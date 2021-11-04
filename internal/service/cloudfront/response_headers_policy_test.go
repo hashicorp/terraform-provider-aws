@@ -91,6 +91,49 @@ func TestAccAWSCloudFrontResponseHeadersPolicy_CorsConfig(t *testing.T) {
 	})
 }
 
+func TestAccAWSCloudFrontResponseHeadersPolicy_CustomHeadersConfig(t *testing.T) {
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_cloudfront_response_headers_policy.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, cloudfront.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckCloudFrontResponseHeadersPolicyDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSCloudFrontResponseHeadersPolicyCustomHeadersConfigConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCloudFrontResponseHeadersPolicyExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "comment", ""),
+					resource.TestCheckResourceAttr(resourceName, "cors_config.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "custom_headers_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "custom_headers_config.0.items.#", "2"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "custom_headers_config.0.items.*", map[string]string{
+						"header":   "X-Header1",
+						"override": "true",
+						"value":    "value1",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "custom_headers_config.0.items.*", map[string]string{
+						"header":   "X-Header2",
+						"override": "false",
+						"value":    "value2",
+					}),
+					resource.TestCheckResourceAttrSet(resourceName, "etag"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "security_headers_config.#", "0"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 func TestAccAWSCloudFrontResponseHeadersPolicy_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cloudfront_response_headers_policy.test"
@@ -215,6 +258,28 @@ resource "aws_cloudfront_response_headers_policy" "test" {
     access_control_max_age_sec = 3600
 
     origin_override = false
+  }
+}
+`, rName)
+}
+
+func testAccAWSCloudFrontResponseHeadersPolicyCustomHeadersConfigConfig(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_cloudfront_response_headers_policy" "test" {
+  name    = %[1]q
+
+  custom_headers_config {
+    items {
+      header   = "X-Header2"
+      override = false
+      value    = "value2"
+    }
+
+    items {
+      header   = "X-Header1"
+      override = true
+      value    = "value1"
+    }
   }
 }
 `, rName)
