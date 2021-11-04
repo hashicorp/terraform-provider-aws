@@ -364,7 +364,7 @@ resource "aws_cloudfront_response_headers_policy" "test" {
 func testAccAWSCloudFrontResponseHeadersPolicySecurityHeadersConfigConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudfront_response_headers_policy" "test" {
-  name    = %[1]q
+  name = %[1]q
 
   custom_headers_config {
     items {
@@ -382,7 +382,7 @@ resource "aws_cloudfront_response_headers_policy" "test" {
 
     frame_options {
       frame_option = "DENY"
-	  override     = false
+      override     = false
     }
 
     strict_transport_security {
