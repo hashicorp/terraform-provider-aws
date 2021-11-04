@@ -61,7 +61,6 @@ The Terraform AWS Provider allows the following endpoints to be customized. **No
   <li><code>amplify</code></li>
   <li><code>amplifybackend</code></li>
   <li><code>apigateway</code></li>
-  <li><code>apigatewaymanagement</code> (or <code>apigatewaymanagementapi</code>)</li>
   <li><code>apigatewayv2</code></li>
   <li><code>appautoscaling</code> (or <code>applicationautoscaling</code>)</li>
   <li><code>appconfig</code></li>
@@ -113,14 +112,12 @@ The Terraform AWS Provider allows the following endpoints to be customized. **No
   <li><code>cognitosync</code></li>
   <li><code>comprehend</code></li>
   <li><code>comprehendmedical</code></li>
-  <li><code>computeoptimizer</code></li>
   <li><code>configservice</code> (or <code>config</code>)</li>
   <li><code>connect</code></li>
   <li><code>connectcontactlens</code></li>
   <li><code>connectparticipant</code></li>
   <li><code>costexplorer</code></li>
   <li><code>cur</code> (or <code>costandusagereportservice</code>)</li>
-  <li><code>customerprofiles</code></li>
   <li><code>dataexchange</code></li>
   <li><code>datapipeline</code></li>
   <li><code>datasync</code></li>
@@ -190,7 +187,6 @@ The Terraform AWS Provider allows the following endpoints to be customized. **No
   <li><code>iotsitewise</code></li>
   <li><code>iotthingsgraph</code></li>
   <li><code>iotwireless</code></li>
-  <li><code>ivs</code></li>
   <li><code>kafka</code></li>
   <li><code>kendra</code></li>
   <li><code>kinesis</code></li>
