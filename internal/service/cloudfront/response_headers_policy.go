@@ -359,6 +359,10 @@ func resourceResponseHeadersPolicyRead(d *schema.ResourceData, meta interface{})
 func resourceResponseHeadersPolicyUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CloudFrontConn
 
+	//
+	// https://docs.aws.amazon.com/cloudfront/latest/APIReference/API_UpdateResponseHeadersPolicy.html:
+	// "When you update a response headers policy, the entire policy is replaced. You cannot update some policy fields independent of others."
+	//
 	apiObject := &cloudfront.ResponseHeadersPolicyConfig{
 		Name: aws.String(d.Get("name").(string)),
 	}
@@ -604,16 +608,16 @@ func expandResponseHeadersPolicyCustomHeader(tfMap map[string]interface{}) *clou
 
 	apiObject := &cloudfront.ResponseHeadersPolicyCustomHeader{}
 
-	if v := apiObject.Header; v != nil {
-		tfMap["header"] = aws.StringValue(v)
+	if v, ok := tfMap["header"].(string); ok && v != "" {
+		apiObject.Header = aws.String(v)
 	}
 
 	if v, ok := tfMap["override"].(bool); ok {
 		apiObject.Override = aws.Bool(v)
 	}
 
-	if v := apiObject.Value; v != nil {
-		tfMap["value"] = aws.StringValue(v)
+	if v, ok := tfMap["value"].(string); ok && v != "" {
+		apiObject.Value = aws.String(v)
 	}
 
 	return apiObject
@@ -666,16 +670,16 @@ func flattenResponseHeadersPolicyCustomHeader(apiObject *cloudfront.ResponseHead
 
 	tfMap := map[string]interface{}{}
 
-	if v, ok := tfMap["header"].(string); ok && v != "" {
-		apiObject.Header = aws.String(v)
+	if v := apiObject.Header; v != nil {
+		tfMap["header"] = aws.StringValue(v)
 	}
 
-	if v, ok := tfMap["override"].(bool); ok && v {
-		apiObject.Override = aws.Bool(v)
+	if v := apiObject.Override; v != nil {
+		tfMap["override"] = aws.BoolValue(v)
 	}
 
-	if v, ok := tfMap["value"].(string); ok && v != "" {
-		apiObject.Value = aws.String(v)
+	if v := apiObject.Value; v != nil {
+		tfMap["value"] = aws.StringValue(v)
 	}
 
 	return tfMap
@@ -710,6 +714,150 @@ func expandResponseHeadersPolicySecurityHeadersConfig(tfMap map[string]interface
 
 	apiObject := &cloudfront.ResponseHeadersPolicySecurityHeadersConfig{}
 
+	if v, ok := tfMap["content_security_policy"].([]interface{}); ok && len(v) > 0 {
+		apiObject.ContentSecurityPolicy = expandResponseHeadersPolicyContentSecurityPolicy(v[0].(map[string]interface{}))
+	}
+
+	if v, ok := tfMap["content_type_options"].([]interface{}); ok && len(v) > 0 {
+		apiObject.ContentTypeOptions = expandResponseHeadersPolicyContentTypeOptions(v[0].(map[string]interface{}))
+	}
+
+	if v, ok := tfMap["frame_options"].([]interface{}); ok && len(v) > 0 {
+		apiObject.FrameOptions = expandResponseHeadersPolicyFrameOptions(v[0].(map[string]interface{}))
+	}
+
+	if v, ok := tfMap["referrer_policy"].([]interface{}); ok && len(v) > 0 {
+		apiObject.ReferrerPolicy = expandResponseHeadersPolicyReferrerPolicy(v[0].(map[string]interface{}))
+	}
+
+	if v, ok := tfMap["strict_transport_security"].([]interface{}); ok && len(v) > 0 {
+		apiObject.StrictTransportSecurity = expandResponseHeadersPolicyStrictTransportSecurity(v[0].(map[string]interface{}))
+	}
+
+	if v, ok := tfMap["xss_protection"].([]interface{}); ok && len(v) > 0 {
+		apiObject.XSSProtection = expandResponseHeadersPolicyXSSProtection(v[0].(map[string]interface{}))
+	}
+
+	return apiObject
+}
+
+func expandResponseHeadersPolicyContentSecurityPolicy(tfMap map[string]interface{}) *cloudfront.ResponseHeadersPolicyContentSecurityPolicy {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &cloudfront.ResponseHeadersPolicyContentSecurityPolicy{}
+
+	if v, ok := tfMap["content_security_policy"].(string); ok && v != "" {
+		apiObject.ContentSecurityPolicy = aws.String(v)
+	}
+
+	if v, ok := tfMap["override"].(bool); ok {
+		apiObject.Override = aws.Bool(v)
+	}
+
+	return apiObject
+}
+
+func expandResponseHeadersPolicyContentTypeOptions(tfMap map[string]interface{}) *cloudfront.ResponseHeadersPolicyContentTypeOptions {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &cloudfront.ResponseHeadersPolicyContentTypeOptions{}
+
+	if v, ok := tfMap["override"].(bool); ok {
+		apiObject.Override = aws.Bool(v)
+	}
+
+	return apiObject
+}
+
+func expandResponseHeadersPolicyFrameOptions(tfMap map[string]interface{}) *cloudfront.ResponseHeadersPolicyFrameOptions {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &cloudfront.ResponseHeadersPolicyFrameOptions{}
+
+	if v, ok := tfMap["frame_option"].(string); ok && v != "" {
+		apiObject.FrameOption = aws.String(v)
+	}
+
+	if v, ok := tfMap["override"].(bool); ok {
+		apiObject.Override = aws.Bool(v)
+	}
+
+	return apiObject
+}
+
+func expandResponseHeadersPolicyReferrerPolicy(tfMap map[string]interface{}) *cloudfront.ResponseHeadersPolicyReferrerPolicy {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &cloudfront.ResponseHeadersPolicyReferrerPolicy{}
+
+	if v, ok := tfMap["override"].(bool); ok {
+		apiObject.Override = aws.Bool(v)
+	}
+
+	if v, ok := tfMap["referrer_policy"].(string); ok && v != "" {
+		apiObject.ReferrerPolicy = aws.String(v)
+	}
+
+	return apiObject
+}
+
+func expandResponseHeadersPolicyStrictTransportSecurity(tfMap map[string]interface{}) *cloudfront.ResponseHeadersPolicyStrictTransportSecurity {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &cloudfront.ResponseHeadersPolicyStrictTransportSecurity{}
+
+	if v, ok := tfMap["access_control_max_age_sec"].(int); ok && v != 0 {
+		apiObject.AccessControlMaxAgeSec = aws.Int64(int64(v))
+	}
+
+	if v, ok := tfMap["include_subdomains"].(bool); ok {
+		apiObject.IncludeSubdomains = aws.Bool(v)
+	}
+
+	if v, ok := tfMap["override"].(bool); ok {
+		apiObject.Override = aws.Bool(v)
+	}
+
+	if v, ok := tfMap["preload"].(bool); ok {
+		apiObject.Preload = aws.Bool(v)
+	}
+
+	return apiObject
+}
+
+func expandResponseHeadersPolicyXSSProtection(tfMap map[string]interface{}) *cloudfront.ResponseHeadersPolicyXSSProtection {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &cloudfront.ResponseHeadersPolicyXSSProtection{}
+
+	if v, ok := tfMap["mode_block"].(bool); ok {
+		apiObject.ModeBlock = aws.Bool(v)
+	}
+
+	if v, ok := tfMap["override"].(bool); ok {
+		apiObject.Override = aws.Bool(v)
+	}
+
+	if v, ok := tfMap["protection"].(bool); ok {
+		apiObject.Protection = aws.Bool(v)
+	}
+
+	if v, ok := tfMap["report_uri"].(string); ok && v != "" {
+		apiObject.ReportUri = aws.String(v)
+	}
+
 	return apiObject
 }
 
@@ -719,6 +867,150 @@ func flattenResponseHeadersPolicySecurityHeadersConfig(apiObject *cloudfront.Res
 	}
 
 	tfMap := map[string]interface{}{}
+
+	if v := apiObject.ContentSecurityPolicy; v != nil {
+		tfMap["content_security_policy"] = []interface{}{flattenResponseHeadersPolicyContentSecurityPolicy(v)}
+	}
+
+	if v := apiObject.ContentTypeOptions; v != nil {
+		tfMap["content_type_options"] = []interface{}{flattenResponseHeadersPolicyContentTypeOptions(v)}
+	}
+
+	if v := apiObject.FrameOptions; v != nil {
+		tfMap["frame_options"] = []interface{}{flattenResponseHeadersPolicyFrameOptions(v)}
+	}
+
+	if v := apiObject.ReferrerPolicy; v != nil {
+		tfMap["referrer_policy"] = []interface{}{flattenResponseHeadersPolicyReferrerPolicy(v)}
+	}
+
+	if v := apiObject.StrictTransportSecurity; v != nil {
+		tfMap["strict_transport_security"] = []interface{}{flattenResponseHeadersPolicyStrictTransportSecurity(v)}
+	}
+
+	if v := apiObject.XSSProtection; v != nil {
+		tfMap["xss_protection"] = []interface{}{flattenResponseHeadersPolicyXSSProtection(v)}
+	}
+
+	return tfMap
+}
+
+func flattenResponseHeadersPolicyContentSecurityPolicy(apiObject *cloudfront.ResponseHeadersPolicyContentSecurityPolicy) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.ContentSecurityPolicy; v != nil {
+		tfMap["content_security_policy"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.Override; v != nil {
+		tfMap["override"] = aws.BoolValue(v)
+	}
+
+	return tfMap
+}
+
+func flattenResponseHeadersPolicyContentTypeOptions(apiObject *cloudfront.ResponseHeadersPolicyContentTypeOptions) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.Override; v != nil {
+		tfMap["override"] = aws.BoolValue(v)
+	}
+
+	return tfMap
+}
+
+func flattenResponseHeadersPolicyFrameOptions(apiObject *cloudfront.ResponseHeadersPolicyFrameOptions) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.FrameOption; v != nil {
+		tfMap["frame_option"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.Override; v != nil {
+		tfMap["override"] = aws.BoolValue(v)
+	}
+
+	return tfMap
+}
+
+func flattenResponseHeadersPolicyReferrerPolicy(apiObject *cloudfront.ResponseHeadersPolicyReferrerPolicy) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.Override; v != nil {
+		tfMap["override"] = aws.BoolValue(v)
+	}
+
+	if v := apiObject.ReferrerPolicy; v != nil {
+		tfMap["referrer_policy"] = aws.StringValue(v)
+	}
+
+	return tfMap
+}
+
+func flattenResponseHeadersPolicyStrictTransportSecurity(apiObject *cloudfront.ResponseHeadersPolicyStrictTransportSecurity) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.AccessControlMaxAgeSec; v != nil {
+		tfMap["access_control_max_age_sec"] = aws.Int64Value(v)
+	}
+
+	if v := apiObject.IncludeSubdomains; v != nil {
+		tfMap["include_subdomains"] = aws.BoolValue(v)
+	}
+
+	if v := apiObject.Override; v != nil {
+		tfMap["override"] = aws.BoolValue(v)
+	}
+
+	if v := apiObject.Preload; v != nil {
+		tfMap["preload"] = aws.BoolValue(v)
+	}
+
+	return tfMap
+}
+
+func flattenResponseHeadersPolicyXSSProtection(apiObject *cloudfront.ResponseHeadersPolicyXSSProtection) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.ModeBlock; v != nil {
+		tfMap["mode_block"] = aws.BoolValue(v)
+	}
+
+	if v := apiObject.Override; v != nil {
+		tfMap["override"] = aws.BoolValue(v)
+	}
+
+	if v := apiObject.Protection; v != nil {
+		tfMap["protection"] = aws.BoolValue(v)
+	}
+
+	if v := apiObject.ReportUri; v != nil {
+		tfMap["report_uri"] = aws.StringValue(v)
+	}
 
 	return tfMap
 }
