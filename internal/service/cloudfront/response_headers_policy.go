@@ -188,7 +188,7 @@ func ResourceResponseHeadersPolicy() *schema.Resource {
 									"frame_option": {
 										Type:         schema.TypeString,
 										Required:     true,
-										ValidateFunc: validation.StringInSlice([]string{"DENY", "SAMEORIGIN"}, false),
+										ValidateFunc: validation.StringInSlice(cloudfront.FrameOptionsList_Values(), false),
 									},
 									"override": {
 										Type:     schema.TypeBool,
@@ -206,7 +206,7 @@ func ResourceResponseHeadersPolicy() *schema.Resource {
 									"referrer_policy": {
 										Type:         schema.TypeString,
 										Required:     true,
-										ValidateFunc: validation.StringInSlice([]string{"no-referrer", "no-referrer-when-downgrade", "origin", "origin-when-cross-origin", "same-origin", "strict-origin", "strict-origin-when-cross-origin", "unsafe-url"}, false),
+										ValidateFunc: validation.StringInSlice(cloudfront.ReferrerPolicyList_Values(), false),
 									},
 									"override": {
 										Type:     schema.TypeBool,
