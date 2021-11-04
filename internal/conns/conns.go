@@ -577,7 +577,7 @@ type ServiceDatum struct {
 var serviceData map[string]*ServiceDatum
 
 func init() {
-	serviceData := make(map[string]*ServiceDatum)
+	serviceData = make(map[string]*ServiceDatum)
 
 	serviceData[AccessAnalyzer] = &ServiceDatum{AWSClientName: "AccessAnalyzer", AWSServiceName: accessanalyzer.ServiceName, AWSEndpointsID: accessanalyzer.EndpointsID, AWSServiceID: accessanalyzer.ServiceID, ProviderNameUpper: "AccessAnalyzer", HCLKeys: []string{"accessanalyzer"}}
 	serviceData[ACM] = &ServiceDatum{AWSClientName: "ACM", AWSServiceName: acm.ServiceName, AWSEndpointsID: acm.EndpointsID, AWSServiceID: acm.ServiceID, ProviderNameUpper: "ACM", HCLKeys: []string{"acm"}}
