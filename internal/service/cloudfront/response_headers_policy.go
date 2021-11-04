@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceResponseHeadersPolicy() *schema.Resource {
@@ -93,6 +94,7 @@ func ResourceResponseHeadersPolicy() *schema.Resource {
 									},
 								},
 							},
+							DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 						},
 						"access_control_max_age_sec": {
 							Type:     schema.TypeInt,
@@ -449,6 +451,10 @@ func expandResponseHeadersPolicyCorsConfig(tfMap map[string]interface{}) *cloudf
 		apiObject.AccessControlAllowOrigins = expandResponseHeadersPolicyAccessControlAllowOrigins(v[0].(map[string]interface{}))
 	}
 
+	if v, ok := tfMap["access_control_expose_headers"].([]interface{}); ok && len(v) > 0 {
+		apiObject.AccessControlExposeHeaders = expandResponseHeadersPolicyAccessControlExposeHeaders(v[0].(map[string]interface{}))
+	}
+
 	if v, ok := tfMap["access_control_max_age_sec"].(int); ok && v != 0 {
 		apiObject.AccessControlMaxAgeSec = aws.Int64(int64(v))
 	}
@@ -508,6 +514,22 @@ func expandResponseHeadersPolicyAccessControlAllowOrigins(tfMap map[string]inter
 	return apiObject
 }
 
+func expandResponseHeadersPolicyAccessControlExposeHeaders(tfMap map[string]interface{}) *cloudfront.ResponseHeadersPolicyAccessControlExposeHeaders {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &cloudfront.ResponseHeadersPolicyAccessControlExposeHeaders{}
+
+	if v, ok := tfMap["items"].(*schema.Set); ok && v.Len() > 0 {
+		items := flex.ExpandStringSet(v)
+		apiObject.Items = items
+		apiObject.Quantity = aws.Int64(int64(len(items)))
+	}
+
+	return apiObject
+}
+
 func flattenResponseHeadersPolicyCorsConfig(apiObject *cloudfront.ResponseHeadersPolicyCorsConfig) map[string]interface{} {
 	if apiObject == nil {
 		return nil
@@ -529,6 +551,10 @@ func flattenResponseHeadersPolicyCorsConfig(apiObject *cloudfront.ResponseHeader
 
 	if v := apiObject.AccessControlAllowOrigins; v != nil {
 		tfMap["access_control_allow_origins"] = []interface{}{flattenResponseHeadersPolicyAccessControlAllowOrigins(v)}
+	}
+
+	if v := apiObject.AccessControlExposeHeaders; v != nil {
+		tfMap["access_control_expose_headers"] = []interface{}{flattenResponseHeadersPolicyAccessControlExposeHeaders(v)}
 	}
 
 	if v := apiObject.AccessControlMaxAgeSec; v != nil {
@@ -571,6 +597,20 @@ func flattenResponseHeadersPolicyAccessControlAllowMethods(apiObject *cloudfront
 }
 
 func flattenResponseHeadersPolicyAccessControlAllowOrigins(apiObject *cloudfront.ResponseHeadersPolicyAccessControlAllowOrigins) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.Items; v != nil {
+		tfMap["items"] = aws.StringValueSlice(v)
+	}
+
+	return tfMap
+}
+
+func flattenResponseHeadersPolicyAccessControlExposeHeaders(apiObject *cloudfront.ResponseHeadersPolicyAccessControlExposeHeaders) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}

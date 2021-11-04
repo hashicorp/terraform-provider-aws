@@ -14,7 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func TestAccAWSCloudFrontResponseHeadersPolicy_basic(t *testing.T) {
+func TestAccAWSCloudFrontResponseHeadersPolicy_CorsConfig(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cloudfront_response_headers_policy.test"
 
@@ -25,16 +25,31 @@ func TestAccAWSCloudFrontResponseHeadersPolicy_basic(t *testing.T) {
 		CheckDestroy: testAccCheckCloudFrontResponseHeadersPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCloudFrontResponseHeadersPolicyConfig(rName),
+				Config: testAccAWSCloudFrontResponseHeadersPolicyCorsConfigConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudFrontResponseHeadersPolicyExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "comment", "test comment"),
-					resource.TestCheckResourceAttr(resourceName, "cors_config.0.access_control_allow_credentials", "true"),
-					resource.TestCheckResourceAttr(resourceName, "cors_config.0.access_control_allow_headers.0.items.0", "test"),
-					resource.TestCheckResourceAttr(resourceName, "cors_config.0.access_control_allow_methods.0.items.0", "GET"),
-					resource.TestCheckResourceAttr(resourceName, "cors_config.0.access_control_allow_origins.0.items.0", "test.example.comtest"),
+					resource.TestCheckResourceAttr(resourceName, "cors_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "cors_config.0.access_control_allow_credentials", "false"),
+					resource.TestCheckResourceAttr(resourceName, "cors_config.0.access_control_allow_headers.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "cors_config.0.access_control_allow_headers.0.items.#", "1"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "cors_config.0.access_control_allow_headers.0.items.*", "X-Header1"),
+					resource.TestCheckResourceAttr(resourceName, "cors_config.0.access_control_allow_methods.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "cors_config.0.access_control_allow_methods.0.items.#", "2"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "cors_config.0.access_control_allow_methods.0.items.*", "GET"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "cors_config.0.access_control_allow_methods.0.items.*", "POST"),
+					resource.TestCheckResourceAttr(resourceName, "cors_config.0.access_control_allow_origins.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "cors_config.0.access_control_allow_origins.0.items.#", "2"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "cors_config.0.access_control_allow_origins.0.items.*", "test1.example.com"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "cors_config.0.access_control_allow_origins.0.items.*", "test2.example.com"),
+					resource.TestCheckResourceAttr(resourceName, "cors_config.0.access_control_expose_headers.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "cors_config.0.access_control_expose_headers.0.items.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "cors_config.0.access_control_max_age_sec", "0"),
 					resource.TestCheckResourceAttr(resourceName, "cors_config.0.origin_override", "true"),
+					resource.TestCheckResourceAttr(resourceName, "custom_headers_config.#", "0"),
+					resource.TestCheckResourceAttrSet(resourceName, "etag"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "security_headers_config.#", "0"),
 				),
 			},
 			{
@@ -42,6 +57,34 @@ func TestAccAWSCloudFrontResponseHeadersPolicy_basic(t *testing.T) {
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{},
+			},
+			{
+				Config: testAccAWSCloudFrontResponseHeadersPolicyCorsConfigUpdatedConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCloudFrontResponseHeadersPolicyExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "comment", "test comment updated"),
+					resource.TestCheckResourceAttr(resourceName, "cors_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "cors_config.0.access_control_allow_credentials", "true"),
+					resource.TestCheckResourceAttr(resourceName, "cors_config.0.access_control_allow_headers.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "cors_config.0.access_control_allow_headers.0.items.#", "2"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "cors_config.0.access_control_allow_headers.0.items.*", "X-Header2"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "cors_config.0.access_control_allow_headers.0.items.*", "X-Header3"),
+					resource.TestCheckResourceAttr(resourceName, "cors_config.0.access_control_allow_methods.#", "1"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "cors_config.0.access_control_allow_methods.0.items.*", "PUT"),
+					resource.TestCheckResourceAttr(resourceName, "cors_config.0.access_control_allow_origins.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "cors_config.0.access_control_allow_origins.0.items.#", "2"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "cors_config.0.access_control_allow_origins.0.items.*", "test1.example.com"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "cors_config.0.access_control_allow_origins.0.items.*", "test2.example.com"),
+					resource.TestCheckResourceAttr(resourceName, "cors_config.0.access_control_expose_headers.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "cors_config.0.access_control_expose_headers.0.items.#", "1"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "cors_config.0.access_control_expose_headers.0.items.*", "HEAD"),
+					resource.TestCheckResourceAttr(resourceName, "cors_config.0.access_control_max_age_sec", "3600"),
+					resource.TestCheckResourceAttr(resourceName, "cors_config.0.origin_override", "false"),
+					resource.TestCheckResourceAttr(resourceName, "custom_headers_config.#", "0"),
+					resource.TestCheckResourceAttrSet(resourceName, "etag"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "security_headers_config.#", "0"),
+				),
 			},
 		},
 	})
@@ -58,58 +101,12 @@ func TestAccAWSCloudFrontResponseHeadersPolicy_disappears(t *testing.T) {
 		CheckDestroy: testAccCheckCloudFrontResponseHeadersPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCloudFrontResponseHeadersPolicyConfig(rName),
+				Config: testAccAWSCloudFrontResponseHeadersPolicyCorsConfigConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudFrontResponseHeadersPolicyExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfcloudfront.ResourceResponseHeadersPolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
-			},
-		},
-	})
-}
-
-func TestAccAWSCloudFrontResponseHeadersPolicy_update(t *testing.T) {
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_cloudfront_response_headers_policy.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, cloudfront.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckCloudFrontResponseHeadersPolicyDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAWSCloudFrontResponseHeadersPolicyConfig(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudFrontResponseHeadersPolicyExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "comment", "test comment"),
-					resource.TestCheckResourceAttr(resourceName, "cors_config.0.access_control_allow_credentials", "true"),
-					resource.TestCheckResourceAttr(resourceName, "cors_config.0.access_control_allow_headers.0.items.0", "test"),
-					resource.TestCheckResourceAttr(resourceName, "cors_config.0.access_control_allow_methods.0.items.0", "GET"),
-					resource.TestCheckResourceAttr(resourceName, "cors_config.0.access_control_allow_origins.0.items.0", "test.example.comtest"),
-					resource.TestCheckResourceAttr(resourceName, "cors_config.0.origin_override", "true"),
-				),
-			},
-			{
-				Config: testAccAWSCloudFrontResponseHeadersPolicyConfigUpdate(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudFrontResponseHeadersPolicyExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "comment", "test comment updated"),
-					resource.TestCheckResourceAttr(resourceName, "cors_config.0.access_control_allow_credentials", "false"),
-					resource.TestCheckResourceAttr(resourceName, "cors_config.0.access_control_allow_headers.0.items.0", "test2"),
-					resource.TestCheckResourceAttr(resourceName, "cors_config.0.access_control_allow_methods.0.items.0", "POST"),
-					resource.TestCheckResourceAttr(resourceName, "cors_config.0.access_control_allow_origins.0.items.0", "test2.example.comtest"),
-					resource.TestCheckResourceAttr(resourceName, "cors_config.0.origin_override", "false"),
-				),
-			},
-			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{},
 			},
 		},
 	})
@@ -162,25 +159,25 @@ func testAccCheckCloudFrontResponseHeadersPolicyExists(n string) resource.TestCh
 	}
 }
 
-func testAccAWSCloudFrontResponseHeadersPolicyConfig(rName string) string {
+func testAccAWSCloudFrontResponseHeadersPolicyCorsConfigConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudfront_response_headers_policy" "test" {
   name    = %[1]q
   comment = "test comment"
 
   cors_config {
-    access_control_allow_credentials = true
+    access_control_allow_credentials = false
 
     access_control_allow_headers {
-      items = ["test"]
+      items = ["X-Header1"]
     }
 
     access_control_allow_methods {
-      items = ["GET"]
+      items = ["GET", "POST"]
     }
 
     access_control_allow_origins {
-      items = ["test.example.comtest"]
+      items = ["test1.example.com", "test2.example.com"]
     }
 
     origin_override = true
@@ -189,26 +186,32 @@ resource "aws_cloudfront_response_headers_policy" "test" {
 `, rName)
 }
 
-func testAccAWSCloudFrontResponseHeadersPolicyConfigUpdate(rName string) string {
+func testAccAWSCloudFrontResponseHeadersPolicyCorsConfigUpdatedConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudfront_response_headers_policy" "test" {
   name    = %[1]q
   comment = "test comment updated"
 
   cors_config {
-    access_control_allow_credentials = false
+    access_control_allow_credentials = true
 
     access_control_allow_headers {
-      items = ["test2"]
+      items = ["X-Header2", "X-Header3"]
     }
 
     access_control_allow_methods {
-      items = ["POST"]
+      items = ["PUT"]
     }
 
     access_control_allow_origins {
-      items = ["test2.example.comtest"]
+      items = ["test1.example.com", "test2.example.com"]
     }
+
+    access_control_expose_headers {
+      items = ["HEAD"]
+    }
+
+    access_control_max_age_sec = 3600
 
     origin_override = false
   }
