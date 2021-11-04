@@ -39,9 +39,9 @@ const (
 )
 
 const (
-	fileSystemAssociationCreateTimeout = 3 * time.Minute
-	fileSystemAssociationUpdateTimeout = 3 * time.Minute
-	fileSystemAssociationDeleteTimeout = 3 * time.Minute
+	fileSystemAssociationCreateTimeout = 10 * time.Minute
+	fileSystemAssociationUpdateTimeout = 10 * time.Minute
+	fileSystemAssociationDeleteTimeout = 10 * time.Minute
 )
 
 //nolint:deadcode,varcheck // These constants are missing from the AWS SDK
