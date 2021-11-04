@@ -326,7 +326,6 @@ func flattenFirehoseExtendedS3Configuration(description *firehose.ExtendedS3Dest
 		m["kms_key_arn"] = aws.StringValue(description.EncryptionConfiguration.KMSEncryptionConfig.AWSKMSKeyARN)
 	}
 
-	log.Printf("Value of the extended s3 is %+v\n", m)
 	return []map[string]interface{}{m}
 }
 
