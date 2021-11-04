@@ -204,7 +204,7 @@ func TestAccAcctestProvider_fipsEndpoint(t *testing.T) {
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFIPSEndpointConfig(fmt.Sprintf("https://s3-fips.%s.amazonaws.com", Region()), rName),
+				Config: testAccFIPSEndpointConfig(fmt.Sprintf("https://s3-fips.%s.%s", Region(), PartitionDNSSuffix()), rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "bucket", rName),
 				),
