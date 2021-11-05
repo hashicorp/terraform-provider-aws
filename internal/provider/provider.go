@@ -1,6 +1,7 @@
 package provider
 
 import (
+	"fmt"
 	"log"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -1828,8 +1829,17 @@ func providerConfigure(d *schema.ResourceData, terraformVersion string) (interfa
 
 	for _, endpointsSetI := range endpointsSet.List() {
 		endpoints := endpointsSetI.(map[string]interface{})
-		for _, serviceKey := range conns.ServiceKeys() {
-			config.Endpoints[serviceKey] = endpoints[serviceKey].(string)
+
+		for _, hclKey := range conns.HCLKeys() {
+			var serviceKey string
+			var err error
+			if serviceKey, err = conns.ServiceForHCLKey(hclKey); err != nil {
+				return nil, fmt.Errorf("failed to assign endpoint (%s): %w", hclKey, err)
+			}
+
+			if config.Endpoints[serviceKey] == "" && endpoints[hclKey].(string) != "" {
+				config.Endpoints[serviceKey] = endpoints[hclKey].(string)
+			}
 		}
 	}
 
@@ -1911,7 +1921,7 @@ func assumeRoleSchema() *schema.Schema {
 func endpointsSchema() *schema.Schema {
 	endpointsAttributes := make(map[string]*schema.Schema)
 
-	for _, serviceKey := range conns.ServiceKeys() {
+	for _, serviceKey := range conns.HCLKeys() {
 		endpointsAttributes[serviceKey] = &schema.Schema{
 			Type:        schema.TypeString,
 			Optional:    true,

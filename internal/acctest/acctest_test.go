@@ -213,6 +213,29 @@ func TestAccAcctestProvider_fipsEndpoint(t *testing.T) {
 	})
 }
 
+func TestAccAcctestProvider_unusualEndpoints(t *testing.T) {
+	var providers []*schema.Provider
+
+	unusual1 := []string{"es", "elasticsearch", "http://notarealendpoint"}
+	unusual2 := []string{"databasemigration", "dms", "http://alsonotarealendpoint"}
+	unusual3 := []string{"lexmodels", "lexmodelbuilding", "http://kingofspain"}
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { PreCheck(t) },
+		ErrorCheck:        ErrorCheck(t),
+		ProviderFactories: FactoriesInternal(&providers),
+		CheckDestroy:      nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccUnusualEndpointsConfig(unusual1, unusual2, unusual3),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckUnusualEndpoints(&providers, unusual1, unusual2, unusual3),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAcctestProvider_IgnoreTags_emptyBlock(t *testing.T) {
 	var providers []*schema.Provider
 
@@ -782,6 +805,81 @@ func testAccCheckEndpoints(providers *[]*schema.Provider) resource.TestCheckFunc
 	}
 }
 
+func testAccCheckUnusualEndpoints(providers *[]*schema.Provider, unusual1, unusual2, unusual3 []string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		if providers == nil {
+			return fmt.Errorf("no providers initialized")
+		}
+
+		// Match conns.AWSClient struct field names to endpoint configuration names
+		endpointFieldNameF := func(key string) func(string) bool {
+			return func(name string) bool {
+				serviceUpper := ""
+				var err error
+				if serviceUpper, err = conns.ServiceProviderNameUpper(key); err != nil {
+					return false
+				}
+
+				// exception to dropping "service" because Config collides with various other "Config"s
+				if name == "ConfigServiceConn" && fmt.Sprintf("%sConn", serviceUpper) == "ConfigConn" {
+					return true
+				}
+
+				return name == fmt.Sprintf("%sConn", serviceUpper)
+			}
+		}
+
+		for _, provo := range *providers {
+			if provo == nil || provo.Meta() == nil || provo.Meta().(*conns.AWSClient) == nil {
+				continue
+			}
+
+			providerClient := provo.Meta().(*conns.AWSClient)
+
+			providerClientField := reflect.Indirect(reflect.ValueOf(providerClient)).FieldByNameFunc(endpointFieldNameF(unusual1[1]))
+
+			if !providerClientField.IsValid() {
+				return fmt.Errorf("unable to match conns.AWSClient struct field name for endpoint name: %s", unusual1[1])
+			}
+
+			actualEndpoint := reflect.Indirect(reflect.Indirect(providerClientField).FieldByName("Config").FieldByName("Endpoint")).String()
+			expectedEndpoint := unusual1[2]
+
+			if actualEndpoint != expectedEndpoint {
+				return fmt.Errorf("expected endpoint (%s) value (%s), got: %s", unusual1[1], expectedEndpoint, actualEndpoint)
+			}
+
+			providerClientField = reflect.Indirect(reflect.ValueOf(providerClient)).FieldByNameFunc(endpointFieldNameF(unusual2[1]))
+
+			if !providerClientField.IsValid() {
+				return fmt.Errorf("unable to match conns.AWSClient struct field name for endpoint name: %s", unusual2[1])
+			}
+
+			actualEndpoint = reflect.Indirect(reflect.Indirect(providerClientField).FieldByName("Config").FieldByName("Endpoint")).String()
+			expectedEndpoint = unusual2[2]
+
+			if actualEndpoint != expectedEndpoint {
+				return fmt.Errorf("expected endpoint (%s) value (%s), got: %s", unusual2[1], expectedEndpoint, actualEndpoint)
+			}
+
+			providerClientField = reflect.Indirect(reflect.ValueOf(providerClient)).FieldByNameFunc(endpointFieldNameF(unusual3[1]))
+
+			if !providerClientField.IsValid() {
+				return fmt.Errorf("unable to match conns.AWSClient struct field name for endpoint name: %s", unusual3[1])
+			}
+
+			actualEndpoint = reflect.Indirect(reflect.Indirect(providerClientField).FieldByName("Config").FieldByName("Endpoint")).String()
+			expectedEndpoint = unusual3[2]
+
+			if actualEndpoint != expectedEndpoint {
+				return fmt.Errorf("expected endpoint (%s) value (%s), got: %s", unusual3[1], expectedEndpoint, actualEndpoint)
+			}
+		}
+
+		return nil
+	}
+}
+
 func testAccEndpointsConfig(endpoints string) string {
 	//lintignore:AT004
 	return ConfigCompose(
@@ -817,6 +915,26 @@ resource "aws_s3_bucket" "test" {
   force_destroy = true
 }
 `, endpoint, rName))
+}
+
+func testAccUnusualEndpointsConfig(unusual1, unusual2, unusual3 []string) string {
+	//lintignore:AT004
+	return ConfigCompose(
+		testAccProviderConfigBase,
+		fmt.Sprintf(`
+provider "aws" {
+  skip_credentials_validation = true
+  skip_get_ec2_platforms      = true
+  skip_metadata_api_check     = true
+  skip_requesting_account_id  = true
+
+  endpoints {
+    %[1]s = %[2]q
+    %[3]s = %[4]q
+    %[5]s = %[6]q
+  }
+}
+`, unusual1[0], unusual1[2], unusual2[0], unusual2[2], unusual3[0], unusual3[2]))
 }
 
 func testAccIgnoreTagsKeys0Config() string {

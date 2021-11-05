@@ -44,7 +44,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/clouddirectory"
 	"github.com/aws/aws-sdk-go/service/cloudformation"
 	"github.com/aws/aws-sdk-go/service/cloudfront"
-	"github.com/aws/aws-sdk-go/service/cloudhsm"
 	"github.com/aws/aws-sdk-go/service/cloudhsmv2"
 	"github.com/aws/aws-sdk-go/service/cloudsearch"
 	"github.com/aws/aws-sdk-go/service/cloudsearchdomain"
@@ -321,7 +320,6 @@ const (
 	CloudDirectory                = "clouddirectory"
 	CloudFormation                = "cloudformation"
 	CloudFront                    = "cloudfront"
-	CloudHSM                      = "cloudhsm"
 	CloudHSMV2                    = "cloudhsmv2"
 	CloudSearch                   = "cloudsearch"
 	CloudSearchDomain             = "cloudsearchdomain"
@@ -609,7 +607,6 @@ func init() {
 	serviceData[CloudDirectory] = &ServiceDatum{AWSClientName: "CloudDirectory", AWSServiceName: clouddirectory.ServiceName, AWSEndpointsID: clouddirectory.EndpointsID, AWSServiceID: clouddirectory.ServiceID, ProviderNameUpper: "CloudDirectory", HCLKeys: []string{"clouddirectory"}}
 	serviceData[CloudFormation] = &ServiceDatum{AWSClientName: "CloudFormation", AWSServiceName: cloudformation.ServiceName, AWSEndpointsID: cloudformation.EndpointsID, AWSServiceID: cloudformation.ServiceID, ProviderNameUpper: "CloudFormation", HCLKeys: []string{"cloudformation"}}
 	serviceData[CloudFront] = &ServiceDatum{AWSClientName: "CloudFront", AWSServiceName: cloudfront.ServiceName, AWSEndpointsID: cloudfront.EndpointsID, AWSServiceID: cloudfront.ServiceID, ProviderNameUpper: "CloudFront", HCLKeys: []string{"cloudfront"}}
-	serviceData[CloudHSM] = &ServiceDatum{AWSClientName: "CloudHSM", AWSServiceName: cloudhsm.ServiceName, AWSEndpointsID: cloudhsm.EndpointsID, AWSServiceID: cloudhsm.ServiceID, ProviderNameUpper: "CloudHSM", HCLKeys: []string{"cloudhsmv1"}}
 	serviceData[CloudHSMV2] = &ServiceDatum{AWSClientName: "CloudHSMV2", AWSServiceName: cloudhsmv2.ServiceName, AWSEndpointsID: cloudhsmv2.EndpointsID, AWSServiceID: cloudhsmv2.ServiceID, ProviderNameUpper: "CloudHSMV2", HCLKeys: []string{"cloudhsm", "cloudhsmv2"}}
 	serviceData[CloudSearch] = &ServiceDatum{AWSClientName: "CloudSearch", AWSServiceName: cloudsearch.ServiceName, AWSEndpointsID: cloudsearch.EndpointsID, AWSServiceID: cloudsearch.ServiceID, ProviderNameUpper: "CloudSearch", HCLKeys: []string{"cloudsearch"}}
 	serviceData[CloudSearchDomain] = &ServiceDatum{AWSClientName: "CloudSearchDomain", AWSServiceName: cloudsearchdomain.ServiceName, AWSEndpointsID: cloudsearchdomain.EndpointsID, AWSServiceID: cloudsearchdomain.ServiceID, ProviderNameUpper: "CloudSearchDomain", HCLKeys: []string{"cloudsearchdomain"}}
@@ -919,7 +916,6 @@ type AWSClient struct {
 	CloudDirectoryConn                *clouddirectory.CloudDirectory
 	CloudFormationConn                *cloudformation.CloudFormation
 	CloudFrontConn                    *cloudfront.CloudFront
-	CloudHSMConn                      *cloudhsm.CloudHSM
 	CloudHSMV2Conn                    *cloudhsmv2.CloudHSMV2
 	CloudSearchConn                   *cloudsearch.CloudSearch
 	CloudSearchDomainConn             *cloudsearchdomain.CloudSearchDomain
@@ -1273,7 +1269,6 @@ func (c *Config) Client() (interface{}, error) {
 		CloudDirectoryConn:                clouddirectory.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[CloudDirectory])})),
 		CloudFormationConn:                cloudformation.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[CloudFormation])})),
 		CloudFrontConn:                    cloudfront.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[CloudFront])})),
-		CloudHSMConn:                      cloudhsm.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[CloudHSM])})),
 		CloudHSMV2Conn:                    cloudhsmv2.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[CloudHSMV2])})),
 		CloudSearchConn:                   cloudsearch.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[CloudSearch])})),
 		CloudSearchDomainConn:             cloudsearchdomain.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[CloudSearchDomain])})),
@@ -1883,7 +1878,7 @@ func ReverseDNS(hostname string) string {
 // This is a global MutexKV for use within this plugin.
 var GlobalMutexKV = NewMutexKV()
 
-func ServiceKeyForHCLKey(s string) (string, error) {
+func ServiceForHCLKey(s string) (string, error) {
 	for k, v := range serviceData {
 		for _, hclKey := range v.HCLKeys {
 			if s == hclKey {
@@ -1902,6 +1897,16 @@ func ServiceKeys() []string {
 	for k := range serviceData {
 		keys[i] = k
 		i++
+	}
+
+	return keys
+}
+
+func HCLKeys() []string {
+	keys := make([]string, 0)
+
+	for _, v := range serviceData {
+		keys = append(keys, v.HCLKeys...)
 	}
 
 	return keys
