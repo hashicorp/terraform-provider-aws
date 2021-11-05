@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -186,6 +187,26 @@ func TestAccAcctestProvider_endpoints(t *testing.T) {
 				Config: testAccEndpointsConfig(endpoints.String()),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpoints(&providers),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAcctestProvider_fipsEndpoint(t *testing.T) {
+	rName := sdkacctest.RandomWithPrefix(ResourcePrefix)
+	resourceName := "aws_s3_bucket.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { PreCheck(t) },
+		ErrorCheck:   ErrorCheck(t),
+		Providers:    Providers,
+		CheckDestroy: nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccFIPSEndpointConfig(fmt.Sprintf("https://s3-fips.%s.%s", Region(), PartitionDNSSuffix()), rName),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "bucket", rName),
 				),
 			},
 		},
@@ -725,6 +746,11 @@ func testAccCheckEndpoints(providers *[]*schema.Provider) resource.TestCheckFunc
 					return false
 				}
 
+				// exception to dropping "service" because Config collides with various other "Config"s
+				if name == "ConfigServiceConn" && fmt.Sprintf("%sConn", serviceUpper) == "ConfigConn" {
+					return true
+				}
+
 				return name == fmt.Sprintf("%sConn", serviceUpper)
 			}
 		}
@@ -772,6 +798,25 @@ provider "aws" {
   }
 }
 `, endpoints))
+}
+
+func testAccFIPSEndpointConfig(endpoint, rName string) string {
+	//lintignore:AT004
+	return ConfigCompose(
+		testAccProviderConfigBase,
+		fmt.Sprintf(`
+provider "aws" {
+  endpoints {
+    s3 = %[1]q
+  }
+}
+
+resource "aws_s3_bucket" "test" {
+  bucket        = %[2]q
+  acl           = "private"
+  force_destroy = true
+}
+`, endpoint, rName))
 }
 
 func testAccIgnoreTagsKeys0Config() string {
