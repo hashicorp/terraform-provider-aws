@@ -44,7 +44,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/clouddirectory"
 	"github.com/aws/aws-sdk-go/service/cloudformation"
 	"github.com/aws/aws-sdk-go/service/cloudfront"
-	"github.com/aws/aws-sdk-go/service/cloudhsm"
 	"github.com/aws/aws-sdk-go/service/cloudhsmv2"
 	"github.com/aws/aws-sdk-go/service/cloudsearch"
 	"github.com/aws/aws-sdk-go/service/cloudsearchdomain"
@@ -321,7 +320,6 @@ const (
 	CloudDirectory                = "clouddirectory"
 	CloudFormation                = "cloudformation"
 	CloudFront                    = "cloudfront"
-	CloudHSM                      = "cloudhsm"
 	CloudHSMV2                    = "cloudhsmv2"
 	CloudSearch                   = "cloudsearch"
 	CloudSearchDomain             = "cloudsearchdomain"
@@ -609,7 +607,6 @@ func init() {
 	serviceData[CloudDirectory] = &ServiceDatum{AWSClientName: "CloudDirectory", AWSServiceName: clouddirectory.ServiceName, AWSEndpointsID: clouddirectory.EndpointsID, AWSServiceID: clouddirectory.ServiceID, ProviderNameUpper: "CloudDirectory", HCLKeys: []string{"clouddirectory"}}
 	serviceData[CloudFormation] = &ServiceDatum{AWSClientName: "CloudFormation", AWSServiceName: cloudformation.ServiceName, AWSEndpointsID: cloudformation.EndpointsID, AWSServiceID: cloudformation.ServiceID, ProviderNameUpper: "CloudFormation", HCLKeys: []string{"cloudformation"}}
 	serviceData[CloudFront] = &ServiceDatum{AWSClientName: "CloudFront", AWSServiceName: cloudfront.ServiceName, AWSEndpointsID: cloudfront.EndpointsID, AWSServiceID: cloudfront.ServiceID, ProviderNameUpper: "CloudFront", HCLKeys: []string{"cloudfront"}}
-	serviceData[CloudHSM] = &ServiceDatum{AWSClientName: "CloudHSM", AWSServiceName: cloudhsm.ServiceName, AWSEndpointsID: cloudhsm.EndpointsID, AWSServiceID: cloudhsm.ServiceID, ProviderNameUpper: "CloudHSM", HCLKeys: []string{"cloudhsmv1"}}
 	serviceData[CloudHSMV2] = &ServiceDatum{AWSClientName: "CloudHSMV2", AWSServiceName: cloudhsmv2.ServiceName, AWSEndpointsID: cloudhsmv2.EndpointsID, AWSServiceID: cloudhsmv2.ServiceID, ProviderNameUpper: "CloudHSMV2", HCLKeys: []string{"cloudhsm", "cloudhsmv2"}}
 	serviceData[CloudSearch] = &ServiceDatum{AWSClientName: "CloudSearch", AWSServiceName: cloudsearch.ServiceName, AWSEndpointsID: cloudsearch.EndpointsID, AWSServiceID: cloudsearch.ServiceID, ProviderNameUpper: "CloudSearch", HCLKeys: []string{"cloudsearch"}}
 	serviceData[CloudSearchDomain] = &ServiceDatum{AWSClientName: "CloudSearchDomain", AWSServiceName: cloudsearchdomain.ServiceName, AWSEndpointsID: cloudsearchdomain.EndpointsID, AWSServiceID: cloudsearchdomain.ServiceID, ProviderNameUpper: "CloudSearchDomain", HCLKeys: []string{"cloudsearchdomain"}}
@@ -719,7 +716,7 @@ func init() {
 	serviceData[KMS] = &ServiceDatum{AWSClientName: "KMS", AWSServiceName: kms.ServiceName, AWSEndpointsID: kms.EndpointsID, AWSServiceID: kms.ServiceID, ProviderNameUpper: "KMS", HCLKeys: []string{"kms"}}
 	serviceData[LakeFormation] = &ServiceDatum{AWSClientName: "LakeFormation", AWSServiceName: lakeformation.ServiceName, AWSEndpointsID: lakeformation.EndpointsID, AWSServiceID: lakeformation.ServiceID, ProviderNameUpper: "LakeFormation", HCLKeys: []string{"lakeformation"}}
 	serviceData[Lambda] = &ServiceDatum{AWSClientName: "Lambda", AWSServiceName: lambda.ServiceName, AWSEndpointsID: lambda.EndpointsID, AWSServiceID: lambda.ServiceID, ProviderNameUpper: "Lambda", HCLKeys: []string{"lambda"}}
-	serviceData[LexModelBuilding] = &ServiceDatum{AWSClientName: "LexModelBuildingService", AWSServiceName: lexmodelbuildingservice.ServiceName, AWSEndpointsID: lexmodelbuildingservice.EndpointsID, AWSServiceID: lexmodelbuildingservice.ServiceID, ProviderNameUpper: "LexModelBuilding", HCLKeys: []string{"lexmodels", "lexmodelbuilding", "lexmodelbuildingservice"}}
+	serviceData[LexModelBuilding] = &ServiceDatum{AWSClientName: "LexModelBuildingService", AWSServiceName: lexmodelbuildingservice.ServiceName, AWSEndpointsID: lexmodelbuildingservice.EndpointsID, AWSServiceID: lexmodelbuildingservice.ServiceID, ProviderNameUpper: "LexModelBuilding", HCLKeys: []string{"lexmodelbuilding", "lexmodels", "lexmodelbuildingservice"}}
 	serviceData[LexModelsV2] = &ServiceDatum{AWSClientName: "LexModelsV2", AWSServiceName: lexmodelsv2.ServiceName, AWSEndpointsID: lexmodelsv2.EndpointsID, AWSServiceID: lexmodelsv2.ServiceID, ProviderNameUpper: "LexModelsV2", HCLKeys: []string{"lexmodelsv2"}}
 	serviceData[LexRuntime] = &ServiceDatum{AWSClientName: "LexRuntimeService", AWSServiceName: lexruntimeservice.ServiceName, AWSEndpointsID: lexruntimeservice.EndpointsID, AWSServiceID: lexruntimeservice.ServiceID, ProviderNameUpper: "LexRuntime", HCLKeys: []string{"lexruntime", "lexruntimeservice"}}
 	serviceData[LexRuntimeV2] = &ServiceDatum{AWSClientName: "LexRuntimeV2", AWSServiceName: lexruntimev2.ServiceName, AWSEndpointsID: lexruntimev2.EndpointsID, AWSServiceID: lexruntimev2.ServiceID, ProviderNameUpper: "LexRuntimeV2", HCLKeys: []string{"lexruntimev2"}}
@@ -801,7 +798,7 @@ func init() {
 	serviceData[Schemas] = &ServiceDatum{AWSClientName: "Schemas", AWSServiceName: schemas.ServiceName, AWSEndpointsID: schemas.EndpointsID, AWSServiceID: schemas.ServiceID, ProviderNameUpper: "Schemas", HCLKeys: []string{"schemas"}}
 	serviceData[SecretsManager] = &ServiceDatum{AWSClientName: "SecretsManager", AWSServiceName: secretsmanager.ServiceName, AWSEndpointsID: secretsmanager.EndpointsID, AWSServiceID: secretsmanager.ServiceID, ProviderNameUpper: "SecretsManager", HCLKeys: []string{"secretsmanager"}}
 	serviceData[SecurityHub] = &ServiceDatum{AWSClientName: "SecurityHub", AWSServiceName: securityhub.ServiceName, AWSEndpointsID: securityhub.EndpointsID, AWSServiceID: securityhub.ServiceID, ProviderNameUpper: "SecurityHub", HCLKeys: []string{"securityhub"}}
-	serviceData[ServerlessAppRepo] = &ServiceDatum{AWSClientName: "ServerlessApplicationRepository", AWSServiceName: serverlessapplicationrepository.ServiceName, AWSEndpointsID: serverlessapplicationrepository.EndpointsID, AWSServiceID: serverlessapplicationrepository.ServiceID, ProviderNameUpper: "ServerlessAppRepo", HCLKeys: []string{"serverlessrepo", "serverlessapprepo", "serverlessapplicationrepository"}}
+	serviceData[ServerlessAppRepo] = &ServiceDatum{AWSClientName: "ServerlessApplicationRepository", AWSServiceName: serverlessapplicationrepository.ServiceName, AWSEndpointsID: serverlessapplicationrepository.EndpointsID, AWSServiceID: serverlessapplicationrepository.ServiceID, ProviderNameUpper: "ServerlessAppRepo", HCLKeys: []string{"serverlessapprepo", "serverlessrepo", "serverlessapplicationrepository"}}
 	serviceData[ServiceCatalog] = &ServiceDatum{AWSClientName: "ServiceCatalog", AWSServiceName: servicecatalog.ServiceName, AWSEndpointsID: servicecatalog.EndpointsID, AWSServiceID: servicecatalog.ServiceID, ProviderNameUpper: "ServiceCatalog", HCLKeys: []string{"servicecatalog"}}
 	serviceData[ServiceDiscovery] = &ServiceDatum{AWSClientName: "ServiceDiscovery", AWSServiceName: servicediscovery.ServiceName, AWSEndpointsID: servicediscovery.EndpointsID, AWSServiceID: servicediscovery.ServiceID, ProviderNameUpper: "ServiceDiscovery", HCLKeys: []string{"servicediscovery"}}
 	serviceData[ServiceQuotas] = &ServiceDatum{AWSClientName: "ServiceQuotas", AWSServiceName: servicequotas.ServiceName, AWSEndpointsID: servicequotas.EndpointsID, AWSServiceID: servicequotas.ServiceID, ProviderNameUpper: "ServiceQuotas", HCLKeys: []string{"servicequotas"}}
@@ -919,7 +916,6 @@ type AWSClient struct {
 	CloudDirectoryConn                *clouddirectory.CloudDirectory
 	CloudFormationConn                *cloudformation.CloudFormation
 	CloudFrontConn                    *cloudfront.CloudFront
-	CloudHSMConn                      *cloudhsm.CloudHSM
 	CloudHSMV2Conn                    *cloudhsmv2.CloudHSMV2
 	CloudSearchConn                   *cloudsearch.CloudSearch
 	CloudSearchDomainConn             *cloudsearchdomain.CloudSearchDomain
@@ -1273,7 +1269,6 @@ func (c *Config) Client() (interface{}, error) {
 		CloudDirectoryConn:                clouddirectory.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[CloudDirectory])})),
 		CloudFormationConn:                cloudformation.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[CloudFormation])})),
 		CloudFrontConn:                    cloudfront.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[CloudFront])})),
-		CloudHSMConn:                      cloudhsm.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[CloudHSM])})),
 		CloudHSMV2Conn:                    cloudhsmv2.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[CloudHSMV2])})),
 		CloudSearchConn:                   cloudsearch.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[CloudSearch])})),
 		CloudSearchDomainConn:             cloudsearchdomain.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[CloudSearchDomain])})),
@@ -1883,7 +1878,7 @@ func ReverseDNS(hostname string) string {
 // This is a global MutexKV for use within this plugin.
 var GlobalMutexKV = NewMutexKV()
 
-func ServiceKeyForHCLKey(s string) (string, error) {
+func ServiceForHCLKey(s string) (string, error) {
 	for k, v := range serviceData {
 		for _, hclKey := range v.HCLKeys {
 			if s == hclKey {
@@ -1902,6 +1897,16 @@ func ServiceKeys() []string {
 	for k := range serviceData {
 		keys[i] = k
 		i++
+	}
+
+	return keys
+}
+
+func HCLKeys() []string {
+	keys := make([]string, 0)
+
+	for _, v := range serviceData {
+		keys = append(keys, v.HCLKeys...)
 	}
 
 	return keys
