@@ -29,19 +29,19 @@ func ResourceInternetGateway() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"vpc_id": {
+			"arn": {
 				Type:     schema.TypeString,
-				Optional: true,
+				Computed: true,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
 			"owner_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"arn": {
+			"tags":     tftags.TagsSchema(),
+			"tags_all": tftags.TagsSchemaComputed(),
+			"vpc_id": {
 				Type:     schema.TypeString,
-				Computed: true,
+				Optional: true,
 			},
 		},
 
@@ -54,47 +54,33 @@ func resourceInternetGatewayCreate(d *schema.ResourceData, meta interface{}) err
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
-	// Create the gateway
-	log.Printf("[DEBUG] Creating internet gateway")
-	var err error
 	input := &ec2.CreateInternetGatewayInput{
 		TagSpecifications: ec2TagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeInternetGateway),
 	}
-	resp, err := conn.CreateInternetGateway(input)
+
+	log.Printf("[DEBUG] Creating EC2 Internet Gateway: %s", input)
+	output, err := conn.CreateInternetGateway(input)
+
 	if err != nil {
-		return fmt.Errorf("Error creating internet gateway: %s", err)
+		return fmt.Errorf("error creating EC2 Internet Gateway: %w", err)
 	}
 
-	// Get the ID and store it
-	ig := *resp.InternetGateway
-	d.SetId(aws.StringValue(ig.InternetGatewayId))
-	log.Printf("[INFO] InternetGateway ID: %s", d.Id())
-	var igRaw interface{}
-	err = resource.Retry(5*time.Minute, func() *resource.RetryError {
-		igRaw, _, err = IGStateRefreshFunc(conn, d.Id())()
-		if igRaw != nil {
-			return nil
-		}
-		if err == nil {
-			return resource.RetryableError(&resource.NotFoundError{})
-		} else {
-			return resource.NonRetryableError(err)
-		}
+	d.SetId(aws.StringValue(output.InternetGateway.InternetGatewayId))
+
+	_, err = tfresource.RetryWhenNotFound(PropagationTimeout, func() (interface{}, error) {
+		return FindInternetGatewayByID(conn, d.Id())
 	})
-	if tfresource.TimedOut(err) {
-		igRaw, _, err = IGStateRefreshFunc(conn, d.Id())()
-		if igRaw == nil {
-			return fmt.Errorf("error finding Internet Gateway (%s) after creation; retry running Terraform", d.Id())
-		}
-	}
+
 	if err != nil {
-		return fmt.Errorf("Error refreshing internet gateway state: %s", err)
+		return fmt.Errorf("error reading EC2 Internet Gateway (%s): %w", d.Id(), err)
 	}
 
-	// Attach the new gateway to the correct vpc
-	err = resourceInternetGatewayAttach(d, meta)
-	if err != nil {
-		return fmt.Errorf("error attaching EC2 Internet Gateway (%s): %s", d.Id(), err)
+	if v, ok := d.GetOk("vpc_id"); ok {
+		err = attachInternetGateway(conn, d.Id(), v.(string), internetGatewayAttachedTimeout)
+
+		if err != nil {
+			return err
+		}
 	}
 
 	return resourceInternetGatewayRead(d, meta)
@@ -431,4 +417,28 @@ func IGAttachStateRefreshFunc(conn *ec2.EC2, id string, expected string) resourc
 
 		return ig, *ig.Attachments[0].State, nil
 	}
+}
+
+func attachInternetGateway(conn *ec2.EC2, internetGatewayID, vpcID string, timeout time.Duration) error {
+	input := &ec2.AttachInternetGatewayInput{
+		InternetGatewayId: aws.String(internetGatewayID),
+		VpcId:             aws.String(vpcID),
+	}
+
+	log.Printf("[INFO] Attaching EC2 Internet Gateway: %s", input)
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(PropagationTimeout, func() (interface{}, error) {
+		return conn.AttachInternetGateway(input)
+	}, ErrCodeInvalidInternetGatewayIDNotFound)
+
+	if err != nil {
+		return fmt.Errorf("error attaching EC2 Internet Gateway (%s) to VPC (%s): %w", internetGatewayID, vpcID, err)
+	}
+
+	_, err = WaitInternetGatewayAttached(conn, internetGatewayID, vpcID, timeout)
+
+	if err != nil {
+		return fmt.Errorf("error waiting for EC2 Internet Gateway (%s) to attach to VPC (%s): %w", internetGatewayID, vpcID, err)
+	}
+
+	return nil
 }

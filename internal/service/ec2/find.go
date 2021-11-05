@@ -290,20 +290,20 @@ func FindNetworkInterfaceByID(conn *ec2.EC2, id string) (*ec2.NetworkInterface, 
 		NetworkInterfaceIds: aws.StringSlice([]string{id}),
 	}
 
-	networkInterface, err := FindNetworkInterface(conn, input)
+	output, err := FindNetworkInterface(conn, input)
 
 	if err != nil {
 		return nil, err
 	}
 
 	// Eventual consistency check.
-	if aws.StringValue(networkInterface.NetworkInterfaceId) != id {
+	if aws.StringValue(output.NetworkInterfaceId) != id {
 		return nil, &resource.NotFoundError{
 			LastRequest: input,
 		}
 	}
 
-	return networkInterface, nil
+	return output, nil
 }
 
 func FindNetworkInterfacesByAttachmentInstanceOwnerIDAndDescription(conn *ec2.EC2, attachmentInstanceOwnerID, description string) ([]*ec2.NetworkInterface, error) {
@@ -786,13 +786,13 @@ func FindVPCEndpointByID(conn *ec2.EC2, vpcEndpointID string) (*ec2.VpcEndpoint,
 		VpcEndpointIds: aws.StringSlice([]string{vpcEndpointID}),
 	}
 
-	vpcEndpoint, err := FindVPCEndpoint(conn, input)
+	output, err := FindVPCEndpoint(conn, input)
 
 	if err != nil {
 		return nil, err
 	}
 
-	if state := aws.StringValue(vpcEndpoint.State); state == VPCEndpointStateDeleted {
+	if state := aws.StringValue(output.State); state == VPCEndpointStateDeleted {
 		return nil, &resource.NotFoundError{
 			Message:     state,
 			LastRequest: input,
@@ -800,13 +800,13 @@ func FindVPCEndpointByID(conn *ec2.EC2, vpcEndpointID string) (*ec2.VpcEndpoint,
 	}
 
 	// Eventual consistency check.
-	if aws.StringValue(vpcEndpoint.VpcEndpointId) != vpcEndpointID {
+	if aws.StringValue(output.VpcEndpointId) != vpcEndpointID {
 		return nil, &resource.NotFoundError{
 			LastRequest: input,
 		}
 	}
 
-	return vpcEndpoint, nil
+	return output, nil
 }
 
 func FindVPCEndpoint(conn *ec2.EC2, input *ec2.DescribeVpcEndpointsInput) (*ec2.VpcEndpoint, error) {
@@ -966,6 +966,100 @@ func FindFlowLogByID(conn *ec2.EC2, id string) (*ec2.FlowLog, error) {
 	}
 
 	return output.FlowLogs[0], nil
+}
+
+func FindInternetGateway(conn *ec2.EC2, input *ec2.DescribeInternetGatewaysInput) (*ec2.InternetGateway, error) {
+	output, err := FindInternetGateways(conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if len(output) == 0 || output[0] == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	if count := len(output); count > 1 {
+		return nil, tfresource.NewTooManyResultsError(count, input)
+	}
+
+	return output[0], nil
+}
+
+func FindInternetGateways(conn *ec2.EC2, input *ec2.DescribeInternetGatewaysInput) ([]*ec2.InternetGateway, error) {
+	var output []*ec2.InternetGateway
+
+	err := conn.DescribeInternetGatewaysPages(input, func(page *ec2.DescribeInternetGatewaysOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.InternetGateways {
+			if v != nil {
+				output = append(output, v)
+			}
+		}
+
+		return !lastPage
+	})
+
+	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidInternetGatewayIDNotFound) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
+}
+
+func FindInternetGatewayByID(conn *ec2.EC2, id string) (*ec2.InternetGateway, error) {
+	input := &ec2.DescribeInternetGatewaysInput{
+		InternetGatewayIds: aws.StringSlice([]string{id}),
+	}
+
+	output, err := FindInternetGateway(conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	// Eventual consistency check.
+	if aws.StringValue(output.InternetGatewayId) != id {
+		return nil, &resource.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
+}
+
+func FindInternetGatewayAttachment(conn *ec2.EC2, internetGatewayID, vpcID string) (*ec2.InternetGatewayAttachment, error) {
+	internetGateway, err := FindInternetGatewayByID(conn, internetGatewayID)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if len(internetGateway.Attachments) == 0 || internetGateway.Attachments[0] == nil {
+		return nil, tfresource.NewEmptyResultError(internetGatewayID)
+	}
+
+	if count := len(internetGateway.Attachments); count > 1 {
+		return nil, tfresource.NewTooManyResultsError(count, internetGatewayID)
+	}
+
+	attachment := internetGateway.Attachments[0]
+
+	if aws.StringValue(attachment.VpcId) != vpcID {
+		return nil, tfresource.NewEmptyResultError(vpcID)
+	}
+
+	return attachment, nil
 }
 
 func FindManagedPrefixListByID(conn *ec2.EC2, id string) (*ec2.ManagedPrefixList, error) {

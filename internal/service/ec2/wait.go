@@ -690,6 +690,27 @@ func WaitHostDeleted(conn *ec2.EC2, id string) (*ec2.Host, error) {
 }
 
 const (
+	internetGatewayAttachedTimeout = 4 * time.Minute
+)
+
+func WaitInternetGatewayAttached(conn *ec2.EC2, internetGatewayID, vpcID string, timeout time.Duration) (*ec2.InternetGatewayAttachment, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{ec2.AttachmentStatusAttaching},
+		Target:  []string{InternetGatewayAttachmentStateAvailable},
+		Timeout: timeout,
+		Refresh: StatusInternetGatewayAttachmentState(conn, internetGatewayID, vpcID),
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*ec2.InternetGatewayAttachment); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+const (
 	ManagedPrefixListTimeout = 15 * time.Minute
 )
 

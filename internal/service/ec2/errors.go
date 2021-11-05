@@ -28,6 +28,10 @@ const (
 )
 
 const (
+	ErrCodeInvalidInternetGatewayIDNotFound = "InvalidInternetGatewayID.NotFound"
+)
+
+const (
 	ErrCodeInvalidNetworkInterfaceIDNotFound = "InvalidNetworkInterfaceID.NotFound"
 )
 
