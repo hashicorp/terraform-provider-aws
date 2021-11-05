@@ -137,7 +137,7 @@ service/devicefarm:
 service/directconnect:
   - '((\*|-) ?`?|(data|resource) "?)aws_dx_'
 service/directoryservice:
-  - '((\*|-) ?`?|(data|resource) "?)aws_directory_service_'
+  - '((\*|-) ?`?|(data|resource) "?)aws_ds_'
 service/dlm:
   - '((\*|-) ?`?|(data|resource) "?)aws_dlm_'
 service/docdb:

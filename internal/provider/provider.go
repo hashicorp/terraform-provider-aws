@@ -409,7 +409,8 @@ func Provider() *schema.Provider {
 			"aws_dx_location":   directconnect.DataSourceLocation(),
 			"aws_dx_locations":  directconnect.DataSourceLocations(),
 
-			"aws_directory_service_directory": ds.DataSourceDirectory(),
+			"aws_ds_directory":                ds.DataSourceDirectory(),
+			"aws_directory_service_directory": ds.DataSourceDirectory(), // backward compatible alias
 
 			"aws_dynamodb_table": dynamodb.DataSourceTable(),
 
@@ -985,9 +986,12 @@ func Provider() *schema.Provider {
 			"aws_docdb_cluster_snapshot":        docdb.ResourceClusterSnapshot(),
 			"aws_docdb_subnet_group":            docdb.ResourceSubnetGroup(),
 
-			"aws_directory_service_conditional_forwarder": ds.ResourceConditionalForwarder(),
-			"aws_directory_service_directory":             ds.ResourceDirectory(),
-			"aws_directory_service_log_subscription":      ds.ResourceLogSubscription(),
+			"aws_ds_conditional_forwarder":                ds.ResourceConditionalForwarder(),
+			"aws_ds_directory":                            ds.ResourceDirectory(),
+			"aws_ds_log_subscription":                     ds.ResourceLogSubscription(),
+			"aws_directory_service_conditional_forwarder": ds.ResourceConditionalForwarder(), // backward compatible alias
+			"aws_directory_service_directory":             ds.ResourceDirectory(),            // backward compatible alias
+			"aws_directory_service_log_subscription":      ds.ResourceLogSubscription(),      // backward compatible alias
 
 			"aws_dynamodb_global_table":                  dynamodb.ResourceGlobalTable(),
 			"aws_dynamodb_kinesis_streaming_destination": dynamodb.ResourceKinesisStreamingDestination(),

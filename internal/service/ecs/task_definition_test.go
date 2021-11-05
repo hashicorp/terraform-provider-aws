@@ -341,7 +341,7 @@ func TestAccECSTaskDefinition_withFSxWinFileSystem(t *testing.T) {
 					}),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "volume.*.fsx_windows_file_server_volume_configuration.0.file_system_id", "aws_fsx_windows_file_system.test", "id"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "volume.*.fsx_windows_file_server_volume_configuration.0.authorization_config.0.credentials_parameter", "aws_secretsmanager_secret_version.test", "arn"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "volume.*.fsx_windows_file_server_volume_configuration.0.authorization_config.0.domain", "aws_directory_service_directory.test", "name"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "volume.*.fsx_windows_file_server_volume_configuration.0.authorization_config.0.domain", "aws_ds_directory.test", "name"),
 				),
 			},
 			{
@@ -2327,7 +2327,7 @@ resource "aws_secretsmanager_secret" "test" {
 
 resource "aws_secretsmanager_secret_version" "test" {
   secret_id     = aws_secretsmanager_secret.test.id
-  secret_string = jsonencode({ username : "admin", password : aws_directory_service_directory.test.password })
+  secret_string = jsonencode({ username : "admin", password : aws_ds_directory.test.password })
 }
 
 resource "aws_iam_role" "test" {
@@ -2390,7 +2390,7 @@ TASK_DEFINITION
 
       authorization_config {
         credentials_parameter = aws_secretsmanager_secret_version.test.arn
-        domain                = aws_directory_service_directory.test.name
+        domain                = aws_ds_directory.test.name
       }
     }
   }
@@ -2442,7 +2442,7 @@ resource "aws_subnet" "test2" {
   availability_zone = data.aws_availability_zones.available.names[1]
 }
 
-resource "aws_directory_service_directory" "test" {
+resource "aws_ds_directory" "test" {
   edition  = "Standard"
   name     = "corp.notexample.com"
   password = "SuperSecretPassw0rd"
@@ -2459,7 +2459,7 @@ resource "aws_directory_service_directory" "test" {
 func testAccFSxWindowsFileSystemSubnetIds1Config() string {
 	return testAccFSxWindowsFileSystemBaseConfig() + `
 resource "aws_fsx_windows_file_system" "test" {
-  active_directory_id = aws_directory_service_directory.test.id
+  active_directory_id = aws_ds_directory.test.id
   skip_final_backup   = true
   storage_capacity    = 32
   subnet_ids          = [aws_subnet.test1.id]

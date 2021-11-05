@@ -17,8 +17,8 @@ import (
 )
 
 func init() {
-	resource.AddTestSweepers("aws_directory_service_directory", &resource.Sweeper{
-		Name: "aws_directory_service_directory",
+	resource.AddTestSweepers("aws_ds_directory", &resource.Sweeper{
+		Name: "aws_ds_directory",
 		F:    sweepDirectories,
 		Dependencies: []string{
 			"aws_db_instance",

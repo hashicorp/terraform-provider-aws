@@ -266,7 +266,7 @@ resource "aws_subnet" "test2" {
   depends_on = [aws_internet_gateway.test]
 }
 
-resource "aws_directory_service_directory" "test" {
+resource "aws_ds_directory" "test" {
   name     = "corp.notexample.com"
   password = "SuperSecretPassw0rd"
 
@@ -302,7 +302,7 @@ func testAccAccessBaseConfig_S3(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_transfer_server" "test" {
   identity_provider_type = "AWS_DIRECTORY_SERVICE"
-  directory_id           = aws_directory_service_directory.test.id
+  directory_id           = aws_ds_directory.test.id
   logging_role           = aws_iam_role.test.arn
 }
 
@@ -425,7 +425,7 @@ func testAccAccessBaseConfig_efs(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_transfer_server" "test" {
   identity_provider_type = "AWS_DIRECTORY_SERVICE"
-  directory_id           = aws_directory_service_directory.test.id
+  directory_id           = aws_ds_directory.test.id
   logging_role           = aws_iam_role.test.arn
   domain                 = "EFS"
 }

@@ -4671,7 +4671,7 @@ resource "aws_security_group_rule" "test" {
   security_group_id = aws_security_group.test.id
 }
 
-resource "aws_directory_service_directory" "directory" {
+resource "aws_ds_directory" "directory" {
   name     = %[2]q
   password = "SuperSecretPassw0rd"
   type     = "MicrosoftAD"
@@ -4704,11 +4704,11 @@ resource "aws_db_instance" "test" {
   username                = "somecrazyusername"
   vpc_security_group_ids  = [aws_security_group.test.id]
 
-  domain               = aws_directory_service_directory.directory.id
+  domain               = aws_ds_directory.directory.id
   domain_iam_role_name = aws_iam_role.role.name
 }
 
-resource "aws_directory_service_directory" "directory-2" {
+resource "aws_ds_directory" "directory-2" {
   name     = %[2]q
   password = "SuperSecretPassw0rd"
   type     = "MicrosoftAD"
@@ -4740,11 +4740,11 @@ resource "aws_db_instance" "test" {
   username                = "somecrazyusername"
   vpc_security_group_ids  = [aws_security_group.test.id]
 
-  domain               = aws_directory_service_directory.directory-2.id
+  domain               = aws_ds_directory.directory-2.id
   domain_iam_role_name = aws_iam_role.role.name
 }
 
-resource "aws_directory_service_directory" "directory-2" {
+resource "aws_ds_directory" "directory-2" {
   name     = %[2]q
   password = "SuperSecretPassw0rd"
   type     = "MicrosoftAD"
@@ -4792,7 +4792,7 @@ resource "aws_db_instance" "test" {
   username                = "somecrazyusername"
   vpc_security_group_ids  = [aws_security_group.test.id]
 
-  domain               = aws_directory_service_directory.directory.id
+  domain               = aws_ds_directory.directory.id
   domain_iam_role_name = aws_iam_role.role.name
 
   snapshot_identifier = aws_db_snapshot.origin.id

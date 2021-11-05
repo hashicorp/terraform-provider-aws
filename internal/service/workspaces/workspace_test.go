@@ -387,7 +387,7 @@ data "aws_workspaces_bundle" "test" {
 }
 
 resource "aws_workspaces_directory" "test" {
-  directory_id = aws_directory_service_directory.main.id
+  directory_id = aws_ds_directory.main.id
 
   tags = {
     Name = "tf-testacc-workspaces-directory-%[1]s"

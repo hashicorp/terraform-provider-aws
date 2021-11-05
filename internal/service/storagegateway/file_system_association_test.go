@@ -316,7 +316,7 @@ func testAccFileSystemAssociationBase(rName, domainName, username string) string
 		testAccGatewayConfig_DirectoryServiceMicrosoftAD(rName, domainName),
 		fmt.Sprintf(`
 resource "aws_fsx_windows_file_system" "test" {
-  active_directory_id = aws_directory_service_directory.test.id
+  active_directory_id = aws_ds_directory.test.id
   security_group_ids  = [aws_security_group.test.id]
   skip_final_backup   = true
   storage_capacity    = 32
@@ -335,8 +335,8 @@ resource "aws_storagegateway_gateway" "test" {
   gateway_type       = "FILE_FSX_SMB"
 
   smb_active_directory_settings {
-    domain_name = aws_directory_service_directory.test.name
-    password    = aws_directory_service_directory.test.password
+    domain_name = aws_ds_directory.test.name
+    password    = aws_ds_directory.test.password
     username    = %[2]q
   }
 
@@ -354,7 +354,7 @@ resource "aws_storagegateway_file_system_association" "test" {
   gateway_arn  = aws_storagegateway_gateway.test.arn
   location_arn = aws_fsx_windows_file_system.test.arn
   username     = %[1]q
-  password     = aws_directory_service_directory.test.password
+  password     = aws_ds_directory.test.password
 }
 `, username)
 }
@@ -365,7 +365,7 @@ resource "aws_storagegateway_file_system_association" "test" {
   gateway_arn  = aws_storagegateway_gateway.test.arn
   location_arn = aws_fsx_windows_file_system.test.arn
   username     = %[1]q
-  password     = aws_directory_service_directory.test.password
+  password     = aws_ds_directory.test.password
 
   tags = {
     %[2]q = %[3]q
@@ -380,7 +380,7 @@ resource "aws_storagegateway_file_system_association" "test" {
   gateway_arn  = aws_storagegateway_gateway.test.arn
   location_arn = aws_fsx_windows_file_system.test.arn
   username     = %[1]q
-  password     = aws_directory_service_directory.test.password
+  password     = aws_ds_directory.test.password
 
   tags = {
     %[2]q = %[3]q
@@ -396,7 +396,7 @@ resource "aws_storagegateway_file_system_association" "test" {
   gateway_arn           = aws_storagegateway_gateway.test.arn
   location_arn          = aws_fsx_windows_file_system.test.arn
   username              = %[1]q
-  password              = aws_directory_service_directory.test.password
+  password              = aws_ds_directory.test.password
   audit_destination_arn = %[2]s
 }
 
@@ -410,7 +410,7 @@ resource "aws_storagegateway_file_system_association" "test" {
   gateway_arn           = aws_storagegateway_gateway.test.arn
   location_arn          = aws_fsx_windows_file_system.test.arn
   username              = %[1]q
-  password              = aws_directory_service_directory.test.password
+  password              = aws_ds_directory.test.password
   audit_destination_arn = ""
 }
 
@@ -425,7 +425,7 @@ resource "aws_storagegateway_file_system_association" "test" {
   gateway_arn  = aws_storagegateway_gateway.test.arn
   location_arn = aws_fsx_windows_file_system.test.arn
   username     = %[1]q
-  password     = aws_directory_service_directory.test.password
+  password     = aws_ds_directory.test.password
 
   cache_attributes {
     cache_stale_timeout_in_seconds = %[2]d

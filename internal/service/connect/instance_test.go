@@ -260,7 +260,7 @@ resource "aws_subnet" "test2" {
   }
 }
 
-resource "aws_directory_service_directory" "test" {
+resource "aws_ds_directory" "test" {
   name     = "corp.notexample.com"
   password = "SuperSecretPassw0rd"
   size     = "Small"
@@ -272,7 +272,7 @@ resource "aws_directory_service_directory" "test" {
 }
 
 resource "aws_connect_instance" "test" {
-  directory_id             = aws_directory_service_directory.test.id
+  directory_id             = aws_ds_directory.test.id
   identity_management_type = "EXISTING_DIRECTORY"
   instance_alias           = %[1]q
   inbound_calls_enabled    = true

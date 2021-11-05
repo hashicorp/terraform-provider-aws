@@ -169,7 +169,7 @@ func init() {
 			"aws_elastic_beanstalk_environment",
 			"aws_cloudhsm_v2_cluster",
 			"aws_db_subnet_group",
-			"aws_directory_service_directory",
+			"aws_ds_directory",
 			"aws_ec2_client_vpn_endpoint",
 			"aws_ec2_transit_gateway_vpc_attachment",
 			"aws_efs_file_system",

@@ -1,0 +1,15 @@
+```release-note:enhancement
+data-source/aws_directory_service_directory: Rename data source to aws_ds_directory (with alias for aws_directory_service_directory)
+```
+
+```release-note:enhancement
+resource/aws_directory_service_directory: Rename resource to aws_ds_directory (with alias for aws_directory_service_directory)
+```
+
+```release-note:enhancement
+resource/aws_directory_service_conditional_forwarder: Rename resource to aws_ds_conditional_forwarder (with alias for aws_directory_service_conditional_forwarder)
+```
+
+```release-note:enhancement
+resource/aws_directory_service_log_subscription: Rename resource to aws_ds_log_subscription (with alias for aws_directory_service_log_subscription)
+```

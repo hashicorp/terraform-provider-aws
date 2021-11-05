@@ -28,7 +28,7 @@ resource "aws_connect_instance" "test" {
 
 ```terraform
 resource "aws_connect_instance" "test" {
-  directory_id             = aws_directory_service_directory.test.id
+  directory_id             = aws_ds_directory.test.id
   identity_management_type = "EXISTING_DIRECTORY"
   inbound_calls_enabled    = true
   instance_alias           = "friendly-name-connect"

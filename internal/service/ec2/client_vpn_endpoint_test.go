@@ -491,7 +491,7 @@ resource "aws_subnet" "test" {
   vpc_id            = aws_vpc.test.id
 }
 
-resource "aws_directory_service_directory" "test" {
+resource "aws_ds_directory" "test" {
   name     = "vpn.notexample.com"
   password = "SuperSecretPassw0rd"
   type     = "MicrosoftAD"
@@ -584,7 +584,7 @@ resource "aws_ec2_client_vpn_endpoint" "test" {
 
   authentication_options {
     type                = "directory-service-authentication"
-    active_directory_id = aws_directory_service_directory.test.id
+    active_directory_id = aws_ds_directory.test.id
   }
 
   connection_log_options {
@@ -603,7 +603,7 @@ resource "aws_ec2_client_vpn_endpoint" "test" {
 
   authentication_options {
     type                = "directory-service-authentication"
-    active_directory_id = aws_directory_service_directory.test.id
+    active_directory_id = aws_ds_directory.test.id
   }
 
   authentication_options {

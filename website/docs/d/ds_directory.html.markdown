@@ -1,20 +1,20 @@
 ---
 subcategory: "Directory Service"
 layout: "aws"
-page_title: "AWS: aws_directory_service_directory"
+page_title: "AWS: aws_ds_directory"
 description: |-
   AWS Directory Service Directory
 ---
 
-# Data Source: aws_directory_service_directory
+# Data Source: aws_ds_directory
 
 Get attributes of AWS Directory Service directory (SimpleAD, Managed AD, AD Connector). It's especially useful to refer AWS Managed AD or on-premise AD in AD Connector configuration.
 
 ## Example Usage
 
 ```terraform
-data "aws_directory_service_directory" "example" {
-  directory_id = aws_directory_service_directory.main.id
+data "aws_ds_directory" "example" {
+  directory_id = aws_ds_directory.main.id
 }
 ```
 

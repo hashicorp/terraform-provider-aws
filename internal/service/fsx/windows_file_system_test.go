@@ -871,7 +871,7 @@ resource "aws_subnet" "test2" {
   availability_zone = data.aws_availability_zones.available.names[1]
 }
 
-resource "aws_directory_service_directory" "test" {
+resource "aws_ds_directory" "test" {
   edition  = "Standard"
   name     = "corp.notexample.com"
   password = "SuperSecretPassw0rd"
@@ -888,7 +888,7 @@ resource "aws_directory_service_directory" "test" {
 func testAccWindowsFileSystemAliases1Config(alias1 string) string {
 	return testAccWindowsFileSystemBaseConfig() + fmt.Sprintf(`
 resource "aws_fsx_windows_file_system" "test" {
-  active_directory_id = aws_directory_service_directory.test.id
+  active_directory_id = aws_ds_directory.test.id
   skip_final_backup   = true
   storage_capacity    = 32
   subnet_ids          = [aws_subnet.test1.id]
@@ -902,7 +902,7 @@ resource "aws_fsx_windows_file_system" "test" {
 func testAccWindowsFileSystemAliases2Config(alias1, alias2 string) string {
 	return testAccWindowsFileSystemBaseConfig() + fmt.Sprintf(`
 resource "aws_fsx_windows_file_system" "test" {
-  active_directory_id = aws_directory_service_directory.test.id
+  active_directory_id = aws_ds_directory.test.id
   skip_final_backup   = true
   storage_capacity    = 32
   subnet_ids          = [aws_subnet.test1.id]
@@ -916,7 +916,7 @@ resource "aws_fsx_windows_file_system" "test" {
 func testAccWindowsFileSystemAutomaticBackupRetentionDaysConfig(automaticBackupRetentionDays int) string {
 	return testAccWindowsFileSystemBaseConfig() + fmt.Sprintf(`
 resource "aws_fsx_windows_file_system" "test" {
-  active_directory_id             = aws_directory_service_directory.test.id
+  active_directory_id             = aws_ds_directory.test.id
   automatic_backup_retention_days = %[1]d
   skip_final_backup               = true
   storage_capacity                = 32
@@ -929,7 +929,7 @@ resource "aws_fsx_windows_file_system" "test" {
 func testAccWindowsFileSystemCopyTagsToBackupsConfig(copyTagsToBackups bool) string {
 	return testAccWindowsFileSystemBaseConfig() + fmt.Sprintf(`
 resource "aws_fsx_windows_file_system" "test" {
-  active_directory_id  = aws_directory_service_directory.test.id
+  active_directory_id  = aws_ds_directory.test.id
   copy_tags_to_backups = %[1]t
   skip_final_backup    = true
   storage_capacity     = 32
@@ -942,7 +942,7 @@ resource "aws_fsx_windows_file_system" "test" {
 func testAccWindowsFileSystemDailyAutomaticBackupStartTimeConfig(dailyAutomaticBackupStartTime string) string {
 	return testAccWindowsFileSystemBaseConfig() + fmt.Sprintf(`
 resource "aws_fsx_windows_file_system" "test" {
-  active_directory_id               = aws_directory_service_directory.test.id
+  active_directory_id               = aws_ds_directory.test.id
   daily_automatic_backup_start_time = %[1]q
   skip_final_backup                 = true
   storage_capacity                  = 32
@@ -960,7 +960,7 @@ resource "aws_kms_key" "test1" {
 }
 
 resource "aws_fsx_windows_file_system" "test" {
-  active_directory_id = aws_directory_service_directory.test.id
+  active_directory_id = aws_ds_directory.test.id
   kms_key_id          = aws_kms_key.test1.arn
   skip_final_backup   = true
   storage_capacity    = 32
@@ -978,7 +978,7 @@ resource "aws_kms_key" "test2" {
 }
 
 resource "aws_fsx_windows_file_system" "test" {
-  active_directory_id = aws_directory_service_directory.test.id
+  active_directory_id = aws_ds_directory.test.id
   kms_key_id          = aws_kms_key.test2.arn
   skip_final_backup   = true
   storage_capacity    = 32
@@ -1010,7 +1010,7 @@ resource "aws_security_group" "test1" {
 }
 
 resource "aws_fsx_windows_file_system" "test" {
-  active_directory_id = aws_directory_service_directory.test.id
+  active_directory_id = aws_ds_directory.test.id
   security_group_ids  = [aws_security_group.test1.id]
   skip_final_backup   = true
   storage_capacity    = 32
@@ -1061,7 +1061,7 @@ resource "aws_security_group" "test2" {
 }
 
 resource "aws_fsx_windows_file_system" "test" {
-  active_directory_id = aws_directory_service_directory.test.id
+  active_directory_id = aws_ds_directory.test.id
   security_group_ids  = [aws_security_group.test1.id, aws_security_group.test2.id]
   skip_final_backup   = true
   storage_capacity    = 32
@@ -1080,9 +1080,9 @@ resource "aws_fsx_windows_file_system" "test" {
   throughput_capacity = 8
 
   self_managed_active_directory {
-    dns_ips     = aws_directory_service_directory.test.dns_ip_addresses
-    domain_name = aws_directory_service_directory.test.name
-    password    = aws_directory_service_directory.test.password
+    dns_ips     = aws_ds_directory.test.dns_ip_addresses
+    domain_name = aws_ds_directory.test.name
+    password    = aws_ds_directory.test.password
     username    = "Admin"
   }
 }
@@ -1098,9 +1098,9 @@ resource "aws_fsx_windows_file_system" "test" {
   throughput_capacity = 8
 
   self_managed_active_directory {
-    dns_ips     = aws_directory_service_directory.test.dns_ip_addresses
-    domain_name = aws_directory_service_directory.test.name
-    password    = aws_directory_service_directory.test.password
+    dns_ips     = aws_ds_directory.test.dns_ip_addresses
+    domain_name = aws_ds_directory.test.name
+    password    = aws_ds_directory.test.password
     username    = %[1]q
   }
 }
@@ -1110,7 +1110,7 @@ resource "aws_fsx_windows_file_system" "test" {
 func testAccWindowsFileSystemStorageCapacityConfig(storageCapacity int) string {
 	return testAccWindowsFileSystemBaseConfig() + fmt.Sprintf(`
 resource "aws_fsx_windows_file_system" "test" {
-  active_directory_id = aws_directory_service_directory.test.id
+  active_directory_id = aws_ds_directory.test.id
   skip_final_backup   = true
   storage_capacity    = %[1]d
   subnet_ids          = [aws_subnet.test1.id]
@@ -1122,7 +1122,7 @@ resource "aws_fsx_windows_file_system" "test" {
 func testAccWindowsFileSystemSubnetIds1Config() string {
 	return testAccWindowsFileSystemBaseConfig() + `
 resource "aws_fsx_windows_file_system" "test" {
-  active_directory_id = aws_directory_service_directory.test.id
+  active_directory_id = aws_ds_directory.test.id
   skip_final_backup   = true
   storage_capacity    = 32
   subnet_ids          = [aws_subnet.test1.id]
@@ -1134,7 +1134,7 @@ resource "aws_fsx_windows_file_system" "test" {
 func testAccWindowsFileSystemSubnetIds1WithSingleTypeConfig(azType string) string {
 	return testAccWindowsFileSystemBaseConfig() + fmt.Sprintf(`
 resource "aws_fsx_windows_file_system" "test" {
-  active_directory_id = aws_directory_service_directory.test.id
+  active_directory_id = aws_ds_directory.test.id
   skip_final_backup   = true
   storage_capacity    = 32
   deployment_type     = %[1]q
@@ -1147,7 +1147,7 @@ resource "aws_fsx_windows_file_system" "test" {
 func testAccWindowsFileSystemSubnetIds1WithStorageTypeConfig(azType, storageType string) string {
 	return testAccWindowsFileSystemBaseConfig() + fmt.Sprintf(`
 resource "aws_fsx_windows_file_system" "test" {
-  active_directory_id = aws_directory_service_directory.test.id
+  active_directory_id = aws_ds_directory.test.id
   skip_final_backup   = true
   storage_capacity    = 2000
   deployment_type     = %[1]q
@@ -1161,7 +1161,7 @@ resource "aws_fsx_windows_file_system" "test" {
 func testAccWindowsFileSystemSubnetIds2Config() string {
 	return acctest.ConfigCompose(testAccWindowsFileSystemBaseConfig(), `
 resource "aws_fsx_windows_file_system" "test" {
-  active_directory_id = aws_directory_service_directory.test.id
+  active_directory_id = aws_ds_directory.test.id
   skip_final_backup   = true
   storage_capacity    = 32
   deployment_type     = "MULTI_AZ_1"
@@ -1175,7 +1175,7 @@ resource "aws_fsx_windows_file_system" "test" {
 func testAccWindowsFileSystemFromBackup() string {
 	return testAccWindowsFileSystemBaseConfig() + `
 resource "aws_fsx_windows_file_system" "base" {
-  active_directory_id = aws_directory_service_directory.test.id
+  active_directory_id = aws_ds_directory.test.id
   skip_final_backup   = true
   storage_capacity    = 32
   subnet_ids          = [aws_subnet.test1.id]
@@ -1187,7 +1187,7 @@ resource "aws_fsx_backup" "test" {
 }
 
 resource "aws_fsx_windows_file_system" "test" {
-  active_directory_id = aws_directory_service_directory.test.id
+  active_directory_id = aws_ds_directory.test.id
   backup_id           = aws_fsx_backup.test.id
   skip_final_backup   = true
   subnet_ids          = [aws_subnet.test1.id]
@@ -1199,7 +1199,7 @@ resource "aws_fsx_windows_file_system" "test" {
 func testAccWindowsFileSystemTags1Config(tagKey1, tagValue1 string) string {
 	return testAccWindowsFileSystemBaseConfig() + fmt.Sprintf(`
 resource "aws_fsx_windows_file_system" "test" {
-  active_directory_id = aws_directory_service_directory.test.id
+  active_directory_id = aws_ds_directory.test.id
   skip_final_backup   = true
   storage_capacity    = 32
   subnet_ids          = [aws_subnet.test1.id]
@@ -1215,7 +1215,7 @@ resource "aws_fsx_windows_file_system" "test" {
 func testAccWindowsFileSystemTags2Config(tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return testAccWindowsFileSystemBaseConfig() + fmt.Sprintf(`
 resource "aws_fsx_windows_file_system" "test" {
-  active_directory_id = aws_directory_service_directory.test.id
+  active_directory_id = aws_ds_directory.test.id
   skip_final_backup   = true
   storage_capacity    = 32
   subnet_ids          = [aws_subnet.test1.id]
@@ -1232,7 +1232,7 @@ resource "aws_fsx_windows_file_system" "test" {
 func testAccWindowsFileSystemThroughputCapacityConfig(throughputCapacity int) string {
 	return testAccWindowsFileSystemBaseConfig() + fmt.Sprintf(`
 resource "aws_fsx_windows_file_system" "test" {
-  active_directory_id = aws_directory_service_directory.test.id
+  active_directory_id = aws_ds_directory.test.id
   skip_final_backup   = true
   storage_capacity    = 32
   subnet_ids          = [aws_subnet.test1.id]
@@ -1244,7 +1244,7 @@ resource "aws_fsx_windows_file_system" "test" {
 func testAccWindowsFileSystemWeeklyMaintenanceStartTimeConfig(weeklyMaintenanceStartTime string) string {
 	return testAccWindowsFileSystemBaseConfig() + fmt.Sprintf(`
 resource "aws_fsx_windows_file_system" "test" {
-  active_directory_id           = aws_directory_service_directory.test.id
+  active_directory_id           = aws_ds_directory.test.id
   skip_final_backup             = true
   storage_capacity              = 32
   subnet_ids                    = [aws_subnet.test1.id]
@@ -1261,7 +1261,7 @@ resource aws_cloudwatch_log_group "test" {
 }
 
 resource "aws_fsx_windows_file_system" "test" {
-  active_directory_id = aws_directory_service_directory.test.id
+  active_directory_id = aws_ds_directory.test.id
   skip_final_backup   = true
   storage_capacity    = 32
   subnet_ids          = [aws_subnet.test1.id]

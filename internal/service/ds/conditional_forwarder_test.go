@@ -15,7 +15,7 @@ import (
 )
 
 func TestAccDirectoryServiceConditionalForwarder_Condition_basic(t *testing.T) {
-	resourceName := "aws_directory_service_conditional_forwarder.fwd"
+	resourceName := "aws_ds_conditional_forwarder.fwd"
 
 	ip1, ip2, ip3 := "8.8.8.8", "1.1.1.1", "8.8.4.4"
 
@@ -59,7 +59,7 @@ func testAccCheckConditionalForwarderDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).DSConn
 
 	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_directory_service_conditional_forwarder" {
+		if rs.Type != "aws_ds_conditional_forwarder" {
 			continue
 		}
 
@@ -149,7 +149,7 @@ data "aws_availability_zones" "available" {
   }
 }
 
-resource "aws_directory_service_directory" "bar" {
+resource "aws_ds_directory" "bar" {
   name     = "corp.notexample.com"
   password = "SuperSecretPassw0rd"
   type     = "MicrosoftAD"
@@ -193,8 +193,8 @@ resource "aws_subnet" "bar" {
   }
 }
 
-resource "aws_directory_service_conditional_forwarder" "fwd" {
-  directory_id = aws_directory_service_directory.bar.id
+resource "aws_ds_conditional_forwarder" "fwd" {
+  directory_id = aws_ds_directory.bar.id
 
   remote_domain_name = "test.example.com"
 

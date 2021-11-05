@@ -21,7 +21,7 @@ func testAccDirectory_basic(t *testing.T) {
 	rName := sdkacctest.RandString(8)
 
 	resourceName := "aws_workspaces_directory.main"
-	directoryResourceName := "aws_directory_service_directory.main"
+	directoryResourceName := "aws_ds_directory.main"
 	iamRoleDataSourceName := "data.aws_iam_role.workspaces-default"
 
 	domain := acctest.RandomDomainName()
@@ -783,7 +783,7 @@ resource "aws_subnet" "secondary" {
   }
 }
 
-resource "aws_directory_service_directory" "main" {
+resource "aws_ds_directory" "main" {
   size     = "Small"
   name     = %[2]q
   password = "#S1ncerely"
@@ -805,7 +805,7 @@ func testAccWorkspacesDirectoryConfig(rName, domain string) string {
 		testAccDirectoryConfig_Prerequisites(rName, domain),
 		fmt.Sprintf(`
 resource "aws_workspaces_directory" "main" {
-  directory_id = aws_directory_service_directory.main.id
+  directory_id = aws_ds_directory.main.id
 
   tags = {
     Name = "tf-testacc-workspaces-directory-%[1]s"
@@ -823,7 +823,7 @@ func testAccWorkspacesDirectory_selfServicePermissions(rName, domain string) str
 		testAccDirectoryConfig_Prerequisites(rName, domain),
 		fmt.Sprintf(`
 resource "aws_workspaces_directory" "main" {
-  directory_id = aws_directory_service_directory.main.id
+  directory_id = aws_ds_directory.main.id
 
   self_service_permissions {
     change_compute_type  = false
@@ -845,7 +845,7 @@ func testAccWorkspacesDirectoryConfig_subnetIds(rName, domain string) string {
 		testAccDirectoryConfig_Prerequisites(rName, domain),
 		fmt.Sprintf(`
 resource "aws_workspaces_directory" "main" {
-  directory_id = aws_directory_service_directory.main.id
+  directory_id = aws_ds_directory.main.id
   subnet_ids   = [aws_subnet.primary.id, aws_subnet.secondary.id]
 
   tags = {
@@ -860,7 +860,7 @@ func testAccWorkspacesDirectoryConfigTags1(rName, domain, tagKey1, tagValue1 str
 		testAccDirectoryConfig_Prerequisites(rName, domain),
 		fmt.Sprintf(`
 resource "aws_workspaces_directory" "main" {
-  directory_id = aws_directory_service_directory.main.id
+  directory_id = aws_ds_directory.main.id
 
   tags = {
     %[1]q = %[2]q
@@ -874,7 +874,7 @@ func testAccWorkspacesDirectoryConfigTags2(rName, domain, tagKey1, tagValue1, ta
 		testAccDirectoryConfig_Prerequisites(rName, domain),
 		fmt.Sprintf(`
 resource "aws_workspaces_directory" "main" {
-  directory_id = aws_directory_service_directory.main.id
+  directory_id = aws_ds_directory.main.id
 
   tags = {
     %[1]q = %[2]q
@@ -889,7 +889,7 @@ func testAccWorkspacesDirectory_workspaceAccessProperties(rName, domain string) 
 		testAccDirectoryConfig_Prerequisites(rName, domain),
 		fmt.Sprintf(`
 resource "aws_workspaces_directory" "main" {
-  directory_id = aws_directory_service_directory.main.id
+  directory_id = aws_ds_directory.main.id
 
   workspace_access_properties {
     device_type_android    = "ALLOW"
@@ -919,7 +919,7 @@ resource "aws_security_group" "test" {
 }
 
 resource "aws_workspaces_directory" "main" {
-  directory_id = aws_directory_service_directory.main.id
+  directory_id = aws_ds_directory.main.id
 
   workspace_creation_properties {
     custom_security_group_id            = aws_security_group.test.id
@@ -941,7 +941,7 @@ func testAccWorkspacesDirectoryConfig_workspaceCreationProperties_customSecurity
 		testAccDirectoryConfig_Prerequisites(rName, domain),
 		fmt.Sprintf(`
 resource "aws_workspaces_directory" "main" {
-  directory_id = aws_directory_service_directory.main.id
+  directory_id = aws_ds_directory.main.id
 
   workspace_creation_properties {
     enable_internet_access              = true
@@ -966,7 +966,7 @@ resource "aws_security_group" "test" {
 }
 
 resource "aws_workspaces_directory" "main" {
-  directory_id = aws_directory_service_directory.main.id
+  directory_id = aws_ds_directory.main.id
 
   workspace_creation_properties {
     custom_security_group_id            = aws_security_group.test.id
@@ -992,7 +992,7 @@ resource "aws_workspaces_ip_group" "test_alpha" {
 }
 
 resource "aws_workspaces_directory" "test" {
-  directory_id = aws_directory_service_directory.main.id
+  directory_id = aws_ds_directory.main.id
 
   ip_group_ids = [
     aws_workspaces_ip_group.test_alpha.id
@@ -1018,7 +1018,7 @@ resource "aws_workspaces_ip_group" "test_gamma" {
 }
 
 resource "aws_workspaces_directory" "test" {
-  directory_id = aws_directory_service_directory.main.id
+  directory_id = aws_ds_directory.main.id
 
   ip_group_ids = [
     aws_workspaces_ip_group.test_beta.id,
