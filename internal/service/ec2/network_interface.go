@@ -382,7 +382,7 @@ func resourceNetworkInterfaceUpdate(d *schema.ResourceData, meta interface{}) er
 		if oa != nil && oa.(*schema.Set).Len() > 0 {
 			attachment := oa.(*schema.Set).List()[0].(map[string]interface{})
 
-			err := DetachNetworkInterface(conn, d.Id(), attachment["attachment_id"].(string), networkInterfaceDetachedTimeout)
+			err := DetachNetworkInterface(conn, d.Id(), attachment["attachment_id"].(string), NetworkInterfaceDetachedTimeout)
 
 			if err != nil {
 				return err
@@ -779,7 +779,7 @@ func resourceNetworkInterfaceDelete(d *schema.ResourceData, meta interface{}) er
 	if v, ok := d.GetOk("attachment"); ok && v.(*schema.Set).Len() > 0 {
 		attachment := v.(*schema.Set).List()[0].(map[string]interface{})
 
-		err := DetachNetworkInterface(conn, d.Id(), attachment["attachment_id"].(string), networkInterfaceDetachedTimeout)
+		err := DetachNetworkInterface(conn, d.Id(), attachment["attachment_id"].(string), NetworkInterfaceDetachedTimeout)
 
 		if err != nil {
 			return err

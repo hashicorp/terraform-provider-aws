@@ -758,7 +758,7 @@ func WaitManagedPrefixListDeleted(conn *ec2.EC2, id string) (*ec2.ManagedPrefixL
 
 const (
 	networkInterfaceAttachedTimeout = 5 * time.Minute
-	networkInterfaceDetachedTimeout = 10 * time.Minute
+	NetworkInterfaceDetachedTimeout = 10 * time.Minute
 )
 
 func WaitNetworkInterfaceAttached(conn *ec2.EC2, id string, timeout time.Duration) (*ec2.NetworkInterfaceAttachment, error) {
