@@ -31,8 +31,6 @@ resource "aws_kms_key" "primary" {
 }
 
 resource "aws_kms_replica_key" "replica" {
-  provider = aws.primary
-
   description             = "Multi-Region replica key"
   deletion_window_in_days = 7
   primary_key_arn         = aws_kms_key.primary.arn
