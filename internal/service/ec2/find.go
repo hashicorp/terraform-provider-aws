@@ -306,6 +306,17 @@ func FindNetworkInterfaceByID(conn *ec2.EC2, id string) (*ec2.NetworkInterface, 
 	return networkInterface, nil
 }
 
+func FindNetworkInterfacesByAttachmentInstanceOwnerIDAndDescription(conn *ec2.EC2, attachmentInstanceOwnerID, description string) ([]*ec2.NetworkInterface, error) {
+	input := &ec2.DescribeNetworkInterfacesInput{
+		Filters: BuildAttributeFilterList(map[string]string{
+			"attachment.instance-owner-id": attachmentInstanceOwnerID,
+			"description":                  description,
+		}),
+	}
+
+	return FindNetworkInterfaces(conn, input)
+}
+
 func FindNetworkInterfaceAttachmentByID(conn *ec2.EC2, id string) (*ec2.NetworkInterfaceAttachment, error) {
 	input := &ec2.DescribeNetworkInterfacesInput{
 		Filters: BuildAttributeFilterList(map[string]string{
