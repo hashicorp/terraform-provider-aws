@@ -1001,6 +1001,7 @@ func Provider() *schema.Provider {
 			"aws_proxy_protocol_policy":                               resourceAwsProxyProtocolPolicy(),
 			"aws_qldb_ledger":                                         resourceAwsQLDBLedger(),
 			"aws_quicksight_data_source":                              resourceAwsQuickSightDataSource(),
+			"aws_quicksight_data_set":                                 resourceAwsQuickSightDataSet(),
 			"aws_quicksight_group":                                    resourceAwsQuickSightGroup(),
 			"aws_quicksight_group_membership":                         resourceAwsQuickSightGroupMembership(),
 			"aws_quicksight_user":                                     resourceAwsQuickSightUser(),

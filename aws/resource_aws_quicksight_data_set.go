@@ -2,11 +2,14 @@ package aws
 
 import (
 	"context"
+	"fmt"
 
+	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/quicksight"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func resourceAwsQuickSightDataSet() *schema.Resource {
@@ -704,7 +707,71 @@ func resourceAwsQuickSightDataSet() *schema.Resource {
 }
 
 func resourceAwsQuickSightDataSetCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	return nil
+	conn := meta.(*AWSClient).quicksightconn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
+
+	awsAccountId := meta.(*AWSClient).accountid
+	id := d.Get("data_set_id").(string)
+
+	if v, ok := d.GetOk("aws_account_id"); ok {
+		awsAccountId = v.(string)
+	}
+
+	params := &quicksight.CreateDataSetInput{
+		AwsAccountId:     aws.String(awsAccountId),
+		DataSetId:        aws.String(id),
+		ImportMode:       aws.String(d.Get("import_mode").(string)),
+		PhysicalTableMap: expandQuickSightDataSetPhysicalTableMap(d.Get("physical_table_map").([]interface{})),
+		Name:             aws.String(d.Get("name").(string)),
+	}
+
+	if len(tags) > 0 {
+		params.Tags = tags.IgnoreAws().QuicksightTags()
+	}
+
+	if v, ok := d.GetOk("column_groups"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		params.ColumnGroups = expandQuickSightDataSetColumnGroups(v.([]interface{}))
+	}
+
+	if v, ok := d.GetOk("column_level_permission_rules"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		params.ColumnLevelPermissionRules = expandQuickSightDataSetColumnLevelPermissionRules(v.([]interface{}))
+	}
+
+	if v, ok := d.GetOk("data_set_usage_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		params.DataSetUsageConfiguration = expandQuickSightDataSetUsageConfiguration(v.([]interface{}))
+	}
+
+	if v, ok := d.GetOk("field_folders"); ok && len(v.(map[string]interface{})) != 0 {
+		params.FieldFolders = expandQuickSightDataSourceFieldFolders(v.(map[string]interface{}))
+	}
+
+	if v, ok := d.GetOk("logical_table_map"); ok && len(v.(map[string]interface{})) != 0 {
+		params.LogicalTableMap = expandQuickSightDataSourceLogicalTableMap(v.(map[string]interface{}))
+	}
+
+	if v, ok := d.GetOk("permissions"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		params.Permissions = expandQuickSightDataSetPermissions(v.([]interface{}))
+	}
+
+	if v, ok := d.GetOk("row_level_permission_data_set"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		params.RowLevelPermissionDataSet = expandQuickSightDataSetRowLevelPermissionDataSet(v.([]interface{}))
+	}
+
+	if v, ok := d.GetOk("row_level_permission_tag_configurations"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		params.RowLevelPermissionTagConfiguration = expandQuickSightDataSetRowLevelPermissionTagConfigurations(v.([]interface{}))
+	}
+
+	_, err := conn.CreateDataSetWithContext(ctx, params)
+	if err != nil {
+		return diag.Errorf("error creating QuickSight Data Set: %s", err)
+	}
+
+	d.SetId(fmt.Sprintf("%s/%s", awsAccountId, id))
+
+	// confirm dataset has been created? having troubles due to a lack of output status and error handling.
+
+	return resourceAwsQuickSightDataSetRead(ctx, d, meta)
 }
 
 func resourceAwsQuickSightDataSetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -716,5 +783,61 @@ func resourceAwsQuickSightDataSetUpdate(ctx context.Context, d *schema.ResourceD
 }
 
 func resourceAwsQuickSightDataSetDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	return nil
+}
+
+func expandQuickSightDataSetPhysicalTableMap(tfList []interface{}) map[string]*quicksight.PhysicalTable {
+	return nil
+}
+
+func expandQuickSightDataSetColumnGroups(tfList []interface{}) []*quicksight.ColumnGroup {
+	return nil
+}
+
+func expandQuickSightDataSetColumnLevelPermissionRules(tfList []interface{}) []*quicksight.ColumnLevelPermissionRule {
+	return nil
+}
+
+func expandQuickSightDataSetUsageConfiguration(tfList []interface{}) *quicksight.DataSetUsageConfiguration {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
+
+	tfMap, ok := tfList[0].(map[string]interface{})
+
+	if !ok {
+		return nil
+	}
+
+	usageConfiguration := &quicksight.DataSetUsageConfiguration{}
+
+	if v, ok := tfMap["disable_use_as_direct_query_source"].(bool); ok {
+		usageConfiguration.DisableUseAsDirectQuerySource = aws.Bool(v)
+	}
+
+	if v, ok := tfMap["disable_use_as_imported_source"].(bool); ok {
+		usageConfiguration.DisableUseAsImportedSource = aws.Bool(v)
+	}
+
+	return usageConfiguration
+}
+
+func expandQuickSightDataSourceFieldFolders(tfMap map[string]interface{}) map[string]*quicksight.FieldFolder {
+	return nil
+}
+
+func expandQuickSightDataSourceLogicalTableMap(tfMap map[string]interface{}) map[string]*quicksight.LogicalTable {
+	return nil
+}
+
+func expandQuickSightDataSetPermissions(tfList []interface{}) []*quicksight.ResourcePermission {
+	return nil
+}
+
+func expandQuickSightDataSetRowLevelPermissionDataSet(tfList []interface{}) *quicksight.RowLevelPermissionDataSet {
+	return nil
+}
+
+func expandQuickSightDataSetRowLevelPermissionTagConfigurations(tfList []interface{}) *quicksight.RowLevelPermissionTagConfiguration {
 	return nil
 }
