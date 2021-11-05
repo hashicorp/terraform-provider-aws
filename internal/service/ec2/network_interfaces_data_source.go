@@ -49,24 +49,19 @@ func dataSourceNetworkInterfacesRead(d *schema.ResourceData, meta interface{}) e
 	}
 
 	networkInterfaceIDs := []string{}
-	err := conn.DescribeNetworkInterfacesPages(input, func(page *ec2.DescribeNetworkInterfacesOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
 
-		for _, networkInterface := range page.NetworkInterfaces {
-			networkInterfaceIDs = append(networkInterfaceIDs, aws.StringValue(networkInterface.NetworkInterfaceId))
-		}
-
-		return !lastPage
-	})
+	output, err := FindNetworkInterfaces(conn, input)
 
 	if err != nil {
 		return fmt.Errorf("error reading EC2 Network Interfaces: %w", err)
 	}
 
-	if len(networkInterfaceIDs) == 0 {
+	if len(output) == 0 {
 		return errors.New("no matching network interfaces found")
+	}
+
+	for _, v := range output {
+		networkInterfaceIDs = append(networkInterfaceIDs, aws.StringValue(v.NetworkInterfaceId))
 	}
 
 	d.SetId(meta.(*conns.AWSClient).Region)
