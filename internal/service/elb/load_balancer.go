@@ -27,8 +27,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-const detachNetworkInterfaceTimeout = 10 * time.Minute
-
 func ResourceLoadBalancer() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceLoadBalancerCreate,
@@ -968,11 +966,89 @@ func CleanupNetworkInterfaces(conn *ec2.EC2, name string) error {
 		return nil
 	}
 
-	err = tfec2.DetachNetworkInterfaces(conn, out.NetworkInterfaces, detachNetworkInterfaceTimeout)
+	err = detachNetworkInterfaces(conn, out.NetworkInterfaces)
 	if err != nil {
 		return err
 	}
 
-	err = tfec2.DeleteNetworkInterfaces(conn, out.NetworkInterfaces)
+	err = deleteNetworkInterfaces(conn, out.NetworkInterfaces)
 	return err
+}
+
+func detachNetworkInterfaces(conn *ec2.EC2, nis []*ec2.NetworkInterface) error {
+	log.Printf("[DEBUG] Trying to detach %d leftover ENIs", len(nis))
+	for _, ni := range nis {
+		if ni.Attachment == nil {
+			log.Printf("[DEBUG] ENI %s is already detached", *ni.NetworkInterfaceId)
+			continue
+		}
+		_, err := conn.DetachNetworkInterface(&ec2.DetachNetworkInterfaceInput{
+			AttachmentId: ni.Attachment.AttachmentId,
+			Force:        aws.Bool(true),
+		})
+		if err != nil {
+			awsErr, ok := err.(awserr.Error)
+			if ok && awsErr.Code() == "InvalidAttachmentID.NotFound" {
+				log.Printf("[DEBUG] ENI %s is already detached", *ni.NetworkInterfaceId)
+				continue
+			}
+			return err
+		}
+
+		log.Printf("[DEBUG] Waiting for ENI (%s) to become detached", *ni.NetworkInterfaceId)
+		stateConf := &resource.StateChangeConf{
+			Pending: []string{"true"},
+			Target:  []string{"false"},
+			Refresh: networkInterfaceAttachmentRefreshFunc(conn, *ni.NetworkInterfaceId),
+			Timeout: 10 * time.Minute,
+		}
+
+		if _, err := stateConf.WaitForState(); err != nil {
+			awsErr, ok := err.(awserr.Error)
+			if ok && awsErr.Code() == "InvalidNetworkInterfaceID.NotFound" {
+				continue
+			}
+			return fmt.Errorf(
+				"Error waiting for ENI (%s) to become detached: %s", *ni.NetworkInterfaceId, err)
+		}
+	}
+	return nil
+}
+
+func deleteNetworkInterfaces(conn *ec2.EC2, nis []*ec2.NetworkInterface) error {
+	log.Printf("[DEBUG] Trying to delete %d leftover ENIs", len(nis))
+	for _, ni := range nis {
+		_, err := conn.DeleteNetworkInterface(&ec2.DeleteNetworkInterfaceInput{
+			NetworkInterfaceId: ni.NetworkInterfaceId,
+		})
+		if err != nil {
+			awsErr, ok := err.(awserr.Error)
+			if ok && awsErr.Code() == "InvalidNetworkInterfaceID.NotFound" {
+				log.Printf("[DEBUG] ENI %s is already deleted", *ni.NetworkInterfaceId)
+				continue
+			}
+			return err
+		}
+	}
+	return nil
+}
+
+func networkInterfaceAttachmentRefreshFunc(conn *ec2.EC2, id string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+
+		describe_network_interfaces_request := &ec2.DescribeNetworkInterfacesInput{
+			NetworkInterfaceIds: []*string{aws.String(id)},
+		}
+		describeResp, err := conn.DescribeNetworkInterfaces(describe_network_interfaces_request)
+
+		if err != nil {
+			log.Printf("[ERROR] Could not find network interface %s. %s", id, err)
+			return nil, "", err
+		}
+
+		eni := describeResp.NetworkInterfaces[0]
+		hasAttachment := strconv.FormatBool(eni.Attachment != nil)
+		log.Printf("[DEBUG] ENI %s has attachment state %s", id, hasAttachment)
+		return eni, hasAttachment, nil
+	}
 }
