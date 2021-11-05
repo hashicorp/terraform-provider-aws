@@ -1,4 +1,8 @@
+## 3.65.0 (Unreleased)
+
 ## 3.64.2 (November 05, 2021)
+
+* provider: Additional fixes to allow setting endpoints with non-standard, legacy keys. ([#21657](https://github.com/hashicorp/terraform-provider-aws/issues/21657))
 
 ## 3.64.1 (November 05, 2021)
 
