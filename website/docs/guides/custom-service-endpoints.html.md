@@ -43,7 +43,20 @@ If multiple, different Terraform AWS Provider configurations are required, see t
 
 ## Available Endpoint Customizations
 
-The Terraform AWS Provider allows the following endpoints to be customized. **Note:** The Provider allows some service endpoints to be customized before supporting those services.
+The Terraform AWS Provider allows the following endpoints to be customized.
+
+**Note:** The Provider allows some service endpoints to be customized despite not supporting those services.
+
+**Note:** For backward compatibility, some endpoints can be assigned using multiple service "keys" (_e.g._, `dms`, `databasemigration`, or `databasemigrationservice`). If you use more than one equivalent service key in your configuration, the provider will use the _first_ endpoint value set. For example, in the configuration below we have set the DMS service endpoints using both `dms` and `databasemigration`. The provider will set the endpoint to whichever appears first. Subsequent values are ignored.
+
+```terraform
+provider "aws" {
+  endpoints {
+    dms               = "http://this.value.will.be.used.com"
+    databasemigration = "http://this.value.will.be.ignored.com"
+  }
+}
+```
 
 <!-- markdownlint-disable MD033 -->
 <!--
