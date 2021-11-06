@@ -6,6 +6,7 @@ import (
 )
 
 const botV1AssociationIDSeparator = ":"
+const lambdaFunctionAssociationIDSeparator = ":"
 
 func BotV1AssociationParseResourceID(id string) (string, string, string, error) {
 	parts := strings.SplitN(id, botV1AssociationIDSeparator, 3)
@@ -23,8 +24,6 @@ func BotV1AssociationCreateResourceID(instanceID string, botName string, region 
 
 	return id
 }
-
-const lambdaFunctionAssociationIDSeparator = ":"
 
 func LambdaFunctionAssociationParseResourceID(id string) (string, string, error) {
 	parts := strings.SplitN(id, lambdaFunctionAssociationIDSeparator, 2)

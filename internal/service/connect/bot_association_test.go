@@ -168,7 +168,6 @@ resource "aws_lex_intent" "test" {
     "I would like to pick up flowers",
   ]
 }
-
 resource "aws_lex_bot" "test" {
   abort_statement {
     message {
@@ -178,7 +177,6 @@ resource "aws_lex_bot" "test" {
   }
   clarification_prompt {
     max_attempts = 2
-
     message {
       content      = "I didn't understand you, what would you like to do?"
       content_type = "PlainText"
@@ -188,12 +186,10 @@ resource "aws_lex_bot" "test" {
     intent_name    = aws_lex_intent.test.name
     intent_version = "1"
   }
-
   child_directed   = false
   name             = %[1]q
   process_behavior = "BUILD"
 }
-
 resource "aws_connect_instance" "test" {
   identity_management_type = "CONNECT_MANAGED"
   inbound_calls_enabled    = true
@@ -208,7 +204,6 @@ func testAccBotV1AssociationConfigBasic(rName string, rName2 string) string {
 		testAccBotV1AssociationConfigBase(rName, rName2),
 		`
 data "aws_region" "current" {}
-
 resource "aws_connect_bot_association" "test" {
   instance_id = aws_connect_instance.test.id
   bot_name    = aws_lex_bot.test.name

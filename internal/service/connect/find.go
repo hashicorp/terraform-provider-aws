@@ -75,7 +75,7 @@ func FindBotAssociationV1ByNameWithContext(ctx context.Context, conn *connect.Co
 	return result, nil
 }
 
-func BotAssociationV2ByAliasArnWithContext(ctx context.Context, conn *connect.Connect, instanceID string, aliasArn string) (*connect.LexV2Bot, error) {
+func FindBotAssociationV2ByAliasArnWithContext(ctx context.Context, conn *connect.Connect, instanceID string, aliasArn string) (*connect.LexV2Bot, error) {
 	var result *connect.LexV2Bot
 
 	input := &connect.ListBotsInput{

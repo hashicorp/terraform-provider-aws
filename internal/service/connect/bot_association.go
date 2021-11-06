@@ -161,11 +161,9 @@ func resourceBotAssociationRead(ctx context.Context, d *schema.ResourceData, met
 			if err != nil {
 				return diag.FromErr(fmt.Errorf("error finding V2 Bot Association by name (%s): %w", name, err))
 			}
-
 			if lexV2Bot == nil {
 				return diag.FromErr(fmt.Errorf("error finding V2 Bot Association by name (%s): not found", name))
 			}
-
 			d.Set("alias_arn", lexV2Bot.AliasArn)
 			d.Set("instance_id", instanceID)
 		}
