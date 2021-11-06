@@ -10,14 +10,14 @@ import (
 
 const (
 	// ConnectInstanceCreateTimeout Timeout for connect instance creation
-	connectInstanceCreatedTimeout = 5 * time.Minute
-	connectInstanceDeletedTimeout = 5 * time.Minute
-	connectContactFlowCreateTimeout = 5 * time.Minute
-	connectContactFlowUpdateTimeout = 5 * time.Minute
+	connectInstanceCreatedTimeout                  = 5 * time.Minute
+	connectInstanceDeletedTimeout                  = 5 * time.Minute
+	connectContactFlowCreateTimeout                = 5 * time.Minute
+	connectContactFlowUpdateTimeout                = 5 * time.Minute
 	connectLambdaFunctionAssociationCreatedTimeout = 1 * time.Minute
 	connectLambdaFunctionAssociationDeletedTimeout = 1 * time.Minute
-	connectBotAssociationCreateTimeout = 5 * time.Minute
-	connectBotAssociationDeleteTimeout = 5 * time.Minute
+	connectBotAssociationCreateTimeout             = 5 * time.Minute
+	connectBotAssociationDeleteTimeout             = 5 * time.Minute
 )
 
 func waitInstanceCreated(ctx context.Context, conn *connect.Connect, instanceId string) (*connect.DescribeInstanceOutput, error) {
