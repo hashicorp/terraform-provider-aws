@@ -1,9 +1,9 @@
 ---
-subcategory: "ElasticSearch"
+subcategory: "Elasticsearch"
 layout: "aws"
 page_title: "AWS: aws_elasticsearch_domain"
 description: |-
-  Get information on an ElasticSearch Domain resource.
+  Get information on an Elasticsearch Domain resource.
 ---
 
 # Data Source: aws_elasticsearch_domain
@@ -60,7 +60,7 @@ The following attributes are exported:
     * `volume_type` - The type of EBS volumes attached to data nodes.
     * `volume_size` - The size of EBS volumes attached to data nodes (in GB).
     * `iops` - The baseline input/output (I/O) performance of EBS volumes attached to data nodes.
-* `elasticsearch_version` – ElasticSearch version for the domain.
+* `elasticsearch_version` – Elasticsearch version for the domain.
 * `encryption_at_rest` - Domain encryption at rest related options.
     * `enabled` - Whether encryption at rest is enabled in the domain.
     * `kms_key_id` - The KMS key id used to encrypt data at rest.

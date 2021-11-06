@@ -69,7 +69,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Global Accelerator endpoint groups can be imported using the `id`, e.g.
+Global Accelerator endpoint groups can be imported using the `id`, e.g.,
 
 ```
 $ terraform import aws_globalaccelerator_endpoint_group.example arn:aws:globalaccelerator::111111111111:accelerator/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/listener/xxxxxxx/endpoint-group/xxxxxxxx

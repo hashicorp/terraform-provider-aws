@@ -98,10 +98,10 @@ resource "aws_lambda_function" "authorizer" {
 The following arguments are supported:
 
 * `authorizer_uri` - (Optional, required for type `TOKEN`/`REQUEST`) The authorizer's Uniform Resource Identifier (URI). This must be a well-formed Lambda function URI in the form of `arn:aws:apigateway:{region}:lambda:path/{service_api}`,
- e.g. `arn:aws:apigateway:us-west-2:lambda:path/2015-03-31/functions/arn:aws:lambda:us-west-2:012345678912:function:my-function/invocations`
+ e.g., `arn:aws:apigateway:us-west-2:lambda:path/2015-03-31/functions/arn:aws:lambda:us-west-2:012345678912:function:my-function/invocations`
 * `name` - (Required) The name of the authorizer
 * `rest_api_id` - (Required) The ID of the associated REST API
-* `identity_source` - (Optional) The source of the identity in an incoming request. Defaults to `method.request.header.Authorization`. For `REQUEST` type, this may be a comma-separated list of values, including headers, query string parameters and stage variables - e.g. `"method.request.header.SomeHeaderName,method.request.querystring.SomeQueryStringName,stageVariables.SomeStageVariableName"`
+* `identity_source` - (Optional) The source of the identity in an incoming request. Defaults to `method.request.header.Authorization`. For `REQUEST` type, this may be a comma-separated list of values, including headers, query string parameters and stage variables - e.g., `"method.request.header.SomeHeaderName,method.request.querystring.SomeQueryStringName,stageVariables.SomeStageVariableName"`
 * `type` - (Optional) The type of the authorizer. Possible values are `TOKEN` for a Lambda function using a single authorization token submitted in a custom header, `REQUEST` for a Lambda function using incoming request parameters, or `COGNITO_USER_POOLS` for using an Amazon Cognito user pool. Defaults to `TOKEN`.
 * `authorizer_credentials` - (Optional) The credentials required for the authorizer. To specify an IAM Role for API Gateway to assume, use the IAM Role ARN.
 * `authorizer_result_ttl_in_seconds` - (Optional) The TTL of cached authorizer results in seconds. Defaults to `300`.
@@ -116,7 +116,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-AWS API Gateway Authorizer can be imported using the `REST-API-ID/AUTHORIZER-ID`, e.g.
+AWS API Gateway Authorizer can be imported using the `REST-API-ID/AUTHORIZER-ID`, e.g.,
 
 ```sh
 $ terraform import aws_api_gateway_authorizer.authorizer 12345abcde/example

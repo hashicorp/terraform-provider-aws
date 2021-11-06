@@ -1,0 +1,16 @@
+name: Issue Comment Created Triage
+
+on:
+  issue_comment:
+    types: [created]
+
+jobs:
+  issue_comment_triage:
+    if: github.event_name == 'issue_comment' && !contains(fromJSON('["anGie44", "bflad", "breathingdust", "dependabot[bot]", "DrFaust92", "ewbankkit", "gdavison", "justinretzolk", "maryelizbeth", "YakDriver", "zhelding"]'), github.actor)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions-ecosystem/action-remove-labels@v1
+        with:
+          labels: |
+            stale
+            waiting-response
