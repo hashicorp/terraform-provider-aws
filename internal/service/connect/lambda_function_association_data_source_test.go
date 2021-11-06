@@ -22,7 +22,7 @@ func TestAccLambdaFunctionAssociationDataSource_basic(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLambdaFunctionAssociationDataSourceConfigBasic(rName, rName2),
+				Config: testAccLambdaFunctionAssociationDataSource_ConfigBasic(rName, rName2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "instance_id", resourceName, "instance_id"),
 					resource.TestCheckResourceAttrPair(datasourceName, "function_arn", resourceName, "function_arn"),
@@ -32,7 +32,7 @@ func TestAccLambdaFunctionAssociationDataSource_basic(t *testing.T) {
 	})
 }
 
-func testAccLambdaFunctionAssociationDataSourceBaseConfig(rName string, rName2 string) string {
+func testAccLambdaFunctionAssociationDataSource_BaseConfig(rName string, rName2 string) string {
 	return fmt.Sprintf(`
 resource "aws_lambda_function" "test" {
   filename      = "test-fixtures/lambdatest.zip"
@@ -76,8 +76,8 @@ resource "aws_connect_lambda_function_association" "test" {
 `, rName, rName2)
 }
 
-func testAccLambdaFunctionAssociationDataSourceConfigBasic(rName string, rName2 string) string {
-	return fmt.Sprintf(testAccLambdaFunctionAssociationDataSourceBaseConfig(rName, rName2) + `
+func testAccLambdaFunctionAssociationDataSource_ConfigBasic(rName string, rName2 string) string {
+	return fmt.Sprintf(testAccLambdaFunctionAssociationDataSource_BaseConfig(rName, rName2) + `
 data "aws_connect_lambda_function_association" "test" {
   function_arn = aws_connect_lambda_function_association.test.function_arn
   instance_id  = aws_connect_instance.test.id
