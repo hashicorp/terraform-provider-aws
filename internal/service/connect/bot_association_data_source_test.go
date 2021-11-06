@@ -28,10 +28,10 @@ func TestAccBotAssociationDataSource_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, connect.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccBotAssociationDataSourceDestroy,
+		CheckDestroy: testAccBotAssociationDataSource_CheckDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBotAssociationDataSourceConfigBasic(rName, rName2),
+				Config: testAccBotAssociationDataSource_ConfigBasic(rName, rName2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "instance_id", resourceName, "instance_id"),
 					resource.TestCheckResourceAttrPair(datasourceName, "bot_name", resourceName, "bot_name"),
@@ -42,7 +42,7 @@ func TestAccBotAssociationDataSource_basic(t *testing.T) {
 	})
 }
 
-func testAccBotAssociationDataSourceDestroy(s *terraform.State) error {
+func testAccBotAssociationDataSource_CheckDestroy(s *terraform.State) error {
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_connect_bot_association" {
 			continue
@@ -76,7 +76,7 @@ func testAccBotAssociationDataSourceDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccBotAssociationDataSourceBaseConfig(rName string, rName2 string) string {
+func testAccBotAssociationDataSource_BaseConfig(rName string, rName2 string) string {
 	return fmt.Sprintf(`
 data "aws_region" "current" {}
 resource "aws_lex_intent" "test" {
@@ -125,8 +125,8 @@ resource "aws_connect_bot_association" "test" {
 `, rName, rName2)
 }
 
-func testAccBotAssociationDataSourceConfigBasic(rName string, rName2 string) string {
-	return fmt.Sprintf(testAccBotAssociationDataSourceBaseConfig(rName, rName2) + `
+func testAccBotAssociationDataSource_ConfigBasic(rName string, rName2 string) string {
+	return fmt.Sprintf(testAccBotAssociationDataSource_BaseConfig(rName, rName2) + `
 data "aws_connect_bot_association" "test" {
   instance_id = aws_connect_instance.test.id
   bot_name    = aws_connect_bot_association.test.bot_name

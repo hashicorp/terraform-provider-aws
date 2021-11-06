@@ -12,7 +12,7 @@ import (
 
 func DataSourceBotAssociation() *schema.Resource {
 	return &schema.Resource{
-		ReadContext: dataSourceAwsConnectLexBotAssociationRead,
+		ReadContext: dataSourceBotAssociationRead,
 		Schema: map[string]*schema.Schema{
 			"bot_name": {
 				Type:         schema.TypeString,
@@ -32,7 +32,7 @@ func DataSourceBotAssociation() *schema.Resource {
 	}
 }
 
-func dataSourceAwsConnectLexBotAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceBotAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).ConnectConn
 	instanceID := d.Get("instance_id")
 	name := d.Get("bot_name")
