@@ -169,7 +169,7 @@ func testAccCheckLambdaFunctionAssociationDestroy(s *terraform.State) error {
 func testAccLambdaFunctionAssociationConfigBase(rName string, rName2 string) string {
 	return fmt.Sprintf(`
 resource "aws_lambda_function" "test" {
-  filename      = "test-fixtures/lambdatest.zip"
+  filename      = "testdata/lambdatest.zip"
   function_name = %[1]q
   role          = aws_iam_role.test.arn
   handler       = "exports.handler"
