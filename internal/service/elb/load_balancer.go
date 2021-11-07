@@ -802,7 +802,7 @@ func resourceLoadBalancerDelete(d *schema.ResourceData, meta interface{}) error 
 
 	name := d.Get("name").(string)
 
-	err := cleanupNetworkInterfaces(meta.(*conns.AWSClient).EC2Conn, name)
+	err := CleanupNetworkInterfaces(meta.(*conns.AWSClient).EC2Conn, name)
 	if err != nil {
 		log.Printf("[WARN] Failed to cleanup ENIs for ELB %q: %#v", name, err)
 	}
@@ -942,7 +942,7 @@ func validateListenerProtocol() schema.SchemaValidateFunc {
 // but the cleanup is asynchronous and may take time
 // which then blocks IGW, SG or VPC on deletion
 // So we make the cleanup "synchronous" here
-func cleanupNetworkInterfaces(conn *ec2.EC2, name string) error {
+func CleanupNetworkInterfaces(conn *ec2.EC2, name string) error {
 	// https://aws.amazon.com/premiumsupport/knowledge-center/elb-find-load-balancer-IP/.
 	networkInterfaces, err := tfec2.FindNetworkInterfacesByAttachmentInstanceOwnerIDAndDescription(conn, "amazon-elb", "ELB "+name)
 
