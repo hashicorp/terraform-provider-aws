@@ -66,6 +66,42 @@ func TestAccEC2InternetGateway_disappears(t *testing.T) {
 	})
 }
 
+func TestAccEC2InternetGateway_Attachment(t *testing.T) {
+	var v ec2.InternetGateway
+	resourceName := "aws_internet_gateway.test"
+	vpc1ResourceName := "aws_vpc.test1"
+	vpc2ResourceName := "aws_vpc.test2"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckInternetGatewayDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInternetGatewayAttachmentConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInternetGatewayExists(resourceName, &v),
+					resource.TestCheckResourceAttrPair(resourceName, "vpc_id", vpc1ResourceName, "id"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccInternetGatewayAttachmentUpdatedConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInternetGatewayExists(resourceName, &v),
+					resource.TestCheckResourceAttrPair(resourceName, "vpc_id", vpc2ResourceName, "id"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccEC2InternetGateway_Tags(t *testing.T) {
 	var v ec2.InternetGateway
 	resourceName := "aws_internet_gateway.test"
@@ -164,55 +200,61 @@ const testAccInternetGatewayBasicConfig = `
 resource "aws_internet_gateway" "test" {}
 `
 
-const testAccNoInternetGatewayConfig = `
-resource "aws_vpc" "test" {
+func testAccInternetGatewayAttachmentConfig(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_vpc" "test1" {
   cidr_block = "10.1.0.0/16"
 
   tags = {
-    Name = "terraform-testacc-no-internet-gateway"
-  }
-}
-`
-
-const testAccInternetGatewayConfig = `
-resource "aws_vpc" "test" {
-  cidr_block = "10.1.0.0/16"
-
-  tags = {
-    Name = "terraform-testacc-internet-gateway"
+    Name = "%[1]s-1"
   }
 }
 
-resource "aws_internet_gateway" "test" {
-  vpc_id = aws_vpc.test.id
-}
-`
-
-const testAccInternetGatewayConfigChangeVPC = `
-resource "aws_vpc" "test" {
-  cidr_block = "10.1.0.0/16"
-
-  tags = {
-    Name = "terraform-testacc-internet-gateway-change-vpc"
-  }
-}
-
-resource "aws_vpc" "bar" {
+resource "aws_vpc" "test2" {
   cidr_block = "10.2.0.0/16"
 
   tags = {
-    Name = "terraform-testacc-internet-gateway-change-vpc-other"
+    Name = "%[1]s-2"
   }
 }
 
 resource "aws_internet_gateway" "test" {
-  vpc_id = aws_vpc.bar.id
+  vpc_id = aws_vpc.test1.id
 
   tags = {
-    Name = "terraform-testacc-internet-gateway-change-vpc-other"
+    Name = %[1]q
   }
 }
-`
+`, rName)
+}
+
+func testAccInternetGatewayAttachmentUpdatedConfig(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_vpc" "test1" {
+  cidr_block = "10.1.0.0/16"
+
+  tags = {
+    Name = "%[1]s-1"
+  }
+}
+
+resource "aws_vpc" "test2" {
+  cidr_block = "10.2.0.0/16"
+
+  tags = {
+    Name = "%[1]s-2"
+  }
+}
+
+resource "aws_internet_gateway" "test" {
+  vpc_id = aws_vpc.test2.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName)
+}
 
 func testAccInternetGatewayTags1Config(rName, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
