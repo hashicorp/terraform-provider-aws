@@ -575,7 +575,7 @@ func TestAccELBV2LoadBalancer_ApplicationLoadBalancer_updateTLSVersionAndCipherS
 				Config: testAccLoadBalancerConfig_enableTLSVersionAndCipherSuite(lbName, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLoadBalancerExists("aws_lb.lb_test", &pre),
-					testAccCheckLoadBalancerAttribute("aws_lb.lb_test", "routing.http.tls_version_and_cipher_suite.enabled", "false"),
+					testAccCheckLoadBalancerAttribute("aws_lb.lb_test", "routing.http.x_amzn_tls_version_and_cipher_suite.enabled", "false"),
 					resource.TestCheckResourceAttr("aws_lb.lb_test", "tls_version_and_cipher_suite", "false"),
 				),
 			},
@@ -583,7 +583,7 @@ func TestAccELBV2LoadBalancer_ApplicationLoadBalancer_updateTLSVersionAndCipherS
 				Config: testAccLoadBalancerConfig_enableTLSVersionAndCipherSuite(lbName, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLoadBalancerExists("aws_lb.lb_test", &mid),
-					testAccCheckLoadBalancerAttribute("aws_lb.lb_test", "routing.http.tls_version_and_cipher_suite.enabled", "true"),
+					testAccCheckLoadBalancerAttribute("aws_lb.lb_test", "routing.http.x_amzn_tls_version_and_cipher_suite.enabled", "true"),
 					resource.TestCheckResourceAttr("aws_lb.lb_test", "tls_version_and_cipher_suite", "true"),
 					testAccChecklbARNs(&pre, &mid),
 				),
@@ -592,7 +592,7 @@ func TestAccELBV2LoadBalancer_ApplicationLoadBalancer_updateTLSVersionAndCipherS
 				Config: testAccLoadBalancerConfig_enableTLSVersionAndCipherSuite(lbName, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLoadBalancerExists("aws_lb.lb_test", &post),
-					testAccCheckLoadBalancerAttribute("aws_lb.lb_test", "routing.http.tls_version_and_cipher_suite.enabled", "false"),
+					testAccCheckLoadBalancerAttribute("aws_lb.lb_test", "routing.http.x_amzn_tls_version_and_cipher_suite.enabled", "false"),
 					resource.TestCheckResourceAttr("aws_lb.lb_test", "tls_version_and_cipher_suite", "false"),
 					testAccChecklbARNs(&mid, &post),
 				),

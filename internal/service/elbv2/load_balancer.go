@@ -477,7 +477,7 @@ func resourceLoadBalancerUpdate(d *schema.ResourceData, meta interface{}) error 
 
 		if d.HasChange("tls_version_and_cipher_suite") || d.IsNewResource() {
 			attributes = append(attributes, &elbv2.LoadBalancerAttribute{
-				Key:   aws.String("routing.http.tls_version_and_cipher_suite.enabled"),
+				Key:   aws.String("routing.http.x_amzn_tls_version_and_cipher_suite.enabled"),
 				Value: aws.String(strconv.FormatBool(d.Get("tls_version_and_cipher_suite").(bool))),
 			})
 		}
