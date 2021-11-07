@@ -206,6 +206,13 @@ func ResourceLoadBalancer() *schema.Resource {
 				DiffSuppressFunc: suppressIfLBType("network"),
 			},
 
+			"tls_version_and_cipher_suite": {
+				Type:             schema.TypeBool,
+				Optional:         true,
+				Default:          false,
+				DiffSuppressFunc: suppressIfLBType("network"),
+			},
+
 			"enable_cross_zone_load_balancing": {
 				Type:             schema.TypeBool,
 				Optional:         true,
@@ -465,6 +472,13 @@ func resourceLoadBalancerUpdate(d *schema.ResourceData, meta interface{}) error 
 			attributes = append(attributes, &elbv2.LoadBalancerAttribute{
 				Key:   aws.String("routing.http.drop_invalid_header_fields.enabled"),
 				Value: aws.String(strconv.FormatBool(d.Get("drop_invalid_header_fields").(bool))),
+			})
+		}
+
+		if d.HasChange("tls_version_and_cipher_suite") || d.IsNewResource() {
+			attributes = append(attributes, &elbv2.LoadBalancerAttribute{
+				Key:   aws.String("routing.http.tls_version_and_cipher_suite.enabled"),
+				Value: aws.String(strconv.FormatBool(d.Get("tls_version_and_cipher_suite").(bool))),
 			})
 		}
 
@@ -812,6 +826,10 @@ func flattenResource(d *schema.ResourceData, meta interface{}, lb *elbv2.LoadBal
 			dropInvalidHeaderFieldsEnabled := aws.StringValue(attr.Value) == "true"
 			log.Printf("[DEBUG] Setting LB Invalid Header Fields Enabled: %t", dropInvalidHeaderFieldsEnabled)
 			d.Set("drop_invalid_header_fields", dropInvalidHeaderFieldsEnabled)
+		case "routing.http.x_amzn_tls_version_and_cipher_suite.enabled":
+			amznTLSHeadersEnabled := aws.StringValue(attr.Value) == "true"
+			log.Printf("[DEBUG] Setting LB TLS Headers Fields Enabled: %t", amznTLSHeadersEnabled)
+			d.Set("tls_version_and_cipher_suite", amznTLSHeadersEnabled)
 		case "deletion_protection.enabled":
 			protectionEnabled := aws.StringValue(attr.Value) == "true"
 			log.Printf("[DEBUG] Setting LB Deletion Protection Enabled: %t", protectionEnabled)
