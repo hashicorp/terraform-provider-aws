@@ -10,6 +10,7 @@ import (
 )
 
 const (
+	ErrCodeDependencyViolation          = "DependencyViolation"
 	ErrCodeGatewayNotAttached           = "Gateway.NotAttached"
 	ErrCodeInvalidAssociationIDNotFound = "InvalidAssociationID.NotFound"
 	ErrCodeInvalidAttachmentIDNotFound  = "InvalidAttachmentID.NotFound"
