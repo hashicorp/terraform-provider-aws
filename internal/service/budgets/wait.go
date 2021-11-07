@@ -13,15 +13,7 @@ const (
 
 func waitActionAvailable(conn *budgets.Budgets, accountID, actionID, budgetName string) (*budgets.Action, error) { //nolint:unparam
 	stateConf := &resource.StateChangeConf{
-		Pending: []string{
-			budgets.ActionStatusExecutionInProgress,
-			budgets.ActionStatusStandby,
-		},
-		Target: []string{
-			budgets.ActionStatusExecutionSuccess,
-			budgets.ActionStatusExecutionFailure,
-			budgets.ActionStatusPending,
-		},
+		Target:  budgets.ActionStatus_Values(),
 		Refresh: statusAction(conn, accountID, actionID, budgetName),
 		Timeout: actionAvailableTimeout,
 	}
