@@ -99,6 +99,8 @@ func TestAccCloudFrontFunction_publish(t *testing.T) {
 				Config: testAccPublishConfig(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "etag", "ETVPDKIKX0DER"),
+					resource.TestCheckResourceAttr(resourceName, "live_stage_etag", ""),
 					resource.TestCheckResourceAttr(resourceName, "publish", "false"),
 					resource.TestCheckResourceAttr(resourceName, "status", "UNPUBLISHED"),
 				),
@@ -113,6 +115,8 @@ func TestAccCloudFrontFunction_publish(t *testing.T) {
 				Config: testAccPublishConfig(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "etag", "ETVPDKIKX0DER"),
+					resource.TestCheckResourceAttr(resourceName, "live_stage_etag", "ETVPDKIKX0DER"),
 					resource.TestCheckResourceAttr(resourceName, "publish", "true"),
 					resource.TestCheckResourceAttr(resourceName, "status", "UNASSOCIATED"),
 				),
