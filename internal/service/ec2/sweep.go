@@ -813,6 +813,9 @@ func sweepInternetGateways(region string) error {
 			r := ResourceInternetGateway()
 			d := r.Data(nil)
 			d.SetId(internetGatewayID)
+			if len(internetGateway.Attachments) > 0 {
+				d.Set("vpc_id", internetGateway.Attachments[0].VpcId)
+			}
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
