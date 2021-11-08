@@ -187,7 +187,7 @@ func dataSourceNetworkInterfaceRead(d *schema.ResourceData, meta interface{}) er
 		d.Set("association", nil)
 	}
 	if eni.Attachment != nil {
-		if err := d.Set("attachment", []interface{}{flattenNetworkInterfaceAttachment(eni.Attachment)}); err != nil {
+		if err := d.Set("attachment", []interface{}{flattenNetworkInterfaceAttachmentForDataSource(eni.Attachment)}); err != nil {
 			return fmt.Errorf("error setting attachment: %w", err)
 		}
 	} else {
@@ -213,4 +213,30 @@ func dataSourceNetworkInterfaceRead(d *schema.ResourceData, meta interface{}) er
 	}
 
 	return nil
+}
+
+func flattenNetworkInterfaceAttachmentForDataSource(apiObject *ec2.NetworkInterfaceAttachment) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.AttachmentId; v != nil {
+		tfMap["attachment_id"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.DeviceIndex; v != nil {
+		tfMap["device_index"] = aws.Int64Value(v)
+	}
+
+	if v := apiObject.InstanceId; v != nil {
+		tfMap["instance_id"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.InstanceOwnerId; v != nil {
+		tfMap["instance_owner_id"] = aws.StringValue(v)
+	}
+
+	return tfMap
 }

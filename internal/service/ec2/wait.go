@@ -690,6 +690,46 @@ func WaitHostDeleted(conn *ec2.EC2, id string) (*ec2.Host, error) {
 }
 
 const (
+	internetGatewayAttachedTimeout = 4 * time.Minute
+	internetGatewayDeletedTimeout  = 10 * time.Minute
+	internetGatewayDetachedTimeout = 15 * time.Minute
+)
+
+func WaitInternetGatewayAttached(conn *ec2.EC2, internetGatewayID, vpcID string, timeout time.Duration) (*ec2.InternetGatewayAttachment, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{ec2.AttachmentStatusAttaching},
+		Target:  []string{InternetGatewayAttachmentStateAvailable},
+		Timeout: timeout,
+		Refresh: StatusInternetGatewayAttachmentState(conn, internetGatewayID, vpcID),
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*ec2.InternetGatewayAttachment); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func WaitInternetGatewayDetached(conn *ec2.EC2, internetGatewayID, vpcID string, timeout time.Duration) (*ec2.InternetGatewayAttachment, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{ec2.AttachmentStatusDetaching},
+		Target:  []string{},
+		Timeout: timeout,
+		Refresh: StatusInternetGatewayAttachmentState(conn, internetGatewayID, vpcID),
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*ec2.InternetGatewayAttachment); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+const (
 	ManagedPrefixListTimeout = 15 * time.Minute
 )
 
@@ -758,7 +798,7 @@ func WaitManagedPrefixListDeleted(conn *ec2.EC2, id string) (*ec2.ManagedPrefixL
 
 const (
 	networkInterfaceAttachedTimeout = 5 * time.Minute
-	networkInterfaceDetachedTimeout = 10 * time.Minute
+	NetworkInterfaceDetachedTimeout = 10 * time.Minute
 )
 
 func WaitNetworkInterfaceAttached(conn *ec2.EC2, id string, timeout time.Duration) (*ec2.NetworkInterfaceAttachment, error) {

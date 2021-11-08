@@ -10,6 +10,7 @@ import (
 )
 
 const (
+	ErrCodeDependencyViolation          = "DependencyViolation"
 	ErrCodeGatewayNotAttached           = "Gateway.NotAttached"
 	ErrCodeInvalidAssociationIDNotFound = "InvalidAssociationID.NotFound"
 	ErrCodeInvalidAttachmentIDNotFound  = "InvalidAttachmentID.NotFound"
@@ -25,6 +26,10 @@ const (
 const (
 	ErrCodeClientInvalidHostIDNotFound = "Client.InvalidHostID.NotFound"
 	ErrCodeInvalidHostIDNotFound       = "InvalidHostID.NotFound"
+)
+
+const (
+	ErrCodeInvalidInternetGatewayIDNotFound = "InvalidInternetGatewayID.NotFound"
 )
 
 const (

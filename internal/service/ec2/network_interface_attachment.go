@@ -91,5 +91,5 @@ func resourceNetworkInterfaceAttachmentRead(d *schema.ResourceData, meta interfa
 func resourceNetworkInterfaceAttachmentDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
-	return detachNetworkInterface(conn, d.Get("network_interface_id").(string), d.Id(), networkInterfaceDetachedTimeout)
+	return DetachNetworkInterface(conn, d.Get("network_interface_id").(string), d.Id(), NetworkInterfaceDetachedTimeout)
 }
