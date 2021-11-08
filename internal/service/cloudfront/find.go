@@ -27,7 +27,7 @@ func FindFunctionByNameAndStage(conn *cloudfront.CloudFront, name, stage string)
 		return nil, err
 	}
 
-	if output == nil {
+	if output == nil || output.FunctionSummary == nil {
 		return nil, tfresource.NewEmptyResultError(input)
 	}
 
