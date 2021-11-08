@@ -1,4 +1,4 @@
-package aws
+package ec2
 
 import (
 	"fmt"
@@ -11,14 +11,16 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func resourceAwsVpcIpamScope() *schema.Resource {
+func ResourceVPCIpamScope() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsVpcIpamScopeCreate,
-		Read:   resourceAwsVpcIpamScopeRead,
-		Update: resourceAwsVpcIpamScopeUpdate,
-		Delete: resourceAwsVpcIpamScopeDelete,
+		Create: ResourceVPCIpamScopeCreate,
+		Read:   ResourceVPCIpamScopeRead,
+		Update: ResourceVPCIpamScopeUpdate,
+		Delete: ResourceVPCIpamScopeDelete,
 		// CustomizeDiff: customdiff.Sequence(SetTagsDiff),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -68,8 +70,8 @@ const (
 	InvalidIpamScopeIdNotFound = "InvalidIpamScopeId.NotFound"
 )
 
-func resourceAwsVpcIpamScopeCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+func ResourceVPCIpamScopeCreate(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*conns.AWSClient).EC2Conn
 	// defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
 	// tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
@@ -95,11 +97,11 @@ func resourceAwsVpcIpamScopeCreate(d *schema.ResourceData, meta interface{}) err
 	// 	return fmt.Errorf("error waiting for IPAM Scope (%s) to be Available: %w", d.Id(), err)
 	// }
 
-	return resourceAwsVpcIpamScopeRead(d, meta)
+	return ResourceVPCIpamScopeRead(d, meta)
 }
 
-func resourceAwsVpcIpamScopeRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+func ResourceVPCIpamScopeRead(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*conns.AWSClient).EC2Conn
 	// defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
 	// tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
@@ -127,8 +129,8 @@ func resourceAwsVpcIpamScopeRead(d *schema.ResourceData, meta interface{}) error
 	return nil
 }
 
-func resourceAwsVpcIpamScopeUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+func ResourceVPCIpamScopeUpdate(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*conns.AWSClient).EC2Conn
 
 	// if d.HasChange("tags_all") {
 	// 	o, n := d.GetChange("tags_all")
@@ -152,11 +154,11 @@ func resourceAwsVpcIpamScopeUpdate(d *schema.ResourceData, meta interface{}) err
 		return fmt.Errorf("error updating IPAM Scope (%s): %w", d.Id(), err)
 	}
 
-	return resourceAwsVpcIpamScopeRead(d, meta)
+	return ResourceVPCIpamScopeRead(d, meta)
 }
 
-func resourceAwsVpcIpamScopeDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+func ResourceVPCIpamScopeDelete(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*conns.AWSClient).EC2Conn
 
 	input := &ec2.DeleteIpamScopeInput{
 		IpamScopeId: aws.String(d.Id()),
@@ -168,8 +170,8 @@ func resourceAwsVpcIpamScopeDelete(d *schema.ResourceData, meta interface{}) err
 		return fmt.Errorf("error deleting IPAM Scope: (%s): %w", d.Id(), err)
 	}
 
-	if _, err = waitIpamScopeDeleted(conn, d.Id(), IpamScopeDeleteTimeout); err != nil {
-		if isResourceNotFoundError(err) {
+	if _, err = WaitIpamScopeDeleted(conn, d.Id(), IpamScopeDeleteTimeout); err != nil {
+		if tfresource.NotFound(err) {
 			return nil
 		}
 		return fmt.Errorf("error waiting for IPAM Scope (%s) to be deleted: %w", d.Id(), err)
@@ -196,7 +198,7 @@ func findIpamScopeById(conn *ec2.EC2, id string) (*ec2.IpamScope, error) {
 	return output.IpamScopes[0], nil
 }
 
-func waitIpamScopeDeleted(conn *ec2.EC2, ipamScopeId string, timeout time.Duration) (*ec2.IpamScope, error) {
+func WaitIpamScopeDeleted(conn *ec2.EC2, ipamScopeId string, timeout time.Duration) (*ec2.IpamScope, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{IpamScopeStatusAvailable},
 		Target:  []string{InvalidIpamScopeIdNotFound},

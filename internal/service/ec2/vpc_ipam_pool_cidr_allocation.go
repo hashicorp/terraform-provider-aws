@@ -1,8 +1,9 @@
-package aws
+package ec2
 
 import (
 	"fmt"
 	"log"
+	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
@@ -10,13 +11,15 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-func resourceAwsVpcIpamPoolCidrAllocation() *schema.Resource {
+func ResourceVPCIpamPoolCidrAllocation() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsVpcIpamPoolCidrAllocationCreate,
-		Read:   resourceAwsVpcIpamPoolCidrAllocationRead,
-		Delete: resourceAwsVpcIpamPoolCidrAllocationDelete,
+		Create: ResourceVPCIpamPoolCidrAllocationCreate,
+		Read:   ResourceVPCIpamPoolCidrAllocationRead,
+		Delete: ResourceVPCIpamPoolCidrAllocationDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -32,8 +35,8 @@ func resourceAwsVpcIpamPoolCidrAllocation() *schema.Resource {
 				Computed:      true,
 				ConflictsWith: []string{"netmask_length"},
 				ValidateFunc: validation.Any(
-					validateIpv4CIDRNetworkAddress,
-					validateIpv6CIDRNetworkAddress,
+					verify.ValidIPv4CIDRNetworkAddress,
+					verify.ValidIPv6CIDRNetworkAddress,
 				),
 			},
 			"description": {
@@ -76,8 +79,8 @@ const (
 	IpamPoolAllocationNotFound = "InvalidIpamPoolCidrAllocationId.NotFound"
 )
 
-func resourceAwsVpcIpamPoolCidrAllocationCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+func ResourceVPCIpamPoolCidrAllocationCreate(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*conns.AWSClient).EC2Conn
 	pool_id := d.Get("ipam_pool_id").(string)
 
 	input := &ec2.AllocateIpamPoolCidrInput{
@@ -105,13 +108,13 @@ func resourceAwsVpcIpamPoolCidrAllocationCreate(d *schema.ResourceData, meta int
 	allocation_id := aws.StringValue(output.IpamPoolAllocation.AllocationId)
 	d.SetId(fmt.Sprintf("%s_%s", allocation_id, pool_id))
 
-	return resourceAwsVpcIpamPoolCidrAllocationRead(d, meta)
+	return ResourceVPCIpamPoolCidrAllocationRead(d, meta)
 }
 
-func resourceAwsVpcIpamPoolCidrAllocationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+func ResourceVPCIpamPoolCidrAllocationRead(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*conns.AWSClient).EC2Conn
 
-	cidr_allocation, pool_id, err := findIpamPoolCidrAllocation(conn, d.Id())
+	cidr_allocation, pool_id, err := FindIpamPoolCidrAllocation(conn, d.Id())
 
 	if err != nil {
 		return err
@@ -141,8 +144,8 @@ func resourceAwsVpcIpamPoolCidrAllocationRead(d *schema.ResourceData, meta inter
 	return nil
 }
 
-func resourceAwsVpcIpamPoolCidrAllocationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+func ResourceVPCIpamPoolCidrAllocationDelete(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*conns.AWSClient).EC2Conn
 
 	input := &ec2.ReleaseIpamPoolAllocationInput{
 		AllocationId: aws.String(d.Get("allocation_id").(string)),
@@ -162,9 +165,9 @@ func resourceAwsVpcIpamPoolCidrAllocationDelete(d *schema.ResourceData, meta int
 	return nil
 }
 
-func findIpamPoolCidrAllocation(conn *ec2.EC2, id string) (*ec2.IpamPoolAllocation, string, error) {
+func FindIpamPoolCidrAllocation(conn *ec2.EC2, id string) (*ec2.IpamPoolAllocation, string, error) {
 
-	allocation_id, pool_id, err := DecodeIpamPoolCidrID(id)
+	allocation_id, pool_id, err := DecodeIpamPoolCidrAllocationID(id)
 	if err != nil {
 		return nil, "", fmt.Errorf("error decoding ID (%s): %w", allocation_id, err)
 	}
@@ -190,4 +193,12 @@ func findIpamPoolCidrAllocation(conn *ec2.EC2, id string) (*ec2.IpamPoolAllocati
 	}
 
 	return output.IpamPoolAllocations[0], pool_id, nil
+}
+
+func DecodeIpamPoolCidrAllocationID(id string) (string, string, error) {
+	idParts := strings.Split(id, "_")
+	if len(idParts) != 2 || idParts[0] == "" || idParts[1] == "" {
+		return "", "", fmt.Errorf("expected ID in the form of allocationId_poolId, given: %q", id)
+	}
+	return idParts[0], idParts[1], nil
 }

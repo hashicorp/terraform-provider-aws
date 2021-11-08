@@ -1,4 +1,4 @@
-package aws
+package ec2_test
 
 import (
 	"fmt"
@@ -7,21 +7,26 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
-func TestAccAWSVpcIpamScope_basic(t *testing.T) {
+func TestAccVPCIpamScope_basic(t *testing.T) {
 	resourceName := "aws_vpc_ipam_scope.test"
 	ipamName := "aws_vpc_ipam.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAwsVpcIpamScopeDestroy,
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckVPCIpamScopeDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsVpcIpamScope("test"),
+				Config: testAccVPCIpamScope("test"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "description", "test"),
 					resource.TestCheckResourceAttr(resourceName, "pool_count", "0"),
@@ -37,7 +42,7 @@ func TestAccAWSVpcIpamScope_basic(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAwsVpcIpamScope("test2"),
+				Config: testAccVPCIpamScope("test2"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "description", "test2"),
 					// resource.TestCheckResourceAttr(rName, "tags.%", "0"),
@@ -47,8 +52,8 @@ func TestAccAWSVpcIpamScope_basic(t *testing.T) {
 	})
 }
 
-func testAccCheckAwsVpcIpamScopeDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).ec2conn
+func testAccCheckVPCIpamScopeDestroy(s *terraform.State) error {
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_vpc_ipam_scope" {
@@ -57,8 +62,8 @@ func testAccCheckAwsVpcIpamScopeDestroy(s *terraform.State) error {
 
 		id := aws.String(rs.Primary.ID)
 
-		if _, err := waitIpamScopeDeleted(conn, *id, IpamScopeDeleteTimeout); err != nil {
-			if isResourceNotFoundError(err) {
+		if _, err := tfec2.WaitIpamScopeDeleted(conn, *id, tfec2.IpamScopeDeleteTimeout); err != nil {
+			if tfresource.NotFound(err) {
 				return nil
 			}
 			return fmt.Errorf("error waiting for IPAM Scope (%s) to be deleted: %w", *id, err)
@@ -68,8 +73,8 @@ func testAccCheckAwsVpcIpamScopeDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccAwsVpcIpamScope(desc string) string {
-	return testAccAwsVpcIpam + fmt.Sprintf(`
+func testAccVPCIpamScope(desc string) string {
+	return testAccVPCIpam + fmt.Sprintf(`
 resource "aws_vpc_ipam_scope" "test" {
 	ipam_id    =  aws_vpc_ipam.test.id
 	description = %[1]q

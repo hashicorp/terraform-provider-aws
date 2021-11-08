@@ -1,4 +1,4 @@
-package aws
+package ec2
 
 import (
 	"fmt"
@@ -10,15 +10,17 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	// "github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
-func resourceAwsVpcIpam() *schema.Resource {
+func ResourceVPCIpam() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsVpcIpamCreate,
-		Read:   resourceAwsVpcIpamRead,
-		Update: resourceAwsVpcIpamUpdate,
-		Delete: resourceAwsVpcIpamDelete,
+		Create: ResourceVPCIpamCreate,
+		Read:   ResourceVPCIpamRead,
+		Update: ResourceVPCIpamUpdate,
+		Delete: ResourceVPCIpamDelete,
 		// CustomizeDiff: customdiff.Sequence(SetTagsDiff),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -40,7 +42,7 @@ func resourceAwsVpcIpam() *schema.Resource {
 						"region_name": {
 							Type:         schema.TypeString,
 							Required:     true,
-							ValidateFunc: validateRegionName,
+							ValidateFunc: verify.ValidateRegionName,
 						},
 					},
 				},
@@ -70,9 +72,9 @@ const (
 	IpamDeleteDelay       = 5 * time.Second
 )
 
-func resourceAwsVpcIpamCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
-	current_region := meta.(*AWSClient).region
+func ResourceVPCIpamCreate(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*conns.AWSClient).EC2Conn
+	current_region := meta.(*conns.AWSClient).Region
 	// defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
 	// tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
@@ -99,11 +101,11 @@ func resourceAwsVpcIpamCreate(d *schema.ResourceData, meta interface{}) error {
 	d.SetId(aws.StringValue(output.Ipam.IpamId))
 	log.Printf("[INFO] IPAM ID: %s", d.Id())
 
-	return resourceAwsVpcIpamRead(d, meta)
+	return ResourceVPCIpamRead(d, meta)
 }
 
-func resourceAwsVpcIpamRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+func ResourceVPCIpamRead(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*conns.AWSClient).EC2Conn
 	// defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
 	// ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
@@ -140,8 +142,8 @@ func resourceAwsVpcIpamRead(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func resourceAwsVpcIpamUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+func ResourceVPCIpamUpdate(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*conns.AWSClient).EC2Conn
 
 	// if d.HasChange("tags_all") {
 	// 	o, n := d.GetChange("tags_all")
@@ -187,8 +189,8 @@ func resourceAwsVpcIpamUpdate(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func resourceAwsVpcIpamDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+func ResourceVPCIpamDelete(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*conns.AWSClient).EC2Conn
 
 	input := &ec2.DeleteIpamInput{
 		IpamId: aws.String(d.Id()),
@@ -200,7 +202,7 @@ func resourceAwsVpcIpamDelete(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error deleting IPAM: (%s): %w", d.Id(), err)
 	}
 
-	if _, err = waiterIpamDeleted(conn, d.Id(), IpamDeleteTimeout); err != nil {
+	if _, err = WaiterIpamDeleted(conn, d.Id(), IpamDeleteTimeout); err != nil {
 		if tfawserr.ErrCodeEquals(err, InvalidIpamIdNotFound) {
 			return nil
 		}
@@ -228,7 +230,7 @@ func findIpamById(conn *ec2.EC2, id string) (*ec2.Ipam, error) {
 	return output.Ipams[0], nil
 }
 
-func waiterIpamDeleted(conn *ec2.EC2, ipamId string, timeout time.Duration) (*ec2.Ipam, error) {
+func WaiterIpamDeleted(conn *ec2.EC2, ipamId string, timeout time.Duration) (*ec2.Ipam, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{IpamStatusAvailable},
 		Target:  []string{InvalidIpamIdNotFound},

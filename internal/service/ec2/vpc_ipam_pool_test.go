@@ -1,4 +1,4 @@
-package aws
+package ec2_test
 
 import (
 	"fmt"
@@ -8,22 +8,26 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func TestAccAWSVpcIpamPool_basic(t *testing.T) {
+func TestAccVPCIpamPool_basic(t *testing.T) {
 	var pool ec2.IpamPool
 	resourceName := "aws_vpc_ipam_pool.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAwsVpcIpamPoolDestroy,
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckVPCIpamPoolDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsVpcIpamPool,
+				Config: testAccVPCIpamPool,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsVpcIpamPoolExists(resourceName, &pool),
+					testAccCheckVPCIpamPoolExists(resourceName, &pool),
 					resource.TestCheckResourceAttr(resourceName, "address_family", "ipv4"),
 					resource.TestCheckResourceAttr(resourceName, "auto_import", "false"),
 					resource.TestCheckResourceAttr(resourceName, "locale", "None"),
@@ -37,7 +41,7 @@ func TestAccAWSVpcIpamPool_basic(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAwsVpcIpamPoolUpdates,
+				Config: testAccVPCIpamPoolUpdates,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "address_family", "ipv4"),
 					resource.TestCheckResourceAttr(resourceName, "auto_import", "true"),
@@ -53,7 +57,7 @@ func TestAccAWSVpcIpamPool_basic(t *testing.T) {
 	})
 }
 
-func testAccCheckAwsVpcIpamPoolExists(n string, pool *ec2.IpamPool) resource.TestCheckFunc {
+func testAccCheckVPCIpamPoolExists(n string, pool *ec2.IpamPool) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -61,8 +65,8 @@ func testAccCheckAwsVpcIpamPoolExists(n string, pool *ec2.IpamPool) resource.Tes
 		}
 
 		id := rs.Primary.ID
-		conn := testAccProvider.Meta().(*AWSClient).ec2conn
-		found_pool, err := findIpamPoolById(conn, id)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+		found_pool, err := tfec2.FindIpamPoolById(conn, id)
 
 		if err != nil {
 			return err
@@ -73,19 +77,19 @@ func testAccCheckAwsVpcIpamPoolExists(n string, pool *ec2.IpamPool) resource.Tes
 	}
 }
 
-// func TestAccAWSVpcIpamPool_ipv6(t *testing.T) {
+// func TestAccVPCIpamPool_ipv6(t *testing.T) {
 // 	resourceName := "aws_vpc_ipam_pool.test"
 
 // 	resource.ParallelTest(t, resource.TestCase{
-// 		PreCheck:     func() { testAccPreCheck(t) },
-// 		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
-// 		Providers:    testAccProviders,
-// 		CheckDestroy: testAccCheckAwsVpcIpamPoolDestroy,
+// 		PreCheck:     func() { acctest.PreCheck(t) },
+// 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
+// 		Providers:    acctest.Providers,
+// 		CheckDestroy: testAccCheckVPCIpamPoolDestroy,
 // 		Steps: []resource.TestStep{
 // 			{
-// 				Config: testAccAwsVpcIpamPool_ipv6,
+// 				Config: testAccVPCIpamPool_ipv6,
 // 				Check: resource.ComposeTestCheckFunc(
-// 					// testAccCheckAwsVpcIpamExists(rName, &pool),
+// 					// testAccCheckVPCIpamExists(rName, &pool),
 // 					resource.TestCheckResourceAttr(resourceName, "address_family", "ipv6"),
 // 					// resource.TestCheckResourceAttr(resourceName, "auto_import", "false"),
 // 					// resource.TestCheckResourceAttr(resourceName, "locale", "None"),
@@ -102,8 +106,8 @@ func testAccCheckAwsVpcIpamPoolExists(n string, pool *ec2.IpamPool) resource.Tes
 // 	})
 // }
 
-func testAccCheckAwsVpcIpamPoolDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).ec2conn
+func testAccCheckVPCIpamPoolDestroy(s *terraform.State) error {
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_vpc_ipam_pool" {
@@ -112,8 +116,8 @@ func testAccCheckAwsVpcIpamPoolDestroy(s *terraform.State) error {
 
 		id := aws.String(rs.Primary.ID)
 
-		if _, err := waitIpamPoolDeleted(conn, *id, IpamPoolDeleteTimeout); err != nil {
-			if isResourceNotFoundError(err) {
+		if _, err := tfec2.WaitIpamPoolDeleted(conn, *id, tfec2.IpamPoolDeleteTimeout); err != nil {
+			if tfresource.NotFound(err) {
 				return nil
 			}
 			return fmt.Errorf("error waiting for IPAM Pool (%s) to be deleted: %w", *id, err)
@@ -123,7 +127,7 @@ func testAccCheckAwsVpcIpamPoolDestroy(s *terraform.State) error {
 	return nil
 }
 
-const testAccAwsVpcIpamPool = `
+const testAccVPCIpamPool = `
 resource "aws_vpc_ipam" "test" {
 	operating_regions {
 	  region_name = "us-east-1"
@@ -135,7 +139,7 @@ resource "aws_vpc_ipam_pool" "test" {
 }
 `
 
-const testAccAwsVpcIpamPoolUpdates = `
+const testAccVPCIpamPoolUpdates = `
 resource "aws_vpc_ipam" "test" {
 	operating_regions {
 	  region_name = "us-east-1"
@@ -155,7 +159,7 @@ resource "aws_vpc_ipam_pool" "test" {
 }
 `
 
-const testAccAwsVpcIpamPool_ipv6 = `
+const testAccVPCIpamPool_ipv6 = `
 resource "aws_vpc_ipam" "test" {
 	operating_regions {
 	  region_name = "us-east-1"

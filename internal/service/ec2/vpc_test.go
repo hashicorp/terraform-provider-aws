@@ -3,6 +3,7 @@ package ec2_test
 import (
 	"fmt"
 	"regexp"
+	"strings"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -634,6 +635,63 @@ func TestAccEC2VPC_tenancy(t *testing.T) {
 	})
 }
 
+func TestAccVPCIpam_ipv4BasicNetmask(t *testing.T) {
+	var vpc ec2.Vpc
+	resourceName := "aws_vpc.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckVpcDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVpcIpamIpv4("28"),
+				Check: resource.ComposeTestCheckFunc(
+					acctest.CheckVPCExists(resourceName, &vpc),
+					testAccCheckVpcCidrPrefix(&vpc, "28"),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`vpc/vpc-.+`)),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"ipv4_ipam_pool_id", "ipv4_netmask_length"},
+			},
+		},
+	})
+}
+
+func TestAccVPCIpam_ipv4BasicExplicitCidr(t *testing.T) {
+	var vpc ec2.Vpc
+	resourceName := "aws_vpc.test"
+	cidr := "172.2.0.0/28"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckVpcDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVpcIpamIpv4ExplicitCidr(cidr),
+				Check: resource.ComposeTestCheckFunc(
+					acctest.CheckVPCExists(resourceName, &vpc),
+					testAccCheckVpcCidr(&vpc, cidr),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`vpc/vpc-.+`)),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"ipv4_ipam_pool_id", "ipv4_netmask_length"},
+			},
+		},
+	})
+}
+
 func TestAccEC2VPC_tags(t *testing.T) {
 	var vpc ec2.Vpc
 	resourceName := "aws_vpc.test"
@@ -753,6 +811,16 @@ func testAccCheckVpcCidr(vpc *ec2.Vpc, expected string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if aws.StringValue(vpc.CidrBlock) != expected {
 			return fmt.Errorf("Bad cidr: %s", aws.StringValue(vpc.CidrBlock))
+		}
+
+		return nil
+	}
+}
+
+func testAccCheckVpcCidrPrefix(vpc *ec2.Vpc, expected string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		if strings.Split(aws.StringValue(vpc.CidrBlock), "/")[1] != expected {
+			return fmt.Errorf("Bad cidr prefix: %s", aws.StringValue(vpc.CidrBlock))
 		}
 
 		return nil
@@ -1053,3 +1121,47 @@ resource "aws_vpc" "test" {
   }
 }
 `
+const testAccVpcIpamBase = `
+data "aws_region" "current" {}
+
+resource "aws_vpc_ipam" "test" {
+	operating_regions {
+		region_name = data.aws_region.current.name
+	}
+}
+
+resource "aws_vpc_ipam_pool" "test" {
+	address_family = "ipv4"
+	ipam_scope_id  = aws_vpc_ipam.test.private_default_scope_id
+	locale         = data.aws_region.current.name
+}
+
+resource "aws_vpc_ipam_pool_cidr" "test" {
+	ipam_pool_id = aws_vpc_ipam_pool.test.id
+	cidr         = "172.2.0.0/16"
+}
+`
+
+func testAccVpcIpamIpv4(netmaskLength string) string {
+	return testAccVpcIpamBase + fmt.Sprintf(`
+resource "aws_vpc" "test" {
+	ipv4_ipam_pool_id   = aws_vpc_ipam_pool.test.id
+	ipv4_netmask_length = %[1]q
+	depends_on = [
+		aws_vpc_ipam_pool_cidr.test
+	]
+}
+`, netmaskLength)
+}
+
+func testAccVpcIpamIpv4ExplicitCidr(cidr string) string {
+	return testAccVpcIpamBase + fmt.Sprintf(`
+resource "aws_vpc" "test" {
+	ipv4_ipam_pool_id = aws_vpc_ipam_pool.test.id
+	cidr_block        = %[1]q
+	depends_on = [
+		aws_vpc_ipam_pool_cidr.test
+	]
+}
+`, cidr)
+}

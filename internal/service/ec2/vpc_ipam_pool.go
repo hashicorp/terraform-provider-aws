@@ -1,4 +1,4 @@
-package aws
+package ec2
 
 import (
 	"fmt"
@@ -12,15 +12,19 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	// "github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
-func resourceAwsVpcIpamPool() *schema.Resource {
+func ResourceVPCIpamPool() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsVpcIpamPoolCreate,
-		Read:   resourceAwsVpcIpamPoolRead,
-		Update: resourceAwsVpcIpamPoolUpdate,
-		Delete: resourceAwsVpcIpamPoolDelete,
+		Create: ResourceVPCIpamPoolCreate,
+		Read:   ResourceVPCIpamPoolRead,
+		Update: ResourceVPCIpamPoolUpdate,
+		Delete: ResourceVPCIpamPoolDelete,
 		// CustomizeDiff: customdiff.Sequence(SetTagsDiff),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -55,7 +59,7 @@ func resourceAwsVpcIpamPool() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: validation.IntBetween(0, 128),
 			},
-			"allocation_resource_tags": tagsSchema(),
+			"allocation_resource_tags": tftags.TagsSchema(),
 			"auto_import": {
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -80,7 +84,7 @@ func resourceAwsVpcIpamPool() *schema.Resource {
 				ForceNew: true,
 				ValidateFunc: validation.Any(
 					validation.StringInSlice([]string{"None"}, false),
-					validateRegionName,
+					verify.ValidateRegionName,
 				),
 				Default: "None",
 			},
@@ -112,10 +116,10 @@ const (
 	IpamPoolDeleteDelay       = 5 * time.Second
 )
 
-func resourceAwsVpcIpamPoolCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+func ResourceVPCIpamPoolCreate(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*conns.AWSClient).EC2Conn
 	// defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	// tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
+	// tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
 	input := &ec2.CreateIpamPoolInput{
 		AddressFamily: aws.String(d.Get("address_family").(string)),
@@ -141,7 +145,7 @@ func resourceAwsVpcIpamPoolCreate(d *schema.ResourceData, meta interface{}) erro
 	}
 
 	if v, ok := d.GetOk("allocation_resource_tags"); ok && len(v.(map[string]interface{})) > 0 {
-		input.AllocationResourceTags = ipamResourceTags(keyvaluetags.New(v.(map[string]interface{})))
+		input.AllocationResourceTags = ipamResourceTags(tftags.New(v.(map[string]interface{})))
 	}
 
 	if v, ok := d.GetOk("auto_import"); ok {
@@ -168,19 +172,19 @@ func resourceAwsVpcIpamPoolCreate(d *schema.ResourceData, meta interface{}) erro
 	d.SetId(aws.StringValue(output.IpamPool.IpamPoolId))
 	log.Printf("[INFO] IPAM Pool ID: %s", d.Id())
 
-	if _, err = waitIpamPoolAvailable(conn, d.Id(), IpamPoolCreateTimeout); err != nil {
+	if _, err = WaitIpamPoolAvailable(conn, d.Id(), IpamPoolCreateTimeout); err != nil {
 		return fmt.Errorf("error waiting for IPAM Pool (%s) to be Available: %w", d.Id(), err)
 	}
 
-	return resourceAwsVpcIpamPoolRead(d, meta)
+	return ResourceVPCIpamPoolRead(d, meta)
 }
 
-func resourceAwsVpcIpamPoolRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+func ResourceVPCIpamPoolRead(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*conns.AWSClient).EC2Conn
 	// defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
 	// tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
-	pool, err := findIpamPoolById(conn, d.Id())
+	pool, err := FindIpamPoolById(conn, d.Id())
 
 	if err != nil && !tfawserr.ErrCodeEquals(err, InvalidIpamPoolIdNotFound) {
 		return err
@@ -202,7 +206,7 @@ func resourceAwsVpcIpamPoolRead(d *schema.ResourceData, meta interface{}) error 
 		d.Set("advertisable", pool.Advertisable)
 	}
 
-	d.Set("allocation_resource_tags", keyvaluetags.Ec2KeyValueTags(ec2TagsFromIpamAllocationTags(pool.AllocationResourceTags)).Map())
+	d.Set("allocation_resource_tags", KeyValueTags(ec2TagsFromIpamAllocationTags(pool.AllocationResourceTags)).Map())
 	d.Set("auto_import", pool.AutoImport)
 	d.Set("description", pool.Description)
 	d.Set("ipam_scope_id", scopeId)
@@ -215,8 +219,8 @@ func resourceAwsVpcIpamPoolRead(d *schema.ResourceData, meta interface{}) error 
 	return nil
 }
 
-func resourceAwsVpcIpamPoolUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+func ResourceVPCIpamPoolUpdate(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*conns.AWSClient).EC2Conn
 
 	// TODO: rm StorageGateway
 	// if d.HasChange("tags_all") {
@@ -248,7 +252,7 @@ func resourceAwsVpcIpamPoolUpdate(d *schema.ResourceData, meta interface{}) erro
 		}
 
 		// if v, ok := d.GetOk("allocation_tags"); ok && len(v.(map[string]interface{})) > 0 {
-		// 	input.AllocationResourceTags = keyvaluetags.New(v.(map[string]interface{})).Ec2Tags()
+		// 	input.AllocationResourceTags = tftags.New(v.(map[string]interface{})).Ec2Tags()
 		// }
 
 		if v, ok := d.GetOk("description"); ok {
@@ -258,15 +262,15 @@ func resourceAwsVpcIpamPoolUpdate(d *schema.ResourceData, meta interface{}) erro
 
 	if d.HasChange("allocation_resource_tags") {
 		o, n := d.GetChange("allocation_resource_tags")
-		oldTags := keyvaluetags.New(o)
-		newTags := keyvaluetags.New(n)
+		oldTags := tftags.New(o)
+		newTags := tftags.New(n)
 
 		if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
-			input.RemoveAllocationResourceTags = ipamResourceTags(removedTags.IgnoreAws())
+			input.RemoveAllocationResourceTags = ipamResourceTags(removedTags.IgnoreAWS())
 		}
 
 		if updatedTags := oldTags.Updated(newTags); len(updatedTags) > 0 {
-			input.AddAllocationResourceTags = ipamResourceTags(updatedTags.IgnoreAws())
+			input.AddAllocationResourceTags = ipamResourceTags(updatedTags.IgnoreAWS())
 			//updatedTags.IgnoreAws().IpamResourceTags()
 		}
 	}
@@ -277,15 +281,15 @@ func resourceAwsVpcIpamPoolUpdate(d *schema.ResourceData, meta interface{}) erro
 		return fmt.Errorf("error updating IPAM Pool (%s): %w", d.Id(), err)
 	}
 
-	if _, err = waitIpamPoolUpdate(conn, d.Id(), IpamPoolUpdateTimeout); err != nil {
+	if _, err = WaitIpamPoolUpdate(conn, d.Id(), IpamPoolUpdateTimeout); err != nil {
 		return fmt.Errorf("error waiting for IPAM Pool (%s) to be Available: %w", d.Id(), err)
 	}
 
-	return resourceAwsVpcIpamPoolRead(d, meta)
+	return ResourceVPCIpamPoolRead(d, meta)
 }
 
-func resourceAwsVpcIpamPoolDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+func ResourceVPCIpamPoolDelete(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*conns.AWSClient).EC2Conn
 
 	input := &ec2.DeleteIpamPoolInput{
 		IpamPoolId: aws.String(d.Id()),
@@ -297,8 +301,8 @@ func resourceAwsVpcIpamPoolDelete(d *schema.ResourceData, meta interface{}) erro
 		return fmt.Errorf("error deleting IPAM Pool: (%s): %w", d.Id(), err)
 	}
 
-	if _, err = waitIpamPoolDeleted(conn, d.Id(), IpamPoolDeleteTimeout); err != nil {
-		if isResourceNotFoundError(err) {
+	if _, err = WaitIpamPoolDeleted(conn, d.Id(), IpamPoolDeleteTimeout); err != nil {
+		if tfresource.NotFound(err) {
 			return nil
 		}
 		return fmt.Errorf("error waiting for IPAM Pool (%s) to be deleted: %w", d.Id(), err)
@@ -307,7 +311,7 @@ func resourceAwsVpcIpamPoolDelete(d *schema.ResourceData, meta interface{}) erro
 	return nil
 }
 
-func findIpamPoolById(conn *ec2.EC2, id string) (*ec2.IpamPool, error) {
+func FindIpamPoolById(conn *ec2.EC2, id string) (*ec2.IpamPool, error) {
 	input := &ec2.DescribeIpamPoolsInput{
 		IpamPoolIds: aws.StringSlice([]string{id}),
 	}
@@ -325,7 +329,7 @@ func findIpamPoolById(conn *ec2.EC2, id string) (*ec2.IpamPool, error) {
 	return output.IpamPools[0], nil
 }
 
-func waitIpamPoolAvailable(conn *ec2.EC2, ipamPoolId string, timeout time.Duration) (*ec2.IpamPool, error) {
+func WaitIpamPoolAvailable(conn *ec2.EC2, ipamPoolId string, timeout time.Duration) (*ec2.IpamPool, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{ec2.IpamPoolStateCreateInProgress},
 		Target:  []string{ec2.IpamPoolStateCreateComplete},
@@ -343,7 +347,7 @@ func waitIpamPoolAvailable(conn *ec2.EC2, ipamPoolId string, timeout time.Durati
 	return nil, err
 }
 
-func waitIpamPoolUpdate(conn *ec2.EC2, ipamPoolId string, timeout time.Duration) (*ec2.IpamPool, error) {
+func WaitIpamPoolUpdate(conn *ec2.EC2, ipamPoolId string, timeout time.Duration) (*ec2.IpamPool, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{ec2.IpamPoolStateModifyInProgress},
 		Target:  []string{ec2.IpamPoolStateModifyComplete},
@@ -361,7 +365,7 @@ func waitIpamPoolUpdate(conn *ec2.EC2, ipamPoolId string, timeout time.Duration)
 	return nil, err
 }
 
-func waitIpamPoolDeleted(conn *ec2.EC2, ipamPoolId string, timeout time.Duration) (*ec2.IpamPool, error) {
+func WaitIpamPoolDeleted(conn *ec2.EC2, ipamPoolId string, timeout time.Duration) (*ec2.IpamPool, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{ec2.IpamPoolStateDeleteInProgress},
 		Target:  []string{InvalidIpamPoolIdNotFound},
@@ -382,7 +386,7 @@ func waitIpamPoolDeleted(conn *ec2.EC2, ipamPoolId string, timeout time.Duration
 func statusIpamPoolStatus(conn *ec2.EC2, ipamPoolId string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 
-		output, err := findIpamPoolById(conn, ipamPoolId)
+		output, err := FindIpamPoolById(conn, ipamPoolId)
 
 		if tfawserr.ErrCodeEquals(err, InvalidIpamPoolIdNotFound) {
 			return output, InvalidIpamPoolIdNotFound, nil
@@ -397,7 +401,7 @@ func statusIpamPoolStatus(conn *ec2.EC2, ipamPoolId string) resource.StateRefres
 	}
 }
 
-func ipamResourceTags(tags keyvaluetags.KeyValueTags) []*ec2.RequestIpamResourceTag {
+func ipamResourceTags(tags tftags.KeyValueTags) []*ec2.RequestIpamResourceTag {
 	result := make([]*ec2.RequestIpamResourceTag, 0, len(tags))
 
 	for k, v := range tags.Map() {

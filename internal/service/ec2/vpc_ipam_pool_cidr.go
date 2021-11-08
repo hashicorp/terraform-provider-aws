@@ -1,4 +1,4 @@
-package aws
+package ec2
 
 import (
 	"fmt"
@@ -8,16 +8,20 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsVpcIpamPoolCidr() *schema.Resource {
+func ResourceVPCIpamPoolCidr() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsVpcIpamPoolCidrCreate,
-		Read:   resourceAwsVpcIpamPoolCidrRead,
-		Delete: resourceAwsVpcIpamPoolCidrDelete,
+		Create: ResourceVPCIpamPoolCidrCreate,
+		Read:   ResourceVPCIpamPoolCidrRead,
+		Delete: ResourceVPCIpamPoolCidrDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -28,8 +32,8 @@ func resourceAwsVpcIpamPoolCidr() *schema.Resource {
 				ForceNew: true,
 				Computed: true,
 				ValidateFunc: validation.Any(
-					validateIpv4CIDRNetworkAddress,
-					validateIpv6CIDRNetworkAddress,
+					verify.ValidIPv4CIDRNetworkAddress,
+					verify.ValidIPv6CIDRNetworkAddress,
 				),
 			},
 			"cidr_authorization_context": {
@@ -73,8 +77,8 @@ const (
 	IpamPoolCidrDeleteDelay    = 5 * time.Second
 )
 
-func resourceAwsVpcIpamPoolCidrCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+func ResourceVPCIpamPoolCidrCreate(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*conns.AWSClient).EC2Conn
 	public := false
 	pool_id := d.Get("ipam_pool_id").(string)
 
@@ -83,7 +87,7 @@ func resourceAwsVpcIpamPoolCidrCreate(d *schema.ResourceData, meta interface{}) 
 	}
 
 	if v, ok := d.GetOk("cidr_authorization_context"); ok {
-		input.CidrAuthorizationContext = expandVpcIpamPoolCidrCidrAuthorizationContext(v.([]interface{}))
+		input.CidrAuthorizationContext = expandVPCIpamPoolCidrCidrAuthorizationContext(v.([]interface{}))
 		public = true
 	}
 
@@ -102,9 +106,9 @@ func resourceAwsVpcIpamPoolCidrCreate(d *schema.ResourceData, meta interface{}) 
 
 	// if ipv6 or private ipv4, can wait
 	if public {
-		if err := validateIpv6CIDRBlock(cidr); err == nil {
+		if err := verify.ValidateIPv6CIDRBlock(cidr); err == nil {
 			log.Printf("[INFO] Public ipv6 request, waiting for response...")
-			if _, err = waitIpamPoolCidrAvailable(conn, d.Id(), IpamPoolCidrCreateTimeout); err != nil {
+			if _, err = WaitIpamPoolCidrAvailable(conn, d.Id(), IpamPoolCidrCreateTimeout); err != nil {
 				failed_id := d.Id()
 				d.SetId("")
 				return fmt.Errorf("error waiting for IPAM Pool Cidr (%s) to be provision: %w", failed_id, err)
@@ -112,8 +116,8 @@ func resourceAwsVpcIpamPoolCidrCreate(d *schema.ResourceData, meta interface{}) 
 			return err
 		}
 	} else {
-		if err := validateIpv4CIDRBlock(cidr); err == nil {
-			if _, err = waitIpamPoolCidrAvailable(conn, d.Id(), IpamPoolCidrCreateTimeout); err != nil {
+		if err := verify.ValidateIPv4CIDRBlock(cidr); err == nil {
+			if _, err = WaitIpamPoolCidrAvailable(conn, d.Id(), IpamPoolCidrCreateTimeout); err != nil {
 				failed_id := d.Id()
 				d.SetId("")
 				return fmt.Errorf("error waiting for IPAM Pool Cidr (%s) to be provision: %w", failed_id, err)
@@ -124,16 +128,16 @@ func resourceAwsVpcIpamPoolCidrCreate(d *schema.ResourceData, meta interface{}) 
 	// log.Printf("[INFO] IPAM PoolCidr ID: %s", d.Id())
 
 	// dont need to wait twice
-	// if _, err = waitIpamPoolCidrAvailable(conn, d.Id(), IpamPoolCidrCreateTimeout); err != nil {
+	// if _, err = WaitIpamPoolCidrAvailable(conn, d.Id(), IpamPoolCidrCreateTimeout); err != nil {
 	// 	return fmt.Errorf("error waiting for IPAM PoolCidr (%s) to be Available: %w", d.Id(), err)
 	// }
 
-	return resourceAwsVpcIpamPoolCidrRead(d, meta)
+	return ResourceVPCIpamPoolCidrRead(d, meta)
 }
 
-func resourceAwsVpcIpamPoolCidrRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
-	cidr, pool_id, err := findIpamPoolCidr(conn, d.Id())
+func ResourceVPCIpamPoolCidrRead(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*conns.AWSClient).EC2Conn
+	cidr, pool_id, err := FindIpamPoolCidr(conn, d.Id())
 
 	if err != nil {
 		return err
@@ -160,8 +164,8 @@ func resourceAwsVpcIpamPoolCidrRead(d *schema.ResourceData, meta interface{}) er
 	return nil
 }
 
-func resourceAwsVpcIpamPoolCidrDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+func ResourceVPCIpamPoolCidrDelete(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*conns.AWSClient).EC2Conn
 	cidr, pool_id, err := DecodeIpamPoolCidrID(d.Id())
 
 	input := &ec2.DeprovisionIpamPoolCidrInput{
@@ -175,8 +179,8 @@ func resourceAwsVpcIpamPoolCidrDelete(d *schema.ResourceData, meta interface{}) 
 
 		if err != nil {
 			// IncorrectState err can mean: State = "deprovisioned" || State = "pending-deprovision"
-			if isAWSErr(err, "IncorrectState", "") {
-				output, err := waitIpamPoolCidrDeleted(conn, d.Id(), IpamPoolCidrDeleteTimeout)
+			if tfawserr.ErrMessageContains(err, "IncorrectState", "") {
+				output, err := WaitIpamPoolCidrDeleted(conn, d.Id(), IpamPoolCidrDeleteTimeout)
 				if err != nil {
 					// State = failed-deprovision
 					return resource.RetryableError(fmt.Errorf("Expected cidr to be deprovisioned but was in state %s", aws.StringValue(output.State)))
@@ -187,7 +191,7 @@ func resourceAwsVpcIpamPoolCidrDelete(d *schema.ResourceData, meta interface{}) 
 			return resource.NonRetryableError(fmt.Errorf("error deprovisioning ipam pool cidr: (%s): %w", cidr, err))
 		}
 
-		output, err := waitIpamPoolCidrDeleted(conn, d.Id(), IpamPoolCidrDeleteTimeout)
+		output, err := WaitIpamPoolCidrDeleted(conn, d.Id(), IpamPoolCidrDeleteTimeout)
 		if err != nil {
 			// State = failed-deprovision
 			return resource.RetryableError(fmt.Errorf("Expected cidr to be deprovisioned but was in state %s", aws.StringValue(output.State)))
@@ -197,7 +201,7 @@ func resourceAwsVpcIpamPoolCidrDelete(d *schema.ResourceData, meta interface{}) 
 	})
 }
 
-func findIpamPoolCidr(conn *ec2.EC2, id string) (*ec2.IpamPoolCidr, string, error) {
+func FindIpamPoolCidr(conn *ec2.EC2, id string) (*ec2.IpamPoolCidr, string, error) {
 	cidr_block, pool_id, err := DecodeIpamPoolCidrID(id)
 	if err != nil {
 		return nil, "", fmt.Errorf("error decoding ID (%s): %w", cidr_block, err)
@@ -225,7 +229,7 @@ func findIpamPoolCidr(conn *ec2.EC2, id string) (*ec2.IpamPoolCidr, string, erro
 	return output.IpamPoolCidrs[0], pool_id, nil
 }
 
-func waitIpamPoolCidrAvailable(conn *ec2.EC2, id string, timeout time.Duration) (*ec2.IpamPoolCidr, error) {
+func WaitIpamPoolCidrAvailable(conn *ec2.EC2, id string, timeout time.Duration) (*ec2.IpamPoolCidr, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{ec2.IpamPoolCidrStatePendingProvision},
 		Target:  []string{ec2.IpamPoolCidrStateProvisioned},
@@ -243,7 +247,7 @@ func waitIpamPoolCidrAvailable(conn *ec2.EC2, id string, timeout time.Duration) 
 	return nil, err
 }
 
-func waitIpamPoolCidrDeleted(conn *ec2.EC2, id string, timeout time.Duration) (*ec2.IpamPoolCidr, error) {
+func WaitIpamPoolCidrDeleted(conn *ec2.EC2, id string, timeout time.Duration) (*ec2.IpamPoolCidr, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{ec2.IpamPoolCidrStatePendingDeprovision, ec2.IpamPoolCidrStateProvisioned},
 		Target:  []string{ec2.IpamPoolCidrStateDeprovisioned},
@@ -264,7 +268,7 @@ func waitIpamPoolCidrDeleted(conn *ec2.EC2, id string, timeout time.Duration) (*
 func statusIpamPoolCidrStatus(conn *ec2.EC2, id string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 
-		output, _, err := findIpamPoolCidr(conn, id)
+		output, _, err := FindIpamPoolCidr(conn, id)
 
 		// there was an unhandled error in the Finder
 		if err != nil {
@@ -283,7 +287,7 @@ func DecodeIpamPoolCidrID(id string) (string, string, error) {
 	return idParts[0], idParts[1], nil
 }
 
-func expandVpcIpamPoolCidrCidrAuthorizationContext(l []interface{}) *ec2.IpamCidrAuthorizationContext {
+func expandVPCIpamPoolCidrCidrAuthorizationContext(l []interface{}) *ec2.IpamCidrAuthorizationContext {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
