@@ -84,20 +84,26 @@ func FindMonitoringSubscriptionByDistributionID(conn *cloudfront.CloudFront, id 
 	return output, nil
 }
 
-// FindRealtimeLogConfigByARN returns the real-time log configuration corresponding to the specified ARN.
-// Returns nil if no configuration is found.
 func FindRealtimeLogConfigByARN(conn *cloudfront.CloudFront, arn string) (*cloudfront.RealtimeLogConfig, error) {
 	input := &cloudfront.GetRealtimeLogConfigInput{
 		ARN: aws.String(arn),
 	}
 
 	output, err := conn.GetRealtimeLogConfig(input)
+
+	if tfawserr.ErrCodeEquals(err, cloudfront.ErrCodeNoSuchRealtimeLogConfig) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
 	if err != nil {
 		return nil, err
 	}
 
-	if output == nil {
-		return nil, nil
+	if output == nil || output.RealtimeLogConfig == nil {
+		return nil, tfresource.NewEmptyResultError(input)
 	}
 
 	return output.RealtimeLogConfig, nil
