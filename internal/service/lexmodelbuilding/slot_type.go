@@ -3,13 +3,13 @@ package lexmodelbuilding
 import (
 	"context"
 	"fmt"
+	"log"
 	"regexp"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/lexmodelbuildingservice"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -22,7 +22,6 @@ const (
 	LexSlotTypeCreateTimeout = 1 * time.Minute
 	LexSlotTypeUpdateTimeout = 1 * time.Minute
 	LexSlotTypeDeleteTimeout = 5 * time.Minute
-	SlotTypeVersionLatest    = "$LATEST"
 )
 
 func ResourceSlotType() *schema.Resource {
@@ -136,8 +135,8 @@ func hasSlotTypeConfigChanges(d verify.ResourceDiffer) bool {
 
 func resourceSlotTypeCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).LexModelBuildingConn
-	name := d.Get("name").(string)
 
+	name := d.Get("name").(string)
 	input := &lexmodelbuildingservice.PutSlotTypeInput{
 		CreateVersion:          aws.Bool(d.Get("create_version").(bool)),
 		Description:            aws.String(d.Get("description").(string)),
@@ -149,26 +148,20 @@ func resourceSlotTypeCreate(d *schema.ResourceData, meta interface{}) error {
 		input.EnumerationValues = expandLexEnumerationValues(v.(*schema.Set).List())
 	}
 
-	err := resource.Retry(d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
-		output, err := conn.PutSlotType(input)
+	var output *lexmodelbuildingservice.PutSlotTypeOutput
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(d.Timeout(schema.TimeoutCreate), func() (interface{}, error) {
+		var err error
 
-		if tfawserr.ErrCodeEquals(err, lexmodelbuildingservice.ErrCodeConflictException) {
+		if output != nil {
 			input.Checksum = output.Checksum
-			return resource.RetryableError(fmt.Errorf("%q slot type still creating, another operation is pending: %s", d.Id(), err))
 		}
-		if err != nil {
-			return resource.NonRetryableError(err)
-		}
+		output, err = conn.PutSlotType(input)
 
-		return nil
-	})
-
-	if tfresource.TimedOut(err) { // nosemgrep: helper-schema-TimeoutError-check-doesnt-return-output
-		_, err = conn.PutSlotType(input)
-	}
+		return output, err
+	}, lexmodelbuildingservice.ErrCodeConflictException)
 
 	if err != nil {
-		return fmt.Errorf("error creating slot type %s: %w", name, err)
+		return fmt.Errorf("error creating Lex Slot Type (%s): %w", name, err)
 	}
 
 	d.SetId(name)
@@ -179,70 +172,38 @@ func resourceSlotTypeCreate(d *schema.ResourceData, meta interface{}) error {
 func resourceSlotTypeRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).LexModelBuildingConn
 
-	resp, err := conn.GetSlotType(&lexmodelbuildingservice.GetSlotTypeInput{
-		Name:    aws.String(d.Id()),
-		Version: aws.String(SlotTypeVersionLatest),
-	})
-	if tfawserr.ErrCodeEquals(err, lexmodelbuildingservice.ErrCodeNotFoundException) {
+	output, err := FindSlotTypeVersionByName(conn, d.Id(), SlotTypeVersionLatest)
+
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] Lex Slot Type (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
+
 	if err != nil {
-		return fmt.Errorf("error getting slot type %s: %w", d.Id(), err)
+		return fmt.Errorf("error reading Lex Slot Type (%s): %w", d.Id(), err)
 	}
 
-	d.Set("checksum", resp.Checksum)
-	d.Set("created_date", resp.CreatedDate.Format(time.RFC3339))
-	d.Set("description", resp.Description)
-	d.Set("last_updated_date", resp.LastUpdatedDate.Format(time.RFC3339))
-	d.Set("name", resp.Name)
-	d.Set("value_selection_strategy", resp.ValueSelectionStrategy)
+	d.Set("checksum", output.Checksum)
+	d.Set("created_date", output.CreatedDate.Format(time.RFC3339))
+	d.Set("description", output.Description)
+	d.Set("last_updated_date", output.LastUpdatedDate.Format(time.RFC3339))
+	d.Set("name", output.Name)
+	d.Set("value_selection_strategy", output.ValueSelectionStrategy)
 
-	if resp.EnumerationValues != nil {
-		d.Set("enumeration_value", flattenLexEnumerationValues(resp.EnumerationValues))
+	if output.EnumerationValues != nil {
+		d.Set("enumeration_value", flattenLexEnumerationValues(output.EnumerationValues))
 	}
 
-	version, err := getLatestLexSlotTypeVersion(conn, &lexmodelbuildingservice.GetSlotTypeVersionsInput{
-		Name: aws.String(d.Id()),
-	})
+	version, err := FindLatestSlotTypeVersionByName(conn, d.Id())
+
 	if err != nil {
-		return err
+		return fmt.Errorf("error reading Lex Slot Type (%s) latest version: %w", d.Id(), err)
 	}
+
 	d.Set("version", version)
 
 	return nil
-}
-
-func getLatestLexSlotTypeVersion(conn *lexmodelbuildingservice.LexModelBuildingService, input *lexmodelbuildingservice.GetSlotTypeVersionsInput) (string, error) {
-	version := SlotTypeVersionLatest
-
-	for {
-		page, err := conn.GetSlotTypeVersions(input)
-		if err != nil {
-			return "", err
-		}
-
-		// At least 1 version will always be returned.
-		if len(page.SlotTypes) == 1 {
-			break
-		}
-
-		for _, slotType := range page.SlotTypes {
-			if *slotType.Version == SlotTypeVersionLatest {
-				continue
-			}
-			if *slotType.Version > version {
-				version = *slotType.Version
-			}
-		}
-
-		if page.NextToken == nil {
-			break
-		}
-		input.NextToken = page.NextToken
-	}
-
-	return version, nil
 }
 
 func resourceSlotTypeUpdate(d *schema.ResourceData, meta interface{}) error {
@@ -260,25 +221,12 @@ func resourceSlotTypeUpdate(d *schema.ResourceData, meta interface{}) error {
 		input.EnumerationValues = expandLexEnumerationValues(v.(*schema.Set).List())
 	}
 
-	err := resource.Retry(d.Timeout(schema.TimeoutUpdate), func() *resource.RetryError {
-		_, err := conn.PutSlotType(input)
-
-		if tfawserr.ErrCodeEquals(err, lexmodelbuildingservice.ErrCodeConflictException) {
-			return resource.RetryableError(fmt.Errorf("%q: slot type still updating", d.Id()))
-		}
-		if err != nil {
-			return resource.NonRetryableError(err)
-		}
-
-		return nil
-	})
-
-	if tfresource.TimedOut(err) {
-		_, err = conn.PutSlotType(input)
-	}
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(d.Timeout(schema.TimeoutUpdate), func() (interface{}, error) {
+		return conn.PutSlotType(input)
+	}, lexmodelbuildingservice.ErrCodeConflictException)
 
 	if err != nil {
-		return fmt.Errorf("error updating slot type %s: %w", d.Id(), err)
+		return fmt.Errorf("error updating Lex Slot Type (%s): %w", d.Id(), err)
 	}
 
 	return resourceSlotTypeRead(d, meta)
@@ -291,25 +239,17 @@ func resourceSlotTypeDelete(d *schema.ResourceData, meta interface{}) error {
 		Name: aws.String(d.Id()),
 	}
 
-	err := resource.Retry(d.Timeout(schema.TimeoutDelete), func() *resource.RetryError {
-		_, err := conn.DeleteSlotType(input)
+	log.Printf("[DEBUG] Deleting Lex Slot Type: (%s)", d.Id())
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(d.Timeout(schema.TimeoutDelete), func() (interface{}, error) {
+		return conn.DeleteSlotType(input)
+	}, lexmodelbuildingservice.ErrCodeConflictException)
 
-		if tfawserr.ErrCodeEquals(err, lexmodelbuildingservice.ErrCodeConflictException) {
-			return resource.RetryableError(fmt.Errorf("%q: there is a pending operation, slot type still deleting", d.Id()))
-		}
-		if err != nil {
-			return resource.NonRetryableError(err)
-		}
-
+	if tfawserr.ErrCodeEquals(err, lexmodelbuildingservice.ErrCodeNotFoundException) {
 		return nil
-	})
-
-	if tfresource.TimedOut(err) {
-		_, err = conn.DeleteSlotType(input)
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting slot type %s: %w", d.Id(), err)
+		return fmt.Errorf("error deleting Lex Slot Type (%s): %w", d.Id(), err)
 	}
 
 	_, err = waitLexSlotTypeDeleted(conn, d.Id())

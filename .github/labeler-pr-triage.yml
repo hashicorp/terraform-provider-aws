@@ -434,13 +434,11 @@ service/mq:
 service/mwaa:
   - 'internal/service/mwaa/**/*'
   - 'website/**/mwaa_*'
-service/nas:
-  - 'internal/service/nas/**/*'
+service/meta:
+  - 'internal/service/meta/**/*'
   - 'website/**/arn*'
   - 'website/**/ip_ranges*'
   - 'website/**/billing_service_account*'
-  - 'website/**/caller_identity*'
-  - 'website/**/canonical_user_id*'
   - 'website/**/default_tags*'
   - 'website/**/partition*'
   - 'website/**/region*'
@@ -523,6 +521,7 @@ service/s3:
   - 'internal/service/s3/**/*'
   - 'website/**/s3_bucket*'
   - 'website/**/s3_object*'
+  - 'website/**/canonical_user_id*'
 service/s3control:
   - 'internal/service/s3control/**/*'
   - 'website/**/s3_account_*'
@@ -588,6 +587,7 @@ service/storagegateway:
   - 'website/**/storagegateway_*'
 service/sts:
   - 'internal/service/sts/**/*'
+  - 'website/**/caller_identity*'
 service/swf:
   - 'internal/service/swf/**/*'
   - 'website/**/swf_*'

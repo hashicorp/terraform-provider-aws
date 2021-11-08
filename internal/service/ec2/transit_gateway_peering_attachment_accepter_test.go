@@ -2,6 +2,7 @@ package ec2_test
 
 import (
 	"fmt"
+	"os"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/ec2"
@@ -9,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func testAccTransitGatewayPeeringAttachmentAccepter_basic_sameAccount(t *testing.T) {
@@ -215,9 +217,21 @@ resource "aws_ec2_transit_gateway_peering_attachment_accepter" "test" {
 `, rName))
 }
 
+func testAccAlternateAccountAlternateRegionProviderConfig() string {
+	//lintignore:AT004
+	return fmt.Sprintf(`
+provider "awsalternate" {
+  access_key = %[1]q
+  profile    = %[2]q
+  region     = %[3]q
+  secret_key = %[4]q
+}
+`, os.Getenv(conns.EnvVarAlternateAccessKeyId), os.Getenv(conns.EnvVarAlternateProfile), acctest.AlternateRegion(), os.Getenv(conns.EnvVarAlternateSecretAccessKey))
+}
+
 func testAccTransitGatewayPeeringAttachmentAccepterConfig_basic_differentAccount(rName string) string {
 	return acctest.ConfigCompose(
-		acctest.ConfigAlternateAccountAlternateRegionProvider(),
+		testAccAlternateAccountAlternateRegionProviderConfig(),
 		testAccTransitGatewayPeeringAttachmentAccepterBaseConfig(rName),
 		`
 resource "aws_ec2_transit_gateway_peering_attachment_accepter" "test" {

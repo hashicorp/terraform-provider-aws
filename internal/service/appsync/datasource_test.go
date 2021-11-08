@@ -152,7 +152,7 @@ func testAccAppSyncDataSource_DynamoDB_useCallerCredentials(t *testing.T) {
 	})
 }
 
-func TestAccAppSyncDataSource_ElasticSearch_region(t *testing.T) {
+func TestAccAppSyncDataSource_Elasticsearch_region(t *testing.T) {
 	rName := fmt.Sprintf("tfacctest%d", sdkacctest.RandInt())
 	resourceName := "aws_appsync_datasource.test"
 

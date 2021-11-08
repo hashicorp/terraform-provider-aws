@@ -1652,14 +1652,14 @@ func TestExpandArtifactStoresValidation(t *testing.T) {
 		_, err := tfcodepipeline.ExpandArtifactStores(tc.Input)
 		if tc.ExpectedError == "" {
 			if err != nil {
-				t.Errorf("%s: Did not expect an error, but got: %w", tc.Name, err)
+				t.Errorf("%s: Did not expect an error, but got: %s", tc.Name, err)
 			}
 		} else {
 			if err == nil {
 				t.Errorf("%s: Expected an error, but did not get one", tc.Name)
 			} else {
 				if err.Error() != tc.ExpectedError {
-					t.Errorf("%s: Expected error %q, got %w", tc.Name, tc.ExpectedError, err)
+					t.Errorf("%s: Expected error %q, got %s", tc.Name, tc.ExpectedError, err)
 				}
 			}
 		}

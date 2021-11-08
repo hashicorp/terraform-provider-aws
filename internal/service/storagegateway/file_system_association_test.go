@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tffsx "github.com/hashicorp/terraform-provider-aws/internal/service/fsx"
 	tfstoragegateway "github.com/hashicorp/terraform-provider-aws/internal/service/storagegateway"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func TestAccStorageGatewayFileSystemAssociation_basic(t *testing.T) {
@@ -271,26 +272,24 @@ func testAccCheckFileSystemAssociationDestroy(s *terraform.State) error {
 			continue
 		}
 
-		output, err := tfstoragegateway.FindFileSystemAssociationByARN(conn, rs.Primary.ID)
+		_, err := tfstoragegateway.FindFileSystemAssociationByARN(conn, rs.Primary.ID)
+
+		if tfresource.NotFound(err) {
+			continue
+		}
 
 		if err != nil {
 			return err
 		}
 
-		if output != nil {
-			return fmt.Errorf("Storage Gateway File System Association (%s) still exists", rs.Primary.ID)
-		}
-
-		if output == nil {
-			continue
-		}
+		return fmt.Errorf("Storage Gateway File System Association %s still exists", rs.Primary.ID)
 	}
 
 	return nil
 
 }
 
-func testAccCheckFileSystemAssociationExists(resourceName string, fileSystemAssociation *storagegateway.FileSystemAssociationInfo) resource.TestCheckFunc {
+func testAccCheckFileSystemAssociationExists(resourceName string, v *storagegateway.FileSystemAssociationInfo) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
@@ -305,11 +304,7 @@ func testAccCheckFileSystemAssociationExists(resourceName string, fileSystemAsso
 			return err
 		}
 
-		if output == nil {
-			return fmt.Errorf("Storage Gateway File System Association (%s) does not exist", rs.Primary.ID)
-		}
-
-		*fileSystemAssociation = *output
+		*v = *output
 
 		return nil
 	}

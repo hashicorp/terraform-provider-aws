@@ -6,13 +6,13 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/lexmodelbuildingservice"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tflexmodelbuilding "github.com/hashicorp/terraform-provider-aws/internal/service/lexmodelbuilding"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func TestAccLexModelBuildingSlotType_basic(t *testing.T) {
@@ -370,7 +370,7 @@ func TestAccLexModelBuildingSlotType_computeVersion(t *testing.T) {
 	})
 }
 
-func testAccCheckSlotTypeExistsWithVersion(rName, slotTypeVersion string, output *lexmodelbuildingservice.GetSlotTypeOutput) resource.TestCheckFunc {
+func testAccCheckSlotTypeExistsWithVersion(rName, slotTypeVersion string, v *lexmodelbuildingservice.GetSlotTypeOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[rName]
 		if !ok {
@@ -378,22 +378,18 @@ func testAccCheckSlotTypeExistsWithVersion(rName, slotTypeVersion string, output
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Lex slot type ID is set")
+			return fmt.Errorf("No Lex Slot Type ID is set")
 		}
 
-		var err error
 		conn := acctest.Provider.Meta().(*conns.AWSClient).LexModelBuildingConn
 
-		output, err = conn.GetSlotType(&lexmodelbuildingservice.GetSlotTypeInput{
-			Name:    aws.String(rs.Primary.ID),
-			Version: aws.String(slotTypeVersion),
-		})
-		if tfawserr.ErrCodeEquals(err, lexmodelbuildingservice.ErrCodeNotFoundException) {
-			return fmt.Errorf("error slot type %q version %s not found", rs.Primary.ID, slotTypeVersion)
-		}
+		output, err := tflexmodelbuilding.FindSlotTypeVersionByName(conn, rs.Primary.ID, slotTypeVersion)
+
 		if err != nil {
-			return fmt.Errorf("error getting slot type %q version %s: %w", rs.Primary.ID, slotTypeVersion, err)
+			return err
 		}
+
+		*v = *output
 
 		return nil
 	}
@@ -407,18 +403,17 @@ func testAccCheckSlotTypeNotExists(slotTypeName, slotTypeVersion string) resourc
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).LexModelBuildingConn
 
-		_, err := conn.GetSlotType(&lexmodelbuildingservice.GetSlotTypeInput{
-			Name:    aws.String(slotTypeName),
-			Version: aws.String(slotTypeVersion),
-		})
-		if tfawserr.ErrCodeEquals(err, lexmodelbuildingservice.ErrCodeNotFoundException) {
+		_, err := tflexmodelbuilding.FindSlotTypeVersionByName(conn, slotTypeName, slotTypeVersion)
+
+		if tfresource.NotFound(err) {
 			return nil
 		}
+
 		if err != nil {
-			return fmt.Errorf("error getting slot type %s version %s: %s", slotTypeName, slotTypeVersion, err)
+			return err
 		}
 
-		return fmt.Errorf("error slot type %s version %s exists", slotTypeName, slotTypeVersion)
+		return fmt.Errorf("Lex Slot Type %s/%s still exists", slotTypeName, slotTypeVersion)
 	}
 }
 
@@ -433,9 +428,7 @@ func testAccCheckSlotTypeDestroy(s *terraform.State) error {
 		output, err := conn.GetSlotTypeVersions(&lexmodelbuildingservice.GetSlotTypeVersionsInput{
 			Name: aws.String(rs.Primary.ID),
 		})
-		if tfawserr.ErrCodeEquals(err, lexmodelbuildingservice.ErrCodeNotFoundException) {
-			continue
-		}
+
 		if err != nil {
 			return err
 		}
@@ -444,7 +437,7 @@ func testAccCheckSlotTypeDestroy(s *terraform.State) error {
 			return nil
 		}
 
-		return fmt.Errorf("Lex slot type %q still exists", rs.Primary.ID)
+		return fmt.Errorf("Lex Slot Type %s still exists", rs.Primary.ID)
 	}
 
 	return nil

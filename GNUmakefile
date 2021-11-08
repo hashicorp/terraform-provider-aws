@@ -1,4 +1,4 @@
-SWEEP?=us-east-1,us-east-2,us-west-2
+SWEEP?=us-west-2,us-east-1,us-east-2
 TEST?=./...
 SWEEP_DIR?=./internal/sweep
 PKG_NAME=internal
@@ -16,6 +16,7 @@ gen:
 	go generate ./...
 
 sweep:
+	# make sweep SWEEPARGS=-sweep-run=aws_example_thing
 	@echo "WARNING: This will destroy infrastructure. Use only in development accounts."
 	go test $(SWEEP_DIR) -v -tags=sweep -sweep=$(SWEEP) $(SWEEPARGS) -timeout 60m
 

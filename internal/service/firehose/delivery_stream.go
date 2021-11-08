@@ -2107,7 +2107,7 @@ func createElasticsearchConfig(d *schema.ResourceData, s3Config *firehose.S3Dest
 	config := &firehose.ElasticsearchDestinationConfiguration{
 		BufferingHints:  extractBufferingHints(es),
 		IndexName:       aws.String(es["index_name"].(string)),
-		RetryOptions:    extractElasticSearchRetryOptions(es),
+		RetryOptions:    extractElasticsearchRetryOptions(es),
 		RoleARN:         aws.String(es["role_arn"].(string)),
 		TypeName:        aws.String(es["type_name"].(string)),
 		S3Configuration: s3Config,
@@ -2155,7 +2155,7 @@ func updateElasticsearchConfig(d *schema.ResourceData, s3Update *firehose.S3Dest
 	update := &firehose.ElasticsearchDestinationUpdate{
 		BufferingHints: extractBufferingHints(es),
 		IndexName:      aws.String(es["index_name"].(string)),
-		RetryOptions:   extractElasticSearchRetryOptions(es),
+		RetryOptions:   extractElasticsearchRetryOptions(es),
 		RoleARN:        aws.String(es["role_arn"].(string)),
 		TypeName:       aws.String(es["type_name"].(string)),
 		S3Update:       s3Update,
@@ -2404,7 +2404,7 @@ func extractBufferingHints(es map[string]interface{}) *firehose.ElasticsearchBuf
 	return bufferingHints
 }
 
-func extractElasticSearchRetryOptions(es map[string]interface{}) *firehose.ElasticsearchRetryOptions {
+func extractElasticsearchRetryOptions(es map[string]interface{}) *firehose.ElasticsearchRetryOptions {
 	retryOptions := &firehose.ElasticsearchRetryOptions{}
 
 	if retryDuration, ok := es["retry_duration"].(int); ok {
@@ -2538,7 +2538,7 @@ func resourceDeliveryStreamCreate(d *schema.ResourceData, meta interface{}) erro
 				return resource.RetryableError(err)
 			}
 
-			// InvalidArgumentException: Verify that the IAM role has access to the ElasticSearch domain.
+			// InvalidArgumentException: Verify that the IAM role has access to the Elasticsearch domain.
 			if tfawserr.ErrMessageContains(err, firehose.ErrCodeInvalidArgumentException, "Verify that the IAM role has access") {
 				return resource.RetryableError(err)
 			}
@@ -2686,7 +2686,7 @@ func resourceDeliveryStreamUpdate(d *schema.ResourceData, meta interface{}) erro
 				return resource.RetryableError(err)
 			}
 
-			// InvalidArgumentException: Verify that the IAM role has access to the ElasticSearch domain.
+			// InvalidArgumentException: Verify that the IAM role has access to the Elasticsearch domain.
 			if tfawserr.ErrMessageContains(err, firehose.ErrCodeInvalidArgumentException, "Verify that the IAM role has access") {
 				return resource.RetryableError(err)
 			}

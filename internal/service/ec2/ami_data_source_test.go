@@ -115,7 +115,7 @@ func TestAccEC2AMIDataSource_instanceStore(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: acctest.ConfigLatestAmazonLinuxHvmInstanceStoreAmi(),
+				Config: testAccLatestAmazonLinuxHVMInstanceStoreAMIConfig(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAMIIDDataSource(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "architecture", "x86_64"),
@@ -208,6 +208,28 @@ func testAccCheckAMIIDDataSource(n string) resource.TestCheckFunc {
 		}
 		return nil
 	}
+}
+
+// testAccLatestAmazonLinuxHVMInstanceStoreAMIConfig returns the configuration for a data source that
+// describes the latest Amazon Linux AMI using HVM virtualization and an instance store root device.
+// The data source is named 'amzn-ami-minimal-hvm-instance-store'.
+func testAccLatestAmazonLinuxHVMInstanceStoreAMIConfig() string {
+	return `
+data "aws_ami" "amzn-ami-minimal-hvm-instance-store" {
+  most_recent = true
+  owners      = ["amazon"]
+
+  filter {
+    name   = "name"
+    values = ["amzn-ami-minimal-hvm-*"]
+  }
+
+  filter {
+    name   = "root-device-type"
+    values = ["instance-store"]
+  }
+}
+`
 }
 
 // Using NAT AMIs for testing - I would expect with NAT gateways now a thing,
