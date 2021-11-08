@@ -199,7 +199,7 @@ resource "aws_s3_bucket_object" "test" {
 
     Resources = {
       MyVPC = {
-        Type = "AWS::EC2::VPC"
+        Type      = "AWS::EC2::VPC"
         Condition = "IsEmptyParameter"
         Properties = {
           CidrBlock = { Ref = "VPCPrimaryCIDR" }
