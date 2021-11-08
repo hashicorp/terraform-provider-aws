@@ -8,6 +8,31 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+func FindFieldLevelEncryptionProfileByID(conn *cloudfront.CloudFront, id string) (*cloudfront.GetFieldLevelEncryptionProfileOutput, error) {
+	input := &cloudfront.GetFieldLevelEncryptionProfileInput{
+		Id: aws.String(id),
+	}
+
+	output, err := conn.GetFieldLevelEncryptionProfile(input)
+
+	if tfawserr.ErrCodeEquals(err, cloudfront.ErrCodeNoSuchFieldLevelEncryptionProfile) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
+}
+
 func FindFunctionByNameAndStage(conn *cloudfront.CloudFront, name, stage string) (*cloudfront.DescribeFunctionOutput, error) {
 	input := &cloudfront.DescribeFunctionInput{
 		Name:  aws.String(name),

@@ -1,4 +1,4 @@
-package aws
+package cloudfront
 
 import (
 	"fmt"
@@ -9,16 +9,17 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/cloudfront/finder"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func resourceAwsCloudfrontFieldLevelEncryptionProfile() *schema.Resource {
+func ResourceFieldLevelEncryptionProfile() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsCloudfrontFieldLevelEncryptionProfileCreate,
-		Read:   resourceAwsCloudfrontFieldLevelEncryptionProfileRead,
-		Update: resourceAwsCloudfrontFieldLevelEncryptionProfileUpdate,
-		Delete: resourceAwsCloudfrontFieldLevelEncryptionProfileDelete,
+		Create: resourceFieldLevelEncryptionProfileCreate,
+		Read:   resourceFieldLevelEncryptionProfileRead,
+		Update: resourceFieldLevelEncryptionProfileUpdate,
+		Delete: resourceFieldLevelEncryptionProfileDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -66,8 +67,8 @@ func resourceAwsCloudfrontFieldLevelEncryptionProfile() *schema.Resource {
 	}
 }
 
-func resourceAwsCloudfrontFieldLevelEncryptionProfileCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cloudfrontconn
+func resourceFieldLevelEncryptionProfileCreate(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*conns.AWSClient).CloudFrontConn
 
 	fl := &cloudfront.FieldLevelEncryptionProfileConfig{
 		CallerReference:    aws.String(resource.UniqueId()),
@@ -90,13 +91,13 @@ func resourceAwsCloudfrontFieldLevelEncryptionProfileCreate(d *schema.ResourceDa
 
 	d.SetId(aws.StringValue(resp.FieldLevelEncryptionProfile.Id))
 
-	return resourceAwsCloudfrontFieldLevelEncryptionProfileRead(d, meta)
+	return resourceFieldLevelEncryptionProfileRead(d, meta)
 }
 
-func resourceAwsCloudfrontFieldLevelEncryptionProfileRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cloudfrontconn
+func resourceFieldLevelEncryptionProfileRead(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*conns.AWSClient).CloudFrontConn
 
-	resp, err := finder.FieldLevelEncryptionProfileByID(conn, d.Id())
+	resp, err := FindFieldLevelEncryptionProfileByID(conn, d.Id())
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Cloudfront Field Level Encryption Profile %s not found, removing from state", d.Id())
 		d.SetId("")
@@ -119,8 +120,8 @@ func resourceAwsCloudfrontFieldLevelEncryptionProfileRead(d *schema.ResourceData
 	return nil
 }
 
-func resourceAwsCloudfrontFieldLevelEncryptionProfileUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cloudfrontconn
+func resourceFieldLevelEncryptionProfileUpdate(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*conns.AWSClient).CloudFrontConn
 
 	fl := &cloudfront.FieldLevelEncryptionProfileConfig{
 		CallerReference:    aws.String(d.Get("caller_reference").(string)),
@@ -143,11 +144,11 @@ func resourceAwsCloudfrontFieldLevelEncryptionProfileUpdate(d *schema.ResourceDa
 		return fmt.Errorf("error creating Cloudfront Field Level Encryption Profile (%s): %w", d.Id(), err)
 	}
 
-	return resourceAwsCloudfrontFieldLevelEncryptionProfileRead(d, meta)
+	return resourceFieldLevelEncryptionProfileRead(d, meta)
 }
 
-func resourceAwsCloudfrontFieldLevelEncryptionProfileDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cloudfrontconn
+func resourceFieldLevelEncryptionProfileDelete(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*conns.AWSClient).CloudFrontConn
 
 	input := &cloudfront.DeleteFieldLevelEncryptionProfileInput{
 		Id:      aws.String(d.Id()),
@@ -191,7 +192,7 @@ func expandAwsCloudfrontFieldLevelEncryptionProfileConfig(config []interface{}) 
 func expandAwsCloudfrontFieldLevelEncryptionProfileFieldPatternsConfig(config *schema.Set) *cloudfront.FieldPatterns {
 	contentTypeProfiles := &cloudfront.FieldPatterns{
 		Quantity: aws.Int64(int64(config.Len())),
-		Items:    expandStringSet(config),
+		Items:    flex.ExpandStringSet(config),
 	}
 
 	return contentTypeProfiles
@@ -204,7 +205,7 @@ func flattenAwsCloudfrontFieldLevelEncryptionProfileEncryptionEntitiesConfig(con
 		m := make(map[string]interface{})
 		m["provider_id"] = aws.StringValue(s.ProviderId)
 		m["public_key_id"] = aws.StringValue(s.PublicKeyId)
-		m["field_patterns"] = flattenStringSet(s.FieldPatterns.Items)
+		m["field_patterns"] = flex.FlattenStringSet(s.FieldPatterns.Items)
 		result[i] = m
 	}
 
