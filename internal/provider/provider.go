@@ -980,8 +980,8 @@ func Provider() *schema.Provider {
 			"aws_docdb_cluster_parameter_group": docdb.ResourceClusterParameterGroup(),
 			"aws_docdb_cluster_snapshot":        docdb.ResourceClusterSnapshot(),
 
-			"aws_docdb_global_cluster":          docdb.ResourceGlobalCluster(),
-			"aws_docdb_subnet_group":            docdb.ResourceSubnetGroup(),
+			"aws_docdb_global_cluster": docdb.ResourceGlobalCluster(),
+			"aws_docdb_subnet_group":   docdb.ResourceSubnetGroup(),
 
 			"aws_directory_service_conditional_forwarder": ds.ResourceConditionalForwarder(),
 			"aws_directory_service_directory":             ds.ResourceDirectory(),
