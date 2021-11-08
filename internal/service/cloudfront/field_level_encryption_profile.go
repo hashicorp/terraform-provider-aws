@@ -25,43 +25,60 @@ func ResourceFieldLevelEncryptionProfile() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"name": {
+			"caller_reference": {
 				Type:     schema.TypeString,
-				Required: true,
-			},
-			"encryption_entities": {
-				Type:     schema.TypeList,
-				Required: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"public_key_id": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"provider_id": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"field_patterns": {
-							Type:     schema.TypeSet,
-							Required: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-					},
-				},
+				Computed: true,
 			},
 			"comment": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
+			"encryption_entities": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"items": {
+							Type:     schema.TypeSet,
+							Optional: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"field_patterns": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"items": {
+													Type:     schema.TypeSet,
+													Optional: true,
+													Elem:     &schema.Schema{Type: schema.TypeString},
+												},
+											},
+										},
+									},
+									"provider_id": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+									"public_key_id": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+								},
+							},
+						},
+					},
+				},
+			},
 			"etag": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"caller_reference": {
+			"name": {
 				Type:     schema.TypeString,
-				Computed: true,
+				Required: true,
 			},
 		},
 	}
@@ -70,26 +87,31 @@ func ResourceFieldLevelEncryptionProfile() *schema.Resource {
 func resourceFieldLevelEncryptionProfileCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CloudFrontConn
 
-	fl := &cloudfront.FieldLevelEncryptionProfileConfig{
-		CallerReference:    aws.String(resource.UniqueId()),
-		Name:               aws.String(d.Get("name").(string)),
-		EncryptionEntities: expandAwsCloudfrontFieldLevelEncryptionProfileConfig(d.Get("encryption_entities").([]interface{})),
+	apiObject := &cloudfront.FieldLevelEncryptionProfileConfig{
+		CallerReference: aws.String(resource.UniqueId()),
+		Name:            aws.String(d.Get("name").(string)),
 	}
 
 	if v, ok := d.GetOk("comment"); ok {
-		fl.Comment = aws.String(v.(string))
+		apiObject.Comment = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("encryption_entities"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		apiObject.EncryptionEntities = expandEncryptionEntities(v.([]interface{})[0].(map[string]interface{}))
 	}
 
 	input := &cloudfront.CreateFieldLevelEncryptionProfileInput{
-		FieldLevelEncryptionProfileConfig: fl,
+		FieldLevelEncryptionProfileConfig: apiObject,
 	}
 
-	resp, err := conn.CreateFieldLevelEncryptionProfile(input)
+	log.Printf("[DEBUG] Creating CloudFront Field-level Encryption Profile: (%s)", input)
+	output, err := conn.CreateFieldLevelEncryptionProfile(input)
+
 	if err != nil {
-		return fmt.Errorf("error creating Cloudfront Field Level Encryption Profile (%s): %w", d.Id(), err)
+		return fmt.Errorf("error creating CloudFront Field-level Encryption Profile (%s): %w", d.Id(), err)
 	}
 
-	d.SetId(aws.StringValue(resp.FieldLevelEncryptionProfile.Id))
+	d.SetId(aws.StringValue(output.FieldLevelEncryptionProfile.Id))
 
 	return resourceFieldLevelEncryptionProfileRead(d, meta)
 }
@@ -97,25 +119,30 @@ func resourceFieldLevelEncryptionProfileCreate(d *schema.ResourceData, meta inte
 func resourceFieldLevelEncryptionProfileRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CloudFrontConn
 
-	resp, err := FindFieldLevelEncryptionProfileByID(conn, d.Id())
+	output, err := FindFieldLevelEncryptionProfileByID(conn, d.Id())
+
 	if !d.IsNewResource() && tfresource.NotFound(err) {
-		log.Printf("[WARN] Cloudfront Field Level Encryption Profile %s not found, removing from state", d.Id())
+		log.Printf("[WARN] CloudFront Field-level Encryption Profile (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading Cloudfront Field Level Encryption Profile (%s): %w", d.Id(), err)
+		return fmt.Errorf("error reading CloudFront Field-level Encryption Profile (%s): %w", d.Id(), err)
 	}
-	profile := resp.FieldLevelEncryptionProfile.FieldLevelEncryptionProfileConfig
-	d.Set("etag", resp.ETag)
-	d.Set("comment", profile.Comment)
-	d.Set("name", profile.Name)
-	d.Set("caller_reference", profile.CallerReference)
 
-	if err := d.Set("encryption_entities", flattenAwsCloudfrontFieldLevelEncryptionProfileEncryptionEntitiesConfig(profile.EncryptionEntities)); err != nil {
-		return fmt.Errorf("error setting encryption_entities %w", err)
+	apiObject := output.FieldLevelEncryptionProfile.FieldLevelEncryptionProfileConfig
+	d.Set("caller_reference", apiObject.CallerReference)
+	d.Set("comment", apiObject.Comment)
+	if apiObject.EncryptionEntities != nil {
+		if err := d.Set("encryption_entities", []interface{}{flattenEncryptionEntities(apiObject.EncryptionEntities)}); err != nil {
+			return fmt.Errorf("error setting encryption_entities: %w", err)
+		}
+	} else {
+		d.Set("encryption_entities", nil)
 	}
+	d.Set("etag", output.ETag)
+	d.Set("name", apiObject.Name)
 
 	return nil
 }
@@ -123,25 +150,30 @@ func resourceFieldLevelEncryptionProfileRead(d *schema.ResourceData, meta interf
 func resourceFieldLevelEncryptionProfileUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CloudFrontConn
 
-	fl := &cloudfront.FieldLevelEncryptionProfileConfig{
-		CallerReference:    aws.String(d.Get("caller_reference").(string)),
-		Name:               aws.String(d.Get("name").(string)),
-		EncryptionEntities: expandAwsCloudfrontFieldLevelEncryptionProfileConfig(d.Get("encryption_entities").([]interface{})),
+	apiObject := &cloudfront.FieldLevelEncryptionProfileConfig{
+		CallerReference: aws.String(d.Get("caller_reference").(string)),
+		Name:            aws.String(d.Get("name").(string)),
 	}
 
 	if v, ok := d.GetOk("comment"); ok {
-		fl.Comment = aws.String(v.(string))
+		apiObject.Comment = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("encryption_entities"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		apiObject.EncryptionEntities = expandEncryptionEntities(v.([]interface{})[0].(map[string]interface{}))
 	}
 
 	input := &cloudfront.UpdateFieldLevelEncryptionProfileInput{
-		FieldLevelEncryptionProfileConfig: fl,
+		FieldLevelEncryptionProfileConfig: apiObject,
 		Id:                                aws.String(d.Id()),
 		IfMatch:                           aws.String(d.Get("etag").(string)),
 	}
 
+	log.Printf("[DEBUG] Updating CloudFront Field-level Encryption Profile: (%s)", input)
 	_, err := conn.UpdateFieldLevelEncryptionProfile(input)
+
 	if err != nil {
-		return fmt.Errorf("error creating Cloudfront Field Level Encryption Profile (%s): %w", d.Id(), err)
+		return fmt.Errorf("error updating CloudFront Field-level Encryption Profile (%s): %w", d.Id(), err)
 	}
 
 	return resourceFieldLevelEncryptionProfileRead(d, meta)
@@ -150,64 +182,169 @@ func resourceFieldLevelEncryptionProfileUpdate(d *schema.ResourceData, meta inte
 func resourceFieldLevelEncryptionProfileDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CloudFrontConn
 
-	input := &cloudfront.DeleteFieldLevelEncryptionProfileInput{
+	log.Printf("[DEBUG] Deleting CloudFront Field-level Encryption Profile: (%s)", d.Id())
+	_, err := conn.DeleteFieldLevelEncryptionProfile(&cloudfront.DeleteFieldLevelEncryptionProfileInput{
 		Id:      aws.String(d.Id()),
 		IfMatch: aws.String(d.Get("etag").(string)),
+	})
+
+	if tfawserr.ErrCodeEquals(err, cloudfront.ErrCodeNoSuchFieldLevelEncryptionProfile) {
+		return nil
 	}
 
-	_, err := conn.DeleteFieldLevelEncryptionProfile(input)
 	if err != nil {
-		if tfawserr.ErrCodeEquals(err, cloudfront.ErrCodeNoSuchFieldLevelEncryptionProfile) {
-			return nil
-		}
-
-		return fmt.Errorf("error deleting Cloudfront Field Level Encryption Profile (%s): %w", d.Id(), err)
+		return fmt.Errorf("error deleting CloudFront Field-level Encryption Profile (%s): %w", d.Id(), err)
 	}
 
 	return nil
 }
-func expandAwsCloudfrontFieldLevelEncryptionProfileConfig(config []interface{}) *cloudfront.EncryptionEntities {
-	entities := make([]*cloudfront.EncryptionEntity, 0)
 
-	for _, raw := range config {
-		m := raw.(map[string]interface{})
+func expandEncryptionEntities(tfMap map[string]interface{}) *cloudfront.EncryptionEntities {
+	if tfMap == nil {
+		return nil
+	}
 
-		entity := &cloudfront.EncryptionEntity{
-			PublicKeyId:   aws.String(m["public_key_id"].(string)),
-			ProviderId:    aws.String(m["provider_id"].(string)),
-			FieldPatterns: expandAwsCloudfrontFieldLevelEncryptionProfileFieldPatternsConfig(m["field_patterns"].(*schema.Set)),
+	apiObject := &cloudfront.EncryptionEntities{}
+
+	if v, ok := tfMap["items"].(*schema.Set); ok && v.Len() > 0 {
+		items := expandEncryptionEntitys(v.List())
+		apiObject.Items = items
+		apiObject.Quantity = aws.Int64(int64(len(items)))
+	}
+
+	return apiObject
+}
+
+func expandEncryptionEntity(tfMap map[string]interface{}) *cloudfront.EncryptionEntity {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &cloudfront.EncryptionEntity{}
+
+	if v, ok := tfMap["field_patterns"].([]interface{}); ok && len(v) > 0 {
+		apiObject.FieldPatterns = expandFieldPatterns(v[0].(map[string]interface{}))
+	}
+
+	if v, ok := tfMap["provider_id"].(string); ok && v != "" {
+		apiObject.ProviderId = aws.String(v)
+	}
+
+	if v, ok := tfMap["public_key_id"].(string); ok && v != "" {
+		apiObject.PublicKeyId = aws.String(v)
+	}
+
+	return apiObject
+}
+
+func expandEncryptionEntitys(tfList []interface{}) []*cloudfront.EncryptionEntity {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	var apiObjects []*cloudfront.EncryptionEntity
+
+	for _, tfMapRaw := range tfList {
+		tfMap, ok := tfMapRaw.(map[string]interface{})
+
+		if !ok {
+			continue
 		}
 
-		entities = append(entities, entity)
+		apiObject := expandEncryptionEntity(tfMap)
+
+		if apiObject == nil {
+			continue
+		}
+
+		apiObjects = append(apiObjects, apiObject)
 	}
 
-	contentTypeProfiles := &cloudfront.EncryptionEntities{
-		Quantity: aws.Int64(int64(len(config))),
-		Items:    entities,
-	}
-
-	return contentTypeProfiles
+	return apiObjects
 }
 
-func expandAwsCloudfrontFieldLevelEncryptionProfileFieldPatternsConfig(config *schema.Set) *cloudfront.FieldPatterns {
-	contentTypeProfiles := &cloudfront.FieldPatterns{
-		Quantity: aws.Int64(int64(config.Len())),
-		Items:    flex.ExpandStringSet(config),
+func expandFieldPatterns(tfMap map[string]interface{}) *cloudfront.FieldPatterns {
+	if tfMap == nil {
+		return nil
 	}
 
-	return contentTypeProfiles
+	apiObject := &cloudfront.FieldPatterns{}
+
+	if v, ok := tfMap["items"].(*schema.Set); ok && v.Len() > 0 {
+		items := flex.ExpandStringSet(v)
+		apiObject.Items = items
+		apiObject.Quantity = aws.Int64(int64(len(items)))
+	}
+
+	return apiObject
 }
 
-func flattenAwsCloudfrontFieldLevelEncryptionProfileEncryptionEntitiesConfig(config *cloudfront.EncryptionEntities) []map[string]interface{} {
-	result := make([]map[string]interface{}, len(config.Items))
-
-	for i, s := range config.Items {
-		m := make(map[string]interface{})
-		m["provider_id"] = aws.StringValue(s.ProviderId)
-		m["public_key_id"] = aws.StringValue(s.PublicKeyId)
-		m["field_patterns"] = flex.FlattenStringSet(s.FieldPatterns.Items)
-		result[i] = m
+func flattenEncryptionEntities(apiObject *cloudfront.EncryptionEntities) map[string]interface{} {
+	if apiObject == nil {
+		return nil
 	}
 
-	return result
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.Items; len(v) > 0 {
+		tfMap["items"] = flattenEncryptionEntitys(v)
+	}
+
+	return tfMap
+}
+
+func flattenEncryptionEntity(apiObject *cloudfront.EncryptionEntity) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := flattenFieldPatterns(apiObject.FieldPatterns); len(v) > 0 {
+		tfMap["field_patterns"] = []interface{}{v}
+	}
+
+	if v := apiObject.ProviderId; v != nil {
+		tfMap["provider_id"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.PublicKeyId; v != nil {
+		tfMap["public_key_id"] = aws.StringValue(v)
+	}
+
+	return tfMap
+}
+
+func flattenEncryptionEntitys(apiObjects []*cloudfront.EncryptionEntity) []interface{} {
+	if len(apiObjects) == 0 {
+		return nil
+	}
+
+	var tfList []interface{}
+
+	for _, apiObject := range apiObjects {
+		if apiObject == nil {
+			continue
+		}
+
+		if v := flattenEncryptionEntity(apiObject); len(v) > 0 {
+			tfList = append(tfList, v)
+		}
+	}
+
+	return tfList
+}
+
+func flattenFieldPatterns(apiObject *cloudfront.FieldPatterns) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.Items; len(v) > 0 {
+		tfMap["items"] = aws.StringValueSlice(v)
+	}
+
+	return tfMap
 }

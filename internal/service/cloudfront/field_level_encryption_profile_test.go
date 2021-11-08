@@ -17,7 +17,6 @@ import (
 func TestAccCloudFrontFieldLevelEncryptionProfile_basic(t *testing.T) {
 	var profile cloudfront.GetFieldLevelEncryptionProfileOutput
 	resourceName := "aws_cloudfront_field_level_encryption_profile.test"
-	keyResourceName := "aws_cloudfront_public_key.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -33,9 +32,13 @@ func TestAccCloudFrontFieldLevelEncryptionProfile_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "comment", "some comment"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "encryption_entities.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "encryption_entities.0.provider_id", rName),
-					resource.TestCheckResourceAttrPair(resourceName, "encryption_entities.0.public_key_id", keyResourceName, "id"),
-					resource.TestCheckResourceAttr(resourceName, "encryption_entities.0.field_patterns.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "encryption_entities.0.items.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "encryption_entities.0.items.*", map[string]string{
+						"provider_id":              rName,
+						"field_patterns.#":         "1",
+						"field_patterns.0.items.#": "1",
+					}),
+					resource.TestCheckTypeSetElemAttr(resourceName, "encryption_entities.0.items.*.field_patterns.0.items.*", "DateOfBirth"),
 					resource.TestCheckResourceAttrSet(resourceName, "etag"),
 				),
 			},
@@ -51,9 +54,14 @@ func TestAccCloudFrontFieldLevelEncryptionProfile_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "comment", "some other comment"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "encryption_entities.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "encryption_entities.0.provider_id", rName),
-					resource.TestCheckResourceAttrPair(resourceName, "encryption_entities.0.public_key_id", keyResourceName, "id"),
-					resource.TestCheckResourceAttr(resourceName, "encryption_entities.0.field_patterns.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "encryption_entities.0.items.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "encryption_entities.0.items.*", map[string]string{
+						"provider_id":              rName,
+						"field_patterns.#":         "1",
+						"field_patterns.0.items.#": "2",
+					}),
+					resource.TestCheckTypeSetElemAttr(resourceName, "encryption_entities.0.items.*.field_patterns.0.items.*", "DateOfBirth"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "encryption_entities.0.items.*.field_patterns.0.items.*", "FirstName"),
 					resource.TestCheckResourceAttrSet(resourceName, "etag"),
 				),
 			},
@@ -142,9 +150,14 @@ resource "aws_cloudfront_field_level_encryption_profile" "test" {
   name    = %[1]q
 
   encryption_entities {
-    public_key_id  = aws_cloudfront_public_key.test.id
-    provider_id    = %[1]q
-    field_patterns = ["DateOfBirth"]
+    items {
+      public_key_id = aws_cloudfront_public_key.test.id
+      provider_id   = %[1]q
+
+      field_patterns {
+        items = ["DateOfBirth"]
+      }
+    }
   }
 }
 `, rName)
@@ -163,9 +176,14 @@ resource "aws_cloudfront_field_level_encryption_profile" "test" {
   name    = %[1]q
 
   encryption_entities {
-    public_key_id  = aws_cloudfront_public_key.test.id
-    provider_id    = %[1]q
-    field_patterns = ["FirstName", "DateOfBirth"]
+    items {
+      public_key_id = aws_cloudfront_public_key.test.id
+      provider_id   = %[1]q
+
+      field_patterns {
+        items = ["FirstName", "DateOfBirth"]
+      }
+    }
   }
 }
 `, rName)
