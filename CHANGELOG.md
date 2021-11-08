@@ -1,5 +1,10 @@
 ## 3.65.0 (Unreleased)
 
+BUG FIXES:
+
+* data-source/aws_network_interface: Correctly set `attachment` attribute ([#21542](https://github.com/hashicorp/terraform-provider-aws/issues/21542))
+* resource/aws_internet_gateway: Retry resource read after creation to deal with EC2 API eventual consistency ([#21542](https://github.com/hashicorp/terraform-provider-aws/issues/21542))
+
 ## 3.64.2 (November 05, 2021)
 
 BUG FIXES:
