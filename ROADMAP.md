@@ -36,6 +36,7 @@ There will also be the usual deprecations and sometimes breaking changes to exis
 For details of the changes in full please refer to #20433. We would love to hear your feedback.
 
 ## Enhancements to Existing Services
+
 - [Support for Managing Amazon CloudSearch Domains](https://github.com/hashicorp/terraform-provider-aws/issues/7833)
 - [aws_config_remediation_configuration: No support for "automatic" remediation](https://github.com/hashicorp/terraform-provider-aws/issues/15491)
 - [S3 Intelligent-Tiering Archive configuration](https://github.com/hashicorp/terraform-provider-aws/issues/16123)
