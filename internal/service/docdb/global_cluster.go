@@ -146,7 +146,7 @@ func resourceGlobalClusterCreate(ctx context.Context, d *schema.ResourceData, me
 
 	d.SetId(aws.StringValue(output.GlobalCluster.GlobalClusterIdentifier))
 
-	if err := waitForDocDBGlobalClusterCreation(ctx, conn, d.Id()); err != nil {
+	if err := waitForGlobalClusterCreation(ctx, conn, d.Id()); err != nil {
 		return diag.FromErr(fmt.Errorf("error waiting for DocDB Global Cluster (%s) availability: %w", d.Id(), err))
 	}
 
@@ -187,7 +187,7 @@ func resourceGlobalClusterRead(ctx context.Context, d *schema.ResourceData, meta
 	_ = d.Set("engine_version", globalCluster.EngineVersion)
 	_ = d.Set("global_cluster_identifier", globalCluster.GlobalClusterIdentifier)
 
-	if err := d.Set("global_cluster_members", flattenDocDBGlobalClusterMembers(globalCluster.GlobalClusterMembers)); err != nil {
+	if err := d.Set("global_cluster_members", flattenGlobalClusterMembers(globalCluster.GlobalClusterMembers)); err != nil {
 		return diag.FromErr(fmt.Errorf("error setting global_cluster_members: %w", err))
 	}
 
@@ -306,7 +306,7 @@ func resourceGlobalClusterDelete(ctx context.Context, d *schema.ResourceData, me
 	return nil
 }
 
-func flattenDocDBGlobalClusterMembers(apiObjects []*docdb.GlobalClusterMember) []interface{} {
+func flattenGlobalClusterMembers(apiObjects []*docdb.GlobalClusterMember) []interface{} {
 	if len(apiObjects) == 0 {
 		return nil
 	}
@@ -412,7 +412,7 @@ func globalClusterRefreshFunc(ctx context.Context, conn *docdb.DocDB, globalClus
 	}
 }
 
-func waitForDocDBGlobalClusterCreation(ctx context.Context, conn *docdb.DocDB, globalClusterID string) error {
+func waitForGlobalClusterCreation(ctx context.Context, conn *docdb.DocDB, globalClusterID string) error {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{"creating"},
 		Target:  []string{"available"},
