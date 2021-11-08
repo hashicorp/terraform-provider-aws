@@ -59,6 +59,31 @@ func FindFunctionByNameAndStage(conn *cloudfront.CloudFront, name, stage string)
 	return output, nil
 }
 
+func FindMonitoringSubscriptionByDistributionID(conn *cloudfront.CloudFront, id string) (*cloudfront.GetMonitoringSubscriptionOutput, error) {
+	input := &cloudfront.GetMonitoringSubscriptionInput{
+		DistributionId: aws.String(id),
+	}
+
+	output, err := conn.GetMonitoringSubscription(input)
+
+	if tfawserr.ErrCodeEquals(err, cloudfront.ErrCodeNoSuchDistribution) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
+}
+
 // FindRealtimeLogConfigByARN returns the real-time log configuration corresponding to the specified ARN.
 // Returns nil if no configuration is found.
 func FindRealtimeLogConfigByARN(conn *cloudfront.CloudFront, arn string) (*cloudfront.RealtimeLogConfig, error) {
@@ -76,25 +101,6 @@ func FindRealtimeLogConfigByARN(conn *cloudfront.CloudFront, arn string) (*cloud
 	}
 
 	return output.RealtimeLogConfig, nil
-}
-
-// FindMonitoringSubscriptionByDistributionID returns the monitoring subscription corresponding to the specified distribution id.
-// Returns nil if no subscription is found.
-func FindMonitoringSubscriptionByDistributionID(conn *cloudfront.CloudFront, id string) (*cloudfront.MonitoringSubscription, error) {
-	input := &cloudfront.GetMonitoringSubscriptionInput{
-		DistributionId: aws.String(id),
-	}
-
-	output, err := conn.GetMonitoringSubscription(input)
-	if err != nil {
-		return nil, err
-	}
-
-	if output == nil {
-		return nil, nil
-	}
-
-	return output.MonitoringSubscription, nil
 }
 
 func FindResponseHeadersPolicyByID(conn *cloudfront.CloudFront, id string) (*cloudfront.GetResponseHeadersPolicyOutput, error) {
