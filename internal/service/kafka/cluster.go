@@ -107,7 +107,7 @@ func ResourceCluster() *schema.Resource {
 				Type:     schema.TypeList,
 				Optional: true,
 				ForceNew: true,
-				MaxItems: 1,
+				MaxItems: 2,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"sasl": {
@@ -129,7 +129,6 @@ func ResourceCluster() *schema.Resource {
 									},
 								},
 							},
-							ConflictsWith: []string{"client_authentication.0.tls"},
 						},
 						"tls": {
 							Type:     schema.TypeList,
