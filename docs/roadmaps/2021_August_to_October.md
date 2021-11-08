@@ -46,6 +46,7 @@ _Amazon QuickSight is a scalable, serverless, embeddable, machine learning-power
 Support for Amazon Quicksight will include:
 
 New Resource(s):
+
 - aws_quicksight_data_source
 - aws_quicksight_group_membership
 - aws_quicksight_iam_policy_assignment
@@ -64,11 +65,12 @@ _Amazon AppStream 2.0 is a fully managed non-persistent desktop and application 
 Support for Amazon AppStream will include:
 
 New Resource(s):
+
 - aws_appstream_stack
 - aws_appstream_fleet
 - aws_appstream_imagebuilder
 
-### Amazon Connect 
+### Amazon Connect
 Issue: [#16392](https://github.com/hashicorp/terraform-provider-aws/issues/16392)
 
 _Amazon Connect is an easy to use omnichannel cloud contact center that helps you provide superior customer service at a lower cost. Designed from the ground up to be omnichannel, Amazon Connect provides a seamless experience across voice and chat for your customers and agents. This includes one set of tools for skills-based routing, task management, powerful real-time and historical analytics, and intuitive management tools – all with pay-as-you-go pricing, which means Amazon Connect simplifies contact center operations, improves agent efficiency, and lowers costs. You can set up a contact center in minutes that can scale to support millions of customers from the office or as a virtual contact center._
@@ -76,13 +78,15 @@ _Amazon Connect is an easy to use omnichannel cloud contact center that helps yo
 Support for Amazon Connect will include:
 
 New Resource(s):
+
 - aws_connect_instance
 - aws_connect_contact_flow
 - aws_connect_bot_association
 - aws_connect_lex_bot_association
 - aws_connect_lambda_function_association
 
-New Data Source(s): 
+New Data Source(s):
+
 - aws_connect_instance
 - aws_connect_contact_flow
 - aws_connect_bot_association
@@ -90,6 +94,7 @@ New Data Source(s):
 - aws_connect_lambda_function_association
 
 ## Enhancements to Existing Services
+
 - [Support for KMS Multi-Region Keys](https://github.com/hashicorp/terraform-provider-aws/issues/19896)
 - [S3 Replication Time Control](https://github.com/hashicorp/terraform-provider-aws/issues/10974)
 - [New Data Source: aws_iam_roles](https://github.com/hashicorp/terraform-provider-aws/issues/14470)
@@ -102,7 +107,7 @@ The scale of the provider (now 1000 resources/datasources) has led to its existi
 
 Research topics include features, architectural changes, and ideas that we are pursuing in the longer term that may significantly impact the core user experience of the AWS provider. Research topics are discovery only and are not guaranteed to be included in a future release.
 
-### Scaffolding for new resources, datasources and associated tests. 
+### Scaffolding for new resources, datasources and associated tests
 
 Adding resources, datasources and test files to the provider is a repetitive task which should be automated to ensure consistency and speed up contributor and maintainer workflow. A simple cli tool should be able to generate these files in place, and ensure that any code reference additions required (ie adding to `provider.go`) are performed as part of the process.
 
