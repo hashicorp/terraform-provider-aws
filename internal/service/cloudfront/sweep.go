@@ -22,6 +22,19 @@ func init() {
 		F:    sweepDistributions,
 	})
 
+	resource.AddTestSweepers("aws_cloudfront_field_level_encryption_config", &resource.Sweeper{
+		Name: "aws_cloudfront_field_level_encryption_config",
+		F:    sweepFieldLevelEncryptionConfigs,
+	})
+
+	resource.AddTestSweepers("aws_cloudfront_field_level_encryption_profile", &resource.Sweeper{
+		Name: "aws_cloudfront_field_level_encryption_profile",
+		F:    sweepFieldLevelEncryptionProfiles,
+		Dependencies: []string{
+			"aws_cloudfront_field_level_encryption_config",
+		},
+	})
+
 	resource.AddTestSweepers("aws_cloudfront_function", &resource.Sweeper{
 		Name: "aws_cloudfront_function",
 		F:    sweepFunctions,
@@ -298,4 +311,118 @@ func sweepRealtimeLogsConfig(region string) error {
 	}
 
 	return sweeperErrs.ErrorOrNil()
+}
+
+func sweepFieldLevelEncryptionConfigs(region string) error {
+	client, err := sweep.SharedRegionalSweepClient(region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %s", err)
+	}
+	conn := client.(*conns.AWSClient).CloudFrontConn
+	input := &cloudfront.ListFieldLevelEncryptionConfigsInput{}
+	sweepResources := make([]*sweep.SweepResource, 0)
+
+	err = ListFieldLevelEncryptionConfigsPages(conn, input, func(page *cloudfront.ListFieldLevelEncryptionConfigsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.FieldLevelEncryptionList.Items {
+			id := aws.StringValue(v.Id)
+
+			output, err := FindFieldLevelEncryptionConfigByID(conn, id)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				log.Printf("[WARN] %s", err)
+				continue
+			}
+
+			r := ResourceFieldLevelEncryptionConfig()
+			d := r.Data(nil)
+			d.SetId(id)
+			d.Set("etag", output.ETag)
+
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+		}
+
+		return !lastPage
+	})
+
+	if sweep.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping CloudFront Field-level Encryption Config sweep for %s: %s", region, err)
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("error listing CloudFront Field-level Encryption Configs (%s): %w", region, err)
+	}
+
+	err = sweep.SweepOrchestrator(sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("error sweeping CloudFront Field-level Encryption Configs (%s): %w", region, err)
+	}
+
+	return nil
+}
+
+func sweepFieldLevelEncryptionProfiles(region string) error {
+	client, err := sweep.SharedRegionalSweepClient(region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %s", err)
+	}
+	conn := client.(*conns.AWSClient).CloudFrontConn
+	input := &cloudfront.ListFieldLevelEncryptionProfilesInput{}
+	sweepResources := make([]*sweep.SweepResource, 0)
+
+	err = ListFieldLevelEncryptionProfilesPages(conn, input, func(page *cloudfront.ListFieldLevelEncryptionProfilesOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.FieldLevelEncryptionProfileList.Items {
+			id := aws.StringValue(v.Id)
+
+			output, err := FindFieldLevelEncryptionProfileByID(conn, id)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				log.Printf("[WARN] %s", err)
+				continue
+			}
+
+			r := ResourceFieldLevelEncryptionProfile()
+			d := r.Data(nil)
+			d.SetId(id)
+			d.Set("etag", output.ETag)
+
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+		}
+
+		return !lastPage
+	})
+
+	if sweep.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping CloudFront Field-level Encryption Profile sweep for %s: %s", region, err)
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("error listing CloudFront Field-level Encryption Profiles (%s): %w", region, err)
+	}
+
+	err = sweep.SweepOrchestrator(sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("error sweeping CloudFront Field-level Encryption Profiles (%s): %w", region, err)
+	}
+
+	return nil
 }

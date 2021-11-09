@@ -7,6 +7,40 @@ import (
 
 // Custom Cloudfront listing functions using similar formatting as other service generated code.
 
+func ListFieldLevelEncryptionConfigsPages(conn *cloudfront.CloudFront, input *cloudfront.ListFieldLevelEncryptionConfigsInput, fn func(*cloudfront.ListFieldLevelEncryptionConfigsOutput, bool) bool) error {
+	for {
+		output, err := conn.ListFieldLevelEncryptionConfigs(input)
+		if err != nil {
+			return err
+		}
+
+		lastPage := aws.StringValue(output.FieldLevelEncryptionList.NextMarker) == ""
+		if !fn(output, lastPage) || lastPage {
+			break
+		}
+
+		input.Marker = output.FieldLevelEncryptionList.NextMarker
+	}
+	return nil
+}
+
+func ListFieldLevelEncryptionProfilesPages(conn *cloudfront.CloudFront, input *cloudfront.ListFieldLevelEncryptionProfilesInput, fn func(*cloudfront.ListFieldLevelEncryptionProfilesOutput, bool) bool) error {
+	for {
+		output, err := conn.ListFieldLevelEncryptionProfiles(input)
+		if err != nil {
+			return err
+		}
+
+		lastPage := aws.StringValue(output.FieldLevelEncryptionProfileList.NextMarker) == ""
+		if !fn(output, lastPage) || lastPage {
+			break
+		}
+
+		input.Marker = output.FieldLevelEncryptionProfileList.NextMarker
+	}
+	return nil
+}
+
 func ListFunctionsPages(conn *cloudfront.CloudFront, input *cloudfront.ListFunctionsInput, fn func(*cloudfront.ListFunctionsOutput, bool) bool) error {
 	for {
 		output, err := conn.ListFunctions(input)
