@@ -189,7 +189,7 @@ resource "aws_cloudfront_field_level_encryption_config" "test" {
       items {
         content_type = "application/x-www-form-urlencoded"
         format       = "URLEncoded"
-        profile_id = aws_cloudfront_field_level_encryption_profile.test.id
+        profile_id   = aws_cloudfront_field_level_encryption_profile.test.id
       }
     }
   }
@@ -213,7 +213,7 @@ resource "aws_cloudfront_field_level_encryption_config" "test" {
       items {
         content_type = "application/x-www-form-urlencoded"
         format       = "URLEncoded"
-        profile_id = aws_cloudfront_field_level_encryption_profile.test.id
+        profile_id   = aws_cloudfront_field_level_encryption_profile.test.id
       }
     }
   }
