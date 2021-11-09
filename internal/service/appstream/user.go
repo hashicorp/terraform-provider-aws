@@ -144,6 +144,10 @@ func resourceUserRead(ctx context.Context, d *schema.ResourceData, meta interfac
 
 	user, err := FindUserByUserNameAndAuthType(ctx, conn, userName, authType)
 
+	if err != nil {
+		return diag.FromErr(fmt.Errorf("error reading Appstream User (%s): %w", d.Id(), err))
+	}
+
 	if !d.IsNewResource() && user == nil {
 		log.Printf("[WARN] AppStream User (%s) not found, removing from state", d.Id())
 		d.SetId("")
@@ -167,6 +171,9 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 	conn := meta.(*conns.AWSClient).AppStreamConn
 
 	userName, authType, err := DecodeUserID(d.Id())
+	if err != nil {
+		return diag.FromErr(fmt.Errorf("error decoding id AppStream User (%s): %w", d.Id(), err))
+	}
 
 	if d.HasChange("enabled") {
 		if d.Get("enabled").(bool) {
