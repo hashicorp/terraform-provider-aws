@@ -61,9 +61,9 @@ func init() {
 	resource.AddTestSweepers("aws_cloudfront_origin_request_policy", &resource.Sweeper{
 		Name: "aws_cloudfront_origin_request_policy",
 		F:    sweepOriginRequestPolicies,
-		// Dependencies: []string{
-		// 	"aws_cloudfront_distribution",
-		// },
+		Dependencies: []string{
+			"aws_cloudfront_distribution",
+		},
 	})
 
 	resource.AddTestSweepers("aws_cloudfront_realtime_log_config", &resource.Sweeper{
