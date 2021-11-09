@@ -40,7 +40,6 @@ In addition to all arguments above, the following attributes are exported:
 
 * `arn` - ARN of the appstream user.
 * `created_time` - Date and time, in UTC and extended RFC 3339 format, when the user was created.
-* `enabled` - Specifies whether the user in the user pool is enabled.
 * `id` - Unique ID of the appstream user.
 * `status` - Status of the user in the user pool.
 
