@@ -257,30 +257,24 @@ func dataSourceResponseHeadersPolicyRead(d *schema.ResourceData, meta interface{
 		name := d.Get("name").(string)
 		input := &cloudfront.ListResponseHeadersPoliciesInput{}
 
-		for {
-			output, err := conn.ListResponseHeadersPolicies(input)
-
-			if err != nil {
-				return fmt.Errorf("error listing CloudFront Response Headers Policies: %w", err)
+		err := ListResponseHeadersPoliciesPages(conn, input, func(page *cloudfront.ListResponseHeadersPoliciesOutput, lastPage bool) bool {
+			if page == nil {
+				return !lastPage
 			}
 
-			for _, policySummary := range output.ResponseHeadersPolicyList.Items {
+			for _, policySummary := range page.ResponseHeadersPolicyList.Items {
 				if responseHeadersPolicy := policySummary.ResponseHeadersPolicy; aws.StringValue(responseHeadersPolicy.ResponseHeadersPolicyConfig.Name) == name {
 					responseHeadersPolicyID = aws.StringValue(responseHeadersPolicy.Id)
 
-					break
+					return false
 				}
 			}
 
-			if responseHeadersPolicyID != "" {
-				break
-			}
+			return !lastPage
+		})
 
-			if nextMarker := aws.StringValue(output.ResponseHeadersPolicyList.NextMarker); nextMarker == "" {
-				break
-			} else {
-				input.Marker = aws.String(nextMarker)
-			}
+		if err != nil {
+			return fmt.Errorf("error listing CloudFront Response Headers Policies: %w", err)
 		}
 
 		if responseHeadersPolicyID == "" {
