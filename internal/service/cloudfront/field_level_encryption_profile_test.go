@@ -102,36 +102,41 @@ func testAccCheckCloudFrontFieldLevelEncryptionProfileDestroy(s *terraform.State
 		}
 
 		_, err := tfcloudfront.FindFieldLevelEncryptionProfileByID(conn, rs.Primary.ID)
+
 		if tfresource.NotFound(err) {
 			continue
 		}
 
-		if err == nil {
-			return fmt.Errorf("cloudfront Field Level Encryption Profile was not deleted")
+		if err != nil {
+			return err
 		}
+
+		return fmt.Errorf("CloudFront Field-level Encryption Profile %s still exists", rs.Primary.ID)
 	}
 
 	return nil
 }
 
-func testAccCheckCloudFrontFieldLevelEncryptionProfileExists(r string, profile *cloudfront.GetFieldLevelEncryptionProfileOutput) resource.TestCheckFunc {
+func testAccCheckCloudFrontFieldLevelEncryptionProfileExists(r string, v *cloudfront.GetFieldLevelEncryptionProfileOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[r]
 		if !ok {
 			return fmt.Errorf("Not found: %s", r)
 		}
+
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Id is set")
+			return fmt.Errorf("No CloudFront Field-level Encryption Profile ID is set")
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFrontConn
 
-		resp, err := tfcloudfront.FindFieldLevelEncryptionProfileByID(conn, rs.Primary.ID)
+		output, err := tfcloudfront.FindFieldLevelEncryptionProfileByID(conn, rs.Primary.ID)
+
 		if err != nil {
-			return fmt.Errorf("Error retrieving Cloudfront Field Level Encryption Profile: %w", err)
+			return err
 		}
 
-		*profile = *resp
+		*v = *output
 
 		return nil
 	}
