@@ -167,7 +167,7 @@ resource "aws_directory_service_directory" "test" {
 
   vpc_settings {
     vpc_id     = aws_vpc.test.id
-    subnet_ids = aws_subnet.test.*.id
+    subnet_ids = aws_subnet.test[*].id
   }
 }
 
