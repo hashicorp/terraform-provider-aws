@@ -36,7 +36,6 @@ func ResourceCachePolicy() *schema.Resource {
 			},
 			"etag": {
 				Type:     schema.TypeString,
-				Optional: true,
 				Computed: true,
 			},
 			"max_ttl": {
@@ -47,7 +46,6 @@ func ResourceCachePolicy() *schema.Resource {
 			"min_ttl": {
 				Type:     schema.TypeInt,
 				Optional: true,
-				Default:  0,
 			},
 			"name": {
 				Type:     schema.TypeString,
@@ -56,7 +54,7 @@ func ResourceCachePolicy() *schema.Resource {
 			"parameters_in_cache_key_and_forwarded_to_origin": {
 				Type:     schema.TypeList,
 				MaxItems: 1,
-				Optional: true,
+				Required: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"cookies_config": {
@@ -163,7 +161,8 @@ func resourceCachePolicyCreate(d *schema.ResourceData, meta interface{}) error {
 
 	name := d.Get("name").(string)
 	apiObject := &cloudfront.CachePolicyConfig{
-		Name: aws.String(name),
+		MinTTL: aws.Int64(int64(d.Get("min_ttl").(int))),
+		Name:   aws.String(name),
 	}
 
 	if v, ok := d.GetOk("comment"); ok {
@@ -176,10 +175,6 @@ func resourceCachePolicyCreate(d *schema.ResourceData, meta interface{}) error {
 
 	if v, ok := d.GetOk("max_ttl"); ok {
 		apiObject.MaxTTL = aws.Int64(int64(v.(int)))
-	}
-
-	if v, ok := d.GetOk("min_ttl"); ok {
-		apiObject.MinTTL = aws.Int64(int64(v.(int)))
 	}
 
 	if v, ok := d.GetOk("parameters_in_cache_key_and_forwarded_to_origin"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
@@ -243,7 +238,8 @@ func resourceCachePolicyUpdate(d *schema.ResourceData, meta interface{}) error {
 	// "When you update a cache policy configuration, all the fields are updated with the values provided in the request. You cannot update some fields independent of others."
 	//
 	apiObject := &cloudfront.CachePolicyConfig{
-		Name: aws.String(d.Get("name").(string)),
+		MinTTL: aws.Int64(int64(d.Get("min_ttl").(int))),
+		Name:   aws.String(d.Get("name").(string)),
 	}
 
 	if v, ok := d.GetOk("comment"); ok {
@@ -256,10 +252,6 @@ func resourceCachePolicyUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	if v, ok := d.GetOk("max_ttl"); ok {
 		apiObject.MaxTTL = aws.Int64(int64(v.(int)))
-	}
-
-	if v, ok := d.GetOk("min_ttl"); ok {
-		apiObject.MinTTL = aws.Int64(int64(v.(int)))
 	}
 
 	if v, ok := d.GetOk("parameters_in_cache_key_and_forwarded_to_origin"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
