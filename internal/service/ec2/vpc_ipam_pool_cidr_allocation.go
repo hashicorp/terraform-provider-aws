@@ -129,7 +129,7 @@ func ResourceVPCIpamPoolCidrAllocationRead(d *schema.ResourceData, meta interfac
 	d.Set("allocation_id", cidr_allocation.AllocationId)
 	d.Set("ipam_pool_id", pool_id)
 
-	d.Set("cidr", cidr_allocation.CidrBlock)
+	d.Set("cidr", cidr_allocation.Cidr)
 
 	if cidr_allocation.ResourceId != nil {
 		d.Set("resource_id", cidr_allocation.ResourceId)

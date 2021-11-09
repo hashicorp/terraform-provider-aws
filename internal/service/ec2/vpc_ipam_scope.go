@@ -9,19 +9,22 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceVPCIpamScope() *schema.Resource {
 	return &schema.Resource{
-		Create: ResourceVPCIpamScopeCreate,
-		Read:   ResourceVPCIpamScopeRead,
-		Update: ResourceVPCIpamScopeUpdate,
-		Delete: ResourceVPCIpamScopeDelete,
-		// CustomizeDiff: customdiff.Sequence(SetTagsDiff),
+		Create:        ResourceVPCIpamScopeCreate,
+		Read:          ResourceVPCIpamScopeRead,
+		Update:        ResourceVPCIpamScopeUpdate,
+		Delete:        ResourceVPCIpamScopeDelete,
+		CustomizeDiff: customdiff.Sequence(verify.SetTagsDiff),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -56,8 +59,8 @@ func ResourceVPCIpamScope() *schema.Resource {
 				Computed: true,
 				ForceNew: true,
 			},
-			// "tags":     tagsSchema(),
-			// "tags_all": tagsSchemaComputed(),
+			"tags":     tftags.TagsSchema(),
+			"tags_all": tftags.TagsSchemaComputed(),
 		},
 	}
 }
@@ -72,13 +75,13 @@ const (
 
 func ResourceVPCIpamScopeCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
-	// defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	// tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
 	input := &ec2.CreateIpamScopeInput{
-		ClientToken: aws.String(resource.UniqueId()),
-		IpamId:      aws.String(d.Get("ipam_id").(string)),
-		// TagSpecifications: ec2TagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeVolume),
+		ClientToken:       aws.String(resource.UniqueId()),
+		IpamId:            aws.String(d.Get("ipam_id").(string)),
+		TagSpecifications: ec2TagSpecificationsFromKeyValueTags(tags, "ipam-scope"),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -102,8 +105,8 @@ func ResourceVPCIpamScopeCreate(d *schema.ResourceData, meta interface{}) error 
 
 func ResourceVPCIpamScopeRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
-	// defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	// tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	scope, err := findIpamScopeById(conn, d.Id())
 	ipamId := strings.Split(*scope.IpamArn, "/")[1]
@@ -126,32 +129,44 @@ func ResourceVPCIpamScopeRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("is_default", scope.IsDefault)
 	d.Set("pool_count", scope.PoolCount)
 
+	tags := KeyValueTags(scope.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+
+	//lintignore:AWSR002
+	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %w", err)
+	}
+
+	if err := d.Set("tags_all", tags.Map()); err != nil {
+		return fmt.Errorf("error setting tags_all: %w", err)
+	}
+
 	return nil
 }
 
 func ResourceVPCIpamScopeUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
-	// if d.HasChange("tags_all") {
-	// 	o, n := d.GetChange("tags_all")
-	// 	if err := keyvaluetags.StoragegatewayUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-	// 		return fmt.Errorf("error updating tags: %w", err)
-	// 	}
-	// }}
-
-	input := &ec2.ModifyIpamScopeInput{
-		IpamScopeId: aws.String(d.Id()),
+	if d.HasChange("tags_all") {
+		o, n := d.GetChange("tags_all")
+		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
+			return fmt.Errorf("error updating tags: %w", err)
+		}
 	}
 
-	if d.HasChangesExcept("tags_all") {
+	if d.HasChange("description") {
+		// moved `ModifyIpamScope` call here due to bug during development, can likely be moved out of if statement scope later
+		input := &ec2.ModifyIpamScopeInput{
+			IpamScopeId: aws.String(d.Id()),
+		}
+
 		if v, ok := d.GetOk("description"); ok {
 			input.Description = aws.String(v.(string))
 		}
-	}
-	log.Printf("[DEBUG] Updating IPAM scope: %s", input)
-	_, err := conn.ModifyIpamScope(input)
-	if err != nil {
-		return fmt.Errorf("error updating IPAM Scope (%s): %w", d.Id(), err)
+		log.Printf("[DEBUG] Updating IPAM scope: %s", input)
+		_, err := conn.ModifyIpamScope(input)
+		if err != nil {
+			return fmt.Errorf("error updating IPAM Scope (%s): %w", d.Id(), err)
+		}
 	}
 
 	return ResourceVPCIpamScopeRead(d, meta)

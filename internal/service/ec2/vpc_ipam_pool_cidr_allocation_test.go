@@ -97,8 +97,8 @@ func testAccCheckVPCIpamAllocationExists(n string, allocation *ec2.IpamPoolAlloc
 
 func testAccCheckVPCIpamCidrPrefix(allocation *ec2.IpamPoolAllocation, expected string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		if strings.Split(aws.StringValue(allocation.CidrBlock), "/")[1] != expected {
-			return fmt.Errorf("Bad cidr prefix: %s", aws.StringValue(allocation.CidrBlock))
+		if strings.Split(aws.StringValue(allocation.Cidr), "/")[1] != expected {
+			return fmt.Errorf("Bad cidr prefix: %s", aws.StringValue(allocation.Cidr))
 		}
 
 		return nil
@@ -128,8 +128,26 @@ func testAccCheckVPCIpamPoolAllocationDestroy(s *terraform.State) error {
 	return nil
 }
 
+const testAccVPCIpamPoolCidrPrivateBase = `
+data "aws_region" "current" {}
+
+resource "aws_vpc_ipam" "test" {
+	description = "test"
+	operating_regions {
+	  region_name = data.aws_region.current.name
+	}
+}
+`
+const testAccVPCIpamPoolCidrPrivatePoolBase = `
+resource "aws_vpc_ipam_pool" "test" {
+    address_family = "ipv4"
+    ipam_scope_id  = aws_vpc_ipam.test.private_default_scope_id
+	locale         = data.aws_region.current.name
+}
+`
+
 func testAccVPCIpamPoolAllocationIpv4(cidr string) string {
-	return testAccVPCIpam + testAccVPCIpamPrivatePool + fmt.Sprintf(`
+	return testAccVPCIpamPoolCidrPrivateBase + testAccVPCIpamPoolCidrPrivatePoolBase + fmt.Sprintf(`
 resource "aws_vpc_ipam_pool_cidr_allocation" "test" {
 	ipam_pool_id = aws_vpc_ipam_pool.test.id
 	cidr         = %[1]q
@@ -141,7 +159,7 @@ resource "aws_vpc_ipam_pool_cidr_allocation" "test" {
 }
 
 func testAccVPCIpamPoolAllocationIpv4Netmask(netmask string) string {
-	return testAccVPCIpam + testAccVPCIpamPrivatePool + fmt.Sprintf(`
+	return testAccVPCIpamPoolCidrPrivateBase + testAccVPCIpamPoolCidrPrivatePoolBase + fmt.Sprintf(`
 resource "aws_vpc_ipam_pool_cidr_allocation" "test" {
 	ipam_pool_id   = aws_vpc_ipam_pool.test.id
 	netmask_length = %[1]q

@@ -41,9 +41,6 @@ func ResourceVPC() *schema.Resource {
 					if diff.Get("ipv4_netmask_length") != 0 {
 						return diff.Clear("cidr_block")
 					}
-					// if diff.Get("ipv6_netmask_length") != 0 {
-					// 	return diff.Clear("ipv6_cidr_block")
-					// }
 					return diff.ForceNew("cidr_block")
 				}
 				return nil

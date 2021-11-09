@@ -101,7 +101,7 @@ func ResourceVPCIpamPoolCidrCreate(d *schema.ResourceData, meta interface{}) err
 		return fmt.Errorf("Error provisioning ipam pool cidr in ipam pool (%s): %w", d.Get("ipam_pool_id").(string), err)
 	}
 
-	cidr := aws.StringValue(output.IpamPoolCidr.CidrBlock)
+	cidr := aws.StringValue(output.IpamPoolCidr.Cidr)
 	d.SetId(fmt.Sprintf("%s_%s", cidr, pool_id))
 
 	// if ipv6 or private ipv4, can wait
@@ -155,7 +155,7 @@ func ResourceVPCIpamPoolCidrRead(d *schema.ResourceData, meta interface{}) error
 		return nil
 	}
 
-	d.Set("cidr", cidr.CidrBlock)
+	d.Set("cidr", cidr.Cidr)
 	// pool id is not returned in describe, adding from concatenated id
 	d.Set("ipam_pool_id", pool_id)
 	d.Set("state", cidr.State)

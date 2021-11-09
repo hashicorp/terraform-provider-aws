@@ -17,7 +17,6 @@ import (
 )
 
 func TestAccVPCIpam_basic(t *testing.T) {
-	// var pool ec2.IpamPool
 	resourceName := "aws_vpc_ipam.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -27,14 +26,14 @@ func TestAccVPCIpam_basic(t *testing.T) {
 		CheckDestroy: testAccCheckVPCIpamDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVPCIpam,
+				Config: testAccVPCIpamBase,
 				Check: resource.ComposeTestCheckFunc(
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`ipam/ipam-[a-z0-9]+`)),
 					resource.TestCheckResourceAttr(resourceName, "operating_regions.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "scope_count", "2"),
 					resource.TestMatchResourceAttr(resourceName, "private_default_scope_id", regexp.MustCompile("^ipam-scope-[a-z0-9]+")),
 					resource.TestMatchResourceAttr(resourceName, "public_default_scope_id", regexp.MustCompile("^ipam-scope-[a-z0-9]+")),
-					// resource.TestCheckResourceAttr(rName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
 			{
@@ -56,11 +55,9 @@ func TestAccVPCIpam_modifyRegion(t *testing.T) {
 		CheckDestroy: testAccCheckVPCIpamDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVPCIpam,
+				Config: testAccVPCIpamBase,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "operating_regions.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "description", "test"),
-					// resource.TestCheckResourceAttr(rName, "tags.%", "0"),
 				),
 			},
 			{
@@ -71,17 +68,53 @@ func TestAccVPCIpam_modifyRegion(t *testing.T) {
 			{
 				Config: testAccVPCIpamOperatingRegion,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "operating_regions.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "description", "test ipam"),
-				// resource.TestCheckResourceAttr(rName, "tags.%", "0"),
 				),
 			},
 			{
-				Config: testAccVPCIpam,
+				Config: testAccVPCIpamBase,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "operating_regions.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "description", "test"),
-					// resource.TestCheckResourceAttr(rName, "tags.%", "0"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccVPCIpam_tags(t *testing.T) {
+	resourceName := "aws_vpc_ipam.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckVPCIpamDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVPCIpamTagsConfig("key1", "value1"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccVPCIpamTags2Config("key1", "value1updated", "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+			{
+				Config: testAccVPCIpamTagsConfig("key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 		},
@@ -109,7 +142,7 @@ func testAccCheckVPCIpamDestroy(s *terraform.State) error {
 	return nil
 }
 
-const testAccVPCIpam = `
+const testAccVPCIpamBase = `
 data "aws_region" "current" {}
 
 resource "aws_vpc_ipam" "test" {
@@ -131,3 +164,36 @@ resource "aws_vpc_ipam" "test" {
 	}
 }
 `
+
+func testAccVPCIpamTagsConfig(tagKey1, tagValue1 string) string {
+	return fmt.Sprintf(`
+data "aws_region" "current" {}
+
+resource "aws_vpc_ipam" "test" {
+	description = "test"
+	operating_regions {
+	  region_name = data.aws_region.current.name
+	}
+	tags = {
+		%[1]q = %[2]q
+	  }
+}
+`, tagKey1, tagValue1)
+}
+
+func testAccVPCIpamTags2Config(tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return fmt.Sprintf(`
+	data "aws_region" "current" {}
+
+	resource "aws_vpc_ipam" "test" {
+		description = "test"
+		operating_regions {
+		  region_name = data.aws_region.current.name
+		}
+		tags = {
+			%[1]q = %[2]q
+			%[3]q = %[4]q
+		  }
+	}
+	`, tagKey1, tagValue1, tagKey2, tagValue2)
+}

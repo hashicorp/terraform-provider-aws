@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -16,16 +17,15 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
-	// "github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func ResourceVPCIpamPool() *schema.Resource {
 	return &schema.Resource{
-		Create: ResourceVPCIpamPoolCreate,
-		Read:   ResourceVPCIpamPoolRead,
-		Update: ResourceVPCIpamPoolUpdate,
-		Delete: ResourceVPCIpamPoolDelete,
-		// CustomizeDiff: customdiff.Sequence(SetTagsDiff),
+		Create:        ResourceVPCIpamPoolCreate,
+		Read:          ResourceVPCIpamPoolRead,
+		Update:        ResourceVPCIpamPoolUpdate,
+		Delete:        ResourceVPCIpamPoolDelete,
+		CustomizeDiff: customdiff.Sequence(verify.SetTagsDiff),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -65,6 +65,12 @@ func ResourceVPCIpamPool() *schema.Resource {
 				Optional: true,
 				Default:  false,
 			},
+			"aws_service": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringInSlice(ec2.IpamPoolAwsService_Values(), false),
+			},
 			"description": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -101,8 +107,8 @@ func ResourceVPCIpamPool() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			// "tags":     tagsSchema(),
-			// "tags_all": tagsSchemaComputed(),
+			"tags":     tftags.TagsSchema(),
+			"tags_all": tftags.TagsSchemaComputed(),
 		},
 	}
 }
@@ -118,14 +124,14 @@ const (
 
 func ResourceVPCIpamPoolCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
-	// defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	// tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
 	input := &ec2.CreateIpamPoolInput{
-		AddressFamily: aws.String(d.Get("address_family").(string)),
-		ClientToken:   aws.String(resource.UniqueId()),
-		IpamScopeId:   aws.String(d.Get("ipam_scope_id").(string)),
-		// TagSpecifications: ec2TagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeVolume),
+		AddressFamily:     aws.String(d.Get("address_family").(string)),
+		ClientToken:       aws.String(resource.UniqueId()),
+		IpamScopeId:       aws.String(d.Get("ipam_scope_id").(string)),
+		TagSpecifications: ec2TagSpecificationsFromKeyValueTags(tags, "ipam-pool"),
 	}
 
 	if v := d.Get("advertisable"); v != "" && d.Get("address_family") == ec2.AddressFamilyIpv6 {
@@ -160,6 +166,10 @@ func ResourceVPCIpamPoolCreate(d *schema.ResourceData, meta interface{}) error {
 		input.Locale = aws.String(v.(string))
 	}
 
+	if v, ok := d.GetOk("aws_service"); ok {
+		input.AwsService = aws.String(v.(string))
+	}
+
 	if v, ok := d.GetOk("source_ipam_pool_id"); ok {
 		input.SourceIpamPoolId = aws.String(v.(string))
 	}
@@ -181,8 +191,8 @@ func ResourceVPCIpamPoolCreate(d *schema.ResourceData, meta interface{}) error {
 
 func ResourceVPCIpamPoolRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
-	// defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	// tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	pool, err := FindIpamPoolById(conn, d.Id())
 
@@ -213,8 +223,20 @@ func ResourceVPCIpamPoolRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("ipam_scope_type", pool.IpamScopeType)
 	d.Set("locale", pool.Locale)
 	d.Set("pool_depth", pool.PoolDepth)
+	d.Set("aws_service", pool.AwsService)
 	d.Set("source_ipam_pool_id", pool.SourceIpamPoolId)
 	d.Set("state", pool.State)
+
+	tags := KeyValueTags(pool.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+
+	//lintignore:AWSR002
+	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %w", err)
+	}
+
+	if err := d.Set("tags_all", tags.Map()); err != nil {
+		return fmt.Errorf("error setting tags_all: %w", err)
+	}
 
 	return nil
 }
@@ -222,14 +244,12 @@ func ResourceVPCIpamPoolRead(d *schema.ResourceData, meta interface{}) error {
 func ResourceVPCIpamPoolUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
-	// TODO: rm StorageGateway
-	// if d.HasChange("tags_all") {
-	// 	o, n := d.GetChange("tags_all")
-	// 	if err := keyvaluetags.StoragegatewayUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-	// 		return fmt.Errorf("error updating tags: %w", err)
-	// 	}
-	// }}
-
+	if d.HasChange("tags_all") {
+		o, n := d.GetChange("tags_all")
+		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
+			return fmt.Errorf("error updating tags: %w", err)
+		}
+	}
 	input := &ec2.ModifyIpamPoolInput{
 		IpamPoolId: aws.String(d.Id()),
 	}
@@ -251,10 +271,6 @@ func ResourceVPCIpamPoolUpdate(d *schema.ResourceData, meta interface{}) error {
 			input.AllocationMinNetmaskLength = aws.Int64(int64(v.(int)))
 		}
 
-		// if v, ok := d.GetOk("allocation_tags"); ok && len(v.(map[string]interface{})) > 0 {
-		// 	input.AllocationResourceTags = tftags.New(v.(map[string]interface{})).Ec2Tags()
-		// }
-
 		if v, ok := d.GetOk("description"); ok {
 			input.Description = aws.String(v.(string))
 		}
@@ -271,7 +287,6 @@ func ResourceVPCIpamPoolUpdate(d *schema.ResourceData, meta interface{}) error {
 
 		if updatedTags := oldTags.Updated(newTags); len(updatedTags) > 0 {
 			input.AddAllocationResourceTags = ipamResourceTags(updatedTags.IgnoreAWS())
-			//updatedTags.IgnoreAws().IpamResourceTags()
 		}
 	}
 
