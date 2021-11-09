@@ -14,12 +14,20 @@ func FindFieldLevelEncryptionConfigByID(conn *cloudfront.CloudFront, id string) 
 	}
 
 	output, err := conn.GetFieldLevelEncryptionConfig(input)
+
+	if tfawserr.ErrCodeEquals(err, cloudfront.ErrCodeNoSuchFieldLevelEncryptionConfig) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
 	if err != nil {
 		return nil, err
 	}
 
 	if output == nil {
-		return nil, nil
+		return nil, tfresource.NewEmptyResultError(input)
 	}
 
 	return output, nil

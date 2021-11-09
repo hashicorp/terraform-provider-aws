@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfcloudfront "github.com/hashicorp/terraform-provider-aws/internal/service/cloudfront"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func TestAccCloudFrontFieldLevelEncryptionConfig_basic(t *testing.T) {
@@ -104,32 +105,41 @@ func testAccCheckCloudFrontFieldLevelEncryptionConfigDestroy(s *terraform.State)
 		}
 
 		_, err := tfcloudfront.FindFieldLevelEncryptionConfigByID(conn, rs.Primary.ID)
-		if err == nil {
-			return fmt.Errorf("cloudfront Field Level Encryption Config was not deleted")
+
+		if tfresource.NotFound(err) {
+			continue
 		}
+
+		if err != nil {
+			return err
+		}
+
+		return fmt.Errorf("CloudFront Field-level Encryption Config %s still exists", rs.Primary.ID)
 	}
 
 	return nil
 }
 
-func testAccCheckCloudFrontFieldLevelEncryptionConfigExists(r string, profile *cloudfront.GetFieldLevelEncryptionConfigOutput) resource.TestCheckFunc {
+func testAccCheckCloudFrontFieldLevelEncryptionConfigExists(r string, v *cloudfront.GetFieldLevelEncryptionConfigOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[r]
 		if !ok {
 			return fmt.Errorf("Not found: %s", r)
 		}
+
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Id is set")
+			return fmt.Errorf("No CloudFront Field-level Encryption Config ID is set")
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFrontConn
 
-		resp, err := tfcloudfront.FindFieldLevelEncryptionConfigByID(conn, rs.Primary.ID)
+		output, err := tfcloudfront.FindFieldLevelEncryptionConfigByID(conn, rs.Primary.ID)
+
 		if err != nil {
-			return fmt.Errorf("Error retrieving Cloudfront Field Level Encryption Config: %w", err)
+			return err
 		}
 
-		*profile = *resp
+		*v = *output
 
 		return nil
 	}

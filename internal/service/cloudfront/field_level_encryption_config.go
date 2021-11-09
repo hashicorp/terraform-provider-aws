@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func ResourceFieldLevelEncryptionConfig() *schema.Resource {
@@ -24,6 +25,18 @@ func ResourceFieldLevelEncryptionConfig() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
+			"caller_reference": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"comment": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			"etag": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"content_type_profile_config": {
 				Type:     schema.TypeList,
 				Required: true,
@@ -87,18 +100,6 @@ func ResourceFieldLevelEncryptionConfig() *schema.Resource {
 					},
 				},
 			},
-			"comment": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"etag": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"caller_reference": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 		},
 	}
 }
@@ -133,26 +134,28 @@ func resourceFieldLevelEncryptionConfigCreate(d *schema.ResourceData, meta inter
 func resourceFieldLevelEncryptionConfigRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CloudFrontConn
 
-	resp, err := FindFieldLevelEncryptionConfigByID(conn, d.Id())
-	if tfawserr.ErrCodeEquals(err, cloudfront.ErrCodeNoSuchFieldLevelEncryptionConfig) {
-		log.Printf("[WARN] Cloudfront Field Level Encryption Config %s not found, removing from state", d.Id())
+	output, err := FindFieldLevelEncryptionConfigByID(conn, d.Id())
+
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] CloudFront Field-level Encryption Config (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading Cloudfront Field Level Encryption Config (%s): %w", d.Id(), err)
+		return fmt.Errorf("error reading CloudFront Field-level Encryption Config (%s): %w", d.Id(), err)
 	}
-	Config := resp.FieldLevelEncryptionConfig
-	d.Set("etag", resp.ETag)
-	d.Set("comment", Config.Comment)
-	d.Set("caller_reference", Config.CallerReference)
 
-	if err := d.Set("content_type_profile_config", flattenAwsCloudfrontFieldLevelEncryptionConfigContentTypeProfileConfig(Config.ContentTypeProfileConfig)); err != nil {
+	apiObject := output.FieldLevelEncryptionConfig
+	d.Set("caller_reference", apiObject.CallerReference)
+	d.Set("comment", apiObject.Comment)
+	d.Set("etag", output.ETag)
+
+	if err := d.Set("content_type_profile_config", flattenAwsCloudfrontFieldLevelEncryptionConfigContentTypeProfileConfig(apiObject.ContentTypeProfileConfig)); err != nil {
 		return fmt.Errorf("error setting content_type_profile_config %w", err)
 	}
 
-	if err := d.Set("query_arg_profile_config", flattenAwsCloudfrontFieldLevelEncryptionConfigQueryArgProfileConfig(Config.QueryArgProfileConfig)); err != nil {
+	if err := d.Set("query_arg_profile_config", flattenAwsCloudfrontFieldLevelEncryptionConfigQueryArgProfileConfig(apiObject.QueryArgProfileConfig)); err != nil {
 		return fmt.Errorf("error setting query_arg_profile_config %w", err)
 	}
 
