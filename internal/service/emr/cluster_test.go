@@ -1584,64 +1584,6 @@ func testAccCheckClusterExists(n string, v *emr.Cluster) resource.TestCheckFunc 
 	}
 }
 
-// func testAccCheckClusterDisappears(cluster *emr.Cluster) resource.TestCheckFunc {
-// 	return func(s *terraform.State) error {
-// 		conn := acctest.Provider.Meta().(*conns.AWSClient).EMRConn
-// 		id := aws.StringValue(cluster.Id)
-
-// 		terminateJobFlowsInput := &emr.TerminateJobFlowsInput{
-// 			JobFlowIds: []*string{cluster.Id},
-// 		}
-
-// 		_, err := conn.TerminateJobFlows(terminateJobFlowsInput)
-
-// 		if err != nil {
-// 			return err
-// 		}
-
-// 		input := &emr.ListInstancesInput{
-// 			ClusterId: cluster.Id,
-// 		}
-// 		var output *emr.ListInstancesOutput
-// 		var instanceCount int
-
-// 		err = resource.Retry(20*time.Minute, func() *resource.RetryError {
-// 			var err error
-// 			output, err = conn.ListInstances(input)
-
-// 			if err != nil {
-// 				return resource.NonRetryableError(err)
-// 			}
-
-// 			instanceCount = tfemr.CountRemainingInstances(output, id)
-
-// 			if instanceCount != 0 {
-// 				return resource.RetryableError(fmt.Errorf("EMR Cluster (%s) has (%d) Instances remaining", id, instanceCount))
-// 			}
-
-// 			return nil
-// 		})
-
-// 		if tfresource.TimedOut(err) {
-// 			output, err = conn.ListInstances(input)
-
-// 			if err == nil {
-// 				instanceCount = tfemr.CountRemainingInstances(output, id)
-// 			}
-// 		}
-
-// 		if instanceCount != 0 {
-// 			return fmt.Errorf("EMR Cluster (%s) has (%d) Instances remaining", id, instanceCount)
-// 		}
-
-// 		if err != nil {
-// 			return fmt.Errorf("error waiting for EMR Cluster (%s) Instances to drain: %w", id, err)
-// 		}
-
-// 		return nil
-// 	}
-// }
-
 func testAccCheckClusterNotRecreated(i, j *emr.Cluster) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if aws.StringValue(i.Id) != aws.StringValue(j.Id) {
