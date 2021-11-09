@@ -54,6 +54,14 @@ func init() {
 		Name: "aws_cloudfront_realtime_log_config",
 		F:    sweepRealtimeLogsConfig,
 	})
+
+	resource.AddTestSweepers("aws_cloudfront_response_headers_policy", &resource.Sweeper{
+		Name: "aws_cloudfront_response_headers_policy",
+		F:    sweepResponseHeadersPolicies,
+		Dependencies: []string{
+			"aws_cloudfront_distribution",
+		},
+	})
 }
 
 func sweepDistributions(region string) error {
@@ -422,6 +430,65 @@ func sweepFieldLevelEncryptionProfiles(region string) error {
 
 	if err != nil {
 		return fmt.Errorf("error sweeping CloudFront Field-level Encryption Profiles (%s): %w", region, err)
+	}
+
+	return nil
+}
+
+func sweepResponseHeadersPolicies(region string) error {
+	client, err := sweep.SharedRegionalSweepClient(region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %s", err)
+	}
+	conn := client.(*conns.AWSClient).CloudFrontConn
+	input := &cloudfront.ListResponseHeadersPoliciesInput{
+		Type: aws.String(cloudfront.ResponseHeadersPolicyTypeCustom),
+	}
+	sweepResources := make([]*sweep.SweepResource, 0)
+
+	err = ListResponseHeadersPoliciesPages(conn, input, func(page *cloudfront.ListResponseHeadersPoliciesOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.ResponseHeadersPolicyList.Items {
+			id := aws.StringValue(v.ResponseHeadersPolicy.Id)
+
+			output, err := FindResponseHeadersPolicyByID(conn, id)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				log.Printf("[WARN] %s", err)
+				continue
+			}
+
+			r := ResourceResponseHeadersPolicy()
+			d := r.Data(nil)
+			d.SetId(id)
+			d.Set("etag", output.ETag)
+
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+		}
+
+		return !lastPage
+	})
+
+	if sweep.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping CloudFront Response Headers Policy sweep for %s: %s", region, err)
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("error listing CloudFront Response Headers Policies (%s): %w", region, err)
+	}
+
+	err = sweep.SweepOrchestrator(sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("error sweeping CloudFront Response Headers Policies (%s): %w", region, err)
 	}
 
 	return nil
