@@ -18,7 +18,6 @@ resource "aws_appstream_user" "example" {
   user_name           = "EMAIL ADDRESS"
   first_name          = "FIRST NAME"
   last_name           = "LAST NAME"
-  message_action      = "RESEND"
 }
 ```
 
