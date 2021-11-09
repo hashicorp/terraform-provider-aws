@@ -87,6 +87,8 @@ func TestParseRecordId(t *testing.T) {
 	cases := []struct {
 		Input, Zone, Name, Type, Set string
 	}{
+		{"ABCDEF", "", "", "", ""},
+		{"ABCDEF_test.example.com", "ABCDEF", "", "", ""},
 		{"ABCDEF_test.example.com_A", "ABCDEF", "test.example.com", "A", ""},
 		{"ABCDEF_test.example.com._A", "ABCDEF", "test.example.com", "A", ""},
 		{"ABCDEF_test.example.com_A_set1", "ABCDEF", "test.example.com", "A", "set1"},
