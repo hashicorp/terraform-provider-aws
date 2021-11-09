@@ -1,6 +1,6 @@
 package autoscaling
 
-import (
+import ( // nosemgrep: aws-sdk-go-multiple-service-imports
 	"bytes"
 	"context"
 	"fmt"
