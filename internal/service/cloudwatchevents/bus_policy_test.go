@@ -16,7 +16,7 @@ import (
 	tfcloudwatchevents "github.com/hashicorp/terraform-provider-aws/internal/service/cloudwatchevents"
 )
 
-func TestAccCloudWatchEventsBusPolicy_basic(t *testing.T) {
+func TestAccEventBridgeBusPolicy_basic(t *testing.T) {
 	resourceName := "aws_cloudwatch_event_bus_policy.test"
 	rstring := sdkacctest.RandString(5)
 
@@ -49,7 +49,7 @@ func TestAccCloudWatchEventsBusPolicy_basic(t *testing.T) {
 	})
 }
 
-func TestAccCloudWatchEventsBusPolicy_disappears(t *testing.T) {
+func TestAccEventBridgeBusPolicy_disappears(t *testing.T) {
 	resourceName := "aws_cloudwatch_event_bus_policy.test"
 	rstring := sdkacctest.RandString(5)
 

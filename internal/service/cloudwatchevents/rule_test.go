@@ -30,7 +30,7 @@ func testAccErrorCheckSkipEvents(t *testing.T) resource.ErrorCheckFunc {
 	)
 }
 
-func TestAccCloudWatchEventsRule_basic(t *testing.T) {
+func TestAccEventBridgeRule_basic(t *testing.T) {
 	var v1, v2, v3 events.DescribeRuleOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -99,7 +99,7 @@ func TestAccCloudWatchEventsRule_basic(t *testing.T) {
 	})
 }
 
-func TestAccCloudWatchEventsRule_eventBusName(t *testing.T) {
+func TestAccEventBridgeRule_eventBusName(t *testing.T) {
 	var v1, v2, v3 events.DescribeRuleOutput
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test-rule")
 	rName2 := sdkacctest.RandomWithPrefix("tf-acc-test-rule")
@@ -150,7 +150,7 @@ func TestAccCloudWatchEventsRule_eventBusName(t *testing.T) {
 	})
 }
 
-func TestAccCloudWatchEventsRule_role(t *testing.T) {
+func TestAccEventBridgeRule_role(t *testing.T) {
 	var v events.DescribeRuleOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -180,7 +180,7 @@ func TestAccCloudWatchEventsRule_role(t *testing.T) {
 	})
 }
 
-func TestAccCloudWatchEventsRule_description(t *testing.T) {
+func TestAccEventBridgeRule_description(t *testing.T) {
 	var v1, v2 events.DescribeRuleOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cloudwatch_event_rule.test"
@@ -216,7 +216,7 @@ func TestAccCloudWatchEventsRule_description(t *testing.T) {
 	})
 }
 
-func TestAccCloudWatchEventsRule_pattern(t *testing.T) {
+func TestAccEventBridgeRule_pattern(t *testing.T) {
 	var v1, v2 events.DescribeRuleOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cloudwatch_event_rule.test"
@@ -253,7 +253,7 @@ func TestAccCloudWatchEventsRule_pattern(t *testing.T) {
 	})
 }
 
-func TestAccCloudWatchEventsRule_scheduleAndPattern(t *testing.T) {
+func TestAccEventBridgeRule_scheduleAndPattern(t *testing.T) {
 	var v events.DescribeRuleOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cloudwatch_event_rule.test"
@@ -282,7 +282,7 @@ func TestAccCloudWatchEventsRule_scheduleAndPattern(t *testing.T) {
 	})
 }
 
-func TestAccCloudWatchEventsRule_namePrefix(t *testing.T) {
+func TestAccEventBridgeRule_namePrefix(t *testing.T) {
 	var v events.DescribeRuleOutput
 	rName := "tf-acc-test-prefix-"
 	resourceName := "aws_cloudwatch_event_rule.test"
@@ -310,7 +310,7 @@ func TestAccCloudWatchEventsRule_namePrefix(t *testing.T) {
 	})
 }
 
-func TestAccCloudWatchEventsRule_Name_generated(t *testing.T) {
+func TestAccEventBridgeRule_Name_generated(t *testing.T) {
 	var v events.DescribeRuleOutput
 	resourceName := "aws_cloudwatch_event_rule.test"
 
@@ -337,7 +337,7 @@ func TestAccCloudWatchEventsRule_Name_generated(t *testing.T) {
 	})
 }
 
-func TestAccCloudWatchEventsRule_tags(t *testing.T) {
+func TestAccEventBridgeRule_tags(t *testing.T) {
 	var v1, v2, v3 events.DescribeRuleOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cloudwatch_event_rule.test"
@@ -389,7 +389,7 @@ func TestAccCloudWatchEventsRule_tags(t *testing.T) {
 	})
 }
 
-func TestAccCloudWatchEventsRule_isEnabled(t *testing.T) {
+func TestAccEventBridgeRule_isEnabled(t *testing.T) {
 	var v1, v2, v3 events.DescribeRuleOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cloudwatch_event_rule.test"
@@ -433,7 +433,7 @@ func TestAccCloudWatchEventsRule_isEnabled(t *testing.T) {
 	})
 }
 
-func TestAccCloudWatchEventsRule_partnerEventBus(t *testing.T) {
+func TestAccEventBridgeRule_partnerEventBus(t *testing.T) {
 	key := "EVENT_BRIDGE_PARTNER_EVENT_BUS_NAME"
 	busName := os.Getenv(key)
 	if busName == "" {
@@ -474,7 +474,7 @@ func TestAccCloudWatchEventsRule_partnerEventBus(t *testing.T) {
 	})
 }
 
-func TestAccCloudWatchEventsRule_eventBusARN(t *testing.T) {
+func TestAccEventBridgeRule_eventBusARN(t *testing.T) {
 	var v events.DescribeRuleOutput
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test-rule")
 	resourceName := "aws_cloudwatch_event_rule.test"

@@ -16,7 +16,7 @@ import (
 	tfcloudwatchevents "github.com/hashicorp/terraform-provider-aws/internal/service/cloudwatchevents"
 )
 
-func TestAccCloudWatchEventsBus_basic(t *testing.T) {
+func TestAccEventBridgeBus_basic(t *testing.T) {
 	var v1, v2, v3 events.DescribeEventBusOutput
 	busName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	busNameModified := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -68,7 +68,7 @@ func TestAccCloudWatchEventsBus_basic(t *testing.T) {
 	})
 }
 
-func TestAccCloudWatchEventsBus_tags(t *testing.T) {
+func TestAccEventBridgeBus_tags(t *testing.T) {
 	var v1, v2, v3, v4 events.DescribeEventBusOutput
 	busName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -124,7 +124,7 @@ func TestAccCloudWatchEventsBus_tags(t *testing.T) {
 	})
 }
 
-func TestAccCloudWatchEventsBus_default(t *testing.T) {
+func TestAccEventBridgeBus_default(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, events.EndpointsID),
@@ -139,7 +139,7 @@ func TestAccCloudWatchEventsBus_default(t *testing.T) {
 	})
 }
 
-func TestAccCloudWatchEventsBus_disappears(t *testing.T) {
+func TestAccEventBridgeBus_disappears(t *testing.T) {
 	var v events.DescribeEventBusOutput
 	busName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -163,7 +163,7 @@ func TestAccCloudWatchEventsBus_disappears(t *testing.T) {
 	})
 }
 
-func TestAccCloudWatchEventsBus_partnerEventSource(t *testing.T) {
+func TestAccEventBridgeBus_partnerEventSource(t *testing.T) {
 	key := "EVENT_BRIDGE_PARTNER_EVENT_SOURCE_NAME"
 	busName := os.Getenv(key)
 	if busName == "" {

@@ -17,7 +17,7 @@ import (
 
 const uuidRegex = "[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
 
-func TestAccCloudWatchEventsAPIDestination_basic(t *testing.T) {
+func TestAccEventBridgeAPIDestination_basic(t *testing.T) {
 	var v1, v2, v3 events.DescribeApiDestinationOutput
 	name := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	invocationEndpoint := "https://www.hashicorp.com/"
@@ -86,7 +86,7 @@ func TestAccCloudWatchEventsAPIDestination_basic(t *testing.T) {
 	})
 }
 
-func TestAccCloudWatchEventsAPIDestination_optional(t *testing.T) {
+func TestAccEventBridgeAPIDestination_optional(t *testing.T) {
 	var v1, v2, v3 events.DescribeApiDestinationOutput
 	name := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	invocationEndpoint := "https://www.hashicorp.com/"
@@ -170,7 +170,7 @@ func TestAccCloudWatchEventsAPIDestination_optional(t *testing.T) {
 	})
 }
 
-func TestAccCloudWatchEventsAPIDestination_disappears(t *testing.T) {
+func TestAccEventBridgeAPIDestination_disappears(t *testing.T) {
 	var v events.DescribeApiDestinationOutput
 	name := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	invocationEndpoint := "https://www.hashicorp.com/"

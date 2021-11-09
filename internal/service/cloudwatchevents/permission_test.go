@@ -18,7 +18,7 @@ import (
 	tfcloudwatchevents "github.com/hashicorp/terraform-provider-aws/internal/service/cloudwatchevents"
 )
 
-func TestAccCloudWatchEventsPermission_basic(t *testing.T) {
+func TestAccEventBridgePermission_basic(t *testing.T) {
 	principal1 := "111111111111"
 	principal2 := "*"
 	statementID := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -89,7 +89,7 @@ func TestAccCloudWatchEventsPermission_basic(t *testing.T) {
 	})
 }
 
-func TestAccCloudWatchEventsPermission_eventBusName(t *testing.T) {
+func TestAccEventBridgePermission_eventBusName(t *testing.T) {
 	principal1 := "111111111111"
 	statementID := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	busName := sdkacctest.RandomWithPrefix("tf-acc-test-bus")
@@ -122,7 +122,7 @@ func TestAccCloudWatchEventsPermission_eventBusName(t *testing.T) {
 	})
 }
 
-func TestAccCloudWatchEventsPermission_action(t *testing.T) {
+func TestAccEventBridgePermission_action(t *testing.T) {
 	principal := "111111111111"
 	statementID := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cloudwatch_event_permission.test"
@@ -165,7 +165,7 @@ func TestAccCloudWatchEventsPermission_action(t *testing.T) {
 	})
 }
 
-func TestAccCloudWatchEventsPermission_condition(t *testing.T) {
+func TestAccEventBridgePermission_condition(t *testing.T) {
 	statementID := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cloudwatch_event_permission.test"
 
@@ -204,7 +204,7 @@ func TestAccCloudWatchEventsPermission_condition(t *testing.T) {
 	})
 }
 
-func TestAccCloudWatchEventsPermission_multiple(t *testing.T) {
+func TestAccEventBridgePermission_multiple(t *testing.T) {
 	principal1 := "111111111111"
 	principal2 := "222222222222"
 	statementID1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -241,7 +241,7 @@ func TestAccCloudWatchEventsPermission_multiple(t *testing.T) {
 	})
 }
 
-func TestAccCloudWatchEventsPermission_disappears(t *testing.T) {
+func TestAccEventBridgePermission_disappears(t *testing.T) {
 	resourceName := "aws_cloudwatch_event_permission.test"
 	principal := "111111111111"
 	statementID := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)

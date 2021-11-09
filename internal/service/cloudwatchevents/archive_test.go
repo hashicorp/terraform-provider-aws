@@ -14,7 +14,7 @@ import (
 	tfcloudwatchevents "github.com/hashicorp/terraform-provider-aws/internal/service/cloudwatchevents"
 )
 
-func TestAccCloudWatchEventsArchive_basic(t *testing.T) {
+func TestAccEventBridgeArchive_basic(t *testing.T) {
 	var v1 events.DescribeArchiveOutput
 	archiveName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cloudwatch_event_archive.test"
@@ -45,7 +45,7 @@ func TestAccCloudWatchEventsArchive_basic(t *testing.T) {
 	})
 }
 
-func TestAccCloudWatchEventsArchive_update(t *testing.T) {
+func TestAccEventBridgeArchive_update(t *testing.T) {
 	var v1 events.DescribeArchiveOutput
 	resourceName := "aws_cloudwatch_event_archive.test"
 	archiveName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -75,7 +75,7 @@ func TestAccCloudWatchEventsArchive_update(t *testing.T) {
 	})
 }
 
-func TestAccCloudWatchEventsArchive_disappears(t *testing.T) {
+func TestAccEventBridgeArchive_disappears(t *testing.T) {
 	var v events.DescribeArchiveOutput
 	archiveName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cloudwatch_event_archive.test"
@@ -147,7 +147,7 @@ func testAccCheckCloudWatchEventArchiveExists(n string, v *events.DescribeArchiv
 	}
 }
 
-func TestAccCloudWatchEventsArchive_retentionSetOnCreation(t *testing.T) {
+func TestAccEventBridgeArchive_retentionSetOnCreation(t *testing.T) {
 	var v1 events.DescribeArchiveOutput
 	archiveName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cloudwatch_event_archive.test"

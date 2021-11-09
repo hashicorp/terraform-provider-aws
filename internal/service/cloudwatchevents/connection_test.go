@@ -17,7 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func TestAccCloudWatchEventsConnection_apiKey(t *testing.T) {
+func TestAccEventBridgeConnection_apiKey(t *testing.T) {
 	var v1, v2, v3 events.DescribeConnectionOutput
 	name := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	authorizationType := "API_KEY"
@@ -99,7 +99,7 @@ func TestAccCloudWatchEventsConnection_apiKey(t *testing.T) {
 	})
 }
 
-func TestAccCloudWatchEventsConnection_basic(t *testing.T) {
+func TestAccEventBridgeConnection_basic(t *testing.T) {
 	var v1, v2, v3 events.DescribeConnectionOutput
 	name := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	authorizationType := "BASIC"
@@ -181,7 +181,7 @@ func TestAccCloudWatchEventsConnection_basic(t *testing.T) {
 	})
 }
 
-func TestAccCloudWatchEventsConnection_oAuth(t *testing.T) {
+func TestAccEventBridgeConnection_oAuth(t *testing.T) {
 	var v1, v2, v3 events.DescribeConnectionOutput
 	name := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	authorizationType := "OAUTH_CLIENT_CREDENTIALS"
@@ -362,7 +362,7 @@ func TestAccCloudWatchEventsConnection_oAuth(t *testing.T) {
 	})
 }
 
-func TestAccCloudWatchEventsConnection_invocationHTTPParameters(t *testing.T) {
+func TestAccEventBridgeConnection_invocationHTTPParameters(t *testing.T) {
 	var v1, v2, v3 events.DescribeConnectionOutput
 	name := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	authorizationType := "API_KEY"
@@ -535,7 +535,7 @@ func TestAccCloudWatchEventsConnection_invocationHTTPParameters(t *testing.T) {
 	})
 }
 
-func TestAccCloudWatchEventsConnection_disappears(t *testing.T) {
+func TestAccEventBridgeConnection_disappears(t *testing.T) {
 	var v events.DescribeConnectionOutput
 	name := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	authorizationType := "API_KEY"
