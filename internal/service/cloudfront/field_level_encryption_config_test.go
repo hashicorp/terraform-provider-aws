@@ -178,7 +178,7 @@ resource "aws_cloudfront_field_level_encryption_profile" "test" {
 }
 
 func testAccAWSCloudfrontFieldLevelEncryptionConfig(rName string) string {
-	return acctest.ConfigCompose(testAccAWSCloudfrontFieldLevelEncryptionBaseConfig(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAWSCloudfrontFieldLevelEncryptionBaseConfig(rName), `
 resource "aws_cloudfront_field_level_encryption_config" "test" {
   comment = "some comment"
 
@@ -198,11 +198,11 @@ resource "aws_cloudfront_field_level_encryption_config" "test" {
     forward_when_query_arg_profile_is_unknown = true
   }
 }
-`))
+`)
 }
 
 func testAccAWSCloudfrontFieldLevelEncryptionUpdatedConfig(rName string) string {
-	return acctest.ConfigCompose(testAccAWSCloudfrontFieldLevelEncryptionBaseConfig(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAWSCloudfrontFieldLevelEncryptionBaseConfig(rName), `
 resource "aws_cloudfront_field_level_encryption_config" "test" {
   comment = "some other comment"
 
@@ -234,5 +234,5 @@ resource "aws_cloudfront_field_level_encryption_config" "test" {
     }
   }
 }
-`))
+`)
 }
