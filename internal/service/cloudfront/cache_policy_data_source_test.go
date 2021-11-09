@@ -69,7 +69,7 @@ func testAccCachePolicyDataSourceConfig(rName string) string {
 data "aws_cloudfront_cache_policy" "by_name" {
   name = aws_cloudfront_cache_policy.test.name
 }
-  
+
 data "aws_cloudfront_cache_policy" "by_id" {
   id = aws_cloudfront_cache_policy.test.id
 }
