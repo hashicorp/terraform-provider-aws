@@ -1,4 +1,4 @@
-package aws
+package cloudfront
 
 import (
 	"fmt"
@@ -6,18 +6,19 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudfront"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/cloudfront/finder"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsCloudfrontFieldLevelEncryptionConfig() *schema.Resource {
+func ResourceFieldLevelEncryptionConfig() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsCloudfrontFieldLevelEncryptionConfigCreate,
-		Read:   resourceAwsCloudfrontFieldLevelEncryptionConfigRead,
-		Update: resourceAwsCloudfrontFieldLevelEncryptionConfigUpdate,
-		Delete: resourceAwsCloudfrontFieldLevelEncryptionConfigDelete,
+		Create: resourceFieldLevelEncryptionConfigCreate,
+		Read:   resourceFieldLevelEncryptionConfigRead,
+		Update: resourceFieldLevelEncryptionConfigUpdate,
+		Delete: resourceFieldLevelEncryptionConfigDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -102,8 +103,8 @@ func resourceAwsCloudfrontFieldLevelEncryptionConfig() *schema.Resource {
 	}
 }
 
-func resourceAwsCloudfrontFieldLevelEncryptionConfigCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cloudfrontconn
+func resourceFieldLevelEncryptionConfigCreate(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*conns.AWSClient).CloudFrontConn
 
 	fl := &cloudfront.FieldLevelEncryptionConfig{
 		CallerReference:          aws.String(resource.UniqueId()),
@@ -126,14 +127,14 @@ func resourceAwsCloudfrontFieldLevelEncryptionConfigCreate(d *schema.ResourceDat
 
 	d.SetId(aws.StringValue(resp.FieldLevelEncryption.Id))
 
-	return resourceAwsCloudfrontFieldLevelEncryptionConfigRead(d, meta)
+	return resourceFieldLevelEncryptionConfigRead(d, meta)
 }
 
-func resourceAwsCloudfrontFieldLevelEncryptionConfigRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cloudfrontconn
+func resourceFieldLevelEncryptionConfigRead(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*conns.AWSClient).CloudFrontConn
 
-	resp, err := finder.FieldLevelEncryptionConfigByID(conn, d.Id())
-	if isAWSErr(err, cloudfront.ErrCodeNoSuchFieldLevelEncryptionConfig, "") {
+	resp, err := FindFieldLevelEncryptionConfigByID(conn, d.Id())
+	if tfawserr.ErrCodeEquals(err, cloudfront.ErrCodeNoSuchFieldLevelEncryptionConfig) {
 		log.Printf("[WARN] Cloudfront Field Level Encryption Config %s not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -158,8 +159,8 @@ func resourceAwsCloudfrontFieldLevelEncryptionConfigRead(d *schema.ResourceData,
 	return nil
 }
 
-func resourceAwsCloudfrontFieldLevelEncryptionConfigUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cloudfrontconn
+func resourceFieldLevelEncryptionConfigUpdate(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*conns.AWSClient).CloudFrontConn
 
 	fl := &cloudfront.FieldLevelEncryptionConfig{
 		CallerReference:          aws.String(d.Get("caller_reference").(string)),
@@ -182,11 +183,11 @@ func resourceAwsCloudfrontFieldLevelEncryptionConfigUpdate(d *schema.ResourceDat
 		return fmt.Errorf("error creating Cloudfront Field Level Encryption Config (%s): %w", d.Id(), err)
 	}
 
-	return resourceAwsCloudfrontFieldLevelEncryptionConfigRead(d, meta)
+	return resourceFieldLevelEncryptionConfigRead(d, meta)
 }
 
-func resourceAwsCloudfrontFieldLevelEncryptionConfigDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cloudfrontconn
+func resourceFieldLevelEncryptionConfigDelete(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*conns.AWSClient).CloudFrontConn
 
 	input := &cloudfront.DeleteFieldLevelEncryptionConfigInput{
 		Id:      aws.String(d.Id()),
@@ -194,6 +195,11 @@ func resourceAwsCloudfrontFieldLevelEncryptionConfigDelete(d *schema.ResourceDat
 	}
 
 	_, err := conn.DeleteFieldLevelEncryptionConfig(input)
+
+	if tfawserr.ErrCodeEquals(err, cloudfront.ErrCodeNoSuchFieldLevelEncryptionConfig) {
+		return nil
+	}
+
 	if err != nil {
 		return fmt.Errorf("error deleting Cloudfront Field Level Encryption Config (%s): %w", d.Id(), err)
 	}

@@ -846,6 +846,7 @@ func Provider() *schema.Provider {
 
 			"aws_cloudfront_cache_policy":                   cloudfront.ResourceCachePolicy(),
 			"aws_cloudfront_distribution":                   cloudfront.ResourceDistribution(),
+			"aws_cloudfront_field_level_encryption_config":  cloudfront.ResourceFieldLevelEncryptionConfig(),
 			"aws_cloudfront_field_level_encryption_profile": cloudfront.ResourceFieldLevelEncryptionProfile(),
 			"aws_cloudfront_function":                       cloudfront.ResourceFunction(),
 			"aws_cloudfront_key_group":                      cloudfront.ResourceKeyGroup(),
