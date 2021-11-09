@@ -17,6 +17,14 @@ import (
 )
 
 func init() {
+	resource.AddTestSweepers("aws_cloudfront_cache_policy", &resource.Sweeper{
+		Name: "aws_cloudfront_cache_policy",
+		F:    sweepCachePolicies,
+		Dependencies: []string{
+			"aws_cloudfront_distribution",
+		},
+	})
+
 	resource.AddTestSweepers("aws_cloudfront_distribution", &resource.Sweeper{
 		Name: "aws_cloudfront_distribution",
 		F:    sweepDistributions,
@@ -62,6 +70,65 @@ func init() {
 			"aws_cloudfront_distribution",
 		},
 	})
+}
+
+func sweepCachePolicies(region string) error {
+	client, err := sweep.SharedRegionalSweepClient(region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %s", err)
+	}
+	conn := client.(*conns.AWSClient).CloudFrontConn
+	input := &cloudfront.ListCachePoliciesInput{
+		Type: aws.String(cloudfront.ResponseHeadersPolicyTypeCustom),
+	}
+	sweepResources := make([]*sweep.SweepResource, 0)
+
+	err = ListCachePoliciesPages(conn, input, func(page *cloudfront.ListCachePoliciesOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.CachePolicyList.Items {
+			id := aws.StringValue(v.CachePolicy.Id)
+
+			output, err := FindCachePolicyByID(conn, id)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				log.Printf("[WARN] %s", err)
+				continue
+			}
+
+			r := ResourceCachePolicy()
+			d := r.Data(nil)
+			d.SetId(id)
+			d.Set("etag", output.ETag)
+
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+		}
+
+		return !lastPage
+	})
+
+	if sweep.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping CloudFront Cache Policy sweep for %s: %s", region, err)
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("error listing CloudFront Cache Policies (%s): %w", region, err)
+	}
+
+	err = sweep.SweepOrchestrator(sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("error sweeping CloudFront Cache Policies (%s): %w", region, err)
+	}
+
+	return nil
 }
 
 func sweepDistributions(region string) error {

@@ -7,6 +7,23 @@ import (
 
 // Custom Cloudfront listing functions using similar formatting as other service generated code.
 
+func ListCachePoliciesPages(conn *cloudfront.CloudFront, input *cloudfront.ListCachePoliciesInput, fn func(*cloudfront.ListCachePoliciesOutput, bool) bool) error {
+	for {
+		output, err := conn.ListCachePolicies(input)
+		if err != nil {
+			return err
+		}
+
+		lastPage := aws.StringValue(output.CachePolicyList.NextMarker) == ""
+		if !fn(output, lastPage) || lastPage {
+			break
+		}
+
+		input.Marker = output.CachePolicyList.NextMarker
+	}
+	return nil
+}
+
 func ListFieldLevelEncryptionConfigsPages(conn *cloudfront.CloudFront, input *cloudfront.ListFieldLevelEncryptionConfigsInput, fn func(*cloudfront.ListFieldLevelEncryptionConfigsOutput, bool) bool) error {
 	for {
 		output, err := conn.ListFieldLevelEncryptionConfigs(input)
