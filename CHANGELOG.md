@@ -1,8 +1,14 @@
 ## 3.65.0 (Unreleased)
 
+ENHANCEMENTS:
+
+* resource/aws_cloudfront_function: Add `live_etag_version` attribute ([#19697](https://github.com/hashicorp/terraform-provider-aws/issues/19697))
+* resource/aws_datasync_s3_location: Add validation to `agent_arns`, `s3_bucket_arn` and `s3_config.bucket_access_role_arn` arguments ([#21661](https://github.com/hashicorp/terraform-provider-aws/issues/21661))
+
 BUG FIXES:
 
 * data-source/aws_network_interface: Correctly set `attachment` attribute ([#21542](https://github.com/hashicorp/terraform-provider-aws/issues/21542))
+* resource/aws_cloudfront_function: The `etag` attribute always the `DEVELOPMENT` version's value ([#19697](https://github.com/hashicorp/terraform-provider-aws/issues/19697))
 * resource/aws_internet_gateway: Retry resource read after creation to deal with EC2 API eventual consistency ([#21542](https://github.com/hashicorp/terraform-provider-aws/issues/21542))
 
 ## 3.64.2 (November 05, 2021)
