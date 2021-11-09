@@ -569,7 +569,7 @@ func TestAccCloudWatchEventsConnection_disappears(t *testing.T) {
 }
 
 func testAccCheckConnectionDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).CloudWatchEventsConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EventBridgeConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_cloudwatch_event_connection" {
@@ -599,7 +599,7 @@ func testAccCheckCloudWatchEventConnectionExists(n string, v *events.DescribeCon
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudWatchEventsConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EventBridgeConn
 
 		output, err := tfcloudwatchevents.FindConnectionByName(conn, rs.Primary.ID)
 

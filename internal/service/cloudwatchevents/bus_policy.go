@@ -48,7 +48,7 @@ func ResourceBusPolicy() *schema.Resource {
 }
 
 func resourceBusPolicyCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CloudWatchEventsConn
+	conn := meta.(*conns.AWSClient).EventBridgeConn
 
 	eventBusName := d.Get("event_bus_name").(string)
 	policy := d.Get("policy").(string)
@@ -71,7 +71,7 @@ func resourceBusPolicyCreate(d *schema.ResourceData, meta interface{}) error {
 
 // See also: https://docs.aws.amazon.com/AmazonCloudWatchEvents/latest/APIReference/API_DescribeEventBus.html
 func resourceBusPolicyRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CloudWatchEventsConn
+	conn := meta.(*conns.AWSClient).EventBridgeConn
 
 	eventBusName := d.Id()
 
@@ -136,7 +136,7 @@ func getEventBusPolicy(output *events.DescribeEventBusOutput) (*string, error) {
 }
 
 func resourceBusPolicyUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CloudWatchEventsConn
+	conn := meta.(*conns.AWSClient).EventBridgeConn
 
 	eventBusName := d.Id()
 
@@ -160,7 +160,7 @@ func resourceBusPolicyUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceBusPolicyDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CloudWatchEventsConn
+	conn := meta.(*conns.AWSClient).EventBridgeConn
 
 	eventBusName := d.Id()
 	removeAllPermissions := true

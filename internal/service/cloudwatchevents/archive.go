@@ -64,7 +64,7 @@ func ResourceArchive() *schema.Resource {
 }
 
 func resourceArchiveCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CloudWatchEventsConn
+	conn := meta.(*conns.AWSClient).EventBridgeConn
 
 	input, err := buildCreateArchiveInputStruct(d)
 
@@ -87,7 +87,7 @@ func resourceArchiveCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceArchiveRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CloudWatchEventsConn
+	conn := meta.(*conns.AWSClient).EventBridgeConn
 	input := &events.DescribeArchiveInput{
 		ArchiveName: aws.String(d.Id()),
 	}
@@ -117,7 +117,7 @@ func resourceArchiveRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceArchiveUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CloudWatchEventsConn
+	conn := meta.(*conns.AWSClient).EventBridgeConn
 
 	input, err := buildUpdateArchiveInputStruct(d)
 
@@ -135,7 +135,7 @@ func resourceArchiveUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceArchiveDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CloudWatchEventsConn
+	conn := meta.(*conns.AWSClient).EventBridgeConn
 
 	input := &events.DeleteArchiveInput{
 		ArchiveName: aws.String(d.Get("name").(string)),

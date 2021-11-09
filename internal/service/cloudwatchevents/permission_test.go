@@ -266,7 +266,7 @@ func TestAccCloudWatchEventsPermission_disappears(t *testing.T) {
 
 func testAccCheckCloudWatchEventPermissionExists(pr string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudWatchEventsConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EventBridgeConn
 		rs, ok := s.RootModule().Resources[pr]
 		if !ok {
 			return fmt.Errorf("Not found: %s", pr)
@@ -304,7 +304,7 @@ func testAccCheckCloudWatchEventPermissionExists(pr string) resource.TestCheckFu
 }
 
 func testAccCheckCloudWatchEventPermissionDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).CloudWatchEventsConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EventBridgeConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_cloudwatch_event_permission" {

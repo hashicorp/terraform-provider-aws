@@ -68,7 +68,7 @@ func ResourceAPIDestination() *schema.Resource {
 }
 
 func resourceAPIDestinationCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CloudWatchEventsConn
+	conn := meta.(*conns.AWSClient).EventBridgeConn
 
 	input := &events.CreateApiDestinationInput{}
 
@@ -106,7 +106,7 @@ func resourceAPIDestinationCreate(d *schema.ResourceData, meta interface{}) erro
 }
 
 func resourceAPIDestinationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CloudWatchEventsConn
+	conn := meta.(*conns.AWSClient).EventBridgeConn
 
 	input := &events.DescribeApiDestinationInput{
 		Name: aws.String(d.Id()),
@@ -137,7 +137,7 @@ func resourceAPIDestinationRead(d *schema.ResourceData, meta interface{}) error 
 }
 
 func resourceAPIDestinationUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CloudWatchEventsConn
+	conn := meta.(*conns.AWSClient).EventBridgeConn
 
 	input := &events.UpdateApiDestinationInput{}
 
@@ -169,7 +169,7 @@ func resourceAPIDestinationUpdate(d *schema.ResourceData, meta interface{}) erro
 }
 
 func resourceAPIDestinationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CloudWatchEventsConn
+	conn := meta.(*conns.AWSClient).EventBridgeConn
 
 	log.Printf("[INFO] Deleting CloudWatchEvent API Destination (%s)", d.Id())
 	input := &events.DeleteApiDestinationInput{

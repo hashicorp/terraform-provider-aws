@@ -521,7 +521,7 @@ func testAccCheckCloudWatchEventRuleExists(n string, rule *events.DescribeRuleOu
 			return fmt.Errorf("No CloudWatch Events Rule ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudWatchEventsConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EventBridgeConn
 
 		resp, err := tfcloudwatchevents.FindRuleByResourceID(conn, rs.Primary.ID)
 
@@ -542,7 +542,7 @@ func testAccCheckCloudWatchEventRuleEnabled(n string, desired string) resource.T
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudWatchEventsConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EventBridgeConn
 
 		resp, err := tfcloudwatchevents.FindRuleByResourceID(conn, rs.Primary.ID)
 
@@ -559,7 +559,7 @@ func testAccCheckCloudWatchEventRuleEnabled(n string, desired string) resource.T
 }
 
 func testAccCheckRuleDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).CloudWatchEventsConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EventBridgeConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_cloudwatch_event_rule" {

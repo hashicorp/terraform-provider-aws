@@ -921,7 +921,7 @@ type AWSClient struct {
 	CloudSearchDomainConn             *cloudsearchdomain.CloudSearchDomain
 	CloudTrailConn                    *cloudtrail.CloudTrail
 	CloudWatchConn                    *cloudwatch.CloudWatch
-	CloudWatchEventsConn              *cloudwatchevents.CloudWatchEvents
+	EventBridgeConn                   *cloudwatchevents.CloudWatchEvents
 	CloudWatchLogsConn                *cloudwatchlogs.CloudWatchLogs
 	CodeArtifactConn                  *codeartifact.CodeArtifact
 	CodeBuildConn                     *codebuild.CodeBuild
@@ -1274,7 +1274,7 @@ func (c *Config) Client() (interface{}, error) {
 		CloudSearchDomainConn:             cloudsearchdomain.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[CloudSearchDomain])})),
 		CloudTrailConn:                    cloudtrail.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[CloudTrail])})),
 		CloudWatchConn:                    cloudwatch.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[CloudWatch])})),
-		CloudWatchEventsConn:              cloudwatchevents.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[CloudWatchEvents])})),
+		EventBridgeConn:                   cloudwatchevents.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[CloudWatchEvents])})),
 		CloudWatchLogsConn:                cloudwatchlogs.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[CloudWatchLogs])})),
 		CodeArtifactConn:                  codeartifact.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[CodeArtifact])})),
 		CodeBuildConn:                     codebuild.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[CodeBuild])})),

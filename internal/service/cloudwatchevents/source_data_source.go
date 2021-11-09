@@ -40,7 +40,7 @@ func DataSourceSource() *schema.Resource {
 }
 
 func dataSourceSourceRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CloudWatchEventsConn
+	conn := meta.(*conns.AWSClient).EventBridgeConn
 
 	input := &events.ListEventSourcesInput{}
 	if v, ok := d.GetOk("name_prefix"); ok {

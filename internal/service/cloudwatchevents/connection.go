@@ -236,7 +236,7 @@ func ResourceConnection() *schema.Resource {
 }
 
 func resourceConnectionCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CloudWatchEventsConn
+	conn := meta.(*conns.AWSClient).EventBridgeConn
 
 	name := d.Get("name").(string)
 	input := &events.CreateConnectionInput{
@@ -269,7 +269,7 @@ func resourceConnectionCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceConnectionRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CloudWatchEventsConn
+	conn := meta.(*conns.AWSClient).EventBridgeConn
 
 	output, err := FindConnectionByName(conn, d.Id())
 
@@ -300,7 +300,7 @@ func resourceConnectionRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceConnectionUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CloudWatchEventsConn
+	conn := meta.(*conns.AWSClient).EventBridgeConn
 
 	input := &events.UpdateConnectionInput{
 		Name: aws.String(d.Id()),
@@ -335,7 +335,7 @@ func resourceConnectionUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceConnectionDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CloudWatchEventsConn
+	conn := meta.(*conns.AWSClient).EventBridgeConn
 
 	log.Printf("[INFO] Deleting CloudWatch Events connection (%s)", d.Id())
 	_, err := conn.DeleteConnection(&events.DeleteConnectionInput{

@@ -49,7 +49,7 @@ func ResourceBus() *schema.Resource {
 }
 
 func resourceBusCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CloudWatchEventsConn
+	conn := meta.(*conns.AWSClient).EventBridgeConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -81,7 +81,7 @@ func resourceBusCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceBusRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CloudWatchEventsConn
+	conn := meta.(*conns.AWSClient).EventBridgeConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -124,7 +124,7 @@ func resourceBusRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceBusUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CloudWatchEventsConn
+	conn := meta.(*conns.AWSClient).EventBridgeConn
 
 	arn := d.Get("arn").(string)
 	if d.HasChange("tags_all") {
@@ -139,7 +139,7 @@ func resourceBusUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceBusDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CloudWatchEventsConn
+	conn := meta.(*conns.AWSClient).EventBridgeConn
 	log.Printf("[INFO] Deleting CloudWatch Events event bus (%s)", d.Id())
 	_, err := conn.DeleteEventBus(&events.DeleteEventBusInput{
 		Name: aws.String(d.Id()),

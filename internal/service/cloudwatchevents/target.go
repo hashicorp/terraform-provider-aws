@@ -386,7 +386,7 @@ func ResourceTarget() *schema.Resource {
 }
 
 func resourceTargetCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CloudWatchEventsConn
+	conn := meta.(*conns.AWSClient).EventBridgeConn
 
 	rule := d.Get("rule").(string)
 
@@ -423,7 +423,7 @@ func resourceTargetCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceTargetRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CloudWatchEventsConn
+	conn := meta.(*conns.AWSClient).EventBridgeConn
 
 	busName := d.Get("event_bus_name").(string)
 
@@ -513,7 +513,7 @@ func resourceTargetRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceTargetUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CloudWatchEventsConn
+	conn := meta.(*conns.AWSClient).EventBridgeConn
 
 	input := buildPutTargetInputStruct(d)
 
@@ -527,7 +527,7 @@ func resourceTargetUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceTargetDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CloudWatchEventsConn
+	conn := meta.(*conns.AWSClient).EventBridgeConn
 
 	input := &events.RemoveTargetsInput{
 		Ids:  []*string{aws.String(d.Get("target_id").(string))},
