@@ -34,7 +34,7 @@ The next major release of the provider will include the adoption of the AWS Go S
 
 There will also be the usual deprecations and sometimes breaking changes to existing resources which are necessary to maintain consistency of behavior across resources. Our goal is to focus on standardization to reduce technical debt and lay a strong foundation for future enhancement initiatives within the provider.
 
-For details of the changes in full please refer to #20433. We would love to hear your feedback.
+For details of the changes in full please refer to [#20433](https://github.com/hashicorp/terraform-provider-aws/issues/20433). We would love to hear your feedback.
 
 ## New Services
 
