@@ -174,8 +174,8 @@ resource "aws_directory_service_directory" "test" {
 resource "aws_appstream_directory_config" "test" {
   directory_name                          = %[1]q
   organizational_unit_distinguished_names = [aws_directory_service_directory.test.id]
-  
-  service_account_credentials{
+
+  service_account_credentials {
     account_name     = %[2]q
     account_password = %[3]q
   }
