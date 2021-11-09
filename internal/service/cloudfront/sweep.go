@@ -58,6 +58,14 @@ func init() {
 		F:    sweepMonitoringSubscriptions,
 	})
 
+	resource.AddTestSweepers("aws_cloudfront_origin_request_policy", &resource.Sweeper{
+		Name: "aws_cloudfront_origin_request_policy",
+		F:    sweepOriginRequestPolicies,
+		// Dependencies: []string{
+		// 	"aws_cloudfront_distribution",
+		// },
+	})
+
 	resource.AddTestSweepers("aws_cloudfront_realtime_log_config", &resource.Sweeper{
 		Name: "aws_cloudfront_realtime_log_config",
 		F:    sweepRealtimeLogsConfig,
@@ -497,6 +505,65 @@ func sweepFieldLevelEncryptionProfiles(region string) error {
 
 	if err != nil {
 		return fmt.Errorf("error sweeping CloudFront Field-level Encryption Profiles (%s): %w", region, err)
+	}
+
+	return nil
+}
+
+func sweepOriginRequestPolicies(region string) error {
+	client, err := sweep.SharedRegionalSweepClient(region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %s", err)
+	}
+	conn := client.(*conns.AWSClient).CloudFrontConn
+	input := &cloudfront.ListOriginRequestPoliciesInput{
+		Type: aws.String(cloudfront.ResponseHeadersPolicyTypeCustom),
+	}
+	sweepResources := make([]*sweep.SweepResource, 0)
+
+	err = ListOriginRequestPoliciesPages(conn, input, func(page *cloudfront.ListOriginRequestPoliciesOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.OriginRequestPolicyList.Items {
+			id := aws.StringValue(v.OriginRequestPolicy.Id)
+
+			output, err := FindOriginRequestPolicyByID(conn, id)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				log.Printf("[WARN] %s", err)
+				continue
+			}
+
+			r := ResourceOriginRequestPolicy()
+			d := r.Data(nil)
+			d.SetId(id)
+			d.Set("etag", output.ETag)
+
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+		}
+
+		return !lastPage
+	})
+
+	if sweep.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping CloudFront Origin Request Policy sweep for %s: %s", region, err)
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("error listing CloudFront Origin Request Policies (%s): %w", region, err)
+	}
+
+	err = sweep.SweepOrchestrator(sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("error sweeping CloudFront Origin Request Policies (%s): %w", region, err)
 	}
 
 	return nil

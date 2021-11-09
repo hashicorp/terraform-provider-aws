@@ -75,6 +75,23 @@ func ListFunctionsPages(conn *cloudfront.CloudFront, input *cloudfront.ListFunct
 	return nil
 }
 
+func ListOriginRequestPoliciesPages(conn *cloudfront.CloudFront, input *cloudfront.ListOriginRequestPoliciesInput, fn func(*cloudfront.ListOriginRequestPoliciesOutput, bool) bool) error {
+	for {
+		output, err := conn.ListOriginRequestPolicies(input)
+		if err != nil {
+			return err
+		}
+
+		lastPage := aws.StringValue(output.OriginRequestPolicyList.NextMarker) == ""
+		if !fn(output, lastPage) || lastPage {
+			break
+		}
+
+		input.Marker = output.OriginRequestPolicyList.NextMarker
+	}
+	return nil
+}
+
 func ListResponseHeadersPoliciesPages(conn *cloudfront.CloudFront, input *cloudfront.ListResponseHeadersPoliciesInput, fn func(*cloudfront.ListResponseHeadersPoliciesOutput, bool) bool) error {
 	for {
 		output, err := conn.ListResponseHeadersPolicies(input)

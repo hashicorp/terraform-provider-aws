@@ -134,6 +134,31 @@ func FindMonitoringSubscriptionByDistributionID(conn *cloudfront.CloudFront, id 
 	return output, nil
 }
 
+func FindOriginRequestPolicyByID(conn *cloudfront.CloudFront, id string) (*cloudfront.GetOriginRequestPolicyOutput, error) {
+	input := &cloudfront.GetOriginRequestPolicyInput{
+		Id: aws.String(id),
+	}
+
+	output, err := conn.GetOriginRequestPolicy(input)
+
+	if tfawserr.ErrCodeEquals(err, cloudfront.ErrCodeNoSuchOriginRequestPolicy) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
+}
+
 func FindRealtimeLogConfigByARN(conn *cloudfront.CloudFront, arn string) (*cloudfront.RealtimeLogConfig, error) {
 	input := &cloudfront.GetRealtimeLogConfigInput{
 		ARN: aws.String(arn),
