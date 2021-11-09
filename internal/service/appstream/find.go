@@ -6,6 +6,8 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/appstream"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
 // FindStackByName Retrieve a appstream stack by name
@@ -82,12 +84,22 @@ func FindImageBuilderByName(ctx context.Context, conn *appstream.AppStream, name
 		return !lastPage
 	})
 
+	if tfawserr.ErrCodeEquals(err, appstream.ErrCodeResourceNotFoundException) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
 	if err != nil {
 		return nil, err
 	}
 
 	if result == nil {
-		return nil, nil
+		return nil, &resource.NotFoundError{
+			Message:     "Empty result",
+			LastRequest: input,
+		}
 	}
 
 	return result, nil
@@ -99,18 +111,33 @@ func FindUserByUserNameAndAuthType(ctx context.Context, conn *appstream.AppStrea
 		AuthenticationType: aws.String(authType),
 	}
 
-	var user *appstream.User
-	resp, err := conn.DescribeUsersWithContext(ctx, input)
+	var result *appstream.User
+
+	err := describeUsersPagesWithContext(ctx, conn, input, func(page *appstream.DescribeUsersOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, user := range page.Users {
+			if user == nil {
+				continue
+			}
+			if aws.StringValue(user.UserName) == username {
+				result = user
+				return false
+			}
+		}
+
+		return !lastPage
+	})
 
 	if err != nil {
 		return nil, err
 	}
 
-	for _, userResp := range resp.Users {
-		if aws.StringValue(userResp.UserName) == username {
-			user = userResp
-		}
+	if result == nil {
+		return nil, nil
 	}
 
-	return user, nil
+	return result, nil
 }

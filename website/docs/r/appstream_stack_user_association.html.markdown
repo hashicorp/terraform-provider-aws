@@ -37,10 +37,6 @@ The following arguments are required:
 * `stack_name` (Required) Name of the stack that is associated with the user.
 * `user_name` (Required) Email address of the user who is associated with the stack.
 
-The following arguments are optional:
-
-* `send_email_notification` - (Optional) Specifies whether a welcome email is sent to a user after the user is created in the user pool.
-
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:

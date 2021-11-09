@@ -31,9 +31,9 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `enabled` - (Optional) Specifies whether the user in the user pool is enabled.
 * `first_name` - (Optional) First name, or given name, of the user.
 * `last_name` - (Optional) Last name, or surname, of the user.
-* `message_action` - (Optional) Action to take for the welcome email that is sent to a user after the user is created in the user pool. If you specify `SUPPRESS`, no email is sent. If you specify `RESEND`, do not specify the `first_name` or `last_name` of the user. If the value is null, the email is sent.
 
 ## Attributes Reference
 

@@ -19,7 +19,8 @@ func TestAccAppStreamUser_basic(t *testing.T) {
 	var userOutput appstream.User
 	resourceName := "aws_appstream_user.test"
 	authType := "USERPOOL"
-	rEmail := acctest.RandomEmailAddress("hashicorp.com")
+	domain := acctest.RandomDomainName()
+	rEmail := acctest.RandomEmailAddress(domain)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -37,6 +38,8 @@ func TestAccAppStreamUser_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "authentication_type", authType),
 					resource.TestCheckResourceAttr(resourceName, "user_name", rEmail),
 					acctest.CheckResourceAttrRFC3339(resourceName, "created_time"),
+					resource.TestCheckResourceAttr(resourceName, "enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "status", "FORCE_CHANGE_PASSWORD"),
 				),
 			},
 			{
@@ -52,7 +55,8 @@ func TestAccAppStreamUser_disappears(t *testing.T) {
 	var userOutput appstream.User
 	resourceName := "aws_appstream_user.test"
 	authType := "USERPOOL"
-	rEmail := acctest.RandomEmailAddress("hashicorp.com")
+	domain := acctest.RandomDomainName()
+	rEmail := acctest.RandomEmailAddress(domain)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -81,7 +85,8 @@ func TestAccAppStreamUser_complete(t *testing.T) {
 	authType := "USERPOOL"
 	firstName := "John"
 	lastName := "Doe"
-	rEmail := acctest.RandomEmailAddress("hashicorp.com")
+	domain := acctest.RandomDomainName()
+	rEmail := acctest.RandomEmailAddress(domain)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -93,28 +98,31 @@ func TestAccAppStreamUser_complete(t *testing.T) {
 		ErrorCheck:        acctest.ErrorCheck(t, appstream.EndpointsID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccUserCompleteConfig(authType, rEmail, firstName, lastName),
+				Config: testAccUserCompleteConfig(authType, rEmail, firstName, lastName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(resourceName, &userOutput),
 					resource.TestCheckResourceAttr(resourceName, "authentication_type", authType),
 					resource.TestCheckResourceAttr(resourceName, "user_name", rEmail),
 					acctest.CheckResourceAttrRFC3339(resourceName, "created_time"),
+					resource.TestCheckResourceAttr(resourceName, "enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "status", "FORCE_CHANGE_PASSWORD"),
 				),
 			},
 			{
-				Config: testAccUserCompleteSupressConfig(authType, rEmail, firstName, lastName),
+				Config: testAccUserCompleteConfig(authType, rEmail, firstName, lastName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(resourceName, &userOutput),
 					resource.TestCheckResourceAttr(resourceName, "authentication_type", authType),
 					resource.TestCheckResourceAttr(resourceName, "user_name", rEmail),
 					acctest.CheckResourceAttrRFC3339(resourceName, "created_time"),
+					resource.TestCheckResourceAttr(resourceName, "enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "status", "FORCE_CHANGE_PASSWORD"),
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"message_action"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -209,25 +217,14 @@ resource "aws_appstream_user" "test" {
 `, authType, userName)
 }
 
-func testAccUserCompleteConfig(authType, userName, firstName, lastName string) string {
+func testAccUserCompleteConfig(authType, userName, firstName, lastName string, enabled bool) string {
 	return fmt.Sprintf(`
 resource "aws_appstream_user" "test" {
   authentication_type = %[1]q
   user_name           = %[2]q
   first_name          = %[3]q
   last_name           = %[4]q
+  enabled             = %[5]t
 }
-`, authType, userName, firstName, lastName)
-}
-
-func testAccUserCompleteSupressConfig(authType, userName, firstName, lastName string) string {
-	return fmt.Sprintf(`
-resource "aws_appstream_user" "test" {
-  authentication_type = %[1]q
-  user_name           = %[2]q
-  first_name          = %[3]q
-  last_name           = %[4]q
-  message_action      = "SUPPRESS"
-}
-`, authType, userName, firstName, lastName)
+`, authType, userName, firstName, lastName, enabled)
 }

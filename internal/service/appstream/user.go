@@ -11,17 +11,16 @@ import (
 	"github.com/aws/aws-sdk-go/service/appstream"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func ResourceUser() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceUserCreate,
 		ReadWithoutTimeout:   resourceUserRead,
+		UpdateWithoutTimeout: resourceUserUpdate,
 		DeleteWithoutTimeout: resourceUserDelete,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
@@ -43,6 +42,7 @@ func ResourceUser() *schema.Resource {
 			},
 			"enabled": {
 				Type:     schema.TypeBool,
+				Optional: true,
 				Computed: true,
 			},
 			"first_name": {
@@ -56,12 +56,6 @@ func ResourceUser() *schema.Resource {
 				Optional:     true,
 				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(0, 2048),
-			},
-			"message_action": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringInSlice(appstream.MessageAction_Values(), false),
 			},
 			"status": {
 				Type:     schema.TypeString,
@@ -100,33 +94,42 @@ func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta interf
 		input.MessageAction = aws.String(v.(string))
 	}
 
-	var err error
-	var _ *appstream.CreateUserOutput
-	err = resource.RetryContext(ctx, fleetOperationTimeout, func() *resource.RetryError {
-		_, err = conn.CreateUserWithContext(ctx, input)
-		if err != nil {
-			if tfawserr.ErrCodeEquals(err, appstream.ErrCodeResourceNotFoundException) {
-				return resource.RetryableError(err)
-			}
+	_, err := conn.CreateUserWithContext(ctx, input)
 
-			return resource.NonRetryableError(err)
-		}
-
-		return nil
-	})
-
-	if tfresource.TimedOut(err) {
-		_, err = conn.CreateUserWithContext(ctx, input)
-	}
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error creating Appstream User (%s): %w", d.Id(), err))
+		return diag.FromErr(fmt.Errorf("error creating AppStream User (%s): %w", d.Id(), err))
 	}
 
 	if _, err = waitUserAvailable(ctx, conn, userName, authType); err != nil {
-		return diag.FromErr(fmt.Errorf("error waiting for Appstream User (%s) to be available: %w", d.Id(), err))
+		return diag.FromErr(fmt.Errorf("error waiting for AppStream User (%s) to be available: %w", d.Id(), err))
 	}
 
-	d.SetId(fmt.Sprintf("%s/%s", userName, authType))
+	// Enabling/disabling workflow
+	if v, ok := d.GetOk("enabled"); ok {
+		if v.(bool) {
+			input := &appstream.EnableUserInput{
+				AuthenticationType: aws.String(authType),
+				UserName:           aws.String(userName),
+			}
+
+			_, err = conn.EnableUserWithContext(ctx, input)
+			if err != nil {
+				return diag.FromErr(fmt.Errorf("error enabling AppStream User (%s): %w", d.Id(), err))
+			}
+		} else {
+			input := &appstream.DisableUserInput{
+				AuthenticationType: aws.String(authType),
+				UserName:           aws.String(userName),
+			}
+
+			_, err = conn.DisableUserWithContext(ctx, input)
+			if err != nil {
+				return diag.FromErr(fmt.Errorf("error disabling AppStream User (%s): %w", d.Id(), err))
+			}
+		}
+	}
+
+	d.SetId(EncodeUserID(userName, authType))
 
 	return resourceUserRead(ctx, d, meta)
 }
@@ -136,30 +139,13 @@ func resourceUserRead(ctx context.Context, d *schema.ResourceData, meta interfac
 
 	userName, authType, err := DecodeUserID(d.Id())
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error decoding id Appstream User (%s): %w", d.Id(), err))
+		return diag.FromErr(fmt.Errorf("error decoding id AppStream User (%s): %w", d.Id(), err))
 	}
 
-	resp, err := conn.DescribeUsersWithContext(ctx, &appstream.DescribeUsersInput{AuthenticationType: aws.String(authType)})
+	user, err := FindUserByUserNameAndAuthType(ctx, conn, userName, authType)
 
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, appstream.ErrCodeResourceNotFoundException) {
-		log.Printf("[WARN] Appstream User (%s) not found, removing from state", d.Id())
-		d.SetId("")
-		return nil
-	}
-
-	if err != nil {
-		return diag.FromErr(fmt.Errorf("error reading Appstream User (%s): %w", d.Id(), err))
-	}
-	var user *appstream.User
-
-	for _, out := range resp.Users {
-		if aws.StringValue(out.UserName) == userName {
-			user = out
-		}
-	}
-
-	if user == nil {
-		log.Printf("[WARN] Appstream User (%s) not found, removing from state", d.Id())
+	if !d.IsNewResource() && user == nil {
+		log.Printf("[WARN] AppStream User (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
@@ -177,12 +163,45 @@ func resourceUserRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	return nil
 }
 
+func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.AWSClient).AppStreamConn
+
+	userName, authType, err := DecodeUserID(d.Id())
+
+	if d.HasChange("enabled") {
+		if d.Get("enabled").(bool) {
+			input := &appstream.EnableUserInput{
+				AuthenticationType: aws.String(authType),
+				UserName:           aws.String(userName),
+			}
+
+			_, err = conn.EnableUserWithContext(ctx, input)
+			if err != nil {
+				return diag.FromErr(fmt.Errorf("error enabling AppStream User (%s): %w", d.Id(), err))
+			}
+		} else {
+			input := &appstream.DisableUserInput{
+				AuthenticationType: aws.String(authType),
+				UserName:           aws.String(userName),
+			}
+
+			_, err = conn.DisableUserWithContext(ctx, input)
+			if err != nil {
+				return diag.FromErr(fmt.Errorf("error disabling AppStream User (%s): %w", d.Id(), err))
+			}
+		}
+
+	}
+
+	return nil
+}
+
 func resourceUserDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).AppStreamConn
 
 	userName, authType, err := DecodeUserID(d.Id())
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error decoding id Appstream User (%s): %w", d.Id(), err))
+		return diag.FromErr(fmt.Errorf("error decoding id AppStream User (%s): %w", d.Id(), err))
 	}
 
 	_, err = conn.DeleteUserWithContext(ctx, &appstream.DeleteUserInput{
@@ -194,10 +213,14 @@ func resourceUserDelete(ctx context.Context, d *schema.ResourceData, meta interf
 		if tfawserr.ErrCodeEquals(err, appstream.ErrCodeResourceNotFoundException) {
 			return nil
 		}
-		return diag.FromErr(fmt.Errorf("error deleting Appstream User (%s): %w", d.Id(), err))
+		return diag.FromErr(fmt.Errorf("error deleting AppStream User (%s): %w", d.Id(), err))
 	}
 
 	return nil
+}
+
+func EncodeUserID(userName, authType string) string {
+	return fmt.Sprintf("%s/%s", userName, authType)
 }
 
 func DecodeUserID(id string) (string, string, error) {

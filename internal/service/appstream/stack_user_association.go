@@ -11,18 +11,16 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func ResourceStackUserAssociation() *schema.Resource {
+func ResourceUserStackAssociation() *schema.Resource {
 	return &schema.Resource{
-		CreateWithoutTimeout: resourceStackUserAssociationCreate,
-		ReadWithoutTimeout:   resourceStackUserAssociationRead,
-		DeleteWithoutTimeout: resourceStackUserAssociationDelete,
+		CreateWithoutTimeout: resourceUserStackAssociationCreate,
+		ReadWithoutTimeout:   resourceUserStackAssociationRead,
+		DeleteWithoutTimeout: resourceUserStackAssociationDelete,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -32,11 +30,6 @@ func ResourceStackUserAssociation() *schema.Resource {
 				Required:     true,
 				ForceNew:     true,
 				ValidateFunc: validation.StringInSlice(appstream.AuthenticationType_Values(), false),
-			},
-			"send_email_notification": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				ForceNew: true,
 			},
 			"stack_name": {
 				Type:         schema.TypeString,
@@ -53,7 +46,7 @@ func ResourceStackUserAssociation() *schema.Resource {
 	}
 }
 
-func resourceStackUserAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceUserStackAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).AppStreamConn
 
 	input := &appstream.UserStackAssociation{
@@ -62,32 +55,11 @@ func resourceStackUserAssociationCreate(ctx context.Context, d *schema.ResourceD
 		UserName:           aws.String(d.Get("user_name").(string)),
 	}
 
-	if v, ok := d.GetOk("send_email_notification"); ok {
-		input.SendEmailNotification = aws.Bool(v.(bool))
-	}
-
-	var err error
 	var output *appstream.BatchAssociateUserStackOutput
-	err = resource.RetryContext(ctx, fleetOperationTimeout, func() *resource.RetryError {
-		output, err = conn.BatchAssociateUserStackWithContext(ctx, &appstream.BatchAssociateUserStackInput{
-			UserStackAssociations: []*appstream.UserStackAssociation{input},
-		})
-		if err != nil {
-			if tfawserr.ErrCodeEquals(err, appstream.ErrCodeResourceNotFoundException) {
-				return resource.RetryableError(err)
-			}
-
-			return resource.NonRetryableError(err)
-		}
-
-		return nil
+	output, err := conn.BatchAssociateUserStackWithContext(ctx, &appstream.BatchAssociateUserStackInput{
+		UserStackAssociations: []*appstream.UserStackAssociation{input},
 	})
 
-	if tfresource.TimedOut(err) {
-		output, err = conn.BatchAssociateUserStackWithContext(ctx, &appstream.BatchAssociateUserStackInput{
-			UserStackAssociations: []*appstream.UserStackAssociation{input},
-		})
-	}
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("error creating Appstream Stack User Association (%s): %w", d.Id(), err))
 	}
@@ -99,12 +71,12 @@ func resourceStackUserAssociationCreate(ctx context.Context, d *schema.ResourceD
 		}
 	}
 
-	d.SetId(fmt.Sprintf("%s/%s/%s", d.Get("stack_name").(string), d.Get("user_name").(string), d.Get("authentication_type").(string)))
+	d.SetId(EncodeStackUserID(d.Get("stack_name").(string), d.Get("user_name").(string), d.Get("authentication_type").(string)))
 
-	return resourceStackUserAssociationRead(ctx, d, meta)
+	return resourceUserStackAssociationRead(ctx, d, meta)
 }
 
-func resourceStackUserAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceUserStackAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).AppStreamConn
 
 	stackName, userName, authType, err := DecodeStackUserID(d.Id())
@@ -134,14 +106,13 @@ func resourceStackUserAssociationRead(ctx context.Context, d *schema.ResourceDat
 	association := resp.UserStackAssociations[0]
 
 	d.Set("authentication_type", association.AuthenticationType)
-	d.Set("send_email_notification", association.SendEmailNotification)
 	d.Set("stack_name", association.StackName)
 	d.Set("user_name", association.UserName)
 
 	return nil
 }
 
-func resourceStackUserAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceUserStackAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).AppStreamConn
 
 	stackName, userName, authType, err := DecodeStackUserID(d.Id())
@@ -166,6 +137,10 @@ func resourceStackUserAssociationDelete(ctx context.Context, d *schema.ResourceD
 		return diag.FromErr(fmt.Errorf("error deleting Appstream Stack User Association (%s): %w", d.Id(), err))
 	}
 	return nil
+}
+
+func EncodeStackUserID(stackName, userName, authType string) string {
+	return fmt.Sprintf("%s/%s/%s", stackName, userName, authType)
 }
 
 func DecodeStackUserID(id string) (string, string, string, error) {

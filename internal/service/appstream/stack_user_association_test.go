@@ -16,7 +16,7 @@ import (
 	tfappstream "github.com/hashicorp/terraform-provider-aws/internal/service/appstream"
 )
 
-func TestAccAppStreamStackUserAssociation_basic(t *testing.T) {
+func TestAccAppStreamUserStackAssociation_basic(t *testing.T) {
 	resourceName := "aws_appstream_stack_user_association.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	authType := "USERPOOL"
@@ -28,13 +28,16 @@ func TestAccAppStreamStackUserAssociation_basic(t *testing.T) {
 			acctest.PreCheckHasIAMRole(t, "AmazonAppStreamServiceAccess")
 		},
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckStackUserAssociationDestroy,
+		CheckDestroy:      testAccCheckUserStackAssociationDestroy,
 		ErrorCheck:        acctest.ErrorCheck(t, appstream.EndpointsID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccStackUserAssociationConfig(rName, authType, rEmail),
+				Config: testAccUserStackAssociationConfig(rName, authType, rEmail),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckStackUserAssociationExists(resourceName),
+					testAccCheckUserStackAssociationExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "authentication_type", authType),
+					resource.TestCheckResourceAttr(resourceName, "stack_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "user_name", rEmail),
 				),
 			},
 			{
@@ -46,7 +49,7 @@ func TestAccAppStreamStackUserAssociation_basic(t *testing.T) {
 	})
 }
 
-func TestAccAppStreamStackUserAssociation_disappears(t *testing.T) {
+func TestAccAppStreamUserStackAssociation_disappears(t *testing.T) {
 	resourceName := "aws_appstream_stack_user_association.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	authType := "USERPOOL"
@@ -58,14 +61,14 @@ func TestAccAppStreamStackUserAssociation_disappears(t *testing.T) {
 			acctest.PreCheckHasIAMRole(t, "AmazonAppStreamServiceAccess")
 		},
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckStackUserAssociationDestroy,
+		CheckDestroy:      testAccCheckUserStackAssociationDestroy,
 		ErrorCheck:        acctest.ErrorCheck(t, appstream.EndpointsID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccStackUserAssociationConfig(rName, authType, rEmail),
+				Config: testAccUserStackAssociationConfig(rName, authType, rEmail),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckStackUserAssociationExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfappstream.ResourceStackUserAssociation(), resourceName),
+					testAccCheckUserStackAssociationExists(resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfappstream.ResourceUserStackAssociation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -73,7 +76,7 @@ func TestAccAppStreamStackUserAssociation_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAppStreamStackUserAssociation_complete(t *testing.T) {
+func TestAccAppStreamUserStackAssociation_complete(t *testing.T) {
 	resourceName := "aws_appstream_stack_user_association.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	authType := "USERPOOL"
@@ -86,19 +89,19 @@ func TestAccAppStreamStackUserAssociation_complete(t *testing.T) {
 			acctest.PreCheckHasIAMRole(t, "AmazonAppStreamServiceAccess")
 		},
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckStackUserAssociationDestroy,
+		CheckDestroy:      testAccCheckUserStackAssociationDestroy,
 		ErrorCheck:        acctest.ErrorCheck(t, appstream.EndpointsID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccStackUserAssociationConfig(rName, authType, rEmail),
+				Config: testAccUserStackAssociationConfig(rName, authType, rEmail),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckStackUserAssociationExists(resourceName),
+					testAccCheckUserStackAssociationExists(resourceName),
 				),
 			},
 			{
-				Config: testAccStackUserAssociationConfig(rName, authType, rEmailUpdated),
+				Config: testAccUserStackAssociationConfig(rName, authType, rEmailUpdated),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckStackUserAssociationExists(resourceName),
+					testAccCheckUserStackAssociationExists(resourceName),
 				),
 			},
 			{
@@ -110,7 +113,7 @@ func TestAccAppStreamStackUserAssociation_complete(t *testing.T) {
 	})
 }
 
-func testAccCheckStackUserAssociationExists(resourceName string) resource.TestCheckFunc {
+func testAccCheckUserStackAssociationExists(resourceName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
@@ -142,7 +145,7 @@ func testAccCheckStackUserAssociationExists(resourceName string) resource.TestCh
 	}
 }
 
-func testAccCheckStackUserAssociationDestroy(s *terraform.State) error {
+func testAccCheckUserStackAssociationDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).AppStreamConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -177,7 +180,7 @@ func testAccCheckStackUserAssociationDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccStackUserAssociationConfig(name, authType, userName string) string {
+func testAccUserStackAssociationConfig(name, authType, userName string) string {
 	return fmt.Sprintf(`
 resource "aws_appstream_stack" "test" {
   name = %[1]q
