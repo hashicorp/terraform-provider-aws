@@ -251,7 +251,7 @@ func resourceDomainNameRead(d *schema.ResourceData, meta interface{}) error {
 			d.SetId("")
 			return nil
 		}
-		return fmt.Errorf("error reading API Gateway Domain Name (%s): %s", d.Id(), err)
+		return fmt.Errorf("error reading API Gateway Domain Name (%s): %w", d.Id(), err)
 	}
 
 	tags := KeyValueTags(domainName.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)

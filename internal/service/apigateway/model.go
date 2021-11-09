@@ -124,7 +124,7 @@ func resourceModelRead(d *schema.ResourceData, meta interface{}) error {
 			d.SetId("")
 			return nil
 		}
-		return fmt.Errorf("error reading API Gateway Model (%s): %s", d.Id(), err)
+		return fmt.Errorf("error reading API Gateway Model (%s): %w", d.Id(), err)
 	}
 	log.Printf("[DEBUG] Received API Gateway Model: %s", out)
 

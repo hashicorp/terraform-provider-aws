@@ -264,7 +264,7 @@ func resourceIntegrationRead(d *schema.ResourceData, meta interface{}) error {
 			d.SetId("")
 			return nil
 		}
-		return fmt.Errorf("error reading API Gateway Integration (%s): %s", d.Id(), err)
+		return fmt.Errorf("error reading API Gateway Integration (%s): %w", d.Id(), err)
 	}
 	log.Printf("[DEBUG] Received API Gateway Integration: %s", integration)
 
