@@ -1,6 +1,7 @@
 package cloudfront
 
 import (
+	"fmt"
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -9,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func ResourceCachePolicy() *schema.Resource {
@@ -158,41 +160,81 @@ func ResourceCachePolicy() *schema.Resource {
 func resourceCachePolicyCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CloudFrontConn
 
-	request := &cloudfront.CreateCachePolicyInput{
-		CachePolicyConfig: expandCloudFrontCachePolicyConfig(d),
+	name := d.Get("name").(string)
+	apiObject := &cloudfront.CachePolicyConfig{
+		Name: aws.String(name),
 	}
 
-	resp, err := conn.CreateCachePolicy(request)
+	if v, ok := d.GetOk("comment"); ok {
+		apiObject.Comment = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("default_ttl"); ok {
+		apiObject.DefaultTTL = aws.Int64(int64(v.(int)))
+	}
+
+	if v, ok := d.GetOk("max_ttl"); ok {
+		apiObject.MaxTTL = aws.Int64(int64(v.(int)))
+	}
+
+	if v, ok := d.GetOk("min_ttl"); ok {
+		apiObject.MinTTL = aws.Int64(int64(v.(int)))
+	}
+
+	// if v, ok := d.GetOk("parameters_in_cache_key_and_forwarded_to_origin"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+	// 	apiObject.ParametersInCacheKeyAndForwardedToOrigin = expandParametersInCacheKeyAndForwardedToOrigin(v.([]interface{})[0].(map[string]interface{}))
+	// }
+
+	if v, ok := d.GetOk("parameters_in_cache_key_and_forwarded_to_origin"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		apiObject.ParametersInCacheKeyAndForwardedToOrigin = expandCloudFrontCachePolicyParametersConfig(v.([]interface{})[0].(map[string]interface{}))
+	}
+
+	input := &cloudfront.CreateCachePolicyInput{
+		CachePolicyConfig: apiObject,
+	}
+
+	log.Printf("[DEBUG] Creating CloudFront Cache Policy: (%s)", input)
+	output, err := conn.CreateCachePolicy(input)
 
 	if err != nil {
-		return err
+		return fmt.Errorf("error creating CloudFront Cache Policy (%s): %w", name, err)
 	}
 
-	d.SetId(aws.StringValue(resp.CachePolicy.Id))
+	d.SetId(aws.StringValue(output.CachePolicy.Id))
 
 	return resourceCachePolicyRead(d, meta)
 }
 
 func resourceCachePolicyRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CloudFrontConn
-	request := &cloudfront.GetCachePolicyInput{
-		Id: aws.String(d.Id()),
-	}
 
-	resp, err := conn.GetCachePolicy(request)
+	output, err := FindCachePolicyByID(conn, d.Id())
 
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] CloudFront Cache Policy (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if err != nil {
-		return err
+		return fmt.Errorf("error reading CloudFront Cache Policy (%s): %w", d.Id(), err)
 	}
-	d.Set("etag", resp.ETag)
 
-	setCloudFrontCachePolicy(d, resp.CachePolicy.CachePolicyConfig)
+	apiObject := output.CachePolicy.CachePolicyConfig
+	d.Set("comment", apiObject.Comment)
+	d.Set("default_ttl", apiObject.DefaultTTL)
+	d.Set("etag", output.ETag)
+	d.Set("max_ttl", apiObject.MaxTTL)
+	d.Set("min_ttl", apiObject.MinTTL)
+	d.Set("name", apiObject.Name)
+	// if apiObject.ParametersInCacheKeyAndForwardedToOrigin != nil {
+	// 	if err := d.Set("parameters_in_cache_key_and_forwarded_to_origin", []interface{}{flattenParametersInCacheKeyAndForwardedToOrigin(apiObject.ParametersInCacheKeyAndForwardedToOrigin)}); err != nil {
+	// 		return fmt.Errorf("error setting parameters_in_cache_key_and_forwarded_to_origin: %w", err)
+	// 	}
+	// } else {
+	// 	d.Set("parameters_in_cache_key_and_forwarded_to_origin", nil)
+	// }
+	d.Set("parameters_in_cache_key_and_forwarded_to_origin", setParametersConfig(apiObject.ParametersInCacheKeyAndForwardedToOrigin))
 
 	return nil
 }
@@ -200,15 +242,49 @@ func resourceCachePolicyRead(d *schema.ResourceData, meta interface{}) error {
 func resourceCachePolicyUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CloudFrontConn
 
-	request := &cloudfront.UpdateCachePolicyInput{
-		CachePolicyConfig: expandCloudFrontCachePolicyConfig(d),
+	//
+	// https://docs.aws.amazon.com/cloudfront/latest/APIReference/API_UpdateCachePolicy.html:
+	// "When you update a cache policy configuration, all the fields are updated with the values provided in the request. You cannot update some fields independent of others."
+	//
+	apiObject := &cloudfront.CachePolicyConfig{
+		Name: aws.String(d.Get("name").(string)),
+	}
+
+	if v, ok := d.GetOk("comment"); ok {
+		apiObject.Comment = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("default_ttl"); ok {
+		apiObject.DefaultTTL = aws.Int64(int64(v.(int)))
+	}
+
+	if v, ok := d.GetOk("max_ttl"); ok {
+		apiObject.MaxTTL = aws.Int64(int64(v.(int)))
+	}
+
+	if v, ok := d.GetOk("min_ttl"); ok {
+		apiObject.MinTTL = aws.Int64(int64(v.(int)))
+	}
+
+	// if v, ok := d.GetOk("parameters_in_cache_key_and_forwarded_to_origin"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+	// 	input.ParametersInCacheKeyAndForwardedToOrigin = expandParametersInCacheKeyAndForwardedToOrigin(v.([]interface{})[0].(map[string]interface{}))
+	// }
+
+	if v, ok := d.GetOk("parameters_in_cache_key_and_forwarded_to_origin"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		apiObject.ParametersInCacheKeyAndForwardedToOrigin = expandCloudFrontCachePolicyParametersConfig(v.([]interface{})[0].(map[string]interface{}))
+	}
+
+	input := &cloudfront.UpdateCachePolicyInput{
+		CachePolicyConfig: apiObject,
 		Id:                aws.String(d.Id()),
 		IfMatch:           aws.String(d.Get("etag").(string)),
 	}
 
-	_, err := conn.UpdateCachePolicy(request)
+	log.Printf("[DEBUG] Updating CloudFront Cache Policy: (%s)", input)
+	_, err := conn.UpdateCachePolicy(input)
+
 	if err != nil {
-		return err
+		return fmt.Errorf("error updating CloudFront Cache Policy (%s): %w", d.Id(), err)
 	}
 
 	return resourceCachePolicyRead(d, meta)
@@ -217,17 +293,18 @@ func resourceCachePolicyUpdate(d *schema.ResourceData, meta interface{}) error {
 func resourceCachePolicyDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CloudFrontConn
 
-	request := &cloudfront.DeleteCachePolicyInput{
+	log.Printf("[DEBUG] Deleting CloudFront Cache Policy: (%s)", d.Id())
+	_, err := conn.DeleteCachePolicy(&cloudfront.DeleteCachePolicyInput{
 		Id:      aws.String(d.Id()),
 		IfMatch: aws.String(d.Get("etag").(string)),
+	})
+
+	if tfawserr.ErrCodeEquals(err, cloudfront.ErrCodeNoSuchCachePolicy) {
+		return nil
 	}
 
-	_, err := conn.DeleteCachePolicy(request)
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, cloudfront.ErrCodeNoSuchCachePolicy, "") {
-			return nil
-		}
-		return err
+		return fmt.Errorf("error deleting CloudFront Cache Policy (%s): %w", d.Id(), err)
 	}
 
 	return nil

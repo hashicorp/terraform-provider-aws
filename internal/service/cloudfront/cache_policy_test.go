@@ -7,7 +7,11 @@ import (
 	"github.com/aws/aws-sdk-go/service/cloudfront"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfcloudfront "github.com/hashicorp/terraform-provider-aws/internal/service/cloudfront"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func TestAccCloudFrontCachePolicy_basic(t *testing.T) {
@@ -18,11 +22,12 @@ func TestAccCloudFrontCachePolicy_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, cloudfront.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckCloudFrontPublicKeyDestroy,
+		CheckDestroy: testAccCheckCloudFrontCachePolicyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCachePolicyConfig(rInt),
 				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCloudFrontCachePolicyExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "comment", "test comment"),
 					resource.TestCheckResourceAttr(resourceName, "default_ttl", "50"),
 					resource.TestCheckResourceAttr(resourceName, "min_ttl", "1"),
@@ -53,11 +58,12 @@ func TestAccCloudFrontCachePolicy_update(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, cloudfront.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckCloudFrontPublicKeyDestroy,
+		CheckDestroy: testAccCheckCloudFrontCachePolicyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCachePolicyConfig(rInt),
 				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCloudFrontCachePolicyExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "comment", "test comment"),
 					resource.TestCheckResourceAttr(resourceName, "default_ttl", "50"),
 					resource.TestCheckResourceAttr(resourceName, "min_ttl", "1"),
@@ -73,6 +79,7 @@ func TestAccCloudFrontCachePolicy_update(t *testing.T) {
 			{
 				Config: testAccCachePolicyUpdateConfig(rInt),
 				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCloudFrontCachePolicyExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "comment", "test comment updated"),
 					resource.TestCheckResourceAttr(resourceName, "default_ttl", "51"),
 					resource.TestCheckResourceAttr(resourceName, "min_ttl", "2"),
@@ -103,11 +110,12 @@ func TestAccCloudFrontCachePolicy_noneBehavior(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, cloudfront.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckCloudFrontPublicKeyDestroy,
+		CheckDestroy: testAccCheckCloudFrontCachePolicyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCachePolicyNoneBehaviorConfig(rInt),
 				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCloudFrontCachePolicyExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "comment", "test comment"),
 					resource.TestCheckResourceAttr(resourceName, "default_ttl", "50"),
 					resource.TestCheckResourceAttr(resourceName, "min_ttl", "1"),
@@ -128,6 +136,53 @@ func TestAccCloudFrontCachePolicy_noneBehavior(t *testing.T) {
 			},
 		},
 	})
+}
+
+func testAccCheckCloudFrontCachePolicyDestroy(s *terraform.State) error {
+	conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFrontConn
+
+	for _, rs := range s.RootModule().Resources {
+		if rs.Type != "aws_cloudfront_cache_policy" {
+			continue
+		}
+
+		_, err := tfcloudfront.FindCachePolicyByID(conn, rs.Primary.ID)
+
+		if tfresource.NotFound(err) {
+			continue
+		}
+
+		if err != nil {
+			return err
+		}
+
+		return fmt.Errorf("CloudFront Cache Policy %s still exists", rs.Primary.ID)
+	}
+
+	return nil
+}
+
+func testAccCheckCloudFrontCachePolicyExists(n string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Not found: %s", n)
+		}
+
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("No CloudFront Cache Policy ID is set")
+		}
+
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFrontConn
+
+		_, err := tfcloudfront.FindCachePolicyByID(conn, rs.Primary.ID)
+
+		if err != nil {
+			return err
+		}
+
+		return nil
+	}
 }
 
 func testAccCachePolicyConfig(rInt int) string {
