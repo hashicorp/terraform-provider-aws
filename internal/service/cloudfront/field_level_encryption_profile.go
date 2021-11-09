@@ -35,7 +35,7 @@ func ResourceFieldLevelEncryptionProfile() *schema.Resource {
 			},
 			"encryption_entities": {
 				Type:     schema.TypeList,
-				Optional: true,
+				Required: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -46,7 +46,7 @@ func ResourceFieldLevelEncryptionProfile() *schema.Resource {
 								Schema: map[string]*schema.Schema{
 									"field_patterns": {
 										Type:     schema.TypeList,
-										Optional: true,
+										Required: true,
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
@@ -207,7 +207,7 @@ func expandEncryptionEntities(tfMap map[string]interface{}) *cloudfront.Encrypti
 	apiObject := &cloudfront.EncryptionEntities{}
 
 	if v, ok := tfMap["items"].(*schema.Set); ok && v.Len() > 0 {
-		items := expandEncryptionEntitys(v.List())
+		items := expandEncryptionEntityItems(v.List())
 		apiObject.Items = items
 		apiObject.Quantity = aws.Int64(int64(len(items)))
 	}
@@ -237,7 +237,7 @@ func expandEncryptionEntity(tfMap map[string]interface{}) *cloudfront.Encryption
 	return apiObject
 }
 
-func expandEncryptionEntitys(tfList []interface{}) []*cloudfront.EncryptionEntity {
+func expandEncryptionEntityItems(tfList []interface{}) []*cloudfront.EncryptionEntity {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -287,7 +287,7 @@ func flattenEncryptionEntities(apiObject *cloudfront.EncryptionEntities) map[str
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.Items; len(v) > 0 {
-		tfMap["items"] = flattenEncryptionEntitys(v)
+		tfMap["items"] = flattenEncryptionEntityItems(v)
 	}
 
 	return tfMap
@@ -315,7 +315,7 @@ func flattenEncryptionEntity(apiObject *cloudfront.EncryptionEntity) map[string]
 	return tfMap
 }
 
-func flattenEncryptionEntitys(apiObjects []*cloudfront.EncryptionEntity) []interface{} {
+func flattenEncryptionEntityItems(apiObjects []*cloudfront.EncryptionEntity) []interface{} {
 	if len(apiObjects) == 0 {
 		return nil
 	}

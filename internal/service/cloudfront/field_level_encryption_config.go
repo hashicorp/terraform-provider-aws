@@ -33,43 +33,52 @@ func ResourceFieldLevelEncryptionConfig() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"etag": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 			"content_type_profile_config": {
 				Type:     schema.TypeList,
 				Required: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"forward_when_content_type_is_unknown": {
-							Type:     schema.TypeBool,
-							Required: true,
-						},
-						"content_type_profile": {
+						"content_type_profiles": {
 							Type:     schema.TypeList,
 							Required: true,
+							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"content_type": {
-										Type:     schema.TypeString,
+									"items": {
+										Type:     schema.TypeSet,
 										Required: true,
-									},
-									"format": {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: validation.StringInSlice(cloudfront.Format_Values(), false),
-									},
-									"profile_id": {
-										Type:     schema.TypeString,
-										Optional: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"content_type": {
+													Type:     schema.TypeString,
+													Required: true,
+												},
+												"format": {
+													Type:         schema.TypeString,
+													Required:     true,
+													ValidateFunc: validation.StringInSlice(cloudfront.Format_Values(), false),
+												},
+												"profile_id": {
+													Type:     schema.TypeString,
+													Optional: true,
+												},
+											},
+										},
 									},
 								},
 							},
 						},
+						"forward_when_content_type_is_unknown": {
+							Type:     schema.TypeBool,
+							Required: true,
+						},
 					},
 				},
+			},
+			"etag": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"query_arg_profile_config": {
 				Type:     schema.TypeList,
@@ -77,22 +86,31 @@ func ResourceFieldLevelEncryptionConfig() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"forward_when_query_arg_is_unknown": {
+						"forward_when_query_arg_profile_is_unknown": {
 							Type:     schema.TypeBool,
 							Required: true,
 						},
-						"query_arg_profile": {
+						"query_arg_profiles": {
 							Type:     schema.TypeList,
-							Required: true,
+							Optional: true,
+							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"profile_id": {
-										Type:     schema.TypeString,
-										Required: true,
-									},
-									"query_arg": {
-										Type:     schema.TypeString,
-										Required: true,
+									"items": {
+										Type:     schema.TypeSet,
+										Optional: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"profile_id": {
+													Type:     schema.TypeString,
+													Required: true,
+												},
+												"query_arg": {
+													Type:     schema.TypeString,
+													Required: true,
+												},
+											},
+										},
 									},
 								},
 							},
@@ -107,26 +125,34 @@ func ResourceFieldLevelEncryptionConfig() *schema.Resource {
 func resourceFieldLevelEncryptionConfigCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CloudFrontConn
 
-	fl := &cloudfront.FieldLevelEncryptionConfig{
-		CallerReference:          aws.String(resource.UniqueId()),
-		ContentTypeProfileConfig: expandAwsCloudfrontFieldLevelEncryptionConfigContentTypeProfileConfig(d.Get("content_type_profile_config").([]interface{})),
-		QueryArgProfileConfig:    expandAwsCloudfrontFieldLevelEncryptionConfigQueryArgProfileConfig(d.Get("query_arg_profile_config").([]interface{})),
+	apiObject := &cloudfront.FieldLevelEncryptionConfig{
+		CallerReference: aws.String(resource.UniqueId()),
 	}
 
 	if v, ok := d.GetOk("comment"); ok {
-		fl.Comment = aws.String(v.(string))
+		apiObject.Comment = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("content_type_profile_config"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		apiObject.ContentTypeProfileConfig = expandContentTypeProfileConfig(v.([]interface{})[0].(map[string]interface{}))
+	}
+
+	if v, ok := d.GetOk("query_arg_profile_config"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		apiObject.QueryArgProfileConfig = expandQueryArgProfileConfig(v.([]interface{})[0].(map[string]interface{}))
 	}
 
 	input := &cloudfront.CreateFieldLevelEncryptionConfigInput{
-		FieldLevelEncryptionConfig: fl,
+		FieldLevelEncryptionConfig: apiObject,
 	}
 
-	resp, err := conn.CreateFieldLevelEncryptionConfig(input)
+	log.Printf("[DEBUG] Creating CloudFront Field-level Encryption Config: (%s)", input)
+	output, err := conn.CreateFieldLevelEncryptionConfig(input)
+
 	if err != nil {
-		return fmt.Errorf("error creating Cloudfront Field Level Encryption Config (%s): %w", d.Id(), err)
+		return fmt.Errorf("error creating CloudFront Field-level Encryption Config (%s): %w", d.Id(), err)
 	}
 
-	d.SetId(aws.StringValue(resp.FieldLevelEncryption.Id))
+	d.SetId(aws.StringValue(output.FieldLevelEncryption.Id))
 
 	return resourceFieldLevelEncryptionConfigRead(d, meta)
 }
@@ -149,14 +175,20 @@ func resourceFieldLevelEncryptionConfigRead(d *schema.ResourceData, meta interfa
 	apiObject := output.FieldLevelEncryptionConfig
 	d.Set("caller_reference", apiObject.CallerReference)
 	d.Set("comment", apiObject.Comment)
-	d.Set("etag", output.ETag)
-
-	if err := d.Set("content_type_profile_config", flattenAwsCloudfrontFieldLevelEncryptionConfigContentTypeProfileConfig(apiObject.ContentTypeProfileConfig)); err != nil {
-		return fmt.Errorf("error setting content_type_profile_config %w", err)
+	if apiObject.ContentTypeProfileConfig != nil {
+		if err := d.Set("content_type_profile_config", []interface{}{flattenContentTypeProfileConfig(apiObject.ContentTypeProfileConfig)}); err != nil {
+			return fmt.Errorf("error setting content_type_profile_config: %w", err)
+		}
+	} else {
+		d.Set("content_type_profile_config", nil)
 	}
-
-	if err := d.Set("query_arg_profile_config", flattenAwsCloudfrontFieldLevelEncryptionConfigQueryArgProfileConfig(apiObject.QueryArgProfileConfig)); err != nil {
-		return fmt.Errorf("error setting query_arg_profile_config %w", err)
+	d.Set("etag", output.ETag)
+	if apiObject.QueryArgProfileConfig != nil {
+		if err := d.Set("query_arg_profile_config", []interface{}{flattenQueryArgProfileConfig(apiObject.QueryArgProfileConfig)}); err != nil {
+			return fmt.Errorf("error setting query_arg_profile_config: %w", err)
+		}
+	} else {
+		d.Set("query_arg_profile_config", nil)
 	}
 
 	return nil
@@ -165,25 +197,33 @@ func resourceFieldLevelEncryptionConfigRead(d *schema.ResourceData, meta interfa
 func resourceFieldLevelEncryptionConfigUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CloudFrontConn
 
-	fl := &cloudfront.FieldLevelEncryptionConfig{
-		CallerReference:          aws.String(d.Get("caller_reference").(string)),
-		ContentTypeProfileConfig: expandAwsCloudfrontFieldLevelEncryptionConfigContentTypeProfileConfig(d.Get("content_type_profile_config").([]interface{})),
-		QueryArgProfileConfig:    expandAwsCloudfrontFieldLevelEncryptionConfigQueryArgProfileConfig(d.Get("query_arg_profile_config").([]interface{})),
+	apiObject := &cloudfront.FieldLevelEncryptionConfig{
+		CallerReference: aws.String(d.Get("caller_reference").(string)),
 	}
 
 	if v, ok := d.GetOk("comment"); ok {
-		fl.Comment = aws.String(v.(string))
+		apiObject.Comment = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("content_type_profile_config"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		apiObject.ContentTypeProfileConfig = expandContentTypeProfileConfig(v.([]interface{})[0].(map[string]interface{}))
+	}
+
+	if v, ok := d.GetOk("query_arg_profile_config"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		apiObject.QueryArgProfileConfig = expandQueryArgProfileConfig(v.([]interface{})[0].(map[string]interface{}))
 	}
 
 	input := &cloudfront.UpdateFieldLevelEncryptionConfigInput{
-		FieldLevelEncryptionConfig: fl,
+		FieldLevelEncryptionConfig: apiObject,
 		Id:                         aws.String(d.Id()),
 		IfMatch:                    aws.String(d.Get("etag").(string)),
 	}
 
+	log.Printf("[DEBUG] Updating CloudFront Field-level Encryption Config: (%s)", input)
 	_, err := conn.UpdateFieldLevelEncryptionConfig(input)
+
 	if err != nil {
-		return fmt.Errorf("error creating Cloudfront Field Level Encryption Config (%s): %w", d.Id(), err)
+		return fmt.Errorf("error updating CloudFront Field-level Encryption Config (%s): %w", d.Id(), err)
 	}
 
 	return resourceFieldLevelEncryptionConfigRead(d, meta)
@@ -192,168 +232,322 @@ func resourceFieldLevelEncryptionConfigUpdate(d *schema.ResourceData, meta inter
 func resourceFieldLevelEncryptionConfigDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CloudFrontConn
 
-	input := &cloudfront.DeleteFieldLevelEncryptionConfigInput{
+	log.Printf("[DEBUG] Deleting CloudFront Field-level Encryption Config: (%s)", d.Id())
+	_, err := conn.DeleteFieldLevelEncryptionConfig(&cloudfront.DeleteFieldLevelEncryptionConfigInput{
 		Id:      aws.String(d.Id()),
 		IfMatch: aws.String(d.Get("etag").(string)),
-	}
-
-	_, err := conn.DeleteFieldLevelEncryptionConfig(input)
+	})
 
 	if tfawserr.ErrCodeEquals(err, cloudfront.ErrCodeNoSuchFieldLevelEncryptionConfig) {
 		return nil
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting Cloudfront Field Level Encryption Config (%s): %w", d.Id(), err)
+		return fmt.Errorf("error deleting CloudFront Field-level Encryption Config (%s): %w", d.Id(), err)
 	}
 
 	return nil
 }
-func expandAwsCloudfrontFieldLevelEncryptionConfigContentTypeProfileConfig(config []interface{}) *cloudfront.ContentTypeProfileConfig {
-	if len(config) == 0 || config[0] == nil {
+
+func expandContentTypeProfileConfig(tfMap map[string]interface{}) *cloudfront.ContentTypeProfileConfig {
+	if tfMap == nil {
 		return nil
 	}
 
-	m := config[0].(map[string]interface{})
+	apiObject := &cloudfront.ContentTypeProfileConfig{}
 
-	profileConf := &cloudfront.ContentTypeProfileConfig{
-		ForwardWhenContentTypeIsUnknown: aws.Bool(m["forward_when_content_type_is_unknown"].(bool)),
-		ContentTypeProfiles:             expandAwsCloudfrontFieldLevelEncryptionConfigContentTypeProfiles(m["content_type_profile"].([]interface{})),
+	if v, ok := tfMap["content_type_profiles"].([]interface{}); ok && len(v) > 0 {
+		apiObject.ContentTypeProfiles = expandContentTypeProfiles(v[0].(map[string]interface{}))
 	}
 
-	return profileConf
+	if v, ok := tfMap["forward_when_content_type_is_unknown"].(bool); ok {
+		apiObject.ForwardWhenContentTypeIsUnknown = aws.Bool(v)
+	}
+
+	return apiObject
 }
 
-func expandAwsCloudfrontFieldLevelEncryptionConfigContentTypeProfiles(config []interface{}) *cloudfront.ContentTypeProfiles {
-	profiles := make([]*cloudfront.ContentTypeProfile, 0)
-
-	for _, raw := range config {
-		m := raw.(map[string]interface{})
-
-		profile := &cloudfront.ContentTypeProfile{
-			ContentType: aws.String(m["content_type"].(string)),
-			Format:      aws.String(m["format"].(string)),
-		}
-
-		if v, ok := m["profile_id"].(string); ok && v != "" {
-			profile.ProfileId = aws.String(v)
-		}
-
-		profiles = append(profiles, profile)
-	}
-
-	contentTypeProfiles := &cloudfront.ContentTypeProfiles{
-		Quantity: aws.Int64(int64(len(config))),
-		Items:    profiles,
-	}
-
-	return contentTypeProfiles
-}
-
-func expandAwsCloudfrontFieldLevelEncryptionConfigQueryArgProfileConfig(config []interface{}) *cloudfront.QueryArgProfileConfig {
-	if len(config) == 0 || config[0] == nil {
+func expandContentTypeProfiles(tfMap map[string]interface{}) *cloudfront.ContentTypeProfiles {
+	if tfMap == nil {
 		return nil
 	}
 
-	m := config[0].(map[string]interface{})
+	apiObject := &cloudfront.ContentTypeProfiles{}
 
-	profileConf := &cloudfront.QueryArgProfileConfig{
-		ForwardWhenQueryArgProfileIsUnknown: aws.Bool(m["forward_when_query_arg_is_unknown"].(bool)),
-		QueryArgProfiles:                    expandAwsCloudfrontFieldLevelEncryptionConfigQueryArgProfiles(m["query_arg_profile"].([]interface{})),
+	if v, ok := tfMap["items"].(*schema.Set); ok && v.Len() > 0 {
+		items := expandContentTypeProfileItems(v.List())
+		apiObject.Items = items
+		apiObject.Quantity = aws.Int64(int64(len(items)))
 	}
 
-	return profileConf
+	return apiObject
 }
 
-func expandAwsCloudfrontFieldLevelEncryptionConfigQueryArgProfiles(config []interface{}) *cloudfront.QueryArgProfiles {
-	profiles := make([]*cloudfront.QueryArgProfile, 0)
+func expandContentTypeProfile(tfMap map[string]interface{}) *cloudfront.ContentTypeProfile {
+	if tfMap == nil {
+		return nil
+	}
 
-	for _, raw := range config {
-		m := raw.(map[string]interface{})
+	apiObject := &cloudfront.ContentTypeProfile{}
 
-		profile := &cloudfront.QueryArgProfile{
-			ProfileId: aws.String(m["profile_id"].(string)),
-			QueryArg:  aws.String(m["query_arg"].(string)),
+	if v, ok := tfMap["content_type"].(string); ok && v != "" {
+		apiObject.ContentType = aws.String(v)
+	}
+
+	if v, ok := tfMap["format"].(string); ok && v != "" {
+		apiObject.Format = aws.String(v)
+	}
+
+	if v, ok := tfMap["profile_id"].(string); ok && v != "" {
+		apiObject.ProfileId = aws.String(v)
+	}
+
+	return apiObject
+}
+
+func expandContentTypeProfileItems(tfList []interface{}) []*cloudfront.ContentTypeProfile {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	var apiObjects []*cloudfront.ContentTypeProfile
+
+	for _, tfMapRaw := range tfList {
+		tfMap, ok := tfMapRaw.(map[string]interface{})
+
+		if !ok {
+			continue
 		}
 
-		profiles = append(profiles, profile)
+		apiObject := expandContentTypeProfile(tfMap)
+
+		if apiObject == nil {
+			continue
+		}
+
+		apiObjects = append(apiObjects, apiObject)
 	}
 
-	contentTypeProfiles := &cloudfront.QueryArgProfiles{
-		Quantity: aws.Int64(int64(len(config))),
-		Items:    profiles,
-	}
-
-	return contentTypeProfiles
+	return apiObjects
 }
 
-func flattenAwsCloudfrontFieldLevelEncryptionConfigContentTypeProfileConfig(config *cloudfront.ContentTypeProfileConfig) []map[string]interface{} {
-	if config == nil {
-		return []map[string]interface{}{}
+func expandQueryArgProfileConfig(tfMap map[string]interface{}) *cloudfront.QueryArgProfileConfig {
+	if tfMap == nil {
+		return nil
 	}
 
-	m := make(map[string]interface{})
+	apiObject := &cloudfront.QueryArgProfileConfig{}
 
-	m["forward_when_content_type_is_unknown"] = aws.BoolValue(config.ForwardWhenContentTypeIsUnknown)
-	if config.ContentTypeProfiles != nil {
-		m["content_type_profile"] = flattenAwsCloudfrontFieldLevelEncryptionConfigContentTypeProfiles(config.ContentTypeProfiles.Items)
+	if v, ok := tfMap["forward_when_query_arg_profile_is_unknown"].(bool); ok {
+		apiObject.ForwardWhenQueryArgProfileIsUnknown = aws.Bool(v)
 	}
 
-	return []map[string]interface{}{m}
+	if v, ok := tfMap["query_arg_profiles"].([]interface{}); ok && len(v) > 0 {
+		apiObject.QueryArgProfiles = expandQueryArgProfiles(v[0].(map[string]interface{}))
+	}
+
+	return apiObject
 }
 
-func flattenAwsCloudfrontFieldLevelEncryptionConfigContentTypeProfiles(profiles []*cloudfront.ContentTypeProfile) []interface{} {
-	if len(profiles) == 0 {
+func expandQueryArgProfiles(tfMap map[string]interface{}) *cloudfront.QueryArgProfiles {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &cloudfront.QueryArgProfiles{}
+
+	if v, ok := tfMap["items"].(*schema.Set); ok && v.Len() > 0 {
+		items := expandQueryArgProfileItems(v.List())
+		apiObject.Items = items
+		apiObject.Quantity = aws.Int64(int64(len(items)))
+	}
+
+	return apiObject
+}
+
+func expandQueryArgProfile(tfMap map[string]interface{}) *cloudfront.QueryArgProfile {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &cloudfront.QueryArgProfile{}
+
+	if v, ok := tfMap["profile_id"].(string); ok && v != "" {
+		apiObject.ProfileId = aws.String(v)
+	}
+
+	if v, ok := tfMap["query_arg"].(string); ok && v != "" {
+		apiObject.QueryArg = aws.String(v)
+	}
+
+	return apiObject
+}
+
+func expandQueryArgProfileItems(tfList []interface{}) []*cloudfront.QueryArgProfile {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	var apiObjects []*cloudfront.QueryArgProfile
+
+	for _, tfMapRaw := range tfList {
+		tfMap, ok := tfMapRaw.(map[string]interface{})
+
+		if !ok {
+			continue
+		}
+
+		apiObject := expandQueryArgProfile(tfMap)
+
+		if apiObject == nil {
+			continue
+		}
+
+		apiObjects = append(apiObjects, apiObject)
+	}
+
+	return apiObjects
+}
+
+func flattenContentTypeProfileConfig(apiObject *cloudfront.ContentTypeProfileConfig) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := flattenContentTypeProfiles(apiObject.ContentTypeProfiles); len(v) > 0 {
+		tfMap["content_type_profiles"] = []interface{}{v}
+	}
+
+	if v := apiObject.ForwardWhenContentTypeIsUnknown; v != nil {
+		tfMap["forward_when_content_type_is_unknown"] = aws.BoolValue(v)
+	}
+
+	return tfMap
+}
+
+func flattenContentTypeProfiles(apiObject *cloudfront.ContentTypeProfiles) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.Items; len(v) > 0 {
+		tfMap["items"] = flattenContentTypeProfileItems(v)
+	}
+
+	return tfMap
+}
+
+func flattenContentTypeProfile(apiObject *cloudfront.ContentTypeProfile) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.ContentType; v != nil {
+		tfMap["content_type"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.Format; v != nil {
+		tfMap["format"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.ProfileId; v != nil {
+		tfMap["profile_id"] = aws.StringValue(v)
+	}
+
+	return tfMap
+}
+
+func flattenContentTypeProfileItems(apiObjects []*cloudfront.ContentTypeProfile) []interface{} {
+	if len(apiObjects) == 0 {
 		return nil
 	}
 
 	var tfList []interface{}
 
-	for _, profile := range profiles {
-		tfMap := map[string]interface{}{
-			"content_type": aws.StringValue(profile.ContentType),
-			"format":       aws.StringValue(profile.Format),
+	for _, apiObject := range apiObjects {
+		if apiObject == nil {
+			continue
 		}
 
-		if aws.StringValue(profile.ProfileId) != "" {
-			tfMap["profile_id"] = aws.StringValue(profile.ProfileId)
+		if v := flattenContentTypeProfile(apiObject); len(v) > 0 {
+			tfList = append(tfList, v)
 		}
-
-		tfList = append(tfList, tfMap)
 	}
 
 	return tfList
 }
 
-func flattenAwsCloudfrontFieldLevelEncryptionConfigQueryArgProfileConfig(config *cloudfront.QueryArgProfileConfig) []map[string]interface{} {
-	if config == nil {
-		return []map[string]interface{}{}
+func flattenQueryArgProfileConfig(apiObject *cloudfront.QueryArgProfileConfig) map[string]interface{} {
+	if apiObject == nil {
+		return nil
 	}
 
-	m := make(map[string]interface{})
+	tfMap := map[string]interface{}{}
 
-	m["forward_when_query_arg_is_unknown"] = aws.BoolValue(config.ForwardWhenQueryArgProfileIsUnknown)
-	if config.QueryArgProfiles != nil {
-		m["query_arg_profile"] = flattenAwsCloudfrontFieldLevelEncryptionConfigQueryArgProfiles(config.QueryArgProfiles.Items)
+	if v := apiObject.ForwardWhenQueryArgProfileIsUnknown; v != nil {
+		tfMap["forward_when_query_arg_profile_is_unknown"] = aws.BoolValue(v)
 	}
 
-	return []map[string]interface{}{m}
+	if v := flattenQueryArgProfiles(apiObject.QueryArgProfiles); len(v) > 0 {
+		tfMap["query_arg_profiles"] = []interface{}{v}
+	}
+
+	return tfMap
 }
 
-func flattenAwsCloudfrontFieldLevelEncryptionConfigQueryArgProfiles(profiles []*cloudfront.QueryArgProfile) []interface{} {
-	if len(profiles) == 0 {
+func flattenQueryArgProfiles(apiObject *cloudfront.QueryArgProfiles) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.Items; len(v) > 0 {
+		tfMap["items"] = flattenQueryArgProfileItems(v)
+	}
+
+	return tfMap
+}
+
+func flattenQueryArgProfile(apiObject *cloudfront.QueryArgProfile) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.ProfileId; v != nil {
+		tfMap["profile_id"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.QueryArg; v != nil {
+		tfMap["query_arg"] = aws.StringValue(v)
+	}
+
+	return tfMap
+}
+
+func flattenQueryArgProfileItems(apiObjects []*cloudfront.QueryArgProfile) []interface{} {
+	if len(apiObjects) == 0 {
 		return nil
 	}
 
 	var tfList []interface{}
 
-	for _, profile := range profiles {
-		tfMap := map[string]interface{}{
-			"query_arg":  aws.StringValue(profile.QueryArg),
-			"profile_id": aws.StringValue(profile.ProfileId),
+	for _, apiObject := range apiObjects {
+		if apiObject == nil {
+			continue
 		}
 
-		tfList = append(tfList, tfMap)
+		if v := flattenQueryArgProfile(apiObject); len(v) > 0 {
+			tfList = append(tfList, v)
+		}
 	}
 
 	return tfList

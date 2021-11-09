@@ -15,9 +15,8 @@ import (
 )
 
 func TestAccCloudFrontFieldLevelEncryptionConfig_basic(t *testing.T) {
-	var profile cloudfront.GetFieldLevelEncryptionConfigOutput
+	var v cloudfront.GetFieldLevelEncryptionConfigOutput
 	resourceName := "aws_cloudfront_field_level_encryption_config.test"
-	profileResourceName := "aws_cloudfront_field_level_encryption_profile.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -27,20 +26,21 @@ func TestAccCloudFrontFieldLevelEncryptionConfig_basic(t *testing.T) {
 		CheckDestroy: testAccCheckCloudFrontFieldLevelEncryptionConfigDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCloudfrontFieldLevelEncryptionConfigBasic(rName),
+				Config: testAccAWSCloudfrontFieldLevelEncryptionConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudFrontFieldLevelEncryptionConfigExists(resourceName, &profile),
+					testAccCheckCloudFrontFieldLevelEncryptionConfigExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "comment", "some comment"),
 					resource.TestCheckResourceAttr(resourceName, "content_type_profile_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "content_type_profile_config.0.content_type_profile.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "content_type_profile_config.0.content_type_profile.0.content_type", "application/x-www-form-urlencoded"),
-					resource.TestCheckResourceAttr(resourceName, "content_type_profile_config.0.content_type_profile.0.format", "URLEncoded"),
+					resource.TestCheckResourceAttr(resourceName, "content_type_profile_config.0.content_type_profiles.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "content_type_profile_config.0.content_type_profiles.0.items.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "content_type_profile_config.0.content_type_profiles.0.items.*", map[string]string{
+						"content_type": "application/x-www-form-urlencoded",
+						"format":       "URLEncoded",
+					}),
 					resource.TestCheckResourceAttr(resourceName, "content_type_profile_config.0.forward_when_content_type_is_unknown", "true"),
 					resource.TestCheckResourceAttr(resourceName, "query_arg_profile_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "query_arg_profile_config.0.query_arg_profile.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "query_arg_profile_config.0.query_arg_profile.0.query_arg", "URLEncoded"),
-					resource.TestCheckResourceAttrPair(resourceName, "query_arg_profile_config.0.query_arg_profile.0.profile_id", profileResourceName, "id"),
-					resource.TestCheckResourceAttr(resourceName, "query_arg_profile_config.0.forward_when_query_arg_is_unknown", "true"),
+					resource.TestCheckResourceAttr(resourceName, "query_arg_profile_config.0.forward_when_query_arg_profile_is_unknown", "true"),
+					resource.TestCheckResourceAttr(resourceName, "query_arg_profile_config.0.query_arg_profiles.#", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "etag"),
 				),
 			},
@@ -50,21 +50,27 @@ func TestAccCloudFrontFieldLevelEncryptionConfig_basic(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSCloudfrontFieldLevelEncryptionConfigUpdated(rName),
+				Config: testAccAWSCloudfrontFieldLevelEncryptionUpdatedConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudFrontFieldLevelEncryptionConfigExists(resourceName, &profile),
-					resource.TestCheckResourceAttr(resourceName, "comment", "some comment"),
+					testAccCheckCloudFrontFieldLevelEncryptionConfigExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "comment", "some other comment"),
 					resource.TestCheckResourceAttr(resourceName, "content_type_profile_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "content_type_profile_config.0.content_type_profile.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "content_type_profile_config.0.content_type_profile.0.content_type", "application/x-www-form-urlencoded"),
-					resource.TestCheckResourceAttr(resourceName, "content_type_profile_config.0.content_type_profile.0.format", "URLEncoded"),
-					resource.TestCheckResourceAttr(resourceName, "content_type_profile_config.0.forward_when_content_type_is_unknown", "false"),
-					resource.TestCheckResourceAttrPair(resourceName, "content_type_profile_config.0.content_type_profile.0.profile_id", profileResourceName, "id"),
+					resource.TestCheckResourceAttr(resourceName, "content_type_profile_config.0.content_type_profiles.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "content_type_profile_config.0.content_type_profiles.0.items.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "content_type_profile_config.0.content_type_profiles.0.items.*", map[string]string{
+						"content_type": "application/x-www-form-urlencoded",
+						"format":       "URLEncoded",
+					}),
 					resource.TestCheckResourceAttr(resourceName, "query_arg_profile_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "query_arg_profile_config.0.query_arg_profile.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "query_arg_profile_config.0.query_arg_profile.0.query_arg", "URLEncoded2"),
-					resource.TestCheckResourceAttrPair(resourceName, "query_arg_profile_config.0.query_arg_profile.0.profile_id", profileResourceName, "id"),
-					resource.TestCheckResourceAttr(resourceName, "query_arg_profile_config.0.forward_when_query_arg_is_unknown", "false"),
+					resource.TestCheckResourceAttr(resourceName, "query_arg_profile_config.0.forward_when_query_arg_profile_is_unknown", "false"),
+					resource.TestCheckResourceAttr(resourceName, "query_arg_profile_config.0.query_arg_profiles.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "query_arg_profile_config.0.query_arg_profiles.0.items.#", "2"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "query_arg_profile_config.0.query_arg_profiles.0.items.*", map[string]string{
+						"query_arg": "Arg1",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "query_arg_profile_config.0.query_arg_profiles.0.items.*", map[string]string{
+						"query_arg": "Arg2",
+					}),
 					resource.TestCheckResourceAttrSet(resourceName, "etag"),
 				),
 			},
@@ -73,7 +79,7 @@ func TestAccCloudFrontFieldLevelEncryptionConfig_basic(t *testing.T) {
 }
 
 func TestAccCloudFrontFieldLevelEncryptionConfig_disappears(t *testing.T) {
-	var profile cloudfront.GetFieldLevelEncryptionConfigOutput
+	var v cloudfront.GetFieldLevelEncryptionConfigOutput
 	resourceName := "aws_cloudfront_field_level_encryption_config.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -84,9 +90,9 @@ func TestAccCloudFrontFieldLevelEncryptionConfig_disappears(t *testing.T) {
 		CheckDestroy: testAccCheckCloudFrontFieldLevelEncryptionConfigDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCloudfrontFieldLevelEncryptionConfigBasic(rName),
+				Config: testAccAWSCloudfrontFieldLevelEncryptionConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudFrontFieldLevelEncryptionConfigExists(resourceName, &profile),
+					testAccCheckCloudFrontFieldLevelEncryptionConfigExists(resourceName, &v),
 					acctest.CheckResourceDisappears(acctest.Provider, tfcloudfront.ResourceFieldLevelEncryptionConfig(), resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfcloudfront.ResourceFieldLevelEncryptionConfig(), resourceName),
 				),
@@ -145,7 +151,7 @@ func testAccCheckCloudFrontFieldLevelEncryptionConfigExists(r string, v *cloudfr
 	}
 }
 
-func testAccAWSCloudfrontFieldLevelEncryptionConfigBase(rName string) string {
+func testAccAWSCloudfrontFieldLevelEncryptionBaseConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudfront_public_key" "test" {
   comment     = "test key"
@@ -171,53 +177,60 @@ resource "aws_cloudfront_field_level_encryption_profile" "test" {
 `, rName)
 }
 
-func testAccAWSCloudfrontFieldLevelEncryptionConfigBasic(rName string) string {
-	return acctest.ConfigCompose(testAccAWSCloudfrontFieldLevelEncryptionConfigBase(rName), fmt.Sprintf(`
+func testAccAWSCloudfrontFieldLevelEncryptionConfig(rName string) string {
+	return acctest.ConfigCompose(testAccAWSCloudfrontFieldLevelEncryptionBaseConfig(rName), fmt.Sprintf(`
 resource "aws_cloudfront_field_level_encryption_config" "test" {
   comment = "some comment"
 
   content_type_profile_config {
     forward_when_content_type_is_unknown = true
 
-    content_type_profile {
-      content_type = "application/x-www-form-urlencoded"
-      format       = "URLEncoded"
+    content_type_profiles {
+      items {
+        content_type = "application/x-www-form-urlencoded"
+        format       = "URLEncoded"
+        profile_id = aws_cloudfront_field_level_encryption_profile.test.id
+      }
     }
   }
 
   query_arg_profile_config {
-    forward_when_query_arg_is_unknown = true
-
-    query_arg_profile {
-      profile_id = aws_cloudfront_field_level_encryption_profile.test.id
-      query_arg  = "URLEncoded"
-    }
+    forward_when_query_arg_profile_is_unknown = true
   }
 }
 `))
 }
 
-func testAccAWSCloudfrontFieldLevelEncryptionConfigUpdated(rName string) string {
-	return acctest.ConfigCompose(testAccAWSCloudfrontFieldLevelEncryptionConfigBase(rName), fmt.Sprintf(`
+func testAccAWSCloudfrontFieldLevelEncryptionUpdatedConfig(rName string) string {
+	return acctest.ConfigCompose(testAccAWSCloudfrontFieldLevelEncryptionBaseConfig(rName), fmt.Sprintf(`
 resource "aws_cloudfront_field_level_encryption_config" "test" {
-  comment = "some comment"
+  comment = "some other comment"
 
   content_type_profile_config {
-    forward_when_content_type_is_unknown = false
+    forward_when_content_type_is_unknown = true
 
-    content_type_profile {
-      content_type = "application/x-www-form-urlencoded"
-      format       = "URLEncoded"
-      profile_id   = aws_cloudfront_field_level_encryption_profile.test.id
+    content_type_profiles {
+      items {
+        content_type = "application/x-www-form-urlencoded"
+        format       = "URLEncoded"
+        profile_id = aws_cloudfront_field_level_encryption_profile.test.id
+      }
     }
   }
 
   query_arg_profile_config {
-    forward_when_query_arg_is_unknown = false
+    forward_when_query_arg_profile_is_unknown = false
 
-    query_arg_profile {
-      profile_id = aws_cloudfront_field_level_encryption_profile.test.id
-      query_arg  = "URLEncoded2"
+    query_arg_profiles {
+      items {
+        profile_id = aws_cloudfront_field_level_encryption_profile.test.id
+        query_arg  = "Arg1"
+      }
+
+      items {
+        profile_id = aws_cloudfront_field_level_encryption_profile.test.id
+        query_arg  = "Arg2"
+      }
     }
   }
 }
