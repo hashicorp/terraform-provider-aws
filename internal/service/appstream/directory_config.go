@@ -76,10 +76,9 @@ func resourceDirectoryConfigCreate(ctx context.Context, d *schema.ResourceData, 
 		ServiceAccountCredentials:            expandServiceAccountCredentials(d.Get("service_account_credentials").([]interface{})),
 	}
 
-	var err error
 	var output *appstream.CreateDirectoryConfigOutput
-	err = resource.RetryContext(ctx, directoryConfigTimeout, func() *resource.RetryError {
-		output, err = conn.CreateDirectoryConfigWithContext(ctx, input)
+	err := resource.RetryContext(ctx, directoryConfigTimeout, func() *resource.RetryError {
+		out, err := conn.CreateDirectoryConfigWithContext(ctx, input)
 		if err != nil {
 			if tfawserr.ErrCodeEquals(err, appstream.ErrCodeResourceNotFoundException) {
 				return resource.RetryableError(err)
@@ -87,6 +86,7 @@ func resourceDirectoryConfigCreate(ctx context.Context, d *schema.ResourceData, 
 
 			return resource.NonRetryableError(err)
 		}
+		output = out
 
 		return nil
 	})

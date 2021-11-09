@@ -39,6 +39,9 @@ func TestAccAppStreamDirectoryConfig_basic(t *testing.T) {
 					testAccCheckDirectoryConfigExists(resourceName, &directoryOutput),
 					resource.TestCheckResourceAttr(resourceName, "directory_name", rName),
 					acctest.CheckResourceAttrRFC3339(resourceName, "created_time"),
+					resource.TestCheckResourceAttr(resourceName, "organizational_unit_distinguished_names.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "service_account_credentials.0.account_name", rUserName),
+					resource.TestCheckResourceAttr(resourceName, "service_account_credentials.0.account_password", rPassword),
 				),
 			},
 			{
@@ -46,6 +49,10 @@ func TestAccAppStreamDirectoryConfig_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDirectoryConfigExists(resourceName, &directoryOutput),
 					resource.TestCheckResourceAttr(resourceName, "directory_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "organizational_unit_distinguished_names.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "service_account_credentials.0.account_name", rUserNameUpdated),
+					resource.TestCheckResourceAttr(resourceName, "service_account_credentials.0.account_password", rPasswordUpdated),
+
 					acctest.CheckResourceAttrRFC3339(resourceName, "created_time"),
 				),
 			},
@@ -138,21 +145,40 @@ func testAccCheckDirectoryConfigDestroy(s *terraform.State) error {
 }
 
 func testAccDirectoryConfigConfig(name, userName, password string) string {
-	return fmt.Sprintf(`
-data "aws_organizations_organization" "test" {}
+	return acctest.ConfigCompose(
+		acctest.ConfigAvailableAZsNoOptIn(),
+		fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+}
 
-data "aws_organizations_organizational_units" "test" {
-  parent_id = data.aws_organizations_organization.test.roots[0].id
+resource "aws_subnet" "test" {
+  count             = 2
+  availability_zone = data.aws_availability_zones.available.names[count.index]
+  cidr_block        = "10.0.${count.index}.0/24"
+  vpc_id            = aws_vpc.test.id
+}
+
+resource "aws_directory_service_directory" "test" {
+  name     = %[1]q
+  password = %[3]q
+  edition  = "Standard"
+  type     = "MicrosoftAD"
+
+  vpc_settings {
+    vpc_id     = aws_vpc.test.id
+    subnet_ids = aws_subnet.test.*.id
+  }
 }
 
 resource "aws_appstream_directory_config" "test" {
   directory_name                          = %[1]q
-  organizational_unit_distinguished_names = data.aws_organizations_organizational_units.test.children.*.id
+  organizational_unit_distinguished_names = [aws_directory_service_directory.test.id]
   
   service_account_credentials{
     account_name     = %[2]q
     account_password = %[3]q
   }
 }
-`, name, userName, password)
+`, name, userName, password))
 }
