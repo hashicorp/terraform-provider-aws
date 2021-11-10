@@ -17,7 +17,7 @@ import (
 	tfworklink "github.com/hashicorp/terraform-provider-aws/internal/service/worklink"
 )
 
-func TestAccWorkLinkWebsiteCertificateAuthorityAssociation_WorkLink_basic(t *testing.T) {
+func TestAccWorkLinkWebsiteCertificateAuthorityAssociation_basic(t *testing.T) {
 	suffix := sdkacctest.RandStringFromCharSet(20, sdkacctest.CharSetAlpha)
 	resourceName := "aws_worklink_website_certificate_authority_association.test"
 
@@ -46,7 +46,7 @@ func TestAccWorkLinkWebsiteCertificateAuthorityAssociation_WorkLink_basic(t *tes
 	})
 }
 
-func TestAccWorkLinkWebsiteCertificateAuthorityAssociation_WorkLink_displayName(t *testing.T) {
+func TestAccWorkLinkWebsiteCertificateAuthorityAssociation_displayName(t *testing.T) {
 	suffix := sdkacctest.RandStringFromCharSet(20, sdkacctest.CharSetAlpha)
 	resourceName := "aws_worklink_website_certificate_authority_association.test"
 	displayName1 := fmt.Sprintf("tf-website-certificate-%s", sdkacctest.RandStringFromCharSet(5, sdkacctest.CharSetAlpha))
@@ -80,7 +80,7 @@ func TestAccWorkLinkWebsiteCertificateAuthorityAssociation_WorkLink_displayName(
 	})
 }
 
-func TestAccWorkLinkWebsiteCertificateAuthorityAssociation_WorkLink_disappears(t *testing.T) {
+func TestAccWorkLinkWebsiteCertificateAuthorityAssociation_disappears(t *testing.T) {
 	suffix := sdkacctest.RandStringFromCharSet(20, sdkacctest.CharSetAlpha)
 	resourceName := "aws_worklink_website_certificate_authority_association.test"
 

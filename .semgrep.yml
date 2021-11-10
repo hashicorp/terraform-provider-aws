@@ -4,7 +4,7 @@ rules:
     message: Prefer naming acceptance tests with _disappears_Parent suffix
     paths:
       include:
-        - 'aws/*_test.go'
+        - "internal/**/*_test.go"
     patterns:
       - pattern: func $FUNCNAME(t *testing.T) { ... }
       - metavariable-regex:
@@ -17,28 +17,12 @@ rules:
     message: Resources should not implement multiple AWS service functionality
     paths:
       exclude:
-        - aws/config.go
-        - aws/structure.go
-        - aws/validators.go
-        - aws/*wafregional*.go
-        - aws/resource_aws_serverlessapplicationrepository_cloudformation_stack.go
-        - aws/resource_aws_transfer_server.go
-        - aws/*_test.go
-        - aws/internal/keyvaluetags/
-        - aws/internal/namevaluesfilters/
-        - aws/internal/service/wafregional/
-        # Legacy resource handling
-        - aws/resource_aws_autoscaling_group.go
-        - aws/resource_aws_efs_mount_target.go
-        - aws/resource_aws_elastic_beanstalk_environment.go
-        - aws/resource_aws_elb.go
-        - aws/resource_aws_iam_server_certificate.go
-        - aws/resource_aws_lambda_event_source_mapping.go
-        - aws/resource_aws_launch_configuration.go
-        - aws/resource_aws_lb.go
-        - aws/resource_aws_s3_bucket_object.go
+        - "internal/service/**/*_test.go"
+        - "internal/service/**/sweep.go"
+        - "internal/acctest/acctest.go"
+        - "internal/conns/conns.go"
       include:
-        - aws/
+        - internal/
     patterns:
       - pattern: |
           import ("$X")
@@ -49,6 +33,10 @@ rules:
       - metavariable-regex:
           metavariable: '$Y'
           regex: '^"github.com/aws/aws-sdk-go/service/[^/]+"$'
+      # wafregional uses a number of resources from waf
+      - pattern-not: |
+          import ("github.com/aws/aws-sdk-go/service/waf")
+          import ("github.com/aws/aws-sdk-go/service/wafregional")
     severity: WARNING
 
   - id: prefer-aws-go-sdk-pointer-conversion-assignment

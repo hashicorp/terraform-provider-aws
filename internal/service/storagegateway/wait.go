@@ -168,11 +168,10 @@ func waitSMBFileShareUpdated(conn *storagegateway.StorageGateway, arn string, ti
 	return nil, err
 }
 
-// waitFileSystemAssociationAvailable waits for a File System Association to return Available
 func waitFileSystemAssociationAvailable(conn *storagegateway.StorageGateway, fileSystemArn string, timeout time.Duration) (*storagegateway.FileSystemAssociationInfo, error) { //nolint:unparam
 	stateConf := &resource.StateChangeConf{
-		Pending: fileSystemAssociationStatusAvailableStatusPending(),
-		Target:  fileSystemAssociationStatusAvailableStatusTarget(),
+		Pending: []string{fileSystemAssociationStatusCreating, fileSystemAssociationStatusUpdating},
+		Target:  []string{fileSystemAssociationStatusAvailable},
 		Refresh: statusFileSystemAssociation(conn, fileSystemArn),
 		Timeout: timeout,
 		Delay:   fileSystemAssociationAvailableDelay,
@@ -189,8 +188,8 @@ func waitFileSystemAssociationAvailable(conn *storagegateway.StorageGateway, fil
 
 func waitFileSystemAssociationDeleted(conn *storagegateway.StorageGateway, fileSystemArn string, timeout time.Duration) (*storagegateway.FileSystemAssociationInfo, error) {
 	stateConf := &resource.StateChangeConf{
-		Pending:        fileSystemAssociationStatusDeletedStatusPending(),
-		Target:         fileSystemAssociationStatusDeletedStatusTarget(),
+		Pending:        []string{fileSystemAssociationStatusAvailable, fileSystemAssociationStatusDeleting, fileSystemAssociationStatusForceDeleting},
+		Target:         []string{},
 		Refresh:        statusFileSystemAssociation(conn, fileSystemArn),
 		Timeout:        timeout,
 		Delay:          fileSystemAssociationDeletedDelay,

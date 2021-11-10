@@ -15,7 +15,6 @@ const (
 	storageGatewayGatewayStatusConnected = "GatewayConnected"
 	storediSCSIVolumeStatusNotFound      = "NotFound"
 	nfsFileShareStatusNotFound           = "NotFound"
-	fileSystemAssociationStatusNotFound  = "NotFound"
 )
 
 func statusStorageGatewayGateway(conn *storagegateway.StorageGateway, gatewayARN string) resource.StateRefreshFunc {
@@ -125,19 +124,16 @@ func statussmBFileShare(conn *storagegateway.StorageGateway, arn string) resourc
 	}
 }
 
-func statusFileSystemAssociation(conn *storagegateway.StorageGateway, fileSystemArn string) resource.StateRefreshFunc {
+func statusFileSystemAssociation(conn *storagegateway.StorageGateway, arn string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
+		output, err := FindFileSystemAssociationByARN(conn, arn)
 
-		output, err := FindFileSystemAssociationByARN(conn, fileSystemArn)
-
-		// there was an unhandled error in the Finder
-		if err != nil {
-			return nil, "", err
+		if tfresource.NotFound(err) {
+			return nil, "", nil
 		}
 
-		// no error, and no File System Association found
-		if output == nil {
-			return nil, fileSystemAssociationStatusNotFound, nil
+		if err != nil {
+			return nil, "", err
 		}
 
 		return output, aws.StringValue(output.FileSystemAssociationStatus), nil

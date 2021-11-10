@@ -308,7 +308,7 @@ func TestAccEC2EIP_TagsEC2VPC_withVPCTrue(t *testing.T) {
 	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckEC2VPCOnly(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckEC2VPCOnly(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckEIPDestroy,
@@ -351,7 +351,7 @@ func TestAccEC2EIP_TagsEC2VPC_withoutVPCTrue(t *testing.T) {
 	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckEC2VPCOnly(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckEC2VPCOnly(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckEIPDestroy,
@@ -933,7 +933,7 @@ resource "aws_eip" "test" {
 func testAccEIPInstanceEC2ClassicConfig() string {
 	return acctest.ConfigCompose(
 		acctest.ConfigEC2ClassicRegionProvider(),
-		acctest.ConfigLatestAmazonLinuxPvEbsAmi(),
+		testAccLatestAmazonLinuxPVEBSAMIConfig(),
 		acctest.AvailableEC2InstanceTypeForRegion("t1.micro", "m3.medium", "m3.large", "c3.large", "r3.large"),
 		`
 resource "aws_instance" "test" {

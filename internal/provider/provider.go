@@ -1,6 +1,7 @@
 package provider
 
 import (
+	"fmt"
 	"log"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -98,9 +99,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/mediaconvert"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/mediapackage"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/mediastore"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/meta"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/mq"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/mwaa"
-	"github.com/hashicorp/terraform-provider-aws/internal/service/nas"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/neptune"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/networkfirewall"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/opsworks"
@@ -141,6 +142,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/ssm"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/ssoadmin"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/storagegateway"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/sts"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/swf"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/synthetics"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/timestreamwrite"
@@ -374,6 +376,7 @@ func Provider() *schema.Provider {
 			"aws_cloudfront_function":                       cloudfront.DataSourceFunction(),
 			"aws_cloudfront_log_delivery_canonical_user_id": cloudfront.DataSourceLogDeliveryCanonicalUserID(),
 			"aws_cloudfront_origin_request_policy":          cloudfront.DataSourceOriginRequestPolicy(),
+			"aws_cloudfront_response_headers_policy":        cloudfront.DataSourceResponseHeadersPolicy(),
 
 			"aws_cloudhsm_v2_cluster": cloudhsmv2.DataSourceCluster(),
 
@@ -448,6 +451,7 @@ func Provider() *schema.Provider {
 			"aws_instance":                                   ec2.DataSourceInstance(),
 			"aws_instances":                                  ec2.DataSourceInstances(),
 			"aws_internet_gateway":                           ec2.DataSourceInternetGateway(),
+			"aws_key_pair":                                   ec2.DataSourceKeyPair(),
 			"aws_launch_template":                            ec2.DataSourceLaunchTemplate(),
 			"aws_nat_gateway":                                ec2.DataSourceNatGateway(),
 			"aws_network_acls":                               ec2.DataSourceNetworkACLs(),
@@ -581,17 +585,15 @@ func Provider() *schema.Provider {
 			"aws_lex_intent":    lexmodelbuilding.DataSourceIntent(),
 			"aws_lex_slot_type": lexmodelbuilding.DataSourceSlotType(),
 
-			"aws_mq_broker": mq.DataSourceBroker(),
+			"aws_arn":                     meta.DataSourceARN(),
+			"aws_billing_service_account": meta.DataSourceBillingServiceAccount(),
+			"aws_default_tags":            meta.DataSourceDefaultTags(),
+			"aws_ip_ranges":               meta.DataSourceIPRanges(),
+			"aws_partition":               meta.DataSourcePartition(),
+			"aws_region":                  meta.DataSourceRegion(),
+			"aws_regions":                 meta.DataSourceRegions(),
 
-			"aws_arn":                     nas.DataSourceARN(),
-			"aws_billing_service_account": nas.DataSourceBillingServiceAccount(),
-			"aws_caller_identity":         nas.DataSourceCallerIdentity(),
-			"aws_canonical_user_id":       nas.DataSourceCanonicalUserID(),
-			"aws_default_tags":            nas.DataSourceDefaultTags(),
-			"aws_ip_ranges":               nas.DataSourceIPRanges(),
-			"aws_partition":               nas.DataSourcePartition(),
-			"aws_region":                  nas.DataSourceRegion(),
-			"aws_regions":                 nas.DataSourceRegions(),
+			"aws_mq_broker": mq.DataSourceBroker(),
 
 			"aws_neptune_engine_version":        neptune.DataSourceEngineVersion(),
 			"aws_neptune_orderable_db_instance": neptune.DataSourceOrderableDBInstance(),
@@ -638,6 +640,7 @@ func Provider() *schema.Provider {
 			"aws_route53_resolver_rule":     route53resolver.DataSourceRule(),
 			"aws_route53_resolver_rules":    route53resolver.DataSourceRules(),
 
+			"aws_canonical_user_id": s3.DataSourceCanonicalUserID(),
 			"aws_s3_bucket":         s3.DataSourceBucket(),
 			"aws_s3_bucket_object":  s3.DataSourceBucketObject(),
 			"aws_s3_bucket_objects": s3.DataSourceBucketObjects(),
@@ -680,6 +683,8 @@ func Provider() *schema.Provider {
 			"aws_ssoadmin_permission_set": ssoadmin.DataSourcePermissionSet(),
 
 			"aws_storagegateway_local_disk": storagegateway.DataSourceLocalDisk(),
+
+			"aws_caller_identity": sts.DataSourceCallerIdentity(),
 
 			"aws_transfer_server": transfer.DataSourceServer(),
 
@@ -840,15 +845,18 @@ func Provider() *schema.Provider {
 			"aws_cloudformation_stack_set_instance": cloudformation.ResourceStackSetInstance(),
 			"aws_cloudformation_type":               cloudformation.ResourceType(),
 
-			"aws_cloudfront_cache_policy":            cloudfront.ResourceCachePolicy(),
-			"aws_cloudfront_distribution":            cloudfront.ResourceDistribution(),
-			"aws_cloudfront_function":                cloudfront.ResourceFunction(),
-			"aws_cloudfront_key_group":               cloudfront.ResourceKeyGroup(),
-			"aws_cloudfront_monitoring_subscription": cloudfront.ResourceMonitoringSubscription(),
-			"aws_cloudfront_origin_access_identity":  cloudfront.ResourceOriginAccessIdentity(),
-			"aws_cloudfront_origin_request_policy":   cloudfront.ResourceOriginRequestPolicy(),
-			"aws_cloudfront_public_key":              cloudfront.ResourcePublicKey(),
-			"aws_cloudfront_realtime_log_config":     cloudfront.ResourceRealtimeLogConfig(),
+			"aws_cloudfront_cache_policy":                   cloudfront.ResourceCachePolicy(),
+			"aws_cloudfront_distribution":                   cloudfront.ResourceDistribution(),
+			"aws_cloudfront_field_level_encryption_config":  cloudfront.ResourceFieldLevelEncryptionConfig(),
+			"aws_cloudfront_field_level_encryption_profile": cloudfront.ResourceFieldLevelEncryptionProfile(),
+			"aws_cloudfront_function":                       cloudfront.ResourceFunction(),
+			"aws_cloudfront_key_group":                      cloudfront.ResourceKeyGroup(),
+			"aws_cloudfront_monitoring_subscription":        cloudfront.ResourceMonitoringSubscription(),
+			"aws_cloudfront_origin_access_identity":         cloudfront.ResourceOriginAccessIdentity(),
+			"aws_cloudfront_origin_request_policy":          cloudfront.ResourceOriginRequestPolicy(),
+			"aws_cloudfront_public_key":                     cloudfront.ResourcePublicKey(),
+			"aws_cloudfront_realtime_log_config":            cloudfront.ResourceRealtimeLogConfig(),
+			"aws_cloudfront_response_headers_policy":        cloudfront.ResourceResponseHeadersPolicy(),
 
 			"aws_cloudhsm_v2_cluster": cloudhsmv2.ResourceCluster(),
 			"aws_cloudhsm_v2_hsm":     cloudhsmv2.ResourceHSM(),
@@ -1680,7 +1688,6 @@ func Provider() *schema.Provider {
 }
 
 var descriptions map[string]string
-var EndpointServiceNames []string
 
 func init() {
 	descriptions = map[string]string{
@@ -1733,171 +1740,6 @@ func init() {
 			"i.e., http://s3.amazonaws.com/BUCKET/KEY. By default, the S3 client will\n" +
 			"use virtual hosted bucket addressing when possible\n" +
 			"(http://BUCKET.s3.amazonaws.com/KEY). Specific to the Amazon S3 service.",
-	}
-
-	EndpointServiceNames = []string{
-		"accessanalyzer",
-		"acm",
-		"acmpca",
-		"amplify",
-		"apigateway",
-		"appconfig",
-		"applicationautoscaling",
-		"applicationinsights",
-		"appmesh",
-		"apprunner",
-		"appstream",
-		"appsync",
-		"athena",
-		"auditmanager",
-		"autoscaling",
-		"autoscalingplans",
-		"backup",
-		"batch",
-		"budgets",
-		"chime",
-		"cloud9",
-		"cloudcontrolapi",
-		"cloudformation",
-		"cloudfront",
-		"cloudhsm",
-		"cloudsearch",
-		"cloudtrail",
-		"cloudwatch",
-		"cloudwatchevents",
-		"cloudwatchlogs",
-		"codeartifact",
-		"codebuild",
-		"codecommit",
-		"codedeploy",
-		"codepipeline",
-		"codestarconnections",
-		"cognitoidentity",
-		"cognitoidp",
-		"configservice",
-		"connect",
-		"cur",
-		"dataexchange",
-		"datapipeline",
-		"datasync",
-		"dax",
-		"detective",
-		"devicefarm",
-		"directconnect",
-		"dlm",
-		"dms",
-		"docdb",
-		"ds",
-		"dynamodb",
-		"ec2",
-		"ecr",
-		"ecrpublic",
-		"ecs",
-		"efs",
-		"eks",
-		"elasticache",
-		"elasticbeanstalk",
-		"elastictranscoder",
-		"elb",
-		"emr",
-		"emrcontainers",
-		"es",
-		"firehose",
-		"fms",
-		"forecast",
-		"fsx",
-		"gamelift",
-		"glacier",
-		"globalaccelerator",
-		"glue",
-		"greengrass",
-		"guardduty",
-		"iam",
-		"identitystore",
-		"imagebuilder",
-		"inspector",
-		"iot",
-		"iotanalytics",
-		"iotevents",
-		"kafka",
-		"kinesis",
-		"kinesisanalytics",
-		"kinesisanalyticsv2",
-		"kinesisvideo",
-		"kms",
-		"lakeformation",
-		"lambda",
-		"lexmodels",
-		"licensemanager",
-		"lightsail",
-		"location",
-		"macie",
-		"macie2",
-		"managedblockchain",
-		"marketplacecatalog",
-		"mediaconnect",
-		"mediaconvert",
-		"medialive",
-		"mediapackage",
-		"mediastore",
-		"mediastoredata",
-		"memorydb",
-		"mq",
-		"mwaa",
-		"neptune",
-		"networkfirewall",
-		"networkmanager",
-		"opsworks",
-		"organizations",
-		"outposts",
-		"personalize",
-		"pinpoint",
-		"pricing",
-		"qldb",
-		"quicksight",
-		"ram",
-		"rds",
-		"redshift",
-		"resourcegroups",
-		"resourcegroupstaggingapi",
-		"route53",
-		"route53domains",
-		"route53recoverycontrolconfig",
-		"route53recoveryreadiness",
-		"route53resolver",
-		"s3",
-		"s3control",
-		"s3outposts",
-		"sagemaker",
-		"schemas",
-		"sdb",
-		"secretsmanager",
-		"securityhub",
-		"serverlessrepo",
-		"servicecatalog",
-		"servicediscovery",
-		"servicequotas",
-		"ses",
-		"shield",
-		"signer",
-		"sns",
-		"sqs",
-		"ssm",
-		"ssoadmin",
-		"stepfunctions",
-		"storagegateway",
-		"sts",
-		"swf",
-		"synthetics",
-		"timestreamwrite",
-		"transfer",
-		"waf",
-		"wafregional",
-		"wafv2",
-		"worklink",
-		"workmail",
-		"workspaces",
-		"xray",
 	}
 }
 
@@ -1992,8 +1834,17 @@ func providerConfigure(d *schema.ResourceData, terraformVersion string) (interfa
 
 	for _, endpointsSetI := range endpointsSet.List() {
 		endpoints := endpointsSetI.(map[string]interface{})
-		for _, endpointServiceName := range EndpointServiceNames {
-			config.Endpoints[endpointServiceName] = endpoints[endpointServiceName].(string)
+
+		for _, hclKey := range conns.HCLKeys() {
+			var serviceKey string
+			var err error
+			if serviceKey, err = conns.ServiceForHCLKey(hclKey); err != nil {
+				return nil, fmt.Errorf("failed to assign endpoint (%s): %w", hclKey, err)
+			}
+
+			if config.Endpoints[serviceKey] == "" && endpoints[hclKey].(string) != "" {
+				config.Endpoints[serviceKey] = endpoints[hclKey].(string)
+			}
 		}
 	}
 
@@ -2075,8 +1926,8 @@ func assumeRoleSchema() *schema.Schema {
 func endpointsSchema() *schema.Schema {
 	endpointsAttributes := make(map[string]*schema.Schema)
 
-	for _, endpointServiceName := range EndpointServiceNames {
-		endpointsAttributes[endpointServiceName] = &schema.Schema{
+	for _, serviceKey := range conns.HCLKeys() {
+		endpointsAttributes[serviceKey] = &schema.Schema{
 			Type:        schema.TypeString,
 			Optional:    true,
 			Default:     "",

@@ -53,7 +53,7 @@ func validTopicRuleCloudWatchAlarmStateValue(v interface{}, s string) ([]string,
 	return nil, []error{fmt.Errorf("State must be one of OK, ALARM, or INSUFFICIENT_DATA")}
 }
 
-func validTopicRuleElasticSearchEndpoint(v interface{}, k string) (ws []string, errors []error) {
+func validTopicRuleElasticsearchEndpoint(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(string)
 
 	// https://docs.aws.amazon.com/iot/latest/apireference/API_ElasticsearchAction.html

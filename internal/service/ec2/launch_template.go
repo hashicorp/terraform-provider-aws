@@ -491,6 +491,10 @@ func ResourceLaunchTemplate() *schema.Resource {
 								ValidateFunc: validation.IsIPv6Address,
 							},
 						},
+						"network_card_index": {
+							Type:     schema.TypeInt,
+							Optional: true,
+						},
 						"network_interface_id": {
 							Type:     schema.TypeString,
 							Optional: true,
@@ -1190,6 +1194,7 @@ func getNetworkInterfaces(n []*ec2.LaunchTemplateInstanceNetworkInterfaceSpecifi
 			"interface_type":       aws.StringValue(v.InterfaceType),
 			"ipv4_address_count":   aws.Int64Value(v.SecondaryPrivateIpAddressCount),
 			"ipv6_address_count":   aws.Int64Value(v.Ipv6AddressCount),
+			"network_card_index":   aws.Int64Value(v.NetworkCardIndex),
 			"network_interface_id": aws.StringValue(v.NetworkInterfaceId),
 			"private_ip_address":   aws.StringValue(v.PrivateIpAddress),
 			"subnet_id":            aws.StringValue(v.SubnetId),
@@ -1612,6 +1617,10 @@ func readNetworkInterfacesFromConfig(ni map[string]interface{}) (*ec2.LaunchTemp
 
 	if v, ok := ni["device_index"].(int); ok {
 		networkInterface.DeviceIndex = aws.Int64(int64(v))
+	}
+
+	if v, ok := ni["network_card_index"].(int); ok {
+		networkInterface.NetworkCardIndex = aws.Int64(int64(v))
 	}
 
 	if v, ok := ni["network_interface_id"].(string); ok && v != "" {

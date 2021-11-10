@@ -1,6 +1,6 @@
 package elb
 
-import (
+import ( // nosemgrep: aws-sdk-go-multiple-service-imports
 	"bytes"
 	"fmt"
 	"log"
@@ -15,6 +15,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/aws/aws-sdk-go/service/elb"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	multierror "github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -942,113 +943,39 @@ func validateListenerProtocol() schema.SchemaValidateFunc {
 // which then blocks IGW, SG or VPC on deletion
 // So we make the cleanup "synchronous" here
 func CleanupNetworkInterfaces(conn *ec2.EC2, name string) error {
-	out, err := conn.DescribeNetworkInterfaces(&ec2.DescribeNetworkInterfacesInput{
-		Filters: []*ec2.Filter{
-			{
-				Name:   aws.String("attachment.instance-owner-id"),
-				Values: []*string{aws.String("amazon-elb")},
-			},
-			{
-				Name:   aws.String("description"),
-				Values: []*string{aws.String("ELB " + name)},
-			},
-		},
-	})
+	// https://aws.amazon.com/premiumsupport/knowledge-center/elb-find-load-balancer-IP/.
+	networkInterfaces, err := tfec2.FindNetworkInterfacesByAttachmentInstanceOwnerIDAndDescription(conn, "amazon-elb", "ELB "+name)
+
 	if err != nil {
 		return err
 	}
 
-	log.Printf("[DEBUG] Found %d ENIs to cleanup for ELB %q",
-		len(out.NetworkInterfaces), name)
+	var errs *multierror.Error
 
-	if len(out.NetworkInterfaces) == 0 {
-		// Nothing to cleanup
-		return nil
-	}
-
-	err = detachNetworkInterfaces(conn, out.NetworkInterfaces)
-	if err != nil {
-		return err
-	}
-
-	err = deleteNetworkInterfaces(conn, out.NetworkInterfaces)
-	return err
-}
-
-func detachNetworkInterfaces(conn *ec2.EC2, nis []*ec2.NetworkInterface) error {
-	log.Printf("[DEBUG] Trying to detach %d leftover ENIs", len(nis))
-	for _, ni := range nis {
-		if ni.Attachment == nil {
-			log.Printf("[DEBUG] ENI %s is already detached", *ni.NetworkInterfaceId)
+	for _, networkInterface := range networkInterfaces {
+		if networkInterface.Attachment == nil {
 			continue
 		}
-		_, err := conn.DetachNetworkInterface(&ec2.DetachNetworkInterfaceInput{
-			AttachmentId: ni.Attachment.AttachmentId,
-			Force:        aws.Bool(true),
-		})
-		if err != nil {
-			awsErr, ok := err.(awserr.Error)
-			if ok && awsErr.Code() == "InvalidAttachmentID.NotFound" {
-				log.Printf("[DEBUG] ENI %s is already detached", *ni.NetworkInterfaceId)
-				continue
-			}
-			return err
-		}
 
-		log.Printf("[DEBUG] Waiting for ENI (%s) to become detached", *ni.NetworkInterfaceId)
-		stateConf := &resource.StateChangeConf{
-			Pending: []string{"true"},
-			Target:  []string{"false"},
-			Refresh: networkInterfaceAttachmentRefreshFunc(conn, *ni.NetworkInterfaceId),
-			Timeout: 10 * time.Minute,
-		}
+		attachmentID := aws.StringValue(networkInterface.Attachment.AttachmentId)
+		networkInterfaceID := aws.StringValue(networkInterface.NetworkInterfaceId)
 
-		if _, err := stateConf.WaitForState(); err != nil {
-			awsErr, ok := err.(awserr.Error)
-			if ok && awsErr.Code() == "InvalidNetworkInterfaceID.NotFound" {
-				continue
-			}
-			return fmt.Errorf(
-				"Error waiting for ENI (%s) to become detached: %s", *ni.NetworkInterfaceId, err)
-		}
-	}
-	return nil
-}
-
-func deleteNetworkInterfaces(conn *ec2.EC2, nis []*ec2.NetworkInterface) error {
-	log.Printf("[DEBUG] Trying to delete %d leftover ENIs", len(nis))
-	for _, ni := range nis {
-		_, err := conn.DeleteNetworkInterface(&ec2.DeleteNetworkInterfaceInput{
-			NetworkInterfaceId: ni.NetworkInterfaceId,
-		})
-		if err != nil {
-			awsErr, ok := err.(awserr.Error)
-			if ok && awsErr.Code() == "InvalidNetworkInterfaceID.NotFound" {
-				log.Printf("[DEBUG] ENI %s is already deleted", *ni.NetworkInterfaceId)
-				continue
-			}
-			return err
-		}
-	}
-	return nil
-}
-
-func networkInterfaceAttachmentRefreshFunc(conn *ec2.EC2, id string) resource.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-
-		describe_network_interfaces_request := &ec2.DescribeNetworkInterfacesInput{
-			NetworkInterfaceIds: []*string{aws.String(id)},
-		}
-		describeResp, err := conn.DescribeNetworkInterfaces(describe_network_interfaces_request)
+		err = tfec2.DetachNetworkInterface(conn, networkInterfaceID, attachmentID, tfec2.NetworkInterfaceDetachedTimeout)
 
 		if err != nil {
-			log.Printf("[ERROR] Could not find network interface %s. %s", id, err)
-			return nil, "", err
+			errs = multierror.Append(errs, err)
+
+			continue
 		}
 
-		eni := describeResp.NetworkInterfaces[0]
-		hasAttachment := strconv.FormatBool(eni.Attachment != nil)
-		log.Printf("[DEBUG] ENI %s has attachment state %s", id, hasAttachment)
-		return eni, hasAttachment, nil
+		err = tfec2.DeleteNetworkInterface(conn, networkInterfaceID)
+
+		if err != nil {
+			errs = multierror.Append(errs, err)
+
+			continue
+		}
 	}
+
+	return errs.ErrorOrNil()
 }

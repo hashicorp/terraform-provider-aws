@@ -363,7 +363,7 @@ resource "aws_kms_replica_key" "test" {
 
   tags = {
     %[2]q = %[3]q
-	%[4]q = %[5]q
+    %[4]q = %[5]q
   }
 
   deletion_window_in_days = 7
