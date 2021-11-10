@@ -9,3 +9,7 @@ resource/aws_cloudfront_cache_policy: The `parameters_in_cache_key_and_forwarded
 ```release-note:bug
 resource/aws_cloudfront_cache_policy: Fix assorted crashes
 ```
+
+```release-note:bug
+resource/aws_cloudfront_origin_request_policy: Fix assorted crashes
+```
