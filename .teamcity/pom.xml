@@ -71,7 +71,8 @@
                     <dstDir>target/generated-configs</dstDir>
                     <!-- For testing -->
                     <!--<contextParameters>
-                      <trigger_time>02:05:00-07:00</trigger_time>
+                        <run_nightly_build>true</run_nightly_build>
+                        <trigger_time>02:05 America/Vancouver</trigger_time>
                     </contextParameters>-->
                 </configuration>
             </plugin>

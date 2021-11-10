@@ -5,7 +5,6 @@ import java.io.File
 import java.time.LocalTime
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
-import java.time.format.DateTimeParseException
 
 version = "2020.2"
 
@@ -98,13 +97,11 @@ object Composite : BuildType({
         }
     }
 
-    val triggerTime = try {
+    val runNightly = DslContext.getParameter("run_nightly_build", "")
+    if (runNightly.toBoolean()) {
+        val triggerTimeRaw = DslContext.getParameter("trigger_time")
         val formatter = DateTimeFormatter.ofPattern("HH':'mm' 'VV")
-        formatter.parse(DslContext.getParameter("trigger_time", ""))
-    } catch (e: DateTimeParseException) {
-        null
-    }
-    if (triggerTime != null) {
+        val triggerTime = formatter.parse(triggerTimeRaw)
         triggers {
             schedule {
                 schedulingPolicy = daily {
