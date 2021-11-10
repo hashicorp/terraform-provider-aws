@@ -21,7 +21,7 @@ import (
 )
 
 const (
-	cloudWatchEventRuleDeleteRetryTimeout = 5 * time.Minute
+	ruleDeleteRetryTimeout = 5 * time.Minute
 )
 
 func ResourceRule() *schema.Resource {
@@ -282,7 +282,7 @@ func resourceRuleDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	log.Printf("[DEBUG] Deleting EventBridge Rule: %s", d.Id())
-	err = resource.Retry(cloudWatchEventRuleDeleteRetryTimeout, func() *resource.RetryError {
+	err = resource.Retry(ruleDeleteRetryTimeout, func() *resource.RetryError {
 		_, err := conn.DeleteRule(input)
 
 		if tfawserr.ErrMessageContains(err, "ValidationException", "Rule can't be deleted since it has targets") {

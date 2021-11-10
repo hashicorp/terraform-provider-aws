@@ -44,17 +44,17 @@ func dataSourceConnectionRead(d *schema.ResourceData, meta interface{}) error {
 		Name: aws.String(d.Id()),
 	}
 
-	log.Printf("[DEBUG] Reading CloudWatchEvent connection (%s)", d.Id())
+	log.Printf("[DEBUG] Reading EventBridge connection (%s)", d.Id())
 	output, err := conn.DescribeConnection(input)
 	if err != nil {
-		return fmt.Errorf("error getting CloudWatchEvent connection (%s): %w", d.Id(), err)
+		return fmt.Errorf("error getting EventBridge connection (%s): %w", d.Id(), err)
 	}
 
 	if output == nil {
-		return fmt.Errorf("error getting CloudWatchEvent connection (%s): empty response", d.Id())
+		return fmt.Errorf("error getting EventBridge connection (%s): empty response", d.Id())
 	}
 
-	log.Printf("[DEBUG] Found CloudWatchEvent connection: %#v", *output)
+	log.Printf("[DEBUG] Found EventBridge connection: %#v", *output)
 	d.Set("arn", output.ConnectionArn)
 	d.Set("secret_arn", output.SecretArn)
 	d.Set("name", output.Name)

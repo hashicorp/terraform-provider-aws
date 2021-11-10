@@ -47,11 +47,11 @@ func dataSourceSourceRead(d *schema.ResourceData, meta interface{}) error {
 		input.NamePrefix = aws.String(v.(string))
 	}
 
-	log.Printf("[DEBUG] Listing cloudwatch Event sources: %s", input)
+	log.Printf("[DEBUG] Listing EventBridge sources: %s", input)
 
 	resp, err := conn.ListEventSources(input)
 	if err != nil {
-		return fmt.Errorf("error listing cloudwatch event sources: %w", err)
+		return fmt.Errorf("error listing EventBridge sources: %w", err)
 	}
 
 	if resp == nil || len(resp.EventSources) == 0 {

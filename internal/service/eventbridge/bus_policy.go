@@ -69,7 +69,7 @@ func resourceBusPolicyCreate(d *schema.ResourceData, meta interface{}) error {
 	return resourceBusPolicyRead(d, meta)
 }
 
-// See also: https://docs.aws.amazon.com/AmazonCloudWatchEvents/latest/APIReference/API_DescribeEventBus.html
+// See also: https://docs.aws.amazon.com/eventbridge/latest/APIReference/API_DescribeEventBus.html
 func resourceBusPolicyRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EventBridgeConn
 
@@ -110,7 +110,7 @@ func resourceBusPolicyRead(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	}
 	if err != nil {
-		return fmt.Errorf("error reading policy from CloudWatch EventBus (%s): %w", d.Id(), err)
+		return fmt.Errorf("error reading policy from EventBridge Bus (%s): %w", d.Id(), err)
 	}
 
 	busName := aws.StringValue(output.Name)
@@ -127,7 +127,7 @@ func resourceBusPolicyRead(d *schema.ResourceData, meta interface{}) error {
 func getEventBusPolicy(output *events.DescribeEventBusOutput) (*string, error) {
 	if output == nil || output.Policy == nil {
 		return nil, &resource.NotFoundError{
-			Message:      fmt.Sprintf("Policy for CloudWatch EventBus %s not found", *output.Name),
+			Message:      fmt.Sprintf("Policy for EventBridge Bus %s not found", *output.Name),
 			LastResponse: output,
 		}
 	}
@@ -145,15 +145,15 @@ func resourceBusPolicyUpdate(d *schema.ResourceData, meta interface{}) error {
 		Policy:       aws.String(d.Get("policy").(string)),
 	}
 
-	log.Printf("[DEBUG] Update CloudWatch EventBus policy: %s", input)
+	log.Printf("[DEBUG] Update EventBridge Bus policy: %s", input)
 	_, err := conn.PutPermission(&input)
 	if tfawserr.ErrMessageContains(err, events.ErrCodeResourceNotFoundException, "") {
-		log.Printf("[WARN] CloudWatch EventBus %q not found, removing from state", d.Id())
+		log.Printf("[WARN] EventBridge Bus %q not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 	if err != nil {
-		return fmt.Errorf("error updating policy for CloudWatch EventBus (%s): %w", d.Id(), err)
+		return fmt.Errorf("error updating policy for EventBridge Bus (%s): %w", d.Id(), err)
 	}
 
 	return resourceBusPolicyRead(d, meta)
@@ -170,13 +170,13 @@ func resourceBusPolicyDelete(d *schema.ResourceData, meta interface{}) error {
 		RemoveAllPermissions: &removeAllPermissions,
 	}
 
-	log.Printf("[DEBUG] Delete CloudWatch EventBus Policy: %s", input)
+	log.Printf("[DEBUG] Delete EventBridge Bus Policy: %s", input)
 	_, err := conn.RemovePermission(&input)
 	if tfawserr.ErrMessageContains(err, events.ErrCodeResourceNotFoundException, "") {
 		return nil
 	}
 	if err != nil {
-		return fmt.Errorf("error deleting policy for CloudWatch EventBus (%s): %w", d.Id(), err)
+		return fmt.Errorf("error deleting policy for EventBridge Bus (%s): %w", d.Id(), err)
 	}
 	return nil
 }

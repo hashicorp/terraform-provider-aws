@@ -91,16 +91,16 @@ func resourceAPIDestinationCreate(d *schema.ResourceData, meta interface{}) erro
 		input.ConnectionArn = aws.String(connectionArn.(string))
 	}
 
-	log.Printf("[DEBUG] Creating CloudWatchEvent API Destination: %v", input)
+	log.Printf("[DEBUG] Creating EventBridge API Destination: %v", input)
 
 	_, err := conn.CreateApiDestination(input)
 	if err != nil {
-		return fmt.Errorf("Creating CloudWatchEvent API Destination (%s) failed: %w", *input.Name, err)
+		return fmt.Errorf("Creating EventBridge API Destination (%s) failed: %w", *input.Name, err)
 	}
 
 	d.SetId(aws.StringValue(input.Name))
 
-	log.Printf("[INFO] CloudWatchEvent API Destination (%s) created", d.Id())
+	log.Printf("[INFO] EventBridge API Destination (%s) created", d.Id())
 
 	return resourceAPIDestinationRead(d, meta)
 }
@@ -112,18 +112,18 @@ func resourceAPIDestinationRead(d *schema.ResourceData, meta interface{}) error 
 		Name: aws.String(d.Id()),
 	}
 
-	log.Printf("[DEBUG] Reading CloudWatchEvent API Destination (%s)", d.Id())
+	log.Printf("[DEBUG] Reading EventBridge API Destination (%s)", d.Id())
 	output, err := conn.DescribeApiDestination(input)
 	if tfawserr.ErrMessageContains(err, events.ErrCodeResourceNotFoundException, "") {
-		log.Printf("[WARN] CloudWatchEvent API Destination (%s) not found, removing from state", d.Id())
+		log.Printf("[WARN] EventBridge API Destination (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 	if err != nil {
-		return fmt.Errorf("error reading CloudWatchEvent API Destination: %w", err)
+		return fmt.Errorf("error reading EventBridge API Destination: %w", err)
 	}
 
-	log.Printf("[DEBUG] Found CloudWatchEvent API Destination: %#v", *output)
+	log.Printf("[DEBUG] Found EventBridge API Destination: %#v", *output)
 
 	d.Set("arn", output.ApiDestinationArn)
 	d.Set("name", output.Name)
@@ -160,10 +160,10 @@ func resourceAPIDestinationUpdate(d *schema.ResourceData, meta interface{}) erro
 		input.ConnectionArn = aws.String(connectionArn.(string))
 	}
 
-	log.Printf("[DEBUG] Updating CloudWatchEvent API Destination: %s", input)
+	log.Printf("[DEBUG] Updating EventBridge API Destination: %s", input)
 	_, err := conn.UpdateApiDestination(input)
 	if err != nil {
-		return fmt.Errorf("error updating CloudWatchEvent API Destination (%s): %w", d.Id(), err)
+		return fmt.Errorf("error updating EventBridge API Destination (%s): %w", d.Id(), err)
 	}
 	return resourceAPIDestinationRead(d, meta)
 }
@@ -171,7 +171,7 @@ func resourceAPIDestinationUpdate(d *schema.ResourceData, meta interface{}) erro
 func resourceAPIDestinationDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EventBridgeConn
 
-	log.Printf("[INFO] Deleting CloudWatchEvent API Destination (%s)", d.Id())
+	log.Printf("[INFO] Deleting EventBridge API Destination (%s)", d.Id())
 	input := &events.DeleteApiDestinationInput{
 		Name: aws.String(d.Id()),
 	}
@@ -179,13 +179,13 @@ func resourceAPIDestinationDelete(d *schema.ResourceData, meta interface{}) erro
 	_, err := conn.DeleteApiDestination(input)
 
 	if tfawserr.ErrMessageContains(err, events.ErrCodeResourceNotFoundException, "") {
-		log.Printf("[WARN] CloudWatchEvent API Destination (%s) not found", d.Id())
+		log.Printf("[WARN] EventBridge API Destination (%s) not found", d.Id())
 		return nil
 	}
 	if err != nil {
-		return fmt.Errorf("Error deleting CloudWatchEvent API Destination (%s): %w", d.Id(), err)
+		return fmt.Errorf("Error deleting EventBridge API Destination (%s): %w", d.Id(), err)
 	}
-	log.Printf("[INFO] CloudWatchEvent API Destination (%s) deleted", d.Id())
+	log.Printf("[INFO] EventBridge API Destination (%s) deleted", d.Id())
 
 	return nil
 }
