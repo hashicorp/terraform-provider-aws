@@ -278,14 +278,14 @@ func testAccCheckCloudWatchEventPermissionExists(pr string) resource.TestCheckFu
 
 		eventBusName, statementID, err := tfcloudwatchevents.PermissionParseResourceID(rs.Primary.ID)
 		if err != nil {
-			return fmt.Errorf("error reading CloudWatch Events permission (%s): %w", pr, err)
+			return fmt.Errorf("error reading EventBridge permission (%s): %w", pr, err)
 		}
 		input := &events.DescribeEventBusInput{
 			Name: aws.String(eventBusName),
 		}
 		debo, err := conn.DescribeEventBus(input)
 		if err != nil {
-			return fmt.Errorf("Reading CloudWatch Events bus policy for '%s' failed: %w", pr, err)
+			return fmt.Errorf("Reading EventBridge bus policy for '%s' failed: %w", pr, err)
 		}
 
 		if debo.Policy == nil {
@@ -295,7 +295,7 @@ func testAccCheckCloudWatchEventPermissionExists(pr string) resource.TestCheckFu
 		var policyDoc tfcloudwatchevents.PermissionPolicyDoc
 		err = json.Unmarshal([]byte(*debo.Policy), &policyDoc)
 		if err != nil {
-			return fmt.Errorf("Reading CloudWatch Events bus policy for '%s' failed: %w", pr, err)
+			return fmt.Errorf("Reading EventBridge bus policy for '%s' failed: %w", pr, err)
 		}
 
 		_, err = tfcloudwatchevents.FindPermissionPolicyStatementByID(&policyDoc, statementID)
@@ -313,7 +313,7 @@ func testAccCheckCloudWatchEventPermissionDestroy(s *terraform.State) error {
 
 		eventBusName, statementID, err := tfcloudwatchevents.PermissionParseResourceID(rs.Primary.ID)
 		if err != nil {
-			return fmt.Errorf("error reading CloudWatch Events permission (%s): %w", rs.Primary.ID, err)
+			return fmt.Errorf("error reading EventBridge permission (%s): %w", rs.Primary.ID, err)
 		}
 		input := &events.DescribeEventBusInput{
 			Name: aws.String(eventBusName),
@@ -333,12 +333,12 @@ func testAccCheckCloudWatchEventPermissionDestroy(s *terraform.State) error {
 			var policyDoc tfcloudwatchevents.PermissionPolicyDoc
 			err = json.Unmarshal([]byte(*debo.Policy), &policyDoc)
 			if err != nil {
-				return resource.NonRetryableError(fmt.Errorf("Reading CloudWatch Events permission '%s' failed: %w", rs.Primary.ID, err))
+				return resource.NonRetryableError(fmt.Errorf("Reading EventBridge permission '%s' failed: %w", rs.Primary.ID, err))
 			}
 
 			_, err = tfcloudwatchevents.FindPermissionPolicyStatementByID(&policyDoc, statementID)
 			if err == nil {
-				return resource.RetryableError(fmt.Errorf("CloudWatch Events permission exists: %s", rs.Primary.ID))
+				return resource.RetryableError(fmt.Errorf("EventBridge permission exists: %s", rs.Primary.ID))
 			}
 
 			return nil

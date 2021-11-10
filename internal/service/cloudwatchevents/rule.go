@@ -119,7 +119,7 @@ func resourceRuleCreate(d *schema.ResourceData, meta interface{}) error {
 		input.Tags = Tags(tags.IgnoreAWS())
 	}
 
-	log.Printf("[DEBUG] Creating CloudWatch Events Rule: %s", input)
+	log.Printf("[DEBUG] Creating EventBridge Rule: %s", input)
 	// IAM Roles take some time to propagate
 	err = resource.Retry(tfiam.PropagationTimeout, func() *resource.RetryError {
 		_, err = conn.PutRule(input)
@@ -140,7 +140,7 @@ func resourceRuleCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("error creating CloudWatch Events Rule (%s): %w", name, err)
+		return fmt.Errorf("error creating EventBridge Rule (%s): %w", name, err)
 	}
 
 	d.SetId(RuleCreateResourceID(aws.StringValue(input.EventBusName), aws.StringValue(input.Name)))
@@ -162,13 +162,13 @@ func resourceRuleRead(d *schema.ResourceData, meta interface{}) error {
 	output, err := FindRuleByEventBusAndRuleNames(conn, eventBusName, ruleName)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
-		log.Printf("[WARN] CloudWatch Events Rule (%s) not found, removing from state", d.Id())
+		log.Printf("[WARN] EventBridge Rule (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading CloudWatch Events Rule (%s): %w", d.Id(), err)
+		return fmt.Errorf("error reading EventBridge Rule (%s): %w", d.Id(), err)
 	}
 
 	arn := aws.StringValue(output.Arn)
@@ -198,7 +198,7 @@ func resourceRuleRead(d *schema.ResourceData, meta interface{}) error {
 	tags, err := ListTags(conn, arn)
 
 	if err != nil {
-		return fmt.Errorf("error listing tags for CloudWatch Events Rule (%s): %w", arn, err)
+		return fmt.Errorf("error listing tags for EventBridge Rule (%s): %w", arn, err)
 	}
 
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
@@ -250,7 +250,7 @@ func resourceRuleUpdate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("error updating CloudWatch Events Rule (%s): %w", d.Id(), err)
+		return fmt.Errorf("error updating EventBridge Rule (%s): %w", d.Id(), err)
 	}
 
 	arn := d.Get("arn").(string)
@@ -281,7 +281,7 @@ func resourceRuleDelete(d *schema.ResourceData, meta interface{}) error {
 		input.EventBusName = aws.String(eventBusName)
 	}
 
-	log.Printf("[DEBUG] Deleting CloudWatch Events Rule: %s", d.Id())
+	log.Printf("[DEBUG] Deleting EventBridge Rule: %s", d.Id())
 	err = resource.Retry(cloudWatchEventRuleDeleteRetryTimeout, func() *resource.RetryError {
 		_, err := conn.DeleteRule(input)
 
@@ -305,7 +305,7 @@ func resourceRuleDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting CloudWatch Events Rule (%s): %w", d.Id(), err)
+		return fmt.Errorf("error deleting EventBridge Rule (%s): %w", d.Id(), err)
 	}
 
 	return nil

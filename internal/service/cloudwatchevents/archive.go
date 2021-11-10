@@ -69,19 +69,19 @@ func resourceArchiveCreate(d *schema.ResourceData, meta interface{}) error {
 	input, err := buildCreateArchiveInputStruct(d)
 
 	if err != nil {
-		return fmt.Errorf("Creating CloudWatch Events Archive parameters failed: %w", err)
+		return fmt.Errorf("Creating EventBridge Archive parameters failed: %w", err)
 	}
 
-	log.Printf("[DEBUG] Creating CloudWatch Events Archive: %s", input)
+	log.Printf("[DEBUG] Creating EventBridge Archive: %s", input)
 
 	_, err = conn.CreateArchive(input)
 	if err != nil {
-		return fmt.Errorf("Creating CloudWatch Events Archive failed: %w", err)
+		return fmt.Errorf("Creating EventBridge Archive failed: %w", err)
 	}
 
 	d.SetId(d.Get("name").(string))
 
-	log.Printf("[INFO] CloudWatch Events Archive (%s) created", d.Id())
+	log.Printf("[INFO] EventBridge Archive (%s) created", d.Id())
 
 	return resourceArchiveRead(d, meta)
 }
@@ -95,13 +95,13 @@ func resourceArchiveRead(d *schema.ResourceData, meta interface{}) error {
 	out, err := conn.DescribeArchive(input)
 
 	if tfawserr.ErrMessageContains(err, events.ErrCodeResourceNotFoundException, "") {
-		log.Printf("[WARN] CloudWatch Events archive (%s) not found, removing from state", d.Id())
+		log.Printf("[WARN] EventBridge archive (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if err != nil {
-		return fmt.Errorf("Error reading CloudWatch Events archive: %w", err)
+		return fmt.Errorf("Error reading EventBridge archive: %w", err)
 	}
 
 	log.Printf("[DEBUG] Found Archive: #{*out}")
@@ -122,13 +122,13 @@ func resourceArchiveUpdate(d *schema.ResourceData, meta interface{}) error {
 	input, err := buildUpdateArchiveInputStruct(d)
 
 	if err != nil {
-		return fmt.Errorf("Creating CloudWatch Events Archive parameters failed: %w", err)
+		return fmt.Errorf("Creating EventBridge Archive parameters failed: %w", err)
 	}
 
-	log.Printf("[DEBUG] Updating CloudWatch Events Archive: %s", input)
+	log.Printf("[DEBUG] Updating EventBridge Archive: %s", input)
 	_, err = conn.UpdateArchive(input)
 	if err != nil {
-		return fmt.Errorf("error updating CloudWatch Events Archive (%s): %w", d.Id(), err)
+		return fmt.Errorf("error updating EventBridge Archive (%s): %w", d.Id(), err)
 	}
 
 	return resourceArchiveRead(d, meta)
@@ -146,7 +146,7 @@ func resourceArchiveDelete(d *schema.ResourceData, meta interface{}) error {
 		if tfawserr.ErrCodeEquals(err, events.ErrCodeResourceNotFoundException) {
 			return nil
 		}
-		return fmt.Errorf("error deleting CloudWatch Events Archive (%s): %w", d.Id(), err)
+		return fmt.Errorf("error deleting EventBridge Archive (%s): %w", d.Id(), err)
 	}
 
 	return nil

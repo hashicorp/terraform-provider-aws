@@ -518,7 +518,7 @@ func testAccCheckCloudWatchEventRuleExists(n string, rule *events.DescribeRuleOu
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No CloudWatch Events Rule ID is set")
+			return fmt.Errorf("No EventBridge Rule ID is set")
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EventBridgeConn
@@ -576,7 +576,7 @@ func testAccCheckRuleDestroy(s *terraform.State) error {
 			return err
 		}
 
-		return fmt.Errorf("CloudWatch Events Rule %s still exists", rs.Primary.ID)
+		return fmt.Errorf("EventBridge Rule %s still exists", rs.Primary.ID)
 	}
 
 	return nil
@@ -585,7 +585,7 @@ func testAccCheckRuleDestroy(s *terraform.State) error {
 func testAccCheckCloudWatchEventRuleRecreated(i, j *events.DescribeRuleOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if aws.StringValue(i.Arn) == aws.StringValue(j.Arn) {
-			return fmt.Errorf("CloudWatch Events rule not recreated, but expected it to be")
+			return fmt.Errorf("EventBridge rule not recreated, but expected it to be")
 		}
 		return nil
 	}
@@ -594,7 +594,7 @@ func testAccCheckCloudWatchEventRuleRecreated(i, j *events.DescribeRuleOutput) r
 func testAccCheckCloudWatchEventRuleNotRecreated(i, j *events.DescribeRuleOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if aws.StringValue(i.Arn) != aws.StringValue(j.Arn) {
-			return fmt.Errorf("CloudWatch Events rule recreated, but expected it to not be")
+			return fmt.Errorf("EventBridge rule recreated, but expected it to not be")
 		}
 		return nil
 	}

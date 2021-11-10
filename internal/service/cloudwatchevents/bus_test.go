@@ -208,7 +208,7 @@ func testAccCheckBusDestroy(s *terraform.State) error {
 		resp, err := conn.DescribeEventBus(&params)
 
 		if err == nil {
-			return fmt.Errorf("CloudWatch Events event bus (%s) still exists: %s", rs.Primary.ID, resp)
+			return fmt.Errorf("EventBridge event bus (%s) still exists: %s", rs.Primary.ID, resp)
 		}
 	}
 
@@ -231,7 +231,7 @@ func testAccCheckCloudWatchEventBusExists(n string, v *events.DescribeEventBusOu
 			return err
 		}
 		if resp == nil {
-			return fmt.Errorf("CloudWatch Events event bus (%s) not found", n)
+			return fmt.Errorf("EventBridge event bus (%s) not found", n)
 		}
 
 		*v = *resp
@@ -243,7 +243,7 @@ func testAccCheckCloudWatchEventBusExists(n string, v *events.DescribeEventBusOu
 func testAccCheckCloudWatchEventBusRecreated(i, j *events.DescribeEventBusOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if aws.StringValue(i.Arn) == aws.StringValue(j.Arn) {
-			return fmt.Errorf("CloudWatch Events event bus not recreated")
+			return fmt.Errorf("EventBridge event bus not recreated")
 		}
 		return nil
 	}
@@ -252,7 +252,7 @@ func testAccCheckCloudWatchEventBusRecreated(i, j *events.DescribeEventBusOutput
 func testAccCheckCloudWatchEventBusNotRecreated(i, j *events.DescribeEventBusOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if aws.StringValue(i.Arn) != aws.StringValue(j.Arn) {
-			return fmt.Errorf("CloudWatch Events event bus was recreated")
+			return fmt.Errorf("EventBridge event bus was recreated")
 		}
 		return nil
 	}

@@ -113,7 +113,7 @@ func testAccCheckArchiveDestroy(s *terraform.State) error {
 		resp, err := conn.DescribeArchive(&params)
 
 		if err == nil {
-			return fmt.Errorf("CloudWatch Events event bus (%s) still exists: %s", rs.Primary.ID, resp)
+			return fmt.Errorf("EventBridge event bus (%s) still exists: %s", rs.Primary.ID, resp)
 		}
 	}
 
@@ -138,7 +138,7 @@ func testAccCheckCloudWatchEventArchiveExists(n string, v *events.DescribeArchiv
 		}
 
 		if resp == nil {
-			return fmt.Errorf("CloudWatch Events archive (%s) not found", n)
+			return fmt.Errorf("EventBridge archive (%s) not found", n)
 		}
 
 		*v = *resp

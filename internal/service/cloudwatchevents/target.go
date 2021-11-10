@@ -404,20 +404,20 @@ func resourceTargetCreate(d *schema.ResourceData, meta interface{}) error {
 
 	input := buildPutTargetInputStruct(d)
 
-	log.Printf("[DEBUG] Creating CloudWatch Events Target: %s", input)
+	log.Printf("[DEBUG] Creating EventBridge Target: %s", input)
 	out, err := conn.PutTargets(input)
 	if err != nil {
-		return fmt.Errorf("Creating CloudWatch Events Target failed: %w", err)
+		return fmt.Errorf("Creating EventBridge Target failed: %w", err)
 	}
 
 	if len(out.FailedEntries) > 0 {
-		return fmt.Errorf("Creating CloudWatch Events Target failed: %s", out.FailedEntries)
+		return fmt.Errorf("Creating EventBridge Target failed: %s", out.FailedEntries)
 	}
 
 	id := TargetCreateResourceID(busName, rule, targetID)
 	d.SetId(id)
 
-	log.Printf("[INFO] CloudWatch Events Target (%s) created", d.Id())
+	log.Printf("[INFO] EventBridge Target (%s) created", d.Id())
 
 	return resourceTargetRead(d, meta)
 }
@@ -432,7 +432,7 @@ func resourceTargetRead(d *schema.ResourceData, meta interface{}) error {
 		if tfawserr.ErrCodeEquals(err, "ValidationException") ||
 			tfawserr.ErrCodeEquals(err, events.ErrCodeResourceNotFoundException) ||
 			regexp.MustCompile(" not found$").MatchString(err.Error()) {
-			log.Printf("[WARN] CloudWatch Events Target (%s) not found, removing from state", d.Id())
+			log.Printf("[WARN] EventBridge Target (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
 		}
@@ -517,10 +517,10 @@ func resourceTargetUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	input := buildPutTargetInputStruct(d)
 
-	log.Printf("[DEBUG] Updating CloudWatch Events Target: %s", input)
+	log.Printf("[DEBUG] Updating EventBridge Target: %s", input)
 	_, err := conn.PutTargets(input)
 	if err != nil {
-		return fmt.Errorf("error updating CloudWatch Events Target (%s): %w", d.Id(), err)
+		return fmt.Errorf("error updating EventBridge Target (%s): %w", d.Id(), err)
 	}
 
 	return resourceTargetRead(d, meta)
@@ -543,12 +543,12 @@ func resourceTargetDelete(d *schema.ResourceData, meta interface{}) error {
 		if tfawserr.ErrCodeEquals(err, events.ErrCodeResourceNotFoundException) {
 			return nil
 		}
-		return fmt.Errorf("error deleting CloudWatch Events Target (%s): %w", d.Id(), err)
+		return fmt.Errorf("error deleting EventBridge Target (%s): %w", d.Id(), err)
 	}
 
 	if output != nil && len(output.FailedEntries) > 0 && output.FailedEntries[0] != nil {
 		failedEntry := output.FailedEntries[0]
-		return fmt.Errorf("error deleting CloudWatch Events Target (%s): failure entry: %s: %s", d.Id(), aws.StringValue(failedEntry.ErrorCode), aws.StringValue(failedEntry.ErrorMessage))
+		return fmt.Errorf("error deleting EventBridge Target (%s): failure entry: %s: %s", d.Id(), aws.StringValue(failedEntry.ErrorCode), aws.StringValue(failedEntry.ErrorMessage))
 	}
 
 	return nil

@@ -586,7 +586,7 @@ func testAccCheckConnectionDestroy(s *terraform.State) error {
 			return err
 		}
 
-		return fmt.Errorf("CloudWatch Events connection %s still exists", rs.Primary.ID)
+		return fmt.Errorf("EventBridge connection %s still exists", rs.Primary.ID)
 	}
 
 	return nil
@@ -616,7 +616,7 @@ func testAccCheckCloudWatchEventConnectionExists(n string, v *events.DescribeCon
 func testAccCheckCloudWatchEventConnectionRecreated(i, j *events.DescribeConnectionOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if aws.StringValue(i.ConnectionArn) == aws.StringValue(j.ConnectionArn) {
-			return fmt.Errorf("CloudWatch Events Connection not recreated")
+			return fmt.Errorf("EventBridge Connection not recreated")
 		}
 		return nil
 	}
@@ -625,7 +625,7 @@ func testAccCheckCloudWatchEventConnectionRecreated(i, j *events.DescribeConnect
 func testAccCheckCloudWatchEventConnectionNotRecreated(i, j *events.DescribeConnectionOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if aws.StringValue(i.ConnectionArn) != aws.StringValue(j.ConnectionArn) {
-			return fmt.Errorf("CloudWatch Events Connection was recreated")
+			return fmt.Errorf("EventBridge Connection was recreated")
 		}
 		return nil
 	}

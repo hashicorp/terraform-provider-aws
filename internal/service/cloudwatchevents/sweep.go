@@ -84,12 +84,12 @@ func sweepAPIDestination(region string) error {
 		output, err := conn.ListApiDestinations(input)
 
 		if sweep.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping CloudWatch Events Api Destination sweep for %s: %s", region, err)
+			log.Printf("[WARN] Skipping EventBridge API Destination sweep for %s: %s", region, err)
 			return nil
 		}
 
 		if err != nil {
-			return fmt.Errorf("Error retrieving CloudWatch Events Api Destinations: %w", err)
+			return fmt.Errorf("Error retrieving EventBridge API Destinations: %w", err)
 		}
 
 		apiDestinations = append(apiDestinations, output.ApiDestinations...)
@@ -107,12 +107,12 @@ func sweepAPIDestination(region string) error {
 		}
 		_, err := conn.DeleteApiDestination(input)
 		if err != nil {
-			sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("Error deleting CloudWatch Event Api Destination (%s): %w", *apiDestination.Name, err))
+			sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("Error deleting EventBridge Api Destination (%s): %w", *apiDestination.Name, err))
 			continue
 		}
 	}
 
-	log.Printf("[INFO] Deleted %d CloudWatch Event Api Destinations", len(apiDestinations))
+	log.Printf("[INFO] Deleted %d EventBridge Api Destinations", len(apiDestinations))
 
 	return sweeperErrs.ErrorOrNil()
 }
@@ -130,16 +130,16 @@ func sweepArchives(region string) error {
 		output, err := conn.ListArchives(input)
 
 		if sweep.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping CloudWatch Events archive sweep for %s: %s", region, err)
+			log.Printf("[WARN] Skipping EventBridge archive sweep for %s: %s", region, err)
 			return nil
 		}
 
 		if err != nil {
-			return fmt.Errorf("Error retrieving CloudWatch Events archive: %w", err)
+			return fmt.Errorf("Error retrieving EventBridge archive: %w", err)
 		}
 
 		if len(output.Archives) == 0 {
-			log.Print("[DEBUG] No CloudWatch Events archives to sweep")
+			log.Print("[DEBUG] No EventBridge archives to sweep")
 			return nil
 		}
 
@@ -149,12 +149,12 @@ func sweepArchives(region string) error {
 				continue
 			}
 
-			log.Printf("[INFO] Deleting CloudWatch Events archive (%s)", name)
+			log.Printf("[INFO] Deleting EventBridge archive (%s)", name)
 			_, err := conn.DeleteArchive(&events.DeleteArchiveInput{
 				ArchiveName: aws.String(name),
 			})
 			if err != nil {
-				return fmt.Errorf("Error deleting CloudWatch Events archive (%s): %w", name, err)
+				return fmt.Errorf("Error deleting EventBridge archive (%s): %w", name, err)
 			}
 		}
 
@@ -203,12 +203,12 @@ func sweepBuses(region string) error {
 	})
 
 	if sweep.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping CloudWatch Events event bus sweep for %s: %s", region, err)
+		log.Printf("[WARN] Skipping EventBridge event bus sweep for %s: %s", region, err)
 		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
 	}
 
 	if err != nil {
-		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing CloudWatch Events event buses: %w", err))
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing EventBridge event buses: %w", err))
 	}
 
 	return sweeperErrs.ErrorOrNil()
@@ -231,12 +231,12 @@ func sweepConnection(region string) error {
 		output, err := conn.ListConnections(input)
 
 		if sweep.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping CloudWatch Events Connection sweep for %s: %s", region, err)
+			log.Printf("[WARN] Skipping EventBridge Connection sweep for %s: %s", region, err)
 			return nil
 		}
 
 		if err != nil {
-			return fmt.Errorf("Error retrieving CloudWatch Events Connections: %w", err)
+			return fmt.Errorf("Error retrieving EventBridge Connections: %w", err)
 		}
 
 		if aws.StringValue(output.NextToken) == "" {
@@ -251,12 +251,12 @@ func sweepConnection(region string) error {
 		}
 		_, err := conn.DeleteConnection(input)
 		if err != nil {
-			sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("Error deleting CloudWatch Event Connection (%s): %w", *connection.Name, err))
+			sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("Error deleting EventBridge Connection (%s): %w", *connection.Name, err))
 			continue
 		}
 	}
 
-	log.Printf("[INFO] Deleted %d CloudWatch Event Connections", len(connections))
+	log.Printf("[INFO] Deleted %d EventBridge Connections", len(connections))
 
 	return sweeperErrs.ErrorOrNil()
 }
@@ -271,34 +271,34 @@ func sweepPermissions(region string) error {
 	output, err := conn.DescribeEventBus(&events.DescribeEventBusInput{})
 	if err != nil {
 		if sweep.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping CloudWatch Event Permission sweep for %s: %s", region, err)
+			log.Printf("[WARN] Skipping EventBridge Permission sweep for %s: %s", region, err)
 			return nil
 		}
-		return fmt.Errorf("Error retrieving CloudWatch Event Permissions: %w", err)
+		return fmt.Errorf("Error retrieving EventBridge Permissions: %w", err)
 	}
 
 	policy := aws.StringValue(output.Policy)
 
 	if policy == "" {
-		log.Print("[DEBUG] No CloudWatch Event Permissions to sweep")
+		log.Print("[DEBUG] No EventBridge Permissions to sweep")
 		return nil
 	}
 
 	var policyDoc PermissionPolicyDoc
 	err = json.Unmarshal([]byte(policy), &policyDoc)
 	if err != nil {
-		return fmt.Errorf("Parsing CloudWatch Event Permissions policy %q failed: %w", policy, err)
+		return fmt.Errorf("Parsing EventBridge Permissions policy %q failed: %w", policy, err)
 	}
 
 	for _, statement := range policyDoc.Statements {
 		sid := statement.Sid
 
-		log.Printf("[INFO] Deleting CloudWatch Event Permission %s", sid)
+		log.Printf("[INFO] Deleting EventBridge Permission %s", sid)
 		_, err := conn.RemovePermission(&events.RemovePermissionInput{
 			StatementId: aws.String(sid),
 		})
 		if err != nil {
-			return fmt.Errorf("Error deleting CloudWatch Event Permission %s: %w", sid, err)
+			return fmt.Errorf("Error deleting EventBridge Permission %s: %w", sid, err)
 		}
 	}
 
@@ -326,13 +326,13 @@ func sweepRules(region string) error {
 			count++
 			name := aws.StringValue(rule.Name)
 
-			log.Printf("[INFO] Deleting CloudWatch Events rule (%s)", name)
+			log.Printf("[INFO] Deleting EventBridge rule (%s)", name)
 			_, err := conn.DeleteRule(&events.DeleteRuleInput{
 				Name:  aws.String(name),
 				Force: aws.Bool(true), // Required for AWS-managed rules, ignored otherwise
 			})
 			if err != nil {
-				sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error deleting CloudWatch Events rule (%s): %w", name, err))
+				sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error deleting EventBridge rule (%s): %w", name, err))
 				continue
 			}
 		}
@@ -341,15 +341,15 @@ func sweepRules(region string) error {
 	})
 
 	if sweep.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping CloudWatch Events rule sweeper for %q: %s", region, err)
+		log.Printf("[WARN] Skipping EventBridge rule sweeper for %q: %s", region, err)
 		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
 	}
 
 	if err != nil {
-		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing CloudWatch Events rules: %w", err))
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing EventBridge rules: %w", err))
 	}
 
-	log.Printf("[INFO] Deleted %d CloudWatch Events rules", count)
+	log.Printf("[INFO] Deleted %d EventBridge rules", count)
 
 	return sweeperErrs.ErrorOrNil()
 }
@@ -375,7 +375,7 @@ func sweepTargets(region string) error {
 			rulesCount++
 			ruleName := aws.StringValue(rule.Name)
 
-			log.Printf("[INFO] Deleting CloudWatch Events targets for rule (%s)", ruleName)
+			log.Printf("[INFO] Deleting EventBridge targets for rule (%s)", ruleName)
 			targetsInput := &events.ListTargetsByRuleInput{
 				Rule:  rule.Name,
 				Limit: aws.Int64(100), // Set limit to allowed maximum to prevent API throttling
@@ -395,11 +395,11 @@ func sweepTargets(region string) error {
 					}
 					targetID := aws.StringValue(target.Id)
 
-					log.Printf("[INFO] Deleting CloudWatch Events target (%s/%s)", ruleName, targetID)
+					log.Printf("[INFO] Deleting EventBridge target (%s/%s)", ruleName, targetID)
 					_, err := conn.RemoveTargets(removeTargetsInput)
 
 					if err != nil {
-						sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("Error deleting CloudWatch Events target (%s/%s): %w", ruleName, targetID, err))
+						sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("Error deleting EventBridge target (%s/%s): %w", ruleName, targetID, err))
 						continue
 					}
 				}
@@ -408,11 +408,11 @@ func sweepTargets(region string) error {
 			})
 
 			if sweep.SkipSweepError(err) {
-				log.Printf("[WARN] Skipping CloudWatch Events target sweeper for %q: %s", region, err)
+				log.Printf("[WARN] Skipping EventBridge target sweeper for %q: %s", region, err)
 				return false
 			}
 			if err != nil {
-				sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing CloudWatch Events targets for rule (%s): %w", ruleName, err))
+				sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing EventBridge targets for rule (%s): %w", ruleName, err))
 			}
 		}
 
@@ -420,15 +420,15 @@ func sweepTargets(region string) error {
 	})
 
 	if sweep.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping CloudWatch Events rule target sweeper for %q: %s", region, err)
+		log.Printf("[WARN] Skipping EventBridge rule target sweeper for %q: %s", region, err)
 		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
 	}
 
 	if err != nil {
-		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing CloudWatch Events rules: %w", err))
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing EventBridge rules: %w", err))
 	}
 
-	log.Printf("[INFO] Deleted %d CloudWatch Events targets across %d CloudWatch Events rules", targetsCount, rulesCount)
+	log.Printf("[INFO] Deleted %d EventBridge targets across %d EventBridge rules", targetsCount, rulesCount)
 
 	return sweeperErrs.ErrorOrNil()
 }

@@ -66,16 +66,16 @@ func resourceBusCreate(d *schema.ResourceData, meta interface{}) error {
 		input.Tags = Tags(tags.IgnoreAWS())
 	}
 
-	log.Printf("[DEBUG] Creating CloudWatch Events event bus: %v", input)
+	log.Printf("[DEBUG] Creating EventBridge event bus: %v", input)
 
 	_, err := conn.CreateEventBus(input)
 	if err != nil {
-		return fmt.Errorf("Creating CloudWatch Events event bus (%s) failed: %w", eventBusName, err)
+		return fmt.Errorf("Creating EventBridge event bus (%s) failed: %w", eventBusName, err)
 	}
 
 	d.SetId(eventBusName)
 
-	log.Printf("[INFO] CloudWatch Events event bus (%s) created", d.Id())
+	log.Printf("[INFO] EventBridge event bus (%s) created", d.Id())
 
 	return resourceBusRead(d, meta)
 }
@@ -89,25 +89,25 @@ func resourceBusRead(d *schema.ResourceData, meta interface{}) error {
 		Name: aws.String(d.Id()),
 	}
 
-	log.Printf("[DEBUG] Reading CloudWatch Events event bus (%s)", d.Id())
+	log.Printf("[DEBUG] Reading EventBridge event bus (%s)", d.Id())
 	output, err := conn.DescribeEventBus(input)
 	if tfawserr.ErrMessageContains(err, events.ErrCodeResourceNotFoundException, "") {
-		log.Printf("[WARN] CloudWatch Events event bus (%s) not found, removing from state", d.Id())
+		log.Printf("[WARN] EventBridge event bus (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 	if err != nil {
-		return fmt.Errorf("error reading CloudWatch Events event bus: %w", err)
+		return fmt.Errorf("error reading EventBridge event bus: %w", err)
 	}
 
-	log.Printf("[DEBUG] Found CloudWatch Event bus: %#v", *output)
+	log.Printf("[DEBUG] Found EventBridge bus: %#v", *output)
 
 	d.Set("arn", output.Arn)
 	d.Set("name", output.Name)
 
 	tags, err := ListTags(conn, aws.StringValue(output.Arn))
 	if err != nil {
-		return fmt.Errorf("error listing tags for CloudWatch Events event bus (%s): %w", d.Id(), err)
+		return fmt.Errorf("error listing tags for EventBridge event bus (%s): %w", d.Id(), err)
 	}
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
@@ -140,18 +140,18 @@ func resourceBusUpdate(d *schema.ResourceData, meta interface{}) error {
 
 func resourceBusDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EventBridgeConn
-	log.Printf("[INFO] Deleting CloudWatch Events event bus (%s)", d.Id())
+	log.Printf("[INFO] Deleting EventBridge event bus (%s)", d.Id())
 	_, err := conn.DeleteEventBus(&events.DeleteEventBusInput{
 		Name: aws.String(d.Id()),
 	})
 	if tfawserr.ErrMessageContains(err, events.ErrCodeResourceNotFoundException, "") {
-		log.Printf("[WARN] CloudWatch Events event bus (%s) not found", d.Id())
+		log.Printf("[WARN] EventBridge event bus (%s) not found", d.Id())
 		return nil
 	}
 	if err != nil {
-		return fmt.Errorf("Error deleting CloudWatch Events event bus (%s): %w", d.Id(), err)
+		return fmt.Errorf("Error deleting EventBridge event bus (%s): %w", d.Id(), err)
 	}
-	log.Printf("[INFO] CloudWatch Events event bus (%s) deleted", d.Id())
+	log.Printf("[INFO] EventBridge event bus (%s) deleted", d.Id())
 
 	return nil
 }

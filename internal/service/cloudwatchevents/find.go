@@ -100,7 +100,7 @@ func FindTarget(conn *events.CloudWatchEvents, busName, ruleName, targetId strin
 	}
 
 	if result == nil {
-		return nil, fmt.Errorf("CloudWatch Event FindTarget %q (\"%s/%s\") not found", targetId, busName, ruleName)
+		return nil, fmt.Errorf("EventBridge FindTarget %q (\"%s/%s\") not found", targetId, busName, ruleName)
 	}
 	return result, nil
 }

@@ -215,7 +215,7 @@ func testAccCheckAPIDestinationDestroy(s *terraform.State) error {
 		resp, err := conn.DescribeApiDestination(&params)
 
 		if err == nil {
-			return fmt.Errorf("CloudWatch Events Api Destination (%s) still exists: %s", rs.Primary.ID, resp)
+			return fmt.Errorf("EventBridge API Destination (%s) still exists: %s", rs.Primary.ID, resp)
 		}
 	}
 
@@ -238,7 +238,7 @@ func testAccCheckCloudWatchEventApiDestinationExists(n string, v *events.Describ
 			return err
 		}
 		if resp == nil {
-			return fmt.Errorf("CloudWatch Events Api Destination (%s) not found", n)
+			return fmt.Errorf("EventBridge API Destination (%s) not found", n)
 		}
 
 		*v = *resp
@@ -250,7 +250,7 @@ func testAccCheckCloudWatchEventApiDestinationExists(n string, v *events.Describ
 func testAccCheckCloudWatchEventApiDestinationRecreated(i, j *events.DescribeApiDestinationOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if aws.StringValue(i.ApiDestinationArn) == aws.StringValue(j.ApiDestinationArn) {
-			return fmt.Errorf("CloudWatch Events Api Destination not recreated")
+			return fmt.Errorf("EventBridge API Destination not recreated")
 		}
 		return nil
 	}
@@ -259,7 +259,7 @@ func testAccCheckCloudWatchEventApiDestinationRecreated(i, j *events.DescribeApi
 func testAccCheckCloudWatchEventApiDestinationNotRecreated(i, j *events.DescribeApiDestinationOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if aws.StringValue(i.ApiDestinationArn) != aws.StringValue(j.ApiDestinationArn) {
-			return fmt.Errorf("CloudWatch Events Api Destination was recreated")
+			return fmt.Errorf("EventBridge API Destination was recreated")
 		}
 		return nil
 	}

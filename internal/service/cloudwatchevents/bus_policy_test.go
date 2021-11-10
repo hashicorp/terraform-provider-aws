@@ -92,7 +92,7 @@ func testAccCheckBusPolicyExists(pr string) resource.TestCheckFunc {
 		describedEventBus, err := cloudWatchEventsConnection.DescribeEventBus(input)
 
 		if err != nil {
-			return fmt.Errorf("Reading CloudWatch Events bus policy for '%s' failed: %w", pr, err)
+			return fmt.Errorf("Reading EventBridge bus policy for '%s' failed: %w", pr, err)
 		}
 		if describedEventBus.Policy == nil || len(*describedEventBus.Policy) == 0 {
 			return fmt.Errorf("Not found: %s", pr)
@@ -116,7 +116,7 @@ func testAccBusPolicyDocument(pr string) resource.TestCheckFunc {
 		var eventBusPolicyResourcePolicyDocument map[string]interface{}
 		err := json.Unmarshal([]byte(eventBusPolicyResource.Primary.Attributes["policy"]), &eventBusPolicyResourcePolicyDocument)
 		if err != nil {
-			return fmt.Errorf("Parsing CloudWatch Events bus policy for '%s' failed: %w", pr, err)
+			return fmt.Errorf("Parsing EventBridge bus policy for '%s' failed: %w", pr, err)
 		}
 
 		eventBusName := eventBusPolicyResource.Primary.ID
@@ -128,21 +128,21 @@ func testAccBusPolicyDocument(pr string) resource.TestCheckFunc {
 		cloudWatchEventsConnection := acctest.Provider.Meta().(*conns.AWSClient).EventBridgeConn
 		describedEventBus, err := cloudWatchEventsConnection.DescribeEventBus(input)
 		if err != nil {
-			return fmt.Errorf("Reading CloudWatch Events bus policy for '%s' failed: %w", pr, err)
+			return fmt.Errorf("Reading EventBridge bus policy for '%s' failed: %w", pr, err)
 		}
 
 		var describedEventBusPolicy map[string]interface{}
 		err = json.Unmarshal([]byte(*describedEventBus.Policy), &describedEventBusPolicy)
 
 		if err != nil {
-			return fmt.Errorf("Reading CloudWatch Events bus policy for '%s' failed: %w", pr, err)
+			return fmt.Errorf("Reading EventBridge bus policy for '%s' failed: %w", pr, err)
 		}
 		if describedEventBus.Policy == nil || len(*describedEventBus.Policy) == 0 {
 			return fmt.Errorf("Not found: %s", pr)
 		}
 
 		if !reflect.DeepEqual(describedEventBusPolicy, eventBusPolicyResourcePolicyDocument) {
-			return fmt.Errorf("CloudWatch Events bus policy mismatch for '%s'", pr)
+			return fmt.Errorf("EventBridge bus policy mismatch for '%s'", pr)
 		}
 
 		return nil

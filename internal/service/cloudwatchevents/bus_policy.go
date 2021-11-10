@@ -58,10 +58,10 @@ func resourceBusPolicyCreate(d *schema.ResourceData, meta interface{}) error {
 		Policy:       aws.String(policy),
 	}
 
-	log.Printf("[DEBUG] Creating CloudWatch Events policy: %s", input)
+	log.Printf("[DEBUG] Creating EventBridge policy: %s", input)
 	_, err := conn.PutPermission(&input)
 	if err != nil {
-		return fmt.Errorf("Creating CloudWatch Events policy failed: %w", err)
+		return fmt.Errorf("Creating EventBridge policy failed: %w", err)
 	}
 
 	d.SetId(eventBusName)
@@ -84,10 +84,10 @@ func resourceBusPolicyRead(d *schema.ResourceData, meta interface{}) error {
 
 	// Especially with concurrent PutPermission calls there can be a slight delay
 	err = resource.Retry(tfiam.PropagationTimeout, func() *resource.RetryError {
-		log.Printf("[DEBUG] Reading CloudWatch Events bus: %s", input)
+		log.Printf("[DEBUG] Reading EventBridge bus: %s", input)
 		output, err = conn.DescribeEventBus(&input)
 		if err != nil {
-			return resource.NonRetryableError(fmt.Errorf("reading CloudWatch Events permission (%s) failed: %w", d.Id(), err))
+			return resource.NonRetryableError(fmt.Errorf("reading EventBridge permission (%s) failed: %w", d.Id(), err))
 		}
 
 		policy, err = getEventBusPolicy(output)

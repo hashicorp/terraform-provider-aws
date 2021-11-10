@@ -249,12 +249,12 @@ func resourceConnectionCreate(d *schema.ResourceData, meta interface{}) error {
 		input.Description = aws.String(v.(string))
 	}
 
-	log.Printf("[DEBUG] Creating CloudWatch Events connection: %s", input)
+	log.Printf("[DEBUG] Creating EventBridge connection: %s", input)
 
 	_, err := conn.CreateConnection(input)
 
 	if err != nil {
-		return fmt.Errorf("error creating CloudWatch Events connection (%s): %w", name, err)
+		return fmt.Errorf("error creating EventBridge connection (%s): %w", name, err)
 	}
 
 	d.SetId(name)
@@ -262,7 +262,7 @@ func resourceConnectionCreate(d *schema.ResourceData, meta interface{}) error {
 	_, err = waitConnectionCreated(conn, d.Id())
 
 	if err != nil {
-		return fmt.Errorf("error waiting for CloudWatch Events connection (%s) to create: %w", d.Id(), err)
+		return fmt.Errorf("error waiting for EventBridge connection (%s) to create: %w", d.Id(), err)
 	}
 
 	return resourceConnectionRead(d, meta)
@@ -274,13 +274,13 @@ func resourceConnectionRead(d *schema.ResourceData, meta interface{}) error {
 	output, err := FindConnectionByName(conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
-		log.Printf("[WARN] CloudWatch Events connection (%s) not found, removing from state", d.Id())
+		log.Printf("[WARN] EventBridge connection (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading CloudWatch Events connection (%s): %w", d.Id(), err)
+		return fmt.Errorf("error reading EventBridge connection (%s): %w", d.Id(), err)
 	}
 
 	d.Set("arn", output.ConnectionArn)
@@ -318,17 +318,17 @@ func resourceConnectionUpdate(d *schema.ResourceData, meta interface{}) error {
 		input.Description = aws.String(v.(string))
 	}
 
-	log.Printf("[DEBUG] Updating CloudWatch Events connection: %s", input)
+	log.Printf("[DEBUG] Updating EventBridge connection: %s", input)
 	_, err := conn.UpdateConnection(input)
 
 	if err != nil {
-		return fmt.Errorf("error updating CloudWatch Events connection (%s): %w", d.Id(), err)
+		return fmt.Errorf("error updating EventBridge connection (%s): %w", d.Id(), err)
 	}
 
 	_, err = waitConnectionUpdated(conn, d.Id())
 
 	if err != nil {
-		return fmt.Errorf("error waiting for CloudWatch Events connection (%s) to update: %w", d.Id(), err)
+		return fmt.Errorf("error waiting for EventBridge connection (%s) to update: %w", d.Id(), err)
 	}
 
 	return resourceConnectionRead(d, meta)
@@ -337,7 +337,7 @@ func resourceConnectionUpdate(d *schema.ResourceData, meta interface{}) error {
 func resourceConnectionDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EventBridgeConn
 
-	log.Printf("[INFO] Deleting CloudWatch Events connection (%s)", d.Id())
+	log.Printf("[INFO] Deleting EventBridge connection (%s)", d.Id())
 	_, err := conn.DeleteConnection(&events.DeleteConnectionInput{
 		Name: aws.String(d.Id()),
 	})
@@ -347,13 +347,13 @@ func resourceConnectionDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting CloudWatch Events connection (%s): %w", d.Id(), err)
+		return fmt.Errorf("error deleting EventBridge connection (%s): %w", d.Id(), err)
 	}
 
 	_, err = waitConnectionDeleted(conn, d.Id())
 
 	if err != nil {
-		return fmt.Errorf("error waiting for CloudWatch Events connection (%s) to delete: %w", d.Id(), err)
+		return fmt.Errorf("error waiting for EventBridge connection (%s) to delete: %w", d.Id(), err)
 	}
 
 	return nil

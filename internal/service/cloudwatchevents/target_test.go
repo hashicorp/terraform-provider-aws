@@ -135,7 +135,7 @@ func TestAccEventBridgeTarget_eventBusName(t *testing.T) {
 func TestAccEventBridgeTarget_eventBusARN(t *testing.T) {
 	// "ValidationException: Adding an EventBus as a target within an account is not allowed."
 	if got, want := acctest.Partition(), endpoints.AwsUsGovPartitionID; got == want {
-		t.Skipf("CloudWatch Events Target EventBus ARNs are not supported in %s partition", got)
+		t.Skipf("EventBridge Target EventBus ARNs are not supported in %s partition", got)
 	}
 
 	resourceName := "aws_cloudwatch_event_target.test"
@@ -797,7 +797,7 @@ func testAccCheckTargetDestroy(s *terraform.State) error {
 
 		t, err := tfcloudwatchevents.FindTarget(conn, rs.Primary.Attributes["event_bus_name"], rs.Primary.Attributes["rule"], rs.Primary.Attributes["target_id"])
 		if err == nil {
-			return fmt.Errorf("CloudWatch Events Target %q still exists: %s",
+			return fmt.Errorf("EventBridge Target %q still exists: %s",
 				rs.Primary.ID, t)
 		}
 	}
