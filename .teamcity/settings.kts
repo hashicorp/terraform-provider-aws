@@ -10,6 +10,7 @@ import java.time.format.DateTimeParseException
 version = "2020.2"
 
 val defaultRegion = DslContext.getParameter("default_region")
+val alternateRegion = DslContext.getParameter("alternate_region", "")
 val sweeperRegions = DslContext.getParameter("sweeper_regions")
 val awsAccountID = DslContext.getParameter("aws_account_id")
 val awsAccessKeyID = DslContext.getParameter("aws_access_key_id")
@@ -27,6 +28,10 @@ project {
         password("env.AWS_ACCESS_KEY_ID", awsAccessKeyID, display = ParameterDisplay.HIDDEN)
         password("env.AWS_SECRET_ACCESS_KEY", awsSecretAccessKey, display = ParameterDisplay.HIDDEN)
         text("env.AWS_DEFAULT_REGION", defaultRegion, allowEmpty = false)
+
+        if (alternateRegion != "") {
+            text("env.AWS_ALTERNATE_REGION", alternateRegion)
+        }
 
         val securityGroupRulesPerGroup = DslContext.getParameter("security_group_rules_per_group", "")
         if (securityGroupRulesPerGroup != "") {
