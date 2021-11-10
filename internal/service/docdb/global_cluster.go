@@ -326,44 +326,6 @@ func flattenGlobalClusterMembers(apiObjects []*docdb.GlobalClusterMember) []inte
 	return tfList
 }
 
-//TODO rename and move to FIND
-func describeGlobalClusterFromDbClusterARN(ctx context.Context, conn *docdb.DocDB, dbClusterARN string) (*docdb.GlobalCluster, error) {
-	var globalCluster *docdb.GlobalCluster
-
-	input := &docdb.DescribeGlobalClustersInput{
-		Filters: []*docdb.Filter{
-			{
-				Name:   aws.String("db-cluster-id"),
-				Values: []*string{aws.String(dbClusterARN)},
-			},
-		},
-	}
-
-	log.Printf("[DEBUG] Reading DocDB Global Clusters: %s", input)
-	err := conn.DescribeGlobalClustersPagesWithContext(ctx, input, func(page *docdb.DescribeGlobalClustersOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
-
-		for _, gc := range page.GlobalClusters {
-			if gc == nil {
-				continue
-			}
-
-			for _, globalClusterMember := range gc.GlobalClusterMembers {
-				if aws.StringValue(globalClusterMember.DBClusterArn) == dbClusterARN {
-					globalCluster = gc
-					return false
-				}
-			}
-		}
-
-		return !lastPage
-	})
-
-	return globalCluster, err
-}
-
 func statusGlobalClusterRefreshFunc(ctx context.Context, conn *docdb.DocDB, globalClusterID string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		globalCluster, err := FindGlobalClusterById(ctx, conn, globalClusterID)
@@ -416,7 +378,7 @@ func waitForGlobalClusterRemoval(ctx context.Context, conn *docdb.DocDB, dbClust
 	err := resource.RetryContext(ctx, timeout, func() *resource.RetryError {
 		var err error
 
-		globalCluster, err = describeGlobalClusterFromDbClusterARN(ctx, conn, dbClusterIdentifier)
+		globalCluster, err = findGlobalClusterByArn(ctx, conn, dbClusterIdentifier)
 
 		if err != nil {
 			return resource.NonRetryableError(err)
@@ -430,7 +392,7 @@ func waitForGlobalClusterRemoval(ctx context.Context, conn *docdb.DocDB, dbClust
 	})
 
 	if tfresource.TimedOut(err) {
-		_, err = describeGlobalClusterFromDbClusterARN(ctx, conn, dbClusterIdentifier)
+		_, err = findGlobalClusterByArn(ctx, conn, dbClusterIdentifier)
 	}
 
 	if err != nil {
