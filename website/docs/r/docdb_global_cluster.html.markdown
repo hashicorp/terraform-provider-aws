@@ -127,10 +127,10 @@ In addition to all arguments above, the following attributes are exported:
 
 * `arn` - Global Cluster Amazon Resource Name (ARN)
 * `global_cluster_members` - Set of objects containing Global Cluster members.
-    * `db_cluster_arn` - Amazon Resource Name (ARN) of member DB Cluster
-    * `is_writer` - Whether the member is the primary DB Cluster
-* `global_cluster_resource_id` - AWS Region-unique, immutable identifier for the global database cluster. This identifier is found in AWS CloudTrail log entries whenever the AWS KMS key for the DB cluster is accessed
-* `id` - DocDB Global Cluster 
+    * `db_cluster_arn` - Amazon Resource Name (ARN) of member DB Cluster.
+    * `is_writer` - Whether the member is the primary DB Cluster.
+* `global_cluster_resource_id` - AWS Region-unique, immutable identifier for the global database cluster. This identifier is found in AWS CloudTrail log entries whenever the AWS KMS key for the DB cluster is accessed.
+* `id` - DocDB Global Cluster.
 
 ## Import
 
