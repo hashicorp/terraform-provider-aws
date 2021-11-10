@@ -2473,6 +2473,25 @@ resource "aws_security_group" "sg_for_lambda" {
 `, policyName, roleName, sgName)
 }
 
+func ConfigVpcWithSubnets(subnetCount int) string {
+	return ConfigCompose(
+		ConfigAvailableAZsNoOptIn(),
+		fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+}
+
+resource "aws_subnet" "test" {
+  count = %[1]d
+
+  vpc_id            = aws_vpc.test.id
+  availability_zone = data.aws_availability_zones.available.names[count.index]
+  cidr_block        = cidrsubnet(aws_vpc.test.cidr_block, 8, count.index)
+}
+`, subnetCount),
+	)
+}
+
 func CheckVPCExists(n string, vpc *ec2.Vpc) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]

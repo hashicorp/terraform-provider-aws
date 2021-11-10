@@ -146,17 +146,16 @@ func testAccCheckDirectoryConfigDestroy(s *terraform.State) error {
 
 func testAccDirectoryConfigConfig(name, userName, password string) string {
 	return acctest.ConfigCompose(
-		acctest.ConfigAvailableAZsNoOptIn(),
+		acctest.ConfigVpcWithSubnets(2),
 		fmt.Sprintf(`
-resource "aws_vpc" "test" {
-  cidr_block = "10.0.0.0/16"
-}
+resource "aws_appstream_directory_config" "test" {
+  directory_name                          = %[1]q
+  organizational_unit_distinguished_names = [aws_directory_service_directory.test.id]
 
-resource "aws_subnet" "test" {
-  count             = 2
-  availability_zone = data.aws_availability_zones.available.names[count.index]
-  cidr_block        = "10.0.${count.index}.0/24"
-  vpc_id            = aws_vpc.test.id
+  service_account_credentials {
+    account_name     = %[2]q
+    account_password = %[3]q
+  }
 }
 
 resource "aws_directory_service_directory" "test" {
@@ -168,16 +167,6 @@ resource "aws_directory_service_directory" "test" {
   vpc_settings {
     vpc_id     = aws_vpc.test.id
     subnet_ids = aws_subnet.test[*].id
-  }
-}
-
-resource "aws_appstream_directory_config" "test" {
-  directory_name                          = %[1]q
-  organizational_unit_distinguished_names = [aws_directory_service_directory.test.id]
-
-  service_account_credentials {
-    account_name     = %[2]q
-    account_password = %[3]q
   }
 }
 `, name, userName, password))
