@@ -187,7 +187,7 @@ func testAccCheckCloudFrontOriginRequestPolicyExists(n string) resource.TestChec
 func testAccOriginRequestPolicyConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudfront_origin_request_policy" "test" {
-  name    = %[1]q
+  name = %[1]q
 
   cookies_config {
     cookie_behavior = "none"
@@ -217,7 +217,7 @@ resource "aws_cloudfront_origin_request_policy" "test" {
       items = ["test1"]
     }
   }
-  
+
   headers_config {
     header_behavior = "whitelist"
 
