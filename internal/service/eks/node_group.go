@@ -313,8 +313,8 @@ func resourceNodeGroupCreate(ctx context.Context, d *schema.ResourceData, meta i
 		input.DiskSize = aws.Int64(int64(v.(int)))
 	}
 
-	if v := d.Get("instance_types").([]interface{}); len(v) > 0 {
-		input.InstanceTypes = flex.ExpandStringList(v)
+	if v, ok := d.GetOk("instance_types"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		input.InstanceTypes = flex.ExpandStringList(v.([]interface{}))
 	}
 
 	if v := d.Get("labels").(map[string]interface{}); len(v) > 0 {
