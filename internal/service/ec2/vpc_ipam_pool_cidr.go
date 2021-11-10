@@ -210,7 +210,7 @@ func FindIpamPoolCidr(conn *ec2.EC2, id string) (*ec2.IpamPoolCidr, string, erro
 		IpamPoolId: aws.String(pool_id),
 		Filters: []*ec2.Filter{
 			{
-				Name:   aws.String("cidr-block"),
+				Name:   aws.String("cidr"),
 				Values: aws.StringSlice([]string{cidr_block}),
 			},
 		},
