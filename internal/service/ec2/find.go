@@ -1062,6 +1062,62 @@ func FindInternetGatewayAttachment(conn *ec2.EC2, internetGatewayID, vpcID strin
 	return attachment, nil
 }
 
+func FindKeyPair(conn *ec2.EC2, input *ec2.DescribeKeyPairsInput) (*ec2.KeyPairInfo, error) {
+	output, err := FindKeyPairs(conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if len(output) == 0 || output[0] == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	if count := len(output); count > 1 {
+		return nil, tfresource.NewTooManyResultsError(count, input)
+	}
+
+	return output[0], nil
+}
+
+func FindKeyPairs(conn *ec2.EC2, input *ec2.DescribeKeyPairsInput) ([]*ec2.KeyPairInfo, error) {
+	output, err := conn.DescribeKeyPairs(input)
+
+	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidKeyPairNotFound) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return output.KeyPairs, nil
+}
+
+func FindKeyPairByName(conn *ec2.EC2, name string) (*ec2.KeyPairInfo, error) {
+	input := &ec2.DescribeKeyPairsInput{
+		KeyNames: aws.StringSlice([]string{name}),
+	}
+
+	output, err := FindKeyPair(conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	// Eventual consistency check.
+	if aws.StringValue(output.KeyName) != name {
+		return nil, &resource.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
+}
+
 func FindManagedPrefixListByID(conn *ec2.EC2, id string) (*ec2.ManagedPrefixList, error) {
 	input := &ec2.DescribeManagedPrefixListsInput{
 		PrefixListIds: aws.StringSlice([]string{id}),
