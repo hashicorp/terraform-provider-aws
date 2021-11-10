@@ -8,7 +8,7 @@ description: |-
 
 # Resource: aws_lambda_permission
 
-Gives an external source (like a EventBridge Rule, SNS, or S3) permission to access the Lambda function.
+Gives an external source (like an EventBridge Rule, SNS, or S3) permission to access the Lambda function.
 
 ## Example Usage
 

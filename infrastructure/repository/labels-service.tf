@@ -80,7 +80,7 @@ variable "service_labels" {
     "ecs",
     "efs",
     "eks",
-    "elastic-transcoder",
+    "elastictranscoder",
     "elasticache",
     "elasticbeanstalk",
     "elasticinference",
