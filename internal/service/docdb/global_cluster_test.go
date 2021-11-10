@@ -308,7 +308,7 @@ func testAccCheckDocDBGlobalClusterExists(resourceName string, globalCluster *do
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).DocDBConn
 
-		cluster, err := tfdocdb.DescribeGlobalCluster(context.TODO(), conn, rs.Primary.ID)
+		cluster, err := tfdocdb.FindGlobalClusterById(context.TODO(), conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -336,7 +336,7 @@ func testAccCheckDocDBGlobalClusterDestroy(s *terraform.State) error {
 			continue
 		}
 
-		globalCluster, err := tfdocdb.DescribeGlobalCluster(context.TODO(), conn, rs.Primary.ID)
+		globalCluster, err := tfdocdb.FindGlobalClusterById(context.TODO(), conn, rs.Primary.ID)
 
 		if tfawserr.ErrMessageContains(err, docdb.ErrCodeGlobalClusterNotFoundFault, "") {
 			continue
