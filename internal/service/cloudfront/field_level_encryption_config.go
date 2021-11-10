@@ -256,7 +256,7 @@ func expandContentTypeProfileConfig(tfMap map[string]interface{}) *cloudfront.Co
 
 	apiObject := &cloudfront.ContentTypeProfileConfig{}
 
-	if v, ok := tfMap["content_type_profiles"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["content_type_profiles"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		apiObject.ContentTypeProfiles = expandContentTypeProfiles(v[0].(map[string]interface{}))
 	}
 
@@ -342,7 +342,7 @@ func expandQueryArgProfileConfig(tfMap map[string]interface{}) *cloudfront.Query
 		apiObject.ForwardWhenQueryArgProfileIsUnknown = aws.Bool(v)
 	}
 
-	if v, ok := tfMap["query_arg_profiles"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["query_arg_profiles"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		apiObject.QueryArgProfiles = expandQueryArgProfiles(v[0].(map[string]interface{}))
 	}
 

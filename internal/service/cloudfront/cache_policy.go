@@ -335,7 +335,7 @@ func expandCachePolicyCookiesConfig(tfMap map[string]interface{}) *cloudfront.Ca
 		apiObject.CookieBehavior = aws.String(v)
 	}
 
-	if v, ok := tfMap["cookies"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["cookies"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		apiObject.Cookies = expandCookieNames(v[0].(map[string]interface{}))
 	}
 
@@ -369,7 +369,7 @@ func expandCachePolicyHeadersConfig(tfMap map[string]interface{}) *cloudfront.Ca
 		apiObject.HeaderBehavior = aws.String(v)
 	}
 
-	if v, ok := tfMap["headers"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["headers"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		apiObject.Headers = expandHeaders(v[0].(map[string]interface{}))
 	}
 
@@ -403,7 +403,7 @@ func expandCachePolicyQueryStringsConfig(tfMap map[string]interface{}) *cloudfro
 		apiObject.QueryStringBehavior = aws.String(v)
 	}
 
-	if v, ok := tfMap["query_strings"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["query_strings"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		apiObject.QueryStrings = expandQueryStringNames(v[0].(map[string]interface{}))
 	}
 
