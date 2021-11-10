@@ -26,7 +26,7 @@ func FindCachePolicyByID(conn *cloudfront.CloudFront, id string) (*cloudfront.Ge
 		return nil, err
 	}
 
-	if output == nil {
+	if output == nil || output.CachePolicy == nil || output.CachePolicy.CachePolicyConfig == nil {
 		return nil, tfresource.NewEmptyResultError(input)
 	}
 
@@ -51,7 +51,7 @@ func FindFieldLevelEncryptionConfigByID(conn *cloudfront.CloudFront, id string) 
 		return nil, err
 	}
 
-	if output == nil {
+	if output == nil || output.FieldLevelEncryptionConfig == nil {
 		return nil, tfresource.NewEmptyResultError(input)
 	}
 
@@ -76,7 +76,7 @@ func FindFieldLevelEncryptionProfileByID(conn *cloudfront.CloudFront, id string)
 		return nil, err
 	}
 
-	if output == nil {
+	if output == nil || output.FieldLevelEncryptionProfile == nil || output.FieldLevelEncryptionProfile.FieldLevelEncryptionProfileConfig == nil {
 		return nil, tfresource.NewEmptyResultError(input)
 	}
 
@@ -152,7 +152,7 @@ func FindOriginRequestPolicyByID(conn *cloudfront.CloudFront, id string) (*cloud
 		return nil, err
 	}
 
-	if output == nil {
+	if output == nil || output.OriginRequestPolicy == nil || output.OriginRequestPolicy.OriginRequestPolicyConfig == nil {
 		return nil, tfresource.NewEmptyResultError(input)
 	}
 
@@ -202,7 +202,7 @@ func FindResponseHeadersPolicyByID(conn *cloudfront.CloudFront, id string) (*clo
 		return nil, err
 	}
 
-	if output == nil {
+	if output == nil || output.ResponseHeadersPolicy == nil || output.ResponseHeadersPolicy.ResponseHeadersPolicyConfig == nil {
 		return nil, tfresource.NewEmptyResultError(input)
 	}
 

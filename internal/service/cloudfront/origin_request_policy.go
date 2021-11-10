@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func ResourceOriginRequestPolicy() *schema.Resource {
@@ -36,7 +37,7 @@ func ResourceOriginRequestPolicy() *schema.Resource {
 						"cookie_behavior": {
 							Type:         schema.TypeString,
 							Required:     true,
-							ValidateFunc: validation.StringInSlice([]string{"none", "whitelist", "all"}, false),
+							ValidateFunc: validation.StringInSlice(cloudfront.OriginRequestPolicyCookieBehavior_Values(), false),
 						},
 						"cookies": {
 							Type:     schema.TypeList,
@@ -57,7 +58,6 @@ func ResourceOriginRequestPolicy() *schema.Resource {
 			},
 			"etag": {
 				Type:     schema.TypeString,
-				Optional: true,
 				Computed: true,
 			},
 			"headers_config": {
@@ -69,7 +69,7 @@ func ResourceOriginRequestPolicy() *schema.Resource {
 						"header_behavior": {
 							Type:         schema.TypeString,
 							Optional:     true,
-							ValidateFunc: validation.StringInSlice([]string{"none", "whitelist", "allViewer", "allViewerAndWhitelistCloudFront"}, false),
+							ValidateFunc: validation.StringInSlice(cloudfront.OriginRequestPolicyHeaderBehavior_Values(), false),
 						},
 						"headers": {
 							Type:     schema.TypeList,
@@ -101,7 +101,7 @@ func ResourceOriginRequestPolicy() *schema.Resource {
 						"query_string_behavior": {
 							Type:         schema.TypeString,
 							Required:     true,
-							ValidateFunc: validation.StringInSlice([]string{"none", "whitelist", "allExcept", "all"}, false),
+							ValidateFunc: validation.StringInSlice(cloudfront.OriginRequestPolicyQueryStringBehavior_Values(), false),
 						},
 						"query_strings": {
 							Type:     schema.TypeList,
@@ -127,6 +127,7 @@ func ResourceOriginRequestPolicy() *schema.Resource {
 func resourceOriginRequestPolicyCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CloudFrontConn
 
+	name := d.Get("name").(string)
 	request := &cloudfront.CreateOriginRequestPolicyInput{
 		OriginRequestPolicyConfig: expandCloudFrontOriginRequestPolicyConfig(d),
 	}
@@ -134,7 +135,7 @@ func resourceOriginRequestPolicyCreate(d *schema.ResourceData, meta interface{})
 	resp, err := conn.CreateOriginRequestPolicy(request)
 
 	if err != nil {
-		return err
+		return fmt.Errorf("error creating CloudFront Origin Request Policy (%s): %w", name, err)
 	}
 
 	d.SetId(aws.StringValue(resp.OriginRequestPolicy.Id))
@@ -144,12 +145,10 @@ func resourceOriginRequestPolicyCreate(d *schema.ResourceData, meta interface{})
 
 func resourceOriginRequestPolicyRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CloudFrontConn
-	request := &cloudfront.GetOriginRequestPolicyInput{
-		Id: aws.String(d.Id()),
-	}
 
-	resp, err := conn.GetOriginRequestPolicy(request)
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+	output, err := FindOriginRequestPolicyByID(conn, d.Id())
+
+	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] CloudFront Origin Request Policy (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -159,18 +158,13 @@ func resourceOriginRequestPolicyRead(d *schema.ResourceData, meta interface{}) e
 		return fmt.Errorf("error reading CloudFront Origin Request Policy (%s): %w", d.Id(), err)
 	}
 
-	if resp == nil || resp.OriginRequestPolicy == nil || resp.OriginRequestPolicy.OriginRequestPolicyConfig == nil {
-		return fmt.Errorf("error reading CloudFront Origin Request Policy (%s): empty response", d.Id())
-	}
-
-	d.Set("etag", resp.ETag)
-
-	originRequestPolicy := resp.OriginRequestPolicy.OriginRequestPolicyConfig
-	d.Set("comment", originRequestPolicy.Comment)
-	d.Set("name", originRequestPolicy.Name)
-	d.Set("cookies_config", flattenCloudFrontOriginRequestPolicyCookiesConfig(originRequestPolicy.CookiesConfig))
-	d.Set("headers_config", flattenCloudFrontOriginRequestPolicyHeadersConfig(originRequestPolicy.HeadersConfig))
-	d.Set("query_strings_config", flattenCloudFrontOriginRequestPolicyQueryStringsConfig(originRequestPolicy.QueryStringsConfig))
+	apiObject := output.OriginRequestPolicy.OriginRequestPolicyConfig
+	d.Set("comment", apiObject.Comment)
+	d.Set("etag", output.ETag)
+	d.Set("name", apiObject.Name)
+	d.Set("cookies_config", flattenCloudFrontOriginRequestPolicyCookiesConfig(apiObject.CookiesConfig))
+	d.Set("headers_config", flattenCloudFrontOriginRequestPolicyHeadersConfig(apiObject.HeadersConfig))
+	d.Set("query_strings_config", flattenCloudFrontOriginRequestPolicyQueryStringsConfig(apiObject.QueryStringsConfig))
 
 	return nil
 }
@@ -185,8 +179,9 @@ func resourceOriginRequestPolicyUpdate(d *schema.ResourceData, meta interface{})
 	}
 
 	_, err := conn.UpdateOriginRequestPolicy(request)
+
 	if err != nil {
-		return err
+		return fmt.Errorf("error updating CloudFront Origin Request Policy (%s): %w", d.Id(), err)
 	}
 
 	return resourceOriginRequestPolicyRead(d, meta)
@@ -195,17 +190,18 @@ func resourceOriginRequestPolicyUpdate(d *schema.ResourceData, meta interface{})
 func resourceOriginRequestPolicyDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CloudFrontConn
 
-	request := &cloudfront.DeleteOriginRequestPolicyInput{
+	log.Printf("[DEBUG] Deleting CloudFront Origin Request Policy: (%s)", d.Id())
+	_, err := conn.DeleteOriginRequestPolicy(&cloudfront.DeleteOriginRequestPolicyInput{
 		Id:      aws.String(d.Id()),
 		IfMatch: aws.String(d.Get("etag").(string)),
+	})
+
+	if tfawserr.ErrCodeEquals(err, cloudfront.ErrCodeNoSuchOriginRequestPolicy) {
+		return nil
 	}
 
-	_, err := conn.DeleteOriginRequestPolicy(request)
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, cloudfront.ErrCodeNoSuchOriginRequestPolicy, "") {
-			return nil
-		}
-		return err
+		return fmt.Errorf("error deleting CloudFront Origin Request Policy (%s): %w", d.Id(), err)
 	}
 
 	return nil
