@@ -1334,7 +1334,7 @@ func ProtocolForValue(v string) string {
 // documented to be supported by AWS Security Groups
 // http://docs.aws.amazon.com/fr_fr/AWSEC2/latest/APIReference/API_IpPermission.html
 // Similar to protocolIntegers() used by Network ACLs, but explicitly only
-// supports "tcp", "udp", "icmp", and "all"
+// supports "tcp", "udp", "icmp", "icmpv6", and "all"
 func sgProtocolIntegers() map[string]int {
 	return map[string]int{
 		"icmpv6": 58,
