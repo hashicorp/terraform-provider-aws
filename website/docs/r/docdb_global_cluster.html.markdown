@@ -120,6 +120,7 @@ The `timeouts` block allows you to specify [timeouts](https://www.terraform.io/d
 * `create` - (Defaults to 5 mins) Used when creating the Global Cluster
 * `update` - (Defaults to 5 mins) Used when updating the Global Cluster members (time is per member)
 * `delete` - (Defaults to 5 mins) Used when deleting the Global Cluster members (time is per member)
+
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
