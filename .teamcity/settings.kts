@@ -17,6 +17,9 @@ val awsAccessKeyID = DslContext.getParameter("aws_access_key_id")
 val awsSecretAccessKey = DslContext.getParameter("aws_secret_access_key")
 val acctestParallelism = DslContext.getParameter("acctest_parallelism")
 val tfAccAssumeRoleArn = DslContext.getParameter("tf_acc_assume_role_arn", "")
+val awsAlternateAccountID = DslContext.getParameter("aws_alternate_account_id", "")
+val awsAlternateAccessKeyID = DslContext.getParameter("aws_alternate_access_key_id", "")
+val awsAlternateSecretAccessKey = DslContext.getParameter("aws_alternate_secret_access_key", "")
 
 project {
     buildType(Composite)
@@ -29,6 +32,12 @@ project {
         password("env.AWS_ACCESS_KEY_ID", awsAccessKeyID, display = ParameterDisplay.HIDDEN)
         password("env.AWS_SECRET_ACCESS_KEY", awsSecretAccessKey, display = ParameterDisplay.HIDDEN)
         text("env.AWS_DEFAULT_REGION", defaultRegion, allowEmpty = false)
+
+        if (awsAlternateAccountID != "" || awsAlternateAccessKeyID != "" || awsAlternateSecretAccessKey != "") {
+            text("env.AWS_ALTERNATE_ACCOUNT_ID", awsAlternateAccountID, display = ParameterDisplay.HIDDEN)
+            password("env.AWS_ALTERNATE_ACCESS_KEY_ID", awsAlternateAccessKeyID, display = ParameterDisplay.HIDDEN)
+            password("env.AWS_ALTERNATE_SECRET_ACCESS_KEY", awsAlternateSecretAccessKey, display = ParameterDisplay.HIDDEN)
+        }
 
         if (alternateRegion != "") {
             text("env.AWS_ALTERNATE_REGION", alternateRegion)
