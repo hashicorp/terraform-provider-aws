@@ -34,7 +34,7 @@ func ResourcePermission() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Default:      "events:PutEvents",
-				ValidateFunc: validateCloudWatchEventPermissionAction,
+				ValidateFunc: validatePermissionAction,
 			},
 			"condition": {
 				Type:     schema.TypeList,
@@ -70,13 +70,13 @@ func ResourcePermission() *schema.Resource {
 			"principal": {
 				Type:         schema.TypeString,
 				Required:     true,
-				ValidateFunc: validateCloudWatchEventPermissionPrincipal,
+				ValidateFunc: validatePermissionPrincipal,
 			},
 			"statement_id": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validateCloudWatchEventPermissionStatementID,
+				ValidateFunc: validatePermissionStatementID,
 			},
 		},
 	}
@@ -90,7 +90,7 @@ func resourcePermissionCreate(d *schema.ResourceData, meta interface{}) error {
 
 	input := events.PutPermissionInput{
 		Action:       aws.String(d.Get("action").(string)),
-		Condition:    expandCloudWatchEventsCondition(d.Get("condition").([]interface{})),
+		Condition:    expandCondition(d.Get("condition").([]interface{})),
 		EventBusName: aws.String(eventBusName),
 		Principal:    aws.String(d.Get("principal").(string)),
 		StatementId:  aws.String(statementID),
@@ -160,7 +160,7 @@ func resourcePermissionRead(d *schema.ResourceData, meta interface{}) error {
 	}
 	d.Set("event_bus_name", busName)
 
-	if err := d.Set("condition", flattenCloudWatchEventPermissionPolicyStatementCondition(policyStatement.Condition)); err != nil {
+	if err := d.Set("condition", flattenPermissionPolicyStatementCondition(policyStatement.Condition)); err != nil {
 		return fmt.Errorf("error setting condition: %w", err)
 	}
 
@@ -215,7 +215,7 @@ func resourcePermissionUpdate(d *schema.ResourceData, meta interface{}) error {
 	}
 	input := events.PutPermissionInput{
 		Action:       aws.String(d.Get("action").(string)),
-		Condition:    expandCloudWatchEventsCondition(d.Get("condition").([]interface{})),
+		Condition:    expandCondition(d.Get("condition").([]interface{})),
 		EventBusName: aws.String(eventBusName),
 		Principal:    aws.String(d.Get("principal").(string)),
 		StatementId:  aws.String(statementID),
@@ -259,7 +259,7 @@ func resourcePermissionDelete(d *schema.ResourceData, meta interface{}) error {
 }
 
 // https://docs.aws.amazon.com/AmazonCloudWatchEvents/latest/APIReference/API_PutPermission.html#API_PutPermission_RequestParameters
-func validateCloudWatchEventPermissionAction(v interface{}, k string) (ws []string, es []error) {
+func validatePermissionAction(v interface{}, k string) (ws []string, es []error) {
 	value := v.(string)
 	if (len(value) < 1) || (len(value) > 64) {
 		es = append(es, fmt.Errorf("%q must be between 1 and 64 characters", k))
@@ -272,7 +272,7 @@ func validateCloudWatchEventPermissionAction(v interface{}, k string) (ws []stri
 }
 
 // https://docs.aws.amazon.com/AmazonCloudWatchEvents/latest/APIReference/API_PutPermission.html#API_PutPermission_RequestParameters
-func validateCloudWatchEventPermissionPrincipal(v interface{}, k string) (ws []string, es []error) {
+func validatePermissionPrincipal(v interface{}, k string) (ws []string, es []error) {
 	value := v.(string)
 	if !regexp.MustCompile(`^(\d{12}|\*)$`).MatchString(value) {
 		es = append(es, fmt.Errorf("%q must be * or a 12 digit AWS account ID", k))
@@ -281,7 +281,7 @@ func validateCloudWatchEventPermissionPrincipal(v interface{}, k string) (ws []s
 }
 
 // https://docs.aws.amazon.com/AmazonCloudWatchEvents/latest/APIReference/API_PutPermission.html#API_PutPermission_RequestParameters
-func validateCloudWatchEventPermissionStatementID(v interface{}, k string) (ws []string, es []error) {
+func validatePermissionStatementID(v interface{}, k string) (ws []string, es []error) {
 	value := v.(string)
 	if (len(value) < 1) || (len(value) > 64) {
 		es = append(es, fmt.Errorf("%q must be between 1 and 64 characters", k))
@@ -390,7 +390,7 @@ func FindPermissionPolicyStatementByID(policy *PermissionPolicyDoc, id string) (
 	}
 }
 
-func expandCloudWatchEventsCondition(l []interface{}) *events.Condition {
+func expandCondition(l []interface{}) *events.Condition {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -406,7 +406,7 @@ func expandCloudWatchEventsCondition(l []interface{}) *events.Condition {
 	return condition
 }
 
-func flattenCloudWatchEventPermissionPolicyStatementCondition(c *CloudWatchEventPermissionPolicyStatementCondition) []interface{} {
+func flattenPermissionPolicyStatementCondition(c *CloudWatchEventPermissionPolicyStatementCondition) []interface{} {
 	if c == nil {
 		return []interface{}{}
 	}

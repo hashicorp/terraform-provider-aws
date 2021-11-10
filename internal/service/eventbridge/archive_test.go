@@ -28,7 +28,7 @@ func TestAccEventBridgeArchive_basic(t *testing.T) {
 			{
 				Config: testAccArchiveConfig(archiveName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudWatchEventArchiveExists(resourceName, &v1),
+					testAccCheckArchiveExists(resourceName, &v1),
 					resource.TestCheckResourceAttr(resourceName, "name", archiveName),
 					resource.TestCheckResourceAttr(resourceName, "retention_days", "0"),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "events", fmt.Sprintf("archive/%s", archiveName)),
@@ -59,13 +59,13 @@ func TestAccEventBridgeArchive_update(t *testing.T) {
 			{
 				Config: testAccArchiveConfig(archiveName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudWatchEventArchiveExists(resourceName, &v1),
+					testAccCheckArchiveExists(resourceName, &v1),
 				),
 			},
 			{
 				Config: testAccArchiveConfig_updateAttributes(archiveName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudWatchEventArchiveExists(resourceName, &v1),
+					testAccCheckArchiveExists(resourceName, &v1),
 					resource.TestCheckResourceAttr(resourceName, "retention_days", "7"),
 					acctest.CheckResourceAttrEquivalentJSON(resourceName, "event_pattern", "{\"source\":[\"company.team.service\"]}"),
 					resource.TestCheckResourceAttr(resourceName, "description", "test"),
@@ -89,7 +89,7 @@ func TestAccEventBridgeArchive_disappears(t *testing.T) {
 			{
 				Config: testAccArchiveConfig(archiveName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudWatchEventArchiveExists(resourceName, &v),
+					testAccCheckArchiveExists(resourceName, &v),
 					acctest.CheckResourceDisappears(acctest.Provider, tfeventbridge.ResourceArchive(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -120,7 +120,7 @@ func testAccCheckArchiveDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckCloudWatchEventArchiveExists(n string, v *events.DescribeArchiveOutput) resource.TestCheckFunc {
+func testAccCheckArchiveExists(n string, v *events.DescribeArchiveOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -161,7 +161,7 @@ func TestAccEventBridgeArchive_retentionSetOnCreation(t *testing.T) {
 			{
 				Config: testAccArchiveConfig_retentionOnCreation(archiveName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudWatchEventArchiveExists(resourceName, &v1),
+					testAccCheckArchiveExists(resourceName, &v1),
 					resource.TestCheckResourceAttr(resourceName, "name", archiveName),
 					resource.TestCheckResourceAttr(resourceName, "retention_days", "1"),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "events", fmt.Sprintf("archive/%s", archiveName)),

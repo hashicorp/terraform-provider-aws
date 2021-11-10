@@ -4,7 +4,7 @@ variable "aws_region" {
 }
 
 variable "rule_name" {
-  description = "The name of the CloudWatch Event Rule"
+  description = "The name of the EventBridge Rule"
   default     = "tf-example-cloudwatch-event-rule-for-kinesis"
 }
 
@@ -14,7 +14,7 @@ variable "iam_role_name" {
 }
 
 variable "target_name" {
-  description = "The name of the CloudWatch Event Target"
+  description = "The name of the EventBridge Target"
   default     = "tf-example-cloudwatch-event-target-for-kinesis"
 }
 

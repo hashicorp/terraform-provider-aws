@@ -32,7 +32,7 @@ func TestAccEventBridgeBus_basic(t *testing.T) {
 			{
 				Config: testAccBusConfig(busName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudWatchEventBusExists(resourceName, &v1),
+					testAccCheckBusExists(resourceName, &v1),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "events", fmt.Sprintf("event-bus/%s", busName)),
 					resource.TestCheckNoResourceAttr(resourceName, "event_source_name"),
 					resource.TestCheckResourceAttr(resourceName, "name", busName),
@@ -47,8 +47,8 @@ func TestAccEventBridgeBus_basic(t *testing.T) {
 			{
 				Config: testAccBusConfig(busNameModified),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudWatchEventBusExists(resourceName, &v2),
-					testAccCheckCloudWatchEventBusRecreated(&v1, &v2),
+					testAccCheckBusExists(resourceName, &v2),
+					testAccCheckBusRecreated(&v1, &v2),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "events", fmt.Sprintf("event-bus/%s", busNameModified)),
 					resource.TestCheckNoResourceAttr(resourceName, "event_source_name"),
 					resource.TestCheckResourceAttr(resourceName, "name", busNameModified),
@@ -58,8 +58,8 @@ func TestAccEventBridgeBus_basic(t *testing.T) {
 			{
 				Config: testAccBusConfig_Tags1(busNameModified, "key", "value"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudWatchEventBusExists(resourceName, &v3),
-					testAccCheckCloudWatchEventBusNotRecreated(&v2, &v3),
+					testAccCheckBusExists(resourceName, &v3),
+					testAccCheckBusNotRecreated(&v2, &v3),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key", "value"),
 				),
@@ -83,7 +83,7 @@ func TestAccEventBridgeBus_tags(t *testing.T) {
 			{
 				Config: testAccBusConfig_Tags1(busName, "key1", "value"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudWatchEventBusExists(resourceName, &v1),
+					testAccCheckBusExists(resourceName, &v1),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value"),
 				),
@@ -96,8 +96,8 @@ func TestAccEventBridgeBus_tags(t *testing.T) {
 			{
 				Config: testAccBusConfig_Tags2(busName, "key1", "updated", "key2", "added"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudWatchEventBusExists(resourceName, &v2),
-					testAccCheckCloudWatchEventBusNotRecreated(&v1, &v2),
+					testAccCheckBusExists(resourceName, &v2),
+					testAccCheckBusNotRecreated(&v1, &v2),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "added"),
@@ -106,8 +106,8 @@ func TestAccEventBridgeBus_tags(t *testing.T) {
 			{
 				Config: testAccBusConfig_Tags1(busName, "key2", "added"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudWatchEventBusExists(resourceName, &v3),
-					testAccCheckCloudWatchEventBusNotRecreated(&v2, &v3),
+					testAccCheckBusExists(resourceName, &v3),
+					testAccCheckBusNotRecreated(&v2, &v3),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "added"),
 				),
@@ -115,8 +115,8 @@ func TestAccEventBridgeBus_tags(t *testing.T) {
 			{
 				Config: testAccBusConfig(busName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudWatchEventBusExists(resourceName, &v4),
-					testAccCheckCloudWatchEventBusNotRecreated(&v3, &v4),
+					testAccCheckBusExists(resourceName, &v4),
+					testAccCheckBusNotRecreated(&v3, &v4),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
@@ -154,7 +154,7 @@ func TestAccEventBridgeBus_disappears(t *testing.T) {
 			{
 				Config: testAccBusConfig(busName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudWatchEventBusExists(resourceName, &v),
+					testAccCheckBusExists(resourceName, &v),
 					acctest.CheckResourceDisappears(acctest.Provider, tfeventbridge.ResourceBus(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -182,7 +182,7 @@ func TestAccEventBridgeBus_partnerEventSource(t *testing.T) {
 			{
 				Config: testAccBusPartnerEventSourceConfig(busName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudWatchEventBusExists(resourceName, &busOutput),
+					testAccCheckBusExists(resourceName, &busOutput),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "events", fmt.Sprintf("event-bus/%s", busName)),
 					resource.TestCheckResourceAttr(resourceName, "event_source_name", busName),
 					resource.TestCheckResourceAttr(resourceName, "name", busName),
@@ -215,7 +215,7 @@ func testAccCheckBusDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckCloudWatchEventBusExists(n string, v *events.DescribeEventBusOutput) resource.TestCheckFunc {
+func testAccCheckBusExists(n string, v *events.DescribeEventBusOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -240,7 +240,7 @@ func testAccCheckCloudWatchEventBusExists(n string, v *events.DescribeEventBusOu
 	}
 }
 
-func testAccCheckCloudWatchEventBusRecreated(i, j *events.DescribeEventBusOutput) resource.TestCheckFunc {
+func testAccCheckBusRecreated(i, j *events.DescribeEventBusOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if aws.StringValue(i.Arn) == aws.StringValue(j.Arn) {
 			return fmt.Errorf("EventBridge event bus not recreated")
@@ -249,7 +249,7 @@ func testAccCheckCloudWatchEventBusRecreated(i, j *events.DescribeEventBusOutput
 	}
 }
 
-func testAccCheckCloudWatchEventBusNotRecreated(i, j *events.DescribeEventBusOutput) resource.TestCheckFunc {
+func testAccCheckBusNotRecreated(i, j *events.DescribeEventBusOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if aws.StringValue(i.Arn) != aws.StringValue(j.Arn) {
 			return fmt.Errorf("EventBridge event bus was recreated")

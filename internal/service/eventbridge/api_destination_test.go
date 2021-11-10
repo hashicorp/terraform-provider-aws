@@ -42,7 +42,7 @@ func TestAccEventBridgeAPIDestination_basic(t *testing.T) {
 					httpMethod,
 				),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudWatchEventApiDestinationExists(resourceName, &v1),
+					testAccCheckAPIDestinationExists(resourceName, &v1),
 					resource.TestCheckResourceAttr(resourceName, "name", name),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "events", regexp.MustCompile(fmt.Sprintf("api-destination/%s/%s", name, uuidRegex))),
 					resource.TestCheckResourceAttr(resourceName, "http_method", httpMethod),
@@ -61,10 +61,10 @@ func TestAccEventBridgeAPIDestination_basic(t *testing.T) {
 					httpMethodModified,
 				),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudWatchEventApiDestinationExists(resourceName, &v2),
+					testAccCheckAPIDestinationExists(resourceName, &v2),
 					resource.TestCheckResourceAttr(resourceName, "name", nameModified),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "events", regexp.MustCompile(fmt.Sprintf("api-destination/%s/%s", nameModified, uuidRegex))),
-					testAccCheckCloudWatchEventApiDestinationRecreated(&v1, &v2),
+					testAccCheckAPIDestinationRecreated(&v1, &v2),
 					resource.TestCheckResourceAttr(resourceName, "http_method", httpMethodModified),
 					resource.TestCheckResourceAttr(resourceName, "invocation_endpoint", invocationEndpointModified),
 				),
@@ -76,8 +76,8 @@ func TestAccEventBridgeAPIDestination_basic(t *testing.T) {
 					httpMethodModified,
 				),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudWatchEventApiDestinationExists(resourceName, &v3),
-					testAccCheckCloudWatchEventApiDestinationNotRecreated(&v2, &v3),
+					testAccCheckAPIDestinationExists(resourceName, &v3),
+					testAccCheckAPIDestinationNotRecreated(&v2, &v3),
 					resource.TestCheckResourceAttr(resourceName, "http_method", httpMethodModified),
 					resource.TestCheckResourceAttr(resourceName, "invocation_endpoint", invocationEndpointModified),
 				),
@@ -117,7 +117,7 @@ func TestAccEventBridgeAPIDestination_optional(t *testing.T) {
 					int64(invocationRateLimitPerSecond),
 				),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudWatchEventApiDestinationExists(resourceName, &v1),
+					testAccCheckAPIDestinationExists(resourceName, &v1),
 					resource.TestCheckResourceAttr(resourceName, "name", name),
 					resource.TestCheckResourceAttr(resourceName, "http_method", httpMethod),
 					resource.TestCheckResourceAttr(resourceName, "invocation_endpoint", invocationEndpoint),
@@ -139,8 +139,8 @@ func TestAccEventBridgeAPIDestination_optional(t *testing.T) {
 					int64(invocationRateLimitPerSecondModified),
 				),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudWatchEventApiDestinationExists(resourceName, &v2),
-					testAccCheckCloudWatchEventApiDestinationRecreated(&v1, &v2),
+					testAccCheckAPIDestinationExists(resourceName, &v2),
+					testAccCheckAPIDestinationRecreated(&v1, &v2),
 					resource.TestCheckResourceAttr(resourceName, "name", nameModified),
 					resource.TestCheckResourceAttr(resourceName, "http_method", httpMethodModified),
 					resource.TestCheckResourceAttr(resourceName, "invocation_endpoint", invocationEndpointModified),
@@ -157,8 +157,8 @@ func TestAccEventBridgeAPIDestination_optional(t *testing.T) {
 					int64(invocationRateLimitPerSecond),
 				),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudWatchEventApiDestinationExists(resourceName, &v3),
-					testAccCheckCloudWatchEventApiDestinationNotRecreated(&v2, &v3),
+					testAccCheckAPIDestinationExists(resourceName, &v3),
+					testAccCheckAPIDestinationNotRecreated(&v2, &v3),
 					resource.TestCheckResourceAttr(resourceName, "name", nameModified),
 					resource.TestCheckResourceAttr(resourceName, "http_method", httpMethodModified),
 					resource.TestCheckResourceAttr(resourceName, "invocation_endpoint", invocationEndpointModified),
@@ -191,7 +191,7 @@ func TestAccEventBridgeAPIDestination_disappears(t *testing.T) {
 					httpMethod,
 				),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudWatchEventApiDestinationExists(resourceName, &v),
+					testAccCheckAPIDestinationExists(resourceName, &v),
 					acctest.CheckResourceDisappears(acctest.Provider, tfeventbridge.ResourceAPIDestination(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -222,7 +222,7 @@ func testAccCheckAPIDestinationDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckCloudWatchEventApiDestinationExists(n string, v *events.DescribeApiDestinationOutput) resource.TestCheckFunc {
+func testAccCheckAPIDestinationExists(n string, v *events.DescribeApiDestinationOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -247,7 +247,7 @@ func testAccCheckCloudWatchEventApiDestinationExists(n string, v *events.Describ
 	}
 }
 
-func testAccCheckCloudWatchEventApiDestinationRecreated(i, j *events.DescribeApiDestinationOutput) resource.TestCheckFunc {
+func testAccCheckAPIDestinationRecreated(i, j *events.DescribeApiDestinationOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if aws.StringValue(i.ApiDestinationArn) == aws.StringValue(j.ApiDestinationArn) {
 			return fmt.Errorf("EventBridge API Destination not recreated")
@@ -256,7 +256,7 @@ func testAccCheckCloudWatchEventApiDestinationRecreated(i, j *events.DescribeApi
 	}
 }
 
-func testAccCheckCloudWatchEventApiDestinationNotRecreated(i, j *events.DescribeApiDestinationOutput) resource.TestCheckFunc {
+func testAccCheckAPIDestinationNotRecreated(i, j *events.DescribeApiDestinationOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if aws.StringValue(i.ApiDestinationArn) != aws.StringValue(j.ApiDestinationArn) {
 			return fmt.Errorf("EventBridge API Destination was recreated")

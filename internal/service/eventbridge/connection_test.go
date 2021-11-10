@@ -47,7 +47,7 @@ func TestAccEventBridgeConnection_apiKey(t *testing.T) {
 					value,
 				),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudWatchEventConnectionExists(resourceName, &v1),
+					testAccCheckConnectionExists(resourceName, &v1),
 					resource.TestCheckResourceAttr(resourceName, "name", name),
 					resource.TestCheckResourceAttr(resourceName, "description", description),
 					resource.TestCheckResourceAttr(resourceName, "authorization_type", authorizationType),
@@ -69,9 +69,9 @@ func TestAccEventBridgeConnection_apiKey(t *testing.T) {
 					valueModified,
 				),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudWatchEventConnectionExists(resourceName, &v2),
+					testAccCheckConnectionExists(resourceName, &v2),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "events", regexp.MustCompile(fmt.Sprintf("connection/%s/%s", nameModified, uuidRegex))),
-					testAccCheckCloudWatchEventConnectionRecreated(&v1, &v2),
+					testAccCheckConnectionRecreated(&v1, &v2),
 					resource.TestCheckResourceAttr(resourceName, "name", nameModified),
 					resource.TestCheckResourceAttr(resourceName, "description", descriptionModified),
 					resource.TestCheckResourceAttr(resourceName, "authorization_type", authorizationType),
@@ -87,8 +87,8 @@ func TestAccEventBridgeConnection_apiKey(t *testing.T) {
 					valueModified,
 				),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudWatchEventConnectionExists(resourceName, &v3),
-					testAccCheckCloudWatchEventConnectionNotRecreated(&v2, &v3),
+					testAccCheckConnectionExists(resourceName, &v3),
+					testAccCheckConnectionNotRecreated(&v2, &v3),
 					resource.TestCheckResourceAttr(resourceName, "name", nameModified),
 					resource.TestCheckResourceAttr(resourceName, "description", descriptionModified),
 					resource.TestCheckResourceAttr(resourceName, "authorization_type", authorizationType),
@@ -129,7 +129,7 @@ func TestAccEventBridgeConnection_basic(t *testing.T) {
 					password,
 				),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudWatchEventConnectionExists(resourceName, &v1),
+					testAccCheckConnectionExists(resourceName, &v1),
 					resource.TestCheckResourceAttr(resourceName, "name", name),
 					resource.TestCheckResourceAttr(resourceName, "description", description),
 					resource.TestCheckResourceAttr(resourceName, "authorization_type", authorizationType),
@@ -151,9 +151,9 @@ func TestAccEventBridgeConnection_basic(t *testing.T) {
 					passwordModified,
 				),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudWatchEventConnectionExists(resourceName, &v2),
+					testAccCheckConnectionExists(resourceName, &v2),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "events", regexp.MustCompile(fmt.Sprintf("connection/%s/%s", nameModified, uuidRegex))),
-					testAccCheckCloudWatchEventConnectionRecreated(&v1, &v2),
+					testAccCheckConnectionRecreated(&v1, &v2),
 					resource.TestCheckResourceAttr(resourceName, "name", nameModified),
 					resource.TestCheckResourceAttr(resourceName, "description", descriptionModified),
 					resource.TestCheckResourceAttr(resourceName, "authorization_type", authorizationType),
@@ -169,8 +169,8 @@ func TestAccEventBridgeConnection_basic(t *testing.T) {
 					passwordModified,
 				),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudWatchEventConnectionExists(resourceName, &v3),
-					testAccCheckCloudWatchEventConnectionNotRecreated(&v2, &v3),
+					testAccCheckConnectionExists(resourceName, &v3),
+					testAccCheckConnectionNotRecreated(&v2, &v3),
 					resource.TestCheckResourceAttr(resourceName, "name", nameModified),
 					resource.TestCheckResourceAttr(resourceName, "description", descriptionModified),
 					resource.TestCheckResourceAttr(resourceName, "authorization_type", authorizationType),
@@ -259,7 +259,7 @@ func TestAccEventBridgeConnection_oAuth(t *testing.T) {
 					queryStringIsSecretValue,
 				),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudWatchEventConnectionExists(resourceName, &v1),
+					testAccCheckConnectionExists(resourceName, &v1),
 					resource.TestCheckResourceAttr(resourceName, "name", name),
 					resource.TestCheckResourceAttr(resourceName, "description", description),
 					resource.TestCheckResourceAttr(resourceName, "authorization_type", authorizationType),
@@ -305,9 +305,9 @@ func TestAccEventBridgeConnection_oAuth(t *testing.T) {
 					queryStringIsSecretValueModified,
 				),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudWatchEventConnectionExists(resourceName, &v2),
+					testAccCheckConnectionExists(resourceName, &v2),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "events", regexp.MustCompile(fmt.Sprintf("connection/%s/%s", nameModified, uuidRegex))),
-					testAccCheckCloudWatchEventConnectionRecreated(&v1, &v2),
+					testAccCheckConnectionRecreated(&v1, &v2),
 					resource.TestCheckResourceAttr(resourceName, "name", nameModified),
 					resource.TestCheckResourceAttr(resourceName, "description", descriptionModified),
 					resource.TestCheckResourceAttr(resourceName, "authorization_type", authorizationType),
@@ -342,8 +342,8 @@ func TestAccEventBridgeConnection_oAuth(t *testing.T) {
 					queryStringIsSecretValueModified,
 				),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudWatchEventConnectionExists(resourceName, &v3),
-					testAccCheckCloudWatchEventConnectionNotRecreated(&v2, &v3),
+					testAccCheckConnectionExists(resourceName, &v3),
+					testAccCheckConnectionNotRecreated(&v2, &v3),
 					resource.TestCheckResourceAttr(resourceName, "name", nameModified),
 					resource.TestCheckResourceAttr(resourceName, "description", descriptionModified),
 					resource.TestCheckResourceAttr(resourceName, "authorization_type", authorizationType),
@@ -422,7 +422,7 @@ func TestAccEventBridgeConnection_invocationHTTPParameters(t *testing.T) {
 					queryStringIsSecretValue,
 				),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudWatchEventConnectionExists(resourceName, &v1),
+					testAccCheckConnectionExists(resourceName, &v1),
 					resource.TestCheckResourceAttr(resourceName, "name", name),
 					resource.TestCheckResourceAttr(resourceName, "description", description),
 					resource.TestCheckResourceAttr(resourceName, "authorization_type", authorizationType),
@@ -473,8 +473,8 @@ func TestAccEventBridgeConnection_invocationHTTPParameters(t *testing.T) {
 					queryStringIsSecretValueModified,
 				),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudWatchEventConnectionExists(resourceName, &v2),
-					testAccCheckCloudWatchEventConnectionNotRecreated(&v1, &v2),
+					testAccCheckConnectionExists(resourceName, &v2),
+					testAccCheckConnectionNotRecreated(&v1, &v2),
 					resource.TestCheckResourceAttr(resourceName, "name", name),
 					resource.TestCheckResourceAttr(resourceName, "description", description),
 					resource.TestCheckResourceAttr(resourceName, "authorization_type", authorizationType),
@@ -511,8 +511,8 @@ func TestAccEventBridgeConnection_invocationHTTPParameters(t *testing.T) {
 					queryStringIsSecretValueModified,
 				),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudWatchEventConnectionExists(resourceName, &v3),
-					testAccCheckCloudWatchEventConnectionNotRecreated(&v2, &v3),
+					testAccCheckConnectionExists(resourceName, &v3),
+					testAccCheckConnectionNotRecreated(&v2, &v3),
 					resource.TestCheckResourceAttr(resourceName, "name", name),
 					resource.TestCheckResourceAttr(resourceName, "description", description),
 					resource.TestCheckResourceAttr(resourceName, "authorization_type", authorizationType),
@@ -559,7 +559,7 @@ func TestAccEventBridgeConnection_disappears(t *testing.T) {
 					value,
 				),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudWatchEventConnectionExists(resourceName, &v),
+					testAccCheckConnectionExists(resourceName, &v),
 					acctest.CheckResourceDisappears(acctest.Provider, tfeventbridge.ResourceConnection(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -592,7 +592,7 @@ func testAccCheckConnectionDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckCloudWatchEventConnectionExists(n string, v *events.DescribeConnectionOutput) resource.TestCheckFunc {
+func testAccCheckConnectionExists(n string, v *events.DescribeConnectionOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -613,7 +613,7 @@ func testAccCheckCloudWatchEventConnectionExists(n string, v *events.DescribeCon
 	}
 }
 
-func testAccCheckCloudWatchEventConnectionRecreated(i, j *events.DescribeConnectionOutput) resource.TestCheckFunc {
+func testAccCheckConnectionRecreated(i, j *events.DescribeConnectionOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if aws.StringValue(i.ConnectionArn) == aws.StringValue(j.ConnectionArn) {
 			return fmt.Errorf("EventBridge Connection not recreated")
@@ -622,7 +622,7 @@ func testAccCheckCloudWatchEventConnectionRecreated(i, j *events.DescribeConnect
 	}
 }
 
-func testAccCheckCloudWatchEventConnectionNotRecreated(i, j *events.DescribeConnectionOutput) resource.TestCheckFunc {
+func testAccCheckConnectionNotRecreated(i, j *events.DescribeConnectionOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if aws.StringValue(i.ConnectionArn) != aws.StringValue(j.ConnectionArn) {
 			return fmt.Errorf("EventBridge Connection was recreated")

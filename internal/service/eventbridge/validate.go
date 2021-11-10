@@ -9,7 +9,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-func validateCloudWatchEventRuleName(v interface{}, k string) (ws []string, errors []error) {
+func validateRuleName(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(string)
 	if len(value) > 64 {
 		errors = append(errors, fmt.Errorf(
@@ -27,7 +27,7 @@ func validateCloudWatchEventRuleName(v interface{}, k string) (ws []string, erro
 	return
 }
 
-func validateCloudWatchEventTargetId(v interface{}, k string) (ws []string, errors []error) {
+func validateTargetID(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(string)
 	if len(value) > 64 {
 		errors = append(errors, fmt.Errorf(

@@ -28,7 +28,7 @@ func TestAccEventBridgePermission_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, events.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckCloudWatchEventPermissionDestroy,
+		CheckDestroy: testAccCheckPermissionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccCheckPermissionResourceBasicConfig("", statementID),
@@ -61,7 +61,7 @@ func TestAccEventBridgePermission_basic(t *testing.T) {
 			{
 				Config: testAccCheckPermissionResourceBasicConfig(principal1, statementID),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudWatchEventPermissionExists(resourceName),
+					testAccCheckPermissionExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "action", "events:PutEvents"),
 					resource.TestCheckResourceAttr(resourceName, "condition.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "principal", principal1),
@@ -72,7 +72,7 @@ func TestAccEventBridgePermission_basic(t *testing.T) {
 			{
 				Config: testAccCheckPermissionResourceBasicConfig(principal2, statementID),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudWatchEventPermissionExists(resourceName),
+					testAccCheckPermissionExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "principal", principal2),
 				),
 			},
@@ -100,12 +100,12 @@ func TestAccEventBridgePermission_eventBusName(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, events.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckCloudWatchEventPermissionDestroy,
+		CheckDestroy: testAccCheckPermissionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCheckPermissionResourceEventBusNameConfig(principal1, busName, statementID),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudWatchEventPermissionExists(resourceName),
+					testAccCheckPermissionExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "action", "events:PutEvents"),
 					resource.TestCheckResourceAttr(resourceName, "condition.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "principal", principal1),
@@ -131,7 +131,7 @@ func TestAccEventBridgePermission_action(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, events.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckCloudWatchEventPermissionDestroy,
+		CheckDestroy: testAccCheckPermissionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccCheckPermissionResourceActionConfig("", principal, statementID),
@@ -152,7 +152,7 @@ func TestAccEventBridgePermission_action(t *testing.T) {
 			{
 				Config: testAccCheckPermissionResourceActionConfig("events:PutEvents", principal, statementID),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudWatchEventPermissionExists(resourceName),
+					testAccCheckPermissionExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "action", "events:PutEvents"),
 				),
 			},
@@ -173,12 +173,12 @@ func TestAccEventBridgePermission_condition(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, events.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckCloudWatchEventPermissionDestroy,
+		CheckDestroy: testAccCheckPermissionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCheckPermissionResourceConditionOrganizationConfig(statementID, "o-1234567890"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudWatchEventPermissionExists(resourceName),
+					testAccCheckPermissionExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "condition.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "condition.0.key", "aws:PrincipalOrgID"),
 					resource.TestCheckResourceAttr(resourceName, "condition.0.type", "StringEquals"),
@@ -188,7 +188,7 @@ func TestAccEventBridgePermission_condition(t *testing.T) {
 			{
 				Config: testAccCheckPermissionResourceConditionOrganizationConfig(statementID, "o-0123456789"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudWatchEventPermissionExists(resourceName),
+					testAccCheckPermissionExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "condition.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "condition.0.key", "aws:PrincipalOrgID"),
 					resource.TestCheckResourceAttr(resourceName, "condition.0.type", "StringEquals"),
@@ -216,12 +216,12 @@ func TestAccEventBridgePermission_multiple(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, events.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckCloudWatchEventPermissionDestroy,
+		CheckDestroy: testAccCheckPermissionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCheckPermissionResourceBasicConfig(principal1, statementID1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudWatchEventPermissionExists(resourceName1),
+					testAccCheckPermissionExists(resourceName1),
 					resource.TestCheckResourceAttr(resourceName1, "principal", principal1),
 					resource.TestCheckResourceAttr(resourceName1, "statement_id", statementID1),
 				),
@@ -229,8 +229,8 @@ func TestAccEventBridgePermission_multiple(t *testing.T) {
 			{
 				Config: testAccCheckPermissionResourceMultipleConfig(principal1, statementID1, principal2, statementID2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudWatchEventPermissionExists(resourceName1),
-					testAccCheckCloudWatchEventPermissionExists(resourceName2),
+					testAccCheckPermissionExists(resourceName1),
+					testAccCheckPermissionExists(resourceName2),
 					resource.TestCheckResourceAttr(resourceName1, "principal", principal1),
 					resource.TestCheckResourceAttr(resourceName1, "statement_id", statementID1),
 					resource.TestCheckResourceAttr(resourceName2, "principal", principal2),
@@ -250,12 +250,12 @@ func TestAccEventBridgePermission_disappears(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, events.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckCloudWatchEventPermissionDestroy,
+		CheckDestroy: testAccCheckPermissionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCheckPermissionResourceBasicConfig(principal, statementID),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudWatchEventPermissionExists(resourceName),
+					testAccCheckPermissionExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfeventbridge.ResourcePermission(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -264,7 +264,7 @@ func TestAccEventBridgePermission_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckCloudWatchEventPermissionExists(pr string) resource.TestCheckFunc {
+func testAccCheckPermissionExists(pr string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EventBridgeConn
 		rs, ok := s.RootModule().Resources[pr]
@@ -303,7 +303,7 @@ func testAccCheckCloudWatchEventPermissionExists(pr string) resource.TestCheckFu
 	}
 }
 
-func testAccCheckCloudWatchEventPermissionDestroy(s *terraform.State) error {
+func testAccCheckPermissionDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).EventBridgeConn
 
 	for _, rs := range s.RootModule().Resources {

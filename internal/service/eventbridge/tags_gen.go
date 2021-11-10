@@ -9,7 +9,7 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
-// ListTags lists cloudwatchevents service tags.
+// ListTags lists eventbridge service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
 func ListTags(conn *eventbridge.EventBridge, identifier string) (tftags.KeyValueTags, error) {
@@ -28,7 +28,7 @@ func ListTags(conn *eventbridge.EventBridge, identifier string) (tftags.KeyValue
 
 // []*SERVICE.Tag handling
 
-// Tags returns cloudwatchevents service tags.
+// Tags returns eventbridge service tags.
 func Tags(tags tftags.KeyValueTags) []*eventbridge.Tag {
 	result := make([]*eventbridge.Tag, 0, len(tags))
 
@@ -44,7 +44,7 @@ func Tags(tags tftags.KeyValueTags) []*eventbridge.Tag {
 	return result
 }
 
-// KeyValueTags creates tftags.KeyValueTags from cloudwatchevents service tags.
+// KeyValueTags creates tftags.KeyValueTags from eventbridge service tags.
 func KeyValueTags(tags []*eventbridge.Tag) tftags.KeyValueTags {
 	m := make(map[string]*string, len(tags))
 
@@ -55,7 +55,7 @@ func KeyValueTags(tags []*eventbridge.Tag) tftags.KeyValueTags {
 	return tftags.New(m)
 }
 
-// UpdateTags updates cloudwatchevents service tags.
+// UpdateTags updates eventbridge service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
 func UpdateTags(conn *eventbridge.EventBridge, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {

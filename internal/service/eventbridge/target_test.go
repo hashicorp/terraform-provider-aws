@@ -39,7 +39,7 @@ func TestAccEventBridgeTarget_basic(t *testing.T) {
 			{
 				Config: testAccTargetConfig(ruleName, snsTopicName1, targetID1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudWatchEventTargetExists(resourceName, &v1),
+					testAccCheckTargetExists(resourceName, &v1),
 					resource.TestCheckResourceAttr(resourceName, "rule", ruleName),
 					resource.TestCheckResourceAttr(resourceName, "event_bus_name", "default"),
 					resource.TestCheckResourceAttr(resourceName, "target_id", targetID1),
@@ -72,7 +72,7 @@ func TestAccEventBridgeTarget_basic(t *testing.T) {
 			{
 				Config: testAccTargetConfig(ruleName, snsTopicName2, targetID2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudWatchEventTargetExists(resourceName, &v2),
+					testAccCheckTargetExists(resourceName, &v2),
 					resource.TestCheckResourceAttr(resourceName, "rule", ruleName),
 					resource.TestCheckResourceAttr(resourceName, "event_bus_name", "default"),
 					resource.TestCheckResourceAttr(resourceName, "target_id", targetID2),
@@ -107,7 +107,7 @@ func TestAccEventBridgeTarget_eventBusName(t *testing.T) {
 			{
 				Config: testAccTargetEventBusNameConfig(ruleName, busName, snsTopicName1, targetID1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudWatchEventTargetExists(resourceName, &v1),
+					testAccCheckTargetExists(resourceName, &v1),
 					resource.TestCheckResourceAttr(resourceName, "rule", ruleName),
 					resource.TestCheckResourceAttr(resourceName, "event_bus_name", busName),
 					resource.TestCheckResourceAttr(resourceName, "target_id", targetID1),
@@ -122,7 +122,7 @@ func TestAccEventBridgeTarget_eventBusName(t *testing.T) {
 			{
 				Config: testAccTargetEventBusNameConfig(ruleName, busName, snsTopicName2, targetID2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudWatchEventTargetExists(resourceName, &v2),
+					testAccCheckTargetExists(resourceName, &v2),
 					resource.TestCheckResourceAttr(resourceName, "rule", ruleName),
 					resource.TestCheckResourceAttr(resourceName, "event_bus_name", busName),
 					resource.TestCheckResourceAttr(resourceName, "target_id", targetID2),
@@ -155,7 +155,7 @@ func TestAccEventBridgeTarget_eventBusARN(t *testing.T) {
 			{
 				Config: testAccTargetEventBusARNConfig(ruleName, originEventBusName, targetID, destinationEventBusName, sdkacctest.RandomWithPrefix("tf-acc-test-target"), sdkacctest.RandomWithPrefix("tf-acc-test-target")),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudWatchEventTargetExists(resourceName, &target),
+					testAccCheckTargetExists(resourceName, &target),
 					resource.TestCheckResourceAttr(resourceName, "rule", ruleName),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "events", regexp.MustCompile(fmt.Sprintf("event-bus/%s", destinationEventBusName))),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "event_bus_name", "events", regexp.MustCompile(fmt.Sprintf("event-bus/%s", originEventBusName))),
@@ -189,7 +189,7 @@ func TestAccEventBridgeTarget_generatedTargetID(t *testing.T) {
 			{
 				Config: testAccTargetMissingTargetIDConfig(ruleName, snsTopicName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudWatchEventTargetExists(resourceName, &v),
+					testAccCheckTargetExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "rule", ruleName),
 					resource.TestCheckResourceAttrPair(resourceName, "arn", snsTopicResourceName, "arn"),
 					create.TestCheckResourceAttrNameGenerated(resourceName, "target_id"),
@@ -224,7 +224,7 @@ func TestAccEventBridgeTarget_RetryPolicy_deadLetter(t *testing.T) {
 			{
 				Config: testAccTargetConfig_retryPolicyDlc(ruleName, targetID, ssmDocumentName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudWatchEventTargetExists(resourceName, &v),
+					testAccCheckTargetExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "rule", ruleName),
 					resource.TestCheckResourceAttr(resourceName, "target_id", targetID),
 					resource.TestCheckResourceAttrPair(resourceName, "arn", kinesisStreamResourceName, "arn"),
@@ -257,7 +257,7 @@ func TestAccEventBridgeTarget_full(t *testing.T) {
 			{
 				Config: testAccTargetConfig_full(ruleName, targetID, ssmDocumentName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudWatchEventTargetExists(resourceName, &v),
+					testAccCheckTargetExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "rule", ruleName),
 					resource.TestCheckResourceAttr(resourceName, "target_id", targetID),
 					resource.TestCheckResourceAttrPair(resourceName, "arn", kinesisStreamResourceName, "arn"),
@@ -293,7 +293,7 @@ func TestAccEventBridgeTarget_disappears(t *testing.T) {
 			{
 				Config: testAccTargetConfig(ruleName, snsTopicName, targetID),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudWatchEventTargetExists(resourceName, &v),
+					testAccCheckTargetExists(resourceName, &v),
 					acctest.CheckResourceDisappears(acctest.Provider, tfeventbridge.ResourceTarget(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -316,7 +316,7 @@ func TestAccEventBridgeTarget_ssmDocument(t *testing.T) {
 			{
 				Config: testAccTargetSSMDocumentConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudWatchEventTargetExists(resourceName, &v),
+					testAccCheckTargetExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "run_command_targets.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "run_command_targets.0.key", "tag:Name"),
 					resource.TestCheckResourceAttr(resourceName, "run_command_targets.0.values.#", "1"),
@@ -348,7 +348,7 @@ func TestAccEventBridgeTarget_http(t *testing.T) {
 			{
 				Config: testAccTargetHTTPConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudWatchEventTargetExists(resourceName, &v),
+					testAccCheckTargetExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "http_target.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "http_target.0.path_parameter_values.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "http_target.0.header_parameters.%", "1"),
@@ -384,7 +384,7 @@ func TestAccEventBridgeTarget_ecs(t *testing.T) {
 			{
 				Config: testAccTargetECSConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudWatchEventTargetExists(resourceName, &v),
+					testAccCheckTargetExists(resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "role_arn", iamRoleResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "ecs_target.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "ecs_target.0.task_count", "1"),
@@ -419,7 +419,7 @@ func TestAccEventBridgeTarget_redshift(t *testing.T) {
 			{
 				Config: testAccTargetRedshiftConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudWatchEventTargetExists(resourceName, &v),
+					testAccCheckTargetExists(resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "role_arn", iamRoleResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "redshift_target.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "redshift_target.0.database", "redshiftdb"),
@@ -453,7 +453,7 @@ func TestAccEventBridgeTarget_ecsWithBlankLaunchType(t *testing.T) {
 			{
 				Config: testAccTargetECSWithBlankLaunchTypeConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudWatchEventTargetExists(resourceName, &v),
+					testAccCheckTargetExists(resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "role_arn", iamRoleResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "ecs_target.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "ecs_target.0.task_count", "1"),
@@ -472,7 +472,7 @@ func TestAccEventBridgeTarget_ecsWithBlankLaunchType(t *testing.T) {
 			{
 				Config: testAccTargetECSConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudWatchEventTargetExists(resourceName, &v),
+					testAccCheckTargetExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "ecs_target.0.launch_type", "FARGATE"),
 				),
 			},
@@ -485,7 +485,7 @@ func TestAccEventBridgeTarget_ecsWithBlankLaunchType(t *testing.T) {
 			{
 				Config: testAccTargetECSWithBlankLaunchTypeConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudWatchEventTargetExists(resourceName, &v),
+					testAccCheckTargetExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "ecs_target.0.launch_type", ""),
 				),
 			},
@@ -507,7 +507,7 @@ func TestAccEventBridgeTarget_ecsWithBlankTaskCount(t *testing.T) {
 			{
 				Config: testAccTargetECSWithBlankTaskCountConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudWatchEventTargetExists(resourceName, &v),
+					testAccCheckTargetExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "ecs_target.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "ecs_target.0.task_count", "1"),
 				),
@@ -536,7 +536,7 @@ func TestAccEventBridgeTarget_ecsFull(t *testing.T) {
 			{
 				Config: testAccTargetECSWithBlankTaskCountFullConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudWatchEventTargetExists(resourceName, &v),
+					testAccCheckTargetExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "ecs_target.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "ecs_target.0.task_count", "1"),
 					resource.TestCheckResourceAttr(resourceName, "ecs_target.0.launch_type", "FARGATE"),
@@ -574,7 +574,7 @@ func TestAccEventBridgeTarget_batch(t *testing.T) {
 			{
 				Config: testAccTargetBatchConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudWatchEventTargetExists(resourceName, &v),
+					testAccCheckTargetExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "batch_target.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "batch_target.0.job_definition", batchJobDefinitionResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "batch_target.0.job_name", rName),
@@ -604,7 +604,7 @@ func TestAccEventBridgeTarget_kinesis(t *testing.T) {
 			{
 				Config: testAccTargetKinesisConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudWatchEventTargetExists(resourceName, &v),
+					testAccCheckTargetExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "kinesis_target.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "kinesis_target.0.partition_key_path", "$.detail"),
 				),
@@ -632,7 +632,7 @@ func TestAccEventBridgeTarget_sqs(t *testing.T) {
 			{
 				Config: testAccTargetSQSConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudWatchEventTargetExists(resourceName, &v),
+					testAccCheckTargetExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "sqs_target.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "sqs_target.0.message_group_id", "event_group"),
 				),
@@ -687,7 +687,7 @@ func TestAccEventBridgeTarget_Input_transformer(t *testing.T) {
 			{
 				Config: testAccTargetInputTransformerConfig(rName, validInputPaths),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudWatchEventTargetExists(resourceName, &v),
+					testAccCheckTargetExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "input_transformer.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "input_transformer.0.input_paths.%", strconv.Itoa(len(validInputPaths))),
 					resource.TestCheckResourceAttr(resourceName, "input_transformer.0.input_paths.ValidField_99", "$.ValidField_99"),
@@ -719,7 +719,7 @@ func TestAccEventBridgeTarget_inputTransformerJSONString(t *testing.T) {
 			{
 				Config: testAccTargetInputTransformerJSONStringConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudWatchEventTargetExists(resourceName, &target),
+					testAccCheckTargetExists(resourceName, &target),
 					resource.TestCheckResourceAttr(resourceName, "input_transformer.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "input_transformer.0.input_paths.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "input_transformer.0.input_paths.instance", "$.detail.instance"),
@@ -751,7 +751,7 @@ func TestAccEventBridgeTarget_partnerEventBus(t *testing.T) {
 			{
 				Config: testAccTargetPartnerEventBusConfig(rName, busName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudWatchEventTargetExists(resourceName, &target),
+					testAccCheckTargetExists(resourceName, &target),
 					resource.TestCheckResourceAttr(resourceName, "rule", rName),
 					resource.TestCheckResourceAttr(resourceName, "event_bus_name", busName),
 					resource.TestCheckResourceAttr(resourceName, "target_id", rName),
@@ -768,7 +768,7 @@ func TestAccEventBridgeTarget_partnerEventBus(t *testing.T) {
 	})
 }
 
-func testAccCheckCloudWatchEventTargetExists(n string, rule *events.Target) resource.TestCheckFunc {
+func testAccCheckTargetExists(n string, rule *events.Target) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
