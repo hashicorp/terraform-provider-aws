@@ -102,12 +102,17 @@ object Composite : BuildType({
         val triggerTimeRaw = DslContext.getParameter("trigger_time")
         val formatter = DateTimeFormatter.ofPattern("HH':'mm' 'VV")
         val triggerTime = formatter.parse(triggerTimeRaw)
+        val triggerDay = if (DslContext.getParameter("trigger_day", "") != "")
+            DslContext.getParameter("trigger_day", "")
+        else
+            "Sun-Thu"
         triggers {
             schedule {
-                schedulingPolicy = daily {
+                schedulingPolicy = cron {
+                    dayOfWeek = triggerDay
                     val triggerHM = LocalTime.from(triggerTime)
-                    hour = triggerHM.getHour()
-                    minute = triggerHM.getMinute()
+                    hours = triggerHM.getHour().toString()
+                    minutes = triggerHM.getMinute().toString()
                     timezone = ZoneId.from(triggerTime).toString()
                 }
                 branchFilter = "" // For a Composite build, the branch filter must be empty
