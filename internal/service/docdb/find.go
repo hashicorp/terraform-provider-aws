@@ -75,7 +75,7 @@ func FindGlobalClusterById(ctx context.Context, conn *docdb.DocDB, globalCluster
 	return globalCluster, err
 }
 
-func FindGlobalClusterIdByArn(ctx context.Context, conn *docdb.DocDB, arn string) string {
+func findGlobalClusterIdByArn(ctx context.Context, conn *docdb.DocDB, arn string) string {
 	result, err := conn.DescribeDBClustersWithContext(ctx, &docdb.DescribeDBClustersInput{})
 	if err != nil {
 		return ""
