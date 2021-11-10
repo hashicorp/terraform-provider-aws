@@ -447,7 +447,23 @@ func FindRouteTableByID(conn *ec2.EC2, routeTableID string) (*ec2.RouteTable, er
 }
 
 func FindRouteTable(conn *ec2.EC2, input *ec2.DescribeRouteTablesInput) (*ec2.RouteTable, error) {
-	output, err := conn.DescribeRouteTables(input)
+	var results []*ec2.RouteTable // only expect to find and return 1
+
+	err := conn.DescribeRouteTablesPages(input, func(page *ec2.DescribeRouteTablesOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, table := range page.RouteTables {
+			if table == nil {
+				continue
+			}
+
+			results = append(results, table)
+		}
+
+		return !lastPage
+	})
 
 	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidRouteTableIDNotFound) {
 		return nil, &resource.NotFoundError{
@@ -460,11 +476,11 @@ func FindRouteTable(conn *ec2.EC2, input *ec2.DescribeRouteTablesInput) (*ec2.Ro
 		return nil, err
 	}
 
-	if output == nil || len(output.RouteTables) == 0 || output.RouteTables[0] == nil {
+	if len(results) == 0 {
 		return nil, tfresource.NewEmptyResultError(input)
 	}
 
-	return output.RouteTables[0], nil
+	return results[0], nil
 }
 
 // RouteFinder returns the route corresponding to the specified destination.
