@@ -11,11 +11,13 @@ version = "2020.2"
 
 val defaultRegion = DslContext.getParameter("default_region")
 val alternateRegion = DslContext.getParameter("alternate_region", "")
+val acmCertificateRootDomain = DslContext.getParameter("acm_certificate_root_domain", "")
 val sweeperRegions = DslContext.getParameter("sweeper_regions")
 val awsAccountID = DslContext.getParameter("aws_account_id")
 val awsAccessKeyID = DslContext.getParameter("aws_access_key_id")
 val awsSecretAccessKey = DslContext.getParameter("aws_secret_access_key")
 val acctestParallelism = DslContext.getParameter("acctest_parallelism")
+val tfAccAssumeRoleArn = DslContext.getParameter("tf_acc_assume_role_arn", "")
 
 project {
     buildType(Composite)
@@ -33,6 +35,10 @@ project {
             text("env.AWS_ALTERNATE_REGION", alternateRegion)
         }
 
+        if (acmCertificateRootDomain != "") {
+            text("env.ACM_CERTIFICATE_ROOT_DOMAIN", acmCertificateRootDomain, display = ParameterDisplay.HIDDEN)
+        }
+
         val securityGroupRulesPerGroup = DslContext.getParameter("security_group_rules_per_group", "")
         if (securityGroupRulesPerGroup != "") {
             text("env.EC2_SECURITY_GROUP_RULES_PER_GROUP_LIMIT", securityGroupRulesPerGroup)
@@ -41,6 +47,10 @@ project {
         val branchName = DslContext.getParameter("branch_name", "")
         if (branchName != "") {
             text("BRANCH_NAME", branchName, display = ParameterDisplay.HIDDEN)
+        }
+
+        if (tfAccAssumeRoleArn != "") {
+            text("env.TF_ACC_ASSUME_ROLE_ARN", tfAccAssumeRoleArn)
         }
 
         // Define this parameter even when not set to allow individual builds to set the value
