@@ -300,6 +300,10 @@ func DataSourceLaunchTemplate() *schema.Resource {
 							Computed: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
+						"network_card_index": {
+							Type:     schema.TypeInt,
+							Optional: true,
+						},
 						"network_interface_id": {
 							Type:     schema.TypeString,
 							Computed: true,

@@ -30,20 +30,16 @@ func statusBotVersion(conn *lexmodelbuildingservice.LexModelBuildingService, nam
 	}
 }
 
-func statusLexSlotType(conn *lexmodelbuildingservice.LexModelBuildingService, id string) resource.StateRefreshFunc {
+func statusLexSlotType(conn *lexmodelbuildingservice.LexModelBuildingService, name, version string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := conn.GetSlotTypeVersions(&lexmodelbuildingservice.GetSlotTypeVersionsInput{
-			Name: aws.String(id),
-		})
-		if tfawserr.ErrCodeEquals(err, lexmodelbuildingservice.ErrCodeNotFoundException) {
-			return nil, lexModelBuildingServiceStatusNotFound, nil
-		}
-		if err != nil {
-			return nil, lexModelBuildingServiceStatusUnknown, err
+		output, err := FindSlotTypeVersionByName(conn, name, version)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
 		}
 
-		if output == nil || len(output.SlotTypes) == 0 {
-			return nil, lexModelBuildingServiceStatusNotFound, nil
+		if err != nil {
+			return nil, "", err
 		}
 
 		return output, lexModelBuildingServiceStatusCreated, nil

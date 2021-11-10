@@ -1,4 +1,4 @@
-package nas_test
+package s3_test
 
 import (
 	"fmt"
@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccNASCanonicalUserIDDataSource_basic(t *testing.T) {
+func TestAccS3CanonicalUserIDDataSource_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
 		ErrorCheck: acctest.ErrorCheck(t, s3.EndpointsID),

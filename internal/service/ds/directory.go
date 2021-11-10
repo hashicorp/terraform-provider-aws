@@ -369,7 +369,7 @@ func enableDirectoryServiceSso(conn *directoryservice.DirectoryService, d *schem
 }
 
 func resourceDirectoryCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DirectoryServiceConn
+	conn := meta.(*conns.AWSClient).DSConn
 
 	var directoryId string
 	var err error
@@ -421,7 +421,7 @@ func resourceDirectoryCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceDirectoryUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DirectoryServiceConn
+	conn := meta.(*conns.AWSClient).DSConn
 
 	if d.HasChange("enable_sso") {
 		if err := enableDirectoryServiceSso(conn, d); err != nil {
@@ -441,7 +441,7 @@ func resourceDirectoryUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceDirectoryRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DirectoryServiceConn
+	conn := meta.(*conns.AWSClient).DSConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -511,7 +511,7 @@ func resourceDirectoryRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceDirectoryDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DirectoryServiceConn
+	conn := meta.(*conns.AWSClient).DSConn
 
 	input := &directoryservice.DeleteDirectoryInput{
 		DirectoryId: aws.String(d.Id()),

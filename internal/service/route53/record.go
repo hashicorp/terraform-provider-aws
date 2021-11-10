@@ -984,7 +984,6 @@ func ParseRecordID(id string) [4]string {
 	split := strings.Split(parts[1], recType)
 	recName, recSet = split[0], split[1]
 
-	recType = strings.TrimSuffix(recType, "_")
 	recName = strings.TrimSuffix(recName, ".")
 	recType = strings.TrimPrefix(recType, "_")
 	return [4]string{recZone, recName, recType, recSet}

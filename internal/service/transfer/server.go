@@ -1,6 +1,6 @@
 package transfer
 
-import (
+import ( // nosemgrep: aws-sdk-go-multiple-service-imports
 	"context"
 	"fmt"
 	"log"

@@ -1,4 +1,4 @@
-package nas
+package meta
 
 import (
 	"github.com/aws/aws-sdk-go/aws/arn"

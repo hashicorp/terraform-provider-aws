@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/cloudfront"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -190,6 +189,10 @@ func ResourceDistribution() *schema.Resource {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ValidateFunc: verify.ValidARN,
+						},
+						"response_headers_policy_id": {
+							Type:     schema.TypeString,
+							Optional: true,
 						},
 						"smooth_streaming": {
 							Type:     schema.TypeBool,
@@ -386,6 +389,10 @@ func ResourceDistribution() *schema.Resource {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ValidateFunc: verify.ValidARN,
+						},
+						"response_headers_policy_id": {
+							Type:     schema.TypeString,
+							Optional: true,
 						},
 						"smooth_streaming": {
 							Type:     schema.TypeBool,
@@ -863,7 +870,7 @@ func resourceDistributionRead(d *schema.ResourceData, meta interface{}) error {
 
 	resp, err := conn.GetDistribution(params)
 	if err != nil {
-		if errcode, ok := err.(awserr.Error); ok && errcode.Code() == "NoSuchDistribution" {
+		if tfawserr.ErrMessageContains(err, cloudfront.ErrCodeNoSuchDistribution, "") {
 			log.Printf("[WARN] No Distribution found: %s", d.Id())
 			d.SetId("")
 			return nil

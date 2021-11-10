@@ -1,12 +1,10 @@
 package storagegateway
 
 import (
-	"fmt"
-	"log"
-
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/storagegateway"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func FindLocalDiskByDiskID(conn *storagegateway.StorageGateway, gatewayARN string, diskID string) (*storagegateway.Disk, error) {
@@ -103,40 +101,41 @@ func FindSMBFileShareByARN(conn *storagegateway.StorageGateway, arn string) (*st
 	}
 
 	if output == nil || len(output.SMBFileShareInfoList) == 0 || output.SMBFileShareInfoList[0] == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	if count := len(output.SMBFileShareInfoList); count > 1 {
+		return nil, tfresource.NewTooManyResultsError(count, input)
+	}
+
+	return output.SMBFileShareInfoList[0], nil
+}
+
+func FindFileSystemAssociationByARN(conn *storagegateway.StorageGateway, arn string) (*storagegateway.FileSystemAssociationInfo, error) {
+	input := &storagegateway.DescribeFileSystemAssociationsInput{
+		FileSystemAssociationARNList: []*string{aws.String(arn)},
+	}
+
+	output, err := conn.DescribeFileSystemAssociations(input)
+
+	if operationErrorCode(err) == operationErrCodeFileSystemAssociationNotFound {
 		return nil, &resource.NotFoundError{
-			Message:     "Empty result",
+			LastError:   err,
 			LastRequest: input,
 		}
 	}
 
-	// TODO Check for multiple results.
-	// TODO https://github.com/hashicorp/terraform-provider-aws/pull/17613.
-	return output.SMBFileShareInfoList[0], nil
-}
-
-func FindFileSystemAssociationByARN(conn *storagegateway.StorageGateway, fileSystemAssociationARN string) (*storagegateway.FileSystemAssociationInfo, error) {
-
-	input := &storagegateway.DescribeFileSystemAssociationsInput{
-		FileSystemAssociationARNList: []*string{aws.String(fileSystemAssociationARN)},
-	}
-	log.Printf("[DEBUG] Reading Storage Gateway File System Associations: %s", input)
-
-	output, err := conn.DescribeFileSystemAssociations(input)
 	if err != nil {
-		if invalidGatewayRequestErrCodeEquals(err, fileSystemAssociationNotFound) {
-			log.Printf("[WARN] Storage Gateway File System Association (%s) not found", fileSystemAssociationARN)
-			return nil, nil
-		}
-
-		return nil, fmt.Errorf("error reading Storage Gateway File System Association (%s): %w", fileSystemAssociationARN, err)
+		return nil, err
 	}
 
 	if output == nil || len(output.FileSystemAssociationInfoList) == 0 || output.FileSystemAssociationInfoList[0] == nil {
-		log.Printf("[WARN] Storage Gateway File System Association (%s) not found", fileSystemAssociationARN)
-		return nil, nil
+		return nil, tfresource.NewEmptyResultError(input)
 	}
 
-	filesystem := output.FileSystemAssociationInfoList[0]
+	if count := len(output.FileSystemAssociationInfoList); count > 1 {
+		return nil, tfresource.NewTooManyResultsError(count, input)
+	}
 
-	return filesystem, nil
+	return output.FileSystemAssociationInfoList[0], nil
 }
