@@ -8,6 +8,43 @@ import (
 	"github.com/aws/aws-sdk-go/service/docdb"
 )
 
+func findGlobalClusterByArn(ctx context.Context, conn *docdb.DocDB, dbClusterARN string) (*docdb.GlobalCluster, error) {
+	var globalCluster *docdb.GlobalCluster
+
+	input := &docdb.DescribeGlobalClustersInput{
+		Filters: []*docdb.Filter{
+			{
+				Name:   aws.String("db-cluster-id"),
+				Values: []*string{aws.String(dbClusterARN)},
+			},
+		},
+	}
+
+	log.Printf("[DEBUG] Reading DocDB Global Clusters: %s", input)
+	err := conn.DescribeGlobalClustersPagesWithContext(ctx, input, func(page *docdb.DescribeGlobalClustersOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, gc := range page.GlobalClusters {
+			if gc == nil {
+				continue
+			}
+
+			for _, globalClusterMember := range gc.GlobalClusterMembers {
+				if aws.StringValue(globalClusterMember.DBClusterArn) == dbClusterARN {
+					globalCluster = gc
+					return false
+				}
+			}
+		}
+
+		return !lastPage
+	})
+
+	return globalCluster, err
+}
+
 func FindGlobalClusterById(ctx context.Context, conn *docdb.DocDB, globalClusterID string) (*docdb.GlobalCluster, error) {
 	var globalCluster *docdb.GlobalCluster
 
@@ -50,3 +87,4 @@ func FindGlobalClusterIdByArn(ctx context.Context, conn *docdb.DocDB, arn string
 	}
 	return ""
 }
+
