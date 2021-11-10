@@ -1213,7 +1213,7 @@ func TestAccFirehoseDeliveryStream_elasticSearchUpdates(t *testing.T) {
 		fmt.Sprintf(testAccKinesisFirehoseDeliveryStreamConfig_ElasticsearchUpdate,
 			ri, ri, ri, ri, ri, ri)
 
-	updatedElasticSearchConfig := &firehose.ElasticsearchDestinationDescription{
+	updatedElasticsearchConfig := &firehose.ElasticsearchDestinationDescription{
 		BufferingHints: &firehose.ElasticsearchBufferingHints{
 			IntervalInSeconds: aws.Int64(500),
 		},
@@ -1255,7 +1255,7 @@ func TestAccFirehoseDeliveryStream_elasticSearchUpdates(t *testing.T) {
 				Config: postConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisFirehoseDeliveryStreamExists(resourceName, &stream),
-					testAccCheckDeliveryStreamAttributes(&stream, nil, nil, nil, updatedElasticSearchConfig, nil, nil),
+					testAccCheckDeliveryStreamAttributes(&stream, nil, nil, nil, updatedElasticsearchConfig, nil, nil),
 				),
 			},
 		},
@@ -1277,7 +1277,7 @@ func TestAccFirehoseDeliveryStream_elasticSearchEndpointUpdates(t *testing.T) {
 		fmt.Sprintf(testAccKinesisFirehoseDeliveryStreamConfig_ElasticsearchEndpointUpdate,
 			ri, ri, ri, ri, ri, ri)
 
-	updatedElasticSearchConfig := &firehose.ElasticsearchDestinationDescription{
+	updatedElasticsearchConfig := &firehose.ElasticsearchDestinationDescription{
 		BufferingHints: &firehose.ElasticsearchBufferingHints{
 			IntervalInSeconds: aws.Int64(500),
 		},
@@ -1319,7 +1319,7 @@ func TestAccFirehoseDeliveryStream_elasticSearchEndpointUpdates(t *testing.T) {
 				Config: postConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisFirehoseDeliveryStreamExists(resourceName, &stream),
-					testAccCheckDeliveryStreamAttributes(&stream, nil, nil, nil, updatedElasticSearchConfig, nil, nil),
+					testAccCheckDeliveryStreamAttributes(&stream, nil, nil, nil, updatedElasticsearchConfig, nil, nil),
 				),
 			},
 		},
@@ -1338,7 +1338,7 @@ func TestAccFirehoseDeliveryStream_elasticSearchWithVPCUpdates(t *testing.T) {
 	policyName := fmt.Sprintf("tf_acc_policy_%s", rString)
 	roleName := fmt.Sprintf("tf_acc_role_%s", rString)
 
-	updatedElasticSearchConfig := &firehose.ElasticsearchDestinationDescription{
+	updatedElasticsearchConfig := &firehose.ElasticsearchDestinationDescription{
 		BufferingHints: &firehose.ElasticsearchBufferingHints{
 			IntervalInSeconds: aws.Int64(500),
 		},
@@ -1384,7 +1384,7 @@ func TestAccFirehoseDeliveryStream_elasticSearchWithVPCUpdates(t *testing.T) {
 				Config: testAccKinesisFirehoseDeliveryStreamConfig_ElasticsearchVpcUpdate(funcName, policyName, roleName, ri),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisFirehoseDeliveryStreamExists(resourceName, &stream),
-					testAccCheckDeliveryStreamAttributes(&stream, nil, nil, nil, updatedElasticSearchConfig, nil, nil),
+					testAccCheckDeliveryStreamAttributes(&stream, nil, nil, nil, updatedElasticsearchConfig, nil, nil),
 					resource.TestCheckResourceAttrPair(resourceName, "elasticsearch_configuration.0.vpc_config.0.vpc_id", "aws_vpc.elasticsearch_in_vpc", "id"),
 					resource.TestCheckResourceAttr(resourceName, "elasticsearch_configuration.0.vpc_config.0.subnet_ids.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "elasticsearch_configuration.0.vpc_config.0.security_group_ids.#", "2"),
@@ -2972,7 +2972,7 @@ EOF
 }
 `
 
-// ElasticSearch associated with VPC
+// Elasticsearch associated with VPC
 var testAccKinesisFirehoseDeliveryStreamBaseElasticsearchVpcConfig = testAccKinesisFirehoseDeliveryStreamBaseConfig + `
 data "aws_availability_zones" "available" {
   state = "available"

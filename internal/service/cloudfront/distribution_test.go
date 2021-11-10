@@ -328,6 +328,38 @@ func TestAccCloudFrontDistribution_orderedCacheBehaviorCachePolicy(t *testing.T)
 	})
 }
 
+func TestAccCloudFrontDistribution_orderedCacheBehaviorResponseHeadersPolicy(t *testing.T) {
+	var distribution cloudfront.Distribution
+	resourceName := "aws_cloudfront_distribution.main"
+	rInt := sdkacctest.RandInt()
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, cloudfront.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckCloudFrontDistributionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccOrderedCacheBehaviorResponseHeadersPolicy(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCloudFrontDistributionExists(resourceName, &distribution),
+					resource.TestCheckResourceAttr(resourceName, "ordered_cache_behavior.0.path_pattern", "images2/*.jpg"),
+					resource.TestMatchResourceAttr(resourceName, "ordered_cache_behavior.0.response_headers_policy_id", regexp.MustCompile(`^[a-z0-9]+`)),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"retain_on_delete",
+					"wait_for_deployment",
+				},
+			},
+		},
+	})
+}
+
 func TestAccCloudFrontDistribution_forwardedValuesToCachePolicy(t *testing.T) {
 	var distribution cloudfront.Distribution
 	rInt := sdkacctest.RandInt()
@@ -1705,6 +1737,29 @@ resource "aws_cloudfront_cache_policy" "example" {
   }
 }
 
+resource "aws_cloudfront_response_headers_policy" "example" {
+  name    = "test-policy%[1]d"
+  comment = "test comment"
+
+  cors_config {
+    access_control_allow_credentials = true
+
+    access_control_allow_headers {
+      items = ["test"]
+    }
+
+    access_control_allow_methods {
+      items = ["GET"]
+    }
+
+    access_control_allow_origins {
+      items = ["test.example.comtest"]
+    }
+
+    origin_override = true
+  }
+}
+
 resource "aws_cloudfront_origin_request_policy" "test_policy" {
   name    = "test-policy%[1]d"
   comment = "test comment"
@@ -1759,8 +1814,9 @@ resource "aws_cloudfront_distribution" "custom_distribution" {
     target_origin_id = "myCustomOrigin"
     smooth_streaming = false
 
-    origin_request_policy_id = aws_cloudfront_origin_request_policy.test_policy.id
-    cache_policy_id          = aws_cloudfront_cache_policy.example.id
+    origin_request_policy_id   = aws_cloudfront_origin_request_policy.test_policy.id
+    cache_policy_id            = aws_cloudfront_cache_policy.example.id
+    response_headers_policy_id = aws_cloudfront_response_headers_policy.example.id
 
     viewer_protocol_policy = "allow-all"
   }
@@ -1819,6 +1875,29 @@ resource "aws_cloudfront_cache_policy" "example" {
   }
 }
 
+resource "aws_cloudfront_response_headers_policy" "example" {
+  name    = "test-policy%[1]d"
+  comment = "test comment"
+
+  cors_config {
+    access_control_allow_credentials = true
+
+    access_control_allow_headers {
+      items = ["test"]
+    }
+
+    access_control_allow_methods {
+      items = ["GET"]
+    }
+
+    access_control_allow_origins {
+      items = ["test.example.comtest"]
+    }
+
+    origin_override = true
+  }
+}
+
 resource "aws_cloudfront_origin_request_policy" "test_policy" {
   name    = "test-policy%[1]d"
   comment = "test comment"
@@ -1873,8 +1952,9 @@ resource "aws_cloudfront_distribution" "custom_distribution" {
     target_origin_id = "myCustomOrigin"
     smooth_streaming = false
 
-    origin_request_policy_id = aws_cloudfront_origin_request_policy.test_policy.id
-    cache_policy_id          = aws_cloudfront_cache_policy.example.id
+    origin_request_policy_id   = aws_cloudfront_origin_request_policy.test_policy.id
+    cache_policy_id            = aws_cloudfront_cache_policy.example.id
+    response_headers_policy_id = aws_cloudfront_response_headers_policy.example.id
 
     viewer_protocol_policy = "allow-all"
   }
@@ -1886,8 +1966,9 @@ resource "aws_cloudfront_distribution" "custom_distribution" {
     smooth_streaming = false
     path_pattern     = "/*"
 
-    origin_request_policy_id = aws_cloudfront_origin_request_policy.test_policy.id
-    cache_policy_id          = aws_cloudfront_cache_policy.example.id
+    origin_request_policy_id   = aws_cloudfront_origin_request_policy.test_policy.id
+    cache_policy_id            = aws_cloudfront_cache_policy.example.id
+    response_headers_policy_id = aws_cloudfront_response_headers_policy.example.id
 
     viewer_protocol_policy = "allow-all"
   }
@@ -2549,6 +2630,115 @@ resource "aws_cloudfront_cache_policy" "cache_policy" {
     query_strings_config {
       query_string_behavior = "none"
     }
+  }
+}
+`, rInt, testAccDistributionRetainConfig())
+}
+
+func testAccOrderedCacheBehaviorResponseHeadersPolicy(rInt int) string {
+	return fmt.Sprintf(`
+variable rand_id {
+  default = %d
+}
+
+resource "aws_cloudfront_distribution" "main" {
+  origin {
+    domain_name = "www.hashicorp.com"
+    origin_id   = "myCustomOrigin"
+
+    custom_origin_config {
+      http_port              = 80
+      https_port             = 443
+      origin_protocol_policy = "http-only"
+      origin_ssl_protocols   = ["SSLv3", "TLSv1"]
+    }
+  }
+
+  enabled = true
+  comment = "Some comment"
+
+  default_cache_behavior {
+    allowed_methods  = ["DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT"]
+    cached_methods   = ["GET", "HEAD"]
+    target_origin_id = "myCustomOrigin"
+    smooth_streaming = true
+
+    forwarded_values {
+      query_string = false
+
+      cookies {
+        forward = "all"
+      }
+    }
+
+    viewer_protocol_policy = "allow-all"
+  }
+
+  ordered_cache_behavior {
+    allowed_methods  = ["DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT"]
+    cached_methods   = ["GET", "HEAD"]
+    target_origin_id = "myCustomOrigin"
+    cache_policy_id  = aws_cloudfront_cache_policy.cache_policy.id
+
+    response_headers_policy_id = aws_cloudfront_response_headers_policy.response_headers_policy.id
+
+    viewer_protocol_policy = "allow-all"
+    path_pattern           = "images2/*.jpg"
+  }
+
+  price_class = "PriceClass_All"
+
+  restrictions {
+    geo_restriction {
+      restriction_type = "none"
+    }
+  }
+
+  viewer_certificate {
+    cloudfront_default_certificate = true
+  }
+
+  %s
+}
+
+resource "aws_cloudfront_cache_policy" "cache_policy" {
+  name        = "test-policy%[1]d"
+  comment     = "test comment"
+  default_ttl = 50
+  max_ttl     = 100
+  parameters_in_cache_key_and_forwarded_to_origin {
+    cookies_config {
+      cookie_behavior = "none"
+    }
+    headers_config {
+      header_behavior = "none"
+    }
+    query_strings_config {
+      query_string_behavior = "none"
+    }
+  }
+}
+
+resource "aws_cloudfront_response_headers_policy" "response_headers_policy" {
+  name    = "test-policy%[1]d"
+  comment = "test comment"
+
+  cors_config {
+    access_control_allow_credentials = true
+
+    access_control_allow_headers {
+      items = ["test"]
+    }
+
+    access_control_allow_methods {
+      items = ["GET"]
+    }
+
+    access_control_allow_origins {
+      items = ["test.example.comtest"]
+    }
+
+    origin_override = true
   }
 }
 `, rInt, testAccDistributionRetainConfig())

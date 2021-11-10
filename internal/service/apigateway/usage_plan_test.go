@@ -800,13 +800,14 @@ resource "aws_api_gateway_usage_plan" "test" {
   }
 
   api_stages {
-    api_id   = aws_api_gateway_rest_api.test.id
-    stage    = aws_api_gateway_deployment.test.stage_name
-	throttle {
+    api_id = aws_api_gateway_rest_api.test.id
+    stage  = aws_api_gateway_deployment.test.stage_name
+
+    throttle {
       path        = "${aws_api_gateway_resource.test.path}/${aws_api_gateway_method.test.http_method}"
       burst_limit = 3
       rate_limit  = 6
-	}
+    }
   }
 }
 `, rName)
@@ -823,23 +824,25 @@ resource "aws_api_gateway_usage_plan" "test" {
   }
 
   api_stages {
-    api_id   = aws_api_gateway_rest_api.test.id
-    stage    = aws_api_gateway_deployment.test.stage_name
-	throttle {
+    api_id = aws_api_gateway_rest_api.test.id
+    stage  = aws_api_gateway_deployment.test.stage_name
+
+    throttle {
       path        = "${aws_api_gateway_resource.test.path}/${aws_api_gateway_method.test.http_method}"
       burst_limit = 3
       rate_limit  = 6
-	}
+    }
   }
 
   api_stages {
-    api_id   = aws_api_gateway_rest_api.test.id
-    stage    = aws_api_gateway_deployment.foo.stage_name
-	throttle {
+    api_id = aws_api_gateway_rest_api.test.id
+    stage  = aws_api_gateway_deployment.foo.stage_name
+
+    throttle {
       path        = "${aws_api_gateway_resource.test.path}/${aws_api_gateway_method.test.http_method}"
       burst_limit = 3
       rate_limit  = 6
-	}
+    }
   }
 }
 `, rName)

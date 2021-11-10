@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
@@ -29,7 +30,6 @@ func ResourceRealtimeLogConfig() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"endpoint": {
 				Type:     schema.TypeList,
 				Required: true,
@@ -37,12 +37,6 @@ func ResourceRealtimeLogConfig() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"stream_type": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.StringInSlice([]string{"Kinesis"}, false),
-						},
-
 						"kinesis_stream_config": {
 							Type:     schema.TypeList,
 							Required: true,
@@ -55,7 +49,6 @@ func ResourceRealtimeLogConfig() *schema.Resource {
 										Required:     true,
 										ValidateFunc: verify.ValidARN,
 									},
-
 									"stream_arn": {
 										Type:         schema.TypeString,
 										Required:     true,
@@ -64,22 +57,24 @@ func ResourceRealtimeLogConfig() *schema.Resource {
 								},
 							},
 						},
+						"stream_type": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validation.StringInSlice(StreamType_Values(), false),
+						},
 					},
 				},
 			},
-
 			"fields": {
 				Type:     schema.TypeSet,
 				Required: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-
 			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-
 			"sampling_rate": {
 				Type:         schema.TypeInt,
 				Required:     true,
@@ -94,10 +89,19 @@ func resourceRealtimeLogConfigCreate(d *schema.ResourceData, meta interface{}) e
 
 	name := d.Get("name").(string)
 	input := &cloudfront.CreateRealtimeLogConfigInput{
-		EndPoints:    expandCloudFrontEndPoints(d.Get("endpoint").([]interface{})),
-		Fields:       flex.ExpandStringSet(d.Get("fields").(*schema.Set)),
-		Name:         aws.String(name),
-		SamplingRate: aws.Int64(int64(d.Get("sampling_rate").(int))),
+		Name: aws.String(name),
+	}
+
+	if v, ok := d.GetOk("endpoint"); ok && len(v.([]interface{})) > 0 {
+		input.EndPoints = expandEndPoints(v.([]interface{}))
+	}
+
+	if v, ok := d.GetOk("fields"); ok && v.(*schema.Set).Len() > 0 {
+		input.Fields = flex.ExpandStringSet(v.(*schema.Set))
+	}
+
+	if v, ok := d.GetOk("sampling_rate"); ok {
+		input.SamplingRate = aws.Int64(int64(v.(int)))
 	}
 
 	log.Printf("[DEBUG] Creating CloudFront Real-time Log Config: %s", input)
@@ -117,7 +121,7 @@ func resourceRealtimeLogConfigRead(d *schema.ResourceData, meta interface{}) err
 
 	logConfig, err := FindRealtimeLogConfigByARN(conn, d.Id())
 
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, cloudfront.ErrCodeNoSuchRealtimeLogConfig) {
+	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] CloudFront Real-time Log Config (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -127,22 +131,11 @@ func resourceRealtimeLogConfigRead(d *schema.ResourceData, meta interface{}) err
 		return fmt.Errorf("error reading CloudFront Real-time Log Config (%s): %w", d.Id(), err)
 	}
 
-	if logConfig == nil {
-		if d.IsNewResource() {
-			return fmt.Errorf("error reading CloudFront Real-time Log Config (%s): not found", d.Id())
-		}
-		log.Printf("[WARN] CloudFront Real-time Log Config (%s) not found, removing from state", d.Id())
-		d.SetId("")
-		return nil
-	}
-
 	d.Set("arn", logConfig.ARN)
-	if err := d.Set("endpoint", flattenCloudFrontEndPoints(logConfig.EndPoints)); err != nil {
+	if err := d.Set("endpoint", flattenEndPoints(logConfig.EndPoints)); err != nil {
 		return fmt.Errorf("error setting endpoint: %w", err)
 	}
-	if err := d.Set("fields", flex.FlattenStringSet(logConfig.Fields)); err != nil {
-		return fmt.Errorf("error setting fields: %w", err)
-	}
+	d.Set("fields", aws.StringValueSlice(logConfig.Fields))
 	d.Set("name", logConfig.Name)
 	d.Set("sampling_rate", logConfig.SamplingRate)
 
@@ -152,11 +145,24 @@ func resourceRealtimeLogConfigRead(d *schema.ResourceData, meta interface{}) err
 func resourceRealtimeLogConfigUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CloudFrontConn
 
+	//
+	// https://docs.aws.amazon.com/cloudfront/latest/APIReference/API_UpdateRealtimeLogConfig.html:
+	// "When you update a real-time log configuration, all the parameters are updated with the values provided in the request. You cannot update some parameters independent of others."
+	//
 	input := &cloudfront.UpdateRealtimeLogConfigInput{
-		ARN:          aws.String(d.Id()),
-		EndPoints:    expandCloudFrontEndPoints(d.Get("endpoint").([]interface{})),
-		Fields:       flex.ExpandStringSet(d.Get("fields").((*schema.Set))),
-		SamplingRate: aws.Int64(int64(d.Get("sampling_rate").(int))),
+		ARN: aws.String(d.Id()),
+	}
+
+	if v, ok := d.GetOk("endpoint"); ok && len(v.([]interface{})) > 0 {
+		input.EndPoints = expandEndPoints(v.([]interface{}))
+	}
+
+	if v, ok := d.GetOk("fields"); ok && v.(*schema.Set).Len() > 0 {
+		input.Fields = flex.ExpandStringSet(v.(*schema.Set))
+	}
+
+	if v, ok := d.GetOk("sampling_rate"); ok {
+		input.SamplingRate = aws.Int64(int64(v.(int)))
 	}
 
 	log.Printf("[DEBUG] Updating CloudFront Real-time Log Config: %s", input)
@@ -188,65 +194,120 @@ func resourceRealtimeLogConfigDelete(d *schema.ResourceData, meta interface{}) e
 	return nil
 }
 
-func expandCloudFrontEndPoints(vEndpoints []interface{}) []*cloudfront.EndPoint {
-	if len(vEndpoints) == 0 || vEndpoints[0] == nil {
+func expandEndPoint(tfMap map[string]interface{}) *cloudfront.EndPoint {
+	if tfMap == nil {
 		return nil
 	}
 
-	endpoints := []*cloudfront.EndPoint{}
+	apiObject := &cloudfront.EndPoint{}
 
-	for _, vEndpoint := range vEndpoints {
-		endpoint := &cloudfront.EndPoint{}
-
-		mEndpoint := vEndpoint.(map[string]interface{})
-
-		if vStreamType, ok := mEndpoint["stream_type"].(string); ok && vStreamType != "" {
-			endpoint.StreamType = aws.String(vStreamType)
-		}
-		if vKinesisStreamConfig, ok := mEndpoint["kinesis_stream_config"].([]interface{}); ok && len(vKinesisStreamConfig) > 0 && vKinesisStreamConfig[0] != nil {
-			kinesisStreamConfig := &cloudfront.KinesisStreamConfig{}
-
-			mKinesisStreamConfig := vKinesisStreamConfig[0].(map[string]interface{})
-
-			if vRoleArn, ok := mKinesisStreamConfig["role_arn"].(string); ok && vRoleArn != "" {
-				kinesisStreamConfig.RoleARN = aws.String(vRoleArn)
-			}
-			if vStreamArn, ok := mKinesisStreamConfig["stream_arn"].(string); ok && vStreamArn != "" {
-				kinesisStreamConfig.StreamARN = aws.String(vStreamArn)
-			}
-
-			endpoint.KinesisStreamConfig = kinesisStreamConfig
-		}
-
-		endpoints = append(endpoints, endpoint)
+	if v, ok := tfMap["kinesis_stream_config"].([]interface{}); ok && len(v) > 0 {
+		apiObject.KinesisStreamConfig = expandKinesisStreamConfig(v[0].(map[string]interface{}))
 	}
 
-	return endpoints
+	if v, ok := tfMap["stream_type"].(string); ok && v != "" {
+		apiObject.StreamType = aws.String(v)
+	}
+
+	return apiObject
 }
 
-func flattenCloudFrontEndPoints(endpoints []*cloudfront.EndPoint) []interface{} {
-	if endpoints == nil {
-		return []interface{}{}
+func expandEndPoints(tfList []interface{}) []*cloudfront.EndPoint {
+	if len(tfList) == 0 {
+		return nil
 	}
 
-	vEndpoints := []interface{}{}
+	var apiObjects []*cloudfront.EndPoint
 
-	for _, endpoint := range endpoints {
-		mEndpoint := map[string]interface{}{
-			"stream_type": aws.StringValue(endpoint.StreamType),
+	for _, tfMapRaw := range tfList {
+		tfMap, ok := tfMapRaw.(map[string]interface{})
+
+		if !ok {
+			continue
 		}
 
-		if kinesisStreamConfig := endpoint.KinesisStreamConfig; kinesisStreamConfig != nil {
-			mKinesisStreamConfig := map[string]interface{}{
-				"role_arn":   aws.StringValue(kinesisStreamConfig.RoleARN),
-				"stream_arn": aws.StringValue(kinesisStreamConfig.StreamARN),
-			}
+		apiObject := expandEndPoint(tfMap)
 
-			mEndpoint["kinesis_stream_config"] = []interface{}{mKinesisStreamConfig}
+		if apiObject == nil {
+			continue
 		}
 
-		vEndpoints = append(vEndpoints, mEndpoint)
+		apiObjects = append(apiObjects, apiObject)
 	}
 
-	return vEndpoints
+	return apiObjects
+}
+
+func expandKinesisStreamConfig(tfMap map[string]interface{}) *cloudfront.KinesisStreamConfig {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &cloudfront.KinesisStreamConfig{}
+
+	if v, ok := tfMap["role_arn"].(string); ok && v != "" {
+		apiObject.RoleARN = aws.String(v)
+	}
+
+	if v, ok := tfMap["stream_arn"].(string); ok && v != "" {
+		apiObject.StreamARN = aws.String(v)
+	}
+
+	return apiObject
+}
+
+func flattenEndPoint(apiObject *cloudfront.EndPoint) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := flattenKinesisStreamConfig(apiObject.KinesisStreamConfig); len(v) > 0 {
+		tfMap["kinesis_stream_config"] = []interface{}{v}
+	}
+
+	if v := apiObject.StreamType; v != nil {
+		tfMap["stream_type"] = aws.StringValue(v)
+	}
+
+	return tfMap
+}
+
+func flattenEndPoints(apiObjects []*cloudfront.EndPoint) []interface{} {
+	if len(apiObjects) == 0 {
+		return nil
+	}
+
+	var tfList []interface{}
+
+	for _, apiObject := range apiObjects {
+		if apiObject == nil {
+			continue
+		}
+
+		if v := flattenEndPoint(apiObject); len(v) > 0 {
+			tfList = append(tfList, v)
+		}
+	}
+
+	return tfList
+}
+
+func flattenKinesisStreamConfig(apiObject *cloudfront.KinesisStreamConfig) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.RoleARN; v != nil {
+		tfMap["role_arn"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.StreamARN; v != nil {
+		tfMap["stream_arn"] = aws.StringValue(v)
+	}
+
+	return tfMap
 }

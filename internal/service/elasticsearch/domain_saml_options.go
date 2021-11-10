@@ -107,7 +107,7 @@ func elasticsearchDomainSamlOptionsDiffSupress(k, old, new string, d *schema.Res
 }
 
 func resourceDomainSAMLOptionsRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ElasticSearchConn
+	conn := meta.(*conns.AWSClient).ElasticsearchConn
 
 	input := &elasticsearch.DescribeElasticsearchDomainInput{
 		DomainName: aws.String(d.Get("domain_name").(string)),
@@ -117,33 +117,33 @@ func resourceDomainSAMLOptionsRead(d *schema.ResourceData, meta interface{}) err
 
 	if err != nil {
 		if awsErr, ok := err.(awserr.Error); ok && awsErr.Code() == "ResourceNotFoundException" {
-			log.Printf("[WARN] ElasticSearch Domain %q not found, removing from state", d.Id())
+			log.Printf("[WARN] Elasticsearch Domain %q not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
 		}
 		return err
 	}
 
-	log.Printf("[DEBUG] Received ElasticSearch domain: %s", domain)
+	log.Printf("[DEBUG] Received Elasticsearch domain: %s", domain)
 
 	ds := domain.DomainStatus
 	options := ds.AdvancedSecurityOptions.SAMLOptions
 
 	if err := d.Set("saml_options", flattenESSAMLOptions(d, options)); err != nil {
-		return fmt.Errorf("error setting saml_options for ElasticSearch Configuration: %w", err)
+		return fmt.Errorf("error setting saml_options for Elasticsearch Configuration: %w", err)
 	}
 
 	return nil
 }
 
 func resourceDomainSAMLOptionsPut(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ElasticSearchConn
+	conn := meta.(*conns.AWSClient).ElasticsearchConn
 
 	domainName := d.Get("domain_name").(string)
 	config := elasticsearch.AdvancedSecurityOptionsInput{}
 	config.SetSAMLOptions(expandESSAMLOptions(d.Get("saml_options").([]interface{})))
 
-	log.Printf("[DEBUG] Updating ElasticSearch domain SAML Options %s", config)
+	log.Printf("[DEBUG] Updating Elasticsearch domain SAML Options %s", config)
 
 	_, err := conn.UpdateElasticsearchDomainConfig(&elasticsearch.UpdateElasticsearchDomainConfigInput{
 		DomainName:              aws.String(domainName),
@@ -188,7 +188,7 @@ func resourceDomainSAMLOptionsPut(d *schema.ResourceData, meta interface{}) erro
 }
 
 func resourceDomainSAMLOptionsDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ElasticSearchConn
+	conn := meta.(*conns.AWSClient).ElasticsearchConn
 
 	domainName := d.Get("domain_name").(string)
 	config := elasticsearch.AdvancedSecurityOptionsInput{}
@@ -202,7 +202,7 @@ func resourceDomainSAMLOptionsDelete(d *schema.ResourceData, meta interface{}) e
 		return err
 	}
 
-	log.Printf("[DEBUG] Waiting for ElasticSearch domain SAML Options %q to be deleted", d.Get("domain_name").(string))
+	log.Printf("[DEBUG] Waiting for Elasticsearch domain SAML Options %q to be deleted", d.Get("domain_name").(string))
 
 	input := &elasticsearch.DescribeElasticsearchDomainInput{
 		DomainName: aws.String(d.Get("domain_name").(string)),

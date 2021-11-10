@@ -3,6 +3,7 @@ package rds_test
 import (
 	"fmt"
 	"log"
+	"os"
 	"regexp"
 	"testing"
 
@@ -5885,8 +5886,32 @@ resource "aws_db_instance" "test" {
 `, rName))
 }
 
+// When testing needs to distinguish a second region and second account in the same region
+// e.g. cross-region functionality with RAM shared subnets
+func testAccAlternateAccountAndAlternateRegionProviderConfig() string {
+	//lintignore:AT004
+	return fmt.Sprintf(`
+provider "awsalternateaccountalternateregion" {
+  access_key = %[1]q
+  profile    = %[2]q
+  region     = %[3]q
+  secret_key = %[4]q
+}
+
+provider "awsalternateaccountsameregion" {
+  access_key = %[1]q
+  profile    = %[2]q
+  secret_key = %[4]q
+}
+
+provider "awssameaccountalternateregion" {
+  region = %[3]q
+}
+`, os.Getenv(conns.EnvVarAlternateAccessKeyId), os.Getenv(conns.EnvVarAlternateProfile), acctest.AlternateRegion(), os.Getenv(conns.EnvVarAlternateSecretAccessKey))
+}
+
 func testAccInstanceConfig_ReplicateSourceDB_DbSubnetGroupName_RAMShared(rName string) string {
-	return acctest.ConfigCompose(acctest.ConfigAlternateAccountAndAlternateRegionProvider() + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAlternateAccountAndAlternateRegionProviderConfig(), fmt.Sprintf(`
 data "aws_availability_zones" "alternateaccountsameregion" {
   provider = "awsalternateaccountsameregion"
 

@@ -245,7 +245,7 @@ func TestAccDirectoryServiceDirectory_withAliasAndSSO(t *testing.T) {
 }
 
 func testAccCheckDirectoryServiceDirectoryDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).DirectoryServiceConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).DSConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_directory_service_directory" {
@@ -310,7 +310,7 @@ func testAccCheckServiceDirectoryExists(name string, ds *directoryservice.Direct
 			return fmt.Errorf("No ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DirectoryServiceConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DSConn
 		out, err := conn.DescribeDirectories(&directoryservice.DescribeDirectoriesInput{
 			DirectoryIds: []*string{aws.String(rs.Primary.ID)},
 		})
@@ -345,7 +345,7 @@ func testAccCheckServiceDirectoryAlias(name, alias string) resource.TestCheckFun
 			return fmt.Errorf("No ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DirectoryServiceConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DSConn
 		out, err := conn.DescribeDirectories(&directoryservice.DescribeDirectoriesInput{
 			DirectoryIds: []*string{aws.String(rs.Primary.ID)},
 		})
@@ -374,7 +374,7 @@ func testAccCheckServiceDirectorySso(name string, ssoEnabled bool) resource.Test
 			return fmt.Errorf("No ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DirectoryServiceConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DSConn
 		out, err := conn.DescribeDirectories(&directoryservice.DescribeDirectoriesInput{
 			DirectoryIds: []*string{aws.String(rs.Primary.ID)},
 		})

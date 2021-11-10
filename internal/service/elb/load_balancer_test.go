@@ -1,6 +1,6 @@
 package elb_test
 
-import (
+import ( // nosemgrep: aws-sdk-go-multiple-service-imports
 	"fmt"
 	"math/rand"
 	"reflect"

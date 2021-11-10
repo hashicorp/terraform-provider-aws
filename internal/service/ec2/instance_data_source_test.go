@@ -990,7 +990,7 @@ data "aws_instance" "test" {
 
 func testAccInstanceDataSourceConfig_getPasswordData(rName, publicKey string, val bool) string {
 	return acctest.ConfigCompose(
-		acctest.ConfigLatestWindowsServer2016CoreAmi(),
+		testAccLatestWindowsServer2016CoreAMIConfig(),
 		fmt.Sprintf(`
 resource "aws_key_pair" "test" {
   key_name   = %[1]q

@@ -2173,7 +2173,7 @@ resource "aws_s3_bucket" "test" {
 
 resource "aws_sqs_queue" "test" {
   name = %[1]q
-  
+
   visibility_timeout_seconds = 3600
 }
 
@@ -2217,10 +2217,10 @@ resource "aws_glue_crawler" "test" {
 
   s3_target {
     path = "s3://${aws_s3_bucket.test.bucket}"
-    
+
     event_queue_arn = aws_sqs_queue.test.arn
   }
-  
+
   recrawl_policy {
     recrawl_behavior = "CRAWL_EVENT_MODE"
   }
@@ -2241,13 +2241,13 @@ resource "aws_s3_bucket" "test" {
 
 resource "aws_sqs_queue" "test" {
   name = %[1]q
-  
+
   visibility_timeout_seconds = 3600
 }
 
 resource "aws_sqs_queue" "test_dlq" {
   name = "%[1]sdlq"
-  
+
   visibility_timeout_seconds = 3600
 }
 
@@ -2292,11 +2292,11 @@ resource "aws_glue_crawler" "test" {
 
   s3_target {
     path = "s3://${aws_s3_bucket.test.bucket}"
-    
+
     event_queue_arn     = aws_sqs_queue.test.arn
     dlq_event_queue_arn = aws_sqs_queue.test_dlq.arn
   }
-  
+
   recrawl_policy {
     recrawl_behavior = "CRAWL_EVENT_MODE"
   }
