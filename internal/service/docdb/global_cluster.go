@@ -228,7 +228,7 @@ func resourceGlobalClusterUpdate(ctx context.Context, d *schema.ResourceData, me
 		return diag.FromErr(fmt.Errorf("error updating DocDB Global Cluster: %w", err))
 	}
 
-	if err := waitForGlobalClusterUpdate(ctx, conn, d.Id(),d.Timeout(schema.TimeoutUpdate)); err != nil {
+	if err := waitForGlobalClusterUpdate(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
 		return diag.FromErr(fmt.Errorf("error waiting for DocDB Global Cluster (%s) update: %w", d.Id(), err))
 	}
 
@@ -359,7 +359,7 @@ func waitForGlobalClusterCreation(ctx context.Context, conn *docdb.DocDB, global
 func waitForGlobalClusterUpdate(ctx context.Context, conn *docdb.DocDB, globalClusterID string, timeout time.Duration) error {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{GlobalClusterStatusModifying, GlobalClusterStatusUpgrading},
-		Target: []string{GlobalClusterStatusAvailable},
+		Target:  []string{GlobalClusterStatusAvailable},
 		Refresh: statusGlobalClusterRefreshFunc(ctx, conn, globalClusterID),
 		Timeout: timeout,
 		Delay:   30 * time.Second,

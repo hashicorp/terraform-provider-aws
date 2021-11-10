@@ -87,4 +87,3 @@ func findGlobalClusterIdByArn(ctx context.Context, conn *docdb.DocDB, arn string
 	}
 	return ""
 }
-
