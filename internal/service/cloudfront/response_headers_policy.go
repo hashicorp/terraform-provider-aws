@@ -437,19 +437,19 @@ func expandResponseHeadersPolicyCorsConfig(tfMap map[string]interface{}) *cloudf
 		apiObject.AccessControlAllowCredentials = aws.Bool(v)
 	}
 
-	if v, ok := tfMap["access_control_allow_headers"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["access_control_allow_headers"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		apiObject.AccessControlAllowHeaders = expandResponseHeadersPolicyAccessControlAllowHeaders(v[0].(map[string]interface{}))
 	}
 
-	if v, ok := tfMap["access_control_allow_methods"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["access_control_allow_methods"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		apiObject.AccessControlAllowMethods = expandResponseHeadersPolicyAccessControlAllowMethods(v[0].(map[string]interface{}))
 	}
 
-	if v, ok := tfMap["access_control_allow_origins"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["access_control_allow_origins"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		apiObject.AccessControlAllowOrigins = expandResponseHeadersPolicyAccessControlAllowOrigins(v[0].(map[string]interface{}))
 	}
 
-	if v, ok := tfMap["access_control_expose_headers"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["access_control_expose_headers"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		apiObject.AccessControlExposeHeaders = expandResponseHeadersPolicyAccessControlExposeHeaders(v[0].(map[string]interface{}))
 	}
 

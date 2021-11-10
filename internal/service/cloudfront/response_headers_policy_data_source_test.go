@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccAWSCloudFrontDataSourceResponseHeadersPolicy_basic(t *testing.T) {
+func TestAccCloudFrontResponseHeadersPolicyDataSource_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSource1Name := "data.aws_cloudfront_response_headers_policy.by_id"
 	dataSource2Name := "data.aws_cloudfront_response_headers_policy.by_name"
@@ -23,7 +23,7 @@ func TestAccAWSCloudFrontDataSourceResponseHeadersPolicy_basic(t *testing.T) {
 		CheckDestroy: testAccCheckCloudFrontPublicKeyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCloudFrontResponseHeadersPolicyDataSourceNameConfig(rName),
+				Config: testAccResponseHeadersPolicyDataSourceConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSource1Name, "comment", resourceName, "comment"),
 					resource.TestCheckResourceAttrPair(dataSource1Name, "cors_config.#", resourceName, "cors_config.#"),
@@ -68,7 +68,7 @@ func TestAccAWSCloudFrontDataSourceResponseHeadersPolicy_basic(t *testing.T) {
 	})
 }
 
-func testAccAWSCloudFrontResponseHeadersPolicyDataSourceNameConfig(rName string) string {
+func testAccResponseHeadersPolicyDataSourceConfig(rName string) string {
 	return fmt.Sprintf(`
 data "aws_cloudfront_response_headers_policy" "by_name" {
   name = aws_cloudfront_response_headers_policy.test.name

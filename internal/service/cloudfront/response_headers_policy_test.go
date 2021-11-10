@@ -14,7 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func TestAccAWSCloudFrontResponseHeadersPolicy_CorsConfig(t *testing.T) {
+func TestAccCloudFrontResponseHeadersPolicy_CorsConfig(t *testing.T) {
 	rName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cloudfront_response_headers_policy.test"
@@ -26,7 +26,7 @@ func TestAccAWSCloudFrontResponseHeadersPolicy_CorsConfig(t *testing.T) {
 		CheckDestroy: testAccCheckCloudFrontResponseHeadersPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCloudFrontResponseHeadersPolicyCorsConfigConfig(rName1),
+				Config: testAccResponseHeadersPolicyCorsConfigConfig(rName1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudFrontResponseHeadersPolicyExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "comment", "test comment"),
@@ -59,7 +59,7 @@ func TestAccAWSCloudFrontResponseHeadersPolicy_CorsConfig(t *testing.T) {
 				ImportStateVerifyIgnore: []string{},
 			},
 			{
-				Config: testAccAWSCloudFrontResponseHeadersPolicyCorsConfigUpdatedConfig(rName2),
+				Config: testAccResponseHeadersPolicyCorsConfigUpdatedConfig(rName2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudFrontResponseHeadersPolicyExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "comment", "test comment updated"),
@@ -90,7 +90,7 @@ func TestAccAWSCloudFrontResponseHeadersPolicy_CorsConfig(t *testing.T) {
 	})
 }
 
-func TestAccAWSCloudFrontResponseHeadersPolicy_CustomHeadersConfig(t *testing.T) {
+func TestAccCloudFrontResponseHeadersPolicy_CustomHeadersConfig(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cloudfront_response_headers_policy.test"
 
@@ -101,7 +101,7 @@ func TestAccAWSCloudFrontResponseHeadersPolicy_CustomHeadersConfig(t *testing.T)
 		CheckDestroy: testAccCheckCloudFrontResponseHeadersPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCloudFrontResponseHeadersPolicyCustomHeadersConfigConfig(rName),
+				Config: testAccResponseHeadersPolicyCustomHeadersConfigConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudFrontResponseHeadersPolicyExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "comment", ""),
@@ -133,7 +133,7 @@ func TestAccAWSCloudFrontResponseHeadersPolicy_CustomHeadersConfig(t *testing.T)
 	})
 }
 
-func TestAccAWSCloudFrontResponseHeadersPolicy_SecurityHeadersConfig(t *testing.T) {
+func TestAccCloudFrontResponseHeadersPolicy_SecurityHeadersConfig(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cloudfront_response_headers_policy.test"
 
@@ -144,7 +144,7 @@ func TestAccAWSCloudFrontResponseHeadersPolicy_SecurityHeadersConfig(t *testing.
 		CheckDestroy: testAccCheckCloudFrontResponseHeadersPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCloudFrontResponseHeadersPolicySecurityHeadersConfigConfig(rName),
+				Config: testAccResponseHeadersPolicySecurityHeadersConfigConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudFrontResponseHeadersPolicyExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "comment", ""),
@@ -182,7 +182,7 @@ func TestAccAWSCloudFrontResponseHeadersPolicy_SecurityHeadersConfig(t *testing.
 				ImportStateVerifyIgnore: []string{},
 			},
 			{
-				Config: testAccAWSCloudFrontResponseHeadersPolicySecurityHeadersConfigUpdatedConfig(rName),
+				Config: testAccResponseHeadersPolicySecurityHeadersConfigUpdatedConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudFrontResponseHeadersPolicyExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "comment", ""),
@@ -210,7 +210,7 @@ func TestAccAWSCloudFrontResponseHeadersPolicy_SecurityHeadersConfig(t *testing.
 	})
 }
 
-func TestAccAWSCloudFrontResponseHeadersPolicy_disappears(t *testing.T) {
+func TestAccCloudFrontResponseHeadersPolicy_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cloudfront_response_headers_policy.test"
 
@@ -221,7 +221,7 @@ func TestAccAWSCloudFrontResponseHeadersPolicy_disappears(t *testing.T) {
 		CheckDestroy: testAccCheckCloudFrontResponseHeadersPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCloudFrontResponseHeadersPolicyCorsConfigConfig(rName),
+				Config: testAccResponseHeadersPolicyCorsConfigConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudFrontResponseHeadersPolicyExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfcloudfront.ResourceResponseHeadersPolicy(), resourceName),
@@ -279,7 +279,7 @@ func testAccCheckCloudFrontResponseHeadersPolicyExists(n string) resource.TestCh
 	}
 }
 
-func testAccAWSCloudFrontResponseHeadersPolicyCorsConfigConfig(rName string) string {
+func testAccResponseHeadersPolicyCorsConfigConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudfront_response_headers_policy" "test" {
   name    = %[1]q
@@ -306,7 +306,7 @@ resource "aws_cloudfront_response_headers_policy" "test" {
 `, rName)
 }
 
-func testAccAWSCloudFrontResponseHeadersPolicyCorsConfigUpdatedConfig(rName string) string {
+func testAccResponseHeadersPolicyCorsConfigUpdatedConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudfront_response_headers_policy" "test" {
   name    = %[1]q
@@ -339,7 +339,7 @@ resource "aws_cloudfront_response_headers_policy" "test" {
 `, rName)
 }
 
-func testAccAWSCloudFrontResponseHeadersPolicyCustomHeadersConfigConfig(rName string) string {
+func testAccResponseHeadersPolicyCustomHeadersConfigConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudfront_response_headers_policy" "test" {
   name = %[1]q
@@ -361,7 +361,7 @@ resource "aws_cloudfront_response_headers_policy" "test" {
 `, rName)
 }
 
-func testAccAWSCloudFrontResponseHeadersPolicySecurityHeadersConfigConfig(rName string) string {
+func testAccResponseHeadersPolicySecurityHeadersConfigConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudfront_response_headers_policy" "test" {
   name = %[1]q
@@ -395,7 +395,7 @@ resource "aws_cloudfront_response_headers_policy" "test" {
 `, rName)
 }
 
-func testAccAWSCloudFrontResponseHeadersPolicySecurityHeadersConfigUpdatedConfig(rName string) string {
+func testAccResponseHeadersPolicySecurityHeadersConfigUpdatedConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudfront_response_headers_policy" "test" {
   name = %[1]q
