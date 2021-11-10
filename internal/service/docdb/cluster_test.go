@@ -752,7 +752,7 @@ resource "aws_docdb_cluster_instance" "secondary" {
 func testAccDocDBClusterConfigGlobalClusterIdentifier_Update(rName, globalClusterIdentifierResourceName string) string {
 	return fmt.Sprintf(`
 resource "aws_docdb_global_cluster" "test" {
-  count = 2
+  count                     = 2
   engine                    = "docdb"
   engine_version            = "4.0.0" # version compatible with global
   global_cluster_identifier = "%[1]s-${count.index}"
