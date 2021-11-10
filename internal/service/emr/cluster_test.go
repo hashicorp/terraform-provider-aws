@@ -32,9 +32,15 @@ func TestAccEMRCluster_basic(t *testing.T) {
 				Config: testAccClusterConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(resourceName, &cluster),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "elasticmapreduce", regexp.MustCompile("cluster/.+$")),
+					resource.TestCheckResourceAttr(resourceName, "release_label", "emr-4.6.0"),
+					resource.TestCheckResourceAttr(resourceName, "applications.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "scale_down_behavior", "TERMINATE_AT_TASK_COMPLETION"),
 					resource.TestCheckResourceAttr(resourceName, "step.#", "0"),
-					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "ebs_root_volume_size", "21"),
+					resource.TestCheckResourceAttrPair(resourceName, "autoscaling_role", "aws_iam_role.emr_service", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "service_role", "aws_iam_role.emr_autoscaling_role", "arn"),
 					resource.TestCheckNoResourceAttr(resourceName, "additional_info"),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "auto_termination_policy.#", "0"),
@@ -3860,7 +3866,7 @@ resource "aws_emr_cluster" "test" {
     instance_type = "m4.large"
   }
 
-  depends_on = [aws_route_table_association.test]  
+  depends_on = [aws_route_table_association.test]
 }
 `, rName, timeout))
 }

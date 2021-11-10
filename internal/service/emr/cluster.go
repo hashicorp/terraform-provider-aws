@@ -11,7 +11,6 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/private/protocol/json/jsonutil"
 	"github.com/aws/aws-sdk-go/service/emr"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
@@ -970,33 +969,16 @@ func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
 	d.Set("keep_job_flow_alive_when_no_steps", params.Instances.KeepJobFlowAliveWhenNoSteps)
 
 	log.Println("[INFO] Waiting for EMR Cluster to be available")
+	cluster, err := waitClusterCreated(conn, d.Id())
 
-	stateConf := &resource.StateChangeConf{
-		Pending: []string{
-			emr.ClusterStateBootstrapping,
-			emr.ClusterStateStarting,
-		},
-		Target: []string{
-			emr.ClusterStateRunning,
-			emr.ClusterStateWaiting,
-		},
-		Refresh:    resourceClusterStateRefreshFunc(d, meta),
-		Timeout:    75 * time.Minute,
-		MinTimeout: 10 * time.Second,
-		Delay:      30 * time.Second, // Wait 30 secs before starting
-	}
-
-	clusterRaw, err := stateConf.WaitForState()
 	if err != nil {
-		return fmt.Errorf("Error waiting for EMR Cluster state to be \"WAITING\" or \"RUNNING\": %w", err)
+		return fmt.Errorf("error waiting for EMR Cluster (%s) to be created: %w", d.Id(), err)
 	}
 
 	// For multiple master nodes, EMR automatically enables
 	// termination protection and ignores the configuration at launch.
 	// This additional handling is to potentially disable termination
 	// protection to match the desired Terraform configuration.
-	cluster := clusterRaw.(*emr.Cluster)
-
 	if aws.BoolValue(cluster.TerminationProtected) != terminationProtection {
 		input := &emr.SetTerminationProtectionInput{
 			JobFlowIds:           []*string{aws.String(d.Id())},
@@ -1016,48 +998,20 @@ func resourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	req := &emr.DescribeClusterInput{
-		ClusterId: aws.String(d.Id()),
-	}
+	cluster, err := FindClusterByID(conn, d.Id())
 
-	resp, err := conn.DescribeCluster(req)
-	if err != nil {
-		// After a Cluster has been terminated for an indeterminate period of time,
-		// the EMR API will return this type of error:
-		//   InvalidRequestException: Cluster id 'j-XXX' is not valid.
-		// If this causes issues with masking other legitimate request errors, the
-		// handling should be updated for deeper inspection of the special error type
-		// which includes an accurate error code:
-		//   ErrorCode: "NoSuchCluster",
-		if tfawserr.ErrMessageContains(err, emr.ErrCodeInvalidRequestException, "is not valid") {
-			log.Printf("[DEBUG] EMR Cluster (%s) not found", d.Id())
-			d.SetId("")
-			return nil
-		}
-		return fmt.Errorf("Error reading EMR cluster: %w", err)
-	}
-
-	if resp.Cluster == nil {
-		log.Printf("[DEBUG] EMR Cluster (%s) not found", d.Id())
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] EMR Cluster (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
-	cluster := resp.Cluster
-
-	if cluster.Status != nil {
-		state := aws.StringValue(cluster.Status.State)
-
-		if state == emr.ClusterStateTerminated || state == emr.ClusterStateTerminatedWithErrors {
-			log.Printf("[WARN] EMR Cluster (%s) was %s already, removing from state", d.Id(), state)
-			d.SetId("")
-			return nil
-		}
-
-		d.Set("cluster_state", state)
-
-		d.Set("arn", cluster.ClusterArn)
+	if err != nil {
+		return fmt.Errorf("error reading EMR Cluster (%s): %w", d.Id(), err)
 	}
+
+	d.Set("cluster_state", cluster.Status.State)
+	d.Set("arn", cluster.ClusterArn)
 
 	instanceGroups, err := fetchAllEMRInstanceGroups(conn, d.Id())
 
@@ -1982,50 +1936,6 @@ func readBodyJson(body string, target interface{}) error {
 		return err
 	}
 	return nil
-}
-
-func resourceClusterStateRefreshFunc(d *schema.ResourceData, meta interface{}) resource.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		conn := meta.(*conns.AWSClient).EMRConn
-
-		log.Printf("[INFO] Reading EMR Cluster Information: %s", d.Id())
-		params := &emr.DescribeClusterInput{
-			ClusterId: aws.String(d.Id()),
-		}
-
-		resp, err := conn.DescribeCluster(params)
-
-		if err != nil {
-			if awsErr, ok := err.(awserr.Error); ok {
-				if awsErr.Code() == "ClusterNotFound" {
-					return 42, "destroyed", nil
-				}
-			}
-			log.Printf("[WARN] Error on retrieving EMR Cluster (%s) when waiting: %s", d.Id(), err)
-			return nil, "", err
-		}
-
-		if resp.Cluster == nil {
-			return 42, "destroyed", nil
-		}
-
-		if resp.Cluster.Status == nil {
-			return resp.Cluster, "", fmt.Errorf("cluster status not provided")
-		}
-
-		state := aws.StringValue(resp.Cluster.Status.State)
-		log.Printf("[DEBUG] EMR Cluster status (%s): %s", d.Id(), state)
-
-		if state == emr.ClusterStateTerminating || state == emr.ClusterStateTerminatedWithErrors {
-			reason := resp.Cluster.Status.StateChangeReason
-			if reason == nil {
-				return resp.Cluster, state, fmt.Errorf("%s: reason code and message not provided", state)
-			}
-			return resp.Cluster, state, fmt.Errorf("%s: %s: %s", state, aws.StringValue(reason.Code), aws.StringValue(reason.Message))
-		}
-
-		return resp.Cluster, state, nil
-	}
 }
 
 func findMasterGroup(instanceGroups []*emr.InstanceGroup) *emr.InstanceGroup {
