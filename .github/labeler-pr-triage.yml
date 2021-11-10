@@ -143,8 +143,8 @@ service/cloudwatch:
   - 'internal/service/cloudwatch/**/*'
   - 'website/**/cloudwatch_dashboard*'
   - 'website/**/cloudwatch_metric_alarm*'
-service/cloudwatchevents:
-  - 'internal/service/cloudwatchevents/**/*'
+service/eventbridge:
+  - 'internal/service/eventbridge/**/*'
   - 'website/**/cloudwatch_event_*'
 service/cloudwatchlogs:
   - 'internal/service/cloudwatchlogs/**/*'
