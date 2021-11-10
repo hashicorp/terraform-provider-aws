@@ -4,6 +4,12 @@ import (
 	"context"
 	"errors"
 	"fmt"
+
+	"log"
+	"regexp"
+	"strings"
+	"time"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/docdb"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
@@ -16,10 +22,6 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
-	"log"
-	"regexp"
-	"strings"
-	"time"
 )
 
 func ResourceCluster() *schema.Resource {
