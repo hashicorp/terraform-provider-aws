@@ -1,69 +1,86 @@
-package aws
+package ec2
 
 import (
-	"errors"
 	"fmt"
-	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func dataSourceAwsKeyPair() *schema.Resource {
+func DataSourceKeyPair() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsKeyPairRead,
+		Read: dataSourceKeyPairRead,
+
 		Schema: map[string]*schema.Schema{
-			"key_name": {
+			"arn": {
 				Type:     schema.TypeString,
-				Required: true,
+				Computed: true,
 			},
+			"filter": DataSourceFiltersSchema(),
 			"fingerprint": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"filter": dataSourceFiltersSchema(),
+			"key_name": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			"key_pair_id": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			"tags": tftags.TagsSchemaComputed(),
 		},
 	}
 }
 
-func dataSourceAwsKeyPairRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+func dataSourceKeyPairRead(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*conns.AWSClient).EC2Conn
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	params := &ec2.DescribeKeyPairsInput{}
-	filters, filtersOk := d.GetOk("filter")
-	if filtersOk {
-		params.Filters = buildAwsDataSourceFilters(filters.(*schema.Set))
+	input := &ec2.DescribeKeyPairsInput{}
+
+	if v, ok := d.GetOk("filter"); ok {
+		input.Filters = BuildFiltersDataSource(v.(*schema.Set))
 	}
 
-	keyName := d.Get("key_name").(string)
-
-	params.KeyNames = []*string{
-		aws.String(keyName),
+	if v, ok := d.GetOk("key_name"); ok {
+		input.KeyNames = aws.StringSlice([]string{v.(string)})
 	}
 
-	log.Printf("[DEBUG] Reading key pair: %s", keyName)
-	resp, err := conn.DescribeKeyPairs(params)
+	if v, ok := d.GetOk("key_pair_id"); ok {
+		input.KeyPairIds = aws.StringSlice([]string{v.(string)})
+	}
+
+	keyPair, err := FindKeyPair(conn, input)
+
 	if err != nil {
-		return fmt.Errorf("error describing EC2 Key Pairs: %w", err)
+		return tfresource.SingularDataSourceFindError("EC2 Key Pair", err)
 	}
 
-	if resp == nil || len(resp.KeyPairs) == 0 {
-		return errors.New("no matching Key Pair found")
-	}
-
-	filteredKeyPair := resp.KeyPairs
-
-	if len(filteredKeyPair) > 1 {
-		return fmt.Errorf("Your query returned more than one result. Please try a more " +
-			"specific search criteria")
-	}
-
-	keyPair := filteredKeyPair[0]
-	log.Printf("[DEBUG] aws_key_pair - Single key pair found: %s", *keyPair.KeyName)
-
-	d.Set("fingerprint", keyPair.KeyFingerprint)
 	d.SetId(aws.StringValue(keyPair.KeyPairId))
+
+	keyName := aws.StringValue(keyPair.KeyName)
+	arn := arn.ARN{
+		Partition: meta.(*conns.AWSClient).Partition,
+		Service:   ec2.ServiceName,
+		Region:    meta.(*conns.AWSClient).Region,
+		AccountID: meta.(*conns.AWSClient).AccountID,
+		Resource:  fmt.Sprintf("key-pair/%s", keyName),
+	}.String()
+	d.Set("arn", arn)
+	d.Set("fingerprint", keyPair.KeyFingerprint)
+	d.Set("key_name", keyName)
+	d.Set("key_pair_id", keyPair.KeyPairId)
+
+	if err := d.Set("tags", KeyValueTags(keyPair.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %w", err)
+	}
 
 	return nil
 }

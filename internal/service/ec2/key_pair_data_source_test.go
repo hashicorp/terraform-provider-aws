@@ -1,47 +1,82 @@
-package aws
+package ec2_test
 
 import (
 	"fmt"
 	"testing"
 
+	"github.com/aws/aws-sdk-go/service/ec2"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccDataSourceAwsKeyPair_basic(t *testing.T) {
-	keyName, publicKey := "testKey", "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQD3F6tyPEFEzV0LX3X8BsXdMsQz1x2cEikKDEY0aIj41qgxMCP/iteneqXSIFZBp5vizPvaoIR3Um9xK7PGoW8giupGn+EPuxIA4cDM4vzOqOkiMPhz5XK0whEjkVzTo4+S0puvDZuwIsdiW9mxhJc7tgBNL0cYlWSYVkz4G/fslNfRPW5mYAM49f4fhtxPb5ok4Q2Lg9dPKVHO/Bgeu5woMc7RY0p1ej6D4CKFE6lymSDJpW0YHX/wqE9+cfEauh7xZcG0q9t2ta6F6fmX0agvpFyZo8aFbXeUBr7osSCJNgvavWbM/06niWrOvYX2xwWdhXmXSrbX8ZbabVohBK41 email@example.com"
-	resourceName := "data.aws_key_pair.default"
+func TestAccEC2KeyPairDataSource_basic(t *testing.T) {
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	dataSource1Name := "data.aws_key_pair.by_id"
+	dataSource2Name := "data.aws_key_pair.by_name"
+	dataSource3Name := "data.aws_key_pair.by_filter"
+	resourceName := "aws_key_pair.test"
+
+	publicKey, _, err := sdkacctest.RandSSHKeyPair(acctest.DefaultEmailAddress)
+	if err != nil {
+		t.Fatalf("error generating random SSH key: %s", err)
+	}
+
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckVolumeDestroy,
+		PreCheck:   func() { acctest.PreCheck(t) },
+		ErrorCheck: acctest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceAwsKeyPairConfig(keyName, publicKey),
+				Config: testAccKeyPairDataSourceConfig(rName, publicKey),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "key_name", keyName),
+					resource.TestCheckResourceAttrPair(dataSource1Name, "arn", resourceName, "arn"),
+					resource.TestCheckResourceAttrPair(dataSource1Name, "fingerprint", resourceName, "fingerprint"),
+					resource.TestCheckResourceAttrPair(dataSource1Name, "key_name", resourceName, "key_name"),
+					resource.TestCheckResourceAttrPair(dataSource1Name, "key_pair_id", resourceName, "key_pair_id"),
+					resource.TestCheckResourceAttrPair(dataSource1Name, "tags.%", resourceName, "tags.%"),
+
+					resource.TestCheckResourceAttrPair(dataSource2Name, "arn", resourceName, "arn"),
+					resource.TestCheckResourceAttrPair(dataSource2Name, "fingerprint", resourceName, "fingerprint"),
+					resource.TestCheckResourceAttrPair(dataSource2Name, "key_name", resourceName, "key_name"),
+					resource.TestCheckResourceAttrPair(dataSource2Name, "key_pair_id", resourceName, "key_pair_id"),
+					resource.TestCheckResourceAttrPair(dataSource2Name, "tags.%", resourceName, "tags.%"),
+
+					resource.TestCheckResourceAttrPair(dataSource3Name, "arn", resourceName, "arn"),
+					resource.TestCheckResourceAttrPair(dataSource3Name, "fingerprint", resourceName, "fingerprint"),
+					resource.TestCheckResourceAttrPair(dataSource3Name, "key_name", resourceName, "key_name"),
+					resource.TestCheckResourceAttrPair(dataSource3Name, "key_pair_id", resourceName, "key_pair_id"),
+					resource.TestCheckResourceAttrPair(dataSource3Name, "tags.%", resourceName, "tags.%"),
 				),
 			},
 		},
 	})
 }
 
-func testAccDataSourceAwsKeyPairConfig(keyName, publicKey string) string {
+func testAccKeyPairDataSourceConfig(rName, publicKey string) string {
 	return fmt.Sprintf(`
-data "aws_region" "current" {}
+data "aws_key_pair" "by_name" {
+  key_name = aws_key_pair.test.key_name
+}
 
-resource "aws_key_pair" "default" {
+data "aws_key_pair" "by_id" {
+  key_pair_id = aws_key_pair.test.key_pair_id
+}
 
-  key_name   = "%s"
-  public_key = "%s"
-
-  tags = {
-    TestIdentifierSet = "testAccDataSourceAwsKeyPair"
+data "aws_key_pair" "by_filter" {
+  filter {
+    name   = "tag:Name"
+    values = [aws_key_pair.test.tags["Name"]]
   }
 }
 
-data "aws_key_pair" "default" {
-  key_name = aws_key_pair.default.key_name
-}
+resource "aws_key_pair" "test" {
+  key_name   = %[1]q
+  public_key = %[2]q
 
-`, keyName, publicKey)
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName, publicKey)
 }
