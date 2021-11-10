@@ -6,14 +6,14 @@ import (
 	"context"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/cloudwatchevents"
+	"github.com/aws/aws-sdk-go/service/eventbridge"
 )
 
-func listEventBusesPages(conn *cloudwatchevents.CloudWatchEvents, input *cloudwatchevents.ListEventBusesInput, fn func(*cloudwatchevents.ListEventBusesOutput, bool) bool) error {
+func listEventBusesPages(conn *eventbridge.EventBridge, input *eventbridge.ListEventBusesInput, fn func(*eventbridge.ListEventBusesOutput, bool) bool) error {
 	return listEventBusesPagesWithContext(context.Background(), conn, input, fn)
 }
 
-func listEventBusesPagesWithContext(ctx context.Context, conn *cloudwatchevents.CloudWatchEvents, input *cloudwatchevents.ListEventBusesInput, fn func(*cloudwatchevents.ListEventBusesOutput, bool) bool) error {
+func listEventBusesPagesWithContext(ctx context.Context, conn *eventbridge.EventBridge, input *eventbridge.ListEventBusesInput, fn func(*eventbridge.ListEventBusesOutput, bool) bool) error {
 	for {
 		output, err := conn.ListEventBusesWithContext(ctx, input)
 		if err != nil {
@@ -30,11 +30,11 @@ func listEventBusesPagesWithContext(ctx context.Context, conn *cloudwatchevents.
 	return nil
 }
 
-func listRulesPages(conn *cloudwatchevents.CloudWatchEvents, input *cloudwatchevents.ListRulesInput, fn func(*cloudwatchevents.ListRulesOutput, bool) bool) error {
+func listRulesPages(conn *eventbridge.EventBridge, input *eventbridge.ListRulesInput, fn func(*eventbridge.ListRulesOutput, bool) bool) error {
 	return listRulesPagesWithContext(context.Background(), conn, input, fn)
 }
 
-func listRulesPagesWithContext(ctx context.Context, conn *cloudwatchevents.CloudWatchEvents, input *cloudwatchevents.ListRulesInput, fn func(*cloudwatchevents.ListRulesOutput, bool) bool) error {
+func listRulesPagesWithContext(ctx context.Context, conn *eventbridge.EventBridge, input *eventbridge.ListRulesInput, fn func(*eventbridge.ListRulesOutput, bool) bool) error {
 	for {
 		output, err := conn.ListRulesWithContext(ctx, input)
 		if err != nil {
@@ -51,11 +51,11 @@ func listRulesPagesWithContext(ctx context.Context, conn *cloudwatchevents.Cloud
 	return nil
 }
 
-func listTargetsByRulePages(conn *cloudwatchevents.CloudWatchEvents, input *cloudwatchevents.ListTargetsByRuleInput, fn func(*cloudwatchevents.ListTargetsByRuleOutput, bool) bool) error {
+func listTargetsByRulePages(conn *eventbridge.EventBridge, input *eventbridge.ListTargetsByRuleInput, fn func(*eventbridge.ListTargetsByRuleOutput, bool) bool) error {
 	return listTargetsByRulePagesWithContext(context.Background(), conn, input, fn)
 }
 
-func listTargetsByRulePagesWithContext(ctx context.Context, conn *cloudwatchevents.CloudWatchEvents, input *cloudwatchevents.ListTargetsByRuleInput, fn func(*cloudwatchevents.ListTargetsByRuleOutput, bool) bool) error {
+func listTargetsByRulePagesWithContext(ctx context.Context, conn *eventbridge.EventBridge, input *eventbridge.ListTargetsByRuleInput, fn func(*eventbridge.ListTargetsByRuleOutput, bool) bool) error {
 	for {
 		output, err := conn.ListTargetsByRuleWithContext(ctx, input)
 		if err != nil {

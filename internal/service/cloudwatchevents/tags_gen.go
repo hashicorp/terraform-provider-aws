@@ -5,15 +5,15 @@ import (
 	"fmt"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/cloudwatchevents"
+	"github.com/aws/aws-sdk-go/service/eventbridge"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 // ListTags lists cloudwatchevents service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func ListTags(conn *cloudwatchevents.CloudWatchEvents, identifier string) (tftags.KeyValueTags, error) {
-	input := &cloudwatchevents.ListTagsForResourceInput{
+func ListTags(conn *eventbridge.EventBridge, identifier string) (tftags.KeyValueTags, error) {
+	input := &eventbridge.ListTagsForResourceInput{
 		ResourceARN: aws.String(identifier),
 	}
 
@@ -29,11 +29,11 @@ func ListTags(conn *cloudwatchevents.CloudWatchEvents, identifier string) (tftag
 // []*SERVICE.Tag handling
 
 // Tags returns cloudwatchevents service tags.
-func Tags(tags tftags.KeyValueTags) []*cloudwatchevents.Tag {
-	result := make([]*cloudwatchevents.Tag, 0, len(tags))
+func Tags(tags tftags.KeyValueTags) []*eventbridge.Tag {
+	result := make([]*eventbridge.Tag, 0, len(tags))
 
 	for k, v := range tags.Map() {
-		tag := &cloudwatchevents.Tag{
+		tag := &eventbridge.Tag{
 			Key:   aws.String(k),
 			Value: aws.String(v),
 		}
@@ -45,7 +45,7 @@ func Tags(tags tftags.KeyValueTags) []*cloudwatchevents.Tag {
 }
 
 // KeyValueTags creates tftags.KeyValueTags from cloudwatchevents service tags.
-func KeyValueTags(tags []*cloudwatchevents.Tag) tftags.KeyValueTags {
+func KeyValueTags(tags []*eventbridge.Tag) tftags.KeyValueTags {
 	m := make(map[string]*string, len(tags))
 
 	for _, tag := range tags {
@@ -58,12 +58,12 @@ func KeyValueTags(tags []*cloudwatchevents.Tag) tftags.KeyValueTags {
 // UpdateTags updates cloudwatchevents service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func UpdateTags(conn *cloudwatchevents.CloudWatchEvents, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
+func UpdateTags(conn *eventbridge.EventBridge, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
 	oldTags := tftags.New(oldTagsMap)
 	newTags := tftags.New(newTagsMap)
 
 	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
-		input := &cloudwatchevents.UntagResourceInput{
+		input := &eventbridge.UntagResourceInput{
 			ResourceARN: aws.String(identifier),
 			TagKeys:     aws.StringSlice(removedTags.IgnoreAWS().Keys()),
 		}
@@ -76,7 +76,7 @@ func UpdateTags(conn *cloudwatchevents.CloudWatchEvents, identifier string, oldT
 	}
 
 	if updatedTags := oldTags.Updated(newTags); len(updatedTags) > 0 {
-		input := &cloudwatchevents.TagResourceInput{
+		input := &eventbridge.TagResourceInput{
 			ResourceARN: aws.String(identifier),
 			Tags:        Tags(updatedTags.IgnoreAWS()),
 		}

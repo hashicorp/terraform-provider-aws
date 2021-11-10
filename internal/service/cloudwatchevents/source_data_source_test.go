@@ -6,7 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/cloudwatchevents"
+	"github.com/aws/aws-sdk-go/service/eventbridge"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
@@ -28,7 +28,7 @@ func TestAccEventBridgeSourceDataSource_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, cloudwatchevents.EndpointsID),
+		ErrorCheck: acctest.ErrorCheck(t, eventbridge.EndpointsID),
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{

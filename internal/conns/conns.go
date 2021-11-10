@@ -49,7 +49,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/cloudsearchdomain"
 	"github.com/aws/aws-sdk-go/service/cloudtrail"
 	"github.com/aws/aws-sdk-go/service/cloudwatch"
-	"github.com/aws/aws-sdk-go/service/cloudwatchevents"
 	"github.com/aws/aws-sdk-go/service/cloudwatchlogs"
 	"github.com/aws/aws-sdk-go/service/codeartifact"
 	"github.com/aws/aws-sdk-go/service/codebuild"
@@ -102,6 +101,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/elbv2"
 	"github.com/aws/aws-sdk-go/service/emr"
 	"github.com/aws/aws-sdk-go/service/emrcontainers"
+	"github.com/aws/aws-sdk-go/service/eventbridge"
 	"github.com/aws/aws-sdk-go/service/finspace"
 	"github.com/aws/aws-sdk-go/service/finspacedata"
 	"github.com/aws/aws-sdk-go/service/firehose"
@@ -325,7 +325,7 @@ const (
 	CloudSearchDomain             = "cloudsearchdomain"
 	CloudTrail                    = "cloudtrail"
 	CloudWatch                    = "cloudwatch"
-	CloudWatchEvents              = "cloudwatchevents"
+	EventBridge                   = "eventbridge"
 	CloudWatchLogs                = "cloudwatchlogs"
 	CodeArtifact                  = "codeartifact"
 	CodeBuild                     = "codebuild"
@@ -612,7 +612,7 @@ func init() {
 	serviceData[CloudSearchDomain] = &ServiceDatum{AWSClientName: "CloudSearchDomain", AWSServiceName: cloudsearchdomain.ServiceName, AWSEndpointsID: cloudsearchdomain.EndpointsID, AWSServiceID: cloudsearchdomain.ServiceID, ProviderNameUpper: "CloudSearchDomain", HCLKeys: []string{"cloudsearchdomain"}}
 	serviceData[CloudTrail] = &ServiceDatum{AWSClientName: "CloudTrail", AWSServiceName: cloudtrail.ServiceName, AWSEndpointsID: cloudtrail.EndpointsID, AWSServiceID: cloudtrail.ServiceID, ProviderNameUpper: "CloudTrail", HCLKeys: []string{"cloudtrail"}}
 	serviceData[CloudWatch] = &ServiceDatum{AWSClientName: "CloudWatch", AWSServiceName: cloudwatch.ServiceName, AWSEndpointsID: cloudwatch.EndpointsID, AWSServiceID: cloudwatch.ServiceID, ProviderNameUpper: "CloudWatch", HCLKeys: []string{"cloudwatch"}}
-	serviceData[CloudWatchEvents] = &ServiceDatum{AWSClientName: "CloudWatchEvents", AWSServiceName: cloudwatchevents.ServiceName, AWSEndpointsID: cloudwatchevents.EndpointsID, AWSServiceID: cloudwatchevents.ServiceID, ProviderNameUpper: "CloudWatchEvents", HCLKeys: []string{"cloudwatchevents"}}
+	serviceData[EventBridge] = &ServiceDatum{AWSClientName: "EventBridge", AWSServiceName: eventbridge.ServiceName, AWSEndpointsID: eventbridge.EndpointsID, AWSServiceID: eventbridge.ServiceID, ProviderNameUpper: "EventBridge", HCLKeys: []string{"cloudwatchevents"}}
 	serviceData[CloudWatchLogs] = &ServiceDatum{AWSClientName: "CloudWatchLogs", AWSServiceName: cloudwatchlogs.ServiceName, AWSEndpointsID: cloudwatchlogs.EndpointsID, AWSServiceID: cloudwatchlogs.ServiceID, ProviderNameUpper: "CloudWatchLogs", HCLKeys: []string{"cloudwatchlogs"}}
 	serviceData[CodeArtifact] = &ServiceDatum{AWSClientName: "CodeArtifact", AWSServiceName: codeartifact.ServiceName, AWSEndpointsID: codeartifact.EndpointsID, AWSServiceID: codeartifact.ServiceID, ProviderNameUpper: "CodeArtifact", HCLKeys: []string{"codeartifact"}}
 	serviceData[CodeBuild] = &ServiceDatum{AWSClientName: "CodeBuild", AWSServiceName: codebuild.ServiceName, AWSEndpointsID: codebuild.EndpointsID, AWSServiceID: codebuild.ServiceID, ProviderNameUpper: "CodeBuild", HCLKeys: []string{"codebuild"}}
@@ -921,7 +921,7 @@ type AWSClient struct {
 	CloudSearchDomainConn             *cloudsearchdomain.CloudSearchDomain
 	CloudTrailConn                    *cloudtrail.CloudTrail
 	CloudWatchConn                    *cloudwatch.CloudWatch
-	EventBridgeConn                   *cloudwatchevents.CloudWatchEvents
+	EventBridgeConn                   *eventbridge.EventBridge
 	CloudWatchLogsConn                *cloudwatchlogs.CloudWatchLogs
 	CodeArtifactConn                  *codeartifact.CodeArtifact
 	CodeBuildConn                     *codebuild.CodeBuild
@@ -1274,7 +1274,7 @@ func (c *Config) Client() (interface{}, error) {
 		CloudSearchDomainConn:             cloudsearchdomain.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[CloudSearchDomain])})),
 		CloudTrailConn:                    cloudtrail.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[CloudTrail])})),
 		CloudWatchConn:                    cloudwatch.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[CloudWatch])})),
-		EventBridgeConn:                   cloudwatchevents.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[CloudWatchEvents])})),
+		EventBridgeConn:                   eventbridge.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[EventBridge])})),
 		CloudWatchLogsConn:                cloudwatchlogs.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[CloudWatchLogs])})),
 		CodeArtifactConn:                  codeartifact.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[CodeArtifact])})),
 		CodeBuildConn:                     codebuild.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[CodeBuild])})),

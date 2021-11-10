@@ -3,7 +3,7 @@ package cloudwatchevents
 import (
 	"fmt"
 
-	events "github.com/aws/aws-sdk-go/service/cloudwatchevents"
+	events "github.com/aws/aws-sdk-go/service/eventbridge"
 )
 
 // RuleEnabledFromState infers from its state whether or not a rule is enabled.

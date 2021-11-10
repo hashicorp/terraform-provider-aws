@@ -3,7 +3,7 @@ package cloudwatchevents
 import (
 	"time"
 
-	events "github.com/aws/aws-sdk-go/service/cloudwatchevents"
+	events "github.com/aws/aws-sdk-go/service/eventbridge"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
@@ -13,7 +13,7 @@ const (
 	connectionUpdatedTimeout = 2 * time.Minute
 )
 
-func waitConnectionCreated(conn *events.CloudWatchEvents, id string) (*events.DescribeConnectionOutput, error) {
+func waitConnectionCreated(conn *events.EventBridge, id string) (*events.DescribeConnectionOutput, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{events.ConnectionStateCreating, events.ConnectionStateAuthorizing},
 		Target:  []string{events.ConnectionStateAuthorized, events.ConnectionStateDeauthorized},
@@ -30,7 +30,7 @@ func waitConnectionCreated(conn *events.CloudWatchEvents, id string) (*events.De
 	return nil, err
 }
 
-func waitConnectionDeleted(conn *events.CloudWatchEvents, id string) (*events.DescribeConnectionOutput, error) {
+func waitConnectionDeleted(conn *events.EventBridge, id string) (*events.DescribeConnectionOutput, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{events.ConnectionStateDeleting},
 		Target:  []string{},
@@ -47,7 +47,7 @@ func waitConnectionDeleted(conn *events.CloudWatchEvents, id string) (*events.De
 	return nil, err
 }
 
-func waitConnectionUpdated(conn *events.CloudWatchEvents, id string) (*events.DescribeConnectionOutput, error) {
+func waitConnectionUpdated(conn *events.EventBridge, id string) (*events.DescribeConnectionOutput, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{events.ConnectionStateUpdating, events.ConnectionStateAuthorizing, events.ConnectionStateDeauthorizing},
 		Target:  []string{events.ConnectionStateAuthorized, events.ConnectionStateDeauthorized},

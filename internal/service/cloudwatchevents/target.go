@@ -7,7 +7,7 @@ import (
 	"regexp"
 
 	"github.com/aws/aws-sdk-go/aws"
-	events "github.com/aws/aws-sdk-go/service/cloudwatchevents"
+	events "github.com/aws/aws-sdk-go/service/eventbridge"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"

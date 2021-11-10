@@ -2,12 +2,12 @@ package cloudwatchevents
 
 import (
 	"github.com/aws/aws-sdk-go/aws"
-	events "github.com/aws/aws-sdk-go/service/cloudwatchevents"
+	events "github.com/aws/aws-sdk-go/service/eventbridge"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func statusConnectionState(conn *events.CloudWatchEvents, name string) resource.StateRefreshFunc {
+func statusConnectionState(conn *events.EventBridge, name string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindConnectionByName(conn, name)
 
