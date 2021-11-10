@@ -167,7 +167,7 @@ Each `block_device_mappings` supports the following:
 * `no_device` - Suppresses the specified device included in the AMI's block device mapping.
 * `virtual_name` - The [Instance Store Device
   Name](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/InstanceStorage.html#InstanceStoreDeviceNames)
-  (e.g. `"ephemeral0"`).
+  (e.g., `"ephemeral0"`).
 
 The `ebs` block supports the following:
 
@@ -180,7 +180,7 @@ The `ebs` block supports the following:
 * `kms_key_id` - The ARN of the AWS Key Management Service (AWS KMS) customer master key (CMK) to use when creating the encrypted volume.
  `encrypted` must be set to `true` when this is set.
 * `snapshot_id` - The Snapshot ID to mount.
-* `throughput` - The throughput to provision for a `gp3` volume in MiB/s (specified as an integer, e.g. 500), with a maximum of 1,000 MiB/s.
+* `throughput` - The throughput to provision for a `gp3` volume in MiB/s (specified as an integer, e.g., 500), with a maximum of 1,000 MiB/s.
 * `volume_size` - The size of the volume in gigabytes.
 * `volume_type` - The volume type. Can be `standard`, `gp2`, `gp3`, `io1`, `io2`, `sc1` or `st1` (Default: `gp2`).
 
@@ -301,6 +301,7 @@ Each `network_interfaces` block supports the following:
 * `ipv6_addresses` - One or more specific IPv6 addresses from the IPv6 CIDR block range of your subnet. Conflicts with `ipv6_address_count`
 * `ipv6_address_count` - The number of IPv6 addresses to assign to a network interface. Conflicts with `ipv6_addresses`
 * `network_interface_id` - The ID of the network interface to attach.
+* `network_card_index` - The index of the network card. Some instance types support multiple network cards. The primary network interface must be assigned to network card index 0. The default is network card index 0.
 * `private_ip_address` - The primary private IPv4 address.
 * `ipv4_address_count` - The number of secondary private IPv4 addresses to assign to a network interface. Conflicts with `ipv4_addresses`
 * `ipv4_addresses` - One or more private IPv4 addresses to associate. Conflicts with `ipv4_address_count`
@@ -357,7 +358,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Launch Templates can be imported using the `id`, e.g.
+Launch Templates can be imported using the `id`, e.g.,
 
 ```
 $ terraform import aws_launch_template.web lt-12345678

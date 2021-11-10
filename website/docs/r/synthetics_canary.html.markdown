@@ -96,7 +96,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Synthetics Canaries can be imported using the `name`, e.g.
+Synthetics Canaries can be imported using the `name`, e.g.,
 
 ```
 $ terraform import aws_synthetics_canary.some some-canary

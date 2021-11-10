@@ -41,7 +41,7 @@ In addition to all arguments above, the following attributes are exported:
 ## Import
 
 `aws_ec2_carrier_gateway` can be imported using the carrier gateway's ID,
-e.g.
+e.g.,
 
 ```
 $ terraform import aws_ec2_carrier_gateway.example cgw-12345

@@ -4,7 +4,7 @@ rules:
     message: Prefer naming acceptance tests with _disappears_Parent suffix
     paths:
       include:
-        - 'aws/*_test.go'
+        - "internal/**/*_test.go"
     patterns:
       - pattern: func $FUNCNAME(t *testing.T) { ... }
       - metavariable-regex:
@@ -17,28 +17,12 @@ rules:
     message: Resources should not implement multiple AWS service functionality
     paths:
       exclude:
-        - aws/config.go
-        - aws/structure.go
-        - aws/validators.go
-        - aws/*wafregional*.go
-        - aws/resource_aws_serverlessapplicationrepository_cloudformation_stack.go
-        - aws/resource_aws_transfer_server.go
-        - aws/*_test.go
-        - aws/internal/keyvaluetags/
-        - aws/internal/namevaluesfilters/
-        - aws/internal/service/wafregional/
-        # Legacy resource handling
-        - aws/resource_aws_autoscaling_group.go
-        - aws/resource_aws_efs_mount_target.go
-        - aws/resource_aws_elastic_beanstalk_environment.go
-        - aws/resource_aws_elb.go
-        - aws/resource_aws_iam_server_certificate.go
-        - aws/resource_aws_lambda_event_source_mapping.go
-        - aws/resource_aws_launch_configuration.go
-        - aws/resource_aws_lb.go
-        - aws/resource_aws_s3_bucket_object.go
+        - "internal/service/**/*_test.go"
+        - "internal/service/**/sweep.go"
+        - "internal/acctest/acctest.go"
+        - "internal/conns/conns.go"
       include:
-        - aws/
+        - internal/
     patterns:
       - pattern: |
           import ("$X")
@@ -49,6 +33,10 @@ rules:
       - metavariable-regex:
           metavariable: '$Y'
           regex: '^"github.com/aws/aws-sdk-go/service/[^/]+"$'
+      # wafregional uses a number of resources from waf
+      - pattern-not: |
+          import ("github.com/aws/aws-sdk-go/service/waf")
+          import ("github.com/aws/aws-sdk-go/service/wafregional")
     severity: WARNING
 
   - id: prefer-aws-go-sdk-pointer-conversion-assignment
@@ -73,7 +61,7 @@ rules:
         - aws/waf_helpers.go
         - aws/internal/generators/
         - aws/internal/keyvaluetags/
-        - awsproviderlint/vendor/
+        - providerlint/vendor/
       include:
         - aws/
     patterns:
@@ -108,7 +96,7 @@ rules:
         - aws/internal/generators/
         - aws/internal/keyvaluetags/
         - aws/internal/naming/
-        - awsproviderlint/vendor/
+        - providerlint/vendor/
       include:
         - aws/
     patterns:
@@ -572,7 +560,7 @@ rules:
     message: Do not call `fmt.Print` and variant
     paths:
       exclude:
-        - awsproviderlint/vendor/
+        - providerlint/vendor/
       include:
         - aws/
     patterns:
@@ -621,7 +609,7 @@ rules:
       include:
         - aws/
       exclude:
-        - awsproviderlint/vendor/
+        - providerlint/vendor/
     patterns:
       # This isn't technically the correct regex, but for some reason adding a '+' causes the regex to
       # miss some SSH keys. AFAICT, this is good enough.
@@ -638,3 +626,17 @@ rules:
     patterns:
       - pattern: 'if d.HasChangeExcept("tags_all") {...}'
     severity: WARNING
+
+  - id: unnecessary-literal-type-conversion
+    languages: [go]
+    message: Literal numbers do not need type conversions
+    paths:
+      include:
+        - internal/
+    patterns:
+      - pattern: "aws.Int64(int64($X))"
+      - metavariable-regex:
+          metavariable: $X
+          regex: (\d+)
+    severity: ERROR
+    fix: "aws.Int64($X)"

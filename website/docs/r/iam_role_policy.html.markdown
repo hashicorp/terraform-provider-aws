@@ -76,7 +76,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-IAM Role Policies can be imported using the `role_name:role_policy_name`, e.g.
+IAM Role Policies can be imported using the `role_name:role_policy_name`, e.g.,
 
 ```
 $ terraform import aws_iam_role_policy.mypolicy role_of_mypolicy_name:mypolicy_name

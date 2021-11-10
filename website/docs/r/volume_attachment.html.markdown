@@ -68,7 +68,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-EBS Volume Attachments can be imported using `DEVICE_NAME:VOLUME_ID:INSTANCE_ID`, e.g.
+EBS Volume Attachments can be imported using `DEVICE_NAME:VOLUME_ID:INSTANCE_ID`, e.g.,
 
 ```
 $ terraform import aws_volume_attachment.example /dev/sdh:vol-049df61146c4d7901:i-12345678

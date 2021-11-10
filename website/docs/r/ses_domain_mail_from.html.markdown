@@ -63,7 +63,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-MAIL FROM domain can be imported using the `domain` attribute, e.g.
+MAIL FROM domain can be imported using the `domain` attribute, e.g.,
 
 ```
 $ terraform import aws_ses_domain_mail_from.example example.com

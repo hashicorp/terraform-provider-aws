@@ -168,7 +168,9 @@ The following arguments are supported:
 * `path` - (Required) The path to the Amazon S3 target.
 * `connection_name` - (Optional) The name of a connection which allows crawler to access data in S3 within a VPC.
 * `exclusions` - (Optional) A list of glob patterns used to exclude from the crawl.
-* `sample_size` - (Optional)  Sets the number of files in each leaf folder to be crawled when crawling sample files in a dataset. If not set, all the files are crawled. A valid value is an integer between 1 and 249.
+* `sample_size` - (Optional) Sets the number of files in each leaf folder to be crawled when crawling sample files in a dataset. If not set, all the files are crawled. A valid value is an integer between 1 and 249.
+* `event_queue_arn` - (Optional) The ARN of the SQS queue to receive S3 notifications from.
+* `dlq_event_queue_arn` - (Optional) The ARN of the dead-letter SQS queue.
 
 ### Catalog Target
 
@@ -209,7 +211,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Glue Crawlers can be imported using `name`, e.g.
+Glue Crawlers can be imported using `name`, e.g.,
 
 ```
 $ terraform import aws_glue_crawler.MyJob MyJob

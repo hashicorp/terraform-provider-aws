@@ -149,7 +149,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-EventBridge permissions can be imported using the `event_bus_name`, e.g.
+EventBridge permissions can be imported using the `event_bus_name`, e.g.,
 
 ```shell
 $ terraform import aws_cloudwatch_event_bus_policy.DevAccountAccess example-event-bus

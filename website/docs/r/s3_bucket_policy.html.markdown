@@ -61,7 +61,7 @@ No additional attributes are exported.
 
 ## Import
 
-S3 bucket policies can be imported using the bucket name, e.g.
+S3 bucket policies can be imported using the bucket name, e.g.,
 
 ```
 $ terraform import aws_s3_bucket_policy.example my-bucket-name

@@ -217,7 +217,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-A QuickSight data source can be imported using the AWS account ID, and data source ID name separated by a slash (`/`) e.g.
+A QuickSight data source can be imported using the AWS account ID, and data source ID name separated by a slash (`/`) e.g.,
 
 ```
 $ terraform import aws_quicksight_data_source.example 123456789123/my-data-source-id

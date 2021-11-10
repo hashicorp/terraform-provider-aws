@@ -77,7 +77,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Remediation Configurations can be imported using the name config_rule_name, e.g.
+Remediation Configurations can be imported using the name config_rule_name, e.g.,
 
 ```
 $ terraform import aws_config_remediation_configuration.this example

@@ -77,7 +77,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Athena Workgroups can be imported using their name, e.g.
+Athena Workgroups can be imported using their name, e.g.,
 
 ```
 $ terraform import aws_athena_workgroup.example example
