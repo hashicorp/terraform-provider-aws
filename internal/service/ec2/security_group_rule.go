@@ -931,7 +931,7 @@ func validateSecurityGroupRuleImportString(importStr string) ([]string, error) {
 
 	if _, ok := sgProtocolIntegers()[protocol]; !ok {
 		if _, err := strconv.Atoi(protocol); err != nil {
-			return nil, fmt.Errorf(errStr, importStr, "protocol must be tcp/udp/icmp/all or a number")
+			return nil, fmt.Errorf(errStr, importStr, "protocol must be tcp/udp/icmp/icmpv6/all or a number")
 		}
 	}
 
