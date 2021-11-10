@@ -1,35 +1,34 @@
-package aws
+package s3_test
 
 import (
 	"fmt"
-	"reflect"
 	"regexp"
-	"sort"
 	"testing"
-	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/s3"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func TestAccAWSS3BucketIntelligentTieringConfiguration_basic(t *testing.T) {
+func TestAccS3BucketIntelligentTieringConfiguration_basic(t *testing.T) {
 	var itc s3.IntelligentTieringConfiguration
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_s3_bucket_intelligent_tiering_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, s3.EndpointsID),
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSS3BucketIntelligentTieringConfigurationDestroy,
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckBucketIntelligentTieringConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSS3BucketIntelligentTieringConfiguration(rName, rName),
+				Config: testAccBucketIntelligentTieringConfiguration(rName, rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSS3BucketIntelligentTieringConfigurationExists(resourceName, &itc),
+					testAccCheckS3BucketIntelligentTieringConfigurationExists(resourceName, &itc),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttrPair(resourceName, "bucket", "aws_s3_bucket.test", "bucket"),
 					resource.TestCheckResourceAttr(resourceName, "enabled", "true"),
@@ -46,48 +45,21 @@ func TestAccAWSS3BucketIntelligentTieringConfiguration_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSS3BucketIntelligentTieringConfiguration_removed(t *testing.T) {
+func TestAccS3BucketIntelligentTieringConfiguration_disableBasic(t *testing.T) {
 	var itc s3.IntelligentTieringConfiguration
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_s3_bucket_intelligent_tiering_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, s3.EndpointsID),
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSS3BucketIntelligentTieringConfigurationDestroy,
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckBucketIntelligentTieringConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSS3BucketIntelligentTieringConfiguration(rName, rName),
+				Config: testAccBucketIntelligentTieringConfiguration(rName, rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSS3BucketIntelligentTieringConfigurationExists(resourceName, &itc),
-				),
-			},
-			{
-				Config: testAccAWSS3BucketIntelligentTieringConfiguration_removed(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSS3BucketIntelligentTieringConfigurationRemoved(rName, rName),
-				),
-			},
-		},
-	})
-}
-
-func TestAccAWSS3BucketIntelligentTieringConfiguration_disableBasic(t *testing.T) {
-	var itc s3.IntelligentTieringConfiguration
-	rName := acctest.RandomWithPrefix("tf-acc-test")
-	resourceName := "aws_s3_bucket_intelligent_tiering_configuration.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, s3.EndpointsID),
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSS3BucketIntelligentTieringConfigurationDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAWSS3BucketIntelligentTieringConfiguration(rName, rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSS3BucketIntelligentTieringConfigurationExists(resourceName, &itc),
+					testAccCheckS3BucketIntelligentTieringConfigurationExists(resourceName, &itc),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttrPair(resourceName, "bucket", "aws_s3_bucket.test", "bucket"),
 					resource.TestCheckResourceAttr(resourceName, "enabled", "true"),
@@ -96,9 +68,9 @@ func TestAccAWSS3BucketIntelligentTieringConfiguration_disableBasic(t *testing.T
 				),
 			},
 			{
-				Config: testAccAWSS3BucketIntelligentTieringConfigurationDisabled(rName, rName),
+				Config: testAccBucketIntelligentTieringConfigurationDisabled(rName, rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSS3BucketIntelligentTieringConfigurationExists(resourceName, &itc),
+					testAccCheckS3BucketIntelligentTieringConfigurationExists(resourceName, &itc),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttrPair(resourceName, "bucket", "aws_s3_bucket.test", "bucket"),
 					resource.TestCheckResourceAttr(resourceName, "enabled", "false"),
@@ -115,24 +87,24 @@ func TestAccAWSS3BucketIntelligentTieringConfiguration_disableBasic(t *testing.T
 	})
 }
 
-func TestAccAWSS3BucketIntelligentTieringConfiguration_updateBasic(t *testing.T) {
+func TestAccS3BucketIntelligentTieringConfiguration_updateBasic(t *testing.T) {
 	var itc s3.IntelligentTieringConfiguration
-	originalITCName := acctest.RandomWithPrefix("tf-acc-test")
-	originalBucketName := acctest.RandomWithPrefix("tf-acc-test")
-	updatedITCName := acctest.RandomWithPrefix("tf-acc-test")
-	updatedBucketName := acctest.RandomWithPrefix("tf-acc-test")
+	originalITCName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	originalBucketName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	updatedITCName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	updatedBucketName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_s3_bucket_intelligent_tiering_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, s3.EndpointsID),
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSS3BucketIntelligentTieringConfigurationDestroy,
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckBucketIntelligentTieringConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSS3BucketIntelligentTieringConfiguration(originalITCName, originalBucketName),
+				Config: testAccBucketIntelligentTieringConfiguration(originalITCName, originalBucketName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSS3BucketIntelligentTieringConfigurationExists(resourceName, &itc),
+					testAccCheckS3BucketIntelligentTieringConfigurationExists(resourceName, &itc),
 					resource.TestCheckResourceAttr(resourceName, "name", originalITCName),
 					resource.TestCheckResourceAttrPair(resourceName, "bucket", "aws_s3_bucket.test", "bucket"),
 					resource.TestCheckResourceAttr(resourceName, "filter.#", "0"),
@@ -140,10 +112,9 @@ func TestAccAWSS3BucketIntelligentTieringConfiguration_updateBasic(t *testing.T)
 				),
 			},
 			{
-				Config: testAccAWSS3BucketIntelligentTieringConfiguration(updatedITCName, originalBucketName),
+				Config: testAccBucketIntelligentTieringConfiguration(updatedITCName, originalBucketName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSS3BucketIntelligentTieringConfigurationExists(resourceName, &itc),
-					testAccCheckAWSS3BucketIntelligentTieringConfigurationRemoved(originalITCName, originalBucketName),
+					testAccCheckS3BucketIntelligentTieringConfigurationExists(resourceName, &itc),
 					resource.TestCheckResourceAttr(resourceName, "name", updatedITCName),
 					resource.TestCheckResourceAttrPair(resourceName, "bucket", "aws_s3_bucket.test", "bucket"),
 					resource.TestCheckResourceAttr(resourceName, "filter.#", "0"),
@@ -151,10 +122,9 @@ func TestAccAWSS3BucketIntelligentTieringConfiguration_updateBasic(t *testing.T)
 				),
 			},
 			{
-				Config: testAccAWSS3BucketIntelligentTieringConfigurationUpdateBucket(updatedITCName, originalBucketName, updatedBucketName),
+				Config: testAccBucketIntelligentTieringConfigurationUpdateBucket(updatedITCName, originalBucketName, updatedBucketName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSS3BucketIntelligentTieringConfigurationExists(resourceName, &itc),
-					testAccCheckAWSS3BucketIntelligentTieringConfigurationRemoved(updatedITCName, originalBucketName),
+					testAccCheckS3BucketIntelligentTieringConfigurationExists(resourceName, &itc),
 					resource.TestCheckResourceAttr(resourceName, "name", updatedITCName),
 					resource.TestCheckResourceAttrPair(resourceName, "bucket", "aws_s3_bucket.test_2", "bucket"),
 					resource.TestCheckResourceAttr(resourceName, "filter.#", "0"),
@@ -170,26 +140,26 @@ func TestAccAWSS3BucketIntelligentTieringConfiguration_updateBasic(t *testing.T)
 	})
 }
 
-func TestAccAWSS3BucketIntelligentTieringConfiguration_WithFilter_Empty(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+func TestAccS3BucketIntelligentTieringConfiguration_WithFilter_Empty(t *testing.T) {
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, s3.EndpointsID),
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSS3BucketIntelligentTieringConfigurationDestroy,
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckBucketIntelligentTieringConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccAWSS3BucketIntelligentTieringConfigurationWithEmptyFilter(rName, rName),
+				Config:      testAccBucketIntelligentTieringConfigurationWithEmptyFilter(rName, rName),
 				ExpectError: regexp.MustCompile(`one of .* must be specified`),
 			},
 		},
 	})
 }
 
-func TestAccAWSS3BucketIntelligentTieringConfiguration_WithFilter_Prefix(t *testing.T) {
+func TestAccS3BucketIntelligentTieringConfiguration_WithFilter_Prefix(t *testing.T) {
 	var itc s3.IntelligentTieringConfiguration
-	rInt := acctest.RandInt()
+	rInt := sdkacctest.RandInt()
 	resourceName := "aws_s3_bucket_intelligent_tiering_configuration.test"
 
 	rName := fmt.Sprintf("tf-acc-test-%d", rInt)
@@ -197,24 +167,24 @@ func TestAccAWSS3BucketIntelligentTieringConfiguration_WithFilter_Prefix(t *test
 	prefixUpdate := fmt.Sprintf("prefix-update-%d/", rInt)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, s3.EndpointsID),
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSS3BucketIntelligentTieringConfigurationDestroy,
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckBucketIntelligentTieringConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSS3BucketIntelligentTieringConfigurationWithFilterPrefix(rName, rName, prefix),
+				Config: testAccBucketIntelligentTieringConfigurationWithFilterPrefix(rName, rName, prefix),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSS3BucketIntelligentTieringConfigurationExists(resourceName, &itc),
+					testAccCheckS3BucketIntelligentTieringConfigurationExists(resourceName, &itc),
 					resource.TestCheckResourceAttr(resourceName, "filter.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.prefix", prefix),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.tags.%", "0"),
 				),
 			},
 			{
-				Config: testAccAWSS3BucketIntelligentTieringConfigurationWithFilterPrefix(rName, rName, prefixUpdate),
+				Config: testAccBucketIntelligentTieringConfigurationWithFilterPrefix(rName, rName, prefixUpdate),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSS3BucketIntelligentTieringConfigurationExists(resourceName, &itc),
+					testAccCheckS3BucketIntelligentTieringConfigurationExists(resourceName, &itc),
 					resource.TestCheckResourceAttr(resourceName, "filter.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.prefix", prefixUpdate),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.tags.%", "0"),
@@ -229,9 +199,9 @@ func TestAccAWSS3BucketIntelligentTieringConfiguration_WithFilter_Prefix(t *test
 	})
 }
 
-func TestAccAWSS3BucketIntelligentTieringConfiguration_WithFilter_SingleTag(t *testing.T) {
+func TestAccS3BucketIntelligentTieringConfiguration_WithFilter_SingleTag(t *testing.T) {
 	var itc s3.IntelligentTieringConfiguration
-	rInt := acctest.RandInt()
+	rInt := sdkacctest.RandInt()
 	resourceName := "aws_s3_bucket_intelligent_tiering_configuration.test"
 
 	rName := fmt.Sprintf("tf-acc-test-%d", rInt)
@@ -239,15 +209,15 @@ func TestAccAWSS3BucketIntelligentTieringConfiguration_WithFilter_SingleTag(t *t
 	tag1Update := fmt.Sprintf("tag-update-%d", rInt)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, s3.EndpointsID),
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSS3BucketIntelligentTieringConfigurationDestroy,
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckBucketIntelligentTieringConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSS3BucketIntelligentTieringConfigurationWithFilterSingleTag(rName, rName, tag1),
+				Config: testAccBucketIntelligentTieringConfigurationWithFilterSingleTag(rName, rName, tag1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSS3BucketIntelligentTieringConfigurationExists(resourceName, &itc),
+					testAccCheckS3BucketIntelligentTieringConfigurationExists(resourceName, &itc),
 					resource.TestCheckResourceAttr(resourceName, "filter.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.prefix", ""),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.tags.%", "1"),
@@ -255,9 +225,9 @@ func TestAccAWSS3BucketIntelligentTieringConfiguration_WithFilter_SingleTag(t *t
 				),
 			},
 			{
-				Config: testAccAWSS3BucketIntelligentTieringConfigurationWithFilterSingleTag(rName, rName, tag1Update),
+				Config: testAccBucketIntelligentTieringConfigurationWithFilterSingleTag(rName, rName, tag1Update),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSS3BucketIntelligentTieringConfigurationExists(resourceName, &itc),
+					testAccCheckS3BucketIntelligentTieringConfigurationExists(resourceName, &itc),
 					resource.TestCheckResourceAttr(resourceName, "filter.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.prefix", ""),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.tags.%", "1"),
@@ -273,9 +243,9 @@ func TestAccAWSS3BucketIntelligentTieringConfiguration_WithFilter_SingleTag(t *t
 	})
 }
 
-func TestAccAWSS3BucketIntelligentTieringConfiguration_WithFilter_MultipleTags(t *testing.T) {
+func TestAccS3BucketIntelligentTieringConfiguration_WithFilter_MultipleTags(t *testing.T) {
 	var itc s3.IntelligentTieringConfiguration
-	rInt := acctest.RandInt()
+	rInt := sdkacctest.RandInt()
 	resourceName := "aws_s3_bucket_intelligent_tiering_configuration.test"
 
 	rName := fmt.Sprintf("tf-acc-test-%d", rInt)
@@ -285,15 +255,15 @@ func TestAccAWSS3BucketIntelligentTieringConfiguration_WithFilter_MultipleTags(t
 	tag2Update := fmt.Sprintf("tag2-update-%d", rInt)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, s3.EndpointsID),
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSS3BucketIntelligentTieringConfigurationDestroy,
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckBucketIntelligentTieringConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSS3BucketIntelligentTieringConfigurationWithFilterMultipleTags(rName, rName, tag1, tag2),
+				Config: testAccBucketIntelligentTieringConfigurationWithFilterMultipleTags(rName, rName, tag1, tag2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSS3BucketIntelligentTieringConfigurationExists(resourceName, &itc),
+					testAccCheckS3BucketIntelligentTieringConfigurationExists(resourceName, &itc),
 					resource.TestCheckResourceAttr(resourceName, "filter.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.prefix", ""),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.tags.%", "2"),
@@ -302,9 +272,9 @@ func TestAccAWSS3BucketIntelligentTieringConfiguration_WithFilter_MultipleTags(t
 				),
 			},
 			{
-				Config: testAccAWSS3BucketIntelligentTieringConfigurationWithFilterMultipleTags(rName, rName, tag1Update, tag2Update),
+				Config: testAccBucketIntelligentTieringConfigurationWithFilterMultipleTags(rName, rName, tag1Update, tag2Update),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSS3BucketIntelligentTieringConfigurationExists(resourceName, &itc),
+					testAccCheckS3BucketIntelligentTieringConfigurationExists(resourceName, &itc),
 					resource.TestCheckResourceAttr(resourceName, "filter.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.prefix", ""),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.tags.%", "2"),
@@ -321,9 +291,9 @@ func TestAccAWSS3BucketIntelligentTieringConfiguration_WithFilter_MultipleTags(t
 	})
 }
 
-func TestAccAWSS3BucketIntelligentTieringConfiguration_WithFilter_PrefixAndTags(t *testing.T) {
+func TestAccS3BucketIntelligentTieringConfiguration_WithFilter_PrefixAndTags(t *testing.T) {
 	var itc s3.IntelligentTieringConfiguration
-	rInt := acctest.RandInt()
+	rInt := sdkacctest.RandInt()
 	resourceName := "aws_s3_bucket_intelligent_tiering_configuration.test"
 
 	rName := fmt.Sprintf("tf-acc-test-%d", rInt)
@@ -335,15 +305,15 @@ func TestAccAWSS3BucketIntelligentTieringConfiguration_WithFilter_PrefixAndTags(
 	tag2Update := fmt.Sprintf("tag2-update-%d", rInt)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, s3.EndpointsID),
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSS3BucketIntelligentTieringConfigurationDestroy,
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckBucketIntelligentTieringConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSS3BucketIntelligentTieringConfigurationWithFilterPrefixAndTags(rName, rName, prefix, tag1, tag2),
+				Config: testAccBucketIntelligentTieringConfigurationWithFilterPrefixAndTags(rName, rName, prefix, tag1, tag2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSS3BucketIntelligentTieringConfigurationExists(resourceName, &itc),
+					testAccCheckS3BucketIntelligentTieringConfigurationExists(resourceName, &itc),
 					resource.TestCheckResourceAttr(resourceName, "filter.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.prefix", prefix),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.tags.%", "2"),
@@ -352,9 +322,9 @@ func TestAccAWSS3BucketIntelligentTieringConfiguration_WithFilter_PrefixAndTags(
 				),
 			},
 			{
-				Config: testAccAWSS3BucketIntelligentTieringConfigurationWithFilterPrefixAndTags(rName, rName, prefixUpdate, tag1Update, tag2Update),
+				Config: testAccBucketIntelligentTieringConfigurationWithFilterPrefixAndTags(rName, rName, prefixUpdate, tag1Update, tag2Update),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSS3BucketIntelligentTieringConfigurationExists(resourceName, &itc),
+					testAccCheckS3BucketIntelligentTieringConfigurationExists(resourceName, &itc),
 					resource.TestCheckResourceAttr(resourceName, "filter.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.prefix", prefixUpdate),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.tags.%", "2"),
@@ -371,30 +341,30 @@ func TestAccAWSS3BucketIntelligentTieringConfiguration_WithFilter_PrefixAndTags(
 	})
 }
 
-func TestAccAWSS3BucketIntelligentTieringConfiguration_WithFilter_Remove(t *testing.T) {
+func TestAccS3BucketIntelligentTieringConfiguration_WithFilter_Remove(t *testing.T) {
 	var itc s3.IntelligentTieringConfiguration
-	rInt := acctest.RandInt()
+	rInt := sdkacctest.RandInt()
 	resourceName := "aws_s3_bucket_intelligent_tiering_configuration.test"
 
 	rName := fmt.Sprintf("tf-acc-test-%d", rInt)
 	prefix := fmt.Sprintf("prefix-%d/", rInt)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, s3.EndpointsID),
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSS3BucketIntelligentTieringConfigurationDestroy,
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckBucketIntelligentTieringConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSS3BucketIntelligentTieringConfigurationWithFilterPrefix(rName, rName, prefix),
+				Config: testAccBucketIntelligentTieringConfigurationWithFilterPrefix(rName, rName, prefix),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSS3BucketIntelligentTieringConfigurationExists(resourceName, &itc),
+					testAccCheckS3BucketIntelligentTieringConfigurationExists(resourceName, &itc),
 				),
 			},
 			{
-				Config: testAccAWSS3BucketIntelligentTieringConfiguration(rName, rName),
+				Config: testAccBucketIntelligentTieringConfiguration(rName, rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSS3BucketIntelligentTieringConfigurationExists(resourceName, &itc),
+					testAccCheckS3BucketIntelligentTieringConfigurationExists(resourceName, &itc),
 					resource.TestCheckResourceAttr(resourceName, "filter.#", "0"),
 				),
 			},
@@ -407,24 +377,24 @@ func TestAccAWSS3BucketIntelligentTieringConfiguration_WithFilter_Remove(t *test
 	})
 }
 
-func TestAccAWSS3BucketIntelligentTieringConfiguration_WithTier_Empty(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+func TestAccS3BucketIntelligentTieringConfiguration_WithTier_Empty(t *testing.T) {
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, s3.EndpointsID),
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSS3BucketIntelligentTieringConfigurationDestroy,
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckBucketIntelligentTieringConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccAWSS3BucketIntelligentTieringConfigurationWithEmptyTier(rName, rName),
+				Config:      testAccBucketIntelligentTieringConfigurationWithEmptyTier(rName, rName),
 				ExpectError: regexp.MustCompile(`The argument "access_tier" is required, but no definition was found.`),
 			},
 		},
 	})
 }
 
-func TestAccAWSS3BucketIntelligentTieringConfiguration_WithTwoTiers_Default(t *testing.T) {
+func testAccBucketIntelligentTieringConfiguration_WithTwoTiers_Default(t *testing.T) {
 	var itc s3.IntelligentTieringConfiguration
 	resourceName := "aws_s3_bucket_intelligent_tiering_configuration.test"
 
@@ -434,18 +404,18 @@ func TestAccAWSS3BucketIntelligentTieringConfiguration_WithTwoTiers_Default(t *t
 	accessTierTwo := "DEEP_ARCHIVE_ACCESS"
 	accessTierDaysTwo := "240"
 
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, s3.EndpointsID),
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSS3BucketIntelligentTieringConfigurationDestroy,
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckBucketIntelligentTieringConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSS3BucketIntelligentTieringConfigurationTwoTiers(rName, rName, accessTierOne, accessTierDaysOne, accessTierTwo, accessTierDaysTwo),
+				Config: testAccBucketIntelligentTieringConfigurationTwoTiers(rName, rName, accessTierOne, accessTierDaysOne, accessTierTwo, accessTierDaysTwo),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSS3BucketIntelligentTieringConfigurationExists(resourceName, &itc),
+					testAccCheckS3BucketIntelligentTieringConfigurationExists(resourceName, &itc),
 					resource.TestCheckResourceAttr(resourceName, "tier.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tier.0.access_tier", accessTierOne),
 					resource.TestCheckResourceAttr(resourceName, "tier.0.days", accessTierDaysOne),
@@ -462,7 +432,7 @@ func TestAccAWSS3BucketIntelligentTieringConfiguration_WithTwoTiers_Default(t *t
 	})
 }
 
-func TestAccAWSS3BucketIntelligentTieringConfiguration_WithOneTier_UpdateDays(t *testing.T) {
+func testAccBucketIntelligentTieringConfiguration_WithOneTier_UpdateDays(t *testing.T) {
 	var itc s3.IntelligentTieringConfiguration
 	resourceName := "aws_s3_bucket_intelligent_tiering_configuration.test"
 
@@ -471,27 +441,27 @@ func TestAccAWSS3BucketIntelligentTieringConfiguration_WithOneTier_UpdateDays(t 
 
 	accessTierDaysNew := "240"
 
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, s3.EndpointsID),
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSS3BucketIntelligentTieringConfigurationDestroy,
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckBucketIntelligentTieringConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSS3BucketIntelligentTieringConfigurationOneTier(rName, rName, accessTier, accessTierDays),
+				Config: testAccBucketIntelligentTieringConfigurationOneTier(rName, rName, accessTier, accessTierDays),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSS3BucketIntelligentTieringConfigurationExists(resourceName, &itc),
+					testAccCheckS3BucketIntelligentTieringConfigurationExists(resourceName, &itc),
 					resource.TestCheckResourceAttr(resourceName, "tier.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tier.0.access_tier", accessTier),
 					resource.TestCheckResourceAttr(resourceName, "tier.0.days", accessTierDays),
 				),
 			},
 			{
-				Config: testAccAWSS3BucketIntelligentTieringConfigurationOneTier(rName, rName, accessTier, accessTierDaysNew),
+				Config: testAccBucketIntelligentTieringConfigurationOneTier(rName, rName, accessTier, accessTierDaysNew),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSS3BucketIntelligentTieringConfigurationExists(resourceName, &itc),
+					testAccCheckS3BucketIntelligentTieringConfigurationExists(resourceName, &itc),
 					resource.TestCheckResourceAttr(resourceName, "tier.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tier.0.access_tier", accessTier),
 					resource.TestCheckResourceAttr(resourceName, "tier.0.days", accessTierDaysNew),
@@ -506,7 +476,7 @@ func TestAccAWSS3BucketIntelligentTieringConfiguration_WithOneTier_UpdateDays(t 
 	})
 }
 
-func TestAccAWSS3BucketIntelligentTieringConfiguration_WithTwoTiers_RemoveOne(t *testing.T) {
+func testAccBucketIntelligentTieringConfiguration_WithTwoTiers_RemoveOne(t *testing.T) {
 	var itc s3.IntelligentTieringConfiguration
 	resourceName := "aws_s3_bucket_intelligent_tiering_configuration.test"
 
@@ -516,18 +486,18 @@ func TestAccAWSS3BucketIntelligentTieringConfiguration_WithTwoTiers_RemoveOne(t 
 	accessTierTwo := "DEEP_ARCHIVE_ACCESS"
 	accessTierDaysTwo := "240"
 
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, s3.EndpointsID),
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSS3BucketIntelligentTieringConfigurationDestroy,
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckBucketIntelligentTieringConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSS3BucketIntelligentTieringConfigurationTwoTiers(rName, rName, accessTierOne, accessTierDaysOne, accessTierTwo, accessTierDaysTwo),
+				Config: testAccBucketIntelligentTieringConfigurationTwoTiers(rName, rName, accessTierOne, accessTierDaysOne, accessTierTwo, accessTierDaysTwo),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSS3BucketIntelligentTieringConfigurationExists(resourceName, &itc),
+					testAccCheckS3BucketIntelligentTieringConfigurationExists(resourceName, &itc),
 					resource.TestCheckResourceAttr(resourceName, "tier.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tier.0.access_tier", accessTierOne),
 					resource.TestCheckResourceAttr(resourceName, "tier.0.days", accessTierDaysOne),
@@ -536,9 +506,9 @@ func TestAccAWSS3BucketIntelligentTieringConfiguration_WithTwoTiers_RemoveOne(t 
 				),
 			},
 			{
-				Config: testAccAWSS3BucketIntelligentTieringConfigurationOneTier(rName, rName, accessTierOne, accessTierDaysOne),
+				Config: testAccBucketIntelligentTieringConfigurationOneTier(rName, rName, accessTierOne, accessTierDaysOne),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSS3BucketIntelligentTieringConfigurationExists(resourceName, &itc),
+					testAccCheckS3BucketIntelligentTieringConfigurationExists(resourceName, &itc),
 					resource.TestCheckResourceAttr(resourceName, "tier.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tier.0.access_tier", accessTierOne),
 					resource.TestCheckResourceAttr(resourceName, "tier.0.days", accessTierDaysOne),
@@ -553,7 +523,7 @@ func TestAccAWSS3BucketIntelligentTieringConfiguration_WithTwoTiers_RemoveOne(t 
 	})
 }
 
-func testAccAWSS3BucketIntelligentTieringConfiguration(name, bucket string) string {
+func testAccBucketIntelligentTieringConfiguration(name, bucket string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket_intelligent_tiering_configuration" "test" {
   bucket = aws_s3_bucket.test.bucket
@@ -570,7 +540,7 @@ resource "aws_s3_bucket" "test" {
 `, name, bucket)
 }
 
-func testAccAWSS3BucketIntelligentTieringConfigurationDisabled(name, bucket string) string {
+func testAccBucketIntelligentTieringConfigurationDisabled(name, bucket string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket_intelligent_tiering_configuration" "test" {
   bucket = aws_s3_bucket.test.bucket
@@ -588,7 +558,7 @@ resource "aws_s3_bucket" "test" {
 `, name, bucket)
 }
 
-func testAccAWSS3BucketIntelligentTieringConfigurationOneTier(name, bucket, accessTier, accessTierDays string) string {
+func testAccBucketIntelligentTieringConfigurationOneTier(name, bucket, accessTier, accessTierDays string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket_intelligent_tiering_configuration" "test" {
   bucket = aws_s3_bucket.test.bucket
@@ -605,7 +575,7 @@ resource "aws_s3_bucket" "test" {
 `, name, accessTier, accessTierDays, bucket)
 }
 
-func testAccAWSS3BucketIntelligentTieringConfigurationTwoTiers(name, bucket, accessTierOne, accessTierDaysOne, accessTierTwo, accessTierDaysTwo string) string {
+func testAccBucketIntelligentTieringConfigurationTwoTiers(name, bucket, accessTierOne, accessTierDaysOne, accessTierTwo, accessTierDaysTwo string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket_intelligent_tiering_configuration" "test" {
   bucket = aws_s3_bucket.test.bucket
@@ -626,15 +596,7 @@ resource "aws_s3_bucket" "test" {
 `, name, accessTierOne, accessTierDaysOne, accessTierTwo, accessTierDaysTwo, bucket)
 }
 
-func testAccAWSS3BucketIntelligentTieringConfiguration_removed(bucket string) string {
-	return fmt.Sprintf(`
-resource "aws_s3_bucket" "test" {
-  bucket = "%s"
-}
-`, bucket)
-}
-
-func testAccAWSS3BucketIntelligentTieringConfigurationUpdateBucket(name, originalBucket, updatedBucket string) string {
+func testAccBucketIntelligentTieringConfigurationUpdateBucket(name, originalBucket, updatedBucket string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket_intelligent_tiering_configuration" "test" {
 	bucket = aws_s3_bucket.test_2.bucket
@@ -655,7 +617,7 @@ resource "aws_s3_bucket" "test_2" {
 `, name, originalBucket, updatedBucket)
 }
 
-func testAccAWSS3BucketIntelligentTieringConfigurationWithEmptyFilter(name, bucket string) string {
+func testAccBucketIntelligentTieringConfigurationWithEmptyFilter(name, bucket string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket_intelligent_tiering_configuration" "test" {
   bucket = aws_s3_bucket.test.bucket
@@ -676,7 +638,7 @@ resource "aws_s3_bucket" "test" {
 `, name, bucket)
 }
 
-func testAccAWSS3BucketIntelligentTieringConfigurationWithFilterPrefix(name, bucket, prefix string) string {
+func testAccBucketIntelligentTieringConfigurationWithFilterPrefix(name, bucket, prefix string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket_intelligent_tiering_configuration" "test" {
   bucket = aws_s3_bucket.test.bucket
@@ -697,7 +659,7 @@ resource "aws_s3_bucket" "test" {
 `, name, prefix, bucket)
 }
 
-func testAccAWSS3BucketIntelligentTieringConfigurationWithFilterSingleTag(name, bucket, tag string) string {
+func testAccBucketIntelligentTieringConfigurationWithFilterSingleTag(name, bucket, tag string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket_intelligent_tiering_configuration" "test" {
   bucket = aws_s3_bucket.test.bucket
@@ -721,7 +683,7 @@ resource "aws_s3_bucket" "test" {
 `, name, tag, bucket)
 }
 
-func testAccAWSS3BucketIntelligentTieringConfigurationWithFilterMultipleTags(name, bucket, tag1, tag2 string) string {
+func testAccBucketIntelligentTieringConfigurationWithFilterMultipleTags(name, bucket, tag1, tag2 string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket_intelligent_tiering_configuration" "test" {
   bucket = aws_s3_bucket.test.bucket
@@ -746,7 +708,7 @@ resource "aws_s3_bucket" "test" {
 `, name, tag1, tag2, bucket)
 }
 
-func testAccAWSS3BucketIntelligentTieringConfigurationWithFilterPrefixAndTags(name, bucket, prefix, tag1, tag2 string) string {
+func testAccBucketIntelligentTieringConfigurationWithFilterPrefixAndTags(name, bucket, prefix, tag1, tag2 string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket_intelligent_tiering_configuration" "test" {
   bucket = aws_s3_bucket.test.bucket
@@ -773,7 +735,7 @@ resource "aws_s3_bucket" "test" {
 `, name, prefix, tag1, tag2, bucket)
 }
 
-func testAccAWSS3BucketIntelligentTieringConfigurationWithEmptyTier(name, bucket string) string {
+func testAccBucketIntelligentTieringConfigurationWithEmptyTier(name, bucket string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket_intelligent_tiering_configuration" "test" {
   bucket = aws_s3_bucket.test.bucket
@@ -788,14 +750,15 @@ resource "aws_s3_bucket" "test" {
 `, name, bucket)
 }
 
-func testAccCheckAWSS3BucketIntelligentTieringConfigurationExists(n string, itc *s3.IntelligentTieringConfiguration) resource.TestCheckFunc {
+func testAccCheckS3BucketIntelligentTieringConfigurationExists(n string, itc *s3.IntelligentTieringConfiguration) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).s3conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn
+
 		output, err := conn.GetBucketIntelligentTieringConfiguration(&s3.GetBucketIntelligentTieringConfigurationInput{
 			Bucket: aws.String(rs.Primary.Attributes["bucket"]),
 			Id:     aws.String(rs.Primary.Attributes["name"]),
@@ -815,474 +778,24 @@ func testAccCheckAWSS3BucketIntelligentTieringConfigurationExists(n string, itc 
 	}
 }
 
-func testAccCheckAWSS3BucketIntelligentTieringConfigurationDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).s3conn
+func testAccCheckBucketIntelligentTieringConfigurationDestroy(s *terraform.State) error {
+	// conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_s3_bucket_intelligent_tiering_configuration" {
 			continue
 		}
-		bucket, name, err := resourceAwsS3BucketIntelligentTieringConfigurationParseID(rs.Primary.ID)
-		if err != nil {
-			return err
-		}
 
-		return waitForDeleteS3BucketIntelligentTieringConfiguration(conn, bucket, name, 1*time.Minute)
+		// TODO
+		// bucket, name, err := resourceAwsS3BucketIntelligentTieringConfigurationParseID(rs.Primary.ID)
+
+		// if err != nil {
+		// 	return err
+		// }
+
+		// return waitForDeleteS3BucketIntelligentTieringConfiguration(conn, bucket, name, 1*time.Minute)
 	}
 
 	return nil
 
-}
-
-func testAccCheckAWSS3BucketIntelligentTieringConfigurationRemoved(name, bucket string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).s3conn
-		return waitForDeleteS3BucketIntelligentTieringConfiguration(conn, bucket, name, 1*time.Minute)
-	}
-}
-
-func TestExpandS3IntelligentTieringFilter(t *testing.T) {
-	testCases := map[string]struct {
-		Input    []interface{}
-		Expected *s3.IntelligentTieringFilter
-	}{
-		"nil input": {
-			Input:    nil,
-			Expected: nil,
-		},
-		"empty input": {
-			Input:    []interface{}{},
-			Expected: nil,
-		},
-		"prefix only": {
-			Input: []interface{}{
-				map[string]interface{}{
-					"prefix": "prefix/",
-				},
-			},
-			Expected: &s3.IntelligentTieringFilter{
-				Prefix: aws.String("prefix/"),
-			},
-		},
-		"prefix and single tag": {
-			Input: []interface{}{
-				map[string]interface{}{
-					"prefix": "prefix/",
-					"tags": map[string]interface{}{
-						"tag1key": "tag1value",
-					},
-				},
-			},
-			Expected: &s3.IntelligentTieringFilter{
-				And: &s3.IntelligentTieringAndOperator{
-					Prefix: aws.String("prefix/"),
-					Tags: []*s3.Tag{
-						{
-							Key:   aws.String("tag1key"),
-							Value: aws.String("tag1value"),
-						},
-					},
-				},
-			},
-		},
-		"prefix and multiple tags": {
-			Input: []interface{}{map[string]interface{}{
-				"prefix": "prefix/",
-				"tags": map[string]interface{}{
-					"tag1key": "tag1value",
-					"tag2key": "tag2value",
-				},
-			},
-			},
-			Expected: &s3.IntelligentTieringFilter{
-				And: &s3.IntelligentTieringAndOperator{
-					Prefix: aws.String("prefix/"),
-					Tags: []*s3.Tag{
-						{
-							Key:   aws.String("tag1key"),
-							Value: aws.String("tag1value"),
-						},
-						{
-							Key:   aws.String("tag2key"),
-							Value: aws.String("tag2value"),
-						},
-					},
-				},
-			},
-		},
-		"single tag only": {
-			Input: []interface{}{
-				map[string]interface{}{
-					"tags": map[string]interface{}{
-						"tag1key": "tag1value",
-					},
-				},
-			},
-			Expected: &s3.IntelligentTieringFilter{
-				Tag: &s3.Tag{
-					Key:   aws.String("tag1key"),
-					Value: aws.String("tag1value"),
-				},
-			},
-		},
-		"multiple tags only": {
-			Input: []interface{}{
-				map[string]interface{}{
-					"tags": map[string]interface{}{
-						"tag1key": "tag1value",
-						"tag2key": "tag2value",
-					},
-				},
-			},
-			Expected: &s3.IntelligentTieringFilter{
-				And: &s3.IntelligentTieringAndOperator{
-					Tags: []*s3.Tag{
-						{
-							Key:   aws.String("tag1key"),
-							Value: aws.String("tag1value"),
-						},
-						{
-							Key:   aws.String("tag2key"),
-							Value: aws.String("tag2value"),
-						},
-					},
-				},
-			},
-		},
-	}
-
-	for k, tc := range testCases {
-		value := expandS3IntelligentTieringFilter(tc.Input)
-
-		if value == nil {
-			if tc.Expected == nil {
-				continue
-			} else {
-				t.Errorf("Case %q: Got nil\nExpected:\n%v", k, tc.Expected)
-			}
-		}
-
-		if tc.Expected == nil {
-			t.Errorf("Case %q: Got: %v\nExpected: nil", k, value)
-		}
-
-		// Sort tags by key for consistency
-		if value.And != nil && value.And.Tags != nil {
-			sort.Slice(value.And.Tags, func(i, j int) bool {
-				return *value.And.Tags[i].Key < *value.And.Tags[j].Key
-			})
-		}
-
-		// Convert to strings to avoid dealing with pointers
-		valueS := fmt.Sprintf("%v", value)
-		expectedValueS := fmt.Sprintf("%v", tc.Expected)
-
-		if valueS != expectedValueS {
-			t.Errorf("Case %q: Given:\n%s\n\nExpected:\n%s", k, valueS, expectedValueS)
-		}
-	}
-}
-
-func TestExpandS3IntelligentTieringConfigurations(t *testing.T) {
-	testCases := map[string]struct {
-		Input    []interface{}
-		Expected []*s3.Tiering
-	}{
-		"nil input": {
-			Input:    nil,
-			Expected: nil,
-		},
-		"empty input": {
-			Input:    []interface{}{map[string]interface{}{}},
-			Expected: nil,
-		},
-		"nil array": {
-			Input:    []interface{}{nil},
-			Expected: nil,
-		},
-		"one input": {
-			Input: []interface{}{
-				map[string]interface{}{
-					"access_tier": "testing",
-					"days":        123,
-				},
-			},
-			Expected: []*s3.Tiering{
-				{
-					AccessTier: aws.String("testing"),
-					Days:       aws.Int64(int64(123)),
-				},
-			},
-		},
-		"two inputs": {
-			Input: []interface{}{
-				map[string]interface{}{
-					"access_tier": "test",
-					"days":        55,
-				},
-				map[string]interface{}{
-					"access_tier": "test2",
-					"days":        56,
-				},
-			},
-			Expected: []*s3.Tiering{
-				{
-					AccessTier: aws.String("test"),
-					Days:       aws.Int64(int64(55)),
-				},
-				{
-					AccessTier: aws.String("test2"),
-					Days:       aws.Int64(int64(56)),
-				},
-			},
-		},
-	}
-
-	for k, tc := range testCases {
-		value := expandS3IntelligentTieringConfigurations(tc.Input)
-
-		if !reflect.DeepEqual(value, tc.Expected) {
-			t.Errorf("Case %q:\nGot:\n%v\nExpected:\n%v", k, value, tc.Expected)
-		}
-	}
-}
-
-func TestFlattenS3IntelligentTieringFilter(t *testing.T) {
-	testCases := map[string]struct {
-		Input    *s3.IntelligentTieringFilter
-		Expected []map[string]interface{}
-	}{
-		"nil input": {
-			Input:    nil,
-			Expected: nil,
-		},
-		"empty input": {
-			Input:    &s3.IntelligentTieringFilter{},
-			Expected: nil,
-		},
-		"prefix only": {
-			Input: &s3.IntelligentTieringFilter{
-				Prefix: aws.String("prefix/"),
-			},
-			Expected: []map[string]interface{}{
-				{
-					"prefix": "prefix/",
-				},
-			},
-		},
-		"prefix and single tag": {
-			Input: &s3.IntelligentTieringFilter{
-				And: &s3.IntelligentTieringAndOperator{
-					Prefix: aws.String("prefix/"),
-					Tags: []*s3.Tag{
-						{
-							Key:   aws.String("tag1key"),
-							Value: aws.String("tag1value"),
-						},
-					},
-				},
-			},
-			Expected: []map[string]interface{}{
-				{
-					"prefix": "prefix/",
-					"tags": map[string]string{
-						"tag1key": "tag1value",
-					},
-				},
-			},
-		},
-		"prefix and multiple tags": {
-			Input: &s3.IntelligentTieringFilter{
-				And: &s3.IntelligentTieringAndOperator{
-					Prefix: aws.String("prefix/"),
-					Tags: []*s3.Tag{
-						{
-							Key:   aws.String("tag1key"),
-							Value: aws.String("tag1value"),
-						},
-						{
-							Key:   aws.String("tag2key"),
-							Value: aws.String("tag2value"),
-						},
-					},
-				},
-			},
-			Expected: []map[string]interface{}{
-				{
-					"prefix": "prefix/",
-					"tags": map[string]string{
-						"tag1key": "tag1value",
-						"tag2key": "tag2value",
-					},
-				},
-			},
-		},
-		"single tag only": {
-			Input: &s3.IntelligentTieringFilter{
-				Tag: &s3.Tag{
-					Key:   aws.String("tag1key"),
-					Value: aws.String("tag1value"),
-				},
-			},
-			Expected: []map[string]interface{}{
-				{
-					"tags": map[string]string{
-						"tag1key": "tag1value",
-					},
-				},
-			},
-		},
-		"multiple tags only": {
-			Input: &s3.IntelligentTieringFilter{
-				And: &s3.IntelligentTieringAndOperator{
-					Tags: []*s3.Tag{
-						{
-							Key:   aws.String("tag1key"),
-							Value: aws.String("tag1value"),
-						},
-						{
-							Key:   aws.String("tag2key"),
-							Value: aws.String("tag2value"),
-						},
-					},
-				},
-			},
-			Expected: []map[string]interface{}{
-				{
-					"tags": map[string]string{
-						"tag1key": "tag1value",
-						"tag2key": "tag2value",
-					},
-				},
-			},
-		},
-	}
-
-	for k, tc := range testCases {
-		value := flattenS3IntelligentTieringFilter(tc.Input)
-
-		if !reflect.DeepEqual(value, tc.Expected) {
-			t.Errorf("Case %q: Got:\n%v\n\nExpected:\n%v", k, value, tc.Expected)
-		}
-	}
-}
-
-func TestFlattenS3IntelligentTieringConfiguration(t *testing.T) {
-	testCases := map[string]struct {
-		Input    []*s3.Tiering
-		Expected []map[string]interface{}
-	}{
-		"nil value": {
-			Input:    nil,
-			Expected: []map[string]interface{}{},
-		},
-		"empty root": {
-			Input:    []*s3.Tiering{},
-			Expected: []map[string]interface{}{},
-		},
-		"one input": {
-			Input: []*s3.Tiering{
-				{
-					AccessTier: aws.String("testing"),
-					Days:       aws.Int64(123),
-				},
-			},
-			Expected: []map[string]interface{}{
-				{
-					"access_tier": "testing",
-					"days":        123,
-				},
-			},
-		},
-		"two input": {
-			Input: []*s3.Tiering{
-				{
-					AccessTier: aws.String("testing_1"),
-					Days:       aws.Int64(111),
-				},
-				{
-					AccessTier: aws.String("testing_2"),
-					Days:       aws.Int64(222),
-				},
-			},
-			Expected: []map[string]interface{}{
-				{
-					"access_tier": "testing_1",
-					"days":        111,
-				},
-				{
-					"access_tier": "testing_2",
-					"days":        222,
-				},
-			},
-		},
-	}
-
-	for k, tc := range testCases {
-		value := flattenS3IntelligentTieringConfiguration(tc.Input)
-
-		if !reflect.DeepEqual(value, tc.Expected) {
-			t.Errorf("Case %q: Got:\n%v\n\nExpected:\n%v", k, value, tc.Expected)
-		}
-	}
-}
-
-func TestResourceAwsS3BucketIntelligentTieringConfigurationParseStatus(t *testing.T) {
-	testCases := map[string]struct {
-		Input    *string
-		Expected bool
-	}{
-		"nil input": {
-			Input:    nil,
-			Expected: false,
-		},
-		"random input": {
-			Input:    aws.String("testing"),
-			Expected: false,
-		},
-		"disabled title": {
-			Input:    aws.String("Disabled"),
-			Expected: false,
-		},
-		"enabled title": {
-			Input:    aws.String("Enabled"),
-			Expected: true,
-		},
-		"enabled random case": {
-			Input:    aws.String("EnAbLed"),
-			Expected: true,
-		},
-	}
-
-	for k, tc := range testCases {
-		value := resourceAwsS3BucketIntelligentTieringConfigurationParseStatus(tc.Input)
-
-		if !reflect.DeepEqual(value, tc.Expected) {
-			t.Errorf("Case %q:\nGot:\n%v\nExpected:\n%v", k, value, tc.Expected)
-		}
-	}
-}
-
-func TestResourceAwsS3BucketIntelligentTieringConfigurationParseEnabled(t *testing.T) {
-	testCases := map[string]struct {
-		Input    bool
-		Expected *string
-	}{
-		"false input": {
-			Input:    false,
-			Expected: aws.String("Disabled"),
-		},
-		"true input": {
-			Input:    true,
-			Expected: aws.String("Enabled"),
-		},
-	}
-
-	for k, tc := range testCases {
-		value := resourceAwsS3BucketIntelligentTieringConfigurationParseEnabled(tc.Input)
-
-		if !reflect.DeepEqual(value, tc.Expected) {
-			t.Errorf("Case %q:\nGot:\n%v\nExpected:\n%v", k, value, tc.Expected)
-		}
-	}
 }
