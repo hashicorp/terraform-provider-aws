@@ -51,7 +51,7 @@ project {
 }
 
 object Composite : BuildType({
-    name = "Composite"
+    name = "Service Tests"
 
     type = BuildTypeSettings.Type.COMPOSITE
 
