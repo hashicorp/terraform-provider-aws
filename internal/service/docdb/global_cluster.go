@@ -367,26 +367,22 @@ func statusGlobalClusterRefreshFunc(ctx context.Context, conn *docdb.DocDB, glob
 	return func() (interface{}, string, error) {
 		globalCluster, err := FindGlobalClusterById(ctx, conn, globalClusterID)
 
-		if tfawserr.ErrMessageContains(err, docdb.ErrCodeGlobalClusterNotFoundFault, "") {
-			return nil, []string{GlobalClusterStatusDeleted}, nil
+		if tfawserr.ErrMessageContains(err, docdb.ErrCodeGlobalClusterNotFoundFault, "") || globalCluster == nil {
+			return nil, GlobalClusterStatusDeleted, nil
 		}
 
 		if err != nil {
 			return nil, "", fmt.Errorf("error reading DocDB Global Cluster (%s): %w", globalClusterID, err)
 		}
-
-		if globalCluster == nil {
-			return nil, []string{GlobalClusterStatusDeleted}, nil
-		}
-
+		
 		return globalCluster, aws.StringValue(globalCluster.Status), nil
 	}
 }
 
 func waitForGlobalClusterCreation(ctx context.Context, conn *docdb.DocDB, globalClusterID string) error {
 	stateConf := &resource.StateChangeConf{
-		Pending: []string{GlobalClusterStatusCreating}
-		Target:  []string{GlobalClusterStatusAvailable}
+		Pending: []string{GlobalClusterStatusCreating},
+		Target:  []string{GlobalClusterStatusAvailable},
 		Refresh: statusGlobalClusterRefreshFunc(ctx, conn, globalClusterID),
 		Timeout: 10 * time.Minute,
 	}
@@ -399,8 +395,8 @@ func waitForGlobalClusterCreation(ctx context.Context, conn *docdb.DocDB, global
 
 func waitForGlobalClusterUpdate(ctx context.Context, conn *docdb.DocDB, globalClusterID string) error {
 	stateConf := &resource.StateChangeConf{
-		Pending: []string{GlobalClusterStatusModifying, GlobalClusterStatusUpgrading}
-		Pending: []string{GlobalClusterStatusAvailable}
+		Pending: []string{GlobalClusterStatusModifying, GlobalClusterStatusUpgrading},
+		Target: []string{GlobalClusterStatusAvailable},
 		Refresh: statusGlobalClusterRefreshFunc(ctx, conn, globalClusterID),
 		Timeout: 10 * time.Minute,
 		Delay:   30 * time.Second,

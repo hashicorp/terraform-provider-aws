@@ -12,6 +12,7 @@ import (
 
 const (
 	GlobalClusterStatusAvailable = "available"
+	GlobalClusterStatusCreating  = "creating"
 	GlobalClusterStatusDeleted   = "deleted"
 	GlobalClusterStatusDeleting  = "deleting"
 	GlobalClusterStatusModifying = "modifying"
