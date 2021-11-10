@@ -18,18 +18,22 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-const (
-	docDBGlobalClusterRemovalTimeout = 2 * time.Minute
-)
-
 func ResourceGlobalCluster() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceGlobalClusterCreate,
 		ReadWithoutTimeout:   resourceGlobalClusterRead,
 		UpdateWithoutTimeout: resourceGlobalClusterUpdate,
 		DeleteWithoutTimeout: resourceGlobalClusterDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
+		},
+
+		//Timeouts will scale per number of resources in the cluster. Timeouts implemented on each resource action.
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(GlobalClusterCreateTimeout),
+			Update: schema.DefaultTimeout(GlobalClusterUpdateTimeout),
+			Delete: schema.DefaultTimeout(GlobalClusterDeleteTimeout),
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -147,7 +151,7 @@ func resourceGlobalClusterCreate(ctx context.Context, d *schema.ResourceData, me
 
 	d.SetId(aws.StringValue(output.GlobalCluster.GlobalClusterIdentifier))
 
-	if err := waitForGlobalClusterCreation(ctx, conn, d.Id()); err != nil {
+	if err := waitForGlobalClusterCreation(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return diag.FromErr(fmt.Errorf("error waiting for DocDB Global Cluster (%s) availability: %w", d.Id(), err))
 	}
 
@@ -175,7 +179,7 @@ func resourceGlobalClusterRead(ctx context.Context, d *schema.ResourceData, meta
 		return nil
 	}
 
-	if aws.StringValue(globalCluster.Status) == "deleting" || aws.StringValue(globalCluster.Status) == "deleted" {
+	if aws.StringValue(globalCluster.Status) == GlobalClusterStatusDeleting || aws.StringValue(globalCluster.Status) == GlobalClusterStatusDeleted {
 		log.Printf("[WARN] DocDB Global Cluster (%s) in deleted state (%s), removing from state", d.Id(), aws.StringValue(globalCluster.Status))
 		d.SetId("")
 		return nil
@@ -224,7 +228,7 @@ func resourceGlobalClusterUpdate(ctx context.Context, d *schema.ResourceData, me
 		return diag.FromErr(fmt.Errorf("error updating DocDB Global Cluster: %w", err))
 	}
 
-	if err := waitForGlobalClusterUpdate(ctx, conn, d.Id()); err != nil {
+	if err := waitForGlobalClusterUpdate(ctx, conn, d.Id(),d.Timeout(schema.TimeoutUpdate)); err != nil {
 		return diag.FromErr(fmt.Errorf("error waiting for DocDB Global Cluster (%s) update: %w", d.Id(), err))
 	}
 
@@ -236,13 +240,11 @@ func resourceGlobalClusterDelete(ctx context.Context, d *schema.ResourceData, me
 
 	for _, globalClusterMemberRaw := range d.Get("global_cluster_members").(*schema.Set).List() {
 		globalClusterMember, ok := globalClusterMemberRaw.(map[string]interface{})
-
 		if !ok {
 			continue
 		}
 
 		dbClusterArn, ok := globalClusterMember["db_cluster_arn"].(string)
-
 		if !ok {
 			continue
 		}
@@ -253,16 +255,14 @@ func resourceGlobalClusterDelete(ctx context.Context, d *schema.ResourceData, me
 		}
 
 		_, err := conn.RemoveFromGlobalClusterWithContext(ctx, input)
-
 		if tfawserr.ErrMessageContains(err, "InvalidParameterValue", "is not found in global cluster") {
 			continue
 		}
-
 		if err != nil {
 			return diag.FromErr(fmt.Errorf("error removing DocDB Cluster (%s) from Global Cluster (%s): %w", dbClusterArn, d.Id(), err))
 		}
 
-		if err := waitForGlobalClusterRemoval(ctx, conn, dbClusterArn); err != nil {
+		if err := waitForGlobalClusterRemoval(ctx, conn, dbClusterArn, d.Timeout(schema.TimeoutDelete)); err != nil {
 			return diag.FromErr(fmt.Errorf("error waiting for DocDB Cluster (%s) removal from DocDB Global Cluster (%s): %w", dbClusterArn, d.Id(), err))
 		}
 	}
@@ -274,7 +274,7 @@ func resourceGlobalClusterDelete(ctx context.Context, d *schema.ResourceData, me
 	log.Printf("[DEBUG] Deleting DocDB Global Cluster (%s): %s", d.Id(), input)
 
 	// Allow for eventual consistency
-	err := resource.RetryContext(ctx, 5*time.Minute, func() *resource.RetryError {
+	err := resource.RetryContext(ctx, d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
 		_, err := conn.DeleteGlobalClusterWithContext(ctx, input)
 
 		if tfawserr.ErrMessageContains(err, docdb.ErrCodeInvalidGlobalClusterStateFault, "is not empty") {
@@ -300,7 +300,7 @@ func resourceGlobalClusterDelete(ctx context.Context, d *schema.ResourceData, me
 		return diag.FromErr(fmt.Errorf("error deleting DocDB Global Cluster: %w", err))
 	}
 
-	if err := WaitForGlobalClusterDeletion(ctx, conn, d.Id()); err != nil {
+	if err := WaitForGlobalClusterDeletion(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
 		return diag.FromErr(fmt.Errorf("error waiting for DocDB Global Cluster (%s) deletion: %w", d.Id(), err))
 	}
 
@@ -326,6 +326,7 @@ func flattenGlobalClusterMembers(apiObjects []*docdb.GlobalClusterMember) []inte
 	return tfList
 }
 
+//TODO rename and move to FIND
 func describeGlobalClusterFromDbClusterARN(ctx context.Context, conn *docdb.DocDB, dbClusterARN string) (*docdb.GlobalCluster, error) {
 	var globalCluster *docdb.GlobalCluster
 
@@ -374,17 +375,17 @@ func statusGlobalClusterRefreshFunc(ctx context.Context, conn *docdb.DocDB, glob
 		if err != nil {
 			return nil, "", fmt.Errorf("error reading DocDB Global Cluster (%s): %w", globalClusterID, err)
 		}
-		
+
 		return globalCluster, aws.StringValue(globalCluster.Status), nil
 	}
 }
 
-func waitForGlobalClusterCreation(ctx context.Context, conn *docdb.DocDB, globalClusterID string) error {
+func waitForGlobalClusterCreation(ctx context.Context, conn *docdb.DocDB, globalClusterID string, timeout time.Duration) error {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{GlobalClusterStatusCreating},
 		Target:  []string{GlobalClusterStatusAvailable},
 		Refresh: statusGlobalClusterRefreshFunc(ctx, conn, globalClusterID),
-		Timeout: 10 * time.Minute,
+		Timeout: timeout,
 	}
 
 	log.Printf("[DEBUG] Waiting for DocDB Global Cluster (%s) availability", globalClusterID)
@@ -393,12 +394,12 @@ func waitForGlobalClusterCreation(ctx context.Context, conn *docdb.DocDB, global
 	return err
 }
 
-func waitForGlobalClusterUpdate(ctx context.Context, conn *docdb.DocDB, globalClusterID string) error {
+func waitForGlobalClusterUpdate(ctx context.Context, conn *docdb.DocDB, globalClusterID string, timeout time.Duration) error {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{GlobalClusterStatusModifying, GlobalClusterStatusUpgrading},
 		Target: []string{GlobalClusterStatusAvailable},
 		Refresh: statusGlobalClusterRefreshFunc(ctx, conn, globalClusterID),
-		Timeout: 10 * time.Minute,
+		Timeout: timeout,
 		Delay:   30 * time.Second,
 	}
 
@@ -408,11 +409,11 @@ func waitForGlobalClusterUpdate(ctx context.Context, conn *docdb.DocDB, globalCl
 	return err
 }
 
-func waitForGlobalClusterRemoval(ctx context.Context, conn *docdb.DocDB, dbClusterIdentifier string) error {
+func waitForGlobalClusterRemoval(ctx context.Context, conn *docdb.DocDB, dbClusterIdentifier string, timeout time.Duration) error {
 	var globalCluster *docdb.GlobalCluster
 	stillExistsErr := fmt.Errorf("DocDB Cluster still exists in DocDB Global Cluster")
 
-	err := resource.RetryContext(ctx, docDBGlobalClusterRemovalTimeout, func() *resource.RetryError {
+	err := resource.RetryContext(ctx, timeout, func() *resource.RetryError {
 		var err error
 
 		globalCluster, err = describeGlobalClusterFromDbClusterARN(ctx, conn, dbClusterIdentifier)
@@ -447,7 +448,7 @@ func waitForGlobalClusterRemoval(ctx context.Context, conn *docdb.DocDB, dbClust
 // To support minor version upgrades, we will upgrade all cluster members
 func resourceGlobalClusterUpgradeEngineVersion(ctx context.Context, d *schema.ResourceData, conn *docdb.DocDB) error {
 	log.Printf("[DEBUG] Upgrading DocDB Global Cluster (%s) engine version: %s", d.Id(), d.Get("engine_version"))
-	err := resourceGlobalClusterUpgradeMinorEngineVersion(ctx, d.Get("global_cluster_members").(*schema.Set), d.Get("engine_version").(string), conn)
+	err := resourceGlobalClusterUpgradeMinorEngineVersion(ctx, d.Get("global_cluster_members").(*schema.Set), d.Get("engine_version").(string), conn, d.Timeout(schema.TimeoutUpdate))
 	if err != nil {
 		return err
 	}
@@ -464,7 +465,7 @@ func resourceGlobalClusterUpgradeEngineVersion(ctx context.Context, d *schema.Re
 	return nil
 }
 
-func resourceGlobalClusterUpgradeMinorEngineVersion(ctx context.Context, clusterMembers *schema.Set, engineVersion string, conn *docdb.DocDB) error {
+func resourceGlobalClusterUpgradeMinorEngineVersion(ctx context.Context, clusterMembers *schema.Set, engineVersion string, conn *docdb.DocDB, timeout time.Duration) error {
 	for _, clusterMemberRaw := range clusterMembers.List() {
 		clusterMember := clusterMemberRaw.(map[string]interface{})
 		if clusterMemberArn, ok := clusterMember["db_cluster_arn"]; ok && clusterMemberArn.(string) != "" {
@@ -473,7 +474,7 @@ func resourceGlobalClusterUpgradeMinorEngineVersion(ctx context.Context, cluster
 				DBClusterIdentifier: aws.String(clusterMemberArn.(string)),
 				EngineVersion:       aws.String(engineVersion),
 			}
-			err := resource.RetryContext(ctx, 5*time.Minute, func() *resource.RetryError {
+			err := resource.RetryContext(ctx, timeout, func() *resource.RetryError {
 				_, err := conn.ModifyDBClusterWithContext(ctx, modInput)
 				if err != nil {
 					if tfawserr.ErrMessageContains(err, "InvalidParameterValue", "IAM role ARN value is invalid or does not include the required permissions") {

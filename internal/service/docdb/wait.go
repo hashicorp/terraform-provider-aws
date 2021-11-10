@@ -11,6 +11,12 @@ import (
 )
 
 const (
+	GlobalClusterCreateTimeout = 5 * time.Minute
+	GlobalClusterDeleteTimeout = 5 * time.Minute
+	GlobalClusterUpdateTimeout = 5 * time.Minute
+)
+
+const (
 	GlobalClusterStatusAvailable = "available"
 	GlobalClusterStatusCreating  = "creating"
 	GlobalClusterStatusDeleted   = "deleted"
@@ -19,12 +25,12 @@ const (
 	GlobalClusterStatusUpgrading = "upgrading"
 )
 
-func WaitForGlobalClusterDeletion(ctx context.Context, conn *docdb.DocDB, globalClusterID string) error {
+func WaitForGlobalClusterDeletion(ctx context.Context, conn *docdb.DocDB, globalClusterID string, timeout time.Duration) error {
 	stateConf := &resource.StateChangeConf{
 		Pending:        []string{GlobalClusterStatusAvailable, GlobalClusterStatusDeleting},
 		Target:         []string{GlobalClusterStatusDeleted},
 		Refresh:        statusGlobalClusterRefreshFunc(ctx, conn, globalClusterID),
-		Timeout:        10 * time.Minute,
+		Timeout:        timeout,
 		NotFoundChecks: 1,
 	}
 

@@ -370,7 +370,7 @@ func testAccCheckDocDBGlobalClusterDisappears(globalCluster *docdb.GlobalCluster
 			return err
 		}
 
-		return tfdocdb.WaitForGlobalClusterDeletion(context.TODO(), conn, aws.StringValue(globalCluster.GlobalClusterIdentifier))
+		return tfdocdb.WaitForGlobalClusterDeletion(context.TODO(), conn, aws.StringValue(globalCluster.GlobalClusterIdentifier), tfdocdb.GlobalClusterDeleteTimeout)
 	}
 }
 
