@@ -421,6 +421,10 @@ func resourceClusterDelete(d *schema.ResourceData, meta interface{}) error {
 			log.Printf("[TRACE] Retrying ECS cluster %q deletion after %s", d.Id(), err)
 			return resource.RetryableError(err)
 		}
+		if tfawserr.ErrMessageContains(err, "ClusterContainsTasksException", "") {
+			log.Printf("[TRACE] Retrying ECS cluster %q deletion after %s", d.Id(), err)
+			return resource.RetryableError(err)
+		}
 		if tfawserr.ErrMessageContains(err, ecs.ErrCodeUpdateInProgressException, "") {
 			log.Printf("[TRACE] Retrying ECS cluster %q deletion after %s", d.Id(), err)
 			return resource.RetryableError(err)
