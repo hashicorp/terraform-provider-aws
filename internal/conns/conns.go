@@ -496,7 +496,7 @@ const (
 	RedshiftData                  = "redshiftdata"
 	Rekognition                   = "rekognition"
 	ResourceGroups                = "resourcegroups"
-	ResourceGroupsTagging         = "resourcegroupstagging"
+	ResourceGroupsTaggingAPI      = "resourcegroupstaggingapi"
 	RoboMaker                     = "robomaker"
 	Route53                       = "route53"
 	Route53Domains                = "route53domains"
@@ -780,7 +780,7 @@ func init() {
 	serviceData[RedshiftData] = &ServiceDatum{AWSClientName: "RedshiftData", AWSServiceName: redshiftdataapiservice.ServiceName, AWSEndpointsID: redshiftdataapiservice.EndpointsID, AWSServiceID: redshiftdataapiservice.ServiceID, ProviderNameUpper: "RedshiftData", HCLKeys: []string{"redshiftdata"}}
 	serviceData[Rekognition] = &ServiceDatum{AWSClientName: "Rekognition", AWSServiceName: rekognition.ServiceName, AWSEndpointsID: rekognition.EndpointsID, AWSServiceID: rekognition.ServiceID, ProviderNameUpper: "Rekognition", HCLKeys: []string{"rekognition"}}
 	serviceData[ResourceGroups] = &ServiceDatum{AWSClientName: "ResourceGroups", AWSServiceName: resourcegroups.ServiceName, AWSEndpointsID: resourcegroups.EndpointsID, AWSServiceID: resourcegroups.ServiceID, ProviderNameUpper: "ResourceGroups", HCLKeys: []string{"resourcegroups"}}
-	serviceData[ResourceGroupsTagging] = &ServiceDatum{AWSClientName: "ResourceGroupsTaggingAPI", AWSServiceName: resourcegroupstaggingapi.ServiceName, AWSEndpointsID: resourcegroupstaggingapi.EndpointsID, AWSServiceID: resourcegroupstaggingapi.ServiceID, ProviderNameUpper: "ResourceGroupsTagging", HCLKeys: []string{"resourcegroupstaggingapi", "resourcegroupstagging"}}
+	serviceData[ResourceGroupsTaggingAPI] = &ServiceDatum{AWSClientName: "ResourceGroupsTaggingAPI", AWSServiceName: resourcegroupstaggingapi.ServiceName, AWSEndpointsID: resourcegroupstaggingapi.EndpointsID, AWSServiceID: resourcegroupstaggingapi.ServiceID, ProviderNameUpper: "ResourceGroupsTaggingAPI", HCLKeys: []string{"resourcegroupstaggingapi", "resourcegroupstagging"}}
 	serviceData[RoboMaker] = &ServiceDatum{AWSClientName: "RoboMaker", AWSServiceName: robomaker.ServiceName, AWSEndpointsID: robomaker.EndpointsID, AWSServiceID: robomaker.ServiceID, ProviderNameUpper: "RoboMaker", HCLKeys: []string{"robomaker"}}
 	serviceData[Route53] = &ServiceDatum{AWSClientName: "Route53", AWSServiceName: route53.ServiceName, AWSEndpointsID: route53.EndpointsID, AWSServiceID: route53.ServiceID, ProviderNameUpper: "Route53", HCLKeys: []string{"route53"}}
 	serviceData[Route53Domains] = &ServiceDatum{AWSClientName: "Route53Domains", AWSServiceName: route53domains.ServiceName, AWSEndpointsID: route53domains.EndpointsID, AWSServiceID: route53domains.ServiceID, ProviderNameUpper: "Route53Domains", HCLKeys: []string{"route53domains"}}
@@ -1095,7 +1095,7 @@ type AWSClient struct {
 	Region                            string
 	RekognitionConn                   *rekognition.Rekognition
 	ResourceGroupsConn                *resourcegroups.ResourceGroups
-	ResourceGroupsTaggingConn         *resourcegroupstaggingapi.ResourceGroupsTaggingAPI
+	ResourceGroupsTaggingAPIConn      *resourcegroupstaggingapi.ResourceGroupsTaggingAPI
 	ReverseDNSPrefix                  string
 	RoboMakerConn                     *robomaker.RoboMaker
 	Route53Conn                       *route53.Route53
@@ -1446,7 +1446,7 @@ func (c *Config) Client() (interface{}, error) {
 		Region:                            c.Region,
 		RekognitionConn:                   rekognition.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[Rekognition])})),
 		ResourceGroupsConn:                resourcegroups.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[ResourceGroups])})),
-		ResourceGroupsTaggingConn:         resourcegroupstaggingapi.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[ResourceGroupsTagging])})),
+		ResourceGroupsTaggingAPIConn:      resourcegroupstaggingapi.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[ResourceGroupsTaggingAPI])})),
 		ReverseDNSPrefix:                  ReverseDNS(DNSSuffix),
 		RoboMakerConn:                     robomaker.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[RoboMaker])})),
 		Route53DomainsConn:                route53domains.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[Route53Domains])})),

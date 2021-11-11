@@ -492,7 +492,7 @@ service/resourcegroups:
   - 'internal/service/resourcegroups/**/*'
   - 'website/**/resourcegroups_*'
 service/resourcegroupstaggingapi:
-  - 'internal/service/resourcegroupstagging/**/*'
+  - 'internal/service/resourcegroupstaggingapi/**/*'
   - 'website/**/resourcegroupstaggingapi_*'
 service/robomaker:
   - 'internal/service/robomaker/**/*'
