@@ -3,12 +3,12 @@ subcategory: "S3"
 layout: "aws"
 page_title: "AWS: aws_s3_bucket_intelligent_tiering_configuration"
 description: |-
-  Provides an S3 bucket intelligent tiering configuration resource.
+  Provides an S3 Intelligent-Tiering configuration resource.
 ---
 
 # Resource: aws_s3_bucket_intelligent_tiering_configuration
 
-Provides a S3 bucket [intelligent tiering configuration](https://docs.aws.amazon.com/AmazonS3/latest/userguide/storage-class-intro.html) resource.
+Provides an [S3 Intelligent-Tiering](https://docs.aws.amazon.com/AmazonS3/latest/userguide/intelligent-tiering.html) configuration resource.
 
 ## Example Usage
 
@@ -19,21 +19,19 @@ resource "aws_s3_bucket_intelligent_tiering_configuration" "example-entire-bucke
   bucket = aws_s3_bucket.example.bucket
   name   = "EntireBucket"
 
-  tier {
+  tiering {
     access_tier = "DEEP_ARCHIVE_ACCESS"
     days        = 180
   }
-  tier {
+  tiering {
     access_tier = "ARCHIVE_ACCESS"
     days        = 125
   }
-
 }
 
 resource "aws_s3_bucket" "example" {
   bucket = "example"
 }
-
 ```
 
 ### Add intelligent tiering configuration with S3 bucket object filter
@@ -43,7 +41,7 @@ resource "aws_s3_bucket_intelligent_tiering_configuration" "example-filtered" {
   bucket = aws_s3_bucket.example.bucket
   name   = "ImportantBlueDocuments"
 
-  enabled = false
+  status = "Disabled"
 
   filter {
     prefix = "documents/"
@@ -54,11 +52,10 @@ resource "aws_s3_bucket_intelligent_tiering_configuration" "example-filtered" {
     }
   }
 
-  tier {
+  tiering {
     access_tier = "ARCHIVE_ACCESS"
     days        = 125
   }
-
 }
 
 resource "aws_s3_bucket" "example" {
@@ -71,20 +68,20 @@ resource "aws_s3_bucket" "example" {
 The following arguments are supported:
 
 * `bucket` - (Required) The name of the bucket this intelligent tiering configuration is associated with.
-* `name` - (Required) Unique identifier of the intelligent tiering configuration for the bucket.
-* `enabled` - (Optional) Whether the configuration is enabled. Defaults to `true`.
-* `filter` - (Optional) Object filtering that accepts a prefix, tags, or a logical AND of prefix and tags (documented below).
-* `tier` - (Required) Access tier configurations that accepts access tier and number of days to move to the tier (documented below).
+* `name` - (Required) The unique name used to identify the S3 Intelligent-Tiering configuration for the bucket.
+* `status` - (Optional) Specifies the status of the configuration. Valid values: `Enabled`, `Disabled`.
+* `filter` - (Optional) A bucket filter. The configuration only includes objects that meet the filter's criteria (documented below).
+* `tiering` - (Required) The S3 Intelligent-Tiering storage class tiers of the configuration (documented below).
 
 The `filter` configuration supports the following:
 
 * `prefix` - (Optional) An object key name prefix that identifies the subset of objects to which the configuration applies.
-* `tags` - (Optional) Set of object level key vaue pairs that identifies the subset of objects to which the configuration applies.
+* `tags` - (Optional) All of these tags must exist in the object's tag set in order for the configuration to apply.
 
-The `tier` configuration supports the following:
+The `tiering` configuration supports the following:
 
-* `access_tier` - (Required) Specifies the Intelligent Tiering Archive Tier that objects in this filter will transition to. Can be `ARCHIVE_CONFIGURATION`, or `DEEP_ARCHIVE_CONFIGURATION`.
-* `days` - (Required) The number of consecutive days of no access after which an object will be eligible to be transitioned to the corresponding tier. Must be over `90` for `ARCHIVE_CONFIGURATION` and over `180` for `DEEP_ARCHIVE_CONFIGURATION`
+* `access_tier` - (Required) S3 Intelligent-Tiering access tier. Valid values: `ARCHIVE_CONFIGURATION`, `DEEP_ARCHIVE_CONFIGURATION`.
+* `days` - (Required) The number of consecutive days of no access after which an object will be eligible to be transitioned to the corresponding tier.
 
 ## Attributes Reference
 
