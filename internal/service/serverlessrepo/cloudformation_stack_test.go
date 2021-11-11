@@ -106,7 +106,7 @@ func TestAccServerlessRepoCloudFormationStack_versioned(t *testing.T) {
 
 	const (
 		version1 = "1.1.36"
-		version2 = "1.1.203"
+		version2 = "1.1.88"
 	)
 
 	resource.ParallelTest(t, resource.TestCase{
