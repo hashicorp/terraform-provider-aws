@@ -1,4 +1,4 @@
-package prometheus
+package amp
 
 import (
 	"context"
@@ -42,7 +42,7 @@ func ResourceWorkspace() *schema.Resource {
 
 func resourceWorkspaceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[INFO] Reading AMP workspace %s", d.Id())
-	conn := meta.(*conns.AWSClient).PrometheusConn
+	conn := meta.(*conns.AWSClient).AMPConn
 
 	details, err := conn.DescribeWorkspaceWithContext(ctx, &prometheusservice.DescribeWorkspaceInput{
 		WorkspaceId: aws.String(d.Id()),
@@ -79,7 +79,7 @@ func resourceWorkspaceUpdate(ctx context.Context, d *schema.ResourceData, meta i
 	if v, ok := d.GetOk("alias"); ok {
 		req.Alias = aws.String(v.(string))
 	}
-	conn := meta.(*conns.AWSClient).PrometheusConn
+	conn := meta.(*conns.AWSClient).AMPConn
 	if _, err := conn.UpdateWorkspaceAliasWithContext(ctx, req); err != nil {
 		return diag.FromErr(fmt.Errorf("error updating Prometheus WorkSpace (%s): %w", d.Id(), err))
 	}
@@ -89,7 +89,7 @@ func resourceWorkspaceUpdate(ctx context.Context, d *schema.ResourceData, meta i
 
 func resourceWorkspaceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[INFO] Creating AMP workspace %s", d.Id())
-	conn := meta.(*conns.AWSClient).PrometheusConn
+	conn := meta.(*conns.AWSClient).AMPConn
 
 	req := &prometheusservice.CreateWorkspaceInput{}
 	if v, ok := d.GetOk("alias"); ok {
@@ -111,7 +111,7 @@ func resourceWorkspaceCreate(ctx context.Context, d *schema.ResourceData, meta i
 
 func resourceWorkspaceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[INFO] Deleting AMP workspace %s", d.Id())
-	conn := meta.(*conns.AWSClient).PrometheusConn
+	conn := meta.(*conns.AWSClient).AMPConn
 
 	_, err := conn.DeleteWorkspaceWithContext(ctx, &prometheusservice.DeleteWorkspaceInput{
 		WorkspaceId: aws.String(d.Id()),

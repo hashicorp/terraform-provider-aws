@@ -289,6 +289,7 @@ const (
 	ACM                           = "acm"
 	ACMPCA                        = "acmpca"
 	AlexaForBusiness              = "alexaforbusiness"
+	AMP                           = "amp"
 	Amplify                       = "amplify"
 	AmplifyBackend                = "amplifybackend"
 	APIGateway                    = "apigateway"
@@ -484,7 +485,6 @@ const (
 	PinpointSMSVoice              = "pinpointsmsvoice"
 	Polly                         = "polly"
 	Pricing                       = "pricing"
-	Prometheus                    = "prometheus"
 	Proton                        = "proton"
 	QLDB                          = "qldb"
 	QLDBSession                   = "qldbsession"
@@ -576,6 +576,7 @@ func init() {
 	serviceData[ACM] = &ServiceDatum{AWSClientName: "ACM", AWSServiceName: acm.ServiceName, AWSEndpointsID: acm.EndpointsID, AWSServiceID: acm.ServiceID, ProviderNameUpper: "ACM", HCLKeys: []string{"acm"}}
 	serviceData[ACMPCA] = &ServiceDatum{AWSClientName: "ACMPCA", AWSServiceName: acmpca.ServiceName, AWSEndpointsID: acmpca.EndpointsID, AWSServiceID: acmpca.ServiceID, ProviderNameUpper: "ACMPCA", HCLKeys: []string{"acmpca"}}
 	serviceData[AlexaForBusiness] = &ServiceDatum{AWSClientName: "AlexaForBusiness", AWSServiceName: alexaforbusiness.ServiceName, AWSEndpointsID: alexaforbusiness.EndpointsID, AWSServiceID: alexaforbusiness.ServiceID, ProviderNameUpper: "AlexaForBusiness", HCLKeys: []string{"alexaforbusiness"}}
+	serviceData[AMP] = &ServiceDatum{AWSClientName: "PrometheusService", AWSServiceName: prometheusservice.ServiceName, AWSEndpointsID: prometheusservice.EndpointsID, AWSServiceID: prometheusservice.ServiceID, ProviderNameUpper: "AMP", HCLKeys: []string{"amp", "prometheus", "prometheusservice"}}
 	serviceData[Amplify] = &ServiceDatum{AWSClientName: "Amplify", AWSServiceName: amplify.ServiceName, AWSEndpointsID: amplify.EndpointsID, AWSServiceID: amplify.ServiceID, ProviderNameUpper: "Amplify", HCLKeys: []string{"amplify"}}
 	serviceData[AmplifyBackend] = &ServiceDatum{AWSClientName: "AmplifyBackend", AWSServiceName: amplifybackend.ServiceName, AWSEndpointsID: amplifybackend.EndpointsID, AWSServiceID: amplifybackend.ServiceID, ProviderNameUpper: "AmplifyBackend", HCLKeys: []string{"amplifybackend"}}
 	serviceData[APIGateway] = &ServiceDatum{AWSClientName: "APIGateway", AWSServiceName: apigateway.ServiceName, AWSEndpointsID: apigateway.EndpointsID, AWSServiceID: apigateway.ServiceID, ProviderNameUpper: "APIGateway", HCLKeys: []string{"apigateway"}}
@@ -768,7 +769,6 @@ func init() {
 	serviceData[PinpointSMSVoice] = &ServiceDatum{AWSClientName: "PinpointSMSVoice", AWSServiceName: pinpointsmsvoice.ServiceName, AWSEndpointsID: pinpointsmsvoice.EndpointsID, AWSServiceID: pinpointsmsvoice.ServiceID, ProviderNameUpper: "PinpointSMSVoice", HCLKeys: []string{"pinpointsmsvoice"}}
 	serviceData[Polly] = &ServiceDatum{AWSClientName: "Polly", AWSServiceName: polly.ServiceName, AWSEndpointsID: polly.EndpointsID, AWSServiceID: polly.ServiceID, ProviderNameUpper: "Polly", HCLKeys: []string{"polly"}}
 	serviceData[Pricing] = &ServiceDatum{AWSClientName: "Pricing", AWSServiceName: pricing.ServiceName, AWSEndpointsID: pricing.EndpointsID, AWSServiceID: pricing.ServiceID, ProviderNameUpper: "Pricing", HCLKeys: []string{"pricing"}}
-	serviceData[Prometheus] = &ServiceDatum{AWSClientName: "PrometheusService", AWSServiceName: prometheusservice.ServiceName, AWSEndpointsID: prometheusservice.EndpointsID, AWSServiceID: prometheusservice.ServiceID, ProviderNameUpper: "Prometheus", HCLKeys: []string{"prometheus", "prometheusservice"}}
 	serviceData[Proton] = &ServiceDatum{AWSClientName: "Proton", AWSServiceName: proton.ServiceName, AWSEndpointsID: proton.EndpointsID, AWSServiceID: proton.ServiceID, ProviderNameUpper: "Proton", HCLKeys: []string{"proton"}}
 	serviceData[QLDB] = &ServiceDatum{AWSClientName: "QLDB", AWSServiceName: qldb.ServiceName, AWSEndpointsID: qldb.EndpointsID, AWSServiceID: qldb.ServiceID, ProviderNameUpper: "QLDB", HCLKeys: []string{"qldb"}}
 	serviceData[QLDBSession] = &ServiceDatum{AWSClientName: "QLDBSession", AWSServiceName: qldbsession.ServiceName, AWSEndpointsID: qldbsession.EndpointsID, AWSServiceID: qldbsession.ServiceID, ProviderNameUpper: "QLDBSession", HCLKeys: []string{"qldbsession"}}
@@ -885,6 +885,7 @@ type AWSClient struct {
 	ACMConn                           *acm.ACM
 	ACMPCAConn                        *acmpca.ACMPCA
 	AlexaForBusinessConn              *alexaforbusiness.AlexaForBusiness
+	AMPConn                           *prometheusservice.PrometheusService
 	AmplifyBackendConn                *amplifybackend.AmplifyBackend
 	AmplifyConn                       *amplify.Amplify
 	APIGatewayConn                    *apigateway.APIGateway
@@ -1082,7 +1083,6 @@ type AWSClient struct {
 	PinpointSMSVoiceConn              *pinpointsmsvoice.PinpointSMSVoice
 	PollyConn                         *polly.Polly
 	PricingConn                       *pricing.Pricing
-	PrometheusConn                    *prometheusservice.PrometheusService
 	ProtonConn                        *proton.Proton
 	QLDBConn                          *qldb.QLDB
 	QLDBSessionConn                   *qldbsession.QLDBSession
@@ -1238,6 +1238,7 @@ func (c *Config) Client() (interface{}, error) {
 		ACMConn:                           acm.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[ACM])})),
 		ACMPCAConn:                        acmpca.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[ACMPCA])})),
 		AlexaForBusinessConn:              alexaforbusiness.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[AlexaForBusiness])})),
+		AMPConn:                           prometheusservice.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[AMP])})),
 		AmplifyBackendConn:                amplifybackend.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[AmplifyBackend])})),
 		AmplifyConn:                       amplify.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[Amplify])})),
 		APIGatewayConn:                    apigateway.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[APIGateway])})),
@@ -1433,7 +1434,6 @@ func (c *Config) Client() (interface{}, error) {
 		PinpointSMSVoiceConn:              pinpointsmsvoice.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[PinpointSMSVoice])})),
 		PollyConn:                         polly.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[Polly])})),
 		PricingConn:                       pricing.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[Pricing])})),
-		PrometheusConn:                    prometheusservice.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[Prometheus])})),
 		ProtonConn:                        proton.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[Proton])})),
 		QLDBConn:                          qldb.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[QLDB])})),
 		QLDBSessionConn:                   qldbsession.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[QLDBSession])})),

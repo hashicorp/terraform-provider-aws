@@ -786,6 +786,8 @@ func awsServiceName(s string) (string, error) {
 	}
 
 	switch s {
+	case "amp":
+		return "prometheusservice", nil
 	case "cloudcontrol":
 		return "cloudcontrolapi", nil
 	case "cognitoidp":
@@ -815,6 +817,8 @@ func awsServiceNameUpper(s string) (string, error) {
 	}
 
 	switch s {
+	case "amp":
+		return awsServiceNames["prometheusservice"], nil
 	case "appautoscaling":
 		return awsServiceNames["applicationautoscaling"], nil
 	case "cloudcontrol":
@@ -1055,7 +1059,7 @@ func init() {
 	awsServiceNames["pinpointsmsvoice"] = "PinpointSMSVoice"
 	awsServiceNames["polly"] = "Polly"
 	awsServiceNames["pricing"] = "Pricing"
-	awsServiceNames["prometheus"] = "Prometheus"
+	awsServiceNames["prometheusservice"] = "PrometheusService"
 	awsServiceNames["proton"] = "Proton"
 	awsServiceNames["qldb"] = "QLDB"
 	awsServiceNames["qldbsession"] = "QLDBSession"

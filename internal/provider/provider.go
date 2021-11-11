@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/accessanalyzer"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/acm"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/acmpca"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/amp"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/amplify"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/apigateway"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/apigatewayv2"
@@ -109,7 +110,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/outposts"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/pinpoint"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/pricing"
-	"github.com/hashicorp/terraform-provider-aws/internal/service/prometheus"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/qldb"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/quicksight"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/ram"
@@ -718,6 +718,10 @@ func Provider() *schema.Provider {
 			"aws_acmpca_certificate":                       acmpca.ResourceCertificate(),
 			"aws_acmpca_certificate_authority":             acmpca.ResourceCertificateAuthority(),
 			"aws_acmpca_certificate_authority_certificate": acmpca.ResourceCertificateAuthorityCertificate(),
+
+			"aws_prometheus_workspace":                amp.ResourceWorkspace(),
+			"aws_prometheus_alert_manager_definition": amp.ResourceAlertManagerDefinition(),
+			"aws_prometheus_rule_group_namespace":     amp.ResourceRuleGroupNamespace(),
 
 			"aws_amplify_app":                 amplify.ResourceApp(),
 			"aws_amplify_backend_environment": amplify.ResourceBackendEnvironment(),
@@ -1384,10 +1388,6 @@ func Provider() *schema.Provider {
 			"aws_pinpoint_event_stream":              pinpoint.ResourceEventStream(),
 			"aws_pinpoint_gcm_channel":               pinpoint.ResourceGCMChannel(),
 			"aws_pinpoint_sms_channel":               pinpoint.ResourceSMSChannel(),
-
-			"aws_prometheus_workspace":                prometheus.ResourceWorkspace(),
-			"aws_prometheus_alert_manager_definition": prometheus.ResourceAlertManagerDefinition(),
-			"aws_prometheus_rule_group_namespace":     prometheus.ResourceRuleGroupNamespace(),
 
 			"aws_qldb_ledger": qldb.ResourceLedger(),
 
