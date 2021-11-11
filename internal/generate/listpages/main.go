@@ -298,7 +298,7 @@ func awsServiceName(s string) (string, error) {
 		return "directoryservice", nil
 	case "events":
 		return "eventbridge", nil
-	case "serverlessapprepo":
+	case "serverlessrepo":
 		return "serverlessapplicationrepository", nil
 	}
 
@@ -331,7 +331,7 @@ func awsServiceNameUpper(s string) (string, error) {
 		return awsServiceNames["directoryservice"], nil
 	case "events":
 		return awsServiceNames["eventbridge"], nil
-	case "serverlessapprepo":
+	case "serverlessrepo":
 		return awsServiceNames["serverlessapplicationrepository"], nil
 	}
 

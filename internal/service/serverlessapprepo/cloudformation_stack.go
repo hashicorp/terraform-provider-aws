@@ -124,7 +124,7 @@ func resourceCloudFormationStackCreate(d *schema.ResourceData, meta interface{})
 }
 
 func resourceCloudFormationStackRead(d *schema.ResourceData, meta interface{}) error {
-	serverlessConn := meta.(*conns.AWSClient).ServerlessAppRepoConn
+	serverlessConn := meta.(*conns.AWSClient).ServerlessRepoConn
 	cfConn := meta.(*conns.AWSClient).CloudFormationConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -298,7 +298,7 @@ func resourceCloudFormationStackImport(d *schema.ResourceData, meta interface{})
 }
 
 func createServerlessApplicationRepositoryCloudFormationChangeSet(d *schema.ResourceData, client *conns.AWSClient) (*cloudformation.DescribeChangeSetOutput, error) {
-	serverlessConn := client.ServerlessAppRepoConn
+	serverlessConn := client.ServerlessRepoConn
 	cfConn := client.CloudFormationConn
 	defaultTagsConfig := client.DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))

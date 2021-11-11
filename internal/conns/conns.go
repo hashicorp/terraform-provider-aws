@@ -514,7 +514,7 @@ const (
 	Schemas                       = "schemas"
 	SecretsManager                = "secretsmanager"
 	SecurityHub                   = "securityhub"
-	ServerlessAppRepo             = "serverlessapprepo"
+	ServerlessRepo                = "serverlessrepo"
 	ServiceCatalog                = "servicecatalog"
 	ServiceDiscovery              = "servicediscovery"
 	ServiceQuotas                 = "servicequotas"
@@ -798,7 +798,7 @@ func init() {
 	serviceData[Schemas] = &ServiceDatum{AWSClientName: "Schemas", AWSServiceName: schemas.ServiceName, AWSEndpointsID: schemas.EndpointsID, AWSServiceID: schemas.ServiceID, ProviderNameUpper: "Schemas", HCLKeys: []string{"schemas"}}
 	serviceData[SecretsManager] = &ServiceDatum{AWSClientName: "SecretsManager", AWSServiceName: secretsmanager.ServiceName, AWSEndpointsID: secretsmanager.EndpointsID, AWSServiceID: secretsmanager.ServiceID, ProviderNameUpper: "SecretsManager", HCLKeys: []string{"secretsmanager"}}
 	serviceData[SecurityHub] = &ServiceDatum{AWSClientName: "SecurityHub", AWSServiceName: securityhub.ServiceName, AWSEndpointsID: securityhub.EndpointsID, AWSServiceID: securityhub.ServiceID, ProviderNameUpper: "SecurityHub", HCLKeys: []string{"securityhub"}}
-	serviceData[ServerlessAppRepo] = &ServiceDatum{AWSClientName: "ServerlessApplicationRepository", AWSServiceName: serverlessapplicationrepository.ServiceName, AWSEndpointsID: serverlessapplicationrepository.EndpointsID, AWSServiceID: serverlessapplicationrepository.ServiceID, ProviderNameUpper: "ServerlessAppRepo", HCLKeys: []string{"serverlessrepo", "serverlessapprepo", "serverlessapplicationrepository"}}
+	serviceData[ServerlessRepo] = &ServiceDatum{AWSClientName: "ServerlessApplicationRepository", AWSServiceName: serverlessapplicationrepository.ServiceName, AWSEndpointsID: serverlessapplicationrepository.EndpointsID, AWSServiceID: serverlessapplicationrepository.ServiceID, ProviderNameUpper: "ServerlessRepo", HCLKeys: []string{"serverlessrepo", "serverlessapprepo", "serverlessapplicationrepository"}}
 	serviceData[ServiceCatalog] = &ServiceDatum{AWSClientName: "ServiceCatalog", AWSServiceName: servicecatalog.ServiceName, AWSEndpointsID: servicecatalog.EndpointsID, AWSServiceID: servicecatalog.ServiceID, ProviderNameUpper: "ServiceCatalog", HCLKeys: []string{"servicecatalog"}}
 	serviceData[ServiceDiscovery] = &ServiceDatum{AWSClientName: "ServiceDiscovery", AWSServiceName: servicediscovery.ServiceName, AWSEndpointsID: servicediscovery.EndpointsID, AWSServiceID: servicediscovery.ServiceID, ProviderNameUpper: "ServiceDiscovery", HCLKeys: []string{"servicediscovery"}}
 	serviceData[ServiceQuotas] = &ServiceDatum{AWSClientName: "ServiceQuotas", AWSServiceName: servicequotas.ServiceName, AWSEndpointsID: servicequotas.EndpointsID, AWSServiceID: servicequotas.ServiceID, ProviderNameUpper: "ServiceQuotas", HCLKeys: []string{"servicequotas"}}
@@ -1115,7 +1115,7 @@ type AWSClient struct {
 	SchemasConn                       *schemas.Schemas
 	SecretsManagerConn                *secretsmanager.SecretsManager
 	SecurityHubConn                   *securityhub.SecurityHub
-	ServerlessAppRepoConn             *serverlessapplicationrepository.ServerlessApplicationRepository
+	ServerlessRepoConn                *serverlessapplicationrepository.ServerlessApplicationRepository
 	ServiceCatalogConn                *servicecatalog.ServiceCatalog
 	ServiceDiscoveryConn              *servicediscovery.ServiceDiscovery
 	ServiceQuotasConn                 *servicequotas.ServiceQuotas
@@ -1463,7 +1463,7 @@ func (c *Config) Client() (interface{}, error) {
 		SchemasConn:                       schemas.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[Schemas])})),
 		SecretsManagerConn:                secretsmanager.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[SecretsManager])})),
 		SecurityHubConn:                   securityhub.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[SecurityHub])})),
-		ServerlessAppRepoConn:             serverlessapplicationrepository.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[ServerlessAppRepo])})),
+		ServerlessRepoConn:                serverlessapplicationrepository.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[ServerlessRepo])})),
 		ServiceCatalogConn:                servicecatalog.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[ServiceCatalog])})),
 		ServiceDiscoveryConn:              servicediscovery.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[ServiceDiscovery])})),
 		ServiceQuotasConn:                 servicequotas.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[ServiceQuotas])})),

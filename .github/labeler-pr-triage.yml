@@ -541,8 +541,8 @@ service/secretsmanager:
 service/securityhub:
   - 'internal/service/securityhub/**/*'
   - 'website/**/securityhub_*'
-service/serverlessapplicationrepository:
-  - 'internal/service/serverlessapprepo/**/*'
+service/serverlessrepo:
+  - 'internal/service/serverlessrepo/**/*'
   - 'website/**/serverlessapplicationrepository_*'
 service/servicecatalog:
   - 'internal/service/servicecatalog/**/*'
