@@ -367,7 +367,7 @@ resource "aws_sagemaker_app" "test" {
 `, rName)
 }
 
-func testAccAppResourceSpecConfig(rName, uName string) string {
+func testAccAppResourceSpecLifecycleConfig(rName, uName string) string {
 	return testAccAppBaseConfig(rName) + fmt.Sprintf(`
 resource "aws_sagemaker_studio_lifecycle_config" "test" {
   studio_lifecycle_config_name     = %[1]q
