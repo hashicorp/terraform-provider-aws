@@ -7,9 +7,11 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/efs"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
@@ -56,7 +58,20 @@ func resourceFileSystemPolicyPut(d *schema.ResourceData, meta interface{}) error
 	}
 
 	log.Printf("[DEBUG] Putting EFS File System Policy: %s", input)
-	_, err := conn.PutFileSystemPolicy(input)
+	err := resource.Retry(iam.PropagationTimeout, func() *resource.RetryError {
+		_, err := conn.PutFileSystemPolicy(input)
+		if err != nil {
+			if tfawserr.ErrMessageContains(err, "InvalidPolicyException", "Policy contains invalid Principal block.") {
+				return resource.RetryableError(err)
+			} else {
+				return resource.NonRetryableError(err)
+			}
+		}
+		return nil
+	})
+	if tfresource.TimedOut(err) {
+		_, err = conn.PutFileSystemPolicy(input)
+	}
 
 	if err != nil {
 		return fmt.Errorf("error putting EFS File System Policy (%s): %w", fsID, err)
