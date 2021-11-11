@@ -10,7 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/service/cloudformation"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	serverlessrepository "github.com/aws/aws-sdk-go/service/serverlessapplicationrepository"
+	serverlessrepo "github.com/aws/aws-sdk-go/service/serverlessapplicationrepository"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -31,7 +31,7 @@ func TestAccServerlessAppRepoCloudFormationStack_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, serverlessrepository.EndpointsID),
+		ErrorCheck:   acctest.ErrorCheck(t, serverlessrepo.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckCloudFormationDestroy,
 		Steps: []resource.TestStep{
@@ -82,7 +82,7 @@ func TestAccServerlessAppRepoCloudFormationStack_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, serverlessrepository.EndpointsID),
+		ErrorCheck:   acctest.ErrorCheck(t, serverlessrepo.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAmiDestroy,
 		Steps: []resource.TestStep{
@@ -111,7 +111,7 @@ func TestAccServerlessAppRepoCloudFormationStack_versioned(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, serverlessrepository.EndpointsID),
+		ErrorCheck:   acctest.ErrorCheck(t, serverlessrepo.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckCloudFormationDestroy,
 		Steps: []resource.TestStep{
@@ -165,7 +165,7 @@ func TestAccServerlessAppRepoCloudFormationStack_paired(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, serverlessrepository.EndpointsID),
+		ErrorCheck:   acctest.ErrorCheck(t, serverlessrepo.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckCloudFormationDestroy,
 		Steps: []resource.TestStep{
@@ -191,7 +191,7 @@ func TestAccServerlessAppRepoCloudFormationStack_tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, serverlessrepository.EndpointsID),
+		ErrorCheck:   acctest.ErrorCheck(t, serverlessrepo.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckCloudFormationDestroy,
 		Steps: []resource.TestStep{
@@ -238,7 +238,7 @@ func TestAccServerlessAppRepoCloudFormationStack_update(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, serverlessrepository.EndpointsID),
+		ErrorCheck:   acctest.ErrorCheck(t, serverlessrepo.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckCloudFormationDestroy,
 		Steps: []resource.TestStep{
@@ -322,7 +322,7 @@ func testAccCloudFormationApplicationID() string {
 
 	return arn.ARN{
 		Partition: acctest.Partition(),
-		Service:   serverlessrepository.ServiceName,
+		Service:   serverlessrepo.ServiceName,
 		Region:    arnRegion,
 		AccountID: arnAccountID,
 		Resource:  "applications/SecretsManagerRDSPostgreSQLRotationSingleUser",
