@@ -1,4 +1,4 @@
-package prometheus_test
+package amp_test
 
 import (
 	"context"
@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	tfprometheus "github.com/hashicorp/terraform-provider-aws/internal/service/prometheus"
+	tfamp "github.com/hashicorp/terraform-provider-aws/internal/service/amp"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
@@ -65,7 +65,7 @@ func TestAccPrometheusAlertManagerDefinition_disappears(t *testing.T) {
 				Config: testAccAMPAlertManagerDefinition(defaultAlertManagerDefinition()),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAlertManagerDefinitionExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfprometheus.ResourceAlertManagerDefinition(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfamp.ResourceAlertManagerDefinition(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -86,7 +86,7 @@ func testAccCheckAlertManagerDefinitionExists(n string) resource.TestCheckFunc {
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).AMPConn
 
-		_, err := tfprometheus.FindAlertManagerDefinitionByID(context.TODO(), conn, rs.Primary.ID)
+		_, err := tfamp.FindAlertManagerDefinitionByID(context.TODO(), conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -104,7 +104,7 @@ func testAccCheckAMPAlertManagerDefinitionDestroy(s *terraform.State) error {
 			continue
 		}
 
-		_, err := tfprometheus.FindAlertManagerDefinitionByID(context.TODO(), conn, rs.Primary.ID)
+		_, err := tfamp.FindAlertManagerDefinitionByID(context.TODO(), conn, rs.Primary.ID)
 
 		if tfresource.NotFound(err) {
 			continue

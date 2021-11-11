@@ -1,4 +1,4 @@
-package prometheus_test
+package amp_test
 
 import (
 	"context"
@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	tfprometheus "github.com/hashicorp/terraform-provider-aws/internal/service/prometheus"
+	tfamp "github.com/hashicorp/terraform-provider-aws/internal/service/amp"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
@@ -65,7 +65,7 @@ func TestAccPrometheusRuleGroupNamespace_disappears(t *testing.T) {
 				Config: testAccAMPRuleGroupNamespace(defaultRuleGroupNamespace()),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleGroupNamespaceExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfprometheus.ResourceRuleGroupNamespace(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfamp.ResourceRuleGroupNamespace(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -86,7 +86,7 @@ func testAccCheckRuleGroupNamespaceExists(n string) resource.TestCheckFunc {
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).AMPConn
 
-		_, err := tfprometheus.FindRuleGroupNamespaceByArn(context.TODO(), conn, rs.Primary.ID)
+		_, err := tfamp.FindRuleGroupNamespaceByArn(context.TODO(), conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -104,7 +104,7 @@ func testAccCheckAMPRuleGroupNamespaceDestroy(s *terraform.State) error {
 			continue
 		}
 
-		_, err := tfprometheus.FindRuleGroupNamespaceByArn(context.TODO(), conn, rs.Primary.ID)
+		_, err := tfamp.FindRuleGroupNamespaceByArn(context.TODO(), conn, rs.Primary.ID)
 
 		if tfresource.NotFound(err) {
 			continue

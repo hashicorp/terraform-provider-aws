@@ -1,4 +1,4 @@
-package prometheus_test
+package amp_test
 
 import (
 	"fmt"
@@ -12,7 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	tfprometheus "github.com/hashicorp/terraform-provider-aws/internal/service/prometheus"
+	tfamp "github.com/hashicorp/terraform-provider-aws/internal/service/amp"
 )
 
 func TestAccPrometheusWorkspace_basic(t *testing.T) {
@@ -66,7 +66,7 @@ func TestAccPrometheusWorkspace_disappears(t *testing.T) {
 				Config: testAccAMPWorkspaceWithoutAliasConfig(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAMPWorkspaceExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfprometheus.ResourceWorkspace(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfamp.ResourceWorkspace(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
