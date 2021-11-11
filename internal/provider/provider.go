@@ -44,7 +44,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/codestarnotifications"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/cognitoidentity"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/cognitoidp"
-	"github.com/hashicorp/terraform-provider-aws/internal/service/config"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/configservice"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/connect"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/cur"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/datapipeline"
@@ -926,17 +926,17 @@ func Provider() *schema.Provider {
 			"aws_cognito_user_pool_domain":           cognitoidp.ResourceUserPoolDomain(),
 			"aws_cognito_user_pool_ui_customization": cognitoidp.ResourceUserPoolUICustomization(),
 
-			"aws_config_aggregate_authorization":       config.ResourceAggregateAuthorization(),
-			"aws_config_config_rule":                   config.ResourceConfigRule(),
-			"aws_config_configuration_aggregator":      config.ResourceConfigurationAggregator(),
-			"aws_config_configuration_recorder":        config.ResourceConfigurationRecorder(),
-			"aws_config_configuration_recorder_status": config.ResourceConfigurationRecorderStatus(),
-			"aws_config_conformance_pack":              config.ResourceConformancePack(),
-			"aws_config_delivery_channel":              config.ResourceDeliveryChannel(),
-			"aws_config_organization_conformance_pack": config.ResourceOrganizationConformancePack(),
-			"aws_config_organization_custom_rule":      config.ResourceOrganizationCustomRule(),
-			"aws_config_organization_managed_rule":     config.ResourceOrganizationManagedRule(),
-			"aws_config_remediation_configuration":     config.ResourceRemediationConfiguration(),
+			"aws_config_aggregate_authorization":       configservice.ResourceAggregateAuthorization(),
+			"aws_config_config_rule":                   configservice.ResourceConfigRule(),
+			"aws_config_configuration_aggregator":      configservice.ResourceConfigurationAggregator(),
+			"aws_config_configuration_recorder":        configservice.ResourceConfigurationRecorder(),
+			"aws_config_configuration_recorder_status": configservice.ResourceConfigurationRecorderStatus(),
+			"aws_config_conformance_pack":              configservice.ResourceConformancePack(),
+			"aws_config_delivery_channel":              configservice.ResourceDeliveryChannel(),
+			"aws_config_organization_conformance_pack": configservice.ResourceOrganizationConformancePack(),
+			"aws_config_organization_custom_rule":      configservice.ResourceOrganizationCustomRule(),
+			"aws_config_organization_managed_rule":     configservice.ResourceOrganizationManagedRule(),
+			"aws_config_remediation_configuration":     configservice.ResourceRemediationConfiguration(),
 
 			"aws_connect_contact_flow": connect.ResourceContactFlow(),
 			"aws_connect_instance":     connect.ResourceInstance(),

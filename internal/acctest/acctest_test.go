@@ -770,7 +770,7 @@ func testAccCheckEndpoints(providers *[]*schema.Provider) resource.TestCheckFunc
 				}
 
 				// exception to dropping "service" because Config collides with various other "Config"s
-				if name == "ConfigServiceConn" && fmt.Sprintf("%sConn", serviceUpper) == "ConfigConn" {
+				if name == "ConfigServiceConn" && fmt.Sprintf("%sConn", serviceUpper) == "ConfigServiceConn" {
 					return true
 				}
 
@@ -821,7 +821,7 @@ func testAccCheckUnusualEndpoints(providers *[]*schema.Provider, unusual1, unusu
 				}
 
 				// exception to dropping "service" because Config collides with various other "Config"s
-				if name == "ConfigServiceConn" && fmt.Sprintf("%sConn", serviceUpper) == "ConfigConn" {
+				if name == "ConfigServiceConn" && fmt.Sprintf("%sConn", serviceUpper) == "ConfigServiceConn" {
 					return true
 				}
 

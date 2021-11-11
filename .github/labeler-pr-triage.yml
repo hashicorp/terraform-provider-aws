@@ -186,7 +186,7 @@ service/comprehend:
   - 'internal/service/comprehend/**/*'
   - 'website/**/comprehend_*'
 service/configservice:
-  - 'internal/service/config/**/*'
+  - 'internal/service/configservice/**/*'
   - 'website/**/config_*'
 service/connect:
   - 'internal/service/connect/**/*'

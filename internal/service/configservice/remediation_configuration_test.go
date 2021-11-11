@@ -1,4 +1,4 @@
-package config_test
+package configservice_test
 
 import (
 	"fmt"
@@ -11,10 +11,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	tfconfig "github.com/hashicorp/terraform-provider-aws/internal/service/config"
+	tfconfig "github.com/hashicorp/terraform-provider-aws/internal/service/configservice"
 )
 
-func testAccConfigRemediationConfiguration_basic(t *testing.T) {
+func testAccRemediationConfiguration_basic(t *testing.T) {
 	var rc configservice.RemediationConfiguration
 	resourceName := "aws_config_remediation_configuration.test"
 	rInt := sdkacctest.RandInt()
@@ -26,12 +26,12 @@ func testAccConfigRemediationConfiguration_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, configservice.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckConfigRemediationConfigurationDestroy,
+		CheckDestroy: testAccCheckRemediationConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccConfigRemediationConfigurationConfig(prefix, sseAlgorithm, rInt),
+				Config: testAccRemediationConfigurationConfig(prefix, sseAlgorithm, rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConfigRemediationConfigurationExists(resourceName, &rc),
+					testAccCheckRemediationConfigurationExists(resourceName, &rc),
 					resource.TestCheckResourceAttr(resourceName, "config_rule_name", expectedName),
 					resource.TestCheckResourceAttr(resourceName, "target_id", "AWS-EnableS3BucketEncryption"),
 					resource.TestCheckResourceAttr(resourceName, "target_type", "SSM_DOCUMENT"),
@@ -47,7 +47,7 @@ func testAccConfigRemediationConfiguration_basic(t *testing.T) {
 	})
 }
 
-func testAccConfigRemediationConfiguration_disappears(t *testing.T) {
+func testAccRemediationConfiguration_disappears(t *testing.T) {
 	var rc configservice.RemediationConfiguration
 	resourceName := "aws_config_remediation_configuration.test"
 	rInt := sdkacctest.RandInt()
@@ -58,12 +58,12 @@ func testAccConfigRemediationConfiguration_disappears(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, configservice.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckConfigRemediationConfigurationDestroy,
+		CheckDestroy: testAccCheckRemediationConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccConfigRemediationConfigurationConfig(prefix, sseAlgorithm, rInt),
+				Config: testAccRemediationConfigurationConfig(prefix, sseAlgorithm, rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConfigRemediationConfigurationExists(resourceName, &rc),
+					testAccCheckRemediationConfigurationExists(resourceName, &rc),
 					acctest.CheckResourceDisappears(acctest.Provider, tfconfig.ResourceRemediationConfiguration(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -72,7 +72,7 @@ func testAccConfigRemediationConfiguration_disappears(t *testing.T) {
 	})
 }
 
-func testAccConfigRemediationConfiguration_recreates(t *testing.T) {
+func testAccRemediationConfiguration_recreates(t *testing.T) {
 	var original configservice.RemediationConfiguration
 	var updated configservice.RemediationConfiguration
 	resourceName := "aws_config_remediation_configuration.test"
@@ -86,20 +86,20 @@ func testAccConfigRemediationConfiguration_recreates(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, configservice.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckConfigRemediationConfigurationDestroy,
+		CheckDestroy: testAccCheckRemediationConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccConfigRemediationConfigurationConfig(originalName, sseAlgorithm, rInt),
+				Config: testAccRemediationConfigurationConfig(originalName, sseAlgorithm, rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConfigRemediationConfigurationExists(resourceName, &original),
+					testAccCheckRemediationConfigurationExists(resourceName, &original),
 					resource.TestCheckResourceAttr(resourceName, "config_rule_name", fmt.Sprintf("%s-tf-acc-test-%d", originalName, rInt)),
 				),
 			},
 			{
-				Config: testAccConfigRemediationConfigurationConfig(updatedName, sseAlgorithm, rInt),
+				Config: testAccRemediationConfigurationConfig(updatedName, sseAlgorithm, rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConfigRemediationConfigurationExists(resourceName, &updated),
-					testAccCheckConfigRemediationConfigurationRecreated(t, &original, &updated),
+					testAccCheckRemediationConfigurationExists(resourceName, &updated),
+					testAccCheckRemediationConfigurationRecreated(t, &original, &updated),
 					resource.TestCheckResourceAttr(resourceName, "config_rule_name", fmt.Sprintf("%s-tf-acc-test-%d", updatedName, rInt)),
 				),
 			},
@@ -107,7 +107,7 @@ func testAccConfigRemediationConfiguration_recreates(t *testing.T) {
 	})
 }
 
-func testAccConfigRemediationConfiguration_updates(t *testing.T) {
+func testAccRemediationConfiguration_updates(t *testing.T) {
 	var original configservice.RemediationConfiguration
 	var updated configservice.RemediationConfiguration
 	resourceName := "aws_config_remediation_configuration.test"
@@ -121,20 +121,20 @@ func testAccConfigRemediationConfiguration_updates(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, configservice.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckConfigRemediationConfigurationDestroy,
+		CheckDestroy: testAccCheckRemediationConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccConfigRemediationConfigurationConfig(name, originalSseAlgorithm, rInt),
+				Config: testAccRemediationConfigurationConfig(name, originalSseAlgorithm, rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConfigRemediationConfigurationExists(resourceName, &original),
+					testAccCheckRemediationConfigurationExists(resourceName, &original),
 					resource.TestCheckResourceAttr(resourceName, "parameter.2.static_value", originalSseAlgorithm),
 				),
 			},
 			{
-				Config: testAccConfigRemediationConfigurationConfig(name, updatedSseAlgorithm, rInt),
+				Config: testAccRemediationConfigurationConfig(name, updatedSseAlgorithm, rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConfigRemediationConfigurationExists(resourceName, &updated),
-					testAccCheckConfigRemediationConfigurationNotRecreated(t, &original, &updated),
+					testAccCheckRemediationConfigurationExists(resourceName, &updated),
+					testAccCheckRemediationConfigurationNotRecreated(t, &original, &updated),
 					resource.TestCheckResourceAttr(resourceName, "parameter.2.static_value", updatedSseAlgorithm),
 				),
 			},
@@ -142,7 +142,7 @@ func testAccConfigRemediationConfiguration_updates(t *testing.T) {
 	})
 }
 
-func testAccCheckConfigRemediationConfigurationExists(n string, obj *configservice.RemediationConfiguration) resource.TestCheckFunc {
+func testAccCheckRemediationConfigurationExists(n string, obj *configservice.RemediationConfiguration) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -153,7 +153,7 @@ func testAccCheckConfigRemediationConfigurationExists(n string, obj *configservi
 			return fmt.Errorf("No config rule ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ConfigConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ConfigServiceConn
 		out, err := conn.DescribeRemediationConfigurations(&configservice.DescribeRemediationConfigurationsInput{
 			ConfigRuleNames: []*string{aws.String(rs.Primary.Attributes["config_rule_name"])},
 		})
@@ -171,8 +171,8 @@ func testAccCheckConfigRemediationConfigurationExists(n string, obj *configservi
 	}
 }
 
-func testAccCheckConfigRemediationConfigurationDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).ConfigConn
+func testAccCheckRemediationConfigurationDestroy(s *terraform.State) error {
+	conn := acctest.Provider.Meta().(*conns.AWSClient).ConfigServiceConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_config_remediation_configuration" {
@@ -194,7 +194,7 @@ func testAccCheckConfigRemediationConfigurationDestroy(s *terraform.State) error
 	return nil
 }
 
-func testAccConfigRemediationConfigurationConfig(namePrefix, sseAlgorithm string, randInt int) string {
+func testAccRemediationConfigurationConfig(namePrefix, sseAlgorithm string, randInt int) string {
 	return fmt.Sprintf(`
 resource "aws_config_remediation_configuration" "test" {
   config_rule_name = aws_config_config_rule.test.name
@@ -279,7 +279,7 @@ EOF
 `, namePrefix, sseAlgorithm, randInt)
 }
 
-func testAccCheckConfigRemediationConfigurationNotRecreated(t *testing.T,
+func testAccCheckRemediationConfigurationNotRecreated(t *testing.T,
 	before, after *configservice.RemediationConfiguration) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if *before.Arn != *after.Arn {
@@ -289,7 +289,7 @@ func testAccCheckConfigRemediationConfigurationNotRecreated(t *testing.T,
 	}
 }
 
-func testAccCheckConfigRemediationConfigurationRecreated(t *testing.T,
+func testAccCheckRemediationConfigurationRecreated(t *testing.T,
 	before, after *configservice.RemediationConfiguration) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if *before.Arn == *after.Arn {

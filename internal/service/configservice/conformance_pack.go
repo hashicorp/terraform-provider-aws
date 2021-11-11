@@ -1,4 +1,4 @@
-package config
+package configservice
 
 import (
 	"fmt"
@@ -94,7 +94,7 @@ func ResourceConformancePack() *schema.Resource {
 }
 
 func resourceConformancePackPut(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ConfigConn
+	conn := meta.(*conns.AWSClient).ConfigServiceConn
 
 	name := d.Get("name").(string)
 
@@ -129,7 +129,7 @@ func resourceConformancePackPut(d *schema.ResourceData, meta interface{}) error 
 
 	d.SetId(name)
 
-	if err := configWaitForConformancePackStateCreateComplete(conn, d.Id()); err != nil {
+	if err := waitForConformancePackStateCreateComplete(conn, d.Id()); err != nil {
 		return fmt.Errorf("error waiting for Config Conformance Pack (%s) to be created: %w", d.Id(), err)
 	}
 
@@ -137,7 +137,7 @@ func resourceConformancePackPut(d *schema.ResourceData, meta interface{}) error 
 }
 
 func resourceConformancePackRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ConfigConn
+	conn := meta.(*conns.AWSClient).ConfigServiceConn
 
 	pack, err := DescribeConformancePack(conn, d.Id())
 
@@ -174,13 +174,13 @@ func resourceConformancePackRead(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceConformancePackDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ConfigConn
+	conn := meta.(*conns.AWSClient).ConfigServiceConn
 
 	input := &configservice.DeleteConformancePackInput{
 		ConformancePackName: aws.String(d.Id()),
 	}
 
-	err := resource.Retry(ConfigConformancePackDeleteTimeout, func() *resource.RetryError {
+	err := resource.Retry(conformancePackDeleteTimeout, func() *resource.RetryError {
 		_, err := conn.DeleteConformancePack(input)
 
 		if err != nil {
@@ -206,7 +206,7 @@ func resourceConformancePackDelete(d *schema.ResourceData, meta interface{}) err
 		return fmt.Errorf("erorr deleting Config Conformance Pack (%s): %w", d.Id(), err)
 	}
 
-	if err := configWaitForConformancePackStateDeleteComplete(conn, d.Id()); err != nil {
+	if err := waitForConformancePackStateDeleteComplete(conn, d.Id()); err != nil {
 		return fmt.Errorf("error waiting for Config Conformance Pack (%s) to be deleted: %w", d.Id(), err)
 	}
 

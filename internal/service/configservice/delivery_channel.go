@@ -1,4 +1,4 @@
-package config
+package configservice
 
 import (
 	"fmt"
@@ -74,7 +74,7 @@ func ResourceDeliveryChannel() *schema.Resource {
 }
 
 func resourceDeliveryChannelPut(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ConfigConn
+	conn := meta.(*conns.AWSClient).ConfigServiceConn
 
 	name := d.Get("name").(string)
 	channel := configservice.DeliveryChannel{
@@ -130,7 +130,7 @@ func resourceDeliveryChannelPut(d *schema.ResourceData, meta interface{}) error 
 }
 
 func resourceDeliveryChannelRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ConfigConn
+	conn := meta.(*conns.AWSClient).ConfigServiceConn
 
 	input := configservice.DescribeDeliveryChannelsInput{
 		DeliveryChannelNames: []*string{aws.String(d.Id())},
@@ -174,7 +174,7 @@ func resourceDeliveryChannelRead(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceDeliveryChannelDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ConfigConn
+	conn := meta.(*conns.AWSClient).ConfigServiceConn
 	input := configservice.DeleteDeliveryChannelInput{
 		DeliveryChannelName: aws.String(d.Id()),
 	}
