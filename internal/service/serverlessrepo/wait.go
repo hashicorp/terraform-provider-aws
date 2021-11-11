@@ -1,4 +1,4 @@
-package serverlessapprepo
+package serverlessrepo
 
 import (
 	"time"

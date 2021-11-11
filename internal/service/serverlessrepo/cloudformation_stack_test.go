@@ -1,4 +1,4 @@
-package serverlessapprepo_test
+package serverlessrepo_test
 
 import (
 	"fmt"
@@ -17,13 +17,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	tfserverlessapprepo "github.com/hashicorp/terraform-provider-aws/internal/service/serverlessapprepo"
+	tfserverlessrepo "github.com/hashicorp/terraform-provider-aws/internal/service/serverlessrepo"
 )
 
 // Since aws_serverlessapplicationrepository_cloudformation_stack creates CloudFormation stacks,
 // the aws_cloudformation_stack sweeper will clean these up as well.
 
-func TestAccServerlessAppRepoCloudFormationStack_basic(t *testing.T) {
+func TestAccServerlessRepoCloudFormationStack_basic(t *testing.T) {
 	var stack cloudformation.Stack
 	stackName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	appARN := testAccCloudFormationApplicationID()
@@ -74,7 +74,7 @@ func TestAccServerlessAppRepoCloudFormationStack_basic(t *testing.T) {
 	})
 }
 
-func TestAccServerlessAppRepoCloudFormationStack_disappears(t *testing.T) {
+func TestAccServerlessRepoCloudFormationStack_disappears(t *testing.T) {
 	var stack cloudformation.Stack
 	stackName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	appARN := testAccCloudFormationApplicationID()
@@ -90,7 +90,7 @@ func TestAccServerlessAppRepoCloudFormationStack_disappears(t *testing.T) {
 				Config: testAccCloudFormationStackConfig(stackName, appARN),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServerlessApplicationRepositoryCloudFormationStackExists(resourceName, &stack),
-					acctest.CheckResourceDisappears(acctest.Provider, tfserverlessapprepo.ResourceCloudFormationStack(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfserverlessrepo.ResourceCloudFormationStack(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -98,15 +98,15 @@ func TestAccServerlessAppRepoCloudFormationStack_disappears(t *testing.T) {
 	})
 }
 
-func TestAccServerlessAppRepoCloudFormationStack_versioned(t *testing.T) {
+func TestAccServerlessRepoCloudFormationStack_versioned(t *testing.T) {
 	var stack1, stack2, stack3 cloudformation.Stack
 	stackName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	appARN := testAccCloudFormationApplicationID()
 	resourceName := "aws_serverlessapplicationrepository_cloudformation_stack.postgres-rotator"
 
 	const (
-		version1 = "1.0.13"
-		version2 = "1.1.36"
+		version1 = "1.1.36"
+		version2 = "1.1.203"
 	)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -120,8 +120,9 @@ func TestAccServerlessAppRepoCloudFormationStack_versioned(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServerlessApplicationRepositoryCloudFormationStackExists(resourceName, &stack1),
 					resource.TestCheckResourceAttr(resourceName, "semantic_version", version1),
-					resource.TestCheckResourceAttr(resourceName, "capabilities.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "capabilities.#", "2"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "capabilities.*", "CAPABILITY_IAM"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "capabilities.*", "CAPABILITY_RESOURCE_POLICY"),
 				),
 			},
 			{
@@ -147,15 +148,16 @@ func TestAccServerlessAppRepoCloudFormationStack_versioned(t *testing.T) {
 					testAccCheckServerlessApplicationRepositoryCloudFormationStackExists(resourceName, &stack3),
 					testAccCheckCloudFormationStackNotRecreated(&stack2, &stack3),
 					resource.TestCheckResourceAttr(resourceName, "semantic_version", version1),
-					resource.TestCheckResourceAttr(resourceName, "capabilities.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "capabilities.#", "2"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "capabilities.*", "CAPABILITY_IAM"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "capabilities.*", "CAPABILITY_RESOURCE_POLICY"),
 				),
 			},
 		},
 	})
 }
 
-func TestAccServerlessAppRepoCloudFormationStack_paired(t *testing.T) {
+func TestAccServerlessRepoCloudFormationStack_paired(t *testing.T) {
 	var stack cloudformation.Stack
 	stackName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	appARN := testAccCloudFormationApplicationID()
@@ -183,7 +185,7 @@ func TestAccServerlessAppRepoCloudFormationStack_paired(t *testing.T) {
 	})
 }
 
-func TestAccServerlessAppRepoCloudFormationStack_tags(t *testing.T) {
+func TestAccServerlessRepoCloudFormationStack_tags(t *testing.T) {
 	var stack cloudformation.Stack
 	stackName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	appARN := testAccCloudFormationApplicationID()
@@ -228,7 +230,7 @@ func TestAccServerlessAppRepoCloudFormationStack_tags(t *testing.T) {
 	})
 }
 
-func TestAccServerlessAppRepoCloudFormationStack_update(t *testing.T) {
+func TestAccServerlessRepoCloudFormationStack_update(t *testing.T) {
 	var stack cloudformation.Stack
 	stackName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	initialName := sdkacctest.RandomWithPrefix("FuncName1")
@@ -297,7 +299,7 @@ func testAccCloudFormationStackNameImportStateIdFunc(resourceName string) resour
 			return "", fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		return fmt.Sprintf("%s%s", tfserverlessapprepo.CloudFormationStackNamePrefix, rs.Primary.Attributes["name"]), nil
+		return fmt.Sprintf("%s%s", tfserverlessrepo.CloudFormationStackNamePrefix, rs.Primary.Attributes["name"]), nil
 	}
 }
 
@@ -419,6 +421,7 @@ resource "aws_serverlessapplicationrepository_cloudformation_stack" "postgres-ro
 
   capabilities = [
     "CAPABILITY_IAM",
+	"CAPABILITY_RESOURCE_POLICY",
   ]
 
   parameters = {

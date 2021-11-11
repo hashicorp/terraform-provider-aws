@@ -1,4 +1,4 @@
-package serverlessapprepo
+package serverlessrepo
 
 import ( // nosemgrep: aws-sdk-go-multiple-service-imports
 	"fmt"

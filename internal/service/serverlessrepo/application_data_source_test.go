@@ -1,4 +1,4 @@
-package serverlessapprepo_test
+package serverlessrepo_test
 
 import (
 	"fmt"
@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccServerlessAppRepoApplicationDataSource_basic(t *testing.T) {
+func TestAccServerlessRepoApplicationDataSource_basic(t *testing.T) {
 	datasourceName := "data.aws_serverlessapplicationrepository_application.secrets_manager_postgres_single_user_rotator"
 	appARN := testAccCloudFormationApplicationID()
 
@@ -39,7 +39,7 @@ func TestAccServerlessAppRepoApplicationDataSource_basic(t *testing.T) {
 	})
 }
 
-func TestAccServerlessAppRepoApplicationDataSource_versioned(t *testing.T) {
+func TestAccServerlessRepoApplicationDataSource_versioned(t *testing.T) {
 	datasourceName := "data.aws_serverlessapplicationrepository_application.secrets_manager_postgres_single_user_rotator"
 	appARN := testAccCloudFormationApplicationID()
 
