@@ -15,7 +15,7 @@ When it’s attached to a cache behavior, CloudFront adds the headers in the pol
 
 ## Example Usage
 
-The following example below creates a CloudFront response headers policy.
+The example below creates a CloudFront response headers policy.
 
 ```terraform
 resource "aws_cloudfront_response_headers_policy" "example" {
@@ -38,6 +38,28 @@ resource "aws_cloudfront_response_headers_policy" "example" {
     }
 
     origin_override = true
+  }
+}
+```
+
+The example below creates a CloudFront response headers policy with a custom headers config.
+
+```terraform
+resource "aws_cloudfront_response_headers_policy" "example" {
+  name = "example-headers-policy"
+
+  custom_headers_config {
+    items {
+      header   = "X-Permitted-Cross-Domain-Policies"
+      override = true
+      value    = "none"
+    }
+
+    items {
+      header   = "X-Test"
+      override = true
+      value    = "none"
+    }
   }
 }
 ```
