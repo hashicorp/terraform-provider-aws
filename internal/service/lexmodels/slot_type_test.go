@@ -15,7 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func TestAccLexModelBuildingSlotType_basic(t *testing.T) {
+func TestAccLexModelsSlotType_basic(t *testing.T) {
 	var v lexmodelbuildingservice.GetSlotTypeOutput
 	rName := "aws_lex_slot_type.test"
 	testSlotTypeID := "test_slot_type_" + sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
@@ -60,7 +60,7 @@ func TestAccLexModelBuildingSlotType_basic(t *testing.T) {
 	})
 }
 
-func TestAccLexModelBuildingSlotType_createVersion(t *testing.T) {
+func TestAccLexModelsSlotType_createVersion(t *testing.T) {
 	var v lexmodelbuildingservice.GetSlotTypeOutput
 	rName := "aws_lex_slot_type.test"
 	testSlotTypeID := "test_slot_type_" + sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
@@ -106,7 +106,7 @@ func TestAccLexModelBuildingSlotType_createVersion(t *testing.T) {
 	})
 }
 
-func TestAccLexModelBuildingSlotType_description(t *testing.T) {
+func TestAccLexModelsSlotType_description(t *testing.T) {
 	var v lexmodelbuildingservice.GetSlotTypeOutput
 	rName := "aws_lex_slot_type.test"
 	testSlotTypeID := "test_slot_type_" + sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
@@ -150,7 +150,7 @@ func TestAccLexModelBuildingSlotType_description(t *testing.T) {
 	})
 }
 
-func TestAccLexModelBuildingSlotType_enumerationValues(t *testing.T) {
+func TestAccLexModelsSlotType_enumerationValues(t *testing.T) {
 	var v lexmodelbuildingservice.GetSlotTypeOutput
 	rName := "aws_lex_slot_type.test"
 	testSlotTypeID := "test_slot_type_" + sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
@@ -199,7 +199,7 @@ func TestAccLexModelBuildingSlotType_enumerationValues(t *testing.T) {
 	})
 }
 
-func TestAccLexModelBuildingSlotType_name(t *testing.T) {
+func TestAccLexModelsSlotType_name(t *testing.T) {
 	var v lexmodelbuildingservice.GetSlotTypeOutput
 	rName := "aws_lex_slot_type.test"
 	testSlotTypeID1 := "test_slot_type_" + sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
@@ -244,7 +244,7 @@ func TestAccLexModelBuildingSlotType_name(t *testing.T) {
 	})
 }
 
-func TestAccLexModelBuildingSlotType_valueSelectionStrategy(t *testing.T) {
+func TestAccLexModelsSlotType_valueSelectionStrategy(t *testing.T) {
 	var v lexmodelbuildingservice.GetSlotTypeOutput
 	rName := "aws_lex_slot_type.test"
 	testSlotTypeID := "test_slot_type_" + sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
@@ -288,7 +288,7 @@ func TestAccLexModelBuildingSlotType_valueSelectionStrategy(t *testing.T) {
 	})
 }
 
-func TestAccLexModelBuildingSlotType_disappears(t *testing.T) {
+func TestAccLexModelsSlotType_disappears(t *testing.T) {
 	var v lexmodelbuildingservice.GetSlotTypeOutput
 	rName := "aws_lex_slot_type.test"
 	testSlotTypeID := "test_slot_type_" + sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
@@ -314,7 +314,7 @@ func TestAccLexModelBuildingSlotType_disappears(t *testing.T) {
 	})
 }
 
-func TestAccLexModelBuildingSlotType_computeVersion(t *testing.T) {
+func TestAccLexModelsSlotType_computeVersion(t *testing.T) {
 	var v1 lexmodelbuildingservice.GetSlotTypeOutput
 	var v2 lexmodelbuildingservice.GetIntentOutput
 

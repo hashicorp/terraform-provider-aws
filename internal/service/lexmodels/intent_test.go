@@ -17,7 +17,7 @@ import (
 	tflexmodels "github.com/hashicorp/terraform-provider-aws/internal/service/lexmodels"
 )
 
-func TestAccLexModelBuildingIntent_basic(t *testing.T) {
+func TestAccLexModelsIntent_basic(t *testing.T) {
 	var v lexmodelbuildingservice.GetIntentOutput
 	rName := "aws_lex_intent.test"
 	testIntentID := "test_intent_" + sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
@@ -66,7 +66,7 @@ func TestAccLexModelBuildingIntent_basic(t *testing.T) {
 	})
 }
 
-func TestAccLexModelBuildingIntent_createVersion(t *testing.T) {
+func TestAccLexModelsIntent_createVersion(t *testing.T) {
 	var v lexmodelbuildingservice.GetIntentOutput
 	rName := "aws_lex_intent.test"
 	testIntentID := "test_intent_" + sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
@@ -111,7 +111,7 @@ func TestAccLexModelBuildingIntent_createVersion(t *testing.T) {
 	})
 }
 
-func TestAccLexModelBuildingIntent_conclusionStatement(t *testing.T) {
+func TestAccLexModelsIntent_conclusionStatement(t *testing.T) {
 	var v lexmodelbuildingservice.GetIntentOutput
 	rName := "aws_lex_intent.test"
 	testIntentID := "test_intent_" + sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
@@ -167,7 +167,7 @@ func TestAccLexModelBuildingIntent_conclusionStatement(t *testing.T) {
 	})
 }
 
-func TestAccLexModelBuildingIntent_confirmationPromptAndRejectionStatement(t *testing.T) {
+func TestAccLexModelsIntent_confirmationPromptAndRejectionStatement(t *testing.T) {
 	var v lexmodelbuildingservice.GetIntentOutput
 	rName := "aws_lex_intent.test"
 	testIntentID := "test_intent_" + sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
@@ -233,7 +233,7 @@ func TestAccLexModelBuildingIntent_confirmationPromptAndRejectionStatement(t *te
 	})
 }
 
-func TestAccLexModelBuildingIntent_dialogCodeHook(t *testing.T) {
+func TestAccLexModelsIntent_dialogCodeHook(t *testing.T) {
 	var v lexmodelbuildingservice.GetIntentOutput
 	rName := "aws_lex_intent.test"
 	testIntentID := "test_intent_" + sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
@@ -269,7 +269,7 @@ func TestAccLexModelBuildingIntent_dialogCodeHook(t *testing.T) {
 	})
 }
 
-func TestAccLexModelBuildingIntent_followUpPrompt(t *testing.T) {
+func TestAccLexModelsIntent_followUpPrompt(t *testing.T) {
 	var v lexmodelbuildingservice.GetIntentOutput
 	rName := "aws_lex_intent.test"
 	testIntentID := "test_intent_" + sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
@@ -341,7 +341,7 @@ func TestAccLexModelBuildingIntent_followUpPrompt(t *testing.T) {
 	})
 }
 
-func TestAccLexModelBuildingIntent_fulfillmentActivity(t *testing.T) {
+func TestAccLexModelsIntent_fulfillmentActivity(t *testing.T) {
 	var v lexmodelbuildingservice.GetIntentOutput
 	rName := "aws_lex_intent.test"
 	testIntentID := "test_intent_" + sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
@@ -379,7 +379,7 @@ func TestAccLexModelBuildingIntent_fulfillmentActivity(t *testing.T) {
 	})
 }
 
-func TestAccLexModelBuildingIntent_sampleUtterances(t *testing.T) {
+func TestAccLexModelsIntent_sampleUtterances(t *testing.T) {
 	var v lexmodelbuildingservice.GetIntentOutput
 	rName := "aws_lex_intent.test"
 	testIntentID := "test_intent_" + sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
@@ -424,7 +424,7 @@ func TestAccLexModelBuildingIntent_sampleUtterances(t *testing.T) {
 	})
 }
 
-func TestAccLexModelBuildingIntent_slots(t *testing.T) {
+func TestAccLexModelsIntent_slots(t *testing.T) {
 	var v lexmodelbuildingservice.GetIntentOutput
 	rName := "aws_lex_intent.test"
 	testIntentID := "test_intent_" + sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
@@ -480,7 +480,7 @@ func TestAccLexModelBuildingIntent_slots(t *testing.T) {
 	})
 }
 
-func TestAccLexModelBuildingIntent_slotsCustom(t *testing.T) {
+func TestAccLexModelsIntent_slotsCustom(t *testing.T) {
 	var v lexmodelbuildingservice.GetIntentOutput
 	rName := "aws_lex_intent.test"
 	testIntentID := "test_intent_" + sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
@@ -527,7 +527,7 @@ func TestAccLexModelBuildingIntent_slotsCustom(t *testing.T) {
 	})
 }
 
-func TestAccLexModelBuildingIntent_disappears(t *testing.T) {
+func TestAccLexModelsIntent_disappears(t *testing.T) {
 	var v lexmodelbuildingservice.GetIntentOutput
 	rName := "aws_lex_intent.test"
 	testIntentID := "test_intent_" + sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
@@ -553,7 +553,7 @@ func TestAccLexModelBuildingIntent_disappears(t *testing.T) {
 	})
 }
 
-func TestAccLexModelBuildingIntent_updateWithExternalChange(t *testing.T) {
+func TestAccLexModelsIntent_updateWithExternalChange(t *testing.T) {
 	var v lexmodelbuildingservice.GetIntentOutput
 	rName := "aws_lex_intent.test"
 	testIntentID := "test_intent_" + sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
@@ -622,7 +622,7 @@ func TestAccLexModelBuildingIntent_updateWithExternalChange(t *testing.T) {
 	})
 }
 
-func TestAccLexModelBuildingIntent_computeVersion(t *testing.T) {
+func TestAccLexModelsIntent_computeVersion(t *testing.T) {
 	var v1 lexmodelbuildingservice.GetIntentOutput
 	var v2 lexmodelbuildingservice.GetBotOutput
 
