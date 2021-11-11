@@ -1,4 +1,4 @@
-package lexmodelbuilding
+package lexmodels
 
 import (
 	"context"

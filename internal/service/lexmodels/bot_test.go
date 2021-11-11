@@ -1,4 +1,4 @@
-package lexmodelbuilding_test
+package lexmodels_test
 
 import (
 	"fmt"
@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	tflexmodelbuilding "github.com/hashicorp/terraform-provider-aws/internal/service/lexmodelbuilding"
+	tflexmodels "github.com/hashicorp/terraform-provider-aws/internal/service/lexmodels"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
@@ -68,7 +68,7 @@ func TestAccLexModelBuildingBot_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(rName, "nlu_intent_confidence_threshold", "0"),
 					resource.TestCheckResourceAttr(rName, "process_behavior", "SAVE"),
 					resource.TestCheckResourceAttr(rName, "status", "NOT_BUILT"),
-					resource.TestCheckResourceAttr(rName, "version", tflexmodelbuilding.BotVersionLatest),
+					resource.TestCheckResourceAttr(rName, "version", tflexmodels.BotVersionLatest),
 					resource.TestCheckNoResourceAttr(rName, "voice_id"),
 				),
 			},
@@ -120,7 +120,7 @@ func testAccBot_createVersion(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBotExists(rName, &v1),
 					testAccCheckBotNotExists(testBotID, "1"),
-					resource.TestCheckResourceAttr(rName, "version", tflexmodelbuilding.BotVersionLatest),
+					resource.TestCheckResourceAttr(rName, "version", tflexmodels.BotVersionLatest),
 					resource.TestCheckResourceAttr(rName, "description", "Bot to order flowers on the behalf of a user"),
 				),
 			},
@@ -718,7 +718,7 @@ func TestAccLexModelBuildingBot_disappears(t *testing.T) {
 				),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBotExists(rName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, tflexmodelbuilding.ResourceBot(), rName),
+					acctest.CheckResourceDisappears(acctest.Provider, tflexmodels.ResourceBot(), rName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -739,7 +739,7 @@ func testAccCheckBotExistsWithVersion(rName, botVersion string, v *lexmodelbuild
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).LexModelsConn
 
-		output, err := tflexmodelbuilding.FindBotVersionByName(conn, rs.Primary.ID, botVersion)
+		output, err := tflexmodels.FindBotVersionByName(conn, rs.Primary.ID, botVersion)
 
 		if err != nil {
 			return err
@@ -752,14 +752,14 @@ func testAccCheckBotExistsWithVersion(rName, botVersion string, v *lexmodelbuild
 }
 
 func testAccCheckBotExists(rName string, output *lexmodelbuildingservice.GetBotOutput) resource.TestCheckFunc {
-	return testAccCheckBotExistsWithVersion(rName, tflexmodelbuilding.BotVersionLatest, output)
+	return testAccCheckBotExistsWithVersion(rName, tflexmodels.BotVersionLatest, output)
 }
 
 func testAccCheckBotNotExists(botName, botVersion string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).LexModelsConn
 
-		_, err := tflexmodelbuilding.FindBotVersionByName(conn, botName, botVersion)
+		_, err := tflexmodels.FindBotVersionByName(conn, botName, botVersion)
 
 		if tfresource.NotFound(err) {
 			return nil

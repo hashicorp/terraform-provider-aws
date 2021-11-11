@@ -92,7 +92,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/kms"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/lakeformation"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/lambda"
-	"github.com/hashicorp/terraform-provider-aws/internal/service/lexmodelbuilding"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/lexmodels"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/licensemanager"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/lightsail"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/macie"
@@ -580,10 +580,10 @@ func Provider() *schema.Provider {
 			"aws_lambda_invocation":          lambda.DataSourceInvocation(),
 			"aws_lambda_layer_version":       lambda.DataSourceLayerVersion(),
 
-			"aws_lex_bot":       lexmodelbuilding.DataSourceBot(),
-			"aws_lex_bot_alias": lexmodelbuilding.DataSourceBotAlias(),
-			"aws_lex_intent":    lexmodelbuilding.DataSourceIntent(),
-			"aws_lex_slot_type": lexmodelbuilding.DataSourceSlotType(),
+			"aws_lex_bot":       lexmodels.DataSourceBot(),
+			"aws_lex_bot_alias": lexmodels.DataSourceBotAlias(),
+			"aws_lex_intent":    lexmodels.DataSourceIntent(),
+			"aws_lex_slot_type": lexmodels.DataSourceSlotType(),
 
 			"aws_arn":                     meta.DataSourceARN(),
 			"aws_billing_service_account": meta.DataSourceBillingServiceAccount(),
@@ -1301,10 +1301,10 @@ func Provider() *schema.Provider {
 			"aws_lambda_permission":                     lambda.ResourcePermission(),
 			"aws_lambda_provisioned_concurrency_config": lambda.ResourceProvisionedConcurrencyConfig(),
 
-			"aws_lex_bot":       lexmodelbuilding.ResourceBot(),
-			"aws_lex_bot_alias": lexmodelbuilding.ResourceBotAlias(),
-			"aws_lex_intent":    lexmodelbuilding.ResourceIntent(),
-			"aws_lex_slot_type": lexmodelbuilding.ResourceSlotType(),
+			"aws_lex_bot":       lexmodels.ResourceBot(),
+			"aws_lex_bot_alias": lexmodels.ResourceBotAlias(),
+			"aws_lex_intent":    lexmodels.ResourceIntent(),
+			"aws_lex_slot_type": lexmodels.ResourceSlotType(),
 
 			"aws_licensemanager_association":           licensemanager.ResourceAssociation(),
 			"aws_licensemanager_license_configuration": licensemanager.ResourceLicenseConfiguration(),

@@ -1,4 +1,4 @@
-package lexmodelbuilding_test
+package lexmodels_test
 
 import (
 	"testing"

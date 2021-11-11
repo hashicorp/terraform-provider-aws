@@ -1,7 +1,7 @@
 //go:build sweep
 // +build sweep
 
-package lexmodelbuilding
+package lexmodels
 
 import (
 	"fmt"
