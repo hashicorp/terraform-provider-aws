@@ -1,4 +1,4 @@
-package sqs
+package create
 
 import (
 	"fmt"
@@ -18,8 +18,8 @@ type attributeInfo struct {
 
 type AttributeMap map[string]attributeInfo
 
-// NewAttrMap returns a new AttributeMap from the specified Terraform resource attribute name to AWS API attribute name map and resource schema.
-func NewAttrMap(attrMap map[string]string, schemaMap map[string]*schema.Schema) AttributeMap {
+// AttrMap returns a new AttributeMap from the specified Terraform resource attribute name to AWS API attribute name map and resource schema.
+func AttrMap(attrMap map[string]string, schemaMap map[string]*schema.Schema) AttributeMap {
 	attributeMap := make(AttributeMap)
 
 	for tfAttributeName, apiAttributeName := range attrMap {
@@ -138,4 +138,15 @@ func (m AttributeMap) ResourceDataToApiAttributesUpdate(d *schema.ResourceData) 
 	}
 
 	return apiAttributes, nil
+}
+
+// ApiAttributeNames returns the AWS API attribute names.
+func (m AttributeMap) ApiAttributeNames() []string {
+	apiAttributeNames := []string{}
+
+	for _, attributeInfo := range m {
+		apiAttributeNames = append(apiAttributeNames, attributeInfo.apiAttributeName)
+	}
+
+	return apiAttributeNames
 }
