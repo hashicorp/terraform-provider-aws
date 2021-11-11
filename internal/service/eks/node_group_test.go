@@ -279,8 +279,8 @@ func TestAccEKSNodeGroup_forceUpdateVersion(t *testing.T) {
 func TestAccEKSNodeGroup_InstanceTypes_multiple(t *testing.T) {
 	var nodeGroup1 eks.Nodegroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	ec2InstanceTypeOfferingsDataSourceName := "data.aws_ec2_instance_type_offerings.available"
 	resourceName := "aws_eks_node_group.test"
+	instanceTypes := fmt.Sprintf("%q, %q, %q, %q", "t2.medium", "t3.medium", "t2.large", "t3.large")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
@@ -289,10 +289,14 @@ func TestAccEKSNodeGroup_InstanceTypes_multiple(t *testing.T) {
 		CheckDestroy: testAccCheckNodeGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccNodeGroupInstanceTypesMultipleConfig(rName),
+				Config: testAccNodeGroupInstanceTypesMultipleConfig(rName, instanceTypes),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNodeGroupExists(resourceName, &nodeGroup1),
-					resource.TestCheckResourceAttrPair(resourceName, "instance_types.#", ec2InstanceTypeOfferingsDataSourceName, "instance_types.#"),
+					resource.TestCheckResourceAttr(resourceName, "instance_types.#", "4"),
+					resource.TestCheckResourceAttr(resourceName, "instance_types.0", "t2.medium"),
+					resource.TestCheckResourceAttr(resourceName, "instance_types.1", "t3.medium"),
+					resource.TestCheckResourceAttr(resourceName, "instance_types.2", "t2.large"),
+					resource.TestCheckResourceAttr(resourceName, "instance_types.3", "t3.large"),
 				),
 			},
 			{
@@ -1386,21 +1390,16 @@ resource "aws_eks_node_group" "test" {
 `, rName))
 }
 
-func testAccNodeGroupInstanceTypesMultipleConfig(rName string) string {
+func testAccNodeGroupInstanceTypesMultipleConfig(rName, instanceTypes string) string {
 	return acctest.ConfigCompose(
 		testAccNodeGroupBaseConfig(rName),
 		fmt.Sprintf(`
-data "aws_ec2_instance_type_offerings" "available" {
-  filter {
-    name   = "instance-type"
-    values = ["t3.medium", "t3.large", "t2.medium", "t2.large"]
-  }
-}
-
 resource "aws_eks_node_group" "test" {
-  cluster_name    = aws_eks_cluster.test.name
-  instance_types  = data.aws_ec2_instance_type_offerings.available.instance_types
-  node_group_name = %[1]q
+  cluster_name = aws_eks_cluster.test.name
+  # use a predetermined string instead of aws_ec2_instance_type_offerings data source for the instance_types (TypeList)
+  # as the apply-time values of the data source's instance_types can change in order
+  instance_types  = [%[1]s]
+  node_group_name = %[2]q
   node_role_arn   = aws_iam_role.node.arn
   subnet_ids      = aws_subnet.test[*].id
 
@@ -1416,7 +1415,7 @@ resource "aws_eks_node_group" "test" {
     aws_iam_role_policy_attachment.node-AmazonEC2ContainerRegistryReadOnly,
   ]
 }
-`, rName))
+`, instanceTypes, rName))
 }
 
 func testAccNodeGroupInstanceTypesSingleConfig(rName string) string {
