@@ -110,7 +110,7 @@ func TestAccEMRCluster_autoTerminationPolicy(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccClusterEC2AttributesDefaultManagedSecurityGroupsConfig(rName),
+				Config: testAccClusterNoAutoTerminationConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(resourceName, &cluster),
 					resource.TestCheckResourceAttr(resourceName, "auto_termination_policy.#", "0"),
@@ -3870,8 +3870,10 @@ resource "aws_emr_cluster" "test" {
   service_role                      = "EMR_DefaultRole"
 
   ec2_attributes {
-    instance_profile = "EMR_EC2_DefaultRole"
-    subnet_id        = aws_subnet.test.id
+    instance_profile                  = "EMR_EC2_DefaultRole"
+    subnet_id                         = aws_subnet.test.id
+	emr_managed_master_security_group = aws_security_group.test.id
+    emr_managed_slave_security_group  = aws_security_group.test.id
   }
 
   master_instance_group {
@@ -3881,4 +3883,33 @@ resource "aws_emr_cluster" "test" {
   depends_on = [aws_route_table_association.test]
 }
 `, rName, timeout))
+}
+
+func testAccClusterNoAutoTerminationConfig(rName string) string {
+	return acctest.ConfigCompose(
+		testAccClusterBaseVPCConfig(rName, false),
+		fmt.Sprintf(`
+data "aws_partition" "current" {}
+
+resource "aws_emr_cluster" "test" {
+  applications                      = ["Spark"]
+  keep_job_flow_alive_when_no_steps = true
+  name                              = %[1]q
+  release_label                     = "emr-5.33.1"
+  service_role                      = "EMR_DefaultRole"
+
+  ec2_attributes {
+    instance_profile                  = "EMR_EC2_DefaultRole"
+    subnet_id                         = aws_subnet.test.id
+	emr_managed_master_security_group = aws_security_group.test.id
+    emr_managed_slave_security_group  = aws_security_group.test.id
+  }
+
+  master_instance_group {
+    instance_type = "m4.large"
+  }
+
+  depends_on = [aws_route_table_association.test]
+}
+`, rName))
 }
