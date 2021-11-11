@@ -121,7 +121,7 @@ rules:
     message: Prefer AWS Go SDK pointer conversion aws.StringValue() function for dereferencing during d.SetId()
     paths:
       include:
-        - aws/
+        - internal/
     pattern: 'd.SetId(*$VALUE)'
     severity: WARNING
 
@@ -131,7 +131,7 @@ rules:
     message: Using AWS Go SDK pointer conversion, e.g. aws.String(), with immediate dereferencing is extraneous
     paths:
       include:
-        - aws/
+        - internal/
     patterns:
       - pattern-either:
         - pattern: '*aws.Bool($VALUE)'
@@ -164,7 +164,7 @@ rules:
     message: Using `acctest.RandInt()` in constant or variable declaration will execute during compilation and not randomize, pass into string generating function instead
     paths:
       include:
-        - aws/
+        - internal/
     patterns:
       - pattern-either:
         - pattern: const $CONST = fmt.Sprintf(..., <... acctest.RandInt() ...>, ...)
@@ -176,7 +176,7 @@ rules:
     message: Using `acctest.RandString()` in constant or variable declaration will execute during compilation and not randomize, pass into string generating function instead
     paths:
       include:
-        - aws/
+        - internal/
     patterns:
       - pattern-either:
         - pattern: const $CONST = fmt.Sprintf(..., <... acctest.RandString(...) ...>, ...)
@@ -188,7 +188,7 @@ rules:
     message: Using `acctest.RandomWithPrefix()` in constant or variable declaration will execute during compilation and not randomize, pass into string generating function instead
     paths:
       include:
-        - aws/
+        - internal/
     patterns:
       - pattern-either:
         - pattern: const $CONST = fmt.Sprintf(..., <... acctest.RandomWithPrefix(...) ...>, ...)
@@ -200,7 +200,7 @@ rules:
     message: Prefer `flattenStringSet()` function for casting a list of string pointers to a set
     paths:
       include:
-        - aws/
+        - internal/
     pattern: schema.NewSet(schema.HashString, flattenStringList($APIOBJECT))
     severity: WARNING
 
@@ -209,7 +209,7 @@ rules:
     message: Prefer `expandStringSet()` function for casting a set to a list of string pointers
     paths:
       include:
-        - aws/
+        - internal/
     patterns:
       - pattern-either:
         - pattern: expandStringList($SET.List())
@@ -224,7 +224,7 @@ rules:
     message: Zero value conditional check after `d.GetOk()` is extraneous
     paths:
       include:
-        - aws/
+        - internal/
     patterns:
       - pattern-either:
         - pattern: if $VALUE, $OK := d.GetOk($KEY); $OK && $VALUE.(bool) { $BODY }
@@ -240,7 +240,7 @@ rules:
     message: AWS Go SDK pointer conversion function for `d.Set()` value is extraneous
     paths:
       include:
-        - aws/
+        - internal/
     patterns:
       - pattern-either:
           - pattern: d.Set($ATTRIBUTE, aws.BoolValue($APIOBJECT))
@@ -251,28 +251,29 @@ rules:
           - pattern: d.Set($ATTRIBUTE, aws.StringValue($APIOBJECT))
     severity: WARNING
 
-  - id: helper-schema-ResourceData-DataSource-Set-tags
-    languages: [go]
-    message: (schema.ResourceData).Set() call with the tags key should include IgnoreConfig in the value
-    paths:
-      include:
-        - aws/data_source*.go
-      exclude:
-        - aws/resource*.go
-    patterns:
-      - pattern-inside: func $READMETHOD(...) $ERRORTYPE { ... }
-      - pattern: if err := d.Set("tags", $TAGSMAP); err != nil { ... }
-      - pattern-not: if err := d.Set("tags", $KEYVALUETAGS.IgnoreAws().IgnoreConfig($CONFIG).Map()); err != nil { ... }
-    severity: WARNING
+  # Not sure why this isn't working
+  # - id: helper-schema-ResourceData-DataSource-Set-tags
+  #   languages: [go]
+  #   message: (schema.ResourceData).Set() call with the tags key should include IgnoreConfig in the value
+  #   paths:
+  #     include:
+  #       - internal/service/**/*_data_source.go
+  #     exclude:
+  #       - internal/service/**/*.go
+  #   patterns:
+  #     - pattern-inside: func $READMETHOD(...) $ERRORTYPE { ... }
+  #     - pattern: if err := d.Set("tags", $TAGSMAP); err != nil { ... }
+  #     - pattern-not: if err := d.Set("tags", $KEYVALUETAGS.IgnoreAws().IgnoreConfig($CONFIG).Map()); err != nil { ... }
+  #   severity: WARNING
 
   - id: helper-schema-ResourceData-Resource-Set-tags
     languages: [go]
     message: (schema.ResourceData).Set() call with the tags key should be preceded by a call to IgnoreConfig or include IgnoreConfig in the value in the case of ASG
     paths:
       include:
-        - aws/resource*.go
+        - internal/service/**/*.go
       exclude:
-        - aws/data_source*.go
+        - internal/service/**/*_data_source.go
     patterns:
       - pattern-inside: func $READMETHOD(...) $ERRORTYPE { ... }
       - pattern-either:
@@ -300,6 +301,9 @@ rules:
           ...
       - pattern-not: |
           tags = keyvaluetags.$VALUETAGS($RESOURCETAGS).IgnoreAws().IgnoreConfig($CONFIG)
+          ...
+      - pattern-not: |
+          tags = $VALUETAGS($RESOURCETAGS).IgnoreAWS().IgnoreConfig($CONFIG).Ignore($IGNORE)
           ...
     severity: WARNING
 
@@ -352,9 +356,9 @@ rules:
     paths:
       exclude:
         - "*_test.go"
-        - aws/internal/tfresource/*.go
+        - sweep.go
       include:
-        - aws/
+        - internal/
     patterns:
       - pattern-either:
         - patterns:
@@ -434,7 +438,7 @@ rules:
       exclude:
         - "*_test.go"
       include:
-        - aws/
+        - internal/
     patterns:
       - pattern-either:
         - patterns:
@@ -486,7 +490,7 @@ rules:
     message: Check for resource.NotFoundError errors with tfresource.NotFound()
     paths:
       include:
-        - aws/
+        - internal/
     patterns:
       - pattern-either:
         - patterns:
@@ -510,7 +514,7 @@ rules:
     message: Use time.Equal() instead of ==
     paths:
       include:
-        - aws/
+        - internal/
     patterns:
       - pattern-either:
         - pattern: |
@@ -536,7 +540,7 @@ rules:
     message: Use lastPage for bool variable in pagination functions
     paths:
       include:
-        - aws/
+        - internal/
     patterns:
       - pattern: |
           $X.$Z(..., func(..., $Y bool) {
@@ -559,10 +563,10 @@ rules:
     languages: [go]
     message: Do not call `fmt.Print` and variant
     paths:
+      include:
+        - internal/
       exclude:
         - providerlint/vendor/
-      include:
-        - aws/
     patterns:
       - pattern-either:
         - pattern: |
@@ -595,7 +599,7 @@ rules:
     message: Use default email address or generate a random email address. https://github.com/hashicorp/terraform-provider-aws/blob/main/docs/contributing/running-and-writing-acceptance-tests.md#hardcoded-email-addresses
     paths:
       include:
-        - aws/
+        - internal/
     patterns:
       - pattern-regex: '[-_A-Za-z0-9.+]+@([-A-Za-z0-9]+\.)(com|net|org)'
       - pattern-not-regex: 'no-reply@hashicorp\.com'
@@ -607,7 +611,7 @@ rules:
     message: Generate random SSH keys using acctest.RandSSHKeyPair() or RandSSHKeyPairSize(). https://github.com/hashicorp/terraform-provider-aws/blob/main/docs/contributing/running-and-writing-acceptance-tests.md#hardcoded-ssh-key
     paths:
       include:
-        - aws/
+        - internal/
       exclude:
         - providerlint/vendor/
     patterns:
@@ -622,7 +626,7 @@ rules:
     message: Incorrect form of non-tags change detection. https://github.com/hashicorp/terraform-provider-aws/blob/main/docs/contributing/contribution-checklists.md#resource-tagging-code-implementation
     paths:
       include:
-        - aws/
+        - internal/
     patterns:
       - pattern: 'if d.HasChangeExcept("tags_all") {...}'
     severity: WARNING
