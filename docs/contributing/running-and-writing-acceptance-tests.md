@@ -421,7 +421,7 @@ For example:
 
 ```go
 func TestAccExampleThing_basic(t *testing.T) {
-  rName := acctest.RandomWithPrefix("tf-acc-test")
+  rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
   // ... omitted for brevity ...
 
   resource.ParallelTest(t, resource.TestCase{
@@ -499,7 +499,7 @@ For example:
 
 ```go
 func TestAccExampleThing_basic(t *testing.T) {
-  rName := acctest.RandomWithPrefix("tf-acc-test")
+  rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
   resourceName := "aws_example_thing.test"
 
   resource.ParallelTest(t, resource.TestCase{
@@ -545,7 +545,7 @@ Here is an example of the default PreCheck:
 
 ```go
 func TestAccExampleThing_basic(t *testing.T) {
-  rName := acctest.RandomWithPrefix("tf-acc-test")
+  rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
   resourceName := "aws_example_thing.test"
 
   resource.ParallelTest(t, resource.TestCase{
@@ -572,7 +572,7 @@ This is an example of using a standard PreCheck function. For an established ser
 
 ```go
 func TestAccExampleThing_basic(t *testing.T) {
-  rName := acctest.RandomWithPrefix("tf-acc-test")
+  rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
   resourceName := "aws_example_thing.test"
 
   resource.ParallelTest(t, resource.TestCase{
@@ -590,7 +590,7 @@ Below is an example of adding a custom PreCheck function. For a new or preview s
 
 ```go
 func TestAccExampleThing_basic(t *testing.T) {
-  rName := acctest.RandomWithPrefix("tf-acc-test")
+  rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
   resourceName := "aws_example_thing.test"
 
   resource.ParallelTest(t, resource.TestCase{
@@ -624,7 +624,7 @@ Here is an example of the common ErrorCheck:
 
 ```go
 func TestAccExampleThing_basic(t *testing.T) {
-  rName := acctest.RandomWithPrefix("tf-acc-test")
+  rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
   resourceName := "aws_example_thing.test"
 
   resource.ParallelTest(t, resource.TestCase{
@@ -675,7 +675,7 @@ For example:
 
 ```go
 func TestAccExampleThing_disappears(t *testing.T) {
-  rName := acctest.RandomWithPrefix("tf-acc-test")
+  rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
   resourceName := "aws_example_thing.test"
 
   resource.ParallelTest(t, resource.TestCase{
@@ -717,7 +717,7 @@ For children resources that are encapsulated by a parent resource, it is also pr
 
 ```go
 func TestAccExampleChildThing_disappears_ParentThing(t *testing.T) {
-  rName := acctest.RandomWithPrefix("tf-acc-test")
+  rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
   parentResourceName := "aws_example_parent_thing.test"
   resourceName := "aws_example_child_thing.test"
 
@@ -748,7 +748,7 @@ For example:
 
 ```go
 func TestAccExampleThing_Description(t *testing.T) {
-  rName := acctest.RandomWithPrefix("tf-acc-test")
+  rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
   resourceName := "aws_example_thing.test"
 
   resource.ParallelTest(t, resource.TestCase{
@@ -1089,7 +1089,7 @@ For example:
 
 ```go
 func TestAccExampleThingDataSource_Name(t *testing.T) {
-  rName := acctest.RandomWithPrefix("tf-acc-test")
+  rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
   dataSourceName := "data.aws_example_thing.test"
   resourceName := "aws_example_thing.test"
 
@@ -1323,7 +1323,7 @@ The below are required items that will be noted during submission review and pre
 - [ ] __Includes ErrorCheck__: All acceptance tests should include a call to the common ErrorCheck (`ErrorCheck:   acctest.ErrorCheck(t, service.EndpointsID),`).
 - [ ] __Uses resource.ParallelTest__: Tests should use [`resource.ParallelTest()`](https://godoc.org/github.com/hashicorp/terraform/helper/resource#ParallelTest) instead of [`resource.Test()`](https://godoc.org/github.com/hashicorp/terraform/helper/resource#Test) except where serialized testing is absolutely required.
 - [ ] __Uses fmt.Sprintf()__: Test configurations preferably should to be separated into their own functions (typically named `testAcc{SERVICE}{RESOURCE}Config{PURPOSE}`) that call [`fmt.Sprintf()`](https://golang.org/pkg/fmt/#Sprintf) for variable injection or a string `const` for completely static configurations. Test configurations should avoid `var` or other variable injection functionality such as [`text/template`](https://golang.org/pkg/text/template/).
-- [ ] __Uses Randomized Infrastructure Naming__: Test configurations that use resources where a unique name is required should generate a random name. Typically this is created via `rName := acctest.RandomWithPrefix("tf-acc-test")` in the acceptance test function before generating the configuration.
+- [ ] __Uses Randomized Infrastructure Naming__: Test configurations that use resources where a unique name is required should generate a random name. Typically this is created via `rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)` in the acceptance test function before generating the configuration.
 - [ ] __Prevents S3 Bucket Deletion Errors__: Test configurations that use `aws_s3_bucket` resources as a logging destination should include the `force_destroy = true` configuration. This is to prevent race conditions where logging objects may be written during the testing duration which will cause `BucketNotEmpty` errors during deletion.
 
 For resources that support import, the additional item below is required that will be noted during submission review and prevent immediate merging:
@@ -1602,7 +1602,7 @@ Here's an example using `aws_key_pair`
 func TestAccKeyPair_basic(t *testing.T) {
   ...
 
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	publicKey, _, err := acctest.RandSSHKeyPair(acctest.DefaultEmailAddress)
 	if err != nil {
 		t.Fatalf("error generating random SSH key: %s", err)
@@ -1641,7 +1641,7 @@ Here's an example using `acctest.DefaultEmailAddress`
 func TestAccSNSTopicSubscription_email(t *testing.T) {
 	...
 
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		...
