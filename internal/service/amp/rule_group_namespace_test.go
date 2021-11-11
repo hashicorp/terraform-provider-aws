@@ -14,7 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func TestAccPrometheusRuleGroupNamespace_basic(t *testing.T) {
+func TestAccAMPRuleGroupNamespace_basic(t *testing.T) {
 	resourceName := "aws_prometheus_rule_group_namespace.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -53,7 +53,7 @@ func TestAccPrometheusRuleGroupNamespace_basic(t *testing.T) {
 	})
 }
 
-func TestAccPrometheusRuleGroupNamespace_disappears(t *testing.T) {
+func TestAccAMPRuleGroupNamespace_disappears(t *testing.T) {
 	resourceName := "aws_prometheus_rule_group_namespace.test"
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(prometheusservice.EndpointsID, t) },

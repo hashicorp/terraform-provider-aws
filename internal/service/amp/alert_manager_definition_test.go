@@ -14,7 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func TestAccPrometheusAlertManagerDefinition_basic(t *testing.T) {
+func TestAccAMPAlertManagerDefinition_basic(t *testing.T) {
 	resourceName := "aws_prometheus_alert_manager_definition.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -53,7 +53,7 @@ func TestAccPrometheusAlertManagerDefinition_basic(t *testing.T) {
 	})
 }
 
-func TestAccPrometheusAlertManagerDefinition_disappears(t *testing.T) {
+func TestAccAMPAlertManagerDefinition_disappears(t *testing.T) {
 	resourceName := "aws_prometheus_alert_manager_definition.test"
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(prometheusservice.EndpointsID, t) },
