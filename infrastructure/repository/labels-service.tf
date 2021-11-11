@@ -180,7 +180,7 @@ variable "service_labels" {
     "schemas",
     "secretsmanager",
     "securityhub",
-    "serverlessapplicationrepository",
+    "serverlessrepo",
     "servicecatalog",
     "servicediscovery",
     "servicequotas",

@@ -128,7 +128,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/schemas"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/secretsmanager"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/securityhub"
-	"github.com/hashicorp/terraform-provider-aws/internal/service/serverlessapprepo"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/serverlessrepo"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/servicecatalog"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/servicediscovery"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/servicequotas"
@@ -651,7 +651,7 @@ func Provider() *schema.Provider {
 			"aws_secretsmanager_secret_rotation": secretsmanager.DataSourceSecretRotation(),
 			"aws_secretsmanager_secret_version":  secretsmanager.DataSourceSecretVersion(),
 
-			"aws_serverlessapplicationrepository_application": serverlessapprepo.DataSourceApplication(),
+			"aws_serverlessapplicationrepository_application": serverlessrepo.DataSourceApplication(),
 
 			"aws_servicecatalog_constraint":            servicecatalog.DataSourceConstraint(),
 			"aws_servicecatalog_launch_paths":          servicecatalog.DataSourceLaunchPaths(),
@@ -1528,7 +1528,7 @@ func Provider() *schema.Provider {
 			"aws_securityhub_standards_control":          securityhub.ResourceStandardsControl(),
 			"aws_securityhub_standards_subscription":     securityhub.ResourceStandardsSubscription(),
 
-			"aws_serverlessapplicationrepository_cloudformation_stack": serverlessapprepo.ResourceCloudFormationStack(),
+			"aws_serverlessapplicationrepository_cloudformation_stack": serverlessrepo.ResourceCloudFormationStack(),
 
 			"aws_servicecatalog_budget_resource_association":     servicecatalog.ResourceBudgetResourceAssociation(),
 			"aws_servicecatalog_constraint":                      servicecatalog.ResourceConstraint(),

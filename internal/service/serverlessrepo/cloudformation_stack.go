@@ -1,4 +1,4 @@
-package serverlessapprepo
+package serverlessrepo
 
 import ( // nosemgrep: aws-sdk-go-multiple-service-imports
 	"fmt"
@@ -8,7 +8,7 @@ import ( // nosemgrep: aws-sdk-go-multiple-service-imports
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/cloudformation"
-	serverlessrepository "github.com/aws/aws-sdk-go/service/serverlessapplicationrepository"
+	serverlessrepo "github.com/aws/aws-sdk-go/service/serverlessapplicationrepository"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -62,7 +62,7 @@ func ResourceCloudFormationStack() *schema.Resource {
 				Required: true,
 				Elem: &schema.Schema{
 					Type:         schema.TypeString,
-					ValidateFunc: validation.StringInSlice(serverlessrepository.Capability_Values(), false),
+					ValidateFunc: validation.StringInSlice(serverlessrepo.Capability_Values(), false),
 				},
 				Set: schema.HashString,
 			},
@@ -124,7 +124,7 @@ func resourceCloudFormationStackCreate(d *schema.ResourceData, meta interface{})
 }
 
 func resourceCloudFormationStackRead(d *schema.ResourceData, meta interface{}) error {
-	serverlessConn := meta.(*conns.AWSClient).ServerlessAppRepoConn
+	serverlessConn := meta.(*conns.AWSClient).ServerlessRepoConn
 	cfConn := meta.(*conns.AWSClient).CloudFormationConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -197,7 +197,7 @@ func resourceCloudFormationStackRead(d *schema.ResourceData, meta interface{}) e
 	return nil
 }
 
-func flattenNonDefaultServerlessApplicationCloudFormationParameters(cfParams []*cloudformation.Parameter, rawParameterDefinitions []*serverlessrepository.ParameterDefinition) map[string]interface{} {
+func flattenNonDefaultServerlessApplicationCloudFormationParameters(cfParams []*cloudformation.Parameter, rawParameterDefinitions []*serverlessrepo.ParameterDefinition) map[string]interface{} {
 	parameterDefinitions := flattenServerlessRepositoryParameterDefinitions(rawParameterDefinitions)
 	params := make(map[string]interface{}, len(cfParams))
 	for _, p := range cfParams {
@@ -210,8 +210,8 @@ func flattenNonDefaultServerlessApplicationCloudFormationParameters(cfParams []*
 	return params
 }
 
-func flattenServerlessRepositoryParameterDefinitions(parameterDefinitions []*serverlessrepository.ParameterDefinition) map[string]*serverlessrepository.ParameterDefinition {
-	result := make(map[string]*serverlessrepository.ParameterDefinition, len(parameterDefinitions))
+func flattenServerlessRepositoryParameterDefinitions(parameterDefinitions []*serverlessrepo.ParameterDefinition) map[string]*serverlessrepo.ParameterDefinition {
+	result := make(map[string]*serverlessrepo.ParameterDefinition, len(parameterDefinitions))
 	for _, p := range parameterDefinitions {
 		result[aws.StringValue(p.Name)] = p
 	}
@@ -298,13 +298,13 @@ func resourceCloudFormationStackImport(d *schema.ResourceData, meta interface{})
 }
 
 func createServerlessApplicationRepositoryCloudFormationChangeSet(d *schema.ResourceData, client *conns.AWSClient) (*cloudformation.DescribeChangeSetOutput, error) {
-	serverlessConn := client.ServerlessAppRepoConn
+	serverlessConn := client.ServerlessRepoConn
 	cfConn := client.CloudFormationConn
 	defaultTagsConfig := client.DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
 	stackName := d.Get("name").(string)
-	changeSetRequest := serverlessrepository.CreateCloudFormationChangeSetRequest{
+	changeSetRequest := serverlessrepo.CreateCloudFormationChangeSetRequest{
 		StackName:     aws.String(stackName),
 		ApplicationId: aws.String(d.Get("application_id").(string)),
 		Capabilities:  flex.ExpandStringSet(d.Get("capabilities").(*schema.Set)),
@@ -326,10 +326,10 @@ func createServerlessApplicationRepositoryCloudFormationChangeSet(d *schema.Reso
 	return tfcloudformation.WaitChangeSetCreated(cfConn, aws.StringValue(changeSetResponse.StackId), aws.StringValue(changeSetResponse.ChangeSetId))
 }
 
-func expandServerlessRepositoryCloudFormationChangeSetParameters(params map[string]interface{}) []*serverlessrepository.ParameterValue {
-	var appParams []*serverlessrepository.ParameterValue
+func expandServerlessRepositoryCloudFormationChangeSetParameters(params map[string]interface{}) []*serverlessrepo.ParameterValue {
+	var appParams []*serverlessrepo.ParameterValue
 	for k, v := range params {
-		appParams = append(appParams, &serverlessrepository.ParameterValue{
+		appParams = append(appParams, &serverlessrepo.ParameterValue{
 			Name:  aws.String(k),
 			Value: aws.String(v.(string)),
 		})
@@ -342,8 +342,8 @@ func flattenServerlessRepositoryStackCapabilities(stackCapabilities []*string, a
 	// returned by the CloudFormation APIs.
 	capabilities := flex.FlattenStringSet(stackCapabilities)
 	for _, capability := range applicationRequiredCapabilities {
-		if aws.StringValue(capability) == serverlessrepository.CapabilityCapabilityResourcePolicy {
-			capabilities.Add(serverlessrepository.CapabilityCapabilityResourcePolicy)
+		if aws.StringValue(capability) == serverlessrepo.CapabilityCapabilityResourcePolicy {
+			capabilities.Add(serverlessrepo.CapabilityCapabilityResourcePolicy)
 			break
 		}
 	}

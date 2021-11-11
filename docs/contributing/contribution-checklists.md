@@ -868,7 +868,7 @@ into Terraform.
             1. Do not use underscores,
             2. The first letter of each word is capitalized, and
             3. Abbreviations and initialisms are all caps.
-        - Proper examples include `CognitoIdentity`, `DevOpsGuru`, `DynamoDB`, `ECS`, `Prometheus` ("Service" is dropped from end), and `ServerlessAppRepo` (shortened from "Serverless Application Repository").
+        - Proper examples include `CognitoIdentity`, `DevOpsGuru`, `DynamoDB`, `ECS`, `Prometheus` ("Service" is dropped from end), and `ServerlessRepo` (shortened from "Serverless Application Repository").
         - The constant value is the same as the name but all lowercase (_e.g._, `DynamoDB = "dynamodb"`).
     - In `internal/conns/conns.go`: Add a new entry to the `serviceData` map:
         1. The entry key is the string constant created above
