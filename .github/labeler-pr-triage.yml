@@ -307,8 +307,8 @@ service/emr:
 service/emrcontainers:
   - 'internal/service/emrcontainers/**/*'
   - 'website/**/emrcontainers_*'
-service/eventbridge:
-  - 'internal/service/eventbridge/**/*'
+service/events:
+  - 'internal/service/events/**/*'
   - 'website/**/cloudwatch_event_*'
 service/firehose:
   - 'internal/service/firehose/**/*'

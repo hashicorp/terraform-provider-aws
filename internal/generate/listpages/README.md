@@ -23,12 +23,12 @@ To use with `go generate`, add the following directive to a Go file
 //go:generate go run <relative-path-to-generators>/generate/listpages/main.go -ListOps=<comma-separated-list-of-functions>
 ```
 
-For example, in the file `internal/service/eventbridge/generate.go`
+For example, in the file `internal/service/events/generate.go`
 
 ```go
 //go:generate go run -tags generate ../../generate/listpages/main.go -ListOps=ListEventBuses,ListRules,ListTargetsByRule
 
-package eventbridge
+package events
 ```
 
-generates the file `internal/service/eventbridge/list_pages_gen.go` with the functions `listEventBusesPages`, `listRulesPages`, and `listTargetsByRulePages` as well as their `...WithContext` equivalents.
+generates the file `internal/service/events/list_pages_gen.go` with the functions `listEventBusesPages`, `listRulesPages`, and `listTargetsByRulePages` as well as their `...WithContext` equivalents.

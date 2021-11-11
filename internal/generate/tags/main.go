@@ -948,7 +948,7 @@ func init() {
 	awsServiceNames["elbv2"] = "ELBV2"
 	awsServiceNames["emr"] = "EMR"
 	awsServiceNames["emrcontainers"] = "EMRContainers"
-	awsServiceNames["eventbridge"] = "EventBridge"
+	awsServiceNames["events"] = "Events"
 	awsServiceNames["expression"] = "Expression"
 	awsServiceNames["finspace"] = "FinSpace"
 	awsServiceNames["finspacedata"] = "FinSpaceData"
