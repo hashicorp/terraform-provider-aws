@@ -421,7 +421,7 @@ resource "aws_serverlessapplicationrepository_cloudformation_stack" "postgres-ro
 
   capabilities = [
     "CAPABILITY_IAM",
-	"CAPABILITY_RESOURCE_POLICY",
+    "CAPABILITY_RESOURCE_POLICY",
   ]
 
   parameters = {
