@@ -9,7 +9,7 @@ import (
 
 // []*SERVICE.Tag handling
 
-// Tags returns resourcegroupstagging service tags.
+// Tags returns resourcegroupstaggingapi service tags.
 func Tags(tags tftags.KeyValueTags) []*resourcegroupstaggingapi.Tag {
 	result := make([]*resourcegroupstaggingapi.Tag, 0, len(tags))
 
