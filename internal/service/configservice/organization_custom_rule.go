@@ -1,4 +1,4 @@
-package config
+package configservice
 
 import (
 	"fmt"
@@ -125,7 +125,7 @@ func ResourceOrganizationCustomRule() *schema.Resource {
 }
 
 func resourceOrganizationCustomRuleCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ConfigConn
+	conn := meta.(*conns.AWSClient).ConfigServiceConn
 	name := d.Get("name").(string)
 
 	input := &configservice.PutOrganizationConfigRuleInput{
@@ -176,7 +176,7 @@ func resourceOrganizationCustomRuleCreate(d *schema.ResourceData, meta interface
 
 	d.SetId(name)
 
-	if err := configWaitForOrganizationRuleStatusCreateSuccessful(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+	if err := waitForOrganizationRuleStatusCreateSuccessful(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return fmt.Errorf("error waiting for Config Organization Custom Rule (%s) creation: %s", d.Id(), err)
 	}
 
@@ -184,7 +184,7 @@ func resourceOrganizationCustomRuleCreate(d *schema.ResourceData, meta interface
 }
 
 func resourceOrganizationCustomRuleRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ConfigConn
+	conn := meta.(*conns.AWSClient).ConfigServiceConn
 
 	rule, err := DescribeOrganizationConfigRule(conn, d.Id())
 
@@ -240,7 +240,7 @@ func resourceOrganizationCustomRuleRead(d *schema.ResourceData, meta interface{}
 }
 
 func resourceOrganizationCustomRuleUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ConfigConn
+	conn := meta.(*conns.AWSClient).ConfigServiceConn
 
 	input := &configservice.PutOrganizationConfigRuleInput{
 		OrganizationConfigRuleName: aws.String(d.Id()),
@@ -288,7 +288,7 @@ func resourceOrganizationCustomRuleUpdate(d *schema.ResourceData, meta interface
 		return fmt.Errorf("error updating Config Organization Custom Rule (%s): %s", d.Id(), err)
 	}
 
-	if err := configWaitForOrganizationRuleStatusUpdateSuccessful(conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+	if err := waitForOrganizationRuleStatusUpdateSuccessful(conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
 		return fmt.Errorf("error waiting for Config Organization Custom Rule (%s) update: %s", d.Id(), err)
 	}
 
@@ -296,7 +296,7 @@ func resourceOrganizationCustomRuleUpdate(d *schema.ResourceData, meta interface
 }
 
 func resourceOrganizationCustomRuleDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ConfigConn
+	conn := meta.(*conns.AWSClient).ConfigServiceConn
 
 	input := &configservice.DeleteOrganizationConfigRuleInput{
 		OrganizationConfigRuleName: aws.String(d.Id()),
@@ -308,7 +308,7 @@ func resourceOrganizationCustomRuleDelete(d *schema.ResourceData, meta interface
 		return fmt.Errorf("error deleting Config Organization Custom Rule (%s): %s", d.Id(), err)
 	}
 
-	if err := configWaitForOrganizationRuleStatusDeleteSuccessful(conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+	if err := waitForOrganizationRuleStatusDeleteSuccessful(conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
 		return fmt.Errorf("error waiting for Config Organization Custom Rule (%s) deletion: %s", d.Id(), err)
 	}
 

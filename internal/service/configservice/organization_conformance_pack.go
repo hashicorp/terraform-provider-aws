@@ -1,4 +1,4 @@
-package config
+package configservice
 
 import (
 	"fmt"
@@ -111,7 +111,7 @@ func ResourceOrganizationConformancePack() *schema.Resource {
 }
 
 func resourceOrganizationConformancePackCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ConfigConn
+	conn := meta.(*conns.AWSClient).ConfigServiceConn
 
 	name := d.Get("name").(string)
 
@@ -151,7 +151,7 @@ func resourceOrganizationConformancePackCreate(d *schema.ResourceData, meta inte
 
 	d.SetId(name)
 
-	if err := configWaitForOrganizationConformancePackStatusCreateSuccessful(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+	if err := waitForOrganizationConformancePackStatusCreateSuccessful(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return fmt.Errorf("error waiting for Config Organization Conformance Pack (%s) to be created: %w", d.Id(), err)
 	}
 
@@ -159,7 +159,7 @@ func resourceOrganizationConformancePackCreate(d *schema.ResourceData, meta inte
 }
 
 func resourceOrganizationConformancePackRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ConfigConn
+	conn := meta.(*conns.AWSClient).ConfigServiceConn
 
 	pack, err := DescribeOrganizationConformancePack(conn, d.Id())
 
@@ -200,7 +200,7 @@ func resourceOrganizationConformancePackRead(d *schema.ResourceData, meta interf
 }
 
 func resourceOrganizationConformancePackUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ConfigConn
+	conn := meta.(*conns.AWSClient).ConfigServiceConn
 
 	input := &configservice.PutOrganizationConformancePackInput{
 		OrganizationConformancePackName: aws.String(d.Id()),
@@ -236,7 +236,7 @@ func resourceOrganizationConformancePackUpdate(d *schema.ResourceData, meta inte
 		return fmt.Errorf("error updating Config Organization Conformance Pack (%s): %w", d.Id(), err)
 	}
 
-	if err := configWaitForOrganizationConformancePackStatusUpdateSuccessful(conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+	if err := waitForOrganizationConformancePackStatusUpdateSuccessful(conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
 		return fmt.Errorf("error waiting for Config Organization Conformance Pack (%s) to be updated: %w", d.Id(), err)
 	}
 
@@ -244,7 +244,7 @@ func resourceOrganizationConformancePackUpdate(d *schema.ResourceData, meta inte
 }
 
 func resourceOrganizationConformancePackDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ConfigConn
+	conn := meta.(*conns.AWSClient).ConfigServiceConn
 
 	input := &configservice.DeleteOrganizationConformancePackInput{
 		OrganizationConformancePackName: aws.String(d.Id()),
@@ -260,7 +260,7 @@ func resourceOrganizationConformancePackDelete(d *schema.ResourceData, meta inte
 		return fmt.Errorf("erorr deleting Config Organization Conformance Pack (%s): %w", d.Id(), err)
 	}
 
-	if err := configWaitForOrganizationConformancePackStatusDeleteSuccessful(conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+	if err := waitForOrganizationConformancePackStatusDeleteSuccessful(conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
 		if tfawserr.ErrCodeEquals(err, configservice.ErrCodeNoSuchOrganizationConformancePackException) {
 			return nil
 		}

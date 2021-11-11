@@ -1,4 +1,4 @@
-package config
+package configservice
 
 import (
 	"bytes"
@@ -110,7 +110,7 @@ func ResourceConfigRule() *schema.Resource {
 						},
 						"source_detail": {
 							Type:     schema.TypeSet,
-							Set:      configRuleSourceDetailsHash,
+							Set:      ruleSourceDetailsHash,
 							Optional: true,
 							MaxItems: 25,
 							Elem: &schema.Resource{
@@ -149,7 +149,7 @@ func ResourceConfigRule() *schema.Resource {
 }
 
 func resourceRulePutConfig(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ConfigConn
+	conn := meta.(*conns.AWSClient).ConfigServiceConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -213,7 +213,7 @@ func resourceRulePutConfig(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceConfigRuleRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ConfigConn
+	conn := meta.(*conns.AWSClient).ConfigServiceConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -278,7 +278,7 @@ func resourceConfigRuleRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceConfigRuleDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ConfigConn
+	conn := meta.(*conns.AWSClient).ConfigServiceConn
 
 	name := d.Get("name").(string)
 
@@ -339,7 +339,7 @@ func resourceConfigRuleDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func configRuleSourceDetailsHash(v interface{}) int {
+func ruleSourceDetailsHash(v interface{}) int {
 	var buf bytes.Buffer
 	m := v.(map[string]interface{})
 	if v, ok := m["message_type"]; ok {

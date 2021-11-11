@@ -1,4 +1,4 @@
-package config
+package configservice
 
 import (
 	"fmt"
@@ -67,7 +67,7 @@ func ResourceConfigurationRecorder() *schema.Resource {
 }
 
 func resourceConfigurationRecorderPut(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ConfigConn
+	conn := meta.(*conns.AWSClient).ConfigServiceConn
 
 	name := d.Get("name").(string)
 	recorder := configservice.ConfigurationRecorder{
@@ -93,7 +93,7 @@ func resourceConfigurationRecorderPut(d *schema.ResourceData, meta interface{}) 
 }
 
 func resourceConfigurationRecorderRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ConfigConn
+	conn := meta.(*conns.AWSClient).ConfigServiceConn
 
 	input := configservice.DescribeConfigurationRecordersInput{
 		ConfigurationRecorderNames: []*string{aws.String(d.Id())},
@@ -137,7 +137,7 @@ func resourceConfigurationRecorderRead(d *schema.ResourceData, meta interface{})
 }
 
 func resourceConfigurationRecorderDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ConfigConn
+	conn := meta.(*conns.AWSClient).ConfigServiceConn
 	input := configservice.DeleteConfigurationRecorderInput{
 		ConfigurationRecorderName: aws.String(d.Id()),
 	}

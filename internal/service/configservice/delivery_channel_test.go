@@ -1,4 +1,4 @@
-package config_test
+package configservice_test
 
 import (
 	"fmt"
@@ -13,7 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func testAccConfigDeliveryChannel_basic(t *testing.T) {
+func testAccDeliveryChannel_basic(t *testing.T) {
 	var dc configservice.DeliveryChannel
 	rInt := sdkacctest.RandInt()
 	expectedName := fmt.Sprintf("tf-acc-test-awsconfig-%d", rInt)
@@ -23,13 +23,13 @@ func testAccConfigDeliveryChannel_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, configservice.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckConfigDeliveryChannelDestroy,
+		CheckDestroy: testAccCheckDeliveryChannelDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccConfigDeliveryChannelConfig_basic(rInt),
+				Config: testAccDeliveryChannelConfig_basic(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConfigDeliveryChannelExists("aws_config_delivery_channel.foo", &dc),
-					testAccCheckConfigDeliveryChannelName("aws_config_delivery_channel.foo", expectedName, &dc),
+					testAccCheckDeliveryChannelExists("aws_config_delivery_channel.foo", &dc),
+					testAccCheckDeliveryChannelName("aws_config_delivery_channel.foo", expectedName, &dc),
 					resource.TestCheckResourceAttr("aws_config_delivery_channel.foo", "name", expectedName),
 					resource.TestCheckResourceAttr("aws_config_delivery_channel.foo", "s3_bucket_name", expectedBucketName),
 				),
@@ -38,7 +38,7 @@ func testAccConfigDeliveryChannel_basic(t *testing.T) {
 	})
 }
 
-func testAccConfigDeliveryChannel_allParams(t *testing.T) {
+func testAccDeliveryChannel_allParams(t *testing.T) {
 	resourceName := "aws_config_delivery_channel.foo"
 	var dc configservice.DeliveryChannel
 	rInt := sdkacctest.RandInt()
@@ -49,13 +49,13 @@ func testAccConfigDeliveryChannel_allParams(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, configservice.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckConfigDeliveryChannelDestroy,
+		CheckDestroy: testAccCheckDeliveryChannelDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccConfigDeliveryChannelConfig_allParams(rInt),
+				Config: testAccDeliveryChannelConfig_allParams(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConfigDeliveryChannelExists(resourceName, &dc),
-					testAccCheckConfigDeliveryChannelName(resourceName, expectedName, &dc),
+					testAccCheckDeliveryChannelExists(resourceName, &dc),
+					testAccCheckDeliveryChannelName(resourceName, expectedName, &dc),
 					resource.TestCheckResourceAttr(resourceName, "name", expectedName),
 					resource.TestCheckResourceAttr(resourceName, "s3_bucket_name", expectedBucketName),
 					resource.TestCheckResourceAttr(resourceName, "s3_key_prefix", "one/two/three"),
@@ -68,7 +68,7 @@ func testAccConfigDeliveryChannel_allParams(t *testing.T) {
 	})
 }
 
-func testAccConfigDeliveryChannel_importBasic(t *testing.T) {
+func testAccDeliveryChannel_importBasic(t *testing.T) {
 	resourceName := "aws_config_delivery_channel.foo"
 	rInt := sdkacctest.RandInt()
 
@@ -76,10 +76,10 @@ func testAccConfigDeliveryChannel_importBasic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, configservice.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckConfigDeliveryChannelDestroy,
+		CheckDestroy: testAccCheckDeliveryChannelDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccConfigDeliveryChannelConfig_basic(rInt),
+				Config: testAccDeliveryChannelConfig_basic(rInt),
 			},
 
 			{
@@ -91,7 +91,7 @@ func testAccConfigDeliveryChannel_importBasic(t *testing.T) {
 	})
 }
 
-func testAccCheckConfigDeliveryChannelName(n, desired string, obj *configservice.DeliveryChannel) resource.TestCheckFunc {
+func testAccCheckDeliveryChannelName(n, desired string, obj *configservice.DeliveryChannel) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		_, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -104,7 +104,7 @@ func testAccCheckConfigDeliveryChannelName(n, desired string, obj *configservice
 	}
 }
 
-func testAccCheckConfigDeliveryChannelExists(n string, obj *configservice.DeliveryChannel) resource.TestCheckFunc {
+func testAccCheckDeliveryChannelExists(n string, obj *configservice.DeliveryChannel) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -115,7 +115,7 @@ func testAccCheckConfigDeliveryChannelExists(n string, obj *configservice.Delive
 			return fmt.Errorf("No delivery channel ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ConfigConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ConfigServiceConn
 		out, err := conn.DescribeDeliveryChannels(&configservice.DescribeDeliveryChannelsInput{
 			DeliveryChannelNames: []*string{aws.String(rs.Primary.Attributes["name"])},
 		})
@@ -133,8 +133,8 @@ func testAccCheckConfigDeliveryChannelExists(n string, obj *configservice.Delive
 	}
 }
 
-func testAccCheckConfigDeliveryChannelDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).ConfigConn
+func testAccCheckDeliveryChannelDestroy(s *terraform.State) error {
+	conn := acctest.Provider.Meta().(*conns.AWSClient).ConfigServiceConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_config_delivery_channel" {
@@ -156,7 +156,7 @@ func testAccCheckConfigDeliveryChannelDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccConfigDeliveryChannelConfig_basic(randInt int) string {
+func testAccDeliveryChannelConfig_basic(randInt int) string {
 	return fmt.Sprintf(`
 resource "aws_config_configuration_recorder" "foo" {
   name     = "tf-acc-test-%d"
@@ -219,7 +219,7 @@ resource "aws_config_delivery_channel" "foo" {
 `, randInt, randInt, randInt, randInt, randInt)
 }
 
-func testAccConfigDeliveryChannelConfig_allParams(randInt int) string {
+func testAccDeliveryChannelConfig_allParams(randInt int) string {
 	return fmt.Sprintf(`
 resource "aws_config_configuration_recorder" "foo" {
   name     = "tf-acc-test-%d"

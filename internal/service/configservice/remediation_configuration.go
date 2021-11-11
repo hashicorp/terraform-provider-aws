@@ -1,4 +1,4 @@
-package config
+package configservice
 
 import (
 	"fmt"
@@ -134,7 +134,7 @@ func flattenRemediationConfigurationParameters(parameters map[string]*configserv
 }
 
 func resourceRemediationConfigurationPut(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ConfigConn
+	conn := meta.(*conns.AWSClient).ConfigServiceConn
 
 	name := d.Get("config_rule_name").(string)
 	remediationConfigurationInput := configservice.RemediationConfiguration{
@@ -178,7 +178,7 @@ func resourceRemediationConfigurationPut(d *schema.ResourceData, meta interface{
 }
 
 func resourceRemediationConfigurationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ConfigConn
+	conn := meta.(*conns.AWSClient).ConfigServiceConn
 	out, err := conn.DescribeRemediationConfigurations(&configservice.DescribeRemediationConfigurationsInput{
 		ConfigRuleNames: []*string{aws.String(d.Id())},
 	})
@@ -214,7 +214,7 @@ func resourceRemediationConfigurationRead(d *schema.ResourceData, meta interface
 }
 
 func resourceRemediationConfigurationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ConfigConn
+	conn := meta.(*conns.AWSClient).ConfigServiceConn
 
 	name := d.Get("config_rule_name").(string)
 

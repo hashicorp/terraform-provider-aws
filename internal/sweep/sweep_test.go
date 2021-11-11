@@ -33,7 +33,7 @@ import (
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/codedeploy"
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/codepipeline"
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/cognitoidp"
-	_ "github.com/hashicorp/terraform-provider-aws/internal/service/config"
+	_ "github.com/hashicorp/terraform-provider-aws/internal/service/configservice"
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/connect"
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/cur"
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/datasync"

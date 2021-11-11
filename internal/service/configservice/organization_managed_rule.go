@@ -1,4 +1,4 @@
-package config
+package configservice
 
 import (
 	"fmt"
@@ -111,7 +111,7 @@ func ResourceOrganizationManagedRule() *schema.Resource {
 }
 
 func resourceOrganizationManagedRuleCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ConfigConn
+	conn := meta.(*conns.AWSClient).ConfigServiceConn
 	name := d.Get("name").(string)
 
 	input := &configservice.PutOrganizationConfigRuleInput{
@@ -161,7 +161,7 @@ func resourceOrganizationManagedRuleCreate(d *schema.ResourceData, meta interfac
 
 	d.SetId(name)
 
-	if err := configWaitForOrganizationRuleStatusCreateSuccessful(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+	if err := waitForOrganizationRuleStatusCreateSuccessful(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return fmt.Errorf("error waiting for Config Organization Managed Rule (%s) creation: %s", d.Id(), err)
 	}
 
@@ -169,7 +169,7 @@ func resourceOrganizationManagedRuleCreate(d *schema.ResourceData, meta interfac
 }
 
 func resourceOrganizationManagedRuleRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ConfigConn
+	conn := meta.(*conns.AWSClient).ConfigServiceConn
 
 	rule, err := DescribeOrganizationConfigRule(conn, d.Id())
 
@@ -221,7 +221,7 @@ func resourceOrganizationManagedRuleRead(d *schema.ResourceData, meta interface{
 }
 
 func resourceOrganizationManagedRuleUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ConfigConn
+	conn := meta.(*conns.AWSClient).ConfigServiceConn
 
 	input := &configservice.PutOrganizationConfigRuleInput{
 		OrganizationConfigRuleName: aws.String(d.Id()),
@@ -268,7 +268,7 @@ func resourceOrganizationManagedRuleUpdate(d *schema.ResourceData, meta interfac
 		return fmt.Errorf("error updating Config Organization Managed Rule (%s): %s", d.Id(), err)
 	}
 
-	if err := configWaitForOrganizationRuleStatusUpdateSuccessful(conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+	if err := waitForOrganizationRuleStatusUpdateSuccessful(conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
 		return fmt.Errorf("error waiting for Config Organization Managed Rule (%s) update: %s", d.Id(), err)
 	}
 
@@ -276,7 +276,7 @@ func resourceOrganizationManagedRuleUpdate(d *schema.ResourceData, meta interfac
 }
 
 func resourceOrganizationManagedRuleDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ConfigConn
+	conn := meta.(*conns.AWSClient).ConfigServiceConn
 
 	input := &configservice.DeleteOrganizationConfigRuleInput{
 		OrganizationConfigRuleName: aws.String(d.Id()),
@@ -288,7 +288,7 @@ func resourceOrganizationManagedRuleDelete(d *schema.ResourceData, meta interfac
 		return fmt.Errorf("error deleting Config Organization Managed Rule (%s): %s", d.Id(), err)
 	}
 
-	if err := configWaitForOrganizationRuleStatusDeleteSuccessful(conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+	if err := waitForOrganizationRuleStatusDeleteSuccessful(conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
 		return fmt.Errorf("error waiting for Config Organization Managed Rule (%s) deletion: %s", d.Id(), err)
 	}
 

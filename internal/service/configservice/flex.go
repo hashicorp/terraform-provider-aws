@@ -1,4 +1,4 @@
-package config
+package configservice
 
 import (
 	"github.com/aws/aws-sdk-go/aws"
@@ -205,7 +205,7 @@ func flattenRuleSource(source *configservice.Source) []interface{} {
 	m["owner"] = *source.Owner
 	m["source_identifier"] = *source.SourceIdentifier
 	if len(source.SourceDetails) > 0 {
-		m["source_detail"] = schema.NewSet(configRuleSourceDetailsHash, flattenRuleSourceDetails(source.SourceDetails))
+		m["source_detail"] = schema.NewSet(ruleSourceDetailsHash, flattenRuleSourceDetails(source.SourceDetails))
 	}
 	result = append(result, m)
 	return result

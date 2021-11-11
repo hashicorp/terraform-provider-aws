@@ -343,7 +343,7 @@ const (
 	Comprehend                    = "comprehend"
 	ComprehendMedical             = "comprehendmedical"
 	ComputeOptimizer              = "computeoptimizer"
-	ConfigService                 = "config"
+	ConfigService                 = "configservice"
 	Connect                       = "connect"
 	ConnectContactLens            = "connectcontactlens"
 	ConnectParticipant            = "connectparticipant"
@@ -629,7 +629,7 @@ func init() {
 	serviceData[CognitoSync] = &ServiceDatum{AWSClientName: "CognitoSync", AWSServiceName: cognitosync.ServiceName, AWSEndpointsID: cognitosync.EndpointsID, AWSServiceID: cognitosync.ServiceID, ProviderNameUpper: "CognitoSync", HCLKeys: []string{"cognitosync"}}
 	serviceData[Comprehend] = &ServiceDatum{AWSClientName: "Comprehend", AWSServiceName: comprehend.ServiceName, AWSEndpointsID: comprehend.EndpointsID, AWSServiceID: comprehend.ServiceID, ProviderNameUpper: "Comprehend", HCLKeys: []string{"comprehend"}}
 	serviceData[ComprehendMedical] = &ServiceDatum{AWSClientName: "ComprehendMedical", AWSServiceName: comprehendmedical.ServiceName, AWSEndpointsID: comprehendmedical.EndpointsID, AWSServiceID: comprehendmedical.ServiceID, ProviderNameUpper: "ComprehendMedical", HCLKeys: []string{"comprehendmedical"}}
-	serviceData[ConfigService] = &ServiceDatum{AWSClientName: "ConfigService", AWSServiceName: configservice.ServiceName, AWSEndpointsID: configservice.EndpointsID, AWSServiceID: configservice.ServiceID, ProviderNameUpper: "Config", HCLKeys: []string{"configservice", "config"}}
+	serviceData[ConfigService] = &ServiceDatum{AWSClientName: "ConfigService", AWSServiceName: configservice.ServiceName, AWSEndpointsID: configservice.EndpointsID, AWSServiceID: configservice.ServiceID, ProviderNameUpper: "ConfigService", HCLKeys: []string{"configservice", "config"}}
 	serviceData[Connect] = &ServiceDatum{AWSClientName: "Connect", AWSServiceName: connect.ServiceName, AWSEndpointsID: connect.EndpointsID, AWSServiceID: connect.ServiceID, ProviderNameUpper: "Connect", HCLKeys: []string{"connect"}}
 	serviceData[ConnectContactLens] = &ServiceDatum{AWSClientName: "ConnectContactLens", AWSServiceName: connectcontactlens.ServiceName, AWSEndpointsID: connectcontactlens.EndpointsID, AWSServiceID: connectcontactlens.ServiceID, ProviderNameUpper: "ConnectContactLens", HCLKeys: []string{"connectcontactlens"}}
 	serviceData[ConnectParticipant] = &ServiceDatum{AWSClientName: "ConnectParticipant", AWSServiceName: connectparticipant.ServiceName, AWSEndpointsID: connectparticipant.EndpointsID, AWSServiceID: connectparticipant.ServiceID, ProviderNameUpper: "ConnectParticipant", HCLKeys: []string{"connectparticipant"}}
@@ -938,7 +938,7 @@ type AWSClient struct {
 	CognitoSyncConn                   *cognitosync.CognitoSync
 	ComprehendConn                    *comprehend.Comprehend
 	ComprehendMedicalConn             *comprehendmedical.ComprehendMedical
-	ConfigConn                        *configservice.ConfigService
+	ConfigServiceConn                 *configservice.ConfigService
 	ConnectConn                       *connect.Connect
 	ConnectContactLensConn            *connectcontactlens.ConnectContactLens
 	ConnectParticipantConn            *connectparticipant.ConnectParticipant
@@ -1291,7 +1291,7 @@ func (c *Config) Client() (interface{}, error) {
 		CognitoSyncConn:                   cognitosync.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[CognitoSync])})),
 		ComprehendConn:                    comprehend.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[Comprehend])})),
 		ComprehendMedicalConn:             comprehendmedical.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[ComprehendMedical])})),
-		ConfigConn:                        configservice.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[ConfigService])})),
+		ConfigServiceConn:                 configservice.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[ConfigService])})),
 		ConnectConn:                       connect.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[Connect])})),
 		ConnectContactLensConn:            connectcontactlens.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[ConnectContactLens])})),
 		ConnectParticipantConn:            connectparticipant.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[ConnectParticipant])})),
@@ -1614,7 +1614,7 @@ func (c *Config) Client() (interface{}, error) {
 		}
 	})
 
-	client.ConfigConn.Handlers.Retry.PushBack(func(r *request.Request) {
+	client.ConfigServiceConn.Handlers.Retry.PushBack(func(r *request.Request) {
 		// When calling Config Organization Rules API actions immediately
 		// after Organization creation, the API can randomly return the
 		// OrganizationAccessDeniedException error for a few minutes, even

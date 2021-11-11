@@ -1,4 +1,4 @@
-package config
+package configservice
 
 import (
 	"github.com/aws/aws-sdk-go/service/configservice"

@@ -1,4 +1,4 @@
-package config_test
+package configservice_test
 
 import (
 	"fmt"
@@ -12,10 +12,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	tfconfig "github.com/hashicorp/terraform-provider-aws/internal/service/config"
+	tfconfig "github.com/hashicorp/terraform-provider-aws/internal/service/configservice"
 )
 
-func TestAccConfigConfigurationAggregator_account(t *testing.T) {
+func TestAccConfigServiceConfigurationAggregator_account(t *testing.T) {
 	var ca configservice.ConfigurationAggregator
 	//Name is upper case on purpose to test https://github.com/hashicorp/terraform-provider-aws/issues/8432
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -51,7 +51,7 @@ func TestAccConfigConfigurationAggregator_account(t *testing.T) {
 	})
 }
 
-func TestAccConfigConfigurationAggregator_organization(t *testing.T) {
+func TestAccConfigServiceConfigurationAggregator_organization(t *testing.T) {
 	var ca configservice.ConfigurationAggregator
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_config_configuration_aggregator.test"
@@ -82,7 +82,7 @@ func TestAccConfigConfigurationAggregator_organization(t *testing.T) {
 	})
 }
 
-func TestAccConfigConfigurationAggregator_switch(t *testing.T) {
+func TestAccConfigServiceConfigurationAggregator_switch(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_config_configuration_aggregator.test"
 
@@ -110,7 +110,7 @@ func TestAccConfigConfigurationAggregator_switch(t *testing.T) {
 	})
 }
 
-func TestAccConfigConfigurationAggregator_tags(t *testing.T) {
+func TestAccConfigServiceConfigurationAggregator_tags(t *testing.T) {
 	var ca configservice.ConfigurationAggregator
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_config_configuration_aggregator.test"
@@ -158,7 +158,7 @@ func TestAccConfigConfigurationAggregator_tags(t *testing.T) {
 	})
 }
 
-func TestAccConfigConfigurationAggregator_disappears(t *testing.T) {
+func TestAccConfigServiceConfigurationAggregator_disappears(t *testing.T) {
 	var ca configservice.ConfigurationAggregator
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_config_configuration_aggregator.test"
@@ -205,7 +205,7 @@ func testAccCheckConfigurationAggregatorExists(n string, obj *configservice.Conf
 			return fmt.Errorf("No config configuration aggregator ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ConfigConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ConfigServiceConn
 		out, err := conn.DescribeConfigurationAggregators(&configservice.DescribeConfigurationAggregatorsInput{
 			ConfigurationAggregatorNames: []*string{aws.String(rs.Primary.Attributes["name"])},
 		})
@@ -224,7 +224,7 @@ func testAccCheckConfigurationAggregatorExists(n string, obj *configservice.Conf
 }
 
 func testAccCheckConfigurationAggregatorDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).ConfigConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).ConfigServiceConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_config_configuration_aggregator" {

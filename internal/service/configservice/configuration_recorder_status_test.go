@@ -1,4 +1,4 @@
-package config_test
+package configservice_test
 
 import (
 	"fmt"
@@ -13,7 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func testAccConfigConfigurationRecorderStatus_basic(t *testing.T) {
+func testAccConfigurationRecorderStatus_basic(t *testing.T) {
 	var cr configservice.ConfigurationRecorder
 	var crs configservice.ConfigurationRecorderStatus
 	rInt := sdkacctest.RandInt()
@@ -23,14 +23,14 @@ func testAccConfigConfigurationRecorderStatus_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, configservice.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckConfigConfigurationRecorderStatusDestroy,
+		CheckDestroy: testAccCheckConfigurationRecorderStatusDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccConfigConfigurationRecorderStatusConfig(rInt, false),
+				Config: testAccConfigurationRecorderStatusConfig(rInt, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConfigConfigurationRecorderExists("aws_config_configuration_recorder.foo", &cr),
-					testAccCheckConfigConfigurationRecorderStatusExists("aws_config_configuration_recorder_status.foo", &crs),
-					testAccCheckConfigConfigurationRecorderStatus("aws_config_configuration_recorder_status.foo", false, &crs),
+					testAccCheckConfigurationRecorderExists("aws_config_configuration_recorder.foo", &cr),
+					testAccCheckConfigurationRecorderStatusExists("aws_config_configuration_recorder_status.foo", &crs),
+					testAccCheckConfigurationRecorderStatus("aws_config_configuration_recorder_status.foo", false, &crs),
 					resource.TestCheckResourceAttr("aws_config_configuration_recorder_status.foo", "is_enabled", "false"),
 					resource.TestCheckResourceAttr("aws_config_configuration_recorder_status.foo", "name", expectedName),
 				),
@@ -39,7 +39,7 @@ func testAccConfigConfigurationRecorderStatus_basic(t *testing.T) {
 	})
 }
 
-func testAccConfigConfigurationRecorderStatus_startEnabled(t *testing.T) {
+func testAccConfigurationRecorderStatus_startEnabled(t *testing.T) {
 	var cr configservice.ConfigurationRecorder
 	var crs configservice.ConfigurationRecorderStatus
 	rInt := sdkacctest.RandInt()
@@ -49,34 +49,34 @@ func testAccConfigConfigurationRecorderStatus_startEnabled(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, configservice.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckConfigConfigurationRecorderStatusDestroy,
+		CheckDestroy: testAccCheckConfigurationRecorderStatusDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccConfigConfigurationRecorderStatusConfig(rInt, true),
+				Config: testAccConfigurationRecorderStatusConfig(rInt, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConfigConfigurationRecorderExists("aws_config_configuration_recorder.foo", &cr),
-					testAccCheckConfigConfigurationRecorderStatusExists("aws_config_configuration_recorder_status.foo", &crs),
-					testAccCheckConfigConfigurationRecorderStatus("aws_config_configuration_recorder_status.foo", true, &crs),
+					testAccCheckConfigurationRecorderExists("aws_config_configuration_recorder.foo", &cr),
+					testAccCheckConfigurationRecorderStatusExists("aws_config_configuration_recorder_status.foo", &crs),
+					testAccCheckConfigurationRecorderStatus("aws_config_configuration_recorder_status.foo", true, &crs),
 					resource.TestCheckResourceAttr("aws_config_configuration_recorder_status.foo", "is_enabled", "true"),
 					resource.TestCheckResourceAttr("aws_config_configuration_recorder_status.foo", "name", expectedName),
 				),
 			},
 			{
-				Config: testAccConfigConfigurationRecorderStatusConfig(rInt, false),
+				Config: testAccConfigurationRecorderStatusConfig(rInt, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConfigConfigurationRecorderExists("aws_config_configuration_recorder.foo", &cr),
-					testAccCheckConfigConfigurationRecorderStatusExists("aws_config_configuration_recorder_status.foo", &crs),
-					testAccCheckConfigConfigurationRecorderStatus("aws_config_configuration_recorder_status.foo", false, &crs),
+					testAccCheckConfigurationRecorderExists("aws_config_configuration_recorder.foo", &cr),
+					testAccCheckConfigurationRecorderStatusExists("aws_config_configuration_recorder_status.foo", &crs),
+					testAccCheckConfigurationRecorderStatus("aws_config_configuration_recorder_status.foo", false, &crs),
 					resource.TestCheckResourceAttr("aws_config_configuration_recorder_status.foo", "is_enabled", "false"),
 					resource.TestCheckResourceAttr("aws_config_configuration_recorder_status.foo", "name", expectedName),
 				),
 			},
 			{
-				Config: testAccConfigConfigurationRecorderStatusConfig(rInt, true),
+				Config: testAccConfigurationRecorderStatusConfig(rInt, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConfigConfigurationRecorderExists("aws_config_configuration_recorder.foo", &cr),
-					testAccCheckConfigConfigurationRecorderStatusExists("aws_config_configuration_recorder_status.foo", &crs),
-					testAccCheckConfigConfigurationRecorderStatus("aws_config_configuration_recorder_status.foo", true, &crs),
+					testAccCheckConfigurationRecorderExists("aws_config_configuration_recorder.foo", &cr),
+					testAccCheckConfigurationRecorderStatusExists("aws_config_configuration_recorder_status.foo", &crs),
+					testAccCheckConfigurationRecorderStatus("aws_config_configuration_recorder_status.foo", true, &crs),
 					resource.TestCheckResourceAttr("aws_config_configuration_recorder_status.foo", "is_enabled", "true"),
 					resource.TestCheckResourceAttr("aws_config_configuration_recorder_status.foo", "name", expectedName),
 				),
@@ -85,7 +85,7 @@ func testAccConfigConfigurationRecorderStatus_startEnabled(t *testing.T) {
 	})
 }
 
-func testAccConfigConfigurationRecorderStatus_importBasic(t *testing.T) {
+func testAccConfigurationRecorderStatus_importBasic(t *testing.T) {
 	resourceName := "aws_config_configuration_recorder_status.foo"
 	rInt := sdkacctest.RandInt()
 
@@ -93,10 +93,10 @@ func testAccConfigConfigurationRecorderStatus_importBasic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, configservice.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckConfigConfigurationRecorderStatusDestroy,
+		CheckDestroy: testAccCheckConfigurationRecorderStatusDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccConfigConfigurationRecorderStatusConfig(rInt, true),
+				Config: testAccConfigurationRecorderStatusConfig(rInt, true),
 			},
 
 			{
@@ -108,14 +108,14 @@ func testAccConfigConfigurationRecorderStatus_importBasic(t *testing.T) {
 	})
 }
 
-func testAccCheckConfigConfigurationRecorderStatusExists(n string, obj *configservice.ConfigurationRecorderStatus) resource.TestCheckFunc {
+func testAccCheckConfigurationRecorderStatusExists(n string, obj *configservice.ConfigurationRecorderStatus) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ConfigConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ConfigServiceConn
 		out, err := conn.DescribeConfigurationRecorderStatus(&configservice.DescribeConfigurationRecorderStatusInput{
 			ConfigurationRecorderNames: []*string{aws.String(rs.Primary.Attributes["name"])},
 		})
@@ -133,7 +133,7 @@ func testAccCheckConfigConfigurationRecorderStatusExists(n string, obj *configse
 	}
 }
 
-func testAccCheckConfigConfigurationRecorderStatus(n string, desired bool, obj *configservice.ConfigurationRecorderStatus) resource.TestCheckFunc {
+func testAccCheckConfigurationRecorderStatus(n string, desired bool, obj *configservice.ConfigurationRecorderStatus) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		_, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -149,8 +149,8 @@ func testAccCheckConfigConfigurationRecorderStatus(n string, desired bool, obj *
 	}
 }
 
-func testAccCheckConfigConfigurationRecorderStatusDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).ConfigConn
+func testAccCheckConfigurationRecorderStatusDestroy(s *terraform.State) error {
+	conn := acctest.Provider.Meta().(*conns.AWSClient).ConfigServiceConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_config_configuration_recorder_status" {
@@ -173,7 +173,7 @@ func testAccCheckConfigConfigurationRecorderStatusDestroy(s *terraform.State) er
 	return nil
 }
 
-func testAccConfigConfigurationRecorderStatusConfig(randInt int, enabled bool) string {
+func testAccConfigurationRecorderStatusConfig(randInt int, enabled bool) string {
 	return fmt.Sprintf(`
 resource "aws_config_configuration_recorder" "foo" {
   name     = "tf-acc-test-%d"

@@ -1,4 +1,4 @@
-package config_test
+package configservice_test
 
 import (
 	"fmt"
@@ -13,10 +13,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	tfconfig "github.com/hashicorp/terraform-provider-aws/internal/service/config"
+	tfconfig "github.com/hashicorp/terraform-provider-aws/internal/service/configservice"
 )
 
-func testAccConfigOrganizationConformancePack_basic(t *testing.T) {
+func testAccOrganizationConformancePack_basic(t *testing.T) {
 	var pack configservice.OrganizationConformancePack
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_config_organization_conformance_pack.test"
@@ -25,12 +25,12 @@ func testAccConfigOrganizationConformancePack_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOrganizationsAccount(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, configservice.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckConfigOrganizationConformancePackDestroy,
+		CheckDestroy: testAccCheckOrganizationConformancePackDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccConfigOrganizationConformancePackBasicConfig(rName),
+				Config: testAccOrganizationConformancePackBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConfigOrganizationConformancePackExists(resourceName, &pack),
+					testAccCheckOrganizationConformancePackExists(resourceName, &pack),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "config", regexp.MustCompile(fmt.Sprintf("organization-conformance-pack/%s-.+", rName))),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "delivery_s3_bucket", ""),
@@ -49,7 +49,7 @@ func testAccConfigOrganizationConformancePack_basic(t *testing.T) {
 	})
 }
 
-func testAccConfigOrganizationConformancePack_disappears(t *testing.T) {
+func testAccOrganizationConformancePack_disappears(t *testing.T) {
 	var pack configservice.OrganizationConformancePack
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_config_organization_conformance_pack.test"
@@ -58,12 +58,12 @@ func testAccConfigOrganizationConformancePack_disappears(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOrganizationsAccount(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, configservice.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckConfigOrganizationConformancePackDestroy,
+		CheckDestroy: testAccCheckOrganizationConformancePackDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccConfigOrganizationConformancePackBasicConfig(rName),
+				Config: testAccOrganizationConformancePackBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConfigOrganizationConformancePackExists(resourceName, &pack),
+					testAccCheckOrganizationConformancePackExists(resourceName, &pack),
 					acctest.CheckResourceDisappears(acctest.Provider, tfconfig.ResourceOrganizationConformancePack(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -72,7 +72,7 @@ func testAccConfigOrganizationConformancePack_disappears(t *testing.T) {
 	})
 }
 
-func testAccConfigOrganizationConformancePack_excludedAccounts(t *testing.T) {
+func testAccOrganizationConformancePack_excludedAccounts(t *testing.T) {
 	var pack configservice.OrganizationConformancePack
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_config_organization_conformance_pack.test"
@@ -81,12 +81,12 @@ func testAccConfigOrganizationConformancePack_excludedAccounts(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOrganizationsAccount(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, configservice.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckConfigOrganizationConformancePackDestroy,
+		CheckDestroy: testAccCheckOrganizationConformancePackDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccConfigOrganizationConformancePackExcludedAccounts1Config(rName),
+				Config: testAccOrganizationConformancePackExcludedAccounts1Config(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConfigOrganizationConformancePackExists(resourceName, &pack),
+					testAccCheckOrganizationConformancePackExists(resourceName, &pack),
 					resource.TestCheckResourceAttr(resourceName, "excluded_accounts.#", "1"),
 				),
 			},
@@ -97,9 +97,9 @@ func testAccConfigOrganizationConformancePack_excludedAccounts(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"template_body"},
 			},
 			{
-				Config: testAccConfigOrganizationConformancePackExcludedAccounts2Config(rName),
+				Config: testAccOrganizationConformancePackExcludedAccounts2Config(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConfigOrganizationConformancePackExists(resourceName, &pack),
+					testAccCheckOrganizationConformancePackExists(resourceName, &pack),
 					resource.TestCheckResourceAttr(resourceName, "excluded_accounts.#", "2"),
 				),
 			},
@@ -110,9 +110,9 @@ func testAccConfigOrganizationConformancePack_excludedAccounts(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"template_body"},
 			},
 			{
-				Config: testAccConfigOrganizationConformancePackBasicConfig(rName),
+				Config: testAccOrganizationConformancePackBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConfigOrganizationConformancePackExists(resourceName, &pack),
+					testAccCheckOrganizationConformancePackExists(resourceName, &pack),
 					resource.TestCheckResourceAttr(resourceName, "excluded_accounts.#", "0"),
 				),
 			},
@@ -120,7 +120,7 @@ func testAccConfigOrganizationConformancePack_excludedAccounts(t *testing.T) {
 	})
 }
 
-func testAccConfigOrganizationConformancePack_forceNew(t *testing.T) {
+func testAccOrganizationConformancePack_forceNew(t *testing.T) {
 	var before, after configservice.OrganizationConformancePack
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rNameUpdated := sdkacctest.RandomWithPrefix("tf-acc-test-update")
@@ -130,19 +130,19 @@ func testAccConfigOrganizationConformancePack_forceNew(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOrganizationsAccount(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, configservice.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckConfigOrganizationConformancePackDestroy,
+		CheckDestroy: testAccCheckOrganizationConformancePackDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccConfigOrganizationConformancePackBasicConfig(rName),
+				Config: testAccOrganizationConformancePackBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConfigOrganizationConformancePackExists(resourceName, &before),
+					testAccCheckOrganizationConformancePackExists(resourceName, &before),
 				),
 			},
 			{
-				Config: testAccConfigOrganizationConformancePackBasicConfig(rNameUpdated),
+				Config: testAccOrganizationConformancePackBasicConfig(rNameUpdated),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConfigOrganizationConformancePackExists(resourceName, &after),
-					testAccCheckConfigOrganizationConformancePackRecreated(&before, &after),
+					testAccCheckOrganizationConformancePackExists(resourceName, &after),
+					testAccCheckOrganizationConformancePackRecreated(&before, &after),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "config", regexp.MustCompile(fmt.Sprintf("organization-conformance-pack/%s-.+", rNameUpdated))),
 					resource.TestCheckResourceAttr(resourceName, "name", rNameUpdated),
 					resource.TestCheckResourceAttr(resourceName, "delivery_s3_bucket", ""),
@@ -161,7 +161,7 @@ func testAccConfigOrganizationConformancePack_forceNew(t *testing.T) {
 	})
 }
 
-func testAccConfigOrganizationConformancePack_inputParameters(t *testing.T) {
+func testAccOrganizationConformancePack_inputParameters(t *testing.T) {
 	var pack configservice.OrganizationConformancePack
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	pKey := "ParamKey"
@@ -172,12 +172,12 @@ func testAccConfigOrganizationConformancePack_inputParameters(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOrganizationsAccount(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, configservice.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckConfigOrganizationConformancePackDestroy,
+		CheckDestroy: testAccCheckOrganizationConformancePackDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccConfigOrganizationConformancePackInputParameterConfig(rName, pKey, pValue),
+				Config: testAccOrganizationConformancePackInputParameterConfig(rName, pKey, pValue),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConfigOrganizationConformancePackExists(resourceName, &pack),
+					testAccCheckOrganizationConformancePackExists(resourceName, &pack),
 					resource.TestCheckResourceAttr(resourceName, "input_parameter.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "input_parameter.*", map[string]string{
 						"parameter_name":  pKey,
@@ -195,7 +195,7 @@ func testAccConfigOrganizationConformancePack_inputParameters(t *testing.T) {
 	})
 }
 
-func testAccConfigOrganizationConformancePack_S3Delivery(t *testing.T) {
+func testAccOrganizationConformancePack_S3Delivery(t *testing.T) {
 	var pack configservice.OrganizationConformancePack
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	bucketName := sdkacctest.RandomWithPrefix("awsconfigconforms")
@@ -205,12 +205,12 @@ func testAccConfigOrganizationConformancePack_S3Delivery(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOrganizationsAccount(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, configservice.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckConfigOrganizationConformancePackDestroy,
+		CheckDestroy: testAccCheckOrganizationConformancePackDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccConfigOrganizationConformancePackS3DeliveryConfig(rName, bucketName),
+				Config: testAccOrganizationConformancePackS3DeliveryConfig(rName, bucketName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConfigOrganizationConformancePackExists(resourceName, &pack),
+					testAccCheckOrganizationConformancePackExists(resourceName, &pack),
 					resource.TestCheckResourceAttr(resourceName, "delivery_s3_bucket", bucketName),
 					resource.TestCheckResourceAttr(resourceName, "delivery_s3_key_prefix", rName),
 				),
@@ -225,7 +225,7 @@ func testAccConfigOrganizationConformancePack_S3Delivery(t *testing.T) {
 	})
 }
 
-func testAccConfigOrganizationConformancePack_S3Template(t *testing.T) {
+func testAccOrganizationConformancePack_S3Template(t *testing.T) {
 	var pack configservice.OrganizationConformancePack
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_config_organization_conformance_pack.test"
@@ -234,12 +234,12 @@ func testAccConfigOrganizationConformancePack_S3Template(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOrganizationsAccount(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, configservice.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckConfigOrganizationConformancePackDestroy,
+		CheckDestroy: testAccCheckOrganizationConformancePackDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccConfigOrganizationConformancePackS3TemplateConfig(rName, rName),
+				Config: testAccOrganizationConformancePackS3TemplateConfig(rName, rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConfigOrganizationConformancePackExists(resourceName, &pack),
+					testAccCheckOrganizationConformancePackExists(resourceName, &pack),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "config", regexp.MustCompile(fmt.Sprintf("organization-conformance-pack/%s-.+", rName))),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "delivery_s3_bucket", ""),
@@ -258,7 +258,7 @@ func testAccConfigOrganizationConformancePack_S3Template(t *testing.T) {
 	})
 }
 
-func testAccConfigOrganizationConformancePack_updateInputParameters(t *testing.T) {
+func testAccOrganizationConformancePack_updateInputParameters(t *testing.T) {
 	var pack configservice.OrganizationConformancePack
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_config_organization_conformance_pack.test"
@@ -267,18 +267,18 @@ func testAccConfigOrganizationConformancePack_updateInputParameters(t *testing.T
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOrganizationsAccount(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, configservice.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckConfigOrganizationConformancePackDestroy,
+		CheckDestroy: testAccCheckOrganizationConformancePackDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccConfigOrganizationConformancePackInputParameterConfig(rName, "TestKey", "TestValue"),
+				Config: testAccOrganizationConformancePackInputParameterConfig(rName, "TestKey", "TestValue"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConfigOrganizationConformancePackExists(resourceName, &pack),
+					testAccCheckOrganizationConformancePackExists(resourceName, &pack),
 				),
 			},
 			{
-				Config: testAccConfigOrganizationConformancePackUpdateInputParameterConfig(rName, "TestKey1", "TestKey2"),
+				Config: testAccOrganizationConformancePackUpdateInputParameterConfig(rName, "TestKey1", "TestKey2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConfigOrganizationConformancePackExists(resourceName, &pack),
+					testAccCheckOrganizationConformancePackExists(resourceName, &pack),
 					resource.TestCheckResourceAttr(resourceName, "input_parameter.#", "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "input_parameter.*", map[string]string{
 						"parameter_name":  "TestKey1",
@@ -297,9 +297,9 @@ func testAccConfigOrganizationConformancePack_updateInputParameters(t *testing.T
 				ImportStateVerifyIgnore: []string{"template_body"},
 			},
 			{
-				Config: testAccConfigOrganizationConformancePackBasicConfig(rName),
+				Config: testAccOrganizationConformancePackBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConfigOrganizationConformancePackExists(resourceName, &pack),
+					testAccCheckOrganizationConformancePackExists(resourceName, &pack),
 					resource.TestCheckResourceAttr(resourceName, "input_parameter.#", "0"),
 				),
 			},
@@ -307,7 +307,7 @@ func testAccConfigOrganizationConformancePack_updateInputParameters(t *testing.T
 	})
 }
 
-func testAccConfigOrganizationConformancePack_updateS3Delivery(t *testing.T) {
+func testAccOrganizationConformancePack_updateS3Delivery(t *testing.T) {
 	var pack configservice.OrganizationConformancePack
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	bucketName := sdkacctest.RandomWithPrefix("awsconfigconforms")
@@ -318,20 +318,20 @@ func testAccConfigOrganizationConformancePack_updateS3Delivery(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOrganizationsAccount(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, configservice.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckConfigOrganizationConformancePackDestroy,
+		CheckDestroy: testAccCheckOrganizationConformancePackDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccConfigOrganizationConformancePackS3DeliveryConfig(rName, bucketName),
+				Config: testAccOrganizationConformancePackS3DeliveryConfig(rName, bucketName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConfigOrganizationConformancePackExists(resourceName, &pack),
+					testAccCheckOrganizationConformancePackExists(resourceName, &pack),
 					resource.TestCheckResourceAttr(resourceName, "delivery_s3_bucket", bucketName),
 					resource.TestCheckResourceAttr(resourceName, "delivery_s3_key_prefix", rName),
 				),
 			},
 			{
-				Config: testAccConfigOrganizationConformancePackS3DeliveryConfig(rName, updatedBucketName),
+				Config: testAccOrganizationConformancePackS3DeliveryConfig(rName, updatedBucketName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConfigOrganizationConformancePackExists(resourceName, &pack),
+					testAccCheckOrganizationConformancePackExists(resourceName, &pack),
 					resource.TestCheckResourceAttr(resourceName, "delivery_s3_bucket", updatedBucketName),
 					resource.TestCheckResourceAttr(resourceName, "delivery_s3_key_prefix", rName),
 				),
@@ -346,7 +346,7 @@ func testAccConfigOrganizationConformancePack_updateS3Delivery(t *testing.T) {
 	})
 }
 
-func testAccConfigOrganizationConformancePack_updateS3Template(t *testing.T) {
+func testAccOrganizationConformancePack_updateS3Template(t *testing.T) {
 	var pack configservice.OrganizationConformancePack
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	bucketName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -356,18 +356,18 @@ func testAccConfigOrganizationConformancePack_updateS3Template(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOrganizationsAccount(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, configservice.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckConfigOrganizationConformancePackDestroy,
+		CheckDestroy: testAccCheckOrganizationConformancePackDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccConfigOrganizationConformancePackS3TemplateConfig(rName, rName),
+				Config: testAccOrganizationConformancePackS3TemplateConfig(rName, rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConfigOrganizationConformancePackExists(resourceName, &pack),
+					testAccCheckOrganizationConformancePackExists(resourceName, &pack),
 				),
 			},
 			{
-				Config: testAccConfigOrganizationConformancePackS3TemplateConfig(rName, bucketName),
+				Config: testAccOrganizationConformancePackS3TemplateConfig(rName, bucketName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConfigOrganizationConformancePackExists(resourceName, &pack),
+					testAccCheckOrganizationConformancePackExists(resourceName, &pack),
 				),
 			},
 			{
@@ -380,7 +380,7 @@ func testAccConfigOrganizationConformancePack_updateS3Template(t *testing.T) {
 	})
 }
 
-func testAccConfigOrganizationConformancePack_updateTemplateBody(t *testing.T) {
+func testAccOrganizationConformancePack_updateTemplateBody(t *testing.T) {
 	var pack configservice.OrganizationConformancePack
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_config_organization_conformance_pack.test"
@@ -389,18 +389,18 @@ func testAccConfigOrganizationConformancePack_updateTemplateBody(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOrganizationsAccount(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, configservice.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckConfigOrganizationConformancePackDestroy,
+		CheckDestroy: testAccCheckOrganizationConformancePackDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccConfigOrganizationConformancePackBasicConfig(rName),
+				Config: testAccOrganizationConformancePackBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConfigOrganizationConformancePackExists(resourceName, &pack),
+					testAccCheckOrganizationConformancePackExists(resourceName, &pack),
 				),
 			},
 			{
-				Config: testAccConfigOrganizationConformancePackUpdateConfig(rName),
+				Config: testAccOrganizationConformancePackUpdateConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConfigOrganizationConformancePackExists(resourceName, &pack),
+					testAccCheckOrganizationConformancePackExists(resourceName, &pack),
 				),
 			},
 			{
@@ -413,8 +413,8 @@ func testAccConfigOrganizationConformancePack_updateTemplateBody(t *testing.T) {
 	})
 }
 
-func testAccCheckConfigOrganizationConformancePackDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).ConfigConn
+func testAccCheckOrganizationConformancePackDestroy(s *terraform.State) error {
+	conn := acctest.Provider.Meta().(*conns.AWSClient).ConfigServiceConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_config_organization_conformance_pack" {
@@ -445,14 +445,14 @@ func testAccCheckConfigOrganizationConformancePackDestroy(s *terraform.State) er
 	return nil
 }
 
-func testAccCheckConfigOrganizationConformancePackExists(resourceName string, ocp *configservice.OrganizationConformancePack) resource.TestCheckFunc {
+func testAccCheckOrganizationConformancePackExists(resourceName string, ocp *configservice.OrganizationConformancePack) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
 			return fmt.Errorf("Not Found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ConfigConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ConfigServiceConn
 
 		pack, err := tfconfig.DescribeOrganizationConformancePack(conn, rs.Primary.ID)
 
@@ -470,7 +470,7 @@ func testAccCheckConfigOrganizationConformancePackExists(resourceName string, oc
 	}
 }
 
-func testAccCheckConfigOrganizationConformancePackRecreated(before, after *configservice.OrganizationConformancePack) resource.TestCheckFunc {
+func testAccCheckOrganizationConformancePackRecreated(before, after *configservice.OrganizationConformancePack) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if aws.StringValue(before.OrganizationConformancePackArn) == aws.StringValue(after.OrganizationConformancePackArn) {
 			return fmt.Errorf("AWS Config Organization Conformance Pack was not recreated")
@@ -479,7 +479,7 @@ func testAccCheckConfigOrganizationConformancePackRecreated(before, after *confi
 	}
 }
 
-func testAccConfigOrganizationConformancePackBase(rName string) string {
+func testAccOrganizationConformancePackBase(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -520,9 +520,9 @@ resource "aws_organizations_organization" "test" {
 `, rName)
 }
 
-func testAccConfigOrganizationConformancePackBasicConfig(rName string) string {
+func testAccOrganizationConformancePackBasicConfig(rName string) string {
 	return acctest.ConfigCompose(
-		testAccConfigOrganizationConformancePackBase(rName),
+		testAccOrganizationConformancePackBase(rName),
 		fmt.Sprintf(`
 resource "aws_config_organization_conformance_pack" "test" {
   depends_on    = [aws_config_configuration_recorder.test, aws_organizations_organization.test]
@@ -541,9 +541,9 @@ EOT
 `, rName))
 }
 
-func testAccConfigOrganizationConformancePackInputParameterConfig(rName, pKey, pValue string) string {
+func testAccOrganizationConformancePackInputParameterConfig(rName, pKey, pValue string) string {
 	return acctest.ConfigCompose(
-		testAccConfigOrganizationConformancePackBase(rName),
+		testAccOrganizationConformancePackBase(rName),
 		fmt.Sprintf(`
 resource "aws_config_organization_conformance_pack" "test" {
   depends_on = [aws_config_configuration_recorder.test, aws_organizations_organization.test]
@@ -571,9 +571,9 @@ EOT
 `, rName, pKey, pValue))
 }
 
-func testAccConfigOrganizationConformancePackUpdateInputParameterConfig(rName, pName1, pName2 string) string {
+func testAccOrganizationConformancePackUpdateInputParameterConfig(rName, pName1, pName2 string) string {
 	return acctest.ConfigCompose(
-		testAccConfigOrganizationConformancePackBase(rName),
+		testAccOrganizationConformancePackBase(rName),
 		fmt.Sprintf(`
 resource "aws_config_organization_conformance_pack" "test" {
   depends_on = [aws_config_configuration_recorder.test, aws_organizations_organization.test]
@@ -608,9 +608,9 @@ EOT
 `, rName, pName1, pName2))
 }
 
-func testAccConfigOrganizationConformancePackS3DeliveryConfig(rName, bName string) string {
+func testAccOrganizationConformancePackS3DeliveryConfig(rName, bName string) string {
 	return acctest.ConfigCompose(
-		testAccConfigOrganizationConformancePackBase(rName),
+		testAccOrganizationConformancePackBase(rName),
 		fmt.Sprintf(`
 resource "aws_config_organization_conformance_pack" "test" {
   depends_on             = [aws_config_configuration_recorder.test, aws_organizations_organization.test]
@@ -637,9 +637,9 @@ resource "aws_s3_bucket" "test" {
 `, rName, bName))
 }
 
-func testAccConfigOrganizationConformancePackS3TemplateConfig(rName, bName string) string {
+func testAccOrganizationConformancePackS3TemplateConfig(rName, bName string) string {
 	return acctest.ConfigCompose(
-		testAccConfigOrganizationConformancePackBase(rName),
+		testAccOrganizationConformancePackBase(rName),
 		fmt.Sprintf(`
 resource "aws_config_organization_conformance_pack" "test" {
   depends_on      = [aws_config_configuration_recorder.test, aws_organizations_organization.test]
@@ -670,9 +670,9 @@ EOT
 `, rName, bName))
 }
 
-func testAccConfigOrganizationConformancePackUpdateConfig(rName string) string {
+func testAccOrganizationConformancePackUpdateConfig(rName string) string {
 	return acctest.ConfigCompose(
-		testAccConfigOrganizationConformancePackBase(rName),
+		testAccOrganizationConformancePackBase(rName),
 		fmt.Sprintf(`
 resource "aws_config_organization_conformance_pack" "test" {
   depends_on    = [aws_config_configuration_recorder.test, aws_organizations_organization.test]
@@ -691,9 +691,9 @@ EOT
 `, rName))
 }
 
-func testAccConfigOrganizationConformancePackExcludedAccounts1Config(rName string) string {
+func testAccOrganizationConformancePackExcludedAccounts1Config(rName string) string {
 	return acctest.ConfigCompose(
-		testAccConfigOrganizationConformancePackBase(rName),
+		testAccOrganizationConformancePackBase(rName),
 		fmt.Sprintf(`
 resource "aws_config_organization_conformance_pack" "test" {
   depends_on = [aws_config_configuration_recorder.test, aws_organizations_organization.test]
@@ -715,9 +715,9 @@ EOT
 `, rName))
 }
 
-func testAccConfigOrganizationConformancePackExcludedAccounts2Config(rName string) string {
+func testAccOrganizationConformancePackExcludedAccounts2Config(rName string) string {
 	return acctest.ConfigCompose(
-		testAccConfigOrganizationConformancePackBase(rName),
+		testAccOrganizationConformancePackBase(rName),
 		fmt.Sprintf(`
 resource "aws_config_organization_conformance_pack" "test" {
   depends_on = [aws_config_configuration_recorder.test, aws_organizations_organization.test]

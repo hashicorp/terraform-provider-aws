@@ -1,6 +1,6 @@
-package config_test
+package configservice_test
 
-// func TestAccConfigAggregateAuthorization_basic(t *testing.T) {
+// func TestAccConfigServiceAggregateAuthorization_basic(t *testing.T) {
 // 	rString := sdkacctest.RandStringFromCharSet(12, "0123456789")
 // 	resourceName := "aws_config_aggregate_authorization.example"
 // 	dataSourceName := "data.aws_region.current"
@@ -28,7 +28,7 @@ package config_test
 // 	})
 // }
 
-// func TestAccConfigAggregateAuthorization_tags(t *testing.T) {
+// func TestAccConfigServiceAggregateAuthorization_tags(t *testing.T) {
 // 	rString := sdkacctest.RandStringFromCharSet(12, "0123456789")
 // 	resourceName := "aws_config_aggregate_authorization.example"
 
@@ -72,7 +72,7 @@ package config_test
 // }
 
 // func testAccCheckAggregateAuthorizationDestroy(s *terraform.State) error {
-// 	conn := acctest.Provider.Meta().(*conns.AWSClient).ConfigConn
+// 	conn := acctest.Provider.Meta().(*conns.AWSClient).ConfigServiceConn
 
 // 	for _, rs := range s.RootModule().Resources {
 // 		if rs.Type != "aws_config_aggregate_authorization" {
