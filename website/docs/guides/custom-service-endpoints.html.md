@@ -71,6 +71,7 @@ provider "aws" {
   <li><code>acm</code></li>
   <li><code>acmpca</code></li>
   <li><code>alexaforbusiness</code></li>
+  <li><code>amp</code> (or <code>prometheus</code>, <code>prometheusservice</code>)</li>
   <li><code>amplify</code></li>
   <li><code>amplifybackend</code></li>
   <li><code>apigateway</code></li>
@@ -264,7 +265,6 @@ provider "aws" {
   <li><code>pinpointsmsvoice</code></li>
   <li><code>polly</code></li>
   <li><code>pricing</code></li>
-  <li><code>prometheus</code> (or <code>prometheusservice</code>)</li>
   <li><code>proton</code></li>
   <li><code>qldb</code></li>
   <li><code>qldbsession</code></li>

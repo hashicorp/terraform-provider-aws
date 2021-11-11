@@ -85,7 +85,7 @@ func testAccCheckAMPWorkspaceExists(n string) resource.TestCheckFunc {
 			return fmt.Errorf("No AMP Workspace ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).PrometheusConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AMPConn
 
 		req := &prometheusservice.DescribeWorkspaceInput{
 			WorkspaceId: aws.String(rs.Primary.ID),
@@ -103,7 +103,7 @@ func testAccCheckAMPWorkspaceExists(n string) resource.TestCheckFunc {
 }
 
 func testAccCheckAMPWorkspaceDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).PrometheusConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).AMPConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_prometheus_workspace" {
