@@ -183,6 +183,10 @@ func TestAccDocDBCluster_GlobalClusterIdentifier_Add(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_docdb_cluster.test"
 
+	if acctest.Partition() == "aws-us-gov" {
+		t.Skip("DocDB Global Cluster is not supported in GovCloud partition")
+	}
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckDocDBGlobalCluster(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, docdb.EndpointsID),
