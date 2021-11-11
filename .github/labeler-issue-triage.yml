@@ -318,7 +318,7 @@ service/secretsmanager:
   - '((\*|-) ?`?|(data|resource) "?)aws_secretsmanager_'
 service/securityhub:
   - '((\*|-) ?`?|(data|resource) "?)aws_securityhub_'
-service/serverlessapplicationrepository:
+service/serverlessrepo:
   - '((\*|-) ?`?|(data|resource) "?)aws_serverlessapplicationrepository_'
 service/servicecatalog:
   - '((\*|-) ?`?|(data|resource) "?)aws_servicecatalog_'
