@@ -15,6 +15,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/s3"
+	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -209,8 +210,8 @@ func ResourceBucketObject() *schema.Resource {
 	}
 }
 
-func resourceBucketObjectPut(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).S3Conn
+func resourceBucketObjectUpload(d *schema.ResourceData, meta interface{}) error {
+	uploader := s3manager.NewUploaderWithClient(meta.(*conns.AWSClient).S3Conn)
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -251,7 +252,7 @@ func resourceBucketObjectPut(d *schema.ResourceData, meta interface{}) error {
 	bucket := d.Get("bucket").(string)
 	key := d.Get("key").(string)
 
-	putInput := &s3.PutObjectInput{
+	uploadInput := &s3manager.UploadInput{
 		Bucket: aws.String(bucket),
 		Key:    aws.String(key),
 		ACL:    aws.String(d.Get("acl").(string)),
@@ -259,69 +260,69 @@ func resourceBucketObjectPut(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if v, ok := d.GetOk("storage_class"); ok {
-		putInput.StorageClass = aws.String(v.(string))
+		uploadInput.StorageClass = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("cache_control"); ok {
-		putInput.CacheControl = aws.String(v.(string))
+		uploadInput.CacheControl = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("content_type"); ok {
-		putInput.ContentType = aws.String(v.(string))
+		uploadInput.ContentType = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("metadata"); ok {
-		putInput.Metadata = flex.ExpandStringMap(v.(map[string]interface{}))
+		uploadInput.Metadata = flex.ExpandStringMap(v.(map[string]interface{}))
 	}
 
 	if v, ok := d.GetOk("content_encoding"); ok {
-		putInput.ContentEncoding = aws.String(v.(string))
+		uploadInput.ContentEncoding = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("content_language"); ok {
-		putInput.ContentLanguage = aws.String(v.(string))
+		uploadInput.ContentLanguage = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("content_disposition"); ok {
-		putInput.ContentDisposition = aws.String(v.(string))
+		uploadInput.ContentDisposition = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("bucket_key_enabled"); ok {
-		putInput.BucketKeyEnabled = aws.Bool(v.(bool))
+		uploadInput.BucketKeyEnabled = aws.Bool(v.(bool))
 	}
 
 	if v, ok := d.GetOk("server_side_encryption"); ok {
-		putInput.ServerSideEncryption = aws.String(v.(string))
+		uploadInput.ServerSideEncryption = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("kms_key_id"); ok {
-		putInput.SSEKMSKeyId = aws.String(v.(string))
-		putInput.ServerSideEncryption = aws.String(s3.ServerSideEncryptionAwsKms)
+		uploadInput.SSEKMSKeyId = aws.String(v.(string))
+		uploadInput.ServerSideEncryption = aws.String(s3.ServerSideEncryptionAwsKms)
 	}
 
 	if len(tags) > 0 {
 		// The tag-set must be encoded as URL Query parameters.
-		putInput.Tagging = aws.String(tags.IgnoreAWS().UrlEncode())
+		uploadInput.Tagging = aws.String(tags.IgnoreAWS().UrlEncode())
 	}
 
 	if v, ok := d.GetOk("website_redirect"); ok {
-		putInput.WebsiteRedirectLocation = aws.String(v.(string))
+		uploadInput.WebsiteRedirectLocation = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("object_lock_legal_hold_status"); ok {
-		putInput.ObjectLockLegalHoldStatus = aws.String(v.(string))
+		uploadInput.ObjectLockLegalHoldStatus = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("object_lock_mode"); ok {
-		putInput.ObjectLockMode = aws.String(v.(string))
+		uploadInput.ObjectLockMode = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("object_lock_retain_until_date"); ok {
-		putInput.ObjectLockRetainUntilDate = expandS3ObjectDate(v.(string))
+		uploadInput.ObjectLockRetainUntilDate = expandS3ObjectDate(v.(string))
 	}
 
-	if _, err := conn.PutObject(putInput); err != nil {
-		return fmt.Errorf("Error putting object in S3 bucket (%s): %s", bucket, err)
+	if _, err := uploader.Upload(uploadInput); err != nil {
+		return fmt.Errorf("Error uploading object in S3 bucket (%s): %s", bucket, err)
 	}
 
 	d.SetId(key)
@@ -329,7 +330,7 @@ func resourceBucketObjectPut(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceBucketObjectCreate(d *schema.ResourceData, meta interface{}) error {
-	return resourceBucketObjectPut(d, meta)
+	return resourceBucketObjectUpload(d, meta)
 }
 
 func resourceBucketObjectRead(d *schema.ResourceData, meta interface{}) error {
@@ -448,7 +449,7 @@ func resourceBucketObjectRead(d *schema.ResourceData, meta interface{}) error {
 
 func resourceBucketObjectUpdate(d *schema.ResourceData, meta interface{}) error {
 	if hasS3BucketObjectContentChanges(d) {
-		return resourceBucketObjectPut(d, meta)
+		return resourceBucketObjectUpload(d, meta)
 	}
 
 	conn := meta.(*conns.AWSClient).S3Conn
