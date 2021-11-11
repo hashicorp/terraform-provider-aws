@@ -69,7 +69,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/elb"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/elbv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/emr"
-	"github.com/hashicorp/terraform-provider-aws/internal/service/eventbridge"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/events"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/firehose"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/fms"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/fsx"
@@ -382,8 +382,8 @@ func Provider() *schema.Provider {
 
 			"aws_cloudtrail_service_account": cloudtrail.DataSourceServiceAccount(),
 
-			"aws_cloudwatch_event_connection": eventbridge.DataSourceConnection(),
-			"aws_cloudwatch_event_source":     eventbridge.DataSourceSource(),
+			"aws_cloudwatch_event_connection": events.DataSourceConnection(),
+			"aws_cloudwatch_event_source":     events.DataSourceSource(),
 
 			"aws_cloudwatch_log_group":  cloudwatchlogs.DataSourceGroup(),
 			"aws_cloudwatch_log_groups": cloudwatchlogs.DataSourceGroups(),
@@ -868,14 +868,14 @@ func Provider() *schema.Provider {
 			"aws_cloudwatch_metric_alarm":    cloudwatch.ResourceMetricAlarm(),
 			"aws_cloudwatch_metric_stream":   cloudwatch.ResourceMetricStream(),
 
-			"aws_cloudwatch_event_api_destination": eventbridge.ResourceAPIDestination(),
-			"aws_cloudwatch_event_archive":         eventbridge.ResourceArchive(),
-			"aws_cloudwatch_event_bus":             eventbridge.ResourceBus(),
-			"aws_cloudwatch_event_bus_policy":      eventbridge.ResourceBusPolicy(),
-			"aws_cloudwatch_event_connection":      eventbridge.ResourceConnection(),
-			"aws_cloudwatch_event_permission":      eventbridge.ResourcePermission(),
-			"aws_cloudwatch_event_rule":            eventbridge.ResourceRule(),
-			"aws_cloudwatch_event_target":          eventbridge.ResourceTarget(),
+			"aws_cloudwatch_event_api_destination": events.ResourceAPIDestination(),
+			"aws_cloudwatch_event_archive":         events.ResourceArchive(),
+			"aws_cloudwatch_event_bus":             events.ResourceBus(),
+			"aws_cloudwatch_event_bus_policy":      events.ResourceBusPolicy(),
+			"aws_cloudwatch_event_connection":      events.ResourceConnection(),
+			"aws_cloudwatch_event_permission":      events.ResourcePermission(),
+			"aws_cloudwatch_event_rule":            events.ResourceRule(),
+			"aws_cloudwatch_event_target":          events.ResourceTarget(),
 
 			"aws_cloudwatch_log_destination":         cloudwatchlogs.ResourceDestination(),
 			"aws_cloudwatch_log_destination_policy":  cloudwatchlogs.ResourceDestinationPolicy(),
