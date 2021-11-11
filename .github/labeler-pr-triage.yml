@@ -57,6 +57,9 @@ service/acmpca:
 service/alexaforbusiness:
   - 'internal/service/alexaforbusiness/**/*'
   - 'website/**/alexaforbusiness_*'
+service/amp:
+  - 'internal/service/amp/**/*'
+  - 'website/**/prometheus_*'
 service/amplify:
   - 'internal/service/amplify/**/*'
   - 'website/**/amplify_*'
@@ -469,9 +472,6 @@ service/polly:
 service/pricing:
   - 'internal/service/pricing/**/*'
   - 'website/**/pricing_*'
-service/prometheusservice:
-  - 'internal/service/prometheus/**/*'
-  - 'website/**/prometheus_*'
 service/qldb:
   - 'internal/service/qldb/**/*'
   - 'website/**/qldb_*'
