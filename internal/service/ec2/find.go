@@ -446,8 +446,47 @@ func FindRouteTableByID(conn *ec2.EC2, routeTableID string) (*ec2.RouteTable, er
 	return FindRouteTable(conn, input)
 }
 
+// FindRouteTable returns the route table corresponding to the specified input.
+// Returns EmptyResultError if no route table is found or TooManyResultsError if more than 1
+// matching route table is found.
 func FindRouteTable(conn *ec2.EC2, input *ec2.DescribeRouteTablesInput) (*ec2.RouteTable, error) {
-	output, err := conn.DescribeRouteTables(input)
+	output, err := FindRouteTables(conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if len(output) == 0 || output[0] == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	if count := len(output); count > 1 {
+		return nil, tfresource.NewTooManyResultsError(count, input)
+	}
+
+	return output[0], nil
+}
+
+// FindRouteTables returns an array of route tables for the specified input.
+// Returns NotFoundError if no route table is found for a specified route table ID.
+func FindRouteTables(conn *ec2.EC2, input *ec2.DescribeRouteTablesInput) ([]*ec2.RouteTable, error) {
+	var output []*ec2.RouteTable
+
+	err := conn.DescribeRouteTablesPages(input, func(page *ec2.DescribeRouteTablesOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, table := range page.RouteTables {
+			if table == nil {
+				continue
+			}
+
+			output = append(output, table)
+		}
+
+		return !lastPage
+	})
 
 	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidRouteTableIDNotFound) {
 		return nil, &resource.NotFoundError{
@@ -460,11 +499,7 @@ func FindRouteTable(conn *ec2.EC2, input *ec2.DescribeRouteTablesInput) (*ec2.Ro
 		return nil, err
 	}
 
-	if output == nil || len(output.RouteTables) == 0 || output.RouteTables[0] == nil {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	return output.RouteTables[0], nil
+	return output, nil
 }
 
 // RouteFinder returns the route corresponding to the specified destination.
