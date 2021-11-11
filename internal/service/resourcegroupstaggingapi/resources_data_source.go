@@ -1,4 +1,4 @@
-package resourcegroupstagging
+package resourcegroupstaggingapi
 
 import (
 	"fmt"
@@ -96,7 +96,7 @@ func DataSourceResources() *schema.Resource {
 }
 
 func dataSourceResourcesRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ResourceGroupsTaggingConn
+	conn := meta.(*conns.AWSClient).ResourceGroupsTaggingAPIConn
 
 	input := &resourcegroupstaggingapi.GetResourcesInput{}
 

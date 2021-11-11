@@ -116,7 +116,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/rds"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/redshift"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/resourcegroups"
-	"github.com/hashicorp/terraform-provider-aws/internal/service/resourcegroupstagging"
+	resourcegroupstagging "github.com/hashicorp/terraform-provider-aws/internal/service/resourcegroupstaggingapi"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/route53"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/route53recoverycontrolconfig"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/route53recoveryreadiness"

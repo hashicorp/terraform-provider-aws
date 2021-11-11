@@ -1,4 +1,4 @@
-package resourcegroupstagging_test
+package resourcegroupstaggingapi_test
 
 import (
 	"fmt"
