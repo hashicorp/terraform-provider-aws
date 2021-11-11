@@ -794,6 +794,8 @@ func awsServiceName(s string) (string, error) {
 		return "databasemigrationservice", nil
 	case "ds":
 		return "directoryservice", nil
+	case "events":
+		return "eventbridge", nil
 	case "resourcegroupstagging":
 		return "resourcegroupstaggingapi", nil
 	case "serverlessapprepo":
@@ -825,6 +827,8 @@ func awsServiceNameUpper(s string) (string, error) {
 		return awsServiceNames["databasemigrationservice"], nil
 	case "ds":
 		return awsServiceNames["directoryservice"], nil
+	case "events":
+		return awsServiceNames["eventbridge"], nil
 	case "resourcegroupstagging":
 		return awsServiceNames["resourcegroupstaggingapi"], nil
 	case "serverlessapprepo":
@@ -948,7 +952,7 @@ func init() {
 	awsServiceNames["elbv2"] = "ELBV2"
 	awsServiceNames["emr"] = "EMR"
 	awsServiceNames["emrcontainers"] = "EMRContainers"
-	awsServiceNames["events"] = "Events"
+	awsServiceNames["eventbridge"] = "EventBridge"
 	awsServiceNames["expression"] = "Expression"
 	awsServiceNames["finspace"] = "FinSpace"
 	awsServiceNames["finspacedata"] = "FinSpaceData"
