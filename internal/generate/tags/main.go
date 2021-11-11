@@ -794,6 +794,8 @@ func awsServiceName(s string) (string, error) {
 		return "databasemigrationservice", nil
 	case "ds":
 		return "directoryservice", nil
+	case "events":
+		return "eventbridge", nil
 	case "resourcegroupstagging":
 		return "resourcegroupstaggingapi", nil
 	case "serverlessapprepo":
@@ -825,6 +827,8 @@ func awsServiceNameUpper(s string) (string, error) {
 		return awsServiceNames["databasemigrationservice"], nil
 	case "ds":
 		return awsServiceNames["directoryservice"], nil
+	case "events":
+		return awsServiceNames["eventbridge"], nil
 	case "resourcegroupstagging":
 		return awsServiceNames["resourcegroupstaggingapi"], nil
 	case "serverlessapprepo":
@@ -893,7 +897,6 @@ func init() {
 	awsServiceNames["cloudsearchdomain"] = "CloudSearchDomain"
 	awsServiceNames["cloudtrail"] = "CloudTrail"
 	awsServiceNames["cloudwatch"] = "CloudWatch"
-	awsServiceNames["cloudwatchevents"] = "CloudWatchEvents"
 	awsServiceNames["cloudwatchlogs"] = "CloudWatchLogs"
 	awsServiceNames["codeartifact"] = "CodeArtifact"
 	awsServiceNames["codebuild"] = "CodeBuild"

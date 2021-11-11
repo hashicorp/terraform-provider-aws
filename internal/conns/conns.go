@@ -49,7 +49,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/cloudsearchdomain"
 	"github.com/aws/aws-sdk-go/service/cloudtrail"
 	"github.com/aws/aws-sdk-go/service/cloudwatch"
-	"github.com/aws/aws-sdk-go/service/cloudwatchevents"
 	"github.com/aws/aws-sdk-go/service/cloudwatchlogs"
 	"github.com/aws/aws-sdk-go/service/codeartifact"
 	"github.com/aws/aws-sdk-go/service/codebuild"
@@ -102,6 +101,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/elbv2"
 	"github.com/aws/aws-sdk-go/service/emr"
 	"github.com/aws/aws-sdk-go/service/emrcontainers"
+	"github.com/aws/aws-sdk-go/service/eventbridge"
 	"github.com/aws/aws-sdk-go/service/finspace"
 	"github.com/aws/aws-sdk-go/service/finspacedata"
 	"github.com/aws/aws-sdk-go/service/firehose"
@@ -325,7 +325,6 @@ const (
 	CloudSearchDomain             = "cloudsearchdomain"
 	CloudTrail                    = "cloudtrail"
 	CloudWatch                    = "cloudwatch"
-	CloudWatchEvents              = "cloudwatchevents"
 	CloudWatchLogs                = "cloudwatchlogs"
 	CodeArtifact                  = "codeartifact"
 	CodeBuild                     = "codebuild"
@@ -380,6 +379,7 @@ const (
 	ELBV2                         = "elbv2"
 	EMR                           = "emr"
 	EMRContainers                 = "emrcontainers"
+	Events                        = "events"
 	FinSpace                      = "finspace"
 	FinSpaceData                  = "finspacedata"
 	Firehose                      = "firehose"
@@ -612,7 +612,6 @@ func init() {
 	serviceData[CloudSearchDomain] = &ServiceDatum{AWSClientName: "CloudSearchDomain", AWSServiceName: cloudsearchdomain.ServiceName, AWSEndpointsID: cloudsearchdomain.EndpointsID, AWSServiceID: cloudsearchdomain.ServiceID, ProviderNameUpper: "CloudSearchDomain", HCLKeys: []string{"cloudsearchdomain"}}
 	serviceData[CloudTrail] = &ServiceDatum{AWSClientName: "CloudTrail", AWSServiceName: cloudtrail.ServiceName, AWSEndpointsID: cloudtrail.EndpointsID, AWSServiceID: cloudtrail.ServiceID, ProviderNameUpper: "CloudTrail", HCLKeys: []string{"cloudtrail"}}
 	serviceData[CloudWatch] = &ServiceDatum{AWSClientName: "CloudWatch", AWSServiceName: cloudwatch.ServiceName, AWSEndpointsID: cloudwatch.EndpointsID, AWSServiceID: cloudwatch.ServiceID, ProviderNameUpper: "CloudWatch", HCLKeys: []string{"cloudwatch"}}
-	serviceData[CloudWatchEvents] = &ServiceDatum{AWSClientName: "CloudWatchEvents", AWSServiceName: cloudwatchevents.ServiceName, AWSEndpointsID: cloudwatchevents.EndpointsID, AWSServiceID: cloudwatchevents.ServiceID, ProviderNameUpper: "CloudWatchEvents", HCLKeys: []string{"cloudwatchevents"}}
 	serviceData[CloudWatchLogs] = &ServiceDatum{AWSClientName: "CloudWatchLogs", AWSServiceName: cloudwatchlogs.ServiceName, AWSEndpointsID: cloudwatchlogs.EndpointsID, AWSServiceID: cloudwatchlogs.ServiceID, ProviderNameUpper: "CloudWatchLogs", HCLKeys: []string{"cloudwatchlogs"}}
 	serviceData[CodeArtifact] = &ServiceDatum{AWSClientName: "CodeArtifact", AWSServiceName: codeartifact.ServiceName, AWSEndpointsID: codeartifact.EndpointsID, AWSServiceID: codeartifact.ServiceID, ProviderNameUpper: "CodeArtifact", HCLKeys: []string{"codeartifact"}}
 	serviceData[CodeBuild] = &ServiceDatum{AWSClientName: "CodeBuild", AWSServiceName: codebuild.ServiceName, AWSEndpointsID: codebuild.EndpointsID, AWSServiceID: codebuild.ServiceID, ProviderNameUpper: "CodeBuild", HCLKeys: []string{"codebuild"}}
@@ -665,6 +664,7 @@ func init() {
 	serviceData[ELBV2] = &ServiceDatum{AWSClientName: "ELBV2", AWSServiceName: elbv2.ServiceName, AWSEndpointsID: elbv2.EndpointsID, AWSServiceID: elbv2.ServiceID, ProviderNameUpper: "ELBV2", HCLKeys: []string{"elbv2"}}
 	serviceData[EMR] = &ServiceDatum{AWSClientName: "EMR", AWSServiceName: emr.ServiceName, AWSEndpointsID: emr.EndpointsID, AWSServiceID: emr.ServiceID, ProviderNameUpper: "EMR", HCLKeys: []string{"emr"}}
 	serviceData[EMRContainers] = &ServiceDatum{AWSClientName: "EMRContainers", AWSServiceName: emrcontainers.ServiceName, AWSEndpointsID: emrcontainers.EndpointsID, AWSServiceID: emrcontainers.ServiceID, ProviderNameUpper: "EMRContainers", HCLKeys: []string{"emrcontainers"}}
+	serviceData[Events] = &ServiceDatum{AWSClientName: "EventBridge", AWSServiceName: eventbridge.ServiceName, AWSEndpointsID: eventbridge.EndpointsID, AWSServiceID: eventbridge.ServiceID, ProviderNameUpper: "Events", HCLKeys: []string{"cloudwatchevents", "eventbridge", "events"}}
 	serviceData[FinSpace] = &ServiceDatum{AWSClientName: "Finspace", AWSServiceName: finspace.ServiceName, AWSEndpointsID: finspace.EndpointsID, AWSServiceID: finspace.ServiceID, ProviderNameUpper: "FinSpace", HCLKeys: []string{"finspace"}}
 	serviceData[FinSpaceData] = &ServiceDatum{AWSClientName: "FinSpaceData", AWSServiceName: finspacedata.ServiceName, AWSEndpointsID: finspacedata.EndpointsID, AWSServiceID: finspacedata.ServiceID, ProviderNameUpper: "FinSpaceData", HCLKeys: []string{"finspacedata"}}
 	serviceData[Firehose] = &ServiceDatum{AWSClientName: "Firehose", AWSServiceName: firehose.ServiceName, AWSEndpointsID: firehose.EndpointsID, AWSServiceID: firehose.ServiceID, ProviderNameUpper: "Firehose", HCLKeys: []string{"firehose"}}
@@ -921,7 +921,6 @@ type AWSClient struct {
 	CloudSearchDomainConn             *cloudsearchdomain.CloudSearchDomain
 	CloudTrailConn                    *cloudtrail.CloudTrail
 	CloudWatchConn                    *cloudwatch.CloudWatch
-	CloudWatchEventsConn              *cloudwatchevents.CloudWatchEvents
 	CloudWatchLogsConn                *cloudwatchlogs.CloudWatchLogs
 	CodeArtifactConn                  *codeartifact.CodeArtifact
 	CodeBuildConn                     *codebuild.CodeBuild
@@ -976,6 +975,7 @@ type AWSClient struct {
 	ELBV2Conn                         *elbv2.ELBV2
 	EMRConn                           *emr.EMR
 	EMRContainersConn                 *emrcontainers.EMRContainers
+	EventsConn                        *eventbridge.EventBridge
 	FinSpaceConn                      *finspace.Finspace
 	FinSpaceDataConn                  *finspacedata.FinSpaceData
 	FirehoseConn                      *firehose.Firehose
@@ -1274,7 +1274,6 @@ func (c *Config) Client() (interface{}, error) {
 		CloudSearchDomainConn:             cloudsearchdomain.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[CloudSearchDomain])})),
 		CloudTrailConn:                    cloudtrail.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[CloudTrail])})),
 		CloudWatchConn:                    cloudwatch.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[CloudWatch])})),
-		CloudWatchEventsConn:              cloudwatchevents.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[CloudWatchEvents])})),
 		CloudWatchLogsConn:                cloudwatchlogs.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[CloudWatchLogs])})),
 		CodeArtifactConn:                  codeartifact.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[CodeArtifact])})),
 		CodeBuildConn:                     codebuild.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[CodeBuild])})),
@@ -1329,6 +1328,7 @@ func (c *Config) Client() (interface{}, error) {
 		ELBV2Conn:                         elbv2.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[ELBV2])})),
 		EMRConn:                           emr.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[EMR])})),
 		EMRContainersConn:                 emrcontainers.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[EMRContainers])})),
+		EventsConn:                        eventbridge.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[Events])})),
 		FinSpaceConn:                      finspace.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[FinSpace])})),
 		FinSpaceDataConn:                  finspacedata.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[FinSpaceData])})),
 		FirehoseConn:                      firehose.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[Firehose])})),

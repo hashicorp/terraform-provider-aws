@@ -94,8 +94,6 @@ service/cloudtrail:
   - '((\*|-) ?`?|(data|resource) "?)aws_cloudtrail'
 service/cloudwatch:
   - '((\*|-) ?`?|(data|resource) "?)aws_cloudwatch_(?!(event_|log_|query_))'
-service/cloudwatchevents:
-  - '((\*|-) ?`?|(data|resource) "?)aws_cloudwatch_event_'
 service/cloudwatchlogs:
   - '((\*|-) ?`?|(data|resource) "?)aws_cloudwatch_(log_|query_)'
 service/codeartifact:
@@ -156,7 +154,7 @@ service/efs:
   - '((\*|-) ?`?|(data|resource) "?)aws_efs_'
 service/eks:
   - '((\*|-) ?`?|(data|resource) "?)aws_eks_'
-elastic-transcoder:
+service/elastictranscoder:
   - '((\*|-) ?`?|(data|resource) "?)aws_elastictranscoder_'
 service/elasticache:
   - '((\*|-) ?`?|(data|resource) "?)aws_elasticache_'
@@ -172,7 +170,7 @@ service/emr:
   - '((\*|-) ?`?|(data|resource) "?)aws_emr_'
 service/emrcontainers:
   - '((\*|-) ?`?|(data|resource) "?)aws_emrcontainers_'
-service/eventbridge:
+service/events:
   - '((\*|-) ?`?|(data|resource) "?)aws_cloudwatch_event_'
 service/firehose:
   - '((\*|-) ?`?|(data|resource) "?)aws_kinesis_firehose_'
