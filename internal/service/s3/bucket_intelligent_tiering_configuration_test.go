@@ -242,7 +242,7 @@ resource "aws_s3_bucket_intelligent_tiering_configuration" "test" {
 
     tags = {
       Environment = "test"
-	}
+    }
   }
 
   tiering {
@@ -300,7 +300,7 @@ resource "aws_s3_bucket_intelligent_tiering_configuration" "test" {
     tags = {
       Environment1 = "test"
       Environment2 = "acctest"
-	}
+    }
   }
 
   tiering {
@@ -325,7 +325,7 @@ resource "aws_s3_bucket_intelligent_tiering_configuration" "test" {
     tags = {
       Environment1 = "acctest"
       Environment2 = "test"
-	}
+    }
   }
 
   tiering {
