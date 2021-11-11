@@ -18,6 +18,17 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
+func init() {
+	acctest.RegisterServiceErrorCheckFunc(docdb.EndpointsID, testAccErrorCheckSkipDocDB)
+
+}
+
+func testAccErrorCheckSkipDocDB(t *testing.T) resource.ErrorCheckFunc {
+	return acctest.ErrorCheckSkipMessagesContaining(t,
+		"Global clusters are not supported",
+	)
+}
+
 func TestAccDocDBCluster_basic(t *testing.T) {
 	var dbCluster docdb.DBCluster
 	rInt := sdkacctest.RandInt()
