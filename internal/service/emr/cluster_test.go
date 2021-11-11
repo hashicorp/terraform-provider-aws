@@ -3901,7 +3901,7 @@ resource "aws_emr_cluster" "test" {
   ec2_attributes {
     instance_profile                  = "EMR_EC2_DefaultRole"
     subnet_id                         = aws_subnet.test.id
-	emr_managed_master_security_group = aws_security_group.test.id
+    emr_managed_master_security_group = aws_security_group.test.id
     emr_managed_slave_security_group  = aws_security_group.test.id
   }
 
