@@ -322,7 +322,7 @@ func resourceBucketObjectUpload(d *schema.ResourceData, meta interface{}) error 
 	}
 
 	if _, err := uploader.Upload(uploadInput); err != nil {
-		return fmt.Errorf("Error uploading object in S3 bucket (%s): %s", bucket, err)
+		return fmt.Errorf("Error uploading object to S3 bucket (%s): %s", bucket, err)
 	}
 
 	d.SetId(key)
