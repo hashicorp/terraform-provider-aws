@@ -10,12 +10,10 @@ import (
 	"github.com/aws/aws-sdk-go/service/appstream"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func ResourceDirectoryConfig() *schema.Resource {
@@ -70,32 +68,21 @@ func ResourceDirectoryConfig() *schema.Resource {
 
 func resourceDirectoryConfigCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).AppStreamConn
+
+	directoryName := d.Get("directory_name").(string)
 	input := &appstream.CreateDirectoryConfigInput{
-		DirectoryName:                        aws.String(d.Get("directory_name").(string)),
+		DirectoryName:                        aws.String(directoryName),
 		OrganizationalUnitDistinguishedNames: flex.ExpandStringSet(d.Get("organizational_unit_distinguished_names").(*schema.Set)),
 		ServiceAccountCredentials:            expandServiceAccountCredentials(d.Get("service_account_credentials").([]interface{})),
 	}
 
-	var output *appstream.CreateDirectoryConfigOutput
-	err := resource.RetryContext(ctx, directoryConfigTimeout, func() *resource.RetryError {
-		out, err := conn.CreateDirectoryConfigWithContext(ctx, input)
-		if err != nil {
-			if tfawserr.ErrCodeEquals(err, appstream.ErrCodeResourceNotFoundException) {
-				return resource.RetryableError(err)
-			}
-
-			return resource.NonRetryableError(err)
-		}
-		output = out
-
-		return nil
-	})
-
-	if tfresource.TimedOut(err) {
-		output, err = conn.CreateDirectoryConfigWithContext(ctx, input)
-	}
+	output, err := conn.CreateDirectoryConfigWithContext(ctx, input)
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error creating Appstream DirectoryConfig (%s): %w", d.Id(), err))
+		return diag.FromErr(fmt.Errorf("error creating Appstream DirectoryConfig (%s): %w", directoryName, err))
+	}
+
+	if output == nil || output.DirectoryConfig == nil {
+		return diag.Errorf("error creating AppStream DirectoryConfig (%s): empty response", directoryName)
 	}
 
 	d.SetId(aws.StringValue(output.DirectoryConfig.DirectoryName))

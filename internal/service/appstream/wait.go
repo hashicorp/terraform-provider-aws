@@ -23,8 +23,6 @@ const (
 	// imageBuilderStateTimeout Maximum amount of time to wait for the statusImageBuilderState to be RUNNING
 	// or for the ImageBuilder to be deleted
 	imageBuilderStateTimeout = 60 * time.Minute
-	// directoryConfigTimeout Maximum amount of time to wait for DirectoryConfig operation eventual consistency
-	directoryConfigTimeout = 4 * time.Minute
 )
 
 // waitStackStateDeleted waits for a deleted stack
