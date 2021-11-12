@@ -1,10 +1,13 @@
 package emr
 
 import (
+	"fmt"
 	"time"
 
-	emr "github.com/aws/aws-sdk-go/service/emr"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/emr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 const (
@@ -32,6 +35,10 @@ func waitClusterCreated(conn *emr.EMR, id string) (*emr.Cluster, error) {
 	outputRaw, err := stateConf.WaitForState()
 
 	if output, ok := outputRaw.(*emr.Cluster); ok {
+		if stateChangeReason := output.Status.StateChangeReason; stateChangeReason != nil {
+			tfresource.SetLastError(err, fmt.Errorf("%s: %s", aws.StringValue(stateChangeReason.Code), aws.StringValue(stateChangeReason.Message)))
+		}
+
 		return output, err
 	}
 
