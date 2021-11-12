@@ -132,7 +132,7 @@ func ResourceMultiRegionAccessPoint() *schema.Resource {
 }
 
 func resourceMultiRegionAccessPointCreate(d *schema.ResourceData, meta interface{}) error {
-	conn, err := s3ControlConn(meta.(*conns.AWSClient))
+	conn, err := S3ControlConn(meta.(*conns.AWSClient))
 
 	if err != nil {
 		return err
@@ -172,7 +172,7 @@ func resourceMultiRegionAccessPointCreate(d *schema.ResourceData, meta interface
 }
 
 func resourceMultiRegionAccessPointRead(d *schema.ResourceData, meta interface{}) error {
-	conn, err := s3ControlConn(meta.(*conns.AWSClient))
+	conn, err := S3ControlConn(meta.(*conns.AWSClient))
 
 	if err != nil {
 		return err
@@ -221,7 +221,7 @@ func resourceMultiRegionAccessPointRead(d *schema.ResourceData, meta interface{}
 }
 
 func resourceMultiRegionAccessPointDelete(d *schema.ResourceData, meta interface{}) error {
-	conn, err := s3ControlConn(meta.(*conns.AWSClient))
+	conn, err := S3ControlConn(meta.(*conns.AWSClient))
 
 	if err != nil {
 		return err
@@ -256,6 +256,24 @@ func resourceMultiRegionAccessPointDelete(d *schema.ResourceData, meta interface
 	}
 
 	return nil
+}
+
+func S3ControlConn(client *conns.AWSClient) (*s3control.S3Control, error) {
+	originalConn := client.S3ControlConn
+	// All Multi-Region Access Point actions are routed to the US West (Oregon) Region.
+	region := endpoints.UsWest2RegionID
+
+	if originalConn.Config.Region != nil && aws.StringValue(originalConn.Config.Region) == region {
+		return originalConn, nil
+	}
+
+	sess, err := conns.NewSessionForRegion(&originalConn.Config, region, client.TerraformVersion)
+
+	if err != nil {
+		return nil, fmt.Errorf("error creating AWS session: %w", err)
+	}
+
+	return s3control.New(sess), nil
 }
 
 const multiRegionAccessPointResourceIDSeparator = ":"
@@ -443,22 +461,4 @@ func flattenRegionReports(apiObjects []*s3control.RegionReport) []interface{} {
 	}
 
 	return tfList
-}
-
-func s3ControlConn(client *conns.AWSClient) (*s3control.S3Control, error) {
-	originalConn := client.S3ControlConn
-	// All Multi-Region Access Point actions are routed to the US West (Oregon) Region.
-	region := endpoints.UsWest2RegionID
-
-	if originalConn.Config.Region != nil && aws.StringValue(originalConn.Config.Region) == region {
-		return originalConn, nil
-	}
-
-	sess, err := conns.NewSessionForRegion(&originalConn.Config, region, client.TerraformVersion)
-
-	if err != nil {
-		return nil, fmt.Errorf("error creating AWS session: %w", err)
-	}
-
-	return s3control.New(sess), nil
 }

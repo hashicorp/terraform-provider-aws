@@ -73,7 +73,7 @@ func ResourceMultiRegionAccessPointPolicy() *schema.Resource {
 }
 
 func resourceMultiRegionAccessPointPolicyCreate(d *schema.ResourceData, meta interface{}) error {
-	conn, err := s3ControlConn(meta.(*conns.AWSClient))
+	conn, err := S3ControlConn(meta.(*conns.AWSClient))
 
 	if err != nil {
 		return err
@@ -113,7 +113,7 @@ func resourceMultiRegionAccessPointPolicyCreate(d *schema.ResourceData, meta int
 }
 
 func resourceMultiRegionAccessPointPolicyRead(d *schema.ResourceData, meta interface{}) error {
-	conn, err := s3ControlConn(meta.(*conns.AWSClient))
+	conn, err := S3ControlConn(meta.(*conns.AWSClient))
 
 	if err != nil {
 		return err
@@ -160,9 +160,10 @@ func resourceMultiRegionAccessPointPolicyRead(d *schema.ResourceData, meta inter
 }
 
 func resourceMultiRegionAccessPointPolicyUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn, err := s3ControlConn(meta.(*conns.AWSClient))
+	conn, err := S3ControlConn(meta.(*conns.AWSClient))
+
 	if err != nil {
-		return fmt.Errorf("Error getting S3Control Client: %s", err)
+		return err
 	}
 
 	accountID, _, err := MultiRegionAccessPointParseResourceID(d.Id())
@@ -183,7 +184,7 @@ func resourceMultiRegionAccessPointPolicyUpdate(d *schema.ResourceData, meta int
 	output, err := conn.PutMultiRegionAccessPointPolicy(input)
 
 	if err != nil {
-		return fmt.Errorf("error updating S3 Multi-Region Access Point (%s) Policy: %w", d.Id(), err)
+		return fmt.Errorf("error updating S3 Multi-Region Access Point Policy (%s): %w", d.Id(), err)
 	}
 
 	_, err = waitMultiRegionAccessPointRequestSucceeded(conn, accountID, aws.StringValue(output.RequestTokenARN), d.Timeout(schema.TimeoutUpdate))

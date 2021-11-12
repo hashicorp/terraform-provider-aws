@@ -6,10 +6,10 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/service/s3control"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -23,11 +23,12 @@ func TestAccS3ControlMultiRegionAccessPoint_basic(t *testing.T) {
 	bucketName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
+	if acctest.Partition() == "aws-us-gov" {
+		t.Skip("S3 Multi-Region Access Point is not supported in GovCloud partition")
+	}
+
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckRegion(t, endpoints.UsWest2RegionID)
-		},
+		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, s3control.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckMultiRegionAccessPointDestroy,
@@ -48,7 +49,9 @@ func TestAccS3ControlMultiRegionAccessPoint_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "details.0.public_access_block.0.ignore_public_acls", "true"),
 					resource.TestCheckResourceAttr(resourceName, "details.0.public_access_block.0.restrict_public_buckets", "true"),
 					resource.TestCheckResourceAttr(resourceName, "details.0.region.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "details.0.region.0.bucket", bucketName),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "details.0.region.*", map[string]string{
+						"bucket": bucketName,
+					}),
 					resource.TestCheckResourceAttr(resourceName, "status", s3control.MultiRegionAccessPointStatusReady),
 				),
 			},
@@ -67,11 +70,12 @@ func TestAccS3ControlMultiRegionAccessPoint_disappears(t *testing.T) {
 	bucketName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
+	if acctest.Partition() == "aws-us-gov" {
+		t.Skip("S3 Multi-Region Access Point is not supported in GovCloud partition")
+	}
+
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckRegion(t, endpoints.UsWest2RegionID)
-		},
+		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, s3control.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckMultiRegionAccessPointDestroy,
@@ -94,11 +98,12 @@ func TestAccS3ControlMultiRegionAccessPoint_PublicAccessBlock(t *testing.T) {
 	bucketName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
+	if acctest.Partition() == "aws-us-gov" {
+		t.Skip("S3 Multi-Region Access Point is not supported in GovCloud partition")
+	}
+
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckRegion(t, endpoints.UsWest2RegionID)
-		},
+		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, s3control.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckMultiRegionAccessPointDestroy,
@@ -130,11 +135,12 @@ func TestAccS3ControlMultiRegionAccessPoint_name(t *testing.T) {
 	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	bucketName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
+	if acctest.Partition() == "aws-us-gov" {
+		t.Skip("S3 Multi-Region Access Point is not supported in GovCloud partition")
+	}
+
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckRegion(t, endpoints.UsWest2RegionID)
-		},
+		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, s3control.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckMultiRegionAccessPointDestroy,
@@ -163,8 +169,57 @@ func TestAccS3ControlMultiRegionAccessPoint_name(t *testing.T) {
 	})
 }
 
+func TestAccS3ControlMultiRegionAccessPoint_threeRegions(t *testing.T) {
+	var providers []*schema.Provider
+	var v s3control.MultiRegionAccessPointReport
+	resourceName := "aws_s3control_multi_region_access_point.test"
+	bucket1Name := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	bucket2Name := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	bucket3Name := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	if acctest.Partition() == "aws-us-gov" {
+		t.Skip("S3 Multi-Region Access Point is not supported in GovCloud partition")
+	}
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckMultipleRegion(t, 3) },
+		ErrorCheck:        acctest.ErrorCheck(t, s3control.EndpointsID),
+		ProviderFactories: acctest.FactoriesMultipleRegion(&providers, 3),
+		CheckDestroy:      testAccCheckMultiRegionAccessPointDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccMultiRegionAccessPointConfig_threeRegions(bucket1Name, bucket2Name, bucket3Name, rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckMultiRegionAccessPointExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "details.0.region.#", "3"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "details.0.region.*", map[string]string{
+						"bucket": bucket1Name,
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "details.0.region.*", map[string]string{
+						"bucket": bucket2Name,
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "details.0.region.*", map[string]string{
+						"bucket": bucket3Name,
+					}),
+					resource.TestCheckResourceAttr(resourceName, "status", s3control.MultiRegionAccessPointStatusReady),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccCheckMultiRegionAccessPointDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).S3ControlConn
+	conn, err := tfs3control.S3ControlConn(acctest.Provider.Meta().(*conns.AWSClient))
+
+	if err != nil {
+		return err
+	}
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_s3control_multi_region_access_point" {
@@ -210,7 +265,11 @@ func testAccCheckMultiRegionAccessPointExists(n string, v *s3control.MultiRegion
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).S3ControlConn
+		conn, err := tfs3control.S3ControlConn(acctest.Provider.Meta().(*conns.AWSClient))
+
+		if err != nil {
+			return err
+		}
 
 		output, err := tfs3control.FindMultiRegionAccessPointByAccountIDAndName(conn, accountID, name)
 
@@ -280,4 +339,51 @@ resource "aws_s3control_multi_region_access_point" "test" {
   }
 }
 `, bucketName, multiRegionAccessPointName)
+}
+
+func testAccMultiRegionAccessPointConfig_threeRegions(bucketName1, bucketName2, bucketName3, multiRegionAccessPointName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigMultipleRegionProvider(3),
+		fmt.Sprintf(`
+resource "aws_s3_bucket" "test1" {
+  provider = aws
+
+  bucket        = %[1]q
+  force_destroy = true
+}
+
+resource "aws_s3_bucket" "test2" {
+  provider = awsalternate
+
+  bucket        = %[2]q
+  force_destroy = true
+}
+
+resource "aws_s3_bucket" "test3" {
+  provider = awsthird
+
+  bucket        = %[3]q
+  force_destroy = true
+}
+
+resource "aws_s3control_multi_region_access_point" "test" {
+  provider = aws
+
+  details {
+    name = %[4]q
+
+    region {
+      bucket = aws_s3_bucket.test1.id
+    }
+
+    region {
+      bucket = aws_s3_bucket.test2.id
+    }
+
+    region {
+      bucket = aws_s3_bucket.test3.id
+    }
+  }
+}
+`, bucketName1, bucketName2, bucketName3, multiRegionAccessPointName))
 }
