@@ -38,6 +38,10 @@ The following arguments are supported:
 * `security_groups` - (Optional) List of security group IDs to assign to the ENI.
 * `attachment` - (Optional) Block to define the attachment of the ENI. Documented below.
 * `source_dest_check` - (Optional) Whether to enable source destination checking for the ENI. Default true.
+* `ipv4_prefixes` - (Optional) One or more IPv4 prefixes assigned to the network interface.
+* `ipv4_prefix_count` - (Optional) The number of IPv4 prefixes that AWS automatically assigns to the network interface.
+* `ipv6_prefixes` - (Optional) One or more IPv6 prefixes assigned to the network interface.
+* `ipv6_prefix_count` - (Optional) The number of IPv6 prefixes that AWS automatically assigns to the network interface.
 
 -> **NOTE:** Changing `interface_type` will cause the resource to be destroyed and re-created.
 
@@ -53,14 +57,16 @@ The `attachment` block supports:
 
 In addition to all arguments above, the following attributes are exported:
 
+* `arn` - The ARN of the network interface.
 * `id` - The ID of the network interface.
 * `mac_address` - The MAC address of the network interface.
+* `owner_id` - The AWS account ID of the owner of the network interface.
 * `private_dns_name` - The private DNS name of the network interface (IPv4).
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
 
 ## Import
 
-Network Interfaces can be imported using the `id`, e.g.
+Network Interfaces can be imported using the `id`, e.g.,
 
 ```
 $ terraform import aws_network_interface.test eni-e5aa89a3

@@ -44,7 +44,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Neptune Subnet groups can be imported using the `name`, e.g.
+Neptune Subnet groups can be imported using the `name`, e.g.,
 
 ```
 $ terraform import aws_neptune_subnet_group.default production-subnet-group

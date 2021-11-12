@@ -29,6 +29,30 @@ resource "aws_ecr_replication_configuration" "example" {
 }
 ```
 
+## Multiple Region Usage
+
+```terraform
+data "aws_caller_identity" "current" {}
+
+data "aws_regions" "example" {}
+
+resource "aws_ecr_replication_configuration" "example" {
+  replication_configuration {
+    rule {
+      destination {
+        region      = data.aws_regions.example.names[0]
+        registry_id = data.aws_caller_identity.current.account_id
+      }
+
+      destination {
+        region      = data.aws_regions.example.names[1]
+        registry_id = data.aws_caller_identity.current.account_id
+      }
+    }
+  }
+}
+```
+
 ## Argument Reference
 
 The following arguments are supported:
@@ -56,7 +80,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-ECR Replication Configuration can be imported using the `registry_id`, e.g.
+ECR Replication Configuration can be imported using the `registry_id`, e.g.,
 
 ```
 $ terraform import aws_ecr_replication_configuration.service 012345678912

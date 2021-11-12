@@ -173,7 +173,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Glue ML Transforms can be imported using `id`, e.g.
+Glue ML Transforms can be imported using `id`, e.g.,
 
 ```
 $ terraform import aws_glue_ml_transform.example tfm-c2cafbe83b1c575f49eaca9939220e2fcd58e2d5
