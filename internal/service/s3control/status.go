@@ -1,21 +1,12 @@
 package s3control
 
 import (
-	"fmt"
-	"log"
 	"strconv"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/s3control"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-)
-
-const (
-	// RequestStatus SUCCEEDED
-	RequestStatusSucceeded = "SUCCEEDED"
-
-	// RequestStatus FAILED
-	RequestStatusFailed = "FAILED"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 // statusPublicAccessBlockConfigurationBlockPublicACLs fetches the PublicAccessBlockConfiguration and its BlockPublicAcls
@@ -86,29 +77,18 @@ func statusPublicAccessBlockConfigurationRestrictPublicBuckets(conn *s3control.S
 	}
 }
 
-func statusMultiRegionAccessPointRequest(conn *s3control.S3Control, accountId string, requestTokenArn string) resource.StateRefreshFunc {
+func statusMultiRegionAccessPointRequest(conn *s3control.S3Control, accountID string, requestTokenARN string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		input := &s3control.DescribeMultiRegionAccessPointOperationInput{
-			AccountId:       aws.String(accountId),
-			RequestTokenARN: aws.String(requestTokenArn),
+		output, err := findMultiRegionAccessPointOperationByAccountIDAndTokenARN(conn, accountID, requestTokenARN)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
 		}
 
-		log.Printf("[DEBUG] Describing S3 Multi-Region Access Point Operation (%s): %s", requestTokenArn, input)
-
-		output, err := conn.DescribeMultiRegionAccessPointOperation(input)
-
 		if err != nil {
-			log.Printf("error Describing S3 Multi-Region Access Point Operation (%s): %s", requestTokenArn, err)
 			return nil, "", err
 		}
 
-		asyncOperation := output.AsyncOperation
-
-		if aws.StringValue(asyncOperation.RequestStatus) == RequestStatusFailed {
-			errorDetails := asyncOperation.ResponseDetails.ErrorDetails
-			return nil, RequestStatusFailed, fmt.Errorf("S3 Multi-Region Access Point asynchronous operation failed (%s): %s: %s", requestTokenArn, aws.StringValue(errorDetails.Code), aws.StringValue(errorDetails.Message))
-		}
-
-		return asyncOperation, aws.StringValue(asyncOperation.RequestStatus), nil
+		return output, aws.StringValue(output.RequestStatus), nil
 	}
 }

@@ -1,12 +1,14 @@
 package s3control
 
 import (
-	"log"
+	"fmt"
 	"strconv"
 	"time"
 
+	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/s3control"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 const (
@@ -96,19 +98,22 @@ func waitPublicAccessBlockConfigurationRestrictPublicBucketsUpdated(conn *s3cont
 	return nil, err
 }
 
-func waitMultiRegionAccessPointRequestSucceeded(conn *s3control.S3Control, accountId string, requestTokenArn string, timeout time.Duration) (*s3control.AsyncOperation, error) { //nolint:unparam
+func waitMultiRegionAccessPointRequestSucceeded(conn *s3control.S3Control, accountID string, requestTokenArn string, timeout time.Duration) (*s3control.AsyncOperation, error) { //nolint:unparam
 	stateConf := &resource.StateChangeConf{
 		Target:     []string{RequestStatusSucceeded},
 		Timeout:    timeout,
-		Refresh:    statusMultiRegionAccessPointRequest(conn, accountId, requestTokenArn),
+		Refresh:    statusMultiRegionAccessPointRequest(conn, accountID, requestTokenArn),
 		MinTimeout: multiRegionAccessPointRequestSucceededMinTimeout,
 		Delay:      multiRegionAccessPointRequestSucceededDelay, // Wait 15 secs before starting
 	}
 
-	log.Printf("[DEBUG] Waiting for S3 Multi-Region Access Point request (%s) to succeed", requestTokenArn)
 	outputRaw, err := stateConf.WaitForState()
 
 	if output, ok := outputRaw.(*s3control.AsyncOperation); ok {
+		if status, responseDetails := aws.StringValue(output.RequestStatus), output.ResponseDetails; status == RequestStatusFailed && responseDetails != nil && responseDetails.ErrorDetails != nil {
+			tfresource.SetLastError(err, fmt.Errorf("%s: %s", aws.StringValue(responseDetails.ErrorDetails.Code), aws.StringValue(responseDetails.ErrorDetails.Message)))
+		}
+
 		return output, err
 	}
 

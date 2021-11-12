@@ -10,7 +10,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3control"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -81,7 +80,7 @@ func TestAccS3ControlMultiRegionAccessPoint_disappears(t *testing.T) {
 				Config: testAccMultiRegionAccessPointConfig_basic(bucketName, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMultiRegionAccessPointExists(resourceName, &v),
-					testAccCheckMultiRegionAccessPointDisappears(acctest.Provider, tfs3control.ResourceMultiRegionAccessPoint(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfs3control.ResourceMultiRegionAccessPoint(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -164,22 +163,6 @@ func TestAccS3ControlMultiRegionAccessPoint_name(t *testing.T) {
 	})
 }
 
-func testAccCheckMultiRegionAccessPointDisappears(provider *schema.Provider, resource *schema.Resource, resourceName string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		resourceState, ok := s.RootModule().Resources[resourceName]
-
-		if !ok {
-			return fmt.Errorf("resource not found: %s", resourceName)
-		}
-
-		if resourceState.Primary.ID == "" {
-			return fmt.Errorf("No S3 Multi-Region Access Point ID is set")
-		}
-
-		return acctest.DeleteResource(resource, resource.Data(resourceState.Primary), provider.Meta())
-	}
-}
-
 func testAccCheckMultiRegionAccessPointDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).S3ControlConn
 
@@ -188,12 +171,13 @@ func testAccCheckMultiRegionAccessPointDestroy(s *terraform.State) error {
 			continue
 		}
 
-		accountId, name, err := tfs3control.MultiRegionAccessPointParseId(rs.Primary.ID)
+		accountID, name, err := tfs3control.MultiRegionAccessPointParseResourceID(rs.Primary.ID)
+
 		if err != nil {
 			return err
 		}
 
-		_, err = tfs3control.FindMultiRegionAccessPointByAccountIDAndName(conn, accountId, name)
+		_, err = tfs3control.FindMultiRegionAccessPointByAccountIDAndName(conn, accountID, name)
 
 		if tfresource.NotFound(err) {
 			continue
@@ -220,14 +204,15 @@ func testAccCheckMultiRegionAccessPointExists(n string, v *s3control.MultiRegion
 			return fmt.Errorf("No S3 Multi-Region Access Point ID is set")
 		}
 
-		accountId, name, err := tfs3control.MultiRegionAccessPointParseId(rs.Primary.ID)
+		accountID, name, err := tfs3control.MultiRegionAccessPointParseResourceID(rs.Primary.ID)
+
 		if err != nil {
 			return err
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).S3ControlConn
 
-		output, err := tfs3control.FindMultiRegionAccessPointByAccountIDAndName(conn, accountId, name)
+		output, err := tfs3control.FindMultiRegionAccessPointByAccountIDAndName(conn, accountID, name)
 
 		if err != nil {
 			return err

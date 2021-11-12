@@ -52,6 +52,32 @@ func FindMultiRegionAccessPointByAccountIDAndName(conn *s3control.S3Control, acc
 	return output.AccessPoint, nil
 }
 
+func findMultiRegionAccessPointOperationByAccountIDAndTokenARN(conn *s3control.S3Control, accountID string, requestTokenARN string) (*s3control.AsyncOperation, error) {
+	input := &s3control.DescribeMultiRegionAccessPointOperationInput{
+		AccountId:       aws.String(accountID),
+		RequestTokenARN: aws.String(requestTokenARN),
+	}
+
+	output, err := conn.DescribeMultiRegionAccessPointOperation(input)
+
+	if tfawserr.ErrCodeEquals(err, errCodeNoSuchAsyncRequest) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.AsyncOperation == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.AsyncOperation, nil
+}
+
 func FindMultiRegionAccessPointPolicyDocumentByAccountIDAndName(conn *s3control.S3Control, accountID string, name string) (*s3control.MultiRegionAccessPointPolicyDocument, error) {
 	input := &s3control.GetMultiRegionAccessPointPolicyInput{
 		AccountId: aws.String(accountID),

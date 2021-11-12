@@ -76,7 +76,7 @@ func TestAccS3ControlMultiRegionAccessPointPolicy_disappears_MultiRegionAccessPo
 				Config: testAccMultiRegionAccessPointPolicyConfig_basic(bucketName, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMultiRegionAccessPointExists(resourceName, &v),
-					testAccCheckMultiRegionAccessPointDisappears(acctest.Provider, tfs3control.ResourceMultiRegionAccessPoint(), parentResourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfs3control.ResourceMultiRegionAccessPoint(), parentResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -175,14 +175,15 @@ func testAccCheckMultiRegionAccessPointPolicyExists(n string, v *s3control.Multi
 			return fmt.Errorf("No S3 Multi-Region Access Point Policy ID is set")
 		}
 
-		accountId, name, err := tfs3control.MultiRegionAccessPointParseId(rs.Primary.ID)
+		accountID, name, err := tfs3control.MultiRegionAccessPointParseResourceID(rs.Primary.ID)
+
 		if err != nil {
 			return err
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).S3ControlConn
 
-		output, err := tfs3control.FindMultiRegionAccessPointPolicyDocumentByAccountIDAndName(conn, accountId, name)
+		output, err := tfs3control.FindMultiRegionAccessPointPolicyDocumentByAccountIDAndName(conn, accountID, name)
 
 		if err != nil {
 			return err
