@@ -983,7 +983,9 @@ func ParseRecordID(id string) [4]string {
 		if firstUnderscore == 0 {
 			firstUnderscore = strings.Index(parts[1][1:], "_") + 1
 		}
-		recName, recType = parts[1][0:firstUnderscore], parts[1][firstUnderscore+1:]
+		if firstUnderscore != -1 {
+			recName, recType = parts[1][0:firstUnderscore], parts[1][firstUnderscore+1:]
+		}
 		if !r53ValidRecordTypes.MatchString(recType) {
 			firstUnderscore = strings.Index(recType, "_")
 			if firstUnderscore != -1 {

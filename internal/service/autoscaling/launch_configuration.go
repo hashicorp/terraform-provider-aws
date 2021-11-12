@@ -1,6 +1,6 @@
 package autoscaling
 
-import (
+import ( // nosemgrep: aws-sdk-go-multiple-service-imports
 	"bytes"
 	"crypto/sha1"
 	"encoding/base64"

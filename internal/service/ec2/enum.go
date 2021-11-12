@@ -36,7 +36,12 @@ const (
 	EBSSnapshotImportStateCompleted  = "completed"
 )
 
-// See https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_CreateNetworkInterface.html#API_CreateNetworkInterface_Example_2_Response
+// See https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_CreateNetworkInterface.html#API_CreateNetworkInterface_Example_2_Response.
 const (
 	NetworkInterfaceStatusPending = "pending"
+)
+
+// See https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeInternetGateways.html#API_DescribeInternetGateways_Example_1_Response.
+const (
+	InternetGatewayAttachmentStateAvailable = "available"
 )

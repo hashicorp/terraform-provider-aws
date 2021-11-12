@@ -1334,13 +1334,14 @@ func ProtocolForValue(v string) string {
 // documented to be supported by AWS Security Groups
 // http://docs.aws.amazon.com/fr_fr/AWSEC2/latest/APIReference/API_IpPermission.html
 // Similar to protocolIntegers() used by Network ACLs, but explicitly only
-// supports "tcp", "udp", "icmp", and "all"
+// supports "tcp", "udp", "icmp", "icmpv6", and "all"
 func sgProtocolIntegers() map[string]int {
 	return map[string]int{
-		"udp":  17,
-		"tcp":  6,
-		"icmp": 1,
-		"all":  -1,
+		"icmpv6": 58,
+		"udp":    17,
+		"tcp":    6,
+		"icmp":   1,
+		"all":    -1,
 	}
 }
 
@@ -1381,14 +1382,14 @@ func deleteLingeringLambdaENIs(conn *ec2.EC2, filterName, resourceId string, tim
 		}
 
 		if eni.Attachment != nil {
-			err = detachNetworkInterface(conn, eniId, aws.StringValue(eni.Attachment.AttachmentId), timeout)
+			err = DetachNetworkInterface(conn, eniId, aws.StringValue(eni.Attachment.AttachmentId), timeout)
 
 			if err != nil {
 				return fmt.Errorf("error detaching Lambda ENI (%s): %w", eniId, err)
 			}
 		}
 
-		err = deleteNetworkInterface(conn, eniId)
+		err = DeleteNetworkInterface(conn, eniId)
 
 		if err != nil {
 			return fmt.Errorf("error deleting Lambda ENI (%s): %w", eniId, err)

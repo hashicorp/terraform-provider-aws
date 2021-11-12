@@ -283,10 +283,12 @@ func resourceCanaryCreate(d *schema.ResourceData, meta interface{}) error {
 	// operation. The goal is only retry these types of errors up to the IAM
 	// timeout. Since the creation process is asynchronous and can take up to
 	// its own timeout, we store a stop time upfront for checking.
-	iamwaiterStopTime := time.Now().Add(tfiam.PropagationTimeout)
+	// Real-life experience shows that double the standard IAM propagation time is required.
+	iamPropagationTimeout := tfiam.PropagationTimeout * 2
+	iamwaiterStopTime := time.Now().Add(iamPropagationTimeout)
 
 	_, err = tfresource.RetryWhen(
-		tfiam.PropagationTimeout+canaryCreatedTimeout,
+		iamPropagationTimeout+canaryCreatedTimeout,
 		func() (interface{}, error) {
 			return waitCanaryReady(conn, d.Id())
 		},
