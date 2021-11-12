@@ -1,14 +1,14 @@
 ---
 subcategory: "S3"
 layout: "aws"
-page_title: "AWS: aws_s3_multi_region_access_point"
+page_title: "AWS: aws_s3control_multi_region_access_point"
 description: |-
-  Provides a resource to manage a Multi-Region S3 Access Point associated with specified buckets.
+  Provides a resource to manage an S3 Multi-Region Access Point associated with specified buckets.
 ---
 
-# Resource: aws_s3_multi_region_access_point
+# Resource: aws_s3control_multi_region_access_point
 
-Provides a resource to manage a Multi-Region S3 Access Point associated with specified buckets.
+Provides a resource to manage an S3 Multi-Region Access Point associated with specified buckets.
 
 ## Example Usage
 
@@ -37,7 +37,7 @@ resource "aws_s3_bucket" "bar_bucket" {
   bucket = "example-bucket-bar"
 }
 
-resource "aws_s3_multi_region_access_point" "example" {
+resource "aws_s3control_multi_region_access_point" "example" {
   details {
     name = "example"
 
@@ -113,5 +113,5 @@ In addition to all arguments above, the following attributes are exported:
 Multi-Region Access Points can be imported using the `account_id` and `name` of the Multi-Region Access Point separated by a colon (`:`), e.g.
 
 ```
-$ terraform import aws_s3_multi_region_access_point.example 123456789012:example
+$ terraform import aws_s3control_multi_region_access_point.example 123456789012:example
 ```

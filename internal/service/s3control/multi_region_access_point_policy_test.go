@@ -17,7 +17,7 @@ import (
 
 func TestAccS3ControlMultiRegionAccessPointPolicy_basic(t *testing.T) {
 	var v s3control.MultiRegionAccessPointPolicyDocument
-	resourceName := "aws_s3_multi_region_access_point_policy.test"
+	resourceName := "aws_s3control_multi_region_access_point_policy.test"
 	bucketName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	multiRegionAccessPointName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -56,8 +56,8 @@ func TestAccS3ControlMultiRegionAccessPointPolicy_basic(t *testing.T) {
 
 func TestAccS3ControlMultiRegionAccessPointPolicy_disappears_MultiRegionAccessPoint(t *testing.T) {
 	var v s3control.MultiRegionAccessPointReport
-	parentResourceName := "aws_s3_multi_region_access_point.test"
-	resourceName := "aws_s3_multi_region_access_point_policy.test"
+	parentResourceName := "aws_s3control_multi_region_access_point.test"
+	resourceName := "aws_s3control_multi_region_access_point_policy.test"
 	bucketName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -86,7 +86,7 @@ func TestAccS3ControlMultiRegionAccessPointPolicy_disappears_MultiRegionAccessPo
 
 func TestAccS3ControlMultiRegionAccessPointPolicy_details_policy(t *testing.T) {
 	var v1, v2 s3control.MultiRegionAccessPointPolicyDocument
-	resourceName := "aws_s3_multi_region_access_point_policy.test"
+	resourceName := "aws_s3control_multi_region_access_point_policy.test"
 	multiRegionAccessPointName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	bucketName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -125,7 +125,7 @@ func TestAccS3ControlMultiRegionAccessPointPolicy_details_policy(t *testing.T) {
 
 func TestAccS3ControlMultiRegionAccessPointPolicy_details_name(t *testing.T) {
 	var v1, v2 s3control.MultiRegionAccessPointPolicyDocument
-	resourceName := "aws_s3_multi_region_access_point_policy.test"
+	resourceName := "aws_s3control_multi_region_access_point_policy.test"
 	multiRegionAccessPointName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	multiRegionAccessPointName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	bucketName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -210,7 +210,7 @@ func testAccMultiRegionAccessPointPolicyConfig_basic(bucketName, multiRegionAcce
 data "aws_caller_identity" "current" {}
 data "aws_partition" "current" {}
 
-resource "aws_s3_multi_region_access_point_policy" "test" {
+resource "aws_s3control_multi_region_access_point_policy" "test" {
   details {
     name = %[1]q
     policy = jsonencode({
@@ -223,7 +223,7 @@ resource "aws_s3_multi_region_access_point_policy" "test" {
             "AWS" : data.aws_caller_identity.current.account_id
           },
           "Action" : "s3:GetObject",
-          "Resource" : "arn:${data.aws_partition.current.partition}:s3::${data.aws_caller_identity.current.account_id}:accesspoint/${aws_s3_multi_region_access_point.test.alias}/object/*"
+          "Resource" : "arn:${data.aws_partition.current.partition}:s3::${data.aws_caller_identity.current.account_id}:accesspoint/${aws_s3control_multi_region_access_point.test.alias}/object/*"
         }
       ]
     })
@@ -239,7 +239,7 @@ func testAccMultiRegionAccessPointPolicyConfig_updatedStatement(bucketName, mult
 data "aws_caller_identity" "current" {}
 data "aws_partition" "current" {}
 
-resource "aws_s3_multi_region_access_point_policy" "test" {
+resource "aws_s3control_multi_region_access_point_policy" "test" {
   details {
     name = %[1]q
     policy = jsonencode({
@@ -252,7 +252,7 @@ resource "aws_s3_multi_region_access_point_policy" "test" {
             "AWS" : data.aws_caller_identity.current.account_id
           },
           "Action" : "s3:PutObject",
-          "Resource" : "arn:${data.aws_partition.current.partition}:s3::${data.aws_caller_identity.current.account_id}:accesspoint/${aws_s3_multi_region_access_point.test.alias}/object/*"
+          "Resource" : "arn:${data.aws_partition.current.partition}:s3::${data.aws_caller_identity.current.account_id}:accesspoint/${aws_s3control_multi_region_access_point.test.alias}/object/*"
         }
       ]
     })

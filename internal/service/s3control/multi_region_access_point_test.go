@@ -20,7 +20,7 @@ import (
 
 func TestAccS3ControlMultiRegionAccessPoint_basic(t *testing.T) {
 	var v s3control.MultiRegionAccessPointReport
-	resourceName := "aws_s3_multi_region_access_point.test"
+	resourceName := "aws_s3control_multi_region_access_point.test"
 	bucketName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -64,7 +64,7 @@ func TestAccS3ControlMultiRegionAccessPoint_basic(t *testing.T) {
 
 func TestAccS3ControlMultiRegionAccessPoint_disappears(t *testing.T) {
 	var v s3control.MultiRegionAccessPointReport
-	resourceName := "aws_s3_multi_region_access_point.test"
+	resourceName := "aws_s3control_multi_region_access_point.test"
 	bucketName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -91,7 +91,7 @@ func TestAccS3ControlMultiRegionAccessPoint_disappears(t *testing.T) {
 
 func TestAccS3ControlMultiRegionAccessPoint_PublicAccessBlock(t *testing.T) {
 	var v s3control.MultiRegionAccessPointReport
-	resourceName := "aws_s3_multi_region_access_point.test"
+	resourceName := "aws_s3control_multi_region_access_point.test"
 	bucketName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -126,7 +126,7 @@ func TestAccS3ControlMultiRegionAccessPoint_PublicAccessBlock(t *testing.T) {
 
 func TestAccS3ControlMultiRegionAccessPoint_name(t *testing.T) {
 	var v1, v2 s3control.MultiRegionAccessPointReport
-	resourceName := "aws_s3_multi_region_access_point.test"
+	resourceName := "aws_s3control_multi_region_access_point.test"
 	rName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	bucketName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -184,7 +184,7 @@ func testAccCheckMultiRegionAccessPointDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).S3ControlConn
 
 	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_s3_multi_region_access_point" {
+		if rs.Type != "aws_s3control_multi_region_access_point" {
 			continue
 		}
 
@@ -262,7 +262,7 @@ resource "aws_s3_bucket" "test" {
   force_destroy = true
 }
 
-resource "aws_s3_multi_region_access_point" "test" {
+resource "aws_s3control_multi_region_access_point" "test" {
   details {
     name = %[2]q
 
@@ -281,7 +281,7 @@ resource "aws_s3_bucket" "test" {
   force_destroy = true
 }
 
-resource "aws_s3_multi_region_access_point" "test" {
+resource "aws_s3control_multi_region_access_point" "test" {
   details {
     name = %[2]q
 

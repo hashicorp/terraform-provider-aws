@@ -1,14 +1,14 @@
 ---
 subcategory: "S3"
 layout: "aws"
-page_title: "AWS: aws_s3_multi_region_access_point_policy"
+page_title: "AWS: aws_s3control_multi_region_access_point_policy"
 description: |-
-  Provides a resource to manage a Multi-Region Access Point access control policy.
+  Provides a resource to manage an S3 Multi-Region Access Point access control policy.
 ---
 
-# Resource: aws_s3_multi_region_access_point_policy
+# Resource: aws_s3control_multi_region_access_point_policy
 
-Provides a resource to manage a Multi-Region Access Point access control policy.
+Provides a resource to manage an S3 Multi-Region Access Point access control policy.
 
 ## Example Usage
 
@@ -22,7 +22,7 @@ resource "aws_s3_bucket" "foo_bucket" {
   bucket = "example-bucket-foo"
 }
 
-resource "aws_s3_multi_region_access_point" "example" {
+resource "aws_s3control_multi_region_access_point" "example" {
   details {
     name = "example"
 
@@ -32,9 +32,9 @@ resource "aws_s3_multi_region_access_point" "example" {
   }
 }
 
-resource "aws_s3_multi_region_access_point_policy" "example" {
+resource "aws_s3control_multi_region_access_point_policy" "example" {
   details {
-    name = element(split(":", aws_s3_multi_region_access_point.example.id), 1)
+    name = element(split(":", aws_s3control_multi_region_access_point.example.id), 1)
     policy = jsonencode({
       "Version" : "2012-10-17",
       "Statement" : [
@@ -45,7 +45,7 @@ resource "aws_s3_multi_region_access_point_policy" "example" {
             "AWS" : data.aws_caller_identity.current.account_id
           },
           "Action" : ["s3:GetObject", "s3:PutObject"],
-          "Resource" : "arn:${data.aws_partition.current.partition}:s3::${data.aws_caller_identity.current.account_id}:accesspoint/${aws_s3_multi_region_access_point.example.alias}/object/*"
+          "Resource" : "arn:${data.aws_partition.current.partition}:s3::${data.aws_caller_identity.current.account_id}:accesspoint/${aws_s3control_multi_region_access_point.example.alias}/object/*"
         }
       ]
     })
@@ -89,5 +89,5 @@ In addition to all arguments above, the following attributes are exported:
 Multi-Region Access Point Policies can be imported using the `account_id` and `name` of the Multi-Region Access Point separated by a colon (`:`), e.g.
 
 ```
-$ terraform import aws_s3_multi_region_access_point_policy.example 123456789012:example
+$ terraform import aws_s3control_multi_region_access_point_policy.example 123456789012:example
 ```
