@@ -1190,7 +1190,7 @@ resource "aws_s3_bucket_replication_configuration" "replication" {
     status   = "Enabled"
 
     filter {
-		prefix = "prefix2"
+      prefix = "prefix2"
     }
 
     delete_marker_replication {
@@ -1251,9 +1251,9 @@ resource "aws_s3_bucket_replication_configuration" "replication" {
     status   = "Enabled"
 
     filter {
-		prefix = "prefix1"
+      prefix = "prefix1"
     }
-	
+
     delete_marker_replication {
       status = "Enabled"
     }
