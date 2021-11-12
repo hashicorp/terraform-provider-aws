@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
@@ -184,12 +185,9 @@ func resourceMultiRegionAccessPointRead(d *schema.ResourceData, meta interface{}
 		return err
 	}
 
-	output, err := conn.GetMultiRegionAccessPoint(&s3control.GetMultiRegionAccessPointInput{
-		AccountId: aws.String(accountId),
-		Name:      aws.String(name),
-	})
+	accessPoint, err := FindMultiRegionAccessPointByAccountIDAndName(conn, accountId, name)
 
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, ErrCodeNoSuchMultiRegionAccessPoint) {
+	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] S3 Multi-Region Access Point (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -199,25 +197,21 @@ func resourceMultiRegionAccessPointRead(d *schema.ResourceData, meta interface{}
 		return fmt.Errorf("error reading S3 Multi-Region Access Point (%s): %w", d.Id(), err)
 	}
 
-	if output == nil {
-		return fmt.Errorf("error reading S3 Multi-Region Access Point (%s): empty response", d.Id())
-	}
-
 	d.Set("account_id", accountId)
-	d.Set("alias", output.AccessPoint.Alias)
-	d.Set("domain_name", meta.(*conns.AWSClient).PartitionHostname(fmt.Sprintf("%s.accesspoint.s3-global", aws.StringValue(output.AccessPoint.Alias))))
-	d.Set("status", output.AccessPoint.Status)
+	d.Set("alias", accessPoint.Alias)
+	d.Set("domain_name", meta.(*conns.AWSClient).PartitionHostname(fmt.Sprintf("%s.accesspoint.s3-global", aws.StringValue(accessPoint.Alias))))
+	d.Set("status", accessPoint.Status)
 
 	multiRegionAccessPointARN := arn.ARN{
 		AccountID: accountId,
 		Partition: meta.(*conns.AWSClient).Partition,
-		Resource:  fmt.Sprintf("accesspoint/%s", aws.StringValue(output.AccessPoint.Alias)),
+		Resource:  fmt.Sprintf("accesspoint/%s", aws.StringValue(accessPoint.Alias)),
 		Service:   "s3",
 	}
 
 	d.Set("arn", multiRegionAccessPointARN.String())
 
-	if err := d.Set("details", []interface{}{flattenMultiRegionAccessPointDetails(output.AccessPoint)}); err != nil {
+	if err := d.Set("details", []interface{}{flattenMultiRegionAccessPointDetails(accessPoint)}); err != nil {
 		return fmt.Errorf("error setting details: %s", err)
 	}
 
@@ -243,12 +237,12 @@ func resourceMultiRegionAccessPointDelete(d *schema.ResourceData, meta interface
 		},
 	})
 
-	if tfawserr.ErrCodeEquals(err, ErrCodeNoSuchMultiRegionAccessPoint) {
+	if tfawserr.ErrCodeEquals(err, errCodeNoSuchMultiRegionAccessPoint) {
 		return nil
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting S3 Multi-Region Access Point (%s): %s", d.Id(), err)
+		return fmt.Errorf("error deleting S3 Multi-Region Access Point (%s): %w", d.Id(), err)
 	}
 
 	requestTokenARN := aws.StringValue(output.RequestTokenARN)

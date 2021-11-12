@@ -6,5 +6,5 @@ package s3control
 const (
 	errCodeNoSuchAccessPoint            = "NoSuchAccessPoint"
 	errCodeNoSuchAccessPointPolicy      = "NoSuchAccessPointPolicy"
-	ErrCodeNoSuchMultiRegionAccessPoint = "NoSuchMultiRegionAccessPoint"
+	errCodeNoSuchMultiRegionAccessPoint = "NoSuchMultiRegionAccessPoint"
 )

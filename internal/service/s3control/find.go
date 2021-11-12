@@ -1,10 +1,11 @@
 package s3control
 
 import (
-	"log"
-
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/s3control"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func findPublicAccessBlockConfiguration(conn *s3control.S3Control, accountID string) (*s3control.PublicAccessBlockConfiguration, error) {
@@ -25,28 +26,33 @@ func findPublicAccessBlockConfiguration(conn *s3control.S3Control, accountID str
 	return output.PublicAccessBlockConfiguration, nil
 }
 
-func FindMultiRegionAccessPointByName(conn *s3control.S3Control, accountId string, name string) (*s3control.MultiRegionAccessPointReport, error) {
+func FindMultiRegionAccessPointByAccountIDAndName(conn *s3control.S3Control, accountID string, name string) (*s3control.MultiRegionAccessPointReport, error) {
 	input := &s3control.GetMultiRegionAccessPointInput{
-		AccountId: aws.String(accountId),
+		AccountId: aws.String(accountID),
 		Name:      aws.String(name),
 	}
 
-	log.Printf("[DEBUG] Getting S3 Multi-Region Access Point (%s): %s", name, input)
-
 	output, err := conn.GetMultiRegionAccessPoint(input)
+
+	if tfawserr.ErrCodeEquals(err, errCodeNoSuchMultiRegionAccessPoint) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
 
 	if err != nil {
 		return nil, err
 	}
 
 	if output == nil || output.AccessPoint == nil {
-		return nil, nil
+		return nil, tfresource.NewEmptyResultError(input)
 	}
 
 	return output.AccessPoint, nil
 }
 
-func FindMultiRegionAccessPointPolicyDocumentByName(conn *s3control.S3Control, accountID string, name string) (*s3control.MultiRegionAccessPointPolicyDocument, error) {
+func FindMultiRegionAccessPointPolicyDocumentByAccountIDAndName(conn *s3control.S3Control, accountID string, name string) (*s3control.MultiRegionAccessPointPolicyDocument, error) {
 	input := &s3control.GetMultiRegionAccessPointPolicyInput{
 		AccountId: aws.String(accountID),
 		Name:      aws.String(name),
@@ -54,12 +60,19 @@ func FindMultiRegionAccessPointPolicyDocumentByName(conn *s3control.S3Control, a
 
 	output, err := conn.GetMultiRegionAccessPointPolicy(input)
 
+	if tfawserr.ErrCodeEquals(err, errCodeNoSuchMultiRegionAccessPoint) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
 	if err != nil {
 		return nil, err
 	}
 
-	if output == nil {
-		return nil, nil
+	if output == nil || output.Policy == nil {
+		return nil, tfresource.NewEmptyResultError(input)
 	}
 
 	return output.Policy, nil

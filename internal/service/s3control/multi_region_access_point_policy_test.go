@@ -164,11 +164,15 @@ func TestAccS3ControlMultiRegionAccessPointPolicy_details_name(t *testing.T) {
 	})
 }
 
-func testAccCheckMultiRegionAccessPointPolicyExists(n string, m *s3control.MultiRegionAccessPointPolicyDocument) resource.TestCheckFunc {
+func testAccCheckMultiRegionAccessPointPolicyExists(n string, v *s3control.MultiRegionAccessPointPolicyDocument) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
+		}
+
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("No S3 Multi-Region Access Point Policy ID is set")
 		}
 
 		accountId, name, err := tfs3control.MultiRegionAccessPointParseId(rs.Primary.ID)
@@ -178,18 +182,15 @@ func testAccCheckMultiRegionAccessPointPolicyExists(n string, m *s3control.Multi
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).S3ControlConn
 
-		policyDocument, err := tfs3control.FindMultiRegionAccessPointPolicyDocumentByName(conn, accountId, name)
+		output, err := tfs3control.FindMultiRegionAccessPointPolicyDocumentByAccountIDAndName(conn, accountId, name)
 
 		if err != nil {
 			return err
 		}
 
-		if policyDocument != nil {
-			*m = *policyDocument
-			return nil
-		}
+		*v = *output
 
-		return fmt.Errorf("Multi-Region Access Point Policy not found")
+		return nil
 	}
 }
 

@@ -7,10 +7,10 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/s3control"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
@@ -119,27 +119,22 @@ func resourceMultiRegionAccessPointPolicyRead(d *schema.ResourceData, meta inter
 		return err
 	}
 
-	policyOutput, err := conn.GetMultiRegionAccessPointPolicy(&s3control.GetMultiRegionAccessPointPolicyInput{
-		AccountId: aws.String(accountId),
-		Name:      aws.String(name),
-	})
+	policyDocument, err := FindMultiRegionAccessPointPolicyDocumentByAccountIDAndName(conn, accountId, name)
 
-	if tfawserr.ErrCodeEquals(err, ErrCodeNoSuchMultiRegionAccessPoint) {
-		log.Printf("[WARN] S3 Multi-Region Access Point (%s) not found, removing from state", d.Id())
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] S3 Multi-Region Access Point Policy (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading S3 Multi-Region Access Point (%s) policy: %s", d.Id(), err)
+		return fmt.Errorf("error reading S3 Multi-Region Access Point Policy (%s): %w", d.Id(), err)
 	}
 
-	log.Printf("[DEBUG] S3 Multi-Region Access Point policy output: %s", policyOutput)
-
 	d.Set("account_id", accountId)
-	d.Set("established", policyOutput.Policy.Established.Policy)
-	d.Set("proposed", policyOutput.Policy.Proposed.Policy)
-	d.Set("details", []interface{}{policyDocumentToDetailsMap(aws.String(name), policyOutput.Policy)})
+	d.Set("established", policyDocument.Established.Policy)
+	d.Set("proposed", policyDocument.Proposed.Policy)
+	d.Set("details", []interface{}{policyDocumentToDetailsMap(aws.String(name), policyDocument)})
 
 	return nil
 }
