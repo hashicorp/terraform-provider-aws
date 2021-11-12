@@ -178,7 +178,7 @@ func resourceAccessPointCreate(d *schema.ResourceData, meta interface{}) error {
 func resourceAccessPointRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).S3ControlConn
 
-	accountId, name, err := AccessPointParseID(d.Id())
+	accountId, name, err := AccessPointParseResourceID(d.Id())
 	if err != nil {
 		return err
 	}
@@ -291,7 +291,7 @@ func resourceAccessPointRead(d *schema.ResourceData, meta interface{}) error {
 func resourceAccessPointUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).S3ControlConn
 
-	accountId, name, err := AccessPointParseID(d.Id())
+	accountId, name, err := AccessPointParseResourceID(d.Id())
 	if err != nil {
 		return err
 	}
@@ -327,7 +327,7 @@ func resourceAccessPointUpdate(d *schema.ResourceData, meta interface{}) error {
 func resourceAccessPointDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).S3ControlConn
 
-	accountId, name, err := AccessPointParseID(d.Id())
+	accountId, name, err := AccessPointParseResourceID(d.Id())
 	if err != nil {
 		return err
 	}
@@ -349,21 +349,31 @@ func resourceAccessPointDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-// AccessPointParseID returns the Account ID and Access Point Name (S3) or ARN (S3 on Outposts)
-func AccessPointParseID(id string) (string, string, error) {
-	parsedARN, err := arn.Parse(id)
+const accessPointResourceIDSeparator = ":"
 
-	if err == nil {
-		return parsedARN.AccountID, id, nil
+func AccessPointCreateResourceID(accessPointARN, accountID, accessPointName string) string {
+	if v, err := arn.Parse(accessPointARN); err != nil && v.Service == "s3-outposts" {
+		return accessPointARN
 	}
 
-	parts := strings.SplitN(id, ":", 2)
+	parts := []string{accountID, accessPointName}
+	id := strings.Join(parts, accessPointResourceIDSeparator)
 
-	if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
-		return "", "", fmt.Errorf("unexpected format of ID (%s), expected ACCOUNT_ID:NAME", id)
+	return id
+}
+
+func AccessPointParseResourceID(id string) (string, string, error) {
+	if v, err := arn.Parse(id); err == nil {
+		return v.AccountID, id, nil
 	}
 
-	return parts[0], parts[1], nil
+	parts := strings.Split(id, multiRegionAccessPointResourceIDSeparator)
+
+	if len(parts) == 2 && parts[0] != "" && parts[1] != "" {
+		return parts[0], parts[1], nil
+	}
+
+	return "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected account-id%[2]saccess-point-name", id, accessPointResourceIDSeparator)
 }
 
 func expandS3AccessPointVpcConfiguration(vConfig []interface{}) *s3control.VpcConfiguration {
