@@ -206,12 +206,8 @@ func resourceMultiRegionAccessPointRead(d *schema.ResourceData, meta interface{}
 	d.Set("account_id", accountID)
 	d.Set("alias", alias)
 	d.Set("arn", arn)
-	if accessPoint != nil {
-		if err := d.Set("details", []interface{}{flattenMultiRegionAccessPointReport(accessPoint)}); err != nil {
-			return fmt.Errorf("error setting details: %w", err)
-		}
-	} else {
-		d.Set("details", nil)
+	if err := d.Set("details", []interface{}{flattenMultiRegionAccessPointReport(accessPoint)}); err != nil {
+		return fmt.Errorf("error setting details: %w", err)
 	}
 	// https://docs.aws.amazon.com/AmazonS3/latest/userguide//MultiRegionAccessPointRequests.html#MultiRegionAccessPointHostnames.
 	d.Set("domain_name", meta.(*conns.AWSClient).PartitionHostname(fmt.Sprintf("%s.accesspoint.s3-global", alias)))
