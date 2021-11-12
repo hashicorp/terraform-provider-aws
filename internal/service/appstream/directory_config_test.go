@@ -25,10 +25,7 @@ func TestAccAppStreamDirectoryConfig_basic(t *testing.T) {
 	rPasswordUpdated := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckHasIAMRole(t, "AmazonAppStreamServiceAccess")
-		},
+		PreCheck:          func() { acctest.PreCheck(t) },
 		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckDirectoryConfigDestroy,
 		ErrorCheck:        acctest.ErrorCheck(t, appstream.EndpointsID),
@@ -49,11 +46,10 @@ func TestAccAppStreamDirectoryConfig_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDirectoryConfigExists(resourceName, &directoryOutput),
 					resource.TestCheckResourceAttr(resourceName, "directory_name", rName),
+					acctest.CheckResourceAttrRFC3339(resourceName, "created_time"),
 					resource.TestCheckResourceAttr(resourceName, "organizational_unit_distinguished_names.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "service_account_credentials.0.account_name", rUserNameUpdated),
 					resource.TestCheckResourceAttr(resourceName, "service_account_credentials.0.account_password", rPasswordUpdated),
-
-					acctest.CheckResourceAttrRFC3339(resourceName, "created_time"),
 				),
 			},
 			{
@@ -74,10 +70,7 @@ func TestAccAppStreamDirectoryConfig_disappears(t *testing.T) {
 	rPassword := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckHasIAMRole(t, "AmazonAppStreamServiceAccess")
-		},
+		PreCheck:          func() { acctest.PreCheck(t) },
 		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckDirectoryConfigDestroy,
 		ErrorCheck:        acctest.ErrorCheck(t, appstream.EndpointsID),
