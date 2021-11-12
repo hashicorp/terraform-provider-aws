@@ -25,10 +25,11 @@ func testAccErrorCheckSkipSagemaker(t *testing.T) resource.ErrorCheckFunc {
 func TestAccSageMaker_serial(t *testing.T) {
 	testCases := map[string]map[string]func(t *testing.T){
 		"App": {
-			"basic":        testAccApp_basic,
-			"disappears":   testAccApp_tags,
-			"tags":         testAccApp_disappears,
-			"resourceSpec": testAccApp_resourceSpec,
+			"basic":                 testAccApp_basic,
+			"disappears":            testAccApp_tags,
+			"tags":                  testAccApp_disappears,
+			"resourceSpec":          testAccApp_resourceSpec,
+			"resourceSpecLifecycle": testAccApp_resourceSpecLifecycle,
 		},
 		"Domain": {
 			"basic":                                    testAccDomain_basic,
