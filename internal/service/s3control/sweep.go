@@ -10,8 +10,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/service/s3control"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
-	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
@@ -34,14 +32,12 @@ func sweepAccessPoints(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-
-	accountId := client.(*conns.AWSClient).AccountID
 	conn := client.(*conns.AWSClient).S3ControlConn
-
+	accountID := client.(*conns.AWSClient).AccountID
 	input := &s3control.ListAccessPointsInput{
-		AccountId: aws.String(accountId),
+		AccountId: aws.String(accountID),
 	}
-	var sweeperErrs *multierror.Error
+	sweepResources := make([]*sweep.SweepResource, 0)
 
 	err = conn.ListAccessPointsPages(input, func(page *s3control.ListAccessPointsOutput, lastPage bool) bool {
 		if page == nil {
@@ -49,25 +45,11 @@ func sweepAccessPoints(region string) error {
 		}
 
 		for _, accessPoint := range page.AccessPointList {
-			input := &s3control.DeleteAccessPointInput{
-				AccountId: aws.String(accountId),
-				Name:      accessPoint.Name,
-			}
-			name := aws.StringValue(accessPoint.Name)
+			r := ResourceAccessPoint()
+			d := r.Data(nil)
+			d.SetId(AccessPointCreateResourceID(aws.StringValue(accessPoint.AccessPointArn), accountID, aws.StringValue(accessPoint.Name)))
 
-			log.Printf("[INFO] Deleting S3 Access Point: %s", name)
-			_, err := conn.DeleteAccessPoint(input)
-
-			if tfawserr.ErrMessageContains(err, "NoSuchAccessPoint", "") {
-				continue
-			}
-
-			if err != nil {
-				sweeperErr := fmt.Errorf("error deleting S3 Access Point (%s): %w", name, err)
-				log.Printf("[ERROR] %s", sweeperErr)
-				sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
-				continue
-			}
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
 
 		return !lastPage
@@ -79,10 +61,16 @@ func sweepAccessPoints(region string) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("error listing S3 Access Points: %w", err)
+		return fmt.Errorf("error listing SS3 Access Points (%s): %w", region, err)
 	}
 
-	return sweeperErrs.ErrorOrNil()
+	err = sweep.SweepOrchestrator(sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("error sweeping S3 Access Points (%s): %w", region, err)
+	}
+
+	return nil
 }
 
 func sweepMultiRegionAccessPoints(region string) error {
@@ -90,12 +78,10 @@ func sweepMultiRegionAccessPoints(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-
 	if region != endpoints.UsWest2RegionID {
 		log.Printf("[WARN] Skipping S3 Multi-Region Access Point sweep for region: %s", region)
 		return nil
 	}
-
 	conn := client.(*conns.AWSClient).S3ControlConn
 	accountID := client.(*conns.AWSClient).AccountID
 	input := &s3control.ListMultiRegionAccessPointsInput{
