@@ -1,4 +1,9 @@
 ## 3.66.0 (Unreleased)
+
+BUG FIXES:
+
+* resource/aws_security_group: Fix lack of pagination when describing security groups ([#21743](https://github.com/hashicorp/terraform-provider-aws/issues/21743))
+
 ## 3.65.0 (November 11, 2021)
 
 FEATURES:
