@@ -1,5 +1,9 @@
 ## 3.66.0 (Unreleased)
 
+ENHANCEMENTS:
+
+* resource/aws_emr_cluster: Add `auto_termination_policy` argument ([#21702](https://github.com/hashicorp/terraform-provider-aws/issues/21702))
+
 BUG FIXES:
 
 * resource/aws_security_group: Fix lack of pagination when describing security groups ([#21743](https://github.com/hashicorp/terraform-provider-aws/issues/21743))
