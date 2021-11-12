@@ -19384,6 +19384,12 @@ var awsPartition = partition{
 					Region: "ca-central-1",
 				}: endpoint{},
 				endpointKey{
+					Region:  "ca-central-1",
+					Variant: fipsVariant,
+				}: endpoint{
+					Hostname: "fips.transcribe.ca-central-1.amazonaws.com",
+				},
+				endpointKey{
 					Region: "eu-central-1",
 				}: endpoint{},
 				endpointKey{
@@ -19398,6 +19404,15 @@ var awsPartition = partition{
 				endpointKey{
 					Region: "eu-west-3",
 				}: endpoint{},
+				endpointKey{
+					Region: "fips-ca-central-1",
+				}: endpoint{
+					Hostname: "fips.transcribe.ca-central-1.amazonaws.com",
+					CredentialScope: credentialScope{
+						Region: "ca-central-1",
+					},
+					Deprecated: boxedTrue,
+				},
 				endpointKey{
 					Region: "fips-us-east-1",
 				}: endpoint{
@@ -24429,6 +24444,14 @@ var awsusgovPartition = partition{
 			},
 		},
 		"identitystore": service{
+			Defaults: endpointDefaults{
+				defaultKey{}: endpoint{},
+				defaultKey{
+					Variant: fipsVariant,
+				}: endpoint{
+					Hostname: "identitystore.{region}.{dnsSuffix}",
+				},
+			},
 			Endpoints: serviceEndpoints{
 				endpointKey{
 					Region: "fips-us-gov-west-1",
@@ -25238,6 +25261,14 @@ var awsusgovPartition = partition{
 			},
 		},
 		"rds": service{
+			Defaults: endpointDefaults{
+				defaultKey{}: endpoint{},
+				defaultKey{
+					Variant: fipsVariant,
+				}: endpoint{
+					Hostname: "rds.{region}.{dnsSuffix}",
+				},
+			},
 			Endpoints: serviceEndpoints{
 				endpointKey{
 					Region: "rds.us-gov-east-1",
@@ -25492,6 +25523,14 @@ var awsusgovPartition = partition{
 			},
 		},
 		"runtime.sagemaker": service{
+			Defaults: endpointDefaults{
+				defaultKey{}: endpoint{},
+				defaultKey{
+					Variant: fipsVariant,
+				}: endpoint{
+					Hostname: "runtime.sagemaker.{region}.{dnsSuffix}",
+				},
+			},
 			Endpoints: serviceEndpoints{
 				endpointKey{
 					Region: "us-gov-west-1",
