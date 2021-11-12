@@ -40,24 +40,8 @@ The following arguments are supported:
 
 ### filter Argument Reference
 
-* `name` - (Required) Name of the filter.
+* `name` - (Required) The name of the field to filter by, as defined by the [underlying AWS API](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeTransitGateways.html).
 * `values` - (Required) List of one or more values for the filter.
-
-#### Supported values for Filters
-
-One or more filters are supported. The possible values are:
-
-* `options.propagation-default-route-table-id` - The ID of the default propagation route table.
-* `options.amazon-side-asn` - The private ASN for the Amazon side of a BGP session.
-* `options.association-default-route-table-id` - The ID of the default association route table.
-* `options.auto-accept-shared-attachments` - Indicates whether there is automatic acceptance of attachment requests (enable | disable ).
-* `options.default-route-table-association` - Indicates whether resource attachments are automatically associated with the default association route table (enable | disable ).
-* `options.default-route-table-propagation` - Indicates whether resource attachments automatically propagate routes to the default propagation route table (enable | disable ).
-* `options.dns-support` - Indicates whether DNS support is enabled (enable | disable ).
-* `options.vpn-ecmp-support` - Indicates whether Equal Cost Multipath Protocol support is enabled (enable | disable ).
-* `owner-id` - The ID of the Amazon Web Services account that owns the transit gateway.
-* `state` - The state of the transit gateway (available | deleted | deleting | modifying | pending ).
-* `transit-gateway-id` - The ID of the transit gateway
 
 ## Attribute Reference
 
