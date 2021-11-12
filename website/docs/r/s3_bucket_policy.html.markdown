@@ -38,7 +38,7 @@ resource "aws_s3_bucket_policy" "b" {
           "${aws_s3_bucket.b.arn}/*",
         ]
         Condition = {
-          IpAddress = {
+          NotIpAddress = {
             "aws:SourceIp" = "8.8.8.8/32"
           }
         }
@@ -61,7 +61,7 @@ No additional attributes are exported.
 
 ## Import
 
-S3 bucket policies can be imported using the bucket name, e.g.
+S3 bucket policies can be imported using the bucket name, e.g.,
 
 ```
 $ terraform import aws_s3_bucket_policy.example my-bucket-name

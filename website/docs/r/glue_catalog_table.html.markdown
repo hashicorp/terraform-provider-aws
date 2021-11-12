@@ -180,7 +180,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Glue Tables can be imported with their catalog ID (usually AWS account ID), database name, and table name, e.g.
+Glue Tables can be imported with their catalog ID (usually AWS account ID), database name, and table name, e.g.,
 
 ```
 $ terraform import aws_glue_catalog_table.MyTable 123456789012:MyDatabase:MyTable

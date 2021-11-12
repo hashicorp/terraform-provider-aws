@@ -40,8 +40,8 @@ The following arguments are optional:
 * `cache_control` - (Optional) Specifies caching behavior along the request/reply chain Read [w3c cache_control](http://www.w3.org/Protocols/rfc2616/rfc2616-sec14.html#sec14.9) for further details.
 * `content_disposition` - (Optional) Specifies presentational information for the object. Read [w3c content_disposition](http://www.w3.org/Protocols/rfc2616/rfc2616-sec19.html#sec19.5.1) for further information.
 * `content_encoding` - (Optional) Specifies what content encodings have been applied to the object and thus what decoding mechanisms must be applied to obtain the media-type referenced by the Content-Type header field. Read [w3c content encoding](http://www.w3.org/Protocols/rfc2616/rfc2616-sec14.html#sec14.11) for further information.
-* `content_language` - (Optional) Language the content is in e.g. en-US or en-GB.
-* `content_type` - (Optional) Standard MIME type describing the format of the object data, e.g. `application/octet-stream`. All Valid MIME Types are valid for this input.
+* `content_language` - (Optional) Language the content is in e.g., en-US or en-GB.
+* `content_type` - (Optional) Standard MIME type describing the format of the object data, e.g., `application/octet-stream`. All Valid MIME Types are valid for this input.
 * `copy_if_match` - (Optional) Copies the object if its entity tag (ETag) matches the specified tag.
 * `copy_if_modified_since` - (Optional) Copies the object if it has been modified since the specified time, in [RFC3339 format](https://tools.ietf.org/html/rfc3339#section-5.8).
 * `copy_if_none_match` - (Optional) Copies the object if its entity tag (ETag) is different than the specified ETag.

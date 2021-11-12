@@ -27,7 +27,9 @@ resource "aws_securityhub_organization_admin_account" "example" {
 }
 
 # Auto enable security hub in organization member accounts
-resource "aws_securityhub_organization_configuration" "example" {}
+resource "aws_securityhub_organization_configuration" "example" {
+  auto_enable = true
+}
 ```
 
 ## Argument Reference
@@ -44,7 +46,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Security Hub Organization Admin Accounts can be imported using the AWS account ID, e.g.
+Security Hub Organization Admin Accounts can be imported using the AWS account ID, e.g.,
 
 ```
 $ terraform import aws_securityhub_organization_admin_account.example 123456789012

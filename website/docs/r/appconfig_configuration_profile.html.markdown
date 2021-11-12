@@ -60,7 +60,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-AppConfig Configuration Profiles can be imported by using the configuration profile ID and application ID separated by a colon (`:`), e.g.
+AppConfig Configuration Profiles can be imported by using the configuration profile ID and application ID separated by a colon (`:`), e.g.,
 
 ```
 $ terraform import aws_appconfig_configuration_profile.example 71abcde:11xxxxx

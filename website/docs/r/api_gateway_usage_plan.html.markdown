@@ -107,6 +107,13 @@ The API Gateway Usage Plan argument layout is a structure composed of several su
 
 * `api_id` (Required) - API Id of the associated API stage in a usage plan.
 * `stage` (Required) - API stage name of the associated API stage in a usage plan.
+* `throttle` - (Optional) The [throttling limits](#throttle) of the usage plan.
+
+##### Throttle
+
+* `path` (Required) - The method to apply the throttle settings for. Specfiy the path and method, for example `/test/GET`.
+* `burst_limit` (Optional) - The API request burst limit, the maximum rate limit over a time ranging from one to a few seconds, depending upon whether the underlying token bucket is at its full capacity.
+* `rate_limit` (Optional) - The API request steady-state rate limit.
 
 #### Quota Settings Arguments
 
@@ -135,7 +142,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-AWS API Gateway Usage Plan can be imported using the `id`, e.g.
+AWS API Gateway Usage Plan can be imported using the `id`, e.g.,
 
 ```sh
 $ terraform import aws_api_gateway_usage_plan.myusageplan <usage_plan_id>

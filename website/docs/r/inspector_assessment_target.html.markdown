@@ -41,7 +41,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Inspector Assessment Targets can be imported via their Amazon Resource Name (ARN), e.g.
+Inspector Assessment Targets can be imported via their Amazon Resource Name (ARN), e.g.,
 
 ```sh
 $ terraform import aws_inspector_assessment_target.example arn:aws:inspector:us-east-1:123456789012:target/0-xxxxxxx

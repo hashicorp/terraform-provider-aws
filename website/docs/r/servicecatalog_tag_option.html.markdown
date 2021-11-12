@@ -41,7 +41,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-`aws_servicecatalog_tag_option` can be imported using the tag option ID, e.g.
+`aws_servicecatalog_tag_option` can be imported using the tag option ID, e.g.,
 
 ```
 $ terraform import aws_servicecatalog_tag_option.example tag-pjtvagohlyo3m

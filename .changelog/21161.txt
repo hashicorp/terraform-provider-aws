@@ -1,0 +1,15 @@
+```release-note:bug
+resource/aws_route: Use custom `timeouts` values
+```
+
+```release-note:enhancement
+resource/aws_route_table: Add [custom `timeouts`](https://www.terraform.io/docs/language/resources/syntax.html#operation-timeouts) block
+```
+
+```release-note:enhancement
+resource/aws_default_route_table: Add [custom `timeouts`](https://www.terraform.io/docs/language/resources/syntax.html#operation-timeouts) block
+```
+
+```release-note:enhancement
+resource/aws_vpn_gateway_route_propagation: Add [custom `timeouts`](https://www.terraform.io/docs/language/resources/syntax.html#operation-timeouts) block
+```

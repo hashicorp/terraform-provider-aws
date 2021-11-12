@@ -116,8 +116,8 @@ For information on the difference between the available Aurora MySQL engines
 see [Comparison between Aurora MySQL 1 and Aurora MySQL 2](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/AuroraMySQL.Updates.20180206.html)
 in the Amazon RDS User Guide.
 * `engine_version` - (Optional) The engine version to use. If `auto_minor_version_upgrade`
-is enabled, you can provide a prefix of the version such as `5.7` (for `5.7.10`) and
-this attribute will ignore differences in the patch version automatically (e.g. `5.7.17`).
+is enabled, you can provide a prefix of the version such as `5.7` (for `5.7.10`).
+The actual engine version used is returned in the attribute `engine_version_actual`, [defined below](#engine_version_actual).
 For supported values, see the EngineVersion parameter in [API action CreateDBInstance](https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_CreateDBInstance.html).
 Note that for Amazon Aurora instances the engine version must match the [DB cluster](/docs/providers/aws/r/rds_cluster.html)'s engine version'.
 * `final_snapshot_identifier` - (Optional) The name of your final DB snapshot
@@ -135,7 +135,7 @@ identifier beginning with the specified prefix. Conflicts with `identifier`.
 storage_type of "io1".
 * `kms_key_id` - (Optional) The ARN for the KMS encryption key. If creating an
 encrypted replica, set this to the destination KMS ARN.
-* `license_model` - (Optional, but required for some DB engines, i.e. Oracle
+* `license_model` - (Optional, but required for some DB engines, i.e., Oracle
 SE1) License model information for this DB instance.
 * `maintenance_window` - (Optional) The window to perform maintenance in.
 Syntax: "ddd:hh24:mi-ddd:hh24:mi". Eg: "Mon:00:00-Mon:03:00". See [RDS
@@ -154,6 +154,8 @@ Documentation](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_Monit
 what IAM permissions are needed to allow Enhanced Monitoring for RDS Instances.
 * `multi_az` - (Optional) Specifies if the RDS instance is multi-AZ
 * `name` - (Optional) The name of the database to create when the DB instance is created. If this parameter is not specified, no database is created in the DB instance. Note that this does not apply for Oracle or SQL Server engines. See the [AWS documentation](https://awscli.amazonaws.com/v2/documentation/api/latest/reference/rds/create-db-instance.html) for more details on what applies for those engines. If you are providing an Oracle db name, it needs to be in all upper case.
+* `nchar_character_set_name` - (Optional, Forces new resource) The national character set is used in the NCHAR, NVARCHAR2, and NCLOB data types for Oracle instances. This can't be changed. See [Oracle Character Sets
+Supported in Amazon RDS](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Appendix.OracleCharacterSets.html).
 * `option_group_name` - (Optional) Name of the DB option group to associate.
 * `parameter_group_name` - (Optional) Name of the DB parameter group to
 associate.
@@ -166,6 +168,8 @@ logs, and it will be stored in the state file.
 * `port` - (Optional) The port on which the DB accepts connections.
 * `publicly_accessible` - (Optional) Bool to control if instance is publicly
 accessible. Default is `false`.
+* `replica_mode` - (Optional) Specifies whether the replica is in either `mounted` or `open-read-only` mode. This attribute
+is only supported by Oracle instances. Oracle replicas operate in `open-read-only` mode unless otherwise specified. See [Working with Oracle Read Replicas](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/oracle-read-replicas.html) for more information.
 * `replicate_source_db` - (Optional) Specifies that this resource is a Replicate
 database, and to use this value as the source database. This correlates to the
 `identifier` of another Amazon RDS Database to replicate (if replicating within
@@ -205,6 +209,7 @@ for more information.
 is provided) Username for the master DB user.
 * `vpc_security_group_ids` - (Optional) List of VPC security groups to
 associate.
+* `customer_owned_ip_enabled` - (Optional) Indicates whether to enable a customer-owned IP address (CoIP) for an RDS on Outposts DB instance. See [CoIP for RDS on Outposts](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/rds-on-outposts.html#rds-on-outposts.coip) for more information.
 
 ~> **NOTE:** Removing the `replicate_source_db` attribute from an existing RDS
 Replicate database managed by Terraform will promote the database to a fully
@@ -279,7 +284,7 @@ DB instance.
 * `domain_iam_role_name` - The name of the IAM role to be used when making API calls to the Directory Service.
 * `endpoint` - The connection endpoint in `address:port` format.
 * `engine` - The database engine.
-* `engine_version` - The database engine version.
+* `engine_version_actual` - The running version of the database.
 * `hosted_zone_id` - The canonical hosted zone ID of the DB instance (to be used
 in a Route 53 Alias record).
 * `id` - The RDS instance ID.
@@ -301,7 +306,7 @@ On Oracle and Microsoft SQL instances the following is exported additionally:
 
 ## Import
 
-DB Instances can be imported using the `identifier`, e.g.
+DB Instances can be imported using the `identifier`, e.g.,
 
 ```
 $ terraform import aws_db_instance.default mydb-rds-instance
