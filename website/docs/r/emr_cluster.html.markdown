@@ -616,6 +616,7 @@ The following arguments are optional:
 * `additional_info` - (Optional) JSON string for selecting additional features such as adding proxy information. Note: Currently there is no API to retrieve the value of this argument after EMR cluster creation from provider, therefore Terraform cannot detect drift from the actual EMR cluster if its value is changed outside Terraform.
 * `applications` - (Optional) List of applications for the cluster. Valid values are: `Flink`, `Hadoop`, `Hive`, `Mahout`, `Pig`, `Spark`, and `JupyterHub` (as of EMR 5.14.0). Case insensitive.
 * `autoscaling_role` - (Optional) IAM role for automatic scaling policies. The IAM role provides permissions that the automatic scaling feature requires to launch and terminate EC2 instances in an instance group.
+* `auto_termination_policy` - (Optional) An auto-termination policy for an Amazon EMR cluster. An auto-termination policy defines the amount of idle time in seconds after which a cluster automatically terminates. See [Auto Termination Policy](#auto_termination_policy) Below.
 * `bootstrap_action` - (Optional) Ordered list of bootstrap actions that will be run before Hadoop is started on the cluster nodes. See below.
 * `configurations` - (Optional) List of configurations supplied for the EMR cluster you are creating. Supply a configuration object for applications to override their default configuration. See [AWS Documentation](https://docs.aws.amazon.com/emr/latest/ReleaseGuide/emr-configure-apps.html) for more information.
 * `configurations_json` - (Optional) JSON string for supplying list of configurations for the EMR cluster.
@@ -664,11 +665,15 @@ EOF
 * `termination_protection` - (Optional) Switch on/off termination protection (default is `false`, except when using multiple master nodes). Before attempting to destroy the resource when termination protection is enabled, this configuration must be applied with its value set to `false`.
 * `visible_to_all_users` - (Optional) Whether the job flow is visible to all IAM users of the AWS account associated with the job flow. Default value is `true`.
 
-### bootstrap_action
+### auto_termination_policy
 
 * `args` - (Optional) List of command line arguments to pass to the bootstrap action script.
 * `name` - (Required) Name of the bootstrap action.
 * `path` - (Required) Location of the script to run during a bootstrap action. Can be either a location in Amazon S3 or on a local file system.
+
+### bootstrap_action
+
+* `idle_timeout` - (Optional) Specifies the amount of idle time in seconds after which the cluster automatically terminates. You can specify a minimum of `60` seconds and a maximum of `604800` seconds (seven days).
 
 ### configurations
 
