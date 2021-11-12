@@ -124,7 +124,7 @@ variable "service_labels" {
     "kms",
     "lakeformation",
     "lambda",
-    "lexmodelbuildingservice",
+    "lexmodels",
     "licensemanager",
     "lightsail",
     "location",

@@ -1,4 +1,4 @@
-package lexmodelbuilding
+package lexmodels
 
 import (
 	"context"
@@ -217,7 +217,7 @@ var validateLexBotVersion = validation.All(
 )
 
 func resourceBotCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).LexModelBuildingConn
+	conn := meta.(*conns.AWSClient).LexModelsConn
 
 	name := d.Get("name").(string)
 	input := &lexmodelbuildingservice.PutBotInput{
@@ -273,7 +273,7 @@ func resourceBotCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceBotRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).LexModelBuildingConn
+	conn := meta.(*conns.AWSClient).LexModelsConn
 
 	output, err := FindBotVersionByName(conn, d.Id(), BotVersionLatest)
 
@@ -343,7 +343,7 @@ func resourceBotRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceBotUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).LexModelBuildingConn
+	conn := meta.(*conns.AWSClient).LexModelsConn
 
 	input := &lexmodelbuildingservice.PutBotInput{
 		Checksum:                     aws.String(d.Get("checksum").(string)),
@@ -388,7 +388,7 @@ func resourceBotUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceBotDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).LexModelBuildingConn
+	conn := meta.(*conns.AWSClient).LexModelsConn
 
 	input := &lexmodelbuildingservice.DeleteBotInput{
 		Name: aws.String(d.Id()),

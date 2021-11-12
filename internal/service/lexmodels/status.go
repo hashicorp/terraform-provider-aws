@@ -1,4 +1,4 @@
-package lexmodelbuilding
+package lexmodels
 
 import (
 	"github.com/aws/aws-sdk-go/aws"

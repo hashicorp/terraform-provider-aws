@@ -222,7 +222,7 @@ service/lakeformation:
   - '((\*|-) ?`?|(data|resource) "?)aws_lakeformation_'
 service/lambda:
   - '((\*|-) ?`?|(data|resource) "?)aws_lambda_'
-service/lexmodelbuildingservice:
+service/lexmodels:
   - '((\*|-) ?`?|(data|resource) "?)aws_lex_'
 service/licensemanager:
   - '((\*|-) ?`?|(data|resource) "?)aws_licensemanager_'

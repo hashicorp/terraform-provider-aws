@@ -1,4 +1,4 @@
-package lexmodelbuilding_test
+package lexmodels_test
 
 import (
 	"fmt"
@@ -13,10 +13,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	tflexmodelbuilding "github.com/hashicorp/terraform-provider-aws/internal/service/lexmodelbuilding"
+	tflexmodels "github.com/hashicorp/terraform-provider-aws/internal/service/lexmodels"
 )
 
-func TestAccLexModelBuildingBotAlias_basic(t *testing.T) {
+func TestAccLexModelsBotAlias_basic(t *testing.T) {
 	var v lexmodelbuildingservice.GetBotAliasOutput
 	resourceName := "aws_lex_bot_alias.test"
 	testBotAliasID := "test_bot_alias" + sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
@@ -45,7 +45,7 @@ func TestAccLexModelBuildingBotAlias_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "description", "Testing lex bot alias create."),
 					acctest.CheckResourceAttrRFC3339(resourceName, "last_updated_date"),
 					resource.TestCheckResourceAttr(resourceName, "bot_name", testBotAliasID),
-					resource.TestCheckResourceAttr(resourceName, "bot_version", tflexmodelbuilding.BotVersionLatest),
+					resource.TestCheckResourceAttr(resourceName, "bot_version", tflexmodels.BotVersionLatest),
 					resource.TestCheckResourceAttr(resourceName, "name", testBotAliasID),
 					resource.TestCheckResourceAttr(resourceName, "conversation_logs.#", "0"),
 				),
@@ -82,7 +82,7 @@ func testAccBotAlias_botVersion(t *testing.T) {
 				),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBotAliasExists(resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "bot_version", tflexmodelbuilding.BotVersionLatest),
+					resource.TestCheckResourceAttr(resourceName, "bot_version", tflexmodels.BotVersionLatest),
 				),
 			},
 			{
@@ -112,7 +112,7 @@ func testAccBotAlias_botVersion(t *testing.T) {
 	})
 }
 
-func TestAccLexModelBuildingBotAlias_conversationLogsText(t *testing.T) {
+func TestAccLexModelsBotAlias_conversationLogsText(t *testing.T) {
 	var v lexmodelbuildingservice.GetBotAliasOutput
 	testBotID := "test_bot_" + sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
 	testBotAliasID := "test_bot_alias" + sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
@@ -138,7 +138,7 @@ func TestAccLexModelBuildingBotAlias_conversationLogsText(t *testing.T) {
 				),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBotAliasExists(resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "bot_version", tflexmodelbuilding.BotVersionLatest),
+					resource.TestCheckResourceAttr(resourceName, "bot_version", tflexmodels.BotVersionLatest),
 					resource.TestCheckResourceAttrPair(resourceName, "conversation_logs.0.iam_role_arn", iamRoleResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "conversation_logs.0.log_settings.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "conversation_logs.0.log_settings.*", map[string]string{
@@ -148,7 +148,7 @@ func TestAccLexModelBuildingBotAlias_conversationLogsText(t *testing.T) {
 					}),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "conversation_logs.0.log_settings.*.resource_arn", cloudwatchLogGroupResourceName, "arn"),
 					resource.TestMatchTypeSetElemNestedAttrs(resourceName, "conversation_logs.0.log_settings.*", map[string]*regexp.Regexp{
-						"resource_prefix": regexp.MustCompile(regexp.QuoteMeta(fmt.Sprintf(`aws/lex/%s/%s/%s/`, testBotID, testBotAliasID, tflexmodelbuilding.BotVersionLatest))),
+						"resource_prefix": regexp.MustCompile(regexp.QuoteMeta(fmt.Sprintf(`aws/lex/%s/%s/%s/`, testBotID, testBotAliasID, tflexmodels.BotVersionLatest))),
 					}),
 				),
 			},
@@ -161,7 +161,7 @@ func TestAccLexModelBuildingBotAlias_conversationLogsText(t *testing.T) {
 	})
 }
 
-func TestAccLexModelBuildingBotAlias_conversationLogsAudio(t *testing.T) {
+func TestAccLexModelsBotAlias_conversationLogsAudio(t *testing.T) {
 	var v lexmodelbuildingservice.GetBotAliasOutput
 	testBotID := "test_bot_" + sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
 	testBotAliasID := sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
@@ -188,7 +188,7 @@ func TestAccLexModelBuildingBotAlias_conversationLogsAudio(t *testing.T) {
 				),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBotAliasExists(resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "bot_version", tflexmodelbuilding.BotVersionLatest),
+					resource.TestCheckResourceAttr(resourceName, "bot_version", tflexmodels.BotVersionLatest),
 					resource.TestCheckResourceAttrPair(resourceName, "conversation_logs.0.iam_role_arn", iamRoleResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "conversation_logs.0.log_settings.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "conversation_logs.0.log_settings.*", map[string]string{
@@ -198,7 +198,7 @@ func TestAccLexModelBuildingBotAlias_conversationLogsAudio(t *testing.T) {
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "conversation_logs.0.log_settings.*.resource_arn", s3BucketResourceName, "arn"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "conversation_logs.0.log_settings.*.kms_key_arn", kmsKeyResourceName, "arn"),
 					resource.TestMatchTypeSetElemNestedAttrs(resourceName, "conversation_logs.0.log_settings.*", map[string]*regexp.Regexp{
-						"resource_prefix": regexp.MustCompile(regexp.QuoteMeta(fmt.Sprintf(`aws/lex/%s/%s/%s/`, testBotID, testBotAliasID, tflexmodelbuilding.BotVersionLatest))),
+						"resource_prefix": regexp.MustCompile(regexp.QuoteMeta(fmt.Sprintf(`aws/lex/%s/%s/%s/`, testBotID, testBotAliasID, tflexmodels.BotVersionLatest))),
 					}),
 				),
 			},
@@ -211,7 +211,7 @@ func TestAccLexModelBuildingBotAlias_conversationLogsAudio(t *testing.T) {
 	})
 }
 
-func TestAccLexModelBuildingBotAlias_conversationLogsBoth(t *testing.T) {
+func TestAccLexModelsBotAlias_conversationLogsBoth(t *testing.T) {
 	var v lexmodelbuildingservice.GetBotAliasOutput
 	testBotID := "test_bot_" + sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
 	testBotAliasID := sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
@@ -239,7 +239,7 @@ func TestAccLexModelBuildingBotAlias_conversationLogsBoth(t *testing.T) {
 				),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBotAliasExists(resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "bot_version", tflexmodelbuilding.BotVersionLatest),
+					resource.TestCheckResourceAttr(resourceName, "bot_version", tflexmodels.BotVersionLatest),
 					resource.TestCheckResourceAttrPair(resourceName, "conversation_logs.0.iam_role_arn", iamRoleResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "conversation_logs.0.log_settings.#", "2"),
 
@@ -267,7 +267,7 @@ func TestAccLexModelBuildingBotAlias_conversationLogsBoth(t *testing.T) {
 	})
 }
 
-func TestAccLexModelBuildingBotAlias_description(t *testing.T) {
+func TestAccLexModelsBotAlias_description(t *testing.T) {
 	var v lexmodelbuildingservice.GetBotAliasOutput
 	resourceName := "aws_lex_bot_alias.test"
 	testBotAliasID := "test_bot_alias" + sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
@@ -316,7 +316,7 @@ func TestAccLexModelBuildingBotAlias_description(t *testing.T) {
 	})
 }
 
-func TestAccLexModelBuildingBotAlias_disappears(t *testing.T) {
+func TestAccLexModelsBotAlias_disappears(t *testing.T) {
 	var v lexmodelbuildingservice.GetBotAliasOutput
 	resourceName := "aws_lex_bot_alias.test"
 	testBotAliasID := "test_bot_alias" + sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
@@ -338,7 +338,7 @@ func TestAccLexModelBuildingBotAlias_disappears(t *testing.T) {
 				),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBotAliasExists(resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, tflexmodelbuilding.ResourceBotAlias(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tflexmodels.ResourceBotAlias(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -361,7 +361,7 @@ func testAccCheckBotAliasExists(rName string, output *lexmodelbuildingservice.Ge
 		botAliasName := rs.Primary.Attributes["name"]
 
 		var err error
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LexModelBuildingConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LexModelsConn
 
 		output, err = conn.GetBotAlias(&lexmodelbuildingservice.GetBotAliasInput{
 			BotName: aws.String(botName),
@@ -380,7 +380,7 @@ func testAccCheckBotAliasExists(rName string, output *lexmodelbuildingservice.Ge
 
 func testAccCheckBotAliasDestroy(botName, botAliasName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LexModelBuildingConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LexModelsConn
 
 		_, err := conn.GetBotAlias(&lexmodelbuildingservice.GetBotAliasInput{
 			BotName: aws.String(botName),

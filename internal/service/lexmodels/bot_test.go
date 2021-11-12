@@ -1,4 +1,4 @@
-package lexmodelbuilding_test
+package lexmodels_test
 
 import (
 	"fmt"
@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	tflexmodelbuilding "github.com/hashicorp/terraform-provider-aws/internal/service/lexmodelbuilding"
+	tflexmodels "github.com/hashicorp/terraform-provider-aws/internal/service/lexmodels"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
@@ -26,7 +26,7 @@ func testAccErrorCheckSkipLex(t *testing.T) resource.ErrorCheckFunc {
 	)
 }
 
-func TestAccLexModelBuildingBot_basic(t *testing.T) {
+func TestAccLexModelsBot_basic(t *testing.T) {
 	var v lexmodelbuildingservice.GetBotOutput
 	rName := "aws_lex_bot.test"
 	testBotID := "test_bot_" + sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
@@ -68,7 +68,7 @@ func TestAccLexModelBuildingBot_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(rName, "nlu_intent_confidence_threshold", "0"),
 					resource.TestCheckResourceAttr(rName, "process_behavior", "SAVE"),
 					resource.TestCheckResourceAttr(rName, "status", "NOT_BUILT"),
-					resource.TestCheckResourceAttr(rName, "version", tflexmodelbuilding.BotVersionLatest),
+					resource.TestCheckResourceAttr(rName, "version", tflexmodels.BotVersionLatest),
 					resource.TestCheckNoResourceAttr(rName, "voice_id"),
 				),
 			},
@@ -81,7 +81,7 @@ func TestAccLexModelBuildingBot_basic(t *testing.T) {
 	})
 }
 
-func TestAccLexModelBuildingBot_Version_serial(t *testing.T) {
+func TestAccLexModelsBot_Version_serial(t *testing.T) {
 	testCases := map[string]func(t *testing.T){
 		"LexBot_createVersion":         testAccBot_createVersion,
 		"LexBotAlias_botVersion":       testAccBotAlias_botVersion,
@@ -120,7 +120,7 @@ func testAccBot_createVersion(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBotExists(rName, &v1),
 					testAccCheckBotNotExists(testBotID, "1"),
-					resource.TestCheckResourceAttr(rName, "version", tflexmodelbuilding.BotVersionLatest),
+					resource.TestCheckResourceAttr(rName, "version", tflexmodels.BotVersionLatest),
 					resource.TestCheckResourceAttr(rName, "description", "Bot to order flowers on the behalf of a user"),
 				),
 			},
@@ -144,7 +144,7 @@ func testAccBot_createVersion(t *testing.T) {
 	})
 }
 
-func TestAccLexModelBuildingBot_abortStatement(t *testing.T) {
+func TestAccLexModelsBot_abortStatement(t *testing.T) {
 	var v lexmodelbuildingservice.GetBotOutput
 	rName := "aws_lex_bot.test"
 	testBotID := "test_bot_" + sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
@@ -204,7 +204,7 @@ func TestAccLexModelBuildingBot_abortStatement(t *testing.T) {
 	})
 }
 
-func TestAccLexModelBuildingBot_clarificationPrompt(t *testing.T) {
+func TestAccLexModelsBot_clarificationPrompt(t *testing.T) {
 	var v lexmodelbuildingservice.GetBotOutput
 	rName := "aws_lex_bot.test"
 	testBotID := "test_bot_" + sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
@@ -260,7 +260,7 @@ func TestAccLexModelBuildingBot_clarificationPrompt(t *testing.T) {
 	})
 }
 
-func TestAccLexModelBuildingBot_childDirected(t *testing.T) {
+func TestAccLexModelsBot_childDirected(t *testing.T) {
 	var v lexmodelbuildingservice.GetBotOutput
 	rName := "aws_lex_bot.test"
 	testBotID := "test_bot_" + sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
@@ -307,7 +307,7 @@ func TestAccLexModelBuildingBot_childDirected(t *testing.T) {
 	})
 }
 
-func TestAccLexModelBuildingBot_description(t *testing.T) {
+func TestAccLexModelsBot_description(t *testing.T) {
 	var v lexmodelbuildingservice.GetBotOutput
 	rName := "aws_lex_bot.test"
 	testBotID := "test_bot_" + sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
@@ -354,7 +354,7 @@ func TestAccLexModelBuildingBot_description(t *testing.T) {
 	})
 }
 
-func TestAccLexModelBuildingBot_detectSentiment(t *testing.T) {
+func TestAccLexModelsBot_detectSentiment(t *testing.T) {
 	var v lexmodelbuildingservice.GetBotOutput
 	rName := "aws_lex_bot.test"
 	testBotID := "test_bot_" + sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
@@ -401,7 +401,7 @@ func TestAccLexModelBuildingBot_detectSentiment(t *testing.T) {
 	})
 }
 
-func TestAccLexModelBuildingBot_enableModelImprovements(t *testing.T) {
+func TestAccLexModelsBot_enableModelImprovements(t *testing.T) {
 	var v lexmodelbuildingservice.GetBotOutput
 	rName := "aws_lex_bot.test"
 	testBotID := "test_bot_" + sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
@@ -449,7 +449,7 @@ func TestAccLexModelBuildingBot_enableModelImprovements(t *testing.T) {
 	})
 }
 
-func TestAccLexModelBuildingBot_idleSessionTTLInSeconds(t *testing.T) {
+func TestAccLexModelsBot_idleSessionTTLInSeconds(t *testing.T) {
 	var v lexmodelbuildingservice.GetBotOutput
 	rName := "aws_lex_bot.test"
 	testBotID := "test_bot_" + sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
@@ -496,7 +496,7 @@ func TestAccLexModelBuildingBot_idleSessionTTLInSeconds(t *testing.T) {
 	})
 }
 
-func TestAccLexModelBuildingBot_intents(t *testing.T) {
+func TestAccLexModelsBot_intents(t *testing.T) {
 	var v lexmodelbuildingservice.GetBotOutput
 	rName := "aws_lex_bot.test"
 	testBotID := "test_bot_" + sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
@@ -543,7 +543,7 @@ func TestAccLexModelBuildingBot_intents(t *testing.T) {
 	})
 }
 
-func TestAccLexModelBuildingBot_computeVersion(t *testing.T) {
+func TestAccLexModelsBot_computeVersion(t *testing.T) {
 	var v1 lexmodelbuildingservice.GetBotOutput
 	var v2 lexmodelbuildingservice.GetBotAliasOutput
 
@@ -603,7 +603,7 @@ func TestAccLexModelBuildingBot_computeVersion(t *testing.T) {
 	})
 }
 
-func TestAccLexModelBuildingBot_locale(t *testing.T) {
+func TestAccLexModelsBot_locale(t *testing.T) {
 	var v lexmodelbuildingservice.GetBotOutput
 	rName := "aws_lex_bot.test"
 	testBotID := "test_bot_" + sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
@@ -650,7 +650,7 @@ func TestAccLexModelBuildingBot_locale(t *testing.T) {
 	})
 }
 
-func TestAccLexModelBuildingBot_voiceID(t *testing.T) {
+func TestAccLexModelsBot_voiceID(t *testing.T) {
 	var v lexmodelbuildingservice.GetBotOutput
 	rName := "aws_lex_bot.test"
 	testBotID := "test_bot_" + sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
@@ -697,7 +697,7 @@ func TestAccLexModelBuildingBot_voiceID(t *testing.T) {
 	})
 }
 
-func TestAccLexModelBuildingBot_disappears(t *testing.T) {
+func TestAccLexModelsBot_disappears(t *testing.T) {
 	var v lexmodelbuildingservice.GetBotOutput
 	rName := "aws_lex_bot.test"
 	testBotID := "test_bot_" + sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
@@ -718,7 +718,7 @@ func TestAccLexModelBuildingBot_disappears(t *testing.T) {
 				),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBotExists(rName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, tflexmodelbuilding.ResourceBot(), rName),
+					acctest.CheckResourceDisappears(acctest.Provider, tflexmodels.ResourceBot(), rName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -737,9 +737,9 @@ func testAccCheckBotExistsWithVersion(rName, botVersion string, v *lexmodelbuild
 			return fmt.Errorf("No Lex Bot ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LexModelBuildingConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LexModelsConn
 
-		output, err := tflexmodelbuilding.FindBotVersionByName(conn, rs.Primary.ID, botVersion)
+		output, err := tflexmodels.FindBotVersionByName(conn, rs.Primary.ID, botVersion)
 
 		if err != nil {
 			return err
@@ -752,14 +752,14 @@ func testAccCheckBotExistsWithVersion(rName, botVersion string, v *lexmodelbuild
 }
 
 func testAccCheckBotExists(rName string, output *lexmodelbuildingservice.GetBotOutput) resource.TestCheckFunc {
-	return testAccCheckBotExistsWithVersion(rName, tflexmodelbuilding.BotVersionLatest, output)
+	return testAccCheckBotExistsWithVersion(rName, tflexmodels.BotVersionLatest, output)
 }
 
 func testAccCheckBotNotExists(botName, botVersion string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LexModelBuildingConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LexModelsConn
 
-		_, err := tflexmodelbuilding.FindBotVersionByName(conn, botName, botVersion)
+		_, err := tflexmodels.FindBotVersionByName(conn, botName, botVersion)
 
 		if tfresource.NotFound(err) {
 			return nil
@@ -774,7 +774,7 @@ func testAccCheckBotNotExists(botName, botVersion string) resource.TestCheckFunc
 }
 
 func testAccCheckBotDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).LexModelBuildingConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).LexModelsConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_lex_bot" {

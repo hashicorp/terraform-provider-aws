@@ -798,6 +798,8 @@ func awsServiceName(s string) (string, error) {
 		return "directoryservice", nil
 	case "events":
 		return "eventbridge", nil
+	case "lexmodels":
+		return "lexmodelbuildingservice", nil
 	case "serverlessrepo":
 		return "serverlessapplicationrepository", nil
 	}
@@ -831,6 +833,8 @@ func awsServiceNameUpper(s string) (string, error) {
 		return awsServiceNames["directoryservice"], nil
 	case "events":
 		return awsServiceNames["eventbridge"], nil
+	case "lexmodels":
+		return awsServiceNames["lexmodelbuildingservice"], nil
 	case "serverlessrepo":
 		return awsServiceNames["serverlessapplicationrepository"], nil
 	}
@@ -1007,7 +1011,7 @@ func init() {
 	awsServiceNames["kms"] = "KMS"
 	awsServiceNames["lakeformation"] = "LakeFormation"
 	awsServiceNames["lambda"] = "Lambda"
-	awsServiceNames["lexmodelbuilding"] = "LexModelBuilding"
+	awsServiceNames["lexmodelbuildingservice"] = "LexModelBuildingService"
 	awsServiceNames["lexmodelsv2"] = "LexModelsV2"
 	awsServiceNames["lexruntime"] = "LexRuntime"
 	awsServiceNames["lexruntimev2"] = "LexRuntimeV2"

@@ -1,4 +1,4 @@
-package lexmodelbuilding
+package lexmodels
 
 import (
 	"fmt"
@@ -76,7 +76,7 @@ func DataSourceSlotType() *schema.Resource {
 }
 
 func dataSourceSlotTypeRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).LexModelBuildingConn
+	conn := meta.(*conns.AWSClient).LexModelsConn
 
 	name := d.Get("name").(string)
 	version := d.Get("version").(string)
