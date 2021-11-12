@@ -684,7 +684,7 @@ func TestAccWAFV2RuleGroup_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAwsWafv2RuleGroup_RuleLabels(t *testing.T) {
+func TestAccWAFV2RuleGroup_RuleLabels(t *testing.T) {
 	var v wafv2.RuleGroup
 	ruleGroupName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_wafv2_rule_group.test"
@@ -696,7 +696,7 @@ func TestAccAwsWafv2RuleGroup_RuleLabels(t *testing.T) {
 		CheckDestroy: testAccCheckRuleGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsWafv2RuleGroupConfig_RuleLabels(ruleGroupName),
+				Config: testAccRuleGroupConfig_RuleLabels(ruleGroupName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleGroupExists(resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
@@ -709,7 +709,7 @@ func TestAccAwsWafv2RuleGroup_RuleLabels(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAwsWafv2RuleGroupConfig_NoRuleLabels(ruleGroupName),
+				Config: testAccRuleGroupConfig_NoRuleLabels(ruleGroupName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleGroupExists(resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
@@ -840,7 +840,7 @@ func TestAccWAFV2RuleGroup_GeoMatchStatement_forwardedIP(t *testing.T) {
 	})
 }
 
-func TestAccAwsWafv2RuleGroup_LabelMatchStatement(t *testing.T) {
+func TestAccWAFV2RuleGroup_LabelMatchStatement(t *testing.T) {
 	var v wafv2.RuleGroup
 	ruleGroupName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_wafv2_rule_group.test"
@@ -852,7 +852,7 @@ func TestAccAwsWafv2RuleGroup_LabelMatchStatement(t *testing.T) {
 		CheckDestroy: testAccCheckRuleGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsWafv2RuleGroupConfig_LabelMatchStatement(ruleGroupName, "LABEL", "Hashicorp:Test:Label1"),
+				Config: testAccRuleGroupConfig_LabelMatchStatement(ruleGroupName, "LABEL", "Hashicorp:Test:Label1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleGroupExists(resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
@@ -866,7 +866,7 @@ func TestAccAwsWafv2RuleGroup_LabelMatchStatement(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAwsWafv2RuleGroupConfig_LabelMatchStatement(ruleGroupName, "NAMESPACE", "awswaf:managed:aws:bot-control:"),
+				Config: testAccRuleGroupConfig_LabelMatchStatement(ruleGroupName, "NAMESPACE", "awswaf:managed:aws:bot-control:"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleGroupExists(resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
@@ -2769,7 +2769,7 @@ resource "aws_wafv2_rule_group" "test" {
 `, name)
 }
 
-func testAccAwsWafv2RuleGroupConfig_LabelMatchStatement(name string, scope string, key string) string {
+func testAccRuleGroupConfig_LabelMatchStatement(name string, scope string, key string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_rule_group" "test" {
   capacity = 2
@@ -2802,7 +2802,7 @@ resource "aws_wafv2_rule_group" "test" {
 `, name, scope, key)
 }
 
-func testAccAwsWafv2RuleGroupConfig_RuleLabels(name string) string {
+func testAccRuleGroupConfig_RuleLabels(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_rule_group" "test" {
   capacity = 2
@@ -2840,7 +2840,7 @@ resource "aws_wafv2_rule_group" "test" {
 `, name)
 }
 
-func testAccAwsWafv2RuleGroupConfig_NoRuleLabels(name string) string {
+func testAccRuleGroupConfig_NoRuleLabels(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_rule_group" "test" {
   capacity = 2

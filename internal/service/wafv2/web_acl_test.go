@@ -798,7 +798,7 @@ func TestAccWAFV2WebACL_GeoMatch_forwardedIP(t *testing.T) {
 	})
 }
 
-func TestAccAwsWafv2WebACL_LabelMatchStatement(t *testing.T) {
+func TestAccWAFV2WebACL_LabelMatchStatement(t *testing.T) {
 	var v wafv2.WebACL
 	webACLName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_wafv2_web_acl.test"
@@ -810,7 +810,7 @@ func TestAccAwsWafv2WebACL_LabelMatchStatement(t *testing.T) {
 		CheckDestroy: testAccCheckWebACLDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsWafv2WebACLConfig_LabelMatchStatement(webACLName, "LABEL", "Hashicorp:Test:Label1"),
+				Config: testAccWebACLConfig_LabelMatchStatement(webACLName, "LABEL", "Hashicorp:Test:Label1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebACLExists(resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/webacl/.+$`)),
@@ -825,7 +825,7 @@ func TestAccAwsWafv2WebACL_LabelMatchStatement(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAwsWafv2WebACLConfig_LabelMatchStatement(webACLName, "NAMESPACE", "awswaf:managed:aws:bot-control:"),
+				Config: testAccWebACLConfig_LabelMatchStatement(webACLName, "NAMESPACE", "awswaf:managed:aws:bot-control:"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebACLExists(resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/webacl/.+$`)),
@@ -849,7 +849,7 @@ func TestAccAwsWafv2WebACL_LabelMatchStatement(t *testing.T) {
 	})
 }
 
-func TestAccAwsWafv2WebACL_RuleLabels(t *testing.T) {
+func TestAccWAFV2WebACL_RuleLabels(t *testing.T) {
 	var v wafv2.WebACL
 	webACLName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_wafv2_web_acl.test"
@@ -861,7 +861,7 @@ func TestAccAwsWafv2WebACL_RuleLabels(t *testing.T) {
 		CheckDestroy: testAccCheckWebACLDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsWafv2WebACLConfig_RuleLabels(webACLName),
+				Config: testAccWebACLConfig_RuleLabels(webACLName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebACLExists(resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/webacl/.+$`)),
@@ -875,7 +875,7 @@ func TestAccAwsWafv2WebACL_RuleLabels(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAwsWafv2WebACLConfig_NoRuleLabels(webACLName),
+				Config: testAccWebACLConfig_NoRuleLabels(webACLName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebACLExists(resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/webacl/.+$`)),
@@ -1752,7 +1752,7 @@ resource "aws_wafv2_web_acl" "test" {
 `, name, countryCodes)
 }
 
-func testAccAwsWafv2WebACLConfig_LabelMatchStatement(name, labelScope string, labelKey string) string {
+func testAccWebACLConfig_LabelMatchStatement(name, labelScope string, labelKey string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_web_acl" "test" {
   name        = "%[1]s"
@@ -1792,7 +1792,7 @@ resource "aws_wafv2_web_acl" "test" {
 `, name, labelScope, labelKey)
 }
 
-func testAccAwsWafv2WebACLConfig_RuleLabels(name string) string {
+func testAccWebACLConfig_RuleLabels(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_web_acl" "test" {
   name        = "%[1]s"
@@ -1833,7 +1833,7 @@ resource "aws_wafv2_web_acl" "test" {
 `, name)
 }
 
-func testAccAwsWafv2WebACLConfig_NoRuleLabels(name string) string {
+func testAccWebACLConfig_NoRuleLabels(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_web_acl" "test" {
   name        = "%[1]s"
