@@ -289,7 +289,7 @@ service/elasticbeanstalk:
   - 'internal/service/elasticbeanstalk/**/*'
   - 'website/**/elastic_beanstalk_*'
 service/elasticsearch:
-  - 'internal/service/elasticsearchservice/**/*'
+  - 'internal/service/elasticsearch/**/*'
   - 'website/**/elasticsearch_*'
 service/elb:
   - 'internal/service/elb/**/*'
