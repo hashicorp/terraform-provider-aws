@@ -69,6 +69,26 @@ func ResourceUser() *schema.Resource {
 					cognitoidentityprovider.MessageActionTypeSuppress,
 				}, false),
 			},
+			"mfa_preference": {
+				Type: schema.TypeList,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"sms_enabled": {
+							Type:     schema.TypeBool,
+							Computed: true,
+						},
+						"software_token_enabled": {
+							Type:     schema.TypeBool,
+							Computed: true,
+						},
+						"preferred_mfa": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+				Computed: true,
+			},
 			"user_attribute": {
 				Type: schema.TypeSet,
 				Elem: &schema.Resource{
@@ -252,6 +272,10 @@ func resourceUserRead(d *schema.ResourceData, meta interface{}) error {
 	}
 	if err := d.Set("last_modified_date", user.UserLastModifiedDate.Format(time.RFC3339)); err != nil {
 		return fmt.Errorf("failed setting user's last_modified_date: %w", err)
+	}
+
+	if err := d.Set("mfa_preference", flattenUserMfaPreference(user.MFAOptions, user.UserMFASettingList, user.PreferredMfaSetting)); err != nil {
+		return fmt.Errorf("failed settings user's mfa_preference: %w", err)
 	}
 
 	return nil
@@ -496,6 +520,31 @@ func expandUserClientMetadata(tfMap map[string]interface{}) map[string]*string {
 	}
 
 	return apiMap
+}
+
+func flattenUserMfaPreference(mfaOptions []*cognitoidentityprovider.MFAOptionType, mfaSettingsList []*string, preferredMfa *string) []interface{} {
+	preference := map[string]interface{}{}
+
+	for _, setting := range mfaSettingsList {
+		v := aws.StringValue(setting)
+
+		if v == cognitoidentityprovider.ChallengeNameTypeSmsMfa {
+			preference["sms_enabled"] = true
+		} else if v == cognitoidentityprovider.ChallengeNameTypeSoftwareTokenMfa {
+			preference["software_token_enabled"] = true
+		}
+	}
+
+	if len(mfaOptions) > 0 {
+		// mfaOptions.DeliveryMediums can only have value SMS so we check only first element
+		if aws.StringValue(mfaOptions[0].DeliveryMedium) == cognitoidentityprovider.DeliveryMediumTypeSms {
+			preference["sms_enabled"] = true
+		}
+	}
+
+	preference["preferred_mfa"] = aws.StringValue(preferredMfa)
+
+	return []interface{}{preference}
 }
 
 func userAttributeHash(attr interface{}) int {
