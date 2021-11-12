@@ -78,11 +78,11 @@ func resourceDirectoryConfigCreate(ctx context.Context, d *schema.ResourceData, 
 
 	output, err := conn.CreateDirectoryConfigWithContext(ctx, input)
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error creating Appstream DirectoryConfig (%s): %w", directoryName, err))
+		return diag.FromErr(fmt.Errorf("error creating AppStream Directory Config (%s): %w", directoryName, err))
 	}
 
 	if output == nil || output.DirectoryConfig == nil {
-		return diag.Errorf("error creating AppStream DirectoryConfig (%s): empty response", directoryName)
+		return diag.Errorf("error creating AppStream Directory Config (%s): empty response", directoryName)
 	}
 
 	d.SetId(aws.StringValue(output.DirectoryConfig.DirectoryName))
@@ -96,21 +96,21 @@ func resourceDirectoryConfigRead(ctx context.Context, d *schema.ResourceData, me
 	resp, err := conn.DescribeDirectoryConfigsWithContext(ctx, &appstream.DescribeDirectoryConfigsInput{DirectoryNames: []*string{aws.String(d.Id())}})
 
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, appstream.ErrCodeResourceNotFoundException) {
-		log.Printf("[WARN] Appstream DirectoryConfig (%s) not found, removing from state", d.Id())
+		log.Printf("[WARN] AppStream Directory Config (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error reading Appstream DirectoryConfig (%s): %w", d.Id(), err))
+		return diag.FromErr(fmt.Errorf("error reading AppStream Directory Config (%s): %w", d.Id(), err))
 	}
 
 	if len(resp.DirectoryConfigs) == 0 {
-		return diag.FromErr(fmt.Errorf("error reading Appstream DirectoryConfig (%s): %s", d.Id(), "empty response"))
+		return diag.FromErr(fmt.Errorf("error reading AppStream Directory Config (%s): %s", d.Id(), "empty response"))
 	}
 
 	if len(resp.DirectoryConfigs) > 1 {
-		return diag.FromErr(fmt.Errorf("error reading Appstream DirectoryConfig (%s): %s", d.Id(), "multiple directories config found"))
+		return diag.FromErr(fmt.Errorf("error reading AppStream Directory Config (%s): %s", d.Id(), "multiple Directory Configs found"))
 	}
 
 	directoryConfig := resp.DirectoryConfigs[0]
@@ -120,7 +120,7 @@ func resourceDirectoryConfigRead(ctx context.Context, d *schema.ResourceData, me
 	d.Set("organizational_unit_distinguished_names", flex.FlattenStringSet(directoryConfig.OrganizationalUnitDistinguishedNames))
 
 	if err = d.Set("service_account_credentials", flattenServiceAccountCredentials(directoryConfig.ServiceAccountCredentials, d)); err != nil {
-		return diag.FromErr(fmt.Errorf("error setting `%s` for AppStream DirectoryConfig (%s): %w", "service_account_credentials", d.Id(), err))
+		return diag.FromErr(fmt.Errorf("error setting `%s` for AppStream Directory Config (%s): %w", "service_account_credentials", d.Id(), err))
 	}
 
 	return nil
@@ -142,7 +142,7 @@ func resourceDirectoryConfigUpdate(ctx context.Context, d *schema.ResourceData, 
 
 	_, err := conn.UpdateDirectoryConfigWithContext(ctx, input)
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error updating Appstream DirectoryConfig (%s): %w", d.Id(), err))
+		return diag.FromErr(fmt.Errorf("error updating AppStream Directory Config (%s): %w", d.Id(), err))
 	}
 
 	return resourceDirectoryConfigRead(ctx, d, meta)
@@ -159,7 +159,7 @@ func resourceDirectoryConfigDelete(ctx context.Context, d *schema.ResourceData, 
 		if tfawserr.ErrCodeEquals(err, appstream.ErrCodeResourceNotFoundException) {
 			return nil
 		}
-		return diag.FromErr(fmt.Errorf("error deleting Appstream DirectoryConfig (%s): %w", d.Id(), err))
+		return diag.FromErr(fmt.Errorf("error deleting AppStream Directory Config (%s): %w", d.Id(), err))
 	}
 	return nil
 }

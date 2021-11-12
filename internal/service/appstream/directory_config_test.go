@@ -102,7 +102,7 @@ func testAccCheckDirectoryConfigExists(resourceName string, appStreamDirectoryCo
 		}
 
 		if resp == nil && len(resp.DirectoryConfigs) == 0 {
-			return fmt.Errorf("appstream directory config %q does not exist", rs.Primary.ID)
+			return fmt.Errorf("AppStream Directory Config %q does not exist", rs.Primary.ID)
 		}
 
 		*appStreamDirectoryConfig = *resp.DirectoryConfigs[0]
@@ -130,7 +130,7 @@ func testAccCheckDirectoryConfigDestroy(s *terraform.State) error {
 		}
 
 		if resp != nil && len(resp.DirectoryConfigs) > 0 {
-			return fmt.Errorf("appstream directory config %q still exists", rs.Primary.ID)
+			return fmt.Errorf("AppStream Directory Config %q still exists", rs.Primary.ID)
 		}
 	}
 

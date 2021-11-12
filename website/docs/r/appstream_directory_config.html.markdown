@@ -14,7 +14,7 @@ Provides an AppStream Directory Config.
 
 ```terraform
 resource "aws_appstream_directory_config" "example" {
-  directory_name                          = "NAME OF DIRECTORY CONFIG"
+  directory_name                          = "NAME OF DIRECTORY"
   organizational_unit_distinguished_names = ["DISTINGUISHED NAME"]
 
   service_account_credentials {
