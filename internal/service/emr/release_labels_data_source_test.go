@@ -104,7 +104,7 @@ func testAccReleaseLabelsDataSourceConfigApplication() string {
 	return `
 data "aws_emr_release_labels" "test" {
   filters {
-    application = "spark@2.1.0"
+    application = "Spark@3.1.2"
   }
 }
 `
@@ -114,8 +114,8 @@ func testAccReleaseLabelsDataSourceConfigFull() string {
 	return `
 data "aws_emr_release_labels" "test" {
   filters {
-    application = "spark@2.1.0"
-    prefix      = "emr-5"
+    application = "Spark@3.1.2"
+    prefix      = "emr-6"
   }
 }
 `

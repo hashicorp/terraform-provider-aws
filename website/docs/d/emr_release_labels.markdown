@@ -1,5 +1,5 @@
 ---
-subcategory: "EMR"
+subcategory: "Elastic Map Reduce (EMR)"
 layout: "aws"
 page_title: "AWS: aws_emr_release_labels"
 description: |-
@@ -27,7 +27,7 @@ data "aws_emr_release_labels" "example" {
 
 ### Filters
 
-* `application` - (Optional) Optional release label application filter. For example, `spark@2.1.0`.
+* `application` - (Optional) Optional release label application filter. For example, `Spark@2.1.0` or `Spark`.
 * `prefix` - (Optional) Optional release label version prefix filter. For example, `emr-5`.
 
 ## Attributes Reference
