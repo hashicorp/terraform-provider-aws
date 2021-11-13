@@ -2,6 +2,7 @@
 
 set -euo pipefail
 
+# shellcheck disable=2050 # This isn't a constant string, it's a TeamCity variable substitution
 if [[ "%TEST_PATTERN%" == "" || "%TEST_PATTERN%" == "TestAcc" ]]; then
   echo "Invalid test filter pattern: \"%TEST_PATTERN%\""
   exit 1
@@ -25,4 +26,4 @@ fi
 echo "${TEST_LIST}"
 echo
 
-TF_ACC=1 go test ./... -run="%TEST_PATTERN%" -v -count=1 -parallelism "%ACCTEST_PARALLELISM%" -timeout=0
+TF_ACC=1 go test ./... -run="%TEST_PATTERN%" -v -count=1 -parallel "%ACCTEST_PARALLELISM%" -timeout=0
