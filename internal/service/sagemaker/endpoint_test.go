@@ -444,22 +444,22 @@ resource "aws_sagemaker_endpoint" "test" {
 
   deployment_config {
     blue_green_update_policy {
-	  traffic_routing_configuration {
+      traffic_routing_configuration {
         type                     = "LINEAR"
         wait_interval_in_seconds = "60"
 
-		linear_step_size {
+        linear_step_size {
           type  = "INSTANCE_COUNT"
           value = 1
-		}
-	  }
-	}
+        }
+      }
+    }
 
-	auto_rollback_configuration {
+    auto_rollback_configuration {
       alarms {
         alarm_name = aws_cloudwatch_metric_alarm.test.alarm_name
-	  }
-	}
+      }
+    }
   }
 }
 `, rName)
