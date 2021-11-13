@@ -115,7 +115,7 @@ func testAccReleaseLabelsDataSourceConfigFull() string {
 data "aws_emr_release_labels" "test" {
   filters {
     application = "spark@2.1.0"
-	prefix      = "emr-5"
+    prefix      = "emr-5"
   }
 }
 `
