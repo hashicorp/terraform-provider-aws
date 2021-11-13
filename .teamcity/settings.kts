@@ -9,6 +9,8 @@ import java.time.format.DateTimeFormatter
 
 version = "2020.2"
 
+val defaultPullRequestTimeoutHours = 6
+
 val defaultRegion = DslContext.getParameter("default_region")
 val alternateRegion = DslContext.getParameter("alternate_region", "")
 val acmCertificateRootDomain = DslContext.getParameter("acm_certificate_root_domain", "")
@@ -88,7 +90,7 @@ object PullRequest : BuildType({
     }
 
     failureConditions {
-        executionTimeoutMin = Duration.ofHours(6).toMinutes().toInt()
+        executionTimeoutMin = Duration.ofHours(defaultPullRequestTimeoutHours).toMinutes().toInt()
     }
 
     steps {
