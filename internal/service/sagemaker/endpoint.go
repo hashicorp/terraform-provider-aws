@@ -467,7 +467,7 @@ func expandEndpointDeploymentConfigAutoRollbackConfig(configured []interface{}) 
 	m := configured[0].(map[string]interface{})
 
 	c := &sagemaker.AutoRollbackConfig{
-		Alarms: expandEndpointDeploymentConfigAutoRollbackConfigAlarms(m["alarms"].([]interface{})),
+		Alarms: expandEndpointDeploymentConfigAutoRollbackConfigAlarms(m["alarms"].(*schema.Set).List()),
 	}
 
 	return c

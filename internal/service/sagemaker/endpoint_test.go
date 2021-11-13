@@ -335,7 +335,7 @@ resource "aws_sagemaker_endpoint_configuration" "test" {
   name = %[1]q
 
   production_variants {
-    initial_instance_count = 1
+    initial_instance_count = 2
     initial_variant_weight = 1
     instance_type          = "ml.t2.medium"
     model_name             = aws_sagemaker_model.test.name
