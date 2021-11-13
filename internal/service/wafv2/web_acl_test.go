@@ -1156,6 +1156,38 @@ func TestAccWAFV2WebACL_Custom_requestHandling(t *testing.T) {
 				),
 			},
 			{
+				Config: testAccWebACLConfig_CustomRequestHandling_captcha(webACLName, "x-hdr1", "x-hdr2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWebACLExists(resourceName, &v),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/webacl/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, "name", webACLName),
+					resource.TestCheckResourceAttr(resourceName, "default_action.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_action.0.allow.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_action.0.block.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "scope", "REGIONAL"),
+					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
+						"name":               "rule-1",
+						"action.#":           "1",
+						"action.0.allow.#":   "0",
+						"action.0.block.#":   "0",
+						"action.0.count.#":   "0",
+						"action.0.captcha.#": "1",
+						"action.0.captcha.0.custom_request_handling.#":                       "1",
+						"action.0.captcha.0.custom_request_handling.0.insert_header.#":       "2",
+						"action.0.captcha.0.custom_request_handling.0.insert_header.0.name":  "x-hdr1",
+						"action.0.captcha.0.custom_request_handling.0.insert_header.0.value": "test-value-1",
+						"action.0.captcha.0.custom_request_handling.0.insert_header.1.name":  "x-hdr2",
+						"action.0.captcha.0.custom_request_handling.0.insert_header.1.value": "test-value-2",
+						"priority": "1",
+					}),
+					resource.TestCheckResourceAttr(resourceName, "visibility_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.cloudwatch_metrics_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.metric_name", "friendly-metric-name"),
+					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.sampled_requests_enabled", "false"),
+				),
+			},
+			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -1671,6 +1703,59 @@ resource "aws_wafv2_web_acl" "test" {
 
     action {
       count {
+        custom_request_handling {
+          insert_header {
+            name  = %[2]q
+            value = "test-value-1"
+          }
+
+          insert_header {
+            name  = %[3]q
+            value = "test-value-2"
+          }
+        }
+      }
+    }
+
+    statement {
+      geo_match_statement {
+        country_codes = ["US", "CA"]
+      }
+    }
+
+    visibility_config {
+      cloudwatch_metrics_enabled = false
+      metric_name                = "friendly-rule-metric-name"
+      sampled_requests_enabled   = false
+    }
+  }
+
+  visibility_config {
+    cloudwatch_metrics_enabled = false
+    metric_name                = "friendly-metric-name"
+    sampled_requests_enabled   = false
+  }
+}
+`, name, firstHeader, secondHeader)
+}
+
+func testAccWebACLConfig_CustomRequestHandling_captcha(name, firstHeader string, secondHeader string) string {
+	return fmt.Sprintf(`
+resource "aws_wafv2_web_acl" "test" {
+  name        = %[1]q
+  description = %[1]q
+  scope       = "REGIONAL"
+
+  default_action {
+    allow {}
+  }
+
+  rule {
+    name     = "rule-1"
+    priority = 1
+
+    action {
+      captcha {
         custom_request_handling {
           insert_header {
             name  = %[2]q

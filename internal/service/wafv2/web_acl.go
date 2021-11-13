@@ -105,9 +105,10 @@ func ResourceWebACL() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"allow": wafv2AllowConfigSchema(),
-									"block": wafv2BlockConfigSchema(),
-									"count": wafv2CountConfigSchema(),
+									"allow":   wafv2AllowConfigSchema(),
+									"block":   wafv2BlockConfigSchema(),
+									"count":   wafv2CountConfigSchema(),
+									"captcha": wafv2CaptchaConfigSchema(),
 								},
 							},
 						},

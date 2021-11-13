@@ -438,6 +438,19 @@ func wafv2CountConfigSchema() *schema.Schema {
 	}
 }
 
+func wafv2CaptchaConfigSchema() *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeList,
+		Optional: true,
+		MaxItems: 1,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"custom_request_handling": wafv2CustomRequestHandlingSchema(),
+			},
+		},
+	}
+}
+
 func wafv2BlockConfigSchema() *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeList,
@@ -574,6 +587,10 @@ func expandWafv2RuleAction(l []interface{}) *wafv2.RuleAction {
 		action.Count = expandWafv2CountAction(v.([]interface{}))
 	}
 
+	if v, ok := m["captcha"]; ok && len(v.([]interface{})) > 0 {
+		action.Captcha = expandWafv2CaptchaAction(v.([]interface{}))
+	}
+
 	return action
 }
 
@@ -598,6 +615,25 @@ func expandWafv2AllowAction(l []interface{}) *wafv2.AllowAction {
 
 func expandWafv2CountAction(l []interface{}) *wafv2.CountAction {
 	action := &wafv2.CountAction{}
+
+	if len(l) == 0 || l[0] == nil {
+		return action
+	}
+
+	m, ok := l[0].(map[string]interface{})
+	if !ok {
+		return action
+	}
+
+	if v, ok := m["custom_request_handling"].([]interface{}); ok && len(v) > 0 {
+		action.CustomRequestHandling = expandWafv2CustomRequestHandling(v)
+	}
+
+	return action
+}
+
+func expandWafv2CaptchaAction(l []interface{}) *wafv2.CaptchaAction {
+	action := &wafv2.CaptchaAction{}
 
 	if len(l) == 0 || l[0] == nil {
 		return action
@@ -1094,6 +1130,10 @@ func flattenWafv2RuleAction(a *wafv2.RuleAction) interface{} {
 		m["count"] = flattenWafv2Count(a.Count)
 	}
 
+	if a.Captcha != nil {
+		m["captcha"] = flattenWafv2Captcha(a.Captcha)
+	}
+
 	return []interface{}{m}
 }
 
@@ -1125,6 +1165,19 @@ func flattenWafv2Block(a *wafv2.BlockAction) []interface{} {
 }
 
 func flattenWafv2Count(a *wafv2.CountAction) []interface{} {
+	if a == nil {
+		return []interface{}{}
+	}
+	m := map[string]interface{}{}
+
+	if a.CustomRequestHandling != nil {
+		m["custom_request_handling"] = flattenWafv2CustomRequestHandling(a.CustomRequestHandling)
+	}
+
+	return []interface{}{m}
+}
+
+func flattenWafv2Captcha(a *wafv2.CaptchaAction) []interface{} {
 	if a == nil {
 		return []interface{}{}
 	}

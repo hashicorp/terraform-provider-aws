@@ -295,11 +295,12 @@ Each `rule` supports the following arguments:
 
 The `action` block supports the following arguments:
 
-~> **NOTE:** One of `allow`, `block`, or `count`, is required when specifying an `action`.
+~> **NOTE:** One of `allow`, `block`, `count` or `captcha`, is required when specifying an `action`.
 
 * `allow` - (Optional) Instructs AWS WAF to allow the web request. See [Allow](#action) below for details.
 * `block` - (Optional) Instructs AWS WAF to block the web request. See [Block](#block) below for details.
 * `count` - (Optional) Instructs AWS WAF to count the web request and allow it. See [Count](#count) below for details.
+* `captcha` - (Optional) Instructs AWS WAF to run a CAPTCHA check against the web request. See [Captcha](#captcha) below for details.
 
 ### Override Action
 
@@ -325,6 +326,12 @@ The `block` block supports the following arguments:
 ### Count
 
 The `count` block supports the following arguments:
+
+* `custom_request_handling` - (Optional) Defines custom handling for the web request. See [Custom Request Handling](#custom-request-handling) below for details.
+
+### Captcha
+
+The `captcha` block supports the following arguments:
 
 * `custom_request_handling` - (Optional) Defines custom handling for the web request. See [Custom Request Handling](#custom-request-handling) below for details.
 
