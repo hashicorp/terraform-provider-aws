@@ -168,6 +168,24 @@ func ResourceImageRecipe() *schema.Resource {
 			},
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
+			"user_data_base64": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+				Computed: true,
+				ValidateFunc: validation.All(
+					validation.StringLenBetween(1, 21847),
+					func(v interface{}, name string) (warns []string, errs []error) {
+						s := v.(string)
+						if !verify.IsBase64Encoded([]byte(s)) {
+							errs = append(errs, fmt.Errorf(
+								"%s: must be base64-encoded", name,
+							))
+						}
+						return
+					},
+				),
+			},
 			"version": {
 				Type:         schema.TypeString,
 				Required:     true,
@@ -217,6 +235,12 @@ func resourceImageRecipeCreate(d *schema.ResourceData, meta interface{}) error {
 
 	if len(tags) > 0 {
 		input.Tags = Tags(tags.IgnoreAWS())
+	}
+
+	if v, ok := d.GetOk("user_data_base64"); ok {
+		input.AdditionalInstanceConfiguration = &imagebuilder.AdditionalInstanceConfiguration{
+			UserDataOverride: aws.String(v.(string)),
+		}
 	}
 
 	if v, ok := d.GetOk("version"); ok {
@@ -287,6 +311,11 @@ func resourceImageRecipeRead(d *schema.ResourceData, meta interface{}) error {
 	if err := d.Set("tags_all", tags.Map()); err != nil {
 		return fmt.Errorf("error setting tags_all: %w", err)
 	}
+
+	if imageRecipe.AdditionalInstanceConfiguration != nil {
+		d.Set("user_data_base64", imageRecipe.AdditionalInstanceConfiguration.UserDataOverride)
+	}
+
 	d.Set("version", imageRecipe.Version)
 	d.Set("working_directory", imageRecipe.WorkingDirectory)
 
