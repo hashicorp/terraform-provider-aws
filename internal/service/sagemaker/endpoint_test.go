@@ -4,15 +4,14 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/sagemaker"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfsagemaker "github.com/hashicorp/terraform-provider-aws/internal/service/sagemaker"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func TestAccSageMakerEndpoint_basic(t *testing.T) {
@@ -200,13 +199,9 @@ func testAccCheckSagemakerEndpointDestroy(s *terraform.State) error {
 			continue
 		}
 
-		describeInput := &sagemaker.DescribeEndpointInput{
-			EndpointName: aws.String(rs.Primary.ID),
-		}
+		_, err := tfsagemaker.FindEndpointByName(conn, rs.Primary.ID)
 
-		_, err := conn.DescribeEndpoint(describeInput)
-
-		if tfawserr.ErrMessageContains(err, "ValidationException", "") {
+		if tfresource.NotFound(err) {
 			continue
 		}
 
@@ -231,10 +226,7 @@ func testAccCheckSagemakerEndpointExists(n string) resource.TestCheckFunc {
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn
-		opts := &sagemaker.DescribeEndpointInput{
-			EndpointName: aws.String(rs.Primary.ID),
-		}
-		_, err := conn.DescribeEndpoint(opts)
+		_, err := tfsagemaker.FindEndpointByName(conn, rs.Primary.ID)
 		if err != nil {
 			return err
 		}
