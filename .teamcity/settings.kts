@@ -2,6 +2,7 @@ import jetbrains.buildServer.configs.kotlin.v2019_2.*
 import jetbrains.buildServer.configs.kotlin.v2019_2.buildSteps.script
 import jetbrains.buildServer.configs.kotlin.v2019_2.triggers.schedule
 import java.io.File
+import java.time.Duration
 import java.time.LocalTime
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
@@ -22,7 +23,11 @@ val awsAlternateAccessKeyID = DslContext.getParameter("aws_alternate_access_key_
 val awsAlternateSecretAccessKey = DslContext.getParameter("aws_alternate_secret_access_key", "")
 
 project {
-    buildType(Composite)
+    buildType(FullBuild)
+
+    if (DslContext.getParameter("pullrequest_build", "").toBoolean()) {
+        buildType(PullRequest)
+    }
 
     params {
         text("ACCTEST_PARALLELISM", acctestParallelism, allowEmpty = false)
@@ -73,7 +78,43 @@ project {
     subProject(Services)
 }
 
-object Composite : BuildType({
+object PullRequest : BuildType({
+    name = "Pull Request"
+
+    vcs {
+        root(AbsoluteId(DslContext.getParameter("vcs_root_id")))
+
+        cleanCheckout = true
+    }
+
+    failureConditions {
+        executionTimeoutMin = Duration.ofHours(6).toMinutes().toInt()
+    }
+
+    steps {
+        script {
+            name = "Setup GOENV"
+            scriptContent = File("./scripts/setup_goenv.sh").readText()
+        }
+
+    }
+
+    features {
+        feature {
+            type = "JetBrains.SharedResources"
+            param("locks-param", "${DslContext.getParameter("account_lock_id")} readLock")
+        }
+        val alternateAccountLockId = DslContext.getParameter("alternate_account_lock_id", "")
+        if (alternateAccountLockId != "") {
+            feature {
+                type = "JetBrains.SharedResources"
+                param("locks-param", "${alternateAccountLockId} readLock")
+            }
+        }
+    }
+})
+
+object FullBuild : BuildType({
     name = "Service Tests"
 
     type = BuildTypeSettings.Type.COMPOSITE
@@ -137,6 +178,13 @@ object Composite : BuildType({
         feature {
             type = "JetBrains.SharedResources"
             param("locks-param", "${DslContext.getParameter("account_lock_id")} writeLock")
+        }
+        val alternateAccountLockId = DslContext.getParameter("alternate_account_lock_id", "")
+        if (alternateAccountLockId != "") {
+            feature {
+                type = "JetBrains.SharedResources"
+                param("locks-param", "${alternateAccountLockId} readLock")
+            }
         }
     }
 })
