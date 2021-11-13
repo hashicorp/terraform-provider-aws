@@ -37,6 +37,30 @@ func ResourceEndpoint() *schema.Resource {
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"auto_rollback_configuration": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							ForceNew: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"alarms": {
+										Type:     schema.TypeSet,
+										Optional: true,
+										MinItems: 1,
+										MaxItems: 10,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"alarm_name": {
+													Type:     schema.TypeString,
+													Required: true,
+												},
+											},
+										},
+									},
+								},
+							},
+						},
 						"blue_green_update_policy": {
 							Type:     schema.TypeList,
 							Required: true,
@@ -107,30 +131,6 @@ func ResourceEndpoint() *schema.Resource {
 													Type:         schema.TypeInt,
 													Required:     true,
 													ValidateFunc: validation.IntBetween(0, 3600),
-												},
-											},
-										},
-									},
-								},
-							},
-						},
-						"auto_rollback_configuration": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							ForceNew: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"alarms": {
-										Type:     schema.TypeSet,
-										Optional: true,
-										MinItems: 1,
-										MaxItems: 10,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"alarm_name": {
-													Type:     schema.TypeString,
-													Required: true,
 												},
 											},
 										},
