@@ -333,7 +333,7 @@ func testAccCheckAccessPointDisappears(n string) resource.TestCheckFunc {
 			return fmt.Errorf("No S3 Access Point ID is set")
 		}
 
-		accountId, name, err := tfs3control.AccessPointParseID(rs.Primary.ID)
+		accountId, name, err := tfs3control.AccessPointParseResourceID(rs.Primary.ID)
 		if err != nil {
 			return err
 		}
@@ -360,7 +360,7 @@ func testAccCheckAccessPointDestroy(s *terraform.State) error {
 			continue
 		}
 
-		accountId, name, err := tfs3control.AccessPointParseID(rs.Primary.ID)
+		accountId, name, err := tfs3control.AccessPointParseResourceID(rs.Primary.ID)
 		if err != nil {
 			return err
 		}
@@ -387,7 +387,7 @@ func testAccCheckAccessPointExists(n string, output *s3control.GetAccessPointOut
 			return fmt.Errorf("No S3 Access Point ID is set")
 		}
 
-		accountId, name, err := tfs3control.AccessPointParseID(rs.Primary.ID)
+		accountId, name, err := tfs3control.AccessPointParseResourceID(rs.Primary.ID)
 		if err != nil {
 			return err
 		}
@@ -419,7 +419,7 @@ func testAccCheckAccessPointHasPolicy(n string, fn func() string) resource.TestC
 			return fmt.Errorf("No S3 Access Point ID is set")
 		}
 
-		accountId, name, err := tfs3control.AccessPointParseID(rs.Primary.ID)
+		accountId, name, err := tfs3control.AccessPointParseResourceID(rs.Primary.ID)
 		if err != nil {
 			return err
 		}
