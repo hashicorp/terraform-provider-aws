@@ -409,11 +409,11 @@ resource "aws_sagemaker_endpoint" "test" {
 
   deployment_config {
     blue_green_update_policy {
-	  traffic_routing_configuration {
+      traffic_routing_configuration {
         type                     = %[2]q
         wait_interval_in_seconds = %[3]d
-	  }
-	}
+      }
+    }
   }
 }
 `, rName, tType, wait)
