@@ -98,7 +98,7 @@ func testAccCheckObjectLambdaAccessPointDestroy(s *terraform.State) error {
 			continue
 		}
 
-		accountId, name, err := tfs3control.AccessPointParseResourceID(rs.Primary.ID)
+		accountId, name, err := tfs3control.ObjectLambdaAccessPointParseResourceID(rs.Primary.ID)
 		if err != nil {
 			return err
 		}
@@ -125,7 +125,7 @@ func testAccCheckObjectLambdaAccessPointExists(n string, output *s3control.GetAc
 			return fmt.Errorf("No S3 Access Point ID is set")
 		}
 
-		accountId, name, err := tfs3control.AccessPointParseResourceID(rs.Primary.ID)
+		accountId, name, err := tfs3control.ObjectLambdaAccessPointParseResourceID(rs.Primary.ID)
 		if err != nil {
 			return err
 		}

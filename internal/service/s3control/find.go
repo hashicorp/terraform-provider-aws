@@ -103,3 +103,29 @@ func FindMultiRegionAccessPointPolicyDocumentByAccountIDAndName(conn *s3control.
 
 	return output.Policy, nil
 }
+
+func FindObjectLambdaAccessPointByAccountIDAndName(conn *s3control.S3Control, accountID string, name string) (*s3control.ObjectLambdaConfiguration, error) {
+	input := &s3control.GetAccessPointConfigurationForObjectLambdaInput{
+		AccountId: aws.String(accountID),
+		Name:      aws.String(name),
+	}
+
+	output, err := conn.GetAccessPointConfigurationForObjectLambda(input)
+
+	if tfawserr.ErrCodeEquals(err, errCodeNoSuchAccessPoint) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.Configuration == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.Configuration, nil
+}
