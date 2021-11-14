@@ -35,56 +35,66 @@ func ResourceObjectLambdaAccessPoint() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: verify.ValidAccountID,
 			},
-			"allowed_features": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem: &schema.Schema{
-					Type:         schema.TypeString,
-					ValidateFunc: validation.StringInSlice(s3control.ObjectLambdaAllowedFeature_Values(), false),
-				},
-			},
-			"cloud_watch_metrics_enabled": {
-				Type:     schema.TypeBool,
-				Optional: true,
-			},
-			"supporting_access_point": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			"transformation_configuration": {
+			"configuration": {
 				Type:     schema.TypeList,
 				Required: true,
+				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"actions": {
+						"allowed_features": {
 							Type:     schema.TypeSet,
-							Required: true,
+							Optional: true,
 							Elem: &schema.Schema{
 								Type:         schema.TypeString,
-								ValidateFunc: validation.StringInSlice(s3control.ObjectLambdaTransformationConfigurationAction_Values(), false),
+								ValidateFunc: validation.StringInSlice(s3control.ObjectLambdaAllowedFeature_Values(), false),
 							},
 						},
-						"content_transformation": {
+						"cloud_watch_metrics_enabled": {
+							Type:     schema.TypeBool,
+							Optional: true,
+						},
+						"supporting_access_point": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ForceNew:     true,
+							ValidateFunc: verify.ValidARN,
+						},
+						"transformation_configuration": {
 							Type:     schema.TypeList,
 							Required: true,
-							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"aws_lambda": {
+									"actions": {
+										Type:     schema.TypeSet,
+										Required: true,
+										Elem: &schema.Schema{
+											Type:         schema.TypeString,
+											ValidateFunc: validation.StringInSlice(s3control.ObjectLambdaTransformationConfigurationAction_Values(), false),
+										},
+									},
+									"content_transformation": {
 										Type:     schema.TypeList,
-										Optional: true,
+										Required: true,
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"function_arn": {
-													Type:         schema.TypeString,
-													Required:     true,
-													ValidateFunc: verify.ValidARN,
-												},
-												"function_payload": {
-													Type:     schema.TypeString,
+												"aws_lambda": {
+													Type:     schema.TypeList,
 													Optional: true,
+													MaxItems: 1,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"function_arn": {
+																Type:         schema.TypeString,
+																Required:     true,
+																ValidateFunc: verify.ValidARN,
+															},
+															"function_payload": {
+																Type:     schema.TypeString,
+																Optional: true,
+															},
+														},
+													},
 												},
 											},
 										},
@@ -94,6 +104,11 @@ func ResourceObjectLambdaAccessPoint() *schema.Resource {
 						},
 					},
 				},
+			},
+			"name": {
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
 			},
 		},
 	}
