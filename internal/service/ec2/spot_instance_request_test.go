@@ -695,16 +695,6 @@ func testAccCheckSpotInstanceRequestRecreated(before, after *ec2.SpotInstanceReq
 	}
 }
 
-func testAccCheckSpotInstanceRequestNotRecreated(before, after *ec2.SpotInstanceRequest) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		if before, after := aws.StringValue(before.InstanceId), aws.StringValue(after.InstanceId); before != after {
-			return fmt.Errorf("Spot Instance (%s/%s) recreated", before, after)
-		}
-
-		return nil
-	}
-}
-
 func testAccSpotInstanceRequestConfig() string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
