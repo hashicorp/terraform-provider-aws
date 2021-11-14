@@ -1,6 +1,4 @@
-// https://pkg.go.dev/github.com/aws/aws-sdk-go@v1.38.31/service/s3control?utm_source=gopls
-// https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/s3_access_point
-package aws
+package s3control
 
 import (
 	"fmt"
@@ -12,15 +10,18 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3control"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	tfs3control "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/s3control"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-func resourceAwsS3ObjectLambdaAccessPoint() *schema.Resource {
+func ResourceObjectLambdaAccessPoint() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsS3ObjectLambdaAccessPointCreate,
-		Read:   resourceAwsS3ObjectLambdaAccessPointRead,
-		Update: resourceAwsS3ObjectLambdaAccessPointUpdate,
-		Delete: resourceAwsS3ObjectLambdaAccessPointDelete,
+		Create: resourceObjectLambdaAccessPointCreate,
+		Read:   resourceObjectLambdaAccessPointRead,
+		Update: resourceObjectLambdaAccessPointUpdate,
+		Delete: resourceObjectLambdaAccessPointDelete,
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -32,48 +33,54 @@ func resourceAwsS3ObjectLambdaAccessPoint() *schema.Resource {
 				Optional:     true,
 				Computed:     true,
 				ForceNew:     true,
-				ValidateFunc: validateAwsAccountId,
+				ValidateFunc: verify.ValidAccountID,
 			},
-
 			"allowed_features": {
 				Type:     schema.TypeSet,
 				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				MaxItems: 2,
+				Elem: &schema.Schema{
+					Type:         schema.TypeString,
+					ValidateFunc: validation.StringInSlice(s3control.ObjectLambdaAllowedFeature_Values(), false),
+				},
 			},
-
 			"cloud_watch_metrics_enabled": {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
-
 			"supporting_access_point": {
-				Type:     schema.TypeString,
-				Optional: false,
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: verify.ValidARN,
 			},
-
-			"transformation_configurations": {
+			"transformation_configuration": {
 				Type:     schema.TypeList,
-				Optional: false,
+				Required: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"actions": {
-							Type:     schema.TypeString,
-							Optional: false,
+							Type:     schema.TypeSet,
+							Required: true,
+							Elem: &schema.Schema{
+								Type:         schema.TypeString,
+								ValidateFunc: validation.StringInSlice(s3control.ObjectLambdaTransformationConfigurationAction_Values(), false),
+							},
 						},
-						"Content_transformation": {
+						"content_transformation": {
 							Type:     schema.TypeList,
-							Optional: false,
+							Required: true,
+							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"aws_lambda": {
-										Type:     schema.TypeString,
+										Type:     schema.TypeList,
 										Optional: true,
+										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"function_arn": {
-													Type:     schema.TypeString,
-													Optional: false,
+													Type:         schema.TypeString,
+													Required:     true,
+													ValidateFunc: verify.ValidARN,
 												},
 												"function_payload": {
 													Type:     schema.TypeString,
@@ -92,58 +99,30 @@ func resourceAwsS3ObjectLambdaAccessPoint() *schema.Resource {
 	}
 }
 
-func expandObjectLambdaContentTransformation(vConfig []interface{}) *s3control.ObjectLambdaContentTransformation {
-	if len(vConfig) == 0 || vConfig[0] == nil {
-		return nil
-	}
+func resourceObjectLambdaAccessPointCreate(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*conns.AWSClient).S3ControlConn
 
-	mConfig := vConfig[0].(map[string]interface{})
-
-	return &s3control.ObjectLambdaContentTransformation{
-		AwsLambda: &s3control.AwsLambdaTransformation{
-			FunctionArn:     aws.String(mConfig["aws_lambda"]["function_arn"]),
-			FunctionPayload: aws.String(mConfig["aws_lambda"]["function_payload"]),
-		},
-	}
-
-}
-
-func expandObjectLambdaTransformationConfiguration(vConfig []interface{}) *s3control.ObjectLambdaTransformationConfiguration {
-	if len(vConfig) == 0 || vConfig[0] == nil {
-		return nil
-	}
-	mConfig := vConfig[0].(map[string]interface{})
-
-	return &s3control.ObjectLambdaTransformationConfiguration{
-		Actions:               expandStringSet(mConfig["actions"].(*schema.Set)),
-		ContentTransformation: expandObjectLambdaContentTransformation(mConfig["content_transformation"].([]interface{})),
-	}
-}
-
-func resourceAwsS3ObjectLambdaAccessPointCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).s3controlconn
-
-	accountId := meta.(*AWSClient).accountid
+	accountID := meta.(*conns.AWSClient).AccountID
 	if v, ok := d.GetOk("account_id"); ok {
-		accountId = v.(string)
+		accountID = v.(string)
 	}
 	name := d.Get("name").(string)
 
 	configuration := &s3control.ObjectLambdaConfiguration{
-		AllowedFeatures:              expandStringSet(d.Get("allowed_features").(*schema.Set)),
-		CloudWatchMetricsEnabled:     aws.Bool(d.Get("cloud_watch_metrics_enabled").(bool)),
-		SupportingAccessPoint:        aws.String(d.Get("supporting_access_point").(string)),
-		TransformationConfigurations: expandObjectLambdaTransformationConfiguration(d.Get("transformation_configurations").([]*interface{})),
+		AllowedFeatures:          flex.ExpandStringSet(d.Get("allowed_features").(*schema.Set)),
+		CloudWatchMetricsEnabled: aws.Bool(d.Get("cloud_watch_metrics_enabled").(bool)),
+		SupportingAccessPoint:    aws.String(d.Get("supporting_access_point").(string)),
+		//TransformationConfigurations: expandObjectLambdaTransformationConfiguration(d.Get("transformation_configurations").([]*interface{})),
 	}
 
 	input := &s3control.CreateAccessPointForObjectLambdaInput{
-		AccountId:     aws.String(accountId),
+		AccountId:     aws.String(accountID),
 		Configuration: configuration,
 		Name:          aws.String(name),
 	}
 
 	log.Printf("[DEBUG] Creating S3 Object Lambda Access Point: %s", input)
-	output, err := conn.CreateAccessPointForObjectLambda()(input)
+	output, err := conn.CreateAccessPointForObjectLambda(input)
 
 	if err != nil {
 		return fmt.Errorf("error creating S3 Control Access Point (%s): %w", name, err)
@@ -153,33 +132,20 @@ func resourceAwsS3ObjectLambdaAccessPointCreate(d *schema.ResourceData, meta int
 		return fmt.Errorf("error creating S3 Control Access Point (%s): empty response", name)
 	}
 
-	parsedARN, err := arn.Parse(aws.StringValue(output.AccessPointArn))
+	parsedARN, err := arn.Parse(aws.StringValue(output.ObjectLambdaAccessPointArn))
 
 	if err == nil && strings.HasPrefix(parsedARN.Resource, "outpost/") {
-		d.SetId(aws.StringValue(output.AccessPointArn))
-		name = aws.StringValue(output.AccessPointArn)
+		d.SetId(aws.StringValue(output.ObjectLambdaAccessPointArn))
+		name = aws.StringValue(output.ObjectLambdaAccessPointArn)
 	} else {
-		d.SetId(fmt.Sprintf("%s:%s", accountId, name))
+		d.SetId(fmt.Sprintf("%s:%s", accountID, name))
 	}
 
-	if v, ok := d.GetOk("policy"); ok {
-		log.Printf("[DEBUG] Putting S3 Object Lambda Access Point policy: %s", d.Id())
-		_, err := conn.PutAccessPointPolicy(&s3control.PutAccessPointPolicyInput{
-			AccountId: aws.String(accountId),
-			Name:      aws.String(name),
-			Policy:    aws.String(v.(string)),
-		})
-
-		if err != nil {
-			return fmt.Errorf("error putting S3 Object Lambda Access Point (%s) policy: %s", d.Id(), err)
-		}
-	}
-
-	return resourceAwsS3ObjectLambdaAccessPointRead(d, meta)
+	return resourceObjectLambdaAccessPointRead(d, meta)
 }
 
-func resourceAwsS3ObjectLambdaAccessPointRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).s3controlconn
+func resourceObjectLambdaAccessPointRead(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*conns.AWSClient).S3ControlConn
 
 	accountId, name, err := S3ObjectLambdaAccessPointParseId(d.Id())
 	if err != nil {
@@ -191,7 +157,7 @@ func resourceAwsS3ObjectLambdaAccessPointRead(d *schema.ResourceData, meta inter
 		Name:      aws.String(name),
 	})
 
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, tfs3control.ErrCodeNoSuchAccessPoint) {
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, errCodeNoSuchAccessPoint) {
 		log.Printf("[WARN] S3 Object Lambda Access Point (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -230,8 +196,8 @@ func resourceAwsS3ObjectLambdaAccessPointRead(d *schema.ResourceData, meta inter
 	} else {
 		accessPointARN := arn.ARN{
 			AccountID: accountId,
-			Partition: meta.(*AWSClient).partition,
-			Region:    meta.(*AWSClient).region,
+			Partition: meta.(*conns.AWSClient).Partition,
+			Region:    meta.(*conns.AWSClient).Region,
 			Resource:  fmt.Sprintf("accesspoint/%s", aws.StringValue(output.Name)),
 			Service:   "s3",
 		}
@@ -241,7 +207,7 @@ func resourceAwsS3ObjectLambdaAccessPointRead(d *schema.ResourceData, meta inter
 	}
 
 	d.Set("account_id", accountId)
-	d.Set("domain_name", meta.(*AWSClient).RegionalHostname(fmt.Sprintf("%s-%s.s3-accesspoint", aws.StringValue(output.Name), accountId)))
+	d.Set("domain_name", meta.(*conns.AWSClient).RegionalHostname(fmt.Sprintf("%s-%s.s3-accesspoint", aws.StringValue(output.Name), accountId)))
 	d.Set("name", output.Name)
 	d.Set("network_origin", output.NetworkOrigin)
 	if err := d.Set("public_access_block_configuration", flattenS3ObjectLambdaAccessPointPublicAccessBlockConfiguration(output.PublicAccessBlockConfiguration)); err != nil {
@@ -251,21 +217,6 @@ func resourceAwsS3ObjectLambdaAccessPointRead(d *schema.ResourceData, meta inter
 		return fmt.Errorf("error setting vpc_configuration: %s", err)
 	}
 
-	policyOutput, err := conn.GetAccessPointPolicy(&s3control.GetAccessPointPolicyInput{
-		AccountId: aws.String(accountId),
-		Name:      aws.String(name),
-	})
-
-	if isAWSErr(err, "NoSuchAccessPointPolicy", "") {
-		d.Set("policy", "")
-	} else {
-		if err != nil {
-			return fmt.Errorf("error reading S3 Object Lambda Access Point (%s) policy: %s", d.Id(), err)
-		}
-
-		d.Set("policy", policyOutput.Policy)
-	}
-
 	// Return early since S3 on Outposts cannot have public policies
 	if strings.HasPrefix(name, "arn:") {
 		d.Set("has_public_access_policy", false)
@@ -273,62 +224,15 @@ func resourceAwsS3ObjectLambdaAccessPointRead(d *schema.ResourceData, meta inter
 		return nil
 	}
 
-	policyStatusOutput, err := conn.GetAccessPointPolicyStatus(&s3control.GetAccessPointPolicyStatusInput{
-		AccountId: aws.String(accountId),
-		Name:      aws.String(name),
-	})
-
-	if isAWSErr(err, "NoSuchAccessPointPolicy", "") {
-		d.Set("has_public_access_policy", false)
-	} else {
-		if err != nil {
-			return fmt.Errorf("error reading S3 Object Lambda Access Point (%s) policy status: %s", d.Id(), err)
-		}
-
-		d.Set("has_public_access_policy", policyStatusOutput.PolicyStatus.IsPublic)
-	}
-
 	return nil
 }
 
-func resourceAwsS3ObjectLambdaAccessPointUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).s3controlconn
-
-	accountId, name, err := S3ObjectLambdaAccessPointParseId(d.Id())
-	if err != nil {
-		return err
-	}
-
-	if d.HasChange("policy") {
-		if v, ok := d.GetOk("policy"); ok {
-			log.Printf("[DEBUG] Putting S3 Object Lambda Access Point policy: %s", d.Id())
-			_, err := conn.PutAccessPointPolicy(&s3control.PutAccessPointPolicyInput{
-				AccountId: aws.String(accountId),
-				Name:      aws.String(name),
-				Policy:    aws.String(v.(string)),
-			})
-
-			if err != nil {
-				return fmt.Errorf("error putting S3 Object Lambda Access Point (%s) policy: %s", d.Id(), err)
-			}
-		} else {
-			log.Printf("[DEBUG] Deleting S3 Object Lambda Access Point policy: %s", d.Id())
-			_, err := conn.DeleteAccessPointForObjectLambdaPolicy(&s3control.DeleteAccessPointForObjectLambdaPolicyInput{
-				AccountId: aws.String(accountId),
-				Name:      aws.String(name),
-			})
-
-			if err != nil {
-				return fmt.Errorf("error deleting S3 Object Lambda Access Point (%s) policy: %s", d.Id(), err)
-			}
-		}
-	}
-
-	return resourceAwsS3ObjectLambdaAccessPointRead(d, meta)
+func resourceObjectLambdaAccessPointUpdate(d *schema.ResourceData, meta interface{}) error {
+	return resourceObjectLambdaAccessPointRead(d, meta)
 }
 
-func resourceAwsS3ObjectLambdaAccessPointDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).s3controlconn
+func resourceObjectLambdaAccessPointDelete(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*conns.AWSClient).S3ControlConn
 
 	accountId, name, err := S3ObjectLambdaAccessPointParseId(d.Id())
 	if err != nil {
@@ -341,9 +245,9 @@ func resourceAwsS3ObjectLambdaAccessPointDelete(d *schema.ResourceData, meta int
 		Name:      aws.String(name),
 	})
 
-	if isAWSErr(err, "NoSuchAccessPoint", "") {
-		return nil
-	}
+	// if isAWSErr(err, "NoSuchAccessPoint", "") {
+	// 	return nil
+	// }
 
 	if err != nil {
 		return fmt.Errorf("error deleting S3 Object Lambda Access Point (%s): %s", d.Id(), err)
@@ -351,6 +255,34 @@ func resourceAwsS3ObjectLambdaAccessPointDelete(d *schema.ResourceData, meta int
 
 	return nil
 }
+
+// func expandObjectLambdaContentTransformation(vConfig []interface{}) *s3control.ObjectLambdaContentTransformation {
+// 	if len(vConfig) == 0 || vConfig[0] == nil {
+// 		return nil
+// 	}
+
+// 	mConfig := vConfig[0].(map[string]interface{})
+
+// 	return &s3control.ObjectLambdaContentTransformation{
+// 		AwsLambda: &s3control.AwsLambdaTransformation{
+// 			FunctionArn:     aws.String(mConfig["aws_lambda"]["function_arn"]),
+// 			FunctionPayload: aws.String(mConfig["aws_lambda"]["function_payload"]),
+// 		},
+// 	}
+
+// }
+
+// func expandObjectLambdaTransformationConfiguration(vConfig []interface{}) *s3control.ObjectLambdaTransformationConfiguration {
+// 	if len(vConfig) == 0 || vConfig[0] == nil {
+// 		return nil
+// 	}
+// 	mConfig := vConfig[0].(map[string]interface{})
+
+// 	return &s3control.ObjectLambdaTransformationConfiguration{
+// 		Actions:               expandStringSet(mConfig["actions"].(*schema.Set)),
+// 		ContentTransformation: expandObjectLambdaContentTransformation(mConfig["content_transformation"].([]interface{})),
+// 	}
+// }
 
 // S3ObjectLambdaAccessPointParseId returns the Account ID and Access Point Name (S3) or ARN (S3 on Outposts)
 func S3ObjectLambdaAccessPointParseId(id string) (string, string, error) {
