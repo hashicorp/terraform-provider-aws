@@ -79,6 +79,13 @@ The `aws_lambda` block supports the following:
 * `function_arn` - (Required) The Amazon Resource Name (ARN) of the AWS Lambda function.
 * `function_payload` - (Optional) Additional JSON that provides supplemental data to the Lambda function used to transform objects.
 
+## Attributes Reference
+
+In addition to all arguments above, the following attributes are exported:
+
+* `arn` - Amazon Resource Name (ARN) of the Object Lambda Access Point.
+* `id` - The AWS account ID and access point name separated by a colon (`:`).
+
 ## Import
 
 Object Lambda Access Points can be imported using the `account_id` and `name`, separated by a colon (`:`), e.g.
