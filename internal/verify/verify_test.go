@@ -26,6 +26,18 @@ func TestNormalizeJSONOrYAMLString(t *testing.T) {
 	if actual != validNormalizedYaml {
 		t.Fatalf("Got:\n\n%s\n\nExpected:\n\n%s\n", actual, validNormalizedYaml)
 	}
+
+
+	validNormalizedYamlWithCarriageReturn := "abc: 1\r\n"
+	expectedNormalizedYaml := `abc: 1
+`
+	actual, err = normalizeJsonOrYamlString(validNormalizedYamlWithCarriageReturn)
+	if err != nil {
+		t.Fatalf("Expected not to throw an error while parsing template, but got: %s", err)
+	}
+	if actual != expectedNormalizedYaml {
+		t.Fatalf("Got:\n\n%s\n\nExpected:\n\n%s\n", actual, expectedNormalizedYaml)
+	}
 }
 
 func TestCheckYAMLString(t *testing.T) {
