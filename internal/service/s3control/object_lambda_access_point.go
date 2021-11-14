@@ -245,12 +245,12 @@ func resourceObjectLambdaAccessPointDelete(d *schema.ResourceData, meta interfac
 		Name:      aws.String(name),
 	})
 
-	// if isAWSErr(err, "NoSuchAccessPoint", "") {
-	// 	return nil
-	// }
+	if tfawserr.ErrCodeEquals(err, errCodeNoSuchAccessPoint) {
+		return nil
+	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting S3 Object Lambda Access Point (%s): %s", d.Id(), err)
+		return fmt.Errorf("error deleting S3 Object Lambda Access Point (%s): %w", d.Id(), err)
 	}
 
 	return nil
