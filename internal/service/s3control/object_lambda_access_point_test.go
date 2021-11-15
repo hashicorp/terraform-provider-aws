@@ -18,6 +18,8 @@ func TestAccS3ControlObjectLambdaAccessPoint_basic(t *testing.T) {
 	var v s3control.ObjectLambdaConfiguration
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_s3control_object_lambda_access_point.test"
+	accessPointResourceName := "aws_s3_access_point.test"
+	lambdaFunctionResourceName := "aws_lambda_function.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -29,6 +31,21 @@ func TestAccS3ControlObjectLambdaAccessPoint_basic(t *testing.T) {
 				Config: testAccObjectLambdaAccessPointConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckObjectLambdaAccessPointExists(resourceName, &v),
+					acctest.CheckResourceAttrAccountID(resourceName, "account_id"),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "s3-object-lambda", fmt.Sprintf("accesspoint/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.allowed_features.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.cloud_watch_metrics_enabled", "false"),
+					resource.TestCheckResourceAttrPair(resourceName, "configuration.0.supporting_access_point", accessPointResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.transformation_configuration.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "configuration.0.transformation_configuration.*", map[string]string{
+						"actions.#":                             "1",
+						"content_transformation.#":              "1",
+						"content_transformation.0.aws_lambda.#": "1",
+						"content_transformation.0.aws_lambda.0.function_payload": "",
+					}),
+					resource.TestCheckTypeSetElemAttr(resourceName, "configuration.0.transformation_configuration.*.actions.*", "GetObject"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "configuration.0.transformation_configuration.*.content_transformation.0.aws_lambda.0.function_arn", lambdaFunctionResourceName, "arn"),
 				),
 			},
 			{
@@ -56,30 +73,6 @@ func TestAccS3ControlObjectLambdaAccessPoint_disappears(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckObjectLambdaAccessPointExists(resourceName, &v),
 					acctest.CheckResourceDisappears(acctest.Provider, tfs3control.ResourceObjectLambdaAccessPoint(), resourceName),
-				),
-				ExpectNonEmptyPlan: true,
-			},
-		},
-	})
-}
-
-func TestAccS3ControlObjectLambdaAccessPoint_disappears_Bucket(t *testing.T) {
-	var v s3control.ObjectLambdaConfiguration
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_s3control_object_lambda_access_point.test"
-	bucketResourceName := "aws_s3_bucket.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, s3control.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckObjectLambdaAccessPointDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccObjectLambdaAccessPointConfig(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckObjectLambdaAccessPointExists(resourceName, &v),
-					testAccCheckDestroyBucket(bucketResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

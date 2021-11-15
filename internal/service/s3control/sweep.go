@@ -19,6 +19,9 @@ func init() {
 	resource.AddTestSweepers("aws_s3_access_point", &resource.Sweeper{
 		Name: "aws_s3_access_point",
 		F:    sweepAccessPoints,
+		Dependencies: []string{
+			"aws_s3control_object_lambda_access_point",
+		},
 	})
 
 	resource.AddTestSweepers("aws_s3control_multi_region_access_point", &resource.Sweeper{
