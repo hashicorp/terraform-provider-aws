@@ -40,7 +40,7 @@ func ResourceVPCIpamPool() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.StringInSlice(ec2.AddressFamily_Values(), false),
 			},
-			"advertisable": {
+			"publicly_advertisable": {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
@@ -134,8 +134,8 @@ func ResourceVPCIpamPoolCreate(d *schema.ResourceData, meta interface{}) error {
 		TagSpecifications: ec2TagSpecificationsFromKeyValueTags(tags, "ipam-pool"),
 	}
 
-	if v := d.Get("advertisable"); v != "" && d.Get("address_family") == ec2.AddressFamilyIpv6 {
-		input.Advertisable = aws.Bool(v.(bool))
+	if v := d.Get("publicly_advertisable"); v != "" && d.Get("address_family") == ec2.AddressFamilyIpv6 {
+		input.PubliclyAdvertisable = aws.Bool(v.(bool))
 	}
 
 	if v, ok := d.GetOk("allocation_default_netmask_length"); ok {
@@ -213,7 +213,7 @@ func ResourceVPCIpamPoolRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("address_family", pool.AddressFamily)
 
 	if pool.Advertisable != nil {
-		d.Set("advertisable", pool.Advertisable)
+		d.Set("publicly_advertisable", pool.Advertisable)
 	}
 
 	d.Set("allocation_resource_tags", KeyValueTags(ec2TagsFromIpamAllocationTags(pool.AllocationResourceTags)).Map())

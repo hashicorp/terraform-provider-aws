@@ -202,11 +202,11 @@ resource "aws_vpc_ipam_pool" "test" {
 
 const testAccVPCIpamPool_ipv6 = testAccVPCIpamPoolBase + `
 resource "aws_vpc_ipam_pool" "test" {
-	address_family = "ipv6"
-	ipam_scope_id  =  aws_vpc_ipam.test.public_default_scope_id
-	locale         = data.aws_region.current.name
-	description    = "ipv6 test"
-	advertisable   = false
+	address_family          = "ipv6"
+	ipam_scope_id           =  aws_vpc_ipam.test.public_default_scope_id
+	locale                  = data.aws_region.current.name
+	description             = "ipv6 test"
+	publicly_advertisable   = false
 }
 `
 

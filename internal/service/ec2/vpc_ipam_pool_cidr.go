@@ -71,8 +71,9 @@ func ResourceVPCIpamPoolCidr() *schema.Resource {
 }
 
 const (
-	IpamPoolCidrCreateTimeout  = 10 * time.Minute
-	IpamPoolCidrDeleteTimeout  = 15 * time.Minute
+	IpamPoolCidrCreateTimeout = 10 * time.Minute
+	// allocations releases are eventually consistent with a max time of 20m
+	IpamPoolCidrDeleteTimeout  = 20 * time.Minute
 	IpamPoolCidrAvailableDelay = 5 * time.Second
 	IpamPoolCidrDeleteDelay    = 5 * time.Second
 )
