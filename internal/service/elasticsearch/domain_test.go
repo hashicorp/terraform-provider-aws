@@ -327,7 +327,7 @@ func TestAccElasticsearchDomain_duplicate(t *testing.T) {
 						t.Fatal(err)
 					}
 
-					err = tfelasticsearch.WaitForDomainCreation(conn, resourceId, resourceId)
+					err = tfelasticsearch.WaitForDomainCreation(conn, resourceId)
 					if err != nil {
 						t.Fatal(err)
 					}
@@ -1276,16 +1276,12 @@ func testAccCheckESDomainExists(n string, domain *elasticsearch.ElasticsearchDom
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ElasticsearchConn
-		opts := &elasticsearch.DescribeElasticsearchDomainInput{
-			DomainName: aws.String(rs.Primary.Attributes["domain_name"]),
-		}
-
-		resp, err := conn.DescribeElasticsearchDomain(opts)
+		resp, err := FindDomainByName(conn,rs.Primary.Attributes["domain_name"])
 		if err != nil {
 			return fmt.Errorf("Error describing domain: %s", err.Error())
 		}
 
-		*domain = *resp.DomainStatus
+		*domain = *resp
 
 		return nil
 	}
@@ -1323,18 +1319,18 @@ func testAccCheckESDomainDestroy(s *terraform.State) error {
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ElasticsearchConn
-		opts := &elasticsearch.DescribeElasticsearchDomainInput{
-			DomainName: aws.String(rs.Primary.Attributes["domain_name"]),
+		_, err := FindDomainByName(conn, rs.Primary.Attributes["domain_name"])
+
+		if tfresource.NotFound(err) {
+			continue
 		}
 
-		_, err := conn.DescribeElasticsearchDomain(opts)
-		// Verify the error is what we want
 		if err != nil {
-			if awsErr, ok := err.(awserr.Error); ok && awsErr.Code() == "ResourceNotFoundException" {
-				continue
-			}
 			return err
 		}
+
+		return fmt.Errorf("Elasticsearch domain %s still exists", rs.Primary.ID)
+
 	}
 	return nil
 }

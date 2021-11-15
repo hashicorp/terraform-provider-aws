@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/elasticsearchservice"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -281,20 +280,10 @@ func dataSourceDomainRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ElasticsearchConn
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	req := &elasticsearchservice.DescribeElasticsearchDomainInput{
-		DomainName: aws.String(d.Get("domain_name").(string)),
-	}
-
-	resp, err := conn.DescribeElasticsearchDomain(req)
+	ds, err := FindDomainByName(conn, d.Get("domain_name").(string))
 	if err != nil {
-		return fmt.Errorf("error querying elasticsearch_domain: %w", err)
-	}
-
-	if resp.DomainStatus == nil {
 		return fmt.Errorf("your query returned no results")
 	}
-
-	ds := resp.DomainStatus
 
 	d.SetId(aws.StringValue(ds.ARN))
 
@@ -362,18 +351,8 @@ func dataSourceDomainRead(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	if ds.LogPublishingOptions != nil {
-		m := make([]map[string]interface{}, 0)
-		for k, val := range ds.LogPublishingOptions {
-			mm := map[string]interface{}{}
-			mm["log_type"] = k
-			if val.CloudWatchLogsLogGroupArn != nil {
-				mm["cloudwatch_log_group_arn"] = aws.StringValue(val.CloudWatchLogsLogGroupArn)
-			}
-			mm["enabled"] = aws.BoolValue(val.Enabled)
-			m = append(m, mm)
-		}
-		d.Set("log_publishing_options", m)
+	if err := d.Set("log_publishing_options", flattenLogPublishingOptions(ds.LogPublishingOptions)); err != nil {
+		return fmt.Errorf("error setting log_publishing_options: %w", err)
 	}
 
 	d.Set("elasticsearch_version", ds.ElasticsearchVersion)
