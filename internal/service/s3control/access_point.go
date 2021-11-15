@@ -65,6 +65,7 @@ func ResourceAccessPoint() *schema.Resource {
 			"policy": {
 				Type:             schema.TypeString,
 				Optional:         true,
+				Computed:         true,
 				DiffSuppressFunc: verify.SuppressEquivalentPolicyDiffs,
 			},
 			"public_access_block_configuration": {
@@ -351,15 +352,31 @@ func resourceAccessPointDelete(d *schema.ResourceData, meta interface{}) error {
 
 const accessPointResourceIDSeparator = ":"
 
-func AccessPointCreateResourceID(accessPointARN, accountID, accessPointName string) string {
-	if v, err := arn.Parse(accessPointARN); err != nil && v.Service == "s3-outposts" {
-		return accessPointARN
+func AccessPointCreateResourceID(accessPointARN string) (string, error) {
+	v, err := arn.Parse(accessPointARN)
+
+	if err != nil {
+		return "", err
 	}
 
-	parts := []string{accountID, accessPointName}
-	id := strings.Join(parts, accessPointResourceIDSeparator)
+	switch service := v.Service; service {
+	case "s3":
+		resource := v.Resource
+		if !strings.HasPrefix(resource, "accesspoint/") {
+			return "", fmt.Errorf("unexpected resource: %s", resource)
+		}
 
-	return id
+		parts := []string{v.AccountID, strings.TrimPrefix(resource, "accesspoint/")}
+		id := strings.Join(parts, accessPointResourceIDSeparator)
+
+		return id, nil
+
+	case "s3-outposts":
+		return accessPointARN, nil
+
+	default:
+		return "", fmt.Errorf("unexpected service: %s", service)
+	}
 }
 
 func AccessPointParseResourceID(id string) (string, string, error) {

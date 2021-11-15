@@ -5,3 +5,11 @@ aws_s3control_object_lambda_access_point
 ```release-note:new-resource
 aws_s3control_object_lambda_access_point_policy
 ```
+
+```release-note:new-resource
+aws_s3control_access_point_policy
+```
+
+```release-note:enhancement
+resource/aws_s3_access_point: The `policy` argument is now `Computed` so as to support use of the standalone `aws_s3control_access_point_policy` resource
+```

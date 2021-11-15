@@ -6,7 +6,6 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3control"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -75,31 +74,6 @@ func TestAccS3ControlAccessPoint_disappears(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccessPointExists(resourceName, &v),
 					testAccCheckAccessPointDisappears(resourceName),
-				),
-				ExpectNonEmptyPlan: true,
-			},
-		},
-	})
-}
-
-func TestAccS3ControlAccessPoint_Disappears_bucket(t *testing.T) {
-	var v s3control.GetAccessPointOutput
-	bucketName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	accessPointName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_s3_access_point.test"
-	bucketResourceName := "aws_s3_bucket.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, s3control.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAccessPointDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAccessPointConfig_basic(bucketName, accessPointName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAccessPointExists(resourceName, &v),
-					testAccCheckDestroyBucket(bucketResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -228,14 +202,6 @@ func TestAccS3ControlAccessPoint_policy(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccessPointExists(resourceName, &v),
 					testAccCheckAccessPointHasPolicy(resourceName, expectedPolicyText2),
-				),
-			},
-			{
-				Config: testAccAccessPointConfig_noPolicy(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAccessPointExists(resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "has_public_access_policy", "false"),
-					resource.TestCheckResourceAttr(resourceName, "policy", ""),
 				),
 			},
 		},
@@ -584,26 +550,6 @@ data "aws_iam_policy_document" "test" {
 `, rName)
 }
 
-func testAccAccessPointConfig_noPolicy(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_s3_bucket" "test" {
-  bucket = %[1]q
-}
-
-resource "aws_s3_access_point" "test" {
-  bucket = aws_s3_bucket.test.bucket
-  name   = %[1]q
-
-  public_access_block_configuration {
-    block_public_acls       = true
-    block_public_policy     = false
-    ignore_public_acls      = true
-    restrict_public_buckets = false
-  }
-}
-`, rName)
-}
-
 func testAccAccessPointConfig_publicAccessBlock(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
@@ -647,27 +593,4 @@ resource "aws_s3_access_point" "test" {
   }
 }
 `, rName)
-}
-
-func testAccCheckDestroyBucket(n string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[n]
-		if !ok {
-			return fmt.Errorf("Not found: %s", n)
-		}
-
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No S3 Bucket ID is set")
-		}
-
-		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn
-		_, err := conn.DeleteBucket(&s3.DeleteBucketInput{
-			Bucket: aws.String(rs.Primary.ID),
-		})
-
-		if err != nil {
-			return fmt.Errorf("Error destroying Bucket (%s) in testAccCheckDestroyBucket: %s", rs.Primary.ID, err)
-		}
-		return nil
-	}
 }
