@@ -70,7 +70,7 @@ The `transformation_configuration` block supports the following:
 
 The `content_transformation` block supports the following:
 
-* `aws_lambda` - (Optional) Configuration for an AWS Lambda function. See [AWS Lambda](#aws-lambda) below for more details.
+* `aws_lambda` - (Required) Configuration for an AWS Lambda function. See [AWS Lambda](#aws-lambda) below for more details.
 
 ### AWS Lambda
 

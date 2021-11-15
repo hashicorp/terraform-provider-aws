@@ -85,7 +85,7 @@ func ResourceObjectLambdaAccessPoint() *schema.Resource {
 											Schema: map[string]*schema.Schema{
 												"aws_lambda": {
 													Type:     schema.TypeList,
-													Optional: true,
+													Required: true,
 													MaxItems: 1,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
@@ -188,6 +188,30 @@ func resourceObjectLambdaAccessPointRead(d *schema.ResourceData, meta interface{
 }
 
 func resourceObjectLambdaAccessPointUpdate(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*conns.AWSClient).S3ControlConn
+
+	accountID, name, err := ObjectLambdaAccessPointParseResourceID(d.Id())
+
+	if err != nil {
+		return err
+	}
+
+	input := &s3control.PutAccessPointConfigurationForObjectLambdaInput{
+		AccountId: aws.String(accountID),
+		Name:      aws.String(name),
+	}
+
+	if v, ok := d.GetOk("configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		input.Configuration = expandObjectLambdaConfiguration(v.([]interface{})[0].(map[string]interface{}))
+	}
+
+	log.Printf("[DEBUG] Updating S3 Object Lambda Access Point: %s", input)
+	_, err = conn.PutAccessPointConfigurationForObjectLambda(input)
+
+	if err != nil {
+		return fmt.Errorf("error updating S3 Object Lambda Access Point (%s): %w", d.Id(), err)
+	}
+
 	return resourceObjectLambdaAccessPointRead(d, meta)
 }
 
