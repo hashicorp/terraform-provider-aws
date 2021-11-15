@@ -138,7 +138,7 @@ func FindObjectLambdaAccessPointPolicyAndStatusByAccountIDAndName(conn *s3contro
 
 	output1, err := conn.GetAccessPointPolicyForObjectLambda(input1)
 
-	if tfawserr.ErrCodeEquals(err, errCodeNoSuchAccessPoint) {
+	if tfawserr.ErrCodeEquals(err, errCodeNoSuchAccessPoint, errCodeNoSuchAccessPointPolicy) {
 		return "", nil, &resource.NotFoundError{
 			LastError:   err,
 			LastRequest: input1,
@@ -166,7 +166,7 @@ func FindObjectLambdaAccessPointPolicyAndStatusByAccountIDAndName(conn *s3contro
 
 	output2, err := conn.GetAccessPointPolicyStatusForObjectLambda(input2)
 
-	if tfawserr.ErrCodeEquals(err, errCodeNoSuchAccessPoint) {
+	if tfawserr.ErrCodeEquals(err, errCodeNoSuchAccessPoint, errCodeNoSuchAccessPointPolicy) {
 		return "", nil, &resource.NotFoundError{
 			LastError:   err,
 			LastRequest: input2,

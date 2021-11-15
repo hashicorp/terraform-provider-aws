@@ -147,7 +147,7 @@ func resourceObjectLambdaAccessPointPolicyDelete(d *schema.ResourceData, meta in
 		Name:      aws.String(name),
 	})
 
-	if tfawserr.ErrCodeEquals(err, errCodeNoSuchAccessPoint) {
+	if tfawserr.ErrCodeEquals(err, errCodeNoSuchAccessPoint, errCodeNoSuchAccessPointPolicy) {
 		return nil
 	}
 
