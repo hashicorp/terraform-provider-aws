@@ -37,6 +37,7 @@ func TestAccElasticsearchDomain_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckESDomainExists(resourceName, &domain),
 					resource.TestCheckResourceAttr(resourceName, "domain_name", resourceId),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "es", fmt.Sprintf("domain/%s", resourceId)),
 					resource.TestCheckResourceAttr(resourceName, "elasticsearch_version", "1.5"),
 					resource.TestMatchResourceAttr(resourceName, "kibana_endpoint", regexp.MustCompile(`.*es\..*/_plugin/kibana/`)),
 					resource.TestCheckResourceAttr(resourceName, "vpc_options.#", "0"),
@@ -1711,7 +1712,7 @@ resource "aws_elasticsearch_domain" "test" {
 `, randInt, tagKey1, tagValue1, tagKey2, tagValue2)
 }
 
-func testAccESDomainConfigWithPolicy(randESId int, randRoleId int) string {
+func testAccESDomainConfigWithPolicy(randESId, randRoleId int) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {
 }
