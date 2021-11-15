@@ -36,9 +36,11 @@ func TestAccElasticsearchDomain_basic(t *testing.T) {
 				Config: testAccESDomainConfig(ri),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckESDomainExists(resourceName, &domain),
-					resource.TestCheckResourceAttr(
-						resourceName, "elasticsearch_version", "1.5"),
+					resource.TestCheckResourceAttr(resourceName, "domain_name", resourceId),
+					resource.TestCheckResourceAttr(resourceName, "elasticsearch_version", "1.5"),
 					resource.TestMatchResourceAttr(resourceName, "kibana_endpoint", regexp.MustCompile(`.*es\..*/_plugin/kibana/`)),
+					resource.TestCheckResourceAttr(resourceName, "vpc_options.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
 			{
@@ -937,10 +939,11 @@ func TestAccElasticsearchDomain_tags(t *testing.T) {
 		CheckDestroy: testAccCheckELBDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccESDomainConfig(ri),
+				Config: testAccESDomainConfigTags1(ri, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckESDomainExists(resourceName, &domain),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
 			{
@@ -950,12 +953,20 @@ func TestAccElasticsearchDomain_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccESDomainConfig_TagUpdate(ri),
+				Config: testAccESDomainConfigTags2(ri, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckESDomainExists(resourceName, &domain),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.foo", "bar"),
-					resource.TestCheckResourceAttr(resourceName, "tags.new", "type"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+			{
+				Config: testAccESDomainConfigTags1(ri, "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckESDomainExists(resourceName, &domain),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 		},
@@ -1122,6 +1133,27 @@ func TestAccElasticsearchDomain_Update_version(t *testing.T) {
 		}})
 }
 
+func TestAccAWSElasticSearchDomain_disappears(t *testing.T) {
+	ri := acctest.RandInt()
+	resourceName := "aws_elasticsearch_domain.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckIamServiceLinkedRoleEs(t) },
+		ErrorCheck:   testAccErrorCheck(t, elasticsearch.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckESDomainDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccESDomainConfig(ri),
+				Check: resource.ComposeTestCheckFunc(
+					acctest.CheckResourceDisappears(acctest.Provider, tfefs.ResourceDomain(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfefs.ResourceDomain(), resourceName)),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func testAccCheckESDomainEndpointOptions(enforceHTTPS bool, tls string, status *elasticsearch.ElasticsearchDomainStatus) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		options := status.DomainEndpointOptions
@@ -1276,7 +1308,7 @@ func testAccCheckESDomainExists(n string, domain *elasticsearch.ElasticsearchDom
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ElasticsearchConn
-		resp, err := FindDomainByName(conn,rs.Primary.Attributes["domain_name"])
+		resp, err := FindDomainByName(conn, rs.Primary.Attributes["domain_name"])
 		if err != nil {
 			return fmt.Errorf("Error describing domain: %s", err.Error())
 		}
@@ -1646,7 +1678,7 @@ resource "aws_elasticsearch_domain" "test" {
 `, randInt)
 }
 
-func testAccESDomainConfig_TagUpdate(randInt int) string {
+func testAccESDomainConfigTags1(randInt int, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_elasticsearch_domain" "test" {
   domain_name = "tf-test-%d"
@@ -1657,11 +1689,26 @@ resource "aws_elasticsearch_domain" "test" {
   }
 
   tags = {
-    foo = "bar"
-    new = "type"
+    %[2]q = %[3]q
   }
 }
 `, randInt)
+}
+
+func testAccESDomainConfigTags2(randInt int, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return fmt.Sprintf(`
+resource "aws_elasticsearch_domain" "test" {
+  domain_name = "tf-test-%d"
+  ebs_options {
+    ebs_enabled = true
+    volume_size = 10
+  }
+  tags = {
+    %[2]q = %[3]q
+    %[4]q = %[5]q
+  }
+}
+`, randInt, tagKey1, tagValue1, tagKey2, tagValue2)
 }
 
 func testAccESDomainConfigWithPolicy(randESId int, randRoleId int) string {

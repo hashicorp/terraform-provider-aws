@@ -14,7 +14,7 @@ const (
 	domainUpgradeSuccessMinTimeout = 10 * time.Second
 	domainUpgradeSuccessDelay      = 30 * time.Second
 	domainRetryTimeout             = 60 * time.Minute
-	domainDeleteRetryTimeout             = 90 * time.Minute
+	domainDeleteRetryTimeout       = 90 * time.Minute
 )
 
 // UpgradeSucceeded waits for an Upgrade to return Success
