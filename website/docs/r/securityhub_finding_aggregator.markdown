@@ -10,7 +10,9 @@ description: |-
 
 Manages a Security Hub finding aggregator. Security Hub needs to be enabled in a region in order for the aggregator to pull through findings.
 
-## All Regions Usage
+## Example Usage
+
+### All Regions Usage
 
 The following example will enable the aggregator for every region.
 
@@ -24,7 +26,7 @@ resource "aws_securityhub_finding_aggregator" "example" {
 }
 ```
 
-## All Regions Except Specified Regions Usage
+### All Regions Except Specified Regions Usage
 
 The following example will enable the aggregator for every region except those specified in `specified_regions`.
 
@@ -39,7 +41,7 @@ resource "aws_securityhub_finding_aggregator" "example" {
 }
 ```
 
-## Specified Regions Usage
+### Specified Regions Usage
 
 The following example will enable the aggregator for every region specified in `specified_regions`.
 
