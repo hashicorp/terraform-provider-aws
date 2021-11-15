@@ -1694,7 +1694,7 @@ resource "aws_elasticsearch_domain" "test" {
     %[2]q = %[3]q
   }
 }
-`, randInt)
+`, randInt, tagKey1, tagValue1)
 }
 
 func testAccESDomainConfigTags2(randInt int, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
