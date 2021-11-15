@@ -103,9 +103,9 @@ object PullRequest : BuildType({
     features {
         feature {
             type = "JetBrains.SharedResources"
-            param("locks-param", "${DslContext.getParameter("account_lock_id")} readLock")
+            param("locks-param", "${DslContext.getParameter("aws_account.lock_id")} readLock")
         }
-        val alternateAccountLockId = DslContext.getParameter("alternate_account_lock_id", "")
+        val alternateAccountLockId = DslContext.getParameter("aws_alternate_account.lock_id", "")
         if (alternateAccountLockId != "") {
             feature {
                 type = "JetBrains.SharedResources"
