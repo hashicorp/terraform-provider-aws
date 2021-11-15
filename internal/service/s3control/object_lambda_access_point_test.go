@@ -184,7 +184,7 @@ func testAccCheckObjectLambdaAccessPointExists(n string, v *s3control.ObjectLamb
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No S3 Object Lambda Access Point is set")
+			return fmt.Errorf("No S3 Object Lambda Access Point ID is set")
 		}
 
 		accountID, name, err := tfs3control.ObjectLambdaAccessPointParseResourceID(rs.Primary.ID)

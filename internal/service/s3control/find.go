@@ -129,3 +129,57 @@ func FindObjectLambdaAccessPointByAccountIDAndName(conn *s3control.S3Control, ac
 
 	return output.Configuration, nil
 }
+
+func FindObjectLambdaAccessPointPolicyAndStatusByAccountIDAndName(conn *s3control.S3Control, accountID string, name string) (string, *s3control.PolicyStatus, error) {
+	input1 := &s3control.GetAccessPointPolicyForObjectLambdaInput{
+		AccountId: aws.String(accountID),
+		Name:      aws.String(name),
+	}
+
+	output1, err := conn.GetAccessPointPolicyForObjectLambda(input1)
+
+	if tfawserr.ErrCodeEquals(err, errCodeNoSuchAccessPoint) {
+		return "", nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input1,
+		}
+	}
+
+	if err != nil {
+		return "", nil, err
+	}
+
+	if output1 == nil {
+		return "", nil, tfresource.NewEmptyResultError(input1)
+	}
+
+	policy := aws.StringValue(output1.Policy)
+
+	if policy == "" {
+		return "", nil, tfresource.NewEmptyResultError(input1)
+	}
+
+	input2 := &s3control.GetAccessPointPolicyStatusForObjectLambdaInput{
+		AccountId: aws.String(accountID),
+		Name:      aws.String(name),
+	}
+
+	output2, err := conn.GetAccessPointPolicyStatusForObjectLambda(input2)
+
+	if tfawserr.ErrCodeEquals(err, errCodeNoSuchAccessPoint) {
+		return "", nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input2,
+		}
+	}
+
+	if err != nil {
+		return "", nil, err
+	}
+
+	if output2 == nil || output2.PolicyStatus == nil {
+		return "", nil, tfresource.NewEmptyResultError(input2)
+	}
+
+	return policy, output2.PolicyStatus, nil
+}
