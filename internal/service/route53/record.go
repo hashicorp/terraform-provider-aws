@@ -612,7 +612,10 @@ func resourceRecordRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	d.Set("set_identifier", record.SetIdentifier)
-	d.Set("health_check_id", record.HealthCheckId)
+
+	if record.HealthCheckId != nil {
+		d.Set("health_check_id", record.HealthCheckId)
+	}
 
 	return nil
 }
