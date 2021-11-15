@@ -133,9 +133,9 @@ func testAccFindingAggregatorAllRegionsConfig() string {
 resource "aws_securityhub_account" "example" {}
 
 resource "aws_securityhub_finding_aggregator" "test_aggregator" {
-	linking_mode = "ALL_REGIONS"
+  linking_mode = "ALL_REGIONS"
 
-	depends_on 	 = [aws_securityhub_account.example]
+  depends_on = [aws_securityhub_account.example]
 }
 `
 }
@@ -145,10 +145,10 @@ func testAccFindingAggregatorSpecifiedRegionsConfig() string {
 resource "aws_securityhub_account" "example" {}
 
 resource "aws_securityhub_finding_aggregator" "test_aggregator" {
-	linking_mode      = "SPECIFIED_REGIONS"
-	specified_regions = ["%s", "%s", "%s"]
+  linking_mode      = "SPECIFIED_REGIONS"
+  specified_regions = ["%s", "%s", "%s"]
 
-	depends_on 	      = [aws_securityhub_account.example]
+  depends_on = [aws_securityhub_account.example]
 }
 `, endpoints.EuWest1RegionID, endpoints.EuWest2RegionID, endpoints.UsEast1RegionID)
 }
@@ -158,10 +158,10 @@ func testAccFindingAggregatorAllRegionsExceptSpecifiedConfig() string {
 resource "aws_securityhub_account" "example" {}
 
 resource "aws_securityhub_finding_aggregator" "test_aggregator" {
-	linking_mode      = "ALL_REGIONS_EXCEPT_SPECIFIED"
-	specified_regions = ["%s", "%s"]
+  linking_mode      = "ALL_REGIONS_EXCEPT_SPECIFIED"
+  specified_regions = ["%s", "%s"]
 
-	depends_on 	      = [aws_securityhub_account.example]
+  depends_on = [aws_securityhub_account.example]
 }
 `, endpoints.EuWest1RegionID, endpoints.EuWest2RegionID)
 }
