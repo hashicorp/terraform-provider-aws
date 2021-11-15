@@ -40,8 +40,9 @@ func ResourcePlacementGroup() *schema.Resource {
 			},
 			"partition_count": {
 				Type:     schema.TypeInt,
-				ForceNew: true,
 				Optional: true,
+				Computed: true,
+				ForceNew: true,
 				// https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/placement-groups.html#placement-groups-limitations-partition.
 				ValidateFunc: validation.IntBetween(0, 7),
 			},

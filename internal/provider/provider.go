@@ -1,6 +1,7 @@
 package provider
 
 import (
+	"fmt"
 	"log"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -9,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/accessanalyzer"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/acm"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/acmpca"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/amp"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/amplify"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/apigateway"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/apigatewayv2"
@@ -32,7 +34,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/cloudhsmv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/cloudtrail"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/cloudwatch"
-	"github.com/hashicorp/terraform-provider-aws/internal/service/cloudwatchevents"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/cloudwatchlogs"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/codeartifact"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/codebuild"
@@ -43,7 +44,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/codestarnotifications"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/cognitoidentity"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/cognitoidp"
-	"github.com/hashicorp/terraform-provider-aws/internal/service/config"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/configservice"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/connect"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/cur"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/datapipeline"
@@ -69,6 +70,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/elb"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/elbv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/emr"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/events"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/firehose"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/fms"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/fsx"
@@ -90,7 +92,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/kms"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/lakeformation"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/lambda"
-	"github.com/hashicorp/terraform-provider-aws/internal/service/lexmodelbuilding"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/lexmodels"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/licensemanager"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/lightsail"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/macie"
@@ -108,14 +110,13 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/outposts"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/pinpoint"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/pricing"
-	"github.com/hashicorp/terraform-provider-aws/internal/service/prometheus"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/qldb"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/quicksight"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/ram"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/rds"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/redshift"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/resourcegroups"
-	"github.com/hashicorp/terraform-provider-aws/internal/service/resourcegroupstagging"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/resourcegroupstaggingapi"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/route53"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/route53recoverycontrolconfig"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/route53recoveryreadiness"
@@ -127,7 +128,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/schemas"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/secretsmanager"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/securityhub"
-	"github.com/hashicorp/terraform-provider-aws/internal/service/serverlessapprepo"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/serverlessrepo"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/servicecatalog"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/servicediscovery"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/servicequotas"
@@ -375,13 +376,14 @@ func Provider() *schema.Provider {
 			"aws_cloudfront_function":                       cloudfront.DataSourceFunction(),
 			"aws_cloudfront_log_delivery_canonical_user_id": cloudfront.DataSourceLogDeliveryCanonicalUserID(),
 			"aws_cloudfront_origin_request_policy":          cloudfront.DataSourceOriginRequestPolicy(),
+			"aws_cloudfront_response_headers_policy":        cloudfront.DataSourceResponseHeadersPolicy(),
 
 			"aws_cloudhsm_v2_cluster": cloudhsmv2.DataSourceCluster(),
 
 			"aws_cloudtrail_service_account": cloudtrail.DataSourceServiceAccount(),
 
-			"aws_cloudwatch_event_connection": cloudwatchevents.DataSourceConnection(),
-			"aws_cloudwatch_event_source":     cloudwatchevents.DataSourceSource(),
+			"aws_cloudwatch_event_connection": events.DataSourceConnection(),
+			"aws_cloudwatch_event_source":     events.DataSourceSource(),
 
 			"aws_cloudwatch_log_group":  cloudwatchlogs.DataSourceGroup(),
 			"aws_cloudwatch_log_groups": cloudwatchlogs.DataSourceGroups(),
@@ -449,6 +451,7 @@ func Provider() *schema.Provider {
 			"aws_instance":                                   ec2.DataSourceInstance(),
 			"aws_instances":                                  ec2.DataSourceInstances(),
 			"aws_internet_gateway":                           ec2.DataSourceInternetGateway(),
+			"aws_key_pair":                                   ec2.DataSourceKeyPair(),
 			"aws_launch_template":                            ec2.DataSourceLaunchTemplate(),
 			"aws_nat_gateway":                                ec2.DataSourceNatGateway(),
 			"aws_network_acls":                               ec2.DataSourceNetworkACLs(),
@@ -515,6 +518,8 @@ func Provider() *schema.Provider {
 			"aws_lb_target_group":  elbv2.DataSourceTargetGroup(),
 			"aws_lb":               elbv2.DataSourceLoadBalancer(),
 
+			"aws_emr_release_labels": emr.DataSourceReleaseLabels(),
+
 			"aws_kinesis_firehose_delivery_stream": firehose.DataSourceDeliveryStream(),
 
 			"aws_globalaccelerator_accelerator": globalaccelerator.DataSourceAccelerator(),
@@ -577,10 +582,10 @@ func Provider() *schema.Provider {
 			"aws_lambda_invocation":          lambda.DataSourceInvocation(),
 			"aws_lambda_layer_version":       lambda.DataSourceLayerVersion(),
 
-			"aws_lex_bot":       lexmodelbuilding.DataSourceBot(),
-			"aws_lex_bot_alias": lexmodelbuilding.DataSourceBotAlias(),
-			"aws_lex_intent":    lexmodelbuilding.DataSourceIntent(),
-			"aws_lex_slot_type": lexmodelbuilding.DataSourceSlotType(),
+			"aws_lex_bot":       lexmodels.DataSourceBot(),
+			"aws_lex_bot_alias": lexmodels.DataSourceBotAlias(),
+			"aws_lex_intent":    lexmodels.DataSourceIntent(),
+			"aws_lex_slot_type": lexmodels.DataSourceSlotType(),
 
 			"aws_arn":                     meta.DataSourceARN(),
 			"aws_billing_service_account": meta.DataSourceBillingServiceAccount(),
@@ -628,7 +633,7 @@ func Provider() *schema.Provider {
 			"aws_redshift_orderable_cluster": redshift.DataSourceOrderableCluster(),
 			"aws_redshift_service_account":   redshift.DataSourceServiceAccount(),
 
-			"aws_resourcegroupstaggingapi_resources": resourcegroupstagging.DataSourceResources(),
+			"aws_resourcegroupstaggingapi_resources": resourcegroupstaggingapi.DataSourceResources(),
 
 			"aws_route53_delegation_set": route53.DataSourceDelegationSet(),
 			"aws_route53_zone":           route53.DataSourceZone(),
@@ -648,7 +653,7 @@ func Provider() *schema.Provider {
 			"aws_secretsmanager_secret_rotation": secretsmanager.DataSourceSecretRotation(),
 			"aws_secretsmanager_secret_version":  secretsmanager.DataSourceSecretVersion(),
 
-			"aws_serverlessapplicationrepository_application": serverlessapprepo.DataSourceApplication(),
+			"aws_serverlessapplicationrepository_application": serverlessrepo.DataSourceApplication(),
 
 			"aws_servicecatalog_constraint":            servicecatalog.DataSourceConstraint(),
 			"aws_servicecatalog_launch_paths":          servicecatalog.DataSourceLaunchPaths(),
@@ -715,6 +720,10 @@ func Provider() *schema.Provider {
 			"aws_acmpca_certificate":                       acmpca.ResourceCertificate(),
 			"aws_acmpca_certificate_authority":             acmpca.ResourceCertificateAuthority(),
 			"aws_acmpca_certificate_authority_certificate": acmpca.ResourceCertificateAuthorityCertificate(),
+
+			"aws_prometheus_workspace":                amp.ResourceWorkspace(),
+			"aws_prometheus_alert_manager_definition": amp.ResourceAlertManagerDefinition(),
+			"aws_prometheus_rule_group_namespace":     amp.ResourceRuleGroupNamespace(),
 
 			"aws_amplify_app":                 amplify.ResourceApp(),
 			"aws_amplify_backend_environment": amplify.ResourceBackendEnvironment(),
@@ -842,15 +851,18 @@ func Provider() *schema.Provider {
 			"aws_cloudformation_stack_set_instance": cloudformation.ResourceStackSetInstance(),
 			"aws_cloudformation_type":               cloudformation.ResourceType(),
 
-			"aws_cloudfront_cache_policy":            cloudfront.ResourceCachePolicy(),
-			"aws_cloudfront_distribution":            cloudfront.ResourceDistribution(),
-			"aws_cloudfront_function":                cloudfront.ResourceFunction(),
-			"aws_cloudfront_key_group":               cloudfront.ResourceKeyGroup(),
-			"aws_cloudfront_monitoring_subscription": cloudfront.ResourceMonitoringSubscription(),
-			"aws_cloudfront_origin_access_identity":  cloudfront.ResourceOriginAccessIdentity(),
-			"aws_cloudfront_origin_request_policy":   cloudfront.ResourceOriginRequestPolicy(),
-			"aws_cloudfront_public_key":              cloudfront.ResourcePublicKey(),
-			"aws_cloudfront_realtime_log_config":     cloudfront.ResourceRealtimeLogConfig(),
+			"aws_cloudfront_cache_policy":                   cloudfront.ResourceCachePolicy(),
+			"aws_cloudfront_distribution":                   cloudfront.ResourceDistribution(),
+			"aws_cloudfront_field_level_encryption_config":  cloudfront.ResourceFieldLevelEncryptionConfig(),
+			"aws_cloudfront_field_level_encryption_profile": cloudfront.ResourceFieldLevelEncryptionProfile(),
+			"aws_cloudfront_function":                       cloudfront.ResourceFunction(),
+			"aws_cloudfront_key_group":                      cloudfront.ResourceKeyGroup(),
+			"aws_cloudfront_monitoring_subscription":        cloudfront.ResourceMonitoringSubscription(),
+			"aws_cloudfront_origin_access_identity":         cloudfront.ResourceOriginAccessIdentity(),
+			"aws_cloudfront_origin_request_policy":          cloudfront.ResourceOriginRequestPolicy(),
+			"aws_cloudfront_public_key":                     cloudfront.ResourcePublicKey(),
+			"aws_cloudfront_realtime_log_config":            cloudfront.ResourceRealtimeLogConfig(),
+			"aws_cloudfront_response_headers_policy":        cloudfront.ResourceResponseHeadersPolicy(),
 
 			"aws_cloudhsm_v2_cluster": cloudhsmv2.ResourceCluster(),
 			"aws_cloudhsm_v2_hsm":     cloudhsmv2.ResourceHSM(),
@@ -862,14 +874,14 @@ func Provider() *schema.Provider {
 			"aws_cloudwatch_metric_alarm":    cloudwatch.ResourceMetricAlarm(),
 			"aws_cloudwatch_metric_stream":   cloudwatch.ResourceMetricStream(),
 
-			"aws_cloudwatch_event_api_destination": cloudwatchevents.ResourceAPIDestination(),
-			"aws_cloudwatch_event_archive":         cloudwatchevents.ResourceArchive(),
-			"aws_cloudwatch_event_bus":             cloudwatchevents.ResourceBus(),
-			"aws_cloudwatch_event_bus_policy":      cloudwatchevents.ResourceBusPolicy(),
-			"aws_cloudwatch_event_connection":      cloudwatchevents.ResourceConnection(),
-			"aws_cloudwatch_event_permission":      cloudwatchevents.ResourcePermission(),
-			"aws_cloudwatch_event_rule":            cloudwatchevents.ResourceRule(),
-			"aws_cloudwatch_event_target":          cloudwatchevents.ResourceTarget(),
+			"aws_cloudwatch_event_api_destination": events.ResourceAPIDestination(),
+			"aws_cloudwatch_event_archive":         events.ResourceArchive(),
+			"aws_cloudwatch_event_bus":             events.ResourceBus(),
+			"aws_cloudwatch_event_bus_policy":      events.ResourceBusPolicy(),
+			"aws_cloudwatch_event_connection":      events.ResourceConnection(),
+			"aws_cloudwatch_event_permission":      events.ResourcePermission(),
+			"aws_cloudwatch_event_rule":            events.ResourceRule(),
+			"aws_cloudwatch_event_target":          events.ResourceTarget(),
 
 			"aws_cloudwatch_log_destination":         cloudwatchlogs.ResourceDestination(),
 			"aws_cloudwatch_log_destination_policy":  cloudwatchlogs.ResourceDestinationPolicy(),
@@ -916,17 +928,17 @@ func Provider() *schema.Provider {
 			"aws_cognito_user_pool_domain":           cognitoidp.ResourceUserPoolDomain(),
 			"aws_cognito_user_pool_ui_customization": cognitoidp.ResourceUserPoolUICustomization(),
 
-			"aws_config_aggregate_authorization":       config.ResourceAggregateAuthorization(),
-			"aws_config_config_rule":                   config.ResourceConfigRule(),
-			"aws_config_configuration_aggregator":      config.ResourceConfigurationAggregator(),
-			"aws_config_configuration_recorder":        config.ResourceConfigurationRecorder(),
-			"aws_config_configuration_recorder_status": config.ResourceConfigurationRecorderStatus(),
-			"aws_config_conformance_pack":              config.ResourceConformancePack(),
-			"aws_config_delivery_channel":              config.ResourceDeliveryChannel(),
-			"aws_config_organization_conformance_pack": config.ResourceOrganizationConformancePack(),
-			"aws_config_organization_custom_rule":      config.ResourceOrganizationCustomRule(),
-			"aws_config_organization_managed_rule":     config.ResourceOrganizationManagedRule(),
-			"aws_config_remediation_configuration":     config.ResourceRemediationConfiguration(),
+			"aws_config_aggregate_authorization":       configservice.ResourceAggregateAuthorization(),
+			"aws_config_config_rule":                   configservice.ResourceConfigRule(),
+			"aws_config_configuration_aggregator":      configservice.ResourceConfigurationAggregator(),
+			"aws_config_configuration_recorder":        configservice.ResourceConfigurationRecorder(),
+			"aws_config_configuration_recorder_status": configservice.ResourceConfigurationRecorderStatus(),
+			"aws_config_conformance_pack":              configservice.ResourceConformancePack(),
+			"aws_config_delivery_channel":              configservice.ResourceDeliveryChannel(),
+			"aws_config_organization_conformance_pack": configservice.ResourceOrganizationConformancePack(),
+			"aws_config_organization_custom_rule":      configservice.ResourceOrganizationCustomRule(),
+			"aws_config_organization_managed_rule":     configservice.ResourceOrganizationManagedRule(),
+			"aws_config_remediation_configuration":     configservice.ResourceRemediationConfiguration(),
 
 			"aws_connect_contact_flow": connect.ResourceContactFlow(),
 			"aws_connect_instance":     connect.ResourceInstance(),
@@ -981,6 +993,7 @@ func Provider() *schema.Provider {
 			"aws_docdb_cluster_instance":        docdb.ResourceClusterInstance(),
 			"aws_docdb_cluster_parameter_group": docdb.ResourceClusterParameterGroup(),
 			"aws_docdb_cluster_snapshot":        docdb.ResourceClusterSnapshot(),
+			"aws_docdb_global_cluster":          docdb.ResourceGlobalCluster(),
 			"aws_docdb_subnet_group":            docdb.ResourceSubnetGroup(),
 
 			"aws_directory_service_conditional_forwarder": ds.ResourceConditionalForwarder(),
@@ -1290,10 +1303,10 @@ func Provider() *schema.Provider {
 			"aws_lambda_permission":                     lambda.ResourcePermission(),
 			"aws_lambda_provisioned_concurrency_config": lambda.ResourceProvisionedConcurrencyConfig(),
 
-			"aws_lex_bot":       lexmodelbuilding.ResourceBot(),
-			"aws_lex_bot_alias": lexmodelbuilding.ResourceBotAlias(),
-			"aws_lex_intent":    lexmodelbuilding.ResourceIntent(),
-			"aws_lex_slot_type": lexmodelbuilding.ResourceSlotType(),
+			"aws_lex_bot":       lexmodels.ResourceBot(),
+			"aws_lex_bot_alias": lexmodels.ResourceBotAlias(),
+			"aws_lex_intent":    lexmodels.ResourceIntent(),
+			"aws_lex_slot_type": lexmodels.ResourceSlotType(),
 
 			"aws_licensemanager_association":           licensemanager.ResourceAssociation(),
 			"aws_licensemanager_license_configuration": licensemanager.ResourceLicenseConfiguration(),
@@ -1379,10 +1392,6 @@ func Provider() *schema.Provider {
 			"aws_pinpoint_gcm_channel":               pinpoint.ResourceGCMChannel(),
 			"aws_pinpoint_sms_channel":               pinpoint.ResourceSMSChannel(),
 
-			"aws_prometheus_workspace":                prometheus.ResourceWorkspace(),
-			"aws_prometheus_alert_manager_definition": prometheus.ResourceAlertManagerDefinition(),
-			"aws_prometheus_rule_group_namespace":     prometheus.ResourceRuleGroupNamespace(),
-
 			"aws_qldb_ledger": qldb.ResourceLedger(),
 
 			"aws_quicksight_data_source":      quicksight.ResourceDataSource(),
@@ -1459,22 +1468,25 @@ func Provider() *schema.Provider {
 			"aws_route53_resolver_rule":                            route53resolver.ResourceRule(),
 			"aws_route53_resolver_rule_association":                route53resolver.ResourceRuleAssociation(),
 
-			"aws_s3_bucket":                         s3.ResourceBucket(),
-			"aws_s3_bucket_analytics_configuration": s3.ResourceBucketAnalyticsConfiguration(),
-			"aws_s3_bucket_inventory":               s3.ResourceBucketInventory(),
-			"aws_s3_bucket_metric":                  s3.ResourceBucketMetric(),
-			"aws_s3_bucket_notification":            s3.ResourceBucketNotification(),
-			"aws_s3_bucket_object":                  s3.ResourceBucketObject(),
-			"aws_s3_bucket_ownership_controls":      s3.ResourceBucketOwnershipControls(),
-			"aws_s3_bucket_policy":                  s3.ResourceBucketPolicy(),
-			"aws_s3_bucket_public_access_block":     s3.ResourceBucketPublicAccessBlock(),
-			"aws_s3_object_copy":                    s3.ResourceObjectCopy(),
+			"aws_s3_bucket":                                   s3.ResourceBucket(),
+			"aws_s3_bucket_analytics_configuration":           s3.ResourceBucketAnalyticsConfiguration(),
+			"aws_s3_bucket_intelligent_tiering_configuration": s3.ResourceBucketIntelligentTieringConfiguration(),
+			"aws_s3_bucket_inventory":                         s3.ResourceBucketInventory(),
+			"aws_s3_bucket_metric":                            s3.ResourceBucketMetric(),
+			"aws_s3_bucket_notification":                      s3.ResourceBucketNotification(),
+			"aws_s3_bucket_object":                            s3.ResourceBucketObject(),
+			"aws_s3_bucket_ownership_controls":                s3.ResourceBucketOwnershipControls(),
+			"aws_s3_bucket_policy":                            s3.ResourceBucketPolicy(),
+			"aws_s3_bucket_public_access_block":               s3.ResourceBucketPublicAccessBlock(),
+			"aws_s3_object_copy":                              s3.ResourceObjectCopy(),
 
-			"aws_s3_access_point":                          s3control.ResourceAccessPoint(),
-			"aws_s3_account_public_access_block":           s3control.ResourceAccountPublicAccessBlock(),
-			"aws_s3control_bucket":                         s3control.ResourceBucket(),
-			"aws_s3control_bucket_lifecycle_configuration": s3control.ResourceBucketLifecycleConfiguration(),
-			"aws_s3control_bucket_policy":                  s3control.ResourceBucketPolicy(),
+			"aws_s3_access_point":                            s3control.ResourceAccessPoint(),
+			"aws_s3_account_public_access_block":             s3control.ResourceAccountPublicAccessBlock(),
+			"aws_s3control_bucket":                           s3control.ResourceBucket(),
+			"aws_s3control_bucket_lifecycle_configuration":   s3control.ResourceBucketLifecycleConfiguration(),
+			"aws_s3control_bucket_policy":                    s3control.ResourceBucketPolicy(),
+			"aws_s3control_multi_region_access_point":        s3control.ResourceMultiRegionAccessPoint(),
+			"aws_s3control_multi_region_access_point_policy": s3control.ResourceMultiRegionAccessPointPolicy(),
 
 			"aws_s3outposts_endpoint": s3outposts.ResourceEndpoint(),
 
@@ -1520,7 +1532,7 @@ func Provider() *schema.Provider {
 			"aws_securityhub_standards_control":          securityhub.ResourceStandardsControl(),
 			"aws_securityhub_standards_subscription":     securityhub.ResourceStandardsSubscription(),
 
-			"aws_serverlessapplicationrepository_cloudformation_stack": serverlessapprepo.ResourceCloudFormationStack(),
+			"aws_serverlessapplicationrepository_cloudformation_stack": serverlessrepo.ResourceCloudFormationStack(),
 
 			"aws_servicecatalog_budget_resource_association":     servicecatalog.ResourceBudgetResourceAssociation(),
 			"aws_servicecatalog_constraint":                      servicecatalog.ResourceConstraint(),
@@ -1826,8 +1838,17 @@ func providerConfigure(d *schema.ResourceData, terraformVersion string) (interfa
 
 	for _, endpointsSetI := range endpointsSet.List() {
 		endpoints := endpointsSetI.(map[string]interface{})
-		for _, serviceKey := range conns.ServiceKeys() {
-			config.Endpoints[serviceKey] = endpoints[serviceKey].(string)
+
+		for _, hclKey := range conns.HCLKeys() {
+			var serviceKey string
+			var err error
+			if serviceKey, err = conns.ServiceForHCLKey(hclKey); err != nil {
+				return nil, fmt.Errorf("failed to assign endpoint (%s): %w", hclKey, err)
+			}
+
+			if config.Endpoints[serviceKey] == "" && endpoints[hclKey].(string) != "" {
+				config.Endpoints[serviceKey] = endpoints[hclKey].(string)
+			}
 		}
 	}
 
@@ -1909,7 +1930,7 @@ func assumeRoleSchema() *schema.Schema {
 func endpointsSchema() *schema.Schema {
 	endpointsAttributes := make(map[string]*schema.Schema)
 
-	for _, serviceKey := range conns.ServiceKeys() {
+	for _, serviceKey := range conns.HCLKeys() {
 		endpointsAttributes[serviceKey] = &schema.Schema{
 			Type:        schema.TypeString,
 			Optional:    true,

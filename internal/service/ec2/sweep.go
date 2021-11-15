@@ -170,6 +170,7 @@ func init() {
 			"aws_cloudhsm_v2_cluster",
 			"aws_db_subnet_group",
 			"aws_directory_service_directory",
+			"aws_dms_replication_instance",
 			"aws_ec2_client_vpn_endpoint",
 			"aws_ec2_transit_gateway_vpc_attachment",
 			"aws_efs_file_system",
@@ -766,21 +767,6 @@ func sweepInternetGateways(region string) error {
 	}
 	conn := client.(*conns.AWSClient).EC2Conn
 
-	req := &ec2.DescribeInternetGatewaysInput{}
-	resp, err := conn.DescribeInternetGateways(req)
-	if err != nil {
-		if sweep.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping Internet Gateway sweep for %s: %s", region, err)
-			return nil
-		}
-		return fmt.Errorf("Error describing Internet Gateways: %s", err)
-	}
-
-	if len(resp.InternetGateways) == 0 {
-		log.Print("[DEBUG] No AWS Internet Gateways to sweep")
-		return nil
-	}
-
 	defaultVPCID := ""
 	describeVpcsInput := &ec2.DescribeVpcsInput{
 		Filters: []*ec2.Filter{
@@ -794,61 +780,63 @@ func sweepInternetGateways(region string) error {
 	describeVpcsOutput, err := conn.DescribeVpcs(describeVpcsInput)
 
 	if err != nil {
-		return fmt.Errorf("Error describing VPCs: %s", err)
+		return fmt.Errorf("error describing VPCs: %w", err)
 	}
 
 	if describeVpcsOutput != nil && len(describeVpcsOutput.Vpcs) == 1 {
 		defaultVPCID = aws.StringValue(describeVpcsOutput.Vpcs[0].VpcId)
 	}
 
-	for _, internetGateway := range resp.InternetGateways {
-		isDefaultVPCInternetGateway := false
+	input := &ec2.DescribeInternetGatewaysInput{}
+	sweepResources := make([]*sweep.SweepResource, 0)
 
-		for _, attachment := range internetGateway.Attachments {
-			if aws.StringValue(attachment.VpcId) == defaultVPCID {
-				isDefaultVPCInternetGateway = true
-				break
-			}
-
-			input := &ec2.DetachInternetGatewayInput{
-				InternetGatewayId: internetGateway.InternetGatewayId,
-				VpcId:             attachment.VpcId,
-			}
-
-			log.Printf("[DEBUG] Detaching Internet Gateway: %s", input)
-			_, err := conn.DetachInternetGateway(input)
-			if err != nil {
-				return fmt.Errorf("error detaching Internet Gateway (%s) from VPC (%s): %s", aws.StringValue(internetGateway.InternetGatewayId), aws.StringValue(attachment.VpcId), err)
-			}
-
-			stateConf := &resource.StateChangeConf{
-				Pending: []string{ec2.AttachmentStatusDetaching},
-				Target:  []string{ec2.AttachmentStatusDetached},
-				Refresh: DetachIGStateRefreshFunc(conn, aws.StringValue(internetGateway.InternetGatewayId), aws.StringValue(attachment.VpcId)),
-				Timeout: 10 * time.Minute,
-				Delay:   10 * time.Second,
-			}
-
-			log.Printf("[DEBUG] Waiting for Internet Gateway (%s) to detach from VPC (%s)", aws.StringValue(internetGateway.InternetGatewayId), aws.StringValue(attachment.VpcId))
-			if _, err = stateConf.WaitForState(); err != nil {
-				return fmt.Errorf("error waiting for VPN Gateway (%s) to detach from VPC (%s): %s", aws.StringValue(internetGateway.InternetGatewayId), aws.StringValue(attachment.VpcId), err)
-			}
+	err = conn.DescribeInternetGatewaysPages(input, func(page *ec2.DescribeInternetGatewaysOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
 		}
 
-		if isDefaultVPCInternetGateway {
-			log.Printf("[DEBUG] Skipping Default VPC Internet Gateway: %s", aws.StringValue(internetGateway.InternetGatewayId))
-			continue
+		for _, internetGateway := range page.InternetGateways {
+			internetGatewayID := aws.StringValue(internetGateway.InternetGatewayId)
+			isDefaultVPCInternetGateway := false
+
+			for _, attachment := range internetGateway.Attachments {
+				if aws.StringValue(attachment.VpcId) == defaultVPCID {
+					isDefaultVPCInternetGateway = true
+					break
+				}
+			}
+
+			if isDefaultVPCInternetGateway {
+				log.Printf("[DEBUG] Skipping Default VPC Internet Gateway: %s", internetGatewayID)
+				continue
+			}
+
+			r := ResourceInternetGateway()
+			d := r.Data(nil)
+			d.SetId(internetGatewayID)
+			if len(internetGateway.Attachments) > 0 {
+				d.Set("vpc_id", internetGateway.Attachments[0].VpcId)
+			}
+
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
 
-		input := &ec2.DeleteInternetGatewayInput{
-			InternetGatewayId: internetGateway.InternetGatewayId,
-		}
+		return !lastPage
+	})
 
-		log.Printf("[DEBUG] Deleting Internet Gateway: %s", input)
-		_, err := conn.DeleteInternetGateway(input)
-		if err != nil {
-			return fmt.Errorf("error deleting Internet Gateway (%s): %s", aws.StringValue(internetGateway.InternetGatewayId), err)
-		}
+	if sweep.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping EC2 Internet Gateway sweep for %s: %s", region, err)
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("error listing EC2 Internet Gateways (%s): %w", region, err)
+	}
+
+	err = sweep.SweepOrchestrator(sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("error sweeping EC2 Internet Gateways (%s): %w", region, err)
 	}
 
 	return nil

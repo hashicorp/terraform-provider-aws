@@ -690,6 +690,46 @@ func WaitHostDeleted(conn *ec2.EC2, id string) (*ec2.Host, error) {
 }
 
 const (
+	internetGatewayAttachedTimeout = 4 * time.Minute
+	internetGatewayDeletedTimeout  = 10 * time.Minute
+	internetGatewayDetachedTimeout = 15 * time.Minute
+)
+
+func WaitInternetGatewayAttached(conn *ec2.EC2, internetGatewayID, vpcID string, timeout time.Duration) (*ec2.InternetGatewayAttachment, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{ec2.AttachmentStatusAttaching},
+		Target:  []string{InternetGatewayAttachmentStateAvailable},
+		Timeout: timeout,
+		Refresh: StatusInternetGatewayAttachmentState(conn, internetGatewayID, vpcID),
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*ec2.InternetGatewayAttachment); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func WaitInternetGatewayDetached(conn *ec2.EC2, internetGatewayID, vpcID string, timeout time.Duration) (*ec2.InternetGatewayAttachment, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{ec2.AttachmentStatusDetaching},
+		Target:  []string{},
+		Timeout: timeout,
+		Refresh: StatusInternetGatewayAttachmentState(conn, internetGatewayID, vpcID),
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*ec2.InternetGatewayAttachment); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+const (
 	ManagedPrefixListTimeout = 15 * time.Minute
 )
 
@@ -750,6 +790,86 @@ func WaitManagedPrefixListDeleted(conn *ec2.EC2, id string) (*ec2.ManagedPrefixL
 			tfresource.SetLastError(err, errors.New(aws.StringValue(output.StateMessage)))
 		}
 
+		return output, err
+	}
+
+	return nil, err
+}
+
+const (
+	networkInterfaceAttachedTimeout = 5 * time.Minute
+	NetworkInterfaceDetachedTimeout = 10 * time.Minute
+)
+
+func WaitNetworkInterfaceAttached(conn *ec2.EC2, id string, timeout time.Duration) (*ec2.NetworkInterfaceAttachment, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{ec2.AttachmentStatusAttaching},
+		Target:  []string{ec2.AttachmentStatusAttached},
+		Timeout: timeout,
+		Refresh: StatusNetworkInterfaceAttachmentStatus(conn, id),
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*ec2.NetworkInterfaceAttachment); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func WaitNetworkInterfaceAvailableAfterUse(conn *ec2.EC2, id string, timeout time.Duration) (*ec2.NetworkInterface, error) {
+	// Hyperplane attached ENI.
+	// Wait for it to be moved into a removable state.
+	stateConf := &resource.StateChangeConf{
+		Pending:    []string{ec2.NetworkInterfaceStatusInUse},
+		Target:     []string{ec2.NetworkInterfaceStatusAvailable},
+		Timeout:    timeout,
+		Refresh:    StatusNetworkInterfaceStatus(conn, id),
+		Delay:      10 * time.Second,
+		MinTimeout: 10 * time.Second,
+		// Handle EC2 ENI eventual consistency. It can take up to 3 minutes.
+		ContinuousTargetOccurence: 18,
+		NotFoundChecks:            1,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*ec2.NetworkInterface); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func WaitNetworkInterfaceCreated(conn *ec2.EC2, id string, timeout time.Duration) (*ec2.NetworkInterface, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{NetworkInterfaceStatusPending},
+		Target:  []string{ec2.NetworkInterfaceStatusAvailable},
+		Timeout: timeout,
+		Refresh: StatusNetworkInterfaceStatus(conn, id),
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*ec2.NetworkInterface); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func WaitNetworkInterfaceDetached(conn *ec2.EC2, id string, timeout time.Duration) (*ec2.NetworkInterfaceAttachment, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{ec2.AttachmentStatusDetaching},
+		Target:  []string{ec2.AttachmentStatusDetached},
+		Timeout: timeout,
+		Refresh: StatusNetworkInterfaceAttachmentStatus(conn, id),
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*ec2.NetworkInterfaceAttachment); ok {
 		return output, err
 	}
 

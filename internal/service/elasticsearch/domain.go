@@ -626,7 +626,7 @@ func resourceDomainCreate(d *schema.ResourceData, meta interface{}) error {
 	// whilst the operation is being performed), we still get the required tags on
 	// the resources.
 	if len(tags) > 0 {
-		if err := UpdateTags(conn, d.Id(), nil, Tags(tags.IgnoreAWS())); err != nil {
+		if err := UpdateTags(conn, d.Id(), nil, tags); err != nil {
 			return fmt.Errorf("error adding Elasticsearch Cluster (%s) tags: %s", d.Id(), err)
 		}
 	}

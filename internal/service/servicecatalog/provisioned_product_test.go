@@ -55,6 +55,7 @@ func TestAccServiceCatalogProvisionedProduct_basic(t *testing.T) {
 					"accept_language",
 					"ignore_errors",
 					"provisioning_artifact_name",
+					"provisioning_parameters",
 					"retain_physical_resources",
 				},
 			},
@@ -175,11 +176,33 @@ resource "aws_s3_bucket_object" "test" {
   content = jsonencode({
     AWSTemplateFormatVersion = "2010-09-09"
 
+    Parameters = {
+      VPCPrimaryCIDR = {
+        Type = "String"
+      }
+      LeaveMeEmpty = {
+        Type        = "String"
+        Description = "Make sure that empty values come through. Issue #21349"
+      }
+    }
+
+    "Conditions" = {
+      "IsEmptyParameter" = {
+        "Fn::Equals" = [
+          {
+            "Ref" = "LeaveMeEmpty"
+          },
+          "",
+        ]
+      }
+    }
+
     Resources = {
       MyVPC = {
-        Type = "AWS::EC2::VPC"
+        Type      = "AWS::EC2::VPC"
+        Condition = "IsEmptyParameter"
         Properties = {
-          CidrBlock = "10.1.0.0/16"
+          CidrBlock = { Ref = "VPCPrimaryCIDR" }
         }
       }
     }
@@ -268,6 +291,16 @@ resource "aws_servicecatalog_provisioned_product" "test" {
   product_id                 = aws_servicecatalog_product.test.id
   provisioning_artifact_name = %[1]q
   path_id                    = data.aws_servicecatalog_launch_paths.test.summaries[0].path_id
+
+  provisioning_parameters {
+    key   = "VPCPrimaryCIDR"
+    value = "10.1.0.0/16"
+  }
+
+  provisioning_parameters {
+    key   = "LeaveMeEmpty"
+    value = ""
+  }
 }
 `, rName))
 }
@@ -280,6 +313,16 @@ resource "aws_servicecatalog_provisioned_product" "test" {
   product_id                 = aws_servicecatalog_constraint.test.product_id
   provisioning_artifact_name = %[1]q
   path_id                    = data.aws_servicecatalog_launch_paths.test.summaries[0].path_id
+
+  provisioning_parameters {
+    key   = "VPCPrimaryCIDR"
+    value = "10.2.0.0/16"
+  }
+
+  provisioning_parameters {
+    key   = "LeaveMeEmpty"
+    value = ""
+  }
 
   tags = {
     %[2]q = %[3]q

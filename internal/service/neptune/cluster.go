@@ -140,7 +140,6 @@ func ResourceCluster() *schema.Resource {
 			"engine_version": {
 				Type:     schema.TypeString,
 				Optional: true,
-				ForceNew: true,
 				Computed: true,
 			},
 
@@ -625,8 +624,14 @@ func resourceClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 		req.EnableIAMDatabaseAuthentication = aws.Bool(d.Get("iam_database_authentication_enabled").(bool))
 		requestUpdate = true
 	}
+
 	if d.HasChange("deletion_protection") {
 		req.DeletionProtection = aws.Bool(d.Get("deletion_protection").(bool))
+		requestUpdate = true
+	}
+
+	if d.HasChange("engine_version") {
+		req.EngineVersion = aws.String(d.Get("engine_version").(string))
 		requestUpdate = true
 	}
 

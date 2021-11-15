@@ -464,7 +464,7 @@ More details about this code generation, including fixes for potential error mes
   ```go
   func TestAccEKSCluster_tags(t *testing.T) {
     var cluster1, cluster2, cluster3 eks.Cluster
-    rName := acctest.RandomWithPrefix("tf-acc-test")
+    rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
     resourceName := "aws_eks_cluster.test"
 
     resource.ParallelTest(t, resource.TestCase{
@@ -690,7 +690,7 @@ import (
 )
 
 func TestAcc{Service}Tag_basic(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_{service}_tag.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -717,7 +717,7 @@ func TestAcc{Service}Tag_basic(t *testing.T) {
 }
 
 func TestAcc{Service}Tag_disappears(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_{service}_tag.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -739,7 +739,7 @@ func TestAcc{Service}Tag_disappears(t *testing.T) {
 }
 
 func TestAcc{Service}Tag_Value(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_{service}_tag.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -868,7 +868,7 @@ into Terraform.
             1. Do not use underscores,
             2. The first letter of each word is capitalized, and
             3. Abbreviations and initialisms are all caps.
-        - Proper examples include `CognitoIdentity`, `DevOpsGuru`, `DynamoDB`, `ECS`, `Prometheus` ("Service" is dropped from end), and `ServerlessAppRepo` (shortened from "Serverless Application Repository").
+        - Proper examples include `CognitoIdentity`, `DevOpsGuru`, `DynamoDB`, `ECS`, `Prometheus` ("Service" is dropped from end), and `ServerlessRepo` (shortened from "Serverless Application Repository").
         - The constant value is the same as the name but all lowercase (_e.g._, `DynamoDB = "dynamodb"`).
     - In `internal/conns/conns.go`: Add a new entry to the `serviceData` map:
         1. The entry key is the string constant created above

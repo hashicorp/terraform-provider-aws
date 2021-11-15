@@ -15,7 +15,7 @@ import (
 	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 )
 
-func TestAccIAMOpenidConnectProvider_OpenID_basic(t *testing.T) {
+func TestAccIAMOpenidConnectProvider_basic(t *testing.T) {
 	rString := sdkacctest.RandString(5)
 	url := "accounts.testle.com/" + rString
 	resourceName := "aws_iam_openid_connect_provider.test"
@@ -62,7 +62,7 @@ func TestAccIAMOpenidConnectProvider_OpenID_basic(t *testing.T) {
 	})
 }
 
-func TestAccIAMOpenidConnectProvider_OpenID_tags(t *testing.T) {
+func TestAccIAMOpenidConnectProvider_tags(t *testing.T) {
 	rString := sdkacctest.RandString(5)
 	resourceName := "aws_iam_openid_connect_provider.test"
 
@@ -107,7 +107,7 @@ func TestAccIAMOpenidConnectProvider_OpenID_tags(t *testing.T) {
 	})
 }
 
-func TestAccIAMOpenidConnectProvider_OpenID_disappears(t *testing.T) {
+func TestAccIAMOpenidConnectProvider_disappears(t *testing.T) {
 	rString := sdkacctest.RandString(5)
 	resourceName := "aws_iam_openid_connect_provider.test"
 
