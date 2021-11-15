@@ -110,6 +110,10 @@ func ResourceUser() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"sub": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"password": {
 				Type:          schema.TypeString,
 				Sensitive:     true,
@@ -245,6 +249,10 @@ func resourceUserRead(d *schema.ResourceData, meta interface{}) error {
 
 	if err := d.Set("status", user.UserStatus); err != nil {
 		return fmt.Errorf("failed setting user_status: %w", err)
+	}
+
+	if err := d.Set("sub", flattenUserSub(user.UserAttributes)); err != nil {
+		return fmt.Errorf("failed setting user's sub: %w", err)
 	}
 
 	if err := d.Set("creation_date", user.UserCreateDate.Format(time.RFC3339)); err != nil {
@@ -485,6 +493,16 @@ func expandUserDesiredDeliveryMediums(tfSet *schema.Set) []*string {
 	}
 
 	return apiList
+}
+
+func flattenUserSub(apiList []*cognitoidentityprovider.AttributeType) string {
+	for _, attr := range apiList {
+		if aws.StringValue(attr.Name) == "sub" {
+			return aws.StringValue(attr.Value)
+		}
+	}
+
+	return ""
 }
 
 // For ClientMetadata we only need expand since AWS doesn't store its value
