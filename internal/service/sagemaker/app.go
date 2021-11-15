@@ -68,7 +68,6 @@ func ResourceApp() *schema.Resource {
 						"lifecycle_config_arn": {
 							Type:         schema.TypeString,
 							Optional:     true,
-							Computed:     true,
 							ValidateFunc: verify.ValidARN,
 						},
 						"sagemaker_image_arn": {
@@ -80,7 +79,6 @@ func ResourceApp() *schema.Resource {
 						"sagemaker_image_version_arn": {
 							Type:         schema.TypeString,
 							Optional:     true,
-							Computed:     true,
 							ValidateFunc: verify.ValidARN,
 						},
 					},

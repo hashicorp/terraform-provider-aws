@@ -690,7 +690,7 @@ func flattenSagemakerDomainDefaultResourceSpec(config *sagemaker.ResourceSpec) [
 	}
 
 	if config.LifecycleConfigArn != nil {
-		m["lifcycle_config_arn"] = aws.StringValue(config.LifecycleConfigArn)
+		m["lifecycle_config_arn"] = aws.StringValue(config.LifecycleConfigArn)
 	}
 
 	if config.SageMakerImageArn != nil {
