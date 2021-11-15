@@ -1136,7 +1136,7 @@ func TestAccElasticsearchDomain_Update_version(t *testing.T) {
 }
 
 func TestAccAWSElasticSearchDomain_disappears(t *testing.T) {
-	ri := acctest.RandInt()
+	ri := sdkacctest.RandInt()
 	resourceName := "aws_elasticsearch_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
