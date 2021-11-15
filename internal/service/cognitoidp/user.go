@@ -28,6 +28,13 @@ func ResourceUser() *schema.Resource {
 
 		// https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_AdminCreateUser.html
 		Schema: map[string]*schema.Schema{
+			"attributes": {
+				Type: schema.TypeMap,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+				Optional: true,
+			},
 			"client_metadata": {
 				Type:     schema.TypeMap,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -88,13 +95,6 @@ func ResourceUser() *schema.Resource {
 					},
 				},
 				Computed: true,
-			},
-			"attributes": {
-				Type: schema.TypeMap,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
-				},
-				Optional: true,
 			},
 			"user_pool_id": {
 				Type:     schema.TypeString,
@@ -541,9 +541,7 @@ func flattenUserMfaPreference(mfaOptions []*cognitoidentityprovider.MFAOptionTyp
 }
 
 func userAttributeHash(attr interface{}) int {
-	attrMap := attr.(map[string]interface{})
-
-	return schema.HashString(attrMap["name"])
+	return schema.HashString(attr.(map[string]interface{})["name"])
 }
 
 func UserAttributeKeyMatchesStandardAttribute(input string) bool {
