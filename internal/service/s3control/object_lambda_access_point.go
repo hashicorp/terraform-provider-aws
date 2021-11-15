@@ -159,7 +159,7 @@ func resourceObjectLambdaAccessPointRead(d *schema.ResourceData, meta interface{
 		return err
 	}
 
-	_, err = FindObjectLambdaAccessPointByAccountIDAndName(conn, accountID, name)
+	output, err := FindObjectLambdaAccessPointByAccountIDAndName(conn, accountID, name)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] S3 Object Lambda Access Point (%s) not found, removing from state", d.Id())
@@ -179,6 +179,9 @@ func resourceObjectLambdaAccessPointRead(d *schema.ResourceData, meta interface{
 		Resource:  fmt.Sprintf("accesspoint/%s", name),
 	}.String()
 	d.Set("arn", arn)
+	if err := d.Set("configuration", []interface{}{flattenObjectLambdaConfiguration(output)}); err != nil {
+		return fmt.Errorf("error setting configuration: %w", err)
+	}
 	d.Set("name", name)
 
 	return nil
@@ -335,80 +338,96 @@ func expandAwsLambdaTransformation(tfMap map[string]interface{}) *s3control.AwsL
 	return apiObject
 }
 
-// func expandObjectLambdaContentTransformation(vConfig []interface{}) *s3control.ObjectLambdaContentTransformation {
-// 	if len(vConfig) == 0 || vConfig[0] == nil {
-// 		return nil
-// 	}
-
-// 	mConfig := vConfig[0].(map[string]interface{})
-
-// 	return &s3control.ObjectLambdaContentTransformation{
-// 		AwsLambda: &s3control.AwsLambdaTransformation{
-// 			FunctionArn:     aws.String(mConfig["aws_lambda"]["function_arn"]),
-// 			FunctionPayload: aws.String(mConfig["aws_lambda"]["function_payload"]),
-// 		},
-// 	}
-
-// }
-
-// func expandObjectLambdaTransformationConfiguration(vConfig []interface{}) *s3control.ObjectLambdaTransformationConfiguration {
-// 	if len(vConfig) == 0 || vConfig[0] == nil {
-// 		return nil
-// 	}
-// 	mConfig := vConfig[0].(map[string]interface{})
-
-// 	return &s3control.ObjectLambdaTransformationConfiguration{
-// 		Actions:               expandStringSet(mConfig["actions"].(*schema.Set)),
-// 		ContentTransformation: expandObjectLambdaContentTransformation(mConfig["content_transformation"].([]interface{})),
-// 	}
-// }
-
-func expandS3ObjectLambdaAccessPointVpcConfiguration(vConfig []interface{}) *s3control.VpcConfiguration {
-	if len(vConfig) == 0 || vConfig[0] == nil {
+func flattenObjectLambdaConfiguration(apiObject *s3control.ObjectLambdaConfiguration) map[string]interface{} {
+	if apiObject == nil {
 		return nil
 	}
 
-	mConfig := vConfig[0].(map[string]interface{})
+	tfMap := map[string]interface{}{}
 
-	return &s3control.VpcConfiguration{
-		VpcId: aws.String(mConfig["vpc_id"].(string)),
-	}
-}
-
-func flattenS3ObjectLambdaAccessPointVpcConfiguration(config *s3control.VpcConfiguration) []interface{} {
-	if config == nil {
-		return []interface{}{}
+	if v := apiObject.AllowedFeatures; v != nil {
+		tfMap["allowed_features"] = aws.StringValueSlice(v)
 	}
 
-	return []interface{}{map[string]interface{}{
-		"vpc_id": aws.StringValue(config.VpcId),
-	}}
+	if v := apiObject.CloudWatchMetricsEnabled; v != nil {
+		tfMap["cloud_watch_metrics_enabled"] = aws.BoolValue(v)
+	}
+
+	if v := apiObject.SupportingAccessPoint; v != nil {
+		tfMap["supporting_access_point"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.TransformationConfigurations; v != nil {
+		tfMap["transformation_configuration"] = flattenObjectLambdaTransformationConfigurations(v)
+	}
+
+	return tfMap
 }
 
-func expandS3ObjectLambdaAccessPointPublicAccessBlockConfiguration(vConfig []interface{}) *s3control.PublicAccessBlockConfiguration {
-	if len(vConfig) == 0 || vConfig[0] == nil {
+func flattenObjectLambdaTransformationConfiguration(apiObject *s3control.ObjectLambdaTransformationConfiguration) map[string]interface{} {
+	if apiObject == nil {
 		return nil
 	}
 
-	mConfig := vConfig[0].(map[string]interface{})
+	tfMap := map[string]interface{}{}
 
-	return &s3control.PublicAccessBlockConfiguration{
-		BlockPublicAcls:       aws.Bool(mConfig["block_public_acls"].(bool)),
-		BlockPublicPolicy:     aws.Bool(mConfig["block_public_policy"].(bool)),
-		IgnorePublicAcls:      aws.Bool(mConfig["ignore_public_acls"].(bool)),
-		RestrictPublicBuckets: aws.Bool(mConfig["restrict_public_buckets"].(bool)),
+	if v := apiObject.Actions; v != nil {
+		tfMap["actions"] = aws.StringValueSlice(v)
 	}
+
+	if v := apiObject.ContentTransformation; v != nil {
+		tfMap["content_transformation"] = []interface{}{flattenObjectLambdaContentTransformation(v)}
+	}
+
+	return tfMap
 }
 
-func flattenS3ObjectLambdaAccessPointPublicAccessBlockConfiguration(config *s3control.PublicAccessBlockConfiguration) []interface{} {
-	if config == nil {
-		return []interface{}{}
+func flattenObjectLambdaTransformationConfigurations(apiObjects []*s3control.ObjectLambdaTransformationConfiguration) []interface{} {
+	if len(apiObjects) == 0 {
+		return nil
 	}
 
-	return []interface{}{map[string]interface{}{
-		"block_public_acls":       aws.BoolValue(config.BlockPublicAcls),
-		"block_public_policy":     aws.BoolValue(config.BlockPublicPolicy),
-		"ignore_public_acls":      aws.BoolValue(config.IgnorePublicAcls),
-		"restrict_public_buckets": aws.BoolValue(config.RestrictPublicBuckets),
-	}}
+	var tfList []interface{}
+
+	for _, apiObject := range apiObjects {
+		if apiObject == nil {
+			continue
+		}
+
+		tfList = append(tfList, flattenObjectLambdaTransformationConfiguration(apiObject))
+	}
+
+	return tfList
+}
+
+func flattenObjectLambdaContentTransformation(apiObject *s3control.ObjectLambdaContentTransformation) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.AwsLambda; v != nil {
+		tfMap["aws_lambda"] = []interface{}{flattenAwsLambdaTransformation(v)}
+	}
+
+	return tfMap
+}
+
+func flattenAwsLambdaTransformation(apiObject *s3control.AwsLambdaTransformation) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.FunctionArn; v != nil {
+		tfMap["function_arn"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.FunctionPayload; v != nil {
+		tfMap["function_payload"] = aws.StringValue(v)
+	}
+
+	return tfMap
 }
