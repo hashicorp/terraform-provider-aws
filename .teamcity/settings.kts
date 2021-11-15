@@ -97,7 +97,10 @@ object PullRequest : BuildType({
             name = "Setup GOENV"
             scriptContent = File("./scripts/setup_goenv.sh").readText()
         }
-
+        script {
+            name = "Run Tests"
+            scriptContent = File("./scripts/pullrequest_tests/tests.sh").readText()
+        }
     }
 
     features {
