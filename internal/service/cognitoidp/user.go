@@ -89,20 +89,10 @@ func ResourceUser() *schema.Resource {
 				},
 				Computed: true,
 			},
-			"user_attribute": {
-				Type: schema.TypeSet,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"name": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"value": {
-							Type:      schema.TypeString,
-							Required:  true,
-							Sensitive: true,
-						},
-					},
+			"attributes": {
+				Type: schema.TypeMap,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
 				},
 				Optional: true,
 			},
@@ -135,19 +125,9 @@ func ResourceUser() *schema.Resource {
 				ConflictsWith: []string{"password"},
 			},
 			"validation_data": {
-				Type: schema.TypeSet,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"name": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"value": {
-							Type:      schema.TypeString,
-							Required:  true,
-							Sensitive: true,
-						},
-					},
+				Type: schema.TypeMap,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
 				},
 				Optional: true,
 			},
@@ -183,13 +163,13 @@ func resourceUserCreate(d *schema.ResourceData, meta interface{}) error {
 		params.MessageAction = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("user_attribute"); ok {
-		attributes := v.(*schema.Set)
+	if v, ok := d.GetOk("attributes"); ok {
+		attributes := v.(map[string]interface{})
 		params.UserAttributes = expandUserAttributes(attributes)
 	}
 
 	if v, ok := d.GetOk("validation_data"); ok {
-		attributes := v.(*schema.Set)
+		attributes := v.(map[string]interface{})
 		// aws sdk uses the same type for both validation data and user attributes
 		// https://docs.aws.amazon.com/sdk-for-go/api/service/cognitoidentityprovider/#AdminCreateUserInput
 		params.ValidationData = expandUserAttributes(attributes)
@@ -259,8 +239,8 @@ func resourceUserRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("Error reading Cognito User: %s", err)
 	}
 
-	if err := d.Set("user_attribute", flattenUserAttributes(user.UserAttributes)); err != nil {
-		return fmt.Errorf("failed setting user_attributes: %w", err)
+	if err := d.Set("attributes", flattenUserAttributes(user.UserAttributes)); err != nil {
+		return fmt.Errorf("failed setting attributes: %w", err)
 	}
 
 	if err := d.Set("status", user.UserStatus); err != nil {
@@ -286,12 +266,12 @@ func resourceUserUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	log.Println("[DEBUG] Updating Cognito User")
 
-	if d.HasChange("user_attribute") {
-		old, new := d.GetChange("user_attribute")
+	if d.HasChange("attributes") {
+		old, new := d.GetChange("attributes")
 
 		upd, del := computeUserAttributesUpdate(old, new)
 
-		if upd.Len() > 0 {
+		if len(upd) > 0 {
 			params := &cognitoidentityprovider.AdminUpdateUserAttributesInput{
 				Username:       aws.String(d.Get("username").(string)),
 				UserPoolId:     aws.String(d.Get("user_pool_id").(string)),
@@ -311,7 +291,7 @@ func resourceUserUpdate(d *schema.ResourceData, meta interface{}) error {
 			params := &cognitoidentityprovider.AdminDeleteUserAttributesInput{
 				Username:           aws.String(d.Get("username").(string)),
 				UserPoolId:         aws.String(d.Get("user_pool_id").(string)),
-				UserAttributeNames: del,
+				UserAttributeNames: expandUserAttributesDelete(del),
 			}
 			_, err := conn.AdminDeleteUserAttributes(params)
 			if err != nil {
@@ -412,52 +392,89 @@ func resourceUserImport(d *schema.ResourceData, meta interface{}) ([]*schema.Res
 	return []*schema.ResourceData{d}, nil
 }
 
-func expandUserAttributes(tfSet *schema.Set) []*cognitoidentityprovider.AttributeType {
-	if tfSet.Len() == 0 {
+func expandUserAttributes(tfMap map[string]interface{}) []*cognitoidentityprovider.AttributeType {
+	if len(tfMap) == 0 {
 		return nil
 	}
 
-	apiList := make([]*cognitoidentityprovider.AttributeType, 0, tfSet.Len())
+	apiList := make([]*cognitoidentityprovider.AttributeType, 0, len(tfMap))
 
-	for _, tfAttribute := range tfSet.List() {
-		apiAttribute := tfAttribute.(map[string]interface{})
+	for k, v := range tfMap {
+		if !UserAttributeKeyMatchesStandardAttribute(k) && !strings.HasPrefix(k, "custom:") {
+			k = fmt.Sprintf("custom:%v", k)
+		}
 		apiList = append(apiList, &cognitoidentityprovider.AttributeType{
-			Name:  aws.String(apiAttribute["name"].(string)),
-			Value: aws.String(apiAttribute["value"].(string)),
+			Name:  aws.String(k),
+			Value: aws.String(v.(string)),
 		})
 	}
 
 	return apiList
 }
 
-func flattenUserAttributes(apiList []*cognitoidentityprovider.AttributeType) *schema.Set {
-	if len(apiList) == 1 {
-		return nil
+func expandUserAttributesDelete(input []*string) []*string {
+	result := make([]*string, 0, len(input))
+
+	for _, v := range input {
+		if !UserAttributeKeyMatchesStandardAttribute(*v) && !strings.HasPrefix(*v, "custom:") {
+			formattedV := fmt.Sprintf("custom:%v", *v)
+			result = append(result, &formattedV)
+		} else {
+			result = append(result, v)
+		}
 	}
 
-	tfList := []interface{}{}
+	return result
+}
 
-	for _, apiAttribute := range apiList {
-		if *apiAttribute.Name == "sub" {
-			continue
+func flattenUserAttributes(apiList []*cognitoidentityprovider.AttributeType) map[string]interface{} {
+	tfMap := make(map[string]interface{})
+
+	if len(apiList) > 1 {
+		for _, apiAttribute := range apiList {
+			if apiAttribute.Name != nil {
+				if UserAttributeKeyMatchesStandardAttribute(*apiAttribute.Name) {
+					if aws.StringValue(apiAttribute.Name) == "sub" {
+						continue
+					}
+					tfMap[aws.StringValue(apiAttribute.Name)] = aws.StringValue(apiAttribute.Value)
+				} else {
+					name := strings.TrimPrefix(strings.TrimPrefix(aws.StringValue(apiAttribute.Name), "dev:"), "custom:")
+					tfMap[name] = aws.StringValue(apiAttribute.Value)
+				}
+			}
 		}
-
-		tfAttribute := map[string]interface{}{}
-
-		if apiAttribute.Name != nil {
-			tfAttribute["name"] = aws.StringValue(apiAttribute.Name)
-		}
-
-		if apiAttribute.Value != nil {
-			tfAttribute["value"] = aws.StringValue(apiAttribute.Value)
-		}
-
-		tfList = append(tfList, tfAttribute)
 	}
 
-	tfSet := schema.NewSet(userAttributeHash, tfList)
+	return tfMap
+}
 
-	return tfSet
+// computeUserAttributesUpdate computes which user attributes should be updated and which ones should be deleted.
+// We should do it like this because we cannot set a list of user attributes in cognito.
+// We can either perfor update or delete operation
+func computeUserAttributesUpdate(old interface{}, new interface{}) (map[string]interface{}, []*string) {
+	oldMap := old.(map[string]interface{})
+	newMap := new.(map[string]interface{})
+
+	upd := make(map[string]interface{})
+
+	for k, v := range newMap {
+		if oldV, ok := oldMap[k]; ok {
+			if oldV.(string) != v.(string) {
+				upd[k] = v
+			}
+			delete(oldMap, k)
+		} else {
+			upd[k] = v
+		}
+	}
+
+	del := make([]*string, 0, len(oldMap))
+	for k := range oldMap {
+		del = append(del, &k)
+	}
+
+	return upd, del
 }
 
 func expandUserDesiredDeliveryMediums(tfSet *schema.Set) []*string {
@@ -468,48 +485,6 @@ func expandUserDesiredDeliveryMediums(tfSet *schema.Set) []*string {
 	}
 
 	return apiList
-}
-
-// computeUserAttributesUpdate computes which user attributes should be updated and which ones should be deleted.
-// We should do it like this because we cannot set a list of user attributes in cognito. We can either perfor man update
-// or delete operation.
-func computeUserAttributesUpdate(old interface{}, new interface{}) (*schema.Set, []*string) {
-	oldMap := map[string]interface{}{}
-
-	oldList := old.(*schema.Set).List()
-	newList := new.(*schema.Set).List()
-
-	upd := schema.NewSet(userAttributeHash, []interface{}{})
-	del := []*string{}
-
-	for _, v := range oldList {
-		vMap := v.(map[string]interface{})
-		oldMap[vMap["name"].(string)] = vMap["value"]
-	}
-
-	for _, v := range newList {
-		vMap := v.(map[string]interface{})
-		if oldV, ok := oldMap[vMap["name"].(string)]; ok {
-			if oldV != vMap["value"] {
-				upd.Add(map[string]interface{}{
-					"name":  vMap["name"].(string),
-					"value": vMap["value"],
-				})
-			}
-			delete(oldMap, vMap["name"].(string))
-		} else {
-			upd.Add(map[string]interface{}{
-				"name":  vMap["name"].(string),
-				"value": vMap["value"],
-			})
-		}
-	}
-
-	for k := range oldMap {
-		del = append(del, &k)
-	}
-
-	return upd, del
 }
 
 // For ClientMetadata we only need expand since AWS doesn't store its value
@@ -551,4 +526,40 @@ func userAttributeHash(attr interface{}) int {
 	attrMap := attr.(map[string]interface{})
 
 	return schema.HashString(attrMap["name"])
+}
+
+func UserAttributeKeyMatchesStandardAttribute(input string) bool {
+	if len(input) == 0 {
+		return false
+	}
+
+	var standardAttributeKeys = []string{
+		"address",
+		"birthdate",
+		"email",
+		"email_verified",
+		"gender",
+		"given_name",
+		"family_name",
+		"locale",
+		"middle_name",
+		"name",
+		"nickname",
+		"phone_number",
+		"phone_number_verified",
+		"picture",
+		"preferred_username",
+		"profile",
+		"sub",
+		"updated_at",
+		"website",
+		"zoneinfo",
+	}
+
+	for _, attribute := range standardAttributeKeys {
+		if input == attribute {
+			return true
+		}
+	}
+	return false
 }
