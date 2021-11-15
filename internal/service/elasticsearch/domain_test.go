@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfelasticsearch "github.com/hashicorp/terraform-provider-aws/internal/service/elasticsearch"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func TestAccElasticsearchDomain_basic(t *testing.T) {
@@ -1139,16 +1140,16 @@ func TestAccAWSElasticSearchDomain_disappears(t *testing.T) {
 	resourceName := "aws_elasticsearch_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckIamServiceLinkedRoleEs(t) },
-		ErrorCheck:   testAccErrorCheck(t, elasticsearch.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckIamServiceLinkedRoleEs(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, elasticsearch.EndpointsID),
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckESDomainDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccESDomainConfig(ri),
 				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckResourceDisappears(acctest.Provider, tfefs.ResourceDomain(), resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfefs.ResourceDomain(), resourceName)),
+					acctest.CheckResourceDisappears(acctest.Provider, tfelasticsearch.ResourceDomain(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfelasticsearch.ResourceDomain(), resourceName)),
 				ExpectNonEmptyPlan: true,
 			},
 		},
@@ -1309,7 +1310,7 @@ func testAccCheckESDomainExists(n string, domain *elasticsearch.ElasticsearchDom
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ElasticsearchConn
-		resp, err := FindDomainByName(conn, rs.Primary.Attributes["domain_name"])
+		resp, err := tfelasticsearch.FindDomainByName(conn, rs.Primary.Attributes["domain_name"])
 		if err != nil {
 			return fmt.Errorf("Error describing domain: %s", err.Error())
 		}
@@ -1352,7 +1353,7 @@ func testAccCheckESDomainDestroy(s *terraform.State) error {
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ElasticsearchConn
-		_, err := FindDomainByName(conn, rs.Primary.Attributes["domain_name"])
+		_, err := tfelasticsearch.FindDomainByName(conn, rs.Primary.Attributes["domain_name"])
 
 		if tfresource.NotFound(err) {
 			continue
