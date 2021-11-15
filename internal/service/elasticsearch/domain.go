@@ -125,6 +125,7 @@ func ResourceDomain() *schema.Resource {
 			"auto_tune_options": {
 				Type:     schema.TypeList,
 				Optional: true,
+				Computed: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -136,6 +137,7 @@ func ResourceDomain() *schema.Resource {
 						"maintenance_schedule": {
 							Type:     schema.TypeSet,
 							Optional: true,
+							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"start_at": {
@@ -171,6 +173,7 @@ func ResourceDomain() *schema.Resource {
 						"rollback_on_disable": {
 							Type:         schema.TypeString,
 							Optional:     true,
+							Computed:     true,
 							ValidateFunc: validation.StringInSlice(elasticsearch.RollbackOnDisable_Values(), false),
 						},
 					},
