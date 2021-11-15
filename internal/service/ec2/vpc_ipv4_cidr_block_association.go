@@ -44,10 +44,10 @@ func ResourceVPCIPv4CIDRBlockAssociation() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-
 			"cidr_block": {
 				Type:         schema.TypeString,
-				Required:     true,
+				Optional:     true,
+				Computed:     true,
 				ForceNew:     true,
 				ValidateFunc: validation.IsCIDRNetwork(16, 28), // The allowed block size is between a /28 netmask and /16 netmask.
 			},

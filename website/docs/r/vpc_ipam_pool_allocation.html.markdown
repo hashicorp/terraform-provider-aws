@@ -8,7 +8,7 @@ description: |-
 
 # Resource: aws_vpc_ipam_pool_allocation
 
-Allocates (reserves) a CIDR from an IPAM address pool, preventing usage by IPAM.
+Allocates (reserves) a CIDR from an IPAM address pool, preventing usage by IPAM. Only works for private IPv4.
 
 ## Example Usage
 

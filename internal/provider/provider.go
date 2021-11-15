@@ -1104,6 +1104,7 @@ func Provider() *schema.Provider {
 			"aws_vpc_ipam_pool_cidr":                              ec2.ResourceVPCIpamPoolCidr(),
 			"aws_vpc_ipam_scope":                                  ec2.ResourceVPCIpamScope(),
 			"aws_vpc_ipv4_cidr_block_association":                 ec2.ResourceVPCIPv4CIDRBlockAssociation(),
+			"aws_vpc_ipv6_cidr_block_association":                 ec2.ResourceVPCIPv6CIDRBlockAssociation(),
 			"aws_vpc_peering_connection":                          ec2.ResourceVPCPeeringConnection(),
 			"aws_vpc_peering_connection_accepter":                 ec2.ResourceVPCPeeringConnectionAccepter(),
 			"aws_vpc_peering_connection_options":                  ec2.ResourceVPCPeeringConnectionOptions(),

@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// acceptance tests for byoip related tests are in vpc_byoip_test.go
 func ResourceVPC() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{
@@ -133,6 +134,11 @@ func ResourceVPC() *schema.Resource {
 				Computed:      true,
 				ConflictsWith: []string{"ipv6_netmask_length", "assign_generated_ipv6_cidr_block"},
 				RequiredWith:  []string{"ipv6_ipam_pool_id"},
+				ValidateFunc: validation.Any(
+					validation.StringIsEmpty,
+					verify.ValidIPv6CIDRNetworkAddress,
+					validation.IsCIDRNetwork(56, 56),
+				),
 			},
 			"ipv6_ipam_pool_id": {
 				Type:          schema.TypeString,
@@ -606,7 +612,6 @@ func resourceVPCUpdate(d *schema.ResourceData, meta interface{}) error {
 
 		// if assoc id exists it needs to be disassociated
 		if v, ok := d.GetOk("ipv6_association_id"); ok {
-			//createOpts.Ipv6IpamPoolId = aws.String(v.(string))
 			log.Printf("[INFO] Disassociating existing ipv6 cidr")
 			if err := ipv6DisassociateCidrBlock(conn, d.Id(), v.(string)); err != nil {
 				return err
@@ -614,23 +619,30 @@ func resourceVPCUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 		if v := d.Get("ipv6_ipam_pool_id"); v != "" {
 			modifyOpts := &ec2.AssociateVpcCidrBlockInput{
-				VpcId: &vpcid,
-			}
-			if v, ok := d.GetOk("ipv6_ipam_pool_id"); ok {
-				modifyOpts.Ipv6IpamPoolId = aws.String(v.(string))
+				VpcId:          &vpcid,
+				Ipv6IpamPoolId: aws.String(v.(string)),
 			}
 
 			// if netmask is set then ipv6_cidr may be set but old
-			if v, ok := d.GetOk("ipv6_netmask_length"); ok {
+			if v := d.Get("ipv6_netmask_length"); v != 0 {
 				modifyOpts.Ipv6NetmaskLength = aws.Int64(int64(v.(int)))
-			} else {
+			}
+			// else {
+			// 	modifyOpts.Ipv6CidrBlock = aws.String(d.Get("ipv6_cidr_block").(string))
+			// }
+			if v := d.Get("ipv6_cidr_block"); v != "" {
 				modifyOpts.Ipv6CidrBlock = aws.String(v.(string))
 			}
+
 			log.Printf("[INFO] Allocating ipv6 cidr block from ipam pool to vpc %s: %#v",
 				d.Id(), modifyOpts)
-			_, err := conn.AssociateVpcCidrBlock(modifyOpts)
+			resp, err := conn.AssociateVpcCidrBlock(modifyOpts)
 			if err != nil {
 				return err
+			}
+			log.Printf("[DEBUG] Waiting for EC2 VPC (%s) IPv6 CIDR to become associated", d.Id())
+			if err := waitForEc2VpcIpv6CidrBlockAssociationCreate(conn, d.Id(), aws.StringValue(resp.Ipv6CidrBlockAssociation.AssociationId)); err != nil {
+				return fmt.Errorf("error waiting for EC2 VPC (%s) IPv6 CIDR to become associated: %s", d.Id(), err)
 			}
 		}
 	}
@@ -936,7 +948,7 @@ func waitForEc2VpcIpv6CidrBlockAssociationCreate(conn *ec2.EC2, vpcID, associati
 		},
 		Target:  []string{ec2.VpcCidrBlockStateCodeAssociated},
 		Refresh: Ipv6CidrStateRefreshFunc(conn, vpcID, associationID),
-		Timeout: 1 * time.Minute,
+		Timeout: 5 * time.Minute,
 	}
 	_, err := stateConf.WaitForState()
 
@@ -951,7 +963,7 @@ func waitForEc2VpcIpv6CidrBlockAssociationDelete(conn *ec2.EC2, vpcID, associati
 		},
 		Target:         []string{ec2.VpcCidrBlockStateCodeDisassociated},
 		Refresh:        Ipv6CidrStateRefreshFunc(conn, vpcID, associationID),
-		Timeout:        1 * time.Minute,
+		Timeout:        3 * time.Minute,
 		NotFoundChecks: 1,
 	}
 	_, err := stateConf.WaitForState()
