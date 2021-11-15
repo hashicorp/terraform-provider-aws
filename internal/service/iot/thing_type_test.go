@@ -215,8 +215,8 @@ resource "aws_iot_thing_type" "foo" {
 func testAccIoTThingTypeTags1(rName, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_iot_thing_type" "foo" {
-  name        = "tf_acc_iot_thing_type_%[1]s"
-  deprecated  = false
+  name       = "tf_acc_iot_thing_type_%[1]s"
+  deprecated = false
 
   tags = {
     %[2]q = %[3]q
@@ -228,8 +228,8 @@ resource "aws_iot_thing_type" "foo" {
 func testAccIoTThingTypeTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 resource "aws_iot_thing_type" "foo" {
-  name        = "tf_acc_iot_thing_type_%[1]s"
-  deprecated  = false
+  name       = "tf_acc_iot_thing_type_%[1]s"
+  deprecated = false
 
   tags = {
     %[2]q = %[3]q
