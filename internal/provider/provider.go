@@ -518,6 +518,8 @@ func Provider() *schema.Provider {
 			"aws_lb_target_group":  elbv2.DataSourceTargetGroup(),
 			"aws_lb":               elbv2.DataSourceLoadBalancer(),
 
+			"aws_emr_release_labels": emr.DataSourceReleaseLabels(),
+
 			"aws_kinesis_firehose_delivery_stream": firehose.DataSourceDeliveryStream(),
 
 			"aws_globalaccelerator_accelerator": globalaccelerator.DataSourceAccelerator(),
