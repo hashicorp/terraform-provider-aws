@@ -225,7 +225,7 @@ resource "aws_appstream_directory_config" "test" {
   }
 
   depends_on = [
-	aws_directory_service_directory.test
+    aws_directory_service_directory.test
   ]
 }
 
@@ -257,7 +257,7 @@ resource "aws_appstream_directory_config" "test" {
   }
 
   depends_on = [
-	aws_directory_service_directory.test
+    aws_directory_service_directory.test
   ]
 }
 
