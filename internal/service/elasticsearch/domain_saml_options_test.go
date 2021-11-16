@@ -168,22 +168,18 @@ func testAccCheckESDomainSAMLOptionsDestroy(s *terraform.State) error {
 			continue
 		}
 
-		resp, err := conn.DescribeElasticsearchDomain(&elasticsearch.DescribeElasticsearchDomainInput{
-			DomainName: aws.String(rs.Primary.Attributes["domain_name"]),
-		})
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ElasticsearchConn
+		_, err := tfelasticsearch.FindDomainByName(conn, rs.Primary.Attributes["domain_name"])
 
-		if err == nil {
-			return fmt.Errorf("Elasticsearch Domain still exists %s", resp)
+		if tfresource.NotFound(err) {
+			continue
 		}
 
-		awsErr, ok := err.(awserr.Error)
-		if !ok {
-			return err
-		}
-		if awsErr.Code() != "ResourceNotFoundException" {
+		if err != nil {
 			return err
 		}
 
+		return fmt.Errorf("Elasticsearch domain saml options %s still exists", rs.Primary.ID)
 	}
 
 	return nil
