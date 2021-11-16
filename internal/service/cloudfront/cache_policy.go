@@ -161,20 +161,14 @@ func resourceCachePolicyCreate(d *schema.ResourceData, meta interface{}) error {
 
 	name := d.Get("name").(string)
 	apiObject := &cloudfront.CachePolicyConfig{
-		MinTTL: aws.Int64(int64(d.Get("min_ttl").(int))),
-		Name:   aws.String(name),
+		DefaultTTL: aws.Int64(int64(d.Get("default_ttl").(int))),
+		MaxTTL:     aws.Int64(int64(d.Get("max_ttl").(int))),
+		MinTTL:     aws.Int64(int64(d.Get("min_ttl").(int))),
+		Name:       aws.String(name),
 	}
 
 	if v, ok := d.GetOk("comment"); ok {
 		apiObject.Comment = aws.String(v.(string))
-	}
-
-	if v, ok := d.GetOk("default_ttl"); ok {
-		apiObject.DefaultTTL = aws.Int64(int64(v.(int)))
-	}
-
-	if v, ok := d.GetOk("max_ttl"); ok {
-		apiObject.MaxTTL = aws.Int64(int64(v.(int)))
 	}
 
 	if v, ok := d.GetOk("parameters_in_cache_key_and_forwarded_to_origin"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
@@ -238,20 +232,14 @@ func resourceCachePolicyUpdate(d *schema.ResourceData, meta interface{}) error {
 	// "When you update a cache policy configuration, all the fields are updated with the values provided in the request. You cannot update some fields independent of others."
 	//
 	apiObject := &cloudfront.CachePolicyConfig{
-		MinTTL: aws.Int64(int64(d.Get("min_ttl").(int))),
-		Name:   aws.String(d.Get("name").(string)),
+		DefaultTTL: aws.Int64(int64(d.Get("default_ttl").(int))),
+		MaxTTL:     aws.Int64(int64(d.Get("max_ttl").(int))),
+		MinTTL:     aws.Int64(int64(d.Get("min_ttl").(int))),
+		Name:       aws.String(d.Get("name").(string)),
 	}
 
 	if v, ok := d.GetOk("comment"); ok {
 		apiObject.Comment = aws.String(v.(string))
-	}
-
-	if v, ok := d.GetOk("default_ttl"); ok {
-		apiObject.DefaultTTL = aws.Int64(int64(v.(int)))
-	}
-
-	if v, ok := d.GetOk("max_ttl"); ok {
-		apiObject.MaxTTL = aws.Int64(int64(v.(int)))
 	}
 
 	if v, ok := d.GetOk("parameters_in_cache_key_and_forwarded_to_origin"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
