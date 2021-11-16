@@ -32,7 +32,7 @@ func ResourceVPCIpamPoolCidrAllocation() *schema.Resource {
 				ConflictsWith: []string{"netmask_length"},
 				ValidateFunc: validation.Any(
 					verify.ValidIPv4CIDRNetworkAddress,
-					validation.IsCIDRNetwork(16, 28),
+					validation.IsCIDRNetwork(VPCCIDRMinIPv4, VPCCIDRMaxIPv4),
 				),
 			},
 			"description": {
@@ -53,7 +53,7 @@ func ResourceVPCIpamPoolCidrAllocation() *schema.Resource {
 				Type:          schema.TypeInt,
 				Optional:      true,
 				ForceNew:      true,
-				ValidateFunc:  validation.IsCIDRNetwork(16, 28),
+				ValidateFunc:  validation.IntBetween(VPCCIDRMinIPv4, VPCCIDRMaxIPv4),
 				ConflictsWith: []string{"cidr"},
 			},
 			"resource_id": {

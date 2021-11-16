@@ -21,6 +21,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+const (
+	VPCCIDRMaxIPv4 = 28
+	VPCCIDRMinIPv4 = 16
+	VPCCIDRMaxIPv6 = 56
+)
+
 // acceptance tests for byoip related tests are in vpc_byoip_test.go
 func ResourceVPC() *schema.Resource {
 	//lintignore:R011
@@ -38,7 +44,7 @@ func ResourceVPC() *schema.Resource {
 			verify.SetTagsDiff,
 			func(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
 				if diff.Id() != "" && diff.HasChange("cidr_block") {
-					// if netmask is set then cidr is derived from ipam, ignore changes
+					// if netmask is set then CIDR is derived from ipam, ignore changes
 					if diff.Get("ipv4_netmask_length") != 0 {
 						return diff.Clear("cidr_block")
 					}
@@ -66,7 +72,7 @@ func ResourceVPC() *schema.Resource {
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
-				ValidateFunc:  validation.IsCIDRNetwork(16, 28),
+				ValidateFunc:  validation.IsCIDRNetwork(VPCCIDRMinIPv4, VPCCIDRMaxIPv4),
 				ConflictsWith: []string{"ipv4_netmask_length"},
 			},
 			"default_network_acl_id": {
@@ -120,7 +126,7 @@ func ResourceVPC() *schema.Resource {
 				Type:          schema.TypeInt,
 				Optional:      true,
 				ForceNew:      true,
-				ValidateFunc:  validation.IntBetween(16, 28),
+				ValidateFunc:  validation.IntBetween(VPCCIDRMinIPv4, VPCCIDRMaxIPv4),
 				ConflictsWith: []string{"cidr_block"},
 				RequiredWith:  []string{"ipv4_ipam_pool_id"},
 			},
@@ -137,7 +143,7 @@ func ResourceVPC() *schema.Resource {
 				ValidateFunc: validation.Any(
 					validation.StringIsEmpty,
 					verify.ValidIPv6CIDRNetworkAddress,
-					validation.IsCIDRNetwork(56, 56),
+					validation.IsCIDRNetwork(VPCCIDRMaxIPv6, VPCCIDRMaxIPv6),
 				),
 			},
 			"ipv6_ipam_pool_id": {
@@ -148,7 +154,7 @@ func ResourceVPC() *schema.Resource {
 			"ipv6_netmask_length": {
 				Type:          schema.TypeInt,
 				Optional:      true,
-				ValidateFunc:  validation.IntInSlice([]int{56}),
+				ValidateFunc:  validation.IntInSlice([]int{VPCCIDRMaxIPv6}),
 				ConflictsWith: []string{"ipv6_cidr_block"},
 				RequiredWith:  []string{"ipv6_ipam_pool_id"},
 			},
@@ -608,11 +614,10 @@ func resourceVPCUpdate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if d.HasChanges("ipv6_cidr_block", "ipv6_ipam_pool_id") {
-		log.Printf("[INFO] Modifying ipam ipv6 cidr")
+		log.Printf("[INFO] Modifying ipam IPv6 CIDR")
 
 		// if assoc id exists it needs to be disassociated
 		if v, ok := d.GetOk("ipv6_association_id"); ok {
-			log.Printf("[INFO] Disassociating existing ipv6 cidr")
 			if err := ipv6DisassociateCidrBlock(conn, d.Id(), v.(string)); err != nil {
 				return err
 			}
@@ -623,26 +628,20 @@ func resourceVPCUpdate(d *schema.ResourceData, meta interface{}) error {
 				Ipv6IpamPoolId: aws.String(v.(string)),
 			}
 
-			// if netmask is set then ipv6_cidr may be set but old
 			if v := d.Get("ipv6_netmask_length"); v != 0 {
 				modifyOpts.Ipv6NetmaskLength = aws.Int64(int64(v.(int)))
 			}
-			// else {
-			// 	modifyOpts.Ipv6CidrBlock = aws.String(d.Get("ipv6_cidr_block").(string))
-			// }
+
 			if v := d.Get("ipv6_cidr_block"); v != "" {
 				modifyOpts.Ipv6CidrBlock = aws.String(v.(string))
 			}
 
-			log.Printf("[INFO] Allocating ipv6 cidr block from ipam pool to vpc %s: %#v",
-				d.Id(), modifyOpts)
 			resp, err := conn.AssociateVpcCidrBlock(modifyOpts)
 			if err != nil {
 				return err
 			}
-			log.Printf("[DEBUG] Waiting for EC2 VPC (%s) IPv6 CIDR to become associated", d.Id())
 			if err := waitForEc2VpcIpv6CidrBlockAssociationCreate(conn, d.Id(), aws.StringValue(resp.Ipv6CidrBlockAssociation.AssociationId)); err != nil {
-				return fmt.Errorf("error waiting for EC2 VPC (%s) IPv6 CIDR to become associated: %s", d.Id(), err)
+				return fmt.Errorf("error waiting for EC2 VPC (%s) IPv6 CIDR to become associated: %w", d.Id(), err)
 			}
 		}
 	}
@@ -707,7 +706,7 @@ func resourceVPCDelete(d *schema.ResourceData, meta interface{}) error {
 }
 
 func ipv6DisassociateCidrBlock(conn *ec2.EC2, id, allocationId string) error {
-	log.Printf("[INFO] Disassociating ipv6 cidr association id: %s", allocationId)
+	log.Printf("[INFO] Disassociating IPv6 CIDR association id: %s", allocationId)
 	modifyOpts := &ec2.DisassociateVpcCidrBlockInput{
 		AssociationId: aws.String(allocationId),
 	}
