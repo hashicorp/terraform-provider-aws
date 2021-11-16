@@ -3,12 +3,9 @@ package elasticsearch
 import (
 	"fmt"
 	"log"
-	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	elasticsearch "github.com/aws/aws-sdk-go/service/elasticsearchservice"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -38,7 +35,6 @@ func ResourceDomainPolicy() *schema.Resource {
 
 func resourceDomainPolicyRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ElasticsearchConn
-	name := d.Get("domain_name").(string)
 
 	ds, err := FindDomainByName(conn, d.Get("domain_name").(string))
 
@@ -52,7 +48,7 @@ func resourceDomainPolicyRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error reading Elasticsearch Domain Policy (%s): %w", d.Id(), err)
 	}
 
-	log.Printf("[DEBUG] Received Elasticsearch domain: %s", out)
+	log.Printf("[DEBUG] Received Elasticsearch domain: %s", ds)
 
 	d.Set("access_policies", ds.AccessPolicies)
 
