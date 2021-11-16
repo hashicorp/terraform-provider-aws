@@ -5,7 +5,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/waf"
 )
 
-func expandAction(l []interface{}) *waf.WafAction {
+func ExpandAction(l []interface{}) *waf.WafAction {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -17,7 +17,7 @@ func expandAction(l []interface{}) *waf.WafAction {
 	}
 }
 
-func expandOverrideAction(l []interface{}) *waf.WafOverrideAction {
+func ExpandOverrideAction(l []interface{}) *waf.WafOverrideAction {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -29,20 +29,20 @@ func expandOverrideAction(l []interface{}) *waf.WafOverrideAction {
 	}
 }
 
-func expandWebACLUpdate(updateAction string, aclRule map[string]interface{}) *waf.WebACLUpdate {
+func ExpandWebACLUpdate(updateAction string, aclRule map[string]interface{}) *waf.WebACLUpdate {
 	var rule *waf.ActivatedRule
 
 	switch aclRule["type"].(string) {
 	case waf.WafRuleTypeGroup:
 		rule = &waf.ActivatedRule{
-			OverrideAction: expandOverrideAction(aclRule["override_action"].([]interface{})),
+			OverrideAction: ExpandOverrideAction(aclRule["override_action"].([]interface{})),
 			Priority:       aws.Int64(int64(aclRule["priority"].(int))),
 			RuleId:         aws.String(aclRule["rule_id"].(string)),
 			Type:           aws.String(aclRule["type"].(string)),
 		}
 	default:
 		rule = &waf.ActivatedRule{
-			Action:   expandAction(aclRule["action"].([]interface{})),
+			Action:   ExpandAction(aclRule["action"].([]interface{})),
 			Priority: aws.Int64(int64(aclRule["priority"].(int))),
 			RuleId:   aws.String(aclRule["rule_id"].(string)),
 			Type:     aws.String(aclRule["type"].(string)),
@@ -57,7 +57,7 @@ func expandWebACLUpdate(updateAction string, aclRule map[string]interface{}) *wa
 	return update
 }
 
-func flattenAction(n *waf.WafAction) []map[string]interface{} {
+func FlattenAction(n *waf.WafAction) []map[string]interface{} {
 	if n == nil {
 		return nil
 	}
@@ -69,7 +69,7 @@ func flattenAction(n *waf.WafAction) []map[string]interface{} {
 	return []map[string]interface{}{result}
 }
 
-func flattenWebACLRules(ts []*waf.ActivatedRule) []map[string]interface{} {
+func FlattenWebACLRules(ts []*waf.ActivatedRule) []map[string]interface{} {
 	out := make([]map[string]interface{}, len(ts))
 	for i, r := range ts {
 		m := make(map[string]interface{})
@@ -95,7 +95,7 @@ func flattenWebACLRules(ts []*waf.ActivatedRule) []map[string]interface{} {
 	return out
 }
 
-func expandFieldToMatch(d map[string]interface{}) *waf.FieldToMatch {
+func ExpandFieldToMatch(d map[string]interface{}) *waf.FieldToMatch {
 	ftm := &waf.FieldToMatch{
 		Type: aws.String(d["type"].(string)),
 	}
@@ -108,10 +108,10 @@ func expandFieldToMatch(d map[string]interface{}) *waf.FieldToMatch {
 func FlattenFieldToMatch(fm *waf.FieldToMatch) []interface{} {
 	m := make(map[string]interface{})
 	if fm.Data != nil {
-		m["data"] = *fm.Data
+		m["data"] = aws.StringValue(fm.Data)
 	}
 	if fm.Type != nil {
-		m["type"] = *fm.Type
+		m["type"] = aws.StringValue(fm.Type)
 	}
 	return []interface{}{m}
 }

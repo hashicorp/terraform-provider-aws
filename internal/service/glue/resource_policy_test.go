@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/glue"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -209,7 +210,7 @@ func testAccResourcePolicy(n string, action string) resource.TestCheckFunc {
 			return fmt.Errorf("Get resource policy error: %v", err)
 		}
 
-		actualPolicyText := *policy.PolicyInJson
+		actualPolicyText := aws.StringValue(policy.PolicyInJson)
 
 		expectedPolicy := CreateTablePolicy(action)
 		equivalent, err := awspolicy.PoliciesAreEquivalent(actualPolicyText, expectedPolicy)

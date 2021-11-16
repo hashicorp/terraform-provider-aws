@@ -275,7 +275,7 @@ func updateWafRuleResource(id string, oldP, newP []interface{}, conn *waf.WAF) e
 		req := &waf.UpdateRuleInput{
 			ChangeToken: token,
 			RuleId:      aws.String(id),
-			Updates:     diffWafRulePredicates(oldP, newP),
+			Updates:     DiffRulePredicates(oldP, newP),
 		}
 
 		return conn.UpdateRule(req)

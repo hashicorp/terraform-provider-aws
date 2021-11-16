@@ -147,7 +147,7 @@ func updateWafRegexPatternSetPatternStrings(id string, oldPatterns, newPatterns 
 		req := &waf.UpdateRegexPatternSetInput{
 			ChangeToken:       token,
 			RegexPatternSetId: aws.String(id),
-			Updates:           diffWafRegexPatternSetPatternStrings(oldPatterns, newPatterns),
+			Updates:           DiffRegexPatternSetPatternStrings(oldPatterns, newPatterns),
 		}
 
 		return conn.UpdateRegexPatternSet(req)

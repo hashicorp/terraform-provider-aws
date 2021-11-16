@@ -384,7 +384,7 @@ func testAccCheckKeyHasPolicy(name string, expectedPolicyText string) resource.T
 			return err
 		}
 
-		actualPolicyText := *out.Policy
+		actualPolicyText := aws.StringValue(out.Policy)
 
 		equivalent, err := awspolicy.PoliciesAreEquivalent(actualPolicyText, expectedPolicyText)
 		if err != nil {

@@ -584,7 +584,7 @@ func daxClusterStateRefreshFunc(conn *dax.DAX, clusterID, givenState string, pen
 		// return the current state if it's in the pending array
 		for _, p := range pending {
 			log.Printf("[DEBUG] DAX: checking pending state (%s) for cluster (%s), cluster status: %s", pending, clusterID, *c.Status)
-			s := *c.Status
+			s := aws.StringValue(c.Status)
 			if p == s {
 				log.Printf("[DEBUG] Return with status: %v", *c.Status)
 				return c, p, nil
