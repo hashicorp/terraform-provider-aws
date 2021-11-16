@@ -4,12 +4,17 @@ FEATURES:
 
 * **New Data Source:** `aws_emr_release_labels` ([#21767](https://github.com/hashicorp/terraform-provider-aws/issues/21767))
 * **New Resource:** `aws_appstream_directory_config` ([#21505](https://github.com/hashicorp/terraform-provider-aws/issues/21505))
+* **New Resource:** `aws_s3control_access_point_policy` ([#19294](https://github.com/hashicorp/terraform-provider-aws/issues/19294))
 * **New Resource:** `aws_s3control_multi_region_access_point` ([#21060](https://github.com/hashicorp/terraform-provider-aws/issues/21060))
 * **New Resource:** `aws_s3control_multi_region_access_point_policy` ([#21060](https://github.com/hashicorp/terraform-provider-aws/issues/21060))
+* **New Resource:** `aws_s3control_object_lambda_access_point` ([#19294](https://github.com/hashicorp/terraform-provider-aws/issues/19294))
+* **New Resource:** `aws_s3control_object_lambda_access_point_policy` ([#19294](https://github.com/hashicorp/terraform-provider-aws/issues/19294))
 * **New Resource:** `aws_securityhub_finding_aggregator` ([#21560](https://github.com/hashicorp/terraform-provider-aws/issues/21560))
 
 ENHANCEMENTS:
 
+* aws_s3_access_point: Add `alias` attribute ([#19294](https://github.com/hashicorp/terraform-provider-aws/issues/19294))
+* aws_s3_access_point: Add `endpoints` attribute ([#19294](https://github.com/hashicorp/terraform-provider-aws/issues/19294))
 * resource/aws_emr_cluster: Add `auto_termination_policy` argument ([#21702](https://github.com/hashicorp/terraform-provider-aws/issues/21702))
 * resource/aws_iot_thing_type: Add `tags` argument and `tags_all` attribute to support resource tagging ([#21769](https://github.com/hashicorp/terraform-provider-aws/issues/21769))
 * resource/aws_neptune_cluster: Support in-place update of `engine_version` ([#21760](https://github.com/hashicorp/terraform-provider-aws/issues/21760))
@@ -17,6 +22,9 @@ ENHANCEMENTS:
 
 BUG FIXES:
 
+* aws_s3_access_point: `vpc_configuration.vpc_id` is _ForceNew_ ([#19294](https://github.com/hashicorp/terraform-provider-aws/issues/19294))
+* resource/aws_cloudfront_cache_policy: Fix 0 values for `default_ttl`, `max_ttl` and `min_ttl` arguments ([#21793](https://github.com/hashicorp/terraform-provider-aws/issues/21793))
+* resource/aws_internet_gateway: Allow `available` as a *pending* state during gateway detach ([#21794](https://github.com/hashicorp/terraform-provider-aws/issues/21794))
 * resource/aws_security_group: Fix lack of pagination when describing security groups ([#21743](https://github.com/hashicorp/terraform-provider-aws/issues/21743))
 
 ## 3.65.0 (November 11, 2021)
