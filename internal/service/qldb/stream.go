@@ -21,10 +21,10 @@ import (
 
 func ResourceStream() *schema.Resource {
 	return &schema.Resource{
-		Create: ResourceStreamCreate,
-		Read:   ResourceStreamRead,
-		Update: ResourceStreamUpdate,
-		Delete: ResourceStreamDelete,
+		Create: resourceStreamCreate,
+		Read:   resourceStreamRead,
+		Update: resourceStreamUpdate,
+		Delete: resourceStreamDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -88,7 +88,7 @@ func ResourceStream() *schema.Resource {
 	}
 }
 
-func ResourceStreamCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceStreamCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).QLDBConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
@@ -160,11 +160,11 @@ func ResourceStreamCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	// Update our attributes and return
-	return ResourceStreamRead(d, meta)
+	return resourceStreamRead(d, meta)
 }
 
 //TODO: Another edge case to account for?:  Stream resources that are in a terminal state (CANCELED, COMPLETED, and FAILED) are subject to a 7-day retention period. They are automatically hard-deleted after this limit expires.
-func ResourceStreamRead(d *schema.ResourceData, meta interface{}) error {
+func resourceStreamRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).QLDBConn
 	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
@@ -243,7 +243,7 @@ func ResourceStreamRead(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func ResourceStreamUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceStreamUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).QLDBConn
 
 	if d.HasChange("tags") {
@@ -253,10 +253,10 @@ func ResourceStreamUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	return ResourceStreamRead(d, meta)
+	return resourceStreamRead(d, meta)
 }
 
-func ResourceStreamDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceStreamDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).QLDBConn
 	deleteQLDBStreamOpts := &qldb.CancelJournalKinesisStreamInput{
 		LedgerName: aws.String(d.Get("ledger_name").(string)),
