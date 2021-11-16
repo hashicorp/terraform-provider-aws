@@ -16,7 +16,7 @@ For more details, see the [Amazon Kinesis Stream Consumer Documentation][1].
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_kinesis_stream" "example" {
   name        = "example-stream"
   shard_count = 1
@@ -45,7 +45,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Kinesis Stream Consumers can be imported using the Amazon Resource Name (ARN) e.g.
+Kinesis Stream Consumers can be imported using the Amazon Resource Name (ARN) e.g.,
 
 ```
 $ terraform import aws_kinesis_stream_consumer.example arn:aws:kinesis:us-west-2:123456789012:stream/example/consumer/example:1616044553

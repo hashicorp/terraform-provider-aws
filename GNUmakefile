@@ -1,7 +1,7 @@
-SWEEP?=us-east-1,us-west-2
+SWEEP?=us-west-2,us-east-1,us-east-2
 TEST?=./...
-SWEEP_DIR?=./aws
-PKG_NAME=aws
+SWEEP_DIR?=./internal/sweep
+PKG_NAME=internal
 TEST_COUNT?=1
 ACCTEST_TIMEOUT?=180m
 ACCTEST_PARALLELISM?=20
@@ -12,16 +12,16 @@ build: fmtcheck
 	go install
 
 gen:
-	rm -f aws/internal/keyvaluetags/*_gen.go
-	rm -f aws/internal/service/**/lister/*_gen.go
+	rm -f internal/service/**/*_gen.go
 	go generate ./...
 
 sweep:
+	# make sweep SWEEPARGS=-sweep-run=aws_example_thing
 	@echo "WARNING: This will destroy infrastructure. Use only in development accounts."
-	go test $(SWEEP_DIR) -v -sweep=$(SWEEP) $(SWEEPARGS) -timeout 60m
+	go test $(SWEEP_DIR) -v -tags=sweep -sweep=$(SWEEP) $(SWEEPARGS) -timeout 60m
 
 test: fmtcheck
-	go test $(TEST) $(TESTARGS) -timeout=5m -parallel=4
+	go test $(TEST) $(TESTARGS) -timeout=5m
 
 testacc: fmtcheck
 	@if [ "$(TESTARGS)" = "-run=TestAccXXX" ]; then \
@@ -34,11 +34,11 @@ testacc: fmtcheck
 		echo "See the contributing guide for more information: https://github.com/hashicorp/terraform-provider-aws/blob/main/docs/contributing/running-and-writing-acceptance-tests.md"; \
 		exit 1; \
 	fi
-	TF_ACC=1 go test ./$(PKG_NAME) -v -count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) $(TESTARGS) -timeout $(ACCTEST_TIMEOUT)
+	TF_ACC=1 go test ./$(PKG_NAME)/... -v -count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) $(TESTARGS) -timeout $(ACCTEST_TIMEOUT)
 
 fmt:
 	@echo "==> Fixing source code with gofmt..."
-	gofmt -s -w ./$(PKG_NAME) $(filter-out ./awsproviderlint/go% ./awsproviderlint/README.md ./awsproviderlint/vendor, $(wildcard ./awsproviderlint/*))
+	gofmt -s -w ./$(PKG_NAME) $(filter-out ./providerlint/go% ./providerlint/README.md ./providerlint/vendor, $(wildcard ./providerlint/*))
 
 # Currently required by tf-deploy compile
 fmtcheck:
@@ -83,15 +83,19 @@ docscheck:
 		-require-resource-subcategory
 	@misspell -error -source text CHANGELOG.md .changelog
 
-lint: golangci-lint awsproviderlint importlint
+lint: golangci-lint providerlint importlint
 
 golangci-lint:
+	@echo "==> Checking source code with golangci-lint..."
 	@golangci-lint run ./$(PKG_NAME)/...
 
-awsproviderlint:
-	@awsproviderlint \
+providerlint:
+	@echo "==> Checking source code with providerlint..."
+	@providerlint \
 		-c 1 \
+		-AT001.ignored-filename-suffixes=_data_source_test.go \
 		-AWSAT006=false \
+		-AWSR002=false \
 		-AWSV001=false \
 		-R001=false \
 		-R010=false \
@@ -99,21 +103,25 @@ awsproviderlint:
 		-R019=false \
 		-V001=false \
 		-V009=false \
+		-V011=false \
+		-V012=false \
+		-V013=false \
+		-V014=false \
 		-XR001=false \
 		-XR002=false \
 		-XR003=false \
 		-XR004=false \
 		-XR005=false \
-		-XAT001=false \
 		-XS001=false \
 		-XS002=false \
-		./$(PKG_NAME)
+		./$(PKG_NAME)/service/... ./$(PKG_NAME)/provider/...
 
 importlint:
+	@echo "==> Checking source code with importlint..."
 	@impi --local . --scheme stdThirdPartyLocal ./$(PKG_NAME)/...
 
 tools:
-	cd awsproviderlint && go install .
+	cd providerlint && go install .
 	cd tools && go install github.com/bflad/tfproviderdocs
 	cd tools && go install github.com/client9/misspell/cmd/misspell
 	cd tools && go install github.com/golangci/golangci-lint/cmd/golangci-lint
@@ -155,4 +163,8 @@ website-lint-fix:
 	@docker run -v $(PWD):/markdown 06kellyjac/markdownlint-cli --fix website/docs/
 	@terrafmt fmt ./website --pattern '*.markdown'
 
-.PHONY: awsproviderlint build gen generate-changelog golangci-lint sweep test testacc fmt fmtcheck lint tools test-compile website-link-check website-lint website-lint-fix depscheck docscheck
+semgrep:
+	@echo "==> Running Semgrep static analysis..."
+	@docker run --rm --volume "${PWD}:/src" returntocorp/semgrep --config .semgrep.yml
+
+.PHONY: providerlint build gen generate-changelog golangci-lint sweep test testacc fmt fmtcheck lint tools test-compile website-link-check website-lint website-lint-fix depscheck docscheck semgrep

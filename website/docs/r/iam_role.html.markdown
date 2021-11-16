@@ -190,14 +190,14 @@ The following arguments are optional:
 * `name_prefix` - (Optional, Forces new resource) Creates a unique friendly name beginning with the specified prefix. Conflicts with `name`.
 * `path` - (Optional) Path to the role. See [IAM Identifiers](https://docs.aws.amazon.com/IAM/latest/UserGuide/Using_Identifiers.html) for more information.
 * `permissions_boundary` - (Optional) ARN of the policy that is used to set the permissions boundary for the role.
-* `tags` - Key-value mapping of tags for the IAM role
+* `tags` - Key-value mapping of tags for the IAM role. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### inline_policy
 
 This configuration block supports the following:
 
 * `name` - (Required) Name of the role policy.
-* `policy` - (Required) Policy document as a JSON formatted string. For more information about building IAM policy documents with Terraform, see the [AWS IAM Policy Document Guide](https://www.terraform.io/docs/providers/aws/guides/iam-policy-documents.html).
+* `policy` - (Required) Policy document as a JSON formatted string. For more information about building IAM policy documents with Terraform, see the [AWS IAM Policy Document Guide](https://learn.hashicorp.com/tutorials/terraform/aws-iam-policy).
 
 ## Attributes Reference
 
@@ -207,11 +207,12 @@ In addition to all arguments above, the following attributes are exported:
 * `create_date` - Creation date of the IAM role.
 * `id` - Name of the role.
 * `name` - Name of the role.
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
 * `unique_id` - Stable and unique string identifying the role.
 
 ## Import
 
-IAM Roles can be imported using the `name`, e.g.
+IAM Roles can be imported using the `name`, e.g.,
 
 ```
 $ terraform import aws_iam_role.developer developer_name

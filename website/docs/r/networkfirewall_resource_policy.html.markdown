@@ -71,13 +71,13 @@ The following arguments are supported:
 
 ## Attributes Reference
 
-In addition to all arguments above, the following attribute is exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `id` - The Amazon Resource Name (ARN) of the rule group or firewall policy associated with the resource policy.
 
 ## Import
 
-Network Firewall Resource Policies can be imported using the `resource_arn` e.g.
+Network Firewall Resource Policies can be imported using the `resource_arn` e.g.,
 
 ```
 $ terraform import aws_networkfirewall_resource_policy.example aws_networkfirewall_rule_group.example arn:aws:network-firewall:us-west-1:123456789012:stateful-rulegroup/example
