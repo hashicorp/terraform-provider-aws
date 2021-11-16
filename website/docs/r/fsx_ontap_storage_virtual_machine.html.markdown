@@ -8,7 +8,7 @@ description: |-
 
 # Resource: aws_fsx_ontap_storage_virtual_machine
 
-Manages a FSx Storage Virtual Machine. 
+Manages a FSx Storage Virtual Machine.
 See the [FSx ONTAP User Guide](https://docs.aws.amazon.com/fsx/latest/ONTAPGuide/managing-svms.html) for more information.
 
 
@@ -19,7 +19,7 @@ See the [FSx ONTAP User Guide](https://docs.aws.amazon.com/fsx/latest/ONTAPGuide
 ```terraform
 resource "aws_fsx_ontap_storage_virtual_machine" "test" {
   file_system_id = aws_fsx_ontap_file_system.test.id
-  name                       = "test"
+  name           = "test"
 }
 ```
 
@@ -34,12 +34,12 @@ resource "aws_fsx_ontap_storage_virtual_machine" "test" {
 
   active_directory_configuration {
     netbios_name = "mysvm"
-	self_managed_active_directory_configuration {
+    self_managed_active_directory_configuration {
       dns_ips     = ["10.0.0.111", "10.0.0.222"]
       domain_name = "corp.example.com"
       password    = "avoid-plaintext-passwords"
       username    = "Admin"
-	}
+    }
   }
 }
 ```
@@ -51,7 +51,7 @@ The following arguments are supported:
 * `active_directory_configuration` - (Optional) Configuration block that Amazon FSx uses to join the FSx ONTAP Storage Virtual Machine(SVM) to your Microsoft Active Directory (AD) directory. Detailed below.
 * `file_system_id` - (Required) The ID of the Amazon FSx ONTAP File System that this SVM will be created on.
 * `name` - (Required) The name of the SVM. You can use a maximum of 47 alphanumeric characters, plus the underscore (_) special character.
-* `root_volume_security_style` - (Optional) Specifies the root volume security style, Valid values are `UNIX`, `NTFS`, and `MIXED`. All volumes created under this SVM will inherit the root security style unless the security style is specified on the volume. Default value is `UNIX`. 
+* `root_volume_security_style` - (Optional) Specifies the root volume security style, Valid values are `UNIX`, `NTFS`, and `MIXED`. All volumes created under this SVM will inherit the root security style unless the security style is specified on the volume. Default value is `UNIX`.
 * `tags` - (Optional) A map of tags to assign to the storage virtual machine. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### active_directory_configuration
@@ -65,7 +65,7 @@ The following arguments are supported for `active_directory_configuration` confi
 
 The following arguments are supported for `self_managed_active_directory` configuration block:
 
-* `dns_ips` - (Required) A list of up to three IP addresses of DNS servers or domain controllers in the self-managed AD directory. 
+* `dns_ips` - (Required) A list of up to three IP addresses of DNS servers or domain controllers in the self-managed AD directory.
 * `domain_name` - (Required) The fully qualified domain name of the self-managed AD directory. For example, `corp.example.com`.
 * `password` - (Required) The password for the service account on your self-managed AD domain that Amazon FSx will use to join to your AD domain.
 * `username` - (Required) The user name for the service account on your self-managed AD domain that Amazon FSx will use to join to your AD domain.
@@ -81,7 +81,7 @@ In addition to all arguments above, the following attributes are exported:
 * `id` - Identifier of the storage virtual machine, e.g., `svm-12345678`
 * `subtype` - Describes the SVM's subtype, e.g. `DEFAULT`
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
-* `uuid` - The SVM's UUID (universally unique identifier). 
+* `uuid` - The SVM's UUID (universally unique identifier).
 
 ### Endpoints
 

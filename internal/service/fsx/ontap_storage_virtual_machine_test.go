@@ -313,41 +313,41 @@ resource "aws_subnet" "test2" {
 }
 
 resource "aws_fsx_ontap_file_system" "test" {
-    storage_capacity    = 1024
-    subnet_ids          = [aws_subnet.test1.id, aws_subnet.test2.id]
-    deployment_type     = "MULTI_AZ_1"
-    throughput_capacity = 512
-    preferred_subnet_id = aws_subnet.test1.id
+  storage_capacity    = 1024
+  subnet_ids          = [aws_subnet.test1.id, aws_subnet.test2.id]
+  deployment_type     = "MULTI_AZ_1"
+  throughput_capacity = 512
+  preferred_subnet_id = aws_subnet.test1.id
 
-    tags = {
-        Name = %[1]q
-      }
+  tags = {
+    Name = %[1]q
   }
+}
 `, rName))
 }
 
 func testAccOntapStorageVirtualMachineADConfig(rName string, domainName string, domainPassword string) string {
 	return acctest.ConfigCompose(testAccOntapStorageVirtualMachineBaseConfig(rName), fmt.Sprintf(`
 
-  resource "aws_directory_service_directory" "test" {
-	edition  = "Standard"
-	name     = %[2]q
-	password = %[3]q
-	type     = "MicrosoftAD"
-  
-	vpc_settings {
-	  subnet_ids = [aws_subnet.test1.id, aws_subnet.test2.id]
-	  vpc_id     = aws_vpc.test.id
-	}
+resource "aws_directory_service_directory" "test" {
+  edition  = "Standard"
+  name     = %[2]q
+  password = %[3]q
+  type     = "MicrosoftAD"
+
+  vpc_settings {
+    subnet_ids = [aws_subnet.test1.id, aws_subnet.test2.id]
+    vpc_id     = aws_vpc.test.id
   }
+}
 `, rName, domainName, domainPassword))
 }
 
 func testAccOntapStorageVirtualMachineBasicConfig(rName string) string {
 	return acctest.ConfigCompose(testAccOntapStorageVirtualMachineBaseConfig(rName), fmt.Sprintf(`
 resource "aws_fsx_ontap_storage_virtual_machine" "test" {
-	file_system_id = aws_fsx_ontap_file_system.test.id
-	name           = %[1]q
+  file_system_id = aws_fsx_ontap_file_system.test.id
+  name           = %[1]q
 }
 `, rName))
 }
@@ -355,9 +355,9 @@ resource "aws_fsx_ontap_storage_virtual_machine" "test" {
 func testAccOntapStorageVirtualMachineRootVolumeSecurityStyleConfig(rName string) string {
 	return acctest.ConfigCompose(testAccOntapStorageVirtualMachineBaseConfig(rName), fmt.Sprintf(`
 resource "aws_fsx_ontap_storage_virtual_machine" "test" {
-	file_system_id = aws_fsx_ontap_file_system.test.id
-	name           = %[1]q
-	root_volume_security_style = "NTFS"
+  file_system_id             = aws_fsx_ontap_file_system.test.id
+  name                       = %[1]q
+  root_volume_security_style = "NTFS"
 }
 `, rName))
 }
@@ -365,9 +365,9 @@ resource "aws_fsx_ontap_storage_virtual_machine" "test" {
 func testAccOntapStorageVirtualMachineSvmAdminPasswordConfig(rName string, pass string) string {
 	return acctest.ConfigCompose(testAccOntapStorageVirtualMachineBaseConfig(rName), fmt.Sprintf(`
 resource "aws_fsx_ontap_storage_virtual_machine" "test" {
-	file_system_id = aws_fsx_ontap_file_system.test.id
-	name           = %[1]q
-	svm_admin_password = %[2]q
+  file_system_id     = aws_fsx_ontap_file_system.test.id
+  name               = %[1]q
+  svm_admin_password = %[2]q
 }
 `, rName, pass))
 }
@@ -402,19 +402,19 @@ resource "aws_fsx_ontap_storage_virtual_machine" "test" {
 func testAccFsxOntapStorageVirutalMachineSelfManagedActiveDirectoryConfig(rName string, netBiosName string, domainNetbiosName string, domainName string, domainPassword string) string {
 	return acctest.ConfigCompose(testAccOntapStorageVirtualMachineADConfig(rName, domainName, domainPassword), fmt.Sprintf(`
 resource "aws_fsx_ontap_storage_virtual_machine" "test" {
-	file_system_id = aws_fsx_ontap_file_system.test.id
-	name           = %[1]q
+  file_system_id = aws_fsx_ontap_file_system.test.id
+  name           = %[1]q
 
-	active_directory_configuration {
-		netbios_name = %[2]q
-		self_managed_active_directory_configuration {
-    		dns_ips     = aws_directory_service_directory.test.dns_ip_addresses
-    		domain_name = %[3]q
-    		password    = %[4]q
-    		username    = "Admin"
-			organizational_unit_distinguidshed_name = "OU=computers,OU=%[5]s" 
-		}
-	}
+  active_directory_configuration {
+    netbios_name = %[2]q
+    self_managed_active_directory_configuration {
+      dns_ips                                 = aws_directory_service_directory.test.dns_ip_addresses
+      domain_name                             = %[3]q
+      password                                = %[4]q
+      username                                = "Admin"
+      organizational_unit_distinguidshed_name = "OU=computers,OU=%[5]s"
+    }
+  }
 }
 `, rName, netBiosName, domainName, domainPassword, domainNetbiosName))
 }
