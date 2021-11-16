@@ -9,3 +9,7 @@ aws_s3control_object_lambda_access_point_policy
 ```release-note:new-resource
 aws_s3control_access_point_policy
 ```
+
+```release-note:bug
+aws_s3_access_point: `vpc_configuration.vpc_id` is _ForceNew_
+```

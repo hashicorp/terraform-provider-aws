@@ -115,6 +115,7 @@ func ResourceAccessPoint() *schema.Resource {
 						"vpc_id": {
 							Type:     schema.TypeString,
 							Required: true,
+							ForceNew: true,
 						},
 					},
 				},
