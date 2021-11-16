@@ -8,6 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/accessanalyzer"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/account"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/acm"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/acmpca"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/amp"
@@ -711,6 +712,8 @@ func Provider() *schema.Provider {
 
 		ResourcesMap: map[string]*schema.Resource{
 			"aws_accessanalyzer_analyzer": accessanalyzer.ResourceAnalyzer(),
+
+			"aws_account_alternate_contact": account.ResourceAlternateContact(),
 
 			"aws_acm_certificate":            acm.ResourceCertificate(),
 			"aws_acm_certificate_validation": acm.ResourceCertificateValidation(),
