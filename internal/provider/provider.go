@@ -472,6 +472,7 @@ func Provider() *schema.Provider {
 			"aws_vpc_dhcp_options":                           ec2.DataSourceVPCDHCPOptions(),
 			"aws_vpc_endpoint_service":                       ec2.DataSourceVPCEndpointService(),
 			"aws_vpc_endpoint":                               ec2.DataSourceVPCEndpoint(),
+			"aws_vpc_ipam_pool":                              ec2.DataSourceVPCIpamPool(),
 			"aws_vpc_peering_connection":                     ec2.DataSourceVPCPeeringConnection(),
 			"aws_vpc_peering_connections":                    ec2.DataSourceVPCPeeringConnections(),
 			"aws_vpc":                                        ec2.DataSourceVPC(),

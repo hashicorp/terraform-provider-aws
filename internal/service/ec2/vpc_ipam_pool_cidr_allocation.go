@@ -24,10 +24,6 @@ func ResourceVPCIpamPoolCidrAllocation() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"allocation_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 			"cidr": {
 				Type:          schema.TypeString,
 				Optional:      true,
@@ -43,6 +39,10 @@ func ResourceVPCIpamPoolCidrAllocation() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
+			},
+			"ipam_pool_allocation_id": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"ipam_pool_id": {
 				Type:     schema.TypeString,
@@ -105,7 +105,7 @@ func ResourceVPCIpamPoolCidrAllocationCreate(d *schema.ResourceData, meta interf
 	if err != nil {
 		return fmt.Errorf("Error allocating cidr from IPAM pool (%s): %w", d.Get("ipam_pool_id").(string), err)
 	}
-	allocation_id := aws.StringValue(output.IpamPoolAllocation.AllocationId)
+	allocation_id := aws.StringValue(output.IpamPoolAllocation.IpamPoolAllocationId)
 	d.SetId(fmt.Sprintf("%s_%s", allocation_id, pool_id))
 
 	return ResourceVPCIpamPoolCidrAllocationRead(d, meta)
@@ -126,7 +126,7 @@ func ResourceVPCIpamPoolCidrAllocationRead(d *schema.ResourceData, meta interfac
 		return nil
 	}
 
-	d.Set("allocation_id", cidr_allocation.AllocationId)
+	d.Set("ipam_pool_allocation_id", cidr_allocation.IpamPoolAllocationId)
 	d.Set("ipam_pool_id", pool_id)
 
 	d.Set("cidr", cidr_allocation.Cidr)
@@ -148,9 +148,9 @@ func ResourceVPCIpamPoolCidrAllocationDelete(d *schema.ResourceData, meta interf
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	input := &ec2.ReleaseIpamPoolAllocationInput{
-		AllocationId: aws.String(d.Get("allocation_id").(string)),
-		IpamPoolId:   aws.String(d.Get("ipam_pool_id").(string)),
-		Cidr:         aws.String(d.Get("cidr").(string)),
+		IpamPoolAllocationId: aws.String(d.Get("ipam_pool_allocation_id").(string)),
+		IpamPoolId:           aws.String(d.Get("ipam_pool_id").(string)),
+		Cidr:                 aws.String(d.Get("cidr").(string)),
 	}
 
 	log.Printf("[DEBUG] Releasing IPAM Pool CIDR Allocation: %s", input)

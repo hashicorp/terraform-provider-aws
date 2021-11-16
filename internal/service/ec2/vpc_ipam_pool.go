@@ -212,8 +212,8 @@ func ResourceVPCIpamPoolRead(d *schema.ResourceData, meta interface{}) error {
 
 	d.Set("address_family", pool.AddressFamily)
 
-	if pool.Advertisable != nil {
-		d.Set("publicly_advertisable", pool.Advertisable)
+	if pool.PubliclyAdvertisable != nil {
+		d.Set("publicly_advertisable", pool.PubliclyAdvertisable)
 	}
 
 	d.Set("allocation_resource_tags", KeyValueTags(ec2TagsFromIpamAllocationTags(pool.AllocationResourceTags)).Map())
