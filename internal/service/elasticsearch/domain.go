@@ -595,7 +595,7 @@ func resourceDomainCreate(d *schema.ResourceData, meta interface{}) error {
 		out, err = conn.CreateElasticsearchDomain(&input)
 	}
 	if err != nil {
-		return fmt.Errorf("Error creating Elasticsearch domain: %s", err)
+		return fmt.Errorf("Error creating Elasticsearch domain: %w", err)
 	}
 
 	d.SetId(aws.StringValue(out.DomainStatus.ARN))
@@ -632,7 +632,7 @@ func resourceDomainRead(d *schema.ResourceData, meta interface{}) error {
 	if ds.AccessPolicies != nil && aws.StringValue(ds.AccessPolicies) != "" {
 		policies, err := structure.NormalizeJsonString(aws.StringValue(ds.AccessPolicies))
 		if err != nil {
-			return fmt.Errorf("access policies contain an invalid JSON: %s", err)
+			return fmt.Errorf("access policies contain an invalid JSON: %w", err)
 		}
 		d.Set("access_policies", policies)
 	}
@@ -834,7 +834,7 @@ func resourceDomainUpdate(d *schema.ResourceData, meta interface{}) error {
 
 		_, err := conn.UpgradeElasticsearchDomain(&upgradeInput)
 		if err != nil {
-			return fmt.Errorf("Failed to upgrade elasticsearch domain: %s", err)
+			return fmt.Errorf("Failed to upgrade elasticsearch domain: %w", err)
 		}
 
 		if _, err := waitUpgradeSucceeded(conn, d.Get("domain_name").(string), d.Timeout(schema.TimeoutUpdate)); err != nil {
