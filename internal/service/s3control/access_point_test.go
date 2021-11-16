@@ -5,7 +5,6 @@ import (
 	"regexp"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/s3control"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -371,22 +370,20 @@ func testAccCheckAccessPointHasPolicy(n string, fn func() string) resource.TestC
 			return fmt.Errorf("No S3 Access Point ID is set")
 		}
 
-		accountId, name, err := tfs3control.AccessPointParseResourceID(rs.Primary.ID)
+		accountID, name, err := tfs3control.AccessPointParseResourceID(rs.Primary.ID)
+
 		if err != nil {
 			return err
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).S3ControlConn
 
-		resp, err := conn.GetAccessPointPolicy(&s3control.GetAccessPointPolicyInput{
-			AccountId: aws.String(accountId),
-			Name:      aws.String(name),
-		})
+		actualPolicyText, _, err := tfs3control.FindAccessPointPolicyAndStatusByAccountIDAndName(conn, accountID, name)
+
 		if err != nil {
 			return err
 		}
 
-		actualPolicyText := *resp.Policy
 		expectedPolicyText := fn()
 
 		equivalent, err := awspolicy.PoliciesAreEquivalent(actualPolicyText, expectedPolicyText)
