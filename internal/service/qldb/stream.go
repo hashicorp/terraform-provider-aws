@@ -40,17 +40,11 @@ func ResourceStream() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
-				ValidateFunc: validation.All(
-					validateUTCTimestamp, // The ExclusiveEndTime must be in ISO 8601 date and time format and in Universal Coordinated Time (UTC). For example: 2019-06-13T21:36:34Z.
-				),
 			},
 			"inclusive_start_time": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
-				ValidateFunc: validation.All(
-					validateUTCTimestamp,
-				),
 			},
 
 			"kinesis_configuration": {
@@ -72,11 +66,10 @@ func ResourceStream() *schema.Resource {
 			},
 
 			"role_arn": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validateArn,
-				Optional:     false,
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+				Optional: false,
 			},
 
 			"stream_name": {
