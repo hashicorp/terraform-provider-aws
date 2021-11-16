@@ -1,18 +1,18 @@
 ---
 layout: "aws"
-page_title: "AWS: aws_iot_thing_group_attachment"
+page_title: "AWS: aws_iot_thing_group_membership"
 description: |-
     Allow to add IoT Thing to IoT Thing Group.
 ---
 
-# Resource: aws_iot_thing_group_attachment
+# Resource: aws_iot_thing_group_membership
 
 Allow to add IoT Thing to IoT Thing Group.
 
 ## Example Usage
 
 ```hcl
-resource "aws_iot_thing_group_attachment" "test_attachment" {
+resource "aws_iot_thing_group_membership" "test_attachment" {
 	thing_name = "test_thing_name"
 	thing_group_name = "test_thing_group_name"
 	override_dynamics_group = false
@@ -27,8 +27,8 @@ resource "aws_iot_thing_group_attachment" "test_attachment" {
 
 ## Import
 
-IOT Thing Group Attachment can be imported using the name of thing and thing group.
+IOT Thing Group Membership can be imported using the name of thing and thing group.
 
 ```
-$ terraform import aws_iot_thing_group_attachment.test_attachment thing_name/thing_group
+$ terraform import aws_iot_thing_group_membership.example thing_name/thing_group
 ```
