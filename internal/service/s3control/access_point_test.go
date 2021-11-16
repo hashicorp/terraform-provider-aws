@@ -204,6 +204,14 @@ func TestAccS3ControlAccessPoint_policy(t *testing.T) {
 					testAccCheckAccessPointHasPolicy(resourceName, expectedPolicyText2),
 				),
 			},
+			{
+				Config: testAccAccessPointConfig_noPolicy(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAccessPointExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "has_public_access_policy", "false"),
+					resource.TestCheckResourceAttr(resourceName, "policy", ""),
+				),
+			},
 		},
 	})
 }
@@ -545,6 +553,26 @@ data "aws_iam_policy_document" "test" {
       type        = "AWS"
       identifiers = ["*"]
     }
+  }
+}
+`, rName)
+}
+
+func testAccAccessPointConfig_noPolicy(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket = %[1]q
+}
+
+resource "aws_s3_access_point" "test" {
+  bucket = aws_s3_bucket.test.bucket
+  name   = %[1]q
+
+  public_access_block_configuration {
+    block_public_acls       = true
+    block_public_policy     = false
+    ignore_public_acls      = true
+    restrict_public_buckets = false
   }
 }
 `, rName)

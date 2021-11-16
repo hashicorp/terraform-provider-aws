@@ -65,7 +65,6 @@ func ResourceAccessPoint() *schema.Resource {
 			"policy": {
 				Type:             schema.TypeString,
 				Optional:         true,
-				Computed:         true,
 				DiffSuppressFunc: verify.SuppressEquivalentPolicyDiffs,
 			},
 			"public_access_block_configuration": {

@@ -210,6 +210,10 @@ resource "aws_s3_access_point" "test" {
     ignore_public_acls      = true
     restrict_public_buckets = false
   }
+
+  lifecycle {
+    ignore_changes = [policy]
+  }
 }
 
 resource "aws_s3control_access_point_policy" "test" {
@@ -245,6 +249,10 @@ resource "aws_s3_access_point" "test" {
     block_public_policy     = false
     ignore_public_acls      = true
     restrict_public_buckets = false
+  }
+
+  lifecycle {
+    ignore_changes = [policy]
   }
 }
 
