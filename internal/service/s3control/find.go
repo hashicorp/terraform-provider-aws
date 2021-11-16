@@ -26,6 +26,32 @@ func findPublicAccessBlockConfiguration(conn *s3control.S3Control, accountID str
 	return output.PublicAccessBlockConfiguration, nil
 }
 
+func FindAccessPointByAccountIDAndName(conn *s3control.S3Control, accountID string, name string) (*s3control.GetAccessPointOutput, error) {
+	input := &s3control.GetAccessPointInput{
+		AccountId: aws.String(accountID),
+		Name:      aws.String(name),
+	}
+
+	output, err := conn.GetAccessPoint(input)
+
+	if tfawserr.ErrCodeEquals(err, errCodeNoSuchAccessPoint) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
+}
+
 func FindAccessPointPolicyAndStatusByAccountIDAndName(conn *s3control.S3Control, accountID string, name string) (string, *s3control.PolicyStatus, error) {
 	input1 := &s3control.GetAccessPointPolicyInput{
 		AccountId: aws.String(accountID),
