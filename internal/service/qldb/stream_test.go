@@ -9,10 +9,15 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/qldb"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
 func init() {
@@ -20,14 +25,10 @@ func init() {
 		Name: "aws_qldb_stream",
 		F:    testSweepQLDBStreams,
 	})
-	testAccProviders = map[string]*schema.Provider{
-		ProviderNameAws: testAccProvider,
-		// "time":          testAccProvider,
-	}
 }
 
 func testSweepQLDBStreams(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := sweep.SharedRegionalSweepClient(region)(region)
 
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
@@ -38,7 +39,7 @@ func testSweepQLDBStreams(region string) error {
 	page, err := conn.ListLedgers(input)
 
 	if err != nil {
-		if testSweepSkipSweepError(err) {
+		if sweep.SkipSweepError(err) {
 			log.Printf("[WARN] Skipping QLDB Stream sweep for %s: %s", region, err)
 			return nil
 		}
@@ -64,7 +65,7 @@ func testSweepQLDBLedgerStreams(conn *qldb.QLDB, region string, ledgerName strin
 	page, err := conn.ListJournalKinesisStreamsForLedger(input)
 
 	if err != nil {
-		if testSweepSkipSweepError(err) {
+		if sweep.SkipSweepError(err) {
 			log.Printf("[WARN] Skipping QLDB Stream sweep for %s: %s", region, err)
 			return nil
 		}
@@ -115,7 +116,7 @@ func waitForQLDBStreamCancellation(conn *qldb.QLDB, ledgerName string, streamID 
 				StreamId:   aws.String(streamID),
 			})
 
-			if isAWSErr(err, qldb.ErrCodeResourceNotFoundException, "") {
+			if tfawserr.ErrMessageContains(err, qldb.ErrCodeResourceNotFoundException, "") {
 				return 1, "", nil
 			}
 
@@ -135,17 +136,17 @@ func waitForQLDBStreamCancellation(conn *qldb.QLDB, ledgerName string, streamID 
 func TestAccAWSQLDBStream_basic(t *testing.T) {
 	var qldbCluster qldb.DescribeJournalKinesisStreamOutput
 
-	ledgerName := fmt.Sprintf("test-ledger-%s", acctest.RandString(10))
-	streamName := fmt.Sprintf("test-stream-%s", acctest.RandString(10))
-	kinesisStreamName := fmt.Sprintf("test-kinesis-stream-%s", acctest.RandString(10))
-	roleName := fmt.Sprintf("test-role-%s", acctest.RandString(10))
+	ledgerName := fmt.Sprintf("test-ledger-%s", sdkacctest.RandString(10))
+	streamName := fmt.Sprintf("test-stream-%s", sdkacctest.RandString(10))
+	kinesisStreamName := fmt.Sprintf("test-kinesis-stream-%s", sdkacctest.RandString(10))
+	roleName := fmt.Sprintf("test-role-%s", sdkacctest.RandString(10))
 
 	resourceName := "aws_qldb_stream.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(qldb.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, qldb.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(qldb.EndpointsID, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, qldb.EndpointsID),
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSQLDBStreamCancel,
 		Steps: []resource.TestStep{
 			{
@@ -154,7 +155,7 @@ func TestAccAWSQLDBStream_basic(t *testing.T) {
 			{
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSQLDBStreamExists(resourceName, &qldbCluster),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "qldb", regexp.MustCompile(`stream/.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "qldb", regexp.MustCompile(`stream/.+`)),
 					resource.TestMatchResourceAttr(resourceName, "stream_name", regexp.MustCompile("test-stream-[0-9]+")),
 					resource.TestCheckResourceAttr(resourceName, "deletion_protection", "false"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -170,11 +171,11 @@ func TestAccAWSQLDBStream_basic(t *testing.T) {
 }
 
 func testAccCheckAWSQLDBStreamCancel(s *terraform.State) error {
-	return testAccCheckAWSQLDBStreamCancelWithProvider(s, testAccProvider)
+	return testAccCheckAWSQLDBStreamCancelWithProvider(s, acctest.Provider)
 }
 
 func testAccCheckAWSQLDBStreamCancelWithProvider(s *terraform.State, provider *schema.Provider) error {
-	conn := provider.Meta().(*AWSClient).qldbconn
+	conn := provider.Meta().(*conns.AWSClient).QLDBConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_qldb_ledger" {
@@ -195,7 +196,7 @@ func testAccCheckAWSQLDBStreamCancelWithProvider(s *terraform.State, provider *s
 		}
 
 		// Return nil if the cluster is already destroyed
-		if isAWSErr(err, qldb.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, qldb.ErrCodeResourceNotFoundException, "") {
 			continue
 		}
 
@@ -227,7 +228,7 @@ func testAccCheckAWSQLDBStreamExists(n string, v *qldb.DescribeJournalKinesisStr
 			return fmt.Errorf("No ledger name value has been set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).qldbconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).QLDBConn
 		resp, err := conn.DescribeJournalKinesisStream(&qldb.DescribeJournalKinesisStreamInput{
 			LedgerName: aws.String(ledgerName),
 			StreamId:   aws.String(rs.Primary.ID),
