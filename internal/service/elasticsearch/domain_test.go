@@ -1585,7 +1585,9 @@ resource "aws_elasticsearch_domain" "test" {
   domain_name = "tf-test-%d"
 
   advanced_options = {
-    "indices.fielddata.cache.size" = 80
+    "indices.fielddata.cache.size"           = 80
+	"override_main_response_version"         = "false"
+    "rest.action.multi.allow_explicit_index" = "true"
   }
 
   ebs_options {
@@ -1618,7 +1620,9 @@ resource "aws_elasticsearch_domain" "test" {
   elasticsearch_version = "6.0"
 
   advanced_options = {
-    "indices.fielddata.cache.size" = 80
+    "indices.fielddata.cache.size"           = 80
+	"override_main_response_version"         = "false"
+    "rest.action.multi.allow_explicit_index" = "true"	
   }
 
   ebs_options {
@@ -1664,7 +1668,9 @@ resource "aws_elasticsearch_domain" "test" {
   elasticsearch_version = "6.0"
 
   advanced_options = {
-    "indices.fielddata.cache.size" = 80
+    "indices.fielddata.cache.size"           = 80
+	"override_main_response_version"         = "false"
+    "rest.action.multi.allow_explicit_index" = "true"	
   }
 
   ebs_options {
@@ -1844,7 +1850,9 @@ resource "aws_elasticsearch_domain" "test" {
   domain_name = "tf-test-%d"
 
   advanced_options = {
-    "indices.fielddata.cache.size" = 80
+    "indices.fielddata.cache.size"           = 80
+	"override_main_response_version"         = "false"
+    "rest.action.multi.allow_explicit_index" = "true"	
   }
 
   ebs_options {
