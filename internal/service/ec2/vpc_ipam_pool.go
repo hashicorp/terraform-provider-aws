@@ -90,7 +90,7 @@ func ResourceVPCIpamPool() *schema.Resource {
 				ForceNew: true,
 				ValidateFunc: validation.Any(
 					validation.StringInSlice([]string{"None"}, false),
-					verify.ValidateRegionName,
+					verify.ValidRegionName,
 				),
 				Default: "None",
 			},

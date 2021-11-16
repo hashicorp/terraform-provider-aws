@@ -43,7 +43,7 @@ func ResourceVPCIpam() *schema.Resource {
 						"region_name": {
 							Type:         schema.TypeString,
 							Required:     true,
-							ValidateFunc: verify.ValidateRegionName,
+							ValidateFunc: verify.ValidRegionName,
 						},
 					},
 				},

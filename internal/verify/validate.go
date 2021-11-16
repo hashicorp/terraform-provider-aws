@@ -229,7 +229,7 @@ func ValidOnceAWeekWindowFormat(v interface{}, k string) (ws []string, errors []
 	return
 }
 
-func ValidateRegionName(v interface{}, k string) (ws []string, errors []error) {
+func ValidRegionName(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(string)
 
 	if value == "" {
