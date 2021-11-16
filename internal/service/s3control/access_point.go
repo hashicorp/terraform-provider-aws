@@ -35,6 +35,10 @@ func ResourceAccessPoint() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: verify.ValidAccountID,
 			},
+			"alias": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -247,6 +251,7 @@ func resourceAccessPointRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	d.Set("account_id", accountID)
+	d.Set("alias", output.Alias)
 	d.Set("domain_name", meta.(*conns.AWSClient).RegionalHostname(fmt.Sprintf("%s-%s.s3-accesspoint", aws.StringValue(output.Name), accountID)))
 	d.Set("name", output.Name)
 	d.Set("network_origin", output.NetworkOrigin)

@@ -90,6 +90,7 @@ The following arguments are required:
 
 In addition to all arguments above, the following attributes are exported:
 
+* `alias` - The alias of the S3 Access Point.
 * `arn` - Amazon Resource Name (ARN) of the S3 Access Point.
 * `domain_name` - The DNS domain name of the S3 Access Point in the format _`name`_-_`account_id`_.s3-accesspoint._region_.amazonaws.com.
 Note: S3 access points only support secure access by HTTPS. HTTP isn't supported.
