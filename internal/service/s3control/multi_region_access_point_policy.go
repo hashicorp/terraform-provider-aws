@@ -73,7 +73,7 @@ func ResourceMultiRegionAccessPointPolicy() *schema.Resource {
 }
 
 func resourceMultiRegionAccessPointPolicyCreate(d *schema.ResourceData, meta interface{}) error {
-	conn, err := S3ControlConn(meta.(*conns.AWSClient))
+	conn, err := S3ControlConnForMRAP(meta.(*conns.AWSClient))
 
 	if err != nil {
 		return err
@@ -113,7 +113,7 @@ func resourceMultiRegionAccessPointPolicyCreate(d *schema.ResourceData, meta int
 }
 
 func resourceMultiRegionAccessPointPolicyRead(d *schema.ResourceData, meta interface{}) error {
-	conn, err := S3ControlConn(meta.(*conns.AWSClient))
+	conn, err := S3ControlConnForMRAP(meta.(*conns.AWSClient))
 
 	if err != nil {
 		return err
@@ -160,7 +160,7 @@ func resourceMultiRegionAccessPointPolicyRead(d *schema.ResourceData, meta inter
 }
 
 func resourceMultiRegionAccessPointPolicyUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn, err := S3ControlConn(meta.(*conns.AWSClient))
+	conn, err := S3ControlConnForMRAP(meta.(*conns.AWSClient))
 
 	if err != nil {
 		return err

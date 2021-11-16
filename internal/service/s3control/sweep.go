@@ -19,11 +19,19 @@ func init() {
 	resource.AddTestSweepers("aws_s3_access_point", &resource.Sweeper{
 		Name: "aws_s3_access_point",
 		F:    sweepAccessPoints,
+		Dependencies: []string{
+			"aws_s3control_object_lambda_access_point",
+		},
 	})
 
 	resource.AddTestSweepers("aws_s3control_multi_region_access_point", &resource.Sweeper{
 		Name: "aws_s3control_multi_region_access_point",
 		F:    sweepMultiRegionAccessPoints,
+	})
+
+	resource.AddTestSweepers("aws_s3control_object_lambda_access_point", &resource.Sweeper{
+		Name: "aws_s3control_object_lambda_access_point",
+		F:    sweepObjectLambdaAccessPoints,
 	})
 }
 
@@ -118,6 +126,52 @@ func sweepMultiRegionAccessPoints(region string) error {
 
 	if err != nil {
 		return fmt.Errorf("error sweeping S3 Multi-Region Access Points (%s): %w", region, err)
+	}
+
+	return nil
+}
+
+func sweepObjectLambdaAccessPoints(region string) error {
+	client, err := sweep.SharedRegionalSweepClient(region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %s", err)
+	}
+	conn := client.(*conns.AWSClient).S3ControlConn
+	accountID := client.(*conns.AWSClient).AccountID
+	input := &s3control.ListAccessPointsForObjectLambdaInput{
+		AccountId: aws.String(accountID),
+	}
+	sweepResources := make([]*sweep.SweepResource, 0)
+
+	conn.ListAccessPointsForObjectLambdaPages(input, func(page *s3control.ListAccessPointsForObjectLambdaOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, accessPoint := range page.ObjectLambdaAccessPointList {
+			r := ResourceObjectLambdaAccessPoint()
+			d := r.Data(nil)
+			d.SetId(AccessPointCreateResourceID(aws.StringValue(accessPoint.ObjectLambdaAccessPointArn), accountID, aws.StringValue(accessPoint.Name)))
+
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+		}
+
+		return !lastPage
+	})
+
+	if sweep.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping S3 Object Lambda Access Point sweep for %s: %s", region, err)
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("error listing S3 Object Lambda Access Points (%s): %w", region, err)
+	}
+
+	err = sweep.SweepOrchestrator(sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("error sweeping S3 Object Lambda Access Points (%s): %w", region, err)
 	}
 
 	return nil
