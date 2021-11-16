@@ -146,7 +146,7 @@ rules:
     message: Calling a resource's Read method from within a data-source is discouraged
     paths:
       include:
-        - aws/data_source_aws_*.go
+        - internal/service/**/*_data_source.go
     patterns:
       - pattern-regex: '(resource.+Read|flatten.+Resource)'
       - pattern-inside: func $FUNCNAME(...) $RETURNTYPE { ... }
