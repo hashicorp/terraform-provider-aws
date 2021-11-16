@@ -137,7 +137,7 @@ func waitFileSystemDeleted(conn *fsx.FSx, id string, timeout time.Duration) (*fs
 	return nil, err
 }
 
-func waitStorageVirtualMachineCreated(conn *fsx.FSx, id string, timeout time.Duration) (*fsx.StorageVirtualMachine, error) { //nolint:unparam
+func waitStorageVirtualMachineCreated(conn *fsx.FSx, id string, timeout time.Duration) (*fsx.StorageVirtualMachine, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{fsx.StorageVirtualMachineLifecycleCreating, fsx.StorageVirtualMachineLifecyclePending},
 		Target:  []string{fsx.StorageVirtualMachineLifecycleCreated, fsx.StorageVirtualMachineLifecycleMisconfigured},
@@ -159,7 +159,7 @@ func waitStorageVirtualMachineCreated(conn *fsx.FSx, id string, timeout time.Dur
 	return nil, err
 }
 
-func waitStorageVirtualMachineUpdated(conn *fsx.FSx, id string, timeout time.Duration) (*fsx.StorageVirtualMachine, error) { //nolint:unparam
+func waitStorageVirtualMachineUpdated(conn *fsx.FSx, id string, timeout time.Duration) (*fsx.StorageVirtualMachine, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{fsx.StorageVirtualMachineLifecyclePending},
 		Target:  []string{fsx.StorageVirtualMachineLifecycleCreated, fsx.StorageVirtualMachineLifecycleMisconfigured},
@@ -181,7 +181,7 @@ func waitStorageVirtualMachineUpdated(conn *fsx.FSx, id string, timeout time.Dur
 	return nil, err
 }
 
-func waitStorageVirtualMachineDeleted(conn *fsx.FSx, id string, timeout time.Duration) (*fsx.StorageVirtualMachine, error) { //nolint:unparam
+func waitStorageVirtualMachineDeleted(conn *fsx.FSx, id string, timeout time.Duration) (*fsx.StorageVirtualMachine, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{fsx.StorageVirtualMachineLifecycleCreated, fsx.StorageVirtualMachineLifecycleDeleting},
 		Target:  []string{},

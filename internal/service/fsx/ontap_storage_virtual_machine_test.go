@@ -212,7 +212,7 @@ func TestAccFSxOntapStorageVirtualMachine_ActiveDirectory(t *testing.T) {
 			{
 				Config: testAccFsxOntapStorageVirutalMachineSelfManagedActiveDirectoryConfig(rName, netBiosName, domainNetbiosName, domainName, domainPassword2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFsxOntapStorageVirtualMachineExists(resourceName, &storageVirtualMachine1),
+					testAccCheckFsxOntapStorageVirtualMachineExists(resourceName, &storageVirtualMachine2),
 					testAccCheckFsxOntapStorageVirtualMachineNotRecreated(&storageVirtualMachine1, &storageVirtualMachine2),
 					resource.TestCheckResourceAttr(resourceName, "active_directory_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "active_directory_configuration.0.netbios_name", strings.ToUpper(netBiosName)),
