@@ -1,35 +1,40 @@
-package aws
+package iot_test
 
 import (
 	"fmt"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/iot"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfiot "github.com/hashicorp/terraform-provider-aws/internal/service/iot"
 )
 
-func TestAccAWSIotThingGroupAttachment_basic(t *testing.T) {
-	rString := acctest.RandString(8)
+func TestAccIoTThingGroupMembership_basic(t *testing.T) {
+	rString := sdkacctest.RandString(8)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSIotThingGroupAttachmentDestroy,
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, iot.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckThingGroupMembershipDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSIotThingGroupAttachmentConfig_basic(rString),
+				Config: testAccThingGroupMembershipConfig_basic(rString),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("aws_iot_thing_group_attachment.test_attachment", "thing_name", fmt.Sprintf("test_thing_%s", rString)),
-					resource.TestCheckResourceAttr("aws_iot_thing_group_attachment.test_attachment", "thing_group_name", fmt.Sprintf("test_group_%s", rString)),
-					resource.TestCheckResourceAttr("aws_iot_thing_group_attachment.test_attachment", "override_dynamics_group", "false"),
-					testAccAWSIotThingGroupAttachmentExists_basic(rString),
+					resource.TestCheckResourceAttr("aws_iot_thing_group_membership.test_attachment", "thing_name", fmt.Sprintf("test_thing_%s", rString)),
+					resource.TestCheckResourceAttr("aws_iot_thing_group_membership.test_attachment", "thing_group_name", fmt.Sprintf("test_group_%s", rString)),
+					resource.TestCheckResourceAttr("aws_iot_thing_group_membership.test_attachment", "override_dynamics_group", "false"),
+					testAccCheckThingGroupMembershipExists(rString),
 				),
 			},
 			{
-				ResourceName:      "aws_iot_thing_group_attachment.test_attachment",
-				ImportStateIdFunc: testAccAWSIotThingGroupAttachmentImportStateIdFunc("aws_iot_thing_group_attachment.test_attachment"),
+				ResourceName:      "aws_iot_thing_group_membership.test_attachment",
+				ImportStateIdFunc: testAccCheckThingGroupMembershipImportStateIdFunc("aws_iot_thing_group_membership.test_attachment"),
 				ImportState:       true,
 				// We do not have a way to align IDs since the Create function uses resource.PrefixedUniqueId()
 				// Failed state verification, resource with ID ROLE-POLICYARN not found
@@ -39,19 +44,19 @@ func TestAccAWSIotThingGroupAttachment_basic(t *testing.T) {
 	})
 }
 
-func testAccAWSIotThingGroupAttachmentExists_basic(rString string) resource.TestCheckFunc {
+func testAccCheckThingGroupMembershipExists(rString string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 
-		conn := testAccProvider.Meta().(*AWSClient).iotconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IoTConn
 
 		for _, rs := range s.RootModule().Resources {
-			if rs.Type != "aws_iot_thing_group_attachment" {
+			if rs.Type != "aws_iot_thing_group_membership" {
 				continue
 			}
 
 			thingName := rs.Primary.Attributes["thing_name"]
 			thingGroupName := rs.Primary.Attributes["thing_group_name"]
-			hasThingGroup, err := iotThingHasThingGroup(conn, thingName, thingGroupName, "")
+			hasThingGroup, err := tfiot.IotThingHasThingGroup(conn, thingName, thingGroupName, "")
 
 			if err != nil {
 				return err
@@ -67,20 +72,20 @@ func testAccAWSIotThingGroupAttachmentExists_basic(rString string) resource.Test
 	}
 }
 
-func testAccCheckAWSIotThingGroupAttachmentDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).iotconn
+func testAccCheckThingGroupMembershipDestroy(s *terraform.State) error {
+	conn := acctest.Provider.Meta().(*conns.AWSClient).IoTConn
 
 	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_iot_thing_group_attachment" {
+		if rs.Type != "aws_iot_thing_group_membership" {
 			continue
 		}
 
 		thingName := rs.Primary.Attributes["thing_name"]
 		thingGroupName := rs.Primary.Attributes["thing_group_name"]
 
-		hasThingGroup, err := iotThingHasThingGroup(conn, thingName, thingGroupName, "")
+		hasThingGroup, err := tfiot.IotThingHasThingGroup(conn, thingName, thingGroupName, "")
 
-		if isAWSErr(err, iot.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, iot.ErrCodeResourceNotFoundException) {
 			return nil
 		}
 
@@ -95,7 +100,7 @@ func testAccCheckAWSIotThingGroupAttachmentDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccAWSIotThingGroupAttachmentImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
+func testAccCheckThingGroupMembershipImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
 	return func(s *terraform.State) (string, error) {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
@@ -106,7 +111,7 @@ func testAccAWSIotThingGroupAttachmentImportStateIdFunc(resourceName string) res
 	}
 }
 
-func testAccAWSIotThingGroupAttachmentConfig_basic(rString string) string {
+func testAccThingGroupMembershipConfig_basic(rString string) string {
 	return fmt.Sprintf(`
 resource "aws_iot_thing" "test_thing" {
 	name = "test_thing_%s"
@@ -122,7 +127,7 @@ resource "aws_iot_thing_group" "test_thing_group" {
 	}
 }
 
-resource "aws_iot_thing_group_attachment" "test_attachment" {
+resource "aws_iot_thing_group_membership" "test_attachment" {
 	thing_name = "${aws_iot_thing.test_thing.name}"
 	thing_group_name = "${aws_iot_thing_group.test_thing_group.name}"
 	override_dynamics_group = false

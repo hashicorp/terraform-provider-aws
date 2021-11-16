@@ -1,4 +1,4 @@
-package aws
+package iot
 
 import (
 	"fmt"
@@ -7,17 +7,19 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/iot"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsIotThingGroupAttachment() *schema.Resource {
+func ResourceThingGroupMembership() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsIotThingGroupAttachmentCreate,
-		Read:   resourceAwsIotThingGroupAttachmentRead,
-		Delete: resourceAwsIotThingGroupAttachmentDelete,
+		Create: resourceThingGroupMembershipCreate,
+		Read:   resourceThingGroupMembershipRead,
+		Delete: resourceThingGroupMembershipDelete,
 		Importer: &schema.ResourceImporter{
-			State: resourceAwsIotThingGroupAttachmentImport,
+			State: resourceThingGroupMembershipImport,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -40,8 +42,8 @@ func resourceAwsIotThingGroupAttachment() *schema.Resource {
 	}
 }
 
-func resourceAwsIotThingGroupAttachmentCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).iotconn
+func resourceThingGroupMembershipCreate(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*conns.AWSClient).IoTConn
 
 	params := &iot.AddThingToThingGroupInput{}
 	params.ThingName = aws.String(d.Get("thing_name").(string))
@@ -59,18 +61,18 @@ func resourceAwsIotThingGroupAttachmentCreate(d *schema.ResourceData, meta inter
 
 	d.SetId(resource.PrefixedUniqueId(fmt.Sprintf("%s-%s", *params.ThingName, *params.ThingGroupName)))
 
-	return resourceAwsIotThingGroupAttachmentRead(d, meta)
+	return resourceThingGroupMembershipRead(d, meta)
 }
 
-func resourceAwsIotThingGroupAttachmentRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).iotconn
+func resourceThingGroupMembershipRead(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*conns.AWSClient).IoTConn
 
 	thingName := d.Get("thing_name").(string)
 	thingGroupName := d.Get("thing_group_name").(string)
 
-	hasThingGroup, err := iotThingHasThingGroup(conn, thingName, thingGroupName, "")
+	hasThingGroup, err := IotThingHasThingGroup(conn, thingName, thingGroupName, "")
 
-	if isAWSErr(err, iot.ErrCodeResourceNotFoundException, "") {
+	if tfawserr.ErrCodeEquals(err, iot.ErrCodeResourceNotFoundException) {
 		log.Printf("[WARN] IoT Thing (%s) is not found", thingName)
 		d.SetId("")
 		return nil
@@ -95,8 +97,8 @@ func resourceAwsIotThingGroupAttachmentRead(d *schema.ResourceData, meta interfa
 	return nil
 }
 
-func resourceAwsIotThingGroupAttachmentDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).iotconn
+func resourceThingGroupMembershipDelete(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*conns.AWSClient).IoTConn
 
 	params := &iot.RemoveThingFromThingGroupInput{}
 	params.ThingName = aws.String(d.Get("thing_name").(string))
@@ -111,7 +113,7 @@ func resourceAwsIotThingGroupAttachmentDelete(d *schema.ResourceData, meta inter
 	return nil
 }
 
-func resourceAwsIotThingGroupAttachmentImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+func resourceThingGroupMembershipImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	idParts := strings.SplitN(d.Id(), "/", 2)
 	if len(idParts) != 2 || idParts[0] == "" || idParts[1] == "" {
 		return nil, fmt.Errorf("unexpected format of ID (%q), expected <thing-name>/<thing-group>", d.Id())
@@ -128,7 +130,7 @@ func resourceAwsIotThingGroupAttachmentImport(d *schema.ResourceData, meta inter
 	return []*schema.ResourceData{d}, nil
 }
 
-func iotThingHasThingGroup(conn *iot.IoT, thingName string, thingGroupName string, nextToken string) (bool, error) {
+func IotThingHasThingGroup(conn *iot.IoT, thingName string, thingGroupName string, nextToken string) (bool, error) {
 	maxResults := int64(20)
 
 	params := &iot.ListThingGroupsForThingInput{
@@ -157,7 +159,7 @@ func iotThingHasThingGroup(conn *iot.IoT, thingName string, thingGroupName strin
 	// then check if NextToken exists. If it is so call hasThingGroup
 	// recursively to search in next part of list. Otherwise return false
 	if out.NextToken != nil {
-		return iotThingHasThingGroup(conn, thingName, thingGroupName, *out.NextToken)
+		return IotThingHasThingGroup(conn, thingName, thingGroupName, *out.NextToken)
 	} else {
 		return false, nil
 	}

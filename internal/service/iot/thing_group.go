@@ -1,4 +1,4 @@
-package aws
+package iot
 
 import (
 	"fmt"
@@ -6,23 +6,31 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/iot"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-func resourceAwsIotThingGroup() *schema.Resource {
+func ResourceThingGroup() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsIotThingGroupCreate,
-		Read:   resourceAwsIotThingGroupRead,
-		Update: resourceAwsIotThingGroupUpdate,
-		Delete: resourceAwsIotThingGroupDelete,
+		Create: resourceThingGroupCreate,
+		Read:   resourceThingGroupRead,
+		Update: resourceThingGroupUpdate,
+		Delete: resourceThingGroupDelete,
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
 
 		Schema: map[string]*schema.Schema{
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"name": {
 				Type:         schema.TypeString,
 				Required:     true,
@@ -52,7 +60,6 @@ func resourceAwsIotThingGroup() *schema.Resource {
 					},
 				},
 			},
-			"tags": tagsSchema(),
 			"metadata": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -89,19 +96,21 @@ func resourceAwsIotThingGroup() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			"arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+			"tags":     tftags.TagsSchema(),
+			"tags_all": tftags.TagsSchemaComputed(),
 		},
+
+		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceAwsIotThingGroupCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).iotconn
+func resourceThingGroupCreate(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*conns.AWSClient).IoTConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+
 	input := &iot.CreateThingGroupInput{
 		ThingGroupName: aws.String(d.Get("name").(string)),
-		Tags:           keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().IotTags(),
 	}
 
 	if v, ok := d.GetOk("parent_group_name"); ok {
@@ -111,6 +120,10 @@ func resourceAwsIotThingGroupCreate(d *schema.ResourceData, meta interface{}) er
 		input.ThingGroupProperties = expandIotThingsGroupProperties(v.([]interface{}))
 	}
 
+	if len(tags) > 0 {
+		input.Tags = Tags(tags.IgnoreAWS())
+	}
+
 	log.Printf("[DEBUG] Creating IoT Thing Group: %s", input)
 	out, err := conn.CreateThingGroup(input)
 	if err != nil {
@@ -118,12 +131,13 @@ func resourceAwsIotThingGroupCreate(d *schema.ResourceData, meta interface{}) er
 	}
 
 	d.SetId(aws.StringValue(out.ThingGroupName))
-	return resourceAwsIotThingGroupRead(d, meta)
+	return resourceThingGroupRead(d, meta)
 }
 
-func resourceAwsIotThingGroupRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).iotconn
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+func resourceThingGroupRead(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*conns.AWSClient).IoTConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	input := &iot.DescribeThingGroupInput{
 		ThingGroupName: aws.String(d.Id()),
@@ -132,7 +146,7 @@ func resourceAwsIotThingGroupRead(d *schema.ResourceData, meta interface{}) erro
 	out, err := conn.DescribeThingGroup(input)
 
 	if err != nil {
-		if isAWSErr(err, iot.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, iot.ErrCodeResourceNotFoundException) {
 			log.Printf("[WARN] IoT Thing Group %q not found, removing from state", d.Id())
 			d.SetId("")
 		}
@@ -151,20 +165,27 @@ func resourceAwsIotThingGroupRead(d *schema.ResourceData, meta interface{}) erro
 	}
 	d.Set("version", out.Version)
 
-	tags, err := keyvaluetags.IotListTags(conn, *out.ThingGroupArn)
+	tags, err := ListTags(conn, aws.StringValue(out.ThingGroupArn))
 	if err != nil {
-		return fmt.Errorf("error listing tags for Iot Thing Group (%s): %s", d.Id(), err)
+		return fmt.Errorf("error listing tags for IoT Thing Group (%s): %w", aws.StringValue(out.ThingGroupArn), err)
 	}
 
-	if err := d.Set("tags", tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %s", err)
+	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+
+	//lintignore:AWSR002
+	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %w", err)
+	}
+
+	if err := d.Set("tags_all", tags.Map()); err != nil {
+		return fmt.Errorf("error setting tags_all: %w", err)
 	}
 
 	return nil
 }
 
-func resourceAwsIotThingGroupUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).iotconn
+func resourceThingGroupUpdate(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*conns.AWSClient).IoTConn
 
 	input := &iot.UpdateThingGroupInput{
 		ThingGroupName: aws.String(d.Get("name").(string)),
@@ -174,26 +195,24 @@ func resourceAwsIotThingGroupUpdate(d *schema.ResourceData, meta interface{}) er
 		input.ThingGroupProperties = expandIotThingsGroupProperties(v.([]interface{}))
 	}
 
-	if d.HasChange("tags") {
-		oldTags, newTags := d.GetChange("tags")
-
-		if v, ok := d.GetOk("arn"); ok {
-			if err := keyvaluetags.IotUpdateTags(conn, v.(string), oldTags, newTags); err != nil {
-				return fmt.Errorf("error updating Iot Thing Group (%s) tags: %s", d.Id(), err)
-			}
-		}
-	}
-
 	_, err := conn.UpdateThingGroup(input)
 	if err != nil {
 		return err
 	}
 
-	return resourceAwsIotThingGroupRead(d, meta)
+	if d.HasChange("tags_all") {
+		o, n := d.GetChange("tags_all")
+
+		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+			return fmt.Errorf("error updating tags: %s", err)
+		}
+	}
+
+	return resourceThingGroupRead(d, meta)
 }
 
-func resourceAwsIotThingGroupDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).iotconn
+func resourceThingGroupDelete(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*conns.AWSClient).IoTConn
 
 	input := &iot.DeleteThingGroupInput{
 		ThingGroupName: aws.String(d.Id()),
@@ -202,7 +221,7 @@ func resourceAwsIotThingGroupDelete(d *schema.ResourceData, meta interface{}) er
 
 	_, err := conn.DeleteThingGroup(input)
 	if err != nil {
-		if isAWSErr(err, iot.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, iot.ErrCodeResourceNotFoundException) {
 			return nil
 		}
 		return err
@@ -218,7 +237,7 @@ func expandIotThingsGroupProperties(l []interface{}) *iot.ThingGroupProperties {
 
 	if v, ok := m["attributes"]; ok {
 		thingGroupProperties.AttributePayload = &iot.AttributePayload{
-			Attributes: stringMapToPointers(v.(map[string]interface{})),
+			Attributes: flex.ExpandStringMap(v.(map[string]interface{})),
 		}
 	}
 
