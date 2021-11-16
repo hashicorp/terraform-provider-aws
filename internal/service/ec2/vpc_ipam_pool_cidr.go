@@ -107,31 +107,20 @@ func ResourceVPCIpamPoolCidrCreate(d *schema.ResourceData, meta interface{}) err
 
 	// if ipv6 or private ipv4, can wait
 	if public {
-		if err := verify.ValidateIPv6CIDRBlock(cidr); err == nil {
-			log.Printf("[INFO] Public ipv6 request, waiting for response...")
-			if _, err = WaitIpamPoolCidrAvailable(conn, d.Id(), IpamPoolCidrCreateTimeout); err != nil {
-				failed_id := d.Id()
-				d.SetId("")
-				return fmt.Errorf("error waiting for IPAM Pool Cidr (%s) to be provision: %w", failed_id, err)
-			}
-			return err
+		log.Printf("[INFO] Public CIDR Authorization request sent, waiting for response...")
+		if _, err = WaitIpamPoolCidrAvailable(conn, d.Id(), IpamPoolCidrCreateTimeout); err != nil {
+			failed_id := d.Id()
+			d.SetId("")
+			return fmt.Errorf("error waiting for IPAM Pool Cidr (%s) to be provision: %w", failed_id, err)
 		}
+		return err
 	} else {
-		if err := verify.ValidateIPv4CIDRBlock(cidr); err == nil {
-			if _, err = WaitIpamPoolCidrAvailable(conn, d.Id(), IpamPoolCidrCreateTimeout); err != nil {
-				failed_id := d.Id()
-				d.SetId("")
-				return fmt.Errorf("error waiting for IPAM Pool Cidr (%s) to be provision: %w", failed_id, err)
-			}
+		if _, err = WaitIpamPoolCidrAvailable(conn, d.Id(), IpamPoolCidrCreateTimeout); err != nil {
+			failed_id := d.Id()
+			d.SetId("")
+			return fmt.Errorf("error waiting for IPAM Pool Cidr (%s) to be provision: %w", failed_id, err)
 		}
 	}
-
-	// log.Printf("[INFO] IPAM PoolCidr ID: %s", d.Id())
-
-	// dont need to wait twice
-	// if _, err = WaitIpamPoolCidrAvailable(conn, d.Id(), IpamPoolCidrCreateTimeout); err != nil {
-	// 	return fmt.Errorf("error waiting for IPAM PoolCidr (%s) to be Available: %w", d.Id(), err)
-	// }
 
 	return ResourceVPCIpamPoolCidrRead(d, meta)
 }
