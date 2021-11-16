@@ -167,7 +167,8 @@ func resourceStreamCreate(d *schema.ResourceData, meta interface{}) error {
 //TODO: Another edge case to account for?:  Stream resources that are in a terminal state (CANCELED, COMPLETED, and FAILED) are subject to a 7-day retention period. They are automatically hard-deleted after this limit expires.
 func resourceStreamRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).QLDBConn
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	var ledgerName string
 	if ledgerNameValue, ok := d.GetOk("ledger_name"); ok {
@@ -232,13 +233,19 @@ func resourceStreamRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	log.Printf("[INFO] Fetching tags for %s", d.Id())
-	tags, err := tftags.QldbListTags(conn, d.Get("arn").(string))
+	tags, err := ListTags(conn, d.Get("arn").(string))
 	if err != nil {
-		return fmt.Errorf("Error listing tags for QLDB Ledger: %s", err)
+		return fmt.Errorf("Error listing tags for QLDB Stream: %s", err)
 	}
 
-	if err := d.Set("tags", tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %s", err)
+	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+
+	if err != nil {
+		return fmt.Errorf("Error listing tags for QLDB Stream: %s", err)
+	}
+
+	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %w", err)
 	}
 
 	return nil
@@ -249,7 +256,7 @@ func resourceStreamUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	if d.HasChange("tags") {
 		o, n := d.GetChange("tags")
-		if err := tftags.QldbUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return fmt.Errorf("error updating tags: %s", err)
 		}
 	}
