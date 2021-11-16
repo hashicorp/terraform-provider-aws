@@ -131,12 +131,21 @@ func FindUserByUserNameAndAuthType(ctx context.Context, conn *appstream.AppStrea
 		return !lastPage
 	})
 
+	if tfawserr.ErrCodeEquals(err, appstream.ErrCodeResourceNotFoundException) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
 	if err != nil {
 		return nil, err
 	}
 
 	if result == nil {
-		return nil, nil
+		return nil, &resource.NotFoundError{
+			Message:     "Empty result",
+			LastRequest: input,
+		}
 	}
 
 	return result, nil

@@ -6,6 +6,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/appstream"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 //statusStackState fetches the fleet and its state
@@ -63,12 +64,12 @@ func statusUserAvailable(ctx context.Context, conn *appstream.AppStream, usernam
 	return func() (interface{}, string, error) {
 		user, err := FindUserByUserNameAndAuthType(ctx, conn, username, authType)
 
-		if err != nil {
-			return nil, "Unknown", err
+		if tfresource.NotFound(err) {
+			return nil, "", nil
 		}
 
-		if user == nil {
-			return user, "NotFound", nil
+		if err != nil {
+			return nil, "", err
 		}
 
 		return user, "AVAILABLE", nil

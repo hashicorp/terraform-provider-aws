@@ -169,7 +169,6 @@ func waitImageBuilderStateDeleted(ctx context.Context, conn *appstream.AppStream
 // waitUserAvailable waits for a user be available
 func waitUserAvailable(ctx context.Context, conn *appstream.AppStream, username, authType string) (*appstream.User, error) {
 	stateConf := &resource.StateChangeConf{
-		Pending: []string{"NotFound"},
 		Target:  []string{"AVAILABLE"},
 		Refresh: statusUserAvailable(ctx, conn, username, authType),
 		Timeout: userOperationTimeout,

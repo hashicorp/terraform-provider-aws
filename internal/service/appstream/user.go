@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func ResourceUser() *schema.Resource {
@@ -143,15 +144,13 @@ func resourceUserRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	}
 
 	user, err := FindUserByUserNameAndAuthType(ctx, conn, userName, authType)
-
-	if err != nil {
-		return diag.FromErr(fmt.Errorf("error reading Appstream User (%s): %w", d.Id(), err))
-	}
-
-	if !d.IsNewResource() && user == nil {
+	if tfresource.NotFound(err) && !d.IsNewResource() {
 		log.Printf("[WARN] AppStream User (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
+	}
+	if err != nil {
+		return diag.FromErr(fmt.Errorf("error reading AppStream User (%s): %w", d.Id(), err))
 	}
 
 	d.Set("arn", user.Arn)
@@ -172,7 +171,7 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 
 	userName, authType, err := DecodeUserID(d.Id())
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error decoding id AppStream User (%s): %w", d.Id(), err))
+		return diag.FromErr(fmt.Errorf("error decoding AppStream User ID (%s): %w", d.Id(), err))
 	}
 
 	if d.HasChange("enabled") {
