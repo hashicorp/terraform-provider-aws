@@ -94,6 +94,7 @@ In addition to all arguments above, the following attributes are exported:
 * `arn` - Amazon Resource Name (ARN) of the S3 Access Point.
 * `domain_name` - The DNS domain name of the S3 Access Point in the format _`name`_-_`account_id`_.s3-accesspoint._region_.amazonaws.com.
 Note: S3 access points only support secure access by HTTPS. HTTP isn't supported.
+* `endpoints` - The VPC endpoints for the S3 Access Point.
 * `has_public_access_policy` - Indicates whether this access point currently has a policy that allows public access.
 * `id` - For Access Point of an AWS Partition S3 Bucket, the AWS account ID and access point name separated by a colon (`:`). For S3 on Outposts Bucket, the Amazon Resource Name (ARN) of the Access Point.
 * `network_origin` - Indicates whether this access point allows access from the public Internet. Values are `VPC` (the access point doesn't allow access from the public Internet) and `Internet` (the access point allows access from the public Internet, subject to the access point and bucket access policies).

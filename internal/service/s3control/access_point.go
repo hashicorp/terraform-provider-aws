@@ -53,6 +53,11 @@ func ResourceAccessPoint() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"endpoints": {
+				Type:     schema.TypeMap,
+				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
 			"has_public_access_policy": {
 				Type:     schema.TypeBool,
 				Computed: true,
@@ -253,6 +258,7 @@ func resourceAccessPointRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("account_id", accountID)
 	d.Set("alias", output.Alias)
 	d.Set("domain_name", meta.(*conns.AWSClient).RegionalHostname(fmt.Sprintf("%s-%s.s3-accesspoint", aws.StringValue(output.Name), accountID)))
+	d.Set("endpoints", aws.StringValueMap(output.Endpoints))
 	d.Set("name", output.Name)
 	d.Set("network_origin", output.NetworkOrigin)
 	if output.PublicAccessBlockConfiguration != nil {
