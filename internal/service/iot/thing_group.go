@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
@@ -139,35 +140,32 @@ func resourceThingGroupRead(d *schema.ResourceData, meta interface{}) error {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	input := &iot.DescribeThingGroupInput{
-		ThingGroupName: aws.String(d.Id()),
+	output, err := FindThingGroupByName(conn, d.Id())
+
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] IoT Thing Group (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
 	}
-	log.Printf("[DEBUG] Reading IoT Thing Group: %s", input)
-	out, err := conn.DescribeThingGroup(input)
 
 	if err != nil {
-		if tfawserr.ErrCodeEquals(err, iot.ErrCodeResourceNotFoundException) {
-			log.Printf("[WARN] IoT Thing Group %q not found, removing from state", d.Id())
-			d.SetId("")
-		}
-		return err
+		return fmt.Errorf("error reading IoT Thing Group (%s): %w", d.Id(), err)
 	}
-	log.Printf("[DEBUG] Received IoT Thing Group: %s", out)
 
-	d.Set("arn", out.ThingGroupArn)
-	d.Set("name", out.ThingGroupName)
+	d.Set("arn", output.ThingGroupArn)
+	d.Set("name", output.ThingGroupName)
 
-	if err := d.Set("metadata", flattenIotThingGroupMetadata(out.ThingGroupMetadata)); err != nil {
+	if err := d.Set("metadata", flattenIotThingGroupMetadata(output.ThingGroupMetadata)); err != nil {
 		return fmt.Errorf("error setting metadata: %s", err)
 	}
-	if err := d.Set("properties", flattenIotThingGroupProperties(out.ThingGroupProperties)); err != nil {
+	if err := d.Set("properties", flattenIotThingGroupProperties(output.ThingGroupProperties)); err != nil {
 		return fmt.Errorf("error setting properties: %s", err)
 	}
-	d.Set("version", out.Version)
+	d.Set("version", output.Version)
 
-	tags, err := ListTags(conn, aws.StringValue(out.ThingGroupArn))
+	tags, err := ListTags(conn, d.Get("arn").(string))
 	if err != nil {
-		return fmt.Errorf("error listing tags for IoT Thing Group (%s): %w", aws.StringValue(out.ThingGroupArn), err)
+		return fmt.Errorf("error listing tags for IoT Thing Group (%s): %w", d.Get("arn").(string), err)
 	}
 
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)

@@ -32,3 +32,28 @@ func FindAuthorizerByName(conn *iot.IoT, name string) (*iot.AuthorizerDescriptio
 
 	return output.AuthorizerDescription, nil
 }
+
+func FindThingGroupByName(conn *iot.IoT, name string) (*iot.DescribeThingGroupOutput, error) {
+	input := &iot.DescribeThingGroupInput{
+		ThingGroupName: aws.String(name),
+	}
+
+	output, err := conn.DescribeThingGroup(input)
+
+	if tfawserr.ErrCodeEquals(err, iot.ErrCodeResourceNotFoundException) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
+}

@@ -4,14 +4,14 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/iot"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfiot "github.com/hashicorp/terraform-provider-aws/internal/service/iot"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func TestAccIoTThingGroup_base(t *testing.T) {
@@ -419,28 +419,26 @@ func TestAccIoTThingGroup_parent(t *testing.T) {
 	})
 }
 
-func testAccCheckIotThingGroupExists(n string, thing *iot.DescribeThingGroupOutput) resource.TestCheckFunc {
+func testAccCheckIotThingGroupExists(n string, v *iot.DescribeThingGroupOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("not found: %s", n)
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("no IoT Thing Group ID is set")
+			return fmt.Errorf("No IoT Thing Group ID is set")
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).IoTConn
 
-		input := &iot.DescribeThingGroupInput{
-			ThingGroupName: aws.String(rs.Primary.ID),
-		}
-		resp, err := conn.DescribeThingGroup(input)
+		output, err := tfiot.FindThingGroupByName(conn, rs.Primary.ID)
+
 		if err != nil {
 			return err
 		}
 
-		*thing = *resp
+		*v = *output
 
 		return nil
 	}
@@ -454,19 +452,19 @@ func testAccCheckThingGroupDestroy(s *terraform.State) error {
 			continue
 		}
 
-		input := &iot.DescribeThingGroupInput{
-			ThingGroupName: aws.String(rs.Primary.ID),
+		_, err := tfiot.FindThingGroupByName(conn, rs.Primary.ID)
+
+		if tfresource.NotFound(err) {
+			continue
 		}
 
-		_, err := conn.DescribeThingGroup(input)
 		if err != nil {
-			if tfawserr.ErrCodeEquals(err, iot.ErrCodeResourceNotFoundException) {
-				return nil
-			}
 			return err
 		}
-		return fmt.Errorf("expected IoT Thing Group to be destroyed, %s found", rs.Primary.ID)
+
+		return fmt.Errorf("IoT Thing Group %s still exists", rs.Primary.ID)
 	}
+
 	return nil
 }
 
