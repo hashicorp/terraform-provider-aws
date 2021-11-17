@@ -18,10 +18,10 @@ import (
 
 func ResourceVPCIpam() *schema.Resource {
 	return &schema.Resource{
-		Create:        ResourceVPCIpamCreate,
-		Read:          ResourceVPCIpamRead,
-		Update:        ResourceVPCIpamUpdate,
-		Delete:        ResourceVPCIpamDelete,
+		Create:        resourceVPCIpamCreate,
+		Read:          resourceVPCIpamRead,
+		Update:        resourceVPCIpamUpdate,
+		Delete:        resourceVPCIpamDelete,
 		CustomizeDiff: customdiff.Sequence(verify.SetTagsDiff),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -73,7 +73,7 @@ const (
 	IpamDeleteDelay       = 5 * time.Second
 )
 
-func ResourceVPCIpamCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceVPCIpamCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 	current_region := meta.(*conns.AWSClient).Region
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
@@ -89,10 +89,10 @@ func ResourceVPCIpamCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	operatingRegions := d.Get("operating_regions").(*schema.Set).List()
-	if !expandAwsIpamOperatingRegionsDefaultRegion(operatingRegions, current_region) {
+	if !expandIpamOperatingRegionsContainsCurrentRegion(operatingRegions, current_region) {
 		return fmt.Errorf("Must include (%s) as a operating_region", current_region)
 	}
-	input.OperatingRegions = expandAwsIpamOperatingRegions(operatingRegions)
+	input.OperatingRegions = expandIpamOperatingRegions(operatingRegions)
 
 	log.Printf("[DEBUG] Creating IPAM: %s", input)
 	output, err := conn.CreateIpam(input)
@@ -102,10 +102,10 @@ func ResourceVPCIpamCreate(d *schema.ResourceData, meta interface{}) error {
 	d.SetId(aws.StringValue(output.Ipam.IpamId))
 	log.Printf("[INFO] IPAM ID: %s", d.Id())
 
-	return ResourceVPCIpamRead(d, meta)
+	return resourceVPCIpamRead(d, meta)
 }
 
-func ResourceVPCIpamRead(d *schema.ResourceData, meta interface{}) error {
+func resourceVPCIpamRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -124,7 +124,7 @@ func ResourceVPCIpamRead(d *schema.ResourceData, meta interface{}) error {
 
 	d.Set("arn", ipam.IpamArn)
 	d.Set("description", ipam.Description)
-	d.Set("operating_regions", flattenAwsIpamOperatingRegions(ipam.OperatingRegions))
+	d.Set("operating_regions", flattenIpamOperatingRegions(ipam.OperatingRegions))
 	d.Set("public_default_scope_id", ipam.PublicDefaultScopeId)
 	d.Set("private_default_scope_id", ipam.PrivateDefaultScopeId)
 	d.Set("scope_count", aws.Int64Value(ipam.ScopeCount))
@@ -143,7 +143,7 @@ func ResourceVPCIpamRead(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func ResourceVPCIpamUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceVPCIpamUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	if d.HasChange("tags_all") {
@@ -171,8 +171,8 @@ func ResourceVPCIpamUpdate(d *schema.ResourceData, meta interface{}) error {
 
 		os := o.(*schema.Set)
 		ns := n.(*schema.Set)
-		operatingRegionUpdateAdd := expandAwsIpamOperatingRegionsUpdateAddRegions(ns.Difference(os).List())
-		operatingRegionUpdateRemove := expandAwsIpamOperatingRegionsUpdateDeleteRegions(os.Difference(ns).List())
+		operatingRegionUpdateAdd := expandIpamOperatingRegionsUpdateAddRegions(ns.Difference(os).List())
+		operatingRegionUpdateRemove := expandIpamOperatingRegionsUpdateDeleteRegions(os.Difference(ns).List())
 
 		if len(operatingRegionUpdateAdd) != 0 {
 			input.AddOperatingRegions = operatingRegionUpdateAdd
@@ -190,7 +190,7 @@ func ResourceVPCIpamUpdate(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func ResourceVPCIpamDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceVPCIpamDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	input := &ec2.DeleteIpamInput{
@@ -267,70 +267,70 @@ func statusIpamStatus(conn *ec2.EC2, ipamId string) resource.StateRefreshFunc {
 	}
 }
 
-func expandAwsIpamOperatingRegions(operatingRegions []interface{}) []*ec2.AddIpamOperatingRegion {
+func expandIpamOperatingRegions(operatingRegions []interface{}) []*ec2.AddIpamOperatingRegion {
 	regions := make([]*ec2.AddIpamOperatingRegion, 0, len(operatingRegions))
 	for _, regionRaw := range operatingRegions {
 		region := regionRaw.(map[string]interface{})
-		regions = append(regions, expandAwsIpamOperatingRegion(region))
+		regions = append(regions, expandIpamOperatingRegion(region))
 	}
 
 	return regions
 }
 
-func expandAwsIpamOperatingRegion(operatingRegion map[string]interface{}) *ec2.AddIpamOperatingRegion {
+func expandIpamOperatingRegion(operatingRegion map[string]interface{}) *ec2.AddIpamOperatingRegion {
 	region := &ec2.AddIpamOperatingRegion{
 		RegionName: aws.String(operatingRegion["region_name"].(string)),
 	}
 	return region
 }
 
-func flattenAwsIpamOperatingRegions(operatingRegions []*ec2.IpamOperatingRegion) []interface{} {
+func flattenIpamOperatingRegions(operatingRegions []*ec2.IpamOperatingRegion) []interface{} {
 	regions := []interface{}{}
 	for _, operatingRegion := range operatingRegions {
-		regions = append(regions, flattenAwsIpamOperatingRegion(operatingRegion))
+		regions = append(regions, flattenIpamOperatingRegion(operatingRegion))
 	}
 	return regions
 }
 
-func flattenAwsIpamOperatingRegion(operatingRegion *ec2.IpamOperatingRegion) map[string]interface{} {
+func flattenIpamOperatingRegion(operatingRegion *ec2.IpamOperatingRegion) map[string]interface{} {
 	region := make(map[string]interface{})
-	region["region_name"] = *operatingRegion.RegionName
+	region["region_name"] = aws.StringValue(operatingRegion.RegionName)
 	return region
 }
 
-func expandAwsIpamOperatingRegionsUpdateAddRegions(operatingRegions []interface{}) []*ec2.AddIpamOperatingRegion {
+func expandIpamOperatingRegionsUpdateAddRegions(operatingRegions []interface{}) []*ec2.AddIpamOperatingRegion {
 	regionUpdates := make([]*ec2.AddIpamOperatingRegion, 0, len(operatingRegions))
 	for _, regionRaw := range operatingRegions {
 		region := regionRaw.(map[string]interface{})
-		regionUpdates = append(regionUpdates, expandAwsIpamOperatingRegionsUpdateAddRegion(region))
+		regionUpdates = append(regionUpdates, expandIpamOperatingRegionsUpdateAddRegion(region))
 	}
 	return regionUpdates
 }
 
-func expandAwsIpamOperatingRegionsUpdateAddRegion(operatingRegion map[string]interface{}) *ec2.AddIpamOperatingRegion {
+func expandIpamOperatingRegionsUpdateAddRegion(operatingRegion map[string]interface{}) *ec2.AddIpamOperatingRegion {
 	regionUpdate := &ec2.AddIpamOperatingRegion{
 		RegionName: aws.String(operatingRegion["region_name"].(string)),
 	}
 	return regionUpdate
 }
 
-func expandAwsIpamOperatingRegionsUpdateDeleteRegions(operatingRegions []interface{}) []*ec2.RemoveIpamOperatingRegion {
+func expandIpamOperatingRegionsUpdateDeleteRegions(operatingRegions []interface{}) []*ec2.RemoveIpamOperatingRegion {
 	regionUpdates := make([]*ec2.RemoveIpamOperatingRegion, 0, len(operatingRegions))
 	for _, regionRaw := range operatingRegions {
 		region := regionRaw.(map[string]interface{})
-		regionUpdates = append(regionUpdates, expandAwsIpamOperatingRegionsUpdateDeleteRegion(region))
+		regionUpdates = append(regionUpdates, expandIpamOperatingRegionsUpdateDeleteRegion(region))
 	}
 	return regionUpdates
 }
 
-func expandAwsIpamOperatingRegionsUpdateDeleteRegion(operatingRegion map[string]interface{}) *ec2.RemoveIpamOperatingRegion {
+func expandIpamOperatingRegionsUpdateDeleteRegion(operatingRegion map[string]interface{}) *ec2.RemoveIpamOperatingRegion {
 	regionUpdate := &ec2.RemoveIpamOperatingRegion{
 		RegionName: aws.String(operatingRegion["region_name"].(string)),
 	}
 	return regionUpdate
 }
 
-func expandAwsIpamOperatingRegionsDefaultRegion(operatingRegions []interface{}, current_region string) bool {
+func expandIpamOperatingRegionsContainsCurrentRegion(operatingRegions []interface{}, current_region string) bool {
 	for _, regionRaw := range operatingRegions {
 		region := regionRaw.(map[string]interface{})
 		if region["region_name"].(string) == current_region {

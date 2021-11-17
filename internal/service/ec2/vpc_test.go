@@ -646,7 +646,7 @@ func TestAccVPCIpam_ipv4BasicNetmask(t *testing.T) {
 		CheckDestroy: testAccCheckVpcDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVpcIpamIpv4("28"),
+				Config: testAccVpcIpamIpv4(28),
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckVPCExists(resourceName, &vpc),
 					testAccCheckVpcCidrPrefix(&vpc, "28"),
@@ -1142,11 +1142,11 @@ resource "aws_vpc_ipam_pool_cidr" "test" {
 }
 `
 
-func testAccVpcIpamIpv4(netmaskLength string) string {
+func testAccVpcIpamIpv4(netmaskLength int) string {
 	return testAccVpcIpamBase + fmt.Sprintf(`
 resource "aws_vpc" "test" {
 	ipv4_ipam_pool_id   = aws_vpc_ipam_pool.test.id
-	ipv4_netmask_length = %[1]q
+	ipv4_netmask_length = %[1]d
 	depends_on = [
 		aws_vpc_ipam_pool_cidr.test
 	]

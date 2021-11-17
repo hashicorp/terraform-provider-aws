@@ -142,8 +142,9 @@ func ResourceVPC() *schema.Resource {
 				RequiredWith:  []string{"ipv6_ipam_pool_id"},
 				ValidateFunc: validation.Any(
 					validation.StringIsEmpty,
-					verify.ValidIPv6CIDRNetworkAddress,
-					validation.IsCIDRNetwork(VPCCIDRMaxIPv6, VPCCIDRMaxIPv6),
+					validation.All(
+						verify.ValidIPv6CIDRNetworkAddress,
+						validation.IsCIDRNetwork(VPCCIDRMaxIPv6, VPCCIDRMaxIPv6)),
 				),
 			},
 			"ipv6_ipam_pool_id": {
@@ -715,7 +716,7 @@ func ipv6DisassociateCidrBlock(conn *ec2.EC2, id, allocationId string) error {
 	}
 	log.Printf("[DEBUG] Waiting for EC2 VPC (%s) IPv6 CIDR to become disassociated", id)
 	if err := waitForEc2VpcIpv6CidrBlockAssociationDelete(conn, id, allocationId); err != nil {
-		return fmt.Errorf("error waiting for EC2 VPC (%s) IPv6 CIDR to become disassociated: %s", id, err)
+		return fmt.Errorf("error waiting for EC2 VPC (%s) IPv6 CIDR to become disassociated: %w", id, err)
 	}
 
 	return nil

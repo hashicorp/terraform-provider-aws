@@ -50,8 +50,9 @@ func ResourceVPCIPv6CIDRBlockAssociation() *schema.Resource {
 				ForceNew: true,
 				ValidateFunc: validation.Any(
 					validation.StringIsEmpty,
-					verify.ValidIPv6CIDRNetworkAddress,
-					validation.IsCIDRNetwork(VPCCIDRMaxIPv6, VPCCIDRMaxIPv6),
+					validation.All(
+						verify.ValidIPv6CIDRNetworkAddress,
+						validation.IsCIDRNetwork(VPCCIDRMaxIPv6, VPCCIDRMaxIPv6)),
 				),
 			},
 			// ipam parameters are not required by the API but other usage mechanisms are not implemented yet. TODO ipv6 options:

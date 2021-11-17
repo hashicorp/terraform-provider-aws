@@ -96,10 +96,7 @@ func dataSourceVPCIpamPoolRead(d *schema.ResourceData, meta interface{}) error {
 		input.IpamPoolIds = aws.StringSlice([]string{v.(string)})
 
 	}
-	// owner-id
-	// ipam-id
-	// ipam-scope-id
-	// ipam-pool-id
+
 	filters, filtersOk := d.GetOk("filter")
 	if filtersOk {
 		input.Filters = BuildFiltersDataSource(filters.(*schema.Set))

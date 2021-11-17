@@ -8,7 +8,7 @@ description: |-
 
 # Resource: aws_vpc_ipam
 
-Provides a VPC resource.
+Provides a IPAM resource.
 
 ## Example Usage
 
