@@ -55,7 +55,7 @@ val services = mapOf(
     "ecrpublic" to ServiceSpec("ECR Public"),
     "ecs" to ServiceSpec("ECS"),
     "efs" to ServiceSpec("EFS"),
-    "eks" to ServiceSpec("EKS"),
+    "eks" to ServiceSpec("EKS", vpcLock = true),
     "elasticache" to ServiceSpec("ElastiCache", vpcLock = true),
     "elasticbeanstalk" to ServiceSpec("Elastic Beanstalk"),
     "elasticsearch" to ServiceSpec("Elasticsearch Service", vpcLock = true),
