@@ -17,7 +17,7 @@ func ExpandAction(l []interface{}) *waf.WafAction {
 	}
 }
 
-func ExpandOverrideAction(l []interface{}) *waf.WafOverrideAction {
+func expandOverrideAction(l []interface{}) *waf.WafOverrideAction {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -35,7 +35,7 @@ func ExpandWebACLUpdate(updateAction string, aclRule map[string]interface{}) *wa
 	switch aclRule["type"].(string) {
 	case waf.WafRuleTypeGroup:
 		rule = &waf.ActivatedRule{
-			OverrideAction: ExpandOverrideAction(aclRule["override_action"].([]interface{})),
+			OverrideAction: expandOverrideAction(aclRule["override_action"].([]interface{})),
 			Priority:       aws.Int64(int64(aclRule["priority"].(int))),
 			RuleId:         aws.String(aclRule["rule_id"].(string)),
 			Type:           aws.String(aclRule["type"].(string)),
