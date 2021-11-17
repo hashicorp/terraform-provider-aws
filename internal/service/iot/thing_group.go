@@ -3,6 +3,7 @@ package iot
 import (
 	"fmt"
 	"log"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/iot"
@@ -32,49 +33,20 @@ func ResourceThingGroup() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"name": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(1, 128),
-			},
-			"parent_group_name": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(1, 128),
-			},
-			"properties": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"attributes": {
-							Type:     schema.TypeMap,
-							Optional: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-						"description": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-					},
-				},
-			},
 			"metadata": {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"creation_date": {
-							Type:     schema.TypeInt,
+							Type:     schema.TypeString,
 							Computed: true,
 						},
 						"parent_group_name": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"root_to_parent_groups": {
+						"root_to_parent_thing_groups": {
 							Type:     schema.TypeList,
 							Computed: true,
 							Elem: &schema.Resource{
@@ -93,12 +65,50 @@ func ResourceThingGroup() *schema.Resource {
 					},
 				},
 			},
+			"name": {
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringLenBetween(1, 128),
+			},
+			"parent_group_name": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringLenBetween(1, 128),
+			},
+			"properties": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"attribute_payload": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"attributes": {
+										Type:     schema.TypeMap,
+										Optional: true,
+										Elem:     &schema.Schema{Type: schema.TypeString},
+									},
+								},
+							},
+						},
+						"description": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+					},
+				},
+			},
+			"tags":     tftags.TagsSchema(),
+			"tags_all": tftags.TagsSchemaComputed(),
 			"version": {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -110,15 +120,17 @@ func resourceThingGroupCreate(d *schema.ResourceData, meta interface{}) error {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
+	name := d.Get("name").(string)
 	input := &iot.CreateThingGroupInput{
-		ThingGroupName: aws.String(d.Get("name").(string)),
+		ThingGroupName: aws.String(name),
 	}
 
 	if v, ok := d.GetOk("parent_group_name"); ok {
 		input.ParentGroupName = aws.String(v.(string))
 	}
-	if v, ok := d.GetOk("properties"); ok {
-		input.ThingGroupProperties = expandIotThingsGroupProperties(v.([]interface{}))
+
+	if v, ok := d.GetOk("properties"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		input.ThingGroupProperties = expandThingGroupProperties(v.([]interface{})[0].(map[string]interface{}))
 	}
 
 	if len(tags) > 0 {
@@ -126,12 +138,14 @@ func resourceThingGroupCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	log.Printf("[DEBUG] Creating IoT Thing Group: %s", input)
-	out, err := conn.CreateThingGroup(input)
+	output, err := conn.CreateThingGroup(input)
+
 	if err != nil {
-		return err
+		return fmt.Errorf("error creating IoT Thing Group (%s): %w", name, err)
 	}
 
-	d.SetId(aws.StringValue(out.ThingGroupName))
+	d.SetId(aws.StringValue(output.ThingGroupName))
+
 	return resourceThingGroupRead(d, meta)
 }
 
@@ -155,11 +169,25 @@ func resourceThingGroupRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("arn", output.ThingGroupArn)
 	d.Set("name", output.ThingGroupName)
 
-	if err := d.Set("metadata", flattenIotThingGroupMetadata(output.ThingGroupMetadata)); err != nil {
-		return fmt.Errorf("error setting metadata: %s", err)
+	if output.ThingGroupMetadata != nil {
+		if err := d.Set("metadata", []interface{}{flattenThingGroupMetadata(output.ThingGroupMetadata)}); err != nil {
+			return fmt.Errorf("error setting metadata: %w", err)
+		}
+	} else {
+		d.Set("metadata", nil)
 	}
-	if err := d.Set("properties", flattenIotThingGroupProperties(output.ThingGroupProperties)); err != nil {
-		return fmt.Errorf("error setting properties: %s", err)
+	if v := flattenThingGroupProperties(output.ThingGroupProperties); len(v) > 0 {
+		if err := d.Set("properties", []interface{}{}); err != nil {
+			return fmt.Errorf("error setting properties: %w", err)
+		}
+	} else {
+		d.Set("properties", nil)
+	}
+
+	if output.ThingGroupMetadata != nil {
+		d.Set("parent_group_name", output.ThingGroupMetadata.ParentGroupName)
+	} else {
+		d.Set("parent_group_name", nil)
 	}
 	d.Set("version", output.Version)
 
@@ -185,22 +213,24 @@ func resourceThingGroupRead(d *schema.ResourceData, meta interface{}) error {
 func resourceThingGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).IoTConn
 
-	input := &iot.UpdateThingGroupInput{
-		ThingGroupName: aws.String(d.Get("name").(string)),
-	}
+	if d.HasChangesExcept("tags", "tags_all") {
+		input := &iot.UpdateThingGroupInput{
+			ThingGroupName: aws.String(d.Get("name").(string)),
+		}
 
-	if v, ok := d.GetOk("properties"); ok {
-		input.ThingGroupProperties = expandIotThingsGroupProperties(v.([]interface{}))
-	}
+		if v, ok := d.GetOk("properties"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+			input.ThingGroupProperties = expandThingGroupProperties(v.([]interface{})[0].(map[string]interface{}))
+		}
 
-	_, err := conn.UpdateThingGroup(input)
-	if err != nil {
-		return err
+		_, err := conn.UpdateThingGroup(input)
+
+		if err != nil {
+			return fmt.Errorf("error updating IoT Thing Group (%s): %w", d.Id(), err)
+		}
 	}
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
-
 		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return fmt.Errorf("error updating tags: %s", err)
 		}
@@ -212,80 +242,140 @@ func resourceThingGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 func resourceThingGroupDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).IoTConn
 
-	input := &iot.DeleteThingGroupInput{
+	log.Printf("[DEBUG] Deleting IoT Thing Group: %s", d.Id())
+	_, err := conn.DeleteThingGroup(&iot.DeleteThingGroupInput{
 		ThingGroupName: aws.String(d.Id()),
-	}
-	log.Printf("[DEBUG] Deleting IoT Thing Group: %s", input)
+	})
 
-	_, err := conn.DeleteThingGroup(input)
+	if tfawserr.ErrCodeEquals(err, iot.ErrCodeResourceNotFoundException) {
+		return nil
+	}
+
 	if err != nil {
-		if tfawserr.ErrCodeEquals(err, iot.ErrCodeResourceNotFoundException) {
-			return nil
-		}
-		return err
+		return fmt.Errorf("error deleting IoT Thing Group (%s): %w", d.Id(), err)
 	}
 
 	return nil
 }
 
-func expandIotThingsGroupProperties(l []interface{}) *iot.ThingGroupProperties {
-	m := l[0].(map[string]interface{})
+func expandThingGroupProperties(tfMap map[string]interface{}) *iot.ThingGroupProperties {
+	if tfMap == nil {
+		return nil
+	}
 
-	thingGroupProperties := &iot.ThingGroupProperties{}
+	apiObject := &iot.ThingGroupProperties{}
 
-	if v, ok := m["attributes"]; ok {
-		thingGroupProperties.AttributePayload = &iot.AttributePayload{
-			Attributes: flex.ExpandStringMap(v.(map[string]interface{})),
+	if v, ok := tfMap["attribute_payload"].([]interface{}); ok && len(v) > 0 {
+		apiObject.AttributePayload = expandAttributePayload(v[0].(map[string]interface{}))
+	}
+
+	if v, ok := tfMap["description"].(string); ok && v != "" {
+		apiObject.ThingGroupDescription = aws.String(v)
+	}
+
+	return apiObject
+}
+
+func expandAttributePayload(tfMap map[string]interface{}) *iot.AttributePayload {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &iot.AttributePayload{}
+
+	if v, ok := tfMap["attributes"].(map[string]interface{}); ok && len(v) > 0 {
+		apiObject.Attributes = flex.ExpandStringMap(v)
+	}
+
+	return apiObject
+}
+
+func flattenThingGroupMetadata(apiObject *iot.ThingGroupMetadata) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.CreationDate; v != nil {
+		tfMap["creation_date"] = aws.TimeValue(v).Format(time.RFC3339)
+	}
+
+	if v := apiObject.ParentGroupName; v != nil {
+		tfMap["parent_group_name"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.RootToParentThingGroups; v != nil {
+		tfMap["root_to_parent_groups"] = flattenGroupNameAndArns(v)
+	}
+
+	return tfMap
+}
+
+func flattenGroupNameAndArn(apiObject *iot.GroupNameAndArn) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.GroupArn; v != nil {
+		tfMap["group_arn"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.GroupName; v != nil {
+		tfMap["group_name"] = aws.StringValue(v)
+	}
+
+	return tfMap
+}
+
+func flattenGroupNameAndArns(apiObjects []*iot.GroupNameAndArn) []interface{} {
+	if len(apiObjects) == 0 {
+		return nil
+	}
+
+	var tfList []interface{}
+
+	for _, apiObject := range apiObjects {
+		if apiObject == nil {
+			continue
 		}
+
+		tfList = append(tfList, flattenGroupNameAndArn(apiObject))
 	}
 
-	if v, ok := m["description"]; ok {
-		thingGroupProperties.ThingGroupDescription = aws.String(v.(string))
-	}
-
-	return thingGroupProperties
+	return tfList
 }
 
-func flattenIotThingGroupProperties(properties *iot.ThingGroupProperties) []map[string]interface{} {
-	if properties == nil {
-		return []map[string]interface{}{}
+func flattenThingGroupProperties(apiObject *iot.ThingGroupProperties) map[string]interface{} {
+	if apiObject == nil {
+		return nil
 	}
 
-	props := map[string]interface{}{
-		"description": aws.StringValue(properties.ThingGroupDescription),
+	tfMap := map[string]interface{}{}
+
+	if v := flattenAttributePayload(apiObject.AttributePayload); len(v) > 0 {
+		tfMap["attribute_payload"] = []interface{}{v}
 	}
 
-	if properties.AttributePayload != nil {
-		props["attributes"] = aws.StringValueMap(properties.AttributePayload.Attributes)
+	if v := apiObject.ThingGroupDescription; v != nil {
+		tfMap["description"] = aws.StringValue(v)
 	}
 
-	return []map[string]interface{}{props}
+	return tfMap
 }
 
-func flattenIotThingGroupMetadata(metadata *iot.ThingGroupMetadata) []map[string]interface{} {
-	if metadata == nil {
-		return []map[string]interface{}{}
+func flattenAttributePayload(apiObject *iot.AttributePayload) map[string]interface{} {
+	if apiObject == nil {
+		return nil
 	}
 
-	meta := map[string]interface{}{
-		"creation_date":         aws.TimeValue(metadata.CreationDate).Unix(),
-		"parent_group_name":     aws.StringValue(metadata.ParentGroupName),
-		"root_to_parent_groups": expandIotGroupNameAndArnList(metadata.RootToParentThingGroups),
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.Attributes; v != nil {
+		tfMap["attributes"] = aws.StringValueMap(v)
 	}
 
-	return []map[string]interface{}{meta}
-}
-
-func expandIotGroupNameAndArnList(lgn []*iot.GroupNameAndArn) []*iot.GroupNameAndArn {
-	vs := make([]*iot.GroupNameAndArn, 0, len(lgn))
-	for _, v := range lgn {
-		val, ok := interface{}(v).(iot.GroupNameAndArn)
-		if ok {
-			vs = append(vs, &iot.GroupNameAndArn{
-				GroupName: val.GroupName,
-				GroupArn:  val.GroupArn,
-			})
-		}
-	}
-	return vs
+	return tfMap
 }

@@ -3,12 +3,12 @@ subcategory: "IoT"
 layout: "aws"
 page_title: "AWS: aws_iot_thing_group"
 description: |-
-    Creates and manages an AWS IoT Thing Group.
+    Manages an AWS IoT Thing Group.
 ---
 
 # Resource: aws_iot_thing_group
 
-Creates and manages an AWS IoT Thing Group.
+Manages an AWS IoT Thing Group.
 
 ## Example Usage
 
@@ -23,9 +23,11 @@ resource "aws_iot_thing_group" "example" {
   parent_group_name = aws_iot_thing_group.parent.name
 
   properties {
-    attributes = {
-      One = "11111"
-      Two = "TwoTwo"
+    attribute_payload {
+      attributes = {
+        One = "11111"
+        Two = "TwoTwo"
+      }
     }
     description = "This is my thing group"
   }
@@ -45,16 +47,20 @@ resource "aws_iot_thing_group" "example" {
 
 ## properties Reference
 
-* `attributes` - (Optional) Map of attributes of the Thing Group.
+* `attribute_payload` - (Optional) The Thing Group attributes. Defined below.
 * `description` - (Optional) A description of the Thing Group.
+
+## attribute_payload Reference
+
+* `attributes` - (Optional) Key-value map.
 
 ## Attributes Reference
 
 In addition to the arguments above, the following attributes are exported:
 
+* `arn` - The ARN of the Thing Group.
 * `id` - The Thing Group ID.
 * `version` - The current version of the Thing Group record in the registry.
-* `arn` - The ARN of the Thing Group.
 
 ## Import
 

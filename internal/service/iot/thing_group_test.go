@@ -14,10 +14,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func TestAccIoTThingGroup_base(t *testing.T) {
+func TestAccIoTThingGroup_basic(t *testing.T) {
 	var thingGroup iot.DescribeThingGroupOutput
-	rString := sdkacctest.RandString(8)
-	thingGroupName := fmt.Sprintf("tf_acc_thing_group_%s", rString)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_iot_thing_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -27,15 +26,18 @@ func TestAccIoTThingGroup_base(t *testing.T) {
 		CheckDestroy: testAccCheckThingGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccThingGroupConfig_base(thingGroupName),
+				Config: testAccThingGroupConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIotThingGroupExists(resourceName, &thingGroup),
-					resource.TestCheckResourceAttr(resourceName, "name", thingGroupName),
-					resource.TestCheckNoResourceAttr(resourceName, "parent_group_name"),
-					resource.TestCheckNoResourceAttr(resourceName, "properties"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttrSet(resourceName, "metadata.0.creation_date"),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "metadata.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "metadata.0.creation_date"),
+					resource.TestCheckResourceAttr(resourceName, "metadata.0.parent_group_name", ""),
+					resource.TestCheckResourceAttr(resourceName, "metadata.0.root_to_parent_thing_groups.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "parent_group_name", ""),
+					resource.TestCheckResourceAttr(resourceName, "properties.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "version"),
 				),
 			},
@@ -43,6 +45,29 @@ func TestAccIoTThingGroup_base(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccIoTThingGroup_disappears(t *testing.T) {
+	var thingGroup iot.DescribeThingGroupOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_iot_thing_group.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, iot.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckThingGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccThingGroupConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckIotThingGroupExists(resourceName, &thingGroup),
+					acctest.CheckResourceDisappears(acctest.Provider, tfiot.ResourceThingGroup(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
@@ -466,6 +491,14 @@ func testAccCheckThingGroupDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+func testAccThingGroupConfig(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_iot_thing_group" "test" {
+  name = %[1]q
+}
+`, rName)
 }
 
 func testAccThingGroupConfig_base(thingGroupName string) string {
