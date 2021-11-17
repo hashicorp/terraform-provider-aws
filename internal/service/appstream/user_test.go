@@ -25,7 +25,6 @@ func TestAccAppStreamUser_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			acctest.PreCheckHasIAMRole(t, "AmazonAppStreamServiceAccess")
 		},
 		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckUserDestroy,
@@ -39,7 +38,6 @@ func TestAccAppStreamUser_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "user_name", rEmail),
 					acctest.CheckResourceAttrRFC3339(resourceName, "created_time"),
 					resource.TestCheckResourceAttr(resourceName, "enabled", "true"),
-					resource.TestCheckResourceAttr(resourceName, "status", "FORCE_CHANGE_PASSWORD"),
 				),
 			},
 			{
@@ -61,7 +59,6 @@ func TestAccAppStreamUser_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			acctest.PreCheckHasIAMRole(t, "AmazonAppStreamServiceAccess")
 		},
 		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckUserDestroy,
@@ -98,14 +95,13 @@ func TestAccAppStreamUser_complete(t *testing.T) {
 		ErrorCheck:        acctest.ErrorCheck(t, appstream.EndpointsID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccUserCompleteConfig(authType, rEmail, firstName, lastName, true),
+				Config: testAccUserCompleteConfig(authType, rEmail, firstName, lastName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(resourceName, &userOutput),
 					resource.TestCheckResourceAttr(resourceName, "authentication_type", authType),
 					resource.TestCheckResourceAttr(resourceName, "user_name", rEmail),
 					acctest.CheckResourceAttrRFC3339(resourceName, "created_time"),
-					resource.TestCheckResourceAttr(resourceName, "enabled", "true"),
-					resource.TestCheckResourceAttr(resourceName, "status", "FORCE_CHANGE_PASSWORD"),
+					resource.TestCheckResourceAttr(resourceName, "enabled", "false"),
 				),
 			},
 			{
@@ -116,7 +112,16 @@ func TestAccAppStreamUser_complete(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "user_name", rEmail),
 					acctest.CheckResourceAttrRFC3339(resourceName, "created_time"),
 					resource.TestCheckResourceAttr(resourceName, "enabled", "false"),
-					resource.TestCheckResourceAttr(resourceName, "status", "FORCE_CHANGE_PASSWORD"),
+				),
+			},
+			{
+				Config: testAccUserCompleteConfig(authType, rEmail, firstName, lastName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckUserExists(resourceName, &userOutput),
+					resource.TestCheckResourceAttr(resourceName, "authentication_type", authType),
+					resource.TestCheckResourceAttr(resourceName, "user_name", rEmail),
+					acctest.CheckResourceAttrRFC3339(resourceName, "created_time"),
+					resource.TestCheckResourceAttr(resourceName, "enabled", "true"),
 				),
 			},
 			{

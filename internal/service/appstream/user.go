@@ -58,9 +58,9 @@ func ResourceUser() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(0, 2048),
 			},
-			"status": {
-				Type:     schema.TypeString,
-				Computed: true,
+			"send_email_notification": {
+				Type:     schema.TypeBool,
+				Optional: true,
 			},
 			"user_name": {
 				Type:         schema.TypeString,
@@ -91,33 +91,27 @@ func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta interf
 		input.LastName = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("message_action"); ok {
-		input.MessageAction = aws.String(v.(string))
+	if v, ok := d.GetOk("send_email_notification"); ok {
+		if !v.(bool) {
+			input.MessageAction = aws.String(appstream.MessageActionSuppress)
+		}
 	}
 
 	_, err := conn.CreateUserWithContext(ctx, input)
 
+	id := EncodeUserID(userName, authType)
+
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error creating AppStream User (%s): %w", d.Id(), err))
+		return diag.FromErr(fmt.Errorf("error creating AppStream User (%s): %w", id, err))
 	}
 
 	if _, err = waitUserAvailable(ctx, conn, userName, authType); err != nil {
-		return diag.FromErr(fmt.Errorf("error waiting for AppStream User (%s) to be available: %w", d.Id(), err))
+		return diag.FromErr(fmt.Errorf("error waiting for AppStream User (%s) to be available: %w", id, err))
 	}
 
 	// Enabling/disabling workflow
-	if v, ok := d.GetOk("enabled"); ok {
-		if v.(bool) {
-			input := &appstream.EnableUserInput{
-				AuthenticationType: aws.String(authType),
-				UserName:           aws.String(userName),
-			}
-
-			_, err = conn.EnableUserWithContext(ctx, input)
-			if err != nil {
-				return diag.FromErr(fmt.Errorf("error enabling AppStream User (%s): %w", d.Id(), err))
-			}
-		} else {
+	if v, ok := d.GetOkExists("enabled"); ok {
+		if !v.(bool) {
 			input := &appstream.DisableUserInput{
 				AuthenticationType: aws.String(authType),
 				UserName:           aws.String(userName),
@@ -125,12 +119,12 @@ func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta interf
 
 			_, err = conn.DisableUserWithContext(ctx, input)
 			if err != nil {
-				return diag.FromErr(fmt.Errorf("error disabling AppStream User (%s): %w", d.Id(), err))
+				return diag.FromErr(fmt.Errorf("error disabling AppStream User (%s): %w", id, err))
 			}
 		}
 	}
 
-	d.SetId(EncodeUserID(userName, authType))
+	d.SetId(id)
 
 	return resourceUserRead(ctx, d, meta)
 }
@@ -160,7 +154,6 @@ func resourceUserRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	d.Set("first_name", user.FirstName)
 
 	d.Set("last_name", user.LastName)
-	d.Set("status", user.Status)
 	d.Set("user_name", user.UserName)
 
 	return nil
@@ -196,7 +189,6 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 				return diag.FromErr(fmt.Errorf("error disabling AppStream User (%s): %w", d.Id(), err))
 			}
 		}
-
 	}
 
 	return nil

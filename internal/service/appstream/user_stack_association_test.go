@@ -17,7 +17,7 @@ import (
 )
 
 func TestAccAppStreamUserStackAssociation_basic(t *testing.T) {
-	resourceName := "aws_appstream_stack_user_association.test"
+	resourceName := "aws_appstream_user_stack_association.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	authType := "USERPOOL"
 	rEmail := acctest.RandomEmailAddress("hashicorp.com")
@@ -25,7 +25,6 @@ func TestAccAppStreamUserStackAssociation_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			acctest.PreCheckHasIAMRole(t, "AmazonAppStreamServiceAccess")
 		},
 		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckUserStackAssociationDestroy,
@@ -50,7 +49,7 @@ func TestAccAppStreamUserStackAssociation_basic(t *testing.T) {
 }
 
 func TestAccAppStreamUserStackAssociation_disappears(t *testing.T) {
-	resourceName := "aws_appstream_stack_user_association.test"
+	resourceName := "aws_appstream_user_stack_association.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	authType := "USERPOOL"
 	rEmail := acctest.RandomEmailAddress("hashicorp.com")
@@ -58,7 +57,6 @@ func TestAccAppStreamUserStackAssociation_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			acctest.PreCheckHasIAMRole(t, "AmazonAppStreamServiceAccess")
 		},
 		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckUserStackAssociationDestroy,
@@ -77,7 +75,7 @@ func TestAccAppStreamUserStackAssociation_disappears(t *testing.T) {
 }
 
 func TestAccAppStreamUserStackAssociation_complete(t *testing.T) {
-	resourceName := "aws_appstream_stack_user_association.test"
+	resourceName := "aws_appstream_user_stack_association.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	authType := "USERPOOL"
 	rEmail := acctest.RandomEmailAddress("hashicorp.com")
@@ -122,7 +120,7 @@ func testAccCheckUserStackAssociationExists(resourceName string) resource.TestCh
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).AppStreamConn
 
-		stackName, userName, authType, err := tfappstream.DecodeStackUserID(rs.Primary.ID)
+		userName, stackName, authType, err := tfappstream.DecodeStackUserID(rs.Primary.ID)
 		if err != nil {
 			return fmt.Errorf("error decoding id appstream stack user association (%s): %w", rs.Primary.ID, err)
 		}
@@ -149,11 +147,11 @@ func testAccCheckUserStackAssociationDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).AppStreamConn
 
 	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_appstream_stack_user_association" {
+		if rs.Type != "aws_appstream_user_stack_association" {
 			continue
 		}
 
-		stackName, userName, authType, err := tfappstream.DecodeStackUserID(rs.Primary.ID)
+		userName, stackName, authType, err := tfappstream.DecodeStackUserID(rs.Primary.ID)
 		if err != nil {
 			return fmt.Errorf("error decoding id appstream stack user association (%s): %w", rs.Primary.ID, err)
 		}
@@ -191,7 +189,7 @@ resource "aws_appstream_user" "test" {
   user_name           = %[3]q
 }
 
-resource "aws_appstream_stack_user_association" "test" {
+resource "aws_appstream_user_stack_association" "test" {
   authentication_type = aws_appstream_user.test.authentication_type
   stack_name          = aws_appstream_stack.test.name
   user_name           = aws_appstream_user.test.user_name

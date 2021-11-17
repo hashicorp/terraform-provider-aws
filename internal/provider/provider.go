@@ -797,7 +797,7 @@ func Provider() *schema.Provider {
 			"aws_appstream_fleet":                  appstream.ResourceFleet(),
 			"aws_appstream_image_builder":          appstream.ResourceImageBuilder(),
 			"aws_appstream_stack":                  appstream.ResourceStack(),
-			"aws_appstream_stack_user_association": appstream.ResourceUserStackAssociation(),
+			"aws_appstream_user_stack_association": appstream.ResourceUserStackAssociation(),
 			"aws_appstream_user":                   appstream.ResourceUser(),
 
 			"aws_appsync_api_key":     appsync.ResourceAPIKey(),

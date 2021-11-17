@@ -25,6 +25,7 @@ const (
 	imageBuilderStateTimeout = 60 * time.Minute
 	// userOperationTimeout Maximum amount of time to wait for User operation eventual consistency
 	userOperationTimeout = 4 * time.Minute
+	userAvailable        = "AVAILABLE"
 )
 
 // waitStackStateDeleted waits for a deleted stack
@@ -169,7 +170,7 @@ func waitImageBuilderStateDeleted(ctx context.Context, conn *appstream.AppStream
 // waitUserAvailable waits for a user be available
 func waitUserAvailable(ctx context.Context, conn *appstream.AppStream, username, authType string) (*appstream.User, error) {
 	stateConf := &resource.StateChangeConf{
-		Target:  []string{"AVAILABLE"},
+		Target:  []string{userAvailable},
 		Refresh: statusUserAvailable(ctx, conn, username, authType),
 		Timeout: userOperationTimeout,
 	}

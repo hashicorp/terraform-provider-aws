@@ -72,6 +72,6 @@ func statusUserAvailable(ctx context.Context, conn *appstream.AppStream, usernam
 			return nil, "", err
 		}
 
-		return user, "AVAILABLE", nil
+		return user, userAvailable, nil
 	}
 }
