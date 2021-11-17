@@ -858,6 +858,42 @@ func TestAccFirehoseDeliveryStream_extendedS3KMSKeyARN(t *testing.T) {
 	})
 }
 
+func TestAccFirehoseDeliveryStream_extendedS3DynamicPartitioning(t *testing.T) {
+	//rString := sdkacctest.RandString(8)
+	//funcName := fmt.Sprintf("aws_kinesis_firehose_delivery_stream_test_%s", rString)
+	//policyName := fmt.Sprintf("tf_acc_policy_%s", rString)
+	//roleName := fmt.Sprintf("tf_acc_role_%s", rString)
+	resourceName := "aws_kinesis_firehose_delivery_stream.test"
+
+	var stream firehose.DeliveryStreamDescription
+	ri := sdkacctest.RandInt()
+
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, firehose.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckKinesisFirehoseDeliveryStreamDestroy_ExtendedS3,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccKinesisFirehoseDeliveryStreamConfig_extendedS3DynamicPartitioning(rName, ri),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKinesisFirehoseDeliveryStreamExists(resourceName, &stream),
+					testAccCheckDeliveryStreamAttributes(&stream, nil, nil, nil, nil, nil, nil),
+					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.processing_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.dynamic_partitioning_configuration.#", "1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccFirehoseDeliveryStream_extendedS3Updates(t *testing.T) {
 	rString := sdkacctest.RandString(8)
 	funcName := fmt.Sprintf("aws_kinesis_firehose_delivery_stream_test_%s", rString)
@@ -2593,6 +2629,53 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
   }
 }
 `
+
+func testAccKinesisFirehoseDeliveryStreamConfig_extendedS3DynamicPartitioning(rName string, rInt int) string {
+	return acctest.ConfigCompose(
+		testAccLambdaBasicConfig(rName, rName, rName),
+		fmt.Sprintf(testAccKinesisFirehoseDeliveryStreamBaseConfig+`
+resource "aws_kinesis_firehose_delivery_stream" "test" {
+  depends_on  = [aws_iam_role_policy.firehose]
+  name        = "terraform-kinesis-firehose-basictest-%d"
+  destination = "extended_s3"
+
+  extended_s3_configuration {
+    role_arn    = aws_iam_role.firehose.arn
+    bucket_arn  = aws_s3_bucket.bucket.arn
+    prefix = "custom-prefix/customerId=!{partitionKeyFromLambda:customerId}/year=!{timestamp:yyyy}/month=!{timestamp:MM}/day=!{timestamp:dd}/hour=!{timestamp:HH}/"
+    error_output_prefix = "prefix1"
+    buffer_size = 64
+
+    dynamic_partitioning_configuration {
+      enabled        = true
+      retry_duration = 300
+    }
+
+    processing_configuration {
+      enabled = true
+
+      processors {
+        type = "Lambda"
+
+        parameters {
+          parameter_name  = "LambdaArn"
+          parameter_value = "${aws_lambda_function.lambda_function_test.arn}:$LATEST"
+        }
+      }
+
+      processors {
+        type = "RecordDeAggregation"
+
+        parameters {
+          parameter_name  = "SubRecordType"
+          parameter_value = "JSON"
+        }
+      }
+    }
+  }
+}
+`, rInt, rInt, rInt, rInt))
+}
 
 var testAccKinesisFirehoseDeliveryStreamConfig_extendedS3Updates_Initial = testAccKinesisFirehoseDeliveryStreamBaseConfig + `
 resource "aws_kinesis_firehose_delivery_stream" "test" {

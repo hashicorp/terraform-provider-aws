@@ -70,20 +70,11 @@ func dynamicPartitioningConfigurationSchema() *schema.Schema {
 					Optional: true,
 					Default:  false,
 				},
-				"retry_options": {
-					Type:     schema.TypeList,
-					MaxItems: 1,
-					Optional: true,
-					Elem: &schema.Resource{
-						Schema: map[string]*schema.Schema{
-							"duration_in_seconds": {
-								Type:         schema.TypeInt,
-								Optional:     true,
-								Default:      300,
-								ValidateFunc: validation.IntBetween(0, 7200),
-							},
-						},
-					},
+				"retry_duration": {
+					Type:         schema.TypeInt,
+					Optional:     true,
+					Default:      300,
+					ValidateFunc: validation.IntBetween(0, 7200),
 				},
 			},
 		},
@@ -704,16 +695,12 @@ func flattenDynamicPartitioningConfiguration(dpc *firehose.DynamicPartitioningCo
 
 	dynamicPartitioningConfiguration := make([]map[string]interface{}, 1)
 
-	retryOptions := make([]map[string]interface{}, 1)
-	if dpc.RetryOptions != nil && dpc.RetryOptions.DurationInSeconds != nil {
-		retryOptions[0] = map[string]interface{}{
-			"duration_in_seconds": int(aws.Int64Value(dpc.RetryOptions.DurationInSeconds)),
-		}
+	dynamicPartitioningConfiguration[0] = map[string]interface{}{
+		"enabled": aws.BoolValue(dpc.Enabled),
 	}
 
-	dynamicPartitioningConfiguration[0] = map[string]interface{}{
-		"enabled":       aws.Bool(*dpc.Enabled),
-		"retry_options": retryOptions,
+	if dpc.RetryOptions != nil && dpc.RetryOptions.DurationInSeconds != nil {
+		dynamicPartitioningConfiguration[0]["retry_duration"] = int(aws.Int64Value(dpc.RetryOptions.DurationInSeconds))
 	}
 
 	return dynamicPartitioningConfiguration
@@ -1990,8 +1977,10 @@ func extractDynamicPartitioningConfiguration(s3 map[string]interface{}) *firehos
 		Enabled: aws.Bool(dynamicPartitioningConfig["enabled"].(bool)),
 	}
 
-	if retryOptions, ok := dynamicPartitioningConfig["retry_options"]; ok {
-		DynamicPartitioningConfiguration.RetryOptions = extractRetryOptions(retryOptions.([]interface{}))
+	if retryDuration, ok := dynamicPartitioningConfig["retry_duration"]; ok {
+		DynamicPartitioningConfiguration.RetryOptions = &firehose.RetryOptions{
+			DurationInSeconds: aws.Int64(int64(retryDuration.(int))),
+		}
 	}
 
 	return DynamicPartitioningConfiguration
