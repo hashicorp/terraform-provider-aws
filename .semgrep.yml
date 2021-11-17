@@ -559,10 +559,9 @@ rules:
     message: Domain names should be in the namespaces defined in RFC 6761 (https://datatracker.ietf.org/doc/html/rfc6761) as reserved for testing
     paths:
       include:
-        - aws/data_source*.go
-        - aws/resource_aws_a*.go
-        - aws/resource_aws_b*.go
-        - aws/resource_aws_workspaces_*.go
+        - internal/service/**/*_data_source_test.go
+        - internal/service/[a-b]*.go
+        - internal/service/workspaces
     patterns:
       - patterns:
         - pattern-regex: '[\"`].*(?<!(example))\.(com|net|org)\b'
