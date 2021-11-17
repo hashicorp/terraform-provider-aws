@@ -48,7 +48,7 @@ func ResourceGroup() *schema.Resource {
 				ValidateFunc: validation.IntInSlice([]int{0, 1, 3, 5, 7, 14, 30, 60, 90, 120, 150, 180, 365, 400, 545, 731, 1827, 3653}),
 			},
 
-			"kms_key_id": {
+			"kms_key_arn": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -86,7 +86,7 @@ func resourceGroupCreate(d *schema.ResourceData, meta interface{}) error {
 		LogGroupName: aws.String(logGroupName),
 	}
 
-	if v, ok := d.GetOk("kms_key_id"); ok {
+	if v, ok := d.GetOk("kms_key_arn"); ok {
 		params.KmsKeyId = aws.String(v.(string))
 	}
 
@@ -141,7 +141,7 @@ func resourceGroupRead(d *schema.ResourceData, meta interface{}) error {
 
 	d.Set("arn", TrimLogGroupARNWildcardSuffix(aws.StringValue(lg.Arn)))
 	d.Set("name", lg.LogGroupName)
-	d.Set("kms_key_id", lg.KmsKeyId)
+	d.Set("kms_key_arn", lg.KmsKeyArn)
 	d.Set("retention_in_days", lg.RetentionInDays)
 
 	tags, err := ListTags(conn, d.Id())
@@ -221,8 +221,8 @@ func resourceGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	if d.HasChange("kms_key_id") && !d.IsNewResource() {
-		_, newKey := d.GetChange("kms_key_id")
+	if d.HasChange("kms_key_arn") && !d.IsNewResource() {
+		_, newKey := d.GetChange("kms_key_arn")
 
 		if newKey.(string) == "" {
 			_, err := conn.DisassociateKmsKey(&cloudwatchlogs.DisassociateKmsKeyInput{

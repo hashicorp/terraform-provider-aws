@@ -315,7 +315,7 @@ func TestAccCloudWatchLogsGroup_kmsKey(t *testing.T) {
 				Config: testAccGroupWithKMSKeyIDConfig(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudWatchLogGroupExists(resourceName, &lg),
-					resource.TestCheckResourceAttrSet(resourceName, "kms_key_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "kms_key_arn"),
 				),
 			},
 		},
@@ -491,7 +491,7 @@ POLICY
 
 resource "aws_cloudwatch_log_group" "test" {
   name       = "foo-bar-%d"
-  kms_key_id = aws_kms_key.foo.arn
+  kms_key_arn = aws_kms_key.foo.arn
 }
 `, rInt, rInt)
 }

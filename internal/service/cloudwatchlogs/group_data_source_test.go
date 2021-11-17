@@ -72,7 +72,7 @@ func TestAccCloudWatchLogsGroupDataSource_kms(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
 					resource.TestCheckResourceAttrSet(resourceName, "creation_time"),
-					resource.TestCheckResourceAttrSet(resourceName, "kms_key_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "kms_key_arn"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
@@ -160,7 +160,7 @@ POLICY
 
 resource aws_cloudwatch_log_group "test" {
   name       = "%s"
-  kms_key_id = aws_kms_key.foo.arn
+  kms_key_arn = aws_kms_key.foo.arn
 }
 
 data aws_cloudwatch_log_group "test" {

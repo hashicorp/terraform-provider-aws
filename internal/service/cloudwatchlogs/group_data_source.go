@@ -29,7 +29,7 @@ func DataSourceGroup() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			"kms_key_id": {
+			"kms_key_arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -55,7 +55,7 @@ func dataSourceGroupRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("arn", logGroup.Arn)
 	d.Set("creation_time", logGroup.CreationTime)
 	d.Set("retention_in_days", logGroup.RetentionInDays)
-	d.Set("kms_key_id", logGroup.KmsKeyId)
+	d.Set("kms_key_arn", logGroup.KmsKeyArn)
 
 	tags, err := ListTags(conn, name)
 
