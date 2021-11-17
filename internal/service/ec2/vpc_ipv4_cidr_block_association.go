@@ -49,7 +49,7 @@ func ResourceVPCIPv4CIDRBlockAssociation() *schema.Resource {
 				Optional:     true,
 				Computed:     true,
 				ForceNew:     true,
-				ValidateFunc: validation.IsCIDRNetwork(16, 28), // The allowed block size is between a /28 netmask and /16 netmask.
+				ValidateFunc: validation.IsCIDRNetwork(VPCCIDRMinIPv4, VPCCIDRMaxIPv4),
 			},
 			"ipv4_ipam_pool_id": {
 				Type:     schema.TypeString,
@@ -60,7 +60,7 @@ func ResourceVPCIPv4CIDRBlockAssociation() *schema.Resource {
 				Type:         schema.TypeInt,
 				Optional:     true,
 				ForceNew:     true,
-				ValidateFunc: validation.IntBetween(16, 28),
+				ValidateFunc: validation.IntBetween(VPCCIDRMinIPv4, VPCCIDRMaxIPv4),
 			},
 		},
 

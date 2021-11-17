@@ -51,7 +51,7 @@ func ResourceVPCIPv6CIDRBlockAssociation() *schema.Resource {
 				ValidateFunc: validation.Any(
 					validation.StringIsEmpty,
 					verify.ValidIPv6CIDRNetworkAddress,
-					validation.IsCIDRNetwork(56, 56),
+					validation.IsCIDRNetwork(VPCCIDRMaxIPv6, VPCCIDRMaxIPv6),
 				),
 			},
 			// ipam parameters are not required by the API but other usage mechanisms are not implemented yet. TODO ipv6 options:
@@ -66,7 +66,7 @@ func ResourceVPCIPv6CIDRBlockAssociation() *schema.Resource {
 				Type:          schema.TypeInt,
 				Optional:      true,
 				ForceNew:      true,
-				ValidateFunc:  validation.IntInSlice([]int{56}),
+				ValidateFunc:  validation.IntInSlice([]int{VPCCIDRMaxIPv6}),
 				ConflictsWith: []string{"cidr_block"},
 				// This RequiredWith setting should be applied once L57 is completed
 				// RequiredWith:  []string{"ipv6_ipam_pool_id"},
