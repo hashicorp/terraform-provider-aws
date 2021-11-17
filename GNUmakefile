@@ -1,10 +1,18 @@
-SWEEP?=us-west-2,us-east-1,us-east-2
-TEST?=./...
-SWEEP_DIR?=./internal/sweep
-PKG=internal
-TEST_COUNT?=1
-ACCTEST_TIMEOUT?=180m
-ACCTEST_PARALLELISM?=20
+SWEEP               ?= us-west-2,us-east-1,us-east-2
+TEST                ?= ./...
+SWEEP_DIR           ?= ./internal/sweep
+PKG_NAME            ?= internal
+TEST_COUNT          ?= 1
+ACCTEST_TIMEOUT     ?= 180m
+ACCTEST_PARALLELISM ?= 20
+
+ifneq ($(origin PKG), undefined)
+	PKG_NAME = internal/service/$(PKG)
+endif
+
+ifneq ($(origin TESTS), undefined)
+	TESTARGS = -run='$(TESTS)'
+endif
 
 default: build
 
@@ -34,11 +42,11 @@ testacc: fmtcheck
 		echo "See the contributing guide for more information: https://github.com/hashicorp/terraform-provider-aws/blob/main/docs/contributing/running-and-writing-acceptance-tests.md"; \
 		exit 1; \
 	fi
-	TF_ACC=1 go test ./$(PKG)/... -v -count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) $(TESTARGS) -timeout $(ACCTEST_TIMEOUT)
+	TF_ACC=1 go test ./$(PKG_NAME)/... -v -count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) $(TESTARGS) -timeout $(ACCTEST_TIMEOUT)
 
 fmt:
 	@echo "==> Fixing source code with gofmt..."
-	gofmt -s -w ./$(PKG) $(filter-out ./providerlint/go% ./providerlint/README.md ./providerlint/vendor, $(wildcard ./providerlint/*))
+	gofmt -s -w ./$(PKG_NAME) $(filter-out ./providerlint/go% ./providerlint/README.md ./providerlint/vendor, $(wildcard ./providerlint/*))
 
 # Currently required by tf-deploy compile
 fmtcheck:
@@ -87,7 +95,7 @@ lint: golangci-lint providerlint importlint
 
 golangci-lint:
 	@echo "==> Checking source code with golangci-lint..."
-	@golangci-lint run ./$(PKG)/...
+	@golangci-lint run ./$(PKG_NAME)/...
 
 providerlint:
 	@echo "==> Checking source code with providerlint..."
@@ -114,11 +122,11 @@ providerlint:
 		-XR005=false \
 		-XS001=false \
 		-XS002=false \
-		./$(PKG)/service/... ./$(PKG)/provider/...
+		./$(PKG_NAME)/service/... ./$(PKG_NAME)/provider/...
 
 importlint:
 	@echo "==> Checking source code with importlint..."
-	@impi --local . --scheme stdThirdPartyLocal ./$(PKG)/...
+	@impi --local . --scheme stdThirdPartyLocal ./$(PKG_NAME)/...
 
 tools:
 	cd providerlint && go install .
@@ -133,7 +141,7 @@ tools:
 test-compile:
 	@if [ "$(TEST)" = "./..." ]; then \
 		echo "ERROR: Set TEST to a specific package. For example,"; \
-		echo "  make test-compile TEST=./$(PKG)"; \
+		echo "  make test-compile TEST=./$(PKG_NAME)"; \
 		exit 1; \
 	fi
 	go test -c $(TEST) $(TESTARGS)
