@@ -1,14 +1,14 @@
 ---
 subcategory: "AppStream"
 layout: "aws"
-page_title: "AWS: aws_appstream_stack_fleet_association"
+page_title: "AWS: aws_appstream_fleet_stack_association"
 description: |-
-  Manages an AppStream Stack Fleet association.
+  Manages an AppStream Fleet Stack association.
 ---
 
-# Resource: aws_appstream_stack_fleet_association
+# Resource: aws_appstream_fleet_stack_association
 
-Manages an AppStream Stack Fleet association.
+Manages an AppStream Fleet Stack association.
 
 ## Example Usage
 
@@ -27,7 +27,7 @@ resource "aws_appstream_stack" "example" {
   name = "STACK NAME"
 }
 
-resource "aws_appstream_stack_fleet_association" "example" {
+resource "aws_appstream_fleet_stack_association" "example" {
   fleet_name = aws_appstream_fleet.example.name
   stack_name = aws_appstream_stack.example.name
 }
@@ -49,8 +49,8 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-AppStream Stack Fleet Association can be imported by using the `stack_name` and `fleet_name` separated by a slash (`/`), e.g.,
+AppStream Stack Fleet Association can be imported by using the `fleet_name` and `stack_name` separated by a slash (`/`), e.g.,
 
 ```
-$ terraform import aws_appstream_stack_fleet_association.example stackName/fleetName
+$ terraform import aws_appstream_fleet_stack_association.example fleetName/stackName
 ```

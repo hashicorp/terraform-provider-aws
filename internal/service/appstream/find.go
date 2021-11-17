@@ -3,6 +3,7 @@ package appstream
 import (
 	"context"
 	"fmt"
+	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/appstream"
@@ -149,4 +150,41 @@ func FindUserByUserNameAndAuthType(ctx context.Context, conn *appstream.AppStrea
 	}
 
 	return result, nil
+}
+
+// FindAssociatedFleetStack Retrieve an associated fleet with a stack by fleet and stack name
+func FindAssociatedFleetStack(ctx context.Context, conn *appstream.AppStream, fleetName, stackName string) (*string, error) {
+	input := &appstream.ListAssociatedStacksInput{
+		FleetName: aws.String(fleetName),
+	}
+
+	resp, err := conn.ListAssociatedStacksWithContext(ctx, &appstream.ListAssociatedStacksInput{FleetName: aws.String(fleetName)})
+
+	if tfawserr.ErrCodeEquals(err, appstream.ErrCodeResourceNotFoundException) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	var sName string
+	for _, name := range resp.Names {
+		log.Printf("[DEBIG] name : %v", name)
+		if aws.StringValue(name) == stackName {
+			log.Printf("[DEBIG] name : %v found", name)
+			sName = aws.StringValue(name)
+		}
+	}
+
+	if len(sName) == 0 {
+		return nil, &resource.NotFoundError{
+			Message:     "Empty result",
+			LastRequest: input,
+		}
+	}
+
+	return aws.String(sName), nil
 }
