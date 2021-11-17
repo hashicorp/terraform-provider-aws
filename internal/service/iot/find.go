@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func AuthorizerByName(conn *iot.IoT, name string) (*iot.AuthorizerDescription, error) {
+func FindAuthorizerByName(conn *iot.IoT, name string) (*iot.AuthorizerDescription, error) {
 	input := &iot.DescribeAuthorizerInput{
 		AuthorizerName: aws.String(name),
 	}
