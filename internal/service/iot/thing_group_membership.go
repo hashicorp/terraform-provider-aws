@@ -8,9 +8,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/iot"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func ResourceThingGroupMembership() *schema.Resource {
@@ -18,14 +18,15 @@ func ResourceThingGroupMembership() *schema.Resource {
 		Create: resourceThingGroupMembershipCreate,
 		Read:   resourceThingGroupMembershipRead,
 		Delete: resourceThingGroupMembershipDelete,
+
 		Importer: &schema.ResourceImporter{
-			State: resourceThingGroupMembershipImport,
+			State: schema.ImportStatePassthrough,
 		},
 
 		Schema: map[string]*schema.Schema{
-			"thing_name": {
-				Type:     schema.TypeString,
-				Required: true,
+			"override_dynamic_group": {
+				Type:     schema.TypeBool,
+				Optional: true,
 				ForceNew: true,
 			},
 			"thing_group_name": {
@@ -33,9 +34,9 @@ func ResourceThingGroupMembership() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"override_dynamics_group": {
-				Type:     schema.TypeBool,
-				Optional: true,
+			"thing_name": {
+				Type:     schema.TypeString,
+				Required: true,
 				ForceNew: true,
 			},
 		},
@@ -45,21 +46,25 @@ func ResourceThingGroupMembership() *schema.Resource {
 func resourceThingGroupMembershipCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).IoTConn
 
-	params := &iot.AddThingToThingGroupInput{}
-	params.ThingName = aws.String(d.Get("thing_name").(string))
-	params.ThingGroupName = aws.String(d.Get("thing_group_name").(string))
-
-	if v, ok := d.GetOk("override_dynamics_group"); ok {
-		params.OverrideDynamicGroups = aws.Bool(v.(bool))
+	thingGroupName := d.Get("thing_group_name").(string)
+	thingName := d.Get("thing_name").(string)
+	input := &iot.AddThingToThingGroupInput{
+		ThingGroupName: aws.String(thingGroupName),
+		ThingName:      aws.String(thingName),
 	}
 
-	_, err := conn.AddThingToThingGroup(params)
+	if v, ok := d.GetOk("override_dynamic_group"); ok {
+		input.OverrideDynamicGroups = aws.Bool(v.(bool))
+	}
+
+	log.Printf("[DEBUG] Creating IoT Thing Group Membership: %s", input)
+	_, err := conn.AddThingToThingGroup(input)
 
 	if err != nil {
-		return err
+		return fmt.Errorf("error adding IoT Thing (%s) to IoT Thing Group (%s): %w", thingName, thingGroupName, err)
 	}
 
-	d.SetId(resource.PrefixedUniqueId(fmt.Sprintf("%s-%s", *params.ThingName, *params.ThingGroupName)))
+	d.SetId(ThingGroupMembershipCreateResourceID(thingGroupName, thingName))
 
 	return resourceThingGroupMembershipRead(d, meta)
 }
@@ -67,32 +72,26 @@ func resourceThingGroupMembershipCreate(d *schema.ResourceData, meta interface{}
 func resourceThingGroupMembershipRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).IoTConn
 
-	thingName := d.Get("thing_name").(string)
-	thingGroupName := d.Get("thing_group_name").(string)
+	thingGroupName, thingName, err := ThingGroupMembershipParseResourceID(d.Id())
 
-	hasThingGroup, err := IotThingHasThingGroup(conn, thingName, thingGroupName, "")
+	if err != nil {
+		return err
+	}
 
-	if tfawserr.ErrCodeEquals(err, iot.ErrCodeResourceNotFoundException) {
-		log.Printf("[WARN] IoT Thing (%s) is not found", thingName)
+	err = FindThingGroupMembership(conn, thingGroupName, thingName)
+
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] IoT Thing Group Membership (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if err != nil {
-		return fmt.Errorf("error finding IoT Thing Group (%s) of thing  (%s): %s", thingGroupName, thingName, err)
+		return fmt.Errorf("error reading IoT Thing Group Membership (%s): %w", d.Id(), err)
 	}
 
-	if !hasThingGroup {
-		log.Printf("[WARN] IoT Thing Group (%s) is not found in Thing (%s) group list", thingGroupName, thingName)
-		d.SetId("")
-		return nil
-	}
-
-	d.Set("thing_name", thingName)
 	d.Set("thing_group_name", thingGroupName)
-	if v, ok := d.GetOk("override_dynamics_group"); ok {
-		d.Set("override_dynamics_group", v.(bool))
-	}
+	d.Set("thing_name", thingName)
 
 	return nil
 }
@@ -100,67 +99,44 @@ func resourceThingGroupMembershipRead(d *schema.ResourceData, meta interface{}) 
 func resourceThingGroupMembershipDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).IoTConn
 
-	params := &iot.RemoveThingFromThingGroupInput{}
-	params.ThingName = aws.String(d.Get("thing_name").(string))
-	params.ThingGroupName = aws.String(d.Get("thing_group_name").(string))
-
-	_, err := conn.RemoveThingFromThingGroup(params)
+	thingGroupName, thingName, err := ThingGroupMembershipParseResourceID(d.Id())
 
 	if err != nil {
 		return err
 	}
 
+	log.Printf("[DEBUG] Deleting IoT Thing Group Membership: %s", d.Id())
+	_, err = conn.RemoveThingFromThingGroup(&iot.RemoveThingFromThingGroupInput{
+		ThingGroupName: aws.String(thingGroupName),
+		ThingName:      aws.String(thingName),
+	})
+
+	if tfawserr.ErrCodeEquals(err, iot.ErrCodeResourceNotFoundException) {
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("error removing IoT Thing (%s) from IoT Thing Group (%s): %w", thingName, thingGroupName, err)
+	}
+
 	return nil
 }
 
-func resourceThingGroupMembershipImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-	idParts := strings.SplitN(d.Id(), "/", 2)
-	if len(idParts) != 2 || idParts[0] == "" || idParts[1] == "" {
-		return nil, fmt.Errorf("unexpected format of ID (%q), expected <thing-name>/<thing-group>", d.Id())
-	}
+const thingGroupMembershipResourceIDSeparator = "/"
 
-	thingName := idParts[0]
-	thingGroupName := idParts[1]
+func ThingGroupMembershipCreateResourceID(thingGroupName, thingName string) string {
+	parts := []string{thingGroupName, thingName}
+	id := strings.Join(parts, thingGroupMembershipResourceIDSeparator)
 
-	d.Set("thing_name", thingName)
-	d.Set("thing_group_name", thingGroupName)
-
-	d.SetId(fmt.Sprintf("%s-%s", thingName, thingGroupName))
-
-	return []*schema.ResourceData{d}, nil
+	return id
 }
 
-func IotThingHasThingGroup(conn *iot.IoT, thingName string, thingGroupName string, nextToken string) (bool, error) {
-	maxResults := int64(20)
+func ThingGroupMembershipParseResourceID(id string) (string, string, error) {
+	parts := strings.Split(id, thingGroupMembershipResourceIDSeparator)
 
-	params := &iot.ListThingGroupsForThingInput{
-		MaxResults: aws.Int64(maxResults),
-		ThingName:  aws.String(thingName),
+	if len(parts) == 2 && parts[0] != "" && parts[1] != "" {
+		return parts[0], parts[1], nil
 	}
 
-	if len(nextToken) > 0 {
-		params.NextToken = aws.String(nextToken)
-	}
-
-	out, err := conn.ListThingGroupsForThing(params)
-	if err != nil {
-		return false, err
-	}
-
-	// Check if searched group is in current collection
-	// If it is return true
-	for _, group := range out.ThingGroups {
-		if thingGroupName == *group.GroupName {
-			return true, nil
-		}
-	}
-
-	// If group that we searched for not appear in current list
-	// then check if NextToken exists. If it is so call hasThingGroup
-	// recursively to search in next part of list. Otherwise return false
-	if out.NextToken != nil {
-		return IotThingHasThingGroup(conn, thingName, thingGroupName, *out.NextToken)
-	} else {
-		return false, nil
-	}
+	return "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected thing-group-name%[2]sthing-name", id, thingGroupMembershipResourceIDSeparator)
 }
