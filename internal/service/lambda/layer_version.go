@@ -113,8 +113,9 @@ func ResourceLayerVersion() *schema.Resource {
 			},
 			"skip_destroy": {
 				Type:     schema.TypeBool,
-				Optional: true,
 				Default:  false,
+				ForceNew: true,
+				Optional: true,
 			},
 			"source_code_hash": {
 				Type:     schema.TypeString,
