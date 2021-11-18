@@ -1,11 +1,8 @@
 package s3
 
 import (
-	"errors"
 	"fmt"
 	"log"
-	"net/http"
-	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/s3"
@@ -21,10 +18,10 @@ import (
 
 func ResourceBucketReplicationConfiguration() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsS3BucketReplicationConfigurationPut,
-		Read:   resourceAwsS3BucketReplicationConfigurationRead,
-		Update: resourceAwsS3BucketReplicationConfigurationUpdate,
-		Delete: resourceAwsS3BucketReplicationConfigurationDelete,
+		Create: resourceBucketReplicationConfigurationCreate,
+		Read:   resourceBucketReplicationConfigurationRead,
+		Update: resourceBucketReplicationConfigurationUpdate,
+		Delete: resourceBucketReplicationConfigurationDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -32,219 +29,25 @@ func ResourceBucketReplicationConfiguration() *schema.Resource {
 		Schema: map[string]*schema.Schema{
 			"bucket": {
 				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
+				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(0, 63),
+				ValidateFunc: validation.StringLenBetween(1, 63),
 			},
 			"role": {
-				Type:     schema.TypeString,
-				Required: true,
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: verify.ValidARN,
 			},
-			"rules": {
+			"rule": {
 				Type:     schema.TypeSet,
 				Required: true,
-				Set:      rulesHash,
+				//Set:      rulesHash,
+				MaxItems: 1000,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"id": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: validation.StringLenBetween(0, 255),
-						},
-						"destination": {
-							Type:     schema.TypeList,
-							MaxItems: 1,
-							MinItems: 1,
-							Required: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"account_id": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ValidateFunc: verify.ValidAccountID,
-									},
-									"bucket": {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: verify.ValidARN,
-									},
-									"storage_class": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ValidateFunc: validation.StringInSlice(s3.StorageClass_Values(), false),
-									},
-									"replica_kms_key_id": {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-									"access_control_translation": {
-										Type:     schema.TypeList,
-										Optional: true,
-										MinItems: 1,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"owner": {
-													Type:         schema.TypeString,
-													Required:     true,
-													ValidateFunc: validation.StringInSlice(s3.OwnerOverride_Values(), false),
-												},
-											},
-										},
-									},
-									"metrics": {
-										Type:     schema.TypeList,
-										Optional: true,
-										MinItems: 1,
-										MaxItems: 2,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"status": {
-													Type:         schema.TypeString,
-													Required:     true,
-													ValidateFunc: validation.StringInSlice(s3.MetricsStatus_Values(), false),
-												},
-												"event_threshold": {
-													Type:     schema.TypeList,
-													Required: true,
-													MinItems: 1,
-													MaxItems: 1,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"minutes": {
-																Type:         schema.TypeInt,
-																Required:     true,
-																ValidateFunc: validation.IntAtLeast(0),
-															},
-														},
-													},
-												},
-											},
-										},
-									},
-									"replication_time": {
-										Type:     schema.TypeList,
-										Optional: true,
-										MinItems: 1,
-										MaxItems: 2,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"status": {
-													Type:         schema.TypeString,
-													Required:     true,
-													ValidateFunc: validation.StringInSlice(s3.ReplicationTimeStatus_Values(), false),
-												},
-												"time": {
-													Type:     schema.TypeList,
-													Required: true,
-													MinItems: 1,
-													MaxItems: 1,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"minutes": {
-																Type:         schema.TypeInt,
-																Required:     true,
-																ValidateFunc: validation.IntAtLeast(0),
-															},
-														},
-													},
-												},
-											},
-										},
-									},
-								},
-							},
-						},
-						"source_selection_criteria": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MinItems: 1,
-							MaxItems: 2,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"sse_kms_encrypted_objects": {
-										Type:     schema.TypeList,
-										Optional: true,
-										MinItems: 1,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"status": {
-													Type:         schema.TypeString,
-													Required:     true,
-													ValidateFunc: validation.StringInSlice(s3.SseKmsEncryptedObjectsStatus_Values(), false),
-												},
-											},
-										},
-									},
-									"replica_modifications": {
-										Type:     schema.TypeList,
-										Optional: true,
-										MinItems: 1,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"status": {
-													Type:         schema.TypeString,
-													Required:     true,
-													ValidateFunc: validation.StringInSlice(s3.ReplicaModificationsStatus_Values(), false),
-												},
-											},
-										},
-									},
-								},
-							},
-						},
-						"prefix": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: validation.StringLenBetween(0, 1024),
-						},
-						"status": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.StringInSlice(s3.ReplicationRuleStatus_Values(), false),
-						},
-						"priority": {
-							Type:     schema.TypeInt,
-							Optional: true,
-						},
-						"filter": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MinItems: 1,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"prefix": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ValidateFunc: validation.StringLenBetween(0, 1024),
-									},
-									"tags": tftags.TagsSchema(),
-								},
-							},
-						},
-						"existing_object_replication": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MinItems: 1,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"status": {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: validation.StringInSlice(s3.ExistingObjectReplicationStatus_Values(), false),
-									},
-								},
-							},
-						},
 						"delete_marker_replication": {
 							Type:     schema.TypeList,
 							Optional: true,
-							MinItems: 1,
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
@@ -256,6 +59,236 @@ func ResourceBucketReplicationConfiguration() *schema.Resource {
 								},
 							},
 						},
+						"destination": {
+							Type:     schema.TypeList,
+							MaxItems: 1,
+							Required: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"access_control_translation": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"owner": {
+													Type:         schema.TypeString,
+													Required:     true,
+													ValidateFunc: validation.StringInSlice(s3.OwnerOverride_Values(), false),
+												},
+											},
+										},
+									},
+									"account": {
+										Type:         schema.TypeString,
+										Optional:     true,
+										ValidateFunc: verify.ValidAccountID,
+									},
+									"bucket": {
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: verify.ValidARN,
+									},
+									"encryption_configuration": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"replica_kms_key_id": {
+													Type:         schema.TypeString,
+													Required:     true,
+													ValidateFunc: verify.ValidARN,
+												},
+											},
+										},
+									},
+									"metrics": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"event_threshold": {
+													Type:     schema.TypeList,
+													Required: true,
+													MaxItems: 1,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"minutes": {
+																Type:     schema.TypeInt,
+																Required: true,
+																// Currently, the S3 API only supports 15 minutes;
+																// however, to account for future changes, validation
+																// is left at positive integers.
+																ValidateFunc: validation.IntAtLeast(0),
+															},
+														},
+													},
+												},
+												"status": {
+													Type:         schema.TypeString,
+													Required:     true,
+													ValidateFunc: validation.StringInSlice(s3.MetricsStatus_Values(), false),
+												},
+											},
+										},
+									},
+									"replication_time": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"status": {
+													Type:         schema.TypeString,
+													Required:     true,
+													ValidateFunc: validation.StringInSlice(s3.ReplicationTimeStatus_Values(), false),
+												},
+												"time": {
+													Type:     schema.TypeList,
+													Required: true,
+													MaxItems: 1,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"minutes": {
+																Type:     schema.TypeInt,
+																Required: true,
+																// Currently, the S3 API only supports 15 minutes;
+																// however, to account for future changes, validation
+																// is left at positive integers.
+																ValidateFunc: validation.IntAtLeast(0),
+															},
+														},
+													},
+												},
+											},
+										},
+									},
+									"storage_class": {
+										Type:         schema.TypeString,
+										Optional:     true,
+										ValidateFunc: validation.StringInSlice(s3.StorageClass_Values(), false),
+									},
+								},
+							},
+						},
+						"existing_object_replication": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"status": {
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: validation.StringInSlice(s3.ExistingObjectReplicationStatus_Values(), false),
+									},
+								},
+							},
+						},
+						"filter": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"and": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"prefix": {
+													Type:         schema.TypeString,
+													Optional:     true,
+													ValidateFunc: validation.StringLenBetween(0, 1024),
+												},
+												"tags": tftags.TagsSchema(),
+											},
+										},
+									},
+									"prefix": {
+										Type:         schema.TypeString,
+										Optional:     true,
+										ValidateFunc: validation.StringLenBetween(0, 1024),
+									},
+									"tag": {
+										Type:     schema.TypeList,
+										MaxItems: 1,
+										Optional: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"key": {
+													Type:     schema.TypeString,
+													Required: true,
+												},
+												"value": {
+													Type:     schema.TypeString,
+													Required: true,
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+						"id": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validation.StringLenBetween(0, 255),
+						},
+						"prefix": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validation.StringLenBetween(0, 1024),
+						},
+						"priority": {
+							Type:     schema.TypeInt,
+							Optional: true,
+						},
+						"source_selection_criteria": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"replica_modifications": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"status": {
+													Type:         schema.TypeString,
+													Required:     true,
+													ValidateFunc: validation.StringInSlice(s3.ReplicaModificationsStatus_Values(), false),
+												},
+											},
+										},
+									},
+									"sse_kms_encrypted_objects": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"status": {
+													Type:         schema.TypeString,
+													Required:     true,
+													ValidateFunc: validation.StringInSlice(s3.SseKmsEncryptedObjectsStatus_Values(), false),
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+						"status": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validation.StringInSlice(s3.ReplicationRuleStatus_Values(), false),
+						},
 					},
 				},
 			},
@@ -263,354 +296,100 @@ func ResourceBucketReplicationConfiguration() *schema.Resource {
 	}
 }
 
-func resourceAwsS3BucketReplicationConfigurationPut(d *schema.ResourceData, meta interface{}) error {
-	// Get the bucket
-	var bucket string
-	if v, ok := d.GetOk("bucket"); ok {
-		bucket = v.(string)
-	} else {
-		log.Printf("[ERROR] S3 Bucket name not set")
-		return errors.New("[ERROR] S3 Bucket name not set")
-	}
-	d.SetId(bucket)
-
-	return resourceAwsS3BucketReplicationConfigurationUpdate(d, meta)
-}
-
-func resourceAwsS3BucketReplicationConfigurationRead(d *schema.ResourceData, meta interface{}) error {
-
-	if _, ok := d.GetOk("bucket"); !ok {
-		// during import operations, use the supplied ID for the bucket name
-		d.Set("bucket", d.Id())
-	}
-
-	var bucket *string
-	input := &s3.HeadBucketInput{}
-	if rsp, ok := d.GetOk("bucket"); !ok {
-		log.Printf("[ERROR] S3 Bucket name not set")
-		return errors.New("[ERROR] S3 Bucket name not set")
-	} else {
-		bucket = aws.String(rsp.(string))
-		input.Bucket = bucket
-	}
-
+func resourceBucketReplicationConfigurationCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).S3Conn
 
-	err := resource.Retry(bucketCreatedTimeout, func() *resource.RetryError {
-		_, err := conn.HeadBucket(input)
+	bucket := d.Get("bucket").(string)
 
-		if d.IsNewResource() && tfawserr.ErrStatusCodeEquals(err, http.StatusNotFound) {
+	rc := &s3.ReplicationConfiguration{
+		Role:  aws.String(d.Get("role").(string)),
+		Rules: ExpandRules(d.Get("rule").(*schema.Set).List()),
+	}
+
+	input := &s3.PutBucketReplicationInput{
+		Bucket:                   aws.String(bucket),
+		ReplicationConfiguration: rc,
+	}
+
+	err := resource.Retry(propagationTimeout, func() *resource.RetryError {
+		_, err := conn.PutBucketReplication(input)
+		if tfawserr.ErrCodeEquals(err, s3.ErrCodeNoSuchBucket) || tfawserr.ErrMessageContains(err, "InvalidRequest", "Versioning must be 'Enabled' on the bucket") {
 			return resource.RetryableError(err)
 		}
-
-		if d.IsNewResource() && tfawserr.ErrCodeEquals(err, s3.ErrCodeNoSuchBucket) {
-			return resource.RetryableError(err)
-		}
-
 		if err != nil {
 			return resource.NonRetryableError(err)
 		}
-
 		return nil
 	})
 
 	if tfresource.TimedOut(err) {
-		_, err = conn.HeadBucket(input)
+		_, err = conn.PutBucketReplication(input)
 	}
 
-	if !d.IsNewResource() && tfawserr.ErrStatusCodeEquals(err, http.StatusNotFound) {
-		log.Printf("[WARN] S3 Bucket (%s) not found, removing from state", d.Id())
-		return nil
+	if err != nil {
+		return fmt.Errorf("error creating S3 replication configuration for bucket (%s): %w", bucket, err)
 	}
 
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, s3.ErrCodeNoSuchBucket) {
-		log.Printf("[WARN] S3 Bucket (%s) not found, removing from state", d.Id())
+	d.SetId(bucket)
+
+	return resourceBucketReplicationConfigurationRead(d, meta)
+}
+
+func resourceBucketReplicationConfigurationRead(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*conns.AWSClient).S3Conn
+
+	input := &s3.GetBucketReplicationInput{
+		Bucket: aws.String(d.Id()),
+	}
+
+	// Read the bucket replication configuration
+	output, err := retryWhenBucketNotFound(func() (interface{}, error) {
+		return conn.GetBucketReplication(input)
+	})
+
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, ErrCodeReplicationConfigurationNotFound, s3.ErrCodeNoSuchBucket) {
+		log.Printf("[WARN] S3 Bucket Replication Configuration (%s) not found, removing from state", d.Id())
+		d.SetId("")
 		return nil
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading S3 Bucket (%s): %w", d.Id(), err)
+		return fmt.Errorf("error getting S3 Bucket Replication Configuration for bucket (%s): %w", d.Id(), err)
 	}
 
-	// Read the bucket replication configuration
-	replicationResponse, err := verify.RetryOnAWSCode(s3.ErrCodeNoSuchBucket, func() (interface{}, error) {
-		return conn.GetBucketReplication(&s3.GetBucketReplicationInput{
-			Bucket: bucket,
-		})
-	})
-	if err != nil && !tfawserr.ErrMessageContains(err, "ReplicationConfigurationNotFoundError", "") {
-		return fmt.Errorf("error getting S3 Bucket replication: %s", err)
+	replication, ok := output.(*s3.GetBucketReplicationOutput)
+
+	if !ok || replication == nil || replication.ReplicationConfiguration == nil {
+		return fmt.Errorf("error reading S3 Bucket Replication Configuration for bucket (%s): empty output", d.Id())
 	}
-	replication, ok := replicationResponse.(*s3.GetBucketReplicationOutput)
-	if !ok || replication == nil {
-		return fmt.Errorf("error reading replication_configuration")
-	}
+
 	r := replication.ReplicationConfiguration
-	// set role
-	if r.Role != nil && aws.StringValue(r.Role) != "" {
-		d.Set("role", r.Role)
+
+	d.Set("bucket", d.Id())
+	d.Set("role", r.Role)
+	if err := d.Set("rule", schema.NewSet(rulesHash, FlattenRules(r.Rules))); err != nil {
+		return fmt.Errorf("error setting rule: %w", err)
 	}
-
-	rules := make([]interface{}, 0, len(r.Rules))
-	for _, v := range r.Rules {
-		t := make(map[string]interface{})
-		if v.Destination != nil {
-			rd := make(map[string]interface{})
-			if v.Destination.Bucket != nil {
-				rd["bucket"] = aws.StringValue(v.Destination.Bucket)
-			}
-			if v.Destination.StorageClass != nil {
-				rd["storage_class"] = aws.StringValue(v.Destination.StorageClass)
-			}
-			if v.Destination.EncryptionConfiguration != nil {
-				if v.Destination.EncryptionConfiguration.ReplicaKmsKeyID != nil {
-					rd["replica_kms_key_id"] = aws.StringValue(v.Destination.EncryptionConfiguration.ReplicaKmsKeyID)
-				}
-			}
-			if v.Destination.Account != nil {
-				rd["account_id"] = aws.StringValue(v.Destination.Account)
-			}
-			if v.Destination.AccessControlTranslation != nil {
-				rdt := map[string]interface{}{
-					"owner": aws.StringValue(v.Destination.AccessControlTranslation.Owner),
-				}
-				rd["access_control_translation"] = []interface{}{rdt}
-			}
-			if v.Destination.ReplicationTime != nil {
-				drt := make(map[string]interface{})
-				if v.Destination.ReplicationTime.Status != nil {
-					drt["status"] = aws.StringValue(v.Destination.ReplicationTime.Status)
-					drtm := make(map[string]interface{})
-					drtm["minutes"] = aws.Int64Value(v.Destination.ReplicationTime.Time.Minutes)
-					drt["time"] = []interface{}{drtm}
-					rd["replication_time"] = []interface{}{drt}
-				}
-			}
-			if v.Destination.Metrics != nil {
-				dm := make(map[string]interface{})
-				if v.Destination.Metrics.Status != nil {
-					dm["status"] = aws.StringValue(v.Destination.Metrics.Status)
-					dmetm := make(map[string]interface{})
-					dmetm["minutes"] = aws.Int64Value(v.Destination.Metrics.EventThreshold.Minutes)
-					dm["event_threshold"] = []interface{}{dmetm}
-					rd["metrics"] = []interface{}{dm}
-				}
-			}
-			t["destination"] = []interface{}{rd}
-		}
-
-		if v.ExistingObjectReplication != nil {
-			status := make(map[string]interface{})
-			status["status"] = aws.StringValue(v.ExistingObjectReplication.Status)
-			t["existing_object_replication"] = []interface{}{status}
-		}
-
-		if v.ID != nil {
-			t["id"] = aws.StringValue(v.ID)
-		}
-		if v.Prefix != nil {
-			t["prefix"] = aws.StringValue(v.Prefix)
-		}
-		if v.Status != nil {
-			t["status"] = aws.StringValue(v.Status)
-		}
-		if vssc := v.SourceSelectionCriteria; vssc != nil {
-			tssc := make(map[string]interface{})
-			if vssc.SseKmsEncryptedObjects != nil {
-				tSseKms := make(map[string]interface{})
-				tSseKms["status"] = aws.StringValue(vssc.SseKmsEncryptedObjects.Status)
-				tssc["sse_kms_encrypted_objects"] = []interface{}{tSseKms}
-			}
-			t["source_selection_criteria"] = []interface{}{tssc}
-		}
-
-		if v.Priority != nil {
-			t["priority"] = int(aws.Int64Value(v.Priority))
-		}
-
-		if f := v.Filter; f != nil {
-			m := map[string]interface{}{}
-			if f.Prefix != nil {
-				m["prefix"] = aws.StringValue(f.Prefix)
-			}
-			if t := f.Tag; t != nil {
-				m["tags"] = KeyValueTags([]*s3.Tag{t}).IgnoreAWS().Map()
-			}
-			if a := f.And; a != nil {
-				m["prefix"] = aws.StringValue(a.Prefix)
-				m["tags"] = KeyValueTags(a.Tags).IgnoreAWS().Map()
-			}
-			t["filter"] = []interface{}{m}
-
-			if v.DeleteMarkerReplication != nil && v.DeleteMarkerReplication.Status != nil {
-				status := make(map[string]interface{})
-				status["status"] = aws.StringValue(v.DeleteMarkerReplication.Status)
-				t["delete_marker_replication"] = []interface{}{status}
-			}
-		}
-
-		rules = append(rules, t)
-	}
-	d.Set("rules", schema.NewSet(rulesHash, rules))
 
 	return nil
 }
 
-func resourceAwsS3BucketReplicationConfigurationUpdate(d *schema.ResourceData, meta interface{}) error {
-	s3conn := meta.(*conns.AWSClient).S3Conn
-	bucket := d.Get("bucket").(string)
+func resourceBucketReplicationConfigurationUpdate(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*conns.AWSClient).S3Conn
 
-	rc := &s3.ReplicationConfiguration{}
-	if val, ok := d.GetOk("role"); ok {
-		rc.Role = aws.String(val.(string))
+	rc := &s3.ReplicationConfiguration{
+		Role:  aws.String(d.Get("role").(string)),
+		Rules: ExpandRules(d.Get("rule").(*schema.Set).List()),
 	}
 
-	rcRules := d.Get("rules").(*schema.Set).List()
-	rules := []*s3.ReplicationRule{}
-	for _, v := range rcRules {
-		rr := v.(map[string]interface{})
-		rcRule := &s3.ReplicationRule{}
-		if status, ok := rr["status"]; ok && status != "" {
-			rcRule.Status = aws.String(status.(string))
-		} else {
-			continue
-		}
-
-		if rrid, ok := rr["id"]; ok && rrid != "" {
-			rcRule.ID = aws.String(rrid.(string))
-		}
-
-		eor := rr["existing_object_replication"].([]interface{})
-		if len(eor) > 0 {
-			s := eor[0].(map[string]interface{})
-			rcRule.ExistingObjectReplication = &s3.ExistingObjectReplication{
-				Status: aws.String(s["status"].(string)),
-			}
-		}
-
-		ruleDestination := &s3.Destination{}
-		if dest, ok := rr["destination"].([]interface{}); ok && len(dest) > 0 {
-			if dest[0] != nil {
-				bd := dest[0].(map[string]interface{})
-				ruleDestination.Bucket = aws.String(bd["bucket"].(string))
-
-				if storageClass, ok := bd["storage_class"]; ok && storageClass != "" {
-					ruleDestination.StorageClass = aws.String(storageClass.(string))
-				}
-
-				if replicaKmsKeyId, ok := bd["replica_kms_key_id"]; ok && replicaKmsKeyId != "" {
-					ruleDestination.EncryptionConfiguration = &s3.EncryptionConfiguration{
-						ReplicaKmsKeyID: aws.String(replicaKmsKeyId.(string)),
-					}
-				}
-
-				if account, ok := bd["account_id"]; ok && account != "" {
-					ruleDestination.Account = aws.String(account.(string))
-				}
-
-				if aclTranslation, ok := bd["access_control_translation"].([]interface{}); ok && len(aclTranslation) > 0 {
-					aclTranslationValues := aclTranslation[0].(map[string]interface{})
-					ruleAclTranslation := &s3.AccessControlTranslation{}
-					ruleAclTranslation.Owner = aws.String(aclTranslationValues["owner"].(string))
-					ruleDestination.AccessControlTranslation = ruleAclTranslation
-				}
-
-				rt, ok := bd["replication_time"].([]interface{})
-				if ok && len(rt) > 0 {
-					s := rt[0].(map[string]interface{})
-					if t, ok := s["time"].([]interface{}); ok && len(t) > 0 {
-						m := t[0].(map[string]interface{})
-						ruleDestination.ReplicationTime = &s3.ReplicationTime{
-							Status: aws.String(s["status"].(string)),
-							Time: &s3.ReplicationTimeValue{
-								Minutes: aws.Int64(int64(m["minutes"].(int))),
-							},
-						}
-					}
-				}
-
-				rm, ok := bd["metrics"].([]interface{})
-				if ok && len(rm) > 0 {
-					s := rm[0].(map[string]interface{})
-					if et, ok := s["event_threshold"].([]interface{}); ok && len(et) > 0 {
-						m := et[0].(map[string]interface{})
-						ruleDestination.Metrics = &s3.Metrics{
-							Status: aws.String(s["status"].(string)),
-							EventThreshold: &s3.ReplicationTimeValue{
-								Minutes: aws.Int64(int64(m["minutes"].(int))),
-							},
-						}
-					}
-				}
-
-			}
-		}
-		rcRule.Destination = ruleDestination
-
-		if ssc, ok := rr["source_selection_criteria"].([]interface{}); ok && len(ssc) > 0 {
-			if ssc[0] != nil {
-				sscValues := ssc[0].(map[string]interface{})
-				ruleSsc := &s3.SourceSelectionCriteria{}
-				if sseKms, ok := sscValues["sse_kms_encrypted_objects"].([]interface{}); ok && len(sseKms) > 0 {
-					if sseKms[0] != nil {
-						sseKmsValues := sseKms[0].(map[string]interface{})
-						sseKmsEncryptedObjects := &s3.SseKmsEncryptedObjects{}
-						sseKmsEncryptedObjects.Status = aws.String(sseKmsValues["status"].(string))
-						ruleSsc.SseKmsEncryptedObjects = sseKmsEncryptedObjects
-					}
-				}
-				if sscRm, ok := sscValues["replica_modifications"].([]interface{}); ok && len(sscRm) > 0 {
-					if sscRm[0] != nil {
-						replicaModValues := sscRm[0].(map[string]interface{})
-						replicaModifications := &s3.ReplicaModifications{}
-						replicaModifications.Status = aws.String(replicaModValues["status"].(string))
-						ruleSsc.ReplicaModifications = replicaModifications
-					}
-				}
-				rcRule.SourceSelectionCriteria = ruleSsc
-			}
-		}
-
-		if f, ok := rr["filter"].([]interface{}); ok && len(f) > 0 && f[0] != nil {
-			// XML schema V2.
-			rcRule.Priority = aws.Int64(int64(rr["priority"].(int)))
-			rcRule.Filter = &s3.ReplicationRuleFilter{}
-			filter := f[0].(map[string]interface{})
-			tags := Tags(tftags.New(filter["tags"]).IgnoreAWS())
-			if len(tags) > 0 {
-				rcRule.Filter.And = &s3.ReplicationRuleAndOperator{
-					Prefix: aws.String(filter["prefix"].(string)),
-					Tags:   tags,
-				}
-			} else {
-				rcRule.Filter.Prefix = aws.String(filter["prefix"].(string))
-			}
-
-			dmr, ok := rr["delete_marker_replication"].([]interface{})
-			if ok && len(dmr) > 0 {
-				s := dmr[0].(map[string]interface{})
-				rcRule.DeleteMarkerReplication = &s3.DeleteMarkerReplication{
-					Status: aws.String(s["status"].(string)),
-				}
-			}
-		} else {
-			// XML schema V1.
-			rcRule.Prefix = aws.String(rr["prefix"].(string))
-		}
-
-		rules = append(rules, rcRule)
-	}
-
-	rc.Rules = rules
-	i := &s3.PutBucketReplicationInput{
-		Bucket:                   aws.String(bucket),
+	input := &s3.PutBucketReplicationInput{
+		Bucket:                   aws.String(d.Id()),
 		ReplicationConfiguration: rc,
 	}
-	log.Printf("[DEBUG] S3 put bucket replication configuration: %#v", i)
 
-	err := resource.Retry(1*time.Minute, func() *resource.RetryError {
-		_, err := s3conn.PutBucketReplication(i)
-		if tfawserr.ErrMessageContains(err, s3.ErrCodeNoSuchBucket, "") || tfawserr.ErrMessageContains(err, "InvalidRequest", "Versioning must be 'Enabled' on the bucket") {
+	err := resource.Retry(propagationTimeout, func() *resource.RetryError {
+		_, err := conn.PutBucketReplication(input)
+		if tfawserr.ErrCodeEquals(err, s3.ErrCodeNoSuchBucket) || tfawserr.ErrMessageContains(err, "InvalidRequest", "Versioning must be 'Enabled' on the bucket") {
 			return resource.RetryableError(err)
 		}
 		if err != nil {
@@ -618,29 +397,33 @@ func resourceAwsS3BucketReplicationConfigurationUpdate(d *schema.ResourceData, m
 		}
 		return nil
 	})
+
 	if tfresource.TimedOut(err) {
-		_, err = s3conn.PutBucketReplication(i)
-	}
-	if err != nil {
-		return fmt.Errorf("Error putting S3 replication configuration: %s", err)
+		_, err = conn.PutBucketReplication(input)
 	}
 
-	return resourceAwsS3BucketReplicationConfigurationRead(d, meta)
+	if err != nil {
+		return fmt.Errorf("error updating S3 replication configuration for bucket (%s): %w", d.Id(), err)
+	}
+
+	return resourceBucketReplicationConfigurationRead(d, meta)
 }
 
-func resourceAwsS3BucketReplicationConfigurationDelete(d *schema.ResourceData, meta interface{}) error {
-	s3conn := meta.(*conns.AWSClient).S3Conn
-	bucket := d.Get("bucket").(string)
+func resourceBucketReplicationConfigurationDelete(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*conns.AWSClient).S3Conn
 
-	log.Printf("[DEBUG] S3 Delete Bucket Replication: %s", d.Id())
-
-	dbri := &s3.DeleteBucketReplicationInput{
-		Bucket: aws.String(bucket),
+	input := &s3.DeleteBucketReplicationInput{
+		Bucket: aws.String(d.Id()),
 	}
 
-	_, err := s3conn.DeleteBucketReplication(dbri)
+	_, err := conn.DeleteBucketReplication(input)
+
+	if tfawserr.ErrCodeEquals(err, ErrCodeReplicationConfigurationNotFound, s3.ErrCodeNoSuchBucket) {
+		return nil
+	}
+
 	if err != nil {
-		return fmt.Errorf("Error removing S3 bucket replication: %s", err)
+		return fmt.Errorf("error deleting S3 bucket replication configuration for bucket (%s): %w", d.Id(), err)
 	}
 
 	return nil
