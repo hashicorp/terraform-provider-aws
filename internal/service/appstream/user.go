@@ -44,7 +44,7 @@ func ResourceUser() *schema.Resource {
 			"enabled": {
 				Type:     schema.TypeBool,
 				Optional: true,
-				Computed: true,
+				Default:  true,
 			},
 			"first_name": {
 				Type:         schema.TypeString,
@@ -110,17 +110,15 @@ func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 
 	// Enabling/disabling workflow
-	if v, ok := d.GetOkExists("enabled"); ok {
-		if !v.(bool) {
-			input := &appstream.DisableUserInput{
-				AuthenticationType: aws.String(authType),
-				UserName:           aws.String(userName),
-			}
+	if !d.Get("enabled").(bool) {
+		input := &appstream.DisableUserInput{
+			AuthenticationType: aws.String(authType),
+			UserName:           aws.String(userName),
+		}
 
-			_, err = conn.DisableUserWithContext(ctx, input)
-			if err != nil {
-				return diag.FromErr(fmt.Errorf("error disabling AppStream User (%s): %w", id, err))
-			}
+		_, err = conn.DisableUserWithContext(ctx, input)
+		if err != nil {
+			return diag.FromErr(fmt.Errorf("error disabling AppStream User (%s): %w", id, err))
 		}
 	}
 
