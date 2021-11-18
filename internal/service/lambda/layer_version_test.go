@@ -249,6 +249,38 @@ func TestAccLambdaLayerVersion_licenseInfo(t *testing.T) {
 	})
 }
 
+func TestAccLambdaLayerVersion_skipDestroy(t *testing.T) {
+	resourceName := "aws_lambda_layer_version.lambda_layer_test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: nil, // this purposely leaves dangling resources, since skip_destroy = true
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLayerVersionSkipDestroyConfig(rName, "nodejs12.x"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLayerVersionExists(resourceName, rName),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "lambda", fmt.Sprintf("layer:%s:1", rName)),
+					resource.TestCheckResourceAttr(resourceName, "compatible_runtimes.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "skip_destroy", "true"),
+				),
+			},
+			{
+				Config: testAccLayerVersionSkipDestroyConfig(rName, "nodejs14.x"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLayerVersionExists(resourceName, rName),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "lambda", fmt.Sprintf("layer:%s:2", rName)),
+					resource.TestCheckResourceAttr(resourceName, "compatible_runtimes.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "skip_destroy", "true"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckLambdaLayerVersionDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).LambdaConn
 
@@ -421,4 +453,15 @@ resource "aws_lambda_layer_version" "lambda_layer_test" {
   license_info = "%s"
 }
 `, layerName, licenseInfo)
+}
+
+func testAccLayerVersionSkipDestroyConfig(rName, compatRuntime string) string {
+	return fmt.Sprintf(`
+resource "aws_lambda_layer_version" "lambda_layer_test" {
+  filename            = "test-fixtures/lambdatest.zip"
+  layer_name          = %[1]q
+  compatible_runtimes = [%[2]q]
+  skip_destroy        = true
+}
+`, rName, compatRuntime)
 }
