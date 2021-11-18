@@ -57,13 +57,13 @@ The following arguments are optional:
 
 In addition to all arguments above, the following attributes are exported:
 
-* `arn` - The Amazon Resource Name (ARN) of the Lambda Layer with version.
-* `layer_arn` - The Amazon Resource Name (ARN) of the Lambda Layer without version.
-* `created_date` - The date this resource was created.
-* `signing_job_arn` - The Amazon Resource Name (ARN) of a signing job.
-* `signing_profile_version_arn` - The Amazon Resource Name (ARN) for a signing profile version.
-* `source_code_size` - The size in bytes of the function .zip file.
-* `version` - This Lambda Layer version.
+* `arn` - ARN of the Lambda Layer with version.
+* `created_date` - Date this resource was created.
+* `layer_arn` - ARN of the Lambda Layer without version.
+* `signing_job_arn` - ARN of a signing job.
+* `signing_profile_version_arn` - ARN for a signing profile version.
+* `source_code_size` - Size in bytes of the function .zip file.
+* `version` - Lambda Layer version.
 
 [1]: https://docs.aws.amazon.com/lambda/latest/dg/configuration-layers.html
 [2]: https://docs.aws.amazon.com/lambda/latest/dg/API_PublishLayerVersion.html#SSS-PublishLayerVersion-request-CompatibleRuntimes
