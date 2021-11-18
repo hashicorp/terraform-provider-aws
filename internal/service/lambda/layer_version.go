@@ -30,6 +30,10 @@ func ResourceLayerVersion() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"compatible_architectures": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -40,9 +44,24 @@ func ResourceLayerVersion() *schema.Resource {
 					ValidateFunc: validation.StringInSlice(lambda.Architecture_Values(), false),
 				},
 			},
-			"layer_name": {
+			"compatible_runtimes": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				ForceNew: true,
+				MinItems: 0,
+				MaxItems: 5,
+				Elem: &schema.Schema{
+					Type:         schema.TypeString,
+					ValidateFunc: validation.StringInSlice(lambda.Runtime_Values(), false),
+				},
+			},
+			"created_date": {
 				Type:     schema.TypeString,
-				Required: true,
+				Computed: true,
+			},
+			"description": {
+				Type:     schema.TypeString,
+				Optional: true,
 				ForceNew: true,
 			},
 			"filename": {
@@ -50,6 +69,21 @@ func ResourceLayerVersion() *schema.Resource {
 				Optional:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"s3_bucket", "s3_key", "s3_object_version"},
+			},
+			"layer_arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"layer_name": {
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+			},
+			"license_info": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringLenBetween(0, 512),
 			},
 			"s3_bucket": {
 				Type:          schema.TypeString,
@@ -69,52 +103,11 @@ func ResourceLayerVersion() *schema.Resource {
 				ForceNew:      true,
 				ConflictsWith: []string{"filename"},
 			},
-			"compatible_runtimes": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				ForceNew: true,
-				MinItems: 0,
-				MaxItems: 5,
-				Elem: &schema.Schema{
-					Type:         schema.TypeString,
-					ValidateFunc: validation.StringInSlice(lambda.Runtime_Values(), false),
-				},
-			},
-			"description": {
+			"signing_job_arn": {
 				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-			},
-			"license_info": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(0, 512),
-			},
-
-			"arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"layer_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"created_date": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"source_code_hash": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
 				Computed: true,
 			},
 			"signing_profile_version_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"signing_job_arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -122,6 +115,12 @@ func ResourceLayerVersion() *schema.Resource {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
+			},
+			"source_code_hash": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+				Computed: true,
 			},
 			"source_code_size": {
 				Type:     schema.TypeInt,
