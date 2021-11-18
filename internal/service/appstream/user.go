@@ -61,6 +61,7 @@ func ResourceUser() *schema.Resource {
 			"send_email_notification": {
 				Type:     schema.TypeBool,
 				Optional: true,
+				Default:  true,
 			},
 			"user_name": {
 				Type:         schema.TypeString,
@@ -91,10 +92,8 @@ func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta interf
 		input.LastName = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("send_email_notification"); ok {
-		if !v.(bool) {
-			input.MessageAction = aws.String(appstream.MessageActionSuppress)
-		}
+	if !d.Get("send_email_notification").(bool) {
+		input.MessageAction = aws.String(appstream.MessageActionSuppress)
 	}
 
 	_, err := conn.CreateUserWithContext(ctx, input)
