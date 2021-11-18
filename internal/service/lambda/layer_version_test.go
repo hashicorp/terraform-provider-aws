@@ -18,24 +18,24 @@ import (
 
 func TestAccLambdaLayerVersion_basic(t *testing.T) {
 	resourceName := "aws_lambda_layer_version.lambda_layer_test"
-	layerName := fmt.Sprintf("tf_acc_lambda_layer_basic_%s", sdkacctest.RandString(8))
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckLambdaLayerVersionDestroy,
+		CheckDestroy: testAccCheckLayerVersionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLayerVersionBasic(layerName),
+				Config: testAccLayerVersionBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLayerVersionExists(resourceName, layerName),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "lambda", fmt.Sprintf("layer:%s:1", layerName)),
+					testAccCheckLayerVersionExists(resourceName, rName),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "lambda", fmt.Sprintf("layer:%s:1", rName)),
 					resource.TestCheckResourceAttr(resourceName, "compatible_runtimes.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
-					resource.TestCheckResourceAttr(resourceName, "layer_name", layerName),
+					resource.TestCheckResourceAttr(resourceName, "layer_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "license_info", ""),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "layer_arn", "lambda", fmt.Sprintf("layer:%s", layerName)),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "layer_arn", "lambda", fmt.Sprintf("layer:%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "version", "1"),
 					resource.TestCheckResourceAttr(resourceName, "signing_profile_version_arn", ""),
 					resource.TestCheckResourceAttr(resourceName, "signing_job_arn", ""),
@@ -46,7 +46,7 @@ func TestAccLambdaLayerVersion_basic(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"filename"},
+				ImportStateVerifyIgnore: []string{"filename", "skip_destroy"},
 			},
 		},
 	})
@@ -54,29 +54,29 @@ func TestAccLambdaLayerVersion_basic(t *testing.T) {
 
 func TestAccLambdaLayerVersion_update(t *testing.T) {
 	resourceName := "aws_lambda_layer_version.lambda_layer_test"
-	layerName := fmt.Sprintf("tf_acc_lambda_layer_basic_%s", sdkacctest.RandString(8))
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckLambdaLayerVersionDestroy,
+		CheckDestroy: testAccCheckLayerVersionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLayerVersionCreateBeforeDestroy(layerName, "test-fixtures/lambdatest.zip"),
-				Check:  testAccCheckLayerVersionExists(resourceName, layerName),
+				Config: testAccLayerVersionCreateBeforeDestroy(rName, "test-fixtures/lambdatest.zip"),
+				Check:  testAccCheckLayerVersionExists(resourceName, rName),
 			},
 
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"filename", "source_code_hash"},
+				ImportStateVerifyIgnore: []string{"filename", "source_code_hash", "skip_destroy"},
 			},
 
 			{
-				Config: testAccLayerVersionCreateBeforeDestroy(layerName, "test-fixtures/lambdatest_modified.zip"),
-				Check:  testAccCheckLayerVersionExists(resourceName, layerName),
+				Config: testAccLayerVersionCreateBeforeDestroy(rName, "test-fixtures/lambdatest_modified.zip"),
+				Check:  testAccCheckLayerVersionExists(resourceName, rName),
 			},
 		},
 	})
@@ -84,26 +84,24 @@ func TestAccLambdaLayerVersion_update(t *testing.T) {
 
 func TestAccLambdaLayerVersion_s3(t *testing.T) {
 	resourceName := "aws_lambda_layer_version.lambda_layer_test"
-	rString := sdkacctest.RandString(8)
-	layerName := fmt.Sprintf("tf_acc_lambda_layer_s3_%s", rString)
-	bucketName := fmt.Sprintf("tf-acc-bucket-lambda-layer-s3-%s", rString)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckLambdaLayerVersionDestroy,
+		CheckDestroy: testAccCheckLayerVersionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLayerVersionS3(bucketName, layerName),
-				Check:  testAccCheckLayerVersionExists(resourceName, layerName),
+				Config: testAccLayerVersionS3(rName),
+				Check:  testAccCheckLayerVersionExists(resourceName, rName),
 			},
 
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"s3_bucket", "s3_key"},
+				ImportStateVerifyIgnore: []string{"s3_bucket", "s3_key", "skip_destroy"},
 			},
 		},
 	})
@@ -111,19 +109,18 @@ func TestAccLambdaLayerVersion_s3(t *testing.T) {
 
 func TestAccLambdaLayerVersion_compatibleRuntimes(t *testing.T) {
 	resourceName := "aws_lambda_layer_version.lambda_layer_test"
-	rString := sdkacctest.RandString(8)
-	layerName := fmt.Sprintf("tf_acc_lambda_layer_runtimes_%s", rString)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckLambdaLayerVersionDestroy,
+		CheckDestroy: testAccCheckLayerVersionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLayerVersionCompatibleRuntimes(layerName),
+				Config: testAccLayerVersionCompatibleRuntimes(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLayerVersionExists(resourceName, layerName),
+					testAccCheckLayerVersionExists(resourceName, rName),
 					resource.TestCheckResourceAttr(resourceName, "compatible_runtimes.#", "2"),
 				),
 			},
@@ -132,7 +129,7 @@ func TestAccLambdaLayerVersion_compatibleRuntimes(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"filename"},
+				ImportStateVerifyIgnore: []string{"filename", "skip_destroy"},
 			},
 		},
 	})
@@ -140,41 +137,40 @@ func TestAccLambdaLayerVersion_compatibleRuntimes(t *testing.T) {
 
 func TestAccLambdaLayerVersion_compatibleArchitectures(t *testing.T) {
 	resourceName := "aws_lambda_layer_version.lambda_layer_test"
-	rString := sdkacctest.RandString(8)
-	layerName := fmt.Sprintf("tf_acc_lambda_layer_architectures_%s", rString)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckLambdaLayerVersionDestroy,
+		CheckDestroy: testAccCheckLayerVersionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLayerVersionCompatibleArchitecturesNone(layerName),
+				Config: testAccLayerVersionCompatibleArchitecturesNone(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLayerVersionExists(resourceName, layerName),
+					testAccCheckLayerVersionExists(resourceName, rName),
 					resource.TestCheckResourceAttr(resourceName, "compatible_architectures.#", "0"),
 				),
 			},
 			{
-				Config: testAccLayerVersionCompatibleArchitecturesX86(layerName),
+				Config: testAccLayerVersionCompatibleArchitecturesX86(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLayerVersionExists(resourceName, layerName),
+					testAccCheckLayerVersionExists(resourceName, rName),
 					resource.TestCheckResourceAttr(resourceName, "compatible_architectures.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "compatible_architectures.*", lambda.ArchitectureX8664),
 				),
 			},
 			{
-				Config: testAccLayerVersionCompatibleArchitecturesArm(layerName),
+				Config: testAccLayerVersionCompatibleArchitecturesArm(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLayerVersionExists(resourceName, layerName),
+					testAccCheckLayerVersionExists(resourceName, rName),
 					resource.TestCheckResourceAttr(resourceName, "compatible_architectures.#", "1"),
 				),
 			},
 			{
-				Config: testAccLayerVersionCompatibleArchitecturesX86Arm(layerName),
+				Config: testAccLayerVersionCompatibleArchitecturesX86Arm(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLayerVersionExists(resourceName, layerName),
+					testAccCheckLayerVersionExists(resourceName, rName),
 					resource.TestCheckResourceAttr(resourceName, "compatible_architectures.#", "2"),
 				),
 			},
@@ -183,7 +179,7 @@ func TestAccLambdaLayerVersion_compatibleArchitectures(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"filename"},
+				ImportStateVerifyIgnore: []string{"filename", "skip_destroy"},
 			},
 		},
 	})
@@ -191,20 +187,19 @@ func TestAccLambdaLayerVersion_compatibleArchitectures(t *testing.T) {
 
 func TestAccLambdaLayerVersion_description(t *testing.T) {
 	resourceName := "aws_lambda_layer_version.lambda_layer_test"
-	rString := sdkacctest.RandString(8)
-	layerName := fmt.Sprintf("tf_acc_lambda_layer_description_%s", rString)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	testDescription := "test description"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckLambdaLayerVersionDestroy,
+		CheckDestroy: testAccCheckLayerVersionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLayerVersionDescription(layerName, testDescription),
+				Config: testAccLayerVersionDescription(rName, testDescription),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLayerVersionExists(resourceName, layerName),
+					testAccCheckLayerVersionExists(resourceName, rName),
 					resource.TestCheckResourceAttr(resourceName, "description", testDescription),
 				),
 			},
@@ -213,7 +208,7 @@ func TestAccLambdaLayerVersion_description(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"filename"},
+				ImportStateVerifyIgnore: []string{"filename", "skip_destroy"},
 			},
 		},
 	})
@@ -221,20 +216,19 @@ func TestAccLambdaLayerVersion_description(t *testing.T) {
 
 func TestAccLambdaLayerVersion_licenseInfo(t *testing.T) {
 	resourceName := "aws_lambda_layer_version.lambda_layer_test"
-	rString := sdkacctest.RandString(8)
-	layerName := fmt.Sprintf("tf_acc_lambda_layer_license_info_%s", rString)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	testLicenseInfo := "MIT"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckLambdaLayerVersionDestroy,
+		CheckDestroy: testAccCheckLayerVersionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLayerVersionLicenseInfo(layerName, testLicenseInfo),
+				Config: testAccLayerVersionLicenseInfo(rName, testLicenseInfo),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLayerVersionExists(resourceName, layerName),
+					testAccCheckLayerVersionExists(resourceName, rName),
 					resource.TestCheckResourceAttr(resourceName, "license_info", testLicenseInfo),
 				),
 			},
@@ -243,13 +237,45 @@ func TestAccLambdaLayerVersion_licenseInfo(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"filename"},
+				ImportStateVerifyIgnore: []string{"filename", "skip_destroy"},
 			},
 		},
 	})
 }
 
-func testAccCheckLambdaLayerVersionDestroy(s *terraform.State) error {
+func TestAccLambdaLayerVersion_skipDestroy(t *testing.T) {
+	resourceName := "aws_lambda_layer_version.lambda_layer_test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: nil, // this purposely leaves dangling resources, since skip_destroy = true
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLayerVersionSkipDestroyConfig(rName, "nodejs12.x"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLayerVersionExists(resourceName, rName),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "lambda", fmt.Sprintf("layer:%s:1", rName)),
+					resource.TestCheckResourceAttr(resourceName, "compatible_runtimes.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "skip_destroy", "true"),
+				),
+			},
+			{
+				Config: testAccLayerVersionSkipDestroyConfig(rName, "nodejs14.x"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLayerVersionExists(resourceName, rName),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "lambda", fmt.Sprintf("layer:%s:2", rName)),
+					resource.TestCheckResourceAttr(resourceName, "compatible_runtimes.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "skip_destroy", "true"),
+				),
+			},
+		},
+	})
+}
+
+func testAccCheckLayerVersionDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).LambdaConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -308,19 +334,19 @@ func testAccCheckLayerVersionExists(res, layerName string) resource.TestCheckFun
 	}
 }
 
-func testAccLayerVersionBasic(layerName string) string {
+func testAccLayerVersionBasic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_lambda_layer_version" "lambda_layer_test" {
   filename   = "test-fixtures/lambdatest.zip"
-  layer_name = "%s"
+  layer_name = %[1]q
 }
-`, layerName)
+`, rName)
 }
 
-func testAccLayerVersionS3(bucketName, layerName string) string {
+func testAccLayerVersionS3(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "lambda_bucket" {
-  bucket = "%s"
+  bucket = %[1]q
 }
 
 resource "aws_s3_bucket_object" "lambda_code" {
@@ -332,93 +358,104 @@ resource "aws_s3_bucket_object" "lambda_code" {
 resource "aws_lambda_layer_version" "lambda_layer_test" {
   s3_bucket  = aws_s3_bucket.lambda_bucket.id
   s3_key     = aws_s3_bucket_object.lambda_code.id
-  layer_name = "%s"
+  layer_name = %[1]q
 }
-`, bucketName, layerName)
+`, rName)
 }
 
-func testAccLayerVersionCreateBeforeDestroy(layerName string, filename string) string {
+func testAccLayerVersionCreateBeforeDestroy(rName string, filename string) string {
 	return fmt.Sprintf(`
 resource "aws_lambda_layer_version" "lambda_layer_test" {
-  filename         = "%s"
-  layer_name       = "%s"
-  source_code_hash = filebase64sha256("%s")
+  filename         = %[1]q
+  layer_name       = %[2]q
+  source_code_hash = filebase64sha256(%[1]q)
 
   lifecycle {
     create_before_destroy = true
   }
 }
-`, filename, layerName, filename)
+`, filename, rName)
 }
 
-func testAccLayerVersionCompatibleRuntimes(layerName string) string {
+func testAccLayerVersionCompatibleRuntimes(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_lambda_layer_version" "lambda_layer_test" {
   filename   = "test-fixtures/lambdatest.zip"
-  layer_name = "%s"
+  layer_name = %[1]q
 
   compatible_runtimes = ["nodejs12.x", "nodejs10.x"]
 }
-`, layerName)
+`, rName)
 }
 
-func testAccLayerVersionCompatibleArchitecturesNone(layerName string) string {
+func testAccLayerVersionCompatibleArchitecturesNone(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_lambda_layer_version" "lambda_layer_test" {
   filename   = "test-fixtures/lambdatest.zip"
-  layer_name = "%s"
+  layer_name = %[1]q
 }
-`, layerName)
+`, rName)
 }
 
-func testAccLayerVersionCompatibleArchitecturesX86Arm(layerName string) string {
+func testAccLayerVersionCompatibleArchitecturesX86Arm(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_lambda_layer_version" "lambda_layer_test" {
   filename                 = "test-fixtures/lambdatest.zip"
-  layer_name               = "%s"
+  layer_name               = %[1]q
   compatible_architectures = ["x86_64", "arm64"]
 }
-`, layerName)
+`, rName)
 }
 
-func testAccLayerVersionCompatibleArchitecturesX86(layerName string) string {
+func testAccLayerVersionCompatibleArchitecturesX86(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_lambda_layer_version" "lambda_layer_test" {
   filename                 = "test-fixtures/lambdatest.zip"
-  layer_name               = "%s"
+  layer_name               = %[1]q
   compatible_architectures = ["x86_64"]
 }
-`, layerName)
+`, rName)
 }
 
-func testAccLayerVersionCompatibleArchitecturesArm(layerName string) string {
+func testAccLayerVersionCompatibleArchitecturesArm(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_lambda_layer_version" "lambda_layer_test" {
   filename                 = "test-fixtures/lambdatest.zip"
-  layer_name               = "%s"
+  layer_name               = %[1]q
   compatible_architectures = ["arm64"]
 }
-`, layerName)
+`, rName)
 }
 
-func testAccLayerVersionDescription(layerName string, description string) string {
+func testAccLayerVersionDescription(rName string, description string) string {
 	return fmt.Sprintf(`
 resource "aws_lambda_layer_version" "lambda_layer_test" {
   filename   = "test-fixtures/lambdatest.zip"
-  layer_name = "%s"
+  layer_name = %[1]q
 
-  description = "%s"
+  description = %[2]q
 }
-`, layerName, description)
+`, rName, description)
 }
 
-func testAccLayerVersionLicenseInfo(layerName string, licenseInfo string) string {
+func testAccLayerVersionLicenseInfo(rName string, licenseInfo string) string {
 	return fmt.Sprintf(`
 resource "aws_lambda_layer_version" "lambda_layer_test" {
   filename   = "test-fixtures/lambdatest.zip"
-  layer_name = "%s"
+  layer_name = %[1]q
 
-  license_info = "%s"
+  license_info = %[2]q
 }
-`, layerName, licenseInfo)
+`, rName, licenseInfo)
+}
+
+func testAccLayerVersionSkipDestroyConfig(rName, compatRuntime string) string {
+	return fmt.Sprintf(`
+resource "aws_lambda_layer_version" "lambda_layer_test" {
+  filename            = "test-fixtures/lambdatest.zip"
+  layer_name          = %[1]q
+  compatible_runtimes = [%[2]q]
+  skip_destroy        = true
+}
+`, rName, compatRuntime)
 }

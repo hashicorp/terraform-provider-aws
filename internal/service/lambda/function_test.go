@@ -24,12 +24,12 @@ import (
 
 func init() {
 	acctest.RegisterServiceErrorCheckFunc(lambda.EndpointsID, testAccErrorCheckSkipLambda)
-
 }
 
 func testAccErrorCheckSkipLambda(t *testing.T) resource.ErrorCheckFunc {
 	return acctest.ErrorCheckSkipMessagesContaining(t,
 		"InvalidParameterValueException: Unsupported source arn",
+		"InvalidParameterValueException: CompatibleArchitectures are not",
 	)
 }
 
