@@ -46,7 +46,7 @@ func TestAccLambdaLayerVersion_basic(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"filename"},
+				ImportStateVerifyIgnore: []string{"filename", "skip_destroy"},
 			},
 		},
 	})
@@ -71,7 +71,7 @@ func TestAccLambdaLayerVersion_update(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"filename", "source_code_hash"},
+				ImportStateVerifyIgnore: []string{"filename", "source_code_hash", "skip_destroy"},
 			},
 
 			{
@@ -103,7 +103,7 @@ func TestAccLambdaLayerVersion_s3(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"s3_bucket", "s3_key"},
+				ImportStateVerifyIgnore: []string{"s3_bucket", "s3_key", "skip_destroy"},
 			},
 		},
 	})
@@ -132,7 +132,7 @@ func TestAccLambdaLayerVersion_compatibleRuntimes(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"filename"},
+				ImportStateVerifyIgnore: []string{"filename", "skip_destroy"},
 			},
 		},
 	})
@@ -183,7 +183,7 @@ func TestAccLambdaLayerVersion_compatibleArchitectures(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"filename"},
+				ImportStateVerifyIgnore: []string{"filename", "skip_destroy"},
 			},
 		},
 	})
@@ -213,7 +213,7 @@ func TestAccLambdaLayerVersion_description(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"filename"},
+				ImportStateVerifyIgnore: []string{"filename", "skip_destroy"},
 			},
 		},
 	})
@@ -243,7 +243,7 @@ func TestAccLambdaLayerVersion_licenseInfo(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"filename"},
+				ImportStateVerifyIgnore: []string{"filename", "skip_destroy"},
 			},
 		},
 	})
