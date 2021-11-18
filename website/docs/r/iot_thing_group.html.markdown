@@ -12,7 +12,7 @@ Manages an AWS IoT Thing Group.
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_iot_thing_group" "parent" {
   name = "parent"
 }
@@ -45,18 +45,18 @@ resource "aws_iot_thing_group" "example" {
 * `properties` - (Optional) The Thing Group properties. Defined below.
 * `tags` - (Optional) Key-value mapping of resource tags
 
-## properties Reference
+### properties Reference
 
 * `attribute_payload` - (Optional) The Thing Group attributes. Defined below.
 * `description` - (Optional) A description of the Thing Group.
 
-## attribute_payload Reference
+### attribute_payload Reference
 
 * `attributes` - (Optional) Key-value map.
 
 ## Attributes Reference
 
-In addition to the arguments above, the following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `arn` - The ARN of the Thing Group.
 * `id` - The Thing Group ID.
