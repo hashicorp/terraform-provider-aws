@@ -38,7 +38,7 @@ For larger deployment packages it is recommended by Amazon to upload via S3, sin
 
 The following arguments are required:
 
-* `layer_name` - (Required) A unique name for your Lambda Layer
+* `layer_name` - (Required) Unique name for your Lambda Layer
 
 The following arguments are optional:
 
