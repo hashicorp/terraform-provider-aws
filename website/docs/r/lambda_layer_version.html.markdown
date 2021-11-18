@@ -10,7 +10,9 @@ description: |-
 
 Provides a Lambda Layer Version resource. Lambda Layers allow you to reuse shared bits of code across multiple lambda functions.
 
-For information about Lambda Layers and how to use them, see [AWS Lambda Layers][1]
+For information about Lambda Layers and how to use them, see [AWS Lambda Layers][1].
+
+~> **NOTE:** Setting `skip_destroy` to `true` means that the AWS Provider will _not_ destroy any layer version, even when running `terraform destroy`. Layer versions are thus intentional dangling resources that are _not_ managed by Terraform and may incur extra expense in your AWS account.
 
 ## Example Usage
 
