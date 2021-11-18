@@ -136,7 +136,7 @@ resource "aws_imagebuilder_image_recipe" "test" {
 data "aws_imagebuilder_image_recipes" "test" {
   filter {
     name   = "name"
-	values = [aws_imagebuilder_image_recipe.test.name]
+    values = [aws_imagebuilder_image_recipe.test.name]
   }
 }
 `, rName))
