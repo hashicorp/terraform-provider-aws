@@ -31,6 +31,7 @@ func TestAccEC2InstanceTypeDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceBasic, "ebs_optimized_support", "default"),
 					resource.TestCheckResourceAttr(resourceBasic, "efa_supported", "false"),
 					resource.TestCheckResourceAttr(resourceBasic, "ena_support", "required"),
+					resource.TestCheckResourceAttr(resourceBasic, "encryption_in_transit_supported", "false"),
 					resource.TestCheckResourceAttr(resourceBasic, "free_tier_eligible", "false"),
 					resource.TestCheckResourceAttr(resourceBasic, "hibernation_supported", "true"),
 					resource.TestCheckResourceAttr(resourceBasic, "hypervisor", "nitro"),
