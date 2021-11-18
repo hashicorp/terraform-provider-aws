@@ -63,7 +63,7 @@ func TestAccCognitoIdentityPool_DeveloperProviderName(t *testing.T) {
 	resourceName := "aws_cognito_identity_pool.main"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheck(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, cognitoidentity.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckPoolDestroy,

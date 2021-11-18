@@ -2609,7 +2609,7 @@ resource "aws_fsx_windows_file_system" "test" {
   active_directory_id = aws_directory_service_directory.test.id
   skip_final_backup   = true
   storage_capacity    = 32
-  subnet_ids          = [aws_subnet.test1.id]
+  subnet_ids          = [aws_subnet.test.id]
   throughput_capacity = 8
 }
 `
