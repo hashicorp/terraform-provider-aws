@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfwaf "github.com/hashicorp/terraform-provider-aws/internal/service/waf"
 )
 
 func ResourceRegexPatternSet() *schema.Resource {
@@ -147,7 +148,7 @@ func updateWafRegionalRegexPatternSetPatternStringsWR(id string, oldPatterns, ne
 		req := &waf.UpdateRegexPatternSetInput{
 			ChangeToken:       token,
 			RegexPatternSetId: aws.String(id),
-			Updates:           diffWafRegexPatternSetPatternStrings(oldPatterns, newPatterns),
+			Updates:           tfwaf.DiffRegexPatternSetPatternStrings(oldPatterns, newPatterns),
 		}
 
 		return conn.UpdateRegexPatternSet(req)

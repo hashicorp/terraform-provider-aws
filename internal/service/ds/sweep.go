@@ -37,7 +37,7 @@ func sweepDirectories(region string) error {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.(*conns.AWSClient).DirectoryServiceConn
+	conn := client.(*conns.AWSClient).DSConn
 
 	var sweeperErrs *multierror.Error
 

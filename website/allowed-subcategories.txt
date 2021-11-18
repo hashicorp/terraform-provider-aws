@@ -62,7 +62,7 @@ Elastic Load Balancing v2 (ALB/NLB)
 Elastic Map Reduce (EMR)
 Elastic Map Reduce Containers
 Elastic Transcoder
-ElasticSearch
+Elasticsearch
 EventBridge (CloudWatch Events)
 EventBridge Schemas
 File System (FSx)

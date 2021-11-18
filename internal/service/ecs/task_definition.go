@@ -500,7 +500,7 @@ func resourceTaskDefinitionCreate(d *schema.ResourceData, meta interface{}) erro
 		return err
 	}
 
-	taskDefinition := *out.TaskDefinition
+	taskDefinition := *out.TaskDefinition // nosemgrep: prefer-aws-go-sdk-pointer-conversion-assignment // false positive
 
 	log.Printf("[DEBUG] ECS task definition registered: %q (rev. %d)",
 		aws.StringValue(taskDefinition.TaskDefinitionArn), aws.Int64Value(taskDefinition.Revision))

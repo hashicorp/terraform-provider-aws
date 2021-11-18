@@ -310,6 +310,6 @@ func flattenReplicas(replicaDescriptions []*dynamodb.ReplicaDescription) []inter
 
 func flattenReplica(replicaDescription *dynamodb.ReplicaDescription) map[string]interface{} {
 	replica := make(map[string]interface{})
-	replica["region_name"] = *replicaDescription.RegionName
+	replica["region_name"] = aws.StringValue(replicaDescription.RegionName)
 	return replica
 }

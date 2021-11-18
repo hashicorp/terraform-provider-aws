@@ -57,6 +57,9 @@ service/acmpca:
 service/alexaforbusiness:
   - 'internal/service/alexaforbusiness/**/*'
   - 'website/**/alexaforbusiness_*'
+service/amp:
+  - 'internal/service/amp/**/*'
+  - 'website/**/prometheus_*'
 service/amplify:
   - 'internal/service/amplify/**/*'
   - 'website/**/amplify_*'
@@ -143,9 +146,6 @@ service/cloudwatch:
   - 'internal/service/cloudwatch/**/*'
   - 'website/**/cloudwatch_dashboard*'
   - 'website/**/cloudwatch_metric_alarm*'
-service/cloudwatchevents:
-  - 'internal/service/cloudwatchevents/**/*'
-  - 'website/**/cloudwatch_event_*'
 service/cloudwatchlogs:
   - 'internal/service/cloudwatchlogs/**/*'
   - 'website/**/cloudwatch_log_*'
@@ -186,7 +186,7 @@ service/comprehend:
   - 'internal/service/comprehend/**/*'
   - 'website/**/comprehend_*'
 service/configservice:
-  - 'internal/service/config/**/*'
+  - 'internal/service/configservice/**/*'
   - 'website/**/config_*'
 service/connect:
   - 'internal/service/connect/**/*'
@@ -278,7 +278,7 @@ service/efs:
 service/eks:
   - 'internal/service/eks/**/*'
   - 'website/**/eks_*'
-service/elastic-transcoder:
+service/elastictranscoder:
   - 'internal/service/elastictranscoder/**/*'
   - 'website/**/elastictranscoder_*'
   - 'website/**/elastic_transcoder_*'
@@ -289,7 +289,7 @@ service/elasticbeanstalk:
   - 'internal/service/elasticbeanstalk/**/*'
   - 'website/**/elastic_beanstalk_*'
 service/elasticsearch:
-  - 'internal/service/elasticsearchservice/**/*'
+  - 'internal/service/elasticsearch/**/*'
   - 'website/**/elasticsearch_*'
 service/elb:
   - 'internal/service/elb/**/*'
@@ -310,6 +310,9 @@ service/emr:
 service/emrcontainers:
   - 'internal/service/emrcontainers/**/*'
   - 'website/**/emrcontainers_*'
+service/events:
+  - 'internal/service/events/**/*'
+  - 'website/**/cloudwatch_event_*'
 service/firehose:
   - 'internal/service/firehose/**/*'
   - 'website/**/firehose_*'
@@ -380,8 +383,8 @@ service/lakeformation:
 service/lambda:
   - 'internal/service/lambda/**/*'
   - 'website/**/lambda_*'
-service/lexmodelbuildingservice:
-  - 'internal/service/lexmodelbuilding/**/*'
+service/lexmodels:
+  - 'internal/service/lexmodels/**/*'
   - 'website/**/lex_*'
 service/licensemanager:
   - 'internal/service/licensemanager/**/*'
@@ -434,13 +437,11 @@ service/mq:
 service/mwaa:
   - 'internal/service/mwaa/**/*'
   - 'website/**/mwaa_*'
-service/nas:
-  - 'internal/service/nas/**/*'
+service/meta:
+  - 'internal/service/meta/**/*'
   - 'website/**/arn*'
   - 'website/**/ip_ranges*'
   - 'website/**/billing_service_account*'
-  - 'website/**/caller_identity*'
-  - 'website/**/canonical_user_id*'
   - 'website/**/default_tags*'
   - 'website/**/partition*'
   - 'website/**/region*'
@@ -471,9 +472,6 @@ service/polly:
 service/pricing:
   - 'internal/service/pricing/**/*'
   - 'website/**/pricing_*'
-service/prometheusservice:
-  - 'internal/service/prometheus/**/*'
-  - 'website/**/prometheus_*'
 service/qldb:
   - 'internal/service/qldb/**/*'
   - 'website/**/qldb_*'
@@ -494,7 +492,7 @@ service/resourcegroups:
   - 'internal/service/resourcegroups/**/*'
   - 'website/**/resourcegroups_*'
 service/resourcegroupstaggingapi:
-  - 'internal/service/resourcegroupstagging/**/*'
+  - 'internal/service/resourcegroupstaggingapi/**/*'
   - 'website/**/resourcegroupstaggingapi_*'
 service/robomaker:
   - 'internal/service/robomaker/**/*'
@@ -523,6 +521,7 @@ service/s3:
   - 'internal/service/s3/**/*'
   - 'website/**/s3_bucket*'
   - 'website/**/s3_object*'
+  - 'website/**/canonical_user_id*'
 service/s3control:
   - 'internal/service/s3control/**/*'
   - 'website/**/s3_account_*'
@@ -542,8 +541,8 @@ service/secretsmanager:
 service/securityhub:
   - 'internal/service/securityhub/**/*'
   - 'website/**/securityhub_*'
-service/serverlessapplicationrepository:
-  - 'internal/service/serverlessapprepo/**/*'
+service/serverlessrepo:
+  - 'internal/service/serverlessrepo/**/*'
   - 'website/**/serverlessapplicationrepository_*'
 service/servicecatalog:
   - 'internal/service/servicecatalog/**/*'
@@ -588,6 +587,7 @@ service/storagegateway:
   - 'website/**/storagegateway_*'
 service/sts:
   - 'internal/service/sts/**/*'
+  - 'website/**/caller_identity*'
 service/swf:
   - 'internal/service/swf/**/*'
   - 'website/**/swf_*'

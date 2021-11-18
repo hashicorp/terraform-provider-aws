@@ -12,7 +12,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-func wafSizeConstraintSetSchema() map[string]*schema.Schema {
+func SizeConstraintSetSchema() map[string]*schema.Schema {
 	return map[string]*schema.Schema{
 		"name": {
 			Type:     schema.TypeString,
@@ -63,7 +63,7 @@ func wafSizeConstraintSetSchema() map[string]*schema.Schema {
 	}
 }
 
-func diffWafSizeConstraints(oldS, newS []interface{}) []*waf.SizeConstraintSetUpdate {
+func DiffSizeConstraints(oldS, newS []interface{}) []*waf.SizeConstraintSetUpdate {
 	updates := make([]*waf.SizeConstraintSetUpdate, 0)
 
 	for _, os := range oldS {
@@ -77,7 +77,7 @@ func diffWafSizeConstraints(oldS, newS []interface{}) []*waf.SizeConstraintSetUp
 		updates = append(updates, &waf.SizeConstraintSetUpdate{
 			Action: aws.String(waf.ChangeActionDelete),
 			SizeConstraint: &waf.SizeConstraint{
-				FieldToMatch:       expandFieldToMatch(constraint["field_to_match"].([]interface{})[0].(map[string]interface{})),
+				FieldToMatch:       ExpandFieldToMatch(constraint["field_to_match"].([]interface{})[0].(map[string]interface{})),
 				ComparisonOperator: aws.String(constraint["comparison_operator"].(string)),
 				Size:               aws.Int64(int64(constraint["size"].(int))),
 				TextTransformation: aws.String(constraint["text_transformation"].(string)),
@@ -91,7 +91,7 @@ func diffWafSizeConstraints(oldS, newS []interface{}) []*waf.SizeConstraintSetUp
 		updates = append(updates, &waf.SizeConstraintSetUpdate{
 			Action: aws.String(waf.ChangeActionInsert),
 			SizeConstraint: &waf.SizeConstraint{
-				FieldToMatch:       expandFieldToMatch(constraint["field_to_match"].([]interface{})[0].(map[string]interface{})),
+				FieldToMatch:       ExpandFieldToMatch(constraint["field_to_match"].([]interface{})[0].(map[string]interface{})),
 				ComparisonOperator: aws.String(constraint["comparison_operator"].(string)),
 				Size:               aws.Int64(int64(constraint["size"].(int))),
 				TextTransformation: aws.String(constraint["text_transformation"].(string)),
@@ -101,33 +101,33 @@ func diffWafSizeConstraints(oldS, newS []interface{}) []*waf.SizeConstraintSetUp
 	return updates
 }
 
-func flattenWafSizeConstraints(sc []*waf.SizeConstraint) []interface{} {
+func FlattenSizeConstraints(sc []*waf.SizeConstraint) []interface{} {
 	out := make([]interface{}, len(sc))
 	for i, c := range sc {
 		m := make(map[string]interface{})
-		m["comparison_operator"] = *c.ComparisonOperator
+		m["comparison_operator"] = aws.StringValue(c.ComparisonOperator)
 		if c.FieldToMatch != nil {
 			m["field_to_match"] = FlattenFieldToMatch(c.FieldToMatch)
 		}
-		m["size"] = *c.Size
-		m["text_transformation"] = *c.TextTransformation
+		m["size"] = aws.Int64Value(c.Size)
+		m["text_transformation"] = aws.StringValue(c.TextTransformation)
 		out[i] = m
 	}
 	return out
 }
 
-func flattenWafGeoMatchConstraint(ts []*waf.GeoMatchConstraint) []interface{} {
+func FlattenGeoMatchConstraint(ts []*waf.GeoMatchConstraint) []interface{} {
 	out := make([]interface{}, len(ts))
 	for i, t := range ts {
 		m := make(map[string]interface{})
-		m["type"] = *t.Type
-		m["value"] = *t.Value
+		m["type"] = aws.StringValue(t.Type)
+		m["value"] = aws.StringValue(t.Value)
 		out[i] = m
 	}
 	return out
 }
 
-func diffWafGeoMatchSetConstraints(oldT, newT []interface{}) []*waf.GeoMatchSetUpdate {
+func DiffGeoMatchSetConstraints(oldT, newT []interface{}) []*waf.GeoMatchSetUpdate {
 	updates := make([]*waf.GeoMatchSetUpdate, 0)
 
 	for _, od := range oldT {
@@ -161,7 +161,7 @@ func diffWafGeoMatchSetConstraints(oldT, newT []interface{}) []*waf.GeoMatchSetU
 	return updates
 }
 
-func diffWafRegexPatternSetPatternStrings(oldPatterns, newPatterns []interface{}) []*waf.RegexPatternSetUpdate {
+func DiffRegexPatternSetPatternStrings(oldPatterns, newPatterns []interface{}) []*waf.RegexPatternSetUpdate {
 	updates := make([]*waf.RegexPatternSetUpdate, 0)
 
 	for _, op := range oldPatterns {
@@ -185,7 +185,7 @@ func diffWafRegexPatternSetPatternStrings(oldPatterns, newPatterns []interface{}
 	return updates
 }
 
-func diffWafRulePredicates(oldP, newP []interface{}) []*waf.RuleUpdate {
+func DiffRulePredicates(oldP, newP []interface{}) []*waf.RuleUpdate {
 	updates := make([]*waf.RuleUpdate, 0)
 
 	for _, op := range oldP {
@@ -221,7 +221,7 @@ func diffWafRulePredicates(oldP, newP []interface{}) []*waf.RuleUpdate {
 	return updates
 }
 
-func diffWafRuleGroupActivatedRules(oldRules, newRules []interface{}) []*waf.RuleGroupUpdate {
+func DiffRuleGroupActivatedRules(oldRules, newRules []interface{}) []*waf.RuleGroupUpdate {
 	updates := make([]*waf.RuleGroupUpdate, 0)
 
 	for _, op := range oldRules {
@@ -234,7 +234,7 @@ func diffWafRuleGroupActivatedRules(oldRules, newRules []interface{}) []*waf.Rul
 
 		updates = append(updates, &waf.RuleGroupUpdate{
 			Action:        aws.String(waf.ChangeActionDelete),
-			ActivatedRule: expandWafActivatedRule(rule),
+			ActivatedRule: ExpandActivatedRule(rule),
 		})
 	}
 
@@ -243,24 +243,24 @@ func diffWafRuleGroupActivatedRules(oldRules, newRules []interface{}) []*waf.Rul
 
 		updates = append(updates, &waf.RuleGroupUpdate{
 			Action:        aws.String(waf.ChangeActionInsert),
-			ActivatedRule: expandWafActivatedRule(rule),
+			ActivatedRule: ExpandActivatedRule(rule),
 		})
 	}
 	return updates
 }
 
-func flattenWafActivatedRules(activatedRules []*waf.ActivatedRule) []interface{} {
+func FlattenActivatedRules(activatedRules []*waf.ActivatedRule) []interface{} {
 	out := make([]interface{}, len(activatedRules))
 	for i, ar := range activatedRules {
 		rule := map[string]interface{}{
-			"priority": int(*ar.Priority),
-			"rule_id":  *ar.RuleId,
-			"type":     *ar.Type,
+			"priority": aws.Int64Value(ar.Priority),
+			"rule_id":  aws.StringValue(ar.RuleId),
+			"type":     aws.StringValue(ar.Type),
 		}
 		if ar.Action != nil {
 			rule["action"] = []interface{}{
 				map[string]interface{}{
-					"type": *ar.Action.Type,
+					"type": aws.StringValue(ar.Action.Type),
 				},
 			}
 		}
@@ -269,9 +269,9 @@ func flattenWafActivatedRules(activatedRules []*waf.ActivatedRule) []interface{}
 	return out
 }
 
-func expandWafActivatedRule(rule map[string]interface{}) *waf.ActivatedRule {
+func ExpandActivatedRule(rule map[string]interface{}) *waf.ActivatedRule {
 	r := &waf.ActivatedRule{
-		Priority: aws.Int64(int64(rule["priority"].(int))),
+		Priority: aws.Int64(rule["priority"].(int64)),
 		RuleId:   aws.String(rule["rule_id"].(string)),
 		Type:     aws.String(rule["type"].(string)),
 	}
@@ -285,7 +285,7 @@ func expandWafActivatedRule(rule map[string]interface{}) *waf.ActivatedRule {
 	return r
 }
 
-func flattenWafRegexMatchTuples(tuples []*waf.RegexMatchTuple) []interface{} {
+func FlattenRegexMatchTuples(tuples []*waf.RegexMatchTuple) []interface{} {
 	out := make([]interface{}, len(tuples))
 	for i, t := range tuples {
 		m := make(map[string]interface{})
@@ -293,24 +293,24 @@ func flattenWafRegexMatchTuples(tuples []*waf.RegexMatchTuple) []interface{} {
 		if t.FieldToMatch != nil {
 			m["field_to_match"] = FlattenFieldToMatch(t.FieldToMatch)
 		}
-		m["regex_pattern_set_id"] = *t.RegexPatternSetId
-		m["text_transformation"] = *t.TextTransformation
+		m["regex_pattern_set_id"] = aws.StringValue(t.RegexPatternSetId)
+		m["text_transformation"] = aws.StringValue(t.TextTransformation)
 
 		out[i] = m
 	}
 	return out
 }
 
-func expandWafRegexMatchTuple(tuple map[string]interface{}) *waf.RegexMatchTuple {
+func ExpandRegexMatchTuple(tuple map[string]interface{}) *waf.RegexMatchTuple {
 	ftm := tuple["field_to_match"].([]interface{})
 	return &waf.RegexMatchTuple{
-		FieldToMatch:       expandFieldToMatch(ftm[0].(map[string]interface{})),
+		FieldToMatch:       ExpandFieldToMatch(ftm[0].(map[string]interface{})),
 		RegexPatternSetId:  aws.String(tuple["regex_pattern_set_id"].(string)),
 		TextTransformation: aws.String(tuple["text_transformation"].(string)),
 	}
 }
 
-func diffWafRegexMatchSetTuples(oldT, newT []interface{}) []*waf.RegexMatchSetUpdate {
+func DiffRegexMatchSetTuples(oldT, newT []interface{}) []*waf.RegexMatchSetUpdate {
 	updates := make([]*waf.RegexMatchSetUpdate, 0)
 
 	for _, ot := range oldT {
@@ -323,7 +323,7 @@ func diffWafRegexMatchSetTuples(oldT, newT []interface{}) []*waf.RegexMatchSetUp
 
 		updates = append(updates, &waf.RegexMatchSetUpdate{
 			Action:          aws.String(waf.ChangeActionDelete),
-			RegexMatchTuple: expandWafRegexMatchTuple(tuple),
+			RegexMatchTuple: ExpandRegexMatchTuple(tuple),
 		})
 	}
 
@@ -332,7 +332,7 @@ func diffWafRegexMatchSetTuples(oldT, newT []interface{}) []*waf.RegexMatchSetUp
 
 		updates = append(updates, &waf.RegexMatchSetUpdate{
 			Action:          aws.String(waf.ChangeActionInsert),
-			RegexMatchTuple: expandWafRegexMatchTuple(tuple),
+			RegexMatchTuple: ExpandRegexMatchTuple(tuple),
 		})
 	}
 	return updates

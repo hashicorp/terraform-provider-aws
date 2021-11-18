@@ -945,7 +945,7 @@ func testAccCheckTaskDefinitionProxyConfiguration(after *ecs.TaskDefinition, con
 
 		propertyLookups := make(map[string]string)
 		for _, property := range properties {
-			propertyLookups[*property.Name] = *property.Value
+			propertyLookups[aws.StringValue(property.Name)] = aws.StringValue(property.Value)
 		}
 
 		if propertyLookups["IgnoredUID"] != ignoredUid {

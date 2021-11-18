@@ -5,8 +5,6 @@ import (
 	"regexp"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3control"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -14,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfs3control "github.com/hashicorp/terraform-provider-aws/internal/service/s3control"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	awspolicy "github.com/jen20/awspolicyequivalence"
 )
 
@@ -34,9 +33,12 @@ func TestAccS3ControlAccessPoint_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccessPointExists(resourceName, &v),
 					acctest.CheckResourceAttrAccountID(resourceName, "account_id"),
+					// https://docs.aws.amazon.com/AmazonS3/latest/userguide/access-points-alias.html:
+					resource.TestMatchResourceAttr(resourceName, "alias", regexp.MustCompile(`^.*-s3alias$`)),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "s3", fmt.Sprintf("accesspoint/%s", accessPointName)),
 					resource.TestCheckResourceAttr(resourceName, "bucket", bucketName),
 					acctest.MatchResourceAttrRegionalHostname(resourceName, "domain_name", "s3-accesspoint", regexp.MustCompile(fmt.Sprintf("^%s-\\d{12}", accessPointName))),
+					resource.TestCheckResourceAttr(resourceName, "endpoints.%", "4"),
 					resource.TestCheckResourceAttr(resourceName, "has_public_access_policy", "false"),
 					resource.TestCheckResourceAttr(resourceName, "name", accessPointName),
 					resource.TestCheckResourceAttr(resourceName, "network_origin", "Internet"),
@@ -74,32 +76,7 @@ func TestAccS3ControlAccessPoint_disappears(t *testing.T) {
 				Config: testAccAccessPointConfig_basic(bucketName, accessPointName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccessPointExists(resourceName, &v),
-					testAccCheckAccessPointDisappears(resourceName),
-				),
-				ExpectNonEmptyPlan: true,
-			},
-		},
-	})
-}
-
-func TestAccS3ControlAccessPoint_Disappears_bucket(t *testing.T) {
-	var v s3control.GetAccessPointOutput
-	bucketName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	accessPointName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_s3_access_point.test"
-	bucketResourceName := "aws_s3_bucket.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, s3control.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAccessPointDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAccessPointConfig_basic(bucketName, accessPointName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAccessPointExists(resourceName, &v),
-					testAccCheckDestroyBucket(bucketResourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfs3control.ResourceAccessPoint(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -322,36 +299,6 @@ func TestAccS3ControlAccessPoint_vpc(t *testing.T) {
 	})
 }
 
-func testAccCheckAccessPointDisappears(n string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[n]
-		if !ok {
-			return fmt.Errorf("Not found: %s", n)
-		}
-
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No S3 Access Point ID is set")
-		}
-
-		accountId, name, err := tfs3control.AccessPointParseID(rs.Primary.ID)
-		if err != nil {
-			return err
-		}
-
-		conn := acctest.Provider.Meta().(*conns.AWSClient).S3ControlConn
-
-		_, err = conn.DeleteAccessPoint(&s3control.DeleteAccessPointInput{
-			AccountId: aws.String(accountId),
-			Name:      aws.String(name),
-		})
-		if err != nil {
-			return err
-		}
-
-		return nil
-	}
-}
-
 func testAccCheckAccessPointDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).S3ControlConn
 
@@ -360,23 +307,28 @@ func testAccCheckAccessPointDestroy(s *terraform.State) error {
 			continue
 		}
 
-		accountId, name, err := tfs3control.AccessPointParseID(rs.Primary.ID)
+		accountID, name, err := tfs3control.AccessPointParseResourceID(rs.Primary.ID)
+
 		if err != nil {
 			return err
 		}
 
-		_, err = conn.GetAccessPoint(&s3control.GetAccessPointInput{
-			AccountId: aws.String(accountId),
-			Name:      aws.String(name),
-		})
-		if err == nil {
-			return fmt.Errorf("S3 Access Point still exists")
+		_, err = tfs3control.FindAccessPointByAccountIDAndName(conn, accountID, name)
+
+		if tfresource.NotFound(err) {
+			continue
 		}
+
+		if err != nil {
+			return err
+		}
+
+		return fmt.Errorf("S3 Access Point %s still exists", rs.Primary.ID)
 	}
 	return nil
 }
 
-func testAccCheckAccessPointExists(n string, output *s3control.GetAccessPointOutput) resource.TestCheckFunc {
+func testAccCheckAccessPointExists(n string, v *s3control.GetAccessPointOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -387,22 +339,21 @@ func testAccCheckAccessPointExists(n string, output *s3control.GetAccessPointOut
 			return fmt.Errorf("No S3 Access Point ID is set")
 		}
 
-		accountId, name, err := tfs3control.AccessPointParseID(rs.Primary.ID)
+		accountID, name, err := tfs3control.AccessPointParseResourceID(rs.Primary.ID)
+
 		if err != nil {
 			return err
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).S3ControlConn
 
-		resp, err := conn.GetAccessPoint(&s3control.GetAccessPointInput{
-			AccountId: aws.String(accountId),
-			Name:      aws.String(name),
-		})
+		output, err := tfs3control.FindAccessPointByAccountIDAndName(conn, accountID, name)
+
 		if err != nil {
 			return err
 		}
 
-		*output = *resp
+		*v = *output
 
 		return nil
 	}
@@ -419,22 +370,20 @@ func testAccCheckAccessPointHasPolicy(n string, fn func() string) resource.TestC
 			return fmt.Errorf("No S3 Access Point ID is set")
 		}
 
-		accountId, name, err := tfs3control.AccessPointParseID(rs.Primary.ID)
+		accountID, name, err := tfs3control.AccessPointParseResourceID(rs.Primary.ID)
+
 		if err != nil {
 			return err
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).S3ControlConn
 
-		resp, err := conn.GetAccessPointPolicy(&s3control.GetAccessPointPolicyInput{
-			AccountId: aws.String(accountId),
-			Name:      aws.String(name),
-		})
+		actualPolicyText, _, err := tfs3control.FindAccessPointPolicyAndStatusByAccountIDAndName(conn, accountID, name)
+
 		if err != nil {
 			return err
 		}
 
-		actualPolicyText := *resp.Policy
 		expectedPolicyText := fn()
 
 		equivalent, err := awspolicy.PoliciesAreEquivalent(actualPolicyText, expectedPolicyText)
@@ -647,27 +596,4 @@ resource "aws_s3_access_point" "test" {
   }
 }
 `, rName)
-}
-
-func testAccCheckDestroyBucket(n string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[n]
-		if !ok {
-			return fmt.Errorf("Not found: %s", n)
-		}
-
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No S3 Bucket ID is set")
-		}
-
-		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn
-		_, err := conn.DeleteBucket(&s3.DeleteBucketInput{
-			Bucket: aws.String(rs.Primary.ID),
-		})
-
-		if err != nil {
-			return fmt.Errorf("Error destroying Bucket (%s) in testAccCheckDestroyBucket: %s", rs.Primary.ID, err)
-		}
-		return nil
-	}
 }

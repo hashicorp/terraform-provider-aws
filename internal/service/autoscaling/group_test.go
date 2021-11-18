@@ -974,6 +974,19 @@ func TestAccAutoScalingGroup_InstanceRefresh_basic(t *testing.T) {
 				},
 			},
 			{
+				Config: testAccGroupConfig_InstanceRefresh_MinHealthyPercentage(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGroupExists(resourceName, &group),
+					resource.TestCheckResourceAttr(resourceName, "instance_refresh.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "instance_refresh.0.strategy", "Rolling"),
+					resource.TestCheckResourceAttr(resourceName, "instance_refresh.0.preferences.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "instance_refresh.0.preferences.0.instance_warmup", ""),
+					resource.TestCheckResourceAttr(resourceName, "instance_refresh.0.preferences.0.min_healthy_percentage", "0"),
+					resource.TestCheckResourceAttr(resourceName, "instance_refresh.0.preferences.0.checkpoint_delay", ""),
+					resource.TestCheckResourceAttr(resourceName, "instance_refresh.0.preferences.0.checkpoint_percentages.#", "0"),
+				),
+			},
+			{
 				Config: testAccGroupConfig_InstanceRefresh_Full(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupExists(resourceName, &group),
@@ -982,6 +995,13 @@ func TestAccAutoScalingGroup_InstanceRefresh_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "instance_refresh.0.preferences.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "instance_refresh.0.preferences.0.instance_warmup", "10"),
 					resource.TestCheckResourceAttr(resourceName, "instance_refresh.0.preferences.0.min_healthy_percentage", "50"),
+					resource.TestCheckResourceAttr(resourceName, "instance_refresh.0.preferences.0.checkpoint_delay", "25"),
+					resource.TestCheckResourceAttr(resourceName, "instance_refresh.0.preferences.0.checkpoint_percentages.#", "5"),
+					resource.TestCheckResourceAttr(resourceName, "instance_refresh.0.preferences.0.checkpoint_percentages.0", "1"),
+					resource.TestCheckResourceAttr(resourceName, "instance_refresh.0.preferences.0.checkpoint_percentages.1", "20"),
+					resource.TestCheckResourceAttr(resourceName, "instance_refresh.0.preferences.0.checkpoint_percentages.2", "25"),
+					resource.TestCheckResourceAttr(resourceName, "instance_refresh.0.preferences.0.checkpoint_percentages.3", "50"),
+					resource.TestCheckResourceAttr(resourceName, "instance_refresh.0.preferences.0.checkpoint_percentages.4", "100"),
 				),
 			},
 			{
@@ -4467,6 +4487,49 @@ resource "aws_launch_configuration" "test" {
 `
 }
 
+func testAccGroupConfig_InstanceRefresh_MinHealthyPercentage() string {
+	return `
+resource "aws_autoscaling_group" "test" {
+  availability_zones   = [data.aws_availability_zones.current.names[0]]
+  max_size             = 2
+  min_size             = 1
+  desired_capacity     = 1
+  launch_configuration = aws_launch_configuration.test.name
+
+  instance_refresh {
+    strategy = "Rolling"
+    preferences {
+      min_healthy_percentage = 0
+    }
+  }
+}
+
+data "aws_ami" "test" {
+  most_recent = true
+  owners      = ["amazon"]
+
+  filter {
+    name   = "name"
+    values = ["amzn-ami-hvm-*-x86_64-gp2"]
+  }
+}
+
+data "aws_availability_zones" "current" {
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
+
+resource "aws_launch_configuration" "test" {
+  image_id      = data.aws_ami.test.id
+  instance_type = "t3.nano"
+}
+`
+}
+
 func testAccGroupConfig_InstanceRefresh_Full() string {
 	return `
 resource "aws_autoscaling_group" "test" {
@@ -4481,6 +4544,8 @@ resource "aws_autoscaling_group" "test" {
     preferences {
       instance_warmup        = 10
       min_healthy_percentage = 50
+      checkpoint_delay       = 25
+      checkpoint_percentages = [1, 20, 25, 50, 100]
     }
   }
 }
@@ -4799,8 +4864,10 @@ func TestCreateAutoScalingGroupInstanceRefreshInput(t *testing.T) {
 				AutoScalingGroupName: aws.String(asgName),
 				Strategy:             aws.String("Rolling"),
 				Preferences: &autoscaling.RefreshPreferences{
-					InstanceWarmup:       aws.Int64(60),
-					MinHealthyPercentage: nil,
+					CheckpointDelay:       nil,
+					CheckpointPercentages: nil,
+					InstanceWarmup:        aws.Int64(60),
+					MinHealthyPercentage:  nil,
 				},
 			},
 		},
@@ -4818,8 +4885,10 @@ func TestCreateAutoScalingGroupInstanceRefreshInput(t *testing.T) {
 				AutoScalingGroupName: aws.String(asgName),
 				Strategy:             aws.String("Rolling"),
 				Preferences: &autoscaling.RefreshPreferences{
-					InstanceWarmup:       aws.Int64(0),
-					MinHealthyPercentage: nil,
+					CheckpointDelay:       nil,
+					CheckpointPercentages: nil,
+					InstanceWarmup:        aws.Int64(0),
+					MinHealthyPercentage:  nil,
 				},
 			},
 		},
@@ -4838,8 +4907,10 @@ func TestCreateAutoScalingGroupInstanceRefreshInput(t *testing.T) {
 				AutoScalingGroupName: aws.String(asgName),
 				Strategy:             aws.String("Rolling"),
 				Preferences: &autoscaling.RefreshPreferences{
-					InstanceWarmup:       nil,
-					MinHealthyPercentage: aws.Int64(80),
+					CheckpointDelay:       nil,
+					CheckpointPercentages: nil,
+					InstanceWarmup:        nil,
+					MinHealthyPercentage:  aws.Int64(80),
 				},
 			},
 		},
@@ -4857,8 +4928,10 @@ func TestCreateAutoScalingGroupInstanceRefreshInput(t *testing.T) {
 				AutoScalingGroupName: aws.String(asgName),
 				Strategy:             aws.String("Rolling"),
 				Preferences: &autoscaling.RefreshPreferences{
-					InstanceWarmup:       nil,
-					MinHealthyPercentage: aws.Int64(80),
+					CheckpointDelay:       nil,
+					CheckpointPercentages: nil,
+					InstanceWarmup:        nil,
+					MinHealthyPercentage:  aws.Int64(80),
 				},
 			},
 		},
@@ -4877,8 +4950,125 @@ func TestCreateAutoScalingGroupInstanceRefreshInput(t *testing.T) {
 				AutoScalingGroupName: aws.String(asgName),
 				Strategy:             aws.String("Rolling"),
 				Preferences: &autoscaling.RefreshPreferences{
-					InstanceWarmup:       aws.Int64(60),
-					MinHealthyPercentage: aws.Int64(80),
+					CheckpointDelay:       nil,
+					CheckpointPercentages: nil,
+					InstanceWarmup:        aws.Int64(60),
+					MinHealthyPercentage:  aws.Int64(80),
+				},
+			},
+		},
+		{
+			name: "checkpoint_delay",
+			input: []interface{}{map[string]interface{}{
+				"strategy": "Rolling",
+				"preferences": []interface{}{
+					map[string]interface{}{
+						"checkpoint_delay": "25",
+					},
+				},
+			}},
+			expected: &autoscaling.StartInstanceRefreshInput{
+				AutoScalingGroupName: aws.String(asgName),
+				Strategy:             aws.String("Rolling"),
+				Preferences: &autoscaling.RefreshPreferences{
+					CheckpointDelay:       aws.Int64(25),
+					CheckpointPercentages: nil,
+					InstanceWarmup:        nil,
+					MinHealthyPercentage:  nil,
+				},
+			},
+		},
+		{
+			name: "checkpoint_delay zero",
+			input: []interface{}{map[string]interface{}{
+				"strategy": "Rolling",
+				"preferences": []interface{}{
+					map[string]interface{}{
+						"checkpoint_delay": "0",
+					},
+				},
+			}},
+			expected: &autoscaling.StartInstanceRefreshInput{
+				AutoScalingGroupName: aws.String(asgName),
+				Strategy:             aws.String("Rolling"),
+				Preferences: &autoscaling.RefreshPreferences{
+					CheckpointDelay:       aws.Int64(0),
+					CheckpointPercentages: nil,
+					InstanceWarmup:        nil,
+					MinHealthyPercentage:  nil,
+				},
+			},
+		},
+		{
+			name: "checkpoint_delay empty string",
+			input: []interface{}{map[string]interface{}{
+				"strategy": "Rolling",
+				"preferences": []interface{}{
+					map[string]interface{}{
+						"checkpoint_delay":       "",
+						"checkpoint_percentages": []interface{}{20, 100},
+					},
+				},
+			}},
+			expected: &autoscaling.StartInstanceRefreshInput{
+				AutoScalingGroupName: aws.String(asgName),
+				Strategy:             aws.String("Rolling"),
+				Preferences: &autoscaling.RefreshPreferences{
+					CheckpointDelay: nil,
+					CheckpointPercentages: []*int64{
+						aws.Int64(20),
+						aws.Int64(100),
+					},
+					InstanceWarmup:       nil,
+					MinHealthyPercentage: nil,
+				},
+			},
+		},
+		{
+			name: "checkpoint_percentages empty",
+			input: []interface{}{map[string]interface{}{
+				"strategy": "Rolling",
+				"preferences": []interface{}{
+					map[string]interface{}{
+						"checkpoint_percentages": []interface{}{},
+					},
+				},
+			}},
+			expected: &autoscaling.StartInstanceRefreshInput{
+				AutoScalingGroupName: aws.String(asgName),
+				Strategy:             aws.String("Rolling"),
+				Preferences: &autoscaling.RefreshPreferences{
+					CheckpointDelay:       nil,
+					CheckpointPercentages: nil,
+					InstanceWarmup:        nil,
+					MinHealthyPercentage:  nil,
+				},
+			},
+		},
+		{
+			name: "checkpoint_percentages",
+			input: []interface{}{map[string]interface{}{
+				"strategy": "Rolling",
+				"preferences": []interface{}{
+					map[string]interface{}{
+						"checkpoint_percentages": []interface{}{1, 20, 25, 50, 100},
+					},
+				},
+			}},
+			expected: &autoscaling.StartInstanceRefreshInput{
+				AutoScalingGroupName: aws.String(asgName),
+				Strategy:             aws.String("Rolling"),
+				Preferences: &autoscaling.RefreshPreferences{
+					CheckpointDelay: nil,
+					CheckpointPercentages: []*int64{
+						aws.Int64(1),
+						aws.Int64(20),
+						aws.Int64(25),
+						aws.Int64(50),
+						aws.Int64(100),
+					},
+					InstanceWarmup:       nil,
+					MinHealthyPercentage: nil,
 				},
 			},
 		},
