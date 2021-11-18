@@ -12,13 +12,45 @@ Associates an SSM Document to an instance or EC2 tag.
 
 ## Example Usage
 
-```hcl
+### Create an association for a specific instance
+
+```terraform
 resource "aws_ssm_association" "example" {
   name = aws_ssm_document.example.name
 
   targets {
     key    = "InstanceIds"
     values = [aws_instance.example.id]
+  }
+}
+```
+
+### Create an association for all managed instances in an AWS account
+
+To target all managed instances in an AWS account, set the `key` as `"InstanceIds"` with `values` set as `["*"]`. This example also illustrates how to use an Amazon owned SSM document named `AmazonCloudWatch-ManageAgent`.
+
+```terraform
+resource "aws_ssm_association" "example" {
+  name = "AmazonCloudWatch-ManageAgent"
+
+  targets {
+    key    = "InstanceIds"
+    values = ["*"]
+  }
+}
+```
+
+### Create an association for a specific tag
+
+This example shows how to target all managed instances that are assigned a tag key of `Environment` and value of `Development`.
+
+```terraform
+resource "aws_ssm_association" "example" {
+  name = "AmazonCloudWatch-ManageAgent"
+
+  targets {
+    key    = "tag:Environment"
+    values = ["Development"]
   }
 }
 ```
@@ -39,7 +71,7 @@ The following arguments are supported:
 * `compliance_severity` - (Optional) The compliance severity for the association. Can be one of the following: `UNSPECIFIED`, `LOW`, `MEDIUM`, `HIGH` or `CRITICAL`
 * `max_concurrency` - (Optional) The maximum number of targets allowed to run the association at the same time. You can specify a number, for example 10, or a percentage of the target set, for example 10%.
 * `max_errors` - (Optional) The number of errors that are allowed before the system stops sending requests to run the association on additional targets. You can specify a number, for example 10, or a percentage of the target set, for example 10%.
-* `automation_target_parameter_name` - (Optional) Specify the target for the association. This target is required for associations that use an `Automation` document and target resources by using rate controls.
+* `automation_target_parameter_name` - (Optional) Specify the target for the association. This target is required for associations that use an `Automation` document and target resources by using rate controls. This should be set to the SSM document `parameter` that will define how your automation will branch out.
 
 Output Location (`output_location`) is an S3 bucket where you want to store the results of this association:
 
@@ -62,7 +94,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-SSM associations can be imported using the `association_id`, e.g.
+SSM associations can be imported using the `association_id`, e.g.,
 
 ```
 $ terraform import aws_ssm_association.test-association 10abcdef-0abc-1234-5678-90abcdef123456

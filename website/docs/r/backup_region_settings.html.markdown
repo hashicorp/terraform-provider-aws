@@ -12,7 +12,7 @@ Provides an AWS Backup Region Settings resource.
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_backup_region_settings" "test" {
   resource_type_opt_in_preference = {
     "DynamoDB"        = true
@@ -41,7 +41,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Backup Region Settings can be imported using the `region`, e.g.
+Backup Region Settings can be imported using the `region`, e.g.,
 
 ```
 $ terraform import aws_backup_region_settings.test us-west-2

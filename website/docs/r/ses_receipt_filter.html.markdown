@@ -12,7 +12,7 @@ Provides an SES receipt filter resource
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_ses_receipt_filter" "filter" {
   name   = "block-spammer"
   cidr   = "10.10.10.10"
@@ -37,7 +37,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-SES Receipt Filter can be imported using their `name`, e.g.
+SES Receipt Filter can be imported using their `name`, e.g.,
 
 ```
 $ terraform import aws_ses_receipt_filter.test some-filter

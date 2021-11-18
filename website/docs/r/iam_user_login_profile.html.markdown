@@ -14,7 +14,7 @@ Manages an IAM User Login Profile with limited support for password creation dur
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_iam_user" "example" {
   name          = "example"
   path          = "/"
@@ -52,15 +52,15 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-IAM User Login Profiles can be imported without password information support via the IAM User name, e.g.
+IAM User Login Profiles can be imported without password information support via the IAM User name, e.g.,
 
 ```sh
 $ terraform import aws_iam_user_login_profile.example myusername
 ```
 
-Since Terraform has no method to read the PGP or password information during import, use the [Terraform resource `lifecycle` configuration block `ignore_changes` argument](https://www.terraform.io/docs/configuration/meta-arguments/lifecycle.html#ignore_changes) to ignore them unless password recreation is desired. e.g.
+Since Terraform has no method to read the PGP or password information during import, use the [Terraform resource `lifecycle` configuration block `ignore_changes` argument](https://www.terraform.io/docs/configuration/meta-arguments/lifecycle.html#ignore_changes) to ignore them unless password recreation is desiredE.g.,
 
-```hcl
+```terraform
 resource "aws_iam_user_login_profile" "example" {
   # ... other configuration ...
 

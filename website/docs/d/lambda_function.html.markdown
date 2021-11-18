@@ -12,7 +12,7 @@ Provides information about a Lambda Function.
 
 ## Example Usage
 
-```hcl
+```terraform
 variable "function_name" {
   type = string
 }
@@ -27,12 +27,13 @@ data "aws_lambda_function" "existing" {
 The following arguments are supported:
 
 * `function_name` - (Required) Name of the lambda function.
-* `qualifier` - (Optional) Alias name or version number of the lambda function. e.g. `$LATEST`, `my-alias`, or `1`
+* `qualifier` - (Optional) Alias name or version number of the lambda functionE.g., `$LATEST`, `my-alias`, or `1`
 
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 
+* `architectures` - The instruction set architecture for the Lambda function.
 * `arn` - Unqualified (no `:QUALIFIER` or `:VERSION` suffix) Amazon Resource Name (ARN) identifying your Lambda Function. See also `qualified_arn`.
 * `code_signing_config_arn` - Amazon Resource Name (ARN) for a Code Signing Configuration.
 * `dead_letter_config` - Configure the function's *dead letter queue*.
