@@ -23,11 +23,6 @@ func init() {
 		Name: "aws_lambda_layer",
 		F:    sweepLayerVersions,
 	})
-
-	resource.AddTestSweepers("aws_lambda_layer_version_permission", &resource.Sweeper{
-		Name: "aws_lambda_layer_version_permission",
-		F:    sweepLayerVersionPermissions,
-	})
 }
 
 func sweepFunctions(region string) error {
@@ -96,49 +91,6 @@ func sweepLayerVersions(region string) error {
 
 		for _, v := range versionResp.LayerVersions {
 			_, err := conn.DeleteLayerVersion(&lambda.DeleteLayerVersionInput{
-				LayerName:     l.LayerName,
-				VersionNumber: v.Version,
-			})
-			if err != nil {
-				return err
-			}
-		}
-	}
-
-	return nil
-}
-
-func sweepLayerVersionPermissions(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
-	}
-
-	lambdaconn := client.(*AWSClient).lambdaconn
-	resp, err := lambdaconn.ListLayers(&lambda.ListLayersInput{})
-	if err != nil {
-		if testSweepSkipSweepError(err) {
-			log.Printf("[WARN] Skipping Lambda Layer sweep for %s: %s", region, err)
-			return nil
-		}
-		return fmt.Errorf("Error retrieving Lambda layers: %s", err)
-	}
-
-	if len(resp.Layers) == 0 {
-		log.Print("[DEBUG] No aws lambda layers to sweep")
-		return nil
-	}
-
-	for _, l := range resp.Layers {
-		versionResp, err := lambdaconn.ListLayerVersions(&lambda.ListLayerVersionsInput{
-			LayerName: l.LayerName,
-		})
-		if err != nil {
-			return fmt.Errorf("Error retrieving versions for lambda layer: %s", err)
-		}
-
-		for _, v := range versionResp.LayerVersions {
-			_, err := lambdaconn.DeleteLayerVersion(&lambda.DeleteLayerVersionInput{
 				LayerName:     l.LayerName,
 				VersionNumber: v.Version,
 			})
