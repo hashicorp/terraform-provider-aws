@@ -136,7 +136,7 @@ func resourceAccountCreate(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("Error creating account: %s", err)
 	}
 
-	requestId := *resp.CreateAccountStatus.Id
+	requestId := aws.StringValue(resp.CreateAccountStatus.Id)
 
 	// Wait for the account to become available
 	log.Printf("[DEBUG] Waiting for account request (%s) to succeed", requestId)
