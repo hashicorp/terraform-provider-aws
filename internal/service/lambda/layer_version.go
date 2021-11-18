@@ -118,6 +118,11 @@ func ResourceLayerVersion() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"skip_destroy": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
 			"source_code_size": {
 				Type:     schema.TypeInt,
 				Computed: true,
@@ -125,11 +130,6 @@ func ResourceLayerVersion() *schema.Resource {
 			"version": {
 				Type:     schema.TypeString,
 				Computed: true,
-			},
-			"retain": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
 			},
 		},
 	}
@@ -265,12 +265,11 @@ func resourceLayerVersionRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceLayerVersionDelete(d *schema.ResourceData, meta interface{}) error {
-	retain := d.Get("retain").(bool)
-	if retain {
-		log.Printf("[DEBUG] Retaining Lambda Layer %q", d.Get("arn").(string))
+	if v, ok := d.GetOk("skip_destroy"); ok && v.(bool) {
+		log.Printf("[DEBUG] Retaining Lambda Layer Version %q", d.Id())
 		return nil
 	}
-	
+
 	conn := meta.(*conns.AWSClient).LambdaConn
 
 	version, err := strconv.ParseInt(d.Get("version").(string), 10, 64)
