@@ -74,8 +74,7 @@ The following arguments are supported:
 * `allocation_default_netmask_length` - (Optional) A default netmask length for allocations added to this pool. If, for example, the CIDR assigned to this pool is 10.0.0.0/8 and you enter 16 here, new allocations will default to 10.0.0.0/16 (unless you provide a different netmask value when you create the new allocation).
 * `allocation_max_netmask_length` - (Optional) The maximum netmask length that will be required for CIDR allocations in this pool.
 * `allocation_min_netmask_length` - (Optional) The minimum netmask length that will be required for CIDR allocations in this pool.
-* `allocation_resource_tags` - (Optional) Tags that will be automatically added to any allocations created in this pool in the format
-Key= ,Value= . If, for example, you create a VPC with a CIDR from this pool, these tags will be attached to the VPC.
+* `allocation_resource_tags` - (Optional) Tags that are required for resources that use CIDRs from this IPAM pool. Resources that do not have these tags will not be allowed to allocate space from the pool. If the resources have their tags changed after they have allocated space or if the allocation tagging requirements are changed on the pool, the resource may be marked as noncompliant.
 * `auto_import` - (Optional) If you include this argument, IPAM automatically imports any VPCs you have in your scope that fall
 within the CIDR range in the pool.
 * `aws_service` - (Optional) Limits which AWS service the pool can be used in. Only useable on public scopes. Valid Values: `ec2`.

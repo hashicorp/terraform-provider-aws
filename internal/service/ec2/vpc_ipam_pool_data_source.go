@@ -15,17 +15,16 @@ func DataSourceVPCIpamPool() *schema.Resource {
 		Read: dataSourceVPCIpamPoolRead,
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 			"filter": DataSourceFiltersSchema(),
-			"ipam_pool_id": {
+			"id": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
 			// computed
-			"tags": tftags.TagsSchemaComputed(),
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"address_family": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -83,6 +82,7 @@ func DataSourceVPCIpamPool() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"tags": tftags.TagsSchemaComputed(),
 		},
 	}
 }
@@ -92,7 +92,7 @@ func dataSourceVPCIpamPoolRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 	input := &ec2.DescribeIpamPoolsInput{}
 
-	if v, ok := d.GetOk("ipam_pool_id"); ok {
+	if v, ok := d.GetOk("id"); ok {
 		input.IpamPoolIds = aws.StringSlice([]string{v.(string)})
 
 	}
