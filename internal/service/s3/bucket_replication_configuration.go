@@ -41,7 +41,7 @@ func ResourceBucketReplicationConfiguration() *schema.Resource {
 			"rule": {
 				Type:     schema.TypeSet,
 				Required: true,
-				//Set:      rulesHash,
+				Set:      rulesHash,
 				MaxItems: 1000,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
