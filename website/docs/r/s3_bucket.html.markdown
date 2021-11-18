@@ -178,7 +178,7 @@ resource "aws_s3_bucket" "versioning_bucket" {
 
 ### Using replication configuration
 
-~> **NOTE:** See `aws_s3_bucket_replication_configuration` to support bi-directional replication configuration and additional features.
+~> **NOTE:** See the [`aws_s3_bucket_replication_configuration` resource](/docs/providers/aws/r/s3_bucket_replication_configuration.html) to support bi-directional replication configuration and additional features.
 
 ```terraform
 provider "aws" {
@@ -438,7 +438,7 @@ The `noncurrent_version_transition` object supports the following
 
 The `replication_configuration` object supports the following:
 
-~> **NOTE:** See the `aws_s3_bucket_replication_configuration` resource documentation to avoid conflicts. Replication configuration can only be defined in one resource not both.  When using the independent replication configuration resource the following lifecycle rule is needed on the `aws_s3_bucket` resource.
+~> **NOTE:** See the [`aws_s3_bucket_replication_configuration` resource documentation](/docs/providers/aws/r/s3_bucket_replication_configuration.html) to avoid conflicts. Replication configuration can only be defined in one resource not both.  When using the independent replication configuration resource the following lifecycle rule is needed on the `aws_s3_bucket` resource.
 
 ```
 lifecycle {
