@@ -538,7 +538,7 @@ func resourceReplicationGroupRead(d *schema.ResourceData, meta interface{}) erro
 			return nil
 		}
 
-		cacheCluster := *rgp.NodeGroups[0].NodeGroupMembers[0]
+		cacheCluster := *rgp.NodeGroups[0].NodeGroupMembers[0] // nosemgrep: prefer-aws-go-sdk-pointer-conversion-assignment // false positive
 
 		res, err := conn.DescribeCacheClusters(&elasticache.DescribeCacheClustersInput{
 			CacheClusterId:    cacheCluster.CacheClusterId,

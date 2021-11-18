@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfwaf "github.com/hashicorp/terraform-provider-aws/internal/service/waf"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
@@ -186,7 +187,7 @@ func resourceWebACLCreate(d *schema.ResourceData, meta interface{}) error {
 	out, err := wr.RetryWithToken(func(token *string) (interface{}, error) {
 		params := &waf.CreateWebACLInput{
 			ChangeToken:   token,
-			DefaultAction: expandAction(d.Get("default_action").([]interface{})),
+			DefaultAction: tfwaf.ExpandAction(d.Get("default_action").([]interface{})),
 			MetricName:    aws.String(d.Get("metric_name").(string)),
 			Name:          aws.String(d.Get("name").(string)),
 		}
@@ -234,7 +235,7 @@ func resourceWebACLCreate(d *schema.ResourceData, meta interface{}) error {
 		_, err := wr.RetryWithToken(func(token *string) (interface{}, error) {
 			req := &waf.UpdateWebACLInput{
 				ChangeToken:   token,
-				DefaultAction: expandAction(d.Get("default_action").([]interface{})),
+				DefaultAction: tfwaf.ExpandAction(d.Get("default_action").([]interface{})),
 				Updates:       diffWebACLRules([]interface{}{}, rules),
 				WebACLId:      aws.String(d.Id()),
 			}
@@ -287,12 +288,12 @@ func resourceWebACLRead(d *schema.ResourceData, meta interface{}) error {
 	}
 	d.Set("arn", webACLARN)
 
-	if err := d.Set("default_action", flattenAction(resp.WebACL.DefaultAction)); err != nil {
+	if err := d.Set("default_action", tfwaf.FlattenAction(resp.WebACL.DefaultAction)); err != nil {
 		return fmt.Errorf("error setting default_action: %s", err)
 	}
 	d.Set("name", resp.WebACL.Name)
 	d.Set("metric_name", resp.WebACL.MetricName)
-	if err := d.Set("rule", flattenWebACLRules(resp.WebACL.Rules)); err != nil {
+	if err := d.Set("rule", tfwaf.FlattenWebACLRules(resp.WebACL.Rules)); err != nil {
 		return fmt.Errorf("error setting rule: %s", err)
 	}
 
@@ -347,7 +348,7 @@ func resourceWebACLUpdate(d *schema.ResourceData, meta interface{}) error {
 		_, err := wr.RetryWithToken(func(token *string) (interface{}, error) {
 			req := &waf.UpdateWebACLInput{
 				ChangeToken:   token,
-				DefaultAction: expandAction(d.Get("default_action").([]interface{})),
+				DefaultAction: tfwaf.ExpandAction(d.Get("default_action").([]interface{})),
 				Updates:       diffWebACLRules(oldR, newR),
 				WebACLId:      aws.String(d.Id()),
 			}
@@ -404,7 +405,7 @@ func resourceWebACLDelete(d *schema.ResourceData, meta interface{}) error {
 		_, err := wr.RetryWithToken(func(token *string) (interface{}, error) {
 			req := &waf.UpdateWebACLInput{
 				ChangeToken:   token,
-				DefaultAction: expandAction(d.Get("default_action").([]interface{})),
+				DefaultAction: tfwaf.ExpandAction(d.Get("default_action").([]interface{})),
 				Updates:       diffWebACLRules(rules, []interface{}{}),
 				WebACLId:      aws.String(d.Id()),
 			}
@@ -467,7 +468,7 @@ func expandWAFRegionalRedactedFields(l []interface{}) []*waf.FieldToMatch {
 			continue
 		}
 
-		redactedFields = append(redactedFields, expandFieldToMatch(fieldToMatch.(map[string]interface{})))
+		redactedFields = append(redactedFields, tfwaf.ExpandFieldToMatch(fieldToMatch.(map[string]interface{})))
 	}
 
 	return redactedFields
@@ -510,7 +511,7 @@ func flattenWAFRegionalRedactedFields(fieldToMatches []*waf.FieldToMatch) []inte
 	l := make([]interface{}, len(fieldToMatches))
 
 	for i, fieldToMatch := range fieldToMatches {
-		l[i] = FlattenFieldToMatch(fieldToMatch)[0]
+		l[i] = tfwaf.FlattenFieldToMatch(fieldToMatch)[0]
 	}
 
 	m := map[string]interface{}{
@@ -530,12 +531,12 @@ func diffWebACLRules(oldR, newR []interface{}) []*waf.WebACLUpdate {
 			newR = append(newR[:idx], newR[idx+1:]...)
 			continue
 		}
-		updates = append(updates, expandWebACLUpdate(waf.ChangeActionDelete, aclRule))
+		updates = append(updates, tfwaf.ExpandWebACLUpdate(waf.ChangeActionDelete, aclRule))
 	}
 
 	for _, nr := range newR {
 		aclRule := nr.(map[string]interface{})
-		updates = append(updates, expandWebACLUpdate(waf.ChangeActionInsert, aclRule))
+		updates = append(updates, tfwaf.ExpandWebACLUpdate(waf.ChangeActionInsert, aclRule))
 	}
 	return updates
 }

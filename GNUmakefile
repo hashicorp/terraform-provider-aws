@@ -1,10 +1,18 @@
-SWEEP?=us-west-2,us-east-1,us-east-2
-TEST?=./...
-SWEEP_DIR?=./internal/sweep
-PKG_NAME=internal
-TEST_COUNT?=1
-ACCTEST_TIMEOUT?=180m
-ACCTEST_PARALLELISM?=20
+SWEEP               ?= us-west-2,us-east-1,us-east-2
+TEST                ?= ./...
+SWEEP_DIR           ?= ./internal/sweep
+PKG_NAME            ?= internal
+TEST_COUNT          ?= 1
+ACCTEST_TIMEOUT     ?= 180m
+ACCTEST_PARALLELISM ?= 20
+
+ifneq ($(origin PKG), undefined)
+	PKG_NAME = internal/service/$(PKG)
+endif
+
+ifneq ($(origin TESTS), undefined)
+	TESTARGS = -run='$(TESTS)'
+endif
 
 default: build
 

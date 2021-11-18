@@ -23,10 +23,10 @@ const (
 	QueryLogConfigDeletedTimeout = 5 * time.Minute
 
 	// Maximum amount of time to wait for a DnssecConfig to return ENABLED
-	DNSSECConfigCreatedTimeout = 5 * time.Minute
+	DNSSECConfigCreatedTimeout = 10 * time.Minute
 
 	// Maximum amount of time to wait for a DnssecConfig to return DISABLED
-	DNSSECConfigDeletedTimeout = 5 * time.Minute
+	DNSSECConfigDeletedTimeout = 10 * time.Minute
 
 	// Maximum amount of time to wait for a FirewallDomainList to be updated
 	FirewallDomainListUpdatedTimeout = 5 * time.Minute

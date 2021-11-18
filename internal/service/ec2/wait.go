@@ -714,7 +714,7 @@ func WaitInternetGatewayAttached(conn *ec2.EC2, internetGatewayID, vpcID string,
 
 func WaitInternetGatewayDetached(conn *ec2.EC2, internetGatewayID, vpcID string, timeout time.Duration) (*ec2.InternetGatewayAttachment, error) {
 	stateConf := &resource.StateChangeConf{
-		Pending: []string{ec2.AttachmentStatusDetaching},
+		Pending: []string{InternetGatewayAttachmentStateAvailable, ec2.AttachmentStatusDetaching},
 		Target:  []string{},
 		Timeout: timeout,
 		Refresh: StatusInternetGatewayAttachmentState(conn, internetGatewayID, vpcID),

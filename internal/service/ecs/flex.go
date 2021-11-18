@@ -43,11 +43,11 @@ func flattenECSLoadBalancers(list []*ecs.LoadBalancer) []map[string]interface{} 
 		}
 
 		if loadBalancer.LoadBalancerName != nil {
-			l["elb_name"] = *loadBalancer.LoadBalancerName
+			l["elb_name"] = aws.StringValue(loadBalancer.LoadBalancerName)
 		}
 
 		if loadBalancer.TargetGroupArn != nil {
-			l["target_group_arn"] = *loadBalancer.TargetGroupArn
+			l["target_group_arn"] = aws.StringValue(loadBalancer.TargetGroupArn)
 		}
 
 		result = append(result, l)

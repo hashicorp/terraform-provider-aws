@@ -44,7 +44,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/codestarnotifications"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/cognitoidentity"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/cognitoidp"
-	"github.com/hashicorp/terraform-provider-aws/internal/service/config"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/configservice"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/connect"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/cur"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/datapipeline"
@@ -92,7 +92,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/kms"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/lakeformation"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/lambda"
-	"github.com/hashicorp/terraform-provider-aws/internal/service/lexmodelbuilding"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/lexmodels"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/licensemanager"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/lightsail"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/macie"
@@ -128,7 +128,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/schemas"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/secretsmanager"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/securityhub"
-	"github.com/hashicorp/terraform-provider-aws/internal/service/serverlessapprepo"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/serverlessrepo"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/servicecatalog"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/servicediscovery"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/servicequotas"
@@ -518,6 +518,8 @@ func Provider() *schema.Provider {
 			"aws_lb_target_group":  elbv2.DataSourceTargetGroup(),
 			"aws_lb":               elbv2.DataSourceLoadBalancer(),
 
+			"aws_emr_release_labels": emr.DataSourceReleaseLabels(),
+
 			"aws_kinesis_firehose_delivery_stream": firehose.DataSourceDeliveryStream(),
 
 			"aws_globalaccelerator_accelerator": globalaccelerator.DataSourceAccelerator(),
@@ -580,10 +582,10 @@ func Provider() *schema.Provider {
 			"aws_lambda_invocation":          lambda.DataSourceInvocation(),
 			"aws_lambda_layer_version":       lambda.DataSourceLayerVersion(),
 
-			"aws_lex_bot":       lexmodelbuilding.DataSourceBot(),
-			"aws_lex_bot_alias": lexmodelbuilding.DataSourceBotAlias(),
-			"aws_lex_intent":    lexmodelbuilding.DataSourceIntent(),
-			"aws_lex_slot_type": lexmodelbuilding.DataSourceSlotType(),
+			"aws_lex_bot":       lexmodels.DataSourceBot(),
+			"aws_lex_bot_alias": lexmodels.DataSourceBotAlias(),
+			"aws_lex_intent":    lexmodels.DataSourceIntent(),
+			"aws_lex_slot_type": lexmodels.DataSourceSlotType(),
 
 			"aws_arn":                     meta.DataSourceARN(),
 			"aws_billing_service_account": meta.DataSourceBillingServiceAccount(),
@@ -651,7 +653,7 @@ func Provider() *schema.Provider {
 			"aws_secretsmanager_secret_rotation": secretsmanager.DataSourceSecretRotation(),
 			"aws_secretsmanager_secret_version":  secretsmanager.DataSourceSecretVersion(),
 
-			"aws_serverlessapplicationrepository_application": serverlessapprepo.DataSourceApplication(),
+			"aws_serverlessapplicationrepository_application": serverlessrepo.DataSourceApplication(),
 
 			"aws_servicecatalog_constraint":            servicecatalog.DataSourceConstraint(),
 			"aws_servicecatalog_launch_paths":          servicecatalog.DataSourceLaunchPaths(),
@@ -791,9 +793,10 @@ func Provider() *schema.Provider {
 			"aws_apprunner_custom_domain_association":          apprunner.ResourceCustomDomainAssociation(),
 			"aws_apprunner_service":                            apprunner.ResourceService(),
 
-			"aws_appstream_fleet":         appstream.ResourceFleet(),
-			"aws_appstream_image_builder": appstream.ResourceImageBuilder(),
-			"aws_appstream_stack":         appstream.ResourceStack(),
+			"aws_appstream_directory_config": appstream.ResourceDirectoryConfig(),
+			"aws_appstream_fleet":            appstream.ResourceFleet(),
+			"aws_appstream_image_builder":    appstream.ResourceImageBuilder(),
+			"aws_appstream_stack":            appstream.ResourceStack(),
 
 			"aws_appsync_api_key":     appsync.ResourceAPIKey(),
 			"aws_appsync_datasource":  appsync.ResourceDataSource(),
@@ -926,17 +929,17 @@ func Provider() *schema.Provider {
 			"aws_cognito_user_pool_domain":           cognitoidp.ResourceUserPoolDomain(),
 			"aws_cognito_user_pool_ui_customization": cognitoidp.ResourceUserPoolUICustomization(),
 
-			"aws_config_aggregate_authorization":       config.ResourceAggregateAuthorization(),
-			"aws_config_config_rule":                   config.ResourceConfigRule(),
-			"aws_config_configuration_aggregator":      config.ResourceConfigurationAggregator(),
-			"aws_config_configuration_recorder":        config.ResourceConfigurationRecorder(),
-			"aws_config_configuration_recorder_status": config.ResourceConfigurationRecorderStatus(),
-			"aws_config_conformance_pack":              config.ResourceConformancePack(),
-			"aws_config_delivery_channel":              config.ResourceDeliveryChannel(),
-			"aws_config_organization_conformance_pack": config.ResourceOrganizationConformancePack(),
-			"aws_config_organization_custom_rule":      config.ResourceOrganizationCustomRule(),
-			"aws_config_organization_managed_rule":     config.ResourceOrganizationManagedRule(),
-			"aws_config_remediation_configuration":     config.ResourceRemediationConfiguration(),
+			"aws_config_aggregate_authorization":       configservice.ResourceAggregateAuthorization(),
+			"aws_config_config_rule":                   configservice.ResourceConfigRule(),
+			"aws_config_configuration_aggregator":      configservice.ResourceConfigurationAggregator(),
+			"aws_config_configuration_recorder":        configservice.ResourceConfigurationRecorder(),
+			"aws_config_configuration_recorder_status": configservice.ResourceConfigurationRecorderStatus(),
+			"aws_config_conformance_pack":              configservice.ResourceConformancePack(),
+			"aws_config_delivery_channel":              configservice.ResourceDeliveryChannel(),
+			"aws_config_organization_conformance_pack": configservice.ResourceOrganizationConformancePack(),
+			"aws_config_organization_custom_rule":      configservice.ResourceOrganizationCustomRule(),
+			"aws_config_organization_managed_rule":     configservice.ResourceOrganizationManagedRule(),
+			"aws_config_remediation_configuration":     configservice.ResourceRemediationConfiguration(),
 
 			"aws_connect_contact_flow": connect.ResourceContactFlow(),
 			"aws_connect_instance":     connect.ResourceInstance(),
@@ -1302,10 +1305,10 @@ func Provider() *schema.Provider {
 			"aws_lambda_permission":                     lambda.ResourcePermission(),
 			"aws_lambda_provisioned_concurrency_config": lambda.ResourceProvisionedConcurrencyConfig(),
 
-			"aws_lex_bot":       lexmodelbuilding.ResourceBot(),
-			"aws_lex_bot_alias": lexmodelbuilding.ResourceBotAlias(),
-			"aws_lex_intent":    lexmodelbuilding.ResourceIntent(),
-			"aws_lex_slot_type": lexmodelbuilding.ResourceSlotType(),
+			"aws_lex_bot":       lexmodels.ResourceBot(),
+			"aws_lex_bot_alias": lexmodels.ResourceBotAlias(),
+			"aws_lex_intent":    lexmodels.ResourceIntent(),
+			"aws_lex_slot_type": lexmodels.ResourceSlotType(),
 
 			"aws_licensemanager_association":           licensemanager.ResourceAssociation(),
 			"aws_licensemanager_license_configuration": licensemanager.ResourceLicenseConfiguration(),
@@ -1467,22 +1470,28 @@ func Provider() *schema.Provider {
 			"aws_route53_resolver_rule":                            route53resolver.ResourceRule(),
 			"aws_route53_resolver_rule_association":                route53resolver.ResourceRuleAssociation(),
 
-			"aws_s3_bucket":                         s3.ResourceBucket(),
-			"aws_s3_bucket_analytics_configuration": s3.ResourceBucketAnalyticsConfiguration(),
-			"aws_s3_bucket_inventory":               s3.ResourceBucketInventory(),
-			"aws_s3_bucket_metric":                  s3.ResourceBucketMetric(),
-			"aws_s3_bucket_notification":            s3.ResourceBucketNotification(),
-			"aws_s3_bucket_object":                  s3.ResourceBucketObject(),
-			"aws_s3_bucket_ownership_controls":      s3.ResourceBucketOwnershipControls(),
-			"aws_s3_bucket_policy":                  s3.ResourceBucketPolicy(),
-			"aws_s3_bucket_public_access_block":     s3.ResourceBucketPublicAccessBlock(),
-			"aws_s3_object_copy":                    s3.ResourceObjectCopy(),
+			"aws_s3_bucket":                                   s3.ResourceBucket(),
+			"aws_s3_bucket_analytics_configuration":           s3.ResourceBucketAnalyticsConfiguration(),
+			"aws_s3_bucket_intelligent_tiering_configuration": s3.ResourceBucketIntelligentTieringConfiguration(),
+			"aws_s3_bucket_inventory":                         s3.ResourceBucketInventory(),
+			"aws_s3_bucket_metric":                            s3.ResourceBucketMetric(),
+			"aws_s3_bucket_notification":                      s3.ResourceBucketNotification(),
+			"aws_s3_bucket_object":                            s3.ResourceBucketObject(),
+			"aws_s3_bucket_ownership_controls":                s3.ResourceBucketOwnershipControls(),
+			"aws_s3_bucket_policy":                            s3.ResourceBucketPolicy(),
+			"aws_s3_bucket_public_access_block":               s3.ResourceBucketPublicAccessBlock(),
+			"aws_s3_object_copy":                              s3.ResourceObjectCopy(),
 
-			"aws_s3_access_point":                          s3control.ResourceAccessPoint(),
-			"aws_s3_account_public_access_block":           s3control.ResourceAccountPublicAccessBlock(),
-			"aws_s3control_bucket":                         s3control.ResourceBucket(),
-			"aws_s3control_bucket_lifecycle_configuration": s3control.ResourceBucketLifecycleConfiguration(),
-			"aws_s3control_bucket_policy":                  s3control.ResourceBucketPolicy(),
+			"aws_s3_access_point":                             s3control.ResourceAccessPoint(),
+			"aws_s3control_access_point_policy":               s3control.ResourceAccessPointPolicy(),
+			"aws_s3_account_public_access_block":              s3control.ResourceAccountPublicAccessBlock(),
+			"aws_s3control_bucket":                            s3control.ResourceBucket(),
+			"aws_s3control_bucket_lifecycle_configuration":    s3control.ResourceBucketLifecycleConfiguration(),
+			"aws_s3control_bucket_policy":                     s3control.ResourceBucketPolicy(),
+			"aws_s3control_multi_region_access_point":         s3control.ResourceMultiRegionAccessPoint(),
+			"aws_s3control_multi_region_access_point_policy":  s3control.ResourceMultiRegionAccessPointPolicy(),
+			"aws_s3control_object_lambda_access_point":        s3control.ResourceObjectLambdaAccessPoint(),
+			"aws_s3control_object_lambda_access_point_policy": s3control.ResourceObjectLambdaAccessPointPolicy(),
 
 			"aws_s3outposts_endpoint": s3outposts.ResourceEndpoint(),
 
@@ -1527,8 +1536,9 @@ func Provider() *schema.Provider {
 			"aws_securityhub_product_subscription":       securityhub.ResourceProductSubscription(),
 			"aws_securityhub_standards_control":          securityhub.ResourceStandardsControl(),
 			"aws_securityhub_standards_subscription":     securityhub.ResourceStandardsSubscription(),
+			"aws_securityhub_finding_aggregator":         securityhub.ResourceFindingAggregator(),
 
-			"aws_serverlessapplicationrepository_cloudformation_stack": serverlessapprepo.ResourceCloudFormationStack(),
+			"aws_serverlessapplicationrepository_cloudformation_stack": serverlessrepo.ResourceCloudFormationStack(),
 
 			"aws_servicecatalog_budget_resource_association":     servicecatalog.ResourceBudgetResourceAssociation(),
 			"aws_servicecatalog_constraint":                      servicecatalog.ResourceConstraint(),

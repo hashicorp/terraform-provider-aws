@@ -218,7 +218,7 @@ func TestAccAcctestProvider_unusualEndpoints(t *testing.T) {
 
 	unusual1 := []string{"es", "elasticsearch", "http://notarealendpoint"}
 	unusual2 := []string{"databasemigration", "dms", "http://alsonotarealendpoint"}
-	unusual3 := []string{"lexmodels", "lexmodelbuilding", "http://kingofspain"}
+	unusual3 := []string{"lexmodelbuildingservice", "lexmodels", "http://kingofspain"}
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { PreCheck(t) },
@@ -769,11 +769,6 @@ func testAccCheckEndpoints(providers *[]*schema.Provider) resource.TestCheckFunc
 					return false
 				}
 
-				// exception to dropping "service" because Config collides with various other "Config"s
-				if name == "ConfigServiceConn" && fmt.Sprintf("%sConn", serviceUpper) == "ConfigConn" {
-					return true
-				}
-
 				return name == fmt.Sprintf("%sConn", serviceUpper)
 			}
 		}
@@ -821,7 +816,7 @@ func testAccCheckUnusualEndpoints(providers *[]*schema.Provider, unusual1, unusu
 				}
 
 				// exception to dropping "service" because Config collides with various other "Config"s
-				if name == "ConfigServiceConn" && fmt.Sprintf("%sConn", serviceUpper) == "ConfigConn" {
+				if name == "ConfigServiceConn" && fmt.Sprintf("%sConn", serviceUpper) == "ConfigServiceConn" {
 					return true
 				}
 

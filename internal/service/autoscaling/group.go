@@ -2217,8 +2217,7 @@ func expandAutoScalingGroupInstanceRefreshPreferences(l []interface{}) *autoscal
 		}
 	}
 
-	if v, ok := m["checkpoint_percentages"]; ok {
-		l := v.([]interface{})
+	if l, ok := m["checkpoint_percentages"].([]interface{}); ok && len(l) > 0 {
 		p := make([]*int64, len(l))
 		for i, v := range l {
 			p[i] = aws.Int64(int64(v.(int)))

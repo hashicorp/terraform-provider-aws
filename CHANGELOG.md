@@ -1,25 +1,66 @@
-## 3.65.0 (Unreleased)
+## 3.66.0 (Unreleased)
+
+FEATURES:
+
+* **New Data Source:** `aws_emr_release_labels` ([#21767](https://github.com/hashicorp/terraform-provider-aws/issues/21767))
+* **New Resource:** `aws_appstream_directory_config` ([#21505](https://github.com/hashicorp/terraform-provider-aws/issues/21505))
+* **New Resource:** `aws_s3control_access_point_policy` ([#19294](https://github.com/hashicorp/terraform-provider-aws/issues/19294))
+* **New Resource:** `aws_s3control_multi_region_access_point` ([#21060](https://github.com/hashicorp/terraform-provider-aws/issues/21060))
+* **New Resource:** `aws_s3control_multi_region_access_point_policy` ([#21060](https://github.com/hashicorp/terraform-provider-aws/issues/21060))
+* **New Resource:** `aws_s3control_object_lambda_access_point` ([#19294](https://github.com/hashicorp/terraform-provider-aws/issues/19294))
+* **New Resource:** `aws_s3control_object_lambda_access_point_policy` ([#19294](https://github.com/hashicorp/terraform-provider-aws/issues/19294))
+* **New Resource:** `aws_securityhub_finding_aggregator` ([#21560](https://github.com/hashicorp/terraform-provider-aws/issues/21560))
+
+ENHANCEMENTS:
+
+* aws_s3_access_point: Add `alias` attribute ([#19294](https://github.com/hashicorp/terraform-provider-aws/issues/19294))
+* aws_s3_access_point: Add `endpoints` attribute ([#19294](https://github.com/hashicorp/terraform-provider-aws/issues/19294))
+* resource/aws_emr_cluster: Add `auto_termination_policy` argument ([#21702](https://github.com/hashicorp/terraform-provider-aws/issues/21702))
+* resource/aws_iot_thing_type: Add `tags` argument and `tags_all` attribute to support resource tagging ([#21769](https://github.com/hashicorp/terraform-provider-aws/issues/21769))
+* resource/aws_neptune_cluster: Support in-place update of `engine_version` ([#21760](https://github.com/hashicorp/terraform-provider-aws/issues/21760))
+* resource/aws_route53_resolver_dnssec_config: Increase resource creation and deletion timeouts to 10 minutes ([#21797](https://github.com/hashicorp/terraform-provider-aws/issues/21797))
+* resource/aws_sagemaker_endpoint: Add `deployment_config` argument ([#21765](https://github.com/hashicorp/terraform-provider-aws/issues/21765))
+
+BUG FIXES:
+
+* aws_s3_access_point: `vpc_configuration.vpc_id` is _ForceNew_ ([#19294](https://github.com/hashicorp/terraform-provider-aws/issues/19294))
+* resource/aws_autoscaling_group: Fix pending state in instance refresh ([#21777](https://github.com/hashicorp/terraform-provider-aws/issues/21777))
+* resource/aws_cloudfront_cache_policy: Fix 0 values for `default_ttl`, `max_ttl` and `min_ttl` arguments ([#21793](https://github.com/hashicorp/terraform-provider-aws/issues/21793))
+* resource/aws_internet_gateway: Allow `available` as a *pending* state during gateway detach ([#21794](https://github.com/hashicorp/terraform-provider-aws/issues/21794))
+* resource/aws_security_group: Fix lack of pagination when describing security groups ([#21743](https://github.com/hashicorp/terraform-provider-aws/issues/21743))
+
+## 3.65.0 (November 11, 2021)
 
 FEATURES:
 
 * **New Data Source:** `aws_key_pair` ([#15829](https://github.com/hashicorp/terraform-provider-aws/issues/15829))
 * **New Resource:** `aws_cloudfront_field_level_encryption_config` ([#15033](https://github.com/hashicorp/terraform-provider-aws/issues/15033))
 * **New Resource:** `aws_cloudfront_field_level_encryption_profile` ([#12509](https://github.com/hashicorp/terraform-provider-aws/issues/12509))
+* **New Resource:** `aws_docdb_global_cluster` ([#20978](https://github.com/hashicorp/terraform-provider-aws/issues/20978))
+* **New Resource:** `aws_s3_bucket_intelligent_tiering_configuration` ([#20329](https://github.com/hashicorp/terraform-provider-aws/issues/20329))
 
 ENHANCEMENTS:
 
+* resource/aws_batch_job_queue: Remove limit of 3 items from the `compute_environments` argument ([#21737](https://github.com/hashicorp/terraform-provider-aws/issues/21737))
 * resource/aws_cloudfront_function: Add `live_etag_version` attribute ([#19697](https://github.com/hashicorp/terraform-provider-aws/issues/19697))
 * resource/aws_datasync_s3_location: Add validation to `agent_arns`, `s3_bucket_arn` and `s3_config.bucket_access_role_arn` arguments ([#21661](https://github.com/hashicorp/terraform-provider-aws/issues/21661))
+* resource/aws_docdb_cluster: Add `global_cluster_identifier` argument ([#20978](https://github.com/hashicorp/terraform-provider-aws/issues/20978))
 * resource/aws_ebs_encryption_by_default: Add import support ([#21717](https://github.com/hashicorp/terraform-provider-aws/issues/21717))
 
 BUG FIXES:
 
 * data-source/aws_network_interface: Correctly set `attachment` attribute ([#21542](https://github.com/hashicorp/terraform-provider-aws/issues/21542))
+* data-source/aws_route: Fix lack of pagination when describing route tables ([#21710](https://github.com/hashicorp/terraform-provider-aws/issues/21710))
 * resource/aws_cloudfront_cache_policy: Fix assorted crashes ([#12509](https://github.com/hashicorp/terraform-provider-aws/issues/12509))
 * resource/aws_cloudfront_cache_policy: The `parameters_in_cache_key_and_forwarded_to_origin` argument is required ([#12509](https://github.com/hashicorp/terraform-provider-aws/issues/12509))
 * resource/aws_cloudfront_function: The `etag` attribute always the `DEVELOPMENT` version's value ([#19697](https://github.com/hashicorp/terraform-provider-aws/issues/19697))
 * resource/aws_cloudfront_origin_request_policy: Fix assorted crashes ([#12509](https://github.com/hashicorp/terraform-provider-aws/issues/12509))
+* resource/aws_default_route_table: Fix lack of pagination when describing route tables ([#21710](https://github.com/hashicorp/terraform-provider-aws/issues/21710))
+* resource/aws_eks_node_group: Respect order of configured `instance_types` ([#21404](https://github.com/hashicorp/terraform-provider-aws/issues/21404))
+* resource/aws_elasticsearch_domain: Fix tagging on creation ([#21738](https://github.com/hashicorp/terraform-provider-aws/issues/21738))
 * resource/aws_internet_gateway: Retry resource read after creation to deal with EC2 API eventual consistency ([#21542](https://github.com/hashicorp/terraform-provider-aws/issues/21542))
+* resource/aws_route_table: Fix lack of pagination when describing route tables ([#21710](https://github.com/hashicorp/terraform-provider-aws/issues/21710))
+* resource/aws_route_table_association: Fix lack of pagination when describing route tables ([#21710](https://github.com/hashicorp/terraform-provider-aws/issues/21710))
 * resource/aws_security_group_rule: Fix resource import for rules with `icmp` or `icmpv6` protocol ([#21163](https://github.com/hashicorp/terraform-provider-aws/issues/21163))
 * resource/aws_servicecatalog_provisioned_product: Allow empty values in provisioning parameters ([#21669](https://github.com/hashicorp/terraform-provider-aws/issues/21669))
 
