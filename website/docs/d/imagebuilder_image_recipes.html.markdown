@@ -26,7 +26,6 @@ data "aws_imagebuilder_image_recipes" "example" {
 ## Argument Reference
 
 * `owner` - (Optional) The owner of the image recipes. Valid values are `Self`, `Shared` and `Amazon`. Defaults to `Self`.
-
 * `filter` - (Optional) Configuration block(s) for filtering. Detailed below.
 
 ### filter Configuration Block
