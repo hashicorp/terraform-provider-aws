@@ -3,12 +3,12 @@ subcategory: "VPC"
 layout: "aws"
 page_title: "AWS: aws_subnet_ids"
 description: |-
-    Provides a list of subnet Ids for a VPC
+    Provides a set of subnet Ids for a VPC
 ---
 
 # Data Source: aws_subnet_ids
 
-`aws_subnet_ids` provides a list of ids for a vpc_id
+`aws_subnet_ids` provides a set of ids for a vpc_id
 
 This resource can be useful for getting back a set of subnet ids for a vpc.
 
@@ -16,7 +16,7 @@ This resource can be useful for getting back a set of subnet ids for a vpc.
 
 The following shows outputing all cidr blocks for every subnet id in a vpc.
 
-```hcl
+```terraform
 data "aws_subnet_ids" "example" {
   vpc_id = var.vpc_id
 }
@@ -27,15 +27,15 @@ data "aws_subnet" "example" {
 }
 
 output "subnet_cidr_blocks" {
-  value = [for s in data.aws_subnet.for-each-example : s.cidr_block]
+  value = [for s in data.aws_subnet.example : s.cidr_block]
 }
 ```
 
-The following example retrieves a list of all subnets in a VPC with a custom
+The following example retrieves a set of all subnets in a VPC with a custom
 tag of `Tier` set to a value of "Private" so that the `aws_instance` resource
 can loop through the subnets, putting instances across availability zones.
 
-```hcl
+```terraform
 data "aws_subnet_ids" "private" {
   vpc_id = var.vpc_id
 
@@ -58,7 +58,7 @@ resource "aws_instance" "app" {
 
 * `filter` - (Optional) Custom filter block as described below.
 
-* `tags` - (Optional) A mapping of tags, each pair of which must exactly match
+* `tags` - (Optional) A map of tags, each pair of which must exactly match
   a pair on the desired subnets.
 
 More complex filters can be expressed using one or more `filter` sub-blocks,
@@ -68,7 +68,7 @@ which take the following arguments:
   [the underlying AWS API](http://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeSubnets.html).
   For example, if matching against tag `Name`, use:
 
-```hcl
+```terraform
 data "aws_subnet_ids" "selected" {
   filter {
     name   = "tag:Name"
