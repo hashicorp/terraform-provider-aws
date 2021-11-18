@@ -706,7 +706,7 @@ func flattenDynamicPartitioningConfiguration(dpc *firehose.DynamicPartitioningCo
 	return dynamicPartitioningConfiguration
 }
 
-func flattenFirehoseKinesisSourceConfiguration(desc *firehose.KinesisStreamSourceDescription) []interface{} {
+func flattenSourceConfiguration(desc *firehose.KinesisStreamSourceDescription) []interface{} {
 	if desc == nil {
 		return []interface{}{}
 	}
@@ -719,7 +719,7 @@ func flattenFirehoseKinesisSourceConfiguration(desc *firehose.KinesisStreamSourc
 	return []interface{}{mDesc}
 }
 
-func flattenKinesisFirehoseDeliveryStream(d *schema.ResourceData, s *firehose.DeliveryStreamDescription) error {
+func flattenDeliveryStream(d *schema.ResourceData, s *firehose.DeliveryStreamDescription) error {
 	d.Set("version_id", s.VersionId)
 	d.Set("arn", s.DeliveryStreamARN)
 	d.Set("name", s.DeliveryStreamName)
@@ -745,7 +745,7 @@ func flattenKinesisFirehoseDeliveryStream(d *schema.ResourceData, s *firehose.De
 	}
 
 	if s.Source != nil {
-		if err := d.Set("kinesis_source_configuration", flattenFirehoseKinesisSourceConfiguration(s.Source.KinesisStreamSourceDescription)); err != nil {
+		if err := d.Set("kinesis_source_configuration", flattenSourceConfiguration(s.Source.KinesisStreamSourceDescription)); err != nil {
 			return fmt.Errorf("error setting kinesis_source_configuration: %s", err)
 		}
 	}
@@ -780,7 +780,7 @@ func flattenKinesisFirehoseDeliveryStream(d *schema.ResourceData, s *firehose.De
 		} else if destination.HttpEndpointDestinationDescription != nil {
 			d.Set("destination", firehoseDestinationTypeHttpEndpoint)
 			configuredAccessKey := d.Get("http_endpoint_configuration.0.access_key").(string)
-			if err := d.Set("http_endpoint_configuration", flattenFirehoseHttpEndpointConfiguration(destination.HttpEndpointDestinationDescription, configuredAccessKey)); err != nil {
+			if err := d.Set("http_endpoint_configuration", flattenHTTPEndpointConfiguration(destination.HttpEndpointDestinationDescription, configuredAccessKey)); err != nil {
 				return fmt.Errorf("error setting http_endpoint_configuration: %s", err)
 			}
 			if err := d.Set("s3_configuration", flattenFirehoseS3Configuration(destination.HttpEndpointDestinationDescription.S3DestinationDescription)); err != nil {
@@ -803,7 +803,7 @@ func flattenKinesisFirehoseDeliveryStream(d *schema.ResourceData, s *firehose.De
 	return nil
 }
 
-func flattenFirehoseHttpEndpointConfiguration(description *firehose.HttpEndpointDestinationDescription, configuredAccessKey string) []map[string]interface{} {
+func flattenHTTPEndpointConfiguration(description *firehose.HttpEndpointDestinationDescription, configuredAccessKey string) []map[string]interface{} {
 	if description == nil {
 		return []map[string]interface{}{}
 	}
@@ -1663,7 +1663,7 @@ func createExtendedS3Config(d *schema.ResourceData) *firehose.ExtendedS3Destinat
 		},
 		Prefix:                            extractPrefixConfiguration(s3),
 		CompressionFormat:                 aws.String(s3["compression_format"].(string)),
-		DataFormatConversionConfiguration: expandFirehoseDataFormatConversionConfiguration(s3["data_format_conversion_configuration"].([]interface{})),
+		DataFormatConversionConfiguration: expandDataFormatConversionConfiguration(s3["data_format_conversion_configuration"].([]interface{})),
 		EncryptionConfiguration:           extractEncryptionConfiguration(s3),
 	}
 
@@ -1759,7 +1759,7 @@ func updateExtendedS3Config(d *schema.ResourceData) *firehose.ExtendedS3Destinat
 		Prefix:                            extractPrefixConfiguration(s3),
 		CompressionFormat:                 aws.String(s3["compression_format"].(string)),
 		EncryptionConfiguration:           extractEncryptionConfiguration(s3),
-		DataFormatConversionConfiguration: expandFirehoseDataFormatConversionConfiguration(s3["data_format_conversion_configuration"].([]interface{})),
+		DataFormatConversionConfiguration: expandDataFormatConversionConfiguration(s3["data_format_conversion_configuration"].([]interface{})),
 		CloudWatchLoggingOptions:          extractCloudWatchLoggingConfiguration(s3),
 		ProcessingConfiguration:           extractProcessingConfiguration(s3),
 	}
@@ -1788,7 +1788,7 @@ func updateExtendedS3Config(d *schema.ResourceData) *firehose.ExtendedS3Destinat
 	return configuration
 }
 
-func expandFirehoseDataFormatConversionConfiguration(l []interface{}) *firehose.DataFormatConversionConfiguration {
+func expandDataFormatConversionConfiguration(l []interface{}) *firehose.DataFormatConversionConfiguration {
 	if len(l) == 0 || l[0] == nil {
 		// It is possible to just pass nil here, but this seems to be the
 		// canonical form that AWS uses, and is less likely to produce diffs.
@@ -1801,13 +1801,13 @@ func expandFirehoseDataFormatConversionConfiguration(l []interface{}) *firehose.
 
 	return &firehose.DataFormatConversionConfiguration{
 		Enabled:                   aws.Bool(m["enabled"].(bool)),
-		InputFormatConfiguration:  expandFirehoseInputFormatConfiguration(m["input_format_configuration"].([]interface{})),
-		OutputFormatConfiguration: expandFirehoseOutputFormatConfiguration(m["output_format_configuration"].([]interface{})),
-		SchemaConfiguration:       expandFirehoseSchemaConfiguration(m["schema_configuration"].([]interface{})),
+		InputFormatConfiguration:  expandInputFormatConfiguration(m["input_format_configuration"].([]interface{})),
+		OutputFormatConfiguration: expandOutputFormatConfiguration(m["output_format_configuration"].([]interface{})),
+		SchemaConfiguration:       expandSchemaConfiguration(m["schema_configuration"].([]interface{})),
 	}
 }
 
-func expandFirehoseInputFormatConfiguration(l []interface{}) *firehose.InputFormatConfiguration {
+func expandInputFormatConfiguration(l []interface{}) *firehose.InputFormatConfiguration {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -1815,11 +1815,11 @@ func expandFirehoseInputFormatConfiguration(l []interface{}) *firehose.InputForm
 	m := l[0].(map[string]interface{})
 
 	return &firehose.InputFormatConfiguration{
-		Deserializer: expandFirehoseDeserializer(m["deserializer"].([]interface{})),
+		Deserializer: expandDeserializer(m["deserializer"].([]interface{})),
 	}
 }
 
-func expandFirehoseDeserializer(l []interface{}) *firehose.Deserializer {
+func expandDeserializer(l []interface{}) *firehose.Deserializer {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -1827,12 +1827,12 @@ func expandFirehoseDeserializer(l []interface{}) *firehose.Deserializer {
 	m := l[0].(map[string]interface{})
 
 	return &firehose.Deserializer{
-		HiveJsonSerDe:  expandFirehoseHiveJsonSerDe(m["hive_json_ser_de"].([]interface{})),
-		OpenXJsonSerDe: expandFirehoseOpenXJsonSerDe(m["open_x_json_ser_de"].([]interface{})),
+		HiveJsonSerDe:  expandHiveJSONSerDe(m["hive_json_ser_de"].([]interface{})),
+		OpenXJsonSerDe: expandOpenXJSONSerDe(m["open_x_json_ser_de"].([]interface{})),
 	}
 }
 
-func expandFirehoseHiveJsonSerDe(l []interface{}) *firehose.HiveJsonSerDe {
+func expandHiveJSONSerDe(l []interface{}) *firehose.HiveJsonSerDe {
 	if len(l) == 0 {
 		return nil
 	}
@@ -1848,7 +1848,7 @@ func expandFirehoseHiveJsonSerDe(l []interface{}) *firehose.HiveJsonSerDe {
 	}
 }
 
-func expandFirehoseOpenXJsonSerDe(l []interface{}) *firehose.OpenXJsonSerDe {
+func expandOpenXJSONSerDe(l []interface{}) *firehose.OpenXJsonSerDe {
 	if len(l) == 0 {
 		return nil
 	}
@@ -1866,7 +1866,7 @@ func expandFirehoseOpenXJsonSerDe(l []interface{}) *firehose.OpenXJsonSerDe {
 	}
 }
 
-func expandFirehoseOutputFormatConfiguration(l []interface{}) *firehose.OutputFormatConfiguration {
+func expandOutputFormatConfiguration(l []interface{}) *firehose.OutputFormatConfiguration {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -1874,11 +1874,11 @@ func expandFirehoseOutputFormatConfiguration(l []interface{}) *firehose.OutputFo
 	m := l[0].(map[string]interface{})
 
 	return &firehose.OutputFormatConfiguration{
-		Serializer: expandFirehoseSerializer(m["serializer"].([]interface{})),
+		Serializer: expandSerializer(m["serializer"].([]interface{})),
 	}
 }
 
-func expandFirehoseSerializer(l []interface{}) *firehose.Serializer {
+func expandSerializer(l []interface{}) *firehose.Serializer {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -1886,12 +1886,12 @@ func expandFirehoseSerializer(l []interface{}) *firehose.Serializer {
 	m := l[0].(map[string]interface{})
 
 	return &firehose.Serializer{
-		OrcSerDe:     expandFirehoseOrcSerDe(m["orc_ser_de"].([]interface{})),
-		ParquetSerDe: expandFirehoseParquetSerDe(m["parquet_ser_de"].([]interface{})),
+		OrcSerDe:     expandOrcSerDe(m["orc_ser_de"].([]interface{})),
+		ParquetSerDe: expandParquetSerDe(m["parquet_ser_de"].([]interface{})),
 	}
 }
 
-func expandFirehoseOrcSerDe(l []interface{}) *firehose.OrcSerDe {
+func expandOrcSerDe(l []interface{}) *firehose.OrcSerDe {
 	if len(l) == 0 {
 		return nil
 	}
@@ -1921,7 +1921,7 @@ func expandFirehoseOrcSerDe(l []interface{}) *firehose.OrcSerDe {
 	return orcSerDe
 }
 
-func expandFirehoseParquetSerDe(l []interface{}) *firehose.ParquetSerDe {
+func expandParquetSerDe(l []interface{}) *firehose.ParquetSerDe {
 	if len(l) == 0 {
 		return nil
 	}
@@ -1942,7 +1942,7 @@ func expandFirehoseParquetSerDe(l []interface{}) *firehose.ParquetSerDe {
 	}
 }
 
-func expandFirehoseSchemaConfiguration(l []interface{}) *firehose.SchemaConfiguration {
+func expandSchemaConfiguration(l []interface{}) *firehose.SchemaConfiguration {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -2094,7 +2094,7 @@ func extractCloudWatchLoggingConfiguration(s3 map[string]interface{}) *firehose.
 
 }
 
-func extractVpcConfiguration(es map[string]interface{}) *firehose.VpcConfiguration {
+func extractVPCConfiguration(es map[string]interface{}) *firehose.VpcConfiguration {
 	config := es["vpc_config"].([]interface{})
 	if len(config) == 0 {
 		return nil
@@ -2225,7 +2225,7 @@ func createElasticsearchConfig(d *schema.ResourceData, s3Config *firehose.S3Dest
 	}
 
 	if _, ok := es["vpc_config"]; ok {
-		config.VpcConfiguration = extractVpcConfiguration(es)
+		config.VpcConfiguration = extractVPCConfiguration(es)
 	}
 
 	return config, nil
@@ -2336,7 +2336,7 @@ func updateSplunkConfig(d *schema.ResourceData, s3Update *firehose.S3Destination
 	return configuration, nil
 }
 
-func createHttpEndpointConfig(d *schema.ResourceData, s3Config *firehose.S3DestinationConfiguration) (*firehose.HttpEndpointDestinationConfiguration, error) {
+func createHTTPEndpointConfig(d *schema.ResourceData, s3Config *firehose.S3DestinationConfiguration) (*firehose.HttpEndpointDestinationConfiguration, error) {
 	HttpEndpointRaw, ok := d.GetOk("http_endpoint_configuration")
 	if !ok {
 		return nil, fmt.Errorf("Error loading HTTP Endpoint Configuration for Kinesis Firehose: http_endpoint_configuration not found")
@@ -2346,12 +2346,12 @@ func createHttpEndpointConfig(d *schema.ResourceData, s3Config *firehose.S3Desti
 	HttpEndpoint := sl[0].(map[string]interface{})
 
 	configuration := &firehose.HttpEndpointDestinationConfiguration{
-		RetryOptions:    extractHttpEndpointRetryOptions(HttpEndpoint),
+		RetryOptions:    extractHTTPEndpointRetryOptions(HttpEndpoint),
 		RoleARN:         aws.String(HttpEndpoint["role_arn"].(string)),
 		S3Configuration: s3Config,
 	}
 
-	configuration.EndpointConfiguration = extractHttpEndpointConfiguration(HttpEndpoint)
+	configuration.EndpointConfiguration = extractHTTPEndpointConfiguration(HttpEndpoint)
 
 	bufferingHints := &firehose.HttpEndpointBufferingHints{}
 
@@ -2381,7 +2381,7 @@ func createHttpEndpointConfig(d *schema.ResourceData, s3Config *firehose.S3Desti
 	return configuration, nil
 }
 
-func updateHttpEndpointConfig(d *schema.ResourceData, s3Update *firehose.S3DestinationUpdate) (*firehose.HttpEndpointDestinationUpdate, error) {
+func updateHTTPEndpointConfig(d *schema.ResourceData, s3Update *firehose.S3DestinationUpdate) (*firehose.HttpEndpointDestinationUpdate, error) {
 	HttpEndpointRaw, ok := d.GetOk("http_endpoint_configuration")
 	if !ok {
 		return nil, fmt.Errorf("Error loading  HTTP Endpoint Configuration for Kinesis Firehose: http_endpoint_configuration not found")
@@ -2391,12 +2391,12 @@ func updateHttpEndpointConfig(d *schema.ResourceData, s3Update *firehose.S3Desti
 	HttpEndpoint := sl[0].(map[string]interface{})
 
 	configuration := &firehose.HttpEndpointDestinationUpdate{
-		RetryOptions: extractHttpEndpointRetryOptions(HttpEndpoint),
+		RetryOptions: extractHTTPEndpointRetryOptions(HttpEndpoint),
 		RoleARN:      aws.String(HttpEndpoint["role_arn"].(string)),
 		S3Update:     s3Update,
 	}
 
-	configuration.EndpointConfiguration = extractHttpEndpointConfiguration(HttpEndpoint)
+	configuration.EndpointConfiguration = extractHTTPEndpointConfiguration(HttpEndpoint)
 
 	bufferingHints := &firehose.HttpEndpointBufferingHints{}
 
@@ -2463,7 +2463,7 @@ func extractRequestConfiguration(rc map[string]interface{}) *firehose.HttpEndpoi
 	return RequestConfiguration
 }
 
-func extractHttpEndpointConfiguration(ep map[string]interface{}) *firehose.HttpEndpointConfiguration {
+func extractHTTPEndpointConfiguration(ep map[string]interface{}) *firehose.HttpEndpointConfiguration {
 	endpointConfiguration := &firehose.HttpEndpointConfiguration{
 		Url: aws.String(ep["url"].(string)),
 	}
@@ -2502,7 +2502,7 @@ func extractElasticsearchRetryOptions(es map[string]interface{}) *firehose.Elast
 	return retryOptions
 }
 
-func extractHttpEndpointRetryOptions(tfMap map[string]interface{}) *firehose.HttpEndpointRetryOptions {
+func extractHTTPEndpointRetryOptions(tfMap map[string]interface{}) *firehose.HttpEndpointRetryOptions {
 	retryOptions := &firehose.HttpEndpointRetryOptions{}
 
 	if retryDuration, ok := tfMap["retry_duration"].(int); ok {
@@ -2598,7 +2598,7 @@ func resourceDeliveryStreamCreate(d *schema.ResourceData, meta interface{}) erro
 			}
 			createInput.SplunkDestinationConfiguration = rc
 		} else if d.Get("destination").(string) == firehoseDestinationTypeHttpEndpoint {
-			rc, err := createHttpEndpointConfig(d, s3Config)
+			rc, err := createHTTPEndpointConfig(d, s3Config)
 			if err != nil {
 				return err
 			}
@@ -2656,10 +2656,10 @@ func resourceDeliveryStreamCreate(d *schema.ResourceData, meta interface{}) erro
 	d.SetId(aws.StringValue(s.DeliveryStreamARN))
 	d.Set("arn", s.DeliveryStreamARN)
 
-	if v, ok := d.GetOk("server_side_encryption"); ok && !isKinesisFirehoseDeliveryStreamOptionDisabled(v) {
+	if v, ok := d.GetOk("server_side_encryption"); ok && !isDeliveryStreamOptionDisabled(v) {
 		startInput := &firehose.StartDeliveryStreamEncryptionInput{
 			DeliveryStreamName:                         aws.String(sn),
-			DeliveryStreamEncryptionConfigurationInput: expandFirehoseDeliveryStreamEncryptionConfigurationInput(v.([]interface{})),
+			DeliveryStreamEncryptionConfigurationInput: expandDeliveryStreamEncryptionConfigurationInput(v.([]interface{})),
 		}
 
 		_, err := conn.StartDeliveryStreamEncryption(startInput)
@@ -2750,7 +2750,7 @@ func resourceDeliveryStreamUpdate(d *schema.ResourceData, meta interface{}) erro
 			}
 			updateInput.SplunkDestinationUpdate = rc
 		} else if d.Get("destination").(string) == firehoseDestinationTypeHttpEndpoint {
-			rc, err := updateHttpEndpointConfig(d, s3Config)
+			rc, err := updateHTTPEndpointConfig(d, s3Config)
 			if err != nil {
 				return err
 			}
@@ -2809,7 +2809,7 @@ func resourceDeliveryStreamUpdate(d *schema.ResourceData, meta interface{}) erro
 
 	if d.HasChange("server_side_encryption") {
 		_, n := d.GetChange("server_side_encryption")
-		if isKinesisFirehoseDeliveryStreamOptionDisabled(n) {
+		if isDeliveryStreamOptionDisabled(n) {
 			_, err := conn.StopDeliveryStreamEncryption(&firehose.StopDeliveryStreamEncryptionInput{
 				DeliveryStreamName: aws.String(sn),
 			})
@@ -2824,7 +2824,7 @@ func resourceDeliveryStreamUpdate(d *schema.ResourceData, meta interface{}) erro
 		} else {
 			startInput := &firehose.StartDeliveryStreamEncryptionInput{
 				DeliveryStreamName:                         aws.String(sn),
-				DeliveryStreamEncryptionConfigurationInput: expandFirehoseDeliveryStreamEncryptionConfigurationInput(n.([]interface{})),
+				DeliveryStreamEncryptionConfigurationInput: expandDeliveryStreamEncryptionConfigurationInput(n.([]interface{})),
 			}
 
 			_, err := conn.StartDeliveryStreamEncryption(startInput)
@@ -2861,7 +2861,7 @@ func resourceDeliveryStreamRead(d *schema.ResourceData, meta interface{}) error 
 		return fmt.Errorf("error reading Kinesis Firehose Delivery Stream (%s): %w", sn, err)
 	}
 
-	err = flattenKinesisFirehoseDeliveryStream(d, s)
+	err = flattenDeliveryStream(d, s)
 
 	if err != nil {
 		return err
@@ -2913,7 +2913,7 @@ func resourceDeliveryStreamDelete(d *schema.ResourceData, meta interface{}) erro
 	return nil
 }
 
-func isKinesisFirehoseDeliveryStreamOptionDisabled(v interface{}) bool {
+func isDeliveryStreamOptionDisabled(v interface{}) bool {
 	options := v.([]interface{})
 	if len(options) == 0 || options[0] == nil {
 		return true
@@ -2929,7 +2929,7 @@ func isKinesisFirehoseDeliveryStreamOptionDisabled(v interface{}) bool {
 	return !enabled
 }
 
-func expandFirehoseDeliveryStreamEncryptionConfigurationInput(tfList []interface{}) *firehose.DeliveryStreamEncryptionConfigurationInput {
+func expandDeliveryStreamEncryptionConfigurationInput(tfList []interface{}) *firehose.DeliveryStreamEncryptionConfigurationInput {
 	if len(tfList) == 0 {
 		return nil
 	}
