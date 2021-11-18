@@ -11,7 +11,11 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/lambda"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/iam"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceLayerVersionPermission() *schema.Resource {
@@ -27,7 +31,7 @@ func ResourceLayerVersionPermission() *schema.Resource {
 		Schema: map[string]*schema.Schema{
 			"layer_arn": {
 				Type:         schema.TypeString,
-				ValidateFunc: validateArn,
+				ValidateFunc: verify.ValidARN,
 				Required:     true,
 				ForceNew:     true,
 			},
@@ -69,7 +73,7 @@ func ResourceLayerVersionPermission() *schema.Resource {
 }
 
 func resourceLayerVersionPermissionCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).lambdaconn
+	conn := meta.(*conns.AWSClient).LambdaConn
 
 	params := &lambda.AddLayerVersionPermissionInput{
 		LayerName:     aws.String(d.Get("layer_arn").(string)),
@@ -91,13 +95,13 @@ func resourceLayerVersionPermissionCreate(d *schema.ResourceData, meta interface
 
 	d.SetId(fmt.Sprintf("%s:%s", *params.LayerName, strconv.FormatInt(*params.VersionNumber, 10)))
 
-	return resourceAwsLambdaLayerVersionPermissionRead(d, meta)
+	return resourceLayerVersionPermissionRead(d, meta)
 }
 
 func resourceLayerVersionPermissionRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).lambdaconn
+	conn := meta.(*conns.AWSClient).LambdaConn
 
-	layerName, layerArn, version, err := resourceLayerVersionPermissionParseId(d.Id())
+	layerName, layerArn, version, err := ResourceLayerVersionPermissionParseId(d.Id())
 	if err != nil {
 		return fmt.Errorf("Error parsing lambda layer ID: %s", err)
 	}
@@ -107,7 +111,7 @@ func resourceLayerVersionPermissionRead(d *schema.ResourceData, meta interface{}
 		VersionNumber: aws.Int64(version),
 	})
 
-	if isAWSErr(err, lambda.ErrCodeResourceNotFoundException, "") {
+	if tfawserr.ErrCodeEquals(err, lambda.ErrCodeResourceNotFoundException) {
 		log.Printf("[WARN] Lambda Layer Version (%s) not found, removing it's permission from state", d.Id())
 		d.SetId("")
 		return nil
@@ -117,7 +121,7 @@ func resourceLayerVersionPermissionRead(d *schema.ResourceData, meta interface{}
 		return fmt.Errorf("error reading Lambda Layer version permission (%s): %s", d.Id(), err)
 	}
 
-	policyDoc := &IAMPolicyDoc{}
+	policyDoc := &iam.IAMPolicyDoc{}
 
 	if err := json.Unmarshal([]byte(aws.StringValue(layerVersionPolicyOutput.Policy)), policyDoc); err != nil {
 		return err
@@ -166,9 +170,9 @@ func resourceLayerVersionPermissionRead(d *schema.ResourceData, meta interface{}
 }
 
 func resourceLayerVersionPermissionDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).lambdaconn
+	conn := meta.(*conns.AWSClient).LambdaConn
 
-	layerName, _, version, err := resourceAwsLambdaLayerVersionPermissionParseId(d.Id())
+	layerName, _, version, err := ResourceLayerVersionPermissionParseId(d.Id())
 	if err != nil {
 		return fmt.Errorf("Error parsing lambda layer ID: %s", err)
 	}
@@ -186,7 +190,7 @@ func resourceLayerVersionPermissionDelete(d *schema.ResourceData, meta interface
 	return nil
 }
 
-func resourceLayerVersionPermissionParseId(id string) (layerName string, layerARN string, version int64, err error) {
+func ResourceLayerVersionPermissionParseId(id string) (layerName string, layerARN string, version int64, err error) {
 	arn, err := arn.Parse(id)
 	if err != nil {
 		return
