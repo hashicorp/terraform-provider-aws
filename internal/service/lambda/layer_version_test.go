@@ -24,7 +24,7 @@ func TestAccLambdaLayerVersion_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckLambdaLayerVersionDestroy,
+		CheckDestroy: testAccCheckLayerVersionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLayerVersionBasic(layerName),
@@ -60,7 +60,7 @@ func TestAccLambdaLayerVersion_update(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckLambdaLayerVersionDestroy,
+		CheckDestroy: testAccCheckLayerVersionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLayerVersionCreateBeforeDestroy(layerName, "test-fixtures/lambdatest.zip"),
@@ -92,7 +92,7 @@ func TestAccLambdaLayerVersion_s3(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckLambdaLayerVersionDestroy,
+		CheckDestroy: testAccCheckLayerVersionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLayerVersionS3(bucketName, layerName),
@@ -118,7 +118,7 @@ func TestAccLambdaLayerVersion_compatibleRuntimes(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckLambdaLayerVersionDestroy,
+		CheckDestroy: testAccCheckLayerVersionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLayerVersionCompatibleRuntimes(layerName),
@@ -147,7 +147,7 @@ func TestAccLambdaLayerVersion_compatibleArchitectures(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckLambdaLayerVersionDestroy,
+		CheckDestroy: testAccCheckLayerVersionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLayerVersionCompatibleArchitecturesNone(layerName),
@@ -199,7 +199,7 @@ func TestAccLambdaLayerVersion_description(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckLambdaLayerVersionDestroy,
+		CheckDestroy: testAccCheckLayerVersionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLayerVersionDescription(layerName, testDescription),
@@ -229,7 +229,7 @@ func TestAccLambdaLayerVersion_licenseInfo(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckLambdaLayerVersionDestroy,
+		CheckDestroy: testAccCheckLayerVersionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLayerVersionLicenseInfo(layerName, testLicenseInfo),
@@ -281,7 +281,7 @@ func TestAccLambdaLayerVersion_skipDestroy(t *testing.T) {
 	})
 }
 
-func testAccCheckLambdaLayerVersionDestroy(s *terraform.State) error {
+func testAccCheckLayerVersionDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).LambdaConn
 
 	for _, rs := range s.RootModule().Resources {

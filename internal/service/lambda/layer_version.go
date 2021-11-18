@@ -17,7 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 )
 
-const awsMutexLambdaLayerKey = `aws_lambda_layer_version`
+const awsMutexLayerKey = `aws_lambda_layer_version`
 
 func ResourceLayerVersion() *schema.Resource {
 	return &schema.Resource{
@@ -150,8 +150,8 @@ func resourceLayerVersionPublish(d *schema.ResourceData, meta interface{}) error
 
 	var layerContent *lambda.LayerVersionContentInput
 	if hasFilename {
-		conns.GlobalMutexKV.Lock(awsMutexLambdaLayerKey)
-		defer conns.GlobalMutexKV.Unlock(awsMutexLambdaLayerKey)
+		conns.GlobalMutexKV.Lock(awsMutexLayerKey)
+		defer conns.GlobalMutexKV.Unlock(awsMutexLayerKey)
 		file, err := loadFileContent(filename.(string))
 		if err != nil {
 			return fmt.Errorf("Unable to load %q: %s", filename.(string), err)
