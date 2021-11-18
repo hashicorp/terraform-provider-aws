@@ -1,33 +1,35 @@
 ---
+subcategory: "IoT"
 layout: "aws"
 page_title: "AWS: aws_iot_thing_group_membership"
 description: |-
-    Allow to add IoT Thing to IoT Thing Group.
+    Adds an IoT Thing to an IoT Thing Group.
 ---
 
 # Resource: aws_iot_thing_group_membership
 
-Allow to add IoT Thing to IoT Thing Group.
+Adds an IoT Thing to an IoT Thing Group.
 
 ## Example Usage
 
-```hcl
-resource "aws_iot_thing_group_membership" "test_attachment" {
-	thing_name = "test_thing_name"
-	thing_group_name = "test_thing_group_name"
-	override_dynamics_group = false
+```terraform
+resource "aws_iot_thing_group_membership" "example" {
+  thing_name       = "example-thing"
+  thing_group_name = "example-group"
+
+  override_dynamics_group = true
 }
 ```
 
 ## Argument Reference
 
-* `thing_name` - (Required, Forces New Resource). The name of the thing to add to a group.
-* `thing_group_name` - (Required, Forces New Resource). The name of the group to which you are adding a thing.
-* `override_dynamics_group` - (Optional) Bool. Override dynamic thing groups with static thing groups when 10-group limit is reached. If a thing belongs to 10 thing groups, and one or more of those groups are dynamic thing groups, adding a thing to a static group removes the thing from the last dynamic group.
+* `thing_name` - (Required. The name of the thing to add to a group.
+* `thing_group_name` - (Required). The name of the group to which you are adding a thing.
+* `override_dynamics_group` - (Optional) Override dynamic thing groups with static thing groups when 10-group limit is reached. If a thing belongs to 10 thing groups, and one or more of those groups are dynamic thing groups, adding a thing to a static group removes the thing from the last dynamic group.
 
 ## Import
 
-IOT Thing Group Membership can be imported using the name of thing and thing group.
+IoT Thing Group Membership can be imported using the name of thing and thing group.
 
 ```
 $ terraform import aws_iot_thing_group_membership.example thing_name/thing_group
