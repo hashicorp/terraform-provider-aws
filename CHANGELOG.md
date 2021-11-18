@@ -1,4 +1,4 @@
-## 3.66.0 (Unreleased)
+## 3.66.0 (November 18, 2021)
 
 FEATURES:
 
