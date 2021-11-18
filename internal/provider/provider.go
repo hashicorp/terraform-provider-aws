@@ -1266,6 +1266,8 @@ func Provider() *schema.Provider {
 			"aws_iot_policy_attachment":          iot.ResourcePolicyAttachment(),
 			"aws_iot_role_alias":                 iot.ResourceRoleAlias(),
 			"aws_iot_thing":                      iot.ResourceThing(),
+			"aws_iot_thing_group":                iot.ResourceThingGroup(),
+			"aws_iot_thing_group_membership":     iot.ResourceThingGroupMembership(),
 			"aws_iot_thing_principal_attachment": iot.ResourceThingPrincipalAttachment(),
 			"aws_iot_thing_type":                 iot.ResourceThingType(),
 			"aws_iot_topic_rule":                 iot.ResourceTopicRule(),
