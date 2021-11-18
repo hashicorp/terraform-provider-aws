@@ -49,7 +49,7 @@ func ResourceLayerVersion() *schema.Resource {
 				Optional: true,
 				ForceNew: true,
 				MinItems: 0,
-				MaxItems: 5,
+				MaxItems: 15,
 				Elem: &schema.Schema{
 					Type:         schema.TypeString,
 					ValidateFunc: validation.StringInSlice(lambda.Runtime_Values(), false),
