@@ -32,22 +32,26 @@ Once you have created your deployment package you can specify it either directly
 indirectly via Amazon S3 (using the `s3_bucket`, `s3_key` and `s3_object_version` arguments). When providing the deployment
 package via S3 it may be useful to use [the `aws_s3_bucket_object` resource](s3_bucket_object.html) to upload it.
 
-For larger deployment packages it is recommended by Amazon to upload via S3, since the S3 API has better support for uploading
-large files efficiently.
+For larger deployment packages it is recommended by Amazon to upload via S3, since the S3 API has better support for uploading large files efficiently.
 
 ## Argument Reference
 
-* `layer_name` (Required) A unique name for your Lambda Layer
-* `filename` (Optional) The path to the function's deployment package within the local filesystem. If defined, The `s3_`-prefixed options cannot be used.
-* `s3_bucket` - (Optional) The S3 bucket location containing the function's deployment package. Conflicts with `filename`. This bucket must reside in the same AWS region where you are creating the Lambda function.
-* `s3_key` - (Optional) The S3 key of an object containing the function's deployment package. Conflicts with `filename`.
-* `s3_object_version` - (Optional) The object version containing the function's deployment package. Conflicts with `filename`.
-* `compatible_runtimes` - (Optional) A list of [Runtimes][2] this layer is compatible with. Up to 5 runtimes can be specified.
-* `compatible_architectures` - (Optional) A list of [Architectures][4] this layer is compatible with. Currently `x86_64` and `arm64` can be specified.
+The following arguments are required:
+
+* `layer_name` - (Required) A unique name for your Lambda Layer
+
+The following arguments are optional:
+
+* `compatible_architectures` - (Optional) List of [Architectures][4] this layer is compatible with. Currently `x86_64` and `arm64` can be specified.
+* `compatible_runtimes` - (Optional) List of [Runtimes][2] this layer is compatible with. Up to 5 runtimes can be specified.
 * `description` - (Optional) Description of what your Lambda Layer does.
+* `filename` (Optional) Path to the function's deployment package within the local filesystem. If defined, The `s3_`-prefixed options cannot be used.
 * `license_info` - (Optional) License info for your Lambda Layer. See [License Info][3].
+* `s3_bucket` - (Optional) S3 bucket location containing the function's deployment package. Conflicts with `filename`. This bucket must reside in the same AWS region where you are creating the Lambda function.
+* `s3_key` - (Optional) S3 key of an object containing the function's deployment package. Conflicts with `filename`.
+* `s3_object_version` - (Optional) Object version containing the function's deployment package. Conflicts with `filename`.
+* `skip_destroy` - (Optional) Whether to retain old versions of previously deployed Lambda Layers. Default is `false`.
 * `source_code_hash` - (Optional) Used to trigger updates. Must be set to a base64-encoded SHA256 hash of the package file specified with either `filename` or `s3_key`. The usual way to set this is `${filebase64sha256("file.zip")}` (Terraform 0.11.12 or later) or `${base64sha256(file("file.zip"))}` (Terraform 0.11.11 and earlier), where "file.zip" is the local filename of the lambda layer source archive.
-* `retain` - (Optional) Retains old versions of previously deployed Lambda Layers if true. Defaults to false.
 
 ## Attributes Reference
 
