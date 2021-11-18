@@ -238,6 +238,7 @@ func resourceThingGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 			}
 		}
 
+		log.Printf("[DEBUG] Updating IoT Thing Group: %s", input)
 		_, err := conn.UpdateThingGroup(input)
 
 		if err != nil {

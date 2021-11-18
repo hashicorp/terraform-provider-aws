@@ -135,10 +135,10 @@ func TestAccIoTThingGroupMembership_overrideDynamicGroup(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				// override_dynamic_group
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"override_dynamic_group"},
 			},
 		},
 	})
