@@ -64,16 +64,17 @@ func ResourceOntapStorageVirtualMachine() *schema.Resource {
 										Type:     schema.TypeSet,
 										Required: true,
 										MinItems: 1,
-										MaxItems: 2,
+										MaxItems: 3,
 										Elem: &schema.Schema{
 											Type:         schema.TypeString,
 											ValidateFunc: validation.IsIPAddress,
 										},
 									},
 									"domain_name": {
-										Type:     schema.TypeString,
-										Required: true,
-										ForceNew: true,
+										Type:         schema.TypeString,
+										Required:     true,
+										ForceNew:     true,
+										ValidateFunc: validation.StringLenBetween(1, 255),
 									},
 									"file_system_administrators_group": {
 										Type:         schema.TypeString,
@@ -183,12 +184,13 @@ func ResourceOntapStorageVirtualMachine() *schema.Resource {
 			"file_system_id": {
 				Type:         schema.TypeString,
 				Required:     true,
-				ValidateFunc: validation.StringLenBetween(11, 8000),
+				ValidateFunc: validation.StringLenBetween(11, 21),
 			},
 			"name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringLenBetween(1, 47),
 			},
 			"root_volume_security_style": {
 				Type:         schema.TypeString,
@@ -204,7 +206,7 @@ func ResourceOntapStorageVirtualMachine() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Sensitive:    true,
-				ValidateFunc: validation.StringLenBetween(8, 8000),
+				ValidateFunc: validation.StringLenBetween(8, 50),
 			},
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
@@ -281,7 +283,8 @@ func resourceOntapStorageVirtualMachineRead(d *schema.ResourceData, meta interfa
 	d.Set("arn", storageVirtualMachine.ResourceARN)
 	d.Set("name", storageVirtualMachine.Name)
 	d.Set("file_system_id", storageVirtualMachine.FileSystemId)
-	d.Set("root_volume_security_style", storageVirtualMachine.RootVolumeSecurityStyle)
+	//RootVolumeSecurityStyle and SVMAdminPassword are write only properties so they don't get returned from the describe API so we just store the original setting to state
+	d.Set("root_volume_security_style", d.Get("root_volume_security_style").(string))
 	d.Set("svm_admin_password", d.Get("svm_admin_password").(string))
 	d.Set("subtype", storageVirtualMachine.Subtype)
 	d.Set("uuid", storageVirtualMachine.UUID)
@@ -294,7 +297,14 @@ func resourceOntapStorageVirtualMachineRead(d *schema.ResourceData, meta interfa
 		return fmt.Errorf("error setting endpoints: %w", err)
 	}
 
-	tags := KeyValueTags(storageVirtualMachine.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	//SVM tags do not get returned with describe call so need to make a separate list tags call
+	tags, tagserr := ListTags(conn, *storageVirtualMachine.ResourceARN)
+
+	if tagserr != nil {
+		return fmt.Errorf("error reading Tags for FSx ONTAP Storage Virtual Machine (%s): %w", d.Id(), err)
+	} else {
+		tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	}
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
