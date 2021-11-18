@@ -46,7 +46,7 @@ func ResourceThingGroup() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"root_to_parent_thing_groups": {
+						"root_to_parent_groups": {
 							Type:     schema.TypeList,
 							Computed: true,
 							Elem: &schema.Resource{
@@ -86,6 +86,7 @@ func ResourceThingGroup() *schema.Resource {
 						"attribute_payload": {
 							Type:     schema.TypeList,
 							Optional: true,
+							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"attributes": {
@@ -114,6 +115,10 @@ func ResourceThingGroup() *schema.Resource {
 		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
+
+const (
+	thingGroupDeleteTimeout = 1 * time.Minute
+)
 
 func resourceThingGroupCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).IoTConn
@@ -177,7 +182,7 @@ func resourceThingGroupRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("metadata", nil)
 	}
 	if v := flattenThingGroupProperties(output.ThingGroupProperties); len(v) > 0 {
-		if err := d.Set("properties", []interface{}{}); err != nil {
+		if err := d.Set("properties", []interface{}{v}); err != nil {
 			return fmt.Errorf("error setting properties: %w", err)
 		}
 	} else {
@@ -215,11 +220,22 @@ func resourceThingGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &iot.UpdateThingGroupInput{
-			ThingGroupName: aws.String(d.Get("name").(string)),
+			ExpectedVersion: aws.Int64(int64(d.Get("version").(int))),
+			ThingGroupName:  aws.String(d.Get("name").(string)),
 		}
 
 		if v, ok := d.GetOk("properties"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 			input.ThingGroupProperties = expandThingGroupProperties(v.([]interface{})[0].(map[string]interface{}))
+		} else {
+			input.ThingGroupProperties = &iot.ThingGroupProperties{}
+		}
+
+		// https://docs.aws.amazon.com/iot/latest/apireference/API_AttributePayload.html#API_AttributePayload_Contents:
+		// "To remove an attribute, call UpdateThing with an empty attribute value."
+		if input.ThingGroupProperties.AttributePayload == nil {
+			input.ThingGroupProperties.AttributePayload = &iot.AttributePayload{
+				Attributes: map[string]*string{},
+			}
 		}
 
 		_, err := conn.UpdateThingGroup(input)
@@ -243,9 +259,19 @@ func resourceThingGroupDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).IoTConn
 
 	log.Printf("[DEBUG] Deleting IoT Thing Group: %s", d.Id())
-	_, err := conn.DeleteThingGroup(&iot.DeleteThingGroupInput{
-		ThingGroupName: aws.String(d.Id()),
-	})
+	_, err := tfresource.RetryWhen(thingGroupDeleteTimeout,
+		func() (interface{}, error) {
+			return conn.DeleteThingGroup(&iot.DeleteThingGroupInput{
+				ThingGroupName: aws.String(d.Id()),
+			})
+		},
+		func(err error) (bool, error) {
+			if tfawserr.ErrMessageContains(err, iot.ErrCodeInvalidRequestException, "there are still child groups attached") {
+				return true, err
+			}
+
+			return false, err
+		})
 
 	if tfawserr.ErrCodeEquals(err, iot.ErrCodeResourceNotFoundException) {
 		return nil

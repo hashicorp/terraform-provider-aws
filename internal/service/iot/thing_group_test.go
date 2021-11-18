@@ -2,6 +2,7 @@ package iot_test
 
 import (
 	"fmt"
+	"regexp"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/iot"
@@ -29,7 +30,7 @@ func TestAccIoTThingGroup_basic(t *testing.T) {
 				Config: testAccThingGroupConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIotThingGroupExists(resourceName, &thingGroup),
-					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "iot", regexp.MustCompile(fmt.Sprintf("thinggroup/%s$", rName))),
 					resource.TestCheckResourceAttr(resourceName, "metadata.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "metadata.0.creation_date"),
 					resource.TestCheckResourceAttr(resourceName, "metadata.0.parent_group_name", ""),
@@ -38,7 +39,7 @@ func TestAccIoTThingGroup_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "parent_group_name", ""),
 					resource.TestCheckResourceAttr(resourceName, "properties.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttrSet(resourceName, "version"),
+					resource.TestCheckResourceAttr(resourceName, "version", "1"),
 				),
 			},
 			{
@@ -73,111 +74,9 @@ func TestAccIoTThingGroup_disappears(t *testing.T) {
 	})
 }
 
-func TestAccIoTThingGroup_full(t *testing.T) {
-	var thingGroup iot.DescribeThingGroupOutput
-	rString := sdkacctest.RandString(8)
-	thingGroupName := fmt.Sprintf("tf_acc_thing_group_%s", rString)
-	parentThingGroupName := thingGroupName + "_parent"
-	resourceName := "aws_iot_thing_group.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, iot.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckThingGroupDestroy,
-		Steps: []resource.TestStep{
-			{ // BASE
-				Config: testAccThingGroupConfig_base(thingGroupName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIotThingGroupExists(resourceName, &thingGroup),
-					resource.TestCheckResourceAttr(resourceName, "name", thingGroupName),
-					resource.TestCheckNoResourceAttr(resourceName, "parent_group_name"),
-					resource.TestCheckNoResourceAttr(resourceName, "properties"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttrSet(resourceName, "metadata.0.creation_date"),
-					resource.TestCheckResourceAttrSet(resourceName, "arn"),
-					resource.TestCheckResourceAttrSet(resourceName, "version"),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{ // UPDATE full
-				Config: testAccThingGroupConfig_full(thingGroupName, parentThingGroupName, "7", "this is my thing group", "myTag"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIotThingGroupExists(resourceName, &thingGroup),
-					resource.TestCheckResourceAttr(resourceName, "name", thingGroupName),
-					resource.TestCheckResourceAttr(resourceName, "parent_group_name", parentThingGroupName),
-					resource.TestCheckResourceAttr(resourceName, "properties.0.attributes.%", "3"),
-					resource.TestCheckResourceAttr(resourceName, "properties.0.attributes.One", "11111"),
-					resource.TestCheckResourceAttr(resourceName, "properties.0.attributes.Two", "TwoTwo"),
-					resource.TestCheckResourceAttr(resourceName, "properties.0.attributes.Answer", "7"),
-					resource.TestCheckResourceAttr(resourceName, "properties.0.description", "this is my thing group"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.tagKey", "myTag"),
-					resource.TestCheckResourceAttrSet(resourceName, "metadata.0.creation_date"),
-					resource.TestCheckResourceAttrSet(resourceName, "arn"),
-					resource.TestCheckResourceAttrSet(resourceName, "version"),
-				),
-			},
-			{ // DELETE full
-				Config: testAccThingGroupConfig_base(thingGroupName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIotThingGroupExists(resourceName, &thingGroup),
-					resource.TestCheckResourceAttr(resourceName, "name", thingGroupName),
-					resource.TestCheckResourceAttr(resourceName, "parent_group_name", ""),
-					resource.TestCheckNoResourceAttr(resourceName, "properties"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttrSet(resourceName, "metadata.0.creation_date"),
-					resource.TestCheckResourceAttrSet(resourceName, "arn"),
-					resource.TestCheckResourceAttrSet(resourceName, "version"),
-				),
-			},
-		},
-	})
-}
-
-func TestAccIoTThingGroup_name(t *testing.T) {
-	var thingGroup iot.DescribeThingGroupOutput
-	rString := sdkacctest.RandString(8)
-	thingGroupName := fmt.Sprintf("tf_acc_thing_group_%s", rString)
-	resourceName := "aws_iot_thing_group.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, iot.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckThingGroupDestroy,
-		Steps: []resource.TestStep{
-			{ // CREATE
-				Config: testAccThingGroupConfig_base(thingGroupName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIotThingGroupExists(resourceName, &thingGroup),
-					resource.TestCheckResourceAttr(resourceName, "name", thingGroupName),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{ // UPDATE
-				Config: testAccThingGroupConfig_base(thingGroupName + "_updated"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIotThingGroupExists(resourceName, &thingGroup),
-					resource.TestCheckResourceAttr(resourceName, "name", thingGroupName+"_updated"),
-				),
-			},
-		},
-	})
-}
-
 func TestAccIoTThingGroup_tags(t *testing.T) {
 	var thingGroup iot.DescribeThingGroupOutput
-	rString := sdkacctest.RandString(8)
-	thingGroupName := fmt.Sprintf("tf_acc_thing_group_%s", rString)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_iot_thing_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -186,50 +85,46 @@ func TestAccIoTThingGroup_tags(t *testing.T) {
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckThingGroupDestroy,
 		Steps: []resource.TestStep{
-			{ // BASE
-				Config: testAccThingGroupConfig_base(thingGroupName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIotThingGroupExists(resourceName, &thingGroup),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-				),
-			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{ // CREATE Tags
-				Config: testAccThingGroupConfig_withTags(thingGroupName, "myTag"),
+				Config: testAccThingGroupConfigTags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIotThingGroupExists(resourceName, &thingGroup),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.tagKey", "myTag"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
-			{ // UPDATE Tags
-				Config: testAccThingGroupConfig_withTags(thingGroupName, "myUpdatedTag"),
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccThingGroupConfigTags2(rName, "key1", "value1updated", "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckIotThingGroupExists(resourceName, &thingGroup),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+			{
+				Config: testAccThingGroupConfigTags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIotThingGroupExists(resourceName, &thingGroup),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.tagKey", "myUpdatedTag"),
-				),
-			},
-			{ // DELETE Tags
-				Config: testAccThingGroupConfig_base(thingGroupName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIotThingGroupExists(resourceName, &thingGroup),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 		},
 	})
 }
 
-func TestAccIoTThingGroup_propsAttr(t *testing.T) {
+func TestAccIoTThingGroup_parentGroup(t *testing.T) {
 	var thingGroup iot.DescribeThingGroupOutput
-	rString := sdkacctest.RandString(8)
-	thingGroupName := fmt.Sprintf("tf_acc_thing_group_%s", rString)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_iot_thing_group.test"
+	parentResourceName := "aws_iot_thing_group.parent"
+	grandparentResourceName := "aws_iot_thing_group.grandparent"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -237,11 +132,18 @@ func TestAccIoTThingGroup_propsAttr(t *testing.T) {
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckThingGroupDestroy,
 		Steps: []resource.TestStep{
-			{ // BASE
-				Config: testAccThingGroupConfig_base(thingGroupName),
+			{
+				Config: testAccThingGroupConfigParentGroup(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIotThingGroupExists(resourceName, &thingGroup),
-					resource.TestCheckNoResourceAttr(resourceName, "properties"),
+					resource.TestCheckResourceAttrPair(resourceName, "parent_group_name", parentResourceName, "name"),
+					resource.TestCheckResourceAttr(resourceName, "metadata.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "metadata.0.parent_group_name", parentResourceName, "name"),
+					resource.TestCheckResourceAttr(resourceName, "metadata.0.root_to_parent_groups.#", "2"),
+					resource.TestCheckResourceAttrPair(resourceName, "metadata.0.root_to_parent_groups.0.group_arn", grandparentResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "metadata.0.root_to_parent_groups.0.group_name", grandparentResourceName, "name"),
+					resource.TestCheckResourceAttrPair(resourceName, "metadata.0.root_to_parent_groups.1.group_arn", parentResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "metadata.0.root_to_parent_groups.1.group_name", parentResourceName, "name"),
 				),
 			},
 			{
@@ -249,156 +151,13 @@ func TestAccIoTThingGroup_propsAttr(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
-			{ // CREATE Properties
-				Config: testAccThingGroupConfig_withPropAttr(thingGroupName, "42"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIotThingGroupExists(resourceName, &thingGroup),
-					resource.TestCheckNoResourceAttr(resourceName, "properties"),
-					resource.TestCheckResourceAttr(resourceName, "properties.0.attributes.%", "3"),
-					resource.TestCheckResourceAttr(resourceName, "properties.0.attributes.One", "11111"),
-					resource.TestCheckResourceAttr(resourceName, "properties.0.attributes.Two", "TwoTwo"),
-					resource.TestCheckResourceAttr(resourceName, "properties.0.attributes.Answer", "42"),
-					resource.TestCheckResourceAttr(resourceName, "properties.0.description", ""),
-				),
-			},
-			{ // UPDATE Properties
-				Config: testAccThingGroupConfig_withPropAttr(thingGroupName, "7"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIotThingGroupExists(resourceName, &thingGroup),
-					resource.TestCheckNoResourceAttr(resourceName, "properties"),
-					resource.TestCheckResourceAttr(resourceName, "properties.0.attributes.%", "3"),
-					resource.TestCheckResourceAttr(resourceName, "properties.0.attributes.One", "11111"),
-					resource.TestCheckResourceAttr(resourceName, "properties.0.attributes.Two", "TwoTwo"),
-					resource.TestCheckResourceAttr(resourceName, "properties.0.attributes.Answer", "7"),
-					resource.TestCheckResourceAttr(resourceName, "properties.0.description", ""),
-				),
-			},
-			{ // DELETE Properties
-				Config: testAccThingGroupConfig_base(thingGroupName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIotThingGroupExists(resourceName, &thingGroup),
-					resource.TestCheckNoResourceAttr(resourceName, "properties"),
-				),
-			},
 		},
 	})
 }
 
-func TestAccIoTThingGroup_propsDesc(t *testing.T) {
+func TestAccIoTThingGroup_properties(t *testing.T) {
 	var thingGroup iot.DescribeThingGroupOutput
-	rString := sdkacctest.RandString(8)
-	thingGroupName := fmt.Sprintf("tf_acc_thing_group_%s", rString)
-	resourceName := "aws_iot_thing_group.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, iot.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckThingGroupDestroy,
-		Steps: []resource.TestStep{
-			{ // BASE
-				Config: testAccThingGroupConfig_base(thingGroupName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIotThingGroupExists(resourceName, &thingGroup),
-					resource.TestCheckNoResourceAttr(resourceName, "properties"),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{ // CREATE Properties
-				Config: testAccThingGroupConfig_withPropDesc(thingGroupName, "this is my thing group"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIotThingGroupExists(resourceName, &thingGroup),
-					resource.TestCheckNoResourceAttr(resourceName, "properties.0.attributes"),
-					resource.TestCheckResourceAttr(resourceName, "properties.0.description", "this is my thing group"),
-				),
-			},
-			{ // UPDATE Properties
-				Config: testAccThingGroupConfig_withPropDesc(thingGroupName, "this is my updated thing group"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIotThingGroupExists(resourceName, &thingGroup),
-					resource.TestCheckNoResourceAttr(resourceName, "properties.0.attributes"),
-					resource.TestCheckResourceAttr(resourceName, "properties.0.description", "this is my updated thing group"),
-				),
-			},
-			{ // DELETE Properties
-				Config: testAccThingGroupConfig_base(thingGroupName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIotThingGroupExists(resourceName, &thingGroup),
-					resource.TestCheckNoResourceAttr(resourceName, "properties"),
-				),
-			},
-		},
-	})
-}
-
-func TestAccIoTThingGroup_propsAll(t *testing.T) {
-	var thingGroup iot.DescribeThingGroupOutput
-	rString := sdkacctest.RandString(8)
-	thingGroupName := fmt.Sprintf("tf_acc_thing_group_%s", rString)
-	resourceName := "aws_iot_thing_group.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, iot.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckThingGroupDestroy,
-		Steps: []resource.TestStep{
-			{ // BASE
-				Config: testAccThingGroupConfig_base(thingGroupName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIotThingGroupExists(resourceName, &thingGroup),
-					resource.TestCheckNoResourceAttr(resourceName, "properties"),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{ // CREATE Properties
-				Config: testAccThingGroupConfig_withPropAll(thingGroupName, "42", "this is my thing group"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIotThingGroupExists(resourceName, &thingGroup),
-					resource.TestCheckNoResourceAttr(resourceName, "properties"),
-					resource.TestCheckResourceAttr(resourceName, "properties.0.attributes.%", "3"),
-					resource.TestCheckResourceAttr(resourceName, "properties.0.attributes.One", "11111"),
-					resource.TestCheckResourceAttr(resourceName, "properties.0.attributes.Two", "TwoTwo"),
-					resource.TestCheckResourceAttr(resourceName, "properties.0.attributes.Answer", "42"),
-					resource.TestCheckResourceAttr(resourceName, "properties.0.description", "this is my thing group"),
-				),
-			},
-			{ // UPDATE Properties
-				Config: testAccThingGroupConfig_withPropAll(thingGroupName, "7", "this is my updated thing group"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIotThingGroupExists(resourceName, &thingGroup),
-					resource.TestCheckNoResourceAttr(resourceName, "properties"),
-					resource.TestCheckResourceAttr(resourceName, "properties.0.attributes.%", "3"),
-					resource.TestCheckResourceAttr(resourceName, "properties.0.attributes.One", "11111"),
-					resource.TestCheckResourceAttr(resourceName, "properties.0.attributes.Two", "TwoTwo"),
-					resource.TestCheckResourceAttr(resourceName, "properties.0.attributes.Answer", "7"),
-					resource.TestCheckResourceAttr(resourceName, "properties.0.description", "this is my updated thing group"),
-				),
-			},
-			{ // DELETE Properties
-				Config: testAccThingGroupConfig_base(thingGroupName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIotThingGroupExists(resourceName, &thingGroup),
-					resource.TestCheckNoResourceAttr(resourceName, "properties"),
-				),
-			},
-		},
-	})
-}
-
-func TestAccIoTThingGroup_parent(t *testing.T) {
-	var thingGroup iot.DescribeThingGroupOutput
-	rString := sdkacctest.RandString(8)
-	thingGroupName := fmt.Sprintf("tf_acc_thing_group_%s", rString)
-	parentThingGroupName := thingGroupName + "_parent"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_iot_thing_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -408,10 +167,15 @@ func TestAccIoTThingGroup_parent(t *testing.T) {
 		CheckDestroy: testAccCheckThingGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccThingGroupConfig_base(thingGroupName),
+				Config: testAccThingGroupConfigProperties(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIotThingGroupExists(resourceName, &thingGroup),
-					resource.TestCheckNoResourceAttr(resourceName, "parent_group_name"),
+					resource.TestCheckResourceAttr(resourceName, "properties.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "properties.0.attribute_payload.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "properties.0.attribute_payload.0.attributes.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "properties.0.attribute_payload.0.attributes.Key1", "Value1"),
+					resource.TestCheckResourceAttr(resourceName, "properties.0.description", "test description 1"),
+					resource.TestCheckResourceAttr(resourceName, "version", "1"),
 				),
 			},
 			{
@@ -419,25 +183,17 @@ func TestAccIoTThingGroup_parent(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
-			{ // CREATE parent_group_name
-				Config: testAccThingGroupConfig_withParent(thingGroupName, parentThingGroupName),
+			{
+				Config: testAccThingGroupConfigPropertiesUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIotThingGroupExists(resourceName, &thingGroup),
-					resource.TestCheckResourceAttr(resourceName, "parent_group_name", parentThingGroupName),
-				),
-			},
-			{ // UPDATE parent_group_name
-				Config: testAccThingGroupConfig_withParent(thingGroupName, parentThingGroupName+"_updated"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIotThingGroupExists(resourceName, &thingGroup),
-					resource.TestCheckResourceAttr(resourceName, "parent_group_name", parentThingGroupName+"_updated"),
-				),
-			},
-			{ // DELETE parent_group_name
-				Config: testAccThingGroupConfig_base(thingGroupName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIotThingGroupExists(resourceName, &thingGroup),
-					resource.TestCheckResourceAttr(resourceName, "parent_group_name", ""),
+					resource.TestCheckResourceAttr(resourceName, "properties.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "properties.0.attribute_payload.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "properties.0.attribute_payload.0.attributes.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "properties.0.attribute_payload.0.attributes.Key2", "Value2"),
+					resource.TestCheckResourceAttr(resourceName, "properties.0.attribute_payload.0.attributes.Key3", "Value3"),
+					resource.TestCheckResourceAttr(resourceName, "properties.0.description", "test description 2"),
+					resource.TestCheckResourceAttr(resourceName, "version", "2"),
 				),
 			},
 		},
@@ -501,109 +257,84 @@ resource "aws_iot_thing_group" "test" {
 `, rName)
 }
 
-func testAccThingGroupConfig_base(thingGroupName string) string {
+func testAccThingGroupConfigTags1(rName, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_iot_thing_group" "test" {
-  name = "%s"
-}
-`, thingGroupName)
-}
-
-func testAccThingGroupConfig_full(thingGroupName, parentThingGroupName, answer, description, tagValue string) string {
-	return fmt.Sprintf(`
-resource "aws_iot_thing_group" "parent" {
-  name = "%s"
-}
-
-resource "aws_iot_thing_group" "test" {
-  name              = "%s"
-  parent_group_name = aws_iot_thing_group.parent.name
-
-  properties {
-    attributes = {
-      One    = "11111"
-      Two    = "TwoTwo"
-      Answer = "%s"
-    }
-    description = "%s"
-  }
+  name = %[1]q
 
   tags = {
-    tagKey = "%s"
+    %[2]q = %[3]q
   }
 }
-`, parentThingGroupName, thingGroupName, answer, description, tagValue)
+`, rName, tagKey1, tagValue1)
 }
 
-func testAccThingGroupConfig_withTags(thingGroupName, tagValue string) string {
+func testAccThingGroupConfigTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 resource "aws_iot_thing_group" "test" {
-  name = "%s"
+  name = %[1]q
 
   tags = {
-    tagKey = "%s"
+    %[2]q = %[3]q
+    %[4]q = %[5]q
   }
 }
-`, thingGroupName, tagValue)
+`, rName, tagKey1, tagValue1, tagKey2, tagValue2)
 }
 
-func testAccThingGroupConfig_withPropAttr(thingGroupName, answer string) string {
+func testAccThingGroupConfigParentGroup(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_iot_thing_group" "test" {
-  name = "%s"
-
-  properties {
-    attributes = {
-      One    = "11111"
-      Two    = "TwoTwo"
-      Answer = "%s"
-    }
-  }
-
-}
-`, thingGroupName, answer)
+resource "aws_iot_thing_group" "grandparent" {
+  name = "%[1]s-grandparent"
 }
 
-func testAccThingGroupConfig_withPropDesc(thingGroupName, description string) string {
-	return fmt.Sprintf(`
-resource "aws_iot_thing_group" "test" {
-  name = "%s"
-
-  properties {
-    description = "%s"
-  }
-
-}
-`, thingGroupName, description)
-}
-
-func testAccThingGroupConfig_withPropAll(thingGroupName, answer, description string) string {
-	return fmt.Sprintf(`
-resource "aws_iot_thing_group" "test" {
-  name = "%s"
-
-  properties {
-    attributes = {
-      One    = "11111"
-      Two    = "TwoTwo"
-      Answer = "%s"
-    }
-    description = "%s"
-  }
-
-}
-`, thingGroupName, answer, description)
-}
-
-func testAccThingGroupConfig_withParent(thingGroupName, parentThingGroupName string) string {
-	return fmt.Sprintf(`
 resource "aws_iot_thing_group" "parent" {
-  name = "%s"
+  name = "%[1]s-parent"
+
+  parent_group_name = aws_iot_thing_group.grandparent.name
 }
 
 resource "aws_iot_thing_group" "test" {
-  name              = "%s"
+  name = %[1]q
+
   parent_group_name = aws_iot_thing_group.parent.name
 }
-`, parentThingGroupName, thingGroupName)
+`, rName)
+}
+
+func testAccThingGroupConfigProperties(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_iot_thing_group" "test" {
+  name = %[1]q
+
+  properties {
+    attribute_payload {
+      attributes = {
+        Key1 = "Value1"
+      }
+    }
+
+    description = "test description 1"
+  }
+}
+`, rName)
+}
+
+func testAccThingGroupConfigPropertiesUpdated(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_iot_thing_group" "test" {
+  name = %[1]q
+
+  properties {
+    attribute_payload {
+      attributes = {
+        Key2 = "Value2"
+        Key3 = "Value3"
+      }
+    }
+
+    description = "test description 2"
+  }
+}
+`, rName)
 }
