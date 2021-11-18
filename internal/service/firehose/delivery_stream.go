@@ -1679,10 +1679,6 @@ func createExtendedS3Config(d *schema.ResourceData) *firehose.ExtendedS3Destinat
 		configuration.CloudWatchLoggingOptions = extractCloudWatchLoggingConfiguration(s3)
 	}
 
-	if _, ok := s3["dynamic_partitioning_configuration"]; ok {
-		configuration.DynamicPartitioningConfiguration = extractDynamicPartitioningConfiguration(s3)
-	}
-
 	if v, ok := s3["error_output_prefix"]; ok && v.(string) != "" {
 		configuration.ErrorOutputPrefix = aws.String(v.(string))
 	}
@@ -1980,14 +1976,6 @@ func extractDynamicPartitioningConfiguration(s3 map[string]interface{}) *firehos
 	}
 
 	return DynamicPartitioningConfiguration
-}
-
-func extractRetryOptions(ro []interface{}) *firehose.RetryOptions {
-	options := ro[0].(map[string]interface{})
-
-	return &firehose.RetryOptions{
-		DurationInSeconds: aws.Int64(int64(options["duration_in_seconds"].(int))),
-	}
 }
 
 func extractProcessingConfiguration(s3 map[string]interface{}) *firehose.ProcessingConfiguration {
