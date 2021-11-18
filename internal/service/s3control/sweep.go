@@ -61,7 +61,7 @@ func sweepAccessPoints(region string) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("error listing S3 Access Points (%s): %w", region, err)
+		return fmt.Errorf("error listing SS3 Access Points (%s): %w", region, err)
 	}
 
 	err = sweep.SweepOrchestrator(sweepResources)
