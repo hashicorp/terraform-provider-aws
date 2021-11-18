@@ -1270,7 +1270,7 @@ func TestAccFirehoseDeliveryStream_elasticSearchWithVPCUpdates(t *testing.T) {
 		CheckDestroy: testAccCheckDeliveryStreamDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDeliveryStreamConfig_ElasticsearchVpcBasic(rName),
+				Config: testAccDeliveryStreamConfig_ElasticsearchVPCBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeliveryStreamExists(resourceName, &stream),
 					testAccCheckDeliveryStreamAttributes(&stream, nil, nil, nil, nil, nil, nil),
@@ -1286,7 +1286,7 @@ func TestAccFirehoseDeliveryStream_elasticSearchWithVPCUpdates(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccDeliveryStreamConfig_ElasticsearchVpcUpdate(rName),
+				Config: testAccDeliveryStreamConfig_ElasticsearchVPCUpdate(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeliveryStreamExists(resourceName, &stream),
 					testAccCheckDeliveryStreamAttributes(&stream, nil, nil, nil, updatedElasticsearchConfig, nil, nil),
@@ -3007,7 +3007,7 @@ EOF
 }
 
 // Elasticsearch associated with VPC
-func testAccDeliveryStreamBaseElasticsearchVpcConfig(rName string) string {
+func testAccDeliveryStreamBaseElasticsearchVPCConfig(rName string) string {
 	return acctest.ConfigCompose(
 		testAccDeliveryStreamBaseConfig(rName),
 		fmt.Sprintf(`
@@ -3077,7 +3077,7 @@ resource "aws_elasticsearch_domain" "test_cluster" {
 }
 
 resource "aws_iam_role_policy" "firehose-elasticsearch" {
-  name   = %[1]q
+  name   = "%[1]s-es"
   role   = aws_iam_role.firehose.id
   policy = <<EOF
 {
@@ -3137,9 +3137,9 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
 `, rName))
 }
 
-func testAccDeliveryStreamConfig_ElasticsearchVpcBasic(rName string) string {
+func testAccDeliveryStreamConfig_ElasticsearchVPCBasic(rName string) string {
 	return acctest.ConfigCompose(
-		testAccDeliveryStreamBaseElasticsearchVpcConfig(rName),
+		testAccDeliveryStreamBaseElasticsearchVPCConfig(rName),
 		fmt.Sprintf(`
 resource "aws_kinesis_firehose_delivery_stream" "test" {
   depends_on = [aws_iam_role_policy.firehose-elasticsearch]
@@ -3208,10 +3208,10 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
 `, rName))
 }
 
-func testAccDeliveryStreamConfig_ElasticsearchVpcUpdate(rName string) string {
+func testAccDeliveryStreamConfig_ElasticsearchVPCUpdate(rName string) string {
 	return acctest.ConfigCompose(
 		testAccLambdaBasicConfig(rName),
-		testAccDeliveryStreamBaseElasticsearchVpcConfig(rName),
+		testAccDeliveryStreamBaseElasticsearchVPCConfig(rName),
 		fmt.Sprintf(`
 resource "aws_kinesis_firehose_delivery_stream" "test" {
   depends_on = [aws_iam_role_policy.firehose-elasticsearch]
