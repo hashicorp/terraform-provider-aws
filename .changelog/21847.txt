@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_route_table: The default aws_route_table timeouts are increased from 2m for create and update to 10m for create and 5m for update.
+```
