@@ -431,6 +431,7 @@ func Provider() *schema.Provider {
 			"aws_ec2_instance_type_offering":                 ec2.DataSourceInstanceTypeOffering(),
 			"aws_ec2_instance_type_offerings":                ec2.DataSourceInstanceTypeOfferings(),
 			"aws_ec2_instance_type":                          ec2.DataSourceInstanceType(),
+			"aws_ec2_instance_types":                         ec2.DataSourceInstanceTypes(),
 			"aws_ec2_local_gateway_route_table":              ec2.DataSourceLocalGatewayRouteTable(),
 			"aws_ec2_local_gateway_route_tables":             ec2.DataSourceLocalGatewayRouteTables(),
 			"aws_ec2_local_gateway_virtual_interface":        ec2.DataSourceLocalGatewayVirtualInterface(),
