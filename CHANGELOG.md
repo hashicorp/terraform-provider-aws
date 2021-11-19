@@ -1,4 +1,9 @@
 ## 3.67.0 (Unreleased)
+
+BUG FIXES:
+
+* resource/aws_apprunner_service: Make instance_role_arn optional ([#20149](https://github.com/hashicorp/terraform-provider-aws/issues/20149))
+
 ## 3.66.0 (November 18, 2021)
 
 FEATURES:
