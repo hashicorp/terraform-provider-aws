@@ -157,6 +157,7 @@ func TestAccELBV2LoadBalancer_LoadBalancerType_gateway(t *testing.T) {
 				ImportStateVerifyIgnore: []string{
 					"drop_invalid_header_fields",
 					"enable_http2",
+					"enable_waf_fail_open",
 					"idle_timeout",
 				},
 			},
@@ -225,6 +226,7 @@ func TestAccELBV2LoadBalancer_LoadBalancerTypeGateway_enableCrossZoneLoadBalanci
 				ImportStateVerifyIgnore: []string{
 					"drop_invalid_header_fields",
 					"enable_http2",
+					"enable_waf_fail_open",
 					"idle_timeout",
 				},
 			},
