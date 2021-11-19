@@ -652,7 +652,7 @@ func expandAppRunnerServiceInstanceConfiguration(l []interface{}) *apprunner.Ins
 		result.Cpu = aws.String(v)
 	}
 
-	if v, ok := tfMap["instance_role_arn"].(string); ok && len(v) > 0 {
+	if v, ok := tfMap["instance_role_arn"].(string); ok && v != "" {
 		result.InstanceRoleArn = aws.String(v)
 	}
 
