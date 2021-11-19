@@ -20,10 +20,10 @@ func testAccRemediationConfiguration_basic(t *testing.T) {
 	resourceName := "aws_config_remediation_configuration.test"
 	rInt := sdkacctest.RandInt()
 	automatic := "false"
-	rAttempts := acctest.RandIntRange(1, 25)
-	rSeconds := acctest.RandIntRange(1, 2678000)
-	rExecPct := acctest.RandIntRange(1, 100)
-	rErrorPct := acctest.RandIntRange(1, 100)
+	rAttempts := sdkacctest.RandIntRange(1, 25)
+	rSeconds := sdkacctest.RandIntRange(1, 2678000)
+	rExecPct := sdkacctest.RandIntRange(1, 100)
+	rErrorPct := sdkacctest.RandIntRange(1, 100)
 	prefix := "Original"
 	sseAlgorithm := "AES256"
 	expectedName := fmt.Sprintf("%s-tf-acc-test-%d", prefix, rInt)
@@ -66,10 +66,10 @@ func testAccRemediationConfiguration_disappears(t *testing.T) {
 	resourceName := "aws_config_remediation_configuration.test"
 	rInt := sdkacctest.RandInt()
 	automatic := "false"
-	rAttempts := acctest.RandIntRange(1, 25)
-	rSeconds := acctest.RandIntRange(1, 2678000)
-	rExecPct := acctest.RandIntRange(1, 100)
-	rErrorPct := acctest.RandIntRange(1, 100)
+	rAttempts := sdkacctest.RandIntRange(1, 25)
+	rSeconds := sdkacctest.RandIntRange(1, 2678000)
+	rExecPct := sdkacctest.RandIntRange(1, 100)
+	rErrorPct := sdkacctest.RandIntRange(1, 100)
 	prefix := "original"
 	sseAlgorithm := "AES256"
 
@@ -97,10 +97,10 @@ func testAccRemediationConfiguration_recreates(t *testing.T) {
 	resourceName := "aws_config_remediation_configuration.test"
 	rInt := sdkacctest.RandInt()
 	automatic := "false"
-	rAttempts := acctest.RandIntRange(1, 25)
-	rSeconds := acctest.RandIntRange(1, 2678000)
-	rExecPct := acctest.RandIntRange(1, 100)
-	rErrorPct := acctest.RandIntRange(1, 100)
+	rAttempts := sdkacctest.RandIntRange(1, 25)
+	rSeconds := sdkacctest.RandIntRange(1, 2678000)
+	rExecPct := sdkacctest.RandIntRange(1, 100)
+	rErrorPct := sdkacctest.RandIntRange(1, 100)
 
 	originalName := "Original"
 	updatedName := "Updated"
@@ -137,15 +137,15 @@ func testAccRemediationConfiguration_updates(t *testing.T) {
 	resourceName := "aws_config_remediation_configuration.test"
 	rInt := sdkacctest.RandInt()
 	automatic := "false"
-	rAttempts := acctest.RandIntRange(1, 25)
-	rSeconds := acctest.RandIntRange(1, 2678000)
-	rExecPct := acctest.RandIntRange(1, 100)
-	rErrorPct := acctest.RandIntRange(1, 100)
+	rAttempts := sdkacctest.RandIntRange(1, 25)
+	rSeconds := sdkacctest.RandIntRange(1, 2678000)
+	rExecPct := sdkacctest.RandIntRange(1, 100)
+	rErrorPct := sdkacctest.RandIntRange(1, 100)
 	uAutomatic := "true"
-	uAttempts := acctest.RandIntRange(1, 25)
-	uSeconds := acctest.RandIntRange(1, 2678000)
-	uExecPct := acctest.RandIntRange(1, 100)
-	uErrorPct := acctest.RandIntRange(1, 100)
+	uAttempts := sdkacctest.RandIntRange(1, 25)
+	uSeconds := sdkacctest.RandIntRange(1, 2678000)
+	uExecPct := sdkacctest.RandIntRange(1, 100)
+	uErrorPct := sdkacctest.RandIntRange(1, 100)
 
 	name := "Original"
 	originalSseAlgorithm := "AES256"
