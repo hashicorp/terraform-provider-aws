@@ -61,6 +61,39 @@ func testAccRemediationConfiguration_basic(t *testing.T) {
 	})
 }
 
+func testAccRemediationConfiguration_basicBackwardCompatible(t *testing.T) {
+	var rc configservice.RemediationConfiguration
+	resourceName := "aws_config_remediation_configuration.test"
+	rInt := sdkacctest.RandInt()
+	prefix := "Original"
+	sseAlgorithm := "AES256"
+	expectedName := fmt.Sprintf("%s-tf-acc-test-%d", prefix, rInt)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, configservice.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckRemediationConfigurationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRemediationConfigurationOlderSchemaConfig(prefix, sseAlgorithm, rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRemediationConfigurationExists(resourceName, &rc),
+					resource.TestCheckResourceAttr(resourceName, "config_rule_name", expectedName),
+					resource.TestCheckResourceAttr(resourceName, "target_id", "AWS-EnableS3BucketEncryption"),
+					resource.TestCheckResourceAttr(resourceName, "target_type", "SSM_DOCUMENT"),
+					resource.TestCheckResourceAttr(resourceName, "parameter.#", "3"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccRemediationConfiguration_disappears(t *testing.T) {
 	var rc configservice.RemediationConfiguration
 	resourceName := "aws_config_remediation_configuration.test"
@@ -242,6 +275,91 @@ func testAccCheckRemediationConfigurationDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+func testAccRemediationConfigurationOlderSchemaConfig(namePrefix, sseAlgorithm string, randInt int) string {
+	return fmt.Sprintf(`
+resource "aws_config_remediation_configuration" "test" {
+  config_rule_name = aws_config_config_rule.test.name
+
+  resource_type  = "AWS::S3::Bucket"
+  target_id      = "AWS-EnableS3BucketEncryption"
+  target_type    = "SSM_DOCUMENT"
+  target_version = "1"
+
+  parameter {
+    name         = "AutomationAssumeRole"
+    static_value = aws_iam_role.test.arn
+  }
+  parameter {
+    name           = "BucketName"
+    resource_value = "RESOURCE_ID"
+  }
+  parameter {
+    name         = "SSEAlgorithm"
+    static_value = "%[2]s"
+  }
+}
+
+resource "aws_sns_topic" "test" {
+  name = "sns_topic_name"
+}
+
+resource "aws_config_config_rule" "test" {
+  name = "%[1]s-tf-acc-test-%[3]d"
+
+  source {
+    owner             = "AWS"
+    source_identifier = "S3_BUCKET_VERSIONING_ENABLED"
+  }
+
+  depends_on = [aws_config_configuration_recorder.test]
+}
+
+resource "aws_config_configuration_recorder" "test" {
+  name     = "%[1]s-tf-acc-test-%[3]d"
+  role_arn = aws_iam_role.test.arn
+}
+
+resource "aws_iam_role" "test" {
+  name = "%[1]s-tf-acc-test-awsconfig-%[3]d"
+
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": "sts:AssumeRole",
+      "Principal": {
+        "Service": "config.amazonaws.com"
+      },
+      "Effect": "Allow",
+      "Sid": ""
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_iam_role_policy" "test" {
+  name = "%[1]s-tf-acc-test-awsconfig-%[3]d"
+  role = aws_iam_role.test.id
+
+  policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+        "Action": "config:Put*",
+        "Effect": "Allow",
+        "Resource": "*"
+
+    }
+  ]
+}
+EOF
+}
+`, namePrefix, sseAlgorithm, randInt)
 }
 
 func testAccRemediationConfigurationConfig(namePrefix, sseAlgorithm string, randInt int, randAttempts int, randSeconds int, randExecPct int, randErrorPct int, automatic string) string {
