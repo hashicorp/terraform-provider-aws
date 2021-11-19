@@ -180,6 +180,7 @@ func init() {
 			"aws_elasticsearch_domain",
 			"aws_elb",
 			"aws_emr_cluster",
+			"aws_emr_studio",
 			"aws_fsx_lustre_file_system",
 			"aws_fsx_ontap_file_system",
 			"aws_fsx_windows_file_system",

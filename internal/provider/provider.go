@@ -1178,6 +1178,7 @@ func Provider() *schema.Provider {
 			"aws_emr_instance_group":         emr.ResourceInstanceGroup(),
 			"aws_emr_managed_scaling_policy": emr.ResourceManagedScalingPolicy(),
 			"aws_emr_security_configuration": emr.ResourceSecurityConfiguration(),
+			"aws_emr_studio":                 emr.ResourceStudio(),
 
 			"aws_kinesis_firehose_delivery_stream": firehose.ResourceDeliveryStream(),
 

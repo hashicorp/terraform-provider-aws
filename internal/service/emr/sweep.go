@@ -19,6 +19,11 @@ func init() {
 		Name: "aws_emr_cluster",
 		F:    sweepClusters,
 	})
+
+	resource.AddTestSweepers("aws_emr_studio", &resource.Sweeper{
+		Name: "aws_emr_studio",
+		F:    sweepStudios,
+	})
 }
 
 func sweepClusters(region string) error {
@@ -73,4 +78,48 @@ func sweepClusters(region string) error {
 	}
 
 	return nil
+}
+
+func sweepStudios(region string) error {
+	client, err := sweep.SharedRegionalSweepClient(region)
+
+	if err != nil {
+		return fmt.Errorf("error getting client: %w", err)
+	}
+
+	conn := client.(*conns.AWSClient).EMRConn
+	sweepResources := make([]*testSweepResource, 0)
+	var sweeperErrs *multierror.Error
+	input := &emr.ListStudiosInput{}
+
+	err = conn.ListStudiosPages(input, func(page *emr.ListStudiosOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, studio := range page.Studios {
+			r := ResourceStudio()
+			d := r.Data(nil)
+			d.SetId(aws.StringValue(studio.StudioId))
+
+			sweepResources = append(sweepResources, NewTestSweepResource(r, d, client))
+		}
+
+		return !lastPage
+	})
+
+	if err != nil {
+		errs = multierror.Append(errs, fmt.Errorf("error listing EMR Studios for %s: %w", region, err))
+	}
+
+	if err = sweep.SweepOrchestrator(sweepResources); err != nil {
+		errs = multierror.Append(errs, fmt.Errorf("error sweeping EMR Studios for %s: %w", region, err))
+	}
+
+	if sweep.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping EMR Studios sweep for %s: %s", region, errs)
+		return nil
+	}
+
+	return errs.ErrorOrNil()
 }
