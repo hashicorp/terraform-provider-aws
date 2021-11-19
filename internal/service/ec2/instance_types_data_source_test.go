@@ -1,16 +1,32 @@
 package ec2_test
 
 import (
-	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
+
+func TestAccEC2InstanceTypesDataSource_basic(t *testing.T) {
+	dataSourceName := "data.aws_ec2_instance_types.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckInstanceTypes(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceTypesDataSourceConfig(),
+				Check: resource.ComposeTestCheckFunc(
+					testCheckResourceAttrGreaterThanValue(dataSourceName, "instance_types.#", "0"),
+				),
+			},
+		},
+	})
+}
 
 func TestAccEC2InstanceTypesDataSource_filter(t *testing.T) {
 	dataSourceName := "data.aws_ec2_instance_types.test"
@@ -22,36 +38,19 @@ func TestAccEC2InstanceTypesDataSource_filter(t *testing.T) {
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceTypesFilterDataSourceConfig(),
+				Config: testAccInstanceTypesDataSourceConfigFilter(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEc2InstanceTypes(dataSourceName),
+					testCheckResourceAttrGreaterThanValue(dataSourceName, "instance_types.#", "0"),
 				),
 			},
 		},
 	})
 }
 
-func testAccCheckEc2InstanceTypes(dataSourceName string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[dataSourceName]
-		if !ok {
-			return fmt.Errorf("Not found: %s", dataSourceName)
-		}
-
-		if v := rs.Primary.Attributes["instance_types.#"]; v == "0" {
-			return fmt.Errorf("expected at least one instance_types result, got none")
-		}
-
-		return nil
-	}
-}
-
 func testAccPreCheckInstanceTypes(t *testing.T) {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
-	input := &ec2.DescribeInstanceTypesInput{
-		MaxResults: aws.Int64(5),
-	}
+	input := &ec2.DescribeInstanceTypesInput{}
 
 	_, err := conn.DescribeInstanceTypes(input)
 
@@ -64,21 +63,17 @@ func testAccPreCheckInstanceTypes(t *testing.T) {
 	}
 }
 
-func testAccInstanceTypesFilterDataSourceConfig() string {
+func testAccInstanceTypesDataSourceConfig() string {
+	return `
+data "aws_ec2_instance_types" "test" {}
+`
+}
+
+func testAccInstanceTypesDataSourceConfigFilter() string {
 	return `
 data "aws_ec2_instance_types" "test" {
   filter {
-    name   = "auto-recovery-supported"
-    values = ["true"]
-  }
-
-  filter {
-    name   = "network-info.encryption-in-transit-supported"
-    values = ["true"]
-  }
-
-  filter {
-    name   = "instance-storage-supported"
+    name   = "current-generation"
     values = ["true"]
   }
 }

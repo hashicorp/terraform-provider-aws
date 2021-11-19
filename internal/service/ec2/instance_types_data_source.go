@@ -52,14 +52,11 @@ func dataSourceInstanceTypesRead(d *schema.ResourceData, meta interface{}) error
 	})
 
 	if err != nil {
-		return fmt.Errorf("error reading EC2 Instance Type: %w", err)
-	}
-
-	if err := d.Set("instance_types", instanceTypes); err != nil {
-		return fmt.Errorf("error setting instance_types: %w", err)
+		return fmt.Errorf("error listing EC2 Instance Types: %w", err)
 	}
 
 	d.SetId(meta.(*conns.AWSClient).Region)
+	d.Set("instance_types", instanceTypes)
 
 	return nil
 }
