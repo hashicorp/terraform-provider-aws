@@ -463,7 +463,7 @@ func resourceDirectoryRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("alias", dir.Alias)
 	d.Set("description", dir.Description)
 
-	if *dir.Type == directoryservice.DirectoryTypeAdconnector {
+	if aws.StringValue(dir.Type) == directoryservice.DirectoryTypeAdconnector {
 		d.Set("dns_ip_addresses", flex.FlattenStringSet(dir.ConnectSettings.ConnectIps))
 	} else {
 		d.Set("dns_ip_addresses", flex.FlattenStringSet(dir.DnsIpAddrs))

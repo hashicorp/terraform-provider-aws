@@ -74,7 +74,7 @@ func resourceResourcePolicyRead(d *schema.ResourceData, meta interface{}) error 
 		return fmt.Errorf("error reading policy request: %w", err)
 	}
 
-	if *resourcePolicy.PolicyInJson == "" {
+	if aws.StringValue(resourcePolicy.PolicyInJson) == "" {
 		//Since the glue resource policy is global we expect it to be deleted when the policy is empty
 		d.SetId("")
 	} else {
