@@ -20,18 +20,18 @@ data "aws_ec2_instance_types" "test" {
   }
 
   filter {
-	name = "network-info.encryption-in-transit-supported"
-	values = ["true"]
+    name   = "network-info.encryption-in-transit-supported"
+    values = ["true"]
   }
 
   filter {
-	name = "instance-storage-supported"
-	values = ["true"]
+    name   = "instance-storage-supported"
+    values = ["true"]
   }
 
   filter {
-	name = "instance-type"
-	values = ["g5.2xlarge", "g5.4xlarge"]
+    name   = "instance-type"
+    values = ["g5.2xlarge", "g5.4xlarge"]
   }
 }
 ```
@@ -44,7 +44,7 @@ The following arguments are supported:
 
 ### filter Argument Reference
 
-* `name` - (Required) Name of the filter. The `location` filter depends on the top-level `location_type` argument and if not specified, defaults to the current region.
+* `name` - (Required) Name of the filter.
 * `values` - (Required) List of one or more values for the filter.
 
 ## Attribute Reference

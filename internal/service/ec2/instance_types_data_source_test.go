@@ -73,13 +73,13 @@ data "aws_ec2_instance_types" "test" {
   }
 
   filter {
-	name = "network-info.encryption-in-transit-supported"
-	values = ["true"]
+    name   = "network-info.encryption-in-transit-supported"
+    values = ["true"]
   }
 
   filter {
-	name = "instance-storage-supported"
-	values = ["true"]
+    name   = "instance-storage-supported"
+    values = ["true"]
   }
 }
 `
