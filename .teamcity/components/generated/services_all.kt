@@ -103,7 +103,7 @@ val services = mapOf(
     "neptune" to ServiceSpec("Neptune"),
     "networkfirewall" to ServiceSpec("Network Firewall", vpcLock = true),
     "networkmanager" to ServiceSpec("NetworkManager"),
-    "opsworks" to ServiceSpec("OpsWorks"),
+    "opsworks" to ServiceSpec("OpsWorks", vpcLock = true),
     "organizations" to ServiceSpec("Organizations"),
     "outposts" to ServiceSpec("Outposts"),
     "pinpoint" to ServiceSpec("Pinpoint"),
