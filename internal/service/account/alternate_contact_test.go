@@ -1,35 +1,43 @@
 package account_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/account"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfaccount "github.com/hashicorp/terraform-provider-aws/internal/service/account"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func TestAccAccountAlternateContact_basic(t *testing.T) {
 	resourceName := "aws_account_alternate_contact.test"
-
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	domain := acctest.RandomDomainName()
+	emailAddress1 := acctest.RandomEmailAddress(domain)
+	emailAddress2 := acctest.RandomEmailAddress(domain)
+	rName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, account.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccountAlternateContactDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccountAlternateContactConfig(rName),
+				Config: testAccountAlternateContactConfig(rName1, emailAddress1),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAccountAlternateContactExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "cloudfront_zone_id", "Z2FDTNDATAQYW2"),
+					resource.TestCheckResourceAttr(resourceName, "alternate_contact_type", "OPERATIONS"),
+					resource.TestCheckResourceAttr(resourceName, "email_address", emailAddress1),
+					resource.TestCheckResourceAttr(resourceName, "name", rName1),
+					resource.TestCheckResourceAttr(resourceName, "phone_number", "+17031235555"),
+					resource.TestCheckResourceAttr(resourceName, "title", rName1),
 				),
 			},
 			{
@@ -37,11 +45,47 @@ func TestAccAccountAlternateContact_basic(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
+			{
+				Config: testAccountAlternateContactConfig(rName2, emailAddress2),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAccountAlternateContactExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "alternate_contact_type", "OPERATIONS"),
+					resource.TestCheckResourceAttr(resourceName, "email_address", emailAddress2),
+					resource.TestCheckResourceAttr(resourceName, "name", rName2),
+					resource.TestCheckResourceAttr(resourceName, "phone_number", "+17031235555"),
+					resource.TestCheckResourceAttr(resourceName, "title", rName2),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAccountAlternateContact_disappears(t *testing.T) {
+	resourceName := "aws_account_alternate_contact.test"
+	domain := acctest.RandomDomainName()
+	emailAddress := acctest.RandomEmailAddress(domain)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, account.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccountAlternateContactDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccountAlternateContactConfig(rName, emailAddress),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAccountAlternateContactExists(resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfaccount.ResourceAlternateContact(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
 		},
 	})
 }
 
 func testAccountAlternateContactDestroy(s *terraform.State) error {
+	ctx := context.TODO()
 	conn := acctest.Provider.Meta().(*conns.AWSClient).AccountConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -49,23 +93,17 @@ func testAccountAlternateContactDestroy(s *terraform.State) error {
 			continue
 		}
 
-		contactType := rs.Primary.Attributes["type"]
+		_, err := tfaccount.FindAlternateContactByContactType(ctx, conn, rs.Primary.ID)
 
-		input := &account.GetAlternateContactInput{AlternateContactType: aws.String(contactType)}
-
-		resp, err := conn.GetAlternateContact(input)
-
-		if tfawserr.ErrCodeEquals(err, account.ErrCodeResourceNotFoundException) {
-			return nil
+		if tfresource.NotFound(err) {
+			continue
 		}
 
 		if err != nil {
-			return fmt.Errorf("error reading Account Alternate Contact (%s): %w", rs.Primary.Attributes["type"], err)
+			return err
 		}
 
-		if resp == nil {
-			return fmt.Errorf("error reading Account Alternate Contact (%s): empty response", rs.Primary.Attributes["type"])
-		}
+		return fmt.Errorf("Account Alternate Contact %s still exists", rs.Primary.ID)
 	}
 
 	return nil
@@ -76,31 +114,50 @@ func testAccCheckAccountAlternateContactExists(n string) resource.TestCheckFunc 
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("not found: %s", n)
+			return fmt.Errorf("Not found: %s", n)
 		}
 
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("No Account Alternate Contact ID is set")
+		}
+
+		ctx := context.TODO()
 		conn := acctest.Provider.Meta().(*conns.AWSClient).AccountConn
-		contactType := rs.Primary.Attributes["type"]
 
-		input := &account.GetAlternateContactInput{AlternateContactType: aws.String(contactType)}
+		_, err := tfaccount.FindAlternateContactByContactType(ctx, conn, rs.Primary.ID)
 
-		_, err := conn.GetAlternateContact(input)
 		if err != nil {
-			return fmt.Errorf("error reading Account Alternate Contact (%s): %w", rs.Primary.Attributes["type"], err)
+			return err
 		}
 
 		return nil
 	}
 }
 
-func testAccountAlternateContactConfig(rName string) string {
+func testAccountAlternateContactConfig(rName, emailAddress string) string {
 	return fmt.Sprintf(`
 resource "aws_account_alternate_contact" "test" {
-  type          = "SECURITY"
+  alternate_contact_type = "OPERATIONS"
+
+  email_address = %[2]q
   name          = %[1]q
+  phone_number  = "+17031235555"
   title         = %[1]q
-  email_address = "test@test.test"
-  phone_number  = "+1234567890"
 }
-`, rName)
+`, rName, emailAddress)
+}
+
+func testAccPreCheck(t *testing.T) {
+	ctx := context.TODO()
+	conn := acctest.Provider.Meta().(*conns.AWSClient).AccountConn
+
+	_, err := tfaccount.FindAlternateContactByContactType(ctx, conn, account.AlternateContactTypeOperations)
+
+	if acctest.PreCheckSkipError(err) {
+		t.Skipf("skipping acceptance testing: %s", err)
+	}
+
+	if err != nil && !tfresource.NotFound(err) {
+		t.Fatalf("unexpected PreCheck error: %s", err)
+	}
 }
