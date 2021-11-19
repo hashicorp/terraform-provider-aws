@@ -10,11 +10,9 @@ description: |-
 
 Provides a resource to manage S3 Bucket Ownership Controls. For more information, see the [S3 Developer Guide](https://docs.aws.amazon.com/AmazonS3/latest/dev/about-object-ownership.html).
 
-~> **NOTE:** This AWS functionality is in Preview and may change before General Availability release. Backwards compatibility is not guaranteed between Terraform AWS Provider releases.
-
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_s3_bucket" "example" {
   bucket = "example"
 }
@@ -51,7 +49,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-S3 Bucket Ownership Controls can be imported using S3 Bucket name, e.g.
+S3 Bucket Ownership Controls can be imported using S3 Bucket name, e.g.,
 
 ```
 $ terraform import aws_s3_bucket_ownership_controls.example my-bucket

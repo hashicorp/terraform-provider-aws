@@ -4,16 +4,24 @@ ACM
 API Gateway (REST APIs)
 API Gateway v2 (WebSocket and HTTP APIs)
 Access Analyzer
+Amplify Console
+AppConfig
 AppMesh
+App Runner
 AppSync
+AppStream
 Application Autoscaling
 Athena
+Audit Manager
 Autoscaling
 Autoscaling Plans
+Amazon Managed Service for Prometheus (AMP)
 Backup
 Batch
 Budgets
+Chime
 Cloud9
+Cloud Control API
 CloudFormation
 CloudFront
 CloudHSM v2
@@ -28,11 +36,13 @@ CodeStar Connections
 CodeStar Notifications
 Cognito
 Config
+Connect
 Cost and Usage Report
 Data Lifecycle Manager (DLM)
 DataPipeline
 DataSync
 Database Migration Service (DMS)
+Detective
 Device Farm
 Direct Connect
 Directory Service
@@ -41,6 +51,7 @@ DynamoDB Accelerator (DAX)
 DynamoDB
 EC2
 ECR
+ECR Public
 ECS
 EFS
 EKS
@@ -49,9 +60,11 @@ Elastic Beanstalk
 Elastic Load Balancing (ELB Classic)
 Elastic Load Balancing v2 (ALB/NLB)
 Elastic Map Reduce (EMR)
+Elastic Map Reduce Containers
 Elastic Transcoder
-ElasticSearch
+Elasticsearch
 EventBridge (CloudWatch Events)
+EventBridge Schemas
 File System (FSx)
 Firewall Manager (FMS)
 Gamelift
@@ -70,10 +83,12 @@ Kinesis Data Analytics (SQL Applications)
 Kinesis Data Analytics v2 (SQL and Flink Applications)
 Kinesis Firehose
 Kinesis Video
+Lake Formation
 Lambda
 Lex
 License Manager
 Lightsail
+Location Service
 MQ
 Macie
 Macie Classic
@@ -81,6 +96,8 @@ Managed Streaming for Kafka (MSK)
 MediaConvert
 MediaPackage
 MediaStore
+MemoryDB
+Managed Workflows for Apache Airflow (MWAA)
 Neptune
 Network Firewall
 OpsWorks
@@ -96,6 +113,8 @@ Redshift
 Resource Groups
 Resource Groups Tagging API
 Route53 Domains
+Route53 Recovery Control Config
+Route53 Recovery Readiness
 Route53 Resolver
 Route53
 S3
@@ -110,6 +129,7 @@ SWF
 Sagemaker
 Secrets Manager
 Security Hub
+Serverless Application Repository
 Service Catalog
 Service Discovery
 Service Quotas

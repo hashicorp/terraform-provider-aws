@@ -14,7 +14,7 @@ Provides an AWS Network Firewall Logging Configuration Resource
 
 ### Logging to S3
 
-```hcl
+```terraform
 resource "aws_networkfirewall_logging_configuration" "example" {
   firewall_arn = aws_networkfirewall_firewall.example.arn
   logging_configuration {
@@ -32,7 +32,7 @@ resource "aws_networkfirewall_logging_configuration" "example" {
 
 ### Logging to CloudWatch
 
-```hcl
+```terraform
 resource "aws_networkfirewall_logging_configuration" "example" {
   firewall_arn = aws_networkfirewall_firewall.example.arn
   logging_configuration {
@@ -49,7 +49,7 @@ resource "aws_networkfirewall_logging_configuration" "example" {
 
 ### Logging to Kinesis Data Firehose
 
-```hcl
+```terraform
 resource "aws_networkfirewall_logging_configuration" "example" {
   firewall_arn = aws_networkfirewall_firewall.example.arn
   logging_configuration {
@@ -83,9 +83,9 @@ The `logging_configuration` block supports the following arguments:
 The `log_destination_config` block supports the following arguments:
 
 * `log_destination` - (Required) A map describing the logging destination for the chosen `log_destination_type`.
-    * For an Amazon S3 bucket, specify the key `bucketName` with the URL of the bucket and optionally specify the key `prefix` with a path.
+    * For an Amazon S3 bucket, specify the key `bucketName` with the name of the bucket and optionally specify the key `prefix` with a path.
     * For a CloudWatch log group, specify the key `logGroup` with the name of the CloudWatch log group.
-    * For a Kinesis Data Firehose delivery stream, specify the key `deliveryStream` with the Amazon Resource Name (ARN) of the delivery stream.
+    * For a Kinesis Data Firehose delivery stream, specify the key `deliveryStream` with the name of the delivery stream.
 
 * `log_destination_type` - (Required) The location to send logs to. Valid values: `S3`, `CloudWatchLogs`, `KinesisDataFirehose`.
 
