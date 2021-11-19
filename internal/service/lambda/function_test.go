@@ -578,14 +578,14 @@ func TestAccLambdaFunction_versionedUpdate(t *testing.T) {
 				PreConfig: func() {
 					timeBeforeUpdate = time.Now()
 				},
-				Config: testAccVersionedNodeJs10xRuntimeConfig(path, funcName, policyName, roleName, sgName),
+				Config: testAccVersionedNodeJs14xRuntimeConfig(path, funcName, policyName, roleName, sgName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(resourceName, funcName, &conf),
 					testAccCheckFunctionName(&conf, funcName),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "lambda", fmt.Sprintf("function:%s", funcName)),
 					resource.TestCheckResourceAttr(resourceName, "version", versionUpdated),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "qualified_arn", "lambda", fmt.Sprintf("function:%s:%s", funcName, versionUpdated)),
-					resource.TestCheckResourceAttr(resourceName, "runtime", lambda.RuntimeNodejs10X),
+					resource.TestCheckResourceAttr(resourceName, "runtime", lambda.RuntimeNodejs14X),
 					func(s *terraform.State) error {
 						return testAccCheckAttributeIsDateAfter(s, resourceName, "last_modified", timeBeforeUpdate)
 					},
@@ -2764,7 +2764,7 @@ resource "aws_lambda_function" "test" {
 `, layerName, funcName)
 }
 
-func testAccVersionedNodeJs10xRuntimeConfig(fileName, funcName, policyName, roleName, sgName string) string {
+func testAccVersionedNodeJs14xRuntimeConfig(fileName, funcName, policyName, roleName, sgName string) string {
 	return fmt.Sprintf(acctest.ConfigLambdaBase(policyName, roleName, sgName)+`
 resource "aws_lambda_function" "test" {
   filename      = "%s"
@@ -2772,7 +2772,7 @@ resource "aws_lambda_function" "test" {
   publish       = true
   role          = aws_iam_role.iam_for_lambda.arn
   handler       = "exports.example"
-  runtime       = "nodejs10.x"
+  runtime       = "nodejs14.x"
 }
 `, fileName, funcName)
 }
