@@ -157,7 +157,6 @@ func TestAccELBV2LoadBalancer_LoadBalancerType_gateway(t *testing.T) {
 				ImportStateVerifyIgnore: []string{
 					"drop_invalid_header_fields",
 					"enable_http2",
-					"enable_waf_fail_open",
 					"idle_timeout",
 				},
 			},
@@ -226,7 +225,6 @@ func TestAccELBV2LoadBalancer_LoadBalancerTypeGateway_enableCrossZoneLoadBalanci
 				ImportStateVerifyIgnore: []string{
 					"drop_invalid_header_fields",
 					"enable_http2",
-					"enable_waf_fail_open",
 					"idle_timeout",
 				},
 			},
@@ -644,7 +642,7 @@ func TestAccELBV2LoadBalancer_ApplicationLoadBalancer_updateDeletionProtection(t
 	})
 }
 
-func TestAccAWSLB_ApplicationLoadBalancer_updateWafFailOpen(t *testing.T) {
+func TestAccELBV2LoadBalancer_ApplicationLoadBalancer_updateWafFailOpen(t *testing.T) {
 	var pre, mid, post elbv2.LoadBalancer
 	lbName := fmt.Sprintf("testAccAWSalb-basic-%s", sdkacctest.RandString(10))
 	resourceName := "aws_lb.lb_test"
@@ -663,6 +661,11 @@ func TestAccAWSLB_ApplicationLoadBalancer_updateWafFailOpen(t *testing.T) {
 				),
 			},
 			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
 				Config: testAccLBConfig_enableWafFailOpen(lbName, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLoadBalancerExists(resourceName, &mid),
@@ -671,9 +674,14 @@ func TestAccAWSLB_ApplicationLoadBalancer_updateWafFailOpen(t *testing.T) {
 				),
 			},
 			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
 				Config: testAccLBConfig_enableWafFailOpen(lbName, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckLoadBalancerExists(resourceName, &mid),
+					testAccCheckLoadBalancerExists(resourceName, &post),
 					resource.TestCheckResourceAttr(resourceName, "enable_waf_fail_open", "false"),
 					testAccChecklbARNs(&mid, &post),
 				),
@@ -1882,7 +1890,7 @@ resource "aws_lb" "lb_test" {
 
 variable "subnets" {
   default = ["10.0.1.0/24", "10.0.2.0/24"]
-  type    = "list"
+  type    = list(string)
 }
 
 resource "aws_vpc" "alb_test" {
