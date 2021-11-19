@@ -17,7 +17,7 @@ import (
 
 const (
 	// Maximum amount of time to wait for Config service eventual consistency on deletion
-	configRemediationConfigurationDeletionTimeout = 2 * time.Minute
+	remediationConfigurationDeletionTimeout = 2 * time.Minute
 )
 
 func ResourceRemediationConfiguration() *schema.Resource {
@@ -128,7 +128,7 @@ func ResourceRemediationConfiguration() *schema.Resource {
 	}
 }
 
-func expandConfigRemediationConfigurationParameters(configured *schema.Set) (map[string]*configservice.RemediationParameterValue, error) {
+func expandRemediationConfigurationParameters(configured *schema.Set) (map[string]*configservice.RemediationParameterValue, error) {
 	results := make(map[string]*configservice.RemediationParameterValue)
 
 	for _, item := range configured.List() {
@@ -156,11 +156,11 @@ func expandConfigRemediationConfigurationParameters(configured *schema.Set) (map
 	return results, nil
 }
 
-func expandConfigRemediationConfigurationExecutionControlsConfig(v map[string]interface{}) (ret *configservice.ExecutionControls, err error) {
+func expandRemediationConfigurationExecutionControlsConfig(v map[string]interface{}) (ret *configservice.ExecutionControls, err error) {
 	if w, ok := v["ssm_controls"]; ok {
 		x := w.([]interface{})
 		if len(x) > 0 {
-			ssmControls, err := expandConfigRemediationConfigurationSsmControlsConfig(x[0].(map[string]interface{}))
+			ssmControls, err := expandRemediationConfigurationSsmControlsConfig(x[0].(map[string]interface{}))
 			if err != nil {
 				return nil, err
 			}
@@ -173,7 +173,7 @@ func expandConfigRemediationConfigurationExecutionControlsConfig(v map[string]in
 	return nil, fmt.Errorf("expected 'ssm_controls' in execution controls configuration")
 }
 
-func expandConfigRemediationConfigurationSsmControlsConfig(v map[string]interface{}) (ret *configservice.SsmControls, err error) {
+func expandRemediationConfigurationSsmControlsConfig(v map[string]interface{}) (ret *configservice.SsmControls, err error) {
 	ret = &configservice.SsmControls{}
 	p := false
 	if concurrentExecutionRatePercentage, ok := v["concurrent_execution_rate_percentage"]; ok {
@@ -209,16 +209,16 @@ func flattenRemediationConfigurationParameters(parameters map[string]*configserv
 	return items
 }
 
-func flattenConfigRemediationConfigurationExecutionControlsConfig(controls *configservice.ExecutionControls) []interface{} {
+func flattenRemediationConfigurationExecutionControlsConfig(controls *configservice.ExecutionControls) []interface{} {
 	if controls == nil {
 		return nil
 	}
 	return []interface{}{map[string]interface{}{
-		"ssm_controls": flattenConfigRemediationConfigurationSsmControlsConfig(controls.SsmControls),
+		"ssm_controls": flattenRemediationConfigurationSsmControlsConfig(controls.SsmControls),
 	}}
 }
 
-func flattenConfigRemediationConfigurationSsmControlsConfig(controls *configservice.SsmControls) []interface{} {
+func flattenRemediationConfigurationSsmControlsConfig(controls *configservice.SsmControls) []interface{} {
 	if controls == nil {
 		return nil
 	}
@@ -241,7 +241,7 @@ func resourceRemediationConfigurationPut(d *schema.ResourceData, meta interface{
 	}
 
 	if v, ok := d.GetOk("parameter"); ok {
-		params, err := expandConfigRemediationConfigurationParameters(v.(*schema.Set))
+		params, err := expandRemediationConfigurationParameters(v.(*schema.Set))
 		if err != nil {
 			return err
 		}
@@ -272,7 +272,7 @@ func resourceRemediationConfigurationPut(d *schema.ResourceData, meta interface{
 		executionControlsConfigs := v.([]interface{})
 		if len(executionControlsConfigs) == 1 {
 			w := executionControlsConfigs[0].(map[string]interface{})
-			controls, err := expandConfigRemediationConfigurationExecutionControlsConfig(w)
+			controls, err := expandRemediationConfigurationExecutionControlsConfig(w)
 			if err != nil {
 				return err
 			}
@@ -330,7 +330,7 @@ func resourceRemediationConfigurationRead(d *schema.ResourceData, meta interface
 	d.Set("maximum_automatic_attempts", remediationConfiguration.MaximumAutomaticAttempts)
 	d.Set("retry_attempt_seconds", remediationConfiguration.RetryAttemptSeconds)
 	d.Set("maximum_automatic_attempts", remediationConfiguration.MaximumAutomaticAttempts)
-	d.Set("execution_controls", flattenConfigRemediationConfigurationExecutionControlsConfig(remediationConfiguration.ExecutionControls))
+	d.Set("execution_controls", flattenRemediationConfigurationExecutionControlsConfig(remediationConfiguration.ExecutionControls))
 	d.SetId(aws.StringValue(remediationConfiguration.ConfigRuleName))
 
 	return nil
@@ -350,7 +350,7 @@ func resourceRemediationConfigurationDelete(d *schema.ResourceData, meta interfa
 	}
 
 	log.Printf("[DEBUG] Deleting AWS Config remediation configurations for rule %q", name)
-	err := resource.Retry(configRemediationConfigurationDeletionTimeout, func() *resource.RetryError {
+	err := resource.Retry(remediationConfigurationDeletionTimeout, func() *resource.RetryError {
 		_, err := conn.DeleteRemediationConfiguration(input)
 
 		if tfawserr.ErrCodeEquals(err, configservice.ErrCodeResourceInUseException) {
