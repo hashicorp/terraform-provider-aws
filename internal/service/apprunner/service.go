@@ -135,7 +135,7 @@ func ResourceService() *schema.Resource {
 						},
 						"instance_role_arn": {
 							Type:         schema.TypeString,
-							Required:     true,
+							Optional:     true,
 							ValidateFunc: verify.ValidARN,
 						},
 						"memory": {
@@ -652,7 +652,7 @@ func expandAppRunnerServiceInstanceConfiguration(l []interface{}) *apprunner.Ins
 		result.Cpu = aws.String(v)
 	}
 
-	if v, ok := tfMap["instance_role_arn"].(string); ok {
+	if v, ok := tfMap["instance_role_arn"].(string); ok && v != "" {
 		result.InstanceRoleArn = aws.String(v)
 	}
 
