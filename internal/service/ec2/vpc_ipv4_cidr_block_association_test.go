@@ -46,7 +46,7 @@ func TestAccEC2VPCIPv4CIDRBlockAssociation_basic(t *testing.T) {
 	})
 }
 
-func TestAccVPCIPv4CidrBlockAssociation_basicIpam(t *testing.T) {
+func TestAccVPCIPv4CidrBlockAssociation_IpamBasic(t *testing.T) {
 	var associationSecondary ec2.VpcCidrBlockAssociation
 	netmaskLength := "28"
 
@@ -60,22 +60,16 @@ func TestAccVPCIPv4CidrBlockAssociation_basicIpam(t *testing.T) {
 				Config: testAccVPCIPv4CidrBlockAssociationIpam(netmaskLength),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVPCIPv4CIDRBlockAssociationExists("aws_vpc_ipv4_cidr_block_association.secondary_cidr", &associationSecondary),
-					testAccCheckVPCAssociationCIDRPrefix(&associationSecondary, "28"),
+					testAccCheckVPCAssociationCIDRPrefix(&associationSecondary, netmaskLength),
 				),
-			},
-			{
-				ResourceName:            "aws_vpc_ipv4_cidr_block_association.secondary_cidr",
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"ipv4_ipam_pool_id", "ipv4_netmask_length"},
 			},
 		},
 	})
 }
 
-func TestAccVPCIPv4CidrBlockAssociation_basicIpamExplicitCidr(t *testing.T) {
+func TestAccVPCIPv4CidrBlockAssociation_IpamBasicExplicitCidr(t *testing.T) {
 	var associationSecondary ec2.VpcCidrBlockAssociation
-	cidr := "172.2.0.0/28"
+	cidr := "172.2.0.32/28"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -87,13 +81,7 @@ func TestAccVPCIPv4CidrBlockAssociation_basicIpamExplicitCidr(t *testing.T) {
 				Config: testAccVPCIPv4CidrBlockAssociationIpamExplicitCidr(cidr),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVPCIPv4CIDRBlockAssociationExists("aws_vpc_ipv4_cidr_block_association.secondary_cidr", &associationSecondary),
-					testAccCheckAdditionalVPCIPv4CIDRBlock(&associationSecondary, "172.2.0.0/28")),
-			},
-			{
-				ResourceName:            "aws_vpc_ipv4_cidr_block_association.secondary_cidr",
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"ipv4_ipam_pool_id", "ipv4_netmask_length"},
+					testAccCheckAdditionalVPCIPv4CIDRBlock(&associationSecondary, cidr)),
 			},
 		},
 	})

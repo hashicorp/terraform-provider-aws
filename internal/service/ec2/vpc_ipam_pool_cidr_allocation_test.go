@@ -34,7 +34,7 @@ func TestAccVPCIpamPoolAllocation_ipv4Basic(t *testing.T) {
 					testAccCheckVPCIpamAllocationExists(resourceName, &allocation),
 					resource.TestCheckResourceAttr(resourceName, "cidr", cidr),
 					resource.TestMatchResourceAttr(resourceName, "id", regexp.MustCompile(`^alloc-([\da-f]{8})((-[\da-f]{4}){3})(-[\da-f]{12})_ipam-pool(-[\da-f]+)$`)),
-					resource.TestMatchResourceAttr(resourceName, "allocation_id", regexp.MustCompile(`^alloc-([\da-f]{8})((-[\da-f]{4}){3})(-[\da-f]{12})$`)),
+					resource.TestMatchResourceAttr(resourceName, "ipam_pool_allocation_id", regexp.MustCompile(`^alloc-([\da-f]{8})((-[\da-f]{4}){3})(-[\da-f]{12})$`)),
 					resource.TestCheckResourceAttrPair(resourceName, "ipam_pool_id", "aws_vpc_ipam_pool.test", "id"),
 				),
 			},
@@ -137,17 +137,21 @@ resource "aws_vpc_ipam" "test" {
 	  region_name = data.aws_region.current.name
 	}
 }
-`
-const testAccVPCIpamPoolCidrPrivatePoolBase = `
+
 resource "aws_vpc_ipam_pool" "test" {
     address_family = "ipv4"
     ipam_scope_id  = aws_vpc_ipam.test.private_default_scope_id
 	locale         = data.aws_region.current.name
 }
+
+resource "aws_vpc_ipam_pool_cidr" "test" {
+	ipam_pool_id = aws_vpc_ipam_pool.test.id
+	cidr         = "172.2.0.0/24"
+}
 `
 
 func testAccVPCIpamPoolAllocationIpv4(cidr string) string {
-	return testAccVPCIpamPoolCidrPrivateBase + testAccVPCIpamPoolCidrPrivatePoolBase + fmt.Sprintf(`
+	return testAccVPCIpamPoolCidrPrivateBase + fmt.Sprintf(`
 resource "aws_vpc_ipam_pool_cidr_allocation" "test" {
 	ipam_pool_id = aws_vpc_ipam_pool.test.id
 	cidr         = %[1]q
@@ -159,7 +163,7 @@ resource "aws_vpc_ipam_pool_cidr_allocation" "test" {
 }
 
 func testAccVPCIpamPoolAllocationIpv4Netmask(netmask string) string {
-	return testAccVPCIpamPoolCidrPrivateBase + testAccVPCIpamPoolCidrPrivatePoolBase + fmt.Sprintf(`
+	return testAccVPCIpamPoolCidrPrivateBase + fmt.Sprintf(`
 resource "aws_vpc_ipam_pool_cidr_allocation" "test" {
 	ipam_pool_id   = aws_vpc_ipam_pool.test.id
 	netmask_length = %[1]q

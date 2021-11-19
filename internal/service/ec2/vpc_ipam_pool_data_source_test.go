@@ -23,7 +23,7 @@ func TestAccDataSourceVPCIpamPool_basic(t *testing.T) {
 				Config: testAccVPCIpamPoolOptions,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataSourceVPCIpamPoolID(dataSourceName),
-					// resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "auto_import", resourceName, "auto_import"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "ipam_scope_id", resourceName, "ipam_scope_id"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "ipam_scope_type", resourceName, "ipam_scope_type"),
@@ -65,29 +65,31 @@ resource "aws_vpc_ipam_pool" "test" {
 	description                       = "test"
 }
 
-data "aws_vpc_ipam_pool" "test" {}
+data "aws_vpc_ipam_pool" "test" {
+	depends_on = [aws_vpc_ipam_pool.test]
+}
 `
 
-const testAccVPCIpamPoolWithSourcePool = testAccVPCIpamPoolBase + `
-resource "aws_vpc_ipam_pool" "root" {
-	address_family = "ipv4"
-	ipam_scope_id  = aws_vpc_ipam.test.private_default_scope_id
-	locale              = data.aws_region.current.name
-	allocation_default_netmask_length = 28
-}
+// const testAccVPCIpamPoolWithSourcePool = testAccVPCIpamPoolBase + `
+// resource "aws_vpc_ipam_pool" "root" {
+// 	address_family = "ipv4"
+// 	ipam_scope_id  = aws_vpc_ipam.test.private_default_scope_id
+// 	locale              = data.aws_region.current.name
+// 	allocation_default_netmask_length = 28
+// }
 
-resource "aws_vpc_ipam_pool" "test" {
-    address_family                    = "ipv4"
-    source_ipam_pool_id               = aws_vpc_ipam.root.private_default_scope_id
-	auto_import                       = true
-	allocation_default_netmask_length = 32
-	allocation_max_netmask_length     = 32
-	allocation_min_netmask_length     = 32
-	allocation_resource_tags          = {
-		test = "1"
-	}
-	description                       = "test"
-}
+// resource "aws_vpc_ipam_pool" "test" {
+//     address_family                    = "ipv4"
+//     source_ipam_pool_id               = aws_vpc_ipam.root.private_default_scope_id
+// 	auto_import                       = true
+// 	allocation_default_netmask_length = 32
+// 	allocation_max_netmask_length     = 32
+// 	allocation_min_netmask_length     = 32
+// 	allocation_resource_tags          = {
+// 		test = "1"
+// 	}
+// 	description                       = "test"
+// }
 
-data "aws_vpc_ipam_pool" "test" {)
-`
+// data "aws_vpc_ipam_pool" "test" {)
+// `

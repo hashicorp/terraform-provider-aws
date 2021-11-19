@@ -635,7 +635,7 @@ func TestAccEC2VPC_tenancy(t *testing.T) {
 	})
 }
 
-func TestAccVPCIpam_ipv4BasicNetmask(t *testing.T) {
+func TestAccVPC_IpamIpv4BasicNetmask(t *testing.T) {
 	var vpc ec2.Vpc
 	resourceName := "aws_vpc.test"
 
@@ -653,20 +653,14 @@ func TestAccVPCIpam_ipv4BasicNetmask(t *testing.T) {
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`vpc/vpc-.+`)),
 				),
 			},
-			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"ipv4_ipam_pool_id", "ipv4_netmask_length"},
-			},
 		},
 	})
 }
 
-func TestAccVPCIpam_ipv4BasicExplicitCidr(t *testing.T) {
+func TestAccVPC_IpamIpv4BasicExplicitCidr(t *testing.T) {
 	var vpc ec2.Vpc
 	resourceName := "aws_vpc.test"
-	cidr := "172.2.0.0/28"
+	cidr := "172.2.0.32/28"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -681,12 +675,6 @@ func TestAccVPCIpam_ipv4BasicExplicitCidr(t *testing.T) {
 					testAccCheckVpcCidr(&vpc, cidr),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`vpc/vpc-.+`)),
 				),
-			},
-			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"ipv4_ipam_pool_id", "ipv4_netmask_length"},
 			},
 		},
 	})
