@@ -1078,6 +1078,7 @@ func Provider() *schema.Provider {
 			"aws_spot_fleet_request":                              ec2.ResourceSpotFleetRequest(),
 			"aws_spot_instance_request":                           ec2.ResourceSpotInstanceRequest(),
 			"aws_subnet":                                          ec2.ResourceSubnet(),
+			"aws_subnet_cidr_reservation":                         ec2.ResourceSubnetCIDRReservation(),
 			"aws_volume_attachment":                               ec2.ResourceVolumeAttachment(),
 			"aws_vpc":                                             ec2.ResourceVPC(),
 			"aws_vpc_dhcp_options":                                ec2.ResourceVPCDHCPOptions(),
