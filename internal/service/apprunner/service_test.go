@@ -646,8 +646,8 @@ resource "aws_apprunner_service" "test" {
   service_name = %[1]q
 
   instance_configuration {
-    cpu               = "1 vCPU"
-    memory            = "3 GB"
+    cpu    = "1 vCPU"
+    memory = "3 GB"
   }
 
   source_configuration {
