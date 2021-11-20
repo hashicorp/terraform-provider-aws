@@ -160,8 +160,8 @@ func resourceWebACLCreate(d *schema.ResourceData, meta interface{}) error {
 		VisibilityConfig: expandWafv2VisibilityConfig(d.Get("visibility_config").([]interface{})),
 	}
 
-	if v, ok := d.Get("custom_response_body").(*schema.Set); ok && len(v.List()) > 0 {
-		params.CustomResponseBodies = expandWafv2CustomResponseBodies(v.List())
+	if v, ok := d.GetOk("custom_response_body"); ok && v.(*schema.Set).Len() > 0 {
+		params.CustomResponseBodies = expandWafv2CustomResponseBodies(v.(*schema.Set).List())
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -282,8 +282,8 @@ func resourceWebACLUpdate(d *schema.ResourceData, meta interface{}) error {
 			VisibilityConfig: expandWafv2VisibilityConfig(d.Get("visibility_config").([]interface{})),
 		}
 
-		if v, ok := d.Get("custom_response_body").(*schema.Set); ok && len(v.List()) > 0 {
-			u.CustomResponseBodies = expandWafv2CustomResponseBodies(v.List())
+		if v, ok := d.GetOk("custom_response_body"); ok && v.(*schema.Set).Len() > 0 {
+			u.CustomResponseBodies = expandWafv2CustomResponseBodies(v.(*schema.Set).List())
 		}
 
 		if v, ok := d.GetOk("description"); ok {

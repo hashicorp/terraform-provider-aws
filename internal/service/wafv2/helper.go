@@ -551,13 +551,9 @@ func wafv2CustomResponseBodySchema() *schema.Schema {
 					ValidateFunc: validation.StringLenBetween(1, 10240),
 				},
 				"content_type": {
-					Type:     schema.TypeString,
-					Required: true,
-					ValidateFunc: validation.StringInSlice([]string{
-						"TEXT_PLAIN",
-						"TEXT_HTML",
-						"APPLICATION_JSON",
-					}, false),
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: validation.StringInSlice(wafv2.ResponseContentType_Values(), false),
 				},
 			},
 		},
@@ -706,7 +702,7 @@ func expandWafv2CustomResponse(l []interface{}) *wafv2.CustomResponse {
 
 	customResponse := &wafv2.CustomResponse{}
 
-	if v, ok := m["custom_response_body_key"].(string); ok && len(v) > 0 {
+	if v, ok := m["custom_response_body_key"].(string); ok && v != "" {
 		customResponse.CustomResponseBodyKey = aws.String(v)
 	}
 	if v, ok := m["response_code"].(int); ok && v > 0 {

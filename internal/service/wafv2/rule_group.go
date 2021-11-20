@@ -52,6 +52,7 @@ func ResourceRuleGroup() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.IntAtLeast(1),
 			},
+			"custom_response_body": wafv2CustomResponseBodySchema(),
 			"description": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -133,8 +134,8 @@ func resourceRuleGroupCreate(d *schema.ResourceData, meta interface{}) error {
 		VisibilityConfig: expandWafv2VisibilityConfig(d.Get("visibility_config").([]interface{})),
 	}
 
-	if v, ok := d.Get("custom_response_body").(*schema.Set); ok && len(v.List()) > 0 {
-		params.CustomResponseBodies = expandWafv2CustomResponseBodies(v.List())
+	if v, ok := d.GetOk("custom_response_body"); ok && v.(*schema.Set).Len() > 0 {
+		params.CustomResponseBodies = expandWafv2CustomResponseBodies(v.(*schema.Set).List())
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -251,8 +252,8 @@ func resourceRuleGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 		VisibilityConfig: expandWafv2VisibilityConfig(d.Get("visibility_config").([]interface{})),
 	}
 
-	if v, ok := d.Get("custom_response_body").(*schema.Set); ok && len(v.List()) > 0 {
-		u.CustomResponseBodies = expandWafv2CustomResponseBodies(v.List())
+	if v, ok := d.GetOk("custom_response_body"); ok && v.(*schema.Set).Len() > 0 {
+		u.CustomResponseBodies = expandWafv2CustomResponseBodies(v.(*schema.Set).List())
 	}
 
 	if v, ok := d.GetOk("description"); ok {
