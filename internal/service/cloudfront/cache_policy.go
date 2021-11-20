@@ -101,7 +101,7 @@ func ResourceCachePolicy() *schema.Resource {
 								Schema: map[string]*schema.Schema{
 									"header_behavior": {
 										Type:         schema.TypeString,
-										Optional:     true,
+										Required:     true,
 										ValidateFunc: validation.StringInSlice(cloudfront.CachePolicyHeaderBehavior_Values(), false),
 									},
 									"headers": {
