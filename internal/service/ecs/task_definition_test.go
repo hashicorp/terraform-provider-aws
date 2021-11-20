@@ -2486,7 +2486,9 @@ TASK_DEFINITION
 }
 
 func testAccTaskDefinitionWithFSxVolume(domain, tdName string) string {
-	return testAccFSxWindowsFileSystemSubnetIds1Config(domain) + fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		testAccFSxWindowsFileSystemSubnetIds1Config(domain),
+		fmt.Sprintf(`
 data "aws_partition" "current" {}
 
 resource "aws_secretsmanager_secret" "test" {
@@ -2570,7 +2572,7 @@ TASK_DEFINITION
     aws_iam_role_policy_attachment.test3
   ]
 }
-`, tdName)
+`, tdName))
 }
 
 func testAccTaskDefinitionImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
@@ -2604,13 +2606,14 @@ resource "aws_directory_service_directory" "test" {
 }
 
 func testAccFSxWindowsFileSystemSubnetIds1Config(domain string) string {
-	return testAccFSxWindowsFileSystemBaseConfig(domain) + `
+	return acctest.ConfigCompose(
+		testAccFSxWindowsFileSystemBaseConfig(domain), `
 resource "aws_fsx_windows_file_system" "test" {
   active_directory_id = aws_directory_service_directory.test.id
   skip_final_backup   = true
   storage_capacity    = 32
-  subnet_ids          = [aws_subnet.test.id]
+  subnet_ids          = [aws_subnet.test[0].id]
   throughput_capacity = 8
 }
-`
+`)
 }

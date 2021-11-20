@@ -471,14 +471,14 @@ resource "aws_worklink_fleet" "test" {
 `, r)
 }
 
-func testAccFleetDeviceCaCertificateConfig(r string) string {
+func testAccFleetDeviceCaCertificateConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_worklink_fleet" "test" {
-  name = "tf-worklink-fleet-%s"
+  name = "tf-worklink-fleet-%[1]s"
 
-  device_ca_certificate = file("./test/test-fixtures/worklink-device-ca-certificate.pem")
+  device_ca_certificate = file("./test-fixtures/worklink-device-ca-certificate.pem")
 }
-`, r)
+`, rName)
 }
 
 func testAccFleetIdentityProviderConfig(rName, idpEntityId string) string {
