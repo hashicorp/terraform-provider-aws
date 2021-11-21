@@ -1907,71 +1907,70 @@ resource "aws_internet_gateway" "gw" {
 `
 
 const testAccLoadBalancerConfigDesyncMitigationMode = `
- data "aws_availability_zones" "available" {
-   state = "available"
+data "aws_availability_zones" "available" {
+  state = "available"
 
-   filter {
-     name   = "opt-in-status"
-     values = ["opt-in-not-required"]
-   }
- }
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
 
- resource "aws_elb" "test" {
-   availability_zones = [data.aws_availability_zones.available.names[0]]
+resource "aws_elb" "test" {
+  availability_zones = [data.aws_availability_zones.available.names[0]]
+  listener {
+    instance_port     = 8000
+    instance_protocol = "http"
+    lb_port           = 80
+    lb_protocol       = "http"
+  }
 
-   listener {
-     instance_port     = 8000
-     instance_protocol = "http"
-     lb_port           = 80
-     lb_protocol       = "http"
-   }
-
-   desync_mitigation_mode = "strictest"
- }
- `
+  desync_mitigation_mode = "strictest"
+}
+`
 
 const testAccLoadBalancerConfigDesyncMitigationMode_update_default = `
- data "aws_availability_zones" "available" {
-   state = "available"
+data "aws_availability_zones" "available" {
+  state = "available"
 
-   filter {
-     name   = "opt-in-status"
-     values = ["opt-in-not-required"]
-   }
- }
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
 
- resource "aws_elb" "test" {
-   availability_zones = [data.aws_availability_zones.available.names[0]]
+resource "aws_elb" "test" {
+  availability_zones = [data.aws_availability_zones.available.names[0]]
 
-   listener {
-     instance_port     = 8000
-     instance_protocol = "http"
-     lb_port           = 80
-     lb_protocol       = "http"
-   }
- }
- `
+  listener {
+    instance_port     = 8000
+    instance_protocol = "http"
+    lb_port           = 80
+    lb_protocol       = "http"
+  }
+}
+`
 
 const testAccLoadBalancerConfigDesyncMitigationMode_update_monitor = `
- data "aws_availability_zones" "available" {
-   state = "available"
+data "aws_availability_zones" "available" {
+  state = "available"
 
-   filter {
-     name   = "opt-in-status"
-     values = ["opt-in-not-required"]
-   }
- }
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
 
- resource "aws_elb" "test" {
-   availability_zones = [data.aws_availability_zones.available.names[0]]
+resource "aws_elb" "test" {
+  availability_zones = [data.aws_availability_zones.available.names[0]]
 
-   listener {
-     instance_port     = 8000
-     instance_protocol = "http"
-     lb_port           = 80
-     lb_protocol       = "http"
-   }
+  listener {
+    instance_port     = 8000
+    instance_protocol = "http"
+    lb_port           = 80
+    lb_protocol       = "http"
+  }
 
-   desync_mitigation_mode = "monitor"
- }
- `
+  desync_mitigation_mode = "monitor"
+}
+`

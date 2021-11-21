@@ -2906,78 +2906,78 @@ resource "aws_security_group" "alb_test" {
 
 func testAccAWSLBConfig_desyncMitigationMode(lbName string, mode string) string {
 	return fmt.Sprintf(`
- resource "aws_lb" "lb_test" {
-   name            = "%s"
-   internal        = true
-   security_groups = ["${aws_security_group.alb_test.id}"]
-   subnets         = "${aws_subnet.alb_test.*.id}"
+resource "aws_lb" "lb_test" {
+  name            = "%s"
+  internal        = true
+  security_groups = ["${aws_security_group.alb_test.id}"]
+  subnets         = aws_subnet.alb_test.*.id
 
-   idle_timeout               = 30
-   enable_deletion_protection = false
+  idle_timeout               = 30
+  enable_deletion_protection = false
 
-   desync_mitigation_mode = %q
+  desync_mitigation_mode = %q
 
-   tags = {
-     Name = "TestAccAWSALB_desync"
-   }
- }
+  tags = {
+    Name = "TestAccAWSALB_desync"
+  }
+}
 
- variable "subnets" {
-   default = ["10.0.1.0/24", "10.0.2.0/24"]
-   type    = list
- }
+variable "subnets" {
+  default = ["10.0.1.0/24", "10.0.2.0/24"]
+  type    = list
+}
 
- data "aws_availability_zones" "available" {
-   state = "available"
+data "aws_availability_zones" "available" {
+  state = "available"
 
-   filter {
-     name   = "opt-in-status"
-     values = ["opt-in-not-required"]
-   }
- }
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
 
- resource "aws_vpc" "alb_test" {
-   cidr_block = "10.0.0.0/16"
+resource "aws_vpc" "alb_test" {
+  cidr_block = "10.0.0.0/16"
 
-   tags = {
-     Name = "terraform-testacc-lb-desync"
-   }
- }
+  tags = {
+    Name = "terraform-testacc-lb-desync"
+  }
+}
 
- resource "aws_subnet" "alb_test" {
-   count                   = 2
-   vpc_id                  = "${aws_vpc.alb_test.id}"
-   cidr_block              = "${element(var.subnets, count.index)}"
-   map_public_ip_on_launch = true
-   availability_zone       = "${element(data.aws_availability_zones.available.names, count.index)}"
+resource "aws_subnet" "alb_test" {
+  count                   = 2
+  vpc_id                  = aws_vpc.alb_test.id
+  cidr_block              = "${element(var.subnets, count.index)}"
+  map_public_ip_on_launch = true
+  availability_zone       = "${element(data.aws_availability_zones.available.names, count.index)}"
 
-   tags = {
-     Name = "tf-acc-lb-desync-${count.index}"
-   }
- }
+  tags = {
+    Name = "tf-acc-lb-desync-${count.index}"
+  }
+}
 
- resource "aws_security_group" "alb_test" {
-   name        = "allow_all_alb_test_desync"
-   description = "Used for ALB Testing"
-   vpc_id      = "${aws_vpc.alb_test.id}"
+resource "aws_security_group" "alb_test" {
+  name        = "allow_all_alb_test_desync"
+  description = "Used for ALB Testing"
+  vpc_id      = aws_vpc.alb_test.id
 
-   ingress {
-     from_port   = 0
-     to_port     = 0
-     protocol    = "-1"
-     cidr_blocks = ["0.0.0.0/0"]
-   }
+  ingress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
 
-   egress {
-     from_port   = 0
-     to_port     = 0
-     protocol    = "-1"
-     cidr_blocks = ["0.0.0.0/0"]
-   }
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
 
-   tags = {
-     Name = "TestAccAWSALB_desync"
-   }
- }
- `, lbName, mode)
+  tags = {
+    Name = "TestAccAWSALB_desync"
+  }
+}
+`, lbName, mode)
 }
