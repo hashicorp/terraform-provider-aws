@@ -2947,9 +2947,9 @@ resource "aws_vpc" "alb_test" {
 resource "aws_subnet" "alb_test" {
   count                   = 2
   vpc_id                  = aws_vpc.alb_test.id
-  cidr_block              = "${element(var.subnets, count.index)}"
+  cidr_block              = element(var.subnets, count.index)}
   map_public_ip_on_launch = true
-  availability_zone       = "${element(data.aws_availability_zones.available.names, count.index)}"
+  availability_zone       = element(data.aws_availability_zones.available.names, count.index)
 
   tags = {
     Name = "tf-acc-lb-desync-${count.index}"
