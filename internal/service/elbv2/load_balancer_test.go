@@ -2909,7 +2909,7 @@ func testAccAWSLBConfig_desyncMitigationMode(lbName string, mode string) string 
 resource "aws_lb" "lb_test" {
   name            = "%s"
   internal        = true
-  security_groups = ["${aws_security_group.alb_test.id}"]
+  security_groups = [aws_security_group.alb_test.id]
   subnets         = aws_subnet.alb_test.*.id
 
   idle_timeout               = 30
@@ -2947,7 +2947,7 @@ resource "aws_vpc" "alb_test" {
 resource "aws_subnet" "alb_test" {
   count                   = 2
   vpc_id                  = aws_vpc.alb_test.id
-  cidr_block              = element(var.subnets, count.index)}
+  cidr_block              = element(var.subnets, count.index)
   map_public_ip_on_launch = true
   availability_zone       = element(data.aws_availability_zones.available.names, count.index)
 
