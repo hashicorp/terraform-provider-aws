@@ -1109,7 +1109,7 @@ func TestAccELBV2LoadBalancer_NetworkLoadBalancerSubnet_change(t *testing.T) {
 	})
 }
 
-func TestAccAWSLB_applicationLoadBalancer_updateDesyncMitigationMode(t *testing.T) {
+func TestAccELBV2LoadBalancer_updateDesyncMitigationMode(t *testing.T) {
 	var pre, mid, post elbv2.LoadBalancer
 	lbName := fmt.Sprintf("testaccawsalb-desync-%s", sdkacctest.RandString(4))
 	resourceName := "aws_lb.lb_test"
