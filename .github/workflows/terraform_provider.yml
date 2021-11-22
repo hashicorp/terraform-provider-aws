@@ -189,12 +189,14 @@ jobs:
 
   go_test:
     name: go test
-    needs: [go_build]
+    needs: [changedfiles,go_build]
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
     # See also: https://github.com/actions/setup-go/pull/62
-    - run: echo "GO_VERSION=$(cat .go-version)" >> $GITHUB_ENV
+    - run: |
+        echo "GO_VERSION=$(cat .go-version)" >> $GITHUB_ENV
+        echo "::set-output name=all::$(git diff --name-only --diff-filter=ACMRT ${{ github.event.pull_request.base.sha }} ${{ github.sha }} | xargs)"
     - uses: actions/setup-go@v2
       with:
         go-version: ${{ env.GO_VERSION }}
@@ -214,7 +216,9 @@ jobs:
       with:
         path: ~/go/pkg/mod
         key: ${{ runner.os }}-go-pkg-mod-${{ hashFiles('go.sum') }}
-    - run: go test ./... -p 3 -short -parallel 8 -failfast -timeout=5m
+    - run: |
+        echo ${{needs.changedfiles.outputs.all}}
+        go test ./internal/service/... -short -parallel 8 -failfast -timeout=5m
 
   golangci-lint:
     needs: [go_build]
