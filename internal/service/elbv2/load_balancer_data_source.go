@@ -158,6 +158,11 @@ func DataSourceLoadBalancer() *schema.Resource {
 				Computed: true,
 			},
 
+			"desync_mitigation_mode": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+
 			"tags": tftags.TagsSchemaComputed(),
 		},
 	}
@@ -298,6 +303,9 @@ func dataSourceLoadBalancerRead(d *schema.ResourceData, meta interface{}) error 
 		case "load_balancing.cross_zone.enabled":
 			crossZoneLbEnabled := aws.StringValue(attr.Value) == "true"
 			d.Set("enable_cross_zone_load_balancing", crossZoneLbEnabled)
+		case "routing.http.desync_mitigation_mode":
+			desyncMitigationMode := aws.StringValue(attr.Value)
+			d.Set("desync_mitigation_mode", desyncMitigationMode)
 		}
 	}
 

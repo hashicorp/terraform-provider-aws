@@ -258,6 +258,18 @@ func ResourceLoadBalancer() *schema.Resource {
 				Computed: true,
 			},
 
+			"desync_mitigation_mode": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Default:  "defensive",
+				ValidateFunc: validation.StringInSlice([]string{
+					"monitor",
+					"defensive",
+					"strictest",
+				}, false),
+				DiffSuppressFunc: suppressIfLBTypeNot(elbv2.LoadBalancerTypeEnumApplication),
+			},
+
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
 		},
@@ -267,6 +279,12 @@ func ResourceLoadBalancer() *schema.Resource {
 func suppressIfLBType(t string) schema.SchemaDiffSuppressFunc {
 	return func(k string, old string, new string, d *schema.ResourceData) bool {
 		return d.Get("load_balancer_type").(string) == t
+	}
+}
+
+func suppressIfLBTypeNot(t string) schema.SchemaDiffSuppressFunc {
+	return func(k string, old string, new string, d *schema.ResourceData) bool {
+		return d.Get("load_balancer_type").(string) != t
 	}
 }
 
@@ -480,6 +498,13 @@ func resourceLoadBalancerUpdate(d *schema.ResourceData, meta interface{}) error 
 			attributes = append(attributes, &elbv2.LoadBalancerAttribute{
 				Key:   aws.String("routing.http.drop_invalid_header_fields.enabled"),
 				Value: aws.String(strconv.FormatBool(d.Get("drop_invalid_header_fields").(bool))),
+			})
+		}
+
+		if d.HasChange("desync_mitigation_mode") || d.IsNewResource() {
+			attributes = append(attributes, &elbv2.LoadBalancerAttribute{
+				Key:   aws.String("routing.http.desync_mitigation_mode"),
+				Value: aws.String(d.Get("desync_mitigation_mode").(string)),
 			})
 		}
 
@@ -824,6 +849,10 @@ func flattenResource(d *schema.ResourceData, meta interface{}, lb *elbv2.LoadBal
 			crossZoneLbEnabled := aws.StringValue(attr.Value) == "true"
 			log.Printf("[DEBUG] Setting NLB Cross Zone Load Balancing Enabled: %t", crossZoneLbEnabled)
 			d.Set("enable_cross_zone_load_balancing", crossZoneLbEnabled)
+		case "routing.http.desync_mitigation_mode":
+			desyncMitigationMode := aws.StringValue(attr.Value)
+			log.Printf("[DEBUG] Setting ALB Desync Mitigation Mode: %s", desyncMitigationMode)
+			d.Set("desync_mitigation_mode", desyncMitigationMode)
 		}
 	}
 

@@ -40,6 +40,7 @@ func TestAccELBV2LoadBalancerDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "ip_address_type", resourceName, "ip_address_type"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "subnet_mapping.#", resourceName, "subnet_mapping.#"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "desync_mitigation_mode", resourceName, "desync_mitigation_mode"),
 					resource.TestCheckResourceAttrPair(dataSourceName2, "name", resourceName, "name"),
 					resource.TestCheckResourceAttrPair(dataSourceName2, "internal", resourceName, "internal"),
 					resource.TestCheckResourceAttrPair(dataSourceName2, "subnets.#", resourceName, "subnets.#"),
@@ -55,6 +56,7 @@ func TestAccELBV2LoadBalancerDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName2, "arn", resourceName, "arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName2, "ip_address_type", resourceName, "ip_address_type"),
 					resource.TestCheckResourceAttrPair(dataSourceName2, "subnet_mapping.#", resourceName, "subnet_mapping.#"),
+					resource.TestCheckResourceAttrPair(dataSourceName2, "desync_mitigation_mode", resourceName, "desync_mitigation_mode"),
 					resource.TestCheckResourceAttrPair(dataSourceName3, "name", resourceName, "name"),
 					resource.TestCheckResourceAttrPair(dataSourceName3, "internal", resourceName, "internal"),
 					resource.TestCheckResourceAttrPair(dataSourceName3, "subnets.#", resourceName, "subnets.#"),
@@ -70,6 +72,7 @@ func TestAccELBV2LoadBalancerDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName3, "arn", resourceName, "arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName3, "ip_address_type", resourceName, "ip_address_type"),
 					resource.TestCheckResourceAttrPair(dataSourceName3, "subnet_mapping.#", resourceName, "subnet_mapping.#"),
+					resource.TestCheckResourceAttrPair(dataSourceName3, "desync_mitigation_mode", resourceName, "desync_mitigation_mode"),
 				),
 			},
 		},
@@ -199,6 +202,8 @@ resource "aws_lb" "test" {
 
   idle_timeout               = 30
   enable_deletion_protection = false
+
+  desync_mitigation_mode = "defensive"
 
   tags = {
     Name   = %[1]q
