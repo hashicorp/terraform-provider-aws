@@ -8,6 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/accessanalyzer"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/account"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/acm"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/acmpca"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/amp"
@@ -432,6 +433,7 @@ func Provider() *schema.Provider {
 			"aws_ec2_instance_type_offering":                 ec2.DataSourceInstanceTypeOffering(),
 			"aws_ec2_instance_type_offerings":                ec2.DataSourceInstanceTypeOfferings(),
 			"aws_ec2_instance_type":                          ec2.DataSourceInstanceType(),
+			"aws_ec2_instance_types":                         ec2.DataSourceInstanceTypes(),
 			"aws_ec2_local_gateway_route_table":              ec2.DataSourceLocalGatewayRouteTable(),
 			"aws_ec2_local_gateway_route_tables":             ec2.DataSourceLocalGatewayRouteTables(),
 			"aws_ec2_local_gateway_virtual_interface":        ec2.DataSourceLocalGatewayVirtualInterface(),
@@ -552,6 +554,7 @@ func Provider() *schema.Provider {
 			"aws_imagebuilder_image":                        imagebuilder.DataSourceImage(),
 			"aws_imagebuilder_image_pipeline":               imagebuilder.DataSourceImagePipeline(),
 			"aws_imagebuilder_image_recipe":                 imagebuilder.DataSourceImageRecipe(),
+			"aws_imagebuilder_image_recipes":                imagebuilder.DataSourceImageRecipes(),
 			"aws_imagebuilder_infrastructure_configuration": imagebuilder.DataSourceInfrastructureConfiguration(),
 
 			"aws_inspector_rules_packages": inspector.DataSourceRulesPackages(),
@@ -714,6 +717,8 @@ func Provider() *schema.Provider {
 
 		ResourcesMap: map[string]*schema.Resource{
 			"aws_accessanalyzer_analyzer": accessanalyzer.ResourceAnalyzer(),
+
+			"aws_account_alternate_contact": account.ResourceAlternateContact(),
 
 			"aws_acm_certificate":            acm.ResourceCertificate(),
 			"aws_acm_certificate_validation": acm.ResourceCertificateValidation(),
@@ -1267,6 +1272,8 @@ func Provider() *schema.Provider {
 			"aws_iot_policy_attachment":          iot.ResourcePolicyAttachment(),
 			"aws_iot_role_alias":                 iot.ResourceRoleAlias(),
 			"aws_iot_thing":                      iot.ResourceThing(),
+			"aws_iot_thing_group":                iot.ResourceThingGroup(),
+			"aws_iot_thing_group_membership":     iot.ResourceThingGroupMembership(),
 			"aws_iot_thing_principal_attachment": iot.ResourceThingPrincipalAttachment(),
 			"aws_iot_thing_type":                 iot.ResourceThingType(),
 			"aws_iot_topic_rule":                 iot.ResourceTopicRule(),
@@ -1302,6 +1309,7 @@ func Provider() *schema.Provider {
 			"aws_lambda_function":                       lambda.ResourceFunction(),
 			"aws_lambda_function_event_invoke_config":   lambda.ResourceFunctionEventInvokeConfig(),
 			"aws_lambda_layer_version":                  lambda.ResourceLayerVersion(),
+			"aws_lambda_layer_version_permission":       lambda.ResourceLayerVersionPermission(),
 			"aws_lambda_permission":                     lambda.ResourcePermission(),
 			"aws_lambda_provisioned_concurrency_config": lambda.ResourceProvisionedConcurrencyConfig(),
 
@@ -1482,6 +1490,7 @@ func Provider() *schema.Provider {
 			"aws_s3_bucket_ownership_controls":                s3.ResourceBucketOwnershipControls(),
 			"aws_s3_bucket_policy":                            s3.ResourceBucketPolicy(),
 			"aws_s3_bucket_public_access_block":               s3.ResourceBucketPublicAccessBlock(),
+			"aws_s3_bucket_replication_configuration":         s3.ResourceBucketReplicationConfiguration(),
 			"aws_s3_object_copy":                              s3.ResourceObjectCopy(),
 
 			"aws_s3_access_point":                             s3control.ResourceAccessPoint(),

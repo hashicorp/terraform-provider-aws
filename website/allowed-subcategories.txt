@@ -4,6 +4,7 @@ ACM
 API Gateway (REST APIs)
 API Gateway v2 (WebSocket and HTTP APIs)
 Access Analyzer
+Account
 Amplify Console
 AppConfig
 AppMesh

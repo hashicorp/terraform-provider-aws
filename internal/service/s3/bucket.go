@@ -818,7 +818,7 @@ func resourceBucketUpdate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if d.HasChange("replication_configuration") {
-		if err := resourceBucketReplicationConfigurationUpdate(conn, d); err != nil {
+		if err := resourceBucketInternalReplicationConfigurationUpdate(conn, d); err != nil {
 			return err
 		}
 	}
@@ -2033,7 +2033,7 @@ func resourceBucketObjectLockConfigurationUpdate(conn *s3.S3, d *schema.Resource
 	return nil
 }
 
-func resourceBucketReplicationConfigurationUpdate(conn *s3.S3, d *schema.ResourceData) error {
+func resourceBucketInternalReplicationConfigurationUpdate(conn *s3.S3, d *schema.ResourceData) error {
 	bucket := d.Get("bucket").(string)
 	replicationConfiguration := d.Get("replication_configuration").([]interface{})
 
