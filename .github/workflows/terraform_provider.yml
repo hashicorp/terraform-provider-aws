@@ -214,10 +214,7 @@ jobs:
       with:
         path: ~/go/pkg/mod
         key: ${{ runner.os }}-go-pkg-mod-${{ hashFiles('go.sum') }}
-    - run: |
-        echo "changed files:"
-        echo $(git diff --name-only --diff-filter=ACMRT ${{ github.event.pull_request.base.sha }} ${{ github.event.pull_request.head.sha }} | xargs)
-        go test ./internal/service/... -short -parallel 8 -failfast -timeout=5m
+    - run: go test ./internal/... -parallel 10 -short -run 'Test[^A]'
 
   golangci-lint:
     needs: [go_build]
