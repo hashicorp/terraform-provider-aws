@@ -56,7 +56,7 @@ The following arguments are supported:
 * `max_ttl` - (Optional) The maximum amount of time, in seconds, that objects stay in the CloudFront cache before CloudFront sends another request to the origin to see if the object has been updated.
 * `default_ttl` - (Optional) The default amount of time, in seconds, that you want objects to stay in the CloudFront cache before CloudFront sends another request to the origin to see if the object has been updated.
 * `comment` - (Optional) A comment to describe the cache policy.
-* `parameters_in_cache_key_and_forwarded_to_origin` - (Optional) The HTTP headers, cookies, and URL query strings to include in the cache key. See [Parameters In Cache Key And Forwarded To Origin](#parameters-in-cache-key-and-forwarded-to-origin) for more information.
+* `parameters_in_cache_key_and_forwarded_to_origin` - (Required) The HTTP headers, cookies, and URL query strings to include in the cache key. See [Parameters In Cache Key And Forwarded To Origin](#parameters-in-cache-key-and-forwarded-to-origin) for more information.
 
 ### Parameters In Cache Key And Forwarded To Origin
 
@@ -91,3 +91,11 @@ In addition to all arguments above, the following attributes are exported:
 
 * `etag` - The current version of the cache policy.
 * `id` - The identifier for the cache policy.
+
+## Import
+
+Cloudfront Cache Policies can be imported using the `id`, e.g.,
+
+```
+$ terraform import aws_cloudfront_cache_policy.policy 658327ea-f89d-4fab-a63d-7e88639e58f6
+```

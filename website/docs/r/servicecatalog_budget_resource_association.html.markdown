@@ -38,7 +38,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-`aws_servicecatalog_budget_resource_association` can be imported using the budget name and resource ID, e.g.
+`aws_servicecatalog_budget_resource_association` can be imported using the budget name and resource ID, e.g.,
 
 ```
 $ terraform import aws_servicecatalog_budget_resource_association.example budget-pjtvyakdlyo3m:prod-dnigbtea24ste

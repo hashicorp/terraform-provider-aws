@@ -64,7 +64,7 @@ resource "aws_wafv2_regex_pattern_set" "test" {
   name  = "test"
   scope = "REGIONAL"
 
-  regular_expression_list {
+  regular_expression {
     regex_string = "one"
   }
 }
@@ -286,12 +286,21 @@ resource "aws_wafv2_rule_group" "example" {
 The following arguments are supported:
 
 * `capacity` - (Required, Forces new resource) The web ACL capacity units (WCUs) required for this rule group. See [here](https://docs.aws.amazon.com/waf/latest/APIReference/API_CreateRuleGroup.html#API_CreateRuleGroup_RequestSyntax) for general information and [here](https://docs.aws.amazon.com/waf/latest/developerguide/waf-rule-statements-list.html) for capacity specific information.
+* `custom_response_body` - (Optional) Defines custom response bodies that can be referenced by `custom_response` actions. See [Custom Response Body](#custom-response-body) below for details.
 * `description` - (Optional) A friendly description of the rule group.
 * `name` - (Required, Forces new resource) A friendly name of the rule group.
 * `rule` - (Optional) The rule blocks used to identify the web requests that you want to `allow`, `block`, or `count`. See [Rules](#rules) below for details.
 * `scope` - (Required, Forces new resource) Specifies whether this is for an AWS CloudFront distribution or for a regional application. Valid values are `CLOUDFRONT` or `REGIONAL`. To work with CloudFront, you must also specify the region `us-east-1` (N. Virginia) on the AWS provider.
 * `tags` - (Optional) An array of key:value pairs to associate with the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `visibility_config` - (Required) Defines and enables Amazon CloudWatch metrics and web request sample collection. See [Visibility Configuration](#visibility-configuration) below for details.
+
+### Custom Response Body
+
+Each `custom_response_body` block supports the following arguments:
+
+* `key` - (Required) A unique key identifying the custom response body. This is referenced by the `custom_response_body_key` argument in the [Custom Response](#custom-response) block.
+* `content` - (Required) The payload of the custom response.
+* `content_type` - (Required) The type of content in the payload that you are defining in the `content` argument. Valid values are `TEXT_PLAIN`, `TEXT_HTML`, or `APPLICATION_JSON`.
 
 ### Rules
 
@@ -341,7 +350,8 @@ The `custom_request_handling` block supports the following arguments:
 
 The `custom_response` block supports the following arguments:
 
-* `response_code` - (Optional) The HTTP status code to return to the client.
+* `custom_response_body_key` - (Optional) References the response body that you want AWS WAF to return to the web request client. This must reference a `key` defined in a `custom_response_body` block of this resource.
+* `response_code` - (Required) The HTTP status code to return to the client.
 * `response_header` - (Optional) The `response_header` blocks used to define the HTTP response headers added to the response. See [Custom HTTP Header](#custom-http-header) below for details.
 
 ### Custom HTTP Header
@@ -520,7 +530,7 @@ The `single_query_argument` block supports the following arguments:
 The `text_transformation` block supports the following arguments:
 
 * `priority` - (Required) The relative processing order for multiple transformations that are defined for a rule statement. AWS WAF processes all transformations, from lowest priority to highest, before inspecting the transformed content.
-* `type` - (Required) The transformation to apply, you can specify the following types: `NONE`, `COMPRESS_WHITE_SPACE`, `HTML_ENTITY_DECODE`, `LOWERCASE`, `CMD_LINE`, `URL_DECODE`. See the [documentation](https://docs.aws.amazon.com/waf/latest/APIReference/API_TextTransformation.html) for more details.
+* `type` - (Required) The transformation to apply, please refer to the Text Transformation [documentation](https://docs.aws.amazon.com/waf/latest/APIReference/API_TextTransformation.html) for more details.
 
 ### Visibility Configuration
 
@@ -540,7 +550,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-WAFv2 Rule Group can be imported using `ID/name/scope` e.g.
+WAFv2 Rule Group can be imported using `ID/name/scope` e.g.,
 
 ```
 $ terraform import aws_wafv2_rule_group.example a1b2c3d4-d5f6-7777-8888-9999aaaabbbbcccc/example/REGIONAL

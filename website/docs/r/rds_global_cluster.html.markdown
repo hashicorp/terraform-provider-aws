@@ -38,6 +38,8 @@ resource "aws_rds_cluster" "primary" {
 
 resource "aws_rds_cluster_instance" "primary" {
   provider             = aws.primary
+  engine               = aws_rds_global_cluster.example.engine
+  engine_version       = aws_rds_global_cluster.example.engine_version
   identifier           = "test-primary-cluster-instance"
   cluster_identifier   = aws_rds_cluster.primary.id
   instance_class       = "db.r4.large"
@@ -55,6 +57,8 @@ resource "aws_rds_cluster" "secondary" {
 
 resource "aws_rds_cluster_instance" "secondary" {
   provider             = aws.secondary
+  engine               = aws_rds_global_cluster.example.engine
+  engine_version       = aws_rds_global_cluster.example.engine_version
   identifier           = "test-secondary-cluster-instance"
   cluster_identifier   = aws_rds_cluster.secondary.id
   instance_class       = "db.r4.large"
@@ -185,7 +189,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-`aws_rds_global_cluster` can be imported by using the RDS Global Cluster identifier, e.g.
+`aws_rds_global_cluster` can be imported by using the RDS Global Cluster identifier, e.g.,
 
 ```
 $ terraform import aws_rds_global_cluster.example example
@@ -193,7 +197,7 @@ $ terraform import aws_rds_global_cluster.example example
 
 Certain resource arguments, like `force_destroy`, only exist within Terraform. If the argument is set in the Terraform configuration on an imported resource, Terraform will show a difference on the first plan after import to update the state value. This change is safe to apply immediately so the state matches the desired configuration.
 
-Certain resource arguments, like `source_db_cluster_identifier`, do not have an API method for reading the information after creation. If the argument is set in the Terraform configuration on an imported resource, Terraform will always show a difference. To workaround this behavior, either omit the argument from the Terraform configuration or use [`ignore_changes`](https://www.terraform.io/docs/configuration/meta-arguments/lifecycle.html#ignore_changes) to hide the difference, e.g.
+Certain resource arguments, like `source_db_cluster_identifier`, do not have an API method for reading the information after creation. If the argument is set in the Terraform configuration on an imported resource, Terraform will always show a difference. To workaround this behavior, either omit the argument from the Terraform configuration or use [`ignore_changes`](https://www.terraform.io/docs/configuration/meta-arguments/lifecycle.html#ignore_changes) to hide the difference, e.g.,
 
 ```terraform
 resource "aws_rds_global_cluster" "example" {

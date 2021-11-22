@@ -46,7 +46,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Egress-only Internet gateways can be imported using the `id`, e.g.
+Egress-only Internet gateways can be imported using the `id`, e.g.,
 
 ```
 $ terraform import aws_egress_only_internet_gateway.example eigw-015e0e244e24dfe8a
