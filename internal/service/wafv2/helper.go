@@ -600,7 +600,7 @@ func expandWafv2Rule(m map[string]interface{}) *wafv2.Rule {
 		VisibilityConfig: expandWafv2VisibilityConfig(m["visibility_config"].([]interface{})),
 	}
 
-	if v, ok := m["rule_label"].(*schema.Set); ok {
+	if v, ok := m["rule_label"].(*schema.Set); ok && v.Len() > 0 {
 		rule.RuleLabels = expandWafv2RuleLabels(v.List())
 	}
 
