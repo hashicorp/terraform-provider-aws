@@ -214,7 +214,7 @@ jobs:
       with:
         path: ~/go/pkg/mod
         key: ${{ runner.os }}-go-pkg-mod-${{ hashFiles('go.sum') }}
-    - run: go test ./... -timeout=5m
+    - run: go test ./internal/... -parallel 10 -short -run 'Test[^A]'
 
   golangci-lint:
     needs: [go_build]
