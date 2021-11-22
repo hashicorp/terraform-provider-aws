@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -154,13 +153,13 @@ func testAccCheckVPCIpamPoolDestroy(s *terraform.State) error {
 			continue
 		}
 
-		id := aws.String(rs.Primary.ID)
+		id := rs.Primary.ID
 
-		if _, err := tfec2.WaitIpamPoolDeleted(conn, *id, tfec2.IpamPoolDeleteTimeout); err != nil {
+		if _, err := tfec2.WaitIpamPoolDeleted(conn, id, tfec2.IpamPoolDeleteTimeout); err != nil {
 			if tfresource.NotFound(err) {
 				return nil
 			}
-			return fmt.Errorf("error waiting for IPAM Pool (%s) to be deleted: %w", *id, err)
+			return fmt.Errorf("error waiting for IPAM Pool (%s) to be deleted: %w", id, err)
 		}
 	}
 

@@ -650,7 +650,6 @@ func TestAccVPC_IpamIpv4BasicNetmask(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckVPCExists(resourceName, &vpc),
 					testAccCheckVpcCidrPrefix(&vpc, "28"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`vpc/vpc-.+`)),
 				),
 			},
 		},
@@ -673,7 +672,6 @@ func TestAccVPC_IpamIpv4BasicExplicitCidr(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckVPCExists(resourceName, &vpc),
 					testAccCheckVpcCidr(&vpc, cidr),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`vpc/vpc-.+`)),
 				),
 			},
 		},

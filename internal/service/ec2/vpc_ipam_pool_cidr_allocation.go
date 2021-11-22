@@ -105,8 +105,7 @@ func ResourceVPCIpamPoolCidrAllocationCreate(d *schema.ResourceData, meta interf
 	if err != nil {
 		return fmt.Errorf("Error allocating cidr from IPAM pool (%s): %w", d.Get("ipam_pool_id").(string), err)
 	}
-	allocation_id := aws.StringValue(output.IpamPoolAllocation.IpamPoolAllocationId)
-	d.SetId(fmt.Sprintf("%s_%s", allocation_id, pool_id))
+	d.SetId(encodeIpamPoolCidrAllocationID(aws.StringValue(output.IpamPoolAllocation.IpamPoolAllocationId), pool_id))
 
 	return ResourceVPCIpamPoolCidrAllocationRead(d, meta)
 }
@@ -193,6 +192,10 @@ func FindIpamPoolCidrAllocation(conn *ec2.EC2, id string) (*ec2.IpamPoolAllocati
 	}
 
 	return output.IpamPoolAllocations[0], pool_id, nil
+}
+
+func encodeIpamPoolCidrAllocationID(allocation_id, pool_id string) string {
+	return fmt.Sprintf("%s_%s", allocation_id, pool_id)
 }
 
 func DecodeIpamPoolCidrAllocationID(id string) (string, string, error) {

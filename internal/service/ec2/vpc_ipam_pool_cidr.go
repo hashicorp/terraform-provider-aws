@@ -19,9 +19,9 @@ import (
 
 func ResourceVPCIpamPoolCidr() *schema.Resource {
 	return &schema.Resource{
-		Create: ResourceVPCIpamPoolCidrCreate,
-		Read:   ResourceVPCIpamPoolCidrRead,
-		Delete: ResourceVPCIpamPoolCidrDelete,
+		Create: resourceVPCIpamPoolCidrCreate,
+		Read:   resourceVPCIpamPoolCidrRead,
+		Delete: resourceVPCIpamPoolCidrDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -78,9 +78,8 @@ const (
 	IpamPoolCidrDeleteDelay    = 5 * time.Second
 )
 
-func ResourceVPCIpamPoolCidrCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceVPCIpamPoolCidrCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
-	public := false
 	pool_id := d.Get("ipam_pool_id").(string)
 
 	input := &ec2.ProvisionIpamPoolCidrInput{
@@ -89,7 +88,6 @@ func ResourceVPCIpamPoolCidrCreate(d *schema.ResourceData, meta interface{}) err
 
 	if v, ok := d.GetOk("cidr_authorization_context"); ok {
 		input.CidrAuthorizationContext = expandVPCIpamPoolCidrCidrAuthorizationContext(v.([]interface{}))
-		public = true
 	}
 
 	if v, ok := d.GetOk("cidr"); ok {
@@ -103,29 +101,17 @@ func ResourceVPCIpamPoolCidrCreate(d *schema.ResourceData, meta interface{}) err
 	}
 
 	cidr := aws.StringValue(output.IpamPoolCidr.Cidr)
-	d.SetId(fmt.Sprintf("%s_%s", cidr, pool_id))
+	id := encodeIpamPoolCidrId(cidr, pool_id)
 
-	// if ipv6 or private ipv4, can wait
-	if public {
-		log.Printf("[INFO] Public CIDR Authorization request sent, waiting for response...")
-		if _, err = WaitIpamPoolCidrAvailable(conn, d.Id(), IpamPoolCidrCreateTimeout); err != nil {
-			failed_id := d.Id()
-			d.SetId("")
-			return fmt.Errorf("error waiting for IPAM Pool Cidr (%s) to be provision: %w", failed_id, err)
-		}
-		return err
-	} else {
-		if _, err = WaitIpamPoolCidrAvailable(conn, d.Id(), IpamPoolCidrCreateTimeout); err != nil {
-			failed_id := d.Id()
-			d.SetId("")
-			return fmt.Errorf("error waiting for IPAM Pool Cidr (%s) to be provision: %w", failed_id, err)
-		}
+	if _, err = WaitIpamPoolCidrAvailable(conn, id, IpamPoolCidrCreateTimeout); err != nil {
+		return fmt.Errorf("error waiting for IPAM Pool Cidr (%s) to be provision: %w", id, err)
 	}
 
-	return ResourceVPCIpamPoolCidrRead(d, meta)
+	d.SetId(id)
+	return resourceVPCIpamPoolCidrRead(d, meta)
 }
 
-func ResourceVPCIpamPoolCidrRead(d *schema.ResourceData, meta interface{}) error {
+func resourceVPCIpamPoolCidrRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 	cidr, pool_id, err := FindIpamPoolCidr(conn, d.Id())
 
@@ -154,7 +140,7 @@ func ResourceVPCIpamPoolCidrRead(d *schema.ResourceData, meta interface{}) error
 	return nil
 }
 
-func ResourceVPCIpamPoolCidrDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceVPCIpamPoolCidrDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 	cidr, pool_id, err := DecodeIpamPoolCidrID(d.Id())
 
@@ -267,6 +253,10 @@ func statusIpamPoolCidrStatus(conn *ec2.EC2, id string) resource.StateRefreshFun
 
 		return output, aws.StringValue(output.State), nil
 	}
+}
+
+func encodeIpamPoolCidrId(cidr, pool_id string) string {
+	return fmt.Sprintf("%s_%s", cidr, pool_id)
 }
 
 func DecodeIpamPoolCidrID(id string) (string, string, error) {
