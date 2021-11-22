@@ -1448,7 +1448,7 @@ func testAccDistributionS3Config(rName string) string {
 		fmt.Sprintf(`
 resource "aws_cloudfront_distribution" "s3_distribution" {
   origin {
-    domain_name = "${aws_s3_bucket.s3_bucket_origin.id}.s3.amazonaws.com"
+    domain_name = aws_s3_bucket.s3_bucket_origin.bucket_regional_domain_name
     origin_id   = "myS3Origin"
   }
 
@@ -1457,7 +1457,7 @@ resource "aws_cloudfront_distribution" "s3_distribution" {
 
   logging_config {
     include_cookies = false
-    bucket          = "${aws_s3_bucket.s3_bucket_logs.id}.s3.amazonaws.com"
+    bucket          = aws_s3_bucket.s3_bucket_logs.bucket_regional_domain_name
     prefix          = "myprefix"
   }
 
@@ -1493,7 +1493,7 @@ resource "aws_cloudfront_distribution" "s3_distribution" {
     cloudfront_default_certificate = true
   }
 
-  %s
+  %[1]s
 }
 `, testAccDistributionRetainConfig()))
 }
@@ -1505,7 +1505,7 @@ func testAccDistributionS3WithTagsConfig(rName string) string {
 		fmt.Sprintf(`
 resource "aws_cloudfront_distribution" "s3_distribution" {
   origin {
-    domain_name = "${aws_s3_bucket.s3_bucket_origin.id}.s3.amazonaws.com"
+    domain_name = aws_s3_bucket.s3_bucket_origin.bucket_regional_domain_name
     origin_id   = "myS3Origin"
   }
 
@@ -1549,7 +1549,7 @@ resource "aws_cloudfront_distribution" "s3_distribution" {
     account     = "main"
   }
 
-  %s
+  %[1]s
 }
 `, testAccDistributionRetainConfig()))
 }
@@ -1561,7 +1561,7 @@ func testAccDistributionS3WithTagsUpdatedConfig(rName string) string {
 		fmt.Sprintf(`
 resource "aws_cloudfront_distribution" "s3_distribution" {
   origin {
-    domain_name = "${aws_s3_bucket.s3_bucket_origin.id}.s3.amazonaws.com"
+    domain_name = aws_s3_bucket.s3_bucket_origin.bucket_regional_domain_name
     origin_id   = "myS3Origin"
   }
 
@@ -1604,7 +1604,7 @@ resource "aws_cloudfront_distribution" "s3_distribution" {
     environment = "dev"
   }
 
-  %s
+  %[1]s
 }
 `, testAccDistributionRetainConfig()))
 }
@@ -1634,7 +1634,7 @@ resource "aws_cloudfront_distribution" "custom_distribution" {
 
   logging_config {
     include_cookies = false
-    bucket          = "${aws_s3_bucket.s3_bucket_logs.id}.s3.amazonaws.com"
+    bucket          = aws_s3_bucket.s3_bucket_logs.bucket_regional_domain_name
     prefix          = "myprefix"
   }
 
@@ -1671,7 +1671,7 @@ resource "aws_cloudfront_distribution" "custom_distribution" {
     cloudfront_default_certificate = true
   }
 
-  %s
+  %[1]s
 }
 `, testAccDistributionRetainConfig()))
 }
@@ -1775,7 +1775,7 @@ resource "aws_cloudfront_distribution" "custom_distribution" {
 
   logging_config {
     include_cookies = false
-    bucket          = "${aws_s3_bucket.s3_bucket_logs.id}.s3.amazonaws.com"
+    bucket          = aws_s3_bucket.s3_bucket_logs.bucket_regional_domain_name
     prefix          = "myprefix"
   }
 
@@ -1909,7 +1909,7 @@ resource "aws_cloudfront_distribution" "custom_distribution" {
 
   logging_config {
     include_cookies = false
-    bucket          = "${aws_s3_bucket.s3_bucket_logs.id}.s3.amazonaws.com"
+    bucket          = aws_s3_bucket.s3_bucket_logs.bucket_regional_domain_name
     prefix          = "myprefix"
   }
 
@@ -1965,7 +1965,7 @@ func testAccDistributionMultiOriginConfig(rName string) string {
 		fmt.Sprintf(`
 resource "aws_cloudfront_distribution" "multi_origin_distribution" {
   origin {
-    domain_name = "${aws_s3_bucket.s3_bucket_origin.id}.s3.amazonaws.com"
+    domain_name = aws_s3_bucket.s3_bucket_origin.bucket_regional_domain_name
     origin_id   = "myS3Origin"
   }
 
@@ -1988,7 +1988,7 @@ resource "aws_cloudfront_distribution" "multi_origin_distribution" {
 
   logging_config {
     include_cookies = false
-    bucket          = "${aws_s3_bucket.s3_bucket_logs.id}.s3.amazonaws.com"
+    bucket          = aws_s3_bucket.s3_bucket_logs.bucket_regional_domain_name
     prefix          = "myprefix"
   }
 
@@ -2071,7 +2071,7 @@ resource "aws_cloudfront_distribution" "multi_origin_distribution" {
     cloudfront_default_certificate = true
   }
 
-  %s
+  %[1]s
 }
 `, testAccDistributionRetainConfig()))
 }
@@ -2130,7 +2130,7 @@ resource "aws_cloudfront_distribution" "no_custom_error_responses" {
     cloudfront_default_certificate = true
   }
 
-  %s
+  %[1]s
 }
 `, testAccDistributionRetainConfig())
 }
@@ -2180,7 +2180,7 @@ resource "aws_cloudfront_distribution" "no_optional_items" {
     cloudfront_default_certificate = true
   }
 
-  %s
+  %[1]s
 }
 `, testAccDistributionRetainConfig())
 }
@@ -2230,7 +2230,7 @@ resource "aws_cloudfront_distribution" "Origin_EmptyDomainName" {
     cloudfront_default_certificate = true
   }
 
-  %s
+  %[1]s
 }
 `, testAccDistributionRetainConfig())
 }
@@ -2280,7 +2280,7 @@ resource "aws_cloudfront_distribution" "Origin_EmptyOriginID" {
     cloudfront_default_certificate = true
   }
 
-  %s
+  %[1]s
 }
 `, testAccDistributionRetainConfig())
 }
@@ -2336,7 +2336,7 @@ resource "aws_cloudfront_distribution" "http_1_1" {
     cloudfront_default_certificate = true
   }
 
-  %s
+  %[1]s
 }
 `, testAccDistributionRetainConfig())
 }
@@ -2393,7 +2393,7 @@ resource "aws_cloudfront_distribution" "is_ipv6_enabled" {
     cloudfront_default_certificate = true
   }
 
-  %s
+  %[1]s
 }
 `, testAccDistributionRetainConfig())
 }
@@ -2488,7 +2488,7 @@ resource "aws_cloudfront_distribution" "main" {
     cloudfront_default_certificate = true
   }
 
-  %s
+  %[1]s
 }
 `, testAccDistributionRetainConfig())
 }
@@ -2551,7 +2551,7 @@ resource "aws_cloudfront_distribution" "main" {
     cloudfront_default_certificate = true
   }
 
-  %s
+  %[2]s
 }
 
 resource "aws_cloudfront_cache_policy" "cache_policy" {
@@ -2739,7 +2739,7 @@ resource "aws_cloudfront_distribution" "failover_distribution" {
   viewer_certificate {
     cloudfront_default_certificate = true
   }
-  %s
+  %[1]s
 }
 `, testAccDistributionRetainConfig()))
 }
@@ -3710,7 +3710,7 @@ data "aws_region" "current" {}
 
 resource "aws_cloudfront_distribution" "test" {
   origin {
-    domain_name = "${aws_s3_bucket.s3_bucket_origin.id}.s3.amazonaws.com"
+    domain_name = aws_s3_bucket.s3_bucket_origin.bucket_regional_domain_name
     origin_id   = "myOrigin"
     %[1]s
   }
