@@ -1135,7 +1135,7 @@ func TestAccElasticsearchDomain_Update_version(t *testing.T) {
 		}})
 }
 
-func TestAccAWSElasticSearchDomain_disappears(t *testing.T) {
+func TestAccElasticsearchDomain_disappears(t *testing.T) {
 	ri := sdkacctest.RandInt()
 	resourceName := "aws_elasticsearch_domain.test"
 
@@ -1586,7 +1586,7 @@ resource "aws_elasticsearch_domain" "test" {
 
   advanced_options = {
     "indices.fielddata.cache.size"           = 80
-	"override_main_response_version"         = "false"
+    "override_main_response_version"         = "false"
     "rest.action.multi.allow_explicit_index" = "true"
   }
 
@@ -1621,8 +1621,8 @@ resource "aws_elasticsearch_domain" "test" {
 
   advanced_options = {
     "indices.fielddata.cache.size"           = 80
-	"override_main_response_version"         = "false"
-    "rest.action.multi.allow_explicit_index" = "true"	
+    "override_main_response_version"         = "false"
+    "rest.action.multi.allow_explicit_index" = "true"
   }
 
   ebs_options {
@@ -1669,8 +1669,8 @@ resource "aws_elasticsearch_domain" "test" {
 
   advanced_options = {
     "indices.fielddata.cache.size"           = 80
-	"override_main_response_version"         = "false"
-    "rest.action.multi.allow_explicit_index" = "true"	
+    "override_main_response_version"         = "false"
+    "rest.action.multi.allow_explicit_index" = "true"
   }
 
   ebs_options {
@@ -1851,8 +1851,8 @@ resource "aws_elasticsearch_domain" "test" {
 
   advanced_options = {
     "indices.fielddata.cache.size"           = 80
-	"override_main_response_version"         = "false"
-    "rest.action.multi.allow_explicit_index" = "true"	
+    "override_main_response_version"         = "false"
+    "rest.action.multi.allow_explicit_index" = "true"
   }
 
   ebs_options {
