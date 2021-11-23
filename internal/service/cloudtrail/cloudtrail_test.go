@@ -1396,7 +1396,7 @@ resource "aws_cloudtrail" "test" {
 
   insight_selector {
     insight_type = "ApiErrorRateInsight"
-  }  
+  }
 }
 `, rName))
 }
