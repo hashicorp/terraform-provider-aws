@@ -249,7 +249,6 @@ jobs:
     - name: Run tests for changed packages
       run: |
         while read pkg; do
-          sweep_tags=""
           if [ "${pkg}" = "internal/sweep" ]; then
             continue
           fi
