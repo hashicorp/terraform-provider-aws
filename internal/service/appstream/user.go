@@ -131,7 +131,7 @@ func resourceUserRead(ctx context.Context, d *schema.ResourceData, meta interfac
 
 	userName, authType, err := DecodeUserID(d.Id())
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error decoding id AppStream User (%s): %w", d.Id(), err))
+		return diag.FromErr(fmt.Errorf("error decoding AppStream User ID (%s): %w", d.Id(), err))
 	}
 
 	user, err := FindUserByUserNameAndAuthType(ctx, conn, userName, authType)
@@ -196,7 +196,7 @@ func resourceUserDelete(ctx context.Context, d *schema.ResourceData, meta interf
 
 	userName, authType, err := DecodeUserID(d.Id())
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error decoding id AppStream User (%s): %w", d.Id(), err))
+		return diag.FromErr(fmt.Errorf("error decoding AppStream User ID (%s): %w", d.Id(), err))
 	}
 
 	_, err = conn.DeleteUserWithContext(ctx, &appstream.DeleteUserInput{

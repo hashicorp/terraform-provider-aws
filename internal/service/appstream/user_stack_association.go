@@ -93,7 +93,7 @@ func resourceUserStackAssociationRead(ctx context.Context, d *schema.ResourceDat
 
 	userName, stackName, authType, err := DecodeStackUserID(d.Id())
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error decoding id AppStream User Stack Association (%s): %w", d.Id(), err))
+		return diag.FromErr(fmt.Errorf("error decoding AppStream User Stack Association ID (%s): %w", d.Id(), err))
 	}
 
 	resp, err := conn.DescribeUserStackAssociationsWithContext(ctx,
@@ -129,7 +129,7 @@ func resourceUserStackAssociationDelete(ctx context.Context, d *schema.ResourceD
 
 	userName, stackName, authType, err := DecodeStackUserID(d.Id())
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error decoding id AppStream User Stack Association (%s): %w", d.Id(), err))
+		return diag.FromErr(fmt.Errorf("error decoding AppStream User Stack Association ID (%s): %w", d.Id(), err))
 	}
 
 	input := &appstream.UserStackAssociation{

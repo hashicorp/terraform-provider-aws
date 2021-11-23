@@ -207,7 +207,7 @@ func testAccCheckUserDestroy(s *terraform.State) error {
 		}
 
 		if found {
-			return fmt.Errorf("appstream user %q still exists", rs.Primary.ID)
+			return fmt.Errorf("AppStream User %q still exists", rs.Primary.ID)
 		}
 	}
 

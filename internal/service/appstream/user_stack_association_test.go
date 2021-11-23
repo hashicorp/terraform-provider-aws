@@ -121,7 +121,7 @@ func testAccCheckUserStackAssociationExists(resourceName string) resource.TestCh
 
 		userName, stackName, authType, err := tfappstream.DecodeStackUserID(rs.Primary.ID)
 		if err != nil {
-			return fmt.Errorf("error decoding id appstream stack user association (%s): %w", rs.Primary.ID, err)
+			return fmt.Errorf("error decoding AppStream User Stack Association ID (%s): %w", rs.Primary.ID, err)
 		}
 
 		resp, err := conn.DescribeUserStackAssociationsWithContext(context.Background(), &appstream.DescribeUserStackAssociationsInput{
@@ -135,7 +135,7 @@ func testAccCheckUserStackAssociationExists(resourceName string) resource.TestCh
 		}
 
 		if len(resp.UserStackAssociations) == 0 {
-			return fmt.Errorf("appstream stack user association %q does not exist", rs.Primary.ID)
+			return fmt.Errorf("AppStream User Stack Association %q does not exist", rs.Primary.ID)
 		}
 
 		return nil
@@ -152,7 +152,7 @@ func testAccCheckUserStackAssociationDestroy(s *terraform.State) error {
 
 		userName, stackName, authType, err := tfappstream.DecodeStackUserID(rs.Primary.ID)
 		if err != nil {
-			return fmt.Errorf("error decoding id appstream stack user association (%s): %w", rs.Primary.ID, err)
+			return fmt.Errorf("error decoding AppStream User Stack Association ID (%s): %w", rs.Primary.ID, err)
 		}
 
 		resp, err := conn.DescribeUserStackAssociationsWithContext(context.Background(), &appstream.DescribeUserStackAssociationsInput{
@@ -170,7 +170,7 @@ func testAccCheckUserStackAssociationDestroy(s *terraform.State) error {
 		}
 
 		if len(resp.UserStackAssociations) > 0 {
-			return fmt.Errorf("appstream stack user association %q still exists", rs.Primary.ID)
+			return fmt.Errorf("AppStream User Stack Association %q still exists", rs.Primary.ID)
 		}
 	}
 
