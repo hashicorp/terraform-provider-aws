@@ -219,6 +219,7 @@ jobs:
       uses: tj-actions/changed-files@v11.7
     - name: List changed files
       run: |
+        touch /tmp/dirs_changed_all
         for file in ${{ steps.changed-files.outputs.all_modified_files }}; do
           if [[ "${file}" == internal/* ]]; then
             echo $( dirname "${file}" ) >> /tmp/dirs_changed_all

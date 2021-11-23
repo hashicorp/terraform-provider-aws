@@ -298,6 +298,7 @@ func resourceCertificateAuthorityCreate(d *schema.ResourceData, meta interface{}
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
+	// random comment
 	input := &acmpca.CreateCertificateAuthorityInput{
 		CertificateAuthorityConfiguration: expandAcmpcaCertificateAuthorityConfiguration(d.Get("certificate_authority_configuration").([]interface{})),
 		CertificateAuthorityType:          aws.String(d.Get("type").(string)),
