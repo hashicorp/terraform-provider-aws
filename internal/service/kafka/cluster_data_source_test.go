@@ -11,7 +11,7 @@ import (
 )
 
 func TestNotARealTest(t *testing.T) {
-	fmt.Println("bad test")
+	t.Errorf("real bad error: %s", "not really")
 }
 
 func TestAccKafkaClusterDataSource_basic(t *testing.T) {
