@@ -260,6 +260,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
+      with:
+        fetch-depth: 0 # important so that changed files are specific to a PR
     # See also: https://github.com/actions/setup-go/pull/62
     - run: echo "GO_VERSION=$(cat .go-version)" >> $GITHUB_ENV
     - uses: actions/setup-go@v2
@@ -282,8 +284,16 @@ jobs:
         path: ~/go/pkg/mod
         key: ${{ runner.os }}-go-pkg-mod-${{ hashFiles('go.sum') }}
     - run: cd tools && go install github.com/golangci/golangci-lint/cmd/golangci-lint
-    - run: golangci-lint run ./internal/...
-    - run: cd providerlint && golangci-lint run ./...
+    - name: Get all changed files
+      id: changed-files
+      uses: tj-actions/changed-files@v11.7
+    - name: Check changed files
+      run: |
+        for file in ${{ steps.changed-files.outputs.all_modified_files }}; do
+          if [[ "${file}" == *.go ]]; then
+            golangci-lint run "${file}"
+          fi
+        done
 
   importlint:
     needs: [go_build]
