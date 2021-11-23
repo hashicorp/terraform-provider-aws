@@ -106,14 +106,10 @@ func TestAccAppStreamUser_complete(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccUserCompleteConfig(authType, rEmail, firstName, lastName, false),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserExists(resourceName, &userOutput),
-					resource.TestCheckResourceAttr(resourceName, "authentication_type", authType),
-					resource.TestCheckResourceAttr(resourceName, "user_name", rEmail),
-					acctest.CheckResourceAttrRFC3339(resourceName, "created_time"),
-					resource.TestCheckResourceAttr(resourceName, "enabled", "false"),
-				),
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"send_email_notification"},
 			},
 			{
 				Config: testAccUserCompleteConfig(authType, rEmail, firstName, lastName, true),
@@ -126,10 +122,14 @@ func TestAccAppStreamUser_complete(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"send_email_notification"},
+				Config: testAccUserCompleteConfig(authType, rEmail, firstName, lastName, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckUserExists(resourceName, &userOutput),
+					resource.TestCheckResourceAttr(resourceName, "authentication_type", authType),
+					resource.TestCheckResourceAttr(resourceName, "user_name", rEmail),
+					acctest.CheckResourceAttrRFC3339(resourceName, "created_time"),
+					resource.TestCheckResourceAttr(resourceName, "enabled", "false"),
+				),
 			},
 		},
 	})
