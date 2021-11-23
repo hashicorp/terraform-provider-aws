@@ -84,7 +84,7 @@ resource "aws_imagebuilder_component" "test" {
 
 data "aws_imagebuilder_components" "test" {
   filter {
-    name = "name"
+    name   = "name"
     values = [aws_imagebuilder_component.test.name]
   }
 }
