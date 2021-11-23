@@ -230,12 +230,26 @@ jobs:
         cat /tmp/dirs_changed_all | sort | uniq > /tmp/pkgs_changed
         echo "All packages changed:"
         cat /tmp/pkgs_changed
+        while read pkg; do
+          if [ "${pkg}" = "" ]; then
+            continue
+          fi
+          while read file; do
+            if [ "${file}" = "" ]; then
+              continue
+            fi
+            echo $( dirname "${file}" | xargs ) >> /tmp/dep_dirs_all
+          done <<< $( grep -l "github.com/hashicorp/terraform-provider-aws/${pkg}" internal/**/*.go )
+        done </tmp/pkgs_changed
+        cat /tmp/dep_dirs_all | sort | uniq > /tmp/dep_pkgs
+        echo "All dependent packages:"
+        cat /tmp/dep_pkgs
       id: changed-packages
     - name: Run tests for changed packages
       run: |
         while read pkg; do
           go test -run ^Test[^A][^c][^c] "github.com/hashicorp/terraform-provider-aws/${pkg}"
-        done </tmp/pkgs_changed
+        done </tmp/dep_pkgs
 
   golangci-lint:
     needs: [go_build]
