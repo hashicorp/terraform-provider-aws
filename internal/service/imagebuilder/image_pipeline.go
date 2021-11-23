@@ -161,7 +161,7 @@ func resourceImagePipelineCreate(d *schema.ResourceData, meta interface{}) error
 	}
 
 	if v, ok := d.GetOk("image_tests_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.ImageTestsConfiguration = expandImageBuilderImageTestConfiguration(v.([]interface{})[0].(map[string]interface{}))
+		input.ImageTestsConfiguration = expandImageTestConfiguration(v.([]interface{})[0].(map[string]interface{}))
 	}
 
 	if v, ok := d.GetOk("infrastructure_configuration_arn"); ok {
@@ -173,7 +173,7 @@ func resourceImagePipelineCreate(d *schema.ResourceData, meta interface{}) error
 	}
 
 	if v, ok := d.GetOk("schedule"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.Schedule = expandImageBuilderPipelineSchedule(v.([]interface{})[0].(map[string]interface{}))
+		input.Schedule = expandPipelineSchedule(v.([]interface{})[0].(map[string]interface{}))
 	}
 
 	if v, ok := d.GetOk("status"); ok {
@@ -237,7 +237,7 @@ func resourceImagePipelineRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("image_recipe_arn", imagePipeline.ImageRecipeArn)
 
 	if imagePipeline.ImageTestsConfiguration != nil {
-		d.Set("image_tests_configuration", []interface{}{flattenImageBuilderImageTestsConfiguration(imagePipeline.ImageTestsConfiguration)})
+		d.Set("image_tests_configuration", []interface{}{flattenImageTestsConfiguration(imagePipeline.ImageTestsConfiguration)})
 	} else {
 		d.Set("image_tests_configuration", nil)
 	}
@@ -247,7 +247,7 @@ func resourceImagePipelineRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("platform", imagePipeline.Platform)
 
 	if imagePipeline.Schedule != nil {
-		d.Set("schedule", []interface{}{flattenImageBuilderSchedule(imagePipeline.Schedule)})
+		d.Set("schedule", []interface{}{flattenSchedule(imagePipeline.Schedule)})
 	} else {
 		d.Set("schedule", nil)
 	}
@@ -295,7 +295,7 @@ func resourceImagePipelineUpdate(d *schema.ResourceData, meta interface{}) error
 		}
 
 		if v, ok := d.GetOk("image_tests_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-			input.ImageTestsConfiguration = expandImageBuilderImageTestConfiguration(v.([]interface{})[0].(map[string]interface{}))
+			input.ImageTestsConfiguration = expandImageTestConfiguration(v.([]interface{})[0].(map[string]interface{}))
 		}
 
 		if v, ok := d.GetOk("infrastructure_configuration_arn"); ok {
@@ -303,7 +303,7 @@ func resourceImagePipelineUpdate(d *schema.ResourceData, meta interface{}) error
 		}
 
 		if v, ok := d.GetOk("schedule"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-			input.Schedule = expandImageBuilderPipelineSchedule(v.([]interface{})[0].(map[string]interface{}))
+			input.Schedule = expandPipelineSchedule(v.([]interface{})[0].(map[string]interface{}))
 		}
 
 		if v, ok := d.GetOk("status"); ok {
@@ -348,7 +348,7 @@ func resourceImagePipelineDelete(d *schema.ResourceData, meta interface{}) error
 	return nil
 }
 
-func expandImageBuilderImageTestConfiguration(tfMap map[string]interface{}) *imagebuilder.ImageTestsConfiguration {
+func expandImageTestConfiguration(tfMap map[string]interface{}) *imagebuilder.ImageTestsConfiguration {
 	if tfMap == nil {
 		return nil
 	}
@@ -366,7 +366,7 @@ func expandImageBuilderImageTestConfiguration(tfMap map[string]interface{}) *ima
 	return apiObject
 }
 
-func expandImageBuilderPipelineSchedule(tfMap map[string]interface{}) *imagebuilder.Schedule {
+func expandPipelineSchedule(tfMap map[string]interface{}) *imagebuilder.Schedule {
 	if tfMap == nil {
 		return nil
 	}
@@ -384,7 +384,7 @@ func expandImageBuilderPipelineSchedule(tfMap map[string]interface{}) *imagebuil
 	return apiObject
 }
 
-func flattenImageBuilderImageTestsConfiguration(apiObject *imagebuilder.ImageTestsConfiguration) map[string]interface{} {
+func flattenImageTestsConfiguration(apiObject *imagebuilder.ImageTestsConfiguration) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -402,7 +402,7 @@ func flattenImageBuilderImageTestsConfiguration(apiObject *imagebuilder.ImageTes
 	return tfMap
 }
 
-func flattenImageBuilderSchedule(apiObject *imagebuilder.Schedule) map[string]interface{} {
+func flattenSchedule(apiObject *imagebuilder.Schedule) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
