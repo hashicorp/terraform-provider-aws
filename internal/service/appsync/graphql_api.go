@@ -18,7 +18,7 @@ import (
 
 var validateAuthorizerResultTtlInSeconds = validation.IntBetween(0, 3600)
 
-const defaultAuthorizerResultTtlInSeconds = 300
+const DefaultAuthorizerResultTtlInSeconds = 300
 
 func ResourceGraphQLAPI() *schema.Resource {
 	return &schema.Resource{
@@ -98,7 +98,7 @@ func ResourceGraphQLAPI() *schema.Resource {
 									"authorizer_result_ttl_in_seconds": {
 										Type:         schema.TypeInt,
 										Optional:     true,
-										Default:      defaultAuthorizerResultTtlInSeconds,
+										Default:      DefaultAuthorizerResultTtlInSeconds,
 										ValidateFunc: validateAuthorizerResultTtlInSeconds,
 									},
 									"authorizer_uri": {
@@ -226,7 +226,7 @@ func ResourceGraphQLAPI() *schema.Resource {
 						"authorizer_result_ttl_in_seconds": {
 							Type:         schema.TypeInt,
 							Optional:     true,
-							Default:      defaultAuthorizerResultTtlInSeconds,
+							Default:      DefaultAuthorizerResultTtlInSeconds,
 							ValidateFunc: validateAuthorizerResultTtlInSeconds,
 						},
 						"authorizer_uri": {
@@ -655,7 +655,7 @@ func flattenAppsyncGraphqlApiLambdaAuthorizerConfig(lambdaAuthorizerConfig *apps
 	if lambdaAuthorizerConfig.AuthorizerResultTtlInSeconds != nil {
 		m["authorizer_result_ttl_in_seconds"] = aws.Int64Value(lambdaAuthorizerConfig.AuthorizerResultTtlInSeconds)
 	} else {
-		m["authorizer_result_ttl_in_seconds"] = defaultAuthorizerResultTtlInSeconds
+		m["authorizer_result_ttl_in_seconds"] = DefaultAuthorizerResultTtlInSeconds
 	}
 
 	if lambdaAuthorizerConfig.IdentityValidationExpression != nil {
