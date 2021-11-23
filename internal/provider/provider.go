@@ -798,10 +798,12 @@ func Provider() *schema.Provider {
 			"aws_apprunner_custom_domain_association":          apprunner.ResourceCustomDomainAssociation(),
 			"aws_apprunner_service":                            apprunner.ResourceService(),
 
-			"aws_appstream_directory_config": appstream.ResourceDirectoryConfig(),
-			"aws_appstream_fleet":            appstream.ResourceFleet(),
-			"aws_appstream_image_builder":    appstream.ResourceImageBuilder(),
-			"aws_appstream_stack":            appstream.ResourceStack(),
+			"aws_appstream_directory_config":       appstream.ResourceDirectoryConfig(),
+			"aws_appstream_fleet":                  appstream.ResourceFleet(),
+			"aws_appstream_image_builder":          appstream.ResourceImageBuilder(),
+			"aws_appstream_stack":                  appstream.ResourceStack(),
+			"aws_appstream_user_stack_association": appstream.ResourceUserStackAssociation(),
+			"aws_appstream_user":                   appstream.ResourceUser(),
 
 			"aws_appsync_api_key":     appsync.ResourceAPIKey(),
 			"aws_appsync_datasource":  appsync.ResourceDataSource(),
