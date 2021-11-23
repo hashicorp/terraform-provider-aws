@@ -251,9 +251,9 @@ jobs:
         while read pkg; do
           sweep_tags=""
           if [ "${pkg}" = "internal/sweep" ]; then
-            sweep_tags="-tags=sweep"
+            continue
           fi
-          go test -run ^Test[^A][^c][^c] $sweep_tags "github.com/hashicorp/terraform-provider-aws/${pkg}"
+          go test -run ^Test[^A][^c][^c] "github.com/hashicorp/terraform-provider-aws/${pkg}"
         done </tmp/dep_pkgs
 
   golangci-lint:
