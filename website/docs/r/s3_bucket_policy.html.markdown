@@ -15,36 +15,33 @@ Attaches a policy to an S3 bucket resource.
 ### Basic Usage
 
 ```terraform
-resource "aws_s3_bucket" "b" {
+locals {
+  aws_account_b_id = "123456789012"
+}
+
+resource "aws_s3_bucket" "example" {
   bucket = "my-tf-test-bucket"
 }
 
-resource "aws_s3_bucket_policy" "b" {
-  bucket = aws_s3_bucket.b.id
+resource "aws_s3_bucket_policy" "allow_access_from_account_b" {
+  bucket = aws_s3_bucket.example.id
+  policy = data.aws_iam_policy_document.allow_access_from_account_b.json
+}
 
-  # Terraform's "jsonencode" function converts a
-  # Terraform expression's result to valid JSON syntax.
-  policy = jsonencode({
-    Version = "2012-10-17"
-    Id      = "MYBUCKETPOLICY"
-    Statement = [
-      {
-        Sid       = "IPAllow"
-        Effect    = "Deny"
-        Principal = "*"
-        Action    = "s3:*"
-        Resource = [
-          aws_s3_bucket.b.arn,
-          "${aws_s3_bucket.b.arn}/*",
-        ]
-        Condition = {
-          NotIpAddress = {
-            "aws:SourceIp" = "8.8.8.8/32"
-          }
-        }
-      },
+data "aws_iam_policy_document" "allow_access_from_account_b" {
+  statement {
+    principals {
+      type         = "AWS"
+      identitfiers = [local.aws_account_b_id]
+    }
+
+    actions = [
+      "s3:GetObject",
+      "s3:ListBucket",
     ]
-  })
+
+    resources = ["*"]
+  }
 }
 ```
 
@@ -53,7 +50,7 @@ resource "aws_s3_bucket_policy" "b" {
 The following arguments are supported:
 
 * `bucket` - (Required) The name of the bucket to which to apply the policy.
-* `policy` - (Required) The text of the policy. For more information about building AWS IAM policy documents with Terraform, see the [AWS IAM Policy Document Guide](https://learn.hashicorp.com/terraform/aws/iam-policy). Note: Bucket policies are limited to 20 KB in size.
+* `policy` - (Required) The text of the policy. Although this isn't technically an IAM policy, you can use the [`aws_iam_policy_document`](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/iam_policy_document) data source for this, so long as it specifies a principal. For more information about building AWS IAM policy documents with Terraform, see the [AWS IAM Policy Document Guide](https://learn.hashicorp.com/terraform/aws/iam-policy). Note: Bucket policies are limited to 20 KB in size.
 
 ## Attributes Reference
 
