@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfcloudtrail "github.com/hashicorp/terraform-provider-aws/internal/service/cloudtrail"
 )
 
 func TestAccCloudTrail_serial(t *testing.T) {
@@ -32,6 +33,7 @@ func TestAccCloudTrail_serial(t *testing.T) {
 			"eventSelectorExclude":  testAcc_eventSelectorExclude,
 			"insightSelector":       testAcc_insightSelector,
 			"advancedEventSelector": testAcc_advanced_event_selector,
+			"disappears":            testAcc_disappears,
 		},
 	}
 
@@ -63,6 +65,7 @@ func testAcc_basic(t *testing.T) {
 				Config: testAccConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudTrailExists(resourceName, &trail),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "cloudtrail", fmt.Sprintf("trail/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "include_global_service_events", "true"),
 					resource.TestCheckResourceAttr(resourceName, "is_organization_trail", "false"),
 					testAccCheckCloudTrailLogValidationEnabled(resourceName, false, &trail),
@@ -597,6 +600,27 @@ func testAcc_insightSelector(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
+			{
+				Config: testAccInsightSelectorMultiConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "insight_selector.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "insight_selector.0.insight_type", "ApiCallRateInsight"),
+					resource.TestCheckResourceAttr(resourceName, "insight_selector.1.insight_type", "ApiErrorRateInsight"),
+				),
+			},
+			{
+				Config: testAccInsightSelectorConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "insight_selector.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "insight_selector.0.insight_type", "ApiCallRateInsight"),
+				),
+			},
+			{
+				Config: testAccConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "insight_selector.#", "0"),
+				),
+			},
 		},
 	})
 }
@@ -694,6 +718,30 @@ func testAcc_advanced_event_selector(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func testAcc_disappears(t *testing.T) {
+	var trail cloudtrail.Trail
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_cloudtrail.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, cloudtrail.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCloudTrailExists(resourceName, &trail),
+					acctest.CheckResourceDisappears(acctest.Provider, tfcloudtrail.ResourceCloudTrail(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfcloudtrail.ResourceCloudTrail(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
@@ -1331,6 +1379,24 @@ resource "aws_cloudtrail" "test" {
   insight_selector {
     insight_type = "ApiCallRateInsight"
   }
+}
+`, rName))
+}
+
+func testAccInsightSelectorMultiConfig(rName string) string {
+	return acctest.ConfigCompose(testAccBaseConfig(rName), fmt.Sprintf(`
+resource "aws_cloudtrail" "test" {
+  name           = %[1]q
+  s3_bucket_name = aws_s3_bucket.test.id
+
+
+  insight_selector {
+    insight_type = "ApiCallRateInsight"
+  }
+
+  insight_selector {
+    insight_type = "ApiErrorRateInsight"
+  }  
 }
 `, rName))
 }
