@@ -367,7 +367,7 @@ func expandComponentConfigurations(tfList []interface{}) []*imagebuilder.Compone
 	return apiObjects
 }
 
-func expandEbsInstanceBlockDeviceSpecification(tfMap map[string]interface{}) *imagebuilder.EbsInstanceBlockDeviceSpecification {
+func expandEBSInstanceBlockDeviceSpecification(tfMap map[string]interface{}) *imagebuilder.EbsInstanceBlockDeviceSpecification {
 	if tfMap == nil {
 		return nil
 	}
@@ -419,7 +419,7 @@ func expandInstanceBlockDeviceMapping(tfMap map[string]interface{}) *imagebuilde
 	}
 
 	if v, ok := tfMap["ebs"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		apiObject.Ebs = expandEbsInstanceBlockDeviceSpecification(v[0].(map[string]interface{}))
+		apiObject.Ebs = expandEBSInstanceBlockDeviceSpecification(v[0].(map[string]interface{}))
 	}
 
 	if v, ok := tfMap["no_device"].(bool); ok && v {
@@ -491,7 +491,7 @@ func flattenComponentConfigurations(apiObjects []*imagebuilder.ComponentConfigur
 	return tfList
 }
 
-func flattenEbsInstanceBlockDeviceSpecification(apiObject *imagebuilder.EbsInstanceBlockDeviceSpecification) map[string]interface{} {
+func flattenEBSInstanceBlockDeviceSpecification(apiObject *imagebuilder.EbsInstanceBlockDeviceSpecification) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -541,7 +541,7 @@ func flattenInstanceBlockDeviceMapping(apiObject *imagebuilder.InstanceBlockDevi
 	}
 
 	if v := apiObject.Ebs; v != nil {
-		tfMap["ebs"] = []interface{}{flattenEbsInstanceBlockDeviceSpecification(v)}
+		tfMap["ebs"] = []interface{}{flattenEBSInstanceBlockDeviceSpecification(v)}
 	}
 
 	if v := apiObject.NoDevice; v != nil {

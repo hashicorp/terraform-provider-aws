@@ -283,7 +283,7 @@ func resourceDistributionConfigurationDelete(d *schema.ResourceData, meta interf
 	return nil
 }
 
-func expandAmiDistributionConfiguration(tfMap map[string]interface{}) *imagebuilder.AmiDistributionConfiguration {
+func expandAMIDistributionConfiguration(tfMap map[string]interface{}) *imagebuilder.AmiDistributionConfiguration {
 	if tfMap == nil {
 		return nil
 	}
@@ -325,7 +325,7 @@ func expandDistribution(tfMap map[string]interface{}) *imagebuilder.Distribution
 	apiObject := &imagebuilder.Distribution{}
 
 	if v, ok := tfMap["ami_distribution_configuration"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		apiObject.AmiDistributionConfiguration = expandAmiDistributionConfiguration(v[0].(map[string]interface{}))
+		apiObject.AmiDistributionConfiguration = expandAMIDistributionConfiguration(v[0].(map[string]interface{}))
 	}
 
 	if v, ok := tfMap["license_configuration_arns"].(*schema.Set); ok && v.Len() > 0 {
@@ -390,7 +390,7 @@ func expandLaunchPermissionConfiguration(tfMap map[string]interface{}) *imagebui
 	return apiObject
 }
 
-func flattenAmiDistributionConfiguration(apiObject *imagebuilder.AmiDistributionConfiguration) map[string]interface{} {
+func flattenAMIDistributionConfiguration(apiObject *imagebuilder.AmiDistributionConfiguration) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -432,7 +432,7 @@ func flattenDistribution(apiObject *imagebuilder.Distribution) map[string]interf
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.AmiDistributionConfiguration; v != nil {
-		tfMap["ami_distribution_configuration"] = []interface{}{flattenAmiDistributionConfiguration(v)}
+		tfMap["ami_distribution_configuration"] = []interface{}{flattenAMIDistributionConfiguration(v)}
 	}
 
 	if v := apiObject.LicenseConfigurationArns; v != nil {

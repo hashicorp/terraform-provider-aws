@@ -314,13 +314,13 @@ func flattenOutputResources(apiObject *imagebuilder.OutputResources) map[string]
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.Amis; v != nil {
-		tfMap["amis"] = flattenAmis(v)
+		tfMap["amis"] = flattenAMIs(v)
 	}
 
 	return tfMap
 }
 
-func flattenAmi(apiObject *imagebuilder.Ami) map[string]interface{} {
+func flattenAMI(apiObject *imagebuilder.Ami) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -350,7 +350,7 @@ func flattenAmi(apiObject *imagebuilder.Ami) map[string]interface{} {
 	return tfMap
 }
 
-func flattenAmis(apiObjects []*imagebuilder.Ami) []interface{} {
+func flattenAMIs(apiObjects []*imagebuilder.Ami) []interface{} {
 	if len(apiObjects) == 0 {
 		return nil
 	}
@@ -362,7 +362,7 @@ func flattenAmis(apiObjects []*imagebuilder.Ami) []interface{} {
 			continue
 		}
 
-		tfList = append(tfList, flattenAmi(apiObject))
+		tfList = append(tfList, flattenAMI(apiObject))
 	}
 
 	return tfList
