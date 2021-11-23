@@ -46,7 +46,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-`aws_apigatewayv2_vpc_link` can be imported by using the VPC Link identifier, e.g.
+`aws_apigatewayv2_vpc_link` can be imported by using the VPC Link identifier, e.g.,
 
 ```
 $ terraform import aws_apigatewayv2_vpc_link.example aabbccddee

@@ -38,6 +38,8 @@ service/acmpca:
   - '((\*|-) ?`?|(data|resource) "?)aws_acmpca_'
 service/alexaforbusiness:
   - '((\*|-) ?`?|(data|resource) "?)aws_alexaforbusiness_'
+service/amp:
+  - '((\*|-) ?`?|(data|resource) "?)aws_prometheus_'
 service/amplify:
   - '((\*|-) ?`?|(data|resource) "?)aws_amplify_'
 service/apigateway:
@@ -78,6 +80,8 @@ service/chime:
   - '((\*|-) ?`?|(data|resource) "?)aws_chime_'
 service/cloud9:
   - '((\*|-) ?`?|(data|resource) "?)aws_cloud9_'
+service/cloudcontrolapi:
+  - '((\*|-) ?`?|(data|resource) "?)aws_cloudcontrolapi_'
 service/clouddirectory:
   - '((\*|-) ?`?|(data|resource) "?)aws_clouddirectory_'
 service/cloudformation:
@@ -92,8 +96,6 @@ service/cloudtrail:
   - '((\*|-) ?`?|(data|resource) "?)aws_cloudtrail'
 service/cloudwatch:
   - '((\*|-) ?`?|(data|resource) "?)aws_cloudwatch_(?!(event_|log_|query_))'
-service/cloudwatchevents:
-  - '((\*|-) ?`?|(data|resource) "?)aws_cloudwatch_event_'
 service/cloudwatchlogs:
   - '((\*|-) ?`?|(data|resource) "?)aws_cloudwatch_(log_|query_)'
 service/codeartifact:
@@ -154,7 +156,7 @@ service/efs:
   - '((\*|-) ?`?|(data|resource) "?)aws_efs_'
 service/eks:
   - '((\*|-) ?`?|(data|resource) "?)aws_eks_'
-elastic-transcoder:
+service/elastictranscoder:
   - '((\*|-) ?`?|(data|resource) "?)aws_elastictranscoder_'
 service/elasticache:
   - '((\*|-) ?`?|(data|resource) "?)aws_elasticache_'
@@ -170,7 +172,7 @@ service/emr:
   - '((\*|-) ?`?|(data|resource) "?)aws_emr_'
 service/emrcontainers:
   - '((\*|-) ?`?|(data|resource) "?)aws_emrcontainers_'
-service/eventbridge:
+service/events:
   - '((\*|-) ?`?|(data|resource) "?)aws_cloudwatch_event_'
 service/firehose:
   - '((\*|-) ?`?|(data|resource) "?)aws_kinesis_firehose_'
@@ -276,8 +278,6 @@ service/polly:
   - '((\*|-) ?`?|(data|resource) "?)aws_polly_'
 service/pricing:
   - '((\*|-) ?`?|(data|resource) "?)aws_pricing_'
-service/prometheusservice:
-  - '((\*|-) ?`?|(data|resource) "?)aws_prometheus_'
 service/qldb:
   - '((\*|-) ?`?|(data|resource) "?)aws_qldb_'
 service/quicksight:
@@ -318,7 +318,7 @@ service/secretsmanager:
   - '((\*|-) ?`?|(data|resource) "?)aws_secretsmanager_'
 service/securityhub:
   - '((\*|-) ?`?|(data|resource) "?)aws_securityhub_'
-service/serverlessapplicationrepository:
+service/serverlessrepo:
   - '((\*|-) ?`?|(data|resource) "?)aws_serverlessapplicationrepository_'
 service/servicecatalog:
   - '((\*|-) ?`?|(data|resource) "?)aws_servicecatalog_'

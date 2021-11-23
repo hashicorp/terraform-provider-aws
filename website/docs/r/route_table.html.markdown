@@ -35,16 +35,15 @@ the separate resource.
 resource "aws_route_table" "example" {
   vpc_id = aws_vpc.example.id
 
-  route = [
-    {
-      cidr_block = "10.0.1.0/24"
-      gateway_id = aws_internet_gateway.example.id
-    },
-    {
-      ipv6_cidr_block        = "::/0"
-      egress_only_gateway_id = aws_egress_only_internet_gateway.example.id
-    }
-  ]
+  route {
+    cidr_block = "10.0.1.0/24"
+    gateway_id = aws_internet_gateway.example.id
+  }
+
+  route {
+    ipv6_cidr_block        = "::/0"
+    egress_only_gateway_id = aws_egress_only_internet_gateway.example.id
+  }
 
   tags = {
     Name = "example"
@@ -112,6 +111,14 @@ attribute once the route resource is created.
 * `arn` - The ARN of the route table.
 * `owner_id` - The ID of the AWS account that owns the route table.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
+
+## Timeouts
+
+`aws_default_route_table` provides the following [Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
+
+- `create` - (Default `2 minutes`) Used for route creation
+- `update` - (Default `2 minutes`) Used for route creation
+- `delete` - (Default `5 minutes`) Used for route deletion
 
 ## Import
 

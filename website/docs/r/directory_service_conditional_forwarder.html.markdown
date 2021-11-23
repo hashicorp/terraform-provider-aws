@@ -38,7 +38,7 @@ No additional attributes are exported.
 
 ## Import
 
-Conditional forwarders can be imported using the directory id and remote_domain_name, e.g.
+Conditional forwarders can be imported using the directory id and remote_domain_name, e.g.,
 
 ```
 $ terraform import aws_directory_service_conditional_forwarder.example d-1234567890:example.com

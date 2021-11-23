@@ -231,7 +231,7 @@ The following values are supported: `ignore`, and `evaluate`.
   See docs for [supported metrics](https://docs.aws.amazon.com/AmazonCloudWatch/latest/DeveloperGuide/CW_Support_For_AWS.html).
 * `period` - (Required) The period in seconds over which the specified `stat` is applied.
 * `stat` - (Required) The statistic to apply to this metric.
-   Either of the following is supported: `SampleCount`, `Average`, `Sum`, `Minimum`, `Maximum`
+   See docs for [supported statistics](https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/Statistics-definitions.html).
 * `unit` - (Optional) The unit for this metric.
 
 
@@ -245,7 +245,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-CloudWatch Metric Alarm can be imported using the `alarm_name`, e.g.
+CloudWatch Metric Alarm can be imported using the `alarm_name`, e.g.,
 
 ```
 $ terraform import aws_cloudwatch_metric_alarm.test alarm-12345
