@@ -214,6 +214,14 @@ jobs:
       with:
         path: ~/go/pkg/mod
         key: ${{ runner.os }}-go-pkg-mod-${{ hashFiles('go.sum') }}
+    - name: Get changed files
+      id: changed-files
+      uses: tj-actions/changed-files@v11.7
+    - name: List changed files
+      run: |
+        for file in ${{ steps.changed-files.outputs.all_modified_files }}; do
+          echo "$file was modified"
+        done
     - run: go test ./internal/... -parallel 10 -short -run 'Test[^A]'
 
   golangci-lint:
