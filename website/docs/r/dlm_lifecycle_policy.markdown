@@ -12,7 +12,7 @@ Provides a [Data Lifecycle Manager (DLM) lifecycle policy](https://docs.aws.amaz
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_iam_role" "dlm_lifecycle_role" {
   name = "dlm-lifecycle-role"
 
@@ -35,7 +35,7 @@ EOF
 
 resource "aws_iam_role_policy" "dlm_lifecycle" {
   name = "dlm-lifecycle-policy"
-  role = "${aws_iam_role.dlm_lifecycle_role.id}"
+  role = aws_iam_role.dlm_lifecycle_role.id
 
   policy = <<EOF
 {
@@ -45,7 +45,9 @@ resource "aws_iam_role_policy" "dlm_lifecycle" {
          "Effect": "Allow",
          "Action": [
             "ec2:CreateSnapshot",
+            "ec2:CreateSnapshots",
             "ec2:DeleteSnapshot",
+            "ec2:DescribeInstances",
             "ec2:DescribeVolumes",
             "ec2:DescribeSnapshots"
          ],
@@ -87,7 +89,7 @@ POLICY
 
 resource "aws_dlm_lifecycle_policy" "example" {
   description        = "example DLM lifecycle policy"
-  execution_role_arn = "${aws_iam_role.dlm_lifecycle_role.arn}"
+  execution_role_arn = aws_iam_role.dlm_lifecycle_role.arn
   state              = "ENABLED"
 
   policy_details {
@@ -115,7 +117,7 @@ resource "aws_dlm_lifecycle_policy" "example" {
       cross_region_copy_rule {
         target_region = "us-west-2"
         encrypted     = true
-        cmk_arn       = "${aws_kms_key.dlm_cross_region_copy_cmk.arn}"
+        cmk_arn       = aws_kms_key.dlm_cross_region_copy_cmk.arn
         copy_tags     = true
         retain_rule {
           interval      = 30
@@ -139,13 +141,13 @@ The following arguments are supported:
 * `execution_role_arn` - (Required) The ARN of an IAM role that is able to be assumed by the DLM service.
 * `policy_details` - (Required) See the [`policy_details` configuration](#policy-details-arguments) block. Max of 1.
 * `state` - (Optional) Whether the lifecycle policy should be enabled or disabled. `ENABLED` or `DISABLED` are valid values. Defaults to `ENABLED`.
-* `tags` - (Optional) Key-value mapping of resource tags.
+* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 #### Policy Details arguments
 
 * `resource_types` - (Required) A list of resource types that should be targeted by the lifecycle policy. `VOLUME` is currently the only allowed value.
 * `schedule` - (Required) See the [`schedule` configuration](#schedule-arguments) block.
-* `target_tags` (Required) A mapping of tag keys and their values. Any resources that match the `resource_types` and are tagged with _any_ of these tags will be targeted.
+* `target_tags` (Required) A map of tag keys and their values. Any resources that match the `resource_types` and are tagged with _any_ of these tags will be targeted.
 
 ~> Note: You cannot have overlapping lifecycle policies that share the same `target_tags`. Terraform is unable to detect this at plan time but it will fail during apply.
 
@@ -156,8 +158,7 @@ The following arguments are supported:
 * `cross_region_copy_rule` (Optional) - See the [`cross_region_copy_rule`](#cross-region-copy-rule-arguments) block.
 * `name` - (Required) A name for the schedule.
 * `retain_rule` - (Required) See the [`retain_rule`](#retain-rule-arguments) block. Max of 1 per schedule.
-* `tags_to_add` - (Optional) A mapping of tag keys and their values. DLM lifecycle policies will already tag the snapshot with the tags on the volume. This configuration adds extra tags on top of these.
-
+* `tags_to_add` - (Optional) A map of tag keys and their values. DLM lifecycle policies will already tag the snapshot with the tags on the volume. This configuration adds extra tags on top of these.
 
 #### Create Rule arguments
 
@@ -182,13 +183,13 @@ The following arguments are supported:
 * `interval` - (Required) The amount of time to retain each snapshot. The maximum is 100 years.
 * `interval_unit` - (Required) The unit of time for time-based retention. `DAYS`, `WEEKS`, `MONTHS`, `YEARS` are currently the only allowed values.
 
-
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 
 * `arn` - Amazon Resource Name (ARN) of the DLM Lifecycle Policy.
 * `id` - Identifier of the DLM Lifecycle Policy.
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
 
 ## Import
 
