@@ -294,6 +294,10 @@ func resourceImagePipelineUpdate(d *schema.ResourceData, meta interface{}) error
 			input.DistributionConfigurationArn = aws.String(v.(string))
 		}
 
+		if v, ok := d.GetOk("image_recipe_arn"); ok {
+			input.ImageRecipeArn = aws.String(v.(string))
+		}
+
 		if v, ok := d.GetOk("image_tests_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 			input.ImageTestsConfiguration = expandImageTestConfiguration(v.([]interface{})[0].(map[string]interface{}))
 		}
