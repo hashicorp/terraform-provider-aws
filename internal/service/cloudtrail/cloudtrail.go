@@ -218,17 +218,19 @@ func ResourceCloudTrail() *schema.Resource {
 				ValidateFunc: verify.ValidARN,
 			},
 			"name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringLenBetween(3, 128),
 			},
 			"s3_bucket_name": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
 			"s3_key_prefix": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.StringLenBetween(0, 2000),
 			},
 			"sns_topic_name": {
 				Type:     schema.TypeString,
