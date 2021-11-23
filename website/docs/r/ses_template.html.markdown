@@ -12,7 +12,7 @@ Provides a resource to create a SES template.
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_ses_template" "MyTemplate" {
   name    = "MyTemplate"
   subject = "Greetings, {{name}}!"
@@ -34,11 +34,12 @@ The following arguments are supported:
 
 In addition to all arguments above, the following attributes are exported:
 
+* `arn` - The ARN of the SES template
 * `id` - The name of the SES template
 
 ## Import
 
-SES templates can be imported using the template name, e.g.
+SES templates can be imported using the template name, e.g.,
 
 ```
 $ terraform import aws_ses_template.MyTemplate MyTemplate

@@ -12,7 +12,7 @@ Manages an AWS Storage Gateway NFS File Share.
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_storagegateway_nfs_file_share" "example" {
   client_list  = ["0.0.0.0/0"]
   gateway_arn  = aws_storagegateway_gateway.example.arn
@@ -29,6 +29,7 @@ The following arguments are supported:
 * `gateway_arn` - (Required) Amazon Resource Name (ARN) of the file gateway.
 * `location_arn` - (Required) The ARN of the backed storage used for storing file data.
 * `role_arn` - (Required) The ARN of the AWS Identity and Access Management (IAM) role that a file gateway assumes when it accesses the underlying storage.
+* `audit_destination_arn` - (Optional) The Amazon Resource Name (ARN) of the storage used for audit logs.
 * `default_storage_class` - (Optional) The default storage class for objects put into an Amazon S3 bucket by the file gateway. Defaults to `S3_STANDARD`. Valid values: `S3_STANDARD`, `S3_STANDARD_IA`, `S3_ONEZONE_IA`.
 * `guess_mime_type_enabled` - (Optional) Boolean value that enables guessing of the MIME type for uploaded objects based on file extensions. Defaults to `true`.
 * `kms_encrypted` - (Optional) Boolean value if `true` to use Amazon S3 server side encryption with your own AWS KMS key, or `false` to use a key managed by Amazon S3. Defaults to `false`.
@@ -41,7 +42,7 @@ The following arguments are supported:
 * `squash` - (Optional) Maps a user to anonymous user. Defaults to `RootSquash`. Valid values: `RootSquash` (only root is mapped to anonymous user), `NoSquash` (no one is mapped to anonymous user), `AllSquash` (everyone is mapped to anonymous user)
 * `file_share_name` - (Optional) The name of the file share. Must be set if an S3 prefix name is set in `location_arn`.
 * `notification_policy` - (Optional) The notification policy of the file share. For more information see the [AWS Documentation](https://docs.aws.amazon.com/storagegateway/latest/APIReference/API_CreateNFSFileShare.html#StorageGateway-CreateNFSFileShare-request-NotificationPolicy). Default value is `{}`.
-* `tags` - (Optional) Key-value map of resource tags
+* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### nfs_file_share_defaults
 
@@ -67,6 +68,7 @@ In addition to all arguments above, the following attributes are exported:
 * `arn` - Amazon Resource Name (ARN) of the NFS File Share.
 * `fileshare_id` - ID of the NFS File Share.
 * `path` - File share path used by the NFS client to identify the mount point.
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
 
 ## Timeouts
 
@@ -78,7 +80,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-`aws_storagegateway_nfs_file_share` can be imported by using the NFS File Share Amazon Resource Name (ARN), e.g.
+`aws_storagegateway_nfs_file_share` can be imported by using the NFS File Share Amazon Resource Name (ARN), e.g.,
 
 ```
 $ terraform import aws_storagegateway_nfs_file_share.example arn:aws:storagegateway:us-east-1:123456789012:share/share-12345678

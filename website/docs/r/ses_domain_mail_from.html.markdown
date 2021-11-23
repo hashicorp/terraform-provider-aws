@@ -14,7 +14,7 @@ Provides an SES domain MAIL FROM resource.
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_ses_domain_mail_from" "example" {
   domain           = aws_ses_domain_identity.example.domain
   mail_from_domain = "bounce.${aws_ses_domain_identity.example.domain}"
@@ -63,7 +63,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-MAIL FROM domain can be imported using the `domain` attribute, e.g.
+MAIL FROM domain can be imported using the `domain` attribute, e.g.,
 
 ```
 $ terraform import aws_ses_domain_mail_from.example example.com
