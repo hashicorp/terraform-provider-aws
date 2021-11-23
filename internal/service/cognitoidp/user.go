@@ -235,7 +235,7 @@ func resourceUserRead(d *schema.ResourceData, meta interface{}) error {
 
 	user, err := conn.AdminGetUser(params)
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, "ResourceNotFoundException", "") {
+		if tfawserr.ErrMessageContains(err, "UserNotFoundException", "") {
 			log.Printf("[WARN] Cognito User %s not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -244,26 +244,31 @@ func resourceUserRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err := d.Set("attributes", flattenUserAttributes(user.UserAttributes)); err != nil {
-		return fmt.Errorf("failed setting attributes: %w", err)
+		return fmt.Errorf("failed setting user attributes: %w", err)
 	}
 
 	if err := d.Set("status", user.UserStatus); err != nil {
-		return fmt.Errorf("failed setting user_status: %w", err)
+		return fmt.Errorf("failed setting user status: %w", err)
 	}
 
 	if err := d.Set("sub", flattenUserSub(user.UserAttributes)); err != nil {
-		return fmt.Errorf("failed setting user's sub: %w", err)
+		return fmt.Errorf("failed setting user sub: %w", err)
+	}
+
+	if err := d.Set("enabled", user.Enabled); err != nil {
+		return fmt.Errorf("failed setting user enabled status: %w", err)
 	}
 
 	if err := d.Set("creation_date", user.UserCreateDate.Format(time.RFC3339)); err != nil {
-		return fmt.Errorf("failed setting user's creation_date: %w", err)
+		return fmt.Errorf("failed setting user creation_date: %w", err)
 	}
+
 	if err := d.Set("last_modified_date", user.UserLastModifiedDate.Format(time.RFC3339)); err != nil {
-		return fmt.Errorf("failed setting user's last_modified_date: %w", err)
+		return fmt.Errorf("failed setting user last_modified_date: %w", err)
 	}
 
 	if err := d.Set("mfa_preference", flattenUserMfaPreference(user.MFAOptions, user.UserMFASettingList, user.PreferredMfaSetting)); err != nil {
-		return fmt.Errorf("failed settings user's mfa_preference: %w", err)
+		return fmt.Errorf("failed settings user mfa_preference: %w", err)
 	}
 
 	return nil
@@ -287,7 +292,7 @@ func resourceUserUpdate(d *schema.ResourceData, meta interface{}) error {
 			}
 			_, err := conn.AdminUpdateUserAttributes(params)
 			if err != nil {
-				if tfawserr.ErrMessageContains(err, "ResourceNotFoundException", "") {
+				if tfawserr.ErrMessageContains(err, "UserNotFoundException", "") {
 					log.Printf("[WARN] Cognito User %s is already gone", d.Id())
 					d.SetId("")
 					return nil
@@ -303,7 +308,7 @@ func resourceUserUpdate(d *schema.ResourceData, meta interface{}) error {
 			}
 			_, err := conn.AdminDeleteUserAttributes(params)
 			if err != nil {
-				if tfawserr.ErrMessageContains(err, "ResourceNotFoundException", "") {
+				if tfawserr.ErrMessageContains(err, "UserNotFoundException", "") {
 					log.Printf("[WARN] Cognito User %s is already gone", d.Id())
 					d.SetId("")
 					return nil
@@ -436,20 +441,23 @@ func expandUserAttributesDelete(input []*string) []*string {
 }
 
 func flattenUserAttributes(apiList []*cognitoidentityprovider.AttributeType) map[string]interface{} {
+	// there is always the `sub` attribute
+	if len(apiList) == 1 {
+		return nil
+	}
+
 	tfMap := make(map[string]interface{})
 
-	if len(apiList) > 1 {
-		for _, apiAttribute := range apiList {
-			if apiAttribute.Name != nil {
-				if UserAttributeKeyMatchesStandardAttribute(*apiAttribute.Name) {
-					if aws.StringValue(apiAttribute.Name) == "sub" {
-						continue
-					}
-					tfMap[aws.StringValue(apiAttribute.Name)] = aws.StringValue(apiAttribute.Value)
-				} else {
-					name := strings.TrimPrefix(strings.TrimPrefix(aws.StringValue(apiAttribute.Name), "dev:"), "custom:")
-					tfMap[name] = aws.StringValue(apiAttribute.Value)
+	for _, apiAttribute := range apiList {
+		if apiAttribute.Name != nil {
+			if UserAttributeKeyMatchesStandardAttribute(*apiAttribute.Name) {
+				if aws.StringValue(apiAttribute.Name) == "sub" {
+					continue
 				}
+				tfMap[aws.StringValue(apiAttribute.Name)] = aws.StringValue(apiAttribute.Value)
+			} else {
+				name := strings.TrimPrefix(strings.TrimPrefix(aws.StringValue(apiAttribute.Name), "dev:"), "custom:")
+				tfMap[name] = aws.StringValue(apiAttribute.Value)
 			}
 		}
 	}
