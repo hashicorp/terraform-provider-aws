@@ -59,6 +59,11 @@ func DataSourceStream() *schema.Resource {
 				Set:      schema.HashString,
 			},
 
+			"consumers_count": {
+				Type:     schema.TypeInt,
+				Computed: true,
+			},
+
 			"tags": tftags.TagsSchemaComputed(),
 		},
 	}
@@ -83,6 +88,7 @@ func dataSourceStreamRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("creation_timestamp", state.creationTimestamp)
 	d.Set("retention_period", state.retentionPeriod)
 	d.Set("shard_level_metrics", state.shardLevelMetrics)
+	d.Set("consumers_count", state.consumersCount)
 
 	tags, err := ListTags(conn, sn)
 
