@@ -64,7 +64,7 @@ func resourceUserStackAssociationCreate(ctx context.Context, d *schema.ResourceD
 		input.SendEmailNotification = aws.Bool(v.(bool))
 	}
 
-	id := EncodeStackUserID(d.Get("stack_name").(string), d.Get("user_name").(string), d.Get("authentication_type").(string))
+	id := EncodeUserStackAssociationID(d.Get("user_name").(string), d.Get("authentication_type").(string), d.Get("stack_name").(string))
 
 	output, err := conn.BatchAssociateUserStackWithContext(ctx, &appstream.BatchAssociateUserStackInput{
 		UserStackAssociations: []*appstream.UserStackAssociation{input},
@@ -91,7 +91,7 @@ func resourceUserStackAssociationCreate(ctx context.Context, d *schema.ResourceD
 func resourceUserStackAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).AppStreamConn
 
-	userName, stackName, authType, err := DecodeStackUserID(d.Id())
+	userName, authType, stackName, err := DecodeUserStackAssociationID(d.Id())
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("error decoding AppStream User Stack Association ID (%s): %w", d.Id(), err))
 	}
@@ -127,7 +127,7 @@ func resourceUserStackAssociationRead(ctx context.Context, d *schema.ResourceDat
 func resourceUserStackAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).AppStreamConn
 
-	userName, stackName, authType, err := DecodeStackUserID(d.Id())
+	userName, authType, stackName, err := DecodeUserStackAssociationID(d.Id())
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("error decoding AppStream User Stack Association ID (%s): %w", d.Id(), err))
 	}
@@ -151,14 +151,14 @@ func resourceUserStackAssociationDelete(ctx context.Context, d *schema.ResourceD
 	return nil
 }
 
-func EncodeStackUserID(stackName, userName, authType string) string {
-	return fmt.Sprintf("%s/%s/%s", userName, stackName, authType)
+func EncodeUserStackAssociationID(userName, authType, stackName string) string {
+	return fmt.Sprintf("%s/%s/%s", userName, authType, stackName)
 }
 
-func DecodeStackUserID(id string) (string, string, string, error) {
+func DecodeUserStackAssociationID(id string) (string, string, string, error) {
 	idParts := strings.SplitN(id, "/", 3)
 	if len(idParts) != 3 {
-		return "", "", "", fmt.Errorf("expected ID in format UserName/StackName/AuthenticationType, received: %s", id)
+		return "", "", "", fmt.Errorf("expected ID in format UserName/AuthenticationType/StackName, received: %s", id)
 	}
 	return idParts[0], idParts[1], idParts[2], nil
 }

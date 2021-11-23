@@ -51,8 +51,8 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-AppStream User Stack Association can be imported by using the `user_name`, `stack_name` , and `authentication_type` separated by a slash (`/`), e.g.,
+AppStream User Stack Association can be imported by using the `user_name`, `authentication_type`, and `stack_name`, separated by a slash (`/`), e.g.,
 
 ```
-$ terraform import aws_appstream_user_stack_association.example userName/stackName/auhtenticationType
+$ terraform import aws_appstream_user_stack_association.example userName/auhtenticationType/stackName
 ```

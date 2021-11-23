@@ -122,7 +122,7 @@ func testAccCheckUserStackAssociationExists(resourceName string) resource.TestCh
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).AppStreamConn
 
-		userName, stackName, authType, err := tfappstream.DecodeStackUserID(rs.Primary.ID)
+		userName, authType, stackName, err := tfappstream.DecodeUserStackAssociationID(rs.Primary.ID)
 		if err != nil {
 			return fmt.Errorf("error decoding AppStream User Stack Association ID (%s): %w", rs.Primary.ID, err)
 		}
@@ -153,7 +153,7 @@ func testAccCheckUserStackAssociationDestroy(s *terraform.State) error {
 			continue
 		}
 
-		userName, stackName, authType, err := tfappstream.DecodeStackUserID(rs.Primary.ID)
+		userName, authType, stackName, err := tfappstream.DecodeUserStackAssociationID(rs.Primary.ID)
 		if err != nil {
 			return fmt.Errorf("error decoding AppStream User Stack Association ID (%s): %w", rs.Primary.ID, err)
 		}
