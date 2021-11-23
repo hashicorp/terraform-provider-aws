@@ -787,8 +787,10 @@ func testAccCheckCloudTrailLoggingEnabled(n string, desired bool) resource.TestC
 		if err != nil {
 			return err
 		}
-		if *resp.IsLogging != desired {
-			return fmt.Errorf("Expected logging status %t, given %t", desired, *resp.IsLogging)
+
+		isLog := aws.BoolValue(resp.IsLogging)
+		if isLog != desired {
+			return fmt.Errorf("Expected logging status %t, given %t", desired, isLog)
 		}
 
 		return nil
@@ -806,9 +808,9 @@ func testAccCheckCloudTrailLogValidationEnabled(n string, desired bool, trail *c
 			return fmt.Errorf("No LogFileValidationEnabled attribute present in trail: %s", trail)
 		}
 
-		if *trail.LogFileValidationEnabled != desired {
-			return fmt.Errorf("Expected log validation status %t, given %t", desired,
-				*trail.LogFileValidationEnabled)
+		logValid := aws.BoolValue(trail.LogFileValidationEnabled)
+		if logValid != desired {
+			return fmt.Errorf("Expected log validation status %t, given %t", desired, logValid)
 		}
 
 		// local state comparison
@@ -842,7 +844,7 @@ func testAccCheckDestroy(s *terraform.State) error {
 
 		if err == nil {
 			if len(resp.TrailList) != 0 &&
-				*resp.TrailList[0].Name == rs.Primary.ID {
+				aws.StringValue(resp.TrailList[0].Name) == rs.Primary.ID {
 				return fmt.Errorf("CloudTrail still exists: %s", rs.Primary.ID)
 			}
 		}
