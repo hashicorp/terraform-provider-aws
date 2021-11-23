@@ -52,6 +52,7 @@ The `configuration` configuration block supports the following arguments:
 * `engine_version` - (Optional) Settings for the Athena Engine Versioning. For more information, see [Athena Engine Versioning](https://docs.aws.amazon.com/athena/latest/ug/engine-versions.html). Defaults to `AUTO`.  
 * `publish_cloudwatch_metrics_enabled` - (Optional) Boolean whether Amazon CloudWatch metrics are enabled for the workgroup. Defaults to `true`.
 * `result_configuration` - (Optional) Configuration block with result settings. Documented below.
+* `requester_pays_enabled` - (Optional) If set to true , allows members assigned to a workgroup to reference Amazon S3 Requester Pays buckets in queries. If set to false , workgroup members cannot query data from Requester Pays buckets, and queries that retrieve data from Requester Pays buckets cause an error. The default is false . For more information about Requester Pays buckets, see [Requester Pays Buckets](https://docs.aws.amazon.com/AmazonS3/latest/dev/RequesterPaysBuckets.html) in the Amazon Simple Storage Service Developer Guide.
 
 #### result_configuration Argument Reference
 
@@ -77,7 +78,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Athena Workgroups can be imported using their name, e.g.
+Athena Workgroups can be imported using their name, e.g.,
 
 ```
 $ terraform import aws_athena_workgroup.example example

@@ -126,6 +126,58 @@ resource "aws_appsync_graphql_api" "example" {
 }
 ```
 
+### Associate Web ACL (v2)
+
+```terraform
+resource "aws_appsync_graphql_api" "example" {
+  authentication_type = "API_KEY"
+  name                = "example"
+}
+
+resource "aws_wafv2_web_acl_association" "example" {
+  resource_arn = aws_appsync_graphql_api.example.arn
+  web_acl_arn  = aws_wafv2_web_acl.example.arn
+}
+
+resource "aws_wafv2_web_acl" "example" {
+  name        = "managed-rule-example"
+  description = "Example of a managed rule."
+  scope       = "REGIONAL"
+
+  default_action {
+    allow {}
+  }
+
+  rule {
+    name     = "rule-1"
+    priority = 1
+
+    override_action {
+      block {}
+    }
+
+    statement {
+      managed_rule_group_statement {
+        name        = "AWSManagedRulesCommonRuleSet"
+        vendor_name = "AWS"
+      }
+    }
+
+    visibility_config {
+      cloudwatch_metrics_enabled = false
+      metric_name                = "friendly-rule-metric-name"
+      sampled_requests_enabled   = false
+    }
+  }
+
+  visibility_config {
+    cloudwatch_metrics_enabled = false
+    metric_name                = "friendly-metric-name"
+    sampled_requests_enabled   = false
+  }
+}
+```
+
 ## Argument Reference
 
 The following arguments are supported:
@@ -181,11 +233,11 @@ In addition to all arguments above, the following attributes are exported:
 * `id` - API ID
 * `arn` - The ARN
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
-* `uris` - Map of URIs associated with the API. e.g. `uris["GRAPHQL"] = https://ID.appsync-api.REGION.amazonaws.com/graphql`
+* `uris` - Map of URIs associated with the APIE.g., `uris["GRAPHQL"] = https://ID.appsync-api.REGION.amazonaws.com/graphql`
 
 ## Import
 
-AppSync GraphQL API can be imported using the GraphQL API ID, e.g.
+AppSync GraphQL API can be imported using the GraphQL API ID, e.g.,
 
 ```
 $ terraform import aws_appsync_graphql_api.example 0123456789

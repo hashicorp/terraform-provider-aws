@@ -25,6 +25,7 @@ resource "aws_lex_intent" "order_flowers_intent" {
   }
 
   create_version = false
+  name           = "OrderFlowers"
   description    = "Intent to order a bouquet of flowers for pick up"
 
   fulfillment_activity {

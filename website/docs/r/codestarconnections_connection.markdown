@@ -66,7 +66,8 @@ resource "aws_codepipeline" "example" {
 The following arguments are supported:
 
 * `name` - (Required) The name of the connection to be created. The name must be unique in the calling AWS account. Changing `name` will create a new resource.
-* `provider_type` - (Required) The name of the external provider where your third-party code repository is configured. Valid values are `Bitbucket`, `GitHub`, or `GitHubEnterpriseServer`. Changing `provider_type` will create a new resource.
+* `provider_type` - (Optional) The name of the external provider where your third-party code repository is configured. Valid values are `Bitbucket`, `GitHub` or `GitHubEnterpriseServer`. Changing `provider_type` will create a new resource. Conflicts with `host_arn`
+* `host_arn` - (Optional) The Amazon Resource Name (ARN) of the host associated with the connection. Conflicts with `provider_type`
 * `tags` - (Optional) Map of key-value resource tags to associate with the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attributes Reference
@@ -80,7 +81,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-CodeStar connections can be imported using the ARN, e.g.
+CodeStar connections can be imported using the ARN, e.g.,
 
 ```
 $ terraform import aws_codestarconnections_connection.test-connection arn:aws:codestar-connections:us-west-1:0123456789:connection/79d4d357-a2ee-41e4-b350-2fe39ae59448

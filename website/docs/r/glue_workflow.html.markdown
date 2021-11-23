@@ -67,7 +67,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Glue Workflows can be imported using `name`, e.g.
+Glue Workflows can be imported using `name`, e.g.,
 
 ```
 $ terraform import aws_glue_workflow.MyWorkflow MyWorkflow
