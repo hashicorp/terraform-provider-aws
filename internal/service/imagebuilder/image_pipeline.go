@@ -65,6 +65,7 @@ func ResourceImagePipeline() *schema.Resource {
 			"image_recipe_arn": {
 				Type:         schema.TypeString,
 				Required:     true,
+				ForceNew:     true,
 				ValidateFunc: validation.StringMatch(regexp.MustCompile(`^arn:aws[^:]*:imagebuilder:[^:]+:(?:\d{12}|aws):image-recipe/[a-z0-9-_]+/\d+\.\d+\.\d+$`), "valid image recipe ARN must be provided"),
 			},
 			"image_tests_configuration": {
@@ -274,7 +275,6 @@ func resourceImagePipelineUpdate(d *schema.ResourceData, meta interface{}) error
 		"description",
 		"distribution_configuration_arn",
 		"enhanced_image_metadata_enabled",
-		"image_recipe_arn",
 		"image_tests_configuration",
 		"infrastructure_configuration_arn",
 		"schedule",
@@ -292,10 +292,6 @@ func resourceImagePipelineUpdate(d *schema.ResourceData, meta interface{}) error
 
 		if v, ok := d.GetOk("distribution_configuration_arn"); ok {
 			input.DistributionConfigurationArn = aws.String(v.(string))
-		}
-
-		if v, ok := d.GetOk("image_recipe_arn"); ok {
-			input.ImageRecipeArn = aws.String(v.(string))
 		}
 
 		if v, ok := d.GetOk("image_tests_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
