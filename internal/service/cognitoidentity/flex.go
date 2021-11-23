@@ -1,10 +1,16 @@
 package cognitoidentity
 
 import (
+	"fmt"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cognitoidentity"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
+
+func unusedFunc() {
+	fmt.Println("nobody calls this func")
+}
 
 func expandIdentityPoolRoleMappingsAttachment(rms []interface{}) map[string]*cognitoidentity.RoleMapping {
 	values := make(map[string]*cognitoidentity.RoleMapping)

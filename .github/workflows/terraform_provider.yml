@@ -290,6 +290,7 @@ jobs:
     - name: Check changed files
       run: |
         for file in ${{ steps.changed-files.outputs.all_modified_files }}; do
+          echo "${file}"
           if [[ "${file}" == *.go ]]; then
             golangci-lint run "${file}"
           fi
