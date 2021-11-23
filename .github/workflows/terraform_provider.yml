@@ -228,11 +228,13 @@ jobs:
         cat /tmp/dirs_changed_all | sort | uniq > /tmp/dirs_changed
         echo "All dirs changed:"
         cat /tmp/dirs_changed
+        echo "::set-output name=pkgs::$( cat /tmp/dirs_changed )"
+      id: changed-packages
     - name: Run tests for changed packages
       run: |
         while read dir; do
           go test "${dir}" -parallel 10 -short -run 'Test[^A]'
-        done </tmp/dirs_changed
+        done <<< $( echo ${{ steps.changed-packages.outputs.pkgs }} )
 
   golangci-lint:
     needs: [go_build]
