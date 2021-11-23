@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfappstream "github.com/hashicorp/terraform-provider-aws/internal/service/appstream"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func TestAccAppStreamUser_basic(t *testing.T) {
@@ -148,28 +149,15 @@ func testAccCheckUserExists(resourceName string, appStreamUser *appstream.User) 
 			return err
 		}
 
-		resp, err := conn.DescribeUsersWithContext(context.Background(), &appstream.DescribeUsersInput{AuthenticationType: aws.String(authType)})
+		user, err := tfappstream.FindUserByUserNameAndAuthType(context.Background(), conn, userName, authType)
+		if tfresource.NotFound(err) {
+			return fmt.Errorf("AppStream User %q does not exist", rs.Primary.ID)
+		}
 		if err != nil {
 			return err
 		}
 
-		if resp == nil && len(resp.Users) == 0 {
-			return fmt.Errorf("appstream user %q does not exist", rs.Primary.ID)
-		}
-
-		var user *appstream.User
-
-		for _, out := range resp.Users {
-			if aws.StringValue(out.UserName) == userName {
-				user = out
-			}
-		}
-
-		if user == nil {
-			return fmt.Errorf("appstream user %q does not exist", rs.Primary.ID)
-		}
-
-		appStreamUser = user
+		*appStreamUser = *user
 
 		return nil
 	}
