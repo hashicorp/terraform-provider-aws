@@ -1,11 +1,14 @@
 package eks
 
 import (
+	"context"
 	"fmt"
 	"log"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/eks"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -18,28 +21,26 @@ import (
 
 func ResourceClusterRegistration() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceClusterRegistrationCreate,
-		Read:   resourceClusterRegistrationRead,
-		Update: resourceClusterRegistrionUpdate,
-		Delete: resourceClusterRegistrationDelete,
+		CreateWithoutTimeout: resourceClusterRegistrationCreate,
+		ReadWithoutTimeout:   resourceClusterRegistrationRead,
+		UpdateWithoutTimeout: resourceClusterRegistrationCreate,
+		DeleteWithoutTimeout: resourceClusterRegistrationDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
 
 		Schema: map[string]*schema.Schema{
-			"client_request_token": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
 			"name": {
 				Type:         schema.TypeString,
 				Required:     true,
+				ForceNew:     true,
 				ValidateFunc: validClusterName,
 			},
 			"connector_config": {
 				Type:     schema.TypeList,
 				MaxItems: 1,
 				Required: true,
+				ForceNew: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"provider": {
@@ -52,6 +53,14 @@ func ResourceClusterRegistration() *schema.Resource {
 							Required:     true,
 							ValidateFunc: verify.ValidARN,
 						},
+						"activation_code": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"activation_expiry": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
 					},
 				},
 			},
@@ -61,16 +70,15 @@ func ResourceClusterRegistration() *schema.Resource {
 	}
 }
 
-func resourceClusterRegistrationCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceClusterRegistrationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).EKSConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 	name := d.Get("name").(string)
 
 	input := &eks.RegisterClusterInput{
-		ClientRequestToken: aws.String(d.Get("client_request_token").(string)),
-		Name:               aws.String(name),
-		ConnectorConfig:    expandConnectorConfigRequest(d.Get("connector_config").([]interface{})),
+		Name:            aws.String(name),
+		ConnectorConfig: expandConnectorConfigRequest(d.Get("connector_config").([]interface{})),
 	}
 
 	if len(tags) > 0 {
@@ -96,12 +104,65 @@ func resourceClusterRegistrationCreate(d *schema.ResourceData, meta interface{})
 	}
 
 	if err != nil {
-		return fmt.Errorf("error registering EKS Cluster (%s): %w", name, err)
+		return diag.FromErr(fmt.Errorf("error registering EKS Cluster (%s): %w", name, err))
 	}
 
 	d.SetId(aws.StringValue(output.Cluster.Name))
 
-	return resourceClusterRead(d, meta)
+	return resourceClusterRegistrationRead(ctx, d, meta)
+}
+
+func resourceClusterRegistrationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.AWSClient).EKSConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+
+	cluster, err := FindClusterByName(conn, d.Id())
+
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] EKS Cluster-Registration (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
+	}
+
+	if err != nil {
+		return diag.FromErr(fmt.Errorf("error reading EKS Add-On (%s): %w", d.Id(), err))
+	}
+
+	d.Set("name", cluster.Name)
+
+	if err := d.Set("connector_config", flattenConnectorConfig(cluster.ConnectorConfig)); err != nil {
+		return diag.FromErr(fmt.Errorf("error setting connector config: %w", err))
+	}
+
+	tags := KeyValueTags(cluster.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+
+	//lintignore:AWSR002
+	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
+		return diag.FromErr(fmt.Errorf("error setting tags: %w", err))
+	}
+
+	if err := d.Set("tags_all", tags.Map()); err != nil {
+		return diag.FromErr(fmt.Errorf("error setting tags_all: %w", err))
+	}
+
+	return nil
+}
+
+func resourceClusterRegistrationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.AWSClient).EKSConn
+
+	log.Printf("[DEBUG] Deleting EKS Cluster Registration: %s", d.Id())
+
+	_, err := conn.DeregisterClusterWithContext(ctx, &eks.DeregisterClusterInput{
+		Name: aws.String(d.Id()),
+	})
+
+	if err != nil {
+		return diag.FromErr(fmt.Errorf("error deleting EKS Cluster Registration (%s): %w", d.Id(), err))
+	}
+
+	return nil
 }
 
 func expandConnectorConfigRequest(tfList []interface{}) *eks.ConnectorConfigRequest {
@@ -122,4 +183,19 @@ func expandConnectorConfigRequest(tfList []interface{}) *eks.ConnectorConfigRequ
 	}
 
 	return apiObject
+}
+
+func flattenConnectorConfig(apiObject *eks.ConnectorConfigResponse) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{
+		"provider":          aws.StringValue(apiObject.Provider),
+		"role_arn":          aws.StringValue(apiObject.RoleArn),
+		"activation_code":   aws.StringValue(apiObject.ActivationCode),
+		"activation_expiry": aws.TimeValue(apiObject.ActivationExpiry).Format(time.RFC3339),
+	}
+
+	return []interface{}{tfMap}
 }
