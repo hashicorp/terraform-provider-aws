@@ -588,7 +588,44 @@ func FindSecurityGroupByNameAndVPCID(conn *ec2.EC2, name, vpcID string) (*ec2.Se
 
 // FindSecurityGroup looks up a security group using an ec2.DescribeSecurityGroupsInput. Returns a resource.NotFoundError if not found.
 func FindSecurityGroup(conn *ec2.EC2, input *ec2.DescribeSecurityGroupsInput) (*ec2.SecurityGroup, error) {
-	result, err := conn.DescribeSecurityGroups(input)
+	output, err := FindSecurityGroups(conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if len(output) == 0 || output[0] == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	if count := len(output); count > 1 {
+		return nil, tfresource.NewTooManyResultsError(count, input)
+	}
+
+	return output[0], nil
+}
+
+// FindSecurityGroups returns an array of security groups that match an ec2.DescribeSecurityGroupsInput.
+// Returns a resource.NotFoundError if no group is found for a specified SecurityGroup or SecurityGroupId.
+func FindSecurityGroups(conn *ec2.EC2, input *ec2.DescribeSecurityGroupsInput) ([]*ec2.SecurityGroup, error) {
+	var output []*ec2.SecurityGroup
+
+	err := conn.DescribeSecurityGroupsPages(input, func(page *ec2.DescribeSecurityGroupsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, sg := range page.SecurityGroups {
+			if sg == nil {
+				continue
+			}
+
+			output = append(output, sg)
+		}
+
+		return !lastPage
+	})
+
 	if tfawserr.ErrCodeEquals(err, InvalidSecurityGroupIDNotFound) ||
 		tfawserr.ErrCodeEquals(err, InvalidGroupNotFound) {
 		return nil, &resource.NotFoundError{
@@ -596,19 +633,12 @@ func FindSecurityGroup(conn *ec2.EC2, input *ec2.DescribeSecurityGroupsInput) (*
 			LastRequest: input,
 		}
 	}
+
 	if err != nil {
 		return nil, err
 	}
 
-	if result == nil || len(result.SecurityGroups) == 0 || result.SecurityGroups[0] == nil {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	if len(result.SecurityGroups) > 1 {
-		return nil, tfresource.NewTooManyResultsError(len(result.SecurityGroups), input)
-	}
-
-	return result.SecurityGroups[0], nil
+	return output, nil
 }
 
 // FindSpotInstanceRequestByID looks up a SpotInstanceRequest by ID. When not found, returns nil and potentially an API error.

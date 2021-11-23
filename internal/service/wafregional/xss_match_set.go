@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfwaf "github.com/hashicorp/terraform-provider-aws/internal/service/waf"
 )
 
 func ResourceXSSMatchSet() *schema.Resource {
@@ -195,7 +196,7 @@ func flattenXSSMatchTuples(ts []*waf.XssMatchTuple) []interface{} {
 	out := make([]interface{}, len(ts))
 	for i, t := range ts {
 		m := make(map[string]interface{})
-		m["field_to_match"] = FlattenFieldToMatch(t.FieldToMatch)
+		m["field_to_match"] = tfwaf.FlattenFieldToMatch(t.FieldToMatch)
 		m["text_transformation"] = aws.StringValue(t.TextTransformation)
 		out[i] = m
 	}
@@ -216,7 +217,7 @@ func diffXSSMatchSetTuples(oldT, newT []interface{}) []*waf.XssMatchSetUpdate {
 		updates = append(updates, &waf.XssMatchSetUpdate{
 			Action: aws.String(waf.ChangeActionDelete),
 			XssMatchTuple: &waf.XssMatchTuple{
-				FieldToMatch:       expandFieldToMatch(tuple["field_to_match"].([]interface{})[0].(map[string]interface{})),
+				FieldToMatch:       tfwaf.ExpandFieldToMatch(tuple["field_to_match"].([]interface{})[0].(map[string]interface{})),
 				TextTransformation: aws.String(tuple["text_transformation"].(string)),
 			},
 		})
@@ -228,7 +229,7 @@ func diffXSSMatchSetTuples(oldT, newT []interface{}) []*waf.XssMatchSetUpdate {
 		updates = append(updates, &waf.XssMatchSetUpdate{
 			Action: aws.String(waf.ChangeActionInsert),
 			XssMatchTuple: &waf.XssMatchTuple{
-				FieldToMatch:       expandFieldToMatch(tuple["field_to_match"].([]interface{})[0].(map[string]interface{})),
+				FieldToMatch:       tfwaf.ExpandFieldToMatch(tuple["field_to_match"].([]interface{})[0].(map[string]interface{})),
 				TextTransformation: aws.String(tuple["text_transformation"].(string)),
 			},
 		})

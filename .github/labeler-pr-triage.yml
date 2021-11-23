@@ -289,7 +289,7 @@ service/elasticbeanstalk:
   - 'internal/service/elasticbeanstalk/**/*'
   - 'website/**/elastic_beanstalk_*'
 service/elasticsearch:
-  - 'internal/service/elasticsearchservice/**/*'
+  - 'internal/service/elasticsearch/**/*'
   - 'website/**/elasticsearch_*'
 service/elb:
   - 'internal/service/elb/**/*'
@@ -383,8 +383,8 @@ service/lakeformation:
 service/lambda:
   - 'internal/service/lambda/**/*'
   - 'website/**/lambda_*'
-service/lexmodelbuildingservice:
-  - 'internal/service/lexmodelbuilding/**/*'
+service/lexmodels:
+  - 'internal/service/lexmodels/**/*'
   - 'website/**/lex_*'
 service/licensemanager:
   - 'internal/service/licensemanager/**/*'

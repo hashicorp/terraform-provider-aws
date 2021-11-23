@@ -352,7 +352,7 @@ func flattenServerlessRepositoryStackCapabilities(stackCapabilities []*string, a
 func flattenCloudFormationOutputs(cfOutputs []*cloudformation.Output) map[string]string {
 	outputs := make(map[string]string, len(cfOutputs))
 	for _, o := range cfOutputs {
-		outputs[*o.OutputKey] = *o.OutputValue
+		outputs[aws.StringValue(o.OutputKey)] = aws.StringValue(o.OutputValue)
 	}
 	return outputs
 }

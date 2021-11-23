@@ -433,7 +433,7 @@ const (
 	KMS                           = "kms"
 	LakeFormation                 = "lakeformation"
 	Lambda                        = "lambda"
-	LexModelBuilding              = "lexmodelbuilding"
+	LexModels                     = "lexmodels"
 	LexModelsV2                   = "lexmodelsv2"
 	LexRuntime                    = "lexruntime"
 	LexRuntimeV2                  = "lexruntimev2"
@@ -717,7 +717,7 @@ func init() {
 	serviceData[KMS] = &ServiceDatum{AWSClientName: "KMS", AWSServiceName: kms.ServiceName, AWSEndpointsID: kms.EndpointsID, AWSServiceID: kms.ServiceID, ProviderNameUpper: "KMS", HCLKeys: []string{"kms"}}
 	serviceData[LakeFormation] = &ServiceDatum{AWSClientName: "LakeFormation", AWSServiceName: lakeformation.ServiceName, AWSEndpointsID: lakeformation.EndpointsID, AWSServiceID: lakeformation.ServiceID, ProviderNameUpper: "LakeFormation", HCLKeys: []string{"lakeformation"}}
 	serviceData[Lambda] = &ServiceDatum{AWSClientName: "Lambda", AWSServiceName: lambda.ServiceName, AWSEndpointsID: lambda.EndpointsID, AWSServiceID: lambda.ServiceID, ProviderNameUpper: "Lambda", HCLKeys: []string{"lambda"}}
-	serviceData[LexModelBuilding] = &ServiceDatum{AWSClientName: "LexModelBuildingService", AWSServiceName: lexmodelbuildingservice.ServiceName, AWSEndpointsID: lexmodelbuildingservice.EndpointsID, AWSServiceID: lexmodelbuildingservice.ServiceID, ProviderNameUpper: "LexModelBuilding", HCLKeys: []string{"lexmodels", "lexmodelbuilding", "lexmodelbuildingservice"}}
+	serviceData[LexModels] = &ServiceDatum{AWSClientName: "LexModelBuildingService", AWSServiceName: lexmodelbuildingservice.ServiceName, AWSEndpointsID: lexmodelbuildingservice.EndpointsID, AWSServiceID: lexmodelbuildingservice.ServiceID, ProviderNameUpper: "LexModels", HCLKeys: []string{"lexmodels", "lexmodelbuilding", "lexmodelbuildingservice"}}
 	serviceData[LexModelsV2] = &ServiceDatum{AWSClientName: "LexModelsV2", AWSServiceName: lexmodelsv2.ServiceName, AWSEndpointsID: lexmodelsv2.EndpointsID, AWSServiceID: lexmodelsv2.ServiceID, ProviderNameUpper: "LexModelsV2", HCLKeys: []string{"lexmodelsv2"}}
 	serviceData[LexRuntime] = &ServiceDatum{AWSClientName: "LexRuntimeService", AWSServiceName: lexruntimeservice.ServiceName, AWSEndpointsID: lexruntimeservice.EndpointsID, AWSServiceID: lexruntimeservice.ServiceID, ProviderNameUpper: "LexRuntime", HCLKeys: []string{"lexruntime", "lexruntimeservice"}}
 	serviceData[LexRuntimeV2] = &ServiceDatum{AWSClientName: "LexRuntimeV2", AWSServiceName: lexruntimev2.ServiceName, AWSEndpointsID: lexruntimev2.EndpointsID, AWSServiceID: lexruntimev2.ServiceID, ProviderNameUpper: "LexRuntimeV2", HCLKeys: []string{"lexruntimev2"}}
@@ -1029,7 +1029,7 @@ type AWSClient struct {
 	KMSConn                           *kms.KMS
 	LakeFormationConn                 *lakeformation.LakeFormation
 	LambdaConn                        *lambda.Lambda
-	LexModelBuildingConn              *lexmodelbuildingservice.LexModelBuildingService
+	LexModelsConn                     *lexmodelbuildingservice.LexModelBuildingService
 	LexModelsV2Conn                   *lexmodelsv2.LexModelsV2
 	LexRuntimeConn                    *lexruntimeservice.LexRuntimeService
 	LexRuntimeV2Conn                  *lexruntimev2.LexRuntimeV2
@@ -1381,7 +1381,7 @@ func (c *Config) Client() (interface{}, error) {
 		KMSConn:                           kms.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[KMS])})),
 		LakeFormationConn:                 lakeformation.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[LakeFormation])})),
 		LambdaConn:                        lambda.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[Lambda])})),
-		LexModelBuildingConn:              lexmodelbuildingservice.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[LexModelBuilding])})),
+		LexModelsConn:                     lexmodelbuildingservice.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[LexModels])})),
 		LexModelsV2Conn:                   lexmodelsv2.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[LexModelsV2])})),
 		LexRuntimeConn:                    lexruntimeservice.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[LexRuntime])})),
 		LexRuntimeV2Conn:                  lexruntimev2.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[LexRuntimeV2])})),

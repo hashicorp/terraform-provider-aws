@@ -218,7 +218,7 @@ func TestAccAcctestProvider_unusualEndpoints(t *testing.T) {
 
 	unusual1 := []string{"es", "elasticsearch", "http://notarealendpoint"}
 	unusual2 := []string{"databasemigration", "dms", "http://alsonotarealendpoint"}
-	unusual3 := []string{"lexmodels", "lexmodelbuilding", "http://kingofspain"}
+	unusual3 := []string{"lexmodelbuildingservice", "lexmodels", "http://kingofspain"}
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { PreCheck(t) },

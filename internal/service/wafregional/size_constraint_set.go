@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfwaf "github.com/hashicorp/terraform-provider-aws/internal/service/waf"
 )
 
 func ResourceSizeConstraintSet() *schema.Resource {
@@ -22,7 +23,7 @@ func ResourceSizeConstraintSet() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 
-		Schema: wafSizeConstraintSetSchema(),
+		Schema: tfwaf.SizeConstraintSetSchema(),
 	}
 }
 
@@ -72,7 +73,7 @@ func resourceSizeConstraintSetRead(d *schema.ResourceData, meta interface{}) err
 	}
 
 	d.Set("name", resp.SizeConstraintSet.Name)
-	d.Set("size_constraints", flattenWafSizeConstraints(resp.SizeConstraintSet.SizeConstraints))
+	d.Set("size_constraints", tfwaf.FlattenSizeConstraints(resp.SizeConstraintSet.SizeConstraints))
 
 	return nil
 }
@@ -139,7 +140,7 @@ func updateRegionalSizeConstraintSetResource(id string, oldConstraints, newConst
 		req := &waf.UpdateSizeConstraintSetInput{
 			ChangeToken:         token,
 			SizeConstraintSetId: aws.String(id),
-			Updates:             diffWafSizeConstraints(oldConstraints, newConstraints),
+			Updates:             tfwaf.DiffSizeConstraints(oldConstraints, newConstraints),
 		}
 
 		log.Printf("[INFO] Updating WAF Regional SizeConstraintSet: %s", req)

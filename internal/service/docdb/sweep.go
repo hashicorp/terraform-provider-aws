@@ -4,6 +4,7 @@
 package docdb
 
 import (
+	"context"
 	"fmt"
 	"log"
 
@@ -11,12 +12,13 @@ import (
 	"github.com/aws/aws-sdk-go/service/docdb"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
 func init() {
 	resource.AddTestSweepers("aws_docdb_global_cluster", &resource.Sweeper{
 		Name: "aws_docdb_global_cluster",
-		F:    testSweepDocDBGlobalClusters,
+		F:    sweepGlobalClusters,
 		Dependencies: []string{
 			"aws_docdb_cluster",
 		},
@@ -49,14 +51,14 @@ func sweepGlobalClusters(region string) error {
 				continue
 			}
 
-			if err := WaitForDocDBGlobalClusterDeletion(context.TODO(), conn, id); err != nil {
+			if err := WaitForGlobalClusterDeletion(context.TODO(), conn, id, GlobalClusterDeleteTimeout); err != nil {
 				log.Printf("[ERROR] Failure while waiting for DocDB Global Cluster (%s) to be deleted: %s", id, err)
 			}
 		}
 		return !lastPage
 	})
 
-	if testSweepSkipSweepError(err) {
+	if sweep.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping DocDB Global Cluster sweep for %s: %s", region, err)
 		return nil
 	}

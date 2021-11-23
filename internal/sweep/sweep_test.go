@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	_ "github.com/hashicorp/terraform-provider-aws/internal/service/accessanalyzer"
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/acm"
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/acmpca"
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/amplify"
@@ -71,7 +72,7 @@ import (
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/kinesisanalyticsv2"
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/kms"
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/lambda"
-	_ "github.com/hashicorp/terraform-provider-aws/internal/service/lexmodelbuilding"
+	_ "github.com/hashicorp/terraform-provider-aws/internal/service/lexmodels"
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/licensemanager"
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/lightsail"
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/mq"
