@@ -20,7 +20,8 @@ func TestAccAppStreamUserStackAssociation_basic(t *testing.T) {
 	resourceName := "aws_appstream_user_stack_association.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	authType := "USERPOOL"
-	rEmail := acctest.RandomEmailAddress("hashicorp.com")
+	domain := acctest.RandomDomainName()
+	rEmail := acctest.RandomEmailAddress(domain)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -52,7 +53,8 @@ func TestAccAppStreamUserStackAssociation_disappears(t *testing.T) {
 	resourceName := "aws_appstream_user_stack_association.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	authType := "USERPOOL"
-	rEmail := acctest.RandomEmailAddress("hashicorp.com")
+	domain := acctest.RandomDomainName()
+	rEmail := acctest.RandomEmailAddress(domain)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -78,8 +80,9 @@ func TestAccAppStreamUserStackAssociation_complete(t *testing.T) {
 	resourceName := "aws_appstream_user_stack_association.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	authType := "USERPOOL"
-	rEmail := acctest.RandomEmailAddress("hashicorp.com")
-	rEmailUpdated := acctest.RandomEmailAddress("hashicorp.com")
+	domain := acctest.RandomDomainName()
+	rEmail := acctest.RandomEmailAddress(domain)
+	rEmailUpdated := acctest.RandomEmailAddress(domain)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
