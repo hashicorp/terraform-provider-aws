@@ -549,6 +549,7 @@ func Provider() *schema.Provider {
 			"aws_identitystore_user":  identitystore.DataSourceUser(),
 
 			"aws_imagebuilder_component":                    imagebuilder.DataSourceComponent(),
+			"aws_imagebuilder_components":                   imagebuilder.DataSourceComponents(),
 			"aws_imagebuilder_distribution_configuration":   imagebuilder.DataSourceDistributionConfiguration(),
 			"aws_imagebuilder_image":                        imagebuilder.DataSourceImage(),
 			"aws_imagebuilder_image_pipeline":               imagebuilder.DataSourceImagePipeline(),
