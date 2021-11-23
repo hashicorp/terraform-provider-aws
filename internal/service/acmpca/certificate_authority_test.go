@@ -16,6 +16,10 @@ import (
 	tfacmpca "github.com/hashicorp/terraform-provider-aws/internal/service/acmpca"
 )
 
+func TestNotARealTest(t *testing.T) {
+	t.Errorf("real bad error: %s", "not really")
+}
+
 func TestAccACMPCACertificateAuthority_basic(t *testing.T) {
 	var certificateAuthority acmpca.CertificateAuthority
 	resourceName := "aws_acmpca_certificate_authority.test"
