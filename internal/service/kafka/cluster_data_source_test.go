@@ -10,6 +10,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
+func TestNotARealTest(t *testing.T) {
+	fmt.Println("bad test")
+}
+
 func TestAccKafkaClusterDataSource_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_msk_cluster.test"
