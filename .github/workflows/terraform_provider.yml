@@ -220,9 +220,12 @@ jobs:
     - name: List changed files
       run: |
         for file in ${{ steps.changed-files.outputs.all_modified_files }}; do
-          echo "$file was modified"
+          echo $( dirname "${file}" ) >> /tmp/dirs_changed_all
         done
-    - run: go test ./internal/... -parallel 10 -short -run 'Test[^A]'
+        cat /tmp/dirs_changed_all | sort | uniq > /tmp/dirs_changed
+        echo "All dirs changed:"
+        cat /tmp/dirs_changed
+    #- run: go test ./internal/... -parallel 10 -short -run 'Test[^A]'
 
   golangci-lint:
     needs: [go_build]
