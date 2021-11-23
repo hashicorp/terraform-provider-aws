@@ -249,7 +249,11 @@ jobs:
     - name: Run tests for changed packages
       run: |
         while read pkg; do
-          go test -run ^Test[^A][^c][^c] "github.com/hashicorp/terraform-provider-aws/${pkg}"
+          sweep_tags=""
+          if [ "${pkg}" = "internal/sweep" ]; then
+            sweep_tags="-tags=sweep"
+          fi
+          go test -run ^Test[^A][^c][^c] $sweep_tags "github.com/hashicorp/terraform-provider-aws/${pkg}"
         done </tmp/dep_pkgs
 
   golangci-lint:
