@@ -241,6 +241,7 @@ jobs:
             echo $( dirname "${file}" | xargs ) >> /tmp/dep_dirs_all
           done <<< $( grep -l "github.com/hashicorp/terraform-provider-aws/${pkg}" internal/**/*.go )
         done </tmp/pkgs_changed
+        cat /tmp/pkgs_changed >> /tmp/dep_dirs_all
         cat /tmp/dep_dirs_all | sort | uniq > /tmp/dep_pkgs
         echo "All dependent packages:"
         cat /tmp/dep_pkgs
