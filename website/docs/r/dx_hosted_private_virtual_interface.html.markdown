@@ -1,19 +1,19 @@
 ---
+subcategory: "Direct Connect"
 layout: "aws"
 page_title: "AWS: aws_dx_hosted_private_virtual_interface"
-sidebar_current: "docs-aws-resource-dx-hosted-private-virtual-interface"
 description: |-
   Provides a Direct Connect hosted private virtual interface resource.
 ---
 
-# aws_dx_hosted_private_virtual_interface
+# Resource: aws_dx_hosted_private_virtual_interface
 
 Provides a Direct Connect hosted private virtual interface resource. This resource represents the allocator's side of the hosted virtual interface.
 A hosted virtual interface is a virtual interface that is owned by another AWS account.
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_dx_hosted_private_virtual_interface" "foo" {
   connection_id = "dxcon-zzzzzzzz"
 
@@ -51,7 +51,7 @@ In addition to all arguments above, the following attributes are exported:
 ## Timeouts
 
 `aws_dx_hosted_private_virtual_interface` provides the following
-[Timeouts](/docs/configuration/resources.html#timeouts) configuration options:
+[Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
 
 - `create` - (Default `10 minutes`) Used for creating virtual interface
 - `update` - (Default `10 minutes`) Used for virtual interface modifications
@@ -59,7 +59,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Direct Connect hosted private virtual interfaces can be imported using the `vif id`, e.g.
+Direct Connect hosted private virtual interfaces can be imported using the `vif id`, e.g.,
 
 ```
 $ terraform import aws_dx_hosted_private_virtual_interface.test dxvif-33cc44dd

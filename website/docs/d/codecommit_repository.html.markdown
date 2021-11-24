@@ -1,7 +1,7 @@
 ---
+subcategory: "CodeCommit"
 layout: "aws"
 page_title: "AWS: aws_codecommit_repository"
-sidebar_current: "docs-aws-datasource-codecommit-repository"
 description: |-
   Provides details about CodeCommit Repository.
 ---
@@ -12,7 +12,7 @@ The CodeCommit Repository data source allows the ARN, Repository ID, Repository 
 
 ## Example Usage
 
-```hcl
+```terraform
 data "aws_codecommit_repository" "test" {
   repository_name = "MyTestRepository"
 }
