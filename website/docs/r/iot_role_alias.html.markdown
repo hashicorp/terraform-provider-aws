@@ -12,7 +12,7 @@ Provides an IoT role alias.
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_iam_role" "role" {
   name = "dynamodb-access-role"
 
@@ -52,7 +52,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-IOT Role Alias can be imported via the alias, e.g.
+IOT Role Alias can be imported via the alias, e.g.,
 
 ```sh
 $ terraform import aws_iot_role_alias.example myalias
