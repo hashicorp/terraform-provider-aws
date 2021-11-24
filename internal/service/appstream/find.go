@@ -150,3 +150,45 @@ func FindUserByUserNameAndAuthType(ctx context.Context, conn *appstream.AppStrea
 
 	return result, nil
 }
+
+// FindFleetStackAssociation Validates that a fleet has the named associated stack
+func FindFleetStackAssociation(ctx context.Context, conn *appstream.AppStream, fleetName, stackName string) error {
+	input := &appstream.ListAssociatedStacksInput{
+		FleetName: aws.String(fleetName),
+	}
+
+	found := false
+	err := listAssociatedStacksPagesWithContext(ctx, conn, input, func(page *appstream.ListAssociatedStacksOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, name := range page.Names {
+			if stackName == aws.StringValue(name) {
+				found = true
+				return false
+			}
+		}
+
+		return !lastPage
+	})
+
+	if tfawserr.ErrCodeEquals(err, appstream.ErrCodeResourceNotFoundException) {
+		return &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+	if err != nil {
+		return err
+	}
+
+	if !found {
+		return &resource.NotFoundError{
+			Message:     fmt.Sprintf("No stack %q associated with fleet %q", stackName, fleetName),
+			LastRequest: input,
+		}
+	}
+
+	return nil
+}
