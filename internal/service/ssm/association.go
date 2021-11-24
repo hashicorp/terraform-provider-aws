@@ -91,8 +91,9 @@ func ResourceAssociation() *schema.Resource {
 							Optional: true,
 						},
 						"s3_region": {
-							Type:     schema.TypeString,
-							Optional: true,
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validation.StringLenBetween(3, 20),
 						},
 					},
 				},
@@ -364,8 +365,8 @@ func expandSSMAssociationOutputLocation(config []interface{}) *ssm.InstanceAssoc
 		S3OutputLocation.OutputS3KeyPrefix = aws.String(v.(string))
 	}
 
-	if v, ok := locationConfig["s3_region"]; ok {
-		S3OutputLocation.OutputS3Region = aws.String(v.(string))
+	if v, ok := locationConfig["s3_region"].(string); ok && v != "" {
+		S3OutputLocation.OutputS3Region = aws.String(v)
 	}
 
 	return &ssm.InstanceAssociationOutputLocation{

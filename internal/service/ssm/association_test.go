@@ -331,8 +331,6 @@ func TestAccSSMAssociation_withOutputLocation(t *testing.T) {
 						resourceName, "output_location.0.s3_bucket_name", fmt.Sprintf("tf-acc-test-ssmoutput-%s", name)),
 					resource.TestCheckResourceAttr(
 						resourceName, "output_location.0.s3_key_prefix", "SSMAssociation"),
-					resource.TestCheckResourceAttr(
-						resourceName, "output_location.0.s3_region", "us-east-1"),
 				),
 			},
 			{
@@ -348,8 +346,6 @@ func TestAccSSMAssociation_withOutputLocation(t *testing.T) {
 						resourceName, "output_location.0.s3_bucket_name", fmt.Sprintf("tf-acc-test-ssmoutput-updated-%s", name)),
 					resource.TestCheckResourceAttr(
 						resourceName, "output_location.0.s3_key_prefix", "SSMAssociation"),
-					resource.TestCheckResourceAttr(
-						resourceName, "output_location.0.s3_region", "us-east-2"),
 				),
 			},
 			{
@@ -360,8 +356,56 @@ func TestAccSSMAssociation_withOutputLocation(t *testing.T) {
 						resourceName, "output_location.0.s3_bucket_name", fmt.Sprintf("tf-acc-test-ssmoutput-updated-%s", name)),
 					resource.TestCheckResourceAttr(
 						resourceName, "output_location.0.s3_key_prefix", "UpdatedAssociation"),
-					resource.TestCheckResourceAttr(
-						resourceName, "output_location.0.s3_region", "UpdatedAssociation"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccSSMAssociation_withOutputLocation_s3Region(t *testing.T) {
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_ssm_association.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckMultipleRegion(t, 2) },
+		ErrorCheck:        acctest.ErrorCheck(t, ssm.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckAssociationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAssociationWithOutputLocationS3RegionConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAssociationExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "output_location.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "output_location.0.s3_bucket_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "output_location.0.s3_region", acctest.Region()),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAssociationWithOutputLocationUpdateS3RegionConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAssociationExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "output_location.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "output_location.0.s3_bucket_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "output_location.0.s3_region", acctest.AlternateRegion()),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAssociationWithOutputLocationNoS3RegionConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAssociationExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "output_location.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "output_location.0.s3_region", ""),
 				),
 			},
 		},
@@ -1083,7 +1127,6 @@ func testAccAssociationBasicWithOutPutLocationConfig(rName string) string {
 resource "aws_s3_bucket" "output_location" {
   bucket        = "tf-acc-test-ssmoutput-%s"
   force_destroy = true
-  region        = "us-east-1"
 }
 
 resource "aws_ssm_document" "test" {
@@ -1123,10 +1166,102 @@ resource "aws_ssm_association" "test" {
   output_location {
     s3_bucket_name = aws_s3_bucket.output_location.id
     s3_key_prefix  = "SSMAssociation"
-    s3_region      = aws_s3_bucket.output_location.region
   }
 }
 `, rName, rName)
+}
+
+func testAccAssociationWithOutputLocationS3RegionConfigBase(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket        = %[1]q
+  force_destroy = true
+}
+
+resource "aws_ssm_document" "test" {
+  name          = %[1]q
+  document_type = "Command"
+
+  content = <<DOC
+{
+  "schemaVersion": "1.2",
+  "description": "Check ip configuration of a Linux instance.",
+  "parameters": {},
+  "runtimeConfig": {
+    "aws:runShellScript": {
+      "properties": [
+        {
+          "id": "0.aws:runShellScript",
+          "runCommand": [
+            "ifconfig"
+          ]
+        }
+      ]
+    }
+  }
+}
+DOC
+}
+`, rName)
+}
+
+func testAccAssociationWithOutputLocationS3RegionConfig(rName string) string {
+	return acctest.ConfigCompose(
+		testAccAssociationWithOutputLocationS3RegionConfigBase(rName),
+		`
+resource "aws_ssm_association" "test" {
+  name = aws_ssm_document.test.name
+
+  targets {
+    key    = "tag:Name"
+    values = ["acceptanceTest"]
+  }
+
+  output_location {
+    s3_bucket_name = aws_s3_bucket.test.id
+    s3_region      = aws_s3_bucket.test.region
+  }
+}
+`)
+}
+
+func testAccAssociationWithOutputLocationUpdateS3RegionConfig(rName string) string {
+	return acctest.ConfigCompose(
+		testAccAssociationWithOutputLocationS3RegionConfigBase(rName),
+		fmt.Sprintf(`
+resource "aws_ssm_association" "test" {
+  name = aws_ssm_document.test.name
+
+  targets {
+    key    = "tag:Name"
+    values = ["acceptanceTest"]
+  }
+
+  output_location {
+    s3_bucket_name = aws_s3_bucket.test.id
+    s3_region      = %[1]q
+  }
+}
+`, acctest.AlternateRegion()))
+}
+
+func testAccAssociationWithOutputLocationNoS3RegionConfig(rName string) string {
+	return acctest.ConfigCompose(
+		testAccAssociationWithOutputLocationS3RegionConfigBase(rName),
+		`
+resource "aws_ssm_association" "test" {
+  name = aws_ssm_document.test.name
+
+  targets {
+    key    = "tag:Name"
+    values = ["acceptanceTest"]
+  }
+
+  output_location {
+    s3_bucket_name = aws_s3_bucket.test.id
+  }
+}
+`)
 }
 
 func testAccAssociationBasicWithOutPutLocationUpdateBucketNameConfig(rName string) string {
@@ -1134,13 +1269,11 @@ func testAccAssociationBasicWithOutPutLocationUpdateBucketNameConfig(rName strin
 resource "aws_s3_bucket" "output_location" {
   bucket        = "tf-acc-test-ssmoutput-%s"
   force_destroy = true
-  region        = "us-east-1"
 }
 
 resource "aws_s3_bucket" "output_location_updated" {
   bucket        = "tf-acc-test-ssmoutput-updated-%s"
   force_destroy = true
-  region        = "us-east-2"
 }
 
 resource "aws_ssm_document" "test" {
@@ -1180,7 +1313,6 @@ resource "aws_ssm_association" "test" {
   output_location {
     s3_bucket_name = aws_s3_bucket.output_location_updated.id
     s3_key_prefix  = "SSMAssociation"
-    s3_region      = aws_s3_bucket.output_location_updated.region
   }
 }
 `, rName, rName, rName)
@@ -1191,13 +1323,11 @@ func testAccAssociationBasicWithOutPutLocationUpdateKeyPrefixConfig(rName string
 resource "aws_s3_bucket" "output_location" {
   bucket        = "tf-acc-test-ssmoutput-%s"
   force_destroy = true
-  region        = "us-east-1"
 }
 
 resource "aws_s3_bucket" "output_location_updated" {
   bucket        = "tf-acc-test-ssmoutput-updated-%s"
   force_destroy = true
-  region        = "us-east-2"
 }
 
 resource "aws_ssm_document" "test" {
@@ -1237,7 +1367,6 @@ resource "aws_ssm_association" "test" {
   output_location {
     s3_bucket_name = aws_s3_bucket.output_location_updated.id
     s3_key_prefix  = "UpdatedAssociation"
-    s3_region      = aws_s3_bucket.output_location_updated.region
   }
 }
 `, rName, rName, rName)
