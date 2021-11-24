@@ -79,11 +79,10 @@ func resourceFleetStackAssociationRead(ctx context.Context, d *schema.ResourceDa
 		return diag.FromErr(fmt.Errorf("error decoding AppStream Fleet Stack Association ID (%s): %w", d.Id(), err))
 	}
 
-	sName, err := FindAssociatedFleetStack(ctx, conn, fleetName, stackName)
+	err = FindFleetStackAssociation(ctx, conn, fleetName, stackName)
 
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, appstream.ErrCodeResourceNotFoundException) ||
-		tfresource.NotFound(err) {
-		log.Printf("[WARN] Appstream Fleet Stack Association (%s) not found, removing from state", d.Id())
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] AppStream Fleet Stack Association (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
@@ -93,7 +92,7 @@ func resourceFleetStackAssociationRead(ctx context.Context, d *schema.ResourceDa
 	}
 
 	d.Set("fleet_name", fleetName)
-	d.Set("stack_name", sName)
+	d.Set("stack_name", stackName)
 
 	return nil
 }

@@ -3,7 +3,6 @@ package appstream
 import (
 	"context"
 	"fmt"
-	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/appstream"
@@ -152,39 +151,44 @@ func FindUserByUserNameAndAuthType(ctx context.Context, conn *appstream.AppStrea
 	return result, nil
 }
 
-// FindAssociatedFleetStack Retrieve an associated fleet with a stack by fleet and stack name
-func FindAssociatedFleetStack(ctx context.Context, conn *appstream.AppStream, fleetName, stackName string) (*string, error) {
+// FindFleetStackAssociation Validates that a fleet has the named associated stack
+func FindFleetStackAssociation(ctx context.Context, conn *appstream.AppStream, fleetName, stackName string) error {
 	input := &appstream.ListAssociatedStacksInput{
 		FleetName: aws.String(fleetName),
 	}
 
-	resp, err := conn.ListAssociatedStacksWithContext(ctx, &appstream.ListAssociatedStacksInput{FleetName: aws.String(fleetName)})
+	found := false
+	err := listAssociatedStacksPagesWithContext(ctx, conn, input, func(page *appstream.ListAssociatedStacksOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, name := range page.Names {
+			if stackName == aws.StringValue(name) {
+				found = true
+				return false
+			}
+		}
+
+		return !lastPage
+	})
 
 	if tfawserr.ErrCodeEquals(err, appstream.ErrCodeResourceNotFoundException) {
-		return nil, &resource.NotFoundError{
+		return &resource.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
 	}
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	var sName string
-	for _, name := range resp.Names {
-		log.Printf("[DEBIG] name : %v", name)
-		if aws.StringValue(name) == stackName {
-			log.Printf("[DEBIG] name : %v found", name)
-			sName = aws.StringValue(name)
-		}
-	}
-
-	if len(sName) == 0 {
-		return nil, &resource.NotFoundError{
-			Message:     "Empty result",
+	if !found {
+		return &resource.NotFoundError{
+			Message:     fmt.Sprintf("No stack %q associated with fleet %q", stackName, fleetName),
 			LastRequest: input,
 		}
 	}
 
-	return aws.String(sName), nil
+	return nil
 }
