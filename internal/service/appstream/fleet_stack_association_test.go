@@ -22,6 +22,7 @@ func TestAccAppStreamFleetStackAssociation_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
+			acctest.PreCheckHasIAMRole(t, "AmazonAppStreamServiceAccess")
 		},
 		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckFleetStackAssociationDestroy,
@@ -51,6 +52,7 @@ func TestAccAppStreamFleetStackAssociation_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
+			acctest.PreCheckHasIAMRole(t, "AmazonAppStreamServiceAccess")
 		},
 		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckFleetStackAssociationDestroy,
