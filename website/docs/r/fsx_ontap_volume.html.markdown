@@ -50,7 +50,7 @@ resource "aws_fsx_ontap_volume" "test" {
 The following arguments are supported:
 
 * `name` - (Required) The name of the Volume. You can use a maximum of 203 alphanumeric characters, plus the underscore (_) special character.
-* `junction_path` - (Required) Specifies the location in the storage virtual machine's namespace where the volume is mounted. The junction_path must have a leading foward slash, such as `/vol3`
+* `junction_path` - (Required) Specifies the location in the storage virtual machine's namespace where the volume is mounted. The junction_path must have a leading forward slash, such as `/vol3`
 * `security_style` - (Optional) Specifies the volume security style, Valid values are `UNIX`, `NTFS`, and `MIXED`. Default value is `UNIX`.
 * `size_in_megabytes` - (Required) Specifies the size of the volume, in megabytes (MB), that you are creating.
 * `storage_efficiency_enabled` - (Required) Set to true to enable deduplication, compression, and compaction storage efficiency features on the volume.
