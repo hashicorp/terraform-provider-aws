@@ -79,7 +79,7 @@ func testAccCheckFleetStackAssociationExists(resourceName string) resource.TestC
 
 		fleetName, stackName, err := tfappstream.DecodeStackFleetID(rs.Primary.ID)
 		if err != nil {
-			return fmt.Errorf("error decoding id appstream fleet stack association (%s): %w", rs.Primary.ID, err)
+			return fmt.Errorf("error decoding AppStream Fleet Stack Association ID (%s): %w", rs.Primary.ID, err)
 		}
 
 		sName, err := tfappstream.FindAssociatedFleetStack(context.TODO(), conn, fleetName, stackName)
@@ -106,7 +106,7 @@ func testAccCheckFleetStackAssociationDestroy(s *terraform.State) error {
 
 		fleetName, stackName, err := tfappstream.DecodeStackFleetID(rs.Primary.ID)
 		if err != nil {
-			return fmt.Errorf("error decoding id appstream fleet stack association (%s): %w", rs.Primary.ID, err)
+			return fmt.Errorf("error decoding AppStream Fleet Stack Association ID (%s): %w", rs.Primary.ID, err)
 		}
 
 		sName, err := tfappstream.FindAssociatedFleetStack(context.TODO(), conn, fleetName, stackName)
