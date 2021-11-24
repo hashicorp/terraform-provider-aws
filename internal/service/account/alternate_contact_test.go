@@ -93,7 +93,7 @@ func testAccountAlternateContactDestroy(s *terraform.State) error {
 			continue
 		}
 
-		_, err := tfaccount.FindAlternateContactByContactType(ctx, conn, rs.Primary.ID)
+		_, err := tfaccount.FindAlternateContactByContactType(ctx, conn, "", rs.Primary.ID)
 
 		if tfresource.NotFound(err) {
 			continue
@@ -124,7 +124,7 @@ func testAccCheckAccountAlternateContactExists(n string) resource.TestCheckFunc 
 		ctx := context.TODO()
 		conn := acctest.Provider.Meta().(*conns.AWSClient).AccountConn
 
-		_, err := tfaccount.FindAlternateContactByContactType(ctx, conn, rs.Primary.ID)
+		_, err := tfaccount.FindAlternateContactByContactType(ctx, conn, "", rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -151,7 +151,7 @@ func testAccPreCheck(t *testing.T) {
 	ctx := context.TODO()
 	conn := acctest.Provider.Meta().(*conns.AWSClient).AccountConn
 
-	_, err := tfaccount.FindAlternateContactByContactType(ctx, conn, account.AlternateContactTypeOperations)
+	_, err := tfaccount.FindAlternateContactByContactType(ctx, conn, "", account.AlternateContactTypeOperations)
 
 	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)
