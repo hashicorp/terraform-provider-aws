@@ -326,7 +326,7 @@ func TestAccElastiCacheReplicationGroup_updateParameterGroup(t *testing.T) {
 	})
 }
 
-func TestAccAWSElasticacheReplicationGroup_updateAuthToken(t *testing.T) {
+func TestAccElasticacheReplicationGroup_updateAuthToken(t *testing.T) {
 	var rg elasticache.ReplicationGroup
 	resourceName := "aws_elasticache_replication_group.test"
 
