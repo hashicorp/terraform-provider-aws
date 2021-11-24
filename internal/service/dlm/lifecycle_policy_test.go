@@ -124,11 +124,10 @@ func TestAccDLMLifecyclePolicy_crossRegionCopyRule(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					checkDlmLifecyclePolicyExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "policy_details.0.schedule.0.cross_region_copy_rule.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "policy_details.0.schedule.0.cross_region_copy_rule.0.copy_tags", "false"),
 					resource.TestCheckResourceAttr(resourceName, "policy_details.0.schedule.0.cross_region_copy_rule.0.encrypted", "false"),
 					resource.TestCheckResourceAttr(resourceName, "policy_details.0.schedule.0.cross_region_copy_rule.0.retain_rule.0.interval", "15"),
 					resource.TestCheckResourceAttr(resourceName, "policy_details.0.schedule.0.cross_region_copy_rule.0.retain_rule.0.interval_unit", "MONTHS"),
-					resource.TestCheckResourceAttr(resourceName, "policy_details.0.schedule.0.cross_region_copy_rule.0.target_region", acctest.AlternateRegion()),
+					resource.TestCheckResourceAttr(resourceName, "policy_details.0.schedule.0.cross_region_copy_rule.0.target", acctest.AlternateRegion()),
 				),
 			},
 			{
@@ -146,7 +145,7 @@ func TestAccDLMLifecyclePolicy_crossRegionCopyRule(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "policy_details.0.schedule.0.cross_region_copy_rule.0.encrypted", "true"),
 					resource.TestCheckResourceAttr(resourceName, "policy_details.0.schedule.0.cross_region_copy_rule.0.retain_rule.0.interval", "30"),
 					resource.TestCheckResourceAttr(resourceName, "policy_details.0.schedule.0.cross_region_copy_rule.0.retain_rule.0.interval_unit", "DAYS"),
-					resource.TestCheckResourceAttr(resourceName, "policy_details.0.schedule.0.cross_region_copy_rule.0.target_region", acctest.AlternateRegion()),
+					resource.TestCheckResourceAttr(resourceName, "policy_details.0.schedule.0.cross_region_copy_rule.0.target", acctest.AlternateRegion()),
 				),
 			},
 			{
@@ -448,7 +447,7 @@ func dlmLifecyclePolicyConfigCrossRegionCopyRuleBase(rName string) string {
 data "aws_partition" "current" {}
 
 resource "aws_iam_role" "test" {
-  name = %q
+  name = %[1]q
 
   assume_role_policy = <<EOF
 {
@@ -492,9 +491,8 @@ resource "aws_dlm_lifecycle_policy" "test" {
       }
 
       cross_region_copy_rule {
-        target_region = %[2]q
-        encrypted     = false
-        copy_tags     = false
+        target    = %[2]q
+        encrypted = false
         retain_rule {
           interval      = 15
           interval_unit = "MONTHS"
@@ -557,10 +555,10 @@ resource "aws_dlm_lifecycle_policy" "test" {
       }
 
       cross_region_copy_rule {
-        target_region = %[2]q
-        encrypted     = true
-        cmk_arn       = aws_kms_key.test.arn
-        copy_tags     = true
+        target    = %[2]q
+        encrypted = true
+        cmk_arn   = aws_kms_key.test.arn
+        copy_tags = true
         retain_rule {
           interval      = 30
           interval_unit = "DAYS"

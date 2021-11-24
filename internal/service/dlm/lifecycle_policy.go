@@ -98,19 +98,41 @@ func ResourceLifecyclePolicy() *schema.Resource {
 										},
 									},
 									"cross_region_copy_rule": {
-										Type:     schema.TypeList,
+										Type:     schema.TypeSet,
 										Optional: true,
+										MaxItems: 3,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"cmk_arn": {
 													Type:         schema.TypeString,
 													Optional:     true,
-													Default:      "",
 													ValidateFunc: verify.ValidARN,
 												},
 												"copy_tags": {
 													Type:     schema.TypeBool,
 													Optional: true,
+												},
+												"deprecate_rule": {
+													Type:     schema.TypeList,
+													Optional: true,
+													MaxItems: 1,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"interval": {
+																Type:         schema.TypeInt,
+																Required:     true,
+																ValidateFunc: validation.IntAtLeast(1),
+															},
+															"interval_unit": {
+																Type:     schema.TypeString,
+																Required: true,
+																ValidateFunc: validation.StringInSlice(
+																	dlm.RetentionIntervalUnitValues_Values(),
+																	false,
+																),
+															},
+														},
+													},
 												},
 												"encrypted": {
 													Type:     schema.TypeBool,
@@ -118,30 +140,30 @@ func ResourceLifecyclePolicy() *schema.Resource {
 												},
 												"retain_rule": {
 													Type:     schema.TypeList,
-													Required: true,
-													MaxItems: 2,
+													Optional: true,
+													MaxItems: 1,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
 															"interval": {
-																Type:     schema.TypeInt,
-																Required: true,
+																Type:         schema.TypeInt,
+																Required:     true,
+																ValidateFunc: validation.IntAtLeast(1),
 															},
 															"interval_unit": {
 																Type:     schema.TypeString,
 																Required: true,
-																ValidateFunc: validation.StringInSlice([]string{
-																	dlm.RetentionIntervalUnitValuesDays,
-																	dlm.RetentionIntervalUnitValuesWeeks,
-																	dlm.RetentionIntervalUnitValuesMonths,
-																	dlm.RetentionIntervalUnitValuesYears,
-																}, false),
+																ValidateFunc: validation.StringInSlice(
+																	dlm.RetentionIntervalUnitValues_Values(),
+																	false,
+																),
 															},
 														},
 													},
 												},
-												"target_region": {
-													Type:     schema.TypeString,
-													Required: true,
+												"target": {
+													Type:         schema.TypeString,
+													Required:     true,
+													ValidateFunc: validation.StringMatch(regexp.MustCompile(`^[\w:\-\/\*]+$`), ""),
 												},
 											},
 										},
@@ -364,8 +386,8 @@ func expandDlmSchedules(cfg []interface{}) []*dlm.Schedule {
 		if v, ok := m["create_rule"]; ok {
 			schedule.CreateRule = expandDlmCreateRule(v.([]interface{}))
 		}
-		if v, ok := m["cross_region_copy_rule"]; ok {
-			schedule.CrossRegionCopyRules = expandDlmCrossRegionCopyRules(v.([]interface{}))
+		if v, ok := m["cross_region_copy_rule"].(*schema.Set); ok && v.Len() > 0 {
+			schedule.CrossRegionCopyRules = expandDlmCrossRegionCopyRules(v.List())
 		}
 		if v, ok := m["name"]; ok {
 			schedule.Name = aws.String(v.(string))
@@ -398,68 +420,124 @@ func flattenDlmSchedules(schedules []*dlm.Schedule) []map[string]interface{} {
 	return result
 }
 
-func expandDlmCrossRegionCopyRules(cfg []interface{}) []*dlm.CrossRegionCopyRule {
-	cross_region_copy_rules := make([]*dlm.CrossRegionCopyRule, len(cfg))
-	for i, c := range cfg {
-		cross_region_copy_rule := &dlm.CrossRegionCopyRule{}
-		m := c.(map[string]interface{})
-		if v, ok := m["cmk_arn"]; ok {
-			if m["cmk_arn"] != "" {
-				cross_region_copy_rule.CmkArn = aws.String(v.(string))
-			}
-		}
-		if v, ok := m["copy_tags"]; ok {
-			cross_region_copy_rule.CopyTags = aws.Bool(v.(bool))
-		}
-		if v, ok := m["encrypted"]; ok {
-			cross_region_copy_rule.Encrypted = aws.Bool(v.(bool))
-		}
-		if v, ok := m["retain_rule"]; ok {
-			cross_region_copy_rule.RetainRule = expandDlmCrossRegionCopyRetainRule(v.([]interface{}))
-		}
-		if v, ok := m["target_region"]; ok {
-			cross_region_copy_rule.TargetRegion = aws.String(v.(string))
-		}
-		cross_region_copy_rules[i] = cross_region_copy_rule
+func expandDlmCrossRegionCopyRules(l []interface{}) []*dlm.CrossRegionCopyRule {
+	if len(l) == 0 || l[0] == nil {
+		return nil
 	}
 
-	return cross_region_copy_rules
+	var rules []*dlm.CrossRegionCopyRule
+
+	for _, tfMapRaw := range l {
+		m, ok := tfMapRaw.(map[string]interface{})
+
+		if !ok {
+			continue
+		}
+
+		rule := &dlm.CrossRegionCopyRule{}
+
+		if v, ok := m["cmk_arn"].(string); ok && v != "" {
+			rule.CmkArn = aws.String(v)
+		}
+		if v, ok := m["copy_tags"].(bool); ok {
+			rule.CopyTags = aws.Bool(v)
+		}
+		if v, ok := m["deprecate_rule"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+			rule.DeprecateRule = expandDlmCrossRegionCopyRuleDeprecateRule(v)
+		}
+		if v, ok := m["encrypted"].(bool); ok {
+			rule.Encrypted = aws.Bool(v)
+		}
+		if v, ok := m["retain_rule"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+			rule.RetainRule = expandDlmCrossRegionCopyRuleRetainRule(v)
+		}
+		if v, ok := m["target"].(string); ok && v != "" {
+			rule.Target = aws.String(v)
+		}
+
+		rules = append(rules, rule)
+	}
+
+	return rules
 }
 
-func flattenDlmCrossRegionCopyRules(crossregioncopyrules []*dlm.CrossRegionCopyRule) []map[string]interface{} {
-	result := make([]map[string]interface{}, len(crossregioncopyrules))
-	for i, s := range crossregioncopyrules {
-		m := make(map[string]interface{})
-		if m["cmk_arn"] != "" {
-			m["cmk_arn"] = aws.StringValue(s.CmkArn)
+func flattenDlmCrossRegionCopyRules(rules []*dlm.CrossRegionCopyRule) []interface{} {
+	if len(rules) == 0 {
+		return []interface{}{}
+	}
+
+	var result []interface{}
+
+	for _, rule := range rules {
+		if rule == nil {
+			continue
 		}
-		m["copy_tags"] = aws.BoolValue(s.CopyTags)
-		m["encrypted"] = aws.BoolValue(s.Encrypted)
-		m["retain_rule"] = flattenDlmCrossRegionCopyRetainRule(s.RetainRule)
-		m["target_region"] = aws.StringValue(s.TargetRegion)
-		result[i] = m
+
+		m := map[string]interface{}{
+			"cmk_arn":        aws.StringValue(rule.CmkArn),
+			"copy_tags":      aws.BoolValue(rule.CopyTags),
+			"deprecate_rule": flattenDlmCrossRegionCopyRuleDeprecateRule(rule.DeprecateRule),
+			"encrypted":      aws.BoolValue(rule.Encrypted),
+			"retain_rule":    flattenDlmCrossRegionCopyRuleRetainRule(rule.RetainRule),
+			"target":         aws.StringValue(rule.Target),
+		}
+
+		result = append(result, m)
 	}
 
 	return result
 }
 
-func expandDlmCrossRegionCopyRetainRule(cfg []interface{}) *dlm.CrossRegionCopyRetainRule {
-	if len(cfg) == 0 || cfg[0] == nil {
+func expandDlmCrossRegionCopyRuleDeprecateRule(l []interface{}) *dlm.CrossRegionCopyDeprecateRule {
+	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
-	m := cfg[0].(map[string]interface{})
+
+	m := l[0].(map[string]interface{})
+
+	return &dlm.CrossRegionCopyDeprecateRule{
+		Interval:     aws.Int64(int64(m["interval"].(int))),
+		IntervalUnit: aws.String(m["interval_unit"].(string)),
+	}
+}
+
+func expandDlmCrossRegionCopyRuleRetainRule(l []interface{}) *dlm.CrossRegionCopyRetainRule {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]interface{})
+
 	return &dlm.CrossRegionCopyRetainRule{
 		Interval:     aws.Int64(int64(m["interval"].(int))),
 		IntervalUnit: aws.String(m["interval_unit"].(string)),
 	}
 }
 
-func flattenDlmCrossRegionCopyRetainRule(crossRegionCopyRetainRule *dlm.CrossRegionCopyRetainRule) []map[string]interface{} {
-	result := make(map[string]interface{})
-	result["interval"] = aws.Int64Value(crossRegionCopyRetainRule.Interval)
-	result["interval_unit"] = aws.StringValue(crossRegionCopyRetainRule.IntervalUnit)
+func flattenDlmCrossRegionCopyRuleDeprecateRule(rule *dlm.CrossRegionCopyDeprecateRule) []interface{} {
+	if rule == nil {
+		return []interface{}{}
+	}
 
-	return []map[string]interface{}{result}
+	m := map[string]interface{}{
+		"interval":      int(aws.Int64Value(rule.Interval)),
+		"interval_unit": aws.StringValue(rule.IntervalUnit),
+	}
+
+	return []interface{}{m}
+}
+
+func flattenDlmCrossRegionCopyRuleRetainRule(rule *dlm.CrossRegionCopyRetainRule) []interface{} {
+	if rule == nil {
+		return []interface{}{}
+	}
+
+	m := map[string]interface{}{
+		"interval":      int(aws.Int64Value(rule.Interval)),
+		"interval_unit": aws.StringValue(rule.IntervalUnit),
+	}
+
+	return []interface{}{m}
 }
 
 func expandDlmCreateRule(cfg []interface{}) *dlm.CreateRule {
