@@ -36,8 +36,6 @@ func ResourceService() *schema.Resource {
 			State: resourceServiceImport,
 		},
 
-		CustomizeDiff: verify.SetTagsDiff,
-
 		Timeouts: &schema.ResourceTimeout{
 			Delete: schema.DefaultTimeout(20 * time.Minute),
 		},
@@ -49,9 +47,8 @@ func ResourceService() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"base": {
-							Type:     schema.TypeInt,
-							Optional: true,
-
+							Type:         schema.TypeInt,
+							Optional:     true,
 							ValidateFunc: validation.IntBetween(0, 100000),
 						},
 
@@ -383,13 +380,14 @@ func ResourceService() *schema.Resource {
 			},
 		},
 
-		CustomizeDiff: customdiff.All(
+		CustomizeDiff: customdiff.Sequence(
 			customdiff.ForceNewIfChange("capacity_provider_strategy", func(_ context.Context, old, new, _ interface{}) bool {
 				ol := old.(*schema.Set).Len()
 				nl := new.(*schema.Set).Len()
 
 				return (ol == 0 && nl > 0) || (ol > 0 && nl == 0)
 			}),
+			verify.SetTagsDiff,
 		),
 	}
 }
