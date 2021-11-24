@@ -1,9 +1,9 @@
 ---
-subcategory: "ElasticSearch"
+subcategory: "Elasticsearch"
 layout: "aws"
 page_title: "AWS: aws_elasticsearch_domain"
 description: |-
-  Get information on an ElasticSearch Domain resource.
+  Get information on an Elasticsearch Domain resource.
 ---
 
 # Data Source: aws_elasticsearch_domain
@@ -12,7 +12,7 @@ Use this data source to get information about an Elasticsearch Domain
 
 ## Example Usage
 
-```hcl
+```terraform
 data "aws_elasticsearch_domain" "my_domain" {
   domain_name = "my-domain-name"
 }
@@ -59,9 +59,8 @@ The following attributes are exported:
     * `ebs_enabled` - Whether EBS volumes are attached to data nodes in the domain.
     * `volume_type` - The type of EBS volumes attached to data nodes.
     * `volume_size` - The size of EBS volumes attached to data nodes (in GB).
-    * `iops` - The baseline input/output (I/O) performance of EBS volumes
-	attached to data nodes.
-* `elasticsearch_version` – ElasticSearch version for the domain.
+    * `iops` - The baseline input/output (I/O) performance of EBS volumes attached to data nodes.
+* `elasticsearch_version` – Elasticsearch version for the domain.
 * `encryption_at_rest` - Domain encryption at rest related options.
     * `enabled` - Whether encryption at rest is enabled in the domain.
     * `kms_key_id` - The KMS key id used to encrypt data at rest.
@@ -75,8 +74,7 @@ The following attributes are exported:
     * `enabled` - Whether node to node encryption is enabled.
 * `processing` – Status of a configuration change in the domain.
 * `snapshot_options` – Domain snapshot related options.
-    * `automated_snapshot_start_hour` - Hour during which the service takes an automated daily
-	snapshot of the indices in the domain.
+    * `automated_snapshot_start_hour` - Hour during which the service takes an automated daily snapshot of the indices in the domain.
 * `tags` - The tags assigned to the domain.
 * `vpc_options` - VPC Options for private Elasticsearch domains.
     * `availability_zones` - The availability zones used by the domain.

@@ -14,7 +14,7 @@ it by domain without having to hard code the ARNs as input.
 
 ## Example Usage
 
-```hcl
+```terraform
 # Find a certificate that is issued
 data "aws_acm_certificate" "issued" {
   domain   = "tf.example.com"
@@ -49,5 +49,5 @@ data "aws_acm_certificate" "rsa_4096" {
 
 * `arn` - Amazon Resource Name (ARN) of the found certificate, suitable for referencing in other resources that support ACM certificates.
 * `id` - Amazon Resource Name (ARN) of the found certificate, suitable for referencing in other resources that support ACM certificates.
+* `status` - Status of the found certificate.
 * `tags` - A mapping of tags for the resource.
-
