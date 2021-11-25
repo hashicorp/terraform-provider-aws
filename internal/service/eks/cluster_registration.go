@@ -8,10 +8,13 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/eks"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -61,8 +64,7 @@ func ResourceClusterRegistration() *schema.Resource {
 					},
 				},
 			},
-			// how do we handle ForceNew with tags?
-			"tags":     tftags.TagsSchema(),
+			"tags":     tftags.TagsSchemaForceNew(),
 			"tags_all": tftags.TagsSchemaComputed(),
 			"arn": {
 				Type:     schema.TypeString,
@@ -95,13 +97,11 @@ func ResourceClusterRegistration() *schema.Resource {
 			},
 			"encryption_config": {
 				Type:     schema.TypeList,
-				MaxItems: 1,
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"provider": {
 							Type:     schema.TypeList,
-							MaxItems: 1,
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
@@ -150,7 +150,6 @@ func ResourceClusterRegistration() *schema.Resource {
 			"kubernetes_network_config": {
 				Type:     schema.TypeList,
 				Computed: true,
-				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"service_ipv4_cidr": {
@@ -234,13 +233,34 @@ func resourceClusterRegistrationCreate(ctx context.Context, d *schema.ResourceDa
 
 	log.Printf("[DEBUG] Creating EKS Cluster Registration: %s", input)
 
-	_, err := conn.RegisterCluster(input)
+	var output *eks.RegisterClusterOutput
+
+	err := resource.Retry(tfiam.PropagationTimeout, func() *resource.RetryError {
+		var err error
+
+		output, err = conn.RegisterCluster(input)
+
+		// InvalidRequestException: Not existing role: arn:aws:iam::12345678:role/xxx
+		if tfawserr.ErrMessageContains(err, eks.ErrCodeInvalidRequestException, "Not existing role") {
+			return resource.RetryableError(err)
+		}
+
+		if err != nil {
+			return resource.NonRetryableError(err)
+		}
+
+		return nil
+	})
+
+	if tfresource.TimedOut(err) {
+		output, err = conn.RegisterCluster(input)
+	}
 
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("error registering EKS Cluster (%s): %w", name, err))
 	}
 
-	d.SetId(name)
+	d.SetId(aws.StringValue(output.Cluster.Name))
 
 	_, err = waitClusterRegistrationPending(conn, d.Id(), d.Timeout(schema.TimeoutCreate))
 

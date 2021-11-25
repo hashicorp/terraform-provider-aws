@@ -7,13 +7,12 @@ import (
 	"github.com/aws/aws-sdk-go/service/eks"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfeks "github.com/hashicorp/terraform-provider-aws/internal/service/eks"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
-
-func init() {
-	acctest.RegisterServiceErrorCheckFunc(eks.EndpointsID, testAccErrorCheckSkipEKS)
-
-}
 
 func TestAccEKSClusterRegistration_basic(t *testing.T) {
 	var cluster eks.Cluster
@@ -24,7 +23,7 @@ func TestAccEKSClusterRegistration_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, eks.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckNodeGroupDestroy,
+		CheckDestroy: testAccCheckClusterRegistrationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterRegistrationBaseConfig(rName),
@@ -42,32 +41,33 @@ func TestAccEKSClusterRegistration_basic(t *testing.T) {
 	})
 }
 
-func testAccClusterRegistrationBasicConfig(rName string) string {
-	return acctest.ConfigCompose(testAccNodeGroupBaseConfig(rName), fmt.Sprintf(`
-	resource "aws_eks_node_group" "test" {
-	  cluster_name    = aws_eks_cluster.test.name
-	  node_group_name = %[1]q
-	  node_role_arn   = aws_iam_role.node.arn
-	  subnet_ids      = aws_subnet.test[*].id
-	
-	  scaling_config {
-		desired_size = 1
-		max_size     = 1
-		min_size     = 1
-	  }
-	
-	  depends_on = [
-		aws_iam_role_policy_attachment.node-AmazonEKSWorkerNodePolicy,
-		aws_iam_role_policy_attachment.node-AmazonEKS_CNI_Policy,
-		aws_iam_role_policy_attachment.node-AmazonEC2ContainerRegistryReadOnly,
-	  ]
+func testAccCheckClusterRegistrationDestroy(s *terraform.State) error {
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EKSConn
+
+	for _, rs := range s.RootModule().Resources {
+		if rs.Type != "aws_eks_cluster_registration" {
+			continue
+		}
+
+		_, err := tfeks.FindClusterByName(conn, rs.Primary.ID)
+
+		if tfresource.NotFound(err) {
+			continue
+		}
+
+		if err != nil {
+			return err
+		}
+
+		return fmt.Errorf("EKS Cluster Registration %s still exists", rs.Primary.ID)
 	}
-	`, rName))
+
+	return nil
 }
 
 func testAccClusterRegistrationBaseIAMConfig(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_iam_role" "cluster_registration" {
+resource "aws_iam_role" "test" {
 	name = "%[1]s-role"
 	
 	assume_role_policy = jsonencode({
@@ -87,8 +87,10 @@ resource "aws_iam_role" "cluster_registration" {
 	})
 }
 
-data aws_iam_policy_document policy_document {
+data aws_iam_policy_document test {
 	statement {
+		sid = "SsmControlChannel"
+
 		actions = [
 			"ssmmessages:CreateControlChannel"
 		]
@@ -99,6 +101,8 @@ data aws_iam_policy_document policy_document {
 	}
 
 	statement {
+		sid = "ssmDataplaneOperations"
+
 		actions = [
 			"ssmmessages:CreateDataChannel",
 			"ssmmessages:OpenDataChannel",
@@ -110,15 +114,15 @@ data aws_iam_policy_document policy_document {
 	}
 }
 
-resource "aws_iam_policy" "agent_policy" {
-	name   = "agent_policy"
+resource "aws_iam_policy" "test" {
+	name   = "test"
 	path   = "/"
-	policy = data.aws_iam_policy_document.policy_document.json
+	policy = data.aws_iam_policy_document.test.json
   }
 
-resource "aws_iam_role_policy_attachment" "test-attach" {
-	role       = aws_iam_role.cluster_registration.name
-	policy_arn = aws_iam_policy.agent_policy.arn
+resource "aws_iam_role_policy_attachment" "test" {
+	role       = aws_iam_role.test.name
+	policy_arn = aws_iam_policy.test.arn
   }
   
 `, rName)
@@ -133,8 +137,12 @@ resource "aws_eks_cluster_registration" "test" {
 
   connector_config {
 	provider    = "OTHER"
-	role_arm    = aws_iam_role.cluster_registration.arn
+	role_arn    = aws_iam_role.test.arn
   }
+
+  depends_on = [
+	"aws_iam_role_policy_attachment.test",
+  ]
 }
 `, rName))
 }

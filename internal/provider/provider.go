@@ -1125,7 +1125,7 @@ func Provider() *schema.Provider {
 
 			"aws_eks_addon":                    eks.ResourceAddon(),
 			"aws_eks_cluster":                  eks.ResourceCluster(),
-			"aws_eks_cluster_registration"      eks.ResourceClusterRegistration(),
+			"aws_eks_cluster_registration":     eks.ResourceClusterRegistration(),
 			"aws_eks_fargate_profile":          eks.ResourceFargateProfile(),
 			"aws_eks_identity_provider_config": eks.ResourceIdentityProviderConfig(),
 			"aws_eks_node_group":               eks.ResourceNodeGroup(),
