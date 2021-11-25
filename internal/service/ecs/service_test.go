@@ -134,7 +134,7 @@ func TestAccECSService_withUnnormalizedPlacementStrategy(t *testing.T) {
 	})
 }
 
-func TestAccECSService_withCapacityProviderStrategy(t *testing.T) {
+func TestAccECSService_CapacityProviderStrategy_basic(t *testing.T) {
 	var service ecs.Service
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_service.test"
@@ -146,13 +146,13 @@ func TestAccECSService_withCapacityProviderStrategy(t *testing.T) {
 		CheckDestroy: testAccCheckServiceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServiceWithCapacityProviderStrategy(rName, 1, 0),
+				Config: testAccServiceWithCapacityProviderStrategy(rName, 1, 0, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(resourceName, &service),
 				),
 			},
 			{
-				Config: testAccServiceWithCapacityProviderStrategy(rName, 10, 1),
+				Config: testAccServiceWithCapacityProviderStrategy(rName, 10, 1, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(resourceName, &service),
 				),
@@ -161,7 +161,69 @@ func TestAccECSService_withCapacityProviderStrategy(t *testing.T) {
 	})
 }
 
-func TestAccECSService_withMultipleCapacityProviderStrategies(t *testing.T) {
+func TestAccECSService_CapacityProviderStrategy_forceNewDeployment(t *testing.T) {
+	var service1, service2 ecs.Service
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_ecs_service.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ecs.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckServiceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccServiceWithCapacityProviderStrategy(rName, 1, 0, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceExists(resourceName, &service1),
+				),
+			},
+			{
+				Config: testAccServiceWithCapacityProviderStrategy(rName, 10, 1, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceExists(resourceName, &service2),
+					testAccCheckServiceNotRecreated(&service1, &service2),
+				),
+			},
+		},
+	})
+}
+
+func TestAccECSService_CapacityProviderStrategy_update(t *testing.T) {
+	var service1, service2 ecs.Service
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_ecs_service.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ecs.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckServiceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccServiceWithUpdateCapacityProviderStrategy(rName, 1, "FARGATE"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceExists(resourceName, &service1),
+				),
+			},
+			{
+				Config: testAccServiceWithUpdateCapacityProviderStrategy(rName, 1, "FARGATE_SPOT"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceExists(resourceName, &service2),
+					testAccCheckServiceNotRecreated(&service1, &service2),
+				),
+			},
+			{
+				Config: testAccServiceWithUpdateCapacityProviderStrategyRemoveConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceExists(resourceName, &service1),
+				),
+			},
+		},
+	})
+}
+
+func TestAccECSService_CapacityProviderStrategy_multiple(t *testing.T) {
 	var service ecs.Service
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_service.test"
@@ -1572,7 +1634,7 @@ resource "aws_ecs_service" "test" {
 `, rName)
 }
 
-func testAccServiceWithCapacityProviderStrategy(rName string, weight, base int) string {
+func testAccServiceWithCapacityProviderStrategy(rName string, weight, base int, forceNewDeployment bool) string {
 	return acctest.ConfigCompose(testAccCapacityProviderBaseConfig(rName), fmt.Sprintf(`
 resource "aws_ecs_capacity_provider" "test" {
   name = %[1]q
@@ -1603,10 +1665,11 @@ DEFINITION
 }
 
 resource "aws_ecs_service" "test" {
-  name            = %[1]q
-  cluster         = aws_ecs_cluster.default.id
-  task_definition = aws_ecs_task_definition.test.arn
-  desired_count   = 1
+  name                 = %[1]q
+  cluster              = aws_ecs_cluster.default.id
+  task_definition      = aws_ecs_task_definition.test.arn
+  desired_count        = 1
+  force_new_deployment = %[4]t
 
   capacity_provider_strategy {
     capacity_provider = aws_ecs_capacity_provider.test.name
@@ -1614,7 +1677,121 @@ resource "aws_ecs_service" "test" {
     base              = %[3]d
   }
 }
-`, rName, weight, base))
+`, rName, weight, base, forceNewDeployment))
+}
+
+func testAccServiceWithUpdateCapacityProviderStrategy(rName string, weight int, capacityProvider string) string {
+	return acctest.ConfigCompose(
+		testAccCapacityProviderBaseConfig(rName),
+		fmt.Sprintf(`
+resource "aws_ecs_cluster" "default" {
+  name = %[1]q
+}
+
+resource "aws_ecs_task_definition" "test" {
+  family                   = %[1]q
+  network_mode             = "awsvpc"
+  requires_compatibilities = ["FARGATE"]
+  cpu                      = "256"
+  memory                   = "512"
+
+  container_definitions = <<DEFINITION
+[
+  {
+    "cpu": 256,
+    "essential": true,
+    "image": "mongo:latest",
+    "memory": 512,
+    "name": "mongodb",
+    "networkMode": "awsvpc"
+  }
+]
+DEFINITION
+}
+
+resource "aws_security_group" "allow_all" {
+  name        = %[1]q
+  description = "Allow all inbound traffic"
+  vpc_id      = aws_vpc.test.id
+
+  ingress {
+    protocol    = "tcp"
+    from_port   = 80
+    to_port     = 8000
+    cidr_blocks = [aws_vpc.test.cidr_block]
+  }
+}
+
+resource "aws_subnet" "test" {
+  cidr_block = cidrsubnet(aws_vpc.test.cidr_block, 8, 1)
+  vpc_id     = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_vpc" "test" {
+  cidr_block = "10.10.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_ecs_service" "test" {
+  name                 = %[1]q
+  cluster              = aws_ecs_cluster.default.id
+  task_definition      = aws_ecs_task_definition.test.arn
+  desired_count        = 1
+  force_new_deployment = true
+
+  network_configuration {
+    security_groups  = [aws_security_group.allow_all.id]
+    subnets          = [aws_subnet.test.id]
+    assign_public_ip = false
+  }
+
+  capacity_provider_strategy {
+    capacity_provider = %[3]q
+    weight            = %[2]d
+  }
+}
+`, rName, weight, capacityProvider))
+}
+
+func testAccServiceWithUpdateCapacityProviderStrategyRemoveConfig(rName string) string {
+	return acctest.ConfigCompose(
+		testAccCapacityProviderBaseConfig(rName),
+		fmt.Sprintf(`
+resource "aws_ecs_cluster" "default" {
+  name = %[1]q
+}
+
+resource "aws_ecs_task_definition" "test2" {
+  family                   = %[1]q
+
+  container_definitions = <<DEFINITION
+[
+  {
+    "cpu": 128,
+    "essential": true,
+    "image": "mongo:latest",
+    "memory": 128,
+    "name": "mongodb"
+  }
+]
+DEFINITION
+}
+
+resource "aws_ecs_service" "test" {
+  name                 = %[1]q
+  cluster              = aws_ecs_cluster.default.id
+  task_definition      = aws_ecs_task_definition.test2.arn
+  desired_count        = 1
+  force_new_deployment = true
+}
+`, rName))
 }
 
 func testAccServiceWithMultipleCapacityProviderStrategies(rName string) string {
