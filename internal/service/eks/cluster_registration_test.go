@@ -139,62 +139,63 @@ func testAccCheckClusterRegistrationDestroy(s *terraform.State) error {
 func testAccClusterRegistrationBaseIAMConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "test" {
-	name = "%[1]s-role"
-	
-	assume_role_policy = jsonencode({
-		"Version": "2012-10-17",
-		"Statement": [
-			{
-				"Sid": "SSMAccess",
-				"Effect": "Allow",
-				"Principal": {
-					"Service": [
-						"ssm.amazonaws.com"
-					]
-				},
-				"Action": "sts:AssumeRole"
-			}
-		]
-	})
+  name = "%[1]s-role"
+
+  assume_role_policy = jsonencode({
+    "Version" : "2012-10-17",
+    "Statement" : [
+      {
+        "Sid" : "SSMAccess",
+        "Effect" : "Allow",
+        "Principal" : {
+          "Service" : [
+            "ssm.amazonaws.com"
+          ]
+        },
+        "Action" : "sts:AssumeRole"
+      }
+    ]
+  })
 }
 
 data aws_iam_policy_document test {
-	statement {
-		sid = "SsmControlChannel"
+  statement {
+    sid = "SsmControlChannel"
 
-		actions = [
-			"ssmmessages:CreateControlChannel"
-		]
+    actions = [
+      "ssmmessages:CreateControlChannel"
+    ]
 
-		resources = [
-			"arn:aws:eks:*:*:cluster/*"
-		] 
-	}
+    resources = [
+      "arn:aws:eks:*:*:cluster/*"
+    ]
+  }
 
-	statement {
-		sid = "ssmDataplaneOperations"
+  statement {
+    sid = "ssmDataplaneOperations"
 
-		actions = [
-			"ssmmessages:CreateDataChannel",
-			"ssmmessages:OpenDataChannel",
-			"ssmmessages:OpenControlChannel"		]
+    actions = [
+      "ssmmessages:CreateDataChannel",
+      "ssmmessages:OpenDataChannel",
+    "ssmmessages:OpenControlChannel"]
 
-		resources = [
-			"*"
-		] 
-	}
+    resources = [
+      "*"
+    ]
+  }
 }
 
 resource "aws_iam_policy" "test" {
-	name   = "%[1]s-test"
-	path   = "/"
-	policy = data.aws_iam_policy_document.test.json
-  }
+  name   = "%[1]s-test"
+  path   = "/"
+  policy = data.aws_iam_policy_document.test.json
+}
 
 resource "aws_iam_role_policy_attachment" "test" {
-	role       = aws_iam_role.test.name
-	policy_arn = aws_iam_policy.test.arn
-  }
+  role       = aws_iam_role.test.name
+  policy_arn = aws_iam_policy.test.arn
+}
+
   
 `, rName)
 }
@@ -204,15 +205,15 @@ func testAccClusterRegistrationBaseConfig(rName string) string {
 		testAccClusterRegistrationBaseIAMConfig(rName),
 		fmt.Sprintf(`
 resource "aws_eks_cluster_registration" "test" {
-  name     = %[1]q
+  name = %[1]q
 
   connector_config {
-	provider    = "OTHER"
-	role_arn    = aws_iam_role.test.arn
+    provider = "OTHER"
+    role_arn = aws_iam_role.test.arn
   }
 
   depends_on = [
-	"aws_iam_role_policy_attachment.test",
+    "aws_iam_role_policy_attachment.test",
   ]
 }
 `, rName))
@@ -221,19 +222,19 @@ resource "aws_eks_cluster_registration" "test" {
 func testAccClusterRegistrationTags1Config(rName, tagKey1, tagValue1 string) string {
 	return acctest.ConfigCompose(testAccClusterRegistrationBaseIAMConfig(rName), fmt.Sprintf(`
 resource "aws_eks_cluster_registration" "test" {
-  name     = %[1]q
+  name = %[1]q
 
   tags = {
     %[2]q = %[3]q
   }
 
   connector_config {
-	provider    = "OTHER"
-	role_arn    = aws_iam_role.test.arn
+    provider = "OTHER"
+    role_arn = aws_iam_role.test.arn
   }
 
   depends_on = [
-	"aws_iam_role_policy_attachment.test",
+    "aws_iam_role_policy_attachment.test",
   ]
 }
 `, rName, tagKey1, tagValue1))
@@ -242,7 +243,7 @@ resource "aws_eks_cluster_registration" "test" {
 func testAccClusterRegistrationTags2Config(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return acctest.ConfigCompose(testAccClusterRegistrationBaseIAMConfig(rName), fmt.Sprintf(`
 resource "aws_eks_cluster_registration" "test" {
-  name     = %[1]q
+  name = %[1]q
 
   tags = {
     %[2]q = %[3]q
@@ -250,12 +251,12 @@ resource "aws_eks_cluster_registration" "test" {
   }
 
   connector_config {
-	provider    = "OTHER"
-	role_arn    = aws_iam_role.test.arn
+    provider = "OTHER"
+    role_arn = aws_iam_role.test.arn
   }
 
   depends_on = [
-	"aws_iam_role_policy_attachment.test",
+    "aws_iam_role_policy_attachment.test",
   ]
 }
   `, rName, tagKey1, tagValue1, tagKey2, tagValue2))
