@@ -51,12 +51,10 @@ func ResourceService() *schema.Resource {
 							Optional:     true,
 							ValidateFunc: validation.IntBetween(0, 100000),
 						},
-
 						"capacity_provider": {
 							Type:     schema.TypeString,
 							Required: true,
 						},
-
 						"weight": {
 							Type:         schema.TypeInt,
 							Optional:     true,
@@ -381,15 +379,41 @@ func ResourceService() *schema.Resource {
 		},
 
 		CustomizeDiff: customdiff.Sequence(
-			customdiff.ForceNewIfChange("capacity_provider_strategy", func(_ context.Context, old, new, _ interface{}) bool {
-				ol := old.(*schema.Set).Len()
-				nl := new.(*schema.Set).Len()
-
-				return (ol == 0 && nl > 0) || (ol > 0 && nl == 0)
-			}),
 			verify.SetTagsDiff,
+			capacityProviderStrategyCustomizeDiff,
 		),
 	}
+}
+
+func capacityProviderStrategyCustomizeDiff(_ context.Context, d *schema.ResourceDiff, meta interface{}) error {
+	// to be backward compatible, should ForceNew almost always (previous behavior), unless:
+	//   force_new_deployment is true and
+	//   neither the old set nor new set is 0 length
+	if v := d.Get("force_new_deployment").(bool); !v {
+		return capacityProviderStrategyForceNew(d)
+	}
+
+	old, new := d.GetChange("capacity_provider_strategy")
+
+	ol := old.(*schema.Set).Len()
+	nl := new.(*schema.Set).Len()
+
+	if (ol == 0 && nl > 0) || (ol > 0 && nl == 0) {
+		return capacityProviderStrategyForceNew(d)
+	}
+
+	return nil
+}
+
+func capacityProviderStrategyForceNew(d *schema.ResourceDiff) error {
+	for _, key := range d.GetChangedKeysPrefix("capacity_provider_strategy") {
+		if d.HasChange(key) {
+			if err := d.ForceNew(key); err != nil {
+				return fmt.Errorf("while attempting to force a new ECS service for capacity_provider_strategy: %w", err)
+			}
+		}
+	}
+	return nil
 }
 
 func resourceServiceImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
