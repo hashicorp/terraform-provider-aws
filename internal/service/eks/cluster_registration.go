@@ -295,6 +295,26 @@ func resourceClusterRegistrationRead(ctx context.Context, d *schema.ResourceData
 		return diag.FromErr(fmt.Errorf("error setting connector config: %w", err))
 	}
 
+	if err := d.Set("identity", flattenEksIdentity(cluster.Identity)); err != nil {
+		return diag.FromErr(fmt.Errorf("error setting identity: %w", err))
+	}
+
+	if err := d.Set("certificate_authority", flattenEksCertificate(cluster.CertificateAuthority)); err != nil {
+		return diag.FromErr(fmt.Errorf("error setting certificate_authority: %w", err))
+	}
+
+	if err := d.Set("encryption_config", flattenEksEncryptionConfig(cluster.EncryptionConfig)); err != nil {
+		return diag.FromErr(fmt.Errorf("error setting encryption_config: %w", err))
+	}
+
+	if err := d.Set("kubernetes_network_config", flattenEksNetworkConfig(cluster.KubernetesNetworkConfig)); err != nil {
+		return diag.FromErr(fmt.Errorf("error setting kubernetes_network_config: %w", err))
+	}
+
+	if err := d.Set("vpc_config", flattenEksVpcConfigResponse(cluster.ResourcesVpcConfig)); err != nil {
+		return diag.FromErr(fmt.Errorf("error setting vpc_config: %w", err))
+	}
+
 	tags := KeyValueTags(cluster.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
