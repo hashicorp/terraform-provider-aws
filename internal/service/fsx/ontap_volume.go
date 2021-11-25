@@ -190,6 +190,7 @@ func resourceOntapVolumeRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("name", volume.Name)
 	d.Set("file_system_id", volume.FileSystemId)
 	d.Set("junction_path", ontapConfig.JunctionPath)
+	d.Set("ontap_volume_type", ontapConfig.OntapVolumeType)
 	d.Set("security_style", ontapConfig.SecurityStyle)
 	d.Set("size_in_megabytes", ontapConfig.SizeInMegabytes)
 	d.Set("storage_efficiency_enabled", ontapConfig.StorageEfficiencyEnabled)

@@ -33,16 +33,22 @@ func TestAccFSxOntapVolume_basic(t *testing.T) {
 					testAccCheckFsxOntapVolumeExists(resourceName, &volume),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "fsx", regexp.MustCompile(`volume/fs-.+/fsvol-.+`)),
 					resource.TestCheckResourceAttrSet(resourceName, "file_system_id"),
+					resource.TestCheckResourceAttr(resourceName, "junction_path", fmt.Sprintf("/%[1]s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "ontap_volume_type", "RW"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "security_style", "UNIX"),
+					resource.TestCheckResourceAttr(resourceName, "size_in_megabytes", "1024"),
+					resource.TestCheckResourceAttr(resourceName, "storage_efficiency_enabled", "true"),
+					resource.TestCheckResourceAttrSet(resourceName, "storage_virtual_machine_id"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttrSet(resourceName, "uuid"),
 					resource.TestCheckResourceAttr(resourceName, "volume_type", "ONTAP"),
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"tiering_policy"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -319,9 +325,6 @@ func TestAccFSxOntapVolume_tieringPolicy(t *testing.T) {
 	var volume1, volume2, volume3, volume4 fsx.Volume
 	resourceName := "aws_fsx_ontap_volume.test"
 	rName := fmt.Sprintf("tf_acc_test_%d", sdkacctest.RandInt())
-	rName2 := fmt.Sprintf("tf_acc_test_%d", sdkacctest.RandInt())
-	rName3 := fmt.Sprintf("tf_acc_test_%d", sdkacctest.RandInt())
-	rName4 := fmt.Sprintf("tf_acc_test_%d", sdkacctest.RandInt())
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
@@ -347,7 +350,7 @@ func TestAccFSxOntapVolume_tieringPolicy(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFsxOntapVolumeExists(resourceName, &volume2),
 					testAccCheckFsxOntapVolumeNotRecreated(&volume1, &volume2),
-					resource.TestCheckResourceAttr(resourceName, "name", rName3),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "tiering_policy.0.name", "SNAPSHOT_ONLY"),
 					resource.TestCheckResourceAttr(resourceName, "tiering_policy.0.cooling_period", "10"),
 				),
@@ -357,7 +360,7 @@ func TestAccFSxOntapVolume_tieringPolicy(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFsxOntapVolumeExists(resourceName, &volume3),
 					testAccCheckFsxOntapVolumeNotRecreated(&volume1, &volume3),
-					resource.TestCheckResourceAttr(resourceName, "name", rName4),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "tiering_policy.0.name", "AUTO"),
 					resource.TestCheckResourceAttr(resourceName, "tiering_policy.0.cooling_period", "60"),
 				),
@@ -367,7 +370,7 @@ func TestAccFSxOntapVolume_tieringPolicy(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFsxOntapVolumeExists(resourceName, &volume4),
 					testAccCheckFsxOntapVolumeNotRecreated(&volume1, &volume4),
-					resource.TestCheckResourceAttr(resourceName, "name", rName2),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "tiering_policy.0.name", "ALL"),
 				),
 			},
