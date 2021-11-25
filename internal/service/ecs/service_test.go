@@ -1775,7 +1775,7 @@ resource "aws_ecs_cluster" "default" {
 }
 
 resource "aws_ecs_task_definition" "test2" {
-  family                   = %[1]q
+  family = %[1]q
 
   container_definitions = <<DEFINITION
 [
