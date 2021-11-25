@@ -30,11 +30,27 @@ func ResourceClusterRegistration() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"name": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
 				ValidateFunc: validClusterName,
+			},
+			"certificate_authority": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"data": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
 			},
 			"connector_config": {
 				Type:     schema.TypeList,
@@ -58,24 +74,6 @@ func ResourceClusterRegistration() *schema.Resource {
 							Computed: true,
 						},
 						"activation_expiry": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-					},
-				},
-			},
-			"tags":     tftags.TagsSchemaForceNew(),
-			"tags_all": tftags.TagsSchemaComputed(),
-			"arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"certificate_authority": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"data": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -163,6 +161,20 @@ func ResourceClusterRegistration() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"role_arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"status": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"tags":     tftags.TagsSchemaForceNew(),
+			"tags_all": tftags.TagsSchemaComputed(),
+			"version": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"vpc_config": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -203,14 +215,6 @@ func ResourceClusterRegistration() *schema.Resource {
 						},
 					},
 				},
-			},
-			"role_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"status": {
-				Type:     schema.TypeString,
-				Computed: true,
 			},
 		},
 	}
@@ -289,27 +293,41 @@ func resourceClusterRegistrationRead(ctx context.Context, d *schema.ResourceData
 		return diag.FromErr(fmt.Errorf("error reading EKS Add-On (%s): %w", d.Id(), err))
 	}
 
-	d.Set("name", cluster.Name)
+	d.Set("arn", cluster.Arn)
+
+	if err := d.Set("certificate_authority", flattenEksCertificate(cluster.CertificateAuthority)); err != nil {
+		return diag.FromErr(fmt.Errorf("error setting certificate_authority: %w", err))
+	}
 
 	if err := d.Set("connector_config", flattenConnectorConfig(cluster.ConnectorConfig)); err != nil {
 		return diag.FromErr(fmt.Errorf("error setting connector config: %w", err))
 	}
 
-	if err := d.Set("identity", flattenEksIdentity(cluster.Identity)); err != nil {
-		return diag.FromErr(fmt.Errorf("error setting identity: %w", err))
-	}
+	d.Set("created_at", aws.TimeValue(cluster.CreatedAt).String())
 
-	if err := d.Set("certificate_authority", flattenEksCertificate(cluster.CertificateAuthority)); err != nil {
-		return diag.FromErr(fmt.Errorf("error setting certificate_authority: %w", err))
+	if err := d.Set("enabled_cluster_log_types", flattenEksEnabledLogTypes(cluster.Logging)); err != nil {
+		return diag.FromErr(fmt.Errorf("error setting enabled_cluster_log_types: %w", err))
 	}
 
 	if err := d.Set("encryption_config", flattenEksEncryptionConfig(cluster.EncryptionConfig)); err != nil {
 		return diag.FromErr(fmt.Errorf("error setting encryption_config: %w", err))
 	}
 
+	d.Set("endpoint", cluster.Endpoint)
+
+	if err := d.Set("identity", flattenEksIdentity(cluster.Identity)); err != nil {
+		return diag.FromErr(fmt.Errorf("error setting identity: %w", err))
+	}
+
 	if err := d.Set("kubernetes_network_config", flattenEksNetworkConfig(cluster.KubernetesNetworkConfig)); err != nil {
 		return diag.FromErr(fmt.Errorf("error setting kubernetes_network_config: %w", err))
 	}
+
+	d.Set("name", cluster.Name)
+	d.Set("platform_version", cluster.PlatformVersion)
+	d.Set("role_arn", cluster.RoleArn)
+	d.Set("status", cluster.Status)
+	d.Set("version", cluster.Version)
 
 	if err := d.Set("vpc_config", flattenEksVpcConfigResponse(cluster.ResourcesVpcConfig)); err != nil {
 		return diag.FromErr(fmt.Errorf("error setting vpc_config: %w", err))
