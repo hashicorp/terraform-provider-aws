@@ -47,7 +47,6 @@ func ResourceFleet() *schema.Resource {
 			"launch_template_config": {
 				Type:     schema.TypeList,
 				Required: true,
-				ForceNew: true,
 				MinItems: 1,
 				MaxItems: 1,
 				Elem: &schema.Resource{
@@ -55,7 +54,6 @@ func ResourceFleet() *schema.Resource {
 						"launch_template_specification": {
 							Type:     schema.TypeList,
 							Required: true,
-							ForceNew: true,
 							MinItems: 1,
 							MaxItems: 1,
 							Elem: &schema.Resource{
@@ -63,17 +61,14 @@ func ResourceFleet() *schema.Resource {
 									"launch_template_id": {
 										Type:     schema.TypeString,
 										Optional: true,
-										ForceNew: true,
 									},
 									"launch_template_name": {
 										Type:     schema.TypeString,
 										Optional: true,
-										ForceNew: true,
 									},
 									"version": {
 										Type:     schema.TypeString,
 										Required: true,
-										ForceNew: true,
 									},
 								},
 							},
@@ -81,39 +76,32 @@ func ResourceFleet() *schema.Resource {
 						"override": {
 							Type:     schema.TypeList,
 							Optional: true,
-							ForceNew: true,
 							MaxItems: 50,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"availability_zone": {
 										Type:     schema.TypeString,
 										Optional: true,
-										ForceNew: true,
 									},
 									"instance_type": {
 										Type:     schema.TypeString,
 										Optional: true,
-										ForceNew: true,
 									},
 									"max_price": {
 										Type:     schema.TypeString,
 										Optional: true,
-										ForceNew: true,
 									},
 									"priority": {
 										Type:     schema.TypeFloat,
 										Optional: true,
-										ForceNew: true,
 									},
 									"subnet_id": {
 										Type:     schema.TypeString,
 										Optional: true,
-										ForceNew: true,
 									},
 									"weighted_capacity": {
 										Type:     schema.TypeFloat,
 										Optional: true,
-										ForceNew: true,
 									},
 								},
 							},
@@ -506,6 +494,7 @@ func resourceFleetUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	input := &ec2.ModifyFleetInput{
 		ExcessCapacityTerminationPolicy: aws.String(d.Get("excess_capacity_termination_policy").(string)),
+		LaunchTemplateConfigs:           expandEc2FleetLaunchTemplateConfigRequests(d.Get("launch_template_config").([]interface{})),
 		FleetId:                         aws.String(d.Id()),
 		// InvalidTargetCapacitySpecification: Currently we only support total target capacity modification.
 		// TargetCapacitySpecification: expandEc2TargetCapacitySpecificationRequest(d.Get("target_capacity_specification").([]interface{})),

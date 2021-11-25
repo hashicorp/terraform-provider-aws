@@ -48,6 +48,9 @@ repository:
 service/accessanalyzer:
   - 'internal/service/accessanalyzer/**/*'
   - 'website/**/accessanalyzer_*'
+service/account:
+  - 'internal/service/account/**/*'
+  - 'website/**/account_*'
 service/acm:
   - 'internal/service/acm/**/*'
   - 'website/**/acm_*'

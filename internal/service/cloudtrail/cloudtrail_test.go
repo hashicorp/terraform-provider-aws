@@ -29,6 +29,7 @@ func TestAccCloudTrail_serial(t *testing.T) {
 			"tags":                  testAcc_tags,
 			"eventSelector":         testAcc_eventSelector,
 			"eventSelectorDynamoDB": testAcc_eventSelectorDynamoDB,
+			"eventSelectorExclude":  testAcc_eventSelectorExclude,
 			"insightSelector":       testAcc_insightSelector,
 			"advancedEventSelector": testAcc_advanced_event_selector,
 		},
@@ -83,6 +84,11 @@ func testAcc_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "kms_key_id", ""),
 				),
 			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
@@ -119,6 +125,11 @@ func testAcc_cloudWatch(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "cloud_watch_logs_role_arn"),
 				),
 			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
@@ -135,7 +146,7 @@ func testAcc_enableLogging(t *testing.T) {
 		CheckDestroy: testAccCheckDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccConfig(rName),
+				Config: testAccEnableLoggingConfig(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudTrailExists(resourceName, &trail),
 					// AWS will create the trail with logging turned off.
@@ -151,13 +162,18 @@ func testAcc_enableLogging(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccModifiedConfig(rName),
+				Config: testAccEnableLoggingConfig(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudTrailExists(resourceName, &trail),
 					testAccCheckCloudTrailLoggingEnabled(resourceName, false),
 					testAccCheckCloudTrailLogValidationEnabled(resourceName, false, &trail),
 					resource.TestCheckResourceAttr(resourceName, "kms_key_id", ""),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 			{
 				Config: testAccConfig(rName),
@@ -434,6 +450,7 @@ func testAcc_eventSelector(t *testing.T) {
 					acctest.CheckResourceAttrGlobalARNNoAccount(resourceName, "event_selector.0.data_resource.0.values.1", "s3", fmt.Sprintf("%s-2/ko", rName)),
 					resource.TestCheckResourceAttr(resourceName, "event_selector.0.include_management_events", "false"),
 					resource.TestCheckResourceAttr(resourceName, "event_selector.0.read_write_type", "ReadOnly"),
+					resource.TestCheckResourceAttr(resourceName, "event_selector.0.exclude_management_event_sources.#", "0"),
 				),
 			},
 			{
@@ -468,6 +485,7 @@ func testAcc_eventSelector(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "event_selector.1.data_resource.1.type", "AWS::Lambda::Function"),
 					resource.TestCheckResourceAttr(resourceName, "event_selector.1.data_resource.1.values.#", "1"),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "event_selector.1.data_resource.1.values.0", "lambda", fmt.Sprintf("function:%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "event_selector.0.exclude_management_event_sources.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "event_selector.1.include_management_events", "false"),
 					resource.TestCheckResourceAttr(resourceName, "event_selector.1.read_write_type", "All"),
 				),
@@ -502,6 +520,55 @@ func testAcc_eventSelectorDynamoDB(t *testing.T) {
 					acctest.MatchResourceAttrRegionalARN(resourceName, "event_selector.0.data_resource.0.values.0", "dynamodb", regexp.MustCompile(`table/tf-acc-test-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "event_selector.0.include_management_events", "true"),
 					resource.TestCheckResourceAttr(resourceName, "event_selector.0.read_write_type", "All"),
+				),
+			},
+		},
+	})
+}
+
+func testAcc_eventSelectorExclude(t *testing.T) {
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_cloudtrail.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, cloudtrail.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEventSelectorExcludeKMSConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "event_selector.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "event_selector.0.include_management_events", "true"),
+					resource.TestCheckResourceAttr(resourceName, "event_selector.0.exclude_management_event_sources.#", "1"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "event_selector.0.exclude_management_event_sources.*", "kms.amazonaws.com"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccEventSelectorExcludeKMSAndRDSDataConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "event_selector.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "event_selector.0.include_management_events", "true"),
+					resource.TestCheckResourceAttr(resourceName, "event_selector.0.exclude_management_event_sources.#", "2"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "event_selector.0.exclude_management_event_sources.*", "kms.amazonaws.com"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "event_selector.0.exclude_management_event_sources.*", "rdsdata.amazonaws.com"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccEventSelectorNoneConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "event_selector.#", "0"),
 				),
 			},
 		},
@@ -807,9 +874,20 @@ resource "aws_cloudtrail" "test" {
   s3_bucket_name                = aws_s3_bucket.test.id
   s3_key_prefix                 = "prefix"
   include_global_service_events = false
-  enable_logging                = false
 }
 `, rName))
+}
+
+func testAccEnableLoggingConfig(rName string, enableLogging bool) string {
+	return acctest.ConfigCompose(testAccBaseConfig(rName), fmt.Sprintf(`
+resource "aws_cloudtrail" "test" {
+  name                          = %[1]q
+  s3_bucket_name                = aws_s3_bucket.test.id
+  s3_key_prefix                 = "prefix"
+  include_global_service_events = false
+  enable_logging                = %[2]t
+}
+`, rName, enableLogging))
 }
 
 func testAccCloudWatchConfig(rName string) string {
@@ -1205,6 +1283,39 @@ resource "aws_dynamodb_table" "test" {
   attribute {
     name = %[1]q
     type = "S"
+  }
+}
+`, rName))
+}
+
+func testAccEventSelectorExcludeKMSConfig(rName string) string {
+	return acctest.ConfigCompose(
+		testAccBaseConfig(rName),
+		fmt.Sprintf(`
+resource "aws_cloudtrail" "test" {
+  name           = %[1]q
+  s3_bucket_name = aws_s3_bucket.test.id
+
+  event_selector {
+    exclude_management_event_sources = ["kms.${data.aws_partition.current.dns_suffix}"]
+  }
+}
+`, rName))
+}
+
+func testAccEventSelectorExcludeKMSAndRDSDataConfig(rName string) string {
+	return acctest.ConfigCompose(
+		testAccBaseConfig(rName),
+		fmt.Sprintf(`
+resource "aws_cloudtrail" "test" {
+  name           = %[1]q
+  s3_bucket_name = aws_s3_bucket.test.id
+
+  event_selector {
+    exclude_management_event_sources = [
+      "kms.${data.aws_partition.current.dns_suffix}",
+      "rdsdata.${data.aws_partition.current.dns_suffix}"
+    ]
   }
 }
 `, rName))

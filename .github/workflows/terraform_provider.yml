@@ -193,6 +193,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
     # See also: https://github.com/actions/setup-go/pull/62
     - run: echo "GO_VERSION=$(cat .go-version)" >> $GITHUB_ENV
     - uses: actions/setup-go@v2
@@ -214,7 +216,44 @@ jobs:
       with:
         path: ~/go/pkg/mod
         key: ${{ runner.os }}-go-pkg-mod-${{ hashFiles('go.sum') }}
-    - run: go test ./... -timeout=5m
+    - name: Get all changed files
+      id: changed-files
+      uses: tj-actions/changed-files@v11.7
+    - name: Get changed packages
+      run: |
+        touch /tmp/dirs_changed_all
+        for file in ${{ steps.changed-files.outputs.all_modified_files }}; do
+          if [[ "${file}" == internal/* ]]; then
+            echo $( dirname "${file}" | xargs ) >> /tmp/dirs_changed_all
+          fi
+        done
+        cat /tmp/dirs_changed_all | sort | uniq > /tmp/pkgs_changed
+        echo "All packages changed:"
+        cat /tmp/pkgs_changed
+        while read pkg; do
+          if [ "${pkg}" = "" ]; then
+            continue
+          fi
+          while read file; do
+            if [ "${file}" = "" ]; then
+              continue
+            fi
+            echo $( dirname "${file}" | xargs ) >> /tmp/dep_dirs_all
+          done <<< $( grep -l "github.com/hashicorp/terraform-provider-aws/${pkg}" internal/**/*.go )
+        done </tmp/pkgs_changed
+        cat /tmp/pkgs_changed >> /tmp/dep_dirs_all
+        cat /tmp/dep_dirs_all | sort | uniq > /tmp/dep_pkgs
+        echo "All dependent packages:"
+        cat /tmp/dep_pkgs
+      id: changed-packages
+    - name: Run tests for changed packages
+      run: |
+        while read pkg; do
+          if [ "${pkg}" = "internal/sweep" ]; then
+            continue
+          fi
+          go test -run ^Test[^A][^c][^c] "github.com/hashicorp/terraform-provider-aws/${pkg}"
+        done </tmp/dep_pkgs
 
   golangci-lint:
     needs: [go_build]

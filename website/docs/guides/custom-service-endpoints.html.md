@@ -68,6 +68,7 @@ provider "aws" {
 <div style="column-width: 14em;">
 <ul>
   <li><code>accessanalyzer</code></li>
+  <li><code>account</code></li>
   <li><code>acm</code></li>
   <li><code>acmpca</code></li>
   <li><code>alexaforbusiness</code></li>

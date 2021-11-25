@@ -8,6 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/accessanalyzer"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/account"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/acm"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/acmpca"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/amp"
@@ -431,6 +432,7 @@ func Provider() *schema.Provider {
 			"aws_ec2_instance_type_offering":                 ec2.DataSourceInstanceTypeOffering(),
 			"aws_ec2_instance_type_offerings":                ec2.DataSourceInstanceTypeOfferings(),
 			"aws_ec2_instance_type":                          ec2.DataSourceInstanceType(),
+			"aws_ec2_instance_types":                         ec2.DataSourceInstanceTypes(),
 			"aws_ec2_local_gateway_route_table":              ec2.DataSourceLocalGatewayRouteTable(),
 			"aws_ec2_local_gateway_route_tables":             ec2.DataSourceLocalGatewayRouteTables(),
 			"aws_ec2_local_gateway_virtual_interface":        ec2.DataSourceLocalGatewayVirtualInterface(),
@@ -551,6 +553,7 @@ func Provider() *schema.Provider {
 			"aws_imagebuilder_image":                        imagebuilder.DataSourceImage(),
 			"aws_imagebuilder_image_pipeline":               imagebuilder.DataSourceImagePipeline(),
 			"aws_imagebuilder_image_recipe":                 imagebuilder.DataSourceImageRecipe(),
+			"aws_imagebuilder_image_recipes":                imagebuilder.DataSourceImageRecipes(),
 			"aws_imagebuilder_infrastructure_configuration": imagebuilder.DataSourceInfrastructureConfiguration(),
 
 			"aws_inspector_rules_packages": inspector.DataSourceRulesPackages(),
@@ -714,6 +717,8 @@ func Provider() *schema.Provider {
 		ResourcesMap: map[string]*schema.Resource{
 			"aws_accessanalyzer_analyzer": accessanalyzer.ResourceAnalyzer(),
 
+			"aws_account_alternate_contact": account.ResourceAlternateContact(),
+
 			"aws_acm_certificate":            acm.ResourceCertificate(),
 			"aws_acm_certificate_validation": acm.ResourceCertificateValidation(),
 
@@ -793,10 +798,13 @@ func Provider() *schema.Provider {
 			"aws_apprunner_custom_domain_association":          apprunner.ResourceCustomDomainAssociation(),
 			"aws_apprunner_service":                            apprunner.ResourceService(),
 
-			"aws_appstream_directory_config": appstream.ResourceDirectoryConfig(),
-			"aws_appstream_fleet":            appstream.ResourceFleet(),
-			"aws_appstream_image_builder":    appstream.ResourceImageBuilder(),
-			"aws_appstream_stack":            appstream.ResourceStack(),
+			"aws_appstream_directory_config":        appstream.ResourceDirectoryConfig(),
+			"aws_appstream_fleet":                   appstream.ResourceFleet(),
+			"aws_appstream_fleet_stack_association": appstream.ResourceFleetStackAssociation(),
+			"aws_appstream_image_builder":           appstream.ResourceImageBuilder(),
+			"aws_appstream_stack":                   appstream.ResourceStack(),
+			"aws_appstream_user":                    appstream.ResourceUser(),
+			"aws_appstream_user_stack_association":  appstream.ResourceUserStackAssociation(),
 
 			"aws_appsync_api_key":     appsync.ResourceAPIKey(),
 			"aws_appsync_datasource":  appsync.ResourceDataSource(),

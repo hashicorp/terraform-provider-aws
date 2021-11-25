@@ -153,7 +153,7 @@ func resourceGlobalClusterCreate(d *schema.ResourceData, meta interface{}) error
 
 	d.SetId(aws.StringValue(output.GlobalCluster.GlobalClusterIdentifier))
 
-	if err := waitForRdsGlobalClusterCreation(conn, d.Id()); err != nil {
+	if err := waitForGlobalClusterCreation(conn, d.Id()); err != nil {
 		return fmt.Errorf("error waiting for RDS Global Cluster (%s) availability: %s", d.Id(), err)
 	}
 
@@ -194,7 +194,7 @@ func resourceGlobalClusterRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("engine_version", globalCluster.EngineVersion)
 	d.Set("global_cluster_identifier", globalCluster.GlobalClusterIdentifier)
 
-	if err := d.Set("global_cluster_members", flattenRdsGlobalClusterMembers(globalCluster.GlobalClusterMembers)); err != nil {
+	if err := d.Set("global_cluster_members", flattenGlobalClusterMembers(globalCluster.GlobalClusterMembers)); err != nil {
 		return fmt.Errorf("error setting global_cluster_members: %w", err)
 	}
 
@@ -229,7 +229,7 @@ func resourceGlobalClusterUpdate(d *schema.ResourceData, meta interface{}) error
 		return fmt.Errorf("error deleting RDS Global Cluster: %s", err)
 	}
 
-	if err := waitForRdsGlobalClusterUpdate(conn, d.Id()); err != nil {
+	if err := waitForGlobalClusterUpdate(conn, d.Id()); err != nil {
 		return fmt.Errorf("error waiting for RDS Global Cluster (%s) update: %s", d.Id(), err)
 	}
 
@@ -281,7 +281,7 @@ func resourceGlobalClusterDelete(d *schema.ResourceData, meta interface{}) error
 				return fmt.Errorf("error removing RDS DB Cluster (%s) from Global Cluster (%s): %w", dbClusterArn, d.Id(), err)
 			}
 
-			if err := waitForRdsGlobalClusterRemoval(conn, dbClusterArn); err != nil {
+			if err := waitForGlobalClusterRemoval(conn, dbClusterArn); err != nil {
 				return fmt.Errorf("error waiting for RDS DB Cluster (%s) removal from RDS Global Cluster (%s): %w", dbClusterArn, d.Id(), err)
 			}
 		}
@@ -328,7 +328,7 @@ func resourceGlobalClusterDelete(d *schema.ResourceData, meta interface{}) error
 	return nil
 }
 
-func flattenRdsGlobalClusterMembers(apiObjects []*rds.GlobalClusterMember) []interface{} {
+func flattenGlobalClusterMembers(apiObjects []*rds.GlobalClusterMember) []interface{} {
 	if len(apiObjects) == 0 {
 		return nil
 	}
@@ -434,7 +434,7 @@ func rdsGlobalClusterRefreshFunc(conn *rds.RDS, globalClusterID string) resource
 	}
 }
 
-func waitForRdsGlobalClusterCreation(conn *rds.RDS, globalClusterID string) error {
+func waitForGlobalClusterCreation(conn *rds.RDS, globalClusterID string) error {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{"creating"},
 		Target:  []string{"available"},
@@ -448,7 +448,7 @@ func waitForRdsGlobalClusterCreation(conn *rds.RDS, globalClusterID string) erro
 	return err
 }
 
-func waitForRdsGlobalClusterUpdate(conn *rds.RDS, globalClusterID string) error {
+func waitForGlobalClusterUpdate(conn *rds.RDS, globalClusterID string) error {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{"modifying", "upgrading"},
 		Target:  []string{"available"},
@@ -485,7 +485,7 @@ func WaitForGlobalClusterDeletion(conn *rds.RDS, globalClusterID string) error {
 	return err
 }
 
-func waitForRdsGlobalClusterRemoval(conn *rds.RDS, dbClusterIdentifier string) error {
+func waitForGlobalClusterRemoval(conn *rds.RDS, dbClusterIdentifier string) error {
 	var globalCluster *rds.GlobalCluster
 	stillExistsErr := fmt.Errorf("RDS DB Cluster still exists in RDS Global Cluster")
 

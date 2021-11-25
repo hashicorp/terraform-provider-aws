@@ -56,6 +56,7 @@ func ResourceWebACL() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
+			"custom_response_body": wafv2CustomResponseBodySchema(),
 			"default_action": {
 				Type:     schema.TypeList,
 				Required: true,
@@ -131,6 +132,7 @@ func ResourceWebACL() *schema.Resource {
 							Type:     schema.TypeInt,
 							Required: true,
 						},
+						"rule_label":        wafv2RuleLabelsSchema(),
 						"statement":         wafv2WebACLRootStatementSchema(3),
 						"visibility_config": wafv2VisibilityConfigSchema(),
 					},
@@ -157,6 +159,10 @@ func resourceWebACLCreate(d *schema.ResourceData, meta interface{}) error {
 		DefaultAction:    expandWafv2DefaultAction(d.Get("default_action").([]interface{})),
 		Rules:            expandWafv2WebACLRules(d.Get("rule").(*schema.Set).List()),
 		VisibilityConfig: expandWafv2VisibilityConfig(d.Get("visibility_config").([]interface{})),
+	}
+
+	if v, ok := d.GetOk("custom_response_body"); ok && v.(*schema.Set).Len() > 0 {
+		params.CustomResponseBodies = expandWafv2CustomResponseBodies(v.(*schema.Set).List())
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -227,6 +233,10 @@ func resourceWebACLRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("arn", resp.WebACL.ARN)
 	d.Set("lock_token", resp.LockToken)
 
+	if err := d.Set("custom_response_body", flattenWafv2CustomResponseBodies(resp.WebACL.CustomResponseBodies)); err != nil {
+		return fmt.Errorf("Error setting custom_response_body: %w", err)
+	}
+
 	if err := d.Set("default_action", flattenWafv2DefaultAction(resp.WebACL.DefaultAction)); err != nil {
 		return fmt.Errorf("Error setting default_action: %w", err)
 	}
@@ -262,7 +272,7 @@ func resourceWebACLRead(d *schema.ResourceData, meta interface{}) error {
 func resourceWebACLUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).WAFV2Conn
 
-	if d.HasChanges("default_action", "description", "rule", "visibility_config") {
+	if d.HasChanges("custom_response_body", "default_action", "description", "rule", "visibility_config") {
 		u := &wafv2.UpdateWebACLInput{
 			Id:               aws.String(d.Id()),
 			Name:             aws.String(d.Get("name").(string)),
@@ -271,6 +281,10 @@ func resourceWebACLUpdate(d *schema.ResourceData, meta interface{}) error {
 			DefaultAction:    expandWafv2DefaultAction(d.Get("default_action").([]interface{})),
 			Rules:            expandWafv2WebACLRules(d.Get("rule").(*schema.Set).List()),
 			VisibilityConfig: expandWafv2VisibilityConfig(d.Get("visibility_config").([]interface{})),
+		}
+
+		if v, ok := d.GetOk("custom_response_body"); ok && v.(*schema.Set).Len() > 0 {
+			u.CustomResponseBodies = expandWafv2CustomResponseBodies(v.(*schema.Set).List())
 		}
 
 		if v, ok := d.GetOk("description"); ok {
@@ -362,6 +376,7 @@ func wafv2WebACLRootStatementSchema(level int) *schema.Schema {
 				"byte_match_statement":                  wafv2ByteMatchStatementSchema(),
 				"geo_match_statement":                   wafv2GeoMatchStatementSchema(),
 				"ip_set_reference_statement":            wafv2IpSetReferenceStatementSchema(),
+				"label_match_statement":                 wafv2LabelMatchStatementSchema(),
 				"managed_rule_group_statement":          wafv2ManagedRuleGroupStatementSchema(level),
 				"not_statement":                         wafv2StatementSchema(level),
 				"or_statement":                          wafv2StatementSchema(level),
@@ -452,6 +467,7 @@ func wafv2ScopeDownStatementSchema(level int) *schema.Schema {
 				"and_statement":                         wafv2StatementSchema(level),
 				"byte_match_statement":                  wafv2ByteMatchStatementSchema(),
 				"geo_match_statement":                   wafv2GeoMatchStatementSchema(),
+				"label_match_statement":                 wafv2LabelMatchStatementSchema(),
 				"ip_set_reference_statement":            wafv2IpSetReferenceStatementSchema(),
 				"not_statement":                         wafv2StatementSchema(level),
 				"or_statement":                          wafv2StatementSchema(level),
@@ -504,7 +520,7 @@ func expandWafv2WebACLRule(m map[string]interface{}) *wafv2.Rule {
 		return nil
 	}
 
-	return &wafv2.Rule{
+	rule := &wafv2.Rule{
 		Name:             aws.String(m["name"].(string)),
 		Priority:         aws.Int64(int64(m["priority"].(int))),
 		Action:           expandWafv2RuleAction(m["action"].([]interface{})),
@@ -512,6 +528,12 @@ func expandWafv2WebACLRule(m map[string]interface{}) *wafv2.Rule {
 		Statement:        expandWafv2WebACLRootStatement(m["statement"].([]interface{})),
 		VisibilityConfig: expandWafv2VisibilityConfig(m["visibility_config"].([]interface{})),
 	}
+
+	if v, ok := m["rule_label"].(*schema.Set); ok && v.Len() > 0 {
+		rule.RuleLabels = expandWafv2RuleLabels(v.List())
+	}
+
+	return rule
 }
 
 func expandWafv2OverrideAction(l []interface{}) *wafv2.OverrideAction {
@@ -583,6 +605,10 @@ func expandWafv2WebACLStatement(m map[string]interface{}) *wafv2.Statement {
 
 	if v, ok := m["geo_match_statement"]; ok {
 		statement.GeoMatchStatement = expandWafv2GeoMatchStatement(v.([]interface{}))
+	}
+
+	if v, ok := m["label_match_statement"]; ok {
+		statement.LabelMatchStatement = expandWafv2LabelMatchStatement(v.([]interface{}))
 	}
 
 	if v, ok := m["managed_rule_group_statement"]; ok {
@@ -737,6 +763,10 @@ func flattenWafv2WebACLStatement(s *wafv2.Statement) map[string]interface{} {
 		m["geo_match_statement"] = flattenWafv2GeoMatchStatement(s.GeoMatchStatement)
 	}
 
+	if s.LabelMatchStatement != nil {
+		m["label_match_statement"] = flattenWafv2LabelMatchStatement(s.LabelMatchStatement)
+	}
+
 	if s.ManagedRuleGroupStatement != nil {
 		m["managed_rule_group_statement"] = flattenWafv2ManagedRuleGroupStatement(s.ManagedRuleGroupStatement)
 	}
@@ -784,6 +814,7 @@ func flattenWafv2WebACLRules(r []*wafv2.Rule) interface{} {
 		m["override_action"] = flattenWafv2OverrideAction(rule.OverrideAction)
 		m["name"] = aws.StringValue(rule.Name)
 		m["priority"] = int(aws.Int64Value(rule.Priority))
+		m["rule_label"] = flattenWafv2RuleLabels(rule.RuleLabels)
 		m["statement"] = flattenWafv2WebACLRootStatement(rule.Statement)
 		m["visibility_config"] = flattenWafv2VisibilityConfig(rule.VisibilityConfig)
 		out[i] = m
