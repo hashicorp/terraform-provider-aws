@@ -113,6 +113,23 @@ func waitClusterDeleted(conn *eks.EKS, name string, timeout time.Duration) (*eks
 	return nil, err
 }
 
+func waitClusterRegistrationPending(conn *eks.EKS, name string, timeout time.Duration) (*eks.Cluster, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{eks.ClusterStatusCreating},
+		Target:  []string{eks.ClusterStatusPending},
+		Refresh: statusCluster(conn, name),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*eks.Cluster); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
 func waitClusterUpdateSuccessful(conn *eks.EKS, name, id string, timeout time.Duration) (*eks.Update, error) { //nolint:unparam
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{eks.UpdateStatusInProgress},

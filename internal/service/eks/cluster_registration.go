@@ -9,11 +9,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/eks"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -23,7 +21,6 @@ func ResourceClusterRegistration() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceClusterRegistrationCreate,
 		ReadWithoutTimeout:   resourceClusterRegistrationRead,
-		UpdateWithoutTimeout: resourceClusterRegistrationCreate,
 		DeleteWithoutTimeout: resourceClusterRegistrationDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -64,8 +61,158 @@ func ResourceClusterRegistration() *schema.Resource {
 					},
 				},
 			},
+			// how do we handle ForceNew with tags?
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"certificate_authority": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"data": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
+			"created_at": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"enabled_cluster_log_types": {
+				Type:     schema.TypeSet,
+				Computed: true,
+				Elem: &schema.Schema{
+					Type:         schema.TypeString,
+					ValidateFunc: validation.StringInSlice(eks.LogType_Values(), true),
+				},
+				Set: schema.HashString,
+			},
+			"encryption_config": {
+				Type:     schema.TypeList,
+				MaxItems: 1,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"provider": {
+							Type:     schema.TypeList,
+							MaxItems: 1,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"key_arn": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+								},
+							},
+						},
+						"resources": {
+							Type:     schema.TypeSet,
+							Computed: true,
+							Elem: &schema.Schema{
+								Type:         schema.TypeString,
+								ValidateFunc: validation.StringInSlice(Resources_Values(), false),
+							},
+						},
+					},
+				},
+			},
+			"endpoint": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"identity": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"oidc": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"issuer": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			"kubernetes_network_config": {
+				Type:     schema.TypeList,
+				Computed: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"service_ipv4_cidr": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
+			"platform_version": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"vpc_config": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"cluster_security_group_id": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"endpoint_private_access": {
+							Type:     schema.TypeBool,
+							Computed: true,
+						},
+						"endpoint_public_access": {
+							Type:     schema.TypeBool,
+							Computed: true,
+						},
+						"public_access_cidrs": {
+							Type:     schema.TypeSet,
+							Computed: true,
+							Elem: &schema.Schema{
+								Type: schema.TypeString,
+							},
+						},
+						"security_group_ids": {
+							Type:     schema.TypeSet,
+							Computed: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+						},
+						"subnet_ids": {
+							Type:     schema.TypeSet,
+							Computed: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+						},
+						"vpc_id": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
+			"role_arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"status": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 		},
 	}
 }
@@ -86,28 +233,21 @@ func resourceClusterRegistrationCreate(ctx context.Context, d *schema.ResourceDa
 	}
 
 	log.Printf("[DEBUG] Creating EKS Cluster Registration: %s", input)
-	var output *eks.RegisterClusterOutput
-	err := resource.Retry(tfiam.PropagationTimeout, func() *resource.RetryError {
-		var err error
 
-		output, err = conn.RegisterCluster(input)
-
-		if err != nil {
-			return resource.NonRetryableError(err)
-		}
-
-		return nil
-	})
-
-	if tfresource.TimedOut(err) {
-		output, err = conn.RegisterCluster(input)
-	}
+	_, err := conn.RegisterCluster(input)
 
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("error registering EKS Cluster (%s): %w", name, err))
 	}
 
-	d.SetId(aws.StringValue(output.Cluster.Name))
+	d.SetId(name)
+
+	_, err = waitClusterRegistrationPending(conn, d.Id(), d.Timeout(schema.TimeoutCreate))
+
+	if err != nil {
+
+		return diag.FromErr(fmt.Errorf("unexpected EKS Cluster Registration (%s) state returned during creation: %s", d.Id(), err))
+	}
 
 	return resourceClusterRegistrationRead(ctx, d, meta)
 }
