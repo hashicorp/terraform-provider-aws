@@ -27,7 +27,7 @@ func FindEnvironmentByID(conn *cloud9.Cloud9, id string) (*cloud9.Environment, e
 
 	envs := out.Environments
 
-	if envs == nil || len(envs) == 0 {
+	if len(envs) == 0 {
 		return nil, tfresource.NewEmptyResultError(input)
 	}
 
