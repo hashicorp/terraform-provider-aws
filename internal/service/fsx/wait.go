@@ -202,3 +202,69 @@ func waitStorageVirtualMachineDeleted(conn *fsx.FSx, id string, timeout time.Dur
 
 	return nil, err
 }
+
+func waitVolumeCreated(conn *fsx.FSx, id string, timeout time.Duration) (*fsx.Volume, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{fsx.VolumeLifecycleCreating, fsx.VolumeLifecyclePending},
+		Target:  []string{fsx.VolumeLifecycleCreated, fsx.VolumeLifecycleMisconfigured},
+		Refresh: statusVolume(conn, id),
+		Timeout: timeout,
+		Delay:   30 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*fsx.Volume); ok {
+		if status, details := aws.StringValue(output.Lifecycle), output.LifecycleTransitionReason; status == fsx.VolumeLifecycleFailed && details != nil {
+			tfresource.SetLastError(err, errors.New(aws.StringValue(output.LifecycleTransitionReason.Message)))
+		}
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitVolumeUpdated(conn *fsx.FSx, id string, timeout time.Duration) (*fsx.Volume, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{fsx.VolumeLifecyclePending},
+		Target:  []string{fsx.VolumeLifecycleCreated, fsx.VolumeLifecycleMisconfigured},
+		Refresh: statusVolume(conn, id),
+		Timeout: timeout,
+		Delay:   150 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*fsx.Volume); ok {
+		if status, details := aws.StringValue(output.Lifecycle), output.LifecycleTransitionReason; status == fsx.VolumeLifecycleFailed && details != nil {
+			tfresource.SetLastError(err, errors.New(aws.StringValue(output.LifecycleTransitionReason.Message)))
+		}
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitVolumeDeleted(conn *fsx.FSx, id string, timeout time.Duration) (*fsx.Volume, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{fsx.VolumeLifecycleCreated, fsx.VolumeLifecycleMisconfigured, fsx.VolumeLifecycleDeleting},
+		Target:  []string{},
+		Refresh: statusVolume(conn, id),
+		Timeout: timeout,
+		Delay:   30 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*fsx.Volume); ok {
+		if status, details := aws.StringValue(output.Lifecycle), output.LifecycleTransitionReason; status == fsx.VolumeLifecycleFailed && details != nil {
+			tfresource.SetLastError(err, errors.New(aws.StringValue(output.LifecycleTransitionReason.Message)))
+		}
+
+		return output, err
+	}
+
+	return nil, err
+}

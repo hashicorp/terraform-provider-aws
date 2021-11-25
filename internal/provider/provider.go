@@ -1191,6 +1191,7 @@ func Provider() *schema.Provider {
 			"aws_fsx_lustre_file_system":            fsx.ResourceLustreFileSystem(),
 			"aws_fsx_ontap_file_system":             fsx.ResourceOntapFileSystem(),
 			"aws_fsx_ontap_storage_virtual_machine": fsx.ResourceOntapStorageVirtualMachine(),
+			"aws_fsx_ontap_volume":                  fsx.ResourceOntapVolume(),
 			"aws_fsx_windows_file_system":           fsx.ResourceWindowsFileSystem(),
 
 			"aws_gamelift_alias":              gamelift.ResourceAlias(),
