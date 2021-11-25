@@ -197,7 +197,7 @@ func resourceOntapVolumeRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("uuid", ontapConfig.UUID)
 	d.Set("volume_type", volume.VolumeType)
 
-	if err := d.Set("tiering_policy", flattenFsxOntapVolumeTieringPolicy(d, ontapConfig.TieringPolicy)); err != nil {
+	if err := d.Set("tiering_policy", flattenFsxOntapVolumeTieringPolicy(ontapConfig.TieringPolicy)); err != nil {
 		return fmt.Errorf("error setting tiering_policy: %w", err)
 	}
 
@@ -319,13 +319,15 @@ func expandFsxOntapVolumeTieringPolicy(cfg []interface{}) *fsx.TieringPolicy {
 	return &out
 }
 
-func flattenFsxOntapVolumeTieringPolicy(d *schema.ResourceData, rs *fsx.TieringPolicy) []interface{} {
+func flattenFsxOntapVolumeTieringPolicy(rs *fsx.TieringPolicy) []interface{} {
 	if rs == nil {
 		return []interface{}{}
 	}
 
+	minCoolingPeriod := 2
+
 	m := make(map[string]interface{})
-	if rs.CoolingPeriod != nil && *rs.CoolingPeriod >= int64(2) {
+	if rs.CoolingPeriod != nil && *rs.CoolingPeriod >= int64(minCoolingPeriod) {
 		m["cooling_period"] = aws.Int64Value(rs.CoolingPeriod)
 	}
 

@@ -6,7 +6,7 @@ description: |-
   Manages a FSx ONTAP Volume.
 ---
 
-# Resource: aws_fsx_ontap_storage_virtual_machine
+# Resource: aws_fsx_ontap_volume
 
 Manages a FSx ONTAP Volume.
 See the [FSx ONTAP User Guide](https://docs.aws.amazon.com/fsx/latest/ONTAPGuide/managing-volumes.html) for more information.
