@@ -74,7 +74,7 @@ func resourceInstanceRoleAssociationCreate(d *schema.ResourceData, meta interfac
 
 	d.SetId(fmt.Sprintf("%s,%s", dbInstanceIdentifier, roleArn))
 
-	if err := waitForRdsDbInstanceRoleAssociation(conn, dbInstanceIdentifier, roleArn); err != nil {
+	if err := waitForDBInstanceRoleAssociation(conn, dbInstanceIdentifier, roleArn); err != nil {
 		return fmt.Errorf("error waiting for RDS DB Instance (%s) IAM Role (%s) association: %s", dbInstanceIdentifier, roleArn, err)
 	}
 
@@ -199,7 +199,7 @@ func DescribeInstanceRole(conn *rds.RDS, dbInstanceIdentifier, roleArn string) (
 	return dbInstanceRole, nil
 }
 
-func waitForRdsDbInstanceRoleAssociation(conn *rds.RDS, dbInstanceIdentifier, roleArn string) error {
+func waitForDBInstanceRoleAssociation(conn *rds.RDS, dbInstanceIdentifier, roleArn string) error {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{rdsDbInstanceRoleStatusPending},
 		Target:  []string{rdsDbInstanceRoleStatusActive},
