@@ -201,15 +201,21 @@ func TestAccECSService_CapacityProviderStrategy_update(t *testing.T) {
 		CheckDestroy: testAccCheckServiceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServiceUpdateCapacityProviderStrategyConfig(rName, 1, "FARGATE"),
+				Config: testAccServiceUpdateCapacityProviderStrategyRemoveConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(resourceName, &service1),
 				),
 			},
 			{
-				Config: testAccServiceUpdateCapacityProviderStrategyConfig(rName, 1, "FARGATE_SPOT"),
+				Config: testAccServiceUpdateCapacityProviderStrategyConfig(rName, 1, "FARGATE"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(resourceName, &service2),
+				),
+			},
+			{
+				Config: testAccServiceUpdateCapacityProviderStrategyConfig(rName, 1, "FARGATE_SPOT"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceExists(resourceName, &service1),
 					testAccCheckServiceNotRecreated(&service1, &service2),
 				),
 			},
