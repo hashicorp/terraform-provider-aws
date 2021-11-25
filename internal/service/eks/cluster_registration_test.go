@@ -30,12 +30,83 @@ func TestAccEKSClusterRegistration_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(resourceName, &cluster),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "connector_config.0.provider", "OTHER"),
+					resource.TestCheckResourceAttrPair(resourceName, "connector_config.0.role_arn", "aws_iam_role.test", "arn"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccEKSClusterRegistration_disappears(t *testing.T) {
+	var cluster eks.Cluster
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_eks_cluster_registration.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, eks.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckClusterRegistrationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterRegistrationBaseConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(resourceName, &cluster),
+					acctest.CheckResourceDisappears(acctest.Provider, tfeks.ResourceClusterRegistration(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccEKSClusterRegistration_tags(t *testing.T) {
+	var cluster1, cluster2, cluster3 eks.Cluster
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_eks_cluster_registration.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, eks.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckClusterRegistrationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterRegistrationTags1Config(rName, "key1", "value1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(resourceName, &cluster1),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccClusterRegistrationTags2Config(rName, "key1", "value1updated", "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(resourceName, &cluster2),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+			{
+				Config: testAccClusterRegistrationTags1Config(rName, "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(resourceName, &cluster3),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
 			},
 		},
 	})
@@ -115,7 +186,7 @@ data aws_iam_policy_document test {
 }
 
 resource "aws_iam_policy" "test" {
-	name   = "test"
+	name   = "%[1]s-test"
 	path   = "/"
 	policy = data.aws_iam_policy_document.test.json
   }
@@ -145,4 +216,47 @@ resource "aws_eks_cluster_registration" "test" {
   ]
 }
 `, rName))
+}
+
+func testAccClusterRegistrationTags1Config(rName, tagKey1, tagValue1 string) string {
+	return acctest.ConfigCompose(testAccClusterRegistrationBaseIAMConfig(rName), fmt.Sprintf(`
+resource "aws_eks_cluster_registration" "test" {
+  name     = %[1]q
+
+  tags = {
+    %[2]q = %[3]q
+  }
+
+  connector_config {
+	provider    = "OTHER"
+	role_arn    = aws_iam_role.test.arn
+  }
+
+  depends_on = [
+	"aws_iam_role_policy_attachment.test",
+  ]
+}
+`, rName, tagKey1, tagValue1))
+}
+
+func testAccClusterRegistrationTags2Config(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return acctest.ConfigCompose(testAccClusterRegistrationBaseIAMConfig(rName), fmt.Sprintf(`
+resource "aws_eks_cluster_registration" "test" {
+  name     = %[1]q
+
+  tags = {
+    %[2]q = %[3]q
+    %[4]q = %[5]q
+  }
+
+  connector_config {
+	provider    = "OTHER"
+	role_arn    = aws_iam_role.test.arn
+  }
+
+  depends_on = [
+	"aws_iam_role_policy_attachment.test",
+  ]
+}
+  `, rName, tagKey1, tagValue1, tagKey2, tagValue2))
 }
