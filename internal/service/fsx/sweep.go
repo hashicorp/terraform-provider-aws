@@ -167,15 +167,15 @@ func sweepFSXOntapFileSystems(region string) error {
 	})
 
 	if err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error listing FSx Ontap File Systems for %s: %w", region, err))
+		errs = multierror.Append(errs, fmt.Errorf("error listing FSx ONTAP File Systems for %s: %w", region, err))
 	}
 
 	if err = sweep.SweepOrchestrator(sweepResources); err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error sweeping FSx Ontap File Systems for %s: %w", region, err))
+		errs = multierror.Append(errs, fmt.Errorf("error sweeping FSx ONTAP File Systems for %s: %w", region, err))
 	}
 
 	if sweep.SkipSweepError(errs.ErrorOrNil()) {
-		log.Printf("[WARN] Skipping FSx Ontap File System sweep for %s: %s", region, errs)
+		log.Printf("[WARN] Skipping FSx ONTAP File System sweep for %s: %s", region, errs)
 		return nil
 	}
 
