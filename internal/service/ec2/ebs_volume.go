@@ -353,7 +353,33 @@ func resourceEBSVolumeDelete(d *schema.ResourceData, meta interface{}) error {
 			return fmt.Errorf("error creating EC2 EBS Snapshot: %s", err)
 		}
 
-		d.SetId(aws.StringValue(res.SnapshotId))
+		err = func() error {
+			log.Printf("Waiting for Snapshot %s to become available...", d.Id())
+			input := &ec2.DescribeSnapshotsInput{
+				SnapshotIds: []*string{aws.String(*res.SnapshotId)},
+			}
+			err := resource.Retry(d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
+				err := conn.WaitUntilSnapshotCompleted(input)
+				if err == nil {
+					return nil
+				}
+				if isAWSErr(err, "ResourceNotReady", "") {
+					return resource.RetryableError(fmt.Errorf("EBS CreatingSnapshot - waiting for snapshot to become available"))
+				}
+				return resource.NonRetryableError(err)
+			})
+			if isResourceTimeoutError(err) {
+				err = conn.WaitUntilSnapshotCompleted(input)
+			}
+			if err != nil {
+				return fmt.Errorf("Error waiting for EBS snapshot to complete: %s", err)
+			}
+			return nil
+		}()
+
+		if err != nil {
+			return fmt.Errorf("Error creating snapshot: %s", err)
+		}
 
 	}
 	input := &ec2.DeleteVolumeInput{
