@@ -346,7 +346,7 @@ func resourceEBSVolumeDelete(d *schema.ResourceData, meta interface{}) error {
 
 			return nil
 		})
-		if isResourceTimeoutError(err) {
+		if tfresource.TimedOut(err) {
 			res, err = conn.CreateSnapshot(request)
 		}
 		if err != nil {
@@ -363,12 +363,12 @@ func resourceEBSVolumeDelete(d *schema.ResourceData, meta interface{}) error {
 				if err == nil {
 					return nil
 				}
-				if isAWSErr(err, "ResourceNotReady", "") {
+				if tfawserr.ErrMessageContains(err, "ResourceNotReady", "") {
 					return resource.RetryableError(fmt.Errorf("CreatingSnapshot: waiting for snapshot to become available"))
 				}
 				return resource.NonRetryableError(err)
 			})
-			if isResourceTimeoutError(err) {
+			if tfresource.TimedOut(err) {
 				err = conn.WaitUntilSnapshotCompleted(input)
 			}
 			if err != nil {

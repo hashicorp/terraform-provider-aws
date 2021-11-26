@@ -695,9 +695,9 @@ func TestAccAWSEBSVolume_FinalSnapshot(t *testing.T) {
 	resourceName := "aws_ebs_volume.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:      func() { testAccPreCheck(t) },
+		PreCheck:      func() { acctest.PreCheck(t) },
 		IDRefreshName: resourceName,
-		Providers:     testAccProviders,
+		Providers:     acctest.Providers,
 		CheckDestroy:  testAccCheckVolumeDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -782,7 +782,7 @@ func testAccCheckEbsSnapshotExists() resource.TestCheckFunc {
 			}
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).ec2conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 		resp, err := conn.DescribeSnapshots(&ec2.DescribeSnapshotsInput{
 			Filters: []*ec2.Filter{
 				{
@@ -1226,6 +1226,7 @@ data "aws_availability_zones" "available" {
     values = ["opt-in-not-required"]
   }
 }
+`
 
 const testAccAwsEbsVolumeConfigFinalSnapshot = `
 data "aws_availability_zones" "available" {}
@@ -1236,19 +1237,6 @@ resource "aws_ebs_volume" "test" {
     Name = "TerraformTest"
   }
   final_snapshot = true
-}
-`
-
-resource "aws_ebs_volume" "test" {
-  availability_zone = data.aws_availability_zones.available.names[0]
-  size              = 10
-  iops              = 100
-  throughput        = 500
-  type              = "io1"
-
-  tags = {
-    Name = "TerraformTest"
-  }
 }
 `
 
@@ -1389,5 +1377,3 @@ resource "aws_ebs_volume" "test" {
 }
 `, rName, size))
 }
-
-
