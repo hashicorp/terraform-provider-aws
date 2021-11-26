@@ -1231,6 +1231,11 @@ data "aws_availability_zones" "available" {
 const testAccAwsEbsVolumeConfigFinalSnapshot = `
 data "aws_availability_zones" "available" {}
 resource "aws_ebs_volume" "test" {
+  availability_zone = data.aws_availability_zones.available.names[0]
+  size              = 10
+  iops              = 100
+  throughput        = 500
+  type              = "io1"
   availability_zone = "${data.aws_availability_zones.available.names[0]}"
   size = 1
   tags = {
