@@ -61,11 +61,6 @@ func ResourceEBSSnapshot() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			"final_snapshot": { 
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
 			"volume_size": {
 				Type:     schema.TypeInt,
 				Computed: true,
@@ -205,16 +200,6 @@ func resourceEBSSnapshotDelete(d *schema.ResourceData, meta interface{}) error {
 	input := &ec2.DeleteSnapshotInput{
 		SnapshotId: aws.String(d.Id()),
 	}
-
-	if d.Get("final_snapshot").(bool) { 
-
-		err = resourceEBSSnapshotCreate(d,conn)
-		if err != nil { 
-			return err 
-		}
-		
-	}
-
 	err := resource.Retry(d.Timeout(schema.TimeoutDelete), func() *resource.RetryError {
 		_, err := conn.DeleteSnapshot(input)
 		if err == nil {
