@@ -18,7 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify",
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceEBSVolume() *schema.Resource {
@@ -52,7 +52,7 @@ func ResourceEBSVolume() *schema.Resource {
 				Computed: true,
 				ForceNew: true,
 			},
-			"final_snapshot" { 
+			"final_snapshot": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
@@ -322,7 +322,7 @@ func resourceEBSVolumeRead(d *schema.ResourceData, meta interface{}) error {
 func resourceEBSVolumeDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
-	if d.Get("final_snapshot").(bool) { 
+	if d.Get("final_snapshot").(bool) {
 
 		log.Printf("[INFO] final_snapshot parameter set to true; before volume destroying, snapshot will be created: %s", d.Id())
 
@@ -335,15 +335,15 @@ func resourceEBSVolumeDelete(d *schema.ResourceData, meta interface{}) error {
 		err := resource.Retry(1*time.Minute, func() *resource.RetryError {
 			var err error
 			res, err = conn.CreateSnapshot(request)
-	
+
 			if tfawserr.ErrMessageContains(err, "SnapshotCreationPerVolumeRateExceeded", "The maximum per volume CreateSnapshot request rate has been exceeded") {
 				return resource.RetryableError(err)
 			}
-	
+
 			if err != nil {
 				return resource.NonRetryableError(err)
 			}
-	
+
 			return nil
 		})
 		if isResourceTimeoutError(err) {
