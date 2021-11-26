@@ -324,7 +324,7 @@ func resourceEBSVolumeDelete(d *schema.ResourceData, meta interface{}) error {
 
 	if d.Get("final_snapshot").(bool) { 
 
-		log.Printf("[INFO] final_snaphot set to true; before destroying, snapshot will be created: %s", d.Id())
+		log.Printf("[INFO] final_snapshot parameter set to true; before volume destroying, snapshot will be created: %s", d.Id())
 
 		request := &ec2.CreateSnapshotInput{
 			VolumeId:          aws.String(d.Id()),
@@ -364,7 +364,7 @@ func resourceEBSVolumeDelete(d *schema.ResourceData, meta interface{}) error {
 					return nil
 				}
 				if isAWSErr(err, "ResourceNotReady", "") {
-					return resource.RetryableError(fmt.Errorf("EBS CreatingSnapshot - waiting for snapshot to become available"))
+					return resource.RetryableError(fmt.Errorf("CreatingSnapshot: waiting for snapshot to become available"))
 				}
 				return resource.NonRetryableError(err)
 			})
