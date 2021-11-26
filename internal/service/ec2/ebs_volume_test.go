@@ -1232,14 +1232,14 @@ const testAccAwsEbsVolumeConfigFinalSnapshot = `
 data "aws_availability_zones" "available" {}
 resource "aws_ebs_volume" "test" {
   availability_zone = data.aws_availability_zones.available.names[0]
-  size              = 10
+  size              = 5
   iops              = 100
-  throughput        = 500
   type              = "io1"
 
   tags = {
     Name = "TerraformTest"
   }
+
   final_snapshot = true
 }
 `
