@@ -820,7 +820,7 @@ In addition to all arguments above, the following attributes are exported:
 * `id` - ID of the cluster.
 * `log_uri` - Path to the Amazon S3 location where logs for this cluster are stored.
 * `master_instance_group.0.id` - Master node type Instance Group ID, if using Instance Group for this node type.
-* `master_public_dns` - Public DNS name of the master EC2 instance.
+* `master_public_dns` - The DNS name of the master node. If the cluster is on a private subnet, this is the private DNS name. On a public subnet, this is the public DNS name.
 * `name` - Name of the cluster.
 * `release_label` - Release label for the Amazon EMR release.
 * `service_role` - IAM role that will be assumed by the Amazon EMR service to access AWS resources on your behalf.
