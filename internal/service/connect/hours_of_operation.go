@@ -115,10 +115,7 @@ func resourceHoursOfOperationCreate(ctx context.Context, d *schema.ResourceData,
 	instanceID := d.Get("instance_id").(string)
 	name := d.Get("name").(string)
 
-	config, err := expandConfigs(d.Get("config").([]interface{}))
-	if err != nil {
-		return diag.FromErr(err)
-	}
+	config := expandConfigs(d.Get("config").([]interface{}))
 
 	input := &connect.CreateHoursOfOperationInput{
 		Config:     config,
@@ -181,7 +178,7 @@ func resourceHoursOfOperationRead(ctx context.Context, d *schema.ResourceData, m
 		return diag.FromErr(fmt.Errorf("error getting Connect Hours of Operation (%s): empty response", d.Id()))
 	}
 
-	if err := d.Set("config", flattenConfigs(resp.HoursOfOperation.Config, d)); err != nil {
+	if err := d.Set("config", flattenConfigs(resp.HoursOfOperation.Config)); err != nil {
 		return diag.FromErr(err)
 	}
 
@@ -211,16 +208,17 @@ func resourceHoursOfOperationUpdate(ctx context.Context, d *schema.ResourceData,
 
 	instanceID, hoursOfOperationID, err := HoursOfOperationParseID(d.Id())
 
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
 	input := &connect.UpdateHoursOfOperationInput{
 		HoursOfOperationId: aws.String(hoursOfOperationID),
 		InstanceId:         aws.String(instanceID),
 	}
 
 	if d.HasChange("config") {
-		config, err := expandConfigs(d.Get("config").([]interface{}))
-		if err != nil {
-			return diag.FromErr(err)
-		}
+		config := expandConfigs(d.Get("config").([]interface{}))
 		input.Config = config
 	}
 
@@ -257,6 +255,10 @@ func resourceHoursOfOperationDelete(ctx context.Context, d *schema.ResourceData,
 
 	instanceID, hoursOfOperationID, err := HoursOfOperationParseID(d.Id())
 
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
 	_, err = conn.DeleteHoursOfOperationWithContext(ctx, &connect.DeleteHoursOfOperationInput{
 		HoursOfOperationId: aws.String(hoursOfOperationID),
 		InstanceId:         aws.String(instanceID),
@@ -269,9 +271,9 @@ func resourceHoursOfOperationDelete(ctx context.Context, d *schema.ResourceData,
 	return nil
 }
 
-func expandConfigs(configs []interface{}) ([]*connect.HoursOfOperationConfig, error) {
+func expandConfigs(configs []interface{}) []*connect.HoursOfOperationConfig {
 	if len(configs) == 0 {
-		return nil, nil
+		return nil
 	}
 
 	hoursOfOperationConfigs := []*connect.HoursOfOperationConfig{}
@@ -300,10 +302,10 @@ func expandConfigs(configs []interface{}) ([]*connect.HoursOfOperationConfig, er
 		hoursOfOperationConfigs = append(hoursOfOperationConfigs, hoursOfOperationConfig)
 	}
 
-	return hoursOfOperationConfigs, nil
+	return hoursOfOperationConfigs
 }
 
-func flattenConfigs(configs []*connect.HoursOfOperationConfig, d *schema.ResourceData) []interface{} {
+func flattenConfigs(configs []*connect.HoursOfOperationConfig) []interface{} {
 	configsList := []interface{}{}
 	for _, config := range configs {
 		values := map[string]interface{}{}
