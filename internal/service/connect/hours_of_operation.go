@@ -257,7 +257,7 @@ func resourceHoursOfOperationDelete(ctx context.Context, d *schema.ResourceData,
 
 	instanceID, hoursOfOperationID, err := HoursOfOperationParseID(d.Id())
 
-	_, err = conn.DeleteHoursOfOperation(&connect.DeleteHoursOfOperationInput{
+	_, err = conn.DeleteHoursOfOperationWithContext(ctx, &connect.DeleteHoursOfOperationInput{
 		HoursOfOperationId: aws.String(hoursOfOperationID),
 		InstanceId:         aws.String(instanceID),
 	})
