@@ -252,6 +252,22 @@ func resourceHoursOfOperationUpdate(ctx context.Context, d *schema.ResourceData,
 	return resourceHoursOfOperationRead(ctx, d, meta)
 }
 
+func resourceHoursOfOperationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.AWSClient).ConnectConn
+
+	instanceID, hoursOfOperationID, err := HoursOfOperationParseID(d.Id())
+
+	_, err = conn.DeleteHoursOfOperation(&connect.DeleteHoursOfOperationInput{
+		HoursOfOperationId: aws.String(hoursOfOperationID),
+		InstanceId:         aws.String(instanceID),
+	})
+
+	if err != nil {
+		return diag.FromErr(fmt.Errorf("error deleting HoursOfOperation (%s): %w", d.Id(), err))
+	}
+
+	return nil
+}
 
 func expandConfigs(configs []interface{}) ([]*connect.HoursOfOperationConfig, error) {
 	if len(configs) == 0 {
