@@ -108,6 +108,62 @@ func ResourceHoursOfOperation() *schema.Resource {
 }
 
 
+func resourceHoursOfOperationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.AWSClient).ConnectConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+
+	instanceID, hoursOfOperationID, err := HoursOfOperationParseID(d.Id())
+
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	resp, err := conn.DescribeHoursOfOperationWithContext(ctx, &connect.DescribeHoursOfOperationInput{
+		HoursOfOperationId: aws.String(hoursOfOperationID),
+		InstanceId:         aws.String(instanceID),
+	})
+
+	if !d.IsNewResource() && tfawserr.ErrMessageContains(err, connect.ErrCodeResourceNotFoundException, "") {
+		log.Printf("[WARN] Connect Hours of Operation (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
+	}
+
+	if err != nil {
+		return diag.FromErr(fmt.Errorf("error getting Connect Hours of Operation (%s): %w", d.Id(), err))
+	}
+
+	if resp == nil || resp.HoursOfOperation == nil {
+		return diag.FromErr(fmt.Errorf("error getting Connect Hours of Operation (%s): empty response", d.Id()))
+	}
+
+	if err := d.Set("config", flattenConfigs(resp.HoursOfOperation.Config, d)); err != nil {
+		return diag.FromErr(err)
+	}
+
+	d.Set("hours_of_operation_arn", resp.HoursOfOperation.HoursOfOperationArn)
+	d.Set("hours_of_operation_id", resp.HoursOfOperation.HoursOfOperationId)
+	d.Set("instance_id", instanceID)
+	d.Set("description", resp.HoursOfOperation.Description)
+	d.Set("name", resp.HoursOfOperation.Name)
+	d.Set("time_zone", resp.HoursOfOperation.TimeZone)
+
+	tags := KeyValueTags(resp.HoursOfOperation.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+
+	//lintignore:AWSR002
+	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
+		return diag.FromErr(fmt.Errorf("error setting tags: %w", err))
+	}
+
+	if err := d.Set("tags_all", tags.Map()); err != nil {
+		return diag.FromErr(fmt.Errorf("error setting tags_all: %w", err))
+	}
+
+	return nil
+}
+
+
 func expandConfigs(configs []interface{}) ([]*connect.HoursOfOperationConfig, error) {
 	if len(configs) == 0 {
 		return nil, nil
