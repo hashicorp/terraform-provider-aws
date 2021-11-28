@@ -107,6 +107,49 @@ func ResourceHoursOfOperation() *schema.Resource {
 	}
 }
 
+func resourceHoursOfOperationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.AWSClient).ConnectConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+
+	instanceID := d.Get("instance_id").(string)
+	name := d.Get("name").(string)
+
+	config, err := expandConfigs(d.Get("config").([]interface{}))
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	input := &connect.CreateHoursOfOperationInput{
+		Config:     config,
+		InstanceId: aws.String(instanceID),
+		Name:       aws.String(name),
+		TimeZone:   aws.String(d.Get("time_zone").(string)),
+	}
+
+	if v, ok := d.GetOk("description"); ok {
+		input.Description = aws.String(v.(string))
+	}
+
+	if len(tags) > 0 {
+		input.Tags = Tags(tags.IgnoreAWS())
+	}
+
+	log.Printf("[DEBUG] Creating Connect Hours of Operation %s", input)
+	output, err := conn.CreateHoursOfOperationWithContext(ctx, input)
+
+	if err != nil {
+		return diag.FromErr(fmt.Errorf("error creating Connect Hours of Operation (%s): %w", name, err))
+	}
+
+	if output == nil {
+		return diag.FromErr(fmt.Errorf("error creating Connect Hours of Operation (%s): empty output", name))
+	}
+
+	d.SetId(fmt.Sprintf("%s:%s", instanceID, aws.StringValue(output.HoursOfOperationId)))
+
+	return resourceHoursOfOperationRead(ctx, d, meta)
+}
 
 func resourceHoursOfOperationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).ConnectConn
