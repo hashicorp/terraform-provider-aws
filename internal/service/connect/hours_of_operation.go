@@ -33,6 +33,8 @@ func ResourceHoursOfOperation() *schema.Resource {
 			"config": {
 				Type:     schema.TypeList,
 				Required: true,
+				MinItems: 0,
+				MaxItems: 100,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"day": {
@@ -78,8 +80,9 @@ func ResourceHoursOfOperation() *schema.Resource {
 				},
 			},
 			"description": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.StringLenBetween(1, 250),
 			},
 			"hours_of_operation_arn": {
 				Type:     schema.TypeString,
@@ -94,8 +97,9 @@ func ResourceHoursOfOperation() *schema.Resource {
 				Required: true,
 			},
 			"name": {
-				Type:     schema.TypeString,
-				Required: true,
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: validation.StringLenBetween(1, 127),
 			},
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
