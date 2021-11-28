@@ -85,6 +85,30 @@ func testAccHoursOfOperation_basic(t *testing.T) {
 	})
 }
 
+func testAccHoursOfOperation_disappears(t *testing.T) {
+	var v connect.DescribeHoursOfOperationOutput
+	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName2 := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	resourceName := "aws_connect_hours_of_operation.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, connect.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckHoursOfOperationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccHoursOfOperationBasicConfig(rName, rName2, "Disappear"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckHoursOfOperationExists(resourceName, &v),
+					acctest.CheckResourceDisappears(acctest.Provider, tfconnect.ResourceHoursOfOperation(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func testAccCheckHoursOfOperationExists(resourceName string, function *connect.DescribeHoursOfOperationOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
