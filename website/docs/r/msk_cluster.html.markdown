@@ -112,6 +112,10 @@ resource "aws_msk_cluster" "example" {
     security_groups = [aws_security_group.sg.id]
   }
 
+  client_authentication {
+    unauthenticated = true
+  }
+
   encryption_info {
     encryption_at_rest_kms_key_arn = aws_kms_key.kms.arn
   }
@@ -168,7 +172,7 @@ The following arguments are supported:
 * `cluster_name` - (Required) Name of the MSK cluster.
 * `kafka_version` - (Required) Specify the desired Kafka software version.
 * `number_of_broker_nodes` - (Required) The desired total number of broker nodes in the kafka cluster.  It must be a multiple of the number of specified client subnets.
-* `client_authentication` - (Optional) Configuration block for specifying a client authentication. See below.
+* `client_authentication` - Configuration block for specifying a client authentication. See below.
 * `configuration_info` - (Optional) Configuration block for specifying a MSK Configuration to attach to Kafka brokers. See below.
 * `encryption_info` - (Optional) Configuration block for specifying encryption. See below.
 * `enhanced_monitoring` - (Optional) Specify the desired enhanced MSK CloudWatch monitoring level.  See [Monitoring Amazon MSK with Amazon CloudWatch](https://docs.aws.amazon.com/msk/latest/developerguide/monitoring.html)
@@ -186,8 +190,9 @@ The following arguments are supported:
 
 ### client_authentication Argument Reference
 
-* `sasl` - (Optional) Configuration block for specifying SASL client authentication. See below.
-* `tls` - (Optional) Configuration block for specifying TLS client authentication. See below.
+* `sasl` - Configuration block for specifying SASL client authentication. See below.
+* `tls` - Configuration block for specifying TLS client authentication. See below.
+* `unauthenticated` - Enables unauthenticated access.
 
 #### client_authentication sasl Argument Reference
 
@@ -196,7 +201,8 @@ The following arguments are supported:
 
 #### client_authentication tls Argument Reference
 
-* `certificate_authority_arns` - (Optional) List of ACM Certificate Authority Amazon Resource Names (ARNs).
+* `certificate_authority_arns` - (Optional) List of ACM Certificate Authority Amazon Resource Names (ARNs) if set the enabled attribute must be set to `true`.
+* `enabled` - (Optional) Enables TLS authentication option. If set to `true` then `certificate_authority_arns` must contain at least one ARN. Defaults to `false`.
 
 ### configuration_info Argument Reference
 
