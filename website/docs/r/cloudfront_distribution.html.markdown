@@ -311,6 +311,8 @@ of several sub-resources - these resources are laid out below.
 
 * `realtime_log_config_arn` (Optional) - The ARN of the [real-time log configuration](cloudfront_realtime_log_config.html)
     that is attached to this cache behavior.
+  
+* `response_headers_policy_id` (Optional) - The identifier for a response headers policy.
 
 * `smooth_streaming` (Optional) - Indicates whether you want to distribute
     media files in Microsoft Smooth Streaming format using the origin that is
@@ -626,7 +628,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Cloudfront Distributions can be imported using the `id`, e.g.
+Cloudfront Distributions can be imported using the `id`, e.g.,
 
 ```
 $ terraform import aws_cloudfront_distribution.distribution E74FTE3EXAMPLE

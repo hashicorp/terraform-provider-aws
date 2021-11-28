@@ -65,7 +65,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Timestream tables can be imported using the `table_name` and `database_name` separate by a colon (`:`), e.g.
+Timestream tables can be imported using the `table_name` and `database_name` separate by a colon (`:`), e.g.,
 
 ```
 $ terraform import aws_timestreamwrite_table.example ExampleTable:ExampleDatabase

@@ -1,0 +1,15 @@
+```release-note:new-resource
+aws_cloudfront_response_headers_policy
+```
+
+```release-note:new-data-source
+aws_cloudfront_response_headers_policy
+```
+
+```release-note:enhancement
+resource/aws_cloudfront_distribution: Add `response_headers_policy_id` argument to `ordered_cache_behavior` configuration block
+```
+
+```release-note:enhancement
+resource/aws_cloudfront_distribution: Add `response_headers_policy_id` argument to `default_cache_behavior` configuration block
+```

@@ -87,7 +87,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Firewall Manager policies can be imported using the policy ID, e.g.
+Firewall Manager policies can be imported using the policy ID, e.g.,
 
 ```
 $ terraform import aws_fms_policy.example 5be49585-a7e3-4c49-dde1-a179fe4a619a

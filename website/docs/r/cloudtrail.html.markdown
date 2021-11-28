@@ -318,7 +318,8 @@ The following arguments are optional:
 This configuration block supports the following attributes:
 
 * `data_resource` - (Optional) Configuration block for data events. See details below.
-* `include_management_events` - (Optional) Whether to include management events for your trail.
+* `exclude_management_event_sources` (Optional) -  A set of event sources to exclude. Valid values include: `kms.amazonaws.com` and `rdsdata.amazonaws.com`. `include_management_events` must be set to`true` to allow this.
+* `include_management_events` - (Optional) Whether to include management events for your trail. Defaults to `true`.
 * `read_write_type` - (Optional) Type of events to log. Valid values are `ReadOnly`, `WriteOnly`, `All`. Default value is `All`.
 
 #### data_resource
@@ -363,7 +364,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Cloudtrails can be imported using the `name`, e.g.
+Cloudtrails can be imported using the `name`, e.g.,
 
 ```
 $ terraform import aws_cloudtrail.sample my-sample-trail
