@@ -29,6 +29,41 @@ func TestAccConnectHoursOfOperation_serial(t *testing.T) {
 		})
 	}
 }
+
+func testAccCheckHoursOfOperationExists(resourceName string, function *connect.DescribeHoursOfOperationOutput) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[resourceName]
+		if !ok {
+			return fmt.Errorf("Connect Hours of Operation not found: %s", resourceName)
+		}
+
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("Connect Hours of Operation ID not set")
+		}
+		instanceID, hoursOfOperationID, err := tfconnect.HoursOfOperationParseID(rs.Primary.ID)
+
+		if err != nil {
+			return err
+		}
+
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectConn
+
+		params := &connect.DescribeHoursOfOperationInput{
+			HoursOfOperationId: aws.String(hoursOfOperationID),
+			InstanceId:         aws.String(instanceID),
+		}
+
+		getFunction, err := conn.DescribeHoursOfOperation(params)
+		if err != nil {
+			return err
+		}
+
+		*function = *getFunction
+
+		return nil
+	}
+}
+
 func testAccHoursOfOperationBaseConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_connect_instance" "test" {
