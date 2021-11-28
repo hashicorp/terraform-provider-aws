@@ -30,6 +30,61 @@ func TestAccConnectHoursOfOperation_serial(t *testing.T) {
 	}
 }
 
+func testAccHoursOfOperation_basic(t *testing.T) {
+	var v connect.DescribeHoursOfOperationOutput
+	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName2 := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	resourceName := "aws_connect_hours_of_operation.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, connect.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckHoursOfOperationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccHoursOfOperationBasicConfig(rName, rName2, "Created"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckHoursOfOperationExists(resourceName, &v),
+					resource.TestCheckResourceAttrSet(resourceName, "hours_of_operation_arn"),
+					resource.TestCheckResourceAttrSet(resourceName, "hours_of_operation_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "instance_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "name"),
+					resource.TestCheckResourceAttrSet(resourceName, "description"),
+					resource.TestCheckResourceAttrSet(resourceName, "time_zone"),
+
+					resource.TestCheckResourceAttr(resourceName, "config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "config.0.day", "MONDAY"),
+
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccHoursOfOperationBasicConfig(rName, rName2, "Updated"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckHoursOfOperationExists(resourceName, &v),
+					resource.TestCheckResourceAttrSet(resourceName, "hours_of_operation_arn"),
+					resource.TestCheckResourceAttrSet(resourceName, "hours_of_operation_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "instance_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "name"),
+					resource.TestCheckResourceAttr(resourceName, "description", "Updated"),
+					resource.TestCheckResourceAttrSet(resourceName, "time_zone"),
+
+					resource.TestCheckResourceAttr(resourceName, "config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "config.0.day", "MONDAY"),
+
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckHoursOfOperationExists(resourceName string, function *connect.DescribeHoursOfOperationOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
