@@ -1939,10 +1939,10 @@ resource "aws_lambda_event_source_mapping" "test" {
 }
 
 func testAccEventSourceMappingSQSFilterCriteria_3(rName string) string {
-	return acctest.ConfigCompose(testAccEventSourceMappingSQSBaseConfig(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccEventSourceMappingSQSBaseConfig(rName), `
 resource "aws_lambda_event_source_mapping" "test" {
   event_source_arn = aws_sqs_queue.test.arn
   function_name    = aws_lambda_function.test.arn
 }
-`))
+`)
 }
