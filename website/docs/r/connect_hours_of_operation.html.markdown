@@ -21,31 +21,31 @@ resource "aws_connect_hours_of_operation" "test" {
   time_zone   = "EST"
 
   config {
-	day = "MONDAY"
+    day = "MONDAY"
 
-	end_time {
-		hours   = 23
-		minutes = 08
-	}
+    end_time {
+      hours   = 23
+      minutes = 08
+    }
 
     start_time {
-		hours   = 8
-		minutes = 0
-	}
+      hours   = 8
+      minutes = 0
+    }
   }
 
   config {
-	day = "TUESDAY"
+    day = "TUESDAY"
 
-	end_time {
-		hours   = 21
-		minutes = 0
-	}
+    end_time {
+      hours   = 21
+      minutes = 0
+    }
 
     start_time {
-		hours   = 9
-		minutes = 0
-	}
+      hours   = 9
+      minutes = 0
+    }
   }
 
   tags = {
