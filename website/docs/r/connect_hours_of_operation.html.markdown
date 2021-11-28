@@ -13,7 +13,7 @@ Provides an Amazon Connect Hours of Operation resource. For more information see
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_connect_hours_of_operation" "test" {
   instance_id = "aaaaaaaa-bbbb-cccc-dddd-111111111111"
   name        = "Office Hours"
