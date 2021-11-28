@@ -53,8 +53,7 @@ func testAccHoursOfOperation_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "description"),
 					resource.TestCheckResourceAttrSet(resourceName, "time_zone"),
 
-					resource.TestCheckResourceAttr(resourceName, "config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "config.0.day", "MONDAY"),
+					resource.TestCheckResourceAttr(resourceName, "config.#", "2"),
 
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 				),
@@ -75,8 +74,7 @@ func testAccHoursOfOperation_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "description", "Updated"),
 					resource.TestCheckResourceAttrSet(resourceName, "time_zone"),
 
-					resource.TestCheckResourceAttr(resourceName, "config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "config.0.day", "MONDAY"),
+					resource.TestCheckResourceAttr(resourceName, "config.#", "2"),
 
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 				),
@@ -205,6 +203,20 @@ resource "aws_connect_hours_of_operation" "test" {
 
     start_time {
 		hours   = 8
+		minutes = 0
+	}
+  }
+
+  config {
+	day = "TUESDAY"
+
+	end_time {
+		hours   = 21
+		minutes = 0
+	}
+
+    start_time {
+		hours   = 9
 		minutes = 0
 	}
   }
