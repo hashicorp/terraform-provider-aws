@@ -206,6 +206,52 @@ func resourceHoursOfOperationRead(ctx context.Context, d *schema.ResourceData, m
 	return nil
 }
 
+func resourceHoursOfOperationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.AWSClient).ConnectConn
+
+	instanceID, hoursOfOperationID, err := HoursOfOperationParseID(d.Id())
+
+	input := &connect.UpdateHoursOfOperationInput{
+		HoursOfOperationId: aws.String(hoursOfOperationID),
+		InstanceId:         aws.String(instanceID),
+	}
+
+	if d.HasChange("config") {
+		config, err := expandConfigs(d.Get("config").([]interface{}))
+		if err != nil {
+			return diag.FromErr(err)
+		}
+		input.Config = config
+	}
+
+	if d.HasChange("name") {
+		input.Name = aws.String(d.Get("name").(string))
+	}
+
+	if d.HasChange("description") {
+		input.Description = aws.String(d.Get("description").(string))
+	}
+
+	if d.HasChange("time_zone") {
+		input.TimeZone = aws.String(d.Get("time_zone").(string))
+	}
+
+	_, err = conn.UpdateHoursOfOperationWithContext(ctx, input)
+
+	if err != nil {
+		return diag.FromErr(fmt.Errorf("[ERROR] Error updating HoursOfOperation (%s): %w", d.Id(), err))
+	}
+
+	if d.HasChange("tags_all") {
+		o, n := d.GetChange("tags_all")
+		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
+			return diag.FromErr(fmt.Errorf("error updating tags: %w", err))
+		}
+	}
+
+	return resourceHoursOfOperationRead(ctx, d, meta)
+}
+
 
 func expandConfigs(configs []interface{}) ([]*connect.HoursOfOperationConfig, error) {
 	if len(configs) == 0 {
