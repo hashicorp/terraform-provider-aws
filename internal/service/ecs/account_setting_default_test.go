@@ -14,7 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func TestAccECSAccountSettingDefault_containerInstanceLongArnFormat(t *testing.T) {
+func TestAccECSAccountSettingDefault_containerInstanceLongARNFormat(t *testing.T) {
 	resourceName := "aws_ecs_account_setting_default.test"
 	settingName := ecs.SettingNameContainerInstanceLongArnFormat
 
@@ -42,7 +42,7 @@ func TestAccECSAccountSettingDefault_containerInstanceLongArnFormat(t *testing.T
 	})
 }
 
-func TestAccECSAccountSettingDefault_serviceLongArnFormat(t *testing.T) {
+func TestAccECSAccountSettingDefault_serviceLongARNFormat(t *testing.T) {
 	resourceName := "aws_ecs_account_setting_default.test"
 	settingName := ecs.SettingNameServiceLongArnFormat
 
@@ -70,7 +70,7 @@ func TestAccECSAccountSettingDefault_serviceLongArnFormat(t *testing.T) {
 	})
 }
 
-func TestAccECSAccountSettingDefault_taskLongArnFormat(t *testing.T) {
+func TestAccECSAccountSettingDefault_taskLongARNFormat(t *testing.T) {
 	resourceName := "aws_ecs_account_setting_default.test"
 	settingName := ecs.SettingNameTaskLongArnFormat
 
@@ -181,10 +181,18 @@ func testAccCheckAccountSettingDefaultDestroy(s *terraform.State) error {
 
 		for _, value := range resp.Settings {
 			if aws.StringValue(value.Value) != "disabled" {
-				return fmt.Errorf("[Destroy Error] Account Settings (%s) Still enabled", aws.StringValue(value.Name))
+				switch name {
+				case ecs.SettingNameContainerInstanceLongArnFormat:
+					return nil
+				case ecs.SettingNameServiceLongArnFormat:
+					return nil
+				case ecs.SettingNameTaskLongArnFormat:
+					return nil
+				default:
+					return fmt.Errorf("[Destroy Error] Account Settings (%s), still enabled", aws.StringValue(value.Name))
+				}
 			}
 		}
-
 	}
 
 	return nil

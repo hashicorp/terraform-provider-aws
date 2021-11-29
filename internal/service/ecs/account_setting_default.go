@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ecs"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -143,6 +144,11 @@ func resourceAccountSettingDefaultDelete(d *schema.ResourceData, meta interface{
 	}
 
 	_, err := conn.PutAccountSettingDefault(&input)
+
+	if tfawserr.ErrMessageContains(err, ecs.ErrCodeInvalidParameterException, "You can no longer disable") {
+		log.Printf("[DEBUG] ECS Account Setting Default (%q) could not be disabled: %s", settingName, err)
+		return nil
+	}
 
 	if err != nil {
 		return fmt.Errorf("disabling ECS Account Setting Default: %s", err)

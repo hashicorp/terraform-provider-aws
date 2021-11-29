@@ -10,7 +10,9 @@ description: |-
 
 Provides an ECS default account setting for a specific ECS Resource name within a specific region. More information can be found on the [ECS Developer Guide](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/ecs-account-settings.html).
 
-~> **NOTE:** The AWS API does not delete this resource, when you run a destroy this resource will be set to disabled.
+~> **NOTE:** The AWS API does not delete this resource. When you run `destroy`, the provider will attempt to disable the setting.
+
+~> **NOTE:** Your AWS account may not support disabling `containerInstanceLongArnFormat`, `serviceLongArnFormat`, and `taskLongArnFormat`. If your account does not support disabling these, attempting to disable them will not cause a Terraform error but the provider will log this AWS error: `InvalidParameterException: You can no longer disable Long Arn settings`.
 
 ## Example Usage
 
