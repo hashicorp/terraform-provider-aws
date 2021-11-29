@@ -391,7 +391,11 @@ func resourceVPCRead(d *schema.ResourceData, meta interface{}) error {
 	// Make sure those values are set, if an IPv6 block exists it'll be set in the loop
 	d.Set("ipv6_association_id", "")
 	d.Set("ipv6_cidr_block", "")
-
+	// assign_generated_ipv6_cidr_block is not returned by the API
+	// leave unassigned if not referenced
+	if v := d.Get("assign_generated_ipv6_cidr_block"); v != "" {
+		d.Set("assign_generated_ipv6_cidr_block", aws.Bool(v.(bool)))
+	}
 	for _, a := range vpc.Ipv6CidrBlockAssociationSet {
 		if aws.StringValue(a.Ipv6CidrBlockState.State) == ec2.VpcCidrBlockStateCodeAssociated { //we can only ever have 1 IPv6 block associated at once
 			d.Set("ipv6_association_id", a.AssociationId)

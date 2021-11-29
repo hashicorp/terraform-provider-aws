@@ -242,48 +242,6 @@ func testAccCheckVPCIPv6CIDRBlockAssociationExists(n string, association *ec2.Vp
 	}
 }
 
-func testAccCheckVPCIPv6CIDRBlockDisassociated(n string, association *ec2.VpcIpv6CidrBlockAssociation) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[n]
-		if !ok {
-			return fmt.Errorf("Not found: %s", n)
-		}
-
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No VPC ID is set")
-		}
-
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
-		DescribeVpcOpts := &ec2.DescribeVpcsInput{
-			VpcIds: []*string{aws.String(rs.Primary.Attributes["vpc_id"])},
-		}
-		resp, err := conn.DescribeVpcs(DescribeVpcOpts)
-		if err != nil {
-			return err
-		}
-		if len(resp.Vpcs) == 0 {
-			return fmt.Errorf("VPC not found")
-		}
-
-		vpc := resp.Vpcs[0]
-		disassociated := false
-		for _, ipv6CidrAssociation := range vpc.Ipv6CidrBlockAssociationSet {
-			if aws.StringValue(ipv6CidrAssociation.AssociationId) == rs.Primary.ID {
-				*association = *ipv6CidrAssociation
-				if aws.StringValue(association.Ipv6CidrBlockState.State) == ec2.VpcCidrBlockStateCodeDisassociated {
-					disassociated = true
-				}
-			}
-		}
-
-		if !disassociated {
-			return fmt.Errorf("VPC IPv6 CIDR block has not been disassociated")
-		}
-
-		return nil
-	}
-}
-
 func testAccCheckVPCAssociationIPv6CIDRPrefix(association *ec2.VpcIpv6CidrBlockAssociation, expected string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if strings.Split(aws.StringValue(association.Ipv6CidrBlock), "/")[1] != expected {

@@ -14,7 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func TestAccEC2VPCIPv4CIDRBlockAssociation_basic(t *testing.T) {
+func TestAccVPCVPCIPv4CIDRBlockAssociation_basic(t *testing.T) {
 	var associationSecondary, associationTertiary ec2.VpcCidrBlockAssociation
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -46,7 +46,7 @@ func TestAccEC2VPCIPv4CIDRBlockAssociation_basic(t *testing.T) {
 	})
 }
 
-func TestAccVPCIPv4CidrBlockAssociation_IpamBasic(t *testing.T) {
+func TestAccVPCIPv4CIDRBlockAssociation_IpamBasic(t *testing.T) {
 	var associationSecondary ec2.VpcCidrBlockAssociation
 	netmaskLength := "28"
 
@@ -57,7 +57,7 @@ func TestAccVPCIPv4CidrBlockAssociation_IpamBasic(t *testing.T) {
 		CheckDestroy: testAccCheckVPCIPv4CIDRBlockAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVPCIPv4CidrBlockAssociationIpam(netmaskLength),
+				Config: testAccVPCIPv4CIDRBlockAssociationIpam(netmaskLength),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVPCIPv4CIDRBlockAssociationExists("aws_vpc_ipv4_cidr_block_association.secondary_cidr", &associationSecondary),
 					testAccCheckVPCAssociationCIDRPrefix(&associationSecondary, netmaskLength),
@@ -67,7 +67,7 @@ func TestAccVPCIPv4CidrBlockAssociation_IpamBasic(t *testing.T) {
 	})
 }
 
-func TestAccVPCIPv4CidrBlockAssociation_IpamBasicExplicitCidr(t *testing.T) {
+func TestAccVPCIPv4CIDRBlockAssociation_IpamBasicExplicitCIDR(t *testing.T) {
 	var associationSecondary ec2.VpcCidrBlockAssociation
 	cidr := "172.2.0.32/28"
 
@@ -78,7 +78,7 @@ func TestAccVPCIPv4CidrBlockAssociation_IpamBasicExplicitCidr(t *testing.T) {
 		CheckDestroy: testAccCheckVPCIPv4CIDRBlockAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVPCIPv4CidrBlockAssociationIpamExplicitCidr(cidr),
+				Config: testAccVPCIPv4CIDRBlockAssociationIpamExplicitCIDR(cidr),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVPCIPv4CIDRBlockAssociationExists("aws_vpc_ipv4_cidr_block_association.secondary_cidr", &associationSecondary),
 					testAccCheckAdditionalVPCIPv4CIDRBlock(&associationSecondary, cidr)),
@@ -206,7 +206,7 @@ resource "aws_vpc_ipv4_cidr_block_association" "tertiary_cidr" {
 }
 `
 
-func testAccVPCIPv4CidrBlockAssociationIpam(netmaskLength string) string {
+func testAccVPCIPv4CIDRBlockAssociationIpam(netmaskLength string) string {
 	return testAccVpcIpamBase + fmt.Sprintf(`
 resource "aws_vpc" "test" {
 	cidr_block = "10.0.0.0/16"
@@ -227,7 +227,7 @@ resource "aws_vpc_ipv4_cidr_block_association" "secondary_cidr" {
 `, netmaskLength)
 }
 
-func testAccVPCIPv4CidrBlockAssociationIpamExplicitCidr(cidr string) string {
+func testAccVPCIPv4CIDRBlockAssociationIpamExplicitCIDR(cidr string) string {
 	return testAccVpcIpamBase + fmt.Sprintf(`
 resource "aws_vpc" "test" {
 	cidr_block = "10.0.0.0/16"
