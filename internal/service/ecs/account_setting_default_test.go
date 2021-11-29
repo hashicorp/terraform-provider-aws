@@ -8,25 +8,28 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ecs"
 
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func TestAccAWSEcsAccountDefaultSetting_containerInstanceLongArnFormat(t *testing.T) {
+func TestAccECSAccountDefaultSetting_containerInstanceLongArnFormat(t *testing.T) {
 	resourceName := "aws_ecs_account_setting_default.test"
 	rName := "containerInstanceLongArnFormat"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSEcsDefaultSettingDestroy,
+		PreCheck:     func() { acctest.PreCheck(t) },
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckDefaultSettingDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEcsDefaultSettingConfig(rName),
+				Config: testAccDefaultSettingConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "value", "enabled"),
-					testAccMatchResourceAttrGlobalARN(resourceName, "principal_arn", "iam", regexp.MustCompile("root")),
+					acctest.MatchResourceAttrGlobalARN(resourceName, "principal_arn", "iam", regexp.MustCompile("root")),
 				),
 			},
 			{
@@ -39,21 +42,21 @@ func TestAccAWSEcsAccountDefaultSetting_containerInstanceLongArnFormat(t *testin
 	})
 }
 
-func TestAccAWSEcsAccountDefaultSetting_serviceLongArnFormat(t *testing.T) {
+func TestAccECSAccountDefaultSetting_serviceLongArnFormat(t *testing.T) {
 	resourceName := "aws_ecs_account_setting_default.test"
 	rName := "serviceLongArnFormat"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSEcsDefaultSettingDestroy,
+		PreCheck:     func() { acctest.PreCheck(t) },
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckDefaultSettingDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEcsDefaultSettingConfig(rName),
+				Config: testAccDefaultSettingConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "value", "enabled"),
-					testAccMatchResourceAttrGlobalARN(resourceName, "principal_arn", "iam", regexp.MustCompile("root")),
+					acctest.MatchResourceAttrGlobalARN(resourceName, "principal_arn", "iam", regexp.MustCompile("root")),
 				),
 			},
 			{
@@ -66,21 +69,21 @@ func TestAccAWSEcsAccountDefaultSetting_serviceLongArnFormat(t *testing.T) {
 	})
 }
 
-func TestAccAWSEcsAccountDefaultSetting_taskLongArnFormat(t *testing.T) {
+func TestAccECSAccountDefaultSetting_taskLongArnFormat(t *testing.T) {
 	resourceName := "aws_ecs_account_setting_default.test"
 	rName := "taskLongArnFormat"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSEcsDefaultSettingDestroy,
+		PreCheck:     func() { acctest.PreCheck(t) },
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckDefaultSettingDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEcsDefaultSettingConfig(rName),
+				Config: testAccDefaultSettingConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "value", "enabled"),
-					testAccMatchResourceAttrGlobalARN(resourceName, "principal_arn", "iam", regexp.MustCompile("root")),
+					acctest.MatchResourceAttrGlobalARN(resourceName, "principal_arn", "iam", regexp.MustCompile("root")),
 				),
 			},
 			{
@@ -93,21 +96,21 @@ func TestAccAWSEcsAccountDefaultSetting_taskLongArnFormat(t *testing.T) {
 	})
 }
 
-func TestAccAWSEcsAccountDefaultSetting_awsvpcTrunking(t *testing.T) {
+func TestAccECSAccountDefaultSetting_awsvpcTrunking(t *testing.T) {
 	resourceName := "aws_ecs_account_setting_default.test"
 	rName := "awsvpcTrunking"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSEcsDefaultSettingDestroy,
+		PreCheck:     func() { acctest.PreCheck(t) },
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckDefaultSettingDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEcsDefaultSettingConfig(rName),
+				Config: testAccDefaultSettingConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "value", "enabled"),
-					testAccMatchResourceAttrGlobalARN(resourceName, "principal_arn", "iam", regexp.MustCompile("root")),
+					acctest.MatchResourceAttrGlobalARN(resourceName, "principal_arn", "iam", regexp.MustCompile("root")),
 				),
 			},
 			{
@@ -120,21 +123,21 @@ func TestAccAWSEcsAccountDefaultSetting_awsvpcTrunking(t *testing.T) {
 	})
 }
 
-func TestAccAWSEcsAccountDefaultSetting_containerInsights(t *testing.T) {
+func TestAccECSAccountDefaultSetting_containerInsights(t *testing.T) {
 	resourceName := "aws_ecs_account_setting_default.test"
 	rName := "containerInsights"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSEcsDefaultSettingDestroy,
+		PreCheck:     func() { acctest.PreCheck(t) },
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckDefaultSettingDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEcsDefaultSettingConfig(rName),
+				Config: testAccDefaultSettingConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "value", "enabled"),
-					testAccMatchResourceAttrGlobalARN(resourceName, "principal_arn", "iam", regexp.MustCompile("root")),
+					acctest.MatchResourceAttrGlobalARN(resourceName, "principal_arn", "iam", regexp.MustCompile("root")),
 				),
 			},
 			{
@@ -147,8 +150,8 @@ func TestAccAWSEcsAccountDefaultSetting_containerInsights(t *testing.T) {
 	})
 }
 
-func testAccCheckAWSEcsDefaultSettingDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).ecsconn
+func testAccCheckDefaultSettingDestroy(s *terraform.State) error {
+	conn := acctest.Provider.Meta().(*conns.AWSClient).ECSConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_ecs_account_setting_default" {
@@ -164,7 +167,7 @@ func testAccCheckAWSEcsDefaultSettingDestroy(s *terraform.State) error {
 
 		resp, err := conn.ListAccountSettings(input)
 
-		if isAWSErr(err, ecs.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, ecs.ErrCodeResourceNotFoundException) {
 			continue
 		}
 
@@ -183,7 +186,7 @@ func testAccCheckAWSEcsDefaultSettingDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccAWSEcsDefaultSettingConfig(rName string) string {
+func testAccDefaultSettingConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ecs_account_setting_default" "test" {
 	name = %q
