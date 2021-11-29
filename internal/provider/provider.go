@@ -1114,11 +1114,12 @@ func Provider() *schema.Provider {
 
 			"aws_ecrpublic_repository": ecrpublic.ResourceRepository(),
 
-			"aws_ecs_capacity_provider": ecs.ResourceCapacityProvider(),
-			"aws_ecs_cluster":           ecs.ResourceCluster(),
-			"aws_ecs_service":           ecs.ResourceService(),
-			"aws_ecs_tag":               ecs.ResourceTag(),
-			"aws_ecs_task_definition":   ecs.ResourceTaskDefinition(),
+			"aws_ecs_account_setting_default": ecs.ResourceAccountSettingDefault(),
+			"aws_ecs_capacity_provider":       ecs.ResourceCapacityProvider(),
+			"aws_ecs_cluster":                 ecs.ResourceCluster(),
+			"aws_ecs_service":                 ecs.ResourceService(),
+			"aws_ecs_tag":                     ecs.ResourceTag(),
+			"aws_ecs_task_definition":         ecs.ResourceTaskDefinition(),
 
 			"aws_efs_access_point":       efs.ResourceAccessPoint(),
 			"aws_efs_backup_policy":      efs.ResourceBackupPolicy(),
