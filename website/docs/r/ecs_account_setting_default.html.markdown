@@ -14,7 +14,7 @@ Provides an ECS default account setting for a specific ECS Resource name within 
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_ecs_account_setting_default" "test" {
   name  = "taskLongArnFormat"
   value = "enabled"
@@ -25,19 +25,19 @@ resource "aws_ecs_account_setting_default" "test" {
 
 The following arguments are supported:
 
-* `name` - (Required) The name of the account setting to set. Valid values are `serviceLongArnFormat`, `taskLongArnFormat`, `containerInstanceLongArnFormat`, `awsvpcTrunking` and `containerInsights`.
-* `value` - (Required) The state of the setting current values are `enabled` or `disabled`.
+* `name` - (Required) Name of the account setting to set. Valid values are `serviceLongArnFormat`, `taskLongArnFormat`, `containerInstanceLongArnFormat`, `awsvpcTrunking` and `containerInsights`.
+* `value` - (Required) State of the setting. Valid values are `enabled` and `disabled`.
 
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 
-* `id` - The Amazon Resource Name (ARN) that identifies the capacity provider.
-* `prinicpal_arn` - The Amazon Resource Name (ARN) that identifies the account setting.
+* `id` - ARN that identifies the account setting.
+* `prinicpal_arn` - ARN that identifies the account setting.
 
 ## Import
 
-ECS Account Setting defaults can be imported using the `name`, e.g.
+ECS Account Setting defaults can be imported using the `name`, e.g.,
 
 ```
 $ terraform import aws_ecs_account_setting_default.example taskLongArnFormat
