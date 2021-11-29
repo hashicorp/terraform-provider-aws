@@ -2840,7 +2840,7 @@ resource "aws_lb_target_group" "test" {
   protocol = "TCP"
   vpc_id   = aws_vpc.test.id
 
-  proxy_protocol_v2    = "true"
+  proxy_protocol_v2    = true
   deregistration_delay = 200
 
   health_check {
@@ -2874,7 +2874,7 @@ resource "aws_lb_target_group" "test" {
   protocol = "TCP"
   vpc_id   = aws_vpc.test.id
 
-  connection_termination = "true"
+  connection_termination = true
   deregistration_delay   = 200
 
   health_check {
