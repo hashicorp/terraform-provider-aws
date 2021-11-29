@@ -1,23 +1,25 @@
-package aws
+package ecs
 
 import (
 	"fmt"
+	"log"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ecs"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"log"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsEcsAccountSettingDefault() *schema.Resource {
+func ResourceAccountSettingDefault() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsEcsAccountSettingDefaultCreate,
-		Read:   resourceAwsEcsAccountSettingDefaultRead,
-		Update: resourceAwsEcsAccountSettingDefaultUpdate,
-		Delete: resourceAwsEcsAccountSettingDefaultDelete,
+		Create: resourceAccountSettingDefaultCreate,
+		Read:   resourceAccountSettingDefaultRead,
+		Update: resourceAccountSettingDefaultUpdate,
+		Delete: resourceAccountSettingDefaultDelete,
 		Importer: &schema.ResourceImporter{
-			State: resourceAwsEcsAccountSettingDefaultImport,
+			State: resourceAccountSettingDefaultImport,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -40,20 +42,20 @@ func resourceAwsEcsAccountSettingDefault() *schema.Resource {
 	}
 }
 
-func resourceAwsEcsAccountSettingDefaultImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+func resourceAccountSettingDefaultImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	d.Set("name", d.Id())
 	d.SetId(arn.ARN{
-		Partition: meta.(*AWSClient).partition,
-		Region:    meta.(*AWSClient).region,
-		AccountID: meta.(*AWSClient).accountid,
+		Partition: meta.(*conns.AWSClient).Partition,
+		Region:    meta.(*conns.AWSClient).Region,
+		AccountID: meta.(*conns.AWSClient).AccountID,
 		Service:   "ecs",
 		Resource:  fmt.Sprintf("cluster/%s", d.Id()),
 	}.String())
 	return []*schema.ResourceData{d}, nil
 }
 
-func resourceAwsEcsAccountSettingDefaultCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ecsconn
+func resourceAccountSettingDefaultCreate(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*conns.AWSClient).ECSConn
 
 	settingName := d.Get("name").(string)
 	settingValue := d.Get("value").(string)
@@ -74,11 +76,11 @@ func resourceAwsEcsAccountSettingDefaultCreate(d *schema.ResourceData, meta inte
 	d.SetId(aws.StringValue(out.Setting.Value))
 	d.Set("principal_arn", out.Setting.PrincipalArn)
 
-	return resourceAwsEcsAccountSettingDefaultRead(d, meta)
+	return resourceAccountSettingDefaultRead(d, meta)
 }
 
-func resourceAwsEcsAccountSettingDefaultRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ecsconn
+func resourceAccountSettingDefaultRead(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*conns.AWSClient).ECSConn
 	accountSettingName := aws.String(d.Get("name").(string))
 
 	input := &ecs.ListAccountSettingsInput{
@@ -109,8 +111,8 @@ func resourceAwsEcsAccountSettingDefaultRead(d *schema.ResourceData, meta interf
 	return nil
 }
 
-func resourceAwsEcsAccountSettingDefaultUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ecsconn
+func resourceAccountSettingDefaultUpdate(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*conns.AWSClient).ECSConn
 
 	settingName := d.Get("name").(string)
 	settingValue := d.Get("value").(string)
@@ -130,8 +132,8 @@ func resourceAwsEcsAccountSettingDefaultUpdate(d *schema.ResourceData, meta inte
 	return nil
 }
 
-func resourceAwsEcsAccountSettingDefaultDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ecsconn
+func resourceAccountSettingDefaultDelete(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*conns.AWSClient).ECSConn
 
 	settingName := d.Get("name").(string)
 
