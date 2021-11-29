@@ -66,6 +66,8 @@ func ResourceVPCIpamScope() *schema.Resource {
 }
 
 const (
+	IpamScopeCreateTimeout = 3 * time.Minute
+	IpamScopeCreateDeley   = 5 * time.Second
 	IpamScopeDeleteTimeout = 3 * time.Minute
 	IpamScopeDeleteDelay   = 5 * time.Second
 
@@ -96,9 +98,9 @@ func ResourceVPCIpamScopeCreate(d *schema.ResourceData, meta interface{}) error 
 	d.SetId(aws.StringValue(output.IpamScope.IpamScopeId))
 	log.Printf("[INFO] IPAM Scope ID: %s", d.Id())
 
-	// if _, err = waiter.IpamScopeAvailable(conn, d.Id(), IpamScopeCreateTimeout); err != nil {
-	// 	return fmt.Errorf("error waiting for IPAM Scope (%s) to be Available: %w", d.Id(), err)
-	// }
+	if _, err = waitIpamScopeAvailable(conn, d.Id(), IpamScopeCreateTimeout); err != nil {
+		return fmt.Errorf("error waiting for IPAM Scope (%s) to be Available: %w", d.Id(), err)
+	}
 
 	return ResourceVPCIpamScopeRead(d, meta)
 }
@@ -213,10 +215,28 @@ func findIpamScopeById(conn *ec2.EC2, id string) (*ec2.IpamScope, error) {
 	return output.IpamScopes[0], nil
 }
 
+func waitIpamScopeAvailable(conn *ec2.EC2, ipamScopeId string, timeout time.Duration) (*ec2.IpamScope, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{ec2.IpamScopeStateCreateInProgress},
+		Target:  []string{ec2.IpamScopeStateCreateComplete},
+		Refresh: statusIpamScopeStatus(conn, ipamScopeId),
+		Timeout: timeout,
+		Delay:   IpamScopeCreateDeley,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*ec2.IpamScope); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
 func WaitIpamScopeDeleted(conn *ec2.EC2, ipamScopeId string, timeout time.Duration) (*ec2.IpamScope, error) {
 	stateConf := &resource.StateChangeConf{
-		Pending: []string{IpamScopeStatusAvailable},
-		Target:  []string{InvalidIpamScopeIdNotFound},
+		Pending: []string{ec2.IpamScopeStateCreateComplete, ec2.IpamScopeStateModifyComplete},
+		Target:  []string{InvalidIpamScopeIdNotFound, ec2.IpamScopeStateDeleteComplete},
 		Refresh: statusIpamScopeStatus(conn, ipamScopeId),
 		Timeout: timeout,
 		Delay:   IpamScopeDeleteDelay,
@@ -245,6 +265,6 @@ func statusIpamScopeStatus(conn *ec2.EC2, ipamScopeId string) resource.StateRefr
 			return nil, "", err
 		}
 
-		return output, IpamScopeStatusAvailable, nil
+		return output, ec2.IpamScopeStateCreateComplete, nil
 	}
 }

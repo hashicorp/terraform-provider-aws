@@ -28,11 +28,11 @@ func TestAccVPCIpam_basic(t *testing.T) {
 			{
 				Config: testAccVPCIpamBase,
 				Check: resource.ComposeTestCheckFunc(
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`ipam/ipam-[a-z0-9]+`)),
+					resource.TestMatchResourceAttr(resourceName, "arn", regexp.MustCompile(`ipam/ipam-[\da-f]+$`)),
 					resource.TestCheckResourceAttr(resourceName, "operating_regions.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "scope_count", "2"),
-					resource.TestMatchResourceAttr(resourceName, "private_default_scope_id", regexp.MustCompile("^ipam-scope-[a-z0-9]+")),
-					resource.TestMatchResourceAttr(resourceName, "public_default_scope_id", regexp.MustCompile("^ipam-scope-[a-z0-9]+")),
+					resource.TestMatchResourceAttr(resourceName, "private_default_scope_id", regexp.MustCompile(`^ipam-scope-[\da-f]+`)),
+					resource.TestMatchResourceAttr(resourceName, "public_default_scope_id", regexp.MustCompile(`^ipam-scope-[\da-f]+`)),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},

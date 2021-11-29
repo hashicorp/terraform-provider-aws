@@ -69,6 +69,8 @@ func ResourceVPCIpam() *schema.Resource {
 const (
 	IpamStatusAvailable   = "Available"
 	InvalidIpamIdNotFound = "InvalidIpamId.NotFound"
+	IpamCreateTimeout     = 3 * time.Minute
+	IpamCreateDeley       = 5 * time.Second
 	IpamDeleteTimeout     = 3 * time.Minute
 	IpamDeleteDelay       = 5 * time.Second
 )
@@ -101,6 +103,10 @@ func resourceVPCIpamCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 	d.SetId(aws.StringValue(output.Ipam.IpamId))
 	log.Printf("[INFO] IPAM ID: %s", d.Id())
+
+	if _, err = WaitIpamAvailable(conn, d.Id(), IpamCreateTimeout); err != nil {
+		return fmt.Errorf("error waiting for IPAM (%s) to be Available: %w", d.Id(), err)
+	}
 
 	return resourceVPCIpamRead(d, meta)
 }
@@ -231,9 +237,27 @@ func findIpamById(conn *ec2.EC2, id string) (*ec2.Ipam, error) {
 	return output.Ipams[0], nil
 }
 
+func WaitIpamAvailable(conn *ec2.EC2, ipamId string, timeout time.Duration) (*ec2.Ipam, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{ec2.IpamStateCreateInProgress},
+		Target:  []string{ec2.IpamStateCreateComplete},
+		Refresh: statusIpamStatus(conn, ipamId),
+		Timeout: timeout,
+		Delay:   IpamCreateDeley,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*ec2.Ipam); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
 func WaiterIpamDeleted(conn *ec2.EC2, ipamId string, timeout time.Duration) (*ec2.Ipam, error) {
 	stateConf := &resource.StateChangeConf{
-		Pending: []string{IpamStatusAvailable},
+		Pending: []string{ec2.IpamStateCreateComplete, ec2.IpamStateModifyComplete},
 		Target:  []string{InvalidIpamIdNotFound},
 		Refresh: statusIpamStatus(conn, ipamId),
 		Timeout: timeout,
@@ -263,7 +287,7 @@ func statusIpamStatus(conn *ec2.EC2, ipamId string) resource.StateRefreshFunc {
 			return nil, "", err
 		}
 
-		return output, IpamStatusAvailable, nil
+		return output, aws.StringValue(output.State), nil
 	}
 }
 
