@@ -27,16 +27,16 @@ func ResourceAccountSettingDefault() *schema.Resource {
 				Type:         schema.TypeString,
 				ForceNew:     true,
 				Required:     true,
-				ValidateFunc: validation.StringInSlice([]string{"serviceLongArnFormat", "taskLongArnFormat", "containerInstanceLongArnFormat", "awsvpcTrunking", "containerInsights"}, false),
+				ValidateFunc: validation.StringInSlice(ecs.SettingName_Values(), false),
+			},
+			"principal_arn": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"value": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringInSlice([]string{"enabled", "disabled"}, false),
-			},
-			"principal_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
 			},
 		},
 	}
@@ -48,7 +48,7 @@ func resourceAccountSettingDefaultImport(d *schema.ResourceData, meta interface{
 		Partition: meta.(*conns.AWSClient).Partition,
 		Region:    meta.(*conns.AWSClient).Region,
 		AccountID: meta.(*conns.AWSClient).AccountID,
-		Service:   "ecs",
+		Service:   ecs.ServiceName,
 		Resource:  fmt.Sprintf("cluster/%s", d.Id()),
 	}.String())
 	return []*schema.ResourceData{d}, nil
@@ -81,10 +81,9 @@ func resourceAccountSettingDefaultCreate(d *schema.ResourceData, meta interface{
 
 func resourceAccountSettingDefaultRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ECSConn
-	accountSettingName := aws.String(d.Get("name").(string))
 
 	input := &ecs.ListAccountSettingsInput{
-		Name:              accountSettingName,
+		Name:              aws.String(d.Get("name").(string)),
 		EffectiveSettings: aws.Bool(true),
 	}
 
@@ -96,15 +95,15 @@ func resourceAccountSettingDefaultRead(d *schema.ResourceData, meta interface{})
 	}
 
 	if len(resp.Settings) == 0 {
-		log.Printf("[WARN] Default Account Setting for #{accountSettingName} not set. Removing from state")
+		log.Printf("[WARN] Account Setting Default not set. Removing from state")
 		d.SetId("")
 		return nil
 	}
 
 	for _, r := range resp.Settings {
 		d.SetId(aws.StringValue(r.PrincipalArn))
-		d.Set("principal_arn", r.PrincipalArn)
 		d.Set("name", r.Name)
+		d.Set("principal_arn", r.PrincipalArn)
 		d.Set("value", r.Value)
 	}
 
@@ -125,7 +124,7 @@ func resourceAccountSettingDefaultUpdate(d *schema.ResourceData, meta interface{
 
 		_, err := conn.PutAccountSettingDefault(&input)
 		if err != nil {
-			return fmt.Errorf("Error Updating Default Account settings (%s): %s", settingName, err)
+			return fmt.Errorf("updating ECS Account Setting Default (%s): %w", settingName, err)
 		}
 	}
 
@@ -137,7 +136,7 @@ func resourceAccountSettingDefaultDelete(d *schema.ResourceData, meta interface{
 
 	settingName := d.Get("name").(string)
 
-	log.Printf("[WARN] Disabling ECS Default Account Setting %s", settingName)
+	log.Printf("[WARN] Disabling ECS Account Setting Default %s", settingName)
 	input := ecs.PutAccountSettingDefaultInput{
 		Name:  aws.String(settingName),
 		Value: aws.String("disabled"),
@@ -146,9 +145,9 @@ func resourceAccountSettingDefaultDelete(d *schema.ResourceData, meta interface{
 	_, err := conn.PutAccountSettingDefault(&input)
 
 	if err != nil {
-		return fmt.Errorf("Error disabling ECS Account Default setting: %s", err)
+		return fmt.Errorf("disabling ECS Account Setting Default: %s", err)
 	}
 
-	log.Printf("[DEBUG] ECS Account default setting %q disabled", settingName)
+	log.Printf("[DEBUG] ECS Account Setting Default (%q) disabled", settingName)
 	return nil
 }
