@@ -19,7 +19,7 @@ it's better to use `aws_ami_launch_permission` instead.
 
 ## Example Usage
 
-```hcl
+```terraform
 # Create an AMI that will start a machine whose root device is backed by
 # an EBS volume populated from a snapshot. It is assumed that such a snapshot
 # already exists with the id "snap-xxxxxxxx".
@@ -52,11 +52,11 @@ The following arguments are supported:
   attached to created instances. The structure of this block is described below.
 * `ephemeral_block_device` - (Optional) Nested block describing an ephemeral block device that
   should be attached to created instances. The structure of this block is described below.
-* `tags` - (Optional) A map of tags to assign to the resource.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 When `virtualization_type` is "paravirtual" the following additional arguments apply:
 
-* `image_location` - (Required) Path to an S3 object containing an image manifest, e.g. created
+* `image_location` - (Required) Path to an S3 object containing an image manifest, e.g., created
   by the `ec2-upload-bundle` command in the EC2 command line tools.
 * `kernel_id` - (Required) The id of the kernel image (AKI) that will be used as the paravirtual
   kernel in created instances.
@@ -74,16 +74,16 @@ Nested `ebs_block_device` blocks have the following structure:
 * `delete_on_termination` - (Optional) Boolean controlling whether the EBS volumes created to
   support each created instance will be deleted once that instance is terminated.
 * `encrypted` - (Optional) Boolean controlling whether the created EBS volumes will be encrypted. Can't be used with `snapshot_id`.
-* `iops` - (Required only when `volume_type` is "io1") Number of I/O operations per second the
+* `iops` - (Required only when `volume_type` is `io1` or `io2`) Number of I/O operations per second the
   created volumes will support.
 * `snapshot_id` - (Optional) The id of an EBS snapshot that will be used to initialize the created
   EBS volumes. If set, the `volume_size` attribute must be at least as large as the referenced
   snapshot.
+* `throughput` - (Optional) The throughput that the EBS volume supports, in MiB/s. Only valid for `volume_type` of `gp3`.
 * `volume_size` - (Required unless `snapshot_id` is set) The size of created volumes in GiB.
   If `snapshot_id` is set and `volume_size` is omitted then the volume will have the same size
   as the selected snapshot.
-* `volume_type` - (Optional) The type of EBS volume to create. Can be one of "standard" (the
-  default), "io1" or "gp2".
+* `volume_type` - (Optional) The type of EBS volume to create. Can be `standard`, `gp2`, `gp3`, `io1`, `io2`, `sc1` or `st1` (Default: `standard`).
 * `kms_key_id` - (Optional) The full ARN of the AWS Key Management Service (AWS KMS) CMK to use when encrypting the snapshots of
 an image during a copy operation. This parameter is only required if you want to use a non-default CMK;
 if this parameter is not specified, the default CMK for EBS is used
@@ -98,7 +98,7 @@ Nested `ephemeral_block_device` blocks have the following structure:
 
 ### Timeouts
 
-The `timeouts` block allows you to specify [timeouts](https://www.terraform.io/docs/configuration/resources.html#timeouts) for certain actions:
+The `timeouts` block allows you to specify [timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) for certain actions:
 
 * `create` - (Defaults to 40 mins) Used when creating the AMI
 * `update` - (Defaults to 40 mins) Used when updating the AMI
@@ -110,11 +110,21 @@ In addition to all arguments above, the following attributes are exported:
 
 * `arn` - The ARN of the AMI.
 * `id` - The ID of the created AMI.
+* `owner_id` - The AWS account ID of the image owner.
 * `root_snapshot_id` - The Snapshot ID for the root volume (for EBS-backed AMIs)
+* `usage_operation` - The operation of the Amazon EC2 instance and the billing code that is associated with the AMI.
+* `platform_details` - The platform details associated with the billing code of the AMI.
+* `image_owner_alias` - The AWS account alias (for example, amazon, self) or the AWS account ID of the AMI owner.
+* `image_type` - The type of image.
+* `hypervisor` - The hypervisor type of the image.
+* `owner_id` - The AWS account ID of the image owner.
+* `platform` - This value is set to windows for Windows AMIs; otherwise, it is blank.
+* `public` - Indicates whether the image has public launch permissions.
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
 
 ## Import
 
-`aws_ami` can be imported using the ID of the AMI, e.g.
+`aws_ami` can be imported using the ID of the AMI, e.g.,
 
 ```
 $ terraform import aws_ami.example ami-12345678

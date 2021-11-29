@@ -11,13 +11,13 @@ description: |-
 Provides a Simple or Managed Microsoft directory in AWS Directory Service.
 
 ~> **Note:** All arguments including the password and customer username will be stored in the raw state as plain-text.
-[Read more about sensitive data in state](/docs/state/sensitive-data.html).
+[Read more about sensitive data in state](https://www.terraform.io/docs/state/sensitive-data.html).
 
 ## Example Usage
 
 ### SimpleAD
 
-```hcl
+```terraform
 resource "aws_directory_service_directory" "bar" {
   name     = "corp.notexample.com"
   password = "SuperSecretPassw0rd"
@@ -52,7 +52,7 @@ resource "aws_subnet" "bar" {
 
 ### Microsoft Active Directory (MicrosoftAD)
 
-```hcl
+```terraform
 resource "aws_directory_service_directory" "bar" {
   name     = "corp.notexample.com"
   password = "SuperSecretPassw0rd"
@@ -88,7 +88,7 @@ resource "aws_subnet" "bar" {
 
 ### Microsoft Active Directory Connector (ADConnector)
 
-```hcl
+```terraform
 resource "aws_directory_service_directory" "connector" {
   name     = "corp.notexample.com"
   password = "SuperSecretPassw0rd"
@@ -135,7 +135,7 @@ The following arguments are supported:
 * `enable_sso` - (Optional) Whether to enable single-sign on for the directory. Requires `alias`. Defaults to `false`.
 * `type` (Optional) - The directory type (`SimpleAD`, `ADConnector` or `MicrosoftAD` are accepted values). Defaults to `SimpleAD`.
 * `edition` - (Optional) The MicrosoftAD edition (`Standard` or `Enterprise`). Defaults to `Enterprise` (applies to MicrosoftAD type only).
-* `tags` - (Optional) A map of tags to assign to the resource.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 **vpc_settings** supports the following:
 
@@ -157,6 +157,7 @@ In addition to all arguments above, the following attributes are exported:
 * `access_url` - The access URL for the directory, such as `http://alias.awsapps.com`.
 * `dns_ip_addresses` - A list of IP addresses of the DNS servers for the directory or connector.
 * `security_group_id` - The ID of the security group created by the directory.
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
 
 `connect_settings` (for `ADConnector`) is also exported with the following attributes:
 
@@ -164,7 +165,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-DirectoryService directories can be imported using the directory `id`, e.g.
+DirectoryService directories can be imported using the directory `id`, e.g.,
 
 ```
 $ terraform import aws_directory_service_directory.sample d-926724cf57

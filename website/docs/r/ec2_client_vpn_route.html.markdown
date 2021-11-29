@@ -8,12 +8,12 @@ description: |-
 
 # Resource: aws_ec2_client_vpn_route
 
-Provides additional routes for AWS Client VPN endpoints. For more information on usage, please see the 
+Provides additional routes for AWS Client VPN endpoints. For more information on usage, please see the
 [AWS Client VPN Administrator's Guide](https://docs.aws.amazon.com/vpn/latest/clientvpn-admin/what-is.html).
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_ec2_client_vpn_route" "example" {
   client_vpn_endpoint_id = aws_ec2_client_vpn_endpoint.example.id
   destination_cidr_block = "0.0.0.0/0"
@@ -50,7 +50,7 @@ The following arguments are supported:
 * `description` - (Optional) A brief description of the authorization rule.
 * `target_vpc_subnet_id` - (Required) The ID of the Subnet to route the traffic through. It must already be attached to the Client VPN.
 
-## Attribute Reference 
+## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 
