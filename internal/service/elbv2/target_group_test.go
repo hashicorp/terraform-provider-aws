@@ -2878,15 +2878,15 @@ resource "aws_lb_target_group" "test" {
   deregistration_delay   = 200
 
   health_check {
-	interval            = 10
-	port                = "traffic-port"
-	protocol            = "TCP"
-	healthy_threshold   = 3
-	unhealthy_threshold = 3
+    interval            = 10
+    port                = "traffic-port"
+    protocol            = "TCP"
+    healthy_threshold   = 3
+    unhealthy_threshold = 3
   }
 
   tags = {
-	Name = %[1]q
+    Name = %[1]q
   }
 }
 
@@ -2894,7 +2894,7 @@ resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
   tags = {
-	Name = %[1]q
+    Name = %[1]q
   }
 }
 `, rName)
