@@ -7,8 +7,8 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ecs"
-
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -17,7 +17,7 @@ import (
 
 func TestAccECSAccountDefaultSetting_containerInstanceLongArnFormat(t *testing.T) {
 	resourceName := "aws_ecs_account_setting_default.test"
-	rName := "containerInstanceLongArnFormat"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -44,7 +44,7 @@ func TestAccECSAccountDefaultSetting_containerInstanceLongArnFormat(t *testing.T
 
 func TestAccECSAccountDefaultSetting_serviceLongArnFormat(t *testing.T) {
 	resourceName := "aws_ecs_account_setting_default.test"
-	rName := "serviceLongArnFormat"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -71,7 +71,7 @@ func TestAccECSAccountDefaultSetting_serviceLongArnFormat(t *testing.T) {
 
 func TestAccECSAccountDefaultSetting_taskLongArnFormat(t *testing.T) {
 	resourceName := "aws_ecs_account_setting_default.test"
-	rName := "taskLongArnFormat"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -98,7 +98,7 @@ func TestAccECSAccountDefaultSetting_taskLongArnFormat(t *testing.T) {
 
 func TestAccECSAccountDefaultSetting_awsvpcTrunking(t *testing.T) {
 	resourceName := "aws_ecs_account_setting_default.test"
-	rName := "awsvpcTrunking"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -125,7 +125,7 @@ func TestAccECSAccountDefaultSetting_awsvpcTrunking(t *testing.T) {
 
 func TestAccECSAccountDefaultSetting_containerInsights(t *testing.T) {
 	resourceName := "aws_ecs_account_setting_default.test"
-	rName := "containerInsights"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -189,8 +189,8 @@ func testAccCheckDefaultSettingDestroy(s *terraform.State) error {
 func testAccDefaultSettingConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ecs_account_setting_default" "test" {
-	name = %q
-    value = "enabled"
+  name  = %[1]q
+  value = "enabled"
 }
 `, rName)
 }
