@@ -806,7 +806,7 @@ func testAccCheckVpcCidr(vpc *ec2.Vpc, expected string) resource.TestCheckFunc {
 func testAccCheckVpcCidrPrefix(vpc *ec2.Vpc, expected string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if strings.Split(aws.StringValue(vpc.CidrBlock), "/")[1] != expected {
-			return fmt.Errorf("Bad cidr prefix: %s", aws.StringValue(vpc.CidrBlock))
+			return fmt.Errorf("Bad cidr prefix: got %s, expected %s", aws.StringValue(vpc.CidrBlock), expected)
 		}
 
 		return nil

@@ -25,14 +25,14 @@ func ResourceVPCIPv6CIDRBlockAssociation() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
-		// cidr_block can be set by a value returned from IPAM or explicitly in config
 		CustomizeDiff: func(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
-			if diff.Id() != "" && diff.HasChange("cidr_block") {
-				// if netmask is set than cidr is derived from ipam, ignore changes
+			// ipv6_cidr_block can be set by a value returned from IPAM or explicitly in config
+			if diff.Id() != "" && diff.HasChange("ipv6_cidr_block") {
+				// if netmask is set then ipv6_cidr_block is derived from ipam, ignore changes
 				if diff.Get("ipv6_netmask_length") != 0 {
-					return diff.Clear("cidr_block")
+					return diff.Clear("ipv6_cidr_block")
 				}
-				return diff.ForceNew("cidr_block")
+				return diff.ForceNew("ipv6_cidr_block")
 			}
 			return nil
 		},
@@ -43,7 +43,7 @@ func ResourceVPCIPv6CIDRBlockAssociation() *schema.Resource {
 				ForceNew: true,
 			},
 
-			"cidr_block": {
+			"ipv6_cidr_block": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -68,7 +68,7 @@ func ResourceVPCIPv6CIDRBlockAssociation() *schema.Resource {
 				Optional:      true,
 				ForceNew:      true,
 				ValidateFunc:  validation.IntInSlice([]int{VPCCIDRMaxIPv6}),
-				ConflictsWith: []string{"cidr_block"},
+				ConflictsWith: []string{"ipv6_cidr_block"},
 				// This RequiredWith setting should be applied once L57 is completed
 				// RequiredWith:  []string{"ipv6_ipam_pool_id"},
 			},
@@ -88,8 +88,8 @@ func resourceVPCIPv6CIDRBlockAssociationCreate(d *schema.ResourceData, meta inte
 		VpcId: aws.String(d.Get("vpc_id").(string)),
 	}
 
-	if v, ok := d.GetOk("cidr_block"); ok {
-		req.CidrBlock = aws.String(v.(string))
+	if v, ok := d.GetOk("ipv6_cidr_block"); ok {
+		req.Ipv6CidrBlock = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("ipv6_ipam_pool_id"); ok {
@@ -163,7 +163,7 @@ func resourceVPCIPv6CIDRBlockAssociationRead(d *schema.ResourceData, meta interf
 		return nil
 	}
 
-	d.Set("cidr_block", vpcIpv6CidrBlockAssociation.Ipv6CidrBlock)
+	d.Set("ipv6_cidr_block", vpcIpv6CidrBlockAssociation.Ipv6CidrBlock)
 	d.Set("vpc_id", vpc.VpcId)
 
 	return nil

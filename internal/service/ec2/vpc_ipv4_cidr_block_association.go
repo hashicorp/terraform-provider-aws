@@ -27,10 +27,10 @@ func ResourceVPCIPv4CIDRBlockAssociation() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
-		// cidr_block can be set by a value returned from IPAM or explicitly in config
 		CustomizeDiff: func(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
+			// cidr_block can be set by a value returned from IPAM or explicitly in config
 			if diff.Id() != "" && diff.HasChange("cidr_block") {
-				// if netmask is set than cidr is derived from ipam, ignore changes
+				// if netmask is set then cidr_block is derived from ipam, ignore changes
 				if diff.Get("ipv4_netmask_length") != 0 {
 					return diff.Clear("cidr_block")
 				}

@@ -3,10 +3,10 @@ subcategory: "VPC"
 layout: "aws"
 page_title: "AWS: aws_vpc_ipam_pool"
 description: |-
-    Returns details about a the first IPAM pool that matches search parameters provided.
+    Returns details about the first IPAM pool that matches search parameters provided.
 ---
 
-# Data Source: aws_vpc
+# Data Source: aws_vpc_ipam_pool
 
 `aws_vpc_ipam_pool` provides details about an IPAM pool.
 

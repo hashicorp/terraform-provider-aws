@@ -16,7 +16,7 @@ func DataSourceVPCIpamPool() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"filter": DataSourceFiltersSchema(),
-			"id": {
+			"ipam_pool_id": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -58,6 +58,10 @@ func DataSourceVPCIpamPool() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"id": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
 			"ipam_scope_id": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -87,12 +91,11 @@ func DataSourceVPCIpamPool() *schema.Resource {
 	}
 }
 
-// dataSourceAwsAmiDescriptionRead performs the AMI lookup.
 func dataSourceVPCIpamPoolRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 	input := &ec2.DescribeIpamPoolsInput{}
 
-	if v, ok := d.GetOk("id"); ok {
+	if v, ok := d.GetOk("ipam_pool_id"); ok {
 		input.IpamPoolIds = aws.StringSlice([]string{v.(string)})
 
 	}

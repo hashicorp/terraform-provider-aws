@@ -43,8 +43,9 @@ func ResourceVPC() *schema.Resource {
 			resourceVPCCustomizeDiff,
 			verify.SetTagsDiff,
 			func(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
+				// cidr_block can be set by a value returned from IPAM or explicitly in config
 				if diff.Id() != "" && diff.HasChange("cidr_block") {
-					// if netmask is set then CIDR is derived from ipam, ignore changes
+					// if netmask is set then cidr_block is derived from ipam, ignore changes
 					if diff.Get("ipv4_netmask_length") != 0 {
 						return diff.Clear("cidr_block")
 					}
@@ -948,7 +949,7 @@ func waitForEc2VpcIpv6CidrBlockAssociationCreate(conn *ec2.EC2, vpcID, associati
 		},
 		Target:  []string{ec2.VpcCidrBlockStateCodeAssociated},
 		Refresh: Ipv6CidrStateRefreshFunc(conn, vpcID, associationID),
-		Timeout: 5 * time.Minute,
+		Timeout: 10 * time.Minute,
 	}
 	_, err := stateConf.WaitForState()
 
@@ -963,7 +964,7 @@ func waitForEc2VpcIpv6CidrBlockAssociationDelete(conn *ec2.EC2, vpcID, associati
 		},
 		Target:         []string{ec2.VpcCidrBlockStateCodeDisassociated},
 		Refresh:        Ipv6CidrStateRefreshFunc(conn, vpcID, associationID),
-		Timeout:        3 * time.Minute,
+		Timeout:        5 * time.Minute,
 		NotFoundChecks: 1,
 	}
 	_, err := stateConf.WaitForState()
