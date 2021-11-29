@@ -276,57 +276,6 @@ func TestAccELBV2TargetGroup_Protocol_tls(t *testing.T) {
 	})
 }
 
-func TestAccAWSLBTargetGroup_networkLB_TargetGroupWithConnectionTermination(t *testing.T) {
-	var confBefore, confAfter elbv2.TargetGroup
-	rName := acctest.RandomWithPrefix("tf-acc-test")
-	resourceName := "aws_lb_target_group.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, elbv2.EndpointsID),
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSLBTargetGroupDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAWSLBTargetGroupConfig_typeTCP(rName),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSLBTargetGroupExists(resourceName, &confBefore),
-					resource.TestCheckResourceAttr(resourceName, "connection_termination", "false"),
-				),
-			},
-			{
-				Config: testAccAWSLBTargetGroupConfig_typeTCP_withConnectionTermination(rName),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSLBTargetGroupExists(resourceName, &confAfter),
-					resource.TestCheckResourceAttr(resourceName, "connection_termination", "true"),
-				),
-			},
-		},
-	})
-}
-
-func TestAccELBV2TargetGroup_TCP_httpHealthCheck(t *testing.T) {
-	var confBefore, confAfter elbv2.TargetGroup
-	rName := acctest.RandomWithPrefix("tf-acc-test")
-	resourceName := "aws_lb_target_group.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, elbv2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckTargetGroupDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccTargetGroupConfig_Protocol_TLS(rName),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTargetGroupExists(resourceName, &targetGroup1),
-					resource.TestCheckResourceAttr(resourceName, "protocol", "TLS"),
-				),
-			},
-		},
-	})
-}
-
 func TestAccELBV2TargetGroup_TCP_httpHealthCheck(t *testing.T) {
 	var confBefore, confAfter elbv2.TargetGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -820,6 +769,7 @@ func TestAccELBV2TargetGroup_NetworkLB_targetGroup(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "vpc_id"),
 					resource.TestCheckResourceAttr(resourceName, "deregistration_delay", "200"),
 					resource.TestCheckResourceAttr(resourceName, "proxy_protocol_v2", "false"),
+					resource.TestCheckResourceAttr(resourceName, "connection_termination", "false"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.enabled", "true"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.interval", "10"),
@@ -981,6 +931,7 @@ func TestAccELBV2TargetGroup_protocolGeneve(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
+					"connection_termination",
 					"lambda_multi_value_headers_enabled",
 					"proxy_protocol_v2",
 					"slow_start",
@@ -1754,6 +1705,7 @@ func TestAccELBV2TargetGroup_A_lambda(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
+					"connection_termination",
 					"deregistration_delay",
 					"proxy_protocol_v2",
 					"slow_start",
@@ -1788,6 +1740,7 @@ func TestAccELBV2TargetGroup_A_lambdaMultiValueHeadersEnabled(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
+					"connection_termination",
 					"deregistration_delay",
 					"proxy_protocol_v2",
 					"slow_start",
