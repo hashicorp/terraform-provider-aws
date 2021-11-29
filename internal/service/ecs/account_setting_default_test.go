@@ -20,6 +20,7 @@ func TestAccECSAccountSettingDefault_containerInstanceLongArnFormat(t *testing.T
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ecs.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAccountSettingDefaultDestroy,
 		Steps: []resource.TestStep{
@@ -47,6 +48,7 @@ func TestAccECSAccountSettingDefault_serviceLongArnFormat(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ecs.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAccountSettingDefaultDestroy,
 		Steps: []resource.TestStep{
@@ -74,6 +76,7 @@ func TestAccECSAccountSettingDefault_taskLongArnFormat(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ecs.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAccountSettingDefaultDestroy,
 		Steps: []resource.TestStep{
@@ -101,6 +104,7 @@ func TestAccECSAccountSettingDefault_awsvpcTrunking(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ecs.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAccountSettingDefaultDestroy,
 		Steps: []resource.TestStep{
@@ -128,6 +132,7 @@ func TestAccECSAccountSettingDefault_containerInsights(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ecs.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAccountSettingDefaultDestroy,
 		Steps: []resource.TestStep{
