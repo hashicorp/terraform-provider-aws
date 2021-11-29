@@ -2,6 +2,7 @@ package cloudfront
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudfront"
@@ -80,6 +81,11 @@ func dataSourceDistributionRead(d *schema.ResourceData, meta interface{}) error 
 		d.Set("in_progress_validation_batches", distribution.InProgressInvalidationBatches)
 		d.Set("last_modified_time", aws.String(distribution.LastModifiedTime.String()))
 		d.Set("status", distribution.Status)
+		if strings.HasPrefix(*conn.Config.Region, "cn-") {
+			d.Set("hosted_zone_id", cloudFrontCNRoute53ZoneID)
+		} else {
+			d.Set("hosted_zone_id", cloudFrontRoute53ZoneID)
+		}
 		if distributionConfig := distribution.DistributionConfig; distributionConfig != nil {
 			d.Set("enabled", distributionConfig.Enabled)
 		}
@@ -92,6 +98,5 @@ func dataSourceDistributionRead(d *schema.ResourceData, meta interface{}) error 
 		return fmt.Errorf("error setting tags: %w", err)
 	}
 
-	d.Set("hosted_zone_id", cloudFrontRoute53ZoneID)
 	return nil
 }

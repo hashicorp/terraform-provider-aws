@@ -3,6 +3,7 @@ package cloudfront
 import (
 	"fmt"
 	"log"
+	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -898,6 +899,13 @@ func resourceDistributionRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("in_progress_validation_batches", resp.Distribution.InProgressInvalidationBatches)
 	d.Set("etag", resp.ETag)
 	d.Set("arn", resp.Distribution.ARN)
+
+	// override hosted_zone_id from flattenDistributionConfig
+	if strings.HasPrefix(*conn.Config.Region, "cn-") {
+		d.Set("hosted_zone_id", cloudFrontCNRoute53ZoneID)
+	} else {
+		d.Set("hosted_zone_id", cloudFrontRoute53ZoneID)
+	}
 
 	tags, err := ListTags(conn, d.Get("arn").(string))
 	if err != nil {
