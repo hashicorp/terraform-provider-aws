@@ -279,82 +279,82 @@ resource "aws_subnet" "test1" {
 }
 
 resource "aws_subnet" "test2" {
-	vpc_id            = aws_vpc.test.id
-	cidr_block        = "10.0.2.0/24"
-	availability_zone = data.aws_availability_zones.available.names[1]
-  }
+  vpc_id            = aws_vpc.test.id
+  cidr_block        = "10.0.2.0/24"
+  availability_zone = data.aws_availability_zones.available.names[1]
+}
 `)
 }
 
 func testAccBackupLustreBaseConfig(rName string) string {
 	return acctest.ConfigCompose(testAccBackupBaseConfig(), fmt.Sprintf(`
-	resource "aws_fsx_lustre_file_system" "test" {
-		storage_capacity            = 1200
-		subnet_ids                  = [aws_subnet.test1.id]
-		deployment_type             = "PERSISTENT_1"
-		per_unit_storage_throughput = 50
+resource "aws_fsx_lustre_file_system" "test" {
+  storage_capacity            = 1200
+  subnet_ids                  = [aws_subnet.test1.id]
+  deployment_type             = "PERSISTENT_1"
+  per_unit_storage_throughput = 50
 
-		tags = {
-			Name = %[1]q
-		  }
-	  }
+  tags = {
+    Name = %[1]q
+  }
+}
 `, rName))
 }
 
 func testAccBackupONTAPBaseConfig(rName string) string {
 	return acctest.ConfigCompose(testAccBackupBaseConfig(), fmt.Sprintf(`
-	resource "aws_fsx_ontap_file_system" "test" {
-		storage_capacity    = 1024
-		subnet_ids          = [aws_subnet.test1.id, aws_subnet.test2.id]
-		deployment_type     = "MULTI_AZ_1"
-		throughput_capacity = 512
-		preferred_subnet_id = aws_subnet.test1.id
+resource "aws_fsx_ontap_file_system" "test" {
+  storage_capacity    = 1024
+  subnet_ids          = [aws_subnet.test1.id, aws_subnet.test2.id]
+  deployment_type     = "MULTI_AZ_1"
+  throughput_capacity = 512
+  preferred_subnet_id = aws_subnet.test1.id
 
-		tags = {
-			Name = %[1]q
-		  }
-	  }
-	  
-	  resource "aws_fsx_ontap_storage_virtual_machine" "test" {
-		file_system_id = aws_fsx_ontap_file_system.test.id
-		name           = %[1]q
-	  }
+  tags = {
+    Name = %[1]q
+  }
+}
 
-	  resource "aws_fsx_ontap_volume" "test" {
-		name                       = %[1]q
-		junction_path              = "/%[1]s"
-		size_in_megabytes          = 1024
-		storage_efficiency_enabled = true
-		storage_virtual_machine_id = aws_fsx_ontap_storage_virtual_machine.test.id
-	  }
+resource "aws_fsx_ontap_storage_virtual_machine" "test" {
+  file_system_id = aws_fsx_ontap_file_system.test.id
+  name           = %[1]q
+}
+
+resource "aws_fsx_ontap_volume" "test" {
+  name                       = %[1]q
+  junction_path              = "/%[1]s"
+  size_in_megabytes          = 1024
+  storage_efficiency_enabled = true
+  storage_virtual_machine_id = aws_fsx_ontap_storage_virtual_machine.test.id
+}
 `, rName))
 }
 
 func testAccBackupWindowsBaseConfig(rName string) string {
 	return acctest.ConfigCompose(testAccBackupBaseConfig(), fmt.Sprintf(`
-	resource "aws_directory_service_directory" "test" {
-		edition  = "Standard"
-		name     = "corp.notexample.com"
-		password = "SuperSecretPassw0rd"
-		type     = "MicrosoftAD"
-	  
-		vpc_settings {
-		  subnet_ids = [aws_subnet.test1.id, aws_subnet.test2.id]
-		  vpc_id     = aws_vpc.test.id
-		}
-	  }
+resource "aws_directory_service_directory" "test" {
+  edition  = "Standard"
+  name     = "corp.notexample.com"
+  password = "SuperSecretPassw0rd"
+  type     = "MicrosoftAD"
 
-	resource "aws_fsx_windows_file_system" "test" {
-		active_directory_id             = aws_directory_service_directory.test.id
-		skip_final_backup               = true
-		storage_capacity                = 32
-		subnet_ids                      = [aws_subnet.test1.id]
-		throughput_capacity             = 8
+  vpc_settings {
+    subnet_ids = [aws_subnet.test1.id, aws_subnet.test2.id]
+    vpc_id     = aws_vpc.test.id
+  }
+}
 
-		tags = {
-			Name = %[1]q
-		  }
-	  }	  
+resource "aws_fsx_windows_file_system" "test" {
+  active_directory_id = aws_directory_service_directory.test.id
+  skip_final_backup   = true
+  storage_capacity    = 32
+  subnet_ids          = [aws_subnet.test1.id]
+  throughput_capacity = 8
+
+  tags = {
+    Name = %[1]q
+  }
+}
 `, rName))
 }
 
@@ -364,7 +364,7 @@ resource "aws_fsx_backup" "test" {
   file_system_id = aws_fsx_lustre_file_system.test.id
 
   tags = {
-	Name = %[1]q
+    Name = %[1]q
   }
 }
 `, rName))
@@ -376,7 +376,7 @@ resource "aws_fsx_backup" "test" {
   volume_id = aws_fsx_ontap_volume.test.id
 
   tags = {
-	Name = %[1]q
+    Name = %[1]q
   }
 }
 `, rName))
@@ -385,10 +385,10 @@ resource "aws_fsx_backup" "test" {
 func testAccBackupWindowsBasicConfig(rName string) string {
 	return acctest.ConfigCompose(testAccBackupWindowsBaseConfig(rName), fmt.Sprintf(`
 resource "aws_fsx_backup" "test" {
-  volume_id = aws_fsx_windows_file_system.test.id
+  file_system_id = aws_fsx_windows_file_system.test.id
 
   tags = {
-	Name = %[1]q
+    Name = %[1]q
   }
 }
 `, rName))
