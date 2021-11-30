@@ -247,9 +247,9 @@ resource "aws_s3_bucket_object" "test" {
 }
 
 resource "aws_servicecatalog_product" "test" {
-  name                = %[1]q
-  owner               = %[1]q
-  type                = "CLOUD_FORMATION_TEMPLATE"
+  name  = %[1]q
+  owner = %[1]q
+  type  = "CLOUD_FORMATION_TEMPLATE"
 
   provisioning_artifact_parameters {
     disable_template_validation = true
@@ -297,17 +297,17 @@ resource "aws_iam_role_policy" "test" {
     Statement = [
       {
         Action = [
-		  "cloudformation:CreateStack",
-		  "cloudformation:DeleteStack",
-		  "cloudformation:DescribeStackEvents",
-		  "cloudformation:DescribeStacks",
-		  "cloudformation:GetTemplateSummary",
-		  "cloudformation:SetStackPolicy",
-		  "cloudformation:ValidateTemplate",
-		  "cloudformation:UpdateStack",
-		  "s3:GetObject",
-		  "servicecatalog:*",
-		  "ec2:*"
+          "cloudformation:CreateStack",
+          "cloudformation:DeleteStack",
+          "cloudformation:DescribeStackEvents",
+          "cloudformation:DescribeStacks",
+          "cloudformation:GetTemplateSummary",
+          "cloudformation:SetStackPolicy",
+          "cloudformation:ValidateTemplate",
+          "cloudformation:UpdateStack",
+          "s3:GetObject",
+          "servicecatalog:*",
+          "ec2:*"
         ]
         Effect   = "Allow"
         Resource = "*"
