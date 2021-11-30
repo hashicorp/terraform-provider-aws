@@ -55,6 +55,10 @@ func TestAccSecurityHub_serial(t *testing.T) {
 			"basic":      testAccStandardsSubscription_basic,
 			"disappears": testAccStandardsSubscription_disappears,
 		},
+		"FindingAggregator": {
+			"basic":      testAccFindingAggregator_basic,
+			"disappears": testAccFindingAggregator_disappears,
+		},
 	}
 
 	for group, m := range testCases {

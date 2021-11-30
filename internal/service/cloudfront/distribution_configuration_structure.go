@@ -386,7 +386,7 @@ func flattenCacheBehavior(cb *cloudfront.CacheBehavior) map[string]interface{} {
 		m["max_ttl"] = int(*cb.MaxTTL)
 	}
 	if cb.SmoothStreaming != nil {
-		m["smooth_streaming"] = *cb.SmoothStreaming
+		m["smooth_streaming"] = aws.BoolValue(cb.SmoothStreaming)
 	}
 	if cb.DefaultTTL != nil {
 		m["default_ttl"] = int(*cb.DefaultTTL)
@@ -398,7 +398,7 @@ func flattenCacheBehavior(cb *cloudfront.CacheBehavior) map[string]interface{} {
 		m["cached_methods"] = FlattenCachedMethods(cb.AllowedMethods.CachedMethods)
 	}
 	if cb.PathPattern != nil {
-		m["path_pattern"] = *cb.PathPattern
+		m["path_pattern"] = aws.StringValue(cb.PathPattern)
 	}
 	return m
 }
@@ -1154,7 +1154,7 @@ func FlattenCustomErrorResponse(er *cloudfront.CustomErrorResponse) map[string]i
 		m["response_code"], _ = strconv.Atoi(*er.ResponseCode)
 	}
 	if er.ResponsePagePath != nil {
-		m["response_page_path"] = *er.ResponsePagePath
+		m["response_page_path"] = aws.StringValue(er.ResponsePagePath)
 	}
 	return m
 }
@@ -1285,18 +1285,18 @@ func flattenViewerCertificate(vc *cloudfront.ViewerCertificate) []interface{} {
 	m := make(map[string]interface{})
 
 	if vc.IAMCertificateId != nil {
-		m["iam_certificate_id"] = *vc.IAMCertificateId
-		m["ssl_support_method"] = *vc.SSLSupportMethod
+		m["iam_certificate_id"] = aws.StringValue(vc.IAMCertificateId)
+		m["ssl_support_method"] = aws.StringValue(vc.SSLSupportMethod)
 	}
 	if vc.ACMCertificateArn != nil {
-		m["acm_certificate_arn"] = *vc.ACMCertificateArn
-		m["ssl_support_method"] = *vc.SSLSupportMethod
+		m["acm_certificate_arn"] = aws.StringValue(vc.ACMCertificateArn)
+		m["ssl_support_method"] = aws.StringValue(vc.SSLSupportMethod)
 	}
 	if vc.CloudFrontDefaultCertificate != nil {
-		m["cloudfront_default_certificate"] = *vc.CloudFrontDefaultCertificate
+		m["cloudfront_default_certificate"] = aws.BoolValue(vc.CloudFrontDefaultCertificate)
 	}
 	if vc.MinimumProtocolVersion != nil {
-		m["minimum_protocol_version"] = *vc.MinimumProtocolVersion
+		m["minimum_protocol_version"] = aws.StringValue(vc.MinimumProtocolVersion)
 	}
 	return []interface{}{m}
 }

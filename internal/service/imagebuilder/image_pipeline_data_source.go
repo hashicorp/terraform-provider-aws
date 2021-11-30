@@ -139,7 +139,7 @@ func dataSourceImagePipelineRead(d *schema.ResourceData, meta interface{}) error
 	d.Set("image_recipe_arn", imagePipeline.ImageRecipeArn)
 
 	if imagePipeline.ImageTestsConfiguration != nil {
-		d.Set("image_tests_configuration", []interface{}{flattenImageBuilderImageTestsConfiguration(imagePipeline.ImageTestsConfiguration)})
+		d.Set("image_tests_configuration", []interface{}{flattenImageTestsConfiguration(imagePipeline.ImageTestsConfiguration)})
 	} else {
 		d.Set("image_tests_configuration", nil)
 	}
@@ -149,7 +149,7 @@ func dataSourceImagePipelineRead(d *schema.ResourceData, meta interface{}) error
 	d.Set("platform", imagePipeline.Platform)
 
 	if imagePipeline.Schedule != nil {
-		d.Set("schedule", []interface{}{flattenImageBuilderSchedule(imagePipeline.Schedule)})
+		d.Set("schedule", []interface{}{flattenSchedule(imagePipeline.Schedule)})
 	} else {
 		d.Set("schedule", nil)
 	}

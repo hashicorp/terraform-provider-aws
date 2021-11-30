@@ -52,6 +52,7 @@ func ResourceRuleGroup() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.IntAtLeast(1),
 			},
+			"custom_response_body": wafv2CustomResponseBodySchema(),
 			"description": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -105,6 +106,7 @@ func ResourceRuleGroup() *schema.Resource {
 							Type:     schema.TypeInt,
 							Required: true,
 						},
+						"rule_label":        wafv2RuleLabelsSchema(),
 						"statement":         wafv2RootStatementSchema(3),
 						"visibility_config": wafv2VisibilityConfigSchema(),
 					},
@@ -131,6 +133,10 @@ func resourceRuleGroupCreate(d *schema.ResourceData, meta interface{}) error {
 		Capacity:         aws.Int64(int64(d.Get("capacity").(int))),
 		Rules:            expandWafv2Rules(d.Get("rule").(*schema.Set).List()),
 		VisibilityConfig: expandWafv2VisibilityConfig(d.Get("visibility_config").([]interface{})),
+	}
+
+	if v, ok := d.GetOk("custom_response_body"); ok && v.(*schema.Set).Len() > 0 {
+		params.CustomResponseBodies = expandWafv2CustomResponseBodies(v.(*schema.Set).List())
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -201,6 +207,10 @@ func resourceRuleGroupRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("arn", resp.RuleGroup.ARN)
 	d.Set("lock_token", resp.LockToken)
 
+	if err := d.Set("custom_response_body", flattenWafv2CustomResponseBodies(resp.RuleGroup.CustomResponseBodies)); err != nil {
+		return fmt.Errorf("Error setting custom_response_body: %w", err)
+	}
+
 	if err := d.Set("rule", flattenWafv2Rules(resp.RuleGroup.Rules)); err != nil {
 		return fmt.Errorf("Error setting rule: %s", err)
 	}
@@ -241,6 +251,10 @@ func resourceRuleGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 		LockToken:        aws.String(d.Get("lock_token").(string)),
 		Rules:            expandWafv2Rules(d.Get("rule").(*schema.Set).List()),
 		VisibilityConfig: expandWafv2VisibilityConfig(d.Get("visibility_config").([]interface{})),
+	}
+
+	if v, ok := d.GetOk("custom_response_body"); ok && v.(*schema.Set).Len() > 0 {
+		u.CustomResponseBodies = expandWafv2CustomResponseBodies(v.(*schema.Set).List())
 	}
 
 	if v, ok := d.GetOk("description"); ok {

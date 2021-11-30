@@ -429,7 +429,7 @@ resource "aws_lambda_function" "test" {
   function_name = %[1]q
   role          = aws_iam_role.iam_for_lambda.arn
   handler       = "index.handler"
-  runtime       = "nodejs10.x"
+  runtime       = "nodejs14.x"
 }
 
 resource "aws_iam_role" "test" {

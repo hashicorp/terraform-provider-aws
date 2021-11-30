@@ -547,7 +547,7 @@ More details about this code generation, including fixes for potential error mes
   }
   ```
 
-- Verify all acceptance testing passes for the resource (e.g., `make testacc TESTARGS='-run=TestAccEKSCluster_' PKG_NAME=internal/service/eks`)
+- Verify all acceptance testing passes for the resource (e.g., `make testacc TESTS=TestAccEKSCluster_ PKG=eks`)
 
 ### Resource Tagging Documentation Implementation
 
@@ -792,7 +792,7 @@ resource "aws_{service}_tag" "test" {
 }
 ```
 
-- Run `make testacc TESTARGS='-run=TestAcc{Service}Tags_' PKG_NAME=internal/service/{Service}` and ensure there are no failures.
+- Run `make testacc TESTS=TestAcc{Service}Tags_ PKG={Service}` and ensure there are no failures.
 - Create `website/docs/r/{service}_tag.html.markdown` with initial documentation similar to the following:
 
 ``````markdown

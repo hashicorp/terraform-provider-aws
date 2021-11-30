@@ -46,6 +46,7 @@ func TestAccAppRunnerService_ImageRepository_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "instance_configuration.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "instance_configuration.0.cpu"),
 					resource.TestCheckResourceAttrSet(resourceName, "instance_configuration.0.memory"),
+					resource.TestCheckResourceAttr(resourceName, "instance_configuration.0.instance_role_arn", ""),
 					resource.TestCheckResourceAttrSet(resourceName, "service_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "service_url"),
 					resource.TestCheckResourceAttr(resourceName, "source_configuration.#", "1"),
@@ -186,7 +187,36 @@ func TestAccAppRunnerService_ImageRepository_healthCheck(t *testing.T) {
 	})
 }
 
-func TestAccAppRunnerService_ImageRepository_instance(t *testing.T) {
+func TestAccAppRunnerService_ImageRepository_instance_NoInstanceRole(t *testing.T) {
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_apprunner_service.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAppRunner(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, apprunner.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckServiceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAppRunnerService_imageRepository_instanceConfiguration_NoInstanceRole(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "instance_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "instance_configuration.0.cpu", "1024"),
+					resource.TestCheckResourceAttr(resourceName, "instance_configuration.0.instance_role_arn", ""),
+					resource.TestCheckResourceAttr(resourceName, "instance_configuration.0.memory", "3072"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAppRunnerService_ImageRepository_instance_Update(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_apprunner_service.test"
 	roleResourceName := "aws_iam_role.test"
@@ -232,8 +262,9 @@ func TestAccAppRunnerService_ImageRepository_instance(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "instance_configuration.#", "1"),
-					resource.TestCheckResourceAttrSet(resourceName, "instance_configuration.0.cpu"),
-					resource.TestCheckResourceAttrSet(resourceName, "instance_configuration.0.memory"),
+					resource.TestCheckResourceAttr(resourceName, "instance_configuration.0.cpu", "2048"),
+					resource.TestCheckResourceAttr(resourceName, "instance_configuration.0.memory", "4096"),
+					resource.TestCheckResourceAttrSet(resourceName, "instance_configuration.0.instance_role_arn"), // The IAM Role is not unset
 				),
 			},
 		},
@@ -607,6 +638,30 @@ resource "aws_apprunner_service" "test" {
   }
 }
 `, rName))
+}
+
+func testAccAppRunnerService_imageRepository_instanceConfiguration_NoInstanceRole(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_apprunner_service" "test" {
+  service_name = %[1]q
+
+  instance_configuration {
+    cpu    = "1 vCPU"
+    memory = "3 GB"
+  }
+
+  source_configuration {
+    auto_deployments_enabled = false
+    image_repository {
+      image_configuration {
+        port = "80"
+      }
+      image_identifier      = "public.ecr.aws/nginx/nginx:latest"
+      image_repository_type = "ECR_PUBLIC"
+    }
+  }
+}
+`, rName)
 }
 
 func testAccAppRunnerService_imageRepository_updateInstanceConfiguration(rName string) string {

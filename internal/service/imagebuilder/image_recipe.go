@@ -196,11 +196,11 @@ func resourceImageRecipeCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if v, ok := d.GetOk("block_device_mapping"); ok && v.(*schema.Set).Len() > 0 {
-		input.BlockDeviceMappings = expandImageBuilderInstanceBlockDeviceMappings(v.(*schema.Set).List())
+		input.BlockDeviceMappings = expandInstanceBlockDeviceMappings(v.(*schema.Set).List())
 	}
 
 	if v, ok := d.GetOk("component"); ok && len(v.([]interface{})) > 0 {
-		input.Components = expandImageBuilderComponentConfigurations(v.([]interface{}))
+		input.Components = expandComponentConfigurations(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -269,8 +269,8 @@ func resourceImageRecipeRead(d *schema.ResourceData, meta interface{}) error {
 	imageRecipe := output.ImageRecipe
 
 	d.Set("arn", imageRecipe.Arn)
-	d.Set("block_device_mapping", flattenImageBuilderInstanceBlockDeviceMappings(imageRecipe.BlockDeviceMappings))
-	d.Set("component", flattenImageBuilderComponentConfigurations(imageRecipe.Components))
+	d.Set("block_device_mapping", flattenInstanceBlockDeviceMappings(imageRecipe.BlockDeviceMappings))
+	d.Set("component", flattenComponentConfigurations(imageRecipe.Components))
 	d.Set("date_created", imageRecipe.DateCreated)
 	d.Set("description", imageRecipe.Description)
 	d.Set("name", imageRecipe.Name)
@@ -327,7 +327,7 @@ func resourceImageRecipeDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func expandImageBuilderComponentConfiguration(tfMap map[string]interface{}) *imagebuilder.ComponentConfiguration {
+func expandComponentConfiguration(tfMap map[string]interface{}) *imagebuilder.ComponentConfiguration {
 	if tfMap == nil {
 		return nil
 	}
@@ -341,7 +341,7 @@ func expandImageBuilderComponentConfiguration(tfMap map[string]interface{}) *ima
 	return apiObject
 }
 
-func expandImageBuilderComponentConfigurations(tfList []interface{}) []*imagebuilder.ComponentConfiguration {
+func expandComponentConfigurations(tfList []interface{}) []*imagebuilder.ComponentConfiguration {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -355,7 +355,7 @@ func expandImageBuilderComponentConfigurations(tfList []interface{}) []*imagebui
 			continue
 		}
 
-		apiObject := expandImageBuilderComponentConfiguration(tfMap)
+		apiObject := expandComponentConfiguration(tfMap)
 
 		if apiObject == nil {
 			continue
@@ -367,7 +367,7 @@ func expandImageBuilderComponentConfigurations(tfList []interface{}) []*imagebui
 	return apiObjects
 }
 
-func expandImageBuilderEbsInstanceBlockDeviceSpecification(tfMap map[string]interface{}) *imagebuilder.EbsInstanceBlockDeviceSpecification {
+func expandEBSInstanceBlockDeviceSpecification(tfMap map[string]interface{}) *imagebuilder.EbsInstanceBlockDeviceSpecification {
 	if tfMap == nil {
 		return nil
 	}
@@ -407,7 +407,7 @@ func expandImageBuilderEbsInstanceBlockDeviceSpecification(tfMap map[string]inte
 	return apiObject
 }
 
-func expandImageBuilderInstanceBlockDeviceMapping(tfMap map[string]interface{}) *imagebuilder.InstanceBlockDeviceMapping {
+func expandInstanceBlockDeviceMapping(tfMap map[string]interface{}) *imagebuilder.InstanceBlockDeviceMapping {
 	if tfMap == nil {
 		return nil
 	}
@@ -419,7 +419,7 @@ func expandImageBuilderInstanceBlockDeviceMapping(tfMap map[string]interface{}) 
 	}
 
 	if v, ok := tfMap["ebs"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		apiObject.Ebs = expandImageBuilderEbsInstanceBlockDeviceSpecification(v[0].(map[string]interface{}))
+		apiObject.Ebs = expandEBSInstanceBlockDeviceSpecification(v[0].(map[string]interface{}))
 	}
 
 	if v, ok := tfMap["no_device"].(bool); ok && v {
@@ -433,7 +433,7 @@ func expandImageBuilderInstanceBlockDeviceMapping(tfMap map[string]interface{}) 
 	return apiObject
 }
 
-func expandImageBuilderInstanceBlockDeviceMappings(tfList []interface{}) []*imagebuilder.InstanceBlockDeviceMapping {
+func expandInstanceBlockDeviceMappings(tfList []interface{}) []*imagebuilder.InstanceBlockDeviceMapping {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -447,7 +447,7 @@ func expandImageBuilderInstanceBlockDeviceMappings(tfList []interface{}) []*imag
 			continue
 		}
 
-		apiObject := expandImageBuilderInstanceBlockDeviceMapping(tfMap)
+		apiObject := expandInstanceBlockDeviceMapping(tfMap)
 
 		if apiObject == nil {
 			continue
@@ -459,7 +459,7 @@ func expandImageBuilderInstanceBlockDeviceMappings(tfList []interface{}) []*imag
 	return apiObjects
 }
 
-func flattenImageBuilderComponentConfiguration(apiObject *imagebuilder.ComponentConfiguration) map[string]interface{} {
+func flattenComponentConfiguration(apiObject *imagebuilder.ComponentConfiguration) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -473,7 +473,7 @@ func flattenImageBuilderComponentConfiguration(apiObject *imagebuilder.Component
 	return tfMap
 }
 
-func flattenImageBuilderComponentConfigurations(apiObjects []*imagebuilder.ComponentConfiguration) []interface{} {
+func flattenComponentConfigurations(apiObjects []*imagebuilder.ComponentConfiguration) []interface{} {
 	if len(apiObjects) == 0 {
 		return nil
 	}
@@ -485,13 +485,13 @@ func flattenImageBuilderComponentConfigurations(apiObjects []*imagebuilder.Compo
 			continue
 		}
 
-		tfList = append(tfList, flattenImageBuilderComponentConfiguration(apiObject))
+		tfList = append(tfList, flattenComponentConfiguration(apiObject))
 	}
 
 	return tfList
 }
 
-func flattenImageBuilderEbsInstanceBlockDeviceSpecification(apiObject *imagebuilder.EbsInstanceBlockDeviceSpecification) map[string]interface{} {
+func flattenEBSInstanceBlockDeviceSpecification(apiObject *imagebuilder.EbsInstanceBlockDeviceSpecification) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -529,7 +529,7 @@ func flattenImageBuilderEbsInstanceBlockDeviceSpecification(apiObject *imagebuil
 	return tfMap
 }
 
-func flattenImageBuilderInstanceBlockDeviceMapping(apiObject *imagebuilder.InstanceBlockDeviceMapping) map[string]interface{} {
+func flattenInstanceBlockDeviceMapping(apiObject *imagebuilder.InstanceBlockDeviceMapping) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -541,7 +541,7 @@ func flattenImageBuilderInstanceBlockDeviceMapping(apiObject *imagebuilder.Insta
 	}
 
 	if v := apiObject.Ebs; v != nil {
-		tfMap["ebs"] = []interface{}{flattenImageBuilderEbsInstanceBlockDeviceSpecification(v)}
+		tfMap["ebs"] = []interface{}{flattenEBSInstanceBlockDeviceSpecification(v)}
 	}
 
 	if v := apiObject.NoDevice; v != nil {
@@ -555,7 +555,7 @@ func flattenImageBuilderInstanceBlockDeviceMapping(apiObject *imagebuilder.Insta
 	return tfMap
 }
 
-func flattenImageBuilderInstanceBlockDeviceMappings(apiObjects []*imagebuilder.InstanceBlockDeviceMapping) []interface{} {
+func flattenInstanceBlockDeviceMappings(apiObjects []*imagebuilder.InstanceBlockDeviceMapping) []interface{} {
 	if len(apiObjects) == 0 {
 		return nil
 	}
@@ -567,7 +567,7 @@ func flattenImageBuilderInstanceBlockDeviceMappings(apiObjects []*imagebuilder.I
 			continue
 		}
 
-		tfList = append(tfList, flattenImageBuilderInstanceBlockDeviceMapping(apiObject))
+		tfList = append(tfList, flattenInstanceBlockDeviceMapping(apiObject))
 	}
 
 	return tfList

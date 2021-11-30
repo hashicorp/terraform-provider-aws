@@ -159,6 +159,11 @@ func ResourceCloudTrail() *schema.Resource {
 								},
 							},
 						},
+						"exclude_management_event_sources": {
+							Type:     schema.TypeSet,
+							Optional: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+						},
 						"include_management_events": {
 							Type:     schema.TypeBool,
 							Optional: true,
@@ -639,6 +644,11 @@ func expandEventSelector(configured []interface{}) []*cloudtrail.EventSelector {
 			ReadWriteType:           aws.String(data["read_write_type"].(string)),
 			DataResources:           dataResources,
 		}
+
+		if v, ok := data["exclude_management_event_sources"].(*schema.Set); ok && v.Len() > 0 {
+			es.ExcludeManagementEventSources = flex.ExpandStringSet(v)
+		}
+
 		eventSelectors = append(eventSelectors, es)
 	}
 
@@ -672,13 +682,14 @@ func flattenEventSelector(configured []*cloudtrail.EventSelector) []map[string]i
 	eventSelectors := make([]map[string]interface{}, 0, len(configured))
 
 	// Prevent default configurations shows differences
-	if len(configured) == 1 && len(configured[0].DataResources) == 0 && aws.StringValue(configured[0].ReadWriteType) == "All" {
+	if len(configured) == 1 && len(configured[0].DataResources) == 0 && aws.StringValue(configured[0].ReadWriteType) == "All" && len(configured[0].ExcludeManagementEventSources) == 0 {
 		return eventSelectors
 	}
 
 	for _, raw := range configured {
 		item := make(map[string]interface{})
 		item["read_write_type"] = aws.StringValue(raw.ReadWriteType)
+		item["exclude_management_event_sources"] = flex.FlattenStringSet(raw.ExcludeManagementEventSources)
 		item["include_management_events"] = aws.BoolValue(raw.IncludeManagementEvents)
 		item["data_resource"] = flattenEventSelectorDataResource(raw.DataResources)
 

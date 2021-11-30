@@ -362,6 +362,56 @@ func TestAccSSMAssociation_withOutputLocation(t *testing.T) {
 	})
 }
 
+func TestAccSSMAssociation_withOutputLocation_s3Region(t *testing.T) {
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_ssm_association.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckMultipleRegion(t, 2) },
+		ErrorCheck:        acctest.ErrorCheck(t, ssm.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckAssociationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAssociationWithOutputLocationS3RegionConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAssociationExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "output_location.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "output_location.0.s3_bucket_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "output_location.0.s3_region", acctest.Region()),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAssociationWithOutputLocationUpdateS3RegionConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAssociationExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "output_location.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "output_location.0.s3_bucket_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "output_location.0.s3_region", acctest.AlternateRegion()),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAssociationWithOutputLocationNoS3RegionConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAssociationExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "output_location.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "output_location.0.s3_region", ""),
+				),
+			},
+		},
+	})
+}
+
 func TestAccSSMAssociation_withAutomationTargetParamName(t *testing.T) {
 	name := sdkacctest.RandString(10)
 	resourceName := "aws_ssm_association.test"
@@ -1119,6 +1169,99 @@ resource "aws_ssm_association" "test" {
   }
 }
 `, rName, rName)
+}
+
+func testAccAssociationWithOutputLocationS3RegionConfigBase(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket        = %[1]q
+  force_destroy = true
+}
+
+resource "aws_ssm_document" "test" {
+  name          = %[1]q
+  document_type = "Command"
+
+  content = <<DOC
+{
+  "schemaVersion": "1.2",
+  "description": "Check ip configuration of a Linux instance.",
+  "parameters": {},
+  "runtimeConfig": {
+    "aws:runShellScript": {
+      "properties": [
+        {
+          "id": "0.aws:runShellScript",
+          "runCommand": [
+            "ifconfig"
+          ]
+        }
+      ]
+    }
+  }
+}
+DOC
+}
+`, rName)
+}
+
+func testAccAssociationWithOutputLocationS3RegionConfig(rName string) string {
+	return acctest.ConfigCompose(
+		testAccAssociationWithOutputLocationS3RegionConfigBase(rName),
+		`
+resource "aws_ssm_association" "test" {
+  name = aws_ssm_document.test.name
+
+  targets {
+    key    = "tag:Name"
+    values = ["acceptanceTest"]
+  }
+
+  output_location {
+    s3_bucket_name = aws_s3_bucket.test.id
+    s3_region      = aws_s3_bucket.test.region
+  }
+}
+`)
+}
+
+func testAccAssociationWithOutputLocationUpdateS3RegionConfig(rName string) string {
+	return acctest.ConfigCompose(
+		testAccAssociationWithOutputLocationS3RegionConfigBase(rName),
+		fmt.Sprintf(`
+resource "aws_ssm_association" "test" {
+  name = aws_ssm_document.test.name
+
+  targets {
+    key    = "tag:Name"
+    values = ["acceptanceTest"]
+  }
+
+  output_location {
+    s3_bucket_name = aws_s3_bucket.test.id
+    s3_region      = %[1]q
+  }
+}
+`, acctest.AlternateRegion()))
+}
+
+func testAccAssociationWithOutputLocationNoS3RegionConfig(rName string) string {
+	return acctest.ConfigCompose(
+		testAccAssociationWithOutputLocationS3RegionConfigBase(rName),
+		`
+resource "aws_ssm_association" "test" {
+  name = aws_ssm_document.test.name
+
+  targets {
+    key    = "tag:Name"
+    values = ["acceptanceTest"]
+  }
+
+  output_location {
+    s3_bucket_name = aws_s3_bucket.test.id
+  }
+}
+`)
 }
 
 func testAccAssociationBasicWithOutPutLocationUpdateBucketNameConfig(rName string) string {

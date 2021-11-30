@@ -22,6 +22,7 @@ const (
 	// General timeout for EC2 resource creations to propagate
 	PropagationTimeout = 2 * time.Minute
 
+	RouteNotFoundChecks                        = 1000 // Should exceed any reasonable custom timeout value.
 	RouteTableNotFoundChecks                   = 1000 // Should exceed any reasonable custom timeout value.
 	RouteTableAssociationCreatedNotFoundChecks = 1000 // Should exceed any reasonable custom timeout value.
 )
@@ -291,6 +292,7 @@ func WaitRouteReady(conn *ec2.EC2, routeFinder RouteFinder, routeTableID, destin
 		Target:                    []string{RouteStatusReady},
 		Refresh:                   StatusRoute(conn, routeFinder, routeTableID, destination),
 		Timeout:                   timeout,
+		NotFoundChecks:            RouteNotFoundChecks,
 		ContinuousTargetOccurence: 2,
 	}
 
@@ -714,7 +716,7 @@ func WaitInternetGatewayAttached(conn *ec2.EC2, internetGatewayID, vpcID string,
 
 func WaitInternetGatewayDetached(conn *ec2.EC2, internetGatewayID, vpcID string, timeout time.Duration) (*ec2.InternetGatewayAttachment, error) {
 	stateConf := &resource.StateChangeConf{
-		Pending: []string{ec2.AttachmentStatusDetaching},
+		Pending: []string{InternetGatewayAttachmentStateAvailable, ec2.AttachmentStatusDetaching},
 		Target:  []string{},
 		Timeout: timeout,
 		Refresh: StatusInternetGatewayAttachmentState(conn, internetGatewayID, vpcID),

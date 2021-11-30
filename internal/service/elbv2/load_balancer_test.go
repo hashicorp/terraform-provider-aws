@@ -92,6 +92,7 @@ func TestAccELBV2LoadBalancer_ALB_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", "TestAccAWSALB_basic"),
 					resource.TestCheckResourceAttrSet(resourceName, "vpc_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "zone_id"),
+					resource.TestCheckResourceAttr(resourceName, "desync_mitigation_mode", "defensive"),
 				),
 			},
 		},
@@ -157,6 +158,7 @@ func TestAccELBV2LoadBalancer_LoadBalancerType_gateway(t *testing.T) {
 				ImportStateVerifyIgnore: []string{
 					"drop_invalid_header_fields",
 					"enable_http2",
+					"enable_waf_fail_open",
 					"idle_timeout",
 				},
 			},
@@ -225,6 +227,7 @@ func TestAccELBV2LoadBalancer_LoadBalancerTypeGateway_enableCrossZoneLoadBalanci
 				ImportStateVerifyIgnore: []string{
 					"drop_invalid_header_fields",
 					"enable_http2",
+					"enable_waf_fail_open",
 					"idle_timeout",
 				},
 			},
@@ -635,6 +638,54 @@ func TestAccELBV2LoadBalancer_ApplicationLoadBalancer_updateDeletionProtection(t
 					testAccCheckLoadBalancerExists(resourceName, &post),
 					testAccCheckLoadBalancerAttribute(resourceName, "deletion_protection.enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "enable_deletion_protection", "false"),
+					testAccChecklbARNs(&mid, &post),
+				),
+			},
+		},
+	})
+}
+
+func TestAccELBV2LoadBalancer_ApplicationLoadBalancer_updateWafFailOpen(t *testing.T) {
+	var pre, mid, post elbv2.LoadBalancer
+	lbName := fmt.Sprintf("testAccAWSalb-basic-%s", sdkacctest.RandString(10))
+	resourceName := "aws_lb.lb_test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, elbv2.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckLoadBalancerDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLBConfig_enableWafFailOpen(lbName, false),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckLoadBalancerExists(resourceName, &pre),
+					resource.TestCheckResourceAttr(resourceName, "enable_waf_fail_open", "false"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccLBConfig_enableWafFailOpen(lbName, true),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckLoadBalancerExists(resourceName, &mid),
+					resource.TestCheckResourceAttr(resourceName, "enable_waf_fail_open", "true"),
+					testAccChecklbARNs(&pre, &mid),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccLBConfig_enableWafFailOpen(lbName, false),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckLoadBalancerExists(resourceName, &post),
+					resource.TestCheckResourceAttr(resourceName, "enable_waf_fail_open", "false"),
 					testAccChecklbARNs(&mid, &post),
 				),
 			},
@@ -1102,6 +1153,55 @@ func TestAccELBV2LoadBalancer_NetworkLoadBalancerSubnet_change(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", "testAccLoadBalancerConfig_networkLoadbalancer_subnets"),
 					resource.TestCheckResourceAttr(resourceName, "load_balancer_type", "network"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccELBV2LoadBalancer_updateDesyncMitigationMode(t *testing.T) {
+	var pre, mid, post elbv2.LoadBalancer
+	lbName := fmt.Sprintf("testaccawsalb-desync-%s", sdkacctest.RandString(4))
+	resourceName := "aws_lb.lb_test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, elbv2.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckLoadBalancerDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSLBConfig_desyncMitigationMode(lbName, "strictest"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckLoadBalancerExists(resourceName, &pre),
+					testAccCheckLoadBalancerAttribute(resourceName, "routing.http.desync_mitigation_mode", "strictest"),
+					resource.TestCheckResourceAttr(resourceName, "desync_mitigation_mode", "strictest"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAWSLBConfig_desyncMitigationMode(lbName, "monitor"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckLoadBalancerExists(resourceName, &mid),
+					testAccCheckLoadBalancerAttribute(resourceName, "routing.http.desync_mitigation_mode", "monitor"),
+					resource.TestCheckResourceAttr(resourceName, "desync_mitigation_mode", "monitor"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAWSLBConfig_desyncMitigationMode(lbName, "defensive"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckLoadBalancerExists(resourceName, &post),
+					testAccCheckLoadBalancerAttribute(resourceName, "routing.http.desync_mitigation_mode", "defensive"),
+					resource.TestCheckResourceAttr(resourceName, "desync_mitigation_mode", "defensive"),
 				),
 			},
 		},
@@ -1818,6 +1918,77 @@ resource "aws_security_group" "alb_test" {
   }
 }
 `, lbName, deletion_protection))
+}
+
+func testAccLBConfig_enableWafFailOpen(lbName string, wafFailOpen bool) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigAvailableAZsNoOptIn(),
+		fmt.Sprintf(`
+resource "aws_lb" "lb_test" {
+  name            = %[1]q
+  internal        = true
+  security_groups = [aws_security_group.alb_test.id]
+  subnets         = aws_subnet.alb_test.*.id
+
+  idle_timeout               = 30
+  enable_deletion_protection = false
+
+  enable_waf_fail_open = %[2]t
+
+  tags = {
+    Name = "TestAccAWSALB_basic"
+  }
+}
+
+variable "subnets" {
+  default = ["10.0.1.0/24", "10.0.2.0/24"]
+  type    = list(string)
+}
+
+resource "aws_vpc" "alb_test" {
+  cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = "terraform-testacc-lb-basic"
+  }
+}
+
+resource "aws_subnet" "alb_test" {
+  count                   = 2
+  vpc_id                  = aws_vpc.alb_test.id
+  cidr_block              = element(var.subnets, count.index)
+  map_public_ip_on_launch = true
+  availability_zone       = element(data.aws_availability_zones.available.names, count.index)
+
+  tags = {
+    Name = "tf-acc-lb-basic-${count.index}"
+  }
+}
+
+resource "aws_security_group" "alb_test" {
+  name        = "allow_all_alb_test"
+  description = "Used for ALB Testing"
+  vpc_id      = aws_vpc.alb_test.id
+
+  ingress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = {
+    Name = "TestAccAWSALB_basic"
+  }
+}
+`, lbName, wafFailOpen))
 }
 
 func testAccLoadBalancerConfig_networkLoadbalancer_subnets(lbName string) string {
@@ -2852,4 +3023,82 @@ resource "aws_security_group" "alb_test" {
   }
 }
 `, lbName))
+}
+
+func testAccAWSLBConfig_desyncMitigationMode(lbName string, mode string) string {
+	return fmt.Sprintf(`
+resource "aws_lb" "lb_test" {
+  name            = "%s"
+  internal        = true
+  security_groups = [aws_security_group.alb_test.id]
+  subnets         = aws_subnet.alb_test.*.id
+
+  idle_timeout               = 30
+  enable_deletion_protection = false
+
+  desync_mitigation_mode = %q
+
+  tags = {
+    Name = "TestAccAWSALB_desync"
+  }
+}
+
+variable "subnets" {
+  default = ["10.0.1.0/24", "10.0.2.0/24"]
+  type    = list
+}
+
+data "aws_availability_zones" "available" {
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
+
+resource "aws_vpc" "alb_test" {
+  cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = "terraform-testacc-lb-desync"
+  }
+}
+
+resource "aws_subnet" "alb_test" {
+  count                   = 2
+  vpc_id                  = aws_vpc.alb_test.id
+  cidr_block              = element(var.subnets, count.index)
+  map_public_ip_on_launch = true
+  availability_zone       = element(data.aws_availability_zones.available.names, count.index)
+
+  tags = {
+    Name = "tf-acc-lb-desync-${count.index}"
+  }
+}
+
+resource "aws_security_group" "alb_test" {
+  name        = "allow_all_alb_test_desync"
+  description = "Used for ALB Testing"
+  vpc_id      = aws_vpc.alb_test.id
+
+  ingress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = {
+    Name = "TestAccAWSALB_desync"
+  }
+}
+`, lbName, mode)
 }

@@ -8,6 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/accessanalyzer"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/account"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/acm"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/acmpca"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/amp"
@@ -431,6 +432,7 @@ func Provider() *schema.Provider {
 			"aws_ec2_instance_type_offering":                 ec2.DataSourceInstanceTypeOffering(),
 			"aws_ec2_instance_type_offerings":                ec2.DataSourceInstanceTypeOfferings(),
 			"aws_ec2_instance_type":                          ec2.DataSourceInstanceType(),
+			"aws_ec2_instance_types":                         ec2.DataSourceInstanceTypes(),
 			"aws_ec2_local_gateway_route_table":              ec2.DataSourceLocalGatewayRouteTable(),
 			"aws_ec2_local_gateway_route_tables":             ec2.DataSourceLocalGatewayRouteTables(),
 			"aws_ec2_local_gateway_virtual_interface":        ec2.DataSourceLocalGatewayVirtualInterface(),
@@ -518,6 +520,8 @@ func Provider() *schema.Provider {
 			"aws_lb_target_group":  elbv2.DataSourceTargetGroup(),
 			"aws_lb":               elbv2.DataSourceLoadBalancer(),
 
+			"aws_emr_release_labels": emr.DataSourceReleaseLabels(),
+
 			"aws_kinesis_firehose_delivery_stream": firehose.DataSourceDeliveryStream(),
 
 			"aws_globalaccelerator_accelerator": globalaccelerator.DataSourceAccelerator(),
@@ -549,6 +553,7 @@ func Provider() *schema.Provider {
 			"aws_imagebuilder_image":                        imagebuilder.DataSourceImage(),
 			"aws_imagebuilder_image_pipeline":               imagebuilder.DataSourceImagePipeline(),
 			"aws_imagebuilder_image_recipe":                 imagebuilder.DataSourceImageRecipe(),
+			"aws_imagebuilder_image_recipes":                imagebuilder.DataSourceImageRecipes(),
 			"aws_imagebuilder_infrastructure_configuration": imagebuilder.DataSourceInfrastructureConfiguration(),
 
 			"aws_inspector_rules_packages": inspector.DataSourceRulesPackages(),
@@ -712,6 +717,8 @@ func Provider() *schema.Provider {
 		ResourcesMap: map[string]*schema.Resource{
 			"aws_accessanalyzer_analyzer": accessanalyzer.ResourceAnalyzer(),
 
+			"aws_account_alternate_contact": account.ResourceAlternateContact(),
+
 			"aws_acm_certificate":            acm.ResourceCertificate(),
 			"aws_acm_certificate_validation": acm.ResourceCertificateValidation(),
 
@@ -791,9 +798,13 @@ func Provider() *schema.Provider {
 			"aws_apprunner_custom_domain_association":          apprunner.ResourceCustomDomainAssociation(),
 			"aws_apprunner_service":                            apprunner.ResourceService(),
 
-			"aws_appstream_fleet":         appstream.ResourceFleet(),
-			"aws_appstream_image_builder": appstream.ResourceImageBuilder(),
-			"aws_appstream_stack":         appstream.ResourceStack(),
+			"aws_appstream_directory_config":        appstream.ResourceDirectoryConfig(),
+			"aws_appstream_fleet":                   appstream.ResourceFleet(),
+			"aws_appstream_fleet_stack_association": appstream.ResourceFleetStackAssociation(),
+			"aws_appstream_image_builder":           appstream.ResourceImageBuilder(),
+			"aws_appstream_stack":                   appstream.ResourceStack(),
+			"aws_appstream_user":                    appstream.ResourceUser(),
+			"aws_appstream_user_stack_association":  appstream.ResourceUserStackAssociation(),
 
 			"aws_appsync_api_key":     appsync.ResourceAPIKey(),
 			"aws_appsync_datasource":  appsync.ResourceDataSource(),
@@ -1104,11 +1115,12 @@ func Provider() *schema.Provider {
 
 			"aws_ecrpublic_repository": ecrpublic.ResourceRepository(),
 
-			"aws_ecs_capacity_provider": ecs.ResourceCapacityProvider(),
-			"aws_ecs_cluster":           ecs.ResourceCluster(),
-			"aws_ecs_service":           ecs.ResourceService(),
-			"aws_ecs_tag":               ecs.ResourceTag(),
-			"aws_ecs_task_definition":   ecs.ResourceTaskDefinition(),
+			"aws_ecs_account_setting_default": ecs.ResourceAccountSettingDefault(),
+			"aws_ecs_capacity_provider":       ecs.ResourceCapacityProvider(),
+			"aws_ecs_cluster":                 ecs.ResourceCluster(),
+			"aws_ecs_service":                 ecs.ResourceService(),
+			"aws_ecs_tag":                     ecs.ResourceTag(),
+			"aws_ecs_task_definition":         ecs.ResourceTaskDefinition(),
 
 			"aws_efs_access_point":       efs.ResourceAccessPoint(),
 			"aws_efs_backup_policy":      efs.ResourceBackupPolicy(),
@@ -1177,10 +1189,12 @@ func Provider() *schema.Provider {
 			"aws_fms_admin_account": fms.ResourceAdminAccount(),
 			"aws_fms_policy":        fms.ResourcePolicy(),
 
-			"aws_fsx_backup":              fsx.ResourceBackup(),
-			"aws_fsx_lustre_file_system":  fsx.ResourceLustreFileSystem(),
-			"aws_fsx_ontap_file_system":   fsx.ResourceOntapFileSystem(),
-			"aws_fsx_windows_file_system": fsx.ResourceWindowsFileSystem(),
+			"aws_fsx_backup":                        fsx.ResourceBackup(),
+			"aws_fsx_lustre_file_system":            fsx.ResourceLustreFileSystem(),
+			"aws_fsx_ontap_file_system":             fsx.ResourceOntapFileSystem(),
+			"aws_fsx_ontap_storage_virtual_machine": fsx.ResourceOntapStorageVirtualMachine(),
+			"aws_fsx_ontap_volume":                  fsx.ResourceOntapVolume(),
+			"aws_fsx_windows_file_system":           fsx.ResourceWindowsFileSystem(),
 
 			"aws_gamelift_alias":              gamelift.ResourceAlias(),
 			"aws_gamelift_build":              gamelift.ResourceBuild(),
@@ -1264,6 +1278,8 @@ func Provider() *schema.Provider {
 			"aws_iot_policy_attachment":          iot.ResourcePolicyAttachment(),
 			"aws_iot_role_alias":                 iot.ResourceRoleAlias(),
 			"aws_iot_thing":                      iot.ResourceThing(),
+			"aws_iot_thing_group":                iot.ResourceThingGroup(),
+			"aws_iot_thing_group_membership":     iot.ResourceThingGroupMembership(),
 			"aws_iot_thing_principal_attachment": iot.ResourceThingPrincipalAttachment(),
 			"aws_iot_thing_type":                 iot.ResourceThingType(),
 			"aws_iot_topic_rule":                 iot.ResourceTopicRule(),
@@ -1299,6 +1315,7 @@ func Provider() *schema.Provider {
 			"aws_lambda_function":                       lambda.ResourceFunction(),
 			"aws_lambda_function_event_invoke_config":   lambda.ResourceFunctionEventInvokeConfig(),
 			"aws_lambda_layer_version":                  lambda.ResourceLayerVersion(),
+			"aws_lambda_layer_version_permission":       lambda.ResourceLayerVersionPermission(),
 			"aws_lambda_permission":                     lambda.ResourcePermission(),
 			"aws_lambda_provisioned_concurrency_config": lambda.ResourceProvisionedConcurrencyConfig(),
 
@@ -1477,13 +1494,19 @@ func Provider() *schema.Provider {
 			"aws_s3_bucket_ownership_controls":                s3.ResourceBucketOwnershipControls(),
 			"aws_s3_bucket_policy":                            s3.ResourceBucketPolicy(),
 			"aws_s3_bucket_public_access_block":               s3.ResourceBucketPublicAccessBlock(),
+			"aws_s3_bucket_replication_configuration":         s3.ResourceBucketReplicationConfiguration(),
 			"aws_s3_object_copy":                              s3.ResourceObjectCopy(),
 
-			"aws_s3_access_point":                          s3control.ResourceAccessPoint(),
-			"aws_s3_account_public_access_block":           s3control.ResourceAccountPublicAccessBlock(),
-			"aws_s3control_bucket":                         s3control.ResourceBucket(),
-			"aws_s3control_bucket_lifecycle_configuration": s3control.ResourceBucketLifecycleConfiguration(),
-			"aws_s3control_bucket_policy":                  s3control.ResourceBucketPolicy(),
+			"aws_s3_access_point":                             s3control.ResourceAccessPoint(),
+			"aws_s3control_access_point_policy":               s3control.ResourceAccessPointPolicy(),
+			"aws_s3_account_public_access_block":              s3control.ResourceAccountPublicAccessBlock(),
+			"aws_s3control_bucket":                            s3control.ResourceBucket(),
+			"aws_s3control_bucket_lifecycle_configuration":    s3control.ResourceBucketLifecycleConfiguration(),
+			"aws_s3control_bucket_policy":                     s3control.ResourceBucketPolicy(),
+			"aws_s3control_multi_region_access_point":         s3control.ResourceMultiRegionAccessPoint(),
+			"aws_s3control_multi_region_access_point_policy":  s3control.ResourceMultiRegionAccessPointPolicy(),
+			"aws_s3control_object_lambda_access_point":        s3control.ResourceObjectLambdaAccessPoint(),
+			"aws_s3control_object_lambda_access_point_policy": s3control.ResourceObjectLambdaAccessPointPolicy(),
 
 			"aws_s3outposts_endpoint": s3outposts.ResourceEndpoint(),
 
@@ -1528,6 +1551,7 @@ func Provider() *schema.Provider {
 			"aws_securityhub_product_subscription":       securityhub.ResourceProductSubscription(),
 			"aws_securityhub_standards_control":          securityhub.ResourceStandardsControl(),
 			"aws_securityhub_standards_subscription":     securityhub.ResourceStandardsSubscription(),
+			"aws_securityhub_finding_aggregator":         securityhub.ResourceFindingAggregator(),
 
 			"aws_serverlessapplicationrepository_cloudformation_stack": serverlessrepo.ResourceCloudFormationStack(),
 

@@ -2,6 +2,7 @@ package ecs
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"log"
 	"math"
@@ -12,6 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ecs"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -34,8 +36,6 @@ func ResourceService() *schema.Resource {
 			State: resourceServiceImport,
 		},
 
-		CustomizeDiff: verify.SetTagsDiff,
-
 		Timeouts: &schema.ResourceTimeout{
 			Delete: schema.DefaultTimeout(20 * time.Minute),
 		},
@@ -44,27 +44,21 @@ func ResourceService() *schema.Resource {
 			"capacity_provider_strategy": {
 				Type:     schema.TypeSet,
 				Optional: true,
-				ForceNew: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"base": {
 							Type:         schema.TypeInt,
 							Optional:     true,
 							ValidateFunc: validation.IntBetween(0, 100000),
-							ForceNew:     true,
 						},
-
 						"capacity_provider": {
 							Type:     schema.TypeString,
 							Required: true,
-							ForceNew: true,
 						},
-
 						"weight": {
 							Type:         schema.TypeInt,
 							Optional:     true,
 							ValidateFunc: validation.IntBetween(0, 1000),
-							ForceNew:     true,
 						},
 					},
 				},
@@ -159,6 +153,7 @@ func ResourceService() *schema.Resource {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
+				ForceNew: true,
 			},
 			"enable_execute_command": {
 				Type:     schema.TypeBool,
@@ -382,7 +377,43 @@ func ResourceService() *schema.Resource {
 				Default:  false,
 			},
 		},
+
+		CustomizeDiff: customdiff.Sequence(
+			verify.SetTagsDiff,
+			capacityProviderStrategyCustomizeDiff,
+		),
 	}
+}
+
+func capacityProviderStrategyCustomizeDiff(_ context.Context, d *schema.ResourceDiff, meta interface{}) error {
+	// to be backward compatible, should ForceNew almost always (previous behavior), unless:
+	//   force_new_deployment is true and
+	//   neither the old set nor new set is 0 length
+	if v := d.Get("force_new_deployment").(bool); !v {
+		return capacityProviderStrategyForceNew(d)
+	}
+
+	old, new := d.GetChange("capacity_provider_strategy")
+
+	ol := old.(*schema.Set).Len()
+	nl := new.(*schema.Set).Len()
+
+	if (ol == 0 && nl > 0) || (ol > 0 && nl == 0) {
+		return capacityProviderStrategyForceNew(d)
+	}
+
+	return nil
+}
+
+func capacityProviderStrategyForceNew(d *schema.ResourceDiff) error {
+	for _, key := range d.GetChangedKeysPrefix("capacity_provider_strategy") {
+		if d.HasChange(key) {
+			if err := d.ForceNew(key); err != nil {
+				return fmt.Errorf("while attempting to force a new ECS service for capacity_provider_strategy: %w", err)
+			}
+		}
+	}
+	return nil
 }
 
 func resourceServiceImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
