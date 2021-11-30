@@ -830,7 +830,7 @@ resource "aws_synthetics_canary" "test" {
   artifact_config {
     s3_encryption {
       encryption_mode = "SSE_S3"
-	}
+    }
   }
 
   schedule {
@@ -858,8 +858,8 @@ resource "aws_synthetics_canary" "test" {
   artifact_config {
     s3_encryption {
       encryption_mode = "SSE_KMS"
-	  kms_key_arn     = aws_kms_key.test.arn
-	}
+      kms_key_arn     = aws_kms_key.test.arn
+    }
   }
 
   schedule {
