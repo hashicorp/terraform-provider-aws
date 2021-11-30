@@ -10,7 +10,9 @@ description: |-
 
 Provides a FSx Backup resource.
 
-## Lustre Example Usage
+## Example Usage
+
+## Lustre Example 
 
 ```terraform
 resource "aws_fsx_backup" "example" {
@@ -25,7 +27,7 @@ resource "aws_fsx_lustre_file_system" "example" {
 }
 ```
 
-## Windows Example Usage
+## Windows Example 
 
 ```terraform
 resource "aws_fsx_backup" "example" {
@@ -41,7 +43,7 @@ resource "aws_fsx_windows_file_system" "example" {
 }
 ```
 
-## ONTAP Example Usage
+## ONTAP Example 
 
 ```terraform
 resource "aws_fsx_backup" "example" {
@@ -61,7 +63,7 @@ resource "aws_fsx_ontap_volume" "example" {
 
 The following arguments are supported:
 
-Note - Only file_system_id or volume_id can be specified. file_system_id is used for Lustre and Windows, volume_id is used for ONTAP. 
+Note - Only file_system_id or volume_id can be specified. file_system_id is used for Lustre and Windows, volume_id is used for ONTAP.
 
 * `file_system_id` - (Optional) The ID of the file system to back up. Required if backing up Lustre or Windows file systems.
 * `tags` - (Optional) A map of tags to assign to the file system. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level. If you have set `copy_tags_to_backups` to true, and you specify one or more tags, no existing file system tags are copied from the file system to the backup.
