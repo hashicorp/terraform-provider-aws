@@ -37,7 +37,7 @@ The following arguments are supported:
 In addition to all arguments above, the following attributes are exported:
 
 * `arn` - Amazon Resource Name of the backup.
-* `id` - Identifier of the backup, e.g. `fs-12345678`
+* `id` - Identifier of the backup, e.g., `fs-12345678`
 * `kms_key_id` -  The ID of the AWS Key Management Service (AWS KMS) key used to encrypt the backup of the Amazon FSx file system's data at rest.
 * `owner_id` - AWS account identifier that created the file system.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
@@ -53,7 +53,7 @@ configuration options:
 
 ## Import
 
-FSx Backups can be imported using the `id`, e.g.
+FSx Backups can be imported using the `id`, e.g.,
 
 ```
 $ terraform import aws_fsx_backup.example fs-543ab12b1ca672f33

@@ -82,7 +82,7 @@ POLICY
 
 The following arguments are supported:
 
-* `server_id` - (Requirement) The Server ID of the Transfer Server (e.g. `s-12345678`)
+* `server_id` - (Requirement) The Server ID of the Transfer Server (e.g., `s-12345678`)
 * `user_name` - (Requirement) The name of the user account that is assigned to one or more servers.
 * `body` - (Requirement) The public key portion of an SSH key pair.
 

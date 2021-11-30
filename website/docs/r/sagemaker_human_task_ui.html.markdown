@@ -51,7 +51,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Sagemaker Human Task UIs can be imported using the `human_task_ui_name`, e.g.
+Sagemaker Human Task UIs can be imported using the `human_task_ui_name`, e.g.,
 
 ```
 $ terraform import aws_sagemaker_human_task_ui.example example

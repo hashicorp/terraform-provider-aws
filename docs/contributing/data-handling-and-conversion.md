@@ -58,7 +58,7 @@ As a generic walkthrough, the following data handling occurs when creating a Ter
 - Terraform CLI sends a Terraform Plugin Protocol request to create the new resource with its planned new state data
 - If the Terraform Plugin is using a higher level library, such as the Terraform Plugin SDK, that library receives the request and translates the Terraform Plugin Protocol data types into the expected library types
 - Terraform Plugin invokes the resource creation function with the planned new state data
-    - **The planned new state data is converted into an remote system request (e.g. API creation request) that is invoked**
+    - **The planned new state data is converted into an remote system request (e.g., API creation request) that is invoked**
     - **The remote system response is received and the data is converted into an applied new state**
 - If the Terraform Plugin is using a higher level library, such as the Terraform Plugin SDK, that library translates the library types back into Terraform Plugin Protocol data types
 - Terraform Plugin responds to Terraform Plugin Protocol request with the new state data
@@ -86,10 +86,10 @@ To expand on the data handling that occurs specifically within the Terraform AWS
 
 - The `Create`/`CreateContext` function of a `schema.Resource` is invoked with `*schema.ResourceData` containing the planned new state data (conventionally named `d`) and an AWS API client (conventionally named `meta`).
     - Note: Before reaching this point, the `ResourceData` was already translated from the Terraform Plugin Protocol data types by the Terraform Plugin SDK so values can be read by invoking `d.Get()` and `d.GetOk()` receiver methods with Attribute and Block names from the `Schema` of the `schema.Resource`.
-- An AWS Go SDK operation input type (e.g. `*ec2.CreateVpcInput`) is initialized
-- For each necessary field to configure in the operation input type, the data is read from the `ResourceData` (e.g. `d.Get()`, `d.GetOk()`) and converted into the AWS Go SDK type for the field (e.g. `*string`)
-- The AWS Go SDK operation is invoked and the output type (e.g. `*ec2.CreateVpcOutput`) is initialized
-- For each necessary Attribute, Block, or resource identifier to be saved in the state, the data is read from the AWS Go SDK type for the field (`*string`), if necessary converted into a `ResourceData` compatible type, and saved into a mutated `ResourceData` (e.g. `d.Set()`, `d.SetId()`)
+- An AWS Go SDK operation input type (e.g., `*ec2.CreateVpcInput`) is initialized
+- For each necessary field to configure in the operation input type, the data is read from the `ResourceData` (e.g., `d.Get()`, `d.GetOk()`) and converted into the AWS Go SDK type for the field (e.g., `*string`)
+- The AWS Go SDK operation is invoked and the output type (e.g., `*ec2.CreateVpcOutput`) is initialized
+- For each necessary Attribute, Block, or resource identifier to be saved in the state, the data is read from the AWS Go SDK type for the field (`*string`), if necessary converted into a `ResourceData` compatible type, and saved into a mutated `ResourceData` (e.g., `d.Set()`, `d.SetId()`)
 - Function is returned
 
 ### Type Mapping
@@ -155,12 +155,24 @@ _NOTE: While it is possible in certain type scenarios to deeply read and write R
 
 Given the various complexities around the Terraform Plugin SDK type system, this section contains recommended implementations for Terraform AWS Provider resource code based on the [Type Mapping section](#type-mapping) and the features of the Terraform Plugin SDK and AWS Go SDK. The eventual goal and styling for many of these recommendations is to ease static analysis of the codebase and future potential code generation efforts.
 
-_Some of these coding patterns may not be well represented in the codebase, as refactoring the many older styles over years of community development is a large task, however this is meant to represent the most preferable implementations today. These will continue to evolve as this codebase and the Terraform Plugin ecosystem changes._
+_Some of these coding patterns may not be well represented in the codebase, as refactoring the many older styles over years of community development is a large task. However this is meant to represent the preferred implementations today. These will continue to evolve as this codebase and the Terraform Plugin ecosystem changes._
+
+### Where to Define Flex Functions
+
+Define FLatten and EXpand (i.e., flex) functions at the _most local level_ possible. This table provides guidance on the preferred place to define flex functions based on usage.
+
+| Where Used | Where to Define | Include Service in Name |
+|---------------|------------|--------|
+| One resource (e.g., `aws_instance`) | Resource file (e.g., `internal/service/ec2/instance.go`) | No |
+| Few resources in one service (e.g., `EC2`) | Resource file or service flex file (e.g., `internal/service/ec2/flex.go`) | No |
+| Widely used in one service (e.g., `EC2`) | Service flex file (e.g., `internal/service/ec2/flex.go`) | No |
+| Two services (e.g., `EC2` and `EKS`) | Define a copy in each service | If helpful |
+| 3+ services | `internal/flex/flex.go` | Yes |
 
 ### Expand Functions for Blocks
 
 ```go
-func expandServiceStructure(tfMap map[string]interface{}) *service.Structure {
+func expandStructure(tfMap map[string]interface{}) *service.Structure {
     if tfMap == nil {
         return nil
     }
@@ -172,7 +184,7 @@ func expandServiceStructure(tfMap map[string]interface{}) *service.Structure {
     return apiObject
 }
 
-func expandServiceStructures(tfList []interface{}) []*service.Structure {
+func expandStructures(tfList []interface{}) []*service.Structure {
     if len(tfList) == 0 {
         return nil
     }
@@ -186,7 +198,7 @@ func expandServiceStructures(tfList []interface{}) []*service.Structure {
             continue
         }
 
-        apiObject := expandServiceStructure(tfMap)
+        apiObject := expandStructure(tfMap)
 
         if apiObject == nil {
             continue
@@ -202,7 +214,7 @@ func expandServiceStructures(tfList []interface{}) []*service.Structure {
 ### Flatten Functions for Blocks
 
 ```go
-func flattenServiceStructure(apiObject *service.Structure) map[string]interface{} {
+func flattenStructure(apiObject *service.Structure) map[string]interface{} {
     if apiObject == nil {
         return nil
     }
@@ -214,7 +226,7 @@ func flattenServiceStructure(apiObject *service.Structure) map[string]interface{
     return tfMap
 }
 
-func flattenServiceStructures(apiObjects []*service.Structure) []interface{} {
+func flattenStructures(apiObjects []*service.Structure) []interface{} {
     if len(apiObjects) == 0 {
         return nil
     }
@@ -226,7 +238,7 @@ func flattenServiceStructures(apiObjects []*service.Structure) []interface{} {
             continue
         }
 
-        tfList = append(tfList, flattenServiceStructure(apiObject))
+        tfList = append(tfList, flattenStructure(apiObject))
     }
 
     return tfList
@@ -303,14 +315,14 @@ To read:
 input := service.ExampleOperationInput{}
 
 if v, ok := d.GetOk("attribute_name"); ok && len(v.([]interface{})) > 0 {
-    input.AttributeName = expandServiceStructures(v.([]interface{}))
+    input.AttributeName = expandStructures(v.([]interface{}))
 }
 ```
 
 To write:
 
 ```go
-if err := d.Set("attribute_name", flattenServiceStructures(output.Thing.AttributeName)); err != nil {
+if err := d.Set("attribute_name", flattenStructures(output.Thing.AttributeName)); err != nil {
     return fmt.Errorf("error setting attribute_name: %w", err)
 }
 ```
@@ -323,7 +335,7 @@ To read:
 input := service.ExampleOperationInput{}
 
 if v, ok := d.GetOk("attribute_name"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-    input.AttributeName = expandServiceStructure(v.([]interface{})[0].(map[string]interface{}))
+    input.AttributeName = expandStructure(v.([]interface{})[0].(map[string]interface{}))
 }
 ```
 
@@ -331,7 +343,7 @@ To write (_likely to have helper function introduced soon_):
 
 ```go
 if output.Thing.AttributeName != nil {
-    if err := d.Set("attribute_name", []interface{}{flattenServiceStructure(output.Thing.AttributeName)}); err != nil {
+    if err := d.Set("attribute_name", []interface{}{flattenStructure(output.Thing.AttributeName)}); err != nil {
         return fmt.Errorf("error setting attribute_name: %w", err)
     }
 } else {
@@ -383,14 +395,14 @@ To read:
 input := service.ExampleOperationInput{}
 
 if v, ok := d.GetOk("attribute_name"); ok && v.(*schema.Set).Len() > 0 {
-    input.AttributeName = expandServiceStructures(v.(*schema.Set).List())
+    input.AttributeName = expandStructures(v.(*schema.Set).List())
 }
 ```
 
 To write:
 
 ```go
-if err := d.Set("attribute_name", flattenServiceStructures(output.Thing.AttributeNames)); err != nil {
+if err := d.Set("attribute_name", flattenStructures(output.Thing.AttributeNames)); err != nil {
     return fmt.Errorf("error setting attribute_name: %w", err)
 }
 ```
@@ -470,7 +482,7 @@ if output.Thing.AttributeName != nil {
 To read, if always sending the attribute value is correct:
 
 ```go
-func expandServiceStructure(tfMap map[string]interface{}) *service.Structure {
+func expandStructure(tfMap map[string]interface{}) *service.Structure {
     // ...
 
     if v, ok := tfMap["nested_attribute_name"].(bool); ok {
@@ -484,7 +496,7 @@ func expandServiceStructure(tfMap map[string]interface{}) *service.Structure {
 To read, if only sending the attribute value when `true` is preferred (`!v` for opposite):
 
 ```go
-func expandServiceStructure(tfMap map[string]interface{}) *service.Structure {
+func expandStructure(tfMap map[string]interface{}) *service.Structure {
     // ...
 
     if v, ok := tfMap["nested_attribute_name"].(bool); ok && v {
@@ -498,7 +510,7 @@ func expandServiceStructure(tfMap map[string]interface{}) *service.Structure {
 To write:
 
 ```go
-func flattenServiceStructure(apiObject *service.Structure) map[string]interface{} {
+func flattenStructure(apiObject *service.Structure) map[string]interface{} {
     // ...
 
     if v := apiObject.NestedAttributeName; v != nil {
@@ -514,7 +526,7 @@ func flattenServiceStructure(apiObject *service.Structure) map[string]interface{
 To read:
 
 ```go
-func expandServiceStructure(tfMap map[string]interface{}) *service.Structure {
+func expandStructure(tfMap map[string]interface{}) *service.Structure {
     // ...
 
     if v, ok := tfMap["nested_attribute_name"].(int); ok && v != 0.0 {
@@ -528,7 +540,7 @@ func expandServiceStructure(tfMap map[string]interface{}) *service.Structure {
 To write:
 
 ```go
-func flattenServiceStructure(apiObject *service.Structure) map[string]interface{} {
+func flattenStructure(apiObject *service.Structure) map[string]interface{} {
     // ...
 
     if v := apiObject.NestedAttributeName; v != nil {
@@ -544,7 +556,7 @@ func flattenServiceStructure(apiObject *service.Structure) map[string]interface{
 To read:
 
 ```go
-func expandServiceStructure(tfMap map[string]interface{}) *service.Structure {
+func expandStructure(tfMap map[string]interface{}) *service.Structure {
     // ...
 
     if v, ok := tfMap["nested_attribute_name"].(int); ok && v != 0 {
@@ -558,7 +570,7 @@ func expandServiceStructure(tfMap map[string]interface{}) *service.Structure {
 To write:
 
 ```go
-func flattenServiceStructure(apiObject *service.Structure) map[string]interface{} {
+func flattenStructure(apiObject *service.Structure) map[string]interface{} {
     // ...
 
     if v := apiObject.NestedAttributeName; v != nil {
@@ -574,11 +586,11 @@ func flattenServiceStructure(apiObject *service.Structure) map[string]interface{
 To read:
 
 ```go
-func expandServiceStructure(tfMap map[string]interface{}) *service.Structure {
+func expandStructure(tfMap map[string]interface{}) *service.Structure {
     // ...
 
     if v, ok := tfMap["nested_attribute_name"].([]interface{}); ok && len(v) > 0 {
-        apiObject.NestedAttributeName = expandServiceStructures(v)
+        apiObject.NestedAttributeName = expandStructures(v)
     }
 
     // ...
@@ -588,11 +600,11 @@ func expandServiceStructure(tfMap map[string]interface{}) *service.Structure {
 To write:
 
 ```go
-func flattenServiceStructure(apiObject *service.Structure) map[string]interface{} {
+func flattenStructure(apiObject *service.Structure) map[string]interface{} {
     // ...
 
     if v := apiObject.NestedAttributeName; v != nil {
-        tfMap["nested_attribute_name"] = flattenServiceNestedStructures(v)
+        tfMap["nested_attribute_name"] = flattenNestedStructures(v)
     }
 
     // ...
@@ -604,11 +616,11 @@ func flattenServiceStructure(apiObject *service.Structure) map[string]interface{
 To read:
 
 ```go
-func expandServiceStructure(tfMap map[string]interface{}) *service.Structure {
+func expandStructure(tfMap map[string]interface{}) *service.Structure {
     // ...
 
     if v, ok := tfMap["nested_attribute_name"].([]interface{}); ok && len(v) > 0 {
-        apiObject.NestedAttributeName = expandServiceStructure(v[0].(map[string]interface{}))
+        apiObject.NestedAttributeName = expandStructure(v[0].(map[string]interface{}))
     }
 
     // ...
@@ -618,11 +630,11 @@ func expandServiceStructure(tfMap map[string]interface{}) *service.Structure {
 To write:
 
 ```go
-func flattenServiceStructure(apiObject *service.Structure) map[string]interface{} {
+func flattenStructure(apiObject *service.Structure) map[string]interface{} {
     // ...
 
     if v := apiObject.NestedAttributeName; v != nil {
-        tfMap["nested_attribute_name"] = []interface{}{flattenServiceNestedStructure(v)}
+        tfMap["nested_attribute_name"] = []interface{}{flattenNestedStructure(v)}
     }
 
     // ...
@@ -634,7 +646,7 @@ func flattenServiceStructure(apiObject *service.Structure) map[string]interface{
 To read:
 
 ```go
-func expandServiceStructure(tfMap map[string]interface{}) *service.Structure {
+func expandStructure(tfMap map[string]interface{}) *service.Structure {
     // ...
 
     if v, ok := tfMap["nested_attribute_name"].([]interface{}); ok && len(v) > 0 {
@@ -648,7 +660,7 @@ func expandServiceStructure(tfMap map[string]interface{}) *service.Structure {
 To write:
 
 ```go
-func flattenServiceStructure(apiObject *service.Structure) map[string]interface{} {
+func flattenStructure(apiObject *service.Structure) map[string]interface{} {
     // ...
 
     if v := apiObject.NestedAttributeName; v != nil {
@@ -674,7 +686,7 @@ if v, ok := tfMap["nested_attribute_name"].(map[string]interface{}); ok && len(v
 To write:
 
 ```go
-func flattenServiceStructure(apiObject *service.Structure) map[string]interface{} {
+func flattenStructure(apiObject *service.Structure) map[string]interface{} {
     // ...
 
     if v := apiObject.NestedAttributeName; v != nil {
@@ -690,11 +702,11 @@ func flattenServiceStructure(apiObject *service.Structure) map[string]interface{
 To read:
 
 ```go
-func expandServiceStructure(tfMap map[string]interface{}) *service.Structure {
+func expandStructure(tfMap map[string]interface{}) *service.Structure {
     // ...
 
     if v, ok := tfMap["nested_attribute_name"].(*schema.Set); ok && v.Len() > 0 {
-        apiObject.NestedAttributeName = expandServiceStructures(v.List())
+        apiObject.NestedAttributeName = expandStructures(v.List())
     }
 
     // ...
@@ -704,11 +716,11 @@ func expandServiceStructure(tfMap map[string]interface{}) *service.Structure {
 To write:
 
 ```go
-func flattenServiceStructure(apiObject *service.Structure) map[string]interface{} {
+func flattenStructure(apiObject *service.Structure) map[string]interface{} {
     // ...
 
     if v := apiObject.NestedAttributeName; v != nil {
-        tfMap["nested_attribute_name"] = flattenServiceNestedStructures(v)
+        tfMap["nested_attribute_name"] = flattenNestedStructures(v)
     }
 
     // ...
@@ -720,7 +732,7 @@ func flattenServiceStructure(apiObject *service.Structure) map[string]interface{
 To read:
 
 ```go
-func expandServiceStructure(tfMap map[string]interface{}) *service.Structure {
+func expandStructure(tfMap map[string]interface{}) *service.Structure {
     // ...
 
     if v, ok := tfMap["nested_attribute_name"].(*schema.Set); ok && v.Len() > 0 {
@@ -734,7 +746,7 @@ func expandServiceStructure(tfMap map[string]interface{}) *service.Structure {
 To write:
 
 ```go
-func flattenServiceStructure(apiObject *service.Structure) map[string]interface{} {
+func flattenStructure(apiObject *service.Structure) map[string]interface{} {
     // ...
 
     if v := apiObject.NestedAttributeName; v != nil {
@@ -750,7 +762,7 @@ func flattenServiceStructure(apiObject *service.Structure) map[string]interface{
 To read:
 
 ```go
-func expandServiceStructure(tfMap map[string]interface{}) *service.Structure {
+func expandStructure(tfMap map[string]interface{}) *service.Structure {
     // ...
 
     if v, ok := tfMap["nested_attribute_name"].(string); ok && v != "" {
@@ -764,7 +776,7 @@ func expandServiceStructure(tfMap map[string]interface{}) *service.Structure {
 To write:
 
 ```go
-func flattenServiceStructure(apiObject *service.Structure) map[string]interface{} {
+func flattenStructure(apiObject *service.Structure) map[string]interface{} {
     // ...
 
     if v := apiObject.NestedAttributeName; v != nil {
@@ -790,7 +802,7 @@ To ensure that parsing the read string value does not fail, define `nested_attri
 To read:
 
 ```go
-func expandServiceStructure(tfMap map[string]interface{}) *service.Structure {
+func expandStructure(tfMap map[string]interface{}) *service.Structure {
     // ...
 
     if v, ok := tfMap["nested_attribute_name"].(string); ok && v != "" {
@@ -806,7 +818,7 @@ func expandServiceStructure(tfMap map[string]interface{}) *service.Structure {
 To write:
 
 ```go
-func flattenServiceStructure(apiObject *service.Structure) map[string]interface{} {
+func flattenStructure(apiObject *service.Structure) map[string]interface{} {
     // ...
 
     if v := apiObject.NestedAttributeName; v != nil {
@@ -827,7 +839,7 @@ Certain resources may need to interact with binary (non UTF-8) data while the Te
 
 ### Destroy State Values
 
-During resource destroy operations, _only_ previously applied Terraform State values are available to resource logic. Even if the configuration is updated in a manner where both the resource destroy is triggered (e.g. setting the resource meta-argument `count = 0`) and an attribute value is updated, the resource logic will only have the previously applied data values.
+During resource destroy operations, _only_ previously applied Terraform State values are available to resource logic. Even if the configuration is updated in a manner where both the resource destroy is triggered (e.g., setting the resource meta-argument `count = 0`) and an attribute value is updated, the resource logic will only have the previously applied data values.
 
 Any usage of attribute values during destroy should explicitly note in the resource documentation that the desired value must be applied into the Terraform State before any apply to destroy the resource.
 
@@ -885,14 +897,14 @@ Below is a listing of relevant terms and descriptions for data handling and conv
 - **AWS Go SDK**: Library that converts Go code into AWS Service API compatible operations and data types. Currently refers to version 1 (v1) available since 2015, however version 2 (v2) will reach general availability status soon. [Project](https://github.com/aws/aws-sdk-go).
 - **AWS Go SDK Model**: AWS Go SDK compatible format of AWS Service API Model.
 - **AWS Go SDK Service**: AWS Service API Go code generated from the AWS Go SDK Model. Generated by the AWS Go SDK code.
-- **AWS Service API**: Logical boundary of an AWS service by API endpoint. Some large AWS services may be marketed with many different product names under the same service API (e.g. VPC functionality is part of the EC2 API) and vice-versa where some services may be marketed with one product name but are split into multiple service APIs (e.g. Single Sign-On functionality is split into the Identity Store and SSO Admin APIs).
+- **AWS Service API**: Logical boundary of an AWS service by API endpoint. Some large AWS services may be marketed with many different product names under the same service API (e.g., VPC functionality is part of the EC2 API) and vice-versa where some services may be marketed with one product name but are split into multiple service APIs (e.g., Single Sign-On functionality is split into the Identity Store and SSO Admin APIs).
 - **AWS Service API Model**: Declarative description of the AWS Service API operations and data types. Generated by the AWS service teams. Used to operate the API and generate API clients such as the various AWS Software Development Kits (SDKs).
 - **Terraform Language** ("Configuration"): Configuration syntax interpreted by the Terraform CLI. An implementation of [HCL](https://github.com/hashicorp/hcl). [Full Documentation](https://www.terraform.io/docs/configuration/index.html).
 - **Terraform Plugin Protocol**: Description of Terraform Plugin operations and data types. Currently based on the Remote Procedure Call (RPC) library [`gRPC`](https://grpc.io/).
 - **Terraform Plugin Go**: Low-level library that converts Go code into Terraform Plugin Protocol compatible operations and data types. Not currently implemented in the Terraform AWS Provider. [Project](https://github.com/hashicorp/terraform-plugin-go).
 - **Terraform Plugin SDK**: High-level library that converts Go code into Terraform Plugin Protocol compatible operations and data types. [Project](https://github.com/hashicorp/terraform-plugin-sdk).
 - **Terraform Plugin SDK Schema**: Declarative description of types and domain specific behaviors for a Terraform provider, including resources and attributes. [Full Documentation](https://www.terraform.io/docs/extend/schemas/index.html).
-- **Terraform State**: Bindings between objects in a remote system (e.g. an EC2 VPC) and a Terraform configuration (e.g. an `aws_vpc` resource configuration). [Full Documentation](https://www.terraform.io/docs/state/index.html).
+- **Terraform State**: Bindings between objects in a remote system (e.g., an EC2 VPC) and a Terraform configuration (e.g., an `aws_vpc` resource configuration). [Full Documentation](https://www.terraform.io/docs/state/index.html).
 
 AWS Service API Models use specific terminology to describe data and types:
 

@@ -55,7 +55,7 @@ No additional attributes are exported.
 
 ## Import
 
-MediaStore Container Policy can be imported using the MediaStore Container Name, e.g.
+MediaStore Container Policy can be imported using the MediaStore Container Name, e.g.,
 
 ```
 $ terraform import aws_media_store_container_policy.example example

@@ -27,7 +27,7 @@ data "aws_lambda_function" "existing" {
 The following arguments are supported:
 
 * `function_name` - (Required) Name of the lambda function.
-* `qualifier` - (Optional) Alias name or version number of the lambda function. e.g. `$LATEST`, `my-alias`, or `1`
+* `qualifier` - (Optional) Alias name or version number of the lambda functionE.g., `$LATEST`, `my-alias`, or `1`
 
 ## Attributes Reference
 
@@ -41,6 +41,7 @@ In addition to all arguments above, the following attributes are exported:
 * `environment` - The Lambda environment's configuration settings.
 * `file_system_config` - The connection settings for an Amazon EFS file system.
 * `handler` - The function entrypoint in your code.
+* `image_uri` - The URI of the container image.
 * `invoke_arn` - The ARN to be used for invoking Lambda Function from API Gateway.
 * `kms_key_arn` - The ARN for the KMS encryption key.
 * `last_modified` - The date this resource was last modified.

@@ -98,7 +98,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Sagemaker Workforces can be imported using the `workforce_name`, e.g.
+Sagemaker Workforces can be imported using the `workforce_name`, e.g.,
 
 ```
 $ terraform import aws_sagemaker_workforce.example example

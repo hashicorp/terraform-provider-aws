@@ -217,7 +217,7 @@ The `launch_template_config` block supports the following:
 
 * `id` - The ID of the launch template. Conflicts with `name`.
 * `name` - The name of the launch template. Conflicts with `id`.
-* `version` - (Optional) Template version. Unlike the autoscaling equivalent, does not support `$Latest` or `$Default`, so use the launch_template resource's attribute, e.g. `"${aws_launch_template.foo.latest_version}"`. It will use the default version if omitted.
+* `version` - (Optional) Template version. Unlike the autoscaling equivalent, does not support `$Latest` or `$Default`, so use the launch_template resource's attribute, e.g., `"${aws_launch_template.foo.latest_version}"`. It will use the default version if omitted.
 
     **Note:** The specified launch template can specify only a subset of the
     inputs of [`aws_launch_template`](launch_template.html).  There are limitations on
@@ -258,7 +258,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Spot Fleet Requests can be imported using `id`, e.g.
+Spot Fleet Requests can be imported using `id`, e.g.,
 
 ```
 $ terraform import aws_spot_fleet_request.fleet sfr-005e9ec8-5546-4c31-b317-31a62325411e

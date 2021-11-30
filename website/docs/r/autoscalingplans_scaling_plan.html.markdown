@@ -217,7 +217,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Auto Scaling scaling plans can be imported using the `name`, e.g.
+Auto Scaling scaling plans can be imported using the `name`, e.g.,
 
 ```
 $ terraform import aws_autoscalingplans_scaling_plan.example MyScale1

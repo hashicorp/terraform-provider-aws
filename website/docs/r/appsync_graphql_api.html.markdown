@@ -233,11 +233,11 @@ In addition to all arguments above, the following attributes are exported:
 * `id` - API ID
 * `arn` - The ARN
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
-* `uris` - Map of URIs associated with the API. e.g. `uris["GRAPHQL"] = https://ID.appsync-api.REGION.amazonaws.com/graphql`
+* `uris` - Map of URIs associated with the APIE.g., `uris["GRAPHQL"] = https://ID.appsync-api.REGION.amazonaws.com/graphql`
 
 ## Import
 
-AppSync GraphQL API can be imported using the GraphQL API ID, e.g.
+AppSync GraphQL API can be imported using the GraphQL API ID, e.g.,
 
 ```
 $ terraform import aws_appsync_graphql_api.example 0123456789
