@@ -804,7 +804,6 @@ func expandQuickSightDataSetUsageConfiguration(tfList []interface{}) *quicksight
 	}
 
 	tfMap, ok := tfList[0].(map[string]interface{})
-
 	if !ok {
 		return nil
 	}
@@ -835,9 +834,79 @@ func expandQuickSightDataSetPermissions(tfList []interface{}) []*quicksight.Reso
 }
 
 func expandQuickSightDataSetRowLevelPermissionDataSet(tfList []interface{}) *quicksight.RowLevelPermissionDataSet {
-	return nil
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
+
+	tfMap, ok := tfList[0].(map[string]interface{})
+	if !ok {
+		return nil
+	}
+
+	rowLevelPermission := &quicksight.RowLevelPermissionDataSet{}
+
+	if v, ok := tfMap["arn"].(string); ok {
+		rowLevelPermission.Arn = aws.String(v)
+	}
+
+	if v, ok := tfMap["permission_policy"].(string); ok {
+		rowLevelPermission.PermissionPolicy = aws.String(v)
+	}
+
+	if v, ok := tfMap["format_version"].(string); ok {
+		rowLevelPermission.FormatVersion = aws.String(v)
+	}
+
+	if v, ok := tfMap["namespace"].(string); ok {
+		rowLevelPermission.Namespace = aws.String(v)
+	}
+
+	if v, ok := tfMap["status"].(string); ok {
+		rowLevelPermission.Status = aws.String(v)
+	}
+
+	return rowLevelPermission
 }
 
 func expandQuickSightDataSetRowLevelPermissionTagConfigurations(tfList []interface{}) *quicksight.RowLevelPermissionTagConfiguration {
-	return nil
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
+
+	tfMap, ok := tfList[0].(map[string]interface{})
+	if !ok {
+		return nil
+	}
+
+	rowLevelPermissionTagConfiguration := &quicksight.RowLevelPermissionTagConfiguration{}
+
+	if v, ok := tfMap["tag_rules"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		m, ok := v[0].(map[string]interface{})
+
+		if ok {
+			tagRules := &quicksight.RowLevelPermissionTagRule{}
+
+			if v, ok := m["column_name"].(string); ok {
+				tagRules.ColumnName = aws.String(v)
+			}
+
+			if v, ok := m["tag_key"].(string); ok {
+				tagRules.TagKey = aws.String(v)
+			}
+
+			if v, ok := m["match_all_value"].(string); ok {
+				tagRules.MatchAllValue = aws.String(v)
+			}
+
+			if v, ok := m["tag_multi_value_delimiter"].(string); ok {
+				tagRules.TagMultiValueDelimiter = aws.String(v)
+			}
+		}
+	}
+
+	if v, ok := tfMap["status"].(string); ok {
+		rowLevelPermissionTagConfiguration.Status = aws.String(v)
+	}
+
+	return rowLevelPermissionTagConfiguration
 }
