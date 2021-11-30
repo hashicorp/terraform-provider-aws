@@ -24,11 +24,20 @@ func TestAccAutoScalingGroupsDataSource_basic(t *testing.T) {
 				Config: testAccCheckGroupsConfig(sdkacctest.RandInt(), sdkacctest.RandInt(), sdkacctest.RandInt()),
 			},
 			{
-				Config: testAccCheckGroupsWithDataSourceConfig(sdkacctest.RandInt(), sdkacctest.RandInt(), sdkacctest.RandInt()),
+				Config: testAccCheckGroupsWithDataSourceConfig(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroups("data.aws_autoscaling_groups.group_list"),
+					testAccCheckGroups("data.aws_autoscaling_groups.group_list_tag_lookup"),
+					testAccCheckGroups("data.aws_autoscaling_groups.group_list_multiple_filters"),
+					testAccCheckGroups("data.aws_autoscaling_groups.group_list_multiple_values"),
 					resource.TestCheckResourceAttr("data.aws_autoscaling_groups.group_list", "names.#", "3"),
 					resource.TestCheckResourceAttr("data.aws_autoscaling_groups.group_list", "arns.#", "3"),
+					resource.TestCheckResourceAttr("data.aws_autoscaling_groups.group_list_tag_lookup", "names.#", "3"),
+					resource.TestCheckResourceAttr("data.aws_autoscaling_groups.group_list_tag_lookup", "arns.#", "3"),
+					resource.TestCheckResourceAttr("data.aws_autoscaling_groups.group_list_multiple_filters", "names.#", "1"),
+					resource.TestCheckResourceAttr("data.aws_autoscaling_groups.group_list_multiple_filters", "arns.#", "1"),
+					resource.TestCheckResourceAttr("data.aws_autoscaling_groups.group_list_multiple_values", "names.#", "2"),
+					resource.TestCheckResourceAttr("data.aws_autoscaling_groups.group_list_multiple_values", "arns.#", "2"),
 				),
 			},
 		},
@@ -116,6 +125,11 @@ resource "aws_autoscaling_group" "bar" {
     value               = "foo-bar"
     propagate_at_launch = true
   }
+  tag {
+    key                 = "some-arbitrary-tag"
+    value               = "some-arbitrary-value"
+    propagate_at_launch = true
+  }
 }
 
 resource "aws_autoscaling_group" "foo" {
@@ -134,6 +148,11 @@ resource "aws_autoscaling_group" "foo" {
     value               = "foo-bar"
     propagate_at_launch = true
   }
+  tag {
+    key                 = "some-arbitrary-tag"
+    value               = "some-other-arbitrary-value"
+    propagate_at_launch = true
+  }
 }
 
 resource "aws_autoscaling_group" "barbaz" {
@@ -150,83 +169,19 @@ resource "aws_autoscaling_group" "barbaz" {
   tag {
     key                 = "Foo"
     value               = "foo-bar"
+    propagate_at_launch = true
+  }
+  tag {
+    key                 = "lorem"
+    value               = "ipsum"
     propagate_at_launch = true
   }
 }
 `, rInt1, rInt2, rInt3)
 }
 
-func testAccCheckGroupsWithDataSourceConfig(rInt1, rInt2, rInt3 int) string {
-	return acctest.ConfigAvailableAZsNoOptIn() + fmt.Sprintf(`
-data "aws_ami" "test_ami" {
-  most_recent = true
-  owners      = ["amazon"]
-
-  filter {
-    name   = "name"
-    values = ["amzn-ami-hvm-*-x86_64-gp2"]
-  }
-}
-
-resource "aws_launch_configuration" "foobar" {
-  image_id      = data.aws_ami.test_ami.id
-  instance_type = "t1.micro"
-}
-
-resource "aws_autoscaling_group" "bar" {
-  availability_zones = [data.aws_availability_zones.available.names[0]]
-  name               = "test-asg-%d"
-  max_size           = 1
-  min_size           = 0
-  health_check_type  = "EC2"
-  desired_capacity   = 0
-  force_delete       = true
-
-  launch_configuration = aws_launch_configuration.foobar.name
-
-  tag {
-    key                 = "Foo"
-    value               = "foo-bar"
-    propagate_at_launch = true
-  }
-}
-
-resource "aws_autoscaling_group" "foo" {
-  availability_zones = [data.aws_availability_zones.available.names[1]]
-  name               = "test-asg-%d"
-  max_size           = 1
-  min_size           = 0
-  health_check_type  = "EC2"
-  desired_capacity   = 0
-  force_delete       = true
-
-  launch_configuration = aws_launch_configuration.foobar.name
-
-  tag {
-    key                 = "Foo"
-    value               = "foo-bar"
-    propagate_at_launch = true
-  }
-}
-
-resource "aws_autoscaling_group" "barbaz" {
-  availability_zones = [data.aws_availability_zones.available.names[2]]
-  name               = "test-asg-%d"
-  max_size           = 1
-  min_size           = 0
-  health_check_type  = "EC2"
-  desired_capacity   = 0
-  force_delete       = true
-
-  launch_configuration = aws_launch_configuration.foobar.name
-
-  tag {
-    key                 = "Foo"
-    value               = "foo-bar"
-    propagate_at_launch = true
-  }
-}
-
+func testAccCheckGroupsWithDataSourceConfig() string {
+	return acctest.ConfigAvailableAZsNoOptIn() + `
 data "aws_autoscaling_groups" "group_list" {
   filter {
     name   = "key"
@@ -238,5 +193,30 @@ data "aws_autoscaling_groups" "group_list" {
     values = ["foo-bar"]
   }
 }
-`, rInt1, rInt2, rInt3)
+
+data "aws_autoscaling_groups" "group_list_tag_lookup" {
+  filter {
+    name   = "tag:Foo"
+    values = ["foo-bar"]
+  }
+}
+
+data "aws_autoscaling_groups" "group_list_multiple_filters" {
+  filter {
+    name   = "tag:Foo"
+    values = ["foo-bar"]
+  }
+  filter {
+    name   = "key"
+    values = ["lorem"]
+  }
+}
+
+data "aws_autoscaling_groups" "group_list_multiple_values" {
+  filter {
+    name   = "tag:some-arbitrary-tag"
+    values = ["some-arbitrary-value", "some-other-arbitrary-value"]
+  }
+}
+`
 }
