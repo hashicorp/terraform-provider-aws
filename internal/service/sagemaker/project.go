@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
@@ -122,13 +123,12 @@ func resourceProjectRead(d *schema.ResourceData, meta interface{}) error {
 
 	project, err := FindProjectByName(conn, d.Id())
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, "ValidationException", "does not exist") {
+		if !d.IsNewResource() && tfresource.NotFound(err) {
 			d.SetId("")
 			log.Printf("[WARN] Unable to find Sagemaker Project (%s); removing from state", d.Id())
 			return nil
 		}
 		return fmt.Errorf("error reading SageMaker Project (%s): %w", d.Id(), err)
-
 	}
 
 	arn := aws.StringValue(project.ProjectArn)
@@ -183,16 +183,14 @@ func resourceProjectDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if _, err := conn.DeleteProject(input); err != nil {
-		if tfawserr.ErrMessageContains(err, "ValidationException", "does not exist") {
+		if tfawserr.ErrMessageContains(err, "ValidationException", "does not exist") ||
+			tfawserr.ErrMessageContains(err, "ValidationException", "Cannot delete Project in DeleteCompleted status") {
 			return nil
 		}
 		return fmt.Errorf("error deleting SageMaker Project (%s): %w", d.Id(), err)
 	}
 
 	if _, err := WaitProjectDeleted(conn, d.Id()); err != nil {
-		if tfawserr.ErrMessageContains(err, "ValidationException", "does not exist") {
-			return nil
-		}
 		return fmt.Errorf("error waiting for SageMaker Project (%s) to delete: %w", d.Id(), err)
 	}
 

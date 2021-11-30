@@ -436,7 +436,7 @@ func FindProjectByName(conn *sagemaker.SageMaker, name string) (*sagemaker.Descr
 
 	output, err := conn.DescribeProject(input)
 
-	if tfawserr.ErrCodeEquals(err, sagemaker.ErrCodeResourceNotFound) {
+	if tfawserr.ErrMessageContains(err, "ValidationException", "does not exist") {
 		return nil, &resource.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -451,8 +451,12 @@ func FindProjectByName(conn *sagemaker.SageMaker, name string) (*sagemaker.Descr
 		return nil, tfresource.NewEmptyResultError(input)
 	}
 
-	if aws.StringValue(output.ProjectStatus) == sagemaker.ProjectStatusDeleteCompleted {
-		return nil, tfresource.NewEmptyResultError(input)
+	status := aws.StringValue(output.ProjectStatus)
+	if status == sagemaker.ProjectStatusDeleteCompleted {
+		return nil, &resource.NotFoundError{
+			Message:     status,
+			LastRequest: input,
+		}
 	}
 
 	return output, nil
