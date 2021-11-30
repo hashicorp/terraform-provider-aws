@@ -443,6 +443,10 @@ func WaitProjectDeleted(conn *sagemaker.SageMaker, name string) (*sagemaker.Desc
 	outputRaw, err := stateConf.WaitForState()
 
 	if output, ok := outputRaw.(*sagemaker.DescribeProjectOutput); ok {
+		if status, reason := aws.StringValue(output.ProjectStatus), aws.StringValue(output.ServiceCatalogProvisionedProductDetails.ProvisionedProductStatusMessage); status == sagemaker.ProjectStatusDeleteFailed && reason != "" {
+			tfresource.SetLastError(err, errors.New(reason))
+		}
+
 		return output, err
 	}
 
@@ -461,6 +465,10 @@ func WaitProjectCreated(conn *sagemaker.SageMaker, name string) (*sagemaker.Desc
 	outputRaw, err := stateConf.WaitForState()
 
 	if output, ok := outputRaw.(*sagemaker.DescribeProjectOutput); ok {
+		if status, reason := aws.StringValue(output.ProjectStatus), aws.StringValue(output.ServiceCatalogProvisionedProductDetails.ProvisionedProductStatusMessage); status == sagemaker.ProjectStatusCreateFailed && reason != "" {
+			tfresource.SetLastError(err, errors.New(reason))
+		}
+
 		return output, err
 	}
 
