@@ -1819,6 +1819,7 @@ func TestAccELBV2TargetGroup_A_lambdaMultiValueHeadersEnabled(t *testing.T) {
 				ImportStateVerifyIgnore: []string{
 					"connection_termination",
 					"deregistration_delay",
+					"ip_address_type",
 					"proxy_protocol_v2",
 					"slow_start",
 					"load_balancing_algorithm_type",
