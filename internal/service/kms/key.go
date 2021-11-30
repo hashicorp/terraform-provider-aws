@@ -200,7 +200,7 @@ func resourceKeyRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("key_usage", key.metadata.KeyUsage)
 	d.Set("multi_region", key.metadata.MultiRegion)
 
-	policyToSet, err := verify.PolicyToSet(d.Get("policy").(string), key.policy)
+	policyToSet, err := verify.NewPolicyUnlessEquivalent(d.Get("policy").(string), key.policy)
 
 	if err != nil {
 		return fmt.Errorf("while setting policy (%s), encountered: %w", key.policy, err)

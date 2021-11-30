@@ -292,7 +292,7 @@ func TestPolicyToSet(t *testing.T) {
 	}
 
 	for _, v := range testCases {
-		got, err := PolicyToSet(v.oldPolicy, v.newPolicy)
+		got, err := NewPolicyUnlessEquivalent(v.oldPolicy, v.newPolicy)
 
 		if err != nil {
 			t.Fatalf("unexpected error with test case %s: %s", v.name, err)

@@ -618,7 +618,7 @@ resource "aws_kms_key" "test" {
   deletion_window_in_days = 7
 
   policy = jsonencode({
-	Id = %[1]q
+    Id = %[1]q
     Statement = [
       {
         Action = "kms:*"
