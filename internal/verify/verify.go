@@ -18,11 +18,14 @@ func SliceContainsString(slice []interface{}, s string) (int, bool) {
 }
 
 func NormalizeJSONOrYAMLString(templateString interface{}) (string, error) {
+    var cleanedTemplateString interface{} = strings.ReplaceAll(templateString.(string), "\r", "")
 	if looksLikeJsonString(templateString) {
 		return structure.NormalizeJsonString(templateString.(string))
 	}
-
-	return checkYAMLString(templateString)
+    if looksLikeJsonString(cleanedTemplateString) {
+		return structure.NormalizeJsonString(cleanedTemplateString)
+	}
+	return checkYAMLString(cleanedTemplateString)
 }
 
 func PointersMapToStringList(pointers map[string]*string) map[string]interface{} {
