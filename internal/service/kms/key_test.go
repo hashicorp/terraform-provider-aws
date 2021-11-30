@@ -539,10 +539,10 @@ resource "aws_kms_key" "test" {
   deletion_window_in_days = 7
 
   policy = jsonencode({
-    Id        = %[1]q
+    Id = %[1]q
     Statement = [{
-      Sid       = "Enable IAM User Permissions"
-      Effect    = "Allow"
+      Sid    = "Enable IAM User Permissions"
+      Effect = "Allow"
       Principal = {
         AWS = "*"
       }
@@ -566,7 +566,7 @@ resource "aws_kms_key" "test" {
   bypass_policy_lockout_safety_check = %[2]t
 
   policy = jsonencode({
-    Id        = %[1]q
+    Id = %[1]q
     Statement = [
       {
         Action = [
@@ -579,11 +579,10 @@ resource "aws_kms_key" "test" {
           "kms:TagResource",
           "kms:UntagResource",
         ]
-        Effect    = "Allow"
+        Effect = "Allow"
         Principal = {
           AWS = data.aws_caller_identity.current.arn
         }
-
         Resource = "*"
         Sid      = "Enable IAM User Permissions"
       },
