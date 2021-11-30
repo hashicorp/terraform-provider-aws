@@ -70,6 +70,22 @@ func ResourceProject() *schema.Resource {
 							Optional: true,
 							Computed: true,
 						},
+						"provisioning_parameter": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"key": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+									"value": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+								},
+							},
+						},
 					},
 				},
 			},
@@ -89,7 +105,7 @@ func resourceProjectCreate(d *schema.ResourceData, meta interface{}) error {
 	name := d.Get("project_name").(string)
 	input := &sagemaker.CreateProjectInput{
 		ProjectName:                       aws.String(name),
-		ServiceCatalogProvisioningDetails: expandSageMakerProjectServiceCatalogProvisioningDetails(d.Get("service_catalog_provisioning_details").([]interface{})),
+		ServiceCatalogProvisioningDetails: expandProjectServiceCatalogProvisioningDetails(d.Get("service_catalog_provisioning_details").([]interface{})),
 	}
 
 	if v, ok := d.GetOk("project_description"); ok {
@@ -137,7 +153,7 @@ func resourceProjectRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("arn", arn)
 	d.Set("project_description", project.ProjectDescription)
 
-	if err := d.Set("service_catalog_provisioning_details", flattenSageMakerProjectServiceCatalogProvisioningDetails(project.ServiceCatalogProvisioningDetails)); err != nil {
+	if err := d.Set("service_catalog_provisioning_details", flattenProjectServiceCatalogProvisioningDetails(project.ServiceCatalogProvisioningDetails)); err != nil {
 		return fmt.Errorf("error setting service_catalog_provisioning_details: %w", err)
 	}
 
@@ -197,7 +213,7 @@ func resourceProjectDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func expandSageMakerProjectServiceCatalogProvisioningDetails(l []interface{}) *sagemaker.ServiceCatalogProvisioningDetails {
+func expandProjectServiceCatalogProvisioningDetails(l []interface{}) *sagemaker.ServiceCatalogProvisioningDetails {
 	if len(l) == 0 {
 		return nil
 	}
@@ -216,10 +232,38 @@ func expandSageMakerProjectServiceCatalogProvisioningDetails(l []interface{}) *s
 		scpd.ProvisioningArtifactId = aws.String(v)
 	}
 
+	if v, ok := m["provisioning_parameter"].([]interface{}); ok && len(v) > 0 {
+		scpd.ProvisioningParameters = expandProjectProvisioningParameters(v)
+	}
+
 	return scpd
 }
 
-func flattenSageMakerProjectServiceCatalogProvisioningDetails(scpd *sagemaker.ServiceCatalogProvisioningDetails) []map[string]interface{} {
+func expandProjectProvisioningParameters(l []interface{}) []*sagemaker.ProvisioningParameter {
+	if len(l) == 0 {
+		return nil
+	}
+
+	params := make([]*sagemaker.ProvisioningParameter, 0, len(l))
+
+	for _, lRaw := range l {
+		data := lRaw.(map[string]interface{})
+
+		scpd := &sagemaker.ProvisioningParameter{
+			Key: aws.String(data["key"].(string)),
+		}
+
+		if v, ok := data["value"].(string); ok && v != "" {
+			scpd.Value = aws.String(v)
+		}
+
+		params = append(params, scpd)
+	}
+
+	return params
+}
+
+func flattenProjectServiceCatalogProvisioningDetails(scpd *sagemaker.ServiceCatalogProvisioningDetails) []map[string]interface{} {
 	if scpd == nil {
 		return []map[string]interface{}{}
 	}
@@ -236,5 +280,26 @@ func flattenSageMakerProjectServiceCatalogProvisioningDetails(scpd *sagemaker.Se
 		m["provisioning_artifact_id"] = aws.StringValue(scpd.ProvisioningArtifactId)
 	}
 
+	if scpd.ProvisioningParameters != nil {
+		m["provisioning_parameter"] = flattenProjectProvisioningParameters(scpd.ProvisioningParameters)
+	}
+
 	return []map[string]interface{}{m}
+}
+
+func flattenProjectProvisioningParameters(scpd []*sagemaker.ProvisioningParameter) []map[string]interface{} {
+	params := make([]map[string]interface{}, 0, len(scpd))
+
+	for _, lRaw := range scpd {
+		param := make(map[string]interface{})
+		param["key"] = aws.StringValue(lRaw.Key)
+
+		if lRaw.Value != nil {
+			param["value"] = lRaw.Value
+		}
+
+		params = append(params, param)
+	}
+
+	return params
 }

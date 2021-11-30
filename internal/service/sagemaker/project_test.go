@@ -347,7 +347,7 @@ resource "aws_sagemaker_project" "test" {
   service_catalog_provisioning_details {
     product_id = aws_servicecatalog_constraint.test.product_id
   }
-}	
+}
 `, rName)
 }
 
@@ -372,7 +372,7 @@ resource "aws_sagemaker_project" "test" {
   service_catalog_provisioning_details {
     product_id = aws_servicecatalog_constraint.test.product_id
   }
-  
+
   tags = {
     %[2]q = %[3]q
   }
@@ -388,7 +388,7 @@ resource "aws_sagemaker_project" "test" {
   service_catalog_provisioning_details {
     product_id = aws_servicecatalog_constraint.test.product_id
   }
- 
+
   tags = {
     %[2]q = %[3]q
     %[4]q = %[5]q
