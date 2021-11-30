@@ -257,8 +257,8 @@ resource "aws_elasticache_user_group" "test" {
 
 func testAccUserGroupTagsConfig(rName, tagKey, tagValue string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
-resource "aws_elasticache_user" "test" {
-  user_id       = %[1]q
+resource "aws_elasticache_user" "test1" {
+  user_id       = "%[1]s-1"
   user_name     = "default"
   access_string = "on ~app::* -@all +@read +@hash +@bitmap +@geo -setbit -bitfield -hset -hsetnx -hmset -hincrby -hincrbyfloat -hdel -bitop -geoadd -georadius -georadiusbymember"
   engine        = "REDIS"
@@ -268,7 +268,7 @@ resource "aws_elasticache_user" "test" {
 resource "aws_elasticache_user_group" "test" {
   user_group_id = %[1]q
   engine        = "REDIS"
-  user_ids      = [aws_elasticache_user.test.user_id]
+  user_ids      = [aws_elasticache_user.test1.user_id]
 
   tags = {
     %[2]s = %[3]q
