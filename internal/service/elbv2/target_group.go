@@ -124,6 +124,13 @@ func ResourceTargetGroup() *schema.Resource {
 					},
 				},
 			},
+			"ip_address_type": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				Default:      elbv2.TargetGroupIpAddressTypeEnumIpv4,
+				ValidateFunc: validation.StringInSlice(elbv2.TargetGroupIpAddressTypeEnum_Values(), true),
+			},
 			"lambda_multi_value_headers_enabled": {
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -328,6 +335,16 @@ func resourceTargetGroupCreate(d *schema.ResourceData, meta interface{}) error {
 			params.ProtocolVersion = aws.String(d.Get("protocol_version").(string))
 		}
 		params.VpcId = aws.String(d.Get("vpc_id").(string))
+	}
+
+	if d.Get("target_type").(string) == elbv2.TargetTypeEnumIp {
+		params.IpAddressType = aws.String(d.Get("ip_address_type").(string))
+	} else {
+		if _, ok := d.GetOk("ip_address_type"); ok {
+			if d.Get("ip_address_type").(string) == elbv2.TargetGroupIpAddressTypeEnumIpv6 {
+				return fmt.Errorf("IPv6 target groups only support IP type targets")
+			}
+		}
 	}
 
 	if healthChecks := d.Get("health_check").([]interface{}); len(healthChecks) == 1 {
@@ -891,6 +908,10 @@ func flattenTargetGroupResource(d *schema.ResourceData, meta interface{}, target
 		d.Set("vpc_id", targetGroup.VpcId)
 		d.Set("port", targetGroup.Port)
 		d.Set("protocol", targetGroup.Protocol)
+	}
+
+	if v, _ := d.Get("target_type").(string); v == elbv2.TargetTypeEnumIp {
+		d.Set("ip_address_type", targetGroup.IpAddressType)
 	}
 
 	switch d.Get("protocol").(string) {

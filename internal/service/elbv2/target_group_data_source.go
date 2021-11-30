@@ -76,6 +76,10 @@ func DataSourceTargetGroup() *schema.Resource {
 					},
 				},
 			},
+			"ip_address_type": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"lambda_multi_value_headers_enabled": {
 				Type:     schema.TypeBool,
 				Computed: true,

@@ -444,6 +444,83 @@ func TestAccELBV2TargetGroup_basicUdp(t *testing.T) {
 	})
 }
 
+func TestAccELBV2TargetGroup_basicIPv6(t *testing.T) {
+	var conf elbv2.TargetGroup
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_lb_target_group.test"
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, elbv2.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckTargetGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTargetGroupConfig_basicIPv6(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTargetGroupExists(resourceName, &conf),
+					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "ip_address_type", "ipv6"),
+					resource.TestCheckResourceAttr(resourceName, "port", "514"),
+					resource.TestCheckResourceAttr(resourceName, "protocol", "TCP"),
+					resource.TestCheckResourceAttrSet(resourceName, "vpc_id"),
+					resource.TestCheckResourceAttr(resourceName, "health_check.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "health_check.0.port", "514"),
+					resource.TestCheckResourceAttr(resourceName, "health_check.0.protocol", "TCP"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
+				),
+			},
+		},
+	})
+}
+
+func TestAccELBV2TargetGroup_changeIPAddressTypeForceNew(t *testing.T) {
+	var before, after elbv2.TargetGroup
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_lb_target_group.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, elbv2.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckTargetGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTargetGroupConfig_basicIPv4(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTargetGroupExists(resourceName, &before),
+					resource.TestCheckResourceAttr(resourceName, "ip_address_type", "ipv4"),
+				),
+			},
+			{
+				Config: testAccTargetGroupConfig_basicIPv6(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTargetGroupExists(resourceName, &after),
+					resource.TestCheckResourceAttr(resourceName, "ip_address_type", "ipv6"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccELBV2TargetGroup_targetTypeInvalidWithIPv6(t *testing.T) {
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, elbv2.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckTargetGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccTargetGroupConfig_invalidIPv6(rName),
+				ExpectError: regexp.MustCompile("IPv6 target groups only support IP type targets"),
+			},
+		},
+	})
+}
+
 func TestAccELBV2TargetGroup_changeNameForceNew(t *testing.T) {
 	var before, after elbv2.TargetGroup
 	rNameBefore := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -2477,6 +2554,95 @@ resource "aws_lb_target_group" "test" {
   name     = %[1]q
   port     = 514
   protocol = "UDP"
+  vpc_id   = aws_vpc.test.id
+
+  health_check {
+    protocol = "TCP"
+    port     = 514
+  }
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName)
+}
+
+func testAccTargetGroupConfig_basicIPv4(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_lb_target_group" "test" {
+  name     = %[1]q
+  ip_address_type = "ipv4"
+  port     = 514
+  protocol = "TCP"
+  target_type = "ip"
+  vpc_id   = aws_vpc.test.id
+
+  health_check {
+    protocol = "TCP"
+    port     = 514
+  }
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName)
+}
+
+func testAccTargetGroupConfig_basicIPv6(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_lb_target_group" "test" {
+  name     = %[1]q
+  ip_address_type = "ipv6"
+  port     = 514
+  protocol = "TCP"
+  target_type = "ip"
+  vpc_id   = aws_vpc.test.id
+
+  health_check {
+    protocol = "TCP"
+    port     = 514
+  }
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName)
+}
+
+func testAccTargetGroupConfig_invalidIPv6(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_lb_target_group" "test" {
+  name     = %[1]q
+  ip_address_type = "ipv6"
+  port     = 514
+  protocol = "TCP"
   vpc_id   = aws_vpc.test.id
 
   health_check {
