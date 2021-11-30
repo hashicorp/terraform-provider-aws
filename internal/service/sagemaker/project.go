@@ -67,6 +67,7 @@ func ResourceProject() *schema.Resource {
 						"provisioning_artifact_id": {
 							Type:     schema.TypeString,
 							Optional: true,
+							Computed: true,
 						},
 					},
 				},
@@ -98,9 +99,11 @@ func resourceProjectCreate(d *schema.ResourceData, meta interface{}) error {
 		input.Tags = Tags(tags.IgnoreAWS())
 	}
 
-	_, err := conn.CreateProject(input)
+	_, err := verify.RetryOnAWSCode("ValidationException", func() (interface{}, error) {
+		return conn.CreateProject(input)
+	})
 	if err != nil {
-		return fmt.Errorf("error creating SageMaker Project %s: %w", name, err)
+		return fmt.Errorf("error creating Sagemaker project: %w", err)
 	}
 
 	d.SetId(name)

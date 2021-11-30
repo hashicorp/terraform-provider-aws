@@ -6,13 +6,13 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/sagemaker"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfsagemaker "github.com/hashicorp/terraform-provider-aws/internal/service/sagemaker"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func TestAccSageMakerProject_basic(t *testing.T) {
@@ -43,6 +43,9 @@ func TestAccSageMakerProject_basic(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
+			{
+				Config: testAccProjectBaseConfig(rName),
+			},
 		},
 	})
 }
@@ -70,6 +73,9 @@ func TestAccSageMakerProject_description(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
+			{
+				Config: testAccProjectBaseConfig(rName),
+			},
 		},
 	})
 }
@@ -86,7 +92,7 @@ func TestAccSageMakerProject_tags(t *testing.T) {
 		CheckDestroy: testAccCheckProjectDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccProjectTags1Config(rName, "key1", "value1"),
+				Config: testAccProjectTagsConfig1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProjectExists(resourceName, &mpg),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -99,7 +105,7 @@ func TestAccSageMakerProject_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccProjectTags2Config(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccProjectTagsConfig2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProjectExists(resourceName, &mpg),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -108,12 +114,15 @@ func TestAccSageMakerProject_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccProjectTags1Config(rName, "key2", "value2"),
+				Config: testAccProjectTagsConfig1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProjectExists(resourceName, &mpg),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
+			},
+			{
+				Config: testAccProjectBaseConfig(rName),
 			},
 		},
 	})
@@ -153,7 +162,7 @@ func testAccCheckProjectDestroy(s *terraform.State) error {
 
 		Project, err := tfsagemaker.FindProjectByName(conn, rs.Primary.ID)
 
-		if tfawserr.ErrMessageContains(err, tfsagemaker.ErrCodeValidationException, "does not exist") {
+		if tfresource.NotFound(err) {
 			continue
 		}
 
@@ -192,7 +201,7 @@ func testAccCheckProjectExists(n string, mpg *sagemaker.DescribeProjectOutput) r
 	}
 }
 
-func testAccProjectBasicConfig(rName string) string {
+func testAccProjectBaseConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket        = %[1]q
@@ -206,6 +215,16 @@ resource "aws_s3_bucket_object" "test" {
 
   content = jsonencode({
     AWSTemplateFormatVersion = "2010-09-09"
+    Parameters = {
+      SageMakerProjectName = {
+        Type        = "String"
+        Description = "Name of the project"
+      }
+      SageMakerProjectId = {
+        Type        = "String"
+        Description = "Service generated Id of the project."
+      }
+    }
 
     Resources = {
       MyVPC = {
@@ -229,7 +248,7 @@ resource "aws_s3_bucket_object" "test" {
 
 resource "aws_servicecatalog_product" "test" {
   name                = %[1]q
-  owner               = "ägare"
+  owner               = %[1]q
   type                = "CLOUD_FORMATION_TEMPLATE"
 
   provisioning_artifact_parameters {
@@ -269,30 +288,91 @@ resource "aws_iam_role" "test" {
   })
 }
 
+resource "aws_iam_role_policy" "test" {
+  name = %[1]q
+  role = aws_iam_role.test.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = [
+		  "cloudformation:CreateStack",
+		  "cloudformation:DeleteStack",
+		  "cloudformation:DescribeStackEvents",
+		  "cloudformation:DescribeStacks",
+		  "cloudformation:GetTemplateSummary",
+		  "cloudformation:SetStackPolicy",
+		  "cloudformation:ValidateTemplate",
+		  "cloudformation:UpdateStack",
+		  "s3:GetObject",
+		  "servicecatalog:*",
+		  "ec2:*"
+        ]
+        Effect   = "Allow"
+        Resource = "*"
+      },
+    ]
+  })
+}
+
+resource "aws_servicecatalog_constraint" "test" {
+  portfolio_id = aws_servicecatalog_product_portfolio_association.test.portfolio_id
+  product_id   = aws_servicecatalog_product_portfolio_association.test.product_id
+  type         = "LAUNCH"
+
+  parameters = jsonencode({
+    "RoleArn" : aws_iam_role.test.arn
+  })
+}
+
+data "aws_caller_identity" "current" {}
+
+data "aws_iam_session_context" "test" {
+  arn = data.aws_caller_identity.current.arn
+}
+
+resource "aws_servicecatalog_principal_portfolio_association" "test" {
+  portfolio_id  = aws_servicecatalog_product_portfolio_association.test.portfolio_id
+  principal_arn = data.aws_iam_session_context.test.issuer_arn
+}
+`, rName)
+}
+
+func testAccProjectBasicConfig(rName string) string {
+	return testAccProjectBaseConfig(rName) + fmt.Sprintf(`
 resource "aws_sagemaker_project" "test" {
   project_name = %[1]q
 
   service_catalog_provisioning_details {
-    product_id = aws_servicecatalog_product_portfolio_association.test.product_id
+    product_id = aws_servicecatalog_constraint.test.product_id
+  }
+}	
+`, rName)
+}
+
+func testAccProjectDescription(rName string) string {
+	return testAccProjectBaseConfig(rName) + fmt.Sprintf(`
+resource "aws_sagemaker_project" "test" {
+  project_name        = %[1]q
+  project_description = %[1]q
+
+  service_catalog_provisioning_details {
+    product_id = aws_servicecatalog_constraint.test.product_id
   }
 }
 `, rName)
 }
 
-func testAccProjectDescription(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_sagemaker_project" "test" {
-  project_name        = %[1]q
-  project_description = %[1]q
-}
-`, rName)
-}
-
-func testAccProjectTags1Config(rName, tagKey1, tagValue1 string) string {
-	return fmt.Sprintf(`
+func testAccProjectTagsConfig1(rName, tagKey1, tagValue1 string) string {
+	return testAccProjectBaseConfig(rName) + fmt.Sprintf(`
 resource "aws_sagemaker_project" "test" {
   project_name = %[1]q
 
+  service_catalog_provisioning_details {
+    product_id = aws_servicecatalog_constraint.test.product_id
+  }
+  
   tags = {
     %[2]q = %[3]q
   }
@@ -300,11 +380,15 @@ resource "aws_sagemaker_project" "test" {
 `, rName, tagKey1, tagValue1)
 }
 
-func testAccProjectTags2Config(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return fmt.Sprintf(`
+func testAccProjectTagsConfig2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return testAccProjectBaseConfig(rName) + fmt.Sprintf(`
 resource "aws_sagemaker_project" "test" {
   project_name = %[1]q
 
+  service_catalog_provisioning_details {
+    product_id = aws_servicecatalog_constraint.test.product_id
+  }
+ 
   tags = {
     %[2]q = %[3]q
     %[4]q = %[5]q

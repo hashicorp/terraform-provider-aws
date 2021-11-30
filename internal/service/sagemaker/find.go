@@ -451,5 +451,9 @@ func FindProjectByName(conn *sagemaker.SageMaker, name string) (*sagemaker.Descr
 		return nil, tfresource.NewEmptyResultError(input)
 	}
 
+	if aws.StringValue(output.ProjectStatus) == sagemaker.ProjectStatusDeleteCompleted {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
 	return output, nil
 }
