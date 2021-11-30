@@ -7,8 +7,9 @@ import java.io.File
 
 data class ServiceSpec(
     val readableName: String,
-    val patternOverride: String = "",
+    val patternOverride: String? = null,
     val vpcLock: Boolean = false,
+    val parallelismOverride: Int? = null,
 )
 
 class Service(name: String, spec: ServiceSpec) {
@@ -26,9 +27,14 @@ class Service(name: String, spec: ServiceSpec) {
                 cleanCheckout = true
             }
 
-            if (spec.patternOverride != "") {
+            if (spec.patternOverride != null) {
                 params {
                     text("TEST_PATTERN", spec.patternOverride, display = ParameterDisplay.HIDDEN)
+                }
+            }
+            if (spec.parallelismOverride != null) {
+                params {
+                    text("ACCTEST_PARALLELISM", spec.parallelismOverride.toString(), display = ParameterDisplay.HIDDEN)
                 }
             }
 
