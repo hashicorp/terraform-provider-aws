@@ -2,7 +2,7 @@ package verify
 
 import "testing"
 
-func TestPolicyToSet(t *testing.T) {
+func TestNewPolicyUnlessEquivalent(t *testing.T) {
 	testCases := []struct {
 		name      string
 		oldPolicy string
@@ -58,14 +58,14 @@ func TestPolicyToSet(t *testing.T) {
         ]
       },
       "Action": [
-        "kms:CreateKey",
         "kms:DescribeKey",
-        "kms:ScheduleKeyDeletion",
-        "kms:Describe*",
-        "kms:Get*",
         "kms:List*",
         "kms:TagResource",
-        "kms:UntagResource"
+        "kms:UntagResource",
+        "kms:CreateKey",
+        "kms:Get*",
+        "kms:ScheduleKeyDeletion",
+        "kms:Describe*"
       ],
       "Resource": "*"
     }
@@ -152,10 +152,10 @@ func TestPolicyToSet(t *testing.T) {
       "Action": [
         "kms:CreateKey",
         "kms:DescribeKey",
-        "kms:ScheduleKeyDeletion",
         "kms:Describe*",
-        "kms:Get*",
         "kms:List*",
+        "kms:ScheduleKeyDeletion",
+        "kms:Get*",
         "kms:TagResource",
         "kms:UntagResource"
       ],
@@ -181,10 +181,10 @@ func TestPolicyToSet(t *testing.T) {
       "Action": [
         "kms:CreateKey",
         "kms:DescribeKey",
-        "kms:ScheduleKeyDeletion",
         "kms:Describe*",
-        "kms:Get*",
         "kms:List*",
+        "kms:ScheduleKeyDeletion",
+        "kms:Get*",
         "kms:TagResource",
         "kms:UntagResource"
       ],
