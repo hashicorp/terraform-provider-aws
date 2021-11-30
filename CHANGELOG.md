@@ -1,9 +1,4 @@
 ## 3.68.0 (Unreleased)
-
-ENHANCEMENTS
-
-* data-source/aws_autoscaling_groups: Add support for tag filters ([#3534](https://github.com/hashicorp/terraform-provider-aws/issues/3534))
-
 ## 3.67.0 (November 25, 2021)
 
 FEATURES:

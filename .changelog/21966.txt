@@ -1,0 +1,3 @@
+```release-note:enhancement
+data-source/aws_autoscaling_groups: Add support for tag filters ([#3534](https://github.com/hashicorp/terraform-provider-aws/issues/3534))
+```
