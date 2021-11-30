@@ -732,48 +732,48 @@ resource "aws_iam_role" "test5" {
   })
 }
 
+data "aws_iam_policy_document" "test" {
+  policy_id = %[1]q
+  statement {
+    actions = [
+      "kms:*",
+    ]
+    effect = "Allow"
+    principals {
+      identifiers = ["*"]
+      type        = "AWS"
+    }
+    resources = ["*"]
+  }
+
+  statement {
+    actions = [
+      "kms:Encrypt",
+      "kms:Decrypt",
+      "kms:ReEncrypt*",
+      "kms:GenerateDataKey*",
+      "kms:DescribeKey",
+    ]
+    effect = "Allow"
+    principals {
+      identifiers = [
+        aws_iam_role.test2.arn,
+        aws_iam_role.test1.arn,
+        aws_iam_role.test4.arn,
+        aws_iam_role.test3.arn,
+        aws_iam_role.test5.arn,
+      ]
+      type = "AWS"
+    }
+    resources = ["*"]
+  }
+}
+
 resource "aws_kms_key" "test" {
   description             = %[1]q
   deletion_window_in_days = 7
 
-  policy = jsonencode({
-	Id = %[1]q
-    Statement = [
-      {
-        Action = "kms:*"
-        Effect = "Allow"
-        Principal = {
-          AWS = "*"
-        }
-
-        Resource = "*"
-        Sid      = "Enable IAM User Permissions"
-      },
-      {
-        Action = [
-          "kms:Encrypt",
-          "kms:Decrypt",
-          "kms:ReEncrypt*",
-          "kms:GenerateDataKey*",
-          "kms:DescribeKey",
-        ]
-        Effect = "Allow"
-        Principal = {
-          AWS = [
-            aws_iam_role.test2.arn,
-            aws_iam_role.test1.arn,
-            aws_iam_role.test4.arn,
-            aws_iam_role.test3.arn,
-            aws_iam_role.test5.arn,
-          ]
-        }
-
-        Resource = "*"
-        Sid      = "Enable IAM User Permissions"
-      },
-    ]
-    Version = "2012-10-17"
-  })
+  policy = data.aws_iam_policy_document.test.json
 }
 `, rName)
 }
