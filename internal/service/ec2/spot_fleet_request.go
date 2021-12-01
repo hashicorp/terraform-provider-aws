@@ -664,7 +664,7 @@ func buildSpotFleetLaunchSpecification(d map[string]interface{}, meta interface{
 		ni := &ec2.InstanceNetworkInterfaceSpecification{
 			AssociatePublicIpAddress: aws.Bool(true),
 			DeleteOnTermination:      aws.Bool(true),
-			DeviceIndex:              aws.Int64(int64(0)),
+			DeviceIndex:              aws.Int64(0),
 			SubnetId:                 aws.String(subnetId.(string)),
 			Groups:                   securityGroupIds,
 		}

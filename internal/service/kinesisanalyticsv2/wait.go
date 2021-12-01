@@ -75,7 +75,7 @@ func waitApplicationStopped(conn *kinesisanalyticsv2.KinesisAnalyticsV2, name st
 }
 
 // waitApplicationUpdated waits for an Application to return Deleted
-func waitApplicationUpdated(conn *kinesisanalyticsv2.KinesisAnalyticsV2, name string) (*kinesisanalyticsv2.ApplicationDetail, error) {
+func waitApplicationUpdated(conn *kinesisanalyticsv2.KinesisAnalyticsV2, name string) (*kinesisanalyticsv2.ApplicationDetail, error) { //nolint:unparam
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{kinesisanalyticsv2.ApplicationStatusUpdating},
 		Target:  []string{kinesisanalyticsv2.ApplicationStatusReady, kinesisanalyticsv2.ApplicationStatusRunning},

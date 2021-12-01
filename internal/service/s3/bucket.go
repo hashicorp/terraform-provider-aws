@@ -456,6 +456,48 @@ func ResourceBucket() *schema.Resource {
 														},
 													},
 												},
+												"replication_time": {
+													Type:     schema.TypeList,
+													Optional: true,
+													MaxItems: 1,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"minutes": {
+																Type:         schema.TypeInt,
+																Optional:     true,
+																Default:      15,
+																ValidateFunc: validation.IntBetween(15, 15),
+															},
+															"status": {
+																Type:         schema.TypeString,
+																Optional:     true,
+																Default:      s3.ReplicationTimeStatusEnabled,
+																ValidateFunc: validation.StringInSlice(s3.ReplicationTimeStatus_Values(), false),
+															},
+														},
+													},
+												},
+												"metrics": {
+													Type:     schema.TypeList,
+													Optional: true,
+													MaxItems: 1,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"minutes": {
+																Type:         schema.TypeInt,
+																Optional:     true,
+																Default:      15,
+																ValidateFunc: validation.IntBetween(10, 15),
+															},
+															"status": {
+																Type:         schema.TypeString,
+																Optional:     true,
+																Default:      s3.MetricsStatusEnabled,
+																ValidateFunc: validation.StringInSlice(s3.MetricsStatus_Values(), false),
+															},
+														},
+													},
+												},
 											},
 										},
 									},
@@ -776,7 +818,7 @@ func resourceBucketUpdate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if d.HasChange("replication_configuration") {
-		if err := resourceBucketReplicationConfigurationUpdate(conn, d); err != nil {
+		if err := resourceBucketInternalReplicationConfigurationUpdate(conn, d); err != nil {
 			return err
 		}
 	}
@@ -1991,7 +2033,7 @@ func resourceBucketObjectLockConfigurationUpdate(conn *s3.S3, d *schema.Resource
 	return nil
 }
 
-func resourceBucketReplicationConfigurationUpdate(conn *s3.S3, d *schema.ResourceData) error {
+func resourceBucketInternalReplicationConfigurationUpdate(conn *s3.S3, d *schema.ResourceData) error {
 	bucket := d.Get("bucket").(string)
 	replicationConfiguration := d.Get("replication_configuration").([]interface{})
 
@@ -2068,6 +2110,26 @@ func resourceBucketReplicationConfigurationUpdate(conn *s3.S3, d *schema.Resourc
 					ruleAclTranslation := &s3.AccessControlTranslation{}
 					ruleAclTranslation.Owner = aws.String(aclTranslationValues["owner"].(string))
 					ruleDestination.AccessControlTranslation = ruleAclTranslation
+				}
+
+				// replication metrics (required for RTC)
+				if metrics, ok := bd["metrics"].([]interface{}); ok && len(metrics) > 0 {
+					metricsConfig := &s3.Metrics{}
+					metricsValues := metrics[0].(map[string]interface{})
+					metricsConfig.EventThreshold = &s3.ReplicationTimeValue{}
+					metricsConfig.Status = aws.String(metricsValues["status"].(string))
+					metricsConfig.EventThreshold.Minutes = aws.Int64(int64(metricsValues["minutes"].(int)))
+					ruleDestination.Metrics = metricsConfig
+				}
+
+				// replication time control (RTC)
+				if rtc, ok := bd["replication_time"].([]interface{}); ok && len(rtc) > 0 {
+					rtcValues := rtc[0].(map[string]interface{})
+					rtcConfig := &s3.ReplicationTime{}
+					rtcConfig.Status = aws.String(rtcValues["status"].(string))
+					rtcConfig.Time = &s3.ReplicationTimeValue{}
+					rtcConfig.Time.Minutes = aws.Int64(int64(rtcValues["minutes"].(int)))
+					ruleDestination.ReplicationTime = rtcConfig
 				}
 			}
 		}
@@ -2355,6 +2417,20 @@ func flattenBucketReplicationConfiguration(r *s3.ReplicationConfiguration) []map
 			if v.Destination.StorageClass != nil {
 				rd["storage_class"] = aws.StringValue(v.Destination.StorageClass)
 			}
+			if v.Destination.ReplicationTime != nil {
+				rtc := map[string]interface{}{
+					"minutes": int(aws.Int64Value(v.Destination.ReplicationTime.Time.Minutes)),
+					"status":  aws.StringValue(v.Destination.ReplicationTime.Status),
+				}
+				rd["replication_time"] = []interface{}{rtc}
+			}
+			if v.Destination.Metrics != nil {
+				metrics := map[string]interface{}{
+					"minutes": int(aws.Int64Value(v.Destination.Metrics.EventThreshold.Minutes)),
+					"status":  aws.StringValue(v.Destination.Metrics.Status),
+				}
+				rd["metrics"] = []interface{}{metrics}
+			}
 			if v.Destination.EncryptionConfiguration != nil {
 				if v.Destination.EncryptionConfiguration.ReplicaKmsKeyID != nil {
 					rd["replica_kms_key_id"] = aws.StringValue(v.Destination.EncryptionConfiguration.ReplicaKmsKeyID)
@@ -2633,6 +2709,12 @@ func destinationHash(v interface{}) int {
 	if v, ok := m["access_control_translation"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		buf.WriteString(fmt.Sprintf("%d-", accessControlTranslationHash(v[0])))
 	}
+	if v, ok := m["replication_time"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		buf.WriteString(fmt.Sprintf("%d-", replicationTimeHash(v[0])))
+	}
+	if v, ok := m["metrics"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		buf.WriteString(fmt.Sprintf("%d-", metricsHash(v[0])))
+	}
 	return create.StringHashcode(buf.String())
 }
 
@@ -2645,6 +2727,40 @@ func accessControlTranslationHash(v interface{}) int {
 	}
 
 	if v, ok := m["owner"]; ok {
+		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
+	}
+	return create.StringHashcode(buf.String())
+}
+
+func metricsHash(v interface{}) int {
+	var buf bytes.Buffer
+	m, ok := v.(map[string]interface{})
+
+	if !ok {
+		return 0
+	}
+
+	if v, ok := m["minutes"]; ok {
+		buf.WriteString(fmt.Sprintf("%d-", v.(int)))
+	}
+	if v, ok := m["status"]; ok {
+		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
+	}
+	return create.StringHashcode(buf.String())
+}
+
+func replicationTimeHash(v interface{}) int {
+	var buf bytes.Buffer
+	m, ok := v.(map[string]interface{})
+
+	if !ok {
+		return 0
+	}
+
+	if v, ok := m["minutes"]; ok {
+		buf.WriteString(fmt.Sprintf("%d-", v.(int)))
+	}
+	if v, ok := m["status"]; ok {
 		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
 	}
 	return create.StringHashcode(buf.String())

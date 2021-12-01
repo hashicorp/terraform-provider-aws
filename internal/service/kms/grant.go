@@ -364,7 +364,7 @@ func findKmsGrantById(conn *kms.KMS, keyId string, grantId string, marker *strin
 
 	input := kms.ListGrantsInput{
 		KeyId:  aws.String(keyId),
-		Limit:  aws.Int64(int64(100)),
+		Limit:  aws.Int64(100),
 		Marker: marker,
 	}
 

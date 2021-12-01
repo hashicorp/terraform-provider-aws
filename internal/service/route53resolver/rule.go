@@ -25,6 +25,12 @@ const (
 	RuleStatusDeleted = "DELETED"
 )
 
+const (
+	ruleCreatedDefaultTimeout = 10 * time.Minute
+	ruleUpdatedDefaultTimeout = 10 * time.Minute
+	ruleDeletedDefaultTimeout = 10 * time.Minute
+)
+
 func ResourceRule() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceRuleCreate,
@@ -40,9 +46,9 @@ func ResourceRule() *schema.Resource {
 		},
 
 		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(10 * time.Minute),
-			Update: schema.DefaultTimeout(10 * time.Minute),
-			Delete: schema.DefaultTimeout(10 * time.Minute),
+			Create: schema.DefaultTimeout(ruleCreatedDefaultTimeout),
+			Update: schema.DefaultTimeout(ruleUpdatedDefaultTimeout),
+			Delete: schema.DefaultTimeout(ruleDeletedDefaultTimeout),
 		},
 
 		Schema: map[string]*schema.Schema{

@@ -6,7 +6,6 @@ package efs
 import (
 	"fmt"
 	"log"
-	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/efs"
@@ -175,7 +174,7 @@ func sweepMountTargets(region string) error {
 						continue
 					}
 
-					err = WaitForDeleteMountTarget(conn, id, 10*time.Minute)
+					err = WaitForDeleteMountTarget(conn, id, mountTargetDeleteTimeout)
 					if err != nil {
 						errors = multierror.Append(errors, fmt.Errorf("error waiting for EFS Mount Target %q to delete: %w", id, err))
 						continue

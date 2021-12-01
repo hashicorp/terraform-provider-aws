@@ -38,13 +38,16 @@ func ResourceLocationS3() *schema.Resource {
 				Type:     schema.TypeSet,
 				Optional: true,
 				ForceNew: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
+				Elem: &schema.Schema{
+					Type:         schema.TypeString,
+					ValidateFunc: verify.ValidARN,
+				},
 			},
 			"s3_bucket_arn": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validation.NoZeroValues,
+				ValidateFunc: verify.ValidARN,
 			},
 			"s3_config": {
 				Type:     schema.TypeList,
@@ -57,7 +60,7 @@ func ResourceLocationS3() *schema.Resource {
 							Type:         schema.TypeString,
 							Required:     true,
 							ForceNew:     true,
-							ValidateFunc: validation.NoZeroValues,
+							ValidateFunc: verify.ValidARN,
 						},
 					},
 				},

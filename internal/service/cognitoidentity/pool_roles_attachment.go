@@ -159,7 +159,7 @@ func resourcePoolRolesAttachmentRead(d *schema.ResourceData, meta interface{}) e
 
 	d.Set("identity_pool_id", ip.IdentityPoolId)
 
-	if err := d.Set("roles", flattenIdentityPoolRoles(ip.Roles)); err != nil {
+	if err := d.Set("roles", aws.StringValueMap(ip.Roles)); err != nil {
 		return fmt.Errorf("Error setting roles error: %#v", err)
 	}
 

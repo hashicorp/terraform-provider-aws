@@ -534,7 +534,7 @@ func testAccCheckFleetDisappears(res *gamelift.FleetAttributes) resource.TestChe
 			return fmt.Errorf("Error deleting Gamelift fleet: %s", err)
 		}
 
-		return tfgamelift.WaitForFleetToBeDeleted(conn, *res.FleetId, 15*time.Minute)
+		return tfgamelift.WaitForFleetToBeDeleted(conn, *res.FleetId, tfgamelift.FleetDeletedDefaultTimeout)
 	}
 }
 

@@ -305,8 +305,8 @@ func TestAccS3BucketObject_nonVersioned(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"acl", "source"},
-				ImportStateId:           fmt.Sprintf("s3://%s/test-key", rName),
+				ImportStateVerifyIgnore: []string{"acl", "source", "force_destroy"},
+				ImportStateId:           fmt.Sprintf("s3://%s/updateable-key", rName),
 			},
 		},
 	})
@@ -1665,10 +1665,10 @@ resource "aws_s3_bucket" "test" {
 }
 
 resource "aws_s3_bucket_object" "object" {
-  bucket       = aws_s3_bucket.test.bucket
-  key          = "test-key"
-  source       = %[2]q
-  source_hash  = filemd5(%[2]q)
+  bucket      = aws_s3_bucket.test.bucket
+  key         = "test-key"
+  source      = %[2]q
+  source_hash = filemd5(%[2]q)
 }
 `, rName, source)
 }

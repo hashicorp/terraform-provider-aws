@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfwaf "github.com/hashicorp/terraform-provider-aws/internal/service/waf"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
@@ -223,7 +224,7 @@ func updateWafRegionalRuleResource(id string, oldP, newP []interface{}, meta int
 		req := &waf.UpdateRuleInput{
 			ChangeToken: token,
 			RuleId:      aws.String(id),
-			Updates:     diffWafRulePredicates(oldP, newP),
+			Updates:     tfwaf.DiffRulePredicates(oldP, newP),
 		}
 
 		return conn.UpdateRule(req)

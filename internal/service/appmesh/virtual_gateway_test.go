@@ -381,7 +381,7 @@ func testAccVirtualGateway_ListenerHealthChecks(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.health_check.0.unhealthy_threshold", "9"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.port_mapping.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.port_mapping.0.port", "8081"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.port_mapping.0.protocol", "http"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.port_mapping.0.protocol", "http2"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.tls.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.logging.#", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "created_date"),
@@ -1020,7 +1020,7 @@ resource "aws_appmesh_virtual_gateway" "test" {
     listener {
       port_mapping {
         port     = 8081
-        protocol = "http"
+        protocol = "http2"
       }
 
       health_check {

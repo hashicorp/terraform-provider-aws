@@ -372,7 +372,7 @@ func testAccPreCheck(t *testing.T) {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIdentityConn
 
 	input := &cognitoidentity.ListIdentityPoolsInput{
-		MaxResults: aws.Int64(int64(1)),
+		MaxResults: aws.Int64(1),
 	}
 
 	_, err := conn.ListIdentityPools(input)

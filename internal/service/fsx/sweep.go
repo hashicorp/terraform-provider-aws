@@ -31,6 +31,11 @@ func init() {
 		F:    sweepFSXOntapFileSystems,
 	})
 
+	resource.AddTestSweepers("aws_fsx_ontap_storage_virtual_machine", &resource.Sweeper{
+		Name: "aws_fsx_ontap_storage_virtual_machine",
+		F:    sweepFSXOntapStorageVirtualMachine,
+	})
+
 	resource.AddTestSweepers("aws_fsx_windows_file_system", &resource.Sweeper{
 		Name: "aws_fsx_windows_file_system",
 		F:    sweepFSXWindowsFileSystems,

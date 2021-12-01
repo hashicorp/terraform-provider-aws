@@ -24,6 +24,10 @@ func DataSourceTargetGroup() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"connection_termination": {
+				Type:     schema.TypeBool,
+				Computed: true,
+			},
 			"deregistration_delay": {
 				Type:     schema.TypeInt,
 				Computed: true,
@@ -209,6 +213,12 @@ func dataSourceTargetGroupRead(d *schema.ResourceData, meta interface{}) error {
 
 	for _, attr := range attrResp.Attributes {
 		switch aws.StringValue(attr.Key) {
+		case "deregistration_delay.connection_termination.enabled":
+			enabled, err := strconv.ParseBool(aws.StringValue(attr.Value))
+			if err != nil {
+				return fmt.Errorf("error converting deregistration_delay.connection_termination.enabled to bool: %s", aws.StringValue(attr.Value))
+			}
+			d.Set("connection_termination", enabled)
 		case "deregistration_delay.timeout_seconds":
 			timeout, err := strconv.Atoi(aws.StringValue(attr.Value))
 			if err != nil {

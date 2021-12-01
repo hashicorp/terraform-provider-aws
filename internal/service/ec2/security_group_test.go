@@ -66,6 +66,18 @@ func TestProtocolStateFunc(t *testing.T) {
 			input:    1,
 			expected: "",
 		},
+		{
+			input:    "icmpv6",
+			expected: "icmpv6",
+		},
+		{
+			input:    "58",
+			expected: "icmpv6",
+		},
+		{
+			input:    58,
+			expected: "",
+		},
 	}
 	for _, c := range cases {
 		result := tfec2.ProtocolStateFunc(c.input)
@@ -131,6 +143,14 @@ func TestProtocolForValue(t *testing.T) {
 		{
 			input:    "1",
 			expected: "icmp",
+		},
+		{
+			input:    "icMpv6",
+			expected: "icmpv6",
+		},
+		{
+			input:    "58",
+			expected: "icmpv6",
 		},
 	}
 
@@ -352,7 +372,7 @@ func TestSecurityGroupIPPermGather(t *testing.T) {
 	raw := []*ec2.IpPermission{
 		{
 			IpProtocol: aws.String("tcp"),
-			FromPort:   aws.Int64(int64(1)),
+			FromPort:   aws.Int64(1),
 			ToPort:     aws.Int64(int64(-1)),
 			IpRanges:   []*ec2.IpRange{{CidrIp: aws.String("0.0.0.0/0")}},
 			UserIdGroupPairs: []*ec2.UserIdGroupPair{
@@ -364,8 +384,8 @@ func TestSecurityGroupIPPermGather(t *testing.T) {
 		},
 		{
 			IpProtocol: aws.String("tcp"),
-			FromPort:   aws.Int64(int64(80)),
-			ToPort:     aws.Int64(int64(80)),
+			FromPort:   aws.Int64(80),
+			ToPort:     aws.Int64(80),
 			UserIdGroupPairs: []*ec2.UserIdGroupPair{
 				// VPC
 				{
@@ -375,8 +395,8 @@ func TestSecurityGroupIPPermGather(t *testing.T) {
 		},
 		{
 			IpProtocol: aws.String("tcp"),
-			FromPort:   aws.Int64(int64(443)),
-			ToPort:     aws.Int64(int64(443)),
+			FromPort:   aws.Int64(443),
+			ToPort:     aws.Int64(443),
 			UserIdGroupPairs: []*ec2.UserIdGroupPair{
 				// Classic
 				{
@@ -393,8 +413,8 @@ func TestSecurityGroupIPPermGather(t *testing.T) {
 		},
 		{
 			IpProtocol: aws.String("-1"),
-			FromPort:   aws.Int64(int64(0)),
-			ToPort:     aws.Int64(int64(0)),
+			FromPort:   aws.Int64(0),
+			ToPort:     aws.Int64(0),
 			PrefixListIds: []*ec2.PrefixListId{
 				{
 					PrefixListId: aws.String("pl-12345678"),

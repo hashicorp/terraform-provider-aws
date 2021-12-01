@@ -127,16 +127,20 @@ func testAccDxConnectionAssociationConfigBasic(rName string) string {
 	return fmt.Sprintf(`
 data "aws_dx_locations" "test" {}
 
+locals {
+  location_code = tolist(data.aws_dx_locations.test.location_codes)[1]
+}
+
 resource "aws_dx_connection" "test" {
   name      = %[1]q
   bandwidth = "1Gbps"
-  location  = tolist(data.aws_dx_locations.test.location_codes)[0]
+  location  = local.location_code
 }
 
 resource "aws_dx_lag" "test" {
   name                  = %[1]q
   connections_bandwidth = "1Gbps"
-  location              = tolist(data.aws_dx_locations.test.location_codes)[0]
+  location              = local.location_code
   force_destroy         = true
 }
 
@@ -151,23 +155,27 @@ func testAccDxConnectionAssociationConfigLAGOnConnection(rName string) string {
 	return fmt.Sprintf(`
 data "aws_dx_locations" "test" {}
 
+locals {
+  location_code = tolist(data.aws_dx_locations.test.location_codes)[1]
+}
+
 resource "aws_dx_connection" "test1" {
   name      = "%[1]s-1"
   bandwidth = "1Gbps"
-  location  = tolist(data.aws_dx_locations.test.location_codes)[0]
+  location  = local.location_code
 }
 
 resource "aws_dx_connection" "test2" {
   name      = "%[1]s-2"
   bandwidth = "1Gbps"
-  location  = tolist(data.aws_dx_locations.test.location_codes)[0]
+  location  = local.location_code
 }
 
 resource "aws_dx_lag" "test" {
   name                  = %[1]q
   connection_id         = aws_dx_connection.test1.id
   connections_bandwidth = "1Gbps"
-  location              = tolist(data.aws_dx_locations.test.location_codes)[0]
+  location              = local.location_code
 }
 
 resource "aws_dx_connection_association" "test" {
@@ -181,22 +189,26 @@ func testAccDxConnectionAssociationConfigMultiple(rName string) string {
 	return fmt.Sprintf(`
 data "aws_dx_locations" "test" {}
 
+locals {
+  location_code = tolist(data.aws_dx_locations.test.location_codes)[1]
+}
+
 resource "aws_dx_connection" "test1" {
   name      = "%[1]s-1"
   bandwidth = "1Gbps"
-  location  = tolist(data.aws_dx_locations.test.location_codes)[0]
+  location  = local.location_code
 }
 
 resource "aws_dx_connection" "test2" {
   name      = "%[1]s-2"
   bandwidth = "1Gbps"
-  location  = tolist(data.aws_dx_locations.test.location_codes)[0]
+  location  = local.location_code
 }
 
 resource "aws_dx_lag" "test" {
   name                  = %[1]q
   connections_bandwidth = "1Gbps"
-  location              = tolist(data.aws_dx_locations.test.location_codes)[0]
+  location              = local.location_code
   force_destroy         = true
 }
 

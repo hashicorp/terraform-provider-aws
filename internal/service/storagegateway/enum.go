@@ -39,11 +39,12 @@ const (
 )
 
 const (
-	fileSystemAssociationCreateTimeout = 3 * time.Minute
-	fileSystemAssociationUpdateTimeout = 3 * time.Minute
-	fileSystemAssociationDeleteTimeout = 3 * time.Minute
+	fileSystemAssociationCreateTimeout = 10 * time.Minute
+	fileSystemAssociationUpdateTimeout = 10 * time.Minute
+	fileSystemAssociationDeleteTimeout = 10 * time.Minute
 )
 
+//nolint:deadcode,varcheck // These constants are missing from the AWS SDK
 const (
 	fileSystemAssociationStatusAvailable     = "AVAILABLE"
 	fileSystemAssociationStatusCreating      = "CREATING"
@@ -52,19 +53,3 @@ const (
 	fileSystemAssociationStatusUpdating      = "UPDATING"
 	fileSystemAssociationStatusError         = "ERROR"
 )
-
-func fileSystemAssociationStatusAvailableStatusPending() []string {
-	return []string{fileSystemAssociationStatusCreating, fileSystemAssociationStatusUpdating}
-}
-
-func fileSystemAssociationStatusAvailableStatusTarget() []string {
-	return []string{fileSystemAssociationStatusAvailable}
-}
-
-func fileSystemAssociationStatusDeletedStatusPending() []string {
-	return []string{fileSystemAssociationStatusAvailable, fileSystemAssociationStatusDeleting, fileSystemAssociationStatusForceDeleting}
-}
-
-func fileSystemAssociationStatusDeletedStatusTarget() []string {
-	return []string{}
-}

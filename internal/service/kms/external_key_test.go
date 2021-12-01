@@ -40,6 +40,7 @@ func TestAccKMSExternalKey_basic(t *testing.T) {
 					resource.TestCheckNoResourceAttr(resourceName, "key_material_base64"),
 					resource.TestCheckResourceAttr(resourceName, "key_state", "PendingImport"),
 					resource.TestCheckResourceAttr(resourceName, "key_usage", "ENCRYPT_DECRYPT"),
+					resource.TestCheckResourceAttr(resourceName, "multi_region", "false"),
 					resource.TestMatchResourceAttr(resourceName, "policy", regexp.MustCompile(`Enable IAM User Permissions`)),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "valid_to", ""),
@@ -76,6 +77,38 @@ func TestAccKMSExternalKey_disappears(t *testing.T) {
 					acctest.CheckResourceDisappears(acctest.Provider, tfkms.ResourceExternalKey(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccKMSExternalKey_multiRegion(t *testing.T) {
+	var key kms.KeyMetadata
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_kms_external_key.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, kms.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckExternalKeyDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccExternalKeyMultiRegionConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckExternalKeyExists(resourceName, &key),
+					resource.TestCheckResourceAttr(resourceName, "multi_region", "true"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"bypass_policy_lockout_safety_check",
+					"deletion_window_in_days",
+					"key_material_base64",
+				},
 			},
 		},
 	})
@@ -550,6 +583,17 @@ func testAccExternalKeyConfig() string {
 	return `
 resource "aws_kms_external_key" "test" {}
 `
+}
+
+func testAccExternalKeyMultiRegionConfig(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_kms_external_key" "test" {
+  description  = %[1]q
+  multi_region = true
+
+  deletion_window_in_days = 7
+}
+`, rName)
 }
 
 func testAccExternalKeyDeletionWindowInDaysConfig(rName string, deletionWindowInDays int) string {

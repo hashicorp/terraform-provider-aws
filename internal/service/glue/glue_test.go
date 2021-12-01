@@ -4,6 +4,10 @@ import "testing"
 
 func TestAccGlue_serial(t *testing.T) {
 	testCases := map[string]map[string]func(t *testing.T){
+		"DataCatalogEncryptionSettings": {
+			"basic":      testAccGlueDataCatalogEncryptionSettings_basic,
+			"DataSource": testAccGlueDataCatalogEncryptionSettingsDataSource_basic,
+		},
 		"ResourcePolicy": {
 			"basic":      testAccResourcePolicy_basic,
 			"update":     testAccResourcePolicy_update,

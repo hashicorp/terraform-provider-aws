@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfdatasync "github.com/hashicorp/terraform-provider-aws/internal/service/datasync"
 )
 
 func TestAccDataSyncLocationS3_basic(t *testing.T) {
@@ -105,8 +106,8 @@ func TestAccDataSyncLocationS3_disappears(t *testing.T) {
 				Config: testAccLocationS3Config(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLocationS3Exists(resourceName, &locationS31),
-					testAccCheckLocationS3Disappears(&locationS31),
-				),
+					acctest.CheckResourceDisappears(acctest.Provider, tfdatasync.ResourceLocationS3(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfdatasync.ResourceLocationS3(), resourceName)),
 				ExpectNonEmptyPlan: true,
 			},
 		},
@@ -215,20 +216,6 @@ func testAccCheckLocationS3Exists(resourceName string, locationS3 *datasync.Desc
 	}
 }
 
-func testAccCheckLocationS3Disappears(location *datasync.DescribeLocationS3Output) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DataSyncConn
-
-		input := &datasync.DeleteLocationInput{
-			LocationArn: location.LocationArn,
-		}
-
-		_, err := conn.DeleteLocation(input)
-
-		return err
-	}
-}
-
 func testAccCheckLocationS3NotRecreated(i, j *datasync.DescribeLocationS3Output) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if !aws.TimeValue(i.CreationTime).Equal(aws.TimeValue(j.CreationTime)) {
@@ -242,7 +229,7 @@ func testAccCheckLocationS3NotRecreated(i, j *datasync.DescribeLocationS3Output)
 func testAccLocationS3BaseConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "test" {
-  name = %q
+  name = %[1]q
 
   assume_role_policy = <<POLICY
 {
@@ -280,10 +267,10 @@ POLICY
 }
 
 resource "aws_s3_bucket" "test" {
-  bucket        = %q
+  bucket        = %[1]q
   force_destroy = true
 }
-`, rName, rName)
+`, rName)
 }
 
 func testAccLocationS3Config(rName string) string {
@@ -295,8 +282,6 @@ resource "aws_datasync_location_s3" "test" {
   s3_config {
     bucket_access_role_arn = aws_iam_role.test.arn
   }
-
-  depends_on = [aws_iam_role_policy.test]
 }
 `
 }
@@ -311,8 +296,6 @@ resource "aws_datasync_location_s3" "test" {
   s3_config {
     bucket_access_role_arn = aws_iam_role.test.arn
   }
-
-  depends_on = [aws_iam_role_policy.test]
 }
 `
 }
@@ -330,8 +313,6 @@ resource "aws_datasync_location_s3" "test" {
   tags = {
     %q = %q
   }
-
-  depends_on = [aws_iam_role_policy.test]
 }
 `, key1, value1)
 }
@@ -350,8 +331,6 @@ resource "aws_datasync_location_s3" "test" {
     %q = %q
     %q = %q
   }
-
-  depends_on = [aws_iam_role_policy.test]
 }
 `, key1, value1, key2, value2)
 }

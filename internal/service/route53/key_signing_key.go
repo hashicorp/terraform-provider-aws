@@ -251,7 +251,7 @@ func resourceKeySigningKeyDelete(d *schema.ResourceData, meta interface{}) error
 
 	status := d.Get("status").(string)
 
-	if status == KeySigningKeyStatusActive {
+	if status == KeySigningKeyStatusActive || status == KeySigningKeyStatusActionNeeded {
 		input := &route53.DeactivateKeySigningKeyInput{
 			HostedZoneId: aws.String(d.Get("hosted_zone_id").(string)),
 			Name:         aws.String(d.Get("name").(string)),

@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfwaf "github.com/hashicorp/terraform-provider-aws/internal/service/waf"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
@@ -173,7 +174,7 @@ func resourceRuleGroupRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error setting tags_all: %w", err)
 	}
 
-	d.Set("activated_rule", FlattenWAFActivatedRules(rResp.ActivatedRules))
+	d.Set("activated_rule", tfwaf.FlattenActivatedRules(rResp.ActivatedRules))
 	d.Set("name", resp.RuleGroup.Name)
 	d.Set("metric_name", resp.RuleGroup.MetricName)
 
@@ -245,7 +246,7 @@ func updateWafRuleGroupResourceWR(id string, oldRules, newRules []interface{}, c
 		req := &waf.UpdateRuleGroupInput{
 			ChangeToken: token,
 			RuleGroupId: aws.String(id),
-			Updates:     diffWafRuleGroupActivatedRules(oldRules, newRules),
+			Updates:     tfwaf.DiffRuleGroupActivatedRules(oldRules, newRules),
 		}
 
 		return conn.UpdateRuleGroup(req)

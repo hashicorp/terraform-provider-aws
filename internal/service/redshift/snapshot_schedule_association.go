@@ -14,6 +14,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
+const (
+	snapshotScheduleAssociationActivatedTimeout = 75 * time.Minute
+	snapshotScheduleAssociationDestroyedTimeout = 75 * time.Minute
+)
+
 func ResourceSnapshotScheduleAssociation() *schema.Resource {
 
 	return &schema.Resource{
@@ -64,7 +69,7 @@ func resourceSnapshotScheduleAssociationCreate(d *schema.ResourceData, meta inte
 		return fmt.Errorf("Error associating Redshift Cluster (%s) and Snapshot Schedule (%s): %s", clusterIdentifier, scheduleIdentifier, err)
 	}
 
-	if err := WaitForSnapshotScheduleAssociationActive(conn, 75*time.Minute, clusterIdentifier, scheduleIdentifier); err != nil {
+	if err := WaitForSnapshotScheduleAssociationActive(conn, snapshotScheduleAssociationActivatedTimeout, clusterIdentifier, scheduleIdentifier); err != nil {
 		return err
 	}
 
@@ -143,7 +148,7 @@ func resourceSnapshotScheduleAssociationDelete(d *schema.ResourceData, meta inte
 		return fmt.Errorf("Error disassociate Redshift Cluster (%s) and Snapshot Schedule (%s) Association: %s", clusterIdentifier, scheduleIdentifier, err)
 	}
 
-	if err := waitForRedshiftSnapshotScheduleAssociationDestroy(conn, 75*time.Minute, clusterIdentifier, scheduleIdentifier); err != nil {
+	if err := waitForRedshiftSnapshotScheduleAssociationDestroy(conn, snapshotScheduleAssociationDestroyedTimeout, clusterIdentifier, scheduleIdentifier); err != nil {
 		return err
 	}
 

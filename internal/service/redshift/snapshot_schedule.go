@@ -3,7 +3,6 @@ package redshift
 import (
 	"fmt"
 	"log"
-	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
@@ -246,7 +245,7 @@ func resourceSnapshotScheduleDeleteAllAssociatedClusters(conn *redshift.Redshift
 	}
 
 	for _, associatedCluster := range snapshotSchedule.AssociatedClusters {
-		if err := waitForRedshiftSnapshotScheduleAssociationDestroy(conn, 75*time.Minute, aws.StringValue(associatedCluster.ClusterIdentifier), scheduleIdentifier); err != nil {
+		if err := waitForRedshiftSnapshotScheduleAssociationDestroy(conn, snapshotScheduleAssociationDestroyedTimeout, aws.StringValue(associatedCluster.ClusterIdentifier), scheduleIdentifier); err != nil {
 			return err
 		}
 	}

@@ -11,9 +11,9 @@ import (
 )
 
 const (
-	clusterCreateTimeout = 120 * time.Minute
-	clusterUpdateTimeout = 120 * time.Minute
-	clusterDeleteTimeout = 120 * time.Minute
+	clusterCreateDefaultTimeout = 120 * time.Minute
+	clusterUpdateDefaultTimeout = 120 * time.Minute
+	clusterDeleteDefaultTimeout = 120 * time.Minute
 )
 
 const (
@@ -62,7 +62,7 @@ func waitClusterDeleted(conn *kafka.Kafka, arn string, timeout time.Duration) (*
 	return nil, err
 }
 
-func waitClusterOperationCompleted(conn *kafka.Kafka, arn string, timeout time.Duration) (*kafka.ClusterOperationInfo, error) {
+func waitClusterOperationCompleted(conn *kafka.Kafka, arn string, timeout time.Duration) (*kafka.ClusterOperationInfo, error) { //nolint:unparam
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{ClusterOperationStatePending, ClusterOperationStateUpdateInProgress},
 		Target:  []string{ClusterOperationStateUpdateComplete},

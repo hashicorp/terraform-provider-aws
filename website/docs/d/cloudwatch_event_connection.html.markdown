@@ -8,7 +8,7 @@ description: |-
 
 # Data source: aws_cloudfront_distribution
 
-Use this data source to retrieve information about a EventBridge connection.
+Use this data source to retrieve information about an EventBridge connection.
 
 ~> **Note:** EventBridge was formerly known as CloudWatch Events. The functionality is identical.
 

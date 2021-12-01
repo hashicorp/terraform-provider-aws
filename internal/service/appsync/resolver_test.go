@@ -16,12 +16,12 @@ import (
 	tfappsync "github.com/hashicorp/terraform-provider-aws/internal/service/appsync"
 )
 
-func TestAccAppSyncResolver_basic(t *testing.T) {
+func testAccAppSyncResolver_basic(t *testing.T) {
 	var resolver1 appsync.Resolver
 	rName := fmt.Sprintf("tfacctest%d", sdkacctest.RandInt())
 	resourceName := "aws_appsync_resolver.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appsync.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, appsync.EndpointsID),
 		Providers:    acctest.Providers,
@@ -45,14 +45,14 @@ func TestAccAppSyncResolver_basic(t *testing.T) {
 	})
 }
 
-func TestAccAppSyncResolver_disappears(t *testing.T) {
+func testAccAppSyncResolver_disappears(t *testing.T) {
 	var api1 appsync.GraphqlApi
 	var resolver1 appsync.Resolver
 	rName := fmt.Sprintf("tfacctest%d", sdkacctest.RandInt())
 	appsyncGraphqlApiResourceName := "aws_appsync_graphql_api.test"
 	resourceName := "aws_appsync_resolver.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appsync.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, appsync.EndpointsID),
 		Providers:    acctest.Providers,
@@ -71,12 +71,12 @@ func TestAccAppSyncResolver_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAppSyncResolver_dataSource(t *testing.T) {
+func testAccAppSyncResolver_dataSource(t *testing.T) {
 	var resolver1, resolver2 appsync.Resolver
 	rName := fmt.Sprintf("tfacctest%d", sdkacctest.RandInt())
 	resourceName := "aws_appsync_resolver.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appsync.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, appsync.EndpointsID),
 		Providers:    acctest.Providers,
@@ -105,12 +105,12 @@ func TestAccAppSyncResolver_dataSource(t *testing.T) {
 	})
 }
 
-func TestAccAppSyncResolver_DataSource_lambda(t *testing.T) {
+func testAccAppSyncResolver_DataSource_lambda(t *testing.T) {
 	var resolver appsync.Resolver
 	rName := fmt.Sprintf("tfacctest%d", sdkacctest.RandInt())
 	resourceName := "aws_appsync_resolver.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appsync.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, appsync.EndpointsID),
 		Providers:    acctest.Providers,
@@ -132,12 +132,12 @@ func TestAccAppSyncResolver_DataSource_lambda(t *testing.T) {
 	})
 }
 
-func TestAccAppSyncResolver_requestTemplate(t *testing.T) {
+func testAccAppSyncResolver_requestTemplate(t *testing.T) {
 	var resolver1, resolver2 appsync.Resolver
 	rName := fmt.Sprintf("tfacctest%d", sdkacctest.RandInt())
 	resourceName := "aws_appsync_resolver.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appsync.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, appsync.EndpointsID),
 		Providers:    acctest.Providers,
@@ -166,12 +166,12 @@ func TestAccAppSyncResolver_requestTemplate(t *testing.T) {
 	})
 }
 
-func TestAccAppSyncResolver_responseTemplate(t *testing.T) {
+func testAccAppSyncResolver_responseTemplate(t *testing.T) {
 	var resolver1, resolver2 appsync.Resolver
 	rName := fmt.Sprintf("tfacctest%d", sdkacctest.RandInt())
 	resourceName := "aws_appsync_resolver.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appsync.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, appsync.EndpointsID),
 		Providers:    acctest.Providers,
@@ -200,12 +200,12 @@ func TestAccAppSyncResolver_responseTemplate(t *testing.T) {
 	})
 }
 
-func TestAccAppSyncResolver_multipleResolvers(t *testing.T) {
+func testAccAppSyncResolver_multipleResolvers(t *testing.T) {
 	var resolver appsync.Resolver
 	rName := fmt.Sprintf("tfacctest%d", sdkacctest.RandInt())
 	resourceName := "aws_appsync_resolver.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appsync.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, appsync.EndpointsID),
 		Providers:    acctest.Providers,
@@ -230,12 +230,12 @@ func TestAccAppSyncResolver_multipleResolvers(t *testing.T) {
 	})
 }
 
-func TestAccAppSyncResolver_pipeline(t *testing.T) {
+func testAccAppSyncResolver_pipeline(t *testing.T) {
 	var resolver appsync.Resolver
 	rName := fmt.Sprintf("tfacctest%d", sdkacctest.RandInt())
 	resourceName := "aws_appsync_resolver.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appsync.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, appsync.EndpointsID),
 		Providers:    acctest.Providers,
@@ -258,12 +258,12 @@ func TestAccAppSyncResolver_pipeline(t *testing.T) {
 	})
 }
 
-func TestAccAppSyncResolver_caching(t *testing.T) {
+func testAccAppSyncResolver_caching(t *testing.T) {
 	var resolver appsync.Resolver
 	rName := fmt.Sprintf("tfacctest%d", sdkacctest.RandInt())
 	resourceName := "aws_appsync_resolver.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appsync.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, appsync.EndpointsID),
 		Providers:    acctest.Providers,

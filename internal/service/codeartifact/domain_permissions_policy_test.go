@@ -16,11 +16,11 @@ import (
 	tfcodeartifact "github.com/hashicorp/terraform-provider-aws/internal/service/codeartifact"
 )
 
-func TestAccCodeArtifactDomainPermissionsPolicy_basic(t *testing.T) {
+func testAccCodeArtifactDomainPermissionsPolicy_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codeartifact_domain_permissions_policy.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(codeartifact.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, codeartifact.EndpointsID),
 		Providers:    acctest.Providers,
@@ -56,11 +56,11 @@ func TestAccCodeArtifactDomainPermissionsPolicy_basic(t *testing.T) {
 	})
 }
 
-func TestAccCodeArtifactDomainPermissionsPolicy_owner(t *testing.T) {
+func testAccCodeArtifactDomainPermissionsPolicy_owner(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codeartifact_domain_permissions_policy.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(codeartifact.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, codeartifact.EndpointsID),
 		Providers:    acctest.Providers,
@@ -85,11 +85,11 @@ func TestAccCodeArtifactDomainPermissionsPolicy_owner(t *testing.T) {
 	})
 }
 
-func TestAccCodeArtifactDomainPermissionsPolicy_disappears(t *testing.T) {
+func testAccCodeArtifactDomainPermissionsPolicy_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codeartifact_domain_permissions_policy.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(codeartifact.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, codeartifact.EndpointsID),
 		Providers:    acctest.Providers,
@@ -107,11 +107,11 @@ func TestAccCodeArtifactDomainPermissionsPolicy_disappears(t *testing.T) {
 	})
 }
 
-func TestAccCodeArtifactDomainPermissionsPolicy_Disappears_domain(t *testing.T) {
+func testAccCodeArtifactDomainPermissionsPolicy_Disappears_domain(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codeartifact_domain_permissions_policy.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(codeartifact.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, codeartifact.EndpointsID),
 		Providers:    acctest.Providers,

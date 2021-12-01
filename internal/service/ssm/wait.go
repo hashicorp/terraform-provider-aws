@@ -31,7 +31,7 @@ func waitDocumentDeleted(conn *ssm.SSM, name string) (*ssm.DocumentDescription, 
 }
 
 // waitDocumentActive waits for an Document to return Active
-func waitDocumentActive(conn *ssm.SSM, name string) (*ssm.DocumentDescription, error) {
+func waitDocumentActive(conn *ssm.SSM, name string) (*ssm.DocumentDescription, error) { //nolint:unparam
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{ssm.DocumentStatusCreating, ssm.DocumentStatusUpdating},
 		Target:  []string{ssm.DocumentStatusActive},

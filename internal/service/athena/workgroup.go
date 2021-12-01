@@ -51,6 +51,24 @@ func ResourceWorkGroup() *schema.Resource {
 							Optional: true,
 							Default:  true,
 						},
+						"engine_version": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"effective_engine_version": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									"selected_engine_version": {
+										Type:     schema.TypeString,
+										Optional: true,
+										Default:  "AUTO",
+									},
+								},
+							},
+						},
 						"publish_cloudwatch_metrics_enabled": {
 							Type:     schema.TypeBool,
 							Optional: true,
@@ -316,6 +334,10 @@ func expandAthenaWorkGroupConfiguration(l []interface{}) *athena.WorkGroupConfig
 		configuration.EnforceWorkGroupConfiguration = aws.Bool(v.(bool))
 	}
 
+	if v, ok := m["engine_version"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		configuration.EngineVersion = expandAthenaWorkGroupEngineVersion(v)
+	}
+
 	if v, ok := m["publish_cloudwatch_metrics_enabled"]; ok {
 		configuration.PublishCloudWatchMetricsEnabled = aws.Bool(v.(bool))
 	}
@@ -329,6 +351,22 @@ func expandAthenaWorkGroupConfiguration(l []interface{}) *athena.WorkGroupConfig
 	}
 
 	return configuration
+}
+
+func expandAthenaWorkGroupEngineVersion(l []interface{}) *athena.EngineVersion {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]interface{})
+
+	engineVersion := &athena.EngineVersion{}
+
+	if v, ok := m["selected_engine_version"].(string); ok && v != "" {
+		engineVersion.SelectedEngineVersion = aws.String(v)
+	}
+
+	return engineVersion
 }
 
 func expandAthenaWorkGroupConfigurationUpdates(l []interface{}) *athena.WorkGroupConfigurationUpdates {
@@ -348,6 +386,10 @@ func expandAthenaWorkGroupConfigurationUpdates(l []interface{}) *athena.WorkGrou
 
 	if v, ok := m["enforce_workgroup_configuration"]; ok {
 		configurationUpdates.EnforceWorkGroupConfiguration = aws.Bool(v.(bool))
+	}
+
+	if v, ok := m["engine_version"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		configurationUpdates.EngineVersion = expandAthenaWorkGroupEngineVersion(v)
 	}
 
 	if v, ok := m["publish_cloudwatch_metrics_enabled"]; ok {
@@ -437,9 +479,23 @@ func flattenAthenaWorkGroupConfiguration(configuration *athena.WorkGroupConfigur
 	m := map[string]interface{}{
 		"bytes_scanned_cutoff_per_query":     aws.Int64Value(configuration.BytesScannedCutoffPerQuery),
 		"enforce_workgroup_configuration":    aws.BoolValue(configuration.EnforceWorkGroupConfiguration),
+		"engine_version":                     flattenAthenaWorkGroupEngineVersion(configuration.EngineVersion),
 		"publish_cloudwatch_metrics_enabled": aws.BoolValue(configuration.PublishCloudWatchMetricsEnabled),
 		"result_configuration":               flattenAthenaWorkGroupResultConfiguration(configuration.ResultConfiguration),
 		"requester_pays_enabled":             aws.BoolValue(configuration.RequesterPaysEnabled),
+	}
+
+	return []interface{}{m}
+}
+
+func flattenAthenaWorkGroupEngineVersion(engineVersion *athena.EngineVersion) []interface{} {
+	if engineVersion == nil {
+		return []interface{}{}
+	}
+
+	m := map[string]interface{}{
+		"effective_engine_version": aws.StringValue(engineVersion.EffectiveEngineVersion),
+		"selected_engine_version":  aws.StringValue(engineVersion.SelectedEngineVersion),
 	}
 
 	return []interface{}{m}

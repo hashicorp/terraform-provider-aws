@@ -23,8 +23,8 @@ import (
 func TestIpPermissionIDHash(t *testing.T) {
 	simple := &ec2.IpPermission{
 		IpProtocol: aws.String("tcp"),
-		FromPort:   aws.Int64(int64(80)),
-		ToPort:     aws.Int64(int64(8000)),
+		FromPort:   aws.Int64(80),
+		ToPort:     aws.Int64(8000),
 		IpRanges: []*ec2.IpRange{
 			{
 				CidrIp: aws.String("10.0.0.0/8"),
@@ -34,8 +34,8 @@ func TestIpPermissionIDHash(t *testing.T) {
 
 	egress := &ec2.IpPermission{
 		IpProtocol: aws.String("tcp"),
-		FromPort:   aws.Int64(int64(80)),
-		ToPort:     aws.Int64(int64(8000)),
+		FromPort:   aws.Int64(80),
+		ToPort:     aws.Int64(8000),
 		IpRanges: []*ec2.IpRange{
 			{
 				CidrIp: aws.String("10.0.0.0/8"),
@@ -54,8 +54,8 @@ func TestIpPermissionIDHash(t *testing.T) {
 
 	vpc_security_group_source := &ec2.IpPermission{
 		IpProtocol: aws.String("tcp"),
-		FromPort:   aws.Int64(int64(80)),
-		ToPort:     aws.Int64(int64(8000)),
+		FromPort:   aws.Int64(80),
+		ToPort:     aws.Int64(8000),
 		UserIdGroupPairs: []*ec2.UserIdGroupPair{
 			{
 				UserId:  aws.String("987654321"),
@@ -74,8 +74,8 @@ func TestIpPermissionIDHash(t *testing.T) {
 
 	security_group_source := &ec2.IpPermission{
 		IpProtocol: aws.String("tcp"),
-		FromPort:   aws.Int64(int64(80)),
-		ToPort:     aws.Int64(int64(8000)),
+		FromPort:   aws.Int64(80),
+		ToPort:     aws.Int64(8000),
 		UserIdGroupPairs: []*ec2.UserIdGroupPair{
 			{
 				UserId:    aws.String("987654321"),
@@ -231,6 +231,39 @@ func TestAccEC2SecurityGroupRule_Ingress_protocol(t *testing.T) {
 				ResourceName:      "aws_security_group_rule.ingress_1",
 				ImportState:       true,
 				ImportStateIdFunc: testAccSecurityGroupRuleImportStateIdFunc("aws_security_group_rule.ingress_1"),
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccEC2SecurityGroupRule_Ingress_icmpv6(t *testing.T) {
+	var group ec2.SecurityGroup
+	resourceName := "aws_security_group_rule.test"
+	sgResourceName := "aws_security_group.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckSecurityGroupRuleDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSecurityGroupRuleIngress_icmpv6Config,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSecurityGroupRuleExists(sgResourceName, &group),
+					resource.TestCheckResourceAttr(resourceName, "from_port", "-1"),
+					resource.TestCheckResourceAttr(resourceName, "to_port", "-1"),
+					resource.TestCheckResourceAttr(resourceName, "protocol", "icmpv6"),
+					resource.TestCheckResourceAttr(resourceName, "type", "ingress"),
+					resource.TestCheckResourceAttr(resourceName, "ipv6_cidr_blocks.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "ipv6_cidr_blocks.0", "::/0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccSecurityGroupRuleImportStateIdFunc(resourceName),
 				ImportStateVerify: true,
 			},
 		},
@@ -1430,6 +1463,25 @@ resource "aws_security_group_rule" "ingress_1" {
 }
 `, rInt)
 }
+
+const testAccSecurityGroupRuleIngress_icmpv6Config = `
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+}
+
+resource "aws_security_group" "test" {
+  vpc_id = aws_vpc.test.id
+}
+
+resource "aws_security_group_rule" "test" {
+  security_group_id = aws_security_group.test.id
+  type              = "ingress"
+  from_port         = -1
+  to_port           = -1
+  protocol          = "icmpv6"
+  ipv6_cidr_blocks  = ["::/0"]
+}
+`
 
 const testAccSecurityGroupRuleIngress_ipv6Config = `
 resource "aws_vpc" "tftest" {

@@ -76,8 +76,12 @@ variable "workflow_labels" {
     },
     "new-resource" = {
       color       = "8040c9", # color:terraform (link on white)
-      description = "Introduces a new resource"
+      description = "Introduces a new resource."
     },
+    "pre-service-packages" = {
+      color       = "ffec6e", # color:vault
+      description = "Includes pre-Service Packages aspects."
+    },    
     "prerelease-tf-testing" = {
       color       = "60dea9", # color:nomad
       description = "Pertains to testing Terraform releases prior to release."
@@ -102,9 +106,9 @@ variable "workflow_labels" {
       color       = "828a90", # color:stale grey
       description = "Repository modifications; GitHub Actions, developer docs, issue templates, codeowners, changelog."
     },
-    "service/nas" = {
+    "service/meta" = {
       color       = "7b42bc", # color:terraform (logomark)
-      description = "(Not A Service) Issues and PRs that don't directly correspond to an AWS service."
+      description = "Issues and PRs that correspond to meta data sources."
     },
     "size/XS" = {
       color       = "62d4dc", # color:lightest-darkest waypoint gradient

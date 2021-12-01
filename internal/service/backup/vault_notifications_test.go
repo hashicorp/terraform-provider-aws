@@ -14,7 +14,7 @@ import (
 	tfbackup "github.com/hashicorp/terraform-provider-aws/internal/service/backup"
 )
 
-func TestAccBackupVaultNotifications_Notification_basic(t *testing.T) {
+func TestAccBackupVaultNotification_basic(t *testing.T) {
 	var vault backup.GetBackupVaultNotificationsOutput
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -41,7 +41,7 @@ func TestAccBackupVaultNotifications_Notification_basic(t *testing.T) {
 	})
 }
 
-func TestAccBackupVaultNotifications_Notification_disappears(t *testing.T) {
+func TestAccBackupVaultNotification_disappears(t *testing.T) {
 	var vault backup.GetBackupVaultNotificationsOutput
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)

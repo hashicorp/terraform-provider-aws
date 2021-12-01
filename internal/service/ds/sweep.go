@@ -37,13 +37,13 @@ func sweepDirectories(region string) error {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.(*conns.AWSClient).DirectoryServiceConn
+	conn := client.(*conns.AWSClient).DSConn
 
 	var sweeperErrs *multierror.Error
 
 	input := &directoryservice.DescribeDirectoriesInput{}
 
-	err = DescribeDirectoriesPagesWithContext(context.TODO(), conn, input, func(page *directoryservice.DescribeDirectoriesOutput, lastPage bool) bool {
+	err = describeDirectoriesPagesWithContext(context.TODO(), conn, input, func(page *directoryservice.DescribeDirectoriesOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}

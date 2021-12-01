@@ -161,7 +161,7 @@ func sweepFleets(region string) error {
 					*attr.FleetId, err)
 			}
 
-			err = WaitForFleetToBeDeleted(conn, *attr.FleetId, 5*time.Minute)
+			err = WaitForFleetToBeDeleted(conn, *attr.FleetId, FleetDeletedDefaultTimeout)
 			if err != nil {
 				return fmt.Errorf("Error waiting for Gamelift Fleet (%s) to be deleted: %s",
 					*attr.FleetId, err)

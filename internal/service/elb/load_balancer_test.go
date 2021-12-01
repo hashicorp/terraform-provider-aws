@@ -1,6 +1,6 @@
 package elb_test
 
-import (
+import ( // nosemgrep: aws-sdk-go-multiple-service-imports
 	"fmt"
 	"math/rand"
 	"reflect"
@@ -44,6 +44,7 @@ func TestAccELBLoadBalancer_basic(t *testing.T) {
 						"lb_protocol":       "http",
 					}),
 					resource.TestCheckResourceAttr(resourceName, "cross_zone_load_balancing", "true"),
+					resource.TestCheckResourceAttr(resourceName, "desync_mitigation_mode", "defensive"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
@@ -503,7 +504,7 @@ func TestAccELBLoadBalancer_listener(t *testing.T) {
 					conn := acctest.Provider.Meta().(*conns.AWSClient).ELBConn
 					input := &elb.DeleteLoadBalancerListenersInput{
 						LoadBalancerName:  conf.LoadBalancerName,
-						LoadBalancerPorts: []*int64{aws.Int64(int64(80))},
+						LoadBalancerPorts: []*int64{aws.Int64(80)},
 					}
 					if _, err := conn.DeleteLoadBalancerListeners(input); err != nil {
 						t.Fatalf("Error deleting listener: %s", err)
@@ -529,9 +530,9 @@ func TestAccELBLoadBalancer_listener(t *testing.T) {
 						LoadBalancerName: conf.LoadBalancerName,
 						Listeners: []*elb.Listener{
 							{
-								InstancePort:     aws.Int64(int64(22)),
+								InstancePort:     aws.Int64(22),
 								InstanceProtocol: aws.String("tcp"),
-								LoadBalancerPort: aws.Int64(int64(22)),
+								LoadBalancerPort: aws.Int64(22),
 								Protocol:         aws.String("tcp"),
 							},
 						},
@@ -661,6 +662,71 @@ func TestAccELBLoadBalancer_securityGroups(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					// Count should still be one as we swap in a custom security group
 					resource.TestCheckResourceAttr(resourceName, "security_groups.#", "1"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccELBLoadBalancer_desyncMitigationMode(t *testing.T) {
+	resourceName := "aws_elb.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, elb.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckLoadBalancerDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLoadBalancerConfigDesyncMitigationMode,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "desync_mitigation_mode", "strictest"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccELBLoadBalancer_desyncMitigationMode_update(t *testing.T) {
+	resourceName := "aws_elb.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, elb.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckLoadBalancerDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLoadBalancerConfigDesyncMitigationMode_update_default,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "desync_mitigation_mode", "defensive"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccLoadBalancerConfigDesyncMitigationMode_update_monitor,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "desync_mitigation_mode", "monitor"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccLoadBalancerConfigDesyncMitigationMode_update_default,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "desync_mitigation_mode", "defensive"),
 				),
 			},
 		},
@@ -921,9 +987,9 @@ func testAccCheckLoadBalancerDisappears(loadBalancer *elb.LoadBalancerDescriptio
 func testAccCheckLoadBalancerAttributes(conf *elb.LoadBalancerDescription) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		l := elb.Listener{
-			InstancePort:     aws.Int64(int64(8000)),
+			InstancePort:     aws.Int64(8000),
 			InstanceProtocol: aws.String("HTTP"),
-			LoadBalancerPort: aws.Int64(int64(80)),
+			LoadBalancerPort: aws.Int64(80),
 			Protocol:         aws.String("HTTP"),
 		}
 
@@ -1837,5 +1903,74 @@ resource "aws_internet_gateway" "gw" {
   tags = {
     Name = "main"
   }
+}
+`
+
+const testAccLoadBalancerConfigDesyncMitigationMode = `
+data "aws_availability_zones" "available" {
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
+
+resource "aws_elb" "test" {
+  availability_zones = [data.aws_availability_zones.available.names[0]]
+  listener {
+    instance_port     = 8000
+    instance_protocol = "http"
+    lb_port           = 80
+    lb_protocol       = "http"
+  }
+
+  desync_mitigation_mode = "strictest"
+}
+`
+
+const testAccLoadBalancerConfigDesyncMitigationMode_update_default = `
+data "aws_availability_zones" "available" {
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
+
+resource "aws_elb" "test" {
+  availability_zones = [data.aws_availability_zones.available.names[0]]
+
+  listener {
+    instance_port     = 8000
+    instance_protocol = "http"
+    lb_port           = 80
+    lb_protocol       = "http"
+  }
+}
+`
+
+const testAccLoadBalancerConfigDesyncMitigationMode_update_monitor = `
+data "aws_availability_zones" "available" {
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
+
+resource "aws_elb" "test" {
+  availability_zones = [data.aws_availability_zones.available.names[0]]
+
+  listener {
+    instance_port     = 8000
+    instance_protocol = "http"
+    lb_port           = 80
+    lb_protocol       = "http"
+  }
+
+  desync_mitigation_mode = "monitor"
 }
 `

@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"regexp"
 	"testing"
-	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
@@ -16,7 +15,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	tfemr "github.com/hashicorp/terraform-provider-aws/internal/service/emr"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func TestAccEMRCluster_basic(t *testing.T) {
@@ -34,11 +32,30 @@ func TestAccEMRCluster_basic(t *testing.T) {
 				Config: testAccClusterConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(resourceName, &cluster),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "elasticmapreduce", regexp.MustCompile("cluster/.+$")),
+					resource.TestCheckResourceAttr(resourceName, "release_label", "emr-4.6.0"),
+					resource.TestCheckResourceAttr(resourceName, "applications.#", "1"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "applications.*", "Spark"),
+					resource.TestCheckResourceAttr(resourceName, "master_instance_group.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "master_instance_group.0.instance_type", "c4.large"),
+					resource.TestCheckResourceAttr(resourceName, "core_instance_group.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "core_instance_group.0.instance_type", "c4.large"),
+					resource.TestCheckResourceAttr(resourceName, "core_instance_group.0.instance_count", "1"),
+					resource.TestCheckResourceAttr(resourceName, "ec2_attributes.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "ec2_attributes.0.subnet_id", "aws_subnet.test", "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "ec2_attributes.0.emr_managed_master_security_group", "aws_security_group.test", "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "ec2_attributes.0.emr_managed_slave_security_group", "aws_security_group.test", "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "ec2_attributes.0.instance_profile", "aws_iam_instance_profile.emr_instance_profile", "arn"),
 					resource.TestCheckResourceAttr(resourceName, "scale_down_behavior", "TERMINATE_AT_TASK_COMPLETION"),
-					resource.TestCheckResourceAttr(resourceName, "step.#", "0"),
-					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "ebs_root_volume_size", "21"),
+					resource.TestCheckResourceAttrPair(resourceName, "service_role", "aws_iam_role.emr_service", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "autoscaling_role", "aws_iam_role.emr_autoscaling_role", "arn"),
 					resource.TestCheckNoResourceAttr(resourceName, "additional_info"),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "kerberos_attributes.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "auto_termination_policy.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "step.#", "0"),
 				),
 			},
 			{
@@ -50,6 +67,62 @@ func TestAccEMRCluster_basic(t *testing.T) {
 					"configurations",
 					"keep_job_flow_alive_when_no_steps",
 				},
+			},
+		},
+	})
+}
+
+func TestAccEMRCluster_autoTerminationPolicy(t *testing.T) {
+	var cluster emr.Cluster
+
+	resourceName := "aws_emr_cluster.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, emr.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterAutoTerminationConfig(rName, 10000),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(resourceName, &cluster),
+					resource.TestCheckResourceAttr(resourceName, "auto_termination_policy.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "auto_termination_policy.0.idle_timeout", "10000"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"cluster_state", // Ignore RUNNING versus WAITING changes
+					"configurations",
+					"keep_job_flow_alive_when_no_steps",
+				},
+			},
+			{
+				Config: testAccClusterAutoTerminationConfig(rName, 20000),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(resourceName, &cluster),
+					resource.TestCheckResourceAttr(resourceName, "auto_termination_policy.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "auto_termination_policy.0.idle_timeout", "20000"),
+				),
+			},
+			{
+				Config: testAccClusterNoAutoTerminationConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(resourceName, &cluster),
+					resource.TestCheckResourceAttr(resourceName, "auto_termination_policy.#", "0"),
+				),
+			},
+			{
+				Config: testAccClusterAutoTerminationConfig(rName, 20000),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(resourceName, &cluster),
+					resource.TestCheckResourceAttr(resourceName, "auto_termination_policy.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "auto_termination_policy.0.idle_timeout", "20000"),
+				),
 			},
 		},
 	})
@@ -112,7 +185,8 @@ func TestAccEMRCluster_disappears(t *testing.T) {
 				Config: testAccClusterConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(resourceName, &cluster),
-					testAccCheckClusterDisappears(&cluster),
+					acctest.CheckResourceDisappears(acctest.Provider, tfemr.ResourceCluster(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfemr.ResourceCluster(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -1528,64 +1602,6 @@ func testAccCheckClusterExists(n string, v *emr.Cluster) resource.TestCheckFunc 
 	}
 }
 
-func testAccCheckClusterDisappears(cluster *emr.Cluster) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EMRConn
-		id := aws.StringValue(cluster.Id)
-
-		terminateJobFlowsInput := &emr.TerminateJobFlowsInput{
-			JobFlowIds: []*string{cluster.Id},
-		}
-
-		_, err := conn.TerminateJobFlows(terminateJobFlowsInput)
-
-		if err != nil {
-			return err
-		}
-
-		input := &emr.ListInstancesInput{
-			ClusterId: cluster.Id,
-		}
-		var output *emr.ListInstancesOutput
-		var instanceCount int
-
-		err = resource.Retry(20*time.Minute, func() *resource.RetryError {
-			var err error
-			output, err = conn.ListInstances(input)
-
-			if err != nil {
-				return resource.NonRetryableError(err)
-			}
-
-			instanceCount = tfemr.CountRemainingInstances(output, id)
-
-			if instanceCount != 0 {
-				return resource.RetryableError(fmt.Errorf("EMR Cluster (%s) has (%d) Instances remaining", id, instanceCount))
-			}
-
-			return nil
-		})
-
-		if tfresource.TimedOut(err) {
-			output, err = conn.ListInstances(input)
-
-			if err == nil {
-				instanceCount = tfemr.CountRemainingInstances(output, id)
-			}
-		}
-
-		if instanceCount != 0 {
-			return fmt.Errorf("EMR Cluster (%s) has (%d) Instances remaining", id, instanceCount)
-		}
-
-		if err != nil {
-			return fmt.Errorf("error waiting for EMR Cluster (%s) Instances to drain: %w", id, err)
-		}
-
-		return nil
-	}
-}
-
 func testAccCheckClusterNotRecreated(i, j *emr.Cluster) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if aws.StringValue(i.Id) != aws.StringValue(j.Id) {
@@ -2535,7 +2551,7 @@ resource "aws_emr_cluster" "test" {
   applications                      = ["Spark"]
   keep_job_flow_alive_when_no_steps = true
   name                              = %[1]q
-  release_label                     = "emr-5.28.0"
+  release_label                     = "emr-5.33.1"
   service_role                      = "EMR_DefaultRole"
 
   ec2_attributes {
@@ -3832,6 +3848,68 @@ resource "aws_emr_cluster" "test" {
     name = "runif"
     args = ["instance.isMaster=true", "echo running on master node"]
   }
+}
+`, rName))
+}
+
+func testAccClusterAutoTerminationConfig(rName string, timeout int) string {
+	return acctest.ConfigCompose(
+		testAccClusterBaseVPCConfig(rName, false),
+		fmt.Sprintf(`
+data "aws_partition" "current" {}
+
+resource "aws_emr_cluster" "test" {
+  auto_termination_policy {
+    idle_timeout = %[2]d
+  }
+
+  applications                      = ["Spark"]
+  keep_job_flow_alive_when_no_steps = true
+  name                              = %[1]q
+  release_label                     = "emr-5.33.1"
+  service_role                      = "EMR_DefaultRole"
+
+  ec2_attributes {
+    instance_profile                  = "EMR_EC2_DefaultRole"
+    subnet_id                         = aws_subnet.test.id
+    emr_managed_master_security_group = aws_security_group.test.id
+    emr_managed_slave_security_group  = aws_security_group.test.id
+  }
+
+  master_instance_group {
+    instance_type = "m4.large"
+  }
+
+  depends_on = [aws_route_table_association.test]
+}
+`, rName, timeout))
+}
+
+func testAccClusterNoAutoTerminationConfig(rName string) string {
+	return acctest.ConfigCompose(
+		testAccClusterBaseVPCConfig(rName, false),
+		fmt.Sprintf(`
+data "aws_partition" "current" {}
+
+resource "aws_emr_cluster" "test" {
+  applications                      = ["Spark"]
+  keep_job_flow_alive_when_no_steps = true
+  name                              = %[1]q
+  release_label                     = "emr-5.33.1"
+  service_role                      = "EMR_DefaultRole"
+
+  ec2_attributes {
+    instance_profile                  = "EMR_EC2_DefaultRole"
+    subnet_id                         = aws_subnet.test.id
+    emr_managed_master_security_group = aws_security_group.test.id
+    emr_managed_slave_security_group  = aws_security_group.test.id
+  }
+
+  master_instance_group {
+    instance_type = "m4.large"
+  }
+
+  depends_on = [aws_route_table_association.test]
 }
 `, rName))
 }

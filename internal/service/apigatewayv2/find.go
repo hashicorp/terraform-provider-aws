@@ -49,7 +49,7 @@ func FindAPI(conn *apigatewayv2.ApiGatewayV2, input *apigatewayv2.GetApiInput) (
 func FindAPIs(conn *apigatewayv2.ApiGatewayV2, input *apigatewayv2.GetApisInput) ([]*apigatewayv2.Api, error) {
 	var apis []*apigatewayv2.Api
 
-	err := GetAPIsPages(conn, input, func(page *apigatewayv2.GetApisOutput, lastPage bool) bool {
+	err := getAPIsPages(conn, input, func(page *apigatewayv2.GetApisOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}

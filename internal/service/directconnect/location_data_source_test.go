@@ -32,7 +32,11 @@ func TestAccDirectConnectLocationDataSource_basic(t *testing.T) {
 const testAccDataSourceDxLocationConfig_basic = `
 data "aws_dx_locations" "test" {}
 
+locals {
+  location_codes = tolist(data.aws_dx_locations.test.location_codes)
+}
+
 data "aws_dx_location" "test" {
-  location_code = tolist(data.aws_dx_locations.test.location_codes)[0]
+  location_code = local.location_codes[length(local.location_codes) - 1]
 }
 `
