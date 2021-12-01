@@ -24,6 +24,7 @@ func init() {
 func testAccErrorCheckSkipAppStream(t *testing.T) resource.ErrorCheckFunc {
 	return acctest.ErrorCheckSkipMessagesContaining(t,
 		"ResourceNotFoundException: The image",
+		"InvalidParameterValueException: The AppStream 2.0 user pool feature",
 	)
 }
 

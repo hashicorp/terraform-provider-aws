@@ -112,7 +112,7 @@ func resourceAuthorizerCreate(d *schema.ResourceData, meta interface{}) error {
 func resourceAuthorizerRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).IoTConn
 
-	authorizer, err := AuthorizerByName(conn, d.Id())
+	authorizer, err := FindAuthorizerByName(conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] IoT Authorizer (%s) not found, removing from state", d.Id())

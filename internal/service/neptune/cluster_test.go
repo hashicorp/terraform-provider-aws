@@ -462,6 +462,57 @@ func TestAccNeptuneCluster_updateCloudWatchLogsExports(t *testing.T) {
 	})
 }
 
+func TestAccNeptuneCluster_updateEngineVersion(t *testing.T) {
+	var dbCluster neptune.DBCluster
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_neptune_cluster.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, neptune.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckClusterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_engineVersion(rName, "1.0.2.1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(resourceName, &dbCluster),
+					resource.TestCheckResourceAttr(resourceName, "engine_version", "1.0.2.1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"apply_immediately",
+					"cluster_identifier_prefix",
+					"final_snapshot_identifier",
+					"skip_final_snapshot",
+				},
+			},
+			{
+				Config: testAccClusterConfig_engineVersion(rName, "1.0.5.1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(resourceName, &dbCluster),
+					resource.TestCheckResourceAttr(resourceName, "engine_version", "1.0.5.1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"apply_immediately",
+					"cluster_identifier_prefix",
+					"final_snapshot_identifier",
+					"skip_final_snapshot",
+				},
+			},
+		},
+	})
+}
+
 func TestAccNeptuneCluster_deleteProtection(t *testing.T) {
 	var dbCluster neptune.DBCluster
 	rName := sdkacctest.RandomWithPrefix("tf-acc")
@@ -1074,4 +1125,34 @@ resource "aws_neptune_cluster" "test" {
   enable_cloudwatch_logs_exports = ["audit"]
 }
 `, rName))
+}
+
+func testAccClusterConfig_engineVersion(rName, engineVersion string) string {
+	return acctest.ConfigCompose(testAccClusterBaseConfig(), fmt.Sprintf(`
+resource "aws_neptune_cluster" "test" {
+  cluster_identifier                   = %[1]q
+  apply_immediately                    = true
+  availability_zones                   = local.availability_zone_names
+  engine_version                       = %[2]q
+  neptune_cluster_parameter_group_name = "default.neptune1"
+  skip_final_snapshot                  = true
+}
+
+data "aws_neptune_orderable_db_instance" "test" {
+  engine         = "neptune"
+  engine_version = aws_neptune_cluster.test.engine_version
+  license_model  = "amazon-license"
+
+  preferred_instance_classes = ["db.t3.medium", "db.r5.large", "db.r4.large"]
+}
+
+resource "aws_neptune_cluster_instance" "test" {
+  identifier                   = %[1]q
+  cluster_identifier           = aws_neptune_cluster.test.id
+  apply_immediately            = true
+  instance_class               = data.aws_neptune_orderable_db_instance.test.instance_class
+  neptune_parameter_group_name = aws_neptune_cluster.test.neptune_cluster_parameter_group_name
+  promotion_tier               = "3"
+}
+`, rName, engineVersion))
 }

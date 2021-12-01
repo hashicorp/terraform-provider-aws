@@ -157,7 +157,7 @@ func resourceInfrastructureConfigurationCreate(d *schema.ResourceData, meta inte
 	}
 
 	if v, ok := d.GetOk("logging"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.Logging = expandImageBuilderLogging(v.([]interface{})[0].(map[string]interface{}))
+		input.Logging = expandLogging(v.([]interface{})[0].(map[string]interface{}))
 	}
 
 	if v, ok := d.GetOk("resource_tags"); ok && len(v.(map[string]interface{})) > 0 {
@@ -249,7 +249,7 @@ func resourceInfrastructureConfigurationRead(d *schema.ResourceData, meta interf
 	d.Set("instance_types", aws.StringValueSlice(infrastructureConfiguration.InstanceTypes))
 	d.Set("key_pair", infrastructureConfiguration.KeyPair)
 	if infrastructureConfiguration.Logging != nil {
-		d.Set("logging", []interface{}{flattenImageBuilderLogging(infrastructureConfiguration.Logging)})
+		d.Set("logging", []interface{}{flattenLogging(infrastructureConfiguration.Logging)})
 	} else {
 		d.Set("logging", nil)
 	}
@@ -310,7 +310,7 @@ func resourceInfrastructureConfigurationUpdate(d *schema.ResourceData, meta inte
 		}
 
 		if v, ok := d.GetOk("logging"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-			input.Logging = expandImageBuilderLogging(v.([]interface{})[0].(map[string]interface{}))
+			input.Logging = expandLogging(v.([]interface{})[0].(map[string]interface{}))
 		}
 
 		if v, ok := d.GetOk("resource_tags"); ok && len(v.(map[string]interface{})) > 0 {
@@ -383,7 +383,7 @@ func resourceInfrastructureConfigurationDelete(d *schema.ResourceData, meta inte
 	return nil
 }
 
-func expandImageBuilderLogging(tfMap map[string]interface{}) *imagebuilder.Logging {
+func expandLogging(tfMap map[string]interface{}) *imagebuilder.Logging {
 	if tfMap == nil {
 		return nil
 	}
@@ -391,13 +391,13 @@ func expandImageBuilderLogging(tfMap map[string]interface{}) *imagebuilder.Loggi
 	apiObject := &imagebuilder.Logging{}
 
 	if v, ok := tfMap["s3_logs"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		apiObject.S3Logs = expandImageBuilderS3Logs(v[0].(map[string]interface{}))
+		apiObject.S3Logs = expandS3Logs(v[0].(map[string]interface{}))
 	}
 
 	return apiObject
 }
 
-func expandImageBuilderS3Logs(tfMap map[string]interface{}) *imagebuilder.S3Logs {
+func expandS3Logs(tfMap map[string]interface{}) *imagebuilder.S3Logs {
 	if tfMap == nil {
 		return nil
 	}
@@ -415,7 +415,7 @@ func expandImageBuilderS3Logs(tfMap map[string]interface{}) *imagebuilder.S3Logs
 	return apiObject
 }
 
-func flattenImageBuilderLogging(apiObject *imagebuilder.Logging) map[string]interface{} {
+func flattenLogging(apiObject *imagebuilder.Logging) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -423,13 +423,13 @@ func flattenImageBuilderLogging(apiObject *imagebuilder.Logging) map[string]inte
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.S3Logs; v != nil {
-		tfMap["s3_logs"] = []interface{}{flattenImageBuilderS3Logs(v)}
+		tfMap["s3_logs"] = []interface{}{flattenS3Logs(v)}
 	}
 
 	return tfMap
 }
 
-func flattenImageBuilderS3Logs(apiObject *imagebuilder.S3Logs) map[string]interface{} {
+func flattenS3Logs(apiObject *imagebuilder.S3Logs) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}

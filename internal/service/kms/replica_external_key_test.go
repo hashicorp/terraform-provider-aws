@@ -61,7 +61,7 @@ func TestAccKMSReplicaExternalKey_basic(t *testing.T) {
 	})
 }
 
-func TestAccKMSReplicaExternalKey_DescriptionAndEnabled(t *testing.T) {
+func TestAccKMSReplicaExternalKey_descriptionAndEnabled(t *testing.T) {
 	var providers []*schema.Provider
 	var key kms.KeyMetadata
 	rName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -117,13 +117,13 @@ func TestAccKMSReplicaExternalKey_DescriptionAndEnabled(t *testing.T) {
 	})
 }
 
-func TestAccKMSReplicaExternalKey_Policy(t *testing.T) {
+func TestAccKMSReplicaExternalKey_policy(t *testing.T) {
 	var providers []*schema.Provider
 	var key kms.KeyMetadata
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_kms_replica_external_key.test"
-	policy1 := `{"Version":"2012-10-17","Id":"kms-tf-1","Statement":[{"Sid":"Enable IAM User Permissions 1","Effect":"Allow","Principal":{"AWS":"*"},"Action":"kms:*","Resource":"*"}]}`
-	policy2 := `{"Version":"2012-10-17","Id":"kms-tf-1","Statement":[{"Sid":"Enable IAM User Permissions 2","Effect":"Allow","Principal":{"AWS":"*"},"Action":"kms:*","Resource":"*"}]}`
+	policy1 := `{"Id":"kms-tf-1","Statement":[{"Action":"kms:*","Effect":"Allow","Principal":{"AWS":"*"},"Resource":"*","Sid":"Enable IAM User Permissions 1"}],"Version":"2012-10-17"}`
+	policy2 := `{"Id":"kms-tf-1","Statement":[{"Action":"kms:*","Effect":"Allow","Principal":{"AWS":"*"},"Resource":"*","Sid":"Enable IAM User Permissions 2"}],"Version":"2012-10-17"}`
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -164,7 +164,7 @@ func TestAccKMSReplicaExternalKey_Policy(t *testing.T) {
 	})
 }
 
-func TestAccKMSReplicaExternalKey_Tags(t *testing.T) {
+func TestAccKMSReplicaExternalKey_tags(t *testing.T) {
 	var providers []*schema.Provider
 	var key kms.KeyMetadata
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -290,9 +290,7 @@ resource "aws_kms_replica_external_key" "test" {
 
   bypass_policy_lockout_safety_check = %[3]t
 
-  policy = <<POLICY
-%[2]s
-POLICY
+  policy = %[2]q
 }
 `, rName, policy, bypassLockoutCheck))
 }

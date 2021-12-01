@@ -150,8 +150,8 @@ func dataSourceImageRecipeRead(d *schema.ResourceData, meta interface{}) error {
 
 	d.SetId(aws.StringValue(imageRecipe.Arn))
 	d.Set("arn", imageRecipe.Arn)
-	d.Set("block_device_mapping", flattenImageBuilderInstanceBlockDeviceMappings(imageRecipe.BlockDeviceMappings))
-	d.Set("component", flattenImageBuilderComponentConfigurations(imageRecipe.Components))
+	d.Set("block_device_mapping", flattenInstanceBlockDeviceMappings(imageRecipe.BlockDeviceMappings))
+	d.Set("component", flattenComponentConfigurations(imageRecipe.Components))
 	d.Set("date_created", imageRecipe.DateCreated)
 	d.Set("description", imageRecipe.Description)
 	d.Set("name", imageRecipe.Name)

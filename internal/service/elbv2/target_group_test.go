@@ -769,6 +769,7 @@ func TestAccELBV2TargetGroup_NetworkLB_targetGroup(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "vpc_id"),
 					resource.TestCheckResourceAttr(resourceName, "deregistration_delay", "200"),
 					resource.TestCheckResourceAttr(resourceName, "proxy_protocol_v2", "false"),
+					resource.TestCheckResourceAttr(resourceName, "connection_termination", "false"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.enabled", "true"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.interval", "10"),
@@ -813,6 +814,35 @@ func TestAccELBV2TargetGroup_NetworkLB_targetGroup(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTargetGroupExists(resourceName, &targetGroup3),
 					testAccCheckTargetGroupRecreated(&targetGroup2, &targetGroup3),
+				),
+			},
+		},
+	})
+}
+
+func TestAccELBV2TargetGroup_networkLB_TargetGroupWithConnectionTermination(t *testing.T) {
+	var confBefore, confAfter elbv2.TargetGroup
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_lb_target_group.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, elbv2.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckTargetGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTargetGroupConfig_typeTCP(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTargetGroupExists(resourceName, &confBefore),
+					resource.TestCheckResourceAttr(resourceName, "connection_termination", "false"),
+				),
+			},
+			{
+				Config: testAccTargetGroupConfig_typeTCP_withConnectionTermination(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTargetGroupExists(resourceName, &confAfter),
+					resource.TestCheckResourceAttr(resourceName, "connection_termination", "true"),
 				),
 			},
 		},
@@ -901,6 +931,7 @@ func TestAccELBV2TargetGroup_protocolGeneve(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
+					"connection_termination",
 					"lambda_multi_value_headers_enabled",
 					"proxy_protocol_v2",
 					"slow_start",
@@ -1674,6 +1705,7 @@ func TestAccELBV2TargetGroup_A_lambda(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
+					"connection_termination",
 					"deregistration_delay",
 					"proxy_protocol_v2",
 					"slow_start",
@@ -1708,6 +1740,7 @@ func TestAccELBV2TargetGroup_A_lambdaMultiValueHeadersEnabled(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
+					"connection_termination",
 					"deregistration_delay",
 					"proxy_protocol_v2",
 					"slow_start",
@@ -2807,8 +2840,42 @@ resource "aws_lb_target_group" "test" {
   protocol = "TCP"
   vpc_id   = aws_vpc.test.id
 
-  proxy_protocol_v2    = "true"
+  proxy_protocol_v2    = true
   deregistration_delay = 200
+
+  health_check {
+    interval            = 10
+    port                = "traffic-port"
+    protocol            = "TCP"
+    healthy_threshold   = 3
+    unhealthy_threshold = 3
+  }
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName)
+}
+
+func testAccTargetGroupConfig_typeTCP_withConnectionTermination(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_lb_target_group" "test" {
+  name     = %[1]q
+  port     = 8082
+  protocol = "TCP"
+  vpc_id   = aws_vpc.test.id
+
+  connection_termination = true
+  deregistration_delay   = 200
 
   health_check {
     interval            = 10

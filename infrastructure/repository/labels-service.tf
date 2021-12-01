@@ -6,6 +6,7 @@
 variable "service_labels" {
   default = [
     "accessanalyzer",
+    "account",
     "acm",
     "acmpca",
     "alexaforbusiness",
@@ -124,7 +125,7 @@ variable "service_labels" {
     "kms",
     "lakeformation",
     "lambda",
-    "lexmodelbuildingservice",
+    "lexmodels",
     "licensemanager",
     "lightsail",
     "location",
@@ -180,7 +181,7 @@ variable "service_labels" {
     "schemas",
     "secretsmanager",
     "securityhub",
-    "serverlessapplicationrepository",
+    "serverlessrepo",
     "servicecatalog",
     "servicediscovery",
     "servicequotas",

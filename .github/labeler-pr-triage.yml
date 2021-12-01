@@ -48,6 +48,9 @@ repository:
 service/accessanalyzer:
   - 'internal/service/accessanalyzer/**/*'
   - 'website/**/accessanalyzer_*'
+service/account:
+  - 'internal/service/account/**/*'
+  - 'website/**/account_*'
 service/acm:
   - 'internal/service/acm/**/*'
   - 'website/**/acm_*'
@@ -186,7 +189,7 @@ service/comprehend:
   - 'internal/service/comprehend/**/*'
   - 'website/**/comprehend_*'
 service/configservice:
-  - 'internal/service/config/**/*'
+  - 'internal/service/configservice/**/*'
   - 'website/**/config_*'
 service/connect:
   - 'internal/service/connect/**/*'
@@ -289,7 +292,7 @@ service/elasticbeanstalk:
   - 'internal/service/elasticbeanstalk/**/*'
   - 'website/**/elastic_beanstalk_*'
 service/elasticsearch:
-  - 'internal/service/elasticsearchservice/**/*'
+  - 'internal/service/elasticsearch/**/*'
   - 'website/**/elasticsearch_*'
 service/elb:
   - 'internal/service/elb/**/*'
@@ -383,8 +386,8 @@ service/lakeformation:
 service/lambda:
   - 'internal/service/lambda/**/*'
   - 'website/**/lambda_*'
-service/lexmodelbuildingservice:
-  - 'internal/service/lexmodelbuilding/**/*'
+service/lexmodels:
+  - 'internal/service/lexmodels/**/*'
   - 'website/**/lex_*'
 service/licensemanager:
   - 'internal/service/licensemanager/**/*'
@@ -541,8 +544,8 @@ service/secretsmanager:
 service/securityhub:
   - 'internal/service/securityhub/**/*'
   - 'website/**/securityhub_*'
-service/serverlessapplicationrepository:
-  - 'internal/service/serverlessapprepo/**/*'
+service/serverlessrepo:
+  - 'internal/service/serverlessrepo/**/*'
   - 'website/**/serverlessapplicationrepository_*'
 service/servicecatalog:
   - 'internal/service/servicecatalog/**/*'

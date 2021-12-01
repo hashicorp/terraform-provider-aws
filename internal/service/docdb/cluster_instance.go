@@ -511,6 +511,7 @@ func resourceInstanceRetrieve(id string, conn *docdb.DocDB) (*docdb.DBInstance, 
 var resourceClusterInstanceCreateUpdatePendingStates = []string{
 	"backing-up",
 	"configuring-enhanced-monitoring",
+	"configuring-iam-database-auth",
 	"configuring-log-exports",
 	"creating",
 	"maintenance",
@@ -519,6 +520,7 @@ var resourceClusterInstanceCreateUpdatePendingStates = []string{
 	"renaming",
 	"resetting-master-credentials",
 	"starting",
+	"storage-optimization",
 	"upgrading",
 }
 

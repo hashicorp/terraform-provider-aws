@@ -199,7 +199,14 @@ func resourceKeyRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("key_id", key.metadata.KeyId)
 	d.Set("key_usage", key.metadata.KeyUsage)
 	d.Set("multi_region", key.metadata.MultiRegion)
-	d.Set("policy", key.policy)
+
+	policyToSet, err := verify.SecondJSONUnlessEquivalent(d.Get("policy").(string), key.policy)
+
+	if err != nil {
+		return fmt.Errorf("while setting policy (%s), encountered: %w", key.policy, err)
+	}
+
+	d.Set("policy", policyToSet)
 
 	tags := key.tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 

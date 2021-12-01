@@ -112,6 +112,11 @@ func DataSourceInstanceType() *schema.Resource {
 				Computed: true,
 			},
 
+			"encryption_in_transit_supported": {
+				Type:     schema.TypeBool,
+				Computed: true,
+			},
+
 			"fpgas": {
 				Type:     schema.TypeSet,
 				Computed: true,
@@ -384,6 +389,7 @@ func dataSourceInstanceTypeRead(d *schema.ResourceData, meta interface{}) error 
 	}
 	d.Set("efa_supported", v.NetworkInfo.EfaSupported)
 	d.Set("ena_support", v.NetworkInfo.EnaSupport)
+	d.Set("encryption_in_transit_supported", v.NetworkInfo.EncryptionInTransitSupported)
 	if v.FpgaInfo != nil {
 		fpgaList := make([]interface{}, len(v.FpgaInfo.Fpgas))
 		for i, fpg := range v.FpgaInfo.Fpgas {

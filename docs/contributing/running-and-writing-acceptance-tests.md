@@ -94,7 +94,7 @@ Tests can then be run by specifying a regular expression defining the tests to
 run and the package in which the tests are defined:
 
 ```sh
-$ make testacc TESTARGS='-run=TestAccCloudWatchDashboard_updateName' PKG_NAME=internal/service/cloudwatch
+$ make testacc TESTS=TestAccCloudWatchDashboard_updateName PKG=cloudwatch
 ==> Checking that code complies with gofmt requirements...
 TF_ACC=1 go test ./internal/service/cloudwatch/... -v -count 1 -parallel 20 -run=TestAccCloudWatchDashboard_updateName -timeout 180m
 === RUN   TestAccCloudWatchDashboard_updateName
@@ -111,7 +111,7 @@ write the regular expression. For example, to run all tests of the
 can start testing like this:
 
 ```sh
-$ make testacc TESTARGS='-run=TestAccCloudWatchDashboard' PKG_NAME=internal/service/cloudwatch
+$ make testacc TESTS=TestAccCloudWatchDashboard PKG=cloudwatch
 ==> Checking that code complies with gofmt requirements...
 TF_ACC=1 go test ./internal/service/cloudwatch/... -v -count 1 -parallel 20 -run=TestAccCloudWatchDashboard -timeout 180m
 === RUN   TestAccCloudWatchDashboard_basic
@@ -141,7 +141,7 @@ Please Note: On macOS 10.14 and later (and some Linux distributions), the defaul
 Certain testing requires multiple AWS accounts. This additional setup is not typically required and the testing will return an error (shown below) if your current setup does not have the secondary AWS configuration:
 
 ```console
-$ make testacc TESTARGS='-run=TestAccRDSInstance_DBSubnetGroupName_ramShared' PKG_NAME=internal/service/rds
+$ make testacc TESTS=TestAccRDSInstance_DBSubnetGroupName_ramShared PKG=rds
 TF_ACC=1 go test ./internal/service/rds/... -v -count 1 -parallel 20 -run=TestAccRDSInstance_DBSubnetGroupName_ramShared -timeout 180m
 === RUN   TestAccRDSInstance_DBSubnetGroupName_ramShared
 === PAUSE TestAccRDSInstance_DBSubnetGroupName_ramShared

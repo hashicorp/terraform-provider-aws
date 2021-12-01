@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/request"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/accessanalyzer"
+	"github.com/aws/aws-sdk-go/service/account"
 	"github.com/aws/aws-sdk-go/service/acm"
 	"github.com/aws/aws-sdk-go/service/acmpca"
 	"github.com/aws/aws-sdk-go/service/alexaforbusiness"
@@ -286,6 +287,7 @@ import (
 
 const (
 	AccessAnalyzer                = "accessanalyzer"
+	Account                       = "account"
 	ACM                           = "acm"
 	ACMPCA                        = "acmpca"
 	AlexaForBusiness              = "alexaforbusiness"
@@ -343,7 +345,7 @@ const (
 	Comprehend                    = "comprehend"
 	ComprehendMedical             = "comprehendmedical"
 	ComputeOptimizer              = "computeoptimizer"
-	ConfigService                 = "config"
+	ConfigService                 = "configservice"
 	Connect                       = "connect"
 	ConnectContactLens            = "connectcontactlens"
 	ConnectParticipant            = "connectparticipant"
@@ -433,7 +435,7 @@ const (
 	KMS                           = "kms"
 	LakeFormation                 = "lakeformation"
 	Lambda                        = "lambda"
-	LexModelBuilding              = "lexmodelbuilding"
+	LexModels                     = "lexmodels"
 	LexModelsV2                   = "lexmodelsv2"
 	LexRuntime                    = "lexruntime"
 	LexRuntimeV2                  = "lexruntimev2"
@@ -514,7 +516,7 @@ const (
 	Schemas                       = "schemas"
 	SecretsManager                = "secretsmanager"
 	SecurityHub                   = "securityhub"
-	ServerlessAppRepo             = "serverlessapprepo"
+	ServerlessRepo                = "serverlessrepo"
 	ServiceCatalog                = "servicecatalog"
 	ServiceDiscovery              = "servicediscovery"
 	ServiceQuotas                 = "servicequotas"
@@ -573,6 +575,7 @@ func init() {
 	serviceData = make(map[string]*ServiceDatum)
 
 	serviceData[AccessAnalyzer] = &ServiceDatum{AWSClientName: "AccessAnalyzer", AWSServiceName: accessanalyzer.ServiceName, AWSEndpointsID: accessanalyzer.EndpointsID, AWSServiceID: accessanalyzer.ServiceID, ProviderNameUpper: "AccessAnalyzer", HCLKeys: []string{"accessanalyzer"}}
+	serviceData[Account] = &ServiceDatum{AWSClientName: "Account", AWSServiceName: account.ServiceName, AWSEndpointsID: account.EndpointsID, AWSServiceID: account.ServiceID, ProviderNameUpper: "Account", HCLKeys: []string{"account"}}
 	serviceData[ACM] = &ServiceDatum{AWSClientName: "ACM", AWSServiceName: acm.ServiceName, AWSEndpointsID: acm.EndpointsID, AWSServiceID: acm.ServiceID, ProviderNameUpper: "ACM", HCLKeys: []string{"acm"}}
 	serviceData[ACMPCA] = &ServiceDatum{AWSClientName: "ACMPCA", AWSServiceName: acmpca.ServiceName, AWSEndpointsID: acmpca.EndpointsID, AWSServiceID: acmpca.ServiceID, ProviderNameUpper: "ACMPCA", HCLKeys: []string{"acmpca"}}
 	serviceData[AlexaForBusiness] = &ServiceDatum{AWSClientName: "AlexaForBusiness", AWSServiceName: alexaforbusiness.ServiceName, AWSEndpointsID: alexaforbusiness.EndpointsID, AWSServiceID: alexaforbusiness.ServiceID, ProviderNameUpper: "AlexaForBusiness", HCLKeys: []string{"alexaforbusiness"}}
@@ -629,7 +632,7 @@ func init() {
 	serviceData[CognitoSync] = &ServiceDatum{AWSClientName: "CognitoSync", AWSServiceName: cognitosync.ServiceName, AWSEndpointsID: cognitosync.EndpointsID, AWSServiceID: cognitosync.ServiceID, ProviderNameUpper: "CognitoSync", HCLKeys: []string{"cognitosync"}}
 	serviceData[Comprehend] = &ServiceDatum{AWSClientName: "Comprehend", AWSServiceName: comprehend.ServiceName, AWSEndpointsID: comprehend.EndpointsID, AWSServiceID: comprehend.ServiceID, ProviderNameUpper: "Comprehend", HCLKeys: []string{"comprehend"}}
 	serviceData[ComprehendMedical] = &ServiceDatum{AWSClientName: "ComprehendMedical", AWSServiceName: comprehendmedical.ServiceName, AWSEndpointsID: comprehendmedical.EndpointsID, AWSServiceID: comprehendmedical.ServiceID, ProviderNameUpper: "ComprehendMedical", HCLKeys: []string{"comprehendmedical"}}
-	serviceData[ConfigService] = &ServiceDatum{AWSClientName: "ConfigService", AWSServiceName: configservice.ServiceName, AWSEndpointsID: configservice.EndpointsID, AWSServiceID: configservice.ServiceID, ProviderNameUpper: "Config", HCLKeys: []string{"configservice", "config"}}
+	serviceData[ConfigService] = &ServiceDatum{AWSClientName: "ConfigService", AWSServiceName: configservice.ServiceName, AWSEndpointsID: configservice.EndpointsID, AWSServiceID: configservice.ServiceID, ProviderNameUpper: "ConfigService", HCLKeys: []string{"configservice", "config"}}
 	serviceData[Connect] = &ServiceDatum{AWSClientName: "Connect", AWSServiceName: connect.ServiceName, AWSEndpointsID: connect.EndpointsID, AWSServiceID: connect.ServiceID, ProviderNameUpper: "Connect", HCLKeys: []string{"connect"}}
 	serviceData[ConnectContactLens] = &ServiceDatum{AWSClientName: "ConnectContactLens", AWSServiceName: connectcontactlens.ServiceName, AWSEndpointsID: connectcontactlens.EndpointsID, AWSServiceID: connectcontactlens.ServiceID, ProviderNameUpper: "ConnectContactLens", HCLKeys: []string{"connectcontactlens"}}
 	serviceData[ConnectParticipant] = &ServiceDatum{AWSClientName: "ConnectParticipant", AWSServiceName: connectparticipant.ServiceName, AWSEndpointsID: connectparticipant.EndpointsID, AWSServiceID: connectparticipant.ServiceID, ProviderNameUpper: "ConnectParticipant", HCLKeys: []string{"connectparticipant"}}
@@ -717,7 +720,7 @@ func init() {
 	serviceData[KMS] = &ServiceDatum{AWSClientName: "KMS", AWSServiceName: kms.ServiceName, AWSEndpointsID: kms.EndpointsID, AWSServiceID: kms.ServiceID, ProviderNameUpper: "KMS", HCLKeys: []string{"kms"}}
 	serviceData[LakeFormation] = &ServiceDatum{AWSClientName: "LakeFormation", AWSServiceName: lakeformation.ServiceName, AWSEndpointsID: lakeformation.EndpointsID, AWSServiceID: lakeformation.ServiceID, ProviderNameUpper: "LakeFormation", HCLKeys: []string{"lakeformation"}}
 	serviceData[Lambda] = &ServiceDatum{AWSClientName: "Lambda", AWSServiceName: lambda.ServiceName, AWSEndpointsID: lambda.EndpointsID, AWSServiceID: lambda.ServiceID, ProviderNameUpper: "Lambda", HCLKeys: []string{"lambda"}}
-	serviceData[LexModelBuilding] = &ServiceDatum{AWSClientName: "LexModelBuildingService", AWSServiceName: lexmodelbuildingservice.ServiceName, AWSEndpointsID: lexmodelbuildingservice.EndpointsID, AWSServiceID: lexmodelbuildingservice.ServiceID, ProviderNameUpper: "LexModelBuilding", HCLKeys: []string{"lexmodels", "lexmodelbuilding", "lexmodelbuildingservice"}}
+	serviceData[LexModels] = &ServiceDatum{AWSClientName: "LexModelBuildingService", AWSServiceName: lexmodelbuildingservice.ServiceName, AWSEndpointsID: lexmodelbuildingservice.EndpointsID, AWSServiceID: lexmodelbuildingservice.ServiceID, ProviderNameUpper: "LexModels", HCLKeys: []string{"lexmodels", "lexmodelbuilding", "lexmodelbuildingservice"}}
 	serviceData[LexModelsV2] = &ServiceDatum{AWSClientName: "LexModelsV2", AWSServiceName: lexmodelsv2.ServiceName, AWSEndpointsID: lexmodelsv2.EndpointsID, AWSServiceID: lexmodelsv2.ServiceID, ProviderNameUpper: "LexModelsV2", HCLKeys: []string{"lexmodelsv2"}}
 	serviceData[LexRuntime] = &ServiceDatum{AWSClientName: "LexRuntimeService", AWSServiceName: lexruntimeservice.ServiceName, AWSEndpointsID: lexruntimeservice.EndpointsID, AWSServiceID: lexruntimeservice.ServiceID, ProviderNameUpper: "LexRuntime", HCLKeys: []string{"lexruntime", "lexruntimeservice"}}
 	serviceData[LexRuntimeV2] = &ServiceDatum{AWSClientName: "LexRuntimeV2", AWSServiceName: lexruntimev2.ServiceName, AWSEndpointsID: lexruntimev2.EndpointsID, AWSServiceID: lexruntimev2.ServiceID, ProviderNameUpper: "LexRuntimeV2", HCLKeys: []string{"lexruntimev2"}}
@@ -798,7 +801,7 @@ func init() {
 	serviceData[Schemas] = &ServiceDatum{AWSClientName: "Schemas", AWSServiceName: schemas.ServiceName, AWSEndpointsID: schemas.EndpointsID, AWSServiceID: schemas.ServiceID, ProviderNameUpper: "Schemas", HCLKeys: []string{"schemas"}}
 	serviceData[SecretsManager] = &ServiceDatum{AWSClientName: "SecretsManager", AWSServiceName: secretsmanager.ServiceName, AWSEndpointsID: secretsmanager.EndpointsID, AWSServiceID: secretsmanager.ServiceID, ProviderNameUpper: "SecretsManager", HCLKeys: []string{"secretsmanager"}}
 	serviceData[SecurityHub] = &ServiceDatum{AWSClientName: "SecurityHub", AWSServiceName: securityhub.ServiceName, AWSEndpointsID: securityhub.EndpointsID, AWSServiceID: securityhub.ServiceID, ProviderNameUpper: "SecurityHub", HCLKeys: []string{"securityhub"}}
-	serviceData[ServerlessAppRepo] = &ServiceDatum{AWSClientName: "ServerlessApplicationRepository", AWSServiceName: serverlessapplicationrepository.ServiceName, AWSEndpointsID: serverlessapplicationrepository.EndpointsID, AWSServiceID: serverlessapplicationrepository.ServiceID, ProviderNameUpper: "ServerlessAppRepo", HCLKeys: []string{"serverlessrepo", "serverlessapprepo", "serverlessapplicationrepository"}}
+	serviceData[ServerlessRepo] = &ServiceDatum{AWSClientName: "ServerlessApplicationRepository", AWSServiceName: serverlessapplicationrepository.ServiceName, AWSEndpointsID: serverlessapplicationrepository.EndpointsID, AWSServiceID: serverlessapplicationrepository.ServiceID, ProviderNameUpper: "ServerlessRepo", HCLKeys: []string{"serverlessrepo", "serverlessapprepo", "serverlessapplicationrepository"}}
 	serviceData[ServiceCatalog] = &ServiceDatum{AWSClientName: "ServiceCatalog", AWSServiceName: servicecatalog.ServiceName, AWSEndpointsID: servicecatalog.EndpointsID, AWSServiceID: servicecatalog.ServiceID, ProviderNameUpper: "ServiceCatalog", HCLKeys: []string{"servicecatalog"}}
 	serviceData[ServiceDiscovery] = &ServiceDatum{AWSClientName: "ServiceDiscovery", AWSServiceName: servicediscovery.ServiceName, AWSEndpointsID: servicediscovery.EndpointsID, AWSServiceID: servicediscovery.ServiceID, ProviderNameUpper: "ServiceDiscovery", HCLKeys: []string{"servicediscovery"}}
 	serviceData[ServiceQuotas] = &ServiceDatum{AWSClientName: "ServiceQuotas", AWSServiceName: servicequotas.ServiceName, AWSEndpointsID: servicequotas.EndpointsID, AWSServiceID: servicequotas.ServiceID, ProviderNameUpper: "ServiceQuotas", HCLKeys: []string{"servicequotas"}}
@@ -881,6 +884,7 @@ type Config struct {
 
 type AWSClient struct {
 	AccessAnalyzerConn                *accessanalyzer.AccessAnalyzer
+	AccountConn                       *account.Account
 	AccountID                         string
 	ACMConn                           *acm.ACM
 	ACMPCAConn                        *acmpca.ACMPCA
@@ -938,7 +942,7 @@ type AWSClient struct {
 	CognitoSyncConn                   *cognitosync.CognitoSync
 	ComprehendConn                    *comprehend.Comprehend
 	ComprehendMedicalConn             *comprehendmedical.ComprehendMedical
-	ConfigConn                        *configservice.ConfigService
+	ConfigServiceConn                 *configservice.ConfigService
 	ConnectConn                       *connect.Connect
 	ConnectContactLensConn            *connectcontactlens.ConnectContactLens
 	ConnectParticipantConn            *connectparticipant.ConnectParticipant
@@ -1029,7 +1033,7 @@ type AWSClient struct {
 	KMSConn                           *kms.KMS
 	LakeFormationConn                 *lakeformation.LakeFormation
 	LambdaConn                        *lambda.Lambda
-	LexModelBuildingConn              *lexmodelbuildingservice.LexModelBuildingService
+	LexModelsConn                     *lexmodelbuildingservice.LexModelBuildingService
 	LexModelsV2Conn                   *lexmodelsv2.LexModelsV2
 	LexRuntimeConn                    *lexruntimeservice.LexRuntimeService
 	LexRuntimeV2Conn                  *lexruntimev2.LexRuntimeV2
@@ -1115,7 +1119,7 @@ type AWSClient struct {
 	SchemasConn                       *schemas.Schemas
 	SecretsManagerConn                *secretsmanager.SecretsManager
 	SecurityHubConn                   *securityhub.SecurityHub
-	ServerlessAppRepoConn             *serverlessapplicationrepository.ServerlessApplicationRepository
+	ServerlessRepoConn                *serverlessapplicationrepository.ServerlessApplicationRepository
 	ServiceCatalogConn                *servicecatalog.ServiceCatalog
 	ServiceDiscoveryConn              *servicediscovery.ServiceDiscovery
 	ServiceQuotasConn                 *servicequotas.ServiceQuotas
@@ -1234,6 +1238,7 @@ func (c *Config) Client() (interface{}, error) {
 
 	client := &AWSClient{
 		AccessAnalyzerConn:                accessanalyzer.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[AccessAnalyzer])})),
+		AccountConn:                       account.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[Account])})),
 		AccountID:                         accountID,
 		ACMConn:                           acm.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[ACM])})),
 		ACMPCAConn:                        acmpca.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[ACMPCA])})),
@@ -1291,7 +1296,7 @@ func (c *Config) Client() (interface{}, error) {
 		CognitoSyncConn:                   cognitosync.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[CognitoSync])})),
 		ComprehendConn:                    comprehend.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[Comprehend])})),
 		ComprehendMedicalConn:             comprehendmedical.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[ComprehendMedical])})),
-		ConfigConn:                        configservice.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[ConfigService])})),
+		ConfigServiceConn:                 configservice.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[ConfigService])})),
 		ConnectConn:                       connect.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[Connect])})),
 		ConnectContactLensConn:            connectcontactlens.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[ConnectContactLens])})),
 		ConnectParticipantConn:            connectparticipant.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[ConnectParticipant])})),
@@ -1381,7 +1386,7 @@ func (c *Config) Client() (interface{}, error) {
 		KMSConn:                           kms.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[KMS])})),
 		LakeFormationConn:                 lakeformation.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[LakeFormation])})),
 		LambdaConn:                        lambda.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[Lambda])})),
-		LexModelBuildingConn:              lexmodelbuildingservice.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[LexModelBuilding])})),
+		LexModelsConn:                     lexmodelbuildingservice.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[LexModels])})),
 		LexModelsV2Conn:                   lexmodelsv2.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[LexModelsV2])})),
 		LexRuntimeConn:                    lexruntimeservice.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[LexRuntime])})),
 		LexRuntimeV2Conn:                  lexruntimev2.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[LexRuntimeV2])})),
@@ -1463,7 +1468,7 @@ func (c *Config) Client() (interface{}, error) {
 		SchemasConn:                       schemas.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[Schemas])})),
 		SecretsManagerConn:                secretsmanager.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[SecretsManager])})),
 		SecurityHubConn:                   securityhub.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[SecurityHub])})),
-		ServerlessAppRepoConn:             serverlessapplicationrepository.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[ServerlessAppRepo])})),
+		ServerlessRepoConn:                serverlessapplicationrepository.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[ServerlessRepo])})),
 		ServiceCatalogConn:                servicecatalog.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[ServiceCatalog])})),
 		ServiceDiscoveryConn:              servicediscovery.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[ServiceDiscovery])})),
 		ServiceQuotasConn:                 servicequotas.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[ServiceQuotas])})),
@@ -1614,7 +1619,7 @@ func (c *Config) Client() (interface{}, error) {
 		}
 	})
 
-	client.ConfigConn.Handlers.Retry.PushBack(func(r *request.Request) {
+	client.ConfigServiceConn.Handlers.Retry.PushBack(func(r *request.Request) {
 		// When calling Config Organization Rules API actions immediately
 		// after Organization creation, the API can randomly return the
 		// OrganizationAccessDeniedException error for a few minutes, even
@@ -1736,6 +1741,12 @@ func (c *Config) Client() (interface{}, error) {
 		// Retry on the following error:
 		// ConcurrentModificationException: AWS Organizations can't complete your request because it conflicts with another attempt to modify the same entity. Try again later.
 		if tfawserr.ErrMessageContains(r.Error, organizations.ErrCodeConcurrentModificationException, "Try again later") {
+			r.Retryable = aws.Bool(true)
+		}
+	})
+
+	client.S3Conn.Handlers.Retry.PushBack(func(r *request.Request) {
+		if tfawserr.ErrMessageContains(r.Error, "OperationAborted", "A conflicting conditional operation is currently in progress against this resource. Please try again.") {
 			r.Retryable = aws.Bool(true)
 		}
 	})

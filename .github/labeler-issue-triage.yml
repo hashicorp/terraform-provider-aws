@@ -32,6 +32,8 @@ sweeper:
 # resource "aws_XXX"
 service/accessanalyzer:
   - '((\*|-) ?`?|(data|resource) "?)aws_accessanalyzer_'
+service/account:
+  - '((\*|-) ?`?|(data|resource) "?)aws_account_'
 service/acm:
   - '((\*|-) ?`?|(data|resource) "?)aws_acm_'
 service/acmpca:
@@ -222,7 +224,7 @@ service/lakeformation:
   - '((\*|-) ?`?|(data|resource) "?)aws_lakeformation_'
 service/lambda:
   - '((\*|-) ?`?|(data|resource) "?)aws_lambda_'
-service/lexmodelbuildingservice:
+service/lexmodels:
   - '((\*|-) ?`?|(data|resource) "?)aws_lex_'
 service/licensemanager:
   - '((\*|-) ?`?|(data|resource) "?)aws_licensemanager_'
@@ -318,7 +320,7 @@ service/secretsmanager:
   - '((\*|-) ?`?|(data|resource) "?)aws_secretsmanager_'
 service/securityhub:
   - '((\*|-) ?`?|(data|resource) "?)aws_securityhub_'
-service/serverlessapplicationrepository:
+service/serverlessrepo:
   - '((\*|-) ?`?|(data|resource) "?)aws_serverlessapplicationrepository_'
 service/servicecatalog:
   - '((\*|-) ?`?|(data|resource) "?)aws_servicecatalog_'

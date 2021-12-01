@@ -460,7 +460,7 @@ func testAccCheckFsxOntapFileSystemExists(resourceName string, fs *fsx.FileSyste
 		}
 
 		if filesystem == nil {
-			return fmt.Errorf("FSx Ontap File System (%s) not found", rs.Primary.ID)
+			return fmt.Errorf("FSx ONTAP File System (%s) not found", rs.Primary.ID)
 		}
 
 		*fs = *filesystem
@@ -483,7 +483,7 @@ func testAccCheckFsxOntapFileSystemDestroy(s *terraform.State) error {
 		}
 
 		if filesystem != nil {
-			return fmt.Errorf("FSx Ontap File System (%s) still exists", rs.Primary.ID)
+			return fmt.Errorf("FSx ONTAP File System (%s) still exists", rs.Primary.ID)
 		}
 	}
 	return nil
@@ -492,7 +492,7 @@ func testAccCheckFsxOntapFileSystemDestroy(s *terraform.State) error {
 func testAccCheckFsxOntapFileSystemNotRecreated(i, j *fsx.FileSystem) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if aws.StringValue(i.FileSystemId) != aws.StringValue(j.FileSystemId) {
-			return fmt.Errorf("FSx File System (%s) recreated", aws.StringValue(i.FileSystemId))
+			return fmt.Errorf("FSx ONTAP File System (%s) recreated", aws.StringValue(i.FileSystemId))
 		}
 
 		return nil
@@ -502,7 +502,7 @@ func testAccCheckFsxOntapFileSystemNotRecreated(i, j *fsx.FileSystem) resource.T
 func testAccCheckFsxOntapFileSystemRecreated(i, j *fsx.FileSystem) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if aws.StringValue(i.FileSystemId) == aws.StringValue(j.FileSystemId) {
-			return fmt.Errorf("FSx File System (%s) not recreated", aws.StringValue(i.FileSystemId))
+			return fmt.Errorf("FSx ONTAP File System (%s) not recreated", aws.StringValue(i.FileSystemId))
 		}
 
 		return nil

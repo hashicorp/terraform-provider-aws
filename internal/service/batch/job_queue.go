@@ -34,7 +34,6 @@ func ResourceJobQueue() *schema.Resource {
 			"compute_environments": {
 				Type:     schema.TypeList,
 				Required: true,
-				MaxItems: 3,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"name": {

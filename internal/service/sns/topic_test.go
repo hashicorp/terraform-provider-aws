@@ -528,7 +528,7 @@ func testAccCheckNSTopicHasPolicy(n string, expectedPolicyText string) resource.
 		var actualPolicyText string
 		for k, v := range resp.Attributes {
 			if k == "Policy" {
-				actualPolicyText = *v
+				actualPolicyText = aws.StringValue(v)
 				break
 			}
 		}
@@ -570,7 +570,7 @@ func testAccCheckNSTopicHasDeliveryPolicy(n string, expectedPolicyText string) r
 		var actualPolicyText string
 		for k, v := range resp.Attributes {
 			if k == "DeliveryPolicy" {
-				actualPolicyText = *v
+				actualPolicyText = aws.StringValue(v)
 				break
 			}
 		}
@@ -634,7 +634,7 @@ func testAccCheckTopicExists(n string, attributes map[string]string) resource.Te
 		}
 
 		for k, v := range out.Attributes {
-			attributes[k] = *v
+			attributes[k] = aws.StringValue(v)
 		}
 
 		return nil

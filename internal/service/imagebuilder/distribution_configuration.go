@@ -155,7 +155,7 @@ func resourceDistributionConfigurationCreate(d *schema.ResourceData, meta interf
 	}
 
 	if v, ok := d.GetOk("distribution"); ok && v.(*schema.Set).Len() > 0 {
-		input.Distributions = expandImageBuilderDistributions(v.(*schema.Set).List())
+		input.Distributions = expandDistributions(v.(*schema.Set).List())
 	}
 
 	if v, ok := d.GetOk("name"); ok {
@@ -212,7 +212,7 @@ func resourceDistributionConfigurationRead(d *schema.ResourceData, meta interfac
 	d.Set("date_created", distributionConfiguration.DateCreated)
 	d.Set("date_updated", distributionConfiguration.DateUpdated)
 	d.Set("description", distributionConfiguration.Description)
-	d.Set("distribution", flattenImageBuilderDistributions(distributionConfiguration.Distributions))
+	d.Set("distribution", flattenDistributions(distributionConfiguration.Distributions))
 	d.Set("name", distributionConfiguration.Name)
 	tags := KeyValueTags(distributionConfiguration.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
@@ -241,7 +241,7 @@ func resourceDistributionConfigurationUpdate(d *schema.ResourceData, meta interf
 		}
 
 		if v, ok := d.GetOk("distribution"); ok && v.(*schema.Set).Len() > 0 {
-			input.Distributions = expandImageBuilderDistributions(v.(*schema.Set).List())
+			input.Distributions = expandDistributions(v.(*schema.Set).List())
 		}
 
 		log.Printf("[DEBUG] UpdateDistributionConfiguration: %#v", input)
@@ -283,7 +283,7 @@ func resourceDistributionConfigurationDelete(d *schema.ResourceData, meta interf
 	return nil
 }
 
-func expandImageBuilderAmiDistributionConfiguration(tfMap map[string]interface{}) *imagebuilder.AmiDistributionConfiguration {
+func expandAMIDistributionConfiguration(tfMap map[string]interface{}) *imagebuilder.AmiDistributionConfiguration {
 	if tfMap == nil {
 		return nil
 	}
@@ -303,7 +303,7 @@ func expandImageBuilderAmiDistributionConfiguration(tfMap map[string]interface{}
 	}
 
 	if v, ok := tfMap["launch_permission"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		apiObject.LaunchPermission = expandImageBuilderLaunchPermissionConfiguration(v[0].(map[string]interface{}))
+		apiObject.LaunchPermission = expandLaunchPermissionConfiguration(v[0].(map[string]interface{}))
 	}
 
 	if v, ok := tfMap["name"].(string); ok && v != "" {
@@ -317,7 +317,7 @@ func expandImageBuilderAmiDistributionConfiguration(tfMap map[string]interface{}
 	return apiObject
 }
 
-func expandImageBuilderDistribution(tfMap map[string]interface{}) *imagebuilder.Distribution {
+func expandDistribution(tfMap map[string]interface{}) *imagebuilder.Distribution {
 	if tfMap == nil {
 		return nil
 	}
@@ -325,7 +325,7 @@ func expandImageBuilderDistribution(tfMap map[string]interface{}) *imagebuilder.
 	apiObject := &imagebuilder.Distribution{}
 
 	if v, ok := tfMap["ami_distribution_configuration"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		apiObject.AmiDistributionConfiguration = expandImageBuilderAmiDistributionConfiguration(v[0].(map[string]interface{}))
+		apiObject.AmiDistributionConfiguration = expandAMIDistributionConfiguration(v[0].(map[string]interface{}))
 	}
 
 	if v, ok := tfMap["license_configuration_arns"].(*schema.Set); ok && v.Len() > 0 {
@@ -339,7 +339,7 @@ func expandImageBuilderDistribution(tfMap map[string]interface{}) *imagebuilder.
 	return apiObject
 }
 
-func expandImageBuilderDistributions(tfList []interface{}) []*imagebuilder.Distribution {
+func expandDistributions(tfList []interface{}) []*imagebuilder.Distribution {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -353,7 +353,7 @@ func expandImageBuilderDistributions(tfList []interface{}) []*imagebuilder.Distr
 			continue
 		}
 
-		apiObject := expandImageBuilderDistribution(tfMap)
+		apiObject := expandDistribution(tfMap)
 
 		if apiObject == nil {
 			continue
@@ -372,7 +372,7 @@ func expandImageBuilderDistributions(tfList []interface{}) []*imagebuilder.Distr
 	return apiObjects
 }
 
-func expandImageBuilderLaunchPermissionConfiguration(tfMap map[string]interface{}) *imagebuilder.LaunchPermissionConfiguration {
+func expandLaunchPermissionConfiguration(tfMap map[string]interface{}) *imagebuilder.LaunchPermissionConfiguration {
 	if tfMap == nil {
 		return nil
 	}
@@ -390,7 +390,7 @@ func expandImageBuilderLaunchPermissionConfiguration(tfMap map[string]interface{
 	return apiObject
 }
 
-func flattenImageBuilderAmiDistributionConfiguration(apiObject *imagebuilder.AmiDistributionConfiguration) map[string]interface{} {
+func flattenAMIDistributionConfiguration(apiObject *imagebuilder.AmiDistributionConfiguration) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -410,7 +410,7 @@ func flattenImageBuilderAmiDistributionConfiguration(apiObject *imagebuilder.Ami
 	}
 
 	if v := apiObject.LaunchPermission; v != nil {
-		tfMap["launch_permission"] = []interface{}{flattenImageBuilderLaunchPermissionConfiguration(v)}
+		tfMap["launch_permission"] = []interface{}{flattenLaunchPermissionConfiguration(v)}
 	}
 
 	if v := apiObject.Name; v != nil {
@@ -424,7 +424,7 @@ func flattenImageBuilderAmiDistributionConfiguration(apiObject *imagebuilder.Ami
 	return tfMap
 }
 
-func flattenImageBuilderDistribution(apiObject *imagebuilder.Distribution) map[string]interface{} {
+func flattenDistribution(apiObject *imagebuilder.Distribution) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -432,7 +432,7 @@ func flattenImageBuilderDistribution(apiObject *imagebuilder.Distribution) map[s
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.AmiDistributionConfiguration; v != nil {
-		tfMap["ami_distribution_configuration"] = []interface{}{flattenImageBuilderAmiDistributionConfiguration(v)}
+		tfMap["ami_distribution_configuration"] = []interface{}{flattenAMIDistributionConfiguration(v)}
 	}
 
 	if v := apiObject.LicenseConfigurationArns; v != nil {
@@ -446,7 +446,7 @@ func flattenImageBuilderDistribution(apiObject *imagebuilder.Distribution) map[s
 	return tfMap
 }
 
-func flattenImageBuilderDistributions(apiObjects []*imagebuilder.Distribution) []interface{} {
+func flattenDistributions(apiObjects []*imagebuilder.Distribution) []interface{} {
 	if len(apiObjects) == 0 {
 		return nil
 	}
@@ -458,13 +458,13 @@ func flattenImageBuilderDistributions(apiObjects []*imagebuilder.Distribution) [
 			continue
 		}
 
-		tfList = append(tfList, flattenImageBuilderDistribution(apiObject))
+		tfList = append(tfList, flattenDistribution(apiObject))
 	}
 
 	return tfList
 }
 
-func flattenImageBuilderLaunchPermissionConfiguration(apiObject *imagebuilder.LaunchPermissionConfiguration) map[string]interface{} {
+func flattenLaunchPermissionConfiguration(apiObject *imagebuilder.LaunchPermissionConfiguration) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
