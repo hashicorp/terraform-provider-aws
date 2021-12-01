@@ -634,6 +634,27 @@ func TestAccS3Bucket_Security_grantToACL(t *testing.T) {
 	})
 }
 
+func TestAccS3Bucket_Security_objectOwnership(t *testing.T) {
+	bucketName := sdkacctest.RandomWithPrefix("tf-test-bucket")
+	resourceName := "aws_s3_bucket.bucket"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckBucketDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBucketObjectOwnership(bucketName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBucketExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "object_ownership", "BucketOwnerPreferred"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccS3Bucket_Web_simple(t *testing.T) {
 	bucketName := sdkacctest.RandomWithPrefix("tf-test-bucket")
 	region := acctest.Region()
@@ -4985,6 +5006,15 @@ resource "aws_s3_bucket" "arbitrary" {
       }
     }
   }
+}
+`, bucketName)
+}
+
+func testAccBucketObjectOwnership(bucketName string) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "bucket" {
+  bucket = %[1]q
+  object_ownership    = "BucketOwnerPreferred"
 }
 `, bucketName)
 }

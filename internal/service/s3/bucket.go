@@ -660,6 +660,12 @@ func ResourceBucket() *schema.Resource {
 					},
 				},
 			},
+			"object_ownership": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: validation.StringInSlice(s3.ObjectOwnership_Values(), false),
+			},
 
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
