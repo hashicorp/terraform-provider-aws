@@ -1409,6 +1409,7 @@ func Provider() *schema.Provider {
 
 			"aws_qldb_ledger": qldb.ResourceLedger(),
 
+			"aws_quicksight_data_set":         quicksight.ResourceDataSet(),
 			"aws_quicksight_data_source":      quicksight.ResourceDataSource(),
 			"aws_quicksight_group":            quicksight.ResourceGroup(),
 			"aws_quicksight_group_membership": quicksight.ResourceGroupMembership(),
