@@ -393,7 +393,7 @@ func testAccCheckFsxOntapVolumeExists(resourceName string, volume *fsx.Volume) r
 		}
 
 		if volume == nil {
-			return fmt.Errorf("FSx Ontap Volume (%s) not found", rs.Primary.ID)
+			return fmt.Errorf("FSx ONTAP Volume (%s) not found", rs.Primary.ID)
 		}
 
 		*volume = *volume1
@@ -416,7 +416,7 @@ func testAccCheckFsxOntapVolumeDestroy(s *terraform.State) error {
 		}
 
 		if volume != nil {
-			return fmt.Errorf("FSx Ontap Volume (%s) still exists", rs.Primary.ID)
+			return fmt.Errorf("FSx ONTAP Volume (%s) still exists", rs.Primary.ID)
 		}
 	}
 	return nil
