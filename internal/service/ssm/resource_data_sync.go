@@ -61,6 +61,11 @@ func ResourceResourceDataSync() *schema.Resource {
 							Default:  ssm.ResourceDataSyncS3FormatJsonSerDe,
 							ForceNew: true,
 						},
+						"destination_data_sharing_type": {
+							Type:     schema.TypeString,
+							Optional: true,
+							ForceNew: true,
+						},
 					},
 				},
 			},
@@ -109,7 +114,7 @@ func resourceResourceDataSyncRead(d *schema.ResourceData, meta interface{}) erro
 		return nil
 	}
 	d.Set("name", syncItem.SyncName)
-	d.Set("s3_destination", flattenSsmResourceDataSyncS3Destination(syncItem.S3Destination))
+	d.Set("s3_destination", flattenSsmResourceDataSyncS3Destination(d, syncItem.S3Destination))
 	return nil
 }
 
@@ -154,7 +159,7 @@ func FindResourceDataSyncItem(conn *ssm.SSM, name string) (*ssm.ResourceDataSync
 	return nil, nil
 }
 
-func flattenSsmResourceDataSyncS3Destination(dest *ssm.ResourceDataSyncS3Destination) []interface{} {
+func flattenSsmResourceDataSyncS3Destination(d *schema.ResourceData, dest *ssm.ResourceDataSyncS3Destination) []interface{} {
 	result := make(map[string]interface{})
 	result["bucket_name"] = *dest.BucketName
 	result["region"] = *dest.Region
@@ -165,6 +170,23 @@ func flattenSsmResourceDataSyncS3Destination(dest *ssm.ResourceDataSyncS3Destina
 	if dest.Prefix != nil {
 		result["prefix"] = *dest.Prefix
 	}
+	if dest.DestinationDataSharing != nil && dest.DestinationDataSharing.DestinationDataSharingType != nil {
+		result["destination_data_sharing_type"] = *dest.DestinationDataSharing.DestinationDataSharingType
+	}
+
+	// Since we can't get the destination_data_sharing_type from the API response, we'll use the value from the configuration..
+	if v, ok := d.GetOk("s3_destination"); ok {
+		s3Destination := v.([]interface{})
+
+		for _, s3DestConfig := range s3Destination {
+			config := s3DestConfig.(map[string]interface{})
+
+			if aws.String(config["destination_data_sharing_type"].(string)) != nil {
+				result["destination_data_sharing_type"] = aws.String(config["destination_data_sharing_type"].(string))
+			}
+		}
+	}
+
 	return []interface{}{result}
 }
 
@@ -180,6 +202,12 @@ func expandSsmResourceDataSyncS3Destination(d *schema.ResourceData) *ssm.Resourc
 	}
 	if v, ok := raw["prefix"].(string); ok && v != "" {
 		s3dest.Prefix = aws.String(v)
+	}
+	if v, ok := raw["destination_data_sharing_type"].(string); ok && v != "" {
+		destinationDataSharing := ssm.ResourceDataSyncDestinationDataSharing{
+			DestinationDataSharingType: aws.String(v),
+		}
+		s3dest.DestinationDataSharing = &destinationDataSharing
 	}
 	return s3dest
 }
