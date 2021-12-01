@@ -3,10 +3,10 @@ package cloudfront
 import (
 	"fmt"
 	"log"
-	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/service/cloudfront"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -901,7 +901,8 @@ func resourceDistributionRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("arn", resp.Distribution.ARN)
 
 	// override hosted_zone_id from flattenDistributionConfig
-	if strings.HasPrefix(*conn.Config.Region, "cn-") {
+	region := meta.(*conns.AWSClient).Region
+	if v, ok := endpoints.PartitionForRegion(endpoints.DefaultPartitions(), region); ok && v.ID() == endpoints.AwsCnPartitionID {
 		d.Set("hosted_zone_id", cloudFrontCNRoute53ZoneID)
 	} else {
 		d.Set("hosted_zone_id", cloudFrontRoute53ZoneID)

@@ -2,9 +2,9 @@ package cloudfront
 
 import (
 	"fmt"
-	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/service/cloudfront"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -81,7 +81,8 @@ func dataSourceDistributionRead(d *schema.ResourceData, meta interface{}) error 
 		d.Set("in_progress_validation_batches", distribution.InProgressInvalidationBatches)
 		d.Set("last_modified_time", aws.String(distribution.LastModifiedTime.String()))
 		d.Set("status", distribution.Status)
-		if strings.HasPrefix(*conn.Config.Region, "cn-") {
+		region := meta.(*conns.AWSClient).Region
+		if v, ok := endpoints.PartitionForRegion(endpoints.DefaultPartitions(), region); ok && v.ID() == endpoints.AwsCnPartitionID {
 			d.Set("hosted_zone_id", cloudFrontCNRoute53ZoneID)
 		} else {
 			d.Set("hosted_zone_id", cloudFrontRoute53ZoneID)
