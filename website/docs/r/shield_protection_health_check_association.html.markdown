@@ -23,15 +23,15 @@ data "aws_caller_identity" "current" {}
 data "aws_partition" "current" {}
 
 resource "aws_eip" "example" {
-	vpc = true
-	tags = {
-		Name = "example"
-	}
+  vpc = true
+  tags = {
+    Name = "example"
+  }
 }
 
 resource "aws_shield_protection" "example" {
-	name         = "example-protection"
-	resource_arn = "arn:${data.aws_partition.current.partition}:ec2:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:eip-allocation/${aws_eip.example.id}"
+  name         = "example-protection"
+  resource_arn = "arn:${data.aws_partition.current.partition}:ec2:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:eip-allocation/${aws_eip.example.id}"
 }
 
 resource "aws_route53_health_check" "example" {

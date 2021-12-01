@@ -150,28 +150,28 @@ func testAccCheckAWSShieldProtectionHealthCheckAssociationExists(resourceName st
 func testAccShieldProtectionaHealthCheckAssociationConfig(rName string) string {
 	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {
-	state = "available"
+  state = "available"
 
-	filter {
-		name   = "opt-in-status"
-		values = ["opt-in-not-required"]
-	}
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
 }
 data "aws_region" "current" {}
 data "aws_caller_identity" "current" {}
 data "aws_partition" "current" {}
 
 resource "aws_eip" "test" {
-	vpc = true
+  vpc = true
 
-	tags = {
-		foo  = "bar"
-		Name = %[1]q
-	}
+  tags = {
+    foo  = "bar"
+    Name = %[1]q
+  }
 }
 resource "aws_shield_protection" "test" {
-	name         = %[1]q
-	resource_arn = "arn:${data.aws_partition.current.partition}:ec2:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:eip-allocation/${aws_eip.test.id}"
+  name         = %[1]q
+  resource_arn = "arn:${data.aws_partition.current.partition}:ec2:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:eip-allocation/${aws_eip.test.id}"
 }
 resource "aws_route53_health_check" "test" {
   fqdn              = "example.com"
