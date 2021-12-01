@@ -230,7 +230,7 @@ func ValidOnceAWeekWindowFormat(v interface{}, k string) (ws []string, errors []
 }
 
 func ValidStringIsJSONOrYAML(v interface{}, k string) (ws []string, errors []error) {
-	if looksLikeJsonString(v) {
+	if looksLikeJSONString(v) {
 		if _, err := structure.NormalizeJsonString(v); err != nil {
 			errors = append(errors, fmt.Errorf("%q contains an invalid JSON: %s", k, err))
 		}
