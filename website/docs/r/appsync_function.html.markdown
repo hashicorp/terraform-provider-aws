@@ -12,7 +12,7 @@ Provides an AppSync Function.
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_appsync_graphql_api" "example" {
   authentication_type = "API_KEY"
   name                = "example"
@@ -94,7 +94,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-`aws_appsync_function` can be imported using the AppSync API ID and Function ID separated by `-`, e.g.
+`aws_appsync_function` can be imported using the AppSync API ID and Function ID separated by `-`, e.g.,
 
 ```
 $ terraform import aws_appsync_function.example xxxxx-yyyyy

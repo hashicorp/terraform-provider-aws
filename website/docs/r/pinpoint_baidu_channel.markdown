@@ -11,12 +11,12 @@ description: |-
 Provides a Pinpoint Baidu Channel resource.
 
 ~> **Note:** All arguments including the Api Key and Secret Key will be stored in the raw state as plain-text.
-[Read more about sensitive data in state](/docs/state/sensitive-data.html).
+[Read more about sensitive data in state](https://www.terraform.io/docs/state/sensitive-data.html).
 
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_pinpoint_app" "app" {}
 
 resource "aws_pinpoint_baidu_channel" "channel" {
@@ -36,9 +36,13 @@ The following arguments are supported:
 * `api_key` - (Required) Platform credential API key from Baidu.
 * `secret_key` - (Required) Platform credential Secret key from Baidu.
 
+## Attributes Reference
+
+No additional attributes are exported.
+
 ## Import
 
-Pinpoint Baidu Channel can be imported using the `application-id`, e.g.
+Pinpoint Baidu Channel can be imported using the `application-id`, e.g.,
 
 ```
 $ terraform import aws_pinpoint_baidu_channel.channel application-id
