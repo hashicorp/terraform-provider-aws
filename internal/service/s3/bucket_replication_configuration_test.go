@@ -458,13 +458,13 @@ func TestAccS3BucketReplicationConfiguration_replicationTimeControl(t *testing.T
 						"delete_marker_replication.0.status": s3.DeleteMarkerReplicationStatusEnabled,
 						"destination.#":                      "1",
 						"destination.0.replication_time.#":   "1",
-						"destination.0.replication_time.0.status":         s3.ReplicationTimeStatusEnabled,
-						"destination.0.replication_time.0.time.#":         "1",
-						"destination.0.replication_time.0.time.0.minutes": "15",
-						"destination.0.metrics.#":                         "1",
-						//"destination.0.metrics.0.status":                    s3.MetricsStatusEnabled,
-						//"destination.0.metrics.0.event_threshold.#":         "1",
-						//"destination.0.metrics.0.event_threshold.0.minutes": "15",
+						"destination.0.replication_time.0.status":           s3.ReplicationTimeStatusEnabled,
+						"destination.0.replication_time.0.time.#":           "1",
+						"destination.0.replication_time.0.time.0.minutes":   "15",
+						"destination.0.metrics.#":                           "1",
+						"destination.0.metrics.0.status":                    s3.MetricsStatusEnabled,
+						"destination.0.metrics.0.event_threshold.#":         "1",
+						"destination.0.metrics.0.event_threshold.0.minutes": "15",
 					}),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "rule.*.destination.0.bucket", dstBucketResourceName, "arn"),
 				),
@@ -648,6 +648,43 @@ func TestAccS3BucketReplicationConfiguration_schemaV2SameRegion(t *testing.T) {
 						"destination.0.storage_class":        s3.StorageClassStandard,
 					}),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "rule.*.destination.0.bucket", dstBucketResourceName, "arn"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/21895
+func TestAccS3BucketReplicationConfiguration_schemaV2DestinationMetrics(t *testing.T) {
+	resourceName := "aws_s3_bucket_replication_configuration.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	var providers []*schema.Provider
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(t)
+			acctest.PreCheckMultipleRegion(t, 2)
+		},
+		ErrorCheck:        acctest.ErrorCheck(t, s3.EndpointsID),
+		ProviderFactories: acctest.FactoriesAlternate(&providers),
+		CheckDestroy:      acctest.CheckWithProviders(testAccCheckReplicationConfigDestroy, &providers),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBucketReplicationConfiguration_schemaV2DestinationMetrics_statusOnly(rName, s3.StorageClassStandard),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBucketReplicationConfigurationExists(resourceName),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
+						"destination.#":                             "1",
+						"destination.0.metrics.#":                   "1",
+						"destination.0.metrics.0.status":            s3.MetricsStatusEnabled,
+						"destination.0.metrics.0.event_threshold.#": "0",
+					}),
 				),
 			},
 			{
@@ -1646,4 +1683,33 @@ resource "aws_s3_bucket_replication_configuration" "test" {
     }
   }
 }`, key1, value1, key2, value2))
+}
+
+func testAccBucketReplicationConfiguration_schemaV2DestinationMetrics_statusOnly(rName, storageClass string) string {
+	return testAccBucketReplicationConfigurationBase(rName) + fmt.Sprintf(`
+resource "aws_s3_bucket_replication_configuration" "test" {
+  bucket = aws_s3_bucket.source.id
+  role   = aws_iam_role.test.arn
+
+  rule {
+    id = "foobar"
+    filter {
+      prefix = "foo"
+    }
+    status = "Enabled"
+
+    delete_marker_replication {
+      status = "Enabled"
+    }
+
+    destination {
+      bucket        = aws_s3_bucket.destination.arn
+      storage_class = %[1]q
+
+      metrics {
+        status = "Enabled"
+      }
+    }
+  }
+}`, storageClass)
 }

@@ -2426,8 +2426,10 @@ func flattenBucketReplicationConfiguration(r *s3.ReplicationConfiguration) []map
 			}
 			if v.Destination.Metrics != nil {
 				metrics := map[string]interface{}{
-					"minutes": int(aws.Int64Value(v.Destination.Metrics.EventThreshold.Minutes)),
-					"status":  aws.StringValue(v.Destination.Metrics.Status),
+					"status": aws.StringValue(v.Destination.Metrics.Status),
+				}
+				if v.Destination.Metrics.EventThreshold != nil {
+					metrics["minutes"] = int(aws.Int64Value(v.Destination.Metrics.EventThreshold.Minutes))
 				}
 				rd["metrics"] = []interface{}{metrics}
 			}
