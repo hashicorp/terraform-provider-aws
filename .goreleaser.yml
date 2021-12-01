@@ -18,6 +18,11 @@ builds:
       - linux
     goarch:
       - amd64
+      - arm64
+    ignore:
+      # Windows arm64 is not used and does not compile well as of writing
+      - goos: windows
+        goarch: arm64
     ldflags:
       - -s -w -X version.ProviderVersion={{.Version}}
     mod_timestamp: '{{ .CommitTimestamp }}'
