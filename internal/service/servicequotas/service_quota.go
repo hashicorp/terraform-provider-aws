@@ -152,7 +152,7 @@ func resourceServiceQuotaRead(d *schema.ResourceData, meta interface{}) error {
 
 	output, err := conn.GetServiceQuota(input)
 
-	if tfawserr.ErrMessageContains(err, servicequotas.ErrCodeNoSuchResourceException, "") {
+	if tfawserr.ErrCodeEquals(err, servicequotas.ErrCodeNoSuchResourceException) {
 		log.Printf("[WARN] Service Quotas Service Quota (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -207,7 +207,7 @@ func resourceServiceQuotaRead(d *schema.ResourceData, meta interface{}) error {
 
 		output, err := conn.GetRequestedServiceQuotaChange(input)
 
-		if tfawserr.ErrMessageContains(err, servicequotas.ErrCodeNoSuchResourceException, "") {
+		if tfawserr.ErrCodeEquals(err, servicequotas.ErrCodeNoSuchResourceException) {
 			d.Set("request_id", "")
 			d.Set("request_status", "")
 			return nil
