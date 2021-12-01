@@ -2,6 +2,7 @@ package account
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"regexp"
 	"strings"
@@ -77,12 +78,11 @@ func resourceAlternateContactCreate(ctx context.Context, d *schema.ResourceData,
 		Title:                aws.String(d.Get("title").(string)),
 	}
 
-	id := contactType
-	if v, ok := d.GetOk("account_id"); ok {
-		account_id := v.(string)
-		input.AccountId = aws.String(account_id)
-		id = account_id + "/" + contactType
+	accountID := d.Get("account_id").(string)
+	if accountID != "" {
+		input.AccountId = aws.String(accountID)
 	}
+	id := AlternateContactCreateResourceID(accountID, contactType)
 
 	log.Printf("[DEBUG] Creating Account Alternate Contact: %s", input)
 	_, err := conn.PutAlternateContactWithContext(ctx, input)
@@ -99,12 +99,13 @@ func resourceAlternateContactCreate(ctx context.Context, d *schema.ResourceData,
 func resourceAlternateContactRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).AccountConn
 
-	accountId, contacType, diagErr := DecodeAlternateContactId(d.Id())
-	if diagErr != nil {
-		return diagErr
+	accountID, contactType, err := AlternateContactParseResourceID(d.Id())
+
+	if err != nil {
+		return diag.FromErr(err)
 	}
 
-	output, err := FindAlternateContactByContactType(ctx, conn, accountId, contacType)
+	output, err := FindAlternateContactByAccountIDAndContactType(ctx, conn, accountID, contactType)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Account Alternate Contact (%s) not found, removing from state", d.Id())
@@ -116,7 +117,7 @@ func resourceAlternateContactRead(ctx context.Context, d *schema.ResourceData, m
 		return diag.Errorf("error reading Account Alternate Contact (%s): %s", d.Id(), err)
 	}
 
-	d.Set("account_id", accountId)
+	d.Set("account_id", accountID)
 	d.Set("alternate_contact_type", output.AlternateContactType)
 	d.Set("email_address", output.EmailAddress)
 	d.Set("name", output.Name)
@@ -129,20 +130,26 @@ func resourceAlternateContactRead(ctx context.Context, d *schema.ResourceData, m
 func resourceAlternateContactUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).AccountConn
 
+	accountID, contactType, err := AlternateContactParseResourceID(d.Id())
+
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
 	input := &account.PutAlternateContactInput{
-		AlternateContactType: aws.String(d.Get("alternate_contact_type").(string)),
+		AlternateContactType: aws.String(contactType),
 		EmailAddress:         aws.String(d.Get("email_address").(string)),
 		Name:                 aws.String(d.Get("name").(string)),
 		PhoneNumber:          aws.String(d.Get("phone_number").(string)),
 		Title:                aws.String(d.Get("title").(string)),
 	}
 
-	if v, ok := d.GetOk("account_id"); ok {
-		input.AccountId = aws.String(v.(string))
+	if accountID != "" {
+		input.AccountId = aws.String(accountID)
 	}
 
 	log.Printf("[DEBUG] Updating Account Alternate Contact: %s", input)
-	_, err := conn.PutAlternateContactWithContext(ctx, input)
+	_, err = conn.PutAlternateContactWithContext(ctx, input)
 
 	if err != nil {
 		return diag.Errorf("error updating Account Alternate Contact (%s): %s", d.Id(), err)
@@ -154,22 +161,22 @@ func resourceAlternateContactUpdate(ctx context.Context, d *schema.ResourceData,
 func resourceAlternateContactDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).AccountConn
 
-	log.Printf("[DEBUG] Deleting Account Alternate Contact: %s", d.Id())
+	accountID, contactType, err := AlternateContactParseResourceID(d.Id())
 
-	accountId, contacType, diagErr := DecodeAlternateContactId(d.Id())
-	if diagErr != nil {
-		return diagErr
+	if err != nil {
+		return diag.FromErr(err)
 	}
 
 	input := &account.DeleteAlternateContactInput{
-		AlternateContactType: aws.String(contacType),
+		AlternateContactType: aws.String(contactType),
 	}
 
-	if accountId != "" {
-		input.AccountId = aws.String(accountId)
+	if accountID != "" {
+		input.AccountId = aws.String(accountID)
 	}
 
-	_, err := conn.DeleteAlternateContactWithContext(ctx, input)
+	log.Printf("[DEBUG] Deleting Account Alternate Contact: %s", d.Id())
+	_, err = conn.DeleteAlternateContactWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, account.ErrCodeResourceNotFoundException) {
 		return nil
@@ -182,13 +189,13 @@ func resourceAlternateContactDelete(ctx context.Context, d *schema.ResourceData,
 	return nil
 }
 
-func FindAlternateContactByContactType(ctx context.Context, conn *account.Account, accountId string, contactType string) (*account.AlternateContact, error) {
+func FindAlternateContactByAccountIDAndContactType(ctx context.Context, conn *account.Account, accountID, contactType string) (*account.AlternateContact, error) {
 	input := &account.GetAlternateContactInput{
 		AlternateContactType: aws.String(contactType),
 	}
 
-	if accountId != "" {
-		input.AccountId = aws.String(accountId)
+	if accountID != "" {
+		input.AccountId = aws.String(accountID)
 	}
 
 	output, err := conn.GetAlternateContactWithContext(ctx, input)
@@ -211,8 +218,17 @@ func FindAlternateContactByContactType(ctx context.Context, conn *account.Accoun
 	return output.AlternateContact, nil
 }
 
-func DecodeAlternateContactId(id string) (string, string, diag.Diagnostics) {
-	parts := strings.Split(id, "/")
+const alternateContactResourceIDSeparator = "/"
+
+func AlternateContactCreateResourceID(accountID, contactType string) string {
+	parts := []string{accountID, contactType}
+	id := strings.Join(parts, alternateContactResourceIDSeparator)
+
+	return id
+}
+
+func AlternateContactParseResourceID(id string) (string, string, error) {
+	parts := strings.Split(id, alternateContactResourceIDSeparator)
 
 	switch len(parts) {
 	case 1:
@@ -220,6 +236,6 @@ func DecodeAlternateContactId(id string) (string, string, diag.Diagnostics) {
 	case 2:
 		return parts[0], parts[1], nil
 	default:
-		return "", "", diag.Errorf("Expected ID in the form of AccountId/ContactType or ContactType, given: %q", id)
+		return "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected ContactType or AccountID%[2]sContactType", id, alternateContactResourceIDSeparator)
 	}
 }
