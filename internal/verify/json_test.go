@@ -6,19 +6,19 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-func TestLooksLikeJsonString(t *testing.T) {
-	looksLikeJson := ` {"abc":"1"} `
-	doesNotLookLikeJson := `abc: 1`
+func TestLooksLikeJSONString(t *testing.T) {
+	looksLikeJSON := ` {"abc":"1"} `
+	doesNotLookLikeJSON := `abc: 1`
 
-	if !looksLikeJSONString(looksLikeJson) {
-		t.Errorf("Expected looksLikeJson to return true for %s", looksLikeJson)
+	if !looksLikeJSONString(looksLikeJSON) {
+		t.Errorf("Expected looksLikeJSON to return true for %s", looksLikeJSON)
 	}
-	if looksLikeJSONString(doesNotLookLikeJson) {
-		t.Errorf("Expected looksLikeJson to return false for %s", doesNotLookLikeJson)
+	if looksLikeJSONString(doesNotLookLikeJSON) {
+		t.Errorf("Expected looksLikeJSON to return false for %s", doesNotLookLikeJSON)
 	}
 }
 
-func TestJsonBytesEqualQuotedAndUnquoted(t *testing.T) {
+func TestJSONBytesEqualQuotedAndUnquoted(t *testing.T) {
 	unquoted := `{"test": "test"}`
 	quoted := "{\"test\": \"test\"}"
 
@@ -34,7 +34,7 @@ func TestJsonBytesEqualQuotedAndUnquoted(t *testing.T) {
 	}
 }
 
-func TestJsonBytesEqualWhitespaceAndNoWhitespace(t *testing.T) {
+func TestJSONBytesEqualWhitespaceAndNoWhitespace(t *testing.T) {
 	noWhitespace := `{"test":"test"}`
 	whitespace := `
 {
@@ -362,13 +362,13 @@ func TestNormalizeJSONOrYAMLString(t *testing.T) {
 	var err error
 	var actual string
 
-	validNormalizedJson := `{"abc":"1"}`
-	actual, err = NormalizeJSONOrYAMLString(validNormalizedJson)
+	validNormalizedJSON := `{"abc":"1"}`
+	actual, err = NormalizeJSONOrYAMLString(validNormalizedJSON)
 	if err != nil {
 		t.Fatalf("Expected not to throw an error while parsing template, but got: %s", err)
 	}
-	if actual != validNormalizedJson {
-		t.Fatalf("Got:\n\n%s\n\nExpected:\n\n%s\n", actual, validNormalizedJson)
+	if actual != validNormalizedJSON {
+		t.Fatalf("Got:\n\n%s\n\nExpected:\n\n%s\n", actual, validNormalizedJSON)
 	}
 
 	validNormalizedYaml := `abc: 1

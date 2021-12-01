@@ -6,6 +6,7 @@ import (
 	"log"
 	"reflect"
 	"regexp"
+	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
@@ -82,7 +83,11 @@ func JSONBytesEqual(b1, b2 []byte) bool {
 func SecondJSONUnlessEquivalent(old, new string) (string, error) {
 	// valid empty JSON is "{}" not "" so handle special case to avoid
 	// Error unmarshaling policy: unexpected end of JSON input
-	if old == "" || new == "" {
+	if strings.TrimSpace(new) == "" {
+		return "", nil
+	}
+
+	if strings.TrimSpace(old) == "" {
 		return new, nil
 	}
 
