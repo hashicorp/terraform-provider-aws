@@ -164,7 +164,7 @@ func TestAccKMSReplicaExternalKey_policy(t *testing.T) {
 	})
 }
 
-func TestAccKMSReplicaExternalKey_Tags(t *testing.T) {
+func TestAccKMSReplicaExternalKey_tags(t *testing.T) {
 	var providers []*schema.Provider
 	var key kms.KeyMetadata
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
