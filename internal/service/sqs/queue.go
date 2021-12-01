@@ -71,13 +71,15 @@ var (
 		},
 
 		"kms_master_key_id": {
-			Type:     schema.TypeString,
-			Optional: true,
+			Type:          schema.TypeString,
+			Optional:      true,
+			ConflictsWith: []string{"sqs_managed_sse_enabled"},
 		},
 
 		"sqs_managed_sse_enabled": {
-			Type:     schema.TypeBool,
-			Optional: true,
+			Type:          schema.TypeBool,
+			Optional:      true,
+			ConflictsWith: []string{"kms_master_key_id"},
 		},
 
 		"max_message_size": {
