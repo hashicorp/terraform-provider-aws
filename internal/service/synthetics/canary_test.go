@@ -53,6 +53,7 @@ func TestAccSyntheticsCanary_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "timeline.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "timeline.0.created"),
 					resource.TestCheckResourceAttr(resourceName, "status", "READY"),
+					resource.TestCheckResourceAttr(resourceName, "artifact_config.#", "0"),
 				),
 			},
 			{
@@ -80,12 +81,52 @@ func TestAccSyntheticsCanary_basic(t *testing.T) {
 					acctest.MatchResourceAttrRegionalARN(resourceName, "engine_arn", "lambda", regexp.MustCompile(fmt.Sprintf(`function:cwsyn-%s.+`, rName))),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "source_location_arn", "lambda", regexp.MustCompile(fmt.Sprintf(`layer:cwsyn-%s.+`, rName))),
 					resource.TestCheckResourceAttrPair(resourceName, "execution_role_arn", "aws_iam_role.test", "arn"),
-					resource.TestCheckResourceAttr(resourceName, "artifact_s3_location", fmt.Sprintf("%s/", rName)),
+					resource.TestCheckResourceAttr(resourceName, "artifact_s3_location", fmt.Sprintf("%s/test/", rName)),
 					resource.TestCheckResourceAttr(resourceName, "timeline.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "timeline.0.created"),
 					resource.TestCheckResourceAttrSet(resourceName, "timeline.0.last_modified"),
 					resource.TestCheckResourceAttr(resourceName, "status", "READY"),
 					testAccCheckCanaryIsUpdated(&conf1, &conf2),
+				),
+			},
+		},
+	})
+}
+
+func TestAccSyntheticsCanary_artifactEncryption(t *testing.T) {
+	var conf synthetics.Canary
+	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(8))
+	resourceName := "aws_synthetics_canary.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, synthetics.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckCanaryDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCanaryArtifactEncryptionConfig(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckCanaryExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "artifact_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "artifact_config.0.s3_encryption.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "artifact_config.0.s3_encryption.0.encryption_mode", "SSE_S3"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"zip_file", "start_canary"},
+			},
+			{
+				Config: testAccCanaryArtifactEncryptionKMSConfig(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckCanaryExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "artifact_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "artifact_config.0.s3_encryption.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "artifact_config.0.s3_encryption.0.encryption_mode", "SSE_KMS"),
+					resource.TestCheckResourceAttrPair(resourceName, "artifact_config.0.s3_encryption.0.kms_key_arn", "aws_kms_key.test", "arn"),
 				),
 			},
 		},
@@ -459,6 +500,7 @@ func TestAccSyntheticsCanary_disappears(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCanaryExists(resourceName, &conf),
 					acctest.CheckResourceDisappears(acctest.Provider, tfsynthetics.ResourceCanary(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfsynthetics.ResourceCanary(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -775,6 +817,58 @@ resource "aws_synthetics_canary" "test" {
 `, rName))
 }
 
+func testAccCanaryArtifactEncryptionConfig(rName string) string {
+	return acctest.ConfigCompose(testAccCanaryBaseConfig(rName), fmt.Sprintf(`
+resource "aws_synthetics_canary" "test" {
+  name                 = %[1]q
+  artifact_s3_location = "s3://${aws_s3_bucket.test.bucket}/"
+  execution_role_arn   = aws_iam_role.test.arn
+  handler              = "exports.handler"
+  zip_file             = "test-fixtures/lambdatest.zip"
+  runtime_version      = "syn-nodejs-puppeteer-3.3"
+
+  artifact_config {
+    s3_encryption {
+      encryption_mode = "SSE_S3"
+    }
+  }
+
+  schedule {
+    expression = "rate(0 minute)"
+  }
+}
+`, rName))
+}
+
+func testAccCanaryArtifactEncryptionKMSConfig(rName string) string {
+	return acctest.ConfigCompose(testAccCanaryBaseConfig(rName), fmt.Sprintf(`
+resource "aws_kms_key" "test" {
+  description             = %[1]q
+  deletion_window_in_days = 7
+}
+
+resource "aws_synthetics_canary" "test" {
+  name                 = %[1]q
+  artifact_s3_location = "s3://${aws_s3_bucket.test.bucket}/"
+  execution_role_arn   = aws_iam_role.test.arn
+  handler              = "exports.handler"
+  zip_file             = "test-fixtures/lambdatest.zip"
+  runtime_version      = "syn-nodejs-puppeteer-3.3"
+
+  artifact_config {
+    s3_encryption {
+      encryption_mode = "SSE_KMS"
+      kms_key_arn     = aws_kms_key.test.arn
+    }
+  }
+
+  schedule {
+    expression = "rate(0 minute)"
+  }
+}
+`, rName))
+}
+
 func testAccCanaryRuntimeVersionConfig(rName, version string) string {
 	return acctest.ConfigCompose(testAccCanaryBaseConfig(rName), fmt.Sprintf(`
 resource "aws_synthetics_canary" "test" {
@@ -796,7 +890,7 @@ func testAccCanaryZipUpdatedConfig(rName string) string {
 	return acctest.ConfigCompose(testAccCanaryBaseConfig(rName), fmt.Sprintf(`
 resource "aws_synthetics_canary" "test" {
   name                 = %[1]q
-  artifact_s3_location = "s3://${aws_s3_bucket.test.bucket}/"
+  artifact_s3_location = "s3://${aws_s3_bucket.test.bucket}/test/"
   execution_role_arn   = aws_iam_role.test.arn
   handler              = "exports.handler"
   zip_file             = "test-fixtures/lambdatest_modified.zip"
