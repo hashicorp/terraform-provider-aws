@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_s3_bucket: Add support for `object_ownership`
+```
