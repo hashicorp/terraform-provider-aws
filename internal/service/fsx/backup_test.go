@@ -32,7 +32,7 @@ func TestAccFSxBackup_basic(t *testing.T) {
 					testAccCheckFsxBackupExists(resourceName, &backup),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "fsx", regexp.MustCompile(`backup/.+`)),
 					acctest.CheckResourceAttrAccountID(resourceName, "owner_id"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 				),
 			},
 			{
@@ -61,7 +61,7 @@ func TestAccFSxBackup_ontapBasic(t *testing.T) {
 					testAccCheckFsxBackupExists(resourceName, &backup),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "fsx", regexp.MustCompile(`backup/.+`)),
 					acctest.CheckResourceAttrAccountID(resourceName, "owner_id"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 				),
 			},
 			{
@@ -90,7 +90,7 @@ func TestAccFSxBackup_windowsBasic(t *testing.T) {
 					testAccCheckFsxBackupExists(resourceName, &backup),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "fsx", regexp.MustCompile(`backup/.+`)),
 					acctest.CheckResourceAttrAccountID(resourceName, "owner_id"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 				),
 			},
 			{
@@ -345,11 +345,12 @@ resource "aws_directory_service_directory" "test" {
 }
 
 resource "aws_fsx_windows_file_system" "test" {
-  active_directory_id = aws_directory_service_directory.test.id
-  skip_final_backup   = true
-  storage_capacity    = 32
-  subnet_ids          = [aws_subnet.test1.id]
-  throughput_capacity = 8
+  active_directory_id             = aws_directory_service_directory.test.id
+  automatic_backup_retention_days = 0
+  skip_final_backup               = true
+  storage_capacity                = 32
+  subnet_ids                      = [aws_subnet.test1.id]
+  throughput_capacity             = 8
 
   tags = {
     Name = %[1]q

@@ -12,7 +12,7 @@ Provides a FSx Backup resource.
 
 ## Example Usage
 
-## Lustre Example 
+## Lustre Example
 
 ```terraform
 resource "aws_fsx_backup" "example" {
@@ -27,7 +27,7 @@ resource "aws_fsx_lustre_file_system" "example" {
 }
 ```
 
-## Windows Example 
+## Windows Example
 
 ```terraform
 resource "aws_fsx_backup" "example" {
@@ -43,7 +43,7 @@ resource "aws_fsx_windows_file_system" "example" {
 }
 ```
 
-## ONTAP Example 
+## ONTAP Example
 
 ```terraform
 resource "aws_fsx_backup" "example" {
