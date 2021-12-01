@@ -5013,8 +5013,8 @@ resource "aws_s3_bucket" "arbitrary" {
 func testAccBucketObjectOwnership(bucketName string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "bucket" {
-  bucket = %[1]q
-  object_ownership    = "BucketOwnerPreferred"
+  bucket           = %[1]q
+  object_ownership = "BucketOwnerPreferred"
 }
 `, bucketName)
 }
