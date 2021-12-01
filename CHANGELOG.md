@@ -11,7 +11,6 @@ BUG FIXES:
 
 * data-source/aws_cloudfront_distribution: Correct `hosted_zone_id` for AWS China regions ([#21943](https://github.com/hashicorp/terraform-provider-aws/issues/21943))
 * resource/aws_cloudfront_distribution: Correct `hosted_zone_id` for AWS China regions ([#21943](https://github.com/hashicorp/terraform-provider-aws/issues/21943))
-* resource/aws_elasticache_user_group: Fix TestAccElastiCacheUserGroup_tags user_id reference ([#21970](https://github.com/hashicorp/terraform-provider-aws/issues/21970))
 * resource/aws_kms_key: Fix order-related diffs in `policy` ([#21969](https://github.com/hashicorp/terraform-provider-aws/issues/21969))
 * resource/aws_s3_bucket_replication_configuration: Mark `event_threshold` in `destination` `metrics` configuration block as `Optional` ([#21901](https://github.com/hashicorp/terraform-provider-aws/issues/21901))
 
