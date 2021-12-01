@@ -80,97 +80,11 @@ func TestAccCloudFrontDistribution_s3Origin(t *testing.T) {
 	})
 }
 
-// TestAccCNCloudFrontDistribution_s3Origin runs an
-// aws_cloudfront_distribution acceptance test with a single S3 origin.
-//
-// If you are testing manually and can't wait for deletion, set the
-// TF_TEST_CLOUDFRONT_RETAIN environment variable.
-func TestAccCNCloudFrontDistribution_s3Origin(t *testing.T) {
-	var distribution cloudfront.Distribution
-	ri := sdkacctest.RandInt()
-	testConfig := testAccDistributionS3CNConfig(ri)
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, cloudfront.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckCloudFrontDistributionDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testConfig,
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudFrontDistributionExists("aws_cloudfront_distribution.s3_distribution", &distribution),
-					resource.TestCheckResourceAttr(
-						"aws_cloudfront_distribution.s3_distribution",
-						"hosted_zone_id",
-						"Z3RFFRIM2A3IF5",
-					),
-				),
-			},
-			{
-				ResourceName:      "aws_cloudfront_distribution.s3_distribution",
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"retain_on_delete",
-					"wait_for_deployment",
-				},
-			},
-		},
-	})
-}
-
 func TestAccCloudFrontDistribution_s3OriginWithTags(t *testing.T) {
 	var distribution cloudfront.Distribution
 	ri := sdkacctest.RandInt()
 	preConfig := testAccDistributionS3WithTagsConfig(ri)
 	postConfig := testAccDistributionS3WithTagsUpdatedConfig(ri)
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, cloudfront.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckCloudFrontDistributionDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: preConfig,
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudFrontDistributionExists("aws_cloudfront_distribution.s3_distribution", &distribution),
-					resource.TestCheckResourceAttr(
-						"aws_cloudfront_distribution.s3_distribution", "tags.%", "2"),
-					resource.TestCheckResourceAttr(
-						"aws_cloudfront_distribution.s3_distribution", "tags.environment", "production"),
-					resource.TestCheckResourceAttr(
-						"aws_cloudfront_distribution.s3_distribution", "tags.account", "main"),
-				),
-			},
-			{
-				ResourceName:      "aws_cloudfront_distribution.s3_distribution",
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"retain_on_delete",
-					"wait_for_deployment",
-				},
-			},
-			{
-				Config: postConfig,
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudFrontDistributionExists("aws_cloudfront_distribution.s3_distribution", &distribution),
-					resource.TestCheckResourceAttr(
-						"aws_cloudfront_distribution.s3_distribution", "tags.%", "1"),
-					resource.TestCheckResourceAttr(
-						"aws_cloudfront_distribution.s3_distribution", "tags.environment", "dev"),
-				),
-			},
-		},
-	})
-}
-
-func TestAccCloudFrontCNDistribution_s3OriginWithTags(t *testing.T) {
-	var distribution cloudfront.Distribution
-	ri := sdkacctest.RandInt()
-	preConfig := testAccDistributionS3WithTagsCNConfig(ri)
-	postConfig := testAccDistributionS3WithTagsCNUpdatedConfig(ri)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
@@ -654,91 +568,6 @@ func TestAccCloudFrontDistribution_noOptionalItems(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "enabled", "true"),
 					resource.TestMatchResourceAttr(resourceName, "etag", regexp.MustCompile(`^[A-Z0-9]+$`)),
 					resource.TestCheckResourceAttr(resourceName, "hosted_zone_id", "Z2FDTNDATAQYW2"),
-					resource.TestCheckResourceAttrSet(resourceName, "http_version"),
-					resource.TestCheckResourceAttr(resourceName, "is_ipv6_enabled", "false"),
-					resource.TestCheckResourceAttr(resourceName, "logging_config.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "origin.#", "1"),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "origin.*", map[string]string{
-						"custom_header.#":                                 "0",
-						"custom_origin_config.#":                          "1",
-						"custom_origin_config.0.http_port":                "80",
-						"custom_origin_config.0.https_port":               "443",
-						"custom_origin_config.0.origin_keepalive_timeout": "5",
-						"custom_origin_config.0.origin_protocol_policy":   "http-only",
-						"custom_origin_config.0.origin_read_timeout":      "30",
-						"custom_origin_config.0.origin_ssl_protocols.#":   "2",
-						"domain_name": "www.example.com",
-					}),
-					resource.TestCheckResourceAttr(resourceName, "price_class", "PriceClass_All"),
-					resource.TestCheckResourceAttr(resourceName, "restrictions.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "restrictions.0.geo_restriction.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "restrictions.0.geo_restriction.0.locations.#", "4"),
-					resource.TestCheckResourceAttr(resourceName, "restrictions.0.geo_restriction.0.restriction_type", "whitelist"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "viewer_certificate.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "viewer_certificate.0.cloudfront_default_certificate", "true"),
-					resource.TestCheckResourceAttr(resourceName, "wait_for_deployment", "true"),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"retain_on_delete",
-					"wait_for_deployment",
-				},
-			},
-		},
-	})
-}
-
-// TestAccCloudFrontCNDistribution_noOptionalItems runs an
-// aws_cloudfront_distribution acceptance test with no optional items set with China AWS environment.
-//
-// If you are testing manually and can't wait for deletion, set the
-// TF_TEST_CLOUDFRONT_RETAIN environment variable.
-func TestAccCloudFrontCNDistribution_noOptionalItems(t *testing.T) {
-	var distribution cloudfront.Distribution
-	resourceName := "aws_cloudfront_distribution.no_optional_items"
-	rInt := sdkacctest.RandInt()
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, cloudfront.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckCloudFrontDistributionDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccDistributionNoOptionalItemsCNConfig(rInt),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudFrontDistributionExists(resourceName, &distribution),
-					resource.TestCheckResourceAttr(resourceName, "aliases.#", "0"),
-					acctest.MatchResourceAttrGlobalARN(resourceName, "arn", "cloudfront", regexp.MustCompile(`distribution/[A-Z0-9]+$`)),
-					resource.TestCheckResourceAttr(resourceName, "custom_error_response.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.0.allowed_methods.#", "7"),
-					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.0.cached_methods.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.0.compress", "false"),
-					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.0.forwarded_values.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.0.forwarded_values.0.cookies.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.0.forwarded_values.0.cookies.0.forward", "all"),
-					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.0.forwarded_values.0.cookies.0.whitelisted_names.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.0.forwarded_values.0.headers.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.0.forwarded_values.0.query_string", "false"),
-					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.0.forwarded_values.0.query_string_cache_keys.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.0.lambda_function_association.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.0.function_association.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.0.min_ttl", "0"),
-					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.0.smooth_streaming", "false"),
-					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.0.target_origin_id", "myCustomOrigin"),
-					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.0.trusted_key_groups.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.0.trusted_signers.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.0.viewer_protocol_policy", "allow-all"),
-					resource.TestMatchResourceAttr(resourceName, "domain_name", regexp.MustCompile(`^[a-z0-9]+\.cloudfront\.cn$`)),
-					resource.TestCheckResourceAttr(resourceName, "enabled", "true"),
-					resource.TestMatchResourceAttr(resourceName, "etag", regexp.MustCompile(`^[A-Z0-9]+$`)),
-					resource.TestCheckResourceAttr(resourceName, "hosted_zone_id", "Z3RFFRIM2A3IF5"),
 					resource.TestCheckResourceAttrSet(resourceName, "http_version"),
 					resource.TestCheckResourceAttr(resourceName, "is_ipv6_enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "logging_config.#", "0"),
@@ -1682,67 +1511,6 @@ resource "aws_cloudfront_distribution" "s3_distribution" {
 `, rInt, testAccDistributionRetainConfig()))
 }
 
-func testAccDistributionS3CNConfig(rInt int) string {
-	return acctest.ConfigCompose(
-		originBucket,
-		logBucket,
-		fmt.Sprintf(`
-variable rand_id {
-  default = %d
-}
-
-resource "aws_cloudfront_distribution" "s3_distribution" {
-  origin {
-    domain_name = "${aws_s3_bucket.s3_bucket_origin.id}.s3.amazonaws.com.cn"
-    origin_id   = "myS3Origin"
-  }
-
-  enabled             = true
-  default_root_object = "index.html"
-
-  logging_config {
-    include_cookies = false
-    bucket          = "${aws_s3_bucket.s3_bucket_logs.id}.s3.amazonaws.com.cn"
-    prefix          = "myprefix"
-  }
-
-  default_cache_behavior {
-    allowed_methods  = ["DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT"]
-    cached_methods   = ["GET", "HEAD"]
-    target_origin_id = "myS3Origin"
-
-    forwarded_values {
-      query_string = false
-
-      cookies {
-        forward = "none"
-      }
-    }
-
-    viewer_protocol_policy = "allow-all"
-    min_ttl                = 0
-    default_ttl            = 3600
-    max_ttl                = 86400
-  }
-
-  price_class = "PriceClass_200"
-
-  restrictions {
-    geo_restriction {
-      restriction_type = "whitelist"
-      locations        = ["US", "CA", "GB", "DE"]
-    }
-  }
-
-  viewer_certificate {
-    cloudfront_default_certificate = true
-  }
-
-  %s
-}
-`, rInt, testAccDistributionRetainConfig()))
-}
-
 func testAccDistributionS3WithTagsConfig(rInt int) string {
 	return acctest.ConfigCompose(
 		originBucket,
@@ -1803,66 +1571,6 @@ resource "aws_cloudfront_distribution" "s3_distribution" {
 `, rInt, testAccDistributionRetainConfig()))
 }
 
-func testAccDistributionS3WithTagsCNConfig(rInt int) string {
-	return acctest.ConfigCompose(
-		originBucket,
-		logBucket,
-		fmt.Sprintf(`
-variable rand_id {
-  default = %d
-}
-
-resource "aws_cloudfront_distribution" "s3_distribution" {
-  origin {
-    domain_name = "${aws_s3_bucket.s3_bucket_origin.id}.s3.amazonaws.com.cn"
-    origin_id   = "myS3Origin"
-  }
-
-  enabled             = true
-  default_root_object = "index.html"
-
-  default_cache_behavior {
-    allowed_methods  = ["DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT"]
-    cached_methods   = ["GET", "HEAD"]
-    target_origin_id = "myS3Origin"
-
-    forwarded_values {
-      query_string = false
-
-      cookies {
-        forward = "none"
-      }
-    }
-
-    viewer_protocol_policy = "allow-all"
-    min_ttl                = 0
-    default_ttl            = 3600
-    max_ttl                = 86400
-  }
-
-  price_class = "PriceClass_200"
-
-  restrictions {
-    geo_restriction {
-      restriction_type = "whitelist"
-      locations        = ["US", "CA", "GB", "DE"]
-    }
-  }
-
-  viewer_certificate {
-    cloudfront_default_certificate = true
-  }
-
-  tags = {
-    environment = "production"
-    account     = "main"
-  }
-
-  %s
-}
-`, rInt, testAccDistributionRetainConfig()))
-}
-
 func testAccDistributionS3WithTagsUpdatedConfig(rInt int) string {
 	return acctest.ConfigCompose(
 		originBucket,
@@ -1875,65 +1583,6 @@ variable rand_id {
 resource "aws_cloudfront_distribution" "s3_distribution" {
   origin {
     domain_name = "${aws_s3_bucket.s3_bucket_origin.id}.s3.amazonaws.com"
-    origin_id   = "myS3Origin"
-  }
-
-  enabled             = true
-  default_root_object = "index.html"
-
-  default_cache_behavior {
-    allowed_methods  = ["DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT"]
-    cached_methods   = ["GET", "HEAD"]
-    target_origin_id = "myS3Origin"
-
-    forwarded_values {
-      query_string = false
-
-      cookies {
-        forward = "none"
-      }
-    }
-
-    viewer_protocol_policy = "allow-all"
-    min_ttl                = 0
-    default_ttl            = 3600
-    max_ttl                = 86400
-  }
-
-  price_class = "PriceClass_200"
-
-  restrictions {
-    geo_restriction {
-      restriction_type = "whitelist"
-      locations        = ["US", "CA", "GB", "DE"]
-    }
-  }
-
-  viewer_certificate {
-    cloudfront_default_certificate = true
-  }
-
-  tags = {
-    environment = "dev"
-  }
-
-  %s
-}
-`, rInt, testAccDistributionRetainConfig()))
-}
-
-func testAccDistributionS3WithTagsCNUpdatedConfig(rInt int) string {
-	return acctest.ConfigCompose(
-		originBucket,
-		logBucket,
-		fmt.Sprintf(`
-variable rand_id {
-  default = %d
-}
-
-resource "aws_cloudfront_distribution" "s3_distribution" {
-  origin {
-    domain_name = "${aws_s3_bucket.s3_bucket_origin.id}.s3.amazonaws.com.cn"
     origin_id   = "myS3Origin"
   }
 
@@ -2528,60 +2177,6 @@ resource "aws_cloudfront_distribution" "no_custom_error_responses" {
 }
 
 func testAccDistributionNoOptionalItemsConfig(rInt int) string {
-	return fmt.Sprintf(`
-variable rand_id {
-  default = %d
-}
-
-resource "aws_cloudfront_distribution" "no_optional_items" {
-  origin {
-    domain_name = "www.example.com"
-    origin_id   = "myCustomOrigin"
-
-    custom_origin_config {
-      http_port              = 80
-      https_port             = 443
-      origin_protocol_policy = "http-only"
-      origin_ssl_protocols   = ["SSLv3", "TLSv1"]
-    }
-  }
-
-  enabled = true
-
-  default_cache_behavior {
-    allowed_methods  = ["DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT"]
-    cached_methods   = ["GET", "HEAD"]
-    target_origin_id = "myCustomOrigin"
-    smooth_streaming = false
-
-    forwarded_values {
-      query_string = false
-
-      cookies {
-        forward = "all"
-      }
-    }
-
-    viewer_protocol_policy = "allow-all"
-  }
-
-  restrictions {
-    geo_restriction {
-      restriction_type = "whitelist"
-      locations        = ["US", "CA", "GB", "DE"]
-    }
-  }
-
-  viewer_certificate {
-    cloudfront_default_certificate = true
-  }
-
-  %s
-}
-`, rInt, testAccDistributionRetainConfig())
-}
-
-func testAccDistributionNoOptionalItemsCNConfig(rInt int) string {
 	return fmt.Sprintf(`
 variable rand_id {
   default = %d
