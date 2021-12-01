@@ -1009,6 +1009,7 @@ func TestAccELBV2TargetGroup_protocolGeneve(t *testing.T) {
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					"connection_termination",
+					"ip_address_type",
 					"lambda_multi_value_headers_enabled",
 					"proxy_protocol_v2",
 					"slow_start",
@@ -1784,6 +1785,7 @@ func TestAccELBV2TargetGroup_A_lambda(t *testing.T) {
 				ImportStateVerifyIgnore: []string{
 					"connection_termination",
 					"deregistration_delay",
+					"ip_address_type",
 					"proxy_protocol_v2",
 					"slow_start",
 					"load_balancing_algorithm_type",
