@@ -500,7 +500,7 @@ The `parameters` array objects support the following:
 * `parameter_name` - (Required) Parameter name. Valid Values: `LambdaArn`, `NumberOfRetries`, `RoleArn`, `BufferSizeInMBs`, `BufferIntervalInSeconds`
 * `parameter_value` - (Required) Parameter value. Must be between 1 and 512 length (inclusive). When providing a Lambda ARN, you should specify the resource version as well.
 
-~> **NOTE:** Parameters with default values are not stored with terraform state so appear as changes. `NumberOfRetries`(3), `RoleArn`(firehose role ARN), `BufferSizeInMBs`(3), `BufferIntervalInSeconds`(60). It is therefore recommended to include only parameters without default values.
+~> **NOTE:** Parameters with default values, including `NumberOfRetries`(default: 3), `RoleArn`(default: firehose role ARN), `BufferSizeInMBs`(default: 3), and `BufferIntervalInSeconds`(default: 60), are not stored in terraform state. To prevent perpetual differences, it is therefore recommended to only include parameters with non-default values.
 
 The `request_configuration` object supports the following:
 
