@@ -1,4 +1,13 @@
 ## 3.68.0 (Unreleased)
+
+ENHANCEMENTS:
+
+* resource/aws_lb_target_group: Add support for `connection_termination` argument for NLBs ([#21130](https://github.com/hashicorp/terraform-provider-aws/issues/21130))
+
+BUG FIXES:
+
+* resource/aws_kms_key: Fix order-related diffs in `policy` ([#21969](https://github.com/hashicorp/terraform-provider-aws/issues/21969))
+
 ## 3.67.0 (November 25, 2021)
 
 FEATURES:
