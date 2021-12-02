@@ -5,3 +5,7 @@ resource/aws_ecr_repository_policy: Fix order-related diffs in `policy`
 ```release-note:bug
 resource/aws_ecr_registry_policy: Fix order-related diffs in `policy`
 ```
+
+```release-note:bug
+resource/aws_iam_role: Prevent `arn` from ever containing a unique ID immediately after role creation
+```
