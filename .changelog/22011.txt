@@ -1,0 +1,3 @@
+```release-note:enhancement
+Updated docs to support changes in filters for ASG Groups.
+```
