@@ -10,6 +10,14 @@ import (
 
 func TestAccEC2TransitGatewayDataSource_serial(t *testing.T) {
 	testCases := map[string]map[string]func(t *testing.T){
+		"Connect": {
+			"Filter": testAccTransitGatewayConnectDataSource_Filter,
+			"ID":     testAccTransitGatewayConnectDataSource_ID,
+		},
+		"ConnectPeer": {
+			"Filter": testAccTransitGatewayConnectPeerDataSource_Filter,
+			"ID":     testAccTransitGatewayConnectPeerDataSource_ID,
+		},
 		"DxGatewayAttachment": {
 			"Filter":                         testAccTransitGatewayDxGatewayAttachmentDataSource_filter,
 			"TransitGatewayIdAndDxGatewayId": testAccTransitGatewayDxGatewayAttachmentDataSource_TransitGatewayIdAndDxGatewayID,
@@ -75,6 +83,7 @@ func testAccTransitGatewayDataSource_Filter(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "arn", dataSourceName, "arn"),
 					resource.TestCheckResourceAttrPair(resourceName, "association_default_route_table_id", dataSourceName, "association_default_route_table_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "auto_accept_shared_attachments", dataSourceName, "auto_accept_shared_attachments"),
+					resource.TestCheckResourceAttrPair(resourceName, "cidr_blocks.#", dataSourceName, "cidr_blocks.#"),
 					resource.TestCheckResourceAttrPair(resourceName, "default_route_table_association", dataSourceName, "default_route_table_association"),
 					resource.TestCheckResourceAttrPair(resourceName, "default_route_table_propagation", dataSourceName, "default_route_table_propagation"),
 					resource.TestCheckResourceAttrPair(resourceName, "description", dataSourceName, "description"),
@@ -106,6 +115,7 @@ func testAccTransitGatewayDataSource_ID(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "arn", dataSourceName, "arn"),
 					resource.TestCheckResourceAttrPair(resourceName, "association_default_route_table_id", dataSourceName, "association_default_route_table_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "auto_accept_shared_attachments", dataSourceName, "auto_accept_shared_attachments"),
+					resource.TestCheckResourceAttrPair(resourceName, "cidr_blocks.#", dataSourceName, "cidr_blocks.#"),
 					resource.TestCheckResourceAttrPair(resourceName, "default_route_table_association", dataSourceName, "default_route_table_association"),
 					resource.TestCheckResourceAttrPair(resourceName, "default_route_table_propagation", dataSourceName, "default_route_table_propagation"),
 					resource.TestCheckResourceAttrPair(resourceName, "description", dataSourceName, "description"),

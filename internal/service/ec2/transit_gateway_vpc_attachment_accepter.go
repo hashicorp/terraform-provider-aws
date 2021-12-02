@@ -265,7 +265,7 @@ func resourceTransitGatewayVPCAttachmentAccepterDelete(d *schema.ResourceData, m
 		return fmt.Errorf("error deleting EC2 Transit Gateway VPC Attachment: %s", err)
 	}
 
-	if err := WaitForTransitGatewayVPCAttachmentDeletion(conn, d.Id()); err != nil {
+	if err := WaitForTransitGatewayAttachmentDeletion(conn, d.Id()); err != nil {
 		return fmt.Errorf("error waiting for EC2 Transit Gateway VPC Attachment (%s) deletion: %s", d.Id(), err)
 	}
 

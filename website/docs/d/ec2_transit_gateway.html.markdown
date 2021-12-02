@@ -51,6 +51,7 @@ In addition to all arguments above, the following attributes are exported:
 * `arn` - EC2 Transit Gateway Amazon Resource Name (ARN)
 * `association_default_route_table_id` - Identifier of the default association route table
 * `auto_accept_shared_attachments` - Whether resource attachment requests are automatically accepted.
+* `cidr_blocks` - The list of associated CIDR blocks
 * `default_route_table_association` - Whether resource attachments are automatically associated with the default association route table.
 * `default_route_table_propagation` - Whether resource attachments automatically propagate routes to the default propagation route table.
 * `description` - Description of the EC2 Transit Gateway

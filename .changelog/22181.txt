@@ -1,0 +1,17 @@
+```release-note:new-resource
+aws_ec2_transit_gateway_connect
+aws_ec2_transit_gateway_connect_peer
+```
+```release-note:new-data-source
+aws_ec2_transit_gateway_connect
+aws_ec2_transit_gateway_connect_peer
+```
+```release-note:new-guide
+aws_ec2_transit_gateway_connect
+aws_ec2_transit_gateway_connect_peer
+```
+```release-note:enhancement
+resource/aws_ec2_transit_gateway: Add `cidr_blocks` argument
+data-source/aws_ec2_transit_gateway: Add `cidr_blocks` argument
+guide/aws_ec2_transit_gateway: Add `cidr_blocks` argument
+```
