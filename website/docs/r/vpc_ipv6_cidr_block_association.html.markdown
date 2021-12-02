@@ -21,8 +21,8 @@ resource "aws_vpc" "test" {
 }
 
 resource "aws_vpc_ipv6_cidr_block_association" "test" {
-	ipv6_ipam_pool_id   = aws_vpc_ipam_pool.test.id
-	vpc_id              = aws_vpc.test.id
+  ipv6_ipam_pool_id = aws_vpc_ipam_pool.test.id
+  vpc_id            = aws_vpc.test.id
 }
 ```
 

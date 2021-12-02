@@ -18,15 +18,15 @@ Basic usage:
 data "aws_region" "current" {}
 
 resource "aws_vpc_ipam" "test" {
-	operating_regions {
-		region_name = data.aws_region.current.name
-	}
+  operating_regions {
+    region_name = data.aws_region.current.name
+  }
 }
 
 resource "aws_vpc_ipam_pool" "test" {
-	address_family = "ipv4"
-	ipam_scope_id  = aws_vpc_ipam.test.private_default_scope_id
-	locale         = data.aws_region.current.name
+  address_family = "ipv4"
+  ipam_scope_id  = aws_vpc_ipam.test.private_default_scope_id
+  locale         = data.aws_region.current.name
 }
 ```
 
@@ -36,32 +36,32 @@ Nested Pools:
 data "aws_region" "current" {}
 
 resource "aws_vpc_ipam" "test" {
-	operating_regions {
-		region_name = data.aws_region.current.name
-	}
+  operating_regions {
+    region_name = data.aws_region.current.name
+  }
 }
 
 resource "aws_vpc_ipam_pool" "parent" {
-	address_family = "ipv4"
-	ipam_scope_id  = aws_vpc_ipam.test.private_default_scope_id
+  address_family = "ipv4"
+  ipam_scope_id  = aws_vpc_ipam.test.private_default_scope_id
 }
 
 resource "aws_vpc_ipam_pool_cidr" "parent_test" {
-	ipam_pool_id = aws_vpc_ipam_pool.parent.id
-	cidr         = "172.2.0.0/16"
+  ipam_pool_id = aws_vpc_ipam_pool.parent.id
+  cidr         = "172.2.0.0/16"
 }
 
 resource "aws_vpc_ipam_pool" "child" {
-	address_family      = "ipv4"
-	ipam_scope_id       = aws_vpc_ipam.test.private_default_scope_id
-	locale              = data.aws_region.current.name
-	source_ipam_pool_id = aws_vpc_ipam_pool.parent.id
+  address_family      = "ipv4"
+  ipam_scope_id       = aws_vpc_ipam.test.private_default_scope_id
+  locale              = data.aws_region.current.name
+  source_ipam_pool_id = aws_vpc_ipam_pool.parent.id
 }
 
 
 resource "aws_vpc_ipam_pool_cidr" "child_test" {
-	ipam_pool_id = aws_vpc_ipam_pool.child.id
-	cidr         = "172.2.0.0/24"
+  ipam_pool_id = aws_vpc_ipam_pool.child.id
+  cidr         = "172.2.0.0/24"
 }
 ```
 

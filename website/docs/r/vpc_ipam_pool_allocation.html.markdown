@@ -16,8 +16,8 @@ Basic usage:
 
 ```terraform
 resource "aws_vpc_ipam_pool_cidr" "test" {
-	ipam_pool_id = aws_vpc_ipam_pool.test.id
-	cidr         = "172.2.0.0/16"
+  ipam_pool_id = aws_vpc_ipam_pool.test.id
+  cidr         = "172.2.0.0/16"
 }
 ```
 

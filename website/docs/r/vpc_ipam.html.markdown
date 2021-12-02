@@ -33,7 +33,7 @@ Shared with multiple operating_regions:
 
 ```terraform
 variable "ipam_regions" {
-  type = list
+  type    = list
   default = ["us-east-1", "us-west-2"]
 }
 

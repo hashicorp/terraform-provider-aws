@@ -18,15 +18,15 @@ Basic usage:
 data "aws_region" "current" {}
 
 resource "aws_vpc_ipam" "test" {
-	operating_regions {
-		region_name = data.aws_region.current.name
-	}
+  operating_regions {
+    region_name = data.aws_region.current.name
+  }
 }
 
 resource "aws_vpc_ipam_scope" "test" {
-	ipam_id     = aws_vpc_ipam.test.id
-	description = "Another Scope"
-1}
+  ipam_id     = aws_vpc_ipam.test.id
+  description = "Another Scope"
+}
 ```
 
 ## Argument Reference
