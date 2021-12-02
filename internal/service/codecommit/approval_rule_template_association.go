@@ -84,7 +84,7 @@ func resourceApprovalRuleTemplateAssociationRead(d *schema.ResourceData, meta in
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading Approval Rule Template Association (%s): %w", d.Id(), err)
+		return fmt.Errorf("error reading CodeCommit Approval Rule Template Association (%s): %w", d.Id(), err)
 	}
 
 	d.Set("approval_rule_template_name", approvalRuleTemplateName)
