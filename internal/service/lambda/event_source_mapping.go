@@ -112,6 +112,30 @@ func ResourceEventSourceMapping() *schema.Resource {
 				ExactlyOneOf: []string{"event_source_arn", "self_managed_event_source"},
 			},
 
+			"filter_criteria": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"filter": {
+							Type:     schema.TypeSet,
+							Optional: true,
+							MaxItems: 5,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"pattern": {
+										Type:         schema.TypeString,
+										Optional:     true,
+										ValidateFunc: validation.StringLenBetween(0, 4096),
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+
 			"function_arn": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -315,6 +339,10 @@ func resourceEventSourceMappingCreate(d *schema.ResourceData, meta interface{}) 
 		target = v
 	}
 
+	if v, ok := d.GetOk("filter_criteria"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		input.FilterCriteria = expandLambdaFilterCriteria(v.([]interface{})[0].(map[string]interface{}))
+	}
+
 	if v, ok := d.GetOk("function_response_types"); ok && v.(*schema.Set).Len() > 0 {
 		input.FunctionResponseTypes = flex.ExpandStringSet(v.(*schema.Set))
 	}
@@ -442,6 +470,13 @@ func resourceEventSourceMappingRead(d *schema.ResourceData, meta interface{}) er
 		d.Set("destination_config", nil)
 	}
 	d.Set("event_source_arn", eventSourceMappingConfiguration.EventSourceArn)
+	if v := eventSourceMappingConfiguration.FilterCriteria; v != nil {
+		if err := d.Set("filter_criteria", []interface{}{flattenLambdaFilterCriteria(v)}); err != nil {
+			return fmt.Errorf("error setting filter criteria: %w", err)
+		}
+	} else {
+		d.Set("filter_criteria", nil)
+	}
 	d.Set("function_arn", eventSourceMappingConfiguration.FunctionArn)
 	d.Set("function_name", eventSourceMappingConfiguration.FunctionArn)
 	d.Set("function_response_types", aws.StringValueSlice(eventSourceMappingConfiguration.FunctionResponseTypes))
@@ -516,6 +551,15 @@ func resourceEventSourceMappingUpdate(d *schema.ResourceData, meta interface{}) 
 
 	if d.HasChange("enabled") {
 		input.Enabled = aws.Bool(d.Get("enabled").(bool))
+	}
+
+	if d.HasChange("filter_criteria") {
+		if v, ok := d.GetOk("filter_criteria"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+			input.FilterCriteria = expandLambdaFilterCriteria(v.([]interface{})[0].(map[string]interface{}))
+		} else {
+			// AWS ignores the removal if this is left as nil.
+			input.FilterCriteria = &lambda.FilterCriteria{}
+		}
 	}
 
 	if d.HasChange("function_name") {
@@ -797,4 +841,105 @@ func flattenLambdaSourceAccessConfigurations(apiObjects []*lambda.SourceAccessCo
 	}
 
 	return tfList
+}
+
+func expandLambdaFilterCriteria(tfMap map[string]interface{}) *lambda.FilterCriteria {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &lambda.FilterCriteria{}
+
+	if v, ok := tfMap["filter"].(*schema.Set); ok && v.Len() > 0 {
+		apiObject.Filters = expandLambdaFilters(v.List())
+	}
+
+	return apiObject
+}
+
+func flattenLambdaFilterCriteria(apiObject *lambda.FilterCriteria) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.Filters; len(v) > 0 {
+		tfMap["filter"] = flattenLambdaFilters(v)
+	}
+
+	return tfMap
+}
+
+func expandLambdaFilters(tfList []interface{}) []*lambda.Filter {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	var apiObjects []*lambda.Filter
+
+	for _, tfMapRaw := range tfList {
+		tfMap, ok := tfMapRaw.(map[string]interface{})
+
+		if !ok {
+			continue
+		}
+
+		apiObject := expandLambdaFilter(tfMap)
+
+		if apiObject == nil {
+			continue
+		}
+
+		apiObjects = append(apiObjects, apiObject)
+	}
+
+	return apiObjects
+}
+
+func flattenLambdaFilters(apiObjects []*lambda.Filter) []interface{} {
+	if len(apiObjects) == 0 {
+		return nil
+	}
+
+	var tfList []interface{}
+
+	for _, apiObject := range apiObjects {
+		if apiObject == nil {
+			continue
+		}
+
+		tfList = append(tfList, flattenLambdaFilter(apiObject))
+	}
+
+	return tfList
+}
+
+func expandLambdaFilter(tfMap map[string]interface{}) *lambda.Filter {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &lambda.Filter{}
+
+	if v, ok := tfMap["pattern"].(string); ok {
+		// The API permits patterns of length >= 0, so accept the empty string.
+		apiObject.Pattern = aws.String(v)
+	}
+
+	return apiObject
+}
+
+func flattenLambdaFilter(apiObject *lambda.Filter) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.Pattern; v != nil {
+		tfMap["pattern"] = aws.StringValue(v)
+	}
+
+	return tfMap
 }

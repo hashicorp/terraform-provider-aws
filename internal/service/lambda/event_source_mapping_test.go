@@ -101,6 +101,7 @@ func TestAccLambdaEventSourceMapping_SQS_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "function_name", functionResourceName, "arn"),
 					resource.TestCheckResourceAttrPair(resourceName, "function_arn", functionResourceName, "arn"),
 					acctest.CheckResourceAttrRFC3339(resourceName, "last_modified"),
+					resource.TestCheckResourceAttr(resourceName, "filter_criteria.#", "0"),
 				),
 			},
 			// batch_size became optional.  Ensure that if the user supplies the default
@@ -871,6 +872,76 @@ func TestAccLambdaEventSourceMapping_rabbitMQ(t *testing.T) {
 			{
 				PlanOnly: true,
 				Config:   testAccEventSourceMappingRabbitMQConfig(rName, "null"),
+			},
+		},
+	})
+}
+
+func TestAccLambdaEventSourceMapping_SQS_filterCriteria(t *testing.T) {
+	var conf lambda.EventSourceMappingConfiguration
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_lambda_event_source_mapping.test"
+	pattern1 := "{\"Region\": [{\"prefix\": \"us-\"}]}"
+	pattern2 := "{\"Location\": [\"New York\"], \"Day\": [\"Monday\"]}"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckLambdaEventSourceMappingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEventSourceMappingSQSFilterCriteria_1(rName, pattern1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEventSourceMappingExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "filter_criteria.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "filter_criteria.0.filter.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "filter_criteria.0.filter.*", map[string]string{"pattern": pattern1}),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"last_modified"},
+			},
+			{
+				Config: testAccEventSourceMappingSQSFilterCriteria_2(rName, pattern1, pattern2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEventSourceMappingExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "filter_criteria.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "filter_criteria.0.filter.#", "2"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "filter_criteria.0.filter.*", map[string]string{"pattern": pattern1}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "filter_criteria.0.filter.*", map[string]string{"pattern": pattern2}),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"last_modified"},
+			},
+			{
+				Config: testAccEventSourceMappingSQSFilterCriteria_3(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEventSourceMappingExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "filter_criteria.#", "0"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"last_modified"},
+			},
+			{
+				Config: testAccEventSourceMappingSQSFilterCriteria_1(rName, pattern1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEventSourceMappingExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "filter_criteria.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "filter_criteria.0.filter.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "filter_criteria.0.filter.*", map[string]string{"pattern": pattern1}),
+				),
 			},
 		},
 	})
@@ -1831,4 +1902,47 @@ func testAccPreCheckSecretsManager(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unexpected PreCheck error: %s", err)
 	}
+}
+
+func testAccEventSourceMappingSQSFilterCriteria_1(rName string, pattern1 string) string {
+	return acctest.ConfigCompose(testAccEventSourceMappingSQSBaseConfig(rName), fmt.Sprintf(`
+resource "aws_lambda_event_source_mapping" "test" {
+  event_source_arn = aws_sqs_queue.test.arn
+  function_name    = aws_lambda_function.test.arn
+
+  filter_criteria {
+    filter {
+      pattern = %q
+    }
+  }
+}
+`, pattern1))
+}
+
+func testAccEventSourceMappingSQSFilterCriteria_2(rName string, pattern1, pattern2 string) string {
+	return acctest.ConfigCompose(testAccEventSourceMappingSQSBaseConfig(rName), fmt.Sprintf(`
+resource "aws_lambda_event_source_mapping" "test" {
+  event_source_arn = aws_sqs_queue.test.arn
+  function_name    = aws_lambda_function.test.arn
+
+  filter_criteria {
+    filter {
+      pattern = %q
+    }
+
+    filter {
+      pattern = %q
+    }
+  }
+}
+`, pattern1, pattern2))
+}
+
+func testAccEventSourceMappingSQSFilterCriteria_3(rName string) string {
+	return acctest.ConfigCompose(testAccEventSourceMappingSQSBaseConfig(rName), `
+resource "aws_lambda_event_source_mapping" "test" {
+  event_source_arn = aws_sqs_queue.test.arn
+  function_name    = aws_lambda_function.test.arn
+}
+`)
 }
