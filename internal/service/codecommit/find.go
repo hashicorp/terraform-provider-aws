@@ -2,12 +2,14 @@ package codecommit
 
 import (
 	"fmt"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/codecommit"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
+// FindApprovalRuleTemplateAssociation validates that an approval rule template has the named associated repository
 func FindApprovalRuleTemplateAssociation(conn *codecommit.CodeCommit, approvalRuleTemplateName, repositoryName string) error {
 	input := &codecommit.ListRepositoriesForApprovalRuleTemplateInput{
 		ApprovalRuleTemplateName: aws.String(approvalRuleTemplateName),
