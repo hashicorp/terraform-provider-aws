@@ -241,6 +241,48 @@ func TestAccCognitoUser_attributes(t *testing.T) {
 	})
 }
 
+func TestAccCognitoUser_enabled(t *testing.T) {
+	rUserPoolName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rUserName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_cognito_user.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckUserDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccUserConfigEnable(rUserPoolName, rUserName, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckUserExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "enabled", "false"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"temporary_password",
+					"password",
+					"client_metadata",
+					"validation_data",
+					"desired_delivery_mediums",
+					"message_action",
+				},
+			},
+			{
+				Config: testAccUserConfigEnable(rUserPoolName, rUserName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckUserExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "enabled", "true"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckUserExists(name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
@@ -577,4 +619,18 @@ resource "aws_cognito_user" "test" {
 	}
 }
 `, userPoolName, userName)
+}
+
+func testAccUserConfigEnable(userPoolName string, userName string, enabled bool) string {
+	return fmt.Sprintf(`
+resource "aws_cognito_user_pool" "test" {
+	name = %[1]q
+}
+
+resource "aws_cognito_user" "test" {
+	user_pool_id = aws_cognito_user_pool.test.id
+	username = %[2]q
+	enabled = %t
+}
+`, userPoolName, userName, enabled)
 }
