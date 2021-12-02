@@ -30,7 +30,7 @@ func TestAccServiceQuotasServiceQuota_basic(t *testing.T) {
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServiceQuotaSameValueConfig(setQuotaQuotaCode, setQuotaServiceCode),
+				Config: testAccServiceQuotaSameValueConfig(setQuotaServiceCode, setQuotaQuotaCode),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, "adjustable", dataSourceName, "adjustable"),
 					resource.TestCheckResourceAttrPair(resourceName, "arn", dataSourceName, "arn"),
@@ -67,7 +67,7 @@ func TestAccServiceQuotasServiceQuota_basic_Unset(t *testing.T) {
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServiceQuotaSameValueConfig(unsetQuotaQuotaCode, unsetQuotaServiceCode),
+				Config: testAccServiceQuotaSameValueConfig(unsetQuotaServiceCode, unsetQuotaQuotaCode),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, "adjustable", dataSourceName, "adjustable"),
 					resource.TestCheckResourceAttrPair(resourceName, "arn", dataSourceName, "arn"),
@@ -120,7 +120,7 @@ func TestAccServiceQuotasServiceQuota_Value_increaseOnCreate(t *testing.T) {
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServiceQuotaValueConfig(quotaCode, serviceCode, value),
+				Config: testAccServiceQuotaValueConfig(serviceCode, quotaCode, value),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "quota_code", quotaCode),
 					resource.TestCheckResourceAttr(resourceName, "service_code", serviceCode),
@@ -164,7 +164,7 @@ func TestAccServiceQuotasServiceQuota_Value_increaseOnUpdate(t *testing.T) {
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServiceQuotaSameValueConfig(quotaCode, serviceCode),
+				Config: testAccServiceQuotaSameValueConfig(serviceCode, quotaCode),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "quota_code", quotaCode),
 					resource.TestCheckResourceAttr(resourceName, "service_code", serviceCode),
@@ -173,7 +173,7 @@ func TestAccServiceQuotasServiceQuota_Value_increaseOnUpdate(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccServiceQuotaValueConfig(quotaCode, serviceCode, value),
+				Config: testAccServiceQuotaValueConfig(serviceCode, quotaCode, value),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "quota_code", quotaCode),
 					resource.TestCheckResourceAttr(resourceName, "service_code", serviceCode),
@@ -200,8 +200,7 @@ func TestAccServiceQuotasServiceQuota_permissionError(t *testing.T) {
 	})
 }
 
-// TODO: Reorder this!
-func testAccServiceQuotaSameValueConfig(quotaCode, serviceCode string) string {
+func testAccServiceQuotaSameValueConfig(serviceCode, quotaCode string) string {
 	return fmt.Sprintf(`
 data "aws_servicequotas_service_quota" "test" {
   quota_code   = %[1]q
@@ -216,7 +215,7 @@ resource "aws_servicequotas_service_quota" "test" {
 `, quotaCode, serviceCode)
 }
 
-func testAccServiceQuotaValueConfig(quotaCode, serviceCode, value string) string {
+func testAccServiceQuotaValueConfig(serviceCode, quotaCode, value string) string {
 	return fmt.Sprintf(`
 resource "aws_servicequotas_service_quota" "test" {
   quota_code   = %[1]q
