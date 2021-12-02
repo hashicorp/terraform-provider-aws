@@ -250,6 +250,11 @@ func resourceRoleRead(d *schema.ResourceData, meta interface{}) error {
 
 	role := outputRaw.(*iam.Role)
 
+	// occasionally, immediately after a role is created, AWS will give an ARN like AROAQ7SSZBKHRKPWRZUN6 (unique ID)
+	if role, err = waitRoleARNIsNotUniqueID(conn, d.Id(), role); err != nil {
+		return fmt.Errorf("error waiting for IAM role (%s) read: %w", d.Id(), err)
+	}
+
 	d.Set("arn", role.Arn)
 	if err := d.Set("create_date", role.CreateDate.Format(time.RFC3339)); err != nil {
 		return err
