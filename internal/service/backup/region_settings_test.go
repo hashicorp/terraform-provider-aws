@@ -5,7 +5,6 @@ import (
 
 	"github.com/aws/aws-sdk-go/service/backup"
 	"github.com/aws/aws-sdk-go/service/fsx"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -14,9 +13,8 @@ import (
 
 func TestAccBackupRegionSettings_basic(t *testing.T) {
 	var settings backup.DescribeRegionSettingsOutput
-
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_backup_region_settings.test"
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
@@ -28,7 +26,7 @@ func TestAccBackupRegionSettings_basic(t *testing.T) {
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBackupRegionSettingsConfig1(rName),
+				Config: testAccBackupRegionSettingsConfig1(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRegionSettingsExists(&settings),
 					resource.TestCheckResourceAttr(resourceName, "resource_type_opt_in_preference.%", "11"),
@@ -44,8 +42,8 @@ func TestAccBackupRegionSettings_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "resource_type_opt_in_preference.Storage Gateway", "true"),
 					resource.TestCheckResourceAttr(resourceName, "resource_type_opt_in_preference.VirtualMachine", "true"),
 					resource.TestCheckResourceAttr(resourceName, "resource_type_management_preference.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "resource_type_management_preference.DynamoDB", "true"),
-					resource.TestCheckResourceAttr(resourceName, "resource_type_management_preference.EFS", "true"),
+					resource.TestCheckResourceAttrSet(resourceName, "resource_type_management_preference.DynamoDB"),
+					resource.TestCheckResourceAttrSet(resourceName, "resource_type_management_preference.EFS"),
 				),
 			},
 			{
@@ -54,7 +52,7 @@ func TestAccBackupRegionSettings_basic(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccBackupRegionSettingsConfig2(rName),
+				Config: testAccBackupRegionSettingsConfig2(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRegionSettingsExists(&settings),
 					resource.TestCheckResourceAttr(resourceName, "resource_type_opt_in_preference.%", "11"),
@@ -75,11 +73,11 @@ func TestAccBackupRegionSettings_basic(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccBackupRegionSettingsConfig1(rName),
+				Config: testAccBackupRegionSettingsConfig3(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRegionSettingsExists(&settings),
 					resource.TestCheckResourceAttr(resourceName, "resource_type_opt_in_preference.%", "11"),
-					resource.TestCheckResourceAttr(resourceName, "resource_type_opt_in_preference.Aurora", "true"),
+					resource.TestCheckResourceAttr(resourceName, "resource_type_opt_in_preference.Aurora", "false"),
 					resource.TestCheckResourceAttr(resourceName, "resource_type_opt_in_preference.DocumentDB", "true"),
 					resource.TestCheckResourceAttr(resourceName, "resource_type_opt_in_preference.DynamoDB", "true"),
 					resource.TestCheckResourceAttr(resourceName, "resource_type_opt_in_preference.EBS", "true"),
@@ -89,9 +87,9 @@ func TestAccBackupRegionSettings_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "resource_type_opt_in_preference.Neptune", "true"),
 					resource.TestCheckResourceAttr(resourceName, "resource_type_opt_in_preference.RDS", "true"),
 					resource.TestCheckResourceAttr(resourceName, "resource_type_opt_in_preference.Storage Gateway", "true"),
-					resource.TestCheckResourceAttr(resourceName, "resource_type_opt_in_preference.VirtualMachine", "true"),
+					resource.TestCheckResourceAttr(resourceName, "resource_type_opt_in_preference.VirtualMachine", "false"),
 					resource.TestCheckResourceAttr(resourceName, "resource_type_management_preference.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "resource_type_management_preference.DynamoDB", "true"),
+					resource.TestCheckResourceAttr(resourceName, "resource_type_management_preference.DynamoDB", "false"),
 					resource.TestCheckResourceAttr(resourceName, "resource_type_management_preference.EFS", "true"),
 				),
 			},
@@ -114,11 +112,31 @@ func testAccCheckRegionSettingsExists(settings *backup.DescribeRegionSettingsOut
 	}
 }
 
-func testAccBackupRegionSettingsConfig1(rName string) string {
+func testAccBackupRegionSettingsConfig1() string {
 	return `
 resource "aws_backup_region_settings" "test" {
   resource_type_opt_in_preference = {
     "Aurora"          = true
+    "DocumentDB"      = true
+    "DynamoDB"        = true
+    "EBS"             = true
+    "EC2"             = true
+    "EFS"             = true
+    "FSx"             = true
+    "Neptune"         = true
+    "RDS"             = true
+    "Storage Gateway" = true
+    "VirtualMachine"  = true
+  }
+}
+`
+}
+
+func testAccBackupRegionSettingsConfig2() string {
+	return `
+resource "aws_backup_region_settings" "test" {
+  resource_type_opt_in_preference = {
+    "Aurora"          = false
     "DocumentDB"      = true
     "DynamoDB"        = true
     "EBS"             = true
@@ -139,7 +157,7 @@ resource "aws_backup_region_settings" "test" {
 `
 }
 
-func testAccBackupRegionSettingsConfig2(rName string) string {
+func testAccBackupRegionSettingsConfig3() string {
 	return `
 resource "aws_backup_region_settings" "test" {
   resource_type_opt_in_preference = {
@@ -153,11 +171,11 @@ resource "aws_backup_region_settings" "test" {
     "Neptune"         = true
     "RDS"             = true
     "Storage Gateway" = true
-    "VirtualMachine"  = true
+    "VirtualMachine"  = false
   }
 
   resource_type_management_preference = {
-    "DynamoDB" = true
+    "DynamoDB" = false
     "EFS"      = true
   }
 }

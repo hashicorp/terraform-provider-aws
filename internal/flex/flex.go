@@ -38,6 +38,15 @@ func ExpandStringMap(m map[string]interface{}) map[string]*string {
 	return stringMap
 }
 
+// Expands a map of string to interface to a map of string to *bool
+func ExpandBoolMap(m map[string]interface{}) map[string]*bool {
+	boolMap := make(map[string]*bool, len(m))
+	for k, v := range m {
+		boolMap[k] = aws.Bool(v.(bool))
+	}
+	return boolMap
+}
+
 // Takes the result of schema.Set of strings and returns a []*string
 func ExpandStringSet(configured *schema.Set) []*string {
 	return ExpandStringList(configured.List()) // nosemgrep: helper-schema-Set-extraneous-ExpandStringList-with-List

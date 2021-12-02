@@ -40,7 +40,7 @@ resource "aws_backup_region_settings" "test" {
 The following arguments are supported:
 
 * `resource_type_opt_in_preference` - (Required) A map of services along with the opt-in preferences for the Region.
-* `resource_type_management_preference` - (Required A map of services along with the management preferences for the Region.
+* `resource_type_management_preference` - (Optional) A map of services along with the management preferences for the Region.
 
 ## Attributes Reference
 
