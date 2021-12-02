@@ -66,6 +66,7 @@ func TestAccSageMakerProject_description(t *testing.T) {
 				Config: testAccProjectDescription(rName, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProjectExists(resourceName, &mpg),
+					resource.TestCheckResourceAttr(resourceName, "project_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "project_description", rName),
 				),
 			},
@@ -78,7 +79,8 @@ func TestAccSageMakerProject_description(t *testing.T) {
 				Config: testAccProjectDescription(rName, rNameUpdated),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProjectExists(resourceName, &mpg),
-					resource.TestCheckResourceAttr(resourceName, "project_description", rName),
+					resource.TestCheckResourceAttr(resourceName, "project_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "project_description", rNameUpdated),
 				),
 			},
 			{
