@@ -94,7 +94,7 @@ func TestAccVPCIpamByoipIPv6(t *testing.T) {
 			},
 			{
 				Config:   testAccVPCIpamIPv6ByoipExplicitCIDR(p, m, s, ipv6CidrVPC),
-				SkipFunc: testAccVPCIpamIPv6ByoipSkipExplicitCidr(ipv6CidrVPC),
+				SkipFunc: testAccVPCIpamIPv6ByoipSkipExplicitCidr(t, ipv6CidrVPC),
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckVPCExists(resourceName, &vpc),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`vpc/vpc-.+`)),
@@ -105,7 +105,7 @@ func TestAccVPCIpamByoipIPv6(t *testing.T) {
 			// disassociate ipv6
 			{
 				Config:   testAccVPCIpamIPv6ByoipCIDRBase(p, m, s),
-				SkipFunc: testAccVPCIpamIPv6ByoipSkipExplicitCidr(ipv6CidrVPC),
+				SkipFunc: testAccVPCIpamIPv6ByoipSkipExplicitCidr(t, ipv6CidrVPC),
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckVPCExists(resourceName, &vpc),
 					resource.TestCheckResourceAttr(resourceName, "ipv6_association_id", "")),
@@ -154,7 +154,7 @@ func TestAccVPCIpamByoipIPv6(t *testing.T) {
 			},
 			{
 				Config:   testAccVPCIpamByoipIPv6CIDRBlockAssociationIpamExplicitCIDR(p, m, s, ipv6CidrAssoc),
-				SkipFunc: testAccVPCIpamIPv6ByoipSkipExplicitCidr(ipv6CidrAssoc),
+				SkipFunc: testAccVPCIpamIPv6ByoipSkipExplicitCidr(t, ipv6CidrAssoc),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVPCIPv6CIDRBlockAssociationExists(assocName, &associationIPv6),
 					resource.TestCheckResourceAttr(assocName, "ipv6_cidr_block", ipv6CidrAssoc),
@@ -252,12 +252,12 @@ func testAccCheckVPCAssociationIPv6CIDRPrefix(association *ec2.VpcIpv6CidrBlockA
 	}
 }
 
-func testAccVPCIpamIPv6ByoipSkipExplicitCidr(ipv6CidrVPC string) func() (bool, error) {
+func testAccVPCIpamIPv6ByoipSkipExplicitCidr(t *testing.T, ipv6CidrVPC string) func() (bool, error) {
 	return func() (bool, error) {
 		if ipv6CidrVPC != "" {
 			return false, nil
 		}
-		fmt.Println("Environment variable IPAM_BYOIP_IPV6_EXPLICIT_CIDR_VPC or IPAM_BYOIP_IPV6_EXPLICIT_CIDR_ASSOCIATE must be set.")
+		t.Log("Skipping step: Environment variable IPAM_BYOIP_IPV6_EXPLICIT_CIDR_VPC or IPAM_BYOIP_IPV6_EXPLICIT_CIDR_ASSOCIATE must be set.")
 		return true, nil
 	}
 }

@@ -133,7 +133,7 @@ func resourceVPCIpamRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("operating_regions", flattenIpamOperatingRegions(ipam.OperatingRegions))
 	d.Set("public_default_scope_id", ipam.PublicDefaultScopeId)
 	d.Set("private_default_scope_id", ipam.PrivateDefaultScopeId)
-	d.Set("scope_count", aws.Int64Value(ipam.ScopeCount))
+	d.Set("scope_count", ipam.ScopeCount)
 
 	tags := KeyValueTags(ipam.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
