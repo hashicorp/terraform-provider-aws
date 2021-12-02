@@ -31,15 +31,21 @@ func TestAccBackupRegionSettings_basic(t *testing.T) {
 				Config: testAccBackupRegionSettingsConfig1(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRegionSettingsExists(&settings),
-					resource.TestCheckResourceAttr(resourceName, "resource_type_opt_in_preference.%", "8"),
-					resource.TestCheckResourceAttr(resourceName, "resource_type_opt_in_preference.DynamoDB", "true"),
+					resource.TestCheckResourceAttr(resourceName, "resource_type_opt_in_preference.%", "11"),
 					resource.TestCheckResourceAttr(resourceName, "resource_type_opt_in_preference.Aurora", "true"),
+					resource.TestCheckResourceAttr(resourceName, "resource_type_opt_in_preference.DocumentDB", "true"),
+					resource.TestCheckResourceAttr(resourceName, "resource_type_opt_in_preference.DynamoDB", "true"),
 					resource.TestCheckResourceAttr(resourceName, "resource_type_opt_in_preference.EBS", "true"),
 					resource.TestCheckResourceAttr(resourceName, "resource_type_opt_in_preference.EC2", "true"),
 					resource.TestCheckResourceAttr(resourceName, "resource_type_opt_in_preference.EFS", "true"),
 					resource.TestCheckResourceAttr(resourceName, "resource_type_opt_in_preference.FSx", "true"),
+					resource.TestCheckResourceAttr(resourceName, "resource_type_opt_in_preference.Neptune", "true"),
 					resource.TestCheckResourceAttr(resourceName, "resource_type_opt_in_preference.RDS", "true"),
 					resource.TestCheckResourceAttr(resourceName, "resource_type_opt_in_preference.Storage Gateway", "true"),
+					resource.TestCheckResourceAttr(resourceName, "resource_type_opt_in_preference.VirtualMachine", "true"),
+					resource.TestCheckResourceAttr(resourceName, "resource_type_management_preference.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "resource_type_management_preference.DynamoDB", "true"),
+					resource.TestCheckResourceAttr(resourceName, "resource_type_management_preference.EFS", "true"),
 				),
 			},
 			{
@@ -51,30 +57,42 @@ func TestAccBackupRegionSettings_basic(t *testing.T) {
 				Config: testAccBackupRegionSettingsConfig2(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRegionSettingsExists(&settings),
-					resource.TestCheckResourceAttr(resourceName, "resource_type_opt_in_preference.%", "8"),
-					resource.TestCheckResourceAttr(resourceName, "resource_type_opt_in_preference.DynamoDB", "true"),
+					resource.TestCheckResourceAttr(resourceName, "resource_type_opt_in_preference.%", "11"),
 					resource.TestCheckResourceAttr(resourceName, "resource_type_opt_in_preference.Aurora", "false"),
+					resource.TestCheckResourceAttr(resourceName, "resource_type_opt_in_preference.DocumentDB", "true"),
+					resource.TestCheckResourceAttr(resourceName, "resource_type_opt_in_preference.DynamoDB", "true"),
 					resource.TestCheckResourceAttr(resourceName, "resource_type_opt_in_preference.EBS", "true"),
 					resource.TestCheckResourceAttr(resourceName, "resource_type_opt_in_preference.EC2", "true"),
 					resource.TestCheckResourceAttr(resourceName, "resource_type_opt_in_preference.EFS", "true"),
 					resource.TestCheckResourceAttr(resourceName, "resource_type_opt_in_preference.FSx", "true"),
+					resource.TestCheckResourceAttr(resourceName, "resource_type_opt_in_preference.Neptune", "true"),
 					resource.TestCheckResourceAttr(resourceName, "resource_type_opt_in_preference.RDS", "true"),
 					resource.TestCheckResourceAttr(resourceName, "resource_type_opt_in_preference.Storage Gateway", "true"),
+					resource.TestCheckResourceAttr(resourceName, "resource_type_opt_in_preference.VirtualMachine", "true"),
+					resource.TestCheckResourceAttr(resourceName, "resource_type_management_preference.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "resource_type_management_preference.DynamoDB", "true"),
+					resource.TestCheckResourceAttr(resourceName, "resource_type_management_preference.EFS", "true"),
 				),
 			},
 			{
 				Config: testAccBackupRegionSettingsConfig1(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRegionSettingsExists(&settings),
-					resource.TestCheckResourceAttr(resourceName, "resource_type_opt_in_preference.%", "8"),
-					resource.TestCheckResourceAttr(resourceName, "resource_type_opt_in_preference.DynamoDB", "true"),
+					resource.TestCheckResourceAttr(resourceName, "resource_type_opt_in_preference.%", "11"),
 					resource.TestCheckResourceAttr(resourceName, "resource_type_opt_in_preference.Aurora", "true"),
+					resource.TestCheckResourceAttr(resourceName, "resource_type_opt_in_preference.DocumentDB", "true"),
+					resource.TestCheckResourceAttr(resourceName, "resource_type_opt_in_preference.DynamoDB", "true"),
 					resource.TestCheckResourceAttr(resourceName, "resource_type_opt_in_preference.EBS", "true"),
 					resource.TestCheckResourceAttr(resourceName, "resource_type_opt_in_preference.EC2", "true"),
 					resource.TestCheckResourceAttr(resourceName, "resource_type_opt_in_preference.EFS", "true"),
 					resource.TestCheckResourceAttr(resourceName, "resource_type_opt_in_preference.FSx", "true"),
+					resource.TestCheckResourceAttr(resourceName, "resource_type_opt_in_preference.Neptune", "true"),
 					resource.TestCheckResourceAttr(resourceName, "resource_type_opt_in_preference.RDS", "true"),
 					resource.TestCheckResourceAttr(resourceName, "resource_type_opt_in_preference.Storage Gateway", "true"),
+					resource.TestCheckResourceAttr(resourceName, "resource_type_opt_in_preference.VirtualMachine", "true"),
+					resource.TestCheckResourceAttr(resourceName, "resource_type_management_preference.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "resource_type_management_preference.DynamoDB", "true"),
+					resource.TestCheckResourceAttr(resourceName, "resource_type_management_preference.EFS", "true"),
 				),
 			},
 		},
@@ -100,14 +118,22 @@ func testAccBackupRegionSettingsConfig1(rName string) string {
 	return `
 resource "aws_backup_region_settings" "test" {
   resource_type_opt_in_preference = {
-    "DynamoDB"        = true
     "Aurora"          = true
+    "DocumentDB"      = true
+    "DynamoDB"        = true
     "EBS"             = true
     "EC2"             = true
     "EFS"             = true
     "FSx"             = true
+    "Neptune"         = true
     "RDS"             = true
     "Storage Gateway" = true
+    "VirtualMachine"  = true
+  }
+
+  resource_type_management_preference = {
+    "DynamoDB"        = true
+    "EFS"             = true
   }
 }
 `
@@ -117,14 +143,22 @@ func testAccBackupRegionSettingsConfig2(rName string) string {
 	return `
 resource "aws_backup_region_settings" "test" {
   resource_type_opt_in_preference = {
-    "DynamoDB"        = true
     "Aurora"          = false
+    "DocumentDB"      = true
+    "DynamoDB"        = true
     "EBS"             = true
     "EC2"             = true
     "EFS"             = true
     "FSx"             = true
+    "Neptune"         = true
     "RDS"             = true
     "Storage Gateway" = true
+    "VirtualMachine"  = true
+  }
+
+  resource_type_management_preference = {
+    "DynamoDB"        = true
+    "EFS"             = true
   }
 }
 `

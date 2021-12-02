@@ -25,6 +25,11 @@ func ResourceRegionSettings() *schema.Resource {
 				Required: true,
 				Elem:     &schema.Schema{Type: schema.TypeBool},
 			},
+			"resource_type_management_preference": {
+				Type:     schema.TypeMap,
+				Required: true,
+				Elem:     &schema.Schema{Type: schema.TypeBool},
+			},
 		},
 	}
 }
@@ -32,14 +37,21 @@ func ResourceRegionSettings() *schema.Resource {
 func resourceRegionSettingsUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).BackupConn
 
-	prefrences := d.Get("resource_type_opt_in_preference").(map[string]interface{})
-	list := make(map[string]*bool, len(prefrences))
-	for i, v := range prefrences {
-		list[i] = aws.Bool(v.(bool))
+	optInPrefs := d.Get("resource_type_opt_in_preference").(map[string]interface{})
+	optInList := make(map[string]*bool, len(optInPrefs))
+	for i, v := range optInPrefs {
+		optInList[i] = aws.Bool(v.(bool))
+	}
+
+	mgmtPrefs := d.Get("resource_type_management_preference").(map[string]interface{})
+	mgmtList := make(map[string]*bool, len(mgmtPrefs))
+	for i, v := range mgmtPrefs {
+		mgmtList[i] = aws.Bool(v.(bool))
 	}
 
 	input := &backup.UpdateRegionSettingsInput{
-		ResourceTypeOptInPreference: list,
+		ResourceTypeOptInPreference:      optInList,
+		ResourceTypeManagementPreference: mgmtList,
 	}
 
 	_, err := conn.UpdateRegionSettings(input)
@@ -61,6 +73,7 @@ func resourceRegionSettingsRead(d *schema.ResourceData, meta interface{}) error 
 	}
 
 	d.Set("resource_type_opt_in_preference", aws.BoolValueMap(resp.ResourceTypeOptInPreference))
+	d.Set("resource_type_management_preference", aws.BoolValueMap(resp.ResourceTypeManagementPreference))
 
 	return nil
 }
