@@ -897,7 +897,7 @@ func expandLambdaFilters(tfList []interface{}) []*lambda.Filter {
 	return apiObjects
 }
 
-func flattenLambdaFilters(apiObjects []*lambda.Filter) *schema.Set {
+func flattenLambdaFilters(apiObjects []*lambda.Filter) []interface{} {
 	if len(apiObjects) == 0 {
 		return nil
 	}
@@ -912,19 +912,7 @@ func flattenLambdaFilters(apiObjects []*lambda.Filter) *schema.Set {
 		tfList = append(tfList, flattenLambdaFilter(apiObject))
 	}
 
-	filterResource := &schema.Resource{
-		Schema: map[string]*schema.Schema{
-			"pattern": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(0, 4096),
-			},
-		},
-	}
-
-	tfSet := schema.NewSet(schema.HashResource(filterResource), tfList)
-
-	return tfSet
+	return tfList
 }
 
 func expandLambdaFilter(tfMap map[string]interface{}) *lambda.Filter {
