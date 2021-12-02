@@ -21,7 +21,7 @@ import (
 // multiple steps in order to share the dependencies
 
 // IPAM IPv6 BYOIP Tests
-func TestAccVPCIpamByoipIPv6(t *testing.T) {
+func TestAccVPCIpam_ByoipIPv6(t *testing.T) {
 	if os.Getenv("IPAM_BYOIP_IPV6_MESSAGE") == "" || os.Getenv("IPAM_BYOIP_IPV6_SIGNATURE") == "" || os.Getenv("IPAM_BYOIP_IPV6_PROVISIONED_CIDR") == "" {
 		t.Skip("Environment variable IPAM_BYOIP_IPV6_MESSAGE, IPAM_BYOIP_IPV6_SIGNATURE, or IPAM_BYOIP_IPV6_PROVISIONED_CIDR is not set")
 	}

@@ -52,12 +52,10 @@ func ResourceVPCIpamScope() *schema.Resource {
 			"is_default": {
 				Type:     schema.TypeBool,
 				Computed: true,
-				ForceNew: true,
 			},
 			"pool_count": {
 				Type:     schema.TypeInt,
 				Computed: true,
-				ForceNew: true,
 			},
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),

@@ -12,9 +12,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
-
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceVPCIpamPoolCidr() *schema.Resource {
@@ -59,11 +58,6 @@ func ResourceVPCIpamPoolCidr() *schema.Resource {
 			"ipam_pool_id": {
 				Type:     schema.TypeString,
 				Required: true,
-				ForceNew: true,
-			},
-			"state": {
-				Type:     schema.TypeString,
-				Computed: true,
 				ForceNew: true,
 			},
 		},
@@ -134,8 +128,6 @@ func resourceVPCIpamPoolCidrRead(d *schema.ResourceData, meta interface{}) error
 	d.Set("cidr", cidr.Cidr)
 	// pool id is not returned in describe, adding from concatenated id
 	d.Set("ipam_pool_id", pool_id)
-	d.Set("state", cidr.State)
-	// d.Set("ipam_pool_id", cidr.IpamPoolId)
 
 	return nil
 }

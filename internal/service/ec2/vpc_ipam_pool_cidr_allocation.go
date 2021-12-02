@@ -59,17 +59,14 @@ func ResourceVPCIpamPoolCidrAllocation() *schema.Resource {
 			"resource_id": {
 				Type:     schema.TypeString,
 				Computed: true,
-				ForceNew: true,
 			},
 			"resource_owner": {
 				Type:     schema.TypeString,
 				Computed: true,
-				ForceNew: true,
 			},
 			"resource_type": {
 				Type:     schema.TypeString,
 				Computed: true,
-				ForceNew: true,
 			},
 		},
 	}

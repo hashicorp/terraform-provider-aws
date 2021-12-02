@@ -8,12 +8,12 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func TestAccVPCIpam_basic(t *testing.T) {
@@ -28,7 +28,7 @@ func TestAccVPCIpam_basic(t *testing.T) {
 			{
 				Config: testAccVPCIpamBase,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestMatchResourceAttr(resourceName, "arn", regexp.MustCompile(`ipam/ipam-[\da-f]+$`)),
+					acctest.MatchResourceAttrGlobalARN(resourceName, "arn", "ec2", regexp.MustCompile(`ipam/ipam-[\da-f]+$`)),
 					resource.TestCheckResourceAttr(resourceName, "operating_regions.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "scope_count", "2"),
 					resource.TestMatchResourceAttr(resourceName, "private_default_scope_id", regexp.MustCompile(`^ipam-scope-[\da-f]+`)),
@@ -46,13 +46,17 @@ func TestAccVPCIpam_basic(t *testing.T) {
 }
 
 func TestAccVPCIpam_modifyRegion(t *testing.T) {
+	var providers []*schema.Provider
 	resourceName := "aws_vpc_ipam.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckVPCIpamDestroy,
+		PreCheck: func() {
+			acctest.PreCheck(t)
+			acctest.PreCheckMultipleRegion(t, 2)
+		},
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.FactoriesMultipleRegion(&providers, 2),
+		CheckDestroy:      testAccCheckVPCIpamDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCIpamBase,
@@ -66,7 +70,7 @@ func TestAccVPCIpam_modifyRegion(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccVPCIpamOperatingRegion,
+				Config: testAccVPCIpamOperatingRegion(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "description", "test ipam"),
 				),
@@ -153,17 +157,27 @@ resource "aws_vpc_ipam" "test" {
 }
 `
 
-const testAccVPCIpamOperatingRegion = `
+func testAccVPCIpamOperatingRegion() string {
+	return acctest.ConfigCompose(
+		acctest.ConfigMultipleRegionProvider(2), `
+data "aws_region" "current" {}
+
+data "aws_region" "alternate" {
+  provider = awsalternate
+}
+
+
 resource "aws_vpc_ipam" "test" {
 	description = "test ipam"
 	operating_regions {
-	  region_name = "us-east-1"
+	  region_name = data.aws_region.current.name
 	}
 	operating_regions {
-	  region_name = "us-west-2"
+	  region_name = data.aws_region.alternate.name
 	}
 }
-`
+`)
+}
 
 func testAccVPCIpamTagsConfig(tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`

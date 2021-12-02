@@ -6,12 +6,11 @@ import (
 
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func TestAccVPCIpamPoolCidr_ipv4Basic(t *testing.T) {
@@ -31,7 +30,6 @@ func TestAccVPCIpamPoolCidr_ipv4Basic(t *testing.T) {
 					testAccCheckVPCIpamCidrExists(resourceName, &cidr),
 					resource.TestCheckResourceAttr(resourceName, "cidr", cidr_range),
 					resource.TestCheckResourceAttrPair(resourceName, "ipam_pool_id", "aws_vpc_ipam_pool.test", "id"),
-					resource.TestCheckResourceAttr(resourceName, "state", "provisioned"),
 				),
 			},
 			{
