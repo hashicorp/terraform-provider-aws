@@ -618,7 +618,7 @@ data "aws_iam_policy_document" "test" {
         aws_iam_role.test4.arn,
         aws_iam_role.test1.arn,
         aws_iam_role.test5.arn,
-		data.aws_caller_identity.current.arn,
+        data.aws_caller_identity.current.arn,
       ]
       type = "AWS"
     }
