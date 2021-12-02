@@ -332,6 +332,7 @@ func TestAccDynamoDBTable_basic(t *testing.T) {
 						"type": "S",
 					}),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "table_class", "STANDARD"),
 				),
 			},
 			{
@@ -1406,6 +1407,33 @@ func TestAccDynamoDBTable_Replica_singleWithCMK(t *testing.T) {
 	})
 }
 
+func TestAccDynamoDBTable_tableClassInfrequentAccess(t *testing.T) {
+	var table dynamodb.DescribeTableOutput
+	resourceName := "aws_dynamodb_table.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, dynamodb.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckTableDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTableClassConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInitialTableExists(resourceName, &table),
+					resource.TestCheckResourceAttr(resourceName, "table_class", "STANDARD_INFREQUENT_ACCESS"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccCheckTableDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).DynamoDBConn
 
@@ -2448,4 +2476,21 @@ resource "aws_dynamodb_table" "test" {
   }
 }
 `, rName, lsiName)
+}
+
+func testAccTableClassConfig(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_dynamodb_table" "test" {
+  hash_key       = "TestTableHashKey"
+  name           = %[1]q
+  read_capacity  = 1
+  write_capacity = 1
+  table_class    = "STANDARD_INFREQUENT_ACCESS"
+
+  attribute {
+    name = "TestTableHashKey"
+    type = "S"
+  }
+}
+`, rName)
 }

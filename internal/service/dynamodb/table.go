@@ -11,7 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
-	multierror "github.com/hashicorp/go-multierror"
+	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -318,6 +318,12 @@ func ResourceTable() *schema.Resource {
 				Type:     schema.TypeInt,
 				Optional: true,
 			},
+			"table_class": {
+				Type:         schema.TypeString,
+				Optional:     false,
+				Default:      dynamodb.TableClassStandard,
+				ValidateFunc: validation.StringInSlice(dynamodb.TableClass_Values(), false),
+			},
 		},
 	}
 }
@@ -341,6 +347,7 @@ func resourceTableCreate(d *schema.ResourceData, meta interface{}) error {
 		BillingMode: aws.String(d.Get("billing_mode").(string)),
 		KeySchema:   expandDynamoDbKeySchema(keySchemaMap),
 		Tags:        Tags(tags.IgnoreAWS()),
+		TableClass:  aws.String(d.Get("table_class").(string)),
 	}
 
 	billingMode := d.Get("billing_mode").(string)
@@ -557,6 +564,8 @@ func resourceTableRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error setting replica: %w", err)
 	}
 
+	d.Set("table_class", table.TableClassSummary.TableClass)
+
 	pitrOut, err := conn.DescribeContinuousBackups(&dynamodb.DescribeContinuousBackupsInput{
 		TableName: aws.String(d.Id()),
 	})
@@ -693,6 +702,10 @@ func resourceTableUpdate(d *schema.ResourceData, meta interface{}) error {
 			hasTableUpdate = true
 			input.GlobalSecondaryIndexUpdates = append(input.GlobalSecondaryIndexUpdates, gsiUpdate)
 		}
+	}
+
+	if d.HasChange("table_class") {
+		input.TableClass = aws.String(d.Get("table_class").(string))
 	}
 
 	if hasTableUpdate {
