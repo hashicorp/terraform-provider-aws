@@ -391,7 +391,7 @@ resource "aws_ecr_repository_policy" "test" {
           aws_iam_role.test2.arn,
           aws_iam_role.test4.arn,
           aws_iam_role.test5.arn,
-		]
+        ]
       }
     }]
     Version = "2012-10-17"
