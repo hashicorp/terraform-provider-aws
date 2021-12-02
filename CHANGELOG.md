@@ -4,6 +4,11 @@ FEATURES:
 
 * **New Resource:** `aws_codecommit_approval_rule_template_association` ([#13467](https://github.com/hashicorp/terraform-provider-aws/issues/13467))
 
+ENHANCEMENTS:
+
+* resource/aws_cloudtrail: Add plan time validations for `cloud_watch_logs_group_arn`, `cloud_watch_logs_role_arn`, `name`, `s3_key_prefix`. ([#21882](https://github.com/hashicorp/terraform-provider-aws/issues/21882))
+* resource/aws_sqs_queue: Add `sqs_managed_sse_enabled` argument ([#21954](https://github.com/hashicorp/terraform-provider-aws/issues/21954))
+
 BUG FIXES:
 
 * resource/aws_ecr_registry_policy: Fix order-related diffs in `policy` ([#22004](https://github.com/hashicorp/terraform-provider-aws/issues/22004))
