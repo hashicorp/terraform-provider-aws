@@ -915,7 +915,14 @@ func resourceBucketRead(d *schema.ResourceData, meta interface{}) error {
 				if err != nil {
 					return fmt.Errorf("policy contains an invalid JSON: %s", err)
 				}
-				d.Set("policy", policy)
+
+				policyToSet, err := verify.SecondJSONUnlessEquivalent(d.Get("policy").(string), policy)
+
+				if err != nil {
+					return fmt.Errorf("while setting policy (%s), encountered: %w", policy, err)
+				}
+
+				d.Set("policy", policyToSet)
 			}
 		}
 	}
