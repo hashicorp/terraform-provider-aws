@@ -320,7 +320,7 @@ func ResourceTable() *schema.Resource {
 			},
 			"table_class": {
 				Type:         schema.TypeString,
-				Optional:     false,
+				Optional:     true,
 				Default:      dynamodb.TableClassStandard,
 				ValidateFunc: validation.StringInSlice(dynamodb.TableClass_Values(), false),
 			},
