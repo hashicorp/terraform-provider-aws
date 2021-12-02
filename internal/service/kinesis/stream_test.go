@@ -528,6 +528,157 @@ func TestAccKinesisStream_updateKMSKeyID(t *testing.T) {
 	})
 }
 
+func TestAccKinesisStream_basicOnDemand(t *testing.T) {
+	var stream kinesis.StreamDescription
+	resourceName := "aws_kinesis_stream.test"
+	rInt := sdkacctest.RandInt()
+	streamName := fmt.Sprintf("terraform-kinesis-test-%d", rInt)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, kinesis.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckKinesisStreamDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccKinesisStreamConfig_basicOnDemand(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKinesisStreamExists(resourceName, &stream),
+					resource.TestCheckResourceAttr(resourceName, "shard_count", "0"),
+					resource.TestCheckResourceAttr(resourceName, "stream_mode", "ON_DEMAND"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateId:           streamName,
+				ImportStateVerifyIgnore: []string{"enforce_consumer_deletion"},
+			},
+		},
+	})
+}
+
+func TestAccKinesisStream_switchBetweenProvisionedAndOnDemand(t *testing.T) {
+	var stream kinesis.StreamDescription
+	resourceName := "aws_kinesis_stream.test"
+	rInt := sdkacctest.RandInt()
+	streamName := fmt.Sprintf("terraform-kinesis-test-%d", rInt)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, kinesis.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckKinesisStreamDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccKinesisStreamConfig_changeProvisionedToOnDemand_1(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKinesisStreamExists(resourceName, &stream),
+					resource.TestCheckResourceAttr(resourceName, "shard_count", "1"),
+					resource.TestCheckResourceAttr(resourceName, "stream_mode", "PROVISIONED"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateId:           streamName,
+				ImportStateVerifyIgnore: []string{"enforce_consumer_deletion"},
+			},
+			{
+				Config: testAccKinesisStreamConfig_changeProvisionedToOnDemand_2(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKinesisStreamExists(resourceName, &stream),
+					resource.TestCheckResourceAttr(resourceName, "shard_count", "0"),
+					resource.TestCheckResourceAttr(resourceName, "stream_mode", "ON_DEMAND"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateId:           streamName,
+				ImportStateVerifyIgnore: []string{"enforce_consumer_deletion"},
+			},
+			{
+				Config: testAccKinesisStreamConfig_changeProvisionedToOnDemand_3(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKinesisStreamExists(resourceName, &stream),
+					resource.TestCheckResourceAttr(resourceName, "shard_count", "2"),
+					resource.TestCheckResourceAttr(resourceName, "stream_mode", "PROVISIONED"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateId:           streamName,
+				ImportStateVerifyIgnore: []string{"enforce_consumer_deletion"},
+			},
+			{
+				Config: testAccKinesisStreamConfig_changeProvisionedToOnDemand_1(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKinesisStreamExists(resourceName, &stream),
+					resource.TestCheckResourceAttr(resourceName, "shard_count", "1"),
+					resource.TestCheckResourceAttr(resourceName, "stream_mode", "PROVISIONED"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateId:           streamName,
+				ImportStateVerifyIgnore: []string{"enforce_consumer_deletion"},
+			},
+		},
+	})
+}
+
+func TestAccKinesisStream_failOnBadStreamCountAndStreamModeCombination(t *testing.T) {
+	var stream kinesis.StreamDescription
+	resourceName := "aws_kinesis_stream.test"
+	rInt := sdkacctest.RandInt()
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, kinesis.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckKinesisStreamDestroy,
+		Steps: []resource.TestStep{
+			// Check that we can't create an invalid combination
+			{
+				Config:      testAccKinesisStreamConfig_failOnBadStreamCountAndStreamModeCombination_nothingSet(rInt),
+				ExpectError: regexp.MustCompile(`shard_count must be at least 1 when stream_mode is PROVISIONED`),
+			},
+			// Check that we can't create an invalid combination
+			{
+				Config:      testAccKinesisStreamConfig_failOnBadStreamCountAndStreamModeCombination_shardCountWhenOnDemand(rInt),
+				ExpectError: regexp.MustCompile(`shard_count must not be set when stream_mode is ON_DEMAND`),
+			},
+			// Prepare for updates...
+			{
+				Config: testAccKinesisStreamConfig_failOnBadStreamCountAndStreamModeCombination(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKinesisStreamExists(resourceName, &stream),
+					resource.TestCheckResourceAttr(resourceName, "shard_count", "1"),
+					resource.TestCheckResourceAttr(resourceName, "stream_mode", "PROVISIONED"),
+				),
+			},
+			// Check that we can't update to an invalid combination
+			{
+				Config:      testAccKinesisStreamConfig_failOnBadStreamCountAndStreamModeCombination_nothingSet(rInt),
+				ExpectError: regexp.MustCompile(`shard_count must be at least 1 when stream_mode is PROVISIONED`),
+			},
+			// Check that we can't update to an invalid combination
+			{
+				Config:      testAccKinesisStreamConfig_failOnBadStreamCountAndStreamModeCombination_shardCountWhenOnDemand(rInt),
+				ExpectError: regexp.MustCompile(`shard_count must not be set when stream_mode is ON_DEMAND`),
+			},
+		},
+	})
+}
+
 func testAccKinesisStreamConfig(rInt int) string {
 	return fmt.Sprintf(`
 resource "aws_kinesis_stream" "test" {
@@ -739,4 +890,68 @@ resource "aws_kinesis_stream" "test" {
   kms_key_id      = aws_kms_key.key[%[2]d].id
 }
 `, rInt, key)
+}
+
+func testAccKinesisStreamConfig_basicOnDemand(rInt int) string {
+	return fmt.Sprintf(`
+resource "aws_kinesis_stream" "test" {
+  name        = "terraform-kinesis-test-%d"
+  stream_mode = "ON_DEMAND"
+}
+`, rInt)
+}
+
+func testAccKinesisStreamConfig_changeProvisionedToOnDemand_1(rInt int) string {
+	return fmt.Sprintf(`
+resource "aws_kinesis_stream" "test" {
+  name        = "terraform-kinesis-test-%d"
+  shard_count = 1
+}
+`, rInt)
+}
+
+func testAccKinesisStreamConfig_changeProvisionedToOnDemand_2(rInt int) string {
+	return fmt.Sprintf(`
+resource "aws_kinesis_stream" "test" {
+  name        = "terraform-kinesis-test-%d"
+  stream_mode = "ON_DEMAND"
+}
+`, rInt)
+}
+
+func testAccKinesisStreamConfig_changeProvisionedToOnDemand_3(rInt int) string {
+	return fmt.Sprintf(`
+resource "aws_kinesis_stream" "test" {
+  name        = "terraform-kinesis-test-%d"
+  shard_count = 2
+  stream_mode = "PROVISIONED"
+}
+`, rInt)
+}
+
+func testAccKinesisStreamConfig_failOnBadStreamCountAndStreamModeCombination_nothingSet(rInt int) string {
+	return fmt.Sprintf(`
+resource "aws_kinesis_stream" "test" {
+  name = "terraform-kinesis-test-%d"
+}
+`, rInt)
+}
+
+func testAccKinesisStreamConfig_failOnBadStreamCountAndStreamModeCombination_shardCountWhenOnDemand(rInt int) string {
+	return fmt.Sprintf(`
+resource "aws_kinesis_stream" "test" {
+  name        = "terraform-kinesis-test-%d"
+  shard_count = 1
+  stream_mode = "ON_DEMAND"
+}
+`, rInt)
+}
+
+func testAccKinesisStreamConfig_failOnBadStreamCountAndStreamModeCombination(rInt int) string {
+	return fmt.Sprintf(`
+resource "aws_kinesis_stream" "test" {
+  name        = "terraform-kinesis-test-%d"
+  shard_count = 1
+}
+`, rInt)
 }

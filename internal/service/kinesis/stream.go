@@ -58,7 +58,7 @@ func ResourceStream() *schema.Resource {
 
 			"shard_count": {
 				Type:     schema.TypeInt,
-				Required: true,
+				Optional: true,
 			},
 
 			"retention_period": {
@@ -99,6 +99,13 @@ func ResourceStream() *schema.Resource {
 				Optional: true,
 			},
 
+			"stream_mode": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Default:      kinesis.StreamModeProvisioned,
+				ValidateFunc: validation.StringInSlice(kinesis.StreamMode_Values(), false),
+			},
+
 			"arn": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -119,9 +126,22 @@ func resourceStreamImport(
 func resourceStreamCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).KinesisConn
 	sn := d.Get("name").(string)
+
+	if err := validateStreamModeAndShardCount(d); err != nil {
+		return err
+	}
+
+	streamMode := d.Get("stream_mode").(string)
+
 	createOpts := &kinesis.CreateStreamInput{
-		ShardCount: aws.Int64(int64(d.Get("shard_count").(int))),
 		StreamName: aws.String(sn),
+		StreamModeDetails: &kinesis.StreamModeDetails{
+			StreamMode: aws.String(streamMode),
+		},
+	}
+
+	if streamMode == kinesis.StreamModeProvisioned {
+		createOpts.ShardCount = aws.Int64(int64(d.Get("shard_count").(int)))
 	}
 
 	_, err := conn.CreateStream(createOpts)
@@ -149,7 +169,9 @@ func resourceStreamCreate(d *schema.ResourceData, meta interface{}) error {
 	s := streamRaw.(*kinesisStreamState)
 	d.SetId(s.arn)
 	d.Set("arn", s.arn)
-	d.Set("shard_count", len(s.openShards))
+	if streamMode == kinesis.StreamModeProvisioned {
+		d.Set("shard_count", len(s.openShards))
+	}
 
 	return resourceStreamUpdate(d, meta)
 }
@@ -166,9 +188,20 @@ func resourceStreamUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	if err := updateKinesisShardCount(conn, d); err != nil {
+	if err := validateStreamModeAndShardCount(d); err != nil {
 		return err
 	}
+
+	if err := updateKinesisStreamMode(conn, d); err != nil {
+		return err
+	}
+
+	if d.Get("stream_mode").(string) == kinesis.StreamModeProvisioned {
+		if err := updateKinesisShardCount(conn, d); err != nil {
+			return err
+		}
+	}
+
 	if err := setKinesisRetentionPeriod(conn, d); err != nil {
 		return err
 	}
@@ -204,11 +237,16 @@ func resourceStreamRead(d *schema.ResourceData, meta interface{}) error {
 	}
 	d.SetId(state.arn)
 	d.Set("arn", state.arn)
-	d.Set("shard_count", len(state.openShards))
+	if state.streamMode == kinesis.StreamModeProvisioned {
+		d.Set("shard_count", len(state.openShards))
+	} else {
+		d.Set("shard_count", nil)
+	}
 	d.Set("retention_period", state.retentionPeriod)
 
 	d.Set("encryption_type", state.encryptionType)
 	d.Set("kms_key_id", state.keyId)
+	d.Set("stream_mode", state.streamMode)
 
 	if len(state.shardLevelMetrics) > 0 {
 		d.Set("shard_level_metrics", state.shardLevelMetrics)
@@ -322,6 +360,32 @@ func updateKinesisShardCount(conn *kinesis.Kinesis, d *schema.ResourceData) erro
 		StreamName:       aws.String(sn),
 		TargetShardCount: aws.Int64(int64(n)),
 		ScalingType:      aws.String("UNIFORM_SCALING"),
+	})
+	if err != nil {
+		return err
+	}
+
+	if err := WaitForToBeActive(conn, d.Timeout(schema.TimeoutUpdate), sn); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func updateKinesisStreamMode(conn *kinesis.Kinesis, d *schema.ResourceData) error {
+	sn := d.Get("name").(string)
+	arn := d.Get("arn").(string)
+
+	prev, next := d.GetChange("stream_mode")
+	if prev == next {
+		return nil
+	}
+
+	_, err := conn.UpdateStreamMode(&kinesis.UpdateStreamModeInput{
+		StreamARN: aws.String(arn),
+		StreamModeDetails: &kinesis.StreamModeDetails{
+			StreamMode: aws.String(next.(string)),
+		},
 	})
 	if err != nil {
 		return err
@@ -456,6 +520,7 @@ type kinesisStreamState struct {
 	shardLevelMetrics []string
 	encryptionType    string
 	keyId             string
+	streamMode        string
 }
 
 func readKinesisStreamState(conn *kinesis.Kinesis, sn string) (*kinesisStreamState, error) {
@@ -479,6 +544,9 @@ func readKinesisStreamState(conn *kinesis.Kinesis, sn string) (*kinesisStreamSta
 			state.encryptionType = kinesis.EncryptionTypeNone
 		}
 		state.keyId = aws.StringValue(page.StreamDescription.KeyId)
+		if details := page.StreamDescription.StreamModeDetails; details != nil {
+			state.streamMode = aws.StringValue(details.StreamMode)
+		}
 		return !lastPage
 	})
 	return state, err
@@ -539,4 +607,24 @@ func FlattenShards(shards []*kinesis.Shard) []string {
 		res[i] = aws.StringValue(s.ShardId)
 	}
 	return res
+}
+
+func validateStreamModeAndShardCount(d *schema.ResourceData) error {
+	streamMode := d.Get("stream_mode").(string)
+	shardCount := d.Get("shard_count").(int)
+
+	switch streamMode {
+	case kinesis.StreamModeOnDemand:
+		if shardCount > 0 {
+			return fmt.Errorf("shard_count must not be set when stream_mode is %s", streamMode)
+		}
+	case kinesis.StreamModeProvisioned:
+		if shardCount < 1 {
+			return fmt.Errorf("shard_count must be at least 1 when stream_mode is %s", streamMode)
+		}
+	default:
+		return fmt.Errorf("unknown stream mode %s", streamMode)
+	}
+
+	return nil
 }
