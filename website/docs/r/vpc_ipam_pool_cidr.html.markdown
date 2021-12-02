@@ -19,20 +19,20 @@ Basic usage:
 ```terraform
 data "aws_region" "current" {}
 
-resource "aws_vpc_ipam" "test" {
+resource "aws_vpc_ipam" "example" {
   operating_regions {
     region_name = data.aws_region.current.name
   }
 }
 
-resource "aws_vpc_ipam_pool" "test" {
+resource "aws_vpc_ipam_pool" "example" {
   address_family = "ipv4"
-  ipam_scope_id  = aws_vpc_ipam.test.private_default_scope_id
+  ipam_scope_id  = aws_vpc_ipam.example.private_default_scope_id
   locale         = data.aws_region.current.name
 }
 
-resource "aws_vpc_ipam_pool_cidr" "test" {
-  ipam_pool_id = aws_vpc_ipam_pool.test.id
+resource "aws_vpc_ipam_pool_cidr" "example" {
+  ipam_pool_id = aws_vpc_ipam_pool.example.id
   cidr         = "172.2.0.0/16"
 }
 ```
@@ -42,7 +42,7 @@ Provision Public IPv6 Pool CIDRs:
 ```terraform
 data "aws_region" "current" {}
 
-resource "aws_vpc_ipam" "test" {
+resource "aws_vpc_ipam" "example" {
   operating_regions {
     region_name = data.aws_region.current.name
   }
@@ -50,7 +50,7 @@ resource "aws_vpc_ipam" "test" {
 
 resource "aws_vpc_ipam_pool" "ipv6_test_public" {
   address_family = "ipv6"
-  ipam_scope_id  = aws_vpc_ipam.test.public_default_scope_id
+  ipam_scope_id  = aws_vpc_ipam.example.public_default_scope_id
   locale         = "us-east-1"
   description    = "public ipv6"
   advertisable   = false
@@ -87,8 +87,8 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-IPAMs can be imported using the `cidr_ipam-pool-id`, e.g.
+IPAMs can be imported using the `<cidr>_<ipam-pool-id>`, e.g.
 
 ```
-$ terraform import aws_vpc_ipam_pool_cidr.test 172.2.0.0/24_ipam-pool-0e634f5a1517cccdc
+$ terraform import aws_vpc_ipam_pool_cidr.example 172.2.0.0/24_ipam-pool-0e634f5a1517cccdc
 ```

@@ -17,14 +17,14 @@ Basic usage:
 ```terraform
 data "aws_region" "current" {}
 
-resource "aws_vpc_ipam" "test" {
+resource "aws_vpc_ipam" "example" {
   operating_regions {
     region_name = data.aws_region.current.name
   }
 }
 
-resource "aws_vpc_ipam_scope" "test" {
-  ipam_id     = aws_vpc_ipam.test.id
+resource "aws_vpc_ipam_scope" "example" {
+  ipam_id     = aws_vpc_ipam.example.id
   description = "Another Scope"
 }
 ```
@@ -50,5 +50,5 @@ In addition to all arguments above, the following attributes are exported:
 IPAMs can be imported using the `scope_id`, e.g.
 
 ```
-$ terraform import aws_vpc_ipam_scope.test ipam-scope-0513c69f283d11dfb
+$ terraform import aws_vpc_ipam_scope.example ipam-scope-0513c69f283d11dfb
 ```

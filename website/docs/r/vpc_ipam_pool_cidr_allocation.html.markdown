@@ -1,12 +1,12 @@
 ---
 subcategory: "VPC"
 layout: "aws"
-page_title: "AWS: aws_vpc_ipam_pool_allocation"
+page_title: "AWS: aws_vpc_ipam_pool_cidr_allocation"
 description: |-
   Allocates (reserves) a CIDR from an IPAM address pool, preventing usage by IPAM.
 ---
 
-# Resource: aws_vpc_ipam_pool_allocation
+# Resource: aws_vpc_ipam_pool_cidr_allocation
 
 Allocates (reserves) a CIDR from an IPAM address pool, preventing usage by IPAM. Only works for private IPv4.
 
@@ -15,9 +15,31 @@ Allocates (reserves) a CIDR from an IPAM address pool, preventing usage by IPAM.
 Basic usage:
 
 ```terraform
-resource "aws_vpc_ipam_pool_cidr" "test" {
-  ipam_pool_id = aws_vpc_ipam_pool.test.id
+data "aws_region" "current" {}
+
+resource "aws_vpc_ipam_pool_cidr_allocation" "example" {
+  ipam_pool_id = aws_vpc_ipam_pool.example.id
+  cidr         = "172.2.0.0/24"
+  depends_on = [
+    aws_vpc_ipam_pool_cidr.example
+  ]
+}
+
+resource "aws_vpc_ipam_pool_cidr" "example" {
+  ipam_pool_id = aws_vpc_ipam_pool.example.id
   cidr         = "172.2.0.0/16"
+}
+
+resource "aws_vpc_ipam_pool" "example" {
+  address_family = "ipv4"
+  ipam_scope_id  = aws_vpc_ipam.example.private_default_scope_id
+  locale         = data.aws_region.current.name
+}
+
+resource "aws_vpc_ipam" "example" {
+  operating_regions {
+    region_name = data.aws_region.current.name
+  }
 }
 ```
 
@@ -44,5 +66,5 @@ In addition to all arguments above, the following attributes are exported:
 IPAMs can be imported using the `allocation id`, e.g.
 
 ```
-$ terraform import aws_vpc_ipam_pool_allocation.test
+$ terraform import aws_vpc_ipam_pool_cidr_allocation.example
 ```

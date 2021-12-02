@@ -37,7 +37,7 @@ variable "ipam_regions" {
   default = ["us-east-1", "us-west-2"]
 }
 
-resource "aws_vpc_ipam" "test" {
+resource "aws_vpc_ipam" "example" {
   description = "test4"
   dynamic operating_regions {
     for_each = var.ipam_regions
@@ -78,5 +78,5 @@ IP space. The public scope is intended for all internet-routable IP space.
 IPAMs can be imported using the `ipam id`, e.g.
 
 ```
-$ terraform import aws_vpc_ipam.test ipam-0178368ad2146a492
+$ terraform import aws_vpc_ipam.example ipam-0178368ad2146a492
 ```

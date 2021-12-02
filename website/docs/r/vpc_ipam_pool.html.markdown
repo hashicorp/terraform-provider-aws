@@ -17,15 +17,15 @@ Basic usage:
 ```terraform
 data "aws_region" "current" {}
 
-resource "aws_vpc_ipam" "test" {
+resource "aws_vpc_ipam" "example" {
   operating_regions {
     region_name = data.aws_region.current.name
   }
 }
 
-resource "aws_vpc_ipam_pool" "test" {
+resource "aws_vpc_ipam_pool" "example" {
   address_family = "ipv4"
-  ipam_scope_id  = aws_vpc_ipam.test.private_default_scope_id
+  ipam_scope_id  = aws_vpc_ipam.example.private_default_scope_id
   locale         = data.aws_region.current.name
 }
 ```
@@ -35,7 +35,7 @@ Nested Pools:
 ```terraform
 data "aws_region" "current" {}
 
-resource "aws_vpc_ipam" "test" {
+resource "aws_vpc_ipam" "example" {
   operating_regions {
     region_name = data.aws_region.current.name
   }
@@ -43,7 +43,7 @@ resource "aws_vpc_ipam" "test" {
 
 resource "aws_vpc_ipam_pool" "parent" {
   address_family = "ipv4"
-  ipam_scope_id  = aws_vpc_ipam.test.private_default_scope_id
+  ipam_scope_id  = aws_vpc_ipam.example.private_default_scope_id
 }
 
 resource "aws_vpc_ipam_pool_cidr" "parent_test" {
@@ -53,7 +53,7 @@ resource "aws_vpc_ipam_pool_cidr" "parent_test" {
 
 resource "aws_vpc_ipam_pool" "child" {
   address_family      = "ipv4"
-  ipam_scope_id       = aws_vpc_ipam.test.private_default_scope_id
+  ipam_scope_id       = aws_vpc_ipam.example.private_default_scope_id
   locale              = data.aws_region.current.name
   source_ipam_pool_id = aws_vpc_ipam_pool.parent.id
 }
@@ -99,5 +99,5 @@ In addition to all arguments above, the following attributes are exported:
 IPAMs can be imported using the `ipam pool id`, e.g.
 
 ```
-$ terraform import aws_vpc_ipam_pool.test ipam-pool-0958f95207d978e1e
+$ terraform import aws_vpc_ipam_pool.example ipam-pool-0958f95207d978e1e
 ```
