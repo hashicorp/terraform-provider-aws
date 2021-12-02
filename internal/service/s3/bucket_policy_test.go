@@ -483,7 +483,7 @@ resource "aws_s3_bucket_policy" "bucket" {
       ]
     }]
     Version = "2012-10-17"
-  })  
+  })
 }
 `, rName))
 }
@@ -520,7 +520,7 @@ resource "aws_s3_bucket_policy" "bucket" {
       ]
     }]
     Version = "2012-10-17"
-  })  
+  })
 }
 `, rName))
 }
@@ -557,7 +557,7 @@ resource "aws_s3_bucket_policy" "bucket" {
       ]
     }]
     Version = "2012-10-17"
-  })  
+  })
 }
 `, rName))
 }
