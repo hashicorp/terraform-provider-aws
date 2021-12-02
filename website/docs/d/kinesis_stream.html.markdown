@@ -38,6 +38,7 @@ are exported:
 * `open_shards` - The list of shard ids in the OPEN state. See [Shard State][2] for more.
 * `closed_shards` - The list of shard ids in the CLOSED state. See [Shard State][2] for more.
 * `shard_level_metrics` - A list of shard-level CloudWatch metrics which are enabled for the stream. See [Monitoring with CloudWatch][3] for more.
+* `stream_mode` - The capacity mode of the stream. Either `ON_DEMAND` or `PROVISIONED`.
 * `tags` - A map of tags to assigned to the stream.
 
 [1]: https://aws.amazon.com/documentation/kinesis/
