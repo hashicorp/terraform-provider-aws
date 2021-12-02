@@ -285,10 +285,6 @@ resource "aws_ecr_repository_policy" "test" {
 
 func testAccRepositoryPolicyIAMRoleOrderBaseConfig(rName string) string {
 	return fmt.Sprintf(`
-data "aws_caller_identity" "current" {}
-
-data "aws_region" "current" {}
-
 data "aws_partition" "current" {}
 
 resource "aws_iam_role" "test1" {
