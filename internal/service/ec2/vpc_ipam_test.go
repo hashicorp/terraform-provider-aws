@@ -150,10 +150,10 @@ const testAccVPCIpamBase = `
 data "aws_region" "current" {}
 
 resource "aws_vpc_ipam" "test" {
-	description = "test"
-	operating_regions {
-	  region_name = data.aws_region.current.name
-	}
+  description = "test"
+  operating_regions {
+    region_name = data.aws_region.current.name
+  }
 }
 `
 
@@ -168,13 +168,13 @@ data "aws_region" "alternate" {
 
 
 resource "aws_vpc_ipam" "test" {
-	description = "test ipam"
-	operating_regions {
-	  region_name = data.aws_region.current.name
-	}
-	operating_regions {
-	  region_name = data.aws_region.alternate.name
-	}
+  description = "test ipam"
+  operating_regions {
+    region_name = data.aws_region.current.name
+  }
+  operating_regions {
+    region_name = data.aws_region.alternate.name
+  }
 }
 `)
 }
@@ -184,30 +184,30 @@ func testAccVPCIpamTagsConfig(tagKey1, tagValue1 string) string {
 data "aws_region" "current" {}
 
 resource "aws_vpc_ipam" "test" {
-	description = "test"
-	operating_regions {
-	  region_name = data.aws_region.current.name
-	}
-	tags = {
-		%[1]q = %[2]q
-	  }
+  description = "test"
+  operating_regions {
+    region_name = data.aws_region.current.name
+  }
+  tags = {
+    %[1]q = %[2]q
+  }
 }
 `, tagKey1, tagValue1)
 }
 
 func testAccVPCIpamTags2Config(tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
-	data "aws_region" "current" {}
+data "aws_region" "current" {}
 
-	resource "aws_vpc_ipam" "test" {
-		description = "test"
-		operating_regions {
-		  region_name = data.aws_region.current.name
-		}
-		tags = {
-			%[1]q = %[2]q
-			%[3]q = %[4]q
-		  }
-	}
+resource "aws_vpc_ipam" "test" {
+  description = "test"
+  operating_regions {
+    region_name = data.aws_region.current.name
+  }
+  tags = {
+    %[1]q = %[2]q
+    %[3]q = %[4]q
+  }
+}
 	`, tagKey1, tagValue1, tagKey2, tagValue2)
 }

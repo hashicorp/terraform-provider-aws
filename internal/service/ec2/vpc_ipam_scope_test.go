@@ -116,18 +116,18 @@ const testAccVPCIpamScopeBase = `
 data "aws_region" "current" {}
 
 resource "aws_vpc_ipam" "test" {
-	description = "test"
-	operating_regions {
-	  region_name = data.aws_region.current.name
-	}
+  description = "test"
+  operating_regions {
+    region_name = data.aws_region.current.name
+  }
 }
 `
 
 func testAccVPCIpamScope(desc string) string {
 	return testAccVPCIpamScopeBase + fmt.Sprintf(`
 resource "aws_vpc_ipam_scope" "test" {
-	ipam_id    =  aws_vpc_ipam.test.id
-	description = %[1]q
+  ipam_id     = aws_vpc_ipam.test.id
+  description = %[1]q
 }
 `, desc)
 }
@@ -135,10 +135,10 @@ resource "aws_vpc_ipam_scope" "test" {
 func testAccVPCIpamScopeTagsConfig(tagKey1, tagValue1 string) string {
 	return testAccVPCIpamScopeBase + fmt.Sprintf(`
 resource "aws_vpc_ipam_scope" "test" {
-	ipam_id    =  aws_vpc_ipam.test.id
-	tags = {
-		%[1]q = %[2]q
-	  }
+  ipam_id = aws_vpc_ipam.test.id
+  tags = {
+    %[1]q = %[2]q
+  }
 }
 `, tagKey1, tagValue1)
 }
@@ -146,12 +146,13 @@ resource "aws_vpc_ipam_scope" "test" {
 func testAccVPCIpamScopeTags2Config(tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return testAccVPCIpamScopeBase + fmt.Sprintf(`
 
+
 resource "aws_vpc_ipam_scope" "test" {
-	ipam_id    =  aws_vpc_ipam.test.id
-	tags = {
-		%[1]q = %[2]q
-		%[3]q = %[4]q
-	}
+  ipam_id = aws_vpc_ipam.test.id
+  tags = {
+    %[1]q = %[2]q
+    %[3]q = %[4]q
+  }
 }
 	`, tagKey1, tagValue1, tagKey2, tagValue2)
 }

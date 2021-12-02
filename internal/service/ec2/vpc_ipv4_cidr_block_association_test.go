@@ -209,20 +209,20 @@ resource "aws_vpc_ipv4_cidr_block_association" "tertiary_cidr" {
 func testAccVPCIPv4CIDRBlockAssociationIpam(netmaskLength string) string {
 	return testAccVpcIpamBase + fmt.Sprintf(`
 resource "aws_vpc" "test" {
-	cidr_block = "10.0.0.0/16"
+  cidr_block = "10.0.0.0/16"
 
-	tags = {
-		Name = "terraform-testacc-vpc-ipv4-cidr-block-association"
-	}
+  tags = {
+    Name = "terraform-testacc-vpc-ipv4-cidr-block-association"
+  }
 }
 
 resource "aws_vpc_ipv4_cidr_block_association" "secondary_cidr" {
-	ipv4_ipam_pool_id   = aws_vpc_ipam_pool.test.id
-	ipv4_netmask_length = %[1]q
-	vpc_id              = aws_vpc.test.id
-	depends_on        = [
-		aws_vpc_ipam_pool_cidr.test
-	]
+  ipv4_ipam_pool_id   = aws_vpc_ipam_pool.test.id
+  ipv4_netmask_length = %[1]q
+  vpc_id              = aws_vpc.test.id
+  depends_on = [
+    aws_vpc_ipam_pool_cidr.test
+  ]
 }
 `, netmaskLength)
 }
@@ -230,20 +230,20 @@ resource "aws_vpc_ipv4_cidr_block_association" "secondary_cidr" {
 func testAccVPCIPv4CIDRBlockAssociationIpamExplicitCIDR(cidr string) string {
 	return testAccVpcIpamBase + fmt.Sprintf(`
 resource "aws_vpc" "test" {
-	cidr_block = "10.0.0.0/16"
+  cidr_block = "10.0.0.0/16"
 
-	tags = {
-		Name = "terraform-testacc-vpc-ipv4-cidr-block-association"
-	}
+  tags = {
+    Name = "terraform-testacc-vpc-ipv4-cidr-block-association"
+  }
 }
 
 resource "aws_vpc_ipv4_cidr_block_association" "secondary_cidr" {
-	ipv4_ipam_pool_id = aws_vpc_ipam_pool.test.id
-	cidr_block        = %[1]q
-	vpc_id            = aws_vpc.test.id
-	depends_on        = [
-		aws_vpc_ipam_pool_cidr.test
-	]
+  ipv4_ipam_pool_id = aws_vpc_ipam_pool.test.id
+  cidr_block        = %[1]q
+  vpc_id            = aws_vpc.test.id
+  depends_on = [
+    aws_vpc_ipam_pool_cidr.test
+  ]
 }
 `, cidr)
 }

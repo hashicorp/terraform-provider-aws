@@ -170,53 +170,53 @@ const testAccVPCIpamPoolBase = `
 data "aws_region" "current" {}
 
 resource "aws_vpc_ipam" "test" {
-	description = "test"
-	operating_regions {
-	  region_name = data.aws_region.current.name
-	}
+  description = "test"
+  operating_regions {
+    region_name = data.aws_region.current.name
+  }
 }
 `
 
 const testAccVPCIpamPool = testAccVPCIpamPoolBase + `
 resource "aws_vpc_ipam_pool" "test" {
-    address_family = "ipv4"
-    ipam_scope_id  = aws_vpc_ipam.test.private_default_scope_id
+  address_family = "ipv4"
+  ipam_scope_id  = aws_vpc_ipam.test.private_default_scope_id
 }
 `
 
 const testAccVPCIpamPoolUpdates = testAccVPCIpamPoolBase + `
 resource "aws_vpc_ipam_pool" "test" {
-    address_family = "ipv4"
-    ipam_scope_id  = aws_vpc_ipam.test.private_default_scope_id
-	auto_import    = true
-	allocation_default_netmask_length = 32
-	allocation_max_netmask_length     = 32
-	allocation_min_netmask_length     = 32
-	allocation_resource_tags          = {
-		test = "1"
-	}
-	description                       = "test"
+  address_family                    = "ipv4"
+  ipam_scope_id                     = aws_vpc_ipam.test.private_default_scope_id
+  auto_import                       = true
+  allocation_default_netmask_length = 32
+  allocation_max_netmask_length     = 32
+  allocation_min_netmask_length     = 32
+  allocation_resource_tags = {
+    test = "1"
+  }
+  description = "test"
 }
 `
 
 const testAccVPCIpamPool_ipv6 = testAccVPCIpamPoolBase + `
 resource "aws_vpc_ipam_pool" "test" {
-	address_family          = "ipv6"
-	ipam_scope_id           =  aws_vpc_ipam.test.public_default_scope_id
-	locale                  = data.aws_region.current.name
-	description             = "ipv6 test"
-	publicly_advertisable   = false
+  address_family        = "ipv6"
+  ipam_scope_id         = aws_vpc_ipam.test.public_default_scope_id
+  locale                = data.aws_region.current.name
+  description           = "ipv6 test"
+  publicly_advertisable = false
 }
 `
 
 func testAccVPCIpamPoolTagsConfig(tagKey1, tagValue1 string) string {
 	return testAccVPCIpamPoolBase + fmt.Sprintf(`
 resource "aws_vpc_ipam_pool" "test" {
-    address_family = "ipv4"
-    ipam_scope_id  = aws_vpc_ipam.test.private_default_scope_id
-	tags = {
-		%[1]q = %[2]q
-	  }
+  address_family = "ipv4"
+  ipam_scope_id  = aws_vpc_ipam.test.private_default_scope_id
+  tags = {
+    %[1]q = %[2]q
+  }
 }
 `, tagKey1, tagValue1)
 }
@@ -224,13 +224,14 @@ resource "aws_vpc_ipam_pool" "test" {
 func testAccVPCIpamPoolTags2Config(tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return testAccVPCIpamPoolBase + fmt.Sprintf(`
 
+
 resource "aws_vpc_ipam_pool" "test" {
-	address_family = "ipv4"
-	ipam_scope_id  = aws_vpc_ipam.test.private_default_scope_id
-	tags = {
-		%[1]q = %[2]q
-		%[3]q = %[4]q
-	}
+  address_family = "ipv4"
+  ipam_scope_id  = aws_vpc_ipam.test.private_default_scope_id
+  tags = {
+    %[1]q = %[2]q
+    %[3]q = %[4]q
+  }
 }
 	`, tagKey1, tagValue1, tagKey2, tagValue2)
 }

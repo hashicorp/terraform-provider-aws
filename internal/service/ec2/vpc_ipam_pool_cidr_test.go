@@ -91,26 +91,26 @@ const testAccVPCIpamPoolCidrBase = `
 data "aws_region" "current" {}
 
 resource "aws_vpc_ipam" "test" {
-	description = "test"
-	operating_regions {
-	  region_name = data.aws_region.current.name
-	}
+  description = "test"
+  operating_regions {
+    region_name = data.aws_region.current.name
+  }
 }
 `
 
 const testAccVPCIpamPoolCidrPrivatePool = `
 resource "aws_vpc_ipam_pool" "test" {
-    address_family = "ipv4"
-    ipam_scope_id  = aws_vpc_ipam.test.private_default_scope_id
-	locale         = data.aws_region.current.name
+  address_family = "ipv4"
+  ipam_scope_id  = aws_vpc_ipam.test.private_default_scope_id
+  locale         = data.aws_region.current.name
 }
 `
 
 func testAccVPCIpamProvisionedPoolCidrIpv4(cidr string) string {
 	return testAccVPCIpamPoolCidrBase + testAccVPCIpamPoolCidrPrivatePool + fmt.Sprintf(`
 resource "aws_vpc_ipam_pool_cidr" "test" {
-	ipam_pool_id = aws_vpc_ipam_pool.test.id
-	cidr         = %[1]q
+  ipam_pool_id = aws_vpc_ipam_pool.test.id
+  cidr         = %[1]q
 }
 `, cidr)
 }

@@ -131,32 +131,32 @@ const testAccVPCIpamPoolCidrPrivateBase = `
 data "aws_region" "current" {}
 
 resource "aws_vpc_ipam" "test" {
-	description = "test"
-	operating_regions {
-	  region_name = data.aws_region.current.name
-	}
+  description = "test"
+  operating_regions {
+    region_name = data.aws_region.current.name
+  }
 }
 
 resource "aws_vpc_ipam_pool" "test" {
-    address_family = "ipv4"
-    ipam_scope_id  = aws_vpc_ipam.test.private_default_scope_id
-	locale         = data.aws_region.current.name
+  address_family = "ipv4"
+  ipam_scope_id  = aws_vpc_ipam.test.private_default_scope_id
+  locale         = data.aws_region.current.name
 }
 
 resource "aws_vpc_ipam_pool_cidr" "test" {
-	ipam_pool_id = aws_vpc_ipam_pool.test.id
-	cidr         = "172.2.0.0/24"
+  ipam_pool_id = aws_vpc_ipam_pool.test.id
+  cidr         = "172.2.0.0/24"
 }
 `
 
 func testAccVPCIpamPoolAllocationIpv4(cidr string) string {
 	return testAccVPCIpamPoolCidrPrivateBase + fmt.Sprintf(`
 resource "aws_vpc_ipam_pool_cidr_allocation" "test" {
-	ipam_pool_id = aws_vpc_ipam_pool.test.id
-	cidr         = %[1]q
-	depends_on   = [
-		aws_vpc_ipam_pool_cidr.test
-	]
+  ipam_pool_id = aws_vpc_ipam_pool.test.id
+  cidr         = %[1]q
+  depends_on = [
+    aws_vpc_ipam_pool_cidr.test
+  ]
 }
 `, cidr)
 }
@@ -164,11 +164,11 @@ resource "aws_vpc_ipam_pool_cidr_allocation" "test" {
 func testAccVPCIpamPoolAllocationIpv4Netmask(netmask string) string {
 	return testAccVPCIpamPoolCidrPrivateBase + fmt.Sprintf(`
 resource "aws_vpc_ipam_pool_cidr_allocation" "test" {
-	ipam_pool_id   = aws_vpc_ipam_pool.test.id
-	netmask_length = %[1]q
-	depends_on     = [
-		aws_vpc_ipam_pool_cidr.test
-	]
+  ipam_pool_id   = aws_vpc_ipam_pool.test.id
+  netmask_length = %[1]q
+  depends_on = [
+    aws_vpc_ipam_pool_cidr.test
+  ]
 }
 `, netmask)
 }

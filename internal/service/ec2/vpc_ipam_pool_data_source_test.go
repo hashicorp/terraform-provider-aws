@@ -53,19 +53,19 @@ func testAccCheckDataSourceVPCIpamPoolID(n string) resource.TestCheckFunc {
 
 const testAccVPCIpamPoolOptions = testAccVPCIpamPoolBase + `
 resource "aws_vpc_ipam_pool" "test" {
-    address_family                    = "ipv4"
-    ipam_scope_id                      = aws_vpc_ipam.test.private_default_scope_id
-	auto_import                       = true
-	allocation_default_netmask_length = 32
-	allocation_max_netmask_length     = 32
-	allocation_min_netmask_length     = 32
-	allocation_resource_tags          = {
-		test = "1"
-	}
-	description                       = "test"
+  address_family                    = "ipv4"
+  ipam_scope_id                     = aws_vpc_ipam.test.private_default_scope_id
+  auto_import                       = true
+  allocation_default_netmask_length = 32
+  allocation_max_netmask_length     = 32
+  allocation_min_netmask_length     = 32
+  allocation_resource_tags = {
+    test = "1"
+  }
+  description = "test"
 }
 
 data "aws_vpc_ipam_pool" "test" {
-	depends_on = [aws_vpc_ipam_pool.test]
+  depends_on = [aws_vpc_ipam_pool.test]
 }
 `
