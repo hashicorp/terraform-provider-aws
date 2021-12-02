@@ -34,6 +34,7 @@ func TestAccKinesisStream_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisStreamExists(resourceName, &stream),
 					testAccCheckStreamAttributes(&stream),
+					resource.TestCheckResourceAttr(resourceName, "stream_mode", "PROVISIONED"),
 				),
 			},
 			{
