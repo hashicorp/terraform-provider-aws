@@ -33,6 +33,7 @@ func TestAccCognitoUser_basic(t *testing.T) {
 					testAccCheckUserExists(resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "creation_date"),
 					resource.TestCheckResourceAttrSet(resourceName, "last_modified_date"),
+					resource.TestCheckResourceAttrSet(resourceName, "sub"),
 					resource.TestCheckResourceAttr(resourceName, "enabled", "true"),
 					resource.TestCheckResourceAttr(resourceName, "status", cognitoidentityprovider.UserStatusTypeForceChangePassword),
 					resource.TestCheckResourceAttr(resourceName, "mfa_preference.0.sms_enabled", "false"),
@@ -44,6 +45,14 @@ func TestAccCognitoUser_basic(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"temporary_password",
+					"password",
+					"client_metadata",
+					"validation_data",
+					"desired_delivery_mediums",
+					"message_action",
+				},
 			},
 		},
 	})
