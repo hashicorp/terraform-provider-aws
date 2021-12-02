@@ -37,6 +37,7 @@ func TestAccDynamoDBTableDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(datasourceName, "billing_mode", "PROVISIONED"),
 					resource.TestCheckResourceAttr(datasourceName, "point_in_time_recovery.#", "1"),
 					resource.TestCheckResourceAttr(datasourceName, "point_in_time_recovery.0.enabled", "false"),
+					resource.TestCheckResourceAttr(datasourceName, "table_class", "STANDARD"),
 				),
 			},
 		},
