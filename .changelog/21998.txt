@@ -1,27 +1,35 @@
 ```release-note:new-resource
 aws_vpc_ipam
 ```
+
 ```release-note:new-resource
 aws_vpc_ipam_pool
 ```
+
 ```release-note:new-resource
 aws_vpc_ipam_scope
 ```
+
 ```release-note:new-resource
 aws_vpc_ipam_pool_cidr
 ```
+
 ```release-note:new-resource
 aws_vpc_ipam_pool_cidr_allocation
 ```
+
 ```release-note:new-resource
 vpc_ipv6_cidr_block_association
 ```
+
 ```release-note:new-data-source
 aws_vpc_pool_data_source
 ```
+
 ```release-note:enhancement
-resource/aws_vpc: `cidr_block` value can now either be set explicitly or computed computed via AWS IPAM. When set explicitly, the request proceeds as before. To be computed, config uses IPAM to generate by passing `ipv{4,6}_ipam_pool_id` if the `aws_vpc_ipam_pool` has `allocation_default_netmask_length` set or by specifying both `ipv{4,6}_ipam_pool_id` & `ipv{4,6}_netmask_length` which the vpc backend calls will use to request a cidr that matches the netmask length from the specified ipam pool.
+resource/aws_vpc: `cidr_block` value can now either be set explicitly or computed via AWS IPAM
 ```
+
 ```release-note:enhancement
-resource/vpc_ipv4_cidr_block_association: `cidr_block` value can now either be set explicitly or computed via AWS IPAM. When set explicitly, the request proceeds as before. To be computed, config uses IPAM to generate by passing `ipv{4,6}_ipam_pool_id` if the `aws_vpc_ipam_pool` has `allocation_default_netmask_length` set or by specifying both `ipv{4,6}_ipam_pool_id` & `ipv{4,6}_netmask_length` which the vpc backend calls will use to request a cidr that matches the netmask length from the specified ipam pool.
+resource/aws_vpc_ipv4_cidr_block_association: `cidr_block` value can now either be set explicitly or computed via AWS IPAM
 ```
