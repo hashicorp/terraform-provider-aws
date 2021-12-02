@@ -14,7 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func TestAccVPCVPCIPv4CIDRBlockAssociation_basic(t *testing.T) {
+func TestAccVPCIPv4CIDRBlockAssociation_basic(t *testing.T) {
 	var associationSecondary, associationTertiary ec2.VpcCidrBlockAssociation
 
 	resource.ParallelTest(t, resource.TestCase{

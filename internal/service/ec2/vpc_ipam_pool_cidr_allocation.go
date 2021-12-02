@@ -175,7 +175,7 @@ func FindIpamPoolCidrAllocation(conn *ec2.EC2, id string) (*ec2.IpamPoolAllocati
 		IpamPoolId: aws.String(pool_id),
 		Filters: []*ec2.Filter{
 			{
-				Name:   aws.String("allocation-id"),
+				Name:   aws.String("ipam-pool-allocation-id"),
 				Values: aws.StringSlice([]string{allocation_id}),
 			},
 		},

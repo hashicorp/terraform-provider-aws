@@ -33,8 +33,8 @@ func TestAccVPCIpamPoolAllocation_ipv4Basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVPCIpamAllocationExists(resourceName, &allocation),
 					resource.TestCheckResourceAttr(resourceName, "cidr", cidr),
-					resource.TestMatchResourceAttr(resourceName, "id", regexp.MustCompile(`^alloc-([\da-f]{8})((-[\da-f]{4}){3})(-[\da-f]{12})_ipam-pool(-[\da-f]+)$`)),
-					resource.TestMatchResourceAttr(resourceName, "ipam_pool_allocation_id", regexp.MustCompile(`^alloc-([\da-f]{8})((-[\da-f]{4}){3})(-[\da-f]{12})$`)),
+					resource.TestMatchResourceAttr(resourceName, "id", regexp.MustCompile(`^ipam-pool-alloc-[\da-f]+_ipam-pool(-[\da-f]+)$`)),
+					resource.TestMatchResourceAttr(resourceName, "ipam_pool_allocation_id", regexp.MustCompile(`^ipam-pool-alloc-[\da-f]+$`)),
 					resource.TestCheckResourceAttrPair(resourceName, "ipam_pool_id", "aws_vpc_ipam_pool.test", "id"),
 				),
 			},
