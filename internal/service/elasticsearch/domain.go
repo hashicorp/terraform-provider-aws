@@ -700,23 +700,24 @@ func resourceDomainCreate(d *schema.ResourceData, meta interface{}) error {
 
 	log.Printf("[DEBUG] Elasticsearch domain %q created", d.Id())
 
-	log.Printf("[DEBUG] Modifying config for Elasticsearch domain %q", d.Id())
-
-	inputUpdateDomainConfig := &elasticsearch.UpdateElasticsearchDomainConfigInput{
-		DomainName: aws.String(d.Get("domain_name").(string)),
-	}
-
 	if v, ok := d.GetOk("auto_tune_options"); ok && len(v.([]interface{})) > 0 {
+
+		log.Printf("[DEBUG] Modifying config for Elasticsearch domain %q", d.Id())
+
+		inputUpdateDomainConfig := &elasticsearch.UpdateElasticsearchDomainConfigInput{
+			DomainName: aws.String(d.Get("domain_name").(string)),
+		}
+
 		inputUpdateDomainConfig.AutoTuneOptions = expandAutoTuneOptions(v.([]interface{})[0].(map[string]interface{}))
+
+		_, err = conn.UpdateElasticsearchDomainConfig(inputUpdateDomainConfig)
+
+		if err != nil {
+			return fmt.Errorf("Error modifying config for Elasticsearch domain: %s", err)
+		}
+
+		log.Printf("[DEBUG] Config for Elasticsearch domain %q modified", d.Id())
 	}
-
-	_, err = conn.UpdateElasticsearchDomainConfig(inputUpdateDomainConfig)
-
-	if err != nil {
-		return fmt.Errorf("Error modifying config for Elasticsearch domain: %s", err)
-	}
-
-	log.Printf("[DEBUG] Config for Elasticsearch domain %q modified", d.Id())
 
 	return resourceDomainRead(d, meta)
 }
