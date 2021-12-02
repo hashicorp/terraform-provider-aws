@@ -118,7 +118,7 @@ func ResourceEventSourceMapping() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"filters": {
+						"filter": {
 							Type:     schema.TypeSet,
 							Optional: true,
 							MaxItems: 5,
@@ -850,7 +850,7 @@ func expandLambdaFilterCriteria(tfMap map[string]interface{}) *lambda.FilterCrit
 
 	apiObject := &lambda.FilterCriteria{}
 
-	if v, ok := tfMap["filters"].(*schema.Set); ok && v.Len() > 0 {
+	if v, ok := tfMap["filter"].(*schema.Set); ok && v.Len() > 0 {
 		apiObject.Filters = expandLambdaFilters(v.List())
 	}
 
@@ -865,7 +865,7 @@ func flattenLambdaFilterCriteria(apiObject *lambda.FilterCriteria) map[string]in
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.Filters; len(v) > 0 {
-		tfMap["filters"] = flattenLambdaFilters(v)
+		tfMap["filter"] = flattenLambdaFilters(v)
 	}
 
 	return tfMap

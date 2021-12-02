@@ -94,7 +94,7 @@ resource "aws_lambda_event_source_mapping" "example" {
   function_name    = aws_lambda_function.example.arn
 
   filter_criteria {
-    filters {
+    filter {
       pattern = jsonencode({
         body = {
           Temperature : [{ numeric : [">", 0, "<=", 100] }]
@@ -177,7 +177,7 @@ resource "aws_lambda_event_source_mapping" "example" {
 
 ### filter_criteria Configuration Block
 
-* `filters` - (Optional) A set of up to 5 filters. If an event satisfies at least one, Lambda sends the event to the function or adds it to the next batch. Detailed below.
+* `filter` - (Optional) A set of up to 5 filter. If an event satisfies at least one, Lambda sends the event to the function or adds it to the next batch. Detailed below.
 
 #### filter_criteria filter Configuration Block
 

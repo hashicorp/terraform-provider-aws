@@ -895,8 +895,8 @@ func TestAccLambdaEventSourceMapping_SQS_filterCriteria(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEventSourceMappingExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "filter_criteria.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "filter_criteria.0.filters.#", "1"),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "filter_criteria.0.filters.*", map[string]string{"pattern": pattern1}),
+					resource.TestCheckResourceAttr(resourceName, "filter_criteria.0.filter.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "filter_criteria.0.filter.*", map[string]string{"pattern": pattern1}),
 				),
 			},
 			{
@@ -910,9 +910,9 @@ func TestAccLambdaEventSourceMapping_SQS_filterCriteria(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEventSourceMappingExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "filter_criteria.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "filter_criteria.0.filters.#", "2"),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "filter_criteria.0.filters.*", map[string]string{"pattern": pattern1}),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "filter_criteria.0.filters.*", map[string]string{"pattern": pattern2}),
+					resource.TestCheckResourceAttr(resourceName, "filter_criteria.0.filter.#", "2"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "filter_criteria.0.filter.*", map[string]string{"pattern": pattern1}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "filter_criteria.0.filter.*", map[string]string{"pattern": pattern2}),
 				),
 			},
 			{
@@ -939,8 +939,8 @@ func TestAccLambdaEventSourceMapping_SQS_filterCriteria(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEventSourceMappingExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "filter_criteria.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "filter_criteria.0.filters.#", "1"),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "filter_criteria.0.filters.*", map[string]string{"pattern": pattern1}),
+					resource.TestCheckResourceAttr(resourceName, "filter_criteria.0.filter.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "filter_criteria.0.filter.*", map[string]string{"pattern": pattern1}),
 				),
 			},
 		},
@@ -1911,7 +1911,7 @@ resource "aws_lambda_event_source_mapping" "test" {
   function_name    = aws_lambda_function.test.arn
 
   filter_criteria {
-    filters {
+    filter {
       pattern = %q
     }
   }
@@ -1926,11 +1926,11 @@ resource "aws_lambda_event_source_mapping" "test" {
   function_name    = aws_lambda_function.test.arn
 
   filter_criteria {
-    filters {
+    filter {
       pattern = %q
     }
 
-    filters {
+    filter {
       pattern = %q
     }
   }
