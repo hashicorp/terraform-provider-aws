@@ -48,7 +48,6 @@ func ResourceProject() *schema.Resource {
 			"project_description": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(1, 1024),
 			},
 			"service_catalog_provisioning_details": {
@@ -60,10 +59,12 @@ func ResourceProject() *schema.Resource {
 						"path_id": {
 							Type:     schema.TypeString,
 							Optional: true,
+							ForceNew: true,
 						},
 						"product_id": {
 							Type:     schema.TypeString,
 							Required: true,
+							ForceNew: true,
 						},
 						"provisioning_artifact_id": {
 							Type:     schema.TypeString,
@@ -180,6 +181,24 @@ func resourceProjectRead(d *schema.ResourceData, meta interface{}) error {
 func resourceProjectUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SageMakerConn
 
+	if d.HasChangesExcept("tags_all", "tags") {
+		input := &sagemaker.UpdateProjectInput{
+			ProjectName: aws.String(d.Id()),
+		}
+
+		if d.HasChange("project_description") {
+			input.ProjectDescription = aws.String(d.Get("project_description").(string))
+		}
+
+		if d.HasChange("service_catalog_provisioning_details") {
+			input.ServiceCatalogProvisioningUpdateDetails = expandProjectServiceCatalogProvisioningDetailsUpdate(d.Get("service_catalog_provisioning_details").([]interface{}))
+		}
+
+		if _, err := WaitProjectUpdated(conn, d.Id()); err != nil {
+			return fmt.Errorf("error waiting for Sagemaker Project (%s) to be updated: %w", d.Id(), err)
+		}
+	}
+
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
@@ -227,6 +246,26 @@ func expandProjectServiceCatalogProvisioningDetails(l []interface{}) *sagemaker.
 	if v, ok := m["path_id"].(string); ok && v != "" {
 		scpd.PathId = aws.String(v)
 	}
+
+	if v, ok := m["provisioning_artifact_id"].(string); ok && v != "" {
+		scpd.ProvisioningArtifactId = aws.String(v)
+	}
+
+	if v, ok := m["provisioning_parameter"].([]interface{}); ok && len(v) > 0 {
+		scpd.ProvisioningParameters = expandProjectProvisioningParameters(v)
+	}
+
+	return scpd
+}
+
+func expandProjectServiceCatalogProvisioningDetailsUpdate(l []interface{}) *sagemaker.ServiceCatalogProvisioningUpdateDetails {
+	if len(l) == 0 {
+		return nil
+	}
+
+	m := l[0].(map[string]interface{})
+
+	scpd := &sagemaker.ServiceCatalogProvisioningUpdateDetails{}
 
 	if v, ok := m["provisioning_artifact_id"].(string); ok && v != "" {
 		scpd.ProvisioningArtifactId = aws.String(v)

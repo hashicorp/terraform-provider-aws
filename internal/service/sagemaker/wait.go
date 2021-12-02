@@ -474,3 +474,25 @@ func WaitProjectCreated(conn *sagemaker.SageMaker, name string) (*sagemaker.Desc
 
 	return nil, err
 }
+
+// WaitProjectUpdated waits for a Project to return Updated
+func WaitProjectUpdated(conn *sagemaker.SageMaker, name string) (*sagemaker.DescribeProjectOutput, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{sagemaker.ProjectStatusPending, sagemaker.ProjectStatusUpdateInProgress},
+		Target:  []string{sagemaker.ProjectStatusUpdateCompleted},
+		Refresh: StatusProject(conn, name),
+		Timeout: ProjectCreatedTimeout,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*sagemaker.DescribeProjectOutput); ok {
+		if status, reason := aws.StringValue(output.ProjectStatus), aws.StringValue(output.ServiceCatalogProvisionedProductDetails.ProvisionedProductStatusMessage); status == sagemaker.ProjectStatusUpdateFailed && reason != "" {
+			tfresource.SetLastError(err, errors.New(reason))
+		}
+
+		return output, err
+	}
+
+	return nil, err
+}

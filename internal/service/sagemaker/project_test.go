@@ -53,6 +53,7 @@ func TestAccSageMakerProject_basic(t *testing.T) {
 func TestAccSageMakerProject_description(t *testing.T) {
 	var mpg sagemaker.DescribeProjectOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rNameUpdated := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_project.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -62,7 +63,7 @@ func TestAccSageMakerProject_description(t *testing.T) {
 		CheckDestroy: testAccCheckProjectDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccProjectDescription(rName),
+				Config: testAccProjectDescription(rName, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProjectExists(resourceName, &mpg),
 					resource.TestCheckResourceAttr(resourceName, "project_description", rName),
@@ -72,6 +73,13 @@ func TestAccSageMakerProject_description(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+			{
+				Config: testAccProjectDescription(rName, rNameUpdated),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckProjectExists(resourceName, &mpg),
+					resource.TestCheckResourceAttr(resourceName, "project_description", rName),
+				),
 			},
 			{
 				Config: testAccProjectBaseConfig(rName),
@@ -351,17 +359,17 @@ resource "aws_sagemaker_project" "test" {
 `, rName)
 }
 
-func testAccProjectDescription(rName string) string {
+func testAccProjectDescription(rName, desc string) string {
 	return testAccProjectBaseConfig(rName) + fmt.Sprintf(`
 resource "aws_sagemaker_project" "test" {
   project_name        = %[1]q
-  project_description = %[1]q
+  project_description = %[2]q
 
   service_catalog_provisioning_details {
     product_id = aws_servicecatalog_constraint.test.product_id
   }
 }
-`, rName)
+`, rName, desc)
 }
 
 func testAccProjectTagsConfig1(rName, tagKey1, tagValue1 string) string {
