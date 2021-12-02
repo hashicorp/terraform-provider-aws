@@ -193,6 +193,54 @@ func TestAccCognitoUser_password(t *testing.T) {
 	})
 }
 
+func TestAccCognitoUser_attributes(t *testing.T) {
+	rUserPoolName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rUserName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_cognito_user.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckUserDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccUserConfigAttributes(rUserPoolName, rUserName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckUserExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "attributes.%", "3"),
+					resource.TestCheckResourceAttr(resourceName, "attributes.one", "1"),
+					resource.TestCheckResourceAttr(resourceName, "attributes.two", "2"),
+					resource.TestCheckResourceAttr(resourceName, "attributes.three", "3"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"temporary_password",
+					"password",
+					"client_metadata",
+					"validation_data",
+					"desired_delivery_mediums",
+					"message_action",
+				},
+			},
+			{
+				Config: testAccUserConfigAttributesUpdated(rUserPoolName, rUserName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckUserExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "attributes.%", "3"),
+					resource.TestCheckResourceAttr(resourceName, "attributes.two", "2"),
+					resource.TestCheckResourceAttr(resourceName, "attributes.three", "three"),
+					resource.TestCheckResourceAttr(resourceName, "attributes.four", "4"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckUserExists(name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
@@ -425,4 +473,108 @@ resource "aws_cognito_user" "test" {
 	username = %[3]q
 }
 `, userPoolName, clientName, userName)
+}
+
+func testAccUserConfigAttributes(userPoolName string, userName string) string {
+	return fmt.Sprintf(`
+resource "aws_cognito_user_pool" "test" {
+	name = %[1]q
+
+	schema {
+		name                     = "one"
+		attribute_data_type      = "String"
+		mutable                  = true
+		required                 = false
+		developer_only_attribute = false
+		string_attribute_constraints {}
+	}
+	schema {
+		name                     = "two"
+		attribute_data_type      = "String"
+		mutable                  = true
+		required                 = false
+		developer_only_attribute = false
+		string_attribute_constraints {}
+	}
+	schema {
+		name                     = "three"
+		attribute_data_type      = "String"
+		mutable                  = true
+		required                 = false
+		developer_only_attribute = false
+		string_attribute_constraints {}
+	}
+	schema {
+		name                     = "four"
+		attribute_data_type      = "String"
+		mutable                  = true
+		required                 = false
+		developer_only_attribute = false
+		string_attribute_constraints {}
+	}
+}
+
+resource "aws_cognito_user" "test" {
+	user_pool_id = aws_cognito_user_pool.test.id
+	username     = %[2]q
+
+	attributes = {
+		one = "1"
+		two = "2"
+		three = "3"
+	}
+}
+`, userPoolName, userName)
+}
+
+func testAccUserConfigAttributesUpdated(userPoolName string, userName string) string {
+	return fmt.Sprintf(`
+resource "aws_cognito_user_pool" "test" {
+	name = %[1]q
+
+	schema {
+		name                     = "one"
+		attribute_data_type      = "String"
+		mutable                  = true
+		required                 = false
+		developer_only_attribute = false
+		string_attribute_constraints {}
+	}
+	schema {
+		name                     = "two"
+		attribute_data_type      = "String"
+		mutable                  = true
+		required                 = false
+		developer_only_attribute = false
+		string_attribute_constraints {}
+	}
+	schema {
+		name                     = "three"
+		attribute_data_type      = "String"
+		mutable                  = true
+		required                 = false
+		developer_only_attribute = false
+		string_attribute_constraints {}
+	}
+	schema {
+		name                     = "four"
+		attribute_data_type      = "String"
+		mutable                  = true
+		required                 = false
+		developer_only_attribute = false
+		string_attribute_constraints {}
+	}
+}
+
+resource "aws_cognito_user" "test" {
+	user_pool_id = aws_cognito_user_pool.test.id
+	username     = %[2]q
+
+	attributes = {
+		two = "2"
+		three = "three"
+		four = "4"
+	}
+}
+`, userPoolName, userName)
 }
