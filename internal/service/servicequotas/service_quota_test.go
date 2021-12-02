@@ -19,21 +19,18 @@ func TestAccServiceQuotasServiceQuota_basic(t *testing.T) {
 	const dataSourceName = "data.aws_servicequotas_service_quota.test"
 	const resourceName = "aws_servicequotas_service_quota.test"
 
-	const serviceCode = "vpc"
-	const quotaCode = "L-F678F1CE"
-
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			testAccPreCheck(t)
-			preCheckServiceQuotaSet(serviceCode, quotaCode, t)
+			preCheckServiceQuotaSet(setQuotaServiceCode, setQuotaQuotaCode, t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, servicequotas.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServiceQuotaSameValueConfig(quotaCode, serviceCode),
+				Config: testAccServiceQuotaSameValueConfig(setQuotaQuotaCode, setQuotaServiceCode),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, "adjustable", dataSourceName, "adjustable"),
 					resource.TestCheckResourceAttrPair(resourceName, "arn", dataSourceName, "arn"),
@@ -59,21 +56,18 @@ func TestAccServiceQuotasServiceQuota_basic_Unset(t *testing.T) {
 	const dataSourceName = "data.aws_servicequotas_service_quota.test"
 	const resourceName = "aws_servicequotas_service_quota.test"
 
-	const serviceCode = "s3"
-	const quotaCode = "L-DC2B2D3D"
-
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			testAccPreCheck(t)
-			preCheckServiceQuotaUnset(serviceCode, quotaCode, t)
+			preCheckServiceQuotaUnset(unsetQuotaServiceCode, unsetQuotaQuotaCode, t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, servicequotas.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServiceQuotaSameValueConfig(quotaCode, serviceCode),
+				Config: testAccServiceQuotaSameValueConfig(unsetQuotaQuotaCode, unsetQuotaServiceCode),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, "adjustable", dataSourceName, "adjustable"),
 					resource.TestCheckResourceAttrPair(resourceName, "arn", dataSourceName, "arn"),
@@ -206,6 +200,7 @@ func TestAccServiceQuotasServiceQuota_permissionError(t *testing.T) {
 	})
 }
 
+// TODO: Reorder this!
 func testAccServiceQuotaSameValueConfig(quotaCode, serviceCode string) string {
 	return fmt.Sprintf(`
 data "aws_servicequotas_service_quota" "test" {

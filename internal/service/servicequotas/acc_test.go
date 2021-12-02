@@ -10,6 +10,16 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
+const (
+	setQuotaServiceCode = "vpc"
+	setQuotaQuotaCode   = "L-F678F1CE"
+	setQuotaQuotaName   = "VPCs per Region"
+
+	unsetQuotaServiceCode = "s3"
+	unsetQuotaQuotaCode   = "L-FAABEEBA"
+	unsetQuotaQuotaName   = "Access Points"
+)
+
 func testAccPreCheck(t *testing.T) {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceQuotasConn
 

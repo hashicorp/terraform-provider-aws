@@ -13,28 +13,25 @@ import (
 func TestAccServiceQuotasServiceQuotaDataSource_quotaCode(t *testing.T) {
 	const dataSourceName = "data.aws_servicequotas_service_quota.test"
 
-	const serviceCode = "vpc"
-	const quotaCode = "L-F678F1CE"
-
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			acctest.PreCheckPartitionHasService(servicequotas.EndpointsID, t)
-			preCheckServiceQuotaSet(serviceCode, quotaCode, t)
+			preCheckServiceQuotaSet(setQuotaServiceCode, setQuotaQuotaCode, t)
 		},
 		ErrorCheck: acctest.ErrorCheck(t, servicequotas.EndpointsID),
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServiceQuotaQuotaCodeDataSourceConfig(serviceCode, quotaCode),
+				Config: testAccServiceQuotaQuotaCodeDataSourceConfig(setQuotaServiceCode, setQuotaQuotaCode),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "adjustable", "true"),
-					acctest.CheckResourceAttrRegionalARN(dataSourceName, "arn", "servicequotas", fmt.Sprintf("%s/%s", serviceCode, quotaCode)),
+					acctest.CheckResourceAttrRegionalARN(dataSourceName, "arn", "servicequotas", fmt.Sprintf("%s/%s", setQuotaServiceCode, setQuotaQuotaCode)),
 					resource.TestCheckResourceAttr(dataSourceName, "default_value", "5"),
 					resource.TestCheckResourceAttr(dataSourceName, "global_quota", "false"),
-					resource.TestCheckResourceAttr(dataSourceName, "quota_code", quotaCode),
+					resource.TestCheckResourceAttr(dataSourceName, "quota_code", setQuotaQuotaCode),
 					resource.TestCheckResourceAttr(dataSourceName, "quota_name", "VPCs per Region"),
-					resource.TestCheckResourceAttr(dataSourceName, "service_code", serviceCode),
+					resource.TestCheckResourceAttr(dataSourceName, "service_code", setQuotaServiceCode),
 					resource.TestCheckResourceAttr(dataSourceName, "service_name", "Amazon Virtual Private Cloud (Amazon VPC)"),
 					resource.TestMatchResourceAttr(dataSourceName, "value", regexp.MustCompile(`^\d+$`)),
 				),
@@ -46,29 +43,25 @@ func TestAccServiceQuotasServiceQuotaDataSource_quotaCode(t *testing.T) {
 func TestAccServiceQuotasServiceQuotaDataSource_quotaCode_Unset(t *testing.T) {
 	const dataSourceName = "data.aws_servicequotas_service_quota.test"
 
-	const serviceCode = "s3"
-	const quotaCode = "L-DC2B2D3D"
-	const quotaName = "Buckets"
-
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			acctest.PreCheckPartitionHasService(servicequotas.EndpointsID, t)
-			preCheckServiceQuotaUnset(serviceCode, quotaCode, t)
+			preCheckServiceQuotaUnset(unsetQuotaServiceCode, unsetQuotaQuotaCode, t)
 		},
 		ErrorCheck: acctest.ErrorCheck(t, servicequotas.EndpointsID),
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServiceQuotaQuotaCodeDataSourceConfig(serviceCode, quotaCode),
+				Config: testAccServiceQuotaQuotaCodeDataSourceConfig(unsetQuotaServiceCode, unsetQuotaQuotaCode),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					acctest.CheckResourceAttrRegionalARNNoAccount(dataSourceName, "arn", "servicequotas", fmt.Sprintf("%s/%s", serviceCode, quotaCode)),
+					acctest.CheckResourceAttrRegionalARNNoAccount(dataSourceName, "arn", "servicequotas", fmt.Sprintf("%s/%s", unsetQuotaServiceCode, unsetQuotaQuotaCode)),
 					resource.TestCheckResourceAttr(dataSourceName, "adjustable", "true"),
 					resource.TestMatchResourceAttr(dataSourceName, "default_value", regexp.MustCompile(`^\d+$`)),
 					resource.TestCheckResourceAttr(dataSourceName, "global_quota", "false"),
-					resource.TestCheckResourceAttr(dataSourceName, "quota_code", quotaCode),
-					resource.TestCheckResourceAttr(dataSourceName, "quota_name", quotaName),
-					resource.TestCheckResourceAttr(dataSourceName, "service_code", serviceCode),
+					resource.TestCheckResourceAttr(dataSourceName, "quota_code", unsetQuotaQuotaCode),
+					resource.TestCheckResourceAttr(dataSourceName, "quota_name", unsetQuotaQuotaName),
+					resource.TestCheckResourceAttr(dataSourceName, "service_code", unsetQuotaServiceCode),
 					resource.TestCheckResourceAttr(dataSourceName, "service_name", "Amazon Simple Storage Service (Amazon S3)"),
 					resource.TestMatchResourceAttr(dataSourceName, "value", regexp.MustCompile(`^\d+$`)),
 					resource.TestCheckResourceAttrPair(dataSourceName, "value", dataSourceName, "default_value"),
@@ -100,29 +93,25 @@ func TestAccServiceQuotasServiceQuotaDataSource_PermissionError_quotaCode(t *tes
 func TestAccServiceQuotasServiceQuotaDataSource_quotaName(t *testing.T) {
 	dataSourceName := "data.aws_servicequotas_service_quota.test"
 
-	const serviceCode = "vpc"
-	const quotaCode = "L-F678F1CE"
-	const quotaName = "VPCs per Region"
-
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			acctest.PreCheckPartitionHasService(servicequotas.EndpointsID, t)
-			preCheckServiceQuotaSet(serviceCode, quotaCode, t)
+			preCheckServiceQuotaSet(setQuotaServiceCode, setQuotaQuotaCode, t)
 		},
 		ErrorCheck: acctest.ErrorCheck(t, servicequotas.EndpointsID),
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServiceQuotaQuotaNameDataSourceConfig("vpc", quotaName),
+				Config: testAccServiceQuotaQuotaNameDataSourceConfig("vpc", setQuotaQuotaName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "adjustable", "true"),
-					acctest.CheckResourceAttrRegionalARN(dataSourceName, "arn", "servicequotas", fmt.Sprintf("%s/%s", serviceCode, quotaCode)),
+					acctest.CheckResourceAttrRegionalARN(dataSourceName, "arn", "servicequotas", fmt.Sprintf("%s/%s", setQuotaServiceCode, setQuotaQuotaCode)),
 					resource.TestCheckResourceAttr(dataSourceName, "default_value", "5"),
 					resource.TestCheckResourceAttr(dataSourceName, "global_quota", "false"),
-					resource.TestCheckResourceAttr(dataSourceName, "quota_code", quotaCode),
-					resource.TestCheckResourceAttr(dataSourceName, "quota_name", quotaName),
-					resource.TestCheckResourceAttr(dataSourceName, "service_code", serviceCode),
+					resource.TestCheckResourceAttr(dataSourceName, "quota_code", setQuotaQuotaCode),
+					resource.TestCheckResourceAttr(dataSourceName, "quota_name", setQuotaQuotaName),
+					resource.TestCheckResourceAttr(dataSourceName, "service_code", setQuotaServiceCode),
 					resource.TestCheckResourceAttr(dataSourceName, "service_name", "Amazon Virtual Private Cloud (Amazon VPC)"),
 					resource.TestMatchResourceAttr(dataSourceName, "value", regexp.MustCompile(`^\d+$`)),
 				),
@@ -134,29 +123,25 @@ func TestAccServiceQuotasServiceQuotaDataSource_quotaName(t *testing.T) {
 func TestAccServiceQuotasServiceQuotaDataSource_quotaName_Unset(t *testing.T) {
 	const dataSourceName = "data.aws_servicequotas_service_quota.test"
 
-	const serviceCode = "s3"
-	const quotaCode = "L-DC2B2D3D"
-	const quotaName = "Buckets"
-
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			acctest.PreCheckPartitionHasService(servicequotas.EndpointsID, t)
-			preCheckServiceQuotaUnset(serviceCode, quotaCode, t)
+			preCheckServiceQuotaUnset(unsetQuotaServiceCode, unsetQuotaQuotaCode, t)
 		},
 		ErrorCheck: acctest.ErrorCheck(t, servicequotas.EndpointsID),
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServiceQuotaQuotaNameDataSourceConfig(serviceCode, quotaName),
+				Config: testAccServiceQuotaQuotaNameDataSourceConfig(unsetQuotaServiceCode, unsetQuotaQuotaName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					acctest.CheckResourceAttrRegionalARNNoAccount(dataSourceName, "arn", "servicequotas", fmt.Sprintf("%s/%s", serviceCode, quotaCode)),
+					acctest.CheckResourceAttrRegionalARNNoAccount(dataSourceName, "arn", "servicequotas", fmt.Sprintf("%s/%s", unsetQuotaServiceCode, unsetQuotaQuotaCode)),
 					resource.TestCheckResourceAttr(dataSourceName, "adjustable", "true"),
 					resource.TestMatchResourceAttr(dataSourceName, "default_value", regexp.MustCompile(`^\d+$`)),
 					resource.TestCheckResourceAttr(dataSourceName, "global_quota", "false"),
-					resource.TestCheckResourceAttr(dataSourceName, "quota_code", quotaCode),
-					resource.TestCheckResourceAttr(dataSourceName, "quota_name", quotaName),
-					resource.TestCheckResourceAttr(dataSourceName, "service_code", serviceCode),
+					resource.TestCheckResourceAttr(dataSourceName, "quota_code", unsetQuotaQuotaCode),
+					resource.TestCheckResourceAttr(dataSourceName, "quota_name", unsetQuotaQuotaName),
+					resource.TestCheckResourceAttr(dataSourceName, "service_code", unsetQuotaServiceCode),
 					resource.TestCheckResourceAttr(dataSourceName, "service_name", "Amazon Simple Storage Service (Amazon S3)"),
 					resource.TestMatchResourceAttr(dataSourceName, "value", regexp.MustCompile(`^\d+$`)),
 					resource.TestCheckResourceAttrPair(dataSourceName, "value", dataSourceName, "default_value"),
