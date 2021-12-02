@@ -72,6 +72,118 @@ func TestAccCognitoUser_disappears(t *testing.T) {
 	})
 }
 
+func TestAccCognitoUser_temporaryPassword(t *testing.T) {
+	rUserPoolName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rUserName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rClientName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rUserPassword := sdkacctest.RandString(16)
+	rUserPasswordUpdated := sdkacctest.RandString(16)
+	userResourceName := "aws_cognito_user.test"
+	clientResourceName := "aws_cognito_user_pool_client.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckUserDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccUserConfigTemporaryPassword(rUserPoolName, rClientName, rUserName, rUserPassword),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckUserExists(userResourceName),
+					testAccUserTemporaryPassword(userResourceName, clientResourceName),
+					resource.TestCheckResourceAttr(userResourceName, "status", cognitoidentityprovider.UserStatusTypeForceChangePassword),
+				),
+			},
+			{
+				ResourceName:      userResourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"temporary_password",
+					"password",
+					"client_metadata",
+					"validation_data",
+					"desired_delivery_mediums",
+					"message_action",
+				},
+			},
+			{
+				Config: testAccUserConfigTemporaryPassword(rUserPoolName, rClientName, rUserName, rUserPasswordUpdated),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckUserExists(userResourceName),
+					testAccUserTemporaryPassword(userResourceName, clientResourceName),
+					resource.TestCheckResourceAttr(userResourceName, "status", cognitoidentityprovider.UserStatusTypeForceChangePassword),
+				),
+			},
+			{
+				Config: testAccUserConfigNoPassword(rUserPoolName, rClientName, rUserName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckUserExists(userResourceName),
+					resource.TestCheckNoResourceAttr(userResourceName, "temporary_password"),
+					resource.TestCheckResourceAttr(userResourceName, "status", cognitoidentityprovider.UserStatusTypeForceChangePassword),
+				),
+			},
+		},
+	})
+}
+
+func TestAccCognitoUser_password(t *testing.T) {
+	rUserPoolName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rUserName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rClientName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rUserPassword := sdkacctest.RandString(16)
+	rUserPasswordUpdated := sdkacctest.RandString(16)
+	userResourceName := "aws_cognito_user.test"
+	clientResourceName := "aws_cognito_user_pool_client.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckUserDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccUserConfigPassword(rUserPoolName, rClientName, rUserName, rUserPassword),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckUserExists(userResourceName),
+					testAccUserPassword(userResourceName, clientResourceName),
+					resource.TestCheckResourceAttr(userResourceName, "status", cognitoidentityprovider.UserStatusTypeConfirmed),
+				),
+			},
+			{
+				ResourceName:      userResourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"temporary_password",
+					"password",
+					"client_metadata",
+					"validation_data",
+					"desired_delivery_mediums",
+					"message_action",
+				},
+			},
+			{
+				Config: testAccUserConfigPassword(rUserPoolName, rClientName, rUserName, rUserPasswordUpdated),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckUserExists(userResourceName),
+					testAccUserPassword(userResourceName, clientResourceName),
+					resource.TestCheckResourceAttr(userResourceName, "status", cognitoidentityprovider.UserStatusTypeConfirmed),
+				),
+			},
+			{
+				Config: testAccUserConfigNoPassword(rUserPoolName, rClientName, rUserName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckUserExists(userResourceName),
+					resource.TestCheckNoResourceAttr(userResourceName, "password"),
+					resource.TestCheckResourceAttr(userResourceName, "status", cognitoidentityprovider.UserStatusTypeConfirmed),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckUserExists(name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
@@ -133,6 +245,86 @@ func testAccCheckUserDestroy(s *terraform.State) error {
 	return nil
 }
 
+func testAccUserTemporaryPassword(userResName string, clientResName string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		userRs, ok := s.RootModule().Resources[userResName]
+		if !ok {
+			return fmt.Errorf("Not found: %s", userResName)
+		}
+
+		clientRs, ok := s.RootModule().Resources[clientResName]
+		if !ok {
+			return fmt.Errorf("Not found: %s", clientResName)
+		}
+
+		userName := userRs.Primary.Attributes["username"]
+		userPassword := userRs.Primary.Attributes["temporary_password"]
+		clientId := clientRs.Primary.Attributes["id"]
+
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPConn
+
+		params := &cognitoidentityprovider.InitiateAuthInput{
+			AuthFlow: aws.String(cognitoidentityprovider.AuthFlowTypeUserPasswordAuth),
+			AuthParameters: map[string]*string{
+				"USERNAME": aws.String(userName),
+				"PASSWORD": aws.String(userPassword),
+			},
+			ClientId: aws.String(clientId),
+		}
+
+		resp, err := conn.InitiateAuth(params)
+		if err != nil {
+			return err
+		}
+
+		if aws.StringValue(resp.ChallengeName) != cognitoidentityprovider.ChallengeNameTypeNewPasswordRequired {
+			return errors.New("The password is not a temporary password.")
+		}
+
+		return nil
+	}
+}
+
+func testAccUserPassword(userResName string, clientResName string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		userRs, ok := s.RootModule().Resources[userResName]
+		if !ok {
+			return fmt.Errorf("Not found: %s", userResName)
+		}
+
+		clientRs, ok := s.RootModule().Resources[clientResName]
+		if !ok {
+			return fmt.Errorf("Not found: %s", clientResName)
+		}
+
+		userName := userRs.Primary.Attributes["username"]
+		userPassword := userRs.Primary.Attributes["password"]
+		clientId := clientRs.Primary.Attributes["id"]
+
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPConn
+
+		params := &cognitoidentityprovider.InitiateAuthInput{
+			AuthFlow: aws.String(cognitoidentityprovider.AuthFlowTypeUserPasswordAuth),
+			AuthParameters: map[string]*string{
+				"USERNAME": aws.String(userName),
+				"PASSWORD": aws.String(userPassword),
+			},
+			ClientId: aws.String(clientId),
+		}
+
+		resp, err := conn.InitiateAuth(params)
+		if err != nil {
+			return err
+		}
+
+		if resp.AuthenticationResult == nil {
+			return errors.New("Authentication has failed.")
+		}
+
+		return nil
+	}
+}
+
 func testAccUserConfigBasic(userPoolName string, userName string) string {
 	return fmt.Sprintf(`
 resource "aws_cognito_user_pool" "test" {
@@ -144,4 +336,84 @@ resource "aws_cognito_user" "test" {
 	username = %[2]q
 }
 `, userPoolName, userName)
+}
+
+func testAccUserConfigTemporaryPassword(userPoolName string, clientName string, userName string, password string) string {
+	return fmt.Sprintf(`
+resource "aws_cognito_user_pool" "test" {
+	name = %[1]q
+	password_policy {
+		temporary_password_validity_days = 7
+		minimum_length = 6
+		require_uppercase = false
+		require_symbols = false
+		require_numbers = false
+	}
+}
+
+resource "aws_cognito_user_pool_client" "test" {
+	name         = %[2]q
+	user_pool_id = aws_cognito_user_pool.test.id
+	explicit_auth_flows = ["ALLOW_USER_PASSWORD_AUTH", "ALLOW_REFRESH_TOKEN_AUTH"]
+}
+
+resource "aws_cognito_user" "test" {
+	user_pool_id = aws_cognito_user_pool.test.id
+	username = %[3]q
+	temporary_password = %[4]q
+}
+`, userPoolName, clientName, userName, password)
+}
+
+func testAccUserConfigPassword(userPoolName string, clientName string, userName string, password string) string {
+	return fmt.Sprintf(`
+resource "aws_cognito_user_pool" "test" {
+	name = %[1]q
+	password_policy {
+		temporary_password_validity_days = 7
+		minimum_length = 6
+		require_uppercase = false
+		require_symbols = false
+		require_numbers = false
+	}
+}
+
+resource "aws_cognito_user_pool_client" "test" {
+	name         = %[2]q
+	user_pool_id = aws_cognito_user_pool.test.id
+	explicit_auth_flows = ["ALLOW_USER_PASSWORD_AUTH", "ALLOW_REFRESH_TOKEN_AUTH"]
+}
+
+resource "aws_cognito_user" "test" {
+	user_pool_id = aws_cognito_user_pool.test.id
+	username = %[3]q
+	password = %[4]q
+}
+`, userPoolName, clientName, userName, password)
+}
+
+func testAccUserConfigNoPassword(userPoolName string, clientName string, userName string) string {
+	return fmt.Sprintf(`
+resource "aws_cognito_user_pool" "test" {
+	name = %[1]q
+	password_policy {
+		temporary_password_validity_days = 7
+		minimum_length = 6
+		require_uppercase = false
+		require_symbols = false
+		require_numbers = false
+	}
+}
+
+resource "aws_cognito_user_pool_client" "test" {
+	name         = %[2]q
+	user_pool_id = aws_cognito_user_pool.test.id
+	explicit_auth_flows = ["ALLOW_USER_PASSWORD_AUTH", "ALLOW_REFRESH_TOKEN_AUTH"]
+}
+
+resource "aws_cognito_user" "test" {
+	user_pool_id = aws_cognito_user_pool.test.id
+	username = %[3]q
+}
+`, userPoolName, clientName, userName)
 }
