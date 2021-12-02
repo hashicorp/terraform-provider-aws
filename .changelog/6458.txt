@@ -1,0 +1,3 @@
+```release-note:enhancement
+data-source/aws_lb: Add ability to filter results by `tags`
+```

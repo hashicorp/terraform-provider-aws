@@ -12,7 +12,7 @@ Provides an OpsWorks application resource.
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_opsworks_application" "foo-app" {
   name        = "foobar application"
   short_name  = "foobar"
@@ -101,7 +101,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Opsworks Application can be imported using the `id`, e.g.
+Opsworks Application can be imported using the `id`, e.g.,
 
 ```
 $ terraform import aws_opsworks_application.test <id>

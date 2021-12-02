@@ -29,6 +29,11 @@ resource "aws_iam_role_policy_attachment" "demo-cluster-AmazonEKSClusterPolicy" 
   role       = aws_iam_role.demo-cluster.name
 }
 
+resource "aws_iam_role_policy_attachment" "demo-cluster-AmazonEKSVPCResourceController" {
+  policy_arn = "arn:aws:iam::aws:policy/AmazonEKSVPCResourceController"
+  role       = aws_iam_role.demo-cluster.name
+}
+
 resource "aws_security_group" "demo-cluster" {
   name        = "terraform-eks-demo-cluster"
   description = "Cluster communication with worker nodes"
@@ -67,5 +72,6 @@ resource "aws_eks_cluster" "demo" {
 
   depends_on = [
     aws_iam_role_policy_attachment.demo-cluster-AmazonEKSClusterPolicy,
+    aws_iam_role_policy_attachment.demo-cluster-AmazonEKSVPCResourceController,
   ]
 }
