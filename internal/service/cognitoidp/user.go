@@ -268,7 +268,7 @@ func resourceUserRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err := d.Set("mfa_preference", flattenUserMfaPreference(user.MFAOptions, user.UserMFASettingList, user.PreferredMfaSetting)); err != nil {
-		return fmt.Errorf("failed settings user mfa_preference: %w", err)
+		return fmt.Errorf("failed setting user mfa_preference: %w", err)
 	}
 
 	return nil
@@ -342,33 +342,43 @@ func resourceUserUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	if d.HasChange("temporary_password") || d.HasChange("password") {
-		tempPassword := d.Get("temporary_password").(string)
-		permanentPassword := d.Get("password").(string)
-
-		var password string
-		var isPermanent bool
-
-		// both passwords cannot be non-empty because of ConflictsWith
-		if tempPassword != "" {
-			password = tempPassword
-		} else if permanentPassword != "" {
-			password = permanentPassword
-			isPermanent = true
-		}
+	if d.HasChange("temporary_password") {
+		password := d.Get("temporary_password").(string)
 
 		if password != "" {
-			tempPasswordParams := &cognitoidentityprovider.AdminSetUserPasswordInput{
+			setPasswordParams := &cognitoidentityprovider.AdminSetUserPasswordInput{
 				Username:   aws.String(d.Get("username").(string)),
 				UserPoolId: aws.String(d.Get("user_pool_id").(string)),
 				Password:   aws.String(password),
-				Permanent:  aws.Bool(isPermanent),
+				Permanent:  aws.Bool(false),
 			}
 
-			_, err := conn.AdminSetUserPassword(tempPasswordParams)
+			_, err := conn.AdminSetUserPassword(setPasswordParams)
 			if err != nil {
 				return fmt.Errorf("Error changing Cognito User's password: %s", err)
 			}
+		} else {
+			d.Set("temporary_password", nil)
+		}
+	}
+
+	if d.HasChange("password") {
+		password := d.Get("password").(string)
+
+		if password != "" {
+			setPasswordParams := &cognitoidentityprovider.AdminSetUserPasswordInput{
+				Username:   aws.String(d.Get("username").(string)),
+				UserPoolId: aws.String(d.Get("user_pool_id").(string)),
+				Password:   aws.String(password),
+				Permanent:  aws.Bool(true),
+			}
+
+			_, err := conn.AdminSetUserPassword(setPasswordParams)
+			if err != nil {
+				return fmt.Errorf("Error changing Cognito User's password: %s", err)
+			}
+		} else {
+			d.Set("password", nil)
 		}
 	}
 
