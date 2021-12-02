@@ -52,6 +52,7 @@ resource "aws_sqs_queue" "terraform_queue" {
 ## Server-side encryption (SSE)
 
 Using [SSE-SQS](https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/sqs-configure-sqs-sse-queue.html):
+
 ```terraform
 resource "aws_sqs_queue" "terraform_queue" {
   name                    = "terraform-example-queue"
@@ -60,6 +61,7 @@ resource "aws_sqs_queue" "terraform_queue" {
 ```
 
 Using [SSE-KMS](https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/sqs-configure-sse-existing-queue.html):
+
 ```terraform
 resource "aws_sqs_queue" "terraform_queue" {
   name                              = "terraform-example-queue"
