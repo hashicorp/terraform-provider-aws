@@ -208,7 +208,7 @@ resource "aws_ecr_repository_policy" "test" {
       Sid       = %[1]q
       Effect    = "Allow"
       Principal = "*"
-      Action = "ecr:ListImages"
+      Action    = "ecr:ListImages"
     }]
   })
 }
@@ -271,7 +271,7 @@ resource "aws_ecr_repository_policy" "test" {
   policy = jsonencode({
     Version = "2008-10-17"
     Statement = [{
-      Sid = %[1]q
+      Sid    = %[1]q
       Effect = "Allow",
       Principal = {
         AWS = aws_iam_role.test.arn
@@ -381,7 +381,7 @@ resource "aws_ecr_repository_policy" "test" {
 
   policy = jsonencode({
     Statement = [{
-      Sid = %[1]q
+      Sid    = %[1]q
       Action = "ecr:ListImages"
       Effect = "Allow"
       Principal = {
@@ -409,7 +409,7 @@ resource "aws_ecr_repository_policy" "test" {
 
   policy = jsonencode({
     Statement = [{
-      Sid = %[1]q
+      Sid    = %[1]q
       Action = "ecr:ListImages"
       Effect = "Allow"
       Principal = {
