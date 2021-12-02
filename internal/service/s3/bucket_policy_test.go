@@ -166,6 +166,41 @@ func TestAccS3BucketPolicy_IAMRoleOrder_policyDoc(t *testing.T) {
 	})
 }
 
+// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/13144
+func TestAccS3BucketPolicy_IAMRoleOrder_policyDocNotPrincipal(t *testing.T) {
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_s3_bucket.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckBucketDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBucketPolicyIAMRoleOrderIAMPolicyDocNotPrincipalConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBucketExists(resourceName),
+				),
+			},
+			{
+				Config: testAccBucketPolicyIAMRoleOrderIAMPolicyDocNotPrincipalConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBucketExists(resourceName),
+				),
+			},
+			{
+				Config:   testAccBucketPolicyIAMRoleOrderIAMPolicyDocNotPrincipalConfig(rName),
+				PlanOnly: true,
+			},
+			{
+				Config:   testAccBucketPolicyIAMRoleOrderIAMPolicyDocNotPrincipalConfig(rName),
+				PlanOnly: true,
+			},
+		},
+	})
+}
+
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/11801
 func TestAccS3BucketPolicy_IAMRoleOrder_jsonEncode(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -560,4 +595,47 @@ resource "aws_s3_bucket_policy" "bucket" {
   })
 }
 `, rName))
+}
+
+func testAccBucketPolicyIAMRoleOrderIAMPolicyDocNotPrincipalConfig(rName string) string {
+	return acctest.ConfigCompose(
+		testAccBucketPolicyIAMRoleOrderBaseConfig(rName),
+		`
+data "aws_caller_identity" "current" {}
+
+data "aws_iam_policy_document" "test" {
+  statement {
+    sid = "DenyInfected"
+    actions = [
+      "s3:GetObject",
+      "s3:PutObjectTagging",
+    ]
+    effect = "Deny"
+    not_principals {
+      identifiers = [
+        aws_iam_role.test2.arn,
+        aws_iam_role.test3.arn,
+        aws_iam_role.test4.arn,
+        aws_iam_role.test1.arn,
+        aws_iam_role.test5.arn,
+		data.aws_caller_identity.current.arn,
+      ]
+      type = "AWS"
+    }
+    resources = [
+      "${aws_s3_bucket.test.arn}/*",
+    ]
+    condition {
+      test     = "StringEquals"
+      variable = "s3:ExistingObjectTag/av-status"
+      values   = ["INFECTED"]
+    }
+  }
+}
+
+resource "aws_s3_bucket_policy" "bucket" {
+  bucket = aws_s3_bucket.test.bucket
+  policy = data.aws_iam_policy_document.test.json
+}
+`)
 }
