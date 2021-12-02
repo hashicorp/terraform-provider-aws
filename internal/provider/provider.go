@@ -392,7 +392,8 @@ func Provider() *schema.Provider {
 			"aws_codeartifact_authorization_token": codeartifact.DataSourceAuthorizationToken(),
 			"aws_codeartifact_repository_endpoint": codeartifact.DataSourceRepositoryEndpoint(),
 
-			"aws_codecommit_repository": codecommit.DataSourceRepository(),
+			"aws_codecommit_approval_rule_template": codecommit.DataSourceApprovalRuleTemplate(),
+			"aws_codecommit_repository":             codecommit.DataSourceRepository(),
 
 			"aws_codestarconnections_connection": codestarconnections.DataSourceConnection(),
 
@@ -911,8 +912,9 @@ func Provider() *schema.Provider {
 			"aws_codebuild_source_credential": codebuild.ResourceSourceCredential(),
 			"aws_codebuild_webhook":           codebuild.ResourceWebhook(),
 
-			"aws_codecommit_repository": codecommit.ResourceRepository(),
-			"aws_codecommit_trigger":    codecommit.ResourceTrigger(),
+			"aws_codecommit_approval_rule_template": codecommit.ResourceApprovalRuleTemplate(),
+			"aws_codecommit_repository":             codecommit.ResourceRepository(),
+			"aws_codecommit_trigger":                codecommit.ResourceTrigger(),
 
 			"aws_codedeploy_app":               codedeploy.ResourceApp(),
 			"aws_codedeploy_deployment_config": codedeploy.ResourceDeploymentConfig(),
