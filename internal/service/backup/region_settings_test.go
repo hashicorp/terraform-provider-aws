@@ -132,8 +132,8 @@ resource "aws_backup_region_settings" "test" {
   }
 
   resource_type_management_preference = {
-    "DynamoDB"        = true
-    "EFS"             = true
+    "DynamoDB" = true
+    "EFS"      = true
   }
 }
 `
@@ -157,8 +157,8 @@ resource "aws_backup_region_settings" "test" {
   }
 
   resource_type_management_preference = {
-    "DynamoDB"        = true
-    "EFS"             = true
+    "DynamoDB" = true
+    "EFS"      = true
   }
 }
 `
