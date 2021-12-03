@@ -234,6 +234,9 @@ jobs:
           if [ "${pkg}" = "" ]; then
             continue
           fi
+          if [ "${pkg}" = "*/test-fixtures" ]; then
+            continue
+          fi
           while read file; do
             if [ "${file}" = "" ]; then
               continue
@@ -250,6 +253,9 @@ jobs:
       run: |
         while read pkg; do
           if [ "${pkg}" = "internal/sweep" ]; then
+            continue
+          fi
+          if [ "${pkg}" = "*/test-fixtures" ]; then
             continue
           fi
           go test -run ^Test[^A][^c][^c] "github.com/hashicorp/terraform-provider-aws/${pkg}"
