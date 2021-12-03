@@ -312,7 +312,6 @@ rules:
         - internal/service
       exclude:
         - internal/service/**/*_data_source.go
-        - internal/service/apigatewayv2
         - internal/service/appautoscaling
         - internal/service/appsync
         - internal/service/athena

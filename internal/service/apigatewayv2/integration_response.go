@@ -98,7 +98,7 @@ func resourceIntegrationResponseRead(d *schema.ResourceData, meta interface{}) e
 		IntegrationId:         aws.String(d.Get("integration_id").(string)),
 		IntegrationResponseId: aws.String(d.Id()),
 	})
-	if tfawserr.ErrMessageContains(err, apigatewayv2.ErrCodeNotFoundException, "") {
+	if tfawserr.ErrCodeEquals(err, apigatewayv2.ErrCodeNotFoundException) && !d.IsNewResource() {
 		log.Printf("[WARN] API Gateway v2 integration response (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil

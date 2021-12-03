@@ -86,7 +86,7 @@ func resourceRouteResponseRead(d *schema.ResourceData, meta interface{}) error {
 		RouteId:         aws.String(d.Get("route_id").(string)),
 		RouteResponseId: aws.String(d.Id()),
 	})
-	if tfawserr.ErrMessageContains(err, apigatewayv2.ErrCodeNotFoundException, "") {
+	if tfawserr.ErrCodeEquals(err, apigatewayv2.ErrCodeNotFoundException) && !d.IsNewResource() {
 		log.Printf("[WARN] API Gateway v2 route response (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
