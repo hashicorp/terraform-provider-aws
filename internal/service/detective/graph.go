@@ -97,7 +97,7 @@ func resourceGraphRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	}
 
 	d.Set("created_time", aws.TimeValue(resp.CreatedTime).Format(time.RFC3339))
-	d.Set("graph_arn", aws.StringValue(resp.Arn))
+	d.Set("graph_arn", resp.Arn)
 
 	tg, err := conn.ListTagsForResource(&detective.ListTagsForResourceInput{
 		ResourceArn: resp.Arn,
