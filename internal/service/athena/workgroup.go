@@ -172,7 +172,7 @@ func resourceWorkGroupCreate(d *schema.ResourceData, meta interface{}) error {
 	_, err := conn.CreateWorkGroup(input)
 
 	if err != nil {
-		return fmt.Errorf("error creating Athena WorkGroup: %s", err)
+		return fmt.Errorf("error creating Athena WorkGroup: %w", err)
 	}
 
 	d.SetId(name)
@@ -184,7 +184,7 @@ func resourceWorkGroupCreate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		if _, err := conn.UpdateWorkGroup(input); err != nil {
-			return fmt.Errorf("error disabling Athena WorkGroup (%s): %s", d.Id(), err)
+			return fmt.Errorf("error disabling Athena WorkGroup (%s): %w", d.Id(), err)
 		}
 	}
 
@@ -202,14 +202,14 @@ func resourceWorkGroupRead(d *schema.ResourceData, meta interface{}) error {
 
 	resp, err := conn.GetWorkGroup(input)
 
-	if tfawserr.ErrMessageContains(err, athena.ErrCodeInvalidRequestException, "is not found") {
+	if tfawserr.ErrMessageContains(err, athena.ErrCodeInvalidRequestException, "is not found") && !d.IsNewResource() {
 		log.Printf("[WARN] Athena WorkGroup (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading Athena WorkGroup (%s): %s", d.Id(), err)
+		return fmt.Errorf("error reading Athena WorkGroup (%s): %w", d.Id(), err)
 	}
 
 	arn := arn.ARN{
@@ -224,7 +224,7 @@ func resourceWorkGroupRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("description", resp.WorkGroup.Description)
 
 	if err := d.Set("configuration", flattenAthenaWorkGroupConfiguration(resp.WorkGroup.Configuration)); err != nil {
-		return fmt.Errorf("error setting configuration: %s", err)
+		return fmt.Errorf("error setting configuration: %w", err)
 	}
 
 	d.Set("name", resp.WorkGroup.Name)
@@ -239,7 +239,7 @@ func resourceWorkGroupRead(d *schema.ResourceData, meta interface{}) error {
 	tags, err := ListTags(conn, arn.String())
 
 	if err != nil {
-		return fmt.Errorf("error listing tags for resource (%s): %s", arn, err)
+		return fmt.Errorf("error listing tags for resource (%s): %w", arn, err)
 	}
 
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
@@ -269,7 +269,7 @@ func resourceWorkGroupDelete(d *schema.ResourceData, meta interface{}) error {
 	_, err := conn.DeleteWorkGroup(input)
 
 	if err != nil {
-		return fmt.Errorf("error deleting Athena WorkGroup (%s): %s", d.Id(), err)
+		return fmt.Errorf("error deleting Athena WorkGroup (%s): %w", d.Id(), err)
 	}
 
 	return nil
@@ -303,14 +303,14 @@ func resourceWorkGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 		_, err := conn.UpdateWorkGroup(input)
 
 		if err != nil {
-			return fmt.Errorf("error updating Athena WorkGroup (%s): %s", d.Id(), err)
+			return fmt.Errorf("error updating Athena WorkGroup (%s): %w", d.Id(), err)
 		}
 	}
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("error updating tags: %s", err)
+			return fmt.Errorf("error updating tags: %w", err)
 		}
 	}
 
