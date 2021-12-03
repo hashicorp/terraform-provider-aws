@@ -22,6 +22,7 @@ require (
 	github.com/mitchellh/copystructure v1.2.0
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/mitchellh/go-testing-interface v1.14.1
+	github.com/mitchellh/mapstructure v1.1.2
 	github.com/pquerna/otp v1.3.0
 	github.com/shopspring/decimal v1.3.1
 	golang.org/x/crypto v0.0.0-20210421170649-83a5a9bb288b

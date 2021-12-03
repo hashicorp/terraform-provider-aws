@@ -10,11 +10,10 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
-	awspolicy "github.com/jen20/awspolicyequivalence"
 )
 
 func SuppressEquivalentPolicyDiffs(k, old, new string, d *schema.ResourceData) bool {
-	equivalent, err := awspolicy.PoliciesAreEquivalent(old, new)
+	equivalent, err := PoliciesAreEquivalent(old, new)
 	if err != nil {
 		return false
 	}
@@ -91,7 +90,7 @@ func SecondJSONUnlessEquivalent(old, new string) (string, error) {
 		return new, nil
 	}
 
-	equivalent, err := awspolicy.PoliciesAreEquivalent(old, new)
+	equivalent, err := PoliciesAreEquivalent(old, new)
 
 	if err != nil {
 		return "", err

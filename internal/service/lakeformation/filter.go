@@ -3,6 +3,7 @@ package lakeformation
 import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/lakeformation"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func FilterPermissions(input *lakeformation.ListPermissionsInput, tableType string, columnNames []*string, excludedColumnNames []*string, columnWildcard bool, allPermissions []*lakeformation.PrincipalResourcePermissions) []*lakeformation.PrincipalResourcePermissions {
@@ -102,7 +103,7 @@ func FilterTableWithColumnsPermissions(principal *string, twc *lakeformation.Tab
 		}
 
 		if perm.Resource.TableWithColumns != nil && perm.Resource.TableWithColumns.ColumnNames != nil {
-			if StringSlicesEqualIgnoreOrder(perm.Resource.TableWithColumns.ColumnNames, columnNames) {
+			if verify.StringValueSlicesEqualIgnoreOrder(perm.Resource.TableWithColumns.ColumnNames, columnNames) {
 				cleanPermissions = append(cleanPermissions, perm)
 				continue
 			}
@@ -114,7 +115,7 @@ func FilterTableWithColumnsPermissions(principal *string, twc *lakeformation.Tab
 				continue
 			}
 
-			if len(excludedColumnNames) > 0 && StringSlicesEqualIgnoreOrder(perm.Resource.TableWithColumns.ColumnWildcard.ExcludedColumnNames, excludedColumnNames) {
+			if len(excludedColumnNames) > 0 && verify.StringValueSlicesEqualIgnoreOrder(perm.Resource.TableWithColumns.ColumnWildcard.ExcludedColumnNames, excludedColumnNames) {
 				cleanPermissions = append(cleanPermissions, perm)
 				continue
 			}
