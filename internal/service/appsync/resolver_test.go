@@ -307,7 +307,7 @@ func testAccCheckResolverDestroy(s *terraform.State) error {
 
 		_, err = conn.GetResolver(input)
 
-		if tfawserr.ErrMessageContains(err, appsync.ErrCodeNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, appsync.ErrCodeNotFoundException) {
 			continue
 		}
 
