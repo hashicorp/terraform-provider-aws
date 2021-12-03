@@ -3881,11 +3881,11 @@ resource "aws_ecs_cluster" "test" {
 resource "aws_ecs_task_definition" "test" {
   family                   = %[1]q
   requires_compatibilities = ["FARGATE"]
-  network_mode = "awsvpc"
+  network_mode             = "awsvpc"
   cpu                      = "256"
   memory                   = "512"
 
-  container_definitions    = <<DEFINITION
+  container_definitions = <<DEFINITION
 [
   {
     "essential": true,
@@ -3903,10 +3903,10 @@ DEFINITION
 }
 
 resource "aws_ecs_service" "test" {
-  cluster         = aws_ecs_cluster.test.id
-  desired_count   = %[2]d
-  name            = %[1]q
-  task_definition = aws_ecs_task_definition.test.arn
+  cluster                           = aws_ecs_cluster.test.id
+  desired_count                     = %[2]d
+  name                              = %[1]q
+  task_definition                   = aws_ecs_task_definition.test.arn
   health_check_grace_period_seconds = %[3]d
 
   deployment_controller {
@@ -3915,8 +3915,8 @@ resource "aws_ecs_service" "test" {
 
   capacity_provider_strategy {
     capacity_provider = "FARGATE"
-    base = 1
-    weight = 1
+    base              = 1
+    weight            = 1
   }
 
   load_balancer {
@@ -3926,8 +3926,8 @@ resource "aws_ecs_service" "test" {
   }
 
   network_configuration {
-    subnets         = aws_subnet.test[*].id
-    security_groups = [aws_security_group.test.id]
+    subnets          = aws_subnet.test[*].id
+    security_groups  = [aws_security_group.test.id]
     assign_public_ip = true
   }
 }
