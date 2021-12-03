@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log"
 	"strings"
-	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
@@ -40,10 +39,6 @@ func ResourceUser() *schema.Resource {
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Optional: true,
 			},
-			"creation_date": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 			"desired_delivery_mediums": {
 				Type: schema.TypeSet,
 				Elem: &schema.Schema{
@@ -63,10 +58,6 @@ func ResourceUser() *schema.Resource {
 			"force_alias_creation": {
 				Type:     schema.TypeBool,
 				Optional: true,
-			},
-			"last_modified_date": {
-				Type:     schema.TypeString,
-				Computed: true,
 			},
 			"message_action": {
 				Type:     schema.TypeString,
@@ -257,14 +248,6 @@ func resourceUserRead(d *schema.ResourceData, meta interface{}) error {
 
 	if err := d.Set("enabled", user.Enabled); err != nil {
 		return fmt.Errorf("failed setting user enabled status: %w", err)
-	}
-
-	if err := d.Set("creation_date", user.UserCreateDate.Format(time.RFC3339)); err != nil {
-		return fmt.Errorf("failed setting user creation_date: %w", err)
-	}
-
-	if err := d.Set("last_modified_date", user.UserLastModifiedDate.Format(time.RFC3339)); err != nil {
-		return fmt.Errorf("failed setting user last_modified_date: %w", err)
 	}
 
 	if err := d.Set("mfa_preference", flattenUserMfaPreference(user.MFAOptions, user.UserMFASettingList, user.PreferredMfaSetting)); err != nil {

@@ -31,8 +31,6 @@ func TestAccCognitoUser_basic(t *testing.T) {
 				Config: testAccUserConfigBasic(rUserPoolName, rUserName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(resourceName),
-					resource.TestCheckResourceAttrSet(resourceName, "creation_date"),
-					resource.TestCheckResourceAttrSet(resourceName, "last_modified_date"),
 					resource.TestCheckResourceAttrSet(resourceName, "sub"),
 					resource.TestCheckResourceAttr(resourceName, "enabled", "true"),
 					resource.TestCheckResourceAttr(resourceName, "status", cognitoidentityprovider.UserStatusTypeForceChangePassword),
