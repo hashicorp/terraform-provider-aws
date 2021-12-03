@@ -93,9 +93,9 @@ func ResourceUser() *schema.Resource {
 				ForceNew: true,
 			},
 			"username": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(1, 128),
 			},
 			"status": {
