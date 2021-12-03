@@ -177,9 +177,10 @@ func resourceUserCreate(d *schema.ResourceData, meta interface{}) error {
 
 	resp, err := conn.AdminCreateUser(params)
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, "AliasExistsException", "") {
+		if tfawserr.ErrMessageContains(err, cognitoidentityprovider.ErrCodeUsernameExistsException, "An account with the email already exists") {
 			log.Println("[ERROR] User alias already exists. To override the alias set `force_alias_creation` attribute to `true`.")
-			return nil
+		} else if tfawserr.ErrMessageContains(err, cognitoidentityprovider.ErrCodeInvalidParameterException, "No email provided but desired delivery medium was Email") {
+			log.Println("[ERROR] No email provided but desired delivery medium was `EMAIL`.")
 		}
 		return fmt.Errorf("Error creating Cognito User: %s", err)
 	}
