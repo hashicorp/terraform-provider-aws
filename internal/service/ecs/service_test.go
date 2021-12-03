@@ -407,7 +407,7 @@ func TestAccECSService_DeploymentControllerType_codeDeploy(t *testing.T) {
 	})
 }
 
-func TestAccECSService_WithDeploymentControllerType_codeDeployUpdate(t *testing.T) {
+func TestAccECSService_DeploymentControllerType_codeDeployUpdateDesiredCountAndHealthCheckGracePeriod(t *testing.T) {
 	var service ecs.Service
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_service.test"
@@ -419,7 +419,7 @@ func TestAccECSService_WithDeploymentControllerType_codeDeployUpdate(t *testing.
 		CheckDestroy: testAccCheckServiceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServiceDeploymentControllerTypeCodeDeployConfigUpdate(rName, 1),
+				Config: testAccServiceDeploymentControllerTypeCodeDeployConfigUpdate(rName, 1, 100),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(resourceName, &service),
 					resource.TestCheckResourceAttr(resourceName, "deployment_controller.#", "1"),
@@ -428,10 +428,17 @@ func TestAccECSService_WithDeploymentControllerType_codeDeployUpdate(t *testing.
 				),
 			},
 			{
-				Config: testAccServiceDeploymentControllerTypeCodeDeployConfigUpdate(rName, 2),
+				Config: testAccServiceDeploymentControllerTypeCodeDeployConfigUpdate(rName, 2, 100),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(resourceName, &service),
 					resource.TestCheckResourceAttr(resourceName, "desired_count", "2"),
+				),
+			},
+			{
+				Config: testAccServiceDeploymentControllerTypeCodeDeployConfigUpdate(rName, 2, 120),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceExists(resourceName, &service),
+					resource.TestCheckResourceAttr(resourceName, "health_check_grace_period_seconds", "120"),
 				),
 			},
 		},
@@ -3769,7 +3776,7 @@ resource "aws_ecs_service" "test" {
 `, rName)
 }
 
-func testAccServiceDeploymentControllerTypeCodeDeployConfigUpdate(rName string, desiredReplicas int) string {
+func testAccServiceDeploymentControllerTypeCodeDeployConfigUpdate(rName string, desiredReplicas, healthCheckGracePeriodSeconds int) string {
 	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {
   state = "available"
@@ -3900,6 +3907,7 @@ resource "aws_ecs_service" "test" {
   desired_count   = %[2]d
   name            = %[1]q
   task_definition = aws_ecs_task_definition.test.arn
+  health_check_grace_period_seconds = %[3]d
 
   deployment_controller {
     type = "CODE_DEPLOY"
@@ -3923,7 +3931,7 @@ resource "aws_ecs_service" "test" {
     assign_public_ip = true
   }
 }
-`, rName, desiredReplicas)
+`, rName, desiredReplicas, healthCheckGracePeriodSeconds)
 }
 
 func testAccServiceDeploymentControllerTypeExternalConfig(rName string) string {
