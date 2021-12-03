@@ -52,7 +52,7 @@ func dataSourceGroupRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	d.SetId(name)
-	d.Set("arn", logGroup.Arn)
+	d.Set("arn", TrimLogGroupARNWildcardSuffix(aws.StringValue(logGroup.Arn)))
 	d.Set("creation_time", logGroup.CreationTime)
 	d.Set("retention_in_days", logGroup.RetentionInDays)
 	d.Set("kms_key_id", logGroup.KmsKeyId)
