@@ -96,6 +96,7 @@ func ResourceUser() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
+				ValidateFunc: validation.StringLenBetween(1, 128),
 			},
 			"status": {
 				Type:     schema.TypeString,
