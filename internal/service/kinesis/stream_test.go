@@ -34,7 +34,7 @@ func TestAccKinesisStream_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisStreamExists(resourceName, &stream),
 					testAccCheckStreamAttributes(&stream),
-					resource.TestCheckResourceAttr(resourceName, "stream_mode", "PROVISIONED"),
+					resource.TestCheckResourceAttr(resourceName, "stream_mode_details.0.stream_mode", "PROVISIONED"),
 				),
 			},
 			{
@@ -396,7 +396,10 @@ func TestAccKinesisStream_tags(t *testing.T) {
 	})
 }
 
-func testAccCheckKinesisStreamExists(n string, stream *kinesis.StreamDescription) resource.TestCheckFunc {
+func testAccCheckKinesisStreamExists(
+	n string,
+	stream *kinesis.StreamDescription,
+) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -466,7 +469,10 @@ func testAccCheckKinesisStreamDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccStreamRegisterStreamConsumer(stream *kinesis.StreamDescription, rStr string) resource.TestCheckFunc {
+func testAccStreamRegisterStreamConsumer(
+	stream *kinesis.StreamDescription,
+	rStr string,
+) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).KinesisConn
 
@@ -481,7 +487,10 @@ func testAccStreamRegisterStreamConsumer(stream *kinesis.StreamDescription, rStr
 	}
 }
 
-func testAccCheckKinesisStreamTags(n string, tagCount int) resource.TestCheckFunc {
+func testAccCheckKinesisStreamTags(
+	n string,
+	tagCount int,
+) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if err := resource.TestCheckResourceAttr(n, "tags.%", fmt.Sprintf("%d", tagCount))(s); err != nil {
 			return err
@@ -546,7 +555,7 @@ func TestAccKinesisStream_basicOnDemand(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisStreamExists(resourceName, &stream),
 					resource.TestCheckResourceAttr(resourceName, "shard_count", "0"),
-					resource.TestCheckResourceAttr(resourceName, "stream_mode", "ON_DEMAND"),
+					resource.TestCheckResourceAttr(resourceName, "stream_mode_details.0.stream_mode", "ON_DEMAND"),
 				),
 			},
 			{
@@ -577,7 +586,7 @@ func TestAccKinesisStream_switchBetweenProvisionedAndOnDemand(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisStreamExists(resourceName, &stream),
 					resource.TestCheckResourceAttr(resourceName, "shard_count", "1"),
-					resource.TestCheckResourceAttr(resourceName, "stream_mode", "PROVISIONED"),
+					resource.TestCheckResourceAttr(resourceName, "stream_mode_details.0.stream_mode", "PROVISIONED"),
 				),
 			},
 			{
@@ -592,7 +601,7 @@ func TestAccKinesisStream_switchBetweenProvisionedAndOnDemand(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisStreamExists(resourceName, &stream),
 					resource.TestCheckResourceAttr(resourceName, "shard_count", "0"),
-					resource.TestCheckResourceAttr(resourceName, "stream_mode", "ON_DEMAND"),
+					resource.TestCheckResourceAttr(resourceName, "stream_mode_details.0.stream_mode", "ON_DEMAND"),
 				),
 			},
 			{
@@ -607,7 +616,7 @@ func TestAccKinesisStream_switchBetweenProvisionedAndOnDemand(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisStreamExists(resourceName, &stream),
 					resource.TestCheckResourceAttr(resourceName, "shard_count", "2"),
-					resource.TestCheckResourceAttr(resourceName, "stream_mode", "PROVISIONED"),
+					resource.TestCheckResourceAttr(resourceName, "stream_mode_details.0.stream_mode", "PROVISIONED"),
 				),
 			},
 			{
@@ -622,7 +631,7 @@ func TestAccKinesisStream_switchBetweenProvisionedAndOnDemand(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisStreamExists(resourceName, &stream),
 					resource.TestCheckResourceAttr(resourceName, "shard_count", "1"),
-					resource.TestCheckResourceAttr(resourceName, "stream_mode", "PROVISIONED"),
+					resource.TestCheckResourceAttr(resourceName, "stream_mode_details.0.stream_mode", "PROVISIONED"),
 				),
 			},
 			{
@@ -663,7 +672,7 @@ func TestAccKinesisStream_failOnBadStreamCountAndStreamModeCombination(t *testin
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisStreamExists(resourceName, &stream),
 					resource.TestCheckResourceAttr(resourceName, "shard_count", "1"),
-					resource.TestCheckResourceAttr(resourceName, "stream_mode", "PROVISIONED"),
+					resource.TestCheckResourceAttr(resourceName, "stream_mode_details.0.stream_mode", "PROVISIONED"),
 				),
 			},
 			// Check that we can't update to an invalid combination
@@ -897,7 +906,10 @@ func testAccKinesisStreamConfig_basicOnDemand(rInt int) string {
 	return fmt.Sprintf(`
 resource "aws_kinesis_stream" "test" {
   name        = "terraform-kinesis-test-%d"
-  stream_mode = "ON_DEMAND"
+
+  stream_mode_details {
+    stream_mode = "ON_DEMAND"
+  }
 }
 `, rInt)
 }
@@ -914,8 +926,11 @@ resource "aws_kinesis_stream" "test" {
 func testAccKinesisStreamConfig_changeProvisionedToOnDemand_2(rInt int) string {
 	return fmt.Sprintf(`
 resource "aws_kinesis_stream" "test" {
-  name        = "terraform-kinesis-test-%d"
-  stream_mode = "ON_DEMAND"
+  name = "terraform-kinesis-test-%d"
+
+  stream_mode_details {
+    stream_mode = "ON_DEMAND"
+  }
 }
 `, rInt)
 }
@@ -925,7 +940,10 @@ func testAccKinesisStreamConfig_changeProvisionedToOnDemand_3(rInt int) string {
 resource "aws_kinesis_stream" "test" {
   name        = "terraform-kinesis-test-%d"
   shard_count = 2
-  stream_mode = "PROVISIONED"
+
+  stream_mode_details {
+    stream_mode = "PROVISIONED"
+  }
 }
 `, rInt)
 }
@@ -943,7 +961,10 @@ func testAccKinesisStreamConfig_failOnBadStreamCountAndStreamModeCombination_sha
 resource "aws_kinesis_stream" "test" {
   name        = "terraform-kinesis-test-%d"
   shard_count = 1
-  stream_mode = "ON_DEMAND"
+
+  stream_mode_details {
+    stream_mode = "ON_DEMAND"
+  }
 }
 `, rInt)
 }

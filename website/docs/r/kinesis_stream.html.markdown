@@ -26,6 +26,10 @@ resource "aws_kinesis_stream" "test_stream" {
     "OutgoingBytes",
   ]
 
+  stream_mode_details {
+    stream_mode = "PROVISIONED"
+  }
+
   tags = {
     Environment = "test"
   }
@@ -44,8 +48,12 @@ Amazon has guidelines for specifying the Stream size that should be referenced w
 * `enforce_consumer_deletion` - (Optional) A boolean that indicates all registered consumers should be deregistered from the stream so that the stream can be destroyed without error. The default value is `false`.
 * `encryption_type` - (Optional) The encryption type to use. The only acceptable values are `NONE` or `KMS`. The default value is `NONE`.
 * `kms_key_id` - (Optional) The GUID for the customer-managed KMS key to use for encryption. You can also use a Kinesis-owned master key by specifying the alias `alias/aws/kinesis`.
-* `stream_mode` - (Optional) Specifies the capacity mode of the stream. Must be either `PROVISIONED` (default) or `ON_DEMAND`.
+* `stream_mode_details` - (Optional) Indicates the [capacity mode](https://docs.aws.amazon.com/streams/latest/dev/how-do-i-size-a-stream.html) of the data stream. Detailed below.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://www.terraform.io/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+
+### stream_mode_details Configuration Block
+
+* `stream_mode` - (Optional) Specifies the capacity mode of the stream. Must be either `PROVISIONED` (default) or `ON_DEMAND`.
 
 ## Attributes Reference
 
