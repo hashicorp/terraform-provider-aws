@@ -1,3 +1,4 @@
 ```release-note:enhancement
 resource/aws_lb: Add `tls_version_and_cipher_suite` argument to the loadbalancer
+resource/aws_lb: Add `xff_client_port` argument to the loadbalancer
 ```
