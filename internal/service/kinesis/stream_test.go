@@ -905,7 +905,7 @@ resource "aws_kinesis_stream" "test" {
 func testAccKinesisStreamConfig_basicOnDemand(rInt int) string {
 	return fmt.Sprintf(`
 resource "aws_kinesis_stream" "test" {
-  name        = "terraform-kinesis-test-%d"
+  name = "terraform-kinesis-test-%d"
 
   stream_mode_details {
     stream_mode = "ON_DEMAND"
