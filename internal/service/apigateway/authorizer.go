@@ -172,12 +172,12 @@ func resourceAuthorizerRead(d *schema.ResourceData, meta interface{}) error {
 
 	authorizer, err := conn.GetAuthorizer(&input)
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, apigateway.ErrCodeNotFoundException, "") {
-			log.Printf("[WARN] No API Gateway Authorizer found: %s", input)
+		if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, apigateway.ErrCodeNotFoundException) {
+			log.Printf("[WARN] API Gateway Authorizer (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
 		}
-		return err
+		return fmt.Errorf("error reading API Gateway Authorizer (%s): %w", d.Id(), err)
 	}
 	log.Printf("[DEBUG] Received API Gateway Authorizer: %s", authorizer)
 

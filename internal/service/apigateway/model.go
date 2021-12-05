@@ -119,12 +119,12 @@ func resourceModelRead(d *schema.ResourceData, meta interface{}) error {
 		RestApiId: aws.String(d.Get("rest_api_id").(string)),
 	})
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, apigateway.ErrCodeNotFoundException, "") {
+		if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, apigateway.ErrCodeNotFoundException) {
 			log.Printf("[WARN] API Gateway Model (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
 		}
-		return err
+		return fmt.Errorf("error reading API Gateway Model (%s): %w", d.Id(), err)
 	}
 	log.Printf("[DEBUG] Received API Gateway Model: %s", out)
 

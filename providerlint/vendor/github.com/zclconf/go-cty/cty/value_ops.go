@@ -116,9 +116,9 @@ func (val Value) GoString() string {
 // Use RawEquals to compare if two values are equal *ignoring* the
 // short-circuit rules and the exception for null values.
 func (val Value) Equals(other Value) Value {
-	if val.IsMarked() || other.IsMarked() {
-		val, valMarks := val.Unmark()
-		other, otherMarks := other.Unmark()
+	if val.ContainsMarked() || other.ContainsMarked() {
+		val, valMarks := val.UnmarkDeep()
+		other, otherMarks := other.UnmarkDeep()
 		return val.Equals(other).WithMarks(valMarks, otherMarks)
 	}
 
@@ -1283,9 +1283,7 @@ func (val Value) AsBigFloat() *big.Float {
 	}
 
 	// Copy the float so that callers can't mutate our internal state
-	ret := *(val.v.(*big.Float))
-
-	return &ret
+	return new(big.Float).Copy(val.v.(*big.Float))
 }
 
 // AsValueSlice returns a []cty.Value representation of a non-null, non-unknown
