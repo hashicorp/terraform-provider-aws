@@ -88,7 +88,7 @@ func dataSourceStreamRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("creation_timestamp", state.creationTimestamp)
 	d.Set("retention_period", state.retentionPeriod)
 	d.Set("shard_level_metrics", state.shardLevelMetrics)
-	d.Set("stream_mode", state.streamMode)
+	d.Set("stream_mode_details", []interface{}{flattenStreamModeDetails(state.streamModeDetails)})
 
 	tags, err := ListTags(conn, sn)
 
