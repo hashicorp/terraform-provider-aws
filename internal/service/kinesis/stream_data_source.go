@@ -59,9 +59,17 @@ func DataSourceStream() *schema.Resource {
 				Set:      schema.HashString,
 			},
 
-			"stream_mode": {
-				Type:     schema.TypeString,
+			"stream_mode_details": {
+				Type:     schema.TypeList,
 				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"stream_mode": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
 			},
 
 			"tags": tftags.TagsSchemaComputed(),

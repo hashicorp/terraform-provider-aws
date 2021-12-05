@@ -105,13 +105,13 @@ func ResourceStream() *schema.Resource {
 			"stream_mode_details": {
 				Type:     schema.TypeList,
 				Optional: true,
+				Computed: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"stream_mode": {
 							Type:         schema.TypeString,
-							Optional:     true,
-							Default:      kinesis.StreamModeProvisioned,
+							Required:     true,
 							ValidateFunc: validation.StringInSlice(kinesis.StreamMode_Values(), false),
 						},
 					},
@@ -267,7 +267,14 @@ func resourceStreamRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("retention_period", state.retentionPeriod)
 	d.Set("encryption_type", state.encryptionType)
 	d.Set("kms_key_id", state.keyId)
-	d.Set("stream_mode_details", []interface{}{flattenStreamModeDetails(state.streamModeDetails)})
+
+	if details := state.streamModeDetails; details != nil {
+		if err := d.Set("stream_mode_details", []interface{}{flattenStreamModeDetails(details)}); err != nil {
+			return fmt.Errorf("set stream_mode_details: %w", err)
+		}
+	} else {
+		d.Set("stream_mode_details", nil)
+	}
 
 	if len(state.shardLevelMetrics) > 0 {
 		d.Set("shard_level_metrics", state.shardLevelMetrics)
