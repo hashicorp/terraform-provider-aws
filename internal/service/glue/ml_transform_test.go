@@ -16,7 +16,7 @@ import (
 	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
 )
 
-func TestAccGlueMlTransform_ML_basic(t *testing.T) {
+func TestAccGlueMlTransform_basic(t *testing.T) {
 	var transform glue.GetMLTransformOutput
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -66,7 +66,7 @@ func TestAccGlueMlTransform_ML_basic(t *testing.T) {
 	})
 }
 
-func TestAccGlueMlTransform_ML_typeFindMatchesFull(t *testing.T) {
+func TestAccGlueMlTransform_typeFindMatchesFull(t *testing.T) {
 	var transform glue.GetMLTransformOutput
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -126,7 +126,7 @@ func TestAccGlueMlTransform_ML_typeFindMatchesFull(t *testing.T) {
 	})
 }
 
-func TestAccGlueMlTransform_ML_description(t *testing.T) {
+func TestAccGlueMlTransform_description(t *testing.T) {
 	var transform glue.GetMLTransformOutput
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -161,7 +161,7 @@ func TestAccGlueMlTransform_ML_description(t *testing.T) {
 	})
 }
 
-func TestAccGlueMlTransform_ML_glueVersion(t *testing.T) {
+func TestAccGlueMlTransform_glueVersion(t *testing.T) {
 	var transform glue.GetMLTransformOutput
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -196,7 +196,7 @@ func TestAccGlueMlTransform_ML_glueVersion(t *testing.T) {
 	})
 }
 
-func TestAccGlueMlTransform_ML_maxRetries(t *testing.T) {
+func TestAccGlueMlTransform_maxRetries(t *testing.T) {
 	var transform glue.GetMLTransformOutput
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -235,7 +235,7 @@ func TestAccGlueMlTransform_ML_maxRetries(t *testing.T) {
 	})
 }
 
-func TestAccGlueMlTransform_ML_tags(t *testing.T) {
+func TestAccGlueMlTransform_tags(t *testing.T) {
 	var transform1, transform2, transform3 glue.GetMLTransformOutput
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -281,7 +281,7 @@ func TestAccGlueMlTransform_ML_tags(t *testing.T) {
 	})
 }
 
-func TestAccGlueMlTransform_ML_timeout(t *testing.T) {
+func TestAccGlueMlTransform_timeout(t *testing.T) {
 	var transform glue.GetMLTransformOutput
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -316,7 +316,7 @@ func TestAccGlueMlTransform_ML_timeout(t *testing.T) {
 	})
 }
 
-func TestAccGlueMlTransform_ML_workerType(t *testing.T) {
+func TestAccGlueMlTransform_workerType(t *testing.T) {
 	var transform glue.GetMLTransformOutput
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -353,7 +353,7 @@ func TestAccGlueMlTransform_ML_workerType(t *testing.T) {
 	})
 }
 
-func TestAccGlueMlTransform_ML_maxCapacity(t *testing.T) {
+func TestAccGlueMlTransform_maxCapacity(t *testing.T) {
 	var transform glue.GetMLTransformOutput
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -388,7 +388,7 @@ func TestAccGlueMlTransform_ML_maxCapacity(t *testing.T) {
 	})
 }
 
-func TestAccGlueMlTransform_ML_disappears(t *testing.T) {
+func TestAccGlueMlTransform_disappears(t *testing.T) {
 	var transform glue.GetMLTransformOutput
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)

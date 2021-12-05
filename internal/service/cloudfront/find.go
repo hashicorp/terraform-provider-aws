@@ -8,6 +8,81 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+func FindCachePolicyByID(conn *cloudfront.CloudFront, id string) (*cloudfront.GetCachePolicyOutput, error) {
+	input := &cloudfront.GetCachePolicyInput{
+		Id: aws.String(id),
+	}
+
+	output, err := conn.GetCachePolicy(input)
+
+	if tfawserr.ErrCodeEquals(err, cloudfront.ErrCodeNoSuchCachePolicy) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.CachePolicy == nil || output.CachePolicy.CachePolicyConfig == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
+}
+
+func FindFieldLevelEncryptionConfigByID(conn *cloudfront.CloudFront, id string) (*cloudfront.GetFieldLevelEncryptionConfigOutput, error) {
+	input := &cloudfront.GetFieldLevelEncryptionConfigInput{
+		Id: aws.String(id),
+	}
+
+	output, err := conn.GetFieldLevelEncryptionConfig(input)
+
+	if tfawserr.ErrCodeEquals(err, cloudfront.ErrCodeNoSuchFieldLevelEncryptionConfig) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.FieldLevelEncryptionConfig == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
+}
+
+func FindFieldLevelEncryptionProfileByID(conn *cloudfront.CloudFront, id string) (*cloudfront.GetFieldLevelEncryptionProfileOutput, error) {
+	input := &cloudfront.GetFieldLevelEncryptionProfileInput{
+		Id: aws.String(id),
+	}
+
+	output, err := conn.GetFieldLevelEncryptionProfile(input)
+
+	if tfawserr.ErrCodeEquals(err, cloudfront.ErrCodeNoSuchFieldLevelEncryptionProfile) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.FieldLevelEncryptionProfile == nil || output.FieldLevelEncryptionProfile.FieldLevelEncryptionProfileConfig == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
+}
+
 func FindFunctionByNameAndStage(conn *cloudfront.CloudFront, name, stage string) (*cloudfront.DescribeFunctionOutput, error) {
 	input := &cloudfront.DescribeFunctionInput{
 		Name:  aws.String(name),
@@ -27,6 +102,31 @@ func FindFunctionByNameAndStage(conn *cloudfront.CloudFront, name, stage string)
 		return nil, err
 	}
 
+	if output == nil || output.FunctionSummary == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
+}
+
+func FindMonitoringSubscriptionByDistributionID(conn *cloudfront.CloudFront, id string) (*cloudfront.GetMonitoringSubscriptionOutput, error) {
+	input := &cloudfront.GetMonitoringSubscriptionInput{
+		DistributionId: aws.String(id),
+	}
+
+	output, err := conn.GetMonitoringSubscription(input)
+
+	if tfawserr.ErrCodeEquals(err, cloudfront.ErrCodeNoSuchDistribution) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
 	if output == nil {
 		return nil, tfresource.NewEmptyResultError(input)
 	}
@@ -34,42 +134,54 @@ func FindFunctionByNameAndStage(conn *cloudfront.CloudFront, name, stage string)
 	return output, nil
 }
 
-// FindRealtimeLogConfigByARN returns the real-time log configuration corresponding to the specified ARN.
-// Returns nil if no configuration is found.
+func FindOriginRequestPolicyByID(conn *cloudfront.CloudFront, id string) (*cloudfront.GetOriginRequestPolicyOutput, error) {
+	input := &cloudfront.GetOriginRequestPolicyInput{
+		Id: aws.String(id),
+	}
+
+	output, err := conn.GetOriginRequestPolicy(input)
+
+	if tfawserr.ErrCodeEquals(err, cloudfront.ErrCodeNoSuchOriginRequestPolicy) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.OriginRequestPolicy == nil || output.OriginRequestPolicy.OriginRequestPolicyConfig == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
+}
+
 func FindRealtimeLogConfigByARN(conn *cloudfront.CloudFront, arn string) (*cloudfront.RealtimeLogConfig, error) {
 	input := &cloudfront.GetRealtimeLogConfigInput{
 		ARN: aws.String(arn),
 	}
 
 	output, err := conn.GetRealtimeLogConfig(input)
+
+	if tfawserr.ErrCodeEquals(err, cloudfront.ErrCodeNoSuchRealtimeLogConfig) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
 	if err != nil {
 		return nil, err
 	}
 
-	if output == nil {
-		return nil, nil
+	if output == nil || output.RealtimeLogConfig == nil {
+		return nil, tfresource.NewEmptyResultError(input)
 	}
 
 	return output.RealtimeLogConfig, nil
-}
-
-// FindMonitoringSubscriptionByDistributionID returns the monitoring subscription corresponding to the specified distribution id.
-// Returns nil if no subscription is found.
-func FindMonitoringSubscriptionByDistributionID(conn *cloudfront.CloudFront, id string) (*cloudfront.MonitoringSubscription, error) {
-	input := &cloudfront.GetMonitoringSubscriptionInput{
-		DistributionId: aws.String(id),
-	}
-
-	output, err := conn.GetMonitoringSubscription(input)
-	if err != nil {
-		return nil, err
-	}
-
-	if output == nil {
-		return nil, nil
-	}
-
-	return output.MonitoringSubscription, nil
 }
 
 func FindResponseHeadersPolicyByID(conn *cloudfront.CloudFront, id string) (*cloudfront.GetResponseHeadersPolicyOutput, error) {
@@ -90,7 +202,7 @@ func FindResponseHeadersPolicyByID(conn *cloudfront.CloudFront, id string) (*clo
 		return nil, err
 	}
 
-	if output == nil {
+	if output == nil || output.ResponseHeadersPolicy == nil || output.ResponseHeadersPolicy.ResponseHeadersPolicyConfig == nil {
 		return nil, tfresource.NewEmptyResultError(input)
 	}
 

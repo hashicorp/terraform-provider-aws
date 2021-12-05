@@ -68,9 +68,11 @@ provider "aws" {
 <div style="column-width: 14em;">
 <ul>
   <li><code>accessanalyzer</code></li>
+  <li><code>account</code></li>
   <li><code>acm</code></li>
   <li><code>acmpca</code></li>
   <li><code>alexaforbusiness</code></li>
+  <li><code>amp</code> (or <code>prometheus</code>, <code>prometheusservice</code>)</li>
   <li><code>amplify</code></li>
   <li><code>amplifybackend</code></li>
   <li><code>apigateway</code></li>
@@ -108,7 +110,6 @@ provider "aws" {
   <li><code>cloudsearchdomain</code></li>
   <li><code>cloudtrail</code></li>
   <li><code>cloudwatch</code></li>
-  <li><code>cloudwatchevents</code></li>
   <li><code>cloudwatchlogs</code></li>
   <li><code>codeartifact</code></li>
   <li><code>codebuild</code></li>
@@ -161,6 +162,7 @@ provider "aws" {
   <li><code>elbv2</code></li>
   <li><code>emr</code></li>
   <li><code>emrcontainers</code></li>
+  <li><code>eventbridge</code> (or <code>cloudwatchevents</code>, <code>events</code>)</li>
   <li><code>finspace</code></li>
   <li><code>finspacedata</code></li>
   <li><code>firehose</code></li>
@@ -264,7 +266,6 @@ provider "aws" {
   <li><code>pinpointsmsvoice</code></li>
   <li><code>polly</code></li>
   <li><code>pricing</code></li>
-  <li><code>prometheus</code> (or <code>prometheusservice</code>)</li>
   <li><code>proton</code></li>
   <li><code>qldb</code></li>
   <li><code>qldbsession</code></li>

@@ -875,13 +875,13 @@ func flattenMqWeeklyStartTime(wst *mq.WeeklyStartTime) []interface{} {
 	}
 	m := make(map[string]interface{})
 	if wst.DayOfWeek != nil {
-		m["day_of_week"] = *wst.DayOfWeek
+		m["day_of_week"] = aws.StringValue(wst.DayOfWeek)
 	}
 	if wst.TimeOfDay != nil {
-		m["time_of_day"] = *wst.TimeOfDay
+		m["time_of_day"] = aws.StringValue(wst.TimeOfDay)
 	}
 	if wst.TimeZone != nil {
-		m["time_zone"] = *wst.TimeZone
+		m["time_zone"] = aws.StringValue(wst.TimeZone)
 	}
 	return []interface{}{m}
 }

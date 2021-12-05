@@ -285,7 +285,7 @@ func resourceNetworkInterfaceRead(d *schema.ResourceData, meta interface{}) erro
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(1*time.Minute, func() (interface{}, error) {
+	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(PropagationTimeout, func() (interface{}, error) {
 		return FindNetworkInterfaceByID(conn, d.Id())
 	}, d.IsNewResource())
 
@@ -382,7 +382,7 @@ func resourceNetworkInterfaceUpdate(d *schema.ResourceData, meta interface{}) er
 		if oa != nil && oa.(*schema.Set).Len() > 0 {
 			attachment := oa.(*schema.Set).List()[0].(map[string]interface{})
 
-			err := detachNetworkInterface(conn, d.Id(), attachment["attachment_id"].(string), networkInterfaceDetachedTimeout)
+			err := DetachNetworkInterface(conn, d.Id(), attachment["attachment_id"].(string), NetworkInterfaceDetachedTimeout)
 
 			if err != nil {
 				return err
@@ -779,14 +779,14 @@ func resourceNetworkInterfaceDelete(d *schema.ResourceData, meta interface{}) er
 	if v, ok := d.GetOk("attachment"); ok && v.(*schema.Set).Len() > 0 {
 		attachment := v.(*schema.Set).List()[0].(map[string]interface{})
 
-		err := detachNetworkInterface(conn, d.Id(), attachment["attachment_id"].(string), networkInterfaceDetachedTimeout)
+		err := DetachNetworkInterface(conn, d.Id(), attachment["attachment_id"].(string), NetworkInterfaceDetachedTimeout)
 
 		if err != nil {
 			return err
 		}
 	}
 
-	return deleteNetworkInterface(conn, d.Id())
+	return DeleteNetworkInterface(conn, d.Id())
 }
 
 func attachNetworkInterface(conn *ec2.EC2, networkInterfaceID, instanceID string, deviceIndex int, timeout time.Duration) (string, error) {
@@ -814,7 +814,7 @@ func attachNetworkInterface(conn *ec2.EC2, networkInterfaceID, instanceID string
 	return attachmentID, nil
 }
 
-func deleteNetworkInterface(conn *ec2.EC2, networkInterfaceID string) error {
+func DeleteNetworkInterface(conn *ec2.EC2, networkInterfaceID string) error {
 	log.Printf("[INFO] Deleting EC2 Network Interface: %s", networkInterfaceID)
 	_, err := conn.DeleteNetworkInterface(&ec2.DeleteNetworkInterfaceInput{
 		NetworkInterfaceId: aws.String(networkInterfaceID),
@@ -831,7 +831,7 @@ func deleteNetworkInterface(conn *ec2.EC2, networkInterfaceID string) error {
 	return nil
 }
 
-func detachNetworkInterface(conn *ec2.EC2, networkInterfaceID, attachmentID string, timeout time.Duration) error {
+func DetachNetworkInterface(conn *ec2.EC2, networkInterfaceID, attachmentID string, timeout time.Duration) error {
 	input := &ec2.DetachNetworkInterfaceInput{
 		AttachmentId: aws.String(attachmentID),
 		Force:        aws.Bool(true),

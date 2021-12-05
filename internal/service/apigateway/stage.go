@@ -220,7 +220,7 @@ func resourceStageRead(d *schema.ResourceData, meta interface{}) error {
 	}
 	stage, err := conn.GetStage(&input)
 
-	if tfawserr.ErrMessageContains(err, apigateway.ErrCodeNotFoundException, "") {
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, apigateway.ErrCodeNotFoundException) {
 		log.Printf("[WARN] API Gateway Stage (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil

@@ -169,19 +169,18 @@ func resourceAnalyzerUpdate(d *schema.ResourceData, meta interface{}) error {
 func resourceAnalyzerDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).AccessAnalyzerConn
 
-	input := &accessanalyzer.DeleteAnalyzerInput{
+	log.Printf("[DEBUG] Deleting Access Analyzer Analyzer: (%s)", d.Id())
+	_, err := conn.DeleteAnalyzer(&accessanalyzer.DeleteAnalyzerInput{
 		AnalyzerName: aws.String(d.Id()),
 		ClientToken:  aws.String(resource.UniqueId()),
-	}
+	})
 
-	_, err := conn.DeleteAnalyzer(input)
-
-	if tfawserr.ErrMessageContains(err, accessanalyzer.ErrCodeResourceNotFoundException, "") {
+	if tfawserr.ErrCodeEquals(err, accessanalyzer.ErrCodeResourceNotFoundException) {
 		return nil
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting Access Analyzer Analyzer (%s): %s", d.Id(), err)
+		return fmt.Errorf("error deleting Access Analyzer Analyzer (%s): %w", d.Id(), err)
 	}
 
 	return nil

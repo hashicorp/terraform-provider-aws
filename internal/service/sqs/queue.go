@@ -71,8 +71,15 @@ var (
 		},
 
 		"kms_master_key_id": {
-			Type:     schema.TypeString,
-			Optional: true,
+			Type:          schema.TypeString,
+			Optional:      true,
+			ConflictsWith: []string{"sqs_managed_sse_enabled"},
+		},
+
+		"sqs_managed_sse_enabled": {
+			Type:          schema.TypeBool,
+			Optional:      true,
+			ConflictsWith: []string{"kms_master_key_id"},
 		},
 
 		"max_message_size": {
@@ -145,7 +152,7 @@ var (
 		"tags_all": tftags.TagsSchemaComputed(),
 	}
 
-	sqsQueueAttributeMap = NewAttrMap(map[string]string{
+	sqsQueueAttributeMap = create.AttrMap(map[string]string{
 		"delay_seconds":                     sqs.QueueAttributeNameDelaySeconds,
 		"max_message_size":                  sqs.QueueAttributeNameMaximumMessageSize,
 		"message_retention_seconds":         sqs.QueueAttributeNameMessageRetentionPeriod,
@@ -158,6 +165,7 @@ var (
 		"content_based_deduplication":       sqs.QueueAttributeNameContentBasedDeduplication,
 		"kms_master_key_id":                 sqs.QueueAttributeNameKmsMasterKeyId,
 		"kms_data_key_reuse_period_seconds": sqs.QueueAttributeNameKmsDataKeyReusePeriodSeconds,
+		"sqs_managed_sse_enabled":           sqs.QueueAttributeNameSqsManagedSseEnabled,
 		"deduplication_scope":               sqs.QueueAttributeNameDeduplicationScope,
 		"fifo_throughput_limit":             sqs.QueueAttributeNameFifoThroughputLimit,
 	}, sqsQueueSchema)

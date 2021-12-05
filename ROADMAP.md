@@ -1,30 +1,29 @@
-# Roadmap:  August 2021 - October 2021
+# Roadmap:  November 2021 - January 2022
 
 Every few months, the team will highlight areas of focus for our work and upcoming research.
 
-We select items for inclusion in the roadmap from the Top 10 Community Issues, [Core Services](docs/contributing/core-services.md), and internal priorities. Where community sourced contributions exist we will work with the authors to review and merge their work. Where this does not exist or the original contributors are not available we will create the resources and implementation ourselves.
+We select items for inclusion in the roadmap from the Top Community Issues, [Core Services](docs/contributing/core-services.md), and internal priorities. Where community sourced contributions exist we will work with the authors to review and merge their work. Where this does not exist or the original contributors are not available we will create the resources and implementation ourselves.
 
 Each weekly release will include necessary tasks that lead to the completion of the stated goals as well as community pull requests, enhancements, and features that are not highlighted in the roadmap. To view all the items we've prioritized for this quarter, please see the [Roadmap milestone](https://github.com/hashicorp/terraform-provider-aws/milestone/138).
 
 This roadmap does not describe all the work that will be included within this timeframe, but it does describe our focus. We will include other work as events occur .
 
-In the period spanning May to July 2021 539 Pull Requests were opened in the provider and 449 were merged, adding support for:
+In the period spanning August to October 2021, 573 Pull Requests were opened in the provider and 465 were merged, adding support for:
 
-- Amazon Timestream
-- AWS AppConfig
-- AWS Amplify
-- AWS Service Catalog
-- AWS Elasticsearch Native SAML for Kibana
-- Amazon Macie 2
-- Delegated Administrators for Organisations
-- Predictive Autoscaling
-- Amazon EKS OIDC
-- AWS Transfer Family support for Amazon Elastic File System
-- Amazon Kinesis Data Streams for Amazon DynamoDB
+- Amazon Chime
+- Amazon Connect
+- Amazon AppStream 2.0
+- Route 53 Recovery Control
+- Graviton2 support for Lambda
+- S3 Replication Time Control
 
-Among many other enhancements, bug fixes and resolutions to technical debt items.
+We also launched a fully generated provider, the AWS Cloud Control (AWSCC) provider for Terraform. The AWSCC provider is currently in Technical Preview. Please check it out and let us know what you think.
 
-From August-October ‘21, we will be prioritizing the following areas of work:
+- [HashiCorp Blog Announcement](https://www.hashicorp.com/blog/announcing-terraform-aws-cloud-control-provider-tech-preview)
+- [GitHub Repository](https://github.com/hashicorp/terraform-provider-awscc)
+- [AWS Cloud Control on the Terraform Registry](https://registry.terraform.io/providers/hashicorp/awscc/latest)
+
+From November ‘21- January ‘22, we will be prioritizing the following areas of work:
 
 ## Provider Version v4.0.0
 
@@ -36,67 +35,40 @@ There will also be the usual deprecations and sometimes breaking changes to exis
 
 For details of the changes in full please refer to #20433. We would love to hear your feedback.
 
-## New Services
-
-### Amazon Quicksight
-Issue: [#10990](https://github.com/hashicorp/terraform-provider-aws/issues/10990)
-
-_Amazon QuickSight is a scalable, serverless, embeddable, machine learning-powered business intelligence (BI) service built for the cloud. QuickSight lets you easily create and publish interactive BI dashboards that include Machine Learning-powered insights. QuickSight dashboards can be accessed from any device, and seamlessly embedded into your applications, portals, and websites._
-
-Support for Amazon Quicksight will include:
-
-New Resource(s):
-- aws_quicksight_data_source
-- aws_quicksight_group_membership
-- aws_quicksight_iam_policy_assignment
-- aws_quicksight_data_set
-- aws_quicksight_ingestion
-- aws_quicksight_template
-- aws_quicksight_dashboard
-- aws_quicksight_template_alias
-
-
-### Amazon AppStream
-Issue: [#6058](https://github.com/hashicorp/terraform-provider-aws/issues/6508)
-
-_Amazon AppStream 2.0 is a fully managed non-persistent desktop and application virtualization service that allows your users to securely access the data, applications, and resources they need, anywhere, anytime, from any supported device. With AppStream 2.0, you can easily scale your applications and desktops to any number of users across the globe without acquiring, provisioning, and operating hardware or infrastructure. AppStream 2.0 is built on AWS, so you benefit from a data center and network architecture designed for the most security-sensitive organizations. Each end user has a fluid and responsive experience because your applications run on virtual machines optimized for specific use cases and each streaming sessions automatically adjusts to network conditions._
-
-Support for Amazon AppStream will include:
-
-New Resource(s):
-- aws_appstream_stack
-- aws_appstream_fleet
-- aws_appstream_imagebuilder
-
-### Amazon Connect 
-Issue: [#16392](https://github.com/hashicorp/terraform-provider-aws/issues/16392)
-
-_Amazon Connect is an easy to use omnichannel cloud contact center that helps you provide superior customer service at a lower cost. Designed from the ground up to be omnichannel, Amazon Connect provides a seamless experience across voice and chat for your customers and agents. This includes one set of tools for skills-based routing, task management, powerful real-time and historical analytics, and intuitive management tools – all with pay-as-you-go pricing, which means Amazon Connect simplifies contact center operations, improves agent efficiency, and lowers costs. You can set up a contact center in minutes that can scale to support millions of customers from the office or as a virtual contact center._
-
-Support for Amazon Connect will include:
-
-New Resource(s):
-- aws_connect_instance
-- aws_connect_contact_flow
-- aws_connect_bot_association
-- aws_connect_lex_bot_association
-- aws_connect_lambda_function_association
-
-New Data Source(s): 
-- aws_connect_instance
-- aws_connect_contact_flow
-- aws_connect_bot_association
-- aws_connect_lex_bot_association
-- aws_connect_lambda_function_association
-
 ## Enhancements to Existing Services
-- [Support for KMS Multi-Region Keys](https://github.com/hashicorp/terraform-provider-aws/issues/19896)
-- [S3 Replication Time Control](https://github.com/hashicorp/terraform-provider-aws/issues/10974)
-- [New Data Source: aws_iam_roles](https://github.com/hashicorp/terraform-provider-aws/issues/14470)
 
-## Project Restructure: Service Level Packages
-
-The scale of the provider (now 1000 resources/datasources) has led to its existing package structure being difficult to work with and maintain. This quarter we are going to perform a large refactor of the codebase, to align on a single go package per AWS service. More details can be found in the encompassing issue [#20431](https://github.com/hashicorp/terraform-provider-aws/issues/20431)
+- [Support for Managing Amazon CloudSearch Domains](https://github.com/hashicorp/terraform-provider-aws/issues/7833)
+- [aws_config_remediation_configuration: No support for "automatic" remediation](https://github.com/hashicorp/terraform-provider-aws/issues/15491)
+- [S3 Intelligent-Tiering Archive configuration](https://github.com/hashicorp/terraform-provider-aws/issues/16123)
+- [IoT Thing Group](https://github.com/hashicorp/terraform-provider-aws/issues/8801)
+- [Add resource for CodeCommit approval rule templates](https://github.com/hashicorp/terraform-provider-aws/issues/11461)
+- [aws_dlm_lifecycle_policy - Implement support for "Cross Region copy"](https://github.com/hashicorp/terraform-provider-aws/issues/12204)
+- [Add a data source for aws_key_pair](https://github.com/hashicorp/terraform-provider-aws/issues/15590)
+- [Support ECS TaskSet](https://github.com/hashicorp/terraform-provider-aws/issues/8124)
+- [Support for AthenaEngineVersion option in Athena work groups](https://github.com/hashicorp/terraform-provider-aws/issues/17456)
+- [ECS Service can't update desired replicas when Blue Green deployment is enabled](https://github.com/hashicorp/terraform-provider-aws/issues/13658)
+- [Add connection termination control to AWS LB target group](https://github.com/hashicorp/terraform-provider-aws/issues/17227)
+- [WAFv2: Added support for custom response bodies](https://github.com/hashicorp/terraform-provider-aws/pull/19764)
+- [New Resource aws_route53domains_domain](https://github.com/hashicorp/terraform-provider-aws/pull/12711)
+- [Add aws_cognito_user resource](https://github.com/hashicorp/terraform-provider-aws/pull/19919)
+- [AWS dynamodb table: restore from point in time](https://github.com/hashicorp/terraform-provider-aws/pull/19292)
+- [Added `retain` parameter to `aws_lambda_layer_version` resource](https://github.com/hashicorp/terraform-provider-aws/pull/11997)
+- [New Resource: aws_lambda_layer_version_permission](https://github.com/hashicorp/terraform-provider-aws/pull/11941)
+- [resoure/aws_lb: Support WAF fial open](https://github.com/hashicorp/terraform-provider-aws/pull/16393)
+- [aws_elb & aws_lb: Add desync_mitigation_mode](https://github.com/hashicorp/terraform-provider-aws/pull/14764)
+- [Implement object lambda access points for S3](https://github.com/hashicorp/terraform-provider-aws/pull/19294)
+- [WAFv2: Added support for label_match_statement and rule_label](https://github.com/hashicorp/terraform-provider-aws/pull/19576)
+- [Cloudtrail: Exclude Management Event Sources](https://github.com/hashicorp/terraform-provider-aws/pull/17203)
+- [Retry S3 OperationAborted errors](https://github.com/hashicorp/terraform-provider-aws/pull/12949)
+- [aws_dms_endpoint: support for secrets id for oracle and postgres](https://github.com/hashicorp/terraform-provider-aws/pull/19040)
+- [Add support for private_ip_list](https://github.com/hashicorp/terraform-provider-aws/pull/17846)
+- [aws_emr_cluster: Fix aws_emr_security_configuration destroy issues](https://github.com/hashicorp/terraform-provider-aws/pull/12578)
+- [New Resource: aws_ecrpublic_repository_policy](https://github.com/hashicorp/terraform-provider-aws/pull/16901)
+- [aws_ecs_task_definition overwrites previous revision](https://github.com/hashicorp/terraform-provider-aws/issues/258)
+- [Order is lost for data aws_iam_policy_document when applied to S3 buckets, iam roles, kms keys](https://github.com/hashicorp/terraform-provider-aws/issues/11801)
+- [aws_ecs_cluster with capacity_providers cannot be destroyed](https://github.com/hashicorp/terraform-provider-aws/issues/11409)
+- [Support for Account Settings Flags](https://github.com/hashicorp/terraform-provider-aws/issues/10168)
+- [Execute AWS Lambda Only Once](https://github.com/hashicorp/terraform-provider-aws/issues/4746)
 
 ## Research Topics
 

@@ -17,7 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 )
 
-const awsMutexLambdaLayerKey = `aws_lambda_layer_version`
+const mutexLayerKey = `aws_lambda_layer_version`
 
 func ResourceLayerVersion() *schema.Resource {
 	return &schema.Resource{
@@ -30,6 +30,10 @@ func ResourceLayerVersion() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"compatible_architectures": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -40,9 +44,24 @@ func ResourceLayerVersion() *schema.Resource {
 					ValidateFunc: validation.StringInSlice(lambda.Architecture_Values(), false),
 				},
 			},
-			"layer_name": {
+			"compatible_runtimes": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				ForceNew: true,
+				MinItems: 0,
+				MaxItems: 15,
+				Elem: &schema.Schema{
+					Type:         schema.TypeString,
+					ValidateFunc: validation.StringInSlice(lambda.Runtime_Values(), false),
+				},
+			},
+			"created_date": {
 				Type:     schema.TypeString,
-				Required: true,
+				Computed: true,
+			},
+			"description": {
+				Type:     schema.TypeString,
+				Optional: true,
 				ForceNew: true,
 			},
 			"filename": {
@@ -50,6 +69,21 @@ func ResourceLayerVersion() *schema.Resource {
 				Optional:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"s3_bucket", "s3_key", "s3_object_version"},
+			},
+			"layer_arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"layer_name": {
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+			},
+			"license_info": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringLenBetween(0, 512),
 			},
 			"s3_bucket": {
 				Type:          schema.TypeString,
@@ -69,53 +103,24 @@ func ResourceLayerVersion() *schema.Resource {
 				ForceNew:      true,
 				ConflictsWith: []string{"filename"},
 			},
-			"compatible_runtimes": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				ForceNew: true,
-				MinItems: 0,
-				MaxItems: 5,
-				Elem: &schema.Schema{
-					Type:         schema.TypeString,
-					ValidateFunc: validation.StringInSlice(lambda.Runtime_Values(), false),
-				},
-			},
-			"description": {
+			"signing_job_arn": {
 				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-			},
-			"license_info": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(0, 512),
-			},
-
-			"arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"layer_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"created_date": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"source_code_hash": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
 				Computed: true,
 			},
 			"signing_profile_version_arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"signing_job_arn": {
+			"skip_destroy": {
+				Type:     schema.TypeBool,
+				Default:  false,
+				ForceNew: true,
+				Optional: true,
+			},
+			"source_code_hash": {
 				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
 				Computed: true,
 			},
 			"source_code_size": {
@@ -145,8 +150,8 @@ func resourceLayerVersionPublish(d *schema.ResourceData, meta interface{}) error
 
 	var layerContent *lambda.LayerVersionContentInput
 	if hasFilename {
-		conns.GlobalMutexKV.Lock(awsMutexLambdaLayerKey)
-		defer conns.GlobalMutexKV.Unlock(awsMutexLambdaLayerKey)
+		conns.GlobalMutexKV.Lock(mutexLayerKey)
+		defer conns.GlobalMutexKV.Unlock(mutexLayerKey)
 		file, err := loadFileContent(filename.(string))
 		if err != nil {
 			return fmt.Errorf("Unable to load %q: %s", filename.(string), err)
@@ -260,6 +265,11 @@ func resourceLayerVersionRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceLayerVersionDelete(d *schema.ResourceData, meta interface{}) error {
+	if v, ok := d.GetOk("skip_destroy"); ok && v.(bool) {
+		log.Printf("[DEBUG] Retaining Lambda Layer Version %q", d.Id())
+		return nil
+	}
+
 	conn := meta.(*conns.AWSClient).LambdaConn
 
 	version, err := strconv.ParseInt(d.Get("version").(string), 10, 64)
@@ -272,7 +282,7 @@ func resourceLayerVersionDelete(d *schema.ResourceData, meta interface{}) error 
 		VersionNumber: aws.Int64(version),
 	})
 	if err != nil {
-		return fmt.Errorf("error deleting Lambda Layer Version (%s): %s", d.Id(), err)
+		return fmt.Errorf("Error deleting Lambda Layer Version (%s): %s", d.Id(), err)
 	}
 
 	log.Printf("[DEBUG] Lambda layer %q deleted", d.Get("arn").(string))

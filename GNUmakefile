@@ -1,10 +1,18 @@
-SWEEP?=us-east-1,us-east-2,us-west-2
-TEST?=./...
-SWEEP_DIR?=./internal/sweep
-PKG_NAME=internal
-TEST_COUNT?=1
-ACCTEST_TIMEOUT?=180m
-ACCTEST_PARALLELISM?=20
+SWEEP               ?= us-west-2,us-east-1,us-east-2
+TEST                ?= ./...
+SWEEP_DIR           ?= ./internal/sweep
+PKG_NAME            ?= internal
+TEST_COUNT          ?= 1
+ACCTEST_TIMEOUT     ?= 180m
+ACCTEST_PARALLELISM ?= 20
+
+ifneq ($(origin PKG), undefined)
+	PKG_NAME = internal/service/$(PKG)
+endif
+
+ifneq ($(origin TESTS), undefined)
+	TESTARGS = -run='$(TESTS)'
+endif
 
 default: build
 
@@ -16,6 +24,7 @@ gen:
 	go generate ./...
 
 sweep:
+	# make sweep SWEEPARGS=-sweep-run=aws_example_thing
 	@echo "WARNING: This will destroy infrastructure. Use only in development accounts."
 	go test $(SWEEP_DIR) -v -tags=sweep -sweep=$(SWEEP) $(SWEEPARGS) -timeout 60m
 
