@@ -338,7 +338,7 @@ func resourceRestAPIRead(d *schema.ResourceData, meta interface{}) error {
 	api, err := conn.GetRestApi(&apigateway.GetRestApiInput{
 		RestApiId: aws.String(d.Id()),
 	})
-	if tfawserr.ErrMessageContains(err, apigateway.ErrCodeNotFoundException, "") {
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, apigateway.ErrCodeNotFoundException) {
 		log.Printf("[WARN] API Gateway (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil

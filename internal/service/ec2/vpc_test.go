@@ -3,6 +3,7 @@ package ec2_test
 import (
 	"fmt"
 	"regexp"
+	"strings"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -18,7 +19,7 @@ import (
 
 // add sweeper to delete known test vpcs
 
-func TestAccEC2VPC_basic(t *testing.T) {
+func TestAccVPC_basic(t *testing.T) {
 	var vpc ec2.Vpc
 	resourceName := "aws_vpc.test"
 
@@ -55,7 +56,7 @@ func TestAccEC2VPC_basic(t *testing.T) {
 	})
 }
 
-func TestAccEC2VPC_disappears(t *testing.T) {
+func TestAccVPC_disappears(t *testing.T) {
 	var vpc ec2.Vpc
 	resourceName := "aws_vpc.test"
 
@@ -77,7 +78,7 @@ func TestAccEC2VPC_disappears(t *testing.T) {
 	})
 }
 
-func TestAccEC2VPC_DefaultTags_providerOnly(t *testing.T) {
+func TestAccVPC_DefaultTags_providerOnly(t *testing.T) {
 	var providers []*schema.Provider
 	var vpc ec2.Vpc
 	resourceName := "aws_vpc.test"
@@ -134,7 +135,7 @@ func TestAccEC2VPC_DefaultTags_providerOnly(t *testing.T) {
 	})
 }
 
-func TestAccEC2VPC_DefaultTags_updateToProviderOnly(t *testing.T) {
+func TestAccVPC_DefaultTags_updateToProviderOnly(t *testing.T) {
 	var providers []*schema.Provider
 	var vpc ec2.Vpc
 	resourceName := "aws_vpc.test"
@@ -176,7 +177,7 @@ func TestAccEC2VPC_DefaultTags_updateToProviderOnly(t *testing.T) {
 	})
 }
 
-func TestAccEC2VPC_DefaultTags_updateToResourceOnly(t *testing.T) {
+func TestAccVPC_DefaultTags_updateToResourceOnly(t *testing.T) {
 	var providers []*schema.Provider
 	var vpc ec2.Vpc
 	resourceName := "aws_vpc.test"
@@ -218,7 +219,7 @@ func TestAccEC2VPC_DefaultTags_updateToResourceOnly(t *testing.T) {
 	})
 }
 
-func TestAccEC2VPC_DefaultTagsProviderAndResource_nonOverlappingTag(t *testing.T) {
+func TestAccVPC_DefaultTagsProviderAndResource_nonOverlappingTag(t *testing.T) {
 	var providers []*schema.Provider
 	var vpc ec2.Vpc
 	resourceName := "aws_vpc.test"
@@ -282,7 +283,7 @@ func TestAccEC2VPC_DefaultTagsProviderAndResource_nonOverlappingTag(t *testing.T
 	})
 }
 
-func TestAccEC2VPC_DefaultTagsProviderAndResource_overlappingTag(t *testing.T) {
+func TestAccVPC_DefaultTagsProviderAndResource_overlappingTag(t *testing.T) {
 	var providers []*schema.Provider
 	var vpc ec2.Vpc
 	resourceName := "aws_vpc.test"
@@ -342,7 +343,7 @@ func TestAccEC2VPC_DefaultTagsProviderAndResource_overlappingTag(t *testing.T) {
 	})
 }
 
-func TestAccEC2VPC_DefaultTagsProviderAndResource_duplicateTag(t *testing.T) {
+func TestAccVPC_DefaultTagsProviderAndResource_duplicateTag(t *testing.T) {
 	var providers []*schema.Provider
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -363,12 +364,12 @@ func TestAccEC2VPC_DefaultTagsProviderAndResource_duplicateTag(t *testing.T) {
 	})
 }
 
-// TestAccEC2VPC_DynamicResourceTagsMergedWithLocals_ignoreChanges ensures computed "tags_all"
+// TestAccVPC_DynamicResourceTagsMergedWithLocals_ignoreChanges ensures computed "tags_all"
 // attributes are correctly determined when the provider-level default_tags block
 // is left unused and resource tags (merged with local.tags) are only known at apply time,
 // with additional lifecycle ignore_changes attributes, thereby eliminating "Inconsistent final plan" errors
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/18366
-func TestAccEC2VPC_DynamicResourceTagsMergedWithLocals_ignoreChanges(t *testing.T) {
+func TestAccVPC_DynamicResourceTagsMergedWithLocals_ignoreChanges(t *testing.T) {
 	var providers []*schema.Provider
 	var vpc ec2.Vpc
 
@@ -419,12 +420,12 @@ func TestAccEC2VPC_DynamicResourceTagsMergedWithLocals_ignoreChanges(t *testing.
 	})
 }
 
-// TestAccEC2VPC_DynamicResourceTags_ignoreChanges ensures computed "tags_all"
+// TestAccVPC_DynamicResourceTags_ignoreChanges ensures computed "tags_all"
 // attributes are correctly determined when the provider-level default_tags block
 // is left unused and resource tags are only known at apply time,
 // with additional lifecycle ignore_changes attributes, thereby eliminating "Inconsistent final plan" errors
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/18366
-func TestAccEC2VPC_DynamicResourceTags_ignoreChanges(t *testing.T) {
+func TestAccVPC_DynamicResourceTags_ignoreChanges(t *testing.T) {
 	var providers []*schema.Provider
 	var vpc ec2.Vpc
 
@@ -471,7 +472,7 @@ func TestAccEC2VPC_DynamicResourceTags_ignoreChanges(t *testing.T) {
 	})
 }
 
-func TestAccEC2VPC_defaultAndIgnoreTags(t *testing.T) {
+func TestAccVPC_defaultAndIgnoreTags(t *testing.T) {
 	var providers []*schema.Provider
 	var vpc ec2.Vpc
 	resourceName := "aws_vpc.test"
@@ -508,7 +509,7 @@ func TestAccEC2VPC_defaultAndIgnoreTags(t *testing.T) {
 	})
 }
 
-func TestAccEC2VPC_ignoreTags(t *testing.T) {
+func TestAccVPC_ignoreTags(t *testing.T) {
 	var providers []*schema.Provider
 	var vpc ec2.Vpc
 	resourceName := "aws_vpc.test"
@@ -539,7 +540,7 @@ func TestAccEC2VPC_ignoreTags(t *testing.T) {
 	})
 }
 
-func TestAccEC2VPC_assignGeneratedIPv6CIDRBlock(t *testing.T) {
+func TestAccVPC_assignGeneratedIPv6CIDRBlock(t *testing.T) {
 	var vpc ec2.Vpc
 	resourceName := "aws_vpc.test"
 
@@ -561,9 +562,10 @@ func TestAccEC2VPC_assignGeneratedIPv6CIDRBlock(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"assign_generated_ipv6_cidr_block"},
 			},
 			{
 				Config: testAccVpcConfigAssignGeneratedIpv6CidrBlock(false),
@@ -591,7 +593,7 @@ func TestAccEC2VPC_assignGeneratedIPv6CIDRBlock(t *testing.T) {
 	})
 }
 
-func TestAccEC2VPC_tenancy(t *testing.T) {
+func TestAccVPC_tenancy(t *testing.T) {
 	var vpcDedicated ec2.Vpc
 	var vpcDefault ec2.Vpc
 	resourceName := "aws_vpc.test"
@@ -634,7 +636,50 @@ func TestAccEC2VPC_tenancy(t *testing.T) {
 	})
 }
 
-func TestAccEC2VPC_tags(t *testing.T) {
+func TestAccVPC_IpamIpv4BasicNetmask(t *testing.T) {
+	var vpc ec2.Vpc
+	resourceName := "aws_vpc.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckVpcDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVpcIpamIpv4(28),
+				Check: resource.ComposeTestCheckFunc(
+					acctest.CheckVPCExists(resourceName, &vpc),
+					testAccCheckVpcCidrPrefix(&vpc, "28"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccVPC_IpamIpv4BasicExplicitCidr(t *testing.T) {
+	var vpc ec2.Vpc
+	resourceName := "aws_vpc.test"
+	cidr := "172.2.0.32/28"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckVpcDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVpcIpamIpv4ExplicitCidr(cidr),
+				Check: resource.ComposeTestCheckFunc(
+					acctest.CheckVPCExists(resourceName, &vpc),
+					testAccCheckVpcCidr(&vpc, cidr),
+				),
+			},
+		},
+	})
+}
+
+func TestAccVPC_tags(t *testing.T) {
 	var vpc ec2.Vpc
 	resourceName := "aws_vpc.test"
 
@@ -678,7 +723,7 @@ func TestAccEC2VPC_tags(t *testing.T) {
 	})
 }
 
-func TestAccEC2VPC_update(t *testing.T) {
+func TestAccVPC_update(t *testing.T) {
 	var vpc ec2.Vpc
 	resourceName := "aws_vpc.test"
 
@@ -759,6 +804,16 @@ func testAccCheckVpcCidr(vpc *ec2.Vpc, expected string) resource.TestCheckFunc {
 	}
 }
 
+func testAccCheckVpcCidrPrefix(vpc *ec2.Vpc, expected string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		if strings.Split(aws.StringValue(vpc.CidrBlock), "/")[1] != expected {
+			return fmt.Errorf("Bad cidr prefix: got %s, expected %s", aws.StringValue(vpc.CidrBlock), expected)
+		}
+
+		return nil
+	}
+}
+
 func testAccCheckVpcIdsEqual(vpc1, vpc2 *ec2.Vpc) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if aws.StringValue(vpc1.VpcId) != aws.StringValue(vpc2.VpcId) {
@@ -794,7 +849,7 @@ func testAccCheckVpcDisappears(vpc *ec2.Vpc) resource.TestCheckFunc {
 }
 
 // https://github.com/hashicorp/terraform/issues/1301
-func TestAccEC2VPC_bothDNSOptionsSet(t *testing.T) {
+func TestAccVPC_bothDNSOptionsSet(t *testing.T) {
 	var vpc ec2.Vpc
 	resourceName := "aws_vpc.test"
 
@@ -822,7 +877,7 @@ func TestAccEC2VPC_bothDNSOptionsSet(t *testing.T) {
 }
 
 // https://github.com/hashicorp/terraform/issues/10168
-func TestAccEC2VPC_disabledDNSSupport(t *testing.T) {
+func TestAccVPC_disabledDNSSupport(t *testing.T) {
 	var vpc ec2.Vpc
 	resourceName := "aws_vpc.test"
 
@@ -848,7 +903,7 @@ func TestAccEC2VPC_disabledDNSSupport(t *testing.T) {
 	})
 }
 
-func TestAccEC2VPC_classicLinkOptionSet(t *testing.T) {
+func TestAccVPC_classicLinkOptionSet(t *testing.T) {
 	var vpc ec2.Vpc
 	resourceName := "aws_vpc.test"
 
@@ -874,7 +929,7 @@ func TestAccEC2VPC_classicLinkOptionSet(t *testing.T) {
 	})
 }
 
-func TestAccEC2VPC_classicLinkDNSSupportOptionSet(t *testing.T) {
+func TestAccVPC_classicLinkDNSSupportOptionSet(t *testing.T) {
 	var vpc ec2.Vpc
 	resourceName := "aws_vpc.test"
 
@@ -1053,3 +1108,47 @@ resource "aws_vpc" "test" {
   }
 }
 `
+const testAccVpcIpamBase = `
+data "aws_region" "current" {}
+
+resource "aws_vpc_ipam" "test" {
+  operating_regions {
+    region_name = data.aws_region.current.name
+  }
+}
+
+resource "aws_vpc_ipam_pool" "test" {
+  address_family = "ipv4"
+  ipam_scope_id  = aws_vpc_ipam.test.private_default_scope_id
+  locale         = data.aws_region.current.name
+}
+
+resource "aws_vpc_ipam_pool_cidr" "test" {
+  ipam_pool_id = aws_vpc_ipam_pool.test.id
+  cidr         = "172.2.0.0/16"
+}
+`
+
+func testAccVpcIpamIpv4(netmaskLength int) string {
+	return testAccVpcIpamBase + fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  ipv4_ipam_pool_id   = aws_vpc_ipam_pool.test.id
+  ipv4_netmask_length = %[1]d
+  depends_on = [
+    aws_vpc_ipam_pool_cidr.test
+  ]
+}
+`, netmaskLength)
+}
+
+func testAccVpcIpamIpv4ExplicitCidr(cidr string) string {
+	return testAccVpcIpamBase + fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  ipv4_ipam_pool_id = aws_vpc_ipam_pool.test.id
+  cidr_block        = %[1]q
+  depends_on = [
+    aws_vpc_ipam_pool_cidr.test
+  ]
+}
+`, cidr)
+}

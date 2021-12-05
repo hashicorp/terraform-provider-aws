@@ -35,6 +35,15 @@ The following attributes are exported:
     * `enabled` - Whether advanced security is enabled.
     * `internal_user_database_enabled` - Whether the internal user database is enabled.
 * `arn` – The Amazon Resource Name (ARN) of the domain.
+* `auto_tune_options` - Configuration of the Auto-Tune options of the domain.
+    * `desired_state` - The Auto-Tune desired state for the domain.
+    * `maintenance_schedule` - A list of the nested configurations for the Auto-Tune maintenance windows of the domain.
+        * `start_at` - Date and time at which the Auto-Tune maintenance schedule starts in [RFC3339 format](https://tools.ietf.org/html/rfc3339#section-5.8).
+        * `duration` - Configuration block for the duration of the Auto-Tune maintenance window.
+            * `value` - An integer specifying the value of the duration of an Auto-Tune maintenance window.
+            * `unit` - The unit of time specifying the duration of an Auto-Tune maintenance window.
+        * `cron_expression_for_recurrence` - A cron expression specifying the recurrence pattern for an Auto-Tune maintenance schedule.
+    * `rollback_on_disable` - Whether the domain is set to roll back to default Auto-Tune settings when disabling Auto-Tune.
 * `cluster_config` - Cluster configuration of the domain.
     * `instance_type` - Instance type of data nodes in the cluster.
     * `instance_count` - Number of instances in the cluster.

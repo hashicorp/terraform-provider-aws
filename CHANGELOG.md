@@ -1,4 +1,38 @@
-## 3.68.0 (Unreleased)
+## 3.69.0 (Unreleased)
+
+FEATURES:
+
+* **New Resource:** `aws_codecommit_approval_rule_template_association` ([#13467](https://github.com/hashicorp/terraform-provider-aws/issues/13467))
+
+ENHANCEMENTS:
+
+* resource/aws_backup_region_settings: Add `resource_type_management_preference` argument ([#22021](https://github.com/hashicorp/terraform-provider-aws/issues/22021))
+* resource/aws_cloudtrail: Add plan time validations for `cloud_watch_logs_group_arn`, `cloud_watch_logs_role_arn`, `name`, `s3_key_prefix`. ([#21882](https://github.com/hashicorp/terraform-provider-aws/issues/21882))
+* resource/aws_elasticsearch_domain: Add `auto_tune_options` configuration block ([#21652](https://github.com/hashicorp/terraform-provider-aws/issues/21652))
+* resource/aws_lambda_event_source_mapping: Add `filter_criteria` argument ([#21937](https://github.com/hashicorp/terraform-provider-aws/issues/21937))
+* resource/aws_sqs_queue: Add `sqs_managed_sse_enabled` argument ([#21954](https://github.com/hashicorp/terraform-provider-aws/issues/21954))
+* resource/aws_transfer_server: Add `function` argument in support of custom identity providers ([#22039](https://github.com/hashicorp/terraform-provider-aws/issues/22039))
+
+BUG FIXES:
+
+* resource/aws_ecr_registry_policy: Fix order-related diffs in `policy` ([#22004](https://github.com/hashicorp/terraform-provider-aws/issues/22004))
+* resource/aws_ecr_repository_policy: Fix order-related diffs in `policy` ([#22004](https://github.com/hashicorp/terraform-provider-aws/issues/22004))
+* resource/aws_iam_role: Prevent `arn` attribute from ever containing a unique ID immediately after role creation ([#22004](https://github.com/hashicorp/terraform-provider-aws/issues/22004))
+* resource/aws_s3_bucket_replication_configuration: Fix `MalformedXML` errors for replication rules using XML schema V1 ([#22026](https://github.com/hashicorp/terraform-provider-aws/issues/22026))
+
+## 3.68.0 (December 02, 2021)
+
+FEATURES:
+
+* **New Data Source:** `aws_codecommit_approval_rule_template` ([#11487](https://github.com/hashicorp/terraform-provider-aws/issues/11487))
+* **New Data Source:** `aws_vpc_pool_data_source` ([#21998](https://github.com/hashicorp/terraform-provider-aws/issues/21998))
+* **New Resource:** `aws_codecommit_approval_rule_template` ([#11487](https://github.com/hashicorp/terraform-provider-aws/issues/11487))
+* **New Resource:** `aws_vpc_ipam` ([#21998](https://github.com/hashicorp/terraform-provider-aws/issues/21998))
+* **New Resource:** `aws_vpc_ipam_pool` ([#21998](https://github.com/hashicorp/terraform-provider-aws/issues/21998))
+* **New Resource:** `aws_vpc_ipam_scope` ([#21998](https://github.com/hashicorp/terraform-provider-aws/issues/21998))
+* **New Resource:** `aws_vpc_ipam_pool_cidr` ([#21998](https://github.com/hashicorp/terraform-provider-aws/issues/21998))
+* **New Resource:** `aws_vpc_ipam_pool_cidr_allocation` ([#21998](https://github.com/hashicorp/terraform-provider-aws/issues/21998))
+* **New Resource:** `aws_vpc_ipv6_cidr_block_association` ([#21998](https://github.com/hashicorp/terraform-provider-aws/issues/21998))
 
 ENHANCEMENTS:
 
@@ -7,6 +41,8 @@ ENHANCEMENTS:
 * resource/aws_lb_target_group: Add support for `connection_termination` argument for NLBs ([#21130](https://github.com/hashicorp/terraform-provider-aws/issues/21130))
 * resource/aws_synthetics_canary: Add `artifact_config` argument. ([#21963](https://github.com/hashicorp/terraform-provider-aws/issues/21963))
 * resource/aws_synthetics_canary: Make `artifact_s3_location` updateable. ([#21963](https://github.com/hashicorp/terraform-provider-aws/issues/21963))
+* resource/aws_vpc: `cidr_block` value can now either be set explicitly or computed computed via AWS IPAM ([#21998](https://github.com/hashicorp/terraform-provider-aws/issues/21998))
+* resource/aws_vpc_ipv4_cidr_block_association: `cidr_block` value can now either be set explicitly or computed via AWS IPAM ([#21998](https://github.com/hashicorp/terraform-provider-aws/issues/21998))
 
 BUG FIXES:
 
@@ -16,6 +52,8 @@ BUG FIXES:
 * resource/aws_kms_key: Fix order-related diffs in `policy` ([#21969](https://github.com/hashicorp/terraform-provider-aws/issues/21969))
 * resource/aws_kms_replica_external_key: Fix order-related diffs in `policy` ([#21990](https://github.com/hashicorp/terraform-provider-aws/issues/21990))
 * resource/aws_kms_replica_key: Fix order-related diffs in `policy` ([#21990](https://github.com/hashicorp/terraform-provider-aws/issues/21990))
+* resource/aws_s3_bucket: Fix order-related diffs in `policy` ([#21997](https://github.com/hashicorp/terraform-provider-aws/issues/21997))
+* resource/aws_s3_bucket_policy: Fix order-related diffs in `policy` ([#21997](https://github.com/hashicorp/terraform-provider-aws/issues/21997))
 * resource/aws_s3_bucket_replication_configuration: Mark `event_threshold` in `destination` `metrics` configuration block as `Optional` ([#21901](https://github.com/hashicorp/terraform-provider-aws/issues/21901))
 
 ## 3.67.0 (November 25, 2021)

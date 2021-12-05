@@ -109,7 +109,7 @@ func resourceUserStackAssociationRead(ctx context.Context, d *schema.ResourceDat
 		return nil
 	}
 
-	if len(resp.UserStackAssociations) == 0 {
+	if len(resp.UserStackAssociations) == 0 && !d.IsNewResource() {
 		log.Printf("[WARN] AppStream User Stack Association (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil

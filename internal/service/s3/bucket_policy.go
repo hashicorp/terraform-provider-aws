@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -48,7 +49,12 @@ func resourceBucketPolicyPut(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).S3Conn
 
 	bucket := d.Get("bucket").(string)
-	policy := d.Get("policy").(string)
+
+	policy, err := structure.NormalizeJsonString(d.Get("policy").(string))
+
+	if err != nil {
+		return fmt.Errorf("policy (%s) is an invalid JSON: %w", policy, err)
+	}
 
 	log.Printf("[DEBUG] S3 bucket: %s, put policy: %s", bucket, policy)
 
@@ -57,7 +63,7 @@ func resourceBucketPolicyPut(d *schema.ResourceData, meta interface{}) error {
 		Policy: aws.String(policy),
 	}
 
-	err := resource.Retry(1*time.Minute, func() *resource.RetryError {
+	err = resource.Retry(1*time.Minute, func() *resource.RetryError {
 		_, err := conn.PutBucketPolicy(params)
 		if tfawserr.ErrMessageContains(err, "MalformedPolicy", "") {
 			return resource.RetryableError(err)
@@ -89,11 +95,25 @@ func resourceBucketPolicyRead(d *schema.ResourceData, meta interface{}) error {
 
 	v := ""
 	if err == nil && pol.Policy != nil {
-		v = *pol.Policy
+		v = aws.StringValue(pol.Policy)
 	}
-	if err := d.Set("policy", v); err != nil {
+
+	policyToSet, err := verify.SecondJSONUnlessEquivalent(d.Get("policy").(string), v)
+
+	if err != nil {
+		return fmt.Errorf("while setting policy (%s), encountered: %w", policyToSet, err)
+	}
+
+	policyToSet, err = structure.NormalizeJsonString(policyToSet)
+
+	if err != nil {
+		return fmt.Errorf("policy (%s) is an invalid JSON: %w", policyToSet, err)
+	}
+
+	if err := d.Set("policy", policyToSet); err != nil {
 		return err
 	}
+
 	if err := d.Set("bucket", d.Id()); err != nil {
 		return err
 	}

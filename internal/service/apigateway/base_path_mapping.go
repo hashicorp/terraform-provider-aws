@@ -161,13 +161,13 @@ func resourceBasePathMappingRead(d *schema.ResourceData, meta interface{}) error
 		BasePath:   aws.String(basePath),
 	})
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, apigateway.ErrCodeNotFoundException, "") {
+		if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, apigateway.ErrCodeNotFoundException) {
 			log.Printf("[WARN] API Gateway Base Path Mapping (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
 		}
 
-		return fmt.Errorf("Error reading Gateway base path mapping: %s", err)
+		return fmt.Errorf("error reading API Gateway Base Path Mapping (%s): %w", d.Id(), err)
 	}
 
 	mappingBasePath := aws.StringValue(mapping.BasePath)

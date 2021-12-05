@@ -122,6 +122,63 @@ func ResourceDomain() *schema.Resource {
 					},
 				},
 			},
+			"auto_tune_options": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Computed: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"desired_state": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validation.StringInSlice(elasticsearch.AutoTuneDesiredState_Values(), false),
+						},
+						"maintenance_schedule": {
+							Type:     schema.TypeSet,
+							Optional: true,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"start_at": {
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: validation.IsRFC3339Time,
+									},
+									"duration": {
+										Type:     schema.TypeList,
+										Required: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"value": {
+													Type:     schema.TypeInt,
+													Required: true,
+												},
+												"unit": {
+													Type:         schema.TypeString,
+													Required:     true,
+													ValidateFunc: validation.StringInSlice(elasticsearch.TimeUnit_Values(), false),
+												},
+											},
+										},
+									},
+									"cron_expression_for_recurrence": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+								},
+							},
+						},
+						"rollback_on_disable": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Computed:     true,
+							ValidateFunc: validation.StringInSlice(elasticsearch.RollbackOnDisable_Values(), false),
+						},
+					},
+				},
+			},
 			"domain_name": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -467,21 +524,25 @@ func resourceDomainCreate(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("Elasticsearch domain %s already exists", aws.StringValue(resp.DomainStatus.DomainName))
 	}
 
-	input := elasticsearch.CreateElasticsearchDomainInput{
+	inputCreateDomain := elasticsearch.CreateElasticsearchDomainInput{
 		DomainName:           aws.String(d.Get("domain_name").(string)),
 		ElasticsearchVersion: aws.String(d.Get("elasticsearch_version").(string)),
 	}
 
 	if v, ok := d.GetOk("access_policies"); ok {
-		input.AccessPolicies = aws.String(v.(string))
+		inputCreateDomain.AccessPolicies = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("advanced_options"); ok {
-		input.AdvancedOptions = flex.ExpandStringMap(v.(map[string]interface{}))
+		inputCreateDomain.AdvancedOptions = flex.ExpandStringMap(v.(map[string]interface{}))
 	}
 
 	if v, ok := d.GetOk("advanced_security_options"); ok {
-		input.AdvancedSecurityOptions = expandAdvancedSecurityOptions(v.([]interface{}))
+		inputCreateDomain.AdvancedSecurityOptions = expandAdvancedSecurityOptions(v.([]interface{}))
+	}
+
+	if v, ok := d.GetOk("auto_tune_options"); ok && len(v.([]interface{})) > 0 {
+		inputCreateDomain.AutoTuneOptions = expandAutoTuneOptionsInput(v.([]interface{})[0].(map[string]interface{}))
 	}
 
 	if v, ok := d.GetOk("ebs_options"); ok {
@@ -493,7 +554,7 @@ func resourceDomainCreate(d *schema.ResourceData, meta interface{}) error {
 			}
 
 			s := options[0].(map[string]interface{})
-			input.EBSOptions = expandEBSOptions(s)
+			inputCreateDomain.EBSOptions = expandEBSOptions(s)
 		}
 	}
 
@@ -504,7 +565,7 @@ func resourceDomainCreate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		s := options[0].(map[string]interface{})
-		input.EncryptionAtRestOptions = expandEncryptAtRestOptions(s)
+		inputCreateDomain.EncryptionAtRestOptions = expandEncryptAtRestOptions(s)
 	}
 
 	if v, ok := d.GetOk("cluster_config"); ok {
@@ -515,7 +576,7 @@ func resourceDomainCreate(d *schema.ResourceData, meta interface{}) error {
 				return fmt.Errorf("At least one field is expected inside cluster_config")
 			}
 			m := config[0].(map[string]interface{})
-			input.ElasticsearchClusterConfig = expandESClusterConfig(m)
+			inputCreateDomain.ElasticsearchClusterConfig = expandESClusterConfig(m)
 		}
 	}
 
@@ -523,7 +584,7 @@ func resourceDomainCreate(d *schema.ResourceData, meta interface{}) error {
 		options := v.([]interface{})
 
 		s := options[0].(map[string]interface{})
-		input.NodeToNodeEncryptionOptions = expandESNodeToNodeEncryptionOptions(s)
+		inputCreateDomain.NodeToNodeEncryptionOptions = expandESNodeToNodeEncryptionOptions(s)
 	}
 
 	if v, ok := d.GetOk("snapshot_options"); ok {
@@ -540,7 +601,7 @@ func resourceDomainCreate(d *schema.ResourceData, meta interface{}) error {
 				AutomatedSnapshotStartHour: aws.Int64(int64(o["automated_snapshot_start_hour"].(int))),
 			}
 
-			input.SnapshotOptions = &snapshotOptions
+			inputCreateDomain.SnapshotOptions = &snapshotOptions
 		}
 	}
 
@@ -551,15 +612,15 @@ func resourceDomainCreate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		s := options[0].(map[string]interface{})
-		input.VPCOptions = expandVPCOptions(s)
+		inputCreateDomain.VPCOptions = expandVPCOptions(s)
 	}
 
 	if v, ok := d.GetOk("log_publishing_options"); ok {
-		input.LogPublishingOptions = make(map[string]*elasticsearch.LogPublishingOption)
+		inputCreateDomain.LogPublishingOptions = make(map[string]*elasticsearch.LogPublishingOption)
 		options := v.(*schema.Set).List()
 		for _, vv := range options {
 			lo := vv.(map[string]interface{})
-			input.LogPublishingOptions[lo["log_type"].(string)] = &elasticsearch.LogPublishingOption{
+			inputCreateDomain.LogPublishingOptions[lo["log_type"].(string)] = &elasticsearch.LogPublishingOption{
 				CloudWatchLogsLogGroupArn: aws.String(lo["cloudwatch_log_group_arn"].(string)),
 				Enabled:                   aws.Bool(lo["enabled"].(bool)),
 			}
@@ -567,23 +628,23 @@ func resourceDomainCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if v, ok := d.GetOk("domain_endpoint_options"); ok {
-		input.DomainEndpointOptions = expandDomainEndpointOptions(v.([]interface{}))
+		inputCreateDomain.DomainEndpointOptions = expandDomainEndpointOptions(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("cognito_options"); ok {
-		input.CognitoOptions = expandCognitoOptions(v.([]interface{}))
+		inputCreateDomain.CognitoOptions = expandCognitoOptions(v.([]interface{}))
 	}
 
-	log.Printf("[DEBUG] Creating Elasticsearch domain: %s", input)
+	log.Printf("[DEBUG] Creating Elasticsearch domain: %s", inputCreateDomain)
 
 	// IAM Roles can take some time to propagate if set in AccessPolicies and created in the same terraform
 	var out *elasticsearch.CreateElasticsearchDomainOutput
 	err = resource.Retry(tfiam.PropagationTimeout, func() *resource.RetryError {
 		var err error
-		out, err = conn.CreateElasticsearchDomain(&input)
+		out, err = conn.CreateElasticsearchDomain(&inputCreateDomain)
 		if err != nil {
 			if tfawserr.ErrMessageContains(err, "InvalidTypeException", "Error setting policy") {
-				log.Printf("[DEBUG] Retrying creation of Elasticsearch domain %s", aws.StringValue(input.DomainName))
+				log.Printf("[DEBUG] Retrying creation of Elasticsearch domain %s", aws.StringValue(inputCreateDomain.DomainName))
 				return resource.RetryableError(err)
 			}
 			if tfawserr.ErrMessageContains(err, "ValidationException", "enable a service-linked role to give Amazon ES permissions") {
@@ -613,7 +674,7 @@ func resourceDomainCreate(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	})
 	if tfresource.TimedOut(err) {
-		out, err = conn.CreateElasticsearchDomain(&input)
+		out, err = conn.CreateElasticsearchDomain(&inputCreateDomain)
 	}
 	if err != nil {
 		return fmt.Errorf("Error creating Elasticsearch domain: %s", err)
@@ -638,6 +699,25 @@ func resourceDomainCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	log.Printf("[DEBUG] Elasticsearch domain %q created", d.Id())
+
+	if v, ok := d.GetOk("auto_tune_options"); ok && len(v.([]interface{})) > 0 {
+
+		log.Printf("[DEBUG] Modifying config for Elasticsearch domain %q", d.Id())
+
+		inputUpdateDomainConfig := &elasticsearch.UpdateElasticsearchDomainConfigInput{
+			DomainName: aws.String(d.Get("domain_name").(string)),
+		}
+
+		inputUpdateDomainConfig.AutoTuneOptions = expandAutoTuneOptions(v.([]interface{})[0].(map[string]interface{}))
+
+		_, err = conn.UpdateElasticsearchDomainConfig(inputUpdateDomainConfig)
+
+		if err != nil {
+			return fmt.Errorf("Error modifying config for Elasticsearch domain: %s", err)
+		}
+
+		log.Printf("[DEBUG] Config for Elasticsearch domain %q modified", d.Id())
+	}
 
 	return resourceDomainRead(d, meta)
 }
@@ -681,7 +761,7 @@ func resourceDomainRead(d *schema.ResourceData, meta interface{}) error {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	out, err := conn.DescribeElasticsearchDomain(&elasticsearch.DescribeElasticsearchDomainInput{
+	outDescribeDomain, err := conn.DescribeElasticsearchDomain(&elasticsearch.DescribeElasticsearchDomainInput{
 		DomainName: aws.String(d.Get("domain_name").(string)),
 	})
 	if err != nil {
@@ -693,9 +773,21 @@ func resourceDomainRead(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	log.Printf("[DEBUG] Received Elasticsearch domain: %s", out)
+	log.Printf("[DEBUG] Received Elasticsearch domain: %s", outDescribeDomain)
 
-	ds := out.DomainStatus
+	ds := outDescribeDomain.DomainStatus
+
+	outDescribeDomainConfig, err := conn.DescribeElasticsearchDomainConfig(&elasticsearch.DescribeElasticsearchDomainConfigInput{
+		DomainName: aws.String(d.Get("domain_name").(string)),
+	})
+
+	if err != nil {
+		return err
+	}
+
+	log.Printf("[DEBUG] Received config for Elasticsearch domain: %s", outDescribeDomainConfig)
+
+	dc := outDescribeDomainConfig.DomainConfig
 
 	if ds.AccessPolicies != nil && aws.StringValue(ds.AccessPolicies) != "" {
 		policies, err := structure.NormalizeJsonString(aws.StringValue(ds.AccessPolicies))
@@ -747,6 +839,13 @@ func resourceDomainRead(d *schema.ResourceData, meta interface{}) error {
 
 		if err := d.Set("advanced_security_options", advSecOpts); err != nil {
 			return fmt.Errorf("error setting advanced_security_options: %w", err)
+		}
+	}
+
+	if v := dc.AutoTuneOptions; v != nil {
+		err = d.Set("auto_tune_options", []interface{}{flattenAutoTuneOptions(v.Options)})
+		if err != nil {
+			return err
 		}
 	}
 
@@ -843,6 +942,10 @@ func resourceDomainUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	if d.HasChange("advanced_security_options") {
 		input.AdvancedSecurityOptions = expandAdvancedSecurityOptions(d.Get("advanced_security_options").([]interface{}))
+	}
+
+	if d.HasChange("auto_tune_options") {
+		input.AutoTuneOptions = expandAutoTuneOptions(d.Get("auto_tune_options").([]interface{})[0].(map[string]interface{}))
 	}
 
 	if d.HasChange("domain_endpoint_options") {

@@ -392,7 +392,8 @@ func Provider() *schema.Provider {
 			"aws_codeartifact_authorization_token": codeartifact.DataSourceAuthorizationToken(),
 			"aws_codeartifact_repository_endpoint": codeartifact.DataSourceRepositoryEndpoint(),
 
-			"aws_codecommit_repository": codecommit.DataSourceRepository(),
+			"aws_codecommit_approval_rule_template": codecommit.DataSourceApprovalRuleTemplate(),
+			"aws_codecommit_repository":             codecommit.DataSourceRepository(),
 
 			"aws_codestarconnections_connection": codestarconnections.DataSourceConnection(),
 
@@ -471,6 +472,7 @@ func Provider() *schema.Provider {
 			"aws_vpc_dhcp_options":                           ec2.DataSourceVPCDHCPOptions(),
 			"aws_vpc_endpoint_service":                       ec2.DataSourceVPCEndpointService(),
 			"aws_vpc_endpoint":                               ec2.DataSourceVPCEndpoint(),
+			"aws_vpc_ipam_pool":                              ec2.DataSourceVPCIpamPool(),
 			"aws_vpc_peering_connection":                     ec2.DataSourceVPCPeeringConnection(),
 			"aws_vpc_peering_connections":                    ec2.DataSourceVPCPeeringConnections(),
 			"aws_vpc":                                        ec2.DataSourceVPC(),
@@ -911,8 +913,10 @@ func Provider() *schema.Provider {
 			"aws_codebuild_source_credential": codebuild.ResourceSourceCredential(),
 			"aws_codebuild_webhook":           codebuild.ResourceWebhook(),
 
-			"aws_codecommit_repository": codecommit.ResourceRepository(),
-			"aws_codecommit_trigger":    codecommit.ResourceTrigger(),
+			"aws_codecommit_approval_rule_template":             codecommit.ResourceApprovalRuleTemplate(),
+			"aws_codecommit_approval_rule_template_association": codecommit.ResourceApprovalRuleTemplateAssociation(),
+			"aws_codecommit_repository":                         codecommit.ResourceRepository(),
+			"aws_codecommit_trigger":                            codecommit.ResourceTrigger(),
 
 			"aws_codedeploy_app":               codedeploy.ResourceApp(),
 			"aws_codedeploy_deployment_config": codedeploy.ResourceDeploymentConfig(),
@@ -1096,7 +1100,13 @@ func Provider() *schema.Provider {
 			"aws_vpc_endpoint_service":                            ec2.ResourceVPCEndpointService(),
 			"aws_vpc_endpoint_service_allowed_principal":          ec2.ResourceVPCEndpointServiceAllowedPrincipal(),
 			"aws_vpc_endpoint_subnet_association":                 ec2.ResourceVPCEndpointSubnetAssociation(),
+			"aws_vpc_ipam":                                        ec2.ResourceVPCIpam(),
+			"aws_vpc_ipam_pool":                                   ec2.ResourceVPCIpamPool(),
+			"aws_vpc_ipam_pool_cidr_allocation":                   ec2.ResourceVPCIpamPoolCidrAllocation(),
+			"aws_vpc_ipam_pool_cidr":                              ec2.ResourceVPCIpamPoolCidr(),
+			"aws_vpc_ipam_scope":                                  ec2.ResourceVPCIpamScope(),
 			"aws_vpc_ipv4_cidr_block_association":                 ec2.ResourceVPCIPv4CIDRBlockAssociation(),
+			"aws_vpc_ipv6_cidr_block_association":                 ec2.ResourceVPCIPv6CIDRBlockAssociation(),
 			"aws_vpc_peering_connection":                          ec2.ResourceVPCPeeringConnection(),
 			"aws_vpc_peering_connection_accepter":                 ec2.ResourceVPCPeeringConnectionAccepter(),
 			"aws_vpc_peering_connection_options":                  ec2.ResourceVPCPeeringConnectionOptions(),
