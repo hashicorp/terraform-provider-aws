@@ -6,13 +6,15 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/rds"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/rds/waiter"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-func resourceAwsRDSClusterActivityStream() *schema.Resource {
+func ResourceClusterActivityStream() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAwsRDSClusterActivityStreamCreate,
 		Read:   resourceAwsRDSClusterActivityStreamRead,
@@ -31,7 +33,7 @@ func resourceAwsRDSClusterActivityStream() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: verify.ValidARN,
 			},
 			"kms_key_id": {
 				Type:     schema.TypeString,
@@ -56,7 +58,7 @@ func resourceAwsRDSClusterActivityStream() *schema.Resource {
 }
 
 func resourceAwsRDSClusterActivityStreamCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).rdsconn
+	conn := meta.(*conns.AWSClient).RDSConn
 
 	resourceArn := d.Get("resource_arn").(string)
 	kmsKeyId := d.Get("kms_key_id").(string)
@@ -80,7 +82,7 @@ func resourceAwsRDSClusterActivityStreamCreate(d *schema.ResourceData, meta inte
 
 	d.SetId(resourceArn)
 
-	err = waiter.ActivityStreamStarted(conn, d.Id(), d.Timeout(schema.TimeoutCreate))
+	err = waitActivityStreamStarted(conn, d.Id(), d.Timeout(schema.TimeoutCreate))
 	if err != nil {
 		return err
 	}
@@ -89,7 +91,7 @@ func resourceAwsRDSClusterActivityStreamCreate(d *schema.ResourceData, meta inte
 }
 
 func resourceAwsRDSClusterActivityStreamRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).rdsconn
+	conn := meta.(*conns.AWSClient).RDSConn
 
 	input := &rds.DescribeDBClustersInput{
 		DBClusterIdentifier: aws.String(d.Id()),
@@ -98,13 +100,13 @@ func resourceAwsRDSClusterActivityStreamRead(d *schema.ResourceData, meta interf
 	log.Printf("[DEBUG] Describing RDS Cluster: %s", input)
 	resp, err := conn.DescribeDBClusters(input)
 
-	if isAWSErr(err, rds.ErrCodeDBClusterNotFoundFault, "") {
-		log.Printf("[WARN] RDS Cluster (%s) not found, removing from state", d.Id())
-		d.SetId("")
-		return nil
-	}
-
 	if err != nil {
+		if awsErr, ok := err.(awserr.Error); ok && awsErr.Code() == rds.ErrCodeDBClusterNotFoundFault {
+			log.Printf("[WARN] RDS Cluster (%s) not found, removing from state", d.Id())
+			d.SetId("")
+			return nil
+		}
+
 		return fmt.Errorf("error describing RDS Cluster (%s): %s", d.Id(), err)
 	}
 
@@ -141,7 +143,7 @@ func resourceAwsRDSClusterActivityStreamRead(d *schema.ResourceData, meta interf
 }
 
 func resourceAwsRDSClusterActivityStreamDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).rdsconn
+	conn := meta.(*conns.AWSClient).RDSConn
 
 	stopActivityStreamInput := &rds.StopActivityStreamInput{
 		ApplyImmediately: aws.Bool(true),
@@ -157,7 +159,7 @@ func resourceAwsRDSClusterActivityStreamDelete(d *schema.ResourceData, meta inte
 
 	log.Printf("[DEBUG] RDS Cluster stop activity stream response: %s", resp)
 
-	err = waiter.ActivityStreamStopped(conn, d.Id(), d.Timeout(schema.TimeoutDelete))
+	err = waitActivityStreamStopped(conn, d.Id(), d.Timeout(schema.TimeoutDelete))
 	if err != nil {
 		return err
 	}
