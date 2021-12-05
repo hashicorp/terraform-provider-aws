@@ -213,6 +213,13 @@ func ResourceLoadBalancer() *schema.Resource {
 				DiffSuppressFunc: suppressIfLBType("network"),
 			},
 
+			"xff_client_port": {
+				Type:             schema.TypeBool,
+				Optional:         true,
+				Default:          false,
+				DiffSuppressFunc: suppressIfLBType("network"),
+			},
+
 			"enable_cross_zone_load_balancing": {
 				Type:             schema.TypeBool,
 				Optional:         true,
@@ -514,6 +521,14 @@ func resourceLoadBalancerUpdate(d *schema.ResourceData, meta interface{}) error 
 				Value: aws.String(strconv.FormatBool(d.Get("tls_version_and_cipher_suite").(bool))),
 			})
 		}
+
+		if d.HasChange("xff_client_port") || d.IsNewResource() {
+			attributes = append(attributes, &elbv2.LoadBalancerAttribute{
+				Key:   aws.String("routing.http.xff_client_port.enabled"),
+				Value: aws.String(strconv.FormatBool(d.Get("xff_client_port").(bool))),
+			})
+		}
+
 		if d.HasChange("desync_mitigation_mode") || d.IsNewResource() {
 			attributes = append(attributes, &elbv2.LoadBalancerAttribute{
 				Key:   aws.String("routing.http.desync_mitigation_mode"),
@@ -850,6 +865,10 @@ func flattenResource(d *schema.ResourceData, meta interface{}, lb *elbv2.LoadBal
 			amznTLSHeadersEnabled := aws.StringValue(attr.Value) == "true"
 			log.Printf("[DEBUG] Setting LB TLS Headers Fields Enabled: %t", amznTLSHeadersEnabled)
 			d.Set("tls_version_and_cipher_suite", amznTLSHeadersEnabled)
+		case "routing.http.xff_client_port.enabled":
+			amznTLSHeadersEnabled := aws.StringValue(attr.Value) == "true"
+			log.Printf("[DEBUG] Setting LB TLS Headers Fields Enabled: %t", amznTLSHeadersEnabled)
+			d.Set("xff_client_port", amznTLSHeadersEnabled)
 		case "deletion_protection.enabled":
 			protectionEnabled := aws.StringValue(attr.Value) == "true"
 			log.Printf("[DEBUG] Setting LB Deletion Protection Enabled: %t", protectionEnabled)

@@ -604,6 +604,46 @@ func TestAccELBV2LoadBalancer_ApplicationLoadBalancer_updateTLSVersionAndCipherS
 	})
 }
 
+func TestAccELBV2LoadBalancer_ApplicationLoadBalancer_updateXFFClientPort(t *testing.T) {
+	var pre, mid, post elbv2.LoadBalancer
+	lbName := fmt.Sprintf("testAccAWSalb-headers-%s", sdkacctest.RandString(10))
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, elbv2.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckLoadBalancerDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLoadBalancerConfig_updateXFFClientPort(lbName, false),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckLoadBalancerExists("aws_lb.lb_test", &pre),
+					testAccCheckLoadBalancerAttribute("aws_lb.lb_test", "routing.http.xff_client_port.enabled", "false"),
+					resource.TestCheckResourceAttr("aws_lb.lb_test", "xff_client_port", "false"),
+				),
+			},
+			{
+				Config: testAccLoadBalancerConfig_updateXFFClientPort(lbName, true),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckLoadBalancerExists("aws_lb.lb_test", &mid),
+					testAccCheckLoadBalancerAttribute("aws_lb.lb_test", "routing.http.xff_client_port.enabled", "true"),
+					resource.TestCheckResourceAttr("aws_lb.lb_test", "xff_client_port", "true"),
+					testAccChecklbARNs(&pre, &mid),
+				),
+			},
+			{
+				Config: testAccLoadBalancerConfig_updateXFFClientPort(lbName, false),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckLoadBalancerExists("aws_lb.lb_test", &post),
+					testAccCheckLoadBalancerAttribute("aws_lb.lb_test", "routing.http.xff_client_port.enabled", "false"),
+					resource.TestCheckResourceAttr("aws_lb.lb_test", "xff_client_port", "false"),
+					testAccChecklbARNs(&mid, &post),
+				),
+			},
+		},
+	})
+}
+
 func TestAccELBV2LoadBalancer_ApplicationLoadBalancer_updateDropInvalidHeaderFields(t *testing.T) {
 	var pre, mid, post elbv2.LoadBalancer
 	lbName := fmt.Sprintf("testAccAWSalb-headers-%s", sdkacctest.RandString(10))
@@ -1891,6 +1931,75 @@ resource "aws_security_group" "alb_test" {
   }
 }
 `, lbName, tls_version_and_cipher_suite))
+}
+
+func testAccLoadBalancerConfig_updateXFFClientPort(lbName string, xff_client_port bool) string {
+	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
+resource "aws_lb" "lb_test" {
+  name            = "%s"
+  internal        = true
+  security_groups = [aws_security_group.alb_test.id]
+  subnets         = aws_subnet.alb_test[*].id
+
+  idle_timeout               = 30
+  enable_deletion_protection = false
+
+  xff_client_port = %t
+
+  tags = {
+    Name = "TestAccAWSALB_basic"
+  }
+}
+
+variable "subnets" {
+  default = ["10.0.1.0/24", "10.0.2.0/24"]
+  type    = list(string)
+}
+
+resource "aws_vpc" "alb_test" {
+  cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = "terraform-testacc-lb-basic"
+  }
+}
+
+resource "aws_subnet" "alb_test" {
+  count                   = 2
+  vpc_id                  = aws_vpc.alb_test.id
+  cidr_block              = element(var.subnets, count.index)
+  map_public_ip_on_launch = true
+  availability_zone       = element(data.aws_availability_zones.available.names, count.index)
+
+  tags = {
+    Name = "tf-acc-lb-basic-${count.index}"
+  }
+}
+
+resource "aws_security_group" "alb_test" {
+  name        = "allow_all_alb_test"
+  description = "Used for ALB Testing"
+  vpc_id      = aws_vpc.alb_test.id
+
+  ingress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = {
+    Name = "TestAccAWSALB_basic"
+  }
+}
+`, lbName, xff_client_port))
 }
 
 func testAccLoadBalancerConfig_enableDropInvalidHeaderFields(lbName string, dropInvalid bool) string {
