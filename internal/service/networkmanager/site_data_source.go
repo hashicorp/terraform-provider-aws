@@ -110,7 +110,7 @@ func dataSourceAwsNetworkManagerSiteRead(d *schema.ResourceData, meta interface{
 
 	d.Set("description", site.Description)
 	d.Set("arn", site.SiteArn)
-	if err := d.Set("location", flattenNetworkManagerLocation(site.Location)); err != nil {
+	if err := d.Set("location", flattenLocation(site.Location)); err != nil {
 		return fmt.Errorf("error setting location: %s", err)
 	}
 	if err := d.Set("tags", keyvaluetags.NetworkmanagerKeyValueTags(site.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {

@@ -89,7 +89,7 @@ func resourceAwsNetworkManagerSiteCreate(d *schema.ResourceData, meta interface{
 	input := &networkmanager.CreateSiteInput{
 		Description:     aws.String(d.Get("description").(string)),
 		GlobalNetworkId: aws.String(d.Get("global_network_id").(string)),
-		Location:        expandNetworkManagerLocation(d.Get("location").([]interface{})),
+		Location:        expandLocation(d.Get("location").([]interface{})),
 		Tags:            keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().NetworkmanagerTags(),
 	}
 
@@ -148,7 +148,7 @@ func resourceAwsNetworkManagerSiteRead(d *schema.ResourceData, meta interface{})
 	d.Set("arn", site.SiteArn)
 	d.Set("description", site.Description)
 
-	if err := d.Set("location", flattenNetworkManagerLocation(site.Location)); err != nil {
+	if err := d.Set("location", flattenLocation(site.Location)); err != nil {
 		return fmt.Errorf("error setting location: %s", err)
 	}
 
@@ -166,7 +166,7 @@ func resourceAwsNetworkManagerSiteUpdate(d *schema.ResourceData, meta interface{
 		request := &networkmanager.UpdateSiteInput{
 			Description:     aws.String(d.Get("description").(string)),
 			GlobalNetworkId: aws.String(d.Get("global_network_id").(string)),
-			Location:        expandNetworkManagerLocation(d.Get("location").([]interface{})),
+			Location:        expandLocation(d.Get("location").([]interface{})),
 			SiteId:          aws.String(d.Id()),
 		}
 

@@ -109,7 +109,7 @@ func resourceAwsNetworkManagerDeviceCreate(d *schema.ResourceData, meta interfac
 	input := &networkmanager.CreateDeviceInput{
 		Description:     aws.String(d.Get("description").(string)),
 		GlobalNetworkId: aws.String(d.Get("global_network_id").(string)),
-		Location:        expandNetworkManagerLocation(d.Get("location").([]interface{})),
+		Location:        expandLocation(d.Get("location").([]interface{})),
 		Model:           aws.String(d.Get("model").(string)),
 		SerialNumber:    aws.String(d.Get("serial_number").(string)),
 		SiteId:          aws.String(d.Get("site_id").(string)),
@@ -178,7 +178,7 @@ func resourceAwsNetworkManagerDeviceRead(d *schema.ResourceData, meta interface{
 	d.Set("type", device.Type)
 	d.Set("vendor", device.Vendor)
 
-	if err := d.Set("location", flattenNetworkManagerLocation(device.Location)); err != nil {
+	if err := d.Set("location", flattenLocation(device.Location)); err != nil {
 		return fmt.Errorf("error setting location: %s", err)
 	}
 
@@ -197,7 +197,7 @@ func resourceAwsNetworkManagerDeviceUpdate(d *schema.ResourceData, meta interfac
 			Description:     aws.String(d.Get("description").(string)),
 			DeviceId:        aws.String(d.Id()),
 			GlobalNetworkId: aws.String(d.Get("global_network_id").(string)),
-			Location:        expandNetworkManagerLocation(d.Get("location").([]interface{})),
+			Location:        expandLocation(d.Get("location").([]interface{})),
 			Model:           aws.String(d.Get("model").(string)),
 			SerialNumber:    aws.String(d.Get("serial_number").(string)),
 			SiteId:          aws.String(d.Get("site_id").(string)),
