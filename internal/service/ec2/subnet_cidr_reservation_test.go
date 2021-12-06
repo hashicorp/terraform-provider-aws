@@ -16,7 +16,7 @@ import (
 
 func TestAccEC2SubnetCidrReservation_basic(t *testing.T) {
 	var res ec2.SubnetCidrReservation
-	resourceName := "aws_subnet_cidr_reservation.test"
+	resourceName := "aws_ec2_subnet_cidr_reservation.test"
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
@@ -45,7 +45,7 @@ func TestAccEC2SubnetCidrReservation_basic(t *testing.T) {
 
 func TestAccEC2SubnetCidrReservation_Ipv6(t *testing.T) {
 	var res ec2.SubnetCidrReservation
-	resourceName := "aws_subnet_cidr_reservation.test"
+	resourceName := "aws_ec2_subnet_cidr_reservation.test"
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
@@ -72,7 +72,7 @@ func TestAccEC2SubnetCidrReservation_Ipv6(t *testing.T) {
 
 func TestAccEC2SubnetCidrReservation_disappears(t *testing.T) {
 	var res ec2.SubnetCidrReservation
-	resourceName := "aws_subnet_cidr_reservation.test"
+	resourceName := "aws_ec2_subnet_cidr_reservation.test"
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
@@ -150,7 +150,7 @@ func testAccCheckSubnetCidrReservationDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
 	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_subnet_cidr_reservation" {
+		if rs.Type != "aws_ec2_subnet_cidr_reservation" {
 			continue
 		}
 
@@ -195,7 +195,7 @@ resource "aws_subnet" "test" {
     Name = "tf-acc-subnet"
   }
 }
-resource "aws_subnet_cidr_reservation" "test" {
+resource "aws_ec2_subnet_cidr_reservation" "test" {
   cidr_block       = "10.1.1.16/28"
   description      = "test"
   reservation_type = "prefix"
@@ -221,7 +221,7 @@ resource "aws_subnet" "test" {
     Name = "tf-acc-subnet-ipv6"
   }
 }
-resource "aws_subnet_cidr_reservation" "test" {
+resource "aws_ec2_subnet_cidr_reservation" "test" {
   cidr_block       = cidrsubnet(aws_vpc.test.ipv6_cidr_block, 12, 17)
   reservation_type = "prefix"
   subnet_id        = aws_subnet.test.id
