@@ -976,8 +976,10 @@ func NormalizeAliasName(alias interface{}) string {
 func ParseRecordID(id string) [4]string {
 	var recZone, recType, recName, recSet string
 	parts := strings.Split(id, "_")
-	if len(parts) >= 3 {
+	if len(parts) > 1 {
 		recZone = parts[0]
+	}
+	if len(parts) >= 3 {
 		var recTypeIndex int = -1
 		for i, maybeRecType := range parts[1:] {
 			if r53ValidRecordTypes.MatchString(maybeRecType) {
