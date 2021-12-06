@@ -291,6 +291,9 @@ func ResourceInstance() *schema.Resource {
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
+				ConflictsWith: []string{
+					"replicate_source_db",
+				},
 			},
 			"nchar_character_set_name": {
 				Type:     schema.TypeString,
