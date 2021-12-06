@@ -190,7 +190,7 @@ func TestAccBackupSelection_withNotResources(t *testing.T) {
 				Config: testAccBackupSelectionConfigWithNotResources(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSelectionExists(resourceName, &selection1),
-					resource.TestCheckResourceAttr(resourceName, "not_resources.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "not_resources.#", "1"),
 				),
 			},
 			{
@@ -354,9 +354,12 @@ resource "aws_backup_selection" "test" {
     key   = "foo"
     value = "bar"
   }
+	
+  conditions {}
 
+  not_resources = []
   resources = [
-    "arn:${data.aws_partition.current.partition}:ec2:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:volume/"
+    "arn:${data.aws_partition.current.partition}:ec2:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:volume/*"
   ]
 }
 `, rName))
@@ -384,8 +387,12 @@ resource "aws_backup_selection" "test" {
     value = "far"
   }
 
+  conditions {}
+  
+  not_resources = []
+
   resources = [
-    "arn:${data.aws_partition.current.partition}:ec2:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:volume/"
+    "arn:${data.aws_partition.current.partition}:ec2:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:volume/*"
   ]
 }
 `, rName))
@@ -427,7 +434,8 @@ resource "aws_backup_selection" "test" {
       value    = "test*"
     }
   }
-
+	
+  not_resources = []
   resources = ["arn:aws:rds:*:*:cluster:*", "arn:aws:rds:*:*:db:*"]
 
 }
@@ -470,6 +478,10 @@ resource "aws_backup_selection" "test" {
     value = "bar"
   }
 
+  conditions {}
+  
+  not_resources = []
+
   resources = aws_ebs_volume.test[*].arn
 }
 `, rName))
@@ -479,26 +491,6 @@ func testAccBackupSelectionConfigWithNotResources(rName string) string {
 	return acctest.ConfigCompose(
 		testAccBackupSelectionConfigBase(rName),
 		fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
-resource "aws_ebs_volume" "test" {
-  count = 2
-
-  availability_zone = data.aws_availability_zones.available.names[0]
-  size              = 1
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
 resource "aws_backup_selection" "test" {
   plan_id = aws_backup_plan.test.id
 
@@ -510,11 +502,10 @@ resource "aws_backup_selection" "test" {
     key   = "foo"
     value = "bar"
   }
+  conditions {}
 
-  conditions{}
-  
   resources = ["*"]
-  not_resources = aws_ebs_volume.test[*].arn
+  not_resources = ["arn:aws:fsx:*"]
 
 }
 `, rName))
@@ -536,8 +527,11 @@ resource "aws_backup_selection" "test" {
     value = "bar2"
   }
 
+  conditions {}
+  
+  not_resources = []
   resources = [
-    "arn:${data.aws_partition.current.partition}:ec2:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:volume/"
+    "arn:${data.aws_partition.current.partition}:ec2:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:volume/*"
   ]
 }
 `, rName))
