@@ -40,18 +40,6 @@ func ResourceClusterRegistration() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validClusterName,
 			},
-			"certificate_authority": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"data": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-					},
-				},
-			},
 			"connector_config": {
 				Type:     schema.TypeList,
 				MaxItems: 1,
@@ -84,138 +72,12 @@ func ResourceClusterRegistration() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"enabled_cluster_log_types": {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem: &schema.Schema{
-					Type:         schema.TypeString,
-					ValidateFunc: validation.StringInSlice(eks.LogType_Values(), true),
-				},
-				Set: schema.HashString,
-			},
-			"encryption_config": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"provider": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"key_arn": {
-										Type:     schema.TypeString,
-										Required: true,
-									},
-								},
-							},
-						},
-						"resources": {
-							Type:     schema.TypeSet,
-							Computed: true,
-							Elem: &schema.Schema{
-								Type:         schema.TypeString,
-								ValidateFunc: validation.StringInSlice(Resources_Values(), false),
-							},
-						},
-					},
-				},
-			},
-			"endpoint": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"identity": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"oidc": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"issuer": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-								},
-							},
-						},
-					},
-				},
-			},
-			"kubernetes_network_config": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"service_ipv4_cidr": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-					},
-				},
-			},
-			"platform_version": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"role_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 			"status": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"tags":     tftags.TagsSchemaForceNew(),
 			"tags_all": tftags.TagsSchemaComputed(),
-			"version": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"vpc_config": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"cluster_security_group_id": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"endpoint_private_access": {
-							Type:     schema.TypeBool,
-							Computed: true,
-						},
-						"endpoint_public_access": {
-							Type:     schema.TypeBool,
-							Computed: true,
-						},
-						"public_access_cidrs": {
-							Type:     schema.TypeSet,
-							Computed: true,
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
-							},
-						},
-						"security_group_ids": {
-							Type:     schema.TypeSet,
-							Computed: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-						"subnet_ids": {
-							Type:     schema.TypeSet,
-							Computed: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-						"vpc_id": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-					},
-				},
-			},
 		},
 	}
 }
@@ -295,43 +157,15 @@ func resourceClusterRegistrationRead(ctx context.Context, d *schema.ResourceData
 
 	d.Set("arn", cluster.Arn)
 
-	if err := d.Set("certificate_authority", flattenEksCertificate(cluster.CertificateAuthority)); err != nil {
-		return diag.FromErr(fmt.Errorf("error setting certificate_authority: %w", err))
-	}
-
 	if err := d.Set("connector_config", flattenConnectorConfig(cluster.ConnectorConfig)); err != nil {
 		return diag.FromErr(fmt.Errorf("error setting connector config: %w", err))
 	}
 
 	d.Set("created_at", aws.TimeValue(cluster.CreatedAt).String())
 
-	if err := d.Set("enabled_cluster_log_types", flattenEksEnabledLogTypes(cluster.Logging)); err != nil {
-		return diag.FromErr(fmt.Errorf("error setting enabled_cluster_log_types: %w", err))
-	}
-
-	if err := d.Set("encryption_config", flattenEksEncryptionConfig(cluster.EncryptionConfig)); err != nil {
-		return diag.FromErr(fmt.Errorf("error setting encryption_config: %w", err))
-	}
-
-	d.Set("endpoint", cluster.Endpoint)
-
-	if err := d.Set("identity", flattenEksIdentity(cluster.Identity)); err != nil {
-		return diag.FromErr(fmt.Errorf("error setting identity: %w", err))
-	}
-
-	if err := d.Set("kubernetes_network_config", flattenEksNetworkConfig(cluster.KubernetesNetworkConfig)); err != nil {
-		return diag.FromErr(fmt.Errorf("error setting kubernetes_network_config: %w", err))
-	}
-
 	d.Set("name", cluster.Name)
-	d.Set("platform_version", cluster.PlatformVersion)
 	d.Set("role_arn", cluster.RoleArn)
 	d.Set("status", cluster.Status)
-	d.Set("version", cluster.Version)
-
-	if err := d.Set("vpc_config", flattenEksVpcConfigResponse(cluster.ResourcesVpcConfig)); err != nil {
-		return diag.FromErr(fmt.Errorf("error setting vpc_config: %w", err))
-	}
 
 	tags := KeyValueTags(cluster.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
