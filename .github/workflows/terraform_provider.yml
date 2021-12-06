@@ -218,7 +218,7 @@ jobs:
         key: ${{ runner.os }}-go-pkg-mod-${{ hashFiles('go.sum') }}
     - name: Get all changed files
       id: changed-files
-      uses: tj-actions/changed-files@v11.7
+      uses: tj-actions/changed-files@v11.9
     - name: Get changed packages
       run: |
         touch /tmp/dirs_changed_all
