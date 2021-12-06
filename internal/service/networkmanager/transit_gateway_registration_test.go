@@ -7,9 +7,12 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/networkmanager"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/ec2"
 )
 
 func init() {
@@ -37,7 +40,7 @@ func testSweepTransitGatewayRegistration(region string) error {
 				log.Printf("[INFO] Deleting Network Manager Transit Gateway Registration: %s", transitGatewayArn)
 				req, _ := conn.DeregisterTransitGatewayRequest(input)
 				err = req.Send()
-				if isAWSErr(err, "InvalidTransitGatewayRegistrationArn.NotFound", "") {
+				if tfawserr.ErrCodeEquals(err, "InvalidTransitGatewayRegistrationArn.NotFound", "") {
 					continue
 				}
 				if err != nil {
@@ -70,7 +73,7 @@ func TestAccTransitGatewayRegistration_basic(t *testing.T) {
 	gloablNetwork2ResourceName := "aws_networkmanager_global_network.test2"
 	transitGatewayResourceName := "aws_ec2_transit_gateway.test"
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEc2TransitGateway(t) },
+		PreCheck:     func() { acctest.PreCheck(t); ec2.testAccPreCheckTransitGateway(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsTransitGatewayRegistrationDestroy,
 		Steps: []resource.TestStep{
@@ -107,7 +110,7 @@ func testAccCheckAwsTransitGatewayRegistrationDestroy(s *terraform.State) error 
 		}
 		transitGatewayArn, err := networkmanagerDescribeTransitGatewayRegistration(conn, rs.Primary.Attributes["global_network_id"], rs.Primary.Attributes["transit_gateway_arn"])
 		if err != nil {
-			if isAWSErr(err, networkmanager.ErrCodeValidationException, "") {
+			if tfawserr.ErrCodeEquals(err, networkmanager.ErrCodeValidationException, "") {
 				return nil
 			}
 			return err

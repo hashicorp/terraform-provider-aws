@@ -8,9 +8,11 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/networkmanager"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func init() {
@@ -40,7 +42,7 @@ func testSweepGlobalNetwork(region string) error {
 				log.Printf("[INFO] Deleting Network Manager Global Network: %s", id)
 				_, err := conn.DeleteGlobalNetwork(input)
 
-				if isAWSErr(err, "InvalidGlobalNetworkID.NotFound", "") {
+				if tfawserr.ErrCodeEquals(err, "InvalidGlobalNetworkID.NotFound", "") {
 					continue
 				}
 
@@ -76,7 +78,7 @@ func TestAccGlobalNetwork_basic(t *testing.T) {
 	resourceName := "aws_networkmanager_global_network.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { acctest.PreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsGlobalNetworkDestroy,
 		Steps: []resource.TestStep{
@@ -110,7 +112,7 @@ func TestAccGlobalNetwork_tags(t *testing.T) {
 	description := "test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { acctest.PreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsGlobalNetworkDestroy,
 		Steps: []resource.TestStep{
@@ -161,7 +163,7 @@ func testAccCheckAwsGlobalNetworkDestroy(s *terraform.State) error {
 
 		globalNetwork, err := networkmanagerDescribeGlobalNetwork(conn, rs.Primary.ID)
 		if err != nil {
-			if isAWSErr(err, networkmanager.ErrCodeResourceNotFoundException, "") {
+			if tfawserr.ErrCodeEquals(err, networkmanager.ErrCodeResourceNotFoundException, "") {
 				return nil
 			}
 			return err

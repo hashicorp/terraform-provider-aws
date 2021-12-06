@@ -9,9 +9,11 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/networkmanager"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/internal/keyvaluetags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func ResourceSite() *schema.Resource {
@@ -123,7 +125,7 @@ func ResourceSiteRead(d *schema.ResourceData, meta interface{}) error {
 
 	site, err := networkmanagerDescribeSite(conn, d.Get("global_network_id").(string), d.Id())
 
-	if isAWSErr(err, "InvalidSiteID.NotFound", "") {
+	if tfawserr.ErrCodeEquals(err, "InvalidSiteID.NotFound", "") {
 		log.Printf("[WARN] Network Manager Site (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -199,11 +201,11 @@ func ResourceSiteDelete(d *schema.ResourceData, meta interface{}) error {
 	err := resource.Retry(2*time.Minute, func() *resource.RetryError {
 		_, err := conn.DeleteSite(input)
 
-		if isAWSErr(err, "IncorrectState", "has non-deleted Link Associations") {
+		if tfawserr.ErrMessageContains(err, "IncorrectState", "has non-deleted Link Associations") {
 			return resource.RetryableError(err)
 		}
 
-		if isAWSErr(err, "IncorrectState", "has non-deleted Device") {
+		if tfawserr.ErrMessageContains(err, "IncorrectState", "has non-deleted Device") {
 			return resource.RetryableError(err)
 		}
 
@@ -214,11 +216,11 @@ func ResourceSiteDelete(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	})
 
-	if isResourceTimeoutError(err) {
+	if tfresource.TimedOut(err) {
 		_, err = conn.DeleteSite(input)
 	}
 
-	if isAWSErr(err, "InvalidSiteID.NotFound", "") {
+	if tfawserr.ErrCodeEquals(err, "InvalidSiteID.NotFound", "") {
 		return nil
 	}
 
@@ -237,7 +239,7 @@ func networkmanagerSiteRefreshFunc(conn *networkmanager.NetworkManager, globalNe
 	return func() (interface{}, string, error) {
 		site, err := networkmanagerDescribeSite(conn, globalNetworkID, siteID)
 
-		if isAWSErr(err, "InvalidSiteID.NotFound", "") {
+		if tfawserr.ErrCodeEquals(err, "InvalidSiteID.NotFound", "") {
 			return nil, "DELETED", nil
 		}
 
@@ -306,7 +308,7 @@ func waitForSiteDeletion(conn *networkmanager.NetworkManager, globalNetworkID, s
 	log.Printf("[DEBUG] Waiting for Network Manager Site (%s) deletion", siteID)
 	_, err := stateConf.WaitForState()
 
-	if isResourceNotFoundError(err) {
+	if tfresource.NotFound(err) {
 		return nil
 	}
 

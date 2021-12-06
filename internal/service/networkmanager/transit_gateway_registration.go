@@ -9,8 +9,10 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/networkmanager"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func ResourceTransitGatewayRegistration() *schema.Resource {
@@ -93,7 +95,7 @@ func ResourceTransitGatewayRegistrationRead(d *schema.ResourceData, meta interfa
 
 	transitGatewayRegistration, err := networkmanagerDescribeTransitGatewayRegistration(conn, d.Get("global_network_id").(string), d.Get("transit_gateway_arn").(string))
 
-	if isAWSErr(err, "InvalidTransitGatewayRegistrationID.NotFound", "") {
+	if tfawserr.ErrCodeEquals(err, "InvalidTransitGatewayRegistrationID.NotFound", "") {
 		log.Printf("[WARN] Network Manager Transit Gateway Registration (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -130,7 +132,7 @@ func ResourceTransitGatewayRegistrationDelete(d *schema.ResourceData, meta inter
 	req, _ := conn.DeregisterTransitGatewayRequest(input)
 	err := req.Send()
 
-	if isAWSErr(err, "InvalidTransitGatewayRegistrationArn.NotFound", "") {
+	if tfawserr.ErrCodeEquals(err, "InvalidTransitGatewayRegistrationArn.NotFound", "") {
 		return nil
 	}
 
@@ -149,7 +151,7 @@ func networkmanagerTransitGatewayRegistrationRefreshFunc(conn *networkmanager.Ne
 	return func() (interface{}, string, error) {
 		transitGatewayRegistration, err := networkmanagerDescribeTransitGatewayRegistration(conn, globalNetworkID, transitGatewayArn)
 
-		if isAWSErr(err, "InvalidTransitGatewayRegistrationID.NotFound", "") {
+		if tfawserr.ErrCodeEquals(err, "InvalidTransitGatewayRegistrationID.NotFound", "") {
 			return nil, "DELETED", nil
 		}
 
@@ -220,7 +222,7 @@ func waitForTransitGatewayRegistrationDeletion(conn *networkmanager.NetworkManag
 	log.Printf("[DEBUG] Waiting for Network Manager Transit Gateway Registration (%s) deletion", transitGatewayArn)
 	_, err := stateConf.WaitForState()
 
-	if isResourceNotFoundError(err) {
+	if tfresource.NotFound(err) {
 		return nil
 	}
 

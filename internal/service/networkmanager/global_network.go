@@ -7,9 +7,11 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/networkmanager"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/internal/keyvaluetags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func ResourceGlobalNetwork() *schema.Resource {
@@ -54,14 +56,14 @@ func ResourceGlobalNetworkCreate(d *schema.ResourceData, meta interface{}) error
 		var err error
 		output, err = conn.CreateGlobalNetwork(input)
 		if err != nil {
-			if isAWSErr(err, "ValidationException", "Resource already exists with ID") {
+			if tfawserr.ErrMessageContains(err, "ValidationException", "Resource already exists with ID") {
 				return resource.RetryableError(err)
 			}
 			return resource.NonRetryableError(err)
 		}
 		return nil
 	})
-	if isResourceTimeoutError(err) {
+	if tfresource.TimedOut(err) {
 		output, err = conn.CreateGlobalNetwork(input)
 	}
 	if err != nil {
@@ -91,7 +93,7 @@ func ResourceGlobalNetworkRead(d *schema.ResourceData, meta interface{}) error {
 
 	globalNetwork, err := networkmanagerDescribeGlobalNetwork(conn, d.Id())
 
-	if isAWSErr(err, "InvalidGlobalNetworkID.NotFound", "") {
+	if tfawserr.ErrCodeEquals(err, "InvalidGlobalNetworkID.NotFound", "") {
 		log.Printf("[WARN] networkmanager Global Network (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -160,23 +162,23 @@ func ResourceGlobalNetworkDelete(d *schema.ResourceData, meta interface{}) error
 	err := resource.Retry(2*time.Minute, func() *resource.RetryError {
 		_, err := conn.DeleteGlobalNetwork(input)
 
-		if isAWSErr(err, "IncorrectState", "has non-deleted Transit Gateway Registrations") {
+		if tfawserr.ErrMessageContains(err, "IncorrectState", "has non-deleted Transit Gateway Registrations") {
 			return resource.RetryableError(err)
 		}
 
-		if isAWSErr(err, "IncorrectState", "has non-deleted Customer Gateway Associations") {
+		if tfawserr.ErrMessageContains(err, "IncorrectState", "has non-deleted Customer Gateway Associations") {
 			return resource.RetryableError(err)
 		}
 
-		if isAWSErr(err, "IncorrectState", "has non-deleted Device") {
+		if tfawserr.ErrMessageContains(err, "IncorrectState", "has non-deleted Device") {
 			return resource.RetryableError(err)
 		}
 
-		if isAWSErr(err, "IncorrectState", "has non-deleted Link") {
+		if tfawserr.ErrMessageContains(err, "IncorrectState", "has non-deleted Link") {
 			return resource.RetryableError(err)
 		}
 
-		if isAWSErr(err, "IncorrectState", "has non-deleted Site") {
+		if tfawserr.ErrMessageContains(err, "IncorrectState", "has non-deleted Site") {
 			return resource.RetryableError(err)
 		}
 
@@ -187,11 +189,11 @@ func ResourceGlobalNetworkDelete(d *schema.ResourceData, meta interface{}) error
 		return nil
 	})
 
-	if isResourceTimeoutError(err) {
+	if tfresource.TimedOut(err) {
 		_, err = conn.DeleteGlobalNetwork(input)
 	}
 
-	if isAWSErr(err, "InvalidGlobalNetworkID.NotFound", "") {
+	if tfawserr.ErrCodeEquals(err, "InvalidGlobalNetworkID.NotFound", "") {
 		return nil
 	}
 
@@ -210,7 +212,7 @@ func networkmanagerGlobalNetworkRefreshFunc(conn *networkmanager.NetworkManager,
 	return func() (interface{}, string, error) {
 		globalNetwork, err := networkmanagerDescribeGlobalNetwork(conn, globalNetworkID)
 
-		if isAWSErr(err, "InvalidGlobalNetworkID.NotFound", "") {
+		if tfawserr.ErrCodeEquals(err, "InvalidGlobalNetworkID.NotFound", "") {
 			return nil, "DELETED", nil
 		}
 
@@ -278,7 +280,7 @@ func waitForGlobalNetworkDeletion(conn *networkmanager.NetworkManager, globalNet
 	log.Printf("[DEBUG] Waiting for  Global Network (%s) deletion", globalNetworkID)
 	_, err := stateConf.WaitForState()
 
-	if isResourceNotFoundError(err) {
+	if tfresource.NotFound(err) {
 		return nil
 	}
 

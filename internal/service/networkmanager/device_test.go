@@ -7,9 +7,11 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/networkmanager"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func init() {
@@ -40,7 +42,7 @@ func testSweepDevice(region string) error {
 				log.Printf("[INFO] Deleting Network Manager Device: %s", id)
 				_, err := conn.DeleteDevice(input)
 
-				if isAWSErr(err, "InvalidDeviceID.NotFound", "") {
+				if tfawserr.ErrCodeEquals(err, "InvalidDeviceID.NotFound", "") {
 					continue
 				}
 
@@ -79,7 +81,7 @@ func TestAccDevice_basic(t *testing.T) {
 	gloablNetworkResourceName := "aws_networkmanager_global_network.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { acctest.PreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsDeviceDestroy,
 		Steps: []resource.TestStep{
@@ -131,7 +133,7 @@ func TestAccDevice_tags(t *testing.T) {
 	description := "test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { acctest.PreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsDeviceDestroy,
 		Steps: []resource.TestStep{
@@ -183,7 +185,7 @@ func testAccCheckAwsDeviceDestroy(s *terraform.State) error {
 
 		device, err := networkmanagerDescribeDevice(conn, rs.Primary.Attributes["global_network_id"], rs.Primary.ID)
 		if err != nil {
-			if isAWSErr(err, networkmanager.ErrCodeValidationException, "") {
+			if tfawserr.ErrCodeEquals(err, networkmanager.ErrCodeValidationException, "") {
 				return nil
 			}
 			return err

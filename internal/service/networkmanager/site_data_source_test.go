@@ -1,11 +1,12 @@
-package networkmanager
+package networkmanager_test
 
 import (
 	"fmt"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccDataSourceSite_basic(t *testing.T) {
@@ -17,7 +18,7 @@ func TestAccDataSourceSite_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
+			acctest.PreCheck(t)
 		},
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsSiteDestroy,
@@ -80,5 +81,5 @@ data "aws_networkmanager_site" "test_by_tags" {
 	Name = aws_networkmanager_site.test.tags["Name"]
   }
 }
-`, acctest.RandInt())
+`, sdkacctest.RandInt())
 }

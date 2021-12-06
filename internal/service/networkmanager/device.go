@@ -9,9 +9,11 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/networkmanager"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/internal/keyvaluetags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func ResourceDevice() *schema.Resource {
@@ -148,7 +150,7 @@ func ResourceDeviceRead(d *schema.ResourceData, meta interface{}) error {
 
 	device, err := networkmanagerDescribeDevice(conn, d.Get("global_network_id").(string), d.Id())
 
-	if isAWSErr(err, "InvalidDeviceID.NotFound", "") {
+	if tfawserr.ErrCodeEquals(err, "InvalidDeviceID.NotFound", "") {
 		log.Printf("[WARN] Network Manager Device (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -234,11 +236,11 @@ func ResourceDeviceDelete(d *schema.ResourceData, meta interface{}) error {
 	err := resource.Retry(2*time.Minute, func() *resource.RetryError {
 		_, err := conn.DeleteDevice(input)
 
-		if isAWSErr(err, "IncorrectState", "has non-deleted Device Associations") {
+		if tfawserr.ErrMessageContains(err, "IncorrectState", "has non-deleted Device Associations") {
 			return resource.RetryableError(err)
 		}
 
-		if isAWSErr(err, "IncorrectState", "has non-deleted Device") {
+		if tfawserr.ErrMessageContains(err, "IncorrectState", "has non-deleted Device") {
 			return resource.RetryableError(err)
 		}
 
@@ -249,11 +251,11 @@ func ResourceDeviceDelete(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	})
 
-	if isResourceTimeoutError(err) {
+	if tfresource.TimedOut(err) {
 		_, err = conn.DeleteDevice(input)
 	}
 
-	if isAWSErr(err, "InvalidDeviceID.NotFound", "") {
+	if tfawserr.ErrCodeEquals(err, "InvalidDeviceID.NotFound", "") {
 		return nil
 	}
 
@@ -272,7 +274,7 @@ func networkmanagerDeviceRefreshFunc(conn *networkmanager.NetworkManager, global
 	return func() (interface{}, string, error) {
 		device, err := networkmanagerDescribeDevice(conn, globalNetworkID, deviceID)
 
-		if isAWSErr(err, "InvalidDeviceID.NotFound", "") {
+		if tfawserr.ErrCodeEquals(err, "InvalidDeviceID.NotFound", "") {
 			return nil, "DELETED", nil
 		}
 
@@ -341,7 +343,7 @@ func waitForNetworkManagerDeviceDeletion(conn *networkmanager.NetworkManager, gl
 	log.Printf("[DEBUG] Waiting for Network Manager Device (%s) deletion", deviceID)
 	_, err := stateConf.WaitForState()
 
-	if isResourceNotFoundError(err) {
+	if tfresource.NotFound(err) {
 		return nil
 	}
 
