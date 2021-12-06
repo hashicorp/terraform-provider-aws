@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/kinesis"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -17,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
@@ -36,7 +38,27 @@ func ResourceStream() *schema.Resource {
 
 		CustomizeDiff: customdiff.Sequence(
 			verify.SetTagsDiff,
-			resourceStreamCustomizeDiff,
+			func(_ context.Context, diff *schema.ResourceDiff, meta interface{}) error {
+				shardCount := diff.Get("shard_count").(int)
+				streamMode := kinesis.StreamModeProvisioned
+				if v, ok := diff.GetOk("stream_mode_details.0.stream_mode"); ok {
+					streamMode = v.(string)
+				}
+				switch streamMode {
+				case kinesis.StreamModeOnDemand:
+					if shardCount > 0 {
+						return fmt.Errorf("shard_count must not be set when stream_mode is %s", streamMode)
+					}
+				case kinesis.StreamModeProvisioned:
+					if shardCount < 1 {
+						return fmt.Errorf("shard_count must be at least 1 when stream_mode is %s", streamMode)
+					}
+				default:
+					return fmt.Errorf("unknown stream mode %s", streamMode)
+				}
+
+				return nil
+			},
 		),
 
 		SchemaVersion: 1,
@@ -123,49 +145,41 @@ func ResourceStream() *schema.Resource {
 
 func resourceStreamCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).KinesisConn
-	sn := d.Get("name").(string)
 
-	createOpts := &kinesis.CreateStreamInput{
-		StreamName: aws.String(sn),
+	name := d.Get("name").(string)
+	input := &kinesis.CreateStreamInput{
+		StreamName: aws.String(name),
 	}
 
 	if v, ok := d.GetOk("stream_mode_details"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		createOpts.StreamModeDetails = expandStreamModeDetails(v.([]interface{})[0].(map[string]interface{}))
+		input.StreamModeDetails = expandStreamModeDetails(v.([]interface{})[0].(map[string]interface{}))
 	}
 
 	streamMode := getStreamMode(d)
 
 	if streamMode == kinesis.StreamModeProvisioned {
-		createOpts.ShardCount = aws.Int64(int64(d.Get("shard_count").(int)))
+		input.ShardCount = aws.Int64(int64(d.Get("shard_count").(int)))
 	}
 
-	_, err := conn.CreateStream(createOpts)
+	_, err := conn.CreateStream(input)
+
 	if err != nil {
-		return fmt.Errorf("Unable to create stream: %s", err)
+		return fmt.Errorf("error creating Kinesis Stream (%s): %w", name, err)
 	}
 
-	// No error, wait for ACTIVE state
-	stateConf := &resource.StateChangeConf{
-		Pending:    []string{kinesis.StreamStatusCreating},
-		Target:     []string{kinesis.StreamStatusActive},
-		Refresh:    streamStateRefreshFunc(conn, sn),
-		Timeout:    d.Timeout(schema.TimeoutCreate),
-		Delay:      10 * time.Second,
-		MinTimeout: 3 * time.Second,
+	streamDescription, err := waitStreamCreated(conn, name, d.Timeout(schema.TimeoutCreate))
+
+	if streamDescription != nil {
+		d.SetId(aws.StringValue(streamDescription.StreamARN))
 	}
 
-	streamRaw, err := stateConf.WaitForState()
 	if err != nil {
-		return fmt.Errorf(
-			"Error waiting for Kinesis Stream (%s) to become active: %s",
-			sn, err)
+		return fmt.Errorf("error waiting for Kinesis Stream (%s) create: %w", d.Id(), err)
 	}
 
-	s := streamRaw.(*kinesisStreamState)
-	d.SetId(s.arn)
-	d.Set("arn", s.arn)
+	d.Set("arn", d.Id())
 	if streamMode == kinesis.StreamModeProvisioned {
-		d.Set("shard_count", len(s.openShards))
+		d.Set("shard_count", len(FilterShards(streamDescription.Shards, true)))
 	}
 
 	return resourceStreamUpdate(d, meta)
@@ -310,28 +324,6 @@ func resourceStreamDelete(d *schema.ResourceData, meta interface{}) error {
 func resourceStreamImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	d.Set("name", d.Id())
 	return []*schema.ResourceData{d}, nil
-}
-
-func resourceStreamCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
-	shardCount := diff.Get("shard_count").(int)
-	streamMode := kinesis.StreamModeProvisioned
-	if v, ok := diff.GetOk("stream_mode_details.0.stream_mode"); ok {
-		streamMode = v.(string)
-	}
-	switch streamMode {
-	case kinesis.StreamModeOnDemand:
-		if shardCount > 0 {
-			return fmt.Errorf("shard_count must not be set when stream_mode is %s", streamMode)
-		}
-	case kinesis.StreamModeProvisioned:
-		if shardCount < 1 {
-			return fmt.Errorf("shard_count must be at least 1 when stream_mode is %s", streamMode)
-		}
-	default:
-		return fmt.Errorf("unknown stream mode %s", streamMode)
-	}
-
-	return nil
 }
 
 func setKinesisRetentionPeriod(conn *kinesis.Kinesis, d *schema.ResourceData) error {
@@ -615,6 +607,75 @@ func WaitForToBeActive(conn *kinesis.Kinesis, timeout time.Duration, sn string) 
 			sn, err)
 	}
 	return nil
+}
+
+func FindStreamByName(conn *kinesis.Kinesis, name string) (*kinesis.StreamDescription, error) {
+	var output *kinesis.StreamDescription
+	input := &kinesis.DescribeStreamInput{
+		StreamName: aws.String(name),
+	}
+
+	err := conn.DescribeStreamPages(input, func(page *kinesis.DescribeStreamOutput, lastPage bool) bool {
+		if page == nil || page.StreamDescription == nil {
+			return !lastPage
+		}
+
+		if output == nil {
+			output = page.StreamDescription
+		} else {
+			output.Shards = append(output.Shards, page.StreamDescription.Shards...)
+		}
+
+		return !lastPage
+	})
+
+	if tfawserr.ErrCodeEquals(err, kinesis.ErrCodeResourceNotFoundException) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
+}
+
+func streamStatus(conn *kinesis.Kinesis, name string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := FindStreamByName(conn, name)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, aws.StringValue(output.StreamStatus), nil
+	}
+}
+
+func waitStreamCreated(conn *kinesis.Kinesis, name string, timeout time.Duration) (*kinesis.StreamDescription, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending:    []string{kinesis.StreamStatusCreating},
+		Target:     []string{kinesis.StreamStatusActive},
+		Refresh:    streamStatus(conn, name),
+		Timeout:    timeout,
+		Delay:      10 * time.Second,
+		MinTimeout: 3 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*kinesis.StreamDescription); ok {
+		return output, err
+	}
+
+	return nil, err
 }
 
 // See http://docs.aws.amazon.com/kinesis/latest/dev/kinesis-using-sdk-java-resharding-merge.html
