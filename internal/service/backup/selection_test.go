@@ -117,6 +117,36 @@ func TestAccBackupSelection_withTags(t *testing.T) {
 	})
 }
 
+func TestAccBackupSelection_ConditionsWithTags(t *testing.T) {
+	var selection1 backup.GetBackupSelectionOutput
+	resourceName := "aws_backup_selection.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, backup.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckSelectionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBackupSelectionConfigWithConditionsTags(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSelectionExists(resourceName, &selection1),
+					resource.TestCheckResourceAttr(resourceName, "conditions.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "conditions.0.string_equals.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "conditions.0.string_not_equals.#", "2"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccSelectionImportStateIDFunc(resourceName),
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccBackupSelection_withResources(t *testing.T) {
 	var selection1 backup.GetBackupSelectionOutput
 	resourceName := "aws_backup_selection.test"
@@ -133,6 +163,34 @@ func TestAccBackupSelection_withResources(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSelectionExists(resourceName, &selection1),
 					resource.TestCheckResourceAttr(resourceName, "resources.#", "2"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccSelectionImportStateIDFunc(resourceName),
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccBackupSelection_withNotResources(t *testing.T) {
+	var selection1 backup.GetBackupSelectionOutput
+	resourceName := "aws_backup_selection.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, backup.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckSelectionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBackupSelectionConfigWithNotResources(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSelectionExists(resourceName, &selection1),
+					resource.TestCheckResourceAttr(resourceName, "not_resources.#", "2"),
 				),
 			},
 			{
@@ -333,6 +391,49 @@ resource "aws_backup_selection" "test" {
 `, rName))
 }
 
+func testAccBackupSelectionConfigWithConditionsTags(rName string) string {
+	return acctest.ConfigCompose(
+		testAccBackupSelectionConfigBase(rName),
+		fmt.Sprintf(`
+resource "aws_backup_selection" "test" {
+  plan_id = aws_backup_plan.test.id
+
+  name         = %[1]q
+  iam_role_arn = "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:role/service-role/AWSBackupDefaultServiceRole"
+
+  conditions {
+    string_equals {
+	  key      = "aws:ResourceTag/Component"
+      value    = "rds"
+    }
+    string_equals {
+	  key      = "aws:ResourceTag/Team"
+      value    = "feed"
+    }
+    string_not_equals {
+	  key      = "aws:ResourceTag/Backup"
+      value    = "false"
+    }
+    string_not_equals {
+	  key      = "aws:ResourceTag/Team"
+      value    = "cloud"
+    }
+    string_like {
+	  key      = "aws:ResourceTag/Application"
+      value    = "ec*"
+    }
+    string_not_like {
+	  key      = "aws:ResourceTag/Environment"
+      value    = "test*"
+    }
+  }
+
+  resources = ["arn:aws:rds:*:*:cluster:*", "arn:aws:rds:*:*:db:*"]
+
+}
+`, rName))
+}
+
 func testAccBackupSelectionConfigWithResources(rName string) string {
 	return acctest.ConfigCompose(
 		testAccBackupSelectionConfigBase(rName),
@@ -370,6 +471,51 @@ resource "aws_backup_selection" "test" {
   }
 
   resources = aws_ebs_volume.test[*].arn
+}
+`, rName))
+}
+
+func testAccBackupSelectionConfigWithNotResources(rName string) string {
+	return acctest.ConfigCompose(
+		testAccBackupSelectionConfigBase(rName),
+		fmt.Sprintf(`
+data "aws_availability_zones" "available" {
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
+
+resource "aws_ebs_volume" "test" {
+  count = 2
+
+  availability_zone = data.aws_availability_zones.available.names[0]
+  size              = 1
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_backup_selection" "test" {
+  plan_id = aws_backup_plan.test.id
+
+  name         = %[1]q
+  iam_role_arn = "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:role/service-role/AWSBackupDefaultServiceRole"
+
+  selection_tag {
+    type  = "STRINGEQUALS"
+    key   = "foo"
+    value = "bar"
+  }
+
+  conditions{}
+  
+  resources = ["*"]
+  not_resources = aws_ebs_volume.test[*].arn
+
 }
 `, rName))
 }
