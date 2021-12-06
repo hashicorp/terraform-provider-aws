@@ -121,11 +121,6 @@ func ResourceStream() *schema.Resource {
 	}
 }
 
-func resourceStreamImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-	d.Set("name", d.Id())
-	return []*schema.ResourceData{d}, nil
-}
-
 func resourceStreamCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).KinesisConn
 	sn := d.Get("name").(string)
@@ -174,42 +169,6 @@ func resourceStreamCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	return resourceStreamUpdate(d, meta)
-}
-
-func resourceStreamUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).KinesisConn
-
-	sn := d.Get("name").(string)
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(conn, sn, o, n); err != nil {
-			return fmt.Errorf("error updating Kinesis Stream (%s) tags: %s", sn, err)
-		}
-	}
-
-	if err := updateKinesisStreamMode(conn, d); err != nil {
-		return err
-	}
-
-	if getStreamMode(d) == kinesis.StreamModeProvisioned {
-		if err := updateKinesisShardCount(conn, d); err != nil {
-			return err
-		}
-	}
-
-	if err := setKinesisRetentionPeriod(conn, d); err != nil {
-		return err
-	}
-	if err := updateKinesisShardLevelMetrics(conn, d); err != nil {
-		return err
-	}
-
-	if err := updateKinesisStreamEncryption(conn, d); err != nil {
-		return err
-	}
-
-	return resourceStreamRead(d, meta)
 }
 
 func resourceStreamRead(d *schema.ResourceData, meta interface{}) error {
@@ -281,6 +240,42 @@ func resourceStreamRead(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
+func resourceStreamUpdate(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*conns.AWSClient).KinesisConn
+
+	sn := d.Get("name").(string)
+	if d.HasChange("tags_all") {
+		o, n := d.GetChange("tags_all")
+
+		if err := UpdateTags(conn, sn, o, n); err != nil {
+			return fmt.Errorf("error updating Kinesis Stream (%s) tags: %s", sn, err)
+		}
+	}
+
+	if err := updateKinesisStreamMode(conn, d); err != nil {
+		return err
+	}
+
+	if getStreamMode(d) == kinesis.StreamModeProvisioned {
+		if err := updateKinesisShardCount(conn, d); err != nil {
+			return err
+		}
+	}
+
+	if err := setKinesisRetentionPeriod(conn, d); err != nil {
+		return err
+	}
+	if err := updateKinesisShardLevelMetrics(conn, d); err != nil {
+		return err
+	}
+
+	if err := updateKinesisStreamEncryption(conn, d); err != nil {
+		return err
+	}
+
+	return resourceStreamRead(d, meta)
+}
+
 func resourceStreamDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).KinesisConn
 	sn := d.Get("name").(string)
@@ -310,6 +305,11 @@ func resourceStreamDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	return nil
+}
+
+func resourceStreamImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+	d.Set("name", d.Id())
+	return []*schema.ResourceData{d}, nil
 }
 
 func resourceStreamCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
