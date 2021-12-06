@@ -50,55 +50,50 @@ func ResourceStream() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
+			"arn": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"encryption_type": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Default:      kinesis.EncryptionTypeNone,
+				ValidateFunc: validation.StringInSlice(kinesis.EncryptionType_Values(), true),
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					return strings.EqualFold(old, new)
+				},
+			},
+			"enforce_consumer_deletion": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
+			"kms_key_id": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
 			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-
-			"shard_count": {
-				Type:     schema.TypeInt,
-				Optional: true,
-			},
-
 			"retention_period": {
 				Type:         schema.TypeInt,
 				Optional:     true,
 				Default:      24,
 				ValidateFunc: validation.IntBetween(24, 8760),
 			},
-
+			"shard_count": {
+				Type:     schema.TypeInt,
+				Optional: true,
+			},
 			"shard_level_metrics": {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Set:      schema.HashString,
 			},
-
-			"enforce_consumer_deletion": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-
-			"encryption_type": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  "NONE",
-				ValidateFunc: validation.StringInSlice([]string{
-					kinesis.EncryptionTypeNone,
-					kinesis.EncryptionTypeKms,
-				}, true),
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					return strings.EqualFold(old, new)
-				},
-			},
-
-			"kms_key_id": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-
 			"stream_mode_details": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -114,12 +109,6 @@ func ResourceStream() *schema.Resource {
 					},
 				},
 				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
-			},
-
-			"arn": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
 			},
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
