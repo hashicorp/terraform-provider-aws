@@ -437,24 +437,24 @@ func flattenBackupConditions(conditions *backup.Conditions) *schema.Set {
 	return schema.NewSet(backupConditionsHash, vConditions)
 }
 
-func backupConditionsHash(vRule interface{}) int {
+func backupConditionsHash(vCondition interface{}) int {
 	var buf bytes.Buffer
 
-	mRule := vRule.(map[string]interface{})
+	mCondition := vCondition.(map[string]interface{})
 
-	if v, ok := mRule["string_equals"].(string); ok {
+	if v, ok := mCondition["string_equals"].(string); ok {
 		buf.WriteString(fmt.Sprintf("%s-", v))
 	}
 
-	if v, ok := mRule["string_not_equals"].(string); ok {
+	if v, ok := mCondition["string_not_equals"].(string); ok {
 		buf.WriteString(fmt.Sprintf("%s-", v))
 	}
 
-	if v, ok := mRule["string_like"].(string); ok {
+	if v, ok := mCondition["string_like"].(string); ok {
 		buf.WriteString(fmt.Sprintf("%s-", v))
 	}
 
-	if v, ok := mRule["string_not_like"].(string); ok {
+	if v, ok := mCondition["string_not_like"].(string); ok {
 		buf.WriteString(fmt.Sprintf("%s-", v))
 	}
 
