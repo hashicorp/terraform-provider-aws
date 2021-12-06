@@ -231,6 +231,32 @@ func TestAccIAMUserPolicy_multiplePolicies(t *testing.T) {
 	})
 }
 
+func TestAccIAMUserPolicy_policyOrder(t *testing.T) {
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	policyResourceName := "aws_iam_user_policy.test"
+	userResourceName := "aws_iam_user.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, iam.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckIAMUserPolicyDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccUserPolicyOrderConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckIAMUserPolicy(userResourceName, policyResourceName),
+					testAccCheckIAMUserPolicyExpectedPolicies(userResourceName, 1),
+				),
+			},
+			{
+				Config:   testAccUserPolicyNewOrderConfig(rName),
+				PlanOnly: true,
+			},
+		},
+	})
+}
+
 func testAccCheckIAMUserPolicyExists(resource string, res *iam.GetUserPolicyOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resource]
@@ -449,4 +475,64 @@ resource "aws_iam_user_policy" "bar" {
   policy = %[4]s
 }
 `, testAccUserConfig(fmt.Sprintf("test_user_%d", rInt), "/"), rInt, policy1, policy2)
+}
+
+func testAccUserPolicyOrderConfig(suffix string) string {
+	return fmt.Sprintf(`
+resource "aws_iam_user" "test" {
+  name = %[1]q
+  path = "/"
+}
+
+resource "aws_iam_user_policy" "test" {
+  name = %[1]q
+  user = aws_iam_user.test.name
+
+  policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": {
+    "Effect": "Allow",
+    "Action": [
+      "ec2:DescribeScheduledInstances",
+      "ec2:DescribeScheduledInstanceAvailability",
+      "ec2:DescribeFastSnapshotRestores",
+      "ec2:DescribeElasticGpus"
+    ],
+    "Resource": "*"
+  }
+}
+EOF
+}
+`, suffix)
+}
+
+func testAccUserPolicyNewOrderConfig(suffix string) string {
+	return fmt.Sprintf(`
+resource "aws_iam_user" "test" {
+  name = %[1]q
+  path = "/"
+}
+
+resource "aws_iam_user_policy" "test" {
+  name = %[1]q
+  user = aws_iam_user.test.name
+
+  policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": {
+    "Effect": "Allow",
+    "Action": [
+      "ec2:DescribeElasticGpus",
+      "ec2:DescribeFastSnapshotRestores",
+      "ec2:DescribeScheduledInstances",
+      "ec2:DescribeScheduledInstanceAvailability"
+    ],
+    "Resource": "*"
+  }
+}
+EOF
+}
+`, suffix)
 }
