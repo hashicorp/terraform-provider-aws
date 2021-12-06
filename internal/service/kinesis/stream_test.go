@@ -396,10 +396,7 @@ func TestAccKinesisStream_tags(t *testing.T) {
 	})
 }
 
-func testAccCheckKinesisStreamExists(
-	n string,
-	stream *kinesis.StreamDescription,
-) resource.TestCheckFunc {
+func testAccCheckKinesisStreamExists(n string, stream *kinesis.StreamDescription) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -469,10 +466,7 @@ func testAccCheckKinesisStreamDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccStreamRegisterStreamConsumer(
-	stream *kinesis.StreamDescription,
-	rStr string,
-) resource.TestCheckFunc {
+func testAccStreamRegisterStreamConsumer(stream *kinesis.StreamDescription, rStr string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).KinesisConn
 
@@ -487,10 +481,7 @@ func testAccStreamRegisterStreamConsumer(
 	}
 }
 
-func testAccCheckKinesisStreamTags(
-	n string,
-	tagCount int,
-) resource.TestCheckFunc {
+func testAccCheckKinesisStreamTags(n string, tagCount int) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if err := resource.TestCheckResourceAttr(n, "tags.%", fmt.Sprintf("%d", tagCount))(s); err != nil {
 			return err

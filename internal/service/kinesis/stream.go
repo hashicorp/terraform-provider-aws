@@ -89,10 +89,7 @@ func ResourceStream() *schema.Resource {
 					kinesis.EncryptionTypeNone,
 					kinesis.EncryptionTypeKms,
 				}, true),
-				DiffSuppressFunc: func(
-					k, old, new string,
-					d *schema.ResourceData,
-				) bool {
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
 					return strings.EqualFold(old, new)
 				},
 			},
@@ -130,9 +127,7 @@ func ResourceStream() *schema.Resource {
 	}
 }
 
-func resourceStreamImport(
-	d *schema.ResourceData, meta interface{},
-) ([]*schema.ResourceData, error) {
+func resourceStreamImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	d.Set("name", d.Id())
 	return []*schema.ResourceData{d}, nil
 }
@@ -288,7 +283,7 @@ func resourceStreamRead(d *schema.ResourceData, meta interface{}) error {
 
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
-	// lintignore:AWSR002
+	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %w", err)
 	}
@@ -331,10 +326,7 @@ func resourceStreamDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func setKinesisRetentionPeriod(
-	conn *kinesis.Kinesis,
-	d *schema.ResourceData,
-) error {
+func setKinesisRetentionPeriod(conn *kinesis.Kinesis, d *schema.ResourceData) error {
 	sn := d.Get("name").(string)
 
 	oraw, nraw := d.GetChange("retention_period")
@@ -374,10 +366,7 @@ func setKinesisRetentionPeriod(
 	return nil
 }
 
-func updateKinesisShardCount(
-	conn *kinesis.Kinesis,
-	d *schema.ResourceData,
-) error {
+func updateKinesisShardCount(conn *kinesis.Kinesis, d *schema.ResourceData) error {
 	sn := d.Get("name").(string)
 
 	oraw, nraw := d.GetChange("shard_count")
@@ -406,10 +395,7 @@ func updateKinesisShardCount(
 	return nil
 }
 
-func updateKinesisStreamMode(
-	conn *kinesis.Kinesis,
-	d *schema.ResourceData,
-) error {
+func updateKinesisStreamMode(conn *kinesis.Kinesis, d *schema.ResourceData) error {
 	sn := d.Get("name").(string)
 	arn := d.Get("arn").(string)
 
@@ -435,10 +421,7 @@ func updateKinesisStreamMode(
 	return nil
 }
 
-func updateKinesisStreamEncryption(
-	conn *kinesis.Kinesis,
-	d *schema.ResourceData,
-) error {
+func updateKinesisStreamEncryption(conn *kinesis.Kinesis, d *schema.ResourceData) error {
 	sn := d.Get("name").(string)
 
 	// If this is not a new resource and there is no change to encryption_type and kms_key_id
@@ -501,10 +484,7 @@ func updateKinesisStreamEncryption(
 	return nil
 }
 
-func updateKinesisShardLevelMetrics(
-	conn *kinesis.Kinesis,
-	d *schema.ResourceData,
-) error {
+func updateKinesisShardLevelMetrics(conn *kinesis.Kinesis, d *schema.ResourceData) error {
 	sn := d.Get("name").(string)
 
 	o, n := d.GetChange("shard_level_metrics")
@@ -566,19 +546,13 @@ type kinesisStreamState struct {
 	streamModeDetails *kinesis.StreamModeDetails
 }
 
-func readKinesisStreamState(
-	conn *kinesis.Kinesis,
-	sn string,
-) (*kinesisStreamState, error) {
+func readKinesisStreamState(conn *kinesis.Kinesis, sn string) (*kinesisStreamState, error) {
 	describeOpts := &kinesis.DescribeStreamInput{
 		StreamName: aws.String(sn),
 	}
 
 	state := &kinesisStreamState{}
-	err := conn.DescribeStreamPages(describeOpts, func(
-		page *kinesis.DescribeStreamOutput,
-		lastPage bool,
-	) (shouldContinue bool) {
+	err := conn.DescribeStreamPages(describeOpts, func(page *kinesis.DescribeStreamOutput, lastPage bool) (shouldContinue bool) {
 		state.arn = aws.StringValue(page.StreamDescription.StreamARN)
 		state.creationTimestamp = aws.TimeValue(page.StreamDescription.StreamCreationTimestamp).Unix()
 		state.status = aws.StringValue(page.StreamDescription.StreamStatus)
@@ -599,10 +573,7 @@ func readKinesisStreamState(
 	return state, err
 }
 
-func streamStateRefreshFunc(
-	conn *kinesis.Kinesis,
-	sn string,
-) resource.StateRefreshFunc {
+func streamStateRefreshFunc(conn *kinesis.Kinesis, sn string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		state, err := readKinesisStreamState(conn, sn)
 		if err != nil {
@@ -619,11 +590,7 @@ func streamStateRefreshFunc(
 	}
 }
 
-func WaitForToBeActive(
-	conn *kinesis.Kinesis,
-	timeout time.Duration,
-	sn string,
-) error {
+func WaitForToBeActive(conn *kinesis.Kinesis, timeout time.Duration, sn string) error {
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{kinesis.StreamStatusUpdating},
 		Target:     []string{kinesis.StreamStatusActive},
