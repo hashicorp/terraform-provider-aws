@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/kinesis"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
@@ -50,7 +49,7 @@ func ResourceStream() *schema.Resource {
 						return fmt.Errorf("shard_count must be at least 1 when stream_mode is %s", streamMode)
 					}
 				default:
-					return fmt.Errorf("unknown stream mode %s", streamMode)
+					return fmt.Errorf("unsupported stream mode %s", streamMode)
 				}
 
 				return nil
@@ -115,7 +114,6 @@ func ResourceStream() *schema.Resource {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
-				Set:      schema.HashString,
 			},
 			"stream_mode_details": {
 				Type:     schema.TypeList,
@@ -153,9 +151,7 @@ func resourceStreamCreate(d *schema.ResourceData, meta interface{}) error {
 		input.StreamModeDetails = expandStreamModeDetails(v.([]interface{})[0].(map[string]interface{}))
 	}
 
-	streamMode := getStreamMode(d)
-
-	if streamMode == kinesis.StreamModeProvisioned {
+	if streamMode := getStreamMode(d); streamMode == kinesis.StreamModeProvisioned {
 		input.ShardCount = aws.Int64(int64(d.Get("shard_count").(int)))
 	}
 
@@ -279,7 +275,7 @@ func resourceStreamRead(d *schema.ResourceData, meta interface{}) error {
 		streamMode = aws.StringValue(details.StreamMode)
 	}
 	if streamMode == kinesis.StreamModeProvisioned {
-		d.Set("shard_count", len(FilterShards(output.Shards, true)))
+		d.Set("shard_count", len(filterShards(output.Shards, true)))
 	} else {
 		d.Set("shard_count", nil)
 	}
@@ -320,35 +316,201 @@ func resourceStreamRead(d *schema.ResourceData, meta interface{}) error {
 
 func resourceStreamUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).KinesisConn
+	name := d.Get("name").(string)
 
-	sn := d.Get("name").(string)
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := UpdateTags(conn, sn, o, n); err != nil {
-			return fmt.Errorf("error updating Kinesis Stream (%s) tags: %s", sn, err)
+		if err := UpdateTags(conn, name, o, n); err != nil {
+			return fmt.Errorf("error updating Kinesis Stream (%s) tags: %w", name, err)
 		}
 	}
 
-	if err := updateKinesisStreamMode(conn, d); err != nil {
-		return err
-	}
+	if d.HasChange("stream_mode_details.0.stream_mode") {
+		input := &kinesis.UpdateStreamModeInput{
+			StreamARN: aws.String(d.Id()),
+			StreamModeDetails: &kinesis.StreamModeDetails{
+				StreamMode: aws.String(d.Get("stream_mode_details.0.stream_mode").(string)),
+			},
+		}
 
-	if getStreamMode(d) == kinesis.StreamModeProvisioned {
-		if err := updateKinesisShardCount(conn, d); err != nil {
-			return err
+		log.Printf("[DEBUG] Updating Kinesis Stream stream mode: %s", input)
+		_, err := conn.UpdateStreamMode(input)
+
+		if err != nil {
+			return fmt.Errorf("error updating Kinesis Stream (%s) stream mode: %w", name, err)
+		}
+
+		_, err = waitStreamUpdated(conn, name, d.Timeout(schema.TimeoutUpdate))
+
+		if err != nil {
+			return fmt.Errorf("error waiting for Kinesis Stream (%s) update (UpdateStreamMode): %w", name, err)
 		}
 	}
 
-	if err := setKinesisRetentionPeriod(conn, d); err != nil {
-		return err
-	}
-	if err := updateKinesisShardLevelMetrics(conn, d); err != nil {
-		return err
+	if streamMode := getStreamMode(d); streamMode == kinesis.StreamModeProvisioned && d.HasChange("shard_count") {
+		input := &kinesis.UpdateShardCountInput{
+			ScalingType:      aws.String(kinesis.ScalingTypeUniformScaling),
+			StreamName:       aws.String(name),
+			TargetShardCount: aws.Int64(int64(d.Get("shard_count").(int))),
+		}
+
+		log.Printf("[DEBUG] Updating Kinesis Stream shard count: %s", input)
+		_, err := conn.UpdateShardCount(input)
+
+		if err != nil {
+			return fmt.Errorf("error updating Kinesis Stream (%s) shard count: %w", name, err)
+		}
+
+		_, err = waitStreamUpdated(conn, name, d.Timeout(schema.TimeoutUpdate))
+
+		if err != nil {
+			return fmt.Errorf("error waiting for Kinesis Stream (%s) update (UpdateShardCount): %w", name, err)
+		}
 	}
 
-	if err := updateKinesisStreamEncryption(conn, d); err != nil {
-		return err
+	if d.HasChange("retention_period") {
+		oraw, nraw := d.GetChange("retention_period")
+		o := oraw.(int)
+		n := nraw.(int)
+
+		if n > o {
+			input := &kinesis.IncreaseStreamRetentionPeriodInput{
+				RetentionPeriodHours: aws.Int64(int64(n)),
+				StreamName:           aws.String(name),
+			}
+
+			log.Printf("[DEBUG] Increasing Kinesis Stream retention period: %s", input)
+			_, err := conn.IncreaseStreamRetentionPeriod(input)
+
+			if err != nil {
+				return fmt.Errorf("error increasing Kinesis Stream (%s) retention period: %w", name, err)
+			}
+
+			_, err = waitStreamUpdated(conn, name, d.Timeout(schema.TimeoutUpdate))
+
+			if err != nil {
+				return fmt.Errorf("error waiting for Kinesis Stream (%s) update (IncreaseStreamRetentionPeriod): %w", name, err)
+			}
+		} else if n != 0 {
+			input := &kinesis.DecreaseStreamRetentionPeriodInput{
+				RetentionPeriodHours: aws.Int64(int64(n)),
+				StreamName:           aws.String(name),
+			}
+
+			log.Printf("[DEBUG] Decreasing Kinesis Stream retention period: %s", input)
+			_, err := conn.DecreaseStreamRetentionPeriod(input)
+
+			if err != nil {
+				return fmt.Errorf("error decreasing Kinesis Stream (%s) retention period: %w", name, err)
+			}
+
+			_, err = waitStreamUpdated(conn, name, d.Timeout(schema.TimeoutUpdate))
+
+			if err != nil {
+				return fmt.Errorf("error waiting for Kinesis Stream (%s) update (DecreaseStreamRetentionPeriod): %w", name, err)
+			}
+		}
+	}
+
+	if d.HasChange("shard_level_metrics") {
+		o, n := d.GetChange("shard_level_metrics")
+		os := o.(*schema.Set)
+		ns := n.(*schema.Set)
+
+		if del := os.Difference(ns); del.Len() > 0 {
+			input := &kinesis.DisableEnhancedMonitoringInput{
+				ShardLevelMetrics: flex.ExpandStringSet(del),
+				StreamName:        aws.String(name),
+			}
+
+			log.Printf("[DEBUG] Disabling Kinesis Stream enhanced monitoring: %s", input)
+			_, err := conn.DisableEnhancedMonitoring(input)
+
+			if err != nil {
+				return fmt.Errorf("error disabling Kinesis Stream (%s) enhanced monitoring: %w", name, err)
+			}
+
+			_, err = waitStreamUpdated(conn, name, d.Timeout(schema.TimeoutUpdate))
+
+			if err != nil {
+				return fmt.Errorf("error waiting for Kinesis Stream (%s) update (DisableEnhancedMonitoring): %w", name, err)
+			}
+		}
+
+		if add := ns.Difference(os); add.Len() > 0 {
+			input := &kinesis.EnableEnhancedMonitoringInput{
+				ShardLevelMetrics: flex.ExpandStringSet(add),
+				StreamName:        aws.String(name),
+			}
+
+			log.Printf("[DEBUG] Enabling Kinesis Stream enhanced monitoring: %s", input)
+			_, err := conn.EnableEnhancedMonitoring(input)
+
+			if err != nil {
+				return fmt.Errorf("error enabling Kinesis Stream (%s) enhanced monitoring: %w", name, err)
+			}
+
+			_, err = waitStreamUpdated(conn, name, d.Timeout(schema.TimeoutUpdate))
+
+			if err != nil {
+				return fmt.Errorf("error waiting for Kinesis Stream (%s) update (EnableEnhancedMonitoring): %w", name, err)
+			}
+		}
+	}
+
+	if d.HasChange("encryption_type") || d.HasChange("kms_key_id") {
+		oldEncryptionType, newEncryptionType := d.GetChange("encryption_type")
+		oldKeyID, newKeyID := d.GetChange("kms_key_id")
+
+		switch newEncryptionType, newKeyID := newEncryptionType.(string), newKeyID.(string); newEncryptionType {
+		case kinesis.EncryptionTypeKms:
+			if newKeyID == "" {
+				return fmt.Errorf("KMS Key Id required when setting encryption_type is not set as NONE")
+			}
+
+			input := &kinesis.StartStreamEncryptionInput{
+				EncryptionType: aws.String(newEncryptionType),
+				KeyId:          aws.String(newKeyID),
+				StreamName:     aws.String(name),
+			}
+
+			log.Printf("[DEBUG] Starting Kinesis Stream encryption: %s", input)
+			_, err := conn.StartStreamEncryption(input)
+
+			if err != nil {
+				return fmt.Errorf("error starting Kinesis Stream (%s) encryption: %w", name, err)
+			}
+
+			_, err = waitStreamUpdated(conn, name, d.Timeout(schema.TimeoutUpdate))
+
+			if err != nil {
+				return fmt.Errorf("error waiting for Kinesis Stream (%s) update (StartStreamEncryption): %w", name, err)
+			}
+
+		case kinesis.EncryptionTypeNone:
+			input := &kinesis.StopStreamEncryptionInput{
+				EncryptionType: aws.String(oldEncryptionType.(string)),
+				KeyId:          aws.String(oldKeyID.(string)),
+				StreamName:     aws.String(name),
+			}
+
+			log.Printf("[DEBUG] Stopping Kinesis Stream encryption: %s", input)
+			_, err := conn.StopStreamEncryption(input)
+
+			if err != nil {
+				return fmt.Errorf("error stopping Kinesis Stream (%s) encryption: %w", name, err)
+			}
+
+			_, err = waitStreamUpdated(conn, name, d.Timeout(schema.TimeoutCreate))
+
+			if err != nil {
+				return fmt.Errorf("error waiting for Kinesis Stream (%s) update (StopStreamEncryption): %w", name, err)
+			}
+
+		default:
+			return fmt.Errorf("unsupported encryption type: %s", newEncryptionType)
+		}
 	}
 
 	return resourceStreamRead(d, meta)
@@ -395,6 +557,7 @@ func resourceStreamImport(d *schema.ResourceData, meta interface{}) ([]*schema.R
 	return []*schema.ResourceData{d}, nil
 }
 
+/*
 func setKinesisRetentionPeriod(conn *kinesis.Kinesis, d *schema.ResourceData) error {
 	sn := d.Get("name").(string)
 
@@ -677,6 +840,7 @@ func WaitForToBeActive(conn *kinesis.Kinesis, timeout time.Duration, sn string) 
 	}
 	return nil
 }
+*/
 
 func FindStreamByName(conn *kinesis.Kinesis, name string) (*kinesis.StreamDescription, error) {
 	var output *kinesis.StreamDescription
@@ -786,24 +950,18 @@ func waitStreamUpdated(conn *kinesis.Kinesis, name string, timeout time.Duration
 }
 
 // See http://docs.aws.amazon.com/kinesis/latest/dev/kinesis-using-sdk-java-resharding-merge.html
-func FilterShards(shards []*kinesis.Shard, open bool) []*kinesis.Shard {
-	res := make([]*kinesis.Shard, 0, len(shards))
-	for _, s := range shards {
-		if open && s.SequenceNumberRange.EndingSequenceNumber == nil {
-			res = append(res, s)
-		} else if !open && s.SequenceNumberRange.EndingSequenceNumber != nil {
-			res = append(res, s)
+func filterShards(shards []*kinesis.Shard, open bool) []*kinesis.Shard {
+	var output []*kinesis.Shard
+
+	for _, shard := range shards {
+		if open && shard.SequenceNumberRange.EndingSequenceNumber == nil {
+			output = append(output, shard)
+		} else if !open && shard.SequenceNumberRange.EndingSequenceNumber != nil {
+			output = append(output, shard)
 		}
 	}
-	return res
-}
 
-func FlattenShards(shards []*kinesis.Shard) []string {
-	res := make([]string, len(shards))
-	for i, s := range shards {
-		res[i] = aws.StringValue(s.ShardId)
-	}
-	return res
+	return output
 }
 
 func getStreamMode(d *schema.ResourceData) string {

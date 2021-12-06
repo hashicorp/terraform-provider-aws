@@ -3,8 +3,6 @@ package kinesis_test
 import (
 	"fmt"
 	"regexp"
-	"strconv"
-	"strings"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -217,9 +215,7 @@ func TestAccKinesisStream_shardCount(t *testing.T) {
 				Config: testAccKinesisStreamConfig(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisStreamExists(resourceName, &stream),
-					testAccCheckStreamAttributes(&stream),
-					resource.TestCheckResourceAttr(
-						resourceName, "shard_count", "2"),
+					resource.TestCheckResourceAttr(resourceName, "shard_count", "2"),
 				),
 			},
 			{
@@ -233,10 +229,8 @@ func TestAccKinesisStream_shardCount(t *testing.T) {
 				Config: testAccKinesisStreamConfigUpdateShardCount(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisStreamExists(resourceName, &updatedStream),
-					testAccCheckStreamAttributes(&updatedStream),
 					testCheckStreamNotDestroyed(),
-					resource.TestCheckResourceAttr(
-						resourceName, "shard_count", "4"),
+					resource.TestCheckResourceAttr(resourceName, "shard_count", "4"),
 				),
 			},
 		},
@@ -259,7 +253,6 @@ func TestAccKinesisStream_retentionPeriod(t *testing.T) {
 				Config: testAccKinesisStreamConfig(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisStreamExists(resourceName, &stream),
-					testAccCheckStreamAttributes(&stream),
 					resource.TestCheckResourceAttr(resourceName, "retention_period", "24"),
 				),
 			},
@@ -274,7 +267,6 @@ func TestAccKinesisStream_retentionPeriod(t *testing.T) {
 				Config: testAccKinesisStreamConfigUpdateRetentionPeriod(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisStreamExists(resourceName, &stream),
-					testAccCheckStreamAttributes(&stream),
 					resource.TestCheckResourceAttr(resourceName, "retention_period", "8760"),
 				),
 			},
@@ -283,7 +275,6 @@ func TestAccKinesisStream_retentionPeriod(t *testing.T) {
 				Config: testAccKinesisStreamConfigDecreaseRetentionPeriod(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisStreamExists(resourceName, &stream),
-					testAccCheckStreamAttributes(&stream),
 					resource.TestCheckResourceAttr(resourceName, "retention_period", "28"),
 				),
 			},
@@ -307,7 +298,6 @@ func TestAccKinesisStream_shardLevelMetrics(t *testing.T) {
 				Config: testAccKinesisStreamConfigSingleShardLevelMetric(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisStreamExists(resourceName, &stream),
-					testAccCheckStreamAttributes(&stream),
 					resource.TestCheckResourceAttr(resourceName, "shard_level_metrics.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "shard_level_metrics.*", "IncomingBytes"),
 				),
@@ -323,7 +313,6 @@ func TestAccKinesisStream_shardLevelMetrics(t *testing.T) {
 				Config: testAccKinesisStreamConfigAllShardLevelMetrics(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisStreamExists(resourceName, &stream),
-					testAccCheckStreamAttributes(&stream),
 					resource.TestCheckResourceAttr(resourceName, "shard_level_metrics.#", "7"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "shard_level_metrics.*", "IncomingBytes"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "shard_level_metrics.*", "IncomingRecords"),
@@ -338,7 +327,6 @@ func TestAccKinesisStream_shardLevelMetrics(t *testing.T) {
 				Config: testAccKinesisStreamConfigSingleShardLevelMetric(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisStreamExists(resourceName, &stream),
-					testAccCheckStreamAttributes(&stream),
 					resource.TestCheckResourceAttr(resourceName, "shard_level_metrics.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "shard_level_metrics.*", "IncomingBytes"),
 				),
@@ -363,7 +351,6 @@ func TestAccKinesisStream_enforceConsumerDeletion(t *testing.T) {
 				Config: testAccKinesisStreamConfigWithEnforceConsumerDeletion(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisStreamExists(resourceName, &stream),
-					testAccCheckStreamAttributes(&stream),
 					testAccStreamRegisterStreamConsumer(&stream, fmt.Sprintf("tf-test-%d", rInt)),
 				),
 			},
@@ -626,27 +613,6 @@ func testAccCheckKinesisStreamExists(n string, v *kinesis.StreamDescription) res
 
 		*v = *output
 
-		return nil
-	}
-}
-
-func testAccCheckStreamAttributes(stream *kinesis.StreamDescription) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		if !strings.HasPrefix(*stream.StreamName, "terraform-kinesis-test") {
-			return fmt.Errorf("Bad Stream name: %s", *stream.StreamName)
-		}
-		for _, rs := range s.RootModule().Resources {
-			if rs.Type != "aws_kinesis_stream" {
-				continue
-			}
-			if *stream.StreamARN != rs.Primary.Attributes["arn"] {
-				return fmt.Errorf("Bad Stream ARN\n\t expected: %s\n\tgot: %s\n", rs.Primary.Attributes["arn"], *stream.StreamARN)
-			}
-			shard_count := strconv.Itoa(len(tfkinesis.FlattenShards(tfkinesis.FilterShards(stream.Shards, true))))
-			if shard_count != rs.Primary.Attributes["shard_count"] {
-				return fmt.Errorf("Bad Stream Shard Count\n\t expected: %s\n\tgot: %s\n", rs.Primary.Attributes["shard_count"], shard_count)
-			}
-		}
 		return nil
 	}
 }
