@@ -68,6 +68,34 @@ func TestAccIAMRolePolicy_basic(t *testing.T) {
 	})
 }
 
+func TestAccIAMRolePolicy_disappears(t *testing.T) {
+	var out iam.GetRolePolicyOutput
+	suffix := sdkacctest.RandStringFromCharSet(10, sdkacctest.CharSetAlpha)
+	roleResourceName := fmt.Sprintf("aws_iam_role.role_%s", suffix)
+	rolePolicyResourceName := fmt.Sprintf("aws_iam_role_policy.test_%s", suffix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, iam.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckIAMRolePolicyDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRolePolicyConfig(suffix),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckIAMRolePolicyExists(
+						roleResourceName,
+						rolePolicyResourceName,
+						&out,
+					),
+					testAccCheckIAMRolePolicyDisappears(&out),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func TestAccIAMRolePolicy_policyOrder(t *testing.T) {
 	var rolePolicy1 iam.GetRolePolicyOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -93,34 +121,6 @@ func TestAccIAMRolePolicy_policyOrder(t *testing.T) {
 			{
 				Config:   testAccIAMRolePolicyNewOrderConfig(rName),
 				PlanOnly: true,
-			},
-		},
-	})
-}
-
-func TestAccIAMRolePolicy_disappears(t *testing.T) {
-	var out iam.GetRolePolicyOutput
-	suffix := sdkacctest.RandStringFromCharSet(10, sdkacctest.CharSetAlpha)
-	roleResourceName := fmt.Sprintf("aws_iam_role.role_%s", suffix)
-	rolePolicyResourceName := fmt.Sprintf("aws_iam_role_policy.test_%s", suffix)
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, iam.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckIAMRolePolicyDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccRolePolicyConfig(suffix),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIAMRolePolicyExists(
-						roleResourceName,
-						rolePolicyResourceName,
-						&out,
-					),
-					testAccCheckIAMRolePolicyDisappears(&out),
-				),
-				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
