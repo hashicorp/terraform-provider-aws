@@ -127,7 +127,7 @@ func TestAccCognitoUser_temporaryPassword(t *testing.T) {
 				Config: testAccUserConfigNoPassword(rUserPoolName, rClientName, rUserName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(userResourceName),
-					resource.TestCheckNoResourceAttr(userResourceName, "temporary_password"),
+					resource.TestCheckResourceAttr(userResourceName, "temporary_password", ""),
 					resource.TestCheckResourceAttr(userResourceName, "status", cognitoidentityprovider.UserStatusTypeForceChangePassword),
 				),
 			},
@@ -183,7 +183,7 @@ func TestAccCognitoUser_password(t *testing.T) {
 				Config: testAccUserConfigNoPassword(rUserPoolName, rClientName, rUserName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(userResourceName),
-					resource.TestCheckNoResourceAttr(userResourceName, "password"),
+					resource.TestCheckResourceAttr(userResourceName, "password", ""),
 					resource.TestCheckResourceAttr(userResourceName, "status", cognitoidentityprovider.UserStatusTypeConfirmed),
 				),
 			},
