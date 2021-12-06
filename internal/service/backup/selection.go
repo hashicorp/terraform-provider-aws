@@ -298,7 +298,6 @@ func resourceSelectionRead(d *schema.ResourceData, meta interface{}) error {
 		if err := d.Set("conditions", flattenBackupConditions(conditions)); err != nil {
 			return fmt.Errorf("error setting conditions: %s", err)
 		}
-		// fmt.Printf("%v \n", conditions)
 	}
 
 	if resp.BackupSelection.ListOfTags != nil {
@@ -401,7 +400,6 @@ func expandBackupConditions(conditions []interface{}) *backup.Conditions {
 			conditions.StringNotLike = vStringNotLike
 		}
 
-		fmt.Printf("%v \n", conditions)
 		return conditions
 
 	}
