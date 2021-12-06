@@ -451,6 +451,36 @@ func TestAccIAMRole_policyBasicInline(t *testing.T) {
 	})
 }
 
+// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/19444
+// This test currently fails but should not. A new PR will fix it.
+func TestAccIAMRole_InlinePolicy_ignoreOrder(t *testing.T) {
+	var role iam.Role
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_iam_role.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, iam.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckRoleDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRolePolicyInlineActionOrderConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRoleExists(resourceName, &role),
+					resource.TestCheckResourceAttr(resourceName, "inline_policy.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "managed_policy_arns.#", "0"),
+				),
+			},
+			{
+				Config:   testAccRolePolicyInlineActionNewOrderConfig(rName),
+				PlanOnly: true,
+			},
+		},
+	})
+}
+
 func TestAccIAMRole_policyBasicInlineEmpty(t *testing.T) {
 	var role iam.Role
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -1627,6 +1657,86 @@ EOF
   }
 }
 `, roleName, policyName3)
+}
+
+func testAccRolePolicyInlineActionOrderConfig(roleName string) string {
+	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+
+resource "aws_iam_role" "test" {
+  name = %[1]q
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Action = "sts:AssumeRole",
+      Principal = {
+        Service = "ec2.${data.aws_partition.current.dns_suffix}",
+      }
+      Effect = "Allow"
+      Sid = ""
+    }]
+  })
+
+  inline_policy {
+    name = %[1]q
+
+    policy = jsonencode({
+      Version = "2012-10-17"
+      Statement = [{
+        Action = [
+          "ec2:DescribeScheduledInstances",
+          "ec2:DescribeScheduledInstanceAvailability",
+          "ec2:DescribeFastSnapshotRestores",
+          "ec2:DescribeElasticGpus",
+        ]
+        Effect = "Allow"
+        Resource = "*"
+      }]
+    })
+  }
+}
+`, roleName)
+}
+
+func testAccRolePolicyInlineActionNewOrderConfig(roleName string) string {
+	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+
+resource "aws_iam_role" "test" {
+  name = %[1]q
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Action = "sts:AssumeRole",
+      Principal = {
+        Service = "ec2.${data.aws_partition.current.dns_suffix}",
+      }
+      Effect = "Allow"
+      Sid = ""
+    }]
+  })
+
+  inline_policy {
+    name = %[1]q
+
+    policy = jsonencode({
+      Version = "2012-10-17"
+      Statement = [{
+        Action = [
+          "ec2:DescribeElasticGpus",
+          "ec2:DescribeScheduledInstances",
+          "ec2:DescribeFastSnapshotRestores",
+          "ec2:DescribeScheduledInstanceAvailability",
+        ]
+        Effect = "Allow"
+        Resource = "*"
+      }]
+    })
+  }
+}
+`, roleName)
 }
 
 func testAccRolePolicyManagedConfig(roleName, policyName string) string {
