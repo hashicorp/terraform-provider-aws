@@ -163,30 +163,30 @@ resource "aws_ecs_task_definition" "test" {
   family                = "test"
   container_definitions = <<TASK_DEFINITION
 [
-	{
-		"cpu": 10,
-		"command": ["sleep", "10"],
-		"entryPoint": ["/"],
-		"environment": [
-			{"name": "VARNAME", "value": "VARVAL"}
-		],
-		"essential": true,
-		"image": "jenkins",
-		"memory": 128,
-		"name": "jenkins",
-		"portMappings": [
-			{
-				"containerPort": 80,
-				"hostPort": 8080
-			}
-		],
+  {
+    "cpu": 10,
+    "command": ["sleep", "10"],
+    "entryPoint": ["/"],
+    "environment": [
+      {"name": "VARNAME", "value": "VARVAL"}
+    ],
+    "essential": true,
+    "image": "jenkins",
+    "memory": 128,
+    "name": "jenkins",
+    "portMappings": [
+      {
+        "containerPort": 80,
+        "hostPort": 8080
+      }
+    ],
         "resourceRequirements":[
             {
                 "type":"InferenceAccelerator",
                 "value":"device_1"
             }
         ]
-	}
+  }
 ]
 TASK_DEFINITION
 
