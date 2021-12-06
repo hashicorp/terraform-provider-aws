@@ -558,7 +558,7 @@ func resourceLaunchConfigurationCreate(d *schema.ResourceData, meta interface{})
 		_, err = autoscalingconn.CreateLaunchConfiguration(&createLaunchConfigurationOpts)
 	}
 	if err != nil {
-		return fmt.Errorf("Error creating launch configuration: %s", err)
+		return fmt.Errorf("Error creating launch configuration: %w", err)
 	}
 
 	d.SetId(lcName)
@@ -586,10 +586,8 @@ func resourceLaunchConfigurationRead(d *schema.ResourceData, meta interface{}) e
 	}
 
 	// Verify AWS returned our launch configuration
-	if *describConfs.LaunchConfigurations[0].LaunchConfigurationName != d.Id() {
-		return fmt.Errorf(
-			"Unable to find launch configuration: %#v",
-			describConfs.LaunchConfigurations)
+	if aws.StringValue(describConfs.LaunchConfigurations[0].LaunchConfigurationName) != d.Id() {
+		return fmt.Errorf("Unable to find launch configuration: %#v", describConfs.LaunchConfigurations)
 	}
 
 	lc := describConfs.LaunchConfigurations[0]
@@ -608,7 +606,7 @@ func resourceLaunchConfigurationRead(d *schema.ResourceData, meta interface{}) e
 	d.Set("enable_monitoring", lc.InstanceMonitoring.Enabled)
 	d.Set("associate_public_ip_address", lc.AssociatePublicIpAddress)
 	if err := d.Set("security_groups", flex.FlattenStringList(lc.SecurityGroups)); err != nil {
-		return fmt.Errorf("error setting security_groups: %s", err)
+		return fmt.Errorf("error setting security_groups: %w", err)
 	}
 	if v := aws.StringValue(lc.UserData); v != "" {
 		_, b64 := d.GetOk("user_data_base64")

@@ -289,7 +289,7 @@ func resourceGrantDelete(d *schema.ResourceData, meta interface{}) error {
 
 func getKmsGrantById(grants []*kms.GrantListEntry, grantIdentifier string) *kms.GrantListEntry {
 	for _, grant := range grants {
-		if *grant.GrantId == grantIdentifier {
+		if aws.StringValue(grant.GrantId) == grantIdentifier {
 			return grant
 		}
 	}

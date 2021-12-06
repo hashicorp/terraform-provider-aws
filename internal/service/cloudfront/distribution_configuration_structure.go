@@ -105,7 +105,7 @@ func flattenDistributionConfig(d *schema.ResourceData, distributionConfig *cloud
 		d.Set("caller_reference", distributionConfig.CallerReference)
 	}
 	if distributionConfig.Comment != nil {
-		if *distributionConfig.Comment != "" {
+		if aws.StringValue(distributionConfig.Comment) != "" {
 			d.Set("comment", distributionConfig.Comment)
 		}
 	}
@@ -152,13 +152,13 @@ func flattenDistributionConfig(d *schema.ResourceData, distributionConfig *cloud
 			return err
 		}
 	}
-	if *distributionConfig.Origins.Quantity > 0 {
+	if aws.Int64Value(distributionConfig.Origins.Quantity) > 0 {
 		err = d.Set("origin", FlattenOrigins(distributionConfig.Origins))
 		if err != nil {
 			return err
 		}
 	}
-	if *distributionConfig.OriginGroups.Quantity > 0 {
+	if aws.Int64Value(distributionConfig.OriginGroups.Quantity) > 0 {
 		err = d.Set("origin_group", FlattenOriginGroups(distributionConfig.OriginGroups))
 		if err != nil {
 			return err
