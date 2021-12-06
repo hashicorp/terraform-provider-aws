@@ -1674,7 +1674,7 @@ resource "aws_iam_role" "test" {
         Service = "ec2.${data.aws_partition.current.dns_suffix}",
       }
       Effect = "Allow"
-      Sid = ""
+      Sid    = ""
     }]
   })
 
@@ -1690,7 +1690,7 @@ resource "aws_iam_role" "test" {
           "ec2:DescribeFastSnapshotRestores",
           "ec2:DescribeElasticGpus",
         ]
-        Effect = "Allow"
+        Effect   = "Allow"
         Resource = "*"
       }]
     })
@@ -1714,7 +1714,7 @@ resource "aws_iam_role" "test" {
         Service = "ec2.${data.aws_partition.current.dns_suffix}",
       }
       Effect = "Allow"
-      Sid = ""
+      Sid    = ""
     }]
   })
 
@@ -1730,7 +1730,7 @@ resource "aws_iam_role" "test" {
           "ec2:DescribeFastSnapshotRestores",
           "ec2:DescribeScheduledInstanceAvailability",
         ]
-        Effect = "Allow"
+        Effect   = "Allow"
         Resource = "*"
       }]
     })
