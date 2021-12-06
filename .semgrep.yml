@@ -299,12 +299,6 @@ rules:
         - internal/service
       exclude:
         - internal/service/**/*_data_source.go
-        - internal/service/apigatewayv2
-        - internal/service/appautoscaling
-        - internal/service/appsync
-        - internal/service/athena
-        - internal/service/autoscaling
-        - internal/service/autoscalingplans/scaling_plan.go
         - internal/service/[b-ce-g]*
         - internal/service/d[a-df-z]*
         - internal/service/devicefarm
