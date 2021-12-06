@@ -68,6 +68,36 @@ func TestAccIAMRolePolicy_basic(t *testing.T) {
 	})
 }
 
+func TestAccIAMRolePolicy_policyOrder(t *testing.T) {
+	var rolePolicy1 iam.GetRolePolicyOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_iam_role_policy.test"
+	roleName := "aws_iam_role.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, iam.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckIAMRolePolicyDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccIAMRolePolicyOrderConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckIAMRolePolicyExists(
+						roleName,
+						resourceName,
+						&rolePolicy1,
+					),
+				),
+			},
+			{
+				Config:   testAccIAMRolePolicyNewOrderConfig(rName),
+				PlanOnly: true,
+			},
+		},
+	})
+}
+
 func TestAccIAMRolePolicy_disappears(t *testing.T) {
 	var out iam.GetRolePolicyOutput
 	suffix := sdkacctest.RandStringFromCharSet(10, sdkacctest.CharSetAlpha)
@@ -621,6 +651,98 @@ resource "aws_iam_role_policy" "test" {
     }]
     Version = "2012-10-17"
   })
+}
+`, rName)
+}
+
+func testAccIAMRolePolicyOrderConfig(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_iam_role" "test" {
+  name = %[1]q
+  path = "/"
+
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": "sts:AssumeRole",
+      "Principal": {
+        "Service": "ec2.amazonaws.com"
+      },
+      "Effect": "Allow",
+      "Sid": ""
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_iam_role_policy" "test" {
+  name = %[1]q
+  role = aws_iam_role.test.name
+
+  policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": {
+    "Effect": "Allow",
+    "Action": [
+      "ec2:DescribeScheduledInstances",
+      "ec2:DescribeScheduledInstanceAvailability",
+      "ec2:DescribeFastSnapshotRestores",
+      "ec2:DescribeElasticGpus"
+    ],
+    "Resource": "*"
+  }
+}
+EOF
+}
+`, rName)
+}
+
+func testAccIAMRolePolicyNewOrderConfig(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_iam_role" "test" {
+  name = %[1]q
+  path = "/"
+
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": "sts:AssumeRole",
+      "Principal": {
+        "Service": "ec2.amazonaws.com"
+      },
+      "Effect": "Allow",
+      "Sid": ""
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_iam_role_policy" "test" {
+  name = %[1]q
+  role = aws_iam_role.test.name
+
+  policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": {
+    "Effect": "Allow",
+	"Action": [
+      "ec2:DescribeFastSnapshotRestores",
+      "ec2:DescribeScheduledInstanceAvailability",
+      "ec2:DescribeScheduledInstances",
+      "ec2:DescribeElasticGpus"
+    ],
+    "Resource": "*"
+  }
+}
+EOF
 }
 `, rName)
 }
