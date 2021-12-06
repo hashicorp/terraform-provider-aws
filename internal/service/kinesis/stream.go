@@ -1,6 +1,7 @@
 package kinesis
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"strings"
@@ -9,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/kinesis"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -32,7 +34,10 @@ func ResourceStream() *schema.Resource {
 			State: resourceStreamImport,
 		},
 
-		CustomizeDiff: verify.SetTagsDiff,
+		CustomizeDiff: customdiff.Sequence(
+			verify.SetTagsDiff,
+			resourceStreamCustomizeDiff,
+		),
 
 		SchemaVersion: 1,
 		StateUpgraders: []schema.StateUpgrader{
@@ -125,10 +130,6 @@ func resourceStreamCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).KinesisConn
 	sn := d.Get("name").(string)
 
-	if err := validateStreamModeAndShardCount(d); err != nil {
-		return err
-	}
-
 	createOpts := &kinesis.CreateStreamInput{
 		StreamName: aws.String(sn),
 	}
@@ -185,10 +186,6 @@ func resourceStreamUpdate(d *schema.ResourceData, meta interface{}) error {
 		if err := UpdateTags(conn, sn, o, n); err != nil {
 			return fmt.Errorf("error updating Kinesis Stream (%s) tags: %s", sn, err)
 		}
-	}
-
-	if err := validateStreamModeAndShardCount(d); err != nil {
-		return err
 	}
 
 	if err := updateKinesisStreamMode(conn, d); err != nil {
@@ -310,6 +307,28 @@ func resourceStreamDelete(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf(
 			"Error waiting for Stream (%s) to be destroyed: %s",
 			sn, err)
+	}
+
+	return nil
+}
+
+func resourceStreamCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
+	shardCount := diff.Get("shard_count").(int)
+	streamMode := kinesis.StreamModeProvisioned
+	if v, ok := diff.GetOk("stream_mode_details.0.stream_mode"); ok {
+		streamMode = v.(string)
+	}
+	switch streamMode {
+	case kinesis.StreamModeOnDemand:
+		if shardCount > 0 {
+			return fmt.Errorf("shard_count must not be set when stream_mode is %s", streamMode)
+		}
+	case kinesis.StreamModeProvisioned:
+		if shardCount < 1 {
+			return fmt.Errorf("shard_count must be at least 1 when stream_mode is %s", streamMode)
+		}
+	default:
+		return fmt.Errorf("unknown stream mode %s", streamMode)
 	}
 
 	return nil
@@ -617,26 +636,6 @@ func FlattenShards(shards []*kinesis.Shard) []string {
 		res[i] = aws.StringValue(s.ShardId)
 	}
 	return res
-}
-
-func validateStreamModeAndShardCount(d *schema.ResourceData) error {
-	streamMode := getStreamMode(d)
-	shardCount := d.Get("shard_count").(int)
-
-	switch streamMode {
-	case kinesis.StreamModeOnDemand:
-		if shardCount > 0 {
-			return fmt.Errorf("shard_count must not be set when stream_mode is %s", streamMode)
-		}
-	case kinesis.StreamModeProvisioned:
-		if shardCount < 1 {
-			return fmt.Errorf("shard_count must be at least 1 when stream_mode is %s", streamMode)
-		}
-	default:
-		return fmt.Errorf("unknown stream mode %s", streamMode)
-	}
-
-	return nil
 }
 
 func getStreamMode(d *schema.ResourceData) string {
