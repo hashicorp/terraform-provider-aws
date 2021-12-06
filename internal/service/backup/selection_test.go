@@ -408,7 +408,7 @@ resource "aws_backup_selection" "test" {
     }
     string_equals {
 	  key      = "aws:ResourceTag/Team"
-      value    = "feed"
+      value    = "dev"
     }
     string_not_equals {
 	  key      = "aws:ResourceTag/Backup"
@@ -416,11 +416,11 @@ resource "aws_backup_selection" "test" {
     }
     string_not_equals {
 	  key      = "aws:ResourceTag/Team"
-      value    = "cloud"
+      value    = "infra"
     }
     string_like {
 	  key      = "aws:ResourceTag/Application"
-      value    = "ec*"
+      value    = "app*"
     }
     string_not_like {
 	  key      = "aws:ResourceTag/Environment"
