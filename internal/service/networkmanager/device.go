@@ -14,12 +14,12 @@ import (
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
-func resourceAwsNetworkManagerDevice() *schema.Resource {
+func ResourceDevice() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsNetworkManagerDeviceCreate,
-		Read:   resourceAwsNetworkManagerDeviceRead,
-		Update: resourceAwsNetworkManagerDeviceUpdate,
-		Delete: resourceAwsNetworkManagerDeviceDelete,
+		Create: ResourceDeviceCreate,
+		Read:   ResourceDeviceRead,
+		Update: ResourceDeviceUpdate,
+		Delete: ResourceDeviceDelete,
 		Importer: &schema.ResourceImporter{
 			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 				d.Set("arn", d.Id())
@@ -103,7 +103,7 @@ func resourceAwsNetworkManagerDevice() *schema.Resource {
 	}
 }
 
-func resourceAwsNetworkManagerDeviceCreate(d *schema.ResourceData, meta interface{}) error {
+func ResourceDeviceCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).networkmanagerconn
 
 	input := &networkmanager.CreateDeviceInput{
@@ -139,10 +139,10 @@ func resourceAwsNetworkManagerDeviceCreate(d *schema.ResourceData, meta interfac
 		return fmt.Errorf("error waiting for Network Manager Device (%s) availability: %s", d.Id(), err)
 	}
 
-	return resourceAwsNetworkManagerDeviceRead(d, meta)
+	return ResourceDeviceRead(d, meta)
 }
 
-func resourceAwsNetworkManagerDeviceRead(d *schema.ResourceData, meta interface{}) error {
+func ResourceDeviceRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).networkmanagerconn
 	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
@@ -189,7 +189,7 @@ func resourceAwsNetworkManagerDeviceRead(d *schema.ResourceData, meta interface{
 	return nil
 }
 
-func resourceAwsNetworkManagerDeviceUpdate(d *schema.ResourceData, meta interface{}) error {
+func ResourceDeviceUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).networkmanagerconn
 
 	if d.HasChanges("description", "location", "model", "serial_number", "site_id", "type", "vendor") {
@@ -222,7 +222,7 @@ func resourceAwsNetworkManagerDeviceUpdate(d *schema.ResourceData, meta interfac
 	return nil
 }
 
-func resourceAwsNetworkManagerDeviceDelete(d *schema.ResourceData, meta interface{}) error {
+func ResourceDeviceDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).networkmanagerconn
 
 	input := &networkmanager.DeleteDeviceInput{
@@ -261,7 +261,7 @@ func resourceAwsNetworkManagerDeviceDelete(d *schema.ResourceData, meta interfac
 		return fmt.Errorf("error deleting Network Manager Device: %s", err)
 	}
 
-	if err := waitForNetworkManagerDeviceDeletion(conn, d.Get("global_network_id").(string), d.Id()); err != nil {
+	if err := waitForDeviceDeletion(conn, d.Get("global_network_id").(string), d.Id()); err != nil {
 		return fmt.Errorf("error waiting for Network Manager Device (%s) deletion: %s", d.Id(), err)
 	}
 

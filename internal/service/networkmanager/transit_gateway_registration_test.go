@@ -15,10 +15,10 @@ import (
 func init() {
 	resource.AddTestSweepers("aws_networkmanager_transit_gateway_registration", &resource.Sweeper{
 		Name: "aws_networkmanager_transit_gateway_registration",
-		F:    testSweepNetworkManagerTransitGatewayRegistration,
+		F:    testSweepTransitGatewayRegistration,
 	})
 }
-func testSweepNetworkManagerTransitGatewayRegistration(region string) error {
+func testSweepTransitGatewayRegistration(region string) error {
 	client, err := sharedClientForRegion(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
@@ -46,7 +46,7 @@ func testSweepNetworkManagerTransitGatewayRegistration(region string) error {
 					sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
 					continue
 				}
-				if err := waitForNetworkManagerTransitGatewayRegistrationDeletion(conn, globalNetworkID, transitGatewayArn); err != nil {
+				if err := waitForTransitGatewayRegistrationDeletion(conn, globalNetworkID, transitGatewayArn); err != nil {
 					sweeperErr := fmt.Errorf("error waiting for Network Manager Transit Gateway Registration (%s) deletion: %s", transitGatewayArn, err)
 					log.Printf("[ERROR] %s", sweeperErr)
 					sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
@@ -64,7 +64,7 @@ func testSweepNetworkManagerTransitGatewayRegistration(region string) error {
 	}
 	return sweeperErrs.ErrorOrNil()
 }
-func TestAccAWSNetworkManagerTransitGatewayRegistration_basic(t *testing.T) {
+func TestAccTransitGatewayRegistration_basic(t *testing.T) {
 	resourceName := "aws_networkmanager_transit_gateway_registration.test"
 	gloablNetworkResourceName := "aws_networkmanager_global_network.test"
 	gloablNetwork2ResourceName := "aws_networkmanager_global_network.test2"
@@ -72,12 +72,12 @@ func TestAccAWSNetworkManagerTransitGatewayRegistration_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEc2TransitGateway(t) },
 		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAwsNetworkManagerTransitGatewayRegistrationDestroy,
+		CheckDestroy: testAccCheckAwsTransitGatewayRegistrationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccNetworkManagerTransitGatewayRegistrationConfig(),
+				Config: testAccTransitGatewayRegistrationConfig(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsNetworkManagerTransitGatewayRegistrationExists(resourceName),
+					testAccCheckAwsTransitGatewayRegistrationExists(resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "global_network_id", gloablNetworkResourceName, "id"),
 					resource.TestCheckResourceAttrPair(resourceName, "transit_gateway_arn", transitGatewayResourceName, "arn"),
 				),
@@ -85,13 +85,13 @@ func TestAccAWSNetworkManagerTransitGatewayRegistration_basic(t *testing.T) {
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateIdFunc: testAccAWSNetworkManagerTransitGatewayRegistrationImportStateIdFunc(resourceName),
+				ImportStateIdFunc: testAccTransitGatewayRegistrationImportStateIdFunc(resourceName),
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccNetworkManagerTransitGatewayRegistrationConfig_Update(),
+				Config: testAccTransitGatewayRegistrationConfig_Update(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsNetworkManagerTransitGatewayRegistrationExists(resourceName),
+					testAccCheckAwsTransitGatewayRegistrationExists(resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "global_network_id", gloablNetwork2ResourceName, "id"),
 					resource.TestCheckResourceAttrPair(resourceName, "transit_gateway_arn", transitGatewayResourceName, "arn"),
 				),
@@ -99,7 +99,7 @@ func TestAccAWSNetworkManagerTransitGatewayRegistration_basic(t *testing.T) {
 		},
 	})
 }
-func testAccCheckAwsNetworkManagerTransitGatewayRegistrationDestroy(s *terraform.State) error {
+func testAccCheckAwsTransitGatewayRegistrationDestroy(s *terraform.State) error {
 	conn := testAccProvider.Meta().(*AWSClient).networkmanagerconn
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_networkmanager_transit_gateway_registration" {
@@ -119,7 +119,7 @@ func testAccCheckAwsNetworkManagerTransitGatewayRegistrationDestroy(s *terraform
 	}
 	return nil
 }
-func testAccCheckAwsNetworkManagerTransitGatewayRegistrationExists(name string) resource.TestCheckFunc {
+func testAccCheckAwsTransitGatewayRegistrationExists(name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -139,7 +139,7 @@ func testAccCheckAwsNetworkManagerTransitGatewayRegistrationExists(name string) 
 		return err
 	}
 }
-func testAccNetworkManagerTransitGatewayRegistrationConfig() string {
+func testAccTransitGatewayRegistrationConfig() string {
 	return `
 resource "aws_networkmanager_global_network" "test" {
  description = "test"
@@ -151,7 +151,7 @@ resource "aws_networkmanager_transit_gateway_registration" "test" {
 }
 `
 }
-func testAccNetworkManagerTransitGatewayRegistrationConfig_Update() string {
+func testAccTransitGatewayRegistrationConfig_Update() string {
 	return `
 resource "aws_networkmanager_global_network" "test" {
  description = "test"
@@ -166,7 +166,7 @@ resource "aws_networkmanager_transit_gateway_registration" "test" {
 }
 `
 }
-func testAccAWSNetworkManagerTransitGatewayRegistrationImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
+func testAccTransitGatewayRegistrationImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
 	return func(s *terraform.State) (string, error) {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {

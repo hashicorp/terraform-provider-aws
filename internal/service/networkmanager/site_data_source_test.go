@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
-func TestAccDataSourceAWSNetworkManagerSite_basic(t *testing.T) {
+func TestAccDataSourceSite_basic(t *testing.T) {
 	dataSourceName := "data.aws_networkmanager_site.test"
 	dataSourceByIdName := "data.aws_networkmanager_site.test_by_id"
 	dataSourceByTagsName := "data.aws_networkmanager_site.test_by_tags"
@@ -20,10 +20,10 @@ func TestAccDataSourceAWSNetworkManagerSite_basic(t *testing.T) {
 			testAccPreCheck(t)
 		},
 		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAwsNetworkManagerSiteDestroy,
+		CheckDestroy: testAccCheckAwsSiteDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceAwsNetworkManagerSiteConfig(),
+				Config: testAccDataSourceSiteConfig(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "id", resourceName, "id"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
@@ -43,7 +43,7 @@ func TestAccDataSourceAWSNetworkManagerSite_basic(t *testing.T) {
 	})
 }
 
-func testAccDataSourceAwsNetworkManagerSiteConfig() string {
+func testAccDataSourceSiteConfig() string {
 	return fmt.Sprintf(`
 resource "aws_networkmanager_global_network" "test" {
   description = "test"

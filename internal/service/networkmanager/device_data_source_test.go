@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
-func TestAccDataSourceAWSNetworkManagerDevice_basic(t *testing.T) {
+func TestAccDataSourceDevice_basic(t *testing.T) {
 	dataSourceName := "data.aws_networkmanager_device.test"
 	dataSourceByIdName := "data.aws_networkmanager_device.test_by_id"
 	dataSourceBySiteIdName := "data.aws_networkmanager_device.test_by_site_id"
@@ -22,10 +22,10 @@ func TestAccDataSourceAWSNetworkManagerDevice_basic(t *testing.T) {
 			testAccPreCheck(t)
 		},
 		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAwsNetworkManagerDeviceDestroy,
+		CheckDestroy: testAccCheckAwsDeviceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceAwsNetworkManagerDeviceConfig(),
+				Config: testAccDataSourceDeviceConfig(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "id", resourceName, "id"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
@@ -51,7 +51,7 @@ func TestAccDataSourceAWSNetworkManagerDevice_basic(t *testing.T) {
 	})
 }
 
-func testAccDataSourceAwsNetworkManagerDeviceConfig() string {
+func testAccDataSourceDeviceConfig() string {
 	return fmt.Sprintf(`
 resource "aws_networkmanager_global_network" "test" {
   description = "test"

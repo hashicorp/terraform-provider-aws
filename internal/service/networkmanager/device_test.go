@@ -15,11 +15,11 @@ import (
 func init() {
 	resource.AddTestSweepers("aws_networkmanager_device", &resource.Sweeper{
 		Name: "aws_networkmanager_device",
-		F:    testSweepNetworkManagerDevice,
+		F:    testSweepDevice,
 	})
 }
 
-func testSweepNetworkManagerDevice(region string) error {
+func testSweepDevice(region string) error {
 	client, err := sharedClientForRegion(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
@@ -51,7 +51,7 @@ func testSweepNetworkManagerDevice(region string) error {
 					continue
 				}
 
-				if err := waitForNetworkManagerDeviceDeletion(conn, globalNetworkID, id); err != nil {
+				if err := waitForDeviceDeletion(conn, globalNetworkID, id); err != nil {
 					sweeperErr := fmt.Errorf("error waiting for Network Manager Device (%s) deletion: %s", id, err)
 					log.Printf("[ERROR] %s", sweeperErr)
 					sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
@@ -72,7 +72,7 @@ func testSweepNetworkManagerDevice(region string) error {
 	return sweeperErrs.ErrorOrNil()
 }
 
-func TestAccAWSNetworkManagerDevice_basic(t *testing.T) {
+func TestAccDevice_basic(t *testing.T) {
 	resourceName := "aws_networkmanager_device.test"
 	siteResourceName := "aws_networkmanager_site.test"
 	site2ResourceName := "aws_networkmanager_site.test2"
@@ -81,12 +81,12 @@ func TestAccAWSNetworkManagerDevice_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAwsNetworkManagerDeviceDestroy,
+		CheckDestroy: testAccCheckAwsDeviceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccNetworkManagerDeviceConfig("test"),
+				Config: testAccDeviceConfig("test"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsNetworkManagerDeviceExists(resourceName),
+					testAccCheckAwsDeviceExists(resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
 					resource.TestCheckResourceAttrPair(resourceName, "global_network_id", gloablNetworkResourceName, "id"),
 					resource.TestCheckResourceAttrPair(resourceName, "site_id", siteResourceName, "id"),
@@ -101,13 +101,13 @@ func TestAccAWSNetworkManagerDevice_basic(t *testing.T) {
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateIdFunc: testAccAWSNetworkManagerDeviceImportStateIdFunc(resourceName),
+				ImportStateIdFunc: testAccDeviceImportStateIdFunc(resourceName),
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccNetworkManagerDeviceConfig_Update("test updated", "def", "456", "home device", "othercompany", "18.0029784", "-76.7897987"),
+				Config: testAccDeviceConfig_Update("test updated", "def", "456", "home device", "othercompany", "18.0029784", "-76.7897987"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsNetworkManagerDeviceExists(resourceName),
+					testAccCheckAwsDeviceExists(resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
 					resource.TestCheckResourceAttrPair(resourceName, "global_network_id", gloablNetworkResourceName, "id"),
 					resource.TestCheckResourceAttrPair(resourceName, "site_id", site2ResourceName, "id"),
@@ -126,19 +126,19 @@ func TestAccAWSNetworkManagerDevice_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSNetworkManagerDevice_tags(t *testing.T) {
+func TestAccDevice_tags(t *testing.T) {
 	resourceName := "aws_networkmanager_device.test"
 	description := "test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAwsNetworkManagerDeviceDestroy,
+		CheckDestroy: testAccCheckAwsDeviceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccNetworkManagerDeviceConfigTags1(description, "key1", "value1"),
+				Config: testAccDeviceConfigTags1(description, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsNetworkManagerDeviceExists(resourceName),
+					testAccCheckAwsDeviceExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "description", "test"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
@@ -147,13 +147,13 @@ func TestAccAWSNetworkManagerDevice_tags(t *testing.T) {
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateIdFunc: testAccAWSNetworkManagerDeviceImportStateIdFunc(resourceName),
+				ImportStateIdFunc: testAccDeviceImportStateIdFunc(resourceName),
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccNetworkManagerDeviceConfigTags2(description, "key1", "value1updated", "key2", "value2"),
+				Config: testAccDeviceConfigTags2(description, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsNetworkManagerDeviceExists(resourceName),
+					testAccCheckAwsDeviceExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "description", "test"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
@@ -161,9 +161,9 @@ func TestAccAWSNetworkManagerDevice_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccNetworkManagerDeviceConfigTags1(description, "key2", "value2"),
+				Config: testAccDeviceConfigTags1(description, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsNetworkManagerDeviceExists(resourceName),
+					testAccCheckAwsDeviceExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "description", "test"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
@@ -173,7 +173,7 @@ func TestAccAWSNetworkManagerDevice_tags(t *testing.T) {
 	})
 }
 
-func testAccCheckAwsNetworkManagerDeviceDestroy(s *terraform.State) error {
+func testAccCheckAwsDeviceDestroy(s *terraform.State) error {
 	conn := testAccProvider.Meta().(*AWSClient).networkmanagerconn
 
 	for _, rs := range s.RootModule().Resources {
@@ -199,7 +199,7 @@ func testAccCheckAwsNetworkManagerDeviceDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckAwsNetworkManagerDeviceExists(name string) resource.TestCheckFunc {
+func testAccCheckAwsDeviceExists(name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -226,7 +226,7 @@ func testAccCheckAwsNetworkManagerDeviceExists(name string) resource.TestCheckFu
 	}
 }
 
-func testAccNetworkManagerDeviceConfig(description string) string {
+func testAccDeviceConfig(description string) string {
 	return fmt.Sprintf(`
 resource "aws_networkmanager_global_network" "test" {
  description = "test"
@@ -249,7 +249,7 @@ resource "aws_networkmanager_device" "test" {
 `, description)
 }
 
-func testAccNetworkManagerDeviceConfigTags1(description, tagKey1, tagValue1 string) string {
+func testAccDeviceConfigTags1(description, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_networkmanager_global_network" "test" {
  description = "test"
@@ -272,7 +272,7 @@ resource "aws_networkmanager_device" "test" {
 `, description, tagKey1, tagValue1)
 }
 
-func testAccNetworkManagerDeviceConfigTags2(description, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccDeviceConfigTags2(description, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 resource "aws_networkmanager_global_network" "test" {
  description = "test"
@@ -295,7 +295,7 @@ resource "aws_networkmanager_device" "test" {
 `, description, tagKey1, tagValue1, tagKey2, tagValue2)
 }
 
-func testAccNetworkManagerDeviceConfig_Update(description, model, serial_number, device_type, vendor, latitude, longitude string) string {
+func testAccDeviceConfig_Update(description, model, serial_number, device_type, vendor, latitude, longitude string) string {
 	return fmt.Sprintf(`
 resource "aws_networkmanager_global_network" "test" {
  description = "test"
@@ -328,7 +328,7 @@ resource "aws_networkmanager_device" "test" {
 `, description, model, serial_number, device_type, vendor, latitude, longitude)
 }
 
-func testAccAWSNetworkManagerDeviceImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
+func testAccDeviceImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
 	return func(s *terraform.State) (string, error) {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {

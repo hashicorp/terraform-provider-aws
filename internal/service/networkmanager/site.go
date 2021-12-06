@@ -14,12 +14,12 @@ import (
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
-func resourceAwsNetworkManagerSite() *schema.Resource {
+func ResourceSite() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsNetworkManagerSiteCreate,
-		Read:   resourceAwsNetworkManagerSiteRead,
-		Update: resourceAwsNetworkManagerSiteUpdate,
-		Delete: resourceAwsNetworkManagerSiteDelete,
+		Create: ResourceSiteCreate,
+		Read:   ResourceSiteRead,
+		Update: ResourceSiteUpdate,
+		Delete: ResourceSiteDelete,
 		Importer: &schema.ResourceImporter{
 			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 				d.Set("arn", d.Id())
@@ -83,7 +83,7 @@ func resourceAwsNetworkManagerSite() *schema.Resource {
 	}
 }
 
-func resourceAwsNetworkManagerSiteCreate(d *schema.ResourceData, meta interface{}) error {
+func ResourceSiteCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).networkmanagerconn
 
 	input := &networkmanager.CreateSiteInput{
@@ -114,10 +114,10 @@ func resourceAwsNetworkManagerSiteCreate(d *schema.ResourceData, meta interface{
 		return fmt.Errorf("error waiting for Network Manager Site (%s) availability: %s", d.Id(), err)
 	}
 
-	return resourceAwsNetworkManagerSiteRead(d, meta)
+	return ResourceSiteRead(d, meta)
 }
 
-func resourceAwsNetworkManagerSiteRead(d *schema.ResourceData, meta interface{}) error {
+func ResourceSiteRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).networkmanagerconn
 	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
@@ -159,7 +159,7 @@ func resourceAwsNetworkManagerSiteRead(d *schema.ResourceData, meta interface{})
 	return nil
 }
 
-func resourceAwsNetworkManagerSiteUpdate(d *schema.ResourceData, meta interface{}) error {
+func ResourceSiteUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).networkmanagerconn
 
 	if d.HasChanges("description", "location") {
@@ -187,7 +187,7 @@ func resourceAwsNetworkManagerSiteUpdate(d *schema.ResourceData, meta interface{
 	return nil
 }
 
-func resourceAwsNetworkManagerSiteDelete(d *schema.ResourceData, meta interface{}) error {
+func ResourceSiteDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).networkmanagerconn
 
 	input := &networkmanager.DeleteSiteInput{
@@ -226,7 +226,7 @@ func resourceAwsNetworkManagerSiteDelete(d *schema.ResourceData, meta interface{
 		return fmt.Errorf("error deleting Network Manager Site: %s", err)
 	}
 
-	if err := waitForNetworkManagerSiteDeletion(conn, d.Get("global_network_id").(string), d.Id()); err != nil {
+	if err := waitForSiteDeletion(conn, d.Get("global_network_id").(string), d.Id()); err != nil {
 		return fmt.Errorf("error waiting for Network Manager Site (%s) deletion: %s", d.Id(), err)
 	}
 
@@ -291,7 +291,7 @@ func networkmanagerDescribeSite(conn *networkmanager.NetworkManager, globalNetwo
 	return nil, nil
 }
 
-func waitForNetworkManagerSiteDeletion(conn *networkmanager.NetworkManager, globalNetworkID, siteID string) error {
+func waitForSiteDeletion(conn *networkmanager.NetworkManager, globalNetworkID, siteID string) error {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{
 			networkmanager.SiteStateAvailable,

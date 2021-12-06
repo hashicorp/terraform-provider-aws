@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
-func TestAccDataSourceAWSNetworkManagerGlobalNetwork_basic(t *testing.T) {
+func TestAccDataSourceGlobalNetwork_basic(t *testing.T) {
 	dataSourceByIdName := "data.aws_networkmanager_global_network.test_by_id"
 	dataSourceByTagsName := "data.aws_networkmanager_global_network.test_by_tags"
 	resourceName := "aws_networkmanager_global_network.test"
@@ -18,10 +18,10 @@ func TestAccDataSourceAWSNetworkManagerGlobalNetwork_basic(t *testing.T) {
 			testAccPreCheck(t)
 		},
 		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAwsNetworkManagerGlobalNetworkDestroy,
+		CheckDestroy: testAccCheckAwsGlobalNetworkDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceAwsNetworkManagerGlobalNetworkConfig(),
+				Config: testAccDataSourceGlobalNetworkConfig(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceByIdName, "id", resourceName, "id"),
 					resource.TestCheckResourceAttrPair(dataSourceByIdName, "arn", resourceName, "arn"),
@@ -38,7 +38,7 @@ func TestAccDataSourceAWSNetworkManagerGlobalNetwork_basic(t *testing.T) {
 	})
 }
 
-func testAccDataSourceAwsNetworkManagerGlobalNetworkConfig() string {
+func testAccDataSourceGlobalNetworkConfig() string {
 	return fmt.Sprintf(`
 resource "aws_networkmanager_global_network" "test" {
   description = "test"

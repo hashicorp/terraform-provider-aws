@@ -11,9 +11,9 @@ import (
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
-func dataSourceAwsNetworkManagerSite() *schema.Resource {
+func DataSourceSite() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsNetworkManagerSiteRead,
+		Read: DataSourceSiteRead,
 
 		Schema: map[string]*schema.Schema{
 			"arn": {
@@ -57,7 +57,7 @@ func dataSourceAwsNetworkManagerSite() *schema.Resource {
 	}
 }
 
-func dataSourceAwsNetworkManagerSiteRead(d *schema.ResourceData, meta interface{}) error {
+func DataSourceSiteRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).networkmanagerconn
 	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 

@@ -12,12 +12,12 @@ import (
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
-func resourceAwsNetworkManagerGlobalNetwork() *schema.Resource {
+func ResourceGlobalNetwork() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsNetworkManagerGlobalNetworkCreate,
-		Read:   resourceAwsNetworkManagerGlobalNetworkRead,
-		Update: resourceAwsNetworkManagerGlobalNetworkUpdate,
-		Delete: resourceAwsNetworkManagerGlobalNetworkDelete,
+		Create: ResourceGlobalNetworkCreate,
+		Read:   ResourceGlobalNetworkRead,
+		Update: ResourceGlobalNetworkUpdate,
+		Delete: ResourceGlobalNetworkDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -36,7 +36,7 @@ func resourceAwsNetworkManagerGlobalNetwork() *schema.Resource {
 	}
 }
 
-func resourceAwsNetworkManagerGlobalNetworkCreate(d *schema.ResourceData, meta interface{}) error {
+func ResourceGlobalNetworkCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).networkmanagerconn
 
 	input := &networkmanager.CreateGlobalNetworkInput{
@@ -82,10 +82,10 @@ func resourceAwsNetworkManagerGlobalNetworkCreate(d *schema.ResourceData, meta i
 		return fmt.Errorf("error waiting for networkmanager Global Network (%s) availability: %s", d.Id(), err)
 	}
 
-	return resourceAwsNetworkManagerGlobalNetworkRead(d, meta)
+	return ResourceGlobalNetworkRead(d, meta)
 }
 
-func resourceAwsNetworkManagerGlobalNetworkRead(d *schema.ResourceData, meta interface{}) error {
+func ResourceGlobalNetworkRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).networkmanagerconn
 	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
@@ -123,7 +123,7 @@ func resourceAwsNetworkManagerGlobalNetworkRead(d *schema.ResourceData, meta int
 	return nil
 }
 
-func resourceAwsNetworkManagerGlobalNetworkUpdate(d *schema.ResourceData, meta interface{}) error {
+func ResourceGlobalNetworkUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).networkmanagerconn
 
 	if d.HasChange("description") {
@@ -149,7 +149,7 @@ func resourceAwsNetworkManagerGlobalNetworkUpdate(d *schema.ResourceData, meta i
 	return nil
 }
 
-func resourceAwsNetworkManagerGlobalNetworkDelete(d *schema.ResourceData, meta interface{}) error {
+func ResourceGlobalNetworkDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).networkmanagerconn
 
 	input := &networkmanager.DeleteGlobalNetworkInput{
@@ -199,7 +199,7 @@ func resourceAwsNetworkManagerGlobalNetworkDelete(d *schema.ResourceData, meta i
 		return fmt.Errorf("error deleting networkmanager Global Network: %s", err)
 	}
 
-	if err := waitForNetworkManagerGlobalNetworkDeletion(conn, d.Id()); err != nil {
+	if err := waitForGlobalNetworkDeletion(conn, d.Id()); err != nil {
 		return fmt.Errorf("error waiting for networkmanager Global Network (%s) deletion: %s", d.Id(), err)
 	}
 
@@ -215,7 +215,7 @@ func networkmanagerGlobalNetworkRefreshFunc(conn *networkmanager.NetworkManager,
 		}
 
 		if err != nil {
-			return nil, "", fmt.Errorf("error reading NetworkManager Global Network (%s): %s", globalNetworkID, err)
+			return nil, "", fmt.Errorf("error reading  Global Network (%s): %s", globalNetworkID, err)
 		}
 
 		if globalNetwork == nil {
@@ -231,7 +231,7 @@ func networkmanagerDescribeGlobalNetwork(conn *networkmanager.NetworkManager, gl
 		GlobalNetworkIds: []*string{aws.String(globalNetworkID)},
 	}
 
-	log.Printf("[DEBUG] Reading NetworkManager Global Network (%s): %s", globalNetworkID, input)
+	log.Printf("[DEBUG] Reading  Global Network (%s): %s", globalNetworkID, input)
 	for {
 		output, err := conn.DescribeGlobalNetworks(input)
 
@@ -263,7 +263,7 @@ func networkmanagerDescribeGlobalNetwork(conn *networkmanager.NetworkManager, gl
 	return nil, nil
 }
 
-func waitForNetworkManagerGlobalNetworkDeletion(conn *networkmanager.NetworkManager, globalNetworkID string) error {
+func waitForGlobalNetworkDeletion(conn *networkmanager.NetworkManager, globalNetworkID string) error {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{
 			networkmanager.GlobalNetworkStateAvailable,
@@ -275,7 +275,7 @@ func waitForNetworkManagerGlobalNetworkDeletion(conn *networkmanager.NetworkMana
 		NotFoundChecks: 1,
 	}
 
-	log.Printf("[DEBUG] Waiting for NetworkManager Global Network (%s) deletion", globalNetworkID)
+	log.Printf("[DEBUG] Waiting for  Global Network (%s) deletion", globalNetworkID)
 	_, err := stateConf.WaitForState()
 
 	if isResourceNotFoundError(err) {

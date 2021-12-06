@@ -13,11 +13,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-func resourceAwsNetworkManagerTransitGatewayRegistration() *schema.Resource {
+func ResourceTransitGatewayRegistration() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsNetworkManagerTransitGatewayRegistrationCreate,
-		Read:   resourceAwsNetworkManagerTransitGatewayRegistrationRead,
-		Delete: resourceAwsNetworkManagerTransitGatewayRegistrationDelete,
+		Create: ResourceTransitGatewayRegistrationCreate,
+		Read:   ResourceTransitGatewayRegistrationRead,
+		Delete: ResourceTransitGatewayRegistrationDelete,
 		Importer: &schema.ResourceImporter{
 			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 				idErr := fmt.Errorf("Expected ID in format of arn:aws:ec2:REGION:ACCOUNTID:transit-gateway/TGWID,GLOBALNETWORKID and provided: %s", d.Id())
@@ -53,7 +53,7 @@ func resourceAwsNetworkManagerTransitGatewayRegistration() *schema.Resource {
 	}
 }
 
-func resourceAwsNetworkManagerTransitGatewayRegistrationCreate(d *schema.ResourceData, meta interface{}) error {
+func ResourceTransitGatewayRegistrationCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).networkmanagerconn
 
 	globalNetworkId := d.Get("global_network_id").(string)
@@ -85,10 +85,10 @@ func resourceAwsNetworkManagerTransitGatewayRegistrationCreate(d *schema.Resourc
 		return fmt.Errorf("error waiting for Network Manager Transit Gateway Registration (%s) availability: %s", d.Id(), err)
 	}
 
-	return resourceAwsNetworkManagerTransitGatewayRegistrationRead(d, meta)
+	return ResourceTransitGatewayRegistrationRead(d, meta)
 }
 
-func resourceAwsNetworkManagerTransitGatewayRegistrationRead(d *schema.ResourceData, meta interface{}) error {
+func ResourceTransitGatewayRegistrationRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).networkmanagerconn
 
 	transitGatewayRegistration, err := networkmanagerDescribeTransitGatewayRegistration(conn, d.Get("global_network_id").(string), d.Get("transit_gateway_arn").(string))
@@ -118,7 +118,7 @@ func resourceAwsNetworkManagerTransitGatewayRegistrationRead(d *schema.ResourceD
 	return nil
 }
 
-func resourceAwsNetworkManagerTransitGatewayRegistrationDelete(d *schema.ResourceData, meta interface{}) error {
+func ResourceTransitGatewayRegistrationDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).networkmanagerconn
 
 	input := &networkmanager.DeregisterTransitGatewayInput{
@@ -138,7 +138,7 @@ func resourceAwsNetworkManagerTransitGatewayRegistrationDelete(d *schema.Resourc
 		return fmt.Errorf("error deleting Network Manager Transit Gateway Registration: %s", err)
 	}
 
-	if err := waitForNetworkManagerTransitGatewayRegistrationDeletion(conn, d.Get("global_network_id").(string), d.Get("transit_gateway_arn").(string)); err != nil {
+	if err := waitForTransitGatewayRegistrationDeletion(conn, d.Get("global_network_id").(string), d.Get("transit_gateway_arn").(string)); err != nil {
 		return fmt.Errorf("error waiting for Network Manager Transit Gateway Registration (%s) deletion: %s", d.Id(), err)
 	}
 
@@ -203,7 +203,7 @@ func networkmanagerDescribeTransitGatewayRegistration(conn *networkmanager.Netwo
 	return nil, nil
 }
 
-func waitForNetworkManagerTransitGatewayRegistrationDeletion(conn *networkmanager.NetworkManager, globalNetworkID, transitGatewayArn string) error {
+func waitForTransitGatewayRegistrationDeletion(conn *networkmanager.NetworkManager, globalNetworkID, transitGatewayArn string) error {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{
 			networkmanager.TransitGatewayRegistrationStateAvailable,
