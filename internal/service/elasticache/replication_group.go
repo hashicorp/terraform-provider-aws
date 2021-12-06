@@ -102,6 +102,11 @@ func ResourceReplicationGroup() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"data_tiering_enabled": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
 			"engine": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -445,6 +450,10 @@ func resourceReplicationGroupCreate(d *schema.ResourceData, meta interface{}) er
 		if _, err := WaitGlobalReplicationGroupAvailable(conn, v.(string), GlobalReplicationGroupDefaultCreatedTimeout); err != nil {
 			return fmt.Errorf("error waiting for ElastiCache Global Replication Group (%s) availability: %w", v, err)
 		}
+	}
+
+	if v, ok := d.GetOk("data_tiering_enabled"); ok {
+		params.DataTieringEnabled = aws.Bool(v.(bool))
 	}
 
 	return resourceReplicationGroupRead(d, meta)
