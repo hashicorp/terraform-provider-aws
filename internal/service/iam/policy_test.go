@@ -147,7 +147,6 @@ func TestAccIAMPolicy_disappears(t *testing.T) {
 
 func TestAccIAMPolicy_namePrefix(t *testing.T) {
 	var out iam.GetPolicyOutput
-	namePrefix := "tf-acc-test-"
 	resourceName := "aws_iam_policy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -157,10 +156,10 @@ func TestAccIAMPolicy_namePrefix(t *testing.T) {
 		CheckDestroy: testAccCheckPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPolicyNamePrefixConfig(namePrefix),
+				Config: testAccPolicyNamePrefixConfig(acctest.ResourcePrefix),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPolicyExists(resourceName, &out),
-					resource.TestMatchResourceAttr(resourceName, "name", regexp.MustCompile(fmt.Sprintf("^%s", namePrefix))),
+					resource.TestMatchResourceAttr(resourceName, "name", regexp.MustCompile(fmt.Sprintf("^%s", acctest.ResourcePrefix))),
 				),
 			},
 			{
