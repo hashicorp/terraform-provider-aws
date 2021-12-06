@@ -254,55 +254,54 @@ func resourceStreamRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).KinesisConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	name := d.Get("name").(string)
 
-	sn := d.Get("name").(string)
+	output, err := FindStreamByName(conn, name)
 
-	state, err := readKinesisStreamState(conn, sn)
-	if err != nil {
-		if awsErr, ok := err.(awserr.Error); ok {
-			if awsErr.Code() == kinesis.ErrCodeResourceNotFoundException {
-				d.SetId("")
-				return nil
-			}
-			return fmt.Errorf("error reading Kinesis Stream (%s): %s", d.Id(), err)
-		}
-		return err
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] Kinesis Stream (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
 	}
+
+	if err != nil {
+		return fmt.Errorf("error reading Kinesis Stream (%s): %w", name, err)
+	}
+
+	d.Set("arn", output.StreamARN)
+	d.Set("encryption_type", output.EncryptionType)
+	d.Set("kms_key_id", output.KeyId)
+	d.Set("name", output.StreamName)
+	d.Set("retention_period", output.RetentionPeriodHours)
 
 	streamMode := kinesis.StreamModeProvisioned
-	if details := state.streamModeDetails; details != nil {
+	if details := output.StreamModeDetails; details != nil {
 		streamMode = aws.StringValue(details.StreamMode)
 	}
-
-	d.SetId(state.arn)
-	d.Set("arn", state.arn)
-
 	if streamMode == kinesis.StreamModeProvisioned {
-		d.Set("shard_count", len(state.openShards))
+		d.Set("shard_count", len(FilterShards(output.Shards, true)))
 	} else {
 		d.Set("shard_count", nil)
 	}
 
-	d.Set("retention_period", state.retentionPeriod)
-	d.Set("encryption_type", state.encryptionType)
-	d.Set("kms_key_id", state.keyId)
+	var shardLevelMetrics []*string
+	for _, v := range output.EnhancedMonitoring {
+		shardLevelMetrics = append(shardLevelMetrics, v.ShardLevelMetrics...)
+	}
+	d.Set("shard_level_metrics", aws.StringValueSlice(shardLevelMetrics))
 
-	if details := state.streamModeDetails; details != nil {
+	if details := output.StreamModeDetails; details != nil {
 		if err := d.Set("stream_mode_details", []interface{}{flattenStreamModeDetails(details)}); err != nil {
-			return fmt.Errorf("set stream_mode_details: %w", err)
+			return fmt.Errorf("error setting stream_mode_details: %w", err)
 		}
 	} else {
 		d.Set("stream_mode_details", nil)
 	}
 
-	if len(state.shardLevelMetrics) > 0 {
-		d.Set("shard_level_metrics", state.shardLevelMetrics)
-	}
-
-	tags, err := ListTags(conn, sn)
+	tags, err := ListTags(conn, name)
 
 	if err != nil {
-		return fmt.Errorf("error listing tags for Kinesis Stream (%s): %s", sn, err)
+		return fmt.Errorf("error listing tags for Kinesis Stream (%s): %w", name, err)
 	}
 
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
@@ -383,7 +382,16 @@ func resourceStreamDelete(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceStreamImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-	d.Set("name", d.Id())
+	conn := meta.(*conns.AWSClient).KinesisConn
+
+	output, err := FindStreamByName(conn, d.Id())
+
+	if err != nil {
+		return nil, err
+	}
+
+	d.SetId(aws.StringValue(output.StreamARN))
+	d.Set("name", output.StreamName)
 	return []*schema.ResourceData{d}, nil
 }
 
