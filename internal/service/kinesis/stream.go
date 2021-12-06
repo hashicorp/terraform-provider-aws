@@ -459,7 +459,7 @@ func resourceStreamUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	if d.HasChange("encryption_type") || d.HasChange("kms_key_id") {
+	if d.HasChanges("encryption_type", "kms_key_id") {
 		oldEncryptionType, newEncryptionType := d.GetChange("encryption_type")
 		oldKeyID, newKeyID := d.GetChange("kms_key_id")
 
