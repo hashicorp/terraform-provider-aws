@@ -858,38 +858,39 @@ resource "aws_kms_key" "test" {
   policy = jsonencode({
     Id = %[1]q
     Statement = [
-    {
-      Sid    = "Enable IAM User Permissions"
-      Effect = "Allow"
-      Principal = {
-        AWS = "*"
-      }
-
-      Action   = "kms:*"
-      Resource = "*"
-    },
-    {
-      Action = [
-        "kms:CreateGrant",
-        "kms:ListGrants",
-        "kms:RevokeGrant"
-      ]
-
-      Effect = "Allow"
-
-      Principal = {
-        AWS = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"
-      }
-
-      Condition = {
-        Bool = {
-          "kms:GrantIsForAWSResource" = true
+      {
+        Action = "kms:*"
+        Effect = "Allow"
+        Principal = {
+          AWS = "*"
         }
-      }
 
-      Resource = "*"
-      Sid      = "Allow attachment of persistent resources"
-    }]
+        Resource = "*"
+        Sid      = "Enable IAM User Permissions"
+      },
+      {
+        Action = [
+          "kms:Encrypt",
+          "kms:Decrypt",
+          "kms:ReEncrypt*",
+          "kms:GenerateDataKey*",
+          "kms:DescribeKey",
+        ]
+        Effect = "Allow"
+        Principal = {
+          AWS = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"
+        }
+
+        Resource = "*"
+        Sid      = "Enable IAM User Permissions"
+
+        Condition = {
+          Bool = {
+            "kms:GrantIsForAWSResource" = true
+          }
+        }
+      },
+    ]
     Version = "2012-10-17"
   })
 }
