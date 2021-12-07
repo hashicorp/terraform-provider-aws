@@ -12,10 +12,10 @@ Manages RDS Aurora Cluster Database Activity Streams.
 
 Database Activity Streams have some limits and requirements, You can refer to the [User Guide][1].
 
-~> **Note:** `apply_immediately` always is true, cannot be modified.
-Because when apply_immediately=false, terraform cannot get activity stream associated attributes.
+~> **Note:** `apply_immediately` is always `true` and cannot be modified.
+This is because when `apply_immediately` is `false` terraform cannot get activity stream associated attributes.
 
-~> **Note:** This resource depends on having one `aws_rds_cluster_instance` created.
+~> **Note:** This resource depends on having at least one `aws_rds_cluster_instance` created.
 To avoid race conditions when all resources are being created together, you need to add explicit resource
 references using the [resource `depends_on` meta-argument](/docs/configuration/resources.html#depends_on-explicit-resource-dependencies).
 
@@ -48,7 +48,6 @@ resource "aws_rds_cluster_activity_stream" "default" {
   resource_arn      = aws_rds_cluster.default.arn
   mode              = "async"
   kms_key_id        = aws_kms_key.default.key_id
-  apply_immediately = true
 
   depends_on = [aws_rds_cluster_instance.default]
 }
@@ -63,7 +62,7 @@ the [AWS official documentation](https://docs.aws.amazon.com/cli/latest/referenc
 The following arguments are supported:
 
 * `resource_arn` - (Required, Forces new resources) The Amazon Resource Name (ARN) of the DB cluster.
-* `mode` - (Required, Forces new resources) Specifies the mode of the database activity stream. One of: `sync` , `async` .
+* `mode` - (Required, Forces new resources) Specifies the mode of the database activity stream. One of: `sync`, `async`.
 * `kms_key_id` - (Required, Forces new resources) The AWS KMS key identifier used for encrypting messages in the database activity stream.
 
 

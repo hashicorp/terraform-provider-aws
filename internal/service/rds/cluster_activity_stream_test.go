@@ -320,22 +320,20 @@ resource "aws_kms_key" "test" {
 
 resource "aws_rds_cluster" "test" {
   cluster_identifier              = "%[1]s"
-  engine                          = "aurora-postgresql"
-  engine_version                  = "10.11"
   availability_zones              = ["${data.aws_availability_zones.available.names[0]}", "${data.aws_availability_zones.available.names[1]}", "${data.aws_availability_zones.available.names[2]}"]
-  database_name                   = "mydb"
   master_username                 = "foo"
   master_password                 = "mustbeeightcharaters"
-  db_cluster_parameter_group_name = "default.aurora-postgresql10"
   skip_final_snapshot             = true
   deletion_protection             = false
+  engine                          = "aurora-postgresql"
+  engine_version                  = "10.11"
 }
 
 resource "aws_rds_cluster_instance" "test" {
   identifier         = "%[2]s"
-  cluster_identifier = aws_rds_cluster.test.cluster_identifier
+  cluster_identifier = aws_rds_cluster.test.id
   engine             = aws_rds_cluster.test.engine
-  instance_class     = "db.r5.large"
+  instance_class     = "db.r6g.large"
 }
 
 resource "aws_rds_cluster_activity_stream" "test" {
