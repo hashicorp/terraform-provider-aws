@@ -184,7 +184,7 @@ func TestAccAppStreamImageBuilder_imageARN(t *testing.T) {
 				Config: testAccImageBuilderByImageARNConfig(rName, imageName, instanceType),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckImageBuilderExists(resourceName),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "image_arn", "appstream", fmt.Sprintf("image/%s", imageName)),
+					acctest.CheckResourceAttrRegionalARNNoAccount(resourceName, "image_arn", "appstream", fmt.Sprintf("image/%s", imageName)),
 				),
 			},
 			{
