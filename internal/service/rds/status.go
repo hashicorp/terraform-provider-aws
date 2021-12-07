@@ -1,6 +1,8 @@
 package rds
 
 import (
+	"log"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/rds"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -91,7 +93,7 @@ func statusDBClusterActivityStream(conn *rds.RDS, id string) resource.StateRefre
 		if err != nil {
 			return nil, "", err
 		}
-
+		log.Printf("DB Cluster (%s) has ActivityStreamStatus=%s", id, aws.StringValue(output.ActivityStreamStatus))
 		return output, aws.StringValue(output.ActivityStreamStatus), nil
 	}
 }

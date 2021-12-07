@@ -3,7 +3,6 @@ package rds
 import (
 	"fmt"
 	"log"
-	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
@@ -21,11 +20,6 @@ func ResourceClusterActivityStream() *schema.Resource {
 		Delete: resourceAwsRDSClusterActivityStreamDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
-		},
-
-		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(120 * time.Minute),
-			Delete: schema.DefaultTimeout(120 * time.Minute),
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -82,7 +76,7 @@ func resourceAwsRDSClusterActivityStreamCreate(d *schema.ResourceData, meta inte
 
 	d.SetId(resourceArn)
 
-	err = waitActivityStreamStarted(conn, d.Id(), d.Timeout(schema.TimeoutCreate))
+	err = waitActivityStreamStarted(conn, d.Id())
 	if err != nil {
 		return err
 	}
@@ -159,7 +153,7 @@ func resourceAwsRDSClusterActivityStreamDelete(d *schema.ResourceData, meta inte
 
 	log.Printf("[DEBUG] RDS Cluster stop activity stream response: %s", resp)
 
-	err = waitActivityStreamStopped(conn, d.Id(), d.Timeout(schema.TimeoutDelete))
+	err = waitActivityStreamStopped(conn, d.Id())
 	if err != nil {
 		return err
 	}

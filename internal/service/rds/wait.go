@@ -15,8 +15,8 @@ const (
 	dbClusterRoleAssociationCreatedTimeout = 5 * time.Minute
 	dbClusterRoleAssociationDeletedTimeout = 5 * time.Minute
 
-	dbClusterActivityStreamRetryDelay      = 5 * time.Second
-	dbClusterActivityStreamRetryMinTimeout = 3 * time.Second
+	dbClusterActivityStreamStartedTimeout = 30 * time.Minute
+	dbClusterActivityStreamStoppedTimeout = 30 * time.Minute
 )
 
 func waitEventSubscriptionCreated(conn *rds.RDS, id string, timeout time.Duration) (*rds.EventSubscription, error) {
@@ -205,16 +205,14 @@ func waitDBClusterInstanceDeleted(conn *rds.RDS, id string, timeout time.Duratio
 }
 
 // waitActivityStreamStarted waits for Aurora Cluster Activity Stream to be started
-func waitActivityStreamStarted(conn *rds.RDS, dbClusterIdentifier string, timeout time.Duration) error {
+func waitActivityStreamStarted(conn *rds.RDS, dbClusterIdentifier string) error {
 	log.Printf("[DEBUG] Waiting for RDS Cluster Activity Stream %s to become started...", dbClusterIdentifier)
 
 	stateConf := &resource.StateChangeConf{
-		Pending:    []string{rds.ActivityStreamStatusStarting},
-		Target:     []string{rds.ActivityStreamStatusStarted},
-		Refresh:    statusDBClusterActivityStream(conn, dbClusterIdentifier),
-		Timeout:    timeout,
-		Delay:      dbClusterActivityStreamRetryDelay,
-		MinTimeout: dbClusterActivityStreamRetryMinTimeout,
+		Pending: []string{rds.ActivityStreamStatusStarting},
+		Target:  []string{rds.ActivityStreamStatusStarted},
+		Refresh: statusDBClusterActivityStream(conn, dbClusterIdentifier),
+		Timeout: dbClusterActivityStreamStartedTimeout,
 	}
 
 	_, err := stateConf.WaitForState()
@@ -225,16 +223,14 @@ func waitActivityStreamStarted(conn *rds.RDS, dbClusterIdentifier string, timeou
 }
 
 // waitActivityStreamStarted waits for Aurora Cluster Activity Stream to be stopped
-func waitActivityStreamStopped(conn *rds.RDS, dbClusterIdentifier string, timeout time.Duration) error {
+func waitActivityStreamStopped(conn *rds.RDS, dbClusterIdentifier string) error {
 	log.Printf("[DEBUG] Waiting for RDS Cluster Activity Stream %s to become stopped...", dbClusterIdentifier)
 
 	stateConf := &resource.StateChangeConf{
-		Pending:    []string{rds.ActivityStreamStatusStopping},
-		Target:     []string{rds.ActivityStreamStatusStopped},
-		Refresh:    statusDBClusterActivityStream(conn, dbClusterIdentifier),
-		Timeout:    timeout,
-		Delay:      dbClusterActivityStreamRetryDelay,
-		MinTimeout: dbClusterActivityStreamRetryMinTimeout,
+		Pending: []string{rds.ActivityStreamStatusStopping},
+		Target:  []string{rds.ActivityStreamStatusStopped},
+		Refresh: statusDBClusterActivityStream(conn, dbClusterIdentifier),
+		Timeout: dbClusterActivityStreamStoppedTimeout,
 	}
 
 	_, err := stateConf.WaitForState()

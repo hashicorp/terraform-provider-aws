@@ -33,8 +33,10 @@ func init() {
 
 func TestAccAWSRDSClusterActivityStream_basic(t *testing.T) {
 	var dbCluster rds.DBCluster
-	clusterName := sdkacctest.RandomWithPrefix("tf-testacc-aurora-cluster")
-	instanceName := sdkacctest.RandomWithPrefix("tf-testacc-aurora-instance")
+	// clusterName := sdkacctest.RandomWithPrefix("tf-testacc-aurora-cluster")
+	clusterName := "tf-testacc-aurora-cluster-4151290840814633261"
+	// instanceName := sdkacctest.RandomWithPrefix("tf-testacc-aurora-instance")
+	instanceName := "tf-testacc-aurora-instance-6766505912483575783"
 	resourceName := "aws_rds_cluster_activity_stream.test"
 	rdsClusterResourceName := "aws_rds_cluster.test"
 	kmsKeyResourceName := "aws_kms_key.test"
@@ -307,43 +309,51 @@ func testAccCheckAWSClusterActivityStreamDestroyWithProvider(s *terraform.State,
 	return nil
 }
 
+func testAccAWSClusterActivityStreamConfigBase(clusterName, instanceName string) string {
+	return ""
+
+	// 	return fmt.Sprintf(`
+	// data "aws_availability_zones" "available" {
+	// 	state = "available"
+	// }
+
+	// resource "aws_kms_key" "test" {
+	// 	description             = "Testing for AWS RDS Cluster Activity Stream"
+	// 	deletion_window_in_days = 7
+	// }
+
+	// resource "aws_rds_cluster" "test" {
+	// 	cluster_identifier              = "%[1]s"
+	// 	availability_zones              = ["${data.aws_availability_zones.available.names[0]}", "${data.aws_availability_zones.available.names[1]}", "${data.aws_availability_zones.available.names[2]}"]
+	// 	master_username                 = "foo"
+	// 	master_password                 = "mustbeeightcharaters"
+	// 	skip_final_snapshot             = true
+	// 	deletion_protection             = false
+	// 	engine                          = "aurora-postgresql"
+	// 	engine_version                  = "11.9"
+	// }
+
+	// resource "aws_rds_cluster_instance" "test" {
+	// 	identifier         = "%[2]s"
+	// 	cluster_identifier = aws_rds_cluster.test.id
+	// 	engine             = aws_rds_cluster.test.engine
+	// 	instance_class     = "db.r6g.large"
+	// }
+	// `, clusterName, instanceName)
+}
+
 func testAccAWSClusterActivityStreamConfig(clusterName, instanceName string) string {
-	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  state = "available"
-}
-
-resource "aws_kms_key" "test" {
-  description             = "Testing for AWS RDS Cluster Activity Stream"
-  deletion_window_in_days = 7
-}
-
-resource "aws_rds_cluster" "test" {
-  cluster_identifier              = "%[1]s"
-  availability_zones              = ["${data.aws_availability_zones.available.names[0]}", "${data.aws_availability_zones.available.names[1]}", "${data.aws_availability_zones.available.names[2]}"]
-  master_username                 = "foo"
-  master_password                 = "mustbeeightcharaters"
-  skip_final_snapshot             = true
-  deletion_protection             = false
-  engine                          = "aurora-postgresql"
-  engine_version                  = "11.9"
-}
-
-resource "aws_rds_cluster_instance" "test" {
-  identifier         = "%[2]s"
-  cluster_identifier = aws_rds_cluster.test.id
-  engine             = aws_rds_cluster.test.engine
-  instance_class     = "db.r6g.large"
-}
-
+	return acctest.ConfigCompose(
+		testAccAWSClusterActivityStreamConfigBase(clusterName, instanceName),
+		`
 resource "aws_rds_cluster_activity_stream" "test" {
-  resource_arn = aws_rds_cluster.test.arn
-  kms_key_id   = aws_kms_key.test.key_id
-  mode         = "async"
-
-  depends_on = [aws_rds_cluster_instance.test]
+	resource_arn = "arn:aws:rds:eu-central-1:657229199622:cluster:tf-testacc-aurora-cluster-4151290840814633261"
+	kms_key_id   = "762ec1ca-d857-4c15-a85d-f2bba877a2db"
+	mode         = "async"
 }
-`, clusterName, instanceName)
+		`)
+	// kms_key_id   = aws_kms_key.test.key_id
+	// depends_on = [aws_rds_cluster_instance.test]
 }
 
 func testAccAWSClusterActivityStreamConfig_kmsKeyId(clusterName, instanceName string) string {
