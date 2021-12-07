@@ -864,6 +864,7 @@ resource "aws_kms_key" "test" {
       Principal = {
         AWS = "*"
       }
+
       Action   = "kms:*"
       Resource = "*"
     },
@@ -873,15 +874,19 @@ resource "aws_kms_key" "test" {
         "kms:ListGrants",
         "kms:RevokeGrant"
       ]
+
       Effect = "Allow"
+
       Principal = {
         AWS = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"
       }
+
       Condition = {
         Bool = {
           "kms:GrantIsForAWSResource" = true
         }
       }
+
       Resource = "*"
       Sid      = "Allow attachment of persistent resources"
     }]
