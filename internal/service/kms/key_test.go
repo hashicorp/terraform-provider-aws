@@ -851,6 +851,8 @@ func testAccKeyPolicyBooleanConditionConfig(rName string) string {
 	return fmt.Sprintf(`
 data "aws_caller_identity" "current" {}
 
+data "aws_partition" "current" {}
+
 resource "aws_kms_key" "test" {
   description             = %[1]q
   deletion_window_in_days = 7
@@ -878,7 +880,7 @@ resource "aws_kms_key" "test" {
         ]
         Effect = "Allow"
         Principal = {
-          AWS = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"
+          AWS = "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:root"
         }
 
         Resource = "*"
