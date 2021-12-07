@@ -1419,10 +1419,22 @@ func TestAccDynamoDBTable_tableClassInfrequentAccess(t *testing.T) {
 		CheckDestroy: testAccCheckTableDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTableClassConfig(rName),
+				Config: testAccTableClassConfig(rName, "STANDARD_INFREQUENT_ACCESS"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInitialTableExists(resourceName, &table),
 					resource.TestCheckResourceAttr(resourceName, "table_class", "STANDARD_INFREQUENT_ACCESS"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccTableClassConfig(rName, "STANDARD"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInitialTableExists(resourceName, &table),
+					resource.TestCheckResourceAttr(resourceName, "table_class", "STANDARD"),
 				),
 			},
 			{
@@ -2478,19 +2490,19 @@ resource "aws_dynamodb_table" "test" {
 `, rName, lsiName)
 }
 
-func testAccTableClassConfig(rName string) string {
+func testAccTableClassConfig(rName, tableClass string) string {
 	return fmt.Sprintf(`
 resource "aws_dynamodb_table" "test" {
   hash_key       = "TestTableHashKey"
   name           = %[1]q
   read_capacity  = 1
   write_capacity = 1
-  table_class    = "STANDARD_INFREQUENT_ACCESS"
+  table_class    = %[2]q
 
   attribute {
     name = "TestTableHashKey"
     type = "S"
   }
 }
-`, rName)
+`, rName, tableClass)
 }
