@@ -33,10 +33,8 @@ func init() {
 
 func TestAccAWSRDSClusterActivityStream_basic(t *testing.T) {
 	var dbCluster rds.DBCluster
-	// clusterName := sdkacctest.RandomWithPrefix("tf-testacc-aurora-cluster")
-	clusterName := "tf-testacc-aurora-cluster-4151290840814633261"
-	// instanceName := sdkacctest.RandomWithPrefix("tf-testacc-aurora-instance")
-	instanceName := "tf-testacc-aurora-instance-6766505912483575783"
+	clusterName := sdkacctest.RandomWithPrefix("tf-testacc-aurora-cluster")
+	instanceName := sdkacctest.RandomWithPrefix("tf-testacc-aurora-instance")
 	resourceName := "aws_rds_cluster_activity_stream.test"
 	rdsClusterResourceName := "aws_rds_cluster.test"
 	kmsKeyResourceName := "aws_kms_key.test"
@@ -345,7 +343,7 @@ func testAccAWSClusterActivityStreamConfig(clusterName, instanceName string) str
 		testAccAWSClusterActivityStreamConfigBase(clusterName, instanceName),
 		`
 resource "aws_rds_cluster_activity_stream" "test" {
-	resource_arn = "arn:aws:rds:eu-central-1:657229199622:cluster:tf-testacc-aurora-cluster-4151290840814633261"
+	resource_arn = aws_rds_cluster.test.arn
 	kms_key_id   = aws_kms_key.test.key_id
 	mode         = "async"
 
@@ -355,124 +353,43 @@ resource "aws_rds_cluster_activity_stream" "test" {
 }
 
 func testAccAWSClusterActivityStreamConfig_kmsKeyId(clusterName, instanceName string) string {
-	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  state = "available"
-}
-
-resource "aws_kms_key" "new_kms_key" {
-  description             = "Testing for AWS RDS Cluster Activity Stream"
-  deletion_window_in_days = 7
-}
-
-resource "aws_rds_cluster" "test" {
-  cluster_identifier              = "%[1]s"
-  engine                          = "aurora-postgresql"
-  engine_version                  = "10.11"
-  availability_zones              = ["${data.aws_availability_zones.available.names[0]}", "${data.aws_availability_zones.available.names[1]}", "${data.aws_availability_zones.available.names[2]}"]
-  database_name                   = "mydb"
-  master_username                 = "foo"
-  master_password                 = "mustbeeightcharaters"
-  db_cluster_parameter_group_name = "default.aurora-postgresql10"
-  skip_final_snapshot             = true
-  deletion_protection             = false
-}
-
-resource "aws_rds_cluster_instance" "test" {
-  identifier         = "%[2]s"
-  cluster_identifier = aws_rds_cluster.test.cluster_identifier
-  engine             = aws_rds_cluster.test.engine
-  instance_class     = "db.r5.large"
-}
-
+	return acctest.ConfigCompose(
+		testAccAWSClusterActivityStreamConfigBase(clusterName, instanceName),
+		`
 resource "aws_rds_cluster_activity_stream" "test" {
-  resource_arn = aws_rds_cluster.test.arn
-  kms_key_id   = aws_kms_key.new_kms_key.key_id
-  mode         = "async"
+	resource_arn = aws_rds_cluster.test.arn
+	kms_key_id   = aws_kms_key.test.key_id
+	mode         = "async"
 
-  depends_on = [aws_rds_cluster_instance.test]
+	depends_on = [aws_rds_cluster_instance.test]
 }
-`, clusterName, instanceName)
+		`)
 }
 
 func testAccAWSClusterActivityStreamConfig_modeSync(clusterName, instanceName string) string {
-	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  state = "available"
-}
-
-resource "aws_kms_key" "test" {
-  description             = "Testing for AWS RDS Cluster Activity Stream"
-  deletion_window_in_days = 7
-}
-
-resource "aws_rds_cluster" "test" {
-  cluster_identifier              = "%[1]s"
-  engine                          = "aurora-postgresql"
-  engine_version                  = "10.11"
-  availability_zones              = ["${data.aws_availability_zones.available.names[0]}", "${data.aws_availability_zones.available.names[1]}", "${data.aws_availability_zones.available.names[2]}"]
-  database_name                   = "mydb"
-  master_username                 = "foo"
-  master_password                 = "mustbeeightcharaters"
-  db_cluster_parameter_group_name = "default.aurora-postgresql10"
-  skip_final_snapshot             = true
-  deletion_protection             = false
-}
-
-resource "aws_rds_cluster_instance" "test" {
-  identifier         = "%[2]s"
-  cluster_identifier = aws_rds_cluster.test.cluster_identifier
-  engine             = aws_rds_cluster.test.engine
-  instance_class     = "db.r5.large"
-}
-
+	return acctest.ConfigCompose(
+		testAccAWSClusterActivityStreamConfigBase(clusterName, instanceName),
+		`
 resource "aws_rds_cluster_activity_stream" "test" {
-  resource_arn = aws_rds_cluster.test.arn
-  kms_key_id   = aws_kms_key.test.key_id
-  mode         = "sync"
+	resource_arn = aws_rds_cluster.test.arn
+	kms_key_id   = aws_kms_key.test.key_id
+	mode         = "sync"
 
-  depends_on = [aws_rds_cluster_instance.test]
+	depends_on = [aws_rds_cluster_instance.test]
 }
-`, clusterName, instanceName)
+		`)
 }
 
 func testAccAWSClusterActivityStreamConfig_resourceArn(clusterName, instanceName string) string {
-	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  state = "available"
-}
-
-resource "aws_kms_key" "test" {
-  description             = "Testing for AWS RDS Cluster Activity Stream"
-  deletion_window_in_days = 7
-}
-
-resource "aws_rds_cluster" "new_rds_cluster_test" {
-  cluster_identifier              = "%[1]s"
-  engine                          = "aurora-postgresql"
-  engine_version                  = "10.11"
-  availability_zones              = ["${data.aws_availability_zones.available.names[0]}", "${data.aws_availability_zones.available.names[1]}", "${data.aws_availability_zones.available.names[2]}"]
-  database_name                   = "mydb"
-  master_username                 = "foo"
-  master_password                 = "mustbeeightcharaters"
-  db_cluster_parameter_group_name = "default.aurora-postgresql10"
-  skip_final_snapshot             = true
-  deletion_protection             = false
-}
-
-resource "aws_rds_cluster_instance" "new_rds_instance_test" {
-  identifier         = "%[2]s"
-  cluster_identifier = aws_rds_cluster.new_rds_cluster_test.cluster_identifier
-  engine             = aws_rds_cluster.new_rds_cluster_test.engine
-  instance_class     = "db.r5.large"
-}
-
+	return acctest.ConfigCompose(
+		testAccAWSClusterActivityStreamConfigBase(clusterName, instanceName),
+		`
 resource "aws_rds_cluster_activity_stream" "test" {
-  resource_arn = aws_rds_cluster.new_rds_cluster_test.arn
-  kms_key_id   = aws_kms_key.test.key_id
-  mode         = "async"
+	resource_arn = aws_rds_cluster.test.arn
+	kms_key_id   = aws_kms_key.test.key_id
+	mode         = "async"
 
-  depends_on = [aws_rds_cluster_instance.new_rds_instance_test]
+	depends_on = [aws_rds_cluster_instance.test]
 }
-`, clusterName, instanceName)
+		`)
 }
