@@ -1,7 +1,7 @@
 package rds
 
 import (
-	"log"
+	"fmt"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/rds"
@@ -82,18 +82,19 @@ func statusDBInstance(conn *rds.RDS, id string) resource.StateRefreshFunc {
 	}
 }
 
-func statusDBClusterActivityStream(conn *rds.RDS, id string) resource.StateRefreshFunc {
+func statusDBClusterActivityStream(conn *rds.RDS, dbClusterArn string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindDBClusterByID(conn, id)
+		output, err := FindDBClusterByClusterArn(conn, dbClusterArn)
 
 		if tfresource.NotFound(err) {
+			fmt.Print("tfresource.NotFound(err)")
 			return nil, "", nil
 		}
 
 		if err != nil {
 			return nil, "", err
 		}
-		log.Printf("DB Cluster (%s) has ActivityStreamStatus=%s", id, aws.StringValue(output.ActivityStreamStatus))
+		fmt.Printf("DB Cluster (%s) has ActivityStreamStatus=%s", dbClusterArn, aws.StringValue(output.ActivityStreamStatus))
 		return output, aws.StringValue(output.ActivityStreamStatus), nil
 	}
 }

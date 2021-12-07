@@ -118,6 +118,36 @@ func FindDBClusterByID(conn *rds.RDS, id string) (*rds.DBCluster, error) {
 	return dbCluster, nil
 }
 
+func FindDBClusterByClusterArn(conn *rds.RDS, dbClusterArn string) (*rds.DBCluster, error) {
+	input := &rds.DescribeDBClustersInput{
+		DBClusterIdentifier: aws.String(dbClusterArn),
+	}
+
+	output, err := conn.DescribeDBClusters(input)
+
+	if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBClusterNotFoundFault) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if output == nil || len(output.DBClusters) == 0 || output.DBClusters[0] == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	dbCluster := output.DBClusters[0]
+
+	// Eventual consistency check.
+	if aws.StringValue(dbCluster.DBClusterArn) != dbClusterArn {
+		return nil, &resource.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	return dbCluster, nil
+}
+
 func FindDBInstanceByID(conn *rds.RDS, id string) (*rds.DBInstance, error) {
 	input := &rds.DescribeDBInstancesInput{
 		DBInstanceIdentifier: aws.String(id),

@@ -1,6 +1,7 @@
 package rds
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"time"
@@ -205,37 +206,37 @@ func waitDBClusterInstanceDeleted(conn *rds.RDS, id string, timeout time.Duratio
 }
 
 // waitActivityStreamStarted waits for Aurora Cluster Activity Stream to be started
-func waitActivityStreamStarted(conn *rds.RDS, dbClusterIdentifier string) error {
-	log.Printf("[DEBUG] Waiting for RDS Cluster Activity Stream %s to become started...", dbClusterIdentifier)
+func waitActivityStreamStarted(ctx context.Context, conn *rds.RDS, dbClusterArn string) error {
+	log.Printf("[DEBUG] Waiting for RDS Cluster Activity Stream %s to become started...", dbClusterArn)
 
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{rds.ActivityStreamStatusStarting},
 		Target:  []string{rds.ActivityStreamStatusStarted},
-		Refresh: statusDBClusterActivityStream(conn, dbClusterIdentifier),
+		Refresh: statusDBClusterActivityStream(conn, dbClusterArn),
 		Timeout: dbClusterActivityStreamStartedTimeout,
 	}
 
-	_, err := stateConf.WaitForState()
+	_, err := stateConf.WaitForStateContext(ctx)
 	if err != nil {
-		return fmt.Errorf("error waiting for RDS Cluster Activity Stream (%s) to be started: %v", dbClusterIdentifier, err)
+		return fmt.Errorf("error waiting for RDS Cluster Activity Stream (%s) to be started: %v", dbClusterArn, err)
 	}
 	return nil
 }
 
 // waitActivityStreamStarted waits for Aurora Cluster Activity Stream to be stopped
-func waitActivityStreamStopped(conn *rds.RDS, dbClusterIdentifier string) error {
-	log.Printf("[DEBUG] Waiting for RDS Cluster Activity Stream %s to become stopped...", dbClusterIdentifier)
+func waitActivityStreamStopped(ctx context.Context, conn *rds.RDS, dbClusterArn string) error {
+	log.Printf("[DEBUG] Waiting for RDS Cluster Activity Stream %s to become stopped...", dbClusterArn)
 
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{rds.ActivityStreamStatusStopping},
 		Target:  []string{rds.ActivityStreamStatusStopped},
-		Refresh: statusDBClusterActivityStream(conn, dbClusterIdentifier),
+		Refresh: statusDBClusterActivityStream(conn, dbClusterArn),
 		Timeout: dbClusterActivityStreamStoppedTimeout,
 	}
 
 	_, err := stateConf.WaitForState()
 	if err != nil {
-		return fmt.Errorf("error waiting for RDS Cluster Activity Stream (%s) to be stopped: %v", dbClusterIdentifier, err)
+		return fmt.Errorf("error waiting for RDS Cluster Activity Stream (%s) to be stopped: %v", dbClusterArn, err)
 	}
 	return nil
 }
