@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -83,7 +82,7 @@ func TestAccEC2SubnetCidrReservation_disappears(t *testing.T) {
 				Config: testSubnetCidrReservationConfig_Ipv4,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubnetCidrReservationExists(resourceName, &res),
-					testAccCheckSubnetCidrReservationDelete(resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceSubnetCIDRReservation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -103,44 +102,12 @@ func testAccCheckSubnetCidrReservationExists(n string, v *ec2.SubnetCidrReservat
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
-		resp, err := conn.GetSubnetCidrReservations(&ec2.GetSubnetCidrReservationsInput{
-			SubnetId: aws.String(rs.Primary.Attributes["subnet_id"]),
-		})
+		res, err := tfec2.FindSubnetCidrReservationById(conn, rs.Primary.ID, rs.Primary.Attributes["subnet_id"])
 		if err != nil {
-			return fmt.Errorf("Error retrieving subnet cidr reservations: %w", err)
+			return err
 		}
 
-		reservations := []*ec2.SubnetCidrReservation{}
-		reservations = append(reservations, resp.SubnetIpv4CidrReservations...)
-		reservations = append(reservations, resp.SubnetIpv6CidrReservations...)
-		for _, r := range reservations {
-			if aws.StringValue(r.SubnetCidrReservationId) == rs.Primary.ID && aws.StringValue(r.Cidr) == rs.Primary.Attributes["cidr_block"] {
-				*v = *r
-				return nil
-			}
-		}
-		return fmt.Errorf("Subnet CIDR reservation %s not found", rs.Primary.ID)
-	}
-}
-
-func testAccCheckSubnetCidrReservationDelete(res string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[res]
-		if !ok {
-			return fmt.Errorf("Not found: %s", res)
-		}
-
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No subnet CIDR reservation ID is set")
-		}
-
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
-		_, err := conn.DeleteSubnetCidrReservation(&ec2.DeleteSubnetCidrReservationInput{
-			SubnetCidrReservationId: aws.String(rs.Primary.ID),
-		})
-		if err != nil {
-			return fmt.Errorf("Error deleting subnet CIDR reservation (%s) in testAccCheckSubnetCidrReservationDelete: %s", rs.Primary.ID, err)
-		}
+		*v = *res
 
 		return nil
 	}
