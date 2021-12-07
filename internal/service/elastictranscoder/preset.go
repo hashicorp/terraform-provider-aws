@@ -346,8 +346,8 @@ func resourcePresetCreate(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("Error creating Elastic Transcoder Preset: %s", err)
 	}
 
-	if resp.Warning != nil && *resp.Warning != "" {
-		log.Printf("[WARN] Elastic Transcoder Preset: %s", *resp.Warning)
+	if aws.StringValue(resp.Warning) != "" {
+		log.Printf("[WARN] Elastic Transcoder Preset: %s", aws.StringValue(resp.Warning))
 	}
 
 	d.SetId(aws.StringValue(resp.Preset.Id))

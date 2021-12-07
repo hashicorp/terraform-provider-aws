@@ -418,8 +418,8 @@ func (lt *opsworksLayerType) Create(d *schema.ResourceData, meta interface{}) er
 	d.SetId(layerId)
 
 	loadBalancer := aws.String(d.Get("elastic_load_balancer").(string))
-	if loadBalancer != nil && *loadBalancer != "" {
-		log.Printf("[DEBUG] Attaching load balancer: %s", *loadBalancer)
+	if aws.StringValue(loadBalancer) != "" {
+		log.Printf("[DEBUG] Attaching load balancer: %s", aws.StringValue(loadBalancer))
 		_, err := conn.AttachElasticLoadBalancer(&opsworks.AttachElasticLoadBalancerInput{
 			ElasticLoadBalancerName: loadBalancer,
 			LayerId:                 &layerId,
@@ -486,7 +486,7 @@ func (lt *opsworksLayerType) Update(d *schema.ResourceData, meta interface{}) er
 		loadBalancerOld := aws.String(lbo.(string))
 		loadBalancerNew := aws.String(lbn.(string))
 
-		if loadBalancerOld != nil && *loadBalancerOld != "" {
+		if aws.StringValue(loadBalancerOld) != "" {
 			log.Printf("[DEBUG] Dettaching load balancer: %s", *loadBalancerOld)
 			_, err := conn.DetachElasticLoadBalancer(&opsworks.DetachElasticLoadBalancerInput{
 				ElasticLoadBalancerName: loadBalancerOld,
@@ -497,7 +497,7 @@ func (lt *opsworksLayerType) Update(d *schema.ResourceData, meta interface{}) er
 			}
 		}
 
-		if loadBalancerNew != nil && *loadBalancerNew != "" {
+		if aws.StringValue(loadBalancerNew) != "" {
 			log.Printf("[DEBUG] Attaching load balancer: %s", *loadBalancerNew)
 			_, err := conn.AttachElasticLoadBalancer(&opsworks.AttachElasticLoadBalancerInput{
 				ElasticLoadBalancerName: loadBalancerNew,

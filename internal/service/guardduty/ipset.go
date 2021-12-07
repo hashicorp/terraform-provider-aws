@@ -150,7 +150,7 @@ func resourceIPSetRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("format", resp.Format)
 	d.Set("location", resp.Location)
 	d.Set("name", resp.Name)
-	d.Set("activate", *resp.Status == guardduty.IpSetStatusActive)
+	d.Set("activate", aws.StringValue(resp.Status) == guardduty.IpSetStatusActive)
 
 	tags := KeyValueTags(resp.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 

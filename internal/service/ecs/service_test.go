@@ -407,6 +407,44 @@ func TestAccECSService_DeploymentControllerType_codeDeploy(t *testing.T) {
 	})
 }
 
+func TestAccECSService_DeploymentControllerType_codeDeployUpdateDesiredCountAndHealthCheckGracePeriod(t *testing.T) {
+	var service ecs.Service
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_ecs_service.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ecs.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckServiceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccServiceDeploymentControllerTypeCodeDeployConfigUpdate(rName, 1, 100),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceExists(resourceName, &service),
+					resource.TestCheckResourceAttr(resourceName, "deployment_controller.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "deployment_controller.0.type", ecs.DeploymentControllerTypeCodeDeploy),
+					resource.TestCheckResourceAttr(resourceName, "desired_count", "1"),
+				),
+			},
+			{
+				Config: testAccServiceDeploymentControllerTypeCodeDeployConfigUpdate(rName, 2, 100),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceExists(resourceName, &service),
+					resource.TestCheckResourceAttr(resourceName, "desired_count", "2"),
+				),
+			},
+			{
+				Config: testAccServiceDeploymentControllerTypeCodeDeployConfigUpdate(rName, 2, 120),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceExists(resourceName, &service),
+					resource.TestCheckResourceAttr(resourceName, "health_check_grace_period_seconds", "120"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccECSService_DeploymentControllerType_external(t *testing.T) {
 	var service ecs.Service
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -3736,6 +3774,164 @@ resource "aws_ecs_service" "test" {
   }
 }
 `, rName)
+}
+
+func testAccServiceDeploymentControllerTypeCodeDeployConfigUpdate(rName string, desiredReplicas, healthCheckGracePeriodSeconds int) string {
+	return fmt.Sprintf(`
+data "aws_availability_zones" "available" {
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
+
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_subnet" "test" {
+  count = 2
+
+  availability_zone = data.aws_availability_zones.available.names[count.index]
+  cidr_block        = cidrsubnet(aws_vpc.test.cidr_block, 8, count.index)
+  vpc_id            = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_internet_gateway" "test" {
+  vpc_id = aws_vpc.test.id
+}
+
+resource "aws_route_table" "test" {
+  vpc_id = aws_vpc.test.id
+
+  route {
+    cidr_block = "0.0.0.0/0"
+    gateway_id = aws_internet_gateway.test.id
+  }
+}
+
+resource "aws_security_group" "test" {
+  name        = %[1]q
+  description = "Allow traffic"
+  vpc_id      = aws_vpc.test.id
+
+  ingress {
+    protocol    = "6"
+    from_port   = 80
+    to_port     = 8000
+    cidr_blocks = [aws_vpc.test.cidr_block]
+  }
+
+  egress {
+    from_port = 0
+    to_port   = 0
+    protocol  = "-1"
+
+    cidr_blocks = [
+      "0.0.0.0/0",
+    ]
+  }
+}
+
+resource "aws_route_table_association" "test" {
+  count          = 2
+  subnet_id      = element(aws_subnet.test.*.id, count.index)
+  route_table_id = aws_route_table.test.id
+}
+
+resource "aws_lb" "test" {
+  internal = true
+  name     = %[1]q
+  subnets  = aws_subnet.test[*].id
+}
+
+resource "aws_lb_listener" "test" {
+  load_balancer_arn = aws_lb.test.id
+  port              = "80"
+  protocol          = "HTTP"
+
+  default_action {
+    target_group_arn = aws_lb_target_group.test.id
+    type             = "forward"
+  }
+}
+
+resource "aws_lb_target_group" "test" {
+  target_type = "ip"
+  name        = aws_lb.test.name
+  port        = 80
+  protocol    = "HTTP"
+  vpc_id      = aws_vpc.test.id
+}
+
+resource "aws_ecs_cluster" "test" {
+  name = %[1]q
+}
+
+resource "aws_ecs_task_definition" "test" {
+  family                   = %[1]q
+  requires_compatibilities = ["FARGATE"]
+  network_mode             = "awsvpc"
+  cpu                      = "256"
+  memory                   = "512"
+
+  container_definitions = <<DEFINITION
+[
+  {
+    "essential": true,
+    "image": "nginx:latest",
+    "name": "test",
+    "portMappings": [
+      {
+        "containerPort": 80,
+        "protocol": "tcp"
+      }
+    ]
+  }
+]
+DEFINITION
+}
+
+resource "aws_ecs_service" "test" {
+  cluster                           = aws_ecs_cluster.test.id
+  desired_count                     = %[2]d
+  name                              = %[1]q
+  task_definition                   = aws_ecs_task_definition.test.arn
+  health_check_grace_period_seconds = %[3]d
+
+  deployment_controller {
+    type = "CODE_DEPLOY"
+  }
+
+  capacity_provider_strategy {
+    capacity_provider = "FARGATE"
+    base              = 1
+    weight            = 1
+  }
+
+  load_balancer {
+    container_name   = "test"
+    container_port   = "80"
+    target_group_arn = aws_lb_target_group.test.id
+  }
+
+  network_configuration {
+    subnets          = aws_subnet.test[*].id
+    security_groups  = [aws_security_group.test.id]
+    assign_public_ip = true
+  }
+}
+`, rName, desiredReplicas, healthCheckGracePeriodSeconds)
 }
 
 func testAccServiceDeploymentControllerTypeExternalConfig(rName string) string {
