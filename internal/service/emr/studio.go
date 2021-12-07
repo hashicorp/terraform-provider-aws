@@ -149,6 +149,9 @@ func resourceStudioCreate(d *schema.ResourceData, meta interface{}) error {
 	err := resource.Retry(tfiam.PropagationTimeout, func() *resource.RetryError {
 		var err error
 		result, err = conn.CreateStudio(input)
+		if tfawserr.ErrMessageContains(err, emr.ErrCodeInvalidRequestException, "entity does not have permissions to assume role") {
+			return resource.RetryableError(err)
+		}
 		if tfawserr.ErrMessageContains(err, emr.ErrCodeInvalidRequestException, "Service role does not have permission to access") {
 			return resource.RetryableError(err)
 		}
