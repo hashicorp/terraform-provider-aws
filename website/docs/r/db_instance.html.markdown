@@ -206,7 +206,7 @@ creation. See [MSSQL User
 Guide](http://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/CHAP_SQLServer.html#SQLServer.Concepts.General.TimeZone)
 for more information.
 * `username` - (Required unless a `snapshot_identifier` or `replicate_source_db`
-is provided) Username for the master DB user.
+is provided) Username for the master DB user. Cannot be specified for a replca.
 * `vpc_security_group_ids` - (Optional) List of VPC security groups to
 associate.
 * `customer_owned_ip_enabled` - (Optional) Indicates whether to enable a customer-owned IP address (CoIP) for an RDS on Outposts DB instance. See [CoIP for RDS on Outposts](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/rds-on-outposts.html#rds-on-outposts.coip) for more information.

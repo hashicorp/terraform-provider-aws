@@ -345,6 +345,7 @@ func ResourceInstance() *schema.Resource {
 			"replica_mode": {
 				Type:         schema.TypeString,
 				Optional:     true,
+				Computed:     true,
 				ValidateFunc: validation.StringInSlice(rds.ReplicaMode_Values(), false),
 			},
 			"replicas": {
@@ -479,6 +480,9 @@ func ResourceInstance() *schema.Resource {
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
+				ConflictsWith: []string{
+					"replicate_source_db",
+				},
 			},
 			"vpc_security_group_ids": {
 				Type:     schema.TypeSet,
