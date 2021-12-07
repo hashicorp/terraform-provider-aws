@@ -326,7 +326,7 @@ resource "aws_rds_cluster" "test" {
   skip_final_snapshot             = true
   deletion_protection             = false
   engine                          = "aurora-postgresql"
-  engine_version                  = "10.11"
+  engine_version                  = "11.9"
 }
 
 resource "aws_rds_cluster_instance" "test" {

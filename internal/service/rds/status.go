@@ -82,7 +82,7 @@ func statusDBInstance(conn *rds.RDS, id string) resource.StateRefreshFunc {
 
 func statusDBClusterActivityStream(conn *rds.RDS, id string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindDBInstanceByID(conn, id)
+		output, err := FindDBClusterByID(conn, id)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -92,6 +92,6 @@ func statusDBClusterActivityStream(conn *rds.RDS, id string) resource.StateRefre
 			return nil, "", err
 		}
 
-		return output, aws.StringValue(output.DBInstanceStatus), nil
+		return output, aws.StringValue(output.ActivityStreamStatus), nil
 	}
 }

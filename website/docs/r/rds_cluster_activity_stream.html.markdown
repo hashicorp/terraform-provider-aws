@@ -30,14 +30,14 @@ resource "aws_rds_cluster" "default" {
   master_username    = "foo"
   master_password    = "mustbeeightcharaters"
   engine             = "aurora-postgresql"
-  engine_version     = "10.11"
+  engine_version     = "13.4"
 }
 
 resource "aws_rds_cluster_instance" "default" {
   identifier         = "aurora-instance-demo"
   cluster_identifier = aws_rds_cluster.default.cluster_identifier
   engine             = aws_rds_cluster.default.engine
-  instance_class     = "db.r5.large"
+  instance_class     = "db.r6g.large"
 }
 
 resource "aws_kms_key" "default" {

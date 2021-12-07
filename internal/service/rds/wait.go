@@ -15,9 +15,8 @@ const (
 	dbClusterRoleAssociationCreatedTimeout = 5 * time.Minute
 	dbClusterRoleAssociationDeletedTimeout = 5 * time.Minute
 
-	// EventSubscriptionDeletedTimeout = 10 * time.Minute
 	dbClusterActivityStreamRetryDelay      = 5 * time.Second
-	dbClusterActivityStreamRetryMinTimeout = 3 * time.Second // Minimum timeout to retry fetch RDS Cluster Activity Stream Status
+	dbClusterActivityStreamRetryMinTimeout = 3 * time.Second
 )
 
 func waitEventSubscriptionCreated(conn *rds.RDS, id string, timeout time.Duration) (*rds.EventSubscription, error) {
