@@ -317,8 +317,8 @@ data "aws_partition" "current" {}
 
 resource "aws_appstream_image_builder" "test" {
   image_arn     = "arn:${data.aws_partition.current.partition}:appstream:%[1]s::image/%[2]s"
-  instance_type = %[2]q
-  name          = %[3]q
+  instance_type = %[3]q
+  name          = %[4]q
 }
 `, acctest.Region(), imageName, instanceType, rName)
 }
