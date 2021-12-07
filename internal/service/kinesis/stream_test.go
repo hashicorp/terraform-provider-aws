@@ -208,10 +208,10 @@ func TestAccKinesisStream_shardCount(t *testing.T) {
 		CheckDestroy: testAccCheckKinesisStreamDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccKinesisStreamConfig(rName),
+				Config: testAccKinesisStreamConfigShardCount(rName, 128),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisStreamExists(resourceName, &stream),
-					resource.TestCheckResourceAttr(resourceName, "shard_count", "2"),
+					resource.TestCheckResourceAttr(resourceName, "shard_count", "128"),
 				),
 			},
 			{
@@ -222,11 +222,11 @@ func TestAccKinesisStream_shardCount(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"enforce_consumer_deletion"},
 			},
 			{
-				Config: testAccKinesisStreamConfigUpdateShardCount(rName),
+				Config: testAccKinesisStreamConfigShardCount(rName, 96),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisStreamExists(resourceName, &updatedStream),
 					testCheckStreamNotDestroyed(),
-					resource.TestCheckResourceAttr(resourceName, "shard_count", "4"),
+					resource.TestCheckResourceAttr(resourceName, "shard_count", "96"),
 				),
 			},
 		},
@@ -710,13 +710,13 @@ POLICY
 `, rName)
 }
 
-func testAccKinesisStreamConfigUpdateShardCount(rName string) string {
+func testAccKinesisStreamConfigShardCount(rName string, shardCount int) string {
 	return fmt.Sprintf(`
 resource "aws_kinesis_stream" "test" {
   name        = %[1]q
-  shard_count = 4
+  shard_count = %[2]d
 }
-`, rName)
+`, rName, shardCount)
 }
 
 func testAccKinesisStreamConfigUpdateRetentionPeriod(rName string) string {

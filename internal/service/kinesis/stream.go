@@ -569,7 +569,8 @@ func FindStreamByName(conn *kinesis.Kinesis, name string) (*kinesis.StreamDescri
 		}
 
 		if output == nil {
-			output = page.StreamDescription
+			output = &kinesis.StreamDescription{}
+			*output = *page.StreamDescription
 		} else {
 			output.Shards = append(output.Shards, page.StreamDescription.Shards...)
 		}
