@@ -167,6 +167,104 @@ func TestAccECSTaskDefinition_withDockerVolumeMinimal(t *testing.T) {
 	})
 }
 
+func TestAccECSTaskDefinition_withRuntimePlatform(t *testing.T) {
+	var def ecs.TaskDefinition
+
+	tdName := sdkacctest.RandomWithPrefix("tf-acc-td-with-runtime-platform")
+	resourceName := "aws_ecs_task_definition.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ecs.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckTaskDefinitionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTaskDefinitionWithRuntimePlatformMinimalConfig(tdName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTaskDefinitionExists(resourceName, &def),
+					resource.TestCheckResourceAttr(resourceName, "runtime_platform.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "runtime_platform.*", map[string]string{
+						"operating_system_family": "LINUX",
+						"cpu_architecture":        "X86_64",
+					}),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccTaskDefinitionImportStateIdFunc(resourceName),
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccECSTaskDefinition_Fargate_withRuntimePlatform(t *testing.T) {
+	var def ecs.TaskDefinition
+
+	tdName := sdkacctest.RandomWithPrefix("tf-acc-td-with-runtime-platform")
+	resourceName := "aws_ecs_task_definition.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ecs.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckTaskDefinitionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccFargateTaskDefinitionWithRuntimePlatformMinimalConfig(tdName, true, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTaskDefinitionExists(resourceName, &def),
+					resource.TestCheckResourceAttr(resourceName, "runtime_platform.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "runtime_platform.*", map[string]string{
+						"operating_system_family": "WINDOWS_SERVER_2019_CORE",
+						"cpu_architecture":        "X86_64",
+					}),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccTaskDefinitionImportStateIdFunc(resourceName),
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccECSTaskDefinition_Fargate_withRuntimePlatformWithoutArch(t *testing.T) {
+	var def ecs.TaskDefinition
+
+	tdName := sdkacctest.RandomWithPrefix("tf-acc-td-with-runtime-platform")
+	resourceName := "aws_ecs_task_definition.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ecs.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckTaskDefinitionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccFargateTaskDefinitionWithRuntimePlatformMinimalConfig(tdName, false, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTaskDefinitionExists(resourceName, &def),
+					resource.TestCheckResourceAttr(resourceName, "runtime_platform.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "runtime_platform.*", map[string]string{
+						"operating_system_family": "WINDOWS_SERVER_2019_CORE",
+					}),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccTaskDefinitionImportStateIdFunc(resourceName),
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccECSTaskDefinition_withEFSVolumeMinimal(t *testing.T) {
 	var def ecs.TaskDefinition
 
@@ -1585,6 +1683,75 @@ TASK_DEFINITION
   }
 }
 `, tdName)
+}
+
+func testAccTaskDefinitionWithRuntimePlatformMinimalConfig(tdName string) string {
+	return fmt.Sprintf(`
+resource "aws_ecs_task_definition" "test" {
+  family                = %[1]q
+  container_definitions = <<TASK_DEFINITION
+[
+  {
+    "name": "sleep",
+    "image": "busybox",
+    "cpu": 10,
+    "command": ["sleep","360"],
+    "memory": 10,
+    "essential": true
+  }
+]
+TASK_DEFINITION
+  runtime_platform {
+    operating_system_family = "LINUX"
+    cpu_architecture        = "X86_64"
+  }
+}
+`, tdName)
+}
+
+func testAccFargateTaskDefinitionWithRuntimePlatformMinimalConfig(tdName string, architecture bool, osFamily bool) string {
+
+	var arch string
+	if architecture {
+		arch = `cpu_architecture         = "X86_64"`
+	} else {
+		arch = ``
+	}
+
+	var os string
+	if osFamily {
+		os = `operating_system_family  = "WINDOWS_SERVER_2019_CORE"`
+	} else {
+		os = ``
+	}
+
+	return fmt.Sprintf(`
+resource "aws_ecs_task_definition" "test" {
+  family                   = %[1]q
+  requires_compatibilities = ["FARGATE"]
+  network_mode             = "awsvpc"
+  cpu                      = 1024
+  memory                   = 2048
+
+  runtime_platform {
+    %[3]s
+    %[2]s
+  }
+
+  container_definitions = <<TASK_DEFINITION
+[
+  {
+    "name": "iis",
+    "image": "mcr.microsoft.com/windows/servercore/iis",
+    "cpu": 1024,
+    "memory": 2048,
+    "essential": true
+  }
+]
+TASK_DEFINITION
+
+}
+`, tdName, arch, os)
 }
 
 func testAccTaskDefinitionWithTaskScopedDockerVolume(tdName string) string {
