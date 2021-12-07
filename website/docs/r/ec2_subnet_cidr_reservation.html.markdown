@@ -12,7 +12,7 @@ Provides a subnet CIDR reservation resource.
 
 ## Example Usage
 
-```
+```terraform
 resource "aws_ec2_subnet_cidr_reservation" "example" {
   cidr_block       = "10.0.0.16/28"
   reservation_type = "prefix"
