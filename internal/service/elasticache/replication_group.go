@@ -105,7 +105,8 @@ func ResourceReplicationGroup() *schema.Resource {
 			"data_tiering_enabled": {
 				Type:     schema.TypeBool,
 				Optional: true,
-				Default:  false,
+				Computed: true,
+				ForceNew: true,
 			},
 			"engine": {
 				Type:         schema.TypeString,
@@ -329,6 +330,10 @@ func resourceReplicationGroupCreate(d *schema.ResourceData, meta interface{}) er
 		Tags:                        Tags(tags.IgnoreAWS()),
 	}
 
+	if v, ok := d.GetOk("data_tiering_enabled"); ok {
+		params.DataTieringEnabled = aws.Bool(v.(bool))
+	}
+
 	if v, ok := d.GetOk("global_replication_group_id"); ok {
 		params.GlobalReplicationGroupId = aws.String(v.(string))
 	} else {
@@ -452,10 +457,6 @@ func resourceReplicationGroupCreate(d *schema.ResourceData, meta interface{}) er
 		}
 	}
 
-	if v, ok := d.GetOk("data_tiering_enabled"); ok {
-		params.DataTieringEnabled = aws.Bool(v.(bool))
-	}
-
 	return resourceReplicationGroupRead(d, meta)
 }
 
@@ -518,6 +519,7 @@ func resourceReplicationGroupRead(d *schema.ResourceData, meta interface{}) erro
 	d.Set("cluster_enabled", rgp.ClusterEnabled)
 	d.Set("replication_group_id", rgp.ReplicationGroupId)
 	d.Set("arn", rgp.ARN)
+	d.Set("data_tiering_enabled", aws.StringValue(rgp.DataTiering) == elasticache.DataTieringStatusEnabled)
 
 	// Tags cannot be read when the replication group is not Available
 	_, err = WaitReplicationGroupAvailable(conn, d.Id(), d.Timeout(schema.TimeoutUpdate))
