@@ -1746,7 +1746,7 @@ func TestAccElastiCacheReplicationGroup_dataTiering(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"apply_immediately"}, //not in the API
+				ImportStateVerifyIgnore: []string{"apply_immediately", "availability_zones"},
 			},
 		},
 	})
@@ -3132,16 +3132,62 @@ resource "aws_elasticache_replication_group" "primary" {
 
 func testAccReplicationGroupConfigDataTiering(rName string) string {
 	return fmt.Sprintf(`
+data "aws_availability_zones" "available" {
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
+
+resource "aws_vpc" "test" {
+  cidr_block = "192.168.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_subnet" "test" {
+  vpc_id            = aws_vpc.test.id
+  cidr_block        = "192.168.0.0/20"
+  availability_zone = data.aws_availability_zones.available.names[0]
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_elasticache_subnet_group" "test" {
+  name        = %[1]q
+  description = "tf-test-cache-subnet-group-descr"
+  subnet_ids  = [aws_subnet.test.id]
+}
+
+resource "aws_security_group" "test" {
+  name        = %[1]q
+  description = "tf-test-security-group-descr"
+  vpc_id      = aws_vpc.test.id
+
+  ingress {
+    from_port   = -1
+    to_port     = -1
+    protocol    = "icmp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+}
+
 resource "aws_elasticache_replication_group" "test" {
   replication_group_id          = %[1]q
   replication_group_description = "test description"
   node_type                     = "cache.r6gd.xlarge"
   data_tiering_enabled          = true
   port                          = 6379
-  apply_immediately             = true
+  subnet_group_name             = aws_elasticache_subnet_group.test.name
+  security_group_ids            = [aws_security_group.test.id]
+  availability_zones            = [data.aws_availability_zones.available.names[0]]
   auto_minor_version_upgrade    = false
-  maintenance_window            = "tue:06:30-tue:07:30"
-  snapshot_window               = "01:00-02:00"
 }
 `, rName)
 }
