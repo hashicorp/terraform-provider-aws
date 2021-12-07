@@ -15,12 +15,23 @@ import (
 	tfemr "github.com/hashicorp/terraform-provider-aws/internal/service/emr"
 )
 
+func init() {
+	acctest.RegisterServiceErrorCheckFunc(emr.EndpointsID, testAccErrorCheckSkipEMR)
+}
+
+func testAccErrorCheckSkipEMR(t *testing.T) resource.ErrorCheckFunc {
+	return acctest.ErrorCheckSkipMessagesContaining(t,
+		"Managed scaling is not available",
+		"SSO is not enabled",
+	)
+}
+
 func TestAccEMRManagedScalingPolicy_basic(t *testing.T) {
 	resourceName := "aws_emr_managed_scaling_policy.testpolicy"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   testAccErrorCheckSkipEmrManagedScalingPolicy(t),
+		ErrorCheck:   acctest.ErrorCheck(t, emr.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckManagedScalingPolicyDestroy,
 
@@ -45,7 +56,7 @@ func TestAccEMRManagedScalingPolicy_ComputeLimits_maximumCoreCapacityUnits(t *te
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   testAccErrorCheckSkipEmrManagedScalingPolicy(t),
+		ErrorCheck:   acctest.ErrorCheck(t, emr.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckManagedScalingPolicyDestroy,
 
@@ -70,7 +81,7 @@ func TestAccEMRManagedScalingPolicy_ComputeLimits_maximumOnDemandCapacityUnits(t
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   testAccErrorCheckSkipEmrManagedScalingPolicy(t),
+		ErrorCheck:   acctest.ErrorCheck(t, emr.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckManagedScalingPolicyDestroy,
 
@@ -95,7 +106,7 @@ func TestAccEMRManagedScalingPolicy_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   testAccErrorCheckSkipEmrManagedScalingPolicy(t),
+		ErrorCheck:   acctest.ErrorCheck(t, emr.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckManagedScalingPolicyDestroy,
 		Steps: []resource.TestStep{
@@ -109,13 +120,6 @@ func TestAccEMRManagedScalingPolicy_disappears(t *testing.T) {
 			},
 		},
 	})
-}
-
-// testAccErrorCheckSkipEmrManagedScalingPolicy skips tests that have error messages indicating unsupported features
-func testAccErrorCheckSkipEmrManagedScalingPolicy(t *testing.T) resource.ErrorCheckFunc {
-	return acctest.ErrorCheckSkipMessagesContaining(t,
-		"Managed scaling is not available",
-	)
 }
 
 func testAccManagedScalingPolicy_basic(r string) string {
