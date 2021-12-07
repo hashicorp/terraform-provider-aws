@@ -14,14 +14,14 @@ See [ECS Task Set section in AWS developer guide](https://docs.amazonaws.cn/en_u
 
 ## Example Usage
 
-```hcl
-resource "aws_ecs_task_set" "mongo" {
-  service         = "${aws_ecs_service.foo.id}"
-  cluster         = "${aws_ecs_cluster.foo.id}"
-  task_definition = "${aws_ecs_task_definition.mongo.arn}"
+```terraform
+resource "aws_ecs_task_set" "example" {
+  service         = aws_ecs_service.example.id
+  cluster         = aws_ecs_cluster.example.id
+  task_definition = aws_ecs_task_definition.example.arn
 
   load_balancer {
-    target_group_arn = "${aws_lb_target_group.foo.arn}"
+    target_group_arn = aws_lb_target_group.example.arn
     container_name   = "mongo"
     container_port   = 8080
   }
@@ -32,7 +32,7 @@ resource "aws_ecs_task_set" "mongo" {
 
 You can utilize the generic Terraform resource [lifecycle configuration block](/docs/configuration/resources.html#lifecycle) with `ignore_changes` to create an ECS service with an initial count of running instances, then ignore any changes to that count caused externally (e.g. Application Autoscaling).
 
-```hcl
+```terraform
 resource "aws_ecs_task_set" "example" {
   # ... other configurations ...
 
@@ -117,5 +117,15 @@ For more information, see [Task Networking](https://docs.aws.amazon.com/AmazonEC
 
 In addition to all arguments above, the following attributes are exported:
 
-* `id` - The ID of the task set
-* `arn` - The Amazon Resource Name (ARN) that identifies the task set
+* `id` -
+* `arn` - The Amazon Resource Name (ARN) that identifies the task set.
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
+* `task_set_id` - The ID of the task set.
+
+## Import
+
+ECS Task Sets can be imported via the `task_set_id`, `service`, and `cluster` separated by commas (`,`) e.g.
+
+```
+$ terraform import aws_ecs_task_set.example ecs-svc/7177320696926227436,arn:aws:ecs:us-west-2:123456789101:service/example/example-1234567890,arn:aws:ecs:us-west-2:123456789101:cluster/example
+```

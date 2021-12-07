@@ -21,6 +21,9 @@ const (
 	clusterAvailableTimeout = 10 * time.Minute
 	clusterDeleteTimeout    = 10 * time.Minute
 	clusterAvailableDelay   = 10 * time.Second
+
+	taskSetCreateTimeout = 10 * time.Minute
+	taskSetDeleteTimeout = 10 * time.Minute
 )
 
 func waitCapacityProviderDeleted(conn *ecs.ECS, arn string) (*ecs.CapacityProvider, error) {
@@ -152,4 +155,30 @@ func waitClusterDeleted(conn *ecs.ECS, arn string) (*ecs.Cluster, error) {
 	}
 
 	return nil, err
+}
+
+func waitTaskSetStable(conn *ecs.ECS, timeout time.Duration, taskSetID, service, cluster string) error {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{ecs.StabilityStatusStabilizing},
+		Target:  []string{ecs.StabilityStatusSteadyState},
+		Refresh: stabilityStatusTaskSet(conn, taskSetID, service, cluster),
+		Timeout: timeout,
+	}
+
+	_, err := stateConf.WaitForState()
+
+	return err
+}
+
+func waitTaskSetDeleted(conn *ecs.ECS, taskSetID, service, cluster string) error {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{taskSetStatusActive, taskSetStatusPrimary, taskSetStatusDraining},
+		Target:  []string{},
+		Refresh: statusTaskSet(conn, taskSetID, service, cluster),
+		Timeout: taskSetDeleteTimeout,
+	}
+
+	_, err := stateConf.WaitForState()
+
+	return err
 }
