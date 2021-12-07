@@ -210,10 +210,12 @@ func waitActivityStreamStarted(ctx context.Context, conn *rds.RDS, dbClusterArn 
 	log.Printf("[DEBUG] Waiting for RDS Cluster Activity Stream %s to become started...", dbClusterArn)
 
 	stateConf := &resource.StateChangeConf{
-		Pending: []string{rds.ActivityStreamStatusStarting},
-		Target:  []string{rds.ActivityStreamStatusStarted},
-		Refresh: statusDBClusterActivityStream(conn, dbClusterArn),
-		Timeout: dbClusterActivityStreamStartedTimeout,
+		Pending:    []string{rds.ActivityStreamStatusStarting},
+		Target:     []string{rds.ActivityStreamStatusStarted},
+		Refresh:    statusDBClusterActivityStream(conn, dbClusterArn),
+		Timeout:    dbClusterActivityStreamStartedTimeout,
+		MinTimeout: 10 * time.Second,
+		Delay:      30 * time.Second,
 	}
 
 	_, err := stateConf.WaitForStateContext(ctx)
@@ -228,10 +230,12 @@ func waitActivityStreamStopped(ctx context.Context, conn *rds.RDS, dbClusterArn 
 	log.Printf("[DEBUG] Waiting for RDS Cluster Activity Stream %s to become stopped...", dbClusterArn)
 
 	stateConf := &resource.StateChangeConf{
-		Pending: []string{rds.ActivityStreamStatusStopping},
-		Target:  []string{rds.ActivityStreamStatusStopped},
-		Refresh: statusDBClusterActivityStream(conn, dbClusterArn),
-		Timeout: dbClusterActivityStreamStoppedTimeout,
+		Pending:    []string{rds.ActivityStreamStatusStopping},
+		Target:     []string{rds.ActivityStreamStatusStopped},
+		Refresh:    statusDBClusterActivityStream(conn, dbClusterArn),
+		Timeout:    dbClusterActivityStreamStoppedTimeout,
+		MinTimeout: 10 * time.Second,
+		Delay:      30 * time.Second,
 	}
 
 	_, err := stateConf.WaitForState()
