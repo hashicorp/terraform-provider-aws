@@ -3,21 +3,31 @@
 FEATURES:
 
 * **New Resource:** `aws_codecommit_approval_rule_template_association` ([#13467](https://github.com/hashicorp/terraform-provider-aws/issues/13467))
+* **New Resource:** `aws_emr_studio` ([#21855](https://github.com/hashicorp/terraform-provider-aws/issues/21855))
 
 ENHANCEMENTS:
 
 * resource/aws_backup_region_settings: Add `resource_type_management_preference` argument ([#22021](https://github.com/hashicorp/terraform-provider-aws/issues/22021))
 * resource/aws_cloudtrail: Add plan time validations for `cloud_watch_logs_group_arn`, `cloud_watch_logs_role_arn`, `name`, `s3_key_prefix`. ([#21882](https://github.com/hashicorp/terraform-provider-aws/issues/21882))
 * resource/aws_elasticsearch_domain: Add `auto_tune_options` configuration block ([#21652](https://github.com/hashicorp/terraform-provider-aws/issues/21652))
+* resource/aws_kinesis_stream: Add `stream_mode_details` argument in support of Kinesis Data Streams On-Demand ([#22002](https://github.com/hashicorp/terraform-provider-aws/issues/22002))
 * resource/aws_lambda_event_source_mapping: Add `filter_criteria` argument ([#21937](https://github.com/hashicorp/terraform-provider-aws/issues/21937))
 * resource/aws_sqs_queue: Add `sqs_managed_sse_enabled` argument ([#21954](https://github.com/hashicorp/terraform-provider-aws/issues/21954))
 * resource/aws_transfer_server: Add `function` argument in support of custom identity providers ([#22039](https://github.com/hashicorp/terraform-provider-aws/issues/22039))
+* resource/ecs: Add `runtime_platform` argument in support of Fargate for ECS Windows containers ([#22016](https://github.com/hashicorp/terraform-provider-aws/issues/22016))
 
 BUG FIXES:
 
+* resource/aws_appstream_image_builder: Correctly create resource with `image_arn` argument ([#22077](https://github.com/hashicorp/terraform-provider-aws/issues/22077))
 * resource/aws_ecr_registry_policy: Fix order-related diffs in `policy` ([#22004](https://github.com/hashicorp/terraform-provider-aws/issues/22004))
 * resource/aws_ecr_repository_policy: Fix order-related diffs in `policy` ([#22004](https://github.com/hashicorp/terraform-provider-aws/issues/22004))
+* resource/aws_iam_group_policy: Fix order-related diffs in `policy` ([#22067](https://github.com/hashicorp/terraform-provider-aws/issues/22067))
+* resource/aws_iam_policy: Fix order-related diffs in `policy` ([#22067](https://github.com/hashicorp/terraform-provider-aws/issues/22067))
 * resource/aws_iam_role: Prevent `arn` attribute from ever containing a unique ID immediately after role creation ([#22004](https://github.com/hashicorp/terraform-provider-aws/issues/22004))
+* resource/aws_iam_role_policy: Fix order-related diffs in `policy` ([#22067](https://github.com/hashicorp/terraform-provider-aws/issues/22067))
+* resource/aws_iam_user_policy: Fix order-related diffs in `policy` ([#22067](https://github.com/hashicorp/terraform-provider-aws/issues/22067))
+* resource/aws_lb: Correctly configure `enable_waf_fail_open` during resource creation ([#22072](https://github.com/hashicorp/terraform-provider-aws/issues/22072))
+* resource/aws_redshift_cluster: Adds retries to enabling and disabling the redshift cluster's logging ([#22080](https://github.com/hashicorp/terraform-provider-aws/issues/22080))
 * resource/aws_s3_bucket_replication_configuration: Fix `MalformedXML` errors for replication rules using XML schema V1 ([#22026](https://github.com/hashicorp/terraform-provider-aws/issues/22026))
 
 ## 3.68.0 (December 02, 2021)

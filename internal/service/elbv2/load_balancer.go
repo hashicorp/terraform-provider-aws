@@ -487,7 +487,12 @@ func resourceLoadBalancerUpdate(d *schema.ResourceData, meta interface{}) error 
 			})
 		}
 
-		if d.HasChange("enable_waf_fail_open") || d.IsNewResource() {
+		// The "waf.fail_open.enabled" attribute is not available in all AWS regions
+		// e.g. us-gov-east-1; thus, we can instead only modify the attribute as a result of d.HasChange()
+		// to avoid "ValidationError: Load balancer attribute key 'waf.fail_open.enabled' is not recognized"
+		// when modifying the attribute right after resource creation.
+		// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/22037
+		if d.HasChange("enable_waf_fail_open") {
 			attributes = append(attributes, &elbv2.LoadBalancerAttribute{
 				Key:   aws.String("waf.fail_open.enabled"),
 				Value: aws.String(strconv.FormatBool(d.Get("enable_waf_fail_open").(bool))),
