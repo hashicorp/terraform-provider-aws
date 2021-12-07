@@ -18,7 +18,7 @@ See [Configuring Logging for DNS Queries](https://docs.aws.amazon.com/Route53/la
 
 ## Example Usage
 
-```hcl
+```terraform
 # Example CloudWatch log group in us-east-1
 
 provider "aws" {
@@ -84,11 +84,12 @@ The following arguments are supported:
 
 In addition to all arguments above, the following attributes are exported:
 
+* `arn` - The Amazon Resource Name (ARN) of the Query Logging Config.
 * `id` - The query logging configuration ID
 
 ## Import
 
-Route53 query logging configurations can be imported using their ID, e.g.
+Route53 query logging configurations can be imported using their ID, e.g.,
 
 ```
 $ terraform import aws_route53_query_log.example_com xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx

@@ -14,7 +14,7 @@ Provides a VPC resource.
 
 Basic usage:
 
-```hcl
+```terraform
 resource "aws_vpc" "main" {
   cidr_block = "10.0.0.0/16"
 }
@@ -22,7 +22,7 @@ resource "aws_vpc" "main" {
 
 Basic usage with tags:
 
-```hcl
+```terraform
 resource "aws_vpc" "main" {
   cidr_block       = "10.0.0.0/16"
   instance_tenancy = "default"
@@ -33,13 +33,45 @@ resource "aws_vpc" "main" {
 }
 ```
 
+VPC with CIDR from AWS IPAM:
+
+```terraform
+data "aws_region" "current" {}
+
+resource "aws_vpc_ipam" "test" {
+  operating_regions {
+    region_name = data.aws_region.current.name
+  }
+}
+
+resource "aws_vpc_ipam_pool" "test" {
+  address_family = "ipv4"
+  ipam_scope_id  = aws_vpc_ipam.test.private_default_scope_id
+  locale         = data.aws_region.current.name
+}
+
+resource "aws_vpc_ipam_pool_cidr" "test" {
+  ipam_pool_id = aws_vpc_ipam_pool.test.id
+  cidr         = "172.2.0.0/16"
+}
+
+resource "aws_vpc" "test" {
+  ipv4_ipam_pool_id   = aws_vpc_ipam_pool.test.id
+  ipv4_netmask_length = "28"
+  depends_on = [
+    aws_vpc_ipam_pool_cidr.test
+  ]
+}
+```
+
 ## Argument Reference
 
 The following arguments are supported:
 
-* `cidr_block` - (Required) The CIDR block for the VPC.
-* `instance_tenancy` - (Optional) A tenancy option for instances launched into the VPC. Default is `default`, which
-  makes your instances shared on the host. Using either of the other options (`dedicated` or `host`) costs at least $2/hr.
+* `cidr_block` - (Optional) The IPv4 CIDR block for the VPC. CIDR can be explicitly set or it can be derived from IPAM using `ipv4_netmask_length`.
+* `instance_tenancy` - (Optional) A tenancy option for instances launched into the VPC. Default is `default`, which makes your instances shared on the host. Using either of the other options (`dedicated` or `host`) costs at least $2/hr.
+* `ipv4_ipam_pool_id` - (Optional) The ID of an IPv4 IPAM pool you want to use for allocating this VPC's CIDR. IPAM is a VPC feature that you can use to automate your IP address management workflows including assigning, tracking, troubleshooting, and auditing IP addresses across AWS Regions and accounts. Using IPAM you can monitor IP address usage throughout your AWS Organization.
+* `ipv4_netmask_length` - (Optional) The netmask length of the IPv4 CIDR you want to allocate to this VPC. Requires specifying a `ipv4_ipam_pool_id`.
 * `enable_dns_support` - (Optional) A boolean flag to enable/disable DNS support in the VPC. Defaults true.
 * `enable_dns_hostnames` - (Optional) A boolean flag to enable/disable DNS hostnames in the VPC. Defaults false.
 * `enable_classiclink` - (Optional) A boolean flag to enable/disable ClassicLink
@@ -50,7 +82,7 @@ The following arguments are supported:
 * `assign_generated_ipv6_cidr_block` - (Optional) Requests an Amazon-provided IPv6 CIDR
 block with a /56 prefix length for the VPC. You cannot specify the range of IP addresses, or
 the size of the CIDR block. Default is `false`.
-* `tags` - (Optional) A map of tags to assign to the resource.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attributes Reference
 
@@ -72,13 +104,13 @@ In addition to all arguments above, the following attributes are exported:
 * `ipv6_association_id` - The association ID for the IPv6 CIDR block.
 * `ipv6_cidr_block` - The IPv6 CIDR block.
 * `owner_id` - The ID of the AWS account that owns the VPC.
-
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
 
 [1]: https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/vpc-classiclink.html
 
 ## Import
 
-VPCs can be imported using the `vpc id`, e.g.
+VPCs can be imported using the `vpc id`, e.g.,
 
 ```
 $ terraform import aws_vpc.test_vpc vpc-a01106c2

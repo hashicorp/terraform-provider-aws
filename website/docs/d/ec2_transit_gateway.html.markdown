@@ -14,7 +14,7 @@ Get information on an EC2 Transit Gateway.
 
 ### By Filter
 
-```hcl
+```terraform
 data "aws_ec2_transit_gateway" "example" {
   filter {
     name   = "options.amazon-side-asn"
@@ -25,7 +25,7 @@ data "aws_ec2_transit_gateway" "example" {
 
 ### By Identifier
 
-```hcl
+```terraform
 data "aws_ec2_transit_gateway" "example" {
   id = "tgw-12345678"
 }
@@ -40,7 +40,7 @@ The following arguments are supported:
 
 ### filter Argument Reference
 
-* `name` - (Required) Name of the filter.
+* `name` - (Required) The name of the field to filter by, as defined by the [underlying AWS API](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeTransitGateways.html).
 * `values` - (Required) List of one or more values for the filter.
 
 ## Attribute Reference
