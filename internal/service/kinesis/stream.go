@@ -645,7 +645,7 @@ func waitStreamDeleted(conn *kinesis.Kinesis, name string, timeout time.Duration
 	return nil, err
 }
 
-func waitStreamUpdated(conn *kinesis.Kinesis, name string, timeout time.Duration) (*kinesis.StreamDescription, error) {
+func waitStreamUpdated(conn *kinesis.Kinesis, name string, timeout time.Duration) (*kinesis.StreamDescription, error) { //nolint:unparam
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{kinesis.StreamStatusUpdating},
 		Target:     []string{kinesis.StreamStatusActive},
