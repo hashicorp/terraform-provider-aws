@@ -23,6 +23,7 @@ func testAccErrorCheckSkipEMR(t *testing.T) resource.ErrorCheckFunc {
 	return acctest.ErrorCheckSkipMessagesContaining(t,
 		"Managed scaling is not available",
 		"SSO is not enabled",
+		"Account is not whitelisted to use this feature",
 	)
 }
 
