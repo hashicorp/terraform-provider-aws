@@ -231,6 +231,8 @@ resource "aws_iam_role" "test" {
 data "aws_iam_policy_document" "assume_role" {
   statement {
     actions = ["sts:AssumeRole"]
+    effect  = "Allow"
+
     principals {
       type        = "Service"
       identifiers = ["elasticmapreduce.${data.aws_partition.current.dns_suffix}"]
@@ -312,10 +314,10 @@ resource "aws_emr_studio" "test" {
   workspace_security_group_id = aws_security_group.test.id
 
   tags = {
-    %[1]q = %[2]q
+    %[2]q = %[3]q
   }
 }
-`, tagKey1, tagValue1))
+`, rName, tagKey1, tagValue1))
 }
 
 func testAccEMRStudioConfigTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
@@ -332,9 +334,9 @@ resource "aws_emr_studio" "test" {
   workspace_security_group_id = aws_security_group.test.id
 
   tags = {
-    %[1]q = %[2]q
-    %[3]q = %[4]q
+    %[2]q = %[3]q
+    %[4]q = %[5]q
   }
 }
-`, tagKey1, tagValue1, tagKey2, tagValue2))
+`, rName, tagKey1, tagValue1, tagKey2, tagValue2))
 }
