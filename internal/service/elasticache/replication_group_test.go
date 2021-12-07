@@ -49,6 +49,7 @@ func TestAccElastiCacheReplicationGroup_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "cluster_enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "engine_version", "6.x"),
 					resource.TestMatchResourceAttr(resourceName, "engine_version_actual", regexp.MustCompile(`^6\.[[:digit:]]+\.[[:digit:]]+$`)),
+					resource.TestCheckResourceAttr(resourceName, "data_tiering_enabled", "false"),
 				),
 			},
 			{
@@ -1721,6 +1722,36 @@ func TestAccElastiCacheReplicationGroup_GlobalReplicationGroupIDClusterModeValid
 	})
 }
 
+func TestAccElastiCacheReplicationGroup_dataTiering(t *testing.T) {
+	var rg elasticache.ReplicationGroup
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_elasticache_replication_group.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, elasticache.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckReplicationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccReplicationGroupConfigDataTiering(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckReplicationGroupExists(resourceName, &rg),
+					resource.TestCheckResourceAttr(resourceName, "engine", "redis"),
+					resource.TestCheckResourceAttr(resourceName, "engine_version", "6.x"),
+					resource.TestCheckResourceAttr(resourceName, "data_tiering_enabled", "true"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"apply_immediately", "availability_zones"},
+			},
+		},
+	})
+}
+
 func testAccCheckReplicationGroupExists(n string, v *elasticache.ReplicationGroup) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -3097,6 +3128,68 @@ resource "aws_elasticache_replication_group" "primary" {
   }
 }
 `, rName))
+}
+
+func testAccReplicationGroupConfigDataTiering(rName string) string {
+	return fmt.Sprintf(`
+data "aws_availability_zones" "available" {
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
+
+resource "aws_vpc" "test" {
+  cidr_block = "192.168.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_subnet" "test" {
+  vpc_id            = aws_vpc.test.id
+  cidr_block        = "192.168.0.0/20"
+  availability_zone = data.aws_availability_zones.available.names[0]
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_elasticache_subnet_group" "test" {
+  name        = %[1]q
+  description = "tf-test-cache-subnet-group-descr"
+  subnet_ids  = [aws_subnet.test.id]
+}
+
+resource "aws_security_group" "test" {
+  name        = %[1]q
+  description = "tf-test-security-group-descr"
+  vpc_id      = aws_vpc.test.id
+
+  ingress {
+    from_port   = -1
+    to_port     = -1
+    protocol    = "icmp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+}
+
+resource "aws_elasticache_replication_group" "test" {
+  replication_group_id          = %[1]q
+  replication_group_description = "test description"
+  node_type                     = "cache.r6gd.xlarge"
+  data_tiering_enabled          = true
+  port                          = 6379
+  subnet_group_name             = aws_elasticache_subnet_group.test.name
+  security_group_ids            = [aws_security_group.test.id]
+  availability_zones            = [data.aws_availability_zones.available.names[0]]
+  auto_minor_version_upgrade    = false
+}
+`, rName)
 }
 
 func resourceReplicationGroupDisableAutomaticFailover(conn *elasticache.ElastiCache, replicationGroupID string, timeout time.Duration) error {
