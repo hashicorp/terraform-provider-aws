@@ -7,6 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -121,5 +122,9 @@ func resourceSubnetCIDRReservationDelete(d *schema.ResourceData, meta interface{
 		SubnetCidrReservationId: aws.String(d.Id()),
 	}
 	_, err := conn.DeleteSubnetCidrReservation(req)
+
+	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidSubnetCidrReservationIDNotFound) {
+		return nil
+	}
 	return err
 }
