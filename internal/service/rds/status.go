@@ -1,8 +1,6 @@
 package rds
 
 import (
-	"fmt"
-
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/rds"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -87,14 +85,13 @@ func statusDBClusterActivityStream(conn *rds.RDS, dbClusterArn string) resource.
 		output, err := FindDBClusterByClusterArn(conn, dbClusterArn)
 
 		if tfresource.NotFound(err) {
-			fmt.Print("tfresource.NotFound(err)")
 			return nil, "", nil
 		}
 
 		if err != nil {
 			return nil, "", err
 		}
-		fmt.Printf("DB Cluster (%s) has ActivityStreamStatus=%s", dbClusterArn, aws.StringValue(output.ActivityStreamStatus))
+
 		return output, aws.StringValue(output.ActivityStreamStatus), nil
 	}
 }
