@@ -315,6 +315,27 @@ func TestAccKMSKey_Policy_iamServiceLinkedRole(t *testing.T) {
 	})
 }
 
+func TestAccKMSKey_Policy_booleanCondition(t *testing.T) {
+	var key kms.KeyMetadata
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_kms_key.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, kms.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckKeyDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccKeyPolicyBooleanConditionConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKeyExists(resourceName, &key),
+				),
+			},
+		},
+	})
+}
+
 func TestAccKMSKey_isEnabled(t *testing.T) {
 	var key1, key2, key3 kms.KeyMetadata
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -820,6 +841,50 @@ resource "aws_kms_key" "test" {
         Sid      = "Enable IAM User Permissions"
       },
     ]
+    Version = "2012-10-17"
+  })
+}
+`, rName)
+}
+
+func testAccKeyPolicyBooleanConditionConfig(rName string) string {
+	return fmt.Sprintf(`
+data "aws_caller_identity" "current" {}
+
+resource "aws_kms_key" "test" {
+  description             = %[1]q
+  deletion_window_in_days = 7
+
+  policy = jsonencode({
+    Id = %[1]q
+    Statement = [
+    {
+      Sid    = "Enable IAM User Permissions"
+      Effect = "Allow"
+      Principal = {
+        AWS = "*"
+      }
+      Action   = "kms:*"
+      Resource = "*"
+    },
+    {
+      Action = [
+        "kms:CreateGrant",
+        "kms:ListGrants",
+        "kms:RevokeGrant"
+      ]
+      Effect = "Allow"
+      Principal = {
+        AWS = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"
+      }
+      Condition = {
+        Bool = {
+          "kms:GrantIsForAWSResource" = true
+        }
+      }
+      Resource = "*"
+      Sid      = "Allow attachment of persistent resources"
+    }]
     Version = "2012-10-17"
   })
 }
