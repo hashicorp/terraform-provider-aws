@@ -8,7 +8,7 @@ description: |-
 
 # Resource: aws_vpc_ipam_pool
 
-Provides a VPC resource.
+Provides an IP address pool resource for IPAM.
 
 ## Example Usage
 
@@ -70,7 +70,7 @@ resource "aws_vpc_ipam_pool_cidr" "child_test" {
 The following arguments are supported:
 
 * `address_family` - (Optional) The IP protocol assigned to this pool. You must choose either IPv4 or IPv6 protocol for a pool.
-* `publicly_advertisable` - (Required) Defines whether or not IPv6 pool space is publicly ∂advertisable over the internet. This option is not available for IPv4 pool space.
+* `publicly_advertisable` - (Required) Defines whether or not IPv6 pool space is publicly advertisable over the internet. This option is not available for IPv4 pool space.
 * `allocation_default_netmask_length` - (Optional) A default netmask length for allocations added to this pool. If, for example, the CIDR assigned to this pool is 10.0.0.0/8 and you enter 16 here, new allocations will default to 10.0.0.0/16 (unless you provide a different netmask value when you create the new allocation).
 * `allocation_max_netmask_length` - (Optional) The maximum netmask length that will be required for CIDR allocations in this pool.
 * `allocation_min_netmask_length` - (Optional) The minimum netmask length that will be required for CIDR allocations in this pool.

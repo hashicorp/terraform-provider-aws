@@ -558,7 +558,7 @@ func resourceLaunchConfigurationCreate(d *schema.ResourceData, meta interface{})
 		_, err = autoscalingconn.CreateLaunchConfiguration(&createLaunchConfigurationOpts)
 	}
 	if err != nil {
-		return fmt.Errorf("Error creating launch configuration: %s", err)
+		return fmt.Errorf("Error creating launch configuration: %w", err)
 	}
 
 	d.SetId(lcName)
@@ -577,19 +577,17 @@ func resourceLaunchConfigurationRead(d *schema.ResourceData, meta interface{}) e
 	log.Printf("[DEBUG] launch configuration describe configuration: %s", describeOpts)
 	describConfs, err := autoscalingconn.DescribeLaunchConfigurations(&describeOpts)
 	if err != nil {
-		return fmt.Errorf("Error retrieving launch configuration: %s", err)
+		return fmt.Errorf("Error retrieving launch configuration: %w", err)
 	}
-	if len(describConfs.LaunchConfigurations) == 0 {
+	if len(describConfs.LaunchConfigurations) == 0 && !d.IsNewResource() {
 		log.Printf("[WARN] Launch Configuration (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	// Verify AWS returned our launch configuration
-	if *describConfs.LaunchConfigurations[0].LaunchConfigurationName != d.Id() {
-		return fmt.Errorf(
-			"Unable to find launch configuration: %#v",
-			describConfs.LaunchConfigurations)
+	if aws.StringValue(describConfs.LaunchConfigurations[0].LaunchConfigurationName) != d.Id() {
+		return fmt.Errorf("Unable to find launch configuration: %#v", describConfs.LaunchConfigurations)
 	}
 
 	lc := describConfs.LaunchConfigurations[0]
@@ -608,7 +606,7 @@ func resourceLaunchConfigurationRead(d *schema.ResourceData, meta interface{}) e
 	d.Set("enable_monitoring", lc.InstanceMonitoring.Enabled)
 	d.Set("associate_public_ip_address", lc.AssociatePublicIpAddress)
 	if err := d.Set("security_groups", flex.FlattenStringList(lc.SecurityGroups)); err != nil {
-		return fmt.Errorf("error setting security_groups: %s", err)
+		return fmt.Errorf("error setting security_groups: %w", err)
 	}
 	if v := aws.StringValue(lc.UserData); v != "" {
 		_, b64 := d.GetOk("user_data_base64")
@@ -621,11 +619,11 @@ func resourceLaunchConfigurationRead(d *schema.ResourceData, meta interface{}) e
 
 	d.Set("vpc_classic_link_id", lc.ClassicLinkVPCId)
 	if err := d.Set("vpc_classic_link_security_groups", flex.FlattenStringList(lc.ClassicLinkVPCSecurityGroups)); err != nil {
-		return fmt.Errorf("error setting vpc_classic_link_security_groups: %s", err)
+		return fmt.Errorf("error setting vpc_classic_link_security_groups: %w", err)
 	}
 
 	if err := d.Set("metadata_options", flattenLaunchConfigInstanceMetadataOptions(lc.MetadataOptions)); err != nil {
-		return fmt.Errorf("error setting metadata_options: %s", err)
+		return fmt.Errorf("error setting metadata_options: %w", err)
 	}
 
 	if err := readLCBlockDevices(d, lc, ec2conn); err != nil {
@@ -666,7 +664,7 @@ func resourceLaunchConfigurationDelete(d *schema.ResourceData, meta interface{})
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting Autoscaling Launch Configuration (%s): %s", d.Id(), err)
+		return fmt.Errorf("error deleting Autoscaling Launch Configuration (%s): %w", d.Id(), err)
 	}
 
 	return nil

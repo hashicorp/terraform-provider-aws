@@ -304,7 +304,7 @@ func flattenETNotifications(n *elastictranscoder.Notifications) []map[string]int
 
 	allEmpty := func(s ...*string) bool {
 		for _, s := range s {
-			if s != nil && *s != "" {
+			if aws.StringValue(s) != "" {
 				return false
 			}
 		}

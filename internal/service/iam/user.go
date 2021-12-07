@@ -353,7 +353,7 @@ func DeleteUserVirtualMFADevices(svc *iam.IAM, username string) error {
 	pageOfVirtualMFADevices := func(page *iam.ListVirtualMFADevicesOutput, lastPage bool) (shouldContinue bool) {
 		for _, m := range page.VirtualMFADevices {
 			// UserName is `nil` for the root user
-			if m.User.UserName != nil && *m.User.UserName == username {
+			if aws.StringValue(m.User.UserName) == username {
 				VirtualMFADevices = append(VirtualMFADevices, *m.SerialNumber)
 			}
 		}

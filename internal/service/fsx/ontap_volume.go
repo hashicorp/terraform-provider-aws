@@ -328,7 +328,7 @@ func flattenFsxOntapVolumeTieringPolicy(rs *fsx.TieringPolicy) []interface{} {
 	minCoolingPeriod := 2
 
 	m := make(map[string]interface{})
-	if rs.CoolingPeriod != nil && *rs.CoolingPeriod >= int64(minCoolingPeriod) {
+	if aws.Int64Value(rs.CoolingPeriod) >= int64(minCoolingPeriod) {
 		m["cooling_period"] = aws.Int64Value(rs.CoolingPeriod)
 	}
 

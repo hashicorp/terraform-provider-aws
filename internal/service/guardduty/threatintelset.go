@@ -151,7 +151,7 @@ func resourceThreatintelsetRead(d *schema.ResourceData, meta interface{}) error 
 	d.Set("format", resp.Format)
 	d.Set("location", resp.Location)
 	d.Set("name", resp.Name)
-	d.Set("activate", *resp.Status == guardduty.ThreatIntelSetStatusActive)
+	d.Set("activate", aws.StringValue(resp.Status) == guardduty.ThreatIntelSetStatusActive)
 
 	tags := KeyValueTags(resp.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
