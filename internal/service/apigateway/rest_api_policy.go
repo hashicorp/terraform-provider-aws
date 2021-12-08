@@ -37,6 +37,10 @@ func ResourceRestAPIPolicy() *schema.Resource {
 				Required:         true,
 				ValidateFunc:     validation.StringIsJSON,
 				DiffSuppressFunc: verify.SuppressEquivalentPolicyDiffs,
+				StateFunc: func(v interface{}) string {
+					json, _ := structure.NormalizeJsonString(v)
+					return json
+				},
 			},
 		},
 	}
@@ -50,10 +54,16 @@ func resourceRestAPIPolicyPut(d *schema.ResourceData, meta interface{}) error {
 
 	operations := make([]*apigateway.PatchOperation, 0)
 
+	policy, err := structure.NormalizeJsonString(d.Get("policy").(string))
+
+	if err != nil {
+		return fmt.Errorf("policy (%s) is invalid JSON: %w", policy, err)
+	}
+
 	operations = append(operations, &apigateway.PatchOperation{
 		Op:    aws.String(apigateway.OpReplace),
 		Path:  aws.String("/policy"),
-		Value: aws.String(d.Get("policy").(string)),
+		Value: aws.String(policy),
 	})
 
 	res, err := conn.UpdateRestApi(&apigateway.UpdateRestApiInput{
@@ -93,11 +103,20 @@ func resourceRestAPIPolicyRead(d *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		return fmt.Errorf("error normalizing API Gateway REST API policy JSON: %w", err)
 	}
+
 	policy, err := strconv.Unquote(normalizedPolicy)
 	if err != nil {
 		return fmt.Errorf("error unescaping API Gateway REST API policy: %w", err)
 	}
-	d.Set("policy", policy)
+
+	policyToSet, err := verify.SecondJSONUnlessEquivalent(d.Get("policy").(string), policy)
+
+	if err != nil {
+		return fmt.Errorf("while setting policy (%s), encountered: %w", policyToSet, err)
+	}
+
+	d.Set("policy", policyToSet)
+
 	d.Set("rest_api_id", api.Id)
 
 	return nil
