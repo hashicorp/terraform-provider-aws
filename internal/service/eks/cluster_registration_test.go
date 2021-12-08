@@ -139,7 +139,7 @@ func testAccCheckClusterRegistrationDestroy(s *terraform.State) error {
 func testAccClusterRegistrationBaseIAMConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "test" {
-  name = "%[1]s-role"
+  name = %[1]q
 
   assume_role_policy = jsonencode({
     "Version" : "2012-10-17",
@@ -186,7 +186,7 @@ data aws_iam_policy_document test {
 }
 
 resource "aws_iam_policy" "test" {
-  name   = "%[1]s-test"
+  name   = %[1]q
   path   = "/"
   policy = data.aws_iam_policy_document.test.json
 }
@@ -195,6 +195,8 @@ resource "aws_iam_role_policy_attachment" "test" {
   role       = aws_iam_role.test.name
   policy_arn = aws_iam_policy.test.arn
 }
+
+
 
   
 `, rName)
