@@ -181,11 +181,13 @@ func ResourceInstance() *schema.Resource {
 					value := v.(string)
 					return strings.ToLower(value)
 				},
+				ConflictsWith: []string{"replicate_source_db"},
 			},
 			"engine_version": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
+				Type:          schema.TypeString,
+				Optional:      true,
+				Computed:      true,
+				ConflictsWith: []string{"replicate_source_db"},
 			},
 			"engine_version_actual": {
 				Type:     schema.TypeString,
@@ -287,13 +289,11 @@ func ResourceInstance() *schema.Resource {
 				Computed: true,
 			},
 			"name": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
-				ConflictsWith: []string{
-					"replicate_source_db",
-				},
+				Type:          schema.TypeString,
+				Optional:      true,
+				Computed:      true,
+				ForceNew:      true,
+				ConflictsWith: []string{"replicate_source_db"},
 			},
 			"nchar_character_set_name": {
 				Type:     schema.TypeString,
@@ -463,9 +463,10 @@ func ResourceInstance() *schema.Resource {
 				ForceNew: true,
 			},
 			"storage_type": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: validation.StringInSlice(StorageType_Values(), false),
 			},
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
@@ -476,13 +477,11 @@ func ResourceInstance() *schema.Resource {
 				ForceNew: true,
 			},
 			"username": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
-				ConflictsWith: []string{
-					"replicate_source_db",
-				},
+				Type:          schema.TypeString,
+				Optional:      true,
+				Computed:      true,
+				ForceNew:      true,
+				ConflictsWith: []string{"replicate_source_db"},
 			},
 			"vpc_security_group_ids": {
 				Type:     schema.TypeSet,
@@ -544,10 +543,10 @@ func resourceInstanceCreate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		if _, ok := d.GetOk("allocated_storage"); ok {
-			log.Printf("[INFO] allocated_storage was ignored for DB Instance (%s) because a replica inherits the primary's allocated_storage and this cannot be changed at creation.", d.Id())
 			// RDS doesn't allow modifying the storage of a replica within the first 6h of creation.
 			// allocated_storage is inherited from the primary so only the same value or no value is correct; a different value would fail the creation.
 			// A different value is possible, granted: the value is higher than the current, there has been 6h between
+			log.Printf("[INFO] allocated_storage was ignored for DB Instance (%s) because a replica inherits the primary's allocated_storage and this cannot be changed at creation.", d.Id())
 		}
 
 		if attr, ok := d.GetOk("availability_zone"); ok {
@@ -1493,8 +1492,8 @@ func resourceInstanceRead(d *schema.ResourceData, meta interface{}) error {
 		sgn.Add(*v.DBSecurityGroupName)
 	}
 	d.Set("security_group_names", sgn)
-	// replica things
 
+	// replica things
 	var replicas []string
 	for _, v := range v.ReadReplicaDBInstanceIdentifiers {
 		replicas = append(replicas, *v)

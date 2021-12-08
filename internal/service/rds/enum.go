@@ -6,6 +6,20 @@ const (
 	ClusterRoleStatusPending = "PENDING"
 )
 
+const (
+	StorageTypeStandard = "standard"
+	StorageTypeGp2      = "gp2"
+	StorageTypeIo1      = "io1"
+)
+
+func StorageType_Values() []string {
+	return []string{
+		StorageTypeStandard,
+		StorageTypeGp2,
+		StorageTypeIo1,
+	}
+}
+
 // https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/accessing-monitoring.html#Overview.DBInstance.Status.
 const (
 	InstanceStatusAvailable                     = "available"
