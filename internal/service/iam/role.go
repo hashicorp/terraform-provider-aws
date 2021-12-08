@@ -830,11 +830,7 @@ func inlinePoliciesActualDiff(d *schema.ResourceData) bool {
 	osPolicies := expandRoleInlinePolicies(roleName, os.List())
 	nsPolicies := expandRoleInlinePolicies(roleName, ns.List())
 
-	if !inlinePoliciesEquivalent(osPolicies, nsPolicies) {
-		return true
-	}
-
-	return false
+	return !inlinePoliciesEquivalent(osPolicies, nsPolicies)
 }
 
 func inlinePoliciesEquivalent(one, two []*iam.PutRolePolicyInput) bool {
@@ -860,9 +856,5 @@ func inlinePoliciesEquivalent(one, two []*iam.PutRolePolicyInput) bool {
 		}
 	}
 
-	if matches != len(one) {
-		return false
-	}
-
-	return true
+	return matches == len(one)
 }
