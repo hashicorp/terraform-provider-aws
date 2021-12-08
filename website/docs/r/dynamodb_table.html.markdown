@@ -119,7 +119,7 @@ attributes, etc.
 * `server_side_encryption` - (Optional) Encryption at rest options. AWS DynamoDB tables are automatically encrypted at rest with an AWS owned Customer Master Key if this argument isn't specified.
 * `tags` - (Optional) A map of tags to populate on the created table. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `point_in_time_recovery` - (Optional) Point-in-time recovery options.
-* `table_class` - (Optional) The storage class of the table. The valid values are `STANDARD` (default) and `STANDARD_INFREQUENT_ACCESS`.
+* `table_class` - (Optional) The storage class of the table. Valid values are `STANDARD` and `STANDARD_INFREQUENT_ACCESS`.
 
 ### Timeouts
 
