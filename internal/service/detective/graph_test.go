@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/detective"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -14,20 +15,20 @@ import (
 	tfdetective "github.com/hashicorp/terraform-provider-aws/internal/service/detective"
 )
 
-func TestAccAwsDetectiveGraph_basic(t *testing.T) {
+func TestAccDetectiveGraph_basic(t *testing.T) {
 	var graphOutput detective.Graph
 	resourceName := "aws_detective_graph.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckAwsDetectiveGraphDestroy,
+		CheckDestroy:      testAccCheckDetectiveGraphDestroy,
 		ErrorCheck:        acctest.ErrorCheck(t, detective.EndpointsID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsDetectiveGraphConfigBasic(),
+				Config: testAccDetectiveGraphConfigBasic(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsDetectiveGraphExists(resourceName, &graphOutput),
+					testAccCheckDetectiveGraphExists(resourceName, &graphOutput),
 					acctest.CheckResourceAttrRFC3339(resourceName, "created_time"),
 				),
 			},
@@ -40,20 +41,20 @@ func TestAccAwsDetectiveGraph_basic(t *testing.T) {
 	})
 }
 
-func TestAccAwsDetectiveGraph_WithTags(t *testing.T) {
-	var graphOutput detective.Graph
+func TestAccDetectiveGraph_tags(t *testing.T) {
+	var graph1, graph2 detective.Graph
 	resourceName := "aws_detective_graph.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckAwsDetectiveGraphDestroy,
+		CheckDestroy:      testAccCheckDetectiveGraphDestroy,
 		ErrorCheck:        acctest.ErrorCheck(t, detective.EndpointsID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsDetectiveGraphConfigWithTags(),
+				Config: testAccDetectiveGraphConfigWithTags(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsDetectiveGraphExists(resourceName, &graphOutput),
+					testAccCheckDetectiveGraphExists(resourceName, &graph1),
 					acctest.CheckResourceAttrRFC3339(resourceName, "created_time"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key", "value"),
@@ -62,9 +63,10 @@ func TestAccAwsDetectiveGraph_WithTags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAwsDetectiveGraphConfigWithTagsUpdate(),
+				Config: testAccDetectiveGraphConfigTagsUpdate(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsDetectiveGraphExists(resourceName, &graphOutput),
+					testAccCheckDetectiveGraphExists(resourceName, &graph2),
+					testAccCheckDetectiveGraphNotRecreated(&graph1, &graph2),
 					acctest.CheckResourceAttrRFC3339(resourceName, "created_time"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key", "value"),
@@ -83,20 +85,20 @@ func TestAccAwsDetectiveGraph_WithTags(t *testing.T) {
 	})
 }
 
-func TestAccAwsDetectiveGraph_disappears(t *testing.T) {
+func TestAccDetectiveGraph_disappears(t *testing.T) {
 	var graphOutput detective.Graph
 	resourceName := "aws_detective_graph.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckAwsDetectiveGraphDestroy,
+		CheckDestroy:      testAccCheckDetectiveGraphDestroy,
 		ErrorCheck:        acctest.ErrorCheck(t, detective.EndpointsID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsDetectiveGraphConfigBasic(),
+				Config: testAccDetectiveGraphConfigBasic(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsDetectiveGraphExists(resourceName, &graphOutput),
+					testAccCheckDetectiveGraphExists(resourceName, &graphOutput),
 					acctest.CheckResourceDisappears(acctest.Provider, tfdetective.ResourceGraph(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -105,7 +107,7 @@ func TestAccAwsDetectiveGraph_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckAwsDetectiveGraphDestroy(s *terraform.State) error {
+func testAccCheckDetectiveGraphDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).DetectiveConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -132,7 +134,7 @@ func testAccCheckAwsDetectiveGraphDestroy(s *terraform.State) error {
 
 }
 
-func testAccCheckAwsDetectiveGraphExists(resourceName string, graph *detective.Graph) resource.TestCheckFunc {
+func testAccCheckDetectiveGraphExists(resourceName string, graph *detective.Graph) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
@@ -156,13 +158,23 @@ func testAccCheckAwsDetectiveGraphExists(resourceName string, graph *detective.G
 	}
 }
 
-func testAccAwsDetectiveGraphConfigBasic() string {
+func testAccCheckDetectiveGraphNotRecreated(before, after *detective.Graph) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		if before, after := aws.StringValue(before.Arn), aws.StringValue(after.Arn); before != after {
+			return fmt.Errorf("detective graph (%s/%s) recreated", before, after)
+		}
+
+		return nil
+	}
+}
+
+func testAccDetectiveGraphConfigBasic() string {
 	return `
 resource "aws_detective_graph" "test" {}
 `
 }
 
-func testAccAwsDetectiveGraphConfigWithTags() string {
+func testAccDetectiveGraphConfigWithTags() string {
 	return `
 resource "aws_detective_graph" "test" {
   tags = {
@@ -172,7 +184,7 @@ resource "aws_detective_graph" "test" {
 `
 }
 
-func testAccAwsDetectiveGraphConfigWithTagsUpdate() string {
+func testAccDetectiveGraphConfigTagsUpdate() string {
 	return `
 resource "aws_detective_graph" "test" {
   tags = {

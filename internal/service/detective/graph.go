@@ -19,9 +19,10 @@ import (
 
 func ResourceGraph() *schema.Resource {
 	return &schema.Resource{
-		CreateWithoutTimeout: resourceGraphCreate,
-		ReadWithoutTimeout:   resourceGraphRead,
-		DeleteWithoutTimeout: resourceGraphDelete,
+		CreateContext: resourceGraphCreate,
+		ReadContext:   resourceGraphRead,
+		UpdateContext: resourceGraphUpdate,
+		DeleteContext: resourceGraphDelete,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -34,7 +35,7 @@ func ResourceGraph() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags":     tftags.TagsSchemaForceNew(),
+			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
 		},
 	}
@@ -120,6 +121,19 @@ func resourceGraphRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	}
 
 	return nil
+}
+
+func resourceGraphUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.AWSClient).DetectiveConn
+
+	if d.HasChange("tags") {
+		o, n := d.GetChange("tags")
+		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
+			return diag.FromErr(fmt.Errorf("error updating detective Graph tags (%s): %w", d.Id(), err))
+		}
+	}
+
+	return resourceGraphRead(ctx, d, meta)
 }
 
 func resourceGraphDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {

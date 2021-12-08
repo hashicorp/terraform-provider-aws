@@ -8,12 +8,16 @@ description: |-
 
 # Resource: aws_detective_graph
 
-Provides a resource to manage an [AWS Detective Graph](https://docs.aws.amazon.com/detective/latest/APIReference/API_CreateGraph.html).
+Provides a resource to manage an [AWS Detective Graph](https://docs.aws.amazon.com/detective/latest/APIReference/API_CreateGraph.html) and only one can exist per region.
 
 ## Example Usage
 
 ```terraform
-resource "aws_detective_graph" "example" {}
+resource "aws_detective_graph" "example" {
+  tags = {
+    Name = "example-detective-graph"
+  }
+}
 ```
 
 ## Argument Reference
