@@ -396,7 +396,7 @@ func waitForSearchDomainToBeAvailable(d *schema.ResourceData, conn *cloudsearch.
 				log.Printf("[DEBUG] GLEN: type: %T", domain.SearchService.Endpoint)
 				log.Printf("[DEBUG] GLEN: SearchServiceEndpoint = %s", *domain.SearchService.Endpoint)
 			}
-			if domain.SearchService.Endpoint == nil || *domain.SearchService.Endpoint == "" {
+			if aws.StringValue(domain.SearchService.Endpoint) == "" {
 				return resp, "Waiting", nil
 			}
 			return resp, "OK", nil
