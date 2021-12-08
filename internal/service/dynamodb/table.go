@@ -321,7 +321,7 @@ func ResourceTable() *schema.Resource {
 			"table_class": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				Default:      dynamodb.TableClassStandard,
+				Computed:     true,
 				ValidateFunc: validation.StringInSlice(dynamodb.TableClass_Values(), false),
 			},
 		},
@@ -347,7 +347,6 @@ func resourceTableCreate(d *schema.ResourceData, meta interface{}) error {
 		BillingMode: aws.String(d.Get("billing_mode").(string)),
 		KeySchema:   expandDynamoDbKeySchema(keySchemaMap),
 		Tags:        Tags(tags.IgnoreAWS()),
-		TableClass:  aws.String(d.Get("table_class").(string)),
 	}
 
 	billingMode := d.Get("billing_mode").(string)
@@ -397,6 +396,10 @@ func resourceTableCreate(d *schema.ResourceData, meta interface{}) error {
 
 	if v, ok := d.GetOk("server_side_encryption"); ok {
 		req.SSESpecification = expandDynamoDbEncryptAtRestOptions(v.([]interface{}))
+	}
+
+	if v, ok := d.GetOk("table_class"); ok {
+		req.TableClass = aws.String(v.(string))
 	}
 
 	var output *dynamodb.CreateTableOutput
@@ -567,7 +570,7 @@ func resourceTableRead(d *schema.ResourceData, meta interface{}) error {
 	if table.TableClassSummary != nil {
 		d.Set("table_class", table.TableClassSummary.TableClass)
 	} else {
-		d.Set("table_class", dynamodb.TableClassStandard)
+		d.Set("table_class", nil)
 	}
 
 	pitrOut, err := conn.DescribeContinuousBackups(&dynamodb.DescribeContinuousBackupsInput{
