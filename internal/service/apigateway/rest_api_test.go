@@ -1714,7 +1714,7 @@ resource "aws_api_gateway_rest_api" "test" {
 func testAccRestAPIWithPolicyConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_api_gateway_rest_api" "test" {
-  name   = %[1]q
+  name = %[1]q
   policy = jsonencode({
     Version = "2012-10-17"
     Statement = [{
@@ -1738,7 +1738,7 @@ resource "aws_api_gateway_rest_api" "test" {
 func testAccRestAPIUpdatePolicyConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_api_gateway_rest_api" "test" {
-  name   = %[1]q
+  name = %[1]q
   policy = jsonencode({
     Version = "2012-10-17"
     Statement = [{
@@ -1757,7 +1757,7 @@ resource "aws_api_gateway_rest_api" "test" {
 func testAccRestAPIWithPolicyOrderConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_api_gateway_rest_api" "test" {
-  name   = %[1]q
+  name = %[1]q
   policy = jsonencode({
     Version = "2012-10-17"
     Statement = [{
@@ -1785,7 +1785,7 @@ resource "aws_api_gateway_rest_api" "test" {
 func testAccRestAPIWithPolicyNewOrderConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_api_gateway_rest_api" "test" {
-  name   = %[1]q
+  name = %[1]q
   policy = jsonencode({
     Version = "2012-10-17"
     Statement = [{

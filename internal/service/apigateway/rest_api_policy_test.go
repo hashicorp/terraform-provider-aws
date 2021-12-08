@@ -179,7 +179,7 @@ resource "aws_api_gateway_rest_api_policy" "test" {
       Principal = {
         AWS = "*"
       }
-      Action = "execute-api:Invoke"
+      Action   = "execute-api:Invoke"
       Resource = aws_api_gateway_rest_api.test.arn
     }]
   })
@@ -203,7 +203,7 @@ resource "aws_api_gateway_rest_api_policy" "test" {
       Principal = {
         AWS = "*"
       }
-      Action = "execute-api:Invoke"
+      Action   = "execute-api:Invoke"
       Resource = aws_api_gateway_rest_api.test.arn
       Condition = {
         IpAddress = {
