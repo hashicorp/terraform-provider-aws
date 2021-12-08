@@ -321,7 +321,6 @@ func ResourceTable() *schema.Resource {
 			"table_class": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				Computed:     true,
 				ValidateFunc: validation.StringInSlice(dynamodb.TableClass_Values(), false),
 			},
 		},
