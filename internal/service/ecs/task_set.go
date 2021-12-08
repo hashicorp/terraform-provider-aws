@@ -157,7 +157,7 @@ func ResourceTaskSet() *schema.Resource {
 						},
 						"registry_arn": {
 							Type:         schema.TypeString,
-							Optional:     true,
+							Required:     true,
 							ForceNew:     true,
 							ValidateFunc: verify.ValidARN,
 						},
@@ -196,7 +196,7 @@ func ResourceTaskSet() *schema.Resource {
 
 						"weight": {
 							Type:         schema.TypeInt,
-							Optional:     true,
+							Required:     true,
 							ValidateFunc: validation.IntBetween(0, 1000),
 							ForceNew:     true,
 						},
@@ -236,6 +236,16 @@ func ResourceTaskSet() *schema.Resource {
 			"force_delete": {
 				Type:     schema.TypeBool,
 				Optional: true,
+			},
+
+			"stability_status": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+
+			"status": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 
 			"tags": tftags.TagsSchema(),
@@ -290,16 +300,16 @@ func resourceTaskSetCreate(d *schema.ResourceData, meta interface{}) error {
 		input.Tags = Tags(tags.IgnoreAWS())
 	}
 
+	if v, ok := d.GetOk("capacity_provider_strategy"); ok && v.(*schema.Set).Len() > 0 {
+		input.CapacityProviderStrategy = expandEcsCapacityProviderStrategy(v.(*schema.Set))
+	}
+
 	if v, ok := d.GetOk("external_id"); ok {
 		input.ExternalId = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("launch_type"); ok {
 		input.LaunchType = aws.String(v.(string))
-	}
-
-	if v, ok := d.GetOk("capacity_provider_strategy"); ok && v.(*schema.Set).Len() > 0 {
-		input.CapacityProviderStrategy = expandEcsCapacityProviderStrategy(v.(*schema.Set))
 	}
 
 	if v, ok := d.GetOk("load_balancer"); ok && v.(*schema.Set).Len() > 0 {
@@ -407,27 +417,29 @@ func resourceTaskSetRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("platform_version", taskSet.PlatformVersion)
 	d.Set("external_id", taskSet.ExternalId)
 	d.Set("service", service)
+	d.Set("status", taskSet.Status)
+	d.Set("stability_status", taskSet.StabilityStatus)
 	d.Set("task_definition", taskSet.TaskDefinition)
 	d.Set("task_set_id", taskSet.Id)
+
+	if err := d.Set("capacity_provider_strategy", flattenEcsCapacityProviderStrategy(taskSet.CapacityProviderStrategy)); err != nil {
+		return fmt.Errorf("error setting capacity_provider_strategy: %w", err)
+	}
 
 	if err := d.Set("load_balancer", flattenTaskSetLoadBalancers(taskSet.LoadBalancers)); err != nil {
 		return fmt.Errorf("error setting load_balancer: %w", err)
 	}
 
-	if err := d.Set("scale", flattenScale(taskSet.Scale)); err != nil {
-		return fmt.Errorf("error setting scale for (%s): %s", d.Id(), err)
-	}
-
-	if err := d.Set("capacity_provider_strategy", flattenEcsCapacityProviderStrategy(taskSet.CapacityProviderStrategy)); err != nil {
-		return fmt.Errorf("error setting capacity_provider_strategy: %s", err)
-	}
-
 	if err := d.Set("network_configuration", flattenEcsNetworkConfiguration(taskSet.NetworkConfiguration)); err != nil {
-		return fmt.Errorf("error setting network_configuration for (%s): %s", d.Id(), err)
+		return fmt.Errorf("error setting network_configuration: %w", err)
+	}
+
+	if err := d.Set("scale", flattenScale(taskSet.Scale)); err != nil {
+		return fmt.Errorf("error setting scale: %w", err)
 	}
 
 	if err := d.Set("service_registries", flattenServiceRegistries(taskSet.ServiceRegistries)); err != nil {
-		return fmt.Errorf("error setting service_registries for (%s): %s", d.Id(), err)
+		return fmt.Errorf("error setting service_registries: %w", err)
 	}
 
 	tags := KeyValueTags(taskSet.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)

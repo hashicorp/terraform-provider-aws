@@ -55,6 +55,8 @@ func flattenECSLoadBalancers(list []*ecs.LoadBalancer) []map[string]interface{} 
 	return result
 }
 
+// Expand for an array of load balancers and
+// returns ecs.LoadBalancer compatible objects for an ECS TaskSet
 func expandTaskSetLoadBalancers(l []interface{}) []*ecs.LoadBalancer {
 	if len(l) == 0 || l[0] == nil {
 		return nil
@@ -90,6 +92,7 @@ func expandTaskSetLoadBalancers(l []interface{}) []*ecs.LoadBalancer {
 	return loadBalancers
 }
 
+// Flattens an array of ECS LoadBalancers (of an ECS TaskSet) into a []map[string]interface{}
 func flattenTaskSetLoadBalancers(list []*ecs.LoadBalancer) []map[string]interface{} {
 	result := make([]map[string]interface{}, 0, len(list))
 	for _, loadBalancer := range list {
@@ -111,6 +114,8 @@ func flattenTaskSetLoadBalancers(list []*ecs.LoadBalancer) []map[string]interfac
 	return result
 }
 
+// Expand for an array of service registries and
+// returns ecs.ServiceRegistry compatible objects for an ECS TaskSet
 func expandServiceRegistries(l []interface{}) []*ecs.ServiceRegistry {
 	if len(l) == 0 || l[0] == nil {
 		return nil
@@ -138,6 +143,8 @@ func expandServiceRegistries(l []interface{}) []*ecs.ServiceRegistry {
 	return result
 }
 
+// Expand for an array of scale configurations and
+// returns an ecs.Scale compatible object for an ECS TaskSet
 func expandScale(l []interface{}) *ecs.Scale {
 	if len(l) == 0 || l[0] == nil {
 		return nil
@@ -161,6 +168,7 @@ func expandScale(l []interface{}) *ecs.Scale {
 	return result
 }
 
+// Flattens an ECS Scale configuration into a []map[string]interface{}
 func flattenScale(scale *ecs.Scale) []map[string]interface{} {
 	if scale == nil {
 		return nil
