@@ -18,6 +18,16 @@ import (
 	tfdynamodb "github.com/hashicorp/terraform-provider-aws/internal/service/dynamodb"
 )
 
+func init() {
+	acctest.RegisterServiceErrorCheckFunc(dynamodb.EndpointsID, testAccErrorCheckSkipDynamoDb)
+}
+
+func testAccErrorCheckSkipDynamoDb(t *testing.T) resource.ErrorCheckFunc {
+	return acctest.ErrorCheckSkipMessagesContaining(t,
+		"Unsupported input parameter TableClass",
+	)
+}
+
 func TestUpdateDynamoDbDiffGSI(t *testing.T) {
 	testCases := []struct {
 		Old             []interface{}
