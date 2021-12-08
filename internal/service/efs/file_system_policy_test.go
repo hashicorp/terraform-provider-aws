@@ -107,6 +107,7 @@ func TestAccEFSFileSystemPolicy_policyBypass(t *testing.T) {
 	})
 }
 
+// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/21968
 func TestAccEFSFileSystemPolicy_equivalentPolicies(t *testing.T) {
 	var desc efs.DescribeFileSystemPolicyOutput
 	resourceName := "aws_efs_file_system_policy.test"
@@ -127,6 +128,33 @@ func TestAccEFSFileSystemPolicy_equivalentPolicies(t *testing.T) {
 			},
 			{
 				Config:   testAccFileSystemPolicySecondEquivalentConfig(rName),
+				PlanOnly: true,
+			},
+		},
+	})
+}
+
+// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/19245
+func TestAccEFSFileSystemPolicy_equivalentPoliciesIAMPolicyDoc(t *testing.T) {
+	var desc efs.DescribeFileSystemPolicyOutput
+	resourceName := "aws_efs_file_system_policy.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, efs.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckEfsFileSystemPolicyDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccFileSystemPolicyEquivalentIAMPolicyDocConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEfsFileSystemPolicyExists(resourceName, &desc),
+					resource.TestCheckResourceAttrSet(resourceName, "policy"),
+				),
+			},
+			{
+				Config:   testAccFileSystemPolicyEquivalentIAMPolicyDocConfig(rName),
 				PlanOnly: true,
 			},
 		},
@@ -349,7 +377,7 @@ resource "aws_efs_file_system_policy" "test" {
       }
       Resource = aws_efs_file_system.test.arn
       Action = [
-        "elasticfilesystem:ClientWrite",   
+        "elasticfilesystem:ClientWrite",
         "elasticfilesystem:ClientMount",
       ]
       Condition = {
@@ -359,6 +387,58 @@ resource "aws_efs_file_system_policy" "test" {
       }
     }]
   })
+}
+`, rName)
+}
+
+func testAccFileSystemPolicyEquivalentIAMPolicyDocConfig(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_efs_file_system" "test" {
+  creation_token = %[1]q
+}
+
+resource "aws_efs_file_system_policy" "test" {
+  file_system_id = aws_efs_file_system.test.id
+  policy         = data.aws_iam_policy_document.test.json
+}
+
+data "aws_iam_policy_document" "test" {
+  version = "2012-10-17"
+
+  statement {
+    sid = "Allow mount and write"
+
+    actions = [
+      "elasticfilesystem:ClientWrite",
+      "elasticfilesystem:ClientRootAccess",
+      "elasticfilesystem:ClientMount",
+    ]
+
+    resources = [aws_efs_file_system.test.arn]
+
+    principals {
+      type        = "AWS"
+      identifiers = ["*"]
+    }
+  }
+
+  statement {
+    sid       = "Enforce in-transit encryption for all clients"
+    effect    = "Deny"
+    actions   = ["*"]
+    resources = [aws_efs_file_system.test.arn]
+
+    principals {
+      type        = "AWS"
+      identifiers = ["*"]
+    }
+
+    condition {
+      test     = "Bool"
+      variable = "aws:SecureTransport"
+      values   = ["false"]
+    }
+  }
 }
 `, rName)
 }
