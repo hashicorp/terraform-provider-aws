@@ -332,7 +332,7 @@ func TestAccDynamoDBTable_basic(t *testing.T) {
 						"type": "S",
 					}),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "table_class", "STANDARD"),
+					resource.TestCheckResourceAttr(resourceName, "table_class", ""),
 				),
 			},
 			{
