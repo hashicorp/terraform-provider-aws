@@ -559,10 +559,29 @@ rules:
     message: Domain names should be in the namespaces defined in RFC 6761 (https://datatracker.ietf.org/doc/html/rfc6761) as reserved for testing
     paths:
       include:
-        - aws/data_source*.go
-        - aws/resource_aws_a*.go
-        - aws/resource_aws_b*.go
-        - aws/resource_aws_workspaces_*.go
+        - internal/service/**/*_data_source_test.go
+        - internal/service/[a-b]*
+        - internal/service/d*
+        - internal/service/[f-z]*
+      exclude:
+        - internal/service/firehose/delivery_stream_test.go
+        - internal/service/globalaccelerator/accelerator_test.go
+        - internal/service/iam/openid_connect_provider_test.go
+        - internal/service/lightsail/domain_test.go
+        - internal/service/mq/broker_test.go
+        - internal/service/opsworks/application_test.go
+        - internal/service/opsworks/stack_test.go
+        - internal/service/ram/resource_share_accepter_test.go
+        - internal/service/rds/instance_test.go
+        - internal/service/route53/sweep.go
+        - internal/service/s3/bucket_test.go
+        - internal/service/s3control/bucket_test.go
+        - internal/service/sagemaker/code_repository_test.go
+        - internal/service/sagemaker/notebook_instance_test.go
+        - internal/service/shield/protection_test.go
+        - internal/service/storagegateway/cached_iscsi_volume.go
+        - internal/service/storagegateway/cached_iscsi_volume_test.go
+        - internal/service/transfer/server_test.go
     patterns:
       - patterns:
         - pattern-regex: '[\"`].*(?<!(example))\.(com|net|org)\b'

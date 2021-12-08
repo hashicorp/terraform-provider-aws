@@ -473,8 +473,17 @@ func TestAccIAMRole_InlinePolicy_ignoreOrder(t *testing.T) {
 				),
 			},
 			{
+				Config:   testAccRolePolicyInlineActionOrderConfig(rName),
+				PlanOnly: true,
+			},
+			{
 				Config:   testAccRolePolicyInlineActionNewOrderConfig(rName),
 				PlanOnly: true,
+			},
+			{
+				Config:             testAccRolePolicyInlineActionOrderActualDiffConfig(rName),
+				PlanOnly:           true,
+				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
@@ -1688,6 +1697,45 @@ resource "aws_iam_role" "test" {
           "ec2:DescribeScheduledInstanceAvailability",
           "ec2:DescribeFastSnapshotRestores",
           "ec2:DescribeElasticGpus",
+        ]
+        Effect   = "Allow"
+        Resource = "*"
+      }]
+    })
+  }
+}
+`, roleName)
+}
+
+func testAccRolePolicyInlineActionOrderActualDiffConfig(roleName string) string {
+	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+
+resource "aws_iam_role" "test" {
+  name = %[1]q
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Action = "sts:AssumeRole",
+      Principal = {
+        Service = "ec2.${data.aws_partition.current.dns_suffix}",
+      }
+      Effect = "Allow"
+      Sid    = ""
+    }]
+  })
+
+  inline_policy {
+    name = %[1]q
+
+    policy = jsonencode({
+      Version = "2012-10-17"
+      Statement = [{
+        Action = [
+          "ec2:DescribeScheduledInstances",
+          "ec2:DescribeElasticGpus",
+          "ec2:DescribeScheduledInstanceAvailability",
         ]
         Effect   = "Allow"
         Resource = "*"
