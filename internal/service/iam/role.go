@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	awspolicy "github.com/hashicorp/awspolicyequivalence"
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -126,7 +127,7 @@ func ResourceRole() *schema.Resource {
 					Schema: map[string]*schema.Schema{
 						"name": {
 							Type:     schema.TypeString,
-							Optional: true,
+							Optional: true, // semantically required but syntactically optional to allow empty inline_policy
 							ValidateFunc: validation.All(
 								validation.StringIsNotEmpty,
 								validRolePolicyName,
@@ -134,11 +135,18 @@ func ResourceRole() *schema.Resource {
 						},
 						"policy": {
 							Type:             schema.TypeString,
-							Optional:         true,
+							Optional:         true, // semantically required but syntactically optional to allow empty inline_policy
 							ValidateFunc:     verify.ValidIAMPolicyJSON,
 							DiffSuppressFunc: verify.SuppressEquivalentPolicyDiffs,
 						},
 					},
+				},
+				DiffSuppressFunc: func(k, _, _ string, d *schema.ResourceData) bool {
+					if d.Id() == "" {
+						return false
+					}
+
+					return !inlinePoliciesActualDiff(d)
 				},
 			},
 
@@ -292,8 +300,16 @@ func resourceRoleRead(d *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		return fmt.Errorf("reading inline policies for IAM role %s, error: %s", d.Id(), err)
 	}
-	if err := d.Set("inline_policy", flattenRoleInlinePolicies(inlinePolicies)); err != nil {
-		return fmt.Errorf("error setting inline_policy: %w", err)
+
+	var configPoliciesList []*iam.PutRolePolicyInput
+	if v := d.Get("inline_policy").(*schema.Set); v.Len() > 0 {
+		configPoliciesList = expandRoleInlinePolicies(aws.StringValue(role.RoleName), v.List())
+	}
+
+	if !inlinePoliciesEquivalent(inlinePolicies, configPoliciesList) {
+		if err := d.Set("inline_policy", flattenRoleInlinePolicies(inlinePolicies)); err != nil {
+			return fmt.Errorf("error setting inline_policy: %w", err)
+		}
 	}
 
 	managedPolicies, err := readRolePolicyAttachments(conn, aws.StringValue(role.RoleName))
@@ -393,18 +409,22 @@ func resourceRoleUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	if d.HasChange("inline_policy") {
+	if d.HasChange("inline_policy") && inlinePoliciesActualDiff(d) {
 		roleName := d.Get("name").(string)
+
 		o, n := d.GetChange("inline_policy")
+
 		if o == nil {
 			o = new(schema.Set)
 		}
+
 		if n == nil {
 			n = new(schema.Set)
 		}
 
 		os := o.(*schema.Set)
 		ns := n.(*schema.Set)
+
 		remove := os.Difference(ns).List()
 		add := ns.Difference(os).List()
 
@@ -792,4 +812,49 @@ func readRoleInlinePolicies(roleName string, meta interface{}) ([]*iam.PutRolePo
 	}
 
 	return apiObjects, nil
+}
+
+func inlinePoliciesActualDiff(d *schema.ResourceData) bool {
+	roleName := d.Get("name").(string)
+	o, n := d.GetChange("inline_policy")
+	if o == nil {
+		o = new(schema.Set)
+	}
+	if n == nil {
+		n = new(schema.Set)
+	}
+
+	os := o.(*schema.Set)
+	ns := n.(*schema.Set)
+
+	osPolicies := expandRoleInlinePolicies(roleName, os.List())
+	nsPolicies := expandRoleInlinePolicies(roleName, ns.List())
+
+	return !inlinePoliciesEquivalent(osPolicies, nsPolicies)
+}
+
+func inlinePoliciesEquivalent(one, two []*iam.PutRolePolicyInput) bool {
+	if one == nil && two == nil {
+		return true
+	}
+
+	if len(one) != len(two) {
+		return false
+	}
+
+	matches := 0
+
+	for _, policyOne := range one {
+		for _, policyTwo := range two {
+			if aws.StringValue(policyOne.PolicyName) == aws.StringValue(policyTwo.PolicyName) {
+				matches++
+				if equivalent, err := awspolicy.PoliciesAreEquivalent(aws.StringValue(policyOne.PolicyDocument), aws.StringValue(policyTwo.PolicyDocument)); err != nil || !equivalent {
+					return false
+				}
+				break
+			}
+		}
+	}
+
+	return matches == len(one)
 }
