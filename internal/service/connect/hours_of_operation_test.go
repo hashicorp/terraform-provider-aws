@@ -198,7 +198,7 @@ resource "aws_connect_hours_of_operation" "test" {
 
     end_time {
       hours   = 23
-      minutes = 08
+      minutes = 8
     }
 
     start_time {
