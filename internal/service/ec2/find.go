@@ -691,9 +691,9 @@ func FindSubnetByID(conn *ec2.EC2, id string) (*ec2.Subnet, error) {
 	return output.Subnets[0], nil
 }
 
-func FindSubnetCidrReservationById(conn *ec2.EC2, resId string, subnetId string) (*ec2.SubnetCidrReservation, error) {
+func FindSubnetCidrReservationBySubnetIDAndReservationID(conn *ec2.EC2, subnetID, reservationID string) (*ec2.SubnetCidrReservation, error) {
 	input := &ec2.GetSubnetCidrReservationsInput{
-		SubnetId: aws.String(subnetId),
+		SubnetId: aws.String(subnetID),
 	}
 
 	output, err := conn.GetSubnetCidrReservations(input)
@@ -703,25 +703,29 @@ func FindSubnetCidrReservationById(conn *ec2.EC2, resId string, subnetId string)
 			LastError: err,
 		}
 	}
+
 	if err != nil {
 		return nil, err
 	}
 
 	if output == nil || (len(output.SubnetIpv4CidrReservations) == 0 && len(output.SubnetIpv6CidrReservations) == 0) {
-		return nil, &resource.NotFoundError{
-			LastRequest: input,
-		}
+		return nil, tfresource.NewEmptyResultError(input)
 	}
-	reservations := []*ec2.SubnetCidrReservation{}
-	reservations = append(reservations, output.SubnetIpv4CidrReservations...)
-	reservations = append(reservations, output.SubnetIpv6CidrReservations...)
-	for _, r := range reservations {
-		if aws.StringValue(r.SubnetCidrReservationId) == resId {
+
+	for _, r := range output.SubnetIpv4CidrReservations {
+		if aws.StringValue(r.SubnetCidrReservationId) == reservationID {
 			return r, nil
 		}
 	}
+	for _, r := range output.SubnetIpv6CidrReservations {
+		if aws.StringValue(r.SubnetCidrReservationId) == reservationID {
+			return r, nil
+		}
+	}
+
 	return nil, &resource.NotFoundError{
-		LastError: fmt.Errorf("Subnet CIDR reservation (%s) not found", resId),
+		LastError:   err,
+		LastRequest: input,
 	}
 }
 

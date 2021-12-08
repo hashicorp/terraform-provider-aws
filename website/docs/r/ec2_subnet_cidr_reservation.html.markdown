@@ -25,7 +25,7 @@ resource "aws_ec2_subnet_cidr_reservation" "example" {
 The following arguments are supported:
 
 * `cidr_block` - (Required) The CIDR block for the reservation.
-* `reservation_type` - (Required) The type of reservation to create.
+* `reservation_type` - (Required) The type of reservation to create. Valid values: `explicit`, `prefix`
 * `subnet_id` - (Required) The ID of the subnet to create the reservation for.
 * `description` - (Optional) A brief description of the reservation.
 
