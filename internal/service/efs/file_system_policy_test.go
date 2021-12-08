@@ -334,9 +334,9 @@ resource "aws_efs_file_system_policy" "test" {
 
   policy = jsonencode({
     Version = "2012-10-17"
-    Id = "ExamplePolicy01"
+    Id      = "ExamplePolicy01"
     Statement = [{
-      Sid = "ExampleSatement01"
+      Sid    = "ExampleSatement01"
       Effect = "Allow"
       Principal = {
         AWS = "*"
@@ -368,9 +368,9 @@ resource "aws_efs_file_system_policy" "test" {
 
   policy = jsonencode({
     Version = "2012-10-17"
-    Id = "ExamplePolicy01"
+    Id      = "ExamplePolicy01"
     Statement = [{
-      Sid = "ExampleSatement01"
+      Sid    = "ExampleSatement01"
       Effect = "Allow"
       Principal = {
         AWS = "*"
