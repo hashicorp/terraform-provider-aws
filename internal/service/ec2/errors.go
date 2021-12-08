@@ -109,6 +109,10 @@ const (
 	ErrCodeInvalidPlacementGroupUnknown = "InvalidPlacementGroup.Unknown"
 )
 
+const (
+	ErrCodeInvalidSubnetCidrReservationIDNotFound = "InvalidSubnetCidrReservationID.NotFound"
+)
+
 func UnsuccessfulItemError(apiObject *ec2.UnsuccessfulItemError) error {
 	if apiObject == nil {
 		return nil
