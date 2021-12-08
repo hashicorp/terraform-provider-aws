@@ -177,7 +177,8 @@ data aws_iam_policy_document test {
     actions = [
       "ssmmessages:CreateDataChannel",
       "ssmmessages:OpenDataChannel",
-    "ssmmessages:OpenControlChannel"]
+      "ssmmessages:OpenControlChannel"
+    ]
 
     resources = [
       "*"
@@ -195,10 +196,6 @@ resource "aws_iam_role_policy_attachment" "test" {
   role       = aws_iam_role.test.name
   policy_arn = aws_iam_policy.test.arn
 }
-
-
-
-  
 `, rName)
 }
 
