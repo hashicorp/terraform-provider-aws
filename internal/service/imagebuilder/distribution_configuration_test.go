@@ -318,6 +318,78 @@ func TestAccImageBuilderDistributionConfiguration_DistributionAMIDistributionLau
 	})
 }
 
+func TestAccImageBuilderDistributionConfiguration_DistributionAMIDistributionLaunchPermission_organizationArns(t *testing.T) {
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_imagebuilder_distribution_configuration.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, imagebuilder.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDistributionConfigurationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDistributionConfigurationDistributionAMIDistributionConfigurationLaunchPermissionOrganizationArnsConfig(rName, "arn:aws:organizations::111111111111:organization/o-aze123rty456"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDistributionConfigurationExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "distribution.#", "1"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "distribution.*.ami_distribution_configuration.0.launch_permission.0.organization_arns.*", "arn:aws:organizations::111111111111:organization/o-aze123rty456"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccDistributionConfigurationDistributionAMIDistributionConfigurationLaunchPermissionOrganizationArnsConfig(rName, "arn:aws:organizations::222222222222:organization/o-aze123rty456"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDistributionConfigurationExists(resourceName),
+					acctest.CheckResourceAttrRFC3339(resourceName, "date_updated"),
+					resource.TestCheckResourceAttr(resourceName, "distribution.#", "1"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "distribution.*.ami_distribution_configuration.0.launch_permission.0.organization_arns.*", "arn:aws:organizations::222222222222:organization/o-aze123rty456"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccImageBuilderDistributionConfiguration_DistributionAMIDistributionLaunchPermission_organizationalUnitArns(t *testing.T) {
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_imagebuilder_distribution_configuration.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, imagebuilder.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDistributionConfigurationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDistributionConfigurationDistributionAMIDistributionConfigurationLaunchPermissionOrganizationalUnitArnsConfig(rName, "arn:aws:organizations::111111111111:ou/o-aze123rty456/ou-azer-12aefd983dz"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDistributionConfigurationExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "distribution.#", "1"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "distribution.*.ami_distribution_configuration.0.launch_permission.0.organizational_unit_arns.*", "arn:aws:organizations::111111111111:ou/o-aze123rty456/ou-azer-12aefd983dz"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccDistributionConfigurationDistributionAMIDistributionConfigurationLaunchPermissionOrganizationalUnitArnsConfig(rName, "arn:aws:organizations::222222222222:ou/o-aze123rty456/ou-azer-12aefd983dz"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDistributionConfigurationExists(resourceName),
+					acctest.CheckResourceAttrRFC3339(resourceName, "date_updated"),
+					resource.TestCheckResourceAttr(resourceName, "distribution.#", "1"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "distribution.*.ami_distribution_configuration.0.launch_permission.0.organizational_unit_arns.*", "arn:aws:organizations::222222222222:ou/o-aze123rty456/ou-azer-12aefd983dz"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccImageBuilderDistributionConfiguration_DistributionAMIDistribution_name(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_imagebuilder_distribution_configuration.test"
@@ -702,6 +774,40 @@ resource "aws_imagebuilder_distribution_configuration" "test" {
   }
 }
 `, rName, userId)
+}
+
+func testAccDistributionConfigurationDistributionAMIDistributionConfigurationLaunchPermissionOrganizationArnsConfig(rName string, organizationArn string) string {
+	return fmt.Sprintf(`
+data "aws_region" "current" {}
+resource "aws_imagebuilder_distribution_configuration" "test" {
+  name = %[1]q
+  distribution {
+    ami_distribution_configuration {
+      launch_permission {
+        organization_arns = [%[2]q]
+      }
+    }
+    region = data.aws_region.current.name
+  }
+}
+`, rName, organizationArn)
+}
+
+func testAccDistributionConfigurationDistributionAMIDistributionConfigurationLaunchPermissionOrganizationalUnitArnsConfig(rName string, organizationalUnitArn string) string {
+	return fmt.Sprintf(`
+data "aws_region" "current" {}
+resource "aws_imagebuilder_distribution_configuration" "test" {
+  name = %[1]q
+  distribution {
+    ami_distribution_configuration {
+      launch_permission {
+        organizational_unit_arns = [%[2]q]
+      }
+    }
+    region = data.aws_region.current.name
+  }
+}
+`, rName, organizationalUnitArn)
 }
 
 func testAccDistributionConfigurationDistributionAMIDistributionConfigurationNameConfig(rName string, name string) string {

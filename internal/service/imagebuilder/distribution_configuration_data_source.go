@@ -85,6 +85,20 @@ func DataSourceDistributionConfiguration() *schema.Resource {
 											Type: schema.TypeString,
 										},
 									},
+									"organization_arns": {
+										Type:     schema.TypeSet,
+										Computed: true,
+										Elem: &schema.Schema{
+											Type: schema.TypeString,
+										},
+									},
+									"organizational_unit_arns": {
+										Type:     schema.TypeSet,
+										Computed: true,
+										Elem: &schema.Schema{
+											Type: schema.TypeString,
+										},
+									},
 								},
 							},
 						},
