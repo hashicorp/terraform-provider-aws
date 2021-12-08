@@ -69,7 +69,7 @@ The following arguments are optional:
 * `service_registries` - (Optional) The service discovery registries for the service. The maximum number of `service_registries` blocks is `1`. [Detailed below](#service_registries).
 * `tags` - (Optional) A map of tags to assign to the file system. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level. If you have set `copy_tags_to_backups` to true, and you specify one or more tags, no existing file system tags are copied from the file system to the backup.
 * `wait_until_stable` - (Optional) Whether `terraform` should wait until the task set has reached `STEADY_STATE`.
-* `wait_until_stable_timeout` - (Optional) Wait timeout for task set to reach `STEADY_STATE`. Default `10m`.
+* `wait_until_stable_timeout` - (Optional) Wait timeout for task set to reach `STEADY_STATE`. Valid time units include `ns`, `us` (or `µs`), `ms`, `s`, `m`, and `h`. Default `10m`.
 
 ## capacity_provider_strategy
 
