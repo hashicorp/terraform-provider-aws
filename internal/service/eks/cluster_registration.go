@@ -164,7 +164,6 @@ func resourceClusterRegistrationRead(ctx context.Context, d *schema.ResourceData
 	d.Set("created_at", aws.TimeValue(cluster.CreatedAt).String())
 
 	d.Set("name", cluster.Name)
-	d.Set("role_arn", cluster.RoleArn)
 	d.Set("status", cluster.Status)
 
 	tags := KeyValueTags(cluster.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
