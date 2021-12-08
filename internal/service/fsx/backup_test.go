@@ -3,6 +3,7 @@ package fsx_test
 import (
 	"fmt"
 	"regexp"
+	"strings"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/fsx"
@@ -18,7 +19,7 @@ import (
 func TestAccFSxBackup_basic(t *testing.T) {
 	var backup fsx.Backup
 	resourceName := "aws_fsx_backup.test"
-	rName := fmt.Sprintf("tf_acc_test_%d", sdkacctest.RandInt())
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
@@ -47,7 +48,9 @@ func TestAccFSxBackup_basic(t *testing.T) {
 func TestAccFSxBackup_ontapBasic(t *testing.T) {
 	var backup fsx.Backup
 	resourceName := "aws_fsx_backup.test"
-	rName := fmt.Sprintf("tf_acc_test_%d", sdkacctest.RandInt())
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	//FSX ONTAP Volume Names can't use dash only underscore
+	vName := strings.Replace(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix), "-", "_", -1)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
@@ -56,7 +59,7 @@ func TestAccFSxBackup_ontapBasic(t *testing.T) {
 		CheckDestroy: testAccCheckFsxBackupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBackupONTAPBasicConfig(rName),
+				Config: testAccBackupONTAPBasicConfig(rName, vName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFsxBackupExists(resourceName, &backup),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "fsx", regexp.MustCompile(`backup/.+`)),
@@ -76,7 +79,7 @@ func TestAccFSxBackup_ontapBasic(t *testing.T) {
 func TestAccFSxBackup_windowsBasic(t *testing.T) {
 	var backup fsx.Backup
 	resourceName := "aws_fsx_backup.test"
-	rName := fmt.Sprintf("tf_acc_test_%d", sdkacctest.RandInt())
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
@@ -105,7 +108,7 @@ func TestAccFSxBackup_windowsBasic(t *testing.T) {
 func TestAccFSxBackup_disappears(t *testing.T) {
 	var backup fsx.Backup
 	resourceName := "aws_fsx_backup.test"
-	rName := fmt.Sprintf("tf_acc_test_%d", sdkacctest.RandInt())
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
@@ -128,7 +131,7 @@ func TestAccFSxBackup_disappears(t *testing.T) {
 func TestAccFSxBackup_Disappears_filesystem(t *testing.T) {
 	var backup fsx.Backup
 	resourceName := "aws_fsx_backup.test"
-	rName := fmt.Sprintf("tf_acc_test_%d", sdkacctest.RandInt())
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
@@ -151,7 +154,7 @@ func TestAccFSxBackup_Disappears_filesystem(t *testing.T) {
 func TestAccFSxBackup_tags(t *testing.T) {
 	var backup fsx.Backup
 	resourceName := "aws_fsx_backup.test"
-	rName := fmt.Sprintf("tf_acc_test_%d", sdkacctest.RandInt())
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
@@ -301,7 +304,7 @@ resource "aws_fsx_lustre_file_system" "test" {
 `, rName))
 }
 
-func testAccBackupONTAPBaseConfig(rName string) string {
+func testAccBackupONTAPBaseConfig(rName string, vName string) string {
 	return acctest.ConfigCompose(testAccBackupBaseConfig(), fmt.Sprintf(`
 resource "aws_fsx_ontap_file_system" "test" {
   storage_capacity    = 1024
@@ -321,13 +324,13 @@ resource "aws_fsx_ontap_storage_virtual_machine" "test" {
 }
 
 resource "aws_fsx_ontap_volume" "test" {
-  name                       = %[1]q
+  name                       = %[2]q
   junction_path              = "/%[1]s"
   size_in_megabytes          = 1024
   storage_efficiency_enabled = true
   storage_virtual_machine_id = aws_fsx_ontap_storage_virtual_machine.test.id
 }
-`, rName))
+`, rName, vName))
 }
 
 func testAccBackupWindowsBaseConfig(rName string) string {
@@ -371,8 +374,8 @@ resource "aws_fsx_backup" "test" {
 `, rName))
 }
 
-func testAccBackupONTAPBasicConfig(rName string) string {
-	return acctest.ConfigCompose(testAccBackupONTAPBaseConfig(rName), fmt.Sprintf(`
+func testAccBackupONTAPBasicConfig(rName string, vName string) string {
+	return acctest.ConfigCompose(testAccBackupONTAPBaseConfig(rName, vName), fmt.Sprintf(`
 resource "aws_fsx_backup" "test" {
   volume_id = aws_fsx_ontap_volume.test.id
 
