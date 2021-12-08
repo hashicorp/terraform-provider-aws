@@ -238,7 +238,7 @@ func waitActivityStreamStopped(ctx context.Context, conn *rds.RDS, dbClusterArn 
 		Delay:      30 * time.Second,
 	}
 
-	_, err := stateConf.WaitForState()
+	_, err := stateConf.WaitForStateContext(ctx)
 	if err != nil {
 		return fmt.Errorf("error waiting for RDS Cluster Activity Stream (%s) to be stopped: %v", dbClusterArn, err)
 	}
