@@ -42,9 +42,9 @@ resource "aws_kms_key" "default" {
 }
 
 resource "aws_rds_cluster_activity_stream" "default" {
-  resource_arn      = aws_rds_cluster.default.arn
-  mode              = "async"
-  kms_key_id        = aws_kms_key.default.key_id
+  resource_arn = aws_rds_cluster.default.arn
+  mode         = "async"
+  kms_key_id   = aws_kms_key.default.key_id
 
   depends_on = [aws_rds_cluster_instance.default]
 }
