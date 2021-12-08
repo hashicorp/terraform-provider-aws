@@ -87,7 +87,7 @@ func statusService(conn *ecs.ECS, id, cluster string) resource.StateRefreshFunc 
 
 func statusCluster(conn *ecs.ECS, arn string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindClusterByARN(conn, arn)
+		output, err := FindClusterByNameOrARN(conn, arn)
 
 		if tfawserr.ErrCodeEquals(err, ecs.ErrCodeClusterNotFoundException) {
 			return nil, clusterStatusNone, nil
