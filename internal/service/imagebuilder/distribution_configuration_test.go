@@ -320,35 +320,30 @@ func TestAccImageBuilderDistributionConfiguration_DistributionAMIDistributionLau
 
 func TestAccImageBuilderDistributionConfiguration_DistributionAMIDistributionLaunchPermission_organizationArns(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	organizationResourceName := "aws_organizations_organization.test"
 	resourceName := "aws_imagebuilder_distribution_configuration.test"
 
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(t)
+			acctest.PreCheckOrganizationsAccount(t)
+		},
 		ErrorCheck:        acctest.ErrorCheck(t, imagebuilder.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckDistributionConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDistributionConfigurationDistributionAMIDistributionConfigurationLaunchPermissionOrganizationArnsConfig(rName, "arn:aws:organizations::111111111111:organization/o-aze123rty456"),
+				Config: testAccDistributionConfigurationDistributionAMIDistributionConfigurationLaunchPermissionOrganizationArnsConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDistributionConfigurationExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "distribution.#", "1"),
-					resource.TestCheckTypeSetElemAttr(resourceName, "distribution.*.ami_distribution_configuration.0.launch_permission.0.organization_arns.*", "arn:aws:organizations::111111111111:organization/o-aze123rty456"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "distribution.*.ami_distribution_configuration.0.launch_permission.0.organization_arns.*", organizationResourceName, "arn"),
 				),
 			},
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
-			},
-			{
-				Config: testAccDistributionConfigurationDistributionAMIDistributionConfigurationLaunchPermissionOrganizationArnsConfig(rName, "arn:aws:organizations::222222222222:organization/o-aze123rty456"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDistributionConfigurationExists(resourceName),
-					acctest.CheckResourceAttrRFC3339(resourceName, "date_updated"),
-					resource.TestCheckResourceAttr(resourceName, "distribution.#", "1"),
-					resource.TestCheckTypeSetElemAttr(resourceName, "distribution.*.ami_distribution_configuration.0.launch_permission.0.organization_arns.*", "arn:aws:organizations::222222222222:organization/o-aze123rty456"),
-				),
 			},
 		},
 	})
@@ -356,35 +351,31 @@ func TestAccImageBuilderDistributionConfiguration_DistributionAMIDistributionLau
 
 func TestAccImageBuilderDistributionConfiguration_DistributionAMIDistributionLaunchPermission_organizationalUnitArns(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	organizationalUnitResourceName := "aws_organizations_organizational_unit.test"
+
 	resourceName := "aws_imagebuilder_distribution_configuration.test"
 
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(t)
+			acctest.PreCheckOrganizationsAccount(t)
+		},
 		ErrorCheck:        acctest.ErrorCheck(t, imagebuilder.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckDistributionConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDistributionConfigurationDistributionAMIDistributionConfigurationLaunchPermissionOrganizationalUnitArnsConfig(rName, "arn:aws:organizations::111111111111:ou/o-aze123rty456/ou-azer-12aefd983dz"),
+				Config: testAccDistributionConfigurationDistributionAMIDistributionConfigurationLaunchPermissionOrganizationalUnitArnsConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDistributionConfigurationExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "distribution.#", "1"),
-					resource.TestCheckTypeSetElemAttr(resourceName, "distribution.*.ami_distribution_configuration.0.launch_permission.0.organizational_unit_arns.*", "arn:aws:organizations::111111111111:ou/o-aze123rty456/ou-azer-12aefd983dz"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "distribution.*.ami_distribution_configuration.0.launch_permission.0.organizational_unit_arns.*", organizationalUnitResourceName, "arn"),
 				),
 			},
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
-			},
-			{
-				Config: testAccDistributionConfigurationDistributionAMIDistributionConfigurationLaunchPermissionOrganizationalUnitArnsConfig(rName, "arn:aws:organizations::222222222222:ou/o-aze123rty456/ou-azer-12aefd983dz"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDistributionConfigurationExists(resourceName),
-					acctest.CheckResourceAttrRFC3339(resourceName, "date_updated"),
-					resource.TestCheckResourceAttr(resourceName, "distribution.#", "1"),
-					resource.TestCheckTypeSetElemAttr(resourceName, "distribution.*.ami_distribution_configuration.0.launch_permission.0.organizational_unit_arns.*", "arn:aws:organizations::222222222222:ou/o-aze123rty456/ou-azer-12aefd983dz"),
-				),
 			},
 		},
 	})
@@ -776,38 +767,51 @@ resource "aws_imagebuilder_distribution_configuration" "test" {
 `, rName, userId)
 }
 
-func testAccDistributionConfigurationDistributionAMIDistributionConfigurationLaunchPermissionOrganizationArnsConfig(rName string, organizationArn string) string {
+func testAccDistributionConfigurationDistributionAMIDistributionConfigurationLaunchPermissionOrganizationArnsConfig(rName string) string {
 	return fmt.Sprintf(`
 data "aws_region" "current" {}
+data "aws_partition" "current" {}
+
+resource "aws_organizations_organization" "test" {}
+
 resource "aws_imagebuilder_distribution_configuration" "test" {
   name = %[1]q
   distribution {
     ami_distribution_configuration {
       launch_permission {
-        organization_arns = [%[2]q]
+        organization_arns = [aws_organizations_organization.test.arn]
       }
     }
     region = data.aws_region.current.name
   }
 }
-`, rName, organizationArn)
+`, rName)
 }
 
-func testAccDistributionConfigurationDistributionAMIDistributionConfigurationLaunchPermissionOrganizationalUnitArnsConfig(rName string, organizationalUnitArn string) string {
+func testAccDistributionConfigurationDistributionAMIDistributionConfigurationLaunchPermissionOrganizationalUnitArnsConfig(rName string) string {
 	return fmt.Sprintf(`
 data "aws_region" "current" {}
-resource "aws_imagebuilder_distribution_configuration" "test" {
-  name = %[1]q
-  distribution {
-    ami_distribution_configuration {
-      launch_permission {
-        organizational_unit_arns = [%[2]q]
-      }
-    }
-    region = data.aws_region.current.name
-  }
+data "aws_partition" "current" {}
+
+resource "aws_organizations_organization" "test" {}
+
+resource "aws_organizations_organizational_unit" "test" {
+	name = %[1]q
+	parent_id = aws_organizations_organization.test.roots[0].id
 }
-`, rName, organizationalUnitArn)
+
+resource "aws_imagebuilder_distribution_configuration" "test" {
+	name = %[1]q
+	distribution {
+	  ami_distribution_configuration {
+		launch_permission {
+		  organizational_unit_arns = [aws_organizations_organizational_unit.test.arn]
+		}
+	  }
+	  region = data.aws_region.current.name
+	}
+  }
+  `, rName)
 }
 
 func testAccDistributionConfigurationDistributionAMIDistributionConfigurationNameConfig(rName string, name string) string {
