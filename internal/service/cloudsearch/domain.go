@@ -1,4 +1,4 @@
-package aws
+package cloudsearch
 
 import (
 	"fmt"
@@ -14,16 +14,20 @@ import (
 	"github.com/aws/aws-sdk-go/service/cloudsearch"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-func resourceAwsCloudSearchDomain() *schema.Resource {
+func ResourceDomain() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsCloudSearchDomainCreate,
-		Read:   resourceAwsCloudSearchDomainRead,
-		Update: resourceAwsCloudSearchDomainUpdate,
-		Delete: resourceAwsCloudSearchDomainDelete,
+		Create: resourceCloudSearchDomainCreate,
+		Read:   resourceCloudSearchDomainRead,
+		Update: resourceCloudSearchDomainUpdate,
+		Delete: resourceCloudSearchDomainDelete,
 		Importer: &schema.ResourceImporter{
-			State: resourceAwsCloudSearchDomainImport,
+			State: resourceCloudSearchDomainImport,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -39,7 +43,7 @@ func resourceAwsCloudSearchDomain() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Default:      "search.small",
-				ValidateFunc: validateInstanceType,
+				ValidateFunc: validation.StringInSlice(cloudsearch.PartitionInstanceType_Values(), false),
 			},
 
 			"replication_count": {
@@ -62,9 +66,9 @@ func resourceAwsCloudSearchDomain() *schema.Resource {
 
 			"service_access_policies": {
 				Type:             schema.TypeString,
-				ValidateFunc:     validateIAMPolicyJson,
 				Required:         true,
-				DiffSuppressFunc: suppressEquivalentAwsPolicyDiffs,
+				DiffSuppressFunc: verify.SuppressEquivalentPolicyDiffs,
+				ValidateFunc:     validation.StringIsJSON,
 			},
 
 			"index": {
@@ -81,7 +85,7 @@ func resourceAwsCloudSearchDomain() *schema.Resource {
 						"type": {
 							Type:         schema.TypeString,
 							Required:     true,
-							ValidateFunc: validateIndexType,
+							ValidateFunc: validation.StringInSlice(cloudsearch.IndexFieldType_Values(), false),
 						},
 
 						"search": {
@@ -149,14 +153,15 @@ func resourceAwsCloudSearchDomain() *schema.Resource {
 				Computed: true,
 			},
 
-			"tags": tagsSchema(),
+			"tags":     tftags.TagsSchema(),
+			"tags_all": tftags.TagsSchemaComputed(),
 		},
 	}
 }
 
 // Terraform CRUD Functions
-func resourceAwsCloudSearchDomainCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cloudsearchconn
+func resourceCloudSearchDomainCreate(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*conns.AWSClient).CloudSearchConn
 
 	input := cloudsearch.CreateDomainInput{
 		DomainName: aws.String(d.Get("name").(string)),
@@ -169,11 +174,11 @@ func resourceAwsCloudSearchDomainCreate(d *schema.ResourceData, meta interface{}
 	}
 
 	d.SetId(aws.StringValue(output.DomainStatus.ARN))
-	return resourceAwsCloudSearchDomainUpdate(d, meta)
+	return resourceCloudSearchDomainUpdate(d, meta)
 }
 
-func resourceAwsCloudSearchDomainRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cloudsearchconn
+func resourceCloudSearchDomainRead(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*conns.AWSClient).CloudSearchConn
 
 	domainlist := cloudsearch.DescribeDomainsInput{
 		DomainNames: []*string{
@@ -247,8 +252,8 @@ func resourceAwsCloudSearchDomainRead(d *schema.ResourceData, meta interface{}) 
 	return err
 }
 
-func resourceAwsCloudSearchDomainUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cloudsearchconn
+func resourceCloudSearchDomainUpdate(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*conns.AWSClient).CloudSearchConn
 
 	_, err := conn.UpdateServiceAccessPolicies(&cloudsearch.UpdateServiceAccessPoliciesInput{
 		DomainName:     aws.String(d.Get("name").(string)),
@@ -310,8 +315,8 @@ func resourceAwsCloudSearchDomainUpdate(d *schema.ResourceData, meta interface{}
 	return nil
 }
 
-func resourceAwsCloudSearchDomainDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cloudsearchconn
+func resourceCloudSearchDomainDelete(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*conns.AWSClient).CloudSearchConn
 
 	dm := d.Get("name").(string)
 	input := cloudsearch.DeleteDomainInput{
@@ -324,7 +329,7 @@ func resourceAwsCloudSearchDomainDelete(d *schema.ResourceData, meta interface{}
 }
 
 // Import Function
-func resourceAwsCloudSearchDomainImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+func resourceCloudSearchDomainImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	d.SetId(d.Id())
 
 	arn, err := arn.Parse(d.Id())
@@ -352,23 +357,6 @@ func validateDomainName(v interface{}, k string) (ws []string, es []error) {
 	return
 }
 
-func validateInstanceType(v interface{}, k string) (ws []string, es []error) {
-	value := v.(string)
-	found := false
-	for _, t := range cloudsearch.PartitionInstanceType_Values() {
-		if t == value {
-			found = true
-			continue
-		}
-	}
-
-	if !found {
-		es = append(es, fmt.Errorf("%q is not a valid instance type", v))
-	}
-
-	return
-}
-
 func validateIndexName(v interface{}, k string) (ws []string, es []error) {
 	value := v.(string)
 
@@ -379,23 +367,6 @@ func validateIndexName(v interface{}, k string) (ws []string, es []error) {
 
 	if value == "score" {
 		es = append(es, fmt.Errorf("'score' is a reserved field name and cannot be used"))
-	}
-
-	return
-}
-
-func validateIndexType(v interface{}, k string) (ws []string, es []error) {
-	value := v.(string)
-	found := false
-	for _, t := range cloudsearch.IndexFieldType_Values() {
-		if t == value {
-			found = true
-			continue
-		}
-	}
-
-	if !found {
-		es = append(es, fmt.Errorf("%q is not a valid index type", v))
 	}
 
 	return

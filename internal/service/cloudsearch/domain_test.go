@@ -1,67 +1,36 @@
-package aws
+package cloudsearch_test
 
 import (
 	"fmt"
-	"regexp"
 	"strconv"
-	"strings"
 	"testing"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudsearch"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func init() {
-	resource.AddTestSweepers("aws_cloudsearch_domain", &resource.Sweeper{
-		Name: "aws_cloudsearch_domain",
-		F: func(region string) error {
-			client, err := sharedClientForRegion(region)
-			if err != nil {
-				return fmt.Errorf("error getting client: %s", err)
-			}
-			conn := client.(*AWSClient).cloudsearchconn
-
-			domains, err := conn.DescribeDomains(&cloudsearch.DescribeDomainsInput{})
-			if err != nil {
-				return fmt.Errorf("error describing CloudSearch domains: %s", err)
-			}
-
-			for _, domain := range domains.DomainStatusList {
-				if !strings.HasPrefix(*domain.DomainName, "tf-acc-") {
-					continue
-				}
-				_, err := conn.DeleteDomain(&cloudsearch.DeleteDomainInput{
-					DomainName: domain.DomainName,
-				})
-				if err != nil {
-					return fmt.Errorf("error deleting CloudSearch domain: %s", err)
-				}
-			}
-			return nil
-		},
-	})
-}
-
-func TestAccAWSCloudSearchDomain_basic(t *testing.T) {
+func TestAccCloudSearchDomain_basic(t *testing.T) {
 	var domains cloudsearch.DescribeDomainsOutput
 	resourceName := "aws_cloudsearch_domain.test"
-	domainName := fmt.Sprintf("tf-acc-%s", acctest.RandString(8))
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSCloudSearchDomainDestroy,
-		ErrorCheck:   func(err error) error { return err },
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudsearch.EndpointsID, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, cloudsearch.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCloudSearchDomainDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCloudSearchDomainConfig_basic(domainName),
+				Config: testAccCloudSearchDomainConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSCloudSearchDomainExists(resourceName, &domains),
-					resource.TestCheckResourceAttr(resourceName, "name", domainName),
+					testAccCloudSearchDomainExists(resourceName, &domains),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
 				),
 			},
 			{
@@ -70,10 +39,10 @@ func TestAccAWSCloudSearchDomain_basic(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSCloudSearchDomainConfig_basicIndexMix(domainName),
+				Config: testAccCloudSearchDomainConfig_basicIndexMix(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSCloudSearchDomainExists(resourceName, &domains),
-					resource.TestCheckResourceAttr(resourceName, "name", domainName),
+					testAccCloudSearchDomainExists(resourceName, &domains),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
 				),
 			},
 			{
@@ -85,29 +54,29 @@ func TestAccAWSCloudSearchDomain_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSCloudSearchDomain_textAnalysisScheme(t *testing.T) {
+func TestAccCloudSearchDomain_textAnalysisScheme(t *testing.T) {
 	var domains cloudsearch.DescribeDomainsOutput
 	resourceName := "aws_cloudsearch_domain.test"
-	domainName := fmt.Sprintf("tf-acc-%s", acctest.RandString(8))
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSCloudSearchDomainDestroy,
-		ErrorCheck:   func(err error) error { return err },
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudsearch.EndpointsID, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, cloudsearch.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCloudSearchDomainDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCloudSearchDomainConfig_textAnalysisScheme(domainName, "_en_default_"),
+				Config: testAccCloudSearchDomainConfig_textAnalysisScheme(rName, "_en_default_"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSCloudSearchDomainExists(resourceName, &domains),
-					resource.TestCheckResourceAttr(resourceName, "name", domainName),
+					testAccCloudSearchDomainExists(resourceName, &domains),
+					resource.TestCheckResourceAttr(resourceName, "name", acctest.RandomFQDomainName()),
 				),
 			},
 			{
-				Config: testAccAWSCloudSearchDomainConfig_textAnalysisScheme(domainName, "_fr_default_"),
+				Config: testAccCloudSearchDomainConfig_textAnalysisScheme(rName, "_fr_default_"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSCloudSearchDomainExists(resourceName, &domains),
-					resource.TestCheckResourceAttr(resourceName, "name", domainName),
+					testAccCloudSearchDomainExists(resourceName, &domains),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
 				),
 			},
 			{
@@ -119,92 +88,14 @@ func TestAccAWSCloudSearchDomain_textAnalysisScheme(t *testing.T) {
 	})
 }
 
-func TestAccAWSCloudSearchDomain_badName(t *testing.T) {
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSCloudSearchDomainDestroy,
-		ErrorCheck:   func(err error) error { return err },
-		Steps: []resource.TestStep{
-			{
-				Config:      testAccAWSCloudSearchDomainConfig_basic("-this-is-a-bad-name"),
-				ExpectError: regexp.MustCompile(`.*"name" must begin with a.*`),
-			},
-		},
-	})
-}
-
-func TestAccAWSCloudSearchDomain_badInstanceType(t *testing.T) {
-	domainName := fmt.Sprintf("tf-acc-%s", acctest.RandString(8))
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSCloudSearchDomainDestroy,
-		ErrorCheck:   func(err error) error { return err },
-		Steps: []resource.TestStep{
-			{
-				Config:      testAccAWSCloudSearchDomainConfig_withInstanceType(domainName, "nope.small"),
-				ExpectError: regexp.MustCompile(`.*is not a valid instance type.*`),
-			},
-		},
-	})
-}
-
-func TestAccAWSCloudSearchDomain_badIndexFieldNames(t *testing.T) {
-	domainName := fmt.Sprintf("tf-acc-%s", acctest.RandString(8))
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSCloudSearchDomainDestroy,
-		ErrorCheck:   func(err error) error { return err },
-		Steps: []resource.TestStep{
-			{
-				Config:      testAccAWSCloudSearchDomainConfig_withIndex(domainName, "HELLO", "text"),
-				ExpectError: regexp.MustCompile(`.*must begin with a letter and be at least 3 and no more than 64 characters long.*`),
-			},
-			{
-				Config:      testAccAWSCloudSearchDomainConfig_withIndex(domainName, "w-a", "text"),
-				ExpectError: regexp.MustCompile(`.*must begin with a letter and be at least 3 and no more than 64 characters long.*`),
-			},
-			{
-				Config:      testAccAWSCloudSearchDomainConfig_withIndex(domainName, "jfjdbfjdhsjakhfdhsajkfhdjksahfdsbfkjchndsjkhafbjdkshafjkdshjfhdsjkahfjkdsha", "text"),
-				ExpectError: regexp.MustCompile(`.*must begin with a letter and be at least 3 and no more than 64 characters long.*`),
-			},
-			{
-				Config:      testAccAWSCloudSearchDomainConfig_withIndex(domainName, "w", "text"),
-				ExpectError: regexp.MustCompile(`.*must begin with a letter and be at least 3 and no more than 64 characters long.*`),
-			},
-		},
-	})
-}
-
-func TestAccAWSCloudSearchDomain_badIndexFieldType(t *testing.T) {
-	domainName := fmt.Sprintf("tf-acc-%s", acctest.RandString(8))
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSCloudSearchDomainDestroy,
-		ErrorCheck:   func(err error) error { return err },
-		Steps: []resource.TestStep{
-			{
-				Config:      testAccAWSCloudSearchDomainConfig_withIndex(domainName, "directory", "not-a-type"),
-				ExpectError: regexp.MustCompile(`.*is not a valid index type.*`),
-			},
-		},
-	})
-}
-
-func testAccCheckAWSCloudSearchDomainExists(n string, domains *cloudsearch.DescribeDomainsOutput) resource.TestCheckFunc {
+func testAccCloudSearchDomainExists(n string, domains *cloudsearch.DescribeDomainsOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).cloudsearchconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudSearchConn
 
 		domainList := cloudsearch.DescribeDomainsInput{
 			DomainNames: []*string{
@@ -223,13 +114,14 @@ func testAccCheckAWSCloudSearchDomainExists(n string, domains *cloudsearch.Descr
 	}
 }
 
-func testAccCheckAWSCloudSearchDomainDestroy(s *terraform.State) error {
+func testAccCloudSearchDomainDestroy(s *terraform.State) error {
+	conn := acctest.Provider.Meta().(*conns.AWSClient).CloudSearchConn
+
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_cloudsearch_domain" {
 			continue
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).cloudsearchconn
 		// Wait for the resource to start being deleted, which is marked as "Deleted" from the API.
 		stateConf := &resource.StateChangeConf{
 			Pending:        []string{"false"},
@@ -269,7 +161,7 @@ func testAccCheckAWSCloudSearchDomainDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccAWSCloudSearchDomainConfig_basic(name string) string {
+func testAccCloudSearchDomainConfig_basic(name string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudsearch_domain" "test" {
   name = "%s"
@@ -385,7 +277,7 @@ EOF
 `, name)
 }
 
-func testAccAWSCloudSearchDomainConfig_basicIndexMix(name string) string {
+func testAccCloudSearchDomainConfig_basicIndexMix(name string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudsearch_domain" "test" {
   name = "%s"
@@ -463,7 +355,7 @@ EOF
 
 // NOTE: I'd like to get text and text arrays field to work properly without having to explicitly set the
 // `analysis_scheme` field, but I cannot find a way to suppress the diff Terraform ends up generating as a result.
-func testAccAWSCloudSearchDomainConfig_textAnalysisScheme(name string, scheme string) string {
+func testAccCloudSearchDomainConfig_textAnalysisScheme(name string, scheme string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudsearch_domain" "test" {
   name = "%s"
@@ -496,7 +388,7 @@ EOF
 `, name, scheme)
 }
 
-func testAccAWSCloudSearchDomainConfig_withInstanceType(name string, instance_type string) string {
+func testAccCloudSearchDomainConfig_withInstanceType(name string, instance_type string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudsearch_domain" "test" {
   name = "%s"
@@ -520,7 +412,7 @@ EOF
 `, name, instance_type)
 }
 
-func testAccAWSCloudSearchDomainConfig_withIndex(name string, index_name string, index_type string) string {
+func testAccCloudSearchDomainConfig_withIndex(name string, index_name string, index_type string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudsearch_domain" "test" {
   name = "%s"
