@@ -299,7 +299,11 @@ func dataSourceTableRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error setting replica: %w", err)
 	}
 
-	d.Set("table_class", table.TableClassSummary.TableClass)
+	if table.TableClassSummary != nil {
+		d.Set("table_class", table.TableClassSummary.TableClass)
+	} else {
+		d.Set("table_class", nil)
+	}
 
 	pitrOut, err := conn.DescribeContinuousBackups(&dynamodb.DescribeContinuousBackupsInput{
 		TableName: aws.String(d.Id()),
