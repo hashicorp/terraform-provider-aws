@@ -138,6 +138,8 @@ func testAccCheckClusterRegistrationDestroy(s *terraform.State) error {
 
 func testAccClusterRegistrationBaseIAMConfig(rName string) string {
 	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+
 resource "aws_iam_role" "test" {
   name = %[1]q
 
@@ -149,7 +151,7 @@ resource "aws_iam_role" "test" {
         "Effect" : "Allow",
         "Principal" : {
           "Service" : [
-            "ssm.amazonaws.com"
+            "ssm.${data.aws_partition.current.dns_suffix}"
           ]
         },
         "Action" : "sts:AssumeRole"
@@ -167,7 +169,7 @@ data aws_iam_policy_document test {
     ]
 
     resources = [
-      "arn:aws:eks:*:*:cluster/*"
+      "arn:${data.aws_partition.current.partition}:eks:*:*:cluster/*"
     ]
   }
 
