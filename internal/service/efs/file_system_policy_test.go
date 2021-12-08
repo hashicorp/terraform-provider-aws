@@ -225,7 +225,7 @@ resource "aws_efs_file_system_policy" "test" {
     "Id": "ExamplePolicy01",
     "Statement": [
         {
-            "Sid": "ExampleSatement01",
+            "Sid": "ExampleStatement01",
             "Effect": "Allow",
             "Principal": {
                 "AWS": "*"
@@ -263,7 +263,7 @@ resource "aws_efs_file_system_policy" "test" {
     "Id": "ExamplePolicy01",
     "Statement": [
         {
-            "Sid": "ExampleSatement01",
+            "Sid": "ExampleStatement01",
             "Effect": "Allow",
             "Principal": {
                 "AWS": "*"
@@ -300,7 +300,7 @@ resource "aws_efs_file_system_policy" "test" {
     "Id": "ExamplePolicy01",
     "Statement": [
         {
-            "Sid": "ExampleSatement01",
+            "Sid": "ExampleStatement01",
             "Effect": "Allow",
             "Principal": {
                 "AWS": "*"
@@ -336,7 +336,7 @@ resource "aws_efs_file_system_policy" "test" {
     Version = "2012-10-17"
     Id      = "ExamplePolicy01"
     Statement = [{
-      Sid    = "ExampleSatement01"
+      Sid    = "ExampleStatement01"
       Effect = "Allow"
       Principal = {
         AWS = "*"
@@ -370,7 +370,7 @@ resource "aws_efs_file_system_policy" "test" {
     Version = "2012-10-17"
     Id      = "ExamplePolicy01"
     Statement = [{
-      Sid    = "ExampleSatement01"
+      Sid    = "ExampleStatement01"
       Effect = "Allow"
       Principal = {
         AWS = "*"
