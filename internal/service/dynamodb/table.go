@@ -705,6 +705,7 @@ func resourceTableUpdate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if d.HasChange("table_class") {
+		hasTableUpdate = true
 		input.TableClass = aws.String(d.Get("table_class").(string))
 	}
 
