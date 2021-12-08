@@ -152,9 +152,7 @@ func resourceRepositoryPolicyUpdate(d *schema.ResourceData, meta interface{}) er
 		return fmt.Errorf("error updating ECR Public Repository Policy (%s): %w", d.Id(), err)
 	}
 
-	repositoryPolicy := *out
-
-	d.Set("registry_id", repositoryPolicy.RegistryId)
+	d.Set("registry_id", out.RegistryId)
 
 	return resourceRepositoryPolicyRead(d, meta)
 }
