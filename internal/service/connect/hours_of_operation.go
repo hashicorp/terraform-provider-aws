@@ -1,6 +1,7 @@
 package connect
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"log"
@@ -13,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
@@ -31,7 +33,7 @@ func ResourceHoursOfOperation() *schema.Resource {
 		},
 		Schema: map[string]*schema.Schema{
 			"config": {
-				Type:     schema.TypeList,
+				Type:     schema.TypeSet,
 				Required: true,
 				MinItems: 0,
 				MaxItems: 100,
@@ -78,6 +80,14 @@ func ResourceHoursOfOperation() *schema.Resource {
 						},
 					},
 				},
+				Set: func(v interface{}) int {
+					var buf bytes.Buffer
+					m := v.(map[string]interface{})
+					buf.WriteString(m["day"].(string))
+					buf.WriteString(fmt.Sprintf("%+v", m["end_time"].([]interface{})))
+					buf.WriteString(fmt.Sprintf("%+v", m["start_time"].([]interface{})))
+					return create.StringHashcode(buf.String())
+				},
 			},
 			"description": {
 				Type:         schema.TypeString,
@@ -119,7 +129,7 @@ func resourceHoursOfOperationCreate(ctx context.Context, d *schema.ResourceData,
 	instanceID := d.Get("instance_id").(string)
 	name := d.Get("name").(string)
 
-	config := expandConfigs(d.Get("config").([]interface{}))
+	config := expandConfigs(d.Get("config").(*schema.Set).List())
 
 	input := &connect.CreateHoursOfOperationInput{
 		Config:     config,
@@ -222,7 +232,7 @@ func resourceHoursOfOperationUpdate(ctx context.Context, d *schema.ResourceData,
 	}
 
 	if d.HasChange("config") {
-		config := expandConfigs(d.Get("config").([]interface{}))
+		config := expandConfigs(d.Get("config").(*schema.Set).List())
 		input.Config = config
 	}
 
