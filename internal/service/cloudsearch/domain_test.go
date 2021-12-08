@@ -18,7 +18,7 @@ import (
 func TestAccCloudSearchDomain_basic(t *testing.T) {
 	var domains cloudsearch.DescribeDomainsOutput
 	resourceName := "aws_cloudsearch_domain.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.ResourcePrefix + "-" + sdkacctest.RandString(28-(len(acctest.ResourcePrefix)+1))
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudsearch.EndpointsID, t) },
@@ -57,7 +57,7 @@ func TestAccCloudSearchDomain_basic(t *testing.T) {
 func TestAccCloudSearchDomain_textAnalysisScheme(t *testing.T) {
 	var domains cloudsearch.DescribeDomainsOutput
 	resourceName := "aws_cloudsearch_domain.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.ResourcePrefix + "-" + sdkacctest.RandString(28-(len(acctest.ResourcePrefix)+1))
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudsearch.EndpointsID, t) },
