@@ -6,16 +6,16 @@ import (
 	"reflect"
 	"regexp"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/cloudsearch"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
@@ -26,48 +26,75 @@ func ResourceDomain() *schema.Resource {
 		Update: resourceCloudSearchDomainUpdate,
 		Delete: resourceCloudSearchDomainDelete,
 		Importer: &schema.ResourceImporter{
-			State: resourceCloudSearchDomainImport,
+			State: schema.ImportStatePassthrough,
 		},
 
 		Schema: map[string]*schema.Schema{
-			"name": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ForceNew:     true,
-				ValidateFunc: validateDomainName,
+			// TODO: Separate access policy resource?
+			// TODO: Is it Required?
+			"access_policies": {
+				Type:             schema.TypeString,
+				Required:         true,
+				ValidateFunc:     validation.StringIsJSON,
+				DiffSuppressFunc: verify.SuppressEquivalentPolicyDiffs,
+				StateFunc: func(v interface{}) string {
+					json, _ := structure.NormalizeJsonString(v)
+					return json
+				},
 			},
-
-			"instance_type": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Default:      cloudsearch.PartitionInstanceTypeSearchSmall,
-				ValidateFunc: validation.StringInSlice(cloudsearch.PartitionInstanceType_Values(), false),
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
-
-			"replication_count": {
-				Type:     schema.TypeInt,
+			"endpoint_options": {
+				Type:     schema.TypeList,
+				MaxItems: 1,
 				Optional: true,
-				Default:  0,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"enforce_https": {
+							Type:     schema.TypeBool,
+							Optional: true,
+						},
+						"tls_security_policy": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validation.StringInSlice(cloudsearch.TLSSecurityPolicy_Values(), false),
+						},
+					},
+				},
 			},
-
-			"partition_count": {
-				Type:     schema.TypeInt,
-				Optional: true,
-				Default:  1,
-			},
-
 			"multi_az": {
 				Type:     schema.TypeBool,
 				Optional: true,
-				Default:  false,
 			},
-
-			"service_access_policies": {
-				Type:             schema.TypeString,
-				Required:         true,
-				DiffSuppressFunc: verify.SuppressEquivalentPolicyDiffs,
-				ValidateFunc:     validation.StringIsJSON,
+			"name": {
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringMatch(regexp.MustCompile(`^[a-z]([a-z0-9-]){2,27}$`), "Search domain names must start with a lowercase letter (a-z) and be at least 3 and no more than 28 lower-case letters, digits or hyphens"),
+			},
+			"scaling_parameters": {
+				Type:     schema.TypeList,
+				MaxItems: 1,
+				Optional: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"desired_instance_type": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validation.StringInSlice(cloudsearch.PartitionInstanceType_Values(), false),
+						},
+						"desired_partition_count": {
+							Type:     schema.TypeInt,
+							Optional: true,
+						},
+						"desired_replication_count": {
+							Type:     schema.TypeInt,
+							Optional: true,
+						},
+					},
+				},
 			},
 
 			"index": {
@@ -137,11 +164,6 @@ func ResourceDomain() *schema.Resource {
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool { return true },
 			},
 
-			"id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
 			"document_endpoint": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -159,17 +181,72 @@ func ResourceDomain() *schema.Resource {
 func resourceCloudSearchDomainCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CloudSearchConn
 
+	name := d.Get("name").(string)
 	input := cloudsearch.CreateDomainInput{
-		DomainName: aws.String(d.Get("name").(string)),
+		DomainName: aws.String(name),
 	}
 
-	output, err := conn.CreateDomain(&input)
+	log.Printf("[DEBUG] Creating CloudSearch Domain: %s", input)
+	_, err := conn.CreateDomain(&input)
+
 	if err != nil {
-		log.Printf("[DEBUG] Creating CloudSearch Domain: %#v", input)
-		return fmt.Errorf("%s %q", err, d.Get("name").(string))
+		return fmt.Errorf("error creating CloudSearch Domain (%s): %w", name, err)
 	}
 
-	d.SetId(aws.StringValue(output.DomainStatus.ARN))
+	d.SetId(name)
+
+	log.Printf("[DEBUG] Updating CloudSearch Domain (%s) access policies", name)
+	_, err = conn.UpdateServiceAccessPolicies(&cloudsearch.UpdateServiceAccessPoliciesInput{
+		DomainName:     aws.String(d.Id()),
+		AccessPolicies: aws.String(d.Get("access_policies").(string)),
+	})
+
+	if err != nil {
+		return fmt.Errorf("error updating CloudSearch Domain (%s) service access policies: %w", name, err)
+	}
+
+	if v, ok := d.GetOk("scaling_parameters"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		input := &cloudsearch.UpdateScalingParametersInput{
+			DomainName:        aws.String(d.Id()),
+			ScalingParameters: expandScalingParameters(v.([]interface{})[0].(map[string]interface{})),
+		}
+
+		log.Printf("[DEBUG] Updating CloudSearch Domain scaling parameters: %s", input)
+		_, err := conn.UpdateScalingParameters(input)
+
+		if err != nil {
+			return fmt.Errorf("error updating CloudSearch Domain (%s) scaling parameters: %w", name, err)
+		}
+	}
+
+	if v, ok := d.GetOk("multi_az"); ok {
+		input := &cloudsearch.UpdateAvailabilityOptionsInput{
+			DomainName: aws.String(d.Id()),
+			MultiAZ:    aws.Bool(v.(bool)),
+		}
+
+		log.Printf("[DEBUG] Updating CloudSearch Domain availability options: %s", input)
+		_, err := conn.UpdateAvailabilityOptions(input)
+
+		if err != nil {
+			return fmt.Errorf("error updating CloudSearch Domain (%s) availability options: %w", name, err)
+		}
+	}
+
+	if v, ok := d.GetOk("scaling_parameters"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		input := &cloudsearch.UpdateDomainEndpointOptionsInput{
+			DomainEndpointOptions: expandDomainEndpointOptions(v.([]interface{})[0].(map[string]interface{})),
+			DomainName:            aws.String(d.Id()),
+		}
+
+		log.Printf("[DEBUG] Updating CloudSearch Domain endpoint options: %s", input)
+		_, err := conn.UpdateDomainEndpointOptions(input)
+
+		if err != nil {
+			return fmt.Errorf("error updating CloudSearch Domain (%s) endpoint options: %w", name, err)
+		}
+	}
+
 	return resourceCloudSearchDomainUpdate(d, meta)
 }
 
@@ -314,43 +391,17 @@ func resourceCloudSearchDomainUpdate(d *schema.ResourceData, meta interface{}) e
 func resourceCloudSearchDomainDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CloudSearchConn
 
-	dm := d.Get("name").(string)
-	input := cloudsearch.DeleteDomainInput{
-		DomainName: aws.String(dm),
-	}
+	log.Printf("[DEBUG] Deleting CloudSearch Domain: %s", d.Id())
 
-	_, err := conn.DeleteDomain(&input)
+	_, err := conn.DeleteDomain(&cloudsearch.DeleteDomainInput{
+		DomainName: aws.String(d.Id()),
+	})
 
-	return err
-}
-
-// Import Function
-func resourceCloudSearchDomainImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-	d.SetId(d.Id())
-
-	arn, err := arn.Parse(d.Id())
 	if err != nil {
-		return nil, err
+		return fmt.Errorf("error deleting CloudSearch Domain (%s): %w", d.Id(), err)
 	}
 
-	parts := strings.Split(arn.Resource, "/")
-	if len(parts) != 2 {
-		return nil, fmt.Errorf("resource component of ARN is not properly formatted")
-	}
-
-	d.Set("name", parts[1])
-
-	return []*schema.ResourceData{d}, nil
-}
-
-// Validation Functions
-func validateDomainName(v interface{}, k string) (ws []string, es []error) {
-	value := v.(string)
-	if !regexp.MustCompile(`^[a-z]([a-z0-9-]){2,27}$`).MatchString(value) {
-		es = append(es, fmt.Errorf(
-			"%q must begin with a lower-case letter, contain only [a-z0-9-] and be at least 3 and at most 28 characters", k))
-	}
-	return
+	return nil
 }
 
 func validateIndexName(v interface{}, k string) (ws []string, es []error) {
@@ -816,4 +867,115 @@ func readIndexField(raw *cloudsearch.IndexField) map[string]interface{} {
 	}
 
 	return index
+}
+
+func FindDomainByName(conn *cloudsearch.CloudSearch, name string) (*cloudsearch.DomainStatus, error) {
+	input := &cloudsearch.DescribeDomainsInput{
+		DomainNames: aws.StringSlice([]string{name}),
+	}
+
+	output, err := conn.DescribeDomains(input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || len(output.DomainStatusList) == 0 || output.DomainStatusList[0] == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	if count := len(output.DomainStatusList); count > 1 {
+		return nil, tfresource.NewTooManyResultsError(count, input)
+	}
+
+	domainStatus := output.DomainStatusList[0]
+
+	if aws.BoolValue(domainStatus.Deleted) {
+		return nil, &resource.NotFoundError{
+			Message:     "deleted",
+			LastRequest: input,
+		}
+	}
+
+	return domainStatus, nil
+}
+
+func expandDomainEndpointOptions(tfMap map[string]interface{}) *cloudsearch.DomainEndpointOptions {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &cloudsearch.DomainEndpointOptions{}
+
+	if v, ok := tfMap["enforce_https"].(bool); ok {
+		apiObject.EnforceHTTPS = aws.Bool(v)
+	}
+
+	if v, ok := tfMap["tls_security_policy"].(string); ok && v != "" {
+		apiObject.TLSSecurityPolicy = aws.String(v)
+	}
+
+	return apiObject
+}
+
+func flattenDomainEndpointOptions(apiObject *cloudsearch.DomainEndpointOptions) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.EnforceHTTPS; v != nil {
+		tfMap["enforce_https"] = aws.BoolValue(v)
+	}
+
+	if v := apiObject.TLSSecurityPolicy; v != nil {
+		tfMap["tls_security_policy"] = aws.StringValue(v)
+	}
+
+	return tfMap
+}
+
+func expandScalingParameters(tfMap map[string]interface{}) *cloudsearch.ScalingParameters {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &cloudsearch.ScalingParameters{}
+
+	if v, ok := tfMap["desired_instance_type"].(string); ok && v != "" {
+		apiObject.DesiredInstanceType = aws.String(v)
+	}
+
+	if v, ok := tfMap["desired_partition_count"].(int); ok && v != 0 {
+		apiObject.DesiredPartitionCount = aws.Int64(int64(v))
+	}
+
+	if v, ok := tfMap["desired_replication_count"].(int); ok && v != 0 {
+		apiObject.DesiredReplicationCount = aws.Int64(int64(v))
+	}
+
+	return apiObject
+}
+
+func flattenScalingParameters(apiObject *cloudsearch.ScalingParameters) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.DesiredInstanceType; v != nil {
+		tfMap["desired_instance_type"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.DesiredPartitionCount; v != nil {
+		tfMap["desired_partition_count"] = aws.Int64Value(v)
+	}
+
+	if v := apiObject.DesiredReplicationCount; v != nil {
+		tfMap["desired_replication_count"] = aws.Int64Value(v)
+	}
+
+	return tfMap
 }

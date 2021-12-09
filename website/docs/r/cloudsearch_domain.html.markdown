@@ -13,7 +13,7 @@ Provides an CloudSearch domain resource.
 ## Example Usage
 
 ```terraform
-resource "aws_cloudsearch_domain" "my_domain" {
+resource "aws_cloudsearch_domain" "example" {
   name          = "test-domain"
   instance_type = "search.medium"
 
@@ -35,7 +35,7 @@ resource "aws_cloudsearch_domain" "my_domain" {
     return = true
     sort   = true
   }
-  service_access_policies = data.aws_iam_policy_document.cloudsearch_access_policy.json
+  access_policies = data.aws_iam_policy_document.cloudsearch_access_policy.json
 }
 
 data "aws_iam_policy_document" "cloudsearch_access_policy" {
@@ -56,13 +56,32 @@ data "aws_iam_policy_document" "cloudsearch_access_policy" {
 
 The following arguments are supported:
 
+* `access_policies` - (Required) The AWS IAM access policy for the domain. See the [AWS documentation](https://docs.aws.amazon.com/cloudsearch/latest/developerguide/configuring-access.html#cloudsearch-access-policies) for more details.
+* `endpoint_options` - (Optional) Domain endpoint options. Documented below.
+* `multi_az` - (Optional) Whether or not to maintain extra instances for the domain in a second Availability Zone to ensure high availability.
 * `name` - (Required) The name of the CloudSearch domain.
+* `scaling_parameters` - (Optional) Domain scaling parameters. Documented below.
+
 * `instance_type` - (Optional) The type of instance to start.
 * `replication_count` - (Optional) The amount of replicas.
 * `partition_count` - (Optional) The amount of partitions on each instance. Currently only supported by `search.2xlarge`.
 * `index` - (Required) See [Indices](#indices) below for details.
-* `service_access_policies` - (Required) The AWS IAM access policy.
 * `wait_for_endpoints` - (Optional) - Default true, wait for the search service end point.  If you set this to false, the search and document endpoints won't be available to use as an attribute during the first run.
+
+### endpoint_options
+
+This configuration block supports the following attributes:
+
+* `enforce_https` - (Optional) Enables or disables the requirement that all requests to the domain arrive over HTTPS.
+* `tls_security_policy` - (Optional) The minimum required TLS version. See the [AWS documentation](https://docs.aws.amazon.com/cloudsearch/latest/developerguide/API_DomainEndpointOptions.html) for valid values.
+
+### scaling_parameters
+
+This configuration block supports the following attributes:
+
+* `desired_instance_type` - (Optional) The instance type that you want to preconfigure for your domain. See the [AWS documentation](https://docs.aws.amazon.com/cloudsearch/latest/developerguide/API_ScalingParameters.html) for valid values.
+* `desired_partition_count` - (Optional) The number of partitions you want to preconfigure for your domain. Only valid when you select `search.2xlarge` as the instance type.
+* `desired_replication_count` - (Optional) The number of replicas you want to preconfigure for each index partition.
 
 ### Indices
 
@@ -82,6 +101,16 @@ Each of the `index` entities represents an index field of the domain.
 
 In addition to all arguments above, the following attributes are exported:
 
+* `arn` - The domain's ARN.
+
 * `document_endpoint` - The doc service end point - see wait_for_endpoints parameter
 * `search_endpoint` - The search service end point - see wait_for_endpoints parameter
 * `domain_id` - The domain id
+
+## Import
+
+CloudSearch Domains can be imported using the `name`, e.g.,
+
+```
+$ terraform import aws_cloudsearch_domain.example test-domain
+```
