@@ -16,13 +16,16 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func TestAccRDSInstance_basic(t *testing.T) {
 	var dbInstance1 rds.DBInstance
-	resourceName := "aws_db_instance.bar"
+
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_db_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -31,10 +34,12 @@ func TestAccRDSInstance_basic(t *testing.T) {
 		CheckDestroy: testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceBasicConfig(),
+				Config: testAccInstanceBasicConfig(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &dbInstance1),
 					testAccCheckInstanceAttributes(&dbInstance1),
+					resource.TestCheckResourceAttr(resourceName, "identifier", rName),
+					resource.TestCheckResourceAttr(resourceName, "identifier_prefix", ""),
 					resource.TestCheckResourceAttr(resourceName, "allocated_storage", "10"),
 					resource.TestCheckNoResourceAttr(resourceName, "allow_major_version_upgrade"),
 					resource.TestCheckResourceAttr(resourceName, "auto_minor_version_upgrade", "true"),
@@ -66,7 +71,7 @@ func TestAccRDSInstance_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "storage_encrypted", "false"),
 					resource.TestCheckResourceAttr(resourceName, "storage_type", "gp2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "username", "foo"),
+					resource.TestCheckResourceAttr(resourceName, "username", "test"),
 				),
 			},
 			{
@@ -121,6 +126,9 @@ func TestAccRDSInstance_onlyMajorVersion(t *testing.T) {
 func TestAccRDSInstance_namePrefix(t *testing.T) {
 	var v rds.DBInstance
 
+	const identifierPrefix = "tf-acc-test-prefix-"
+	const resourceName = "aws_db_instance.test"
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
@@ -128,20 +136,29 @@ func TestAccRDSInstance_namePrefix(t *testing.T) {
 		CheckDestroy: testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceConfig_namePrefix(),
+				Config: testAccInstanceConfig_namePrefix(identifierPrefix),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceExists("aws_db_instance.test", &v),
-					testAccCheckInstanceAttributes(&v),
-					resource.TestMatchResourceAttr(
-						"aws_db_instance.test", "identifier", regexp.MustCompile("^tf-test-")),
+					testAccCheckInstanceExists(resourceName, &v),
+					create.TestCheckResourceAttrNameFromPrefix(resourceName, "identifier", identifierPrefix),
+					resource.TestCheckResourceAttr(resourceName, "identifier_prefix", identifierPrefix),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"password",
+				},
 			},
 		},
 	})
 }
 
-func TestAccRDSInstance_generatedName(t *testing.T) {
+func TestAccRDSInstance_nameGenerated(t *testing.T) {
 	var v rds.DBInstance
+
+	const resourceName = "aws_db_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -150,11 +167,20 @@ func TestAccRDSInstance_generatedName(t *testing.T) {
 		CheckDestroy: testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceConfig_generatedName(),
+				Config: testAccInstanceConfig_nameGenerated(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceExists("aws_db_instance.test", &v),
-					testAccCheckInstanceAttributes(&v),
+					testAccCheckInstanceExists(resourceName, &v),
+					create.TestCheckResourceAttrNameGenerated(resourceName, "identifier"),
+					resource.TestCheckResourceAttr(resourceName, "identifier_prefix", resource.UniqueIdPrefix),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"password",
+				},
 			},
 		},
 	})
@@ -3754,10 +3780,12 @@ func testAccInstanceConfig_orderableClassSQLServerEx() string {
 	return testAccInstanceConfig_orderableClass("sqlserver-ex", "14.00.1000.169.v1", "license-included")
 }
 
-func testAccInstanceBasicConfig() string {
+func testAccInstanceBasicConfig(rName string) string {
 	return acctest.ConfigCompose(
-		testAccInstanceConfig_orderableClassMySQL(), `
-resource "aws_db_instance" "bar" {
+		testAccInstanceConfig_orderableClassMySQL(),
+		fmt.Sprintf(`
+resource "aws_db_instance" "test" {
+  identifier              = %[1]q
   allocated_storage       = 10
   backup_retention_period = 0
   engine                  = data.aws_rds_orderable_db_instance.test.engine
@@ -3767,14 +3795,14 @@ resource "aws_db_instance" "bar" {
   parameter_group_name    = "default.mysql5.6"
   password                = "barbarbarbar"
   skip_final_snapshot     = true
-  username                = "foo"
+  username                = "test"
 
   # Maintenance Window is stored in lower case in the API, though not strictly
   # documented. Terraform will downcase this to match (as opposed to throw a
   # validation error).
   maintenance_window = "Fri:09:00-Fri:09:30"
 }
-`)
+`, rName))
 }
 
 func testAccInstanceConfig_MajorVersionOnly(engine, engineVersion string) string {
@@ -3803,23 +3831,26 @@ resource "aws_db_instance" "test" {
 `, engine, engineVersion))
 }
 
-func testAccInstanceConfig_namePrefix() string {
-	return acctest.ConfigCompose(testAccInstanceConfig_orderableClassMySQL(), `
+func testAccInstanceConfig_namePrefix(identifierPrefix string) string {
+	return acctest.ConfigCompose(
+		testAccInstanceConfig_orderableClassMySQL(),
+		fmt.Sprintf(`
 resource "aws_db_instance" "test" {
+  identifier_prefix   = %[1]q
   allocated_storage   = 10
   engine              = data.aws_rds_orderable_db_instance.test.engine
-  identifier_prefix   = "tf-test-"
   instance_class      = data.aws_rds_orderable_db_instance.test.instance_class
   password            = "password"
   publicly_accessible = true
   skip_final_snapshot = true
   username            = "root"
 }
-`)
+`, identifierPrefix))
 }
 
-func testAccInstanceConfig_generatedName() string {
-	return acctest.ConfigCompose(testAccInstanceConfig_orderableClassMySQL(), `
+func testAccInstanceConfig_nameGenerated() string {
+	return acctest.ConfigCompose(
+		testAccInstanceConfig_orderableClassMySQL(), `
 resource "aws_db_instance" "test" {
   allocated_storage   = 10
   engine              = data.aws_rds_orderable_db_instance.test.engine

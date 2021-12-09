@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -1417,6 +1418,7 @@ func resourceInstanceRead(d *schema.ResourceData, meta interface{}) error {
 
 	d.Set("name", v.DBName)
 	d.Set("identifier", v.DBInstanceIdentifier)
+	d.Set("identifier_prefix", create.NamePrefixFromName(aws.StringValue(v.DBInstanceIdentifier)))
 	d.Set("resource_id", v.DbiResourceId)
 	d.Set("username", v.MasterUsername)
 	d.Set("deletion_protection", v.DeletionProtection)
