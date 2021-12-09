@@ -29,7 +29,7 @@ func ResourceCluster() *schema.Resource {
 		Update: resourceClusterUpdate,
 		Delete: resourceClusterDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			State: resourceClusterImport,
 		},
 
 		CustomizeDiff: customdiff.Sequence(
@@ -751,4 +751,22 @@ func flattenEksNetworkConfig(apiObject *eks.KubernetesNetworkConfigResponse) []i
 	}
 
 	return []interface{}{tfMap}
+}
+
+func resourceClusterImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+	conn := meta.(*conns.AWSClient).EKSConn
+
+	cluster, err := FindClusterByName(conn, d.Id())
+	if err != nil {
+		return nil, err
+	}
+	if cluster == nil {
+		return nil, fmt.Errorf("EKS cluster (%s) not found", d.Id())
+	}
+
+	if connectorProvider := aws.StringValue(cluster.ConnectorConfig.Provider); connectorProvider != "" {
+		return nil, fmt.Errorf("EKS cluster (%s) has been registered from an external provider", d.Id())
+	}
+
+	return []*schema.ResourceData{d}, nil
 }

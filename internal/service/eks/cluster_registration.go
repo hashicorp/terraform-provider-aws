@@ -26,7 +26,7 @@ func ResourceClusterRegistration() *schema.Resource {
 		ReadWithoutTimeout:   resourceClusterRegistrationRead,
 		DeleteWithoutTimeout: resourceClusterRegistrationDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			State: resourceClusterRegistrationImport,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -229,4 +229,22 @@ func flattenConnectorConfig(apiObject *eks.ConnectorConfigResponse) []interface{
 	}
 
 	return []interface{}{tfMap}
+}
+
+func resourceClusterRegistrationImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+	conn := meta.(*conns.AWSClient).EKSConn
+
+	cluster, err := FindClusterByName(conn, d.Id())
+	if err != nil {
+		return nil, err
+	}
+	if cluster == nil {
+		return nil, fmt.Errorf("EKS cluster (%s) not found", d.Id())
+	}
+
+	if connectorProvider := aws.StringValue(cluster.ConnectorConfig.Provider); connectorProvider == "" {
+		return nil, fmt.Errorf("EKS cluster (%s) has not been registered", d.Id())
+	}
+
+	return []*schema.ResourceData{d}, nil
 }
