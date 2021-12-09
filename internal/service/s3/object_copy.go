@@ -267,7 +267,7 @@ func ResourceObjectCopy() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
-				ValidateFunc: validation.StringInSlice(s3.StorageClass_Values(), false),
+				ValidateFunc: validation.StringInSlice(s3.ObjectStorageClass_Values(), false),
 			},
 			"tagging_directive": {
 				Type:         schema.TypeString,
