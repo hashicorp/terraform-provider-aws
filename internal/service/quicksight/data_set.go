@@ -1072,7 +1072,246 @@ func expandQuickSightDataSourceFieldFolders(tfMap map[string]interface{}) map[st
 }
 
 func expandQuickSightDataSourceLogicalTableMap(tfMap map[string]interface{}) map[string]*quicksight.LogicalTable {
-	return nil
+	if len(tfMap) == 0 {
+		return nil
+	}
+
+	logicalTableMap := make(map[string]*quicksight.LogicalTable)
+	for key, value := range tfMap {
+
+		ltm, ok := value.(map[string]interface{})
+		if !ok {
+			continue
+		}
+
+		logicalTable := &quicksight.LogicalTable{}
+
+		if v, ok := ltm["alias"].(string); ok {
+			logicalTable.Alias = aws.String(v)
+		}
+
+		if ltsm, ok := ltm["logical_table_source"].(map[string]interface{}); ok {
+
+			logicalTableSource := &quicksight.LogicalTableSource{}
+
+			if v, ok := ltsm["data_set_arn"].(string); ok {
+				logicalTableSource.DataSetArn = aws.String(v)
+			}
+
+			if v, ok := ltsm["physical_table_id"].(string); ok {
+				logicalTableSource.PhysicalTableId = aws.String(v)
+			}
+
+			if jim := ltsm["join_instruction"].(map[string]interface{}); ok {
+
+				joinInstruction := &quicksight.JoinInstruction{}
+
+				if v, ok := jim["left_operand"].(string); ok {
+					joinInstruction.LeftOperand = aws.String(v)
+				}
+
+				if v, ok := jim["on_clause"].(string); ok {
+					joinInstruction.OnClause = aws.String(v)
+				}
+
+				if v, ok := jim["right_operand"].(string); ok {
+					joinInstruction.RightOperand = aws.String(v)
+				}
+
+				if v, ok := jim["type"].(string); ok {
+					joinInstruction.Type = aws.String(v)
+				}
+
+				if ljkpm, ok := jim["left_join_key_properties"].(map[string]interface{}); ok {
+
+					leftJoinKeyProperties := &quicksight.JoinKeyProperties{}
+
+					if v, ok := ljkpm["unique_key"].(bool); ok {
+						leftJoinKeyProperties.UniqueKey = aws.Bool(v)
+					}
+
+					joinInstruction.LeftJoinKeyProperties = leftJoinKeyProperties
+				}
+
+				if rjkpm, ok := jim["right_join_key_properties"].(map[string]interface{}); ok {
+
+					rightJoinKeyProperties := &quicksight.JoinKeyProperties{}
+
+					if v, ok := rjkpm["unique_key"].(bool); ok {
+						rightJoinKeyProperties.UniqueKey = aws.Bool(v)
+					}
+
+					joinInstruction.RightJoinKeyProperties = rightJoinKeyProperties
+				}
+
+				logicalTableSource.JoinInstruction = joinInstruction
+			}
+
+			logicalTable.Source = logicalTableSource
+		}
+
+		if dtm, ok := ltm["data_transforms"].([]map[string]interface{}); ok {
+
+			var transformOperations []*quicksight.TransformOperation
+
+			for _, transformOperationMap := range dtm {
+
+				transformOperation := &quicksight.TransformOperation{}
+
+				if cctom, ok := transformOperationMap["cast_column_type_operation"].(map[string]interface{}); ok {
+
+					castColumnTypeOperation := &quicksight.CastColumnTypeOperation{}
+
+					if v, ok := cctom["column_name"].(string); ok {
+						castColumnTypeOperation.ColumnName = aws.String(v)
+					}
+
+					if v, ok := cctom["new_column_type"].(string); ok {
+						castColumnTypeOperation.NewColumnType = aws.String(v)
+					}
+
+					if v, ok := cctom["format"].(string); ok {
+						castColumnTypeOperation.Format = aws.String(v)
+					}
+
+					transformOperation.CastColumnTypeOperation = castColumnTypeOperation
+				}
+
+				if ccom, ok := transformOperationMap["create_columns_operation"].(map[string]interface{}); ok {
+
+					createColumnsOperation := &quicksight.CreateColumnsOperation{}
+
+					if columnsMap, ok := ccom["columns"].([]map[string]interface{}); ok {
+
+						var columns []*quicksight.CalculatedColumn
+
+						for _, columnMap := range columnsMap {
+
+							column := &quicksight.CalculatedColumn{}
+
+							if v, ok := columnMap["column_id"].(string); ok {
+								column.ColumnId = aws.String(v)
+							}
+
+							if v, ok := columnMap["column_name"].(string); ok {
+								column.ColumnName = aws.String(v)
+							}
+
+							if v, ok := columnMap["expression"].(string); ok {
+								column.Expression = aws.String(v)
+							}
+
+							columns = append(columns, column)
+						}
+
+						createColumnsOperation.Columns = columns
+					}
+
+					transformOperation.CreateColumnsOperation = createColumnsOperation
+				}
+
+				if fom, ok := transformOperationMap["filter_operation"].(map[string]interface{}); ok {
+
+					filterOperation := &quicksight.FilterOperation{}
+
+					if v, ok := fom["condition_expression"].(string); ok {
+						filterOperation.ConditionExpression = aws.String(v)
+					}
+
+					transformOperation.FilterOperation = filterOperation
+				}
+
+				if pom, ok := transformOperationMap["project_operation"].(map[string]interface{}); ok {
+
+					projectOperation := &quicksight.ProjectOperation{}
+
+					if v, ok := pom["projected_columns"].([]string); ok && len(v) > 0 {
+						projectOperation.ProjectedColumns = aws.StringSlice(v)
+					}
+
+					transformOperation.ProjectOperation = projectOperation
+				}
+
+				if rcom, ok := transformOperationMap["rename_column_operation"].(map[string]interface{}); ok {
+
+					renameColumnOperation := &quicksight.RenameColumnOperation{}
+
+					if v, ok := rcom["column_name"].(string); ok {
+						renameColumnOperation.ColumnName = aws.String(v)
+					}
+
+					if v, ok := rcom["new_column_name"].(string); ok {
+						renameColumnOperation.NewColumnName = aws.String(v)
+					}
+
+					transformOperation.RenameColumnOperation = renameColumnOperation
+				}
+
+				if tcom, ok := transformOperationMap["tag_column_operation"].(map[string]interface{}); ok {
+
+					tagColumnOperation := &quicksight.TagColumnOperation{}
+
+					if v, ok := tcom["column_name"].(string); ok {
+						tagColumnOperation.ColumnName = aws.String(v)
+					}
+
+					if tagsMap, ok := tcom["tags"].([]map[string]interface{}); ok {
+
+						var tags []*quicksight.ColumnTag
+
+						for _, tagMap := range tagsMap {
+
+							tag := &quicksight.ColumnTag{}
+
+							if cdm, ok := tagMap["column_description"].(map[string]interface{}); ok {
+
+								columnDescription := &quicksight.ColumnDescription{}
+
+								if v, ok := cdm["text"].(string); ok {
+									columnDescription.Text = aws.String(v)
+								}
+
+								tag.ColumnDescription = columnDescription
+							}
+
+							if v, ok := tagMap["column_geographic_role"].(string); ok {
+								tag.ColumnGeographicRole = aws.String(v)
+							}
+
+							tags = append(tags, tag)
+						}
+
+						tagColumnOperation.Tags = tags
+					}
+
+					transformOperation.TagColumnOperation = tagColumnOperation
+				}
+
+				if ucom, ok := transformOperationMap["untag_column_operation"].(map[string]interface{}); ok {
+
+					untagColumnOperation := &quicksight.UntagColumnOperation{}
+
+					if v, ok := ucom["column_name"].(string); ok {
+						untagColumnOperation.ColumnName = aws.String(v)
+					}
+
+					if v, ok := ucom["tag_names"].([]string); ok {
+						untagColumnOperation.TagNames = aws.StringSlice(v)
+					}
+
+					transformOperation.UntagColumnOperation = untagColumnOperation
+				}
+
+				transformOperations = append(transformOperations, transformOperation)
+			}
+
+			logicalTable.DataTransforms = transformOperations
+		}
+
+		logicalTableMap[key] = logicalTable
+	}
+
+	return logicalTableMap
 }
 
 func expandQuickSightDataSetResourcePermissions(tfMap map[string]interface{}) []*quicksight.ResourcePermission {
