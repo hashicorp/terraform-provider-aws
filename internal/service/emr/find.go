@@ -89,7 +89,8 @@ func FindStudioSessionMappingByID(conn *emr.EMR, id string) (*emr.SessionMapping
 
 	output, err := conn.GetStudioSessionMapping(input)
 
-	if tfawserr.ErrMessageContains(err, emr.ErrCodeInvalidRequestException, "Studio session mapping does not exist.") {
+	if tfawserr.ErrMessageContains(err, emr.ErrCodeInvalidRequestException, "Studio session mapping does not exist") ||
+		tfawserr.ErrMessageContains(err, emr.ErrCodeInvalidRequestException, "Studio does not exist") {
 		return nil, &resource.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
