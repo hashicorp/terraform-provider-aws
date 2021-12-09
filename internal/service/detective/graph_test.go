@@ -52,28 +52,40 @@ func TestAccDetectiveGraph_tags(t *testing.T) {
 		ErrorCheck:        acctest.ErrorCheck(t, detective.EndpointsID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDetectiveGraphConfigTags1(),
+				Config: testAccDetectiveGraphConfigTags1("key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDetectiveGraphExists(resourceName, &graph1),
 					acctest.CheckResourceAttrRFC3339(resourceName, "created_time"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.Key", "value"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.Key", "value"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.key1", "value1"),
 				),
 			},
 			{
-				Config: testAccDetectiveGraphConfigTags2(),
+				Config: testAccDetectiveGraphConfigTags2("key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDetectiveGraphExists(resourceName, &graph2),
 					testAccCheckDetectiveGraphNotRecreated(&graph1, &graph2),
 					acctest.CheckResourceAttrRFC3339(resourceName, "created_time"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.Key", "value"),
-					resource.TestCheckResourceAttr(resourceName, "tags.Key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.Key", "value"),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.Key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.key2", "value2"),
+				),
+			},
+			{
+				Config: testAccDetectiveGraphConfigTags1("key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDetectiveGraphExists(resourceName, &graph2),
+					testAccCheckDetectiveGraphNotRecreated(&graph1, &graph2),
+					acctest.CheckResourceAttrRFC3339(resourceName, "created_time"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.key2", "value2"),
 				),
 			},
 			{
@@ -174,23 +186,23 @@ resource "aws_detective_graph" "test" {}
 `
 }
 
-func testAccDetectiveGraphConfigTags1() string {
-	return `
+func testAccDetectiveGraphConfigTags1(tagKey1, tagValue1 string) string {
+	return fmt.Sprintf(`
 resource "aws_detective_graph" "test" {
   tags = {
-    Key = "value"
+    %[1]q = %[2]q
   }
 }
-`
+`, tagKey1, tagValue1)
 }
 
-func testAccDetectiveGraphConfigTags2() string {
-	return `
+func testAccDetectiveGraphConfigTags2(tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return fmt.Sprintf(`
 resource "aws_detective_graph" "test" {
   tags = {
-    Key  = "value"
-    Key2 = "value2"
+    %[1]q = %[2]q
+    %[3]q = %[4]q
   }
 }
-`
+`, tagKey1, tagValue1, tagKey2, tagValue2)
 }
