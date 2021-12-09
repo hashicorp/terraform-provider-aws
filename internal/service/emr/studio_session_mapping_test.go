@@ -143,10 +143,6 @@ func testAccPreCheckUserID(t *testing.T) {
 
 func testAccEMRStudioSessionMappingConfigBase(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
-provider "aws" {
-  region = "us-east-1"
-}
-
 data "aws_partition" "current" {}
 
 resource "aws_vpc" "test" {
