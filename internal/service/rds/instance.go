@@ -553,22 +553,6 @@ func resourceInstanceCreate(d *schema.ResourceData, meta interface{}) error {
 			opts.AvailabilityZone = aws.String(attr.(string))
 		}
 
-		if attr, ok := d.GetOk("allow_major_version_upgrade"); ok {
-			modifyDbInstanceInput.AllowMajorVersionUpgrade = aws.Bool(attr.(bool))
-			// Having allowing_major_version_upgrade by itself should not trigger ModifyDBInstance
-			// InvalidParameterCombination: No modifications were requested
-		}
-
-		if attr, ok := d.GetOk("backup_retention_period"); ok {
-			modifyDbInstanceInput.BackupRetentionPeriod = aws.Int64(int64(attr.(int)))
-			requiresModifyDbInstance = true
-		}
-
-		if attr, ok := d.GetOk("backup_window"); ok {
-			modifyDbInstanceInput.PreferredBackupWindow = aws.String(attr.(string))
-			requiresModifyDbInstance = true
-		}
-
 		if attr, ok := d.GetOk("db_subnet_group_name"); ok {
 			opts.DBSubnetGroupName = aws.String(attr.(string))
 		}
@@ -592,16 +576,6 @@ func resourceInstanceCreate(d *schema.ResourceData, meta interface{}) error {
 			}
 		}
 
-		if attr, ok := d.GetOk("maintenance_window"); ok {
-			modifyDbInstanceInput.PreferredMaintenanceWindow = aws.String(attr.(string))
-			requiresModifyDbInstance = true
-		}
-
-		if attr, ok := d.GetOk("max_allocated_storage"); ok {
-			modifyDbInstanceInput.MaxAllocatedStorage = aws.Int64(int64(attr.(int)))
-			requiresModifyDbInstance = true
-		}
-
 		if attr, ok := d.GetOk("monitoring_interval"); ok {
 			opts.MonitoringInterval = aws.Int64(int64(attr.(int)))
 		}
@@ -618,24 +592,8 @@ func resourceInstanceCreate(d *schema.ResourceData, meta interface{}) error {
 			opts.OptionGroupName = aws.String(attr.(string))
 		}
 
-		if attr, ok := d.GetOk("parameter_group_name"); ok {
-			modifyDbInstanceInput.DBParameterGroupName = aws.String(attr.(string))
-			requiresModifyDbInstance = true
-			requiresRebootDbInstance = true
-		}
-
-		if attr, ok := d.GetOk("password"); ok {
-			modifyDbInstanceInput.MasterUserPassword = aws.String(attr.(string))
-			requiresModifyDbInstance = true
-		}
-
 		if attr, ok := d.GetOk("port"); ok {
 			opts.Port = aws.Int64(int64(attr.(int)))
-		}
-
-		if attr := d.Get("security_group_names").(*schema.Set); attr.Len() > 0 {
-			modifyDbInstanceInput.DBSecurityGroups = flex.ExpandStringSet(attr)
-			requiresModifyDbInstance = true
 		}
 
 		if attr, ok := d.GetOk("storage_type"); ok {
@@ -658,20 +616,91 @@ func resourceInstanceCreate(d *schema.ResourceData, meta interface{}) error {
 			opts.PerformanceInsightsRetentionPeriod = aws.Int64(int64(attr.(int)))
 		}
 
-		if attr, ok := d.GetOk("ca_cert_identifier"); ok {
-			modifyDbInstanceInput.CACertificateIdentifier = aws.String(attr.(string))
-			requiresModifyDbInstance = true
-		}
-
 		if attr, ok := d.GetOk("replica_mode"); ok {
 			opts.ReplicaMode = aws.String(attr.(string))
 			requiresModifyDbInstance = true
 		}
 
-		log.Printf("[DEBUG] DB Instance Replica create configuration: %#v", opts)
-		_, err := conn.CreateDBInstanceReadReplica(&opts)
+		output, err := conn.CreateDBInstanceReadReplica(&opts)
 		if err != nil {
-			return fmt.Errorf("Error creating DB Instance: %s", err)
+			return fmt.Errorf("Error creating DB Instance: %w", err)
+		}
+
+		if attr, ok := d.GetOk("allow_major_version_upgrade"); ok {
+			// Having allowing_major_version_upgrade by itself should not trigger ModifyDBInstance
+			// InvalidParameterCombination: No modifications were requested
+			modifyDbInstanceInput.AllowMajorVersionUpgrade = aws.Bool(attr.(bool))
+		}
+
+		if attr, ok := d.GetOk("backup_retention_period"); ok {
+			current := aws.Int64Value(output.DBInstance.BackupRetentionPeriod)
+			desired := int64(attr.(int))
+			if current != desired {
+				modifyDbInstanceInput.BackupRetentionPeriod = aws.Int64(desired)
+				requiresModifyDbInstance = true
+			}
+		}
+
+		if attr, ok := d.GetOk("backup_window"); ok {
+			current := aws.StringValue(output.DBInstance.PreferredBackupWindow)
+			desired := attr.(string)
+			if current != desired {
+				modifyDbInstanceInput.PreferredBackupWindow = aws.String(desired)
+				requiresModifyDbInstance = true
+			}
+		}
+
+		if attr, ok := d.GetOk("ca_cert_identifier"); ok {
+			current := aws.StringValue(output.DBInstance.CACertificateIdentifier)
+			desired := attr.(string)
+			if current != desired {
+				modifyDbInstanceInput.CACertificateIdentifier = aws.String(desired)
+				requiresModifyDbInstance = true
+			}
+		}
+
+		if attr, ok := d.GetOk("maintenance_window"); ok {
+			current := aws.StringValue(output.DBInstance.PreferredMaintenanceWindow)
+			desired := attr.(string)
+			if current != desired {
+				modifyDbInstanceInput.PreferredMaintenanceWindow = aws.String(desired)
+				requiresModifyDbInstance = true
+			}
+		}
+
+		if attr, ok := d.GetOk("max_allocated_storage"); ok {
+			current := aws.Int64Value(output.DBInstance.MaxAllocatedStorage)
+			desired := int64(attr.(int))
+			if current != desired {
+				modifyDbInstanceInput.MaxAllocatedStorage = aws.Int64(desired)
+				requiresModifyDbInstance = true
+			}
+		}
+
+		if attr, ok := d.GetOk("parameter_group_name"); ok {
+			if len(output.DBInstance.DBParameterGroups) > 0 {
+				current := aws.StringValue(output.DBInstance.DBParameterGroups[0].DBParameterGroupName)
+				desired := attr.(string)
+				if current != desired {
+					modifyDbInstanceInput.DBParameterGroupName = aws.String(desired)
+					requiresModifyDbInstance = true
+					requiresRebootDbInstance = true
+				}
+			}
+		}
+
+		if attr, ok := d.GetOk("password"); ok {
+			modifyDbInstanceInput.MasterUserPassword = aws.String(attr.(string))
+			requiresModifyDbInstance = true
+		}
+
+		if attr := d.Get("security_group_names").(*schema.Set); attr.Len() > 0 {
+			current := flattenDBSecurityGroups(output.DBInstance.DBSecurityGroups)
+			desired := attr
+			if !desired.Equal(current) {
+				modifyDbInstanceInput.DBSecurityGroups = flex.ExpandStringSet(attr)
+				requiresModifyDbInstance = true
+			}
 		}
 	} else if v, ok := d.GetOk("s3_import"); ok {
 
@@ -1172,6 +1201,7 @@ func resourceInstanceCreate(d *schema.ResourceData, meta interface{}) error {
 
 		attr := d.Get("backup_retention_period")
 		opts.BackupRetentionPeriod = aws.Int64(int64(attr.(int)))
+
 		if attr, ok := d.GetOk("multi_az"); ok {
 			opts.MultiAZ = aws.Bool(attr.(bool))
 
@@ -1484,14 +1514,7 @@ func resourceInstanceRead(d *schema.ResourceData, meta interface{}) error {
 	}
 	d.Set("vpc_security_group_ids", ids)
 
-	// Create an empty schema.Set to hold all security group names
-	sgn := &schema.Set{
-		F: schema.HashString,
-	}
-	for _, v := range v.DBSecurityGroups {
-		sgn.Add(*v.DBSecurityGroupName)
-	}
-	d.Set("security_group_names", sgn)
+	d.Set("security_group_names", flattenDBSecurityGroups(v.DBSecurityGroups))
 
 	// replica things
 	var replicas []string
@@ -1499,7 +1522,7 @@ func resourceInstanceRead(d *schema.ResourceData, meta interface{}) error {
 		replicas = append(replicas, *v)
 	}
 	if err := d.Set("replicas", replicas); err != nil {
-		return fmt.Errorf("Error setting replicas attribute: %#v, error: %#v", replicas, err)
+		return fmt.Errorf("Error setting replicas attribute: %#v, error: %w", replicas, err)
 	}
 
 	d.Set("replica_mode", v.ReplicaMode)
@@ -1801,7 +1824,7 @@ func resourceInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 			}
 			_, err := conn.PromoteReadReplica(&opts)
 			if err != nil {
-				return fmt.Errorf("Error promoting database: %#v", err)
+				return fmt.Errorf("Error promoting database: %w", err)
 			}
 			d.Set("replicate_source_db", "")
 		} else {
@@ -1951,4 +1974,14 @@ func dbSetResourceDataEngineVersionFromInstance(d *schema.ResourceData, c *rds.D
 	oldVersion := d.Get("engine_version").(string)
 	newVersion := aws.StringValue(c.EngineVersion)
 	compareActualEngineVersion(d, oldVersion, newVersion)
+}
+
+func flattenDBSecurityGroups(groups []*rds.DBSecurityGroupMembership) *schema.Set {
+	result := &schema.Set{
+		F: schema.HashString,
+	}
+	for _, v := range groups {
+		result.Add(aws.StringValue(v.DBSecurityGroupName))
+	}
+	return result
 }
