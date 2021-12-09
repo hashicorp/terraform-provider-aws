@@ -52,7 +52,7 @@ func TestAccDetectiveGraph_tags(t *testing.T) {
 		ErrorCheck:        acctest.ErrorCheck(t, detective.EndpointsID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDetectiveGraphConfigWithTags(),
+				Config: testAccDetectiveGraphConfigTags1(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDetectiveGraphExists(resourceName, &graph1),
 					acctest.CheckResourceAttrRFC3339(resourceName, "created_time"),
@@ -63,7 +63,7 @@ func TestAccDetectiveGraph_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccDetectiveGraphConfigTagsUpdate(),
+				Config: testAccDetectiveGraphConfigTags2(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDetectiveGraphExists(resourceName, &graph2),
 					testAccCheckDetectiveGraphNotRecreated(&graph1, &graph2),
@@ -174,7 +174,7 @@ resource "aws_detective_graph" "test" {}
 `
 }
 
-func testAccDetectiveGraphConfigWithTags() string {
+func testAccDetectiveGraphConfigTags1() string {
 	return `
 resource "aws_detective_graph" "test" {
   tags = {
@@ -184,7 +184,7 @@ resource "aws_detective_graph" "test" {
 `
 }
 
-func testAccDetectiveGraphConfigTagsUpdate() string {
+func testAccDetectiveGraphConfigTags2() string {
 	return `
 resource "aws_detective_graph" "test" {
   tags = {
