@@ -30,7 +30,7 @@ func TestAccBackupVaultPolicy_basic(t *testing.T) {
 				Config: testAccBackupVaultPolicyConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVaultPolicyExists(resourceName, &vault),
-					resource.TestMatchResourceAttr(resourceName, "policy", regexp.MustCompile("^{\"Version\":\"2012-10-17\".+"))),
+					resource.TestMatchResourceAttr(resourceName, "policy", regexp.MustCompile("^{\"Id\":\"default\".+"))),
 			},
 			{
 				ResourceName:      resourceName,
@@ -41,7 +41,7 @@ func TestAccBackupVaultPolicy_basic(t *testing.T) {
 				Config: testAccBackupVaultPolicyConfigUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVaultPolicyExists(resourceName, &vault),
-					resource.TestMatchResourceAttr(resourceName, "policy", regexp.MustCompile("^{\"Version\":\"2012-10-17\".+")),
+					resource.TestMatchResourceAttr(resourceName, "policy", regexp.MustCompile("^{\"Id\":\"default\".+")),
 					resource.TestMatchResourceAttr(resourceName, "policy", regexp.MustCompile("backup:ListRecoveryPointsByBackupVault")),
 				),
 			},
@@ -218,7 +218,7 @@ resource "aws_backup_vault_policy" "test" {
     Version = "2012-10-17"
     Id      = "default"
     Statement = [{
-      Sid = "default"
+      Sid    = "default"
       Effect = "Allow"
       Principal = {
         AWS = "*"
