@@ -17,7 +17,6 @@ const (
 	connectContactFlowUpdateTimeout = 5 * time.Minute
 
 	connectBotAssociationCreateTimeout = 5 * time.Minute
-	connectBotAssociationDeleteTimeout = 5 * time.Minute
 )
 
 func waitInstanceCreated(ctx context.Context, conn *connect.Connect, instanceId string) (*connect.DescribeInstanceOutput, error) {

@@ -1,84 +1,41 @@
 package connect_test
 
 import (
-	"context"
-	"errors"
 	"fmt"
-	"log"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/connect"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	tfconnect "github.com/hashicorp/terraform-provider-aws/internal/service/connect"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func TestAccBotAssociationDataSource_basic(t *testing.T) {
+func TestAccConnectBotAssociationDataSource_basic(t *testing.T) {
 	rName := sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
-	rName2 := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_connect_bot_association.test"
 	datasourceName := "data.aws_connect_bot_association.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, connect.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccBotAssociationDataSource_CheckDestroy,
+		PreCheck:   func() { acctest.PreCheck(t) },
+		ErrorCheck: acctest.ErrorCheck(t, connect.EndpointsID),
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBotAssociationDataSource_ConfigBasic(rName, rName2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "instance_id", resourceName, "instance_id"),
-					resource.TestCheckResourceAttrPair(datasourceName, "bot_name", resourceName, "bot_name"),
-					resource.TestCheckResourceAttrPair(datasourceName, "lex_region", resourceName, "lex_region"),
+					resource.TestCheckResourceAttrPair(datasourceName, "lex_bot", resourceName, "lex_bot"),
 				),
 			},
 		},
 	})
 }
 
-func testAccBotAssociationDataSource_CheckDestroy(s *terraform.State) error {
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_connect_bot_association" {
-			continue
-		}
-
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("Connect Connect Bot V1 Association ID not set")
-		}
-		instanceID, name, _, err := tfconnect.BotV1AssociationParseResourceID(rs.Primary.ID)
-		if err != nil {
-			return err
-		}
-
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectConn
-
-		lexBot, err := tfconnect.FindBotAssociationV1ByNameWithContext(context.Background(), conn, instanceID, name)
-
-		if tfawserr.ErrCodeEquals(err, tfconnect.BotAssociationStatusNotFound, "") || errors.Is(err, tfresource.ErrEmptyResult) {
-			log.Printf("[DEBUG] Connect Bot V1 Association (%s) not found, has been removed from state", name)
-			return nil
-		}
-
-		if err != nil {
-			return fmt.Errorf("error finding Connect Bot V1 Association by name (%s) potentially still exists: %w", name, err)
-		}
-
-		if lexBot != nil {
-			return fmt.Errorf("error Connect Bot V1 Association by name (%s): still exists", name)
-		}
-	}
-	return nil
-}
-
 func testAccBotAssociationDataSource_BaseConfig(rName string, rName2 string) string {
 	return fmt.Sprintf(`
 data "aws_region" "current" {}
+
 resource "aws_lex_intent" "test" {
   create_version = true
   name           = %[1]q
@@ -89,6 +46,7 @@ resource "aws_lex_intent" "test" {
     "I would like to pick up flowers",
   ]
 }
+
 resource "aws_lex_bot" "test" {
   abort_statement {
     message {
@@ -111,16 +69,20 @@ resource "aws_lex_bot" "test" {
   name             = %[1]q
   process_behavior = "BUILD"
 }
+
 resource "aws_connect_instance" "test" {
   identity_management_type = "CONNECT_MANAGED"
   inbound_calls_enabled    = true
   instance_alias           = %[2]q
   outbound_calls_enabled   = true
 }
+
 resource "aws_connect_bot_association" "test" {
   instance_id = aws_connect_instance.test.id
-  bot_name    = aws_lex_bot.test.name
-  lex_region  = data.aws_region.current.name
+  lex_bot {
+    lex_region = data.aws_region.current.name
+    name       = aws_lex_bot.test.name
+  }
 }
 `, rName, rName2)
 }
@@ -129,7 +91,9 @@ func testAccBotAssociationDataSource_ConfigBasic(rName string, rName2 string) st
 	return fmt.Sprintf(testAccBotAssociationDataSource_BaseConfig(rName, rName2) + `
 data "aws_connect_bot_association" "test" {
   instance_id = aws_connect_instance.test.id
-  bot_name    = aws_connect_bot_association.test.bot_name
+  lex_bot {
+    name = aws_connect_bot_association.test.lex_bot.0.name
+  }
 }
 `)
 }
