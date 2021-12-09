@@ -3,7 +3,6 @@ package detective
 import (
 	"context"
 	"fmt"
-	"log"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -15,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceGraph() *schema.Resource {
@@ -38,6 +38,7 @@ func ResourceGraph() *schema.Resource {
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
 		},
+		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -100,17 +101,13 @@ func resourceGraphRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	d.Set("created_time", aws.TimeValue(resp.CreatedTime).Format(time.RFC3339))
 	d.Set("graph_arn", resp.Arn)
 
-	tg, err := conn.ListTagsForResource(&detective.ListTagsForResourceInput{
-		ResourceArn: resp.Arn,
-	})
+	tags, err := ListTags(conn, aws.StringValue(resp.Arn))
+
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("error listing tags for Detective Graph (%s): %w", d.Id(), err))
 	}
-	if tg.Tags == nil {
-		log.Printf("[DEBUG] Detective Graph tags (%s) not found", d.Id())
-		return nil
-	}
-	tags := KeyValueTags(tg.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+
+	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	if err = d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
 		return diag.FromErr(fmt.Errorf("error setting `%s` for Detective Graph (%s): %w", "tags", d.Id(), err))

@@ -9,6 +9,23 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
+// ListTags lists detective service tags.
+// The identifier is typically the Amazon Resource Name (ARN), although
+// it may also be a different identifier depending on the service.
+func ListTags(conn *detective.Detective, identifier string) (tftags.KeyValueTags, error) {
+	input := &detective.ListTagsForResourceInput{
+		ResourceArn: aws.String(identifier),
+	}
+
+	output, err := conn.ListTagsForResource(input)
+
+	if err != nil {
+		return tftags.New(nil), err
+	}
+
+	return KeyValueTags(output.Tags), nil
+}
+
 // map[string]*string handling
 
 // Tags returns detective service tags.
