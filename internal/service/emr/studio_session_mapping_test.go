@@ -19,6 +19,7 @@ func TestAccEMRStudioSessionMapping_basic(t *testing.T) {
 	var studio emr.SessionMappingDetail
 	resourceName := "aws_emr_studio_session_mapping.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	updatedName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	uName := os.Getenv("AWS_IDENTITY_STORE_USER_ID")
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -44,6 +45,16 @@ func TestAccEMRStudioSessionMapping_basic(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+			{
+				Config: testAccEMRStudioSessionMappingConfigUpdated(rName, uName, updatedName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEmrStudioSessionMappingExists(resourceName, &studio),
+					resource.TestCheckResourceAttr(resourceName, "identity_id", uName),
+					resource.TestCheckResourceAttr(resourceName, "identity_type", "USER"),
+					resource.TestCheckResourceAttrPair(resourceName, "studio_id", "aws_emr_studio.test", "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "session_policy_arn", "aws_iam_policy.test2", "arn"),
+				),
 			},
 		},
 	})
@@ -130,7 +141,7 @@ func testAccPreCheckUserID(t *testing.T) {
 	}
 }
 
-func testAccEMRStudioSessionMappingConfigBasic(rName, uName string) string {
+func testAccEMRStudioSessionMappingConfigBase(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 provider "aws" {
   region = "us-east-1"
@@ -231,12 +242,48 @@ resource "aws_iam_policy" "test" {
 }
 EOF
 }
+`, rName))
+}
+
+func testAccEMRStudioSessionMappingConfigBasic(rName, uName string) string {
+	return acctest.ConfigCompose(testAccEMRStudioSessionMappingConfigBase(rName), fmt.Sprintf(`
+resource "aws_emr_studio_session_mapping" "test" {
+  studio_id          = aws_emr_studio.test.id
+  identity_type      = "USER"
+  identity_id        = %[1]q
+  session_policy_arn = aws_iam_policy.test.arn
+}
+`, uName))
+}
+
+func testAccEMRStudioSessionMappingConfigUpdated(rName, uName, updatedName string) string {
+	return acctest.ConfigCompose(testAccEMRStudioSessionMappingConfigBase(rName), fmt.Sprintf(`
+resource "aws_iam_policy" "test2" {
+  name   = %[2]q
+  policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "s3:*"
+      ],
+      "Resource": [
+        "${aws_s3_bucket.test.arn}/*",
+		"${aws_s3_bucket.test.arn}"
+      ]
+    }
+  ]
+}
+EOF
+}
 
 resource "aws_emr_studio_session_mapping" "test" {
   studio_id          = aws_emr_studio.test.id
   identity_type      = "USER"
-  identity_id        = %[2]q
-  session_policy_arn = aws_iam_policy.test.arn
+  identity_id        = %[1]q
+  session_policy_arn = aws_iam_policy.test2.arn
 }
-`, rName, uName))
+`, uName, updatedName))
 }
