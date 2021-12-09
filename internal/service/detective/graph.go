@@ -2,7 +2,6 @@ package detective
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -74,7 +73,7 @@ func resourceGraphCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error creating detective Graph: %w", err))
+		return diag.Errorf("error creating detective Graph: %s", err)
 	}
 
 	d.SetId(aws.StringValue(output.GraphArn))
@@ -95,7 +94,7 @@ func resourceGraphRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		return nil
 	}
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error reading detective Graph (%s): %w", d.Id(), err))
+		return diag.Errorf("error reading detective Graph (%s): %s", d.Id(), err)
 	}
 
 	d.Set("created_time", aws.TimeValue(resp.CreatedTime).Format(time.RFC3339))
@@ -104,17 +103,17 @@ func resourceGraphRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	tags, err := ListTags(conn, aws.StringValue(resp.Arn))
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error listing tags for Detective Graph (%s): %w", d.Id(), err))
+		return diag.Errorf("error listing tags for Detective Graph (%s): %s", d.Id(), err)
 	}
 
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	if err = d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return diag.FromErr(fmt.Errorf("error setting `%s` for Detective Graph (%s): %w", "tags", d.Id(), err))
+		return diag.Errorf("error setting `%s` for Detective Graph (%s): %s", "tags", d.Id(), err)
 	}
 
 	if err = d.Set("tags_all", tags.Map()); err != nil {
-		return diag.FromErr(fmt.Errorf("error setting `%s` for Detective Graph (%s): %w", "tags_all", d.Id(), err))
+		return diag.Errorf("error setting `%s` for Detective Graph (%s): %s", "tags_all", d.Id(), err)
 	}
 
 	return nil
@@ -126,7 +125,7 @@ func resourceGraphUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 	if d.HasChange("tags") {
 		o, n := d.GetChange("tags")
 		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
-			return diag.FromErr(fmt.Errorf("error updating detective Graph tags (%s): %w", d.Id(), err))
+			return diag.Errorf("error updating detective Graph tags (%s): %s", d.Id(), err)
 		}
 	}
 
@@ -145,7 +144,7 @@ func resourceGraphDelete(ctx context.Context, d *schema.ResourceData, meta inter
 		if tfawserr.ErrCodeEquals(err, detective.ErrCodeResourceNotFoundException) {
 			return nil
 		}
-		return diag.FromErr(fmt.Errorf("error deleting detective Graph (%s): %w", d.Id(), err))
+		return diag.Errorf("error deleting detective Graph (%s): %s", d.Id(), err)
 	}
 
 	return nil
