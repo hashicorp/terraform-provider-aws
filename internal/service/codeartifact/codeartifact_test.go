@@ -16,10 +16,11 @@ func TestAccCodeArtifact_serial(t *testing.T) {
 			"tags":                 testAccCodeArtifactDomain_tags,
 		},
 		"DomainPermissionsPolicy": {
-			"basic":             testAccCodeArtifactDomainPermissionsPolicy_basic,
-			"disappears":        testAccCodeArtifactDomainPermissionsPolicy_disappears,
-			"owner":             testAccCodeArtifactDomainPermissionsPolicy_owner,
-			"Disappears_domain": testAccCodeArtifactDomainPermissionsPolicy_Disappears_domain,
+			"basic":            testAccCodeArtifactDomainPermissionsPolicy_basic,
+			"disappears":       testAccCodeArtifactDomainPermissionsPolicy_disappears,
+			"owner":            testAccCodeArtifactDomainPermissionsPolicy_owner,
+			"disappearsDomain": testAccCodeArtifactDomainPermissionsPolicy_Disappears_domain,
+			"ignoreEquivalent": testAccCodeArtifactDomainPermissionsPolicy_ignoreEquivalent,
 		},
 		"Repository": {
 			"basic":              testAccCodeArtifactRepository_basic,
