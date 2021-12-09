@@ -26,16 +26,18 @@ func ResourceStudioSessionMapping() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"identity_id": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-				Computed: true,
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				Computed:     true,
+				ExactlyOneOf: []string{"identity_id", "identity_name"},
 			},
 			"identity_name": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-				Computed: true,
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				Computed:     true,
+				ExactlyOneOf: []string{"identity_id", "identity_name"},
 			},
 			"identity_type": {
 				Type:         schema.TypeString,
