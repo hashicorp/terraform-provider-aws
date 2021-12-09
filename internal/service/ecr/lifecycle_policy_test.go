@@ -144,7 +144,7 @@ EOF
 func testAccEcrLifecyclePolicyOrderConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ecr_repository" "test" {
-  name = "%s"
+  name = %[1]q
 }
 
 resource "aws_ecr_lifecycle_policy" "test" {
@@ -167,7 +167,7 @@ resource "aws_ecr_lifecycle_policy" "test" {
       },
       {
         rulePriority = 2
-        description = "Expire tagged images older than 14 days"
+        description  = "Expire tagged images older than 14 days"
         selection = {
           tagStatus = "tagged"
           tagPrefixList = [
@@ -202,7 +202,7 @@ resource "aws_ecr_lifecycle_policy" "test" {
     rules = [
       {
         rulePriority = 2
-        description = "Expire tagged images older than 14 days"
+        description  = "Expire tagged images older than 14 days"
         selection = {
           tagStatus = "tagged"
           tagPrefixList = [
