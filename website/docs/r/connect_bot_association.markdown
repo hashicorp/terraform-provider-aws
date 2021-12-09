@@ -93,6 +93,8 @@ The `lex_bot` configuration block supports the following:
 
 ## Attributes Reference
 
+In addition to all arguments above, the following attributes are exported:
+
 * `id` - The Amazon Connect instance ID, Lex (V1) bot name, and Lex (V1) bot region separated by colons (`:`).
 
 ## Import
