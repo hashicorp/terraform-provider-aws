@@ -62,9 +62,9 @@ func resourceStudioSessionMappingCreate(d *schema.ResourceData, meta interface{}
 
 	var id string
 	studioId := d.Get("studio_id").(string)
-	indetityType := d.Get("identity_type").(string)
+	identityType := d.Get("identity_type").(string)
 	input := &emr.CreateStudioSessionMappingInput{
-		IdentityType:     aws.String(indetityType),
+		IdentityType:     aws.String(identityType),
 		SessionPolicyArn: aws.String(d.Get("session_policy_arn").(string)),
 		StudioId:         aws.String(studioId),
 	}
@@ -84,7 +84,7 @@ func resourceStudioSessionMappingCreate(d *schema.ResourceData, meta interface{}
 		return fmt.Errorf("error creating EMR Studio Session Mapping: %w", err)
 	}
 
-	d.SetId(fmt.Sprintf("%s:%s:%s", studioId, indetityType, id))
+	d.SetId(fmt.Sprintf("%s:%s:%s", studioId, identityType, id))
 
 	return resourceStudioSessionMappingRead(d, meta)
 }
