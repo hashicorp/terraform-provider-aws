@@ -36,10 +36,11 @@ func TestAccCodeArtifact_serial(t *testing.T) {
 			"owner": testAccCodeArtifactRepositoryEndpointDataSource_owner,
 		},
 		"RepositoryPermissionsPolicy": {
-			"basic":             testAccCodeArtifactRepositoryPermissionsPolicy_basic,
-			"disappears":        testAccCodeArtifactRepositoryPermissionsPolicy_disappears,
-			"owner":             testAccCodeArtifactRepositoryPermissionsPolicy_owner,
-			"Disappears_domain": testAccCodeArtifactRepositoryPermissionsPolicy_Disappears_domain,
+			"basic":            testAccCodeArtifactRepositoryPermissionsPolicy_basic,
+			"disappears":       testAccCodeArtifactRepositoryPermissionsPolicy_disappears,
+			"owner":            testAccCodeArtifactRepositoryPermissionsPolicy_owner,
+			"disappearsDomain": testAccCodeArtifactRepositoryPermissionsPolicy_Disappears_domain,
+			"ignoreEquivalent": testAccCodeArtifactRepositoryPermissionsPolicy_ignoreEquivalent,
 		},
 	}
 
