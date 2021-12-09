@@ -92,7 +92,7 @@ func testAccBotAssociationDataSource_ConfigBasic(rName string, rName2 string) st
 data "aws_connect_bot_association" "test" {
   instance_id = aws_connect_instance.test.id
   lex_bot {
-    name = aws_connect_bot_association.test.lex_bot.0.name
+    name = aws_connect_bot_association.test.lex_bot[0].name
   }
 }
 `)
