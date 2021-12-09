@@ -21,11 +21,5 @@ func validBucketLifecycleTimestamp(v interface{}, k string) (ws []string, errors
 }
 
 func validBucketLifecycleTransitionStorageClass() schema.SchemaValidateFunc {
-	return validation.StringInSlice([]string{
-		s3.TransitionStorageClassGlacier,
-		s3.TransitionStorageClassStandardIa,
-		s3.TransitionStorageClassOnezoneIa,
-		s3.TransitionStorageClassIntelligentTiering,
-		s3.TransitionStorageClassDeepArchive,
-	}, false)
+	return validation.StringInSlice(s3.TransitionStorageClass_Values(), false)
 }
