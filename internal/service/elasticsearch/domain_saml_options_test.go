@@ -15,11 +15,13 @@ import (
 	tfelasticsearch "github.com/hashicorp/terraform-provider-aws/internal/service/elasticsearch"
 )
 
-func TestAccElasticSearchDomainSamlOptions_basic(t *testing.T) {
+func TestAccElasticsearchDomainSamlOptions_basic(t *testing.T) {
 	var domain elasticsearch.ElasticsearchDomainStatus
 
 	rName := sdkacctest.RandomWithPrefix("acc-test")
 	rUserName := sdkacctest.RandomWithPrefix("es-master-user")
+	idpEntityId := fmt.Sprintf("https://%s", acctest.RandomDomainName())
+
 	resourceName := "aws_elasticsearch_domain_saml_options.main"
 	esDomainResourceName := "aws_elasticsearch_domain.example"
 
@@ -30,14 +32,14 @@ func TestAccElasticSearchDomainSamlOptions_basic(t *testing.T) {
 		CheckDestroy: testAccCheckESDomainSAMLOptionsDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccESDomainSAMLOptionsConfig(rUserName, rName),
+				Config: testAccESDomainSAMLOptionsConfig(rUserName, rName, idpEntityId),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckESDomainExists(esDomainResourceName, &domain),
 					testAccCheckESDomainSAMLOptions(esDomainResourceName, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "saml_options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "saml_options.0.enabled", "true"),
 					resource.TestCheckResourceAttr(resourceName, "saml_options.0.idp.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "saml_options.0.idp.0.entity_id", "https://terraform-dev-ed.my.salesforce.com"),
+					resource.TestCheckResourceAttr(resourceName, "saml_options.0.idp.0.entity_id", idpEntityId),
 				),
 			},
 			{
@@ -49,9 +51,11 @@ func TestAccElasticSearchDomainSamlOptions_basic(t *testing.T) {
 	})
 }
 
-func TestAccElasticSearchDomainSamlOptions_disappears(t *testing.T) {
+func TestAccElasticsearchDomainSamlOptions_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("acc-test")
 	rUserName := sdkacctest.RandomWithPrefix("es-master-user")
+	idpEntityId := fmt.Sprintf("https://%s", acctest.RandomDomainName())
+
 	resourceName := "aws_elasticsearch_domain_saml_options.main"
 	esDomainResourceName := "aws_elasticsearch_domain.example"
 
@@ -62,7 +66,7 @@ func TestAccElasticSearchDomainSamlOptions_disappears(t *testing.T) {
 		CheckDestroy: testAccCheckESDomainSAMLOptionsDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccESDomainSAMLOptionsConfig(rUserName, rName),
+				Config: testAccESDomainSAMLOptionsConfig(rUserName, rName, idpEntityId),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckESDomainSAMLOptions(esDomainResourceName, resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfelasticsearch.ResourceDomainSAMLOptions(), resourceName),
@@ -72,9 +76,11 @@ func TestAccElasticSearchDomainSamlOptions_disappears(t *testing.T) {
 	})
 }
 
-func TestAccElasticSearchDomainSamlOptions_disappears_domain(t *testing.T) {
+func TestAccElasticsearchDomainSamlOptions_disappears_Domain(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("acc-test")
 	rUserName := sdkacctest.RandomWithPrefix("es-master-user")
+	idpEntityId := fmt.Sprintf("https://%s", acctest.RandomDomainName())
+
 	resourceName := "aws_elasticsearch_domain_saml_options.main"
 	esDomainResourceName := "aws_elasticsearch_domain.example"
 
@@ -85,7 +91,7 @@ func TestAccElasticSearchDomainSamlOptions_disappears_domain(t *testing.T) {
 		CheckDestroy: testAccCheckESDomainSAMLOptionsDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccESDomainSAMLOptionsConfig(rUserName, rName),
+				Config: testAccESDomainSAMLOptionsConfig(rUserName, rName, idpEntityId),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckESDomainSAMLOptions(esDomainResourceName, resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfelasticsearch.ResourceDomain(), esDomainResourceName),
@@ -96,9 +102,11 @@ func TestAccElasticSearchDomainSamlOptions_disappears_domain(t *testing.T) {
 	})
 }
 
-func TestAccElasticSearchDomainSamlOptions_update(t *testing.T) {
+func TestAccElasticsearchDomainSamlOptions_Update(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("acc-test")
 	rUserName := sdkacctest.RandomWithPrefix("es-master-user")
+	idpEntityId := fmt.Sprintf("https://%s", acctest.RandomDomainName())
+
 	resourceName := "aws_elasticsearch_domain_saml_options.main"
 	esDomainResourceName := "aws_elasticsearch_domain.example"
 
@@ -109,7 +117,7 @@ func TestAccElasticSearchDomainSamlOptions_update(t *testing.T) {
 		CheckDestroy: testAccCheckESDomainSAMLOptionsDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccESDomainSAMLOptionsConfig(rUserName, rName),
+				Config: testAccESDomainSAMLOptionsConfig(rUserName, rName, idpEntityId),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "saml_options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "saml_options.0.session_timeout_minutes", "60"),
@@ -117,7 +125,7 @@ func TestAccElasticSearchDomainSamlOptions_update(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccESDomainSAMLOptionsConfigUpdate(rUserName, rName),
+				Config: testAccESDomainSAMLOptionsConfigUpdate(rUserName, rName, idpEntityId),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "saml_options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "saml_options.0.session_timeout_minutes", "180"),
@@ -128,9 +136,11 @@ func TestAccElasticSearchDomainSamlOptions_update(t *testing.T) {
 	})
 }
 
-func TestAccElasticSearchDomainSamlOptions_disabled(t *testing.T) {
+func TestAccElasticsearchDomainSamlOptions_Disabled(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("acc-test")
 	rUserName := sdkacctest.RandomWithPrefix("es-master-user")
+	idpEntityId := fmt.Sprintf("https://%s", acctest.RandomDomainName())
+
 	resourceName := "aws_elasticsearch_domain_saml_options.main"
 	esDomainResourceName := "aws_elasticsearch_domain.example"
 
@@ -141,7 +151,7 @@ func TestAccElasticSearchDomainSamlOptions_disabled(t *testing.T) {
 		CheckDestroy: testAccCheckESDomainSAMLOptionsDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccESDomainSAMLOptionsConfig(rUserName, rName),
+				Config: testAccESDomainSAMLOptionsConfig(rUserName, rName, idpEntityId),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "saml_options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "saml_options.0.session_timeout_minutes", "60"),
@@ -214,14 +224,14 @@ func testAccCheckESDomainSAMLOptions(esResource string, samlOptionsResource stri
 	}
 }
 
-func testAccESDomainSAMLOptionsConfig(userName string, domainName string) string {
+func testAccESDomainSAMLOptionsConfig(userName, domainName, idpEntityId string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_user" "es_master_user" {
-  name = "%s"
+  name = %[1]q
 }
 
 resource "aws_elasticsearch_domain" "example" {
-  domain_name           = "%s"
+  domain_name           = %[2]q
   elasticsearch_version = "7.10"
 
   cluster_config {
@@ -263,22 +273,22 @@ resource "aws_elasticsearch_domain_saml_options" "main" {
   saml_options {
     enabled = true
     idp {
-      entity_id        = "https://terraform-dev-ed.my.salesforce.com"
-      metadata_content = file("./test-fixtures/saml-metadata.xml")
+      entity_id        = %[3]q
+      metadata_content = templatefile("./test-fixtures/saml-metadata.xml.tpl", { entity_id = %[3]q })
     }
   }
 }
-`, userName, domainName)
+`, userName, domainName, idpEntityId)
 }
 
-func testAccESDomainSAMLOptionsConfigUpdate(userName string, domainName string) string {
+func testAccESDomainSAMLOptionsConfigUpdate(userName, domainName, idpEntityId string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_user" "es_master_user" {
-  name = "%s"
+  name = %[1]q
 }
 
 resource "aws_elasticsearch_domain" "example" {
-  domain_name           = "%s"
+  domain_name           = %[2]q
   elasticsearch_version = "7.10"
 
   cluster_config {
@@ -320,13 +330,13 @@ resource "aws_elasticsearch_domain_saml_options" "main" {
   saml_options {
     enabled = true
     idp {
-      entity_id        = "https://terraform-dev-ed.my.salesforce.com"
-      metadata_content = file("./test-fixtures/saml-metadata.xml")
+      entity_id        = %[3]q
+      metadata_content = templatefile("./test-fixtures/saml-metadata.xml.tpl", { entity_id = %[3]q })
     }
     session_timeout_minutes = 180
   }
 }
-`, userName, domainName)
+`, userName, domainName, idpEntityId)
 }
 
 func testAccESDomainSAMLOptionsConfigDisabled(userName string, domainName string) string {
