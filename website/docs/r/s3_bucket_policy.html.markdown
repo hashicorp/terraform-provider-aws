@@ -15,24 +15,20 @@ Attaches a policy to an S3 bucket resource.
 ### Basic Usage
 
 ```terraform
-locals {
-  aws_account_b_id = "123456789012"
-}
-
 resource "aws_s3_bucket" "example" {
   bucket = "my-tf-test-bucket"
 }
 
-resource "aws_s3_bucket_policy" "allow_access_from_account_b" {
+resource "aws_s3_bucket_policy" "allow_access_from_another_account" {
   bucket = aws_s3_bucket.example.id
-  policy = data.aws_iam_policy_document.allow_access_from_account_b.json
+  policy = data.aws_iam_policy_document.allow_access_from_another_account.json
 }
 
-data "aws_iam_policy_document" "allow_access_from_account_b" {
+data "aws_iam_policy_document" "allow_access_from_another_account" {
   statement {
     principals {
-      type         = "AWS"
-      identitfiers = [local.aws_account_b_id]
+      type        = "AWS"
+      identifiers = ["123456789012"]
     }
 
     actions = [
