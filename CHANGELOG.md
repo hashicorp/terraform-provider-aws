@@ -24,6 +24,8 @@ ENHANCEMENTS:
 BUG FIXES:
 
 * data-source/aws_ecs_cluster: Ensure that `setting` attribute is set consistently ([#22119](https://github.com/hashicorp/terraform-provider-aws/issues/22119))
+* resource/aws_api_gateway_rest_api: Fix erroneous diffs in `policy` when no changes made or policies are equivalent ([#22115](https://github.com/hashicorp/terraform-provider-aws/issues/22115))
+* resource/aws_api_gateway_rest_api_policy: Fix erroneous diffs in `policy` when no changes made or policies are equivalent ([#22115](https://github.com/hashicorp/terraform-provider-aws/issues/22115))
 * resource/aws_appstream_image_builder: Correctly create resource with `image_arn` argument ([#22077](https://github.com/hashicorp/terraform-provider-aws/issues/22077))
 * resource/aws_ecr_registry_policy: Fix order-related diffs in `policy` ([#22004](https://github.com/hashicorp/terraform-provider-aws/issues/22004))
 * resource/aws_ecr_repository_policy: Fix order-related diffs in `policy` ([#22004](https://github.com/hashicorp/terraform-provider-aws/issues/22004))
