@@ -187,7 +187,7 @@ func testAccCheckResourcePolicyResourceOrderConfig(rName string) string {
 data "aws_partition" "current" {}
 
 resource "aws_cloudwatch_log_resource_policy" "test" {
-  policy_name     = %[1]q
+  policy_name = %[1]q
   policy_document = jsonencode({
     Statement = [{
       Action = [
@@ -215,7 +215,7 @@ func testAccCheckResourcePolicyResourceNewOrderConfig(rName string) string {
 data "aws_partition" "current" {}
 
 resource "aws_cloudwatch_log_resource_policy" "test" {
-  policy_name     = %[1]q
+  policy_name = %[1]q
   policy_document = jsonencode({
     Statement = [{
       Action = [
