@@ -644,10 +644,85 @@ func TestAccRDSInstance_replicateSourceDB_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(sourceResourceName, &sourceDbInstance),
 					testAccCheckInstanceExists(resourceName, &dbInstance),
+					resource.TestCheckResourceAttr(resourceName, "identifier", rName),
+					resource.TestCheckResourceAttr(resourceName, "identifier_prefix", ""),
 					testAccCheckInstanceReplicaAttributes(&sourceDbInstance, &dbInstance),
 					resource.TestCheckResourceAttrPair(resourceName, "name", sourceResourceName, "name"),
 					resource.TestCheckResourceAttrPair(resourceName, "username", sourceResourceName, "username"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"password",
+				},
+			},
+		},
+	})
+}
+
+func TestAccRDSInstance_replicateSourceDB_namePrefix(t *testing.T) {
+	var v rds.DBInstance
+
+	sourceName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	const identifierPrefix = "tf-acc-test-prefix-"
+	const resourceName = "aws_db_instance.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_ReplicateSourceDB_namePrefix(identifierPrefix, sourceName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInstanceExists(resourceName, &v),
+					create.TestCheckResourceAttrNameFromPrefix(resourceName, "identifier", identifierPrefix),
+					resource.TestCheckResourceAttr(resourceName, "identifier_prefix", identifierPrefix),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"password",
+				},
+			},
+		},
+	})
+}
+
+func TestAccRDSInstance_replicateSourceDB_nameGenerated(t *testing.T) {
+	var v rds.DBInstance
+
+	sourceName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	const resourceName = "aws_db_instance.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_ReplicateSourceDB_nameGenerated(sourceName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInstanceExists(resourceName, &v),
+					create.TestCheckResourceAttrNameGenerated(resourceName, "identifier"),
+					resource.TestCheckResourceAttr(resourceName, "identifier_prefix", resource.UniqueIdPrefix),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"password",
+				},
 			},
 		},
 	})
@@ -667,7 +742,7 @@ func TestAccRDSInstance_replicateSourceDB_addLater(t *testing.T) {
 		CheckDestroy: testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceConfig_ReplicateSourceDB_addLaterSetup(rName),
+				Config: testAccInstanceConfig_ReplicateSourceDB_addLaterSetup(),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(sourceResourceName, &sourceDbInstance),
 				),
@@ -5780,7 +5855,7 @@ resource "aws_db_instance" "test" {
 `, rName))
 }
 
-func testAccInstanceConfig_ReplicateSourceDB_addLaterSetup(rName string) string {
+func testAccInstanceConfig_ReplicateSourceDB_namePrefix(identifierPrefix, sourceName string) string {
 	return acctest.ConfigCompose(
 		testAccInstanceConfig_orderableClassMySQL(),
 		fmt.Sprintf(`
@@ -5788,30 +5863,64 @@ resource "aws_db_instance" "source" {
   allocated_storage       = 5
   backup_retention_period = 1
   engine                  = data.aws_rds_orderable_db_instance.test.engine
-  identifier              = "%[1]s-source"
+  identifier              = %[1]q
   instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
   password                = "avoid-plaintext-passwords"
   username                = "tfacctest"
   skip_final_snapshot     = true
 }
-`, rName))
+
+resource "aws_db_instance" "test" {
+  identifier_prefix   = %[2]q
+  instance_class      = aws_db_instance.source.instance_class
+  replicate_source_db = aws_db_instance.source.id
+  skip_final_snapshot = true
+}
+`, sourceName, identifierPrefix))
+}
+
+func testAccInstanceConfig_ReplicateSourceDB_nameGenerated(sourceName string) string {
+	return acctest.ConfigCompose(
+		testAccInstanceConfig_orderableClassMySQL(),
+		fmt.Sprintf(`
+resource "aws_db_instance" "source" {
+  allocated_storage       = 5
+  backup_retention_period = 1
+  engine                  = data.aws_rds_orderable_db_instance.test.engine
+  identifier              = %[1]q
+  instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
+  password                = "avoid-plaintext-passwords"
+  username                = "tfacctest"
+  skip_final_snapshot     = true
+}
+
+resource "aws_db_instance" "test" {
+  instance_class      = aws_db_instance.source.instance_class
+  replicate_source_db = aws_db_instance.source.id
+  skip_final_snapshot = true
+}
+`, sourceName))
+}
+
+func testAccInstanceConfig_ReplicateSourceDB_addLaterSetup() string {
+	return acctest.ConfigCompose(
+		testAccInstanceConfig_orderableClassMySQL(), `
+resource "aws_db_instance" "source" {
+  allocated_storage       = 5
+  backup_retention_period = 1
+  engine                  = data.aws_rds_orderable_db_instance.test.engine
+  instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
+  password                = "avoid-plaintext-passwords"
+  username                = "tfacctest"
+  skip_final_snapshot     = true
+}
+`)
 }
 
 func testAccInstanceConfig_ReplicateSourceDB_addLater(rName string) string {
 	return acctest.ConfigCompose(
-		testAccInstanceConfig_orderableClassMySQL(),
+		testAccInstanceConfig_ReplicateSourceDB_addLaterSetup(),
 		fmt.Sprintf(`
-resource "aws_db_instance" "source" {
-  allocated_storage       = 5
-  backup_retention_period = 1
-  engine                  = data.aws_rds_orderable_db_instance.test.engine
-  identifier              = "%[1]s-source"
-  instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
-  password                = "avoid-plaintext-passwords"
-  username                = "tfacctest"
-  skip_final_snapshot     = true
-}
-
 resource "aws_db_instance" "test" {
   identifier          = %[1]q
   instance_class      = aws_db_instance.source.instance_class
