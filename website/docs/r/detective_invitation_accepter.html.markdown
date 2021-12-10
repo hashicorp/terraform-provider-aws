@@ -19,7 +19,6 @@ resource "aws_detective_graph" "primary" {
 
 resource "aws_detective2_member" "primary" {
   provider   = "awsalternate"
-  
   account_id = "ACCOUNT ID"
   email      = "EMAIL"
   graph_arn  = aws_detective_graph.admin.id
