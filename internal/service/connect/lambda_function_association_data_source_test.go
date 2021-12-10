@@ -37,7 +37,7 @@ func testAccLambdaFunctionAssociationDataSource_BaseConfig(rName string, rName2 
 data "aws_partition" "current" {}
 
 resource "aws_lambda_function" "test" {
-  filename      = "testdata/lambdatest.zip"
+  filename      = "test-fixtures/lambdatest.zip"
   function_name = %[1]q
   role          = aws_iam_role.test.arn
   handler       = "exports.handler"
