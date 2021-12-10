@@ -201,19 +201,17 @@ type lifecyclePolicy struct {
 	Rules []*lifecyclePolicyRule `locationName:"rules" min:"1" type:"list" required:"true"`
 }
 
-func (lp *lifecyclePolicy) reduce() error {
+func (lp *lifecyclePolicy) reduce() {
 	sort.Slice(lp.Rules, func(i, j int) bool {
 		return aws.Int64Value(lp.Rules[i].RulePriority) < aws.Int64Value(lp.Rules[j].RulePriority)
 	})
 
 	for _, rule := range lp.Rules {
-		_ = rule.Selection.reduce()
+		rule.Selection.reduce()
 	}
-
-	return nil
 }
 
-func (lprs *lifecyclePolicyRuleSelection) reduce() error {
+func (lprs *lifecyclePolicyRuleSelection) reduce() {
 	sort.Slice(lprs.TagPrefixList, func(i, j int) bool {
 		return aws.StringValue(lprs.TagPrefixList[i]) < aws.StringValue(lprs.TagPrefixList[j])
 	})
@@ -221,8 +219,6 @@ func (lprs *lifecyclePolicyRuleSelection) reduce() error {
 	if len(lprs.TagPrefixList) == 0 {
 		lprs.TagPrefixList = nil
 	}
-
-	return nil
 }
 
 func equivalentLifecyclePolicyJSON(str1, str2 string) (bool, error) {
@@ -240,7 +236,7 @@ func equivalentLifecyclePolicyJSON(str1, str2 string) (bool, error) {
 		return false, err
 	}
 
-	_ = lp1.reduce()
+	lp1.reduce()
 
 	canonicalJSON1, err := jsonutil.BuildJSON(lp1)
 
@@ -252,7 +248,7 @@ func equivalentLifecyclePolicyJSON(str1, str2 string) (bool, error) {
 		return false, err
 	}
 
-	_ = lp2.reduce()
+	lp2.reduce()
 
 	canonicalJSON2, err := jsonutil.BuildJSON(lp2)
 
