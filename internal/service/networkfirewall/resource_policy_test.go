@@ -275,7 +275,7 @@ resource "aws_networkfirewall_resource_policy" "test" {
         "network-firewall:UpdateFirewall",
         "network-firewall:AssociateFirewallPolicy",
         "network-firewall:ListFirewallPolicies",
-		"network-firewall:CreateFirewall",
+        "network-firewall:CreateFirewall",
       ]
       Effect   = "Allow"
       Resource = aws_networkfirewall_firewall_policy.test.arn
