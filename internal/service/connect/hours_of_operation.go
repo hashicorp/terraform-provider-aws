@@ -36,7 +36,6 @@ func ResourceHoursOfOperation() *schema.Resource {
 				Type:     schema.TypeSet,
 				Required: true,
 				MinItems: 0,
-				MaxItems: 100,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"day": {
