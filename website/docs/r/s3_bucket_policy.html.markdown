@@ -36,7 +36,10 @@ data "aws_iam_policy_document" "allow_access_from_another_account" {
       "s3:ListBucket",
     ]
 
-    resources = ["*"]
+    resources = [
+      aws_s3_bucket.example.arn,
+      "${aws_s3_bucket.example.arn}/*",
+    ]
   }
 }
 ```
