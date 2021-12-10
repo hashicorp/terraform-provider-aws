@@ -837,7 +837,7 @@ func resourceGroupRead(d *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		return err
 	}
-	if g == nil {
+	if g == nil && !d.IsNewResource() {
 		log.Printf("[WARN] Auto Scaling Group (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -1661,8 +1661,6 @@ func resourceGroupDrain(d *schema.ResourceData, meta interface{}) error {
 			return resource.NonRetryableError(err)
 		}
 		if g == nil {
-			log.Printf("[WARN] Auto Scaling Group (%s) not found, removing from state", d.Id())
-			d.SetId("")
 			return nil
 		}
 

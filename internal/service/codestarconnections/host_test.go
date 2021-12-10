@@ -35,7 +35,7 @@ func TestAccCodeStarConnectionsHost_basic(t *testing.T) {
 					acctest.MatchResourceAttrRegionalARN(resourceName, "id", "codestar-connections", regexp.MustCompile("host/.+")),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "codestar-connections", regexp.MustCompile("host/.+")),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "provider_endpoint", "https://test.com"),
+					resource.TestCheckResourceAttr(resourceName, "provider_endpoint", "https://example.com"),
 					resource.TestCheckResourceAttr(resourceName, "provider_type", codestarconnections.ProviderTypeGitHubEnterpriseServer),
 				),
 			},
@@ -89,7 +89,7 @@ func TestAccCodeStarConnectionsHost_vpc(t *testing.T) {
 					acctest.MatchResourceAttrRegionalARN(resourceName, "id", "codestar-connections", regexp.MustCompile("host/.+")),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "codestar-connections", regexp.MustCompile("host/.+")),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "provider_endpoint", "https://test.com"),
+					resource.TestCheckResourceAttr(resourceName, "provider_endpoint", "https://example.com"),
 					resource.TestCheckResourceAttr(resourceName, "provider_type", codestarconnections.ProviderTypeGitHubEnterpriseServer),
 					resource.TestCheckResourceAttr(resourceName, "vpc_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_configuration.0.security_group_ids.#", "1"),
@@ -206,7 +206,7 @@ func testAccHostBasicConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_codestarconnections_host" "test" {
   name              = %[1]q
-  provider_endpoint = "https://test.com"
+  provider_endpoint = "https://example.com"
   provider_type     = "GitHubEnterpriseServer"
 }
 `, rName)
@@ -218,7 +218,7 @@ func testAccHostVPCConfig(rName string) string {
 		fmt.Sprintf(`
 resource "aws_codestarconnections_host" "test" {
   name              = %[1]q
-  provider_endpoint = "https://test.com"
+  provider_endpoint = "https://example.com"
   provider_type     = "GitHubEnterpriseServer"
   vpc_configuration {
     security_group_ids = [aws_security_group.test.id]

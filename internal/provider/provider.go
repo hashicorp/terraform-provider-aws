@@ -51,6 +51,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/datapipeline"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/datasync"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/dax"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/detective"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/devicefarm"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/directconnect"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/dlm"
@@ -392,14 +393,16 @@ func Provider() *schema.Provider {
 			"aws_codeartifact_authorization_token": codeartifact.DataSourceAuthorizationToken(),
 			"aws_codeartifact_repository_endpoint": codeartifact.DataSourceRepositoryEndpoint(),
 
-			"aws_codecommit_repository": codecommit.DataSourceRepository(),
+			"aws_codecommit_approval_rule_template": codecommit.DataSourceApprovalRuleTemplate(),
+			"aws_codecommit_repository":             codecommit.DataSourceRepository(),
 
 			"aws_codestarconnections_connection": codestarconnections.DataSourceConnection(),
 
 			"aws_cognito_user_pools": cognitoidp.DataSourceUserPools(),
 
-			"aws_connect_contact_flow": connect.DataSourceContactFlow(),
-			"aws_connect_instance":     connect.DataSourceInstance(),
+			"aws_connect_bot_association": connect.DataSourceBotAssociation(),
+			"aws_connect_contact_flow":    connect.DataSourceContactFlow(),
+			"aws_connect_instance":        connect.DataSourceInstance(),
 
 			"aws_cur_report_definition": cur.DataSourceReportDefinition(),
 
@@ -471,6 +474,7 @@ func Provider() *schema.Provider {
 			"aws_vpc_dhcp_options":                           ec2.DataSourceVPCDHCPOptions(),
 			"aws_vpc_endpoint_service":                       ec2.DataSourceVPCEndpointService(),
 			"aws_vpc_endpoint":                               ec2.DataSourceVPCEndpoint(),
+			"aws_vpc_ipam_pool":                              ec2.DataSourceVPCIpamPool(),
 			"aws_vpc_peering_connection":                     ec2.DataSourceVPCPeeringConnection(),
 			"aws_vpc_peering_connections":                    ec2.DataSourceVPCPeeringConnections(),
 			"aws_vpc":                                        ec2.DataSourceVPC(),
@@ -911,8 +915,10 @@ func Provider() *schema.Provider {
 			"aws_codebuild_source_credential": codebuild.ResourceSourceCredential(),
 			"aws_codebuild_webhook":           codebuild.ResourceWebhook(),
 
-			"aws_codecommit_repository": codecommit.ResourceRepository(),
-			"aws_codecommit_trigger":    codecommit.ResourceTrigger(),
+			"aws_codecommit_approval_rule_template":             codecommit.ResourceApprovalRuleTemplate(),
+			"aws_codecommit_approval_rule_template_association": codecommit.ResourceApprovalRuleTemplateAssociation(),
+			"aws_codecommit_repository":                         codecommit.ResourceRepository(),
+			"aws_codecommit_trigger":                            codecommit.ResourceTrigger(),
 
 			"aws_codedeploy_app":               codedeploy.ResourceApp(),
 			"aws_codedeploy_deployment_config": codedeploy.ResourceDeploymentConfig(),
@@ -949,9 +955,10 @@ func Provider() *schema.Provider {
 			"aws_config_organization_managed_rule":     configservice.ResourceOrganizationManagedRule(),
 			"aws_config_remediation_configuration":     configservice.ResourceRemediationConfiguration(),
 
-			"aws_connect_contact_flow":       connect.ResourceContactFlow(),
+			"aws_connect_bot_association": connect.ResourceBotAssociation(),
+			"aws_connect_contact_flow":    connect.ResourceContactFlow(),
 			"aws_connect_hours_of_operation": connect.ResourceHoursOfOperation(),
-			"aws_connect_instance":           connect.ResourceInstance(),
+			"aws_connect_instance":        connect.ResourceInstance(),
 
 			"aws_cur_report_definition": cur.ResourceReportDefinition(),
 
@@ -970,6 +977,8 @@ func Provider() *schema.Provider {
 			"aws_dax_subnet_group":    dax.ResourceSubnetGroup(),
 
 			"aws_devicefarm_project": devicefarm.ResourceProject(),
+
+			"aws_detective_graph": detective.ResourceGraph(),
 
 			"aws_dx_bgp_peer":                                  directconnect.ResourceBGPPeer(),
 			"aws_dx_connection":                                directconnect.ResourceConnection(),
@@ -1046,6 +1055,7 @@ func Provider() *schema.Provider {
 			"aws_ec2_local_gateway_route_table_vpc_association":   ec2.ResourceLocalGatewayRouteTableVPCAssociation(),
 			"aws_ec2_managed_prefix_list":                         ec2.ResourceManagedPrefixList(),
 			"aws_ec2_managed_prefix_list_entry":                   ec2.ResourceManagedPrefixListEntry(),
+			"aws_ec2_subnet_cidr_reservation":                     ec2.ResourceSubnetCIDRReservation(),
 			"aws_ec2_tag":                                         ec2.ResourceTag(),
 			"aws_ec2_traffic_mirror_filter":                       ec2.ResourceTrafficMirrorFilter(),
 			"aws_ec2_traffic_mirror_filter_rule":                  ec2.ResourceTrafficMirrorFilterRule(),
@@ -1097,7 +1107,13 @@ func Provider() *schema.Provider {
 			"aws_vpc_endpoint_service":                            ec2.ResourceVPCEndpointService(),
 			"aws_vpc_endpoint_service_allowed_principal":          ec2.ResourceVPCEndpointServiceAllowedPrincipal(),
 			"aws_vpc_endpoint_subnet_association":                 ec2.ResourceVPCEndpointSubnetAssociation(),
+			"aws_vpc_ipam":                                        ec2.ResourceVPCIpam(),
+			"aws_vpc_ipam_pool":                                   ec2.ResourceVPCIpamPool(),
+			"aws_vpc_ipam_pool_cidr_allocation":                   ec2.ResourceVPCIpamPoolCidrAllocation(),
+			"aws_vpc_ipam_pool_cidr":                              ec2.ResourceVPCIpamPoolCidr(),
+			"aws_vpc_ipam_scope":                                  ec2.ResourceVPCIpamScope(),
 			"aws_vpc_ipv4_cidr_block_association":                 ec2.ResourceVPCIPv4CIDRBlockAssociation(),
+			"aws_vpc_ipv6_cidr_block_association":                 ec2.ResourceVPCIPv6CIDRBlockAssociation(),
 			"aws_vpc_peering_connection":                          ec2.ResourceVPCPeeringConnection(),
 			"aws_vpc_peering_connection_accepter":                 ec2.ResourceVPCPeeringConnectionAccepter(),
 			"aws_vpc_peering_connection_options":                  ec2.ResourceVPCPeeringConnectionOptions(),
@@ -1115,11 +1131,13 @@ func Provider() *schema.Provider {
 
 			"aws_ecrpublic_repository": ecrpublic.ResourceRepository(),
 
-			"aws_ecs_capacity_provider": ecs.ResourceCapacityProvider(),
-			"aws_ecs_cluster":           ecs.ResourceCluster(),
-			"aws_ecs_service":           ecs.ResourceService(),
-			"aws_ecs_tag":               ecs.ResourceTag(),
-			"aws_ecs_task_definition":   ecs.ResourceTaskDefinition(),
+			"aws_ecs_account_setting_default": ecs.ResourceAccountSettingDefault(),
+			"aws_ecs_capacity_provider":       ecs.ResourceCapacityProvider(),
+			"aws_ecs_cluster":                 ecs.ResourceCluster(),
+			"aws_ecs_service":                 ecs.ResourceService(),
+			"aws_ecs_tag":                     ecs.ResourceTag(),
+			"aws_ecs_task_definition":         ecs.ResourceTaskDefinition(),
+			"aws_ecs_task_set":                ecs.ResourceTaskSet(),
 
 			"aws_efs_access_point":       efs.ResourceAccessPoint(),
 			"aws_efs_backup_policy":      efs.ResourceBackupPolicy(),
@@ -1182,6 +1200,8 @@ func Provider() *schema.Provider {
 			"aws_emr_instance_group":         emr.ResourceInstanceGroup(),
 			"aws_emr_managed_scaling_policy": emr.ResourceManagedScalingPolicy(),
 			"aws_emr_security_configuration": emr.ResourceSecurityConfiguration(),
+			"aws_emr_studio":                 emr.ResourceStudio(),
+			"aws_emr_studio_session_mapping": emr.ResourceStudioSessionMapping(),
 
 			"aws_kinesis_firehose_delivery_stream": firehose.ResourceDeliveryStream(),
 

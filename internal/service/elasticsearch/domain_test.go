@@ -5,6 +5,7 @@ import (
 	"regexp"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
@@ -495,6 +496,47 @@ func TestAccElasticsearchDomain_internetToVPCEndpoint(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckESDomainExists(resourceName, &domain),
 				),
+			},
+		},
+	})
+}
+
+func TestAccElasticsearchDomain_AutoTuneOptions(t *testing.T) {
+	var domain elasticsearch.ElasticsearchDomainStatus
+	ri := sdkacctest.RandInt()
+	autoTuneStartAtTime := testAccGetValidStartAtTime(t, "24h")
+	resourceName := "aws_elasticsearch_domain.test"
+	resourceId := fmt.Sprintf("tf-test-%d", ri)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckIamServiceLinkedRoleEs(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, elasticsearch.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckESDomainDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccESDomainConfigWithAutoTuneOptions(ri, autoTuneStartAtTime),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckESDomainExists(resourceName, &domain),
+					resource.TestCheckResourceAttr(
+						resourceName, "elasticsearch_version", "6.7"),
+					resource.TestMatchResourceAttr(resourceName, "kibana_endpoint", regexp.MustCompile(`.*es\..*/_plugin/kibana/`)),
+					resource.TestCheckResourceAttr(resourceName, "auto_tune_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "auto_tune_options.0.desired_state", "ENABLED"),
+					resource.TestCheckResourceAttr(resourceName, "auto_tune_options.0.maintenance_schedule.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "auto_tune_options.0.maintenance_schedule.0.start_at", autoTuneStartAtTime),
+					resource.TestCheckResourceAttr(resourceName, "auto_tune_options.0.maintenance_schedule.0.duration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "auto_tune_options.0.maintenance_schedule.0.duration.0.value", "2"),
+					resource.TestCheckResourceAttr(resourceName, "auto_tune_options.0.maintenance_schedule.0.duration.0.unit", "HOURS"),
+					resource.TestCheckResourceAttr(resourceName, "auto_tune_options.0.maintenance_schedule.0.cron_expression_for_recurrence", "cron(0 0 ? * 1 *)"),
+					resource.TestCheckResourceAttr(resourceName, "auto_tune_options.0.rollback_on_disable", "NO_ROLLBACK"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateId:     resourceId,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -1339,6 +1381,15 @@ func testAccCheckESDomainDestroy(s *terraform.State) error {
 	return nil
 }
 
+func testAccGetValidStartAtTime(t *testing.T, timeUntilStart string) string {
+	n := time.Now().UTC()
+	d, err := time.ParseDuration(timeUntilStart)
+	if err != nil {
+		t.Fatalf("err parsing timeUntilStart: %s", err)
+	}
+	return n.Add(d).Format(time.RFC3339)
+}
+
 func testAccPreCheckIamServiceLinkedRoleEs(t *testing.T) {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn
 	dnsSuffix := acctest.Provider.Meta().(*conns.AWSClient).DNSSuffix
@@ -1382,6 +1433,36 @@ resource "aws_elasticsearch_domain" "test" {
   }
 }
 `, randInt)
+}
+
+func testAccESDomainConfigWithAutoTuneOptions(randInt int, autoTuneStartAtTime string) string {
+	return fmt.Sprintf(`
+resource "aws_elasticsearch_domain" "test" {
+  domain_name           = "tf-test-%d"
+  elasticsearch_version = "6.7"
+
+  ebs_options {
+    ebs_enabled = true
+    volume_size = 10
+  }
+
+  auto_tune_options {
+    desired_state = "ENABLED"
+
+    maintenance_schedule {
+      start_at = "%s"
+      duration {
+        value = "2"
+        unit  = "HOURS"
+      }
+      cron_expression_for_recurrence = "cron(0 0 ? * 1 *)"
+    }
+
+    rollback_on_disable = "NO_ROLLBACK"
+
+  }
+}
+`, randInt, autoTuneStartAtTime)
 }
 
 func testAccESDomainConfigWithDisabledEBSAndVolumeType(rName, volumeType string) string {
@@ -2361,8 +2442,7 @@ func testAccESDomainConfig_CognitoOptions(randInt int, includeCognitoOptions boo
 	}
 
 	return fmt.Sprintf(`
-data "aws_partition" "current" {
-}
+data "aws_partition" "current" {}
 
 resource "aws_cognito_user_pool" "example" {
   name = "tf-test-%[1]d"
@@ -2411,7 +2491,7 @@ resource "aws_elasticsearch_domain" "test" {
 
   elasticsearch_version = "6.0"
 
-	%s
+  %s
 
   ebs_options {
     ebs_enabled = true

@@ -27,13 +27,20 @@ func init() {
 	})
 
 	resource.AddTestSweepers("aws_fsx_ontap_file_system", &resource.Sweeper{
-		Name: "aws_fsx_ontap_file_system",
-		F:    sweepFSXOntapFileSystems,
+		Name:         "aws_fsx_ontap_file_system",
+		F:            sweepFSXOntapFileSystems,
+		Dependencies: []string{"aws_fsx_ontap_storage_virtual_machine"},
 	})
 
 	resource.AddTestSweepers("aws_fsx_ontap_storage_virtual_machine", &resource.Sweeper{
-		Name: "aws_fsx_ontap_storage_virtual_machine",
-		F:    sweepFSXOntapStorageVirtualMachine,
+		Name:         "aws_fsx_ontap_storage_virtual_machine",
+		F:            sweepFSXOntapStorageVirtualMachine,
+		Dependencies: []string{"aws_fsx_ontap_volume"},
+	})
+
+	resource.AddTestSweepers("aws_fsx_ontap_volume", &resource.Sweeper{
+		Name: "aws_fsx_ontap_volume",
+		F:    sweepFSXOntapVolume,
 	})
 
 	resource.AddTestSweepers("aws_fsx_windows_file_system", &resource.Sweeper{
@@ -46,7 +53,7 @@ func sweepFSXBackups(region string) error {
 	client, err := sweep.SharedRegionalSweepClient(region)
 
 	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
+		return fmt.Errorf("error getting client: %w", err)
 	}
 
 	conn := client.(*conns.AWSClient).FSxConn
@@ -90,7 +97,7 @@ func sweepFSXLustreFileSystems(region string) error {
 	client, err := sweep.SharedRegionalSweepClient(region)
 
 	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
+		return fmt.Errorf("error getting client: %w", err)
 	}
 
 	conn := client.(*conns.AWSClient).FSxConn
@@ -138,7 +145,7 @@ func sweepFSXOntapFileSystems(region string) error {
 	client, err := sweep.SharedRegionalSweepClient(region)
 
 	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
+		return fmt.Errorf("error getting client: %w", err)
 	}
 
 	conn := client.(*conns.AWSClient).FSxConn
@@ -167,15 +174,110 @@ func sweepFSXOntapFileSystems(region string) error {
 	})
 
 	if err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error listing FSx Ontap File Systems for %s: %w", region, err))
+		errs = multierror.Append(errs, fmt.Errorf("error listing FSx ONTAP File Systems for %s: %w", region, err))
 	}
 
 	if err = sweep.SweepOrchestrator(sweepResources); err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error sweeping FSx Ontap File Systems for %s: %w", region, err))
+		errs = multierror.Append(errs, fmt.Errorf("error sweeping FSx ONTAP File Systems for %s: %w", region, err))
 	}
 
 	if sweep.SkipSweepError(errs.ErrorOrNil()) {
-		log.Printf("[WARN] Skipping FSx Ontap File System sweep for %s: %s", region, errs)
+		log.Printf("[WARN] Skipping FSx ONTAP File System sweep for %s: %s", region, errs)
+		return nil
+	}
+
+	return errs.ErrorOrNil()
+}
+
+func sweepFSXOntapStorageVirtualMachine(region string) error {
+	client, err := sweep.SharedRegionalSweepClient(region)
+
+	if err != nil {
+		return fmt.Errorf("error getting client: %w", err)
+	}
+
+	conn := client.(*conns.AWSClient).FSxConn
+	sweepResources := make([]*sweep.SweepResource, 0)
+	var errs *multierror.Error
+	input := &fsx.DescribeStorageVirtualMachinesInput{}
+
+	err = conn.DescribeStorageVirtualMachinesPages(input, func(page *fsx.DescribeStorageVirtualMachinesOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, vm := range page.StorageVirtualMachines {
+			r := ResourceOntapStorageVirtualMachine()
+			d := r.Data(nil)
+			d.SetId(aws.StringValue(vm.StorageVirtualMachineId))
+
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+		}
+
+		return !lastPage
+	})
+
+	if err != nil {
+		errs = multierror.Append(errs, fmt.Errorf("error listing FSx ONTAP Storage Virtual Machine for %s: %w", region, err))
+	}
+
+	if err = sweep.SweepOrchestrator(sweepResources); err != nil {
+		errs = multierror.Append(errs, fmt.Errorf("error sweeping FSx ONTAP Storage Virtual Machine for %s: %w", region, err))
+	}
+
+	if sweep.SkipSweepError(errs.ErrorOrNil()) {
+		log.Printf("[WARN] Skipping FSx ONTAP Storage Virtual Machine sweep for %s: %s", region, errs)
+		return nil
+	}
+
+	return errs.ErrorOrNil()
+}
+
+func sweepFSXOntapVolume(region string) error {
+	client, err := sweep.SharedRegionalSweepClient(region)
+
+	if err != nil {
+		return fmt.Errorf("error getting client: %w", err)
+	}
+
+	conn := client.(*conns.AWSClient).FSxConn
+	sweepResources := make([]*sweep.SweepResource, 0)
+	var errs *multierror.Error
+	input := &fsx.DescribeVolumesInput{}
+
+	err = conn.DescribeVolumesPages(input, func(page *fsx.DescribeVolumesOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.Volumes {
+			if aws.StringValue(v.VolumeType) != fsx.VolumeTypeOntap {
+				continue
+			}
+			if v.OntapConfiguration != nil && aws.BoolValue(v.OntapConfiguration.StorageVirtualMachineRoot) {
+				continue
+			}
+
+			r := ResourceOntapVolume()
+			d := r.Data(nil)
+			d.SetId(aws.StringValue(v.VolumeId))
+
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+		}
+
+		return !lastPage
+	})
+
+	if err != nil {
+		errs = multierror.Append(errs, fmt.Errorf("error listing FSx ONTAP Volume for %s: %w", region, err))
+	}
+
+	if err = sweep.SweepOrchestrator(sweepResources); err != nil {
+		errs = multierror.Append(errs, fmt.Errorf("error sweeping FSx ONTAP Volume for %s: %w", region, err))
+	}
+
+	if sweep.SkipSweepError(errs.ErrorOrNil()) {
+		log.Printf("[WARN] Skipping FSx ONTAP Volume sweep for %s: %s", region, errs)
 		return nil
 	}
 

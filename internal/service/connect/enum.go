@@ -3,11 +3,14 @@ package connect
 import "github.com/aws/aws-sdk-go/service/connect"
 
 const InstanceStatusStatusNotFound = "ResourceNotFoundException"
+const BotAssociationStatusNotFound = "ResourceNotFoundException"
 
 const (
 	ListInstancesMaxResults = 10
 	// MaxResults Valid Range: Minimum value of 1. Maximum value of 1000
 	ListContactFlowsMaxResults = 60
+	// MaxResults Valid Range: Minimum value of 1. Maximum value of 25
+	ListBotsMaxResults = 25
 )
 
 func InstanceAttributeMapping() map[string]string {

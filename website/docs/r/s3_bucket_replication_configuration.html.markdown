@@ -313,7 +313,7 @@ metrics {
 
 The `metrics` configuration block supports the following arguments:
 
-* `event_threshold` - (Required) A configuration block that specifies the time threshold for emitting the `s3:Replication:OperationMissedThreshold` event [documented below](#event_threshold).
+* `event_threshold` - (Optional) A configuration block that specifies the time threshold for emitting the `s3:Replication:OperationMissedThreshold` event [documented below](#event_threshold).
 * `status` - (Required) The status of the Destination Metrics. Either `"Enabled"` or `"Disabled"`.
 
 ### event_threshold

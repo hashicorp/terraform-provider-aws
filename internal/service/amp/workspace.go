@@ -47,7 +47,7 @@ func resourceWorkspaceRead(ctx context.Context, d *schema.ResourceData, meta int
 	details, err := conn.DescribeWorkspaceWithContext(ctx, &prometheusservice.DescribeWorkspaceInput{
 		WorkspaceId: aws.String(d.Id()),
 	})
-	if tfawserr.ErrCodeEquals(err, prometheusservice.ErrCodeResourceNotFoundException) {
+	if tfawserr.ErrCodeEquals(err, prometheusservice.ErrCodeResourceNotFoundException) && !d.IsNewResource() {
 		log.Printf("[WARN] Prometheus Workspace (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil

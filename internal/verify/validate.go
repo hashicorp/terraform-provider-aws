@@ -229,8 +229,23 @@ func ValidOnceAWeekWindowFormat(v interface{}, k string) (ws []string, errors []
 	return
 }
 
+func ValidRegionName(v interface{}, k string) (ws []string, errors []error) {
+	value := v.(string)
+
+	if value == "" {
+		return ws, errors
+	}
+	if !regionRegexp.MatchString(value) {
+		errors = append(errors, fmt.Errorf(
+			"%q region name is malformed(%q): %q",
+			k, regionRegexp, value))
+	}
+
+	return
+}
+
 func ValidStringIsJSONOrYAML(v interface{}, k string) (ws []string, errors []error) {
-	if looksLikeJsonString(v) {
+	if looksLikeJSONString(v) {
 		if _, err := structure.NormalizeJsonString(v); err != nil {
 			errors = append(errors, fmt.Errorf("%q contains an invalid JSON: %s", k, err))
 		}

@@ -270,8 +270,8 @@ func resourceGraphQLAPIRead(d *schema.ResourceData, meta interface{}) error {
 
 	resp, err := conn.GetGraphqlApi(input)
 
-	if tfawserr.ErrMessageContains(err, appsync.ErrCodeNotFoundException, "") {
-		log.Printf("[WARN] No such entity found for Appsync Graphql API (%s)", d.Id())
+	if tfawserr.ErrCodeEquals(err, appsync.ErrCodeNotFoundException) && !d.IsNewResource() {
+		log.Printf("[WARN] AppSync GraphQL API (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
@@ -381,7 +381,7 @@ func resourceGraphQLAPIDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 	_, err := conn.DeleteGraphqlApi(input)
 
-	if tfawserr.ErrMessageContains(err, appsync.ErrCodeNotFoundException, "") {
+	if tfawserr.ErrCodeEquals(err, appsync.ErrCodeNotFoundException) {
 		return nil
 	}
 

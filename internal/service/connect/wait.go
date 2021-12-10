@@ -16,6 +16,8 @@ const (
 	connectContactFlowCreateTimeout = 5 * time.Minute
 	connectContactFlowUpdateTimeout = 5 * time.Minute
 
+	connectBotAssociationCreateTimeout = 5 * time.Minute
+
 	connectHoursOfOperationCreatedTimeout = 5 * time.Minute
 	connectHoursOfOperationDeletedTimeout = 5 * time.Minute
 )

@@ -218,7 +218,7 @@ jobs:
         key: ${{ runner.os }}-go-pkg-mod-${{ hashFiles('go.sum') }}
     - name: Get all changed files
       id: changed-files
-      uses: tj-actions/changed-files@v11.7
+      uses: tj-actions/changed-files@v11.9
     - name: Get changed packages
       run: |
         touch /tmp/dirs_changed_all
@@ -232,6 +232,9 @@ jobs:
         cat /tmp/pkgs_changed
         while read pkg; do
           if [ "${pkg}" = "" ]; then
+            continue
+          fi
+          if [[ "${pkg}" == */test-fixtures ]]; then
             continue
           fi
           while read file; do
@@ -250,6 +253,9 @@ jobs:
       run: |
         while read pkg; do
           if [ "${pkg}" = "internal/sweep" ]; then
+            continue
+          fi
+          if [[ "${pkg}" == */test-fixtures ]]; then
             continue
           fi
           go test -run ^Test[^A][^c][^c] "github.com/hashicorp/terraform-provider-aws/${pkg}"
@@ -355,3 +361,35 @@ jobs:
           -provider-source registry.terraform.io/hashicorp/aws \
           -providers-schema-json terraform-providers-schema/schema.json \
           -require-resource-subcategory
+
+  compile_sweepers:
+    name: Compile sweepers
+    needs: [go_build]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      # See also: https://github.com/actions/setup-go/pull/62
+      - run: echo "GO_VERSION=$(cat .go-version)" >> $GITHUB_ENV
+      - uses: actions/setup-go@v2
+        with:
+          go-version: ${{ env.GO_VERSION }}
+      # See also: https://github.com/actions/setup-go/issues/54
+      - name: go env
+        run: |
+          echo "GOCACHE=$(go env GOCACHE)" >> $GITHUB_ENV
+      - uses: actions/cache@v2
+        continue-on-error: true
+        timeout-minutes: 2
+        with:
+          path: ${{ env.GOCACHE }}
+          key: ${{ runner.os }}-GOCACHE-${{ hashFiles('go.sum') }}-${{ hashFiles('internal/**') }}
+      - uses: actions/cache@v2
+        continue-on-error: true
+        timeout-minutes: 2
+        with:
+          path: ~/go/pkg/mod
+          key: ${{ runner.os }}-go-pkg-mod-${{ hashFiles('go.sum') }}
+      - name: Try building
+        run: go build -tags=sweep

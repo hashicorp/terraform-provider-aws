@@ -2,6 +2,7 @@ package ec2_test
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -13,7 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func TestAccEC2VPCIPv4CIDRBlockAssociation_basic(t *testing.T) {
+func TestAccVPCIPv4CIDRBlockAssociation_basic(t *testing.T) {
 	var associationSecondary, associationTertiary ec2.VpcCidrBlockAssociation
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -45,11 +46,62 @@ func TestAccEC2VPCIPv4CIDRBlockAssociation_basic(t *testing.T) {
 	})
 }
 
+func TestAccVPCIPv4CIDRBlockAssociation_IpamBasic(t *testing.T) {
+	var associationSecondary ec2.VpcCidrBlockAssociation
+	netmaskLength := "28"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckVPCIPv4CIDRBlockAssociationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVPCIPv4CIDRBlockAssociationIpam(netmaskLength),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVPCIPv4CIDRBlockAssociationExists("aws_vpc_ipv4_cidr_block_association.secondary_cidr", &associationSecondary),
+					testAccCheckVPCAssociationCIDRPrefix(&associationSecondary, netmaskLength),
+				),
+			},
+		},
+	})
+}
+
+func TestAccVPCIPv4CIDRBlockAssociation_IpamBasicExplicitCIDR(t *testing.T) {
+	var associationSecondary ec2.VpcCidrBlockAssociation
+	cidr := "172.2.0.32/28"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckVPCIPv4CIDRBlockAssociationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVPCIPv4CIDRBlockAssociationIpamExplicitCIDR(cidr),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVPCIPv4CIDRBlockAssociationExists("aws_vpc_ipv4_cidr_block_association.secondary_cidr", &associationSecondary),
+					testAccCheckAdditionalVPCIPv4CIDRBlock(&associationSecondary, cidr)),
+			},
+		},
+	})
+}
+
 func testAccCheckAdditionalVPCIPv4CIDRBlock(association *ec2.VpcCidrBlockAssociation, expected string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		CIDRBlock := association.CidrBlock
 		if *CIDRBlock != expected {
 			return fmt.Errorf("Bad CIDR: %s", *association.CidrBlock)
+		}
+
+		return nil
+	}
+}
+
+func testAccCheckVPCAssociationCIDRPrefix(association *ec2.VpcCidrBlockAssociation, expected string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		if strings.Split(aws.StringValue(association.CidrBlock), "/")[1] != expected {
+			return fmt.Errorf("Bad cidr prefix: %s", aws.StringValue(association.CidrBlock))
 		}
 
 		return nil
@@ -153,3 +205,45 @@ resource "aws_vpc_ipv4_cidr_block_association" "tertiary_cidr" {
   cidr_block = "170.2.0.0/16"
 }
 `
+
+func testAccVPCIPv4CIDRBlockAssociationIpam(netmaskLength string) string {
+	return testAccVpcIpamBase + fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = "terraform-testacc-vpc-ipv4-cidr-block-association"
+  }
+}
+
+resource "aws_vpc_ipv4_cidr_block_association" "secondary_cidr" {
+  ipv4_ipam_pool_id   = aws_vpc_ipam_pool.test.id
+  ipv4_netmask_length = %[1]q
+  vpc_id              = aws_vpc.test.id
+  depends_on = [
+    aws_vpc_ipam_pool_cidr.test
+  ]
+}
+`, netmaskLength)
+}
+
+func testAccVPCIPv4CIDRBlockAssociationIpamExplicitCIDR(cidr string) string {
+	return testAccVpcIpamBase + fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = "terraform-testacc-vpc-ipv4-cidr-block-association"
+  }
+}
+
+resource "aws_vpc_ipv4_cidr_block_association" "secondary_cidr" {
+  ipv4_ipam_pool_id = aws_vpc_ipam_pool.test.id
+  cidr_block        = %[1]q
+  vpc_id            = aws_vpc.test.id
+  depends_on = [
+    aws_vpc_ipam_pool_cidr.test
+  ]
+}
+`, cidr)
+}

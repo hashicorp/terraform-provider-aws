@@ -16,10 +16,11 @@ func TestAccCodeArtifact_serial(t *testing.T) {
 			"tags":                 testAccCodeArtifactDomain_tags,
 		},
 		"DomainPermissionsPolicy": {
-			"basic":             testAccCodeArtifactDomainPermissionsPolicy_basic,
-			"disappears":        testAccCodeArtifactDomainPermissionsPolicy_disappears,
-			"owner":             testAccCodeArtifactDomainPermissionsPolicy_owner,
-			"Disappears_domain": testAccCodeArtifactDomainPermissionsPolicy_Disappears_domain,
+			"basic":            testAccCodeArtifactDomainPermissionsPolicy_basic,
+			"disappears":       testAccCodeArtifactDomainPermissionsPolicy_disappears,
+			"owner":            testAccCodeArtifactDomainPermissionsPolicy_owner,
+			"disappearsDomain": testAccCodeArtifactDomainPermissionsPolicy_Disappears_domain,
+			"ignoreEquivalent": testAccCodeArtifactDomainPermissionsPolicy_ignoreEquivalent,
 		},
 		"Repository": {
 			"basic":              testAccCodeArtifactRepository_basic,
@@ -35,10 +36,11 @@ func TestAccCodeArtifact_serial(t *testing.T) {
 			"owner": testAccCodeArtifactRepositoryEndpointDataSource_owner,
 		},
 		"RepositoryPermissionsPolicy": {
-			"basic":             testAccCodeArtifactRepositoryPermissionsPolicy_basic,
-			"disappears":        testAccCodeArtifactRepositoryPermissionsPolicy_disappears,
-			"owner":             testAccCodeArtifactRepositoryPermissionsPolicy_owner,
-			"Disappears_domain": testAccCodeArtifactRepositoryPermissionsPolicy_Disappears_domain,
+			"basic":            testAccCodeArtifactRepositoryPermissionsPolicy_basic,
+			"disappears":       testAccCodeArtifactRepositoryPermissionsPolicy_disappears,
+			"owner":            testAccCodeArtifactRepositoryPermissionsPolicy_owner,
+			"disappearsDomain": testAccCodeArtifactRepositoryPermissionsPolicy_Disappears_domain,
+			"ignoreEquivalent": testAccCodeArtifactRepositoryPermissionsPolicy_ignoreEquivalent,
 		},
 	}
 

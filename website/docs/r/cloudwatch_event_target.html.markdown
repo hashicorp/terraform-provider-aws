@@ -100,6 +100,11 @@ resource "aws_iam_policy" "ssm_lifecycle" {
   policy = data.aws_iam_policy_document.ssm_lifecycle.json
 }
 
+resource "aws_iam_role_policy_attachment" "ssm_lifecycle" {
+  policy_arn = aws_iam_policy.ssm_lifecycle.arn
+  role       = aws_iam_role.ssm_lifecycle.name
+}
+
 resource "aws_ssm_document" "stop_instance" {
   name          = "stop_instance"
   document_type = "Command"

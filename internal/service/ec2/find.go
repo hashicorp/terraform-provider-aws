@@ -691,6 +691,44 @@ func FindSubnetByID(conn *ec2.EC2, id string) (*ec2.Subnet, error) {
 	return output.Subnets[0], nil
 }
 
+func FindSubnetCidrReservationBySubnetIDAndReservationID(conn *ec2.EC2, subnetID, reservationID string) (*ec2.SubnetCidrReservation, error) {
+	input := &ec2.GetSubnetCidrReservationsInput{
+		SubnetId: aws.String(subnetID),
+	}
+
+	output, err := conn.GetSubnetCidrReservations(input)
+
+	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidSubnetIDNotFound) {
+		return nil, &resource.NotFoundError{
+			LastError: err,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || (len(output.SubnetIpv4CidrReservations) == 0 && len(output.SubnetIpv6CidrReservations) == 0) {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	for _, r := range output.SubnetIpv4CidrReservations {
+		if aws.StringValue(r.SubnetCidrReservationId) == reservationID {
+			return r, nil
+		}
+	}
+	for _, r := range output.SubnetIpv6CidrReservations {
+		if aws.StringValue(r.SubnetCidrReservationId) == reservationID {
+			return r, nil
+		}
+	}
+
+	return nil, &resource.NotFoundError{
+		LastError:   err,
+		LastRequest: input,
+	}
+}
+
 func FindTransitGatewayPrefixListReference(conn *ec2.EC2, transitGatewayRouteTableID string, prefixListID string) (*ec2.TransitGatewayPrefixListReference, error) {
 	filters := map[string]string{
 		"prefix-list-id": prefixListID,

@@ -111,7 +111,7 @@ func ResourceBucketReplicationConfiguration() *schema.Resource {
 											Schema: map[string]*schema.Schema{
 												"event_threshold": {
 													Type:     schema.TypeList,
-													Required: true,
+													Optional: true,
 													MaxItems: 1,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{

@@ -1,6 +1,7 @@
 package organizations
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"regexp"
@@ -133,7 +134,7 @@ func resourceAccountCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("Error creating account: %s", err)
+		return fmt.Errorf("Error creating account: %w", err)
 	}
 
 	requestId := aws.StringValue(resp.CreateAccountStatus.Id)
@@ -151,7 +152,7 @@ func resourceAccountCreate(d *schema.ResourceData, meta interface{}) error {
 	stateResp, stateErr := stateConf.WaitForState()
 	if stateErr != nil {
 		return fmt.Errorf(
-			"Error waiting for account request (%s) to become available: %s",
+			"Error waiting for account request (%s) to become available: %w",
 			requestId, stateErr)
 	}
 
@@ -165,7 +166,7 @@ func resourceAccountCreate(d *schema.ResourceData, meta interface{}) error {
 		existingParentID, err := resourceAccountGetParentID(conn, d.Id())
 
 		if err != nil {
-			return fmt.Errorf("error getting AWS Organizations Account (%s) parent: %s", d.Id(), err)
+			return fmt.Errorf("error getting AWS Organizations Account (%s) parent: %w", d.Id(), err)
 		}
 
 		if newParentID != existingParentID {
@@ -176,7 +177,7 @@ func resourceAccountCreate(d *schema.ResourceData, meta interface{}) error {
 			}
 
 			if _, err := conn.MoveAccount(input); err != nil {
-				return fmt.Errorf("error moving AWS Organizations Account (%s): %s", d.Id(), err)
+				return fmt.Errorf("error moving AWS Organizations Account (%s): %w", d.Id(), err)
 			}
 		}
 	}
@@ -201,7 +202,7 @@ func resourceAccountRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("error describing AWS Organizations Account (%s): %s", d.Id(), err)
+		return fmt.Errorf("error describing AWS Organizations Account (%s): %w", d.Id(), err)
 	}
 
 	account := resp.Account
@@ -213,7 +214,7 @@ func resourceAccountRead(d *schema.ResourceData, meta interface{}) error {
 
 	parentId, err := resourceAccountGetParentID(conn, d.Id())
 	if err != nil {
-		return fmt.Errorf("error getting AWS Organizations Account (%s) parent: %s", d.Id(), err)
+		return fmt.Errorf("error getting AWS Organizations Account (%s) parent: %w", d.Id(), err)
 	}
 
 	d.Set("arn", account.Arn)
@@ -227,7 +228,7 @@ func resourceAccountRead(d *schema.ResourceData, meta interface{}) error {
 	tags, err := ListTags(conn, d.Id())
 
 	if err != nil {
-		return fmt.Errorf("error listing tags for AWS Organizations Account (%s): %s", d.Id(), err)
+		return fmt.Errorf("error listing tags for AWS Organizations Account (%s): %w", d.Id(), err)
 	}
 
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
@@ -257,7 +258,7 @@ func resourceAccountUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		if _, err := conn.MoveAccount(input); err != nil {
-			return fmt.Errorf("error moving AWS Organizations Account (%s): %s", d.Id(), err)
+			return fmt.Errorf("error moving AWS Organizations Account (%s): %w", d.Id(), err)
 		}
 	}
 
@@ -265,7 +266,7 @@ func resourceAccountUpdate(d *schema.ResourceData, meta interface{}) error {
 		o, n := d.GetChange("tags_all")
 
 		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
-			return fmt.Errorf("error updating AWS Organizations Account (%s) tags: %s", d.Id(), err)
+			return fmt.Errorf("error updating AWS Organizations Account (%s) tags: %w", d.Id(), err)
 		}
 	}
 
@@ -313,10 +314,10 @@ func resourceAccountStateRefreshFunc(conn *organizations.Organizations, id strin
 		}
 
 		accountStatus := resp.CreateAccountStatus
-		if *accountStatus.State == organizations.CreateAccountStateFailed {
-			return nil, *accountStatus.State, fmt.Errorf(*accountStatus.FailureReason)
+		if aws.StringValue(accountStatus.State) == organizations.CreateAccountStateFailed {
+			return nil, aws.StringValue(accountStatus.State), errors.New(aws.StringValue(accountStatus.FailureReason))
 		}
-		return accountStatus, *accountStatus.State, nil
+		return accountStatus, aws.StringValue(accountStatus.State), nil
 	}
 }
 

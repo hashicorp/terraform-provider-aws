@@ -49,3 +49,61 @@ func FindClusterByID(conn *emr.EMR, id string) (*emr.Cluster, error) {
 
 	return output, nil
 }
+
+func FindStudioByID(conn *emr.EMR, id string) (*emr.Studio, error) {
+	input := &emr.DescribeStudioInput{
+		StudioId: aws.String(id),
+	}
+
+	output, err := conn.DescribeStudio(input)
+
+	if tfawserr.ErrMessageContains(err, emr.ErrCodeInvalidRequestException, "Studio does not exist") {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.Studio == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.Studio, nil
+}
+
+func FindStudioSessionMappingByID(conn *emr.EMR, id string) (*emr.SessionMappingDetail, error) {
+	studioId, identityType, identityId, err := readStudioSessionMapping(id)
+	if err != nil {
+		return nil, err
+	}
+
+	input := &emr.GetStudioSessionMappingInput{
+		StudioId:     aws.String(studioId),
+		IdentityType: aws.String(identityType),
+		IdentityId:   aws.String(identityId),
+	}
+
+	output, err := conn.GetStudioSessionMapping(input)
+
+	if tfawserr.ErrMessageContains(err, emr.ErrCodeInvalidRequestException, "Studio session mapping does not exist") ||
+		tfawserr.ErrMessageContains(err, emr.ErrCodeInvalidRequestException, "Studio does not exist") {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.SessionMapping == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.SessionMapping, nil
+}

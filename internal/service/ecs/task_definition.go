@@ -143,6 +143,29 @@ func ResourceTaskDefinition() *schema.Resource {
 				ValidateFunc: validation.StringInSlice(ecs.NetworkMode_Values(), false),
 			},
 
+			"runtime_platform": {
+				Type:     schema.TypeList,
+				MaxItems: 1,
+				Optional: true,
+				ForceNew: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"operating_system_family": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ForceNew:     true,
+							ValidateFunc: validation.StringInSlice(ecs.OSFamily_Values(), false),
+						},
+						"cpu_architecture": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ForceNew:     true,
+							ValidateFunc: validation.StringInSlice(ecs.CPUArchitecture_Values(), false),
+						},
+					},
+				},
+			},
+
 			"volume": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -485,6 +508,11 @@ func resourceTaskDefinitionCreate(d *schema.ResourceData, meta interface{}) erro
 		input.RequiresCompatibilities = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
+	runtimePlatformConfigs := d.Get("runtime_platform").([]interface{})
+	if len(runtimePlatformConfigs) > 0 && runtimePlatformConfigs[0] != nil {
+		input.RuntimePlatform = expandEcsTaskDefinitionRuntimePlatformConfiguration(runtimePlatformConfigs)
+	}
+
 	proxyConfigs := d.Get("proxy_configuration").([]interface{})
 	if len(proxyConfigs) > 0 {
 		input.ProxyConfiguration = expandEcsTaskDefinitionProxyConfiguration(proxyConfigs)
@@ -589,6 +617,10 @@ func resourceTaskDefinitionRead(d *schema.ResourceData, meta interface{}) error 
 		return fmt.Errorf("error setting requires_compatibilities: %w", err)
 	}
 
+	if err := d.Set("runtime_platform", flattenRuntimePlatform(taskDefinition.RuntimePlatform)); err != nil {
+		return fmt.Errorf("error setting runtime_platform: %w", err)
+	}
+
 	if err := d.Set("proxy_configuration", flattenProxyConfiguration(taskDefinition.ProxyConfiguration)); err != nil {
 		return fmt.Errorf("error setting proxy_configuration: %w", err)
 	}
@@ -611,6 +643,32 @@ func flattenPlacementConstraints(pcs []*ecs.TaskDefinitionPlacementConstraint) [
 		results = append(results, c)
 	}
 	return results
+}
+
+func flattenRuntimePlatform(rp *ecs.RuntimePlatform) []map[string]interface{} {
+	if rp == nil {
+		return nil
+	}
+
+	os := aws.StringValue(rp.OperatingSystemFamily)
+	cpu := aws.StringValue(rp.CpuArchitecture)
+
+	if os == "" && cpu == "" {
+		return nil
+	}
+
+	config := make(map[string]interface{})
+
+	if os != "" {
+		config["operating_system_family"] = os
+	}
+	if cpu != "" {
+		config["cpu_architecture"] = cpu
+	}
+
+	return []map[string]interface{}{
+		config,
+	}
 }
 
 func flattenProxyConfiguration(pc *ecs.ProxyConfiguration) []map[string]interface{} {
@@ -766,6 +824,25 @@ func expandEcsTaskDefinitionPlacementConstraints(constraints []interface{}) ([]*
 	}
 
 	return pc, nil
+}
+
+func expandEcsTaskDefinitionRuntimePlatformConfiguration(runtimePlatformConfig []interface{}) *ecs.RuntimePlatform {
+	config := runtimePlatformConfig[0]
+
+	configMap := config.(map[string]interface{})
+	ecsProxyConfig := &ecs.RuntimePlatform{}
+
+	os := configMap["operating_system_family"].(string)
+	if os != "" {
+		ecsProxyConfig.OperatingSystemFamily = aws.String(os)
+	}
+
+	osFamily := configMap["cpu_architecture"].(string)
+	if osFamily != "" {
+		ecsProxyConfig.CpuArchitecture = aws.String(osFamily)
+	}
+
+	return ecsProxyConfig
 }
 
 func expandEcsTaskDefinitionProxyConfiguration(proxyConfigs []interface{}) *ecs.ProxyConfiguration {

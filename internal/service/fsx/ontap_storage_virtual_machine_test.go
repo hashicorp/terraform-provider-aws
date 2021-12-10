@@ -291,7 +291,7 @@ func testAccCheckFsxOntapStorageVirtualMachineExists(resourceName string, svm *f
 		}
 
 		if storageVirtualMachine == nil {
-			return fmt.Errorf("FSx Ontap Storage Virtual Machine (%s) not found", rs.Primary.ID)
+			return fmt.Errorf("FSx ONTAP Storage Virtual Machine (%s) not found", rs.Primary.ID)
 		}
 
 		*svm = *storageVirtualMachine
@@ -314,7 +314,7 @@ func testAccCheckFsxOntapStorageVirtualMachineDestroy(s *terraform.State) error 
 		}
 
 		if storageVirtualMachine != nil {
-			return fmt.Errorf("FSx Ontap Storage Virtual Machine (%s) still exists", rs.Primary.ID)
+			return fmt.Errorf("FSx ONTAP Storage Virtual Machine (%s) still exists", rs.Primary.ID)
 		}
 	}
 	return nil
