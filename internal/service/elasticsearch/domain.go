@@ -957,11 +957,6 @@ func resourceDomainUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	if d.HasChange("advanced_options") {
 		input.AdvancedOptions = flex.ExpandStringMap(d.Get("advanced_options").(map[string]interface{}))
-		/*o, n := d.GetChange("advanced_options")
-
-		advancedOptionsToSet := advancedOptionsIgnoreDefault(o.(map[string]interface{}), n.(map[string]interface{}))
-		input.AdvancedOptions = flex.ExpandStringMap(advancedOptionsToSet)
-		*/
 	}
 
 	if d.HasChange("advanced_security_options") {
