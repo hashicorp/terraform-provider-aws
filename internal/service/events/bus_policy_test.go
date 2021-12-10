@@ -49,6 +49,31 @@ func TestAccEventsBusPolicy_basic(t *testing.T) {
 	})
 }
 
+func TestAccEventsBusPolicy_ignoreEquivalent(t *testing.T) {
+	resourceName := "aws_cloudwatch_event_bus_policy.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, eventbridge.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckBusDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBusPolicyOrderConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBusPolicyExists(resourceName),
+					testAccBusPolicyDocument(resourceName),
+				),
+			},
+			{
+				Config:   testAccBusPolicyNewOrderConfig(rName),
+				PlanOnly: true,
+			},
+		},
+	})
+}
+
 func TestAccEventsBusPolicy_disappears(t *testing.T) {
 	resourceName := "aws_cloudwatch_event_bus_policy.test"
 	rstring := sdkacctest.RandString(5)
@@ -222,4 +247,72 @@ resource "aws_cloudwatch_event_bus_policy" "test" {
   event_bus_name = aws_cloudwatch_event_bus.test.name
 }
 `, name)
+}
+
+func testAccBusPolicyOrderConfig(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_cloudwatch_event_bus" "test" {
+  name = %[1]q
+}
+
+resource "aws_cloudwatch_event_bus_policy" "test" {
+  event_bus_name = aws_cloudwatch_event_bus.test.name
+
+  policy = jsonencode({
+    Statement = [{
+      Sid    = %[1]q
+      Action = [
+        "events:PutEvents",
+        "events:PutRule",
+        "events:ListRules",
+        "events:DescribeRule",
+      ]
+      Effect = "Allow"
+      Principal = {
+        Service = [
+          "ecs.amazonaws.com",
+        ]
+      }
+      Resource = [
+        aws_cloudwatch_event_bus.test.arn,
+      ]
+    }]
+    Version = "2012-10-17"    
+  })
+}
+`, rName)
+}
+
+func testAccBusPolicyNewOrderConfig(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_cloudwatch_event_bus" "test" {
+  name = %[1]q
+}
+
+resource "aws_cloudwatch_event_bus_policy" "test" {
+  event_bus_name = aws_cloudwatch_event_bus.test.name
+
+  policy = jsonencode({
+    Statement = [{
+      Sid    = %[1]q
+      Action = [
+        "events:PutRule",
+        "events:DescribeRule",
+        "events:PutEvents",
+        "events:ListRules",
+      ]
+      Effect = "Allow"
+      Principal = {
+        Service = [
+          "ecs.amazonaws.com",
+        ]
+      }
+      Resource = [
+        aws_cloudwatch_event_bus.test.arn,
+      ]
+    }]
+    Version = "2012-10-17"    
+  })
+}
+`, rName)
 }
