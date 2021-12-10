@@ -102,10 +102,18 @@ Each of the `index` entities represents an index field of the domain.
 In addition to all arguments above, the following attributes are exported:
 
 * `arn` - The domain's ARN.
+* `document_service_endpoint` - The service endpoint for updating documents in a search domain.
+* `domain_id` - An internally generated unique identifier for the domain.
+* `search_service_endpoint` - The service endpoint for requesting search results from a search domain.
 
-* `document_endpoint` - The doc service end point - see wait_for_endpoints parameter
-* `search_endpoint` - The search service end point - see wait_for_endpoints parameter
-* `domain_id` - The domain id
+## Timeouts
+
+`aws_cloudsearch_domain` provides the following
+[Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
+
+* `create` - (Default `20 minutes`) How long to wait for the CloudSearch Domain to be created.
+* `update` - (Default `20 minutes`) How long to wait for the CloudSearch Domain to be updated.
+* `delete` - (Default `10 minutes`) How long to wait for the CloudSearch Domain to be deleted.
 
 ## Import
 
