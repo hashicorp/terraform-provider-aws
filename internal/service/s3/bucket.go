@@ -346,7 +346,7 @@ func ResourceBucket() *schema.Resource {
 									"storage_class": {
 										Type:         schema.TypeString,
 										Required:     true,
-										ValidateFunc: validBucketLifecycleTransitionStorageClass(),
+										ValidateFunc: validation.StringInSlice(s3.TransitionStorageClass_Values(), false),
 									},
 								},
 							},
@@ -365,7 +365,7 @@ func ResourceBucket() *schema.Resource {
 									"storage_class": {
 										Type:         schema.TypeString,
 										Required:     true,
-										ValidateFunc: validBucketLifecycleTransitionStorageClass(),
+										ValidateFunc: validation.StringInSlice(s3.TransitionStorageClass_Values(), false),
 									},
 								},
 							},
