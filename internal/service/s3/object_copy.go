@@ -267,7 +267,7 @@ func ResourceObjectCopy() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
-				ValidateFunc: validation.StringInSlice(s3.StorageClass_Values(), false),
+				ValidateFunc: validation.StringInSlice(s3.ObjectStorageClass_Values(), false),
 			},
 			"tagging_directive": {
 				Type:         schema.TypeString,
@@ -358,7 +358,7 @@ func resourceObjectCopyRead(d *schema.ResourceData, meta interface{}) error {
 
 	// The "STANDARD" (which is also the default) storage
 	// class when set would not be included in the results.
-	d.Set("storage_class", s3.StorageClassStandard)
+	d.Set("storage_class", s3.ObjectStorageClassStandard)
 	if resp.StorageClass != nil {
 		d.Set("storage_class", resp.StorageClass)
 	}
