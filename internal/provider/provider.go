@@ -959,6 +959,7 @@ func Provider() *schema.Provider {
 			"aws_connect_bot_association":             connect.ResourceBotAssociation(),
 			"aws_connect_contact_flow":                connect.ResourceContactFlow(),
 			"aws_connect_instance":                    connect.ResourceInstance(),
+			"aws_connect_hours_of_operation":          connect.ResourceHoursOfOperation(),
 			"aws_connect_lambda_function_association": connect.ResourceLambdaFunctionAssociation(),
 
 			"aws_cur_report_definition": cur.ResourceReportDefinition(),
