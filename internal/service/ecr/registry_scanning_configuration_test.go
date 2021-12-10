@@ -50,7 +50,7 @@ func testAccRegistryScanningConfiguration_basic(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccRegistryPolicyUpdated(),
+				Config: testAccRegistryScanningConfigurationUpdated(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccRegistryScanningConfigurationExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "scan_type", "BASIC"),
@@ -60,28 +60,6 @@ func testAccRegistryScanningConfiguration_basic(t *testing.T) {
 		},
 	})
 }
-
-// func testAccRegistryScanningConfiguration_disappears(t *testing.T) {
-// 	var v ecr.GetRegistryPolicyOutput
-// 	resourceName := "aws_ecr_registry_policy.test"
-
-// 	resource.Test(t, resource.TestCase{
-// 		PreCheck:     func() { acctest.PreCheck(t) },
-// 		ErrorCheck:   acctest.ErrorCheck(t, ecr.EndpointsID),
-// 		Providers:    acctest.Providers,
-// 		CheckDestroy: testAccCheckRegistryPolicyDestroy,
-// 		Steps: []resource.TestStep{
-// 			{
-// 				Config: testAccRegistryPolicy(),
-// 				Check: resource.ComposeTestCheckFunc(
-// 					testAccCheckRegistryPolicyExists(resourceName, &v),
-// 					acctest.CheckResourceDisappears(acctest.Provider, tfecr.ResourceRegistryPolicy(), resourceName),
-// 				),
-// 				ExpectNonEmptyPlan: true,
-// 			},
-// 		},
-// 	})
-// }
 
 func testAccRegistryScanningConfigurationDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).ECRConn
