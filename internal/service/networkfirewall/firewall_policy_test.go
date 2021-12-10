@@ -173,6 +173,8 @@ func TestAccNetworkFirewallFirewallPolicy_statefulRuleGroupReference(t *testing.
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFirewallPolicyExists(resourceName, &firewallPolicy),
 					resource.TestCheckResourceAttr(resourceName, "firewall_policy.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.stateful_default_actions.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.stateful_engine_options.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.stateful_rule_group_reference.#", "1"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "firewall_policy.0.stateful_rule_group_reference.*.resource_arn", ruleGroupResourceName, "arn"),
 				),
