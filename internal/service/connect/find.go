@@ -60,3 +60,48 @@ func FindBotAssociationV1ByNameAndRegionWithContext(ctx context.Context, conn *c
 
 	return result, nil
 }
+
+func FindLambdaFunctionAssociationByArnWithContext(ctx context.Context, conn *connect.Connect, instanceID string, functionArn string) (string, error) {
+	var result string
+
+	input := &connect.ListLambdaFunctionsInput{
+		InstanceId: aws.String(instanceID),
+		MaxResults: aws.Int64(ListLambdaFunctionsMaxResults),
+	}
+
+	err := conn.ListLambdaFunctionsPagesWithContext(ctx, input, func(page *connect.ListLambdaFunctionsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, cf := range page.LambdaFunctions {
+			if cf == nil {
+				continue
+			}
+
+			if aws.StringValue(cf) == functionArn {
+				result = functionArn
+				return false
+			}
+		}
+
+		return !lastPage
+	})
+
+	if tfawserr.ErrCodeEquals(err, connect.ErrCodeResourceNotFoundException) {
+		return "", &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return "", err
+	}
+
+	if result == "" {
+		return "", tfresource.NewEmptyResultError(input)
+	}
+
+	return result, nil
+}

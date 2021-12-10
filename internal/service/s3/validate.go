@@ -3,10 +3,6 @@ package s3
 import (
 	"fmt"
 	"time"
-
-	"github.com/aws/aws-sdk-go/service/s3"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 func validBucketLifecycleTimestamp(v interface{}, k string) (ws []string, errors []error) {
@@ -18,14 +14,4 @@ func validBucketLifecycleTimestamp(v interface{}, k string) (ws []string, errors
 	}
 
 	return
-}
-
-func validBucketLifecycleTransitionStorageClass() schema.SchemaValidateFunc {
-	return validation.StringInSlice([]string{
-		s3.TransitionStorageClassGlacier,
-		s3.TransitionStorageClassStandardIa,
-		s3.TransitionStorageClassOnezoneIa,
-		s3.TransitionStorageClassIntelligentTiering,
-		s3.TransitionStorageClassDeepArchive,
-	}, false)
 }
