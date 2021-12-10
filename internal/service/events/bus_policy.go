@@ -129,7 +129,13 @@ func resourceBusPolicyRead(d *schema.ResourceData, meta interface{}) error {
 	}
 	d.Set("event_bus_name", busName)
 
-	d.Set("policy", policy)
+	policyToSet, err := verify.PolicyToSet(d.Get("policy").(string), aws.StringValue(policy))
+
+	if err != nil {
+		return err
+	}
+
+	d.Set("policy", policyToSet)
 
 	return nil
 }
