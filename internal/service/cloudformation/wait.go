@@ -58,7 +58,7 @@ const (
 
 func WaitStackSetOperationSucceeded(conn *cloudformation.CloudFormation, stackSetName, operationID string, timeout time.Duration) (*cloudformation.StackSetOperation, error) {
 	stateConf := &resource.StateChangeConf{
-		Pending: []string{cloudformation.StackSetOperationStatusRunning},
+		Pending: []string{cloudformation.StackSetOperationStatusRunning, cloudformation.StackSetOperationStatusQueued},
 		Target:  []string{cloudformation.StackSetOperationStatusSucceeded},
 		Refresh: StatusStackSetOperation(conn, stackSetName, operationID),
 		Timeout: timeout,
