@@ -93,7 +93,7 @@ func testAccContactFlow_filename(t *testing.T) {
 		CheckDestroy: testAccCheckContactFlowDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccContactFlowConfig_filename(rName, rName2, "Created", "testdata/connect_contact_flow.json"),
+				Config: testAccContactFlowConfig_filename(rName, rName2, "Created", "test-fixtures/connect_contact_flow.json"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContactFlowExists(resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
@@ -115,7 +115,7 @@ func testAccContactFlow_filename(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccContactFlowConfig_filename(rName, rName2, "Updated", "testdata/connect_contact_flow_updated.json"),
+				Config: testAccContactFlowConfig_filename(rName, rName2, "Updated", "test-fixtures/connect_contact_flow_updated.json"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckContactFlowExists(resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
