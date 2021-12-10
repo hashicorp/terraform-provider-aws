@@ -260,7 +260,7 @@ resource "aws_cloudwatch_event_bus_policy" "test" {
 
   policy = jsonencode({
     Statement = [{
-      Sid    = %[1]q
+      Sid = %[1]q
       Action = [
         "events:PutEvents",
         "events:PutRule",
@@ -277,7 +277,7 @@ resource "aws_cloudwatch_event_bus_policy" "test" {
         aws_cloudwatch_event_bus.test.arn,
       ]
     }]
-    Version = "2012-10-17"    
+    Version = "2012-10-17"
   })
 }
 `, rName)
@@ -294,7 +294,7 @@ resource "aws_cloudwatch_event_bus_policy" "test" {
 
   policy = jsonencode({
     Statement = [{
-      Sid    = %[1]q
+      Sid = %[1]q
       Action = [
         "events:PutRule",
         "events:DescribeRule",
@@ -311,7 +311,7 @@ resource "aws_cloudwatch_event_bus_policy" "test" {
         aws_cloudwatch_event_bus.test.arn,
       ]
     }]
-    Version = "2012-10-17"    
+    Version = "2012-10-17"
   })
 }
 `, rName)
