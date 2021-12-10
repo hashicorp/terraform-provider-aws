@@ -133,13 +133,13 @@ func testAccResourcePolicy_ignoreEquivalent(t *testing.T) {
 		CheckDestroy: testAccCheckResourcePolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccResourcePolicyOrderConfig(),
+				Config: testAccResourcePolicyEquivalentConfig(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccResourcePolicy(resourceName, "glue:CreateTable"),
 				),
 			},
 			{
-				Config:   testAccResourcePolicyNewOrderConfig(),
+				Config:   testAccResourcePolicyEquivalent2Config(),
 				PlanOnly: true,
 			},
 		},
@@ -267,7 +267,7 @@ resource "aws_glue_resource_policy" "test" {
 `, action, hybrid)
 }
 
-func testAccResourcePolicyOrderConfig() string {
+func testAccResourcePolicyEquivalentConfig() string {
 	return `
 data "aws_caller_identity" "current" {}
 
@@ -277,13 +277,13 @@ data "aws_region" "current" {}
 
 resource "aws_glue_resource_policy" "test" {
   policy = jsonencode({
+    Version = "2012-10-17"
     Statement = {
-      Action = [
-        "glue:CreateTable",
-        "glue:DeleteTable",
-      ]
+      Action = "glue:CreateTable"
       Effect = "Allow"
-      Resource = ["arn:${data.aws_partition.current.partition}:glue:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:*"]
+      Resource = [
+        "arn:${data.aws_partition.current.partition}:glue:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:*"
+      ]
       Principal = {
         AWS = "*"
       }
@@ -293,7 +293,7 @@ resource "aws_glue_resource_policy" "test" {
 `
 }
 
-func testAccResourcePolicyNewOrderConfig() string {
+func testAccResourcePolicyEquivalent2Config() string {
 	return `
 data "aws_caller_identity" "current" {}
 
@@ -303,10 +303,10 @@ data "aws_region" "current" {}
 
 resource "aws_glue_resource_policy" "test" {
   policy = jsonencode({
+    Version = "2012-10-17"
     Statement = {
       Effect = "Allow"
       Action = [
-        "glue:DeleteTable",
         "glue:CreateTable",
       ]
       Resource = "arn:${data.aws_partition.current.partition}:glue:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:*"
