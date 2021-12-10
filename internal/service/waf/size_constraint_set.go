@@ -22,7 +22,7 @@ func ResourceSizeConstraintSet() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 
-		Schema: wafSizeConstraintSetSchema(),
+		Schema: SizeConstraintSetSchema(),
 	}
 }
 
@@ -69,7 +69,7 @@ func resourceSizeConstraintSetRead(d *schema.ResourceData, meta interface{}) err
 	}
 
 	d.Set("name", resp.SizeConstraintSet.Name)
-	d.Set("size_constraints", flattenWafSizeConstraints(resp.SizeConstraintSet.SizeConstraints))
+	d.Set("size_constraints", FlattenSizeConstraints(resp.SizeConstraintSet.SizeConstraints))
 
 	arn := arn.ARN{
 		Partition: meta.(*conns.AWSClient).Partition,
@@ -132,7 +132,7 @@ func updateSizeConstraintSetResource(id string, oldS, newS []interface{}, conn *
 		req := &waf.UpdateSizeConstraintSetInput{
 			ChangeToken:         token,
 			SizeConstraintSetId: aws.String(id),
-			Updates:             diffWafSizeConstraints(oldS, newS),
+			Updates:             DiffSizeConstraints(oldS, newS),
 		}
 
 		log.Printf("[INFO] Updating WAF Size Constraint constraints: %s", req)

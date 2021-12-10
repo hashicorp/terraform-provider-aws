@@ -1,6 +1,7 @@
 package ec2
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"time"
@@ -26,19 +27,40 @@ func ResourceVPCIPv4CIDRBlockAssociation() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
-
+		CustomizeDiff: func(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
+			// cidr_block can be set by a value returned from IPAM or explicitly in config
+			if diff.Id() != "" && diff.HasChange("cidr_block") {
+				// if netmask is set then cidr_block is derived from ipam, ignore changes
+				if diff.Get("ipv4_netmask_length") != 0 {
+					return diff.Clear("cidr_block")
+				}
+				return diff.ForceNew("cidr_block")
+			}
+			return nil
+		},
 		Schema: map[string]*schema.Schema{
 			"vpc_id": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-
 			"cidr_block": {
 				Type:         schema.TypeString,
-				Required:     true,
+				Optional:     true,
+				Computed:     true,
 				ForceNew:     true,
-				ValidateFunc: validation.IsCIDRNetwork(16, 28), // The allowed block size is between a /28 netmask and /16 netmask.
+				ValidateFunc: validation.IsCIDRNetwork(VPCCIDRMinIPv4, VPCCIDRMaxIPv4),
+			},
+			"ipv4_ipam_pool_id": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+			},
+			"ipv4_netmask_length": {
+				Type:         schema.TypeInt,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.IntBetween(VPCCIDRMinIPv4, VPCCIDRMaxIPv4),
 			},
 		},
 
@@ -53,9 +75,21 @@ func resourceVPCIPv4CIDRBlockAssociationCreate(d *schema.ResourceData, meta inte
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	req := &ec2.AssociateVpcCidrBlockInput{
-		VpcId:     aws.String(d.Get("vpc_id").(string)),
-		CidrBlock: aws.String(d.Get("cidr_block").(string)),
+		VpcId: aws.String(d.Get("vpc_id").(string)),
 	}
+
+	if v, ok := d.GetOk("cidr_block"); ok {
+		req.CidrBlock = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("ipv4_ipam_pool_id"); ok {
+		req.Ipv4IpamPoolId = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("ipv4_netmask_length"); ok {
+		req.Ipv4NetmaskLength = aws.Int64(int64(v.(int)))
+	}
+
 	log.Printf("[DEBUG] Creating VPC IPv4 CIDR block association: %#v", req)
 	resp, err := conn.AssociateVpcCidrBlock(req)
 	if err != nil {

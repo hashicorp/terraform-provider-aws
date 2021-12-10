@@ -499,16 +499,18 @@ func resourceClusterInstanceDelete(d *schema.ResourceData, meta interface{}) err
 
 var resourceClusterInstanceCreateUpdatePendingStates = []string{
 	"backing-up",
+	"configuring-enhanced-monitoring",
+	"configuring-iam-database-auth",
+	"configuring-log-exports",
 	"creating",
 	"maintenance",
 	"modifying",
 	"rebooting",
 	"renaming",
+	"resetting-master-credentials",
 	"starting",
-	"upgrading",
-	"configuring-log-exports",
-	"configuring-enhanced-monitoring",
 	"storage-optimization",
+	"upgrading",
 }
 
 var resourceClusterInstanceDeletePendingStates = []string{

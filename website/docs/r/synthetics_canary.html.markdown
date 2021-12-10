@@ -42,6 +42,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `vpc_config` - (Optional) Configuration block. Detailed below.
 * `failure_retention_period` - (Optional) Number of days to retain data about failed runs of this canary. If you omit this field, the default of 31 days is used. The valid range is 1 to 455 days.
 * `run_config` - (Optional) Configuration block for individual canary runs. Detailed below.
 * `s3_bucket` - (Optional) Full bucket name which is used if your canary script is located in S3. The bucket must already exist. Specify the full bucket name including s3:// as the start of the bucket name. **Conflicts with `zip_file`.**
@@ -50,8 +51,17 @@ The following arguments are optional:
 * `start_canary` - (Optional) Whether to run or stop the canary.
 * `success_retention_period` - (Optional) Number of days to retain data about successful runs of this canary. If you omit this field, the default of 31 days is used. The valid range is 1 to 455 days.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
-* `vpc_config` - (Optional) Configuration block. Detailed below.
+* `artifact_config` - (Optional) configuration for canary artifacts, including the encryption-at-rest settings for artifacts that the canary uploads to Amazon S3. See [Artifact Config](#artifact_config).
 * `zip_file` - (Optional) ZIP file that contains the script, if you input your canary script directly into the canary instead of referring to an S3 location. It can be up to 5 MB. **Conflicts with `s3_bucket`, `s3_key`, and `s3_version`.**
+
+### artifact_config
+
+* `s3_encryption` - (Optional) Configuration of the encryption-at-rest settings for artifacts that the canary uploads to Amazon S3. See [S3 Encryption](#s3_encryption).
+
+### s3_encryption
+
+* `encryption_mode` - (Optional) The encryption method to use for artifacts created by this canary. Valid values are: `SSE-S3` and `SSE-KMS`.
+* `kms_key_arn` - (Optional) The ARN of the customer-managed KMS key to use, if you specify `SSE-KMS` for `encryption_mode`.
 
 ### schedule
 

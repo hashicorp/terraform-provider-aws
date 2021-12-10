@@ -191,6 +191,10 @@ func DataSourceFunction() *schema.Resource {
 					Type: schema.TypeString,
 				},
 			},
+			"image_uri": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 		},
 	}
 }
@@ -257,6 +261,10 @@ func dataSourceFunctionRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("invoke_arn", lambdaFunctionInvokeArn(aws.StringValue(function.FunctionArn), meta))
 	d.Set("kms_key_arn", function.KMSKeyArn)
 	d.Set("last_modified", function.LastModified)
+
+	if output.Code != nil {
+		d.Set("image_uri", output.Code.ImageUri)
+	}
 
 	if err := d.Set("layers", flattenLayers(function.Layers)); err != nil {
 		return fmt.Errorf("Error setting layers for Lambda Function (%s): %w", d.Id(), err)

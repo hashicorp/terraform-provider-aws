@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/sqs"
+	awspolicy "github.com/hashicorp/awspolicyequivalence"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -15,7 +16,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tfsqs "github.com/hashicorp/terraform-provider-aws/internal/service/sqs"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	awspolicy "github.com/jen20/awspolicyequivalence"
 )
 
 func TestAccSQSQueue_basic(t *testing.T) {
@@ -559,6 +559,13 @@ func TestAccSQSQueue_encryption(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "kms_master_key_id", "alias/aws/sqs"),
 				),
 			},
+			{
+				Config: testAccManagedEncryptionConfig(rName, "true"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckQueueExists(resourceName, &queueAttributes),
+					resource.TestCheckResourceAttr(resourceName, "sqs_managed_sse_enabled", "true"),
+				),
+			},
 		},
 	})
 }
@@ -910,6 +917,15 @@ resource "aws_sqs_queue" "test" {
   kms_data_key_reuse_period_seconds = %[2]s
 }
 `, rName, kmsDataKeyReusePeriodSeconds)
+}
+
+func testAccManagedEncryptionConfig(rName, sqsManagedSseEnabled string) string {
+	return fmt.Sprintf(`
+resource "aws_sqs_queue" "test" {
+  name                    = %[1]q
+  sqs_managed_sse_enabled = %[2]s
+}
+`, rName, sqsManagedSseEnabled)
 }
 
 func testAccZeroVisibilityTimeoutSecondsConfig(rName string) string {

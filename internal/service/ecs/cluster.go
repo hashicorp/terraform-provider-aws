@@ -242,7 +242,7 @@ func resourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 	var out *ecs.DescribeClustersOutput
 	err := resource.Retry(2*time.Minute, func() *resource.RetryError {
 		var err error
-		out, err = FindClusterByARN(conn, d.Id())
+		out, err = FindClusterByNameOrARN(conn, d.Id())
 
 		if err != nil {
 			return resource.NonRetryableError(err)
@@ -258,7 +258,7 @@ func resourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	})
 	if tfresource.TimedOut(err) {
-		out, err = FindClusterByARN(conn, d.Id())
+		out, err = FindClusterByNameOrARN(conn, d.Id())
 	}
 
 	if tfresource.NotFound(err) {
@@ -418,6 +418,10 @@ func resourceClusterDelete(d *schema.ResourceData, meta interface{}) error {
 			return resource.RetryableError(err)
 		}
 		if tfawserr.ErrMessageContains(err, "ClusterContainsServicesException", "") {
+			log.Printf("[TRACE] Retrying ECS cluster %q deletion after %s", d.Id(), err)
+			return resource.RetryableError(err)
+		}
+		if tfawserr.ErrMessageContains(err, "ClusterContainsTasksException", "") {
 			log.Printf("[TRACE] Retrying ECS cluster %q deletion after %s", d.Id(), err)
 			return resource.RetryableError(err)
 		}

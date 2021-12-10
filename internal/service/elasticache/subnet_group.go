@@ -148,7 +148,7 @@ func resourceSubnetGroupRead(d *schema.ResourceData, meta interface{}) error {
 
 	ids := make([]string, len(group.Subnets))
 	for i, s := range group.Subnets {
-		ids[i] = *s.SubnetIdentifier
+		ids[i] = aws.StringValue(s.SubnetIdentifier)
 	}
 
 	d.Set("arn", group.ARN)

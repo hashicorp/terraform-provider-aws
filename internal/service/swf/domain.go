@@ -129,7 +129,7 @@ func resourceDomainRead(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	}
 
-	arn := *resp.DomainInfo.Arn
+	arn := aws.StringValue(resp.DomainInfo.Arn)
 	tags, err := ListTags(conn, arn)
 
 	if err != nil {

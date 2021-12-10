@@ -93,7 +93,7 @@ func resourceVPCLinkRead(d *schema.ResourceData, meta interface{}) error {
 
 	resp, err := conn.GetVpcLink(input)
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, apigateway.ErrCodeNotFoundException, "") {
+		if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, apigateway.ErrCodeNotFoundException) {
 			log.Printf("[WARN] VPC Link %s not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -161,12 +161,7 @@ func resourceVPCLinkUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	_, err := conn.UpdateVpcLink(input)
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, apigateway.ErrCodeNotFoundException, "") {
-			log.Printf("[WARN] VPC Link %s not found, removing from state", d.Id())
-			d.SetId("")
-			return nil
-		}
-		return err
+		return fmt.Errorf("error updating API Gateway VPC Link (%s): %w", d.Id(), err)
 	}
 
 	if err := waitAPIGatewayVPCLinkAvailable(conn, d.Id()); err != nil {

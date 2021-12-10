@@ -15,7 +15,7 @@ import (
 	tfcognitoidp "github.com/hashicorp/terraform-provider-aws/internal/service/cognitoidp"
 )
 
-func TestAccCognitoIDPUserPoolUICustomization_AllClients_cSS(t *testing.T) {
+func TestAccCognitoIDPUserPoolUICustomization_AllClients_CSS(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cognito_user_pool_ui_customization.test"
 	userPoolResourceName := "aws_cognito_user_pool.test"
@@ -67,7 +67,7 @@ func TestAccCognitoIDPUserPoolUICustomization_AllClients_cSS(t *testing.T) {
 	})
 }
 
-func TestAccCognitoIDPUserPoolUICustomization_AllClients_disappears(t *testing.T) {
+func TestAccCognitoIDPUserPoolUICustomization_AllClients_disappears(t *testing.T) { // nosemgrep: acceptance-test-naming-parent-disappears
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cognito_user_pool_ui_customization.test"
 
@@ -143,7 +143,7 @@ func TestAccCognitoIDPUserPoolUICustomization_AllClients_imageFile(t *testing.T)
 	})
 }
 
-func TestAccCognitoIDPUserPoolUICustomization_AllClients_cSSAndImageFile(t *testing.T) {
+func TestAccCognitoIDPUserPoolUICustomization_AllClients_CSSAndImageFile(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cognito_user_pool_ui_customization.test"
 	userPoolResourceName := "aws_cognito_user_pool.test"
@@ -210,7 +210,7 @@ func TestAccCognitoIDPUserPoolUICustomization_AllClients_cSSAndImageFile(t *test
 	})
 }
 
-func TestAccCognitoIDPUserPoolUICustomization_Client_cSS(t *testing.T) {
+func TestAccCognitoIDPUserPoolUICustomization_Client_CSS(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cognito_user_pool_ui_customization.test"
 	clientResourceName := "aws_cognito_user_pool_client.test"
@@ -263,7 +263,7 @@ func TestAccCognitoIDPUserPoolUICustomization_Client_cSS(t *testing.T) {
 	})
 }
 
-func TestAccCognitoIDPUserPoolUICustomization_Client_disappears(t *testing.T) {
+func TestAccCognitoIDPUserPoolUICustomization_Client_disappears(t *testing.T) { // nosemgrep: acceptance-test-naming-parent-disappears
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cognito_user_pool_ui_customization.test"
 

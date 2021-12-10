@@ -317,6 +317,10 @@ func dataSourcePolicyDocumentMakeConditions(in []interface{}, version string) (I
 		if err != nil {
 			return nil, fmt.Errorf("error reading values: %w", err)
 		}
+		itemValues := out[i].Values.([]string)
+		if len(itemValues) == 1 {
+			out[i].Values = itemValues[0]
+		}
 	}
 	return IAMPolicyStatementConditionSet(out), nil
 }

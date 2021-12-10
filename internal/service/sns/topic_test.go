@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/sns"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	awspolicy "github.com/hashicorp/awspolicyequivalence"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -16,7 +17,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tfsns "github.com/hashicorp/terraform-provider-aws/internal/service/sns"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
-	awspolicy "github.com/jen20/awspolicyequivalence"
 )
 
 func init() {
@@ -528,7 +528,7 @@ func testAccCheckNSTopicHasPolicy(n string, expectedPolicyText string) resource.
 		var actualPolicyText string
 		for k, v := range resp.Attributes {
 			if k == "Policy" {
-				actualPolicyText = *v
+				actualPolicyText = aws.StringValue(v)
 				break
 			}
 		}
@@ -570,7 +570,7 @@ func testAccCheckNSTopicHasDeliveryPolicy(n string, expectedPolicyText string) r
 		var actualPolicyText string
 		for k, v := range resp.Attributes {
 			if k == "DeliveryPolicy" {
-				actualPolicyText = *v
+				actualPolicyText = aws.StringValue(v)
 				break
 			}
 		}
@@ -634,7 +634,7 @@ func testAccCheckTopicExists(n string, attributes map[string]string) resource.Te
 		}
 
 		for k, v := range out.Attributes {
-			attributes[k] = *v
+			attributes[k] = aws.StringValue(v)
 		}
 
 		return nil

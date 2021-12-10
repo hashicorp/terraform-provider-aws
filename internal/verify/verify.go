@@ -1,7 +1,6 @@
 package verify
 
 import (
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"gopkg.in/yaml.v2"
 )
 
@@ -15,14 +14,6 @@ func SliceContainsString(slice []interface{}, s string) (int, bool) {
 		}
 	}
 	return -1, false
-}
-
-func NormalizeJSONOrYAMLString(templateString interface{}) (string, error) {
-	if looksLikeJsonString(templateString) {
-		return structure.NormalizeJsonString(templateString.(string))
-	}
-
-	return checkYAMLString(templateString)
 }
 
 func PointersMapToStringList(pointers map[string]*string) map[string]interface{} {

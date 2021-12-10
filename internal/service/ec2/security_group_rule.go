@@ -931,14 +931,25 @@ func validateSecurityGroupRuleImportString(importStr string) ([]string, error) {
 
 	if _, ok := sgProtocolIntegers()[protocol]; !ok {
 		if _, err := strconv.Atoi(protocol); err != nil {
-			return nil, fmt.Errorf(errStr, importStr, "protocol must be tcp/udp/icmp/all or a number")
+			return nil, fmt.Errorf(errStr, importStr, "protocol must be tcp/udp/icmp/icmpv6/all or a number")
 		}
 	}
 
-	if p1, err := strconv.Atoi(fromPort); err != nil {
-		return nil, fmt.Errorf(errStr, importStr, "invalid port")
-	} else if p2, err := strconv.Atoi(toPort); err != nil || p2 < p1 {
-		return nil, fmt.Errorf(errStr, importStr, "invalid port")
+	protocolName := ProtocolForValue(protocol)
+	if protocolName == "icmp" || protocolName == "icmpv6" {
+		if itype, err := strconv.Atoi(fromPort); err != nil || itype < -1 || itype > 255 {
+			return nil, fmt.Errorf(errStr, importStr, "invalid icmp type")
+		} else if icode, err := strconv.Atoi(toPort); err != nil || icode < -1 || icode > 255 {
+			return nil, fmt.Errorf(errStr, importStr, "invalid icmp code")
+		}
+	} else {
+		if p1, err := strconv.Atoi(fromPort); err != nil {
+			return nil, fmt.Errorf(errStr, importStr, "invalid from_port")
+		} else if p2, err := strconv.Atoi(toPort); err != nil {
+			return nil, fmt.Errorf(errStr, importStr, "invalid to_port")
+		} else if p2 < p1 {
+			return nil, fmt.Errorf(errStr, importStr, "to_port lower than from_port")
+		}
 	}
 
 	for _, source := range sources {

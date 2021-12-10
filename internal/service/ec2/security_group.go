@@ -1334,13 +1334,14 @@ func ProtocolForValue(v string) string {
 // documented to be supported by AWS Security Groups
 // http://docs.aws.amazon.com/fr_fr/AWSEC2/latest/APIReference/API_IpPermission.html
 // Similar to protocolIntegers() used by Network ACLs, but explicitly only
-// supports "tcp", "udp", "icmp", and "all"
+// supports "tcp", "udp", "icmp", "icmpv6", and "all"
 func sgProtocolIntegers() map[string]int {
 	return map[string]int{
-		"udp":  17,
-		"tcp":  6,
-		"icmp": 1,
-		"all":  -1,
+		"icmpv6": 58,
+		"udp":    17,
+		"tcp":    6,
+		"icmp":   1,
+		"all":    -1,
 	}
 }
 
@@ -1367,25 +1368,7 @@ func deleteLingeringLambdaENIs(conn *ec2.EC2, filterName, resourceId string, tim
 		eniId := aws.StringValue(eni.NetworkInterfaceId)
 
 		if eni.Attachment != nil && aws.StringValue(eni.Attachment.InstanceOwnerId) == "amazon-aws" {
-			// Hyperplane attached ENI.
-			// Wait for it to be moved into a removable state.
-			stateConf := &resource.StateChangeConf{
-				Pending: []string{
-					ec2.NetworkInterfaceStatusInUse,
-				},
-				Target: []string{
-					ec2.NetworkInterfaceStatusAvailable,
-				},
-				Refresh:    networkInterfaceStateRefresh(conn, eniId),
-				Timeout:    timeout,
-				Delay:      10 * time.Second,
-				MinTimeout: 10 * time.Second,
-				// Handle EC2 ENI eventual consistency. It can take up to 3 minutes.
-				ContinuousTargetOccurence: 18,
-				NotFoundChecks:            1,
-			}
-
-			eniRaw, err := stateConf.WaitForState()
+			networkInterface, err := WaitNetworkInterfaceAvailableAfterUse(conn, eniId, timeout)
 
 			if tfresource.NotFound(err) {
 				continue
@@ -1395,16 +1378,18 @@ func deleteLingeringLambdaENIs(conn *ec2.EC2, filterName, resourceId string, tim
 				return fmt.Errorf("error waiting for Lambda V2N ENI (%s) to become available for detachment: %w", eniId, err)
 			}
 
-			eni = eniRaw.(*ec2.NetworkInterface)
+			eni = networkInterface
 		}
 
-		err = detachNetworkInterface(conn, eni, timeout)
+		if eni.Attachment != nil {
+			err = DetachNetworkInterface(conn, eniId, aws.StringValue(eni.Attachment.AttachmentId), timeout)
 
-		if err != nil {
-			return fmt.Errorf("error detaching Lambda ENI (%s): %w", eniId, err)
+			if err != nil {
+				return fmt.Errorf("error detaching Lambda ENI (%s): %w", eniId, err)
+			}
 		}
 
-		err = deleteNetworkInterface(conn, eniId)
+		err = DeleteNetworkInterface(conn, eniId)
 
 		if err != nil {
 			return fmt.Errorf("error deleting Lambda ENI (%s): %w", eniId, err)

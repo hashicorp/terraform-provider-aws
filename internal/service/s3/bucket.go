@@ -818,7 +818,7 @@ func resourceBucketUpdate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if d.HasChange("replication_configuration") {
-		if err := resourceBucketReplicationConfigurationUpdate(conn, d); err != nil {
+		if err := resourceBucketInternalReplicationConfigurationUpdate(conn, d); err != nil {
 			return err
 		}
 	}
@@ -911,11 +911,19 @@ func resourceBucketRead(d *schema.ResourceData, meta interface{}) error {
 					return err
 				}
 			} else {
-				policy, err := structure.NormalizeJsonString(aws.StringValue(v))
+				policyToSet, err := verify.SecondJSONUnlessEquivalent(d.Get("policy").(string), aws.StringValue(v))
+
 				if err != nil {
-					return fmt.Errorf("policy contains an invalid JSON: %s", err)
+					return fmt.Errorf("while setting policy (%s), encountered: %w", aws.StringValue(v), err)
 				}
-				d.Set("policy", policy)
+
+				policyToSet, err = structure.NormalizeJsonString(policyToSet)
+
+				if err != nil {
+					return fmt.Errorf("policy (%s) contains invalid JSON: %w", d.Get("policy").(string), err)
+				}
+
+				d.Set("policy", policyToSet)
 			}
 		}
 	}
@@ -1444,7 +1452,12 @@ func resourceBucketDelete(d *schema.ResourceData, meta interface{}) error {
 
 func resourceBucketPolicyUpdate(conn *s3.S3, d *schema.ResourceData) error {
 	bucket := d.Get("bucket").(string)
-	policy := d.Get("policy").(string)
+
+	policy, err := structure.NormalizeJsonString(d.Get("policy").(string))
+
+	if err != nil {
+		return fmt.Errorf("policy (%s) is an invalid JSON: %w", policy, err)
+	}
 
 	if policy != "" {
 		log.Printf("[DEBUG] S3 bucket: %s, put policy: %s", bucket, policy)
@@ -2033,7 +2046,7 @@ func resourceBucketObjectLockConfigurationUpdate(conn *s3.S3, d *schema.Resource
 	return nil
 }
 
-func resourceBucketReplicationConfigurationUpdate(conn *s3.S3, d *schema.ResourceData) error {
+func resourceBucketInternalReplicationConfigurationUpdate(conn *s3.S3, d *schema.ResourceData) error {
 	bucket := d.Get("bucket").(string)
 	replicationConfiguration := d.Get("replication_configuration").([]interface{})
 
@@ -2426,8 +2439,10 @@ func flattenBucketReplicationConfiguration(r *s3.ReplicationConfiguration) []map
 			}
 			if v.Destination.Metrics != nil {
 				metrics := map[string]interface{}{
-					"minutes": int(aws.Int64Value(v.Destination.Metrics.EventThreshold.Minutes)),
-					"status":  aws.StringValue(v.Destination.Metrics.Status),
+					"status": aws.StringValue(v.Destination.Metrics.Status),
+				}
+				if v.Destination.Metrics.EventThreshold != nil {
+					metrics["minutes"] = int(aws.Int64Value(v.Destination.Metrics.EventThreshold.Minutes))
 				}
 				rd["metrics"] = []interface{}{metrics}
 			}

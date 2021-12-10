@@ -118,6 +118,11 @@ func DataSourceLoadBalancer() *schema.Resource {
 				Computed: true,
 			},
 
+			"enable_waf_fail_open": {
+				Type:     schema.TypeBool,
+				Computed: true,
+			},
+
 			"idle_timeout": {
 				Type:     schema.TypeInt,
 				Computed: true,
@@ -149,6 +154,11 @@ func DataSourceLoadBalancer() *schema.Resource {
 			},
 
 			"customer_owned_ipv4_pool": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+
+			"desync_mitigation_mode": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -287,9 +297,15 @@ func dataSourceLoadBalancerRead(d *schema.ResourceData, meta interface{}) error 
 		case "routing.http2.enabled":
 			http2Enabled := aws.StringValue(attr.Value) == "true"
 			d.Set("enable_http2", http2Enabled)
+		case "waf.fail_open.enabled":
+			wafFailOpenEnabled := aws.StringValue(attr.Value) == "true"
+			d.Set("enable_waf_fail_open", wafFailOpenEnabled)
 		case "load_balancing.cross_zone.enabled":
 			crossZoneLbEnabled := aws.StringValue(attr.Value) == "true"
 			d.Set("enable_cross_zone_load_balancing", crossZoneLbEnabled)
+		case "routing.http.desync_mitigation_mode":
+			desyncMitigationMode := aws.StringValue(attr.Value)
+			d.Set("desync_mitigation_mode", desyncMitigationMode)
 		}
 	}
 

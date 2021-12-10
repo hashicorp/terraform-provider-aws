@@ -6,6 +6,8 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/appstream"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
 // FindStackByName Retrieve a appstream stack by name
@@ -82,13 +84,111 @@ func FindImageBuilderByName(ctx context.Context, conn *appstream.AppStream, name
 		return !lastPage
 	})
 
+	if tfawserr.ErrCodeEquals(err, appstream.ErrCodeResourceNotFoundException) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
 	if err != nil {
 		return nil, err
 	}
 
 	if result == nil {
-		return nil, nil
+		return nil, &resource.NotFoundError{
+			Message:     "Empty result",
+			LastRequest: input,
+		}
 	}
 
 	return result, nil
+}
+
+// FindUserByUserNameAndAuthType Retrieve a appstream fleet by Username and authentication type
+func FindUserByUserNameAndAuthType(ctx context.Context, conn *appstream.AppStream, username, authType string) (*appstream.User, error) {
+	input := &appstream.DescribeUsersInput{
+		AuthenticationType: aws.String(authType),
+	}
+
+	var result *appstream.User
+
+	err := describeUsersPagesWithContext(ctx, conn, input, func(page *appstream.DescribeUsersOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, user := range page.Users {
+			if user == nil {
+				continue
+			}
+			if aws.StringValue(user.UserName) == username {
+				result = user
+				return false
+			}
+		}
+
+		return !lastPage
+	})
+
+	if tfawserr.ErrCodeEquals(err, appstream.ErrCodeResourceNotFoundException) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	if result == nil {
+		return nil, &resource.NotFoundError{
+			Message:     "Empty result",
+			LastRequest: input,
+		}
+	}
+
+	return result, nil
+}
+
+// FindFleetStackAssociation Validates that a fleet has the named associated stack
+func FindFleetStackAssociation(ctx context.Context, conn *appstream.AppStream, fleetName, stackName string) error {
+	input := &appstream.ListAssociatedStacksInput{
+		FleetName: aws.String(fleetName),
+	}
+
+	found := false
+	err := listAssociatedStacksPagesWithContext(ctx, conn, input, func(page *appstream.ListAssociatedStacksOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, name := range page.Names {
+			if stackName == aws.StringValue(name) {
+				found = true
+				return false
+			}
+		}
+
+		return !lastPage
+	})
+
+	if tfawserr.ErrCodeEquals(err, appstream.ErrCodeResourceNotFoundException) {
+		return &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+	if err != nil {
+		return err
+	}
+
+	if !found {
+		return &resource.NotFoundError{
+			Message:     fmt.Sprintf("No stack %q associated with fleet %q", stackName, fleetName),
+			LastRequest: input,
+		}
+	}
+
+	return nil
 }

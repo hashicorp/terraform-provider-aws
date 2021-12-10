@@ -815,6 +815,35 @@ func TestAccEC2LaunchTemplate_networkInterfaceType(t *testing.T) {
 	})
 }
 
+func TestAccEC2LaunchTemplate_networkInterfaceCardIndex(t *testing.T) {
+	var template ec2.LaunchTemplate
+	resourceName := "aws_launch_template.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, autoscaling.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckLaunchTemplateDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLaunchTemplateConfig_networkInterfaceCardIndex(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLaunchTemplateExists(resourceName, &template),
+					resource.TestCheckResourceAttrSet(resourceName, "instance_type"),
+					resource.TestCheckResourceAttr(resourceName, "network_interfaces.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "network_interfaces.0.network_card_index", "1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccEC2LaunchTemplate_associatePublicIPAddress(t *testing.T) {
 	var template ec2.LaunchTemplate
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -2018,6 +2047,19 @@ resource "aws_launch_template" "test" {
 
   network_interfaces {
     interface_type = "efa"
+  }
+}
+`, rName)
+}
+
+func testAccLaunchTemplateConfig_networkInterfaceCardIndex(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_launch_template" "test" {
+  name          = %[1]q
+  instance_type = "p4d.24xlarge"
+
+  network_interfaces {
+    network_card_index = 1
   }
 }
 `, rName)

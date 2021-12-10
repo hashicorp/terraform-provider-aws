@@ -142,7 +142,7 @@ func TestAccImageBuilderDistributionConfiguration_DistributionAMIDistribution_am
 		CheckDestroy:      testAccCheckDistributionConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDistributionConfigurationDistributionAMIDistributionConfigurationAmiTagsConfig(rName, "key1", "value1"),
+				Config: testAccDistributionConfigurationDistributionAMIDistributionConfigurationAMITagsConfig(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDistributionConfigurationExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "distribution.#", "1"),
@@ -159,7 +159,7 @@ func TestAccImageBuilderDistributionConfiguration_DistributionAMIDistribution_am
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccDistributionConfigurationDistributionAMIDistributionConfigurationAmiTagsConfig(rName, "key2", "value2"),
+				Config: testAccDistributionConfigurationDistributionAMIDistributionConfigurationAMITagsConfig(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDistributionConfigurationExists(resourceName),
 					acctest.CheckResourceAttrRFC3339(resourceName, "date_updated"),
@@ -582,7 +582,7 @@ resource "aws_imagebuilder_distribution_configuration" "test" {
 `, rName))
 }
 
-func testAccDistributionConfigurationDistributionAMIDistributionConfigurationAmiTagsConfig(rName string, amiTagKey string, amiTagValue string) string {
+func testAccDistributionConfigurationDistributionAMIDistributionConfigurationAMITagsConfig(rName string, amiTagKey string, amiTagValue string) string {
 	return fmt.Sprintf(`
 data "aws_region" "current" {}
 

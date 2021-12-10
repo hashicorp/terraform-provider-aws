@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	awspolicy "github.com/hashicorp/awspolicyequivalence"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -271,11 +272,21 @@ func resourceVPCEndpointRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error setting network_interface_ids: %s", err)
 	}
 	d.Set("owner_id", vpce.OwnerId)
-	policy, err := structure.NormalizeJsonString(aws.StringValue(vpce.PolicyDocument))
+
+	policyToSet, err := verify.SecondJSONUnlessEquivalent(d.Get("policy").(string), aws.StringValue(vpce.PolicyDocument))
+
 	if err != nil {
-		return fmt.Errorf("policy contains an invalid JSON: %s", err)
+		return fmt.Errorf("while setting policy (%s), encountered: %w", policyToSet, err)
 	}
-	d.Set("policy", policy)
+
+	policyToSet, err = structure.NormalizeJsonString(policyToSet)
+
+	if err != nil {
+		return fmt.Errorf("policy (%s) is invalid JSON: %w", policyToSet, err)
+	}
+
+	d.Set("policy", policyToSet)
+
 	d.Set("private_dns_enabled", vpce.PrivateDnsEnabled)
 	err = d.Set("route_table_ids", flex.FlattenStringSet(vpce.RouteTableIds))
 	if err != nil {
@@ -326,15 +337,19 @@ func resourceVPCEndpointUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		if d.HasChange("policy") {
-			policy, err := structure.NormalizeJsonString(d.Get("policy"))
-			if err != nil {
-				return fmt.Errorf("policy contains an invalid JSON: %s", err)
-			}
+			o, n := d.GetChange("policy")
 
-			if policy == "" {
-				req.ResetPolicy = aws.Bool(true)
-			} else {
-				req.PolicyDocument = aws.String(policy)
+			if equivalent, err := awspolicy.PoliciesAreEquivalent(o.(string), n.(string)); err != nil || !equivalent {
+				policy, err := structure.NormalizeJsonString(d.Get("policy"))
+				if err != nil {
+					return fmt.Errorf("policy contains an invalid JSON: %s", err)
+				}
+
+				if policy == "" {
+					req.ResetPolicy = aws.Bool(true)
+				} else {
+					req.PolicyDocument = aws.String(policy)
+				}
 			}
 		}
 

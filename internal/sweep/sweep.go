@@ -188,12 +188,16 @@ func SkipSweepError(err error) bool {
 	if tfawserr.ErrMessageContains(err, "KeySigningKeyInParentDSRecord", "Due to DNS lookup failure") {
 		return true
 	}
-	// For example from us-gov-west-1 CloudwatchEvents archive
+	// For example from us-gov-west-1 EventBridge archive
 	if tfawserr.ErrMessageContains(err, "UnknownOperationException", "Operation is disabled in this region") {
 		return true
 	}
 	// For example from us-west-2 ECR public repository
 	if tfawserr.ErrMessageContains(err, "UnsupportedCommandException", "command is only supported in") {
+		return true
+	}
+	// For example from us-west-1 EMR studio
+	if tfawserr.ErrMessageContains(err, "ValidationException", "Account is not whitelisted to use this feature") {
 		return true
 	}
 	return false

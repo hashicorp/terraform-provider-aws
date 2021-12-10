@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
+	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/service/cloudfront"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -190,6 +190,10 @@ func ResourceDistribution() *schema.Resource {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ValidateFunc: verify.ValidARN,
+						},
+						"response_headers_policy_id": {
+							Type:     schema.TypeString,
+							Optional: true,
 						},
 						"smooth_streaming": {
 							Type:     schema.TypeBool,
@@ -386,6 +390,10 @@ func ResourceDistribution() *schema.Resource {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ValidateFunc: verify.ValidARN,
+						},
+						"response_headers_policy_id": {
+							Type:     schema.TypeString,
+							Optional: true,
 						},
 						"smooth_streaming": {
 							Type:     schema.TypeBool,
@@ -863,7 +871,7 @@ func resourceDistributionRead(d *schema.ResourceData, meta interface{}) error {
 
 	resp, err := conn.GetDistribution(params)
 	if err != nil {
-		if errcode, ok := err.(awserr.Error); ok && errcode.Code() == "NoSuchDistribution" {
+		if tfawserr.ErrMessageContains(err, cloudfront.ErrCodeNoSuchDistribution, "") {
 			log.Printf("[WARN] No Distribution found: %s", d.Id())
 			d.SetId("")
 			return nil
@@ -891,6 +899,14 @@ func resourceDistributionRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("in_progress_validation_batches", resp.Distribution.InProgressInvalidationBatches)
 	d.Set("etag", resp.ETag)
 	d.Set("arn", resp.Distribution.ARN)
+
+	// override hosted_zone_id from flattenDistributionConfig
+	region := meta.(*conns.AWSClient).Region
+	if v, ok := endpoints.PartitionForRegion(endpoints.DefaultPartitions(), region); ok && v.ID() == endpoints.AwsCnPartitionID {
+		d.Set("hosted_zone_id", cloudFrontCNRoute53ZoneID)
+	} else {
+		d.Set("hosted_zone_id", cloudFrontRoute53ZoneID)
+	}
 
 	tags, err := ListTags(conn, d.Get("arn").(string))
 	if err != nil {

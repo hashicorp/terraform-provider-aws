@@ -89,12 +89,12 @@ func resourceRequestValidatorRead(d *schema.ResourceData, meta interface{}) erro
 
 	out, err := conn.GetRequestValidator(&input)
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, apigateway.ErrCodeNotFoundException, "") {
+		if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, apigateway.ErrCodeNotFoundException) {
 			log.Printf("[WARN] API Gateway Request Validator (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
 		}
-		return err
+		return fmt.Errorf("error reading API Gateway Request Validator (%s): %w", d.Id(), err)
 	}
 
 	d.Set("name", out.Name)

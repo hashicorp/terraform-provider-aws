@@ -131,7 +131,7 @@ func resourceTargetRead(d *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		return err
 	}
-	if t == nil {
+	if t == nil && !d.IsNewResource() {
 		log.Printf("[WARN] Application AutoScaling Target (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil

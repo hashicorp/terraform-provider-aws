@@ -11,7 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
-	multierror "github.com/hashicorp/go-multierror"
+	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -318,6 +318,11 @@ func ResourceTable() *schema.Resource {
 				Type:     schema.TypeInt,
 				Optional: true,
 			},
+			"table_class": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.StringInSlice(dynamodb.TableClass_Values(), false),
+			},
 		},
 	}
 }
@@ -390,6 +395,10 @@ func resourceTableCreate(d *schema.ResourceData, meta interface{}) error {
 
 	if v, ok := d.GetOk("server_side_encryption"); ok {
 		req.SSESpecification = expandDynamoDbEncryptAtRestOptions(v.([]interface{}))
+	}
+
+	if v, ok := d.GetOk("table_class"); ok {
+		req.TableClass = aws.String(v.(string))
 	}
 
 	var output *dynamodb.CreateTableOutput
@@ -557,6 +566,12 @@ func resourceTableRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error setting replica: %w", err)
 	}
 
+	if table.TableClassSummary != nil {
+		d.Set("table_class", table.TableClassSummary.TableClass)
+	} else {
+		d.Set("table_class", nil)
+	}
+
 	pitrOut, err := conn.DescribeContinuousBackups(&dynamodb.DescribeContinuousBackupsInput{
 		TableName: aws.String(d.Id()),
 	})
@@ -693,6 +708,11 @@ func resourceTableUpdate(d *schema.ResourceData, meta interface{}) error {
 			hasTableUpdate = true
 			input.GlobalSecondaryIndexUpdates = append(input.GlobalSecondaryIndexUpdates, gsiUpdate)
 		}
+	}
+
+	if d.HasChange("table_class") {
+		hasTableUpdate = true
+		input.TableClass = aws.String(d.Get("table_class").(string))
 	}
 
 	if hasTableUpdate {
@@ -1380,7 +1400,7 @@ func flattenDynamoDbPitr(pitrDesc *dynamodb.DescribeContinuousBackupsOutput) []i
 	if pitrDesc.ContinuousBackupsDescription != nil {
 		pitr := pitrDesc.ContinuousBackupsDescription.PointInTimeRecoveryDescription
 		if pitr != nil {
-			m["enabled"] = (*pitr.PointInTimeRecoveryStatus == dynamodb.PointInTimeRecoveryStatusEnabled)
+			m["enabled"] = (aws.StringValue(pitr.PointInTimeRecoveryStatus) == dynamodb.PointInTimeRecoveryStatusEnabled)
 		}
 	}
 

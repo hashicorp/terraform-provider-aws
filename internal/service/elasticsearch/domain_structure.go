@@ -1,6 +1,8 @@
 package elasticsearch
 
 import (
+	"time"
+
 	"github.com/aws/aws-sdk-go/aws"
 	elasticsearch "github.com/aws/aws-sdk-go/service/elasticsearchservice"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -42,6 +44,71 @@ func expandAdvancedSecurityOptions(m []interface{}) *elasticsearch.AdvancedSecur
 	}
 
 	return &config
+}
+
+func expandAutoTuneOptions(tfMap map[string]interface{}) *elasticsearch.AutoTuneOptions {
+	if tfMap == nil {
+		return nil
+	}
+
+	options := &elasticsearch.AutoTuneOptions{}
+
+	autoTuneOptionsInput := expandAutoTuneOptionsInput(tfMap)
+
+	options.DesiredState = autoTuneOptionsInput.DesiredState
+	options.MaintenanceSchedules = autoTuneOptionsInput.MaintenanceSchedules
+
+	options.RollbackOnDisable = aws.String(tfMap["rollback_on_disable"].(string))
+
+	return options
+}
+
+func expandAutoTuneOptionsInput(tfMap map[string]interface{}) *elasticsearch.AutoTuneOptionsInput {
+	if tfMap == nil {
+		return nil
+	}
+
+	options := &elasticsearch.AutoTuneOptionsInput{}
+
+	options.DesiredState = aws.String(tfMap["desired_state"].(string))
+
+	if v, ok := tfMap["maintenance_schedule"].(*schema.Set); ok && v.Len() > 0 {
+		options.MaintenanceSchedules = expandAutoTuneMaintenanceSchedules(v.List())
+	}
+
+	return options
+}
+
+func expandAutoTuneMaintenanceSchedules(tfList []interface{}) []*elasticsearch.AutoTuneMaintenanceSchedule {
+	var autoTuneMaintenanceSchedules []*elasticsearch.AutoTuneMaintenanceSchedule
+
+	for _, tfMapRaw := range tfList {
+		tfMap, _ := tfMapRaw.(map[string]interface{})
+
+		autoTuneMaintenanceSchedule := &elasticsearch.AutoTuneMaintenanceSchedule{}
+
+		startAt, _ := time.Parse(time.RFC3339, tfMap["start_at"].(string))
+		autoTuneMaintenanceSchedule.StartAt = aws.Time(startAt)
+
+		if v, ok := tfMap["duration"].([]interface{}); ok {
+			autoTuneMaintenanceSchedule.Duration = expandAutoTuneMaintenanceScheduleDuration(v[0].(map[string]interface{}))
+		}
+
+		autoTuneMaintenanceSchedule.CronExpressionForRecurrence = aws.String(tfMap["cron_expression_for_recurrence"].(string))
+
+		autoTuneMaintenanceSchedules = append(autoTuneMaintenanceSchedules, autoTuneMaintenanceSchedule)
+	}
+
+	return autoTuneMaintenanceSchedules
+}
+
+func expandAutoTuneMaintenanceScheduleDuration(tfMap map[string]interface{}) *elasticsearch.Duration {
+	autoTuneMaintenanceScheduleDuration := &elasticsearch.Duration{
+		Value: aws.Int64(int64(tfMap["value"].(int))),
+		Unit:  aws.String(tfMap["unit"].(string)),
+	}
+
+	return autoTuneMaintenanceScheduleDuration
 }
 
 func expandESSAMLOptions(data []interface{}) *elasticsearch.SAMLOptionsInput {
@@ -111,6 +178,55 @@ func flattenAdvancedSecurityOptions(advancedSecurityOptions *elasticsearch.Advan
 	}
 
 	return []map[string]interface{}{m}
+}
+
+func flattenAutoTuneOptions(autoTuneOptions *elasticsearch.AutoTuneOptions) map[string]interface{} {
+	if autoTuneOptions == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{}
+
+	m["desired_state"] = aws.StringValue(autoTuneOptions.DesiredState)
+
+	if v := autoTuneOptions.MaintenanceSchedules; v != nil {
+		m["maintenance_schedule"] = flattenAutoTuneMaintenanceSchedules(v)
+	}
+
+	m["rollback_on_disable"] = aws.StringValue(autoTuneOptions.RollbackOnDisable)
+
+	return m
+}
+
+func flattenAutoTuneMaintenanceSchedules(autoTuneMaintenanceSchedules []*elasticsearch.AutoTuneMaintenanceSchedule) []interface{} {
+	if len(autoTuneMaintenanceSchedules) == 0 {
+		return nil
+	}
+
+	var tfList []interface{}
+
+	for _, autoTuneMaintenanceSchedule := range autoTuneMaintenanceSchedules {
+		m := map[string]interface{}{}
+
+		m["start_at"] = aws.TimeValue(autoTuneMaintenanceSchedule.StartAt).Format(time.RFC3339)
+
+		m["duration"] = []interface{}{flattenAutoTuneMaintenanceScheduleDuration(autoTuneMaintenanceSchedule.Duration)}
+
+		m["cron_expression_for_recurrence"] = aws.StringValue(autoTuneMaintenanceSchedule.CronExpressionForRecurrence)
+
+		tfList = append(tfList, m)
+	}
+
+	return tfList
+}
+
+func flattenAutoTuneMaintenanceScheduleDuration(autoTuneMaintenanceScheduleDuration *elasticsearch.Duration) map[string]interface{} {
+	m := map[string]interface{}{}
+
+	m["value"] = aws.Int64Value(autoTuneMaintenanceScheduleDuration.Value)
+	m["unit"] = aws.StringValue(autoTuneMaintenanceScheduleDuration.Unit)
+
+	return m
 }
 
 func flattenESSAMLOptions(d *schema.ResourceData, samlOptions *elasticsearch.SAMLOptionsOutput) []interface{} {

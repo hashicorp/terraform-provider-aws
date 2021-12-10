@@ -225,11 +225,12 @@ func dataSourceRouteTableRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("route_table_id", rt.RouteTableId)
 	d.Set("vpc_id", rt.VpcId)
 
-	if err := d.Set("tags", KeyValueTags(rt.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	//Ignore the AmazonFSx service tag in addition to standard ignores
+	if err := d.Set("tags", KeyValueTags(rt.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Ignore(tftags.New([]string{"AmazonFSx"})).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %w", err)
 	}
 
-	if err := d.Set("routes", dataSourceRoutesRead(rt.Routes)); err != nil {
+	if err := d.Set("routes", dataSourceRoutesRead(conn, rt.Routes)); err != nil {
 		return err
 	}
 
@@ -240,15 +241,15 @@ func dataSourceRouteTableRead(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func dataSourceRoutesRead(ec2Routes []*ec2.Route) []map[string]interface{} {
+func dataSourceRoutesRead(conn *ec2.EC2, ec2Routes []*ec2.Route) []map[string]interface{} {
 	routes := make([]map[string]interface{}, 0, len(ec2Routes))
 	// Loop through the routes and add them to the set
 	for _, r := range ec2Routes {
-		if r.GatewayId != nil && *r.GatewayId == "local" {
+		if aws.StringValue(r.GatewayId) == "local" {
 			continue
 		}
 
-		if r.Origin != nil && *r.Origin == "EnableVgwRoutePropagation" {
+		if aws.StringValue(r.Origin) == ec2.RouteOriginEnableVgwRoutePropagation {
 			continue
 		}
 
@@ -256,6 +257,18 @@ func dataSourceRoutesRead(ec2Routes []*ec2.Route) []map[string]interface{} {
 			// Skipping because VPC endpoint routes are handled separately
 			// See aws_vpc_endpoint
 			continue
+		}
+
+		// Skip cross-account ENIs for AWS services.
+		if networkInterfaceID := aws.StringValue(r.NetworkInterfaceId); networkInterfaceID != "" {
+			networkInterface, err := FindNetworkInterfaceByID(conn, networkInterfaceID)
+
+			if err == nil && networkInterface.Attachment != nil {
+				if ownerID, instanceOwnerID := aws.StringValue(networkInterface.OwnerId), aws.StringValue(networkInterface.Attachment.InstanceOwnerId); ownerID != "" && instanceOwnerID != ownerID {
+					log.Printf("[DEBUG] Skip cross-account ENI (%s)", networkInterfaceID)
+					continue
+				}
+			}
 		}
 
 		m := make(map[string]interface{})

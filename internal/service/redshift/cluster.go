@@ -802,11 +802,18 @@ func resourceClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 			}
 		} else {
 			log.Printf("[INFO] Disabling Logging for Redshift Cluster %q", d.Id())
-			_, err := conn.DisableLogging(&redshift.DisableLoggingInput{
-				ClusterIdentifier: aws.String(d.Id()),
-			})
+			_, err := tfresource.RetryWhenAWSErrCodeEquals(
+				clusterInvalidClusterStateFaultTimeout,
+				func() (interface{}, error) {
+					return conn.DisableLogging(&redshift.DisableLoggingInput{
+						ClusterIdentifier: aws.String(d.Id()),
+					})
+				},
+				redshift.ErrCodeInvalidClusterStateFault,
+			)
+
 			if err != nil {
-				return err
+				return fmt.Errorf("error disabling Redshift Cluster (%s) logging: %w", d.Id(), err)
 			}
 		}
 	}
@@ -830,9 +837,18 @@ func enableRedshiftClusterLogging(d *schema.ResourceData, conn *redshift.Redshif
 		params.S3KeyPrefix = aws.String(v.(string))
 	}
 
-	if _, err := conn.EnableLogging(params); err != nil {
-		return fmt.Errorf("error enabling Redshift Cluster (%s) logging: %s", d.Id(), err)
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(
+		clusterInvalidClusterStateFaultTimeout,
+		func() (interface{}, error) {
+			return conn.EnableLogging(params)
+		},
+		redshift.ErrCodeInvalidClusterStateFault,
+	)
+
+	if err != nil {
+		return fmt.Errorf("error enabling Redshift Cluster (%s) logging: %w", d.Id(), err)
 	}
+
 	return nil
 }
 
