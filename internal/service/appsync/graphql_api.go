@@ -16,6 +16,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+var validateAuthorizerResultTtlInSeconds = validation.IntBetween(0, 3600)
+
+const DefaultAuthorizerResultTtlInSeconds = 300
+
 func ResourceGraphQLAPI() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceGraphQLAPICreate,
@@ -81,6 +85,29 @@ func ResourceGraphQLAPI() *schema.Resource {
 									"user_pool_id": {
 										Type:     schema.TypeString,
 										Required: true,
+									},
+								},
+							},
+						},
+						"lambda_authorizer_config": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"authorizer_result_ttl_in_seconds": {
+										Type:         schema.TypeInt,
+										Optional:     true,
+										Default:      DefaultAuthorizerResultTtlInSeconds,
+										ValidateFunc: validateAuthorizerResultTtlInSeconds,
+									},
+									"authorizer_uri": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+									"identity_validation_expression": {
+										Type:     schema.TypeString,
+										Optional: true,
 									},
 								},
 							},
@@ -190,6 +217,29 @@ func ResourceGraphQLAPI() *schema.Resource {
 					},
 				},
 			},
+			"lambda_authorizer_config": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"authorizer_result_ttl_in_seconds": {
+							Type:         schema.TypeInt,
+							Optional:     true,
+							Default:      DefaultAuthorizerResultTtlInSeconds,
+							ValidateFunc: validateAuthorizerResultTtlInSeconds,
+						},
+						"authorizer_uri": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						"identity_validation_expression": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+					},
+				},
+			},
 			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -231,6 +281,10 @@ func resourceGraphQLAPICreate(d *schema.ResourceData, meta interface{}) error {
 
 	if v, ok := d.GetOk("user_pool_config"); ok {
 		input.UserPoolConfig = expandAppsyncGraphqlApiUserPoolConfig(v.([]interface{}), meta.(*conns.AWSClient).Region)
+	}
+
+	if v, ok := d.GetOk("lambda_authorizer_config"); ok {
+		input.LambdaAuthorizerConfig = expandAppsyncGraphqlApiLambdaAuthorizerConfig(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("additional_authentication_provider"); ok {
@@ -296,6 +350,10 @@ func resourceGraphQLAPIRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error setting user_pool_config: %s", err)
 	}
 
+	if err := d.Set("lambda_authorizer_config", flattenAppsyncGraphqlApiLambdaAuthorizerConfig(resp.GraphqlApi.LambdaAuthorizerConfig)); err != nil {
+		return fmt.Errorf("error setting lambda_authorizer_config: %s", err)
+	}
+
 	if err := d.Set("additional_authentication_provider", flattenAppsyncGraphqlApiAdditionalAuthenticationProviders(resp.GraphqlApi.AdditionalAuthenticationProviders)); err != nil {
 		return fmt.Errorf("error setting additional_authentication_provider: %s", err)
 	}
@@ -349,6 +407,10 @@ func resourceGraphQLAPIUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	if v, ok := d.GetOk("user_pool_config"); ok {
 		input.UserPoolConfig = expandAppsyncGraphqlApiUserPoolConfig(v.([]interface{}), meta.(*conns.AWSClient).Region)
+	}
+
+	if v, ok := d.GetOk("lambda_authorizer_config"); ok {
+		input.LambdaAuthorizerConfig = expandAppsyncGraphqlApiLambdaAuthorizerConfig(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("additional_authentication_provider"); ok {
@@ -458,6 +520,25 @@ func expandAppsyncGraphqlApiUserPoolConfig(l []interface{}, currentRegion string
 	return userPoolConfig
 }
 
+func expandAppsyncGraphqlApiLambdaAuthorizerConfig(l []interface{}) *appsync.LambdaAuthorizerConfig {
+	if len(l) < 1 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]interface{})
+
+	lambdaAuthorizerConfig := &appsync.LambdaAuthorizerConfig{
+		AuthorizerResultTtlInSeconds: aws.Int64(int64(m["authorizer_result_ttl_in_seconds"].(int))),
+		AuthorizerUri:                aws.String(m["authorizer_uri"].(string)),
+	}
+
+	if v, ok := m["identity_validation_expression"].(string); ok && v != "" {
+		lambdaAuthorizerConfig.IdentityValidationExpression = aws.String(v)
+	}
+
+	return lambdaAuthorizerConfig
+}
+
 func expandAppsyncGraphqlApiAdditionalAuthProviders(items []interface{}, currentRegion string) []*appsync.AdditionalAuthenticationProvider {
 	if len(items) < 1 {
 		return nil
@@ -480,6 +561,10 @@ func expandAppsyncGraphqlApiAdditionalAuthProviders(items []interface{}, current
 
 		if v, ok := m["user_pool_config"]; ok {
 			additionalAuthProvider.UserPoolConfig = expandAppsyncGraphqlApiCognitoUserPoolConfig(v.([]interface{}), currentRegion)
+		}
+
+		if v, ok := m["lambda_authorizer_config"]; ok {
+			additionalAuthProvider.LambdaAuthorizerConfig = expandAppsyncGraphqlApiLambdaAuthorizerConfig(v.([]interface{}))
 		}
 
 		additionalAuthProviders = append(additionalAuthProviders, additionalAuthProvider)
@@ -558,6 +643,28 @@ func flattenAppsyncGraphqlApiUserPoolConfig(userPoolConfig *appsync.UserPoolConf
 	return []interface{}{m}
 }
 
+func flattenAppsyncGraphqlApiLambdaAuthorizerConfig(lambdaAuthorizerConfig *appsync.LambdaAuthorizerConfig) []interface{} {
+	if lambdaAuthorizerConfig == nil {
+		return []interface{}{}
+	}
+
+	m := map[string]interface{}{
+		"authorizer_uri": aws.StringValue(lambdaAuthorizerConfig.AuthorizerUri),
+	}
+
+	if lambdaAuthorizerConfig.AuthorizerResultTtlInSeconds != nil {
+		m["authorizer_result_ttl_in_seconds"] = aws.Int64Value(lambdaAuthorizerConfig.AuthorizerResultTtlInSeconds)
+	} else {
+		m["authorizer_result_ttl_in_seconds"] = DefaultAuthorizerResultTtlInSeconds
+	}
+
+	if lambdaAuthorizerConfig.IdentityValidationExpression != nil {
+		m["identity_validation_expression"] = aws.StringValue(lambdaAuthorizerConfig.IdentityValidationExpression)
+	}
+
+	return []interface{}{m}
+}
+
 func flattenAppsyncGraphqlApiAdditionalAuthenticationProviders(additionalAuthenticationProviders []*appsync.AdditionalAuthenticationProvider) []interface{} {
 	if len(additionalAuthenticationProviders) == 0 {
 		return []interface{}{}
@@ -566,9 +673,10 @@ func flattenAppsyncGraphqlApiAdditionalAuthenticationProviders(additionalAuthent
 	result := make([]interface{}, len(additionalAuthenticationProviders))
 	for i, provider := range additionalAuthenticationProviders {
 		result[i] = map[string]interface{}{
-			"authentication_type":   aws.StringValue(provider.AuthenticationType),
-			"openid_connect_config": flattenAppsyncGraphqlApiOpenIDConnectConfig(provider.OpenIDConnectConfig),
-			"user_pool_config":      flattenAppsyncGraphqlApiCognitoUserPoolConfig(provider.UserPoolConfig),
+			"authentication_type":      aws.StringValue(provider.AuthenticationType),
+			"lambda_authorizer_config": flattenAppsyncGraphqlApiLambdaAuthorizerConfig(provider.LambdaAuthorizerConfig),
+			"openid_connect_config":    flattenAppsyncGraphqlApiOpenIDConnectConfig(provider.OpenIDConnectConfig),
+			"user_pool_config":         flattenAppsyncGraphqlApiCognitoUserPoolConfig(provider.UserPoolConfig),
 		}
 	}
 
