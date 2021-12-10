@@ -7,6 +7,13 @@ FEATURES:
 * **New Resource:** `aws_connect_bot_association` ([#21097](https://github.com/hashicorp/terraform-provider-aws/issues/21097))
 * **New Resource:** `aws_connect_lambda_function_association` ([#21276](https://github.com/hashicorp/terraform-provider-aws/issues/21276))
 
+ENHANCEMENTS:
+
+* data/aws_sagemaker_prebuilt_ecr_image: Add Hugging Face DLCs ([#21983](https://github.com/hashicorp/terraform-provider-aws/issues/21983))
+* resource/aws_fsx_backup: Add `volume_id` argument to support Amazon FSx for NetApp ONTAP backup ([#21960](https://github.com/hashicorp/terraform-provider-aws/issues/21960))
+* resource/aws_networkfirewall_firewall_policy: Add `stateful_default_actions` and `stateful_engine_options` configuration blocks. Add `priority` attribute to `stateful_rule_group_reference` block ([#21955](https://github.com/hashicorp/terraform-provider-aws/issues/21955))
+* resource/aws_networkfirewall_firewall_rule_group: Add `stateful_rule_options` configuration block ([#21955](https://github.com/hashicorp/terraform-provider-aws/issues/21955))
+
 BUG FIXES:
 
 * resource/aws_ecr_lifecycle_policy: Fix erroneous diffs in `policy` when no changes made or policies are equivalent ([#22142](https://github.com/hashicorp/terraform-provider-aws/issues/22142))
