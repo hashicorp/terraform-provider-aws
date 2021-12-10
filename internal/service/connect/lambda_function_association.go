@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
@@ -18,34 +19,21 @@ func ResourceLambdaFunctionAssociation() *schema.Resource {
 	return &schema.Resource{
 		CreateContext: resourceLambdaFunctionAssociationCreate,
 		ReadContext:   resourceLambdaFunctionAssociationRead,
-		UpdateContext: resourceLambdaFunctionAssociationRead,
 		DeleteContext: resourceLambdaFunctionAssociationDelete,
 		Importer: &schema.ResourceImporter{
-			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-				instanceID, functionArn, err := LambdaFunctionAssociationParseResourceID(d.Id())
-				if err != nil {
-					return nil, err
-				}
-				d.Set("function_arn", functionArn)
-				d.Set("instance_id", instanceID)
-				d.SetId(LambdaFunctionAssociationCreateResourceID(instanceID, functionArn))
-
-				return []*schema.ResourceData{d}, nil
-			},
-		},
-		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(connectLambdaFunctionAssociationCreatedTimeout),
-			Delete: schema.DefaultTimeout(connectLambdaFunctionAssociationDeletedTimeout),
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"function_arn": {
 				Type:         schema.TypeString,
 				Required:     true,
+				ForceNew:     true,
 				ValidateFunc: verify.ValidARN,
 			},
 			"instance_id": {
 				Type:     schema.TypeString,
 				Required: true,
+				ForceNew: true,
 			},
 		},
 	}
@@ -54,25 +42,21 @@ func ResourceLambdaFunctionAssociation() *schema.Resource {
 func resourceLambdaFunctionAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).ConnectConn
 
+	instanceId := d.Get("instance_id").(string)
+	functionArn := d.Get("function_arn").(string)
+
 	input := &connect.AssociateLambdaFunctionInput{
-		InstanceId:  aws.String(d.Get("instance_id").(string)),
-		FunctionArn: aws.String(d.Get("function_arn").(string)),
+		InstanceId:  aws.String(instanceId),
+		FunctionArn: aws.String(functionArn),
 	}
 
-	lfaId := LambdaFunctionAssociationCreateResourceID(d.Get("instance_id").(string), d.Get("function_arn").(string))
-
-	lfaArn, err := FindLambdaFunctionAssociationByArnWithContext(ctx, conn, d.Get("instance_id").(string), d.Get("function_arn").(string))
+	_, err := conn.AssociateLambdaFunctionWithContext(ctx, input)
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error finding Connect Lambda Function Association by Function ARN (%s): %w", lfaArn, err))
-	}
-	log.Printf("[DEBUG] Creating Connect Lambda Association %s", input)
-
-	_, err = conn.AssociateLambdaFunctionWithContext(ctx, input)
-	if err != nil {
-		return diag.FromErr(fmt.Errorf("error creating Connect Lambda Function Association (%s): %s", lfaArn, err))
+		return diag.FromErr(fmt.Errorf("error creating Connect Lambda Function Association (%s,%s): %s", instanceId, functionArn, err))
 	}
 
-	d.SetId(lfaId)
+	d.SetId(LambdaFunctionAssociationCreateResourceID(instanceId, functionArn))
+
 	return resourceLambdaFunctionAssociationRead(ctx, d, meta)
 }
 
@@ -80,22 +64,24 @@ func resourceLambdaFunctionAssociationRead(ctx context.Context, d *schema.Resour
 	conn := meta.(*conns.AWSClient).ConnectConn
 
 	instanceID, functionArn, err := LambdaFunctionAssociationParseResourceID(d.Id())
+
 	if err != nil {
 		return diag.FromErr(err)
 	}
 
 	lfaArn, err := FindLambdaFunctionAssociationByArnWithContext(ctx, conn, instanceID, functionArn)
-	if err != nil {
-		return diag.FromErr(fmt.Errorf("error finding Connect Lambda Function Association by Function ARN (%s): %w", functionArn, err))
-	}
 
-	if !d.IsNewResource() && lfaArn == "" {
+	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Connect Lambda Function Association (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
-	d.Set("function_arn", functionArn)
+	if err != nil {
+		return diag.FromErr(fmt.Errorf("error finding Connect Lambda Function Association by Function ARN (%s): %w", functionArn, err))
+	}
+
+	d.Set("function_arn", lfaArn)
 	d.Set("instance_id", instanceID)
 
 	return nil
@@ -114,12 +100,15 @@ func resourceLambdaFunctionAssociationDelete(ctx context.Context, d *schema.Reso
 		FunctionArn: aws.String(functionArn),
 	}
 
-	log.Printf("[DEBUG] Deleting Connect Lambda Function Association %s", d.Id())
+	_, err = conn.DisassociateLambdaFunctionWithContext(ctx, input)
 
-	_, err = conn.DisassociateLambdaFunction(input)
+	if tfawserr.ErrCodeEquals(err, connect.ErrCodeResourceNotFoundException) {
+		return nil
+	}
 
-	if err != nil && !tfawserr.ErrCodeEquals(err, "ResourceNotFoundException", "") {
+	if err != nil {
 		return diag.FromErr(fmt.Errorf("error deleting Connect Lambda Function Association (%s): %w", d.Id(), err))
 	}
+
 	return nil
 }

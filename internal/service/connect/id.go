@@ -6,7 +6,7 @@ import (
 )
 
 const botV1AssociationIDSeparator = ":"
-const lambdaFunctionAssociationIDSeparator = ":"
+const lambdaFunctionAssociationIDSeparator = ","
 
 func BotV1AssociationParseResourceID(id string) (string, string, string, error) {
 	parts := strings.SplitN(id, botV1AssociationIDSeparator, 3)
@@ -27,13 +27,13 @@ func BotV1AssociationCreateResourceID(instanceID string, botName string, region 
 
 func LambdaFunctionAssociationParseResourceID(id string) (string, string, error) {
 	parts := strings.SplitN(id, lambdaFunctionAssociationIDSeparator, 2)
-	if len(parts) == 2 && parts[0] != "" && parts[1] != "" {
-		return parts[0], parts[1], nil
+	if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
+		return "", "",
+			fmt.Errorf("unexpected format for ID (%q), expected instanceID"+lambdaFunctionAssociationIDSeparator+
+				"functionARN", id)
 	}
 
-	return "", "",
-		fmt.Errorf("unexpected format for ID (%q), expected instanceID"+lambdaFunctionAssociationIDSeparator+
-			"function-arn", id)
+	return parts[0], parts[1], nil
 }
 
 func LambdaFunctionAssociationCreateResourceID(instanceID string, functionArn string) string {

@@ -88,8 +88,19 @@ func FindLambdaFunctionAssociationByArnWithContext(ctx context.Context, conn *co
 		return !lastPage
 	})
 
+	if tfawserr.ErrCodeEquals(err, connect.ErrCodeResourceNotFoundException) {
+		return "", &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
 	if err != nil {
 		return "", err
+	}
+
+	if result == "" {
+		return "", tfresource.NewEmptyResultError(input)
 	}
 
 	return result, nil

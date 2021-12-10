@@ -41,9 +41,9 @@ func dataSourceLambdaFunctionAssociationRead(ctx context.Context, d *schema.Reso
 		return diag.FromErr(fmt.Errorf("error finding Connect Lambda Function Association by ARN (%s): not found", functionArn))
 	}
 
+	d.SetId(meta.(*conns.AWSClient).Region)
 	d.Set("function_arn", functionArn)
 	d.Set("instance_id", instanceID)
-	d.SetId(fmt.Sprintf("%s:%s", d.Get("instance_id").(string), d.Get("function_arn").(string)))
 
 	return nil
 }

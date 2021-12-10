@@ -13,13 +13,14 @@ Provides details about a specific Connect Lambda Function Association.
 ## Example Usage
 
 ```terraform
-data "aws_connect_lambda_function_association" "test" {
+data "aws_connect_lambda_function_association" "example" {
   function_arn = "arn:aws:lambda:us-west-2:123456789123:function:abcdefg"
   instance_id  = "aaaaaaaa-bbbb-cccc-dddd-111111111111"
 }
 ```
 
 ## Argument Reference
+
 The following arguments are supported:
 
 * `function_arn` - (Required) Amazon Resource Name (ARN) of the Lambda Function, omitting any version or alias qualifier.
@@ -27,4 +28,6 @@ The following arguments are supported:
 
 ## Attributes Reference
 
-No additional attributes are exported.
+In addition to all arguments above, the following attributes are exported:
+
+* `id` - AWS Region.

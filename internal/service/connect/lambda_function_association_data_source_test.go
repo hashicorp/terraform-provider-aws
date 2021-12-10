@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccLambdaFunctionAssociationDataSource_basic(t *testing.T) {
+func TestAccConnectLambdaFunctionAssociationDataSource_basic(t *testing.T) {
 	rName := sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
 	rName2 := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	resourceName := "aws_connect_lambda_function_association.test"
@@ -34,12 +34,14 @@ func TestAccLambdaFunctionAssociationDataSource_basic(t *testing.T) {
 
 func testAccLambdaFunctionAssociationDataSource_BaseConfig(rName string, rName2 string) string {
 	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+
 resource "aws_lambda_function" "test" {
   filename      = "testdata/lambdatest.zip"
   function_name = %[1]q
   role          = aws_iam_role.test.arn
   handler       = "exports.handler"
-  runtime       = "nodejs12.x"
+  runtime       = "nodejs14.x"
 }
 
 resource "aws_iam_role" "test" {
@@ -52,7 +54,7 @@ resource "aws_iam_role" "test" {
     {
       "Action": "sts:AssumeRole",
       "Principal": {
-        "Service": "lambda.amazonaws.com"
+        "Service": "lambda.${data.aws_partition.current.dns_suffix}"
       },
       "Effect": "Allow",
       "Sid": ""
