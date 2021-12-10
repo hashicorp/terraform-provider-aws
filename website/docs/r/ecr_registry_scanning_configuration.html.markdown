@@ -1,0 +1,61 @@
+---
+subcategory: "ECR"
+layout: "aws"
+page_title: "AWS: aws_ecr_registry_scanning_configuration"
+description: |-
+  Provides an Elastic Container Registry Repository.
+---
+
+# Resource: aws_ecr_registry_scanning_configuration
+
+Provides an Elastic Container Registry Scanning Configuration. Can't be deleted.
+
+## Example Usage
+
+```terraform
+resource "aws_ecr_registry_scanning_configuration" "configuration" {
+  scan_type = "ENHANCED"
+
+  rule {
+    scan_frequency = "CONTINUOUS_SCAN"
+    repository_filter {
+      filter      = "example"
+      filter_type = "WILDCARD"
+    }
+  }
+}
+```
+
+## Argument Reference
+
+The following arguments are supported:
+
+- `scan_type` - (Required) the scanning type to set for the registry. Can be either `ENHANCED` or `BASIC`.
+- `rule` - (Optional) One or multiple blocks specifying scanning rules to determine which repository filters are used and at what frequency scanning will occur. See [below for schema](#rule).
+
+### rule
+
+- `repository_filter` - (Required) One or more repository filter blocks, containing a `filter` (required string filtering repositories, see pattern regex [here](https://docs.aws.amazon.com/AmazonECR/latest/APIReference/API_ScanningRepositoryFilter.html)) and a `filter_type` (required string, currently only `WILDCARD` is supported).
+- `scan_frequency` - (Required) The frequency that scans are performed at for a private registry. Can be `SCAN_ON_PUSH`, `CONTINUOUS_SCAN`, or `MANUAL`.
+
+## Attributes Reference
+
+In addition to all arguments above, the following attributes are exported:
+
+- `registry_id` - The registry ID where the repository was created.
+- `scanning_configuration` - The scanning configuration for the registry.
+
+## Timeouts
+
+`aws_ecr_registry_scanning_configuration` provides the following [Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts)
+configuration options:
+
+- `delete` - (Default `20 minutes`) How long to wait for a scanning configuration to be deleted.
+
+## Import
+
+ECR Scanning Configurations can be imported using the `registry_id`, e.g.,
+
+```
+$ terraform import aws_ecr_registry_scanning_configuration 012345678901
+```
