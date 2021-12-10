@@ -120,7 +120,7 @@ resource "aws_media_store_container_policy" "test" {
   policy = jsonencode({
     Version = "2012-10-17"
     Statement = [{
-      Sid    = %[1]q
+      Sid    = "i-dont-believe-that-anybody"
       Action = "mediastore:*"
       Principal = {
         AWS = "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:root"
