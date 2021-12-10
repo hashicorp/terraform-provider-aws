@@ -53,8 +53,8 @@ func testAccRegistryScanningConfiguration_basic(t *testing.T) {
 				Config: testAccRegistryScanningConfigurationUpdated(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccRegistryScanningConfigurationExists(resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "scan_type", "BASIC"),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "scan_type", "ENHANCED"),
+					resource.TestCheckResourceAttr(resourceName, "rule.#", "2"),
 				),
 			},
 		},
@@ -120,7 +120,21 @@ resource "aws_ecr_registry_scanning_configuration" "test" {
 func testAccRegistryScanningConfigurationUpdated() string {
 	return `
 resource "aws_ecr_registry_scanning_configuration" "test" {
-  scan_type = "BASIC"
+  scan_type = "ENHANCED"
+  rule {
+    scan_frequency = "CONTINUOUS_SCAN"
+    repository_filter {
+      filter      = "*"
+      filter_type = "WILDCARD"
+    }
+  }
+  rule {
+    scan_frequency = "SCAN_ON_PUSH"
+    repository_filter {
+      filter      = "example"
+      filter_type = "WILDCARD"
+    }
+  }
 }
 `
 }
