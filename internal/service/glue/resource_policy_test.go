@@ -282,6 +282,7 @@ resource "aws_glue_resource_policy" "test" {
         "glue:CreateTable",
         "glue:DeleteTable",
       ]
+      Effect = "Allow"
       Resource = ["arn:${data.aws_partition.current.partition}:glue:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:*"]
       Principal = {
         AWS = "*"
@@ -303,6 +304,7 @@ data "aws_region" "current" {}
 resource "aws_glue_resource_policy" "test" {
   policy = jsonencode({
     Statement = {
+      Effect = "Allow"
       Action = [
         "glue:DeleteTable",
         "glue:CreateTable",
