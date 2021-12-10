@@ -955,10 +955,10 @@ func Provider() *schema.Provider {
 			"aws_config_organization_managed_rule":     configservice.ResourceOrganizationManagedRule(),
 			"aws_config_remediation_configuration":     configservice.ResourceRemediationConfiguration(),
 
-			"aws_connect_bot_association": connect.ResourceBotAssociation(),
-			"aws_connect_contact_flow":    connect.ResourceContactFlow(),
+			"aws_connect_bot_association":    connect.ResourceBotAssociation(),
+			"aws_connect_contact_flow":       connect.ResourceContactFlow(),
 			"aws_connect_hours_of_operation": connect.ResourceHoursOfOperation(),
-			"aws_connect_instance":        connect.ResourceInstance(),
+			"aws_connect_instance":           connect.ResourceInstance(),
 
 			"aws_cur_report_definition": cur.ResourceReportDefinition(),
 
