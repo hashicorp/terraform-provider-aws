@@ -71,7 +71,7 @@ func resourceInvitationAccepterRead(ctx context.Context, d *schema.ResourceData,
 		return diag.Errorf("error reading Detective InvitationAccepter (%s): %s", d.Id(), err)
 	}
 
-	d.Set("graph_arn", aws.StringValue(graphArn))
+	d.Set("graph_arn", graphArn)
 	return nil
 }
 

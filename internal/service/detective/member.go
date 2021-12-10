@@ -159,7 +159,7 @@ func resourceMemberRead(ctx context.Context, d *schema.ResourceData, meta interf
 		return diag.Errorf("error reading Detective Member (%s): %s", d.Id(), err)
 	}
 
-	if resp == nil {
+	if !d.IsNewResource() && resp == nil {
 		log.Printf("[WARN] Detective Member (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
