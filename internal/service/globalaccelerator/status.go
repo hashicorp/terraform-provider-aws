@@ -23,3 +23,20 @@ func statusAccelerator(conn *globalaccelerator.GlobalAccelerator, arn string) re
 		return accelerator, aws.StringValue(accelerator.Status), nil
 	}
 }
+
+// statusCustomRoutingAccelerator fetches the Custom Routing Accelerator and its Status
+func statusCustomRoutingAccelerator(conn *globalaccelerator.GlobalAccelerator, arn string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		accelerator, err := FindCustomRoutingAcceleratorByARN(conn, arn)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return accelerator, aws.StringValue(accelerator.Status), nil
+	}
+}
