@@ -1121,6 +1121,7 @@ func Provider() *schema.Provider {
 			"aws_vpn_gateway_route_propagation":                   ec2.ResourceVPNGatewayRoutePropagation(),
 
 			"aws_ecr_lifecycle_policy":          ecr.ResourceLifecyclePolicy(),
+			"aws_ecr_pull_through_cache_rule":   ecr.ResourcePullThroughCacheRule(),
 			"aws_ecr_registry_policy":           ecr.ResourceRegistryPolicy(),
 			"aws_ecr_replication_configuration": ecr.ResourceReplicationConfiguration(),
 			"aws_ecr_repository":                ecr.ResourceRepository(),
