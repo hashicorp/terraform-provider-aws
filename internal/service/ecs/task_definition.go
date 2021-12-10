@@ -1057,11 +1057,11 @@ func flattenDockerVolumeConfiguration(config *ecs.DockerVolumeConfiguration) []i
 	}
 
 	if config.DriverOpts != nil {
-		m["driver_opts"] = verify.PointersMapToStringList(config.DriverOpts)
+		m["driver_opts"] = flex.PointersMapToStringList(config.DriverOpts)
 	}
 
 	if v := config.Labels; v != nil {
-		m["labels"] = verify.PointersMapToStringList(v)
+		m["labels"] = flex.PointersMapToStringList(v)
 	}
 
 	items = append(items, m)

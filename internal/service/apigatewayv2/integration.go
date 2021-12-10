@@ -264,11 +264,11 @@ func resourceIntegrationRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("integration_uri", resp.IntegrationUri)
 	d.Set("passthrough_behavior", resp.PassthroughBehavior)
 	d.Set("payload_format_version", resp.PayloadFormatVersion)
-	err = d.Set("request_parameters", verify.PointersMapToStringList(resp.RequestParameters))
+	err = d.Set("request_parameters", flex.PointersMapToStringList(resp.RequestParameters))
 	if err != nil {
 		return fmt.Errorf("error setting request_parameters: %s", err)
 	}
-	err = d.Set("request_templates", verify.PointersMapToStringList(resp.RequestTemplates))
+	err = d.Set("request_templates", flex.PointersMapToStringList(resp.RequestTemplates))
 	if err != nil {
 		return fmt.Errorf("error setting request_templates: %s", err)
 	}

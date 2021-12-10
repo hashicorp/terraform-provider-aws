@@ -11,7 +11,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceRouteResponse() *schema.Resource {
@@ -96,7 +95,7 @@ func resourceRouteResponseRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	d.Set("model_selection_expression", resp.ModelSelectionExpression)
-	if err := d.Set("response_models", verify.PointersMapToStringList(resp.ResponseModels)); err != nil {
+	if err := d.Set("response_models", flex.PointersMapToStringList(resp.ResponseModels)); err != nil {
 		return fmt.Errorf("error setting response_models: %s", err)
 	}
 	d.Set("route_response_key", resp.RouteResponseKey)

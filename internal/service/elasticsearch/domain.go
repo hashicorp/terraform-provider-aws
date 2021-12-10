@@ -12,6 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	elasticsearch "github.com/aws/aws-sdk-go/service/elasticsearchservice"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	awspolicy "github.com/hashicorp/awspolicyequivalence"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -72,6 +73,10 @@ func ResourceDomain() *schema.Resource {
 				Computed:         true,
 				ValidateFunc:     validation.StringIsJSON,
 				DiffSuppressFunc: verify.SuppressEquivalentPolicyDiffs,
+				StateFunc: func(v interface{}) string {
+					json, _ := structure.NormalizeJsonString(v)
+					return json
+				},
 			},
 			"advanced_options": {
 				Type:     schema.TypeMap,
@@ -530,7 +535,13 @@ func resourceDomainCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if v, ok := d.GetOk("access_policies"); ok {
-		inputCreateDomain.AccessPolicies = aws.String(v.(string))
+		policy, err := structure.NormalizeJsonString(v.(string))
+
+		if err != nil {
+			return fmt.Errorf("policy (%s) is invalid JSON: %w", policy, err)
+		}
+
+		inputCreateDomain.AccessPolicies = aws.String(policy)
 	}
 
 	if v, ok := d.GetOk("advanced_options"); ok {
@@ -576,7 +587,7 @@ func resourceDomainCreate(d *schema.ResourceData, meta interface{}) error {
 				return fmt.Errorf("At least one field is expected inside cluster_config")
 			}
 			m := config[0].(map[string]interface{})
-			inputCreateDomain.ElasticsearchClusterConfig = expandESClusterConfig(m)
+			inputCreateDomain.ElasticsearchClusterConfig = expandClusterConfig(m)
 		}
 	}
 
@@ -584,7 +595,7 @@ func resourceDomainCreate(d *schema.ResourceData, meta interface{}) error {
 		options := v.([]interface{})
 
 		s := options[0].(map[string]interface{})
-		inputCreateDomain.NodeToNodeEncryptionOptions = expandESNodeToNodeEncryptionOptions(s)
+		inputCreateDomain.NodeToNodeEncryptionOptions = expandNodeToNodeEncryptionOptions(s)
 	}
 
 	if v, ok := d.GetOk("snapshot_options"); ok {
@@ -790,16 +801,20 @@ func resourceDomainRead(d *schema.ResourceData, meta interface{}) error {
 	dc := outDescribeDomainConfig.DomainConfig
 
 	if ds.AccessPolicies != nil && aws.StringValue(ds.AccessPolicies) != "" {
-		policies, err := structure.NormalizeJsonString(aws.StringValue(ds.AccessPolicies))
+		policies, err := verify.PolicyToSet(d.Get("access_policies").(string), aws.StringValue(ds.AccessPolicies))
+
 		if err != nil {
-			return fmt.Errorf("access policies contain an invalid JSON: %s", err)
+			return err
 		}
+
 		d.Set("access_policies", policies)
 	}
-	err = d.Set("advanced_options", verify.PointersMapToStringList(ds.AdvancedOptions))
-	if err != nil {
-		return err
+
+	options := advancedOptionsIgnoreDefault(d.Get("advanced_options").(map[string]interface{}), flex.PointersMapToStringList(ds.AdvancedOptions))
+	if err = d.Set("advanced_options", options); err != nil {
+		return fmt.Errorf("setting advanced_options %v: %w", options, err)
 	}
+
 	d.SetId(aws.StringValue(ds.ARN))
 	d.Set("domain_id", ds.DomainId)
 	d.Set("domain_name", ds.DomainName)
@@ -813,7 +828,7 @@ func resourceDomainRead(d *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		return err
 	}
-	err = d.Set("cluster_config", flattenESClusterConfig(ds.ElasticsearchClusterConfig))
+	err = d.Set("cluster_config", flattenClusterConfig(ds.ElasticsearchClusterConfig))
 	if err != nil {
 		return err
 	}
@@ -821,7 +836,7 @@ func resourceDomainRead(d *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		return err
 	}
-	err = d.Set("node_to_node_encryption", flattenESNodeToNodeEncryptionOptions(ds.NodeToNodeEncryptionOptions))
+	err = d.Set("node_to_node_encryption", flattenNodeToNodeEncryptionOptions(ds.NodeToNodeEncryptionOptions))
 	if err != nil {
 		return err
 	}
@@ -858,7 +873,7 @@ func resourceDomainRead(d *schema.ResourceData, meta interface{}) error {
 		if err != nil {
 			return err
 		}
-		endpoints := verify.PointersMapToStringList(ds.Endpoints)
+		endpoints := flex.PointersMapToStringList(ds.Endpoints)
 		err = d.Set("endpoint", endpoints["vpc"])
 		if err != nil {
 			return err
@@ -933,7 +948,11 @@ func resourceDomainUpdate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if d.HasChange("access_policies") {
-		input.AccessPolicies = aws.String(d.Get("access_policies").(string))
+		o, n := d.GetChange("access_policies")
+
+		if equivalent, err := awspolicy.PoliciesAreEquivalent(o.(string), n.(string)); err != nil || !equivalent {
+			input.AccessPolicies = aws.String(d.Get("access_policies").(string))
+		}
 	}
 
 	if d.HasChange("advanced_options") {
@@ -965,7 +984,7 @@ func resourceDomainUpdate(d *schema.ResourceData, meta interface{}) error {
 
 			if len(config) == 1 {
 				m := config[0].(map[string]interface{})
-				input.ElasticsearchClusterConfig = expandESClusterConfig(m)
+				input.ElasticsearchClusterConfig = expandClusterConfig(m)
 			}
 		}
 
@@ -1184,7 +1203,7 @@ func isCustomEndpointDisabled(k, old, new string, d *schema.ResourceData) bool {
 	return false
 }
 
-func expandESNodeToNodeEncryptionOptions(s map[string]interface{}) *elasticsearch.NodeToNodeEncryptionOptions {
+func expandNodeToNodeEncryptionOptions(s map[string]interface{}) *elasticsearch.NodeToNodeEncryptionOptions {
 	options := elasticsearch.NodeToNodeEncryptionOptions{}
 
 	if v, ok := s["enabled"]; ok {
@@ -1193,7 +1212,7 @@ func expandESNodeToNodeEncryptionOptions(s map[string]interface{}) *elasticsearc
 	return &options
 }
 
-func flattenESNodeToNodeEncryptionOptions(o *elasticsearch.NodeToNodeEncryptionOptions) []map[string]interface{} {
+func flattenNodeToNodeEncryptionOptions(o *elasticsearch.NodeToNodeEncryptionOptions) []map[string]interface{} {
 	if o == nil {
 		return []map[string]interface{}{}
 	}
@@ -1206,7 +1225,7 @@ func flattenESNodeToNodeEncryptionOptions(o *elasticsearch.NodeToNodeEncryptionO
 	return []map[string]interface{}{m}
 }
 
-func expandESClusterConfig(m map[string]interface{}) *elasticsearch.ElasticsearchClusterConfig {
+func expandClusterConfig(m map[string]interface{}) *elasticsearch.ElasticsearchClusterConfig {
 	config := elasticsearch.ElasticsearchClusterConfig{}
 
 	if v, ok := m["dedicated_master_enabled"]; ok {
@@ -1236,7 +1255,7 @@ func expandESClusterConfig(m map[string]interface{}) *elasticsearch.Elasticsearc
 
 		if isEnabled {
 			if v, ok := m["zone_awareness_config"]; ok {
-				config.ZoneAwarenessConfig = expandElasticsearchZoneAwarenessConfig(v.([]interface{}))
+				config.ZoneAwarenessConfig = expandZoneAwarenessConfig(v.([]interface{}))
 			}
 		}
 	}
@@ -1259,7 +1278,7 @@ func expandESClusterConfig(m map[string]interface{}) *elasticsearch.Elasticsearc
 	return &config
 }
 
-func expandElasticsearchZoneAwarenessConfig(l []interface{}) *elasticsearch.ZoneAwarenessConfig {
+func expandZoneAwarenessConfig(l []interface{}) *elasticsearch.ZoneAwarenessConfig {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -1275,9 +1294,9 @@ func expandElasticsearchZoneAwarenessConfig(l []interface{}) *elasticsearch.Zone
 	return zoneAwarenessConfig
 }
 
-func flattenESClusterConfig(c *elasticsearch.ElasticsearchClusterConfig) []map[string]interface{} {
+func flattenClusterConfig(c *elasticsearch.ElasticsearchClusterConfig) []map[string]interface{} {
 	m := map[string]interface{}{
-		"zone_awareness_config":  flattenElasticsearchZoneAwarenessConfig(c.ZoneAwarenessConfig),
+		"zone_awareness_config":  flattenZoneAwarenessConfig(c.ZoneAwarenessConfig),
 		"zone_awareness_enabled": aws.BoolValue(c.ZoneAwarenessEnabled),
 	}
 
@@ -1309,7 +1328,7 @@ func flattenESClusterConfig(c *elasticsearch.ElasticsearchClusterConfig) []map[s
 	return []map[string]interface{}{m}
 }
 
-func flattenElasticsearchZoneAwarenessConfig(zoneAwarenessConfig *elasticsearch.ZoneAwarenessConfig) []interface{} {
+func flattenZoneAwarenessConfig(zoneAwarenessConfig *elasticsearch.ZoneAwarenessConfig) []interface{} {
 	if zoneAwarenessConfig == nil {
 		return []interface{}{}
 	}
@@ -1319,4 +1338,24 @@ func flattenElasticsearchZoneAwarenessConfig(zoneAwarenessConfig *elasticsearch.
 	}
 
 	return []interface{}{m}
+}
+
+// advancedOptionsIgnoreDefault checks for defaults in the n map and, if
+// they don't exist in the o map, it deletes them. AWS returns default advanced
+// options that cause perpetual diffs.
+func advancedOptionsIgnoreDefault(o map[string]interface{}, n map[string]interface{}) map[string]interface{} {
+	for k, v := range n {
+		switch fmt.Sprintf("%s=%s", k, v) {
+		case "override_main_response_version=false":
+			if _, ok := o[k]; !ok {
+				delete(n, "override_main_response_version")
+			}
+		case "rest.action.multi.allow_explicit_index=true":
+			if _, ok := o[k]; !ok {
+				delete(n, "rest.action.multi.allow_explicit_index")
+			}
+		}
+	}
+
+	return n
 }

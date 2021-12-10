@@ -32,9 +32,9 @@ func TestAccElasticsearchDomainSamlOptions_basic(t *testing.T) {
 		CheckDestroy: testAccCheckESDomainSAMLOptionsDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccESDomainSAMLOptionsConfig(rUserName, rName, idpEntityId),
+				Config: testAccDomainSAMLOptionsConfig(rUserName, rName, idpEntityId),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckESDomainExists(esDomainResourceName, &domain),
+					testAccCheckDomainExists(esDomainResourceName, &domain),
 					testAccCheckESDomainSAMLOptions(esDomainResourceName, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "saml_options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "saml_options.0.enabled", "true"),
@@ -66,7 +66,7 @@ func TestAccElasticsearchDomainSamlOptions_disappears(t *testing.T) {
 		CheckDestroy: testAccCheckESDomainSAMLOptionsDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccESDomainSAMLOptionsConfig(rUserName, rName, idpEntityId),
+				Config: testAccDomainSAMLOptionsConfig(rUserName, rName, idpEntityId),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckESDomainSAMLOptions(esDomainResourceName, resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfelasticsearch.ResourceDomainSAMLOptions(), resourceName),
@@ -91,7 +91,7 @@ func TestAccElasticsearchDomainSamlOptions_disappears_Domain(t *testing.T) {
 		CheckDestroy: testAccCheckESDomainSAMLOptionsDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccESDomainSAMLOptionsConfig(rUserName, rName, idpEntityId),
+				Config: testAccDomainSAMLOptionsConfig(rUserName, rName, idpEntityId),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckESDomainSAMLOptions(esDomainResourceName, resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfelasticsearch.ResourceDomain(), esDomainResourceName),
@@ -117,7 +117,7 @@ func TestAccElasticsearchDomainSamlOptions_Update(t *testing.T) {
 		CheckDestroy: testAccCheckESDomainSAMLOptionsDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccESDomainSAMLOptionsConfig(rUserName, rName, idpEntityId),
+				Config: testAccDomainSAMLOptionsConfig(rUserName, rName, idpEntityId),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "saml_options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "saml_options.0.session_timeout_minutes", "60"),
@@ -125,7 +125,7 @@ func TestAccElasticsearchDomainSamlOptions_Update(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccESDomainSAMLOptionsConfigUpdate(rUserName, rName, idpEntityId),
+				Config: testAccDomainSAMLOptionsConfigUpdate(rUserName, rName, idpEntityId),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "saml_options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "saml_options.0.session_timeout_minutes", "180"),
@@ -151,7 +151,7 @@ func TestAccElasticsearchDomainSamlOptions_Disabled(t *testing.T) {
 		CheckDestroy: testAccCheckESDomainSAMLOptionsDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccESDomainSAMLOptionsConfig(rUserName, rName, idpEntityId),
+				Config: testAccDomainSAMLOptionsConfig(rUserName, rName, idpEntityId),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "saml_options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "saml_options.0.session_timeout_minutes", "60"),
@@ -159,7 +159,7 @@ func TestAccElasticsearchDomainSamlOptions_Disabled(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccESDomainSAMLOptionsConfigDisabled(rUserName, rName),
+				Config: testAccDomainSAMLOptionsConfigDisabled(rUserName, rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "saml_options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "saml_options.0.session_timeout_minutes", "0"),
@@ -224,7 +224,7 @@ func testAccCheckESDomainSAMLOptions(esResource string, samlOptionsResource stri
 	}
 }
 
-func testAccESDomainSAMLOptionsConfig(userName, domainName, idpEntityId string) string {
+func testAccDomainSAMLOptionsConfig(userName, domainName, idpEntityId string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_user" "es_master_user" {
   name = %[1]q
@@ -281,7 +281,7 @@ resource "aws_elasticsearch_domain_saml_options" "main" {
 `, userName, domainName, idpEntityId)
 }
 
-func testAccESDomainSAMLOptionsConfigUpdate(userName, domainName, idpEntityId string) string {
+func testAccDomainSAMLOptionsConfigUpdate(userName, domainName, idpEntityId string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_user" "es_master_user" {
   name = %[1]q
@@ -339,7 +339,7 @@ resource "aws_elasticsearch_domain_saml_options" "main" {
 `, userName, domainName, idpEntityId)
 }
 
-func testAccESDomainSAMLOptionsConfigDisabled(userName string, domainName string) string {
+func testAccDomainSAMLOptionsConfigDisabled(userName string, domainName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_user" "es_master_user" {
   name = "%s"
