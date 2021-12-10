@@ -90,7 +90,7 @@ resource "aws_elasticsearch_domain" "example" {
   elasticsearch_version = "2.3"
 
   cluster_config {
-    instance_type = "t2.micro.elasticsearch"
+    instance_type = "t2.small.elasticsearch" # supported in both aws and aws-us-gov
   }
 
   ebs_options {
