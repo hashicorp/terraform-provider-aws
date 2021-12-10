@@ -1,4 +1,4 @@
-## 3.69.0 (Unreleased)
+## 3.69.0 (December 09, 2021)
 
 FEATURES:
 
