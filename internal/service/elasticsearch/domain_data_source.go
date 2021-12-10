@@ -8,8 +8,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func DataSourceDomain() *schema.Resource {
@@ -369,7 +369,7 @@ func dataSourceDomainRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("access_policies", policies)
 	}
 
-	if err := d.Set("advanced_options", verify.PointersMapToStringList(ds.AdvancedOptions)); err != nil {
+	if err := d.Set("advanced_options", flex.PointersMapToStringList(ds.AdvancedOptions)); err != nil {
 		return fmt.Errorf("error setting advanced_options: %w", err)
 	}
 
@@ -396,11 +396,11 @@ func dataSourceDomainRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error setting encryption_at_rest: %w", err)
 	}
 
-	if err := d.Set("node_to_node_encryption", flattenESNodeToNodeEncryptionOptions(ds.NodeToNodeEncryptionOptions)); err != nil {
+	if err := d.Set("node_to_node_encryption", flattenNodeToNodeEncryptionOptions(ds.NodeToNodeEncryptionOptions)); err != nil {
 		return fmt.Errorf("error setting node_to_node_encryption: %w", err)
 	}
 
-	if err := d.Set("cluster_config", flattenESClusterConfig(ds.ElasticsearchClusterConfig)); err != nil {
+	if err := d.Set("cluster_config", flattenClusterConfig(ds.ElasticsearchClusterConfig)); err != nil {
 		return fmt.Errorf("error setting cluster_config: %w", err)
 	}
 
@@ -413,7 +413,7 @@ func dataSourceDomainRead(d *schema.ResourceData, meta interface{}) error {
 			return fmt.Errorf("error setting vpc_options: %w", err)
 		}
 
-		endpoints := verify.PointersMapToStringList(ds.Endpoints)
+		endpoints := flex.PointersMapToStringList(ds.Endpoints)
 		if err := d.Set("endpoint", endpoints["vpc"]); err != nil {
 			return fmt.Errorf("error setting endpoint: %w", err)
 		}
