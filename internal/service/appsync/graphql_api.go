@@ -674,9 +674,9 @@ func flattenAppsyncGraphqlApiAdditionalAuthenticationProviders(additionalAuthent
 	for i, provider := range additionalAuthenticationProviders {
 		result[i] = map[string]interface{}{
 			"authentication_type":      aws.StringValue(provider.AuthenticationType),
+			"lambda_authorizer_config": flattenAppsyncGraphqlApiLambdaAuthorizerConfig(provider.LambdaAuthorizerConfig),
 			"openid_connect_config":    flattenAppsyncGraphqlApiOpenIDConnectConfig(provider.OpenIDConnectConfig),
 			"user_pool_config":         flattenAppsyncGraphqlApiCognitoUserPoolConfig(provider.UserPoolConfig),
-			"lambda_authorizer_config": flattenAppsyncGraphqlApiLambdaAuthorizerConfig(provider.LambdaAuthorizerConfig),
 		}
 	}
 
