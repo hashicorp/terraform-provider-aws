@@ -385,7 +385,7 @@ func resourceBucketObjectRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("content_encoding", resp.ContentEncoding)
 	d.Set("content_language", resp.ContentLanguage)
 	d.Set("content_type", resp.ContentType)
-	metadata := verify.PointersMapToStringList(resp.Metadata)
+	metadata := flex.PointersMapToStringList(resp.Metadata)
 
 	// AWS Go SDK capitalizes metadata, this is a workaround. https://github.com/aws/aws-sdk-go/issues/445
 	for k, v := range metadata {

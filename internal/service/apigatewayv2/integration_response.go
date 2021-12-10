@@ -12,7 +12,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceIntegrationResponse() *schema.Resource {
@@ -109,7 +108,7 @@ func resourceIntegrationResponseRead(d *schema.ResourceData, meta interface{}) e
 
 	d.Set("content_handling_strategy", resp.ContentHandlingStrategy)
 	d.Set("integration_response_key", resp.IntegrationResponseKey)
-	err = d.Set("response_templates", verify.PointersMapToStringList(resp.ResponseTemplates))
+	err = d.Set("response_templates", flex.PointersMapToStringList(resp.ResponseTemplates))
 	if err != nil {
 		return fmt.Errorf("error setting response_templates: %s", err)
 	}

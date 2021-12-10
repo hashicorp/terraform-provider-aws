@@ -294,7 +294,7 @@ func resourceStageRead(d *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		return fmt.Errorf("error setting route_settings: %s", err)
 	}
-	err = d.Set("stage_variables", verify.PointersMapToStringList(resp.StageVariables))
+	err = d.Set("stage_variables", flex.PointersMapToStringList(resp.StageVariables))
 	if err != nil {
 		return fmt.Errorf("error setting stage_variables: %s", err)
 	}
