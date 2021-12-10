@@ -1,4 +1,10 @@
 ## 3.70.0 (Unreleased)
+
+FEATURES:
+
+* **New Data Source:** `aws_connect_bot_association` ([#21097](https://github.com/hashicorp/terraform-provider-aws/issues/21097))
+* **New Resource:** `aws_connect_bot_association` ([#21097](https://github.com/hashicorp/terraform-provider-aws/issues/21097))
+
 ## 3.69.0 (December 09, 2021)
 
 FEATURES:
