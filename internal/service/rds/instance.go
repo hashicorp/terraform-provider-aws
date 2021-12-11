@@ -845,15 +845,14 @@ func resourceInstanceCreate(d *schema.ResourceData, meta interface{}) error {
 			_, err = conn.RestoreDBInstanceFromS3(&opts)
 		}
 		if err != nil {
-			return fmt.Errorf("Error creating DB Instance: %s", err)
+			return fmt.Errorf("Error creating DB Instance: %w", err)
 		}
 
 		d.SetId(identifier)
 
 		log.Printf("[INFO] DB Instance ID: %s", d.Id())
 
-		log.Println(
-			"[INFO] Waiting for DB Instance to be available")
+		log.Println("[INFO] Waiting for DB Instance to be available")
 
 		stateConf := &resource.StateChangeConf{
 			Pending:    resourceInstanceCreatePendingStates,
@@ -1063,7 +1062,7 @@ func resourceInstanceCreate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		if err != nil {
-			return fmt.Errorf("Error creating DB Instance: %s", err)
+			return fmt.Errorf("Error creating DB Instance: %w", err)
 		}
 	} else if v, ok := d.GetOk("restore_to_point_in_time"); ok {
 		if input := expandRestoreToPointInTime(v.([]interface{})); input != nil {
@@ -1323,9 +1322,9 @@ func resourceInstanceCreate(d *schema.ResourceData, meta interface{}) error {
 		if err != nil {
 			if tfawserr.ErrMessageContains(err, "InvalidParameterValue", "") {
 				opts.MasterUserPassword = aws.String("********")
-				return fmt.Errorf("Error creating DB Instance: %s, %+v", err, opts)
+				return fmt.Errorf("Error creating DB Instance: %w, %+v", err, opts)
 			}
-			return fmt.Errorf("Error creating DB Instance: %s", err)
+			return fmt.Errorf("Error creating DB Instance: %w", err)
 		}
 		// This is added here to avoid unnecessary modification when ca_cert_identifier is the default one
 		if attr, ok := d.GetOk("ca_cert_identifier"); ok && attr.(string) != aws.StringValue(createdDBInstanceOutput.DBInstance.CACertificateIdentifier) {
@@ -1357,13 +1356,13 @@ func resourceInstanceCreate(d *schema.ResourceData, meta interface{}) error {
 		log.Printf("[INFO] DB Instance (%s) configuration requires ModifyDBInstance: %s", d.Id(), modifyDbInstanceInput)
 		_, err := conn.ModifyDBInstance(modifyDbInstanceInput)
 		if err != nil {
-			return fmt.Errorf("error modifying DB Instance (%s): %s", d.Id(), err)
+			return fmt.Errorf("error modifying DB Instance (%s): %w", d.Id(), err)
 		}
 
 		log.Printf("[INFO] Waiting for DB Instance (%s) to be available", d.Id())
 		err = waitUntilDBInstanceAvailableAfterUpdate(d.Id(), conn, d.Timeout(schema.TimeoutUpdate))
 		if err != nil {
-			return fmt.Errorf("error waiting for DB Instance (%s) to be available: %s", d.Id(), err)
+			return fmt.Errorf("error waiting for DB Instance (%s) to be available: %w", d.Id(), err)
 		}
 	}
 
@@ -1375,13 +1374,13 @@ func resourceInstanceCreate(d *schema.ResourceData, meta interface{}) error {
 		log.Printf("[INFO] DB Instance (%s) configuration requires RebootDBInstance: %s", d.Id(), rebootDbInstanceInput)
 		_, err := conn.RebootDBInstance(rebootDbInstanceInput)
 		if err != nil {
-			return fmt.Errorf("error rebooting DB Instance (%s): %s", d.Id(), err)
+			return fmt.Errorf("error rebooting DB Instance (%s): %w", d.Id(), err)
 		}
 
 		log.Printf("[INFO] Waiting for DB Instance (%s) to be available", d.Id())
 		err = waitUntilDBInstanceAvailableAfterUpdate(d.Id(), conn, d.Timeout(schema.TimeoutUpdate))
 		if err != nil {
-			return fmt.Errorf("error waiting for DB Instance (%s) to be available: %s", d.Id(), err)
+			return fmt.Errorf("error waiting for DB Instance (%s) to be available: %w", d.Id(), err)
 		}
 	}
 
@@ -1466,7 +1465,7 @@ func resourceInstanceRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("monitoring_role_arn", v.MonitoringRoleArn)
 
 	if err := d.Set("enabled_cloudwatch_logs_exports", flex.FlattenStringList(v.EnabledCloudwatchLogsExports)); err != nil {
-		return fmt.Errorf("error setting enabled_cloudwatch_logs_exports: %s", err)
+		return fmt.Errorf("error setting enabled_cloudwatch_logs_exports: %w", err)
 	}
 
 	d.Set("domain", "")
@@ -1482,7 +1481,7 @@ func resourceInstanceRead(d *schema.ResourceData, meta interface{}) error {
 	tags, err := ListTags(conn, d.Get("arn").(string))
 
 	if err != nil {
-		return fmt.Errorf("error listing tags for RDS DB Instance (%s): %s", d.Get("arn").(string), err)
+		return fmt.Errorf("error listing tags for RDS DB Instance (%s): %w", d.Get("arn").(string), err)
 	}
 
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
@@ -1791,13 +1790,13 @@ func resourceInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		if err != nil {
-			return fmt.Errorf("Error modifying DB Instance %s: %s", d.Id(), err)
+			return fmt.Errorf("Error modifying DB Instance %s: %w", d.Id(), err)
 		}
 
 		log.Printf("[DEBUG] Waiting for DB Instance (%s) to be available", d.Id())
 		err = waitUntilDBInstanceAvailableAfterUpdate(d.Id(), conn, d.Timeout(schema.TimeoutUpdate))
 		if err != nil {
-			return fmt.Errorf("error waiting for DB Instance (%s) to be available: %s", d.Id(), err)
+			return fmt.Errorf("error waiting for DB Instance (%s) to be available: %w", d.Id(), err)
 		}
 	}
 
@@ -1827,7 +1826,7 @@ func resourceInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 		o, n := d.GetChange("tags_all")
 
 		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("error updating RDS DB Instance (%s) tags: %s", d.Get("arn").(string), err)
+			return fmt.Errorf("error updating RDS DB Instance (%s) tags: %w", d.Get("arn").(string), err)
 		}
 
 	}
@@ -1851,7 +1850,7 @@ func resourceInstanceRetrieve(id string, conn *rds.RDS) (*rds.DBInstance, error)
 		if tfawserr.ErrMessageContains(err, rds.ErrCodeDBInstanceNotFoundFault, "") {
 			return nil, nil
 		}
-		return nil, fmt.Errorf("Error retrieving DB Instances: %s", err)
+		return nil, fmt.Errorf("Error retrieving DB Instances: %w", err)
 	}
 
 	if len(resp.DBInstances) != 1 || resp.DBInstances[0] == nil || aws.StringValue(resp.DBInstances[0].DBInstanceIdentifier) != id {
