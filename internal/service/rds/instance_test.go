@@ -7350,11 +7350,6 @@ resource "aws_db_instance" "test" {
   identifier          = %[1]q
   instance_class      = aws_db_instance.source.instance_class
   skip_final_snapshot = true
-
-//   allocated_storage   = 5
-//   engine              = data.aws_rds_orderable_db_instance.test.engine
-//   password            = "avoid-plaintext-passwords"
-//   username            = "tfacctest"
 }
 `, rName))
 }
