@@ -518,18 +518,7 @@ func resourceInstanceCreate(d *schema.ResourceData, meta interface{}) error {
 	// we expect everything to be in sync before returning completion.
 	var requiresRebootDbInstance bool
 
-	var identifier string
-	if v, ok := d.GetOk("identifier"); ok {
-		identifier = v.(string)
-	} else {
-		if v, ok := d.GetOk("identifier_prefix"); ok {
-			identifier = resource.PrefixedUniqueId(v.(string))
-		} else {
-			identifier = resource.UniqueId()
-		}
-
-		d.Set("identifier", identifier)
-	}
+	identifier := create.Name(d.Get("identifier").(string), d.Get("identifier_prefix").(string))
 
 	if v, ok := d.GetOk("replicate_source_db"); ok {
 		opts := rds.CreateDBInstanceReadReplicaInput{
@@ -725,7 +714,7 @@ func resourceInstanceCreate(d *schema.ResourceData, meta interface{}) error {
 			CopyTagsToSnapshot:      aws.Bool(d.Get("copy_tags_to_snapshot").(bool)),
 			DBName:                  aws.String(d.Get("name").(string)),
 			DBInstanceClass:         aws.String(d.Get("instance_class").(string)),
-			DBInstanceIdentifier:    aws.String(d.Get("identifier").(string)),
+			DBInstanceIdentifier:    aws.String(identifier),
 			DeletionProtection:      aws.Bool(d.Get("deletion_protection").(bool)),
 			Engine:                  aws.String(d.Get("engine").(string)),
 			EngineVersion:           aws.String(d.Get("engine_version").(string)),
@@ -859,7 +848,7 @@ func resourceInstanceCreate(d *schema.ResourceData, meta interface{}) error {
 			return fmt.Errorf("Error creating DB Instance: %s", err)
 		}
 
-		d.SetId(d.Get("identifier").(string))
+		d.SetId(identifier)
 
 		log.Printf("[INFO] DB Instance ID: %s", d.Id())
 
@@ -887,7 +876,7 @@ func resourceInstanceCreate(d *schema.ResourceData, meta interface{}) error {
 			AutoMinorVersionUpgrade: aws.Bool(d.Get("auto_minor_version_upgrade").(bool)),
 			CopyTagsToSnapshot:      aws.Bool(d.Get("copy_tags_to_snapshot").(bool)),
 			DBInstanceClass:         aws.String(d.Get("instance_class").(string)),
-			DBInstanceIdentifier:    aws.String(d.Get("identifier").(string)),
+			DBInstanceIdentifier:    aws.String(identifier),
 			DBSnapshotIdentifier:    aws.String(d.Get("snapshot_identifier").(string)),
 			DeletionProtection:      aws.Bool(d.Get("deletion_protection").(bool)),
 			PubliclyAccessible:      aws.Bool(d.Get("publicly_accessible").(bool)),
@@ -1084,7 +1073,7 @@ func resourceInstanceCreate(d *schema.ResourceData, meta interface{}) error {
 			input.DeletionProtection = aws.Bool(d.Get("deletion_protection").(bool))
 			input.PubliclyAccessible = aws.Bool(d.Get("publicly_accessible").(bool))
 			input.Tags = Tags(tags.IgnoreAWS())
-			input.TargetDBInstanceIdentifier = aws.String(d.Get("identifier").(string))
+			input.TargetDBInstanceIdentifier = aws.String(identifier)
 
 			if v, ok := d.GetOk("availability_zone"); ok {
 				input.AvailabilityZone = aws.String(v.(string))
@@ -1187,7 +1176,7 @@ func resourceInstanceCreate(d *schema.ResourceData, meta interface{}) error {
 			AllocatedStorage:        aws.Int64(int64(d.Get("allocated_storage").(int))),
 			DBName:                  aws.String(d.Get("name").(string)),
 			DBInstanceClass:         aws.String(d.Get("instance_class").(string)),
-			DBInstanceIdentifier:    aws.String(d.Get("identifier").(string)),
+			DBInstanceIdentifier:    aws.String(identifier),
 			DeletionProtection:      aws.Bool(d.Get("deletion_protection").(bool)),
 			MasterUsername:          aws.String(d.Get("username").(string)),
 			MasterUserPassword:      aws.String(d.Get("password").(string)),
@@ -1345,7 +1334,7 @@ func resourceInstanceCreate(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	d.SetId(d.Get("identifier").(string))
+	d.SetId(identifier)
 
 	stateConf := &resource.StateChangeConf{
 		Pending:    resourceInstanceCreatePendingStates,
