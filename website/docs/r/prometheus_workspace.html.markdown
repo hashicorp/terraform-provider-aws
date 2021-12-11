@@ -36,7 +36,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-AMP Workspaces can be imported using the identifier, e.g.
+AMP Workspaces can be imported using the identifier, e.g.,
 
 ```
 $ terraform import aws_prometheus_workspace.demo ws-C6DCB907-F2D7-4D96-957B-66691F865D8B

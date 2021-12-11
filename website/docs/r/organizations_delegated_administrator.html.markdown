@@ -41,7 +41,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-`aws_organizations_delegated_administrator` can be imported by using the account ID and its service principal, e.g.
+`aws_organizations_delegated_administrator` can be imported by using the account ID and its service principal, e.g.,
 
 ```
 $ terraform import aws_organizations_delegated_administrator.example 123456789012/config.amazonaws.com

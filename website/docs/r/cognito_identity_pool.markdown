@@ -76,7 +76,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Cognito Identity Pool can be imported using the name, e.g.
+Cognito Identity Pool can be imported using the name, e.g.,
 
 ```
 $ terraform import aws_cognito_identity_pool.mypool <identity-pool-id>

@@ -39,7 +39,7 @@ data "aws_ami" "example" {
 
 ## Argument Reference
 
-* `owners` - (Required) List of AMI owners to limit search. At least 1 value must be specified. Valid values: an AWS account ID, `self` (the current account), or an AWS owner alias (e.g. `amazon`, `aws-marketplace`, `microsoft`).
+* `owners` - (Required) List of AMI owners to limit search. At least 1 value must be specified. Valid values: an AWS account ID, `self` (the current account), or an AWS owner alias (e.g., `amazon`, `aws-marketplace`, `microsoft`).
 
 * `most_recent` - (Optional) If more than one result is returned, use the most
 recent AMI.
@@ -74,7 +74,7 @@ interpolation.
 * `architecture` - The OS architecture of the AMI (ie: `i386` or `x86_64`).
 * `block_device_mappings` - Set of objects with block device mappings of the AMI.
     * `device_name` - The physical name of the device.
-    * `ebs` - Map containing EBS information, if the device is EBS based. Unlike most object attributes, these are accessed directly (e.g. `ebs.volume_size` or `ebs["volume_size"]`) rather than accessed through the first element of a list (e.g. `ebs[0].volume_size`).
+    * `ebs` - Map containing EBS information, if the device is EBS based. Unlike most object attributes, these are accessed directly (e.g., `ebs.volume_size` or `ebs["volume_size"]`) rather than accessed through the first element of a list (e.g., `ebs[0].volume_size`).
         * `delete_on_termination` - `true` if the EBS volume will be deleted on termination.
         * `encrypted` - `true` if the EBS volume is encrypted.
         * `iops` - `0` if the EBS volume is not a provisioned IOPS image, otherwise the supported IOPS count.

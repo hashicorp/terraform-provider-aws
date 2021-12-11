@@ -123,7 +123,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Service Discovery Service can be imported using the service ID, e.g.
+Service Discovery Service can be imported using the service ID, e.g.,
 
 ```
 $ terraform import aws_service_discovery_service.example 0123456789

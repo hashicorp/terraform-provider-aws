@@ -52,7 +52,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-DB proxy endpoints can be imported using the `DB-PROXY-NAME/DB-PROXY-ENDPOINT-NAME`, e.g.
+DB proxy endpoints can be imported using the `DB-PROXY-NAME/DB-PROXY-ENDPOINT-NAME`, e.g.,
 
 ```
 $ terraform import aws_db_proxy_endpoint.example example/example

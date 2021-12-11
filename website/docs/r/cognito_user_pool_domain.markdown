@@ -74,7 +74,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Cognito User Pool Domains can be imported using the `domain`, e.g.
+Cognito User Pool Domains can be imported using the `domain`, e.g.,
 
 ```
 $ terraform import aws_cognito_user_pool_domain.main <domain>

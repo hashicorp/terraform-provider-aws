@@ -73,7 +73,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Route53 Recovery Control Config Safety Rule can be imported via the safety rule ARN, e.g.
+Route53 Recovery Control Config Safety Rule can be imported via the safety rule ARN, e.g.,
 
 ```
 $ terraform import aws_route53recoverycontrolconfig_safety_rule.myrule arn:aws:route53-recovery-control::313517334327:controlpanel/1bfba17df8684f5dab0467b71424f7e8/safetyrule/3bacc77003364c0f

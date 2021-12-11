@@ -56,7 +56,7 @@ The following arguments are supported:
 
 When `virtualization_type` is "paravirtual" the following additional arguments apply:
 
-* `image_location` - (Required) Path to an S3 object containing an image manifest, e.g. created
+* `image_location` - (Required) Path to an S3 object containing an image manifest, e.g., created
   by the `ec2-upload-bundle` command in the EC2 command line tools.
 * `kernel_id` - (Required) The id of the kernel image (AKI) that will be used as the paravirtual
   kernel in created instances.
@@ -124,7 +124,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-`aws_ami` can be imported using the ID of the AMI, e.g.
+`aws_ami` can be imported using the ID of the AMI, e.g.,
 
 ```
 $ terraform import aws_ami.example ami-12345678

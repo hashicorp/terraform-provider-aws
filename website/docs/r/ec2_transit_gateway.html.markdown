@@ -44,7 +44,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-`aws_ec2_transit_gateway` can be imported by using the EC2 Transit Gateway identifier, e.g.
+`aws_ec2_transit_gateway` can be imported by using the EC2 Transit Gateway identifier, e.g.,
 
 ```
 $ terraform import aws_ec2_transit_gateway.example tgw-12345678

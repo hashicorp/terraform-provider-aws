@@ -55,10 +55,12 @@ The following arguments are supported:
 
 * `default_resource_spec` - (Optional) The default instance type and the Amazon Resource Name (ARN) of the SageMaker image created on the instance. see [Default Resource Spec](#default-resource-spec) below.
 * `custom_image` - (Optional) A list of custom SageMaker images that are configured to run as a KernelGateway app. see [Custom Image](#custom-image) below.
+* `lifecycle_config_arns` - (Optional) The Amazon Resource Name (ARN) of the Lifecycle Configurations.
 
 #### Jupyter Server App Settings
 
 * `default_resource_spec` - (Optional) The default instance type and the Amazon Resource Name (ARN) of the SageMaker image created on the instance. see [Default Resource Spec](#default-resource-spec) below.
+* `lifecycle_config_arns` - (Optional) The Amazon Resource Name (ARN) of the Lifecycle Configurations.
 
 ##### Default Resource Spec
 
@@ -82,7 +84,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Sagemaker Code User Profiles can be imported using the `arn`, e.g.
+Sagemaker Code User Profiles can be imported using the `arn`, e.g.,
 
 ```
 $ terraform import aws_sagemaker_user_profile.test_user_profile arn:aws:sagemaker:us-west-2:123456789012:user-profile/domain-id/profile-name

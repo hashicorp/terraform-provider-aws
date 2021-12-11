@@ -275,7 +275,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-SNS Topic Subscriptions can be imported using the `subscription arn`, e.g.
+SNS Topic Subscriptions can be imported using the `subscription arn`, e.g.,
 
 ```
 $ terraform import aws_sns_topic_subscription.user_updates_sqs_target arn:aws:sns:us-west-2:0123456789012:my-topic:8a21d249-4329-4871-acc6-7be709c6ea7f

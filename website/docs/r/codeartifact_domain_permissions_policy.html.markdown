@@ -58,7 +58,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-CodeArtifact Domain Permissions Policies can be imported using the CodeArtifact Domain ARN, e.g.
+CodeArtifact Domain Permissions Policies can be imported using the CodeArtifact Domain ARN, e.g.,
 
 ```
 $ terraform import aws_codeartifact_domain_permissions_policy.example arn:aws:codeartifact:us-west-2:012345678912:domain/tf-acc-test-1928056699409417367
