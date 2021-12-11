@@ -333,6 +333,7 @@ func TestAccDynamoDBTable_basic(t *testing.T) {
 				Config: testAccConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInitialTableExists(resourceName, &conf),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "dynamodb", fmt.Sprintf("table/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "read_capacity", "1"),
 					resource.TestCheckResourceAttr(resourceName, "write_capacity", "1"),
