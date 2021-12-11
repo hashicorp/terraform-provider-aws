@@ -12,9 +12,35 @@ Provides an Elastic Container Registry Scanning Configuration. Can't be deleted.
 
 ## Example Usage
 
+### Basic example
+
 ```terraform
 resource "aws_ecr_registry_scanning_configuration" "configuration" {
   scan_type = "ENHANCED"
+
+  rule {
+    scan_frequency = "CONTINUOUS_SCAN"
+    repository_filter {
+      filter      = "example"
+      filter_type = "WILDCARD"
+    }
+  }
+}
+```
+
+### Multiple rules
+
+```terraform
+resource "aws_ecr_registry_scanning_configuration" "test" {
+  scan_type = "ENHANCED"
+
+  rule {
+    scan_frequency = "SCAN_ON_PUSH"
+    repository_filter {
+      filter      = "*"
+      filter_type = "WILDCARD"
+    }
+  }
 
   rule {
     scan_frequency = "CONTINUOUS_SCAN"
