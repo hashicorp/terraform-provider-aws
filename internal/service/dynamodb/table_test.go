@@ -1460,7 +1460,7 @@ func TestAccDynamoDBTable_tableClassInfrequentAccess(t *testing.T) {
 func TestAccDynamoDBTable_backup_encryption(t *testing.T) {
 	var confBYOK dynamodb.DescribeTableOutput
 	resourceName := "aws_dynamodb_table.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	kmsKeyResourceName := "aws_kms_key.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -1495,7 +1495,7 @@ func TestAccDynamoDBTable_backup_encryption(t *testing.T) {
 func TestAccDynamoDBTable_backup_overrideEncryption(t *testing.T) {
 	var confBYOK dynamodb.DescribeTableOutput
 	resourceName := "aws_dynamodb_table.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	kmsKeyResourceName := "aws_kms_key.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -2616,14 +2616,13 @@ resource "aws_kms_key" "test" {
 
 resource "aws_dynamodb_table" "test" {
   name                   = "%[1]s-target"
-  restore_source_name    = "%[1]s-source"
+  restore_source_name    = aws_dynamodb_table.source.name
   restore_to_latest_time = true
 
   server_side_encryption {
     enabled     = true
     kms_key_arn = aws_kms_key.test.arn
   }
-  depends_on = [aws_dynamodb_table.source]
 }
 `, rName)
 }
@@ -2657,14 +2656,8 @@ resource "aws_kms_key" "test" {
 
 resource "aws_dynamodb_table" "test" {
   name                   = "%[1]s-target"
-  restore_source_name    = "%[1]s-source"
+  restore_source_name    = aws_dynamodb_table.source.name
   restore_to_latest_time = true
-
-  server_side_encryption {
-    enabled     = true
-    kms_key_arn = aws_kms_key.test.arn
-  }
-  depends_on = [aws_dynamodb_table.source]
 }
 `, rName)
 }
