@@ -361,8 +361,6 @@ func resourceTableCreate(d *schema.ResourceData, meta interface{}) error {
 		keySchemaMap["range_key"] = v.(string)
 	}
 
-	var requiresTagging bool
-
 	log.Printf("[DEBUG] Creating DynamoDB table with key schema: %#v", keySchemaMap)
 
 	if _, ok := d.GetOk("restore_source_name"); ok {
@@ -435,12 +433,6 @@ func resourceTableCreate(d *schema.ResourceData, meta interface{}) error {
 					return resource.RetryableError(err)
 				}
 				if tfawserr.ErrMessageContains(err, dynamodb.ErrCodeLimitExceededException, "indexed tables that can be created simultaneously") {
-					return resource.RetryableError(err)
-				}
-				// AWS GovCloud (US) and others may reply with the following until their API is updated:
-				// ValidationException: One or more parameter values were invalid: Unsupported input parameter BillingMode
-				if tfawserr.ErrMessageContains(err, "ValidationException", "Unsupported input parameter BillingMode") {
-					req.BillingModeOverride = nil
 					return resource.RetryableError(err)
 				}
 
@@ -537,19 +529,6 @@ func resourceTableCreate(d *schema.ResourceData, meta interface{}) error {
 				if tfawserr.ErrMessageContains(err, dynamodb.ErrCodeLimitExceededException, "indexed tables that can be created simultaneously") {
 					return resource.RetryableError(err)
 				}
-				// AWS GovCloud (US) and others may reply with the following until their API is updated:
-				// ValidationException: One or more parameter values were invalid: Unsupported input parameter BillingMode
-				if tfawserr.ErrMessageContains(err, "ValidationException", "Unsupported input parameter BillingMode") {
-					req.BillingMode = nil
-					return resource.RetryableError(err)
-				}
-				// AWS GovCloud (US) and others may reply with the following until their API is updated:
-				// ValidationException: Unsupported input parameter Tags
-				if tfawserr.ErrMessageContains(err, "ValidationException", "Unsupported input parameter Tags") {
-					req.Tags = nil
-					requiresTagging = true
-					return resource.RetryableError(err)
-				}
 
 				return resource.NonRetryableError(err)
 			}
@@ -573,12 +552,6 @@ func resourceTableCreate(d *schema.ResourceData, meta interface{}) error {
 
 	if _, err := waitDynamoDBTableActive(conn, d.Id()); err != nil {
 		return fmt.Errorf("error waiting for creation of DynamoDB table (%s): %w", d.Id(), err)
-	}
-
-	if requiresTagging {
-		if err := UpdateTags(conn, d.Get("arn").(string), nil, tags); err != nil {
-			return fmt.Errorf("error adding DynamoDB Table (%s) tags: %w", d.Id(), err)
-		}
 	}
 
 	if d.Get("ttl.0.enabled").(bool) {
