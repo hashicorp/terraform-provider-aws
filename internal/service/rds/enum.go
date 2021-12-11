@@ -29,6 +29,7 @@ const (
 	InstanceStatusCreating                      = "creating"
 	InstanceStatusDeleting                      = "deleting"
 	InstanceStatusIncompatibleParameters        = "incompatible-parameters"
+	InstanceStatusIncompatibleRestore           = "incompatible-restore"
 	InstanceStatusModifying                     = "modifying"
 	InstanceStatusStarting                      = "starting"
 	InstanceStatusStopping                      = "stopping"

@@ -1499,11 +1499,13 @@ func TestAccRDSInstance_ReplicateSourceDB_parameterGroupTwoStep(t *testing.T) {
 	})
 }
 
-func TestAccRDSInstance_s3Import(t *testing.T) {
+func TestAccRDSInstance_s3Import_basic(t *testing.T) {
 	var snap rds.DBInstance
 	bucket := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	uniqueId := sdkacctest.RandomWithPrefix("tf-acc-s3-import-test")
 	bucketPrefix := sdkacctest.RandString(5)
+
+	const resourceName = "aws_db_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -1512,10 +1514,87 @@ func TestAccRDSInstance_s3Import(t *testing.T) {
 		CheckDestroy: testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceConfig_S3Import(bucket, bucketPrefix, uniqueId),
+				Config: testAccInstanceConfig_S3Import_basic(bucket, bucketPrefix, uniqueId),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceExists("aws_db_instance.s3", &snap),
+					testAccCheckInstanceExists(resourceName, &snap),
+					resource.TestCheckResourceAttr(resourceName, "identifier", uniqueId),
+					resource.TestCheckResourceAttr(resourceName, "identifier_prefix", ""),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"password",
+				},
+			},
+		},
+	})
+}
+
+func TestAccRDSInstance_s3Import_namePrefix(t *testing.T) {
+	var snap rds.DBInstance
+	const identifierPrefix = "tf-acc-test-prefix-"
+	bucket := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	bucketPrefix := sdkacctest.RandString(5)
+
+	const resourceName = "aws_db_instance.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_S3Import_namePrefix(bucket, bucketPrefix, identifierPrefix),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(resourceName, &snap),
+					create.TestCheckResourceAttrNameFromPrefix(resourceName, "identifier", identifierPrefix),
+					resource.TestCheckResourceAttr(resourceName, "identifier_prefix", identifierPrefix),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"password",
+				},
+			},
+		},
+	})
+}
+
+func TestAccRDSInstance_s3Import_nameGenerated(t *testing.T) {
+	var snap rds.DBInstance
+	bucket := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	bucketPrefix := sdkacctest.RandString(5)
+
+	const resourceName = "aws_db_instance.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_S3Import_nameGenerated(bucket, bucketPrefix),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(resourceName, &snap),
+					create.TestCheckResourceAttrNameGenerated(resourceName, "identifier"),
+					resource.TestCheckResourceAttr(resourceName, "identifier_prefix", resource.UniqueIdPrefix),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"password",
+				},
 			},
 		},
 	})
@@ -4182,8 +4261,10 @@ resource "aws_db_instance" "snapshot" {
 `, sdkacctest.RandInt()))
 }
 
-func testAccInstanceConfig_S3Import(bucketName string, bucketPrefix string, uniqueId string) string {
-	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
+func testAccInstanceConfig_S3Import_Base(rName, bucketPrefix string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigVpcWithSubnets(2),
+		fmt.Sprintf(`
 resource "aws_s3_bucket" "xtrabackup" {
   bucket = %[1]q
 }
@@ -4198,7 +4279,7 @@ resource "aws_s3_object" "xtrabackup_db" {
 data "aws_partition" "current" {}
 
 resource "aws_iam_role" "rds_s3_access_role" {
-  name = "%[3]s-role"
+  name = "%[1]s-role"
 
   assume_role_policy = <<EOF
 {
@@ -4218,7 +4299,7 @@ EOF
 }
 
 resource "aws_iam_policy" "test" {
-  name = "%[3]s-policy"
+  name = "%[1]s-policy"
 
   policy = <<POLICY
 {
@@ -4240,7 +4321,7 @@ POLICY
 }
 
 resource "aws_iam_policy_attachment" "test-attach" {
-  name = "%[3]s-policy-attachment"
+  name = "%[1]s-policy-attachment"
 
   roles = [
     aws_iam_role.rds_s3_access_role.name,
@@ -4249,38 +4330,9 @@ resource "aws_iam_policy_attachment" "test-attach" {
   policy_arn = aws_iam_policy.test.arn
 }
 
-#  Make sure EVERYTHING required is here...
-resource "aws_vpc" "foo" {
-  cidr_block = "10.1.0.0/16"
-
-  tags = {
-    Name = "terraform-testacc-db-instance-with-subnet-group"
-  }
-}
-
-resource "aws_subnet" "foo" {
-  cidr_block        = "10.1.1.0/24"
-  availability_zone = data.aws_availability_zones.available.names[0]
-  vpc_id            = aws_vpc.foo.id
-
-  tags = {
-    Name = "tf-acc-db-instance-with-subnet-group-1"
-  }
-}
-
-resource "aws_subnet" "bar" {
-  cidr_block        = "10.1.2.0/24"
-  availability_zone = data.aws_availability_zones.available.names[1]
-  vpc_id            = aws_vpc.foo.id
-
-  tags = {
-    Name = "tf-acc-db-instance-with-subnet-group-2"
-  }
-}
-
 resource "aws_db_subnet_group" "foo" {
-  name       = "%[3]s-subnet-group"
-  subnet_ids = [aws_subnet.foo.id, aws_subnet.bar.id]
+  name       = %[1]q
+  subnet_ids = aws_subnet.test[*].id
 
   tags = {
     Name = "tf-dbsubnet-group-test"
@@ -4296,9 +4348,15 @@ data "aws_rds_orderable_db_instance" "test" {
   # instance class db.t2.micro is not supported for restoring from S3
   preferred_instance_classes = ["db.t3.small", "db.t2.small", "db.t2.medium"]
 }
+`, rName, bucketPrefix))
+}
 
-resource "aws_db_instance" "s3" {
-  identifier = "%[3]s-db"
+func testAccInstanceConfig_S3Import_basic(bucketName, bucketPrefix, uniqueId string) string {
+	return acctest.ConfigCompose(
+		testAccInstanceConfig_S3Import_Base(bucketName, bucketPrefix),
+		fmt.Sprintf(`
+resource "aws_db_instance" "test" {
+  identifier = "%[1]s-db"
 
   allocated_storage          = 5
   engine                     = data.aws_rds_orderable_db_instance.test.engine
@@ -4325,7 +4383,75 @@ resource "aws_db_instance" "s3" {
     ingestion_role = aws_iam_role.rds_s3_access_role.arn
   }
 }
-`, bucketName, bucketPrefix, uniqueId))
+`, uniqueId, bucketPrefix))
+}
+
+func testAccInstanceConfig_S3Import_namePrefix(rName, bucketPrefix, identifierPrefix string) string {
+	return acctest.ConfigCompose(
+		testAccInstanceConfig_S3Import_Base(rName, bucketPrefix),
+		fmt.Sprintf(`
+resource "aws_db_instance" "test" {
+  identifier_prefix = %[1]q
+
+  allocated_storage          = 5
+  engine                     = data.aws_rds_orderable_db_instance.test.engine
+  engine_version             = "5.6"
+  auto_minor_version_upgrade = true
+  instance_class             = data.aws_rds_orderable_db_instance.test.instance_class
+  name                       = "baz"
+  password                   = "barbarbarbar"
+  publicly_accessible        = false
+  username                   = "foo"
+  backup_retention_period    = 0
+
+  parameter_group_name = "default.mysql5.6"
+  skip_final_snapshot  = true
+  multi_az             = false
+  db_subnet_group_name = aws_db_subnet_group.foo.id
+
+  s3_import {
+    source_engine         = data.aws_rds_orderable_db_instance.test.engine
+    source_engine_version = "5.6"
+
+    bucket_name    = aws_s3_bucket.xtrabackup.bucket
+    bucket_prefix  = %[2]q
+    ingestion_role = aws_iam_role.rds_s3_access_role.arn
+  }
+}
+`, identifierPrefix, bucketPrefix))
+}
+
+func testAccInstanceConfig_S3Import_nameGenerated(rName, bucketPrefix string) string {
+	return acctest.ConfigCompose(
+		testAccInstanceConfig_S3Import_Base(rName, bucketPrefix),
+		fmt.Sprintf(`
+resource "aws_db_instance" "test" {
+  allocated_storage          = 5
+  engine                     = data.aws_rds_orderable_db_instance.test.engine
+  engine_version             = "5.6"
+  auto_minor_version_upgrade = true
+  instance_class             = data.aws_rds_orderable_db_instance.test.instance_class
+  name                       = "baz"
+  password                   = "barbarbarbar"
+  publicly_accessible        = false
+  username                   = "foo"
+  backup_retention_period    = 0
+
+  parameter_group_name = "default.mysql5.6"
+  skip_final_snapshot  = true
+  multi_az             = false
+  db_subnet_group_name = aws_db_subnet_group.foo.id
+
+  s3_import {
+    source_engine         = data.aws_rds_orderable_db_instance.test.engine
+    source_engine_version = "5.6"
+
+    bucket_name    = aws_s3_bucket.xtrabackup.bucket
+    bucket_prefix  = %[1]q
+    ingestion_role = aws_iam_role.rds_s3_access_role.arn
+  }
+}
+`, bucketPrefix))
 }
 
 func testAccInstanceConfig_FinalSnapshotIdentifier(rInt int) string {
@@ -7119,7 +7245,9 @@ resource "aws_iam_role_policy_attachment" "test" {
 }
 
 func testAccInstanceConfig_SnapshotIdentifier(rName string) string {
-	return acctest.ConfigCompose(testAccInstanceConfig_orderableClassMariadb(), fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		testAccInstanceConfig_orderableClassMariadb(),
+		fmt.Sprintf(`
 resource "aws_db_instance" "source" {
   allocated_storage   = 5
   engine              = data.aws_rds_orderable_db_instance.test.engine
@@ -7200,7 +7328,9 @@ resource "aws_db_instance" "test" {
 }
 
 func testAccInstanceConfig_SnapshotIdentifier_AssociationRemoved(rName string) string {
-	return acctest.ConfigCompose(testAccInstanceConfig_orderableClassMariadb(), fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		testAccInstanceConfig_orderableClassMariadb(),
+		fmt.Sprintf(`
 resource "aws_db_instance" "source" {
   allocated_storage   = 5
   engine              = data.aws_rds_orderable_db_instance.test.engine
