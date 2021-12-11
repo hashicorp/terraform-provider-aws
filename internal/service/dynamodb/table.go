@@ -384,7 +384,7 @@ func resourceTableCreate(d *schema.ResourceData, meta interface{}) error {
 			req.LocalSecondaryIndexOverride = expandDynamoDbLocalSecondaryIndexes(lsiSet.List(), keySchemaMap)
 		}
 
-		BillingModeOverride := d.Get("billing_mode").(string)
+		billingModeOverride := d.Get("billing_mode").(string)
 
 		if _, ok := d.GetOk("write_capacity"); ok {
 			if _, ok := d.GetOk("read_capacity"); ok {
@@ -392,7 +392,7 @@ func resourceTableCreate(d *schema.ResourceData, meta interface{}) error {
 					"write_capacity": d.Get("write_capacity"),
 					"read_capacity":  d.Get("read_capacity"),
 				}
-				req.ProvisionedThroughputOverride = expandDynamoDbProvisionedThroughput(capacityMap, BillingModeOverride)
+				req.ProvisionedThroughputOverride = expandDynamoDbProvisionedThroughput(capacityMap, billingModeOverride)
 			}
 		}
 
@@ -407,11 +407,11 @@ func resourceTableCreate(d *schema.ResourceData, meta interface{}) error {
 
 			for _, gsiObject := range gsiSet.List() {
 				gsi := gsiObject.(map[string]interface{})
-				if err := validateDynamoDbProvisionedThroughput(gsi, BillingModeOverride); err != nil {
+				if err := validateDynamoDbProvisionedThroughput(gsi, billingModeOverride); err != nil {
 					return fmt.Errorf("failed to create GSI: %v", err)
 				}
 
-				gsiObject := expandDynamoDbGlobalSecondaryIndex(gsi, BillingModeOverride)
+				gsiObject := expandDynamoDbGlobalSecondaryIndex(gsi, billingModeOverride)
 				globalSecondaryIndexes = append(globalSecondaryIndexes, gsiObject)
 			}
 			req.GlobalSecondaryIndexOverride = globalSecondaryIndexes
