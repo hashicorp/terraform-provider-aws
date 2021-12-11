@@ -3,12 +3,12 @@ subcategory: "ECR"
 layout: "aws"
 page_title: "AWS: aws_ecr_registry_scanning_configuration"
 description: |-
-  Provides an Elastic Container Registry Repository.
+  Provides an Elastic Container Registry Scanning Configuration.
 ---
 
 # Resource: aws_ecr_registry_scanning_configuration
 
-Provides an Elastic Container Registry Scanning Configuration. Can't be deleted.
+Provides an Elastic Container Registry Scanning Configuration. Can't be completely deleted, instead reverts to the default `BASIC` scanning configuration without rules.
 
 ## Example Usage
 
@@ -68,8 +68,7 @@ The following arguments are supported:
 
 In addition to all arguments above, the following attributes are exported:
 
-- `registry_id` - The registry ID where the repository was created.
-- `scanning_configuration` - The scanning configuration for the registry.
+- `id` - The registry ID the scanning configuration applies to.
 
 ## Timeouts
 

@@ -107,7 +107,7 @@ func resourceRegistryScanningConfigurationDelete(d *schema.ResourceData, meta in
 	conn := meta.(*conns.AWSClient).ECRConn
 
 	_, err := conn.PutRegistryScanningConfiguration(&ecr.PutRegistryScanningConfigurationInput{
-		Rules:    nil,
+		Rules:    []*ecr.RegistryScanningRule{},
 		ScanType: aws.String(ecr.ScanTypeBasic),
 	})
 
