@@ -115,6 +115,9 @@ definition after you have created the resource.
 attributes, etc.
 * `point_in_time_recovery` - (Optional) Enable point-in-time recovery options.
 * `replica` - (Optional) Configuration block(s) with [DynamoDB Global Tables V2 (version 2019.11.21)](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/globaltables.V2.html) replication configurations. Detailed below.
+* `restore_source_name` - (Optional) The name of the table to restore. Must match the name of an existing table.
+* `restore_to_latest_time` - (Optional) If set, restores table to the most recent point-in-time recovery point.
+* `restore_date_time` - (Optional) The time of the point-in-time recovery point to restore.
 * `stream_enabled` - (Optional) Indicates whether Streams are to be enabled (true) or disabled (false).
 * `stream_view_type` - (Optional) When an item in the table is modified, StreamViewType determines what information is written to the table's stream. Valid values are `KEYS_ONLY`, `NEW_IMAGE`, `OLD_IMAGE`, `NEW_AND_OLD_IMAGES`.
 * `server_side_encryption` - (Optional) Encryption at rest options. AWS DynamoDB tables are automatically encrypted at rest with an AWS owned Customer Master Key if this argument isn't specified.
