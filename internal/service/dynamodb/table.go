@@ -7,6 +7,7 @@ import (
 	"log"
 	"reflect"
 	"strings"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
@@ -79,7 +80,8 @@ func ResourceTable() *schema.Resource {
 			},
 			"attribute": {
 				Type:     schema.TypeSet,
-				Required: true,
+				Optional: true,
+				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"name": {
@@ -153,7 +155,8 @@ func ResourceTable() *schema.Resource {
 			},
 			"hash_key": {
 				Type:     schema.TypeString,
-				Required: true,
+				Optional: true,
+				Computed: true,
 				ForceNew: true,
 			},
 			"local_secondary_index": {
@@ -220,6 +223,7 @@ func ResourceTable() *schema.Resource {
 			"read_capacity": {
 				Type:     schema.TypeInt,
 				Optional: true,
+				Computed: true,
 			},
 			"replica": {
 				Type:     schema.TypeSet,
@@ -292,6 +296,7 @@ func ResourceTable() *schema.Resource {
 			"ttl": {
 				Type:     schema.TypeList,
 				Optional: true,
+				Computed: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -316,12 +321,29 @@ func ResourceTable() *schema.Resource {
 			},
 			"write_capacity": {
 				Type:     schema.TypeInt,
+				Computed: true,
 				Optional: true,
 			},
 			"table_class": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringInSlice(dynamodb.TableClass_Values(), false),
+			},
+			"restore_source_name": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+			},
+			"restore_to_latest_time": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				ForceNew: true,
+			},
+			"restore_date_time": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: verify.ValidUTCTimestamp,
 			},
 		},
 	}
@@ -341,123 +363,195 @@ func resourceTableCreate(d *schema.ResourceData, meta interface{}) error {
 
 	log.Printf("[DEBUG] Creating DynamoDB table with key schema: %#v", keySchemaMap)
 
-	req := &dynamodb.CreateTableInput{
-		TableName:   aws.String(d.Get("name").(string)),
-		BillingMode: aws.String(d.Get("billing_mode").(string)),
-		KeySchema:   expandDynamoDbKeySchema(keySchemaMap),
-		Tags:        Tags(tags.IgnoreAWS()),
-	}
+	if _, ok := d.GetOk("restore_source_name"); ok {
 
-	billingMode := d.Get("billing_mode").(string)
-	capacityMap := map[string]interface{}{
-		"write_capacity": d.Get("write_capacity"),
-		"read_capacity":  d.Get("read_capacity"),
-	}
+		req := &dynamodb.RestoreTableToPointInTimeInput{
+			TargetTableName: aws.String(d.Get("name").(string)),
+			SourceTableName: aws.String(d.Get("restore_source_name").(string)),
+		}
 
-	if err := validateDynamoDbProvisionedThroughput(capacityMap, billingMode); err != nil {
-		return err
-	}
+		if v, ok := d.GetOk("restore_date_time"); ok {
+			t, _ := time.Parse(time.RFC3339, v.(string))
+			req.RestoreDateTime = aws.Time(t)
+		}
 
-	req.ProvisionedThroughput = expandDynamoDbProvisionedThroughput(capacityMap, billingMode)
+		if attr, ok := d.GetOk("restore_to_latest_time"); ok {
+			req.UseLatestRestorableTime = aws.Bool(attr.(bool))
+		}
 
-	if v, ok := d.GetOk("attribute"); ok {
-		aSet := v.(*schema.Set)
-		req.AttributeDefinitions = expandDynamoDbAttributes(aSet.List())
-	}
+		if v, ok := d.GetOk("local_secondary_index"); ok {
+			lsiSet := v.(*schema.Set)
+			req.LocalSecondaryIndexOverride = expandDynamoDbLocalSecondaryIndexes(lsiSet.List(), keySchemaMap)
+		}
 
-	if v, ok := d.GetOk("local_secondary_index"); ok {
-		lsiSet := v.(*schema.Set)
-		req.LocalSecondaryIndexes = expandDynamoDbLocalSecondaryIndexes(lsiSet.List(), keySchemaMap)
-	}
+		billingModeOverride := d.Get("billing_mode").(string)
 
-	if v, ok := d.GetOk("global_secondary_index"); ok {
-		globalSecondaryIndexes := []*dynamodb.GlobalSecondaryIndex{}
-		gsiSet := v.(*schema.Set)
-
-		for _, gsiObject := range gsiSet.List() {
-			gsi := gsiObject.(map[string]interface{})
-			if err := validateDynamoDbProvisionedThroughput(gsi, billingMode); err != nil {
-				return fmt.Errorf("failed to create GSI: %v", err)
+		if _, ok := d.GetOk("write_capacity"); ok {
+			if _, ok := d.GetOk("read_capacity"); ok {
+				capacityMap := map[string]interface{}{
+					"write_capacity": d.Get("write_capacity"),
+					"read_capacity":  d.Get("read_capacity"),
+				}
+				req.ProvisionedThroughputOverride = expandDynamoDbProvisionedThroughput(capacityMap, billingModeOverride)
 			}
-
-			gsiObject := expandDynamoDbGlobalSecondaryIndex(gsi, billingMode)
-			globalSecondaryIndexes = append(globalSecondaryIndexes, gsiObject)
 		}
-		req.GlobalSecondaryIndexes = globalSecondaryIndexes
-	}
 
-	if v, ok := d.GetOk("stream_enabled"); ok {
-		req.StreamSpecification = &dynamodb.StreamSpecification{
-			StreamEnabled:  aws.Bool(v.(bool)),
-			StreamViewType: aws.String(d.Get("stream_view_type").(string)),
+		if v, ok := d.GetOk("local_secondary_index"); ok {
+			lsiSet := v.(*schema.Set)
+			req.LocalSecondaryIndexOverride = expandDynamoDbLocalSecondaryIndexes(lsiSet.List(), keySchemaMap)
 		}
-	}
 
-	if v, ok := d.GetOk("server_side_encryption"); ok {
-		req.SSESpecification = expandDynamoDbEncryptAtRestOptions(v.([]interface{}))
-	}
+		if v, ok := d.GetOk("global_secondary_index"); ok {
+			globalSecondaryIndexes := []*dynamodb.GlobalSecondaryIndex{}
+			gsiSet := v.(*schema.Set)
 
-	if v, ok := d.GetOk("table_class"); ok {
-		req.TableClass = aws.String(v.(string))
-	}
+			for _, gsiObject := range gsiSet.List() {
+				gsi := gsiObject.(map[string]interface{})
+				if err := validateDynamoDbProvisionedThroughput(gsi, billingModeOverride); err != nil {
+					return fmt.Errorf("failed to create GSI: %v", err)
+				}
 
-	var output *dynamodb.CreateTableOutput
-	var requiresTagging bool
-	err := resource.Retry(createTableTimeout, func() *resource.RetryError {
-		var err error
-		output, err = conn.CreateTable(req)
+				gsiObject := expandDynamoDbGlobalSecondaryIndex(gsi, billingModeOverride)
+				globalSecondaryIndexes = append(globalSecondaryIndexes, gsiObject)
+			}
+			req.GlobalSecondaryIndexOverride = globalSecondaryIndexes
+		}
+
+		if v, ok := d.GetOk("server_side_encryption"); ok {
+			req.SSESpecificationOverride = expandDynamoDbEncryptAtRestOptions(v.([]interface{}))
+		}
+
+		var output *dynamodb.RestoreTableToPointInTimeOutput
+		err := resource.Retry(createTableTimeout, func() *resource.RetryError {
+			var err error
+			output, err = conn.RestoreTableToPointInTime(req)
+			if err != nil {
+				if tfawserr.ErrCodeEquals(err, "ThrottlingException") {
+					return resource.RetryableError(err)
+				}
+				if tfawserr.ErrMessageContains(err, dynamodb.ErrCodeLimitExceededException, "can be created, updated, or deleted simultaneously") {
+					return resource.RetryableError(err)
+				}
+				if tfawserr.ErrMessageContains(err, dynamodb.ErrCodeLimitExceededException, "indexed tables that can be created simultaneously") {
+					return resource.RetryableError(err)
+				}
+
+				return resource.NonRetryableError(err)
+			}
+			return nil
+		})
+
+		if tfresource.TimedOut(err) {
+			output, err = conn.RestoreTableToPointInTime(req)
+		}
+
 		if err != nil {
-			if tfawserr.ErrMessageContains(err, "ThrottlingException", "") {
-				return resource.RetryableError(err)
-			}
-			if tfawserr.ErrMessageContains(err, dynamodb.ErrCodeLimitExceededException, "can be created, updated, or deleted simultaneously") {
-				return resource.RetryableError(err)
-			}
-			if tfawserr.ErrMessageContains(err, dynamodb.ErrCodeLimitExceededException, "indexed tables that can be created simultaneously") {
-				return resource.RetryableError(err)
-			}
-			// AWS GovCloud (US) and others may reply with the following until their API is updated:
-			// ValidationException: One or more parameter values were invalid: Unsupported input parameter BillingMode
-			if tfawserr.ErrMessageContains(err, "ValidationException", "Unsupported input parameter BillingMode") {
-				req.BillingMode = nil
-				return resource.RetryableError(err)
-			}
-			// AWS GovCloud (US) and others may reply with the following until their API is updated:
-			// ValidationException: Unsupported input parameter Tags
-			if tfawserr.ErrMessageContains(err, "ValidationException", "Unsupported input parameter Tags") {
-				req.Tags = nil
-				requiresTagging = true
-				return resource.RetryableError(err)
-			}
-
-			return resource.NonRetryableError(err)
+			return fmt.Errorf("error creating DynamoDB Table: %w", err)
 		}
-		return nil
-	})
 
-	if tfresource.TimedOut(err) {
-		output, err = conn.CreateTable(req)
+		if output == nil || output.TableDescription == nil {
+			return fmt.Errorf("error creating DynamoDB Table: empty response")
+		}
+
+	} else {
+		req := &dynamodb.CreateTableInput{
+			TableName:   aws.String(d.Get("name").(string)),
+			BillingMode: aws.String(d.Get("billing_mode").(string)),
+			KeySchema:   expandDynamoDbKeySchema(keySchemaMap),
+			Tags:        Tags(tags.IgnoreAWS()),
+		}
+
+		billingMode := d.Get("billing_mode").(string)
+
+		capacityMap := map[string]interface{}{
+			"write_capacity": d.Get("write_capacity"),
+			"read_capacity":  d.Get("read_capacity"),
+		}
+
+		if err := validateDynamoDbProvisionedThroughput(capacityMap, billingMode); err != nil {
+			return err
+		}
+
+		req.ProvisionedThroughput = expandDynamoDbProvisionedThroughput(capacityMap, billingMode)
+
+		if v, ok := d.GetOk("attribute"); ok {
+			aSet := v.(*schema.Set)
+			req.AttributeDefinitions = expandDynamoDbAttributes(aSet.List())
+		}
+
+		if v, ok := d.GetOk("local_secondary_index"); ok {
+			lsiSet := v.(*schema.Set)
+			req.LocalSecondaryIndexes = expandDynamoDbLocalSecondaryIndexes(lsiSet.List(), keySchemaMap)
+		}
+
+		if v, ok := d.GetOk("global_secondary_index"); ok {
+			globalSecondaryIndexes := []*dynamodb.GlobalSecondaryIndex{}
+			gsiSet := v.(*schema.Set)
+
+			for _, gsiObject := range gsiSet.List() {
+				gsi := gsiObject.(map[string]interface{})
+				if err := validateDynamoDbProvisionedThroughput(gsi, billingMode); err != nil {
+					return fmt.Errorf("failed to create GSI: %v", err)
+				}
+
+				gsiObject := expandDynamoDbGlobalSecondaryIndex(gsi, billingMode)
+				globalSecondaryIndexes = append(globalSecondaryIndexes, gsiObject)
+			}
+			req.GlobalSecondaryIndexes = globalSecondaryIndexes
+		}
+
+		if v, ok := d.GetOk("stream_enabled"); ok {
+			req.StreamSpecification = &dynamodb.StreamSpecification{
+				StreamEnabled:  aws.Bool(v.(bool)),
+				StreamViewType: aws.String(d.Get("stream_view_type").(string)),
+			}
+		}
+
+		if v, ok := d.GetOk("server_side_encryption"); ok {
+			req.SSESpecification = expandDynamoDbEncryptAtRestOptions(v.([]interface{}))
+		}
+
+		if v, ok := d.GetOk("table_class"); ok {
+			req.TableClass = aws.String(v.(string))
+		}
+
+		var output *dynamodb.CreateTableOutput
+		err := resource.Retry(createTableTimeout, func() *resource.RetryError {
+			var err error
+			output, err = conn.CreateTable(req)
+			if err != nil {
+				if tfawserr.ErrCodeEquals(err, "ThrottlingException", "") {
+					return resource.RetryableError(err)
+				}
+				if tfawserr.ErrMessageContains(err, dynamodb.ErrCodeLimitExceededException, "can be created, updated, or deleted simultaneously") {
+					return resource.RetryableError(err)
+				}
+				if tfawserr.ErrMessageContains(err, dynamodb.ErrCodeLimitExceededException, "indexed tables that can be created simultaneously") {
+					return resource.RetryableError(err)
+				}
+
+				return resource.NonRetryableError(err)
+			}
+			return nil
+		})
+
+		if tfresource.TimedOut(err) {
+			output, err = conn.CreateTable(req)
+		}
+
+		if err != nil {
+			return fmt.Errorf("error creating DynamoDB Table: %w", err)
+		}
+
+		if output == nil || output.TableDescription == nil {
+			return fmt.Errorf("error creating DynamoDB Table: empty response")
+		}
 	}
 
-	if err != nil {
-		return fmt.Errorf("error creating DynamoDB Table: %w", err)
-	}
-
-	if output == nil || output.TableDescription == nil {
-		return fmt.Errorf("error creating DynamoDB Table: empty response")
-	}
-
-	d.SetId(aws.StringValue(output.TableDescription.TableName))
-	d.Set("arn", output.TableDescription.TableArn)
+	d.SetId(d.Get("name").(string))
 
 	if _, err := waitDynamoDBTableActive(conn, d.Id()); err != nil {
 		return fmt.Errorf("error waiting for creation of DynamoDB table (%s): %w", d.Id(), err)
-	}
-
-	if requiresTagging {
-		if err := UpdateTags(conn, d.Get("arn").(string), nil, tags); err != nil {
-			return fmt.Errorf("error adding DynamoDB Table (%s) tags: %w", d.Id(), err)
-		}
 	}
 
 	if d.Get("ttl.0.enabled").(bool) {
@@ -875,7 +969,7 @@ func createDynamoDbReplicas(tableName string, tfList []interface{}, conn *dynamo
 		err := resource.Retry(replicaUpdateTimeout, func() *resource.RetryError {
 			_, err := conn.UpdateTable(input)
 			if err != nil {
-				if tfawserr.ErrMessageContains(err, "ThrottlingException", "") {
+				if tfawserr.ErrCodeEquals(err, "ThrottlingException") {
 					return resource.RetryableError(err)
 				}
 				if tfawserr.ErrMessageContains(err, dynamodb.ErrCodeLimitExceededException, "can be created, updated, or deleted simultaneously") {
@@ -1169,7 +1263,7 @@ func deleteDynamoDbReplicas(tableName string, tfList []interface{}, conn *dynamo
 			err := resource.Retry(updateTableTimeout, func() *resource.RetryError {
 				_, err := conn.UpdateTable(input)
 				if err != nil {
-					if tfawserr.ErrMessageContains(err, "ThrottlingException", "") {
+					if tfawserr.ErrCodeEquals(err, "ThrottlingException") {
 						return resource.RetryableError(err)
 					}
 					if tfawserr.ErrMessageContains(err, dynamodb.ErrCodeLimitExceededException, "can be created, updated, or deleted simultaneously") {
@@ -1511,9 +1605,10 @@ func expandDynamoDbEncryptAtRestOptions(vOptions []interface{}) *dynamodb.SSESpe
 
 func validateDynamoDbTableAttributes(d *schema.ResourceDiff) error {
 	// Collect all indexed attributes
-	primaryHashKey := d.Get("hash_key").(string)
-	indexedAttributes := map[string]bool{
-		primaryHashKey: true,
+	indexedAttributes := map[string]bool{}
+
+	if v, ok := d.GetOk("hash_key"); ok {
+		indexedAttributes[v.(string)] = true
 	}
 	if v, ok := d.GetOk("range_key"); ok {
 		indexedAttributes[v.(string)] = true
