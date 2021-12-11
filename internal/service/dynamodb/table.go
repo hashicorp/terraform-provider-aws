@@ -340,7 +340,7 @@ func ResourceTable() *schema.Resource {
 				ForceNew: true,
 			},
 			"restore_date_time": {
-				Type:         schema.TypeBool,
+				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
 				ValidateFunc: verify.ValidUTCTimestamp,
