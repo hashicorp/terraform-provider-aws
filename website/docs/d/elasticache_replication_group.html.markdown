@@ -36,6 +36,7 @@ In addition to all arguments above, the following attributes are exported:
 * `number_cache_clusters` – The number of cache clusters that the replication group has.
 * `member_clusters` - The identifiers of all the nodes that are part of this replication group.
 * `multi_az_enabled` - Specifies whether Multi-AZ Support is enabled for the replication group.
+* `log_delivery_configurations` - Redis [SLOWLOG](https://redis.io/commands/slowlog) delivery settings.
 * `snapshot_window` - The daily time range (in UTC) during which ElastiCache begins taking a daily snapshot of your node group (shard).
 * `snapshot_retention_limit` - The number of days for which ElastiCache retains automatic cache cluster snapshots before deleting them.
 * `port` – The port number on which the configuration endpoint will accept connections.
