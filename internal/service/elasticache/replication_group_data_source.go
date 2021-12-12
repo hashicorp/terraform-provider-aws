@@ -139,6 +139,7 @@ func dataSourceReplicationGroupRead(d *schema.ResourceData, meta interface{}) er
 		return fmt.Errorf("error setting member_clusters: %w", err)
 	}
 	d.Set("node_type", rg.CacheNodeType)
+	d.Set("log_delivery_configurations", flattenLogDeliveryConfigurations(rg.LogDeliveryConfigurations))
 	d.Set("snapshot_window", rg.SnapshotWindow)
 	d.Set("snapshot_retention_limit", rg.SnapshotRetentionLimit)
 	return nil
