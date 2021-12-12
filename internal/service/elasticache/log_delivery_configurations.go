@@ -230,3 +230,22 @@ func flattenKinesisFirehoseDestinationDetails(kinesisFirehoseDestinationDetails 
 	return result
 }
 
+func validateLogDeliveryConfigurations(d *schema.ResourceData) error {
+	if engine, ok := d.Get("engine").(string); ok && engine == engineMemcached {
+		return fmt.Errorf("unsupported engine: `log_delivery_configurations` is supported only for the `engine`: `%s`, got `%s` instead", engineRedis, engineMemcached)
+	}
+	destinationTypesToKeys := map[string]string{
+		elasticache.DestinationTypeCloudwatchLogs:  "log_delivery_configurations.0.destination_details.0.cloudwatch_logs",
+		elasticache.DestinationTypeKinesisFirehose: "log_delivery_configurations.0.destination_details.0.kinesis_firehose",
+	}
+	destinationTypeKey := "log_delivery_configurations.0.destination_type"
+	for expectedDestinationType, destinationDetailKey := range destinationTypesToKeys {
+		if _, ok := d.GetOk(destinationDetailKey); ok {
+			if receivedDestinationType, ok := d.Get(destinationTypeKey).(string); ok && receivedDestinationType != expectedDestinationType {
+				return fmt.Errorf(
+					"unsupported configuration: when `%s` is defined, `%s` is expected to be `%s`, got `%s` instead", destinationDetailKey, destinationTypeKey, expectedDestinationType, receivedDestinationType)
+			}
+		}
+	}
+	return nil
+}
