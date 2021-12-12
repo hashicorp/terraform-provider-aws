@@ -1,0 +1,6 @@
+```release-note:enhancement
+internal/service/elasticache/cluster: Add `log_delivery_configurations` attribute
+internal/service/elasticache/cluster_data_source: Add `log_delivery_configurations` attribute
+internal/service/elasticache/replication_group: Add `log_delivery_configurations` attribute
+internal/service/elasticache/replication_group_data_source: Add `log_delivery_configurations` attribute
+```
