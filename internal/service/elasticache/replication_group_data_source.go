@@ -70,6 +70,11 @@ func DataSourceReplicationGroup() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"log_delivery_configurations": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem:     getLogDeliveryConfigurationsComputedSchema(),
+			},
 			"snapshot_window": {
 				Type:     schema.TypeString,
 				Computed: true,
