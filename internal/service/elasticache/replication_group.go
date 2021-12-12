@@ -657,6 +657,15 @@ func resourceReplicationGroupUpdate(d *schema.ResourceData, meta interface{}) er
 		}
 	}
 
+	if d.HasChange("log_delivery_configurations") {
+		validateError := validateLogDeliveryConfigurations(d)
+		if validateError != nil {
+			return validateError
+		}
+		params.LogDeliveryConfigurations = expandLogDeliveryConfigurations(d)
+		requestUpdate = true
+	}
+
 	if d.HasChange("maintenance_window") {
 		params.PreferredMaintenanceWindow = aws.String(d.Get("maintenance_window").(string))
 		requestUpdate = true
