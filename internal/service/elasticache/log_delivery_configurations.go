@@ -78,3 +78,63 @@ func getLogDeliveryConfigurationsSchema() *schema.Resource {
 
 }
 
+func getLogDeliveryConfigurationsComputedSchema() *schema.Resource {
+	return &schema.Resource{
+		Schema: map[string]*schema.Schema{
+			"destination_details": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"cloudwatch_logs": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"log_group": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+								},
+							},
+						},
+						"kinesis_firehose": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"delivery_stream": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			"destination_type": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"log_format": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"log_type": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"message": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"status": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+		},
+	}
+
+}
+
