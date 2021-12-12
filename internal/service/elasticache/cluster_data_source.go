@@ -187,6 +187,7 @@ func dataSourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("replication_group_id", cluster.ReplicationGroupId)
 	}
 
+	d.Set("log_delivery_configurations", flattenLogDeliveryConfigurations(cluster.LogDeliveryConfigurations))
 	d.Set("maintenance_window", cluster.PreferredMaintenanceWindow)
 	d.Set("snapshot_window", cluster.SnapshotWindow)
 	d.Set("snapshot_retention_limit", cluster.SnapshotRetentionLimit)
