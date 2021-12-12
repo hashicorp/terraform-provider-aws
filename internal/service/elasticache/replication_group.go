@@ -385,6 +385,14 @@ func resourceReplicationGroupCreate(d *schema.ResourceData, meta interface{}) er
 		params.SnapshotArns = flex.ExpandStringSet(snaps)
 	}
 
+	if v, ok := d.GetOk("log_delivery_configurations"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		validateError := validateLogDeliveryConfigurations(d)
+		if validateError != nil {
+			return validateError
+		}
+		params.LogDeliveryConfigurations = expandLogDeliveryConfigurations(d)
+	}
+
 	if v, ok := d.GetOk("maintenance_window"); ok {
 		params.PreferredMaintenanceWindow = aws.String(v.(string))
 	}
