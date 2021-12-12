@@ -1430,3 +1430,84 @@ resource "aws_elasticache_cluster" "test" {
 `, rName, enableLogDelivery)
 }
 
+func testAccClusterConfig_Engine_Redis_LogDeliveryConfigurations_KinesisFirehose(rName string, enableLogDelivery bool) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "b" {
+  count         = tobool("%[2]t") ? 1 : 0
+  acl           = "private"
+  force_destroy = true
+}
+resource "aws_iam_role" "r" {
+  count = tobool("%[2]t") ? 1 : 0
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Sid    = ""
+        Principal = {
+          Service = "firehose.amazonaws.com"
+        }
+      },
+    ]
+  })
+  inline_policy {
+    name = "my_inline_s3_policy"
+    policy = jsonencode({
+      Version = "2012-10-17"
+      Statement = [
+        {
+          Action = [
+            "s3:AbortMultipartUpload",
+            "s3:GetBucketLocation",
+            "s3:GetObject",
+            "s3:ListBucket",
+            "s3:ListBucketMultipartUploads",
+            "s3:PutObject",
+            "s3:PutObjectAcl",
+          ]
+          Effect   = "Allow"
+          Resource = ["${aws_s3_bucket.b[0].arn}", "${aws_s3_bucket.b[0].arn}/*"]
+        },
+      ]
+    })
+  }
+}
+resource "aws_kinesis_firehose_delivery_stream" "ds" {
+  count       = tobool("%[2]t") ? 1 : 0
+  name        = "%[1]s"
+  destination = "s3"
+  s3_configuration {
+    role_arn   = aws_iam_role.r[0].arn
+    bucket_arn = aws_s3_bucket.b[0].arn
+  }
+  lifecycle {
+    ignore_changes = [
+      tags["LogDeliveryEnabled"],
+    ]
+  }
+}
+resource "aws_elasticache_cluster" "test" {
+  cluster_id        = "%[1]s"
+  engine            = "redis"
+  node_type         = "cache.t3.micro"
+  num_cache_nodes   = 1
+  port              = 6379
+  apply_immediately = true
+  dynamic "log_delivery_configurations" {
+    for_each = tobool("%[2]t") ? [""] : []
+    content {
+      destination_details {
+        kinesis_firehose {
+          delivery_stream = aws_kinesis_firehose_delivery_stream.ds[0].name
+        }
+      }
+      destination_type = "kinesis-firehose"
+      log_format       = "json"
+      log_type         = "slow-log"
+    }
+  }
+}
+`, rName, enableLogDelivery)
+}
