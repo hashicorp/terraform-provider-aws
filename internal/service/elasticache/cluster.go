@@ -339,6 +339,14 @@ func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
 		req.SnapshotWindow = aws.String(v.(string))
 	}
 
+	if v, ok := d.GetOk("log_delivery_configurations"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		validateError := validateLogDeliveryConfigurations(d)
+		if validateError != nil {
+			return validateError
+		}
+		req.LogDeliveryConfigurations = expandLogDeliveryConfigurations(d)
+	}
+
 	if v, ok := d.GetOk("maintenance_window"); ok {
 		req.PreferredMaintenanceWindow = aws.String(v.(string))
 	}
