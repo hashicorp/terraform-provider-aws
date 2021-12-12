@@ -538,6 +538,15 @@ func resourceClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 		requestUpdate = true
 	}
 
+	if d.HasChange("log_delivery_configurations") {
+		validateError := validateLogDeliveryConfigurations(d)
+		if validateError != nil {
+			return validateError
+		}
+		req.LogDeliveryConfigurations = expandLogDeliveryConfigurations(d)
+		requestUpdate = true
+	}
+
 	if d.HasChange("maintenance_window") {
 		req.PreferredMaintenanceWindow = aws.String(d.Get("maintenance_window").(string))
 		requestUpdate = true
