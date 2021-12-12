@@ -184,3 +184,49 @@ func expandDestinationDetails(d *schema.ResourceData) *elasticache.DestinationDe
 	return &destinationDetails
 }
 
+func flattenLogDeliveryConfigurations(logDeliveryConfiguration []*elasticache.LogDeliveryConfiguration) []map[string]interface{} {
+	if len(logDeliveryConfiguration) == 0 || logDeliveryConfiguration[0] == nil {
+		return nil
+	}
+	config := make(map[string]interface{})
+	config["destination_details"] = flattenDestinationDetails(logDeliveryConfiguration[0].DestinationDetails)
+	config["destination_type"] = aws.StringValue(logDeliveryConfiguration[0].DestinationType)
+	config["log_format"] = aws.StringValue(logDeliveryConfiguration[0].LogFormat)
+	config["log_type"] = aws.StringValue(logDeliveryConfiguration[0].LogType)
+	config["message"] = aws.StringValue(logDeliveryConfiguration[0].Message)
+	config["status"] = aws.StringValue(logDeliveryConfiguration[0].Status)
+	result := []map[string]interface{}{config}
+	return result
+}
+
+func flattenDestinationDetails(destinationDetails *elasticache.DestinationDetails) []map[string]interface{} {
+	if destinationDetails == nil {
+		return nil
+	}
+	config := make(map[string]interface{})
+	config["cloudwatch_logs"] = flattenCloudWatchLogsDestinationDetails(destinationDetails.CloudWatchLogsDetails)
+	config["kinesis_firehose"] = flattenKinesisFirehoseDestinationDetails(destinationDetails.KinesisFirehoseDetails)
+	result := []map[string]interface{}{config}
+	return result
+}
+
+func flattenCloudWatchLogsDestinationDetails(cloudWatchLogsDestinationDetails *elasticache.CloudWatchLogsDestinationDetails) []map[string]interface{} {
+	if cloudWatchLogsDestinationDetails == nil {
+		return nil
+	}
+	config := make(map[string]interface{})
+	config["log_group"] = aws.StringValue(cloudWatchLogsDestinationDetails.LogGroup)
+	result := []map[string]interface{}{config}
+	return result
+}
+
+func flattenKinesisFirehoseDestinationDetails(kinesisFirehoseDestinationDetails *elasticache.KinesisFirehoseDestinationDetails) []map[string]interface{} {
+	if kinesisFirehoseDestinationDetails == nil {
+		return nil
+	}
+	config := make(map[string]interface{})
+	config["delivery_stream"] = aws.StringValue(kinesisFirehoseDestinationDetails.DeliveryStream)
+	result := []map[string]interface{}{config}
+	return result
+}
+
