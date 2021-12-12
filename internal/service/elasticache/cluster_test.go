@@ -1376,3 +1376,57 @@ resource "aws_elasticache_cluster" "test" {
 }
 `, rName)
 }
+
+func testAccClusterConfig_Engine_Redis_LogDeliveryConfigurations_Cloudwatch(rName string, enableLogDelivery bool) string {
+	return fmt.Sprintf(`
+data "aws_iam_policy_document" "p" {
+  count = tobool("%[2]t") ? 1 : 0
+  statement {
+    actions = [
+      "logs:CreateLogStream",
+      "logs:PutLogEvents"
+    ]
+    resources = ["${aws_cloudwatch_log_group.lg[0].arn}:log-stream:*"]
+    principals {
+      identifiers = ["delivery.logs.amazonaws.com"]
+      type        = "Service"
+    }
+  }
+}
+resource "aws_cloudwatch_log_resource_policy" "rp" {
+  count           = tobool("%[2]t") ? 1 : 0
+  policy_document = data.aws_iam_policy_document.p[0].json
+  policy_name     = "%[1]s"
+  depends_on = [
+    aws_cloudwatch_log_group.lg[0]
+  ]
+}
+resource "aws_cloudwatch_log_group" "lg" {
+  count             = tobool("%[2]t") ? 1 : 0
+  retention_in_days = 1
+  name              = "%[1]s"
+}
+resource "aws_elasticache_cluster" "test" {
+  cluster_id        = "%[1]s"
+  engine            = "redis"
+  node_type         = "cache.t3.micro"
+  num_cache_nodes   = 1
+  port              = 6379
+  apply_immediately = true
+  dynamic "log_delivery_configurations" {
+    for_each = tobool("%[2]t") ? [""] : []
+    content {
+      destination_details {
+        cloudwatch_logs {
+          log_group = aws_cloudwatch_log_group.lg[0].name
+        }
+      }
+      destination_type = "cloudwatch-logs"
+      log_format       = "text"
+      log_type         = "slow-log"
+    }
+  }
+}
+`, rName, enableLogDelivery)
+}
+
