@@ -413,6 +413,7 @@ func resourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
+	d.Set("log_delivery_configurations", flattenLogDeliveryConfigurations(c.LogDeliveryConfigurations))
 	d.Set("snapshot_window", c.SnapshotWindow)
 	d.Set("snapshot_retention_limit", c.SnapshotRetentionLimit)
 
