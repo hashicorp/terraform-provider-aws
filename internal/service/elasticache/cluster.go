@@ -134,6 +134,12 @@ func ResourceCluster() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"log_delivery_configurations": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem:     getLogDeliveryConfigurationsSchema(),
+			},
 			"maintenance_window": {
 				Type:     schema.TypeString,
 				Optional: true,
