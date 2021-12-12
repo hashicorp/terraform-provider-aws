@@ -582,6 +582,7 @@ func resourceReplicationGroupRead(d *schema.ResourceData, meta interface{}) erro
 			return err
 		}
 
+		d.Set("log_delivery_configurations", flattenLogDeliveryConfigurations(rgp.LogDeliveryConfigurations))
 		d.Set("snapshot_window", rgp.SnapshotWindow)
 		d.Set("snapshot_retention_limit", rgp.SnapshotRetentionLimit)
 
