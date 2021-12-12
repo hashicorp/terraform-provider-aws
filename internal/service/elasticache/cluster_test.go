@@ -744,7 +744,7 @@ func TestAccElastiCacheCluster_Redis_finalSnapshot(t *testing.T) {
 	})
 }
 
-func TestAccElasticacheCluster_Engine_Redis_LogDeliveryConfigurations_Cloudwatch_KinesisFirehose_Update(t *testing.T) {
+func TestAccElastiCacheCluster_Engine_Redis_LogDeliveryConfigurations_Cloudwatch_KinesisFirehose_Update(t *testing.T) {
 	var ec elasticache.CacheCluster
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_elasticache_cluster.test"
@@ -810,7 +810,7 @@ func TestAccElasticacheCluster_Engine_Redis_LogDeliveryConfigurations_Cloudwatch
 	})
 }
 
-func TestAccElasticacheCluster_Engine_Redis_LogDeliveryConfigurations_Cloudwatch_EnableDisable(t *testing.T) {
+func TestAccElastiCacheCluster_Engine_Redis_LogDeliveryConfigurations_Cloudwatch_EnableDisable(t *testing.T) {
 	var ec elasticache.CacheCluster
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_elasticache_cluster.test"
@@ -876,7 +876,7 @@ func TestAccElasticacheCluster_Engine_Redis_LogDeliveryConfigurations_Cloudwatch
 	})
 }
 
-func TestAccElasticacheCluster_Engine_Redis_LogDeliveryConfigurations_KinesisFirehose_EnableDisable(t *testing.T) {
+func TestAccElastiCacheCluster_Engine_Redis_LogDeliveryConfigurations_KinesisFirehose_EnableDisable(t *testing.T) {
 	var ec elasticache.CacheCluster
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_elasticache_cluster.test"
