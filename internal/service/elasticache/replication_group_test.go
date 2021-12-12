@@ -1741,6 +1741,76 @@ func TestAccElasticacheReplicationGroup_Engine_Redis_LogDeliveryConfigurations_C
 	})
 }
 
+func TestAccElasticacheReplicationGroup_Engine_Redis_LogDeliveryConfigurations_Cloudwatch_EnableDisable(t *testing.T) {
+	var rg elasticache.ReplicationGroup
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_elasticache_replication_group.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, elasticache.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckReplicationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccReplicationGroupConfig_Engine_Redis_LogDeliveryConfigurations_Cloudwatch(rName, false, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckReplicationGroupExists(resourceName, &rg),
+					resource.TestCheckResourceAttr(resourceName, "engine", "redis"),
+					resource.TestCheckResourceAttr(resourceName, "cluster_enabled", "false"),
+					resource.TestCheckNoResourceAttr(resourceName, "log_delivery_configurations.0.destination_details.0.cloudwatch_logs.0.log_group"),
+					resource.TestCheckNoResourceAttr(resourceName, "log_delivery_configurations.0.destination_type"),
+					resource.TestCheckNoResourceAttr(resourceName, "log_delivery_configurations.0.log_format"),
+					resource.TestCheckNoResourceAttr(resourceName, "log_delivery_configurations.0.log_type"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"apply_immediately"},
+			},
+			{
+				Config: testAccReplicationGroupConfig_Engine_Redis_LogDeliveryConfigurations_Cloudwatch(rName, true, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckReplicationGroupExists(resourceName, &rg),
+					resource.TestCheckResourceAttr(resourceName, "engine", "redis"),
+					resource.TestCheckResourceAttr(resourceName, "cluster_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "log_delivery_configurations.0.destination_details.0.cloudwatch_logs.0.log_group", rName),
+					resource.TestCheckResourceAttr(resourceName, "log_delivery_configurations.0.destination_type", "cloudwatch-logs"),
+					resource.TestCheckResourceAttr(resourceName, "log_delivery_configurations.0.log_format", "text"),
+					resource.TestCheckResourceAttr(resourceName, "log_delivery_configurations.0.log_type", "slow-log"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"apply_immediately"},
+			},
+
+			{
+				Config: testAccReplicationGroupConfig_Engine_Redis_LogDeliveryConfigurations_Cloudwatch(rName, false, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckReplicationGroupExists(resourceName, &rg),
+					resource.TestCheckResourceAttr(resourceName, "engine", "redis"),
+					resource.TestCheckResourceAttr(resourceName, "cluster_enabled", "false"),
+					resource.TestCheckNoResourceAttr(resourceName, "log_delivery_configurations.0.destination_details.0.cloudwatch_logs.0.log_group"),
+					resource.TestCheckNoResourceAttr(resourceName, "log_delivery_configurations.0.destination_type"),
+					resource.TestCheckNoResourceAttr(resourceName, "log_delivery_configurations.0.log_format"),
+					resource.TestCheckNoResourceAttr(resourceName, "log_delivery_configurations.0.log_type"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"apply_immediately"},
+			},
+		},
+	})
+}
+
 // Test for out-of-band deletion
 // Naming to allow grouping all TestAccAWSElasticacheReplicationGroup_GlobalReplicationGroupId_* tests
 func TestAccElastiCacheReplicationGroup_GlobalReplicationGroupID_disappears(t *testing.T) { // nosemgrep: acceptance-test-naming-parent-disappears
