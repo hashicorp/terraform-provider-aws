@@ -11,10 +11,12 @@ import (
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceServiceLinkedRole() *schema.Resource {
@@ -76,12 +78,17 @@ func ResourceServiceLinkedRole() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
+			"tags":     tftags.TagsSchema(),
+			"tags_all": tftags.TagsSchemaComputed(),
 		},
+		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
 func resourceServiceLinkedRoleCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).IAMConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
 	serviceName := d.Get("aws_service_name").(string)
 
@@ -100,37 +107,49 @@ func resourceServiceLinkedRoleCreate(d *schema.ResourceData, meta interface{}) e
 	resp, err := conn.CreateServiceLinkedRole(params)
 
 	if err != nil {
-		return fmt.Errorf("Error creating service-linked role with name %s: %s", serviceName, err)
+		return fmt.Errorf("Error creating service-linked role with name %s: %w", serviceName, err)
 	}
 	d.SetId(aws.StringValue(resp.Role.Arn))
+
+	if len(tags) > 0 {
+		_, roleName, _, err := DecodeServiceLinkedRoleID(d.Id())
+		if err != nil {
+			return err
+		}
+
+		if err := roleUpdateTags(conn, roleName, nil, tags); err != nil {
+			return fmt.Errorf("error updating IAM Service Linked Role (%s) tags: %w", d.Id(), err)
+		}
+	}
 
 	return resourceServiceLinkedRoleRead(d, meta)
 }
 
 func resourceServiceLinkedRoleRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).IAMConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	serviceName, roleName, customSuffix, err := DecodeServiceLinkedRoleID(d.Id())
 	if err != nil {
 		return err
 	}
 
-	params := &iam.GetRoleInput{
-		RoleName: aws.String(roleName),
-	}
+	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(PropagationTimeout, func() (interface{}, error) {
+		return FindRoleByName(conn, roleName)
+	}, d.IsNewResource())
 
-	resp, err := conn.GetRole(params)
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] IAM Service Linked Role (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
+	}
 
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, iam.ErrCodeNoSuchEntityException, "") {
-			log.Printf("[WARN] IAM service linked role %s not found, removing from state", d.Id())
-			d.SetId("")
-			return nil
-		}
-		return err
+		return fmt.Errorf("error reading IAM Service Linked Role (%s): %w", d.Id(), err)
 	}
 
-	role := resp.Role
+	role := outputRaw.(*iam.Role)
 
 	d.Set("arn", role.Arn)
 	d.Set("aws_service_name", serviceName)
@@ -140,6 +159,17 @@ func resourceServiceLinkedRoleRead(d *schema.ResourceData, meta interface{}) err
 	d.Set("name", role.RoleName)
 	d.Set("path", role.Path)
 	d.Set("unique_id", role.RoleId)
+
+	tags := KeyValueTags(role.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+
+	//lintignore:AWSR002
+	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %w", err)
+	}
+
+	if err := d.Set("tags_all", tags.Map()); err != nil {
+		return fmt.Errorf("error setting tags_all: %w", err)
+	}
 
 	return nil
 }
@@ -152,15 +182,25 @@ func resourceServiceLinkedRoleUpdate(d *schema.ResourceData, meta interface{}) e
 		return err
 	}
 
-	params := &iam.UpdateRoleInput{
-		Description: aws.String(d.Get("description").(string)),
-		RoleName:    aws.String(roleName),
+	if d.HasChangesExcept("tags_all", "tags") {
+		params := &iam.UpdateRoleInput{
+			Description: aws.String(d.Get("description").(string)),
+			RoleName:    aws.String(roleName),
+		}
+
+		_, err = conn.UpdateRole(params)
+
+		if err != nil {
+			return fmt.Errorf("Error updating service-linked role %s: %w", d.Id(), err)
+		}
 	}
 
-	_, err = conn.UpdateRole(params)
+	if d.HasChange("tags_all") {
+		o, n := d.GetChange("tags_all")
 
-	if err != nil {
-		return fmt.Errorf("Error updating service-linked role %s: %s", d.Id(), err)
+		if err := roleUpdateTags(conn, roleName, o, n); err != nil {
+			return fmt.Errorf("error updating IAM Service Linked Role (%s) tags: %w", d.Id(), err)
+		}
 	}
 
 	return resourceServiceLinkedRoleRead(d, meta)
@@ -176,15 +216,15 @@ func resourceServiceLinkedRoleDelete(d *schema.ResourceData, meta interface{}) e
 
 	deletionID, err := DeleteServiceLinkedRole(conn, roleName)
 	if err != nil {
-		return fmt.Errorf("Error deleting service-linked role %s: %s", d.Id(), err)
+		return fmt.Errorf("Error deleting service-linked role %s: %w", d.Id(), err)
 	}
 	if deletionID == "" {
 		return nil
 	}
 
-	err = DeleteServiceLinkedRoleWaiter(conn, deletionID)
+	err = WaitDeleteServiceLinkedRole(conn, deletionID)
 	if err != nil {
-		return fmt.Errorf("Error waiting for role (%s) to be deleted: %s", d.Id(), err)
+		return fmt.Errorf("Error waiting for role (%s) to be deleted: %w", d.Id(), err)
 	}
 
 	return nil
@@ -227,39 +267,4 @@ func DeleteServiceLinkedRole(conn *iam.IAM, roleName string) (string, error) {
 	}
 
 	return aws.StringValue(resp.DeletionTaskId), nil
-}
-
-func DeleteServiceLinkedRoleWaiter(conn *iam.IAM, deletionTaskID string) error {
-	stateConf := &resource.StateChangeConf{
-		Pending: []string{iam.DeletionTaskStatusTypeInProgress, iam.DeletionTaskStatusTypeNotStarted},
-		Target:  []string{iam.DeletionTaskStatusTypeSucceeded},
-		Refresh: deleteIamServiceLinkedRoleRefreshFunc(conn, deletionTaskID),
-		Timeout: 5 * time.Minute,
-		Delay:   10 * time.Second,
-	}
-
-	_, err := stateConf.WaitForState()
-	if err != nil {
-		if tfawserr.ErrMessageContains(err, iam.ErrCodeNoSuchEntityException, "") {
-			return nil
-		}
-		return err
-	}
-
-	return nil
-}
-
-func deleteIamServiceLinkedRoleRefreshFunc(conn *iam.IAM, deletionTaskId string) resource.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		params := &iam.GetServiceLinkedRoleDeletionStatusInput{
-			DeletionTaskId: aws.String(deletionTaskId),
-		}
-
-		resp, err := conn.GetServiceLinkedRoleDeletionStatus(params)
-		if err != nil {
-			return nil, "", err
-		}
-
-		return resp, aws.StringValue(resp.Status), nil
-	}
 }
