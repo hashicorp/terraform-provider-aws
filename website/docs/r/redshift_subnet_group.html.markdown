@@ -66,7 +66,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Redshift subnet groups can be imported using the `name`, e.g.
+Redshift subnet groups can be imported using the `name`, e.g.,
 
 ```
 $ terraform import aws_redshift_subnet_group.testgroup1 test-cluster-subnet-group

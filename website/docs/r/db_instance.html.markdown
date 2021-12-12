@@ -135,7 +135,7 @@ identifier beginning with the specified prefix. Conflicts with `identifier`.
 storage_type of "io1".
 * `kms_key_id` - (Optional) The ARN for the KMS encryption key. If creating an
 encrypted replica, set this to the destination KMS ARN.
-* `license_model` - (Optional, but required for some DB engines, i.e. Oracle
+* `license_model` - (Optional, but required for some DB engines, i.e., Oracle
 SE1) License model information for this DB instance.
 * `maintenance_window` - (Optional) The window to perform maintenance in.
 Syntax: "ddd:hh24:mi-ddd:hh24:mi". Eg: "Mon:00:00-Mon:03:00". See [RDS
@@ -168,6 +168,8 @@ logs, and it will be stored in the state file.
 * `port` - (Optional) The port on which the DB accepts connections.
 * `publicly_accessible` - (Optional) Bool to control if instance is publicly
 accessible. Default is `false`.
+* `replica_mode` - (Optional) Specifies whether the replica is in either `mounted` or `open-read-only` mode. This attribute
+is only supported by Oracle instances. Oracle replicas operate in `open-read-only` mode unless otherwise specified. See [Working with Oracle Read Replicas](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/oracle-read-replicas.html) for more information.
 * `replicate_source_db` - (Optional) Specifies that this resource is a Replicate
 database, and to use this value as the source database. This correlates to the
 `identifier` of another Amazon RDS Database to replicate (if replicating within
@@ -304,7 +306,7 @@ On Oracle and Microsoft SQL instances the following is exported additionally:
 
 ## Import
 
-DB Instances can be imported using the `identifier`, e.g.
+DB Instances can be imported using the `identifier`, e.g.,
 
 ```
 $ terraform import aws_db_instance.default mydb-rds-instance

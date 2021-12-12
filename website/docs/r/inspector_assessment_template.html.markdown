@@ -46,7 +46,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-`aws_inspector_assessment_template` can be imported by using the template assessment ARN, e.g.
+`aws_inspector_assessment_template` can be imported by using the template assessment ARN, e.g.,
 
 ```
 $ terraform import aws_inspector_assessment_template.example arn:aws:inspector:us-west-2:123456789012:target/0-9IaAzhGR/template/0-WEcjR8CH

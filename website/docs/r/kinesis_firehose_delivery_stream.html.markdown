@@ -329,7 +329,7 @@ resource "aws_kinesis_firehose_delivery_stream" "test_stream" {
 }
 ```
 
-### HTTP Endpoint (e.g. New Relic) Destination
+### HTTP Endpoint (e.g., New Relic) Destination
 
 ```terraform
 resource "aws_kinesis_firehose_delivery_stream" "test_stream" {
@@ -500,6 +500,8 @@ The `parameters` array objects support the following:
 * `parameter_name` - (Required) Parameter name. Valid Values: `LambdaArn`, `NumberOfRetries`, `RoleArn`, `BufferSizeInMBs`, `BufferIntervalInSeconds`
 * `parameter_value` - (Required) Parameter value. Must be between 1 and 512 length (inclusive). When providing a Lambda ARN, you should specify the resource version as well.
 
+~> **NOTE:** Parameters with default values, including `NumberOfRetries`(default: 3), `RoleArn`(default: firehose role ARN), `BufferSizeInMBs`(default: 3), and `BufferIntervalInSeconds`(default: 60), are not stored in terraform state. To prevent perpetual differences, it is therefore recommended to only include parameters with non-default values.
+
 The `request_configuration` object supports the following:
 
 * `content_encoding` - (Optional) Kinesis Data Firehose uses the content encoding to compress the body of a request before sending the request to the destination. Valid values are `NONE` and `GZIP`.  Default value is `NONE`.
@@ -632,7 +634,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Kinesis Firehose Delivery streams can be imported using the stream ARN, e.g.
+Kinesis Firehose Delivery streams can be imported using the stream ARN, e.g.,
 
 ```
 $ terraform import aws_kinesis_firehose_delivery_stream.foo arn:aws:firehose:us-east-1:XXX:deliverystream/example

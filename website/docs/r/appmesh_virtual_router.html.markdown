@@ -78,7 +78,7 @@ In addition to all arguments above, the following attributes are exported:
 ## Import
 
 App Mesh virtual routers can be imported using `mesh_name` together with the virtual router's `name`,
-e.g.
+e.g.,
 
 ```
 $ terraform import aws_appmesh_virtual_router.serviceb simpleapp/serviceB

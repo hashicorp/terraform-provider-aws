@@ -32,7 +32,7 @@ resource "aws_iam_account_password_policy" "strict" {
 The following arguments are supported:
 
 * `allow_users_to_change_password` - (Optional) Whether to allow users to change their own password
-* `hard_expiry` - (Optional) Whether users are prevented from setting a new password after their password has expired (i.e. require administrator reset)
+* `hard_expiry` - (Optional) Whether users are prevented from setting a new password after their password has expired (i.e., require administrator reset)
 * `max_password_age` - (Optional) The number of days that an user password is valid.
 * `minimum_password_length` - (Optional) Minimum length to require for user passwords.
 * `password_reuse_prevention` - (Optional) The number of previous passwords that users are prevented from reusing.
@@ -50,7 +50,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-IAM Account Password Policy can be imported using the word `iam-account-password-policy`, e.g.
+IAM Account Password Policy can be imported using the word `iam-account-password-policy`, e.g.,
 
 ```
 $ terraform import aws_iam_account_password_policy.strict iam-account-password-policy
