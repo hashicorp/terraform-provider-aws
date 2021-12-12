@@ -74,6 +74,12 @@ func DataSourceCluster() *schema.Resource {
 				Set:      schema.HashString,
 			},
 
+			"log_delivery_configurations": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem:     getLogDeliveryConfigurationsComputedSchema(),
+			},
+
 			"maintenance_window": {
 				Type:     schema.TypeString,
 				Computed: true,
