@@ -10,6 +10,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudsearch"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
@@ -29,12 +30,18 @@ func ResourceDomain() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(20 * time.Minute),
+			Update: schema.DefaultTimeout(20 * time.Minute),
+			Delete: schema.DefaultTimeout(10 * time.Minute),
+		},
+
 		Schema: map[string]*schema.Schema{
 			// TODO: Separate access policy resource?
 			// TODO: Is it Required?
 			"access_policies": {
 				Type:             schema.TypeString,
-				Required:         true,
+				Optional:         true,
 				ValidateFunc:     validation.StringIsJSON,
 				DiffSuppressFunc: verify.SuppressEquivalentPolicyDiffs,
 				StateFunc: func(v interface{}) string {
@@ -46,19 +53,30 @@ func ResourceDomain() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"document_service_endpoint": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"domain_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"endpoint_options": {
 				Type:     schema.TypeList,
 				MaxItems: 1,
 				Optional: true,
+				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"enforce_https": {
 							Type:     schema.TypeBool,
 							Optional: true,
+							Computed: true,
 						},
 						"tls_security_policy": {
 							Type:         schema.TypeString,
 							Optional:     true,
+							Computed:     true,
 							ValidateFunc: validation.StringInSlice(cloudsearch.TLSSecurityPolicy_Values(), false),
 						},
 					},
@@ -67,6 +85,7 @@ func ResourceDomain() *schema.Resource {
 			"multi_az": {
 				Type:     schema.TypeBool,
 				Optional: true,
+				Computed: true,
 			},
 			"name": {
 				Type:         schema.TypeString,
@@ -78,23 +97,31 @@ func ResourceDomain() *schema.Resource {
 				Type:     schema.TypeList,
 				MaxItems: 1,
 				Optional: true,
+				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"desired_instance_type": {
 							Type:         schema.TypeString,
 							Optional:     true,
+							Computed:     true,
 							ValidateFunc: validation.StringInSlice(cloudsearch.PartitionInstanceType_Values(), false),
 						},
 						"desired_partition_count": {
 							Type:     schema.TypeInt,
 							Optional: true,
+							Computed: true,
 						},
 						"desired_replication_count": {
 							Type:     schema.TypeInt,
 							Optional: true,
+							Computed: true,
 						},
 					},
 				},
+			},
+			"search_service_endpoint": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 
 			"index": {
@@ -156,28 +183,10 @@ func ResourceDomain() *schema.Resource {
 					},
 				},
 			},
-
-			"wait_for_endpoints": {
-				Type:             schema.TypeBool,
-				Optional:         true,
-				Default:          true,
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool { return true },
-			},
-
-			"document_endpoint": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
-			"search_endpoint": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 		},
 	}
 }
 
-// Terraform CRUD Functions
 func resourceCloudSearchDomainCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CloudSearchConn
 
@@ -195,15 +204,16 @@ func resourceCloudSearchDomainCreate(d *schema.ResourceData, meta interface{}) e
 
 	d.SetId(name)
 
-	log.Printf("[DEBUG] Updating CloudSearch Domain (%s) access policies", name)
-	_, err = conn.UpdateServiceAccessPolicies(&cloudsearch.UpdateServiceAccessPoliciesInput{
-		DomainName:     aws.String(d.Id()),
-		AccessPolicies: aws.String(d.Get("access_policies").(string)),
-	})
+	// TODO: Separate domain access policy resource?
+	// log.Printf("[DEBUG] Updating CloudSearch Domain (%s) access policies", name)
+	// _, err = conn.UpdateServiceAccessPolicies(&cloudsearch.UpdateServiceAccessPoliciesInput{
+	// 	DomainName:     aws.String(d.Id()),
+	// 	AccessPolicies: aws.String(d.Get("access_policies").(string)),
+	// })
 
-	if err != nil {
-		return fmt.Errorf("error updating CloudSearch Domain (%s) service access policies: %w", name, err)
-	}
+	// if err != nil {
+	// 	return fmt.Errorf("error updating CloudSearch Domain (%s) service access policies: %w", d.Id(), err)
+	// }
 
 	if v, ok := d.GetOk("scaling_parameters"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		input := &cloudsearch.UpdateScalingParametersInput{
@@ -215,7 +225,7 @@ func resourceCloudSearchDomainCreate(d *schema.ResourceData, meta interface{}) e
 		_, err := conn.UpdateScalingParameters(input)
 
 		if err != nil {
-			return fmt.Errorf("error updating CloudSearch Domain (%s) scaling parameters: %w", name, err)
+			return fmt.Errorf("error updating CloudSearch Domain (%s) scaling parameters: %w", d.Id(), err)
 		}
 	}
 
@@ -229,11 +239,11 @@ func resourceCloudSearchDomainCreate(d *schema.ResourceData, meta interface{}) e
 		_, err := conn.UpdateAvailabilityOptions(input)
 
 		if err != nil {
-			return fmt.Errorf("error updating CloudSearch Domain (%s) availability options: %w", name, err)
+			return fmt.Errorf("error updating CloudSearch Domain (%s) availability options: %w", d.Id(), err)
 		}
 	}
 
-	if v, ok := d.GetOk("scaling_parameters"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+	if v, ok := d.GetOk("endpoint_options"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		input := &cloudsearch.UpdateDomainEndpointOptionsInput{
 			DomainEndpointOptions: expandDomainEndpointOptions(v.([]interface{})[0].(map[string]interface{})),
 			DomainName:            aws.String(d.Id()),
@@ -243,35 +253,105 @@ func resourceCloudSearchDomainCreate(d *schema.ResourceData, meta interface{}) e
 		_, err := conn.UpdateDomainEndpointOptions(input)
 
 		if err != nil {
-			return fmt.Errorf("error updating CloudSearch Domain (%s) endpoint options: %w", name, err)
+			return fmt.Errorf("error updating CloudSearch Domain (%s) endpoint options: %w", d.Id(), err)
 		}
 	}
 
-	return resourceCloudSearchDomainUpdate(d, meta)
+	if v, ok := d.GetOk("index"); ok && v.(*schema.Set).Len() > 0 {
+		for _, v := range v.(*schema.Set).List() {
+			field, err := generateIndexFieldInput(v.(map[string]interface{}))
+
+			if err != nil {
+				return err
+			}
+
+			_, err = conn.DefineIndexField(&cloudsearch.DefineIndexFieldInput{
+				DomainName: aws.String(d.Id()),
+				IndexField: field,
+			})
+
+			if err != nil {
+				return fmt.Errorf("error defining CloudSearch Domain (%s) index field (%s): %w", d.Id(), aws.StringValue(field.IndexFieldName), err)
+			}
+		}
+
+		_, err := conn.IndexDocuments(&cloudsearch.IndexDocumentsInput{
+			DomainName: aws.String(d.Id()),
+		})
+
+		if err != nil {
+			return fmt.Errorf("error indexing CloudSearch Domain (%s) documents: %w", d.Id(), err)
+		}
+	}
+
+	_, err = waitDomainActive(conn, d.Id(), d.Timeout(schema.TimeoutCreate))
+
+	if err != nil {
+		return fmt.Errorf("error waiting for CloudSearch Domain (%s) create: %w", d.Id(), err)
+	}
+
+	return resourceCloudSearchDomainRead(d, meta)
 }
 
 func resourceCloudSearchDomainRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CloudSearchConn
 
-	domainlist := cloudsearch.DescribeDomainsInput{
-		DomainNames: []*string{
-			aws.String(d.Get("name").(string)),
-		},
+	domainStatus, err := FindDomainStatusByName(conn, d.Id())
+
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] CloudSearch Domain (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
 	}
 
-	resp, err := conn.DescribeDomains(&domainlist)
 	if err != nil {
-		return err
+		return fmt.Errorf("error reading CloudSearch Domain (%s): %w", d.Id(), err)
 	}
-	domain := resp.DomainStatusList[0]
-	d.Set("id", domain.DomainId)
 
-	if domain.DocService.Endpoint != nil {
-		d.Set("document_endpoint", domain.DocService.Endpoint)
+	d.Set("arn", domainStatus.ARN)
+	d.Set("domain_id", domainStatus.DomainId)
+	d.Set("name", domainStatus.DomainName)
+
+	if domainStatus.DocService != nil {
+		d.Set("document_service_endpoint", domainStatus.DocService.Endpoint)
+	} else {
+		d.Set("document_service_endpoint", nil)
 	}
-	if domain.SearchService.Endpoint != nil {
-		d.Set("search_endpoint", domain.SearchService.Endpoint)
+	if domainStatus.SearchService != nil {
+		d.Set("search_service_endpoint", domainStatus.SearchService.Endpoint)
+	} else {
+		d.Set("search_service_endpoint", nil)
 	}
+
+	availabilityOptionStatus, err := findAvailabilityOptionsStatusByName(conn, d.Id())
+
+	if err != nil {
+		return fmt.Errorf("error reading CloudSearch Domain (%s) availability options: %w", d.Id(), err)
+	}
+
+	d.Set("multi_az", availabilityOptionStatus.Options)
+
+	endpointOptions, err := findDomainEndpointOptionsByName(conn, d.Id())
+
+	if err != nil {
+		return fmt.Errorf("error reading CloudSearch Domain (%s) endpoint options: %w", d.Id(), err)
+	}
+
+	if err := d.Set("endpoint_options", []interface{}{flattenDomainEndpointOptions(endpointOptions)}); err != nil {
+		return fmt.Errorf("error setting endpoint_options: %w", err)
+	}
+
+	scalingParameters, err := findScalingParametersByName(conn, d.Id())
+
+	if err != nil {
+		return fmt.Errorf("error reading CloudSearch Domain (%s) scaling parameters: %w", d.Id(), err)
+	}
+
+	if err := d.Set("scaling_parameters", []interface{}{flattenScalingParameters(scalingParameters)}); err != nil {
+		return fmt.Errorf("error setting scaling_parameters: %w", err)
+	}
+
+	// TODO...
 
 	// Read index fields.
 	indexResults, err := conn.DescribeIndexFields(&cloudsearch.DescribeIndexFieldsInput{
@@ -294,33 +374,13 @@ func resourceCloudSearchDomainRead(d *schema.ResourceData, meta interface{}) err
 	d.Set("index", result)
 
 	// Read service access policies.
-	policyResult, err := conn.DescribeServiceAccessPolicies(&cloudsearch.DescribeServiceAccessPoliciesInput{
-		DomainName: aws.String(d.Get("name").(string)),
-	})
-	if err != nil {
-		return err
-	}
-	d.Set("service_access_policies", policyResult.AccessPolicies.Options)
-
-	// Read availability options (i.e. multi-az).
-	availabilityResult, err := conn.DescribeAvailabilityOptions(&cloudsearch.DescribeAvailabilityOptionsInput{
-		DomainName: aws.String(d.Get("name").(string)),
-	})
-	if err != nil {
-		return err
-	}
-	d.Set("multi_az", availabilityResult.AvailabilityOptions.Options)
-
-	// Read scaling parameters.
-	scalingResult, err := conn.DescribeScalingParameters(&cloudsearch.DescribeScalingParametersInput{
-		DomainName: aws.String(d.Get("name").(string)),
-	})
-	if err != nil {
-		return err
-	}
-	d.Set("instance_type", scalingResult.ScalingParameters.Options.DesiredInstanceType)
-	d.Set("partition_count", scalingResult.ScalingParameters.Options.DesiredPartitionCount)
-	d.Set("replication_count", scalingResult.ScalingParameters.Options.DesiredReplicationCount)
+	// policyResult, err := conn.DescribeServiceAccessPolicies(&cloudsearch.DescribeServiceAccessPoliciesInput{
+	// 	DomainName: aws.String(d.Get("name").(string)),
+	// })
+	// if err != nil {
+	// 	return err
+	// }
+	// d.Set("service_access_policies", policyResult.AccessPolicies.Options)
 
 	return err
 }
@@ -373,18 +433,6 @@ func resourceCloudSearchDomainUpdate(d *schema.ResourceData, meta interface{}) e
 		}
 	}
 
-	if d.Get("wait_for_endpoints").(bool) {
-		domainsList := cloudsearch.DescribeDomainsInput{
-			DomainNames: []*string{
-				aws.String(d.Get("name").(string)),
-			},
-		}
-
-		err = waitForSearchDomainToBeAvailable(d, conn, domainsList)
-		if err != nil {
-			return fmt.Errorf("%s %q", err, d.Get("name").(string))
-		}
-	}
 	return nil
 }
 
@@ -399,6 +447,12 @@ func resourceCloudSearchDomainDelete(d *schema.ResourceData, meta interface{}) e
 
 	if err != nil {
 		return fmt.Errorf("error deleting CloudSearch Domain (%s): %w", d.Id(), err)
+	}
+
+	_, err = waitDomainDeleted(conn, d.Id(), d.Timeout(schema.TimeoutDelete))
+
+	if err != nil {
+		return fmt.Errorf("error waiting for CloudSearch Domain (%s) delete: %w", d.Id(), err)
 	}
 
 	return nil
@@ -417,58 +471,6 @@ func validateIndexName(v interface{}, k string) (ws []string, es []error) {
 	}
 
 	return
-}
-
-// Waiters
-func waitForSearchDomainToBeAvailable(d *schema.ResourceData, conn *cloudsearch.CloudSearch, domainlist cloudsearch.DescribeDomainsInput) error {
-	log.Printf("[INFO] cloudsearch (%#v) waiting for domain endpoint. This usually takes 10 minutes.", domainlist.DomainNames[0])
-	stateConf := &resource.StateChangeConf{
-		Pending:    []string{"Waiting"},
-		Target:     []string{"OK"},
-		Timeout:    30 * time.Minute,
-		MinTimeout: 5 * time.Second,
-		Refresh: func() (interface{}, string, error) {
-			resp, err := conn.DescribeDomains(&domainlist)
-			log.Printf("[DEBUG] Checking %v", domainlist.DomainNames[0])
-			if err != nil {
-				log.Printf("[ERROR] Could not find domain (%v).  %s", domainlist.DomainNames[0], err)
-				return nil, "", err
-			}
-			// Not good enough to wait for processing, have to check for search endpoint.
-			domain := resp.DomainStatusList[0]
-			log.Printf("[DEBUG] GLEN: Domain = %s", domain)
-			processing := strconv.FormatBool(*domain.Processing)
-			log.Printf("[DEBUG] GLEN: Processing = %s", processing)
-			if domain.SearchService.Endpoint != nil {
-				log.Printf("[DEBUG] GLEN: type: %T", domain.SearchService.Endpoint)
-				log.Printf("[DEBUG] GLEN: SearchServiceEndpoint = %s", *domain.SearchService.Endpoint)
-			}
-			if aws.StringValue(domain.SearchService.Endpoint) == "" {
-				return resp, "Waiting", nil
-			}
-			return resp, "OK", nil
-
-		},
-	}
-
-	log.Printf("[DEBUG] Waiting for CloudSearch domain to finish processing: %v", domainlist.DomainNames[0])
-	_, err := stateConf.WaitForState()
-
-	// Search service was blank.
-	resp, err1 := conn.DescribeDomains(&domainlist)
-	if err1 != nil {
-		return err1
-	}
-
-	domain := resp.DomainStatusList[0]
-	d.Set("id", domain.DomainId)
-	d.Set("document_endpoint", domain.DocService.Endpoint)
-	d.Set("search_endpoint", domain.SearchService.Endpoint)
-
-	if err != nil {
-		return fmt.Errorf("Error waiting for CloudSearch domain (%#v) to finish processing: %s", domainlist.DomainNames[0], err)
-	}
-	return err
 }
 
 // Miscellaneous helper functions
@@ -869,7 +871,7 @@ func readIndexField(raw *cloudsearch.IndexField) map[string]interface{} {
 	return index
 }
 
-func FindDomainByName(conn *cloudsearch.CloudSearch, name string) (*cloudsearch.DomainStatus, error) {
+func FindDomainStatusByName(conn *cloudsearch.CloudSearch, name string) (*cloudsearch.DomainStatus, error) {
 	input := &cloudsearch.DescribeDomainsInput{
 		DomainNames: aws.StringSlice([]string{name}),
 	}
@@ -888,16 +890,177 @@ func FindDomainByName(conn *cloudsearch.CloudSearch, name string) (*cloudsearch.
 		return nil, tfresource.NewTooManyResultsError(count, input)
 	}
 
-	domainStatus := output.DomainStatusList[0]
+	return output.DomainStatusList[0], nil
+}
 
-	if aws.BoolValue(domainStatus.Deleted) {
+func findAvailabilityOptionsStatusByName(conn *cloudsearch.CloudSearch, name string) (*cloudsearch.AvailabilityOptionsStatus, error) {
+	input := &cloudsearch.DescribeAvailabilityOptionsInput{
+		Deployed:   aws.Bool(true),
+		DomainName: aws.String(name),
+	}
+
+	output, err := conn.DescribeAvailabilityOptions(input)
+
+	if tfawserr.ErrCodeEquals(err, cloudsearch.ErrCodeResourceNotFoundException) {
 		return nil, &resource.NotFoundError{
-			Message:     "deleted",
+			LastError:   err,
 			LastRequest: input,
 		}
 	}
 
-	return domainStatus, nil
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.AvailabilityOptions == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.AvailabilityOptions, nil
+}
+
+func findDomainEndpointOptionsByName(conn *cloudsearch.CloudSearch, name string) (*cloudsearch.DomainEndpointOptions, error) {
+	output, err := findDomainEndpointOptionsStatusByName(conn, name)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output.Options == nil {
+		return nil, tfresource.NewEmptyResultError(name)
+	}
+
+	return output.Options, nil
+}
+
+func findDomainEndpointOptionsStatusByName(conn *cloudsearch.CloudSearch, name string) (*cloudsearch.DomainEndpointOptionsStatus, error) {
+	input := &cloudsearch.DescribeDomainEndpointOptionsInput{
+		DomainName: aws.String(name),
+	}
+
+	output, err := conn.DescribeDomainEndpointOptions(input)
+
+	if tfawserr.ErrCodeEquals(err, cloudsearch.ErrCodeResourceNotFoundException) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.DomainEndpointOptions == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.DomainEndpointOptions, nil
+}
+
+func findScalingParametersByName(conn *cloudsearch.CloudSearch, name string) (*cloudsearch.ScalingParameters, error) {
+	output, err := findScalingParametersStatusByName(conn, name)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output.Options == nil {
+		return nil, tfresource.NewEmptyResultError(name)
+	}
+
+	return output.Options, nil
+}
+
+func findScalingParametersStatusByName(conn *cloudsearch.CloudSearch, name string) (*cloudsearch.ScalingParametersStatus, error) {
+	input := &cloudsearch.DescribeScalingParametersInput{
+		DomainName: aws.String(name),
+	}
+
+	output, err := conn.DescribeScalingParameters(input)
+
+	if tfawserr.ErrCodeEquals(err, cloudsearch.ErrCodeResourceNotFoundException) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.ScalingParameters == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.ScalingParameters, nil
+}
+
+func statusDomainDeleting(conn *cloudsearch.CloudSearch, name string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := FindDomainStatusByName(conn, name)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, strconv.FormatBool(aws.BoolValue(output.Deleted)), nil
+	}
+}
+
+func statusDomainProcessing(conn *cloudsearch.CloudSearch, name string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := FindDomainStatusByName(conn, name)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, strconv.FormatBool(aws.BoolValue(output.Processing)), nil
+	}
+}
+
+func waitDomainActive(conn *cloudsearch.CloudSearch, name string, timeout time.Duration) (*cloudsearch.DomainStatus, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{"true"},
+		Target:  []string{"false"},
+		Refresh: statusDomainProcessing(conn, name),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*cloudsearch.DomainStatus); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitDomainDeleted(conn *cloudsearch.CloudSearch, name string, timeout time.Duration) (*cloudsearch.DomainStatus, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{"true"},
+		Target:  []string{},
+		Refresh: statusDomainDeleting(conn, name),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*cloudsearch.DomainStatus); ok {
+		return output, err
+	}
+
+	return nil, err
 }
 
 func expandDomainEndpointOptions(tfMap map[string]interface{}) *cloudsearch.DomainEndpointOptions {

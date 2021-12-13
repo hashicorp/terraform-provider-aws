@@ -2,21 +2,20 @@ package cloudsearch_test
 
 import (
 	"fmt"
-	"strconv"
 	"testing"
-	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudsearch"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfcloudsearch "github.com/hashicorp/terraform-provider-aws/internal/service/cloudsearch"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func TestAccCloudSearchDomain_basic(t *testing.T) {
-	var domains cloudsearch.DescribeDomainsOutput
+	var v cloudsearch.DomainStatus
 	resourceName := "aws_cloudsearch_domain.test"
 	rName := acctest.ResourcePrefix + "-" + sdkacctest.RandString(28-(len(acctest.ResourcePrefix)+1))
 
@@ -27,9 +26,72 @@ func TestAccCloudSearchDomain_basic(t *testing.T) {
 		CheckDestroy: testAccCloudSearchDomainDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCloudSearchDomainConfig_basic(rName),
+				Config: testAccCloudSearchDomainConfig(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCloudSearchDomainExists(resourceName, &v),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "cloudsearch", fmt.Sprintf("domain/%s", rName)),
+					resource.TestCheckResourceAttrSet(resourceName, "document_service_endpoint"),
+					resource.TestCheckResourceAttrSet(resourceName, "domain_id"),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_options.0.enforce_https", "false"),
+					resource.TestCheckResourceAttrSet(resourceName, "endpoint_options.0.tls_security_policy"),
+					resource.TestCheckResourceAttr(resourceName, "index.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "multi_az", "false"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "scaling_parameters.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "scaling_parameters.0.desired_instance_type", ""),
+					resource.TestCheckResourceAttr(resourceName, "scaling_parameters.0.desired_partition_count", "0"),
+					resource.TestCheckResourceAttr(resourceName, "scaling_parameters.0.desired_replication_count", "0"),
+					resource.TestCheckResourceAttrSet(resourceName, "search_service_endpoint"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccCloudSearchDomain_disappears(t *testing.T) {
+	var v cloudsearch.DomainStatus
+	resourceName := "aws_cloudsearch_domain.test"
+	rName := acctest.ResourcePrefix + "-" + sdkacctest.RandString(28-(len(acctest.ResourcePrefix)+1))
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudsearch.EndpointsID, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, cloudsearch.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCloudSearchDomainDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCloudSearchDomainConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCloudSearchDomainExists(resourceName, &domains),
+					testAccCloudSearchDomainExists(resourceName, &v),
+					acctest.CheckResourceDisappears(acctest.Provider, tfcloudsearch.ResourceDomain(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccCloudSearchDomain_simple(t *testing.T) {
+	var v cloudsearch.DomainStatus
+	resourceName := "aws_cloudsearch_domain.test"
+	rName := acctest.ResourcePrefix + "-" + sdkacctest.RandString(28-(len(acctest.ResourcePrefix)+1))
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudsearch.EndpointsID, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, cloudsearch.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCloudSearchDomainDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCloudSearchDomainConfig_simple(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCloudSearchDomainExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 				),
 			},
@@ -41,7 +103,7 @@ func TestAccCloudSearchDomain_basic(t *testing.T) {
 			{
 				Config: testAccCloudSearchDomainConfig_basicIndexMix(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCloudSearchDomainExists(resourceName, &domains),
+					testAccCloudSearchDomainExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 				),
 			},
@@ -55,7 +117,7 @@ func TestAccCloudSearchDomain_basic(t *testing.T) {
 }
 
 func TestAccCloudSearchDomain_textAnalysisScheme(t *testing.T) {
-	var domains cloudsearch.DescribeDomainsOutput
+	var v cloudsearch.DomainStatus
 	resourceName := "aws_cloudsearch_domain.test"
 	rName := acctest.ResourcePrefix + "-" + sdkacctest.RandString(28-(len(acctest.ResourcePrefix)+1))
 
@@ -68,14 +130,14 @@ func TestAccCloudSearchDomain_textAnalysisScheme(t *testing.T) {
 			{
 				Config: testAccCloudSearchDomainConfig_textAnalysisScheme(rName, "_en_default_"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCloudSearchDomainExists(resourceName, &domains),
+					testAccCloudSearchDomainExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "name", acctest.RandomFQDomainName()),
 				),
 			},
 			{
 				Config: testAccCloudSearchDomainConfig_textAnalysisScheme(rName, "_fr_default_"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCloudSearchDomainExists(resourceName, &domains),
+					testAccCloudSearchDomainExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 				),
 			},
@@ -88,80 +150,64 @@ func TestAccCloudSearchDomain_textAnalysisScheme(t *testing.T) {
 	})
 }
 
-func testAccCloudSearchDomainExists(n string, domains *cloudsearch.DescribeDomainsOutput) resource.TestCheckFunc {
+func testAccCloudSearchDomainExists(n string, v *cloudsearch.DomainStatus) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudSearchConn
-
-		domainList := cloudsearch.DescribeDomainsInput{
-			DomainNames: []*string{
-				aws.String(rs.Primary.Attributes["name"]),
-			},
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("No CloudSearch Domain ID is set")
 		}
 
-		resp, err := conn.DescribeDomains(&domainList)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudSearchConn
+
+		output, err := tfcloudsearch.FindDomainStatusByName(conn, rs.Primary.ID)
+
 		if err != nil {
 			return err
 		}
 
-		*domains = *resp
+		*v = *output
 
 		return nil
 	}
 }
 
 func testAccCloudSearchDomainDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).CloudSearchConn
-
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_cloudsearch_domain" {
 			continue
 		}
 
-		// Wait for the resource to start being deleted, which is marked as "Deleted" from the API.
-		stateConf := &resource.StateChangeConf{
-			Pending:        []string{"false"},
-			Target:         []string{"true"},
-			Timeout:        20 * time.Minute,
-			NotFoundChecks: 100,
-			Refresh: func() (interface{}, string, error) {
-				domainlist := cloudsearch.DescribeDomainsInput{
-					DomainNames: []*string{
-						aws.String(rs.Primary.Attributes["name"]),
-					},
-				}
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudSearchConn
 
-				resp, err := conn.DescribeDomains(&domainlist)
-				if err != nil {
-					return nil, "false", err
-				}
+		_, err := tfcloudsearch.FindDomainStatusByName(conn, rs.Primary.ID)
 
-				domain := resp.DomainStatusList[0]
-
-				// If we see that the domain has been deleted, go ahead and return true.
-				if *domain.Deleted {
-					return domain, "true", nil
-				}
-
-				if domain.Deleted != nil {
-					return nil, strconv.FormatBool(*domain.Deleted), nil
-				}
-
-				return nil, "false", nil
-			},
+		if tfresource.NotFound(err) {
+			continue
 		}
-		_, err := stateConf.WaitForState()
-		return err
+
+		if err != nil {
+			return err
+		}
+
+		return fmt.Errorf("CloudSearch Domain %s still exists", rs.Primary.ID)
 	}
 
 	return nil
 }
 
-func testAccCloudSearchDomainConfig_basic(name string) string {
+func testAccCloudSearchDomainConfig(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_cloudsearch_domain" "test" {
+  name = %[1]q
+}
+`, rName)
+}
+
+func testAccCloudSearchDomainConfig_simple(name string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudsearch_domain" "test" {
   name = "%s"
