@@ -59,11 +59,11 @@ func resourcePullThroughCacheRuleCreate(ctx context.Context, d *schema.ResourceD
 		UpstreamRegistryUrl: aws.String(d.Get("upstream_registry_url").(string)),
 	}
 
-	log.Printf("[DEBUG] Creating ECR Pull Through Cache Repository: %s", input)
+	log.Printf("[DEBUG] Creating ECR Pull Through Cache Rule: %s", input)
 	_, err := conn.CreatePullThroughCacheRuleWithContext(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("error creating ECR Pull Through Cache Repository (%s): %s", repositoryPrefix, err)
+		return diag.Errorf("error creating ECR Pull Through Cache Rule (%s): %s", repositoryPrefix, err)
 	}
 
 	d.SetId(repositoryPrefix)
@@ -77,13 +77,13 @@ func resourcePullThroughCacheRuleRead(ctx context.Context, d *schema.ResourceDat
 	rule, err := FindPullThroughCacheRuleByRepositoryPrefix(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
-		log.Printf("[WARN] ECR Pull Through Cache Repository (%s) not found, removing from state", d.Id())
+		log.Printf("[WARN] ECR Pull Through Cache Rule (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if err != nil {
-		return diag.Errorf("error reading ECR Pull Through Cache Repository (%s): %s", d.Id(), err)
+		return diag.Errorf("error reading ECR Pull Through Cache Rule (%s): %s", d.Id(), err)
 	}
 
 	d.Set("ecr_repository_prefix", rule.EcrRepositoryPrefix)
@@ -96,7 +96,7 @@ func resourcePullThroughCacheRuleRead(ctx context.Context, d *schema.ResourceDat
 func resourcePullThroughCacheRuleDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).ECRConn
 
-	log.Printf("[DEBUG] Deleting ECR Pull Through Cache Repository: (%s)", d.Id())
+	log.Printf("[DEBUG] Deleting ECR Pull Through Cache Rule: (%s)", d.Id())
 	_, err := conn.DeletePullThroughCacheRuleWithContext(ctx, &ecr.DeletePullThroughCacheRuleInput{
 		EcrRepositoryPrefix: aws.String(d.Id()),
 		RegistryId:          aws.String(d.Get("registry_id").(string)),
@@ -107,7 +107,7 @@ func resourcePullThroughCacheRuleDelete(ctx context.Context, d *schema.ResourceD
 	}
 
 	if err != nil {
-		return diag.Errorf("error deleting ECR Pull Through Cache Repository (%s): %s", d.Id(), err)
+		return diag.Errorf("error deleting ECR Pull Through Cache Rule (%s): %s", d.Id(), err)
 	}
 
 	return nil
