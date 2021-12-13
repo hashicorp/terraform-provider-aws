@@ -1294,7 +1294,7 @@ func onPremisesTagSetToMap(tagSet *codedeploy.OnPremisesTagSet) []map[string]int
 				filtersAsIntfSlice = append(filtersAsIntfSlice, item)
 			}
 			tagFilters := map[string]interface{}{
-				"on_premises_instance_tag_filter": schema.NewSet(resourceAwsCodeDeployTagFilterHash, filtersAsIntfSlice),
+				"on_premises_instance_tag_filter": schema.NewSet(resourceTagFilterHash, filtersAsIntfSlice),
 			}
 			result = append(result, tagFilters)
 		}
@@ -1569,7 +1569,7 @@ func resourceAwsCodeDeployOnPremTagSetHash(v interface{}) int {
 
 	var x uint64 = 1
 	for i, filter := range filterSetSlice {
-		x = ((x << 7) | (x >> (64 - 7))) ^ uint64(i) ^ uint64(resourceAwsCodeDeployTagFilterHash(filter))
+		x = ((x << 7) | (x >> (64 - 7))) ^ uint64(i) ^ uint64(resourceTagFilterHash(filter))
 	}
 	return int(x)
 }
