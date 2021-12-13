@@ -916,10 +916,10 @@ resource "aws_sqs_queue" "test" {
 
   policy = jsonencode({
     Version = "2012-10-17"
-    Id = "sqspolicy"
+    Id      = "sqspolicy"
     Statement = [{
-      Sid = "SID1993561419"
-      Effect = "Allow"
+      Sid       = "SID1993561419"
+      Effect    = "Allow"
       Principal = "*"
       Action = [
         "sqs:SendMessage",
@@ -966,10 +966,10 @@ resource "aws_sqs_queue" "test" {
 
   policy = jsonencode({
     Version = "2012-10-17"
-    Id = "sqspolicy"
+    Id      = "sqspolicy"
     Statement = [{
-      Sid = "SID1993561419"
-      Effect = "Allow"
+      Sid       = "SID1993561419"
+      Effect    = "Allow"
       Principal = ["*"]
       Action = [
         "sqs:ListQueues",
