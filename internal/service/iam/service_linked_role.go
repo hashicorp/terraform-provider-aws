@@ -84,28 +84,30 @@ func resourceServiceLinkedRoleCreate(d *schema.ResourceData, meta interface{}) e
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
 	serviceName := d.Get("aws_service_name").(string)
-
-	params := &iam.CreateServiceLinkedRoleInput{
+	input := &iam.CreateServiceLinkedRoleInput{
 		AWSServiceName: aws.String(serviceName),
 	}
 
 	if v, ok := d.GetOk("custom_suffix"); ok {
-		params.CustomSuffix = aws.String(v.(string))
+		input.CustomSuffix = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("description"); ok {
-		params.Description = aws.String(v.(string))
+		input.Description = aws.String(v.(string))
 	}
 
-	resp, err := conn.CreateServiceLinkedRole(params)
+	log.Printf("[DEBUG] Creating IAM Service Linked Role: %s", input)
+	output, err := conn.CreateServiceLinkedRole(input)
 
 	if err != nil {
-		return fmt.Errorf("Error creating service-linked role with name %s: %w", serviceName, err)
+		return fmt.Errorf("error creating IAM Service Linked Role (%s): %w", serviceName, err)
 	}
-	d.SetId(aws.StringValue(resp.Role.Arn))
+
+	d.SetId(aws.StringValue(output.Role.Arn))
 
 	if len(tags) > 0 {
 		_, roleName, _, err := DecodeServiceLinkedRoleID(d.Id())
+
 		if err != nil {
 			return err
 		}
@@ -124,6 +126,7 @@ func resourceServiceLinkedRoleRead(d *schema.ResourceData, meta interface{}) err
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	serviceName, roleName, customSuffix, err := DecodeServiceLinkedRoleID(d.Id())
+
 	if err != nil {
 		return err
 	}
@@ -171,20 +174,22 @@ func resourceServiceLinkedRoleUpdate(d *schema.ResourceData, meta interface{}) e
 	conn := meta.(*conns.AWSClient).IAMConn
 
 	_, roleName, _, err := DecodeServiceLinkedRoleID(d.Id())
+
 	if err != nil {
 		return err
 	}
 
 	if d.HasChangesExcept("tags_all", "tags") {
-		params := &iam.UpdateRoleInput{
+		input := &iam.UpdateRoleInput{
 			Description: aws.String(d.Get("description").(string)),
 			RoleName:    aws.String(roleName),
 		}
 
-		_, err = conn.UpdateRole(params)
+		log.Printf("[DEBUG] Updating IAM Service Linked Role: %s", input)
+		_, err = conn.UpdateRole(input)
 
 		if err != nil {
-			return fmt.Errorf("Error updating service-linked role %s: %w", d.Id(), err)
+			return fmt.Errorf("error updating IAM Service Linked Role (%s): %w", d.Id(), err)
 		}
 	}
 
@@ -238,11 +243,13 @@ func resourceServiceLinkedRoleDelete(d *schema.ResourceData, meta interface{}) e
 
 func DecodeServiceLinkedRoleID(id string) (serviceName, roleName, customSuffix string, err error) {
 	idArn, err := arn.Parse(id)
+
 	if err != nil {
 		return "", "", "", err
 	}
 
 	resourceParts := strings.Split(idArn.Resource, "/")
+
 	if len(resourceParts) != 4 {
 		return "", "", "", fmt.Errorf("expected IAM Service Role ARN (arn:PARTITION:iam::ACCOUNTID:role/aws-service-role/SERVICENAME/ROLENAME), received: %s", id)
 	}
