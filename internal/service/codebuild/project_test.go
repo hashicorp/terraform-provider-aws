@@ -86,6 +86,7 @@ func TestAccCodeBuildProject_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "environment.0.image_pull_credentials_type", codebuild.ImagePullCredentialsTypeCodebuild),
 					resource.TestCheckResourceAttr(resourceName, "logs_config.0.cloudwatch_logs.0.status", codebuild.LogsConfigStatusTypeEnabled),
 					resource.TestCheckResourceAttr(resourceName, "logs_config.0.s3_logs.0.status", codebuild.LogsConfigStatusTypeDisabled),
+					resource.TestCheckResourceAttr(resourceName, "project_visibility", "PRIVATE"),
 					resource.TestCheckResourceAttrPair(resourceName, "service_role", roleResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "source.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "source.0.auth.#", "0"),
@@ -102,6 +103,51 @@ func TestAccCodeBuildProject_basic(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccCodeBuildProject_publicVisibility(t *testing.T) {
+	var project codebuild.Project
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resourceName := "aws_codebuild_project.test"
+	roleResourceName := "aws_iam_role.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, codebuild.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckProjectDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccProjectConfig_projectVisibility(rName, "PUBLIC_READ"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckProjectExists(resourceName, &project),
+					resource.TestCheckResourceAttr(resourceName, "project_visibility", "PUBLIC_READ"),
+					resource.TestCheckResourceAttrSet(resourceName, "public_project_alias"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccProjectConfig_projectVisibility(rName, "PRIVATE"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckProjectExists(resourceName, &project),
+					resource.TestCheckResourceAttr(resourceName, "project_visibility", "PRIVATE"),
+				),
+			},
+			{
+				Config: testAccProjectConfig_projectVisibility_resourceRole(rName, "PRIVATE"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckProjectExists(resourceName, &project),
+					resource.TestCheckResourceAttr(resourceName, "project_visibility", "PRIVATE"),
+					resource.TestCheckResourceAttrPair(resourceName, "resource_access_role", roleResourceName, "arn"),
+				),
 			},
 		},
 	})
@@ -2578,6 +2624,57 @@ resource "aws_codebuild_project" "test" {
   }
 }
 `, rName, testAccGitHubSourceLocationFromEnv()))
+}
+
+func testAccProjectConfig_projectVisibility(rName, visibility string) string {
+	return acctest.ConfigCompose(testAccProjectConfig_Base_ServiceRole(rName), fmt.Sprintf(`
+resource "aws_codebuild_project" "test" {
+  name               = %[1]q
+  service_role       = aws_iam_role.test.arn
+  project_visibility = %[3]q
+
+  artifacts {
+    type = "NO_ARTIFACTS"
+  }
+
+  environment {
+    compute_type = "BUILD_GENERAL1_SMALL"
+    image        = "2"
+    type         = "LINUX_CONTAINER"
+  }
+
+  source {
+    location = %[2]q
+    type     = "GITHUB"
+  }
+}
+`, rName, testAccGitHubSourceLocationFromEnv(), visibility))
+}
+
+func testAccProjectConfig_projectVisibility_resourceRole(rName, visibility string) string {
+	return acctest.ConfigCompose(testAccProjectConfig_Base_ServiceRole(rName), fmt.Sprintf(`
+resource "aws_codebuild_project" "test" {
+  name                 = %[1]q
+  service_role         = aws_iam_role.test.arn
+  project_visibility   = %[3]q
+  resource_access_role = aws_iam_role.test.arn
+
+  artifacts {
+    type = "NO_ARTIFACTS"
+  }
+
+  environment {
+    compute_type = "BUILD_GENERAL1_SMALL"
+    image        = "2"
+    type         = "LINUX_CONTAINER"
+  }
+
+  source {
+    location = %[2]q
+    type     = "GITHUB"
+  }
+}
+`, rName, testAccGitHubSourceLocationFromEnv(), visibility))
 }
 
 func testAccProjectConfig_BadgeEnabled(rName string, badgeEnabled bool) string {

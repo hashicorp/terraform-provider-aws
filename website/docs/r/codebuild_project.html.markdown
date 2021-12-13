@@ -238,6 +238,8 @@ The following arguments are optional:
 * `file_system_locations` - (Optional) A set of file system locations to to mount inside the build. File system locations are documented below.
 * `encryption_key` - (Optional) AWS Key Management Service (AWS KMS) customer master key (CMK) to be used for encrypting the build project's build output artifacts.
 * `logs_config` - (Optional) Configuration block. Detailed below.
+* `project_visibility` - (Optional) Specifies the visibility of the project's builds. Possible values are: `PUBLIC_READ` and `PRIVATE`. Default value is `PRIVATE`.
+* `resource_access_role` - The ARN of the IAM role that enables CodeBuild to access the CloudWatch Logs and Amazon S3 artifacts for the project's builds.
 * `queued_timeout` - (Optional) Number of minutes, from 5 to 480 (8 hours), a build is allowed to be queued before it times out. The default is 8 hours.
 * `secondary_artifacts` - (Optional) Configuration block. Detailed below.
 * `secondary_sources` - (Optional) Configuration block. Detailed below.
@@ -406,6 +408,7 @@ In addition to all arguments above, the following attributes are exported:
 * `arn` - ARN of the CodeBuild project.
 * `badge_url` - URL of the build badge when `badge_enabled` is enabled.
 * `id` - Name (if imported via `name`) or ARN (if created via Terraform or imported via ARN) of the CodeBuild project.
+* `public_project_alias` - The project identifier used with the public build APIs.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
 
 ## Import
