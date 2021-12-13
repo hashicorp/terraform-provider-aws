@@ -37,6 +37,16 @@ func DataSourceCluster() *schema.Resource {
 				Computed: true,
 			},
 
+			"availability_zone_relocation": {
+				Type:     schema.TypeBool,
+				Computed: true,
+			},
+
+			"availability_zone_relocation_status": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+
 			"bucket_name": {
 				Type:     schema.TypeString,
 				Computed: true,
