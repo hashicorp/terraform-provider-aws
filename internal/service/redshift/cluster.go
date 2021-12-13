@@ -59,6 +59,15 @@ func ResourceCluster() *schema.Resource {
 				ForceNew: true,
 				Computed: true,
 			},
+			"availability_zone_relocation": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
+			"availability_zone_relocation_status": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"cluster_identifier": {
 				Type:     schema.TypeString,
 				Required: true,
