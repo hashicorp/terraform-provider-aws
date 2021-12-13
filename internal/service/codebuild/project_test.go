@@ -1824,6 +1824,42 @@ func TestAccCodeBuildProject_Artifacts_type(t *testing.T) {
 	})
 }
 
+func TestAccCodeBuildProject_Artifacts_bucketOwnerAccess(t *testing.T) {
+	var project codebuild.Project
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_codebuild_project.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, codebuild.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckProjectDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccProjectConfig_Artifacts_BucketOwnerAccess(rName, "FULL"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckProjectExists(resourceName, &project),
+					resource.TestCheckResourceAttr(resourceName, "artifacts.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "artifacts.0.bucket_owner_access", "FULL"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccProjectConfig_Artifacts_BucketOwnerAccess(rName, "READ_ONLY"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckProjectExists(resourceName, &project),
+					resource.TestCheckResourceAttr(resourceName, "artifacts.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "artifacts.0.bucket_owner_access", "READ_ONLY"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccCodeBuildProject_secondaryArtifacts(t *testing.T) {
 	var project codebuild.Project
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -2484,6 +2520,7 @@ resource "aws_iam_role_policy" "test" {
         "s3:GetObject",
         "s3:GetObjectVersion",
         "s3:GetBucketAcl",
+        "s3:PutBucketAcl",
         "s3:GetBucketLocation"
       ]
     },
@@ -4138,6 +4175,39 @@ resource "aws_codebuild_project" "test" {
   }
 }
 `, rName, artifactType))
+}
+
+func testAccProjectConfig_Artifacts_BucketOwnerAccess(rName string, typ string) string {
+	return acctest.ConfigCompose(
+		testAccProjectConfig_Base_ServiceRole(rName),
+		fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket        = %[1]q
+  force_destroy = true
+}
+
+resource "aws_codebuild_project" "test" {
+  name         = %[1]q
+  service_role = aws_iam_role.test.arn
+
+  artifacts {
+    type                = "S3"
+    location            = aws_s3_bucket.test.bucket
+	bucket_owner_access = %[2]q
+  }
+
+  environment {
+    compute_type = "BUILD_GENERAL1_SMALL"
+    image        = "2"
+    type         = "LINUX_CONTAINER"
+  }
+
+  source {
+    type     = "S3"
+    location = "${aws_s3_bucket.test.bucket}/"
+  }
+}
+`, rName, typ))
 }
 
 func testAccProjectConfig_SecondaryArtifacts(rName string) string {
