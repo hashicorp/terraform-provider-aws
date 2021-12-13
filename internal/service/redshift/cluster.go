@@ -567,6 +567,12 @@ func resourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("arn", arn)
 	d.Set("automated_snapshot_retention_period", rsc.AutomatedSnapshotRetentionPeriod)
 	d.Set("availability_zone", rsc.AvailabilityZone)
+	d.Set("availability_zone_relocation_status", rsc.AvailabilityZoneRelocationStatus)
+	azr, err := availabilityZoneRelocationStatus(rsc)
+	if err != nil {
+		return fmt.Errorf("error reading Redshift Cluster (%s): %w", d.Id(), err)
+	}
+	d.Set("availability_zone_relocation", azr)
 	d.Set("cluster_identifier", rsc.ClusterIdentifier)
 	if err := d.Set("cluster_nodes", flattenRedshiftClusterNodes(rsc.ClusterNodes)); err != nil {
 		return fmt.Errorf("error setting cluster_nodes: %w", err)
