@@ -225,6 +225,7 @@ The following arguments are required:
 * `artifacts` - (Required) Configuration block. Detailed below.
 * `environment` - (Required) Configuration block. Detailed below.
 * `name` - (Required) Project's name.
+* `service_role` - (Required) Amazon Resource Name (ARN) of the AWS Identity and Access Management (IAM) role that enables AWS CodeBuild to interact with dependent AWS services on behalf of the AWS account.
 * `source` - (Required) Configuration block. Detailed below.
 
 The following arguments are optional:
@@ -243,7 +244,6 @@ The following arguments are optional:
 * `queued_timeout` - (Optional) Number of minutes, from 5 to 480 (8 hours), a build is allowed to be queued before it times out. The default is 8 hours.
 * `secondary_artifacts` - (Optional) Configuration block. Detailed below.
 * `secondary_sources` - (Optional) Configuration block. Detailed below.
-* `service_role` - (Required) Amazon Resource Name (ARN) of the AWS Identity and Access Management (IAM) role that enables AWS CodeBuild to interact with dependent AWS services on behalf of the AWS account.
 * `source_version` - (Optional) Version of the build input to be built for this project. If not specified, the latest version is used.
 * `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `vpc_config` - (Optional) Configuration block. Detailed below.
