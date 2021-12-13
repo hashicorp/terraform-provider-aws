@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/iam"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -78,6 +79,7 @@ func TestAccIAMServiceLinkedRole_basic(t *testing.T) {
 	awsServiceName := "elasticbeanstalk.amazonaws.com"
 	name := "AWSServiceRoleForElasticBeanstalk"
 	path := fmt.Sprintf("/aws-service-role/%s/", awsServiceName)
+	arnResource := fmt.Sprintf("role%s%s", path, name)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -88,10 +90,18 @@ func TestAccIAMServiceLinkedRole_basic(t *testing.T) {
 			{
 				PreConfig: func() {
 					// Remove existing if possible
+					client := acctest.Provider.Meta().(*conns.AWSClient)
+					arn := arn.ARN{
+						Partition: client.Partition,
+						Service:   "iam",
+						Region:    client.Region,
+						AccountID: client.AccountID,
+						Resource:  arnResource,
+					}.String()
 					r := tfiam.ResourceServiceLinkedRole()
 					d := r.Data(nil)
-					d.SetId(name)
-					err := r.Delete(d, acctest.Provider.Meta())
+					d.SetId(arn)
+					err := r.Delete(d, client)
 
 					if err != nil {
 						t.Fatalf("Error deleting service-linked role %s: %s", name, err)
@@ -100,7 +110,7 @@ func TestAccIAMServiceLinkedRole_basic(t *testing.T) {
 				Config: testAccServiceLinkedRoleConfig(awsServiceName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceLinkedRoleExists(resourceName),
-					acctest.CheckResourceAttrGlobalARN(resourceName, "arn", "iam", fmt.Sprintf("role%s%s", path, name)),
+					acctest.CheckResourceAttrGlobalARN(resourceName, "arn", "iam", arnResource),
 					resource.TestCheckResourceAttr(resourceName, "aws_service_name", awsServiceName),
 					acctest.CheckResourceAttrRFC3339(resourceName, "create_date"),
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
