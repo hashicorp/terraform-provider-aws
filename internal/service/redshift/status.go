@@ -1,7 +1,6 @@
 package redshift
 
 import (
-	"errors"
 	"fmt"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -34,6 +33,6 @@ func availabilityZoneRelocationStatus(cluster *redshift.Cluster) (bool, error) {
 	case "disabled", "pending_disabling":
 		return false, nil
 	default:
-		return false, errors.New(fmt.Sprintf("unexpected AvailabilityZoneRelocationStatus attribute value: %s", availabilityZoneRelocationStatus))
+		return false, fmt.Errorf("unexpected AvailabilityZoneRelocationStatus attribute value: %s", availabilityZoneRelocationStatus)
 	}
 }
