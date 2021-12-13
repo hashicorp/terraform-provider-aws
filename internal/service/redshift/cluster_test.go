@@ -1278,3 +1278,23 @@ resource "aws_redshift_cluster" "test" {
 }
 `, rName))
 }
+
+func testAccClusterConfig_availabilityZoneRelocation(rInt int, enabled bool) string {
+	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptInExclude("usw2-az2"), fmt.Sprintf(`
+resource "aws_redshift_cluster" "default" {
+  cluster_identifier                  = "tf-redshift-cluster-%[1]d"
+  availability_zone                   = data.aws_availability_zones.available.names[0]
+  database_name                       = "mydb"
+  master_username                     = "foo_test"
+  master_password                     = "Mustbe8characters"
+  node_type                           = "ra3.xlplus"
+  number_of_nodes                     = 2
+  cluster_type                        = "multi-node"
+  availability_zone_relocation        = tobool("%[2]t")
+  publicly_accessible                 = false
+  automated_snapshot_retention_period = 1
+  allow_version_upgrade               = false
+  skip_final_snapshot                 = true
+}
+`, rInt, enabled))
+}
