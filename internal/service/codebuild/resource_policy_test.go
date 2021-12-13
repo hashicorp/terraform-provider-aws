@@ -166,10 +166,10 @@ resource "aws_codebuild_resource_policy" "test" {
         AWS = "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:root"
       }
       Action = [
-		"codebuild:BatchGetReportGroups",
-		"codebuild:BatchGetReports",
-		"codebuild:ListReportsForReportGroup",
-		"codebuild:DescribeTestCases",
+        "codebuild:BatchGetReportGroups",
+        "codebuild:BatchGetReports",
+        "codebuild:ListReportsForReportGroup",
+        "codebuild:DescribeTestCases",
       ]
       Resource = aws_codebuild_report_group.test.arn
     }]
