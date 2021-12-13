@@ -23,10 +23,9 @@ func ResourceRegistryScanningConfiguration() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"scan_type": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringInSlice(ecr.ScanType_Values(), false),
+			"registry_id": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"rule": {
 				Type:     schema.TypeSet,
@@ -65,6 +64,11 @@ func ResourceRegistryScanningConfiguration() *schema.Resource {
 					},
 				},
 			},
+			"scan_type": {
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: validation.StringInSlice(ecr.ScanType_Values(), false),
+			},
 		},
 	}
 }
@@ -78,8 +82,9 @@ func resourceRegistryScanningConfigurationPut(d *schema.ResourceData, meta inter
 	}
 
 	_, err := conn.PutRegistryScanningConfiguration(&input)
+
 	if err != nil {
-		return fmt.Errorf("Error creating ECR Scanning Configuration: %w", err)
+		return fmt.Errorf("error creating ECR Registry Scanning Configuration: %w", err)
 	}
 
 	d.SetId(meta.(*conns.AWSClient).AccountID)
@@ -90,13 +95,13 @@ func resourceRegistryScanningConfigurationPut(d *schema.ResourceData, meta inter
 func resourceRegistryScanningConfigurationRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ECRConn
 
-	log.Printf("[DEBUG] Reading registry scanning configuration %s", d.Id())
 	out, err := conn.GetRegistryScanningConfiguration(&ecr.GetRegistryScanningConfigurationInput{})
 
 	if err != nil {
-		return fmt.Errorf("Error reading registry scanning configuration: %s", err)
+		return fmt.Errorf("error reading ECR Registry Scanning Configuration (%s): %w", d.Id(), err)
 	}
 
+	d.Set("registry_id", out.RegistryId)
 	d.Set("scan_type", out.ScanningConfiguration.ScanType)
 	d.Set("rule", flattenEcrScanningConfigurationRules(out.ScanningConfiguration.Rules))
 
@@ -106,13 +111,14 @@ func resourceRegistryScanningConfigurationRead(d *schema.ResourceData, meta inte
 func resourceRegistryScanningConfigurationDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ECRConn
 
+	log.Printf("[DEBUG] Deleting ECR Registry Scanning Configuration: (%s)", d.Id())
 	_, err := conn.PutRegistryScanningConfiguration(&ecr.PutRegistryScanningConfigurationInput{
 		Rules:    []*ecr.RegistryScanningRule{},
 		ScanType: aws.String(ecr.ScanTypeBasic),
 	})
 
 	if err != nil {
-		return fmt.Errorf("Error deleting registry scanning configuration: %s", err)
+		return fmt.Errorf("error deleting ECR Registry Scanning Configuration (%s): %w", d.Id(), err)
 	}
 
 	return nil

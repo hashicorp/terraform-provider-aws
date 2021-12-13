@@ -68,14 +68,7 @@ The following arguments are supported:
 
 In addition to all arguments above, the following attributes are exported:
 
-- `id` - The registry ID the scanning configuration applies to.
-
-## Timeouts
-
-`aws_ecr_registry_scanning_configuration` provides the following [Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts)
-configuration options:
-
-- `delete` - (Default `20 minutes`) How long to wait for a scanning configuration to be deleted.
+* `registry_id` - The registry ID the scanning configuration applies to.
 
 ## Import
 

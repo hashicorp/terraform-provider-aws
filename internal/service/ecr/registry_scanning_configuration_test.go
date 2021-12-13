@@ -13,8 +13,8 @@ import (
 
 func TestAccECRScanningConfiguration_serial(t *testing.T) {
 	testFuncs := map[string]func(t *testing.T){
-		"basic": testAccRegistryScanningConfiguration_basic,
-		// "disappears": testAccRegistryPolicy_disappears,
+		"basic":  testAccRegistryScanningConfiguration_basic,
+		"update": testAccRegistryScanningConfiguration_update,
 	}
 
 	for name, testFunc := range testFuncs {
@@ -37,11 +37,40 @@ func testAccRegistryScanningConfiguration_basic(t *testing.T) {
 		CheckDestroy: testAccRegistryScanningConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRegistryScanningConfiguration(),
+				Config: testAccRegistryScanningConfigurationConfig(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccRegistryScanningConfigurationExists(resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "scan_type", "ENHANCED"),
+					acctest.CheckResourceAttrAccountID(resourceName, "registry_id"),
+					resource.TestCheckResourceAttr(resourceName, "rule.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "scan_type", "BASIC"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func testAccRegistryScanningConfiguration_update(t *testing.T) {
+	var v ecr.GetRegistryScanningConfigurationOutput
+	resourceName := "aws_ecr_registry_scanning_configuration.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ecr.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccRegistryScanningConfigurationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRegistryScanningConfigurationConfigOneRule(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccRegistryScanningConfigurationExists(resourceName, &v),
+					acctest.CheckResourceAttrAccountID(resourceName, "registry_id"),
 					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "scan_type", "BASIC"),
 				),
 			},
 			{
@@ -50,11 +79,11 @@ func testAccRegistryScanningConfiguration_basic(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccRegistryScanningConfigurationUpdated(),
+				Config: testAccRegistryScanningConfigurationConfigTwoRules(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccRegistryScanningConfigurationExists(resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "scan_type", "ENHANCED"),
 					resource.TestCheckResourceAttr(resourceName, "rule.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "scan_type", "ENHANCED"),
 				),
 			},
 		},
@@ -65,11 +94,12 @@ func testAccRegistryScanningConfigurationDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).ECRConn
 
 	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_ecr_registry_policy" {
+		if rs.Type != "aws_ecr_registry_scanning_configuration" {
 			continue
 		}
 
 		_, err := conn.GetRegistryScanningConfiguration(&ecr.GetRegistryScanningConfigurationInput{})
+
 		if err != nil {
 			return err
 		}
@@ -78,7 +108,7 @@ func testAccRegistryScanningConfigurationDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccRegistryScanningConfigurationExists(name string, res *ecr.GetRegistryScanningConfigurationOutput) resource.TestCheckFunc {
+func testAccRegistryScanningConfigurationExists(name string, v *ecr.GetRegistryScanningConfigurationOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -86,28 +116,37 @@ func testAccRegistryScanningConfigurationExists(name string, res *ecr.GetRegistr
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No ECR registry policy ID is set")
+			return fmt.Errorf("No ECR Registry Scanning Configuration ID is set")
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ECRConn
 
 		output, err := conn.GetRegistryScanningConfiguration(&ecr.GetRegistryScanningConfigurationInput{})
+
 		if err != nil {
 			return err
 		}
 
-		*res = *output
+		*v = *output
 
 		return nil
 	}
 }
 
-func testAccRegistryScanningConfiguration() string {
+func testAccRegistryScanningConfigurationConfig() string {
 	return `
 resource "aws_ecr_registry_scanning_configuration" "test" {
-  scan_type = "ENHANCED"
+  scan_type = "BASIC"
+}
+`
+}
+
+func testAccRegistryScanningConfigurationConfigOneRule() string {
+	return `
+resource "aws_ecr_registry_scanning_configuration" "test" {
+  scan_type = "BASIC"
   rule {
-    scan_frequency = "CONTINUOUS_SCAN"
+    scan_frequency = "SCAN_ON_PUSH"
     repository_filter {
       filter      = "example"
       filter_type = "WILDCARD"
@@ -117,7 +156,7 @@ resource "aws_ecr_registry_scanning_configuration" "test" {
 `
 }
 
-func testAccRegistryScanningConfigurationUpdated() string {
+func testAccRegistryScanningConfigurationConfigTwoRules() string {
 	return `
 resource "aws_ecr_registry_scanning_configuration" "test" {
   scan_type = "ENHANCED"
