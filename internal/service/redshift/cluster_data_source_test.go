@@ -40,6 +40,7 @@ func TestAccRedshiftClusterDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(dataSourceName, "port"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "preferred_maintenance_window"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "publicly_accessible"),
+					resource.TestCheckResourceAttrSet(dataSourceName, "availability_zone_relocation"),
 				),
 			},
 		},
