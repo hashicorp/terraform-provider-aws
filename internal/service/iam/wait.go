@@ -65,7 +65,7 @@ func statusRoleCreate(conn *iam.IAM, id string, role *iam.Role) resource.StateRe
 	}
 }
 
-func WaitDeleteServiceLinkedRole(conn *iam.IAM, deletionTaskID string) error {
+func waitDeleteServiceLinkedRole(conn *iam.IAM, deletionTaskID string) error {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{iam.DeletionTaskStatusTypeInProgress, iam.DeletionTaskStatusTypeNotStarted},
 		Target:  []string{iam.DeletionTaskStatusTypeSucceeded},

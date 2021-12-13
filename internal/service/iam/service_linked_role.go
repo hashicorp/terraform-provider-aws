@@ -210,21 +210,34 @@ func resourceServiceLinkedRoleDelete(d *schema.ResourceData, meta interface{}) e
 	conn := meta.(*conns.AWSClient).IAMConn
 
 	_, roleName, _, err := DecodeServiceLinkedRoleID(d.Id())
+
 	if err != nil {
 		return err
 	}
 
-	deletionID, err := DeleteServiceLinkedRole(conn, roleName)
-	if err != nil {
-		return fmt.Errorf("Error deleting service-linked role %s: %w", d.Id(), err)
-	}
-	if deletionID == "" {
+	log.Printf("[DEBUG] Deleting IAM Service Linked Role: (%s)", d.Id())
+	output, err := conn.DeleteServiceLinkedRole(&iam.DeleteServiceLinkedRoleInput{
+		RoleName: aws.String(roleName),
+	})
+
+	if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
 		return nil
 	}
 
-	err = WaitDeleteServiceLinkedRole(conn, deletionID)
 	if err != nil {
-		return fmt.Errorf("Error waiting for role (%s) to be deleted: %w", d.Id(), err)
+		return fmt.Errorf("error deleting IAM Service Linked Role (%s): %w", d.Id(), err)
+	}
+
+	deletionTaskID := aws.StringValue(output.DeletionTaskId)
+
+	if deletionTaskID == "" {
+		return nil
+	}
+
+	err = waitDeleteServiceLinkedRole(conn, deletionTaskID)
+
+	if err != nil {
+		return fmt.Errorf("error waiting for IAM Service Linked Role (%s) delete: %w", d.Id(), err)
 	}
 
 	return nil
@@ -250,21 +263,4 @@ func DecodeServiceLinkedRoleID(id string) (serviceName, roleName, customSuffix s
 	}
 
 	return
-}
-
-func DeleteServiceLinkedRole(conn *iam.IAM, roleName string) (string, error) {
-	params := &iam.DeleteServiceLinkedRoleInput{
-		RoleName: aws.String(roleName),
-	}
-
-	resp, err := conn.DeleteServiceLinkedRole(params)
-
-	if err != nil {
-		if tfawserr.ErrMessageContains(err, iam.ErrCodeNoSuchEntityException, "") {
-			return "", nil
-		}
-		return "", err
-	}
-
-	return aws.StringValue(resp.DeletionTaskId), nil
 }

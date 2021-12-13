@@ -88,18 +88,13 @@ func TestAccIAMServiceLinkedRole_basic(t *testing.T) {
 			{
 				PreConfig: func() {
 					// Remove existing if possible
-					conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn
-					deletionID, err := tfiam.DeleteServiceLinkedRole(conn, name)
+					r := tfiam.ResourceServiceLinkedRole()
+					d := r.Data(nil)
+					d.SetId(name)
+					err := r.Delete(d, acctest.Provider.Meta())
+
 					if err != nil {
 						t.Fatalf("Error deleting service-linked role %s: %s", name, err)
-					}
-					if deletionID == "" {
-						return
-					}
-
-					err = tfiam.WaitDeleteServiceLinkedRole(conn, deletionID)
-					if err != nil {
-						t.Fatalf("Error waiting for role (%s) to be deleted: %s", name, err)
 					}
 				},
 				Config: testAccServiceLinkedRoleConfig(awsServiceName),
