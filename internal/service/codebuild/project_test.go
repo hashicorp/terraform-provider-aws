@@ -4193,7 +4193,7 @@ resource "aws_codebuild_project" "test" {
   artifacts {
     type                = "S3"
     location            = aws_s3_bucket.test.bucket
-	bucket_owner_access = %[2]q
+    bucket_owner_access = %[2]q
   }
 
   environment {
