@@ -459,6 +459,10 @@ func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
 			createOpts.AvailabilityZone = aws.String(v.(string))
 		}
 
+		if v, ok := d.GetOk("availability_zone_relocation"); ok {
+			createOpts.AvailabilityZoneRelocation = aws.Bool(v.(bool))
+		}
+
 		if v, ok := d.GetOk("preferred_maintenance_window"); ok {
 			createOpts.PreferredMaintenanceWindow = aws.String(v.(string))
 		}
