@@ -882,7 +882,7 @@ func Provider() *schema.Provider {
 			"aws_cloudhsm_v2_cluster": cloudhsmv2.ResourceCluster(),
 			"aws_cloudhsm_v2_hsm":     cloudhsmv2.ResourceHSM(),
 
-			"aws_cloudsearch_domain": cloudsearch.ResourceDomain(),
+			"aws_cloudsearch_domain":                       cloudsearch.ResourceDomain(),
 			"aws_cloudsearch_domain_service_access_policy": cloudsearch.ResourceDomainServiceAccessPolicy(),
 
 			"aws_cloudtrail": cloudtrail.ResourceCloudTrail(),
