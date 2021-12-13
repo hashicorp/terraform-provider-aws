@@ -146,7 +146,7 @@ func TestAccFirehoseDeliveryStream_s3basicWithPrefixes(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccDeliveryStreamConfig_s3basicWithPrefixes(rName,"", ""),
+				Config: testAccDeliveryStreamConfig_s3basicWithPrefixes(rName, "", ""),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeliveryStreamExists(resourceName, &stream),
 					testAccCheckDeliveryStreamAttributes(&stream, nil, nil, nil, nil, nil, nil),
@@ -1978,8 +1978,8 @@ func testAccDeliveryStreamConfig_s3basicWithPrefixes(rName, prefix, errorOutputP
 		testAccDeliveryStreamBaseConfig(rName),
 		fmt.Sprintf(`
 resource "aws_kinesis_firehose_delivery_stream" "test" {
-  depends_on = ["aws_iam_role_policy.firehose"]
-  name = %[1]q
+  depends_on  = ["aws_iam_role_policy.firehose"]
+  name        = %[1]q
   destination = "s3"
 
   s3_configuration {
