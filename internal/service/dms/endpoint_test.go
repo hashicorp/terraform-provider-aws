@@ -1635,7 +1635,7 @@ data "aws_kms_alias" "dms" {
   name = "alias/aws/dms"
 }
 
-data "aws_region" "current" {}
+data "aws_partition" "current" {}
 
 resource "aws_secretsmanager_secret" "test" {
   name                    = %[1]q
@@ -1750,7 +1750,7 @@ data "aws_kms_alias" "dms" {
   name = "alias/aws/dms"
 }
 
-data "aws_region" "current" {}
+data "aws_partition" "current" {}
 
 resource "aws_secretsmanager_secret" "test" {
   name                    = %[1]q
