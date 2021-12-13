@@ -12,7 +12,7 @@ Provides an AppSync DataSource.
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_dynamodb_table" "example" {
   name           = "example"
   read_capacity  = 1
@@ -46,7 +46,7 @@ EOF
 
 resource "aws_iam_role_policy" "example" {
   name = "example"
-  role = "${aws_iam_role.example.id}"
+  role = aws_iam_role.example.id
 
   policy = <<EOF
 {
@@ -72,13 +72,13 @@ resource "aws_appsync_graphql_api" "example" {
 }
 
 resource "aws_appsync_datasource" "example" {
-  api_id           = "${aws_appsync_graphql_api.example.id}"
+  api_id           = aws_appsync_graphql_api.example.id
   name             = "tf_appsync_example"
-  service_role_arn = "${aws_iam_role.example.arn}"
+  service_role_arn = aws_iam_role.example.arn
   type             = "AMAZON_DYNAMODB"
 
   dynamodb_config {
-    table_name = "${aws_dynamodb_table.example.name}"
+    table_name = aws_dynamodb_table.example.name
   }
 }
 ```
@@ -132,7 +132,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-`aws_appsync_datasource` can be imported with their `api_id`, a hyphen, and `name`, e.g.
+`aws_appsync_datasource` can be imported with their `api_id`, a hyphen, and `name`, e.g.,
 
 ```
 $ terraform import aws_appsync_datasource.example abcdef123456-example
