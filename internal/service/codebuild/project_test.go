@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfcodebuild "github.com/hashicorp/terraform-provider-aws/internal/service/codebuild"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func init() {
@@ -400,7 +401,7 @@ func TestAccCodeBuildProject_encryptionKey(t *testing.T) {
 				Config: testAccProjectConfig_EncryptionKey(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProjectExists(resourceName, &project),
-					resource.TestMatchResourceAttr(resourceName, "encryption_key", regexp.MustCompile(`.+`)),
+					resource.TestCheckResourceAttrPair(resourceName, "encryption_key", "aws_kms_key.test", "arn"),
 				),
 			},
 			{
@@ -2339,6 +2340,31 @@ func TestAccCodeBuildProject_Environment_registryCredential(t *testing.T) {
 	})
 }
 
+func TestAccCodeBuildProject_disappears(t *testing.T) {
+	var project codebuild.Project
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resourceName := "aws_codebuild_project.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, codebuild.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckProjectDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccProjectConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckProjectExists(resourceName, &project),
+					acctest.CheckResourceDisappears(acctest.Provider, tfcodebuild.ResourceProject(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfcodebuild.ResourceProject(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func testAccCheckProjectExists(n string, project *codebuild.Project) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -2352,21 +2378,16 @@ func testAccCheckProjectExists(n string, project *codebuild.Project) resource.Te
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).CodeBuildConn
 
-		out, err := conn.BatchGetProjects(&codebuild.BatchGetProjectsInput{
-			Names: []*string{
-				aws.String(rs.Primary.ID),
-			},
-		})
-
+		output, err := tfcodebuild.FindProjectByARN(conn, rs.Primary.ID)
 		if err != nil {
 			return err
 		}
 
-		if len(out.Projects) < 1 {
-			return fmt.Errorf("No project found")
+		if output == nil {
+			return fmt.Errorf("CodeBuild Project (%s) not found", rs.Primary.ID)
 		}
 
-		*project = *out.Projects[0]
+		*project = *output
 
 		return nil
 	}
@@ -2380,21 +2401,12 @@ func testAccCheckProjectDestroy(s *terraform.State) error {
 			continue
 		}
 
-		out, err := conn.BatchGetProjects(&codebuild.BatchGetProjectsInput{
-			Names: []*string{
-				aws.String(rs.Primary.ID),
-			},
-		})
-
+		_, err := tfcodebuild.FindProjectByARN(conn, rs.Primary.ID)
 		if err != nil {
 			return err
 		}
 
-		if out != nil && len(out.Projects) > 0 {
-			return fmt.Errorf("Expected AWS CodeBuild Project to be gone, but was still found")
-		}
-
-		return nil
+		return fmt.Errorf("CodeBuild Project %s still exists", rs.Primary.ID)
 	}
 
 	return nil
@@ -2412,17 +2424,13 @@ func testAccCheckProjectCertificate(project *codebuild.Project, expectedCertific
 func testAccPreCheck(t *testing.T) {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).CodeBuildConn
 
-	input := &codebuild.BatchGetProjectsInput{
-		Names: []*string{aws.String("tf-acc-test-precheck")},
-	}
-
-	_, err := conn.BatchGetProjects(input)
+	_, err := tfcodebuild.FindProjectByARN(conn, "tf-acc-test-precheck")
 
 	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)
 	}
 
-	if err != nil {
+	if err != nil && !tfresource.NotFound(err) {
 		t.Fatalf("unexpected PreCheck error: %s", err)
 	}
 }

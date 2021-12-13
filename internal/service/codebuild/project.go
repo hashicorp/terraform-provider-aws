@@ -49,6 +49,11 @@ func ResourceProject() *schema.Resource {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
+						"bucket_owner_access": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validation.StringInSlice(codebuild.BucketOwnerAccess_Values(), false),
+						},
 						"name": {
 							Type:     schema.TypeString,
 							Optional: true,
@@ -143,8 +148,9 @@ func ResourceProject() *schema.Resource {
 							},
 						},
 						"service_role": {
-							Type:     schema.TypeString,
-							Required: true,
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: verify.ValidARN,
 						},
 						"timeout_in_mins": {
 							Type:         schema.TypeInt,
@@ -155,15 +161,10 @@ func ResourceProject() *schema.Resource {
 				},
 			},
 			"cache": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					if old == "1" && new == "0" {
-						return true
-					}
-					return false
-				},
+				Type:             schema.TypeList,
+				Optional:         true,
+				MaxItems:         1,
+				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"type": {
@@ -179,7 +180,10 @@ func ResourceProject() *schema.Resource {
 						"modes": {
 							Type:     schema.TypeList,
 							Optional: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
+							Elem: &schema.Schema{
+								Type:         schema.TypeString,
+								ValidateFunc: validation.StringInSlice(codebuild.CacheMode_Values(), false),
+							},
 						},
 					},
 				},
@@ -345,6 +349,11 @@ func ResourceProject() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
+									"bucket_owner_access": {
+										Type:         schema.TypeString,
+										Optional:     true,
+										ValidateFunc: validation.StringInSlice(codebuild.BucketOwnerAccess_Values(), false),
+									},
 									"status": {
 										Type:         schema.TypeString,
 										Optional:     true,
@@ -385,6 +394,11 @@ func ResourceProject() *schema.Resource {
 						"name": {
 							Type:     schema.TypeString,
 							Optional: true,
+						},
+						"bucket_owner_access": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validation.StringInSlice(codebuild.BucketOwnerAccess_Values(), false),
 						},
 						"encryption_disabled": {
 							Type:     schema.TypeBool,
@@ -618,13 +632,13 @@ func ResourceProject() *schema.Resource {
 			"build_timeout": {
 				Type:         schema.TypeInt,
 				Optional:     true,
-				Default:      "60",
+				Default:      60,
 				ValidateFunc: validation.IntBetween(5, 480),
 			},
 			"queued_timeout": {
 				Type:         schema.TypeInt,
 				Optional:     true,
-				Default:      "480",
+				Default:      480,
 				ValidateFunc: validation.IntBetween(5, 480),
 			},
 			"badge_enabled": {
@@ -782,7 +796,7 @@ func resourceProjectCreate(d *schema.ResourceData, meta interface{}) error {
 		resp, err = conn.CreateProject(params)
 	}
 	if err != nil {
-		return fmt.Errorf("Error creating CodeBuild project: %s", err)
+		return fmt.Errorf("Error creating CodeBuild project: %w", err)
 	}
 
 	d.SetId(aws.StringValue(resp.Project.Arn))
@@ -868,32 +882,36 @@ func expandProjectArtifactData(data map[string]interface{}) codebuild.ProjectArt
 		projectArtifacts.EncryptionDisabled = aws.Bool(data["encryption_disabled"].(bool))
 	}
 
-	if data["artifact_identifier"] != nil && data["artifact_identifier"].(string) != "" {
-		projectArtifacts.ArtifactIdentifier = aws.String(data["artifact_identifier"].(string))
+	if v, ok := data["artifact_identifier"].(string); ok && v != "" {
+		projectArtifacts.ArtifactIdentifier = aws.String(v)
 	}
 
-	if data["location"].(string) != "" {
-		projectArtifacts.Location = aws.String(data["location"].(string))
+	if v, ok := data["location"].(string); ok && v != "" {
+		projectArtifacts.Location = aws.String(v)
 	}
 
-	if data["name"].(string) != "" {
-		projectArtifacts.Name = aws.String(data["name"].(string))
+	if v, ok := data["name"].(string); ok && v != "" {
+		projectArtifacts.Name = aws.String(v)
 	}
 
-	if data["namespace_type"].(string) != "" {
-		projectArtifacts.NamespaceType = aws.String(data["namespace_type"].(string))
+	if v, ok := data["namespace_type"].(string); ok && v != "" {
+		projectArtifacts.NamespaceType = aws.String(v)
 	}
 
 	if v, ok := data["override_artifact_name"]; ok {
 		projectArtifacts.OverrideArtifactName = aws.Bool(v.(bool))
 	}
 
-	if data["packaging"].(string) != "" {
-		projectArtifacts.Packaging = aws.String(data["packaging"].(string))
+	if v, ok := data["packaging"].(string); ok && v != "" {
+		projectArtifacts.Packaging = aws.String(v)
 	}
 
-	if data["path"].(string) != "" {
-		projectArtifacts.Path = aws.String(data["path"].(string))
+	if v, ok := data["path"].(string); ok && v != "" {
+		projectArtifacts.Path = aws.String(v)
+	}
+
+	if v, ok := data["bucket_owner_access"].(string); ok && v != "" {
+		projectArtifacts.BucketOwnerAccess = aws.String(v)
 	}
 
 	return projectArtifacts
@@ -1116,11 +1134,12 @@ func expandCodeBuildS3LogsConfig(configList []interface{}) *codebuild.S3LogsConf
 		Status: aws.String(status),
 	}
 
-	if v, ok := data["location"]; ok {
-		location := v.(string)
-		if len(location) > 0 {
-			s3LogsConfig.Location = aws.String(location)
-		}
+	if v, ok := data["location"].(string); ok && v != "" {
+		s3LogsConfig.Location = aws.String(v)
+	}
+
+	if v, ok := data["bucket_owner_access"].(string); ok && v != "" {
+		s3LogsConfig.BucketOwnerAccess = aws.String(v)
 	}
 
 	s3LogsConfig.EncryptionDisabled = aws.Bool(data["encryption_disabled"].(bool))
@@ -1242,63 +1261,56 @@ func resourceProjectRead(d *schema.ResourceData, meta interface{}) error {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	resp, err := conn.BatchGetProjects(&codebuild.BatchGetProjectsInput{
-		Names: []*string{
-			aws.String(d.Id()),
-		},
-	})
+	project, err := FindProjectByARN(conn, d.Id())
 
-	if err != nil {
-		return fmt.Errorf("Error retreiving Projects: %q", err)
-	}
-
-	// if nothing was found, then return no state
-	if len(resp.Projects) == 0 {
-		log.Printf("[INFO]: No projects were found, removing from state")
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] CodeBuild Project (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
-	project := resp.Projects[0]
+	if err != nil {
+		return fmt.Errorf("error Listing CodeBuild Projects: %w", err)
+	}
 
 	if err := d.Set("artifacts", flattenProjectArtifacts(project.Artifacts)); err != nil {
-		return fmt.Errorf("error setting artifacts: %s", err)
+		return fmt.Errorf("error setting artifacts: %w", err)
 	}
 
 	if err := d.Set("environment", flattenProjectEnvironment(project.Environment)); err != nil {
-		return fmt.Errorf("error setting environment: %s", err)
+		return fmt.Errorf("error setting environment: %w", err)
 	}
 
 	if err := d.Set("file_system_locations", flattenProjectFileSystemLocations(project.FileSystemLocations)); err != nil {
-		return fmt.Errorf("error setting file_system_locations: %s", err)
+		return fmt.Errorf("error setting file_system_locations: %w", err)
 	}
 
 	if err := d.Set("cache", flattenProjectCache(project.Cache)); err != nil {
-		return fmt.Errorf("error setting cache: %s", err)
+		return fmt.Errorf("error setting cache: %w", err)
 	}
 
 	if err := d.Set("logs_config", flattenLogsConfig(project.LogsConfig)); err != nil {
-		return fmt.Errorf("error setting logs_config: %s", err)
+		return fmt.Errorf("error setting logs_config: %w", err)
 	}
 
 	if err := d.Set("secondary_artifacts", flattenProjectSecondaryArtifacts(project.SecondaryArtifacts)); err != nil {
-		return fmt.Errorf("error setting secondary_artifacts: %s", err)
+		return fmt.Errorf("error setting secondary_artifacts: %w", err)
 	}
 
 	if err := d.Set("secondary_sources", flattenProjectSecondarySources(project.SecondarySources)); err != nil {
-		return fmt.Errorf("error setting secondary_sources: %s", err)
+		return fmt.Errorf("error setting secondary_sources: %w", err)
 	}
 
 	if err := d.Set("source", flattenProjectSource(project.Source)); err != nil {
-		return fmt.Errorf("error setting source: %s", err)
+		return fmt.Errorf("error setting source: %w", err)
 	}
 
 	if err := d.Set("vpc_config", flattenVPCConfig(project.VpcConfig)); err != nil {
-		return fmt.Errorf("error setting vpc_config: %s", err)
+		return fmt.Errorf("error setting vpc_config: %w", err)
 	}
 
 	if err := d.Set("build_batch_config", flattenBuildBatchConfig(project.BuildBatchConfig)); err != nil {
-		return fmt.Errorf("error setting build_batch_config: %s", err)
+		return fmt.Errorf("error setting build_batch_config: %w", err)
 	}
 
 	d.Set("arn", project.Arn)
@@ -1462,9 +1474,7 @@ func resourceProjectUpdate(d *schema.ResourceData, meta interface{}) error {
 		_, err = conn.UpdateProject(params)
 	}
 	if err != nil {
-		return fmt.Errorf(
-			"[ERROR] Error updating CodeBuild project (%s): %s",
-			d.Id(), err)
+		return fmt.Errorf("[ERROR] Error updating CodeBuild project (%s): %w", d.Id(), err)
 	}
 
 	return resourceProjectRead(d, meta)
@@ -1568,6 +1578,7 @@ func flattenS3Logs(s3LogsConfig *codebuild.S3LogsConfig) []interface{} {
 		values["status"] = aws.StringValue(s3LogsConfig.Status)
 		values["location"] = aws.StringValue(s3LogsConfig.Location)
 		values["encryption_disabled"] = aws.BoolValue(s3LogsConfig.EncryptionDisabled)
+		values["bucket_owner_access"] = aws.StringValue(s3LogsConfig.BucketOwnerAccess)
 	}
 
 	return []interface{}{values}
@@ -1623,6 +1634,10 @@ func flattenProjectArtifactsData(artifacts codebuild.ProjectArtifacts) map[strin
 
 	if artifacts.Path != nil {
 		values["path"] = aws.StringValue(artifacts.Path)
+	}
+
+	if artifacts.BucketOwnerAccess != nil {
+		values["bucket_owner_access"] = aws.StringValue(artifacts.BucketOwnerAccess)
 	}
 	return values
 }
@@ -1823,6 +1838,10 @@ func resourceProjectArtifactsHash(v interface{}) int {
 	}
 
 	if v, ok := m["type"]; ok {
+		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
+	}
+
+	if v, ok := m["bucket_owner_access"]; ok {
 		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
 	}
 
