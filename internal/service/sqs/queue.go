@@ -118,6 +118,10 @@ var (
 			Computed:         true,
 			ValidateFunc:     validation.StringIsJSON,
 			DiffSuppressFunc: verify.SuppressEquivalentPolicyDiffs,
+			StateFunc: func(v interface{}) string {
+				json, _ := structure.NormalizeJsonString(v)
+				return json
+			},
 		},
 
 		"receive_wait_time_seconds": {
@@ -216,6 +220,14 @@ func resourceQueueCreate(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
+	policy, err := structure.NormalizeJsonString(attributes[sqs.QueueAttributeNamePolicy])
+
+	if err != nil {
+		return fmt.Errorf("policy (%s) is invalid JSON: %w", attributes[sqs.QueueAttributeNamePolicy], err)
+	}
+
+	attributes[sqs.QueueAttributeNamePolicy] = policy
+
 	input.Attributes = aws.StringMap(attributes)
 
 	// Tag-on-create is currently only supported in AWS Commercial
@@ -308,6 +320,14 @@ func resourceQueueRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("name_prefix", create.NamePrefixFromName(name))
 	}
 	d.Set("url", d.Id())
+
+	policyToSet, err := verify.PolicyToSet(d.Get("policy").(string), output[sqs.QueueAttributeNamePolicy])
+
+	if err != nil {
+		return err
+	}
+
+	d.Set("policy", policyToSet)
 
 	tags, err := ListTags(conn, d.Id())
 
