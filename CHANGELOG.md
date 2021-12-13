@@ -5,21 +5,34 @@ FEATURES:
 * **New Data Source:** `aws_connect_bot_association` ([#21097](https://github.com/hashicorp/terraform-provider-aws/issues/21097))
 * **New Data Source:** `aws_connect_lambda_function_association` ([#21276](https://github.com/hashicorp/terraform-provider-aws/issues/21276))
 * **New Resource:** `aws_connect_bot_association` ([#21097](https://github.com/hashicorp/terraform-provider-aws/issues/21097))
+* **New Resource:** `aws_connect_hours_of_operation` ([#21934](https://github.com/hashicorp/terraform-provider-aws/issues/21934))
 * **New Resource:** `aws_connect_lambda_function_association` ([#21276](https://github.com/hashicorp/terraform-provider-aws/issues/21276))
+* **New Resource:** `aws_ecr_pull_through_cache_rule` ([#22172](https://github.com/hashicorp/terraform-provider-aws/issues/22172))
+* **New Resource:** `aws_ecr_registry_scanning_configuration` ([#22179](https://github.com/hashicorp/terraform-provider-aws/issues/22179))
 
 ENHANCEMENTS:
 
 * data-source/aws_sagemaker_prebuilt_ecr_image: Add Hugging Face DLCs ([#21983](https://github.com/hashicorp/terraform-provider-aws/issues/21983))
+* resource/aws_appsync_graphql_api: Add `lambda_authorizer_config` argument ([#20857](https://github.com/hashicorp/terraform-provider-aws/issues/20857))
+* resource/aws_dynamodb_table: Allows restoring to point-in-time ([#19292](https://github.com/hashicorp/terraform-provider-aws/issues/19292))
 * resource/aws_fsx_backup: Add `volume_id` argument to support Amazon FSx for NetApp ONTAP backup ([#21960](https://github.com/hashicorp/terraform-provider-aws/issues/21960))
 * resource/aws_networkfirewall_firewall_policy: Add `stateful_default_actions` and `stateful_engine_options` configuration blocks. Add `priority` attribute to `stateful_rule_group_reference` block ([#21955](https://github.com/hashicorp/terraform-provider-aws/issues/21955))
 * resource/aws_networkfirewall_firewall_rule_group: Add `stateful_rule_options` configuration block ([#21955](https://github.com/hashicorp/terraform-provider-aws/issues/21955))
+* resource/iam_service_linked_role: Add `tags` argument ([#22185](https://github.com/hashicorp/terraform-provider-aws/issues/22185))
 
 BUG FIXES:
 
+* resource/aws_cloudwatch_event_bus_policy: Fix erroneous diffs in `policy` when no changes made or policies are equivalent ([#22165](https://github.com/hashicorp/terraform-provider-aws/issues/22165))
 * resource/aws_ecr_lifecycle_policy: Fix erroneous diffs in `policy` when no changes made or policies are equivalent ([#22142](https://github.com/hashicorp/terraform-provider-aws/issues/22142))
 * resource/aws_elasticsearch_domain: Fix erroneous diffs in `access_policies` when no changes made or policies are equivalent ([#22157](https://github.com/hashicorp/terraform-provider-aws/issues/22157))
 * resource/aws_elasticsearch_domain: Fix erroneous diffs in `advanced_options` due to AWS defaults being returned ([#22157](https://github.com/hashicorp/terraform-provider-aws/issues/22157))
 * resource/aws_elasticsearch_domain_policy: Fix erroneous diffs in `access_policies` when no changes made or policies are equivalent ([#22157](https://github.com/hashicorp/terraform-provider-aws/issues/22157))
+* resource/aws_glacier_vault: Fix erroneous diffs in `access_policy` when no changes made or policies are equivalent ([#22166](https://github.com/hashicorp/terraform-provider-aws/issues/22166))
+* resource/aws_glacier_vault_lock: Fix erroneous diffs in `policy` when no changes made or policies are equivalent ([#22166](https://github.com/hashicorp/terraform-provider-aws/issues/22166))
+* resource/aws_glue_resource_policy: Fix erroneous diffs in `policy` when no changes made or policies are equivalent ([#22167](https://github.com/hashicorp/terraform-provider-aws/issues/22167))
+* resource/aws_iot_policy: Fix erroneous diffs in `policy` when no changes made or policies are equivalent ([#22169](https://github.com/hashicorp/terraform-provider-aws/issues/22169))
+* resource/aws_media_store_container_policy: Fix erroneous diffs in `policy` when no changes made or policies are equivalent ([#22170](https://github.com/hashicorp/terraform-provider-aws/issues/22170))
+* resource/aws_networkfirewall_resource_policy: Fix erroneous diffs in `policy` when no changes made or policies are equivalent ([#22171](https://github.com/hashicorp/terraform-provider-aws/issues/22171))
 
 ## 3.69.0 (December 09, 2021)
 
