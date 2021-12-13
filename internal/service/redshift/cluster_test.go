@@ -546,6 +546,46 @@ func TestAccRedshiftCluster_changeEncryption2(t *testing.T) {
 	})
 }
 
+func TestAccRedshiftCluster_availabilityZoneRelocation(t *testing.T) {
+	var v redshift.Cluster
+	rInt := sdkacctest.RandInt()
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, redshift.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckClusterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_availabilityZoneRelocation(rInt, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists("aws_redshift_cluster.default", &v),
+					resource.TestCheckResourceAttr(
+						"aws_redshift_cluster.default", "availability_zone_relocation", "true"),
+				),
+			},
+			{
+				ResourceName:      "aws_redshift_cluster.default",
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"final_snapshot_identifier",
+					"master_password",
+					"skip_final_snapshot",
+				},
+			},
+			{
+				Config: testAccClusterConfig_availabilityZoneRelocation(rInt, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists("aws_redshift_cluster.default", &v),
+					resource.TestCheckResourceAttr(
+						"aws_redshift_cluster.default", "availability_zone_relocation", "false"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckClusterDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftConn
 
