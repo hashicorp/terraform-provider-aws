@@ -684,6 +684,11 @@ func resourceClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 		requestUpdate = true
 	}
 
+	if d.HasChange("availability_zone_relocation") {
+		req.AvailabilityZoneRelocation = aws.Bool(d.Get("availability_zone_relocation").(bool))
+		requestUpdate = true
+	}
+
 	if d.HasChange("cluster_security_groups") {
 		req.ClusterSecurityGroups = flex.ExpandStringSet(d.Get("cluster_security_groups").(*schema.Set))
 		requestUpdate = true
