@@ -1643,7 +1643,7 @@ resource "aws_secretsmanager_secret" "test" {
 }
 
 resource "aws_iam_role" "test" {
-  name = %[1]q
+  name               = %[1]q
   assume_role_policy = <<EOF
 {
   "Version": "2012-10-17",
@@ -1662,8 +1662,8 @@ EOF
 }
 
 resource "aws_iam_role_policy" "test" {
-  name = %[1]q
-  role = aws_iam_role.test.id
+  name   = %[1]q
+  role   = aws_iam_role.test.id
   policy = <<EOF
 {
   "Version": "2012-10-17",
@@ -1758,7 +1758,7 @@ resource "aws_secretsmanager_secret" "test" {
 }
 
 resource "aws_iam_role" "test" {
-  name = %[1]q
+  name               = %[1]q
   assume_role_policy = <<EOF
 {
   "Version": "2012-10-17",
@@ -1777,8 +1777,8 @@ EOF
 }
 
 resource "aws_iam_role_policy" "test" {
-  name = %[1]q
-  role = aws_iam_role.test.id
+  name   = %[1]q
+  role   = aws_iam_role.test.id
   policy = <<EOF
 {
   "Version": "2012-10-17",
