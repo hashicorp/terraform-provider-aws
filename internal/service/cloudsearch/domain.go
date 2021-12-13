@@ -13,11 +13,9 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceDomain() *schema.Resource {
@@ -37,18 +35,6 @@ func ResourceDomain() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			// TODO: Separate access policy resource?
-			// TODO: Is it Required?
-			"access_policies": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ValidateFunc:     validation.StringIsJSON,
-				DiffSuppressFunc: verify.SuppressEquivalentPolicyDiffs,
-				StateFunc: func(v interface{}) string {
-					json, _ := structure.NormalizeJsonString(v)
-					return json
-				},
-			},
 			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -203,17 +189,6 @@ func resourceCloudSearchDomainCreate(d *schema.ResourceData, meta interface{}) e
 	}
 
 	d.SetId(name)
-
-	// TODO: Separate domain access policy resource?
-	// log.Printf("[DEBUG] Updating CloudSearch Domain (%s) access policies", name)
-	// _, err = conn.UpdateServiceAccessPolicies(&cloudsearch.UpdateServiceAccessPoliciesInput{
-	// 	DomainName:     aws.String(d.Id()),
-	// 	AccessPolicies: aws.String(d.Get("access_policies").(string)),
-	// })
-
-	// if err != nil {
-	// 	return fmt.Errorf("error updating CloudSearch Domain (%s) service access policies: %w", d.Id(), err)
-	// }
 
 	if v, ok := d.GetOk("scaling_parameters"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		input := &cloudsearch.UpdateScalingParametersInput{
@@ -373,30 +348,13 @@ func resourceCloudSearchDomainRead(d *schema.ResourceData, meta interface{}) err
 	}
 	d.Set("index", result)
 
-	// Read service access policies.
-	// policyResult, err := conn.DescribeServiceAccessPolicies(&cloudsearch.DescribeServiceAccessPoliciesInput{
-	// 	DomainName: aws.String(d.Get("name").(string)),
-	// })
-	// if err != nil {
-	// 	return err
-	// }
-	// d.Set("service_access_policies", policyResult.AccessPolicies.Options)
-
 	return err
 }
 
 func resourceCloudSearchDomainUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CloudSearchConn
 
-	_, err := conn.UpdateServiceAccessPolicies(&cloudsearch.UpdateServiceAccessPoliciesInput{
-		DomainName:     aws.String(d.Get("name").(string)),
-		AccessPolicies: aws.String(d.Get("service_access_policies").(string)),
-	})
-	if err != nil {
-		return err
-	}
-
-	_, err = conn.UpdateScalingParameters(&cloudsearch.UpdateScalingParametersInput{
+	_, err := conn.UpdateScalingParameters(&cloudsearch.UpdateScalingParametersInput{
 		DomainName: aws.String(d.Get("name").(string)),
 		ScalingParameters: &cloudsearch.ScalingParameters{
 			DesiredInstanceType:     aws.String(d.Get("instance_type").(string)),
