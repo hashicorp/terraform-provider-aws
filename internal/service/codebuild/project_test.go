@@ -2402,6 +2402,11 @@ func testAccCheckProjectDestroy(s *terraform.State) error {
 		}
 
 		_, err := tfcodebuild.FindProjectByARN(conn, rs.Primary.ID)
+
+		if tfresource.NotFound(err) {
+			continue
+		}
+
 		if err != nil {
 			return err
 		}
