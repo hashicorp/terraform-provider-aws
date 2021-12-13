@@ -551,8 +551,7 @@ func resourceDeploymentGroupCreate(d *schema.ResourceData, meta interface{}) err
 	}
 
 	if attr, ok := d.GetOk("on_premises_instance_tag_filter"); ok {
-		onPremFilters := buildOnPremTagFilters(attr.(*schema.Set).List())
-		input.OnPremisesInstanceTagFilters = onPremFilters
+		input.OnPremisesInstanceTagFilters = buildOnPremTagFilters(attr.(*schema.Set).List())
 	}
 
 	if attr, ok := d.GetOk("ec2_tag_set"); ok {
