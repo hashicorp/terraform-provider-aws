@@ -30,38 +30,20 @@ func ResourceServiceLinkedRole() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"aws_service_name": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
 				ValidateFunc: validation.StringMatch(regexp.MustCompile(`\.`), "must be a full service hostname e.g. elasticbeanstalk.amazonaws.com"),
 			},
-
-			"name": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
-			"path": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
-			"arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
 			"create_date": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
-			"unique_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
 			"custom_suffix": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -73,13 +55,24 @@ func ResourceServiceLinkedRole() *schema.Resource {
 					return false
 				},
 			},
-
 			"description": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
+			"name": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"path": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
+			"unique_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 		},
 		CustomizeDiff: verify.SetTagsDiff,
 	}
