@@ -926,6 +926,7 @@ func Provider() *schema.Provider {
 			"aws_codeartifact_repository_permissions_policy": codeartifact.ResourceRepositoryPermissionsPolicy(),
 
 			"aws_codebuild_project":           codebuild.ResourceProject(),
+			"aws_codebuild_resource_policy":   codebuild.ResourceResourcePolicy(),
 			"aws_codebuild_report_group":      codebuild.ResourceReportGroup(),
 			"aws_codebuild_source_credential": codebuild.ResourceSourceCredential(),
 			"aws_codebuild_webhook":           codebuild.ResourceWebhook(),

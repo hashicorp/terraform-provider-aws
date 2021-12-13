@@ -3,6 +3,7 @@ package codebuild
 import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/codebuild"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
@@ -52,6 +53,27 @@ func FindProjectByARN(conn *codebuild.CodeBuild, arn string) (*codebuild.Project
 	}
 
 	return output.Projects[0], nil
+}
+
+func FindResourcePolicyByARN(conn *codebuild.CodeBuild, arn string) (*codebuild.GetResourcePolicyOutput, error) {
+	input := &codebuild.GetResourcePolicyInput{
+		ResourceArn: aws.String(arn),
+	}
+
+	output, err := conn.GetResourcePolicy(input)
+	if tfawserr.ErrMessageContains(err, codebuild.ErrCodeResourceNotFoundException, "Resource ARN does not exist") ||
+		tfawserr.ErrMessageContains(err, codebuild.ErrCodeResourceNotFoundException, "Resource ARN resource policy does not exist") {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
 }
 
 func FindSourceCredentialByARN(conn *codebuild.CodeBuild, arn string) (*codebuild.SourceCredentialsInfo, error) {
