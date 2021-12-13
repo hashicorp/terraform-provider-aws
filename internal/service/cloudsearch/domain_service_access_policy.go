@@ -111,7 +111,6 @@ func resourceDomainServiceAccessPolicyRead(d *schema.ResourceData, meta interfac
 func resourceDomainServiceAccessPolicyDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CloudSearchConn
 
-	domainName := d.Get("domain_name").(string)
 	input := &cloudsearch.UpdateServiceAccessPoliciesInput{
 		AccessPolicies: aws.String(""),
 		DomainName:     aws.String(d.Id()),
