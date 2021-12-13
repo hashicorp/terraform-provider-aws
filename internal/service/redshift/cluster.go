@@ -363,6 +363,10 @@ func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
 			restoreOpts.AvailabilityZone = aws.String(v.(string))
 		}
 
+		if v, ok := d.GetOk("availability_zone_relocation"); ok {
+			restoreOpts.AvailabilityZoneRelocation = aws.Bool(v.(bool))
+		}
+
 		if v, ok := d.GetOk("cluster_subnet_group_name"); ok {
 			restoreOpts.ClusterSubnetGroupName = aws.String(v.(string))
 		}
