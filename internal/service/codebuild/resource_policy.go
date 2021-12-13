@@ -6,9 +6,11 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/codebuild"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
@@ -72,14 +74,15 @@ func resourceResourcePolicyRead(d *schema.ResourceData, meta interface{}) error 
 	conn := meta.(*conns.AWSClient).CodeBuildConn
 
 	output, err := FindResourcePolicyByARN(conn, d.Id())
-	if err != nil {
-		return fmt.Errorf("error Listing CodeBuild Resource Policys: %w", err)
-	}
 
-	if output == nil {
+	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] CodeBuild Resource Policy (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("error Listing CodeBuild Resource Policies: %w", err)
 	}
 
 	policyToSet, err := verify.PolicyToSet(d.Get("policy").(string), aws.StringValue(output.Policy))
@@ -102,6 +105,9 @@ func resourceResourcePolicyDelete(d *schema.ResourceData, meta interface{}) erro
 	}
 
 	if _, err := conn.DeleteResourcePolicy(deleteOpts); err != nil {
+		if tfawserr.ErrMessageContains(err, codebuild.ErrCodeResourceNotFoundException, "Resource ARN does not exist") {
+			return nil
+		}
 		return fmt.Errorf("error deleting CodeBuild Resource Policy (%s): %w", d.Id(), err)
 	}
 
