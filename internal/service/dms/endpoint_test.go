@@ -624,7 +624,7 @@ func TestAccDMSEndpoint_Postgres(t *testing.T) {
 	})
 }
 
-func TTestAccDMSEndpoint_Postgres_secretId(t *testing.T) {
+func TestAccDMSEndpoint_Postgres_secretId(t *testing.T) {
 	resourceName := "aws_dms_endpoint.dms_endpoint"
 	randId := sdkacctest.RandString(8) + "-oracledb"
 
@@ -1635,6 +1635,7 @@ data "aws_kms_alias" "dms" {
   name = "alias/aws/dms"
 }
 
+data "aws_region" "current" {}
 data "aws_partition" "current" {}
 
 resource "aws_secretsmanager_secret" "test" {
@@ -1651,7 +1652,7 @@ resource "aws_iam_role" "test" {
     {
       "Action": "sts:AssumeRole",
       "Principal": {
-        "Service": "dms.${data.aws_partition.current.dns_suffix}"
+        "Service": "dms.${data.aws_region.current.name}.${data.aws_partition.current.dns_suffix}"
       },
       "Effect": "Allow",
       "Sid": ""
@@ -1750,6 +1751,7 @@ data "aws_kms_alias" "dms" {
   name = "alias/aws/dms"
 }
 
+data "aws_region" "current" {}
 data "aws_partition" "current" {}
 
 resource "aws_secretsmanager_secret" "test" {
@@ -1766,7 +1768,7 @@ resource "aws_iam_role" "test" {
     {
       "Action": "sts:AssumeRole",
       "Principal": {
-        "Service": "dms.${data.aws_partition.current.dns_suffix}"
+        "Service": "dms.${data.aws_region.current.name}.${data.aws_partition.current.dns_suffix}"
       },
       "Effect": "Allow",
       "Sid": ""
