@@ -14,7 +14,7 @@ Provides an CloudSearch domain resource.
 
 ```terraform
 resource "aws_cloudsearch_domain" "example" {
-  name          = "test-domain"
+  name          = "example-domain"
   instance_type = "search.medium"
 
   index {
@@ -35,20 +35,6 @@ resource "aws_cloudsearch_domain" "example" {
     return = true
     sort   = true
   }
-  access_policies = data.aws_iam_policy_document.cloudsearch_access_policy.json
-}
-
-data "aws_iam_policy_document" "cloudsearch_access_policy" {
-  statement {
-    principals {
-      type        = "AWS"
-      identifiers = ["*"]
-    }
-    actions = [
-      "cloudsearch:search",
-      "cloudsearch:suggest"
-    ]
-  }
 }
 ```
 
@@ -56,7 +42,6 @@ data "aws_iam_policy_document" "cloudsearch_access_policy" {
 
 The following arguments are supported:
 
-* `access_policies` - (Required) The AWS IAM access policy for the domain. See the [AWS documentation](https://docs.aws.amazon.com/cloudsearch/latest/developerguide/configuring-access.html#cloudsearch-access-policies) for more details.
 * `endpoint_options` - (Optional) Domain endpoint options. Documented below.
 * `multi_az` - (Optional) Whether or not to maintain extra instances for the domain in a second Availability Zone to ensure high availability.
 * `name` - (Required) The name of the CloudSearch domain.
@@ -66,7 +51,6 @@ The following arguments are supported:
 * `replication_count` - (Optional) The amount of replicas.
 * `partition_count` - (Optional) The amount of partitions on each instance. Currently only supported by `search.2xlarge`.
 * `index` - (Required) See [Indices](#indices) below for details.
-* `wait_for_endpoints` - (Optional) - Default true, wait for the search service end point.  If you set this to false, the search and document endpoints won't be available to use as an attribute during the first run.
 
 ### endpoint_options
 
@@ -120,5 +104,5 @@ In addition to all arguments above, the following attributes are exported:
 CloudSearch Domains can be imported using the `name`, e.g.,
 
 ```
-$ terraform import aws_cloudsearch_domain.example test-domain
+$ terraform import aws_cloudsearch_domain.example example-domain
 ```
