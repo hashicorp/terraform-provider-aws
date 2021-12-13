@@ -513,7 +513,7 @@ func sweepServiceLinkedRoles(region string) error {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 	conn := client.(*conns.AWSClient).IAMConn
-
+	var sweeperErrs *multierror.Error
 	input := &iam.ListRolesInput{
 		PathPrefix: aws.String("/aws-service-role/"),
 	}
@@ -535,33 +535,30 @@ func sweepServiceLinkedRoles(region string) error {
 				continue
 			}
 
-			log.Printf("[INFO] Deleting IAM Service Role: %s", roleName)
-			deletionTaskID, err := DeleteServiceLinkedRole(conn, roleName)
+			r := ResourceServiceLinkedRole()
+			d := r.Data(nil)
+			d.SetId(roleName)
+			err := r.Delete(d, client)
 			if err != nil {
-				log.Printf("[ERROR] Failed to delete IAM Service Role %s: %s", roleName, err)
+				sweeperErr := fmt.Errorf("error deleting IAM Service Linked Role (%s): %w", roleName, err)
+				log.Printf("[ERROR] %s", sweeperErr)
+				sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
 				continue
-			}
-			if deletionTaskID == "" {
-				continue
-			}
-
-			log.Printf("[INFO] Waiting for deletion of IAM Service Role: %s", roleName)
-			err = DeleteServiceLinkedRoleWaiter(conn, deletionTaskID)
-			if err != nil {
-				log.Printf("[ERROR] Failed to wait for deletion of IAM Service Role %s: %s", roleName, err)
 			}
 		}
 		return !lastPage
 	})
-	if err != nil {
-		if sweep.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping IAM Service Role sweep for %s: %s", region, err)
-			return nil
-		}
-		return fmt.Errorf("Error retrieving IAM Service Roles: %s", err)
+
+	if sweep.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping IAM Service Role sweep for %s: %s", region, err)
+		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
 	}
 
-	return nil
+	if err != nil {
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error describing IAM Service Roles: %w", err))
+	}
+
+	return sweeperErrs.ErrorOrNil()
 }
 
 func sweepUsers(region string) error {
