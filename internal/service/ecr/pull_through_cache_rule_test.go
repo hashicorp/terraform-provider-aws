@@ -70,6 +70,10 @@ func TestAccPullThroughCacheRule_failWhenAlreadyExists(t *testing.T) {
 	repositoryPrefix := "tf-test-" + sdkacctest.RandString(8)
 	resourceName := "aws_ecr_pull_through_cache_rule.test"
 
+	if acctest.Partition() == "aws-us-gov" {
+		t.Skip("ECR Pull Through Cache Rule is not supported in GovCloud partition")
+	}
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ecr.EndpointsID),
@@ -105,7 +109,7 @@ func testAccCheckPullThroughCacheRuleDestroy(s *terraform.State) error {
 			return err
 		}
 
-		return fmt.Errorf("ECR Pull Through Cache Repository %s still exists", rs.Primary.ID)
+		return fmt.Errorf("ECR Pull Through Cache Rule %s still exists", rs.Primary.ID)
 	}
 
 	return nil
@@ -119,7 +123,7 @@ func testAccCheckPullThroughCacheRuleExists(n string) resource.TestCheckFunc {
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No ECR Pull Through Cache Repository ID is set")
+			return fmt.Errorf("No ECR Pull Through Cache Rule ID is set")
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ECRConn
