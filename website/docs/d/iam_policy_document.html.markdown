@@ -441,9 +441,9 @@ The following arguments are optional:
 * `effect` (Optional) - Whether this statement allows or denies the given actions. Valid values are `Allow` and `Deny`. Defaults to `Allow`.
 * `not_actions` (Optional) - List of actions that this statement does *not* apply to. Use to apply a policy statement to all actions *except* those listed.
 * `not_principals` (Optional) - Like `principals` except these are principals that the statement does *not* apply to.
-* `not_resources` (Optional) - List of resource ARNs that this statement does *not* apply to. Use to apply a policy statement to all resources *except* those listed.
+* `not_resources` (Optional) - List of resource ARNs that this statement does *not* apply to. Use to apply a policy statement to all resources *except* those listed. Conflicts with `resources`.
 * `principals` (Optional) - Configuration block for principals. Detailed below.
-* `resources` (Optional) - List of resource ARNs that this statement applies to. This is required by AWS if used for an IAM policy.
+* `resources` (Optional) - List of resource ARNs that this statement applies to. This is required by AWS if used for an IAM policy. Conflicts with `not_resources`.
 * `sid` (Optional) - Sid (statement ID) is an identifier for a policy statement.
 
 ### `condition`
