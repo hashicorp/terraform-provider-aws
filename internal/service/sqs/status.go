@@ -1,7 +1,6 @@
 package sqs
 
 import (
-	"fmt"
 	"strconv"
 
 	"github.com/aws/aws-sdk-go/service/sqs"
@@ -28,7 +27,7 @@ func statusQueueState(conn *sqs.SQS, url string) resource.StateRefreshFunc {
 
 func statusQueueAttributeState(conn *sqs.SQS, url string, expected map[string]string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		attributesMatch := func(got map[string]string) error {
+		attributesMatch := func(got map[string]string) string {
 			for k, e := range expected {
 				g, ok := got[k]
 
@@ -43,7 +42,7 @@ func statusQueueAttributeState(conn *sqs.SQS, url string, expected map[string]st
 						continue
 					}
 
-					return fmt.Errorf("SQS Queue attribute (%s) not available", k)
+					return queuePolicyStateNotEqual
 				}
 
 				switch k {
@@ -51,24 +50,24 @@ func statusQueueAttributeState(conn *sqs.SQS, url string, expected map[string]st
 					equivalent, err := awspolicy.PoliciesAreEquivalent(g, e)
 
 					if err != nil {
-						return err
+						return queuePolicyStateNotEqual
 					}
 
 					if !equivalent {
-						return fmt.Errorf("SQS Queue policies are not equivalent")
+						return queuePolicyStateNotEqual
 					}
 				case sqs.QueueAttributeNameRedrivePolicy:
 					if !StringsEquivalent(g, e) {
-						return fmt.Errorf("SQS Queue redrive policies are not equivalent")
+						return queuePolicyStateNotEqual
 					}
 				default:
 					if g != e {
-						return fmt.Errorf("SQS Queue attribute (%s) got: %s, expected: %s", k, g, e)
+						return queuePolicyStateNotEqual
 					}
 				}
 			}
 
-			return nil
+			return queuePolicyStateEqual
 		}
 
 		got, err := FindQueueAttributesByURL(conn, url)
@@ -81,12 +80,8 @@ func statusQueueAttributeState(conn *sqs.SQS, url string, expected map[string]st
 			return nil, "", err
 		}
 
-		err = attributesMatch(got)
+		status := attributesMatch(got)
 
-		if err != nil {
-			return got, queuePolicyStateNotEqual, nil //nolint:nilerr
-		}
-
-		return got, queuePolicyStateEqual, nil
+		return got, status, nil
 	}
 }
