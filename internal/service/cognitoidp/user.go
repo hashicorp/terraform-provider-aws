@@ -267,6 +267,12 @@ func resourceUserUpdate(d *schema.ResourceData, meta interface{}) error {
 				UserPoolId:     aws.String(d.Get("user_pool_id").(string)),
 				UserAttributes: expandAttribute(upd),
 			}
+
+			if v, ok := d.GetOk("client_metadata"); ok {
+				metadata := v.(map[string]interface{})
+				params.ClientMetadata = expandUserClientMetadata(metadata)
+			}
+
 			_, err := conn.AdminUpdateUserAttributes(params)
 			if err != nil {
 				return fmt.Errorf("Error updating Cognito User Attributes (%s): %w", d.Id(), err)
