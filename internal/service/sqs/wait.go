@@ -18,7 +18,7 @@ const (
 	// If you delete a queue, you must wait at least 60 seconds before creating a queue with the same name.
 	// ReferenceL https://docs.aws.amazon.com/AWSSimpleQueueService/latest/APIReference/API_CreateQueue.html
 	queueCreatedTimeout = 70 * time.Second
-	queueReadTimeout    = 15 * time.Second
+	queueReadTimeout    = 20 * time.Second
 	queueDeletedTimeout = 3 * time.Minute
 	queueTagsTimeout    = 60 * time.Second
 
@@ -36,8 +36,9 @@ func waitQueueAttributesPropagated(conn *sqs.SQS, url string, expected map[strin
 		Target:                    []string{queuePolicyStateEqual},
 		Refresh:                   statusQueueAttributeState(conn, url, expected),
 		Timeout:                   queueAttributePropagationTimeout,
-		ContinuousTargetOccurence: 3,               // set to accomodate GovCloud, commercial, China, etc. - avoid lowering
-		MinTimeout:                7 * time.Second, // set to accomodate GovCloud, commercial, China, etc. - avoid lowering
+		ContinuousTargetOccurence: 5,               // set to accomodate GovCloud, commercial, China, etc. - avoid lowering
+		Delay:                     5 * time.Second, // set to accomodate GovCloud, commercial, China, etc. - avoid lowering
+		MinTimeout:                2 * time.Second, // set to accomodate GovCloud, commercial, China, etc. - avoid lowering
 		NotFoundChecks:            10,              // set to accomodate GovCloud, commercial, China, etc. - avoid lowering
 	}
 
@@ -52,9 +53,10 @@ func waitQueueDeleted(conn *sqs.SQS, url string) error {
 		Target:                    []string{},
 		Refresh:                   statusQueueState(conn, url),
 		Timeout:                   queueDeletedTimeout,
-		ContinuousTargetOccurence: 12,              // set to accomodate GovCloud, commercial, China, etc. - avoid lowering
+		ContinuousTargetOccurence: 15,              // set to accomodate GovCloud, commercial, China, etc. - avoid lowering
+		Delay:                     5 * time.Second, // set to accomodate GovCloud, commercial, China, etc. - avoid lowering
 		MinTimeout:                2 * time.Second, // set to accomodate GovCloud, commercial, China, etc. - avoid lowering
-		NotFoundChecks:            3,               // set to accomodate GovCloud, commercial, China, etc. - avoid lowering
+		NotFoundChecks:            5,               // set to accomodate GovCloud, commercial, China, etc. - avoid lowering
 	}
 
 	_, err := stateConf.WaitForState()
