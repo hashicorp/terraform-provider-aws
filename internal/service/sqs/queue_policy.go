@@ -113,6 +113,14 @@ func resourceQueuePolicyRead(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	})
 
+	if tfresource.TimedOut(err) {
+		policy, err = FindQueuePolicyByURL(conn, d.Id())
+	}
+
+	if err != nil {
+		return fmt.Errorf("error reading SQS Queue Policy (%s): %w", d.Id(), err)
+	}
+
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] SQS Queue Policy (%s) not found, removing from state", d.Id())
 		d.SetId("")

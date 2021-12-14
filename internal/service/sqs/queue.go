@@ -301,6 +301,14 @@ func resourceQueueRead(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	})
 
+	if tfresource.TimedOut(err) {
+		output, err = FindQueueAttributesByURL(conn, d.Id())
+	}
+
+	if err != nil {
+		return fmt.Errorf("error reading SQS Queue (%s): %w", d.Id(), err)
+	}
+
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] SQS Queue (%s) not found, removing from state", d.Id())
 		d.SetId("")
