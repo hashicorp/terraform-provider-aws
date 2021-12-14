@@ -15,7 +15,7 @@ import (
 )
 
 func TestAccCloudSearchDomainServiceAccessPolicy_basic(t *testing.T) {
-	resourceName := "aws_cloudsearch_domain.test"
+	resourceName := "aws_cloudsearch_domain_service_access_policy.test"
 	rName := acctest.ResourcePrefix + "-" + sdkacctest.RandString(28-(len(acctest.ResourcePrefix)+1))
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -25,7 +25,7 @@ func TestAccCloudSearchDomainServiceAccessPolicy_basic(t *testing.T) {
 		CheckDestroy: testAccCloudSearchDomainServiceAccessPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCloudSearchDomainConfig(rName),
+				Config: testAccDomainServiceAccessPolicyConfig(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCloudSearchDomainServiceAccessPolicyExists(resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "access_policy"),
@@ -96,13 +96,15 @@ resource "aws_cloudsearch_domain" "test" {
 resource "aws_cloudsearch_domain_service_access_policy" "test" {
   domain_name = aws_cloudsearch_domain.test.id
   
-  policy = <<POLICY
+  access_policy = <<POLICY
 {
-  "Version":"2012-10-17",           
-  "Statement": [{
-    "Effect": "Allow",
-    "Action": ["cloudsearch:search"],
-    "Resource": "${aws_cloudsearch_domain.test.arn}/movies"
+  "Version":"2012-10-17",
+  "Statement":[{
+    "Sid":"search_only",
+    "Effect":"Allow",
+    "Principal":"*",
+    "Action":["cloudsearch:search"],
+    "Condition":{"IpAddress":{"aws:SourceIp":"192.0.2.0/32"}}
   }]
 }
 POLICY

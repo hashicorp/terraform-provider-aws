@@ -20,16 +20,16 @@ resource "aws_cloudsearch_domain" "example" {
 resource "aws_cloudsearch_domain_service_access_policy" "example" {
   domain_name = aws_cloudsearch_domain.example.id
 
-  policy = <<POLICY
+  access_policy = <<POLICY
 {
-  "Version":"2012-10-17",           
-  "Statement": [
-    {
-      "Effect": "Allow",
-      "Action": ["cloudsearch:search"],
-      "Resource": "${aws_cloudsearch_domain.example.arn}/movies"
-    }
-  ]
+  "Version":"2012-10-17",
+  "Statement":[{
+    "Sid":"search_only",
+    "Effect":"Allow",
+    "Principal":"*",
+    "Action":["cloudsearch:search"],
+    "Condition":{"IpAddress":{"aws:SourceIp":"192.0.2.0/32"}}
+  }]
 }
 POLICY
 }

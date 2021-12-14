@@ -78,7 +78,7 @@ func resourceDomainServiceAccessPolicyPut(d *schema.ResourceData, meta interface
 		return fmt.Errorf("error waiting for CloudSearch Domain Service Access Policy (%s) to become active: %w", d.Id(), err)
 	}
 
-	return nil
+	return resourceDomainServiceAccessPolicyRead(d, meta)
 }
 
 func resourceDomainServiceAccessPolicyRead(d *schema.ResourceData, meta interface{}) error {
