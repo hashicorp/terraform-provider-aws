@@ -21,7 +21,7 @@ resource "aws_appstream_fleet" "test_fleet" {
   }
 
   description                        = "test fleet"
-  idle_disconnect_timeout_in_seconds = 15
+  idle_disconnect_timeout_in_seconds = 60
   display_name                       = "test-fleet"
   enable_default_internet_access     = false
   fleet_type                         = "ON_DEMAND"
