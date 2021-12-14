@@ -3,6 +3,7 @@
 FEATURES:
 
 * **New Data Source:** `aws_connect_bot_association` ([#21097](https://github.com/hashicorp/terraform-provider-aws/issues/21097))
+* **New Data Source:** `aws_connect_hours_of_operation` ([#22207](https://github.com/hashicorp/terraform-provider-aws/issues/22207))
 * **New Data Source:** `aws_connect_lambda_function_association` ([#21276](https://github.com/hashicorp/terraform-provider-aws/issues/21276))
 * **New Resource:** `aws_connect_bot_association` ([#21097](https://github.com/hashicorp/terraform-provider-aws/issues/21097))
 * **New Resource:** `aws_connect_hours_of_operation` ([#21934](https://github.com/hashicorp/terraform-provider-aws/issues/21934))
@@ -33,6 +34,10 @@ BUG FIXES:
 * resource/aws_iot_policy: Fix erroneous diffs in `policy` when no changes made or policies are equivalent ([#22169](https://github.com/hashicorp/terraform-provider-aws/issues/22169))
 * resource/aws_media_store_container_policy: Fix erroneous diffs in `policy` when no changes made or policies are equivalent ([#22170](https://github.com/hashicorp/terraform-provider-aws/issues/22170))
 * resource/aws_networkfirewall_resource_policy: Fix erroneous diffs in `policy` when no changes made or policies are equivalent ([#22171](https://github.com/hashicorp/terraform-provider-aws/issues/22171))
+* resource/aws_sqs_queue: Fix "error reading, empty result" and various eventual consistency errors ([#22194](https://github.com/hashicorp/terraform-provider-aws/issues/22194))
+* resource/aws_sqs_queue: Fix erroneous diffs in `policy` when no changes made or policies are equivalent ([#22194](https://github.com/hashicorp/terraform-provider-aws/issues/22194))
+* resource/aws_sqs_queue_policy: Fix "error reading, empty result" and various eventual consistency errors ([#22194](https://github.com/hashicorp/terraform-provider-aws/issues/22194))
+* resource/aws_sqs_queue_policy: Fix erroneous diffs in `policy` when no changes made or policies are equivalent ([#22194](https://github.com/hashicorp/terraform-provider-aws/issues/22194))
 * resource/aws_ssoadmin_permission_set_inline_policy: Fix erroneous diffs in `inline_policy` when no changes made or policies are equivalent ([#22192](https://github.com/hashicorp/terraform-provider-aws/issues/22192))
 * resource/aws_transfer_access: Fix erroneous diffs in `policy` when no changes made or policies are equivalent ([#22193](https://github.com/hashicorp/terraform-provider-aws/issues/22193))
 * resource/aws_transfer_user: Fix erroneous diffs in `policy` when no changes made or policies are equivalent ([#22193](https://github.com/hashicorp/terraform-provider-aws/issues/22193))
