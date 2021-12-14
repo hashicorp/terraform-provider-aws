@@ -370,6 +370,10 @@ func resourceQueueRead(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	})
 
+	if tfresource.TimedOut(err) {
+		tags, err = ListTags(conn, d.Id())
+	}
+
 	if err != nil {
 		// Non-standard partitions (e.g. US Gov) and some local development
 		// solutions do not yet support this API call. Depending on the
