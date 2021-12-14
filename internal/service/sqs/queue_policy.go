@@ -7,7 +7,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/sqs"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -96,26 +95,9 @@ func resourceQueuePolicyUpsert(d *schema.ResourceData, meta interface{}) error {
 func resourceQueuePolicyRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SQSConn
 
-	var policy string
-	err := resource.Retry(queuePolicyReadTimeout, func() *resource.RetryError {
-		var err error
-
-		policy, err = FindQueuePolicyByURL(conn, d.Id())
-
-		if tfresource.NotFound(err) {
-			return resource.RetryableError(err)
-		}
-
-		if err != nil {
-			return resource.NonRetryableError(err)
-		}
-
-		return nil
+	outputRaw, err := tfresource.RetryWhenNotFound(queuePolicyReadTimeout, func() (interface{}, error) {
+		return FindQueuePolicyByURL(conn, d.Id())
 	})
-
-	if tfresource.TimedOut(err) {
-		policy, err = FindQueuePolicyByURL(conn, d.Id())
-	}
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] SQS Queue Policy (%s) not found, removing from state", d.Id())
@@ -127,7 +109,7 @@ func resourceQueuePolicyRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error reading SQS Queue Policy (%s): %w", d.Id(), err)
 	}
 
-	policyToSet, err := verify.PolicyToSet(d.Get("policy").(string), policy)
+	policyToSet, err := verify.PolicyToSet(d.Get("policy").(string), outputRaw.(string))
 
 	if err != nil {
 		return err
