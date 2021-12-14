@@ -39,6 +39,10 @@ func ResourceSecretPolicy() *schema.Resource {
 				Required:         true,
 				ValidateFunc:     validation.StringIsJSON,
 				DiffSuppressFunc: verify.SuppressEquivalentPolicyDiffs,
+				StateFunc: func(v interface{}) string {
+					json, _ := structure.NormalizeJsonString(v)
+					return json
+				},
 			},
 			"block_public_policy": {
 				Type:     schema.TypeBool,
@@ -51,8 +55,14 @@ func ResourceSecretPolicy() *schema.Resource {
 func resourceSecretPolicyCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SecretsManagerConn
 
+	policy, err := structure.NormalizeJsonString(d.Get("policy").(string))
+
+	if err != nil {
+		return fmt.Errorf("policy (%s) is invalid JSON: %w", d.Get("policy").(string), err)
+	}
+
 	input := &secretsmanager.PutResourcePolicyInput{
-		ResourcePolicy: aws.String(d.Get("policy").(string)),
+		ResourcePolicy: aws.String(policy),
 		SecretId:       aws.String(d.Get("secret_arn").(string)),
 	}
 
@@ -63,7 +73,7 @@ func resourceSecretPolicyCreate(d *schema.ResourceData, meta interface{}) error 
 	log.Printf("[DEBUG] Setting Secrets Manager Secret resource policy; %#v", input)
 	var res *secretsmanager.PutResourcePolicyOutput
 
-	err := resource.Retry(tfiam.PropagationTimeout, func() *resource.RetryError {
+	err = resource.Retry(tfiam.PropagationTimeout, func() *resource.RetryError {
 		var err error
 		res, err = conn.PutResourcePolicy(input)
 		if tfawserr.ErrMessageContains(err, secretsmanager.ErrCodeMalformedPolicyDocumentException,
@@ -131,11 +141,13 @@ func resourceSecretPolicyRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if res.ResourcePolicy != nil {
-		policy, err := structure.NormalizeJsonString(aws.StringValue(res.ResourcePolicy))
+		policyToSet, err := verify.PolicyToSet(d.Get("policy").(string), aws.StringValue(res.ResourcePolicy))
+
 		if err != nil {
-			return fmt.Errorf("policy contains an invalid JSON: %w", err)
+			return err
 		}
-		d.Set("policy", policy)
+
+		d.Set("policy", policyToSet)
 	} else {
 		d.Set("policy", "")
 	}
@@ -149,9 +161,11 @@ func resourceSecretPolicyUpdate(d *schema.ResourceData, meta interface{}) error 
 
 	if d.HasChanges("policy", "block_public_policy") {
 		policy, err := structure.NormalizeJsonString(d.Get("policy").(string))
+
 		if err != nil {
 			return fmt.Errorf("policy contains an invalid JSON: %s", err)
 		}
+
 		input := &secretsmanager.PutResourcePolicyInput{
 			ResourcePolicy:    aws.String(policy),
 			SecretId:          aws.String(d.Id()),

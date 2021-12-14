@@ -71,6 +71,10 @@ func ResourceSecret() *schema.Resource {
 				Computed:         true,
 				ValidateFunc:     validation.StringIsJSON,
 				DiffSuppressFunc: verify.SuppressEquivalentPolicyDiffs,
+				StateFunc: func(v interface{}) string {
+					json, _ := structure.NormalizeJsonString(v)
+					return json
+				},
 			},
 			"recovery_window_in_days": {
 				Type:     schema.TypeInt,
@@ -206,12 +210,18 @@ func resourceSecretCreate(d *schema.ResourceData, meta interface{}) error {
 	d.SetId(aws.StringValue(output.ARN))
 
 	if v, ok := d.GetOk("policy"); ok && v.(string) != "" {
+		policy, err := structure.NormalizeJsonString(v.(string))
+
+		if err != nil {
+			return fmt.Errorf("policy (%s) is invalid JSON: %w", v.(string), err)
+		}
+
 		input := &secretsmanager.PutResourcePolicyInput{
-			ResourcePolicy: aws.String(v.(string)),
+			ResourcePolicy: aws.String(policy),
 			SecretId:       aws.String(d.Id()),
 		}
 
-		err := resource.Retry(tfiam.PropagationTimeout, func() *resource.RetryError {
+		err = resource.Retry(tfiam.PropagationTimeout, func() *resource.RetryError {
 			_, err := conn.PutResourcePolicy(input)
 			if tfawserr.ErrMessageContains(err, secretsmanager.ErrCodeMalformedPolicyDocumentException,
 				"This resource policy contains an unsupported principal") {
@@ -324,11 +334,15 @@ func resourceSecretRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if pOut.ResourcePolicy != nil {
-		policy, err := structure.NormalizeJsonString(aws.StringValue(pOut.ResourcePolicy))
+		policyToSet, err := verify.PolicyToSet(d.Get("policy").(string), aws.StringValue(pOut.ResourcePolicy))
+
 		if err != nil {
-			return fmt.Errorf("policy contains an invalid JSON: %w", err)
+			return err
 		}
-		d.Set("policy", policy)
+
+		d.Set("policy", policyToSet)
+	} else {
+		d.Set("policy", "")
 	}
 
 	d.Set("rotation_enabled", output.RotationEnabled)
