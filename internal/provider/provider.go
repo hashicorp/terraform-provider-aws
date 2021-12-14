@@ -1379,6 +1379,7 @@ func Provider() *schema.Provider {
 			"aws_media_store_container_policy": mediastore.ResourceContainerPolicy(),
 
 			"aws_memorydb_subnet_group": memorydb.ResourceSubnetGroup(),
+			"aws_memorydb_user":         memorydb.ResourceUser(),
 
 			"aws_mq_broker":        mq.ResourceBroker(),
 			"aws_mq_configuration": mq.ResourceConfiguration(),
