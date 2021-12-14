@@ -84,7 +84,7 @@ func statusQueueAttributeState(conn *sqs.SQS, url string, expected map[string]st
 		err = attributesMatch(got)
 
 		if err != nil {
-			return got, queuePolicyStateNotEqual, nil
+			return got, queuePolicyStateNotEqual, nil //nolint:nilerr
 		}
 
 		return got, queuePolicyStateEqual, nil
