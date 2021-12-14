@@ -260,7 +260,7 @@ resource "aws_sns_topic" "test" {
 }
 
 resource "aws_sns_topic_policy" "test" {
-  arn    = aws_sns_topic.test.arn
+  arn = aws_sns_topic.test.arn
   policy = jsonencode({
     Version = "2012-10-17"
     Id      = "default"
@@ -291,7 +291,7 @@ resource "aws_sns_topic" "test" {
 }
 
 resource "aws_sns_topic_policy" "test" {
-  arn    = aws_sns_topic.test.arn
+  arn = aws_sns_topic.test.arn
   policy = jsonencode({
     Version = "2012-10-17"
     Id      = "default"
