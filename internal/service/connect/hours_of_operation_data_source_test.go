@@ -75,43 +75,43 @@ resource "aws_connect_instance" "test" {
 }
 
 resource "aws_connect_hours_of_operation" "test" {
-	instance_id = aws_connect_instance.test.id
-	name        = %[2]q
-	description = "Test Hours of Operation Description"
-	time_zone   = "EST"
+  instance_id = aws_connect_instance.test.id
+  name        = %[2]q
+  description = "Test Hours of Operation Description"
+  time_zone   = "EST"
 
-	config {
-	  day = "MONDAY"
+  config {
+    day = "MONDAY"
 
-	  end_time {
-		hours   = 23
-		minutes = 8
-	  }
+    end_time {
+      hours   = 23
+      minutes = 8
+    }
 
-	  start_time {
-		hours   = 8
-		minutes = 0
-	  }
-	}
-
-	config {
-	  day = "TUESDAY"
-
-	  end_time {
-		hours   = 21
-		minutes = 0
-	  }
-
-	  start_time {
-		hours   = 9
-		minutes = 0
-	  }
-	}
-
-	tags = {
-	  "Name" = "Test Hours of Operation"
-	}
+    start_time {
+      hours   = 8
+      minutes = 0
+    }
   }
+
+  config {
+    day = "TUESDAY"
+
+    end_time {
+      hours   = 21
+      minutes = 0
+    }
+
+    start_time {
+      hours   = 9
+      minutes = 0
+    }
+  }
+
+  tags = {
+    "Name" = "Test Hours of Operation"
+  }
+}
 	`, rName, rName2)
 }
 
