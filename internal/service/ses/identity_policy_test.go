@@ -272,13 +272,15 @@ func testAccIdentityPolicyPolicy2Config(domain string) string {
 	return fmt.Sprintf(`
 data "aws_caller_identity" "current" {}
 
+data "aws_partition" "current" {}
+
 data "aws_iam_policy_document" "test" {
   statement {
     actions   = ["SES:SendEmail", "SES:SendRawEmail"]
     resources = [aws_ses_domain_identity.test.arn]
 
     principals {
-      identifiers = [data.aws_caller_identity.current.account_id]
+      identifiers = ["arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:root"]
       type        = "AWS"
     }
   }
