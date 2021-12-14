@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"strings"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
@@ -39,14 +40,15 @@ func ResourceUser() *schema.Resource {
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Optional: true,
 			},
+			"creation_date": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"desired_delivery_mediums": {
 				Type: schema.TypeSet,
 				Elem: &schema.Schema{
-					Type: schema.TypeString,
-					ValidateFunc: validation.StringInSlice([]string{
-						cognitoidentityprovider.DeliveryMediumTypeSms,
-						cognitoidentityprovider.DeliveryMediumTypeEmail,
-					}, false),
+					Type:         schema.TypeString,
+					ValidateFunc: validation.StringInSlice(cognitoidentityprovider.DeliveryMediumType_Values(), false),
 				},
 				Optional: true,
 			},
@@ -59,32 +61,24 @@ func ResourceUser() *schema.Resource {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
-			"message_action": {
+			"last_modified_date": {
 				Type:     schema.TypeString,
-				Optional: true,
-				ValidateFunc: validation.StringInSlice([]string{
-					cognitoidentityprovider.MessageActionTypeResend,
-					cognitoidentityprovider.MessageActionTypeSuppress,
-				}, false),
+				Computed: true,
 			},
-			"mfa_preference": {
-				Type: schema.TypeList,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"sms_enabled": {
-							Type:     schema.TypeBool,
-							Computed: true,
-						},
-						"software_token_enabled": {
-							Type:     schema.TypeBool,
-							Computed: true,
-						},
-						"preferred_mfa": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-					},
+			"message_action": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.StringInSlice(cognitoidentityprovider.MessageActionType_Values(), false),
+			},
+			"mfa_setting_list": {
+				Type: schema.TypeSet,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
 				},
+				Computed: true,
+			},
+			"preferred_mfa_setting": {
+				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"user_pool_id": {
@@ -161,14 +155,14 @@ func resourceUserCreate(d *schema.ResourceData, meta interface{}) error {
 
 	if v, ok := d.GetOk("attributes"); ok {
 		attributes := v.(map[string]interface{})
-		params.UserAttributes = expandUserAttributes(attributes)
+		params.UserAttributes = expandAttribute(attributes)
 	}
 
 	if v, ok := d.GetOk("validation_data"); ok {
 		attributes := v.(map[string]interface{})
 		// aws sdk uses the same type for both validation data and user attributes
 		// https://docs.aws.amazon.com/sdk-for-go/api/service/cognitoidentityprovider/#AdminCreateUserInput
-		params.ValidationData = expandUserAttributes(attributes)
+		params.ValidationData = expandAttribute(attributes)
 	}
 
 	if v, ok := d.GetOk("temporary_password"); ok {
@@ -177,15 +171,10 @@ func resourceUserCreate(d *schema.ResourceData, meta interface{}) error {
 
 	resp, err := conn.AdminCreateUser(params)
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, cognitoidentityprovider.ErrCodeUsernameExistsException, "An account with the email already exists") {
-			log.Println("[ERROR] User alias already exists. To override the alias set `force_alias_creation` attribute to `true`.")
-		} else if tfawserr.ErrMessageContains(err, cognitoidentityprovider.ErrCodeInvalidParameterException, "No email provided but desired delivery medium was Email") {
-			log.Println("[ERROR] No email provided but desired delivery medium was `EMAIL`.")
-		}
-		return fmt.Errorf("Error creating Cognito User: %s", err)
+		return fmt.Errorf("Error creating Cognito User (%s): %w", d.Id(), err)
 	}
 
-	d.SetId(fmt.Sprintf("%s/%s", *params.UserPoolId, *resp.User.Username))
+	d.SetId(fmt.Sprintf("%s/%s", aws.StringValue(params.UserPoolId), aws.StringValue(resp.User.Username)))
 
 	if v := d.Get("enabled"); !v.(bool) {
 		disableParams := &cognitoidentityprovider.AdminDisableUserInput{
@@ -195,7 +184,7 @@ func resourceUserCreate(d *schema.ResourceData, meta interface{}) error {
 
 		_, err := conn.AdminDisableUser(disableParams)
 		if err != nil {
-			return fmt.Errorf("Error disabling Cognito User: %s", err)
+			return fmt.Errorf("Error disabling Cognito User (%s): %w", d.Id(), err)
 		}
 	}
 
@@ -209,7 +198,7 @@ func resourceUserCreate(d *schema.ResourceData, meta interface{}) error {
 
 		_, err := conn.AdminSetUserPassword(setPasswordParams)
 		if err != nil {
-			return fmt.Errorf("Error setting Cognito User's password: %s", err)
+			return fmt.Errorf("Error setting Cognito User's password (%s): %w", d.Id(), err)
 		}
 	}
 
@@ -228,33 +217,28 @@ func resourceUserRead(d *schema.ResourceData, meta interface{}) error {
 
 	user, err := conn.AdminGetUser(params)
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, "UserNotFoundException", "") {
+		if tfawserr.ErrCodeEquals(err, cognitoidentityprovider.ErrCodeUserNotFoundException) {
 			log.Printf("[WARN] Cognito User %s not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
 		}
-		return fmt.Errorf("Error reading Cognito User: %s", err)
+		return fmt.Errorf("Error reading Cognito User (%s): %w", d.Id(), err)
 	}
 
 	if err := d.Set("attributes", flattenUserAttributes(user.UserAttributes)); err != nil {
-		return fmt.Errorf("failed setting user attributes: %w", err)
+		return fmt.Errorf("failed setting user attributes (%s): %w", d.Id(), err)
 	}
 
-	if err := d.Set("status", user.UserStatus); err != nil {
-		return fmt.Errorf("failed setting user status: %w", err)
+	if err := d.Set("mfa_setting_list", user.UserMFASettingList); err != nil {
+		return fmt.Errorf("failed setting user's mfa settings (%s): %w", d.Id(), err)
 	}
 
-	if err := d.Set("sub", flattenUserSub(user.UserAttributes)); err != nil {
-		return fmt.Errorf("failed setting user sub: %w", err)
-	}
-
-	if err := d.Set("enabled", user.Enabled); err != nil {
-		return fmt.Errorf("failed setting user enabled status: %w", err)
-	}
-
-	if err := d.Set("mfa_preference", flattenUserMfaPreference(user.MFAOptions, user.UserMFASettingList, user.PreferredMfaSetting)); err != nil {
-		return fmt.Errorf("failed setting user mfa_preference: %w", err)
-	}
+	d.Set("preferred_mfa_setting", aws.StringValue(user.PreferredMfaSetting))
+	d.Set("status", aws.StringValue(user.UserStatus))
+	d.Set("enabled", aws.BoolValue(user.Enabled))
+	d.Set("creation_date", user.UserCreateDate.Format(time.RFC3339))
+	d.Set("last_modified_date", user.UserLastModifiedDate.Format(time.RFC3339))
+	d.Set("sub", retrieveUserSub(user.UserAttributes))
 
 	return nil
 }
@@ -273,16 +257,11 @@ func resourceUserUpdate(d *schema.ResourceData, meta interface{}) error {
 			params := &cognitoidentityprovider.AdminUpdateUserAttributesInput{
 				Username:       aws.String(d.Get("username").(string)),
 				UserPoolId:     aws.String(d.Get("user_pool_id").(string)),
-				UserAttributes: expandUserAttributes(upd),
+				UserAttributes: expandAttribute(upd),
 			}
 			_, err := conn.AdminUpdateUserAttributes(params)
 			if err != nil {
-				if tfawserr.ErrMessageContains(err, "UserNotFoundException", "") {
-					log.Printf("[WARN] Cognito User %s is already gone", d.Id())
-					d.SetId("")
-					return nil
-				}
-				return fmt.Errorf("Error updating Cognito User Attributes: %s", err)
+				return fmt.Errorf("Error updating Cognito User Attributes (%s): %w", d.Id(), err)
 			}
 		}
 		if len(del) > 0 {
@@ -293,12 +272,7 @@ func resourceUserUpdate(d *schema.ResourceData, meta interface{}) error {
 			}
 			_, err := conn.AdminDeleteUserAttributes(params)
 			if err != nil {
-				if tfawserr.ErrMessageContains(err, "UserNotFoundException", "") {
-					log.Printf("[WARN] Cognito User %s is already gone", d.Id())
-					d.SetId("")
-					return nil
-				}
-				return fmt.Errorf("Error updating Cognito User Attributes: %s", err)
+				return fmt.Errorf("Error updating Cognito User Attributes (%s): %w", d.Id(), err)
 			}
 		}
 	}
@@ -313,7 +287,7 @@ func resourceUserUpdate(d *schema.ResourceData, meta interface{}) error {
 			}
 			_, err := conn.AdminEnableUser(enableParams)
 			if err != nil {
-				return fmt.Errorf("Error enabling Cognito User: %s", err)
+				return fmt.Errorf("Error enabling Cognito User (%s): %w", d.Id(), err)
 			}
 		} else {
 			disableParams := &cognitoidentityprovider.AdminDisableUserInput{
@@ -322,7 +296,7 @@ func resourceUserUpdate(d *schema.ResourceData, meta interface{}) error {
 			}
 			_, err := conn.AdminDisableUser(disableParams)
 			if err != nil {
-				return fmt.Errorf("Error disabling Cognito User: %s", err)
+				return fmt.Errorf("Error disabling Cognito User (%s): %w", d.Id(), err)
 			}
 		}
 	}
@@ -340,7 +314,7 @@ func resourceUserUpdate(d *schema.ResourceData, meta interface{}) error {
 
 			_, err := conn.AdminSetUserPassword(setPasswordParams)
 			if err != nil {
-				return fmt.Errorf("Error changing Cognito User's password: %s", err)
+				return fmt.Errorf("Error changing Cognito User's temporary password (%s): %w", d.Id(), err)
 			}
 		} else {
 			d.Set("temporary_password", nil)
@@ -360,7 +334,7 @@ func resourceUserUpdate(d *schema.ResourceData, meta interface{}) error {
 
 			_, err := conn.AdminSetUserPassword(setPasswordParams)
 			if err != nil {
-				return fmt.Errorf("Error changing Cognito User's password: %s", err)
+				return fmt.Errorf("Error changing Cognito User's password (%s): %w", d.Id(), err)
 			}
 		} else {
 			d.Set("password", nil)
@@ -382,7 +356,7 @@ func resourceUserDelete(d *schema.ResourceData, meta interface{}) error {
 
 	_, err := conn.AdminDeleteUser(params)
 	if err != nil {
-		return fmt.Errorf("Error deleting Cognito User: %s", err)
+		return fmt.Errorf("Error deleting Cognito User (%s): %w", d.Id(), err)
 	}
 
 	return nil
@@ -400,7 +374,7 @@ func resourceUserImport(d *schema.ResourceData, meta interface{}) ([]*schema.Res
 	return []*schema.ResourceData{d}, nil
 }
 
-func expandUserAttributes(tfMap map[string]interface{}) []*cognitoidentityprovider.AttributeType {
+func expandAttribute(tfMap map[string]interface{}) []*cognitoidentityprovider.AttributeType {
 	if len(tfMap) == 0 {
 		return nil
 	}
@@ -498,7 +472,7 @@ func expandUserDesiredDeliveryMediums(tfSet *schema.Set) []*string {
 	return apiList
 }
 
-func flattenUserSub(apiList []*cognitoidentityprovider.AttributeType) string {
+func retrieveUserSub(apiList []*cognitoidentityprovider.AttributeType) string {
 	for _, attr := range apiList {
 		if aws.StringValue(attr.Name) == "sub" {
 			return aws.StringValue(attr.Value)
@@ -516,35 +490,6 @@ func expandUserClientMetadata(tfMap map[string]interface{}) map[string]*string {
 	}
 
 	return apiMap
-}
-
-func flattenUserMfaPreference(mfaOptions []*cognitoidentityprovider.MFAOptionType, mfaSettingsList []*string, preferredMfa *string) []interface{} {
-	preference := map[string]interface{}{}
-
-	for _, setting := range mfaSettingsList {
-		v := aws.StringValue(setting)
-
-		if v == cognitoidentityprovider.ChallengeNameTypeSmsMfa {
-			preference["sms_enabled"] = true
-		} else if v == cognitoidentityprovider.ChallengeNameTypeSoftwareTokenMfa {
-			preference["software_token_enabled"] = true
-		}
-	}
-
-	if len(mfaOptions) > 0 {
-		// mfaOptions.DeliveryMediums can only have value SMS so we check only first element
-		if aws.StringValue(mfaOptions[0].DeliveryMedium) == cognitoidentityprovider.DeliveryMediumTypeSms {
-			preference["sms_enabled"] = true
-		}
-	}
-
-	preference["preferred_mfa"] = aws.StringValue(preferredMfa)
-
-	return []interface{}{preference}
-}
-
-func userAttributeHash(attr interface{}) int {
-	return schema.HashString(attr.(map[string]interface{})["name"])
 }
 
 func UserAttributeKeyMatchesStandardAttribute(input string) bool {

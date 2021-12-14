@@ -31,12 +31,13 @@ func TestAccCognitoUser_basic(t *testing.T) {
 				Config: testAccUserConfigBasic(rUserPoolName, rUserName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(resourceName),
+					resource.TestCheckResourceAttrSet(resourceName, "creation_date"),
+					resource.TestCheckResourceAttrSet(resourceName, "last_modified_date"),
 					resource.TestCheckResourceAttrSet(resourceName, "sub"),
+					resource.TestCheckResourceAttr(resourceName, "preferred_mfa_setting", ""),
+					resource.TestCheckResourceAttr(resourceName, "mfa_setting_list.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "enabled", "true"),
 					resource.TestCheckResourceAttr(resourceName, "status", cognitoidentityprovider.UserStatusTypeForceChangePassword),
-					resource.TestCheckResourceAttr(resourceName, "mfa_preference.0.sms_enabled", "false"),
-					resource.TestCheckResourceAttr(resourceName, "mfa_preference.0.software_token_enabled", "false"),
-					resource.TestCheckResourceAttr(resourceName, "mfa_preference.0.preferred_mfa", ""),
 				),
 			},
 			{
@@ -332,7 +333,7 @@ func testAccCheckUserDestroy(s *terraform.State) error {
 		_, err := conn.AdminGetUser(params)
 
 		if err != nil {
-			if awsErr, ok := err.(awserr.Error); ok && awsErr.Code() == "ResourceNotFoundException" {
+			if awsErr, ok := err.(awserr.Error); ok && (awsErr.Code() == cognitoidentityprovider.ErrCodeUserNotFoundException || awsErr.Code() == cognitoidentityprovider.ErrCodeResourceNotFoundException) {
 				return nil
 			}
 			return err
@@ -628,7 +629,7 @@ resource "aws_cognito_user_pool" "test" {
 resource "aws_cognito_user" "test" {
 	user_pool_id = aws_cognito_user_pool.test.id
 	username = %[2]q
-	enabled = %t
+	enabled = %[3]t
 }
 `, userPoolName, userName, enabled)
 }
