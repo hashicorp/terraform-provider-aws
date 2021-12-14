@@ -103,3 +103,95 @@ func DataSourceHoursOfOperation() *schema.Resource {
 	}
 }
 
+func dataSourceHoursOfOperationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.AWSClient).ConnectConn
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+
+	instanceID := d.Get("instance_id").(string)
+
+	input := &connect.DescribeHoursOfOperationInput{
+		InstanceId: aws.String(instanceID),
+	}
+
+	if v, ok := d.GetOk("hours_of_operation_id"); ok {
+		input.HoursOfOperationId = aws.String(v.(string))
+	} else if v, ok := d.GetOk("name"); ok {
+		name := v.(string)
+		hoursOfOperationSummary, err := dataSourceGetConnectHoursOfOperationSummaryByName(ctx, conn, instanceID, name)
+
+		if err != nil {
+			return diag.FromErr(fmt.Errorf("error finding Connect Hours of Operation Summary by name (%s): %w", name, err))
+		}
+
+		if hoursOfOperationSummary == nil {
+			return diag.FromErr(fmt.Errorf("error finding Connect Hours of Operation Summary by name (%s): not found", name))
+		}
+
+		input.HoursOfOperationId = hoursOfOperationSummary.Id
+	}
+
+	resp, err := conn.DescribeHoursOfOperation(input)
+
+	if err != nil {
+		return diag.FromErr(fmt.Errorf("error getting Connect Hours of Operation: %w", err))
+	}
+
+	if resp == nil || resp.HoursOfOperation == nil {
+		return diag.FromErr(fmt.Errorf("error getting Connect Hours of Operation: empty response"))
+	}
+
+	hoursOfOperation := resp.HoursOfOperation
+
+	d.Set("hours_of_operation_arn", hoursOfOperation.HoursOfOperationArn)
+	d.Set("hours_of_operation_id", hoursOfOperation.HoursOfOperationId)
+	d.Set("instance_id", instanceID)
+	d.Set("description", hoursOfOperation.Description)
+	d.Set("name", hoursOfOperation.Name)
+	d.Set("time_zone", hoursOfOperation.TimeZone)
+
+	if err := d.Set("config", flattenConfigs(hoursOfOperation.Config)); err != nil {
+		return diag.FromErr(fmt.Errorf("error setting config: %s", err))
+	}
+
+	if err := d.Set("tags", KeyValueTags(hoursOfOperation.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+		return diag.FromErr(fmt.Errorf("error setting tags: %s", err))
+	}
+
+	d.SetId(fmt.Sprintf("%s:%s", instanceID, aws.StringValue(hoursOfOperation.HoursOfOperationId)))
+
+	return nil
+}
+
+func dataSourceGetConnectHoursOfOperationSummaryByName(ctx context.Context, conn *connect.Connect, instanceID, name string) (*connect.HoursOfOperationSummary, error) {
+	var result *connect.HoursOfOperationSummary
+
+	input := &connect.ListHoursOfOperationsInput{
+		InstanceId: aws.String(instanceID),
+		MaxResults: aws.Int64(ListHoursOfOperationsMaxResults),
+	}
+
+	err := conn.ListHoursOfOperationsPagesWithContext(ctx, input, func(page *connect.ListHoursOfOperationsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, cf := range page.HoursOfOperationSummaryList {
+			if cf == nil {
+				continue
+			}
+
+			if aws.StringValue(cf.Name) == name {
+				result = cf
+				return false
+			}
+		}
+
+		return !lastPage
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	return result, nil
+}
