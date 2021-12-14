@@ -284,7 +284,22 @@ func resourceQueueRead(d *schema.ResourceData, meta interface{}) error {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	output, err := FindQueueAttributesByURL(conn, d.Id())
+	var output map[string]string
+	err := resource.Retry(queueReadTimeout, func() *resource.RetryError {
+		var err error
+
+		output, err = FindQueueAttributesByURL(conn, d.Id())
+
+		if tfresource.NotFound(err) {
+			return resource.RetryableError(err)
+		}
+
+		if err != nil {
+			return resource.NonRetryableError(err)
+		}
+
+		return nil
+	})
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] SQS Queue (%s) not found, removing from state", d.Id())
@@ -329,15 +344,33 @@ func resourceQueueRead(d *schema.ResourceData, meta interface{}) error {
 
 	d.Set("policy", policyToSet)
 
-	tags, err := ListTags(conn, d.Id())
+	var tags tftags.KeyValueTags
+
+	err = resource.Retry(queueTagsTimeout, func() *resource.RetryError {
+		var err error
+
+		tags, err = ListTags(conn, d.Id())
+
+		if tfawserr.ErrCodeEquals(err, sqs.ErrCodeQueueDoesNotExist) {
+			return resource.RetryableError(err)
+		}
+
+		if err != nil {
+			return resource.NonRetryableError(err)
+		}
+
+		return nil
+	})
 
 	if err != nil {
 		// Non-standard partitions (e.g. US Gov) and some local development
 		// solutions do not yet support this API call. Depending on the
 		// implementation it may return InvalidAction or AWS.SimpleQueueService.UnsupportedOperation
-		if !tfawserr.ErrCodeEquals(err, ErrCodeInvalidAction) && !tfawserr.ErrCodeEquals(err, sqs.ErrCodeUnsupportedOperation) {
-			return fmt.Errorf("error listing tags for SQS Queue (%s): %w", d.Id(), err)
+		if tfawserr.ErrCodeEquals(err, ErrCodeInvalidAction) || tfawserr.ErrCodeEquals(err, sqs.ErrCodeUnsupportedOperation) {
+			return nil
 		}
+
+		return fmt.Errorf("error listing tags for SQS Queue (%s): %w", d.Id(), err)
 	}
 
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
