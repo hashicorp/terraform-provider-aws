@@ -10,6 +10,8 @@ description: |-
 
 Provides an CloudSearch domain resource.
 
+Terraform waits for the domain to become `Active` when applying a configuration.
+
 ## Example Usage
 
 ```terraform
@@ -95,9 +97,9 @@ In addition to all arguments above, the following attributes are exported:
 `aws_cloudsearch_domain` provides the following
 [Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
 
-* `create` - (Default `20 minutes`) How long to wait for the CloudSearch Domain to be created.
-* `update` - (Default `20 minutes`) How long to wait for the CloudSearch Domain to be updated.
-* `delete` - (Default `10 minutes`) How long to wait for the CloudSearch Domain to be deleted.
+* `create` - (Default `20 minutes`) How long to wait for the CloudSearch domain to be created.
+* `update` - (Default `20 minutes`) How long to wait for the CloudSearch domain to be updated.
+* `delete` - (Default `20 minutes`) How long to wait for the CloudSearch domain to be deleted.
 
 ## Import
 

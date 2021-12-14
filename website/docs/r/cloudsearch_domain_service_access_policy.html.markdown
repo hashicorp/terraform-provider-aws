@@ -10,6 +10,8 @@ description: |-
 
 Provides an CloudSearch domain service access policy resource.
 
+Terraform waits for the domain service access policy to become `Active` when applying a configuration.
+
 ## Example Usage
 
 ```terraform
@@ -27,7 +29,10 @@ resource "aws_cloudsearch_domain_service_access_policy" "example" {
     "Sid":"search_only",
     "Effect":"Allow",
     "Principal":"*",
-    "Action":["cloudsearch:search"],
+    "Action":[
+      "cloudsearch:search",
+      "cloudsearch:document"
+    ],
     "Condition":{"IpAddress":{"aws:SourceIp":"192.0.2.0/32"}}
   }]
 }
@@ -45,6 +50,14 @@ The following arguments are supported:
 ## Attributes Reference
 
 No additional attributes are exported.
+
+## Timeouts
+
+`aws_cloudsearch_domain_service_access_policy` provides the following
+[Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
+
+* `update` - (Default `20 minutes`) How long to wait for the CloudSearch domain service access policy to be created or updated.
+* `delete` - (Default `20 minutes`) How long to wait for the CloudSearch domain service access policy to be deleted.
 
 ## Import
 

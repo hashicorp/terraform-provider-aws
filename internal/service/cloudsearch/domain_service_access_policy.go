@@ -27,6 +27,11 @@ func ResourceDomainServiceAccessPolicy() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 
+		Timeouts: &schema.ResourceTimeout{
+			Update: schema.DefaultTimeout(20 * time.Minute),
+			Delete: schema.DefaultTimeout(20 * time.Minute),
+		},
+
 		Schema: map[string]*schema.Schema{
 			"access_policy": {
 				Type:             schema.TypeString,
@@ -67,12 +72,12 @@ func resourceDomainServiceAccessPolicyPut(d *schema.ResourceData, meta interface
 	_, err = conn.UpdateServiceAccessPolicies(input)
 
 	if err != nil {
-		return fmt.Errorf("error creating CloudSearch Domain Service Access Policy (%s): %w", domainName, err)
+		return fmt.Errorf("error updating CloudSearch Domain Service Access Policy (%s): %w", domainName, err)
 	}
 
 	d.SetId(domainName)
 
-	_, err = waitAccessPolicyActive(conn, d.Id())
+	_, err = waitAccessPolicyActive(conn, d.Id(), d.Timeout(schema.TimeoutUpdate))
 
 	if err != nil {
 		return fmt.Errorf("error waiting for CloudSearch Domain Service Access Policy (%s) to become active: %w", d.Id(), err)
@@ -127,7 +132,7 @@ func resourceDomainServiceAccessPolicyDelete(d *schema.ResourceData, meta interf
 		return fmt.Errorf("error deleting CloudSearch Domain Service Access Policy (%s): %w", d.Id(), err)
 	}
 
-	_, err = waitAccessPolicyActive(conn, d.Id())
+	_, err = waitAccessPolicyActive(conn, d.Id(), d.Timeout(schema.TimeoutDelete))
 
 	if err != nil {
 		return fmt.Errorf("error waiting for CloudSearch Domain Service Access Policy (%s) to delete: %w", d.Id(), err)
@@ -154,7 +159,6 @@ func FindAccessPolicyByName(conn *cloudsearch.CloudSearch, name string) (string,
 
 func findAccessPoliciesStatusByName(conn *cloudsearch.CloudSearch, name string) (*cloudsearch.AccessPoliciesStatus, error) {
 	input := &cloudsearch.DescribeServiceAccessPoliciesInput{
-		Deployed:   aws.Bool(true),
 		DomainName: aws.String(name),
 	}
 
@@ -194,16 +198,12 @@ func statusAccessPolicyState(conn *cloudsearch.CloudSearch, name string) resourc
 	}
 }
 
-const (
-	accessPolicyTimeout = 2 * time.Minute
-)
-
-func waitAccessPolicyActive(conn *cloudsearch.CloudSearch, name string) (*cloudsearch.AccessPoliciesStatus, error) {
+func waitAccessPolicyActive(conn *cloudsearch.CloudSearch, name string, timeout time.Duration) (*cloudsearch.AccessPoliciesStatus, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{cloudsearch.OptionStateProcessing},
 		Target:  []string{cloudsearch.OptionStateActive},
 		Refresh: statusAccessPolicyState(conn, name),
-		Timeout: accessPolicyTimeout,
+		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForState()

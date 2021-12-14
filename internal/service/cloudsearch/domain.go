@@ -31,7 +31,7 @@ func ResourceDomain() *schema.Resource {
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(20 * time.Minute),
 			Update: schema.DefaultTimeout(20 * time.Minute),
-			Delete: schema.DefaultTimeout(10 * time.Minute),
+			Delete: schema.DefaultTimeout(20 * time.Minute),
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -853,7 +853,6 @@ func FindDomainStatusByName(conn *cloudsearch.CloudSearch, name string) (*clouds
 
 func findAvailabilityOptionsStatusByName(conn *cloudsearch.CloudSearch, name string) (*cloudsearch.AvailabilityOptionsStatus, error) {
 	input := &cloudsearch.DescribeAvailabilityOptionsInput{
-		Deployed:   aws.Bool(true),
 		DomainName: aws.String(name),
 	}
 
