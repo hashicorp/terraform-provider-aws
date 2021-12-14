@@ -148,6 +148,11 @@ func ResourceVPC() *schema.Resource {
 						validation.IsCIDRNetwork(VPCCIDRMaxIPv6, VPCCIDRMaxIPv6)),
 				),
 			},
+			"ipv6_cidr_block_network_border_group": {
+				Type: schema.TypeString,
+				Optional: true,
+				RequiredWith: []string{"AmazonProvidedIpv6CidrBlock"},
+			},
 			"ipv6_ipam_pool_id": {
 				Type:          schema.TypeString,
 				Optional:      true,
@@ -208,6 +213,10 @@ func resourceVPCCreate(d *schema.ResourceData, meta interface{}) error {
 
 	if v, ok := d.GetOk("ipv6_netmask_length"); ok {
 		createOpts.Ipv6NetmaskLength = aws.Int64(int64(v.(int)))
+	}
+
+	if v, ok := d.GetOk("ipv6_cidr_block_network_border_group"); ok {
+		createOpts.Ipv6CidrBlockNetworkBorderGroup = aws.String(v.(string))
 	}
 
 	log.Printf("[DEBUG] VPC create config: %#v", *createOpts)
@@ -401,6 +410,10 @@ func resourceVPCRead(d *schema.ResourceData, meta interface{}) error {
 			d.Set("ipv6_association_id", a.AssociationId)
 			d.Set("ipv6_cidr_block", a.Ipv6CidrBlock)
 		}
+	}
+	// check for an assigned ipv6_cidr_block for ipv6_cidr_block_network_border_group
+	if v := d.Get("ipv6_cidr_block"); v != "" {
+		d.Set("ipv6_cidr_block_network_border_group", v.(string))
 	}
 
 	enableDnsHostnames, err := FindVPCAttribute(conn, aws.StringValue(vpc.VpcId), ec2.VpcAttributeNameEnableDnsHostnames)
@@ -649,6 +662,17 @@ func resourceVPCUpdate(d *schema.ResourceData, meta interface{}) error {
 			if err := waitForEc2VpcIpv6CidrBlockAssociationCreate(conn, d.Id(), aws.StringValue(resp.Ipv6CidrBlockAssociation.AssociationId)); err != nil {
 				return fmt.Errorf("error waiting for EC2 VPC (%s) IPv6 CIDR to become associated: %w", d.Id(), err)
 			}
+		}
+	}
+
+	if d.HasChange("ipv6_cidr_block_network_border_group") {
+		log.Printf("[INFO] Modifying IPv6 Block Network Border Group")
+
+		if v := d.Get("ipv6_cidr_block_network_border_group"); v != "" {
+			modifyOpts := &ec2.AssociateVpcCidrBlockInput{
+				AmazonProvidedIpv6CidrBlock: aws.Bool(true),
+			}
+			modifyOpts.Ipv6CidrBlockNetworkBorderGroup  = aws.String(v.(string))
 		}
 	}
 
