@@ -37,7 +37,7 @@ func waitQueueAttributesPropagated(conn *sqs.SQS, url string, expected map[strin
 		Refresh:                   statusQueueAttributeState(conn, url, expected),
 		Timeout:                   queueAttributePropagationTimeout,
 		ContinuousTargetOccurence: 5,               // set to accommodate GovCloud, commercial, China, etc. - avoid lowering
-		MinTimeout:                3 * time.Second, // set to accommodate GovCloud, commercial, China, etc. - avoid lowering
+		MinTimeout:                6 * time.Second, // set to accommodate GovCloud, commercial, China, etc. - avoid lowering
 		NotFoundChecks:            10,              // set to accommodate GovCloud, commercial, China, etc. - avoid lowering
 	}
 
