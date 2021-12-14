@@ -3,12 +3,12 @@ subcategory: "CloudFront"
 layout: "aws"
 page_title: "AWS: aws_cloudfront_cache_policy"
 description: |-
-  Provides a cache policy for a CloudFront ditribution. When it’s attached to a cache behavior, 
-  the cache policy determines the the values that CloudFront includes in the cache key. These 
-  values can include HTTP headers, cookies, and URL query strings. CloudFront uses the cache 
-  key to find an object in its cache that it can return to the viewer. It also determines the 
-  default, minimum, and maximum time to live (TTL) values that you want objects to stay in the 
-  CloudFront cache. 
+  Provides a cache policy for a CloudFront ditribution. When it’s attached to a cache behavior,
+  the cache policy determines the the values that CloudFront includes in the cache key. These
+  values can include HTTP headers, cookies, and URL query strings. CloudFront uses the cache
+  key to find an object in its cache that it can return to the viewer. It also determines the
+  default, minimum, and maximum time to live (TTL) values that you want objects to stay in the
+  CloudFront cache.
 ---
 
 # Resource: aws_cloudfront_cache_policy
