@@ -33,6 +33,14 @@ func ResourceUser() *schema.Resource {
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 				},
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					log.Printf("[DEBUG] k = %v, old = %v, new = %v", k, old, new)
+					if k == "attributes.sub" || k == "attributes.%" {
+						return true
+					}
+
+					return false
+				},
 				Optional: true,
 			},
 			"client_metadata": {
@@ -410,19 +418,11 @@ func expandUserAttributesDelete(input []*string) []*string {
 }
 
 func flattenUserAttributes(apiList []*cognitoidentityprovider.AttributeType) map[string]interface{} {
-	// there is always the `sub` attribute
-	if len(apiList) == 1 {
-		return nil
-	}
-
 	tfMap := make(map[string]interface{})
 
 	for _, apiAttribute := range apiList {
 		if apiAttribute.Name != nil {
 			if UserAttributeKeyMatchesStandardAttribute(*apiAttribute.Name) {
-				if aws.StringValue(apiAttribute.Name) == "sub" {
-					continue
-				}
 				tfMap[aws.StringValue(apiAttribute.Name)] = aws.StringValue(apiAttribute.Value)
 			} else {
 				name := strings.TrimPrefix(strings.TrimPrefix(aws.StringValue(apiAttribute.Name), "dev:"), "custom:")

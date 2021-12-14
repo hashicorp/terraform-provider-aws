@@ -207,7 +207,7 @@ func TestAccCognitoUser_attributes(t *testing.T) {
 				Config: testAccUserConfigAttributes(rUserPoolName, rUserName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "attributes.%", "3"),
+					resource.TestCheckResourceAttr(resourceName, "attributes.%", "4"),
 					resource.TestCheckResourceAttr(resourceName, "attributes.one", "1"),
 					resource.TestCheckResourceAttr(resourceName, "attributes.two", "2"),
 					resource.TestCheckResourceAttr(resourceName, "attributes.three", "3"),
@@ -230,7 +230,7 @@ func TestAccCognitoUser_attributes(t *testing.T) {
 				Config: testAccUserConfigAttributesUpdated(rUserPoolName, rUserName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "attributes.%", "3"),
+					resource.TestCheckResourceAttr(resourceName, "attributes.%", "4"),
 					resource.TestCheckResourceAttr(resourceName, "attributes.two", "2"),
 					resource.TestCheckResourceAttr(resourceName, "attributes.three", "three"),
 					resource.TestCheckResourceAttr(resourceName, "attributes.four", "4"),
