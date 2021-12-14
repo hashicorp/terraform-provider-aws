@@ -17,6 +17,7 @@ resource "aws_quicksight_user" "example" {
   session_name  = "an-author"
   email         = "author@example.com"
   identity_type = "IAM"
+  iam_arn       = "arn:aws:iam::123456789012:user/Example"
   user_role     = "AUTHOR"
 }
 ```
@@ -27,7 +28,7 @@ The following arguments are supported:
 
 
 * `email` - (Required) The email address of the user that you want to register.
-* `identity_type` - (Required) Amazon QuickSight supports several ways of managing the identity of users. This parameter accepts either  `IAM` or `QUICKSIGHT`.
+* `identity_type` - (Required) Amazon QuickSight supports several ways of managing the identity of users. This parameter accepts either  `IAM` or `QUICKSIGHT`. If `IAM` is specified, the `iam_arn` must also be specified.
 * `user_role` - (Required) The Amazon QuickSight role of the user. The user role can be one of the following: `READER`, `AUTHOR`, or `ADMIN`
 * `user_name` - (Optional) The Amazon QuickSight user name that you want to create for the user you are registering. Only valid for registering a user with `identity_type` set to `QUICKSIGHT`.
 * `aws_account_id` - (Optional) The ID for the AWS account that the user is in. Currently, you use the ID for the AWS account that contains your Amazon QuickSight account.
