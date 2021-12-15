@@ -424,7 +424,7 @@ func TestAccSecretsManagerSecret_policy(t *testing.T) {
 		CheckDestroy: testAccCheckSecretDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSecretConfig_Policy(rName),
+				Config: testAccSecretPolicyConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecretExists(resourceName, &secret),
 					resource.TestMatchResourceAttr(resourceName, "policy",
@@ -432,14 +432,14 @@ func TestAccSecretsManagerSecret_policy(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccSecretConfig_Name(rName),
+				Config: testAccSecretPolicyEmptyConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecretExists(resourceName, &secret),
 					resource.TestCheckResourceAttr(resourceName, "policy", ""),
 				),
 			},
 			{
-				Config: testAccSecretConfig_Policy(rName),
+				Config: testAccSecretPolicyConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecretExists(resourceName, &secret),
 					resource.TestMatchResourceAttr(resourceName, "policy",
@@ -801,47 +801,67 @@ resource "aws_secretsmanager_secret" "test" {
 `, rName)
 }
 
-func testAccSecretConfig_Policy(rName string) string {
+func testAccSecretPolicyConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "test" {
   name = %[1]q
+  description = "a description"
 
-  assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Action": "sts:AssumeRole",
-      "Principal": {
-        "Service": "ec2.amazonaws.com"
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Action = "sts:AssumeRole"
+      Principal = {
+        Service = "ec2.amazonaws.com"
       },
-      "Effect": "Allow",
-      "Sid": ""
-    }
-  ]
-}
-EOF
+      Effect = "Allow"
+      Sid    = ""
+    }]
+  })
 }
 
 resource "aws_secretsmanager_secret" "test" {
   name = %[1]q
 
-  policy = <<POLICY
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Sid": "EnableAllPermissions",
-      "Effect": "Allow",
-      "Principal": {
-        "AWS": "${aws_iam_role.test.arn}"
-      },
-      "Action": "secretsmanager:GetSecretValue",
-      "Resource": "*"
-    }
-  ]
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Sid    = "EnableAllPermissions"
+      Effect = "Allow"
+      Principal = {
+        AWS = aws_iam_role.test.arn
+      }
+      Action   = "secretsmanager:GetSecretValue"
+      Resource = "*"
+    }]
+  })
 }
-POLICY
+`, rName)
+}
+
+func testAccSecretPolicyEmptyConfig(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_iam_role" "test" {
+  name = %[1]q
+  description = "a description"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Action = "sts:AssumeRole"
+      Principal = {
+        Service = "ec2.amazonaws.com"
+      },
+      Effect = "Allow"
+      Sid    = ""
+    }]
+  })
+}
+
+resource "aws_secretsmanager_secret" "test" {
+  name = %[1]q
+
+  policy = ""
 }
 `, rName)
 }

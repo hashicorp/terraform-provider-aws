@@ -68,7 +68,6 @@ func ResourceSecret() *schema.Resource {
 			"policy": {
 				Type:             schema.TypeString,
 				Optional:         true,
-				Computed:         true,
 				ValidateFunc:     validation.StringIsJSON,
 				DiffSuppressFunc: verify.SuppressEquivalentPolicyDiffs,
 				StateFunc: func(v interface{}) string {
@@ -279,27 +278,9 @@ func resourceSecretRead(d *schema.ResourceData, meta interface{}) error {
 		SecretId: aws.String(d.Id()),
 	}
 
-	var output *secretsmanager.DescribeSecretOutput
-
-	err := resource.Retry(PropagationTimeout, func() *resource.RetryError {
-		var err error
-
-		output, err = conn.DescribeSecret(input)
-
-		if d.IsNewResource() && tfawserr.ErrCodeEquals(err, secretsmanager.ErrCodeResourceNotFoundException) {
-			return resource.RetryableError(err)
-		}
-
-		if err != nil {
-			return resource.NonRetryableError(err)
-		}
-
-		return nil
+	outputRaw, err := tfresource.RetryWhenNotFound(PropagationTimeout, func() (interface{}, error) {
+		return conn.DescribeSecret(input)
 	})
-
-	if tfresource.TimedOut(err) {
-		output, err = conn.DescribeSecret(input)
-	}
 
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, secretsmanager.ErrCodeResourceNotFoundException) {
 		log.Printf("[WARN] Secrets Manager Secret (%s) not found, removing from state", d.Id())
@@ -310,6 +291,8 @@ func resourceSecretRead(d *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		return fmt.Errorf("error reading Secrets Manager Secret (%s): %w", d.Id(), err)
 	}
+
+	output := outputRaw.(*secretsmanager.DescribeSecretOutput)
 
 	if output == nil {
 		return fmt.Errorf("error reading Secrets Manager Secret (%s): empty response", d.Id())
