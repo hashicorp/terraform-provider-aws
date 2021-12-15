@@ -3,9 +3,11 @@ package quicksight
 import (
 	"context"
 	"fmt"
+	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/quicksight"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -779,7 +781,110 @@ func resourceAwsQuickSightDataSetCreate(ctx context.Context, d *schema.ResourceD
 }
 
 func resourceAwsQuickSightDataSetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.AWSClient).QuickSightConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+
+	awsAccountId, dataSetId, err := ParseDataSourceID(d.Id())
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	descOpts := &quicksight.DescribeDataSetInput{
+		AwsAccountId: aws.String(awsAccountId),
+		DataSetId:    aws.String(dataSetId),
+	}
+
+	output, err := conn.DescribeDataSetWithContext(ctx, descOpts)
+
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, quicksight.ErrCodeResourceNotFoundException) {
+		log.Printf("[WARN] QuickSight Data Set (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
+	}
+
+	if err != nil {
+		return diag.Errorf("error describing QuickSight Data Set (%s): %s", d.Id(), err)
+	}
+
+	if output == nil || output.DataSet == nil {
+		return diag.Errorf("error describing QuickSight Data Set (%s): empty output", d.Id())
+	}
+
+	dataSet := output.DataSet
+
+	d.Set("arn", dataSet.Arn)
+	d.Set("aws_account_id", awsAccountId)
+	d.Set("data_source_id", dataSet.DataSetId)
+	d.Set("name", dataSet.Name)
+	d.Set("import_mode", dataSet.ImportMode)
+
+	if err := d.Set("column_groups", flattenQuickSightColumnGroups(dataSet.ColumnGroups)); err != nil {
+		return diag.Errorf("error setting column_groups: %s", err)
+	}
+
+	if err := d.Set("column_level_permission_rules", flattenQuickSightColumnLevelPermissionRules(dataSet.ColumnLevelPermissionRules)); err != nil {
+		return diag.Errorf("error setting column_level_permission_rules: %s", err)
+	}
+
+	if err := d.Set("data_set_usage_configuration", flattenQuickSightDataSetUsageConfiguration(dataSet.DataSetUsageConfiguration)); err != nil {
+		return diag.Errorf("error setting data_set_usage_configuration: %s", err)
+	}
+
+	if err := d.Set("field_folders", flattenQuickSightFieldFolders(dataSet.FieldFolders)); err != nil {
+		return diag.Errorf("error setting field_folders: %s", err)
+	}
+
+	if err := d.Set("logical_table_map", flattenQuickSightLogicalTableMap(dataSet.LogicalTableMap)); err != nil {
+		return diag.Errorf("error setting logical_table_map: %s", err)
+	}
+
+	if err := d.Set("physical_table_map", flattenQuickSightPhysicalTableMap(dataSet.PhysicalTableMap)); err != nil {
+		return diag.Errorf("error setting physical_table_map: %s", err)
+	}
+
+	if err := d.Set("row_level_permission_data_set", flattenQuickSightRowLevelPermissionDataSet(dataSet.RowLevelPermissionDataSet)); err != nil {
+		return diag.Errorf("error setting row_level_permission_data_set: %s", err)
+	}
+
+	if err := d.Set("row_level_permission_tag_configuration", flattenQuickSightRowLevelPermissionTagConfiguration(dataSet.RowLevelPermissionTagConfiguration)); err != nil {
+		return diag.Errorf("error setting row_level_permission_tag_configuration: %s", err)
+	}
+
+	tags, err := ListTags(conn, d.Get("arn").(string))
+
+	if err != nil {
+		return diag.Errorf("error listing tags for QuickSight Data Set (%s): %s", d.Id(), err)
+	}
+
+	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+
+	//lintignore:AWSR002
+	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
+		return diag.Errorf("error setting tags: %s", err)
+	}
+
+	if err := d.Set("tags_all", tags.Map()); err != nil {
+		return diag.Errorf("error setting tags_all: %s", err)
+	}
+
+	permsResp, err := conn.DescribeDataSetPermissionsWithContext(ctx, &quicksight.DescribeDataSetPermissionsInput{
+		AwsAccountId: aws.String(awsAccountId),
+		DataSetId:    aws.String(dataSetId),
+	})
+
+	if err != nil {
+		return diag.Errorf("error describing QuickSight Data Source (%s) Permissions: %s", d.Id(), err)
+	}
+
+	if err := d.Set("permission", flattenQuickSightPermissions(permsResp.Permissions)); err != nil {
+		return diag.Errorf("error setting permission: %s", err)
+	}
+
 	return nil
+
+	// not sure what to do with
+	// dataSet.OutputColumns
 }
 
 func resourceAwsQuickSightDataSetUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -1652,4 +1757,36 @@ func expandQuickSightDataSetTagRule(tfMap map[string]interface{}) *quicksight.Ro
 	}
 
 	return tagRules
+}
+
+func flattenQuickSightColumnGroups(groups []*quicksight.ColumnGroup) []interface{} {
+	return nil
+}
+
+func flattenQuickSightColumnLevelPermissionRules(rules []*quicksight.ColumnLevelPermissionRule) []interface{} {
+	return nil
+}
+
+func flattenQuickSightDataSetUsageConfiguration(configurations *quicksight.DataSetUsageConfiguration) []interface{} {
+	return nil
+}
+
+func flattenQuickSightFieldFolders(folders map[string]*quicksight.FieldFolder) []interface{} {
+	return nil
+}
+
+func flattenQuickSightLogicalTableMap(maps map[string]*quicksight.LogicalTable) []interface{} {
+	return nil
+}
+
+func flattenQuickSightPhysicalTableMap(maps map[string]*quicksight.PhysicalTable) []interface{} {
+	return nil
+}
+
+func flattenQuickSightRowLevelPermissionDataSet(sets *quicksight.RowLevelPermissionDataSet) []interface{} {
+	return nil
+}
+
+func flattenQuickSightRowLevelPermissionTagConfiguration(configurations *quicksight.RowLevelPermissionTagConfiguration) []interface{} {
+	return nil
 }
