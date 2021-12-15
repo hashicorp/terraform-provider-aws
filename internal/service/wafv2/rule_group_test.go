@@ -1868,6 +1868,80 @@ func TestAccWAFV2RuleGroup_xssMatchStatement(t *testing.T) {
 	})
 }
 
+func TestAccWAFV2RuleGroup_rateBasedStatement(t *testing.T) {
+	var v wafv2.RuleGroup
+	ruleGroupName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_wafv2_rule_group.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckScopeRegional(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, wafv2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRuleGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRuleGroupConfig_rateBasedStatement(ruleGroupName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRuleGroupExists(resourceName, &v),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
+						"statement.#": "1",
+						"statement.0.rate_based_statement.0.aggregate_key_type":     "IP",
+						"statement.0.rate_based_statement.0.forwarded_ip_config.#":  "0",
+						"statement.0.rate_based_statement.0.limit":                  "50000",
+						"statement.0.rate_based_statement.0.scope_down_statement.#": "0",
+					}),
+				),
+			},
+			{
+				Config: testAccRuleGroupConfig_rateBasedStatement_forwardedIPConfig(ruleGroupName, "MATCH", "X-Forwarded-For"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRuleGroupExists(resourceName, &v),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
+						"statement.#":                        "1",
+						"statement.0.rate_based_statement.#": "1",
+						"statement.0.rate_based_statement.0.aggregate_key_type":                      "FORWARDED_IP",
+						"statement.0.rate_based_statement.0.forwarded_ip_config.#":                   "1",
+						"statement.0.rate_based_statement.0.forwarded_ip_config.0.fallback_behavior": "MATCH",
+						"statement.0.rate_based_statement.0.forwarded_ip_config.0.header_name":       "X-Forwarded-For",
+						"statement.0.rate_based_statement.0.limit":                                   "50000",
+						"statement.0.rate_based_statement.0.scope_down_statement.#":                  "0",
+					}),
+				),
+			},
+			{
+				Config: testAccRuleGroupConfig_rateBasedStatement_update(ruleGroupName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRuleGroupExists(resourceName, &v),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
+						"statement.#":                        "1",
+						"statement.0.rate_based_statement.#": "1",
+						"statement.0.rate_based_statement.0.aggregate_key_type":                                           "IP",
+						"statement.0.rate_based_statement.0.forwarded_ip_config.#":                                        "0",
+						"statement.0.rate_based_statement.0.limit":                                                        "10000",
+						"statement.0.rate_based_statement.0.scope_down_statement.#":                                       "1",
+						"statement.0.rate_based_statement.0.scope_down_statement.0.geo_match_statement.#":                 "1",
+						"statement.0.rate_based_statement.0.scope_down_statement.0.geo_match_statement.0.country_codes.#": "2",
+						"statement.0.rate_based_statement.0.scope_down_statement.0.geo_match_statement.0.country_codes.0": "US",
+						"statement.0.rate_based_statement.0.scope_down_statement.0.geo_match_statement.0.country_codes.1": "NL",
+					}),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateIdFunc: testAccRuleGroupImportStateIdFunc(resourceName),
+			},
+		},
+	})
+}
+
 func testAccPreCheckScopeRegional(t *testing.T) {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).WAFV2Conn
 
@@ -4026,6 +4100,129 @@ resource "aws_wafv2_rule_group" "test" {
     cloudwatch_metrics_enabled = false
     metric_name                = "friendly-metric-name"
     sampled_requests_enabled   = false
+  }
+}
+`, name)
+}
+
+func testAccRuleGroupConfig_rateBasedStatement(name string) string {
+	return fmt.Sprintf(`
+resource "aws_wafv2_rule_group" "test" {
+  capacity = 3
+  name     = "%s"
+  scope    = "REGIONAL"
+
+  rule {
+	name     = "rule-1"
+	priority = 1
+
+	action {
+	  count {}
+	}
+
+	statement {
+	  rate_based_statement {
+		limit = 50000
+	  }
+	}
+
+	visibility_config {
+	  cloudwatch_metrics_enabled = false
+	  metric_name                = "friendly-rule-metric-name"
+	  sampled_requests_enabled   = false
+	}
+  }
+
+  visibility_config {
+	cloudwatch_metrics_enabled = false
+	metric_name                = "friendly-metric-name"
+	sampled_requests_enabled   = false
+  }
+}
+`, name)
+}
+
+func testAccRuleGroupConfig_rateBasedStatement_forwardedIPConfig(name, fallbackBehavior, headerName string) string {
+	return fmt.Sprintf(`
+resource "aws_wafv2_rule_group" "test" {
+  capacity = 3
+  name     = "%s"
+  scope    = "REGIONAL"
+
+  rule {
+	name     = "rule-1"
+	priority = 1
+
+	action {
+	  count {}
+	}
+
+	statement {
+	  rate_based_statement {
+		aggregate_key_type = "FORWARDED_IP"
+		forwarded_ip_config {
+		  fallback_behavior = %[2]q
+		  header_name       = %[3]q
+		}
+		limit = 50000
+	  }
+	}
+
+	visibility_config {
+	  cloudwatch_metrics_enabled = false
+	  metric_name                = "friendly-rule-metric-name"
+	  sampled_requests_enabled   = false
+	}
+  }
+
+  visibility_config {
+	cloudwatch_metrics_enabled = false
+	metric_name                = "friendly-metric-name"
+	sampled_requests_enabled   = false
+  }
+}
+`, name, fallbackBehavior, headerName)
+}
+
+func testAccRuleGroupConfig_rateBasedStatement_update(name string) string {
+	return fmt.Sprintf(`
+resource "aws_wafv2_rule_group" "test" {
+  capacity = 3
+  name     = "%s"
+  scope    = "REGIONAL"
+
+  rule {
+	name     = "rule-1"
+	priority = 1
+
+	action {
+	  count {}
+	}
+
+	statement {
+	  rate_based_statement {
+		limit              = 10000
+		aggregate_key_type = "IP"
+
+		scope_down_statement {
+		  geo_match_statement {
+			country_codes = ["US", "NL"]
+		  }
+		}
+	  }
+	}
+
+	visibility_config {
+	  cloudwatch_metrics_enabled = false
+	  metric_name                = "friendly-rule-metric-name"
+	  sampled_requests_enabled   = false
+	}
+  }
+
+  visibility_config {
+	cloudwatch_metrics_enabled = false
+	metric_name                = "friendly-metric-name"
+	sampled_requests_enabled   = false
   }
 }
 `, name)

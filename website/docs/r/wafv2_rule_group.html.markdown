@@ -402,6 +402,7 @@ The `statement` block supports the following arguments:
 * `ip_set_reference_statement` - (Optional) A rule statement used to detect web requests coming from particular IP addresses or address ranges. See [IP Set Reference Statement](#ip-set-reference-statement) below for details.
 * `not_statement` - (Optional) A logical rule statement used to negate the results of another rule statement. See [NOT Statement](#not-statement) below for details.
 * `or_statement` - (Optional) A logical rule statement used to combine other rule statements with OR logic. See [OR Statement](#or-statement) below for details.
+* `rate_based_statement` - (Optional) A rate-based rule tracks the rate of requests for each originating `IP address`, and triggers the rule action when the rate exceeds a limit that you specify on the number of requests in any `5-minute` time span. This statement can not be nested. See [Rate Based Statement](#rate-based-statement) below for details.
 * `regex_match_statement` - (Optional) A rule statement used to search web request components for a match against a single regular expression. See [Regex Match Statement](#regex-match-statement) below for details.
 * `regex_pattern_set_reference_statement` - (Optional) A rule statement used to search web request components for matches with regular expressions. See [Regex Pattern Set Reference Statement](#regex-pattern-set-reference-statement) below for details.
 * `size_constraint_statement` - (Optional) A rule statement that compares a number of bytes against the size of a request component, using a comparison operator, such as greater than (>) or less than (<). See [Size Constraint Statement](#size-constraint-statement) below for more details.
@@ -467,6 +468,19 @@ A logical rule statement used to combine other rule statements with `OR` logic. 
 The `or_statement` block supports the following arguments:
 
 * `statement` - (Required) The statements to combine with `OR` logic. You can use any statements that can be nested. See [Statement](#statement) above for details.
+
+### Rate Based Statement
+
+A rate-based rule tracks the rate of requests for each originating IP address, and triggers the rule action when the rate exceeds a limit that you specify on the number of requests in any 5-minute time span. You can use this to put a temporary block on requests from an IP address that is sending excessive requests. See the [documentation](https://docs.aws.amazon.com/waf/latest/APIReference/API_RateBasedStatement.html) for more information.
+
+You can't nest a `rate_based_statement`, for example for use inside a `not_statement` or `or_statement`. It can only be referenced as a `top-level` statement within a `rule`.
+
+The `rate_based_statement` block supports the following arguments:
+
+* `aggregate_key_type` - (Optional) Setting that indicates how to aggregate the request counts. Valid values include: `FORWARDED_IP` or `IP`. Default: `IP`.
+* `forwarded_ip_config` - (Optional) The configuration for inspecting IP addresses in an HTTP header that you specify, instead of using the IP address that's reported by the web request origin. If `aggregate_key_type` is set to `FORWARDED_IP`, this block is required. See [Forwarded IP Config](#forwarded-ip-config) below for details.
+* `limit` - (Required) The limit on requests per 5-minute period for a single originating IP address.
+* `scope_down_statement` - (Optional) An optional nested statement that narrows the scope of the rate-based statement to matching web requests. This can be any nestable statement, and you can nest statements at any level below this scope-down statement. See [Statement](#statement) above for details.
 
 ### Regex Match Statement
 
