@@ -82,7 +82,7 @@ func ResourceOntapStorageVirtualMachine() *schema.Resource {
 										ForceNew:     true,
 										ValidateFunc: validation.StringLenBetween(1, 256),
 									},
-									"organizational_unit_distinguidshed_name": {
+									"organizational_unit_distinguished_name": {
 										Type:         schema.TypeString,
 										Optional:     true,
 										ForceNew:     true,
@@ -421,7 +421,7 @@ func expandFsxOntapSvmSelfManagedActiveDirectoryConfiguration(cfg []interface{})
 		out.FileSystemAdministratorsGroup = aws.String(v)
 	}
 
-	if v, ok := conf["organizational_unit_distinguidshed_name"].(string); ok && len(v) > 0 {
+	if v, ok := conf["organizational_unit_distinguished_name"].(string); ok && len(v) > 0 {
 		out.OrganizationalUnitDistinguishedName = aws.String(v)
 	}
 
@@ -512,7 +512,7 @@ func flattenFsxOntapSelfManagedActiveDirectoryConfiguration(d *schema.ResourceDa
 	}
 
 	if rs.OrganizationalUnitDistinguishedName != nil {
-		m["organizational_unit_distinguidshed_name"] = aws.StringValue(rs.OrganizationalUnitDistinguishedName)
+		m["organizational_unit_distinguished_name"] = aws.StringValue(rs.OrganizationalUnitDistinguishedName)
 	}
 
 	if rs.UserName != nil {

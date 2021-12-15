@@ -473,7 +473,7 @@ resource "aws_fsx_ontap_storage_virtual_machine" "test" {
       domain_name                             = %[3]q
       password                                = %[4]q
       username                                = "Admin"
-      organizational_unit_distinguidshed_name = "OU=computers,OU=%[5]s"
+      organizational_unit_distinguished_name = "OU=computers,OU=%[5]s"
     }
   }
 }
