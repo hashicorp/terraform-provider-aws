@@ -90,6 +90,36 @@ func destroyDefaultVPCBeforeTest(t *testing.T) {
 		}
 	}
 
+	//delete internet gateway
+	reqIG := &ec2.DescribeInternetGatewaysInput{
+		Filters: []*ec2.Filter{
+			{
+				Name:   aws.String("attachment.vpc-id"),
+				Values: aws.StringSlice([]string{aws.StringValue(resp.Vpcs[0].VpcId)}),
+			},
+		},
+	}
+
+	respIG, err := conn.DescribeInternetGateways(reqIG)
+	if err != nil {
+		t.Fatalf("Error describing default internet gateways: %s", err)
+	}
+	for _, ig := range respIG.InternetGateways {
+		_, err := conn.DetachInternetGateway(&ec2.DetachInternetGatewayInput{
+			InternetGatewayId: ig.InternetGatewayId,
+			VpcId:             ig.Attachments[0].VpcId,
+		})
+		if err != nil {
+			t.Fatalf("Error detaching default internet gateway: %s", err)
+		}
+		_, err = conn.DeleteInternetGateway(&ec2.DeleteInternetGatewayInput{
+			InternetGatewayId: ig.InternetGatewayId,
+		})
+		if err != nil {
+			t.Fatalf("Error deleting default internet gateway: %s", err)
+		}
+	}
+
 	delReq := &ec2.DeleteVpcInput{
 		VpcId: resp.Vpcs[0].VpcId,
 	}
