@@ -510,11 +510,11 @@ resource "aws_fsx_ontap_storage_virtual_machine" "test" {
   active_directory_configuration {
     netbios_name = %[2]q
     self_managed_active_directory_configuration {
-      dns_ips                                 = aws_directory_service_directory.test.dns_ip_addresses
-      domain_name                             = %[3]q
-      password                                = %[4]q
-      username                                = "Admin"
-      organizational_unit_distinguished_name  = "OU=computers,OU=%[5]s"
+      dns_ips                                = aws_directory_service_directory.test.dns_ip_addresses
+      domain_name                            = %[3]q
+      password                               = %[4]q
+      username                               = "Admin"
+      organizational_unit_distinguished_name = "OU=computers,OU=%[5]s"
     }
   }
 }
