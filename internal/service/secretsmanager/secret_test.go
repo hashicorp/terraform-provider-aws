@@ -805,7 +805,6 @@ func testAccSecretPolicyConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "test" {
   name = %[1]q
-  description = "a description"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
@@ -843,7 +842,6 @@ func testAccSecretPolicyEmptyConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "test" {
   name = %[1]q
-  description = "a description"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
