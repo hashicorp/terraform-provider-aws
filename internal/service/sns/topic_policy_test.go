@@ -130,6 +130,35 @@ func TestAccSNSTopicPolicy_disappears(t *testing.T) {
 	})
 }
 
+func TestAccSNSTopicPolicy_ignoreEquivalent(t *testing.T) {
+	attributes := make(map[string]string)
+	resourceName := "aws_sns_topic_policy.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, sns.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckTopicPolicyDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTopicPolicyEquivalentConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTopicExists("aws_sns_topic.test", attributes),
+					resource.TestCheckResourceAttrPair(resourceName, "arn", "aws_sns_topic.test", "arn"),
+					resource.TestMatchResourceAttr(resourceName, "policy",
+						regexp.MustCompile(fmt.Sprintf("\"Sid\":\"%[1]s\"", rName))),
+					acctest.CheckResourceAttrAccountID(resourceName, "owner"),
+				),
+			},
+			{
+				Config:   testAccTopicPolicyEquivalent2Config(rName),
+				PlanOnly: true,
+			},
+		},
+	})
+}
+
 func testAccCheckTopicPolicyDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).SNSConn
 
@@ -220,6 +249,68 @@ resource "aws_sns_topic_policy" "test" {
   ]
 }
 POLICY
+}
+`, rName)
+}
+
+func testAccTopicPolicyEquivalentConfig(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_sns_topic" "test" {
+  name = %[1]q
+}
+
+resource "aws_sns_topic_policy" "test" {
+  arn = aws_sns_topic.test.arn
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Id      = "default"
+    Statement = [{
+      Sid    = %[1]q
+      Effect = "Allow"
+      Principal = {
+        AWS = "*"
+      }
+      Action = [
+        "SNS:GetTopicAttributes",
+        "SNS:SetTopicAttributes",
+        "SNS:AddPermission",
+        "SNS:RemovePermission",
+        "SNS:DeleteTopic",
+      ]
+      Resource = aws_sns_topic.test.arn
+    }]
+  })
+}
+`, rName)
+}
+
+func testAccTopicPolicyEquivalent2Config(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_sns_topic" "test" {
+  name = %[1]q
+}
+
+resource "aws_sns_topic_policy" "test" {
+  arn = aws_sns_topic.test.arn
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Id      = "default"
+    Statement = [{
+      Sid    = %[1]q
+      Effect = "Allow"
+      Principal = {
+        AWS = ["*"]
+      }
+      Action = [
+        "SNS:SetTopicAttributes",
+        "SNS:RemovePermission",
+        "SNS:DeleteTopic",
+        "SNS:AddPermission",
+        "SNS:GetTopicAttributes",
+      ]
+      Resource = [aws_sns_topic.test.arn]
+    }]
+  })
 }
 `, rName)
 }
