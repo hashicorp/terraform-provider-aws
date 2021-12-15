@@ -2899,6 +2899,11 @@ func expandVersioningWhenIsNewResource(l []interface{}) *s3.VersioningConfigurat
 
 	output := &s3.VersioningConfiguration{}
 
+	// Only set and return a non-nil VersioningConfiguration with at least one of
+	// MFADelete or Status enabled as the PutBucketVersioning API request
+	// does not need to be made for new buckets that don't require versioning.
+	// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/4494
+
 	if v, ok := tfMap["enabled"].(bool); ok && v {
 		output.Status = aws.String(s3.BucketVersioningStatusEnabled)
 	}
@@ -2907,10 +2912,6 @@ func expandVersioningWhenIsNewResource(l []interface{}) *s3.VersioningConfigurat
 		output.MFADelete = aws.String(s3.MFADeleteEnabled)
 	}
 
-	// Only return a non-nil VersioningConfiguration with at least one of
-	// MFADelete or Status enabled as the PutBucketVersioning API request
-	// does not need to be made for new buckets that don't require versioning.
-	// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/4494
 	if output.MFADelete == nil && output.Status == nil {
 		return nil
 	}
