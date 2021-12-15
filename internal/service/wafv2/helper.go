@@ -68,6 +68,7 @@ func wafv2RootStatementSchema(level int) *schema.Schema {
 				"label_match_statement":                 wafv2LabelMatchStatementSchema(),
 				"not_statement":                         wafv2StatementSchema(level - 1),
 				"or_statement":                          wafv2StatementSchema(level - 1),
+				"rate_based_statement":                  wafv2RateBasedStatementSchema(level),
 				"regex_pattern_set_reference_statement": wafv2RegexPatternSetReferenceStatementSchema(),
 				"size_constraint_statement":             wafv2SizeConstraintSchema(),
 				"sqli_match_statement":                  wafv2SqliMatchStatementSchema(),
@@ -910,6 +911,10 @@ func expandWafv2Statement(m map[string]interface{}) *wafv2.Statement {
 		statement.OrStatement = expandWafv2OrStatement(v.([]interface{}))
 	}
 
+	if v, ok := m["rate_based_statement"]; ok {
+		statement.RateBasedStatement = expandWafv2RateBasedStatement(v.([]interface{}))
+	}
+
 	if v, ok := m["regex_pattern_set_reference_statement"]; ok {
 		statement.RegexPatternSetReferenceStatement = expandWafv2RegexPatternSetReferenceStatement(v.([]interface{}))
 	}
@@ -1424,6 +1429,10 @@ func flattenWafv2Statement(s *wafv2.Statement) map[string]interface{} {
 
 	if s.OrStatement != nil {
 		m["or_statement"] = flattenWafv2OrStatement(s.OrStatement)
+	}
+
+	if s.RateBasedStatement != nil {
+		m["rate_based_statement"] = flattenWafv2RateBasedStatement(s.RateBasedStatement)
 	}
 
 	if s.RegexPatternSetReferenceStatement != nil {
