@@ -436,6 +436,7 @@ func TestAccSecretsManagerSecret_policy(t *testing.T) {
 				Config: testAccSecretPolicyEmptyConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecretExists(resourceName, &secret),
+					resource.TestCheckResourceAttr(resourceName, "description", "Poliça"),
 					resource.TestCheckResourceAttr(resourceName, "policy", "{}"),
 				),
 			},
@@ -821,7 +822,7 @@ resource "aws_iam_role" "test" {
 }
 
 resource "aws_secretsmanager_secret" "test" {
-  name = %[1]q
+  name        = %[1]q
   description = "San Holo feat. Duskus"
 
   policy = jsonencode({
@@ -859,8 +860,8 @@ resource "aws_iam_role" "test" {
 }
 
 resource "aws_secretsmanager_secret" "test" {
-  name = %[1]q
-  description = "fred"
+  name        = %[1]q
+  description = "Poliça"
 
   policy = "{}"
 }
