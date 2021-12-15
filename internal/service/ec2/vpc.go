@@ -151,7 +151,7 @@ func ResourceVPC() *schema.Resource {
 			"ipv6_cidr_block_network_border_group": {
 				Type: schema.TypeString,
 				Optional: true,
-				RequiredWith: []string{"AmazonProvidedIpv6CidrBlock"},
+				RequiredWith: []string{"assign_generated_ipv6_cidr_block"},
 			},
 			"ipv6_ipam_pool_id": {
 				Type:          schema.TypeString,
@@ -667,13 +667,46 @@ func resourceVPCUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	if d.HasChange("ipv6_cidr_block_network_border_group") {
 		log.Printf("[INFO] Modifying IPv6 Block Network Border Group")
+		value := d.Get("ipv6_association_id")
+		log.Printf("[INFO] VALUE %v", value)
+		modifyOpts := &ec2.AssociateVpcCidrBlockInput{
+			VpcId:          &vpcid,
+			AmazonProvidedIpv6CidrBlock: aws.Bool(d.Get("assign_generated_ipv6_cidr_block").(bool)),
+		}
 
 		if v := d.Get("ipv6_cidr_block_network_border_group"); v != "" {
-			modifyOpts := &ec2.AssociateVpcCidrBlockInput{
-				AmazonProvidedIpv6CidrBlock: aws.Bool(true),
+			modifyOpts.Ipv6CidrBlockNetworkBorderGroup = aws.String(v.(string))
+			log.Printf("[INFO] Trying to associate IPv6 Block Network Border Group")
+			if _, err := conn.AssociateVpcCidrBlock(modifyOpts); err != nil {
+					return err
 			}
-			modifyOpts.Ipv6CidrBlockNetworkBorderGroup  = aws.String(v.(string))
+		} 
+		if  v := d.Get("ipv6_cidr_block_network_border_group"); v == "" {
+			associationID := d.Get("ipv6_association_id").(string)
+			modifyOpts := &ec2.DisassociateVpcCidrBlockInput{
+				AssociationId: aws.String(associationID),
+			}
+			log.Printf("[INFO] Dissaociating IPv6 Block Network Border Group")
+			if _, err := conn.DisassociateVpcCidrBlock(modifyOpts); err != nil {
+				return err
+			}
+			if d.Get("assign_generated_ipv6_cidr_block").(bool) {
+				log.Printf("[INFO] Trying to associate IPv6 Block Network Border Group")
+				modifyOpts := &ec2.AssociateVpcCidrBlockInput{
+					VpcId:          &vpcid,
+					AmazonProvidedIpv6CidrBlock: aws.Bool(d.Get("assign_generated_ipv6_cidr_block").(bool)),
+				}
+				if _, err := conn.AssociateVpcCidrBlock(modifyOpts); err != nil {
+					return err
+				}
+			}
 		}
+		// if d.Get("assign_generated_ipv6_cidr_block").(bool) {
+		// 	log.Printf("[INFO] Trying to associate IPv6 Block Network Border Group")
+		// 	if _, err := conn.AssociateVpcCidrBlock(modifyOpts); err != nil {
+		// 		return err
+		// 	}
+		// }
 	}
 
 	if d.HasChange("instance_tenancy") {
