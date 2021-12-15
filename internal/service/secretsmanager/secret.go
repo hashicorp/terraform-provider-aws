@@ -68,6 +68,7 @@ func ResourceSecret() *schema.Resource {
 			"policy": {
 				Type:             schema.TypeString,
 				Optional:         true,
+				Computed:         true,
 				ValidateFunc:     validation.StringIsJSON,
 				DiffSuppressFunc: verify.SuppressEquivalentPolicyDiffs,
 				StateFunc: func(v interface{}) string {
@@ -325,7 +326,7 @@ func resourceSecretRead(d *schema.ResourceData, meta interface{}) error {
 
 		d.Set("policy", policyToSet)
 	} else {
-		d.Set("policy", "")
+		d.Set("policy", "{}")
 	}
 
 	d.Set("rotation_enabled", output.RotationEnabled)
@@ -394,7 +395,7 @@ func resourceSecretUpdate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if d.HasChange("policy") {
-		if v, ok := d.GetOk("policy"); ok && v.(string) != "" {
+		if v, ok := d.GetOk("policy"); ok && v.(string) != "" && v.(string) != "{}" {
 			policy, err := structure.NormalizeJsonString(v.(string))
 			if err != nil {
 				return fmt.Errorf("policy contains an invalid JSON: %w", err)

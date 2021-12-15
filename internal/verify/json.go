@@ -88,7 +88,11 @@ func SecondJSONUnlessEquivalent(old, new string) (string, error) {
 		return "", nil
 	}
 
-	if strings.TrimSpace(old) == "" {
+	if strings.TrimSpace(new) == "{}" {
+		return "{}", nil
+	}
+
+	if strings.TrimSpace(old) == "" || strings.TrimSpace(old) == "{}" {
 		return new, nil
 	}
 

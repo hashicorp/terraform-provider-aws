@@ -30,8 +30,8 @@ func waitRoleARNIsNotUniqueID(conn *iam.IAM, id string, role *iam.Role) (*iam.Ro
 		Target:                    []string{RoleStatusARNIsARN},
 		Refresh:                   statusRoleCreate(conn, id, role),
 		Timeout:                   PropagationTimeout,
-		NotFoundChecks:            5,
-		ContinuousTargetOccurence: 4,
+		NotFoundChecks:            10,
+		ContinuousTargetOccurence: 5,
 	}
 
 	outputRaw, err := stateConf.WaitForState()
