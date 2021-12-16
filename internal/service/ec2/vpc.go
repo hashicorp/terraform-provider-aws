@@ -412,7 +412,7 @@ func resourceVPCRead(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 	// check for an assigned ipv6_cidr_block for ipv6_cidr_block_network_border_group
-	if v := d.Get("ipv6_cidr_block"); v != "" {
+	if v := d.Get("assign_generated_ipv6_cidr_block"); v != "" {
 		d.Set("ipv6_cidr_block_network_border_group", v.(string))
 	}
 
