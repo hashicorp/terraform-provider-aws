@@ -1,3 +1,9 @@
+## 2.70.1 (Unreleased)
+
+BUG FIXES:
+
+* resource/aws_lambda_function: Wait for successful completion of function code update ([#22242](https://github.com/hashicorp/terraform-provider-aws/issues/22242))
+
 ## 2.70.0 (July 10, 2020)
 
 FEATURES:

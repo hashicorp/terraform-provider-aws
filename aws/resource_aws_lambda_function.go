@@ -871,12 +871,12 @@ func resourceAwsLambdaFunctionUpdate(d *schema.ResourceData, meta interface{}) e
 				_, err = conn.UpdateFunctionConfiguration(configReq)
 			}
 			if err != nil {
-				return fmt.Errorf("Error modifying Lambda Function Configuration %s: %s", d.Id(), err)
+				return fmt.Errorf("error modifying Lambda Function (%s) Configuration: %w", d.Id(), err)
 			}
 		}
 
 		if err := waitForLambdaFunctionUpdate(conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return fmt.Errorf("error waiting for Lambda Function (%s) update: %s", d.Id(), err)
+			return fmt.Errorf("error waiting for Lambda Function (%s) configuration update: %w", d.Id(), err)
 		}
 	}
 
@@ -913,7 +913,11 @@ func resourceAwsLambdaFunctionUpdate(d *schema.ResourceData, meta interface{}) e
 
 		_, err := conn.UpdateFunctionCode(codeReq)
 		if err != nil {
-			return fmt.Errorf("Error modifying Lambda Function Code %s: %s", d.Id(), err)
+			return fmt.Errorf("error modifying Lambda Function (%s) Code: %w", d.Id(), err)
+		}
+
+		if err := waitForLambdaFunctionUpdate(conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return fmt.Errorf("error waiting for Lambda Function (%s) code update: %w", d.Id(), err)
 		}
 	}
 
