@@ -134,6 +134,46 @@ func ResourceQuickConnect() *schema.Resource {
 	}
 }
 
+func resourceQuickConnectCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.AWSClient).ConnectConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+
+	instanceID := d.Get("instance_id").(string)
+	name := d.Get("name").(string)
+
+	quickConnectConfig := expandQuickConnectConfig(d.Get("quick_connect_config").([]interface{}))
+
+	input := &connect.CreateQuickConnectInput{
+		QuickConnectConfig: quickConnectConfig,
+		InstanceId:         aws.String(instanceID),
+		Name:               aws.String(name),
+	}
+
+	if v, ok := d.GetOk("description"); ok {
+		input.Description = aws.String(v.(string))
+	}
+
+	if len(tags) > 0 {
+		input.Tags = Tags(tags.IgnoreAWS())
+	}
+
+	log.Printf("[DEBUG] Creating Connect Quick Connect %s", input)
+	output, err := conn.CreateQuickConnectWithContext(ctx, input)
+
+	if err != nil {
+		return diag.FromErr(fmt.Errorf("error creating Connect Quick Connect (%s): %w", name, err))
+	}
+
+	if output == nil {
+		return diag.FromErr(fmt.Errorf("error creating Connect Quick Connect (%s): empty output", name))
+	}
+
+	d.SetId(fmt.Sprintf("%s:%s", instanceID, aws.StringValue(output.QuickConnectId)))
+
+	return resourceQuickConnectRead(ctx, d, meta)
+}
+
 func resourceQuickConnectRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).ConnectConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
