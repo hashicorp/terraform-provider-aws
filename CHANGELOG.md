@@ -51,6 +51,7 @@ BUG FIXES:
 * resource/aws_s3control_bucket_policy: Fix erroneous diffs in `policy` when no changes made or policies are equivalent ([#22255](https://github.com/hashicorp/terraform-provider-aws/issues/22255))
 * resource/aws_s3control_multi_region_access_point_policy: Fix erroneous diffs in `policy` when no changes made or policies are equivalent ([#22255](https://github.com/hashicorp/terraform-provider-aws/issues/22255))
 * resource/aws_s3control_object_lambda_access_point_policy: Fix erroneous diffs in `policy` when no changes made or policies are equivalent ([#22255](https://github.com/hashicorp/terraform-provider-aws/issues/22255))
+* resource/aws_sagemaker_model_package_group_policy: Fix erroneous diffs in `resource_policy` when no changes made or policies are equivalent ([#22259](https://github.com/hashicorp/terraform-provider-aws/issues/22259))
 * resource/aws_secretsmanager_secret: Fix erroneous diffs in `policy` when no changes made or policies are equivalent ([#22217](https://github.com/hashicorp/terraform-provider-aws/issues/22217))
 * resource/aws_secretsmanager_secret_policy: Fix erroneous diffs in `policy` when no changes made or policies are equivalent ([#22217](https://github.com/hashicorp/terraform-provider-aws/issues/22217))
 * resource/aws_ses_identity_policy: Fix erroneous diffs in `policy` when no changes made or policies are equivalent ([#22214](https://github.com/hashicorp/terraform-provider-aws/issues/22214))
