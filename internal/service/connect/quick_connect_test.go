@@ -30,6 +30,60 @@ func TestAccConnectQuickConnect_serial(t *testing.T) {
 	}
 }
 
+func testAccQuickConnect_phoneNumber(t *testing.T) {
+	var v connect.DescribeQuickConnectOutput
+	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName2 := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	resourceName := "aws_connect_quick_connect.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, connect.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckQuickConnectDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccQuickConnectPhoneNumberConfig(rName, rName2, "Created"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckQuickConnectExists(resourceName, &v),
+					resource.TestCheckResourceAttrSet(resourceName, "instance_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "name"),
+					resource.TestCheckResourceAttrSet(resourceName, "description"),
+					resource.TestCheckResourceAttrSet(resourceName, "quick_connect_arn"),
+					resource.TestCheckResourceAttrSet(resourceName, "quick_connect_id"),
+					resource.TestCheckResourceAttr(resourceName, "quick_connect_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "quick_connect_config.0.quick_connect_type", "PHONE_NUMBER"),
+					resource.TestCheckResourceAttr(resourceName, "quick_connect_config.0.phone_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "quick_connect_config.0.phone_config.0.phone_number", "+12345678912"),
+
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccQuickConnectPhoneNumberConfig(rName, rName2, "Updated"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckQuickConnectExists(resourceName, &v),
+					resource.TestCheckResourceAttrSet(resourceName, "instance_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "name"),
+					resource.TestCheckResourceAttr(resourceName, "description", "Updated"),
+					resource.TestCheckResourceAttrSet(resourceName, "quick_connect_arn"),
+					resource.TestCheckResourceAttrSet(resourceName, "quick_connect_id"),
+					resource.TestCheckResourceAttr(resourceName, "quick_connect_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "quick_connect_config.0.quick_connect_type", "PHONE_NUMBER"),
+					resource.TestCheckResourceAttr(resourceName, "quick_connect_config.0.phone_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "quick_connect_config.0.phone_config.0.phone_number", "+12345678912"),
+
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+				),
+			},
+		},
+	})
+}
 func testAccCheckQuickConnectExists(resourceName string, function *connect.DescribeQuickConnectOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
