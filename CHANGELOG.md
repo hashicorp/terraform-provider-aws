@@ -14,6 +14,7 @@ FEATURES:
 * **New Resource:** `aws_connect_lambda_function_association` ([#21276](https://github.com/hashicorp/terraform-provider-aws/issues/21276))
 * **New Resource:** `aws_ecr_pull_through_cache_rule` ([#22172](https://github.com/hashicorp/terraform-provider-aws/issues/22172))
 * **New Resource:** `aws_ecr_registry_scanning_configuration` ([#22179](https://github.com/hashicorp/terraform-provider-aws/issues/22179))
+* **New Resource:** `aws_ecrpublic_repository_policy` ([#16901](https://github.com/hashicorp/terraform-provider-aws/issues/16901))
 
 ENHANCEMENTS:
 
@@ -23,6 +24,8 @@ ENHANCEMENTS:
 * resource/aws_fsx_backup: Add `volume_id` argument to support Amazon FSx for NetApp ONTAP backup ([#21960](https://github.com/hashicorp/terraform-provider-aws/issues/21960))
 * resource/aws_networkfirewall_firewall_policy: Add `stateful_default_actions` and `stateful_engine_options` configuration blocks. Add `priority` attribute to `stateful_rule_group_reference` block ([#21955](https://github.com/hashicorp/terraform-provider-aws/issues/21955))
 * resource/aws_networkfirewall_firewall_rule_group: Add `stateful_rule_options` configuration block ([#21955](https://github.com/hashicorp/terraform-provider-aws/issues/21955))
+* resource/aws_route: Extend creation timeout to 5 minutes ([#21531](https://github.com/hashicorp/terraform-provider-aws/issues/21531))
+* resource/aws_route_table: Extend creation timeout to 5 minutes ([#21531](https://github.com/hashicorp/terraform-provider-aws/issues/21531))
 * resource/iam_service_linked_role: Add `tags` argument ([#22185](https://github.com/hashicorp/terraform-provider-aws/issues/22185))
 
 BUG FIXES:
