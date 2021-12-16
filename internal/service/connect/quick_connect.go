@@ -247,18 +247,15 @@ func resourceQuickConnectUpdate(ctx context.Context, d *schema.ResourceData, met
 		QuickConnectId: aws.String(quickConnectID),
 	}
 
-	if d.HasChange("name") {
+	// Either QuickConnectName or QuickConnectDescription must be specified. Both cannot be null or empty
+	if d.HasChange("name") || d.HasChange("description") {
 		inputNameDesc.Name = aws.String(d.Get("name").(string))
-	}
-
-	if d.HasChange("description") {
 		inputNameDesc.Description = aws.String(d.Get("description").(string))
-	}
+		_, err = conn.UpdateQuickConnectNameWithContext(ctx, inputNameDesc)
 
-	_, err = conn.UpdateQuickConnectNameWithContext(ctx, inputNameDesc)
-
-	if err != nil {
-		return diag.FromErr(fmt.Errorf("[ERROR] Error updating QuickConnect Name (%s): %w", d.Id(), err))
+		if err != nil {
+			return diag.FromErr(fmt.Errorf("[ERROR] Error updating QuickConnect Name (%s): %w", d.Id(), err))
+		}
 	}
 
 	// updates to configuration settings
