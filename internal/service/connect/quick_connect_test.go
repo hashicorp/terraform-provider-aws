@@ -222,7 +222,7 @@ resource "aws_connect_quick_connect" "test" {
     quick_connect_type = "PHONE_NUMBER"
 
     phone_config {
-	  phone_number   = %[3]q
+      phone_number = %[3]q
     }
   }
 
