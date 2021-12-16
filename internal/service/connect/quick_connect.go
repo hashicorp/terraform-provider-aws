@@ -134,6 +134,59 @@ func ResourceQuickConnect() *schema.Resource {
 	}
 }
 
+func resourceQuickConnectRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.AWSClient).ConnectConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+
+	instanceID, quickConnectID, err := QuickConnectParseID(d.Id())
+
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	resp, err := conn.DescribeQuickConnectWithContext(ctx, &connect.DescribeQuickConnectInput{
+		InstanceId:     aws.String(instanceID),
+		QuickConnectId: aws.String(quickConnectID),
+	})
+
+	if !d.IsNewResource() && tfawserr.ErrMessageContains(err, connect.ErrCodeResourceNotFoundException, "") {
+		log.Printf("[WARN] Connect Quick Connect (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
+	}
+
+	if err != nil {
+		return diag.FromErr(fmt.Errorf("error getting Connect Quick Connect (%s): %w", d.Id(), err))
+	}
+
+	if resp == nil || resp.QuickConnect == nil {
+		return diag.FromErr(fmt.Errorf("error getting Connect Quick Connect (%s): empty response", d.Id()))
+	}
+
+	if err := d.Set("quick_connect_config", flattenQuickConnectConfig(resp.QuickConnect.QuickConnectConfig)); err != nil {
+		return diag.FromErr(err)
+	}
+
+	d.Set("instance_id", instanceID)
+	d.Set("description", resp.QuickConnect.Description)
+	d.Set("name", resp.QuickConnect.Name)
+	d.Set("quick_connect_arn", resp.QuickConnect.QuickConnectARN)
+	d.Set("quick_connect_id", resp.QuickConnect.QuickConnectId)
+
+	tags := KeyValueTags(resp.QuickConnect.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+
+	//lintignore:AWSR002
+	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
+		return diag.FromErr(fmt.Errorf("error setting tags: %w", err))
+	}
+
+	if err := d.Set("tags_all", tags.Map()); err != nil {
+		return diag.FromErr(fmt.Errorf("error setting tags_all: %w", err))
+	}
+
+	return nil
+}
 
 func expandQuickConnectConfig(quickConnectConfig []interface{}) *connect.QuickConnectConfig {
 	if len(quickConnectConfig) == 0 || quickConnectConfig[0] == nil {
