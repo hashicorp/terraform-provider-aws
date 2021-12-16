@@ -6,7 +6,6 @@ import (
 	"log"
 	"os"
 	"strings"
-	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/connect"
@@ -268,17 +267,17 @@ func resourceContactFlowDelete(ctx context.Context, d *schema.ResourceData, meta
 		return diag.FromErr(err)
 	}
 
-	input := &connect.UpdateContactFlowNameInput{
+	log.Printf("[DEBUG] Deleting Connect Contact Flow : %s", contactFlowID)
+
+	input := &connect.DeleteContactFlowInput{
 		ContactFlowId: aws.String(contactFlowID),
 		InstanceId:    aws.String(instanceID),
-		Name:          aws.String(fmt.Sprintf("%s:%s:%d", "zzTrash", d.Get("name").(string), time.Now().Unix())),
-		Description:   aws.String("DELETED"),
 	}
 
-	_, delerr := conn.UpdateContactFlowNameWithContext(ctx, input)
+	_, deleteContactFlowErr := conn.DeleteContactFlowWithContext(ctx, input)
 
-	if delerr != nil {
-		return diag.FromErr(fmt.Errorf("Unable to delete contact flow: %s", delerr))
+	if deleteContactFlowErr != nil {
+		return diag.FromErr(fmt.Errorf("error deleting Connect Contact Flow (%s): %w", d.Id(), deleteContactFlowErr))
 	}
 
 	return nil

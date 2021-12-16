@@ -131,7 +131,6 @@ func testAccContactFlow_filename(t *testing.T) {
 	})
 }
 
-// Can't delete an contact flow. Test deletion of entire connect instance
 func testAccContactFlow_disappears_ConnectInstance(t *testing.T) {
 	var v connect.DescribeContactFlowOutput
 	// var v2 connect.DescribeInstanceOutput
