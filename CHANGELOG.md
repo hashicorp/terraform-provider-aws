@@ -1,5 +1,9 @@
 ## 3.70.0 (Unreleased)
 
+NOTES:
+
+* resource/aws_fsx_ontap_storage_virtual_machine: The `active_directory_configuration.self_managed_active_directory_configuration.organizational_unit_distinguidshed_name` attribute has been deprecated. All configurations using `active_directory_configuration.self_managed_active_directory_configuration.organizational_unit_distinguidshed_name` should be updated to use the new `active_directory_configuration.self_managed_active_directory_configuration.organizational_unit_distinguished_name` attribute instead ([#22246](https://github.com/hashicorp/terraform-provider-aws/issues/22246))
+
 FEATURES:
 
 * **New Data Source:** `aws_connect_bot_association` ([#21097](https://github.com/hashicorp/terraform-provider-aws/issues/21097))
@@ -29,6 +33,7 @@ BUG FIXES:
 * resource/aws_elasticsearch_domain: Fix erroneous diffs in `access_policies` when no changes made or policies are equivalent ([#22157](https://github.com/hashicorp/terraform-provider-aws/issues/22157))
 * resource/aws_elasticsearch_domain: Fix erroneous diffs in `advanced_options` due to AWS defaults being returned ([#22157](https://github.com/hashicorp/terraform-provider-aws/issues/22157))
 * resource/aws_elasticsearch_domain_policy: Fix erroneous diffs in `access_policies` when no changes made or policies are equivalent ([#22157](https://github.com/hashicorp/terraform-provider-aws/issues/22157))
+* resource/aws_emr_cluster: Wait for the cluster to reach a terminated state on deletion ([#12578](https://github.com/hashicorp/terraform-provider-aws/issues/12578))
 * resource/aws_glacier_vault: Fix erroneous diffs in `access_policy` when no changes made or policies are equivalent ([#22166](https://github.com/hashicorp/terraform-provider-aws/issues/22166))
 * resource/aws_glacier_vault_lock: Fix erroneous diffs in `policy` when no changes made or policies are equivalent ([#22166](https://github.com/hashicorp/terraform-provider-aws/issues/22166))
 * resource/aws_glue_resource_policy: Fix erroneous diffs in `policy` when no changes made or policies are equivalent ([#22167](https://github.com/hashicorp/terraform-provider-aws/issues/22167))
