@@ -287,6 +287,28 @@ func resourceQuickConnectUpdate(ctx context.Context, d *schema.ResourceData, met
 
 	return resourceQuickConnectRead(ctx, d, meta)
 }
+
+func resourceQuickConnectDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.AWSClient).ConnectConn
+
+	instanceID, quickConnectID, err := QuickConnectParseID(d.Id())
+
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	_, err = conn.DeleteQuickConnectWithContext(ctx, &connect.DeleteQuickConnectInput{
+		InstanceId:     aws.String(instanceID),
+		QuickConnectId: aws.String(quickConnectID),
+	})
+
+	if err != nil {
+		return diag.FromErr(fmt.Errorf("error deleting QuickConnect (%s): %w", d.Id(), err))
+	}
+
+	return nil
+}
+
 func expandQuickConnectConfig(quickConnectConfig []interface{}) *connect.QuickConnectConfig {
 	if len(quickConnectConfig) == 0 || quickConnectConfig[0] == nil {
 		return nil
