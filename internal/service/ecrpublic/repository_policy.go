@@ -10,6 +10,8 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -30,6 +32,7 @@ func ResourceRepositoryPolicy() *schema.Resource {
 				Type:             schema.TypeString,
 				Required:         true,
 				DiffSuppressFunc: verify.SuppressEquivalentPolicyDiffs,
+				ValidateFunc:     validation.StringIsJSON,
 			},
 			"registry_id": {
 				Type:     schema.TypeString,
@@ -51,9 +54,15 @@ const (
 func resourceRepositoryPolicyPut(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ECRPublicConn
 
+	policy, err := structure.NormalizeJsonString(d.Get("policy").(string))
+
+	if err != nil {
+		return fmt.Errorf("policy (%s) is invalid JSON: %w", policy, err)
+	}
+
 	repositoryName := d.Get("repository_name").(string)
 	input := &ecrpublic.SetRepositoryPolicyInput{
-		PolicyText:     aws.String(d.Get("policy").(string)),
+		PolicyText:     aws.String(policy),
 		RepositoryName: aws.String(repositoryName),
 	}
 
@@ -97,7 +106,19 @@ func resourceRepositoryPolicyRead(d *schema.ResourceData, meta interface{}) erro
 		return fmt.Errorf("error reading ECR Public Repository Policy (%s): %w", d.Id(), err)
 	}
 
-	d.Set("policy", output.PolicyText)
+	policyToSet, err := verify.SecondJSONUnlessEquivalent(d.Get("policy").(string), aws.StringValue(output.PolicyText))
+
+	if err != nil {
+		return fmt.Errorf("while setting policy (%s), encountered: %w", policyToSet, err)
+	}
+
+	policyToSet, err = structure.NormalizeJsonString(policyToSet)
+
+	if err != nil {
+		return fmt.Errorf("policy (%s) is an invalid JSON: %w", policyToSet, err)
+	}
+
+	d.Set("policy", policyToSet)
 	d.Set("registry_id", output.RegistryId)
 	d.Set("repository_name", output.RepositoryName)
 
