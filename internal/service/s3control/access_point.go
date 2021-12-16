@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3control"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -75,7 +76,12 @@ func ResourceAccessPoint() *schema.Resource {
 			"policy": {
 				Type:             schema.TypeString,
 				Optional:         true,
+				ValidateFunc:     validation.StringIsJSON,
 				DiffSuppressFunc: verify.SuppressEquivalentPolicyDiffs,
+				StateFunc: func(v interface{}) string {
+					json, _ := structure.NormalizeJsonString(v)
+					return json
+				},
 			},
 			"public_access_block_configuration": {
 				Type:             schema.TypeList,
