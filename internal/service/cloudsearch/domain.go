@@ -353,45 +353,94 @@ func resourceCloudSearchDomainRead(d *schema.ResourceData, meta interface{}) err
 
 func resourceCloudSearchDomainUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CloudSearchConn
+	requiresIndexDocuments := false
 
-	_, err := conn.UpdateScalingParameters(&cloudsearch.UpdateScalingParametersInput{
-		DomainName: aws.String(d.Get("name").(string)),
-		ScalingParameters: &cloudsearch.ScalingParameters{
-			DesiredInstanceType:     aws.String(d.Get("instance_type").(string)),
-			DesiredReplicationCount: aws.Int64(int64(d.Get("replication_count").(int))),
-			DesiredPartitionCount:   aws.Int64(int64(d.Get("partition_count").(int))),
-		},
-	})
-	if err != nil {
-		return err
-	}
+	if d.HasChange("scaling_parameters") {
+		input := &cloudsearch.UpdateScalingParametersInput{
+			DomainName: aws.String(d.Id()),
+		}
 
-	_, err = conn.UpdateAvailabilityOptions(&cloudsearch.UpdateAvailabilityOptionsInput{
-		DomainName: aws.String(d.Get("name").(string)),
-		MultiAZ:    aws.Bool(d.Get("multi_az").(bool)),
-	})
-	if err != nil {
-		return err
-	}
+		if v, ok := d.GetOk("scaling_parameters"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+			input.ScalingParameters = expandScalingParameters(v.([]interface{})[0].(map[string]interface{}))
+		} else {
+			input.ScalingParameters = &cloudsearch.ScalingParameters{}
+		}
 
-	updated, err := defineIndexFields(d, conn)
-	if err != nil {
-		return err
-	}
+		log.Printf("[DEBUG] Updating CloudSearch Domain scaling parameters: %s", input)
+		output, err := conn.UpdateScalingParameters(input)
 
-	// When you add fields or modify existing fields, you must explicitly issue a request to re-index your data
-	// when you are done making configuration changes.
-	// https://docs.aws.amazon.com/cloudsearch/latest/developerguide/configuring-index-fields.html
-	if updated {
-		_, err := conn.IndexDocuments(&cloudsearch.IndexDocumentsInput{
-			DomainName: aws.String(d.Get("name").(string)),
-		})
 		if err != nil {
-			return err
+			return fmt.Errorf("error updating CloudSearch Domain (%s) scaling parameters: %w", d.Id(), err)
+		}
+
+		if output != nil && output.ScalingParameters != nil && output.ScalingParameters.Status != nil && aws.StringValue(output.ScalingParameters.Status.State) == cloudsearch.OptionStateRequiresIndexDocuments {
+			requiresIndexDocuments = true
 		}
 	}
 
-	return nil
+	if d.HasChange("multi_az") {
+		input := &cloudsearch.UpdateAvailabilityOptionsInput{
+			DomainName: aws.String(d.Id()),
+			MultiAZ:    aws.Bool(d.Get("multi_az").(bool)),
+		}
+
+		log.Printf("[DEBUG] Updating CloudSearch Domain availability options: %s", input)
+		output, err := conn.UpdateAvailabilityOptions(input)
+
+		if err != nil {
+			return fmt.Errorf("error updating CloudSearch Domain (%s) availability options: %w", d.Id(), err)
+		}
+
+		if output != nil && output.AvailabilityOptions != nil && output.AvailabilityOptions.Status != nil && aws.StringValue(output.AvailabilityOptions.Status.State) == cloudsearch.OptionStateRequiresIndexDocuments {
+			requiresIndexDocuments = true
+		}
+	}
+
+	if d.HasChange("endpoint_options") {
+		input := &cloudsearch.UpdateDomainEndpointOptionsInput{
+			DomainName: aws.String(d.Id()),
+		}
+
+		if v, ok := d.GetOk("endpoint_options"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+			input.DomainEndpointOptions = expandDomainEndpointOptions(v.([]interface{})[0].(map[string]interface{}))
+		} else {
+			input.DomainEndpointOptions = &cloudsearch.DomainEndpointOptions{}
+		}
+
+		log.Printf("[DEBUG] Updating CloudSearch Domain endpoint options: %s", input)
+		output, err := conn.UpdateDomainEndpointOptions(input)
+
+		if err != nil {
+			return fmt.Errorf("error updating CloudSearch Domain (%s) endpoint options: %w", d.Id(), err)
+		}
+
+		if output != nil && output.DomainEndpointOptions != nil && output.DomainEndpointOptions.Status != nil && aws.StringValue(output.DomainEndpointOptions.Status.State) == cloudsearch.OptionStateRequiresIndexDocuments {
+			requiresIndexDocuments = true
+		}
+	}
+
+	_, err := defineIndexFields(d, conn)
+	if err != nil {
+		return err
+	}
+
+	if requiresIndexDocuments {
+		_, err := conn.IndexDocuments(&cloudsearch.IndexDocumentsInput{
+			DomainName: aws.String(d.Id()),
+		})
+
+		if err != nil {
+			return fmt.Errorf("error indexing CloudSearch Domain (%s) documents: %w", d.Id(), err)
+		}
+	}
+
+	_, err = waitDomainActive(conn, d.Id(), d.Timeout(schema.TimeoutUpdate))
+
+	if err != nil {
+		return fmt.Errorf("error waiting for CloudSearch Domain (%s) update: %w", d.Id(), err)
+	}
+
+	return resourceCloudSearchDomainRead(d, meta)
 }
 
 func resourceCloudSearchDomainDelete(d *schema.ResourceData, meta interface{}) error {
