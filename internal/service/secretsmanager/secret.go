@@ -326,7 +326,7 @@ func resourceSecretRead(d *schema.ResourceData, meta interface{}) error {
 
 		d.Set("policy", policyToSet)
 	} else {
-		d.Set("policy", "{}")
+		d.Set("policy", "")
 	}
 
 	d.Set("rotation_enabled", output.RotationEnabled)
