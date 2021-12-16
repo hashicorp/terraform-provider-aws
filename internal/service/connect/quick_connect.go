@@ -248,7 +248,7 @@ func resourceQuickConnectUpdate(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	// Either QuickConnectName or QuickConnectDescription must be specified. Both cannot be null or empty
-	if d.HasChange("name") || d.HasChange("description") {
+	if d.HasChanges("name", "description") {
 		inputNameDesc.Name = aws.String(d.Get("name").(string))
 		inputNameDesc.Description = aws.String(d.Get("description").(string))
 		_, err = conn.UpdateQuickConnectNameWithContext(ctx, inputNameDesc)
