@@ -84,6 +84,31 @@ func testAccQuickConnect_phoneNumber(t *testing.T) {
 		},
 	})
 }
+
+func testAccQuickConnect_disappears(t *testing.T) {
+	var v connect.DescribeQuickConnectOutput
+	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName2 := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	resourceName := "aws_connect_quick_connect.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, connect.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckQuickConnectDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccQuickConnectPhoneNumberConfig(rName, rName2, "Disappear"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckQuickConnectExists(resourceName, &v),
+					acctest.CheckResourceDisappears(acctest.Provider, tfconnect.ResourceQuickConnect(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func testAccCheckQuickConnectExists(resourceName string, function *connect.DescribeQuickConnectOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
