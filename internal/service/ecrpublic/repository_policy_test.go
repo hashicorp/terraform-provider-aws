@@ -36,11 +36,18 @@ func TestAccECRPublicRepositoryPolicy_basic(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
+			{
+				Config: testAccRepositoryPolicyUpdated(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRepositoryPolicyExists(resourceName),
+					resource.TestCheckResourceAttrSet(resourceName, "policy"),
+				),
+			},
 		},
 	})
 }
 
-func TestAccECRPublicRepositoryPolicy_policy(t *testing.T) {
+func TestAccECRPublicRepositoryPolicy_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_ecrpublic_repository_policy.test"
 
@@ -55,19 +62,33 @@ func TestAccECRPublicRepositoryPolicy_policy(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRepositoryPolicyExists(resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "policy"),
+					acctest.CheckResourceDisappears(acctest.Provider, tfecrpublic.ResourceRepositoryPolicy(), resourceName),
 				),
+				ExpectNonEmptyPlan: true,
 			},
+		},
+	})
+}
+
+func TestAccECRPublicRepositoryPolicy_Disappears_repository(t *testing.T) {
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_ecrpublic_repository_policy.test"
+	repositoryResourceName := "aws_ecrpublic_repository.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ecrpublic.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckRepositoryPolicyDestroy,
+		Steps: []resource.TestStep{
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{
-				Config: testAccRepositoryPolicyUpdated(rName),
+				Config: testAccRepositoryPolicy(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRepositoryPolicyExists(resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "policy"),
+					acctest.CheckResourceDisappears(acctest.Provider, tfecrpublic.ResourceRepository(), repositoryResourceName),
 				),
+				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
