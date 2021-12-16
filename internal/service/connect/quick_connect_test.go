@@ -15,6 +15,21 @@ import (
 	tfconnect "github.com/hashicorp/terraform-provider-aws/internal/service/connect"
 )
 
+//Serialized acceptance tests due to Connect account limits (max 2 parallel tests)
+func TestAccConnectQuickConnect_serial(t *testing.T) {
+	testCases := map[string]func(t *testing.T){
+		"basic":      testAccQuickConnect_phoneNumber,
+		"disappears": testAccQuickConnect_disappears,
+	}
+
+	for name, tc := range testCases {
+		tc := tc
+		t.Run(name, func(t *testing.T) {
+			tc(t)
+		})
+	}
+}
+
 
 func testAccQuickConnectBaseConfig(rName string) string {
 	return fmt.Sprintf(`
