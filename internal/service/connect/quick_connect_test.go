@@ -30,6 +30,39 @@ func TestAccConnectQuickConnect_serial(t *testing.T) {
 	}
 }
 
+func testAccCheckQuickConnectExists(resourceName string, function *connect.DescribeQuickConnectOutput) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[resourceName]
+		if !ok {
+			return fmt.Errorf("Connect Quick Connect not found: %s", resourceName)
+		}
+
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("Connect Quick Connect ID not set")
+		}
+		instanceID, quickConnectID, err := tfconnect.QuickConnectParseID(rs.Primary.ID)
+
+		if err != nil {
+			return err
+		}
+
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectConn
+
+		params := &connect.DescribeQuickConnectInput{
+			QuickConnectId: aws.String(quickConnectID),
+			InstanceId:     aws.String(instanceID),
+		}
+
+		getFunction, err := conn.DescribeQuickConnect(params)
+		if err != nil {
+			return err
+		}
+
+		*function = *getFunction
+
+		return nil
+	}
+}
 
 func testAccQuickConnectBaseConfig(rName string) string {
 	return fmt.Sprintf(`
