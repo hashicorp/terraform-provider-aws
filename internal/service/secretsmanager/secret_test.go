@@ -437,7 +437,7 @@ func TestAccSecretsManagerSecret_policy(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecretExists(resourceName, &secret),
 					resource.TestCheckResourceAttr(resourceName, "description", "Poliça"),
-					resource.TestCheckResourceAttr(resourceName, "policy", "{}"),
+					resource.TestCheckResourceAttr(resourceName, "policy", ""),
 				),
 			},
 			{

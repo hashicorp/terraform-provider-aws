@@ -209,7 +209,7 @@ func resourceSecretCreate(d *schema.ResourceData, meta interface{}) error {
 
 	d.SetId(aws.StringValue(output.ARN))
 
-	if v, ok := d.GetOk("policy"); ok && v.(string) != "" {
+	if v, ok := d.GetOk("policy"); ok && v.(string) != "" && v.(string) != "{}" {
 		policy, err := structure.NormalizeJsonString(v.(string))
 
 		if err != nil {
@@ -326,7 +326,7 @@ func resourceSecretRead(d *schema.ResourceData, meta interface{}) error {
 
 		d.Set("policy", policyToSet)
 	} else {
-		d.Set("policy", "{}")
+		d.Set("policy", "")
 	}
 
 	d.Set("rotation_enabled", output.RotationEnabled)
