@@ -43,7 +43,7 @@ func testAccQuickConnect_phoneNumber(t *testing.T) {
 		CheckDestroy: testAccCheckQuickConnectDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccQuickConnectPhoneNumberConfig(rName, rName2, "Created"),
+				Config: testAccQuickConnectPhoneNumberConfig(rName, rName2, "Created", "+12345678912"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckQuickConnectExists(resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, "instance_id"),
@@ -65,7 +65,8 @@ func testAccQuickConnect_phoneNumber(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccQuickConnectPhoneNumberConfig(rName, rName2, "Updated"),
+				// update description
+				Config: testAccQuickConnectPhoneNumberConfig(rName, rName2, "Updated", "+12345678912"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckQuickConnectExists(resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, "instance_id"),
@@ -77,6 +78,29 @@ func testAccQuickConnect_phoneNumber(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "quick_connect_config.0.quick_connect_type", "PHONE_NUMBER"),
 					resource.TestCheckResourceAttr(resourceName, "quick_connect_config.0.phone_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "quick_connect_config.0.phone_config.0.phone_number", "+12345678912"),
+
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				// update phone number
+				Config: testAccQuickConnectPhoneNumberConfig(rName, rName2, "Updated", "+12345678913"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckQuickConnectExists(resourceName, &v),
+					resource.TestCheckResourceAttrSet(resourceName, "instance_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "name"),
+					resource.TestCheckResourceAttr(resourceName, "description", "Updated"),
+					resource.TestCheckResourceAttrSet(resourceName, "quick_connect_arn"),
+					resource.TestCheckResourceAttrSet(resourceName, "quick_connect_id"),
+					resource.TestCheckResourceAttr(resourceName, "quick_connect_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "quick_connect_config.0.quick_connect_type", "PHONE_NUMBER"),
+					resource.TestCheckResourceAttr(resourceName, "quick_connect_config.0.phone_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "quick_connect_config.0.phone_config.0.phone_number", "+12345678913"),
 
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 				),
@@ -98,7 +122,7 @@ func testAccQuickConnect_disappears(t *testing.T) {
 		CheckDestroy: testAccCheckQuickConnectDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccQuickConnectPhoneNumberConfig(rName, rName2, "Disappear"),
+				Config: testAccQuickConnectPhoneNumberConfig(rName, rName2, "Disappear", "+12345678912"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckQuickConnectExists(resourceName, &v),
 					acctest.CheckResourceDisappears(acctest.Provider, tfconnect.ResourceQuickConnect(), resourceName),
@@ -185,7 +209,7 @@ resource "aws_connect_instance" "test" {
 `, rName)
 }
 
-func testAccQuickConnectPhoneNumberConfig(rName, rName2, label string) string {
+func testAccQuickConnectPhoneNumberConfig(rName, rName2, label string, phoneNumber string) string {
 	return acctest.ConfigCompose(
 		testAccQuickConnectBaseConfig(rName),
 		fmt.Sprintf(`
@@ -198,7 +222,7 @@ resource "aws_connect_quick_connect" "test" {
     quick_connect_type = "PHONE_NUMBER"
 
     phone_config {
-	  phone_number   = "+12345678912"
+	  phone_number   = %[3]q
     }
   }
 
@@ -206,5 +230,5 @@ resource "aws_connect_quick_connect" "test" {
     "Name" = "Test Quick Connect"
   }
 }
-`, rName2, label))
+`, rName2, label, phoneNumber))
 }
