@@ -667,11 +667,22 @@ func resourceVPCUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	if d.HasChange("ipv6_cidr_block_network_border_group") {
 		log.Printf("[INFO] Modifying IPv6 Block Network Border Group")
-		value := d.Get("ipv6_association_id")
-		log.Printf("[INFO] VALUE %v", value)
 		modifyOpts := &ec2.AssociateVpcCidrBlockInput{
 			VpcId:          &vpcid,
 			AmazonProvidedIpv6CidrBlock: aws.Bool(d.Get("assign_generated_ipv6_cidr_block").(bool)),
+		}
+
+		if val := d.Get("ipv6_cidr_block"); val != "" {
+			log.Printf("[INFO] Disabling assign_generated_ipv6_cidr_block vpc attribute for %s: %#v",
+			d.Id(), modifyOpts)
+			disassociationID := d.Get("ipv6_association_id").(string)
+			disModifyOpts := &ec2.DisassociateVpcCidrBlockInput{
+				AssociationId: aws.String(disassociationID),
+			}
+			log.Printf("[INFO] Dissaociating IPv6 Block Network Border Group")
+			if _, err := conn.DisassociateVpcCidrBlock(disModifyOpts); err != nil {
+				return err
+			}
 		}
 
 		if v := d.Get("ipv6_cidr_block_network_border_group"); v != "" {
@@ -701,12 +712,6 @@ func resourceVPCUpdate(d *schema.ResourceData, meta interface{}) error {
 				}
 			}
 		}
-		// if d.Get("assign_generated_ipv6_cidr_block").(bool) {
-		// 	log.Printf("[INFO] Trying to associate IPv6 Block Network Border Group")
-		// 	if _, err := conn.AssociateVpcCidrBlock(modifyOpts); err != nil {
-		// 		return err
-		// 	}
-		// }
 	}
 
 	if d.HasChange("instance_tenancy") {
