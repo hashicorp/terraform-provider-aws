@@ -191,9 +191,7 @@ resource "aws_ecrpublic_repository_policy" "test" {
             "Sid": "testpolicy",
             "Effect": "Allow",
             "Principal": "*",
-            "Action": [
-                "ecr-public:ListImages"
-            ]
+            "Action": "ecr-public:ListImages"
         }
     ]
 }
@@ -273,9 +271,7 @@ resource "aws_ecrpublic_repository_policy" "test" {
             "Principal": {
               "AWS": "${aws_iam_role.test.arn}"
             },
-            "Action": [
-                "ecr-public:ListImages"
-            ]
+            "Action": "ecr-public:ListImages"
         }
     ]
 }
