@@ -228,6 +228,65 @@ func resourceQuickConnectRead(ctx context.Context, d *schema.ResourceData, meta 
 	return nil
 }
 
+func resourceQuickConnectUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.AWSClient).ConnectConn
+
+	instanceID, quickConnectID, err := QuickConnectParseID(d.Id())
+
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	// QuickConnect has 2 update APIs
+	// UpdateQuickConnectConfigWithContext: Updates the configuration settings for the specified quick connect.
+	// UpdateQuickConnectNameWithContext: Updates the name and description of a quick connect.
+
+	// updates to name and/or description
+	inputNameDesc := &connect.UpdateQuickConnectNameInput{
+		InstanceId:     aws.String(instanceID),
+		QuickConnectId: aws.String(quickConnectID),
+	}
+
+	if d.HasChange("name") {
+		inputNameDesc.Name = aws.String(d.Get("name").(string))
+	}
+
+	if d.HasChange("description") {
+		inputNameDesc.Description = aws.String(d.Get("description").(string))
+	}
+
+	_, err = conn.UpdateQuickConnectNameWithContext(ctx, inputNameDesc)
+
+	if err != nil {
+		return diag.FromErr(fmt.Errorf("[ERROR] Error updating QuickConnect Name (%s): %w", d.Id(), err))
+	}
+
+	// updates to configuration settings
+	inputConfig := &connect.UpdateQuickConnectConfigInput{
+		InstanceId:     aws.String(instanceID),
+		QuickConnectId: aws.String(quickConnectID),
+	}
+
+	// QuickConnectConfig is a required field but does not require update if it is unchanged
+	if d.HasChange("quick_connect_config") {
+		quickConnectConfig := expandQuickConnectConfig(d.Get("quick_connect_config").([]interface{}))
+		inputConfig.QuickConnectConfig = quickConnectConfig
+		_, err = conn.UpdateQuickConnectConfigWithContext(ctx, inputConfig)
+		if err != nil {
+			return diag.FromErr(fmt.Errorf("[ERROR] Error updating QuickConnect (%s): %w", d.Id(), err))
+		}
+	}
+
+	// updates to tags
+	if d.HasChange("tags_all") {
+		o, n := d.GetChange("tags_all")
+		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
+			return diag.FromErr(fmt.Errorf("error updating tags: %w", err))
+		}
+	}
+
+	return resourceQuickConnectRead(ctx, d, meta)
+}
 func expandQuickConnectConfig(quickConnectConfig []interface{}) *connect.QuickConnectConfig {
 	if len(quickConnectConfig) == 0 || quickConnectConfig[0] == nil {
 		return nil
