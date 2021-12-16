@@ -64,6 +64,37 @@ func testAccCheckQuickConnectExists(resourceName string, function *connect.Descr
 	}
 }
 
+func testAccCheckQuickConnectDestroy(s *terraform.State) error {
+	for _, rs := range s.RootModule().Resources {
+		if rs.Type != "aws_connect_quick_connect" {
+			continue
+		}
+
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectConn
+
+		instanceID, quickConnectID, err := tfconnect.QuickConnectParseID(rs.Primary.ID)
+
+		if err != nil {
+			return err
+		}
+
+		params := &connect.DescribeQuickConnectInput{
+			QuickConnectId: aws.String(quickConnectID),
+			InstanceId:     aws.String(instanceID),
+		}
+
+		_, experr := conn.DescribeQuickConnect(params)
+		// Verify the error is what we want
+		if experr != nil {
+			if awsErr, ok := experr.(awserr.Error); ok && awsErr.Code() == "ResourceNotFoundException" {
+				continue
+			}
+			return experr
+		}
+	}
+	return nil
+}
+
 func testAccQuickConnectBaseConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_connect_instance" "test" {
