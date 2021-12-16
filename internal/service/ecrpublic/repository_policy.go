@@ -27,11 +27,6 @@ func ResourceRepositoryPolicy() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"repository_name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
 			"policy": {
 				Type:             schema.TypeString,
 				Required:         true,
@@ -40,6 +35,11 @@ func ResourceRepositoryPolicy() *schema.Resource {
 			"registry_id": {
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+			"repository_name": {
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
 			},
 		},
 	}
