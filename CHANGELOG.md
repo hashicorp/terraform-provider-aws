@@ -1,4 +1,4 @@
-## 3.70.0 (Unreleased)
+## 3.70.0 (December 16, 2021)
 
 NOTES:
 
