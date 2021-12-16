@@ -1,5 +1,5 @@
 ```release-note:bug
-resource/aws_s3control_access_point: Fix erroneous diffs in `policy` when no changes made or policies are equivalent
+resource/aws_s3_access_point: Fix erroneous diffs in `policy` when no changes made or policies are equivalent
 ```
 
 ```release-note:bug
