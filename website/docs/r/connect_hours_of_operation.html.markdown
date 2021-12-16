@@ -65,7 +65,7 @@ The following arguments are supported:
 * `tags` - (Optional) Tags to apply to the Hours of Operation. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `time_zone` - (Required) Specifies the time zone of the Hours of Operation.
 
-A `config` blog supports the following arguments:
+A `config` block supports the following arguments:
 
 * `day` - (Required) Specifies the day that the hours of operation applies to.
 * `end_time` - (Required) A end time block specifies the time that your contact center closes. The `end_time` is documented below.
