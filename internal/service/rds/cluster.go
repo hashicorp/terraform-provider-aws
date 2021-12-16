@@ -973,7 +973,7 @@ func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
 
 	if v, ok := d.GetOk("iam_roles"); ok {
 		for _, role := range v.(*schema.Set).List() {
-			err := setIamRoleToRdsCluster(d.Id(), role.(string), conn)
+			err := setIAMRoleToCluster(d.Id(), role.(string), conn)
 			if err != nil {
 				return err
 			}
@@ -1335,14 +1335,14 @@ func resourceClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 		enableRoles := ns.Difference(os)
 
 		for _, role := range enableRoles.List() {
-			err := setIamRoleToRdsCluster(d.Id(), role.(string), conn)
+			err := setIAMRoleToCluster(d.Id(), role.(string), conn)
 			if err != nil {
 				return err
 			}
 		}
 
 		for _, role := range removeRoles.List() {
-			err := removeIamRoleFromRdsCluster(d.Id(), role.(string), conn)
+			err := removeIAMRoleFromCluster(d.Id(), role.(string), conn)
 			if err != nil {
 				return err
 			}
@@ -1463,7 +1463,7 @@ func resourceClusterStateRefreshFunc(conn *rds.RDS, dbClusterIdentifier string) 
 	}
 }
 
-func setIamRoleToRdsCluster(clusterIdentifier string, roleArn string, conn *rds.RDS) error {
+func setIAMRoleToCluster(clusterIdentifier string, roleArn string, conn *rds.RDS) error {
 	params := &rds.AddRoleToDBClusterInput{
 		DBClusterIdentifier: aws.String(clusterIdentifier),
 		RoleArn:             aws.String(roleArn),
@@ -1472,7 +1472,7 @@ func setIamRoleToRdsCluster(clusterIdentifier string, roleArn string, conn *rds.
 	return err
 }
 
-func removeIamRoleFromRdsCluster(clusterIdentifier string, roleArn string, conn *rds.RDS) error {
+func removeIAMRoleFromCluster(clusterIdentifier string, roleArn string, conn *rds.RDS) error {
 	params := &rds.RemoveRoleFromDBClusterInput{
 		DBClusterIdentifier: aws.String(clusterIdentifier),
 		RoleArn:             aws.String(roleArn),

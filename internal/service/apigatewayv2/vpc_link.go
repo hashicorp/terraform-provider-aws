@@ -91,7 +91,7 @@ func resourceVPCLinkRead(d *schema.ResourceData, meta interface{}) error {
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	outputRaw, _, err := StatusVPCLink(conn, d.Id())()
-	if tfawserr.ErrMessageContains(err, apigatewayv2.ErrCodeNotFoundException, "") {
+	if tfawserr.ErrCodeEquals(err, apigatewayv2.ErrCodeNotFoundException) && !d.IsNewResource() {
 		log.Printf("[WARN] API Gateway v2 VPC Link (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil

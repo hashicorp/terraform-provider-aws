@@ -422,7 +422,7 @@ func testAccCheckDestroyDataSource(s *terraform.State) error {
 
 		_, err = conn.GetDataSource(input)
 		if err != nil {
-			if tfawserr.ErrMessageContains(err, appsync.ErrCodeNotFoundException, "") {
+			if tfawserr.ErrCodeEquals(err, appsync.ErrCodeNotFoundException) {
 				return nil
 			}
 			return err

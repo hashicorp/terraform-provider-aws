@@ -6,6 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
+	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/service/opsworks"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -227,8 +228,10 @@ func TestAccOpsWorksStack_classicEndpoints(t *testing.T) {
 	rInt := sdkacctest.RandInt()
 	var opsstack opsworks.Stack
 
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckRegion(t, "us-west-2") }, //lintignore:AWSAT003
+	// This test cannot be parallel with other tests, because it changes the provider region in a non-standard way
+	// https://github.com/hashicorp/terraform-provider-aws/issues/21887
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckRegion(t, endpoints.UsWest2RegionID) },
 		ErrorCheck:   acctest.ErrorCheck(t, opsworks.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckStackDestroy,
@@ -251,7 +254,6 @@ func TestAccOpsWorksStack_classicEndpoints(t *testing.T) {
 			},
 		},
 	})
-
 }
 
 func testAccCheckStackRecreated(t *testing.T, before, after *opsworks.Stack) resource.TestCheckFunc {
@@ -470,8 +472,7 @@ func testAccCheckCreateStackAttributes(stackName string) resource.TestCheckFunc 
 	)
 }
 
-func testAccCheckStackExists(
-	n string, vpc bool, opsstack *opsworks.Stack) resource.TestCheckFunc {
+func testAccCheckStackExists(n string, vpc bool, opsstack *opsworks.Stack) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {

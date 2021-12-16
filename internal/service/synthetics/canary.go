@@ -40,10 +40,37 @@ func ResourceCanary() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"artifact_config": {
+				Type:     schema.TypeList,
+				MaxItems: 1,
+				Optional: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"s3_encryption": {
+							Type:     schema.TypeList,
+							MaxItems: 1,
+							Optional: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"encryption_mode": {
+										Type:         schema.TypeString,
+										Optional:     true,
+										ValidateFunc: validation.StringInSlice(synthetics.EncryptionMode_Values(), false),
+									},
+									"kms_key_arn": {
+										Type:         schema.TypeString,
+										Optional:     true,
+										ValidateFunc: verify.ValidARN,
+									},
+								},
+							},
+						},
+					},
+				},
+			},
 			"artifact_s3_location": {
 				Type:     schema.TypeString,
 				Required: true,
-				ForceNew: true,
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
 					return strings.TrimPrefix(new, "s3://") == old
 				},
@@ -238,16 +265,18 @@ func resourceCanaryCreate(d *schema.ResourceData, meta interface{}) error {
 		RuntimeVersion:     aws.String(d.Get("runtime_version").(string)),
 	}
 
-	code, err := expandCanaryCode(d)
-
-	if err != nil {
+	if code, err := expandCanaryCode(d); err != nil {
 		return err
+	} else {
+		input.Code = code
 	}
-
-	input.Code = code
 
 	if v, ok := d.GetOk("run_config"); ok {
 		input.RunConfig = expandCanaryRunConfig(v.([]interface{}))
+	}
+
+	if v, ok := d.GetOk("artifact_config"); ok {
+		input.ArtifactConfig = expandCanaryArtifactConfig(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("schedule"); ok {
@@ -368,6 +397,10 @@ func resourceCanaryRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error setting schedule: %w", err)
 	}
 
+	if err := d.Set("artifact_config", flattenCanaryArtifactConfig(canary.ArtifactConfig)); err != nil {
+		return fmt.Errorf("error setting artifact_config: %w", err)
+	}
+
 	tags := KeyValueTags(canary.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
@@ -394,20 +427,28 @@ func resourceCanaryUpdate(d *schema.ResourceData, meta interface{}) error {
 			input.VpcConfig = expandCanaryVPCConfig(d.Get("vpc_config").([]interface{}))
 		}
 
+		if d.HasChange("artifact_config") {
+			input.ArtifactConfig = expandCanaryArtifactConfig(d.Get("artifact_config").([]interface{}))
+		}
+
 		if d.HasChange("runtime_version") {
 			input.RuntimeVersion = aws.String(d.Get("runtime_version").(string))
 		}
 
 		if d.HasChanges("handler", "zip_file", "s3_bucket", "s3_key", "s3_version") {
-			code, err := expandCanaryCode(d)
-			if err != nil {
+			if code, err := expandCanaryCode(d); err != nil {
 				return err
+			} else {
+				input.Code = code
 			}
-			input.Code = code
 		}
 
 		if d.HasChange("run_config") {
 			input.RunConfig = expandCanaryRunConfig(d.Get("run_config").([]interface{}))
+		}
+
+		if d.HasChange("artifact_s3_location") {
+			input.ArtifactS3Location = aws.String(d.Get("artifact_s3_location").(string))
 		}
 
 		if d.HasChange("schedule") {
@@ -542,6 +583,74 @@ func expandCanaryCode(d *schema.ResourceData) (*synthetics.CanaryCodeInput, erro
 	}
 
 	return codeConfig, nil
+}
+
+func expandCanaryArtifactConfig(l []interface{}) *synthetics.ArtifactConfigInput_ {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]interface{})
+
+	config := &synthetics.ArtifactConfigInput_{}
+
+	if v, ok := m["s3_encryption"].([]interface{}); ok && len(v) > 0 {
+		config.S3Encryption = expandCanaryS3EncryptionConfig(v)
+	}
+
+	return config
+}
+
+func flattenCanaryArtifactConfig(config *synthetics.ArtifactConfigOutput_) []interface{} {
+	if config == nil {
+		return []interface{}{}
+	}
+
+	m := map[string]interface{}{}
+
+	if config.S3Encryption != nil {
+		m["s3_encryption"] = flattenCanaryS3EncryptionConfig(config.S3Encryption)
+	}
+
+	return []interface{}{m}
+}
+
+func expandCanaryS3EncryptionConfig(l []interface{}) *synthetics.S3EncryptionConfig {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]interface{})
+
+	config := &synthetics.S3EncryptionConfig{}
+
+	if v, ok := m["encryption_mode"].(string); ok && v != "" {
+		config.EncryptionMode = aws.String(v)
+	}
+
+	if v, ok := m["kms_key_arn"].(string); ok && v != "" {
+		config.KmsKeyArn = aws.String(v)
+	}
+
+	return config
+}
+
+func flattenCanaryS3EncryptionConfig(config *synthetics.S3EncryptionConfig) []interface{} {
+	if config == nil {
+		return []interface{}{}
+	}
+
+	m := map[string]interface{}{}
+
+	if config.EncryptionMode != nil {
+		m["encryption_mode"] = aws.StringValue(config.EncryptionMode)
+	}
+
+	if config.KmsKeyArn != nil {
+		m["kms_key_arn"] = aws.StringValue(config.KmsKeyArn)
+	}
+
+	return []interface{}{m}
 }
 
 func expandCanarySchedule(l []interface{}) *synthetics.CanaryScheduleInput {

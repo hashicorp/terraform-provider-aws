@@ -77,6 +77,7 @@ Output Location (`output_location`) is an S3 bucket where you want to store the 
 
 * `s3_bucket_name` - (Required) The S3 bucket name.
 * `s3_key_prefix` - (Optional) The S3 bucket prefix. Results stored in the root if not configured.
+* `s3_region` - (Optional) The S3 bucket region.
 
 Targets specify what instance IDs or tags to apply the document to and has these keys:
 

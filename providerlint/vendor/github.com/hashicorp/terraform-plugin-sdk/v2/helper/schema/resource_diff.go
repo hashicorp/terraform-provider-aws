@@ -247,7 +247,7 @@ func (d *ResourceDiff) clear(key string) error {
 	}
 
 	for k := range d.diff.Attributes {
-		if strings.HasPrefix(k, key) {
+		if k == key || childAddrOf(k, key) {
 			delete(d.diff.Attributes, k)
 		}
 	}
@@ -260,7 +260,7 @@ func (d *ResourceDiff) clear(key string) error {
 func (d *ResourceDiff) GetChangedKeysPrefix(prefix string) []string {
 	keys := make([]string, 0)
 	for k := range d.diff.Attributes {
-		if strings.HasPrefix(k, prefix) {
+		if k == prefix || childAddrOf(k, prefix) {
 			keys = append(keys, k)
 		}
 	}

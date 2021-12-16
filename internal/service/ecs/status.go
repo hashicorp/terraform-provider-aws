@@ -21,6 +21,10 @@ const (
 
 	clusterStatusError = "ERROR"
 	clusterStatusNone  = "NONE"
+
+	taskSetStatusActive   = "ACTIVE"
+	taskSetStatusDraining = "DRAINING"
+	taskSetStatusPrimary  = "PRIMARY"
 )
 
 func statusCapacityProvider(conn *ecs.ECS, arn string) resource.StateRefreshFunc {
@@ -83,7 +87,7 @@ func statusService(conn *ecs.ECS, id, cluster string) resource.StateRefreshFunc 
 
 func statusCluster(conn *ecs.ECS, arn string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindClusterByARN(conn, arn)
+		output, err := FindClusterByNameOrARN(conn, arn)
 
 		if tfawserr.ErrCodeEquals(err, ecs.ErrCodeClusterNotFoundException) {
 			return nil, clusterStatusNone, nil
@@ -98,5 +102,49 @@ func statusCluster(conn *ecs.ECS, arn string) resource.StateRefreshFunc {
 		}
 
 		return output, aws.StringValue(output.Clusters[0].Status), err
+	}
+}
+
+func stabilityStatusTaskSet(conn *ecs.ECS, taskSetID, service, cluster string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		input := &ecs.DescribeTaskSetsInput{
+			Cluster:  aws.String(cluster),
+			Service:  aws.String(service),
+			TaskSets: aws.StringSlice([]string{taskSetID}),
+		}
+
+		output, err := conn.DescribeTaskSets(input)
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		if output == nil || len(output.TaskSets) == 0 {
+			return nil, "", nil
+		}
+
+		return output.TaskSets[0], aws.StringValue(output.TaskSets[0].StabilityStatus), nil
+	}
+}
+
+func statusTaskSet(conn *ecs.ECS, taskSetID, service, cluster string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		input := &ecs.DescribeTaskSetsInput{
+			Cluster:  aws.String(cluster),
+			Service:  aws.String(service),
+			TaskSets: aws.StringSlice([]string{taskSetID}),
+		}
+
+		output, err := conn.DescribeTaskSets(input)
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		if output == nil || len(output.TaskSets) == 0 {
+			return nil, "", nil
+		}
+
+		return output.TaskSets[0], aws.StringValue(output.TaskSets[0].Status), nil
 	}
 }

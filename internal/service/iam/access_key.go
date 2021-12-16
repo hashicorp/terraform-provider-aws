@@ -195,7 +195,7 @@ func resourceAccessKeyRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	for _, key := range getResp.AccessKeyMetadata {
-		if key.AccessKeyId != nil && *key.AccessKeyId == d.Id() {
+		if aws.StringValue(key.AccessKeyId) == d.Id() {
 			return resourceAccessKeyReadResult(d, key)
 		}
 	}

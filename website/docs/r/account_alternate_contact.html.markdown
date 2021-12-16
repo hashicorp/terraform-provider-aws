@@ -14,6 +14,7 @@ Manages the specified alternate contact attached to an AWS Account.
 
 ```terraform
 resource "aws_account_alternate_contact" "operations" {
+
   alternate_contact_type = "OPERATIONS"
 
   name          = "Example"
@@ -27,6 +28,7 @@ resource "aws_account_alternate_contact" "operations" {
 
 The following arguments are supported:
 
+* `account_id` - (Optional) The ID of the target account when managing member accounts. Will manage current user's account by default if omitted.
 * `alternate_contact_type` - (Required) The type of the alternate contact. Allowed values are: `BILLING`, `OPERATIONS`, `SECURITY`.
 * `email_address` - (Required) An email address for the alternate contact.
 * `name` - (Required) The name of the alternate contact.

@@ -136,12 +136,12 @@ func resourceMethodResponseRead(d *schema.ResourceData, meta interface{}) error 
 		StatusCode: aws.String(d.Get("status_code").(string)),
 	})
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, apigateway.ErrCodeNotFoundException, "") {
-			log.Printf("[WARN] API Gateway Response (%s) not found, removing from state", d.Id())
+		if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, apigateway.ErrCodeNotFoundException) {
+			log.Printf("[WARN] API Gateway Method Response (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
 		}
-		return err
+		return fmt.Errorf("error reading API Gateway Method Response (%s): %w", d.Id(), err)
 	}
 
 	log.Printf("[DEBUG] Received API Gateway Method Response: %s", methodResponse)

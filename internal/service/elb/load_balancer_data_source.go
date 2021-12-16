@@ -312,7 +312,7 @@ func dataSourceLoadBalancerRead(d *schema.ResourceData, meta interface{}) error 
 	for _, attr := range lbAttrs.AdditionalAttributes {
 		switch aws.StringValue(attr.Key) {
 		case "elb.http.desyncmitigationmode":
-			d.Set("desync_mitigation_mode", aws.StringValue(attr.Value))
+			d.Set("desync_mitigation_mode", attr.Value)
 		}
 	}
 

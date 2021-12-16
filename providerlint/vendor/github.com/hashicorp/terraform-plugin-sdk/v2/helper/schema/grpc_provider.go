@@ -1123,7 +1123,11 @@ func (s *GRPCProviderServer) ReadDataSource(ctx context.Context, req *tfprotov5.
 		return resp, nil
 	}
 
-	diff.RawConfig = configVal
+	// Not setting RawConfig here is okay, as ResourceData.GetRawConfig()
+	// will return a NullVal of the schema if there is no InstanceDiff.
+	if diff != nil {
+		diff.RawConfig = configVal
+	}
 
 	// now we can get the new complete data source
 	newInstanceState, diags := res.ReadDataApply(ctx, diff, s.provider.Meta())

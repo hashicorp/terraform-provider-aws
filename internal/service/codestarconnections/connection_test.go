@@ -206,7 +206,7 @@ func testAccConnectionHostARNConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_codestarconnections_host" "test" {
   name              = %[1]q
-  provider_endpoint = "https://test.com"
+  provider_endpoint = "https://example.com"
   provider_type     = "GitHubEnterpriseServer"
 }
 

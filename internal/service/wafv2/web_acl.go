@@ -132,6 +132,7 @@ func ResourceWebACL() *schema.Resource {
 							Type:     schema.TypeInt,
 							Required: true,
 						},
+						"rule_label":        wafv2RuleLabelsSchema(),
 						"statement":         wafv2WebACLRootStatementSchema(3),
 						"visibility_config": wafv2VisibilityConfigSchema(),
 					},
@@ -375,6 +376,7 @@ func wafv2WebACLRootStatementSchema(level int) *schema.Schema {
 				"byte_match_statement":                  wafv2ByteMatchStatementSchema(),
 				"geo_match_statement":                   wafv2GeoMatchStatementSchema(),
 				"ip_set_reference_statement":            wafv2IpSetReferenceStatementSchema(),
+				"label_match_statement":                 wafv2LabelMatchStatementSchema(),
 				"managed_rule_group_statement":          wafv2ManagedRuleGroupStatementSchema(level),
 				"not_statement":                         wafv2StatementSchema(level),
 				"or_statement":                          wafv2StatementSchema(level),
@@ -465,6 +467,7 @@ func wafv2ScopeDownStatementSchema(level int) *schema.Schema {
 				"and_statement":                         wafv2StatementSchema(level),
 				"byte_match_statement":                  wafv2ByteMatchStatementSchema(),
 				"geo_match_statement":                   wafv2GeoMatchStatementSchema(),
+				"label_match_statement":                 wafv2LabelMatchStatementSchema(),
 				"ip_set_reference_statement":            wafv2IpSetReferenceStatementSchema(),
 				"not_statement":                         wafv2StatementSchema(level),
 				"or_statement":                          wafv2StatementSchema(level),
@@ -517,7 +520,7 @@ func expandWafv2WebACLRule(m map[string]interface{}) *wafv2.Rule {
 		return nil
 	}
 
-	return &wafv2.Rule{
+	rule := &wafv2.Rule{
 		Name:             aws.String(m["name"].(string)),
 		Priority:         aws.Int64(int64(m["priority"].(int))),
 		Action:           expandWafv2RuleAction(m["action"].([]interface{})),
@@ -525,6 +528,12 @@ func expandWafv2WebACLRule(m map[string]interface{}) *wafv2.Rule {
 		Statement:        expandWafv2WebACLRootStatement(m["statement"].([]interface{})),
 		VisibilityConfig: expandWafv2VisibilityConfig(m["visibility_config"].([]interface{})),
 	}
+
+	if v, ok := m["rule_label"].(*schema.Set); ok && v.Len() > 0 {
+		rule.RuleLabels = expandWafv2RuleLabels(v.List())
+	}
+
+	return rule
 }
 
 func expandWafv2OverrideAction(l []interface{}) *wafv2.OverrideAction {
@@ -596,6 +605,10 @@ func expandWafv2WebACLStatement(m map[string]interface{}) *wafv2.Statement {
 
 	if v, ok := m["geo_match_statement"]; ok {
 		statement.GeoMatchStatement = expandWafv2GeoMatchStatement(v.([]interface{}))
+	}
+
+	if v, ok := m["label_match_statement"]; ok {
+		statement.LabelMatchStatement = expandWafv2LabelMatchStatement(v.([]interface{}))
 	}
 
 	if v, ok := m["managed_rule_group_statement"]; ok {
@@ -750,6 +763,10 @@ func flattenWafv2WebACLStatement(s *wafv2.Statement) map[string]interface{} {
 		m["geo_match_statement"] = flattenWafv2GeoMatchStatement(s.GeoMatchStatement)
 	}
 
+	if s.LabelMatchStatement != nil {
+		m["label_match_statement"] = flattenWafv2LabelMatchStatement(s.LabelMatchStatement)
+	}
+
 	if s.ManagedRuleGroupStatement != nil {
 		m["managed_rule_group_statement"] = flattenWafv2ManagedRuleGroupStatement(s.ManagedRuleGroupStatement)
 	}
@@ -797,6 +814,7 @@ func flattenWafv2WebACLRules(r []*wafv2.Rule) interface{} {
 		m["override_action"] = flattenWafv2OverrideAction(rule.OverrideAction)
 		m["name"] = aws.StringValue(rule.Name)
 		m["priority"] = int(aws.Int64Value(rule.Priority))
+		m["rule_label"] = flattenWafv2RuleLabels(rule.RuleLabels)
 		m["statement"] = flattenWafv2WebACLRootStatement(rule.Statement)
 		m["visibility_config"] = flattenWafv2VisibilityConfig(rule.VisibilityConfig)
 		out[i] = m

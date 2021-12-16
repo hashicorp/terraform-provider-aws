@@ -137,7 +137,7 @@ func resourceParameterGroupRead(d *schema.ResourceData, meta interface{}) error 
 	}
 
 	if len(describeResp.DBParameterGroups) != 1 ||
-		*describeResp.DBParameterGroups[0].DBParameterGroupName != d.Id() {
+		aws.StringValue(describeResp.DBParameterGroups[0].DBParameterGroupName) != d.Id() {
 		return fmt.Errorf("Unable to find Parameter Group: %#v", describeResp.DBParameterGroups)
 	}
 

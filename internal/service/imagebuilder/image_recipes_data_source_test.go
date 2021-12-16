@@ -16,7 +16,9 @@ func TestAccImageBuilderImageRecipesDataSource_owner(t *testing.T) {
 	dataSourceNameOwnerSelf := "data.aws_imagebuilder_image_recipes.self"
 	resourceName := "aws_imagebuilder_image_recipe.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	// Not a good test since it is susceptible to fail with parallel tests or if anything else
+	// ImageBuilder is going on in the account
+	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, imagebuilder.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,

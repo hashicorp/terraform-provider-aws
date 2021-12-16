@@ -92,3 +92,81 @@ func FindFileSystemByID(conn *fsx.FSx, id string) (*fsx.FileSystem, error) {
 
 	return filesystems[0], nil
 }
+
+func FindStorageVirtualMachineByID(conn *fsx.FSx, id string) (*fsx.StorageVirtualMachine, error) {
+	input := &fsx.DescribeStorageVirtualMachinesInput{
+		StorageVirtualMachineIds: []*string{aws.String(id)},
+	}
+
+	var storageVirtualMachines []*fsx.StorageVirtualMachine
+
+	err := conn.DescribeStorageVirtualMachinesPages(input, func(page *fsx.DescribeStorageVirtualMachinesOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		storageVirtualMachines = append(storageVirtualMachines, page.StorageVirtualMachines...)
+
+		return !lastPage
+	})
+
+	if tfawserr.ErrCodeEquals(err, fsx.ErrCodeStorageVirtualMachineNotFound) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if len(storageVirtualMachines) == 0 || storageVirtualMachines[0] == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	if count := len(storageVirtualMachines); count > 1 {
+		return nil, tfresource.NewTooManyResultsError(count, input)
+	}
+
+	return storageVirtualMachines[0], nil
+}
+
+func FindVolumeByID(conn *fsx.FSx, id string) (*fsx.Volume, error) {
+	input := &fsx.DescribeVolumesInput{
+		VolumeIds: []*string{aws.String(id)},
+	}
+
+	var volumes []*fsx.Volume
+
+	err := conn.DescribeVolumesPages(input, func(page *fsx.DescribeVolumesOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		volumes = append(volumes, page.Volumes...)
+
+		return !lastPage
+	})
+
+	if tfawserr.ErrCodeEquals(err, fsx.ErrCodeVolumeNotFound) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if len(volumes) == 0 || volumes[0] == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	if count := len(volumes); count > 1 {
+		return nil, tfresource.NewTooManyResultsError(count, input)
+	}
+
+	return volumes[0], nil
+}

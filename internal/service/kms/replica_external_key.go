@@ -237,7 +237,15 @@ func resourceReplicaExternalKeyRead(d *schema.ResourceData, meta interface{}) er
 	d.Set("key_id", key.metadata.KeyId)
 	d.Set("key_state", key.metadata.KeyState)
 	d.Set("key_usage", key.metadata.KeyUsage)
-	d.Set("policy", key.policy)
+
+	policyToSet, err := verify.SecondJSONUnlessEquivalent(d.Get("policy").(string), key.policy)
+
+	if err != nil {
+		return fmt.Errorf("while setting policy (%s), encountered: %w", key.policy, err)
+	}
+
+	d.Set("policy", policyToSet)
+
 	d.Set("primary_key_arn", key.metadata.MultiRegionConfiguration.PrimaryKey.Arn)
 	if key.metadata.ValidTo != nil {
 		d.Set("valid_to", aws.TimeValue(key.metadata.ValidTo).Format(time.RFC3339))

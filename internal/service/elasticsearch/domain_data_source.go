@@ -8,8 +8,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func DataSourceDomain() *schema.Resource {
@@ -37,6 +37,54 @@ func DataSourceDomain() *schema.Resource {
 						},
 						"internal_user_database_enabled": {
 							Type:     schema.TypeBool,
+							Computed: true,
+						},
+					},
+				},
+			},
+			"auto_tune_options": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"desired_state": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"maintenance_schedule": {
+							Type:     schema.TypeSet,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"start_at": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									"duration": {
+										Type:     schema.TypeList,
+										Computed: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"value": {
+													Type:     schema.TypeInt,
+													Computed: true,
+												},
+												"unit": {
+													Type:     schema.TypeString,
+													Computed: true,
+												},
+											},
+										},
+									},
+									"cron_expression_for_recurrence": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+								},
+							},
+						},
+						"rollback_on_disable": {
+							Type:     schema.TypeString,
 							Computed: true,
 						},
 					},
@@ -281,20 +329,35 @@ func dataSourceDomainRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ElasticsearchConn
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	req := &elasticsearchservice.DescribeElasticsearchDomainInput{
+	reqDescribeDomain := &elasticsearchservice.DescribeElasticsearchDomainInput{
 		DomainName: aws.String(d.Get("domain_name").(string)),
 	}
 
-	resp, err := conn.DescribeElasticsearchDomain(req)
+	respDescribeDomain, err := conn.DescribeElasticsearchDomain(reqDescribeDomain)
 	if err != nil {
 		return fmt.Errorf("error querying elasticsearch_domain: %w", err)
 	}
 
-	if resp.DomainStatus == nil {
+	if respDescribeDomain.DomainStatus == nil {
 		return fmt.Errorf("your query returned no results")
 	}
 
-	ds := resp.DomainStatus
+	ds := respDescribeDomain.DomainStatus
+
+	reqDescribeDomainConfig := &elasticsearchservice.DescribeElasticsearchDomainConfigInput{
+		DomainName: aws.String(d.Get("domain_name").(string)),
+	}
+
+	respDescribeDomainConfig, err := conn.DescribeElasticsearchDomainConfig(reqDescribeDomainConfig)
+	if err != nil {
+		return fmt.Errorf("error querying config for elasticsearch_domain: %w", err)
+	}
+
+	if respDescribeDomainConfig.DomainConfig == nil {
+		return fmt.Errorf("your query returned no results")
+	}
+
+	dc := respDescribeDomainConfig.DomainConfig
 
 	d.SetId(aws.StringValue(ds.ARN))
 
@@ -306,7 +369,7 @@ func dataSourceDomainRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("access_policies", policies)
 	}
 
-	if err := d.Set("advanced_options", verify.PointersMapToStringList(ds.AdvancedOptions)); err != nil {
+	if err := d.Set("advanced_options", flex.PointersMapToStringList(ds.AdvancedOptions)); err != nil {
 		return fmt.Errorf("error setting advanced_options: %w", err)
 	}
 
@@ -319,6 +382,12 @@ func dataSourceDomainRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error setting advanced_security_options: %w", err)
 	}
 
+	if dc.AutoTuneOptions != nil {
+		if err := d.Set("auto_tune_options", []interface{}{flattenAutoTuneOptions(dc.AutoTuneOptions.Options)}); err != nil {
+			return fmt.Errorf("error setting auto_tune_options: %w", err)
+		}
+	}
+
 	if err := d.Set("ebs_options", flattenEBSOptions(ds.EBSOptions)); err != nil {
 		return fmt.Errorf("error setting ebs_options: %w", err)
 	}
@@ -327,11 +396,11 @@ func dataSourceDomainRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error setting encryption_at_rest: %w", err)
 	}
 
-	if err := d.Set("node_to_node_encryption", flattenESNodeToNodeEncryptionOptions(ds.NodeToNodeEncryptionOptions)); err != nil {
+	if err := d.Set("node_to_node_encryption", flattenNodeToNodeEncryptionOptions(ds.NodeToNodeEncryptionOptions)); err != nil {
 		return fmt.Errorf("error setting node_to_node_encryption: %w", err)
 	}
 
-	if err := d.Set("cluster_config", flattenESClusterConfig(ds.ElasticsearchClusterConfig)); err != nil {
+	if err := d.Set("cluster_config", flattenClusterConfig(ds.ElasticsearchClusterConfig)); err != nil {
 		return fmt.Errorf("error setting cluster_config: %w", err)
 	}
 
@@ -344,7 +413,7 @@ func dataSourceDomainRead(d *schema.ResourceData, meta interface{}) error {
 			return fmt.Errorf("error setting vpc_options: %w", err)
 		}
 
-		endpoints := verify.PointersMapToStringList(ds.Endpoints)
+		endpoints := flex.PointersMapToStringList(ds.Endpoints)
 		if err := d.Set("endpoint", endpoints["vpc"]); err != nil {
 			return fmt.Errorf("error setting endpoint: %w", err)
 		}

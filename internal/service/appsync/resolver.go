@@ -177,7 +177,7 @@ func resourceResolverRead(d *schema.ResourceData, meta interface{}) error {
 
 	resp, err := conn.GetResolver(input)
 
-	if tfawserr.ErrMessageContains(err, appsync.ErrCodeNotFoundException, "") {
+	if tfawserr.ErrCodeEquals(err, appsync.ErrCodeNotFoundException) && !d.IsNewResource() {
 		log.Printf("[WARN] AppSync Resolver (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil

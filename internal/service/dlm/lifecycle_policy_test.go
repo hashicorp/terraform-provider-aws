@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -96,6 +97,67 @@ func TestAccDLMLifecyclePolicy_full(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "policy_details.0.schedule.0.tags_to_add.tf-acc-test-added", "full-updated"),
 					resource.TestCheckResourceAttr(resourceName, "policy_details.0.schedule.0.copy_tags", "true"),
 					resource.TestCheckResourceAttr(resourceName, "policy_details.0.target_tags.tf-acc-test", "full-updated"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccDLMLifecyclePolicy_crossRegionCopyRule(t *testing.T) {
+	var providers []*schema.Provider
+
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_dlm_lifecycle_policy.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(t)
+			acctest.PreCheckMultipleRegion(t, 2)
+			testAccPreCheck(t)
+		},
+		ErrorCheck:        acctest.ErrorCheck(t, dlm.EndpointsID),
+		ProviderFactories: acctest.FactoriesAlternate(&providers),
+		CheckDestroy:      dlmLifecyclePolicyDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: dlmLifecyclePolicyConfigCrossRegionCopyRule(rName),
+				Check: resource.ComposeTestCheckFunc(
+					checkDlmLifecyclePolicyExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "policy_details.0.schedule.0.cross_region_copy_rule.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "policy_details.0.schedule.0.cross_region_copy_rule.0.encrypted", "false"),
+					resource.TestCheckResourceAttr(resourceName, "policy_details.0.schedule.0.cross_region_copy_rule.0.retain_rule.0.interval", "15"),
+					resource.TestCheckResourceAttr(resourceName, "policy_details.0.schedule.0.cross_region_copy_rule.0.retain_rule.0.interval_unit", "MONTHS"),
+					resource.TestCheckResourceAttr(resourceName, "policy_details.0.schedule.0.cross_region_copy_rule.0.target", acctest.AlternateRegion()),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: dlmLifecyclePolicyConfigUpdateCrossRegionCopyRule(rName),
+				Check: resource.ComposeTestCheckFunc(
+					checkDlmLifecyclePolicyExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "policy_details.0.schedule.0.cross_region_copy_rule.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "policy_details.0.schedule.0.cross_region_copy_rule.0.cmk_arn", "aws_kms_key.test", "arn"),
+					resource.TestCheckResourceAttr(resourceName, "policy_details.0.schedule.0.cross_region_copy_rule.0.copy_tags", "true"),
+					resource.TestCheckResourceAttr(resourceName, "policy_details.0.schedule.0.cross_region_copy_rule.0.encrypted", "true"),
+					resource.TestCheckResourceAttr(resourceName, "policy_details.0.schedule.0.cross_region_copy_rule.0.retain_rule.0.interval", "30"),
+					resource.TestCheckResourceAttr(resourceName, "policy_details.0.schedule.0.cross_region_copy_rule.0.retain_rule.0.interval_unit", "DAYS"),
+					resource.TestCheckResourceAttr(resourceName, "policy_details.0.schedule.0.cross_region_copy_rule.0.target", acctest.AlternateRegion()),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: dlmLifecyclePolicyConfigNoCrossRegionCopyRule(rName),
+				Check: resource.ComposeTestCheckFunc(
+					checkDlmLifecyclePolicyExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "policy_details.0.schedule.0.cross_region_copy_rule.#", "0"),
 				),
 			},
 		},
@@ -378,6 +440,170 @@ resource "aws_dlm_lifecycle_policy" "full" {
   }
 }
 `, rName)
+}
+
+func dlmLifecyclePolicyConfigCrossRegionCopyRuleBase(rName string) string {
+	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+
+resource "aws_iam_role" "test" {
+  name = %[1]q
+
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": "sts:AssumeRole",
+      "Principal": {
+        "Service": "dlm.${data.aws_partition.current.dns_suffix}"
+      },
+      "Effect": "Allow",
+      "Sid": ""
+    }
+  ]
+}
+EOF
+}
+`, rName)
+}
+
+func dlmLifecyclePolicyConfigCrossRegionCopyRule(rName string) string {
+	return acctest.ConfigCompose(
+		dlmLifecyclePolicyConfigCrossRegionCopyRuleBase(rName),
+		fmt.Sprintf(`
+resource "aws_dlm_lifecycle_policy" "test" {
+  description        = %[1]q
+  execution_role_arn = aws_iam_role.test.arn
+
+  policy_details {
+    resource_types = ["VOLUME"]
+
+    schedule {
+      name = %[1]q
+
+      create_rule {
+        interval = 12
+      }
+
+      retain_rule {
+        count = 10
+      }
+
+      cross_region_copy_rule {
+        target    = %[2]q
+        encrypted = false
+        retain_rule {
+          interval      = 15
+          interval_unit = "MONTHS"
+        }
+      }
+    }
+
+    target_tags = {
+      Name = %[1]q
+    }
+  }
+}
+`, rName, acctest.AlternateRegion()))
+}
+
+func dlmLifecyclePolicyConfigUpdateCrossRegionCopyRule(rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigMultipleRegionProvider(2),
+		dlmLifecyclePolicyConfigCrossRegionCopyRuleBase(rName),
+		fmt.Sprintf(`
+resource "aws_kms_key" "test" {
+  provider    = "awsalternate"
+  description = %[1]q
+
+  policy = <<POLICY
+{
+  "Version": "2012-10-17",
+  "Id": %[1]q,
+  "Statement": [
+    {
+      "Sid": "Enable IAM User Permissions",
+      "Effect": "Allow",
+      "Principal": {
+        "AWS": "*"
+      },
+      "Action": "kms:*",
+      "Resource": "*"
+    }
+  ]
+}
+POLICY
+}
+
+resource "aws_dlm_lifecycle_policy" "test" {
+  description        = %[1]q
+  execution_role_arn = aws_iam_role.test.arn
+
+  policy_details {
+    resource_types = ["VOLUME"]
+
+    schedule {
+      name = %[1]q
+
+      create_rule {
+        interval = 12
+      }
+
+      retain_rule {
+        count = 10
+      }
+
+      cross_region_copy_rule {
+        target    = %[2]q
+        encrypted = true
+        cmk_arn   = aws_kms_key.test.arn
+        copy_tags = true
+        retain_rule {
+          interval      = 30
+          interval_unit = "DAYS"
+        }
+      }
+    }
+
+    target_tags = {
+      Name = %[1]q
+    }
+  }
+}
+`, rName, acctest.AlternateRegion()))
+}
+
+func dlmLifecyclePolicyConfigNoCrossRegionCopyRule(rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigMultipleRegionProvider(2),
+		dlmLifecyclePolicyConfigCrossRegionCopyRuleBase(rName),
+		fmt.Sprintf(`
+resource "aws_dlm_lifecycle_policy" "test" {
+  description        = %[1]q
+  execution_role_arn = aws_iam_role.test.arn
+
+  policy_details {
+    resource_types = ["VOLUME"]
+
+    schedule {
+      name = %[1]q
+
+      create_rule {
+        interval = 12
+      }
+
+      retain_rule {
+        count = 10
+      }
+    }
+
+    target_tags = {
+      Name = %[1]q
+    }
+  }
+}
+`, rName))
 }
 
 func dlmLifecyclePolicyConfigTags1(rName, tagKey1, tagValue1 string) string {

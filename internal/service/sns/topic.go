@@ -11,6 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/sns"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	awspolicy "github.com/hashicorp/awspolicyequivalence"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
@@ -287,7 +288,14 @@ func resourceTopicCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("policy") {
 		_, v := d.GetChange("policy")
-		if err := updateTopicAttribute(d.Id(), "Policy", v, conn); err != nil {
+
+		policy, err := structure.NormalizeJsonString(v.(string))
+
+		if err != nil {
+			return fmt.Errorf("policy (%s) is invalid JSON: %w", v.(string), err)
+		}
+
+		if err := updateTopicAttribute(d.Id(), "Policy", policy, conn); err != nil {
 			return err
 		}
 	}
@@ -419,12 +427,23 @@ func resourceTopicUpdate(d *schema.ResourceData, meta interface{}) error {
 			return err
 		}
 	}
+
 	if d.HasChange("policy") {
-		_, v := d.GetChange("policy")
-		if err := updateTopicAttribute(d.Id(), "Policy", v, conn); err != nil {
-			return err
+		o, n := d.GetChange("policy")
+
+		if equivalent, err := awspolicy.PoliciesAreEquivalent(o.(string), n.(string)); err != nil || !equivalent {
+			policy, err := structure.NormalizeJsonString(n.(string))
+
+			if err != nil {
+				return fmt.Errorf("policy contains an invalid JSON: %s", err)
+			}
+
+			if err := updateTopicAttribute(d.Id(), "Policy", policy, conn); err != nil {
+				return err
+			}
 		}
 	}
+
 	if d.HasChange("sqs_failure_feedback_role_arn") {
 		_, v := d.GetChange("sqs_failure_feedback_role_arn")
 		if err := updateTopicAttribute(d.Id(), "SQSFailureFeedbackRoleArn", v, conn); err != nil {
@@ -525,12 +544,19 @@ func resourceTopicRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("kms_master_key_id", attributeOutput.Attributes["KmsMasterKeyId"])
 		d.Set("lambda_failure_feedback_role_arn", attributeOutput.Attributes["LambdaFailureFeedbackRoleArn"])
 		d.Set("lambda_success_feedback_role_arn", attributeOutput.Attributes["LambdaSuccessFeedbackRoleArn"])
-		d.Set("policy", attributeOutput.Attributes["Policy"])
 		d.Set("sqs_failure_feedback_role_arn", attributeOutput.Attributes["SQSFailureFeedbackRoleArn"])
 		d.Set("sqs_success_feedback_role_arn", attributeOutput.Attributes["SQSSuccessFeedbackRoleArn"])
 		d.Set("firehose_success_feedback_role_arn", attributeOutput.Attributes["FirehoseSuccessFeedbackRoleArn"])
 		d.Set("firehose_failure_feedback_role_arn", attributeOutput.Attributes["FirehoseFailureFeedbackRoleArn"])
 		d.Set("owner", attributeOutput.Attributes["Owner"])
+
+		policyToSet, policyErr := verify.PolicyToSet(d.Get("policy").(string), aws.StringValue(attributeOutput.Attributes["Policy"]))
+
+		if policyErr != nil {
+			return err
+		}
+
+		d.Set("policy", policyToSet)
 
 		// set the boolean values
 		if v, ok := attributeOutput.Attributes["FifoTopic"]; ok && aws.StringValue(v) == "true" {

@@ -71,8 +71,15 @@ var (
 		},
 
 		"kms_master_key_id": {
-			Type:     schema.TypeString,
-			Optional: true,
+			Type:          schema.TypeString,
+			Optional:      true,
+			ConflictsWith: []string{"sqs_managed_sse_enabled"},
+		},
+
+		"sqs_managed_sse_enabled": {
+			Type:          schema.TypeBool,
+			Optional:      true,
+			ConflictsWith: []string{"kms_master_key_id"},
 		},
 
 		"max_message_size": {
@@ -111,6 +118,10 @@ var (
 			Computed:         true,
 			ValidateFunc:     validation.StringIsJSON,
 			DiffSuppressFunc: verify.SuppressEquivalentPolicyDiffs,
+			StateFunc: func(v interface{}) string {
+				json, _ := structure.NormalizeJsonString(v)
+				return json
+			},
 		},
 
 		"receive_wait_time_seconds": {
@@ -158,6 +169,7 @@ var (
 		"content_based_deduplication":       sqs.QueueAttributeNameContentBasedDeduplication,
 		"kms_master_key_id":                 sqs.QueueAttributeNameKmsMasterKeyId,
 		"kms_data_key_reuse_period_seconds": sqs.QueueAttributeNameKmsDataKeyReusePeriodSeconds,
+		"sqs_managed_sse_enabled":           sqs.QueueAttributeNameSqsManagedSseEnabled,
 		"deduplication_scope":               sqs.QueueAttributeNameDeduplicationScope,
 		"fifo_throughput_limit":             sqs.QueueAttributeNameFifoThroughputLimit,
 	}, sqsQueueSchema)
@@ -207,6 +219,14 @@ func resourceQueueCreate(d *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		return err
 	}
+
+	policy, err := structure.NormalizeJsonString(attributes[sqs.QueueAttributeNamePolicy])
+
+	if err != nil {
+		return fmt.Errorf("policy (%s) is invalid JSON: %w", attributes[sqs.QueueAttributeNamePolicy], err)
+	}
+
+	attributes[sqs.QueueAttributeNamePolicy] = policy
 
 	input.Attributes = aws.StringMap(attributes)
 
@@ -264,7 +284,9 @@ func resourceQueueRead(d *schema.ResourceData, meta interface{}) error {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	output, err := FindQueueAttributesByURL(conn, d.Id())
+	outputRaw, err := tfresource.RetryWhenNotFound(queueReadTimeout, func() (interface{}, error) {
+		return FindQueueAttributesByURL(conn, d.Id())
+	})
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] SQS Queue (%s) not found, removing from state", d.Id())
@@ -281,6 +303,8 @@ func resourceQueueRead(d *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		return err
 	}
+
+	output := outputRaw.(map[string]string)
 
 	err = sqsQueueAttributeMap.ApiAttributesToResourceData(output, d)
 
@@ -301,15 +325,45 @@ func resourceQueueRead(d *schema.ResourceData, meta interface{}) error {
 	}
 	d.Set("url", d.Id())
 
-	tags, err := ListTags(conn, d.Id())
+	policyToSet, err := verify.PolicyToSet(d.Get("policy").(string), output[sqs.QueueAttributeNamePolicy])
+
+	if err != nil {
+		return err
+	}
+
+	d.Set("policy", policyToSet)
+
+	var tags tftags.KeyValueTags
+
+	err = resource.Retry(queueTagsTimeout, func() *resource.RetryError {
+		var err error
+
+		tags, err = ListTags(conn, d.Id())
+
+		if tfawserr.ErrCodeEquals(err, sqs.ErrCodeQueueDoesNotExist) {
+			return resource.RetryableError(err)
+		}
+
+		if err != nil {
+			return resource.NonRetryableError(err)
+		}
+
+		return nil
+	})
+
+	if tfresource.TimedOut(err) {
+		tags, err = ListTags(conn, d.Id())
+	}
 
 	if err != nil {
 		// Non-standard partitions (e.g. US Gov) and some local development
 		// solutions do not yet support this API call. Depending on the
 		// implementation it may return InvalidAction or AWS.SimpleQueueService.UnsupportedOperation
-		if !tfawserr.ErrCodeEquals(err, ErrCodeInvalidAction) && !tfawserr.ErrCodeEquals(err, sqs.ErrCodeUnsupportedOperation) {
-			return fmt.Errorf("error listing tags for SQS Queue (%s): %w", d.Id(), err)
+		if tfawserr.ErrCodeEquals(err, ErrCodeInvalidAction) || tfawserr.ErrCodeEquals(err, sqs.ErrCodeUnsupportedOperation) {
+			return nil
 		}
+
+		return fmt.Errorf("error listing tags for SQS Queue (%s): %w", d.Id(), err)
 	}
 
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)

@@ -77,7 +77,7 @@ func resourceDeploymentRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).APIGatewayV2Conn
 
 	outputRaw, _, err := StatusDeployment(conn, d.Get("api_id").(string), d.Id())()
-	if tfawserr.ErrMessageContains(err, apigatewayv2.ErrCodeNotFoundException, "") {
+	if tfawserr.ErrCodeEquals(err, apigatewayv2.ErrCodeNotFoundException) && !d.IsNewResource() {
 		log.Printf("[WARN] API Gateway v2 deployment (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil

@@ -196,6 +196,10 @@ func SkipSweepError(err error) bool {
 	if tfawserr.ErrMessageContains(err, "UnsupportedCommandException", "command is only supported in") {
 		return true
 	}
+	// For example from us-west-1 EMR studio
+	if tfawserr.ErrMessageContains(err, "ValidationException", "Account is not whitelisted to use this feature") {
+		return true
+	}
 	return false
 }
 
