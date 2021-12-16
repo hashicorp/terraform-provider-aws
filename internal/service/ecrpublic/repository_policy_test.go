@@ -4,14 +4,14 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ecrpublic"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfecrpublic "github.com/hashicorp/terraform-provider-aws/internal/service/ecrpublic"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func TestAccAWSEcrPublicRepositoryPolicy_basic(t *testing.T) {
@@ -114,17 +114,17 @@ func testAccCheckAwsEcrPublicRepositoryPolicyDestroy(s *terraform.State) error {
 			continue
 		}
 
-		_, err := conn.GetRepositoryPolicy(&ecrpublic.GetRepositoryPolicyInput{
-			RegistryId:     aws.String(rs.Primary.Attributes["registry_id"]),
-			RepositoryName: aws.String(rs.Primary.Attributes["repository_name"]),
-		})
+		_, err := tfecrpublic.FindRepositoryPolicyByName(conn, rs.Primary.ID)
+
+		if tfresource.NotFound(err) {
+			continue
+		}
+
 		if err != nil {
-			if tfawserr.ErrMessageContains(err, ecrpublic.ErrCodeRepositoryNotFoundException, "") ||
-				tfawserr.ErrMessageContains(err, ecrpublic.ErrCodeRepositoryPolicyNotFoundException, "") {
-				return nil
-			}
 			return err
 		}
+
+		return fmt.Errorf("ECR Public Repository Policy %s still exists", rs.Primary.ID)
 	}
 
 	return nil
@@ -132,16 +132,28 @@ func testAccCheckAwsEcrPublicRepositoryPolicyDestroy(s *terraform.State) error {
 
 func testAccCheckAWSEcrPublicRepositoryPolicyExists(name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		_, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[name]
 		if !ok {
 			return fmt.Errorf("Not found: %s", name)
+		}
+
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("No ECR Public Repository Policy ID is set")
+		}
+
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ECRPublicConn
+
+		_, err := tfecrpublic.FindRepositoryPolicyByName(conn, rs.Primary.ID)
+
+		if err != nil {
+			return err
 		}
 
 		return nil
 	}
 }
 
-func testAccAWSEcrPublicRepositoryPolicy(randString string) string {
+func testAccAWSEcrPublicRepositoryPolicy(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ecrpublic_repository" "test" {
   repository_name = %[1]q
@@ -166,10 +178,10 @@ resource "aws_ecrpublic_repository_policy" "test" {
 }
 EOF
 }
-`, randString)
+`, rName)
 }
 
-func testAccAWSEcrPublicRepositoryPolicyUpdated(randString string) string {
+func testAccAWSEcrPublicRepositoryPolicyUpdated(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ecrpublic_repository" "test" {
   repository_name = %[1]q
@@ -195,14 +207,14 @@ resource "aws_ecrpublic_repository_policy" "test" {
 }
 EOF
 }
-`, randString)
+`, rName)
 }
 
 // testAccAwsEcrPublicRepositoryPolicyWithIAMRole creates a new IAM Role and tries
 // to use it's ARN in an ECR Repository Policy. IAM changes need some time to
 // be propagated to other services - like ECR. So the following code should
 // exercise our retry logic, since we try to use the new resource instantly.
-func testAccAWSEcrPublicRepositoryPolicyWithIAMRole(randString string) string {
+func testAccAWSEcrPublicRepositoryPolicyWithIAMRole(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ecrpublic_repository" "test" {
   repository_name = %[1]q
@@ -248,10 +260,10 @@ resource "aws_ecrpublic_repository_policy" "test" {
 }
 EOF
 }
-`, randString, randString)
+`, rName)
 }
 
-func testAccAWSEcrPublicRepositoryPolicyWithIAMRoleUpdated(randString string) string {
+func testAccAWSEcrPublicRepositoryPolicyWithIAMRoleUpdated(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ecrpublic_repository" "test" {
   repository_name = %[1]q
@@ -298,5 +310,5 @@ resource "aws_ecrpublic_repository_policy" "test" {
 }
 EOF
 }
-`, randString, randString)
+`, rName)
 }
