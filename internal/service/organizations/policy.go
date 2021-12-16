@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -37,8 +38,12 @@ func ResourcePolicy() *schema.Resource {
 			"content": {
 				Type:             schema.TypeString,
 				Required:         true,
-				DiffSuppressFunc: verify.SuppressEquivalentPolicyDiffs,
 				ValidateFunc:     validation.StringIsJSON,
+				DiffSuppressFunc: verify.SuppressEquivalentPolicyDiffs,
+				StateFunc: func(v interface{}) string {
+					json, _ := structure.NormalizeJsonString(v)
+					return json
+				},
 			},
 			"description": {
 				Type:     schema.TypeString,
@@ -70,8 +75,14 @@ func resourcePolicyCreate(ctx context.Context, d *schema.ResourceData, meta inte
 
 	name := d.Get("name").(string)
 
+	policy, err := structure.NormalizeJsonString(d.Get("content").(string))
+
+	if err != nil {
+		return diag.Errorf("policy content (%s) is invalid JSON: %s", d.Get("content").(string), err)
+	}
+
 	input := &organizations.CreatePolicyInput{
-		Content:     aws.String(d.Get("content").(string)),
+		Content:     aws.String(policy),
 		Description: aws.String(d.Get("description").(string)),
 		Name:        aws.String(name),
 		Type:        aws.String(d.Get("type").(string)),
@@ -80,7 +91,6 @@ func resourcePolicyCreate(ctx context.Context, d *schema.ResourceData, meta inte
 
 	log.Printf("[DEBUG] Creating Organizations Policy (%s): %v", name, input)
 
-	var err error
 	var resp *organizations.CreatePolicyOutput
 	err = resource.Retry(4*time.Minute, func() *resource.RetryError {
 		resp, err = conn.CreatePolicy(input)
@@ -136,10 +146,17 @@ func resourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 
 	d.Set("arn", resp.Policy.PolicySummary.Arn)
-	d.Set("content", resp.Policy.Content)
 	d.Set("description", resp.Policy.PolicySummary.Description)
 	d.Set("name", resp.Policy.PolicySummary.Name)
 	d.Set("type", resp.Policy.PolicySummary.Type)
+
+	policyToSet, err := verify.PolicyToSet(d.Get("content").(string), aws.StringValue(resp.Policy.Content))
+
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	d.Set("content", policyToSet)
 
 	if aws.BoolValue(resp.Policy.PolicySummary.AwsManaged) {
 		return diag.Diagnostics{
@@ -178,7 +195,13 @@ func resourcePolicyUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	if d.HasChange("content") {
-		input.Content = aws.String(d.Get("content").(string))
+		policy, err := structure.NormalizeJsonString(d.Get("content").(string))
+
+		if err != nil {
+			return diag.Errorf("policy content (%s) is invalid JSON: %s", d.Get("content").(string), err)
+		}
+
+		input.Content = aws.String(policy)
 	}
 
 	if d.HasChange("description") {
