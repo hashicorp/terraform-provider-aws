@@ -237,3 +237,13 @@ func flattenQuickConnectConfig(quickConnectConfig *connect.QuickConnectConfig) [
 
 	return []interface{}{values}
 }
+
+func QuickConnectParseID(id string) (string, string, error) {
+	parts := strings.SplitN(id, ":", 2)
+
+	if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
+		return "", "", fmt.Errorf("unexpected format of ID (%s), expected instanceID:quickConnectID", id)
+	}
+
+	return parts[0], parts[1], nil
+}
