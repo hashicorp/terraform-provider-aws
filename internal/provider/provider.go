@@ -1134,7 +1134,8 @@ func Provider() *schema.Provider {
 			"aws_ecr_repository":                      ecr.ResourceRepository(),
 			"aws_ecr_repository_policy":               ecr.ResourceRepositoryPolicy(),
 
-			"aws_ecrpublic_repository": ecrpublic.ResourceRepository(),
+			"aws_ecrpublic_repository":        ecrpublic.ResourceRepository(),
+			"aws_ecrpublic_repository_policy": ecrpublic.ResourceRepositoryPolicy(),
 
 			"aws_ecs_account_setting_default": ecs.ResourceAccountSettingDefault(),
 			"aws_ecs_capacity_provider":       ecs.ResourceCapacityProvider(),
