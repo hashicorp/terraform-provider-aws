@@ -14,7 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func TestAccAWSEcrPublicRepositoryPolicy_basic(t *testing.T) {
+func TestAccECRPublicRepositoryPolicy_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_ecrpublic_repository_policy.test"
 
@@ -22,12 +22,12 @@ func TestAccAWSEcrPublicRepositoryPolicy_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ecrpublic.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAwsEcrPublicRepositoryPolicyDestroy,
+		CheckDestroy: testAccCheckRepositoryPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEcrPublicRepositoryPolicy(rName),
+				Config: testAccRepositoryPolicy(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEcrPublicRepositoryPolicyExists(resourceName),
+					testAccCheckRepositoryPolicyExists(resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "policy"),
 				),
 			},
@@ -40,7 +40,7 @@ func TestAccAWSEcrPublicRepositoryPolicy_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSEcrPublicRepositoryPolicy_policy(t *testing.T) {
+func TestAccECRPublicRepositoryPolicy_policy(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_ecrpublic_repository_policy.test"
 
@@ -48,12 +48,12 @@ func TestAccAWSEcrPublicRepositoryPolicy_policy(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ecrpublic.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAwsEcrPublicRepositoryPolicyDestroy,
+		CheckDestroy: testAccCheckRepositoryPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEcrPublicRepositoryPolicy(rName),
+				Config: testAccRepositoryPolicy(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEcrPublicRepositoryPolicyExists(resourceName),
+					testAccCheckRepositoryPolicyExists(resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "policy"),
 				),
 			},
@@ -63,9 +63,9 @@ func TestAccAWSEcrPublicRepositoryPolicy_policy(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSEcrPublicRepositoryPolicyUpdated(rName),
+				Config: testAccRepositoryPolicyUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEcrPublicRepositoryPolicyExists(resourceName),
+					testAccCheckRepositoryPolicyExists(resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "policy"),
 				),
 			},
@@ -73,7 +73,7 @@ func TestAccAWSEcrPublicRepositoryPolicy_policy(t *testing.T) {
 	})
 }
 
-func TestAccAWSEcrPublicRepositoryPolicy_iam(t *testing.T) {
+func TestAccECRPublicRepositoryPolicy_iam(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_ecrpublic_repository_policy.test"
 
@@ -81,12 +81,12 @@ func TestAccAWSEcrPublicRepositoryPolicy_iam(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ecrpublic.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAwsEcrPublicRepositoryPolicyDestroy,
+		CheckDestroy: testAccCheckRepositoryPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEcrPublicRepositoryPolicyWithIAMRole(rName),
+				Config: testAccRepositoryPolicyWithIAMRole(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEcrPublicRepositoryPolicyExists(resourceName),
+					testAccCheckRepositoryPolicyExists(resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "policy"),
 				),
 			},
@@ -96,9 +96,9 @@ func TestAccAWSEcrPublicRepositoryPolicy_iam(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSEcrPublicRepositoryPolicyWithIAMRoleUpdated(rName),
+				Config: testAccRepositoryPolicyWithIAMRoleUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEcrPublicRepositoryPolicyExists(resourceName),
+					testAccCheckRepositoryPolicyExists(resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "policy"),
 				),
 			},
@@ -106,7 +106,7 @@ func TestAccAWSEcrPublicRepositoryPolicy_iam(t *testing.T) {
 	})
 }
 
-func testAccCheckAwsEcrPublicRepositoryPolicyDestroy(s *terraform.State) error {
+func testAccCheckRepositoryPolicyDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).ECRPublicConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -130,7 +130,7 @@ func testAccCheckAwsEcrPublicRepositoryPolicyDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckAWSEcrPublicRepositoryPolicyExists(name string) resource.TestCheckFunc {
+func testAccCheckRepositoryPolicyExists(name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -153,7 +153,7 @@ func testAccCheckAWSEcrPublicRepositoryPolicyExists(name string) resource.TestCh
 	}
 }
 
-func testAccAWSEcrPublicRepositoryPolicy(rName string) string {
+func testAccRepositoryPolicy(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ecrpublic_repository" "test" {
   repository_name = %[1]q
@@ -181,7 +181,7 @@ EOF
 `, rName)
 }
 
-func testAccAWSEcrPublicRepositoryPolicyUpdated(rName string) string {
+func testAccRepositoryPolicyUpdated(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ecrpublic_repository" "test" {
   repository_name = %[1]q
@@ -214,7 +214,7 @@ EOF
 // to use it's ARN in an ECR Repository Policy. IAM changes need some time to
 // be propagated to other services - like ECR. So the following code should
 // exercise our retry logic, since we try to use the new resource instantly.
-func testAccAWSEcrPublicRepositoryPolicyWithIAMRole(rName string) string {
+func testAccRepositoryPolicyWithIAMRole(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ecrpublic_repository" "test" {
   repository_name = %[1]q
@@ -263,7 +263,7 @@ EOF
 `, rName)
 }
 
-func testAccAWSEcrPublicRepositoryPolicyWithIAMRoleUpdated(rName string) string {
+func testAccRepositoryPolicyWithIAMRoleUpdated(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ecrpublic_repository" "test" {
   repository_name = %[1]q
