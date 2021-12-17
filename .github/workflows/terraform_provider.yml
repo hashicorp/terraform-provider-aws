@@ -222,7 +222,7 @@ jobs:
     - name: Get changed packages
       run: |
         touch /tmp/dirs_changed_all
-        for file in ${{ steps.changed-files.outputs.all_modified_files }}; do
+        for file in ${{ steps.changed-files.outputs.all_changed_files }}; do
           if [[ "${file}" == internal/* ]]; then
             echo $( dirname "${file}" | xargs ) >> /tmp/dirs_changed_all
           fi
