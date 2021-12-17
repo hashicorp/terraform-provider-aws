@@ -20,7 +20,7 @@ origin access identities, see
 The following example below creates a CloudFront origin access identity.
 
 ```terraform
-resource "aws_cloudfront_origin_access_identity" "origin_access_identity" {
+resource "aws_cloudfront_origin_access_identity" "example" {
   comment = "Some comment"
 }
 ```
@@ -82,7 +82,7 @@ data "aws_iam_policy_document" "s3_policy" {
 
     principals {
       type        = "AWS"
-      identifiers = [aws_cloudfront_origin_access_identity.origin_access_identity.iam_arn]
+      identifiers = [aws_cloudfront_origin_access_identity.example.iam_arn]
     }
   }
 }
@@ -101,7 +101,7 @@ resource "aws_s3_bucket_policy" "example" {
 
 ## Import
 
-Cloudfront Origin Access Identities can be imported using the `id`, e.g.
+Cloudfront Origin Access Identities can be imported using the `id`, e.g.,
 
 ```
 $ terraform import aws_cloudfront_origin_access_identity.origin_access E74FTE3AEXAMPLE
