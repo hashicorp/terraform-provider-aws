@@ -228,7 +228,7 @@ func waitVolumeCreated(conn *fsx.FSx, id string, timeout time.Duration) (*fsx.Vo
 func waitVolumeUpdated(conn *fsx.FSx, id string, timeout time.Duration) (*fsx.Volume, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{fsx.VolumeLifecyclePending},
-		Target:  []string{fsx.VolumeLifecycleCreated, fsx.VolumeLifecycleMisconfigured},
+		Target:  []string{fsx.VolumeLifecycleCreated, fsx.VolumeLifecycleMisconfigured, fsx.VolumeLifecycleAvailable},
 		Refresh: statusVolume(conn, id),
 		Timeout: timeout,
 		Delay:   150 * time.Second,
