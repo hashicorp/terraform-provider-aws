@@ -156,6 +156,12 @@ func valueFromBool(in interface{}) (Value, error) {
 func valueFromNumber(in interface{}) (Value, error) {
 	switch value := in.(type) {
 	case *big.Float:
+		if value == nil {
+			return Value{
+				typ:   Number,
+				value: nil,
+			}, nil
+		}
 		return Value{
 			typ:   Number,
 			value: value,
