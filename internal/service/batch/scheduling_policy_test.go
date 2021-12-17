@@ -41,6 +41,22 @@ func testAccCheckBatchSchedulingPolicyExists(n string, sp *batch.SchedulingPolic
 	}
 }
 
+func testAccCheckBatchSchedulingPolicyDestroy(s *terraform.State) error {
+	for _, rs := range s.RootModule().Resources {
+		if rs.Type != "aws_batch_scheduling_policy" {
+			continue
+		}
+		conn := acctest.Provider.Meta().(*conns.AWSClient).BatchConn
+		sp, err := GetSchedulingPolicyNoContext(conn, rs.Primary.ID)
+		if err == nil {
+			if sp != nil {
+				return fmt.Errorf("Error: Scheduling Policy still exists")
+			}
+		}
+		return nil
+	}
+	return nil
+}
 
 func GetSchedulingPolicyNoContext(conn *batch.Batch, arn string) (*batch.SchedulingPolicyDetail, error) {
 	resp, err := conn.DescribeSchedulingPolicies(&batch.DescribeSchedulingPoliciesInput{
