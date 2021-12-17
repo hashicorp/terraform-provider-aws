@@ -250,7 +250,7 @@ func expandFairsharePolicy(fairsharePolicy []interface{}) *batch.FairsharePolicy
 
 		schedulingPolicyConfig := &batch.ShareAttributes{
 			ShareIdentifier: aws.String(data["share_identifier"].(string)),
-			WeightFactor:    aws.Float64(float64(data["weight_factor"].(float64))),
+			WeightFactor:    aws.Float64(data["weight_factor"].(float64)),
 		}
 		fairsharePolicyShareDistributions = append(fairsharePolicyShareDistributions, schedulingPolicyConfig)
 	}
