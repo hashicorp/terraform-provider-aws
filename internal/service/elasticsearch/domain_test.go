@@ -37,8 +37,6 @@ func TestAccElasticsearchDomain_basic(t *testing.T) {
 				Config: testAccDomainConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(resourceName, &domain),
-					resource.TestCheckResourceAttr(resourceName, "domain_name", resourceId),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "es", fmt.Sprintf("domain/%s", resourceId)),
 					resource.TestCheckResourceAttr(resourceName, "elasticsearch_version", "1.5"),
 					resource.TestMatchResourceAttr(resourceName, "kibana_endpoint", regexp.MustCompile(`.*es\..*/_plugin/kibana/`)),
 					resource.TestCheckResourceAttr(resourceName, "vpc_options.#", "0"),
@@ -327,7 +325,7 @@ func TestAccElasticsearchDomain_duplicate(t *testing.T) {
 						t.Fatal(err)
 					}
 
-					err = tfelasticsearch.WaitForDomainCreation(conn, rName[:28], rName[:28])
+					err = tfelasticsearch.WaitForDomainCreation(conn, rName[:28])
 					if err != nil {
 						t.Fatal(err)
 					}
@@ -1009,9 +1007,9 @@ func TestAccElasticsearchDomain_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccDomainConfigTags1(ri, "key2", "value2"),
+				Config: testAccDomainConfigTags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckESDomainExists(resourceName, &domain),
+					testAccCheckDomainExists(resourceName, &domain),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),

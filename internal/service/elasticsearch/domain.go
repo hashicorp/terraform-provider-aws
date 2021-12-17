@@ -741,8 +741,10 @@ func resourceDomainRead(d *schema.ResourceData, meta interface{}) error {
 
 		d.Set("access_policies", policies)
 	}
-	if err := d.Set("advanced_options", flex.PointersMapToStringList(ds.AdvancedOptions)); err != nil {
-		return fmt.Errorf("error setting advanced_options: %w", err)
+
+	options := advancedOptionsIgnoreDefault(d.Get("advanced_options").(map[string]interface{}), flex.PointersMapToStringList(ds.AdvancedOptions))
+	if err = d.Set("advanced_options", options); err != nil {
+		return fmt.Errorf("setting advanced_options %v: %w", options, err)
 	}
 
 	d.SetId(aws.StringValue(ds.ARN))
@@ -855,111 +857,113 @@ func resourceDomainUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ElasticsearchConn
 
 	if d.HasChangesExcept("tags", "tags_all") {
+		input := elasticsearch.UpdateElasticsearchDomainConfigInput{
+			DomainName: aws.String(d.Get("domain_name").(string)),
+		}
+
+		if d.HasChange("access_policies") {
+			o, n := d.GetChange("access_policies")
+
+			if equivalent, err := awspolicy.PoliciesAreEquivalent(o.(string), n.(string)); err != nil || !equivalent {
+				input.AccessPolicies = aws.String(d.Get("access_policies").(string))
+			}
+		}
+
+		if d.HasChange("advanced_options") {
+			input.AdvancedOptions = flex.ExpandStringMap(d.Get("advanced_options").(map[string]interface{}))
+		}
+
+		if d.HasChange("advanced_security_options") {
+			input.AdvancedSecurityOptions = expandAdvancedSecurityOptions(d.Get("advanced_security_options").([]interface{}))
+		}
+
+		if d.HasChange("auto_tune_options") {
+			input.AutoTuneOptions = expandAutoTuneOptions(d.Get("auto_tune_options").([]interface{})[0].(map[string]interface{}))
+		}
+
+		if d.HasChange("domain_endpoint_options") {
+			input.DomainEndpointOptions = expandDomainEndpointOptions(d.Get("domain_endpoint_options").([]interface{}))
+		}
+
+		if d.HasChanges("ebs_options", "cluster_config") {
+			options := d.Get("ebs_options").([]interface{})
+
+			if len(options) == 1 {
+				s := options[0].(map[string]interface{})
+				input.EBSOptions = expandEBSOptions(s)
+			}
+
+			if d.HasChange("cluster_config") {
+				config := d.Get("cluster_config").([]interface{})
+
+				if len(config) == 1 {
+					m := config[0].(map[string]interface{})
+					input.ElasticsearchClusterConfig = expandClusterConfig(m)
+				}
+			}
+
+		}
+
+		if d.HasChange("snapshot_options") {
+			options := d.Get("snapshot_options").([]interface{})
+
+			if len(options) == 1 {
+				o := options[0].(map[string]interface{})
+
+				snapshotOptions := elasticsearch.SnapshotOptions{
+					AutomatedSnapshotStartHour: aws.Int64(int64(o["automated_snapshot_start_hour"].(int))),
+				}
+
+				input.SnapshotOptions = &snapshotOptions
+			}
+		}
+
+		if d.HasChange("vpc_options") {
+			options := d.Get("vpc_options").([]interface{})
+			s := options[0].(map[string]interface{})
+			input.VPCOptions = expandVPCOptions(s)
+		}
+
+		if d.HasChange("cognito_options") {
+			options := d.Get("cognito_options").([]interface{})
+			input.CognitoOptions = expandCognitoOptions(options)
+		}
+
+		if d.HasChange("log_publishing_options") {
+			input.LogPublishingOptions = expandLogPublishingOptions(d.Get("log_publishing_options").(*schema.Set))
+		}
+
+		_, err := conn.UpdateElasticsearchDomainConfig(&input)
+		if err != nil {
+			return err
+		}
+
+		if err := waitForDomainUpdate(conn, d.Get("domain_name").(string)); err != nil {
+			return fmt.Errorf("error waiting for Elasticsearch Domain Update (%s) to succeed: %w", d.Id(), err)
+		}
+
+		if d.HasChange("elasticsearch_version") {
+			upgradeInput := elasticsearch.UpgradeElasticsearchDomainInput{
+				DomainName:    aws.String(d.Get("domain_name").(string)),
+				TargetVersion: aws.String(d.Get("elasticsearch_version").(string)),
+			}
+
+			_, err := conn.UpgradeElasticsearchDomain(&upgradeInput)
+			if err != nil {
+				return fmt.Errorf("Failed to upgrade elasticsearch domain: %w", err)
+			}
+
+			if _, err := waitUpgradeSucceeded(conn, d.Get("domain_name").(string), d.Timeout(schema.TimeoutUpdate)); err != nil {
+				return fmt.Errorf("error waiting for Elasticsearch Domain Upgrade (%s) to succeed: %w", d.Id(), err)
+			}
+		}
+	}
+
+	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
 		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
 			return fmt.Errorf("error updating Elasticsearch Cluster (%s) tags: %w", d.Id(), err)
-		}
-	}
-
-	input := elasticsearch.UpdateElasticsearchDomainConfigInput{
-		DomainName: aws.String(d.Get("domain_name").(string)),
-	}
-
-	if d.HasChange("access_policies") {
-		o, n := d.GetChange("access_policies")
-
-		if equivalent, err := awspolicy.PoliciesAreEquivalent(o.(string), n.(string)); err != nil || !equivalent {
-			input.AccessPolicies = aws.String(d.Get("access_policies").(string))
-		}
-	}
-
-	if d.HasChange("advanced_options") {
-		input.AdvancedOptions = flex.ExpandStringMap(d.Get("advanced_options").(map[string]interface{}))
-	}
-
-	if d.HasChange("advanced_security_options") {
-		input.AdvancedSecurityOptions = expandAdvancedSecurityOptions(d.Get("advanced_security_options").([]interface{}))
-	}
-
-	if d.HasChange("auto_tune_options") {
-		input.AutoTuneOptions = expandAutoTuneOptions(d.Get("auto_tune_options").([]interface{})[0].(map[string]interface{}))
-	}
-
-	if d.HasChange("domain_endpoint_options") {
-		input.DomainEndpointOptions = expandDomainEndpointOptions(d.Get("domain_endpoint_options").([]interface{}))
-	}
-
-	if d.HasChanges("ebs_options", "cluster_config") {
-		options := d.Get("ebs_options").([]interface{})
-
-		if len(options) == 1 {
-			s := options[0].(map[string]interface{})
-			input.EBSOptions = expandEBSOptions(s)
-		}
-
-		if d.HasChange("cluster_config") {
-			config := d.Get("cluster_config").([]interface{})
-
-			if len(config) == 1 {
-				m := config[0].(map[string]interface{})
-				input.ElasticsearchClusterConfig = expandClusterConfig(m)
-			}
-		}
-
-	}
-
-	if d.HasChange("snapshot_options") {
-		options := d.Get("snapshot_options").([]interface{})
-
-		if len(options) == 1 {
-			o := options[0].(map[string]interface{})
-
-			snapshotOptions := elasticsearch.SnapshotOptions{
-				AutomatedSnapshotStartHour: aws.Int64(int64(o["automated_snapshot_start_hour"].(int))),
-			}
-
-			input.SnapshotOptions = &snapshotOptions
-		}
-	}
-
-	if d.HasChange("vpc_options") {
-		options := d.Get("vpc_options").([]interface{})
-		s := options[0].(map[string]interface{})
-		input.VPCOptions = expandVPCOptions(s)
-	}
-
-	if d.HasChange("cognito_options") {
-		options := d.Get("cognito_options").([]interface{})
-		input.CognitoOptions = expandCognitoOptions(options)
-	}
-
-	if d.HasChange("log_publishing_options") {
-		input.LogPublishingOptions = expandLogPublishingOptions(d.Get("log_publishing_options").(*schema.Set))
-	}
-
-	_, err := conn.UpdateElasticsearchDomainConfig(&input)
-	if err != nil {
-		return err
-	}
-
-	if err := waitForDomainUpdate(conn, d.Get("domain_name").(string)); err != nil {
-		return fmt.Errorf("error waiting for Elasticsearch Domain Update (%s) to succeed: %w", d.Id(), err)
-	}
-
-	if d.HasChange("elasticsearch_version") {
-		upgradeInput := elasticsearch.UpgradeElasticsearchDomainInput{
-			DomainName:    aws.String(d.Get("domain_name").(string)),
-			TargetVersion: aws.String(d.Get("elasticsearch_version").(string)),
-		}
-
-		_, err := conn.UpgradeElasticsearchDomain(&upgradeInput)
-		if err != nil {
-			return fmt.Errorf("Failed to upgrade elasticsearch domain: %w", err)
-		}
-
-		if _, err := waitUpgradeSucceeded(conn, d.Get("domain_name").(string), d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return fmt.Errorf("error waiting for Elasticsearch Domain Upgrade (%s) to succeed: %w", d.Id(), err)
 		}
 	}
 
