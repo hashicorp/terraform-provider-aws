@@ -845,6 +845,7 @@ func Provider() *schema.Provider {
 			"aws_batch_compute_environment": batch.ResourceComputeEnvironment(),
 			"aws_batch_job_definition":      batch.ResourceJobDefinition(),
 			"aws_batch_job_queue":           batch.ResourceJobQueue(),
+			"aws_batch_scheduling_policy":   batch.ResourceSchedulingPolicy(),
 
 			"aws_budgets_budget":        budgets.ResourceBudget(),
 			"aws_budgets_budget_action": budgets.ResourceBudgetAction(),
