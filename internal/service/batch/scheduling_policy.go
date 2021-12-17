@@ -92,6 +92,63 @@ func ResourceSchedulingPolicy() *schema.Resource {
 }
 
 
+func resourceSchedulingPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.AWSClient).BatchConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+
+	sp, err := GetSchedulingPolicy(ctx, conn, d.Id())
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	if sp == nil {
+		log.Printf("[WARN] Batch Scheduling Policy (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
+	}
+
+	d.Set("arn", sp.Arn)
+	d.Set("name", sp.Name)
+
+	if err := d.Set("fair_share_policy", flattenFairsharePolicy(sp.FairsharePolicy)); err != nil {
+		return diag.FromErr(err)
+	}
+
+	tags := KeyValueTags(sp.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+
+	//lintignore:AWSR002
+	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
+		return diag.FromErr(fmt.Errorf("error setting tags: %w", err))
+	}
+
+	if err := d.Set("tags_all", tags.Map()); err != nil {
+		return diag.FromErr(fmt.Errorf("error setting tags_all: %w", err))
+	}
+
+	return nil
+}
+
+func GetSchedulingPolicy(ctx context.Context, conn *batch.Batch, arn string) (*batch.SchedulingPolicyDetail, error) {
+	resp, err := conn.DescribeSchedulingPoliciesWithContext(ctx, &batch.DescribeSchedulingPoliciesInput{
+		Arns: []*string{aws.String(arn)},
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	numSchedulingPolicies := len(resp.SchedulingPolicies)
+	switch {
+	case numSchedulingPolicies == 0:
+		log.Printf("[DEBUG] Scheduling Policy %q is already gone", arn)
+		return nil, nil
+	case numSchedulingPolicies == 1:
+		return resp.SchedulingPolicies[0], nil
+	case numSchedulingPolicies > 1:
+		return nil, fmt.Errorf("Multiple Scheduling Policy with arn %s", arn)
+	}
+	return nil, nil
+}
+
 func expandFairsharePolicy(fairsharePolicy []interface{}) *batch.FairsharePolicy {
 	if len(fairsharePolicy) == 0 || fairsharePolicy[0] == nil {
 		return nil
