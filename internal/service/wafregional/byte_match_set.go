@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfwaf "github.com/hashicorp/terraform-provider-aws/internal/service/waf"
 )
 
 func ResourceByteMatchSet() *schema.Resource {
@@ -232,7 +233,7 @@ func diffByteMatchSetTuple(oldT, newT []interface{}) []*waf.ByteMatchSetUpdate {
 		updates = append(updates, &waf.ByteMatchSetUpdate{
 			Action: aws.String(waf.ChangeActionDelete),
 			ByteMatchTuple: &waf.ByteMatchTuple{
-				FieldToMatch:         expandFieldToMatch(tuple["field_to_match"].([]interface{})[0].(map[string]interface{})),
+				FieldToMatch:         tfwaf.ExpandFieldToMatch(tuple["field_to_match"].([]interface{})[0].(map[string]interface{})),
 				PositionalConstraint: aws.String(tuple["positional_constraint"].(string)),
 				TargetString:         []byte(tuple["target_string"].(string)),
 				TextTransformation:   aws.String(tuple["text_transformation"].(string)),
@@ -246,7 +247,7 @@ func diffByteMatchSetTuple(oldT, newT []interface{}) []*waf.ByteMatchSetUpdate {
 		updates = append(updates, &waf.ByteMatchSetUpdate{
 			Action: aws.String(waf.ChangeActionInsert),
 			ByteMatchTuple: &waf.ByteMatchTuple{
-				FieldToMatch:         expandFieldToMatch(tuple["field_to_match"].([]interface{})[0].(map[string]interface{})),
+				FieldToMatch:         tfwaf.ExpandFieldToMatch(tuple["field_to_match"].([]interface{})[0].(map[string]interface{})),
 				PositionalConstraint: aws.String(tuple["positional_constraint"].(string)),
 				TargetString:         []byte(tuple["target_string"].(string)),
 				TextTransformation:   aws.String(tuple["text_transformation"].(string)),

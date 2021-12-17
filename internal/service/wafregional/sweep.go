@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfwaf "github.com/hashicorp/terraform-provider-aws/internal/service/waf"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
@@ -218,7 +219,7 @@ func sweepRuleGroups(region string) error {
 		if err != nil {
 			return err
 		}
-		oldRules := FlattenWAFActivatedRules(rResp.ActivatedRules)
+		oldRules := tfwaf.FlattenActivatedRules(rResp.ActivatedRules)
 		err = DeleteRuleGroup(*group.RuleGroupId, oldRules, conn, region)
 		if err != nil {
 			return err

@@ -7,6 +7,8 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	elasticsearch "github.com/aws/aws-sdk-go/service/elasticsearchservice"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -27,7 +29,12 @@ func ResourceDomainPolicy() *schema.Resource {
 			"access_policies": {
 				Type:             schema.TypeString,
 				Required:         true,
+				ValidateFunc:     validation.StringIsJSON,
 				DiffSuppressFunc: verify.SuppressEquivalentPolicyDiffs,
+				StateFunc: func(v interface{}) string {
+					json, _ := structure.NormalizeJsonString(v)
+					return json
+				},
 			},
 		},
 	}
@@ -50,7 +57,13 @@ func resourceDomainPolicyRead(d *schema.ResourceData, meta interface{}) error {
 
 	log.Printf("[DEBUG] Received Elasticsearch domain: %s", ds)
 
-	d.Set("access_policies", ds.AccessPolicies)
+	policies, err := verify.PolicyToSet(d.Get("access_policies").(string), aws.StringValue(ds.AccessPolicies))
+
+	if err != nil {
+		return err
+	}
+
+	d.Set("access_policies", policies)
 
 	return nil
 }
@@ -58,9 +71,16 @@ func resourceDomainPolicyRead(d *schema.ResourceData, meta interface{}) error {
 func resourceDomainPolicyUpsert(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ElasticsearchConn
 	domainName := d.Get("domain_name").(string)
-	_, err := conn.UpdateElasticsearchDomainConfig(&elasticsearch.UpdateElasticsearchDomainConfigInput{
+
+	policy, err := structure.NormalizeJsonString(d.Get("access_policies").(string))
+
+	if err != nil {
+		return fmt.Errorf("policy (%s) is invalid JSON: %w", policy, err)
+	}
+
+	_, err = conn.UpdateElasticsearchDomainConfig(&elasticsearch.UpdateElasticsearchDomainConfigInput{
 		DomainName:     aws.String(domainName),
-		AccessPolicies: aws.String(d.Get("access_policies").(string)),
+		AccessPolicies: aws.String(policy),
 	})
 	if err != nil {
 		return err

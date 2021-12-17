@@ -200,7 +200,7 @@ func resourceDataSourceRead(d *schema.ResourceData, meta interface{}) error {
 
 	resp, err := conn.GetDataSource(input)
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, appsync.ErrCodeNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, appsync.ErrCodeNotFoundException) && !d.IsNewResource() {
 			log.Printf("[WARN] AppSync Datasource %q not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -298,7 +298,7 @@ func resourceDataSourceDelete(d *schema.ResourceData, meta interface{}) error {
 
 	_, err = conn.DeleteDataSource(input)
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, appsync.ErrCodeNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, appsync.ErrCodeNotFoundException) {
 			return nil
 		}
 		return err

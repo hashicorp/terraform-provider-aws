@@ -86,14 +86,13 @@ func resourceClientCertificateRead(d *schema.ResourceData, meta interface{}) err
 	}
 	out, err := conn.GetClientCertificate(&input)
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, apigateway.ErrCodeNotFoundException, "") {
-			log.Printf("[WARN] API Gateway Client Certificate %s not found, removing", d.Id())
+		if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, apigateway.ErrCodeNotFoundException) {
+			log.Printf("[WARN] API Gateway Client Certificate (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
 		}
-		return err
+		return fmt.Errorf("error reading API Gateway Client Certificate (%s): %w", d.Id(), err)
 	}
-	log.Printf("[DEBUG] Received API Gateway Client Certificate: %s", out)
 
 	tags := KeyValueTags(out.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 

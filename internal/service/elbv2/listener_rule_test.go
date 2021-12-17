@@ -1277,7 +1277,7 @@ func TestAccELBV2ListenerRule_conditionUpdateMultiple(t *testing.T) {
 						"host_header.#":          "1",
 						"host_header.0.values.#": "1",
 					}),
-					resource.TestCheckTypeSetElemAttr(resourceName, "condition.*.host_header.0.values.*", "foobar.com"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "condition.*.host_header.0.values.*", "example.com"),
 				),
 			},
 		},
@@ -3684,7 +3684,7 @@ func testAccListenerRuleConfig_conditionMultiple_updated(lbName string) string {
 	return testAccListenerRuleConfig_condition_base(`
 condition {
   host_header {
-    values = ["foobar.com"]
+    values = ["example.com"]
   }
 }
 

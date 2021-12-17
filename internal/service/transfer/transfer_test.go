@@ -21,6 +21,7 @@ func TestAccTransfer_serial(t *testing.T) {
 			"Domain":                        testAccServer_domain,
 			"ForceDestroy":                  testAccServer_forceDestroy,
 			"HostKey":                       testAccServer_hostKey,
+			"LambdaFunction":                testAccServer_lambdaFunction,
 			"Protocols":                     testAccServer_protocols,
 			"SecurityPolicy":                testAccServer_securityPolicy,
 			"UpdateEndpointTypePublicToVPC": testAccServer_updateEndpointType_publicToVPC,

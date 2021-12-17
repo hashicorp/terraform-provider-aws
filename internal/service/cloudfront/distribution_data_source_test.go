@@ -12,7 +12,7 @@ import (
 func TestAccCloudFrontDistributionDataSource_basic(t *testing.T) {
 	dataSourceName := "data.aws_cloudfront_distribution.test"
 	resourceName := "aws_cloudfront_distribution.s3_distribution"
-	rInt := sdkacctest.RandInt()
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
@@ -20,7 +20,7 @@ func TestAccCloudFrontDistributionDataSource_basic(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDistributionDataConfig(rInt),
+				Config: testAccDistributionDataConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "domain_name", resourceName, "domain_name"),
@@ -35,10 +35,9 @@ func TestAccCloudFrontDistributionDataSource_basic(t *testing.T) {
 	})
 }
 
-func testAccDistributionDataConfig(rInt int) string {
+func testAccDistributionDataConfig(rName string) string {
 	return acctest.ConfigCompose(
-		testAccDistributionS3WithTagsConfig(rInt),
-		`
+		testAccDistributionS3WithTagsConfig(rName), `
 data "aws_cloudfront_distribution" "test" {
   id = aws_cloudfront_distribution.s3_distribution.id
 }

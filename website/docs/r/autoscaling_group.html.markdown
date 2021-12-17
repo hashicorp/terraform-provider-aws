@@ -374,7 +374,7 @@ Note that if you suspend either the `Launch` or `Terminate` process types, it ca
 * `tags` (Optional) Set of maps containing resource tags. Conflicts with `tag`. See [Tags](#tag-and-tags) below for more details.
 * `placement_group` (Optional) The name of the placement group into which you'll launch your instances, if any.
 * `metrics_granularity` - (Optional) The granularity to associate with the metrics to collect. The only valid value is `1Minute`. Default is `1Minute`.
-* `enabled_metrics` - (Optional) A list of metrics to collect. The allowed values are `GroupDesiredCapacity`, `GroupInServiceCapacity`, `GroupPendingCapacity`, `GroupMinSize`, `GroupMaxSize`, `GroupInServiceInstances`, `GroupPendingInstances`, `GroupStandbyInstances`, `GroupStandbyCapacity`, `GroupTerminatingCapacity`, `GroupTerminatingInstances`, `GroupTotalCapacity`, `GroupTotalInstances`.
+* `enabled_metrics` - (Optional) A list of metrics to collect. The allowed values are defined by the [underlying AWS API](https://docs.aws.amazon.com/autoscaling/ec2/APIReference/API_EnableMetricsCollection.html).
 * `wait_for_capacity_timeout` (Default: "10m") A maximum
   [duration](https://golang.org/pkg/time/#ParseDuration) that Terraform should
   wait for ASG instances to be healthy before timing out.  (See also [Waiting

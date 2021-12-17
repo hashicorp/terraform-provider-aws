@@ -109,13 +109,13 @@ func resourceAPIKeyRead(d *schema.ResourceData, meta interface{}) error {
 		IncludeValue: aws.Bool(true),
 	})
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, apigateway.ErrCodeNotFoundException, "") {
+		if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, apigateway.ErrCodeNotFoundException) {
 			log.Printf("[WARN] API Gateway API Key (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
 		}
 
-		return err
+		return fmt.Errorf("error reading API Gateway API Key (%s): %w", d.Id(), err)
 	}
 
 	tags := KeyValueTags(apiKey.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)

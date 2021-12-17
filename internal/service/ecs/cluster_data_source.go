@@ -2,10 +2,8 @@ package ecs
 
 import (
 	"fmt"
-	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ecs"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
@@ -68,22 +66,19 @@ func DataSourceCluster() *schema.Resource {
 func dataSourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ECSConn
 
-	params := &ecs.DescribeClustersInput{
-		Clusters: []*string{aws.String(d.Get("cluster_name").(string))},
-	}
-	log.Printf("[DEBUG] Reading ECS Cluster: %s", params)
-	desc, err := conn.DescribeClusters(params)
+	clusterName := d.Get("cluster_name").(string)
+	desc, err := FindClusterByNameOrARN(conn, d.Get("cluster_name").(string))
 
 	if err != nil {
-		return err
+		return fmt.Errorf("error reading ECS Cluster (%s): %w", clusterName, err)
 	}
 
 	if len(desc.Clusters) == 0 {
-		return fmt.Errorf("no matches found for name: %s", d.Get("cluster_name").(string))
+		return fmt.Errorf("no matches found for name: %s", clusterName)
 	}
 
 	if len(desc.Clusters) > 1 {
-		return fmt.Errorf("multiple matches found for name: %s", d.Get("cluster_name").(string))
+		return fmt.Errorf("multiple matches found for name: %s", clusterName)
 	}
 
 	cluster := desc.Clusters[0]

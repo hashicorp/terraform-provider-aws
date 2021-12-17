@@ -214,6 +214,10 @@ func DataSourceTable() *schema.Resource {
 					},
 				},
 			},
+			"table_class": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 		},
 	}
 }
@@ -293,6 +297,12 @@ func dataSourceTableRead(d *schema.ResourceData, meta interface{}) error {
 
 	if err := d.Set("replica", flattenDynamoDbReplicaDescriptions(table.Replicas)); err != nil {
 		return fmt.Errorf("error setting replica: %w", err)
+	}
+
+	if table.TableClassSummary != nil {
+		d.Set("table_class", table.TableClassSummary.TableClass)
+	} else {
+		d.Set("table_class", nil)
 	}
 
 	pitrOut, err := conn.DescribeContinuousBackups(&dynamodb.DescribeContinuousBackupsInput{

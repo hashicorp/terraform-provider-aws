@@ -271,7 +271,7 @@ func resourcePolicyRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("Failed to read scaling policy: %s", err)
 	}
 
-	if p == nil {
+	if p == nil && !d.IsNewResource() {
 		log.Printf("[WARN] Application AutoScaling Policy (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil

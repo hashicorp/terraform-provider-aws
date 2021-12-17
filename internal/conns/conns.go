@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/request"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/accessanalyzer"
+	"github.com/aws/aws-sdk-go/service/account"
 	"github.com/aws/aws-sdk-go/service/acm"
 	"github.com/aws/aws-sdk-go/service/acmpca"
 	"github.com/aws/aws-sdk-go/service/alexaforbusiness"
@@ -286,6 +287,7 @@ import (
 
 const (
 	AccessAnalyzer                = "accessanalyzer"
+	Account                       = "account"
 	ACM                           = "acm"
 	ACMPCA                        = "acmpca"
 	AlexaForBusiness              = "alexaforbusiness"
@@ -573,6 +575,7 @@ func init() {
 	serviceData = make(map[string]*ServiceDatum)
 
 	serviceData[AccessAnalyzer] = &ServiceDatum{AWSClientName: "AccessAnalyzer", AWSServiceName: accessanalyzer.ServiceName, AWSEndpointsID: accessanalyzer.EndpointsID, AWSServiceID: accessanalyzer.ServiceID, ProviderNameUpper: "AccessAnalyzer", HCLKeys: []string{"accessanalyzer"}}
+	serviceData[Account] = &ServiceDatum{AWSClientName: "Account", AWSServiceName: account.ServiceName, AWSEndpointsID: account.EndpointsID, AWSServiceID: account.ServiceID, ProviderNameUpper: "Account", HCLKeys: []string{"account"}}
 	serviceData[ACM] = &ServiceDatum{AWSClientName: "ACM", AWSServiceName: acm.ServiceName, AWSEndpointsID: acm.EndpointsID, AWSServiceID: acm.ServiceID, ProviderNameUpper: "ACM", HCLKeys: []string{"acm"}}
 	serviceData[ACMPCA] = &ServiceDatum{AWSClientName: "ACMPCA", AWSServiceName: acmpca.ServiceName, AWSEndpointsID: acmpca.EndpointsID, AWSServiceID: acmpca.ServiceID, ProviderNameUpper: "ACMPCA", HCLKeys: []string{"acmpca"}}
 	serviceData[AlexaForBusiness] = &ServiceDatum{AWSClientName: "AlexaForBusiness", AWSServiceName: alexaforbusiness.ServiceName, AWSEndpointsID: alexaforbusiness.EndpointsID, AWSServiceID: alexaforbusiness.ServiceID, ProviderNameUpper: "AlexaForBusiness", HCLKeys: []string{"alexaforbusiness"}}
@@ -881,6 +884,7 @@ type Config struct {
 
 type AWSClient struct {
 	AccessAnalyzerConn                *accessanalyzer.AccessAnalyzer
+	AccountConn                       *account.Account
 	AccountID                         string
 	ACMConn                           *acm.ACM
 	ACMPCAConn                        *acmpca.ACMPCA
@@ -1234,6 +1238,7 @@ func (c *Config) Client() (interface{}, error) {
 
 	client := &AWSClient{
 		AccessAnalyzerConn:                accessanalyzer.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[AccessAnalyzer])})),
+		AccountConn:                       account.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[Account])})),
 		AccountID:                         accountID,
 		ACMConn:                           acm.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[ACM])})),
 		ACMPCAConn:                        acmpca.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[ACMPCA])})),
@@ -1736,6 +1741,12 @@ func (c *Config) Client() (interface{}, error) {
 		// Retry on the following error:
 		// ConcurrentModificationException: AWS Organizations can't complete your request because it conflicts with another attempt to modify the same entity. Try again later.
 		if tfawserr.ErrMessageContains(r.Error, organizations.ErrCodeConcurrentModificationException, "Try again later") {
+			r.Retryable = aws.Bool(true)
+		}
+	})
+
+	client.S3Conn.Handlers.Retry.PushBack(func(r *request.Request) {
+		if tfawserr.ErrMessageContains(r.Error, "OperationAborted", "A conflicting conditional operation is currently in progress against this resource. Please try again.") {
 			r.Retryable = aws.Bool(true)
 		}
 	})

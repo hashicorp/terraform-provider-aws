@@ -142,9 +142,15 @@ func resourceUserPolicyRead(d *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		return err
 	}
-	if err := d.Set("policy", policy); err != nil {
-		return err
+
+	policyToSet, err := verify.SecondJSONUnlessEquivalent(d.Get("policy").(string), policy)
+
+	if err != nil {
+		return fmt.Errorf("while setting policy (%s), encountered: %w", policyToSet, err)
 	}
+
+	d.Set("policy", policyToSet)
+
 	if err := d.Set("name", name); err != nil {
 		return err
 	}

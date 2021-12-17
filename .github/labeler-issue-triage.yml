@@ -32,6 +32,8 @@ sweeper:
 # resource "aws_XXX"
 service/accessanalyzer:
   - '((\*|-) ?`?|(data|resource) "?)aws_accessanalyzer_'
+service/account:
+  - '((\*|-) ?`?|(data|resource) "?)aws_account_'
 service/acm:
   - '((\*|-) ?`?|(data|resource) "?)aws_acm_'
 service/acmpca:

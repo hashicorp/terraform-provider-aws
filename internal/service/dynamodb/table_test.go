@@ -18,6 +18,16 @@ import (
 	tfdynamodb "github.com/hashicorp/terraform-provider-aws/internal/service/dynamodb"
 )
 
+func init() {
+	acctest.RegisterServiceErrorCheckFunc(dynamodb.EndpointsID, testAccErrorCheckSkipDynamoDb)
+}
+
+func testAccErrorCheckSkipDynamoDb(t *testing.T) resource.ErrorCheckFunc {
+	return acctest.ErrorCheckSkipMessagesContaining(t,
+		"Unsupported input parameter TableClass",
+	)
+}
+
 func TestUpdateDynamoDbDiffGSI(t *testing.T) {
 	testCases := []struct {
 		Old             []interface{}
@@ -323,6 +333,7 @@ func TestAccDynamoDBTable_basic(t *testing.T) {
 				Config: testAccConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInitialTableExists(resourceName, &conf),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "dynamodb", fmt.Sprintf("table/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "read_capacity", "1"),
 					resource.TestCheckResourceAttr(resourceName, "write_capacity", "1"),
@@ -332,6 +343,7 @@ func TestAccDynamoDBTable_basic(t *testing.T) {
 						"type": "S",
 					}),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "table_class", ""),
 				),
 			},
 			{
@@ -1406,6 +1418,115 @@ func TestAccDynamoDBTable_Replica_singleWithCMK(t *testing.T) {
 	})
 }
 
+func TestAccDynamoDBTable_tableClassInfrequentAccess(t *testing.T) {
+	var table dynamodb.DescribeTableOutput
+	resourceName := "aws_dynamodb_table.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, dynamodb.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckTableDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTableClassConfig(rName, "STANDARD_INFREQUENT_ACCESS"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInitialTableExists(resourceName, &table),
+					resource.TestCheckResourceAttr(resourceName, "table_class", "STANDARD_INFREQUENT_ACCESS"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccTableClassConfig(rName, "STANDARD"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInitialTableExists(resourceName, &table),
+					resource.TestCheckResourceAttr(resourceName, "table_class", "STANDARD"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccDynamoDBTable_backup_encryption(t *testing.T) {
+	var confBYOK dynamodb.DescribeTableOutput
+	resourceName := "aws_dynamodb_table.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	kmsKeyResourceName := "aws_kms_key.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, dynamodb.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckTableDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSDynamoDbBackupConfigInitialStateWithEncryption(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInitialTableExists(resourceName, &confBYOK),
+					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.0.enabled", "true"),
+					resource.TestCheckResourceAttrPair(resourceName, "server_side_encryption.0.kms_key_arn", kmsKeyResourceName, "arn"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"restore_to_latest_time",
+					"restore_date_time",
+					"restore_source_name",
+				},
+			},
+		},
+	})
+}
+
+func TestAccDynamoDBTable_backup_overrideEncryption(t *testing.T) {
+	var confBYOK dynamodb.DescribeTableOutput
+	resourceName := "aws_dynamodb_table.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	kmsKeyResourceName := "aws_kms_key.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, dynamodb.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckTableDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSDynamoDbBackupConfigInitialStateWithOverrideEncryption(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInitialTableExists(resourceName, &confBYOK),
+					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.0.enabled", "true"),
+					resource.TestCheckResourceAttrPair(resourceName, "server_side_encryption.0.kms_key_arn", kmsKeyResourceName, "arn"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"restore_to_latest_time",
+					"restore_date_time",
+					"restore_source_name",
+				},
+			},
+		},
+	})
+}
+
 func testAccCheckTableDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).DynamoDBConn
 
@@ -2448,4 +2569,95 @@ resource "aws_dynamodb_table" "test" {
   }
 }
 `, rName, lsiName)
+}
+
+func testAccTableClassConfig(rName, tableClass string) string {
+	return fmt.Sprintf(`
+resource "aws_dynamodb_table" "test" {
+  hash_key       = "TestTableHashKey"
+  name           = %[1]q
+  read_capacity  = 1
+  write_capacity = 1
+  table_class    = %[2]q
+
+  attribute {
+    name = "TestTableHashKey"
+    type = "S"
+  }
+}
+`, rName, tableClass)
+}
+
+func testAccAWSDynamoDbBackupConfigInitialStateWithOverrideEncryption(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_dynamodb_table" "source" {
+  name           = "%[1]s-source"
+  read_capacity  = 2
+  write_capacity = 2
+  hash_key       = "TestTableHashKey"
+
+  attribute {
+    name = "TestTableHashKey"
+    type = "S"
+  }
+
+  point_in_time_recovery {
+    enabled = true
+  }
+
+  server_side_encryption {
+    enabled = false
+  }
+}
+
+resource "aws_kms_key" "test" {
+  description = %[1]q
+}
+
+resource "aws_dynamodb_table" "test" {
+  name                   = "%[1]s-target"
+  restore_source_name    = aws_dynamodb_table.source.name
+  restore_to_latest_time = true
+
+  server_side_encryption {
+    enabled     = true
+    kms_key_arn = aws_kms_key.test.arn
+  }
+}
+`, rName)
+}
+
+func testAccAWSDynamoDbBackupConfigInitialStateWithEncryption(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_dynamodb_table" "source" {
+  name           = "%[1]s-source"
+  read_capacity  = 2
+  write_capacity = 2
+  hash_key       = "TestTableHashKey"
+
+  attribute {
+    name = "TestTableHashKey"
+    type = "S"
+  }
+
+  point_in_time_recovery {
+    enabled = true
+  }
+
+  server_side_encryption {
+    enabled     = true
+    kms_key_arn = aws_kms_key.test.arn
+  }
+}
+
+resource "aws_kms_key" "test" {
+  description = %[1]q
+}
+
+resource "aws_dynamodb_table" "test" {
+  name                   = "%[1]s-target"
+  restore_source_name    = aws_dynamodb_table.source.name
+  restore_to_latest_time = true
+}
+`, rName)
 }

@@ -385,16 +385,16 @@ func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
 
 	name := d.Get("cluster_name").(string)
 	input := &kafka.CreateClusterInput{
-		BrokerNodeGroupInfo:  expandMskClusterBrokerNodeGroupInfo(d.Get("broker_node_group_info").([]interface{})),
-		ClientAuthentication: expandMskClusterClientAuthentication(d.Get("client_authentication").([]interface{})),
+		BrokerNodeGroupInfo:  expandClusterBrokerNodeGroupInfo(d.Get("broker_node_group_info").([]interface{})),
+		ClientAuthentication: expandClusterClientAuthentication(d.Get("client_authentication").([]interface{})),
 		ClusterName:          aws.String(name),
-		ConfigurationInfo:    expandMskClusterConfigurationInfo(d.Get("configuration_info").([]interface{})),
-		EncryptionInfo:       expandMskClusterEncryptionInfo(d.Get("encryption_info").([]interface{})),
+		ConfigurationInfo:    expandClusterConfigurationInfo(d.Get("configuration_info").([]interface{})),
+		EncryptionInfo:       expandClusterEncryptionInfo(d.Get("encryption_info").([]interface{})),
 		EnhancedMonitoring:   aws.String(d.Get("enhanced_monitoring").(string)),
 		KafkaVersion:         aws.String(d.Get("kafka_version").(string)),
 		NumberOfBrokerNodes:  aws.Int64(int64(d.Get("number_of_broker_nodes").(int))),
-		OpenMonitoring:       expandMskOpenMonitoring(d.Get("open_monitoring").([]interface{})),
-		LoggingInfo:          expandMskLoggingInfo(d.Get("logging_info").([]interface{})),
+		OpenMonitoring:       expandOpenMonitoring(d.Get("open_monitoring").([]interface{})),
+		LoggingInfo:          expandLoggingInfo(d.Get("logging_info").([]interface{})),
 		Tags:                 Tags(tags.IgnoreAWS()),
 	}
 
@@ -446,36 +446,36 @@ func resourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("bootstrap_brokers_sasl_scram", SortEndpointsString(aws.StringValue(output.BootstrapBrokerStringSaslScram)))
 	d.Set("bootstrap_brokers_tls", SortEndpointsString(aws.StringValue(output.BootstrapBrokerStringTls)))
 
-	if err := d.Set("broker_node_group_info", flattenMskBrokerNodeGroupInfo(cluster.BrokerNodeGroupInfo)); err != nil {
+	if err := d.Set("broker_node_group_info", flattenBrokerNodeGroupInfo(cluster.BrokerNodeGroupInfo)); err != nil {
 		return fmt.Errorf("error setting broker_node_group_info: %w", err)
 	}
 
-	if err := d.Set("client_authentication", flattenMskClientAuthentication(cluster.ClientAuthentication)); err != nil {
+	if err := d.Set("client_authentication", flattenClientAuthentication(cluster.ClientAuthentication)); err != nil {
 		return fmt.Errorf("error setting configuration_info: %w", err)
 	}
 
 	d.Set("cluster_name", cluster.ClusterName)
 
-	if err := d.Set("configuration_info", flattenMskConfigurationInfo(cluster.CurrentBrokerSoftwareInfo)); err != nil {
+	if err := d.Set("configuration_info", flattenConfigurationInfo(cluster.CurrentBrokerSoftwareInfo)); err != nil {
 		return fmt.Errorf("error setting configuration_info: %w", err)
 	}
 
 	d.Set("current_version", cluster.CurrentVersion)
 	d.Set("enhanced_monitoring", cluster.EnhancedMonitoring)
 
-	if err := d.Set("encryption_info", flattenMskEncryptionInfo(cluster.EncryptionInfo)); err != nil {
+	if err := d.Set("encryption_info", flattenEncryptionInfo(cluster.EncryptionInfo)); err != nil {
 		return fmt.Errorf("error setting encryption_info: %w", err)
 	}
 
 	d.Set("kafka_version", cluster.CurrentBrokerSoftwareInfo.KafkaVersion)
 
-	if err := d.Set("logging_info", flattenMskLoggingInfo(cluster.LoggingInfo)); err != nil {
+	if err := d.Set("logging_info", flattenLoggingInfo(cluster.LoggingInfo)); err != nil {
 		return fmt.Errorf("error setting logging_info: %w", err)
 	}
 
 	d.Set("number_of_broker_nodes", cluster.NumberOfBrokerNodes)
 
-	if err := d.Set("open_monitoring", flattenMskOpenMonitoring(cluster.OpenMonitoring)); err != nil {
+	if err := d.Set("open_monitoring", flattenOpenMonitoring(cluster.OpenMonitoring)); err != nil {
 		return fmt.Errorf("error setting open_monitoring: %w", err)
 	}
 
@@ -575,8 +575,8 @@ func resourceClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 			ClusterArn:         aws.String(d.Id()),
 			CurrentVersion:     aws.String(d.Get("current_version").(string)),
 			EnhancedMonitoring: aws.String(d.Get("enhanced_monitoring").(string)),
-			OpenMonitoring:     expandMskOpenMonitoring(d.Get("open_monitoring").([]interface{})),
-			LoggingInfo:        expandMskLoggingInfo(d.Get("logging_info").([]interface{})),
+			OpenMonitoring:     expandOpenMonitoring(d.Get("open_monitoring").([]interface{})),
+			LoggingInfo:        expandLoggingInfo(d.Get("logging_info").([]interface{})),
 		}
 
 		output, err := conn.UpdateMonitoring(input)
@@ -597,7 +597,7 @@ func resourceClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("configuration_info") && !d.HasChange("kafka_version") {
 		input := &kafka.UpdateClusterConfigurationInput{
 			ClusterArn:        aws.String(d.Id()),
-			ConfigurationInfo: expandMskClusterConfigurationInfo(d.Get("configuration_info").([]interface{})),
+			ConfigurationInfo: expandClusterConfigurationInfo(d.Get("configuration_info").([]interface{})),
 			CurrentVersion:    aws.String(d.Get("current_version").(string)),
 		}
 
@@ -624,7 +624,7 @@ func resourceClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		if d.HasChange("configuration_info") {
-			input.ConfigurationInfo = expandMskClusterConfigurationInfo(d.Get("configuration_info").([]interface{}))
+			input.ConfigurationInfo = expandClusterConfigurationInfo(d.Get("configuration_info").([]interface{}))
 		}
 
 		output, err := conn.UpdateClusterKafkaVersion(input)
@@ -678,7 +678,7 @@ func resourceClusterDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func expandMskClusterBrokerNodeGroupInfo(l []interface{}) *kafka.BrokerNodeGroupInfo {
+func expandClusterBrokerNodeGroupInfo(l []interface{}) *kafka.BrokerNodeGroupInfo {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -700,7 +700,7 @@ func expandMskClusterBrokerNodeGroupInfo(l []interface{}) *kafka.BrokerNodeGroup
 	return bngi
 }
 
-func expandMskClusterClientAuthentication(l []interface{}) *kafka.ClientAuthentication {
+func expandClusterClientAuthentication(l []interface{}) *kafka.ClientAuthentication {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -710,17 +710,17 @@ func expandMskClusterClientAuthentication(l []interface{}) *kafka.ClientAuthenti
 	ca := &kafka.ClientAuthentication{}
 
 	if v, ok := m["sasl"].([]interface{}); ok {
-		ca.Sasl = expandMskClusterSasl(v)
+		ca.Sasl = expandClusterSasl(v)
 	}
 
 	if v, ok := m["tls"].([]interface{}); ok {
-		ca.Tls = expandMskClusterTls(v)
+		ca.Tls = expandClusterTls(v)
 	}
 
 	return ca
 }
 
-func expandMskClusterConfigurationInfo(l []interface{}) *kafka.ConfigurationInfo {
+func expandClusterConfigurationInfo(l []interface{}) *kafka.ConfigurationInfo {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -735,7 +735,7 @@ func expandMskClusterConfigurationInfo(l []interface{}) *kafka.ConfigurationInfo
 	return ci
 }
 
-func expandMskClusterEncryptionInfo(l []interface{}) *kafka.EncryptionInfo {
+func expandClusterEncryptionInfo(l []interface{}) *kafka.EncryptionInfo {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -743,7 +743,7 @@ func expandMskClusterEncryptionInfo(l []interface{}) *kafka.EncryptionInfo {
 	m := l[0].(map[string]interface{})
 
 	ei := &kafka.EncryptionInfo{
-		EncryptionInTransit: expandMskClusterEncryptionInTransit(m["encryption_in_transit"].([]interface{})),
+		EncryptionInTransit: expandClusterEncryptionInTransit(m["encryption_in_transit"].([]interface{})),
 	}
 
 	if v, ok := m["encryption_at_rest_kms_key_arn"]; ok && v.(string) != "" {
@@ -755,7 +755,7 @@ func expandMskClusterEncryptionInfo(l []interface{}) *kafka.EncryptionInfo {
 	return ei
 }
 
-func expandMskClusterEncryptionInTransit(l []interface{}) *kafka.EncryptionInTransit {
+func expandClusterEncryptionInTransit(l []interface{}) *kafka.EncryptionInTransit {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -770,7 +770,7 @@ func expandMskClusterEncryptionInTransit(l []interface{}) *kafka.EncryptionInTra
 	return eit
 }
 
-func expandMskClusterSasl(l []interface{}) *kafka.Sasl {
+func expandClusterSasl(l []interface{}) *kafka.Sasl {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -797,7 +797,7 @@ func expandMskClusterSasl(l []interface{}) *kafka.Sasl {
 	return sasl
 }
 
-func expandMskClusterTls(l []interface{}) *kafka.Tls {
+func expandClusterTls(l []interface{}) *kafka.Tls {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -811,7 +811,7 @@ func expandMskClusterTls(l []interface{}) *kafka.Tls {
 	return tls
 }
 
-func expandMskOpenMonitoring(l []interface{}) *kafka.OpenMonitoringInfo {
+func expandOpenMonitoring(l []interface{}) *kafka.OpenMonitoringInfo {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -819,13 +819,13 @@ func expandMskOpenMonitoring(l []interface{}) *kafka.OpenMonitoringInfo {
 	m := l[0].(map[string]interface{})
 
 	openMonitoring := &kafka.OpenMonitoringInfo{
-		Prometheus: expandMskOpenMonitoringPrometheus(m["prometheus"].([]interface{})),
+		Prometheus: expandOpenMonitoringPrometheus(m["prometheus"].([]interface{})),
 	}
 
 	return openMonitoring
 }
 
-func expandMskOpenMonitoringPrometheus(l []interface{}) *kafka.PrometheusInfo {
+func expandOpenMonitoringPrometheus(l []interface{}) *kafka.PrometheusInfo {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -833,14 +833,14 @@ func expandMskOpenMonitoringPrometheus(l []interface{}) *kafka.PrometheusInfo {
 	m := l[0].(map[string]interface{})
 
 	prometheus := &kafka.PrometheusInfo{
-		JmxExporter:  expandMskOpenMonitoringPrometheusJmxExporter(m["jmx_exporter"].([]interface{})),
-		NodeExporter: expandMskOpenMonitoringPrometheusNodeExporter(m["node_exporter"].([]interface{})),
+		JmxExporter:  expandOpenMonitoringPrometheusJmxExporter(m["jmx_exporter"].([]interface{})),
+		NodeExporter: expandOpenMonitoringPrometheusNodeExporter(m["node_exporter"].([]interface{})),
 	}
 
 	return prometheus
 }
 
-func expandMskOpenMonitoringPrometheusJmxExporter(l []interface{}) *kafka.JmxExporterInfo {
+func expandOpenMonitoringPrometheusJmxExporter(l []interface{}) *kafka.JmxExporterInfo {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -854,7 +854,7 @@ func expandMskOpenMonitoringPrometheusJmxExporter(l []interface{}) *kafka.JmxExp
 	return jmxExporter
 }
 
-func expandMskOpenMonitoringPrometheusNodeExporter(l []interface{}) *kafka.NodeExporterInfo {
+func expandOpenMonitoringPrometheusNodeExporter(l []interface{}) *kafka.NodeExporterInfo {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -868,7 +868,7 @@ func expandMskOpenMonitoringPrometheusNodeExporter(l []interface{}) *kafka.NodeE
 	return nodeExporter
 }
 
-func expandMskLoggingInfo(l []interface{}) *kafka.LoggingInfo {
+func expandLoggingInfo(l []interface{}) *kafka.LoggingInfo {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -876,13 +876,13 @@ func expandMskLoggingInfo(l []interface{}) *kafka.LoggingInfo {
 	m := l[0].(map[string]interface{})
 
 	loggingInfo := &kafka.LoggingInfo{
-		BrokerLogs: expandMskLoggingInfoBrokerLogs(m["broker_logs"].([]interface{})),
+		BrokerLogs: expandLoggingInfoBrokerLogs(m["broker_logs"].([]interface{})),
 	}
 
 	return loggingInfo
 }
 
-func expandMskLoggingInfoBrokerLogs(l []interface{}) *kafka.BrokerLogs {
+func expandLoggingInfoBrokerLogs(l []interface{}) *kafka.BrokerLogs {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -890,15 +890,15 @@ func expandMskLoggingInfoBrokerLogs(l []interface{}) *kafka.BrokerLogs {
 	m := l[0].(map[string]interface{})
 
 	brokerLogs := &kafka.BrokerLogs{
-		CloudWatchLogs: expandMskLoggingInfoBrokerLogsCloudWatchLogs(m["cloudwatch_logs"].([]interface{})),
-		Firehose:       expandMskLoggingInfoBrokerLogsFirehose(m["firehose"].([]interface{})),
-		S3:             expandMskLoggingInfoBrokerLogsS3(m["s3"].([]interface{})),
+		CloudWatchLogs: expandLoggingInfoBrokerLogsCloudWatchLogs(m["cloudwatch_logs"].([]interface{})),
+		Firehose:       expandLoggingInfoBrokerLogsFirehose(m["firehose"].([]interface{})),
+		S3:             expandLoggingInfoBrokerLogsS3(m["s3"].([]interface{})),
 	}
 
 	return brokerLogs
 }
 
-func expandMskLoggingInfoBrokerLogsCloudWatchLogs(l []interface{}) *kafka.CloudWatchLogs {
+func expandLoggingInfoBrokerLogsCloudWatchLogs(l []interface{}) *kafka.CloudWatchLogs {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -913,7 +913,7 @@ func expandMskLoggingInfoBrokerLogsCloudWatchLogs(l []interface{}) *kafka.CloudW
 	return cloudWatchLogs
 }
 
-func expandMskLoggingInfoBrokerLogsFirehose(l []interface{}) *kafka.Firehose {
+func expandLoggingInfoBrokerLogsFirehose(l []interface{}) *kafka.Firehose {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -928,7 +928,7 @@ func expandMskLoggingInfoBrokerLogsFirehose(l []interface{}) *kafka.Firehose {
 	return firehose
 }
 
-func expandMskLoggingInfoBrokerLogsS3(l []interface{}) *kafka.S3 {
+func expandLoggingInfoBrokerLogsS3(l []interface{}) *kafka.S3 {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -944,7 +944,7 @@ func expandMskLoggingInfoBrokerLogsS3(l []interface{}) *kafka.S3 {
 	return s3
 }
 
-func flattenMskBrokerNodeGroupInfo(b *kafka.BrokerNodeGroupInfo) []map[string]interface{} {
+func flattenBrokerNodeGroupInfo(b *kafka.BrokerNodeGroupInfo) []map[string]interface{} {
 
 	if b == nil {
 		return []map[string]interface{}{}
@@ -964,20 +964,20 @@ func flattenMskBrokerNodeGroupInfo(b *kafka.BrokerNodeGroupInfo) []map[string]in
 	return []map[string]interface{}{m}
 }
 
-func flattenMskClientAuthentication(ca *kafka.ClientAuthentication) []map[string]interface{} {
+func flattenClientAuthentication(ca *kafka.ClientAuthentication) []map[string]interface{} {
 	if ca == nil {
 		return []map[string]interface{}{}
 	}
 
 	m := map[string]interface{}{
-		"sasl": flattenMskSasl(ca.Sasl),
-		"tls":  flattenMskTls(ca.Tls),
+		"sasl": flattenSasl(ca.Sasl),
+		"tls":  flattenTls(ca.Tls),
 	}
 
 	return []map[string]interface{}{m}
 }
 
-func flattenMskConfigurationInfo(bsi *kafka.BrokerSoftwareInfo) []map[string]interface{} {
+func flattenConfigurationInfo(bsi *kafka.BrokerSoftwareInfo) []map[string]interface{} {
 	if bsi == nil {
 		return []map[string]interface{}{}
 	}
@@ -990,20 +990,20 @@ func flattenMskConfigurationInfo(bsi *kafka.BrokerSoftwareInfo) []map[string]int
 	return []map[string]interface{}{m}
 }
 
-func flattenMskEncryptionInfo(e *kafka.EncryptionInfo) []map[string]interface{} {
+func flattenEncryptionInfo(e *kafka.EncryptionInfo) []map[string]interface{} {
 	if e == nil || e.EncryptionAtRest == nil {
 		return []map[string]interface{}{}
 	}
 
 	m := map[string]interface{}{
 		"encryption_at_rest_kms_key_arn": aws.StringValue(e.EncryptionAtRest.DataVolumeKMSKeyId),
-		"encryption_in_transit":          flattenMskEncryptionInTransit(e.EncryptionInTransit),
+		"encryption_in_transit":          flattenEncryptionInTransit(e.EncryptionInTransit),
 	}
 
 	return []map[string]interface{}{m}
 }
 
-func flattenMskEncryptionInTransit(eit *kafka.EncryptionInTransit) []map[string]interface{} {
+func flattenEncryptionInTransit(eit *kafka.EncryptionInTransit) []map[string]interface{} {
 	if eit == nil {
 		return []map[string]interface{}{}
 	}
@@ -1016,20 +1016,20 @@ func flattenMskEncryptionInTransit(eit *kafka.EncryptionInTransit) []map[string]
 	return []map[string]interface{}{m}
 }
 
-func flattenMskSasl(sasl *kafka.Sasl) []map[string]interface{} {
+func flattenSasl(sasl *kafka.Sasl) []map[string]interface{} {
 	if sasl == nil {
 		return []map[string]interface{}{}
 	}
 
 	m := map[string]interface{}{
-		"scram": flattenMskSaslScram(sasl.Scram),
-		"iam":   flattenMskSaslIam(sasl.Iam),
+		"scram": flattenSaslScram(sasl.Scram),
+		"iam":   flattenSaslIam(sasl.Iam),
 	}
 
 	return []map[string]interface{}{m}
 }
 
-func flattenMskSaslScram(scram *kafka.Scram) bool {
+func flattenSaslScram(scram *kafka.Scram) bool {
 	if scram == nil {
 		return false
 	}
@@ -1037,7 +1037,7 @@ func flattenMskSaslScram(scram *kafka.Scram) bool {
 	return aws.BoolValue(scram.Enabled)
 }
 
-func flattenMskSaslIam(iam *kafka.Iam) bool {
+func flattenSaslIam(iam *kafka.Iam) bool {
 	if iam == nil {
 		return false
 	}
@@ -1045,7 +1045,7 @@ func flattenMskSaslIam(iam *kafka.Iam) bool {
 	return aws.BoolValue(iam.Enabled)
 }
 
-func flattenMskTls(tls *kafka.Tls) []map[string]interface{} {
+func flattenTls(tls *kafka.Tls) []map[string]interface{} {
 	if tls == nil {
 		return []map[string]interface{}{}
 	}
@@ -1057,44 +1057,32 @@ func flattenMskTls(tls *kafka.Tls) []map[string]interface{} {
 	return []map[string]interface{}{m}
 }
 
-func flattenMskOpenMonitoring(e *kafka.OpenMonitoring) []map[string]interface{} {
+func flattenOpenMonitoring(e *kafka.OpenMonitoring) []map[string]interface{} {
 	if e == nil {
 		return []map[string]interface{}{}
 	}
 
 	m := map[string]interface{}{
-		"prometheus": flattenMskOpenMonitoringPrometheus(e.Prometheus),
+		"prometheus": flattenOpenMonitoringPrometheus(e.Prometheus),
 	}
 
 	return []map[string]interface{}{m}
 }
 
-func flattenMskOpenMonitoringPrometheus(e *kafka.Prometheus) []map[string]interface{} {
+func flattenOpenMonitoringPrometheus(e *kafka.Prometheus) []map[string]interface{} {
 	if e == nil {
 		return []map[string]interface{}{}
 	}
 
 	m := map[string]interface{}{
-		"jmx_exporter":  flattenMskOpenMonitoringPrometheusJmxExporter(e.JmxExporter),
-		"node_exporter": flattenMskOpenMonitoringPrometheusNodeExporter(e.NodeExporter),
+		"jmx_exporter":  flattenOpenMonitoringPrometheusJmxExporter(e.JmxExporter),
+		"node_exporter": flattenOpenMonitoringPrometheusNodeExporter(e.NodeExporter),
 	}
 
 	return []map[string]interface{}{m}
 }
 
-func flattenMskOpenMonitoringPrometheusJmxExporter(e *kafka.JmxExporter) []map[string]interface{} {
-	if e == nil {
-		return []map[string]interface{}{}
-	}
-
-	m := map[string]interface{}{
-		"enabled_in_broker": aws.BoolValue(e.EnabledInBroker),
-	}
-
-	return []map[string]interface{}{m}
-}
-
-func flattenMskOpenMonitoringPrometheusNodeExporter(e *kafka.NodeExporter) []map[string]interface{} {
+func flattenOpenMonitoringPrometheusJmxExporter(e *kafka.JmxExporter) []map[string]interface{} {
 	if e == nil {
 		return []map[string]interface{}{}
 	}
@@ -1106,33 +1094,45 @@ func flattenMskOpenMonitoringPrometheusNodeExporter(e *kafka.NodeExporter) []map
 	return []map[string]interface{}{m}
 }
 
-func flattenMskLoggingInfo(e *kafka.LoggingInfo) []map[string]interface{} {
+func flattenOpenMonitoringPrometheusNodeExporter(e *kafka.NodeExporter) []map[string]interface{} {
 	if e == nil {
 		return []map[string]interface{}{}
 	}
 
 	m := map[string]interface{}{
-		"broker_logs": flattenMskLoggingInfoBrokerLogs(e.BrokerLogs),
+		"enabled_in_broker": aws.BoolValue(e.EnabledInBroker),
 	}
 
 	return []map[string]interface{}{m}
 }
 
-func flattenMskLoggingInfoBrokerLogs(e *kafka.BrokerLogs) []map[string]interface{} {
+func flattenLoggingInfo(e *kafka.LoggingInfo) []map[string]interface{} {
 	if e == nil {
 		return []map[string]interface{}{}
 	}
 
 	m := map[string]interface{}{
-		"cloudwatch_logs": flattenMskLoggingInfoBrokerLogsCloudWatchLogs(e.CloudWatchLogs),
-		"firehose":        flattenMskLoggingInfoBrokerLogsFirehose(e.Firehose),
-		"s3":              flattenMskLoggingInfoBrokerLogsS3(e.S3),
+		"broker_logs": flattenLoggingInfoBrokerLogs(e.BrokerLogs),
 	}
 
 	return []map[string]interface{}{m}
 }
 
-func flattenMskLoggingInfoBrokerLogsCloudWatchLogs(e *kafka.CloudWatchLogs) []map[string]interface{} {
+func flattenLoggingInfoBrokerLogs(e *kafka.BrokerLogs) []map[string]interface{} {
+	if e == nil {
+		return []map[string]interface{}{}
+	}
+
+	m := map[string]interface{}{
+		"cloudwatch_logs": flattenLoggingInfoBrokerLogsCloudWatchLogs(e.CloudWatchLogs),
+		"firehose":        flattenLoggingInfoBrokerLogsFirehose(e.Firehose),
+		"s3":              flattenLoggingInfoBrokerLogsS3(e.S3),
+	}
+
+	return []map[string]interface{}{m}
+}
+
+func flattenLoggingInfoBrokerLogsCloudWatchLogs(e *kafka.CloudWatchLogs) []map[string]interface{} {
 	if e == nil {
 		return []map[string]interface{}{}
 	}
@@ -1145,7 +1145,7 @@ func flattenMskLoggingInfoBrokerLogsCloudWatchLogs(e *kafka.CloudWatchLogs) []ma
 	return []map[string]interface{}{m}
 }
 
-func flattenMskLoggingInfoBrokerLogsFirehose(e *kafka.Firehose) []map[string]interface{} {
+func flattenLoggingInfoBrokerLogsFirehose(e *kafka.Firehose) []map[string]interface{} {
 	if e == nil {
 		return []map[string]interface{}{}
 	}
@@ -1158,7 +1158,7 @@ func flattenMskLoggingInfoBrokerLogsFirehose(e *kafka.Firehose) []map[string]int
 	return []map[string]interface{}{m}
 }
 
-func flattenMskLoggingInfoBrokerLogsS3(e *kafka.S3) []map[string]interface{} {
+func flattenLoggingInfoBrokerLogsS3(e *kafka.S3) []map[string]interface{} {
 	if e == nil {
 		return []map[string]interface{}{}
 	}

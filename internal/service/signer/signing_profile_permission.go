@@ -97,7 +97,7 @@ func resourceSigningProfilePermissionCreate(d *schema.ResourceData, meta interfa
 			return err
 		}
 	} else {
-		revisionId = *getProfilePermissionsOutput.RevisionId
+		revisionId = aws.StringValue(getProfilePermissionsOutput.RevisionId)
 	}
 
 	statementId := create.Name(d.Get("statement_id").(string), d.Get("statement_id_prefix").(string))

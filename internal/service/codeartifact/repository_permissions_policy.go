@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/codeartifact"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -45,6 +46,10 @@ func ResourceRepositoryPermissionsPolicy() *schema.Resource {
 				Required:         true,
 				ValidateFunc:     validation.StringIsJSON,
 				DiffSuppressFunc: verify.SuppressEquivalentPolicyDiffs,
+				StateFunc: func(v interface{}) string {
+					json, _ := structure.NormalizeJsonString(v)
+					return json
+				},
 			},
 			"policy_revision": {
 				Type:     schema.TypeString,
@@ -63,10 +68,16 @@ func resourceRepositoryPermissionsPolicyPut(d *schema.ResourceData, meta interfa
 	conn := meta.(*conns.AWSClient).CodeArtifactConn
 	log.Print("[DEBUG] Creating CodeArtifact Repository Permissions Policy")
 
+	policy, err := structure.NormalizeJsonString(d.Get("policy_document").(string))
+
+	if err != nil {
+		return fmt.Errorf("policy (%s) is invalid JSON: %w", policy, err)
+	}
+
 	params := &codeartifact.PutRepositoryPermissionsPolicyInput{
 		Domain:         aws.String(d.Get("domain").(string)),
 		Repository:     aws.String(d.Get("repository").(string)),
-		PolicyDocument: aws.String(d.Get("policy_document").(string)),
+		PolicyDocument: aws.String(policy),
 	}
 
 	if v, ok := d.GetOk("domain_owner"); ok {
@@ -114,8 +125,21 @@ func resourceRepositoryPermissionsPolicyRead(d *schema.ResourceData, meta interf
 	d.Set("domain_owner", domainOwner)
 	d.Set("repository", repoName)
 	d.Set("resource_arn", dm.Policy.ResourceArn)
-	d.Set("policy_document", dm.Policy.Document)
 	d.Set("policy_revision", dm.Policy.Revision)
+
+	policyToSet, err := verify.SecondJSONUnlessEquivalent(d.Get("policy_document").(string), aws.StringValue(dm.Policy.Document))
+
+	if err != nil {
+		return fmt.Errorf("while setting policy (%s), encountered: %w", policyToSet, err)
+	}
+
+	policyToSet, err = structure.NormalizeJsonString(policyToSet)
+
+	if err != nil {
+		return fmt.Errorf("policy (%s) is invalid JSON: %w", policyToSet, err)
+	}
+
+	d.Set("policy_document", policyToSet)
 
 	return nil
 }

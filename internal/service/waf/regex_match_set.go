@@ -116,7 +116,7 @@ func resourceRegexMatchSetRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	d.Set("name", resp.RegexMatchSet.Name)
-	d.Set("regex_match_tuple", flattenWafRegexMatchTuples(resp.RegexMatchSet.RegexMatchTuples))
+	d.Set("regex_match_tuple", FlattenRegexMatchTuples(resp.RegexMatchSet.RegexMatchTuples))
 
 	arn := arn.ARN{
 		Partition: meta.(*conns.AWSClient).Partition,
@@ -180,7 +180,7 @@ func updateRegexMatchSetResource(id string, oldT, newT []interface{}, conn *waf.
 		req := &waf.UpdateRegexMatchSetInput{
 			ChangeToken:     token,
 			RegexMatchSetId: aws.String(id),
-			Updates:         diffWafRegexMatchSetTuples(oldT, newT),
+			Updates:         DiffRegexMatchSetTuples(oldT, newT),
 		}
 
 		return conn.UpdateRegexMatchSet(req)
