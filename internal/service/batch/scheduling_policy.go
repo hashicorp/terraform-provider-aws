@@ -91,6 +91,41 @@ func ResourceSchedulingPolicy() *schema.Resource {
 	}
 }
 
+func resourceSchedulingPolicyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.AWSClient).BatchConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+
+	name := d.Get("name").(string)
+
+	fairsharePolicy := expandFairsharePolicy(d.Get("fair_share_policy").([]interface{}))
+
+	input := &batch.CreateSchedulingPolicyInput{
+		FairsharePolicy: fairsharePolicy,
+		Name:            aws.String(name),
+	}
+
+	if len(tags) > 0 {
+		input.Tags = Tags(tags.IgnoreAWS())
+	}
+
+	log.Printf("[DEBUG] Creating Batch Scheduling Policy %s", input)
+	output, err := conn.CreateSchedulingPolicyWithContext(ctx, input)
+
+	if err != nil {
+		return diag.FromErr(fmt.Errorf("error creating Batch Scheduling Policy (%s): %w", name, err))
+	}
+
+	if output == nil {
+		return diag.FromErr(fmt.Errorf("error creating Batch Scheduling Policy (%s): empty output", name))
+	}
+
+	arn := aws.StringValue(output.Arn)
+	log.Printf("[DEBUG] Scheduling Policy created: %s", arn)
+	d.SetId(arn)
+
+	return resourceSchedulingPolicyRead(ctx, d, meta)
+}
 
 func resourceSchedulingPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).BatchConn
