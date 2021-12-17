@@ -137,7 +137,7 @@ func resourceManagedPolicyAttachmentDelete(d *schema.ResourceData, meta interfac
 		return fmt.Errorf("error detaching Managed Policy (%s) from SSO Permission Set (%s): %w", managedPolicyArn, permissionSetArn, err)
 	}
 
-	// Provision ALL accounts after delete the managed policy
+	// Provision ALL accounts after detaching the managed policy
 	if err := provisionSsoAdminPermissionSet(conn, permissionSetArn, instanceArn); err != nil {
 		return err
 	}
