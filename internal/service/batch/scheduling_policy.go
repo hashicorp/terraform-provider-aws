@@ -190,6 +190,21 @@ func resourceSchedulingPolicyUpdate(ctx context.Context, d *schema.ResourceData,
 
 	return resourceSchedulingPolicyRead(ctx, d, meta)
 }
+
+func resourceSchedulingPolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.AWSClient).BatchConn
+
+	_, err := conn.DeleteSchedulingPolicyWithContext(ctx, &batch.DeleteSchedulingPolicyInput{
+		Arn: aws.String(d.Id()),
+	})
+
+	if err != nil {
+		return diag.FromErr(fmt.Errorf("error deleting SchedulingPolicy (%s): %w", d.Id(), err))
+	}
+
+	return nil
+}
+
 func GetSchedulingPolicy(ctx context.Context, conn *batch.Batch, arn string) (*batch.SchedulingPolicyDetail, error) {
 	resp, err := conn.DescribeSchedulingPoliciesWithContext(ctx, &batch.DescribeSchedulingPoliciesInput{
 		Arns: []*string{aws.String(arn)},
