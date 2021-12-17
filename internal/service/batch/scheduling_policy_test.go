@@ -15,6 +15,52 @@ import (
 	tfbatch "github.com/hashicorp/terraform-provider-aws/internal/service/batch"
 )
 
+func TestAccBatchSchedulingPolicy_basic(t *testing.T) {
+	var schedulingPolicy1 batch.SchedulingPolicyDetail
+	resourceName := "aws_batch_scheduling_policy.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, batch.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckBatchSchedulingPolicyDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBatchSchedulingPolicyConfigBasic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBatchSchedulingPolicyExists(resourceName, &schedulingPolicy1),
+					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "fair_share_policy.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "fair_share_policy.0.compute_reservation", "1"),
+					resource.TestCheckResourceAttr(resourceName, "fair_share_policy.0.share_decay_seconds", "3600"),
+					resource.TestCheckResourceAttr(resourceName, "fair_share_policy.0.share_distribution.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				// add one more share_distribution block
+				Config: testAccBatchSchedulingPolicyConfigBasic2(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBatchSchedulingPolicyExists(resourceName, &schedulingPolicy1),
+					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "fair_share_policy.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "fair_share_policy.0.compute_reservation", "1"),
+					resource.TestCheckResourceAttr(resourceName, "fair_share_policy.0.share_decay_seconds", "3600"),
+					resource.TestCheckResourceAttr(resourceName, "fair_share_policy.0.share_distribution.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+				),
+			},
+		},
+	})
+}
 func testAccCheckBatchSchedulingPolicyExists(n string, sp *batch.SchedulingPolicyDetail) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
