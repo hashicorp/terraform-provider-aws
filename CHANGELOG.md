@@ -1,4 +1,9 @@
 ## 3.71.0 (Unreleased)
+
+BUG FIXES:
+
+* resource/aws_ssoadmin_managed_policy_attachment: Fix missing call to `ProvisionPermissionSet` after detaching the managed policy ([#21773](https://github.com/hashicorp/terraform-provider-aws/issues/21773))
+
 ## 3.70.0 (December 16, 2021)
 
 NOTES:
