@@ -1189,7 +1189,7 @@ func TestAccElasticsearchDomain_disappears(t *testing.T) {
 				Config: testAccDomainConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckResourceDisappears(acctest.Provider, tfelasticsearch.ResourceDomain(), resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfelasticsearch.ResourceDomain(), resourceName)),
+				),
 				ExpectNonEmptyPlan: true,
 			},
 		},
