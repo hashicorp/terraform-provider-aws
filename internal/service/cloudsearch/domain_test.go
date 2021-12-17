@@ -30,7 +30,6 @@ func TestAccCloudSearchDomain_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCloudSearchDomainExists(resourceName, &v),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "cloudsearch", fmt.Sprintf("domain/%s", rName)),
-					resource.TestCheckResourceAttrSet(resourceName, "document_service_endpoint"),
 					resource.TestCheckResourceAttrSet(resourceName, "domain_id"),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_options.0.enforce_https", "false"),
@@ -42,7 +41,6 @@ func TestAccCloudSearchDomain_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "scaling_parameters.0.desired_instance_type", ""),
 					resource.TestCheckResourceAttr(resourceName, "scaling_parameters.0.desired_partition_count", "0"),
 					resource.TestCheckResourceAttr(resourceName, "scaling_parameters.0.desired_replication_count", "0"),
-					resource.TestCheckResourceAttrSet(resourceName, "search_service_endpoint"),
 				),
 			},
 			{
