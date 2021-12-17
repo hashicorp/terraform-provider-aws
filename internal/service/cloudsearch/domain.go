@@ -29,8 +29,8 @@ func ResourceDomain() *schema.Resource {
 		},
 
 		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(20 * time.Minute),
-			Update: schema.DefaultTimeout(20 * time.Minute),
+			Create: schema.DefaultTimeout(30 * time.Minute),
+			Update: schema.DefaultTimeout(30 * time.Minute),
 			Delete: schema.DefaultTimeout(20 * time.Minute),
 		},
 
@@ -258,6 +258,8 @@ func resourceCloudSearchDomainCreate(d *schema.ResourceData, meta interface{}) e
 			return fmt.Errorf("error indexing CloudSearch Domain (%s) documents: %w", d.Id(), err)
 		}
 	}
+
+	// TODO: Status.RequiresIndexDocuments = true?
 
 	_, err = waitDomainActive(conn, d.Id(), d.Timeout(schema.TimeoutCreate))
 
