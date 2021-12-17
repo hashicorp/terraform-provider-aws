@@ -61,6 +61,30 @@ func TestAccBatchSchedulingPolicy_basic(t *testing.T) {
 		},
 	})
 }
+
+func TestAccBatchSchedulingPolicy_disappears(t *testing.T) {
+	var schedulingPolicy1 batch.SchedulingPolicyDetail
+	resourceName := "aws_batch_scheduling_policy.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, batch.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckBatchSchedulingPolicyDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBatchSchedulingPolicyConfigBasic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBatchSchedulingPolicyExists(resourceName, &schedulingPolicy1),
+					acctest.CheckResourceDisappears(acctest.Provider, tfbatch.ResourceSchedulingPolicy(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func testAccCheckBatchSchedulingPolicyExists(n string, sp *batch.SchedulingPolicyDetail) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
