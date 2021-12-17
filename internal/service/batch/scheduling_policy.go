@@ -163,6 +163,33 @@ func resourceSchedulingPolicyRead(ctx context.Context, d *schema.ResourceData, m
 	return nil
 }
 
+func resourceSchedulingPolicyUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.AWSClient).BatchConn
+
+	input := &batch.UpdateSchedulingPolicyInput{
+		Arn: aws.String(d.Id()),
+	}
+
+	if d.HasChange("fair_share_policy") {
+		fairsharePolicy := expandFairsharePolicy(d.Get("fair_share_policy").([]interface{}))
+		input.FairsharePolicy = fairsharePolicy
+	}
+
+	_, err := conn.UpdateSchedulingPolicyWithContext(ctx, input)
+
+	if err != nil {
+		return diag.FromErr(fmt.Errorf("[ERROR] Error updating SchedulingPolicy (%s): %w", d.Id(), err))
+	}
+
+	if d.HasChange("tags_all") {
+		o, n := d.GetChange("tags_all")
+		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
+			return diag.FromErr(fmt.Errorf("error updating tags: %w", err))
+		}
+	}
+
+	return resourceSchedulingPolicyRead(ctx, d, meta)
+}
 func GetSchedulingPolicy(ctx context.Context, conn *batch.Batch, arn string) (*batch.SchedulingPolicyDetail, error) {
 	resp, err := conn.DescribeSchedulingPoliciesWithContext(ctx, &batch.DescribeSchedulingPoliciesInput{
 		Arns: []*string{aws.String(arn)},
