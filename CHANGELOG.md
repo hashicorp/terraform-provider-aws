@@ -2,6 +2,7 @@
 
 BUG FIXES:
 
+* resource/aws_launch_template: Correctly set `default_version` and `latest_version` as Computed when `name`, `name_prefix` or `description` change ([#22277](https://github.com/hashicorp/terraform-provider-aws/issues/22277))
 * resource/aws_ssoadmin_managed_policy_attachment: Fix missing call to `ProvisionPermissionSet` after detaching the managed policy ([#21773](https://github.com/hashicorp/terraform-provider-aws/issues/21773))
 
 ## 3.70.0 (December 16, 2021)
