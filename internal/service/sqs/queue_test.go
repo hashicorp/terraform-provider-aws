@@ -48,6 +48,7 @@ func TestAccSQSQueue_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "policy", ""),
 					resource.TestCheckResourceAttr(resourceName, "receive_wait_time_seconds", strconv.Itoa(tfsqs.DefaultQueueReceiveMessageWaitTimeSeconds)),
 					resource.TestCheckResourceAttr(resourceName, "redrive_policy", ""),
+					resource.TestCheckResourceAttr(resourceName, "redrive_allow_policy", ""),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttrPair(resourceName, "url", resourceName, "id"),
 					resource.TestCheckResourceAttr(resourceName, "visibility_timeout_seconds", strconv.Itoa(tfsqs.DefaultQueueVisibilityTimeout)),
@@ -466,6 +467,8 @@ func TestAccSQSQueue_redrivePolicy(t *testing.T) {
 		},
 	})
 }
+
+///ADD TEST HERE
 
 func TestAccSQSQueue_fifoQueue(t *testing.T) {
 	var queueAttributes map[string]string
