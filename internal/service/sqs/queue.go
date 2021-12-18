@@ -140,6 +140,30 @@ var (
 			},
 		},
 
+		"redrive_allow_policy": {
+			Type:     schema.TypeSet,
+			Optional: true,
+			Elem: &schema.Resource{
+				Schema: map[string]*schema.Schema{
+					"redrive_permission": {
+						Type:         schema.TypeString,
+						ValidateFunc: validation.StringInSlice([]string{"allowAll", "denyAll", "byQueue"}, false),
+						Default:      "allowAll",
+						Optional:     true,
+					},
+					"source_queue_arns": {
+						Type:     schema.TypeSet,
+						Optional: true,
+						Computed: true,
+						Elem: &schema.Schema{
+							Type:         schema.TypeString,
+							ValidateFunc: verify.ValidARN,
+						},
+					},
+				},
+			},
+		},
+
 		"url": {
 			Type:     schema.TypeString,
 			Computed: true,
