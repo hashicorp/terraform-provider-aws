@@ -17,7 +17,7 @@ import (
 )
 
 func TestAccSNSTopicPolicy_basic(t *testing.T) {
-	attributes := make(map[string]string)
+	var attributes map[string]string
 	resourceName := "aws_sns_topic_policy.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -30,7 +30,7 @@ func TestAccSNSTopicPolicy_basic(t *testing.T) {
 			{
 				Config: testAccTopicPolicyBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTopicExists("aws_sns_topic.test", attributes),
+					testAccCheckTopicExists("aws_sns_topic.test", &attributes),
 					resource.TestCheckResourceAttrPair(resourceName, "arn", "aws_sns_topic.test", "arn"),
 					resource.TestMatchResourceAttr(resourceName, "policy",
 						regexp.MustCompile(fmt.Sprintf("\"Sid\":\"%[1]s\"", rName))),
@@ -47,7 +47,7 @@ func TestAccSNSTopicPolicy_basic(t *testing.T) {
 }
 
 func TestAccSNSTopicPolicy_updated(t *testing.T) {
-	attributes := make(map[string]string)
+	var attributes map[string]string
 	resourceName := "aws_sns_topic_policy.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -60,7 +60,7 @@ func TestAccSNSTopicPolicy_updated(t *testing.T) {
 			{
 				Config: testAccTopicPolicyBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTopicExists("aws_sns_topic.test", attributes),
+					testAccCheckTopicExists("aws_sns_topic.test", &attributes),
 					resource.TestMatchResourceAttr(resourceName, "policy",
 						regexp.MustCompile(fmt.Sprintf("\"Sid\":\"%[1]s\"", rName))),
 				),
@@ -73,7 +73,7 @@ func TestAccSNSTopicPolicy_updated(t *testing.T) {
 			{
 				Config: testAccTopicPolicyUpdatedConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTopicExists("aws_sns_topic.test", attributes),
+					testAccCheckTopicExists("aws_sns_topic.test", &attributes),
 					resource.TestMatchResourceAttr(resourceName, "policy",
 						regexp.MustCompile(fmt.Sprintf("\"Sid\":\"%[1]s\"", rName))),
 					resource.TestMatchResourceAttr(resourceName, "policy",
@@ -85,7 +85,7 @@ func TestAccSNSTopicPolicy_updated(t *testing.T) {
 }
 
 func TestAccSNSTopicPolicy_Disappears_topic(t *testing.T) {
-	attributes := make(map[string]string)
+	var attributes map[string]string
 	topicResourceName := "aws_sns_topic.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -98,7 +98,7 @@ func TestAccSNSTopicPolicy_Disappears_topic(t *testing.T) {
 			{
 				Config: testAccTopicPolicyBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTopicExists(topicResourceName, attributes),
+					testAccCheckTopicExists(topicResourceName, &attributes),
 					acctest.CheckResourceDisappears(acctest.Provider, tfsns.ResourceTopic(), topicResourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -108,7 +108,7 @@ func TestAccSNSTopicPolicy_Disappears_topic(t *testing.T) {
 }
 
 func TestAccSNSTopicPolicy_disappears(t *testing.T) {
-	attributes := make(map[string]string)
+	var attributes map[string]string
 	resourceName := "aws_sns_topic_policy.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -121,7 +121,7 @@ func TestAccSNSTopicPolicy_disappears(t *testing.T) {
 			{
 				Config: testAccTopicPolicyBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTopicExists("aws_sns_topic.test", attributes),
+					testAccCheckTopicExists("aws_sns_topic.test", &attributes),
 					acctest.CheckResourceDisappears(acctest.Provider, tfsns.ResourceTopicPolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -131,7 +131,7 @@ func TestAccSNSTopicPolicy_disappears(t *testing.T) {
 }
 
 func TestAccSNSTopicPolicy_ignoreEquivalent(t *testing.T) {
-	attributes := make(map[string]string)
+	var attributes map[string]string
 	resourceName := "aws_sns_topic_policy.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -144,7 +144,7 @@ func TestAccSNSTopicPolicy_ignoreEquivalent(t *testing.T) {
 			{
 				Config: testAccTopicPolicyEquivalentConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTopicExists("aws_sns_topic.test", attributes),
+					testAccCheckTopicExists("aws_sns_topic.test", &attributes),
 					resource.TestCheckResourceAttrPair(resourceName, "arn", "aws_sns_topic.test", "arn"),
 					resource.TestMatchResourceAttr(resourceName, "policy",
 						regexp.MustCompile(fmt.Sprintf("\"Sid\":\"%[1]s\"", rName))),
