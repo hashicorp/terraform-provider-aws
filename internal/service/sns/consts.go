@@ -5,6 +5,41 @@ const (
 )
 
 const (
+	SubscriptionProtocolApplication = "application"
+	SubscriptionProtocolEmail       = "email"
+	SubscriptionProtocolEmailJSON   = "email-json"
+	SubscriptionProtocolFirehose    = "firehose"
+	SubscriptionProtocolHTTP        = "http"
+	SubscriptionProtocolHTTPS       = "https"
+	SubscriptionProtocolLambda      = "lambda"
+	SubscriptionProtocolSMS         = "sms"
+	SubscriptionProtocolSQS         = "sqs"
+)
+
+func SubscriptionProtocol_Values() []string {
+	return []string{
+		SubscriptionProtocolApplication,
+		SubscriptionProtocolEmail,
+		SubscriptionProtocolEmailJSON,
+		SubscriptionProtocolFirehose,
+		SubscriptionProtocolHTTP,
+		SubscriptionProtocolHTTPS,
+		SubscriptionProtocolLambda,
+		SubscriptionProtocolSMS,
+		SubscriptionProtocolSQS,
+	}
+}
+
+const (
+	SubscriptionAttributeNameDeliveryPolicy      = "DeliveryPolicy"
+	SubscriptionAttributeNameFilterPolicy        = "FilterPolicy"
+	SubscriptionAttributeNameProtocol            = "Protocol"
+	SubscriptionAttributeNameRawMessageDelivery  = "RawMessageDelivery"
+	SubscriptionAttributeNameRedrivePolicy       = "RedrivePolicy"
+	SubscriptionAttributeNameSubscriptionRoleArn = "SubscriptionRoleArn"
+)
+
+const (
 	TopicAttributeNameApplicationFailureFeedbackRoleArn    = "ApplicationFailureFeedbackRoleArn"
 	TopicAttributeNameApplicationSuccessFeedbackRoleArn    = "ApplicationSuccessFeedbackRoleArn"
 	TopicAttributeNameApplicationSuccessFeedbackSampleRate = "ApplicationSuccessFeedbackSampleRate"
