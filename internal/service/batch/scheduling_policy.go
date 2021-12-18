@@ -54,10 +54,9 @@ func ResourceSchedulingPolicy() *schema.Resource {
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"share_identifier": {
-										Type:     schema.TypeString,
-										Required: true,
-										// limited to 255 alphanumeric characters, optionally followed by an asterisk (*).
-										ValidateFunc: validation.StringLenBetween(1, 256),
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: validShareIdentifier,
 									},
 									"weight_factor": {
 										Type:         schema.TypeFloat,
@@ -83,7 +82,7 @@ func ResourceSchedulingPolicy() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(1, 127),
+				ValidateFunc: validName,
 			},
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
