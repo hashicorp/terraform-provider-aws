@@ -8,23 +8,29 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func FindSubscriptionByARN(conn *sns.SNS, id string) (*sns.GetSubscriptionAttributesOutput, error) {
-	output, err := conn.GetSubscriptionAttributes(&sns.GetSubscriptionAttributesInput{
-		SubscriptionArn: aws.String(id),
-	})
+func FindSubscriptionAttributesByARN(conn *sns.SNS, arn string) (map[string]string, error) {
+	input := &sns.GetSubscriptionAttributesInput{
+		SubscriptionArn: aws.String(arn),
+	}
+
+	output, err := conn.GetSubscriptionAttributes(input)
+
 	if tfawserr.ErrCodeEquals(err, sns.ErrCodeNotFoundException) {
-		return nil, nil
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
 	}
 
 	if err != nil {
 		return nil, err
 	}
 
-	if output == nil || output.Attributes == nil || len(output.Attributes) == 0 {
-		return nil, nil
+	if output == nil || len(output.Attributes) == 0 {
+		return nil, tfresource.NewEmptyResultError(input)
 	}
 
-	return output, nil
+	return aws.StringValueMap(output.Attributes), nil
 }
 
 func FindTopicAttributesByARN(conn *sns.SNS, arn string) (map[string]string, error) {

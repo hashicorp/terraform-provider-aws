@@ -33,6 +33,7 @@ func SubscriptionProtocol_Values() []string {
 const (
 	SubscriptionAttributeNameDeliveryPolicy      = "DeliveryPolicy"
 	SubscriptionAttributeNameFilterPolicy        = "FilterPolicy"
+	SubscriptionAttributeNamePendingConfirmation = "PendingConfirmation"
 	SubscriptionAttributeNameProtocol            = "Protocol"
 	SubscriptionAttributeNameRawMessageDelivery  = "RawMessageDelivery"
 	SubscriptionAttributeNameRedrivePolicy       = "RedrivePolicy"

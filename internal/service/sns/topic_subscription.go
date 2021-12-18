@@ -12,7 +12,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws/awsutil"
 	"github.com/aws/aws-sdk-go/service/sns"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -80,20 +79,10 @@ func ResourceTopicSubscription() *schema.Resource {
 				Computed: true,
 			},
 			"protocol": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				ValidateFunc: validation.StringInSlice([]string{
-					"application",
-					"email-json",
-					"email",
-					"firehose",
-					"http",
-					"https",
-					"lambda",
-					"sms",
-					"sqs",
-				}, false),
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringInSlice(SubscriptionProtocol_Values(), false),
 			},
 			"raw_message_delivery": {
 				Type:     schema.TypeBool,
@@ -171,45 +160,21 @@ func resourceTopicSubscriptionCreate(d *schema.ResourceData, meta interface{}) e
 func resourceTopicSubscriptionRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SNSConn
 
-	var output *sns.GetSubscriptionAttributesOutput
+	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(subscriptionCreateTimeout, func() (interface{}, error) {
+		return FindSubscriptionAttributesByARN(conn, d.Id())
+	}, d.IsNewResource())
 
-	err := resource.Retry(subscriptionCreateTimeout, func() *resource.RetryError {
-		var err error
-
-		output, err = FindSubscriptionByARN(conn, d.Id())
-
-		if err != nil {
-			return resource.NonRetryableError(err)
-		}
-
-		if d.IsNewResource() && output == nil {
-			return resource.RetryableError(&resource.NotFoundError{
-				LastError: fmt.Errorf("SNS Topic Subscription Attributes (%s) not found", d.Id()),
-			})
-		}
-
-		return nil
-	})
-
-	if tfresource.TimedOut(err) {
-		output, err = FindSubscriptionByARN(conn, d.Id())
-	}
-
-	if err != nil {
-		return fmt.Errorf("error getting SNS Topic Subscription Attributes (%s): %w", d.Id(), err)
-	}
-
-	if output == nil {
-		if d.IsNewResource() {
-			return fmt.Errorf("error getting SNS Topic Subscription Attributes (%s): not found after creation", d.Id())
-		}
-
-		log.Printf("[WARN] SNS Topic Subscription Attributes (%s) not found, removing from state", d.Id())
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] SNS Topic Subscription %s not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
-	attributes := output.Attributes
+	if err != nil {
+		return fmt.Errorf("error reading SNS Topic Subscription (%s): %w", d.Id(), err)
+	}
+
+	attributes := outputRaw.(map[string]string)
 
 	d.Set("arn", attributes["SubscriptionArn"])
 	d.Set("delivery_policy", attributes["DeliveryPolicy"])
@@ -222,17 +187,17 @@ func resourceTopicSubscriptionRead(d *schema.ResourceData, meta interface{}) err
 	d.Set("topic_arn", attributes["TopicArn"])
 
 	d.Set("confirmation_was_authenticated", false)
-	if v, ok := attributes["ConfirmationWasAuthenticated"]; ok && aws.StringValue(v) == "true" {
+	if v, ok := attributes["ConfirmationWasAuthenticated"]; ok && v == "true" {
 		d.Set("confirmation_was_authenticated", true)
 	}
 
 	d.Set("pending_confirmation", false)
-	if v, ok := attributes["PendingConfirmation"]; ok && aws.StringValue(v) == "true" {
+	if v, ok := attributes["PendingConfirmation"]; ok && v == "true" {
 		d.Set("pending_confirmation", true)
 	}
 
 	d.Set("raw_message_delivery", false)
-	if v, ok := attributes["RawMessageDelivery"]; ok && aws.StringValue(v) == "true" {
+	if v, ok := attributes["RawMessageDelivery"]; ok && v == "true" {
 		d.Set("raw_message_delivery", true)
 	}
 
