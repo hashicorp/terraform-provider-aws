@@ -85,11 +85,11 @@ The following arguments are supported:
 
 ### Replication Configuration
 
-* `rule` - (Required) The replication rules for a replication configuration. See [Rule](#rule).
+* `rule` - (Required) The replication rules for a replication configuration. A maximum of 10 are allowed per `replication_configuration`. See [Rule](#rule)
 
 ### Rule
 
-* `destination` - (Required) the details of a replication destination. See [Destination](#destination).
+* `destination` - (Required) the details of a replication destination. A maximum of 25 are allowed per `rule`. See [Destination](#destination).
 * `repository_filter` - (Optional) filters for a replication rule. See [Repository Filter](#repository-filter).
 
 ### Destination
