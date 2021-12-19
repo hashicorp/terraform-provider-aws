@@ -1052,7 +1052,7 @@ resource "aws_sqs_queue" "test" {
   delay_seconds              = 0
   visibility_timeout_seconds = 300
 
-	redrive_allow_policy = <<EOF
+  redrive_allow_policy = <<EOF
 {
   "redrivePermission": "byQueue",
   "sourceQueueArns": ["${aws_sqs_queue.dlq.arn}"]
