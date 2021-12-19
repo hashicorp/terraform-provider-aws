@@ -60,6 +60,10 @@ func statusQueueAttributeState(conn *sqs.SQS, url string, expected map[string]st
 					if !StringsEquivalent(g, e) {
 						return queuePolicyStateNotEqual
 					}
+				case sqs.QueueAttributeNameRedriveAllowPolicy:
+					if !StringsEquivalent(g, e) {
+						return queuePolicyStateNotEqual
+					}
 				default:
 					if g != e {
 						return queuePolicyStateNotEqual
