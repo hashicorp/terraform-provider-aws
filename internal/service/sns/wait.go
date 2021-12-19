@@ -45,3 +45,7 @@ func waitSubscriptionDeleted(conn *sns.SNS, arn string) (map[string]string, erro
 
 	return nil, err
 }
+
+const (
+	topicCreateTimeout = 2 * time.Minute
+)

@@ -13,7 +13,8 @@ import (
 type attributeInfo struct {
 	apiAttributeName   string
 	tfType             schema.ValueType
-	tfOptionalComputed bool
+	tfOptionalComputed bool // Optional: true, Computed: true
+	tfPureComputed     bool // Optional: false, Computed: true
 }
 
 type AttributeMap map[string]attributeInfo
@@ -29,8 +30,12 @@ func AttrMap(attrMap map[string]string, schemaMap map[string]*schema.Schema) Att
 				tfType:           s.Type,
 			}
 
-			if s.Optional && s.Computed {
-				attributeInfo.tfOptionalComputed = true
+			if s.Computed {
+				if s.Optional {
+					attributeInfo.tfOptionalComputed = true
+				} else {
+					attributeInfo.tfPureComputed = true
+				}
 			}
 
 			attributeMap[tfAttributeName] = attributeInfo
@@ -85,6 +90,11 @@ func (m AttributeMap) ResourceDataToApiAttributesCreate(d *schema.ResourceData) 
 	apiAttributes := map[string]string{}
 
 	for tfAttributeName, attributeInfo := range m {
+		// Purely Computed values aren't specified on creation.
+		if attributeInfo.tfPureComputed {
+			continue
+		}
+
 		var apiAttributeValue string
 
 		switch v, t := d.Get(tfAttributeName), attributeInfo.tfType; t {
@@ -117,6 +127,11 @@ func (m AttributeMap) ResourceDataToApiAttributesUpdate(d *schema.ResourceData) 
 	apiAttributes := map[string]string{}
 
 	for tfAttributeName, attributeInfo := range m {
+		// Purely Computed values aren't specified on update.
+		if attributeInfo.tfPureComputed {
+			continue
+		}
+
 		if d.HasChange(tfAttributeName) {
 			v := d.Get(tfAttributeName)
 
