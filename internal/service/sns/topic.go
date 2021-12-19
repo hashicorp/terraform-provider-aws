@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log"
 	"regexp"
-	"strconv"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
@@ -257,13 +256,13 @@ func resourceTopicCreate(d *schema.ResourceData, meta interface{}) error {
 	d.SetId(aws.StringValue(output.TopicArn))
 
 	if policy, ok := attributes[TopicAttributeNamePolicy]; ok && policy != "" {
-		normalizedPolicy, err := structure.NormalizeJsonString(policy)
+		policyToPut, err := structure.NormalizeJsonString(policy)
 
 		if err != nil {
 			return fmt.Errorf("policy (%s) is invalid JSON: %w", policy, err)
 		}
 
-		attributes[TopicAttributeNamePolicy] = normalizedPolicy
+		attributes[TopicAttributeNamePolicy] = policyToPut
 	}
 
 	err = putTopicAttributes(conn, d.Id(), attributes)
@@ -432,12 +431,9 @@ func resourceTopicRead(d *schema.ResourceData, meta interface{}) error {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	log.Printf("[DEBUG] Reading SNS Topic Attributes for %s", d.Id())
-	attributeOutput, err := conn.GetTopicAttributes(&sns.GetTopicAttributesInput{
-		TopicArn: aws.String(d.Id()),
-	})
+	attributes, err := FindTopicAttributesByARN(conn, d.Id())
 
-	if tfawserr.ErrMessageContains(err, sns.ErrCodeNotFoundException, "") {
+	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] SNS Topic (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -447,96 +443,20 @@ func resourceTopicRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error reading SNS Topic (%s): %w", d.Id(), err)
 	}
 
-	fifoTopic := false
+	// Save the policy to set here as ApiAttributesToResourceData will set it to the attribut's value.
+	policyToSet, err := verify.PolicyToSet(d.Get("policy").(string), attributes[TopicAttributeNamePolicy])
 
-	// set the mutable attributes
-	if attributeOutput.Attributes != nil && len(attributeOutput.Attributes) > 0 {
-		// set the string values
-		d.Set("application_failure_feedback_role_arn", attributeOutput.Attributes["ApplicationFailureFeedbackRoleArn"])
-		d.Set("application_success_feedback_role_arn", attributeOutput.Attributes["ApplicationSuccessFeedbackRoleArn"])
-		d.Set("arn", attributeOutput.Attributes["TopicArn"])
-		d.Set("delivery_policy", attributeOutput.Attributes["DeliveryPolicy"])
-		d.Set("display_name", attributeOutput.Attributes["DisplayName"])
-		d.Set("http_failure_feedback_role_arn", attributeOutput.Attributes["HTTPFailureFeedbackRoleArn"])
-		d.Set("http_success_feedback_role_arn", attributeOutput.Attributes["HTTPSuccessFeedbackRoleArn"])
-		d.Set("kms_master_key_id", attributeOutput.Attributes["KmsMasterKeyId"])
-		d.Set("lambda_failure_feedback_role_arn", attributeOutput.Attributes["LambdaFailureFeedbackRoleArn"])
-		d.Set("lambda_success_feedback_role_arn", attributeOutput.Attributes["LambdaSuccessFeedbackRoleArn"])
-		d.Set("sqs_failure_feedback_role_arn", attributeOutput.Attributes["SQSFailureFeedbackRoleArn"])
-		d.Set("sqs_success_feedback_role_arn", attributeOutput.Attributes["SQSSuccessFeedbackRoleArn"])
-		d.Set("firehose_success_feedback_role_arn", attributeOutput.Attributes["FirehoseSuccessFeedbackRoleArn"])
-		d.Set("firehose_failure_feedback_role_arn", attributeOutput.Attributes["FirehoseFailureFeedbackRoleArn"])
-		d.Set("owner", attributeOutput.Attributes["Owner"])
-
-		policyToSet, policyErr := verify.PolicyToSet(d.Get("policy").(string), aws.StringValue(attributeOutput.Attributes["Policy"]))
-
-		if policyErr != nil {
-			return err
-		}
-
-		d.Set("policy", policyToSet)
-
-		// set the boolean values
-		if v, ok := attributeOutput.Attributes["FifoTopic"]; ok && aws.StringValue(v) == "true" {
-			fifoTopic = true
-		}
-		d.Set("content_based_deduplication", false)
-		if v, ok := attributeOutput.Attributes["ContentBasedDeduplication"]; ok && aws.StringValue(v) == "true" {
-			d.Set("content_based_deduplication", true)
-		}
-
-		// set the number values
-		var vStr string
-		var v int64
-		var err error
-
-		vStr = aws.StringValue(attributeOutput.Attributes["ApplicationSuccessFeedbackSampleRate"])
-		if vStr != "" {
-			v, err = strconv.ParseInt(vStr, 10, 64)
-			if err != nil {
-				return fmt.Errorf("error parsing integer attribute 'ApplicationSuccessFeedbackSampleRate': %w", err)
-			}
-			d.Set("application_success_feedback_sample_rate", v)
-		}
-
-		vStr = aws.StringValue(attributeOutput.Attributes["HTTPSuccessFeedbackSampleRate"])
-		if vStr != "" {
-			v, err = strconv.ParseInt(vStr, 10, 64)
-			if err != nil {
-				return fmt.Errorf("error parsing integer attribute 'HTTPSuccessFeedbackSampleRate': %w", err)
-			}
-			d.Set("http_success_feedback_sample_rate", v)
-		}
-
-		vStr = aws.StringValue(attributeOutput.Attributes["LambdaSuccessFeedbackSampleRate"])
-		if vStr != "" {
-			v, err = strconv.ParseInt(vStr, 10, 64)
-			if err != nil {
-				return fmt.Errorf("error parsing integer attribute 'LambdaSuccessFeedbackSampleRate': %w", err)
-			}
-			d.Set("lambda_success_feedback_sample_rate", v)
-		}
-
-		vStr = aws.StringValue(attributeOutput.Attributes["SQSSuccessFeedbackSampleRate"])
-		if vStr != "" {
-			v, err = strconv.ParseInt(vStr, 10, 64)
-			if err != nil {
-				return fmt.Errorf("error parsing integer attribute 'SQSSuccessFeedbackSampleRate': %w", err)
-			}
-			d.Set("sqs_success_feedback_sample_rate", v)
-		}
-
-		vStr = aws.StringValue(attributeOutput.Attributes["FirehoseSuccessFeedbackSampleRate"])
-		if vStr != "" {
-			v, err = strconv.ParseInt(vStr, 10, 64)
-			if err != nil {
-				return fmt.Errorf("error parsing integer attribute 'FirehoseSuccessFeedbackSampleRate': %w", err)
-			}
-			d.Set("firehose_success_feedback_sample_rate", v)
-		}
+	if err != nil {
+		return err
 	}
 
-	d.Set("fifo_topic", fifoTopic)
+	err = topicAttributeMap.ApiAttributesToResourceData(attributes, d)
+
+	if err != nil {
+		return err
+	}
+
+	d.Set("policy", policyToSet)
 
 	arn, err := arn.Parse(d.Id())
 
@@ -546,7 +466,7 @@ func resourceTopicRead(d *schema.ResourceData, meta interface{}) error {
 
 	name := arn.Resource
 	d.Set("name", name)
-	if fifoTopic {
+	if d.Get("fifo_topic").(bool) {
 		d.Set("name_prefix", create.NamePrefixFromNameWithSuffix(name, FIFOTopicNameSuffix))
 	} else {
 		d.Set("name_prefix", create.NamePrefixFromName(name))
@@ -575,15 +495,16 @@ func resourceTopicRead(d *schema.ResourceData, meta interface{}) error {
 func resourceTopicDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SNSConn
 
-	log.Printf("[DEBUG] SNS Delete Topic: %s", d.Id())
+	log.Printf("[DEBUG] Deleting SNS Topic: %s", d.Id())
 	_, err := conn.DeleteTopic(&sns.DeleteTopicInput{
 		TopicArn: aws.String(d.Id()),
 	})
 
+	if tfawserr.ErrCodeEquals(err, sns.ErrCodeNotFoundException) {
+		return nil
+	}
+
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, sns.ErrCodeNotFoundException, "") {
-			return nil
-		}
 		return fmt.Errorf("error deleting SNS Topic (%s): %w", d.Id(), err)
 	}
 
