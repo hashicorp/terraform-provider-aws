@@ -190,7 +190,7 @@ var (
 		"sqs_failure_feedback_role_arn":         TopicAttributeNameSQSFailureFeedbackRoleArn,
 		"sqs_success_feedback_role_arn":         TopicAttributeNameSQSSuccessFeedbackRoleArn,
 		"sqs_success_feedback_sample_rate":      TopicAttributeNameSQSSuccessFeedbackSampleRate,
-	}, topicSchema)
+	}, topicSchema).WithIAMPolicyAttribute("policy")
 )
 
 func ResourceTopic() *schema.Resource {
@@ -234,11 +234,12 @@ func resourceTopicCreate(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	// If FifoTopic is true, then the attribute must be passed into the call to CreateTopic.
+	// The FifoTopic attribute must be passed in the call to CreateTopic.
 	if v, ok := attributes[TopicAttributeNameFifoTopic]; ok {
 		input.Attributes = aws.StringMap(map[string]string{
 			TopicAttributeNameFifoTopic: v,
 		})
+
 		delete(attributes, TopicAttributeNameFifoTopic)
 	}
 
@@ -254,16 +255,6 @@ func resourceTopicCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	d.SetId(aws.StringValue(output.TopicArn))
-
-	if policy, ok := attributes[TopicAttributeNamePolicy]; ok && policy != "" {
-		policyToPut, err := structure.NormalizeJsonString(policy)
-
-		if err != nil {
-			return fmt.Errorf("policy (%s) is invalid JSON: %w", policy, err)
-		}
-
-		attributes[TopicAttributeNamePolicy] = policyToPut
-	}
 
 	err = putTopicAttributes(conn, d.Id(), attributes)
 
@@ -443,20 +434,11 @@ func resourceTopicRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error reading SNS Topic (%s): %w", d.Id(), err)
 	}
 
-	// Save the policy to set here as ApiAttributesToResourceData will set it to the attribut's value.
-	policyToSet, err := verify.PolicyToSet(d.Get("policy").(string), attributes[TopicAttributeNamePolicy])
-
-	if err != nil {
-		return err
-	}
-
 	err = topicAttributeMap.ApiAttributesToResourceData(attributes, d)
 
 	if err != nil {
 		return err
 	}
-
-	d.Set("policy", policyToSet)
 
 	arn, err := arn.Parse(d.Id())
 

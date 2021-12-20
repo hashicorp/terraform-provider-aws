@@ -6,6 +6,8 @@ import (
 	"strconv"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // AttributeMap represents a map of Terraform resource attribute name to AWS API attribute name.
@@ -15,6 +17,7 @@ type attributeInfo struct {
 	tfType           schema.ValueType
 	tfComputed       bool
 	tfOptional       bool
+	isIAMPolicy      bool
 }
 
 type AttributeMap map[string]attributeInfo
@@ -64,6 +67,16 @@ func (m AttributeMap) ApiAttributesToResourceData(apiAttributes map[string]strin
 				}
 			case schema.TypeString:
 				tfAttributeValue = v
+
+				if attributeInfo.isIAMPolicy {
+					policy, err := verify.PolicyToSet(d.Get(tfAttributeName).(string), tfAttributeValue.(string))
+
+					if err != nil {
+						return err
+					}
+
+					tfAttributeValue = policy
+				}
 			default:
 				return fmt.Errorf("attribute %s is of unsupported type: %d", tfAttributeName, t)
 			}
@@ -105,6 +118,16 @@ func (m AttributeMap) ResourceDataToApiAttributesCreate(d *schema.ResourceData) 
 			}
 		case schema.TypeString:
 			apiAttributeValue = v.(string)
+
+			if attributeInfo.isIAMPolicy && apiAttributeValue != "" {
+				policy, err := structure.NormalizeJsonString(apiAttributeValue)
+
+				if err != nil {
+					return nil, fmt.Errorf("policy (%s) is invalid JSON: %w", apiAttributeValue, err)
+				}
+
+				apiAttributeValue = policy
+			}
 		default:
 			return nil, fmt.Errorf("attribute %s is of unsupported type: %d", tfAttributeName, t)
 		}
@@ -160,4 +183,15 @@ func (m AttributeMap) ApiAttributeNames() []string {
 	}
 
 	return apiAttributeNames
+}
+
+// WithIAMPolicyAttribute marks the specified Terraform attribute as holding an AWS IAM policy.
+// AWS IAM policies get special handling.
+// This method is intended to be chained with other similar helper methods in a builder pattern.
+func (m AttributeMap) WithIAMPolicyAttribute(tfAttributeName string) AttributeMap {
+	if attributeInfo, ok := m[tfAttributeName]; ok {
+		attributeInfo.isIAMPolicy = true
+	}
+
+	return m
 }
