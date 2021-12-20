@@ -289,6 +289,54 @@ func sweepFSXOntapVolume(region string) error {
 	return errs.ErrorOrNil()
 }
 
+func sweepFSXOpenzfsFileSystems(region string) error {
+	client, err := sweep.SharedRegionalSweepClient(region)
+
+	if err != nil {
+		return fmt.Errorf("error getting client: %w", err)
+	}
+
+	conn := client.(*conns.AWSClient).FSxConn
+	sweepResources := make([]*sweep.SweepResource, 0)
+	var errs *multierror.Error
+	input := &fsx.DescribeFileSystemsInput{}
+
+	err = conn.DescribeFileSystemsPages(input, func(page *fsx.DescribeFileSystemsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, fs := range page.FileSystems {
+			if aws.StringValue(fs.FileSystemType) != fsx.FileSystemTypeOpenZFS {
+				continue
+			}
+
+			r := ResourceOpenzfsFileSystem()
+			d := r.Data(nil)
+			d.SetId(aws.StringValue(fs.FileSystemId))
+
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+		}
+
+		return !lastPage
+	})
+
+	if err != nil {
+		errs = multierror.Append(errs, fmt.Errorf("error listing FSx OpenZFS File Systems for %s: %w", region, err))
+	}
+
+	if err = sweep.SweepOrchestrator(sweepResources); err != nil {
+		errs = multierror.Append(errs, fmt.Errorf("error sweeping FSx OpenZFS File Systems for %s: %w", region, err))
+	}
+
+	if sweep.SkipSweepError(errs.ErrorOrNil()) {
+		log.Printf("[WARN] Skipping FSx OpenZFS File System sweep for %s: %s", region, errs)
+		return nil
+	}
+
+	return errs.ErrorOrNil()
+}
+
 func sweepFSXWindowsFileSystems(region string) error {
 	client, err := sweep.SharedRegionalSweepClient(region)
 

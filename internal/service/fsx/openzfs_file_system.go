@@ -121,7 +121,7 @@ func ResourceOpenzfsFileSystem() *schema.Resource {
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"client_configurations": {
-										Type:     schema.TypeList,
+										Type:     schema.TypeSet,
 										Required: true,
 										MaxItems: 25,
 										Elem: &schema.Resource{
@@ -273,7 +273,8 @@ func resourceOepnzfsFileSystemCreate(d *schema.ResourceData, meta interface{}) e
 		StorageType:        aws.String(d.Get("storage_type").(string)),
 		SubnetIds:          flex.ExpandStringList(d.Get("subnet_ids").([]interface{})),
 		OpenZFSConfiguration: &fsx.CreateFileSystemOpenZFSConfiguration{
-			DeploymentType: aws.String(d.Get("deployment_type").(string)),
+			DeploymentType:               aws.String(d.Get("deployment_type").(string)),
+			AutomaticBackupRetentionDays: aws.Int64(int64(d.Get("automatic_backup_retention_days").(int))),
 		},
 	}
 
@@ -282,7 +283,8 @@ func resourceOepnzfsFileSystemCreate(d *schema.ResourceData, meta interface{}) e
 		StorageType:        aws.String(d.Get("storage_type").(string)),
 		SubnetIds:          flex.ExpandStringList(d.Get("subnet_ids").([]interface{})),
 		OpenZFSConfiguration: &fsx.CreateFileSystemOpenZFSConfiguration{
-			DeploymentType: aws.String(d.Get("deployment_type").(string)),
+			DeploymentType:               aws.String(d.Get("deployment_type").(string)),
+			AutomaticBackupRetentionDays: aws.Int64(int64(d.Get("automatic_backup_retention_days").(int))),
 		},
 	}
 
@@ -299,11 +301,6 @@ func resourceOepnzfsFileSystemCreate(d *schema.ResourceData, meta interface{}) e
 	if v, ok := d.GetOk("kms_key_id"); ok {
 		input.KmsKeyId = aws.String(v.(string))
 		backupInput.KmsKeyId = aws.String(v.(string))
-	}
-
-	if v, ok := d.GetOk("automatic_backup_retention_days"); ok {
-		input.OpenZFSConfiguration.AutomaticBackupRetentionDays = aws.Int64(int64(v.(int)))
-		backupInput.OpenZFSConfiguration.AutomaticBackupRetentionDays = aws.Int64(int64(v.(int)))
 	}
 
 	if v, ok := d.GetOk("daily_automatic_backup_start_time"); ok {
@@ -588,8 +585,6 @@ func expandFsxOpenzfsRootVolumeConfiguration(cfg []interface{}) *fsx.OpenZFSCrea
 		return nil
 	}
 
-	log.Printf("[WARN] Root Volume Info (%v) ", cfg)
-
 	conf := cfg[0].(map[string]interface{})
 
 	out := fsx.OpenZFSCreateRootVolumeConfiguration{}
@@ -685,8 +680,6 @@ func expandFsxOpenzfsUserAndGroupQuota(conf map[string]interface{}) *fsx.OpenZFS
 func expandFsxOpenzfsNfsExports(cfg []interface{}) []*fsx.OpenZFSNfsExport {
 	exports := []*fsx.OpenZFSNfsExport{}
 
-	log.Printf("[WARN] NFS Info (%v) ", cfg)
-
 	for _, export := range cfg {
 		expandedExport := expandFsxOpenzfsNfsExport(export.(map[string]interface{}))
 		if expandedExport != nil {
@@ -698,13 +691,11 @@ func expandFsxOpenzfsNfsExports(cfg []interface{}) []*fsx.OpenZFSNfsExport {
 
 }
 
-func expandFsxOpenzfsNfsExport(conf map[string]interface{}) *fsx.OpenZFSNfsExport {
+func expandFsxOpenzfsNfsExport(cfg map[string]interface{}) *fsx.OpenZFSNfsExport {
 	out := fsx.OpenZFSNfsExport{}
 
-	log.Printf("[DEBUG] NFS Export Info (%v) ", conf)
-
-	if v, ok := conf["client_configurations"].([]interface{}); ok {
-		out.ClientConfigurations = expandFsxOpenzfsClinetConfigurations(v)
+	if v, ok := cfg["client_configurations"]; ok {
+		out.ClientConfigurations = expandFsxOpenzfsClinetConfigurations(v.(*schema.Set).List())
 	}
 
 	return &out
@@ -712,8 +703,6 @@ func expandFsxOpenzfsNfsExport(conf map[string]interface{}) *fsx.OpenZFSNfsExpor
 
 func expandFsxOpenzfsClinetConfigurations(cfg []interface{}) []*fsx.OpenZFSClientConfiguration {
 	configurations := []*fsx.OpenZFSClientConfiguration{}
-
-	log.Printf("[DEBUG] Client Configs (%v) ", cfg)
 
 	for _, configuration := range cfg {
 		expandedConfiguration := expandFsxOpenzfsClientConfiguration(configuration.(map[string]interface{}))
@@ -728,8 +717,6 @@ func expandFsxOpenzfsClinetConfigurations(cfg []interface{}) []*fsx.OpenZFSClien
 
 func expandFsxOpenzfsClientConfiguration(conf map[string]interface{}) *fsx.OpenZFSClientConfiguration {
 	out := fsx.OpenZFSClientConfiguration{}
-
-	log.Printf("[DEBUG] Client Config (%v) ", conf)
 
 	if v, ok := conf["clients"].(string); ok && len(v) > 0 {
 		out.Clients = aws.String(v)

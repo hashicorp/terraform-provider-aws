@@ -3,12 +3,12 @@ subcategory: "File System (FSx)"
 layout: "aws"
 page_title: "AWS: aws_fsx_openzfs_file_system"
 description: |-
-  Manages an Amazon FSx for NetApp OpenZFS file system.
+  Manages an Amazon FSx for OpenZFS file system.
 ---
 
-# Resource: aws_fsx_ontap_file_system
+# Resource: aws_fsx_openzfs_file_system
 
-Manages an Amazon FSx for NetApp OpenZFS file system.
+Manages an Amazon FSx for OpenZFS file system.
 See the [FSx OpenZFS User Guide](https://docs.aws.amazon.com/fsx/latest/OpenZFSGuide/what-is-fsx.html) for more information.
 
 ## Example Usage
@@ -39,7 +39,7 @@ The following arguments are supported:
 * `kms_key_id` - (Optional) ARN for the KMS Key to encrypt the file system at rest, Defaults to an AWS managed KMS Key.
 * `root_volume_configuration` - (Optional) The configuration for the root volume of the file system. All other volumes are children or the root volume. See [Root Volume Configuration](#root-volume-configuration) Below.
 * `security_group_ids` - (Optional) A list of IDs for the security groups that apply to the specified network interfaces created for file system access. These security groups will apply to all network interfaces.
-* `storage_type` - (Optional) The filesystem storage type. defaults to `SSD`.
+* `storage_type` - (Optional) The filesystem storage type. Only `SSD` is supported. 
 * `tags` - (Optional) A map of tags to assign to the file system. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `weekly_maintenance_start_time` - (Optional) The preferred start time (in `d:HH:MM` format) to perform weekly maintenance, in the UTC time zone.
 
@@ -50,7 +50,7 @@ The following arguments are supported:
 
 ### Root Volume Configuration
 * `copy_tags_to_snapshots` - (Optional) - A boolean flag indicating whether tags for the file system should be copied to snapshots. The default value is false.
-* `data_compression_type` - (Optional) - Method used to compress the data on the volume. Valid values are `NONE` or `ZSTD`. Child volumes that don't specify compession option will inherit from parent volume. This option on file system applies to the root volume. 
+* `data_compression_type` - (Optional) - Method used to compress the data on the volume. Valid values are `NONE` or `ZSTD`. Child volumes that don't specify compression option will inherit from parent volume. This option on file system applies to the root volume. 
 * `nfs_exports` - (Optional) - NFS export configuration for the root volume. Exactly 1 item. See [NFS Exports](#nfs-exports) Below.
 * `read_only` - (Optional) - specifies whether the volume is read-only. Default is false.
 * `user_and_group_quotas` - (Optional) - Specify how much storage users or groups can use on the volume. Maximum of 100 items. See [User and Group Quotas](#user-and-group-quotas) Below.
