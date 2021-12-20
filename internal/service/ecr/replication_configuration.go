@@ -36,12 +36,13 @@ func ResourceReplicationConfiguration() *schema.Resource {
 						"rule": {
 							Type:     schema.TypeList,
 							Required: true,
-							MaxItems: 1,
+							MaxItems: 10,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"destination": {
 										Type:     schema.TypeList,
 										Required: true,
+										MaxItems: 25,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"region": {
