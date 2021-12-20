@@ -11,10 +11,25 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func TestAccECRReplicationConfiguration_basic(t *testing.T) {
+func TestAccECRReplicationConfiguration_serial(t *testing.T) {
+	testFuncs := map[string]func(t *testing.T){
+		"basic":            testAccReplicationConfiguration_basic,
+		"repositoryFilter": testAccReplicationConfiguration_repositoryFilter,
+	}
+
+	for name, testFunc := range testFuncs {
+		testFunc := testFunc
+
+		t.Run(name, func(t *testing.T) {
+			testFunc(t)
+		})
+	}
+}
+
+func testAccReplicationConfiguration_basic(t *testing.T) {
 	resourceName := "aws_ecr_replication_configuration.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ecr.EndpointsID),
 		Providers:    acctest.Providers,
@@ -70,10 +85,10 @@ func TestAccECRReplicationConfiguration_basic(t *testing.T) {
 	})
 }
 
-func TestAccECRReplicationConfiguration_repositoryFilter(t *testing.T) {
+func testAccReplicationConfiguration_repositoryFilter(t *testing.T) {
 	resourceName := "aws_ecr_replication_configuration.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ecr.EndpointsID),
 		Providers:    acctest.Providers,
