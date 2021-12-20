@@ -69,7 +69,7 @@ resource "aws_ecr_replication_configuration" "example" {
       }
 
       repository_filter {
-        filter = "prod-microservice"
+        filter      = "prod-microservice"
         filter_type = "PREFIX_MATCH"
       }
     }
@@ -99,7 +99,7 @@ The following arguments are supported:
 
 ### Repository Filter
 * `filter` - (Required) The repository filter details.
-* `filter_type` - (Required) The repository filter type. The only supported value is PREFIX_MATCH, which is a repository name prefix specified with the filter parameter.
+* `filter_type` - (Required) The repository filter type. The only supported value is `PREFIX_MATCH`, which is a repository name prefix specified with the filter parameter.
 
 
 ## Attributes Reference

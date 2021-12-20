@@ -72,7 +72,7 @@ func waitEventSubscriptionUpdated(conn *rds.RDS, id string, timeout time.Duratio
 }
 
 // waitDBProxyEndpointAvailable waits for a DBProxyEndpoint to return Available
-func waitDBProxyEndpointAvailable(conn *rds.RDS, id string, timeout time.Duration) (*rds.DBProxyEndpoint, error) {
+func waitDBProxyEndpointAvailable(conn *rds.RDS, id string, timeout time.Duration) (*rds.DBProxyEndpoint, error) { //nolint:unparam
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{
 			rds.DBProxyEndpointStatusCreating,

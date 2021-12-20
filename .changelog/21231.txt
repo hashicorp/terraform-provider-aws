@@ -1,0 +1,4 @@
+
+```release-note:enhancement
+resource/aws_ecr_replication_configuration: Added support for repository filters
+```

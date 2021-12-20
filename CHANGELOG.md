@@ -1,5 +1,9 @@
 ## 3.64.0 (Unreleased)
 
+FEATURES:
+
+* **New Data Source:** `aws_iam_user_ssh_key` ([#21335](https://github.com/hashicorp/terraform-provider-aws/issues/21335))
+
 ENHANCEMENTS:
 
 * data-source/aws_s3_bucket: Return `hosted_zone_id` attribute for `cn-northwest-1` (Ningxia) region ([#21337](https://github.com/hashicorp/terraform-provider-aws/issues/21337))

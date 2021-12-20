@@ -119,7 +119,7 @@ func waitServiceDescribeReady(conn *ecs.ECS, id, cluster string) (*ecs.DescribeS
 	return nil, err
 }
 
-func waitClusterAvailable(conn *ecs.ECS, arn string) (*ecs.Cluster, error) {
+func waitClusterAvailable(conn *ecs.ECS, arn string) (*ecs.Cluster, error) { //nolint:unparam
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{"PROVISIONING"},
 		Target:  []string{"ACTIVE"},

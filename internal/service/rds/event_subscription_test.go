@@ -469,7 +469,7 @@ resource "aws_db_event_subscription" "test" {
 
   event_categories = [
     "creation",
-	"deletion",
+    "deletion",
   ]
 }
 `, rName)

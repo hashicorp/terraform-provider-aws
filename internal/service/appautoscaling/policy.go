@@ -1,4 +1,4 @@
-package applicationautoscaling
+package appautoscaling
 
 import (
 	"fmt"
@@ -204,7 +204,7 @@ func ResourcePolicy() *schema.Resource {
 }
 
 func resourcePolicyCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ApplicationAutoScalingConn
+	conn := meta.(*conns.AWSClient).AppAutoScalingConn
 
 	params, err := getPutScalingPolicyInput(d)
 	if err != nil {
@@ -297,7 +297,7 @@ func resourcePolicyRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourcePolicyUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ApplicationAutoScalingConn
+	conn := meta.(*conns.AWSClient).AppAutoScalingConn
 
 	params, inputErr := getPutScalingPolicyInput(d)
 	if inputErr != nil {
@@ -329,7 +329,7 @@ func resourcePolicyUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourcePolicyDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ApplicationAutoScalingConn
+	conn := meta.(*conns.AWSClient).AppAutoScalingConn
 	p, err := getPolicy(d, meta)
 	if err != nil {
 		return fmt.Errorf("Error getting policy: %s", err)
@@ -592,7 +592,7 @@ func getPutScalingPolicyInput(d *schema.ResourceData) (applicationautoscaling.Pu
 }
 
 func getPolicy(d *schema.ResourceData, meta interface{}) (*applicationautoscaling.ScalingPolicy, error) {
-	conn := meta.(*conns.AWSClient).ApplicationAutoScalingConn
+	conn := meta.(*conns.AWSClient).AppAutoScalingConn
 
 	params := applicationautoscaling.DescribeScalingPoliciesInput{
 		PolicyNames:       []*string{aws.String(d.Get("name").(string))},

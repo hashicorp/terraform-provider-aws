@@ -101,7 +101,7 @@ const (
 )
 
 // waitCacheClusterAvailable waits for a Cache Cluster to return Available
-func waitCacheClusterAvailable(conn *elasticache.ElastiCache, cacheClusterID string, timeout time.Duration) (*elasticache.CacheCluster, error) {
+func waitCacheClusterAvailable(conn *elasticache.ElastiCache, cacheClusterID string, timeout time.Duration) (*elasticache.CacheCluster, error) { //nolint:unparam
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{
 			CacheClusterStatusCreating,

@@ -33,7 +33,7 @@ testacc: fmtcheck
 		echo "See the contributing guide for more information: https://github.com/hashicorp/terraform-provider-aws/blob/main/docs/contributing/running-and-writing-acceptance-tests.md"; \
 		exit 1; \
 	fi
-	TF_ACC=1 go test ./$(PKG_NAME) -v -count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) $(TESTARGS) -timeout $(ACCTEST_TIMEOUT)
+	TF_ACC=1 go test ./$(PKG_NAME)/... -v -count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) $(TESTARGS) -timeout $(ACCTEST_TIMEOUT)
 
 fmt:
 	@echo "==> Fixing source code with gofmt..."
@@ -82,15 +82,17 @@ docscheck:
 		-require-resource-subcategory
 	@misspell -error -source text CHANGELOG.md .changelog
 
-# lint: golangci-lint providerlint importlint
-lint: golangci-lint importlint
+lint: golangci-lint providerlint importlint
 
 golangci-lint:
+	@echo "==> Checking source code with golangci-lint..."
 	@golangci-lint run ./$(PKG_NAME)/...
 
 providerlint:
+	@echo "==> Checking source code with providerlint..."
 	@providerlint \
 		-c 1 \
+		-AT001.ignored-filename-suffixes=_data_source_test.go \
 		-AWSAT006=false \
 		-AWSR002=false \
 		-AWSV001=false \
@@ -111,9 +113,10 @@ providerlint:
 		-XR005=false \
 		-XS001=false \
 		-XS002=false \
-		./$(PKG_NAME)
+		./$(PKG_NAME)/service/... ./$(PKG_NAME)/provider/...
 
 importlint:
+	@echo "==> Checking source code with importlint..."
 	@impi --local . --scheme stdThirdPartyLocal ./$(PKG_NAME)/...
 
 tools:
