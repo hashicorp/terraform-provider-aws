@@ -98,6 +98,7 @@ The following arguments are supported:
 * `registry_id` - (Required) The account ID of the destination registry to replicate to.
 
 ### Repository Filter
+
 * `filter` - (Required) The repository filter details.
 * `filter_type` - (Required) The repository filter type. The only supported value is `PREFIX_MATCH`, which is a repository name prefix specified with the filter parameter.
 
