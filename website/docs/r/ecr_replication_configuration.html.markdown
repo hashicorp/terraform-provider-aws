@@ -101,7 +101,6 @@ The following arguments are supported:
 * `filter` - (Required) The repository filter details.
 * `filter_type` - (Required) The repository filter type. The only supported value is `PREFIX_MATCH`, which is a repository name prefix specified with the filter parameter.
 
-
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
