@@ -490,8 +490,7 @@ In addition to all arguments above, the following attributes are exported:
 
 - `create` - (Default `10 minutes`) Used for Application creation
 - `update` - (Default `10 minutes`) Used for Application modifications and snapshotting
-- `delete` - (Default `10 minutes`) Used for destroying Application or snapshot. This includes
-any cleanup task during the destroying process.
+- `delete` - (Default `10 minutes`) Used for Application deletion
 
 ## Import
 
