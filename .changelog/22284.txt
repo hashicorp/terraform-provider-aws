@@ -1,0 +1,3 @@
+```release-note:bug
+resource/networkfirewall: allow any character in networkfirewall/ip_sets as per the AWS apis docs
+```
