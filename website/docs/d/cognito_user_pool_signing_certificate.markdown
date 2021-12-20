@@ -14,7 +14,7 @@ Use this data source to get the signing certificate to the external SAML IdP.
 
 ```terraform
 data "aws_cognito_user_pool_signing_certificate" "sc" {
-    user_pool_id = aws_cognito_user_pool.my_pool.id
+  user_pool_id = aws_cognito_user_pool.my_pool.id
 }
 ```
 
