@@ -5,15 +5,14 @@ import (
 	"regexp"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/sns"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfsns "github.com/hashicorp/terraform-provider-aws/internal/service/sns"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func TestAccSNSTopicPolicy_basic(t *testing.T) {
@@ -167,18 +166,17 @@ func testAccCheckTopicPolicyDestroy(s *terraform.State) error {
 			continue
 		}
 
-		// Check if the topic policy exists by fetching its attributes
-		params := &sns.GetTopicAttributesInput{
-			TopicArn: aws.String(rs.Primary.ID),
+		_, err := tfsns.FindTopicAttributesByARN(conn, rs.Primary.ID)
+
+		if tfresource.NotFound(err) {
+			continue
 		}
-		_, err := conn.GetTopicAttributes(params)
+
 		if err != nil {
-			if tfawserr.ErrMessageContains(err, sns.ErrCodeNotFoundException, "") {
-				return nil
-			}
 			return err
 		}
-		return fmt.Errorf("SNS Topic Policy (%s) exists when it should be destroyed", rs.Primary.ID)
+
+		return fmt.Errorf("SNS Topic Policy %s still exists", rs.Primary.ID)
 	}
 
 	return nil
