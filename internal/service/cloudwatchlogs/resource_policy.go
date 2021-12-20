@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudwatchlogs"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
@@ -36,6 +37,10 @@ func ResourceResourcePolicy() *schema.Resource {
 				Required:         true,
 				ValidateFunc:     validResourcePolicyDocument,
 				DiffSuppressFunc: verify.SuppressEquivalentPolicyDiffs,
+				StateFunc: func(v interface{}) string {
+					json, _ := structure.NormalizeJsonString(v)
+					return json
+				},
 			},
 		},
 	}
@@ -44,15 +49,21 @@ func ResourceResourcePolicy() *schema.Resource {
 func resourceResourcePolicyPut(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CloudWatchLogsConn
 
+	policy, err := structure.NormalizeJsonString(d.Get("policy_document").(string))
+
+	if err != nil {
+		return fmt.Errorf("policy (%s) is invalid JSON: %w", policy, err)
+	}
+
 	policyName := d.Get("policy_name").(string)
 
 	input := &cloudwatchlogs.PutResourcePolicyInput{
-		PolicyDocument: aws.String(d.Get("policy_document").(string)),
+		PolicyDocument: aws.String(policy),
 		PolicyName:     aws.String(policyName),
 	}
 
 	log.Printf("[DEBUG] Writing CloudWatch log resource policy: %#v", input)
-	_, err := conn.PutResourcePolicy(input)
+	_, err = conn.PutResourcePolicy(input)
 
 	if err != nil {
 		return fmt.Errorf("Writing CloudWatch log resource policy failed: %s", err.Error())
@@ -75,7 +86,19 @@ func resourceResourcePolicyRead(d *schema.ResourceData, meta interface{}) error 
 		return nil
 	}
 
-	d.Set("policy_document", resourcePolicy.PolicyDocument)
+	policyToSet, err := verify.SecondJSONUnlessEquivalent(d.Get("policy_document").(string), aws.StringValue(resourcePolicy.PolicyDocument))
+
+	if err != nil {
+		return fmt.Errorf("while setting policy (%s), encountered: %w", policyToSet, err)
+	}
+
+	policyToSet, err = structure.NormalizeJsonString(policyToSet)
+
+	if err != nil {
+		return fmt.Errorf("policy (%s) is invalid JSON: %w", policyToSet, err)
+	}
+
+	d.Set("policy_document", policyToSet)
 
 	return nil
 }
@@ -99,6 +122,7 @@ func LookupResourcePolicy(conn *cloudwatchlogs.CloudWatchLogs,
 	input := &cloudwatchlogs.DescribeResourcePoliciesInput{
 		NextToken: nextToken,
 	}
+
 	log.Printf("[DEBUG] Reading CloudWatch log resource policies: %#v", input)
 	resp, err := conn.DescribeResourcePolicies(input)
 	if err != nil {

@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfwaf "github.com/hashicorp/terraform-provider-aws/internal/service/waf"
 )
 
 func ResourceRegexMatchSet() *schema.Resource {
@@ -32,7 +33,7 @@ func ResourceRegexMatchSet() *schema.Resource {
 			"regex_match_tuple": {
 				Type:     schema.TypeSet,
 				Optional: true,
-				Set:      WAFRegexMatchSetTupleHash,
+				Set:      tfwaf.RegexMatchSetTupleHash,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"field_to_match": {
@@ -109,7 +110,7 @@ func resourceRegexMatchSetRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	d.Set("name", set.Name)
-	d.Set("regex_match_tuple", flattenWafRegexMatchTuples(set.RegexMatchTuples))
+	d.Set("regex_match_tuple", tfwaf.FlattenRegexMatchTuples(set.RegexMatchTuples))
 
 	return nil
 }
@@ -158,7 +159,7 @@ func getRegexMatchTuplesFromResourceData(d *schema.ResourceData) []*waf.RegexMat
 	result := []*waf.RegexMatchTuple{}
 
 	for _, t := range d.Get("regex_match_tuple").(*schema.Set).List() {
-		result = append(result, expandWafRegexMatchTuple(t.(map[string]interface{})))
+		result = append(result, tfwaf.ExpandRegexMatchTuple(t.(map[string]interface{})))
 	}
 
 	return result
@@ -224,7 +225,7 @@ func updateRegexMatchSetResourceWR(id string, oldT, newT []interface{}, conn *wa
 		req := &waf.UpdateRegexMatchSetInput{
 			ChangeToken:     token,
 			RegexMatchSetId: aws.String(id),
-			Updates:         diffWafRegexMatchSetTuples(oldT, newT),
+			Updates:         tfwaf.DiffRegexMatchSetTuples(oldT, newT),
 		}
 
 		return conn.UpdateRegexMatchSet(req)

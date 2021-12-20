@@ -95,7 +95,7 @@ func resourceGeoMatchSetRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	d.Set("name", resp.GeoMatchSet.Name)
-	d.Set("geo_match_constraint", flattenWafGeoMatchConstraint(resp.GeoMatchSet.GeoMatchConstraints))
+	d.Set("geo_match_constraint", FlattenGeoMatchConstraint(resp.GeoMatchSet.GeoMatchConstraints))
 
 	arn := arn.ARN{
 		Partition: meta.(*conns.AWSClient).Partition,
@@ -158,7 +158,7 @@ func updateGeoMatchSetResource(id string, oldT, newT []interface{}, conn *waf.WA
 		req := &waf.UpdateGeoMatchSetInput{
 			ChangeToken:   token,
 			GeoMatchSetId: aws.String(id),
-			Updates:       diffWafGeoMatchSetConstraints(oldT, newT),
+			Updates:       DiffGeoMatchSetConstraints(oldT, newT),
 		}
 
 		log.Printf("[INFO] Updating GeoMatchSet constraints: %s", req)

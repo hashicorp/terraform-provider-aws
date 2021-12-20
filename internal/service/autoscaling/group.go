@@ -1,6 +1,6 @@
 package autoscaling
 
-import (
+import ( // nosemgrep: aws-sdk-go-multiple-service-imports
 	"bytes"
 	"context"
 	"fmt"
@@ -528,6 +528,18 @@ func ResourceGroup() *schema.Resource {
 							Optional: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
+									"checkpoint_delay": {
+										Type:         nullable.TypeNullableInt,
+										Optional:     true,
+										ValidateFunc: nullable.ValidateTypeStringNullableIntAtLeast(0),
+									},
+									"checkpoint_percentages": {
+										Type:     schema.TypeList,
+										Optional: true,
+										Elem: &schema.Schema{
+											Type: schema.TypeInt,
+										},
+									},
 									"instance_warmup": {
 										Type:         nullable.TypeNullableInt,
 										Optional:     true,
@@ -825,7 +837,7 @@ func resourceGroupRead(d *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		return err
 	}
-	if g == nil {
+	if g == nil && !d.IsNewResource() {
 		log.Printf("[WARN] Auto Scaling Group (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -1649,8 +1661,6 @@ func resourceGroupDrain(d *schema.ResourceData, meta interface{}) error {
 			return resource.NonRetryableError(err)
 		}
 		if g == nil {
-			log.Printf("[WARN] Auto Scaling Group (%s) not found, removing from state", d.Id())
-			d.SetId("")
 			return nil
 		}
 
@@ -2198,6 +2208,20 @@ func expandAutoScalingGroupInstanceRefreshPreferences(l []interface{}) *autoscal
 	m := l[0].(map[string]interface{})
 
 	refreshPreferences := &autoscaling.RefreshPreferences{}
+
+	if v, ok := m["checkpoint_delay"]; ok {
+		if v, null, _ := nullable.Int(v.(string)).Value(); !null {
+			refreshPreferences.CheckpointDelay = aws.Int64(v)
+		}
+	}
+
+	if l, ok := m["checkpoint_percentages"].([]interface{}); ok && len(l) > 0 {
+		p := make([]*int64, len(l))
+		for i, v := range l {
+			p[i] = aws.Int64(int64(v.(int)))
+		}
+		refreshPreferences.CheckpointPercentages = p
+	}
 
 	if v, ok := m["instance_warmup"]; ok {
 		if v, null, _ := nullable.Int(v.(string)).Value(); !null {

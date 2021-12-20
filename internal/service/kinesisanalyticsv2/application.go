@@ -2587,7 +2587,7 @@ func flattenApplicationConfigurationDescription(applicationConfigurationDescript
 			if propertyGroup != nil {
 				mPropertyGroup := map[string]interface{}{
 					"property_group_id": aws.StringValue(propertyGroup.PropertyGroupId),
-					"property_map":      verify.PointersMapToStringList(propertyGroup.PropertyMap),
+					"property_map":      flex.PointersMapToStringList(propertyGroup.PropertyMap),
 				}
 
 				vPropertyGroups = append(vPropertyGroups, mPropertyGroup)

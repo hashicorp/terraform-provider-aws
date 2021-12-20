@@ -679,6 +679,7 @@ var resourceClusterInstanceCreateUpdatePendingStates = []string{
 	"renaming",
 	"resetting-master-credentials",
 	"starting",
+	"storage-optimization",
 	"upgrading",
 }
 

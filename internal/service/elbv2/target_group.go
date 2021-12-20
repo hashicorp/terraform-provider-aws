@@ -204,6 +204,11 @@ func ResourceTargetGroup() *schema.Resource {
 				Optional: true,
 				Default:  false,
 			},
+			"connection_termination": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
 			"slow_start": {
 				Type:         schema.TypeInt,
 				Optional:     true,
@@ -433,6 +438,13 @@ func resourceTargetGroupCreate(d *schema.ResourceData, meta interface{}) error {
 		if v, ok := d.GetOk("proxy_protocol_v2"); ok {
 			attrs = append(attrs, &elbv2.TargetGroupAttribute{
 				Key:   aws.String("proxy_protocol_v2.enabled"),
+				Value: aws.String(strconv.FormatBool(v.(bool))),
+			})
+		}
+
+		if v, ok := d.GetOk("connection_termination"); ok {
+			attrs = append(attrs, &elbv2.TargetGroupAttribute{
+				Key:   aws.String("deregistration_delay.connection_termination.enabled"),
 				Value: aws.String(strconv.FormatBool(v.(bool))),
 			})
 		}
@@ -671,6 +683,13 @@ func resourceTargetGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 			})
 		}
 
+		if d.HasChange("connection_termination") {
+			attrs = append(attrs, &elbv2.TargetGroupAttribute{
+				Key:   aws.String("deregistration_delay.connection_termination.enabled"),
+				Value: aws.String(strconv.FormatBool(d.Get("connection_termination").(bool))),
+			})
+		}
+
 		if d.HasChange("preserve_client_ip") {
 			attrs = append(attrs, &elbv2.TargetGroupAttribute{
 				Key:   aws.String("preserve_client_ip.enabled"),
@@ -902,6 +921,12 @@ func flattenTargetGroupResource(d *schema.ResourceData, meta interface{}, target
 				return fmt.Errorf("error converting proxy_protocol_v2.enabled to bool: %s", aws.StringValue(attr.Value))
 			}
 			d.Set("proxy_protocol_v2", enabled)
+		case "deregistration_delay.connection_termination.enabled":
+			enabled, err := strconv.ParseBool(aws.StringValue(attr.Value))
+			if err != nil {
+				return fmt.Errorf("error converting deregistration_delay.connection_termination.enabled to bool: %s", aws.StringValue(attr.Value))
+			}
+			d.Set("connection_termination", enabled)
 		case "slow_start.duration_seconds":
 			slowStart, err := strconv.Atoi(aws.StringValue(attr.Value))
 			if err != nil {

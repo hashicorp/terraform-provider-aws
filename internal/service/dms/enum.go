@@ -14,7 +14,7 @@ const (
 	engineNameTransfer                   = "dms-transfer"
 	engineNameDocDB                      = "docdb"
 	engineNameDynamoDB                   = "dynamodb"
-	engineNameElasticSearch              = "elasticsearch"
+	engineNameElasticsearch              = "elasticsearch"
 	engineNameKafka                      = "kafka"
 	engineNameKinesis                    = "kinesis"
 	engineNameMariadb                    = "mariadb"
@@ -42,7 +42,7 @@ func engineName_Values() []string {
 		engineNameTransfer,
 		engineNameDocDB,
 		engineNameDynamoDB,
-		engineNameElasticSearch,
+		engineNameElasticsearch,
 		engineNameKafka,
 		engineNameKinesis,
 		engineNameMariadb,

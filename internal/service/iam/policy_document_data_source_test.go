@@ -32,6 +32,24 @@ func TestAccIAMPolicyDocumentDataSource_basic(t *testing.T) {
 	})
 }
 
+func TestAccIAMPolicyDocumentDataSource_singleConditionValue(t *testing.T) {
+	dataSourceName := "data.aws_iam_policy_document.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:   func() { acctest.PreCheck(t) },
+		ErrorCheck: acctest.ErrorCheck(t, iam.EndpointsID),
+		Providers:  acctest.Providers,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPolicyDocumentConfig_SingleConditionValue,
+				Check: resource.ComposeTestCheckFunc(
+					acctest.CheckResourceAttrEquivalentJSON(dataSourceName, "json", testAccPolicyDocumentConfig_SingleConditionValue_ExpectedJSON),
+				),
+			},
+		},
+	})
+}
+
 func TestAccIAMPolicyDocumentDataSource_source(t *testing.T) {
 	// This really ought to be able to be a unit test rather than an
 	// acceptance test, but just instantiating the AWS provider requires
@@ -452,6 +470,49 @@ func testAccPolicyDocumentExpectedJSON() string {
   ]
 }`, acctest.Partition())
 }
+
+const testAccPolicyDocumentConfig_SingleConditionValue = `
+data "aws_iam_policy_document" "test" {
+  statement {
+    effect = "Deny"
+
+    principals {
+      type        = "AWS"
+      identifiers = ["*"]
+    }
+
+    actions = ["elasticfilesystem:*"]
+
+    resources = ["*"]
+
+    condition {
+      test     = "Bool"
+      variable = "aws:SecureTransport"
+      values   = ["false"]
+    }
+  }
+}
+`
+
+const testAccPolicyDocumentConfig_SingleConditionValue_ExpectedJSON = `{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "",
+      "Effect": "Deny",
+      "Action": "elasticfilesystem:*",
+      "Resource": "*",
+      "Principal": {
+        "AWS": "*"
+      },
+      "Condition": {
+        "Bool": {
+          "aws:SecureTransport": "false"
+        }
+      }
+    }
+  ]
+}`
 
 var testAccPolicyDocumentSourceConfig = `
 data "aws_partition" "current" {}

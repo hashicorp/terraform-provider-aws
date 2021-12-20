@@ -43,21 +43,21 @@ func TestAccIAMUserSSHKeyDataSource_basic(t *testing.T) {
 func testAccSSHKeyDataSourceConfig(username, publicKey string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_user" "test" {
-	name = %[1]q
-	path = "/"
+  name = %[1]q
+  path = "/"
 }
 
 resource "aws_iam_user_ssh_key" "test" {
-	username   = aws_iam_user.test.name
-	encoding   = "SSH"
-	public_key = %[2]q
-	status     = "Inactive"
+  username   = aws_iam_user.test.name
+  encoding   = "SSH"
+  public_key = %[2]q
+  status     = "Inactive"
 }
 
 data "aws_iam_user_ssh_key" "test" {
-	username          = aws_iam_user.test.name
-	encoding          = "SSH"
-	ssh_public_key_id = aws_iam_user_ssh_key.test.ssh_public_key_id
+  username          = aws_iam_user.test.name
+  encoding          = "SSH"
+  ssh_public_key_id = aws_iam_user_ssh_key.test.ssh_public_key_id
 }
 `, username, publicKey)
 }

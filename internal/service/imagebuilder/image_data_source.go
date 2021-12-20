@@ -162,7 +162,7 @@ func dataSourceImageRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if image.ImageTestsConfiguration != nil {
-		d.Set("image_tests_configuration", []interface{}{flattenImageBuilderImageTestsConfiguration(image.ImageTestsConfiguration)})
+		d.Set("image_tests_configuration", []interface{}{flattenImageTestsConfiguration(image.ImageTestsConfiguration)})
 	} else {
 		d.Set("image_tests_configuration", nil)
 	}
@@ -176,7 +176,7 @@ func dataSourceImageRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("os_version", image.OsVersion)
 
 	if image.OutputResources != nil {
-		d.Set("output_resources", []interface{}{flattenImageBuilderOutputResources(image.OutputResources)})
+		d.Set("output_resources", []interface{}{flattenOutputResources(image.OutputResources)})
 	} else {
 		d.Set("output_resources", nil)
 	}

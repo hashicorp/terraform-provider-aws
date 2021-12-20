@@ -251,7 +251,7 @@ func resourceStageRead(d *schema.ResourceData, meta interface{}) error {
 		ApiId:     aws.String(apiId),
 		StageName: aws.String(d.Id()),
 	})
-	if tfawserr.ErrMessageContains(err, apigatewayv2.ErrCodeNotFoundException, "") {
+	if tfawserr.ErrCodeEquals(err, apigatewayv2.ErrCodeNotFoundException) && !d.IsNewResource() {
 		log.Printf("[WARN] API Gateway v2 stage (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -294,7 +294,7 @@ func resourceStageRead(d *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		return fmt.Errorf("error setting route_settings: %s", err)
 	}
-	err = d.Set("stage_variables", verify.PointersMapToStringList(resp.StageVariables))
+	err = d.Set("stage_variables", flex.PointersMapToStringList(resp.StageVariables))
 	if err != nil {
 		return fmt.Errorf("error setting stage_variables: %s", err)
 	}

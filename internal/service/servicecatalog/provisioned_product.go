@@ -547,7 +547,7 @@ func expandServiceCatalogProvisioningParameter(tfMap map[string]interface{}) *se
 		apiObject.Key = aws.String(v)
 	}
 
-	if v, ok := tfMap["value"].(string); ok && v != "" {
+	if v, ok := tfMap["value"].(string); ok {
 		apiObject.Value = aws.String(v)
 	}
 
@@ -629,7 +629,7 @@ func expandServiceCatalogUpdateProvisioningParameter(tfMap map[string]interface{
 		apiObject.UsePreviousValue = aws.Bool(v)
 	}
 
-	if v, ok := tfMap["value"].(string); ok && v != "" {
+	if v, ok := tfMap["value"].(string); ok {
 		apiObject.Value = aws.String(v)
 	}
 

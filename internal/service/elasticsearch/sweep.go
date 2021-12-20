@@ -29,7 +29,7 @@ func sweepDomains(region string) error {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.(*conns.AWSClient).ElasticSearchConn
+	conn := client.(*conns.AWSClient).ElasticsearchConn
 	sweepResources := make([]*sweep.SweepResource, 0)
 	var errs *multierror.Error
 
@@ -93,7 +93,7 @@ func sweepDomains(region string) error {
 	}
 
 	if err = sweep.SweepOrchestrator(sweepResources); err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error sweeping ElasticSearch Domains for %s: %w", region, err))
+		errs = multierror.Append(errs, fmt.Errorf("error sweeping Elasticsearch Domains for %s: %w", region, err))
 	}
 
 	if sweep.SkipSweepError(errs.ErrorOrNil()) {

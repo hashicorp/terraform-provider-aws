@@ -8,7 +8,7 @@ import (
 
 // See https://docs.aws.amazon.com/general/latest/gr/s3.html#s3_website_region_endpoints.
 var hostedZoneIDsMap = map[string]string{
-	endpoints.AfSouth1RegionID:     "Z11KHD8FBVPUYU",
+	endpoints.AfSouth1RegionID:     "Z83WF9RJE8B12",
 	endpoints.ApEast1RegionID:      "ZNB98KWMFR0R6",
 	endpoints.ApNortheast1RegionID: "Z2M4EHUR26P7ZW",
 	endpoints.ApNortheast2RegionID: "Z3W03O7B5YMIYP",
@@ -20,7 +20,7 @@ var hostedZoneIDsMap = map[string]string{
 	endpoints.CnNorthwest1RegionID: "Z282HJ1KT0DH03",
 	endpoints.EuCentral1RegionID:   "Z21DNDUVLTQW6Q",
 	endpoints.EuNorth1RegionID:     "Z3BAZG2TWCNX0D",
-	endpoints.EuSouth1RegionID:     "Z3IXVV8C73GIO3",
+	endpoints.EuSouth1RegionID:     "Z30OZKI7KPW7MI",
 	endpoints.EuWest1RegionID:      "Z1BKCTXD74EZPE",
 	endpoints.EuWest2RegionID:      "Z3GKZC51ZF0DB4",
 	endpoints.EuWest3RegionID:      "Z3R1K369G5AVDG",
@@ -28,7 +28,7 @@ var hostedZoneIDsMap = map[string]string{
 	endpoints.SaEast1RegionID:      "Z7KQH4QJS55SO",
 	endpoints.UsEast1RegionID:      "Z3AQBSTGFYJSTF",
 	endpoints.UsEast2RegionID:      "Z2O1EMRO9K5GLX",
-	endpoints.UsGovEast1RegionID:   "Z31GFT0UA1I2HV",
+	endpoints.UsGovEast1RegionID:   "Z2NIFVYYW2VKV1",
 	endpoints.UsGovWest1RegionID:   "Z31GFT0UA1I2HV",
 	endpoints.UsWest1RegionID:      "Z2F56UZL2M1ACD",
 	endpoints.UsWest2RegionID:      "Z3BJ6K6RIION7M",

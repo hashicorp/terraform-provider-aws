@@ -27,9 +27,9 @@ func DataSourceCachePolicy() *schema.Resource {
 				Computed: true,
 			},
 			"id": {
-				Type:          schema.TypeString,
-				ConflictsWith: []string{"name"},
-				Optional:      true,
+				Type:         schema.TypeString,
+				Optional:     true,
+				ExactlyOneOf: []string{"id", "name"},
 			},
 			"max_ttl": {
 				Type:     schema.TypeInt,
@@ -40,9 +40,9 @@ func DataSourceCachePolicy() *schema.Resource {
 				Computed: true,
 			},
 			"name": {
-				Type:          schema.TypeString,
-				ConflictsWith: []string{"id"},
-				Optional:      true,
+				Type:         schema.TypeString,
+				Optional:     true,
+				ExactlyOneOf: []string{"id", "name"},
 			},
 			"parameters_in_cache_key_and_forwarded_to_origin": {
 				Type:     schema.TypeList,
@@ -141,47 +141,61 @@ func DataSourceCachePolicy() *schema.Resource {
 func dataSourceCachePolicyRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CloudFrontConn
 
-	if d.Id() == "" {
-		if err := dataSourceCachePolicyFindByName(d, conn); err != nil {
-			return fmt.Errorf("unable to locate cache policy by name: %s", err.Error())
-		}
-	}
+	var cachePolicyID string
 
-	if d.Id() != "" {
-		d.Set("id", d.Id())
-		request := &cloudfront.GetCachePolicyInput{
-			Id: aws.String(d.Id()),
-		}
+	if v, ok := d.GetOk("id"); ok {
+		cachePolicyID = v.(string)
+	} else {
+		name := d.Get("name").(string)
+		input := &cloudfront.ListCachePoliciesInput{}
 
-		resp, err := conn.GetCachePolicy(request)
+		err := ListCachePoliciesPages(conn, input, func(page *cloudfront.ListCachePoliciesOutput, lastPage bool) bool {
+			if page == nil {
+				return !lastPage
+			}
+
+			for _, policySummary := range page.CachePolicyList.Items {
+				if cachePolicy := policySummary.CachePolicy; aws.StringValue(cachePolicy.CachePolicyConfig.Name) == name {
+					cachePolicyID = aws.StringValue(cachePolicy.Id)
+
+					return false
+				}
+			}
+
+			return !lastPage
+		})
+
 		if err != nil {
-			return fmt.Errorf("unable to retrieve cache policy with ID %s: %s", d.Id(), err.Error())
+			return fmt.Errorf("error listing CloudFront Cache Policies: %w", err)
 		}
-		d.Set("etag", resp.ETag)
 
-		setCloudFrontCachePolicy(d, resp.CachePolicy.CachePolicyConfig)
+		if cachePolicyID == "" {
+			return fmt.Errorf("no matching CloudFront Cache Policy (%s)", name)
+		}
 	}
 
-	return nil
-}
+	output, err := FindCachePolicyByID(conn, cachePolicyID)
 
-func dataSourceCachePolicyFindByName(d *schema.ResourceData, conn *cloudfront.CloudFront) error {
-	var cachePolicy *cloudfront.CachePolicy
-	request := &cloudfront.ListCachePoliciesInput{}
-	resp, err := conn.ListCachePolicies(request)
 	if err != nil {
-		return err
+		return fmt.Errorf("error reading CloudFront Cache Policy (%s): %w", cachePolicyID, err)
 	}
 
-	for _, policySummary := range resp.CachePolicyList.Items {
-		if aws.StringValue(policySummary.CachePolicy.CachePolicyConfig.Name) == d.Get("name").(string) {
-			cachePolicy = policySummary.CachePolicy
-			break
+	d.SetId(cachePolicyID)
+
+	apiObject := output.CachePolicy.CachePolicyConfig
+	d.Set("comment", apiObject.Comment)
+	d.Set("default_ttl", apiObject.DefaultTTL)
+	d.Set("etag", output.ETag)
+	d.Set("max_ttl", apiObject.MaxTTL)
+	d.Set("min_ttl", apiObject.MinTTL)
+	d.Set("name", apiObject.Name)
+	if apiObject.ParametersInCacheKeyAndForwardedToOrigin != nil {
+		if err := d.Set("parameters_in_cache_key_and_forwarded_to_origin", []interface{}{flattenParametersInCacheKeyAndForwardedToOrigin(apiObject.ParametersInCacheKeyAndForwardedToOrigin)}); err != nil {
+			return fmt.Errorf("error setting parameters_in_cache_key_and_forwarded_to_origin: %w", err)
 		}
+	} else {
+		d.Set("parameters_in_cache_key_and_forwarded_to_origin", nil)
 	}
 
-	if cachePolicy != nil {
-		d.SetId(aws.StringValue(cachePolicy.Id))
-	}
 	return nil
 }

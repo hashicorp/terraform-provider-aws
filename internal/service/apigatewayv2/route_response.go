@@ -11,7 +11,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceRouteResponse() *schema.Resource {
@@ -86,7 +85,7 @@ func resourceRouteResponseRead(d *schema.ResourceData, meta interface{}) error {
 		RouteId:         aws.String(d.Get("route_id").(string)),
 		RouteResponseId: aws.String(d.Id()),
 	})
-	if tfawserr.ErrMessageContains(err, apigatewayv2.ErrCodeNotFoundException, "") {
+	if tfawserr.ErrCodeEquals(err, apigatewayv2.ErrCodeNotFoundException) && !d.IsNewResource() {
 		log.Printf("[WARN] API Gateway v2 route response (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -96,7 +95,7 @@ func resourceRouteResponseRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	d.Set("model_selection_expression", resp.ModelSelectionExpression)
-	if err := d.Set("response_models", verify.PointersMapToStringList(resp.ResponseModels)); err != nil {
+	if err := d.Set("response_models", flex.PointersMapToStringList(resp.ResponseModels)); err != nil {
 		return fmt.Errorf("error setting response_models: %s", err)
 	}
 	d.Set("route_response_key", resp.RouteResponseKey)

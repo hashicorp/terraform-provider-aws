@@ -161,7 +161,7 @@ func testAccCheckFunctionDestroy(s *terraform.State) error {
 
 		_, err = conn.GetFunction(input)
 		if err != nil {
-			if tfawserr.ErrMessageContains(err, appsync.ErrCodeNotFoundException, "") {
+			if tfawserr.ErrCodeEquals(err, appsync.ErrCodeNotFoundException) {
 				return nil
 			}
 			return err

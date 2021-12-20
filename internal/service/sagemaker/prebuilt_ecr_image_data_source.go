@@ -70,6 +70,14 @@ const (
 	sageMakerRepositoryTensorFlowInferenceEIA = "tensorflow-inference-eia"
 	// SageMaker Repo TensorFlow Training
 	sageMakerRepositoryTensorFlowTraining = "tensorflow-training"
+	// SageMaker Repo HuggingFace TensorFlow Training
+	sageMakerRepositoryHuggingFaceTensorFlowTraining = "huggingface-tensorflow-training"
+	// SageMaker Repo HuggingFace TensorFlow Inference
+	sageMakerRepositoryHuggingFaceTensorFlowInference = "huggingface-tensorflow-inference"
+	// SageMaker Repo HuggingFace PyTorch Training
+	sageMakerRepositoryHuggingFacePyTorchTraining = "huggingface-pytorch-training"
+	// SageMaker Repo HuggingFace PyTorch Inference
+	sageMakerRepositoryHuggingFacePyTorchInference = "huggingface-pytorch-inference"
 )
 
 // https://docs.aws.amazon.com/sagemaker/latest/dg/sagemaker-algo-docker-registry-paths.html
@@ -295,6 +303,10 @@ func DataSourcePrebuiltECRImage() *schema.Resource {
 					sageMakerRepositoryTensorFlowServing,
 					sageMakerRepositoryTensorFlowServingEIA,
 					sageMakerRepositoryTensorFlowTraining,
+					sageMakerRepositoryHuggingFaceTensorFlowTraining,
+					sageMakerRepositoryHuggingFaceTensorFlowInference,
+					sageMakerRepositoryHuggingFacePyTorchTraining,
+					sageMakerRepositoryHuggingFacePyTorchInference,
 					sageMakerRepositoryXGBoost,
 				}, false),
 			},
@@ -367,7 +379,11 @@ func dataSourcePrebuiltECRImageRead(d *schema.ResourceData, meta interface{}) er
 		sageMakerRepositoryPyTorchTraining,
 		sageMakerRepositoryTensorFlowInference,
 		sageMakerRepositoryTensorFlowInferenceEIA,
-		sageMakerRepositoryTensorFlowTraining:
+		sageMakerRepositoryTensorFlowTraining,
+		sageMakerRepositoryHuggingFaceTensorFlowTraining,
+		sageMakerRepositoryHuggingFaceTensorFlowInference,
+		sageMakerRepositoryHuggingFacePyTorchTraining,
+		sageMakerRepositoryHuggingFacePyTorchInference:
 		id = sageMakerPrebuiltECRImageIDByRegion_DeepLearning[region]
 	default:
 		id = PrebuiltECRImageIDByRegion_FactorMachines[region]

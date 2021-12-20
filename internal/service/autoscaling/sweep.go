@@ -104,7 +104,7 @@ func sweepLaunchConfigurations(region string) error {
 	}
 
 	for _, lc := range resp.LaunchConfigurations {
-		name := *lc.LaunchConfigurationName
+		name := aws.StringValue(lc.LaunchConfigurationName)
 
 		log.Printf("[INFO] Deleting Launch Configuration: %s", name)
 		_, err := conn.DeleteLaunchConfiguration(

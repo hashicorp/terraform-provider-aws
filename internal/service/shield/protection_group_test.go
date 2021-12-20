@@ -325,12 +325,12 @@ resource "aws_shield_protection_group" "test" {
 func testAccShieldProtectionGroupConfig_members(rName string) string {
 	return acctest.ConfigCompose(testAccShieldProtectionElasticIPAddressConfig(rName), fmt.Sprintf(`
 resource "aws_shield_protection_group" "test" {
-  depends_on = [aws_shield_protection.acctest]
+  depends_on = [aws_shield_protection.test]
 
   protection_group_id = "%[1]s"
   aggregation         = "MAX"
   pattern             = "ARBITRARY"
-  members             = ["arn:${data.aws_partition.current.partition}:ec2:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:eip-allocation/${aws_eip.sdkacctest.id}"]
+  members             = ["arn:${data.aws_partition.current.partition}:ec2:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:eip-allocation/${aws_eip.test.id}"]
 }
 `, rName))
 }

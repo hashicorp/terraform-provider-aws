@@ -229,6 +229,10 @@ func resourceFleetCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		input.ImageName = aws.String(v.(string))
 	}
 
+	if v, ok := d.GetOk("image_arn"); ok {
+		input.ImageArn = aws.String(v.(string))
+	}
+
 	if v, ok := d.GetOk("iam_role_arn"); ok {
 		input.IamRoleArn = aws.String(v.(string))
 	}

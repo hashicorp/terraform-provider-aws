@@ -24,6 +24,7 @@ func init() {
 func testAccErrorCheckSkipAppStream(t *testing.T) resource.ErrorCheckFunc {
 	return acctest.ErrorCheckSkipMessagesContaining(t,
 		"ResourceNotFoundException: The image",
+		"InvalidParameterValueException: The AppStream 2.0 user pool feature",
 	)
 }
 
@@ -318,6 +319,9 @@ func testAccFleetCompleteConfig(name, description, fleetType, instanceType strin
 	return acctest.ConfigCompose(
 		acctest.ConfigAvailableAZsNoOptIn(),
 		fmt.Sprintf(`
+data "aws_region" "current" {}
+data "aws_partition" "current" {}
+
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 }
@@ -330,8 +334,8 @@ resource "aws_subnet" "test" {
 }
 
 resource "aws_appstream_fleet" "test" {
-  name       = %[1]q
-  image_name = "Amazon-AppStream2-Sample-Image-02-04-2019"
+  name      = %[1]q
+  image_arn = "arn:${data.aws_partition.current.partition}:appstream:${data.aws_region.current.name}::image/Amazon-AppStream2-Sample-Image-02-04-2019"
 
   compute_capacity {
     desired_instances = 1
