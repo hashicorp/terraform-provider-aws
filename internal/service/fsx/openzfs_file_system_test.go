@@ -408,7 +408,7 @@ func TestAccFSxOpenzfsFileSystem_storageType(t *testing.T) {
 	})
 }
 
-func TestAccFSxOnpenzfsFileSystem_weeklyMaintenanceStartTime(t *testing.T) {
+func TestAccFSxOpenzfsFileSystem_weeklyMaintenanceStartTime(t *testing.T) {
 	var filesystem1, filesystem2 fsx.FileSystem
 	resourceName := "aws_fsx_openzfs_file_system.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)

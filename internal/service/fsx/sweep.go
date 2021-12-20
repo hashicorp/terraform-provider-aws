@@ -307,7 +307,7 @@ func sweepFSXOpenzfsFileSystems(region string) error {
 		}
 
 		for _, fs := range page.FileSystems {
-			if aws.StringValue(fs.FileSystemType) != fsx.FileSystemTypeOpenZFS {
+			if aws.StringValue(fs.FileSystemType) != fsx.FileSystemTypeOpenzfs {
 				continue
 			}
 
