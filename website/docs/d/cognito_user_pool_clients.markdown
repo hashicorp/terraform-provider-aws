@@ -8,7 +8,7 @@ description: |-
 
 # Data Source: aws_cognito_user_pool_clients
 
-Use this data source to get a list of cognito user pools clients on a given userpool. 
+Use this data source to get a list of cognito user pools clients on a given userpool.
 
 ## Example Usage
 
