@@ -1,4 +1,4 @@
-package create
+package attrmap
 
 import (
 	"fmt"
@@ -22,8 +22,8 @@ type attributeInfo struct {
 
 type AttributeMap map[string]attributeInfo
 
-// AttrMap returns a new AttributeMap from the specified Terraform resource attribute name to AWS API attribute name map and resource schema.
-func AttrMap(attrMap map[string]string, schemaMap map[string]*schema.Schema) AttributeMap {
+// New returns a new AttributeMap from the specified Terraform resource attribute name to AWS API attribute name map and resource schema.
+func New(attrMap map[string]string, schemaMap map[string]*schema.Schema) AttributeMap {
 	attributeMap := make(AttributeMap)
 
 	for tfAttributeName, apiAttributeName := range attrMap {

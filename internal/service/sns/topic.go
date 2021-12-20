@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/hashicorp/terraform-provider-aws/internal/attrmap"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -166,7 +167,7 @@ var (
 		"tags_all": tftags.TagsSchemaComputed(),
 	}
 
-	topicAttributeMap = create.AttrMap(map[string]string{
+	topicAttributeMap = attrmap.New(map[string]string{
 		"application_failure_feedback_role_arn":    TopicAttributeNameApplicationFailureFeedbackRoleArn,
 		"application_success_feedback_role_arn":    TopicAttributeNameApplicationSuccessFeedbackRoleArn,
 		"application_success_feedback_sample_rate": TopicAttributeNameApplicationSuccessFeedbackSampleRate,
