@@ -82,7 +82,6 @@ func ResourceSubnetGroup() *schema.Resource {
 				Required: true,
 				MinItems: 1,
 				Elem:     &schema.Schema{Type: schema.TypeString},
-				Set:      schema.HashString,
 			},
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
@@ -100,7 +99,6 @@ func resourceSubnetGroupCreate(ctx context.Context, d *schema.ResourceData, meta
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
 	name := create.Name(d.Get("name").(string), d.Get("name_prefix").(string))
-
 	input := &memorydb.CreateSubnetGroupInput{
 		Description:     aws.String(d.Get("description").(string)),
 		SubnetGroupName: aws.String(name),
@@ -124,13 +122,14 @@ func resourceSubnetGroupUpdate(ctx context.Context, d *schema.ResourceData, meta
 	conn := meta.(*conns.AWSClient).MemoryDBConn
 
 	if d.HasChangesExcept("tags", "tags_all") {
-		log.Printf("[DEBUG] Updating MemoryDB Subnet Group (%s)", d.Id())
-
-		_, err := conn.UpdateSubnetGroupWithContext(ctx, &memorydb.UpdateSubnetGroupInput{
+		input := &memorydb.UpdateSubnetGroupInput{
 			Description:     aws.String(d.Get("description").(string)),
 			SubnetGroupName: aws.String(d.Id()),
 			SubnetIds:       flex.ExpandStringSet(d.Get("subnet_ids").(*schema.Set)),
-		})
+		}
+
+		log.Printf("[DEBUG] Updating MemoryDB Subnet Group: %s", input)
+		_, err := conn.UpdateSubnetGroupWithContext(ctx, input)
 
 		if err != nil {
 			return diag.Errorf("error updating MemoryDB Subnet Group (%s): %s", d.Id(), err)
@@ -140,7 +139,6 @@ func resourceSubnetGroupUpdate(ctx context.Context, d *schema.ResourceData, meta
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		log.Printf("[DEBUG] Updating MemoryDB Subnet Group (%s) tags", d.Id())
 		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return diag.Errorf("error updating MemoryDB Subnet Group (%s) tags: %s", d.Id(), err)
 		}
