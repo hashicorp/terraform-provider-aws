@@ -91,7 +91,7 @@ docscheck:
 		-require-resource-subcategory
 	@misspell -error -source text CHANGELOG.md .changelog
 
-lint: golangci-lint providerlint importlint
+lint: golangci-lint terrafmt providerlint importlint
 
 golangci-lint:
 	@echo "==> Checking source code with golangci-lint..."
@@ -127,6 +127,16 @@ providerlint:
 importlint:
 	@echo "==> Checking source code with importlint..."
 	@impi --local . --scheme stdThirdPartyLocal ./$(PKG_NAME)/...
+
+terrafmt:
+	@echo "==> Checking source code with terrafmt..."
+	find ./internal/service -type f -name '*_test.go' \
+    | sort -u \
+    | grep -v efs/file_system_test.go \
+    | grep -v kms/grant_test.go \
+    | grep -v quicksight/user_test.go \
+    | grep -v sns/platform_application_test.go \
+    | xargs -I {} terrafmt fmt --check --fmtcompat {}
 
 tools:
 	cd providerlint && go install .
