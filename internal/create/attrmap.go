@@ -11,10 +11,10 @@ import (
 // AttributeMap represents a map of Terraform resource attribute name to AWS API attribute name.
 // Useful for SQS Queue or SNS Topic attribute handling.
 type attributeInfo struct {
-	apiAttributeName   string
-	tfType             schema.ValueType
-	tfOptionalComputed bool // Optional: true, Computed: true
-	tfPureComputed     bool // Optional: false, Computed: true
+	apiAttributeName string
+	tfType           schema.ValueType
+	tfComputed       bool
+	tfOptional       bool
 }
 
 type AttributeMap map[string]attributeInfo
@@ -30,13 +30,8 @@ func AttrMap(attrMap map[string]string, schemaMap map[string]*schema.Schema) Att
 				tfType:           s.Type,
 			}
 
-			if s.Computed {
-				if s.Optional {
-					attributeInfo.tfOptionalComputed = true
-				} else {
-					attributeInfo.tfPureComputed = true
-				}
-			}
+			attributeInfo.tfComputed = s.Computed
+			attributeInfo.tfOptional = s.Optional
 
 			attributeMap[tfAttributeName] = attributeInfo
 		} else {
@@ -91,11 +86,12 @@ func (m AttributeMap) ResourceDataToApiAttributesCreate(d *schema.ResourceData) 
 
 	for tfAttributeName, attributeInfo := range m {
 		// Purely Computed values aren't specified on creation.
-		if attributeInfo.tfPureComputed {
+		if attributeInfo.tfComputed && !attributeInfo.tfOptional {
 			continue
 		}
 
 		var apiAttributeValue string
+		tfOptionalComputed := attributeInfo.tfComputed && attributeInfo.tfOptional
 
 		switch v, t := d.Get(tfAttributeName), attributeInfo.tfType; t {
 		case schema.TypeBool:
@@ -104,7 +100,7 @@ func (m AttributeMap) ResourceDataToApiAttributesCreate(d *schema.ResourceData) 
 			}
 		case schema.TypeInt:
 			// On creation don't specify any zero Optional/Computed attribute integer values.
-			if v := v.(int); !attributeInfo.tfOptionalComputed || v != 0 {
+			if v := v.(int); !tfOptionalComputed || v != 0 {
 				apiAttributeValue = strconv.Itoa(v)
 			}
 		case schema.TypeString:
@@ -128,7 +124,7 @@ func (m AttributeMap) ResourceDataToApiAttributesUpdate(d *schema.ResourceData) 
 
 	for tfAttributeName, attributeInfo := range m {
 		// Purely Computed values aren't specified on update.
-		if attributeInfo.tfPureComputed {
+		if attributeInfo.tfComputed && !attributeInfo.tfOptional {
 			continue
 		}
 
