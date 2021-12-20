@@ -53,6 +53,30 @@ resource "aws_ecr_replication_configuration" "example" {
 }
 ```
 
+## Repository Filter Usage
+
+```terraform
+data "aws_caller_identity" "current" {}
+
+data "aws_regions" "example" {}
+
+resource "aws_ecr_replication_configuration" "example" {
+  replication_configuration {
+    rule {
+      destination {
+        region      = data.aws_regions.example.names[0]
+        registry_id = data.aws_caller_identity.current.account_id
+      }
+
+      repository_filter {
+        filter      = "prod-microservice"
+        filter_type = "PREFIX_MATCH"
+      }
+    }
+  }
+}
+```
+
 ## Argument Reference
 
 The following arguments are supported:
@@ -66,11 +90,17 @@ The following arguments are supported:
 ### Rule
 
 * `destination` - (Required) the details of a replication destination. See [Destination](#destination).
+* `repository_filter` - (Optional) filters for a replication rule. See [Repository Filter](#repository-filter).
 
 ### Destination
 
 * `region` - (Required) A Region to replicate to.
 * `registry_id` - (Required) The account ID of the destination registry to replicate to.
+
+### Repository Filter
+
+* `filter` - (Required) The repository filter details.
+* `filter_type` - (Required) The repository filter type. The only supported value is `PREFIX_MATCH`, which is a repository name prefix specified with the filter parameter.
 
 ## Attributes Reference
 
