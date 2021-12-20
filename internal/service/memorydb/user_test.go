@@ -20,7 +20,7 @@ func TestAccUser_basic(t *testing.T) {
 	resourceName := "aws_memorydb_user.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, memorydb.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckUserDestroy,
@@ -56,7 +56,7 @@ func TestAccUser_disappears(t *testing.T) {
 	resourceName := "aws_memorydb_user.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, memorydb.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckUserDestroy,
@@ -78,7 +78,7 @@ func TestAccUser_update_accessString(t *testing.T) {
 	resourceName := "aws_memorydb_user.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, memorydb.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckUserDestroy,
@@ -112,7 +112,7 @@ func TestAccUser_update_passwords(t *testing.T) {
 	resourceName := "aws_memorydb_user.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, memorydb.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckUserDestroy,
@@ -165,7 +165,7 @@ func TestAccUser_update_tags(t *testing.T) {
 	resourceName := "aws_memorydb_user.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, memorydb.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckUserDestroy,
