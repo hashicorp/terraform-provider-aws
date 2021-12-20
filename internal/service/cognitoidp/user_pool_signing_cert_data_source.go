@@ -35,6 +35,6 @@ func dataSourceUserPoolSigningCertRead(d *schema.ResourceData, meta interface{})
 		return fmt.Errorf("Error getting signing cert from user pool: %w", err)
 	}
 	d.SetId(id)
-	d.Set("certificate", *result.Certificate)
+	d.Set("certificate", result.Certificate)
 	return nil
 }
