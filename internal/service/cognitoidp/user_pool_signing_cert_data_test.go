@@ -42,9 +42,7 @@ resource "aws_cognito_identity_provider" "saml" {
   provider_type = "SAML"
 
   provider_details = {
-    MetadataFile = file("./test-fixtures/saml-metadata.xml")
-    // if we don't specify below, terraform always thinks this resource has
-    // changed: https://github.com/terraform-providers/terraform-provider-aws/issues/4831
+    MetadataFile          = file("./test-fixtures/saml-metadata.xml")
     SSORedirectBindingURI = "https://terraform-dev-ed.my.salesforce.com/idp/endpoint/HttpRedirect"
   }
 
