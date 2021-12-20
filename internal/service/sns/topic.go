@@ -10,7 +10,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/sns"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
-	awspolicy "github.com/hashicorp/awspolicyequivalence"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
@@ -266,158 +265,6 @@ func resourceTopicCreate(d *schema.ResourceData, meta interface{}) error {
 	return resourceTopicRead(d, meta)
 }
 
-func resourceTopicUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SNSConn
-
-	// update mutable attributes
-	if d.HasChange("application_failure_feedback_role_arn") {
-		_, v := d.GetChange("application_failure_feedback_role_arn")
-		if err := updateTopicAttribute(d.Id(), "ApplicationFailureFeedbackRoleArn", v, conn); err != nil {
-			return err
-		}
-	}
-	if d.HasChange("application_success_feedback_role_arn") {
-		_, v := d.GetChange("application_success_feedback_role_arn")
-		if err := updateTopicAttribute(d.Id(), "ApplicationSuccessFeedbackRoleArn", v, conn); err != nil {
-			return err
-		}
-	}
-	if d.HasChange("arn") {
-		_, v := d.GetChange("arn")
-		if err := updateTopicAttribute(d.Id(), "TopicArn", v, conn); err != nil {
-			return err
-		}
-	}
-	if d.HasChange("delivery_policy") {
-		_, v := d.GetChange("delivery_policy")
-		if err := updateTopicAttribute(d.Id(), "DeliveryPolicy", v, conn); err != nil {
-			return err
-		}
-	}
-	if d.HasChange("display_name") {
-		_, v := d.GetChange("display_name")
-		if err := updateTopicAttribute(d.Id(), "DisplayName", v, conn); err != nil {
-			return err
-		}
-	}
-	if d.HasChange("http_failure_feedback_role_arn") {
-		_, v := d.GetChange("http_failure_feedback_role_arn")
-		if err := updateTopicAttribute(d.Id(), "HTTPFailureFeedbackRoleArn", v, conn); err != nil {
-			return err
-		}
-	}
-	if d.HasChange("http_success_feedback_role_arn") {
-		_, v := d.GetChange("http_success_feedback_role_arn")
-		if err := updateTopicAttribute(d.Id(), "HTTPSuccessFeedbackRoleArn", v, conn); err != nil {
-			return err
-		}
-	}
-	if d.HasChange("kms_master_key_id") {
-		_, v := d.GetChange("kms_master_key_id")
-		if err := updateTopicAttribute(d.Id(), "KmsMasterKeyId", v, conn); err != nil {
-			return err
-		}
-	}
-	if d.HasChange("content_based_deduplication") {
-		_, v := d.GetChange("content_based_deduplication")
-		if err := updateTopicAttribute(d.Id(), "ContentBasedDeduplication", v, conn); err != nil {
-			return err
-		}
-	}
-	if d.HasChange("lambda_failure_feedback_role_arn") {
-		_, v := d.GetChange("lambda_failure_feedback_role_arn")
-		if err := updateTopicAttribute(d.Id(), "LambdaFailureFeedbackRoleArn", v, conn); err != nil {
-			return err
-		}
-	}
-	if d.HasChange("lambda_success_feedback_role_arn") {
-		_, v := d.GetChange("lambda_success_feedback_role_arn")
-		if err := updateTopicAttribute(d.Id(), "LambdaSuccessFeedbackRoleArn", v, conn); err != nil {
-			return err
-		}
-	}
-
-	if d.HasChange("policy") {
-		o, n := d.GetChange("policy")
-
-		if equivalent, err := awspolicy.PoliciesAreEquivalent(o.(string), n.(string)); err != nil || !equivalent {
-			policy, err := structure.NormalizeJsonString(n.(string))
-
-			if err != nil {
-				return fmt.Errorf("policy contains an invalid JSON: %s", err)
-			}
-
-			if err := updateTopicAttribute(d.Id(), "Policy", policy, conn); err != nil {
-				return err
-			}
-		}
-	}
-
-	if d.HasChange("sqs_failure_feedback_role_arn") {
-		_, v := d.GetChange("sqs_failure_feedback_role_arn")
-		if err := updateTopicAttribute(d.Id(), "SQSFailureFeedbackRoleArn", v, conn); err != nil {
-			return err
-		}
-	}
-	if d.HasChange("sqs_success_feedback_role_arn") {
-		_, v := d.GetChange("sqs_success_feedback_role_arn")
-		if err := updateTopicAttribute(d.Id(), "SQSSuccessFeedbackRoleArn", v, conn); err != nil {
-			return err
-		}
-	}
-	if d.HasChange("application_success_feedback_sample_rate") {
-		_, v := d.GetChange("application_success_feedback_sample_rate")
-		if err := updateTopicAttribute(d.Id(), "ApplicationSuccessFeedbackSampleRate", v, conn); err != nil {
-			return err
-		}
-	}
-	if d.HasChange("http_success_feedback_sample_rate") {
-		_, v := d.GetChange("http_success_feedback_sample_rate")
-		if err := updateTopicAttribute(d.Id(), "HTTPSuccessFeedbackSampleRate", v, conn); err != nil {
-			return err
-		}
-	}
-	if d.HasChange("lambda_success_feedback_sample_rate") {
-		_, v := d.GetChange("lambda_success_feedback_sample_rate")
-		if err := updateTopicAttribute(d.Id(), "LambdaSuccessFeedbackSampleRate", v, conn); err != nil {
-			return err
-		}
-	}
-	if d.HasChange("sqs_success_feedback_sample_rate") {
-		_, v := d.GetChange("sqs_success_feedback_sample_rate")
-		if err := updateTopicAttribute(d.Id(), "SQSSuccessFeedbackSampleRate", v, conn); err != nil {
-			return err
-		}
-	}
-	if d.HasChange("firehose_failure_feedback_role_arn") {
-		_, v := d.GetChange("firehose_failure_feedback_role_arn")
-		if err := updateTopicAttribute(d.Id(), "FirehoseFailureFeedbackRoleArn", v, conn); err != nil {
-			return err
-		}
-	}
-	if d.HasChange("firehose_success_feedback_role_arn") {
-		_, v := d.GetChange("firehose_success_feedback_role_arn")
-		if err := updateTopicAttribute(d.Id(), "FirehoseSuccessFeedbackRoleArn", v, conn); err != nil {
-			return err
-		}
-	}
-	if d.HasChange("firehose_success_feedback_sample_rate") {
-		_, v := d.GetChange("firehose_success_feedback_sample_rate")
-		if err := updateTopicAttribute(d.Id(), "FirehoseSuccessFeedbackSampleRate", v, conn); err != nil {
-			return err
-		}
-	}
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
-			return fmt.Errorf("error updating tags: %w", err)
-		}
-	}
-
-	return resourceTopicRead(d, meta)
-}
-
 func resourceTopicRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SNSConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
@@ -475,6 +322,33 @@ func resourceTopicRead(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
+func resourceTopicUpdate(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*conns.AWSClient).SNSConn
+
+	if d.HasChangesExcept("tags", "tags_all") {
+		attributes, err := topicAttributeMap.ResourceDataToApiAttributesUpdate(d)
+
+		if err != nil {
+			return err
+		}
+
+		err = putTopicAttributes(conn, d.Id(), attributes)
+
+		if err != nil {
+			return err
+		}
+	}
+
+	if d.HasChange("tags_all") {
+		o, n := d.GetChange("tags_all")
+		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
+			return fmt.Errorf("error updating tags: %w", err)
+		}
+	}
+
+	return resourceTopicRead(d, meta)
+}
+
 func resourceTopicDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SNSConn
 
@@ -525,34 +399,6 @@ func resourceTopicCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, me
 
 	if !fifoTopic && contentBasedDeduplication {
 		return fmt.Errorf("content-based deduplication can only be set for FIFO topics")
-	}
-
-	return nil
-}
-
-func updateTopicAttribute(topicArn, name string, value interface{}, conn *sns.SNS) error {
-	// Ignore an empty policy
-	if name == "Policy" && value == "" {
-		return nil
-	}
-	log.Printf("[DEBUG] Updating SNS Topic Attribute: %s", name)
-
-	// Make API call to update attributes
-	req := sns.SetTopicAttributesInput{
-		TopicArn:       aws.String(topicArn),
-		AttributeName:  aws.String(name),
-		AttributeValue: aws.String(fmt.Sprintf("%v", value)),
-	}
-
-	// Retry the update in the event of an eventually consistent style of
-	// error, where say an IAM resource is successfully created but not
-	// actually available. See https://github.com/hashicorp/terraform/issues/3660
-	_, err := verify.RetryOnAWSCode(sns.ErrCodeInvalidParameterException, func() (interface{}, error) {
-		return conn.SetTopicAttributes(&req)
-	})
-
-	if err != nil {
-		return fmt.Errorf("error setting SNS Topic (%s) attributes: %w", topicArn, err)
 	}
 
 	return nil

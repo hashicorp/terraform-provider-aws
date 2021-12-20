@@ -163,6 +163,16 @@ func (m AttributeMap) ResourceDataToApiAttributesUpdate(d *schema.ResourceData) 
 				apiAttributeValue = strconv.Itoa(v.(int))
 			case schema.TypeString:
 				apiAttributeValue = v.(string)
+
+				if attributeInfo.isIAMPolicy {
+					policy, err := structure.NormalizeJsonString(apiAttributeValue)
+
+					if err != nil {
+						return nil, fmt.Errorf("policy (%s) is invalid JSON: %w", apiAttributeValue, err)
+					}
+
+					apiAttributeValue = policy
+				}
 			default:
 				return nil, fmt.Errorf("attribute %s is of unsupported type: %d", tfAttributeName, t)
 			}
