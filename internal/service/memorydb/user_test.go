@@ -15,7 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func TestAccUser_basic(t *testing.T) {
+func TestAccMemoryDBUser_basic(t *testing.T) {
 	rName := "tf-test-" + sdkacctest.RandString(8)
 	resourceName := "aws_memorydb_user.test"
 
@@ -51,7 +51,7 @@ func TestAccUser_basic(t *testing.T) {
 	})
 }
 
-func TestAccUser_disappears(t *testing.T) {
+func TestAccMemoryDBUser_disappears(t *testing.T) {
 	rName := "tf-test-" + sdkacctest.RandString(8)
 	resourceName := "aws_memorydb_user.test"
 
@@ -73,7 +73,7 @@ func TestAccUser_disappears(t *testing.T) {
 	})
 }
 
-func TestAccUser_update_accessString(t *testing.T) {
+func TestAccMemoryDBUser_update_accessString(t *testing.T) {
 	rName := "tf-test-" + sdkacctest.RandString(8)
 	resourceName := "aws_memorydb_user.test"
 
@@ -107,7 +107,7 @@ func TestAccUser_update_accessString(t *testing.T) {
 	})
 }
 
-func TestAccUser_update_passwords(t *testing.T) {
+func TestAccMemoryDBUser_update_passwords(t *testing.T) {
 	rName := "tf-test-" + sdkacctest.RandString(8)
 	resourceName := "aws_memorydb_user.test"
 
@@ -160,7 +160,7 @@ func TestAccUser_update_passwords(t *testing.T) {
 	})
 }
 
-func TestAccUser_update_tags(t *testing.T) {
+func TestAccMemoryDBUser_update_tags(t *testing.T) {
 	rName := "tf-test-" + sdkacctest.RandString(8)
 	resourceName := "aws_memorydb_user.test"
 

@@ -26,7 +26,7 @@ func testAccPreCheck(t *testing.T) {
 	}
 }
 
-func TestAccSubnetGroup_basic(t *testing.T) {
+func TestAccMemoryDBSubnetGroup_basic(t *testing.T) {
 	rName := "tf-test-" + sdkacctest.RandString(8)
 	resourceName := "aws_memorydb_subnet_group.test"
 
@@ -60,7 +60,7 @@ func TestAccSubnetGroup_basic(t *testing.T) {
 	})
 }
 
-func TestAccSubnetGroup_disappears(t *testing.T) {
+func TestAccMemoryDBSubnetGroup_disappears(t *testing.T) {
 	rName := "tf-test-" + sdkacctest.RandString(8)
 	resourceName := "aws_memorydb_subnet_group.test"
 
@@ -82,7 +82,7 @@ func TestAccSubnetGroup_disappears(t *testing.T) {
 	})
 }
 
-func TestAccSubnetGroup_nameGenerated(t *testing.T) {
+func TestAccMemoryDBSubnetGroup_nameGenerated(t *testing.T) {
 	resourceName := "aws_memorydb_subnet_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -103,7 +103,7 @@ func TestAccSubnetGroup_nameGenerated(t *testing.T) {
 	})
 }
 
-func TestAccSubnetGroup_namePrefix(t *testing.T) {
+func TestAccMemoryDBSubnetGroup_namePrefix(t *testing.T) {
 	resourceName := "aws_memorydb_subnet_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -124,7 +124,7 @@ func TestAccSubnetGroup_namePrefix(t *testing.T) {
 	})
 }
 
-func TestAccSubnetGroup_update_description(t *testing.T) {
+func TestAccMemoryDBSubnetGroup_update_description(t *testing.T) {
 	rName := "tf-test-" + sdkacctest.RandString(8)
 	resourceName := "aws_memorydb_subnet_group.test"
 
@@ -162,7 +162,7 @@ func TestAccSubnetGroup_update_description(t *testing.T) {
 	})
 }
 
-func TestAccSubnetGroup_update_subnetIds(t *testing.T) {
+func TestAccMemoryDBSubnetGroup_update_subnetIds(t *testing.T) {
 	rName := "tf-test-" + sdkacctest.RandString(8)
 	resourceName := "aws_memorydb_subnet_group.test"
 
@@ -218,7 +218,7 @@ func TestAccSubnetGroup_update_subnetIds(t *testing.T) {
 	})
 }
 
-func TestAccSubnetGroup_update_tags(t *testing.T) {
+func TestAccMemoryDBSubnetGroup_update_tags(t *testing.T) {
 	rName := "tf-test-" + sdkacctest.RandString(8)
 	resourceName := "aws_memorydb_subnet_group.test"
 
