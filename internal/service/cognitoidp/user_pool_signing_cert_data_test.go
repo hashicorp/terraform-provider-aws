@@ -33,28 +33,28 @@ func TestAccCognitoIDPUserPoolSigningCertDataSource_basic(t *testing.T) {
 func testAccUserPoolSigningCertDataSourceConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_cognito_user_pool" "saml" {
-	name                     = "%s"
-	auto_verified_attributes = ["email"]
+  name                     = "%s"
+  auto_verified_attributes = ["email"]
 }
 resource "aws_cognito_identity_provider" "saml" {
-	user_pool_id  = aws_cognito_user_pool.saml.id
-	provider_name = "SAML"
-	provider_type = "SAML"
-  
-	provider_details = {
-	  MetadataFile = file("./test-fixtures/saml-metadata.xml")
-	  // if we don't specify below, terraform always thinks this resource has
-	  // changed: https://github.com/terraform-providers/terraform-provider-aws/issues/4831
-	  SSORedirectBindingURI = "https://terraform-dev-ed.my.salesforce.com/idp/endpoint/HttpRedirect"
-	}
-  
-	attribute_mapping = {
-	  email = "email"
-	}
+  user_pool_id  = aws_cognito_user_pool.saml.id
+  provider_name = "SAML"
+  provider_type = "SAML"
+
+  provider_details = {
+    MetadataFile = file("./test-fixtures/saml-metadata.xml")
+    // if we don't specify below, terraform always thinks this resource has
+    // changed: https://github.com/terraform-providers/terraform-provider-aws/issues/4831
+    SSORedirectBindingURI = "https://terraform-dev-ed.my.salesforce.com/idp/endpoint/HttpRedirect"
+  }
+
+  attribute_mapping = {
+    email = "email"
+  }
 }
-  
+
 data "aws_cognito_user_pool_signing_certificate" "saml" {
-	user_pool_id = aws_cognito_user_pool.saml.id
+  user_pool_id = aws_cognito_user_pool.saml.id
 }
 `, rName)
 }
