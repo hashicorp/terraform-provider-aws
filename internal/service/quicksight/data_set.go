@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/quicksight"
@@ -925,10 +926,134 @@ func resourceAwsQuickSightDataSetRead(ctx context.Context, d *schema.ResourceDat
 }
 
 func resourceAwsQuickSightDataSetUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	return nil
+	conn := meta.(*conns.AWSClient).QuickSightConn
+
+	if d.HasChangesExcept("permission", "tags", "tags_all") {
+		awsAccountId, dataSetId, err := ParseDataSetID(d.Id())
+		if err != nil {
+			return diag.FromErr(err)
+		}
+
+		params := &quicksight.UpdateDataSetInput{
+			AwsAccountId: aws.String(awsAccountId),
+			DataSetId:    aws.String(dataSetId),
+			Name:         aws.String(d.Get("name").(string)),
+		}
+
+		if d.HasChange("column_groups") {
+			params.ColumnGroups = expandQuickSightDataSetColumnGroups(d.Get("column_groups").([]interface{}))
+		}
+
+		if d.HasChange("column_level_permission_rules") {
+			params.ColumnLevelPermissionRules = expandQuickSightDataSetColumnLevelPermissionRules(d.Get("column_level_permission_rules").([]interface{}))
+		}
+
+		if d.HasChange("data_set_usage_configuration") {
+			params.DataSetUsageConfiguration = expandQuickSightDataSetUsageConfiguration(d.Get("data_set_usage_configuration").(map[string]interface{}))
+		}
+
+		if d.HasChange("field_folders") {
+			params.FieldFolders = expandQuickSightDataSetFieldFolders(d.Get("field_folders").(map[string]interface{}))
+		}
+
+		if d.HasChange("import_mode") {
+			params.ImportMode = aws.String(d.Get("import_mode").(string))
+		}
+
+		if d.HasChange("logical_table_map") {
+			params.LogicalTableMap = expandQuickSightDataSetLogicalTableMap(d.Get("logical_table_map").(map[string]interface{}))
+		}
+
+		if d.HasChange("physical_table_map") {
+			params.PhysicalTableMap = expandQuickSightDataSetPhysicalTableMap(d.Get("physical_table_map").(map[string]interface{}))
+		}
+
+		if d.HasChange("row_level_permission_data_set") {
+			params.RowLevelPermissionDataSet = expandQuickSightDataSetRowLevelPermissionDataSet(d.Get("row_level_permission_data_set").(map[string]interface{}))
+		}
+
+		if d.HasChange("row_level_permission_tag_configuration") {
+			params.RowLevelPermissionTagConfiguration = expandQuickSightDataSetRowLevelPermissionTagConfigurations(d.Get("row_level_permission_tag_configuration").(map[string]interface{}))
+		}
+
+		_, err = conn.UpdateDataSetWithContext(ctx, params)
+		if err != nil {
+			return diag.Errorf("error updating QuickSight Data Set (%s): %s", d.Id(), err)
+		}
+
+		// dataSet doesnt have a status, don't know what to do without a status function
+
+		// if _, err := waitUpdated(ctx, conn, awsAccountId, dataSourceId); err != nil {
+		// 	return diag.Errorf("error waiting for QuickSight Data Set (%s) to update: %s", d.Id(), err)
+		// }
+	}
+
+	if d.HasChange("permission") {
+		awsAccountId, dataSetId, err := ParseDataSetID(d.Id())
+		if err != nil {
+			return diag.FromErr(err)
+		}
+
+		oraw, nraw := d.GetChange("permission")
+		o := oraw.(*schema.Set).List()
+		n := nraw.(*schema.Set).List()
+
+		toGrant, toRevoke := DiffPermissions(o, n)
+
+		params := &quicksight.UpdateDataSetPermissionsInput{
+			AwsAccountId: aws.String(awsAccountId),
+			DataSetId:    aws.String(dataSetId),
+		}
+
+		if len(toGrant) > 0 {
+			params.GrantPermissions = toGrant
+		}
+
+		if len(toRevoke) > 0 {
+			params.RevokePermissions = toRevoke
+		}
+
+		_, err = conn.UpdateDataSetPermissionsWithContext(ctx, params)
+
+		if err != nil {
+			return diag.Errorf("error updating QuickSight Data Set (%s) permissions: %s", dataSetId, err)
+		}
+	}
+
+	if d.HasChange("tags_all") {
+		o, n := d.GetChange("tags_all")
+
+		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+			return diag.Errorf("error updating QuickSight Data Source (%s) tags: %s", d.Id(), err)
+		}
+	}
+
+	return resourceAwsQuickSightDataSetRead(ctx, d, meta)
 }
 
 func resourceAwsQuickSightDataSetDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.AWSClient).QuickSightConn
+
+	awsAccountId, dataSetId, err := ParseDataSetID(d.Id())
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	deleteOpts := &quicksight.DeleteDataSetInput{
+		AwsAccountId: aws.String(awsAccountId),
+		DataSetId:    aws.String(dataSetId),
+	}
+
+	_, err = conn.DeleteDataSetWithContext(ctx, deleteOpts)
+
+	if tfawserr.ErrCodeEquals(err, quicksight.ErrCodeResourceNotFoundException) {
+		return nil
+	}
+
+	if err != nil {
+		return diag.Errorf("error deleting QuickSight Data Set (%s): %s", d.Id(), err)
+	}
+
 	return nil
 }
 
@@ -2628,4 +2753,12 @@ func flattenQuickSightOutputColumn(column *quicksight.OutputColumn) map[string]i
 	}
 
 	return tfMap
+}
+
+func ParseDataSetID(id string) (string, string, error) {
+	parts := strings.SplitN(id, "/", 2)
+	if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
+		return "", "", fmt.Errorf("unexpected format of ID (%s), expected AWS_ACCOUNT_ID/DATA_SOURCE_ID", id)
+	}
+	return parts[0], parts[1], nil
 }
