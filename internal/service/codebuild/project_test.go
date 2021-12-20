@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfcodebuild "github.com/hashicorp/terraform-provider-aws/internal/service/codebuild"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func init() {
@@ -85,6 +86,7 @@ func TestAccCodeBuildProject_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "environment.0.image_pull_credentials_type", codebuild.ImagePullCredentialsTypeCodebuild),
 					resource.TestCheckResourceAttr(resourceName, "logs_config.0.cloudwatch_logs.0.status", codebuild.LogsConfigStatusTypeEnabled),
 					resource.TestCheckResourceAttr(resourceName, "logs_config.0.s3_logs.0.status", codebuild.LogsConfigStatusTypeDisabled),
+					resource.TestCheckResourceAttr(resourceName, "project_visibility", "PRIVATE"),
 					resource.TestCheckResourceAttrPair(resourceName, "service_role", roleResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "source.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "source.0.auth.#", "0"),
@@ -101,6 +103,51 @@ func TestAccCodeBuildProject_basic(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccCodeBuildProject_publicVisibility(t *testing.T) {
+	var project codebuild.Project
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resourceName := "aws_codebuild_project.test"
+	roleResourceName := "aws_iam_role.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, codebuild.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckProjectDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccProjectConfig_projectVisibility(rName, "PUBLIC_READ"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckProjectExists(resourceName, &project),
+					resource.TestCheckResourceAttr(resourceName, "project_visibility", "PUBLIC_READ"),
+					resource.TestCheckResourceAttrSet(resourceName, "public_project_alias"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccProjectConfig_projectVisibility(rName, "PRIVATE"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckProjectExists(resourceName, &project),
+					resource.TestCheckResourceAttr(resourceName, "project_visibility", "PRIVATE"),
+				),
+			},
+			{
+				Config: testAccProjectConfig_projectVisibility_resourceRole(rName, "PRIVATE"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckProjectExists(resourceName, &project),
+					resource.TestCheckResourceAttr(resourceName, "project_visibility", "PRIVATE"),
+					resource.TestCheckResourceAttrPair(resourceName, "resource_access_role", roleResourceName, "arn"),
+				),
 			},
 		},
 	})
@@ -400,7 +447,7 @@ func TestAccCodeBuildProject_encryptionKey(t *testing.T) {
 				Config: testAccProjectConfig_EncryptionKey(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProjectExists(resourceName, &project),
-					resource.TestMatchResourceAttr(resourceName, "encryption_key", regexp.MustCompile(`.+`)),
+					resource.TestCheckResourceAttrPair(resourceName, "encryption_key", "aws_kms_key.test", "arn"),
 				),
 			},
 			{
@@ -1823,6 +1870,42 @@ func TestAccCodeBuildProject_Artifacts_type(t *testing.T) {
 	})
 }
 
+func TestAccCodeBuildProject_Artifacts_bucketOwnerAccess(t *testing.T) {
+	var project codebuild.Project
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_codebuild_project.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, codebuild.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckProjectDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccProjectConfig_Artifacts_BucketOwnerAccess(rName, "FULL"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckProjectExists(resourceName, &project),
+					resource.TestCheckResourceAttr(resourceName, "artifacts.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "artifacts.0.bucket_owner_access", "FULL"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccProjectConfig_Artifacts_BucketOwnerAccess(rName, "READ_ONLY"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckProjectExists(resourceName, &project),
+					resource.TestCheckResourceAttr(resourceName, "artifacts.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "artifacts.0.bucket_owner_access", "READ_ONLY"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccCodeBuildProject_secondaryArtifacts(t *testing.T) {
 	var project codebuild.Project
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -2339,6 +2422,31 @@ func TestAccCodeBuildProject_Environment_registryCredential(t *testing.T) {
 	})
 }
 
+func TestAccCodeBuildProject_disappears(t *testing.T) {
+	var project codebuild.Project
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resourceName := "aws_codebuild_project.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, codebuild.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckProjectDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccProjectConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckProjectExists(resourceName, &project),
+					acctest.CheckResourceDisappears(acctest.Provider, tfcodebuild.ResourceProject(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfcodebuild.ResourceProject(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func testAccCheckProjectExists(n string, project *codebuild.Project) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -2352,21 +2460,16 @@ func testAccCheckProjectExists(n string, project *codebuild.Project) resource.Te
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).CodeBuildConn
 
-		out, err := conn.BatchGetProjects(&codebuild.BatchGetProjectsInput{
-			Names: []*string{
-				aws.String(rs.Primary.ID),
-			},
-		})
-
+		output, err := tfcodebuild.FindProjectByARN(conn, rs.Primary.ID)
 		if err != nil {
 			return err
 		}
 
-		if len(out.Projects) < 1 {
-			return fmt.Errorf("No project found")
+		if output == nil {
+			return fmt.Errorf("CodeBuild Project (%s) not found", rs.Primary.ID)
 		}
 
-		*project = *out.Projects[0]
+		*project = *output
 
 		return nil
 	}
@@ -2380,21 +2483,17 @@ func testAccCheckProjectDestroy(s *terraform.State) error {
 			continue
 		}
 
-		out, err := conn.BatchGetProjects(&codebuild.BatchGetProjectsInput{
-			Names: []*string{
-				aws.String(rs.Primary.ID),
-			},
-		})
+		_, err := tfcodebuild.FindProjectByARN(conn, rs.Primary.ID)
+
+		if tfresource.NotFound(err) {
+			continue
+		}
 
 		if err != nil {
 			return err
 		}
 
-		if out != nil && len(out.Projects) > 0 {
-			return fmt.Errorf("Expected AWS CodeBuild Project to be gone, but was still found")
-		}
-
-		return nil
+		return fmt.Errorf("CodeBuild Project %s still exists", rs.Primary.ID)
 	}
 
 	return nil
@@ -2412,17 +2511,13 @@ func testAccCheckProjectCertificate(project *codebuild.Project, expectedCertific
 func testAccPreCheck(t *testing.T) {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).CodeBuildConn
 
-	input := &codebuild.BatchGetProjectsInput{
-		Names: []*string{aws.String("tf-acc-test-precheck")},
-	}
-
-	_, err := conn.BatchGetProjects(input)
+	_, err := tfcodebuild.FindProjectByARN(conn, "tf-acc-test-precheck")
 
 	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)
 	}
 
-	if err != nil {
+	if err != nil && !tfresource.NotFound(err) {
 		t.Fatalf("unexpected PreCheck error: %s", err)
 	}
 }
@@ -2471,6 +2566,7 @@ resource "aws_iam_role_policy" "test" {
         "s3:GetObject",
         "s3:GetObjectVersion",
         "s3:GetBucketAcl",
+        "s3:PutBucketAcl",
         "s3:GetBucketLocation"
       ]
     },
@@ -2528,6 +2624,57 @@ resource "aws_codebuild_project" "test" {
   }
 }
 `, rName, testAccGitHubSourceLocationFromEnv()))
+}
+
+func testAccProjectConfig_projectVisibility(rName, visibility string) string {
+	return acctest.ConfigCompose(testAccProjectConfig_Base_ServiceRole(rName), fmt.Sprintf(`
+resource "aws_codebuild_project" "test" {
+  name               = %[1]q
+  service_role       = aws_iam_role.test.arn
+  project_visibility = %[3]q
+
+  artifacts {
+    type = "NO_ARTIFACTS"
+  }
+
+  environment {
+    compute_type = "BUILD_GENERAL1_SMALL"
+    image        = "2"
+    type         = "LINUX_CONTAINER"
+  }
+
+  source {
+    location = %[2]q
+    type     = "GITHUB"
+  }
+}
+`, rName, testAccGitHubSourceLocationFromEnv(), visibility))
+}
+
+func testAccProjectConfig_projectVisibility_resourceRole(rName, visibility string) string {
+	return acctest.ConfigCompose(testAccProjectConfig_Base_ServiceRole(rName), fmt.Sprintf(`
+resource "aws_codebuild_project" "test" {
+  name                 = %[1]q
+  service_role         = aws_iam_role.test.arn
+  project_visibility   = %[3]q
+  resource_access_role = aws_iam_role.test.arn
+
+  artifacts {
+    type = "NO_ARTIFACTS"
+  }
+
+  environment {
+    compute_type = "BUILD_GENERAL1_SMALL"
+    image        = "2"
+    type         = "LINUX_CONTAINER"
+  }
+
+  source {
+    location = %[2]q
+    type     = "GITHUB"
+  }
+}
+`, rName, testAccGitHubSourceLocationFromEnv(), visibility))
 }
 
 func testAccProjectConfig_BadgeEnabled(rName string, badgeEnabled bool) string {
@@ -4125,6 +4272,39 @@ resource "aws_codebuild_project" "test" {
   }
 }
 `, rName, artifactType))
+}
+
+func testAccProjectConfig_Artifacts_BucketOwnerAccess(rName string, typ string) string {
+	return acctest.ConfigCompose(
+		testAccProjectConfig_Base_ServiceRole(rName),
+		fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket        = %[1]q
+  force_destroy = true
+}
+
+resource "aws_codebuild_project" "test" {
+  name         = %[1]q
+  service_role = aws_iam_role.test.arn
+
+  artifacts {
+    type                = "S3"
+    location            = aws_s3_bucket.test.bucket
+    bucket_owner_access = %[2]q
+  }
+
+  environment {
+    compute_type = "BUILD_GENERAL1_SMALL"
+    image        = "2"
+    type         = "LINUX_CONTAINER"
+  }
+
+  source {
+    type     = "S3"
+    location = "${aws_s3_bucket.test.bucket}/"
+  }
+}
+`, rName, typ))
 }
 
 func testAccProjectConfig_SecondaryArtifacts(rName string) string {
