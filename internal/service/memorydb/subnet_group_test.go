@@ -21,7 +21,7 @@ func TestAccSubnetGroup_basic(t *testing.T) {
 	resourceName := "aws_memorydb_subnet_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(memorydb.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, memorydb.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckSubnetGroupDestroy,
@@ -55,7 +55,7 @@ func TestAccSubnetGroup_disappears(t *testing.T) {
 	resourceName := "aws_memorydb_subnet_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(memorydb.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, memorydb.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckSubnetGroupDestroy,
@@ -76,7 +76,7 @@ func TestAccSubnetGroup_nameGenerated(t *testing.T) {
 	resourceName := "aws_memorydb_subnet_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(memorydb.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, memorydb.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckSubnetGroupDestroy,
@@ -97,7 +97,7 @@ func TestAccSubnetGroup_namePrefix(t *testing.T) {
 	resourceName := "aws_memorydb_subnet_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(memorydb.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, memorydb.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckSubnetGroupDestroy,
@@ -119,7 +119,7 @@ func TestAccSubnetGroup_update_description(t *testing.T) {
 	resourceName := "aws_memorydb_subnet_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(memorydb.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, memorydb.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckSubnetGroupDestroy,
@@ -157,7 +157,7 @@ func TestAccSubnetGroup_update_subnetIds(t *testing.T) {
 	resourceName := "aws_memorydb_subnet_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(memorydb.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, memorydb.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckSubnetGroupDestroy,
@@ -213,7 +213,7 @@ func TestAccSubnetGroup_update_tags(t *testing.T) {
 	resourceName := "aws_memorydb_subnet_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(memorydb.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, memorydb.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckSubnetGroupDestroy,
