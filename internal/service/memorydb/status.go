@@ -15,8 +15,8 @@ const (
 	UserStatusModifying = "modifying"
 )
 
-// StatusUser fetches the MemoryDB user and its status.
-func StatusUser(ctx context.Context, conn *memorydb.MemoryDB, userName string) resource.StateRefreshFunc {
+// statusUser fetches the MemoryDB user and its status.
+func statusUser(ctx context.Context, conn *memorydb.MemoryDB, userName string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		user, err := FindUserByName(ctx, conn, userName)
 

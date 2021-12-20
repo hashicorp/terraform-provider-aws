@@ -148,7 +148,7 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 			return diag.Errorf("error updating MemoryDB User (%s): %s", d.Id(), err)
 		}
 
-		if err := WaitUserActive(ctx, conn, d.Id()); err != nil {
+		if err := waitUserActive(ctx, conn, d.Id()); err != nil {
 			return diag.Errorf("error waiting for MemoryDB User (%s) to be modified: %s", d.Id(), err)
 		}
 	}
@@ -236,11 +236,7 @@ func resourceUserDelete(ctx context.Context, d *schema.ResourceData, meta interf
 		return diag.Errorf("error deleting MemoryDB User (%s): %s", d.Id(), err)
 	}
 
-	if err := WaitUserDeleted(ctx, conn, d.Id()); err != nil {
-		if tfawserr.ErrCodeEquals(err, memorydb.ErrCodeUserNotFoundFault) {
-			return nil
-		}
-
+	if err := waitUserDeleted(ctx, conn, d.Id()); err != nil {
 		return diag.Errorf("error waiting for MemoryDB User (%s) to be deleted: %s", d.Id(), err)
 	}
 
