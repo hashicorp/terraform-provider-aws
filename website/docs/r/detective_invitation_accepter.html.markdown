@@ -23,7 +23,7 @@ resource "aws_detective_member" "primary" {
 }
 
 resource "aws_detective_invitation_accepter" "member" {
-  provider   = "awsalternate"
+  provider  = "awsalternate"
   graph_arn = aws_detective_member.primary.graph_arn
 }
 ```
