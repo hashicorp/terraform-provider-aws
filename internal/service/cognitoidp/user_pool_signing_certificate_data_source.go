@@ -9,32 +9,39 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func DataSourceSigningCert() *schema.Resource {
+func DataSourceUserPoolSigningCertificate() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceUserPoolSigningCertRead,
+		Read: dataSourceUserPoolSigningCertificateRead,
+
 		Schema: map[string]*schema.Schema{
-			"user_pool_id": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
 			"certificate": {
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+			"user_pool_id": {
+				Type:     schema.TypeString,
+				Required: true,
 			},
 		},
 	}
 }
 
-func dataSourceUserPoolSigningCertRead(d *schema.ResourceData, meta interface{}) error {
-	id := d.Get("user_pool_id").(string)
+func dataSourceUserPoolSigningCertificateRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CognitoIDPConn
-	result, err := conn.GetSigningCertificate(&cognitoidentityprovider.GetSigningCertificateInput{
-		UserPoolId: aws.String(id),
-	})
-	if err != nil {
-		return fmt.Errorf("Error getting signing cert from user pool: %w", err)
+
+	userPoolID := d.Get("user_pool_id").(string)
+	input := &cognitoidentityprovider.GetSigningCertificateInput{
+		UserPoolId: aws.String(userPoolID),
 	}
-	d.SetId(id)
-	d.Set("certificate", result.Certificate)
+
+	output, err := conn.GetSigningCertificate(input)
+
+	if err != nil {
+		return fmt.Errorf("error reading Cognito User Pool (%s) Signing Certificate: %w", userPoolID, err)
+	}
+
+	d.SetId(userPoolID)
+	d.Set("certificate", output.Certificate)
+
 	return nil
 }

@@ -10,34 +10,34 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccCognitoIDPUserPoolSigningCertDataSource_basic(t *testing.T) {
-	testName := fmt.Sprintf("tf_acc_ds_cognito_user_pools_%s", sdkacctest.RandString(7))
-	resourceName := "aws_cognito_user_pool.saml"
+func TestAccCognitoIDPUserPoolSigningCertificateDataSource_basic(t *testing.T) {
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	datasourceName := "data.aws_cognito_user_pool_signing_certificate.test"
+
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckIdentityProvider(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckUserPoolDestroy,
+		PreCheck:   func() { acctest.PreCheck(t); testAccPreCheckIdentityProvider(t) },
+		ErrorCheck: acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccUserPoolSigningCertDataSourceConfig_basic(testName),
+				Config: testAccUserPoolSigningCertificateDataSourceConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckUserPoolExists(resourceName, nil),
-					resource.TestCheckResourceAttrSet("data.aws_cognito_user_pool_signing_certificate.saml", "certificate"),
+					resource.TestCheckResourceAttrSet(datasourceName, "certificate"),
 				),
 			},
 		},
 	})
 }
 
-func testAccUserPoolSigningCertDataSourceConfig_basic(rName string) string {
+func testAccUserPoolSigningCertificateDataSourceConfig_basic(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_cognito_user_pool" "saml" {
-  name                     = "%s"
+resource "aws_cognito_user_pool" "test" {
+  name                     = %[1]q
   auto_verified_attributes = ["email"]
 }
-resource "aws_cognito_identity_provider" "saml" {
-  user_pool_id  = aws_cognito_user_pool.saml.id
+
+resource "aws_cognito_identity_provider" "test" {
+  user_pool_id  = aws_cognito_user_pool.test.id
   provider_name = "SAML"
   provider_type = "SAML"
 
@@ -51,8 +51,8 @@ resource "aws_cognito_identity_provider" "saml" {
   }
 }
 
-data "aws_cognito_user_pool_signing_certificate" "saml" {
-  user_pool_id = aws_cognito_user_pool.saml.id
+data "aws_cognito_user_pool_signing_certificate" "test" {
+  user_pool_id = aws_cognito_user_pool.test.id
 }
 `, rName)
 }

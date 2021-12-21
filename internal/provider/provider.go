@@ -397,7 +397,7 @@ func Provider() *schema.Provider {
 			"aws_codestarconnections_connection": codestarconnections.DataSourceConnection(),
 
 			"aws_cognito_user_pools":                    cognitoidp.DataSourceUserPools(),
-			"aws_cognito_user_pool_signing_certificate": cognitoidp.DataSourceSigningCert(),
+			"aws_cognito_user_pool_signing_certificate": cognitoidp.DataSourceUserPoolSigningCertificate(),
 
 			"aws_connect_contact_flow": connect.DataSourceContactFlow(),
 			"aws_connect_instance":     connect.DataSourceInstance(),
