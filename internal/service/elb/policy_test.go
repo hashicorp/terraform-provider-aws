@@ -76,7 +76,7 @@ func TestAccELBPolicy_disappears(t *testing.T) {
 	})
 }
 
-func TestAccELBPolicy_LBCookieStickinessPolicyType_computedAttributes(t *testing.T) {
+func TestAccELBPolicy_LBCookieStickinessPolicyType_computedAttributesOnly(t *testing.T) {
 	var policy elb.PolicyDescription
 	resourceName := "aws_load_balancer_policy.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -93,25 +93,14 @@ func TestAccELBPolicy_LBCookieStickinessPolicyType_computedAttributes(t *testing
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPolicyExists(resourceName, &policy),
 					resource.TestCheckResourceAttr(resourceName, "policy_type_name", policyTypeName),
-					resource.TestCheckResourceAttr(resourceName, "policy_attribute.#", "0"),
-				),
-			},
-			{
-				Config:   testAccPolicyConfig_policyTypeNameOnly(rName, policyTypeName),
-				PlanOnly: true,
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPolicyExists(resourceName, &policy),
 					resource.TestCheckResourceAttr(resourceName, "policy_attribute.#", "1"),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "policy_attribute.*", map[string]string{
-						"name": "CookieExpirationPeriod",
-					}),
 				),
 			},
 		},
 	})
 }
 
-func TestAccELBPolicy_SSLNegotiationPolicyType_computedAttributes(t *testing.T) {
+func TestAccELBPolicy_SSLNegotiationPolicyType_computedAttributesOnly(t *testing.T) {
 	var policy elb.PolicyDescription
 	resourceName := "aws_load_balancer_policy.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -127,15 +116,6 @@ func TestAccELBPolicy_SSLNegotiationPolicyType_computedAttributes(t *testing.T) 
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPolicyExists(resourceName, &policy),
 					resource.TestCheckResourceAttr(resourceName, "policy_type_name", tfelb.SSLNegotiationPolicyType),
-					resource.TestCheckResourceAttr(resourceName, "policy_attribute.#", "0"),
-				),
-			},
-			{
-				Config:   testAccPolicyConfig_policyTypeNameOnly(rName, tfelb.SSLNegotiationPolicyType),
-				PlanOnly: true,
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPolicyExists(resourceName, &policy),
-					resource.TestCheckResourceAttr(resourceName, "policy_type_name", tfelb.SSLNegotiationPolicyType),
 					resource.TestMatchResourceAttr(resourceName, "policy_attribute.#", regexp.MustCompile(`[^0]+`)),
 				),
 			},
@@ -143,7 +123,56 @@ func TestAccELBPolicy_SSLNegotiationPolicyType_computedAttributes(t *testing.T) 
 	})
 }
 
-func TestAccELBPolicy_predefinedSSLSecurityPolicy(t *testing.T) {
+func TestAccELBPolicy_SSLNegotiationPolicyType_customPolicy(t *testing.T) {
+	var policy elb.PolicyDescription
+	resourceName := "aws_load_balancer_policy.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, elb.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckPolicyDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPolicyConfig_customSSLSecurityPolicy(rName, "Protocol-TLSv1.1", "DHE-RSA-AES256-SHA256"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPolicyExists(resourceName, &policy),
+					resource.TestCheckResourceAttr(resourceName, "policy_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "policy_type_name", tfelb.SSLNegotiationPolicyType),
+					resource.TestCheckResourceAttr(resourceName, "policy_attribute.#", "2"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "policy_attribute.*", map[string]string{
+						"name":  "Protocol-TLSv1.1",
+						"value": "true",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "policy_attribute.*", map[string]string{
+						"name":  "DHE-RSA-AES256-SHA256",
+						"value": "true",
+					}),
+				),
+			},
+			{
+				Config: testAccPolicyConfig_customSSLSecurityPolicy(rName, "Protocol-TLSv1.2", "ECDHE-ECDSA-AES128-GCM-SHA256"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPolicyExists(resourceName, &policy),
+					resource.TestCheckResourceAttr(resourceName, "policy_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "policy_type_name", tfelb.SSLNegotiationPolicyType),
+					resource.TestCheckResourceAttr(resourceName, "policy_attribute.#", "2"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "policy_attribute.*", map[string]string{
+						"name":  "Protocol-TLSv1.2",
+						"value": "true",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "policy_attribute.*", map[string]string{
+						"name":  "ECDHE-ECDSA-AES128-GCM-SHA256",
+						"value": "true",
+					}),
+				),
+			},
+		},
+	})
+}
+
+func TestAccELBPolicy_SSLSecurityPolicy_predefined(t *testing.T) {
 	var policy elb.PolicyDescription
 	resourceName := "aws_load_balancer_policy.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -406,6 +435,42 @@ resource "aws_load_balancer_policy" "test" {
   policy_type_name   = %[2]q
 }
 `, rName, policyType))
+}
+
+func testAccPolicyConfig_customSSLSecurityPolicy(rName, protocol, cipher string) string {
+	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
+resource "aws_elb" "test" {
+  name               = %[1]q
+  availability_zones = [data.aws_availability_zones.available.names[0]]
+
+  listener {
+    instance_port     = 80
+    instance_protocol = "http"
+    lb_port           = 80
+    lb_protocol       = "http"
+  }
+
+  tags = {
+    Name = "tf-acc-test"
+  }
+}
+
+resource "aws_load_balancer_policy" "test" {
+  load_balancer_name = aws_elb.test.name
+  policy_name        = %[1]q
+  policy_type_name   = "SSLNegotiationPolicyType"
+
+  policy_attribute {
+    name  = %[2]q
+    value = "true"
+  }
+
+  policy_attribute {
+    name  = %[3]q
+    value = "true"
+  }
+}
+`, rName, protocol, cipher))
 }
 
 func testAccPolicyConfig_predefinedSSLSecurityPolicy(rName, securityPolicy string) string {

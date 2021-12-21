@@ -177,6 +177,10 @@ func FlattenPolicyAttributes(list []*elb.PolicyAttributeDescription) []interface
 	var attributes []interface{}
 
 	for _, attrdef := range list {
+		if attrdef == nil {
+			continue
+		}
+
 		attribute := map[string]string{
 			"name":  aws.StringValue(attrdef.AttributeName),
 			"value": aws.StringValue(attrdef.AttributeValue),

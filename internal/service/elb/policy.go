@@ -42,6 +42,10 @@ func ResourcePolicy() *schema.Resource {
 			"policy_attribute": {
 				Type:     schema.TypeSet,
 				Optional: true,
+				// If policy_attribute(s) are not specified,
+				// default values per policy type (see https://awscli.amazonaws.com/v2/documentation/api/latest/reference/elb/describe-load-balancer-policies.html)
+				// will be returned by the API; thus, this TypeSet is marked as Computed.
+				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"name": {
@@ -55,9 +59,9 @@ func ResourcePolicy() *schema.Resource {
 						},
 					},
 				},
-				// If policy_attribute(s) are not specified,
-				// default values per policy type (see https://awscli.amazonaws.com/v2/documentation/api/latest/reference/elb/describe-load-balancer-policies.html)
-				// will be returned by the API.
+				// For policy types like "SSLNegotiationPolicyType" that can reference predefined policies
+				// via the "Reference-Security-Policy" policy_attribute (https://docs.aws.amazon.com/elasticloadbalancing/latest/classic/elb-security-policy-table.html),
+				// differences caused by additional attributes returned by the API are suppressed.
 				DiffSuppressFunc: suppressPolicyAttributeDiffs,
 			},
 		},
@@ -352,33 +356,20 @@ func resourcePolicyUnassign(policyName, loadBalancerName string, conn *elb.ELB) 
 }
 
 func suppressPolicyAttributeDiffs(k, old, new string, d *schema.ResourceData) bool {
+	// Show difference for new resource
+	if d.Id() == "" {
+		return false
+	}
+
+	// Show differences if configured attributes are not in state
+	if old == "0" && new != "0" {
+		return false
+	}
+
 	o, n := d.GetChange("policy_attribute")
-	oldAttributes := ExpandPolicyAttributes(o.(*schema.Set).List())
-	newAttributes := ExpandPolicyAttributes(n.(*schema.Set).List())
+	oldAttributes := o.(*schema.Set)
+	newAttributes := n.(*schema.Set)
 
-	if d.Get("policy_type_name").(string) == SSLNegotiationPolicyType {
-		if len(newAttributes) == 1 && aws.StringValue(newAttributes[0].AttributeName) == ReferenceSecurityPolicy {
-			for _, attr := range oldAttributes {
-				if aws.StringValue(attr.AttributeName) != aws.StringValue(newAttributes[0].AttributeName) {
-					continue
-				}
-				return aws.StringValue(attr.AttributeValue) == aws.StringValue(newAttributes[0].AttributeValue)
-			}
-		}
-	}
-
-	for _, na := range newAttributes {
-		found := false
-		for _, oa := range oldAttributes {
-			if aws.StringValue(oa.AttributeName) != aws.StringValue(na.AttributeName) {
-				continue
-			}
-			found = aws.StringValue(oa.AttributeValue) == aws.StringValue(na.AttributeValue)
-		}
-		if !found {
-			return false
-		}
-	}
-
-	return true
+	// Suppress differences if the attributes returned from the API contain those configured
+	return oldAttributes.Intersection(newAttributes).Len() == newAttributes.Len()
 }
