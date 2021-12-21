@@ -2,6 +2,7 @@ package eks_test
 
 import (
 	"fmt"
+	"regexp"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/eks"
@@ -107,6 +108,34 @@ func TestAccEKSClusterRegistration_tags(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccEKSClusterRegistration_InvalidClusterProvider(t *testing.T) {
+	cluName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	regName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resourceName := "aws_eks_cluster_registration.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, eks.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckClusterRegistrationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_Required(cluName),
+			},
+			{
+				Config: testAccClusterRegistrationBaseConfig(regName),
+			},
+			{
+				ResourceName:  resourceName,
+				ImportState:   true,
+				ImportStateId: cluName,
+				ExpectError:   regexp.MustCompile(`has not been registered`),
 			},
 		},
 	})
