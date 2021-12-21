@@ -8,7 +8,7 @@ description: |-
 
 # Data Source: aws_cognito_user_pool_clients
 
-Use this data source to get a list of cognito user pools clients on a given userpool.
+Use this data source to get a list of Cognito user pools clients for a Cognito IdP user pool.
 
 ## Example Usage
 
@@ -20,9 +20,9 @@ data "aws_cognito_user_pool_clients" "main" {
 
 ## Argument Reference
 
-* `user_pool_id` - (required) The Cognito user pool id.
+* `user_pool_id` - (required) The Cognito user pool ID.
 
 
 ## Attributes Reference
 
-* `client_ids` - The set of cognito user pool client ids.
+* `client_ids` - List of Cognito user pool client IDs.
