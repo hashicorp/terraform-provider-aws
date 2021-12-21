@@ -25,16 +25,16 @@ func ResourceVPCEndpointConnectionAccepter() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"service_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
 			"state": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"vpc_endpoint_id": {
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+			},
+			"vpc_endpoint_service_id": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -46,26 +46,26 @@ func ResourceVPCEndpointConnectionAccepter() *schema.Resource {
 func resourceVPCEndpointConnectionAccepterCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
-	svcID := d.Get("service_id").(string)
-	vpceID := d.Get("vpc_endpoint_id").(string)
-
+	serviceID := d.Get("vpc_endpoint_service_id").(string)
+	vpcEndpointID := d.Get("vpc_endpoint_id").(string)
 	input := &ec2.AcceptVpcEndpointConnectionsInput{
-		ServiceId:      aws.String(svcID),
-		VpcEndpointIds: aws.StringSlice([]string{vpceID}),
+		ServiceId:      aws.String(serviceID),
+		VpcEndpointIds: aws.StringSlice([]string{vpcEndpointID}),
 	}
 
-	log.Printf("[DEBUG] Accepting VPC Endpoint Connection: %#v", input)
+	log.Printf("[DEBUG] Accepting VPC Endpoint Connection: %s", input)
 	_, err := conn.AcceptVpcEndpointConnections(input)
+
 	if err != nil {
-		return fmt.Errorf("error accepting VPC Endpoint Connection: %s", err.Error())
+		return fmt.Errorf("error accepting VPC Endpoint Connection: %w", err)
 	}
 
-	d.SetId(vpcEndpointConnectionAccepterCreateResourceID(svcID, vpceID))
+	d.SetId(vpcEndpointConnectionAccepterCreateResourceID(serviceID, vpcEndpointID))
 
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{"pendingAcceptance", "pending"},
 		Target:     []string{"available"},
-		Refresh:    vpcEndpointConnectionRefresh(conn, svcID, vpceID),
+		Refresh:    vpcEndpointConnectionRefresh(conn, serviceID, vpcEndpointID),
 		Timeout:    d.Timeout(schema.TimeoutCreate),
 		Delay:      5 * time.Second,
 		MinTimeout: 5 * time.Second,
@@ -73,7 +73,7 @@ func resourceVPCEndpointConnectionAccepterCreate(d *schema.ResourceData, meta in
 
 	vpceConn, err := stateConf.WaitForStateContext(context.Background())
 	if err != nil {
-		return fmt.Errorf("error waiting for VPC Endpoint (%s) to be accepted by VPC Endpoint Service (%s): %s", vpceID, svcID, err)
+		return fmt.Errorf("error waiting for VPC Endpoint (%s) to be accepted by VPC Endpoint Service (%s): %s", vpcEndpointID, serviceID, err)
 	}
 
 	d.Set("state", vpceConn.(ec2.VpcEndpointConnection).VpcEndpointState)
@@ -136,9 +136,9 @@ func resourceVPCEndpointConnectionAccepterRead(d *schema.ResourceData, meta inte
 		return fmt.Errorf("error reading VPC Endpoint Connection from VPC Endpoint Service (%s) to VPC Endpoint (%s): %s", serviceID, vpcEndpointID, err)
 	}
 
-	d.Set("service_id", serviceID)
 	d.Set("state", vpceConn.(ec2.VpcEndpointConnection).VpcEndpointState)
 	d.Set("vpc_endpoint_id", vpcEndpointID)
+	d.Set("vpc_endpoint_service_id", serviceID)
 
 	return nil
 }
@@ -180,5 +180,5 @@ func vpcEndpointConnectionAccepterParseResourceID(id string) (string, string, er
 		return parts[0], parts[1], nil
 	}
 
-	return "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected ServiceID%[2]sVPCEndpointID", id, vpcEndpointConnectionAccepterResourceIDSeparator)
+	return "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected VPCEndpointServiceID%[2]sVPCEndpointID", id, vpcEndpointConnectionAccepterResourceIDSeparator)
 }

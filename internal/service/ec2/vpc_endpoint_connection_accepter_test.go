@@ -53,7 +53,7 @@ func testAccCheckVpcEndpointConnectionAccepterDestroy(s *terraform.State) error 
 			continue
 		}
 
-		svcID := rs.Primary.Attributes["service_id"]
+		svcID := rs.Primary.Attributes["vpc_endpoint_service_id"]
 		vpceID := rs.Primary.Attributes["vpc_endpoint_id"]
 
 		input := &ec2.DescribeVpcEndpointConnectionsInput{
@@ -267,8 +267,8 @@ resource "aws_vpc_endpoint" "test" {
 }
 
 resource "aws_vpc_endpoint_connection_accepter" "test" {
-  service_id      = aws_vpc_endpoint_service.test.id
-  vpc_endpoint_id = aws_vpc_endpoint.test.id
+  vpc_endpoint_service_id = aws_vpc_endpoint_service.test.id
+  vpc_endpoint_id         = aws_vpc_endpoint.test.id
 }
 `, rName))
 }

@@ -34,8 +34,8 @@ resource "aws_vpc_endpoint" "example" {
 }
 
 resource "aws_vpc_endpoint_connection_accepter" "example" {
-  service_id      = aws_vpc_endpoint_service.example.id
-  vpc_endpoint_id = aws_vpc_endpoint.example.id
+  vpc_endpoint_service_id = aws_vpc_endpoint_service.example.id
+  vpc_endpoint_id         = aws_vpc_endpoint.example.id
 }
 ```
 
@@ -43,8 +43,8 @@ resource "aws_vpc_endpoint_connection_accepter" "example" {
 
 The following arguments are supported:
 
-* `service_id` - (Required) AWS VPC Endpoint Service ID.
 * `vpc_endpoint_id` - (Required) AWS VPC Endpoint ID.
+* `vpc_endpoint_service_id` - (Required) AWS VPC Endpoint Service ID.
 
 ## Attributes Reference
 
