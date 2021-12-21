@@ -18,6 +18,16 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+func init() {
+	acctest.RegisterServiceErrorCheckFunc(sqs.EndpointsID, testAccErrorCheckSkipSQS)
+}
+
+func testAccErrorCheckSkipSQS(t *testing.T) resource.ErrorCheckFunc {
+	return acctest.ErrorCheckSkipMessagesContaining(t,
+		"Unknown Attribute RedriveAllowPolicy",
+	)
+}
+
 func TestAccSQSQueue_basic(t *testing.T) {
 	var queueAttributes map[string]string
 	resourceName := "aws_sqs_queue.test"
