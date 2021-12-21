@@ -621,6 +621,8 @@ func Provider() *schema.Provider {
 
 			"aws_ram_resource_share": ram.DataSourceResourceShare(),
 
+			"aws_ses_active_receipt_rule_set": ses.DataSourceActiveReceiptRuleSet(),
+
 			"aws_db_cluster_snapshot":       rds.DataSourceClusterSnapshot(),
 			"aws_db_event_categories":       rds.DataSourceEventCategories(),
 			"aws_db_instance":               rds.DataSourceInstance(),
