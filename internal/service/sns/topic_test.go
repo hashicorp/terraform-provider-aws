@@ -48,7 +48,7 @@ func TestAccSNSTopic_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "application_failure_feedback_role_arn", ""),
 					resource.TestCheckResourceAttr(resourceName, "application_success_feedback_role_arn", ""),
 					resource.TestCheckResourceAttr(resourceName, "application_success_feedback_sample_rate", "0"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "sns", regexp.MustCompile(`terraform-\d+$`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "sns", regexp.MustCompile(`terraform-.+$`)),
 					resource.TestCheckResourceAttr(resourceName, "content_based_deduplication", "false"),
 					resource.TestCheckResourceAttr(resourceName, "delivery_policy", ""),
 					resource.TestCheckResourceAttr(resourceName, "display_name", ""),
