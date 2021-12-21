@@ -184,7 +184,11 @@ func resourceJobQueueUpdate(d *schema.ResourceData, meta interface{}) error {
 				return fmt.Errorf("Cannot remove the fair share scheduling policy")
 			}
 		} else {
-			updateInput.SchedulingPolicyArn = aws.String(d.Get("scheduling_policy_arn").(string))
+			// if a queue is a FIFO queue, SchedulingPolicyArn should not be set. Error is "Only fairshare queue can have scheduling policy"
+			// hence, check for scheduling_policy_arn and set it in the inputs only if it exists already
+			if v, ok := d.GetOk("scheduling_policy_arn"); ok {
+				updateInput.SchedulingPolicyArn = aws.String(v.(string))
+			}
 		}
 
 		_, err := conn.UpdateJobQueue(updateInput)
