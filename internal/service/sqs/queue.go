@@ -24,79 +24,63 @@ import (
 )
 
 var (
-	sqsQueueSchema = map[string]*schema.Schema{
+	queueSchema = map[string]*schema.Schema{
 		"arn": {
 			Type:     schema.TypeString,
 			Computed: true,
 		},
-
 		"content_based_deduplication": {
 			Type:     schema.TypeBool,
 			Default:  false,
 			Optional: true,
 		},
-
 		"deduplication_scope": {
 			Type:         schema.TypeString,
 			Optional:     true,
 			Computed:     true,
 			ValidateFunc: validation.StringInSlice(DeduplicationScope_Values(), false),
 		},
-
 		"delay_seconds": {
 			Type:         schema.TypeInt,
 			Optional:     true,
 			Default:      DefaultQueueDelaySeconds,
 			ValidateFunc: validation.IntBetween(0, 900),
 		},
-
 		"fifo_queue": {
 			Type:     schema.TypeBool,
 			Default:  false,
 			ForceNew: true,
 			Optional: true,
 		},
-
 		"fifo_throughput_limit": {
 			Type:         schema.TypeString,
 			Optional:     true,
 			Computed:     true,
 			ValidateFunc: validation.StringInSlice(FIFOThroughputLimit_Values(), false),
 		},
-
 		"kms_data_key_reuse_period_seconds": {
 			Type:         schema.TypeInt,
 			Optional:     true,
 			Computed:     true,
 			ValidateFunc: validation.IntBetween(60, 86_400),
 		},
-
 		"kms_master_key_id": {
 			Type:          schema.TypeString,
 			Optional:      true,
 			ConflictsWith: []string{"sqs_managed_sse_enabled"},
 		},
-
-		"sqs_managed_sse_enabled": {
-			Type:          schema.TypeBool,
-			Optional:      true,
-			ConflictsWith: []string{"kms_master_key_id"},
-		},
-
 		"max_message_size": {
 			Type:         schema.TypeInt,
 			Optional:     true,
 			Default:      DefaultQueueMaximumMessageSize,
 			ValidateFunc: validation.IntBetween(1024, 262_144),
 		},
-
 		"message_retention_seconds": {
 			Type:         schema.TypeInt,
 			Optional:     true,
 			Default:      DefaultQueueMessageRetentionPeriod,
 			ValidateFunc: validation.IntBetween(60, 1_209_600),
 		},
-
 		"name": {
 			Type:          schema.TypeString,
 			Optional:      true,
@@ -104,7 +88,6 @@ var (
 			ForceNew:      true,
 			ConflictsWith: []string{"name_prefix"},
 		},
-
 		"name_prefix": {
 			Type:          schema.TypeString,
 			Optional:      true,
@@ -112,7 +95,6 @@ var (
 			ForceNew:      true,
 			ConflictsWith: []string{"name"},
 		},
-
 		"policy": {
 			Type:             schema.TypeString,
 			Optional:         true,
@@ -124,23 +106,11 @@ var (
 				return json
 			},
 		},
-
 		"receive_wait_time_seconds": {
 			Type:     schema.TypeInt,
 			Optional: true,
 			Default:  DefaultQueueReceiveMessageWaitTimeSeconds,
 		},
-
-		"redrive_policy": {
-			Type:         schema.TypeString,
-			Optional:     true,
-			ValidateFunc: validation.StringIsJSON,
-			StateFunc: func(v interface{}) string {
-				json, _ := structure.NormalizeJsonString(v)
-				return json
-			},
-		},
-
 		"redrive_allow_policy": {
 			Type:         schema.TypeString,
 			Optional:     true,
@@ -150,41 +120,52 @@ var (
 				return json
 			},
 		},
-
+		"redrive_policy": {
+			Type:         schema.TypeString,
+			Optional:     true,
+			ValidateFunc: validation.StringIsJSON,
+			StateFunc: func(v interface{}) string {
+				json, _ := structure.NormalizeJsonString(v)
+				return json
+			},
+		},
+		"sqs_managed_sse_enabled": {
+			Type:          schema.TypeBool,
+			Optional:      true,
+			ConflictsWith: []string{"kms_master_key_id"},
+		},
+		"tags":     tftags.TagsSchema(),
+		"tags_all": tftags.TagsSchemaComputed(),
 		"url": {
 			Type:     schema.TypeString,
 			Computed: true,
 		},
-
 		"visibility_timeout_seconds": {
 			Type:         schema.TypeInt,
 			Optional:     true,
 			Default:      DefaultQueueVisibilityTimeout,
 			ValidateFunc: validation.IntBetween(0, 43_200),
 		},
-
-		"tags":     tftags.TagsSchema(),
-		"tags_all": tftags.TagsSchemaComputed(),
 	}
 
 	sqsQueueAttributeMap = attrmap.New(map[string]string{
+		"arn":                               sqs.QueueAttributeNameQueueArn,
+		"content_based_deduplication":       sqs.QueueAttributeNameContentBasedDeduplication,
+		"deduplication_scope":               sqs.QueueAttributeNameDeduplicationScope,
 		"delay_seconds":                     sqs.QueueAttributeNameDelaySeconds,
+		"fifo_queue":                        sqs.QueueAttributeNameFifoQueue,
+		"fifo_throughput_limit":             sqs.QueueAttributeNameFifoThroughputLimit,
+		"kms_data_key_reuse_period_seconds": sqs.QueueAttributeNameKmsDataKeyReusePeriodSeconds,
+		"kms_master_key_id":                 sqs.QueueAttributeNameKmsMasterKeyId,
 		"max_message_size":                  sqs.QueueAttributeNameMaximumMessageSize,
 		"message_retention_seconds":         sqs.QueueAttributeNameMessageRetentionPeriod,
-		"receive_wait_time_seconds":         sqs.QueueAttributeNameReceiveMessageWaitTimeSeconds,
-		"visibility_timeout_seconds":        sqs.QueueAttributeNameVisibilityTimeout,
 		"policy":                            sqs.QueueAttributeNamePolicy,
-		"redrive_policy":                    sqs.QueueAttributeNameRedrivePolicy,
+		"receive_wait_time_seconds":         sqs.QueueAttributeNameReceiveMessageWaitTimeSeconds,
 		"redrive_allow_policy":              sqs.QueueAttributeNameRedriveAllowPolicy,
-		"arn":                               sqs.QueueAttributeNameQueueArn,
-		"fifo_queue":                        sqs.QueueAttributeNameFifoQueue,
-		"content_based_deduplication":       sqs.QueueAttributeNameContentBasedDeduplication,
-		"kms_master_key_id":                 sqs.QueueAttributeNameKmsMasterKeyId,
-		"kms_data_key_reuse_period_seconds": sqs.QueueAttributeNameKmsDataKeyReusePeriodSeconds,
+		"redrive_policy":                    sqs.QueueAttributeNameRedrivePolicy,
 		"sqs_managed_sse_enabled":           sqs.QueueAttributeNameSqsManagedSseEnabled,
-		"deduplication_scope":               sqs.QueueAttributeNameDeduplicationScope,
-		"fifo_throughput_limit":             sqs.QueueAttributeNameFifoThroughputLimit,
-	}, sqsQueueSchema)
+		"visibility_timeout_seconds":        sqs.QueueAttributeNameVisibilityTimeout,
+	}, queueSchema)
 )
 
 // A number of these are marked as computed because if you don't
@@ -204,7 +185,7 @@ func ResourceQueue() *schema.Resource {
 			verify.SetTagsDiff,
 		),
 
-		Schema: sqsQueueSchema,
+		Schema: queueSchema,
 	}
 }
 
