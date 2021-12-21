@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -13,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func TestAccEC2VPCEndpointConnectionAccepter_crossAccount(t *testing.T) {
@@ -32,7 +32,7 @@ func TestAccEC2VPCEndpointConnectionAccepter_crossAccount(t *testing.T) {
 			{
 				Config: testAccVPCEndpointConnectionAccepterConfig_crossAccount(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "state", "available"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_endpoint_state", "available"),
 				),
 			},
 			{
@@ -53,32 +53,23 @@ func testAccCheckVpcEndpointConnectionAccepterDestroy(s *terraform.State) error 
 			continue
 		}
 
-		svcID := rs.Primary.Attributes["vpc_endpoint_service_id"]
-		vpceID := rs.Primary.Attributes["vpc_endpoint_id"]
+		serviceID, vpcEndpointID, err := tfec2.VPCEndpointConnectionAccepterParseResourceID(rs.Primary.ID)
 
-		input := &ec2.DescribeVpcEndpointConnectionsInput{
-			Filters: tfec2.BuildAttributeFilterList(map[string]string{"service-id": svcID}),
-		}
-
-		var foundAvailable bool
-
-		paginator := func(page *ec2.DescribeVpcEndpointConnectionsOutput, lastPage bool) bool {
-			for _, c := range page.VpcEndpointConnections {
-				if aws.StringValue(c.VpcEndpointId) == vpceID && aws.StringValue(c.VpcEndpointState) == "available" {
-					foundAvailable = true
-					return false
-				}
-			}
-			return !lastPage
-		}
-
-		if err := conn.DescribeVpcEndpointConnectionsPages(input, paginator); err != nil {
+		if err != nil {
 			return err
 		}
 
-		if foundAvailable {
-			return fmt.Errorf("AWS VPC Endpoint Service (%s) still has connection from AWS VPC Endpoint (%s) in available status", svcID, vpceID)
+		_, err = tfec2.FindVPCEndpointConnectionByServiceIDAndVPCEndpointID(conn, serviceID, vpcEndpointID)
+
+		if tfresource.NotFound(err) {
+			continue
 		}
+
+		if err != nil {
+			return err
+		}
+
+		return fmt.Errorf("VPC Endpoint Connection %s still exists", rs.Primary.ID)
 	}
 
 	return nil
