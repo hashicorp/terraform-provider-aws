@@ -24,10 +24,6 @@ func ResourceVPCEndpointConnectionAccepter() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"state": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 			"vpc_endpoint_id": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -37,6 +33,10 @@ func ResourceVPCEndpointConnectionAccepter() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
+			},
+			"vpc_endpoint_state": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 		},
 	}
