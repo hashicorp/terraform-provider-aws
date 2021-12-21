@@ -13,10 +13,6 @@ func DataSourceUserPoolClients() *schema.Resource {
 	return &schema.Resource{
 		Read: dataSourceuserPoolClientsRead,
 		Schema: map[string]*schema.Schema{
-			"user_pool_id": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
 			"client_ids": {
 				Type: schema.TypeList,
 				Elem: &schema.Schema{
@@ -24,27 +20,45 @@ func DataSourceUserPoolClients() *schema.Resource {
 				},
 				Computed: true,
 			},
+			"user_pool_id": {
+				Type:     schema.TypeString,
+				Required: true,
+			},
 		},
 	}
 }
 
 func dataSourceuserPoolClientsRead(d *schema.ResourceData, meta interface{}) error {
-	userPoolId := d.Get("user_pool_id").(string)
 	conn := meta.(*conns.AWSClient).CognitoIDPConn
 
-	var clientIds []string
-	err := conn.ListUserPoolClientsPages(&cognitoidentityprovider.ListUserPoolClientsInput{
-		UserPoolId: aws.String(userPoolId),
-	}, func(resp *cognitoidentityprovider.ListUserPoolClientsOutput, lastPage bool) bool {
-		for _, v := range resp.UserPoolClients {
-			clientIds = append(clientIds, aws.StringValue(v.ClientId))
+	userPoolID := d.Get("user_pool_id").(string)
+	input := &cognitoidentityprovider.ListUserPoolClientsInput{
+		UserPoolId: aws.String(userPoolID),
+	}
+
+	var clientIDs []string
+	err := conn.ListUserPoolClientsPages(input, func(page *cognitoidentityprovider.ListUserPoolClientsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
 		}
+
+		for _, v := range page.UserPoolClients {
+			if v == nil {
+				continue
+			}
+
+			clientIDs = append(clientIDs, aws.StringValue(v.ClientId))
+		}
+
 		return !lastPage
 	})
+
 	if err != nil {
 		return fmt.Errorf("Error getting user pool clients: %w", err)
 	}
-	d.SetId(userPoolId)
-	d.Set("client_ids", clientIds)
+
+	d.SetId(userPoolID)
+	d.Set("client_ids", clientIDs)
+
 	return nil
 }
