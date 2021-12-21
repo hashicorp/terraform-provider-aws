@@ -1,4 +1,4 @@
-package aws
+package ec2_test
 
 import (
 	"fmt"
@@ -6,34 +6,37 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 )
 
 func TestAccVpcEndpointServiceAccepter_crossAccount(t *testing.T) {
 	var providers []*schema.Provider
 	resourceName := "aws_vpc_endpoint_connection_accepter.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
-			testAccAlternateAccountPreCheck(t)
+			acctest.PreCheck(t)
+			acctest.PreCheckAlternateAccount(t)
 		},
-		ErrorCheck:        testAccErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: testAccProviderFactoriesAlternate(&providers),
-		CheckDestroy:      testAccCheckAwsVpcEndpointServiceAccepterDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.FactoriesAlternate(&providers),
+		CheckDestroy:      testAccVPCEndpointServiceAccepterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVpcEndpointServiceAccepterConfig_crossAccount(rName),
+				Config: testAccVPCEndpointServiceAccepterConfig_crossAccount(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "state", "available"),
 				),
 			},
 			{
-				Config:            testAccVpcEndpointServiceAccepterConfig_crossAccount(rName),
+				Config:            testAccVPCEndpointServiceAccepterConfig_crossAccount(rName),
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -42,8 +45,8 @@ func TestAccVpcEndpointServiceAccepter_crossAccount(t *testing.T) {
 	})
 }
 
-func testAccCheckAwsVpcEndpointServiceAccepterDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).ec2conn
+func testAccVPCEndpointServiceAccepterDestroy(s *terraform.State) error {
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_vpc_endpoint_connection_accepter" {
@@ -54,7 +57,7 @@ func testAccCheckAwsVpcEndpointServiceAccepterDestroy(s *terraform.State) error 
 		vpceID := rs.Primary.Attributes["endpoint_id"]
 
 		input := &ec2.DescribeVpcEndpointConnectionsInput{
-			Filters: buildEC2AttributeFilterList(map[string]string{"service-id": svcID}),
+			Filters: tfec2.BuildAttributeFilterList(map[string]string{"service-id": svcID}),
 		}
 
 		var foundAvailable bool
@@ -81,8 +84,8 @@ func testAccCheckAwsVpcEndpointServiceAccepterDestroy(s *terraform.State) error 
 	return nil
 }
 
-func testAccVpcEndpointServiceAccepterConfig_crossAccount(rName string) string {
-	return testAccAlternateAccountProviderConfig() + fmt.Sprintf(`
+func testAccVPCEndpointServiceAccepterConfig_crossAccount(rName string) string {
+	return acctest.ConfigCompose(acctest.ConfigAlternateAccountProvider(), fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
@@ -267,5 +270,5 @@ resource "aws_vpc_endpoint_connection_accepter" "test" {
   service_id  = aws_vpc_endpoint_service.test.id
   endpoint_id = aws_vpc_endpoint.test.id
 }
-`, rName)
+`, rName))
 }

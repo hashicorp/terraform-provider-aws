@@ -1,4 +1,4 @@
-package aws
+package ec2
 
 import (
 	"context"
@@ -11,13 +11,14 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsVpcEndpointConnectionAccepter() *schema.Resource {
+func ResourceVPCEndpointConnectionAccepter() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsVpcEndpointConnectionAccepterCreate,
-		Read:   resourceAwsVpcEndpointConnectionAccepterRead,
-		Delete: resourceAwsVpcEndpointConnectionAccepterDelete,
+		Create: resourceVPCEndpointConnectionAccepterCreate,
+		Read:   resourceVPCEndpointConnectionAccepterRead,
+		Delete: resourceVPCEndpointConnectionAccepterDelete,
 
 		Importer: &schema.ResourceImporter{
 			StateContext: func(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
@@ -31,12 +32,12 @@ func resourceAwsVpcEndpointConnectionAccepter() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"service_id": {
+			"endpoint_id": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"endpoint_id": {
+			"service_id": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -44,14 +45,13 @@ func resourceAwsVpcEndpointConnectionAccepter() *schema.Resource {
 			"state": {
 				Type:     schema.TypeString,
 				Computed: true,
-				ForceNew: true,
 			},
 		},
 	}
 }
 
-func resourceAwsVpcEndpointConnectionAccepterCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+func resourceVPCEndpointConnectionAccepterCreate(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*conns.AWSClient).EC2Conn
 
 	svcID := d.Get("service_id").(string)
 	vpceID := d.Get("endpoint_id").(string)
@@ -85,7 +85,7 @@ func resourceAwsVpcEndpointConnectionAccepterCreate(d *schema.ResourceData, meta
 
 	d.Set("state", vpceConn.(ec2.VpcEndpointConnection).VpcEndpointState)
 
-	return resourceAwsVpcEndpointConnectionAccepterRead(d, meta)
+	return resourceVPCEndpointConnectionAccepterRead(d, meta)
 }
 
 func vpcEndpointConnectionRefresh(conn *ec2.EC2, svcID, vpceID string) resource.StateRefreshFunc {
@@ -93,7 +93,7 @@ func vpcEndpointConnectionRefresh(conn *ec2.EC2, svcID, vpceID string) resource.
 		log.Printf("[DEBUG] Reading VPC Endpoint Connections for VPC Endpoint Service (%s)", svcID)
 
 		input := &ec2.DescribeVpcEndpointConnectionsInput{
-			Filters: buildEC2AttributeFilterList(map[string]string{"service-id": svcID}),
+			Filters: BuildAttributeFilterList(map[string]string{"service-id": svcID}),
 		}
 
 		var vpceConn *ec2.VpcEndpointConnection
@@ -129,8 +129,8 @@ func vpcEndpointConnectionRefresh(conn *ec2.EC2, svcID, vpceID string) resource.
 	}
 }
 
-func resourceAwsVpcEndpointConnectionAccepterRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+func resourceVPCEndpointConnectionAccepterRead(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*conns.AWSClient).EC2Conn
 
 	svcID, vpceID := parseVPCEndpointConnectionAccepterID(d.Id())
 
@@ -144,8 +144,8 @@ func resourceAwsVpcEndpointConnectionAccepterRead(d *schema.ResourceData, meta i
 	return nil
 }
 
-func resourceAwsVpcEndpointConnectionAccepterDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+func resourceVPCEndpointConnectionAccepterDelete(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*conns.AWSClient).EC2Conn
 
 	svcID, vpceID := parseVPCEndpointConnectionAccepterID(d.Id())
 
