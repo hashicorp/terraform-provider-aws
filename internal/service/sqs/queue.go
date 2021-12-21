@@ -164,12 +164,9 @@ var (
 		"redrive_policy":                    sqs.QueueAttributeNameRedrivePolicy,
 		"sqs_managed_sse_enabled":           sqs.QueueAttributeNameSqsManagedSseEnabled,
 		"visibility_timeout_seconds":        sqs.QueueAttributeNameVisibilityTimeout,
-	}, queueSchema)
+	}, queueSchema).WithIAMPolicyAttribute("policy")
 )
 
-// A number of these are marked as computed because if you don't
-// provide a value, SQS will provide you with defaults (which are the
-// default values specified below)
 func ResourceQueue() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceQueueCreate,
@@ -195,7 +192,6 @@ func resourceQueueCreate(d *schema.ResourceData, meta interface{}) error {
 
 	var name string
 	fifoQueue := d.Get("fifo_queue").(bool)
-
 	if fifoQueue {
 		name = create.NameWithSuffix(d.Get("name").(string), d.Get("name_prefix").(string), FIFOQueueNameSuffix)
 	} else {
@@ -211,14 +207,6 @@ func resourceQueueCreate(d *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		return err
 	}
-
-	policy, err := structure.NormalizeJsonString(attributes[sqs.QueueAttributeNamePolicy])
-
-	if err != nil {
-		return fmt.Errorf("policy (%s) is invalid JSON: %w", attributes[sqs.QueueAttributeNamePolicy], err)
-	}
-
-	attributes[sqs.QueueAttributeNamePolicy] = policy
 
 	input.Attributes = aws.StringMap(attributes)
 
@@ -299,14 +287,6 @@ func resourceQueueRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("name_prefix", create.NamePrefixFromName(name))
 	}
 	d.Set("url", d.Id())
-
-	policyToSet, err := verify.PolicyToSet(d.Get("policy").(string), output[sqs.QueueAttributeNamePolicy])
-
-	if err != nil {
-		return err
-	}
-
-	d.Set("policy", policyToSet)
 
 	outputRaw, err = tfresource.RetryWhenAWSErrCodeEquals(queueTagsTimeout, func() (interface{}, error) {
 		return ListTags(conn, d.Id())
