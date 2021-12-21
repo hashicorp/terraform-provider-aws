@@ -665,13 +665,13 @@ EOF
 * `termination_protection` - (Optional) Switch on/off termination protection (default is `false`, except when using multiple master nodes). Before attempting to destroy the resource when termination protection is enabled, this configuration must be applied with its value set to `false`.
 * `visible_to_all_users` - (Optional) Whether the job flow is visible to all IAM users of the AWS account associated with the job flow. Default value is `true`.
 
-### auto_termination_policy
+### bootstrap_action
 
 * `args` - (Optional) List of command line arguments to pass to the bootstrap action script.
 * `name` - (Required) Name of the bootstrap action.
 * `path` - (Required) Location of the script to run during a bootstrap action. Can be either a location in Amazon S3 or on a local file system.
 
-### bootstrap_action
+### auto_termination_policy
 
 * `idle_timeout` - (Optional) Specifies the amount of idle time in seconds after which the cluster automatically terminates. You can specify a minimum of `60` seconds and a maximum of `604800` seconds (seven days).
 
