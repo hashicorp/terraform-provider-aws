@@ -261,7 +261,7 @@ func sweepSchedulingPolicies(region string) error {
 	input := &batch.ListSchedulingPoliciesInput{}
 	var sweeperErrs *multierror.Error
 
-	err = conn.ListSchedulingPolicies(input, func(page *batch.ListSchedulingPoliciesOutput, lastPage bool) bool {
+	err = conn.ListSchedulingPoliciesPages(input, func(page *batch.ListSchedulingPoliciesOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
