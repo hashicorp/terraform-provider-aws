@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_fsx_lustre_file_system: Support PERSISTENT_2 for deployement_type
+```
+
+```release-note:new-resource
+aws_fsx_data_repository_association
+```
