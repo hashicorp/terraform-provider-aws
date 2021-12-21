@@ -8,25 +8,23 @@ description: |-
 
 # Resource: aws_detective_invitation_accepter
 
-Provides a resource to manage an [Amazon Detective Invitation Accepter](https://docs.aws.amazon.com/detective/latest/APIReference/API_AcceptInvitation.html).
+rovides a resource to manage an [Amazon Detective Invitation Accepter](https://docs.aws.amazon.com/detective/latest/APIReference/API_AcceptInvitation.html). Ensure that the accepter is configured to use the AWS account you wish to _accept_ the invitation from the primary graph owner account.
 
 ## Example Usage
 
 ```terraform
-resource "aws_detective_graph" "primary" {
-  provider = "awsalternate"
-}
+resource "aws_detective_graph" "primary" {}
 
-resource "aws_detective2_member" "primary" {
-  provider   = "awsalternate"
+resource "aws_detective_member" "primary" {
   account_id = "ACCOUNT ID"
   email      = "EMAIL"
-  graph_arn  = aws_detective_graph.admin.id
+  graph_arn  = aws_detective_graph.primary.id
   message    = "Message of the invite"
 }
 
 resource "aws_detective_invitation_accepter" "member" {
-  graph_arn = aws_detective_graph.primary.id
+  provider   = "awsalternate"
+  graph_arn = aws_detective_member.primary.graph_arn
 }
 ```
 
@@ -40,11 +38,11 @@ The following arguments are supported:
 
 In addition to all arguments above, the following attributes are exported:
 
-* `id` - Unique identifier (ID) of the detective invitation accepter.
+* `id` - Unique identifier (ID) of the Detective invitation accepter.
 
 ## Import
 
-`aws_detective_invitation_accepter` can be imported using the admin account ID, e.g.
+`aws_detective_invitation_accepter` can be imported using the graph ARN, e.g.
 
 ```
 $ terraform import aws_detective_invitation_accepter.example arn:aws:detective:us-east1:graph:testing

@@ -8,7 +8,7 @@ description: |-
 
 # Resource: aws_detective_member
 
-Provides a resource to manage an [Amazon Detective](https://docs.aws.amazon.com/detective/latest/APIReference/API_CreateMembers.html).
+Provides a resource to manage an [Amazon Detective Member](https://docs.aws.amazon.com/detective/latest/APIReference/API_CreateMembers.html).
 
 ## Example Usage
 
@@ -16,11 +16,11 @@ Provides a resource to manage an [Amazon Detective](https://docs.aws.amazon.com/
 resource "aws_detective_graph" "example" {}
 
 resource "aws_detective_member" "example" {
-  account_id                            = "AWS ACCOUNT ID"
-  email                                 = "EMAIL"
-  graph_arn                             = aws_detective_graph.example.id
-  invitation_message                    = "Message of the invitation"
-  invitation_disable_email_notification = true
+  account_id                 = "AWS ACCOUNT ID"
+  email                      = "EMAIL"
+  graph_arn                  = aws_detective_graph.example.id
+  message                    = "Message of the invitation"
+  disable_email_notification = true
 }
 ```
 
@@ -32,7 +32,7 @@ The following arguments are supported:
 * `email_address` - (Required) Email address for the account.
 * `graph_arn` - (Required) ARN of the behavior graph to invite the member accounts to contribute their data to.
 * `message` - (Optional) A custom message to include in the invitation. Amazon Detective adds this message to the standard content that it sends for an invitation.
-* `disable_email_notification` - (Optional) Specifies whether to send an email notification to the root user of each account that the invitation will be sent to. This notification is in addition to an alert that the root user receives in AWS Personal Health Dashboard. To send an email notification to the root user of each account, set this value to `true`.
+* `disable_email_notification` - (Optional) If set to true, then the root user of the invited account will _not_ receive an email notification. This notification is in addition to an alert that the root user receives in AWS Personal Health Dashboard. By default, this is set to `false`.
 
 ## Attributes Reference
 
@@ -51,5 +51,5 @@ In addition to all arguments above, the following attributes are exported:
 `aws_detective_member` can be imported using the account ID of the member account and the arn of a graph, e.g.
 
 ```
-$ terraform import aws_detective_member.example 123456789012/arn:aws:detective:us-east1:graph:testing
+$ terraform import aws_detective_member.example arn:aws:detective:us-east1:graph:testing/123456789012
 ```

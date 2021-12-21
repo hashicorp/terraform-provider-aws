@@ -15,30 +15,37 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceMember() *schema.Resource {
 	return &schema.Resource{
-		CreateWithoutTimeout: resourceMemberCreate,
-		ReadWithoutTimeout:   resourceMemberRead,
-		DeleteWithoutTimeout: resourceMemberDelete,
+		CreateContext: resourceMemberCreate,
+		ReadContext:   resourceMemberRead,
+		DeleteContext: resourceMemberDelete,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"account_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: verify.ValidAccountID,
 			},
 			"administrator_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"disable_email_notification": {
-				Type:     schema.TypeString,
+				Type:     schema.TypeBool,
 				Optional: true,
 				ForceNew: true,
+				Default:  false,
+			},
+			"disabled_reason": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"email_address": {
 				Type:     schema.TypeString,
@@ -46,15 +53,12 @@ func ResourceMember() *schema.Resource {
 				ForceNew: true,
 			},
 			"graph_arn": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: verify.ValidARN,
 			},
 			"invited_time": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"master_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -67,23 +71,7 @@ func ResourceMember() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"percent_of_graph_utilization": {
-				Type:     schema.TypeFloat,
-				Computed: true,
-			},
-			"percent_of_graph_utilization_updated_time": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 			"updated_time": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"volume_usage_in_bytes": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			"volume_usage_updated_time": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -105,6 +93,14 @@ func resourceMemberCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	input := &detective.CreateMembersInput{
 		Accounts: []*detective.Account{accountInput},
 		GraphArn: aws.String(graphArn),
+	}
+
+	if v := d.Get("disable_email_notification").(bool); v {
+		input.DisableEmailNotification = aws.Bool(v)
+	}
+
+	if v, ok := d.GetOk("message"); ok {
+		input.Message = aws.String(v.(string))
 	}
 
 	var err error
@@ -130,11 +126,11 @@ func resourceMemberCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		return diag.Errorf("error creating Detective Member: %s", err)
 	}
 
-	if _, err = MemberInvited(ctx, conn, graphArn, accountId); err != nil {
+	if _, err = MemberUpdated(ctx, conn, graphArn, accountId, detective.MemberStatusInvited); err != nil {
 		return diag.Errorf("error waiting for Detective Member (%s) to be invited: %s", d.Id(), err)
 	}
 
-	d.SetId(EncodeMemberAccountID(graphArn, accountId))
+	d.SetId(EncodeMemberID(graphArn, accountId))
 
 	return resourceMemberRead(ctx, d, meta)
 }
@@ -142,7 +138,7 @@ func resourceMemberCreate(ctx context.Context, d *schema.ResourceData, meta inte
 func resourceMemberRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).DetectiveConn
 
-	graphArn, accountId, err := DecodeMemberAccountID(d.Id())
+	graphArn, accountId, err := DecodeMemberID(d.Id())
 	if err != nil {
 		return diag.Errorf("error decoding ID Detective Member (%s): %s", d.Id(), err)
 	}
@@ -167,23 +163,19 @@ func resourceMemberRead(ctx context.Context, d *schema.ResourceData, meta interf
 
 	d.Set("account_id", resp.AccountId)
 	d.Set("administrator_id", resp.AdministratorId)
+	d.Set("disabled_reason", resp.DisabledReason)
 	d.Set("email_address", resp.EmailAddress)
 	d.Set("graph_arn", resp.GraphArn)
 	d.Set("invited_time", aws.TimeValue(resp.InvitedTime).Format(time.RFC3339))
-	d.Set("master_id", resp.MasterId)
 	d.Set("status", resp.Status)
-	d.Set("percent_of_graph_utilization", resp.PercentOfGraphUtilization)
-	d.Set("percent_of_graph_utilization_updated_time", aws.TimeValue(resp.PercentOfGraphUtilizationUpdatedTime).Format(time.RFC3339))
 	d.Set("updated_time", aws.TimeValue(resp.UpdatedTime).Format(time.RFC3339))
-	d.Set("volume_usage_in_bytes", resp.VolumeUsageInBytes)
-	d.Set("volume_usage_updated_time", aws.TimeValue(resp.VolumeUsageUpdatedTime).Format(time.RFC3339))
 
 	return nil
 }
 func resourceMemberDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).DetectiveConn
 
-	graphArn, accountId, err := DecodeMemberAccountID(d.Id())
+	graphArn, accountId, err := DecodeMemberID(d.Id())
 	if err != nil {
 		return diag.Errorf("error decoding ID Detective Member (%s): %s", d.Id(), err)
 	}
@@ -203,11 +195,11 @@ func resourceMemberDelete(ctx context.Context, d *schema.ResourceData, meta inte
 	return nil
 }
 
-func EncodeMemberAccountID(graphArn, accountId string) string {
+func EncodeMemberID(graphArn, accountId string) string {
 	return fmt.Sprintf("%s/%s", graphArn, accountId)
 }
 
-func DecodeMemberAccountID(id string) (string, string, error) {
+func DecodeMemberID(id string) (string, string, error) {
 	idParts := strings.Split(id, "/")
 	if len(idParts) != 2 || idParts[0] == "" || idParts[1] == "" {
 		return "", "", fmt.Errorf("expected ID in the form of graph_arn/account_id, given: %q", id)

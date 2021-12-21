@@ -9,17 +9,19 @@ import (
 )
 
 const (
-	// DetectiveOperationTimeout Maximum amount of time to wait for a detective graph to be created, deleted
-	DetectiveOperationTimeout = 4 * time.Minute
+	// GraphOperationTimeout Maximum amount of time to wait for a detective graph to be created, deleted
+	GraphOperationTimeout = 4 * time.Minute
+	// MemberStatusPropagationTimeout Maximum amount of time to wait for a detective member
+	MemberStatusPropagationTimeout = 4 * time.Minute
 )
 
-// MemberInvited waits for an AdminAccount and graph arn to return Invited
-func MemberInvited(ctx context.Context, conn *detective.Detective, graphARN, adminAccountID string) (*detective.MemberDetail, error) {
+// MemberUpdated waits for an AdminAccount and graph arn to return Invited
+func MemberUpdated(ctx context.Context, conn *detective.Detective, graphARN, adminAccountID, expectedValue string) (*detective.MemberDetail, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{detective.MemberStatusVerificationInProgress},
-		Target:  []string{detective.MemberStatusInvited},
-		Refresh: StatusMember(ctx, conn, graphARN, adminAccountID),
-		Timeout: DetectiveOperationTimeout,
+		Target:  []string{expectedValue},
+		Refresh: MemberStatus(ctx, conn, graphARN, adminAccountID),
+		Timeout: MemberStatusPropagationTimeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)

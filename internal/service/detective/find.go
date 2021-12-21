@@ -56,7 +56,7 @@ func FindInvitationByGraphArn(ctx context.Context, conn *detective.Detective, gr
 
 	var result *string
 
-	err := conn.ListInvitationsPages(&detective.ListInvitationsInput{}, func(page *detective.ListInvitationsOutput, lastPage bool) bool {
+	err := conn.ListInvitationsPagesWithContext(ctx, input, func(page *detective.ListInvitationsOutput, lastPage bool) bool {
 		for _, invitation := range page.Invitations {
 			if aws.StringValue(invitation.GraphArn) == graphARN {
 				result = invitation.GraphArn

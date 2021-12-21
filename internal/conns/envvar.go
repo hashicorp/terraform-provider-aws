@@ -44,7 +44,7 @@ const (
 
 	// For tests using an alternate AWS account, the equivalent of AWS_SECRET_ACCESS_KEY for that account
 	EnvVarAlternateSecretAccessKey = "AWS_ALTERNATE_SECRET_ACCESS_KEY"
-
+	EnvVarAlternateToken           = "AWS_ALTERNATE_TOKEN"
 	// For tests using a third AWS region, the equivalent of AWS_DEFAULT_REGION for that region
 	EnvVarThirdRegion = "AWS_THIRD_REGION"
 

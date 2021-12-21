@@ -16,10 +16,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func TestAccDetectiveInvitationAccepter_basic(t *testing.T) {
+func testAccDetectiveInvitationAccepter_basic(t *testing.T) {
 	var providers []*schema.Provider
 	resourceName := "aws_detective_invitation_accepter.member"
-	email := conns.SkipIfEnvVarEmpty(t, EnvVarDetectivePrincipalEmail, EnvVarDetectivePrincipalEmailMessageError)
+	email := testAccMemberFromEnv(t, false)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
@@ -99,18 +99,13 @@ func testAccCheckDetectiveInvitationAccepterDestroy(s *terraform.State) error {
 
 func testAccDetectiveInvitationAccepterConfigBasic(email string) string {
 	return acctest.ConfigAlternateAccountProvider() + fmt.Sprintf(`
-data "aws_caller_identity" "admin" {
+data "aws_caller_identity" "member" {
   provider = "awsalternate"
 }
 
-data "aws_caller_identity" "member" {}
-
-resource "aws_detective_graph" "admin" {
-  provider = "awsalternate"
-}
+resource "aws_detective_graph" "admin" {}
 
 resource "aws_detective_member" "member" {
-  provider      = "awsalternate"
   account_id    = data.aws_caller_identity.member.account_id
   graph_arn     = aws_detective_graph.admin.id
   email_address = %[1]q
@@ -118,8 +113,8 @@ resource "aws_detective_member" "member" {
 }
 
 resource "aws_detective_invitation_accepter" "member" {
+  provider = "awsalternate"
   graph_arn  = aws_detective_member.member.graph_arn
-  depends_on = [data.aws_caller_identity.member]
 }
 `, email)
 }

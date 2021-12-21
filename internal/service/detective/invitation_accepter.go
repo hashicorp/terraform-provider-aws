@@ -15,9 +15,9 @@ import (
 
 func ResourceInvitationAccepter() *schema.Resource {
 	return &schema.Resource{
-		CreateWithoutTimeout: resourceInvitationAccepterCreate,
-		ReadWithoutTimeout:   resourceInvitationAccepterRead,
-		DeleteWithoutTimeout: resourceInvitationAccepterDelete,
+		CreateContext: resourceInvitationAccepterCreate,
+		ReadContext:   resourceInvitationAccepterRead,
+		DeleteContext: resourceInvitationAccepterDelete,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
