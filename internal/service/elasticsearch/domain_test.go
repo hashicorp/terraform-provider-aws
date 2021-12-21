@@ -1664,9 +1664,7 @@ resource "aws_elasticsearch_domain" "test" {
   domain_name = substr(%[1]q, 0, 28)
 
   advanced_options = {
-    "indices.fielddata.cache.size"           = 80
-    "override_main_response_version"         = "false"
-    "rest.action.multi.allow_explicit_index" = "true"
+    "indices.fielddata.cache.size" = 80
   }
 
   ebs_options {
@@ -1699,9 +1697,7 @@ resource "aws_elasticsearch_domain" "test" {
   elasticsearch_version = "6.0"
 
   advanced_options = {
-    "indices.fielddata.cache.size"           = 80
-    "override_main_response_version"         = "false"
-    "rest.action.multi.allow_explicit_index" = "true"
+    "indices.fielddata.cache.size" = 80
   }
 
   ebs_options {
@@ -1747,9 +1743,7 @@ resource "aws_elasticsearch_domain" "test" {
   elasticsearch_version = "6.0"
 
   advanced_options = {
-    "indices.fielddata.cache.size"           = 80
-    "override_main_response_version"         = "false"
-    "rest.action.multi.allow_explicit_index" = "true"
+    "indices.fielddata.cache.size" = 80
   }
 
   ebs_options {
@@ -2025,9 +2019,7 @@ resource "aws_elasticsearch_domain" "test" {
   domain_name = substr(%[1]q, 0, 28)
 
   advanced_options = {
-    "indices.fielddata.cache.size"           = 80
-    "override_main_response_version"         = "false"
-    "rest.action.multi.allow_explicit_index" = "true"
+    "indices.fielddata.cache.size" = 80
   }
 
   ebs_options {

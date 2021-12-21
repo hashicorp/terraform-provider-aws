@@ -150,7 +150,7 @@ func resourceDomainSAMLOptionsPut(d *schema.ResourceData, meta interface{}) erro
 	d.SetId(domainName)
 
 	if err := waitForDomainUpdate(conn, d.Get("domain_name").(string)); err != nil {
-		return fmt.Errorf("error waiting for Elasticsearch Domain SAML Options Update (%s) to succeed: %w", d.Id(), err)
+		return fmt.Errorf("error waiting for Elasticsearch Domain SAML Options update (%s) to succeed: %w", d.Id(), err)
 	}
 
 	return resourceDomainSAMLOptionsRead(d, meta)

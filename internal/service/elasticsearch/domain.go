@@ -509,7 +509,6 @@ func resourceDomainCreate(d *schema.ResourceData, meta interface{}) error {
 	// The API doesn't check for duplicate names
 	// so w/out this check Create would act as upsert
 	// and might cause duplicate domain to appear in state
-
 	resp, err := FindDomainByName(conn, d.Get("domain_name").(string))
 	if err == nil {
 		return fmt.Errorf("Elasticsearch domain %s already exists", aws.StringValue(resp.DomainName))
@@ -673,7 +672,7 @@ func resourceDomainCreate(d *schema.ResourceData, meta interface{}) error {
 	d.SetId(aws.StringValue(out.DomainStatus.ARN))
 
 	log.Printf("[DEBUG] Waiting for Elasticsearch domain %q to be created", d.Id())
-	if err = WaitForDomainCreation(conn, d.Get("domain_name").(string)); err != nil {
+	if err := WaitForDomainCreation(conn, d.Get("domain_name").(string)); err != nil {
 		return fmt.Errorf("error waiting for Elasticsearch Domain (%s) to be created: %w", d.Id(), err)
 	}
 
@@ -736,7 +735,7 @@ func resourceDomainRead(d *schema.ResourceData, meta interface{}) error {
 		policies, err := verify.PolicyToSet(d.Get("access_policies").(string), aws.StringValue(ds.AccessPolicies))
 
 		if err != nil {
-			return fmt.Errorf("access policies contain an invalid JSON: %w", err)
+			return err
 		}
 
 		d.Set("access_policies", policies)
@@ -963,7 +962,7 @@ func resourceDomainUpdate(d *schema.ResourceData, meta interface{}) error {
 		o, n := d.GetChange("tags_all")
 
 		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
-			return fmt.Errorf("error updating Elasticsearch Cluster (%s) tags: %w", d.Id(), err)
+			return fmt.Errorf("error updating Elasticsearch Domain (%s) tags: %w", d.Id(), err)
 		}
 	}
 
@@ -986,7 +985,7 @@ func resourceDomainDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	log.Printf("[DEBUG] Waiting for Elasticsearch domain %q to be deleted", domainName)
-	if err = waitForDomainDelete(conn, d.Get("domain_name").(string)); err != nil {
+	if err := waitForDomainDelete(conn, d.Get("domain_name").(string)); err != nil {
 		return fmt.Errorf("error waiting for Elasticsearch Domain (%s) to be deleted: %w", d.Id(), err)
 	}
 

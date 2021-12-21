@@ -89,7 +89,7 @@ func resourceDomainPolicyUpsert(d *schema.ResourceData, meta interface{}) error 
 	d.SetId("esd-policy-" + domainName)
 
 	if err := waitForDomainUpdate(conn, d.Get("domain_name").(string)); err != nil {
-		return fmt.Errorf("error waiting for Elasticsearch Domain SAML Policy (%s) to be updated: %w", d.Id(), err)
+		return fmt.Errorf("error waiting for Elasticsearch Domain Policy (%s) to be updated: %w", d.Id(), err)
 	}
 
 	return resourceDomainPolicyRead(d, meta)
@@ -109,7 +109,7 @@ func resourceDomainPolicyDelete(d *schema.ResourceData, meta interface{}) error 
 	log.Printf("[DEBUG] Waiting for Elasticsearch domain policy %q to be deleted", d.Get("domain_name").(string))
 
 	if err := waitForDomainUpdate(conn, d.Get("domain_name").(string)); err != nil {
-		return fmt.Errorf("error waiting for Elasticsearch Domain SAML Policy (%s) to be deleted: %w", d.Id(), err)
+		return fmt.Errorf("error waiting for Elasticsearch Domain Policy (%s) to be deleted: %w", d.Id(), err)
 	}
 
 	return nil
