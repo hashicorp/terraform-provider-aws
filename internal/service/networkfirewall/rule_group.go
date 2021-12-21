@@ -87,7 +87,7 @@ func ResourceRuleGroup() *schema.Resource {
 															"definition": {
 																Type:     schema.TypeSet,
 																Required: true,
-																Elem: &schema.Schema{Type: schema.TypeString},
+																Elem:     &schema.Schema{Type: schema.TypeString},
 															},
 														},
 													},
