@@ -15,9 +15,98 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/hashicorp/terraform-provider-aws/internal/attrmap"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+)
+
+var (
+	subscriptionSchema = map[string]*schema.Schema{
+		"arn": {
+			Type:     schema.TypeString,
+			Computed: true,
+		},
+		"confirmation_timeout_in_minutes": {
+			Type:     schema.TypeInt,
+			Optional: true,
+			Default:  1,
+		},
+		"confirmation_was_authenticated": {
+			Type:     schema.TypeBool,
+			Computed: true,
+		},
+		"delivery_policy": {
+			Type:             schema.TypeString,
+			Optional:         true,
+			ValidateFunc:     validation.StringIsJSON,
+			DiffSuppressFunc: SuppressEquivalentTopicSubscriptionDeliveryPolicy,
+		},
+		"endpoint": {
+			Type:     schema.TypeString,
+			Required: true,
+			ForceNew: true,
+		},
+		"endpoint_auto_confirms": {
+			Type:     schema.TypeBool,
+			Optional: true,
+			Default:  false,
+		},
+		"filter_policy": {
+			Type:             schema.TypeString,
+			Optional:         true,
+			ValidateFunc:     validation.StringIsJSON,
+			DiffSuppressFunc: verify.SuppressEquivalentJSONDiffs,
+			StateFunc: func(v interface{}) string {
+				json, _ := structure.NormalizeJsonString(v)
+				return json
+			},
+		},
+		"owner_id": {
+			Type:     schema.TypeString,
+			Computed: true,
+		},
+		"pending_confirmation": {
+			Type:     schema.TypeBool,
+			Computed: true,
+		},
+		"protocol": {
+			Type:         schema.TypeString,
+			Required:     true,
+			ForceNew:     true,
+			ValidateFunc: validation.StringInSlice(SubscriptionProtocol_Values(), false),
+		},
+		"raw_message_delivery": {
+			Type:     schema.TypeBool,
+			Optional: true,
+			Default:  false,
+		},
+		"redrive_policy": {
+			Type:             schema.TypeString,
+			Optional:         true,
+			ValidateFunc:     validation.StringIsJSON,
+			DiffSuppressFunc: verify.SuppressEquivalentJSONDiffs,
+		},
+		"subscription_role_arn": {
+			Type:         schema.TypeString,
+			Optional:     true,
+			ValidateFunc: verify.ValidARN,
+		},
+		"topic_arn": {
+			Type:         schema.TypeString,
+			Required:     true,
+			ForceNew:     true,
+			ValidateFunc: verify.ValidARN,
+		},
+	}
+
+	subscriptionAttributeMap = attrmap.New(map[string]string{
+		"delivery_policy":       SubscriptionAttributeNameDeliveryPolicy,
+		"filter_policy":         SubscriptionAttributeNameFilterPolicy,
+		"raw_message_delivery":  SubscriptionAttributeNameRawMessageDelivery,
+		"redrive_policy":        SubscriptionAttributeNameRedrivePolicy,
+		"subscription_role_arn": SubscriptionAttributeNameSubscriptionRoleArn,
+	}, subscriptionSchema)
 )
 
 func ResourceTopicSubscription() *schema.Resource {
@@ -30,91 +119,21 @@ func ResourceTopicSubscription() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 
-		Schema: map[string]*schema.Schema{
-			"arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"confirmation_timeout_in_minutes": {
-				Type:     schema.TypeInt,
-				Optional: true,
-				Default:  1,
-			},
-			"confirmation_was_authenticated": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"delivery_policy": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ValidateFunc:     validation.StringIsJSON,
-				DiffSuppressFunc: SuppressEquivalentTopicSubscriptionDeliveryPolicy,
-			},
-			"endpoint": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"endpoint_auto_confirms": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			"filter_policy": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ValidateFunc:     validation.StringIsJSON,
-				DiffSuppressFunc: verify.SuppressEquivalentJSONDiffs,
-				StateFunc: func(v interface{}) string {
-					json, _ := structure.NormalizeJsonString(v)
-					return json
-				},
-			},
-			"owner_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"pending_confirmation": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"protocol": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringInSlice(SubscriptionProtocol_Values(), false),
-			},
-			"raw_message_delivery": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			"redrive_policy": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ValidateFunc:     validation.StringIsJSON,
-				DiffSuppressFunc: verify.SuppressEquivalentJSONDiffs,
-			},
-			"subscription_role_arn": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			"topic_arn": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-		},
+		Schema: subscriptionSchema,
 	}
 }
 
 func resourceTopicSubscriptionCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SNSConn
 
+	attributes, err := subscriptionAttributeMap.ResourceDataToApiAttributesCreate(d)
+
+	if err != nil {
+		return err
+	}
+
 	input := &sns.SubscribeInput{
-		Attributes:            expandSNSSubscriptionAttributes(d),
+		Attributes:            aws.StringMap(attributes),
 		Endpoint:              aws.String(d.Get("endpoint").(string)),
 		Protocol:              aws.String(d.Get("protocol").(string)),
 		ReturnSubscriptionArn: aws.Bool(true), // even if not confirmed, will get ARN
@@ -124,11 +143,7 @@ func resourceTopicSubscriptionCreate(d *schema.ResourceData, meta interface{}) e
 	output, err := conn.Subscribe(input)
 
 	if err != nil {
-		return fmt.Errorf("error creating SNS topic subscription: %w", err)
-	}
-
-	if output == nil || output.SubscriptionArn == nil || aws.StringValue(output.SubscriptionArn) == "" {
-		return fmt.Errorf("error creating SNS topic subscription: empty response")
+		return fmt.Errorf("error creating SNS Topic Subscription: %w", err)
 	}
 
 	d.SetId(aws.StringValue(output.SubscriptionArn))
@@ -149,8 +164,8 @@ func resourceTopicSubscriptionCreate(d *schema.ResourceData, meta interface{}) e
 	}
 
 	if waitForConfirmation {
-		if _, err := waitSubscriptionConfirmed(conn, d.Id(), "false", timeout); err != nil {
-			return fmt.Errorf("waiting for SNS topic subscription (%s) confirmation: %w", d.Id(), err)
+		if _, err := waitSubscriptionConfirmed(conn, d.Id(), timeout); err != nil {
+			return fmt.Errorf("error waiting for SNS Topic Subscription (%s) confirmation: %w", d.Id(), err)
 		}
 	}
 
@@ -278,40 +293,6 @@ func resourceTopicSubscriptionDelete(d *schema.ResourceData, meta interface{}) e
 	}
 
 	return err
-}
-
-// Assembles supplied attributes into a single map - empty/default values are excluded from the map
-func expandSNSSubscriptionAttributes(d *schema.ResourceData) (output map[string]*string) {
-	deliveryPolicy := d.Get("delivery_policy").(string)
-	filterPolicy := d.Get("filter_policy").(string)
-	rawMessageDelivery := d.Get("raw_message_delivery").(bool)
-	redrivePolicy := d.Get("redrive_policy").(string)
-	subscriptionRoleARN := d.Get("subscription_role_arn").(string)
-
-	// Collect attributes if available
-	attributes := map[string]*string{}
-
-	if deliveryPolicy != "" {
-		attributes["DeliveryPolicy"] = aws.String(deliveryPolicy)
-	}
-
-	if filterPolicy != "" {
-		attributes["FilterPolicy"] = aws.String(filterPolicy)
-	}
-
-	if rawMessageDelivery {
-		attributes["RawMessageDelivery"] = aws.String(fmt.Sprintf("%t", rawMessageDelivery))
-	}
-
-	if subscriptionRoleARN != "" {
-		attributes["SubscriptionRoleArn"] = aws.String(subscriptionRoleARN)
-	}
-
-	if redrivePolicy != "" {
-		attributes["RedrivePolicy"] = aws.String(redrivePolicy)
-	}
-
-	return attributes
 }
 
 func snsSubscriptionAttributeUpdate(conn *sns.SNS, subscriptionArn, attributeName, attributeValue string) error {

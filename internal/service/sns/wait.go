@@ -13,9 +13,10 @@ const (
 	subscriptionDeleteTimeout              = 2 * time.Minute
 )
 
-func waitSubscriptionConfirmed(conn *sns.SNS, arn, expectedValue string, timeout time.Duration) (map[string]string, error) {
+func waitSubscriptionConfirmed(conn *sns.SNS, arn string, timeout time.Duration) (map[string]string, error) {
 	stateConf := &resource.StateChangeConf{
-		Target:  []string{expectedValue},
+		Pending: []string{"true"},
+		Target:  []string{"false"},
 		Refresh: statusSubscriptionPendingConfirmation(conn, arn),
 		Timeout: timeout,
 	}
