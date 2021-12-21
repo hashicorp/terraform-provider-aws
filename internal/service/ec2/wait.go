@@ -1031,3 +1031,22 @@ func WaitEBSSnapshotImportComplete(conn *ec2.EC2, importTaskID string) (*ec2.Sna
 		return detail.(*ec2.SnapshotTaskDetail), nil
 	}
 }
+
+func waitVPCEndpointConnectionAccepted(conn *ec2.EC2, serviceID, vpcEndpointID string, timeout time.Duration) (*ec2.VpcEndpointConnection, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending:    []string{VPCEndpointStatePendingAcceptance, VPCEndpointStatePending},
+		Target:     []string{VPCEndpointStateAvailable},
+		Refresh:    statusVPCEndpointConnectionVPCEndpointState(conn, serviceID, vpcEndpointID),
+		Timeout:    timeout,
+		Delay:      5 * time.Second,
+		MinTimeout: 5 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*ec2.VpcEndpointConnection); ok {
+		return output, err
+	}
+
+	return nil, err
+}

@@ -1109,6 +1109,7 @@ func Provider() *schema.Provider {
 			"aws_vpc_dhcp_options":                                ec2.ResourceVPCDHCPOptions(),
 			"aws_vpc_dhcp_options_association":                    ec2.ResourceVPCDHCPOptionsAssociation(),
 			"aws_vpc_endpoint":                                    ec2.ResourceVPCEndpoint(),
+			"aws_vpc_endpoint_connection_accepter":                ec2.ResourceVPCEndpointConnectionAccepter(),
 			"aws_vpc_endpoint_connection_notification":            ec2.ResourceVPCEndpointConnectionNotification(),
 			"aws_vpc_endpoint_route_table_association":            ec2.ResourceVPCEndpointRouteTableAssociation(),
 			"aws_vpc_endpoint_service":                            ec2.ResourceVPCEndpointService(),
