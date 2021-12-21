@@ -495,7 +495,7 @@ resource "aws_batch_job_queue" "test" {
   compute_environments  = [aws_batch_compute_environment.test.arn]
   name                  = %[1]q
   priority              = 1
-  scheduling_policy_arn = %[2]q == "first" ? aws_batch_scheduling_policy.test1.arn : aws_batch_scheduling_policy.test2.arn
+  scheduling_policy_arn = "%[2]q" == "first" ? aws_batch_scheduling_policy.test1.arn : aws_batch_scheduling_policy.test2.arn
   state                 = "ENABLED"
 }
 `, rName, selectSchedulingPolicy))
