@@ -152,6 +152,7 @@ func resourceTopicSubscriptionCreate(d *schema.ResourceData, meta interface{}) e
 		TopicArn:              aws.String(d.Get("topic_arn").(string)),
 	}
 
+	log.Printf("[DEBUG] Creating SNS Topic Subscription: %s", input)
 	output, err := conn.Subscribe(input)
 
 	if err != nil {
@@ -215,50 +216,16 @@ func resourceTopicSubscriptionRead(d *schema.ResourceData, meta interface{}) err
 func resourceTopicSubscriptionUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SNSConn
 
-	if d.HasChange("raw_message_delivery") {
-		if err := snsSubscriptionAttributeUpdate(conn, d.Id(), "RawMessageDelivery", fmt.Sprintf("%t", d.Get("raw_message_delivery").(bool))); err != nil {
-			return err
-		}
+	attributes, err := subscriptionAttributeMap.ResourceDataToApiAttributesUpdate(d)
+
+	if err != nil {
+		return err
 	}
 
-	if d.HasChange("filter_policy") {
-		filterPolicy := d.Get("filter_policy").(string)
+	err = putSubscriptionAttributes(conn, d.Id(), attributes)
 
-		// https://docs.aws.amazon.com/sns/latest/dg/message-filtering.html#message-filtering-policy-remove
-		if filterPolicy == "" {
-			filterPolicy = "{}"
-		}
-
-		if err := snsSubscriptionAttributeUpdate(conn, d.Id(), "FilterPolicy", filterPolicy); err != nil {
-			return err
-		}
-	}
-
-	if d.HasChange("delivery_policy") {
-		if err := snsSubscriptionAttributeUpdate(conn, d.Id(), "DeliveryPolicy", d.Get("delivery_policy").(string)); err != nil {
-			return err
-		}
-	}
-
-	if d.HasChange("subscription_role_arn") {
-		protocol := d.Get("protocol").(string)
-		subscriptionRoleARN := d.Get("subscription_role_arn").(string)
-		if strings.Contains(protocol, "firehose") && subscriptionRoleARN == "" {
-			return fmt.Errorf("protocol firehose must contain subscription_role_arn!")
-		}
-		if !strings.Contains(protocol, "firehose") && subscriptionRoleARN != "" {
-			return fmt.Errorf("only protocol firehose supports subscription_role_arn!")
-		}
-
-		if err := snsSubscriptionAttributeUpdate(conn, d.Id(), "SubscriptionRoleArn", subscriptionRoleARN); err != nil {
-			return err
-		}
-	}
-
-	if d.HasChange("redrive_policy") {
-		if err := snsSubscriptionAttributeUpdate(conn, d.Id(), "RedrivePolicy", d.Get("redrive_policy").(string)); err != nil {
-			return err
-		}
+	if err != nil {
+		return err
 	}
 
 	return resourceTopicSubscriptionRead(d, meta)
@@ -267,45 +234,60 @@ func resourceTopicSubscriptionUpdate(d *schema.ResourceData, meta interface{}) e
 func resourceTopicSubscriptionDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SNSConn
 
-	log.Printf("[DEBUG] SNS delete topic subscription: %s", d.Id())
+	log.Printf("[DEBUG] Deleting SNS Topic Subscription: %s", d.Id())
 	_, err := conn.Unsubscribe(&sns.UnsubscribeInput{
 		SubscriptionArn: aws.String(d.Id()),
 	})
 
 	if tfawserr.ErrMessageContains(err, sns.ErrCodeInvalidParameterException, "Cannot unsubscribe a subscription that is pending confirmation") {
-		log.Printf("[WARN] Removing unconfirmed SNS topic subscription (%s) from Terraform state but failed to remove it from AWS!", d.Id())
-		d.SetId("")
+		log.Printf("[WARN] Removing unconfirmed SNS Topic Subscription (%s) from Terraform state but failed to remove it from AWS!", d.Id())
 		return nil
 	}
 
 	if _, err := waitSubscriptionDeleted(conn, d.Id()); err != nil {
-		if tfawserr.ErrCodeEquals(err, sns.ErrCodeNotFoundException) {
-			return nil
-		}
-		return fmt.Errorf("error waiting for SNS topic subscription (%s) deletion: %w", d.Id(), err)
+		return fmt.Errorf("error waiting for SNS Topic Subscription (%s) deletion: %w", d.Id(), err)
 	}
 
 	return err
 }
 
-func snsSubscriptionAttributeUpdate(conn *sns.SNS, subscriptionArn, attributeName, attributeValue string) error {
-	req := &sns.SetSubscriptionAttributesInput{
-		SubscriptionArn: aws.String(subscriptionArn),
-		AttributeName:   aws.String(attributeName),
-		AttributeValue:  aws.String(attributeValue),
+func putSubscriptionAttributes(conn *sns.SNS, arn string, attributes map[string]string) error {
+	for name, value := range attributes {
+		err := putSubscriptionAttribute(conn, arn, name, value)
+
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func putSubscriptionAttribute(conn *sns.SNS, arn string, name, value string) error {
+	// https://docs.aws.amazon.com/sns/latest/dg/message-filtering.html#message-filtering-policy-remove
+	if name == SubscriptionAttributeNameFilterPolicy && value == "" {
+		value = "{}"
+	}
+
+	input := &sns.SetSubscriptionAttributesInput{
+		AttributeName:   aws.String(name),
+		AttributeValue:  aws.String(value),
+		SubscriptionArn: aws.String(arn),
 	}
 
 	// The AWS API requires a non-empty string value or nil for the RedrivePolicy attribute,
-	// else throws an InvalidParameter error
-	if attributeName == "RedrivePolicy" && attributeValue == "" {
-		req.AttributeValue = nil
+	// else throws an InvalidParameter error.
+	if name == SubscriptionAttributeNameRedrivePolicy && value == "" {
+		input.AttributeValue = nil
 	}
 
-	_, err := conn.SetSubscriptionAttributes(req)
+	log.Printf("[DEBUG] Setting SNS Topic Subscription attribute: %s", input)
+	_, err := conn.SetSubscriptionAttributes(input)
 
 	if err != nil {
-		return fmt.Errorf("error setting subscription (%s) attribute (%s): %s", subscriptionArn, attributeName, err)
+		return fmt.Errorf("error setting SNS Topic Subscription (%s) attribute (%s): %w", arn, name, err)
 	}
+
 	return nil
 }
 
