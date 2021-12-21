@@ -11,7 +11,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/sqs"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -229,32 +228,15 @@ func resourceQueueCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	log.Printf("[DEBUG] Creating SQS Queue: %s", input)
-	var output *sqs.CreateQueueOutput
-	err = resource.Retry(queueCreatedTimeout, func() *resource.RetryError {
-		var err error
-
-		output, err = conn.CreateQueue(input)
-
-		if tfawserr.ErrCodeEquals(err, sqs.ErrCodeQueueDeletedRecently) {
-			return resource.RetryableError(err)
-		}
-
-		if err != nil {
-			return resource.NonRetryableError(err)
-		}
-
-		return nil
-	})
-
-	if tfresource.TimedOut(err) {
-		output, err = conn.CreateQueue(input)
-	}
+	outputRaw, err := tfresource.RetryWhenAWSErrCodeEquals(queueCreatedTimeout, func() (interface{}, error) {
+		return conn.CreateQueue(input)
+	}, sqs.ErrCodeQueueDeletedRecently)
 
 	if err != nil {
 		return fmt.Errorf("error creating SQS Queue (%s): %w", name, err)
 	}
 
-	d.SetId(aws.StringValue(output.QueueUrl))
+	d.SetId(aws.StringValue(outputRaw.(*sqs.CreateQueueOutput).QueueUrl))
 
 	err = waitQueueAttributesPropagated(conn, d.Id(), attributes)
 
@@ -326,27 +308,9 @@ func resourceQueueRead(d *schema.ResourceData, meta interface{}) error {
 
 	d.Set("policy", policyToSet)
 
-	var tags tftags.KeyValueTags
-
-	err = resource.Retry(queueTagsTimeout, func() *resource.RetryError {
-		var err error
-
-		tags, err = ListTags(conn, d.Id())
-
-		if tfawserr.ErrCodeEquals(err, sqs.ErrCodeQueueDoesNotExist) {
-			return resource.RetryableError(err)
-		}
-
-		if err != nil {
-			return resource.NonRetryableError(err)
-		}
-
-		return nil
-	})
-
-	if tfresource.TimedOut(err) {
-		tags, err = ListTags(conn, d.Id())
-	}
+	outputRaw, err = tfresource.RetryWhenAWSErrCodeEquals(queueTagsTimeout, func() (interface{}, error) {
+		return ListTags(conn, d.Id())
+	}, sqs.ErrCodeQueueDoesNotExist)
 
 	if err != nil {
 		// Non-standard partitions (e.g. US Gov) and some local development
@@ -359,7 +323,7 @@ func resourceQueueRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error listing tags for SQS Queue (%s): %w", d.Id(), err)
 	}
 
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	tags := outputRaw.(tftags.KeyValueTags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
@@ -463,7 +427,6 @@ func resourceQueueCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, me
 		if !re.MatchString(name) {
 			return fmt.Errorf("invalid queue name: %s", name)
 		}
-
 	}
 
 	if !fifoQueue && contentBasedDeduplication {
