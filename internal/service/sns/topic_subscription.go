@@ -101,11 +101,18 @@ var (
 	}
 
 	subscriptionAttributeMap = attrmap.New(map[string]string{
-		"delivery_policy":       SubscriptionAttributeNameDeliveryPolicy,
-		"filter_policy":         SubscriptionAttributeNameFilterPolicy,
-		"raw_message_delivery":  SubscriptionAttributeNameRawMessageDelivery,
-		"redrive_policy":        SubscriptionAttributeNameRedrivePolicy,
-		"subscription_role_arn": SubscriptionAttributeNameSubscriptionRoleArn,
+		"arn":                            SubscriptionAttributeNameSubscriptionArn,
+		"confirmation_was_authenticated": SubscriptionAttributeNameConfirmationWasAuthenticated,
+		"delivery_policy":                SubscriptionAttributeNameDeliveryPolicy,
+		"endpoint":                       SubscriptionAttributeNameEndpoint,
+		"filter_policy":                  SubscriptionAttributeNameFilterPolicy,
+		"owner_id":                       SubscriptionAttributeNameOwner,
+		"pending_confirmation":           SubscriptionAttributeNamePendingConfirmation,
+		"protocol":                       SubscriptionAttributeNameProtocol,
+		"raw_message_delivery":           SubscriptionAttributeNameRawMessageDelivery,
+		"redrive_policy":                 SubscriptionAttributeNameRedrivePolicy,
+		"subscription_role_arn":          SubscriptionAttributeNameSubscriptionRoleArn,
+		"topic_arn":                      SubscriptionAttributeNameTopicArn,
 	}, subscriptionSchema)
 )
 
@@ -131,6 +138,11 @@ func resourceTopicSubscriptionCreate(d *schema.ResourceData, meta interface{}) e
 	if err != nil {
 		return err
 	}
+
+	// Endpoint, Protocol and TopicArn are not passed in Attributes.
+	delete(attributes, SubscriptionAttributeNameEndpoint)
+	delete(attributes, SubscriptionAttributeNameProtocol)
+	delete(attributes, SubscriptionAttributeNameTopicArn)
 
 	input := &sns.SubscribeInput{
 		Attributes:            aws.StringMap(attributes),
@@ -191,29 +203,10 @@ func resourceTopicSubscriptionRead(d *schema.ResourceData, meta interface{}) err
 
 	attributes := outputRaw.(map[string]string)
 
-	d.Set("arn", attributes["SubscriptionArn"])
-	d.Set("delivery_policy", attributes["DeliveryPolicy"])
-	d.Set("endpoint", attributes["Endpoint"])
-	d.Set("filter_policy", attributes["FilterPolicy"])
-	d.Set("owner_id", attributes["Owner"])
-	d.Set("protocol", attributes["Protocol"])
-	d.Set("redrive_policy", attributes["RedrivePolicy"])
-	d.Set("subscription_role_arn", attributes["SubscriptionRoleArn"])
-	d.Set("topic_arn", attributes["TopicArn"])
+	err = subscriptionAttributeMap.ApiAttributesToResourceData(attributes, d)
 
-	d.Set("confirmation_was_authenticated", false)
-	if v, ok := attributes["ConfirmationWasAuthenticated"]; ok && v == "true" {
-		d.Set("confirmation_was_authenticated", true)
-	}
-
-	d.Set("pending_confirmation", false)
-	if v, ok := attributes["PendingConfirmation"]; ok && v == "true" {
-		d.Set("pending_confirmation", true)
-	}
-
-	d.Set("raw_message_delivery", false)
-	if v, ok := attributes["RawMessageDelivery"]; ok && v == "true" {
-		d.Set("raw_message_delivery", true)
+	if err != nil {
+		return err
 	}
 
 	return nil

@@ -31,13 +31,18 @@ func SubscriptionProtocol_Values() []string {
 }
 
 const (
-	SubscriptionAttributeNameDeliveryPolicy      = "DeliveryPolicy"
-	SubscriptionAttributeNameFilterPolicy        = "FilterPolicy"
-	SubscriptionAttributeNamePendingConfirmation = "PendingConfirmation"
-	SubscriptionAttributeNameProtocol            = "Protocol"
-	SubscriptionAttributeNameRawMessageDelivery  = "RawMessageDelivery"
-	SubscriptionAttributeNameRedrivePolicy       = "RedrivePolicy"
-	SubscriptionAttributeNameSubscriptionRoleArn = "SubscriptionRoleArn"
+	SubscriptionAttributeNameConfirmationWasAuthenticated = "ConfirmationWasAuthenticated"
+	SubscriptionAttributeNameDeliveryPolicy               = "DeliveryPolicy"
+	SubscriptionAttributeNameEndpoint                     = "Endpoint"
+	SubscriptionAttributeNameFilterPolicy                 = "FilterPolicy"
+	SubscriptionAttributeNameOwner                        = "Owner"
+	SubscriptionAttributeNamePendingConfirmation          = "PendingConfirmation"
+	SubscriptionAttributeNameProtocol                     = "Protocol"
+	SubscriptionAttributeNameRawMessageDelivery           = "RawMessageDelivery"
+	SubscriptionAttributeNameRedrivePolicy                = "RedrivePolicy"
+	SubscriptionAttributeNameSubscriptionArn              = "SubscriptionArn"
+	SubscriptionAttributeNameSubscriptionRoleArn          = "SubscriptionRoleArn"
+	SubscriptionAttributeNameTopicArn                     = "TopicArn"
 )
 
 const (
