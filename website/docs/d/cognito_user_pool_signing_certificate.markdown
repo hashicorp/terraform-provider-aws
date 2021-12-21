@@ -8,7 +8,7 @@ description: |-
 
 # Data Source: aws_cognito_user_pool_signing_certificate
 
-Use this data source to get the signing certificate to the external SAML IdP.
+Use this data source to get the signing certificate for a Cognito IdP user pool.
 
 ## Example Usage
 
@@ -20,9 +20,8 @@ data "aws_cognito_user_pool_signing_certificate" "sc" {
 
 ## Argument Reference
 
-* `user_pool_id` - (required) The Cognito user pool ids.
-
+* `user_pool_id` - (required) The Cognito user pool ID.
 
 ## Attributes Reference
 
-* `certificate` - the certificate string
+* `certificate` - The certificate string
