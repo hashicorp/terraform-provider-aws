@@ -21,22 +21,10 @@ func ResourceVPCEndpointConnectionAccepter() *schema.Resource {
 		Delete: resourceVPCEndpointConnectionAccepterDelete,
 
 		Importer: &schema.ResourceImporter{
-			StateContext: func(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-				svcID, vpceID := parseVPCEndpointConnectionAccepterID(d.Id())
-
-				d.Set("service_id", svcID)
-				d.Set("endpoint_id", vpceID)
-
-				return []*schema.ResourceData{d}, nil
-			},
+			State: schema.ImportStatePassthrough,
 		},
 
 		Schema: map[string]*schema.Schema{
-			"endpoint_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
 			"service_id": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -46,6 +34,11 @@ func ResourceVPCEndpointConnectionAccepter() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"vpc_endpoint_id": {
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+			},
 		},
 	}
 }
@@ -54,7 +47,7 @@ func resourceVPCEndpointConnectionAccepterCreate(d *schema.ResourceData, meta in
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	svcID := d.Get("service_id").(string)
-	vpceID := d.Get("endpoint_id").(string)
+	vpceID := d.Get("vpc_endpoint_id").(string)
 
 	input := &ec2.AcceptVpcEndpointConnectionsInput{
 		ServiceId:      aws.String(svcID),
@@ -67,7 +60,7 @@ func resourceVPCEndpointConnectionAccepterCreate(d *schema.ResourceData, meta in
 		return fmt.Errorf("error accepting VPC Endpoint Connection: %s", err.Error())
 	}
 
-	d.SetId(makeVPCEndpointConnectionAccepterID(svcID, vpceID))
+	d.SetId(vpcEndpointConnectionAccepterCreateResourceID(svcID, vpceID))
 
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{"pendingAcceptance", "pending"},
@@ -132,14 +125,20 @@ func vpcEndpointConnectionRefresh(conn *ec2.EC2, svcID, vpceID string) resource.
 func resourceVPCEndpointConnectionAccepterRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
-	svcID, vpceID := parseVPCEndpointConnectionAccepterID(d.Id())
+	serviceID, vpcEndpointID, err := vpcEndpointConnectionAccepterParseResourceID(d.Id())
 
-	vpceConn, state, err := vpcEndpointConnectionRefresh(conn, svcID, vpceID)()
-	if err != nil && state != "failed" {
-		return fmt.Errorf("error reading VPC Endpoint Connection from VPC Endpoint Service (%s) to VPC Endpoint (%s): %s", svcID, vpceID, err)
+	if err != nil {
+		return err
 	}
 
+	vpceConn, state, err := vpcEndpointConnectionRefresh(conn, serviceID, vpcEndpointID)()
+	if err != nil && state != "failed" {
+		return fmt.Errorf("error reading VPC Endpoint Connection from VPC Endpoint Service (%s) to VPC Endpoint (%s): %s", serviceID, vpcEndpointID, err)
+	}
+
+	d.Set("service_id", serviceID)
 	d.Set("state", vpceConn.(ec2.VpcEndpointConnection).VpcEndpointState)
+	d.Set("vpc_endpoint_id", vpcEndpointID)
 
 	return nil
 }
@@ -147,31 +146,39 @@ func resourceVPCEndpointConnectionAccepterRead(d *schema.ResourceData, meta inte
 func resourceVPCEndpointConnectionAccepterDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
-	svcID, vpceID := parseVPCEndpointConnectionAccepterID(d.Id())
+	serviceID, vpcEndpointID, err := vpcEndpointConnectionAccepterParseResourceID(d.Id())
+
+	if err != nil {
+		return err
+	}
 
 	input := &ec2.RejectVpcEndpointConnectionsInput{
-		ServiceId:      aws.String(svcID),
-		VpcEndpointIds: aws.StringSlice([]string{vpceID}),
+		ServiceId:      aws.String(serviceID),
+		VpcEndpointIds: aws.StringSlice([]string{vpcEndpointID}),
 	}
 
 	if _, err := conn.RejectVpcEndpointConnections(input); err != nil {
-		return fmt.Errorf("error rejecting VPC Endpoint Connection from VPC Endpoint (%s) to VPC Endpoint Service (%s): %s", vpceID, svcID, err)
+		return fmt.Errorf("error rejecting VPC Endpoint Connection from VPC Endpoint (%s) to VPC Endpoint Service (%s): %s", serviceID, vpcEndpointID, err)
 	}
 
 	return nil
 }
 
-const vpcEndpointConnectionAccepterIDSeparator = "_"
+const vpcEndpointConnectionAccepterResourceIDSeparator = "_"
 
-func makeVPCEndpointConnectionAccepterID(svcID, vpceID string) string {
-	return strings.Join([]string{svcID, vpceID}, vpcEndpointConnectionAccepterIDSeparator)
+func vpcEndpointConnectionAccepterCreateResourceID(serviceID, vpcEndpointID string) string {
+	parts := []string{serviceID, vpcEndpointID}
+	id := strings.Join(parts, vpcEndpointConnectionAccepterResourceIDSeparator)
+
+	return id
 }
 
-func parseVPCEndpointConnectionAccepterID(vpceConnID string) (svcID string, vpceID string) {
-	split := strings.Split(vpceConnID, vpcEndpointConnectionAccepterIDSeparator)
+func vpcEndpointConnectionAccepterParseResourceID(id string) (string, string, error) {
+	parts := strings.Split(id, vpcEndpointConnectionAccepterResourceIDSeparator)
 
-	svcID = split[0]
-	vpceID = split[1]
+	if len(parts) == 2 && parts[0] != "" && parts[1] != "" {
+		return parts[0], parts[1], nil
+	}
 
-	return
+	return "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected ServiceID%[2]sVPCEndpointID", id, vpcEndpointConnectionAccepterResourceIDSeparator)
 }
