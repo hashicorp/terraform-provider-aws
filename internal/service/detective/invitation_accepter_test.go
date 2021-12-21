@@ -113,8 +113,8 @@ resource "aws_detective_member" "member" {
 }
 
 resource "aws_detective_invitation_accepter" "member" {
-  provider = "awsalternate"
-  graph_arn  = aws_detective_member.member.graph_arn
+  provider  = "awsalternate"
+  graph_arn = aws_detective_member.member.graph_arn
 }
 `, email)
 }
