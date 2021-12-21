@@ -55,7 +55,10 @@ func ResourceRestAPI() *schema.Resource {
 			},
 			"created_date": {
 				Type:     schema.TypeString,
-				Computed: true,
+
+			"fail_on_warnings": {
+				Type:     schema.TypeBool,
+				Optional: true,
 			},
 			"description": {
 				Type:     schema.TypeString,
@@ -211,6 +214,10 @@ func resourceRestAPICreate(d *schema.ResourceData, meta interface{}) error {
 			// Default value from schema is not being returned at runtime.
 			//Mode:      aws.String(d.Get("put_rest_api_mode").(string)),
 			Body: []byte(body.(string)),
+		}
+
+		if v, ok := d.GetOk("fail_on_warnings"); ok {
+			input.FailOnWarnings = aws.Bool(v.(bool))
 		}
 
 		if v, ok := d.GetOk("parameters"); ok && len(v.(map[string]interface{})) > 0 {
@@ -618,6 +625,10 @@ func resourceRestAPIUpdate(d *schema.ResourceData, meta interface{}) error {
 				// Default value from schema is not being returned at runtime.
 				//Mode:      aws.String(d.Get("put_rest_api_mode").(string)),
 				Body: []byte(body.(string)),
+			}
+
+			if v, ok := d.GetOk("fail_on_warnings"); ok {
+				input.FailOnWarnings = aws.Bool(v.(bool))
 			}
 
 			if v, ok := d.GetOk("parameters"); ok && len(v.(map[string]interface{})) > 0 {
