@@ -1322,6 +1322,7 @@ func resourceTopicRuleUpdate(d *schema.ResourceData, meta interface{}) error {
 		"sql",
 		"sql_version",
 		"sqs",
+		"timestream",
 	) {
 		input := &iot.ReplaceTopicRuleInput{
 			RuleName:         aws.String(d.Get("name").(string)),
@@ -1758,6 +1759,81 @@ func expandIotStepFunctionsAction(tfList []interface{}) *iot.StepFunctionsAction
 	return apiObject
 }
 
+func expandIotTimestreamAction(tfList []interface{}) *iot.TimestreamAction {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
+
+	apiObject := &iot.TimestreamAction{}
+	tfMap := tfList[0].(map[string]interface{})
+
+	if v, ok := tfMap["database_name"].(string); ok && v != "" {
+		apiObject.DatabaseName = aws.String(v)
+	}
+
+	if v, ok := tfMap["dimension"].(*schema.Set); ok {
+		apiObject.Dimensions = expandIotTimestreamDimensions(v)
+	}
+
+	if v, ok := tfMap["role_arn"].(string); ok && v != "" {
+		apiObject.RoleArn = aws.String(v)
+	}
+
+	if v, ok := tfMap["table_name"].(string); ok && v != "" {
+		apiObject.TableName = aws.String(v)
+	}
+
+	if v, ok := tfMap["timestamp"].([]interface{}); ok {
+		apiObject.Timestamp = expandIotTimestreamTimestamp(v)
+	}
+
+	return apiObject
+}
+
+func expandIotTimestreamDimensions(tfSet *schema.Set) []*iot.TimestreamDimension {
+	if tfSet == nil || tfSet.Len() == 0 {
+		return nil
+	}
+
+	apiObjects := make([]*iot.TimestreamDimension, tfSet.Len())
+	for i, elem := range tfSet.List() {
+		if tfMap, ok := elem.(map[string]interface{}); ok {
+			apiObject := &iot.TimestreamDimension{}
+
+			if v, ok := tfMap["name"].(string); ok && v != "" {
+				apiObject.Name = aws.String(v)
+			}
+
+			if v, ok := tfMap["value"].(string); ok && v != "" {
+				apiObject.Value = aws.String(v)
+			}
+
+			apiObjects[i] = apiObject
+		}
+	}
+
+	return apiObjects
+}
+
+func expandIotTimestreamTimestamp(tfList []interface{}) *iot.TimestreamTimestamp {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
+
+	apiObject := &iot.TimestreamTimestamp{}
+	tfMap := tfList[0].(map[string]interface{})
+
+	if v, ok := tfMap["unit"].(string); ok && v != "" {
+		apiObject.Unit = aws.String(v)
+	}
+
+	if v, ok := tfMap["value"].(string); ok && v != "" {
+		apiObject.Value = aws.String(v)
+	}
+
+	return apiObject
+}
+
 func expandIotTopicRulePayload(d *schema.ResourceData) *iot.TopicRulePayload {
 	var actions []*iot.Action
 
@@ -1924,6 +2000,17 @@ func expandIotTopicRulePayload(d *schema.ResourceData) *iot.TopicRulePayload {
 		}
 
 		actions = append(actions, &iot.Action{StepFunctions: action})
+	}
+
+	// Legacy root attribute handling
+	for _, tfMapRaw := range d.Get("timestream").(*schema.Set).List() {
+		action := expandIotTimestreamAction([]interface{}{tfMapRaw})
+
+		if action == nil {
+			continue
+		}
+
+		actions = append(actions, &iot.Action{Timestream: action})
 	}
 
 	// Prevent sending empty Actions:
