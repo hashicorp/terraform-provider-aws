@@ -83,6 +83,8 @@ The following arguments are optional:
 
 ## Attributes Reference
 
+In addition to all arguments above, the following attributes are exported:
+
 * `status` - current user status.
 * `sub` - unique user id that is never reassignable to another user.
 * `mfa_preference` - user's settings regarding MFA settings and preferences.
