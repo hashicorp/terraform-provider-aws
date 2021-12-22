@@ -306,12 +306,11 @@ func ResourceVPCIpamPoolUpdate(d *schema.ResourceData, meta interface{}) error {
 func ResourceVPCIpamPoolDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
-	input := &ec2.DeleteIpamPoolInput{
+	log.Printf("[DEBUG] Deleting IPAM Pool: %s", d.Id())
+	_, err := conn.DeleteIpamPool(&ec2.DeleteIpamPoolInput{
 		IpamPoolId: aws.String(d.Id()),
-	}
+	})
 
-	log.Printf("[DEBUG] Deleting IPAM Pool: %s", input)
-	_, err := conn.DeleteIpamPool(input)
 	if err != nil {
 		return fmt.Errorf("error deleting IPAM Pool: (%s): %w", d.Id(), err)
 	}
