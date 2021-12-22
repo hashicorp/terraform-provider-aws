@@ -138,9 +138,12 @@ func resourceUserCreate(d *schema.ResourceData, meta interface{}) error {
 
 	log.Print("[DEBUG] Creating Cognito User")
 
+	username := d.Get("username").(string)
+	userPoolId := d.Get("user_pool_id").(string)
+
 	params := &cognitoidentityprovider.AdminCreateUserInput{
-		Username:   aws.String(d.Get("username").(string)),
-		UserPoolId: aws.String(d.Get("user_pool_id").(string)),
+		Username:   aws.String(username),
+		UserPoolId: aws.String(userPoolId),
 	}
 
 	if v, ok := d.GetOk("client_metadata"); ok {
@@ -179,7 +182,7 @@ func resourceUserCreate(d *schema.ResourceData, meta interface{}) error {
 
 	resp, err := conn.AdminCreateUser(params)
 	if err != nil {
-		return fmt.Errorf("Error creating Cognito User (%s): %w", d.Id(), err)
+		return fmt.Errorf("Error creating Cognito User (%s/%s): %w", userPoolId, username, err)
 	}
 
 	d.SetId(fmt.Sprintf("%s/%s", aws.StringValue(params.UserPoolId), aws.StringValue(resp.User.Username)))
