@@ -244,9 +244,9 @@ func resourceUserRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("failed setting user's mfa settings (%s): %w", d.Id(), err)
 	}
 
-	d.Set("preferred_mfa_setting", aws.StringValue(user.PreferredMfaSetting))
-	d.Set("status", aws.StringValue(user.UserStatus))
-	d.Set("enabled", aws.BoolValue(user.Enabled))
+	d.Set("preferred_mfa_setting", user.PreferredMfaSetting)
+	d.Set("status", user.UserStatus)
+	d.Set("enabled", user.Enabled)
 	d.Set("creation_date", user.UserCreateDate.Format(time.RFC3339))
 	d.Set("last_modified_date", user.UserLastModifiedDate.Format(time.RFC3339))
 	d.Set("sub", retrieveUserSub(user.UserAttributes))
