@@ -426,12 +426,12 @@ func testAccUserPassword(userResName string, clientResName string) resource.Test
 func testAccUserConfigBasic(userPoolName string, userName string) string {
 	return fmt.Sprintf(`
 resource "aws_cognito_user_pool" "test" {
-	name = %[1]q
+  name = %[1]q
 }
 
 resource "aws_cognito_user" "test" {
-	user_pool_id = aws_cognito_user_pool.test.id
-	username = %[2]q
+  user_pool_id = aws_cognito_user_pool.test.id
+  username     = %[2]q
 }
 `, userPoolName, userName)
 }
@@ -439,26 +439,26 @@ resource "aws_cognito_user" "test" {
 func testAccUserConfigTemporaryPassword(userPoolName string, clientName string, userName string, password string) string {
 	return fmt.Sprintf(`
 resource "aws_cognito_user_pool" "test" {
-	name = %[1]q
-	password_policy {
-		temporary_password_validity_days = 7
-		minimum_length = 6
-		require_uppercase = false
-		require_symbols = false
-		require_numbers = false
-	}
+  name = %[1]q
+  password_policy {
+    temporary_password_validity_days = 7
+    minimum_length                   = 6
+    require_uppercase                = false
+    require_symbols                  = false
+    require_numbers                  = false
+  }
 }
 
 resource "aws_cognito_user_pool_client" "test" {
-	name         = %[2]q
-	user_pool_id = aws_cognito_user_pool.test.id
-	explicit_auth_flows = ["ALLOW_USER_PASSWORD_AUTH", "ALLOW_REFRESH_TOKEN_AUTH"]
+  name                = %[2]q
+  user_pool_id        = aws_cognito_user_pool.test.id
+  explicit_auth_flows = ["ALLOW_USER_PASSWORD_AUTH", "ALLOW_REFRESH_TOKEN_AUTH"]
 }
 
 resource "aws_cognito_user" "test" {
-	user_pool_id = aws_cognito_user_pool.test.id
-	username = %[3]q
-	temporary_password = %[4]q
+  user_pool_id       = aws_cognito_user_pool.test.id
+  username           = %[3]q
+  temporary_password = %[4]q
 }
 `, userPoolName, clientName, userName, password)
 }
@@ -466,26 +466,26 @@ resource "aws_cognito_user" "test" {
 func testAccUserConfigPassword(userPoolName string, clientName string, userName string, password string) string {
 	return fmt.Sprintf(`
 resource "aws_cognito_user_pool" "test" {
-	name = %[1]q
-	password_policy {
-		temporary_password_validity_days = 7
-		minimum_length = 6
-		require_uppercase = false
-		require_symbols = false
-		require_numbers = false
-	}
+  name = %[1]q
+  password_policy {
+    temporary_password_validity_days = 7
+    minimum_length                   = 6
+    require_uppercase                = false
+    require_symbols                  = false
+    require_numbers                  = false
+  }
 }
 
 resource "aws_cognito_user_pool_client" "test" {
-	name         = %[2]q
-	user_pool_id = aws_cognito_user_pool.test.id
-	explicit_auth_flows = ["ALLOW_USER_PASSWORD_AUTH", "ALLOW_REFRESH_TOKEN_AUTH"]
+  name                = %[2]q
+  user_pool_id        = aws_cognito_user_pool.test.id
+  explicit_auth_flows = ["ALLOW_USER_PASSWORD_AUTH", "ALLOW_REFRESH_TOKEN_AUTH"]
 }
 
 resource "aws_cognito_user" "test" {
-	user_pool_id = aws_cognito_user_pool.test.id
-	username = %[3]q
-	password = %[4]q
+  user_pool_id = aws_cognito_user_pool.test.id
+  username     = %[3]q
+  password     = %[4]q
 }
 `, userPoolName, clientName, userName, password)
 }
@@ -493,25 +493,25 @@ resource "aws_cognito_user" "test" {
 func testAccUserConfigNoPassword(userPoolName string, clientName string, userName string) string {
 	return fmt.Sprintf(`
 resource "aws_cognito_user_pool" "test" {
-	name = %[1]q
-	password_policy {
-		temporary_password_validity_days = 7
-		minimum_length = 6
-		require_uppercase = false
-		require_symbols = false
-		require_numbers = false
-	}
+  name = %[1]q
+  password_policy {
+    temporary_password_validity_days = 7
+    minimum_length                   = 6
+    require_uppercase                = false
+    require_symbols                  = false
+    require_numbers                  = false
+  }
 }
 
 resource "aws_cognito_user_pool_client" "test" {
-	name         = %[2]q
-	user_pool_id = aws_cognito_user_pool.test.id
-	explicit_auth_flows = ["ALLOW_USER_PASSWORD_AUTH", "ALLOW_REFRESH_TOKEN_AUTH"]
+  name                = %[2]q
+  user_pool_id        = aws_cognito_user_pool.test.id
+  explicit_auth_flows = ["ALLOW_USER_PASSWORD_AUTH", "ALLOW_REFRESH_TOKEN_AUTH"]
 }
 
 resource "aws_cognito_user" "test" {
-	user_pool_id = aws_cognito_user_pool.test.id
-	username = %[3]q
+  user_pool_id = aws_cognito_user_pool.test.id
+  username     = %[3]q
 }
 `, userPoolName, clientName, userName)
 }
@@ -519,51 +519,51 @@ resource "aws_cognito_user" "test" {
 func testAccUserConfigAttributes(userPoolName string, userName string) string {
 	return fmt.Sprintf(`
 resource "aws_cognito_user_pool" "test" {
-	name = %[1]q
+  name = %[1]q
 
-	schema {
-		name                     = "one"
-		attribute_data_type      = "String"
-		mutable                  = true
-		required                 = false
-		developer_only_attribute = false
-		string_attribute_constraints {}
-	}
-	schema {
-		name                     = "two"
-		attribute_data_type      = "String"
-		mutable                  = true
-		required                 = false
-		developer_only_attribute = false
-		string_attribute_constraints {}
-	}
-	schema {
-		name                     = "three"
-		attribute_data_type      = "String"
-		mutable                  = true
-		required                 = false
-		developer_only_attribute = false
-		string_attribute_constraints {}
-	}
-	schema {
-		name                     = "four"
-		attribute_data_type      = "String"
-		mutable                  = true
-		required                 = false
-		developer_only_attribute = false
-		string_attribute_constraints {}
-	}
+  schema {
+    name                     = "one"
+    attribute_data_type      = "String"
+    mutable                  = true
+    required                 = false
+    developer_only_attribute = false
+    string_attribute_constraints {}
+  }
+  schema {
+    name                     = "two"
+    attribute_data_type      = "String"
+    mutable                  = true
+    required                 = false
+    developer_only_attribute = false
+    string_attribute_constraints {}
+  }
+  schema {
+    name                     = "three"
+    attribute_data_type      = "String"
+    mutable                  = true
+    required                 = false
+    developer_only_attribute = false
+    string_attribute_constraints {}
+  }
+  schema {
+    name                     = "four"
+    attribute_data_type      = "String"
+    mutable                  = true
+    required                 = false
+    developer_only_attribute = false
+    string_attribute_constraints {}
+  }
 }
 
 resource "aws_cognito_user" "test" {
-	user_pool_id = aws_cognito_user_pool.test.id
-	username     = %[2]q
+  user_pool_id = aws_cognito_user_pool.test.id
+  username     = %[2]q
 
-	attributes = {
-		one = "1"
-		two = "2"
-		three = "3"
-	}
+  attributes = {
+    one   = "1"
+    two   = "2"
+    three = "3"
+  }
 }
 `, userPoolName, userName)
 }
@@ -571,51 +571,51 @@ resource "aws_cognito_user" "test" {
 func testAccUserConfigAttributesUpdated(userPoolName string, userName string) string {
 	return fmt.Sprintf(`
 resource "aws_cognito_user_pool" "test" {
-	name = %[1]q
+  name = %[1]q
 
-	schema {
-		name                     = "one"
-		attribute_data_type      = "String"
-		mutable                  = true
-		required                 = false
-		developer_only_attribute = false
-		string_attribute_constraints {}
-	}
-	schema {
-		name                     = "two"
-		attribute_data_type      = "String"
-		mutable                  = true
-		required                 = false
-		developer_only_attribute = false
-		string_attribute_constraints {}
-	}
-	schema {
-		name                     = "three"
-		attribute_data_type      = "String"
-		mutable                  = true
-		required                 = false
-		developer_only_attribute = false
-		string_attribute_constraints {}
-	}
-	schema {
-		name                     = "four"
-		attribute_data_type      = "String"
-		mutable                  = true
-		required                 = false
-		developer_only_attribute = false
-		string_attribute_constraints {}
-	}
+  schema {
+    name                     = "one"
+    attribute_data_type      = "String"
+    mutable                  = true
+    required                 = false
+    developer_only_attribute = false
+    string_attribute_constraints {}
+  }
+  schema {
+    name                     = "two"
+    attribute_data_type      = "String"
+    mutable                  = true
+    required                 = false
+    developer_only_attribute = false
+    string_attribute_constraints {}
+  }
+  schema {
+    name                     = "three"
+    attribute_data_type      = "String"
+    mutable                  = true
+    required                 = false
+    developer_only_attribute = false
+    string_attribute_constraints {}
+  }
+  schema {
+    name                     = "four"
+    attribute_data_type      = "String"
+    mutable                  = true
+    required                 = false
+    developer_only_attribute = false
+    string_attribute_constraints {}
+  }
 }
 
 resource "aws_cognito_user" "test" {
-	user_pool_id = aws_cognito_user_pool.test.id
-	username     = %[2]q
+  user_pool_id = aws_cognito_user_pool.test.id
+  username     = %[2]q
 
-	attributes = {
-		two = "2"
-		three = "three"
-		four = "4"
-	}
+  attributes = {
+    two   = "2"
+    three = "three"
+    four  = "4"
+  }
 }
 `, userPoolName, userName)
 }
@@ -623,13 +623,13 @@ resource "aws_cognito_user" "test" {
 func testAccUserConfigEnable(userPoolName string, userName string, enabled bool) string {
 	return fmt.Sprintf(`
 resource "aws_cognito_user_pool" "test" {
-	name = %[1]q
+  name = %[1]q
 }
 
 resource "aws_cognito_user" "test" {
-	user_pool_id = aws_cognito_user_pool.test.id
-	username = %[2]q
-	enabled = %[3]t
+  user_pool_id = aws_cognito_user_pool.test.id
+  username     = %[2]q
+  enabled      = %[3]t
 }
 `, userPoolName, userName, enabled)
 }
