@@ -44,6 +44,7 @@ resource "aws_ses_receipt_rule_set" "test" {
 resource "aws_ses_active_receipt_rule_set" "test" {
   rule_set_name = aws_ses_receipt_rule_set.test.rule_set_name
 }
+
 data "aws_ses_active_receipt_rule_set" "test" {
   depends_on = [aws_ses_active_receipt_rule_set.test]
 }
