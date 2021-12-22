@@ -1,0 +1,4 @@
+```release-note:new-data-source
+aws_ses_domain_identity
+aws_ses_email_identity
+```
