@@ -17,17 +17,25 @@ import (
 // Only one SES Receipt RuleSet can be active at a time, so run serially
 // locally and in TeamCity.
 func TestAccSESActiveReceiptRuleSet_serial(t *testing.T) {
-	testFuncs := map[string]func(t *testing.T){
-		"basic":       testAccActiveReceiptRuleSet_basic,
-		"disappears":  testAccActiveReceiptRuleSet_disappears,
-		"data_source": testAccActiveReceiptRuleSet_data_source,
+	testCases := map[string]map[string]func(t *testing.T){
+		"Resource": {
+			"basic":      testAccActiveReceiptRuleSet_basic,
+			"disappears": testAccActiveReceiptRuleSet_disappears,
+		},
+		"DataSource": {
+			"basic": testAccActiveReceiptRuleSetDataSource_basic,
+		},
 	}
 
-	for name, testFunc := range testFuncs {
-		testFunc := testFunc
-
-		t.Run(name, func(t *testing.T) {
-			testFunc(t)
+	for group, m := range testCases {
+		m := m
+		t.Run(group, func(t *testing.T) {
+			for name, tc := range m {
+				tc := tc
+				t.Run(name, func(t *testing.T) {
+					tc(t)
+				})
+			}
 		})
 	}
 }
@@ -78,31 +86,6 @@ func testAccActiveReceiptRuleSet_disappears(t *testing.T) {
 					acctest.CheckResourceDisappears(acctest.Provider, tfses.ResourceActiveReceiptRuleSet(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
-			},
-		},
-	})
-}
-
-func testAccActiveReceiptRuleSet_data_source(t *testing.T) {
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "data.aws_ses_active_receipt_rule_set.test"
-
-	resource.Test(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(t)
-			testAccPreCheck(t)
-			testAccPreCheckSESReceiptRule(t)
-		},
-		ErrorCheck:   acctest.ErrorCheck(t, ses.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckSESActiveReceiptRuleSetDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccActiveReceiptRuleSetConfigDataSource(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckActiveReceiptRuleSetExists(resourceName),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "ses", fmt.Sprintf("receipt-rule-set/%s", rName)),
-				),
 			},
 		},
 	})
@@ -165,21 +148,6 @@ resource "aws_ses_receipt_rule_set" "test" {
 
 resource "aws_ses_active_receipt_rule_set" "test" {
   rule_set_name = aws_ses_receipt_rule_set.test.rule_set_name
-}
-`, name)
-}
-
-func testAccActiveReceiptRuleSetConfigDataSource(name string) string {
-	return fmt.Sprintf(`
-resource "aws_ses_receipt_rule_set" "test" {
-  rule_set_name = %[1]q
-}
-
-resource "aws_ses_active_receipt_rule_set" "test" {
-  rule_set_name = aws_ses_receipt_rule_set.test.rule_set_name
-}
-data "aws_ses_active_receipt_rule_set" "test" {
-  depends_on = [aws_ses_active_receipt_rule_set.test]
 }
 `, name)
 }
