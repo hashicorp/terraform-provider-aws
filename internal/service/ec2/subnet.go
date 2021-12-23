@@ -38,25 +38,15 @@ func ResourceSubnet() *schema.Resource {
 		MigrateState:  SubnetMigrateState,
 
 		Schema: map[string]*schema.Schema{
-			"vpc_id": {
+			"arn": {
 				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Computed: true,
 			},
-
-			"cidr_block": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidIPv4CIDRNetworkAddress,
+			"assign_ipv6_address_on_creation": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
 			},
-
-			"ipv6_cidr_block": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: verify.ValidIPv6CIDRNetworkAddress,
-			},
-
 			"availability_zone": {
 				Type:          schema.TypeString,
 				Optional:      true,
@@ -64,7 +54,6 @@ func ResourceSubnet() *schema.Resource {
 				ForceNew:      true,
 				ConflictsWith: []string{"availability_zone_id"},
 			},
-
 			"availability_zone_id": {
 				Type:          schema.TypeString,
 				Optional:      true,
@@ -72,55 +61,52 @@ func ResourceSubnet() *schema.Resource {
 				ForceNew:      true,
 				ConflictsWith: []string{"availability_zone"},
 			},
-
+			"cidr_block": {
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: verify.ValidIPv4CIDRNetworkAddress,
+			},
 			"customer_owned_ipv4_pool": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				RequiredWith: []string{"map_customer_owned_ip_on_launch", "outpost_arn"},
 			},
-
+			"ipv6_cidr_block": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: verify.ValidIPv6CIDRNetworkAddress,
+			},
+			"ipv6_cidr_block_association_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"map_customer_owned_ip_on_launch": {
 				Type:         schema.TypeBool,
 				Optional:     true,
 				RequiredWith: []string{"customer_owned_ipv4_pool", "outpost_arn"},
 			},
-
 			"map_public_ip_on_launch": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
 			},
-
 			"outpost_arn": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-
-			"assign_ipv6_address_on_creation": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-
-			"ipv6_cidr_block_association_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
-			"arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
-			"tags": tftags.TagsSchema(),
-
-			"tags_all": tftags.TagsSchemaComputed(),
-
 			"owner_id": {
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+			"tags":     tftags.TagsSchema(),
+			"tags_all": tftags.TagsSchemaComputed(),
+			"vpc_id": {
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
 			},
 		},
 	}
