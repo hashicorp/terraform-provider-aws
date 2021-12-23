@@ -82,7 +82,7 @@ In addition to the attributes above, the following attributes are exported:
 * `assign_ipv6_address_on_creation` - Whether an IPv6 address is assigned on creation.
 * `available_ip_address_count` - Available IP addresses of the subnet.
 * `customer_owned_ipv4_pool` - Identifier of customer owned IPv4 address pool.
-* `enable_dns64` - (Optional) Indicates whether DNS queries made to the Amazon-provided DNS Resolver in this subnet return synthetic IPv6 addresses for IPv4-only destinations.
+* `enable_dns64` - Indicates whether DNS queries made to the Amazon-provided DNS Resolver in this subnet return synthetic IPv6 addresses for IPv4-only destinations.
 * `ipv6_cidr_block_association_id` - Association ID of the IPv6 CIDR block.
 * `map_customer_owned_ip_on_launch` - Whether customer owned IP addresses are assigned on network interface creation.
 * `map_public_ip_on_launch` - Whether public IP addresses are assigned on instance launch.
