@@ -626,8 +626,8 @@ func FindSecurityGroups(conn *ec2.EC2, input *ec2.DescribeSecurityGroupsInput) (
 		return !lastPage
 	})
 
-	if tfawserr.ErrCodeEquals(err, InvalidSecurityGroupIDNotFound) ||
-		tfawserr.ErrCodeEquals(err, InvalidGroupNotFound) {
+	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidSecurityGroupIDNotFound) ||
+		tfawserr.ErrCodeEquals(err, ErrCodeInvalidGroupNotFound) {
 		return nil, &resource.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -964,7 +964,7 @@ func FindVPCEndpointByID(conn *ec2.EC2, vpcEndpointID string) (*ec2.VpcEndpoint,
 func FindVPCEndpoint(conn *ec2.EC2, input *ec2.DescribeVpcEndpointsInput) (*ec2.VpcEndpoint, error) {
 	output, err := conn.DescribeVpcEndpoints(input)
 
-	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidVPCEndpointIdNotFound) {
+	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidVpcEndpointIdNotFound) {
 		return nil, &resource.NotFoundError{
 			LastError:   err,
 			LastRequest: input,

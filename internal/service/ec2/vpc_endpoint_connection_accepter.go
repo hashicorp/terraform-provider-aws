@@ -115,7 +115,7 @@ func resourceVPCEndpointConnectionAccepterDelete(d *schema.ResourceData, meta in
 
 	_, err = conn.RejectVpcEndpointConnections(input)
 
-	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidVPCEndpointServiceIdNotFound) {
+	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidVpcEndpointServiceIdNotFound) {
 		return nil
 	}
 

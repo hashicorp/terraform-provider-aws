@@ -117,7 +117,7 @@ func testAccCheckClientVPNRouteDestroy(s *terraform.State) error {
 		if err == nil {
 			return fmt.Errorf("Client VPN route (%s) still exists", rs.Primary.ID)
 		}
-		if tfawserr.ErrMessageContains(err, tfec2.ErrCodeClientVPNRouteNotFound, "") {
+		if tfawserr.ErrMessageContains(err, tfec2.ErrCodeClientVpnRouteNotFound, "") {
 			continue
 		}
 	}

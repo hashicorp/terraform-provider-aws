@@ -52,10 +52,10 @@ const (
 )
 
 const (
-	ErrCodeClientVPNEndpointIdNotFound        = "InvalidClientVpnEndpointId.NotFound"
-	ErrCodeClientVPNAuthorizationRuleNotFound = "InvalidClientVpnEndpointAuthorizationRuleNotFound"
-	ErrCodeClientVPNAssociationIdNotFound     = "InvalidClientVpnAssociationId.NotFound"
-	ErrCodeClientVPNRouteNotFound             = "InvalidClientVpnRouteNotFound"
+	ErrCodeClientVpnEndpointIdNotFound        = "InvalidClientVpnEndpointId.NotFound"
+	ErrCodeClientVpnAuthorizationRuleNotFound = "InvalidClientVpnEndpointAuthorizationRuleNotFound"
+	ErrCodeClientVpnAssociationIdNotFound     = "InvalidClientVpnAssociationId.NotFound"
+	ErrCodeClientVpnRouteNotFound             = "InvalidClientVpnRouteNotFound"
 )
 
 const (
@@ -63,8 +63,8 @@ const (
 )
 
 const (
-	InvalidSecurityGroupIDNotFound = "InvalidSecurityGroupID.NotFound"
-	InvalidGroupNotFound           = "InvalidGroup.NotFound"
+	ErrCodeInvalidSecurityGroupIDNotFound = "InvalidSecurityGroupID.NotFound"
+	ErrCodeInvalidGroupNotFound           = "InvalidGroup.NotFound"
 )
 
 const (
@@ -77,22 +77,22 @@ const (
 )
 
 const (
-	ErrCodeInvalidVPCIDNotFound = "InvalidVpcID.NotFound"
+	ErrCodeInvalidVpcIDNotFound = "InvalidVpcID.NotFound"
 )
 
 const (
-	ErrCodeInvalidVPCEndpointIdNotFound        = "InvalidVpcEndpointId.NotFound"
-	ErrCodeInvalidVPCEndpointNotFound          = "InvalidVpcEndpoint.NotFound"
-	ErrCodeInvalidVPCEndpointServiceIdNotFound = "InvalidVpcEndpointServiceId.NotFound"
+	ErrCodeInvalidVpcEndpointIdNotFound        = "InvalidVpcEndpointId.NotFound"
+	ErrCodeInvalidVpcEndpointNotFound          = "InvalidVpcEndpoint.NotFound"
+	ErrCodeInvalidVpcEndpointServiceIdNotFound = "InvalidVpcEndpointServiceId.NotFound"
 )
 
 const (
-	ErrCodeInvalidVPCPeeringConnectionIDNotFound = "InvalidVpcPeeringConnectionID.NotFound"
+	ErrCodeInvalidVpcPeeringConnectionIDNotFound = "InvalidVpcPeeringConnectionID.NotFound"
 )
 
 const (
-	InvalidVPNGatewayAttachmentNotFound = "InvalidVpnGatewayAttachment.NotFound"
-	InvalidVPNGatewayIDNotFound         = "InvalidVpnGatewayID.NotFound"
+	ErrCodeInvalidVpnGatewayAttachmentNotFound = "InvalidVpnGatewayAttachment.NotFound"
+	ErrCodeInvalidVpnGatewayIDNotFound         = "InvalidVpnGatewayID.NotFound"
 )
 
 const (
