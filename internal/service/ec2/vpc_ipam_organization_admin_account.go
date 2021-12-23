@@ -2,10 +2,11 @@ package ec2
 
 import (
 	"fmt"
-	"strings"
+	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/aws/aws-sdk-go/service/organizations"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -15,8 +16,6 @@ func ResourceVPCIpamOrganizationAdminAccount() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceVPCIpamOrganizationAdminAccountCreate,
 		Read:   resourceVPCIpamOrganizationAdminAccountRead,
-		// TODO: validate update is possible
-		// Update: resourceVPCIpamOrganizationAdminAccountUpdate,
 		Delete: resourceVPCIpamOrganizationAdminAccountDelete,
 
 		Importer: &schema.ResourceImporter{
@@ -24,19 +23,34 @@ func ResourceVPCIpamOrganizationAdminAccount() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"delegated_admin_account_id": {
+			"arn": {
 				Type:     schema.TypeString,
-				Required: true,
-				// ForceNew = true if cannot update in place - see L21
-				// ForceNew:     true,
+				Computed: true,
+			},
+			"delegated_admin_account_id": {
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
 				ValidateFunc: verify.ValidAccountID,
+			},
+			"email": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"name": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"service_principal": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 		},
 	}
 }
 
 const (
-	ipam_service_principal = "ipam.amazonaws.com"
+	Ipam_service_principal = "ipam.amazonaws.com"
 )
 
 func resourceVPCIpamOrganizationAdminAccountCreate(d *schema.ResourceData, meta interface{}) error {
@@ -57,63 +71,55 @@ func resourceVPCIpamOrganizationAdminAccountCreate(d *schema.ResourceData, meta 
 		return fmt.Errorf("error enabling IPAM Organization Admin Account (%s): %w", adminAccountID, err)
 	}
 
-	d.SetId(encodeIpamOrgAdminId(adminAccountID))
+	d.SetId(adminAccountID)
 
 	return resourceVPCIpamOrganizationAdminAccountRead(d, meta)
 }
 
 func resourceVPCIpamOrganizationAdminAccountRead(d *schema.ResourceData, meta interface{}) error {
 	org_conn := meta.(*conns.AWSClient).OrganizationsConn
-	// ListDelegatedAdministratorsInput
 
-	// if err != nil {
-	// 	return fmt.Errorf("error reading VPCIpam Organization Admin Account (%s): %w", d.Id(), err)
-	// }
+	input := &organizations.ListDelegatedAdministratorsInput{
+		ServicePrincipal: aws.String(Ipam_service_principal),
+	}
 
-	// if adminAccount == nil {
-	// 	log.Printf("[WARN] VPCIpam Organization Admin Account (%s) not found, removing from state", d.Id())
-	// 	d.SetId("")
-	// 	return nil
-	// }
+	output, err := org_conn.ListDelegatedAdministrators(input)
 
-	return nil
-}
+	if err != nil {
+		return fmt.Errorf("error finding IPAM organization delegated account: (%s): %w", d.Id(), err)
+	}
 
-func resourceVPCIpamOrganizationAdminAccountUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
-	// need to check if its possbile to overwrite
-	// likely youll just run the same steps from Create()
+	if output == nil || len(output.DelegatedAdministrators) == 0 || output.DelegatedAdministrators[0] == nil {
+		log.Printf("[WARN] VPC Ipam Organization Admin Account (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
+	}
+
+	admin_account := output.DelegatedAdministrators[0]
+
+	d.Set("arn", admin_account.Arn)
+	d.Set("delegated_admin_account_id", admin_account.Id)
+	d.Set("email", admin_account.Email)
+	d.Set("name", admin_account.Name)
+	d.Set("service_principal", Ipam_service_principal)
+
 	return nil
 }
 
 func resourceVPCIpamOrganizationAdminAccountDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
-	account_id, _, err := DecodeIpamPoolCidrID(d.Id())
-
 	input := &ec2.DisableIpamOrganizationAdminAccountInput{
-		DelegatedAdminAccountId: aws.String(account_id),
+		DelegatedAdminAccountId: aws.String(d.Id()),
 	}
 
 	output, err := conn.DisableIpamOrganizationAdminAccount(input)
 
 	if err != nil {
-		return fmt.Errorf("error disabling IPAM Organization Admin Account (%s): %w", account_id, err)
+		return fmt.Errorf("error disabling IPAM Organization Admin Account (%s): %w", d.Id(), err)
 	}
 	if !aws.BoolValue(output.Success) {
-		return fmt.Errorf("error disabling IPAM Organization Admin Account (%s): %w", account_id, err)
+		return fmt.Errorf("error disabling IPAM Organization Admin Account (%s): %w", d.Id(), err)
 	}
 	return nil
-}
-
-func encodeIpamOrgAdminId(account_id string) string {
-	return fmt.Sprintf("%s_%s", account_id, ipam_service_principal)
-}
-
-func DecodeIpamOrgAdminId(id string) (string, string, error) {
-	idParts := strings.Split(id, "_")
-	if len(idParts) != 2 || idParts[0] == "" || idParts[1] == "" {
-		return "", "", fmt.Errorf("expected ID in the form of <account_id>_<service_principal>, given: %q", id)
-	}
-	return idParts[0], idParts[1], nil
 }
