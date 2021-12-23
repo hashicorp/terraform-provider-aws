@@ -1,3 +1,3 @@
 ```release-note:enhancement
-data/aws_ecs_task_definition: Add `arn` attribute.
+data-source/aws_ecs_task_definition: Add `arn` attribute.
 ```
