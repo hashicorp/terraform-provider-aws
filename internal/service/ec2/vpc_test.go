@@ -605,7 +605,7 @@ func TestAccVPC_assignGeneratedIPv6CIDRBlockWithBorder(t *testing.T) {
 		CheckDestroy: testAccCheckVpcDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVpcConfigAssignGeneratedIpv6CidrBlockWithBorder(true),
+				Config: testAccVpcConfigAssignGeneratedIpv6CidrBlockWithBorder(true, "us-west-2-lax-1"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					acctest.CheckVPCExists(resourceName, &vpc),
 					testAccCheckVpcCidr(&vpc, "10.1.0.0/16"),
@@ -623,24 +623,25 @@ func TestAccVPC_assignGeneratedIPv6CIDRBlockWithBorder(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"assign_generated_ipv6_cidr_block"},
 			},
 			{
-				Config: testAccVpcConfigAssignGeneratedIpv6CidrBlockWithBorder(false),
+				Config: testAccVpcConfigAssignGeneratedIpv6CidrBlockWithBorder(false, ""),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					acctest.CheckVPCExists(resourceName, &vpc),
 					testAccCheckVpcCidr(&vpc, "10.1.0.0/16"),
 					resource.TestCheckResourceAttr(resourceName, "assign_generated_ipv6_cidr_block", "false"),
 					resource.TestCheckResourceAttr(resourceName, "cidr_block", "10.1.0.0/16"),
+					resource.TestCheckResourceAttr(resourceName, "ipv6_cidr_block_network_border_group", ""),
 					resource.TestCheckResourceAttr(resourceName, "ipv6_association_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "ipv6_cidr_block", ""),
 				),
 			},
 			{
-				Config: testAccVpcConfigAssignGeneratedIpv6CidrBlockWithBorder(true),
+				Config: testAccVpcConfigAssignGeneratedIpv6CidrBlockWithBorder(true, "us-west-2-lax-1"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					acctest.CheckVPCExists(resourceName, &vpc),
 					testAccCheckVpcCidr(&vpc, "10.1.0.0/16"),
 					resource.TestCheckResourceAttr(resourceName, "assign_generated_ipv6_cidr_block", "true"),
 					resource.TestCheckResourceAttr(resourceName, "cidr_block", "10.1.0.0/16"),
-					// resource.TestCheckResourceAttr(resourceName, "ipv6_cidr_block_network_border_group", "us-west-2-lax-1"),
+					resource.TestCheckResourceAttr(resourceName, "ipv6_cidr_block_network_border_group", "us-west-2-lax-1"),
 					resource.TestMatchResourceAttr(resourceName, "ipv6_association_id", regexp.MustCompile(`^vpc-cidr-assoc-.+`)),
 					resource.TestMatchResourceAttr(resourceName, "ipv6_cidr_block", regexp.MustCompile(`/56$`)),
 				),
@@ -1041,18 +1042,18 @@ resource "aws_vpc" "test" {
 }
 `
 
-func testAccVpcConfigAssignGeneratedIpv6CidrBlockWithBorder(assignGeneratedIpv6CidrBlock bool) string {
+func testAccVpcConfigAssignGeneratedIpv6CidrBlockWithBorder(assignGeneratedIpv6CidrBlock bool, networkBorderGroup string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   assign_generated_ipv6_cidr_block 		= %t
   cidr_block                      		 = "10.1.0.0/16"
-  ipv6_cidr_block_network_border_group	 = "us-west-2-lax-1"
+  ipv6_cidr_block_network_border_group	 = %q
 
   tags = {
     Name = "terraform-testacc-vpc-ipv6-with-border-group"
   }
 }
-`, assignGeneratedIpv6CidrBlock)
+`, assignGeneratedIpv6CidrBlock, networkBorderGroup)
 }
 
 func testAccVPCTags1Config(tagKey1, tagValue1 string) string {

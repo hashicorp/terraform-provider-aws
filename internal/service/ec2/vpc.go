@@ -409,6 +409,7 @@ func resourceVPCRead(d *schema.ResourceData, meta interface{}) error {
 		if aws.StringValue(a.Ipv6CidrBlockState.State) == ec2.VpcCidrBlockStateCodeAssociated { //we can only ever have 1 IPv6 block associated at once
 			d.Set("ipv6_association_id", a.AssociationId)
 			d.Set("ipv6_cidr_block", a.Ipv6CidrBlock)
+			d.Set("ipv6_cidr_block_network_border_group", a.NetworkBorderGroup)
 		}
 	}
 	// assign ipv6_cidr_block_network_border_group
