@@ -37,6 +37,7 @@ func TestAccVPC_basic(t *testing.T) {
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`vpc/vpc-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "assign_generated_ipv6_cidr_block", "false"),
+					resource.TestCheckResourceAttr(resourceName, "ipv6_cidr_block_network_border_group", "false"),
 					resource.TestMatchResourceAttr(resourceName, "default_route_table_id", regexp.MustCompile(`^rtb-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "cidr_block", "10.1.0.0/16"),
 					resource.TestCheckResourceAttr(resourceName, "enable_dns_support", "true"),
@@ -593,6 +594,61 @@ func TestAccVPC_assignGeneratedIPv6CIDRBlock(t *testing.T) {
 	})
 }
 
+func TestAccVPC_assignGeneratedIPv6CIDRBlockWithBorder(t *testing.T) {
+	var vpc ec2.Vpc
+	resourceName := "aws_vpc.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckVpcDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVpcConfigAssignGeneratedIpv6CidrBlockWithBorder(true),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					acctest.CheckVPCExists(resourceName, &vpc),
+					testAccCheckVpcCidr(&vpc, "10.1.0.0/16"),
+					resource.TestCheckResourceAttr(resourceName, "assign_generated_ipv6_cidr_block", "true"),
+					resource.TestCheckResourceAttr(resourceName, "cidr_block", "10.1.0.0/16"),
+					resource.TestCheckResourceAttr(resourceName, "ipv6_cidr_block_network_border_group", "us-west-2-lax-1"),
+					resource.TestMatchResourceAttr(resourceName, "ipv6_association_id", regexp.MustCompile(`^vpc-cidr-assoc-.+`)),
+					resource.TestMatchResourceAttr(resourceName, "ipv6_cidr_block", regexp.MustCompile(`/56$`)),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"assign_generated_ipv6_cidr_block"},
+			},
+			{
+				Config: testAccVpcConfigAssignGeneratedIpv6CidrBlockWithBorder(false),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					acctest.CheckVPCExists(resourceName, &vpc),
+					testAccCheckVpcCidr(&vpc, "10.1.0.0/16"),
+					resource.TestCheckResourceAttr(resourceName, "assign_generated_ipv6_cidr_block", "false"),
+					resource.TestCheckResourceAttr(resourceName, "cidr_block", "10.1.0.0/16"),
+					resource.TestCheckResourceAttr(resourceName, "ipv6_association_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "ipv6_cidr_block", ""),
+				),
+			},
+			{
+				Config: testAccVpcConfigAssignGeneratedIpv6CidrBlockWithBorder(true),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					acctest.CheckVPCExists(resourceName, &vpc),
+					testAccCheckVpcCidr(&vpc, "10.1.0.0/16"),
+					resource.TestCheckResourceAttr(resourceName, "assign_generated_ipv6_cidr_block", "true"),
+					resource.TestCheckResourceAttr(resourceName, "cidr_block", "10.1.0.0/16"),
+					// resource.TestCheckResourceAttr(resourceName, "ipv6_cidr_block_network_border_group", "us-west-2-lax-1"),
+					resource.TestMatchResourceAttr(resourceName, "ipv6_association_id", regexp.MustCompile(`^vpc-cidr-assoc-.+`)),
+					resource.TestMatchResourceAttr(resourceName, "ipv6_cidr_block", regexp.MustCompile(`/56$`)),
+				),
+			},
+		},
+	})
+}
+
 func TestAccVPC_tenancy(t *testing.T) {
 	var vpcDedicated ec2.Vpc
 	var vpcDefault ec2.Vpc
@@ -984,6 +1040,20 @@ resource "aws_vpc" "test" {
   }
 }
 `
+
+func testAccVpcConfigAssignGeneratedIpv6CidrBlockWithBorder(assignGeneratedIpv6CidrBlock bool) string {
+	return fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  assign_generated_ipv6_cidr_block 		= %t
+  cidr_block                      		 = "10.1.0.0/16"
+  ipv6_cidr_block_network_border_group	 = "us-west-2-lax-1"
+
+  tags = {
+    Name = "terraform-testacc-vpc-ipv6-with-border-group"
+  }
+}
+`, assignGeneratedIpv6CidrBlock)
+}
 
 func testAccVPCTags1Config(tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
