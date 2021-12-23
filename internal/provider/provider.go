@@ -367,6 +367,7 @@ func Provider() *schema.Provider {
 
 			"aws_batch_compute_environment": batch.DataSourceComputeEnvironment(),
 			"aws_batch_job_queue":           batch.DataSourceJobQueue(),
+			"aws_batch_scheduling_policy":   batch.DataSourceSchedulingPolicy(),
 
 			"aws_cloudcontrolapi_resource": cloudcontrol.DataSourceResource(),
 
