@@ -52,6 +52,10 @@ func DataSourceSubnet() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
+			"enable_dns64": {
+				Type:     schema.TypeBool,
+				Computed: true,
+			},
 			"filter": CustomFiltersSchema(),
 			"id": {
 				Type:     schema.TypeString,
@@ -166,6 +170,7 @@ func dataSourceSubnetRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("cidr_block", subnet.CidrBlock)
 	d.Set("customer_owned_ipv4_pool", subnet.CustomerOwnedIpv4Pool)
 	d.Set("default_for_az", subnet.DefaultForAz)
+	d.Set("enable_dns64", subnet.EnableDns64)
 
 	for _, a := range subnet.Ipv6CidrBlockAssociationSet {
 		if a.Ipv6CidrBlockState != nil && aws.StringValue(a.Ipv6CidrBlockState.State) == ec2.VpcCidrBlockStateCodeAssociated { //we can only ever have 1 IPv6 block associated at once
