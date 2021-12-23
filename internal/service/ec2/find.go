@@ -694,7 +694,39 @@ func FindSubnetByID(conn *ec2.EC2, id string) (*ec2.Subnet, error) {
 }
 
 func FindSubnet(conn *ec2.EC2, input *ec2.DescribeSubnetsInput) (*ec2.Subnet, error) {
-	output, err := conn.DescribeSubnets(input)
+	output, err := FindSubnets(conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if len(output) == 0 || output[0] == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	if count := len(output); count > 1 {
+		return nil, tfresource.NewTooManyResultsError(count, input)
+	}
+
+	return output[0], nil
+}
+
+func FindSubnets(conn *ec2.EC2, input *ec2.DescribeSubnetsInput) ([]*ec2.Subnet, error) {
+	var output []*ec2.Subnet
+
+	err := conn.DescribeSubnetsPages(input, func(page *ec2.DescribeSubnetsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.Subnets {
+			if v != nil {
+				output = append(output, v)
+			}
+		}
+
+		return !lastPage
+	})
 
 	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidSubnetIDNotFound) {
 		return nil, &resource.NotFoundError{
@@ -707,11 +739,7 @@ func FindSubnet(conn *ec2.EC2, input *ec2.DescribeSubnetsInput) (*ec2.Subnet, er
 		return nil, err
 	}
 
-	if output == nil || len(output.Subnets) == 0 || output.Subnets[0] == nil {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	return output.Subnets[0], nil
+	return output, nil
 }
 
 func FindSubnetCidrReservationBySubnetIDAndReservationID(conn *ec2.EC2, subnetID, reservationID string) (*ec2.SubnetCidrReservation, error) {
