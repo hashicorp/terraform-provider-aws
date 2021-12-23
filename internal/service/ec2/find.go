@@ -944,7 +944,7 @@ func FindVPCEndpointByID(conn *ec2.EC2, vpcEndpointID string) (*ec2.VpcEndpoint,
 		return nil, err
 	}
 
-	if state := aws.StringValue(output.State); state == VPCEndpointStateDeleted {
+	if state := aws.StringValue(output.State); state == VpcEndpointStateDeleted {
 		return nil, &resource.NotFoundError{
 			Message:     state,
 			LastRequest: input,
@@ -1434,7 +1434,7 @@ func FindVPCEndpointConnectionByServiceIDAndVPCEndpointID(conn *ec2.EC2, service
 		return nil, tfresource.NewEmptyResultError(input)
 	}
 
-	if vpcEndpointState := aws.StringValue(output.VpcEndpointState); vpcEndpointState == VPCEndpointStateDeleted {
+	if vpcEndpointState := aws.StringValue(output.VpcEndpointState); vpcEndpointState == VpcEndpointStateDeleted {
 		return nil, &resource.NotFoundError{
 			Message:     vpcEndpointState,
 			LastRequest: input,

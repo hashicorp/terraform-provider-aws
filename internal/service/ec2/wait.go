@@ -980,8 +980,8 @@ func WaitPlacementGroupDeleted(conn *ec2.EC2, name string) (*ec2.PlacementGroup,
 
 func WaitVPCEndpointAccepted(conn *ec2.EC2, vpcEndpointID string, timeout time.Duration) (*ec2.VpcEndpoint, error) {
 	stateConf := &resource.StateChangeConf{
-		Pending:    []string{VPCEndpointStatePendingAcceptance},
-		Target:     []string{VPCEndpointStateAvailable},
+		Pending:    []string{VpcEndpointStatePendingAcceptance},
+		Target:     []string{VpcEndpointStateAvailable},
 		Timeout:    timeout,
 		Refresh:    StatusVPCEndpointState(conn, vpcEndpointID),
 		Delay:      5 * time.Second,
@@ -991,7 +991,7 @@ func WaitVPCEndpointAccepted(conn *ec2.EC2, vpcEndpointID string, timeout time.D
 	outputRaw, err := stateConf.WaitForState()
 
 	if output, ok := outputRaw.(*ec2.VpcEndpoint); ok {
-		if state, lastError := aws.StringValue(output.State), output.LastError; state == VPCEndpointStateFailed && lastError != nil {
+		if state, lastError := aws.StringValue(output.State), output.LastError; state == VpcEndpointStateFailed && lastError != nil {
 			tfresource.SetLastError(err, fmt.Errorf("%s: %s", aws.StringValue(lastError.Code), aws.StringValue(lastError.Message)))
 		}
 
@@ -1003,8 +1003,8 @@ func WaitVPCEndpointAccepted(conn *ec2.EC2, vpcEndpointID string, timeout time.D
 
 func WaitVPCEndpointAvailable(conn *ec2.EC2, vpcEndpointID string, timeout time.Duration) (*ec2.VpcEndpoint, error) {
 	stateConf := &resource.StateChangeConf{
-		Pending:    []string{VPCEndpointStatePending},
-		Target:     []string{VPCEndpointStateAvailable, VPCEndpointStatePendingAcceptance},
+		Pending:    []string{VpcEndpointStatePending},
+		Target:     []string{VpcEndpointStateAvailable, VpcEndpointStatePendingAcceptance},
 		Timeout:    timeout,
 		Refresh:    StatusVPCEndpointState(conn, vpcEndpointID),
 		Delay:      5 * time.Second,
@@ -1014,7 +1014,7 @@ func WaitVPCEndpointAvailable(conn *ec2.EC2, vpcEndpointID string, timeout time.
 	outputRaw, err := stateConf.WaitForState()
 
 	if output, ok := outputRaw.(*ec2.VpcEndpoint); ok {
-		if state, lastError := aws.StringValue(output.State), output.LastError; state == VPCEndpointStateFailed && lastError != nil {
+		if state, lastError := aws.StringValue(output.State), output.LastError; state == VpcEndpointStateFailed && lastError != nil {
 			tfresource.SetLastError(err, fmt.Errorf("%s: %s", aws.StringValue(lastError.Code), aws.StringValue(lastError.Message)))
 		}
 
@@ -1026,7 +1026,7 @@ func WaitVPCEndpointAvailable(conn *ec2.EC2, vpcEndpointID string, timeout time.
 
 func WaitVPCEndpointDeleted(conn *ec2.EC2, vpcEndpointID string, timeout time.Duration) (*ec2.VpcEndpoint, error) {
 	stateConf := &resource.StateChangeConf{
-		Pending:    []string{VPCEndpointStateDeleting},
+		Pending:    []string{VpcEndpointStateDeleting},
 		Target:     []string{},
 		Timeout:    timeout,
 		Refresh:    StatusVPCEndpointState(conn, vpcEndpointID),
@@ -1095,8 +1095,8 @@ func WaitEBSSnapshotImportComplete(conn *ec2.EC2, importTaskID string) (*ec2.Sna
 
 func waitVPCEndpointConnectionAccepted(conn *ec2.EC2, serviceID, vpcEndpointID string, timeout time.Duration) (*ec2.VpcEndpointConnection, error) {
 	stateConf := &resource.StateChangeConf{
-		Pending:    []string{VPCEndpointStatePendingAcceptance, VPCEndpointStatePending},
-		Target:     []string{VPCEndpointStateAvailable},
+		Pending:    []string{VpcEndpointStatePendingAcceptance, VpcEndpointStatePending},
+		Target:     []string{VpcEndpointStateAvailable},
 		Refresh:    statusVPCEndpointConnectionVPCEndpointState(conn, serviceID, vpcEndpointID),
 		Timeout:    timeout,
 		Delay:      5 * time.Second,
