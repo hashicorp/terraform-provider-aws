@@ -309,12 +309,6 @@ func ResourceTable() *schema.Resource {
 							Optional: true,
 							Default:  false,
 						},
-						"kms_key_arn": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Computed:     true,
-							ValidateFunc: verify.ValidARN,
-						},
 					},
 				},
 				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
