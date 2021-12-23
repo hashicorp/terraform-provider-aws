@@ -356,14 +356,6 @@ func TestAccFirehoseDeliveryStream_s3KinesisStreamSource(t *testing.T) {
 					testAccCheckDeliveryStreamAttributes(&stream, nil, nil, nil, nil, nil, nil),
 				),
 			},
-			{
-				Config: testAccDeliveryStreamConfig_ExtendedS3_ErrorOutputPrefix(rName, ""),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDeliveryStreamExists(resourceName, &stream),
-					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.error_output_prefix", ""),
-				),
-			},
 		},
 	})
 }
@@ -801,6 +793,71 @@ func TestAccFirehoseDeliveryStream_ExtendedS3_errorOutputPrefix(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.error_output_prefix", "prefix2"),
 				),
 			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				// Ensure the ErrorOutputPrefix can be updated to an empty value
+				// Reference: https://github.com/hashicorp/terraform-provider-aws/pull/11229#discussion_r356282765
+				Config: testAccDeliveryStreamConfig_ExtendedS3_ErrorOutputPrefix(rName, ""),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDeliveryStreamExists(resourceName, &stream),
+					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.error_output_prefix", ""),
+				),
+			},
+		},
+	})
+}
+
+func TestAccFirehoseDeliveryStream_ExtendedS3_S3BackupConfiguration_ErrorOutputPrefix(t *testing.T) {
+	var stream firehose.DeliveryStreamDescription
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_kinesis_firehose_delivery_stream.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, firehose.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckDeliveryStreamDestroy_ExtendedS3,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDeliveryStreamConfig_ExtendedS3_S3BackUpConfiguration_ErrorOutputPrefix(rName, "prefix1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDeliveryStreamExists(resourceName, &stream),
+					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.s3_backup_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.s3_backup_configuration.0.error_output_prefix", "prefix1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccDeliveryStreamConfig_ExtendedS3_S3BackUpConfiguration_ErrorOutputPrefix(rName, "prefix2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDeliveryStreamExists(resourceName, &stream),
+					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.s3_backup_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.s3_backup_configuration.0.error_output_prefix", "prefix2")),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccDeliveryStreamConfig_ExtendedS3_S3BackUpConfiguration_ErrorOutputPrefix(rName, ""),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDeliveryStreamExists(resourceName, &stream),
+					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.s3_backup_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.s3_backup_configuration.0.error_output_prefix", "")),
+			},
 		},
 	})
 }
@@ -1103,6 +1160,55 @@ func TestAccFirehoseDeliveryStream_splunkUpdates(t *testing.T) {
 	})
 }
 
+func TestAccFirehoseDeliveryStream_Splunk_ErrorOutputPrefix(t *testing.T) {
+	var stream firehose.DeliveryStreamDescription
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_kinesis_firehose_delivery_stream.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, firehose.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckDeliveryStreamDestroy_ExtendedS3,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDeliveryStreamConfig_Splunk_ErrorOutputPrefix(rName, "prefix1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDeliveryStreamExists(resourceName, &stream),
+					resource.TestCheckResourceAttr(resourceName, "s3_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "s3_configuration.0.error_output_prefix", "prefix1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccDeliveryStreamConfig_Splunk_ErrorOutputPrefix(rName, "prefix2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDeliveryStreamExists(resourceName, &stream),
+					resource.TestCheckResourceAttr(resourceName, "s3_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "s3_configuration.0.error_output_prefix", "prefix2"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccDeliveryStreamConfig_Splunk_ErrorOutputPrefix(rName, ""),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDeliveryStreamExists(resourceName, &stream),
+					resource.TestCheckResourceAttr(resourceName, "s3_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "s3_configuration.0.error_output_prefix", ""),
+				),
+			},
+		},
+	})
+}
+
 func TestAccFirehoseDeliveryStream_httpEndpoint(t *testing.T) {
 	var stream firehose.DeliveryStreamDescription
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -1153,6 +1259,55 @@ func TestAccFirehoseDeliveryStream_httpEndpoint(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeliveryStreamExists(resourceName, &stream),
 					testAccCheckDeliveryStreamAttributes(&stream, nil, nil, nil, nil, nil, updatedHTTPEndpointConfig),
+				),
+			},
+		},
+	})
+}
+
+func TestAccFirehoseDeliveryStream_HTTPEndpoint_ErrorOutputPrefix(t *testing.T) {
+	var stream firehose.DeliveryStreamDescription
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_kinesis_firehose_delivery_stream.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, firehose.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckDeliveryStreamDestroy_ExtendedS3,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDeliveryStreamConfig_HTTPEndpoint_ErrorOutputPrefix(rName, "prefix1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDeliveryStreamExists(resourceName, &stream),
+					resource.TestCheckResourceAttr(resourceName, "s3_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "s3_configuration.0.error_output_prefix", "prefix1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccDeliveryStreamConfig_HTTPEndpoint_ErrorOutputPrefix(rName, "prefix2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDeliveryStreamExists(resourceName, &stream),
+					resource.TestCheckResourceAttr(resourceName, "s3_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "s3_configuration.0.error_output_prefix", "prefix2"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccDeliveryStreamConfig_HTTPEndpoint_ErrorOutputPrefix(rName, ""),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDeliveryStreamExists(resourceName, &stream),
+					resource.TestCheckResourceAttr(resourceName, "s3_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "s3_configuration.0.error_output_prefix", ""),
 				),
 			},
 		},
@@ -1357,6 +1512,55 @@ func TestAccFirehoseDeliveryStream_elasticSearchWithVPCUpdates(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "elasticsearch_configuration.0.vpc_config.0.subnet_ids.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "elasticsearch_configuration.0.vpc_config.0.security_group_ids.#", "2"),
 					resource.TestCheckResourceAttrPair(resourceName, "elasticsearch_configuration.0.vpc_config.0.role_arn", "aws_iam_role.firehose", "arn"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccFirehoseDeliveryStream_Elasticsearch_ErrorOutputPrefix(t *testing.T) {
+	var stream firehose.DeliveryStreamDescription
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_kinesis_firehose_delivery_stream.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, firehose.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckDeliveryStreamDestroy_ExtendedS3,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDeliveryStreamConfig_Elasticsearch_ErrorOutputPrefix(rName, "prefix1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDeliveryStreamExists(resourceName, &stream),
+					resource.TestCheckResourceAttr(resourceName, "s3_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "s3_configuration.0.error_output_prefix", "prefix1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccDeliveryStreamConfig_Elasticsearch_ErrorOutputPrefix(rName, "prefix2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDeliveryStreamExists(resourceName, &stream),
+					resource.TestCheckResourceAttr(resourceName, "s3_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "s3_configuration.0.error_output_prefix", "prefix2"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccDeliveryStreamConfig_Elasticsearch_ErrorOutputPrefix(rName, ""),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDeliveryStreamExists(resourceName, &stream),
+					resource.TestCheckResourceAttr(resourceName, "s3_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "s3_configuration.0.error_output_prefix", ""),
 				),
 			},
 		},
@@ -2574,6 +2778,30 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
 `, rName, errorOutputPrefix))
 }
 
+func testAccDeliveryStreamConfig_ExtendedS3_S3BackUpConfiguration_ErrorOutputPrefix(rName, errorOutputPrefix string) string {
+	return acctest.ConfigCompose(
+		testAccDeliveryStreamBaseConfig(rName),
+		fmt.Sprintf(`
+resource "aws_kinesis_firehose_delivery_stream" "test" {
+  destination = "extended_s3"
+  name        = %[1]q
+
+  extended_s3_configuration {
+    bucket_arn     = aws_s3_bucket.bucket.arn
+    role_arn       = aws_iam_role.firehose.arn
+    s3_backup_mode = "Enabled"
+    s3_backup_configuration {
+      role_arn            = aws_iam_role.firehose.arn
+      bucket_arn          = aws_s3_bucket.bucket.arn
+      error_output_prefix = %[2]q
+    }
+  }
+
+  depends_on = [aws_iam_role_policy.firehose]
+}
+`, rName, errorOutputPrefix))
+}
+
 func testAccDeliveryStreamConfig_ExtendedS3_ProcessingConfiguration_Empty(rName string) string {
 	return acctest.ConfigCompose(
 		testAccDeliveryStreamBaseConfig(rName),
@@ -2943,6 +3171,29 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
 `, rName))
 }
 
+func testAccDeliveryStreamConfig_Splunk_ErrorOutputPrefix(rName, errorOutputPrefix string) string {
+	return acctest.ConfigCompose(
+		testAccDeliveryStreamBaseConfig(rName),
+		fmt.Sprintf(`
+resource "aws_kinesis_firehose_delivery_stream" "test" {
+  depends_on  = [aws_iam_role_policy.firehose]
+  name        = %[1]q
+  destination = "splunk"
+
+  s3_configuration {
+    role_arn            = aws_iam_role.firehose.arn
+    bucket_arn          = aws_s3_bucket.bucket.arn
+    error_output_prefix = %[2]q
+  }
+
+  splunk_configuration {
+    hec_endpoint = "https://input-test.com:443"
+    hec_token    = "51D4DA16-C61B-4F5F-8EC7-ED4301342A4A"
+  }
+}
+`, rName, errorOutputPrefix))
+}
+
 func testAccDeliveryStreamConfig_HTTPEndpointBasic(rName string) string {
 	return acctest.ConfigCompose(
 		testAccDeliveryStreamBaseConfig(rName),
@@ -2964,6 +3215,30 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
   }
 }
 `, rName))
+}
+
+func testAccDeliveryStreamConfig_HTTPEndpoint_ErrorOutputPrefix(rName, errorOutputPrefix string) string {
+	return acctest.ConfigCompose(
+		testAccDeliveryStreamBaseConfig(rName),
+		fmt.Sprintf(`
+resource "aws_kinesis_firehose_delivery_stream" "test" {
+  depends_on  = [aws_iam_role_policy.firehose]
+  name        = %[1]q
+  destination = "http_endpoint"
+
+  s3_configuration {
+    role_arn            = aws_iam_role.firehose.arn
+    bucket_arn          = aws_s3_bucket.bucket.arn
+    error_output_prefix = %[2]q
+  }
+
+  http_endpoint_configuration {
+    url      = "https://input-test.com:443"
+    name     = "HTTP_test"
+    role_arn = aws_iam_role.firehose.arn
+  }
+}
+`, rName, errorOutputPrefix))
 }
 
 func testAccDeliveryStreamConfig_HTTPEndpoint_RetryDuration(rName string, retryDuration int) string {
@@ -3217,6 +3492,32 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
   }
 }
 `, rName))
+}
+
+func testAccDeliveryStreamConfig_Elasticsearch_ErrorOutputPrefix(rName, errorOutputPrefix string) string {
+	return acctest.ConfigCompose(
+		testAccDeliveryStreamBaseElasticsearchConfig(rName),
+		fmt.Sprintf(`
+resource "aws_kinesis_firehose_delivery_stream" "test" {
+  depends_on = [aws_iam_role_policy.firehose-elasticsearch]
+
+  name        = %[1]q
+  destination = "elasticsearch"
+
+  s3_configuration {
+    role_arn            = aws_iam_role.firehose.arn
+    bucket_arn          = aws_s3_bucket.bucket.arn
+    error_output_prefix = %[2]q
+  }
+
+  elasticsearch_configuration {
+    domain_arn = aws_elasticsearch_domain.test_cluster.arn
+    role_arn   = aws_iam_role.firehose.arn
+    index_name = "test"
+    type_name  = "test"
+  }
+}
+`, rName, errorOutputPrefix))
 }
 
 func testAccDeliveryStreamConfig_ElasticsearchVPCBasic(rName string) string {
