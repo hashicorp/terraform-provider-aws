@@ -677,7 +677,7 @@ func FindSubnetByID(conn *ec2.EC2, id string) (*ec2.Subnet, error) {
 		SubnetIds: aws.StringSlice([]string{id}),
 	}
 
-	output, err := findSubnet(conn, input)
+	output, err := FindSubnet(conn, input)
 
 	if err != nil {
 		return nil, err
@@ -693,7 +693,7 @@ func FindSubnetByID(conn *ec2.EC2, id string) (*ec2.Subnet, error) {
 	return output, nil
 }
 
-func findSubnet(conn *ec2.EC2, input *ec2.DescribeSubnetsInput) (*ec2.Subnet, error) {
+func FindSubnet(conn *ec2.EC2, input *ec2.DescribeSubnetsInput) (*ec2.Subnet, error) {
 	output, err := conn.DescribeSubnets(input)
 
 	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidSubnetIDNotFound) {
@@ -759,7 +759,7 @@ func FindSubnetIPv6CIDRBlockAssociationByID(conn *ec2.EC2, associationID string)
 		}),
 	}
 
-	output, err := findSubnet(conn, input)
+	output, err := FindSubnet(conn, input)
 
 	if err != nil {
 		return nil, err

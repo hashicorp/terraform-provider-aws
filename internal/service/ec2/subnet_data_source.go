@@ -2,13 +2,13 @@ package ec2
 
 import (
 	"fmt"
-	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func DataSourceSubnet() *schema.Resource {
@@ -102,10 +102,10 @@ func dataSourceSubnetRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	req := &ec2.DescribeSubnetsInput{}
+	input := &ec2.DescribeSubnetsInput{}
 
 	if id, ok := d.GetOk("id"); ok {
-		req.SubnetIds = []*string{aws.String(id.(string))}
+		input.SubnetIds = []*string{aws.String(id.(string))}
 	}
 
 	// We specify default_for_az as boolean, but EC2 filters want
@@ -134,35 +134,27 @@ func dataSourceSubnetRead(d *schema.ResourceData, meta interface{}) error {
 		filters["ipv6-cidr-block-association.ipv6-cidr-block"] = v.(string)
 	}
 
-	req.Filters = BuildAttributeFilterList(filters)
+	input.Filters = BuildAttributeFilterList(filters)
 
 	if tags, tagsOk := d.GetOk("tags"); tagsOk {
-		req.Filters = append(req.Filters, BuildTagFilterList(
+		input.Filters = append(input.Filters, BuildTagFilterList(
 			Tags(tftags.New(tags.(map[string]interface{}))),
 		)...)
 	}
 
-	req.Filters = append(req.Filters, BuildCustomFilterList(
+	input.Filters = append(input.Filters, BuildCustomFilterList(
 		d.Get("filter").(*schema.Set),
 	)...)
-	if len(req.Filters) == 0 {
+	if len(input.Filters) == 0 {
 		// Don't send an empty filters list; the EC2 API won't accept it.
-		req.Filters = nil
+		input.Filters = nil
 	}
 
-	log.Printf("[DEBUG] Reading Subnet: %s", req)
-	resp, err := conn.DescribeSubnets(req)
+	subnet, err := FindSubnet(conn, input)
+
 	if err != nil {
-		return err
+		return tfresource.SingularDataSourceFindError("EC2 Subnet", err)
 	}
-	if resp == nil || len(resp.Subnets) == 0 {
-		return fmt.Errorf("no matching subnet found")
-	}
-	if len(resp.Subnets) > 1 {
-		return fmt.Errorf("multiple subnets matched; use additional constraints to reduce matches to a single subnet")
-	}
-
-	subnet := resp.Subnets[0]
 
 	d.SetId(aws.StringValue(subnet.SubnetId))
 
