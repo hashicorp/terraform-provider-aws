@@ -102,6 +102,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/mediaconvert"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/mediapackage"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/mediastore"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/memorydb"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/meta"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/mq"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/mwaa"
@@ -398,10 +399,13 @@ func Provider() *schema.Provider {
 
 			"aws_codestarconnections_connection": codestarconnections.DataSourceConnection(),
 
-			"aws_cognito_user_pools": cognitoidp.DataSourceUserPools(),
+			"aws_cognito_user_pool_clients":             cognitoidp.DataSourceUserPoolClients(),
+			"aws_cognito_user_pool_signing_certificate": cognitoidp.DataSourceUserPoolSigningCertificate(),
+			"aws_cognito_user_pools":                    cognitoidp.DataSourceUserPools(),
 
 			"aws_connect_bot_association":             connect.DataSourceBotAssociation(),
 			"aws_connect_contact_flow":                connect.DataSourceContactFlow(),
+			"aws_connect_hours_of_operation":          connect.DataSourceHoursOfOperation(),
 			"aws_connect_instance":                    connect.DataSourceInstance(),
 			"aws_connect_lambda_function_association": connect.DataSourceLambdaFunctionAssociation(),
 
@@ -626,6 +630,10 @@ func Provider() *schema.Provider {
 
 			"aws_ram_resource_share": ram.DataSourceResourceShare(),
 
+			"aws_ses_active_receipt_rule_set": ses.DataSourceActiveReceiptRuleSet(),
+			"aws_ses_domain_identity":         ses.DataSourceDomainIdentity(),
+			"aws_ses_email_identity":          ses.DataSourceEmailIdentity(),
+
 			"aws_db_cluster_snapshot":       rds.DataSourceClusterSnapshot(),
 			"aws_db_event_categories":       rds.DataSourceEventCategories(),
 			"aws_db_instance":               rds.DataSourceInstance(),
@@ -844,6 +852,7 @@ func Provider() *schema.Provider {
 			"aws_batch_compute_environment": batch.ResourceComputeEnvironment(),
 			"aws_batch_job_definition":      batch.ResourceJobDefinition(),
 			"aws_batch_job_queue":           batch.ResourceJobQueue(),
+			"aws_batch_scheduling_policy":   batch.ResourceSchedulingPolicy(),
 
 			"aws_budgets_budget":        budgets.ResourceBudget(),
 			"aws_budgets_budget_action": budgets.ResourceBudgetAction(),
@@ -1104,6 +1113,7 @@ func Provider() *schema.Provider {
 			"aws_vpc_dhcp_options":                                ec2.ResourceVPCDHCPOptions(),
 			"aws_vpc_dhcp_options_association":                    ec2.ResourceVPCDHCPOptionsAssociation(),
 			"aws_vpc_endpoint":                                    ec2.ResourceVPCEndpoint(),
+			"aws_vpc_endpoint_connection_accepter":                ec2.ResourceVPCEndpointConnectionAccepter(),
 			"aws_vpc_endpoint_connection_notification":            ec2.ResourceVPCEndpointConnectionNotification(),
 			"aws_vpc_endpoint_route_table_association":            ec2.ResourceVPCEndpointRouteTableAssociation(),
 			"aws_vpc_endpoint_service":                            ec2.ResourceVPCEndpointService(),
@@ -1133,7 +1143,8 @@ func Provider() *schema.Provider {
 			"aws_ecr_repository":                      ecr.ResourceRepository(),
 			"aws_ecr_repository_policy":               ecr.ResourceRepositoryPolicy(),
 
-			"aws_ecrpublic_repository": ecrpublic.ResourceRepository(),
+			"aws_ecrpublic_repository":        ecrpublic.ResourceRepository(),
+			"aws_ecrpublic_repository_policy": ecrpublic.ResourceRepositoryPolicy(),
 
 			"aws_ecs_account_setting_default": ecs.ResourceAccountSettingDefault(),
 			"aws_ecs_capacity_provider":       ecs.ResourceCapacityProvider(),
@@ -1374,6 +1385,11 @@ func Provider() *schema.Provider {
 
 			"aws_media_store_container":        mediastore.ResourceContainer(),
 			"aws_media_store_container_policy": mediastore.ResourceContainerPolicy(),
+
+			"aws_memorydb_acl":             memorydb.ResourceACL(),
+			"aws_memorydb_parameter_group": memorydb.ResourceParameterGroup(),
+			"aws_memorydb_subnet_group":    memorydb.ResourceSubnetGroup(),
+			"aws_memorydb_user":            memorydb.ResourceUser(),
 
 			"aws_mq_broker":        mq.ResourceBroker(),
 			"aws_mq_configuration": mq.ResourceConfiguration(),

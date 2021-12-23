@@ -641,3 +641,19 @@ func StatusEBSSnapshotImport(conn *ec2.EC2, importTaskId string) resource.StateR
 		}
 	}
 }
+
+func statusVPCEndpointConnectionVPCEndpointState(conn *ec2.EC2, serviceID, vpcEndpointID string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := FindVPCEndpointConnectionByServiceIDAndVPCEndpointID(conn, serviceID, vpcEndpointID)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, aws.StringValue(output.VpcEndpointState), nil
+	}
+}

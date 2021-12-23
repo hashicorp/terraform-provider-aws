@@ -1349,3 +1349,48 @@ func FindPlacementGroupByName(conn *ec2.EC2, name string) (*ec2.PlacementGroup, 
 
 	return placementGroup, nil
 }
+
+func FindVPCEndpointConnectionByServiceIDAndVPCEndpointID(conn *ec2.EC2, serviceID, vpcEndpointID string) (*ec2.VpcEndpointConnection, error) {
+	input := &ec2.DescribeVpcEndpointConnectionsInput{
+		Filters: BuildAttributeFilterList(map[string]string{
+			"service-id": serviceID,
+			// "InvalidFilter: The filter vpc-endpoint-id  is invalid"
+			// "vpc-endpoint-id ": vpcEndpointID,
+		}),
+	}
+
+	var output *ec2.VpcEndpointConnection
+
+	err := conn.DescribeVpcEndpointConnectionsPages(input, func(page *ec2.DescribeVpcEndpointConnectionsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.VpcEndpointConnections {
+			if aws.StringValue(v.VpcEndpointId) == vpcEndpointID {
+				output = v
+
+				return false
+			}
+		}
+
+		return !lastPage
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	if vpcEndpointState := aws.StringValue(output.VpcEndpointState); vpcEndpointState == VPCEndpointStateDeleted {
+		return nil, &resource.NotFoundError{
+			Message:     vpcEndpointState,
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
+}

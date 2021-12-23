@@ -117,6 +117,7 @@ variable "service_labels" {
     "iotthingsgraph",
     "ivs",
     "kafka",
+    "kafkaconnect",
     "kendra",
     "kinesis",
     "kinesisanalytics",

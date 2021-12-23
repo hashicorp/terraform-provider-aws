@@ -25,6 +25,11 @@ func ResourceApplicationSnapshot() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(10 * time.Minute),
+			Delete: schema.DefaultTimeout(10 * time.Minute),
+		},
+
 		Schema: map[string]*schema.Schema{
 			"application_name": {
 				Type:     schema.TypeString,
@@ -79,7 +84,7 @@ func resourceApplicationSnapshotCreate(d *schema.ResourceData, meta interface{})
 
 	d.SetId(applicationSnapshotCreateID(applicationName, snapshotName))
 
-	_, err = waitSnapshotCreated(conn, applicationName, snapshotName)
+	_, err = waitSnapshotCreated(conn, applicationName, snapshotName, d.Timeout(schema.TimeoutCreate))
 
 	if err != nil {
 		return fmt.Errorf("error waiting for Kinesis Analytics v2 Application Snapshot (%s) creation: %w", d.Id(), err)
@@ -150,7 +155,7 @@ func resourceApplicationSnapshotDelete(d *schema.ResourceData, meta interface{})
 		return fmt.Errorf("error deleting Kinesis Analytics v2 Application Snapshot (%s): %w", d.Id(), err)
 	}
 
-	_, err = waitSnapshotDeleted(conn, applicationName, snapshotName)
+	_, err = waitSnapshotDeleted(conn, applicationName, snapshotName, d.Timeout(schema.TimeoutDelete))
 
 	if err != nil {
 		return fmt.Errorf("error waiting for Kinesis Analytics v2 Application Snapshot (%s) deletion: %w", d.Id(), err)

@@ -261,6 +261,47 @@ func TestAccFSxOntapStorageVirtualMachine_activeDirectory(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "active_directory_configuration.0.self_managed_active_directory_configuration.0.domain_name", domainName),
 					resource.TestCheckResourceAttr(resourceName, "endpoints.0.smb.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "endpoints.0.smb.0.dns_name"),
+					resource.TestCheckResourceAttr(resourceName, "active_directory_configuration.0.self_managed_active_directory_configuration.0.organizational_unit_distinguished_name", fmt.Sprintf("OU=computers,OU=%s", domainNetbiosName)),
+					resource.TestCheckResourceAttr(resourceName, "active_directory_configuration.0.self_managed_active_directory_configuration.0.password", domainPassword1),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"active_directory_configuration",
+				},
+			},
+		},
+	})
+}
+
+func TestAccFSxOntapStorageVirtualMachine_activeDirectoryDeprecatedOrganizationalUnitDistinguishedName(t *testing.T) {
+	var storageVirtualMachine1 fsx.StorageVirtualMachine
+	resourceName := "aws_fsx_ontap_storage_virtual_machine.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	netBiosName := "tftest-" + sdkacctest.RandString(7)
+	domainNetbiosName := "tftestcorp"
+	domainName := "tftestcorp.local"
+	domainPassword1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, fsx.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckFsxOntapStorageVirtualMachineDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccFsxOntapStorageVirutalMachineSelfManagedActiveDirectoryConfigDeprecatedOrganizationalUnitDistinguishedName(rName, netBiosName, domainNetbiosName, domainName, domainPassword1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFsxOntapStorageVirtualMachineExists(resourceName, &storageVirtualMachine1),
+					resource.TestCheckResourceAttr(resourceName, "active_directory_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "active_directory_configuration.0.netbios_name", strings.ToUpper(netBiosName)),
+					resource.TestCheckResourceAttr(resourceName, "active_directory_configuration.0.self_managed_active_directory_configuration.0.domain_name", domainName),
+					resource.TestCheckResourceAttr(resourceName, "endpoints.0.smb.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "endpoints.0.smb.0.dns_name"),
+					resource.TestCheckResourceAttr(resourceName, "active_directory_configuration.0.self_managed_active_directory_configuration.0.organizational_unit_distinguidshed_name", fmt.Sprintf("OU=computers,OU=%s", domainNetbiosName)),
 					resource.TestCheckResourceAttr(resourceName, "active_directory_configuration.0.self_managed_active_directory_configuration.0.password", domainPassword1),
 				),
 			},
@@ -460,6 +501,27 @@ resource "aws_fsx_ontap_storage_virtual_machine" "test" {
 }
 
 func testAccFsxOntapStorageVirutalMachineSelfManagedActiveDirectoryConfig(rName string, netBiosName string, domainNetbiosName string, domainName string, domainPassword string) string {
+	return acctest.ConfigCompose(testAccOntapStorageVirtualMachineADConfig(rName, domainName, domainPassword), fmt.Sprintf(`
+resource "aws_fsx_ontap_storage_virtual_machine" "test" {
+  file_system_id = aws_fsx_ontap_file_system.test.id
+  name           = %[1]q
+  depends_on     = [aws_directory_service_directory.test]
+
+  active_directory_configuration {
+    netbios_name = %[2]q
+    self_managed_active_directory_configuration {
+      dns_ips                                = aws_directory_service_directory.test.dns_ip_addresses
+      domain_name                            = %[3]q
+      password                               = %[4]q
+      username                               = "Admin"
+      organizational_unit_distinguished_name = "OU=computers,OU=%[5]s"
+    }
+  }
+}
+`, rName, netBiosName, domainName, domainPassword, domainNetbiosName))
+}
+
+func testAccFsxOntapStorageVirutalMachineSelfManagedActiveDirectoryConfigDeprecatedOrganizationalUnitDistinguishedName(rName string, netBiosName string, domainNetbiosName string, domainName string, domainPassword string) string {
 	return acctest.ConfigCompose(testAccOntapStorageVirtualMachineADConfig(rName, domainName, domainPassword), fmt.Sprintf(`
 resource "aws_fsx_ontap_storage_virtual_machine" "test" {
   file_system_id = aws_fsx_ontap_file_system.test.id

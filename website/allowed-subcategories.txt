@@ -94,6 +94,7 @@ MQ
 Macie
 Macie Classic
 Managed Streaming for Kafka (MSK)
+Kafka Connect (MSK Connect)
 MediaConvert
 MediaPackage
 MediaStore
