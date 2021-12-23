@@ -430,8 +430,10 @@ func WaitSecurityGroupCreated(conn *ec2.EC2, id string, timeout time.Duration) (
 }
 
 const (
-	SubnetPropagationTimeout          = 2 * time.Minute
-	SubnetAttributePropagationTimeout = 5 * time.Minute
+	SubnetPropagationTimeout                     = 2 * time.Minute
+	SubnetAttributePropagationTimeout            = 5 * time.Minute
+	SubnetIPv6CIDRBlockAssociationCreatedTimeout = 3 * time.Minute
+	SubnetIPv6CIDRBlockAssociationDeletedTimeout = 3 * time.Minute
 )
 
 func WaitSubnetAvailable(conn *ec2.EC2, id string, timeout time.Duration) (*ec2.Subnet, error) {
@@ -445,6 +447,48 @@ func WaitSubnetAvailable(conn *ec2.EC2, id string, timeout time.Duration) (*ec2.
 	outputRaw, err := stateConf.WaitForState()
 
 	if output, ok := outputRaw.(*ec2.Subnet); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func WaitSubnetIPv6CIDRBlockAssociationCreated(conn *ec2.EC2, id string) (*ec2.SubnetCidrBlockState, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{ec2.SubnetCidrBlockStateCodeAssociating, ec2.SubnetCidrBlockStateCodeDisassociated, ec2.SubnetCidrBlockStateCodeFailing},
+		Target:  []string{ec2.SubnetCidrBlockStateCodeAssociated},
+		Refresh: StatusSubnetIPv6CIDRBlockAssociationState(conn, id),
+		Timeout: SubnetIPv6CIDRBlockAssociationCreatedTimeout,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*ec2.SubnetCidrBlockState); ok {
+		if state := aws.StringValue(output.State); state == ec2.SubnetCidrBlockStateCodeFailed {
+			tfresource.SetLastError(err, errors.New(aws.StringValue(output.StatusMessage)))
+		}
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func WaitSubnetIPv6CIDRBlockAssociationDeleted(conn *ec2.EC2, id string) (*ec2.SubnetCidrBlockState, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{ec2.SubnetCidrBlockStateCodeAssociated, ec2.SubnetCidrBlockStateCodeDisassociating, ec2.SubnetCidrBlockStateCodeFailing},
+		Target:  []string{},
+		Refresh: StatusSubnetIPv6CIDRBlockAssociationState(conn, id),
+		Timeout: SubnetIPv6CIDRBlockAssociationDeletedTimeout,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*ec2.SubnetCidrBlockState); ok {
+		if state := aws.StringValue(output.State); state == ec2.SubnetCidrBlockStateCodeFailed {
+			tfresource.SetLastError(err, errors.New(aws.StringValue(output.StatusMessage)))
+		}
+
 		return output, err
 	}
 

@@ -813,7 +813,7 @@ func testAccCheckSubnetDestroy(s *terraform.State) error {
 			return err
 		}
 
-		return fmt.Errorf("Subnet %s still exists", rs.Primary.ID)
+		return fmt.Errorf("EC2 Subnet %s still exists", rs.Primary.ID)
 	}
 
 	return nil
@@ -827,7 +827,7 @@ func testAccCheckSubnetExists(n string, v *ec2.Subnet) resource.TestCheckFunc {
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Subnet ID is set")
+			return fmt.Errorf("No EC2 Subnet ID is set")
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn

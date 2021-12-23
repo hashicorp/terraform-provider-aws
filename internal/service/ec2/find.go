@@ -752,6 +752,32 @@ func FindSubnetCidrReservationBySubnetIDAndReservationID(conn *ec2.EC2, subnetID
 	}
 }
 
+func FindSubnetIPv6CIDRBlockAssociationByID(conn *ec2.EC2, associationID string) (*ec2.SubnetIpv6CidrBlockAssociation, error) {
+	input := &ec2.DescribeSubnetsInput{
+		Filters: BuildAttributeFilterList(map[string]string{
+			"ipv6-cidr-block-association.association-id": associationID,
+		}),
+	}
+
+	output, err := findSubnet(conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	for _, association := range output.Ipv6CidrBlockAssociationSet {
+		if aws.StringValue(association.AssociationId) == associationID {
+			if state := aws.StringValue(association.Ipv6CidrBlockState.State); state == ec2.SubnetCidrBlockStateCodeDisassociated {
+				return nil, &resource.NotFoundError{Message: state}
+			}
+
+			return association, nil
+		}
+	}
+
+	return nil, &resource.NotFoundError{}
+}
+
 func FindTransitGatewayPrefixListReference(conn *ec2.EC2, transitGatewayRouteTableID string, prefixListID string) (*ec2.TransitGatewayPrefixListReference, error) {
 	filters := map[string]string{
 		"prefix-list-id": prefixListID,
