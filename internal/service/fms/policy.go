@@ -38,7 +38,7 @@ func ResourcePolicy() *schema.Resource {
 				Default:  true,
 			},
 
-			"delete_unused_fms_resources": {
+			"delete_unused_fm_managed_resources": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
@@ -217,7 +217,7 @@ func resourcePolicyFlattenPolicy(d *schema.ResourceData, resp *fms.GetPolicyOutp
 	if err := d.Set("resource_type_list", resp.Policy.ResourceTypeList); err != nil {
 		return err
 	}
-	d.Set("delete_unused_fms_resources", resp.Policy.DeleteUnusedFMManagedResources)
+	d.Set("delete_unused_fm_managed_resources", resp.Policy.DeleteUnusedFMManagedResources)
 	d.Set("resource_type", resp.Policy.ResourceType)
 	d.Set("policy_update_token", resp.Policy.PolicyUpdateToken)
 	if err := d.Set("resource_tags", flattenFMSResourceTags(resp.Policy.ResourceTags)); err != nil {
@@ -248,7 +248,7 @@ func resourcePolicyExpandPolicy(d *schema.ResourceData) *fms.Policy {
 		ResourceType:                   resourceType,
 		ResourceTypeList:               resourceTypeList,
 		ExcludeResourceTags:            aws.Bool(d.Get("exclude_resource_tags").(bool)),
-		DeleteUnusedFMManagedResources: aws.Bool(d.Get("delete_unused_fms_resources").(bool)),
+		DeleteUnusedFMManagedResources: aws.Bool(d.Get("delete_unused_fm_managed_resources").(bool)),
 	}
 
 	if d.Id() != "" {

@@ -33,6 +33,7 @@ func testAccPolicy_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPolicyExists("aws_fms_policy.test"),
 					acctest.CheckResourceAttrRegionalARNIgnoreRegionAndAccount("aws_fms_policy.test", "arn", "fms", "policy/.+"),
+					resource.TestCheckResourceAttr("aws_fms_policy.test", "delete_unused_fm_managed_resources", "false"),
 					resource.TestCheckResourceAttr("aws_fms_policy.test", "name", fmsPolicyName),
 					resource.TestCheckResourceAttr("aws_fms_policy.test", "security_service_policy_data.#", "1"),
 				),
