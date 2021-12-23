@@ -71,6 +71,11 @@ func ResourceSubnet() *schema.Resource {
 				Optional:     true,
 				RequiredWith: []string{"map_customer_owned_ip_on_launch", "outpost_arn"},
 			},
+			"enable_dns64": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
 			"ipv6_cidr_block": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -182,6 +187,23 @@ func resourceSubnetCreate(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
+	if d.Get("enable_dns64").(bool) {
+		input := &ec2.ModifySubnetAttributeInput{
+			EnableDns64: &ec2.AttributeBooleanValue{
+				Value: aws.Bool(true),
+			},
+			SubnetId: aws.String(d.Id()),
+		}
+
+		if _, err := conn.ModifySubnetAttribute(input); err != nil {
+			return fmt.Errorf("error setting EC2 Subnet (%s) EnableDns64: %w", d.Id(), err)
+		}
+
+		if _, err := WaitSubnetEnableDNS64Updated(conn, d.Id(), d.Get("enable_dns64").(bool)); err != nil {
+			return fmt.Errorf("error waiting for EC2 Subnet (%s) EnableDns64 update: %w", d.Id(), err)
+		}
+	}
+
 	if d.Get("map_public_ip_on_launch").(bool) {
 		input := &ec2.ModifySubnetAttributeInput{
 			MapPublicIpOnLaunch: &ec2.AttributeBooleanValue{
@@ -229,6 +251,7 @@ func resourceSubnetRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("availability_zone_id", subnet.AvailabilityZoneId)
 	d.Set("cidr_block", subnet.CidrBlock)
 	d.Set("customer_owned_ipv4_pool", subnet.CustomerOwnedIpv4Pool)
+	d.Set("enable_dns64", subnet.EnableDns64)
 	d.Set("map_customer_owned_ip_on_launch", subnet.MapCustomerOwnedIpOnLaunch)
 	d.Set("map_public_ip_on_launch", subnet.MapPublicIpOnLaunch)
 	d.Set("outpost_arn", subnet.OutpostArn)
@@ -294,6 +317,23 @@ func resourceSubnetUpdate(d *schema.ResourceData, meta interface{}) error {
 
 		if _, err := WaitSubnetMapCustomerOwnedIPOnLaunchUpdated(conn, d.Id(), d.Get("map_customer_owned_ip_on_launch").(bool)); err != nil {
 			return fmt.Errorf("error waiting for EC2 Subnet (%s) MapCustomerOwnedIpOnLaunch update: %w", d.Id(), err)
+		}
+	}
+
+	if d.HasChange("enable_dns64") {
+		input := &ec2.ModifySubnetAttributeInput{
+			EnableDns64: &ec2.AttributeBooleanValue{
+				Value: aws.Bool(d.Get("enable_dns64").(bool)),
+			},
+			SubnetId: aws.String(d.Id()),
+		}
+
+		if _, err := conn.ModifySubnetAttribute(input); err != nil {
+			return fmt.Errorf("error setting EC2 Subnet (%s) EnableDns64: %w", d.Id(), err)
+		}
+
+		if _, err := WaitSubnetEnableDNS64Updated(conn, d.Id(), d.Get("enable_dns64").(bool)); err != nil {
+			return fmt.Errorf("error waiting for EC2 Subnet (%s) EnableDns64 update: %w", d.Id(), err)
 		}
 	}
 

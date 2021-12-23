@@ -37,6 +37,7 @@ func TestAccEC2Subnet_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "availability_zone_id"),
 					resource.TestCheckResourceAttr(resourceName, "cidr_block", "10.1.1.0/24"),
 					resource.TestCheckResourceAttr(resourceName, "customer_owned_ipv4_pool", ""),
+					resource.TestCheckResourceAttr(resourceName, "enable_dns64", "false"),
 					resource.TestCheckResourceAttr(resourceName, "ipv6_cidr_block", ""),
 					resource.TestCheckResourceAttr(resourceName, "map_customer_owned_ip_on_launch", "false"),
 					resource.TestCheckResourceAttr(resourceName, "map_public_ip_on_launch", "false"),
@@ -761,6 +762,47 @@ func TestAccEC2Subnet_outpost(t *testing.T) {
 	})
 }
 
+func TestAccEC2Subnet_enableDNS64(t *testing.T) {
+	var subnet ec2.Subnet
+	resourceName := "aws_subnet.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckSubnetDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSubnetConfigEnableDns64(rName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSubnetExists(resourceName, &subnet),
+					resource.TestCheckResourceAttr(resourceName, "enable_dns64", "true"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccSubnetConfigEnableDns64(rName, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSubnetExists(resourceName, &subnet),
+					resource.TestCheckResourceAttr(resourceName, "enable_dns64", "false"),
+				),
+			},
+			{
+				Config: testAccSubnetConfigEnableDns64(rName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSubnetExists(resourceName, &subnet),
+					resource.TestCheckResourceAttr(resourceName, "enable_dns64", "true"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckSubnetIPv6BeforeUpdate(subnet *ec2.Subnet) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if subnet.Ipv6CidrBlockAssociationSet == nil {
@@ -1196,6 +1238,31 @@ resource "aws_subnet" "test" {
   }
 }
 `, rName, mapPublicIpOnLaunch)
+}
+
+func testAccSubnetConfigEnableDns64(rName string, enableDns64 bool) string {
+	return fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  cidr_block                       = "10.10.0.0/16"
+  assign_generated_ipv6_cidr_block = true
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_subnet" "test" {
+  cidr_block                      = cidrsubnet(aws_vpc.test.cidr_block, 8, 0)
+  enable_dns64                    = %[2]t
+  vpc_id                          = aws_vpc.test.id
+  ipv6_cidr_block                 = cidrsubnet(aws_vpc.test.ipv6_cidr_block, 8, 1)
+  assign_ipv6_address_on_creation = true
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName, enableDns64)
 }
 
 func testAccSubnetConfigOutpost(rName string) string {
