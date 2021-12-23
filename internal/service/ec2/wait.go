@@ -434,6 +434,23 @@ const (
 	SubnetAttributePropagationTimeout = 5 * time.Minute
 )
 
+func WaitSubnetAvailable(conn *ec2.EC2, id string, timeout time.Duration) (*ec2.Subnet, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{ec2.SubnetStatePending},
+		Target:  []string{ec2.SubnetStateAvailable},
+		Refresh: StatusSubnetState(conn, id),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*ec2.Subnet); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
 func WaitSubnetMapCustomerOwnedIPOnLaunchUpdated(conn *ec2.EC2, subnetID string, expectedValue bool) (*ec2.Subnet, error) {
 	stateConf := &resource.StateChangeConf{
 		Target:     []string{strconv.FormatBool(expectedValue)},

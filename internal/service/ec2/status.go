@@ -323,45 +323,51 @@ func StatusSecurityGroup(conn *ec2.EC2, id string) resource.StateRefreshFunc {
 	}
 }
 
-// StatusSubnetMapCustomerOwnedIPOnLaunch fetches the Subnet and its MapCustomerOwnedIpOnLaunch
-func StatusSubnetMapCustomerOwnedIPOnLaunch(conn *ec2.EC2, id string) resource.StateRefreshFunc {
+func StatusSubnetState(conn *ec2.EC2, id string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		subnet, err := FindSubnetByID(conn, id)
+		output, err := FindSubnetByID(conn, id)
 
-		if tfawserr.ErrCodeEquals(err, ErrCodeInvalidSubnetIDNotFound) {
-			return nil, "false", nil
+		if tfresource.NotFound(err) {
+			return nil, "", nil
 		}
 
 		if err != nil {
-			return nil, "false", err
+			return nil, "", err
 		}
 
-		if subnet == nil {
-			return nil, "false", nil
-		}
-
-		return subnet, strconv.FormatBool(aws.BoolValue(subnet.MapCustomerOwnedIpOnLaunch)), nil
+		return output, aws.StringValue(output.State), nil
 	}
 }
 
-// StatusSubnetMapPublicIPOnLaunch fetches the Subnet and its MapPublicIpOnLaunch
-func StatusSubnetMapPublicIPOnLaunch(conn *ec2.EC2, id string) resource.StateRefreshFunc {
+func StatusSubnetMapCustomerOwnedIPOnLaunch(conn *ec2.EC2, id string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		subnet, err := FindSubnetByID(conn, id)
+		output, err := FindSubnetByID(conn, id)
 
-		if tfawserr.ErrCodeEquals(err, ErrCodeInvalidSubnetIDNotFound) {
-			return nil, "false", nil
+		if tfresource.NotFound(err) {
+			return nil, "", nil
 		}
 
 		if err != nil {
-			return nil, "false", err
+			return nil, "", err
 		}
 
-		if subnet == nil {
-			return nil, "false", nil
+		return output, strconv.FormatBool(aws.BoolValue(output.MapCustomerOwnedIpOnLaunch)), nil
+	}
+}
+
+func StatusSubnetMapPublicIPOnLaunch(conn *ec2.EC2, id string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := FindSubnetByID(conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
 		}
 
-		return subnet, strconv.FormatBool(aws.BoolValue(subnet.MapPublicIpOnLaunch)), nil
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, strconv.FormatBool(aws.BoolValue(output.MapPublicIpOnLaunch)), nil
 	}
 }
 

@@ -672,20 +672,43 @@ func FindSpotInstanceRequestByID(conn *ec2.EC2, id string) (*ec2.SpotInstanceReq
 	return nil, nil
 }
 
-// FindSubnetByID looks up a Subnet by ID. When not found, returns nil and potentially an API error.
 func FindSubnetByID(conn *ec2.EC2, id string) (*ec2.Subnet, error) {
 	input := &ec2.DescribeSubnetsInput{
 		SubnetIds: aws.StringSlice([]string{id}),
 	}
 
+	output, err := findSubnet(conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	// Eventual consistency check.
+	if aws.StringValue(output.SubnetId) != id {
+		return nil, &resource.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
+}
+
+func findSubnet(conn *ec2.EC2, input *ec2.DescribeSubnetsInput) (*ec2.Subnet, error) {
 	output, err := conn.DescribeSubnets(input)
+
+	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidSubnetIDNotFound) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
 
 	if err != nil {
 		return nil, err
 	}
 
 	if output == nil || len(output.Subnets) == 0 || output.Subnets[0] == nil {
-		return nil, nil
+		return nil, tfresource.NewEmptyResultError(input)
 	}
 
 	return output.Subnets[0], nil

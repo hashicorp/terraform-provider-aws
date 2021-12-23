@@ -117,7 +117,7 @@ func resourceSubnetCreate(d *schema.ResourceData, meta interface{}) error {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
-	createOpts := &ec2.CreateSubnetInput{
+	input := &ec2.CreateSubnetInput{
 		AvailabilityZone:   aws.String(d.Get("availability_zone").(string)),
 		AvailabilityZoneId: aws.String(d.Get("availability_zone_id").(string)),
 		CidrBlock:          aws.String(d.Get("cidr_block").(string)),
@@ -126,39 +126,26 @@ func resourceSubnetCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if v, ok := d.GetOk("ipv6_cidr_block"); ok {
-		createOpts.Ipv6CidrBlock = aws.String(v.(string))
+		input.Ipv6CidrBlock = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("outpost_arn"); ok {
-		createOpts.OutpostArn = aws.String(v.(string))
+		input.OutpostArn = aws.String(v.(string))
 	}
 
-	var err error
-	resp, err := conn.CreateSubnet(createOpts)
+	log.Printf("[DEBUG] Creating Subnet: %s", input)
+	output, err := conn.CreateSubnet(input)
 
 	if err != nil {
-		return fmt.Errorf("error creating subnet: %w", err)
+		return fmt.Errorf("error creating Subnet: %w", err)
 	}
 
-	// Get the ID and store it
-	subnet := resp.Subnet
-	subnetId := aws.StringValue(subnet.SubnetId)
-	d.SetId(subnetId)
-	log.Printf("[INFO] Subnet ID: %s", subnetId)
+	d.SetId(aws.StringValue(output.Subnet.SubnetId))
 
-	// Wait for the Subnet to become available
-	log.Printf("[DEBUG] Waiting for subnet (%s) to become available", subnetId)
-	stateConf := &resource.StateChangeConf{
-		Pending: []string{ec2.SubnetStatePending},
-		Target:  []string{ec2.SubnetStateAvailable},
-		Refresh: SubnetStateRefreshFunc(conn, subnetId),
-		Timeout: d.Timeout(schema.TimeoutCreate),
-	}
-
-	_, err = stateConf.WaitForState()
+	_, err = WaitSubnetAvailable(conn, d.Id(), d.Timeout(schema.TimeoutCreate))
 
 	if err != nil {
-		return fmt.Errorf("error waiting for subnet (%s) to become ready: %w", d.Id(), err)
+		return fmt.Errorf("error waiting for Subnet (%s) to become available: %w", d.Id(), err)
 	}
 
 	// You cannot modify multiple subnet attributes in the same request,
@@ -221,63 +208,33 @@ func resourceSubnetRead(d *schema.ResourceData, meta interface{}) error {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	var subnet *ec2.Subnet
+	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(SubnetPropagationTimeout, func() (interface{}, error) {
+		return FindSubnetByID(conn, d.Id())
+	}, d.IsNewResource())
 
-	err := resource.Retry(SubnetPropagationTimeout, func() *resource.RetryError {
-		var err error
-
-		subnet, err = FindSubnetByID(conn, d.Id())
-
-		if d.IsNewResource() && tfawserr.ErrCodeEquals(err, "InvalidSubnetID.NotFound") {
-			return resource.RetryableError(err)
-		}
-
-		if err != nil {
-			return resource.NonRetryableError(err)
-		}
-
-		if d.IsNewResource() && subnet == nil {
-			return resource.RetryableError(&resource.NotFoundError{
-				LastError: fmt.Errorf("EC2 Subnet (%s) not found", d.Id()),
-			})
-		}
-
-		return nil
-	})
-
-	if tfresource.TimedOut(err) {
-		subnet, err = FindSubnetByID(conn, d.Id())
-	}
-
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, "InvalidSubnetID.NotFound") {
-		log.Printf("[WARN] EC2 Subnet (%s) not found, removing from state", d.Id())
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] Subnet (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading EC2 Subnet (%s): %w", d.Id(), err)
+		return fmt.Errorf("error reading Subnet (%s): %w", d.Id(), err)
 	}
 
-	if subnet == nil {
-		if d.IsNewResource() {
-			return fmt.Errorf("error reading EC2 Subnet (%s): not found after creation", d.Id())
-		}
+	subnet := outputRaw.(*ec2.Subnet)
 
-		log.Printf("[WARN] EC2 Subnet (%s) not found, removing from state", d.Id())
-		d.SetId("")
-		return nil
-	}
-
-	d.Set("vpc_id", subnet.VpcId)
+	d.Set("arn", subnet.SubnetArn)
+	d.Set("assign_ipv6_address_on_creation", subnet.AssignIpv6AddressOnCreation)
 	d.Set("availability_zone", subnet.AvailabilityZone)
 	d.Set("availability_zone_id", subnet.AvailabilityZoneId)
 	d.Set("cidr_block", subnet.CidrBlock)
 	d.Set("customer_owned_ipv4_pool", subnet.CustomerOwnedIpv4Pool)
 	d.Set("map_customer_owned_ip_on_launch", subnet.MapCustomerOwnedIpOnLaunch)
 	d.Set("map_public_ip_on_launch", subnet.MapPublicIpOnLaunch)
-	d.Set("assign_ipv6_address_on_creation", subnet.AssignIpv6AddressOnCreation)
 	d.Set("outpost_arn", subnet.OutpostArn)
+	d.Set("owner_id", subnet.OwnerId)
+	d.Set("vpc_id", subnet.VpcId)
 
 	// Make sure those values are set, if an IPv6 block exists it'll be set in the loop
 	d.Set("ipv6_cidr_block_association_id", "")
@@ -291,8 +248,6 @@ func resourceSubnetRead(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	d.Set("arn", subnet.SubnetArn)
-
 	tags := KeyValueTags(subnet.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
@@ -303,8 +258,6 @@ func resourceSubnetRead(d *schema.ResourceData, meta interface{}) error {
 	if err := d.Set("tags_all", tags.Map()); err != nil {
 		return fmt.Errorf("error setting tags_all: %w", err)
 	}
-
-	d.Set("owner_id", subnet.OwnerId)
 
 	return nil
 }
@@ -509,32 +462,6 @@ func resourceSubnetDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	return nil
-}
-
-// SubnetStateRefreshFunc returns a resource.StateRefreshFunc that is used to watch a Subnet.
-func SubnetStateRefreshFunc(conn *ec2.EC2, id string) resource.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		resp, err := conn.DescribeSubnets(&ec2.DescribeSubnetsInput{
-			SubnetIds: []*string{aws.String(id)},
-		})
-		if err != nil {
-			if tfawserr.ErrMessageContains(err, "InvalidSubnetID.NotFound", "") {
-				resp = nil
-			} else {
-				log.Printf("Error on SubnetStateRefresh: %s", err)
-				return nil, "", err
-			}
-		}
-
-		if resp == nil {
-			// Sometimes AWS just has consistency issues and doesn't see
-			// our instance yet. Return an empty state.
-			return nil, "", nil
-		}
-
-		subnet := resp.Subnets[0]
-		return subnet, aws.StringValue(subnet.State), nil
-	}
 }
 
 func SubnetIpv6CidrStateRefreshFunc(conn *ec2.EC2, id string, associationId string) resource.StateRefreshFunc {
