@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_subnet: Add `enable_dns64` argument
+```
+
+```release-note:enhancement
+data-source/aws_subnet: Add `enable_dns64` attribute
+```
