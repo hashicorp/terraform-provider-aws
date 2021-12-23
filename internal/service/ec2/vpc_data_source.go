@@ -96,7 +96,6 @@ func DataSourceVPC() *schema.Resource {
 
 			"ipv6_cidr_block_network_border_group": {
 				Type:     schema.TypeString,
-				Optional: true,
 				Computed: true,
 			},
 
