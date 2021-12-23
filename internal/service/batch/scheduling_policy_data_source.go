@@ -71,3 +71,39 @@ func DataSourceSchedulingPolicy() *schema.Resource {
 		},
 	}
 }
+
+func dataSourceSchedulingPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.AWSClient).BatchConn
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	arn := d.Get("arn").(string)
+
+	resp, err := conn.DescribeSchedulingPoliciesWithContext(ctx, &batch.DescribeSchedulingPoliciesInput{
+		Arns: []*string{aws.String(arn)},
+	})
+
+	if err != nil {
+		return diag.FromErr(fmt.Errorf("error calling DescribeSchedulingPoliciesWithContext API for arn: %s", arn))
+	}
+
+	if len(resp.SchedulingPolicies) == 0 {
+		return diag.FromErr(fmt.Errorf("no matches found for arn: %s", arn))
+	}
+
+	if len(resp.SchedulingPolicies) > 1 {
+		return diag.FromErr(fmt.Errorf("multiple matches found for arn: %s", arn))
+	}
+
+	schedulingPolicy := resp.SchedulingPolicies[0]
+	d.SetId(aws.StringValue(schedulingPolicy.Arn))
+	d.Set("name", schedulingPolicy.Name)
+
+	if err := d.Set("fair_share_policy", flattenFairsharePolicy(schedulingPolicy.FairsharePolicy)); err != nil {
+		return diag.FromErr(fmt.Errorf("error setting fair share policy: %s", err))
+	}
+
+	if err := d.Set("tags", KeyValueTags(schedulingPolicy.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+		return diag.FromErr(fmt.Errorf("error setting tags: %s", err))
+	}
+
+	return nil
+}
