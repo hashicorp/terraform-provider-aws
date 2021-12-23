@@ -94,6 +94,12 @@ func DataSourceVPC() *schema.Resource {
 				Computed: true,
 			},
 
+			"ipv6_cidr_block_network_border_group": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+
 			"main_route_table_id": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -215,6 +221,7 @@ func dataSourceVPCRead(d *schema.ResourceData, meta interface{}) error {
 	if vpc.Ipv6CidrBlockAssociationSet != nil {
 		d.Set("ipv6_association_id", vpc.Ipv6CidrBlockAssociationSet[0].AssociationId)
 		d.Set("ipv6_cidr_block", vpc.Ipv6CidrBlockAssociationSet[0].Ipv6CidrBlock)
+		d.Set("ipv6_cidr_block_network_border_group", vpc.Ipv6CidrBlockAssociationSet[0].NetworkBorderGroup)
 	}
 
 	enableDnsHostnames, err := FindVPCAttribute(conn, aws.StringValue(vpc.VpcId), ec2.VpcAttributeNameEnableDnsHostnames)
