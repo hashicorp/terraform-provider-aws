@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -76,6 +77,16 @@ func ResourceSubnet() *schema.Resource {
 				Optional: true,
 				Default:  false,
 			},
+			"enable_resource_name_dns_aaaa_record_on_launch": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
+			"enable_resource_name_dns_a_record_on_launch": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
 			"ipv6_cidr_block": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -104,6 +115,12 @@ func ResourceSubnet() *schema.Resource {
 			"owner_id": {
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+			"private_dns_hostname_type_on_launch": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: validation.StringInSlice(ec2.HostnameType_Values(), false),
 			},
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
@@ -199,8 +216,42 @@ func resourceSubnetCreate(d *schema.ResourceData, meta interface{}) error {
 			return fmt.Errorf("error setting EC2 Subnet (%s) EnableDns64: %w", d.Id(), err)
 		}
 
-		if _, err := WaitSubnetEnableDNS64Updated(conn, d.Id(), d.Get("enable_dns64").(bool)); err != nil {
+		if _, err := WaitSubnetEnableDns64Updated(conn, d.Id(), d.Get("enable_dns64").(bool)); err != nil {
 			return fmt.Errorf("error waiting for EC2 Subnet (%s) EnableDns64 update: %w", d.Id(), err)
+		}
+	}
+
+	if d.Get("enable_resource_name_dns_aaaa_record_on_launch").(bool) {
+		input := &ec2.ModifySubnetAttributeInput{
+			EnableResourceNameDnsAAAARecordOnLaunch: &ec2.AttributeBooleanValue{
+				Value: aws.Bool(true),
+			},
+			SubnetId: aws.String(d.Id()),
+		}
+
+		if _, err := conn.ModifySubnetAttribute(input); err != nil {
+			return fmt.Errorf("error setting EC2 Subnet (%s) EnableResourceNameDnsAAAARecordOnLaunch: %w", d.Id(), err)
+		}
+
+		if _, err := WaitSubnetEnableResourceNameDnsAAAARecordOnLaunchUpdated(conn, d.Id(), d.Get("enable_resource_name_dns_aaaa_record_on_launch").(bool)); err != nil {
+			return fmt.Errorf("error waiting for EC2 Subnet (%s) EnableResourceNameDnsAAAARecordOnLaunch update: %w", d.Id(), err)
+		}
+	}
+
+	if d.Get("enable_resource_name_dns_a_record_on_launch").(bool) {
+		input := &ec2.ModifySubnetAttributeInput{
+			EnableResourceNameDnsARecordOnLaunch: &ec2.AttributeBooleanValue{
+				Value: aws.Bool(true),
+			},
+			SubnetId: aws.String(d.Id()),
+		}
+
+		if _, err := conn.ModifySubnetAttribute(input); err != nil {
+			return fmt.Errorf("error setting EC2 Subnet (%s) EnableResourceNameDnsARecordOnLaunch: %w", d.Id(), err)
+		}
+
+		if _, err := WaitSubnetEnableResourceNameDnsARecordOnLaunchUpdated(conn, d.Id(), d.Get("enable_resource_name_dns_a_record_on_launch").(bool)); err != nil {
+			return fmt.Errorf("error waiting for EC2 Subnet (%s) EnableResourceNameDnsARecordOnLaunch update: %w", d.Id(), err)
 		}
 	}
 
@@ -218,6 +269,17 @@ func resourceSubnetCreate(d *schema.ResourceData, meta interface{}) error {
 
 		if _, err := WaitSubnetMapPublicIPOnLaunchUpdated(conn, d.Id(), d.Get("map_public_ip_on_launch").(bool)); err != nil {
 			return fmt.Errorf("error waiting for EC2 Subnet (%s) MapPublicIpOnLaunch update: %w", d.Id(), err)
+		}
+	}
+
+	if v, ok := d.GetOk("private_dns_hostname_type_on_launch"); ok {
+		input := &ec2.ModifySubnetAttributeInput{
+			PrivateDnsHostnameTypeOnLaunch: aws.String(v.(string)),
+			SubnetId:                       aws.String(d.Id()),
+		}
+
+		if _, err := conn.ModifySubnetAttribute(input); err != nil {
+			return fmt.Errorf("error setting EC2 Subnet (%s) PrivateDnsHostnameTypeOnLaunch: %w", d.Id(), err)
 		}
 	}
 
@@ -268,6 +330,16 @@ func resourceSubnetRead(d *schema.ResourceData, meta interface{}) error {
 			d.Set("ipv6_cidr_block", v.Ipv6CidrBlock)
 			break
 		}
+	}
+
+	if subnet.PrivateDnsNameOptionsOnLaunch != nil {
+		d.Set("enable_resource_name_dns_aaaa_record_on_launch", subnet.PrivateDnsNameOptionsOnLaunch.EnableResourceNameDnsAAAARecord)
+		d.Set("enable_resource_name_dns_a_record_on_launch", subnet.PrivateDnsNameOptionsOnLaunch.EnableResourceNameDnsARecord)
+		d.Set("private_dns_hostname_type_on_launch", subnet.PrivateDnsNameOptionsOnLaunch.HostnameType)
+	} else {
+		d.Set("enable_resource_name_dns_aaaa_record_on_launch", nil)
+		d.Set("enable_resource_name_dns_a_record_on_launch", nil)
+		d.Set("private_dns_hostname_type_on_launch", nil)
 	}
 
 	tags := KeyValueTags(subnet.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
@@ -332,8 +404,42 @@ func resourceSubnetUpdate(d *schema.ResourceData, meta interface{}) error {
 			return fmt.Errorf("error setting EC2 Subnet (%s) EnableDns64: %w", d.Id(), err)
 		}
 
-		if _, err := WaitSubnetEnableDNS64Updated(conn, d.Id(), d.Get("enable_dns64").(bool)); err != nil {
+		if _, err := WaitSubnetEnableDns64Updated(conn, d.Id(), d.Get("enable_dns64").(bool)); err != nil {
 			return fmt.Errorf("error waiting for EC2 Subnet (%s) EnableDns64 update: %w", d.Id(), err)
+		}
+	}
+
+	if d.HasChange("enable_resource_name_dns_aaaa_record_on_launch") {
+		input := &ec2.ModifySubnetAttributeInput{
+			EnableResourceNameDnsAAAARecordOnLaunch: &ec2.AttributeBooleanValue{
+				Value: aws.Bool(d.Get("enable_resource_name_dns_aaaa_record_on_launch").(bool)),
+			},
+			SubnetId: aws.String(d.Id()),
+		}
+
+		if _, err := conn.ModifySubnetAttribute(input); err != nil {
+			return fmt.Errorf("error setting EC2 Subnet (%s) EnableResourceNameDnsAAAARecordOnLaunch: %w", d.Id(), err)
+		}
+
+		if _, err := WaitSubnetEnableResourceNameDnsAAAARecordOnLaunchUpdated(conn, d.Id(), d.Get("enable_resource_name_dns_aaaa_record_on_launch").(bool)); err != nil {
+			return fmt.Errorf("error waiting for EC2 Subnet (%s) EnableResourceNameDnsAAAARecordOnLaunch update: %w", d.Id(), err)
+		}
+	}
+
+	if d.HasChange("enable_resource_name_dns_a_record_on_launch") {
+		input := &ec2.ModifySubnetAttributeInput{
+			EnableResourceNameDnsARecordOnLaunch: &ec2.AttributeBooleanValue{
+				Value: aws.Bool(d.Get("enable_resource_name_dns_a_record_on_launch").(bool)),
+			},
+			SubnetId: aws.String(d.Id()),
+		}
+
+		if _, err := conn.ModifySubnetAttribute(input); err != nil {
+			return fmt.Errorf("error setting EC2 Subnet (%s) EnableResourceNameDnsARecordOnLaunch: %w", d.Id(), err)
+		}
+
+		if _, err := WaitSubnetEnableResourceNameDnsARecordOnLaunchUpdated(conn, d.Id(), d.Get("enable_resource_name_dns_a_record_on_launch").(bool)); err != nil {
+			return fmt.Errorf("error waiting for EC2 Subnet (%s) EnableResourceNameDnsARecordOnLaunch update: %w", d.Id(), err)
 		}
 	}
 
@@ -351,6 +457,17 @@ func resourceSubnetUpdate(d *schema.ResourceData, meta interface{}) error {
 
 		if _, err := WaitSubnetMapPublicIPOnLaunchUpdated(conn, d.Id(), d.Get("map_public_ip_on_launch").(bool)); err != nil {
 			return fmt.Errorf("error waiting for EC2 Subnet (%s) MapPublicIpOnLaunch update: %w", d.Id(), err)
+		}
+	}
+
+	if d.HasChange("private_dns_hostname_type_on_launch") {
+		input := &ec2.ModifySubnetAttributeInput{
+			PrivateDnsHostnameTypeOnLaunch: aws.String(d.Get("private_dns_hostname_type_on_launch").(string)),
+			SubnetId:                       aws.String(d.Id()),
+		}
+
+		if _, err := conn.ModifySubnetAttribute(input); err != nil {
+			return fmt.Errorf("error setting EC2 Subnet (%s) PrivateDnsHostnameTypeOnLaunch: %w", d.Id(), err)
 		}
 	}
 
