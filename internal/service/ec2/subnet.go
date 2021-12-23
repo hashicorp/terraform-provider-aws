@@ -63,7 +63,7 @@ func ResourceSubnet() *schema.Resource {
 			},
 			"cidr_block": {
 				Type:         schema.TypeString,
-				Required:     true,
+				Optional:     true,
 				ForceNew:     true,
 				ValidateFunc: verify.ValidIPv4CIDRNetworkAddress,
 			},
@@ -95,6 +95,12 @@ func ResourceSubnet() *schema.Resource {
 			"ipv6_cidr_block_association_id": {
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+			"ipv6_native": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				ForceNew: true,
+				Default:  false,
 			},
 			"map_customer_owned_ip_on_launch": {
 				Type:         schema.TypeBool,
@@ -141,9 +147,13 @@ func resourceSubnetCreate(d *schema.ResourceData, meta interface{}) error {
 	input := &ec2.CreateSubnetInput{
 		AvailabilityZone:   aws.String(d.Get("availability_zone").(string)),
 		AvailabilityZoneId: aws.String(d.Get("availability_zone_id").(string)),
-		CidrBlock:          aws.String(d.Get("cidr_block").(string)),
-		VpcId:              aws.String(d.Get("vpc_id").(string)),
+		Ipv6Native:         aws.Bool(d.Get("ipv6_native").(bool)),
 		TagSpecifications:  ec2TagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeSubnet),
+		VpcId:              aws.String(d.Get("vpc_id").(string)),
+	}
+
+	if v, ok := d.GetOk("cidr_block"); ok {
+		input.CidrBlock = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("ipv6_cidr_block"); ok {
@@ -314,6 +324,7 @@ func resourceSubnetRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("cidr_block", subnet.CidrBlock)
 	d.Set("customer_owned_ipv4_pool", subnet.CustomerOwnedIpv4Pool)
 	d.Set("enable_dns64", subnet.EnableDns64)
+	d.Set("ipv6_native", subnet.Ipv6Native)
 	d.Set("map_customer_owned_ip_on_launch", subnet.MapCustomerOwnedIpOnLaunch)
 	d.Set("map_public_ip_on_launch", subnet.MapPublicIpOnLaunch)
 	d.Set("outpost_arn", subnet.OutpostArn)

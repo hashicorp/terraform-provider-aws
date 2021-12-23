@@ -41,6 +41,7 @@ func TestAccEC2Subnet_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "enable_resource_name_dns_aaaa_record_on_launch", "false"),
 					resource.TestCheckResourceAttr(resourceName, "enable_resource_name_dns_a_record_on_launch", "false"),
 					resource.TestCheckResourceAttr(resourceName, "ipv6_cidr_block", ""),
+					resource.TestCheckResourceAttr(resourceName, "ipv6_native", "false"),
 					resource.TestCheckResourceAttr(resourceName, "map_customer_owned_ip_on_launch", "false"),
 					resource.TestCheckResourceAttr(resourceName, "map_public_ip_on_launch", "false"),
 					resource.TestCheckResourceAttr(resourceName, "outpost_arn", ""),
@@ -853,6 +854,35 @@ func TestAccEC2Subnet_privateDnsNameOptionsOnLaunch(t *testing.T) {
 	})
 }
 
+func TestAccEC2Subnet_ipv6Native(t *testing.T) {
+	var v ec2.Subnet
+	resourceName := "aws_subnet.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckSubnetDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSubnetConfigIPv6Native(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSubnetExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "cidr_block", ""),
+					resource.TestCheckResourceAttr(resourceName, "enable_resource_name_dns_aaaa_record_on_launch", "true"),
+					resource.TestCheckResourceAttr(resourceName, "ipv6_native", "true"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccCheckSubnetIPv6BeforeUpdate(subnet *ec2.Subnet) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if subnet.Ipv6CidrBlockAssociationSet == nil {
@@ -1341,6 +1371,32 @@ resource "aws_subnet" "test" {
   }
 }
 `, rName, enableDnsAAAA, enableDnsA, hostnameType)
+}
+
+func testAccSubnetConfigIPv6Native(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  cidr_block                       = "10.10.0.0/16"
+  assign_generated_ipv6_cidr_block = true
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_subnet" "test" {
+  vpc_id                          = aws_vpc.test.id
+  ipv6_cidr_block                 = cidrsubnet(aws_vpc.test.ipv6_cidr_block, 8, 1)
+  assign_ipv6_address_on_creation = true
+  ipv6_native                     = true
+
+  enable_resource_name_dns_aaaa_record_on_launch = true
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName)
 }
 
 func testAccSubnetConfigOutpost(rName string) string {

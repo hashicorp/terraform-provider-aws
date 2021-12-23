@@ -53,13 +53,14 @@ The following arguments are supported:
     assigned an IPv6 address. Default is `false`
 * `availability_zone` - (Optional) The AZ for the subnet.
 * `availability_zone_id` - (Optional) The AZ ID of the subnet.
-* `cidr_block` - (Required) The CIDR block for the subnet.
+* `cidr_block` - (Optional) The IPv4 CIDR block for the subnet.
 * `customer_owned_ipv4_pool` - (Optional) The customer owned IPv4 address pool. Typically used with the `map_customer_owned_ip_on_launch` argument. The `outpost_arn` argument must be specified when configured.
 * `enable_dns64` - (Optional) Indicates whether DNS queries made to the Amazon-provided DNS Resolver in this subnet should return synthetic IPv6 addresses for IPv4-only destinations. Default: `false`.
 * `enable_resource_name_dns_aaaa_record_on_launch` - (Optional) Indicates whether to respond to DNS queries for instance hostnames with DNS AAAA records. Default: `false`.
 * `enable_resource_name_dns_a_record_on_launch` - (Optional) Indicates whether to respond to DNS queries for instance hostnames with DNS A records. Default: `false`.
 * `ipv6_cidr_block` - (Optional) The IPv6 network range for the subnet,
     in CIDR notation. The subnet size must use a /64 prefix length.
+* `ipv6_native` - (Optional) Indicates whether to create an IPv6-only subnet. Default: `false`.
 * `map_customer_owned_ip_on_launch` -  (Optional) Specify `true` to indicate that network interfaces created in the subnet should be assigned a customer owned IP address. The `customer_owned_ipv4_pool` and `outpost_arn` arguments must be specified when set to `true`. Default is `false`.
 * `map_public_ip_on_launch` -  (Optional) Specify true to indicate
     that instances launched into the subnet should be assigned
