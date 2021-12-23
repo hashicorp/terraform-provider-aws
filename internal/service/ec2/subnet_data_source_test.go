@@ -44,6 +44,8 @@ func TestAccEC2SubnetDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(ds1ResourceName, "arn", snResourceName, "arn"),
 					resource.TestCheckResourceAttrPair(ds1ResourceName, "customer_owned_ipv4_pool", snResourceName, "customer_owned_ipv4_pool"),
 					resource.TestCheckResourceAttrPair(ds1ResourceName, "enable_dns64", snResourceName, "enable_dns64"),
+					resource.TestCheckResourceAttrPair(ds1ResourceName, "enable_resource_name_dns_aaaa_record_on_launch", snResourceName, "enable_resource_name_dns_aaaa_record_on_launch"),
+					resource.TestCheckResourceAttrPair(ds1ResourceName, "enable_resource_name_dns_a_record_on_launch", snResourceName, "enable_resource_name_dns_a_record_on_launch"),
 					resource.TestCheckResourceAttrPair(ds1ResourceName, "map_customer_owned_ip_on_launch", snResourceName, "map_customer_owned_ip_on_launch"),
 					resource.TestCheckResourceAttrPair(ds1ResourceName, "outpost_arn", snResourceName, "outpost_arn"),
 
@@ -58,6 +60,8 @@ func TestAccEC2SubnetDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(ds2ResourceName, "arn", snResourceName, "arn"),
 					resource.TestCheckResourceAttrPair(ds2ResourceName, "customer_owned_ipv4_pool", snResourceName, "customer_owned_ipv4_pool"),
 					resource.TestCheckResourceAttrPair(ds2ResourceName, "enable_dns64", snResourceName, "enable_dns64"),
+					resource.TestCheckResourceAttrPair(ds2ResourceName, "enable_resource_name_dns_aaaa_record_on_launch", snResourceName, "enable_resource_name_dns_aaaa_record_on_launch"),
+					resource.TestCheckResourceAttrPair(ds2ResourceName, "enable_resource_name_dns_a_record_on_launch", snResourceName, "enable_resource_name_dns_a_record_on_launch"),
 					resource.TestCheckResourceAttrPair(ds2ResourceName, "map_customer_owned_ip_on_launch", snResourceName, "map_customer_owned_ip_on_launch"),
 					resource.TestCheckResourceAttrPair(ds2ResourceName, "outpost_arn", snResourceName, "outpost_arn"),
 
@@ -72,6 +76,8 @@ func TestAccEC2SubnetDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(ds3ResourceName, "arn", snResourceName, "arn"),
 					resource.TestCheckResourceAttrPair(ds3ResourceName, "customer_owned_ipv4_pool", snResourceName, "customer_owned_ipv4_pool"),
 					resource.TestCheckResourceAttrPair(ds3ResourceName, "enable_dns64", snResourceName, "enable_dns64"),
+					resource.TestCheckResourceAttrPair(ds3ResourceName, "enable_resource_name_dns_aaaa_record_on_launch", snResourceName, "enable_resource_name_dns_aaaa_record_on_launch"),
+					resource.TestCheckResourceAttrPair(ds3ResourceName, "enable_resource_name_dns_a_record_on_launch", snResourceName, "enable_resource_name_dns_a_record_on_launch"),
 					resource.TestCheckResourceAttrPair(ds3ResourceName, "map_customer_owned_ip_on_launch", snResourceName, "map_customer_owned_ip_on_launch"),
 					resource.TestCheckResourceAttrPair(ds3ResourceName, "outpost_arn", snResourceName, "outpost_arn"),
 
@@ -85,6 +91,8 @@ func TestAccEC2SubnetDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(ds4ResourceName, "arn", snResourceName, "arn"),
 					resource.TestCheckResourceAttrPair(ds4ResourceName, "customer_owned_ipv4_pool", snResourceName, "customer_owned_ipv4_pool"),
 					resource.TestCheckResourceAttrPair(ds4ResourceName, "enable_dns64", snResourceName, "enable_dns64"),
+					resource.TestCheckResourceAttrPair(ds4ResourceName, "enable_resource_name_dns_aaaa_record_on_launch", snResourceName, "enable_resource_name_dns_aaaa_record_on_launch"),
+					resource.TestCheckResourceAttrPair(ds4ResourceName, "enable_resource_name_dns_a_record_on_launch", snResourceName, "enable_resource_name_dns_a_record_on_launch"),
 					resource.TestCheckResourceAttrPair(ds4ResourceName, "map_customer_owned_ip_on_launch", snResourceName, "map_customer_owned_ip_on_launch"),
 					resource.TestCheckResourceAttrPair(ds4ResourceName, "outpost_arn", snResourceName, "outpost_arn"),
 
@@ -99,6 +107,8 @@ func TestAccEC2SubnetDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(ds5ResourceName, "customer_owned_ipv4_pool", snResourceName, "customer_owned_ipv4_pool"),
 					resource.TestCheckResourceAttrPair(ds5ResourceName, "enable_dns64", snResourceName, "enable_dns64"),
 					resource.TestCheckResourceAttrPair(ds5ResourceName, "map_customer_owned_ip_on_launch", snResourceName, "map_customer_owned_ip_on_launch"),
+					resource.TestCheckResourceAttrPair(ds5ResourceName, "enable_resource_name_dns_aaaa_record_on_launch", snResourceName, "enable_resource_name_dns_aaaa_record_on_launch"),
+					resource.TestCheckResourceAttrPair(ds5ResourceName, "enable_resource_name_dns_a_record_on_launch", snResourceName, "enable_resource_name_dns_a_record_on_launch"),
 					resource.TestCheckResourceAttrPair(ds5ResourceName, "outpost_arn", snResourceName, "outpost_arn"),
 
 					resource.TestCheckResourceAttrPair(ds6ResourceName, "id", snResourceName, "id"),
@@ -111,6 +121,8 @@ func TestAccEC2SubnetDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(ds6ResourceName, "arn", snResourceName, "arn"),
 					resource.TestCheckResourceAttrPair(ds6ResourceName, "customer_owned_ipv4_pool", snResourceName, "customer_owned_ipv4_pool"),
 					resource.TestCheckResourceAttrPair(ds6ResourceName, "enable_dns64", snResourceName, "enable_dns64"),
+					resource.TestCheckResourceAttrPair(ds6ResourceName, "enable_resource_name_dns_aaaa_record_on_launch", snResourceName, "enable_resource_name_dns_aaaa_record_on_launch"),
+					resource.TestCheckResourceAttrPair(ds6ResourceName, "enable_resource_name_dns_a_record_on_launch", snResourceName, "enable_resource_name_dns_a_record_on_launch"),
 					resource.TestCheckResourceAttrPair(ds6ResourceName, "map_customer_owned_ip_on_launch", snResourceName, "map_customer_owned_ip_on_launch"),
 					resource.TestCheckResourceAttrPair(ds6ResourceName, "outpost_arn", snResourceName, "outpost_arn"),
 				),

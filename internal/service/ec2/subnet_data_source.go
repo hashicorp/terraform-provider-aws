@@ -56,6 +56,14 @@ func DataSourceSubnet() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
+			"enable_resource_name_dns_aaaa_record_on_launch": {
+				Type:     schema.TypeBool,
+				Computed: true,
+			},
+			"enable_resource_name_dns_a_record_on_launch": {
+				Type:     schema.TypeBool,
+				Computed: true,
+			},
 			"filter": CustomFiltersSchema(),
 			"id": {
 				Type:     schema.TypeString,
@@ -84,6 +92,10 @@ func DataSourceSubnet() *schema.Resource {
 				Computed: true,
 			},
 			"owner_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"private_dns_hostname_type_on_launch": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -172,10 +184,14 @@ func dataSourceSubnetRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("default_for_az", subnet.DefaultForAz)
 	d.Set("enable_dns64", subnet.EnableDns64)
 
-	for _, a := range subnet.Ipv6CidrBlockAssociationSet {
-		if a.Ipv6CidrBlockState != nil && aws.StringValue(a.Ipv6CidrBlockState.State) == ec2.VpcCidrBlockStateCodeAssociated { //we can only ever have 1 IPv6 block associated at once
-			d.Set("ipv6_cidr_block_association_id", a.AssociationId)
-			d.Set("ipv6_cidr_block", a.Ipv6CidrBlock)
+	// Make sure those values are set, if an IPv6 block exists it'll be set in the loop.
+	d.Set("ipv6_cidr_block_association_id", nil)
+	d.Set("ipv6_cidr_block", nil)
+
+	for _, v := range subnet.Ipv6CidrBlockAssociationSet {
+		if v.Ipv6CidrBlockState != nil && aws.StringValue(v.Ipv6CidrBlockState.State) == ec2.VpcCidrBlockStateCodeAssociated { //we can only ever have 1 IPv6 block associated at once
+			d.Set("ipv6_cidr_block_association_id", v.AssociationId)
+			d.Set("ipv6_cidr_block", v.Ipv6CidrBlock)
 		}
 	}
 
@@ -184,6 +200,16 @@ func dataSourceSubnetRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("outpost_arn", subnet.OutpostArn)
 	d.Set("owner_id", subnet.OwnerId)
 	d.Set("state", subnet.State)
+
+	if subnet.PrivateDnsNameOptionsOnLaunch != nil {
+		d.Set("enable_resource_name_dns_aaaa_record_on_launch", subnet.PrivateDnsNameOptionsOnLaunch.EnableResourceNameDnsAAAARecord)
+		d.Set("enable_resource_name_dns_a_record_on_launch", subnet.PrivateDnsNameOptionsOnLaunch.EnableResourceNameDnsARecord)
+		d.Set("private_dns_hostname_type_on_launch", subnet.PrivateDnsNameOptionsOnLaunch.HostnameType)
+	} else {
+		d.Set("enable_resource_name_dns_aaaa_record_on_launch", nil)
+		d.Set("enable_resource_name_dns_a_record_on_launch", nil)
+		d.Set("private_dns_hostname_type_on_launch", nil)
+	}
 
 	if err := d.Set("tags", KeyValueTags(subnet.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %w", err)

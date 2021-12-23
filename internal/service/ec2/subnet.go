@@ -321,8 +321,8 @@ func resourceSubnetRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("vpc_id", subnet.VpcId)
 
 	// Make sure those values are set, if an IPv6 block exists it'll be set in the loop.
-	d.Set("ipv6_cidr_block_association_id", "")
-	d.Set("ipv6_cidr_block", "")
+	d.Set("ipv6_cidr_block_association_id", nil)
+	d.Set("ipv6_cidr_block", nil)
 
 	for _, v := range subnet.Ipv6CidrBlockAssociationSet {
 		if aws.StringValue(v.Ipv6CidrBlockState.State) == ec2.SubnetCidrBlockStateCodeAssociated { //we can only ever have 1 IPv6 block associated at once
