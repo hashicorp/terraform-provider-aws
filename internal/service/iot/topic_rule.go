@@ -474,6 +474,12 @@ func ResourceTopicRule() *schema.Resource {
 									"unit": {
 										Type:     schema.TypeString,
 										Required: true,
+										ValidateFunc: validation.StringInSlice([]string{
+											"SECONDS",
+											"MILLISECONDS",
+											"MICROSECONDS",
+											"NANOSECONDS",
+										}, false),
 									},
 									"value": {
 										Type:     schema.TypeString,
@@ -1182,6 +1188,12 @@ func ResourceTopicRule() *schema.Resource {
 												"unit": {
 													Type:     schema.TypeString,
 													Required: true,
+													ValidateFunc: validation.StringInSlice([]string{
+														"SECONDS",
+														"MILLISECONDS",
+														"MICROSECONDS",
+														"NANOSECONDS",
+													}, false),
 												},
 												"value": {
 													Type:     schema.TypeString,
