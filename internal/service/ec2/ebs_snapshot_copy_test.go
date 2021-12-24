@@ -275,7 +275,7 @@ data "aws_availability_zones" "alternate_available" {
     values = ["opt-in-not-required"]
   }
 }
-	
+
 data "aws_region" "alternate" {
   provider = "awsalternate"
 }
