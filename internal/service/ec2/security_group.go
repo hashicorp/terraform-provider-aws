@@ -1353,7 +1353,7 @@ func deleteLingeringLambdaENIs(conn *ec2.EC2, filterName, resourceId string, tim
 		timeout = minimumTimeout
 	}
 
-	resp, err := conn.DescribeNetworkInterfaces(&ec2.DescribeNetworkInterfacesInput{
+	networkInterfaces, err := FindNetworkInterfaces(conn, &ec2.DescribeNetworkInterfacesInput{
 		Filters: BuildAttributeFilterList(map[string]string{
 			filterName:    resourceId,
 			"description": "AWS Lambda VPC ENI*",
@@ -1361,38 +1361,38 @@ func deleteLingeringLambdaENIs(conn *ec2.EC2, filterName, resourceId string, tim
 	})
 
 	if err != nil {
-		return fmt.Errorf("error describing ENIs: %w", err)
+		return fmt.Errorf("error listing EC2 Network Interfaces: %w", err)
 	}
 
-	for _, eni := range resp.NetworkInterfaces {
-		eniId := aws.StringValue(eni.NetworkInterfaceId)
+	for _, v := range networkInterfaces {
+		networkInterfaceID := aws.StringValue(v.NetworkInterfaceId)
 
-		if eni.Attachment != nil && aws.StringValue(eni.Attachment.InstanceOwnerId) == "amazon-aws" {
-			networkInterface, err := WaitNetworkInterfaceAvailableAfterUse(conn, eniId, timeout)
+		if v.Attachment != nil && aws.StringValue(v.Attachment.InstanceOwnerId) == "amazon-aws" {
+			networkInterface, err := WaitNetworkInterfaceAvailableAfterUse(conn, networkInterfaceID, timeout)
 
 			if tfresource.NotFound(err) {
 				continue
 			}
 
 			if err != nil {
-				return fmt.Errorf("error waiting for Lambda V2N ENI (%s) to become available for detachment: %w", eniId, err)
+				return fmt.Errorf("error waiting for Lambda ENI (%s) to become available for detachment: %w", networkInterfaceID, err)
 			}
 
-			eni = networkInterface
+			v = networkInterface
 		}
 
-		if eni.Attachment != nil {
-			err = DetachNetworkInterface(conn, eniId, aws.StringValue(eni.Attachment.AttachmentId), timeout)
+		if v.Attachment != nil {
+			err = DetachNetworkInterface(conn, networkInterfaceID, aws.StringValue(v.Attachment.AttachmentId), timeout)
 
 			if err != nil {
-				return fmt.Errorf("error detaching Lambda ENI (%s): %w", eniId, err)
+				return fmt.Errorf("error detaching Lambda ENI (%s): %w", networkInterfaceID, err)
 			}
 		}
 
-		err = DeleteNetworkInterface(conn, eniId)
+		err = DeleteNetworkInterface(conn, networkInterfaceID)
 
 		if err != nil {
-			return fmt.Errorf("error deleting Lambda ENI (%s): %w", eniId, err)
+			return fmt.Errorf("error deleting Lambda ENI (%s): %w", networkInterfaceID, err)
 		}
 	}
 
