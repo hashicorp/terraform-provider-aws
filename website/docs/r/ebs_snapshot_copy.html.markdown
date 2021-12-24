@@ -49,6 +49,9 @@ The following arguments are supported:
 * `kms_key_id` - The ARN for the KMS encryption key.
 * `source_snapshot_id` The ARN for the snapshot to be copied.
 * `source_region` The region of the source snapshot.
+* `storage_tier` - (Optional) The name of the storage tier. Valid values are `archive` and `standard`. Default value is `standard`.
+* `permenent_restore` - (Optional) Indicates whether to permanently restore an archived snapshot.
+* `temporary_restore_days` - (Optional) Specifies the number of days for which to temporarily restore an archived snapshot. Required for temporary restores only. The snapshot will be automatically re-archived after this period.
 * `tags` - A map of tags for the snapshot. If configured with a provider [`default_tags` configuration block](https://www.terraform.io/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attributes Reference
