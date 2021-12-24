@@ -88,6 +88,28 @@ func TestAccEC2EBSSnapshotImport_tags(t *testing.T) {
 	})
 }
 
+func TestAccEC2EBSSnapshotImport_storageTier(t *testing.T) {
+	var v ec2.Snapshot
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_ebs_snapshot_import.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckEBSSnapshotDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEBSSnapshotImportStorageTierConfig(rName, t),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSnapshotExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "storage_tier", "archive"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccEC2EBSSnapshotImport_disappears(t *testing.T) {
 	var v ec2.Snapshot
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -228,6 +250,29 @@ resource "aws_ebs_snapshot_import" "test" {
   }
 
   role_name = aws_iam_role.vmimport.name
+
+  timeouts {
+    create = "10m"
+    delete = "10m"
+  }
+}
+`, rName))
+}
+
+func testAccEBSSnapshotImportStorageTierConfig(rName string, t *testing.T) string {
+	return acctest.ConfigCompose(testAccEBSSnapshotImportConfig_Base(t), fmt.Sprintf(`
+resource "aws_ebs_snapshot_import" "test" {
+  disk_container {
+    description = %[1]q
+    format      = "VHD"
+    user_bucket {
+      s3_bucket = aws_s3_bucket.images.id
+      s3_key    = aws_s3_bucket_object.image.key
+    }
+  }
+
+  role_name    = aws_iam_role.vmimport.name
+  storage_tier = "archive"
 
   timeouts {
     create = "10m"
