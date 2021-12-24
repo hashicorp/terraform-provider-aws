@@ -83,5 +83,4 @@ In addition to all arguments above, the following attributes are exported:
 * `owner_alias` - Value from an Amazon-maintained list (`amazon`, `aws-marketplace`, `microsoft`) of snapshot owners.
 * `volume_size` - The size of the drive in GiBs.
 * `data_encryption_key_id` - The data encryption key identifier for the snapshot.
-* `tags` - A map of tags for the snapshot.
-
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://www.terraform.io/docs/providers/aws/index.html#default_tags-configuration-block).
