@@ -66,18 +66,9 @@ func TestAccEC2EBSSnapshot_storageTier(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"permenent_restore"},
-			},
-			{
-				Config: testAccEBSSnapshotStorageTierConfig(rName, "standard"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSnapshotExists(resourceName, &v),
-					// Restoring a snapshot takes 24-72 hours so state will reamin (https://aws.amazon.com/blogs/aws/new-amazon-ebs-snapshots-archive/)
-					resource.TestCheckResourceAttr(resourceName, "storage_tier", "archive"),
-				),
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -312,8 +303,7 @@ func testAccEBSSnapshotStorageTierConfig(rName, tier string) string {
 	return acctest.ConfigCompose(testAccEBSSnapshotBaseConfig(rName), fmt.Sprintf(`
 resource "aws_ebs_snapshot" "test" {
   volume_id    = aws_ebs_volume.test.id
-  storage_tier      = %[1]q
-  permenent_restore = true
+  storage_tier = %[1]q
 
   timeouts {
     create = "10m"
