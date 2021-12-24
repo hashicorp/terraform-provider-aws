@@ -123,16 +123,16 @@ resource "aws_mskconnect_custom_plugin" "test" {
 
 func testAccCustomPluginConfigDescription(bucketName, objectKey, pluginName, description string) string {
 	return acctest.ConfigCompose(testAccCustomPluginConfigBasicS3Object(bucketName, objectKey), fmt.Sprintf(`
-	resource "aws_mskconnect_custom_plugin" "test" {
-		name         = %[1]q
-		description = %[2]q
-		content_type = "ZIP"
-		location {
-		  s3 {
-			bucket_arn = aws_s3_bucket.test.arn
-			file_key   = aws_s3_bucket_object.test.key
-		  }
-		}
-	  }
+resource "aws_mskconnect_custom_plugin" "test" {
+  name         = %[1]q
+  description  = %[2]q
+  content_type = "ZIP"
+  location {
+    s3 {
+      bucket_arn = aws_s3_bucket.test.arn
+      file_key   = aws_s3_bucket_object.test.key
+    }
+  }
+}
 	  `, pluginName, description))
 }
