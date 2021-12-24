@@ -16,7 +16,10 @@ func ResourceCustomPlugin() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceCustomPluginCreate,
 		Read:   resourceCustomPluginRead,
-		Delete: resourceCustomPluginDelete,
+		Delete: schema.Noop,
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(customPluginCreateDefaultTimeout),
@@ -36,6 +39,7 @@ func ResourceCustomPlugin() *schema.Resource {
 			"description": {
 				Type:     schema.TypeString,
 				Optional: true,
+				ForceNew: true,
 			},
 			"location": {
 				Type: schema.TypeList,
@@ -74,7 +78,7 @@ func ResourceCustomPlugin() *schema.Resource {
 				ForceNew: true,
 			},
 			"latest_revision": {
-				Type:     schema.TypeString,
+				Type:     schema.TypeInt,
 				Computed: true,
 			},
 			"state": {
@@ -136,14 +140,15 @@ func resourceCustomPluginRead(d *schema.ResourceData, meta interface{}) error {
 
 	d.Set("arn", plugin.CustomPluginArn)
 	d.Set("description", plugin.Description)
-	d.Set("latest_reviosion", plugin.LatestRevision)
+	d.Set("content_type", plugin.LatestRevision.ContentType)
+	d.Set("latest_revision", plugin.LatestRevision.Revision)
 	d.Set("name", plugin.Name)
 	d.Set("state", plugin.CustomPluginState)
 
-	return nil
-}
+	if err := d.Set("location", flattenLocation(plugin.LatestRevision.Location)); err != nil {
+		return fmt.Errorf("error setting custom plugin's location (%s): %w", d.Id(), err)
+	}
 
-func resourceCustomPluginDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
@@ -176,4 +181,21 @@ func expandS3Location(tfList []interface{}) *kafkaconnect.S3Location {
 	}
 
 	return &s3Location
+}
+
+func flattenLocation(apiLocation *kafkaconnect.CustomPluginLocationDescription) []interface{} {
+	location := make(map[string]interface{})
+	location["s3"] = flattenS3Location(apiLocation.S3Location)
+
+	return []interface{}{location}
+}
+
+func flattenS3Location(apiS3Location *kafkaconnect.S3LocationDescription) []interface{} {
+	location := make(map[string]interface{})
+	location["bucket_arn"] = aws.StringValue(apiS3Location.BucketArn)
+	location["file_key"] = aws.StringValue(apiS3Location.FileKey)
+	if objVer := apiS3Location.ObjectVersion; objVer != nil {
+		location["object_version"] = aws.StringValue(objVer)
+	}
+	return []interface{}{location}
 }
