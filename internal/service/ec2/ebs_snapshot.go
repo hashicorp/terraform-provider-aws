@@ -193,8 +193,11 @@ func resourceEBSSnapshotRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("data_encryption_key_id", snapshot.DataEncryptionKeyId)
 	d.Set("kms_key_id", snapshot.KmsKeyId)
 	d.Set("volume_size", snapshot.VolumeSize)
-	d.Set("outpost_arn", snapshot.OutpostArn)
 	d.Set("storage_tier", snapshot.StorageTier)
+
+	if snapshot.OutpostArn != nil {
+		d.Set("outpost_arn", snapshot.OutpostArn)
+	}
 
 	tags := KeyValueTags(snapshot.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 

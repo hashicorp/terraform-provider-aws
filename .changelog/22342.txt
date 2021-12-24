@@ -1,0 +1,11 @@
+```release-note:enhancement
+resource/aws_ebs_snapshot: Add `outpost_arn`, `storage_tier`, `permenent_restore`, `temporary_restore_days` arguments
+```
+
+```release-note:enhancement
+resource/aws_ebs_snapshot_copy: Add `storage_tier`, `permenent_restore`, `temporary_restore_days` arguments
+```
+
+```release-note:enhancement
+resource/aws_ebs_snapshot_import: Add `storage_tier`, `permenent_restore`, `temporary_restore_days` arguments
+```

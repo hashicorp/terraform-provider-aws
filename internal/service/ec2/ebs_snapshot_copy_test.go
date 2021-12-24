@@ -141,6 +141,27 @@ func TestAccEC2EBSSnapshotCopy_withKMS(t *testing.T) {
 	})
 }
 
+func TestAccEC2EBSSnapshotCopy_storageTier(t *testing.T) {
+	var v ec2.Snapshot
+	resourceName := "aws_ebs_snapshot_copy.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckEBSSnapshotDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEBSSnapshotCopyStorageTierConfig(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSnapshotExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "storage_tier", "archive"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccEC2EBSSnapshotCopy_disappears(t *testing.T) {
 	var snapshot ec2.Snapshot
 	resourceName := "aws_ebs_snapshot_copy.test"
@@ -163,7 +184,7 @@ func TestAccEC2EBSSnapshotCopy_disappears(t *testing.T) {
 	})
 }
 
-func testAccEBSSnapshotCopyConfig() string {
+func testAccEBSSnapshotCopyBaseConfig() string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), `
 data "aws_region" "current" {}
 
@@ -179,7 +200,11 @@ resource "aws_ebs_snapshot" "test" {
     Name = "testAccEBSSnapshotCopyConfig"
   }
 }
+`)
+}
 
+func testAccEBSSnapshotCopyConfig() string {
+	return acctest.ConfigCompose(testAccEBSSnapshotCopyBaseConfig(), `
 resource "aws_ebs_snapshot_copy" "test" {
   source_snapshot_id = aws_ebs_snapshot.test.id
   source_region      = data.aws_region.current.name
@@ -187,33 +212,18 @@ resource "aws_ebs_snapshot_copy" "test" {
 `)
 }
 
+func testAccEBSSnapshotCopyStorageTierConfig() string {
+	return acctest.ConfigCompose(testAccEBSSnapshotCopyBaseConfig(), `
+resource "aws_ebs_snapshot_copy" "test" {
+  source_snapshot_id = aws_ebs_snapshot.test.id
+  source_region      = data.aws_region.current.name
+  storage_tier       = "archive"
+}
+`)
+}
+
 func testAccEBSSnapshotCopyTags1Config(tagKey1, tagValue1 string) string {
-	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
-data "aws_region" "current" {
-}
-
-resource "aws_ebs_volume" "test" {
-  availability_zone = data.aws_availability_zones.available.names[0]
-  size              = 1
-}
-
-resource "aws_ebs_snapshot" "test" {
-  volume_id = aws_ebs_volume.test.id
-
-  tags = {
-    Name = "testAccEBSSnapshotCopyConfig"
-  }
-}
-
+	return acctest.ConfigCompose(testAccEBSSnapshotCopyBaseConfig(), fmt.Sprintf(`
 resource "aws_ebs_snapshot_copy" "test" {
   source_snapshot_id = aws_ebs_snapshot.test.id
   source_region      = data.aws_region.current.name
@@ -223,36 +233,11 @@ resource "aws_ebs_snapshot_copy" "test" {
     "%s" = "%s"
   }
 }
-`, tagKey1, tagValue1)
+`, tagKey1, tagValue1))
 }
 
 func testAccEBSSnapshotCopyTags2Config(tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
-data "aws_region" "current" {
-}
-
-resource "aws_ebs_volume" "test" {
-  availability_zone = data.aws_availability_zones.available.names[0]
-  size              = 1
-}
-
-resource "aws_ebs_snapshot" "test" {
-  volume_id = aws_ebs_volume.test.id
-
-  tags = {
-    Name = "testAccEBSSnapshotCopyConfig"
-  }
-}
-
+	return acctest.ConfigCompose(testAccEBSSnapshotCopyBaseConfig(), fmt.Sprintf(`
 resource "aws_ebs_snapshot_copy" "test" {
   source_snapshot_id = aws_ebs_snapshot.test.id
   source_region      = data.aws_region.current.name
@@ -263,31 +248,11 @@ resource "aws_ebs_snapshot_copy" "test" {
     "%s" = "%s"
   }
 }
-`, tagKey1, tagValue1, tagKey2, tagValue2)
+`, tagKey1, tagValue1, tagKey2, tagValue2))
 }
 
 func testAccEBSSnapshotCopyWithDescriptionConfig() string {
-	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), `
-data "aws_region" "current" {}
-
-resource "aws_ebs_volume" "test" {
-  availability_zone = data.aws_availability_zones.available.names[0]
-  size              = 1
-
-  tags = {
-    Name = "testAccEBSSnapshotCopyWithDescriptionConfig"
-  }
-}
-
-resource "aws_ebs_snapshot" "test" {
-  volume_id   = aws_ebs_volume.test.id
-  description = "EBS Snapshot Acceptance Test"
-
-  tags = {
-    Name = "testAccEBSSnapshotCopyWithDescriptionConfig"
-  }
-}
-
+	return acctest.ConfigCompose(testAccEBSSnapshotCopyBaseConfig(), `
 resource "aws_ebs_snapshot_copy" "test" {
   description        = "Copy Snapshot Acceptance Test"
   source_snapshot_id = aws_ebs_snapshot.test.id
@@ -301,7 +266,16 @@ resource "aws_ebs_snapshot_copy" "test" {
 }
 
 func testAccEBSSnapshotCopyWithRegionsConfig() string {
-	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), acctest.ConfigAlternateRegionProvider(), `
+	return acctest.ConfigCompose(acctest.ConfigAlternateRegionProvider(), `
+data "aws_availability_zones" "alternate_available" {
+  provider = "awsalternate"
+  state    = "available"
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
+	
 data "aws_region" "alternate" {
   provider = "awsalternate"
 }
@@ -337,29 +311,10 @@ resource "aws_ebs_snapshot_copy" "test" {
 }
 
 func testAccEBSSnapshotCopyWithKMSConfig() string {
-	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), `
-data "aws_region" "current" {}
-
+	return acctest.ConfigCompose(testAccEBSSnapshotCopyBaseConfig(), `
 resource "aws_kms_key" "test" {
   description             = "testAccEBSSnapshotCopyWithKMSConfig"
   deletion_window_in_days = 7
-}
-
-resource "aws_ebs_volume" "test" {
-  availability_zone = data.aws_availability_zones.available.names[0]
-  size              = 1
-
-  tags = {
-    Name = "testAccEBSSnapshotCopyWithKMSConfig"
-  }
-}
-
-resource "aws_ebs_snapshot" "test" {
-  volume_id = aws_ebs_volume.test.id
-
-  tags = {
-    Name = "testAccEBSSnapshotCopyWithKMSConfig"
-  }
 }
 
 resource "aws_ebs_snapshot_copy" "test" {

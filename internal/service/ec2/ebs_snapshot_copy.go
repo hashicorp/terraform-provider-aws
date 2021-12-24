@@ -6,6 +6,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -70,6 +71,23 @@ func ResourceEBSSnapshotCopy() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
+			"storage_tier": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				ValidateFunc: validation.Any(
+					validation.StringInSlice(ec2.TargetStorageTier_Values(), false),
+					validation.StringInSlice([]string{"standard"}, false), //Enum slice does not include `standard` type.
+				),
+			},
+			"permenent_restore": {
+				Type:     schema.TypeBool,
+				Optional: true,
+			},
+			"temporary_restore_days": {
+				Type:     schema.TypeInt,
+				Optional: true,
+			},
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
 		},
@@ -115,109 +133,14 @@ func resourceEBSSnapshotCopyCreate(d *schema.ResourceData, meta interface{}) err
 		})
 
 		if err != nil {
-			return fmt.Errorf("error setting EBS Snapshot (%s) Storage Tier: %w", d.Id(), err)
+			return fmt.Errorf("error setting EBS Snapshot Copy (%s) Storage Tier: %w", d.Id(), err)
 		}
 
 		_, err = WaitEBSSnapshotTierArchive(conn, d.Id())
 		if err != nil {
-			return fmt.Errorf("Error waiting for EBS Snapshot (%s) Storage Tier to be archived: %w", d.Id(), err)
+			return fmt.Errorf("Error waiting for EBS Snapshot Copy (%s) Storage Tier to be archived: %w", d.Id(), err)
 		}
 	}
 
 	return resourceEBSSnapshotRead(d, meta)
 }
-
-// func resourceEBSSnapshotCopyRead(d *schema.ResourceData, meta interface{}) error {
-// 	conn := meta.(*conns.AWSClient).EC2Conn
-// 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-// 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
-
-// 	snapshot, err := FindSnapshotById(conn, d.Id())
-
-// 	if !d.IsNewResource() && tfresource.NotFound(err) {
-// 		log.Printf("[WARN] EBS Snapshot (%s) Not found - removing from state", d.Id())
-// 		d.SetId("")
-// 		return nil
-// 	}
-
-// 	if err != nil {
-// 		return fmt.Errorf("error reading EBS Snapshot (%s): %w", d.Id(), err)
-// 	}
-
-// 	d.Set("description", snapshot.Description)
-// 	d.Set("owner_id", snapshot.OwnerId)
-// 	d.Set("encrypted", snapshot.Encrypted)
-// 	d.Set("owner_alias", snapshot.OwnerAlias)
-// 	d.Set("volume_id", snapshot.VolumeId)
-// 	d.Set("data_encryption_key_id", snapshot.DataEncryptionKeyId)
-// 	d.Set("kms_key_id", snapshot.KmsKeyId)
-// 	d.Set("volume_size", snapshot.VolumeSize)
-
-// 	tags := KeyValueTags(snapshot.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-// 	//lintignore:AWSR002
-// 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-// 		return fmt.Errorf("error setting tags: %w", err)
-// 	}
-
-// 	if err := d.Set("tags_all", tags.Map()); err != nil {
-// 		return fmt.Errorf("error setting tags_all: %w", err)
-// 	}
-
-// 	snapshotArn := arn.ARN{
-// 		Partition: meta.(*conns.AWSClient).Partition,
-// 		Region:    meta.(*conns.AWSClient).Region,
-// 		Resource:  fmt.Sprintf("snapshot/%s", d.Id()),
-// 		Service:   ec2.ServiceName,
-// 	}.String()
-
-// 	d.Set("arn", snapshotArn)
-
-// 	return nil
-// }
-
-// func resourceEBSSnapshotCopyDelete(d *schema.ResourceData, meta interface{}) error {
-// 	conn := meta.(*conns.AWSClient).EC2Conn
-// 	input := &ec2.DeleteSnapshotInput{
-// 		SnapshotId: aws.String(d.Id()),
-// 	}
-// 	err := resource.Retry(5*time.Minute, func() *resource.RetryError {
-// 		_, err := conn.DeleteSnapshot(input)
-// 		if err == nil {
-// 			return nil
-// 		}
-
-// 		if tfawserr.ErrMessageContains(err, "SnapshotInUse", "") {
-// 			return resource.RetryableError(fmt.Errorf("EBS SnapshotInUse - trying again while it detaches"))
-// 		}
-
-// 		if tfawserr.ErrMessageContains(err, "InvalidSnapshot.NotFound", "") {
-// 			return nil
-// 		}
-
-// 		return resource.NonRetryableError(err)
-// 	})
-// 	if tfresource.TimedOut(err) {
-// 		_, err = conn.DeleteSnapshot(input)
-// 		if tfawserr.ErrMessageContains(err, "InvalidSnapshot.NotFound", "") {
-// 			return nil
-// 		}
-// 	}
-// 	if err != nil {
-// 		return fmt.Errorf("Error deleting EBS snapshot copy: %s", err)
-// 	}
-// 	return nil
-// }
-
-// func resourceEBSSnapshotCopyUpdate(d *schema.ResourceData, meta interface{}) error {
-// 	conn := meta.(*conns.AWSClient).EC2Conn
-
-// 	if d.HasChange("tags_all") {
-// 		o, n := d.GetChange("tags_all")
-// 		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
-// 			return fmt.Errorf("error updating tags: %s", err)
-// 		}
-// 	}
-
-// 	return resourceEBSSnapshotRead(d, meta)
-// }
