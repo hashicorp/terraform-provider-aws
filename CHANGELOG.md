@@ -4,21 +4,35 @@ FEATURES:
 
 * **New Data Source:** `aws_cognito_user_pool_clients` ([#22289](https://github.com/hashicorp/terraform-provider-aws/issues/22289))
 * **New Data Source:** `aws_cognito_user_pool_signing_certificate` ([#22285](https://github.com/hashicorp/terraform-provider-aws/issues/22285))
+* **New Data Source:** `aws_ses_active_receipt_rule_set` ([#22310](https://github.com/hashicorp/terraform-provider-aws/issues/22310))
+* **New Data Source:** `aws_ses_domain_identity` ([#22321](https://github.com/hashicorp/terraform-provider-aws/issues/22321))
+* **New Data Source:** `aws_ses_email_identity` ([#22321](https://github.com/hashicorp/terraform-provider-aws/issues/22321))
 * **New Resource:** `aws_batch_scheduling_policy` ([#22262](https://github.com/hashicorp/terraform-provider-aws/issues/22262))
+* **New Resource:** `aws_memorydb_parameter_group` ([#22304](https://github.com/hashicorp/terraform-provider-aws/issues/22304))
 * **New Resource:** `aws_memorydb_subnet_group` ([#22256](https://github.com/hashicorp/terraform-provider-aws/issues/22256))
 * **New Resource:** `aws_memorydb_user` ([#22261](https://github.com/hashicorp/terraform-provider-aws/issues/22261))
 * **New Resource:** `aws_vpc_endpoint_connection_accepter` ([#19083](https://github.com/hashicorp/terraform-provider-aws/issues/19083))
 
 ENHANCEMENTS:
 
+* data-source/aws_ecs_task_definition: Add `arn` attribute. ([#21856](https://github.com/hashicorp/terraform-provider-aws/issues/21856))
+* data-source/aws_subnet: Add `enable_dns64`, `ipv6_native`, `enable_resource_name_dns_aaaa_record_on_launch`, `enable_resource_name_dns_a_record_on_launch` and `private_dns_hostname_type_on_launch` attributes ([#22339](https://github.com/hashicorp/terraform-provider-aws/issues/22339))
+* resource/aws_batch_job_queue: Add `scheduling_policy_arn` attribute ([#22298](https://github.com/hashicorp/terraform-provider-aws/issues/22298))
 * resource/aws_codebuild_project: Add `artifacts.bucket_owner_access`, `secondary_artifacts.bucket_owner_access`, `logs_config.s3_logs.bucket_owner_access`, `project_visibility`, `resource_access_role` arguments. ([#22189](https://github.com/hashicorp/terraform-provider-aws/issues/22189))
 * resource/aws_codebuild_project: Add `public_project_alias` attribute. ([#22189](https://github.com/hashicorp/terraform-provider-aws/issues/22189))
 * resource/aws_codebuild_project: Add plan time validation for `cache.modes` and `service_role`. ([#22189](https://github.com/hashicorp/terraform-provider-aws/issues/22189))
 * resource/aws_ecr_replication_configuration: Add `repository_filter` to `replication_configuration` block ([#21231](https://github.com/hashicorp/terraform-provider-aws/issues/21231))
 * resource/aws_ecr_replication_configuration: Increase `MaxItems` for `rule` to `10` and for `destination` to `25` ([#22281](https://github.com/hashicorp/terraform-provider-aws/issues/22281))
+* resource/aws_elasticsearch_domain: Tag on create ([#18082](https://github.com/hashicorp/terraform-provider-aws/issues/18082))
+* resource/aws_kinesis_firehose_delivery_stream: Add `error_output_prefix` argument to `extended_s3_configuration` `s3_backup_configuration` configuration block ([#11229](https://github.com/hashicorp/terraform-provider-aws/issues/11229))
+* resource/aws_kinesis_firehose_delivery_stream: Add `error_output_prefix` argument to `redshift_configuration` `s3_backup_configuration` configuration block ([#11229](https://github.com/hashicorp/terraform-provider-aws/issues/11229))
+* resource/aws_kinesis_firehose_delivery_stream: Add `error_output_prefix` argument to `s3_configuration` configuration block ([#11229](https://github.com/hashicorp/terraform-provider-aws/issues/11229))
+* resource/aws_subnet: Add `enable_dns64`, `ipv6_native`, `enable_resource_name_dns_aaaa_record_on_launch`, `enable_resource_name_dns_a_record_on_launch` and `private_dns_hostname_type_on_launch` arguments ([#22339](https://github.com/hashicorp/terraform-provider-aws/issues/22339))
 
 BUG FIXES:
 
+* resource/aws_dynamodb_table: Remove extraneous `kms_key_arn` attribute from the `ttl` configuration block ([#21334](https://github.com/hashicorp/terraform-provider-aws/issues/21334))
+* resource/aws_ec2_traffic_mirror_filter_rule: Prevent crash during resource read ([#22315](https://github.com/hashicorp/terraform-provider-aws/issues/22315))
 * resource/aws_launch_template: Correctly set `default_version` and `latest_version` as Computed when `name`, `name_prefix` or `description` change ([#22277](https://github.com/hashicorp/terraform-provider-aws/issues/22277))
 * resource/aws_networkfirewall_rule_group: Allow any character in `ip_set` `definition` as per the AWS API docs ([#22284](https://github.com/hashicorp/terraform-provider-aws/issues/22284))
 * resource/aws_ssoadmin_managed_policy_attachment: Fix missing call to `ProvisionPermissionSet` after detaching the managed policy ([#21773](https://github.com/hashicorp/terraform-provider-aws/issues/21773))
