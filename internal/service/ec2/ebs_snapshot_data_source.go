@@ -86,6 +86,14 @@ func DataSourceEBSSnapshot() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"storage_tier": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"outpost_arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"tags": tftags.TagsSchemaComputed(),
 		},
 	}
@@ -155,6 +163,8 @@ func snapshotDescriptionAttributes(d *schema.ResourceData, snapshot *ec2.Snapsho
 	d.Set("state", snapshot.State)
 	d.Set("owner_id", snapshot.OwnerId)
 	d.Set("owner_alias", snapshot.OwnerAlias)
+	d.Set("storage_tier", snapshot.StorageTier)
+	d.Set("outpost_arn", snapshot.OutpostArn)
 
 	if err := d.Set("tags", KeyValueTags(snapshot.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %w", err)
