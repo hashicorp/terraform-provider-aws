@@ -86,6 +86,7 @@ In addition to the attributes above, the following attributes are exported:
 * `enable_resource_name_dns_aaaa_record_on_launch` - Indicates whether to respond to DNS queries for instance hostnames with DNS AAAA records.
 * `enable_resource_name_dns_a_record_on_launch` - Indicates whether to respond to DNS queries for instance hostnames with DNS A records.
 * `ipv6_cidr_block_association_id` - Association ID of the IPv6 CIDR block.
+* `ipv6_native` - Indicates whether this is an IPv6-only subnet.
 * `map_customer_owned_ip_on_launch` - Whether customer owned IP addresses are assigned on network interface creation.
 * `map_public_ip_on_launch` - Whether public IP addresses are assigned on instance launch.
 * `outpost_arn` - ARN of the Outpost.

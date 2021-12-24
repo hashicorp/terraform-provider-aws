@@ -79,6 +79,10 @@ func DataSourceSubnet() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"ipv6_native": {
+				Type:     schema.TypeBool,
+				Computed: true,
+			},
 			"map_customer_owned_ip_on_launch": {
 				Type:     schema.TypeBool,
 				Computed: true,
@@ -183,6 +187,7 @@ func dataSourceSubnetRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("customer_owned_ipv4_pool", subnet.CustomerOwnedIpv4Pool)
 	d.Set("default_for_az", subnet.DefaultForAz)
 	d.Set("enable_dns64", subnet.EnableDns64)
+	d.Set("ipv6_native", subnet.Ipv6Native)
 
 	// Make sure those values are set, if an IPv6 block exists it'll be set in the loop.
 	d.Set("ipv6_cidr_block_association_id", nil)
