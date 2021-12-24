@@ -86,7 +86,7 @@ func ResourceEBSSnapshot() *schema.Resource {
 				Computed: true,
 				ValidateFunc: validation.Any(
 					validation.StringInSlice(ec2.TargetStorageTier_Values(), false),
-					validation.StringInSlice([]string{"standard"}, false), //Does not include `standard` type.
+					validation.StringInSlice([]string{"standard"}, false), //Enum slice does not include `standard` type.
 				),
 			},
 			"permenent_restore": {
