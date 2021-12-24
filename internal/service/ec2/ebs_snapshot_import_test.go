@@ -166,7 +166,7 @@ func TestAccEC2EBSSnapshotImport_Disappears_s3BucketObject(t *testing.T) {
 func testAccEBSSnapshotImportConfig_Base(t *testing.T) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "images" {
-  bucket_prefix = "images-"
+  bucket_prefix = "tf-acc-test-"
   force_destroy = true
 }
 
