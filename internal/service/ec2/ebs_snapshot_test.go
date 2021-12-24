@@ -323,7 +323,7 @@ data "aws_outposts_outpost" "test" {
 
 resource "aws_ebs_snapshot" "test" {
   volume_id   = aws_ebs_volume.test.id
-  outpost_arn = data.aws_outposts_outpost.test.arn  
+  outpost_arn = data.aws_outposts_outpost.test.arn
 
   timeouts {
     create = "10m"
