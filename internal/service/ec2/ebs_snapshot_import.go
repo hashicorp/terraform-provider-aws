@@ -23,7 +23,7 @@ func ResourceEBSSnapshotImport() *schema.Resource {
 		Create:        resourceEBSSnapshotImportCreate,
 		Read:          resourceEBSSnapshotImportRead,
 		Update:        resourceEBSSnapshotImportUpdate,
-		Delete:        resourceEBSSnapshotImportDelete,
+		Delete:        resourceEBSSnapshotDelete,
 		CustomizeDiff: verify.SetTagsDiff,
 
 		Timeouts: &schema.ResourceTimeout{
@@ -248,6 +248,22 @@ func resourceEBSSnapshotImportCreate(d *schema.ResourceData, meta interface{}) e
 		return fmt.Errorf("error importing EBS Snapshot: %s", err)
 	}
 
+	if v, ok := d.GetOk("storage_tier"); ok && v.(string) == ec2.TargetStorageTierArchive {
+		_, err = conn.ModifySnapshotTier(&ec2.ModifySnapshotTierInput{
+			SnapshotId:  aws.String(d.Id()),
+			StorageTier: aws.String(v.(string)),
+		})
+
+		if err != nil {
+			return fmt.Errorf("error setting EBS Snapshot (%s) Storage Tier: %w", d.Id(), err)
+		}
+
+		_, err = WaitEBSSnapshotTierArchive(conn, d.Id())
+		if err != nil {
+			return fmt.Errorf("Error waiting for EBS Snapshot (%s) Storage Tier to be archived: %w", d.Id(), err)
+		}
+	}
+
 	return resourceEBSSnapshotImportRead(d, meta)
 }
 
@@ -256,26 +272,17 @@ func resourceEBSSnapshotImportRead(d *schema.ResourceData, meta interface{}) err
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	req := &ec2.DescribeSnapshotsInput{
-		SnapshotIds: []*string{aws.String(d.Id())},
-	}
-	res, err := conn.DescribeSnapshots(req)
-	if err != nil {
-		if tfawserr.ErrMessageContains(err, "InvalidSnapshot.NotFound", "") {
-			log.Printf("[WARN] EBS Snapshot %q Not found - removing from state", d.Id())
-			d.SetId("")
-			return nil
-		}
-		return err
-	}
+	snapshot, err := FindSnapshotById(conn, d.Id())
 
-	if len(res.Snapshots) == 0 {
-		log.Printf("[WARN] EBS Snapshot %q Not found - removing from state", d.Id())
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] EBS Snapshot (%s) Not found - removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
-	snapshot := res.Snapshots[0]
+	if err != nil {
+		return fmt.Errorf("error reading EBS Snapshot (%s): %w", d.Id(), err)
+	}
 
 	d.Set("description", snapshot.Description)
 	d.Set("owner_id", snapshot.OwnerId)
@@ -320,29 +327,29 @@ func resourceEBSSnapshotImportUpdate(d *schema.ResourceData, meta interface{}) e
 	return resourceEBSSnapshotImportRead(d, meta)
 }
 
-func resourceEBSSnapshotImportDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
-	input := &ec2.DeleteSnapshotInput{
-		SnapshotId: aws.String(d.Id()),
-	}
-	err := resource.Retry(d.Timeout(schema.TimeoutDelete), func() *resource.RetryError {
-		_, err := conn.DeleteSnapshot(input)
-		if err == nil {
-			return nil
-		}
-		if tfawserr.ErrMessageContains(err, "SnapshotInUse", "") {
-			return resource.RetryableError(fmt.Errorf("EBS SnapshotInUse - trying again while it detaches"))
-		}
-		return resource.NonRetryableError(err)
-	})
-	if tfresource.TimedOut(err) {
-		_, err = conn.DeleteSnapshot(input)
-	}
-	if err != nil {
-		return fmt.Errorf("error deleting EBS snapshot: %s", err)
-	}
-	return nil
-}
+// func resourceEBSSnapshotImportDelete(d *schema.ResourceData, meta interface{}) error {
+// 	conn := meta.(*conns.AWSClient).EC2Conn
+// 	input := &ec2.DeleteSnapshotInput{
+// 		SnapshotId: aws.String(d.Id()),
+// 	}
+// 	err := resource.Retry(d.Timeout(schema.TimeoutDelete), func() *resource.RetryError {
+// 		_, err := conn.DeleteSnapshot(input)
+// 		if err == nil {
+// 			return nil
+// 		}
+// 		if tfawserr.ErrMessageContains(err, "SnapshotInUse", "") {
+// 			return resource.RetryableError(fmt.Errorf("EBS SnapshotInUse - trying again while it detaches"))
+// 		}
+// 		return resource.NonRetryableError(err)
+// 	})
+// 	if tfresource.TimedOut(err) {
+// 		_, err = conn.DeleteSnapshot(input)
+// 	}
+// 	if err != nil {
+// 		return fmt.Errorf("error deleting EBS snapshot: %s", err)
+// 	}
+// 	return nil
+// }
 
 func expandEBSSnapshotClientData(tfMap map[string]interface{}) (*ec2.ClientData, error) {
 	clientData := &ec2.ClientData{}

@@ -1165,3 +1165,20 @@ func waitVPCEndpointConnectionAccepted(conn *ec2.EC2, serviceID, vpcEndpointID s
 
 	return nil, err
 }
+
+func WaitEBSSnapshotTierArchive(conn *ec2.EC2, id string) (*ec2.SnapshotTierStatus, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{"standard"},
+		Target:  []string{ec2.TargetStorageTierArchive},
+		Refresh: StatusSnapshotTierStatus(conn, id),
+		Timeout: 60 * time.Minute,
+		Delay:   10 * time.Second,
+	}
+
+	detail, err := stateConf.WaitForState()
+	if err != nil {
+		return nil, err
+	} else {
+		return detail.(*ec2.SnapshotTierStatus), nil
+	}
+}

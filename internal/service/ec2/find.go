@@ -1471,3 +1471,65 @@ func FindVPCEndpointConnectionByServiceIDAndVPCEndpointID(conn *ec2.EC2, service
 
 	return output, nil
 }
+
+func FindSnapshotById(conn *ec2.EC2, name string) (*ec2.Snapshot, error) {
+	input := &ec2.DescribeSnapshotsInput{
+		SnapshotIds: aws.StringSlice([]string{name}),
+	}
+
+	output, err := conn.DescribeSnapshots(input)
+
+	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidSnapshotNotFound) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || len(output.Snapshots) == 0 || output.Snapshots[0] == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	if count := len(output.Snapshots); count > 1 {
+		return nil, tfresource.NewTooManyResultsError(count, input)
+	}
+
+	return output.Snapshots[0], nil
+}
+
+func FindSnapshotTierStatusById(conn *ec2.EC2, id string) (*ec2.SnapshotTierStatus, error) {
+	filters := map[string]string{
+		"snapshot-id": id,
+	}
+
+	input := &ec2.DescribeSnapshotTierStatusInput{
+		Filters: BuildAttributeFilterList(filters),
+	}
+
+	output, err := conn.DescribeSnapshotTierStatus(input)
+
+	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidSnapshotNotFound) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || len(output.SnapshotTierStatuses) == 0 || output.SnapshotTierStatuses[0] == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	if count := len(output.SnapshotTierStatuses); count > 1 {
+		return nil, tfresource.NewTooManyResultsError(count, input)
+	}
+
+	return output.SnapshotTierStatuses[0], nil
+}
