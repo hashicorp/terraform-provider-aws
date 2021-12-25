@@ -1103,6 +1103,20 @@ func TestAccCodeBuildProject_SecondarySourcesVersions(t *testing.T) {
 					}),
 				),
 			},
+			{
+				Config: testAccProjectConfig_SecondarySources_GitSubmodulesConfig_CodeCommit(rName, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckProjectExists(resourceName, &project),
+					resource.TestCheckResourceAttr(resourceName, "secondary_sources.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "secondary_source_version.#", "0"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "secondary_sources.*", map[string]string{
+						"source_identifier": "secondarySource1",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "secondary_sources.*", map[string]string{
+						"source_identifier": "secondarySource2",
+					}),
+				),
+			},
 		},
 	})
 }
@@ -3647,7 +3661,7 @@ resource "aws_codebuild_project" "test" {
   }
 
   secondary_source_version {
-	source_version    = "master"
+    source_version    = "master"
     source_identifier = "secondarySource1"
   }
 }
@@ -3688,12 +3702,12 @@ resource "aws_codebuild_project" "test" {
   }
 
   secondary_source_version {
-	source_version    = "master"
+    source_version    = "master"
     source_identifier = "secondarySource1"
   }
 
   secondary_source_version {
-	source_version    = "master"
+    source_version    = "master"
     source_identifier = "secondarySource2"
   }
 }
