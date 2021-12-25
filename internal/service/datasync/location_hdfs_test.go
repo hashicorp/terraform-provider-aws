@@ -282,7 +282,7 @@ resource "aws_datasync_location_hdfs" "test" {
 
   name_node {
     hostname = aws_instance.test.private_dns
-	port     = 80
+    port     = 80
   }
 }
 `, rName)
@@ -297,7 +297,7 @@ resource "aws_datasync_location_hdfs" "test" {
 
   name_node {
     hostname = aws_instance.test.private_dns
-	port     = 80
+    port     = 80
   }
 
   tags = {
@@ -316,7 +316,7 @@ resource "aws_datasync_location_hdfs" "test" {
 
   name_node {
     hostname = aws_instance.test.private_dns
-	port     = 80
+    port     = 80
   }
 
   tags = {
