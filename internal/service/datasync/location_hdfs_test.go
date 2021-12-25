@@ -36,8 +36,13 @@ func TestAccDataSyncLocationHdfs_basic(t *testing.T) {
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "datasync", regexp.MustCompile(`location/loc-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "agent_arns.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "name_node.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "name_node.*", map[string]string{
+						"port": "80",
+					}),
 					resource.TestCheckResourceAttr(resourceName, "authentication_type", "SIMPLE"),
 					resource.TestCheckResourceAttr(resourceName, "simple_user", rName),
+					resource.TestCheckResourceAttr(resourceName, "block_size", "134217728"),
+					resource.TestCheckResourceAttr(resourceName, "replication_factor", "3"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestMatchResourceAttr(resourceName, "uri", regexp.MustCompile(`^hdfs://.+/`)),
 				),

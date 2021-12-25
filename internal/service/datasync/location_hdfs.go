@@ -45,9 +45,42 @@ func ResourceLocationHdfs() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: validation.StringInSlice(datasync.HdfsAuthenticationType_Values(), false),
 			},
+			"kerberos_keytab": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			"kerberos_krb5_conf": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			"kerberos_principal": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.StringLenBetween(1, 255),
+			},
+			"kms_key_provider_uri": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.StringLenBetween(1, 255),
+			},
+			"block_size": {
+				Type:     schema.TypeInt,
+				Optional: true,
+				Default:  128 * 1024 * 1024, // 128 MiB
+				ValidateFunc: validation.All(
+					validation.IntDivisibleBy(512),
+					validation.IntBetween(1048576, 1073741824),
+				),
+			},
+			"replication_factor": {
+				Type:         schema.TypeInt,
+				Optional:     true,
+				Default:      3,
+				ValidateFunc: validation.IntBetween(1, 512),
+			},
 			"name_node": {
 				Type:     schema.TypeSet,
-				Optional: true,
+				Required: true,
 				MinItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -60,6 +93,25 @@ func ResourceLocationHdfs() *schema.Resource {
 							Type:         schema.TypeInt,
 							Required:     true,
 							ValidateFunc: validation.IsPortNumber,
+						},
+					},
+				},
+			},
+			"qop_configuration": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"data_transfer_protection": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validation.StringInSlice(datasync.HdfsDataTransferProtection_Values(), false),
+						},
+						"rpc_protection": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validation.StringInSlice(datasync.HdfsRpcProtection_Values(), false),
 						},
 					},
 				},
@@ -113,6 +165,34 @@ func resourceLocationHdfsCreate(d *schema.ResourceData, meta interface{}) error 
 		input.SimpleUser = aws.String(v.(string))
 	}
 
+	if v, ok := d.GetOk("kerberos_krb5_conf"); ok {
+		input.KerberosKrb5Conf = []byte(v.(string))
+	}
+
+	if v, ok := d.GetOk("kerberos_keytab"); ok {
+		input.KerberosKeytab = []byte(v.(string))
+	}
+
+	if v, ok := d.GetOk("kerberos_principal"); ok {
+		input.KerberosPrincipal = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("kms_key_provider_uri"); ok {
+		input.KmsKeyProviderUri = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("block_size"); ok {
+		input.BlockSize = aws.Int64(int64(v.(int)))
+	}
+
+	if v, ok := d.GetOk("replication_factor"); ok {
+		input.ReplicationFactor = aws.Int64(int64(v.(int)))
+	}
+
+	if v, ok := d.GetOk("qop_configuration"); ok && len(v.([]interface{})) > 0 {
+		input.QopConfiguration = expandDataSyncHdfsQopConfiguration(v.([]interface{}))
+	}
+
 	log.Printf("[DEBUG] Creating DataSync Location Hdfs: %s", input)
 	output, err := conn.CreateLocationHdfs(input)
 	if err != nil {
@@ -152,12 +232,19 @@ func resourceLocationHdfsRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("simple_user", output.SimpleUser)
 	d.Set("authentication_type", output.AuthenticationType)
 	d.Set("uri", output.LocationUri)
+	d.Set("block_size", output.BlockSize)
+	d.Set("replication_factor", output.ReplicationFactor)
+	d.Set("kerberos_principal", output.KerberosPrincipal)
+	d.Set("kms_key_provider_uri", output.KmsKeyProviderUri)
+	d.Set("subdirectory", subdirectory)
 
 	if err := d.Set("name_node", flattenDataSyncHdfsNameNodes(output.NameNodes)); err != nil {
 		return fmt.Errorf("error setting name_node: %w", err)
 	}
 
-	d.Set("subdirectory", subdirectory)
+	if err := d.Set("qop_configuration", flattenDataSyncHdfsQopConfiguration(output.QopConfiguration)); err != nil {
+		return fmt.Errorf("error setting qop_configuration: %w", err)
+	}
 
 	tags, err := ListTags(conn, d.Id())
 
@@ -199,12 +286,40 @@ func resourceLocationHdfsUpdate(d *schema.ResourceData, meta interface{}) error 
 			input.SimpleUser = aws.String(d.Get("simple_user").(string))
 		}
 
+		if d.HasChange("kerberos_keytab") {
+			input.KerberosKeytab = []byte(d.Get("kerberos_keytab").(string))
+		}
+
+		if d.HasChange("kerberos_krb5_conf") {
+			input.KerberosKrb5Conf = []byte(d.Get("kerberos_krb5_conf").(string))
+		}
+
+		if d.HasChange("kerberos_principal") {
+			input.KerberosPrincipal = aws.String(d.Get("kerberos_principal").(string))
+		}
+
+		if d.HasChange("kms_key_provider_uri") {
+			input.KmsKeyProviderUri = aws.String(d.Get("kms_key_provider_uri").(string))
+		}
+
+		if d.HasChange("block_size") {
+			input.BlockSize = aws.Int64(int64(d.Get("block_size").(int)))
+		}
+
+		if d.HasChange("replication_factor") {
+			input.ReplicationFactor = aws.Int64(int64(d.Get("replication_factor").(int)))
+		}
+
 		if d.HasChange("agent_arns") {
 			input.AgentArns = flex.ExpandStringSet(d.Get("agent_arns").(*schema.Set))
 		}
 
 		if d.HasChange("name_noode") {
 			input.NameNodes = expandDataSyncHdfsNameNodes(d.Get("name_node").(*schema.Set))
+		}
+
+		if d.HasChange("qop_configuration") {
+			input.QopConfiguration = expandDataSyncHdfsQopConfiguration(d.Get("qop_configuration").([]interface{}))
 		}
 
 		_, err := conn.UpdateLocationHdfs(input)
@@ -270,4 +385,32 @@ func flattenDataSyncHdfsNameNodes(nodes []*datasync.HdfsNameNode) []map[string]i
 	}
 
 	return dataResources
+}
+
+func expandDataSyncHdfsQopConfiguration(l []interface{}) *datasync.QopConfiguration {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]interface{})
+
+	qopConfig := &datasync.QopConfiguration{
+		DataTransferProtection: aws.String(m["data_transfer_protection"].(string)),
+		RpcProtection:          aws.String(m["rpc_protection"].(string)),
+	}
+
+	return qopConfig
+}
+
+func flattenDataSyncHdfsQopConfiguration(qopConfig *datasync.QopConfiguration) []interface{} {
+	if qopConfig == nil {
+		return []interface{}{}
+	}
+
+	m := map[string]interface{}{
+		"data_transfer_protection": aws.StringValue(qopConfig.DataTransferProtection),
+		"rpc_protection":           aws.StringValue(qopConfig.RpcProtection),
+	}
+
+	return []interface{}{m}
 }
