@@ -104,7 +104,7 @@ func TestAccCodeBuildSourceCredential_disappears(t *testing.T) {
 		CheckDestroy: testAccCheckSourceCredentialDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSourceCredential_Basic("PERSONAL_ACCESS_TOKEN", "GITHUB", token),
+				Config: testAccSourceCredential_Basic("PERSONAL_ACCESS_TOKEN", "GITHUB_ENTERPRISE", token),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSourceCredentialExists(resourceName, &sourceCredentialsInfo),
 					acctest.CheckResourceDisappears(acctest.Provider, tfcodebuild.ResourceSourceCredential(), resourceName),
