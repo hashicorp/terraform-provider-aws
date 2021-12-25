@@ -95,6 +95,10 @@ func TestAccCodeBuildProject_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "source.0.location", "https://github.com/hashibot-test/aws-test.git"),
 					resource.TestCheckResourceAttr(resourceName, "source.0.report_build_status", "false"),
 					resource.TestCheckResourceAttr(resourceName, "source.0.type", "GITHUB"),
+					resource.TestCheckResourceAttr(resourceName, "secondary_source_version.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "build_batch_config.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "secondary_artifacts.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "secondary_sources.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
@@ -1019,6 +1023,84 @@ func TestAccCodeBuildProject_SecondarySourcesGitSubmodules_gitHubEnterprise(t *t
 				Config: testAccProjectConfig_SecondarySources_GitSubmodulesConfig_GitHubEnterprise(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProjectExists(resourceName, &project),
+				),
+			},
+		},
+	})
+}
+
+func TestAccCodeBuildProject_SecondarySourcesVersions(t *testing.T) {
+	var project codebuild.Project
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_codebuild_project.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, codebuild.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckProjectDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccProjectConfig_SecondarySourceVersions_CodeCommit(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckProjectExists(resourceName, &project),
+					resource.TestCheckResourceAttr(resourceName, "secondary_sources.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "secondary_source_version.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "secondary_sources.*", map[string]string{
+						"source_identifier": "secondarySource1",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "secondary_sources.*", map[string]string{
+						"source_identifier": "secondarySource2",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "secondary_source_version.*", map[string]string{
+						"source_identifier": "secondarySource1",
+						"source_version":    "master",
+					}),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccProjectConfig_SecondarySourceVersions_CodeCommitUpdated(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckProjectExists(resourceName, &project),
+					resource.TestCheckResourceAttr(resourceName, "secondary_sources.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "secondary_source_version.#", "2"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "secondary_sources.*", map[string]string{
+						"source_identifier": "secondarySource1",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "secondary_sources.*", map[string]string{
+						"source_identifier": "secondarySource2",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "secondary_source_version.*", map[string]string{
+						"source_identifier": "secondarySource1",
+						"source_version":    "master",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "secondary_source_version.*", map[string]string{
+						"source_identifier": "secondarySource2",
+						"source_version":    "master",
+					}),
+				),
+			},
+			{
+				Config: testAccProjectConfig_SecondarySourceVersions_CodeCommit(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckProjectExists(resourceName, &project),
+					resource.TestCheckResourceAttr(resourceName, "secondary_sources.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "secondary_source_version.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "secondary_sources.*", map[string]string{
+						"source_identifier": "secondarySource1",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "secondary_sources.*", map[string]string{
+						"source_identifier": "secondarySource2",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "secondary_source_version.*", map[string]string{
+						"source_identifier": "secondarySource1",
+						"source_version":    "master",
+					}),
 				),
 			},
 		},
@@ -3529,6 +3611,93 @@ resource "aws_codebuild_project" "test" {
   }
 }
 `, rName, fetchSubmodules))
+}
+
+func testAccProjectConfig_SecondarySourceVersions_CodeCommit(rName string) string {
+	return acctest.ConfigCompose(testAccProjectConfig_Base_ServiceRole(rName), fmt.Sprintf(`
+resource "aws_codebuild_project" "test" {
+  name         = %[1]q
+  service_role = aws_iam_role.test.arn
+
+  artifacts {
+    type = "NO_ARTIFACTS"
+  }
+
+  environment {
+    compute_type = "BUILD_GENERAL1_SMALL"
+    image        = "2"
+    type         = "LINUX_CONTAINER"
+  }
+
+  source {
+    location = "https://git-codecommit.region-id.amazonaws.com/v1/repos/repo-name"
+    type     = "CODECOMMIT"
+  }
+
+  secondary_sources {
+    location          = "https://git-codecommit.region-id.amazonaws.com/v1/repos/second-repo-name"
+    type              = "CODECOMMIT"
+    source_identifier = "secondarySource1"
+  }
+
+  secondary_sources {
+    location          = "https://git-codecommit.region-id.amazonaws.com/v1/repos/third-repo-name"
+    type              = "CODECOMMIT"
+    source_identifier = "secondarySource2"
+  }
+
+  secondary_source_version {
+	source_version    = "master"
+    source_identifier = "secondarySource1"
+  }
+}
+`, rName))
+}
+
+func testAccProjectConfig_SecondarySourceVersions_CodeCommitUpdated(rName string) string {
+	return acctest.ConfigCompose(testAccProjectConfig_Base_ServiceRole(rName), fmt.Sprintf(`
+resource "aws_codebuild_project" "test" {
+  name         = %[1]q
+  service_role = aws_iam_role.test.arn
+
+  artifacts {
+    type = "NO_ARTIFACTS"
+  }
+
+  environment {
+    compute_type = "BUILD_GENERAL1_SMALL"
+    image        = "2"
+    type         = "LINUX_CONTAINER"
+  }
+
+  source {
+    location = "https://git-codecommit.region-id.amazonaws.com/v1/repos/repo-name"
+    type     = "CODECOMMIT"
+  }
+
+  secondary_sources {
+    location          = "https://git-codecommit.region-id.amazonaws.com/v1/repos/second-repo-name"
+    type              = "CODECOMMIT"
+    source_identifier = "secondarySource1"
+  }
+
+  secondary_sources {
+    location          = "https://git-codecommit.region-id.amazonaws.com/v1/repos/third-repo-name"
+    type              = "CODECOMMIT"
+    source_identifier = "secondarySource2"
+  }
+
+  secondary_source_version {
+	source_version    = "master"
+    source_identifier = "secondarySource1"
+  }
+
+  secondary_source_version {
+	source_version    = "master"
+    source_identifier = "secondarySource2"
+  }
+}
+`, rName))
 }
 
 func testAccProjectConfig_Source_InsecureSSL(rName string, insecureSSL bool) string {
