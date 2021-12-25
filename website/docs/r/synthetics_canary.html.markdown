@@ -64,8 +64,7 @@ The following arguments are optional:
 * `kms_key_arn` - (Optional) The ARN of the customer-managed KMS key to use, if you specify `SSE-KMS` for `encryption_mode`.
 
 ### schedule
-
-* `expression` - (Required) Rate expression that defines how often the canary is to run. The syntax is rate(number unit). unit can be minute, minutes, or hour.
+* `expression` - (Required) Rate expression or cron expression that defines how often the canary is to run. For rate expression, the syntax is rate(number unit). unit can be minute, minutes, or hour. For cron expression, the syntax is cron(expression). The document can be found at [Scheduling canary runs using cron](https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/CloudWatch_Synthetics_Canaries_cron.html)
 * `duration_in_seconds` - (Optional) Duration in seconds, for the canary to continue making regular runs according to the schedule in the Expression value.
 
 ### run_config
