@@ -157,6 +157,8 @@ func testAccCheckSourceCredentialExists(name string, sourceCredential *codebuild
 			return fmt.Errorf("CodeBuild Source Credential (%s) not found", rs.Primary.ID)
 		}
 
+		*sourceCredential = *output
+
 		return nil
 	}
 }
