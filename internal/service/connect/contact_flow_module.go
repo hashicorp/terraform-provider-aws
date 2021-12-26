@@ -86,6 +86,57 @@ func ResourceContactFlowModule() *schema.Resource {
 	}
 }
 
+func resourceContactFlowModuleCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.AWSClient).ConnectConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+
+	instanceID := d.Get("instance_id").(string)
+	name := d.Get("name").(string)
+
+	input := &connect.CreateContactFlowModuleInput{
+		Name:       aws.String(name),
+		InstanceId: aws.String(instanceID),
+	}
+
+	if v, ok := d.GetOk("description"); ok {
+		input.Description = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("filename"); ok {
+		filename := v.(string)
+		// Grab an exclusive lock so that we're only reading one contact flow module into
+		// memory at a time.
+		// See https://github.com/hashicorp/terraform/issues/9364
+		conns.GlobalMutexKV.Lock(awsMutexConnectContactFlowModuleKey)
+		defer conns.GlobalMutexKV.Unlock(awsMutexConnectContactFlowModuleKey)
+		file, err := resourceContactFlowModuleLoadFileContent(filename)
+		if err != nil {
+			return diag.FromErr(fmt.Errorf("unable to load %q: %w", filename, err))
+		}
+		input.Content = aws.String(file)
+	} else if v, ok := d.GetOk("content"); ok {
+		input.Content = aws.String(v.(string))
+	}
+
+	if len(tags) > 0 {
+		input.Tags = Tags(tags.IgnoreAWS())
+	}
+
+	output, err := conn.CreateContactFlowModuleWithContext(ctx, input)
+
+	if err != nil {
+		return diag.FromErr(fmt.Errorf("error creating Connect Contact Flow Module (%s): %w", name, err))
+	}
+
+	if output == nil {
+		return diag.FromErr(fmt.Errorf("error creating Connect Contact Flow Module (%s): empty output", name))
+	}
+
+	d.SetId(fmt.Sprintf("%s:%s", instanceID, aws.StringValue(output.Id)))
+
+	return resourceContactFlowModuleRead(ctx, d, meta)
+}
 
 func resourceContactFlowModuleRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).ConnectConn
