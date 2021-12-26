@@ -21,7 +21,7 @@ func TestAccBatchJobQueueDataSource_basic(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccJobQueueDataSourceConfig(rName),
+				Config: testAccJobQueueDataSourceConfigBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "arn", resourceName, "arn"),
 					resource.TestCheckResourceAttrPair(datasourceName, "compute_environment_order.#", resourceName, "compute_environments.#"),
@@ -35,7 +35,7 @@ func TestAccBatchJobQueueDataSource_basic(t *testing.T) {
 	})
 }
 
-func testAccJobQueueDataSourceConfig(rName string) string {
+func testAccJobQueueDataSourceConfigBase(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -133,7 +133,13 @@ resource "aws_batch_compute_environment" "sample" {
   type         = "MANAGED"
   depends_on   = [aws_iam_role_policy_attachment.aws_batch_service_role]
 }
+`, rName)
+}
 
+func testAccJobQueueDataSourceConfigBasic(rName string) string {
+	return acctest.ConfigCompose(
+		testAccJobQueueDataSourceConfigBase(rName),
+		fmt.Sprintf(`
 resource "aws_batch_job_queue" "test" {
   name                 = "%[1]s"
   state                = "ENABLED"
@@ -151,5 +157,5 @@ resource "aws_batch_job_queue" "wrong" {
 data "aws_batch_job_queue" "by_name" {
   name = aws_batch_job_queue.test.name
 }
-`, rName)
+`, rName))
 }
