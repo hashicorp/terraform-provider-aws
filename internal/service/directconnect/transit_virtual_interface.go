@@ -98,7 +98,7 @@ func ResourceTransitVirtualInterface() *schema.Resource {
 			},
 			"sitelink_enabled": {
 				Type:     schema.TypeBool,
-				Computed: true,
+				Optional: true,
 			},
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
