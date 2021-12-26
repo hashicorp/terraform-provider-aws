@@ -51,6 +51,7 @@ func TestAccDirectConnectPrivateVirtualInterface_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "jumbo_frame_capable", "true"),
 					resource.TestCheckResourceAttr(resourceName, "mtu", "1500"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "sitelink_enabled", "true"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "vlan", strconv.Itoa(vlan)),
 					resource.TestCheckResourceAttrPair(resourceName, "vpn_gateway_id", vpnGatewayResourceName, "id"),
@@ -72,6 +73,7 @@ func TestAccDirectConnectPrivateVirtualInterface_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "jumbo_frame_capable", "true"),
 					resource.TestCheckResourceAttr(resourceName, "mtu", "9001"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "sitelink_enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "vlan", strconv.Itoa(vlan)),
 					resource.TestCheckResourceAttrPair(resourceName, "vpn_gateway_id", vpnGatewayResourceName, "id"),
@@ -241,10 +243,11 @@ resource "aws_dx_private_virtual_interface" "test" {
   bgp_asn        = %[3]d
   connection_id  = %[1]q
   name           = %[2]q
+  sitelink_enabled = %[5]t
   vlan           = %[4]d
   vpn_gateway_id = aws_vpn_gateway.test.id
 }
-`, cid, rName, bgpAsn, vlan)
+`, cid, rName, bgpAsn, vlan, true)
 }
 
 func testAccDxPrivateVirtualInterfaceConfig_updated(cid, rName string, bgpAsn, vlan int) string {
@@ -255,10 +258,11 @@ resource "aws_dx_private_virtual_interface" "test" {
   connection_id  = %[1]q
   mtu            = 9001
   name           = %[2]q
+  sitelink_enabled = %[5]t
   vlan           = %[4]d
   vpn_gateway_id = aws_vpn_gateway.test.id
 }
-`, cid, rName, bgpAsn, vlan)
+`, cid, rName, bgpAsn, vlan, false)
 }
 
 func testAccDxPrivateVirtualInterfaceConfig_tags(cid, rName string, bgpAsn, vlan int) string {

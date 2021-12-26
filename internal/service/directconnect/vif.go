@@ -28,12 +28,22 @@ func dxVirtualInterfaceRead(id string, conn *directconnect.DirectConnect) (*dire
 func dxVirtualInterfaceUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DirectConnectConn
 
-	if d.HasChange("mtu") {
+	if d.HasChanges("mtu") {
 		req := &directconnect.UpdateVirtualInterfaceAttributesInput{
 			Mtu:                aws.Int64(int64(d.Get("mtu").(int))),
 			VirtualInterfaceId: aws.String(d.Id()),
 		}
-
+		log.Printf("[DEBUG] Modifying Direct Connect virtual interface attributes: %s", req)
+		_, err := conn.UpdateVirtualInterfaceAttributes(req)
+		if err != nil {
+			return fmt.Errorf("error modifying Direct Connect virtual interface (%s) attributes: %s", d.Id(), err)
+		}
+	}
+	if d.HasChange("sitelink_enabled") {
+		req := &directconnect.UpdateVirtualInterfaceAttributesInput{
+			EnableSiteLink:     aws.Bool(d.Get("sitelink_enabled").(bool)),
+			VirtualInterfaceId: aws.String(d.Id()),
+		}
 		log.Printf("[DEBUG] Modifying Direct Connect virtual interface attributes: %s", req)
 		_, err := conn.UpdateVirtualInterfaceAttributes(req)
 		if err != nil {

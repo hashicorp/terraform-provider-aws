@@ -67,6 +67,7 @@ func testAccTransitVirtualInterface_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "jumbo_frame_capable", "true"),
 					resource.TestCheckResourceAttr(resourceName, "mtu", "1500"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "sitelink_enabled", "true"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "vlan", strconv.Itoa(vlan)),
 				),
@@ -88,6 +89,7 @@ func testAccTransitVirtualInterface_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "jumbo_frame_capable", "true"),
 					resource.TestCheckResourceAttr(resourceName, "mtu", "8500"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "sitelink_enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "vlan", strconv.Itoa(vlan)),
 				),
@@ -206,9 +208,10 @@ resource "aws_dx_transit_virtual_interface" "test" {
   dx_gateway_id  = aws_dx_gateway.test.id
   connection_id  = %[1]q
   name           = %[2]q
+  sitelink_enabled = %[5]t
   vlan           = %[4]d
 }
-`, cid, rName, bgpAsn, vlan)
+`, cid, rName, bgpAsn, vlan, true)
 }
 
 func testAccDxTransitVirtualInterfaceConfig_updated(cid, rName string, amzAsn, bgpAsn, vlan int) string {
@@ -220,9 +223,10 @@ resource "aws_dx_transit_virtual_interface" "test" {
   connection_id  = %[1]q
   mtu            = 8500
   name           = %[2]q
+  sitelink_enabled = %[5]t
   vlan           = %[4]d
 }
-`, cid, rName, bgpAsn, vlan)
+`, cid, rName, bgpAsn, vlan, false)
 }
 
 func testAccDxTransitVirtualInterfaceConfig_tags(cid, rName string, amzAsn, bgpAsn, vlan int) string {
