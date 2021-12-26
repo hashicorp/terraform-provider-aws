@@ -6,11 +6,10 @@ package devicefarm
 import (
 	"fmt"
 	"log"
-	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/devicefarm"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
@@ -25,49 +24,54 @@ func init() {
 
 func sweepProjects(region string) error {
 	client, err := sweep.SharedRegionalSweepClient(region)
+
 	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
+		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).DeviceFarm
+
+	conn := client.(*conns.AWSClient).DeviceFarmConn
+	sweepResources := make([]*sweep.SweepResource, 0)
+	var errs *multierror.Error
 
 	input := &devicefarm.ListProjectsInput{}
-	for {
-		output, err := conn.ListProjectsPages(input)
 
-		if sweep.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping DeviceFarm Project sweep for %s: %s", region, err)
-			return nil
+	err = conn.ListProjectsPages(input, func(page *devicefarm.ListProjectsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
 		}
 
-		if err != nil {
-			return fmt.Errorf("Error retrieving DeviceFarm Projects: %s", err)
-		}
-
-		if len(output.Projects) == 0 {
-			log.Print("[DEBUG] No DeviceFarm Projects to sweep")
-			return nil
-		}
-
-		for _, project := range output.Projects {
-			arn := aws.StringValue(project.Arn)
-
-			log.Printf("[INFO] Deleting DeviceFarm Project: %s", arn)
+		for _, project := range page.Projects {
 			r := ResourceProject()
 			d := r.Data(nil)
-			d.SetId(arn)
-			err = r.Delete(d, client)
+
+			id := aws.StringValue(project.Arn)
+			d.SetId(id)
 
 			if err != nil {
-				log.Printf("[ERROR] Failed to delete DeviceFarm Project (%s): %s", uri, err)
+				err := fmt.Errorf("error reading DeviceFarm Project (%s): %w", id, err)
+				log.Printf("[ERROR] %s", err)
+				errs = multierror.Append(errs, err)
+				continue
 			}
+
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
 
-		if aws.StringValue(output.NextToken) == "" {
-			break
-		}
+		return !lastPage
+	})
 
-		input.NextToken = output.NextToken
+	if err != nil {
+		errs = multierror.Append(errs, fmt.Errorf("error listing DeviceFarm Project for %s: %w", region, err))
 	}
 
-	return nil
+	if err := sweep.SweepOrchestrator(sweepResources); err != nil {
+		errs = multierror.Append(errs, fmt.Errorf("error sweeping DeviceFarm Project for %s: %w", region, err))
+	}
+
+	if sweep.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping DeviceFarm Project sweep for %s: %s", region, errs)
+		return nil
+	}
+
+	return errs.ErrorOrNil()
 }
