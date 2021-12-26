@@ -86,3 +86,14 @@ func ResourceContactFlowModule() *schema.Resource {
 	}
 }
 
+func resourceContactFlowModuleLoadFileContent(filename string) (string, error) {
+	filename, err := homedir.Expand(filename)
+	if err != nil {
+		return "", err
+	}
+	fileContent, err := os.ReadFile(filename)
+	if err != nil {
+		return "", err
+	}
+	return string(fileContent), nil
+}
