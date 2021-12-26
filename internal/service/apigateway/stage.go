@@ -116,6 +116,10 @@ func ResourceStage() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"web_acl_arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -224,6 +228,7 @@ func resourceStageRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("description", stage.Description)
 	d.Set("documentation_version", stage.DocumentationVersion)
 	d.Set("xray_tracing_enabled", stage.TracingEnabled)
+	d.Set("web_acl_arn", stage.WebAclArn)
 
 	tags := KeyValueTags(stage.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 

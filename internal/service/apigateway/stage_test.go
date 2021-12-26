@@ -220,6 +220,31 @@ func TestAccAPIGatewayStage_disappears(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStageExists(resourceName, &stage),
 					acctest.CheckResourceDisappears(acctest.Provider, tfapigateway.ResourceStage(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfapigateway.ResourceStage(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccAPIGatewayStage_disappears_restApi(t *testing.T) {
+	var stage apigateway.Stage
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_api_gateway_stage.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckStageDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccStageReferencingDeploymentConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckStageExists(resourceName, &stage),
+					acctest.CheckResourceDisappears(acctest.Provider, tfapigateway.ResourceRestAPI(), "aws_api_gateway_rest_api.test"),
+					acctest.CheckResourceDisappears(acctest.Provider, tfapigateway.ResourceStage(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -359,6 +384,40 @@ func TestAccAPIGatewayStage_AccessLogSettings_kinesis(t *testing.T) {
 					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "apigateway", regexp.MustCompile(`/restapis/.+/stages/prod`)),
 					resource.TestCheckResourceAttr(resourceName, "access_log_settings.#", "0"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccAPIGatewayStage_waf(t *testing.T) {
+	var conf apigateway.Stage
+	rName := sdkacctest.RandString(5)
+	resourceName := "aws_api_gateway_stage.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckStageDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSAPIGatewayStageConfigWafAcl(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckStageExists(resourceName, &conf),
+				),
+			},
+			{
+				Config: testAccAWSAPIGatewayStageConfigWafAcl(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckStageExists(resourceName, &conf),
+					resource.TestCheckResourceAttrPair(resourceName, "web_acl_arn", "aws_wafregional_web_acl.test", "arn"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccStageImportStateIdFunc(resourceName),
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -693,4 +752,21 @@ resource "aws_api_gateway_stage" "test" {
   }
 }
 `, tagKey1, tagValue1, tagKey2, tagValue2)
+}
+
+func testAccAWSAPIGatewayStageConfigWafAcl(rName string) string {
+	return testAccStageConfigBasic(rName) + fmt.Sprintf(`
+resource "aws_wafregional_web_acl" "test" {
+  name        = %[1]q
+  metric_name = "test"
+  default_action {
+    type = "ALLOW"
+  }
+}
+
+resource "aws_wafregional_web_acl_association" "test" {
+  resource_arn = aws_api_gateway_stage.test.arn
+  web_acl_id   = aws_wafregional_web_acl.test.id
+}
+`, rName)
 }
