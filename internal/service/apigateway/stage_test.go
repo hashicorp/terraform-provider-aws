@@ -630,11 +630,11 @@ resource "aws_api_gateway_stage" "test" {
 func testAccStageConfigUpdated(rName string) string {
 	return testAccStageConfig_base(rName) + `
 resource "aws_api_gateway_stage" "test" {
-  rest_api_id           = aws_api_gateway_rest_api.test.id
-  stage_name            = "prod"
-  deployment_id         = aws_api_gateway_deployment.dev.id
-  description           = "Hello world"
-  xray_tracing_enabled  = true
+  rest_api_id          = aws_api_gateway_rest_api.test.id
+  stage_name           = "prod"
+  deployment_id        = aws_api_gateway_deployment.dev.id
+  description          = "Hello world"
+  xray_tracing_enabled = true
 
   variables = {
     one   = "1"
@@ -663,9 +663,9 @@ resource "aws_cloudwatch_log_group" "test" {
 }
 
 resource "aws_api_gateway_stage" "test" {
-  rest_api_id           = aws_api_gateway_rest_api.test.id
-  stage_name            = "prod"
-  deployment_id         = aws_api_gateway_deployment.dev.id
+  rest_api_id   = aws_api_gateway_rest_api.test.id
+  stage_name    = "prod"
+  deployment_id = aws_api_gateway_deployment.dev.id
 
   access_log_settings {
     destination_arn = aws_cloudwatch_log_group.test.arn
@@ -713,9 +713,9 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
 }
 
 resource "aws_api_gateway_stage" "test" {
-  rest_api_id           = aws_api_gateway_rest_api.test.id
-  stage_name            = "prod"
-  deployment_id         = aws_api_gateway_deployment.dev.id
+  rest_api_id   = aws_api_gateway_rest_api.test.id
+  stage_name    = "prod"
+  deployment_id = aws_api_gateway_deployment.dev.id
 
   access_log_settings {
     destination_arn = aws_kinesis_firehose_delivery_stream.test.arn
@@ -728,9 +728,9 @@ resource "aws_api_gateway_stage" "test" {
 func testAccStageConfigTags1(rName, tagKey1, tagValue1 string) string {
 	return testAccStageConfig_base(rName) + fmt.Sprintf(`
 resource "aws_api_gateway_stage" "test" {
-  rest_api_id           = aws_api_gateway_rest_api.test.id
-  stage_name            = "prod"
-  deployment_id         = aws_api_gateway_deployment.dev.id
+  rest_api_id   = aws_api_gateway_rest_api.test.id
+  stage_name    = "prod"
+  deployment_id = aws_api_gateway_deployment.dev.id
 
   tags = {
     %[1]q = %[2]q
@@ -742,9 +742,9 @@ resource "aws_api_gateway_stage" "test" {
 func testAccStageConfigTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return testAccStageConfig_base(rName) + fmt.Sprintf(`
 resource "aws_api_gateway_stage" "test" {
-  rest_api_id           = aws_api_gateway_rest_api.test.id
-  stage_name            = "prod"
-  deployment_id         = aws_api_gateway_deployment.dev.id
+  rest_api_id   = aws_api_gateway_rest_api.test.id
+  stage_name    = "prod"
+  deployment_id = aws_api_gateway_deployment.dev.id
 
   tags = {
     %[1]q = %[2]q
