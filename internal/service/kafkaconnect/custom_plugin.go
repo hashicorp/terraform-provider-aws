@@ -52,17 +52,21 @@ func ResourceCustomPlugin() *schema.Resource {
 									"bucket_arn": {
 										Type:     schema.TypeString,
 										Required: true,
+										ForceNew: true,
 									},
 									"file_key": {
 										Type:     schema.TypeString,
 										Required: true,
+										ForceNew: true,
 									},
 									"object_version": {
 										Type:     schema.TypeString,
 										Optional: true,
+										ForceNew: true,
 									},
 								},
 							},
+							ForceNew: true,
 							Required: true,
 							MaxItems: 1,
 						},
@@ -185,6 +189,7 @@ func expandS3Location(tfList []interface{}) *kafkaconnect.S3Location {
 
 func flattenLocation(apiLocation *kafkaconnect.CustomPluginLocationDescription) []interface{} {
 	location := make(map[string]interface{})
+
 	location["s3"] = flattenS3Location(apiLocation.S3Location)
 
 	return []interface{}{location}
@@ -192,10 +197,14 @@ func flattenLocation(apiLocation *kafkaconnect.CustomPluginLocationDescription) 
 
 func flattenS3Location(apiS3Location *kafkaconnect.S3LocationDescription) []interface{} {
 	location := make(map[string]interface{})
+
 	location["bucket_arn"] = aws.StringValue(apiS3Location.BucketArn)
 	location["file_key"] = aws.StringValue(apiS3Location.FileKey)
+
 	if objVer := apiS3Location.ObjectVersion; objVer != nil {
+		log.Printf("[DEBUG] Assigning object_version: %v", *objVer)
 		location["object_version"] = aws.StringValue(objVer)
 	}
+
 	return []interface{}{location}
 }
