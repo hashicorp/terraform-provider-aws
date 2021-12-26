@@ -189,6 +189,69 @@ func resourceContactFlowModuleRead(ctx context.Context, d *schema.ResourceData, 
 	return nil
 }
 
+func resourceContactFlowModuleUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.AWSClient).ConnectConn
+
+	instanceID, contactFlowModuleID, err := ContactFlowModuleParseID(d.Id())
+
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	if d.HasChanges("name", "description") {
+		updateMetadataInput := &connect.UpdateContactFlowModuleMetadataInput{
+			ContactFlowModuleId: aws.String(contactFlowModuleID),
+			Description:         aws.String(d.Get("description").(string)),
+			InstanceId:          aws.String(instanceID),
+			Name:                aws.String(d.Get("name").(string)),
+		}
+
+		_, updateMetadataInputErr := conn.UpdateContactFlowModuleMetadataWithContext(ctx, updateMetadataInput)
+
+		if updateMetadataInputErr != nil {
+			return diag.FromErr(fmt.Errorf("error updating Connect Contact Flow Module (%s): %w", d.Id(), updateMetadataInputErr))
+		}
+	}
+
+	if d.HasChanges("content", "content_hash", "filename") {
+		updateContentInput := &connect.UpdateContactFlowModuleContentInput{
+			ContactFlowModuleId: aws.String(contactFlowModuleID),
+			InstanceId:          aws.String(instanceID),
+		}
+
+		if v, ok := d.GetOk("filename"); ok {
+			filename := v.(string)
+			// Grab an exclusive lock so that we're only reading one contact flow module into
+			// memory at a time.
+			// See https://github.com/hashicorp/terraform/issues/9364
+			conns.GlobalMutexKV.Lock(awsMutexConnectContactFlowModuleKey)
+			defer conns.GlobalMutexKV.Unlock(awsMutexConnectContactFlowModuleKey)
+			file, err := resourceContactFlowModuleLoadFileContent(filename)
+			if err != nil {
+				return diag.FromErr(fmt.Errorf("unable to load %q: %w", filename, err))
+			}
+			updateContentInput.Content = aws.String(file)
+		} else if v, ok := d.GetOk("content"); ok {
+			updateContentInput.Content = aws.String(v.(string))
+		}
+
+		_, updateContentInputErr := conn.UpdateContactFlowModuleContentWithContext(ctx, updateContentInput)
+
+		if updateContentInputErr != nil {
+			return diag.FromErr(fmt.Errorf("error updating Connect Contact Flow Module content (%s): %w", d.Id(), updateContentInputErr))
+		}
+	}
+
+	if d.HasChange("tags_all") {
+		o, n := d.GetChange("tags_all")
+		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+			return diag.FromErr(fmt.Errorf("error updating tags: %w", err))
+		}
+	}
+
+	return resourceContactFlowModuleRead(ctx, d, meta)
+}
+
 func ContactFlowModuleParseID(id string) (string, string, error) {
 	parts := strings.SplitN(id, ":", 2)
 
