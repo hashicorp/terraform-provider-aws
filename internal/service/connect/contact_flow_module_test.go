@@ -63,6 +63,55 @@ func testAccContactFlowModule_basic(t *testing.T) {
 	})
 }
 
+func testAccContactFlowModule_filename(t *testing.T) {
+	var v connect.DescribeContactFlowModuleOutput
+	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName2 := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	resourceName := "aws_connect_contact_flow_module.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, connect.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckContactFlowModuleDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccContactFlowModuleConfig_filename(rName, rName2, "Created", "test-fixtures/connect_contact_flow_module.json"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckContactFlowModuleExists(resourceName, &v),
+					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckResourceAttrSet(resourceName, "contact_flow_module_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "instance_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "name"),
+					resource.TestCheckResourceAttr(resourceName, "description", "Created"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"content_hash",
+					"filename",
+				},
+			},
+			{
+				Config: testAccContactFlowModuleConfig_filename(rName, rName2, "Updated", "test-fixtures/connect_contact_flow_module_updated.json"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckContactFlowModuleExists(resourceName, &v),
+					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckResourceAttrSet(resourceName, "contact_flow_module_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "instance_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "name"),
+					resource.TestCheckResourceAttr(resourceName, "description", "Updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+				),
+			},
+		},
+	})
+}
+
 
 func testAccCheckContactFlowModuleExists(resourceName string, function *connect.DescribeContactFlowModuleOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
