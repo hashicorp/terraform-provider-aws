@@ -252,6 +252,26 @@ func resourceContactFlowModuleUpdate(ctx context.Context, d *schema.ResourceData
 	return resourceContactFlowModuleRead(ctx, d, meta)
 }
 
+func resourceContactFlowModuleDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.AWSClient).ConnectConn
+
+	instanceID, contactFlowModuleID, err := ContactFlowModuleParseID(d.Id())
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	log.Printf("[DEBUG] Deleting Connect Contact Flow Module : %s", contactFlowModuleID)
+	input := &connect.DeleteContactFlowModuleInput{
+		ContactFlowModuleId: aws.String(contactFlowModuleID),
+		InstanceId:          aws.String(instanceID),
+	}
+
+	_, deleteContactFlowModuleErr := conn.DeleteContactFlowModuleWithContext(ctx, input)
+	if deleteContactFlowModuleErr != nil {
+		return diag.FromErr(fmt.Errorf("error deleting Connect Contact Flow Module (%s): %w", d.Id(), deleteContactFlowModuleErr))
+	}
+	return nil
+}
+
 func ContactFlowModuleParseID(id string) (string, string, error) {
 	parts := strings.SplitN(id, ":", 2)
 
