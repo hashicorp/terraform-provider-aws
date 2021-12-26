@@ -16,6 +16,41 @@ import (
 )
 
 
+func testAccCheckContactFlowModuleExists(resourceName string, function *connect.DescribeContactFlowModuleOutput) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[resourceName]
+		if !ok {
+			return fmt.Errorf("Connect Contact Flow Module not found: %s", resourceName)
+		}
+
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("Connect Contact Flow Module ID not set")
+		}
+		instanceID, contactFlowModuleID, err := tfconnect.ContactFlowModuleParseID(rs.Primary.ID)
+
+		if err != nil {
+			return err
+		}
+
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectConn
+
+		params := &connect.DescribeContactFlowModuleInput{
+			ContactFlowModuleId: aws.String(contactFlowModuleID),
+			InstanceId:          aws.String(instanceID),
+		}
+
+		getFunction, err := conn.DescribeContactFlowModule(params)
+		if err != nil {
+			return err
+		}
+
+		*function = *getFunction
+
+		return nil
+	}
+}
+
+
 func testAccContactFlowModuleBaseConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_connect_instance" "test" {
