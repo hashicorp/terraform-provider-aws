@@ -50,6 +50,36 @@ func testAccCheckContactFlowModuleExists(resourceName string, function *connect.
 	}
 }
 
+func testAccCheckContactFlowModuleDestroy(s *terraform.State) error {
+	for _, rs := range s.RootModule().Resources {
+		if rs.Type != "aws_connect_contact_flow_module" {
+			continue
+		}
+
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectConn
+
+		instanceID, contactFlowModuleID, err := tfconnect.ContactFlowModuleParseID(rs.Primary.ID)
+
+		if err != nil {
+			return err
+		}
+
+		params := &connect.DescribeContactFlowModuleInput{
+			ContactFlowModuleId: aws.String(contactFlowModuleID),
+			InstanceId:          aws.String(instanceID),
+		}
+
+		_, experr := conn.DescribeContactFlowModule(params)
+		// Verify the error is what we want
+		if experr != nil {
+			if awsErr, ok := experr.(awserr.Error); ok && awsErr.Code() == "ResourceNotFoundException" {
+				continue
+			}
+			return experr
+		}
+	}
+	return nil
+}
 
 func testAccContactFlowModuleBaseConfig(rName string) string {
 	return fmt.Sprintf(`
