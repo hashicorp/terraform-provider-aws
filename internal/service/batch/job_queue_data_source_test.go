@@ -27,6 +27,7 @@ func TestAccBatchJobQueueDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(datasourceName, "compute_environment_order.#", resourceName, "compute_environments.#"),
 					resource.TestCheckResourceAttrPair(datasourceName, "name", resourceName, "name"),
 					resource.TestCheckResourceAttrPair(datasourceName, "priority", resourceName, "priority"),
+					resource.TestCheckResourceAttrPair(datasourceName, "scheduling_policy_arn", resourceName, "scheduling_policy_arn"),
 					resource.TestCheckResourceAttrPair(datasourceName, "state", resourceName, "state"),
 					resource.TestCheckResourceAttrPair(datasourceName, "tags.%", resourceName, "tags.%"),
 				),
