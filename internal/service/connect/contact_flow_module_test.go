@@ -112,6 +112,29 @@ func testAccContactFlowModule_filename(t *testing.T) {
 	})
 }
 
+func testAccContactFlowModule_disappears(t *testing.T) {
+	var v connect.DescribeContactFlowModuleOutput
+	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName2 := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	resourceName := "aws_connect_contact_flow_module.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, connect.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckContactFlowModuleDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccContactFlowModuleConfig_basic(rName, rName2, "Disappear"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckContactFlowModuleExists(resourceName, &v),
+					acctest.CheckResourceDisappears(acctest.Provider, tfconnect.ResourceContactFlowModule(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
 
 func testAccCheckContactFlowModuleExists(resourceName string, function *connect.DescribeContactFlowModuleOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
