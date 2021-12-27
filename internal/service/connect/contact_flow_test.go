@@ -20,7 +20,7 @@ func TestAccConnectContactFlow_serial(t *testing.T) {
 	testCases := map[string]func(t *testing.T){
 		"basic":      testAccContactFlow_basic,
 		"filename":   testAccContactFlow_filename,
-		"disappears": testAccContactFlow_disappears_ConnectInstance,
+		"disappears": testAccContactFlow_disappears,
 	}
 
 	for name, tc := range testCases {
@@ -131,13 +131,12 @@ func testAccContactFlow_filename(t *testing.T) {
 	})
 }
 
-func testAccContactFlow_disappears_ConnectInstance(t *testing.T) {
+func testAccContactFlow_disappears(t *testing.T) {
 	var v connect.DescribeContactFlowOutput
 	// var v2 connect.DescribeInstanceOutput
 	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	rName2 := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	resourceName := "aws_connect_contact_flow.test"
-	instanceResourceName := "aws_connect_instance.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -149,7 +148,7 @@ func testAccContactFlow_disappears_ConnectInstance(t *testing.T) {
 				Config: testAccContactFlowBasicConfig(rName, rName2, "Disappear"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContactFlowExists(resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, tfconnect.ResourceInstance(), instanceResourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfconnect.ResourceContactFlow(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
