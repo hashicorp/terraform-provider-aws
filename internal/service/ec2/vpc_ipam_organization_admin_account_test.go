@@ -2,34 +2,41 @@ package ec2_test
 
 import (
 	"fmt"
+	"os"
 	"regexp"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/organizations"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	tforganizations "github.com/hashicorp/terraform-provider-aws/internal/service/organizations"
 )
 
 func TestAccVPCIpamOrganizationAdminAccount_basic(t *testing.T) {
-	// var providers []*schema.Provider
+	// In order for IPAM to properly delete resources that are created during other tests
+	// we must have a delegated admin account setup which creates the appropriate SLR to properly delete.
+	// Since you can only have 1 delegate account, these tests are skipped in CI
+	if os.Getenv("IPAM_ORG_ACCOUNT_ADMIN") != "" {
+		t.Skip("IPAM_ORG_ACCOUNT_ADMIN must have a value to run test suite.")
+	}
+	var providers []*schema.Provider
 	var organization organizations.DelegatedAdministrator
 	resourceName := "aws_vpc_ipam_organization_account_admin.test"
-	// servicePrincipal := "ipam.amazonaws.com"
 	dataSourceIdentity := "data.aws_caller_identity.delegated"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			// acctest.PreCheckAlternateAccount(t)
+			acctest.PreCheckAlternateAccount(t)
 		},
-		ErrorCheck: acctest.ErrorCheck(t, organizations.EndpointsID),
-		// ProviderFactories: acctest.FactoriesAlternate(&providers),
-		CheckDestroy: testAccCheckVPCIpamOrganizationAdminAccountDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, organizations.EndpointsID),
+		ProviderFactories: acctest.FactoriesAlternate(&providers),
+		CheckDestroy:      testAccCheckVPCIpamOrganizationAdminAccountDestroy,
+		// Providers:    acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCIpamOrganizationAdminAccountConfig,
@@ -37,7 +44,7 @@ func TestAccVPCIpamOrganizationAdminAccount_basic(t *testing.T) {
 					testAccCheckVPCIpamOrganizationAdminAccountExists(resourceName, &organization),
 					resource.TestCheckResourceAttrPair(resourceName, "id", dataSourceIdentity, "account_id"),
 					resource.TestCheckResourceAttr(resourceName, "service_principal", tfec2.Ipam_service_principal),
-					acctest.MatchResourceAttrGlobalARNNoAccount(resourceName, "arn", "organizations", regexp.MustCompile("account/.+")),
+					acctest.MatchResourceAttrGlobalARN(resourceName, "arn", "organizations", regexp.MustCompile("account/.+")),
 				),
 			},
 			{
@@ -68,12 +75,11 @@ func testAccCheckVPCIpamOrganizationAdminAccountDestroy(s *terraform.State) erro
 			return fmt.Errorf("error finding IPAM organization delegated account: (%s): %w", id, err)
 		}
 
-		if aws.StringValue(output.DelegatedAdministrators[0].Id) == id {
-			return fmt.Errorf("organization DelegatedAdministrator still exists: %q", id)
+		if output == nil || len(output.DelegatedAdministrators) == 0 || output.DelegatedAdministrators[0] == nil {
+			return nil
 		}
-
+		return fmt.Errorf("organization DelegatedAdministrator still exists: %q", id)
 	}
-
 	return nil
 }
 
@@ -88,50 +94,39 @@ func testAccCheckVPCIpamOrganizationAdminAccountExists(n string, org *organizati
 			return fmt.Errorf("Organization ID not set")
 		}
 
-		accountID, servicePrincipal, err := tforganizations.DecodeOrganizationDelegatedAdministratorID(rs.Primary.ID)
-		if err != nil {
-			return err
-		}
+		accountID := rs.Primary.ID
+
 		conn := acctest.Provider.Meta().(*conns.AWSClient).OrganizationsConn
 		input := &organizations.ListDelegatedAdministratorsInput{
-			ServicePrincipal: aws.String(servicePrincipal),
+			ServicePrincipal: aws.String(tfec2.Ipam_service_principal),
 		}
 
-		exists := false
-		var resp *organizations.DelegatedAdministrator
-		err = conn.ListDelegatedAdministratorsPages(input, func(page *organizations.ListDelegatedAdministratorsOutput, lastPage bool) bool {
-			for _, delegated := range page.DelegatedAdministrators {
-				if aws.StringValue(delegated.Id) == accountID {
-					exists = true
-					resp = delegated
-				}
-			}
-
-			return !lastPage
-		})
+		output, err := conn.ListDelegatedAdministrators(input)
 
 		if err != nil {
-			return err
+			return fmt.Errorf("error finding IPAM organization delegated account: (%s): %w", accountID, err)
 		}
 
-		if !exists {
+		if output == nil || len(output.DelegatedAdministrators) == 0 || output.DelegatedAdministrators[0] == nil {
 			return fmt.Errorf("organization DelegatedAdministrator %q does not exist", rs.Primary.ID)
+
 		}
 
-		*org = *resp
+		output_account := output.DelegatedAdministrators[0]
 
+		if aws.StringValue(output_account.Id) != accountID {
+			return fmt.Errorf("organization DelegatedAdministrator %q does not match expected %s", accountID, aws.StringValue(output_account.Id))
+		}
+		*org = *output_account
 		return nil
 	}
 }
 
 const testAccVPCIpamOrganizationAdminAccountConfig = `
-	// data "aws_caller_identity" "delegated" {
-	//   provider = "awsalternate"
-	// }
+data "aws_caller_identity" "delegated" {
+	provider = "awsalternate"
+  }
 
-	resource "aws_vpc_ipam_organization_account_admin" "test" {
-		delegated_admin_account_id =  "034799157163" #data.aws_caller_identity.delegated.account_id
-	}
-	`
-
-//acctest.ConfigAlternateAccountProvider()
+resource "aws_vpc_ipam_organization_account_admin" "test" {
+	delegated_admin_account_id = data.aws_caller_identity.delegated.account_id
+`
