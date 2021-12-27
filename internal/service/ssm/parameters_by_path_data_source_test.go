@@ -69,7 +69,7 @@ data "aws_ssm_parameters_by_path" "test" {
 }
 
 func TestAccSSMParametersByPathDataSource_withRecursion(t *testing.T) {
-	resourceName := "data.aws_ssm_parameters_by_path.recursive_test"
+	resourceName := "data.aws_ssm_parameters_by_path.recursive"
 	pathPrefix := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -105,7 +105,7 @@ resource "aws_ssm_parameter" "nested" {
   value = "TestValueB"
 }
 
-data "aws_ssm_parameters_by_path" "recursive_test" {
+data "aws_ssm_parameters_by_path" "recursive" {
   path      = "/%[1]s/"
   recursive = true
 
