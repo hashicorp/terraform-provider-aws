@@ -106,7 +106,7 @@ resource "aws_ssm_parameter" "nested" {
 }
 
 data "aws_ssm_parameters_by_path" "recursive_test" {
-  path            = "/%[1]s/"
+  path      = "/%[1]s/"
   recursive = true
 
   depends_on = [
