@@ -620,6 +620,10 @@ func PreCheckMultipleRegion(t *testing.T, regions int) {
 	}
 
 	if regions >= 3 {
+		if thirdRegionPartition() == "aws-us-gov" || Partition() == "aws-us-gov" {
+			t.Skipf("wanted %d regions, partition (%s) only has 2 regions", regions, Partition())
+		}
+
 		if Region() == ThirdRegion() {
 			t.Fatalf("%s and %s must be set to different values for acceptance tests", conns.EnvVarDefaultRegion, conns.EnvVarThirdRegion)
 		}

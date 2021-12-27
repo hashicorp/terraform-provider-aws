@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ecr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
@@ -35,22 +36,43 @@ func ResourceReplicationConfiguration() *schema.Resource {
 						"rule": {
 							Type:     schema.TypeList,
 							Required: true,
-							MaxItems: 1,
+							MaxItems: 10,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"destination": {
 										Type:     schema.TypeList,
 										Required: true,
+										MaxItems: 25,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"region": {
-													Type:     schema.TypeString,
-													Required: true,
+													Type:         schema.TypeString,
+													Required:     true,
+													ValidateFunc: verify.ValidRegionName,
 												},
 												"registry_id": {
 													Type:         schema.TypeString,
 													Required:     true,
 													ValidateFunc: verify.ValidAccountID,
+												},
+											},
+										},
+									},
+									"repository_filter": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MinItems: 1,
+										MaxItems: 100,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"filter": {
+													Type:     schema.TypeString,
+													Required: true,
+												},
+												"filter_type": {
+													Type:         schema.TypeString,
+													Required:     true,
+													ValidateFunc: validation.StringInSlice(ecr.RepositoryFilterType_Values(), false),
 												},
 											},
 										},
@@ -153,7 +175,8 @@ func expandEcrReplicationConfigurationReplicationConfigurationRules(data []inter
 	for _, rule := range data {
 		ec := rule.(map[string]interface{})
 		config := &ecr.ReplicationRule{
-			Destinations: expandEcrReplicationConfigurationReplicationConfigurationRulesDestinations(ec["destination"].([]interface{})),
+			Destinations:      expandEcrReplicationConfigurationReplicationConfigurationRulesDestinations(ec["destination"].([]interface{})),
+			RepositoryFilters: expandEcrReplicationConfigurationReplicationConfigurationRulesRepositoryFilters(ec["repository_filter"].([]interface{})),
 		}
 
 		rules = append(rules, config)
@@ -171,7 +194,8 @@ func flattenEcrReplicationConfigurationReplicationConfigurationRules(ec []*ecr.R
 
 	for _, apiObject := range ec {
 		tfMap := map[string]interface{}{
-			"destination": flattenEcrReplicationConfigurationReplicationConfigurationRulesDestinations(apiObject.Destinations),
+			"destination":       flattenEcrReplicationConfigurationReplicationConfigurationRulesDestinations(apiObject.Destinations),
+			"repository_filter": flattenEcrReplicationConfigurationReplicationConfigurationRulesRepositoryFilters(apiObject.RepositoryFilters),
 		}
 
 		tfList = append(tfList, tfMap)
@@ -210,6 +234,44 @@ func flattenEcrReplicationConfigurationReplicationConfigurationRulesDestinations
 		tfMap := map[string]interface{}{
 			"region":      aws.StringValue(apiObject.Region),
 			"registry_id": aws.StringValue(apiObject.RegistryId),
+		}
+
+		tfList = append(tfList, tfMap)
+	}
+
+	return tfList
+}
+
+func expandEcrReplicationConfigurationReplicationConfigurationRulesRepositoryFilters(data []interface{}) []*ecr.RepositoryFilter {
+	if len(data) == 0 || data[0] == nil {
+		return nil
+	}
+
+	var filters []*ecr.RepositoryFilter
+
+	for _, filter := range data {
+		ec := filter.(map[string]interface{})
+		config := &ecr.RepositoryFilter{
+			Filter:     aws.String(ec["filter"].(string)),
+			FilterType: aws.String(ec["filter_type"].(string)),
+		}
+
+		filters = append(filters, config)
+	}
+	return filters
+}
+
+func flattenEcrReplicationConfigurationReplicationConfigurationRulesRepositoryFilters(ec []*ecr.RepositoryFilter) []interface{} {
+	if len(ec) == 0 {
+		return nil
+	}
+
+	var tfList []interface{}
+
+	for _, apiObject := range ec {
+		tfMap := map[string]interface{}{
+			"filter":      aws.StringValue(apiObject.Filter),
+			"filter_type": aws.StringValue(apiObject.FilterType),
 		}
 
 		tfList = append(tfList, tfMap)

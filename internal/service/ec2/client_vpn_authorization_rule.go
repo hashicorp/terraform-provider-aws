@@ -106,7 +106,7 @@ func resourceClientVPNAuthorizationRuleRead(d *schema.ResourceData, meta interfa
 		d.Get("access_group_id").(string),
 	)
 
-	if tfawserr.ErrMessageContains(err, ErrCodeClientVPNAuthorizationRuleNotFound, "") {
+	if tfawserr.ErrMessageContains(err, ErrCodeClientVpnAuthorizationRuleNotFound, "") {
 		log.Printf("[WARN] EC2 Client VPN authorization rule (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -171,7 +171,7 @@ func deleteClientVpnAuthorizationRule(conn *ec2.EC2, input *ec2.RevokeClientVpnI
 		aws.StringValue(input.AccessGroupId))
 
 	_, err := conn.RevokeClientVpnIngress(input)
-	if tfawserr.ErrMessageContains(err, ErrCodeClientVPNAuthorizationRuleNotFound, "") {
+	if tfawserr.ErrMessageContains(err, ErrCodeClientVpnAuthorizationRuleNotFound, "") {
 		return nil
 	}
 	if err != nil {

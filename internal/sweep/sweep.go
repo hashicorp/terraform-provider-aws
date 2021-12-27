@@ -149,7 +149,7 @@ func SkipSweepError(err error) bool {
 		return true
 	}
 	// Ignore unsupported API calls
-	if tfawserr.ErrMessageContains(err, "UnsupportedOperation", "") {
+	if tfawserr.ErrCodeEquals(err, "UnsupportedOperation") {
 		return true
 	}
 	// Ignore more unsupported API calls
@@ -165,11 +165,15 @@ func SkipSweepError(err error) bool {
 	// AccessDeniedException:
 	// Since acceptance test sweepers are best effort and this response is very common,
 	// we allow bypassing this error globally instead of individual test sweeper fixes.
-	if tfawserr.ErrMessageContains(err, "AccessDeniedException", "") {
+	if tfawserr.ErrCodeEquals(err, "AccessDeniedException") {
 		return true
 	}
 	// Example: BadRequestException: vpc link not supported for region us-gov-west-1
 	if tfawserr.ErrMessageContains(err, "BadRequestException", "not supported") {
+		return true
+	}
+	// Example: InvalidAction: InvalidAction: Operation (ListPlatformApplications) is not supported in this region
+	if tfawserr.ErrMessageContains(err, "InvalidAction", "is not supported in this region") {
 		return true
 	}
 	// Example: InvalidAction: The action DescribeTransitGatewayAttachments is not valid for this web service
@@ -194,6 +198,10 @@ func SkipSweepError(err error) bool {
 	}
 	// For example from us-west-2 ECR public repository
 	if tfawserr.ErrMessageContains(err, "UnsupportedCommandException", "command is only supported in") {
+		return true
+	}
+	// For example from us-west-1 EMR studio
+	if tfawserr.ErrMessageContains(err, "ValidationException", "Account is not whitelisted to use this feature") {
 		return true
 	}
 	return false

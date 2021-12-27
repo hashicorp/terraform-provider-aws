@@ -15,13 +15,12 @@ func DataSourceSubnets() *schema.Resource {
 		Read: dataSourceSubnetsRead,
 		Schema: map[string]*schema.Schema{
 			"filter": DataSourceFiltersSchema(),
-			"tags":   tftags.TagsSchemaComputed(),
-
 			"ids": {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
+			"tags": tftags.TagsSchemaComputed(),
 		},
 	}
 }
@@ -46,25 +45,20 @@ func dataSourceSubnetsRead(d *schema.ResourceData, meta interface{}) error {
 		input.Filters = nil
 	}
 
-	var subnetIDs []*string
-	err := conn.DescribeSubnetsPages(input, func(page *ec2.DescribeSubnetsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
-
-		for _, subnet := range page.Subnets {
-			subnetIDs = append(subnetIDs, subnet.SubnetId)
-		}
-
-		return !lastPage
-	})
+	output, err := FindSubnets(conn, input)
 
 	if err != nil {
-		return fmt.Errorf("error reading Subnets: %w", err)
+		return fmt.Errorf("error reading EC2 Subnets: %w", err)
+	}
+
+	var subnetIDs []string
+
+	for _, v := range output {
+		subnetIDs = append(subnetIDs, aws.StringValue(v.SubnetId))
 	}
 
 	d.SetId(meta.(*conns.AWSClient).Region)
-	d.Set("ids", aws.StringValueSlice(subnetIDs))
+	d.Set("ids", subnetIDs)
 
 	return nil
 }

@@ -201,24 +201,23 @@ func testAccCheckWebsiteCertificateAuthorityAssociationExists(n string) resource
 }
 
 func testAccWebsiteCertificateAuthorityAssociationConfig(r string) string {
-	return fmt.Sprintf(`
-%s
-
+	return acctest.ConfigCompose(
+		testAccFleetConfig(r), `
 resource "aws_worklink_website_certificate_authority_association" "test" {
   fleet_arn   = aws_worklink_fleet.test.arn
   certificate = file("test-fixtures/worklink-website-certificate-authority-association.pem")
 }
-`, testAccFleetConfig(r))
+`)
 }
 
 func testAccWebsiteCertificateAuthorityAssociationDisplayNameConfig(r, displayName string) string {
-	return fmt.Sprintf(`
-%s
-
+	return acctest.ConfigCompose(
+		testAccFleetConfig(r),
+		fmt.Sprintf(`
 resource "aws_worklink_website_certificate_authority_association" "test" {
   fleet_arn    = aws_worklink_fleet.test.arn
   certificate  = file("test-fixtures/worklink-website-certificate-authority-association.pem")
   display_name = "%s"
 }
-`, testAccFleetConfig(r), displayName)
+`, displayName))
 }

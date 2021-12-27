@@ -16,14 +16,6 @@ func SliceContainsString(slice []interface{}, s string) (int, bool) {
 	return -1, false
 }
 
-func PointersMapToStringList(pointers map[string]*string) map[string]interface{} {
-	list := make(map[string]interface{}, len(pointers))
-	for i, v := range pointers {
-		list[i] = *v
-	}
-	return list
-}
-
 // Takes a value containing YAML string and passes it through
 // the YAML parser. Returns either a parsing
 // error or original YAML string.

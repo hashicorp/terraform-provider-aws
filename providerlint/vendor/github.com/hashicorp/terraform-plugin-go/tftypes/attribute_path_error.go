@@ -11,6 +11,9 @@ type AttributePathError struct {
 	err  error
 }
 
+// Equal returns true if two AttributePathErrors are semantically equal. To be
+// considered equal, they must have the same path and if errors are set, the
+// strings returned by their `Error()` methods must match.
 func (a AttributePathError) Equal(o AttributePathError) bool {
 	if !a.Path.Equal(o.Path) {
 		return false

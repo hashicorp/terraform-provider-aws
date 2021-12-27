@@ -3,6 +3,8 @@ package verify
 import (
 	"reflect"
 	"testing"
+
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 )
 
 func TestSuppressEquivalentTypeStringBoolean(t *testing.T) {
@@ -128,9 +130,9 @@ func TestDiffStringMaps(t *testing.T) {
 
 	for i, tc := range cases {
 		c, r, u := DiffStringMaps(tc.Old, tc.New)
-		cm := PointersMapToStringList(c)
-		rm := PointersMapToStringList(r)
-		um := PointersMapToStringList(u)
+		cm := flex.PointersMapToStringList(c)
+		rm := flex.PointersMapToStringList(r)
+		um := flex.PointersMapToStringList(u)
 		if !reflect.DeepEqual(cm, tc.Create) {
 			t.Fatalf("%d: bad create: %#v", i, cm)
 		}

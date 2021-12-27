@@ -203,6 +203,7 @@ provider "aws" {
   <li><code>iotthingsgraph</code></li>
   <li><code>iotwireless</code></li>
   <li><code>kafka</code></li>
+  <li><code>kafkaconnect</code></li>
   <li><code>kendra</code></li>
   <li><code>kinesis</code></li>
   <li><code>kinesisanalytics</code></li>

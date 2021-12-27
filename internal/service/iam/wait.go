@@ -6,6 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/iam"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
@@ -25,10 +26,12 @@ const (
 
 func waitRoleARNIsNotUniqueID(conn *iam.IAM, id string, role *iam.Role) (*iam.Role, error) {
 	stateConf := &resource.StateChangeConf{
-		Pending: []string{RoleStatusARNIsUniqueID, RoleStatusNotFound},
-		Target:  []string{RoleStatusARNIsARN},
-		Refresh: statusRoleCreate(conn, id, role),
-		Timeout: PropagationTimeout,
+		Pending:                   []string{RoleStatusARNIsUniqueID, RoleStatusNotFound},
+		Target:                    []string{RoleStatusARNIsARN},
+		Refresh:                   statusRoleCreate(conn, id, role),
+		Timeout:                   PropagationTimeout,
+		NotFoundChecks:            10,
+		ContinuousTargetOccurence: 5,
 	}
 
 	outputRaw, err := stateConf.WaitForState()
@@ -61,5 +64,40 @@ func statusRoleCreate(conn *iam.IAM, id string, role *iam.Role) resource.StateRe
 		}
 
 		return output, RoleStatusARNIsUniqueID, nil
+	}
+}
+
+func waitDeleteServiceLinkedRole(conn *iam.IAM, deletionTaskID string) error {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{iam.DeletionTaskStatusTypeInProgress, iam.DeletionTaskStatusTypeNotStarted},
+		Target:  []string{iam.DeletionTaskStatusTypeSucceeded},
+		Refresh: statusDeleteServiceLinkedRole(conn, deletionTaskID),
+		Timeout: 5 * time.Minute,
+		Delay:   10 * time.Second,
+	}
+
+	_, err := stateConf.WaitForState()
+	if err != nil {
+		if tfawserr.ErrMessageContains(err, iam.ErrCodeNoSuchEntityException, "") {
+			return nil
+		}
+		return err
+	}
+
+	return nil
+}
+
+func statusDeleteServiceLinkedRole(conn *iam.IAM, deletionTaskId string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		params := &iam.GetServiceLinkedRoleDeletionStatusInput{
+			DeletionTaskId: aws.String(deletionTaskId),
+		}
+
+		resp, err := conn.GetServiceLinkedRoleDeletionStatus(params)
+		if err != nil {
+			return nil, "", err
+		}
+
+		return resp, aws.StringValue(resp.Status), nil
 	}
 }

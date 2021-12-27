@@ -3,6 +3,7 @@ package codebuild
 import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/codebuild"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 // FindReportGroupByARN returns the Report Group corresponding to the specified Arn.
@@ -29,4 +30,25 @@ func FindReportGroupByARN(conn *codebuild.CodeBuild, arn string) (*codebuild.Rep
 	}
 
 	return reportGroup, nil
+}
+
+func FindProjectByARN(conn *codebuild.CodeBuild, arn string) (*codebuild.Project, error) {
+	input := &codebuild.BatchGetProjectsInput{
+		Names: []*string{aws.String(arn)},
+	}
+
+	output, err := conn.BatchGetProjects(input)
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || len(output.Projects) == 0 || output.Projects[0] == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	if count := len(output.Projects); count > 1 {
+		return nil, tfresource.NewTooManyResultsError(count, input)
+	}
+
+	return output.Projects[0], nil
 }

@@ -367,6 +367,9 @@ service/iotevents:
 service/kafka:
   - 'internal/service/kafka/**/*'
   - 'website/**/msk_*'
+service/kafkaconnect:
+  - 'internal/service/kafkaconnect/**/*'
+  - 'website/**/mskconnect_*'
 service/kinesis:
   - 'internal/service/kinesis/**/*'
   - '*_aws_kinesis_stream*'

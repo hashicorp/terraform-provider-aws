@@ -346,7 +346,7 @@ func ResourceBucket() *schema.Resource {
 									"storage_class": {
 										Type:         schema.TypeString,
 										Required:     true,
-										ValidateFunc: validBucketLifecycleTransitionStorageClass(),
+										ValidateFunc: validation.StringInSlice(s3.TransitionStorageClass_Values(), false),
 									},
 								},
 							},
@@ -365,7 +365,7 @@ func ResourceBucket() *schema.Resource {
 									"storage_class": {
 										Type:         schema.TypeString,
 										Required:     true,
-										ValidateFunc: validBucketLifecycleTransitionStorageClass(),
+										ValidateFunc: validation.StringInSlice(s3.TransitionStorageClass_Values(), false),
 									},
 								},
 							},
@@ -777,10 +777,22 @@ func resourceBucketUpdate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if d.HasChange("versioning") {
-		if err := resourceBucketVersioningUpdate(conn, d); err != nil {
-			return err
+		v := d.Get("versioning").([]interface{})
+
+		if d.IsNewResource() {
+			if versioning := expandVersioningWhenIsNewResource(v); versioning != nil {
+				err := resourceBucketVersioningUpdate(conn, d.Id(), versioning)
+				if err != nil {
+					return err
+				}
+			}
+		} else {
+			if err := resourceBucketVersioningUpdate(conn, d.Id(), expandVersioning(v)); err != nil {
+				return err
+			}
 		}
 	}
+
 	if d.HasChange("acl") && !d.IsNewResource() {
 		if err := resourceBucketACLUpdate(conn, d); err != nil {
 			return err
@@ -1054,28 +1066,15 @@ func resourceBucketRead(d *schema.ResourceData, meta interface{}) error {
 			Bucket: aws.String(d.Id()),
 		})
 	})
+
 	if err != nil {
-		return err
+		return fmt.Errorf("error getting S3 Bucket versioning (%s): %w", d.Id(), err)
 	}
 
-	vcl := make([]map[string]interface{}, 0, 1)
 	if versioning, ok := versioningResponse.(*s3.GetBucketVersioningOutput); ok {
-		vc := make(map[string]interface{})
-		if versioning.Status != nil && aws.StringValue(versioning.Status) == s3.BucketVersioningStatusEnabled {
-			vc["enabled"] = true
-		} else {
-			vc["enabled"] = false
+		if err := d.Set("versioning", flattenVersioning(versioning)); err != nil {
+			return fmt.Errorf("error setting versioning: %w", err)
 		}
-
-		if versioning.MFADelete != nil && aws.StringValue(versioning.MFADelete) == s3.MFADeleteEnabled {
-			vc["mfa_delete"] = true
-		} else {
-			vc["mfa_delete"] = false
-		}
-		vcl = append(vcl, vc)
-	}
-	if err := d.Set("versioning", vcl); err != nil {
-		return fmt.Errorf("error setting versioning: %s", err)
 	}
 
 	// Read the acceleration status
@@ -1843,41 +1842,18 @@ func resourceBucketACLUpdate(conn *s3.S3, d *schema.ResourceData) error {
 	return nil
 }
 
-func resourceBucketVersioningUpdate(conn *s3.S3, d *schema.ResourceData) error {
-	v := d.Get("versioning").([]interface{})
-	bucket := d.Get("bucket").(string)
-	vc := &s3.VersioningConfiguration{}
-
-	if len(v) > 0 {
-		c := v[0].(map[string]interface{})
-
-		if c["enabled"].(bool) {
-			vc.Status = aws.String(s3.BucketVersioningStatusEnabled)
-		} else {
-			vc.Status = aws.String(s3.BucketVersioningStatusSuspended)
-		}
-
-		if c["mfa_delete"].(bool) {
-			vc.MFADelete = aws.String(s3.MFADeleteEnabled)
-		} else {
-			vc.MFADelete = aws.String(s3.MFADeleteDisabled)
-		}
-
-	} else {
-		vc.Status = aws.String(s3.BucketVersioningStatusSuspended)
-	}
-
-	i := &s3.PutBucketVersioningInput{
+func resourceBucketVersioningUpdate(conn *s3.S3, bucket string, versioningConfig *s3.VersioningConfiguration) error {
+	input := &s3.PutBucketVersioningInput{
 		Bucket:                  aws.String(bucket),
-		VersioningConfiguration: vc,
+		VersioningConfiguration: versioningConfig,
 	}
-	log.Printf("[DEBUG] S3 put bucket versioning: %#v", i)
 
 	_, err := verify.RetryOnAWSCode(s3.ErrCodeNoSuchBucket, func() (interface{}, error) {
-		return conn.PutBucketVersioning(i)
+		return conn.PutBucketVersioning(input)
 	})
+
 	if err != nil {
-		return fmt.Errorf("Error putting S3 versioning: %s", err)
+		return fmt.Errorf("error putting S3 versioning for bucket (%s): %w", bucket, err)
 	}
 
 	return nil
@@ -2874,6 +2850,95 @@ func expandS3ObjectLockConfiguration(vConf []interface{}) *s3.ObjectLockConfigur
 	}
 
 	return conf
+}
+
+// Versioning functions
+
+func expandVersioning(l []interface{}) *s3.VersioningConfiguration {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	tfMap, ok := l[0].(map[string]interface{})
+
+	if !ok {
+		return nil
+	}
+
+	output := &s3.VersioningConfiguration{}
+
+	if v, ok := tfMap["enabled"].(bool); ok {
+		if v {
+			output.Status = aws.String(s3.BucketVersioningStatusEnabled)
+		} else {
+			output.Status = aws.String(s3.BucketVersioningStatusSuspended)
+		}
+	}
+
+	if v, ok := tfMap["mfa_delete"].(bool); ok {
+		if v {
+			output.MFADelete = aws.String(s3.MFADeleteEnabled)
+		} else {
+			output.MFADelete = aws.String(s3.MFADeleteDisabled)
+		}
+	}
+
+	return output
+}
+
+func expandVersioningWhenIsNewResource(l []interface{}) *s3.VersioningConfiguration {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	tfMap, ok := l[0].(map[string]interface{})
+
+	if !ok {
+		return nil
+	}
+
+	output := &s3.VersioningConfiguration{}
+
+	// Only set and return a non-nil VersioningConfiguration with at least one of
+	// MFADelete or Status enabled as the PutBucketVersioning API request
+	// does not need to be made for new buckets that don't require versioning.
+	// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/4494
+
+	if v, ok := tfMap["enabled"].(bool); ok && v {
+		output.Status = aws.String(s3.BucketVersioningStatusEnabled)
+	}
+
+	if v, ok := tfMap["mfa_delete"].(bool); ok && v {
+		output.MFADelete = aws.String(s3.MFADeleteEnabled)
+	}
+
+	if output.MFADelete == nil && output.Status == nil {
+		return nil
+	}
+
+	return output
+}
+
+func flattenVersioning(versioning *s3.GetBucketVersioningOutput) []interface{} {
+	if versioning == nil {
+		return []interface{}{}
+	}
+
+	vc := make(map[string]interface{})
+
+	if aws.StringValue(versioning.Status) == s3.BucketVersioningStatusEnabled {
+		vc["enabled"] = true
+	} else {
+		vc["enabled"] = false
+	}
+
+	if aws.StringValue(versioning.MFADelete) == s3.MFADeleteEnabled {
+		vc["mfa_delete"] = true
+	} else {
+		vc["mfa_delete"] = false
+	}
+
+	return []interface{}{vc}
 }
 
 func flattenS3ObjectLockConfiguration(conf *s3.ObjectLockConfiguration) []interface{} {

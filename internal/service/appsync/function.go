@@ -123,8 +123,8 @@ func resourceFunctionRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	resp, err := conn.GetFunction(input)
-	if tfawserr.ErrMessageContains(err, appsync.ErrCodeNotFoundException, "") {
-		log.Printf("[WARN] No such entity found for Appsync Function (%s)", d.Id())
+	if tfawserr.ErrCodeEquals(err, appsync.ErrCodeNotFoundException) && !d.IsNewResource() {
+		log.Printf("[WARN] AppSync Function (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
@@ -171,11 +171,6 @@ func resourceFunctionUpdate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	_, err = conn.UpdateFunction(input)
-	if tfawserr.ErrMessageContains(err, appsync.ErrCodeNotFoundException, "") {
-		log.Printf("[WARN] No such entity found for Appsync Function (%s)", d.Id())
-		d.SetId("")
-		return nil
-	}
 	if err != nil {
 		return fmt.Errorf("Error updating AppSync Function %s: %s", d.Id(), err)
 	}
@@ -197,7 +192,7 @@ func resourceFunctionDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	_, err = conn.DeleteFunction(input)
-	if tfawserr.ErrMessageContains(err, appsync.ErrCodeNotFoundException, "") {
+	if tfawserr.ErrCodeEquals(err, appsync.ErrCodeNotFoundException) {
 		return nil
 	}
 	if err != nil {

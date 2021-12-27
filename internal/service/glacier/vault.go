@@ -56,6 +56,10 @@ func ResourceVault() *schema.Resource {
 				Optional:         true,
 				ValidateFunc:     validation.StringIsJSON,
 				DiffSuppressFunc: verify.SuppressEquivalentPolicyDiffs,
+				StateFunc: func(v interface{}) string {
+					json, _ := structure.NormalizeJsonString(v)
+					return json
+				},
 			},
 
 			"notification": {
@@ -212,10 +216,12 @@ func resourceVaultRead(d *schema.ResourceData, meta interface{}) error {
 	} else if err != nil {
 		return fmt.Errorf("error getting access policy for Glacier Vault (%s): %w", d.Id(), err)
 	} else if pol != nil && pol.Policy != nil {
-		policy, err := structure.NormalizeJsonString(aws.StringValue(pol.Policy.Policy))
+		policy, err := verify.PolicyToSet(d.Get("access_policy").(string), aws.StringValue(pol.Policy.Policy))
+
 		if err != nil {
-			return fmt.Errorf("access policy contains an invalid JSON: %w", err)
+			return err
 		}
+
 		d.Set("access_policy", policy)
 	}
 
@@ -278,7 +284,11 @@ func resourceVaultNotificationUpdate(conn *glacier.Glacier, d *schema.ResourceDa
 
 func resourceVaultPolicyUpdate(conn *glacier.Glacier, d *schema.ResourceData) error {
 	vaultName := d.Id()
-	policyContents := d.Get("access_policy").(string)
+	policyContents, err := structure.NormalizeJsonString(d.Get("access_policy").(string))
+
+	if err != nil {
+		return fmt.Errorf("policy (%s) is invalid JSON: %w", policyContents, err)
+	}
 
 	policy := &glacier.VaultAccessPolicy{
 		Policy: aws.String(policyContents),
