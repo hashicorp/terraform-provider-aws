@@ -238,8 +238,8 @@ func resourceQuickConnectUpdate(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	// QuickConnect has 2 update APIs
-	// UpdateQuickConnectConfigWithContext: Updates the configuration settings for the specified quick connect.
 	// UpdateQuickConnectNameWithContext: Updates the name and description of a quick connect.
+	// UpdateQuickConnectConfigWithContext: Updates the configuration settings for the specified quick connect.
 
 	// updates to name and/or description
 	inputNameDesc := &connect.UpdateQuickConnectNameInput{
