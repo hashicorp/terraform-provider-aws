@@ -25,10 +25,6 @@ func ResourceQuickConnect() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
-		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(connectQuickConnectCreatedTimeout),
-			Delete: schema.DefaultTimeout(connectQuickConnectDeletedTimeout),
-		},
 		Schema: map[string]*schema.Schema{
 			"description": {
 				Type:         schema.TypeString,
