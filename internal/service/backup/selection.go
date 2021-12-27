@@ -45,12 +45,6 @@ func ResourceSelection() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"iam_role_arn": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
-			},
 			"conditions": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -76,7 +70,7 @@ func ResourceSelection() *schema.Resource {
 								},
 							},
 						},
-						"string_not_equals": {
+						"string_like": {
 							Type:     schema.TypeSet,
 							Optional: true,
 							ForceNew: true,
@@ -95,7 +89,7 @@ func ResourceSelection() *schema.Resource {
 								},
 							},
 						},
-						"string_like": {
+						"string_not_equals": {
 							Type:     schema.TypeSet,
 							Optional: true,
 							ForceNew: true,
@@ -136,6 +130,12 @@ func ResourceSelection() *schema.Resource {
 					},
 				},
 			},
+			"iam_role_arn": {
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: verify.ValidARN,
+			},
 			"selection_tag": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -163,13 +163,13 @@ func ResourceSelection() *schema.Resource {
 					},
 				},
 			},
-			"resources": {
+			"not_resources": {
 				Type:     schema.TypeSet,
 				Optional: true,
 				ForceNew: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"not_resources": {
+			"resources": {
 				Type:     schema.TypeSet,
 				Optional: true,
 				ForceNew: true,
@@ -186,8 +186,8 @@ func resourceSelectionCreate(d *schema.ResourceData, meta interface{}) error {
 		Conditions:    expandBackupConditions(d.Get("conditions").(*schema.Set).List()),
 		IamRoleArn:    aws.String(d.Get("iam_role_arn").(string)),
 		ListOfTags:    expandBackupConditionTags(d.Get("selection_tag").(*schema.Set).List()),
-		Resources:     flex.ExpandStringSet(d.Get("resources").(*schema.Set)),
 		NotResources:  flex.ExpandStringSet(d.Get("not_resources").(*schema.Set)),
+		Resources:     flex.ExpandStringSet(d.Get("resources").(*schema.Set)),
 		SelectionName: aws.String(d.Get("name").(string)),
 	}
 
@@ -381,11 +381,11 @@ func expandBackupConditionTags(tagList []interface{}) []*backup.Condition {
 	return conditions
 }
 
-func expandBackupConditions(conditions []interface{}) *backup.Conditions {
+func expandBackupConditions(conditionsList []interface{}) *backup.Conditions {
+	conditions := &backup.Conditions{}
 
-	for _, condition := range conditions {
+	for _, condition := range conditionsList {
 		mCondition := condition.(map[string]interface{})
-		conditions := &backup.Conditions{}
 
 		if vStringEquals := expandBackupConditionParameters(mCondition["string_equals"].(*schema.Set).List()); len(vStringEquals) > 0 {
 			conditions.StringEquals = vStringEquals
@@ -399,11 +399,9 @@ func expandBackupConditions(conditions []interface{}) *backup.Conditions {
 		if vStringNotLike := expandBackupConditionParameters(mCondition["string_not_like"].(*schema.Set).List()); len(vStringNotLike) > 0 {
 			conditions.StringNotLike = vStringNotLike
 		}
-
-		return conditions
-
 	}
-	return nil
+
+	return conditions
 }
 
 func expandBackupConditionParameters(conditionParametersList []interface{}) []*backup.ConditionParameter {
@@ -423,7 +421,7 @@ func expandBackupConditionParameters(conditionParametersList []interface{}) []*b
 }
 
 func flattenBackupConditions(conditions *backup.Conditions) *schema.Set {
-	vConditions := []interface{}{}
+	var vConditions []interface{}
 
 	mCondition := map[string]interface{}{}
 

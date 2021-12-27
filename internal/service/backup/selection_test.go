@@ -134,7 +134,9 @@ func TestAccBackupSelection_ConditionsWithTags(t *testing.T) {
 					testAccCheckSelectionExists(resourceName, &selection1),
 					resource.TestCheckResourceAttr(resourceName, "conditions.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "conditions.0.string_equals.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "conditions.0.string_like.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "conditions.0.string_not_equals.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "conditions.0.string_not_like.#", "1"),
 				),
 			},
 			{
@@ -354,7 +356,6 @@ resource "aws_backup_selection" "test" {
     key   = "foo"
     value = "bar"
   }
-	
   conditions {}
 
   not_resources = []
@@ -388,7 +389,6 @@ resource "aws_backup_selection" "test" {
   }
 
   conditions {}
-  
   not_resources = []
 
   resources = [
@@ -405,39 +405,42 @@ func testAccBackupSelectionConfigWithConditionsTags(rName string) string {
 resource "aws_backup_selection" "test" {
   plan_id = aws_backup_plan.test.id
 
-  name         = %[1]q
+  name = %[1]q
+
   iam_role_arn = "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:role/service-role/AWSBackupDefaultServiceRole"
 
   conditions {
     string_equals {
-	  key      = "aws:ResourceTag/Component"
-      value    = "rds"
+      key   = "aws:ResourceTag/Component"
+      value = "rds"
     }
     string_equals {
-	  key      = "aws:ResourceTag/Team"
-      value    = "dev"
-    }
-    string_not_equals {
-	  key      = "aws:ResourceTag/Backup"
-      value    = "false"
-    }
-    string_not_equals {
-	  key      = "aws:ResourceTag/Team"
-      value    = "infra"
+      key   = "aws:ResourceTag/Team"
+      value = "dev"
     }
     string_like {
-	  key      = "aws:ResourceTag/Application"
-      value    = "app*"
+      key   = "aws:ResourceTag/Application"
+      value = "app*"
+    }
+    string_not_equals {
+      key   = "aws:ResourceTag/Backup"
+      value = "false"
+    }
+    string_not_equals {
+      key   = "aws:ResourceTag/Team"
+      value = "infra"
     }
     string_not_like {
-	  key      = "aws:ResourceTag/Environment"
-      value    = "test*"
+      key   = "aws:ResourceTag/Environment"
+      value = "test*"
     }
   }
-	
-  not_resources = []
-  resources = ["arn:aws:rds:*:*:cluster:*", "arn:aws:rds:*:*:db:*"]
 
+  not_resources = []
+  resources = [
+    "arn:${data.aws_partition.current.partition}:rds:*:*:cluster:*",
+    "arn:${data.aws_partition.current.partition}:rds:*:*:db:*"
+  ]
 }
 `, rName))
 }
@@ -479,7 +482,6 @@ resource "aws_backup_selection" "test" {
   }
 
   conditions {}
-  
   not_resources = []
 
   resources = aws_ebs_volume.test[*].arn
@@ -504,9 +506,8 @@ resource "aws_backup_selection" "test" {
   }
   conditions {}
 
-  resources = ["*"]
-  not_resources = ["arn:aws:fsx:*"]
-
+  not_resources = ["arn:${data.aws_partition.current.partition}:fsx:*"]
+  resources     = ["*"]
 }
 `, rName))
 }
@@ -528,7 +529,6 @@ resource "aws_backup_selection" "test" {
   }
 
   conditions {}
-  
   not_resources = []
   resources = [
     "arn:${data.aws_partition.current.partition}:ec2:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:volume/*"

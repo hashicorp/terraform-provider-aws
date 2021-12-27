@@ -78,7 +78,6 @@ resource "aws_backup_selection" "test" {
   }
 
   conditions {}
-  
   not_resources = []
 
   resources = [
