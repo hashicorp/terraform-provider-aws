@@ -20,9 +20,6 @@ const (
 
 	connectHoursOfOperationCreatedTimeout = 5 * time.Minute
 	connectHoursOfOperationDeletedTimeout = 5 * time.Minute
-
-	connectQuickConnectCreatedTimeout = 5 * time.Minute
-	connectQuickConnectDeletedTimeout = 5 * time.Minute
 )
 
 func waitInstanceCreated(ctx context.Context, conn *connect.Connect, instanceId string) (*connect.DescribeInstanceOutput, error) {
