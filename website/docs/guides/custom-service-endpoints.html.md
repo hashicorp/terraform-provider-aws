@@ -407,7 +407,7 @@ provider "aws" {
 }
 ```
 
-In case of DNS issues resolving `s3.localhost.localstack.cloud`, the alternative is to fallback to the `http://localhost:4566` endpoint in combination with `s3_force_path_style = true`:
+In case of DNS issues resolving `s3.localhost.localstack.cloud`, the alternative is to fallback to the `http://localhost:4566` endpoint in combination with `s3_force_path_style = true`, e.g.,
 
 ```terraform
 
