@@ -2,7 +2,6 @@ package ec2_test
 
 import (
 	"fmt"
-	"os"
 	"regexp"
 	"testing"
 
@@ -17,12 +16,6 @@ import (
 )
 
 func TestAccVPCIpamOrganizationAdminAccount_basic(t *testing.T) {
-	// In order for IPAM to properly delete resources that are created during other tests
-	// we must have a delegated admin account setup which creates the appropriate SLR to properly delete.
-	// Since you can only have 1 delegate account, these tests are skipped in CI
-	if os.Getenv("IPAM_ORG_ACCOUNT_ADMIN") != "" {
-		t.Skip("IPAM_ORG_ACCOUNT_ADMIN must have a value to run test suite.")
-	}
 	var providers []*schema.Provider
 	var organization organizations.DelegatedAdministrator
 	resourceName := "aws_vpc_ipam_organization_account_admin.test"
@@ -36,10 +29,9 @@ func TestAccVPCIpamOrganizationAdminAccount_basic(t *testing.T) {
 		ErrorCheck:        acctest.ErrorCheck(t, organizations.EndpointsID),
 		ProviderFactories: acctest.FactoriesAlternate(&providers),
 		CheckDestroy:      testAccCheckVPCIpamOrganizationAdminAccountDestroy,
-		// Providers:    acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVPCIpamOrganizationAdminAccountConfig,
+				Config: testAccVPCIpamOrganizationAdminAccountConfig(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVPCIpamOrganizationAdminAccountExists(resourceName, &organization),
 					resource.TestCheckResourceAttrPair(resourceName, "id", dataSourceIdentity, "account_id"),
@@ -122,11 +114,14 @@ func testAccCheckVPCIpamOrganizationAdminAccountExists(n string, org *organizati
 	}
 }
 
-const testAccVPCIpamOrganizationAdminAccountConfig = `
+func testAccVPCIpamOrganizationAdminAccountConfig() string {
+	return acctest.ConfigAlternateAccountProvider() + `
 data "aws_caller_identity" "delegated" {
 	provider = "awsalternate"
-  }
+}
 
 resource "aws_vpc_ipam_organization_account_admin" "test" {
 	delegated_admin_account_id = data.aws_caller_identity.delegated.account_id
+}
 `
+}
