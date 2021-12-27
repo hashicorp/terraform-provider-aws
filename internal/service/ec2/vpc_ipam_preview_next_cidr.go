@@ -63,7 +63,7 @@ func ResourceVPCIpamPreviewNextCidr() *schema.Resource {
 				//   DefaultNetmaskLength allocation rule will be ignored.
 				// since there is no attribute to check if the rule is set, this attribute is required
 				Type:         schema.TypeInt,
-				Required:     true,
+				Optional:     true,
 				ForceNew:     true,
 				ValidateFunc: validation.IntBetween(0, 32),
 			},
@@ -93,13 +93,16 @@ func ResourceVPCIpamPreviewNextCidrRead(d *schema.ResourceData, meta interface{}
 	input := &ec2.AllocateIpamPoolCidrInput{
 		ClientToken:     aws.String(uniqueValue),
 		IpamPoolId:      aws.String(poolId),
-		NetmaskLength:   aws.Int64(int64(d.Get("netmask_length").(int))),
 		PreviewNextCidr: aws.Bool(true),
 	}
 
 	// if v, ok := d.GetOk("disallowed_cidrs"); ok && v.(*schema.Set).Len() > 0 {
 	// 	input.DisallowedCidrs = flex.ExpandStringSet(v.(*schema.Set))
 	// }
+
+	if v, ok := d.GetOk("netmask_length"); ok {
+		input.NetmaskLength = aws.Int64(int64(v.(int)))
+	}
 
 	output, err := conn.AllocateIpamPoolCidr(input)
 
