@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/directoconnect/private_virtual_interface: Add `sitelink_enabled` argument
+```
+
+```release-note:enhancement
+resource/directoconnect/transit_virtual_interface: Add `sitelink_enabled` argument
+```

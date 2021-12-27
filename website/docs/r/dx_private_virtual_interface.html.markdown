@@ -16,10 +16,12 @@ Provides a Direct Connect private virtual interface resource.
 resource "aws_dx_private_virtual_interface" "foo" {
   connection_id = "dxcon-zzzzzzzz"
 
-  name           = "vif-foo"
-  vlan           = 4094
-  address_family = "ipv4"
-  bgp_asn        = 65352
+  name              = "vif-foo"
+  vlan              = 4094
+  address_family    = "ipv4"
+  bgp_asn           = 65352
+  sitelink_enabled" = true
+
 }
 ```
 
@@ -40,6 +42,7 @@ The MTU of a virtual private interface can be either `1500` or `9001` (jumbo fra
 * `dx_gateway_id` - (Optional) The ID of the Direct Connect gateway to which to connect the virtual interface.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `vpn_gateway_id` - (Optional) The ID of the [virtual private gateway](vpn_gateway.html) to which to connect the virtual interface.
+* `sitelink_enabled` - (Optional) Defines if SiteLink is enabled on the VIF.
 
 ## Attributes Reference
 

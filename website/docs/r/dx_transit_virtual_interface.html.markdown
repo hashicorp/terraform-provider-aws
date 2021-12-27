@@ -22,11 +22,12 @@ resource "aws_dx_gateway" "example" {
 resource "aws_dx_transit_virtual_interface" "example" {
   connection_id = aws_dx_connection.example.id
 
-  dx_gateway_id  = aws_dx_gateway.example.id
-  name           = "tf-transit-vif-example"
-  vlan           = 4094
-  address_family = "ipv4"
-  bgp_asn        = 65352
+  dx_gateway_id     = aws_dx_gateway.example.id
+  name              = "tf-transit-vif-example"
+  vlan              = 4094
+  address_family    = "ipv4"
+  bgp_asn           = 65352
+  sitelink_enabled" = true
 }
 ```
 
@@ -46,6 +47,7 @@ The following arguments are supported:
 * `mtu` - (Optional) The maximum transmission unit (MTU) is the size, in bytes, of the largest permissible packet that can be passed over the connection.
 The MTU of a virtual transit interface can be either `1500` or `8500` (jumbo frames). Default is `1500`.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `sitelink_enabled` - (Optional) Defines if SiteLink is enabled on the VIF.
 
 ## Attributes Reference
 
