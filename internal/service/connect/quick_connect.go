@@ -35,7 +35,7 @@ func ResourceQuickConnect() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(1, 250),
 			},
-			"quick_connect_arn": {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -211,7 +211,7 @@ func resourceQuickConnectRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set("instance_id", instanceID)
 	d.Set("description", resp.QuickConnect.Description)
 	d.Set("name", resp.QuickConnect.Name)
-	d.Set("quick_connect_arn", resp.QuickConnect.QuickConnectARN)
+	d.Set("arn", resp.QuickConnect.QuickConnectARN)
 	d.Set("quick_connect_id", resp.QuickConnect.QuickConnectId)
 
 	tags := KeyValueTags(resp.QuickConnect.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
