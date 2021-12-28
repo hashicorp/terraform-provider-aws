@@ -162,6 +162,43 @@ func resourceSecurityProfileRead(ctx context.Context, d *schema.ResourceData, me
 	return nil
 }
 
+func resourceSecurityProfileUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.AWSClient).ConnectConn
+
+	instanceID, securityProfileID, err := SecurityProfileParseID(d.Id())
+
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	input := &connect.UpdateSecurityProfileInput{
+		InstanceId:        aws.String(instanceID),
+		SecurityProfileId: aws.String(securityProfileID),
+	}
+
+	if d.HasChange("description") {
+		input.Description = aws.String(d.Get("description").(string))
+	}
+
+	if d.HasChange("permissions") {
+		input.Permissions = flex.ExpandStringSet(d.Get("permissions").(*schema.Set))
+	}
+
+	_, err = conn.UpdateSecurityProfileWithContext(ctx, input)
+
+	if err != nil {
+		return diag.FromErr(fmt.Errorf("[ERROR] Error updating SecurityProfile (%s): %w", d.Id(), err))
+	}
+
+	if d.HasChange("tags_all") {
+		o, n := d.GetChange("tags_all")
+		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
+			return diag.FromErr(fmt.Errorf("error updating tags: %w", err))
+		}
+	}
+
+	return resourceSecurityProfileRead(ctx, d, meta)
+}
 func SecurityProfileParseID(id string) (string, string, error) {
 	parts := strings.SplitN(id, ":", 2)
 
