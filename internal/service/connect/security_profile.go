@@ -69,3 +69,64 @@ func ResourceSecurityProfile() *schema.Resource {
 	}
 }
 
+func resourceSecurityProfileRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.AWSClient).ConnectConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+
+	instanceID, securityProfileID, err := SecurityProfileParseID(d.Id())
+
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	resp, err := conn.DescribeSecurityProfileWithContext(ctx, &connect.DescribeSecurityProfileInput{
+		InstanceId:        aws.String(instanceID),
+		SecurityProfileId: aws.String(securityProfileID),
+	})
+
+	if !d.IsNewResource() && tfawserr.ErrMessageContains(err, connect.ErrCodeResourceNotFoundException, "") {
+		log.Printf("[WARN] Connect Security Profile (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
+	}
+
+	if err != nil {
+		return diag.FromErr(fmt.Errorf("error getting Connect Security Profile (%s): %w", d.Id(), err))
+	}
+
+	if resp == nil || resp.SecurityProfile == nil {
+		return diag.FromErr(fmt.Errorf("error getting Connect Security Profile (%s): empty response", d.Id()))
+	}
+
+	d.Set("arn", resp.SecurityProfile.Arn)
+	d.Set("description", resp.SecurityProfile.Description)
+	d.Set("instance_id", instanceID)
+	d.Set("organization_resource_id", resp.SecurityProfile.OrganizationResourceId)
+	d.Set("security_profile_id", resp.SecurityProfile.Id)
+	d.Set("name", resp.SecurityProfile.SecurityProfileName)
+	// NOTE: The response does not return information about the permissions
+
+	tags := KeyValueTags(resp.SecurityProfile.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+
+	//lintignore:AWSR002
+	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
+		return diag.FromErr(fmt.Errorf("error setting tags: %w", err))
+	}
+
+	if err := d.Set("tags_all", tags.Map()); err != nil {
+		return diag.FromErr(fmt.Errorf("error setting tags_all: %w", err))
+	}
+
+	return nil
+}
+
+func SecurityProfileParseID(id string) (string, string, error) {
+	parts := strings.SplitN(id, ":", 2)
+
+	if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
+		return "", "", fmt.Errorf("unexpected format of ID (%s), expected instanceID:securityProfileID", id)
+	}
+
+	return parts[0], parts[1], nil
+}
