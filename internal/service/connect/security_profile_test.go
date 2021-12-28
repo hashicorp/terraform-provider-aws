@@ -16,6 +16,57 @@ import (
 )
 
 
+func testAccSecurityProfile_basic(t *testing.T) {
+	var v connect.DescribeSecurityProfileOutput
+	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName2 := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	resourceName := "aws_connect_security_profile.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, connect.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckSecurityProfileDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSecurityProfileBasicConfig(rName, rName2, "Created"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSecurityProfileExists(resourceName, &v),
+					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckResourceAttrSet(resourceName, "instance_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "security_profile_id"),
+
+					resource.TestCheckResourceAttr(resourceName, "name", rName2),
+					resource.TestCheckResourceAttr(resourceName, "description", "Created"),
+					resource.TestCheckResourceAttr(resourceName, "permissions.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"permissions"},
+			},
+			{
+				Config: testAccSecurityProfileBasicConfig(rName, rName2, "Updated"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckSecurityProfileExists(resourceName, &v),
+					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckResourceAttrSet(resourceName, "instance_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "security_profile_id"),
+
+					resource.TestCheckResourceAttr(resourceName, "name", rName2),
+					resource.TestCheckResourceAttr(resourceName, "description", "Updated"),
+					resource.TestCheckResourceAttr(resourceName, "permissions.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+				),
+			},
+		},
+	})
+}
+
+
 func testAccCheckSecurityProfileExists(resourceName string, function *connect.DescribeSecurityProfileOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
