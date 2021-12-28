@@ -136,7 +136,7 @@ func resourceCustomPluginRead(d *schema.ResourceData, meta interface{}) error {
 
 	plugin, err := conn.DescribeCustomPlugin(params)
 	if err != nil {
-		if tfresource.NotFound(err) {
+		if tfresource.NotFound(err) && !d.IsNewResource() {
 			log.Printf("[WARN] Custom Plugin (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
