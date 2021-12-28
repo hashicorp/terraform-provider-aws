@@ -14,9 +14,7 @@ import (
 )
 
 func TestAccKafkaConnectCustomPlugin_basic(t *testing.T) {
-	rBucketName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	rObjectKey := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	rPluginName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_mskconnect_custom_plugin.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -26,13 +24,13 @@ func TestAccKafkaConnectCustomPlugin_basic(t *testing.T) {
 		Providers:    acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCustomPluginConfigBasic(rBucketName, rObjectKey, rPluginName),
+				Config: testAccCustomPluginConfigBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCustomPluginExists(resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
 					resource.TestCheckResourceAttrSet(resourceName, "latest_revision"),
 					resource.TestCheckResourceAttrSet(resourceName, "location.0.s3.0.bucket_arn"),
-					resource.TestCheckResourceAttr(resourceName, "location.0.s3.0.file_key", rObjectKey),
+					resource.TestCheckResourceAttr(resourceName, "location.0.s3.0.file_key", rName),
 					resource.TestCheckResourceAttr(resourceName, "location.0.s3.0.object_version", ""),
 					resource.TestCheckResourceAttr(resourceName, "state", kafkaconnect.CustomPluginStateActive),
 					resource.TestCheckResourceAttr(resourceName, "content_type", kafkaconnect.CustomPluginContentTypeJar),
@@ -48,9 +46,7 @@ func TestAccKafkaConnectCustomPlugin_basic(t *testing.T) {
 }
 
 func TestAccKafkaConnectCustomPlugin_description(t *testing.T) {
-	rBucketName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	rObjectKey := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	rPluginName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rDescription := sdkacctest.RandString(20)
 	resourceName := "aws_mskconnect_custom_plugin.test"
 
@@ -61,7 +57,7 @@ func TestAccKafkaConnectCustomPlugin_description(t *testing.T) {
 		Providers:    acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCustomPluginConfigDescription(rBucketName, rObjectKey, rPluginName, rDescription),
+				Config: testAccCustomPluginConfigDescription(rName, rDescription),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCustomPluginExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "description", rDescription),
@@ -77,10 +73,8 @@ func TestAccKafkaConnectCustomPlugin_description(t *testing.T) {
 }
 
 func TestAccKafkaConnectCustomPlugin_contentType(t *testing.T) {
-	rBucketName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	rObjectKey := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	rPluginName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	rPluginNameUpdated := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rNameUpdated := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_mskconnect_custom_plugin.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -90,7 +84,7 @@ func TestAccKafkaConnectCustomPlugin_contentType(t *testing.T) {
 		Providers:    acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCustomPluginConfigBasic(rBucketName, rObjectKey, rPluginName),
+				Config: testAccCustomPluginConfigBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCustomPluginExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "content_type", kafkaconnect.CustomPluginContentTypeJar),
@@ -102,7 +96,7 @@ func TestAccKafkaConnectCustomPlugin_contentType(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccCustomPluginConfigContentTypeZip(rBucketName, rObjectKey, rPluginNameUpdated),
+				Config: testAccCustomPluginConfigContentTypeZip(rNameUpdated),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCustomPluginExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "content_type", kafkaconnect.CustomPluginContentTypeZip),
@@ -113,9 +107,7 @@ func TestAccKafkaConnectCustomPlugin_contentType(t *testing.T) {
 }
 
 func TestAccKafkaConnectCustomPlugin_objectVersion(t *testing.T) {
-	rBucketName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	rObjectKey := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	rPluginName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_mskconnect_custom_plugin.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -125,7 +117,7 @@ func TestAccKafkaConnectCustomPlugin_objectVersion(t *testing.T) {
 		Providers:    acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCustomPluginConfigObjectVersion(rBucketName, rObjectKey, rPluginName),
+				Config: testAccCustomPluginConfigObjectVersion(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCustomPluginExists(resourceName),
 					testAccCheckCustomPluginObjectVersion(resourceName),
@@ -182,7 +174,7 @@ func testAccCheckCustomPluginObjectVersion(name string) resource.TestCheckFunc {
 	}
 }
 
-func testAccCustomPluginConfigBasicS3ObjectZip(bucketName string, objectKey string) string {
+func testAccCustomPluginConfigBasicS3ObjectZip(name string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
@@ -190,13 +182,13 @@ resource "aws_s3_bucket" "test" {
 
 resource "aws_s3_bucket_object" "test" {
   bucket = aws_s3_bucket.test.id
-  key    = %[2]q
+  key    = %[1]q
   source = "test-fixtures/activemq-connector.zip"
 }
-`, bucketName, objectKey)
+`, name)
 }
 
-func testAccCustomPluginConfigBasicS3ObjectJar(bucketName string, objectKey string) string {
+func testAccCustomPluginConfigBasicS3ObjectJar(name string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
@@ -204,14 +196,14 @@ resource "aws_s3_bucket" "test" {
 
 resource "aws_s3_bucket_object" "test" {
   bucket = aws_s3_bucket.test.id
-  key    = %[2]q
+  key    = %[1]q
   source = "test-fixtures/mongodb-connector.jar"
 }
-`, bucketName, objectKey)
+`, name)
 }
 
-func testAccCustomPluginConfigBasic(bucketName, objectKey, pluginName string) string {
-	return acctest.ConfigCompose(testAccCustomPluginConfigBasicS3ObjectJar(bucketName, objectKey), fmt.Sprintf(`
+func testAccCustomPluginConfigBasic(name string) string {
+	return acctest.ConfigCompose(testAccCustomPluginConfigBasicS3ObjectJar(name), fmt.Sprintf(`
 resource "aws_mskconnect_custom_plugin" "test" {
   name         = %[1]q
   content_type = "JAR"
@@ -222,11 +214,11 @@ resource "aws_mskconnect_custom_plugin" "test" {
     }
   }
 }
-`, pluginName))
+`, name))
 }
 
-func testAccCustomPluginConfigDescription(bucketName, objectKey, pluginName, description string) string {
-	return acctest.ConfigCompose(testAccCustomPluginConfigBasicS3ObjectJar(bucketName, objectKey), fmt.Sprintf(`
+func testAccCustomPluginConfigDescription(name, description string) string {
+	return acctest.ConfigCompose(testAccCustomPluginConfigBasicS3ObjectJar(name), fmt.Sprintf(`
 resource "aws_mskconnect_custom_plugin" "test" {
   name         = %[1]q
   description  = %[2]q
@@ -238,11 +230,11 @@ resource "aws_mskconnect_custom_plugin" "test" {
     }
   }
 }
-`, pluginName, description))
+`, name, description))
 }
 
-func testAccCustomPluginConfigContentTypeZip(bucketName, objectKey, pluginName string) string {
-	return acctest.ConfigCompose(testAccCustomPluginConfigBasicS3ObjectZip(bucketName, objectKey), fmt.Sprintf(`
+func testAccCustomPluginConfigContentTypeZip(name string) string {
+	return acctest.ConfigCompose(testAccCustomPluginConfigBasicS3ObjectZip(name), fmt.Sprintf(`
 resource "aws_mskconnect_custom_plugin" "test" {
   name         = %[1]q
   content_type = "ZIP"
@@ -253,10 +245,10 @@ resource "aws_mskconnect_custom_plugin" "test" {
     }
   }
 }
-`, pluginName))
+`, name))
 }
 
-func testAccCustomPluginConfigObjectVersion(bucketName, objectKey, pluginName string) string {
+func testAccCustomPluginConfigObjectVersion(name string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
@@ -268,12 +260,12 @@ resource "aws_s3_bucket" "test" {
 
 resource "aws_s3_bucket_object" "test" {
   bucket = aws_s3_bucket.test.id
-  key    = %[2]q
+  key    = %[1]q
   source = "test-fixtures/mongodb-connector.jar"
 }
 
 resource "aws_mskconnect_custom_plugin" "test" {
-  name         = %[3]q
+  name         = %[1]q
   content_type = "JAR"
   location {
     s3 {
@@ -285,5 +277,5 @@ resource "aws_mskconnect_custom_plugin" "test" {
 }
 
 
-`, bucketName, objectKey, pluginName)
+`, name)
 }
