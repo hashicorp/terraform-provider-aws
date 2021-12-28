@@ -3,12 +3,12 @@ subcategory: "Kafka Connect (MSK Connect)"
 layout: "aws"
 page_title: "AWS: aws_mskconnect_custom_plugin"
 description: |-
-  Provides an MSK Connect custom plugin resource.
+  Provides an Amazon MSK Connect custom plugin resource.
 ---
 
 # Resource: aws_mskconnect_custom_plugin
 
-Provides an MSK Connect Custom Plugin Resource.
+Provides an Amazon MSK Connect Custom Plugin Resource.
 
 ## Example Usage
 
