@@ -51,9 +51,9 @@ func ResourceCustomPlugin() *schema.Resource {
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"bucket_arn": {
-										Type:     schema.TypeString,
-										Required: true,
-										ForceNew: true,
+										Type:         schema.TypeString,
+										Required:     true,
+										ForceNew:     true,
 										ValidateFunc: verify.ValidARN,
 									},
 									"file_key": {
