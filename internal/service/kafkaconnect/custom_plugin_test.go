@@ -20,9 +20,10 @@ func TestAccKafkaConnectCustomPlugin_basic(t *testing.T) {
 	resourceName := "aws_mskconnect_custom_plugin.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, kafkaconnect.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, kafkaconnect.EndpointsID),
+		CheckDestroy: nil,
+		Providers:    acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCustomPluginConfigBasic(rBucketName, rObjectKey, rPluginName),
@@ -30,11 +31,11 @@ func TestAccKafkaConnectCustomPlugin_basic(t *testing.T) {
 					testAccCheckCustomPluginExists(resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
 					resource.TestCheckResourceAttrSet(resourceName, "latest_revision"),
-					resource.TestCheckResourceAttr(resourceName, "state", kafkaconnect.CustomPluginStateActive),
-					resource.TestCheckResourceAttr(resourceName, "content_type", kafkaconnect.CustomPluginContentTypeJar),
-					resource.TestCheckResourceAttr(resourceName, "location.0.s3.0.bucket_arn", fmt.Sprintf("arn:aws:s3:::%s", rBucketName)),
+					resource.TestCheckResourceAttrSet(resourceName, "location.0.s3.0.bucket_arn"),
 					resource.TestCheckResourceAttr(resourceName, "location.0.s3.0.file_key", rObjectKey),
 					resource.TestCheckResourceAttr(resourceName, "location.0.s3.0.object_version", ""),
+					resource.TestCheckResourceAttr(resourceName, "state", kafkaconnect.CustomPluginStateActive),
+					resource.TestCheckResourceAttr(resourceName, "content_type", kafkaconnect.CustomPluginContentTypeJar),
 				),
 			},
 			{
@@ -54,9 +55,10 @@ func TestAccKafkaConnectCustomPlugin_description(t *testing.T) {
 	resourceName := "aws_mskconnect_custom_plugin.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, kafkaconnect.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, kafkaconnect.EndpointsID),
+		CheckDestroy: nil,
+		Providers:    acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCustomPluginConfigDescription(rBucketName, rObjectKey, rPluginName, rDescription),
@@ -82,9 +84,10 @@ func TestAccKafkaConnectCustomPlugin_contentType(t *testing.T) {
 	resourceName := "aws_mskconnect_custom_plugin.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, kafkaconnect.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, kafkaconnect.EndpointsID),
+		CheckDestroy: nil,
+		Providers:    acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCustomPluginConfigBasic(rBucketName, rObjectKey, rPluginName),
@@ -116,9 +119,10 @@ func TestAccKafkaConnectCustomPlugin_objectVersion(t *testing.T) {
 	resourceName := "aws_mskconnect_custom_plugin.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, kafkaconnect.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, kafkaconnect.EndpointsID),
+		CheckDestroy: nil,
+		Providers:    acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCustomPluginConfigObjectVersion(rBucketName, rObjectKey, rPluginName),
