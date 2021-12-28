@@ -6,6 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/kafkaconnect"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -136,11 +137,12 @@ func resourceCustomPluginRead(d *schema.ResourceData, meta interface{}) error {
 
 	plugin, err := conn.DescribeCustomPlugin(params)
 	if err != nil {
-		if tfresource.NotFound(&kafkaconnect.NotFoundException{}) {
+		if tfresource.NotFound(err) {
 			log.Printf("[WARN] Custom Plugin (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
 		}
+		return fmt.Errorf("Error reading MSK Connect Custom Plugin (%s): %w", d.Id(), err)
 	}
 
 	d.Set("arn", plugin.CustomPluginArn)
