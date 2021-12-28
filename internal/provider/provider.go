@@ -573,6 +573,8 @@ func Provider() *schema.Provider {
 			"aws_msk_configuration": kafka.DataSourceConfiguration(),
 			"aws_msk_kafka_version": kafka.DataSourceVersion(),
 
+			"aws_mskconnect_custom_plugin": kafkaconnect.DataSourceCustomPlugin(),
+
 			"aws_kinesis_stream":          kinesis.DataSourceStream(),
 			"aws_kinesis_stream_consumer": kinesis.DataSourceStreamConsumer(),
 
