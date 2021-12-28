@@ -66,6 +66,29 @@ func testAccSecurityProfile_basic(t *testing.T) {
 	})
 }
 
+func testAccSecurityProfile_disappears(t *testing.T) {
+	var v connect.DescribeSecurityProfileOutput
+	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName2 := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	resourceName := "aws_connect_security_profile.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, connect.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckSecurityProfileDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSecurityProfileBasicConfig(rName, rName2, "Disappear"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSecurityProfileExists(resourceName, &v),
+					acctest.CheckResourceDisappears(acctest.Provider, tfconnect.ResourceSecurityProfile(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
 
 func testAccCheckSecurityProfileExists(resourceName string, function *connect.DescribeSecurityProfileOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
