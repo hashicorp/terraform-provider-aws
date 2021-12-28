@@ -69,6 +69,47 @@ func ResourceSecurityProfile() *schema.Resource {
 	}
 }
 
+func resourceSecurityProfileCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.AWSClient).ConnectConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+
+	instanceID := d.Get("instance_id").(string)
+	securityProfileName := d.Get("name").(string)
+
+	input := &connect.CreateSecurityProfileInput{
+		InstanceId:          aws.String(instanceID),
+		SecurityProfileName: aws.String(securityProfileName),
+	}
+
+	if v, ok := d.GetOk("description"); ok {
+		input.Description = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("permissions"); ok && v.(*schema.Set).Len() > 0 {
+		input.Permissions = flex.ExpandStringSet(v.(*schema.Set))
+	}
+
+	if len(tags) > 0 {
+		input.Tags = Tags(tags.IgnoreAWS())
+	}
+
+	log.Printf("[DEBUG] Creating Connect Security Profile %s", input)
+	output, err := conn.CreateSecurityProfileWithContext(ctx, input)
+
+	if err != nil {
+		return diag.FromErr(fmt.Errorf("error creating Connect Security Profile (%s): %w", securityProfileName, err))
+	}
+
+	if output == nil {
+		return diag.FromErr(fmt.Errorf("error creating Connect Security Profile (%s): empty output", securityProfileName))
+	}
+
+	d.SetId(fmt.Sprintf("%s:%s", instanceID, aws.StringValue(output.SecurityProfileId)))
+
+	return resourceSecurityProfileRead(ctx, d, meta)
+}
+
 func resourceSecurityProfileRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).ConnectConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
