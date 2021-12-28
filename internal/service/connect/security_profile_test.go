@@ -49,6 +49,38 @@ func testAccCheckSecurityProfileExists(resourceName string, function *connect.De
 		return nil
 	}
 }
+
+func testAccCheckSecurityProfileDestroy(s *terraform.State) error {
+	for _, rs := range s.RootModule().Resources {
+		if rs.Type != "aws_connect_security_profile" {
+			continue
+		}
+
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectConn
+
+		instanceID, securityProfileID, err := tfconnect.SecurityProfileParseID(rs.Primary.ID)
+
+		if err != nil {
+			return err
+		}
+
+		params := &connect.DescribeSecurityProfileInput{
+			InstanceId:        aws.String(instanceID),
+			SecurityProfileId: aws.String(securityProfileID),
+		}
+
+		_, experr := conn.DescribeSecurityProfile(params)
+		// Verify the error is what we want
+		if experr != nil {
+			if awsErr, ok := experr.(awserr.Error); ok && awsErr.Code() == "ResourceNotFoundException" {
+				continue
+			}
+			return experr
+		}
+	}
+	return nil
+}
+
 func testAccSecurityProfileBaseConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_connect_instance" "test" {
