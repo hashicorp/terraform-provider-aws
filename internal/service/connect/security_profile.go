@@ -199,6 +199,28 @@ func resourceSecurityProfileUpdate(ctx context.Context, d *schema.ResourceData, 
 
 	return resourceSecurityProfileRead(ctx, d, meta)
 }
+
+func resourceSecurityProfileDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.AWSClient).ConnectConn
+
+	instanceID, securityProfileID, err := SecurityProfileParseID(d.Id())
+
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	_, err = conn.DeleteSecurityProfileWithContext(ctx, &connect.DeleteSecurityProfileInput{
+		InstanceId:        aws.String(instanceID),
+		SecurityProfileId: aws.String(securityProfileID),
+	})
+
+	if err != nil {
+		return diag.FromErr(fmt.Errorf("error deleting SecurityProfile (%s): %w", d.Id(), err))
+	}
+
+	return nil
+}
+
 func SecurityProfileParseID(id string) (string, string, error) {
 	parts := strings.SplitN(id, ":", 2)
 
