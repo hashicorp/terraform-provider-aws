@@ -1,5 +1,5 @@
 ---
-subcategory: "MSK Connect"
+subcategory: "Kafka Connect (MSK Connect)"
 layout: "aws"
 page_title: "AWS: aws_mskconnect_custom_plugin"
 description: |-
