@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceCustomPlugin() *schema.Resource {
@@ -53,6 +54,7 @@ func ResourceCustomPlugin() *schema.Resource {
 										Type:     schema.TypeString,
 										Required: true,
 										ForceNew: true,
+										ValidateFunc: verify.ValidARN,
 									},
 									"file_key": {
 										Type:     schema.TypeString,
