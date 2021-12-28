@@ -6,7 +6,7 @@ description: |-
   Provides an MSK Connect custom plugin resource.
 ---
 
-# Resource: aws_cognito_user
+# Resource: aws_mskconnect_custom_plugin
 
 Provides an MSK Connect Custom Plugin Resource.
 
