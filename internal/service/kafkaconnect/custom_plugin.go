@@ -107,7 +107,6 @@ func resourceCustomPluginCreate(d *schema.ResourceData, meta interface{}) error 
 		Location:    expandLocation(d.Get("location").([]interface{})),
 	}
 
-	log.Print("[DEBUG] Setting Description")
 	if v, ok := d.GetOk("description"); ok {
 		params.Description = aws.String(v.(string))
 	}
@@ -204,7 +203,6 @@ func flattenS3Location(apiS3Location *kafkaconnect.S3LocationDescription) []inte
 	location["file_key"] = aws.StringValue(apiS3Location.FileKey)
 
 	if objVer := apiS3Location.ObjectVersion; objVer != nil {
-		log.Printf("[DEBUG] Assigning object_version: %v", *objVer)
 		location["object_version"] = aws.StringValue(objVer)
 	}
 
