@@ -15,6 +15,40 @@ import (
 	tfconnect "github.com/hashicorp/terraform-provider-aws/internal/service/connect"
 )
 
+
+func testAccCheckSecurityProfileExists(resourceName string, function *connect.DescribeSecurityProfileOutput) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[resourceName]
+		if !ok {
+			return fmt.Errorf("Connect Security Profile not found: %s", resourceName)
+		}
+
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("Connect Security Profile ID not set")
+		}
+		instanceID, securityProfileID, err := tfconnect.SecurityProfileParseID(rs.Primary.ID)
+
+		if err != nil {
+			return err
+		}
+
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectConn
+
+		params := &connect.DescribeSecurityProfileInput{
+			InstanceId:        aws.String(instanceID),
+			SecurityProfileId: aws.String(securityProfileID),
+		}
+
+		getFunction, err := conn.DescribeSecurityProfile(params)
+		if err != nil {
+			return err
+		}
+
+		*function = *getFunction
+
+		return nil
+	}
+}
 func testAccSecurityProfileBaseConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_connect_instance" "test" {
