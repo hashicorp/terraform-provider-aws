@@ -522,8 +522,7 @@ resource "aws_fsx_openzfs_file_system" "test" {
   subnet_ids          = [aws_subnet.test1.id]
   deployment_type     = "SINGLE_AZ_1"
   throughput_capacity = 64
-  }
-
+}
 `, rName))
 }
 
@@ -546,7 +545,7 @@ resource "aws_fsx_openzfs_volume" "test" {
 resource "aws_fsx_openzfs_volume" "test2" {
   name             = %[2]q
   parent_volume_id = aws_fsx_openzfs_volume.test.id
-  }
+}
 `, rName, rName2))
 }
 
@@ -568,7 +567,7 @@ func testAccOpenzfsVolumeTags2Config(rName, tagKey1, tagValue1, tagKey2, tagValu
 resource "aws_fsx_openzfs_volume" "test" {
   name             = %[1]q
   parent_volume_id = aws_fsx_openzfs_file_system.test.root_volume_id
-	
+
 
   tags = {
     %[2]q = %[3]q
@@ -634,7 +633,7 @@ resource "aws_fsx_openzfs_volume" "test" {
       options = ["async", "rw"]
     }
   }
-    
+
 }
 `, rName))
 }
@@ -644,16 +643,16 @@ func testAccOpenzfsVolumeNFSExports2Config(rName string) string {
 resource "aws_fsx_openzfs_volume" "test" {
   name             = %[1]q
   parent_volume_id = aws_fsx_openzfs_file_system.test.root_volume_id
-    nfs_exports {
-      client_configurations {
-        clients = "10.0.1.0/24"
-        options = ["async", "rw"]
-      }
-      client_configurations {
-        clients = "*"
-        options = ["sync", "rw"]
-      }
+  nfs_exports {
+    client_configurations {
+      clients = "10.0.1.0/24"
+      options = ["async", "rw"]
     }
+    client_configurations {
+      clients = "*"
+      options = ["sync", "rw"]
+    }
+  }
 }
 `, rName))
 }
@@ -664,9 +663,9 @@ resource "aws_fsx_openzfs_volume" "test" {
   name             = %[1]q
   parent_volume_id = aws_fsx_openzfs_file_system.test.root_volume_id
   user_and_group_quotas {
-	id                         = 10
-	storage_capacity_quota_gib = %[2]d
-	type                       = "USER"
+    id                         = 10
+    storage_capacity_quota_gib = %[2]d
+    type                       = "USER"
   }
 }
 `, rName, quotaSize))

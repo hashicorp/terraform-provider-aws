@@ -284,7 +284,6 @@ func resourceOpenzfsVolumeRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("copy_tags_to_snapshots", openzfsConfig.CopyTagsToSnapshots)
 	d.Set("data_compression_type", openzfsConfig.DataCompressionType)
 	d.Set("name", volume.Name)
-	d.Set("origin_snapshot", openzfsConfig.OriginSnapshot)
 	d.Set("parent_volume_id", openzfsConfig.ParentVolumeId)
 	d.Set("read_only", openzfsConfig.ReadOnly)
 	d.Set("storage_capacity_quota_gib", openzfsConfig.StorageCapacityQuotaGiB)
@@ -309,11 +308,15 @@ func resourceOpenzfsVolumeRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error setting tags_all: %w", err)
 	}
 
-	if err := d.Set("nfs_exports", flattenFsxOpenzfsFileNfsExports(openzfsConfig.NfsExports)); err != nil {
+	if err := d.Set("origin_snapshot", flattenFsxOpenzfsVolumeOriginSnapshot(openzfsConfig.OriginSnapshot)); err != nil {
 		return fmt.Errorf("error setting nfs_exports: %w", err)
 	}
 
-	if err := d.Set("user_and_group_quotas", flattenFsxOpenzfsFileUserAndGroupQuotas(openzfsConfig.UserAndGroupQuotas)); err != nil {
+	if err := d.Set("nfs_exports", flattenFsxOpenzfsVolumeNfsExports(openzfsConfig.NfsExports)); err != nil {
+		return fmt.Errorf("error setting nfs_exports: %w", err)
+	}
+
+	if err := d.Set("user_and_group_quotas", flattenFsxOpenzfsVolumeUserAndGroupQuotas(openzfsConfig.UserAndGroupQuotas)); err != nil {
 		return fmt.Errorf("error setting user_and_group_quotas: %w", err)
 	}
 
@@ -562,4 +565,20 @@ func flattenFsxOpenzfsVolumeUserAndGroupQuotas(rs []*fsx.OpenZFSUserOrGroupQuota
 	}
 
 	return nil
+}
+
+func flattenFsxOpenzfsVolumeOriginSnapshot(rs *fsx.OpenZFSOriginSnapshotConfiguration) []interface{} {
+	if rs == nil {
+		return []interface{}{}
+	}
+
+	m := make(map[string]interface{})
+	if rs.CopyStrategy != nil {
+		m["copy_strategy"] = aws.StringValue(rs.CopyStrategy)
+	}
+	if rs.SnapshotARN != nil {
+		m["snapshot_arn"] = aws.StringValue(rs.SnapshotARN)
+	}
+
+	return []interface{}{m}
 }

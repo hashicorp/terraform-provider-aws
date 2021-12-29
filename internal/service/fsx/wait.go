@@ -203,7 +203,7 @@ func waitStorageVirtualMachineDeleted(conn *fsx.FSx, id string, timeout time.Dur
 	return nil, err
 }
 
-func waitVolumeCreated(conn *fsx.FSx, id string, timeout time.Duration) (*fsx.Volume, error) {
+func waitVolumeCreated(conn *fsx.FSx, id string, timeout time.Duration) (*fsx.Volume, error) { //nolint:unparam
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{fsx.VolumeLifecycleCreating, fsx.VolumeLifecyclePending},
 		Target:  []string{fsx.VolumeLifecycleCreated, fsx.VolumeLifecycleMisconfigured, fsx.VolumeLifecycleAvailable},
@@ -247,7 +247,7 @@ func waitVolumeUpdated(conn *fsx.FSx, id string, timeout time.Duration) (*fsx.Vo
 	return nil, err
 }
 
-func waitVolumeDeleted(conn *fsx.FSx, id string, timeout time.Duration) (*fsx.Volume, error) {
+func waitVolumeDeleted(conn *fsx.FSx, id string, timeout time.Duration) (*fsx.Volume, error) { //nolint:unparam
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{fsx.VolumeLifecycleCreated, fsx.VolumeLifecycleMisconfigured, fsx.VolumeLifecycleAvailable, fsx.VolumeLifecycleDeleting},
 		Target:  []string{},
