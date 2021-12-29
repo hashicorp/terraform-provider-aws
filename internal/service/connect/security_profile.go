@@ -31,15 +31,6 @@ func ResourceSecurityProfile() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"permissions": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				MaxItems: 500,
-				Elem: &schema.Schema{
-					Type:         schema.TypeString,
-					ValidateFunc: validation.StringLenBetween(1, 128),
-				},
-			},
 			"description": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -50,18 +41,27 @@ func ResourceSecurityProfile() *schema.Resource {
 				Required:     true,
 				ValidateFunc: validation.StringLenBetween(1, 100),
 			},
-			"organization_resource_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"security_profile_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
+			},
+			"organization_resource_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"permissions": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				MaxItems: 500,
+				Elem: &schema.Schema{
+					Type:         schema.TypeString,
+					ValidateFunc: validation.StringLenBetween(1, 128),
+				},
+			},
+			"security_profile_id": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
