@@ -426,8 +426,8 @@ resource "aws_timestreamwrite_table" "test" {
       s3_configuration {
         bucket_name       = aws_s3_bucket.test.bucket
         object_key_prefix = %[2]q
-	  }
-	}
+      }
+    }
   }
 }
 `, rName, prefix))
@@ -458,10 +458,10 @@ resource "aws_timestreamwrite_table" "test" {
       s3_configuration {
         bucket_name       = aws_s3_bucket.test.bucket
         object_key_prefix = %[1]q
-		kms_key_id        = aws_kms_key.test.arn
-		encryption_option = "SSE_KMS"
-	  }
-	}
+        kms_key_id        = aws_kms_key.test.arn
+        encryption_option = "SSE_KMS"
+      }
+    }
   }
 }
 `, rName))
