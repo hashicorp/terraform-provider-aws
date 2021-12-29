@@ -245,7 +245,7 @@ func resourceRouteCreate(d *schema.ResourceData, meta interface{}) error {
 		ErrCodeInvalidTransitGatewayIDNotFound,
 	)
 
-	var routeExistsError bool = err.Error() == fmt.Sprintf("The route identified by (%s) already exists.", destination)
+	var routeExistsError bool = err.ErrMessageContains(fmt.Sprintf("The route identified by (%s) already exists.", destination))
 	if routeExistsError && input.overwrite_existing {
 		log.Printf("[DEBUG] overwrite_existing - updating route: %s", input)
 		_, err = conn.ReplaceRoute(input)
