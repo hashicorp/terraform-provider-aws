@@ -616,6 +616,7 @@ func Provider() *schema.Provider {
 			"aws_organizations_delegated_services":       organizations.DataSourceDelegatedServices(),
 			"aws_organizations_organization":             organizations.DataSourceOrganization(),
 			"aws_organizations_organizational_units":     organizations.DataSourceOrganizationalUnits(),
+			"aws_organizations_resource_tags":            organizations.DataSourceOrganizationResourceTags(),
 
 			"aws_outposts_outpost":                outposts.DataSourceOutpost(),
 			"aws_outposts_outpost_instance_type":  outposts.DataSourceOutpostInstanceType(),
