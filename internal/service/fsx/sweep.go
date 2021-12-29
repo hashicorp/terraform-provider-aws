@@ -363,7 +363,7 @@ func sweepFSXOpenzfsVolume(region string) error {
 			if aws.StringValue(v.VolumeType) != fsx.VolumeTypeOpenzfs {
 				continue
 			}
-			if v.OpenZFSConfiguration != nil && aws.StringValue(v.OpenZFSConfiguration.ParentVolumeId) == nil {
+			if v.OpenZFSConfiguration != nil && aws.StringValue(v.OpenZFSConfiguration.ParentVolumeId) == "" {
 				continue
 			}
 
