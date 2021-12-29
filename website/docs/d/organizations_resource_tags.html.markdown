@@ -34,7 +34,7 @@ You can specify any of the following taggable resources.
 
 In addition to all arguments above, the following attributes are exported:
 
-* `tags` - Blocks of default tags set on the provider. See details below.
+* `tags` - Blocks of tags set on the resource. See details below.
 
 ### tags
 
