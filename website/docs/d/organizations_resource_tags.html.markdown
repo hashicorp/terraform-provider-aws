@@ -34,4 +34,4 @@ You can specify any of the following taggable resources.
 
 In addition to all arguments above, the following attributes are exported:
 
-* `tags` - Key/Value pairs for each tag set on the resource.
+* `tags` - Map of key=value pairs for each tag set on the resource.
