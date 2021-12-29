@@ -1219,6 +1219,7 @@ func Provider() *schema.Provider {
 			"aws_fsx_ontap_storage_virtual_machine": fsx.ResourceOntapStorageVirtualMachine(),
 			"aws_fsx_ontap_volume":                  fsx.ResourceOntapVolume(),
 			"aws_fsx_openzfs_file_system":           fsx.ResourceOpenzfsFileSystem(),
+			"aws_fsx_openzfs_volume":                fsx.ResourceOpenzfsVolume(),
 			"aws_fsx_windows_file_system":           fsx.ResourceWindowsFileSystem(),
 
 			"aws_gamelift_alias":              gamelift.ResourceAlias(),
