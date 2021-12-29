@@ -57,6 +57,12 @@ func ResourceRoute() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
+			"overwrite_existing": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+				ForceNew: false
+			},
 
 			///
 			// Destinations.
@@ -238,6 +244,16 @@ func resourceRouteCreate(d *schema.ResourceData, meta interface{}) error {
 		ErrCodeInvalidParameterException,
 		ErrCodeInvalidTransitGatewayIDNotFound,
 	)
+
+	var routeExistsError bool = err.Error() == fmt.Sprintf("The route identified by (%s) already exists.", destination)
+	if routeExistsError && input.overwrite_existing {
+		log.Printf("[DEBUG] overwrite_existing - updating route: %s", input)
+		_, err = conn.ReplaceRoute(input)
+
+		if err != nil {
+			return fmt.Errorf("overwrite_existing - error updating Route in Route Table (%s) with destination (%s): %w", routeTableID, destination, err)
+		}
+	}
 
 	if err != nil {
 		return fmt.Errorf("error creating Route in Route Table (%s) with destination (%s): %w", routeTableID, destination, err)
