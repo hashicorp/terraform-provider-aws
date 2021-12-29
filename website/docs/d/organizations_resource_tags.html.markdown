@@ -34,9 +34,4 @@ You can specify any of the following taggable resources.
 
 In addition to all arguments above, the following attributes are exported:
 
-* `tags` - Blocks of tags set on the resource. See details below.
-
-### tags
-
-* `key` - Key name of the tag (i.e., `tags.#.key`).
-* `value` - Value of the tag (i.e., `tags.#.value`).
+* `tags` - Key/Value pairs for each tag set on the resource.
