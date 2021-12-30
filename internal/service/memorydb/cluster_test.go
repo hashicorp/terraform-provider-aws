@@ -84,6 +84,44 @@ func TestAccMemoryDBCluster_disappears(t *testing.T) {
 	})
 }
 
+func TestAccMemoryDBCluster_update_maintenanceWindow(t *testing.T) {
+	rName := "tf-test-" + sdkacctest.RandString(8)
+	resourceName := "aws_memorydb_cluster.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, memorydb.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckClusterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_withMaintenanceWindow(rName, "thu:09:00-thu:10:00"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "maintenance_window", "thu:09:00-thu:10:00"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccClusterConfig_withMaintenanceWindow(rName, "fri:09:00-fri:10:00"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "maintenance_window", "fri:09:00-fri:10:00"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccCheckClusterDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).MemoryDBConn
 
@@ -131,6 +169,37 @@ func testAccCheckClusterExists(n string) resource.TestCheckFunc {
 	}
 }
 
+func testAccClusterConfigBase(rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigVpcWithSubnets(2),
+		fmt.Sprintf(`
+resource "aws_memorydb_subnet_group" "test" {
+  name       = %[1]q
+  subnet_ids = aws_subnet.test.*.id
+}
+`, rName),
+	)
+}
+
+func testAccClusterConfigUserAndACL(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_memorydb_user" "test" {
+  access_string = "on ~* &* +@all"
+  user_name     = %[1]q
+
+  authentication_mode {
+    type      = "password"
+    passwords = ["aaaaaaaaaaaaaaaa"]
+  }
+}
+
+resource "aws_memorydb_acl" "test" {
+  name       = %[1]q
+  user_names = [aws_memorydb_user.test.id]
+}
+`, rName)
+}
+
 func testAccClusterConfig_basic(rName string) string {
 	return acctest.ConfigCompose(
 		//testAccClusterConfigBase(rName),
@@ -145,5 +214,20 @@ resource "aws_memorydb_cluster" "test" {
   }
 }
 `, rName),
+	)
+}
+
+func testAccClusterConfig_withMaintenanceWindow(rName, maintenanceWindow string) string {
+	return acctest.ConfigCompose(
+		testAccClusterConfigBase(rName),
+		fmt.Sprintf(`
+resource "aws_memorydb_cluster" "test" {
+  acl_name           = "open-access"
+  maintenance_window = %[2]q
+  name               = %[1]q
+  node_type          = "db.t4g.small"
+  subnet_group_name  = aws_memorydb_subnet_group.test.id
+}
+`, rName, maintenanceWindow),
 	)
 }

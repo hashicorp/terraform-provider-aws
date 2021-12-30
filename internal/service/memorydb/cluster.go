@@ -80,8 +80,10 @@ func ResourceCluster() *schema.Resource {
 				Computed: true,
 			},
 			"maintenance_window": {
-				Type:     schema.TypeString,
-				Computed: true,
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: verify.ValidOnceAWeekWindowFormat,
 			},
 			"name": {
 				Type:          schema.TypeString,
@@ -177,6 +179,10 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 		Tags:        Tags(tags.IgnoreAWS()),
 	}
 
+	if v, ok := d.GetOk("maintenance_window"); ok {
+		input.MaintenanceWindow = aws.String(v.(string))
+	}
+
 	if v, ok := d.GetOk("subnet_group_name"); ok {
 		input.SubnetGroupName = aws.String(v.(string))
 	}
@@ -207,6 +213,10 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 
 		if d.HasChange("acl_name") {
 			input.ACLName = aws.String(d.Get("acl_name").(string))
+		}
+
+		if d.HasChange("maintenance_window") {
+			input.MaintenanceWindow = aws.String(d.Get("maintenance_window").(string))
 		}
 
 		if d.HasChange("node_type") {
