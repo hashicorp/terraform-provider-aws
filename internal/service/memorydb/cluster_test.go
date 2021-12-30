@@ -32,7 +32,6 @@ func TestAccMemoryDBCluster_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "acl_name", "open-access"),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "memorydb", "cluster/"+rName),
 					resource.TestCheckResourceAttr(resourceName, "auto_minor_version_upgrade", "true"),
-					resource.TestCheckResourceAttr(resourceName, "availability_mode", "MultiAZ"),
 					resource.TestCheckResourceAttrSet(resourceName, "cluster_endpoint.0.address"),
 					resource.TestCheckResourceAttr(resourceName, "cluster_endpoint.0.port", "6379"),
 					resource.TestCheckResourceAttr(resourceName, "description", ""),

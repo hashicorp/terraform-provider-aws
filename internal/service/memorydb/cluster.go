@@ -47,10 +47,6 @@ func ResourceCluster() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			"availability_mode": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 			"cluster_endpoint": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -154,7 +150,9 @@ func ResourceCluster() *schema.Resource {
 			},
 			"subnet_group_name": {
 				Type:     schema.TypeString,
+				Optional: true,
 				Computed: true,
+				ForceNew: true,
 			},
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
@@ -177,6 +175,10 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 		ClusterName: aws.String(name),
 		NodeType:    aws.String(d.Get("node_type").(string)),
 		Tags:        Tags(tags.IgnoreAWS()),
+	}
+
+	if v, ok := d.GetOk("subnet_group_name"); ok {
+		input.SubnetGroupName = aws.String(v.(string))
 	}
 
 	log.Printf("[DEBUG] Creating MemoryDB Cluster: %s", input)
@@ -254,7 +256,6 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("acl_name", cluster.ACLName)
 	d.Set("arn", cluster.ARN)
 	d.Set("auto_minor_version_upgrade", cluster.AutoMinorVersionUpgrade)
-	d.Set("availability_mode", cluster.AvailabilityMode)
 
 	if v := cluster.ClusterEndpoint; v != nil {
 		m := map[string]interface{}{}
