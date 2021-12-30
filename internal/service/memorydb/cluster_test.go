@@ -29,6 +29,53 @@ func TestAccMemoryDBCluster_basic(t *testing.T) {
 				Config: testAccClusterConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(resourceName),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "acl_name", "aws_memorydb_acl.test", "id"),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "memorydb", "cluster/"+rName),
+					resource.TestCheckResourceAttr(resourceName, "auto_minor_version_upgrade", "true"),
+					resource.TestCheckResourceAttrSet(resourceName, "cluster_endpoint.0.address"),
+					resource.TestCheckResourceAttr(resourceName, "cluster_endpoint.0.port", "6379"),
+					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					resource.TestCheckResourceAttrSet(resourceName, "engine_patch_version"),
+					resource.TestCheckResourceAttrSet(resourceName, "engine_version"),
+					resource.TestCheckResourceAttr(resourceName, "kms_key_id", ""),
+					resource.TestCheckResourceAttrSet(resourceName, "maintenance_window"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "node_type", "db.t4g.small"),
+					resource.TestCheckResourceAttr(resourceName, "number_of_shards", "1"),
+					resource.TestCheckResourceAttr(resourceName, "parameter_group_name", "default.memorydb-redis6"),
+					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "snapshot_retention_limit", "0"),
+					resource.TestCheckResourceAttrSet(resourceName, "snapshot_window"),
+					resource.TestCheckResourceAttr(resourceName, "sns_topic_arn", ""),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "subnet_group_name", "aws_memorydb_subnet_group.test", "id"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Test", "test"),
+					resource.TestCheckResourceAttr(resourceName, "tls_enabled", "true"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccMemoryDBCluster_defaults(t *testing.T) {
+	rName := "tf-test-" + sdkacctest.RandString(8)
+	resourceName := "aws_memorydb_cluster.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, memorydb.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckClusterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_defaults(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "acl_name", "open-access"),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "memorydb", "cluster/"+rName),
 					resource.TestCheckResourceAttr(resourceName, "auto_minor_version_upgrade", "true"),
@@ -38,18 +85,17 @@ func TestAccMemoryDBCluster_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "engine_patch_version"),
 					resource.TestCheckResourceAttrSet(resourceName, "engine_version"),
 					resource.TestCheckResourceAttr(resourceName, "kms_key_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "maintenance_window", "thu:09:00-thu:10:00"),
+					resource.TestCheckResourceAttrSet(resourceName, "maintenance_window"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "node_type", "db.t4g.small"),
 					resource.TestCheckResourceAttr(resourceName, "number_of_shards", "1"),
 					resource.TestCheckResourceAttr(resourceName, "parameter_group_name", "default.memorydb-redis6"),
 					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "snapshot_retention_limit", "0"),
-					resource.TestCheckResourceAttr(resourceName, "snapshot_window", "11:30-12:30"),
+					resource.TestCheckResourceAttrSet(resourceName, "snapshot_window"),
 					resource.TestCheckResourceAttr(resourceName, "sns_topic_arn", ""),
 					resource.TestCheckResourceAttr(resourceName, "subnet_group_name", "default"), // created automatically & matches the default vpc
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.Test", "test"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tls_enabled", "true"),
 				),
 			},
@@ -202,16 +248,30 @@ resource "aws_memorydb_acl" "test" {
 
 func testAccClusterConfig_basic(rName string) string {
 	return acctest.ConfigCompose(
-		//testAccClusterConfigBase(rName),
+		testAccClusterConfigBase(rName),
+		testAccClusterConfigUserAndACL(rName),
+		fmt.Sprintf(`
+resource "aws_memorydb_cluster" "test" {
+  acl_name           = aws_memorydb_acl.test.id
+  name               = %[1]q
+  node_type          = "db.t4g.small"
+  subnet_group_name  = aws_memorydb_subnet_group.test.id
+
+  tags = {
+    Test = "test"
+  }
+}
+`, rName),
+	)
+}
+
+func testAccClusterConfig_defaults(rName string) string {
+	return acctest.ConfigCompose(
 		fmt.Sprintf(`
 resource "aws_memorydb_cluster" "test" {
   acl_name  = "open-access"
   name      = %[1]q
   node_type = "db.t4g.small"
-
-  tags = {
-    Test = "test"
-  }
 }
 `, rName),
 	)
