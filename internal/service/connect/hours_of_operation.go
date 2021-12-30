@@ -27,10 +27,6 @@ func ResourceHoursOfOperation() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
-		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(connectHoursOfOperationCreatedTimeout),
-			Delete: schema.DefaultTimeout(connectHoursOfOperationDeletedTimeout),
-		},
 		Schema: map[string]*schema.Schema{
 			"arn": {
 				Type:     schema.TypeString,

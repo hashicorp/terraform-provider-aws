@@ -90,13 +90,6 @@ In addition to all arguments above, the following attributes are exported:
 * `id` - The identifier of the hosting Amazon Connect Instance and identifier of the Hours of Operation separated by a colon (`:`).
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
 
-### Timeouts
-
-The `timeouts` block allows you to specify [timeouts](https://www.terraform.io/docs/configuration/resources.html#timeouts) for certain actions:
-
-* `create` - (Defaults to 5 min) Used when creating the Hours of Operation.
-* `update` - (Defaults to 5 min) Used when updating the Hours of Operation.
-
 ## Import
 
 Amazon Connect Hours of Operations can be imported using the `instance_id` and `hours_of_operation_id` separated by a colon (`:`), e.g.,
