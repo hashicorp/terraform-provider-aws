@@ -46,7 +46,7 @@ func testAccHoursOfOperation_basic(t *testing.T) {
 				Config: testAccHoursOfOperationBasicConfig(rName, rName2, "Created"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckHoursOfOperationExists(resourceName, &v),
-					resource.TestCheckResourceAttrSet(resourceName, "hours_of_operation_arn"),
+					resource.TestCheckResourceAttrSet(resourceName, "arn"),
 					resource.TestCheckResourceAttrSet(resourceName, "hours_of_operation_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "instance_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "name"),
@@ -67,7 +67,7 @@ func testAccHoursOfOperation_basic(t *testing.T) {
 				Config: testAccHoursOfOperationBasicConfig(rName, rName2, "Updated"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckHoursOfOperationExists(resourceName, &v),
-					resource.TestCheckResourceAttrSet(resourceName, "hours_of_operation_arn"),
+					resource.TestCheckResourceAttrSet(resourceName, "arn"),
 					resource.TestCheckResourceAttrSet(resourceName, "hours_of_operation_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "instance_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "name"),

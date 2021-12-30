@@ -85,7 +85,7 @@ A `start_time` blocks supports the following arguments:
 
 In addition to all arguments above, the following attributes are exported:
 
-* `hours_of_operation_arn` - The Amazon Resource Name (ARN) of the Hours of Operation.
+* `arn` - The Amazon Resource Name (ARN) of the Hours of Operation.
 * `hours_of_operation_id` - The identifier for the hours of operation.
 * `id` - The identifier of the hosting Amazon Connect Instance and identifier of the Hours of Operation separated by a colon (`:`).
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).

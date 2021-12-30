@@ -32,6 +32,10 @@ func ResourceHoursOfOperation() *schema.Resource {
 			Delete: schema.DefaultTimeout(connectHoursOfOperationDeletedTimeout),
 		},
 		Schema: map[string]*schema.Schema{
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"config": {
 				Type:     schema.TypeSet,
 				Required: true,
@@ -92,10 +96,6 @@ func ResourceHoursOfOperation() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(1, 250),
-			},
-			"hours_of_operation_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
 			},
 			"hours_of_operation_id": {
 				Type:     schema.TypeString,
@@ -195,7 +195,7 @@ func resourceHoursOfOperationRead(ctx context.Context, d *schema.ResourceData, m
 		return diag.FromErr(err)
 	}
 
-	d.Set("hours_of_operation_arn", resp.HoursOfOperation.HoursOfOperationArn)
+	d.Set("arn", resp.HoursOfOperation.HoursOfOperationArn)
 	d.Set("hours_of_operation_id", resp.HoursOfOperation.HoursOfOperationId)
 	d.Set("instance_id", instanceID)
 	d.Set("description", resp.HoursOfOperation.Description)

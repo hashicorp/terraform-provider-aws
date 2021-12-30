@@ -45,7 +45,7 @@ In addition to all of the arguments above, the following attributes are exported
 
 * `config` - Specifies configuration information for the hours of operation: day, start time, and end time . Config blocks are documented below. Config blocks are documented below.
 * `description` - Specifies the description of the Hours of Operation.
-* `hours_of_operation_arn` - The Amazon Resource Name (ARN) of the Hours of Operation.
+* `arn` - The Amazon Resource Name (ARN) of the Hours of Operation.
 * `hours_of_operation_id` - The identifier for the hours of operation.
 * `instance_id` - Specifies the identifier of the hosting Amazon Connect Instance.
 * `name` - Specifies the name of the Hours of Operation.
