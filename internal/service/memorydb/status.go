@@ -15,6 +15,11 @@ const (
 	aclStatusDeleting  = "deleting"
 	aclStatusModifying = "modifying"
 
+	clusterStatusAvailable = "available"
+	clusterStatusCreating  = "creating"
+	clusterStatusDeleting  = "deleting"
+	clusterStatusUpdating  = "updating"
+
 	userStatusActive    = "active"
 	userStatusDeleting  = "deleting"
 	userStatusModifying = "modifying"
@@ -34,6 +39,23 @@ func statusACL(ctx context.Context, conn *memorydb.MemoryDB, aclName string) res
 		}
 
 		return acl, aws.StringValue(acl.Status), nil
+	}
+}
+
+// statusCluster fetches the MemoryDB Cluster and its status.
+func statusCluster(ctx context.Context, conn *memorydb.MemoryDB, clusterName string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		Cluster, err := FindClusterByName(ctx, conn, clusterName)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return Cluster, aws.StringValue(Cluster.Status), nil
 	}
 }
 

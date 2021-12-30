@@ -39,6 +39,35 @@ func FindACLByName(ctx context.Context, conn *memorydb.MemoryDB, name string) (*
 	return output.ACLs[0], nil
 }
 
+func FindClusterByName(ctx context.Context, conn *memorydb.MemoryDB, name string) (*memorydb.Cluster, error) {
+	input := memorydb.DescribeClustersInput{
+		ClusterName: aws.String(name),
+	}
+
+	output, err := conn.DescribeClustersWithContext(ctx, &input)
+
+	if tfawserr.ErrCodeEquals(err, memorydb.ErrCodeClusterNotFoundFault) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || len(output.Clusters) == 0 || output.Clusters[0] == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	if count := len(output.Clusters); count > 1 {
+		return nil, tfresource.NewTooManyResultsError(count, input)
+	}
+
+	return output.Clusters[0], nil
+}
+
 func FindParameterGroupByName(ctx context.Context, conn *memorydb.MemoryDB, name string) (*memorydb.ParameterGroup, error) {
 	input := memorydb.DescribeParameterGroupsInput{
 		ParameterGroupName: aws.String(name),
