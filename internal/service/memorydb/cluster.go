@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -39,6 +40,50 @@ func ResourceCluster() *schema.Resource {
 				Required: true,
 			},
 			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"auto_minor_version_upgrade": {
+				Type:     schema.TypeBool,
+				Computed: true,
+			},
+			"availability_mode": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"cluster_endpoint": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"address": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"port": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
+					},
+				},
+			},
+			"description": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"engine_patch_version": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"engine_version": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"kms_key_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"maintenance_window": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -80,8 +125,43 @@ func ResourceCluster() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
+			"number_of_shards": {
+				Type:     schema.TypeInt,
+				Computed: true,
+			},
+			"parameter_group_name": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"security_group_ids": {
+				Type:     schema.TypeSet,
+				Computed: true,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+			},
+			"snapshot_retention_limit": {
+				Type:     schema.TypeInt,
+				Computed: true,
+			},
+			"snapshot_window": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"sns_topic_arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"subnet_group_name": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
+			"tls_enabled": {
+				Type:     schema.TypeBool,
+				Computed: true,
+			},
 		},
 	}
 }
@@ -173,9 +253,42 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 
 	d.Set("acl_name", cluster.ACLName)
 	d.Set("arn", cluster.ARN)
+	d.Set("auto_minor_version_upgrade", cluster.AutoMinorVersionUpgrade)
+	d.Set("availability_mode", cluster.AvailabilityMode)
+
+	if v := cluster.ClusterEndpoint; v != nil {
+		m := map[string]interface{}{}
+		if v := aws.StringValue(v.Address); v != "" {
+			m["address"] = v
+		}
+		if v := aws.Int64Value(v.Port); v != 0 {
+			m["port"] = v
+		}
+		d.Set("cluster_endpoint", []interface{}{m})
+	}
+
+	d.Set("description", cluster.Description)
+	d.Set("engine_patch_version", cluster.EnginePatchVersion)
+	d.Set("engine_version", cluster.EngineVersion)
+	d.Set("kms_key_id", cluster.KmsKeyId)
+	d.Set("maintenance_window", cluster.MaintenanceWindow)
 	d.Set("name", cluster.Name)
 	d.Set("name_prefix", create.NamePrefixFromName(aws.StringValue(cluster.Name)))
 	d.Set("node_type", cluster.NodeType)
+	d.Set("number_of_shards", cluster.NumberOfShards)
+	d.Set("parameter_group_name", cluster.ParameterGroupName)
+
+	var securityGroupIds []*string
+	for _, v := range cluster.SecurityGroups {
+		securityGroupIds = append(securityGroupIds, v.SecurityGroupId)
+	}
+	d.Set("security_group_ids", flex.FlattenStringSet(securityGroupIds))
+
+	d.Set("snapshot_retention_limit", cluster.SnapshotRetentionLimit)
+	d.Set("snapshot_window", cluster.SnapshotWindow)
+	d.Set("sns_topic_arn", cluster.SnsTopicArn)
+	d.Set("subnet_group_name", cluster.SubnetGroupName)
+	d.Set("tls_enabled", cluster.TLSEnabled)
 
 	tags, err := ListTags(conn, d.Get("arn").(string))
 
