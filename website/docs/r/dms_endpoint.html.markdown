@@ -144,17 +144,20 @@ The `s3_settings` configuration block supports the following arguments:
 
 * `bucket_folder` - (Optional) S3 Bucket Object prefix.
 * `bucket_name` - (Optional) S3 Bucket name.
+* `cdc_path` - (Optional) Specifies the folder path of CDC files. For an S3 source, this setting is required if a task captures change data; otherwise, it's optional. If `cdc_path` is set, AWS DMS reads CDC files from this path and replicates the data changes to the target endpoint. Supported in AWS DMS versions 3.4.2 and later.
 * `compression_type` - (Optional) Set to compress target files. Defaults to `NONE`. Valid values are `GZIP` and `NONE`.
 * `csv_delimiter` - (Optional) Delimiter used to separate columns in the source files. Defaults to `,`.
 * `csv_row_delimiter` - (Optional) Delimiter used to separate rows in the source files. Defaults to `\n`.
 * `data_format` - (Optional) The output format for the files that AWS DMS uses to create S3 objects. Defaults to `csv`. Valid values are `csv` and `parquet`.
 * `date_partition_enabled` - (Optional) Partition S3 bucket folders based on transaction commit dates. Defaults to `false`.
+* `date_partition_sequence` - (Optional) Identifies the sequence of the date format to use during folder partitioning. Use this parameter when `date_partition_enabled` is set to true. Defaults to `YYYYMMDD`. Valid values are `YYYYMMDD`, `YYYYMMDDHH`, `YYYYMM`, `MMYYYYDD`, and `DDMMYYYY`.
 * `encryption_mode` - (Optional) The server-side encryption mode that you want to encrypt your .csv or .parquet object files copied to S3. Defaults to `SSE_S3`. Valid values are `SSE_S3` and `SSE_KMS`.
 * `external_table_definition` - (Optional) JSON document that describes how AWS DMS should interpret the data.
 * `parquet_timestamp_in_millisecond` - (Optional) - Specifies the precision of any TIMESTAMP column values written to an S3 object file in .parquet format. Defaults to `false`.
 * `parquet_version` - (Optional) The version of the .parquet file format. Defaults to `parquet-1-0`. Valid values are `parquet-1-0` and `parquet-2-0`.
 * `server_side_encryption_kms_key_id` - (Optional) If you set encryptionMode to `SSE_KMS`, set this parameter to the Amazon Resource Name (ARN) for the AWS KMS key.
 * `service_access_role_arn` - (Optional) Amazon Resource Name (ARN) of the IAM Role with permissions to read from or write to the S3 Bucket.
+* `timestamp_column_name` - (Optional) A value that when nonblank causes AWS DMS to add a column with timestamp information to the endpoint data for an Amazon S3 target. DMS includes an additional `STRING` column in the .csv or .parquet object files of your migrated data when you set `timestamp_column_name` to a nonblank value. For a full load, each row of this timestamp column contains a timestamp for when the data was transferred from the source to the target by DMS. For a change data capture (CDC) load, each row of the timestamp column contains the timestamp for the commit of that row in the source database. The string format for this timestamp column value is `yyyy-MM-dd HH:mm:ss.SSSSSS`. By default, the precision of this value is in microseconds. For a CDC load, the rounding of the precision depends on the commit timestamp supported by DMS for the source database. Supported in AWS DMS versions 3.1.4 and later.
 
 ## Attributes Reference
 
