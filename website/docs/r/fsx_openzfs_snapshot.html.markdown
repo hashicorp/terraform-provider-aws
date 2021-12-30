@@ -1,3 +1,4 @@
+---
 subcategory: "File System (FSx)"
 layout: "aws"
 page_title: "AWS: aws_fsx_openzfs_snapshot"
@@ -13,10 +14,11 @@ See the [FSx OpenZFS User Guide](https://docs.aws.amazon.com/fsx/latest/OpenZFSG
 
 ## Example Usage
 
-### Root volume Example 
+### Root volume Example
+
 ```terraform
 resource "aws_fsx_openzfs_snapshot" "example" {
-  name = "example"
+  name      = "example"
   volume_id = aws_fsx_openzfs_file_system.example.root_volume_id
 }
 
@@ -28,10 +30,11 @@ resource "aws_fsx_openzfs_file_system" "example" {
 }
 ```
 
-### Child volume Example 
+### Child volume Example
+
 ```terraform
 resource "aws_fsx_openzfs_snapshot" "example" {
-  name = "example"
+  name      = "example"
   volume_id = aws_fsx_openzfs_volume.example.id
 }
 
