@@ -455,8 +455,11 @@ func ResourceEndpoint() *schema.Resource {
 						"date_partition_sequence": {
 							Type:         schema.TypeString,
 							Optional:     true,
-							Default:      DatePartitionSequenceValueYyyymmdd,
-							ValidateFunc: validation.StringInSlice(DatePartitionSequenceValue_Values(), false),
+							Default:      dms.DatePartitionSequenceValueYyyymmdd,
+							ValidateFunc: validation.StringInSlice(dms.DatePartitionSequenceValue_Values(), true),
+							StateFunc: func(v interface{}) string {
+								return strings.ToLower(v.(string))
+							},
 						},
 						"date_partition_delimiter": {
 							Type:         schema.TypeString,

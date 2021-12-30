@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_dms_endpoint: Add `s3_settings.cdc_path`, `s3_settings.date_partition_sequence` and `s3_settings.timestamp_column_name` arguments.
+```

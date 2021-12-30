@@ -75,12 +75,16 @@ func TestAccDMSEndpoint_s3(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.csv_delimiter", ","),
 					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.bucket_folder", ""),
 					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.bucket_name", "bucket_name"),
+					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.cdc_path", "cdc/path"),
 					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.compression_type", "NONE"),
 					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.data_format", "csv"),
+					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.date_partition_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.date_partition_sequence", "yyyymmddhh"),
 					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.parquet_version", "parquet-1-0"),
 					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.parquet_timestamp_in_millisecond", "false"),
 					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.encryption_mode", "SSE_S3"),
 					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.server_side_encryption_kms_key_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.timestamp_column_name", "tx_commit_time"),
 				),
 			},
 			{
@@ -1024,6 +1028,10 @@ resource "aws_dms_endpoint" "dms_endpoint" {
   s3_settings {
     service_access_role_arn = aws_iam_role.iam_role.arn
     bucket_name             = "bucket_name"
+	cdc_path 				= "cdc/path"
+	date_partition_enabled  = true
+	date_partition_sequence = "yyyymmddhh"
+	timestamp_column_name	= "tx_commit_time"
   }
 
   depends_on = [aws_iam_role_policy.dms_s3_access]
