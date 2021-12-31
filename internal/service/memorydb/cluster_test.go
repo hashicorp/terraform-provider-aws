@@ -3,6 +3,7 @@ package memorydb_test
 import (
 	"context"
 	"fmt"
+	"regexp"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/memorydb"
@@ -33,7 +34,7 @@ func TestAccMemoryDBCluster_basic(t *testing.T) {
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "acl_name", "aws_memorydb_acl.test", "id"),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "memorydb", "cluster/"+rName),
 					resource.TestCheckResourceAttr(resourceName, "auto_minor_version_upgrade", "false"),
-					resource.TestCheckResourceAttrSet(resourceName, "cluster_endpoint.0.address"),
+					resource.TestMatchResourceAttr(resourceName, "cluster_endpoint.0.address", regexp.MustCompile(`^clustercfg\..*?\.amazonaws\.com$`)),
 					resource.TestCheckResourceAttr(resourceName, "cluster_endpoint.0.port", "6379"),
 					resource.TestCheckResourceAttr(resourceName, "description", "Managed by Terraform"),
 					resource.TestCheckResourceAttrSet(resourceName, "engine_patch_version"),
