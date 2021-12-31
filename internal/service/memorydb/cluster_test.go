@@ -398,6 +398,44 @@ func TestAccMemoryDBCluster_update_maintenanceWindow(t *testing.T) {
 	})
 }
 
+func TestAccMemoryDBCluster_update_nodeType(t *testing.T) {
+	rName := "tf-test-" + sdkacctest.RandString(8)
+	resourceName := "aws_memorydb_cluster.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, memorydb.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckClusterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_withNodeType(rName, "db.t4g.small"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "node_type", "db.t4g.small"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccClusterConfig_withNodeType(rName, "db.t4g.medium"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "node_type", "db.t4g.medium"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccMemoryDBCluster_update_tags(t *testing.T) {
 	rName := "tf-test-" + sdkacctest.RandString(8)
 	resourceName := "aws_memorydb_cluster.test"
@@ -710,6 +748,20 @@ resource "aws_memorydb_cluster" "test" {
   subnet_group_name  = aws_memorydb_subnet_group.test.id
 }
 `, rName, maintenanceWindow),
+	)
+}
+
+func testAccClusterConfig_withNodeType(rName, nodeType string) string {
+	return acctest.ConfigCompose(
+		testAccClusterConfigBaseNetwork(),
+		fmt.Sprintf(`
+resource "aws_memorydb_cluster" "test" {
+  acl_name           = "open-access"
+  name               = %[1]q
+  node_type          = %[2]q
+  subnet_group_name  = aws_memorydb_subnet_group.test.id
+}
+`, rName, nodeType),
 	)
 }
 
