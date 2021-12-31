@@ -32,7 +32,7 @@ func TestAccMemoryDBCluster_basic(t *testing.T) {
 					testAccCheckClusterExists(resourceName),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "acl_name", "aws_memorydb_acl.test", "id"),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "memorydb", "cluster/"+rName),
-					resource.TestCheckResourceAttr(resourceName, "auto_minor_version_upgrade", "true"),
+					resource.TestCheckResourceAttr(resourceName, "auto_minor_version_upgrade", "false"),
 					resource.TestCheckResourceAttrSet(resourceName, "cluster_endpoint.0.address"),
 					resource.TestCheckResourceAttr(resourceName, "cluster_endpoint.0.port", "6379"),
 					resource.TestCheckResourceAttr(resourceName, "description", "Managed by Terraform"),
@@ -454,10 +454,11 @@ func testAccClusterConfig_basic(rName string) string {
 		testAccClusterConfigBaseUserAndACL(rName),
 		fmt.Sprintf(`
 resource "aws_memorydb_cluster" "test" {
-  acl_name           = aws_memorydb_acl.test.id
-  name               = %[1]q
-  node_type          = "db.t4g.small"
-  subnet_group_name  = aws_memorydb_subnet_group.test.id
+  acl_name                   = aws_memorydb_acl.test.id
+  auto_minor_version_upgrade = false
+  name                       = %[1]q
+  node_type                  = "db.t4g.small"
+  subnet_group_name          = aws_memorydb_subnet_group.test.id
 
   tags = {
     Test = "test"
