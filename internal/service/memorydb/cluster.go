@@ -75,6 +75,7 @@ func ResourceCluster() *schema.Resource {
 			},
 			"engine_version": {
 				Type:     schema.TypeString,
+				Optional: true,
 				Computed: true,
 			},
 			"kms_key_id": {
@@ -189,6 +190,10 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 		input.Description = aws.String(v.(string))
 	}
 
+	if v, ok := d.GetOk("engine_version"); ok {
+		input.EngineVersion = aws.String(v.(string))
+	}
+
 	if v, ok := d.GetOk("maintenance_window"); ok {
 		input.MaintenanceWindow = aws.String(v.(string))
 	}
@@ -227,6 +232,10 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 
 		if d.HasChange("description") {
 			input.Description = aws.String(d.Get("description").(string))
+		}
+
+		if d.HasChange("engine_version") {
+			input.EngineVersion = aws.String(d.Get("engine_version").(string))
 		}
 
 		if d.HasChange("maintenance_window") {

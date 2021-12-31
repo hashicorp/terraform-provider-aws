@@ -290,6 +290,50 @@ func TestAccMemoryDBCluster_update_description(t *testing.T) {
 	})
 }
 
+func TestAccMemoryDBCluster_update_engineVersion(t *testing.T) {
+	// As of writing, 6.2 is the one and only MemoryDB engine version available,
+	// so we cannot check upgrade behaviour.
+	//
+	// The API should allow upgrades with some unknown waiting time, and disallow
+	// downgrades.
+
+	rName := "tf-test-" + sdkacctest.RandString(8)
+	resourceName := "aws_memorydb_cluster.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, memorydb.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckClusterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_withEngineVersionNull(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "engine_version", "6.2"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccClusterConfig_withEngineVersion(rName, "6.2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "engine_version", "6.2"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccMemoryDBCluster_update_maintenanceWindow(t *testing.T) {
 	rName := "tf-test-" + sdkacctest.RandString(8)
 	resourceName := "aws_memorydb_cluster.test"
@@ -579,6 +623,35 @@ resource "aws_memorydb_cluster" "test" {
   subnet_group_name = aws_memorydb_subnet_group.test.id
 }
 `, rName, description),
+	)
+}
+
+func testAccClusterConfig_withEngineVersionNull(rName string) string {
+	return acctest.ConfigCompose(
+		testAccClusterConfigBaseNetwork(),
+		fmt.Sprintf(`
+resource "aws_memorydb_cluster" "test" {
+  acl_name          = "open-access"
+  name              = %[1]q
+  node_type         = "db.t4g.small"
+  subnet_group_name = aws_memorydb_subnet_group.test.id
+}
+`, rName),
+	)
+}
+
+func testAccClusterConfig_withEngineVersion(rName, engineVersion string) string {
+	return acctest.ConfigCompose(
+		testAccClusterConfigBaseNetwork(),
+		fmt.Sprintf(`
+resource "aws_memorydb_cluster" "test" {
+  acl_name          = "open-access"
+  engine_version    = %[2]q
+  name              = %[1]q
+  node_type         = "db.t4g.small"
+  subnet_group_name = aws_memorydb_subnet_group.test.id
+}
+`, rName, engineVersion),
 	)
 }
 
