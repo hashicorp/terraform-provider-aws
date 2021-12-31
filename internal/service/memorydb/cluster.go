@@ -4,7 +4,6 @@ import (
 	"context"
 	"log"
 	"regexp"
-	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/memorydb"
@@ -65,7 +64,8 @@ func ResourceCluster() *schema.Resource {
 			},
 			"description": {
 				Type:     schema.TypeString,
-				Computed: true,
+				Optional: true,
+				Default:  "Managed by Terraform",
 			},
 			"engine_patch_version": {
 				Type:     schema.TypeString,
@@ -179,6 +179,10 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 		Tags:        Tags(tags.IgnoreAWS()),
 	}
 
+	if v, ok := d.GetOk("description"); ok {
+		input.Description = aws.String(v.(string))
+	}
+
 	if v, ok := d.GetOk("maintenance_window"); ok {
 		input.MaintenanceWindow = aws.String(v.(string))
 	}
@@ -213,6 +217,10 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 
 		if d.HasChange("acl_name") {
 			input.ACLName = aws.String(d.Get("acl_name").(string))
+		}
+
+		if d.HasChange("description") {
+			input.Description = aws.String(d.Get("description").(string))
 		}
 
 		if d.HasChange("maintenance_window") {
