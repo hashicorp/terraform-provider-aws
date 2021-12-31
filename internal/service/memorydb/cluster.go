@@ -162,7 +162,9 @@ func ResourceCluster() *schema.Resource {
 			"tags_all": tftags.TagsSchemaComputed(),
 			"tls_enabled": {
 				Type:     schema.TypeBool,
-				Computed: true,
+				Optional: true,
+				Default:  true,
+				ForceNew: true,
 			},
 		},
 	}
@@ -180,6 +182,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 		ClusterName:             aws.String(name),
 		NodeType:                aws.String(d.Get("node_type").(string)),
 		Tags:                    Tags(tags.IgnoreAWS()),
+		TLSEnabled:              aws.Bool(d.Get("tls_enabled").(bool)),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
