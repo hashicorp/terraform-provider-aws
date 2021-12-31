@@ -16,7 +16,7 @@ func TestAccKafkaConnectCustomPluginDataSource_basic(t *testing.T) {
 	dataSourceName := "data.aws_mskconnect_custom_plugin.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(kafkaconnect.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, kafkaconnect.EndpointsID),
 		CheckDestroy: nil,
 		Providers:    acctest.Providers,
