@@ -12,8 +12,8 @@ const (
 	aclActiveTimeout  = 5 * time.Minute
 	aclDeletedTimeout = 5 * time.Minute
 
-	clusterAvailableTimeout = 30 * time.Minute
-	clusterDeletedTimeout   = 30 * time.Minute
+	clusterAvailableTimeout = 120 * time.Minute
+	clusterDeletedTimeout   = 120 * time.Minute
 
 	userActiveTimeout  = 5 * time.Minute
 	userDeletedTimeout = 5 * time.Minute

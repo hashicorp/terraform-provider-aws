@@ -31,6 +31,12 @@ func ResourceCluster() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(clusterAvailableTimeout),
+			Update: schema.DefaultTimeout(clusterAvailableTimeout),
+			Delete: schema.DefaultTimeout(clusterDeletedTimeout),
+		},
+
 		CustomizeDiff: verify.SetTagsDiff,
 
 		Schema: map[string]*schema.Schema{
