@@ -130,6 +130,44 @@ func TestAccMemoryDBCluster_disappears(t *testing.T) {
 	})
 }
 
+func TestAccMemoryDBCluster_update_aclName(t *testing.T) {
+	rName := "tf-test-" + sdkacctest.RandString(8)
+	resourceName := "aws_memorydb_cluster.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, memorydb.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckClusterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_withACLName(rName, rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "acl_name", rName),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccClusterConfig_withACLName(rName, "open-access"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "acl_name", "open-access"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccMemoryDBCluster_update_description(t *testing.T) {
 	rName := "tf-test-" + sdkacctest.RandString(8)
 	resourceName := "aws_memorydb_cluster.test"
@@ -265,19 +303,18 @@ func testAccCheckClusterExists(n string) resource.TestCheckFunc {
 	}
 }
 
-func testAccClusterConfigBase(rName string) string {
+func testAccClusterConfigBaseNetwork() string {
 	return acctest.ConfigCompose(
 		acctest.ConfigVpcWithSubnets(2),
 		fmt.Sprintf(`
 resource "aws_memorydb_subnet_group" "test" {
-  name       = %[1]q
   subnet_ids = aws_subnet.test.*.id
 }
-`, rName),
+`),
 	)
 }
 
-func testAccClusterConfigUserAndACL(rName string) string {
+func testAccClusterConfigBaseUserAndACL(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_memorydb_user" "test" {
   access_string = "on ~* &* +@all"
@@ -298,8 +335,8 @@ resource "aws_memorydb_acl" "test" {
 
 func testAccClusterConfig_basic(rName string) string {
 	return acctest.ConfigCompose(
-		testAccClusterConfigBase(rName),
-		testAccClusterConfigUserAndACL(rName),
+		testAccClusterConfigBaseNetwork(),
+		testAccClusterConfigBaseUserAndACL(rName),
 		fmt.Sprintf(`
 resource "aws_memorydb_cluster" "test" {
   acl_name           = aws_memorydb_acl.test.id
@@ -327,9 +364,25 @@ resource "aws_memorydb_cluster" "test" {
 	)
 }
 
+func testAccClusterConfig_withACLName(rName, aclName string) string {
+	return acctest.ConfigCompose(
+		testAccClusterConfigBaseNetwork(),
+		testAccClusterConfigBaseUserAndACL(rName),
+		fmt.Sprintf(`
+resource "aws_memorydb_cluster" "test" {
+  depends_on        = [aws_memorydb_acl.test]
+  acl_name          = %[2]q
+  name              = %[1]q
+  node_type         = "db.t4g.small"
+  subnet_group_name = aws_memorydb_subnet_group.test.id
+}
+`, rName, aclName),
+	)
+}
+
 func testAccClusterConfig_withDescription(rName, description string) string {
 	return acctest.ConfigCompose(
-		testAccClusterConfigBase(rName),
+		testAccClusterConfigBaseNetwork(),
 		fmt.Sprintf(`
 resource "aws_memorydb_cluster" "test" {
   acl_name          = "open-access"
@@ -344,7 +397,7 @@ resource "aws_memorydb_cluster" "test" {
 
 func testAccClusterConfig_withMaintenanceWindow(rName, maintenanceWindow string) string {
 	return acctest.ConfigCompose(
-		testAccClusterConfigBase(rName),
+		testAccClusterConfigBaseNetwork(),
 		fmt.Sprintf(`
 resource "aws_memorydb_cluster" "test" {
   acl_name           = "open-access"
