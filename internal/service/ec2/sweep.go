@@ -164,6 +164,8 @@ func init() {
 		Name: "aws_subnet",
 		F:    sweepSubnets,
 		Dependencies: []string{
+			"aws_appstream_fleet",
+			"aws_appstream_image_builder",
 			"aws_autoscaling_group",
 			"aws_batch_compute_environment",
 			"aws_elastic_beanstalk_environment",
