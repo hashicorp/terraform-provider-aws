@@ -6,7 +6,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/kafkaconnect"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
@@ -28,9 +27,8 @@ func DataSourceCustomPlugin() *schema.Resource {
 				Computed: true,
 			},
 			"name": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringLenBetween(1, 64),
+				Type:     schema.TypeString,
+				Required: true,
 			},
 			"state": {
 				Type:     schema.TypeString,
@@ -73,13 +71,16 @@ func dataSourceCustomPluginRead(d *schema.ResourceData, meta interface{}) error 
 		return fmt.Errorf("error reading MSK Connect Custom Plugin (%s): no results found", pluginName)
 	}
 
-	d.Set("arn", plugin.CustomPluginArn)
-	d.Set("name", plugin.Name)
-	d.Set("description", plugin.Description)
-	d.Set("state", plugin.CustomPluginState)
-	d.Set("latest_revision", plugin.LatestRevision.Revision)
-
 	d.SetId(aws.StringValue(plugin.CustomPluginArn))
+	d.Set("arn", plugin.CustomPluginArn)
+	d.Set("description", plugin.Description)
+	d.Set("name", plugin.Name)
+	d.Set("state", plugin.CustomPluginState)
+	if plugin.LatestRevision != nil {
+		d.Set("latest_revision", plugin.LatestRevision.Revision)
+	} else {
+		d.Set("latest_revision", nil)
+	}
 
 	return nil
 }

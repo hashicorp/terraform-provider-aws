@@ -146,7 +146,12 @@ func testAccCheckCustomPluginExists(name string) resource.TestCheckFunc {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).KafkaConnectConn
 
 		_, err := tfkafkaconnect.FindCustomPluginByARN(conn, rs.Primary.ID)
-		return err
+
+		if err != nil {
+			return err
+		}
+
+		return nil
 	}
 }
 
@@ -207,6 +212,7 @@ func testAccCustomPluginConfigBasic(name string) string {
 resource "aws_mskconnect_custom_plugin" "test" {
   name         = %[1]q
   content_type = "JAR"
+
   location {
     s3 {
       bucket_arn = aws_s3_bucket.test.arn
@@ -223,6 +229,7 @@ resource "aws_mskconnect_custom_plugin" "test" {
   name         = %[1]q
   description  = %[2]q
   content_type = "JAR"
+
   location {
     s3 {
       bucket_arn = aws_s3_bucket.test.arn
@@ -238,6 +245,7 @@ func testAccCustomPluginConfigContentTypeZip(name string) string {
 resource "aws_mskconnect_custom_plugin" "test" {
   name         = %[1]q
   content_type = "ZIP"
+
   location {
     s3 {
       bucket_arn = aws_s3_bucket.test.arn
@@ -267,6 +275,7 @@ resource "aws_s3_bucket_object" "test" {
 resource "aws_mskconnect_custom_plugin" "test" {
   name         = %[1]q
   content_type = "JAR"
+
   location {
     s3 {
       bucket_arn     = aws_s3_bucket.test.arn
@@ -275,7 +284,5 @@ resource "aws_mskconnect_custom_plugin" "test" {
     }
   }
 }
-
-
 `, name)
 }

@@ -7,10 +7,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
-const (
-	customPluginCreateDefaultTimeout = 10 * time.Minute
-)
-
 func waitCustomPluginCreated(conn *kafkaconnect.KafkaConnect, arn string, timeout time.Duration) (*kafkaconnect.DescribeCustomPluginOutput, error) {
 	stateconf := &resource.StateChangeConf{
 		Pending: []string{kafkaconnect.CustomPluginStateCreating},

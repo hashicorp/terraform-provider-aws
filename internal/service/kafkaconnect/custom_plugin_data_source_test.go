@@ -40,6 +40,7 @@ func testAccCustomPluginDataSourceConfig(rName string) string {
 resource "aws_mskconnect_custom_plugin" "test" {
   name         = %[1]q
   content_type = "JAR"
+
   location {
     s3 {
       bucket_arn = aws_s3_bucket.test.arn

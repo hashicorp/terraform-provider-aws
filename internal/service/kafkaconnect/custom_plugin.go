@@ -3,6 +3,7 @@ package kafkaconnect
 import (
 	"fmt"
 	"log"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/kafkaconnect"
@@ -18,12 +19,13 @@ func ResourceCustomPlugin() *schema.Resource {
 		Create: resourceCustomPluginCreate,
 		Read:   resourceCustomPluginRead,
 		Delete: schema.Noop,
+
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
 
 		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(customPluginCreateDefaultTimeout),
+			Create: schema.DefaultTimeout(10 * time.Minute),
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -33,21 +35,31 @@ func ResourceCustomPlugin() *schema.Resource {
 			},
 			"content_type": {
 				Type:         schema.TypeString,
-				ValidateFunc: validation.StringInSlice(kafkaconnect.CustomPluginContentType_Values(), false),
 				Required:     true,
 				ForceNew:     true,
+				ValidateFunc: validation.StringInSlice(kafkaconnect.CustomPluginContentType_Values(), false),
 			},
 			"description": {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
 			},
+			"latest_revision": {
+				Type:     schema.TypeInt,
+				Computed: true,
+			},
 			"location": {
-				Type: schema.TypeList,
+				Type:     schema.TypeList,
+				MaxItems: 1,
+				Required: true,
+				ForceNew: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"s3": {
-							Type: schema.TypeList,
+							Type:     schema.TypeList,
+							MaxItems: 1,
+							ForceNew: true,
+							Required: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"bucket_arn": {
@@ -68,24 +80,14 @@ func ResourceCustomPlugin() *schema.Resource {
 									},
 								},
 							},
-							ForceNew: true,
-							Required: true,
-							MaxItems: 1,
 						},
 					},
 				},
-				Required: true,
-				ForceNew: true,
-				MaxItems: 1,
 			},
 			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
-			},
-			"latest_revision": {
-				Type:     schema.TypeInt,
-				Computed: true,
 			},
 			"state": {
 				Type:     schema.TypeString,
@@ -98,30 +100,30 @@ func ResourceCustomPlugin() *schema.Resource {
 func resourceCustomPluginCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).KafkaConnectConn
 
-	log.Print("[DEBUG] Creating MSK Connect Custom Plugin")
-
 	name := d.Get("name").(string)
-	params := &kafkaconnect.CreateCustomPluginInput{
+	input := &kafkaconnect.CreateCustomPluginInput{
 		Name:        aws.String(name),
 		ContentType: aws.String(d.Get("content_type").(string)),
 		Location:    expandLocation(d.Get("location").([]interface{})),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
-		params.Description = aws.String(v.(string))
+		input.Description = aws.String(v.(string))
 	}
 
-	resp, err := conn.CreateCustomPlugin(params)
+	log.Printf("[DEBUG] Creating MSK Connect Custom Plugin: %s", input)
+	output, err := conn.CreateCustomPlugin(input)
+
 	if err != nil {
-		return fmt.Errorf("Error creating custom plugin (%s): %w", name, err)
+		return fmt.Errorf("error creating MSK Connect Custom Plugin (%s): %w", name, err)
 	}
 
-	d.SetId(aws.StringValue(resp.CustomPluginArn))
+	d.SetId(aws.StringValue(output.CustomPluginArn))
 
 	_, err = waitCustomPluginCreated(conn, d.Id(), d.Timeout(schema.TimeoutCreate))
 
 	if err != nil {
-		return fmt.Errorf("Error waiting for MSK Connect Custom Plugin (%s) create: %w", d.Id(), err)
+		return fmt.Errorf("error waiting for MSK Connect Custom Plugin (%s) create: %w", d.Id(), err)
 	}
 
 	return resourceCustomPluginRead(d, meta)
@@ -130,29 +132,33 @@ func resourceCustomPluginCreate(d *schema.ResourceData, meta interface{}) error 
 func resourceCustomPluginRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).KafkaConnectConn
 
-	params := &kafkaconnect.DescribeCustomPluginInput{
-		CustomPluginArn: aws.String(d.Id()),
+	plugin, err := FindCustomPluginByARN(conn, d.Id())
+
+	if tfresource.NotFound(err) && !d.IsNewResource() {
+		log.Printf("[WARN] MSK Connect Custom Plugin (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
 	}
 
-	plugin, err := conn.DescribeCustomPlugin(params)
 	if err != nil {
-		if tfresource.NotFound(err) && !d.IsNewResource() {
-			log.Printf("[WARN] Custom Plugin (%s) not found, removing from state", d.Id())
-			d.SetId("")
-			return nil
-		}
-		return fmt.Errorf("Error reading MSK Connect Custom Plugin (%s): %w", d.Id(), err)
+		return fmt.Errorf("error reading MSK Connect Custom Plugin (%s): %w", d.Id(), err)
 	}
 
 	d.Set("arn", plugin.CustomPluginArn)
 	d.Set("description", plugin.Description)
-	d.Set("content_type", plugin.LatestRevision.ContentType)
-	d.Set("latest_revision", plugin.LatestRevision.Revision)
 	d.Set("name", plugin.Name)
 	d.Set("state", plugin.CustomPluginState)
 
-	if err := d.Set("location", flattenLocation(plugin.LatestRevision.Location)); err != nil {
-		return fmt.Errorf("error setting custom plugin's location (%s): %w", d.Id(), err)
+	if plugin.LatestRevision != nil {
+		d.Set("content_type", plugin.LatestRevision.ContentType)
+		d.Set("latest_revision", plugin.LatestRevision.Revision)
+		if err := d.Set("location", flattenLocation(plugin.LatestRevision.Location)); err != nil {
+			return fmt.Errorf("error setting location: %w", err)
+		}
+	} else {
+		d.Set("content_type", nil)
+		d.Set("latest_revision", nil)
+		d.Set("location", nil)
 	}
 
 	return nil
