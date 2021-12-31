@@ -39,7 +39,7 @@ func TestAccMemoryDBCluster_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "description", "Managed by Terraform"),
 					resource.TestCheckResourceAttrSet(resourceName, "engine_patch_version"),
 					resource.TestCheckResourceAttrSet(resourceName, "engine_version"),
-					resource.TestCheckResourceAttr(resourceName, "kms_key_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "kms_key_arn", ""),
 					resource.TestCheckResourceAttrSet(resourceName, "maintenance_window"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "node_type", "db.t4g.small"),
@@ -86,7 +86,7 @@ func TestAccMemoryDBCluster_defaults(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "description", "Managed by Terraform"),
 					resource.TestCheckResourceAttrSet(resourceName, "engine_patch_version"),
 					resource.TestCheckResourceAttrSet(resourceName, "engine_version"),
-					resource.TestCheckResourceAttr(resourceName, "kms_key_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "kms_key_arn", ""),
 					resource.TestCheckResourceAttrSet(resourceName, "maintenance_window"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "node_type", "db.t4g.small"),
@@ -191,6 +191,32 @@ func TestAccMemoryDBCluster_create_noTLS(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tls_enabled", "false"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccMemoryDBCluster_create_withKMS(t *testing.T) {
+	rName := "tf-test-" + sdkacctest.RandString(8)
+	resourceName := "aws_memorydb_cluster.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, memorydb.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckClusterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_withKMS(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(resourceName),
+					resource.TestCheckResourceAttrPair(resourceName, "kms_key_arn", "aws_kms_key.test", "arn"),
 				),
 			},
 			{
@@ -652,6 +678,23 @@ resource "aws_memorydb_cluster" "test" {
   subnet_group_name = aws_memorydb_subnet_group.test.id
 }
 `, rName, engineVersion),
+	)
+}
+
+func testAccClusterConfig_withKMS(rName string) string {
+	return acctest.ConfigCompose(
+		testAccClusterConfigBaseNetwork(),
+		fmt.Sprintf(`
+resource "aws_kms_key" "test" {}
+
+resource "aws_memorydb_cluster" "test" {
+  acl_name          = "open-access"
+  kms_key_arn       = aws_kms_key.test.arn
+  name              = %[1]q
+  node_type         = "db.t4g.small"
+  subnet_group_name = aws_memorydb_subnet_group.test.id
+}
+`, rName),
 	)
 }
 

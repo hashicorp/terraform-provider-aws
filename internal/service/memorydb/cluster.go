@@ -78,9 +78,15 @@ func ResourceCluster() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-			"kms_key_id": {
-				Type:     schema.TypeString,
-				Computed: true,
+			"kms_key_arn": {
+				// The API will accept an ID, but return the ARN on every read.
+				// For the sake of consistency, force everyone to use ARN-s.
+				// To prevent confusion, the attribute is suffixed _arn rather
+				// than the _id implied by the API.
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: verify.ValidARN,
 			},
 			"maintenance_window": {
 				Type:         schema.TypeString,
@@ -194,6 +200,10 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 		input.EngineVersion = aws.String(v.(string))
 	}
 
+	if v, ok := d.GetOk("kms_key_arn"); ok {
+		input.KmsKeyId = aws.String(v.(string))
+	}
+
 	if v, ok := d.GetOk("maintenance_window"); ok {
 		input.MaintenanceWindow = aws.String(v.(string))
 	}
@@ -304,7 +314,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("description", cluster.Description)
 	d.Set("engine_patch_version", cluster.EnginePatchVersion)
 	d.Set("engine_version", cluster.EngineVersion)
-	d.Set("kms_key_id", cluster.KmsKeyId)
+	d.Set("kms_key_arn", cluster.KmsKeyId) // KmsKeyId is actually an ARN here.
 	d.Set("maintenance_window", cluster.MaintenanceWindow)
 	d.Set("name", cluster.Name)
 	d.Set("name_prefix", create.NamePrefixFromName(aws.StringValue(cluster.Name)))
