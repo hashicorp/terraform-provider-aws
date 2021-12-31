@@ -43,7 +43,7 @@ func TestAccMemoryDBCluster_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "maintenance_window"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "node_type", "db.t4g.small"),
-					resource.TestCheckResourceAttr(resourceName, "number_of_shards", "1"),
+					resource.TestCheckResourceAttr(resourceName, "num_shards", "2"),
 					resource.TestCheckResourceAttr(resourceName, "parameter_group_name", "default.memorydb-redis6"),
 					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "snapshot_retention_limit", "0"),
@@ -90,7 +90,7 @@ func TestAccMemoryDBCluster_defaults(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "maintenance_window"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "node_type", "db.t4g.small"),
-					resource.TestCheckResourceAttr(resourceName, "number_of_shards", "1"),
+					resource.TestCheckResourceAttr(resourceName, "num_shards", "1"),
 					resource.TestCheckResourceAttr(resourceName, "parameter_group_name", "default.memorydb-redis6"),
 					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "snapshot_retention_limit", "0"),
@@ -436,6 +436,78 @@ func TestAccMemoryDBCluster_update_nodeType(t *testing.T) {
 	})
 }
 
+func TestAccMemoryDBCluster_update_numShards_scaleUp(t *testing.T) {
+	// As updating MemoryDB clusters can be slow, scaling up and down have been
+	// split into separate tests for timeout management
+
+	rName := "tf-test-" + sdkacctest.RandString(8)
+	resourceName := "aws_memorydb_cluster.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, memorydb.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckClusterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_withNumShards(rName, 1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "num_shards", "1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccClusterConfig_withNumShards(rName, 2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "num_shards", "2"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccMemoryDBCluster_update_numShards_scaleDown(t *testing.T) {
+	// As updating MemoryDB clusters can be slow, scaling up and down have been
+	// split into separate tests for timeout management
+
+	rName := "tf-test-" + sdkacctest.RandString(8)
+	resourceName := "aws_memorydb_cluster.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, memorydb.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckClusterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_withNumShards(rName, 2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "num_shards", "2"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccClusterConfig_withNumShards(rName, 1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "num_shards", "1"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccMemoryDBCluster_update_tags(t *testing.T) {
 	rName := "tf-test-" + sdkacctest.RandString(8)
 	resourceName := "aws_memorydb_cluster.test"
@@ -595,6 +667,7 @@ resource "aws_memorydb_cluster" "test" {
   auto_minor_version_upgrade = false
   name                       = %[1]q
   node_type                  = "db.t4g.small"
+  num_shards                 = 2
   subnet_group_name          = aws_memorydb_subnet_group.test.id
 
   tags = {
@@ -762,6 +835,21 @@ resource "aws_memorydb_cluster" "test" {
   subnet_group_name  = aws_memorydb_subnet_group.test.id
 }
 `, rName, nodeType),
+	)
+}
+
+func testAccClusterConfig_withNumShards(rName string, numShards int) string {
+	return acctest.ConfigCompose(
+		testAccClusterConfigBaseNetwork(),
+		fmt.Sprintf(`
+resource "aws_memorydb_cluster" "test" {
+  acl_name           = "open-access"
+  name               = %[1]q
+  node_type          = "db.t4g.small"
+  num_shards         = %[2]d
+  subnet_group_name  = aws_memorydb_subnet_group.test.id
+}
+`, rName, numShards),
 	)
 }
 
