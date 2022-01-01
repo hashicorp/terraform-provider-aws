@@ -146,6 +146,7 @@ func ResourceCluster() *schema.Resource {
 			},
 			"parameter_group_name": {
 				Type:     schema.TypeString,
+				Optional: true,
 				Computed: true,
 			},
 			"security_group_ids": {
@@ -221,6 +222,10 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 		input.ParameterGroupName = aws.String(v.(string))
 	}
 
+	if v, ok := d.GetOk("parameter_group_name"); ok {
+		input.ParameterGroupName = aws.String(v.(string))
+	}
+
 	if v, ok := d.GetOk("subnet_group_name"); ok {
 		input.SubnetGroupName = aws.String(v.(string))
 	}
@@ -245,6 +250,8 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 	conn := meta.(*conns.AWSClient).MemoryDBConn
 
 	if d.HasChangesExcept("tags", "tags_all") {
+		waitParameterGroupInSync := false
+
 		input := &memorydb.UpdateClusterInput{
 			ClusterName: aws.String(d.Id()),
 		}
@@ -275,6 +282,11 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 			}
 		}
 
+		if d.HasChange("parameter_group_name") {
+			waitParameterGroupInSync = true
+			input.ParameterGroupName = aws.String(d.Get("parameter_group_name").(string))
+		}
+
 		log.Printf("[DEBUG] Updating MemoryDB Cluster (%s)", d.Id())
 
 		_, err := conn.UpdateClusterWithContext(ctx, input)
@@ -284,6 +296,12 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 
 		if err := waitClusterAvailable(ctx, conn, d.Id()); err != nil {
 			return diag.Errorf("error waiting for MemoryDB Cluster (%s) to be modified: %s", d.Id(), err)
+		}
+
+		if waitParameterGroupInSync {
+			if err := waitClusterParameterGroupInSync(ctx, conn, d.Id()); err != nil {
+				return diag.Errorf("error waiting for MemoryDB Cluster (%s) parameter group to be in sync: %s", d.Id(), err)
+			}
 		}
 	}
 

@@ -20,6 +20,9 @@ const (
 	clusterStatusDeleting  = "deleting"
 	clusterStatusUpdating  = "updating"
 
+	clusterParameterGroupStatusApplying = "applying"
+	clusterParameterGroupStatusInSync   = "in-sync"
+
 	userStatusActive    = "active"
 	userStatusDeleting  = "deleting"
 	userStatusModifying = "modifying"
@@ -56,6 +59,23 @@ func statusCluster(ctx context.Context, conn *memorydb.MemoryDB, clusterName str
 		}
 
 		return Cluster, aws.StringValue(Cluster.Status), nil
+	}
+}
+
+// statusClusterParameterGroup fetches the MemoryDB Cluster and its parameter group status.
+func statusClusterParameterGroup(ctx context.Context, conn *memorydb.MemoryDB, clusterName string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		Cluster, err := FindClusterByName(ctx, conn, clusterName)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return Cluster, aws.StringValue(Cluster.ParameterGroupStatus), nil
 	}
 }
 

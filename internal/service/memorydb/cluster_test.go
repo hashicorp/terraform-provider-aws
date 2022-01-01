@@ -508,6 +508,51 @@ func TestAccMemoryDBCluster_update_numShards_scaleDown(t *testing.T) {
 	})
 }
 
+func TestAccMemoryDBCluster_update_parameterGroup(t *testing.T) {
+	rName := "tf-test-" + sdkacctest.RandString(8)
+	resourceName := "aws_memorydb_cluster.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, memorydb.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckClusterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_withParameterGroup(rName, "default.memorydb-redis6"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "parameter_group_name", "default.memorydb-redis6"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccClusterConfig_withParameterGroup(rName, rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "parameter_group_name", rName),
+				),
+			},
+			{
+				Config: testAccClusterConfig_withParameterGroup(rName, "default.memorydb-redis6"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "parameter_group_name", "default.memorydb-redis6"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccMemoryDBCluster_update_tags(t *testing.T) {
 	rName := "tf-test-" + sdkacctest.RandString(8)
 	resourceName := "aws_memorydb_cluster.test"
@@ -850,6 +895,37 @@ resource "aws_memorydb_cluster" "test" {
   subnet_group_name  = aws_memorydb_subnet_group.test.id
 }
 `, rName, numShards),
+	)
+}
+
+func testAccClusterConfig_withParameterGroup(rName, parameterGroup string) string {
+	return acctest.ConfigCompose(
+		testAccClusterConfigBaseNetwork(),
+		fmt.Sprintf(`
+resource "aws_memorydb_parameter_group" "test" {
+  name   = %[1]q
+  family = "memorydb_redis6"
+
+  parameter {
+    name  = "active-defrag-cycle-max"
+    value = "70"
+  }
+
+  parameter {
+    name  = "active-defrag-cycle-min"
+    value = "10"
+  }
+}
+
+resource "aws_memorydb_cluster" "test" {
+  depends_on           = [aws_memorydb_parameter_group.test]
+  acl_name             = "open-access"
+  name                 = %[1]q
+  node_type            = "db.t4g.small"
+  parameter_group_name = %[2]q
+  subnet_group_name    = aws_memorydb_subnet_group.test.id
+}
+`, rName, parameterGroup),
 	)
 }
 

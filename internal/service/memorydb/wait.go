@@ -15,6 +15,8 @@ const (
 	clusterAvailableTimeout = 120 * time.Minute
 	clusterDeletedTimeout   = 120 * time.Minute
 
+	clusterParameterGroupInSyncTimeout = 60 * time.Minute
+
 	userActiveTimeout  = 5 * time.Minute
 	userDeletedTimeout = 5 * time.Minute
 )
@@ -68,6 +70,21 @@ func waitClusterDeleted(ctx context.Context, conn *memorydb.MemoryDB, clusterId 
 		Target:  []string{},
 		Refresh: statusCluster(ctx, conn, clusterId),
 		Timeout: clusterDeletedTimeout,
+	}
+
+	_, err := stateConf.WaitForStateContext(ctx)
+
+	return err
+}
+
+// waitClusterParameterGroupInSync waits for MemoryDB Cluster to come in sync
+// with a new parameter group.
+func waitClusterParameterGroupInSync(ctx context.Context, conn *memorydb.MemoryDB, clusterId string) error {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{clusterParameterGroupStatusApplying},
+		Target:  []string{clusterParameterGroupStatusInSync},
+		Refresh: statusClusterParameterGroup(ctx, conn, clusterId),
+		Timeout: clusterParameterGroupInSyncTimeout,
 	}
 
 	_, err := stateConf.WaitForStateContext(ctx)
