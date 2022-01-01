@@ -71,12 +71,12 @@ A `config` block supports the following arguments:
 * `end_time` - (Required) A end time block specifies the time that your contact center closes. The `end_time` is documented below.
 * `start_time` - (Required) A start time block specifies the time that your contact center opens. The `start_time` is documented below.
 
-A `end_time` blocks supports the following arguments:
+A `end_time` block supports the following arguments:
 
 * `hours` - (Required) Specifies the hour of closing.
 * `minutes` - (Required) Specifies the minute of closing.
 
-A `start_time` blocks supports the following arguments:
+A `start_time` block supports the following arguments:
 
 * `hours` - (Required) Specifies the hour of opening.
 * `minutes` - (Required) Specifies the minute of opening.
