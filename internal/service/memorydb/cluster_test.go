@@ -931,9 +931,11 @@ func testAccClusterConfig_withNoName() string {
 		testAccClusterConfigBaseNetwork(),
 		fmt.Sprintf(`
 resource "aws_memorydb_cluster" "test" {
-  acl_name          = "open-access"
-  node_type         = "db.t4g.small"
-  subnet_group_name = aws_memorydb_subnet_group.test.id
+  acl_name               = "open-access"
+  node_type              = "db.t4g.small"
+  num_replicas_per_shard = 0
+  num_shards             = 1
+  subnet_group_name      = aws_memorydb_subnet_group.test.id
 }
 `),
 	)
@@ -944,10 +946,12 @@ func testAccClusterConfig_withNamePrefix(rNamePrefix string) string {
 		testAccClusterConfigBaseNetwork(),
 		fmt.Sprintf(`
 resource "aws_memorydb_cluster" "test" {
-  acl_name          = "open-access"
-  name_prefix       = %[1]q 
-  node_type         = "db.t4g.small"
-  subnet_group_name = aws_memorydb_subnet_group.test.id
+  acl_name               = "open-access"
+  name_prefix            = %[1]q 
+  node_type              = "db.t4g.small"
+  num_replicas_per_shard = 0
+  num_shards             = 1
+  subnet_group_name      = aws_memorydb_subnet_group.test.id
 }
 `, rNamePrefix),
 	)
@@ -958,11 +962,13 @@ func testAccClusterConfig_withNoTLS(rName string) string {
 		testAccClusterConfigBaseNetwork(),
 		fmt.Sprintf(`
 resource "aws_memorydb_cluster" "test" {
-  acl_name          = "open-access"
-  name              = %[1]q
-  node_type         = "db.t4g.small"
-  subnet_group_name = aws_memorydb_subnet_group.test.id
-  tls_enabled       = false
+  acl_name               = "open-access"
+  name                   = %[1]q
+  node_type              = "db.t4g.small"
+  num_replicas_per_shard = 0
+  num_shards             = 1
+  subnet_group_name      = aws_memorydb_subnet_group.test.id
+  tls_enabled            = false
 }
 `, rName),
 	)
@@ -974,11 +980,13 @@ func testAccClusterConfig_withACLName(rName, aclName string) string {
 		testAccClusterConfigBaseUserAndACL(rName),
 		fmt.Sprintf(`
 resource "aws_memorydb_cluster" "test" {
-  depends_on        = [aws_memorydb_acl.test]
-  acl_name          = %[2]q
-  name              = %[1]q
-  node_type         = "db.t4g.small"
-  subnet_group_name = aws_memorydb_subnet_group.test.id
+  depends_on             = [aws_memorydb_acl.test]
+  acl_name               = %[2]q
+  name                   = %[1]q
+  node_type              = "db.t4g.small"
+  num_replicas_per_shard = 0
+  num_shards             = 1
+  subnet_group_name      = aws_memorydb_subnet_group.test.id
 }
 `, rName, aclName),
 	)
@@ -1004,10 +1012,12 @@ func testAccClusterConfig_withEngineVersionNull(rName string) string {
 		testAccClusterConfigBaseNetwork(),
 		fmt.Sprintf(`
 resource "aws_memorydb_cluster" "test" {
-  acl_name          = "open-access"
-  name              = %[1]q
-  node_type         = "db.t4g.small"
-  subnet_group_name = aws_memorydb_subnet_group.test.id
+  acl_name               = "open-access"
+  name                   = %[1]q
+  node_type              = "db.t4g.small"
+  num_replicas_per_shard = 0
+  num_shards             = 1
+  subnet_group_name      = aws_memorydb_subnet_group.test.id
 }
 `, rName),
 	)
@@ -1018,11 +1028,13 @@ func testAccClusterConfig_withEngineVersion(rName, engineVersion string) string 
 		testAccClusterConfigBaseNetwork(),
 		fmt.Sprintf(`
 resource "aws_memorydb_cluster" "test" {
-  acl_name          = "open-access"
-  engine_version    = %[2]q
-  name              = %[1]q
-  node_type         = "db.t4g.small"
-  subnet_group_name = aws_memorydb_subnet_group.test.id
+  acl_name               = "open-access"
+  engine_version         = %[2]q
+  name                   = %[1]q
+  node_type              = "db.t4g.small"
+  num_replicas_per_shard = 0
+  num_shards             = 1
+  subnet_group_name      = aws_memorydb_subnet_group.test.id
 }
 `, rName, engineVersion),
 	)
@@ -1035,11 +1047,13 @@ func testAccClusterConfig_withKMS(rName string) string {
 resource "aws_kms_key" "test" {}
 
 resource "aws_memorydb_cluster" "test" {
-  acl_name          = "open-access"
-  kms_key_arn       = aws_kms_key.test.arn
-  name              = %[1]q
-  node_type         = "db.t4g.small"
-  subnet_group_name = aws_memorydb_subnet_group.test.id
+  acl_name               = "open-access"
+  kms_key_arn            = aws_kms_key.test.arn
+  name                   = %[1]q
+  node_type              = "db.t4g.small"
+  num_replicas_per_shard = 0
+  num_shards             = 1
+  subnet_group_name      = aws_memorydb_subnet_group.test.id
 }
 `, rName),
 	)
@@ -1050,11 +1064,13 @@ func testAccClusterConfig_withMaintenanceWindow(rName, maintenanceWindow string)
 		testAccClusterConfigBaseNetwork(),
 		fmt.Sprintf(`
 resource "aws_memorydb_cluster" "test" {
-  acl_name           = "open-access"
-  maintenance_window = %[2]q
-  name               = %[1]q
-  node_type          = "db.t4g.small"
-  subnet_group_name  = aws_memorydb_subnet_group.test.id
+  acl_name               = "open-access"
+  maintenance_window     = %[2]q
+  name                   = %[1]q
+  node_type              = "db.t4g.small"
+  num_replicas_per_shard = 0
+  num_shards             = 1
+  subnet_group_name      = aws_memorydb_subnet_group.test.id
 }
 `, rName, maintenanceWindow),
 	)
@@ -1065,10 +1081,12 @@ func testAccClusterConfig_withNodeType(rName, nodeType string) string {
 		testAccClusterConfigBaseNetwork(),
 		fmt.Sprintf(`
 resource "aws_memorydb_cluster" "test" {
-  acl_name           = "open-access"
-  name               = %[1]q
-  node_type          = %[2]q
-  subnet_group_name  = aws_memorydb_subnet_group.test.id
+  acl_name               = "open-access"
+  name                   = %[1]q
+  node_type              = %[2]q
+  num_replicas_per_shard = 0
+  num_shards             = 1
+  subnet_group_name      = aws_memorydb_subnet_group.test.id
 }
 `, rName, nodeType),
 	)
@@ -1124,12 +1142,14 @@ resource "aws_memorydb_parameter_group" "test" {
 }
 
 resource "aws_memorydb_cluster" "test" {
-  depends_on           = [aws_memorydb_parameter_group.test]
-  acl_name             = "open-access"
-  name                 = %[1]q
-  node_type            = "db.t4g.small"
-  parameter_group_name = %[2]q
-  subnet_group_name    = aws_memorydb_subnet_group.test.id
+  depends_on             = [aws_memorydb_parameter_group.test]
+  acl_name               = "open-access"
+  name                   = %[1]q
+  node_type              = "db.t4g.small"
+  num_replicas_per_shard = 0
+  num_shards             = 1
+  parameter_group_name   = %[2]q
+  subnet_group_name      = aws_memorydb_subnet_group.test.id
 }
 `, rName, parameterGroup),
 	)
@@ -1145,11 +1165,13 @@ resource "aws_security_group" "test" {
 }
 
 resource "aws_memorydb_cluster" "test" {
-  acl_name           = "open-access"
-  name               = %[1]q
-  node_type          = "db.t4g.small"
-  security_group_ids = aws_security_group.test[*].id
-  subnet_group_name  = aws_memorydb_subnet_group.test.id
+  acl_name               = "open-access"
+  name                   = %[1]q
+  node_type              = "db.t4g.small"
+  num_replicas_per_shard = 0
+  num_shards             = 1
+  security_group_ids     = aws_security_group.test[*].id
+  subnet_group_name      = aws_memorydb_subnet_group.test.id
 }
 `, rName, count),
 	)
@@ -1163,6 +1185,8 @@ resource "aws_memorydb_cluster" "test" {
   acl_name                 = "open-access"
   name                     = %[1]q
   node_type                = "db.t4g.small"
+  num_replicas_per_shard   = 0
+  num_shards               = 1
   snapshot_retention_limit = %[2]d
   subnet_group_name        = aws_memorydb_subnet_group.test.id
 }
@@ -1175,10 +1199,12 @@ func testAccClusterConfig_withTags0(rName string) string {
 		testAccClusterConfigBaseNetwork(),
 		fmt.Sprintf(`
 resource "aws_memorydb_cluster" "test" {
-  acl_name           = "open-access"
-  name               = %[1]q
-  node_type          = "db.t4g.small"
-  subnet_group_name  = aws_memorydb_subnet_group.test.id
+  acl_name               = "open-access"
+  name                   = %[1]q
+  node_type              = "db.t4g.small"
+  num_replicas_per_shard = 0
+  num_shards             = 1
+  subnet_group_name      = aws_memorydb_subnet_group.test.id
 }
 `, rName),
 	)
@@ -1189,10 +1215,12 @@ func testAccClusterConfig_withTags1(rName, tag1Key, tag1Value string) string {
 		testAccClusterConfigBaseNetwork(),
 		fmt.Sprintf(`
 resource "aws_memorydb_cluster" "test" {
-  acl_name           = "open-access"
-  name               = %[1]q
-  node_type          = "db.t4g.small"
-  subnet_group_name  = aws_memorydb_subnet_group.test.id
+  acl_name               = "open-access"
+  name                   = %[1]q
+  node_type              = "db.t4g.small"
+  num_replicas_per_shard = 0
+  num_shards             = 1
+  subnet_group_name      = aws_memorydb_subnet_group.test.id
 
   tags = {
     %[2]q = %[3]q
@@ -1207,10 +1235,12 @@ func testAccClusterConfig_withTags2(rName, tag1Key, tag1Value, tag2Key, tag2Valu
 		testAccClusterConfigBaseNetwork(),
 		fmt.Sprintf(`
 resource "aws_memorydb_cluster" "test" {
-  acl_name           = "open-access"
-  name               = %[1]q
-  node_type          = "db.t4g.small"
-  subnet_group_name  = aws_memorydb_subnet_group.test.id
+  acl_name               = "open-access"
+  name                   = %[1]q
+  node_type              = "db.t4g.small"
+  num_replicas_per_shard = 0
+  num_shards             = 1
+  subnet_group_name      = aws_memorydb_subnet_group.test.id
 
   tags = {
     %[2]q = %[3]q
