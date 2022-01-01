@@ -169,8 +169,10 @@ func ResourceCluster() *schema.Resource {
 				ValidateFunc: validation.IntBetween(0, 35),
 			},
 			"snapshot_window": {
-				Type:     schema.TypeString,
-				Computed: true,
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: verify.ValidOnceADayWindowFormat,
 			},
 			"sns_topic_arn": {
 				Type:     schema.TypeString,
@@ -231,16 +233,16 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 		input.ParameterGroupName = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("parameter_group_name"); ok {
-		input.ParameterGroupName = aws.String(v.(string))
-	}
-
 	if v, ok := d.GetOk("security_group_ids"); ok {
 		input.SecurityGroupIds = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
 	if v, ok := d.GetOk("snapshot_retention_limit"); ok {
 		input.SnapshotRetentionLimit = aws.Int64(int64(v.(int)))
+	}
+
+	if v, ok := d.GetOk("snapshot_window"); ok {
+		input.SnapshotWindow = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("subnet_group_name"); ok {
@@ -325,6 +327,10 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 
 		if d.HasChange("snapshot_retention_limit") {
 			input.SnapshotRetentionLimit = aws.Int64(int64(d.Get("snapshot_retention_limit").(int)))
+		}
+
+		if d.HasChange("snapshot_window") {
+			input.SnapshotWindow = aws.String(d.Get("snapshot_window").(string))
 		}
 
 		log.Printf("[DEBUG] Updating MemoryDB Cluster (%s)", d.Id())

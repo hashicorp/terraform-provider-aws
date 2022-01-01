@@ -736,6 +736,44 @@ func TestAccMemoryDBCluster_update_snapshotRetentionLimit(t *testing.T) {
 	})
 }
 
+func TestAccMemoryDBCluster_update_snapshotWindow(t *testing.T) {
+	rName := "tf-test-" + sdkacctest.RandString(8)
+	resourceName := "aws_memorydb_cluster.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, memorydb.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckClusterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_withSnapshotWindow(rName, "00:30-01:30"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "snapshot_window", "00:30-01:30"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccClusterConfig_withSnapshotWindow(rName, "02:30-03:30"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "snapshot_window", "02:30-03:30"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccMemoryDBCluster_update_tags(t *testing.T) {
 	rName := "tf-test-" + sdkacctest.RandString(8)
 	resourceName := "aws_memorydb_cluster.test"
@@ -1191,6 +1229,24 @@ resource "aws_memorydb_cluster" "test" {
   subnet_group_name        = aws_memorydb_subnet_group.test.id
 }
 `, rName, retentionLimit),
+	)
+}
+
+func testAccClusterConfig_withSnapshotWindow(rName, snapshotWindow string) string {
+	return acctest.ConfigCompose(
+		testAccClusterConfigBaseNetwork(),
+		fmt.Sprintf(`
+resource "aws_memorydb_cluster" "test" {
+  acl_name                 = "open-access"
+  name                     = %[1]q
+  node_type                = "db.t4g.small"
+  num_replicas_per_shard   = 0
+  num_shards               = 1
+  snapshot_retention_limit = 1
+  snapshot_window          = %[2]q
+  subnet_group_name        = aws_memorydb_subnet_group.test.id
+}
+`, rName, snapshotWindow),
 	)
 }
 
