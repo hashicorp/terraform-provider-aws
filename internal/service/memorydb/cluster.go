@@ -4,6 +4,7 @@ import (
 	"context"
 	"log"
 	"regexp"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/memorydb"
@@ -54,22 +55,7 @@ func ResourceCluster() *schema.Resource {
 				Default:  true,
 				ForceNew: true,
 			},
-			"cluster_endpoint": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"address": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"port": {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
-					},
-				},
-			},
+			"cluster_endpoint": endpointSchema(),
 			"description": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -182,6 +168,49 @@ func ResourceCluster() *schema.Resource {
 					Type: schema.TypeString,
 				},
 			},
+			"shards": {
+				Type:     schema.TypeSet,
+				Computed: true,
+				Set:      shardHash,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"name": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"nodes": {
+							Type:     schema.TypeSet,
+							Computed: true,
+							Set:      nodeHash,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"availability_zone": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									"create_time": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									"endpoint": endpointSchema(),
+									"name": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+								},
+							},
+						},
+						"num_nodes": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
+						"slots": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
 			"snapshot_arns": {
 				Type:          schema.TypeList,
 				Optional:      true,
@@ -232,6 +261,25 @@ func ResourceCluster() *schema.Resource {
 				Optional: true,
 				Default:  true,
 				ForceNew: true,
+			},
+		},
+	}
+}
+
+func endpointSchema() *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeList,
+		Computed: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"address": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"port": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
 			},
 		},
 	}
@@ -456,14 +504,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("auto_minor_version_upgrade", cluster.AutoMinorVersionUpgrade)
 
 	if v := cluster.ClusterEndpoint; v != nil {
-		m := map[string]interface{}{}
-		if v := aws.StringValue(v.Address); v != "" {
-			m["address"] = v
-		}
-		if v := aws.Int64Value(v.Port); v != 0 {
-			m["port"] = v
-		}
-		d.Set("cluster_endpoint", []interface{}{m})
+		d.Set("cluster_endpoint", flattenEndpoint(v))
 		d.Set("port", v.Port)
 	}
 
@@ -504,6 +545,10 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 		securityGroupIds = append(securityGroupIds, v.SecurityGroupId)
 	}
 	d.Set("security_group_ids", flex.FlattenStringSet(securityGroupIds))
+
+	if err := d.Set("shards", flattenShards(cluster.Shards)); err != nil {
+		return diag.Errorf("failed to set shards for MemoryDB Cluster (%s): %s", d.Id(), err)
+	}
 
 	d.Set("snapshot_retention_limit", cluster.SnapshotRetentionLimit)
 	d.Set("snapshot_window", cluster.SnapshotWindow)
@@ -564,4 +609,64 @@ func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	return nil
+}
+
+func shardHash(v interface{}) int {
+	return create.StringHashcode(v.(map[string]interface{})["name"].(string))
+}
+
+func nodeHash(v interface{}) int {
+	return create.StringHashcode(v.(map[string]interface{})["name"].(string))
+}
+
+func flattenEndpoint(endpoint *memorydb.Endpoint) []interface{} {
+	if endpoint == nil {
+		return []interface{}{}
+	}
+
+	m := map[string]interface{}{}
+
+	if v := aws.StringValue(endpoint.Address); v != "" {
+		m["address"] = v
+	}
+
+	if v := aws.Int64Value(endpoint.Port); v != 0 {
+		m["port"] = v
+	}
+
+	return []interface{}{m}
+}
+
+func flattenShards(shards []*memorydb.Shard) *schema.Set {
+	shardSet := schema.NewSet(shardHash, nil)
+
+	for _, shard := range shards {
+		if shard == nil {
+			continue
+		}
+
+		nodeSet := schema.NewSet(nodeHash, nil)
+
+		for _, node := range shard.Nodes {
+			if node == nil {
+				continue
+			}
+
+			nodeSet.Add(map[string]interface{}{
+				"availability_zone": aws.StringValue(node.AvailabilityZone),
+				"create_time":       aws.TimeValue(node.CreateTime).Format(time.RFC3339),
+				"endpoint":          flattenEndpoint(node.Endpoint),
+				"name":              aws.StringValue(node.Name),
+			})
+		}
+
+		shardSet.Add(map[string]interface{}{
+			"name":      aws.StringValue(shard.Name),
+			"num_nodes": int(aws.Int64Value(shard.NumberOfNodes)),
+			"nodes":     nodeSet,
+			"slots":     aws.StringValue(shard.Slots),
+		})
+	}
+
+	return shardSet
 }
