@@ -155,6 +155,12 @@ func ResourceCluster() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
+			"port": {
+				Type:     schema.TypeInt,
+				Optional: true,
+				Computed: true,
+				ForceNew: true,
+			},
 			"security_group_ids": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -236,6 +242,10 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 	if v, ok := d.GetOk("parameter_group_name"); ok {
 		input.ParameterGroupName = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("port"); ok {
+		input.Port = aws.Int64(int64(v.(int)))
 	}
 
 	if v, ok := d.GetOk("security_group_ids"); ok {
@@ -402,6 +412,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 			m["port"] = v
 		}
 		d.Set("cluster_endpoint", []interface{}{m})
+		d.Set("port", v.Port)
 	}
 
 	d.Set("description", cluster.Description)

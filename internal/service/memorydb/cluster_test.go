@@ -46,6 +46,7 @@ func TestAccMemoryDBCluster_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "num_replicas_per_shard", "1"),
 					resource.TestCheckResourceAttr(resourceName, "num_shards", "2"),
 					resource.TestCheckResourceAttr(resourceName, "parameter_group_name", "default.memorydb-redis6"),
+					resource.TestCheckResourceAttr(resourceName, "port", "6379"),
 					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "1"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "security_group_ids.*", "aws_security_group.test", "id"),
 					resource.TestCheckResourceAttr(resourceName, "snapshot_name", ""),
@@ -96,6 +97,7 @@ func TestAccMemoryDBCluster_defaults(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "num_replicas_per_shard", "1"),
 					resource.TestCheckResourceAttr(resourceName, "num_shards", "1"),
 					resource.TestCheckResourceAttr(resourceName, "parameter_group_name", "default.memorydb-redis6"),
+					resource.TestCheckResourceAttr(resourceName, "port", "6379"),
 					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "snapshot_retention_limit", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "snapshot_window"),
@@ -221,6 +223,33 @@ func TestAccMemoryDBCluster_create_withKMS(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "kms_key_arn", "aws_kms_key.test", "arn"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccMemoryDBCluster_create_withPort(t *testing.T) {
+	rName := "tf-test-" + sdkacctest.RandString(8)
+	resourceName := "aws_memorydb_cluster.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, memorydb.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckClusterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_withPort(rName, 9999),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "cluster_endpoint.0.port", "9999"),
+					resource.TestCheckResourceAttr(resourceName, "port", "9999"),
 				),
 			},
 			{
@@ -1191,6 +1220,23 @@ resource "aws_memorydb_cluster" "test" {
   subnet_group_name      = aws_memorydb_subnet_group.test.id
 }
 `, rName, parameterGroup),
+	)
+}
+
+func testAccClusterConfig_withPort(rName string, port int) string {
+	return acctest.ConfigCompose(
+		testAccClusterConfigBaseNetwork(),
+		fmt.Sprintf(`
+resource "aws_memorydb_cluster" "test" {
+  acl_name               = "open-access"
+  name                   = %[1]q
+  node_type              = "db.t4g.small"
+  num_replicas_per_shard = 0
+  num_shards             = 1
+  port                   = %[2]d
+  subnet_group_name      = aws_memorydb_subnet_group.test.id
+}
+`, rName, port),
 	)
 }
 
