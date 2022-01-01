@@ -41,7 +41,8 @@ func FindACLByName(ctx context.Context, conn *memorydb.MemoryDB, name string) (*
 
 func FindClusterByName(ctx context.Context, conn *memorydb.MemoryDB, name string) (*memorydb.Cluster, error) {
 	input := memorydb.DescribeClustersInput{
-		ClusterName: aws.String(name),
+		ClusterName:      aws.String(name),
+		ShowShardDetails: aws.Bool(true),
 	}
 
 	output, err := conn.DescribeClustersWithContext(ctx, &input)

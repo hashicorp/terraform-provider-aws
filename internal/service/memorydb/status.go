@@ -23,6 +23,9 @@ const (
 	clusterParameterGroupStatusApplying = "applying"
 	clusterParameterGroupStatusInSync   = "in-sync"
 
+	clusterShardStatusAvailable = "available"
+	clusterShardStatusUpdating  = "updating"
+
 	userStatusActive    = "active"
 	userStatusDeleting  = "deleting"
 	userStatusModifying = "modifying"

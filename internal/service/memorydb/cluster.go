@@ -138,6 +138,12 @@ func ResourceCluster() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
+			"num_replicas_per_shard": {
+				Type:         schema.TypeInt,
+				Optional:     true,
+				Default:      1,
+				ValidateFunc: validation.IntBetween(0, 5),
+			},
 			"num_shards": {
 				Type:         schema.TypeInt,
 				Optional:     true,
@@ -197,6 +203,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 		AutoMinorVersionUpgrade: aws.Bool(d.Get("auto_minor_version_upgrade").(bool)),
 		ClusterName:             aws.String(name),
 		NodeType:                aws.String(d.Get("node_type").(string)),
+		NumReplicasPerShard:     aws.Int64(int64(d.Get("num_replicas_per_shard").(int))),
 		NumShards:               aws.Int64(int64(d.Get("num_shards").(int))),
 		Tags:                    Tags(tags.IgnoreAWS()),
 		TLSEnabled:              aws.Bool(d.Get("tls_enabled").(bool)),
@@ -274,6 +281,12 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 
 		if d.HasChange("node_type") {
 			input.NodeType = aws.String(d.Get("node_type").(string))
+		}
+
+		if d.HasChange("num_replicas_per_shard") {
+			input.ReplicaConfiguration = &memorydb.ReplicaConfigurationRequest{
+				ReplicaCount: aws.Int64(int64(d.Get("num_replicas_per_shard").(int))),
+			}
 		}
 
 		if d.HasChange("num_shards") {
@@ -356,6 +369,26 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("name", cluster.Name)
 	d.Set("name_prefix", create.NamePrefixFromName(aws.StringValue(cluster.Name)))
 	d.Set("node_type", cluster.NodeType)
+
+	// The configured value of num_replicas_per_shard cannot be read back, so
+	// assume that it's the same as that of the largest shard.
+	//
+	// For the sake of caution, limit this search to stable shards.
+	var maxNumberOfNodesPerShard int64
+	for _, shard := range cluster.Shards {
+		if aws.StringValue(shard.Status) != clusterShardStatusAvailable {
+			continue
+		}
+
+		n := aws.Int64Value(shard.NumberOfNodes)
+		if n > maxNumberOfNodesPerShard {
+			maxNumberOfNodesPerShard = n
+		}
+	}
+	if maxNumberOfNodesPerShard == 0 {
+		return diag.Errorf("error reading num_replicas_per_shard for MemoryDB Cluster (%s): no available shards found", d.Id())
+	}
+	d.Set("num_replicas_per_shard", maxNumberOfNodesPerShard-1)
 
 	d.Set("num_shards", cluster.NumberOfShards)
 	d.Set("parameter_group_name", cluster.ParameterGroupName)
