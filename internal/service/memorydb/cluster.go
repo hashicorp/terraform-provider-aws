@@ -162,6 +162,11 @@ func ResourceCluster() *schema.Resource {
 					Type: schema.TypeString,
 				},
 			},
+			"snapshot_name": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+			},
 			"snapshot_retention_limit": {
 				Type:         schema.TypeInt,
 				Computed:     true,
@@ -235,6 +240,11 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 	if v, ok := d.GetOk("security_group_ids"); ok {
 		input.SecurityGroupIds = flex.ExpandStringSet(v.(*schema.Set))
+	}
+
+	if v, ok := d.GetOk("snapshot_name"); ok {
+		input.SnapshotName = aws.String(v.(string))
+		log.Printf("[DEBUG] Restoring MemoryDB Cluster (%s) from snapshot %s", name, v.(string))
 	}
 
 	if v, ok := d.GetOk("snapshot_retention_limit"); ok {

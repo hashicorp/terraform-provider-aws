@@ -48,6 +48,7 @@ func TestAccMemoryDBCluster_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "parameter_group_name", "default.memorydb-redis6"),
 					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "1"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "security_group_ids.*", "aws_security_group.test", "id"),
+					resource.TestCheckResourceAttr(resourceName, "snapshot_name", ""),
 					resource.TestCheckResourceAttr(resourceName, "snapshot_retention_limit", "7"),
 					resource.TestCheckResourceAttrSet(resourceName, "snapshot_window"),
 					resource.TestCheckResourceAttr(resourceName, "sns_topic_arn", ""),
