@@ -48,7 +48,7 @@ func TestAccMemoryDBCluster_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "parameter_group_name", "default.memorydb-redis6"),
 					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "1"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "security_group_ids.*", "aws_security_group.test", "id"),
-					resource.TestCheckResourceAttr(resourceName, "snapshot_retention_limit", "0"),
+					resource.TestCheckResourceAttr(resourceName, "snapshot_retention_limit", "7"),
 					resource.TestCheckResourceAttrSet(resourceName, "snapshot_window"),
 					resource.TestCheckResourceAttr(resourceName, "sns_topic_arn", ""),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "subnet_group_name", "aws_memorydb_subnet_group.test", "id"),
@@ -686,6 +686,56 @@ func TestAccMemoryDBCluster_update_securityGroupIds(t *testing.T) {
 	})
 }
 
+func TestAccMemoryDBCluster_update_snapshotRetentionLimit(t *testing.T) {
+	rName := "tf-test-" + sdkacctest.RandString(8)
+	resourceName := "aws_memorydb_cluster.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, memorydb.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckClusterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_withSnapshotRetentionLimit(rName, 2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "snapshot_retention_limit", "2"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccClusterConfig_withSnapshotRetentionLimit(rName, 35),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "snapshot_retention_limit", "35"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccClusterConfig_withSnapshotRetentionLimit(rName, 0),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "snapshot_retention_limit", "0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccMemoryDBCluster_update_tags(t *testing.T) {
 	rName := "tf-test-" + sdkacctest.RandString(8)
 	resourceName := "aws_memorydb_cluster.test"
@@ -853,6 +903,7 @@ resource "aws_memorydb_cluster" "test" {
   node_type                  = "db.t4g.small"
   num_shards                 = 2
   security_group_ids         = [aws_security_group.test.id]
+  snapshot_retention_limit   = 7
   subnet_group_name          = aws_memorydb_subnet_group.test.id
 
   tags = {
@@ -1101,6 +1152,21 @@ resource "aws_memorydb_cluster" "test" {
   subnet_group_name  = aws_memorydb_subnet_group.test.id
 }
 `, rName, count),
+	)
+}
+
+func testAccClusterConfig_withSnapshotRetentionLimit(rName string, retentionLimit int) string {
+	return acctest.ConfigCompose(
+		testAccClusterConfigBaseNetwork(),
+		fmt.Sprintf(`
+resource "aws_memorydb_cluster" "test" {
+  acl_name                 = "open-access"
+  name                     = %[1]q
+  node_type                = "db.t4g.small"
+  snapshot_retention_limit = %[2]d
+  subnet_group_name        = aws_memorydb_subnet_group.test.id
+}
+`, rName, retentionLimit),
 	)
 }
 

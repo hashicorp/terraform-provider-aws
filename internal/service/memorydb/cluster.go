@@ -163,8 +163,10 @@ func ResourceCluster() *schema.Resource {
 				},
 			},
 			"snapshot_retention_limit": {
-				Type:     schema.TypeInt,
-				Computed: true,
+				Type:         schema.TypeInt,
+				Computed:     true,
+				Optional:     true,
+				ValidateFunc: validation.IntBetween(0, 35),
 			},
 			"snapshot_window": {
 				Type:     schema.TypeString,
@@ -235,6 +237,10 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 	if v, ok := d.GetOk("security_group_ids"); ok {
 		input.SecurityGroupIds = flex.ExpandStringSet(v.(*schema.Set))
+	}
+
+	if v, ok := d.GetOk("snapshot_retention_limit"); ok {
+		input.SnapshotRetentionLimit = aws.Int64(int64(v.(int)))
 	}
 
 	if v, ok := d.GetOk("subnet_group_name"); ok {
@@ -315,6 +321,10 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 			}
 
 			input.SecurityGroupIds = flex.ExpandStringSet(v)
+		}
+
+		if d.HasChange("snapshot_retention_limit") {
+			input.SnapshotRetentionLimit = aws.Int64(int64(d.Get("snapshot_retention_limit").(int)))
 		}
 
 		log.Printf("[DEBUG] Updating MemoryDB Cluster (%s)", d.Id())
