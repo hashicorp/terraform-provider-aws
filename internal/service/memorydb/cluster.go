@@ -84,6 +84,20 @@ func ResourceCluster() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
+			"final_snapshot_name": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ValidateFunc: validation.All(
+					validation.StringLenBetween(1, 255),
+					validation.StringDoesNotMatch(
+						regexp.MustCompile(`[-][-]`),
+						"The name may not contain two consecutive hyphens."),
+					validation.StringMatch(
+						// Similar to ElastiCache, MemoryDB normalises names to lowercase.
+						regexp.MustCompile(`^[a-z0-9-]*[a-z0-9]$`),
+						"Only lowercase alphanumeric characters and hyphens allowed. The name may not end with a hyphen."),
+				),
+			},
 			"kms_key_arn": {
 				// The API will accept an ID, but return the ARN on every read.
 				// For the sake of consistency, force everyone to use ARN-s.
@@ -293,7 +307,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).MemoryDBConn
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept("final_snapshot_name", "tags", "tags_all") {
 		waitParameterGroupInSync := false
 
 		input := &memorydb.UpdateClusterInput{
@@ -505,10 +519,16 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).MemoryDBConn
 
-	log.Printf("[DEBUG] Deleting MemoryDB Cluster: (%s)", d.Id())
-	_, err := conn.DeleteClusterWithContext(ctx, &memorydb.DeleteClusterInput{
+	input := &memorydb.DeleteClusterInput{
 		ClusterName: aws.String(d.Id()),
-	})
+	}
+
+	if v := d.Get("final_snapshot_name"); v != nil && len(v.(string)) > 0 {
+		input.FinalSnapshotName = aws.String(v.(string))
+	}
+
+	log.Printf("[DEBUG] Deleting MemoryDB Cluster: (%s)", d.Id())
+	_, err := conn.DeleteClusterWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, memorydb.ErrCodeClusterNotFoundFault) {
 		return nil

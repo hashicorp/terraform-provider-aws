@@ -98,6 +98,35 @@ func FindParameterGroupByName(ctx context.Context, conn *memorydb.MemoryDB, name
 	return output.ParameterGroups[0], nil
 }
 
+func FindSnapshotByName(ctx context.Context, conn *memorydb.MemoryDB, name string) (*memorydb.Snapshot, error) {
+	input := memorydb.DescribeSnapshotsInput{
+		SnapshotName: aws.String(name),
+	}
+
+	output, err := conn.DescribeSnapshotsWithContext(ctx, &input)
+
+	if tfawserr.ErrCodeEquals(err, memorydb.ErrCodeSnapshotNotFoundFault) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || len(output.Snapshots) == 0 || output.Snapshots[0] == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	if count := len(output.Snapshots); count > 1 {
+		return nil, tfresource.NewTooManyResultsError(count, input)
+	}
+
+	return output.Snapshots[0], nil
+}
+
 func FindSubnetGroupByName(ctx context.Context, conn *memorydb.MemoryDB, name string) (*memorydb.SubnetGroup, error) {
 	input := memorydb.DescribeSubnetGroupsInput{
 		SubnetGroupName: aws.String(name),

@@ -261,6 +261,52 @@ func TestAccMemoryDBCluster_create_withPort(t *testing.T) {
 	})
 }
 
+func TestAccMemoryDBCluster_delete_withFinalSnapshot(t *testing.T) {
+	rName := "tf-test-" + sdkacctest.RandString(8)
+	resourceName := "aws_memorydb_cluster.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, memorydb.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckClusterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_withFinalSnapshotName(rName, rName+"-1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "final_snapshot_name", rName+"-1"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"final_snapshot_name"},
+			},
+			{
+				Config: testAccClusterConfig_withFinalSnapshotName(rName, rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "final_snapshot_name", rName),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"final_snapshot_name"},
+			},
+			{
+				Config: testAccClusterConfigBaseNetwork(), // empty Config not supported
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSnapshotExists(rName),
+				),
+			},
+		},
+	})
+}
+
 func TestAccMemoryDBCluster_update_aclName(t *testing.T) {
 	rName := "tf-test-" + sdkacctest.RandString(8)
 	resourceName := "aws_memorydb_cluster.test"
@@ -973,6 +1019,24 @@ func testAccCheckClusterExists(n string) resource.TestCheckFunc {
 	}
 }
 
+func testAccCheckSnapshotExists(snapshotName string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).MemoryDBConn
+
+		_, err := tfmemorydb.FindSnapshotByName(context.Background(), conn, snapshotName)
+
+		if tfresource.NotFound(err) {
+			return fmt.Errorf("MemoryDB Snapshot %s not found", snapshotName)
+		}
+
+		if err != nil {
+			return err
+		}
+
+		return nil
+	}
+}
+
 func testAccClusterConfigBaseNetwork() string {
 	return acctest.ConfigCompose(
 		acctest.ConfigVpcWithSubnets(2),
@@ -1155,6 +1219,23 @@ resource "aws_memorydb_cluster" "test" {
   subnet_group_name      = aws_memorydb_subnet_group.test.id
 }
 `, rName, engineVersion),
+	)
+}
+
+func testAccClusterConfig_withFinalSnapshotName(rName, finalSnapshotName string) string {
+	return acctest.ConfigCompose(
+		testAccClusterConfigBaseNetwork(),
+		fmt.Sprintf(`
+resource "aws_memorydb_cluster" "test" {
+  acl_name               = "open-access"
+  final_snapshot_name    = %[2]q
+  name                   = %[1]q
+  node_type              = "db.t4g.small"
+  num_replicas_per_shard = 0
+  num_shards             = 1
+  subnet_group_name      = aws_memorydb_subnet_group.test.id
+}
+`, rName, finalSnapshotName),
 	)
 }
 
