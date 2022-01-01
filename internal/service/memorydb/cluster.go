@@ -182,10 +182,25 @@ func ResourceCluster() *schema.Resource {
 					Type: schema.TypeString,
 				},
 			},
+			"snapshot_arns": {
+				Type:          schema.TypeList,
+				Optional:      true,
+				ForceNew:      true,
+				MaxItems:      1,
+				ConflictsWith: []string{"snapshot_name"},
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+					ValidateFunc: validation.All(
+						verify.ValidARN,
+						validation.StringDoesNotContainAny(","),
+					),
+				},
+			},
 			"snapshot_name": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
+				Type:          schema.TypeString,
+				Optional:      true,
+				ForceNew:      true,
+				ConflictsWith: []string{"snapshot_arns"},
 			},
 			"snapshot_retention_limit": {
 				Type:         schema.TypeInt,
@@ -265,6 +280,12 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 	if v, ok := d.GetOk("security_group_ids"); ok {
 		input.SecurityGroupIds = flex.ExpandStringSet(v.(*schema.Set))
+	}
+
+	if v, ok := d.GetOk("snapshot_arns"); ok && len(v.([]interface{})) > 0 {
+		v := v.([]interface{})
+		input.SnapshotArns = flex.ExpandStringList(v)
+		log.Printf("[DEBUG] Restoring MemoryDB Cluster (%s) from S3 snapshots %#v", name, v)
 	}
 
 	if v, ok := d.GetOk("snapshot_name"); ok {
