@@ -49,7 +49,7 @@ In addition to all of the arguments above, the following attributes are exported
 * `hours_of_operation_id` - The identifier for the hours of operation.
 * `instance_id` - Specifies the identifier of the hosting Amazon Connect Instance.
 * `name` - Specifies the name of the Hours of Operation.
-* `tags` - A the map of tags to assign to the Hours of Operation.
+* `tags` - A map of tags to assign to the Hours of Operation.
 * `time_zone` - Specifies the time zone of the Hours of Operation.
 
 A `config` blog supports the following arguments:
