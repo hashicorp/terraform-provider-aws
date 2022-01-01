@@ -46,7 +46,8 @@ func TestAccMemoryDBCluster_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "num_replicas_per_shard", "1"),
 					resource.TestCheckResourceAttr(resourceName, "num_shards", "2"),
 					resource.TestCheckResourceAttr(resourceName, "parameter_group_name", "default.memorydb-redis6"),
-					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "1"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "security_group_ids.*", "aws_security_group.test", "id"),
 					resource.TestCheckResourceAttr(resourceName, "snapshot_retention_limit", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "snapshot_window"),
 					resource.TestCheckResourceAttr(resourceName, "sns_topic_arn", ""),
@@ -627,6 +628,64 @@ func TestAccMemoryDBCluster_update_parameterGroup(t *testing.T) {
 	})
 }
 
+func TestAccMemoryDBCluster_update_securityGroupIds(t *testing.T) {
+	rName := "tf-test-" + sdkacctest.RandString(8)
+	resourceName := "aws_memorydb_cluster.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, memorydb.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckClusterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_withSecurityGroups(rName, 1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "1"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "security_group_ids.*", "aws_security_group.test.0", "id"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccClusterConfig_withSecurityGroups(rName, 2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "2"), // add one
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "security_group_ids.*", "aws_security_group.test.0", "id"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "security_group_ids.*", "aws_security_group.test.1", "id"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config:      testAccClusterConfig_withSecurityGroups(rName, 0), // attempt to remove all
+				ExpectError: regexp.MustCompile(`removing all security groups is not possible$`),
+			},
+			{
+				Config: testAccClusterConfig_withSecurityGroups(rName, 1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "1"), // remove one
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "security_group_ids.*", "aws_security_group.test.0", "id"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccMemoryDBCluster_update_tags(t *testing.T) {
 	rName := "tf-test-" + sdkacctest.RandString(8)
 	resourceName := "aws_memorydb_cluster.test"
@@ -781,12 +840,19 @@ func testAccClusterConfig_basic(rName string) string {
 		testAccClusterConfigBaseNetwork(),
 		testAccClusterConfigBaseUserAndACL(rName),
 		fmt.Sprintf(`
+resource "aws_security_group" "test" {
+  name        = %[1]q
+  description = %[1]q
+  vpc_id      = aws_vpc.test.id
+}
+
 resource "aws_memorydb_cluster" "test" {
   acl_name                   = aws_memorydb_acl.test.id
   auto_minor_version_upgrade = false
   name                       = %[1]q
   node_type                  = "db.t4g.small"
   num_shards                 = 2
+  security_group_ids         = [aws_security_group.test.id]
   subnet_group_name          = aws_memorydb_subnet_group.test.id
 
   tags = {
@@ -1015,6 +1081,26 @@ resource "aws_memorydb_cluster" "test" {
   subnet_group_name    = aws_memorydb_subnet_group.test.id
 }
 `, rName, parameterGroup),
+	)
+}
+
+func testAccClusterConfig_withSecurityGroups(rName string, count int) string {
+	return acctest.ConfigCompose(
+		testAccClusterConfigBaseNetwork(),
+		fmt.Sprintf(`
+resource "aws_security_group" "test" {
+  count  = %[2]d
+  vpc_id = aws_vpc.test.id
+}
+
+resource "aws_memorydb_cluster" "test" {
+  acl_name           = "open-access"
+  name               = %[1]q
+  node_type          = "db.t4g.small"
+  security_group_ids = aws_security_group.test[*].id
+  subnet_group_name  = aws_memorydb_subnet_group.test.id
+}
+`, rName, count),
 	)
 }
 

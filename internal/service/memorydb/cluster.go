@@ -157,7 +157,7 @@ func ResourceCluster() *schema.Resource {
 			},
 			"security_group_ids": {
 				Type:     schema.TypeSet,
-				Computed: true,
+				Optional: true,
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 				},
@@ -233,6 +233,10 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 		input.ParameterGroupName = aws.String(v.(string))
 	}
 
+	if v, ok := d.GetOk("security_group_ids"); ok {
+		input.SecurityGroupIds = flex.ExpandStringSet(v.(*schema.Set))
+	}
+
 	if v, ok := d.GetOk("subnet_group_name"); ok {
 		input.SubnetGroupName = aws.String(v.(string))
 	}
@@ -298,6 +302,19 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		if d.HasChange("parameter_group_name") {
 			waitParameterGroupInSync = true
 			input.ParameterGroupName = aws.String(d.Get("parameter_group_name").(string))
+		}
+
+		if d.HasChange("security_group_ids") {
+			// UpdateCluster reads null and empty slice as "no change", so once
+			// at least one security group is present, it's no longer possible
+			// to remove all of them.
+
+			v := d.Get("security_group_ids").(*schema.Set)
+			if v.Len() == 0 {
+				return diag.Errorf("unable to update MemoryDB Cluster (%s): removing all security groups is not possible", d.Id())
+			}
+
+			input.SecurityGroupIds = flex.ExpandStringSet(v)
 		}
 
 		log.Printf("[DEBUG] Updating MemoryDB Cluster (%s)", d.Id())
