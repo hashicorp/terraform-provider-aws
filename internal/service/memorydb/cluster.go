@@ -186,8 +186,9 @@ func ResourceCluster() *schema.Resource {
 				ValidateFunc: verify.ValidOnceADayWindowFormat,
 			},
 			"sns_topic_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: verify.ValidARN,
 			},
 			"subnet_group_name": {
 				Type:     schema.TypeString,
@@ -263,6 +264,10 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 	if v, ok := d.GetOk("snapshot_window"); ok {
 		input.SnapshotWindow = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("sns_topic_arn"); ok {
+		input.SnsTopicArn = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("subnet_group_name"); ok {
@@ -351,6 +356,18 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 
 		if d.HasChange("snapshot_window") {
 			input.SnapshotWindow = aws.String(d.Get("snapshot_window").(string))
+		}
+
+		if d.HasChange("sns_topic_arn") {
+			v := d.Get("sns_topic_arn").(string)
+
+			input.SnsTopicArn = aws.String(v)
+
+			if v == "" {
+				input.SnsTopicStatus = aws.String(clusterSnsTopicStatusInactive)
+			} else {
+				input.SnsTopicStatus = aws.String(clusterSnsTopicStatusActive)
+			}
 		}
 
 		log.Printf("[DEBUG] Updating MemoryDB Cluster (%s)", d.Id())
@@ -455,7 +472,13 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 
 	d.Set("snapshot_retention_limit", cluster.SnapshotRetentionLimit)
 	d.Set("snapshot_window", cluster.SnapshotWindow)
-	d.Set("sns_topic_arn", cluster.SnsTopicArn)
+
+	if aws.StringValue(cluster.SnsTopicStatus) == clusterSnsTopicStatusActive {
+		d.Set("sns_topic_arn", cluster.SnsTopicArn)
+	} else {
+		d.Set("sns_topic_arn", "")
+	}
+
 	d.Set("subnet_group_name", cluster.SubnetGroupName)
 	d.Set("tls_enabled", cluster.TLSEnabled)
 

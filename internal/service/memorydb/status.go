@@ -26,6 +26,9 @@ const (
 	clusterShardStatusAvailable = "available"
 	clusterShardStatusUpdating  = "updating"
 
+	clusterSnsTopicStatusActive   = "ACTIVE"
+	clusterSnsTopicStatusInactive = "INACTIVE"
+
 	userStatusActive    = "active"
 	userStatusDeleting  = "deleting"
 	userStatusModifying = "modifying"

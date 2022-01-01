@@ -804,6 +804,56 @@ func TestAccMemoryDBCluster_update_snapshotWindow(t *testing.T) {
 	})
 }
 
+func TestAccMemoryDBCluster_update_snsTopicArn(t *testing.T) {
+	rName := "tf-test-" + sdkacctest.RandString(8)
+	resourceName := "aws_memorydb_cluster.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, memorydb.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckClusterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_withSnsTopic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(resourceName),
+					resource.TestCheckResourceAttrPair(resourceName, "sns_topic_arn", "aws_sns_topic.test", "arn"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccClusterConfig_withSnsTopicNull(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "sns_topic_arn", ""),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccClusterConfig_withSnsTopic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(resourceName),
+					resource.TestCheckResourceAttrPair(resourceName, "sns_topic_arn", "aws_sns_topic.test", "arn"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccMemoryDBCluster_update_tags(t *testing.T) {
 	rName := "tf-test-" + sdkacctest.RandString(8)
 	resourceName := "aws_memorydb_cluster.test"
@@ -1294,6 +1344,51 @@ resource "aws_memorydb_cluster" "test" {
   subnet_group_name        = aws_memorydb_subnet_group.test.id
 }
 `, rName, snapshotWindow),
+	)
+}
+
+func testAccClusterConfig_withSnsTopicNull(rName string) string {
+	return acctest.ConfigCompose(
+		testAccClusterConfigBaseNetwork(),
+		fmt.Sprintf(`
+resource "aws_sns_topic" "test" {
+  name = %[1]q
+}
+
+resource "aws_memorydb_cluster" "test" {
+  depends_on               = [aws_sns_topic.test]
+  acl_name                 = "open-access"
+  name                     = %[1]q
+  node_type                = "db.t4g.small"
+  num_replicas_per_shard   = 0
+  num_shards               = 1
+  snapshot_retention_limit = 1
+  subnet_group_name        = aws_memorydb_subnet_group.test.id
+}
+`, rName),
+	)
+}
+
+func testAccClusterConfig_withSnsTopic(rName string) string {
+	return acctest.ConfigCompose(
+		testAccClusterConfigBaseNetwork(),
+		fmt.Sprintf(`
+resource "aws_sns_topic" "test" {
+  name = %[1]q
+}
+
+resource "aws_memorydb_cluster" "test" {
+  depends_on               = [aws_sns_topic.test]
+  acl_name                 = "open-access"
+  name                     = %[1]q
+  node_type                = "db.t4g.small"
+  num_replicas_per_shard   = 0
+  num_shards               = 1
+  snapshot_retention_limit = 1
+  sns_topic_arn            = aws_sns_topic.test.arn
+  subnet_group_name        = aws_memorydb_subnet_group.test.id
+}
+`, rName),
 	)
 }
 
