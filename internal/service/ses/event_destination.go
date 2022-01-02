@@ -31,29 +31,73 @@ func ResourceEventDestination() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(1, 64),
-					validation.StringMatch(regexp.MustCompile(`^[0-9a-zA-Z_-]+$`), "must contain only alphanumeric, underscore, and hyphen characters"),
-				),
+			"cloudwatch_destination": {
+				Type:          schema.TypeSet,
+				Optional:      true,
+				ForceNew:      true,
+				ConflictsWith: []string{"kinesis_destination", "sns_destination"},
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"default_value": {
+							Type:     schema.TypeString,
+							Required: true,
+							ValidateFunc: validation.All(
+								validation.StringLenBetween(1, 256),
+								validation.StringMatch(regexp.MustCompile(`^[0-9a-zA-Z_\-\.@]+$`), "must contain only alphanumeric, underscore, hyphen, period, and at signs characters"),
+							),
+						},
+						"dimension_name": {
+							Type:     schema.TypeString,
+							Required: true,
+							ValidateFunc: validation.All(
+								validation.StringLenBetween(1, 256),
+								validation.StringMatch(regexp.MustCompile(`^[0-9a-zA-Z_:-]+$`), "must contain only alphanumeric, underscore, and hyphen characters"),
+							),
+						},
+						"value_source": {
+							Type:     schema.TypeString,
+							Required: true,
+							ValidateFunc: validation.StringInSlice([]string{
+								ses.DimensionValueSourceMessageTag,
+								ses.DimensionValueSourceEmailHeader,
+								ses.DimensionValueSourceLinkTag,
+							}, false),
+						},
+					},
+				},
 			},
-
 			"configuration_set_name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-
 			"enabled": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
 				ForceNew: true,
 			},
-
+			"kinesis_destination": {
+				Type:          schema.TypeList,
+				Optional:      true,
+				ForceNew:      true,
+				MaxItems:      1,
+				ConflictsWith: []string{"cloudwatch_destination", "sns_destination"},
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"role_arn": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: verify.ValidARN,
+						},
+						"stream_arn": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: verify.ValidARN,
+						},
+					},
+				},
+			},
 			"matching_types": {
 				Type:     schema.TypeSet,
 				Required: true,
@@ -73,68 +117,15 @@ func ResourceEventDestination() *schema.Resource {
 					}, false),
 				},
 			},
-
-			"cloudwatch_destination": {
-				Type:          schema.TypeSet,
-				Optional:      true,
-				ForceNew:      true,
-				ConflictsWith: []string{"kinesis_destination", "sns_destination"},
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"default_value": {
-							Type:     schema.TypeString,
-							Required: true,
-							ValidateFunc: validation.All(
-								validation.StringLenBetween(1, 256),
-								validation.StringMatch(regexp.MustCompile(`^[0-9a-zA-Z_\-\.@]+$`), "must contain only alphanumeric, underscore, hyphen, period, and at signs characters"),
-							),
-						},
-
-						"dimension_name": {
-							Type:     schema.TypeString,
-							Required: true,
-							ValidateFunc: validation.All(
-								validation.StringLenBetween(1, 256),
-								validation.StringMatch(regexp.MustCompile(`^[0-9a-zA-Z_:-]+$`), "must contain only alphanumeric, underscore, and hyphen characters"),
-							),
-						},
-
-						"value_source": {
-							Type:     schema.TypeString,
-							Required: true,
-							ValidateFunc: validation.StringInSlice([]string{
-								ses.DimensionValueSourceMessageTag,
-								ses.DimensionValueSourceEmailHeader,
-								ses.DimensionValueSourceLinkTag,
-							}, false),
-						},
-					},
-				},
+			"name": {
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+				ValidateFunc: validation.All(
+					validation.StringLenBetween(1, 64),
+					validation.StringMatch(regexp.MustCompile(`^[0-9a-zA-Z_-]+$`), "must contain only alphanumeric, underscore, and hyphen characters"),
+				),
 			},
-
-			"kinesis_destination": {
-				Type:          schema.TypeList,
-				Optional:      true,
-				ForceNew:      true,
-				MaxItems:      1,
-				ConflictsWith: []string{"cloudwatch_destination", "sns_destination"},
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"stream_arn": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: verify.ValidARN,
-						},
-
-						"role_arn": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: verify.ValidARN,
-						},
-					},
-				},
-			},
-
 			"sns_destination": {
 				Type:          schema.TypeList,
 				MaxItems:      1,
