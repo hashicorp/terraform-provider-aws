@@ -17,6 +17,8 @@ const (
 
 	clusterParameterGroupInSyncTimeout = 60 * time.Minute
 
+	clusterSecurityGroupsActiveTimeout = 10 * time.Minute
+
 	userActiveTimeout  = 5 * time.Minute
 	userDeletedTimeout = 5 * time.Minute
 )
@@ -85,6 +87,21 @@ func waitClusterParameterGroupInSync(ctx context.Context, conn *memorydb.MemoryD
 		Target:  []string{clusterParameterGroupStatusInSync},
 		Refresh: statusClusterParameterGroup(ctx, conn, clusterId),
 		Timeout: clusterParameterGroupInSyncTimeout,
+	}
+
+	_, err := stateConf.WaitForStateContext(ctx)
+
+	return err
+}
+
+// waitClusterSecurityGroupsActive waits for MemoryDB Cluster to apply all
+// security group-related changes.
+func waitClusterSecurityGroupsActive(ctx context.Context, conn *memorydb.MemoryDB, clusterId string) error {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{clusterSecurityGroupStatusModifying},
+		Target:  []string{clusterSecurityGroupStatusActive},
+		Refresh: statusClusterSecurityGroups(ctx, conn, clusterId),
+		Timeout: clusterSecurityGroupsActiveTimeout,
 	}
 
 	_, err := stateConf.WaitForStateContext(ctx)

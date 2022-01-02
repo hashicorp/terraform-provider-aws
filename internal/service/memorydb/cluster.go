@@ -378,6 +378,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 
 	if d.HasChangesExcept("final_snapshot_name", "tags", "tags_all") {
 		waitParameterGroupInSync := false
+		waitSecurityGroupsActive := false
 
 		input := &memorydb.UpdateClusterInput{
 			ClusterName: aws.String(d.Id()),
@@ -416,8 +417,8 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		}
 
 		if d.HasChange("parameter_group_name") {
-			waitParameterGroupInSync = true
 			input.ParameterGroupName = aws.String(d.Get("parameter_group_name").(string))
+			waitParameterGroupInSync = true
 		}
 
 		if d.HasChange("security_group_ids") {
@@ -426,11 +427,13 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 			// to remove all of them.
 
 			v := d.Get("security_group_ids").(*schema.Set)
+
 			if v.Len() == 0 {
 				return diag.Errorf("unable to update MemoryDB Cluster (%s): removing all security groups is not possible", d.Id())
 			}
 
 			input.SecurityGroupIds = flex.ExpandStringSet(v)
+			waitSecurityGroupsActive = true
 		}
 
 		if d.HasChange("snapshot_retention_limit") {
@@ -467,6 +470,12 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		if waitParameterGroupInSync {
 			if err := waitClusterParameterGroupInSync(ctx, conn, d.Id()); err != nil {
 				return diag.Errorf("error waiting for MemoryDB Cluster (%s) parameter group to be in sync: %s", d.Id(), err)
+			}
+		}
+
+		if waitSecurityGroupsActive {
+			if err := waitClusterSecurityGroupsActive(ctx, conn, d.Id()); err != nil {
+				return diag.Errorf("error waiting for MemoryDB Cluster (%s) security groups to be available: %s", d.Id(), err)
 			}
 		}
 	}

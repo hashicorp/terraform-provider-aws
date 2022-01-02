@@ -724,7 +724,7 @@ func TestAccMemoryDBCluster_update_securityGroupIds(t *testing.T) {
 		CheckDestroy: testAccCheckClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterConfig_withSecurityGroups(rName, 1),
+				Config: testAccClusterConfig_withSecurityGroups(rName, 2, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "1"),
@@ -737,7 +737,7 @@ func TestAccMemoryDBCluster_update_securityGroupIds(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccClusterConfig_withSecurityGroups(rName, 2),
+				Config: testAccClusterConfig_withSecurityGroups(rName, 2, 2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "2"), // add one
@@ -751,11 +751,11 @@ func TestAccMemoryDBCluster_update_securityGroupIds(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config:      testAccClusterConfig_withSecurityGroups(rName, 0), // attempt to remove all
-				ExpectError: regexp.MustCompile(`removing all security groups is not possible$`),
+				Config:      testAccClusterConfig_withSecurityGroups(rName, 2, 0), // attempt to remove all
+				ExpectError: regexp.MustCompile(`removing all security groups is not possible`),
 			},
 			{
-				Config: testAccClusterConfig_withSecurityGroups(rName, 1),
+				Config: testAccClusterConfig_withSecurityGroups(rName, 2, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "1"), // remove one
@@ -1380,7 +1380,7 @@ resource "aws_memorydb_cluster" "test" {
 	)
 }
 
-func testAccClusterConfig_withSecurityGroups(rName string, count int) string {
+func testAccClusterConfig_withSecurityGroups(rName string, sgCount, sgCountInCluster int) string {
 	return acctest.ConfigCompose(
 		testAccClusterConfigBaseNetwork(),
 		fmt.Sprintf(`
@@ -1395,10 +1395,10 @@ resource "aws_memorydb_cluster" "test" {
   node_type              = "db.t4g.small"
   num_replicas_per_shard = 0
   num_shards             = 1
-  security_group_ids     = aws_security_group.test[*].id
+  security_group_ids     = slice(aws_security_group.test[*].id, 0, %[3]d)
   subnet_group_name      = aws_memorydb_subnet_group.test.id
 }
-`, rName, count),
+`, rName, sgCount, sgCountInCluster),
 	)
 }
 
