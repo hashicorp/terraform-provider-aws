@@ -51,7 +51,7 @@ func TestAccOrganizations_serial(t *testing.T) {
 			"disappears": testAccDelegatedAdministrator_disappears,
 		},
 		"ResourceTags": {
-			"basic": testAccOrganizationResourceTagsDataSource_basic,
+			"basic": testAccResourceTagsDataSource_basic,
 		},
 	}
 

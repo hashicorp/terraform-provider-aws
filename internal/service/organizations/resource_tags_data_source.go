@@ -10,9 +10,9 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
-func DataSourceOrganizationResourceTags() *schema.Resource {
+func DataSourceResourceTags() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceOrganizationResourceTagsRead,
+		Read: dataSourceResourceTagsRead,
 
 		Schema: map[string]*schema.Schema{
 			"resource_id": {
@@ -24,7 +24,7 @@ func DataSourceOrganizationResourceTags() *schema.Resource {
 	}
 }
 
-func dataSourceOrganizationResourceTagsRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceResourceTagsRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).OrganizationsConn
 
 	resource_id := d.Get("resource_id").(string)
@@ -43,7 +43,7 @@ func dataSourceOrganizationResourceTagsRead(d *schema.ResourceData, meta interfa
 		})
 
 	if err != nil {
-		return fmt.Errorf("error listing Organization Resource Tags for for resource (%s): %w", resource_id, err)
+		return fmt.Errorf("error listing tags for resource (%s): %w", resource_id, err)
 	}
 
 	d.SetId(resource_id)
