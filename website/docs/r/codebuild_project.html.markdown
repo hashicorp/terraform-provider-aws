@@ -244,6 +244,7 @@ The following arguments are optional:
 * `queued_timeout` - (Optional) Number of minutes, from 5 to 480 (8 hours), a build is allowed to be queued before it times out. The default is 8 hours.
 * `secondary_artifacts` - (Optional) Configuration block. Detailed below.
 * `secondary_sources` - (Optional) Configuration block. Detailed below.
+* `secondary_source_version` - (Optional) Configuration block. Detailed below.
 * `source_version` - (Optional) Version of the build input to be built for this project. If not specified, the latest version is used.
 * `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `vpc_config` - (Optional) Configuration block. Detailed below.
@@ -362,6 +363,11 @@ This block is only valid when the `type` is `CODECOMMIT`, `GITHUB` or `GITHUB_EN
 
 * `context` - (Optional) Specifies the context of the build status CodeBuild sends to the source provider. The usage of this parameter depends on the source provider.
 * `target_url` - (Optional) Specifies the target url of the build status CodeBuild sends to the source provider. The usage of this parameter depends on the source provider.
+
+### secondary_source_version
+
+* `source_identifier` - (Required) An identifier for a source in the build project.
+* `source_version` - (Required) The source version for the corresponding source identifier. See [AWS docs](https://docs.aws.amazon.com/codebuild/latest/APIReference/API_ProjectSourceVersion.html#CodeBuild-Type-ProjectSourceVersion-sourceVersion) for more details.
 
 ### source
 

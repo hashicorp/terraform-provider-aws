@@ -533,6 +533,23 @@ func ResourceProject() *schema.Resource {
 					},
 				},
 			},
+			"secondary_source_version": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				MaxItems: 12,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"source_identifier": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						"source_version": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+					},
+				},
+			},
 			"service_role": {
 				Type:         schema.TypeString,
 				Required:     true,
@@ -788,6 +805,10 @@ func resourceProjectCreate(d *schema.ResourceData, meta interface{}) error {
 		params.BadgeEnabled = aws.Bool(v.(bool))
 	}
 
+	if v, ok := d.GetOk("secondary_source_version"); ok && v.(*schema.Set).Len() > 0 {
+		params.SecondarySourceVersions = expandProjectSecondarySourceVersions(v.(*schema.Set))
+	}
+
 	var resp *codebuild.CreateProjectOutput
 	// Handle IAM eventual consistency
 	err := resource.Retry(5*time.Minute, func() *resource.RetryError {
@@ -833,6 +854,32 @@ func resourceProjectCreate(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 	return resourceProjectRead(d, meta)
+}
+
+func expandProjectSecondarySourceVersions(ssv *schema.Set) []*codebuild.ProjectSourceVersion {
+	sourceVersions := make([]*codebuild.ProjectSourceVersion, 0)
+
+	rawSourceVersions := ssv.List()
+	if len(rawSourceVersions) == 0 {
+		return nil
+	}
+
+	for _, config := range rawSourceVersions {
+		sourceVersion := expandProjectSourceVersion(config.(map[string]interface{}))
+		sourceVersions = append(sourceVersions, &sourceVersion)
+	}
+
+	return sourceVersions
+}
+
+func expandProjectSourceVersion(data map[string]interface{}) codebuild.ProjectSourceVersion {
+
+	sourceVersion := codebuild.ProjectSourceVersion{
+		SourceIdentifier: aws.String(data["source_identifier"].(string)),
+		SourceVersion:    aws.String(data["source_version"].(string)),
+	}
+
+	return sourceVersion
 }
 
 func expandProjectFileSystemLocations(d *schema.ResourceData) []*codebuild.ProjectFileSystemLocation {
@@ -1332,6 +1379,10 @@ func resourceProjectRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error setting secondary_sources: %w", err)
 	}
 
+	if err := d.Set("secondary_source_version", flattenAwsCodeBuildProjectSecondarySourceVersions(project.SecondarySourceVersions)); err != nil {
+		return fmt.Errorf("error setting secondary_source_version: %w", err)
+	}
+
 	if err := d.Set("source", flattenProjectSource(project.Source)); err != nil {
 		return fmt.Errorf("error setting source: %w", err)
 	}
@@ -1434,6 +1485,18 @@ func resourceProjectUpdate(d *schema.ResourceData, meta interface{}) error {
 				params.SecondarySources = projectSecondarySources
 			} else {
 				params.SecondarySources = []*codebuild.ProjectSource{}
+			}
+		}
+
+		if d.HasChange("secondary_source_version") {
+			_, n := d.GetChange("secondary_source_version")
+
+			psv := d.Get("secondary_source_version").(*schema.Set)
+
+			if n.(*schema.Set).Len() > 0 {
+				params.SecondarySourceVersions = expandProjectSecondarySourceVersions(psv)
+			} else {
+				params.SecondarySourceVersions = []*codebuild.ProjectSourceVersion{}
 			}
 		}
 
@@ -1782,6 +1845,29 @@ func flattenProjectSourceData(source *codebuild.ProjectSource) interface{} {
 	}
 
 	return m
+}
+
+func flattenAwsCodeBuildProjectSecondarySourceVersions(sourceVersions []*codebuild.ProjectSourceVersion) []interface{} {
+	l := make([]interface{}, 0)
+
+	for _, sourceVersion := range sourceVersions {
+		l = append(l, flattenAwsCodeBuildProjectsourceVersionsData(sourceVersion))
+	}
+	return l
+}
+
+func flattenAwsCodeBuildProjectsourceVersionsData(sourceVersion *codebuild.ProjectSourceVersion) map[string]interface{} {
+	values := map[string]interface{}{}
+
+	if sourceVersion.SourceIdentifier != nil {
+		values["source_identifier"] = aws.StringValue(sourceVersion.SourceIdentifier)
+	}
+
+	if sourceVersion.SourceVersion != nil {
+		values["source_version"] = aws.StringValue(sourceVersion.SourceVersion)
+	}
+
+	return values
 }
 
 func flattenProjectGitSubmodulesConfig(config *codebuild.GitSubmodulesConfig) []interface{} {
