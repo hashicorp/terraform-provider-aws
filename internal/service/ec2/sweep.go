@@ -278,6 +278,9 @@ func init() {
 	resource.AddTestSweepers("aws_vpc_ipam_pool_cidr", &resource.Sweeper{
 		Name: "aws_vpc_ipam_pool_cidr",
 		F:    sweepIPAMPoolCIDRs,
+		Dependencies: []string{
+			"aws_vpc",
+		},
 	})
 
 	resource.AddTestSweepers("aws_vpc_ipam_pool", &resource.Sweeper{
