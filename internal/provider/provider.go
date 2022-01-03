@@ -87,6 +87,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/inspector"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/iot"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/kafka"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/kafkaconnect"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/kinesis"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/kinesisanalytics"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/kinesisanalyticsv2"
@@ -574,6 +575,8 @@ func Provider() *schema.Provider {
 			"aws_msk_cluster":       kafka.DataSourceCluster(),
 			"aws_msk_configuration": kafka.DataSourceConfiguration(),
 			"aws_msk_kafka_version": kafka.DataSourceVersion(),
+
+			"aws_mskconnect_custom_plugin": kafkaconnect.DataSourceCustomPlugin(),
 
 			"aws_kinesis_stream":          kinesis.DataSourceStream(),
 			"aws_kinesis_stream_consumer": kinesis.DataSourceStreamConsumer(),
@@ -1324,6 +1327,8 @@ func Provider() *schema.Provider {
 			"aws_msk_cluster":                  kafka.ResourceCluster(),
 			"aws_msk_configuration":            kafka.ResourceConfiguration(),
 			"aws_msk_scram_secret_association": kafka.ResourceScramSecretAssociation(),
+
+			"aws_mskconnect_custom_plugin": kafkaconnect.ResourceCustomPlugin(),
 
 			"aws_kinesis_stream":          kinesis.ResourceStream(),
 			"aws_kinesis_stream_consumer": kinesis.ResourceStreamConsumer(),
