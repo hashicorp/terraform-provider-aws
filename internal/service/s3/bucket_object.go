@@ -49,98 +49,74 @@ func ResourceBucketObject() *schema.Resource {
 		),
 
 		Schema: map[string]*schema.Schema{
-			"bucket": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.NoZeroValues,
-			},
-
-			"key": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.NoZeroValues,
-			},
-
 			"acl": {
 				Type:         schema.TypeString,
 				Default:      s3.ObjectCannedACLPrivate,
 				Optional:     true,
 				ValidateFunc: validation.StringInSlice(s3.ObjectCannedACL_Values(), false),
 			},
-
+			"bucket": {
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.NoZeroValues,
+			},
 			"bucket_key_enabled": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
 			},
-
 			"cache_control": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-
-			"content_disposition": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-
-			"content_encoding": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-
-			"content_language": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-
-			"metadata": {
-				Type:         schema.TypeMap,
-				ValidateFunc: validateMetadataIsLowerCase,
-				Optional:     true,
-				Elem:         &schema.Schema{Type: schema.TypeString},
-			},
-
-			"content_type": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-
-			"source": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				ConflictsWith: []string{"content", "content_base64"},
-			},
-
 			"content": {
 				Type:          schema.TypeString,
 				Optional:      true,
 				ConflictsWith: []string{"source", "content_base64"},
 			},
-
 			"content_base64": {
 				Type:          schema.TypeString,
 				Optional:      true,
 				ConflictsWith: []string{"source", "content"},
 			},
-
-			"storage_class": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: validation.StringInSlice(s3.ObjectStorageClass_Values(), false),
+			"content_disposition": {
+				Type:     schema.TypeString,
+				Optional: true,
 			},
-
-			"server_side_encryption": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringInSlice(s3.ServerSideEncryption_Values(), false),
-				Computed:     true,
+			"content_encoding": {
+				Type:     schema.TypeString,
+				Optional: true,
 			},
-
+			"content_language": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			"content_type": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"etag": {
+				Type: schema.TypeString,
+				// This will conflict with SSE-C and SSE-KMS encryption and multi-part upload
+				// if/when it's actually implemented. The Etag then won't match raw-file MD5.
+				// See http://docs.aws.amazon.com/AmazonS3/latest/API/RESTCommonResponseHeaders.html
+				Optional:      true,
+				Computed:      true,
+				ConflictsWith: []string{"kms_key_id"},
+			},
+			"force_destroy": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
+			"key": {
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.NoZeroValues,
+			},
 			"kms_key_id": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -154,55 +130,55 @@ func ResourceBucketObject() *schema.Resource {
 					return false
 				},
 			},
-
-			"etag": {
-				Type: schema.TypeString,
-				// This will conflict with SSE-C and SSE-KMS encryption and multi-part upload
-				// if/when it's actually implemented. The Etag then won't match raw-file MD5.
-				// See http://docs.aws.amazon.com/AmazonS3/latest/API/RESTCommonResponseHeaders.html
-				Optional:      true,
-				Computed:      true,
-				ConflictsWith: []string{"kms_key_id"},
+			"metadata": {
+				Type:         schema.TypeMap,
+				ValidateFunc: validateMetadataIsLowerCase,
+				Optional:     true,
+				Elem:         &schema.Schema{Type: schema.TypeString},
 			},
-
-			"version_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
-
-			"website_redirect": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-
-			"force_destroy": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-
 			"object_lock_legal_hold_status": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringInSlice(s3.ObjectLockLegalHoldStatus_Values(), false),
 			},
-
 			"object_lock_mode": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringInSlice(s3.ObjectLockMode_Values(), false),
 			},
-
 			"object_lock_retain_until_date": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.IsRFC3339Time,
 			},
-
+			"server_side_encryption": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.StringInSlice(s3.ServerSideEncryption_Values(), false),
+				Computed:     true,
+			},
+			"source": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				ConflictsWith: []string{"content", "content_base64"},
+			},
 			"source_hash": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			"storage_class": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: validation.StringInSlice(s3.ObjectStorageClass_Values(), false),
+			},
+			"tags":     tftags.TagsSchema(),
+			"tags_all": tftags.TagsSchemaComputed(),
+			"version_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"website_redirect": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
