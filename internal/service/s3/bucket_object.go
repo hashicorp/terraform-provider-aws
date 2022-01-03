@@ -210,125 +210,6 @@ func ResourceBucketObject() *schema.Resource {
 	}
 }
 
-func resourceBucketObjectUpload(d *schema.ResourceData, meta interface{}) error {
-	uploader := s3manager.NewUploaderWithClient(meta.(*conns.AWSClient).S3Conn)
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
-
-	var body io.ReadSeeker
-
-	if v, ok := d.GetOk("source"); ok {
-		source := v.(string)
-		path, err := homedir.Expand(source)
-		if err != nil {
-			return fmt.Errorf("Error expanding homedir in source (%s): %s", source, err)
-		}
-		file, err := os.Open(path)
-		if err != nil {
-			return fmt.Errorf("Error opening S3 bucket object source (%s): %s", path, err)
-		}
-
-		body = file
-		defer func() {
-			err := file.Close()
-			if err != nil {
-				log.Printf("[WARN] Error closing S3 bucket object source (%s): %s", path, err)
-			}
-		}()
-	} else if v, ok := d.GetOk("content"); ok {
-		content := v.(string)
-		body = bytes.NewReader([]byte(content))
-	} else if v, ok := d.GetOk("content_base64"); ok {
-		content := v.(string)
-		// We can't do streaming decoding here (with base64.NewDecoder) because
-		// the AWS SDK requires an io.ReadSeeker but a base64 decoder can't seek.
-		contentRaw, err := base64.StdEncoding.DecodeString(content)
-		if err != nil {
-			return fmt.Errorf("error decoding content_base64: %s", err)
-		}
-		body = bytes.NewReader(contentRaw)
-	}
-
-	bucket := d.Get("bucket").(string)
-	key := d.Get("key").(string)
-
-	uploadInput := &s3manager.UploadInput{
-		Bucket: aws.String(bucket),
-		Key:    aws.String(key),
-		ACL:    aws.String(d.Get("acl").(string)),
-		Body:   body,
-	}
-
-	if v, ok := d.GetOk("storage_class"); ok {
-		uploadInput.StorageClass = aws.String(v.(string))
-	}
-
-	if v, ok := d.GetOk("cache_control"); ok {
-		uploadInput.CacheControl = aws.String(v.(string))
-	}
-
-	if v, ok := d.GetOk("content_type"); ok {
-		uploadInput.ContentType = aws.String(v.(string))
-	}
-
-	if v, ok := d.GetOk("metadata"); ok {
-		uploadInput.Metadata = flex.ExpandStringMap(v.(map[string]interface{}))
-	}
-
-	if v, ok := d.GetOk("content_encoding"); ok {
-		uploadInput.ContentEncoding = aws.String(v.(string))
-	}
-
-	if v, ok := d.GetOk("content_language"); ok {
-		uploadInput.ContentLanguage = aws.String(v.(string))
-	}
-
-	if v, ok := d.GetOk("content_disposition"); ok {
-		uploadInput.ContentDisposition = aws.String(v.(string))
-	}
-
-	if v, ok := d.GetOk("bucket_key_enabled"); ok {
-		uploadInput.BucketKeyEnabled = aws.Bool(v.(bool))
-	}
-
-	if v, ok := d.GetOk("server_side_encryption"); ok {
-		uploadInput.ServerSideEncryption = aws.String(v.(string))
-	}
-
-	if v, ok := d.GetOk("kms_key_id"); ok {
-		uploadInput.SSEKMSKeyId = aws.String(v.(string))
-		uploadInput.ServerSideEncryption = aws.String(s3.ServerSideEncryptionAwsKms)
-	}
-
-	if len(tags) > 0 {
-		// The tag-set must be encoded as URL Query parameters.
-		uploadInput.Tagging = aws.String(tags.IgnoreAWS().UrlEncode())
-	}
-
-	if v, ok := d.GetOk("website_redirect"); ok {
-		uploadInput.WebsiteRedirectLocation = aws.String(v.(string))
-	}
-
-	if v, ok := d.GetOk("object_lock_legal_hold_status"); ok {
-		uploadInput.ObjectLockLegalHoldStatus = aws.String(v.(string))
-	}
-
-	if v, ok := d.GetOk("object_lock_mode"); ok {
-		uploadInput.ObjectLockMode = aws.String(v.(string))
-	}
-
-	if v, ok := d.GetOk("object_lock_retain_until_date"); ok {
-		uploadInput.ObjectLockRetainUntilDate = expandS3ObjectDate(v.(string))
-	}
-
-	if _, err := uploader.Upload(uploadInput); err != nil {
-		return fmt.Errorf("Error uploading object to S3 bucket (%s): %s", bucket, err)
-	}
-
-	d.SetId(key)
-	return resourceBucketObjectRead(d, meta)
-}
-
 func resourceBucketObjectCreate(d *schema.ResourceData, meta interface{}) error {
 	return resourceBucketObjectUpload(d, meta)
 }
@@ -559,6 +440,127 @@ func resourceBucketObjectImport(d *schema.ResourceData, meta interface{}) ([]*sc
 	d.Set("key", key)
 
 	return []*schema.ResourceData{d}, nil
+}
+
+func resourceBucketObjectUpload(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*conns.AWSClient).S3Conn
+	uploader := s3manager.NewUploaderWithClient(conn)
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+
+	var body io.ReadSeeker
+
+	if v, ok := d.GetOk("source"); ok {
+		source := v.(string)
+		path, err := homedir.Expand(source)
+		if err != nil {
+			return fmt.Errorf("Error expanding homedir in source (%s): %s", source, err)
+		}
+		file, err := os.Open(path)
+		if err != nil {
+			return fmt.Errorf("Error opening S3 bucket object source (%s): %s", path, err)
+		}
+
+		body = file
+		defer func() {
+			err := file.Close()
+			if err != nil {
+				log.Printf("[WARN] Error closing S3 bucket object source (%s): %s", path, err)
+			}
+		}()
+	} else if v, ok := d.GetOk("content"); ok {
+		content := v.(string)
+		body = bytes.NewReader([]byte(content))
+	} else if v, ok := d.GetOk("content_base64"); ok {
+		content := v.(string)
+		// We can't do streaming decoding here (with base64.NewDecoder) because
+		// the AWS SDK requires an io.ReadSeeker but a base64 decoder can't seek.
+		contentRaw, err := base64.StdEncoding.DecodeString(content)
+		if err != nil {
+			return fmt.Errorf("error decoding content_base64: %s", err)
+		}
+		body = bytes.NewReader(contentRaw)
+	}
+
+	bucket := d.Get("bucket").(string)
+	key := d.Get("key").(string)
+
+	input := &s3manager.UploadInput{
+		ACL:    aws.String(d.Get("acl").(string)),
+		Body:   body,
+		Bucket: aws.String(bucket),
+		Key:    aws.String(key),
+	}
+
+	if v, ok := d.GetOk("storage_class"); ok {
+		input.StorageClass = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("cache_control"); ok {
+		input.CacheControl = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("content_type"); ok {
+		input.ContentType = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("metadata"); ok {
+		input.Metadata = flex.ExpandStringMap(v.(map[string]interface{}))
+	}
+
+	if v, ok := d.GetOk("content_encoding"); ok {
+		input.ContentEncoding = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("content_language"); ok {
+		input.ContentLanguage = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("content_disposition"); ok {
+		input.ContentDisposition = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("bucket_key_enabled"); ok {
+		input.BucketKeyEnabled = aws.Bool(v.(bool))
+	}
+
+	if v, ok := d.GetOk("server_side_encryption"); ok {
+		input.ServerSideEncryption = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("kms_key_id"); ok {
+		input.SSEKMSKeyId = aws.String(v.(string))
+		input.ServerSideEncryption = aws.String(s3.ServerSideEncryptionAwsKms)
+	}
+
+	if len(tags) > 0 {
+		// The tag-set must be encoded as URL Query parameters.
+		input.Tagging = aws.String(tags.IgnoreAWS().UrlEncode())
+	}
+
+	if v, ok := d.GetOk("website_redirect"); ok {
+		input.WebsiteRedirectLocation = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("object_lock_legal_hold_status"); ok {
+		input.ObjectLockLegalHoldStatus = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("object_lock_mode"); ok {
+		input.ObjectLockMode = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("object_lock_retain_until_date"); ok {
+		input.ObjectLockRetainUntilDate = expandS3ObjectDate(v.(string))
+	}
+
+	if _, err := uploader.Upload(input); err != nil {
+		return fmt.Errorf("Error uploading object to S3 bucket (%s): %s", bucket, err)
+	}
+
+	d.SetId(key)
+
+	return resourceBucketObjectRead(d, meta)
 }
 
 func resourceBucketObjectSetKMS(d *schema.ResourceData, meta interface{}, sseKMSKeyId *string) error {
