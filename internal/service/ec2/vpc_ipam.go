@@ -203,7 +203,7 @@ func resourceVPCIpamDelete(d *schema.ResourceData, meta interface{}) error {
 		IpamId: aws.String(d.Id()),
 	}
 
-	log.Printf("[DEBUG] Deleting IPAM: %s", input)
+	log.Printf("[DEBUG] Deleting IPAM: %s", d.Id())
 	_, err := conn.DeleteIpam(input)
 	if err != nil {
 		return fmt.Errorf("error deleting IPAM: (%s): %w", d.Id(), err)
