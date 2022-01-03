@@ -1194,7 +1194,7 @@ func TestAccKinesisAnalyticsV2Application_FlinkApplication_restoreFromSnapshot(t
 					resource.TestCheckResourceAttr(resourceName, "start_application", "false"),
 					resource.TestCheckResourceAttr(resourceName, "status", "READY"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "version_id", "2"),
+					resource.TestCheckResourceAttr(resourceName, "version_id", "1"),
 				),
 			},
 			{
@@ -1264,7 +1264,7 @@ func TestAccKinesisAnalyticsV2Application_FlinkApplication_restoreFromSnapshot(t
 					resource.TestCheckResourceAttr(resourceName, "start_application", "true"),
 					resource.TestCheckResourceAttr(resourceName, "status", "RUNNING"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "version_id", "3"),
+					resource.TestCheckResourceAttr(resourceName, "version_id", "1"),
 				),
 			},
 			{
@@ -1323,7 +1323,7 @@ func TestAccKinesisAnalyticsV2Application_FlinkApplication_restoreFromSnapshot(t
 					resource.TestCheckResourceAttr(resourceName, "start_application", "false"),
 					resource.TestCheckResourceAttr(resourceName, "status", "READY"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "version_id", "4"),
+					resource.TestCheckResourceAttr(resourceName, "version_id", "1"),
 				),
 			},
 		},

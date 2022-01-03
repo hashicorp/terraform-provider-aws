@@ -30,7 +30,7 @@ func TestAccBackupVaultPolicy_basic(t *testing.T) {
 				Config: testAccBackupVaultPolicyConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVaultPolicyExists(resourceName, &vault),
-					resource.TestMatchResourceAttr(resourceName, "policy", regexp.MustCompile("^{\"Version\":\"2012-10-17\".+"))),
+					resource.TestMatchResourceAttr(resourceName, "policy", regexp.MustCompile("^{\"Id\":\"default\".+"))),
 			},
 			{
 				ResourceName:      resourceName,
@@ -41,7 +41,7 @@ func TestAccBackupVaultPolicy_basic(t *testing.T) {
 				Config: testAccBackupVaultPolicyConfigUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVaultPolicyExists(resourceName, &vault),
-					resource.TestMatchResourceAttr(resourceName, "policy", regexp.MustCompile("^{\"Version\":\"2012-10-17\".+")),
+					resource.TestMatchResourceAttr(resourceName, "policy", regexp.MustCompile("^{\"Id\":\"default\".+")),
 					resource.TestMatchResourceAttr(resourceName, "policy", regexp.MustCompile("backup:ListRecoveryPointsByBackupVault")),
 				),
 			},
@@ -91,6 +91,31 @@ func TestAccBackupVaultPolicy_Disappears_vault(t *testing.T) {
 					acctest.CheckResourceDisappears(acctest.Provider, tfbackup.ResourceVault(), vaultResourceName),
 				),
 				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccBackupVaultPolicy_ignoreEquivalent(t *testing.T) {
+	var vault backup.GetBackupVaultAccessPolicyOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_backup_vault_policy.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, backup.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckVaultPolicyDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBackupVaultPolicyConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVaultPolicyExists(resourceName, &vault),
+					resource.TestMatchResourceAttr(resourceName, "policy", regexp.MustCompile("\"Version\":\"2012-10-17\""))),
+			},
+			{
+				Config:   testAccBackupVaultPolicyNewOrderConfig(rName),
+				PlanOnly: true,
 			},
 		},
 	})
@@ -154,32 +179,28 @@ resource "aws_backup_vault" "test" {
 resource "aws_backup_vault_policy" "test" {
   backup_vault_name = aws_backup_vault.test.name
 
-  policy = <<POLICY
-{
-  "Version": "2012-10-17",
-  "Id": "default",
-  "Statement": [
-    {
-      "Sid": "default",
-      "Effect": "Allow",
-      "Principal": {
-        "AWS": "*"
-      },
-      "Action": [
-		"backup:DescribeBackupVault",
-		"backup:DeleteBackupVault",
-		"backup:PutBackupVaultAccessPolicy",
-		"backup:DeleteBackupVaultAccessPolicy",
-		"backup:GetBackupVaultAccessPolicy",
-		"backup:StartBackupJob",
-		"backup:GetBackupVaultNotifications",
-		"backup:PutBackupVaultNotifications"
-      ],
-      "Resource": "${aws_backup_vault.test.arn}"
-    }
-  ]
-}
-POLICY
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Id      = "default"
+    Statement = [{
+      Sid    = "default"
+      Effect = "Allow"
+      Principal = {
+        AWS = "*"
+      }
+      Action = [
+        "backup:DescribeBackupVault",
+        "backup:DeleteBackupVault",
+        "backup:PutBackupVaultAccessPolicy",
+        "backup:DeleteBackupVaultAccessPolicy",
+        "backup:GetBackupVaultAccessPolicy",
+        "backup:StartBackupJob",
+        "backup:GetBackupVaultNotifications",
+        "backup:PutBackupVaultNotifications",
+      ]
+      Resource = aws_backup_vault.test.arn
+    }]
+  })
 }
 `, rName)
 }
@@ -193,33 +214,64 @@ resource "aws_backup_vault" "test" {
 resource "aws_backup_vault_policy" "test" {
   backup_vault_name = aws_backup_vault.test.name
 
-  policy = <<POLICY
-{
-  "Version": "2012-10-17",
-  "Id": "default",
-  "Statement": [
-    {
-      "Sid": "default",
-      "Effect": "Allow",
-      "Principal": {
-        "AWS": "*"
-      },
-      "Action": [
-		"backup:DescribeBackupVault",
-		"backup:DeleteBackupVault",
-		"backup:PutBackupVaultAccessPolicy",
-		"backup:DeleteBackupVaultAccessPolicy",
-		"backup:GetBackupVaultAccessPolicy",
-		"backup:StartBackupJob",
-		"backup:GetBackupVaultNotifications",
-		"backup:PutBackupVaultNotifications",
-		"backup:ListRecoveryPointsByBackupVault"
-      ],
-      "Resource": "${aws_backup_vault.test.arn}"
-    }
-  ]
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Id      = "default"
+    Statement = [{
+      Sid    = "default"
+      Effect = "Allow"
+      Principal = {
+        AWS = "*"
+      }
+      Action = [
+        "backup:DescribeBackupVault",
+        "backup:DeleteBackupVault",
+        "backup:PutBackupVaultAccessPolicy",
+        "backup:DeleteBackupVaultAccessPolicy",
+        "backup:GetBackupVaultAccessPolicy",
+        "backup:StartBackupJob",
+        "backup:GetBackupVaultNotifications",
+        "backup:PutBackupVaultNotifications",
+        "backup:ListRecoveryPointsByBackupVault",
+      ]
+      Resource = aws_backup_vault.test.arn
+    }]
+  })
 }
-POLICY
+`, rName)
+}
+
+func testAccBackupVaultPolicyNewOrderConfig(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_backup_vault" "test" {
+  name = %[1]q
+}
+
+resource "aws_backup_vault_policy" "test" {
+  backup_vault_name = aws_backup_vault.test.name
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Id      = "default"
+    Statement = [{
+      Sid    = "default"
+      Effect = "Allow"
+      Principal = {
+        AWS = "*"
+      }
+      Action = [
+        "backup:DeleteBackupVault",
+        "backup:PutBackupVaultNotifications",
+        "backup:GetBackupVaultNotifications",
+        "backup:GetBackupVaultAccessPolicy",
+        "backup:DeleteBackupVaultAccessPolicy",
+        "backup:DescribeBackupVault",
+        "backup:StartBackupJob",
+        "backup:PutBackupVaultAccessPolicy",
+      ]
+      Resource = aws_backup_vault.test.arn
+    }]
+  })
 }
 `, rName)
 }

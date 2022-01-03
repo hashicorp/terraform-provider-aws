@@ -731,7 +731,7 @@ resource "aws_lambda_function" "test" {
   function_name = %[1]q
   role          = aws_iam_role.test.arn
   handler       = "index.handler"
-  runtime       = "nodejs10.x"
+  runtime       = "nodejs14.x"
 
   depends_on = [aws_iam_role_policy.test]
 }

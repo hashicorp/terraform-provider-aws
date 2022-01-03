@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -31,7 +32,11 @@ func ResourceResourcePolicy() *schema.Resource {
 				Type:             schema.TypeString,
 				Required:         true,
 				ValidateFunc:     validation.StringIsJSON,
-				DiffSuppressFunc: verify.SuppressEquivalentJSONDiffs,
+				DiffSuppressFunc: verify.SuppressEquivalentPolicyDiffs,
+				StateFunc: func(v interface{}) string {
+					json, _ := structure.NormalizeJsonString(v)
+					return json
+				},
 			},
 			"resource_arn": {
 				Type:         schema.TypeString,
@@ -46,16 +51,23 @@ func ResourceResourcePolicy() *schema.Resource {
 func resourceResourcePolicyPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).NetworkFirewallConn
 	resourceArn := d.Get("resource_arn").(string)
+
+	policy, err := structure.NormalizeJsonString(d.Get("policy").(string))
+
+	if err != nil {
+		return diag.Errorf("policy (%s) is invalid JSON: %s", policy, err)
+	}
+
 	input := &networkfirewall.PutResourcePolicyInput{
 		ResourceArn: aws.String(resourceArn),
-		Policy:      aws.String(d.Get("policy").(string)),
+		Policy:      aws.String(policy),
 	}
 
 	log.Printf("[DEBUG] Putting NetworkFirewall Resource Policy for resource: %s", resourceArn)
 
-	_, err := conn.PutResourcePolicyWithContext(ctx, input)
+	_, err = conn.PutResourcePolicyWithContext(ctx, input)
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error putting NetworkFirewall Resource Policy (for resource: %s): %w", resourceArn, err))
+		return diag.Errorf("error putting NetworkFirewall Resource Policy (for resource: %s): %s", resourceArn, err)
 	}
 
 	d.SetId(resourceArn)
@@ -83,8 +95,15 @@ func resourceResourcePolicyRead(ctx context.Context, d *schema.ResourceData, met
 		return diag.FromErr(fmt.Errorf("error reading NetworkFirewall Resource Policy (for resource: %s): empty output", resourceArn))
 	}
 
-	d.Set("policy", policy)
 	d.Set("resource_arn", resourceArn)
+
+	policyToSet, err := verify.PolicyToSet(d.Get("policy").(string), aws.StringValue(policy))
+
+	if err != nil {
+		return diag.Errorf("setting policy %s: %s", aws.StringValue(policy), err)
+	}
+
+	d.Set("policy", policyToSet)
 
 	return nil
 }

@@ -163,36 +163,64 @@ resource "aws_ecs_task_definition" "test" {
   family                = "test"
   container_definitions = <<TASK_DEFINITION
 [
-	{
-		"cpu": 10,
-		"command": ["sleep", "10"],
-		"entryPoint": ["/"],
-		"environment": [
-			{"name": "VARNAME", "value": "VARVAL"}
-		],
-		"essential": true,
-		"image": "jenkins",
-		"memory": 128,
-		"name": "jenkins",
-		"portMappings": [
-			{
-				"containerPort": 80,
-				"hostPort": 8080
-			}
-		],
+  {
+    "cpu": 10,
+    "command": ["sleep", "10"],
+    "entryPoint": ["/"],
+    "environment": [
+      {"name": "VARNAME", "value": "VARVAL"}
+    ],
+    "essential": true,
+    "image": "jenkins",
+    "memory": 128,
+    "name": "jenkins",
+    "portMappings": [
+      {
+        "containerPort": 80,
+        "hostPort": 8080
+      }
+    ],
         "resourceRequirements":[
             {
                 "type":"InferenceAccelerator",
                 "value":"device_1"
             }
         ]
-	}
+  }
 ]
 TASK_DEFINITION
 
   inference_accelerator {
     device_name = "device_1"
     device_type = "eia1.medium"
+  }
+}
+```
+
+### Example Using `runtime_platform` and `fargate`
+
+```terraform
+resource "aws_ecs_task_definition" "test" {
+  family                   = "test"
+  requires_compatibilities = ["FARGATE"]
+  network_mode             = "awsvpc"
+  cpu                      = 1024
+  memory                   = 2048
+  container_definitions    = <<TASK_DEFINITION
+[
+  {
+    "name": "iis",
+    "image": "mcr.microsoft.com/windows/servercore/iis",
+    "cpu": 1024,
+    "memory": 2048,
+    "essential": true
+  }
+]
+TASK_DEFINITION
+
+  runtime_platform {
+    operating_system_family = "WINDOWS_SERVER_2019_CORE"
+    cpu_architecture        = "X86_64"
   }
 }
 ```
@@ -214,6 +242,7 @@ The following arguments are optional:
 * `ipc_mode` - (Optional) IPC resource namespace to be used for the containers in the task The valid values are `host`, `task`, and `none`.
 * `memory` - (Optional) Amount (in MiB) of memory used by the task. If the `requires_compatibilities` is `FARGATE` this field is required.
 * `network_mode` - (Optional) Docker networking mode to use for the containers in the task. Valid values are `none`, `bridge`, `awsvpc`, and `host`.
+* `runtime_platform` - (Optional) Configuration block for [runtime_platform](#runtime_platform) that containers in your task may use.
 * `pid_mode` - (Optional) Process namespace to use for the containers in the task. The valid values are `host` and `task`.
 * `placement_constraints` - (Optional) Configuration block for rules that are taken into consideration during task placement. Maximum number of `placement_constraints` is `10`. [Detailed below](#placement_constraints).
 * `proxy_configuration` - (Optional) Configuration block for the App Mesh proxy. [Detailed below.](#proxy_configuration)
@@ -251,6 +280,11 @@ For more information, see [Specifying an EFS volume in your Task Definition Deve
 * `transit_encryption` - (Optional) Whether or not to enable encryption for Amazon EFS data in transit between the Amazon ECS host and the Amazon EFS server. Transit encryption must be enabled if Amazon EFS IAM authorization is used. Valid values: `ENABLED`, `DISABLED`. If this parameter is omitted, the default value of `DISABLED` is used.
 * `transit_encryption_port` - (Optional) Port to use for transit encryption. If you do not specify a transit encryption port, it will use the port selection strategy that the Amazon EFS mount helper uses.
 * `authorization_config` - (Optional) Configuration block for [authorization](#authorization_config) for the Amazon EFS file system. Detailed below.
+
+### runtime_platform
+
+* `operating_system_family` - (Optional) If the `requires_compatibilities` is `FARGATE` this field is required; must be set to a valid option from the [operating system family in the runtime platform](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/task_definition_parameters.html#runtime-platform) setting
+* `cpu_architecture` - (Optional) Must be set to either `X86_64` or `ARM64`; see [cpu architecture](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/task_definition_parameters.html#runtime-platform)
 
 #### authorization_config
 

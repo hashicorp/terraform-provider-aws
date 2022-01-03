@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
@@ -49,15 +50,20 @@ func ResourceRepositoryPolicy() *schema.Resource {
 func resourceRepositoryPolicyPut(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ECRConn
 
+	policy, err := structure.NormalizeJsonString(d.Get("policy").(string))
+
+	if err != nil {
+		return fmt.Errorf("policy (%s) is invalid JSON: %w", policy, err)
+	}
+
 	input := ecr.SetRepositoryPolicyInput{
 		RepositoryName: aws.String(d.Get("repository").(string)),
-		PolicyText:     aws.String(d.Get("policy").(string)),
+		PolicyText:     aws.String(policy),
 	}
 
 	log.Printf("[DEBUG] Creating ECR repository policy: %#v", input)
 
 	// Retry due to IAM eventual consistency
-	var err error
 	var out *ecr.SetRepositoryPolicyOutput
 	err = resource.Retry(tfiam.PropagationTimeout, func() *resource.RetryError {
 		out, err = conn.SetRepositoryPolicy(&input)
@@ -141,7 +147,20 @@ func resourceRepositoryPolicyRead(d *schema.ResourceData, meta interface{}) erro
 
 	d.Set("repository", out.RepositoryName)
 	d.Set("registry_id", out.RegistryId)
-	d.Set("policy", out.PolicyText)
+
+	policyToSet, err := verify.SecondJSONUnlessEquivalent(d.Get("policy").(string), aws.StringValue(out.PolicyText))
+
+	if err != nil {
+		return fmt.Errorf("while setting policy (%s), encountered: %w", policyToSet, err)
+	}
+
+	policyToSet, err = structure.NormalizeJsonString(policyToSet)
+
+	if err != nil {
+		return fmt.Errorf("policy (%s) is invalid JSON: %w", policyToSet, err)
+	}
+
+	d.Set("policy", policyToSet)
 
 	return nil
 }

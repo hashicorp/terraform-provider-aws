@@ -1963,6 +1963,8 @@ func TestAccLambdaFunction_runtimes(t *testing.T) {
 			fallthrough
 		case lambda.RuntimeDotnetcore10:
 			fallthrough
+		case lambda.RuntimeNodejs10X:
+			fallthrough
 		case lambda.RuntimeNodejs810:
 			fallthrough
 		case lambda.RuntimeNodejs610:

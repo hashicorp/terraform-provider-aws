@@ -167,6 +167,104 @@ func TestAccECSTaskDefinition_withDockerVolumeMinimal(t *testing.T) {
 	})
 }
 
+func TestAccECSTaskDefinition_withRuntimePlatform(t *testing.T) {
+	var def ecs.TaskDefinition
+
+	tdName := sdkacctest.RandomWithPrefix("tf-acc-td-with-runtime-platform")
+	resourceName := "aws_ecs_task_definition.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ecs.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckTaskDefinitionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTaskDefinitionWithRuntimePlatformMinimalConfig(tdName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTaskDefinitionExists(resourceName, &def),
+					resource.TestCheckResourceAttr(resourceName, "runtime_platform.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "runtime_platform.*", map[string]string{
+						"operating_system_family": "LINUX",
+						"cpu_architecture":        "X86_64",
+					}),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccTaskDefinitionImportStateIdFunc(resourceName),
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccECSTaskDefinition_Fargate_withRuntimePlatform(t *testing.T) {
+	var def ecs.TaskDefinition
+
+	tdName := sdkacctest.RandomWithPrefix("tf-acc-td-with-runtime-platform")
+	resourceName := "aws_ecs_task_definition.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ecs.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckTaskDefinitionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccFargateTaskDefinitionWithRuntimePlatformMinimalConfig(tdName, true, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTaskDefinitionExists(resourceName, &def),
+					resource.TestCheckResourceAttr(resourceName, "runtime_platform.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "runtime_platform.*", map[string]string{
+						"operating_system_family": "WINDOWS_SERVER_2019_CORE",
+						"cpu_architecture":        "X86_64",
+					}),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccTaskDefinitionImportStateIdFunc(resourceName),
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccECSTaskDefinition_Fargate_withRuntimePlatformWithoutArch(t *testing.T) {
+	var def ecs.TaskDefinition
+
+	tdName := sdkacctest.RandomWithPrefix("tf-acc-td-with-runtime-platform")
+	resourceName := "aws_ecs_task_definition.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ecs.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckTaskDefinitionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccFargateTaskDefinitionWithRuntimePlatformMinimalConfig(tdName, false, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTaskDefinitionExists(resourceName, &def),
+					resource.TestCheckResourceAttr(resourceName, "runtime_platform.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "runtime_platform.*", map[string]string{
+						"operating_system_family": "WINDOWS_SERVER_2019_CORE",
+					}),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccTaskDefinitionImportStateIdFunc(resourceName),
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccECSTaskDefinition_withEFSVolumeMinimal(t *testing.T) {
 	var def ecs.TaskDefinition
 
@@ -318,6 +416,8 @@ func TestAccECSTaskDefinition_withFSxWinFileSystem(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_task_definition.test"
 
+	domainName := acctest.RandomDomainName()
+
 	if acctest.Partition() == "aws-us-gov" {
 		t.Skip("Amazon FSx for Windows File Server volumes for ECS tasks are not supported in GovCloud partition")
 	}
@@ -329,7 +429,7 @@ func TestAccECSTaskDefinition_withFSxWinFileSystem(t *testing.T) {
 		CheckDestroy: testAccCheckTaskDefinitionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTaskDefinitionWithFSxVolume(rName),
+				Config: testAccTaskDefinitionWithFSxVolume(domainName, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTaskDefinitionExists(resourceName, &def),
 					resource.TestCheckResourceAttr(resourceName, "volume.#", "1"),
@@ -1587,6 +1687,75 @@ TASK_DEFINITION
 `, tdName)
 }
 
+func testAccTaskDefinitionWithRuntimePlatformMinimalConfig(tdName string) string {
+	return fmt.Sprintf(`
+resource "aws_ecs_task_definition" "test" {
+  family                = %[1]q
+  container_definitions = <<TASK_DEFINITION
+[
+  {
+    "name": "sleep",
+    "image": "busybox",
+    "cpu": 10,
+    "command": ["sleep","360"],
+    "memory": 10,
+    "essential": true
+  }
+]
+TASK_DEFINITION
+  runtime_platform {
+    operating_system_family = "LINUX"
+    cpu_architecture        = "X86_64"
+  }
+}
+`, tdName)
+}
+
+func testAccFargateTaskDefinitionWithRuntimePlatformMinimalConfig(tdName string, architecture bool, osFamily bool) string {
+
+	var arch string
+	if architecture {
+		arch = `cpu_architecture         = "X86_64"`
+	} else {
+		arch = ``
+	}
+
+	var os string
+	if osFamily {
+		os = `operating_system_family  = "WINDOWS_SERVER_2019_CORE"`
+	} else {
+		os = ``
+	}
+
+	return fmt.Sprintf(`
+resource "aws_ecs_task_definition" "test" {
+  family                   = %[1]q
+  requires_compatibilities = ["FARGATE"]
+  network_mode             = "awsvpc"
+  cpu                      = 1024
+  memory                   = 2048
+
+  runtime_platform {
+    %[3]s
+    %[2]s
+  }
+
+  container_definitions = <<TASK_DEFINITION
+[
+  {
+    "name": "iis",
+    "image": "mcr.microsoft.com/windows/servercore/iis",
+    "cpu": 1024,
+    "memory": 2048,
+    "essential": true
+  }
+]
+TASK_DEFINITION
+
+}
+`, tdName, arch, os)
+}
+
 func testAccTaskDefinitionWithTaskScopedDockerVolume(tdName string) string {
 	return fmt.Sprintf(`
 resource "aws_ecs_task_definition" "test" {
@@ -2316,8 +2485,10 @@ TASK_DEFINITION
 `, tdName)
 }
 
-func testAccTaskDefinitionWithFSxVolume(tdName string) string {
-	return testAccFSxWindowsFileSystemSubnetIds1Config() + fmt.Sprintf(`
+func testAccTaskDefinitionWithFSxVolume(domain, tdName string) string {
+	return acctest.ConfigCompose(
+		testAccFSxWindowsFileSystemSubnetIds1Config(domain),
+		fmt.Sprintf(`
 data "aws_partition" "current" {}
 
 resource "aws_secretsmanager_secret" "test" {
@@ -2401,7 +2572,7 @@ TASK_DEFINITION
     aws_iam_role_policy_attachment.test3
   ]
 }
-`, tdName)
+`, tdName))
 }
 
 func testAccTaskDefinitionImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
@@ -2415,55 +2586,34 @@ func testAccTaskDefinitionImportStateIdFunc(resourceName string) resource.Import
 	}
 }
 
-func testAccFSxWindowsFileSystemBaseConfig() string {
-	return `
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
-resource "aws_vpc" "test" {
-  cidr_block = "10.0.0.0/16"
-}
-
-resource "aws_subnet" "test1" {
-  vpc_id            = aws_vpc.test.id
-  cidr_block        = "10.0.1.0/24"
-  availability_zone = data.aws_availability_zones.available.names[0]
-}
-
-resource "aws_subnet" "test2" {
-  vpc_id            = aws_vpc.test.id
-  cidr_block        = "10.0.2.0/24"
-  availability_zone = data.aws_availability_zones.available.names[1]
-}
-
+func testAccFSxWindowsFileSystemBaseConfig(domain string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigVpcWithSubnets(2),
+		fmt.Sprintf(`
 resource "aws_directory_service_directory" "test" {
   edition  = "Standard"
-  name     = "corp.notexample.com"
+  name     = %[1]q
   password = "SuperSecretPassw0rd"
   type     = "MicrosoftAD"
 
   vpc_settings {
-    subnet_ids = [aws_subnet.test1.id, aws_subnet.test2.id]
     vpc_id     = aws_vpc.test.id
+    subnet_ids = aws_subnet.test[*].id
   }
 }
-`
+`, domain),
+	)
 }
 
-func testAccFSxWindowsFileSystemSubnetIds1Config() string {
-	return testAccFSxWindowsFileSystemBaseConfig() + `
+func testAccFSxWindowsFileSystemSubnetIds1Config(domain string) string {
+	return acctest.ConfigCompose(
+		testAccFSxWindowsFileSystemBaseConfig(domain), `
 resource "aws_fsx_windows_file_system" "test" {
   active_directory_id = aws_directory_service_directory.test.id
   skip_final_backup   = true
   storage_capacity    = 32
-  subnet_ids          = [aws_subnet.test1.id]
+  subnet_ids          = [aws_subnet.test[0].id]
   throughput_capacity = 8
 }
-`
+`)
 }

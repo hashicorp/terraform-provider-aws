@@ -274,7 +274,7 @@ The `destination` configuration block supports the following arguments:
 * `encryption_configuration` - (Optional) A configuration block that provides information about encryption [documented below](#encryption_configuration). If `source_selection_criteria` is specified, you must specify this element.
 * `metrics` - (Optional) A configuration block that specifies replication metrics-related settings enabling replication metrics and events [documented below](#metrics).
 * `replication_time` - (Optional) A configuration block that specifies S3 Replication Time Control (S3 RTC), including whether S3 RTC is enabled and the time when all objects and operations on objects must be replicated [documented below](#replication_time). Replication Time Control must be used in conjunction with `metrics`.
-* `storage_class` - (Optional) The class of storage used to store the object. Can be `STANDARD`, `REDUCED_REDUNDANCY`, `STANDARD_IA`, `ONEZONE_IA`, `INTELLIGENT_TIERING`, `GLACIER`, or `DEEP_ARCHIVE`. By default, Amazon S3 uses the storage class of the source object to create the object replica.
+* `storage_class` - (Optional) The [storage class](https://docs.aws.amazon.com/AmazonS3/latest/API/API_Destination.html#AmazonS3-Type-Destination-StorageClass) used to store the object. By default, Amazon S3 uses the storage class of the source object to create the object replica.
 
 ### access_control_translation
 
@@ -313,7 +313,7 @@ metrics {
 
 The `metrics` configuration block supports the following arguments:
 
-* `event_threshold` - (Required) A configuration block that specifies the time threshold for emitting the `s3:Replication:OperationMissedThreshold` event [documented below](#event_threshold).
+* `event_threshold` - (Optional) A configuration block that specifies the time threshold for emitting the `s3:Replication:OperationMissedThreshold` event [documented below](#event_threshold).
 * `status` - (Required) The status of the Destination Metrics. Either `"Enabled"` or `"Disabled"`.
 
 ### event_threshold

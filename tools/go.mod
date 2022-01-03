@@ -11,7 +11,7 @@ require (
 	github.com/hashicorp/terraform-exec v0.14.0 // indirect
 	github.com/katbyte/terrafmt v0.3.0
 	github.com/pavius/impi v0.0.3
-	github.com/terraform-linters/tflint v0.33.1
+	github.com/terraform-linters/tflint v0.34.1
 	golang.org/x/term v0.0.0-20201210144234-2321bbc49cbf // indirect
 )
 

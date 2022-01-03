@@ -277,7 +277,7 @@ func flattenCloudWatchLogMetricTransformations(ts []*cloudwatchlogs.MetricTransf
 	}
 
 	if dims := transform.Dimensions; len(dims) > 0 {
-		m["dimensions"] = verify.PointersMapToStringList(dims)
+		m["dimensions"] = flex.PointersMapToStringList(dims)
 	} else {
 		m["dimensions"] = nil
 	}

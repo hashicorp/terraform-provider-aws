@@ -156,8 +156,8 @@ func TestAccEC2Fleet_LaunchTemplateLaunchTemplateSpecification_launchTemplateID(
 			{
 				Config: testAccFleetConfig_LaunchTemplateConfig_LaunchTemplateSpecification_LaunchTemplateID(rName, launchTemplateResourceName2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFleetExists(resourceName, &fleet1),
-					testAccCheckFleetRecreated(&fleet1, &fleet2),
+					testAccCheckFleetExists(resourceName, &fleet2),
+					testAccCheckFleetNotRecreated(&fleet1, &fleet2),
 					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.launch_template_specification.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "launch_template_config.0.launch_template_specification.0.launch_template_id", launchTemplateResourceName2, "id"),
@@ -200,8 +200,8 @@ func TestAccEC2Fleet_LaunchTemplateLaunchTemplateSpecification_launchTemplateNam
 			{
 				Config: testAccFleetConfig_LaunchTemplateConfig_LaunchTemplateSpecification_LaunchTemplateName(rName, launchTemplateResourceName2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFleetExists(resourceName, &fleet1),
-					testAccCheckFleetRecreated(&fleet1, &fleet2),
+					testAccCheckFleetExists(resourceName, &fleet2),
+					testAccCheckFleetNotRecreated(&fleet1, &fleet2),
 					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.launch_template_specification.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "launch_template_config.0.launch_template_specification.0.launch_template_name", launchTemplateResourceName2, "name"),
@@ -250,8 +250,8 @@ func TestAccEC2Fleet_LaunchTemplateLaunchTemplateSpecification_version(t *testin
 					testAccCheckLaunchTemplateExists(launchTemplateResourceName, &launchTemplate),
 					resource.TestCheckResourceAttr(launchTemplateResourceName, "instance_type", "t3.small"),
 					resource.TestCheckResourceAttr(launchTemplateResourceName, "latest_version", "2"),
-					testAccCheckFleetExists(resourceName, &fleet1),
-					testAccCheckFleetRecreated(&fleet1, &fleet2),
+					testAccCheckFleetExists(resourceName, &fleet2),
+					testAccCheckFleetNotRecreated(&fleet1, &fleet2),
 					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.launch_template_specification.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "launch_template_config.0.launch_template_specification.0.launch_template_id", launchTemplateResourceName, "id"),
@@ -292,8 +292,8 @@ func TestAccEC2Fleet_LaunchTemplateOverride_availabilityZone(t *testing.T) {
 			{
 				Config: testAccFleetConfig_LaunchTemplateConfig_Override_AvailabilityZone(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFleetExists(resourceName, &fleet1),
-					testAccCheckFleetRecreated(&fleet1, &fleet2),
+					testAccCheckFleetExists(resourceName, &fleet2),
+					testAccCheckFleetNotRecreated(&fleet1, &fleet2),
 					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "launch_template_config.0.override.0.availability_zone", availabilityZonesDataSourceName, "names.1"),
@@ -332,8 +332,8 @@ func TestAccEC2Fleet_LaunchTemplateOverride_instanceType(t *testing.T) {
 			{
 				Config: testAccFleetConfig_LaunchTemplateConfig_Override_InstanceType(rName, "t3.medium"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFleetExists(resourceName, &fleet1),
-					testAccCheckFleetRecreated(&fleet1, &fleet2),
+					testAccCheckFleetExists(resourceName, &fleet2),
+					testAccCheckFleetNotRecreated(&fleet1, &fleet2),
 					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_type", "t3.medium"),
@@ -374,8 +374,8 @@ func TestAccEC2Fleet_LaunchTemplateOverride_maxPrice(t *testing.T) {
 			{
 				Config: testAccFleetConfig_LaunchTemplateConfig_Override_MaxPrice(rName, "1.02"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFleetExists(resourceName, &fleet1),
-					testAccCheckFleetRecreated(&fleet1, &fleet2),
+					testAccCheckFleetExists(resourceName, &fleet2),
+					testAccCheckFleetNotRecreated(&fleet1, &fleet2),
 					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.max_price", "1.02"),
@@ -414,8 +414,8 @@ func TestAccEC2Fleet_LaunchTemplateOverride_priority(t *testing.T) {
 			{
 				Config: testAccFleetConfig_LaunchTemplateConfig_Override_Priority(rName, 2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFleetExists(resourceName, &fleet1),
-					testAccCheckFleetRecreated(&fleet1, &fleet2),
+					testAccCheckFleetExists(resourceName, &fleet2),
+					testAccCheckFleetNotRecreated(&fleet1, &fleet2),
 					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.priority", "2"),
@@ -455,8 +455,8 @@ func TestAccEC2Fleet_LaunchTemplateOverridePriority_multiple(t *testing.T) {
 			{
 				Config: testAccFleetConfig_LaunchTemplateConfig_Override_Priority_Multiple(rName, 2, 1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFleetExists(resourceName, &fleet1),
-					testAccCheckFleetRecreated(&fleet1, &fleet2),
+					testAccCheckFleetExists(resourceName, &fleet2),
+					testAccCheckFleetNotRecreated(&fleet1, &fleet2),
 					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.priority", "2"),
@@ -498,8 +498,8 @@ func TestAccEC2Fleet_LaunchTemplateOverride_subnetID(t *testing.T) {
 			{
 				Config: testAccFleetConfig_LaunchTemplateConfig_Override_SubnetID(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFleetExists(resourceName, &fleet1),
-					testAccCheckFleetRecreated(&fleet1, &fleet2),
+					testAccCheckFleetExists(resourceName, &fleet2),
+					testAccCheckFleetNotRecreated(&fleet1, &fleet2),
 					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "launch_template_config.0.override.0.subnet_id", subnetResourceName2, "id"),
@@ -538,8 +538,8 @@ func TestAccEC2Fleet_LaunchTemplateOverride_weightedCapacity(t *testing.T) {
 			{
 				Config: testAccFleetConfig_LaunchTemplateConfig_Override_WeightedCapacity(rName, 2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFleetExists(resourceName, &fleet1),
-					testAccCheckFleetRecreated(&fleet1, &fleet2),
+					testAccCheckFleetExists(resourceName, &fleet2),
+					testAccCheckFleetNotRecreated(&fleet1, &fleet2),
 					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.weighted_capacity", "2"),
@@ -579,8 +579,8 @@ func TestAccEC2Fleet_LaunchTemplateOverrideWeightedCapacity_multiple(t *testing.
 			{
 				Config: testAccFleetConfig_LaunchTemplateConfig_Override_WeightedCapacity_Multiple(rName, 1, 2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFleetExists(resourceName, &fleet1),
-					testAccCheckFleetRecreated(&fleet1, &fleet2),
+					testAccCheckFleetExists(resourceName, &fleet2),
+					testAccCheckFleetNotRecreated(&fleet1, &fleet2),
 					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.weighted_capacity", "1"),

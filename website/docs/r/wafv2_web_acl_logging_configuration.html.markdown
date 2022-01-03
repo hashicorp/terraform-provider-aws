@@ -77,7 +77,7 @@ resource "aws_wafv2_web_acl_logging_configuration" "example" {
 
 The following arguments are supported:
 
-* `log_destination_configs` - (Required) The Amazon Kinesis Data Firehose Amazon Resource Name (ARNs) that you want to associate with the web ACL. Currently, only 1 ARN is supported.
+* `log_destination_configs` - (Required) The Amazon Kinesis Data Firehose, Cloudwatch Log log group, or S3 bucket Amazon Resource Names (ARNs) that you want to associate with the web ACL.
 * `logging_filter` - (Optional) A configuration block that specifies which web requests are kept in the logs and which are dropped. You can filter on the rule action and on the web request labels that were applied by matching rules during web ACL evaluation. See [Logging Filter](#logging-filter) below for more details.
 * `redacted_fields` - (Optional) The parts of the request that you want to keep out of the logs. Up to 100 `redacted_fields` blocks are supported. See [Redacted Fields](#redacted-fields) below for more details.
 * `resource_arn` - (Required) The Amazon Resource Name (ARN) of the web ACL that you want to associate with `log_destination_configs`.

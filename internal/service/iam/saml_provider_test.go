@@ -17,6 +17,8 @@ import (
 
 func TestAccIAMSamlProvider_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	idpEntityId := fmt.Sprintf("https://%s", acctest.RandomDomainName())
+	idpEntityIdModified := fmt.Sprintf("https://%s", acctest.RandomDomainName())
 	resourceName := "aws_iam_saml_provider.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -26,7 +28,7 @@ func TestAccIAMSamlProvider_basic(t *testing.T) {
 		CheckDestroy: testAccCheckIAMSamlProviderDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccIAMSamlProviderConfig(rName),
+				Config: testAccIAMSamlProviderConfig(rName, idpEntityId),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIAMSamlProviderExists(resourceName),
 					acctest.CheckResourceAttrGlobalARN(resourceName, "arn", "iam", fmt.Sprintf("saml-provider/%s", rName)),
@@ -37,7 +39,7 @@ func TestAccIAMSamlProvider_basic(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccIAMSamlProviderConfigUpdate(rName),
+				Config: testAccIAMSamlProviderConfigUpdate(rName, idpEntityIdModified),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIAMSamlProviderExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -55,6 +57,7 @@ func TestAccIAMSamlProvider_basic(t *testing.T) {
 
 func TestAccIAMSamlProvider_tags(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	idpEntityId := fmt.Sprintf("https://%s", acctest.RandomDomainName())
 	resourceName := "aws_iam_saml_provider.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -64,7 +67,7 @@ func TestAccIAMSamlProvider_tags(t *testing.T) {
 		CheckDestroy: testAccCheckIAMSamlProviderDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccIAMSamlProviderConfigTags1(rName, "key1", "value1"),
+				Config: testAccIAMSamlProviderConfigTags1(rName, idpEntityId, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIAMSamlProviderExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -77,7 +80,7 @@ func TestAccIAMSamlProvider_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccIAMSamlProviderConfigTags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccIAMSamlProviderConfigTags2(rName, idpEntityId, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIAMSamlProviderExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -86,7 +89,7 @@ func TestAccIAMSamlProvider_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccIAMSamlProviderConfigTags1(rName, "key2", "value2"),
+				Config: testAccIAMSamlProviderConfigTags1(rName, idpEntityId, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIAMSamlProviderExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -99,6 +102,7 @@ func TestAccIAMSamlProvider_tags(t *testing.T) {
 
 func TestAccIAMSamlProvider_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	idpEntityId := fmt.Sprintf("https://%s", acctest.RandomDomainName())
 	resourceName := "aws_iam_saml_provider.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -108,7 +112,7 @@ func TestAccIAMSamlProvider_disappears(t *testing.T) {
 		CheckDestroy: testAccCheckIAMSamlProviderDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccIAMSamlProviderConfig(rName),
+				Config: testAccIAMSamlProviderConfig(rName, idpEntityId),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIAMSamlProviderExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfiam.ResourceSamlProvider(), resourceName),
@@ -168,47 +172,47 @@ func testAccCheckIAMSamlProviderExists(id string) resource.TestCheckFunc {
 	}
 }
 
-func testAccIAMSamlProviderConfig(rName string) string {
+func testAccIAMSamlProviderConfig(rName, idpEntityId string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_saml_provider" "test" {
-  name                   = %q
-  saml_metadata_document = file("./test-fixtures/saml-metadata.xml")
+  name                   = %[1]q
+  saml_metadata_document = templatefile("./test-fixtures/saml-metadata.xml.tpl", { entity_id = %[2]q })
 }
-`, rName)
+`, rName, idpEntityId)
 }
 
-func testAccIAMSamlProviderConfigUpdate(rName string) string {
+func testAccIAMSamlProviderConfigUpdate(rName, idpEntityIdModified string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_saml_provider" "test" {
-  name                   = %q
-  saml_metadata_document = file("./test-fixtures/saml-metadata-modified.xml")
+  name                   = %[1]q
+  saml_metadata_document = templatefile("./test-fixtures/saml-metadata-modified.xml.tpl", { entity_id_modified = %[2]q })
 }
-`, rName)
+`, rName, idpEntityIdModified)
 }
 
-func testAccIAMSamlProviderConfigTags1(rName, tagKey1, tagValue1 string) string {
+func testAccIAMSamlProviderConfigTags1(rName, idpEntityId, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_saml_provider" "test" {
-  name                   = %q
-  saml_metadata_document = file("./test-fixtures/saml-metadata.xml")
+  name                   = %[1]q
+  saml_metadata_document = templatefile("./test-fixtures/saml-metadata.xml.tpl", { entity_id = %[2]q })
 
   tags = {
-    %[2]q = %[3]q
+    %[3]q = %[4]q
   }
 }
-`, rName, tagKey1, tagValue1)
+`, rName, idpEntityId, tagKey1, tagValue1)
 }
 
-func testAccIAMSamlProviderConfigTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccIAMSamlProviderConfigTags2(rName, idpEntityId, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_saml_provider" "test" {
-  name                   = %q
-  saml_metadata_document = file("./test-fixtures/saml-metadata.xml")
+  name                   = %[1]q
+  saml_metadata_document = templatefile("./test-fixtures/saml-metadata.xml.tpl", { entity_id = %[2]q })
 
   tags = {
-    %[2]q = %[3]q
-    %[4]q = %[5]q
+    %[3]q = %[4]q
+    %[5]q = %[6]q
   }
 }
-`, rName, tagKey1, tagValue1, tagKey2, tagValue2)
+`, rName, idpEntityId, tagKey1, tagValue1, tagKey2, tagValue2)
 }

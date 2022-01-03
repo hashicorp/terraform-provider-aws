@@ -516,6 +516,32 @@ func TestAccImageBuilderImageRecipe_workingDirectory(t *testing.T) {
 	})
 }
 
+func TestAccImageBuilderImageRecipe_pipelineUpdateDependency(t *testing.T) {
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_imagebuilder_image_recipe.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, imagebuilder.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckImageRecipeDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccImageRecipePipelineDependencyConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckImageRecipeExists(resourceName),
+				),
+			},
+			{
+				Config: testAccImageRecipePipelineDependencyUpdateConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckImageRecipeExists(resourceName),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckImageRecipeDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).ImageBuilderConn
 
@@ -946,4 +972,120 @@ resource "aws_imagebuilder_image_recipe" "test" {
   working_directory = %[2]q
 }
 `, rName, workingDirectory))
+}
+
+func testAccImageRecipePipelineDependencyBaseConfig(rName string) string {
+	return fmt.Sprintf(`
+data "aws_region" "current" {}
+
+data "aws_partition" "current" {}
+
+resource "aws_iam_instance_profile" "test" {
+  name = aws_iam_role.role.name
+  role = aws_iam_role.role.name
+}
+
+resource "aws_iam_role" "role" {
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Action = "sts:AssumeRole"
+      Effect = "Allow"
+      Principal = {
+        Service = "ec2.${data.aws_partition.current.dns_suffix}"
+      }
+      Sid = ""
+    }]
+  })
+  name = %[1]q
+}
+
+resource "aws_imagebuilder_component" "test" {
+  data = yamlencode({
+    phases = [{
+      name = "build"
+      steps = [{
+        action = "ExecuteBash"
+        inputs = {
+          commands = ["echo 'hello world'"]
+        }
+        name      = "example"
+        onFailure = "Continue"
+      }]
+    }]
+    schemaVersion = 1.0
+  })
+  name     = %[1]q
+  platform = "Linux"
+  version  = "1.0.0"
+}
+
+resource "aws_imagebuilder_component" "test2" {
+  data = yamlencode({
+    phases = [{
+      name = "build"
+      steps = [{
+        action = "ExecuteBash"
+        inputs = {
+          commands = ["echo 'Hej världen!'"]
+        }
+        name      = "example"
+        onFailure = "Continue"
+      }]
+    }]
+    schemaVersion = 1.0
+  })
+  name     = "%[1]s-2"
+  platform = "Linux"
+  version  = "1.0.0"
+}
+
+resource "aws_imagebuilder_infrastructure_configuration" "test" {
+  instance_profile_name = aws_iam_instance_profile.test.name
+  name                  = %[1]q
+}
+
+resource "aws_imagebuilder_image_pipeline" "test" {
+  description                      = "Världens finaste beskrivning."
+  image_recipe_arn                 = aws_imagebuilder_image_recipe.test.arn
+  infrastructure_configuration_arn = aws_imagebuilder_infrastructure_configuration.test.arn
+  name                             = %[1]q
+}
+`, rName)
+}
+
+func testAccImageRecipePipelineDependencyConfig(rName string) string {
+	return acctest.ConfigCompose(
+		testAccImageRecipePipelineDependencyBaseConfig(rName),
+		fmt.Sprintf(`
+resource "aws_imagebuilder_image_recipe" "test" {
+  component {
+    component_arn = aws_imagebuilder_component.test.arn
+  }
+
+  name         = %[1]q
+  parent_image = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:image/amazon-linux-2-x86/x.x.x"
+  version      = "1.0.0"
+}
+`, rName))
+}
+
+func testAccImageRecipePipelineDependencyUpdateConfig(rName string) string {
+	return acctest.ConfigCompose(
+		testAccImageRecipePipelineDependencyBaseConfig(rName),
+		fmt.Sprintf(`
+resource "aws_imagebuilder_image_recipe" "test" {
+  component {
+    component_arn = aws_imagebuilder_component.test.arn
+  }
+
+  component {
+    component_arn = aws_imagebuilder_component.test2.arn
+  }
+
+  name         = %[1]q
+  parent_image = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:image/amazon-linux-2-x86/x.x.x"
+  version      = "1.0.0"
+}
+`, rName))
 }

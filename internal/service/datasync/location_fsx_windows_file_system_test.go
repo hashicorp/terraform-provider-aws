@@ -21,6 +21,8 @@ func TestAccDataSyncLocationFSxWindowsFileSystem_basic(t *testing.T) {
 	resourceName := "aws_datasync_location_fsx_windows_file_system.test"
 	fsResourceName := "aws_fsx_windows_file_system.test"
 
+	domainName := acctest.RandomDomainName()
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
@@ -32,7 +34,7 @@ func TestAccDataSyncLocationFSxWindowsFileSystem_basic(t *testing.T) {
 		CheckDestroy: testAccCheckLocationFSxWindowsDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLocationFSxWindowsConfig(),
+				Config: testAccLocationFSxWindowsConfig(domainName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLocationFSxWindowsExists(resourceName, &locationFsxWindows1),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "datasync", regexp.MustCompile(`location/loc-.+`)),
@@ -58,6 +60,8 @@ func TestAccDataSyncLocationFSxWindowsFileSystem_disappears(t *testing.T) {
 	var locationFsxWindows1 datasync.DescribeLocationFsxWindowsOutput
 	resourceName := "aws_datasync_location_fsx_windows_file_system.test"
 
+	domainName := acctest.RandomDomainName()
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
@@ -69,7 +73,7 @@ func TestAccDataSyncLocationFSxWindowsFileSystem_disappears(t *testing.T) {
 		CheckDestroy: testAccCheckLocationFSxWindowsDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLocationFSxWindowsConfig(),
+				Config: testAccLocationFSxWindowsConfig(domainName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLocationFSxWindowsExists(resourceName, &locationFsxWindows1),
 					acctest.CheckResourceDisappears(acctest.Provider, tfdatasync.ResourceLocationFSxWindowsFileSystem(), resourceName),
@@ -84,6 +88,8 @@ func TestAccDataSyncLocationFSxWindowsFileSystem_subdirectory(t *testing.T) {
 	var locationFsxWindows1 datasync.DescribeLocationFsxWindowsOutput
 	resourceName := "aws_datasync_location_fsx_windows_file_system.test"
 
+	domainName := acctest.RandomDomainName()
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
@@ -95,7 +101,7 @@ func TestAccDataSyncLocationFSxWindowsFileSystem_subdirectory(t *testing.T) {
 		CheckDestroy: testAccCheckLocationFSxWindowsDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLocationFSxWindowsSubdirectoryConfig("/subdirectory1/"),
+				Config: testAccLocationFSxWindowsSubdirectoryConfig(domainName, "/subdirectory1/"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLocationFSxWindowsExists(resourceName, &locationFsxWindows1),
 					resource.TestCheckResourceAttr(resourceName, "subdirectory", "/subdirectory1/"),
@@ -116,6 +122,8 @@ func TestAccDataSyncLocationFSxWindowsFileSystem_tags(t *testing.T) {
 	var locationFsxWindows1 datasync.DescribeLocationFsxWindowsOutput
 	resourceName := "aws_datasync_location_fsx_windows_file_system.test"
 
+	domainName := acctest.RandomDomainName()
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
@@ -127,7 +135,7 @@ func TestAccDataSyncLocationFSxWindowsFileSystem_tags(t *testing.T) {
 		CheckDestroy: testAccCheckLocationFSxWindowsDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLocationFSxWindowsTags1Config("key1", "value1"),
+				Config: testAccLocationFSxWindowsTags1Config(domainName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLocationFSxWindowsExists(resourceName, &locationFsxWindows1),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -142,7 +150,7 @@ func TestAccDataSyncLocationFSxWindowsFileSystem_tags(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"password"},
 			},
 			{
-				Config: testAccLocationFSxWindowsTags2Config("key1", "value1updated", "key2", "value2"),
+				Config: testAccLocationFSxWindowsTags2Config(domainName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLocationFSxWindowsExists(resourceName, &locationFsxWindows1),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -151,7 +159,7 @@ func TestAccDataSyncLocationFSxWindowsFileSystem_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccLocationFSxWindowsTags1Config("key1", "value1"),
+				Config: testAccLocationFSxWindowsTags1Config(domainName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLocationFSxWindowsExists(resourceName, &locationFsxWindows1),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -227,8 +235,8 @@ func testAccWSDataSyncLocationFsxWindowsImportStateIdFunc(resourceName string) r
 	}
 }
 
-func testAccLocationFSxWindowsConfig() string {
-	return acctest.ConfigCompose(testAccFSxWindowsFileSystemSecurityGroupIds1Config(), `
+func testAccLocationFSxWindowsConfig(domain string) string {
+	return acctest.ConfigCompose(testAccFSxWindowsFileSystemSecurityGroupIds1Config(domain), `
 resource "aws_datasync_location_fsx_windows_file_system" "test" {
   fsx_filesystem_arn  = aws_fsx_windows_file_system.test.arn
   user                = "SomeUser"
@@ -238,8 +246,8 @@ resource "aws_datasync_location_fsx_windows_file_system" "test" {
 `)
 }
 
-func testAccLocationFSxWindowsSubdirectoryConfig(subdirectory string) string {
-	return testAccFSxWindowsFileSystemSecurityGroupIds1Config() + fmt.Sprintf(`
+func testAccLocationFSxWindowsSubdirectoryConfig(domain, subdirectory string) string {
+	return testAccFSxWindowsFileSystemSecurityGroupIds1Config(domain) + fmt.Sprintf(`
 resource "aws_datasync_location_fsx_windows_file_system" "test" {
   fsx_filesystem_arn  = aws_fsx_windows_file_system.test.arn
   user                = "SomeUser"
@@ -250,8 +258,8 @@ resource "aws_datasync_location_fsx_windows_file_system" "test" {
 `, subdirectory)
 }
 
-func testAccLocationFSxWindowsTags1Config(key1, value1 string) string {
-	return testAccFSxWindowsFileSystemSecurityGroupIds1Config() + fmt.Sprintf(`
+func testAccLocationFSxWindowsTags1Config(domain, key1, value1 string) string {
+	return testAccFSxWindowsFileSystemSecurityGroupIds1Config(domain) + fmt.Sprintf(`
 resource "aws_datasync_location_fsx_windows_file_system" "test" {
   fsx_filesystem_arn  = aws_fsx_windows_file_system.test.arn
   user                = "SomeUser"
@@ -265,8 +273,8 @@ resource "aws_datasync_location_fsx_windows_file_system" "test" {
 `, key1, value1)
 }
 
-func testAccLocationFSxWindowsTags2Config(key1, value1, key2, value2 string) string {
-	return testAccFSxWindowsFileSystemSecurityGroupIds1Config() + fmt.Sprintf(`
+func testAccLocationFSxWindowsTags2Config(domain, key1, value1, key2, value2 string) string {
+	return testAccFSxWindowsFileSystemSecurityGroupIds1Config(domain) + fmt.Sprintf(`
 resource "aws_datasync_location_fsx_windows_file_system" "test" {
   fsx_filesystem_arn  = aws_fsx_windows_file_system.test.arn
   user                = "SomeUser"
@@ -281,8 +289,8 @@ resource "aws_datasync_location_fsx_windows_file_system" "test" {
 `, key1, value1, key2, value2)
 }
 
-func testAccFSxWindowsFileSystemBaseConfig() string {
-	return `
+func testAccFSxWindowsFileSystemBaseConfig(domain string) string {
+	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {
   state = "available"
 
@@ -310,7 +318,7 @@ resource "aws_subnet" "test2" {
 
 resource "aws_directory_service_directory" "test" {
   edition  = "Standard"
-  name     = "corp.notexample.com"
+  name     = %[1]q
   password = "SuperSecretPassw0rd"
   type     = "MicrosoftAD"
 
@@ -319,11 +327,11 @@ resource "aws_directory_service_directory" "test" {
     vpc_id     = aws_vpc.test.id
   }
 }
-`
+`, domain)
 }
 
-func testAccFSxWindowsFileSystemSecurityGroupIds1Config() string {
-	return testAccFSxWindowsFileSystemBaseConfig() + `
+func testAccFSxWindowsFileSystemSecurityGroupIds1Config(domain string) string {
+	return testAccFSxWindowsFileSystemBaseConfig(domain) + `
 resource "aws_security_group" "test1" {
   description = "security group for FSx testing"
   vpc_id      = aws_vpc.test.id
