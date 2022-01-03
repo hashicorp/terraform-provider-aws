@@ -1,12 +1,12 @@
 ---
 subcategory: "VPC"
 layout: "aws"
-page_title: "AWS: aws_vpc_ipam_organization_account_admin"
+page_title: "AWS: aws_vpc_ipam_organization_admin_account"
 description: |-
   Enables the IPAM Service and promotes an account to delegated administrator for the service.
 ---
 
-# Resource: aws_vpc_ipam_organization_account_admin
+# Resource: aws_vpc_ipam_organization_admin_account
 
 Enables the IPAM Service and promotes a delegated administrator.
 
@@ -19,7 +19,7 @@ data "aws_caller_identity" "delegated" {
   provider = "awsalternate"
 }
 
-resource "aws_vpc_ipam_organization_account_admin" "example" {
+resource "aws_vpc_ipam_organization_admin_account" "example" {
   delegated_admin_account_id =  data.aws_caller_identity.delegated.account_id
 }
 ```
@@ -45,5 +45,5 @@ In addition to all arguments above, the following attributes are exported:
 IPAMs can be imported using the `delegate account id`, e.g.
 
 ```
-$ terraform import aws_vpc_ipam_organization_account_admin.example 12345678901
+$ terraform import aws_vpc_ipam_organization_admin_account.example 12345678901
 ```
