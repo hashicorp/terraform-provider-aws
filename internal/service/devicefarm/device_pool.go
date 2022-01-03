@@ -232,10 +232,12 @@ func resourceDevicePoolDelete(d *schema.ResourceData, meta interface{}) error {
 
 	log.Printf("[DEBUG] Deleting DeviceFarm DevicePool: %s", d.Id())
 	_, err := conn.DeleteDevicePool(input)
+
+	if tfawserr.ErrCodeEquals(err, devicefarm.ErrCodeNotFoundException) {
+		return nil
+	}
+
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, devicefarm.ErrCodeNotFoundException, "") {
-			return nil
-		}
 		return fmt.Errorf("Error deleting DeviceFarm DevicePool: %w", err)
 	}
 
