@@ -1162,7 +1162,7 @@ The first step is to initialize the resource into the test sweeper framework:
 func init() {
   resource.AddTestSweepers("aws_example_thing", &resource.Sweeper{
     Name: "aws_example_thing",
-    F:    testSweepExampleThings,
+    F:    sweepThings,
     // Optionally
     Dependencies: []string{
       "aws_other_thing",
@@ -1174,15 +1174,15 @@ func init() {
 Then add the actual implementation. Preferably, if a paginated SDK call is available:
 
 ```go
-func testSweepExampleThings(region string) error {
-  client, err := acctest.SharedRegionalSweeperClient(region)
+func sweepThings(region string) error {
+	client, err := sweep.SharedRegionalSweepClient(region)
 
   if err != nil {
     return fmt.Errorf("error getting client: %w", err)
   }
 
   conn := client.(*conns.AWSClient).ExampleConn
-  sweepResources := make([]*testSweepResource, 0)
+	sweepResources := make([]*sweep.SweepResource, 0)
   var errs *multierror.Error
 
   input := &example.ListThingsInput{}
@@ -1214,7 +1214,7 @@ func testSweepExampleThings(region string) error {
         continue
       }
 
-      sweepResources = append(sweepResources, NewTestSweepResource(r, d, client))
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
     }
 
     return !lastPage
@@ -1224,11 +1224,11 @@ func testSweepExampleThings(region string) error {
     errs = multierror.Append(errs, fmt.Errorf("error listing Example Thing for %s: %w", region, err))
   }
 
-  if err = testSweepResourceOrchestrator(sweepResources); err != nil {
+	if err := sweep.SweepOrchestrator(sweepResources); err != nil {
     errs = multierror.Append(errs, fmt.Errorf("error sweeping Example Thing for %s: %w", region, err))
   }
 
-  if testSweepSkipSweepError(errs.ErrorOrNil()) {
+	if sweep.SkipSweepError(err) {
     log.Printf("[WARN] Skipping Example Thing sweep for %s: %s", region, errs)
     return nil
   }
@@ -1240,15 +1240,15 @@ func testSweepExampleThings(region string) error {
 Otherwise, if no paginated SDK call is available:
 
 ```go
-func testSweepExampleThings(region string) error {
-  client, err := acctest.SharedRegionalSweeperClient(region)
+func sweepThings(region string) error {
+	client, err := sweep.SharedRegionalSweepClient(region)
 
   if err != nil {
     return fmt.Errorf("error getting client: %w", err)
   }
 
   conn := client.(*conns.AWSClient).ExampleConn
-  sweepResources := make([]*testSweepResource, 0)
+	sweepResources := make([]*sweep.SweepResource, 0)
   var errs *multierror.Error
 
   input := &example.ListThingsInput{}
@@ -1278,7 +1278,7 @@ func testSweepExampleThings(region string) error {
         continue
       }
 
-      sweepResources = append(sweepResources, NewTestSweepResource(r, d, client))
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
     }
 
     if aws.StringValue(output.NextToken) == "" {
@@ -1288,11 +1288,11 @@ func testSweepExampleThings(region string) error {
     input.NextToken = output.NextToken
   }
 
-  if err = testSweepResourceOrchestrator(sweepResources); err != nil {
+	if err := sweep.SweepOrchestrator(sweepResources); err != nil {
     errs = multierror.Append(errs, fmt.Errorf("error sweeping Example Thing for %s: %w", region, err))
   }
 
-  if testSweepSkipSweepError(errs.ErrorOrNil()) {
+	if sweep.SkipSweepError(err) {
     log.Printf("[WARN] Skipping Example Thing sweep for %s: %s", region, errs)
     return nil
   }
