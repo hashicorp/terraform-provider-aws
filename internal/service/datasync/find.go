@@ -5,6 +5,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/datasync"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func FindAgentByARN(conn *datasync.DataSync, arn string) (*datasync.DescribeAgentOutput, error) {
@@ -58,6 +59,31 @@ func FindTaskByARN(conn *datasync.DataSync, arn string) (*datasync.DescribeTaskO
 			Message:     "Empty result",
 			LastRequest: input,
 		}
+	}
+
+	return output, nil
+}
+
+func FindFsxLustreLocationByARN(conn *datasync.DataSync, arn string) (*datasync.DescribeLocationFsxLustreOutput, error) {
+	input := &datasync.DescribeLocationFsxLustreInput{
+		LocationArn: aws.String(arn),
+	}
+
+	output, err := conn.DescribeLocationFsxLustre(input)
+
+	if tfawserr.ErrMessageContains(err, datasync.ErrCodeInvalidRequestException, "not found") {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
 	}
 
 	return output, nil

@@ -32,6 +32,11 @@ func init() {
 		F:    sweepLocationFSxWindows,
 	})
 
+	resource.AddTestSweepers("aws_datasync_location_fsx_lustre_file_system", &resource.Sweeper{
+		Name: "aws_datasync_location_fsx_lustre_file_system",
+		F:    sweepLocationFSxLustres,
+	})
+
 	resource.AddTestSweepers("aws_datasync_location_nfs", &resource.Sweeper{
 		Name: "aws_datasync_location_nfs",
 		F:    sweepLocationNFSs,
@@ -208,6 +213,61 @@ func sweepLocationFSxWindows(region string) error {
 
 			if err != nil {
 				log.Printf("[ERROR] Failed to delete DataSync Location FSX Windows (%s): %s", uri, err)
+			}
+		}
+
+		if aws.StringValue(output.NextToken) == "" {
+			break
+		}
+
+		input.NextToken = output.NextToken
+	}
+
+	return nil
+}
+
+func sweepLocationFSxLustres(region string) error {
+	client, err := sweep.SharedRegionalSweepClient(region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %w", err)
+	}
+	conn := client.(*conns.AWSClient).DataSyncConn
+
+	input := &datasync.ListLocationsInput{}
+	for {
+		output, err := conn.ListLocations(input)
+
+		if sweep.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping DataSync Location FSX Lustre sweep for %s: %s", region, err)
+			return nil
+		}
+
+		if err != nil {
+			return fmt.Errorf("error retrieving DataSync Location FSX Lustre: %w", err)
+		}
+
+		if len(output.Locations) == 0 {
+			log.Print("[DEBUG] No DataSync Location FSX Lustre File System to sweep")
+			return nil
+		}
+
+		for _, location := range output.Locations {
+			uri := aws.StringValue(location.LocationUri)
+			if !strings.HasPrefix(uri, "fsxl://") {
+				log.Printf("[INFO] Skipping DataSync Location FSX Lustre File System: %s", uri)
+				continue
+			}
+			log.Printf("[INFO] Deleting DataSync Location FSX Lustre File System: %s", uri)
+			r := ResourceLocationFSxLustreFileSystem()
+			d := r.Data(nil)
+			d.SetId(aws.StringValue(location.LocationArn))
+			err = r.Delete(d, client)
+			if tfawserr.ErrMessageContains(err, datasync.ErrCodeInvalidRequestException, "not found") {
+				continue
+			}
+
+			if err != nil {
+				log.Printf("[ERROR] Failed to delete DataSync Location Lustre File System (%s): %s", uri, err)
 			}
 		}
 

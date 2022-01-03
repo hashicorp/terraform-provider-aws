@@ -8,7 +8,7 @@ import (
 )
 
 var (
-	locationURIPattern                      = regexp.MustCompile(`^(efs|nfs|s3|smb|fsxw)://(.+)$`)
+	locationURIPattern                      = regexp.MustCompile(`^(efs|nfs|s3|smb|fsxw|fsxl)://(.+)$`)
 	locationURIGlobalIDAndSubdirPattern     = regexp.MustCompile(`^([a-zA-Z0-9.\-]+)(/.*)$`)
 	s3OutpostsAccessPointARNResourcePattern = regexp.MustCompile(`^outpost/.*/accesspoint/.*?(/.*)$`)
 )

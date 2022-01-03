@@ -978,6 +978,7 @@ func Provider() *schema.Provider {
 
 			"aws_datasync_agent":                            datasync.ResourceAgent(),
 			"aws_datasync_location_efs":                     datasync.ResourceLocationEFS(),
+			"aws_datasync_location_fsx_lustre_file_system":  datasync.ResourceLocationFSxLustreFileSystem(),
 			"aws_datasync_location_fsx_windows_file_system": datasync.ResourceLocationFSxWindowsFileSystem(),
 			"aws_datasync_location_nfs":                     datasync.ResourceLocationNFS(),
 			"aws_datasync_location_s3":                      datasync.ResourceLocationS3(),
