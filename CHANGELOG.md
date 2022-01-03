@@ -11,6 +11,7 @@ FEATURES:
 * **New Data Source:** `aws_ses_domain_identity` ([#22321](https://github.com/hashicorp/terraform-provider-aws/issues/22321))
 * **New Data Source:** `aws_ses_email_identity` ([#22321](https://github.com/hashicorp/terraform-provider-aws/issues/22321))
 * **New Resource:** `aws_batch_scheduling_policy` ([#22262](https://github.com/hashicorp/terraform-provider-aws/issues/22262))
+* **New Resource:** `aws_codebuild_resource_policy` ([#22196](https://github.com/hashicorp/terraform-provider-aws/issues/22196))
 * **New Resource:** `aws_datasync_location_fsx_lustre_file_system` ([#22346](https://github.com/hashicorp/terraform-provider-aws/issues/22346))
 * **New Resource:** `aws_datasync_location_hdfs` ([#22347](https://github.com/hashicorp/terraform-provider-aws/issues/22347))
 * **New Resource:** `aws_memorydb_parameter_group` ([#22304](https://github.com/hashicorp/terraform-provider-aws/issues/22304))
@@ -21,7 +22,10 @@ FEATURES:
 
 ENHANCEMENTS:
 
+* data-source/aws_cloudtrail_service_account: Add service account ID for `ap-southeast-3` AWS Region ([#22295](https://github.com/hashicorp/terraform-provider-aws/issues/22295))
 * data-source/aws_ecs_task_definition: Add `arn` attribute. ([#21856](https://github.com/hashicorp/terraform-provider-aws/issues/21856))
+* data-source/aws_elb_hosted_zone_id: Add hosted zone ID for `ap-southeast-3` AWS Region ([#22295](https://github.com/hashicorp/terraform-provider-aws/issues/22295))
+* data-source/aws_s3_bucket: Add hosted zone ID for `ap-southeast-3` AWS Region ([#22295](https://github.com/hashicorp/terraform-provider-aws/issues/22295))
 * data-source/aws_subnet: Add `enable_dns64`, `ipv6_native`, `enable_resource_name_dns_aaaa_record_on_launch`, `enable_resource_name_dns_a_record_on_launch` and `private_dns_hostname_type_on_launch` attributes ([#22339](https://github.com/hashicorp/terraform-provider-aws/issues/22339))
 * resource/aws_batch_job_queue: Add `scheduling_policy_arn` attribute ([#22298](https://github.com/hashicorp/terraform-provider-aws/issues/22298))
 * resource/aws_codebuild_project: Add `artifacts.bucket_owner_access`, `secondary_artifacts.bucket_owner_access`, `logs_config.s3_logs.bucket_owner_access`, `project_visibility`, `resource_access_role` arguments. ([#22189](https://github.com/hashicorp/terraform-provider-aws/issues/22189))
@@ -34,6 +38,7 @@ ENHANCEMENTS:
 * resource/aws_kinesis_firehose_delivery_stream: Add `error_output_prefix` argument to `extended_s3_configuration` `s3_backup_configuration` configuration block ([#11229](https://github.com/hashicorp/terraform-provider-aws/issues/11229))
 * resource/aws_kinesis_firehose_delivery_stream: Add `error_output_prefix` argument to `redshift_configuration` `s3_backup_configuration` configuration block ([#11229](https://github.com/hashicorp/terraform-provider-aws/issues/11229))
 * resource/aws_kinesis_firehose_delivery_stream: Add `error_output_prefix` argument to `s3_configuration` configuration block ([#11229](https://github.com/hashicorp/terraform-provider-aws/issues/11229))
+* resource/aws_s3_bucket: Add hosted zone ID for `ap-southeast-3` AWS Region ([#22295](https://github.com/hashicorp/terraform-provider-aws/issues/22295))
 * resource/aws_sagemaker_app: Add `lifecycle_config_arn` and `sagemaker_image_version_arn` arguments to `resource_spec` configuration block ([#21508](https://github.com/hashicorp/terraform-provider-aws/issues/21508))
 * resource/aws_sagemaker_domain: Add `lifecycle_config_arn` and `sagemaker_image_version_arn` arguments to `default_resource_spec` configuration block ([#21508](https://github.com/hashicorp/terraform-provider-aws/issues/21508))
 * resource/aws_sagemaker_user_profile: Add `lifecycle_config_arn` and `sagemaker_image_version_arn` arguments to `default_resource_spec` configuration block ([#21508](https://github.com/hashicorp/terraform-provider-aws/issues/21508))
