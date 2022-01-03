@@ -2207,9 +2207,16 @@ func sweepIPAMScopes(region string) error {
 		}
 
 		for _, v := range page.IpamScopes {
-			r := ResourceVPCIpamPool()
+			scopeID := aws.StringValue(v.IpamScopeId)
+
+			if aws.BoolValue(v.IsDefault) {
+				log.Printf("[DEBUG] Skipping default IPAM Scope (%s)", scopeID)
+				continue
+			}
+
+			r := ResourceVPCIpamScope()
 			d := r.Data(nil)
-			d.SetId(aws.StringValue(v.IpamScopeId))
+			d.SetId(scopeID)
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
