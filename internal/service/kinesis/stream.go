@@ -576,6 +576,10 @@ func FindStreamByName(conn *kinesis.Kinesis, name string) (*kinesis.StreamDescri
 		}
 	}
 
+	if err != nil {
+		return nil, err
+	}
+
 	if output == nil || output.StreamDescriptionSummary == nil {
 		return nil, tfresource.NewEmptyResultError(input)
 	}
