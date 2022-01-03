@@ -3,6 +3,7 @@ package codebuild
 import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/codebuild"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
@@ -51,4 +52,37 @@ func FindProjectByARN(conn *codebuild.CodeBuild, arn string) (*codebuild.Project
 	}
 
 	return output.Projects[0], nil
+}
+
+func FindSourceCredentialByARN(conn *codebuild.CodeBuild, arn string) (*codebuild.SourceCredentialsInfo, error) {
+	var result *codebuild.SourceCredentialsInfo
+	input := &codebuild.ListSourceCredentialsInput{}
+	output, err := conn.ListSourceCredentials(input)
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	for _, sourceCred := range output.SourceCredentialsInfos {
+		if sourceCred == nil {
+			continue
+		}
+
+		if aws.StringValue(sourceCred.Arn) == arn {
+			result = sourceCred
+			break
+		}
+	}
+
+	if result == nil {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	return result, nil
 }
