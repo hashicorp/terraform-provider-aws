@@ -28,9 +28,6 @@ func TestAccVPCIpamPreviewNextCidr_ipv4Basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "netmask_length", netmaskLength),
 				),
 			},
-			// Errors with the import
-			// vpc_ipam_preview_next_cidr_test.go:<line number>: Step 2/2 error running import: exit status 1
-			// Error: Error allocating cidr from IPAM pool (): InvalidParameterValue: The allocation size is too big for the pool.
 		},
 	})
 }
@@ -58,9 +55,6 @@ func TestAccVPCIpamPreviewNextCidr_ipv4Basic(t *testing.T) {
 // 					resource.TestCheckResourceAttr(resourceName, "netmask_length", netmaskLength),
 // 				),
 // 			},
-// 			// Errors with the import
-// 			// vpc_ipam_preview_next_cidr_test.go:<line number>: Step 2/2 error running import: exit status 1
-// 			// Error: Error allocating cidr from IPAM pool (): InvalidParameterValue: The allocation size is too big for the pool.
 // 		},
 // 	})
 // }

@@ -19,12 +19,6 @@ func ResourceVPCIpamPreviewNextCidr() *schema.Resource {
 		Create: ResourceVPCIpamPreviewNextCidrCreate,
 		Read:   ResourceVPCIpamPreviewNextCidrRead,
 		Delete: schema.Noop,
-		// Having imports results in errors
-		// 	error running import: exit status 1
-		// 	Error: Error allocating cidr from IPAM pool (): InvalidParameterValue: The allocation size is too big for the pool.
-		// Importer: &schema.ResourceImporter{
-		// 	State: schema.ImportStatePassthrough,
-		// },
 		Schema: map[string]*schema.Schema{
 			"cidr": {
 				Type:     schema.TypeString,
@@ -61,7 +55,6 @@ func ResourceVPCIpamPreviewNextCidr() *schema.Resource {
 				//   - If the DefaultNetmaskLength allocation rule is set on the pool,
 				//   you can specify either the NetmaskLength or the CIDR and the
 				//   DefaultNetmaskLength allocation rule will be ignored.
-				// since there is no attribute to check if the rule is set, this attribute is required
 				Type:         schema.TypeInt,
 				Optional:     true,
 				ForceNew:     true,
