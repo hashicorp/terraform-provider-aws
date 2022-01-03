@@ -32,6 +32,7 @@ func TestAccKinesisStream_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisStreamExists(resourceName, &stream),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "kinesis", fmt.Sprintf("stream/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "consumer_count", "0"),
 					resource.TestCheckResourceAttr(resourceName, "encryption_type", "NONE"),
 					resource.TestCheckResourceAttr(resourceName, "enforce_consumer_deletion", "false"),
 					resource.TestCheckResourceAttr(resourceName, "kms_key_id", ""),
@@ -352,7 +353,7 @@ func TestAccKinesisStream_enforceConsumerDeletion(t *testing.T) {
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateId:           rName,
-				ImportStateVerifyIgnore: []string{"enforce_consumer_deletion"},
+				ImportStateVerifyIgnore: []string{"consumer_count", "enforce_consumer_deletion"},
 			},
 		},
 	})

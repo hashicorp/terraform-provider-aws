@@ -60,9 +60,9 @@ Amazon has guidelines for specifying the Stream size that should be referenced w
 In addition to all arguments above, the following attributes are exported:
 
 * `id` - The unique Stream id
-* `name` - The unique Stream name
-* `shard_count` - The count of Shards for this Stream
 * `arn` - The Amazon Resource Name (ARN) specifying the Stream (same as `id`)
+* `consumer_count` - The number of enhanced fan-out consumers registered with the Stream
+* `shard_count` - The number of open shards in the Stream
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://www.terraform.io/docs/providers/aws/index.html#default_tags-configuration-block).
 
 ## Timeouts

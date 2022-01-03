@@ -77,6 +77,10 @@ func ResourceStream() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
+			"consumer_count": {
+				Type:     schema.TypeInt,
+				Optional: true,
+			},
 			"encryption_type": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -265,6 +269,7 @@ func resourceStreamRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	d.Set("arn", stream.StreamARN)
+	d.Set("consumer_count", stream.ConsumerCount)
 	d.Set("encryption_type", stream.EncryptionType)
 	d.Set("kms_key_id", stream.KeyId)
 	d.Set("name", stream.StreamName)
