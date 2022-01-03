@@ -28,7 +28,7 @@ func dxVirtualInterfaceRead(id string, conn *directconnect.DirectConnect) (*dire
 func dxVirtualInterfaceUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DirectConnectConn
 
-	if d.HasChanges("mtu") {
+	if d.HasChange("mtu") {
 		req := &directconnect.UpdateVirtualInterfaceAttributesInput{
 			Mtu:                aws.Int64(int64(d.Get("mtu").(int))),
 			VirtualInterfaceId: aws.String(d.Id()),
