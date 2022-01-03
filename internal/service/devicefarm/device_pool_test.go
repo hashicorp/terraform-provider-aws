@@ -16,7 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func TestAccAWSDeviceFarmDevicePool_basic(t *testing.T) {
+func TestAccDeviceFarmDevicePool_basic(t *testing.T) {
 	var pool devicefarm.DevicePool
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rNameUpdated := sdkacctest.RandomWithPrefix("tf-acc-test-updated")
@@ -62,7 +62,7 @@ func TestAccAWSDeviceFarmDevicePool_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSDeviceFarmDevicePool_tags(t *testing.T) {
+func TestAccDeviceFarmDevicePool_tags(t *testing.T) {
 	var pool devicefarm.DevicePool
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_devicefarm_device_pool.test"
@@ -113,7 +113,7 @@ func TestAccAWSDeviceFarmDevicePool_tags(t *testing.T) {
 	})
 }
 
-func TestAccAWSDeviceFarmDevicePool_disappears(t *testing.T) {
+func TestAccDeviceFarmDevicePool_disappears(t *testing.T) {
 	var pool devicefarm.DevicePool
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_devicefarm_device_pool.test"
@@ -143,7 +143,7 @@ func TestAccAWSDeviceFarmDevicePool_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSDeviceFarmDevicePool_disappears_project(t *testing.T) {
+func TestAccDeviceFarmDevicePool_disappears_project(t *testing.T) {
 	var pool devicefarm.DevicePool
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_devicefarm_device_pool.test"
