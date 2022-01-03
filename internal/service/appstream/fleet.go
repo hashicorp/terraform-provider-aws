@@ -241,6 +241,10 @@ func resourceFleetCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		input.MaxUserDurationInSeconds = aws.Int64(int64(v.(int)))
 	}
 
+	if v, ok := d.GetOk("stream_view"); ok {
+		input.StreamView = aws.String(v.(string))
+	}
+
 	if v, ok := d.GetOk("vpc_config"); ok {
 		input.VpcConfig = expandVpcConfig(v.([]interface{}))
 	}
