@@ -1045,9 +1045,9 @@ resource "aws_vpc" "test" {
 func testAccVpcConfigAssignGeneratedIpv6CidrBlockWithBorder(assignGeneratedIpv6CidrBlock bool, networkBorderGroup string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
-  assign_generated_ipv6_cidr_block 		= %t
-  cidr_block                      		 = "10.1.0.0/16"
-  ipv6_cidr_block_network_border_group	 = %q
+  assign_generated_ipv6_cidr_block     = %t
+  cidr_block                           = "10.1.0.0/16"
+  ipv6_cidr_block_network_border_group = %q
 
   tags = {
     Name = "terraform-testacc-vpc-ipv6-with-border-group"
