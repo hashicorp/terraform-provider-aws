@@ -1049,11 +1049,11 @@ func testAccCheckSnapshotExists(snapshotName string) resource.TestCheckFunc {
 func testAccClusterConfigBaseNetwork() string {
 	return acctest.ConfigCompose(
 		acctest.ConfigVpcWithSubnets(2),
-		fmt.Sprintf(`
+		`
 resource "aws_memorydb_subnet_group" "test" {
   subnet_ids = aws_subnet.test.*.id
 }
-`),
+`,
 	)
 }
 
@@ -1120,7 +1120,7 @@ resource "aws_memorydb_cluster" "test" {
 func testAccClusterConfig_withNoName() string {
 	return acctest.ConfigCompose(
 		testAccClusterConfigBaseNetwork(),
-		fmt.Sprintf(`
+		`
 resource "aws_memorydb_cluster" "test" {
   acl_name               = "open-access"
   node_type              = "db.t4g.small"
@@ -1128,23 +1128,23 @@ resource "aws_memorydb_cluster" "test" {
   num_shards             = 1
   subnet_group_name      = aws_memorydb_subnet_group.test.id
 }
-`),
+`,
 	)
 }
 
-func testAccClusterConfig_withNamePrefix(rNamePrefix string) string {
+func testAccClusterConfig_withNamePrefix(prefix string) string {
 	return acctest.ConfigCompose(
 		testAccClusterConfigBaseNetwork(),
 		fmt.Sprintf(`
 resource "aws_memorydb_cluster" "test" {
   acl_name               = "open-access"
-  name_prefix            = %[1]q 
+  name_prefix            = %[1]q
   node_type              = "db.t4g.small"
   num_replicas_per_shard = 0
   num_shards             = 1
   subnet_group_name      = aws_memorydb_subnet_group.test.id
 }
-`, rNamePrefix),
+`, prefix),
 	)
 }
 
@@ -1320,11 +1320,11 @@ func testAccClusterConfig_withNumShards(rName string, numShards int) string {
 		testAccClusterConfigBaseNetwork(),
 		fmt.Sprintf(`
 resource "aws_memorydb_cluster" "test" {
-  acl_name           = "open-access"
-  name               = %[1]q
-  node_type          = "db.t4g.small"
-  num_shards         = %[2]d
-  subnet_group_name  = aws_memorydb_subnet_group.test.id
+  acl_name          = "open-access"
+  name              = %[1]q
+  node_type         = "db.t4g.small"
+  num_shards        = %[2]d
+  subnet_group_name = aws_memorydb_subnet_group.test.id
 }
 `, rName, numShards),
 	)

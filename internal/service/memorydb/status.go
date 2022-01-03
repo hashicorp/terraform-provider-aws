@@ -27,7 +27,6 @@ const (
 	clusterSecurityGroupStatusModifying = "modifying"
 
 	clusterShardStatusAvailable = "available"
-	clusterShardStatusUpdating  = "updating"
 
 	clusterSnsTopicStatusActive   = "ACTIVE"
 	clusterSnsTopicStatusInactive = "INACTIVE"
