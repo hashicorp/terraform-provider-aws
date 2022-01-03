@@ -34,11 +34,11 @@ ENHANCEMENTS:
 * resource/aws_kinesis_firehose_delivery_stream: Add `error_output_prefix` argument to `extended_s3_configuration` `s3_backup_configuration` configuration block ([#11229](https://github.com/hashicorp/terraform-provider-aws/issues/11229))
 * resource/aws_kinesis_firehose_delivery_stream: Add `error_output_prefix` argument to `redshift_configuration` `s3_backup_configuration` configuration block ([#11229](https://github.com/hashicorp/terraform-provider-aws/issues/11229))
 * resource/aws_kinesis_firehose_delivery_stream: Add `error_output_prefix` argument to `s3_configuration` configuration block ([#11229](https://github.com/hashicorp/terraform-provider-aws/issues/11229))
+* resource/aws_sagemaker_app: Add `lifecycle_config_arn` and `sagemaker_image_version_arn` arguments to `resource_spec` configuration block ([#21508](https://github.com/hashicorp/terraform-provider-aws/issues/21508))
+* resource/aws_sagemaker_domain: Add `lifecycle_config_arn` and `sagemaker_image_version_arn` arguments to `default_resource_spec` configuration block ([#21508](https://github.com/hashicorp/terraform-provider-aws/issues/21508))
+* resource/aws_sagemaker_user_profile: Add `lifecycle_config_arn` and `sagemaker_image_version_arn` arguments to `default_resource_spec` configuration block ([#21508](https://github.com/hashicorp/terraform-provider-aws/issues/21508))
 * resource/aws_subnet: Add `enable_dns64`, `ipv6_native`, `enable_resource_name_dns_aaaa_record_on_launch`, `enable_resource_name_dns_a_record_on_launch` and `private_dns_hostname_type_on_launch` arguments ([#22339](https://github.com/hashicorp/terraform-provider-aws/issues/22339))
 * resource/aws_timestreamwrite_table: Add `magnetic_store_write_properties` argument. ([#22363](https://github.com/hashicorp/terraform-provider-aws/issues/22363))
-* resource/sagemaker_app: Add `lifecycle_config_arn` and `sagemaker_image_version_arn` arguments to `resource_spec` configuration block ([#21508](https://github.com/hashicorp/terraform-provider-aws/issues/21508))
-* resource/sagemaker_domain: Add `lifecycle_config_arn` and `sagemaker_image_version_arn` arguments to `default_resource_spec` configuration block ([#21508](https://github.com/hashicorp/terraform-provider-aws/issues/21508))
-* resource/sagemaker_user_profile: Add `lifecycle_config_arn` and `sagemaker_image_version_arn` arguments to `default_resource_spec` configuration block ([#21508](https://github.com/hashicorp/terraform-provider-aws/issues/21508))
 
 BUG FIXES:
 
