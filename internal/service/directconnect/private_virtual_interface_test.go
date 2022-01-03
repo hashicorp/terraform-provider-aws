@@ -239,13 +239,13 @@ resource "aws_vpn_gateway" "test" {
 func testAccDxPrivateVirtualInterfaceConfig_basic(cid, rName string, bgpAsn, vlan int) string {
 	return testAccDxPrivateVirtualInterfaceConfig_vpnGateway(rName) + fmt.Sprintf(`
 resource "aws_dx_private_virtual_interface" "test" {
-  address_family = "ipv4"
-  bgp_asn        = %[3]d
-  connection_id  = %[1]q
-  name           = %[2]q
+  address_family   = "ipv4"
+  bgp_asn          = %[3]d
+  connection_id    = %[1]q
+  name             = %[2]q
   sitelink_enabled = %[5]t
-  vlan           = %[4]d
-  vpn_gateway_id = aws_vpn_gateway.test.id
+  vlan             = %[4]d
+  vpn_gateway_id   = aws_vpn_gateway.test.id
 }
 `, cid, rName, bgpAsn, vlan, true)
 }
@@ -253,14 +253,14 @@ resource "aws_dx_private_virtual_interface" "test" {
 func testAccDxPrivateVirtualInterfaceConfig_updated(cid, rName string, bgpAsn, vlan int) string {
 	return testAccDxPrivateVirtualInterfaceConfig_vpnGateway(rName) + fmt.Sprintf(`
 resource "aws_dx_private_virtual_interface" "test" {
-  address_family = "ipv4"
-  bgp_asn        = %[3]d
-  connection_id  = %[1]q
-  mtu            = 9001
-  name           = %[2]q
+  address_family   = "ipv4"
+  bgp_asn          = %[3]d
+  connection_id    = %[1]q
+  mtu              = 9001
+  name             = %[2]q
   sitelink_enabled = %[5]t
-  vlan           = %[4]d
-  vpn_gateway_id = aws_vpn_gateway.test.id
+  vlan             = %[4]d
+  vpn_gateway_id   = aws_vpn_gateway.test.id
 }
 `, cid, rName, bgpAsn, vlan, false)
 }
