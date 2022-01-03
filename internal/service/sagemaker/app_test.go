@@ -80,6 +80,38 @@ func testAccApp_resourceSpec(t *testing.T) {
 	})
 }
 
+func testAccApp_resourceSpecLifecycle(t *testing.T) {
+	var app sagemaker.DescribeAppOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	uName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_sagemaker_app.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckAppDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAppResourceSpecLifecycleConfig(rName, uName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAppExists(resourceName, &app),
+					resource.TestCheckResourceAttr(resourceName, "app_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "resource_spec.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "resource_spec.0.instance_type", "system"),
+					resource.TestCheckResourceAttrSet(resourceName, "resource_spec.0.sagemaker_image_arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "resource_spec.0.lifecycle_config_arn", "aws_sagemaker_studio_lifecycle_config.test", "arn"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccApp_tags(t *testing.T) {
 	var app sagemaker.DescribeAppOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -333,4 +365,44 @@ resource "aws_sagemaker_app" "test" {
   }
 }
 `, rName)
+}
+
+func testAccAppResourceSpecLifecycleConfig(rName, uName string) string {
+	return testAccAppBaseConfig(rName) + fmt.Sprintf(`
+resource "aws_sagemaker_studio_lifecycle_config" "test" {
+  studio_lifecycle_config_name     = %[1]q
+  studio_lifecycle_config_app_type = "JupyterServer"
+  studio_lifecycle_config_content  = base64encode("echo Hello")
+}
+
+resource "aws_sagemaker_user_profile" "lifecycletest" {
+  domain_id         = aws_sagemaker_domain.test.id
+  user_profile_name = %[2]q
+
+  user_settings {
+    execution_role = aws_iam_role.test.arn
+
+    jupyter_server_app_settings {
+      default_resource_spec {
+        instance_type        = "system"
+        lifecycle_config_arn = aws_sagemaker_studio_lifecycle_config.test.arn
+      }
+
+      lifecycle_config_arns = [aws_sagemaker_studio_lifecycle_config.test.arn]
+    }
+  }
+}
+
+resource "aws_sagemaker_app" "test" {
+  domain_id         = aws_sagemaker_domain.test.id
+  user_profile_name = aws_sagemaker_user_profile.lifecycletest.user_profile_name
+  app_name          = %[1]q
+  app_type          = "JupyterServer"
+
+  resource_spec {
+    instance_type        = "system"
+    lifecycle_config_arn = aws_sagemaker_studio_lifecycle_config.test.arn
+  }
+}
+`, rName, uName)
 }

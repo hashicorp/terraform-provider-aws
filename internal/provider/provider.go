@@ -616,6 +616,7 @@ func Provider() *schema.Provider {
 			"aws_organizations_delegated_services":       organizations.DataSourceDelegatedServices(),
 			"aws_organizations_organization":             organizations.DataSourceOrganization(),
 			"aws_organizations_organizational_units":     organizations.DataSourceOrganizationalUnits(),
+			"aws_organizations_resource_tags":            organizations.DataSourceResourceTags(),
 
 			"aws_outposts_outpost":                outposts.DataSourceOutpost(),
 			"aws_outposts_outpost_instance_type":  outposts.DataSourceOutpostInstanceType(),
@@ -977,6 +978,7 @@ func Provider() *schema.Provider {
 
 			"aws_datasync_agent":                            datasync.ResourceAgent(),
 			"aws_datasync_location_efs":                     datasync.ResourceLocationEFS(),
+			"aws_datasync_location_fsx_lustre_file_system":  datasync.ResourceLocationFSxLustreFileSystem(),
 			"aws_datasync_location_fsx_windows_file_system": datasync.ResourceLocationFSxWindowsFileSystem(),
 			"aws_datasync_location_hdfs":                    datasync.ResourceLocationHdfs(),
 			"aws_datasync_location_nfs":                     datasync.ResourceLocationNFS(),

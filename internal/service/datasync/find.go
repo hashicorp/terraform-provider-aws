@@ -82,3 +82,28 @@ func FindLocationHdfsByARN(conn *datasync.DataSync, arn string) (*datasync.Descr
 
 	return output, nil
 }
+
+func FindFsxLustreLocationByARN(conn *datasync.DataSync, arn string) (*datasync.DescribeLocationFsxLustreOutput, error) {
+	input := &datasync.DescribeLocationFsxLustreInput{
+		LocationArn: aws.String(arn),
+	}
+
+	output, err := conn.DescribeLocationFsxLustre(input)
+
+	if tfawserr.ErrMessageContains(err, datasync.ErrCodeInvalidRequestException, "not found") {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
+}
