@@ -10,107 +10,47 @@ import (
 )
 
 const (
-	ErrCodeDependencyViolation          = "DependencyViolation"
-	ErrCodeGatewayNotAttached           = "Gateway.NotAttached"
-	ErrCodeInvalidAssociationIDNotFound = "InvalidAssociationID.NotFound"
-	ErrCodeInvalidAttachmentIDNotFound  = "InvalidAttachmentID.NotFound"
-	ErrCodeInvalidKeyPairNotFound       = "InvalidKeyPair.NotFound"
-	ErrCodeInvalidParameter             = "InvalidParameter"
-	ErrCodeInvalidParameterException    = "InvalidParameterException"
-	ErrCodeInvalidParameterValue        = "InvalidParameterValue"
-)
-
-const (
-	ErrCodeInvalidCarrierGatewayIDNotFound = "InvalidCarrierGatewayID.NotFound"
-)
-
-const (
-	ErrCodeClientInvalidHostIDNotFound = "Client.InvalidHostID.NotFound"
-	ErrCodeInvalidHostIDNotFound       = "InvalidHostID.NotFound"
-)
-
-const (
-	ErrCodeInvalidInternetGatewayIDNotFound = "InvalidInternetGatewayID.NotFound"
-)
-
-const (
-	ErrCodeInvalidNetworkInterfaceIDNotFound = "InvalidNetworkInterfaceID.NotFound"
-)
-
-const (
-	ErrCodeInvalidPrefixListIDNotFound = "InvalidPrefixListID.NotFound"
-)
-
-const (
-	ErrCodeInvalidRouteNotFound        = "InvalidRoute.NotFound"
-	ErrCodeInvalidRouteTableIdNotFound = "InvalidRouteTableId.NotFound"
-	ErrCodeInvalidRouteTableIDNotFound = "InvalidRouteTableID.NotFound"
-)
-
-const (
-	ErrCodeInvalidTransitGatewayIDNotFound = "InvalidTransitGatewayID.NotFound"
-)
-
-const (
-	ErrCodeClientVPNEndpointIdNotFound        = "InvalidClientVpnEndpointId.NotFound"
-	ErrCodeClientVPNAuthorizationRuleNotFound = "InvalidClientVpnEndpointAuthorizationRuleNotFound"
-	ErrCodeClientVPNAssociationIdNotFound     = "InvalidClientVpnAssociationId.NotFound"
-	ErrCodeClientVPNRouteNotFound             = "InvalidClientVpnRouteNotFound"
-)
-
-const (
-	ErrCodeInvalidInstanceIDNotFound = "InvalidInstanceID.NotFound"
-)
-
-const (
-	InvalidSecurityGroupIDNotFound = "InvalidSecurityGroupID.NotFound"
-	InvalidGroupNotFound           = "InvalidGroup.NotFound"
-)
-
-const (
-	ErrCodeInvalidSpotInstanceRequestIDNotFound = "InvalidSpotInstanceRequestID.NotFound"
-)
-
-const (
-	ErrCodeInvalidSubnetIdNotFound = "InvalidSubnetId.NotFound"
-	ErrCodeInvalidSubnetIDNotFound = "InvalidSubnetID.NotFound"
-)
-
-const (
-	ErrCodeInvalidVPCIDNotFound = "InvalidVpcID.NotFound"
-)
-
-const (
-	ErrCodeInvalidVPCEndpointIdNotFound        = "InvalidVpcEndpointId.NotFound"
-	ErrCodeInvalidVPCEndpointNotFound          = "InvalidVpcEndpoint.NotFound"
-	ErrCodeInvalidVPCEndpointServiceIdNotFound = "InvalidVpcEndpointServiceId.NotFound"
-)
-
-const (
-	ErrCodeInvalidVPCPeeringConnectionIDNotFound = "InvalidVpcPeeringConnectionID.NotFound"
-)
-
-const (
-	InvalidVPNGatewayAttachmentNotFound = "InvalidVpnGatewayAttachment.NotFound"
-	InvalidVPNGatewayIDNotFound         = "InvalidVpnGatewayID.NotFound"
-)
-
-const (
-	ErrCodeInvalidPermissionDuplicate = "InvalidPermission.Duplicate"
-	ErrCodeInvalidPermissionMalformed = "InvalidPermission.Malformed"
-	ErrCodeInvalidPermissionNotFound  = "InvalidPermission.NotFound"
-)
-
-const (
-	ErrCodeInvalidFlowLogIdNotFound = "InvalidFlowLogId.NotFound"
-)
-
-const (
-	ErrCodeInvalidPlacementGroupUnknown = "InvalidPlacementGroup.Unknown"
-)
-
-const (
+	ErrCodeClientInvalidHostIDNotFound            = "Client.InvalidHostID.NotFound"
+	ErrCodeClientVpnAssociationIdNotFound         = "InvalidClientVpnAssociationId.NotFound"
+	ErrCodeClientVpnAuthorizationRuleNotFound     = "InvalidClientVpnEndpointAuthorizationRuleNotFound"
+	ErrCodeClientVpnEndpointIdNotFound            = "InvalidClientVpnEndpointId.NotFound"
+	ErrCodeClientVpnRouteNotFound                 = "InvalidClientVpnRouteNotFound"
+	ErrCodeDependencyViolation                    = "DependencyViolation"
+	ErrCodeGatewayNotAttached                     = "Gateway.NotAttached"
+	ErrCodeInvalidAssociationIDNotFound           = "InvalidAssociationID.NotFound"
+	ErrCodeInvalidAttachmentIDNotFound            = "InvalidAttachmentID.NotFound"
+	ErrCodeInvalidCarrierGatewayIDNotFound        = "InvalidCarrierGatewayID.NotFound"
+	ErrCodeInvalidFlowLogIdNotFound               = "InvalidFlowLogId.NotFound"
+	ErrCodeInvalidGroupNotFound                   = "InvalidGroup.NotFound"
+	ErrCodeInvalidHostIDNotFound                  = "InvalidHostID.NotFound"
+	ErrCodeInvalidInstanceIDNotFound              = "InvalidInstanceID.NotFound"
+	ErrCodeInvalidInternetGatewayIDNotFound       = "InvalidInternetGatewayID.NotFound"
+	ErrCodeInvalidKeyPairNotFound                 = "InvalidKeyPair.NotFound"
+	ErrCodeInvalidNetworkInterfaceIDNotFound      = "InvalidNetworkInterfaceID.NotFound"
+	ErrCodeInvalidParameter                       = "InvalidParameter"
+	ErrCodeInvalidParameterException              = "InvalidParameterException"
+	ErrCodeInvalidParameterValue                  = "InvalidParameterValue"
+	ErrCodeInvalidPermissionDuplicate             = "InvalidPermission.Duplicate"
+	ErrCodeInvalidPermissionMalformed             = "InvalidPermission.Malformed"
+	ErrCodeInvalidPermissionNotFound              = "InvalidPermission.NotFound"
+	ErrCodeInvalidPlacementGroupUnknown           = "InvalidPlacementGroup.Unknown"
+	ErrCodeInvalidPrefixListIDNotFound            = "InvalidPrefixListID.NotFound"
+	ErrCodeInvalidRouteNotFound                   = "InvalidRoute.NotFound"
+	ErrCodeInvalidRouteTableIDNotFound            = "InvalidRouteTableID.NotFound"
+	ErrCodeInvalidRouteTableIdNotFound            = "InvalidRouteTableId.NotFound"
+	ErrCodeInvalidSecurityGroupIDNotFound         = "InvalidSecurityGroupID.NotFound"
+	ErrCodeInvalidSpotInstanceRequestIDNotFound   = "InvalidSpotInstanceRequestID.NotFound"
 	ErrCodeInvalidSubnetCidrReservationIDNotFound = "InvalidSubnetCidrReservationID.NotFound"
+	ErrCodeInvalidSubnetIDNotFound                = "InvalidSubnetID.NotFound"
+	ErrCodeInvalidSubnetIdNotFound                = "InvalidSubnetId.NotFound"
+	ErrCodeInvalidTransitGatewayIDNotFound        = "InvalidTransitGatewayID.NotFound"
+	ErrCodeInvalidVpcEndpointIdNotFound           = "InvalidVpcEndpointId.NotFound"
+	ErrCodeInvalidVpcEndpointNotFound             = "InvalidVpcEndpoint.NotFound"
+	ErrCodeInvalidVpcEndpointServiceIdNotFound    = "InvalidVpcEndpointServiceId.NotFound"
+	ErrCodeInvalidVpcIDNotFound                   = "InvalidVpcID.NotFound"
+	ErrCodeInvalidVpcPeeringConnectionIDNotFound  = "InvalidVpcPeeringConnectionID.NotFound"
+	ErrCodeInvalidVpnGatewayAttachmentNotFound    = "InvalidVpnGatewayAttachment.NotFound"
+	ErrCodeInvalidVpnGatewayIDNotFound            = "InvalidVpnGatewayID.NotFound"
 )
 
 func UnsuccessfulItemError(apiObject *ec2.UnsuccessfulItemError) error {

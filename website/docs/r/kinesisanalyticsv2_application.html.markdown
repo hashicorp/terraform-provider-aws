@@ -483,6 +483,15 @@ In addition to all arguments above, the following attributes are exported:
 * `version_id` - The current application version. Kinesis Data Analytics updates the `version_id` each time the application is updated.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://www.terraform.io/docs/providers/aws/index.html#default_tags-configuration-block).
 
+## Timeouts
+
+`aws_kinesisanalyticsv2_application` provides the following
+[Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
+
+- `create` - (Default `10 minutes`) Used for Application creation
+- `update` - (Default `10 minutes`) Used for Application modifications and snapshotting
+- `delete` - (Default `10 minutes`) Used for Application deletion
+
 ## Import
 
 `aws_kinesisanalyticsv2_application` can be imported by using the application ARN, e.g.,

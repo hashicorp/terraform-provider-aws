@@ -70,7 +70,7 @@ func resourceVPNGatewayAttachmentRead(d *schema.ResourceData, meta interface{}) 
 
 	vpcAttachment, err := FindVPNGatewayVPCAttachment(conn, vgwId, vpcId)
 
-	if tfawserr.ErrMessageContains(err, InvalidVPNGatewayIDNotFound, "") {
+	if tfawserr.ErrMessageContains(err, ErrCodeInvalidVpnGatewayIDNotFound, "") {
 		log.Printf("[WARN] VPN Gateway (%s) Attachment (%s) not found, removing from state", vgwId, vpcId)
 		d.SetId("")
 		return nil
@@ -101,7 +101,7 @@ func resourceVPNGatewayAttachmentDelete(d *schema.ResourceData, meta interface{}
 		VpnGatewayId: aws.String(vgwId),
 	})
 
-	if tfawserr.ErrMessageContains(err, InvalidVPNGatewayAttachmentNotFound, "") || tfawserr.ErrMessageContains(err, InvalidVPNGatewayIDNotFound, "") {
+	if tfawserr.ErrMessageContains(err, ErrCodeInvalidVpnGatewayAttachmentNotFound, "") || tfawserr.ErrMessageContains(err, ErrCodeInvalidVpnGatewayIDNotFound, "") {
 		return nil
 	}
 

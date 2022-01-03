@@ -89,7 +89,7 @@ func StatusClientVPNEndpoint(conn *ec2.EC2, endpointID string) resource.StateRef
 		result, err := conn.DescribeClientVpnEndpoints(&ec2.DescribeClientVpnEndpointsInput{
 			ClientVpnEndpointIds: aws.StringSlice([]string{endpointID}),
 		})
-		if tfawserr.ErrCodeEquals(err, ErrCodeClientVPNEndpointIdNotFound) {
+		if tfawserr.ErrCodeEquals(err, ErrCodeClientVpnEndpointIdNotFound) {
 			return nil, ClientVPNEndpointStatusNotFound, nil
 		}
 		if err != nil {
@@ -119,7 +119,7 @@ const (
 func StatusClientVPNAuthorizationRule(conn *ec2.EC2, authorizationRuleID string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		result, err := FindClientVPNAuthorizationRuleByID(conn, authorizationRuleID)
-		if tfawserr.ErrCodeEquals(err, ErrCodeClientVPNAuthorizationRuleNotFound) {
+		if tfawserr.ErrCodeEquals(err, ErrCodeClientVpnAuthorizationRuleNotFound) {
 			return nil, ClientVPNAuthorizationRuleStatusNotFound, nil
 		}
 		if err != nil {
@@ -156,7 +156,7 @@ func StatusClientVPNNetworkAssociation(conn *ec2.EC2, cvnaID string, cvepID stri
 			AssociationIds:      []*string{aws.String(cvnaID)},
 		})
 
-		if tfawserr.ErrCodeEquals(err, ErrCodeClientVPNAssociationIdNotFound) || tfawserr.ErrCodeEquals(err, ErrCodeClientVPNEndpointIdNotFound) {
+		if tfawserr.ErrCodeEquals(err, ErrCodeClientVpnAssociationIdNotFound) || tfawserr.ErrCodeEquals(err, ErrCodeClientVpnEndpointIdNotFound) {
 			return nil, ClientVPNNetworkAssociationStatusNotFound, nil
 		}
 		if err != nil {
@@ -186,7 +186,7 @@ const (
 func StatusClientVPNRoute(conn *ec2.EC2, routeID string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		result, err := FindClientVPNRouteByID(conn, routeID)
-		if tfawserr.ErrCodeEquals(err, ErrCodeClientVPNRouteNotFound) {
+		if tfawserr.ErrCodeEquals(err, ErrCodeClientVpnRouteNotFound) {
 			return nil, ClientVPNRouteStatusNotFound, nil
 		}
 		if err != nil {
@@ -323,45 +323,115 @@ func StatusSecurityGroup(conn *ec2.EC2, id string) resource.StateRefreshFunc {
 	}
 }
 
-// StatusSubnetMapCustomerOwnedIPOnLaunch fetches the Subnet and its MapCustomerOwnedIpOnLaunch
-func StatusSubnetMapCustomerOwnedIPOnLaunch(conn *ec2.EC2, id string) resource.StateRefreshFunc {
+func StatusSubnetState(conn *ec2.EC2, id string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		subnet, err := FindSubnetByID(conn, id)
+		output, err := FindSubnetByID(conn, id)
 
-		if tfawserr.ErrCodeEquals(err, ErrCodeInvalidSubnetIDNotFound) {
-			return nil, "false", nil
+		if tfresource.NotFound(err) {
+			return nil, "", nil
 		}
 
 		if err != nil {
-			return nil, "false", err
+			return nil, "", err
 		}
 
-		if subnet == nil {
-			return nil, "false", nil
-		}
-
-		return subnet, strconv.FormatBool(aws.BoolValue(subnet.MapCustomerOwnedIpOnLaunch)), nil
+		return output, aws.StringValue(output.State), nil
 	}
 }
 
-// StatusSubnetMapPublicIPOnLaunch fetches the Subnet and its MapPublicIpOnLaunch
-func StatusSubnetMapPublicIPOnLaunch(conn *ec2.EC2, id string) resource.StateRefreshFunc {
+func StatusSubnetIPv6CIDRBlockAssociationState(conn *ec2.EC2, id string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		subnet, err := FindSubnetByID(conn, id)
+		output, err := FindSubnetIPv6CIDRBlockAssociationByID(conn, id)
 
-		if tfawserr.ErrCodeEquals(err, ErrCodeInvalidSubnetIDNotFound) {
-			return nil, "false", nil
+		if tfresource.NotFound(err) {
+			return nil, "", nil
 		}
 
 		if err != nil {
-			return nil, "false", err
+			return nil, "", err
 		}
 
-		if subnet == nil {
-			return nil, "false", nil
+		return output.Ipv6CidrBlockState, aws.StringValue(output.Ipv6CidrBlockState.State), nil
+	}
+}
+
+func StatusSubnetMapCustomerOwnedIPOnLaunch(conn *ec2.EC2, id string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := FindSubnetByID(conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
 		}
 
-		return subnet, strconv.FormatBool(aws.BoolValue(subnet.MapPublicIpOnLaunch)), nil
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, strconv.FormatBool(aws.BoolValue(output.MapCustomerOwnedIpOnLaunch)), nil
+	}
+}
+
+func StatusSubnetEnableDns64(conn *ec2.EC2, id string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := FindSubnetByID(conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, strconv.FormatBool(aws.BoolValue(output.EnableDns64)), nil
+	}
+}
+
+func StatusSubnetEnableResourceNameDnsAAAARecordOnLaunch(conn *ec2.EC2, id string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := FindSubnetByID(conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, strconv.FormatBool(aws.BoolValue(output.PrivateDnsNameOptionsOnLaunch.EnableResourceNameDnsAAAARecord)), nil
+	}
+}
+
+func StatusSubnetEnableResourceNameDnsARecordOnLaunch(conn *ec2.EC2, id string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := FindSubnetByID(conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, strconv.FormatBool(aws.BoolValue(output.PrivateDnsNameOptionsOnLaunch.EnableResourceNameDnsARecord)), nil
+	}
+}
+
+func StatusSubnetMapPublicIPOnLaunch(conn *ec2.EC2, id string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := FindSubnetByID(conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, strconv.FormatBool(aws.BoolValue(output.MapPublicIpOnLaunch)), nil
 	}
 }
 
@@ -402,7 +472,7 @@ func StatusVPCAttribute(conn *ec2.EC2, id string, attribute string) resource.Sta
 	return func() (interface{}, string, error) {
 		attributeValue, err := FindVPCAttribute(conn, id, attribute)
 
-		if tfawserr.ErrCodeEquals(err, ErrCodeInvalidVPCIDNotFound) {
+		if tfawserr.ErrCodeEquals(err, ErrCodeInvalidVpcIDNotFound) {
 			return nil, "", nil
 		}
 
@@ -427,7 +497,7 @@ const (
 func StatusVPCPeeringConnection(conn *ec2.EC2, vpcPeeringConnectionID string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		vpcPeeringConnection, err := FindVPCPeeringConnectionByID(conn, vpcPeeringConnectionID)
-		if tfawserr.ErrCodeEquals(err, ErrCodeInvalidVPCPeeringConnectionIDNotFound) {
+		if tfawserr.ErrCodeEquals(err, ErrCodeInvalidVpcPeeringConnectionIDNotFound) {
 			return nil, vpcPeeringConnectionStatusNotFound, nil
 		}
 		if err != nil {
@@ -464,7 +534,7 @@ const (
 func StatusVPNGatewayVPCAttachmentState(conn *ec2.EC2, vpnGatewayID, vpcID string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		vpcAttachment, err := FindVPNGatewayVPCAttachment(conn, vpnGatewayID, vpcID)
-		if tfawserr.ErrCodeEquals(err, InvalidVPNGatewayIDNotFound) {
+		if tfawserr.ErrCodeEquals(err, ErrCodeInvalidVpnGatewayIDNotFound) {
 			return nil, attachmentStateNotFound, nil
 		}
 		if err != nil {
@@ -639,5 +709,21 @@ func StatusEBSSnapshotImport(conn *ec2.EC2, importTaskId string) resource.StateR
 		} else {
 			return nil, snapshotImportNotFound, nil
 		}
+	}
+}
+
+func statusVPCEndpointConnectionVPCEndpointState(conn *ec2.EC2, serviceID, vpcEndpointID string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := FindVPCEndpointConnectionByServiceIDAndVPCEndpointID(conn, serviceID, vpcEndpointID)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, aws.StringValue(output.VpcEndpointState), nil
 	}
 }

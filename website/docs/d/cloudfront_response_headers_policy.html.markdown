@@ -31,9 +31,9 @@ In addition to all arguments above, the following attributes are exported:
 
 * `comment` - A comment to describe the response headers policy. The comment cannot be longer than 128 characters.
 * `etag` - The current version of the response headers policy.
-* `cors_config` - A configuration for a set of HTTP response headers that are used for Cross-Origin Resource Sharing (CORS). See [Cors Config](#cors_config) for more information.
-* `custom_headers_config` - Object that contains an attribute `items` that contains a list of Custom Headers See [Custom Header](#custom_header) for more information.
-* `security_headers_config` - A configuration for a set of security-related HTTP response headers. See [Security Headers Config](#security_headers_config) for more information.
+* `cors_config` - A configuration for a set of HTTP response headers that are used for Cross-Origin Resource Sharing (CORS). See [Cors Config](#cors-config) for more information.
+* `custom_headers_config` - Object that contains an attribute `items` that contains a list of Custom Headers See [Custom Header](#custom-header) for more information.
+* `security_headers_config` - A configuration for a set of security-related HTTP response headers. See [Security Headers Config](#security-headers-config) for more information.
 
 ### Cors Config
 
@@ -52,12 +52,12 @@ In addition to all arguments above, the following attributes are exported:
 
 ### Security Headers Config
 
-* `content_security_policy` - The policy directives and their values that CloudFront includes as values for the Content-Security-Policy HTTP response header. See [Content Security Policy](#content_security_policy) for more information.
-* `content_type_options` - A setting that determines whether CloudFront includes the X-Content-Type-Options HTTP response header with its value set to nosniff. See [Content Type Options](#content_type_options) for more information.
-* `frame_options` - A setting that determines whether CloudFront includes the X-Frame-Options HTTP response header and the header’s value. See [Frame Options](#frame_options) for more information.
-* `referrer_policy` - A setting that determines whether CloudFront includes the Referrer-Policy HTTP response header and the header’s value. See [Referrer Policy](#referrer_policy) for more information.
-* `strict_transport_security` - Settings that determine whether CloudFront includes the Strict-Transport-Security HTTP response header and the header’s value. See [Strict Transport Security](#strict_transport_security) for more information.
-* `xss_protection` - Settings that determine whether CloudFront includes the X-XSS-Protection HTTP response header and the header’s value. See [XSS Protection](#xss_protection) for more information.
+* `content_security_policy` - The policy directives and their values that CloudFront includes as values for the Content-Security-Policy HTTP response header. See [Content Security Policy](#content-security-policy) for more information.
+* `content_type_options` - A setting that determines whether CloudFront includes the X-Content-Type-Options HTTP response header with its value set to nosniff. See [Content Type Options](#content-type-options) for more information.
+* `frame_options` - A setting that determines whether CloudFront includes the X-Frame-Options HTTP response header and the header’s value. See [Frame Options](#frame-options) for more information.
+* `referrer_policy` - A setting that determines whether CloudFront includes the Referrer-Policy HTTP response header and the header’s value. See [Referrer Policy](#referrer-policy) for more information.
+* `strict_transport_security` - Settings that determine whether CloudFront includes the Strict-Transport-Security HTTP response header and the header’s value. See [Strict Transport Security](#strict-transport-security) for more information.
+* `xss_protection` - Settings that determine whether CloudFront includes the X-XSS-Protection HTTP response header and the header’s value. See [XSS Protection](#xss-protection) for more information.
 
 ### Content Security Policy
 

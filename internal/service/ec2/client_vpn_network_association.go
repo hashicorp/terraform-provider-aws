@@ -123,7 +123,7 @@ func resourceClientVPNNetworkAssociationRead(d *schema.ResourceData, meta interf
 		AssociationIds:      []*string{aws.String(d.Id())},
 	})
 
-	if tfawserr.ErrMessageContains(err, ErrCodeClientVPNAssociationIdNotFound, "") || tfawserr.ErrMessageContains(err, ErrCodeClientVPNEndpointIdNotFound, "") {
+	if tfawserr.ErrMessageContains(err, ErrCodeClientVpnAssociationIdNotFound, "") || tfawserr.ErrMessageContains(err, ErrCodeClientVpnEndpointIdNotFound, "") {
 		log.Printf("[WARN] EC2 Client VPN Network Association (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -176,7 +176,7 @@ func DeleteClientVPNNetworkAssociation(conn *ec2.EC2, networkAssociationID, clie
 		AssociationId:       aws.String(networkAssociationID),
 	})
 
-	if tfawserr.ErrMessageContains(err, ErrCodeClientVPNAssociationIdNotFound, "") || tfawserr.ErrMessageContains(err, ErrCodeClientVPNEndpointIdNotFound, "") {
+	if tfawserr.ErrMessageContains(err, ErrCodeClientVpnAssociationIdNotFound, "") || tfawserr.ErrMessageContains(err, ErrCodeClientVpnEndpointIdNotFound, "") {
 		return nil
 	}
 	if err != nil {
