@@ -29,7 +29,7 @@ each type of contribution.
 
 ## Documentation Update
 
-The [Terraform AWS Provider's website source][website] is in this repository
+The [Terraform AWS Provider's website source](website) is in this repository
 along with the code and tests. Below are some common items that will get
 flagged during documentation reviews:
 
