@@ -2,15 +2,21 @@
 
 FEATURES:
 
+* **New Data Source:** `aws_batch_scheduling_policy` ([#22335](https://github.com/hashicorp/terraform-provider-aws/issues/22335))
 * **New Data Source:** `aws_cognito_user_pool_clients` ([#22289](https://github.com/hashicorp/terraform-provider-aws/issues/22289))
 * **New Data Source:** `aws_cognito_user_pool_signing_certificate` ([#22285](https://github.com/hashicorp/terraform-provider-aws/issues/22285))
+* **New Data Source:** `aws_mskconnect_custom_plugin` ([#22333](https://github.com/hashicorp/terraform-provider-aws/issues/22333))
+* **New Data Source:** `aws_organizations_resource_tags` ([#22371](https://github.com/hashicorp/terraform-provider-aws/issues/22371))
 * **New Data Source:** `aws_ses_active_receipt_rule_set` ([#22310](https://github.com/hashicorp/terraform-provider-aws/issues/22310))
 * **New Data Source:** `aws_ses_domain_identity` ([#22321](https://github.com/hashicorp/terraform-provider-aws/issues/22321))
 * **New Data Source:** `aws_ses_email_identity` ([#22321](https://github.com/hashicorp/terraform-provider-aws/issues/22321))
 * **New Resource:** `aws_batch_scheduling_policy` ([#22262](https://github.com/hashicorp/terraform-provider-aws/issues/22262))
+* **New Resource:** `aws_datasync_location_fsx_lustre_file_system` ([#22346](https://github.com/hashicorp/terraform-provider-aws/issues/22346))
+* **New Resource:** `aws_datasync_location_hdfs` ([#22347](https://github.com/hashicorp/terraform-provider-aws/issues/22347))
 * **New Resource:** `aws_memorydb_parameter_group` ([#22304](https://github.com/hashicorp/terraform-provider-aws/issues/22304))
 * **New Resource:** `aws_memorydb_subnet_group` ([#22256](https://github.com/hashicorp/terraform-provider-aws/issues/22256))
 * **New Resource:** `aws_memorydb_user` ([#22261](https://github.com/hashicorp/terraform-provider-aws/issues/22261))
+* **New Resource:** `aws_mskconnect_custom_plugin` ([#22333](https://github.com/hashicorp/terraform-provider-aws/issues/22333))
 * **New Resource:** `aws_vpc_endpoint_connection_accepter` ([#19083](https://github.com/hashicorp/terraform-provider-aws/issues/19083))
 
 ENHANCEMENTS:
@@ -20,6 +26,7 @@ ENHANCEMENTS:
 * resource/aws_batch_job_queue: Add `scheduling_policy_arn` attribute ([#22298](https://github.com/hashicorp/terraform-provider-aws/issues/22298))
 * resource/aws_codebuild_project: Add `artifacts.bucket_owner_access`, `secondary_artifacts.bucket_owner_access`, `logs_config.s3_logs.bucket_owner_access`, `project_visibility`, `resource_access_role` arguments. ([#22189](https://github.com/hashicorp/terraform-provider-aws/issues/22189))
 * resource/aws_codebuild_project: Add `public_project_alias` attribute. ([#22189](https://github.com/hashicorp/terraform-provider-aws/issues/22189))
+* resource/aws_codebuild_project: Add `secondary_source_version` argument ([#22345](https://github.com/hashicorp/terraform-provider-aws/issues/22345))
 * resource/aws_codebuild_project: Add plan time validation for `cache.modes` and `service_role`. ([#22189](https://github.com/hashicorp/terraform-provider-aws/issues/22189))
 * resource/aws_ecr_replication_configuration: Add `repository_filter` to `replication_configuration` block ([#21231](https://github.com/hashicorp/terraform-provider-aws/issues/21231))
 * resource/aws_ecr_replication_configuration: Increase `MaxItems` for `rule` to `10` and for `destination` to `25` ([#22281](https://github.com/hashicorp/terraform-provider-aws/issues/22281))
@@ -28,6 +35,10 @@ ENHANCEMENTS:
 * resource/aws_kinesis_firehose_delivery_stream: Add `error_output_prefix` argument to `redshift_configuration` `s3_backup_configuration` configuration block ([#11229](https://github.com/hashicorp/terraform-provider-aws/issues/11229))
 * resource/aws_kinesis_firehose_delivery_stream: Add `error_output_prefix` argument to `s3_configuration` configuration block ([#11229](https://github.com/hashicorp/terraform-provider-aws/issues/11229))
 * resource/aws_subnet: Add `enable_dns64`, `ipv6_native`, `enable_resource_name_dns_aaaa_record_on_launch`, `enable_resource_name_dns_a_record_on_launch` and `private_dns_hostname_type_on_launch` arguments ([#22339](https://github.com/hashicorp/terraform-provider-aws/issues/22339))
+* resource/aws_timestreamwrite_table: Add `magnetic_store_write_properties` argument. ([#22363](https://github.com/hashicorp/terraform-provider-aws/issues/22363))
+* resource/sagemaker_app: Add `lifecycle_config_arn` and `sagemaker_image_version_arn` arguments to `resource_spec` configuration block ([#21508](https://github.com/hashicorp/terraform-provider-aws/issues/21508))
+* resource/sagemaker_domain: Add `lifecycle_config_arn` and `sagemaker_image_version_arn` arguments to `default_resource_spec` configuration block ([#21508](https://github.com/hashicorp/terraform-provider-aws/issues/21508))
+* resource/sagemaker_user_profile: Add `lifecycle_config_arn` and `sagemaker_image_version_arn` arguments to `default_resource_spec` configuration block ([#21508](https://github.com/hashicorp/terraform-provider-aws/issues/21508))
 
 BUG FIXES:
 
@@ -35,6 +46,7 @@ BUG FIXES:
 * resource/aws_ec2_traffic_mirror_filter_rule: Prevent crash during resource read ([#22315](https://github.com/hashicorp/terraform-provider-aws/issues/22315))
 * resource/aws_launch_template: Correctly set `default_version` and `latest_version` as Computed when `name`, `name_prefix` or `description` change ([#22277](https://github.com/hashicorp/terraform-provider-aws/issues/22277))
 * resource/aws_networkfirewall_rule_group: Allow any character in `ip_set` `definition` as per the AWS API docs ([#22284](https://github.com/hashicorp/terraform-provider-aws/issues/22284))
+* resource/aws_ses_event_destination: Allow `.` and `@` characters in `cloudwatch_destination.default_value` argument ([#22359](https://github.com/hashicorp/terraform-provider-aws/issues/22359))
 * resource/aws_ssoadmin_managed_policy_attachment: Fix missing call to `ProvisionPermissionSet` after detaching the managed policy ([#21773](https://github.com/hashicorp/terraform-provider-aws/issues/21773))
 
 ## 3.70.0 (December 16, 2021)
