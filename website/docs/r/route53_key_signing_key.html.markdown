@@ -12,7 +12,7 @@ Manages a Route 53 Key Signing Key. To manage Domain Name System Security Extens
 
 ## Example Usage
 
-```hcl
+```terraform
 provider "aws" {
   region = "us-east-1"
 }
@@ -31,9 +31,24 @@ resource "aws_kms_key" "example" {
         ],
         Effect = "Allow"
         Principal = {
-          Service = "api-service.dnssec.route53.aws.internal"
+          Service = "dnssec-route53.amazonaws.com"
         }
-        Sid = "Route 53 DNSSEC Permissions"
+        Sid      = "Allow Route 53 DNSSEC Service",
+        Resource = "*"
+      },
+      {
+        Action = "kms:CreateGrant",
+        Effect = "Allow"
+        Principal = {
+          Service = "dnssec-route53.amazonaws.com"
+        }
+        Sid      = "Allow Route 53 DNSSEC Service to CreateGrant",
+        Resource = "*"
+        Condition = {
+          Bool = {
+            "kms:GrantIsForAWSResource" = "true"
+          }
+        }
       },
       {
         Action = "kms:*"
@@ -60,6 +75,9 @@ resource "aws_route53_key_signing_key" "example" {
 }
 
 resource "aws_route53_hosted_zone_dnssec" "example" {
+  depends_on = [
+    aws_route53_key_signing_key.example
+  ]
   hosted_zone_id = aws_route53_key_signing_key.example.hosted_zone_id
 }
 ```
@@ -94,7 +112,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-`aws_route53_key_signing_key` resources can be imported by using the Route 53 Hosted Zone identifier and KMS Key identifier, separated by a comma (`,`), e.g.
+`aws_route53_key_signing_key` resources can be imported by using the Route 53 Hosted Zone identifier and KMS Key identifier, separated by a comma (`,`), e.g.,
 
 ```
 $ terraform import aws_route53_key_signing_key.example Z1D633PJN98FT9,example

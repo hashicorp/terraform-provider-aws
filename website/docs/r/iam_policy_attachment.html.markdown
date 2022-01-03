@@ -18,7 +18,7 @@ Attaches a Managed IAM Policy to user(s), role(s), and/or group(s)
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_iam_user" "user" {
   name = "test-user"
 }

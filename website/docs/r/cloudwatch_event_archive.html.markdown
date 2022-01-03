@@ -15,7 +15,7 @@ Provides an EventBridge event archive resource.
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_cloudwatch_event_bus" "order" {
   name = "orders"
 }
@@ -28,7 +28,7 @@ resource "aws_cloudwatch_event_archive" "order" {
 
 ## Example all optional arguments
 
-```hcl
+```terraform
 resource "aws_cloudwatch_event_bus" "order" {
   name = "orders"
 }

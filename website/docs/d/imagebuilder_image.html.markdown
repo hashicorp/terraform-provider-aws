@@ -14,7 +14,7 @@ Provides details about an Image Builder Image.
 
 ### Latest
 
-```hcl
+```terraform
 data "aws_imagebuilder_image" "example" {
   arn = "arn:aws:imagebuilder:us-west-2:aws:image/amazon-linux-2-x86/x.x.x"
 }
@@ -22,7 +22,7 @@ data "aws_imagebuilder_image" "example" {
 
 ## Argument Reference
 
-* `arn` - (Required) Amazon Resource Name (ARN) of the image. The suffix can either be specified with wildcards (`x.x.x`) to fetch the latest build version or a full build version (e.g. `2020.11.26/1`) to fetch an exact version.
+* `arn` - (Required) Amazon Resource Name (ARN) of the image. The suffix can either be specified with wildcards (`x.x.x`) to fetch the latest build version or a full build version (e.g., `2020.11.26/1`) to fetch an exact version.
 
 ## Attributes Reference
 
