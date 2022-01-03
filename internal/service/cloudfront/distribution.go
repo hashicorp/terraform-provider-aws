@@ -557,7 +557,7 @@ func ResourceDistribution() *schema.Resource {
 										Required: true,
 										Elem: &schema.Schema{
 											Type:         schema.TypeString,
-											ValidateFunc: validation.StringInSlice([]string{"SSLv3", "TLSv1", "TLSv1.1", "TLSv1.2"}, false),
+											ValidateFunc: validation.StringInSlice(cloudfront.SslProtocol_Values(), false),
 										},
 									},
 								},
