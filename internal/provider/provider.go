@@ -3,6 +3,7 @@ package provider
 import (
 	"fmt"
 	"log"
+	"regexp"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -1945,14 +1946,19 @@ func assumeRoleSchema() *schema.Schema {
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
 				"duration_seconds": {
-					Type:        schema.TypeInt,
-					Optional:    true,
-					Description: "Seconds to restrict the assume role session duration.",
+					Type:         schema.TypeInt,
+					Optional:     true,
+					Description:  "The duration, in seconds, of the role session.",
+					ValidateFunc: validation.IntBetween(900, 43200),
 				},
 				"external_id": {
 					Type:        schema.TypeString,
 					Optional:    true,
-					Description: "Unique identifier that might be required for assuming a role in another account.",
+					Description: "A unique identifier that might be required when you assume a role in another account.",
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(2, 1224),
+						validation.StringMatch(regexp.MustCompile(`[\w+=,.@:\/\-]*`), ""),
+					),
 				},
 				"policy": {
 					Type:         schema.TypeString,
@@ -1978,7 +1984,11 @@ func assumeRoleSchema() *schema.Schema {
 				"session_name": {
 					Type:        schema.TypeString,
 					Optional:    true,
-					Description: "Identifier for the assumed role session.",
+					Description: "An identifier for the assumed role session.",
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(2, 64),
+						validation.StringMatch(regexp.MustCompile(`[\w+=,.@\-]*`), ""),
+					),
 				},
 				"tags": {
 					Type:        schema.TypeMap,
