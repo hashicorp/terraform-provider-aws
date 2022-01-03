@@ -203,13 +203,13 @@ resource "aws_dx_gateway" "test" {
 func testAccDxTransitVirtualInterfaceConfig_basic(cid, rName string, amzAsn, bgpAsn, vlan int) string {
 	return testAccDxTransitVirtualInterfaceConfig_base(rName, amzAsn) + fmt.Sprintf(`
 resource "aws_dx_transit_virtual_interface" "test" {
-  address_family = "ipv4"
-  bgp_asn        = %[3]d
-  dx_gateway_id  = aws_dx_gateway.test.id
-  connection_id  = %[1]q
-  name           = %[2]q
+  address_family   = "ipv4"
+  bgp_asn          = %[3]d
+  dx_gateway_id    = aws_dx_gateway.test.id
+  connection_id    = %[1]q
+  name             = %[2]q
   sitelink_enabled = %[5]t
-  vlan           = %[4]d
+  vlan             = %[4]d
 }
 `, cid, rName, bgpAsn, vlan, true)
 }
@@ -217,14 +217,14 @@ resource "aws_dx_transit_virtual_interface" "test" {
 func testAccDxTransitVirtualInterfaceConfig_updated(cid, rName string, amzAsn, bgpAsn, vlan int) string {
 	return testAccDxTransitVirtualInterfaceConfig_base(rName, amzAsn) + fmt.Sprintf(`
 resource "aws_dx_transit_virtual_interface" "test" {
-  address_family = "ipv4"
-  bgp_asn        = %[3]d
-  dx_gateway_id  = aws_dx_gateway.test.id
-  connection_id  = %[1]q
-  mtu            = 8500
-  name           = %[2]q
+  address_family   = "ipv4"
+  bgp_asn          = %[3]d
+  dx_gateway_id    = aws_dx_gateway.test.id
+  connection_id    = %[1]q
+  mtu              = 8500
+  name             = %[2]q
   sitelink_enabled = %[5]t
-  vlan           = %[4]d
+  vlan             = %[4]d
 }
 `, cid, rName, bgpAsn, vlan, false)
 }
