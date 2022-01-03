@@ -456,6 +456,8 @@ func resourceBucketObjectUpload(d *schema.ResourceData, meta interface{}) error 
 			return fmt.Errorf("error decoding content_base64: %s", err)
 		}
 		body = bytes.NewReader(contentRaw)
+	} else {
+		body = bytes.NewReader([]byte{})
 	}
 
 	bucket := d.Get("bucket").(string)
