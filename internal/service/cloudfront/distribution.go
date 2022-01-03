@@ -93,13 +93,9 @@ func ResourceDistribution() *schema.Resource {
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"forward": {
-													Type:     schema.TypeString,
-													Required: true,
-													ValidateFunc: validation.StringInSlice([]string{
-														cloudfront.ItemSelectionAll,
-														cloudfront.ItemSelectionNone,
-														cloudfront.ItemSelectionWhitelist,
-													}, false),
+													Type:         schema.TypeString,
+													Required:     true,
+													ValidateFunc: validation.StringInSlice(cloudfront.ItemSelection_Values(), false),
 												},
 												"whitelisted_names": {
 													Type:     schema.TypeSet,
@@ -135,12 +131,14 @@ func ResourceDistribution() *schema.Resource {
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"event_type": {
-										Type:     schema.TypeString,
-										Required: true,
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: validation.StringInSlice(cloudfront.EventType_Values(), false),
 									},
 									"lambda_arn": {
-										Type:     schema.TypeString,
-										Required: true,
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: verify.ValidARN,
 									},
 									"include_body": {
 										Type:     schema.TypeBool,
@@ -158,12 +156,14 @@ func ResourceDistribution() *schema.Resource {
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"event_type": {
-										Type:     schema.TypeString,
-										Required: true,
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: validation.StringInSlice(cloudfront.EventType_Values(), false),
 									},
 									"function_arn": {
-										Type:     schema.TypeString,
-										Required: true,
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: verify.ValidARN,
 									},
 								},
 							},
@@ -214,15 +214,17 @@ func ResourceDistribution() *schema.Resource {
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
 						"viewer_protocol_policy": {
-							Type:     schema.TypeString,
-							Required: true,
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validation.StringInSlice(cloudfront.ViewerProtocolPolicy_Values(), false),
 						},
 					},
 				},
 			},
 			"comment": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.StringLenBetween(0, 128),
 			},
 			"custom_error_response": {
 				Type:     schema.TypeSet,
@@ -296,13 +298,9 @@ func ResourceDistribution() *schema.Resource {
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"forward": {
-													Type:     schema.TypeString,
-													Required: true,
-													ValidateFunc: validation.StringInSlice([]string{
-														cloudfront.ItemSelectionAll,
-														cloudfront.ItemSelectionNone,
-														cloudfront.ItemSelectionWhitelist,
-													}, false),
+													Type:         schema.TypeString,
+													Required:     true,
+													ValidateFunc: validation.StringInSlice(cloudfront.ItemSelection_Values(), false),
 												},
 												"whitelisted_names": {
 													Type:     schema.TypeSet,
@@ -339,12 +337,14 @@ func ResourceDistribution() *schema.Resource {
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"event_type": {
-										Type:     schema.TypeString,
-										Required: true,
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: validation.StringInSlice(cloudfront.EventType_Values(), false),
 									},
 									"lambda_arn": {
-										Type:     schema.TypeString,
-										Required: true,
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: verify.ValidARN,
 									},
 									"include_body": {
 										Type:     schema.TypeBool,
@@ -362,12 +362,14 @@ func ResourceDistribution() *schema.Resource {
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"event_type": {
-										Type:     schema.TypeString,
-										Required: true,
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: validation.StringInSlice(cloudfront.EventType_Values(), false),
 									},
 									"function_arn": {
-										Type:     schema.TypeString,
-										Required: true,
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: verify.ValidARN,
 									},
 								},
 							},
@@ -416,8 +418,9 @@ func ResourceDistribution() *schema.Resource {
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
 						"viewer_protocol_policy": {
-							Type:     schema.TypeString,
-							Required: true,
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validation.StringInSlice(cloudfront.ViewerProtocolPolicy_Values(), false),
 						},
 					},
 				},
@@ -433,8 +436,8 @@ func ResourceDistribution() *schema.Resource {
 			"http_version": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				Default:      "http2",
-				ValidateFunc: validation.StringInSlice([]string{"http1.1", "http2"}, false),
+				Default:      cloudfront.HttpVersionHttp2,
+				ValidateFunc: validation.StringInSlice(cloudfront.HttpVersion_Values(), false),
 			},
 			"logging_config": {
 				Type:     schema.TypeList,
@@ -534,23 +537,29 @@ func ResourceDistribution() *schema.Resource {
 										Required: true,
 									},
 									"origin_keepalive_timeout": {
-										Type:     schema.TypeInt,
-										Optional: true,
-										Default:  5,
+										Type:         schema.TypeInt,
+										Optional:     true,
+										Default:      5,
+										ValidateFunc: validation.IntBetween(1, 60),
 									},
 									"origin_read_timeout": {
-										Type:     schema.TypeInt,
-										Optional: true,
-										Default:  30,
+										Type:         schema.TypeInt,
+										Optional:     true,
+										Default:      30,
+										ValidateFunc: validation.IntBetween(1, 60),
 									},
 									"origin_protocol_policy": {
-										Type:     schema.TypeString,
-										Required: true,
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: validation.StringInSlice(cloudfront.OriginProtocolPolicy_Values(), false),
 									},
 									"origin_ssl_protocols": {
 										Type:     schema.TypeSet,
 										Required: true,
-										Elem:     &schema.Schema{Type: schema.TypeString},
+										Elem: &schema.Schema{
+											Type:         schema.TypeString,
+											ValidateFunc: validation.StringInSlice(cloudfront.SslProtocol_Values(), false),
+										},
 									},
 								},
 							},
@@ -621,9 +630,10 @@ func ResourceDistribution() *schema.Resource {
 				},
 			},
 			"price_class": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  "PriceClass_All",
+				Type:         schema.TypeString,
+				Optional:     true,
+				Default:      cloudfront.PriceClassPriceClassAll,
+				ValidateFunc: validation.StringInSlice(cloudfront.PriceClass_Values(), false),
 			},
 			"restrictions": {
 				Type:     schema.TypeList,
@@ -644,13 +654,9 @@ func ResourceDistribution() *schema.Resource {
 										Elem:     &schema.Schema{Type: schema.TypeString},
 									},
 									"restriction_type": {
-										Type:     schema.TypeString,
-										Required: true,
-										ValidateFunc: validation.StringInSlice([]string{
-											cloudfront.GeoRestrictionTypeNone,
-											cloudfront.GeoRestrictionTypeBlacklist,
-											cloudfront.GeoRestrictionTypeWhitelist,
-										}, false),
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: validation.StringInSlice(cloudfront.GeoRestrictionType_Values(), false),
 									},
 								},
 							},
@@ -665,8 +671,9 @@ func ResourceDistribution() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"acm_certificate_arn": {
-							Type:     schema.TypeString,
-							Optional: true,
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: verify.ValidARN,
 						},
 						"cloudfront_default_certificate": {
 							Type:     schema.TypeBool,
@@ -677,13 +684,15 @@ func ResourceDistribution() *schema.Resource {
 							Optional: true,
 						},
 						"minimum_protocol_version": {
-							Type:     schema.TypeString,
-							Optional: true,
-							Default:  "TLSv1",
+							Type:         schema.TypeString,
+							Optional:     true,
+							Default:      cloudfront.MinimumProtocolVersionTlsv1,
+							ValidateFunc: validation.StringInSlice(cloudfront.MinimumProtocolVersion_Values(), false),
 						},
 						"ssl_support_method": {
-							Type:     schema.TypeString,
-							Optional: true,
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validation.StringInSlice(cloudfront.SSLSupportMethod_Values(), false),
 						},
 					},
 				},
