@@ -275,9 +275,17 @@ func init() {
 		},
 	})
 
+	resource.AddTestSweepers("aws_vpc_ipam_pool_cidr", &resource.Sweeper{
+		Name: "aws_vpc_ipam_pool_cidr",
+		F:    sweepIPAMPoolCIDRs,
+	})
+
 	resource.AddTestSweepers("aws_vpc_ipam_pool", &resource.Sweeper{
 		Name: "aws_vpc_ipam_pool",
 		F:    sweepIPAMPools,
+		Dependencies: []string{
+			"aws_vpc_ipam_pool_cidr",
+		},
 	})
 
 	resource.AddTestSweepers("aws_vpc_ipam_scope", &resource.Sweeper{
@@ -2074,6 +2082,72 @@ func sweepVPNGateways(region string) error {
 	return sweeperErrs.ErrorOrNil()
 }
 
+func sweepIPAMPoolCIDRs(region string) error {
+	client, err := sweep.SharedRegionalSweepClient(region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %s", err)
+	}
+	conn := client.(*conns.AWSClient).EC2Conn
+	input := &ec2.DescribeIpamPoolsInput{}
+	var sweeperErrs *multierror.Error
+	sweepResources := make([]*sweep.SweepResource, 0)
+
+	err = conn.DescribeIpamPoolsPages(input, func(page *ec2.DescribeIpamPoolsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.IpamPools {
+			poolID := aws.StringValue(v.IpamPoolId)
+			input := &ec2.GetIpamPoolCidrsInput{
+				IpamPoolId: aws.String(poolID),
+			}
+
+			err := conn.GetIpamPoolCidrsPages(input, func(page *ec2.GetIpamPoolCidrsOutput, lastPage bool) bool {
+				if page == nil {
+					return !lastPage
+				}
+
+				for _, v := range page.IpamPoolCidrs {
+					r := ResourceVPCIpamPoolCidr()
+					d := r.Data(nil)
+					d.SetId(encodeIpamPoolCidrId(aws.StringValue(v.Cidr), poolID))
+
+					sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+				}
+
+				return !lastPage
+			})
+
+			if sweep.SkipSweepError(err) {
+				continue
+			}
+
+			if err != nil {
+				sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing IPAM Pool (%s) CIDRs (%s): %w", poolID, region, err))
+			}
+		}
+
+		return !lastPage
+	})
+
+	if sweep.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping IPAM Pool sweep for %s: %s", region, err)
+		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
+	}
+
+	if err != nil {
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing IPAM Pools (%s): %w", region, err))
+	}
+
+	err = sweep.SweepOrchestrator(sweepResources)
+
+	if err != nil {
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping IPAM Pools (%s): %w", region, err))
+	}
+
+	return sweeperErrs.ErrorOrNil()
+}
 
 func sweepIPAMPools(region string) error {
 	client, err := sweep.SharedRegionalSweepClient(region)
