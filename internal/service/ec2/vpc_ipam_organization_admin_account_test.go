@@ -115,7 +115,7 @@ func testAccCheckVPCIpamOrganizationAdminAccountExists(n string, org *organizati
 }
 
 func testAccVPCIpamOrganizationAdminAccountConfig() string {
-	return acctest.ConfigAlternateAccountProvider() + `
+	return acctest.ConfigCompose(acctest.ConfigAlternateAccountProvider() + `
 data "aws_caller_identity" "delegated" {
   provider = "awsalternate"
 }
@@ -123,5 +123,5 @@ data "aws_caller_identity" "delegated" {
 resource "aws_vpc_ipam_organization_admin_account" "test" {
   delegated_admin_account_id = data.aws_caller_identity.delegated.account_id
 }
-`
+`)
 }
