@@ -17,6 +17,7 @@ const (
 	ErrCodeClientVpnRouteNotFound                 = "InvalidClientVpnRouteNotFound"
 	ErrCodeDependencyViolation                    = "DependencyViolation"
 	ErrCodeGatewayNotAttached                     = "Gateway.NotAttached"
+	ErrCodeIncorrectState                         = "IncorrectState"
 	ErrCodeInvalidAssociationIDNotFound           = "InvalidAssociationID.NotFound"
 	ErrCodeInvalidAttachmentIDNotFound            = "InvalidAttachmentID.NotFound"
 	ErrCodeInvalidCarrierGatewayIDNotFound        = "InvalidCarrierGatewayID.NotFound"

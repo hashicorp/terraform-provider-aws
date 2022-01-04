@@ -64,28 +64,30 @@ func resourceVPNGatewayCreate(d *schema.ResourceData, meta interface{}) error {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
-	createOpts := &ec2.CreateVpnGatewayInput{
+	input := &ec2.CreateVpnGatewayInput{
 		AvailabilityZone:  aws.String(d.Get("availability_zone").(string)),
-		Type:              aws.String(ec2.GatewayTypeIpsec1),
 		TagSpecifications: ec2TagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeVpnGateway),
+		Type:              aws.String(ec2.GatewayTypeIpsec1),
 	}
 
-	if asn, ok := d.GetOk("amazon_side_asn"); ok {
-		i, err := strconv.ParseInt(asn.(string), 10, 64)
+	if v, ok := d.GetOk("amazon_side_asn"); ok {
+		v, err := strconv.ParseInt(v.(string), 10, 64)
+
 		if err != nil {
 			return err
 		}
-		createOpts.AmazonSideAsn = aws.Int64(i)
+
+		input.AmazonSideAsn = aws.Int64(v)
 	}
 
-	// Create the VPN gateway
-	log.Printf("[DEBUG] Creating VPN gateway")
-	resp, err := conn.CreateVpnGateway(createOpts)
+	log.Printf("[DEBUG] Creating EC2 VPN Gateway: %s", input)
+	output, err := conn.CreateVpnGateway(input)
+
 	if err != nil {
-		return fmt.Errorf("Error creating VPN gateway: %s", err)
+		return fmt.Errorf("error creating EC2 VPN Gateway: %w", err)
 	}
 
-	d.SetId(aws.StringValue(resp.VpnGateway.VpnGatewayId))
+	d.SetId(aws.StringValue(output.VpnGateway.VpnGatewayId))
 
 	if _, ok := d.GetOk("vpc_id"); ok {
 		if err := resourceVPNGatewayAttach(d, meta); err != nil {
@@ -193,35 +195,17 @@ func resourceVPNGatewayDelete(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	log.Printf("[INFO] Deleting VPN gateway: %s", d.Id())
-	input := &ec2.DeleteVpnGatewayInput{
-		VpnGatewayId: aws.String(d.Id()),
-	}
-	err := resource.Retry(5*time.Minute, func() *resource.RetryError {
-		_, err := conn.DeleteVpnGateway(input)
-		if err == nil {
-			return nil
-		}
-
-		if tfawserr.ErrMessageContains(err, "InvalidVpnGatewayID.NotFound", "") {
-			return nil
-		}
-		if tfawserr.ErrMessageContains(err, "IncorrectState", "") {
-			return resource.RetryableError(err)
-		}
-
-		return resource.NonRetryableError(err)
-	})
-	if tfresource.TimedOut(err) {
-		_, err = conn.DeleteVpnGateway(input)
-		if tfawserr.ErrMessageContains(err, "InvalidVpnGatewayID.NotFound", "") {
-			return nil
-		}
-	}
+	log.Printf("[INFO] Deleting EC2 VPN Gateway: %s", d.Id())
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(VPNGatewayDeletedTimeout, func() (interface{}, error) {
+		return conn.DeleteVpnGateway(&ec2.DeleteVpnGatewayInput{
+			VpnGatewayId: aws.String(d.Id()),
+		})
+	}, ErrCodeIncorrectState, ErrCodeInvalidVpnGatewayIDNotFound)
 
 	if err != nil {
-		return fmt.Errorf("Error deleting VPN gateway: %s", err)
+		return fmt.Errorf("error deleting EC2 VPN Gateway (%s): %w", d.Id(), err)
 	}
+
 	return nil
 }
 

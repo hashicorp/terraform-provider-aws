@@ -710,8 +710,9 @@ func WaitVPCAttributeUpdated(conn *ec2.EC2, vpcID string, attribute string, expe
 }
 
 const (
-	VPNGatewayVPCAttachmentAttachedTimeout = 15 * time.Minute
+	VPNGatewayDeletedTimeout = 5 * time.Minute
 
+	VPNGatewayVPCAttachmentAttachedTimeout = 15 * time.Minute
 	VPNGatewayVPCAttachmentDetachedTimeout = 30 * time.Minute
 )
 
