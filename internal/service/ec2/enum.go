@@ -15,13 +15,13 @@ func CPUCredits_Values() []string {
 
 const (
 	// https://docs.aws.amazon.com/vpc/latest/privatelink/vpce-interface.html#vpce-interface-lifecycle
-	VPCEndpointStateAvailable         = "available"
-	VPCEndpointStateDeleted           = "deleted"
-	VPCEndpointStateDeleting          = "deleting"
-	VPCEndpointStateFailed            = "failed"
-	VPCEndpointStatePending           = "pending"
-	VPCEndpointStatePendingAcceptance = "pendingAcceptance"
-	VPCEndpointStateRejected          = "rejected"
+	VpcEndpointStateAvailable         = "available"
+	VpcEndpointStateDeleted           = "deleted"
+	VpcEndpointStateDeleting          = "deleting"
+	VpcEndpointStateFailed            = "failed"
+	VpcEndpointStatePending           = "pending"
+	VpcEndpointStatePendingAcceptance = "pendingAcceptance"
+	VpcEndpointStateRejected          = "rejected"
 )
 
 // See https://docs.aws.amazon.com/vm-import/latest/userguide/vmimport-image-import.html#check-import-task-status

@@ -212,6 +212,8 @@ service/iotevents:
   - '((\*|-) ?`?|(data|resource) "?)aws_iotevents_'
 service/kafka:
   - '((\*|-) ?`?|(data|resource) "?)aws_msk_'
+service/kafkaconnect:
+  - '((\*|-) ?`?|(data|resource) "?)aws_mskconnect_'
 service/kinesis:
   - '((\*|-) ?`?|(data|resource) "?)aws_kinesis_stream'
 service/kinesisanalytics:
@@ -301,7 +303,7 @@ service/route53:
 service/route53domains:
   - '((\*|-) ?`?|(data|resource) "?)aws_route53domains_'
 service/route53recoverycontrolconfig:
-  - '((\*|-) ?`?|(data|resource) "?)aws_route53recoverycontrolconfig_'  
+  - '((\*|-) ?`?|(data|resource) "?)aws_route53recoverycontrolconfig_'
 service/route53recoveryreadiness:
   - '((\*|-) ?`?|(data|resource) "?)aws_route53recoveryreadiness_'
 service/route53resolver:

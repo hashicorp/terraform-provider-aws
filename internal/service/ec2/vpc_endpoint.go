@@ -195,7 +195,7 @@ func resourceVPCEndpointCreate(d *schema.ResourceData, meta interface{}) error {
 	vpce := resp.VpcEndpoint
 	d.SetId(aws.StringValue(vpce.VpcEndpointId))
 
-	if d.Get("auto_accept").(bool) && aws.StringValue(vpce.State) == VPCEndpointStatePendingAcceptance {
+	if d.Get("auto_accept").(bool) && aws.StringValue(vpce.State) == VpcEndpointStatePendingAcceptance {
 		if err := vpcEndpointAccept(conn, d.Id(), aws.StringValue(vpce.ServiceName), d.Timeout(schema.TimeoutCreate)); err != nil {
 			return err
 		}
@@ -325,7 +325,7 @@ func resourceVPCEndpointRead(d *schema.ResourceData, meta interface{}) error {
 func resourceVPCEndpointUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
-	if d.HasChange("auto_accept") && d.Get("auto_accept").(bool) && d.Get("state").(string) == VPCEndpointStatePendingAcceptance {
+	if d.HasChange("auto_accept") && d.Get("auto_accept").(bool) && d.Get("state").(string) == VpcEndpointStatePendingAcceptance {
 		if err := vpcEndpointAccept(conn, d.Id(), d.Get("service_name").(string), d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return err
 		}
@@ -396,7 +396,7 @@ func resourceVPCEndpointDelete(d *schema.ResourceData, meta interface{}) error {
 		err = UnsuccessfulItemsError(output.Unsuccessful)
 	}
 
-	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidVPCEndpointNotFound) {
+	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidVpcEndpointNotFound) {
 		return nil
 	}
 

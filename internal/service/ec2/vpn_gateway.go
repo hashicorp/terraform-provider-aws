@@ -251,7 +251,7 @@ func resourceVPNGatewayAttach(d *schema.ResourceData, meta interface{}) error {
 	err := resource.Retry(1*time.Minute, func() *resource.RetryError {
 		_, err := conn.AttachVpnGateway(req)
 		if err != nil {
-			if tfawserr.ErrMessageContains(err, InvalidVPNGatewayIDNotFound, "") {
+			if tfawserr.ErrMessageContains(err, ErrCodeInvalidVpnGatewayIDNotFound, "") {
 				return resource.RetryableError(err)
 			}
 			return resource.NonRetryableError(err)
@@ -301,7 +301,7 @@ func resourceVPNGatewayDetach(d *schema.ResourceData, meta interface{}) error {
 		VpcId:        aws.String(vpcId),
 	})
 
-	if tfawserr.ErrMessageContains(err, InvalidVPNGatewayAttachmentNotFound, "") || tfawserr.ErrMessageContains(err, InvalidVPNGatewayIDNotFound, "") {
+	if tfawserr.ErrMessageContains(err, ErrCodeInvalidVpnGatewayAttachmentNotFound, "") || tfawserr.ErrMessageContains(err, ErrCodeInvalidVpnGatewayIDNotFound, "") {
 		return nil
 	}
 

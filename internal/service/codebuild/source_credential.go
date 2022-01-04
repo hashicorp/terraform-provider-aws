@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func ResourceSourceCredential() *schema.Resource {
@@ -28,23 +29,16 @@ func ResourceSourceCredential() *schema.Resource {
 				Computed: true,
 			},
 			"auth_type": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				ValidateFunc: validation.StringInSlice([]string{
-					codebuild.AuthTypeBasicAuth,
-					codebuild.AuthTypePersonalAccessToken,
-				}, false),
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringInSlice(codebuild.AuthType_Values(), false),
 			},
 			"server_type": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				ValidateFunc: validation.StringInSlice([]string{
-					codebuild.ServerTypeGithub,
-					codebuild.ServerTypeBitbucket,
-					codebuild.ServerTypeGithubEnterprise,
-				}, false),
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringInSlice(codebuild.ServerType_Values(), false),
 			},
 			"token": {
 				Type:      schema.TypeString,
@@ -78,7 +72,7 @@ func resourceSourceCredentialCreate(d *schema.ResourceData, meta interface{}) er
 
 	resp, err := conn.ImportSourceCredentials(createOpts)
 	if err != nil {
-		return fmt.Errorf("Error importing source credentials: %s", err)
+		return fmt.Errorf("Error importing source credentials: %w", err)
 	}
 
 	d.SetId(aws.StringValue(resp.Arn))
@@ -89,29 +83,20 @@ func resourceSourceCredentialCreate(d *schema.ResourceData, meta interface{}) er
 func resourceSourceCredentialRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CodeBuildConn
 
-	resp, err := conn.ListSourceCredentials(&codebuild.ListSourceCredentialsInput{})
-	if err != nil {
-		return fmt.Errorf("Error List CodeBuild Source Credential: %s", err)
-	}
-
-	var info *codebuild.SourceCredentialsInfo
-
-	for _, sourceCredentialsInfo := range resp.SourceCredentialsInfos {
-		if d.Id() == aws.StringValue(sourceCredentialsInfo.Arn) {
-			info = sourceCredentialsInfo
-			break
-		}
-	}
-
-	if info == nil {
+	resp, err := FindSourceCredentialByARN(conn, d.Id())
+	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] CodeBuild Source Credential (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
-	d.Set("arn", info.Arn)
-	d.Set("auth_type", info.AuthType)
-	d.Set("server_type", info.ServerType)
+	if err != nil {
+		return fmt.Errorf("error reading CodeBuild Source Credential (%s): %w", d.Id(), err)
+	}
+
+	d.Set("arn", resp.Arn)
+	d.Set("auth_type", resp.AuthType)
+	d.Set("server_type", resp.ServerType)
 
 	return nil
 }
@@ -127,7 +112,7 @@ func resourceSourceCredentialDelete(d *schema.ResourceData, meta interface{}) er
 		if tfawserr.ErrMessageContains(err, codebuild.ErrCodeResourceNotFoundException, "") {
 			return nil
 		}
-		return fmt.Errorf("Error deleting Source Credentials(%s): %s", d.Id(), err)
+		return fmt.Errorf("Error deleting CodeBuild Source Credentials(%s): %w", d.Id(), err)
 	}
 
 	return nil

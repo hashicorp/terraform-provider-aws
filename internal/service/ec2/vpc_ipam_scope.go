@@ -175,12 +175,11 @@ func ResourceVPCIpamScopeUpdate(d *schema.ResourceData, meta interface{}) error 
 func ResourceVPCIpamScopeDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
-	input := &ec2.DeleteIpamScopeInput{
+	log.Printf("[DEBUG] Deleting IPAM Scope: %s", d.Id())
+	_, err := conn.DeleteIpamScope(&ec2.DeleteIpamScopeInput{
 		IpamScopeId: aws.String(d.Id()),
-	}
+	})
 
-	log.Printf("[DEBUG] Deleting IPAM Scope: %s", input)
-	_, err := conn.DeleteIpamScope(input)
 	if err != nil {
 		return fmt.Errorf("error deleting IPAM Scope: (%s): %w", d.Id(), err)
 	}

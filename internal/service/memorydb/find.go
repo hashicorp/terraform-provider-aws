@@ -10,6 +10,64 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+func FindACLByName(ctx context.Context, conn *memorydb.MemoryDB, name string) (*memorydb.ACL, error) {
+	input := memorydb.DescribeACLsInput{
+		ACLName: aws.String(name),
+	}
+
+	output, err := conn.DescribeACLsWithContext(ctx, &input)
+
+	if tfawserr.ErrCodeEquals(err, memorydb.ErrCodeACLNotFoundFault) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || len(output.ACLs) == 0 || output.ACLs[0] == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	if count := len(output.ACLs); count > 1 {
+		return nil, tfresource.NewTooManyResultsError(count, input)
+	}
+
+	return output.ACLs[0], nil
+}
+
+func FindParameterGroupByName(ctx context.Context, conn *memorydb.MemoryDB, name string) (*memorydb.ParameterGroup, error) {
+	input := memorydb.DescribeParameterGroupsInput{
+		ParameterGroupName: aws.String(name),
+	}
+
+	output, err := conn.DescribeParameterGroupsWithContext(ctx, &input)
+
+	if tfawserr.ErrCodeEquals(err, memorydb.ErrCodeParameterGroupNotFoundFault) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || len(output.ParameterGroups) == 0 || output.ParameterGroups[0] == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	if count := len(output.ParameterGroups); count > 1 {
+		return nil, tfresource.NewTooManyResultsError(count, input)
+	}
+
+	return output.ParameterGroups[0], nil
+}
+
 func FindSubnetGroupByName(ctx context.Context, conn *memorydb.MemoryDB, name string) (*memorydb.SubnetGroup, error) {
 	input := memorydb.DescribeSubnetGroupsInput{
 		SubnetGroupName: aws.String(name),
