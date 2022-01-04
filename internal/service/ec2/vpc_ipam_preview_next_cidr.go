@@ -65,26 +65,11 @@ func ResourceVPCIpamPreviewNextCidr() *schema.Resource {
 }
 
 func resourceVPCIpamPreviewNextCidrCreate(d *schema.ResourceData, meta interface{}) error {
-	poolId := d.Get("ipam_pool_id").(string)
-	uniqueValue := resource.UniqueId()
-
-	// preview will not produce an IpamPoolAllocationId. Hence use the uniqueValue instead
-	d.SetId(encodeVPCIpamPreviewNextCidrID(uniqueValue, poolId))
-
-	return resourceVPCIpamPreviewNextCidrRead(d, meta)
-}
-
-func resourceVPCIpamPreviewNextCidrRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
-
-	uniqueValue, poolId, err := decodeVPCIpamPreviewNextCidrID(d.Id())
-
-	if err != nil {
-		return err
-	}
+	poolId := d.Get("ipam_pool_id").(string)
 
 	input := &ec2.AllocateIpamPoolCidrInput{
-		ClientToken:     aws.String(uniqueValue),
+		ClientToken:     aws.String(resource.UniqueId()),
 		IpamPoolId:      aws.String(poolId),
 		PreviewNextCidr: aws.Bool(true),
 	}
@@ -107,13 +92,29 @@ func resourceVPCIpamPreviewNextCidrRead(d *schema.ResourceData, meta interface{}
 		return fmt.Errorf("error allocating from ipam pool (%s): empty response", poolId)
 	}
 
-	d.Set("cidr", output.IpamPoolAllocation.Cidr)
+	cidr := output.IpamPoolAllocation.Cidr
+
+	d.Set("cidr", cidr)
+	d.SetId(encodeVPCIpamPreviewNextCidrID(aws.StringValue(cidr), poolId))
+
+	return resourceVPCIpamPreviewNextCidrRead(d, meta)
+}
+
+func resourceVPCIpamPreviewNextCidrRead(d *schema.ResourceData, meta interface{}) error {
+	cidr, poolId, err := decodeVPCIpamPreviewNextCidrID(d.Id())
+
+	if err != nil {
+		return err
+	}
+
+	d.Set("cidr", cidr)
+	d.Set("ipam_pool_id", poolId)
 
 	return nil
 }
 
-func encodeVPCIpamPreviewNextCidrID(uniqueValue, poolId string) string {
-	return fmt.Sprintf("%s_%s", uniqueValue, poolId)
+func encodeVPCIpamPreviewNextCidrID(cidr, poolId string) string {
+	return fmt.Sprintf("%s_%s", cidr, poolId)
 }
 
 func decodeVPCIpamPreviewNextCidrID(id string) (string, string, error) {
