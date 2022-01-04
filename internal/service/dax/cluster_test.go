@@ -32,6 +32,8 @@ func TestAccDAXCluster_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(resourceName, &dc),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "dax", regexp.MustCompile("cache/.+")),
+					resource.TestCheckResourceAttr(
+						resourceName, "cluster_endpoint_encryption_type", "NONE"),
 					resource.TestMatchResourceAttr(
 						resourceName, "cluster_name", regexp.MustCompile(`^tf-\w+$`)),
 					resource.TestCheckResourceAttrPair(resourceName, "iam_role_arn", iamRoleResourceName, "arn"),
