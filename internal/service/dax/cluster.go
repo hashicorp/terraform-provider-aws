@@ -50,7 +50,7 @@ func ResourceCluster() *schema.Resource {
 				ValidateFunc: validation.StringInSlice(dax.ClusterEndpointEncryptionType_Values(), false),
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
 					// API returns "NONE" by default.
-					if old == ClusterEndpointEncryptionTypeNone && new == "" {
+					if old == dax.ClusterEndpointEncryptionTypeNone && new == "" {
 						return true
 					}
 
