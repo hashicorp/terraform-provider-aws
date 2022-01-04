@@ -5,14 +5,13 @@ import (
 	"regexp"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 // add sweeper to delete known test VPN Gateways
@@ -325,43 +324,23 @@ func testAccCheckVpnGatewayDestroy(s *terraform.State) error {
 			continue
 		}
 
-		// Try to find the resource
-		resp, err := conn.DescribeVpnGateways(&ec2.DescribeVpnGatewaysInput{
-			VpnGatewayIds: []*string{aws.String(rs.Primary.ID)},
-		})
-		if err == nil {
-			var v *ec2.VpnGateway
-			for _, g := range resp.VpnGateways {
-				if *g.VpnGatewayId == rs.Primary.ID {
-					v = g
-				}
-			}
+		_, err := tfec2.FindVPNGatewayByID(conn, rs.Primary.ID)
 
-			if v == nil {
-				// wasn't found
-				return nil
-			}
-
-			if *v.State != "deleted" {
-				return fmt.Errorf("Expected VPN Gateway to be in deleted state, but was not: %s", v)
-			}
-			return nil
+		if tfresource.NotFound(err) {
+			continue
 		}
 
-		// Verify the error is what we want
-		ec2err, ok := err.(awserr.Error)
-		if !ok {
+		if err != nil {
 			return err
 		}
-		if ec2err.Code() != "InvalidVpnGatewayID.NotFound" {
-			return err
-		}
+
+		return fmt.Errorf("EC2 VPN Gateway %s still exists", rs.Primary.ID)
 	}
 
 	return nil
 }
 
-func testAccCheckVpnGatewayExists(n string, ig *ec2.VpnGateway) resource.TestCheckFunc {
+func testAccCheckVpnGatewayExists(n string, v *ec2.VpnGateway) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -369,21 +348,18 @@ func testAccCheckVpnGatewayExists(n string, ig *ec2.VpnGateway) resource.TestChe
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No ID is set")
+			return fmt.Errorf("No EC2 VPN Gateway ID is set")
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
-		resp, err := conn.DescribeVpnGateways(&ec2.DescribeVpnGatewaysInput{
-			VpnGatewayIds: []*string{aws.String(rs.Primary.ID)},
-		})
+
+		output, err := tfec2.FindVPNGatewayByID(conn, rs.Primary.ID)
+
 		if err != nil {
 			return err
 		}
-		if len(resp.VpnGateways) == 0 {
-			return fmt.Errorf("VPN Gateway not found")
-		}
 
-		*ig = *resp.VpnGateways[0]
+		*v = *output
 
 		return nil
 	}

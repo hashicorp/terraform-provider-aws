@@ -1086,41 +1086,77 @@ func FindVPNGatewayRoutePropagationExists(conn *ec2.EC2, routeTableID, gatewayID
 	}
 }
 
-// FindVPNGatewayVPCAttachment returns the attachment between the specified VPN gateway and VPC.
-// Returns nil and potentially an error if no attachment is found.
 func FindVPNGatewayVPCAttachment(conn *ec2.EC2, vpnGatewayID, vpcID string) (*ec2.VpcAttachment, error) {
 	vpnGateway, err := FindVPNGatewayByID(conn, vpnGatewayID)
+
 	if err != nil {
 		return nil, err
 	}
 
-	if vpnGateway == nil {
-		return nil, nil
-	}
-
 	for _, vpcAttachment := range vpnGateway.VpcAttachments {
 		if aws.StringValue(vpcAttachment.VpcId) == vpcID {
+			if state := aws.StringValue(vpcAttachment.State); state == ec2.AttachmentStatusDetached {
+				return nil, &resource.NotFoundError{
+					Message:     state,
+					LastRequest: vpcID,
+				}
+			}
+
 			return vpcAttachment, nil
 		}
 	}
 
-	return nil, nil
+	return nil, tfresource.NewEmptyResultError(vpcID)
 }
 
-// FindVPNGatewayByID returns the VPN gateway corresponding to the specified identifier.
-// Returns nil and potentially an error if no VPN gateway is found.
 func FindVPNGatewayByID(conn *ec2.EC2, id string) (*ec2.VpnGateway, error) {
 	input := &ec2.DescribeVpnGatewaysInput{
 		VpnGatewayIds: aws.StringSlice([]string{id}),
 	}
 
-	output, err := conn.DescribeVpnGateways(input)
+	output, err := FindVPNGateway(conn, input)
+
 	if err != nil {
 		return nil, err
 	}
 
-	if output == nil || len(output.VpnGateways) == 0 {
-		return nil, nil
+	if state := aws.StringValue(output.State); state == ec2.VpnStateDeleted {
+		return nil, &resource.NotFoundError{
+			Message:     state,
+			LastRequest: input,
+		}
+	}
+
+	// Eventual consistency check.
+	if aws.StringValue(output.VpnGatewayId) != id {
+		return nil, &resource.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
+}
+
+func FindVPNGateway(conn *ec2.EC2, input *ec2.DescribeVpnGatewaysInput) (*ec2.VpnGateway, error) {
+	output, err := conn.DescribeVpnGateways(input)
+
+	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidVpnGatewayIDNotFound) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || len(output.VpnGateways) == 0 || output.VpnGateways[0] == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	if count := len(output.VpnGateways); count > 1 {
+		return nil, tfresource.NewTooManyResultsError(count, input)
 	}
 
 	return output.VpnGateways[0], nil

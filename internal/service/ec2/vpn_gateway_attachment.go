@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func ResourceVPNGatewayAttachment() *schema.Resource {
@@ -23,7 +24,6 @@ func ResourceVPNGatewayAttachment() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-
 			"vpn_gateway_id": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -68,22 +68,16 @@ func resourceVPNGatewayAttachmentRead(d *schema.ResourceData, meta interface{}) 
 	vpcId := d.Get("vpc_id").(string)
 	vgwId := d.Get("vpn_gateway_id").(string)
 
-	vpcAttachment, err := FindVPNGatewayVPCAttachment(conn, vgwId, vpcId)
+	_, err := FindVPNGatewayVPCAttachment(conn, vgwId, vpcId)
 
-	if tfawserr.ErrMessageContains(err, ErrCodeInvalidVpnGatewayIDNotFound, "") {
-		log.Printf("[WARN] VPN Gateway (%s) Attachment (%s) not found, removing from state", vgwId, vpcId)
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] EC2 VPN Gateway (%s) Attachment (%s) not found, removing from state", vgwId, vpcId)
 		d.SetId("")
 		return nil
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading VPN Gateway (%s) Attachment (%s): %w", vgwId, vpcId, err)
-	}
-
-	if vpcAttachment == nil || aws.StringValue(vpcAttachment.State) == ec2.AttachmentStatusDetached {
-		log.Printf("[WARN] VPN Gateway (%s) Attachment (%s) not found, removing from state", vgwId, vpcId)
-		d.SetId("")
-		return nil
+		return fmt.Errorf("error reading EC2 VPN Gateway (%s) Attachment (%s): %w", vgwId, vpcId, err)
 	}
 
 	return nil

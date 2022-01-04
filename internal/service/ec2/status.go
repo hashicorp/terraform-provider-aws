@@ -525,27 +525,19 @@ func StatusVPCPeeringConnection(conn *ec2.EC2, vpcPeeringConnectionID string) re
 	}
 }
 
-const (
-	attachmentStateNotFound = "NotFound"
-	attachmentStateUnknown  = "Unknown"
-)
-
-// StatusVPNGatewayVPCAttachmentState fetches the attachment between the specified VPN gateway and VPC and its state
 func StatusVPNGatewayVPCAttachmentState(conn *ec2.EC2, vpnGatewayID, vpcID string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		vpcAttachment, err := FindVPNGatewayVPCAttachment(conn, vpnGatewayID, vpcID)
-		if tfawserr.ErrCodeEquals(err, ErrCodeInvalidVpnGatewayIDNotFound) {
-			return nil, attachmentStateNotFound, nil
+		output, err := FindVPNGatewayVPCAttachment(conn, vpnGatewayID, vpcID)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
 		}
+
 		if err != nil {
-			return nil, attachmentStateUnknown, err
+			return nil, "", err
 		}
 
-		if vpcAttachment == nil {
-			return nil, attachmentStateNotFound, nil
-		}
-
-		return vpcAttachment, aws.StringValue(vpcAttachment.State), nil
+		return output, aws.StringValue(output.State), nil
 	}
 }
 

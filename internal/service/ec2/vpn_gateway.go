@@ -103,39 +103,37 @@ func resourceVPNGatewayRead(d *schema.ResourceData, meta interface{}) error {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	resp, err := conn.DescribeVpnGateways(&ec2.DescribeVpnGatewaysInput{
-		VpnGatewayIds: []*string{aws.String(d.Id())},
-	})
-	if err != nil {
-		if tfawserr.ErrMessageContains(err, "InvalidVpnGatewayID.NotFound", "") {
-			log.Printf("[WARN] VPC Gateway (%s) not found, removing from state", d.Id())
-			d.SetId("")
-			return nil
-		} else {
-			log.Printf("[ERROR] Error finding VpnGateway: %s", err)
-			return err
-		}
-	}
+	vpnGateway, err := FindVPNGatewayByID(conn, d.Id())
 
-	vpnGateway := resp.VpnGateways[0]
-	if vpnGateway == nil || aws.StringValue(vpnGateway.State) == ec2.VpnStateDeleted {
-		log.Printf("[WARN] VPC Gateway (%s) not found, removing from state", d.Id())
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] EC2 VPN Gateway (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
-	vpnAttachment := vpnGatewayGetAttachment(vpnGateway)
-	if vpnAttachment == nil {
-		// Gateway exists but not attached to the VPC
-		d.Set("vpc_id", "")
-	} else {
-		d.Set("vpc_id", vpnAttachment.VpcId)
+	if err != nil {
+		return fmt.Errorf("error reading EC2 VPN Gateway (%s): %w", d.Id(), err)
 	}
 
-	if vpnGateway.AvailabilityZone != nil && aws.StringValue(vpnGateway.AvailabilityZone) != "" {
+	d.Set("amazon_side_asn", strconv.FormatInt(aws.Int64Value(vpnGateway.AmazonSideAsn), 10))
+	arn := arn.ARN{
+		Partition: meta.(*conns.AWSClient).Partition,
+		Service:   ec2.ServiceName,
+		Region:    meta.(*conns.AWSClient).Region,
+		AccountID: meta.(*conns.AWSClient).AccountID,
+		Resource:  fmt.Sprintf("vpn-gateway/%s", d.Id()),
+	}.String()
+	d.Set("arn", arn)
+	if aws.StringValue(vpnGateway.AvailabilityZone) != "" {
 		d.Set("availability_zone", vpnGateway.AvailabilityZone)
 	}
-	d.Set("amazon_side_asn", strconv.FormatInt(aws.Int64Value(vpnGateway.AmazonSideAsn), 10))
+
+	d.Set("vpc_id", nil)
+	for _, vpcAttachment := range vpnGateway.VpcAttachments {
+		if aws.StringValue(vpcAttachment.State) == ec2.AttachmentStatusAttached {
+			d.Set("vpc_id", vpcAttachment.VpcId)
+		}
+	}
 
 	tags := KeyValueTags(vpnGateway.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
@@ -147,16 +145,6 @@ func resourceVPNGatewayRead(d *schema.ResourceData, meta interface{}) error {
 	if err := d.Set("tags_all", tags.Map()); err != nil {
 		return fmt.Errorf("error setting tags_all: %w", err)
 	}
-
-	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
-		Service:   ec2.ServiceName,
-		Region:    meta.(*conns.AWSClient).Region,
-		AccountID: meta.(*conns.AWSClient).AccountID,
-		Resource:  fmt.Sprintf("vpn-gateway/%s", d.Id()),
-	}.String()
-
-	d.Set("arn", arn)
 
 	return nil
 }
@@ -297,15 +285,5 @@ func resourceVPNGatewayDetach(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error waiting for VPN Gateway (%s) Attachment (%s) to become detached: %w", d.Id(), vpcId, err)
 	}
 
-	return nil
-}
-
-// vpnGatewayGetAttachment returns any VGW attachment that's in "attached" state or nil.
-func vpnGatewayGetAttachment(vgw *ec2.VpnGateway) *ec2.VpcAttachment {
-	for _, vpcAttachment := range vgw.VpcAttachments {
-		if aws.StringValue(vpcAttachment.State) == ec2.AttachmentStatusAttached {
-			return vpcAttachment
-		}
-	}
 	return nil
 }

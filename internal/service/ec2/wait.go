@@ -718,7 +718,7 @@ const (
 
 func WaitVPNGatewayVPCAttachmentAttached(conn *ec2.EC2, vpnGatewayID, vpcID string) (*ec2.VpcAttachment, error) {
 	stateConf := &resource.StateChangeConf{
-		Pending: []string{ec2.AttachmentStatusDetached, ec2.AttachmentStatusAttaching},
+		Pending: []string{ec2.AttachmentStatusAttaching},
 		Target:  []string{ec2.AttachmentStatusAttached},
 		Refresh: StatusVPNGatewayVPCAttachmentState(conn, vpnGatewayID, vpcID),
 		Timeout: VPNGatewayVPCAttachmentAttachedTimeout,
@@ -736,7 +736,7 @@ func WaitVPNGatewayVPCAttachmentAttached(conn *ec2.EC2, vpnGatewayID, vpcID stri
 func WaitVPNGatewayVPCAttachmentDetached(conn *ec2.EC2, vpnGatewayID, vpcID string) (*ec2.VpcAttachment, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{ec2.AttachmentStatusAttached, ec2.AttachmentStatusDetaching},
-		Target:  []string{ec2.AttachmentStatusDetached},
+		Target:  []string{},
 		Refresh: StatusVPNGatewayVPCAttachmentState(conn, vpnGatewayID, vpcID),
 		Timeout: VPNGatewayVPCAttachmentDetachedTimeout,
 	}
