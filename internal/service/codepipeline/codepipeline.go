@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"regexp"
 	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -50,11 +51,16 @@ func ResourceCodePipeline() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
+				ValidateFunc: validation.All(
+					validation.StringLenBetween(1, 100),
+					validation.StringMatch(regexp.MustCompile(`[A-Za-z0-9.@\-_]+`), ""),
+				),
 			},
 
 			"role_arn": {
-				Type:     schema.TypeString,
-				Required: true,
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: verify.ValidARN,
 			},
 			"artifact_store": {
 				Type:     schema.TypeSet,
@@ -105,6 +111,10 @@ func ResourceCodePipeline() *schema.Resource {
 						"name": {
 							Type:     schema.TypeString,
 							Required: true,
+							ValidateFunc: validation.All(
+								validation.StringLenBetween(1, 100),
+								validation.StringMatch(regexp.MustCompile(`[A-Za-z0-9.@\-_]+`), ""),
+							),
 						},
 						"action": {
 							Type:     schema.TypeList,
@@ -112,8 +122,12 @@ func ResourceCodePipeline() *schema.Resource {
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"configuration": {
-										Type:             schema.TypeMap,
-										Optional:         true,
+										Type:     schema.TypeMap,
+										Optional: true,
+										ValidateDiagFunc: allDiagFunc(
+											validation.MapKeyLenBetween(1, 50),
+											validation.MapKeyLenBetween(1, 1000),
+										),
 										Elem:             &schema.Schema{Type: schema.TypeString},
 										DiffSuppressFunc: suppressCodePipelineStageActionConfiguration,
 									},
@@ -135,6 +149,10 @@ func ResourceCodePipeline() *schema.Resource {
 									"version": {
 										Type:     schema.TypeString,
 										Required: true,
+										ValidateFunc: validation.All(
+											validation.StringLenBetween(1, 9),
+											validation.StringMatch(regexp.MustCompile(`[0-9A-Za-z_-]+`), ""),
+										),
 									},
 									"input_artifacts": {
 										Type:     schema.TypeList,
@@ -149,15 +167,21 @@ func ResourceCodePipeline() *schema.Resource {
 									"name": {
 										Type:     schema.TypeString,
 										Required: true,
+										ValidateFunc: validation.All(
+											validation.StringLenBetween(1, 100),
+											validation.StringMatch(regexp.MustCompile(`[A-Za-z0-9.@\-_]+`), ""),
+										),
 									},
 									"role_arn": {
-										Type:     schema.TypeString,
-										Optional: true,
+										Type:         schema.TypeString,
+										Optional:     true,
+										ValidateFunc: verify.ValidARN,
 									},
 									"run_order": {
-										Type:     schema.TypeInt,
-										Optional: true,
-										Computed: true,
+										Type:         schema.TypeInt,
+										Optional:     true,
+										Computed:     true,
+										ValidateFunc: validation.IntBetween(1, 999),
 									},
 									"region": {
 										Type:     schema.TypeString,
@@ -167,6 +191,10 @@ func ResourceCodePipeline() *schema.Resource {
 									"namespace": {
 										Type:     schema.TypeString,
 										Optional: true,
+										ValidateFunc: validation.All(
+											validation.StringLenBetween(1, 100),
+											validation.StringMatch(regexp.MustCompile(`[A-Za-z0-9@\-_]+`), ""),
+										),
 									},
 								},
 							},
@@ -234,7 +262,7 @@ func expand(d *schema.ResourceData) (*codepipeline.PipelineDeclaration, error) {
 		Stages:  expandStages(d),
 	}
 
-	pipelineArtifactStores, err := ExpandArtifactStores(d.Get("artifact_store").(*schema.Set).List())
+	pipelineArtifactStores, err := expandArtifactStores(d.Get("artifact_store").(*schema.Set).List())
 	if err != nil {
 		return nil, err
 	}
@@ -249,7 +277,7 @@ func expand(d *schema.ResourceData) (*codepipeline.PipelineDeclaration, error) {
 	return &pipeline, nil
 }
 
-func ExpandArtifactStores(configs []interface{}) (map[string]*codepipeline.ArtifactStore, error) {
+func expandArtifactStores(configs []interface{}) (map[string]*codepipeline.ArtifactStore, error) {
 	if len(configs) == 0 {
 		return nil, nil
 	}
@@ -650,4 +678,15 @@ func hashCodePipelineGitHubToken(token string) string {
 	}
 	sum := sha256.Sum256([]byte(token))
 	return codePipelineGitHubTokenHashPrefix + hex.EncodeToString(sum[:])
+}
+
+// https://github.com/hashicorp/terraform-plugin-sdk/issues/780.
+func allDiagFunc(validators ...schema.SchemaValidateDiagFunc) schema.SchemaValidateDiagFunc {
+	return func(i interface{}, k cty.Path) diag.Diagnostics {
+		var diags diag.Diagnostics
+		for _, validator := range validators {
+			diags = append(diags, validator(i, k)...)
+		}
+		return diags
+	}
 }
