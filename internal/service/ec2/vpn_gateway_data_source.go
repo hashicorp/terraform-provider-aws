@@ -18,18 +18,13 @@ func DataSourceVPNGateway() *schema.Resource {
 		Read: dataSourceVPNGatewayRead,
 
 		Schema: map[string]*schema.Schema{
+			"amazon_side_asn": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
 			"arn": {
 				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"id": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"state": {
-				Type:     schema.TypeString,
-				Optional: true,
 				Computed: true,
 			},
 			"attached_vpc_id": {
@@ -42,13 +37,18 @@ func DataSourceVPNGateway() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-			"amazon_side_asn": {
+			"filter": CustomFiltersSchema(),
+			"id": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"filter": CustomFiltersSchema(),
-			"tags":   tftags.TagsSchemaComputed(),
+			"state": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"tags": tftags.TagsSchemaComputed(),
 		},
 	}
 }
