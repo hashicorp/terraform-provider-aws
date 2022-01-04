@@ -323,6 +323,23 @@ resource "aws_dax_cluster" "test" {
 `, baseConfig, rString, enabled)
 }
 
+func testAccClusterWithEndpointEncryptionConfig(rString string, encryptionType string) string {
+	return fmt.Sprintf(`%s
+resource "aws_dax_cluster" "test" {
+  cluster_name                     = "tf-%s"
+  cluster_endpoint_encryption_type = "%s"
+  iam_role_arn                     = aws_iam_role.test.arn
+  node_type                        = "dax.t2.small"
+  replication_factor               = 1
+  description                      = "test cluster"
+
+  tags = {
+    foo = "bar"
+  }
+}
+`, baseConfig, rString, encryptionType)
+}
+
 func testAccClusterResizeConfig_singleNode(rString string) string {
 	return fmt.Sprintf(`%s
 resource "aws_dax_cluster" "test" {
