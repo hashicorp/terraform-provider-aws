@@ -156,7 +156,7 @@ func ResourceOpenzfsFileSystem() *schema.Resource {
 							Computed: true,
 						},
 						"user_and_group_quotas": {
-							Type:     schema.TypeList,
+							Type:     schema.TypeSet,
 							Optional: true,
 							Computed: true,
 							MaxItems: 100,
@@ -601,8 +601,8 @@ func expandFsxOpenzfsRootVolumeConfiguration(cfg []interface{}) *fsx.OpenZFSCrea
 		out.ReadOnly = aws.Bool(v)
 	}
 
-	if v, ok := conf["user_and_group_quotas"].([]interface{}); ok {
-		out.UserAndGroupQuotas = expandFsxOpenzfsUserAndGroupQuotas(v)
+	if v, ok := conf["user_and_group_quotas"]; ok {
+		out.UserAndGroupQuotas = expandFsxOpenzfsUserAndGroupQuotas(v.(*schema.Set).List())
 	}
 
 	if v, ok := conf["nfs_exports"].([]interface{}); ok {
@@ -629,8 +629,8 @@ func expandFsxOpenzfsUpdateRootVolumeConfiguration(cfg []interface{}) *fsx.Updat
 		out.ReadOnly = aws.Bool(v)
 	}
 
-	if v, ok := conf["user_and_group_quotas"].([]interface{}); ok {
-		out.UserAndGroupQuotas = expandFsxOpenzfsUserAndGroupQuotas(v)
+	if v, ok := conf["user_and_group_quotas"]; ok {
+		out.UserAndGroupQuotas = expandFsxOpenzfsUserAndGroupQuotas(v.(*schema.Set).List())
 	}
 
 	if v, ok := conf["nfs_exports"].([]interface{}); ok {

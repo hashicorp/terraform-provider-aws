@@ -141,7 +141,7 @@ func ResourceOpenzfsVolume() *schema.Resource {
 				ValidateFunc: validation.IntBetween(0, 2147483647),
 			},
 			"user_and_group_quotas": {
-				Type:     schema.TypeList,
+				Type:     schema.TypeSet,
 				Optional: true,
 				Computed: true,
 				MaxItems: 100,
@@ -222,7 +222,7 @@ func resourceOepnzfsVolumeCreate(d *schema.ResourceData, meta interface{}) error
 	}
 
 	if v, ok := d.GetOk("user_and_group_quotas"); ok {
-		input.OpenZFSConfiguration.UserAndGroupQuotas = expandFsxOpenzfsVolumeUserAndGroupQuotas(v.([]interface{}))
+		input.OpenZFSConfiguration.UserAndGroupQuotas = expandFsxOpenzfsVolumeUserAndGroupQuotas(v.(*schema.Set).List())
 	}
 
 	if v, ok := d.GetOk("origin_snapshot"); ok {
@@ -366,7 +366,7 @@ func resourceOpenzfsVolumeUpdate(d *schema.ResourceData, meta interface{}) error
 		}
 
 		if d.HasChange("user_and_group_quotas") {
-			input.OpenZFSConfiguration.UserAndGroupQuotas = expandFsxOpenzfsVolumeUserAndGroupQuotas(d.Get("user_and_group_quotas").([]interface{}))
+			input.OpenZFSConfiguration.UserAndGroupQuotas = expandFsxOpenzfsVolumeUserAndGroupQuotas(d.Get("user_and_group_quotas").(*schema.Set).List())
 		}
 
 		_, err := conn.UpdateVolume(input)
