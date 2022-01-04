@@ -184,6 +184,74 @@ func TestAccDAXCluster_Encryption_enabled(t *testing.T) {
 	})
 }
 
+func TestAccDAXCluster_EndpointEncryption_disabled(t *testing.T) {
+	var dc dax.Cluster
+	rString := sdkacctest.RandString(10)
+	resourceName := "aws_dax_cluster.test"
+	clusterEndpointEncryptionType := "NONE"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, dax.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckClusterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterWithEndpointEncryptionConfig(rString, clusterEndpointEncryptionType),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(resourceName, &dc),
+					resource.TestCheckResourceAttr(resourceName, "cluster_endpoint_encryption_type", clusterEndpointEncryptionType),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			// Ensure it shows no difference when removing cluster_endpoint_encryption_type configuration
+			{
+				Config:             testAccClusterConfig(rString),
+				PlanOnly:           true,
+				ExpectNonEmptyPlan: false,
+			},
+		},
+	})
+}
+
+func TestAccDAXCluster_EndpointEncryption_enabled(t *testing.T) {
+	var dc dax.Cluster
+	rString := sdkacctest.RandString(10)
+	resourceName := "aws_dax_cluster.test"
+	clusterEndpointEncryptionType := "TLS"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, dax.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckClusterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterWithEndpointEncryptionConfig(rString, clusterEndpointEncryptionType),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(resourceName, &dc),
+					resource.TestCheckResourceAttr(resourceName, "cluster_endpoint_encryption_type", clusterEndpointEncryptionType),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			// Ensure it shows a difference when removing cluster_endpoint_encryption_type configuration
+			{
+				Config:             testAccClusterConfig(rString),
+				PlanOnly:           true,
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func testAccCheckClusterDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).DAXConn
 
