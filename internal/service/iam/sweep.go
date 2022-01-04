@@ -327,6 +327,11 @@ func sweepPolicies(region string) error {
 		}
 
 		for _, policy := range page.Policies {
+			// "error deleting IAM Policy (arn:aws:iam::123456789012:policy/SecurityComputeAccess): AccessDenied: User: arn:aws:iam::123456789012:user/teamcity is not authorized to perform: iam:DeletePolicy on resource: policy arn:aws:iam::123456789012:policy/SecurityComputeAccess with an explicit deny"
+			if aws.StringValue(policy.PolicyName) == "SecurityComputeAccess" {
+				continue
+			}
+
 			arn := aws.StringValue(policy.Arn)
 			input := &iam.DeletePolicyInput{
 				PolicyArn: policy.Arn,
