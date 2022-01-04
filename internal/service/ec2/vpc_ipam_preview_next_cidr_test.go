@@ -14,7 +14,7 @@ func TestAccVPCIpamPreviewNextCidr_ipv4Basic(t *testing.T) {
 	netmaskLength := "28"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccIPAMPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: nil,
@@ -39,7 +39,7 @@ func TestAccVPCIpamPreviewNextCidr_ipv4Basic(t *testing.T) {
 // 	netmaskLength := "28"
 
 // 	resource.ParallelTest(t, resource.TestCase{
-// 		PreCheck:     func() { acctest.PreCheck(t) },
+// 		PreCheck:     func() { acctest.PreCheck(t); testAccIPAMPreCheck(t) },
 // 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 // 		Providers:    acctest.Providers,
 // 		CheckDestroy: nil,
