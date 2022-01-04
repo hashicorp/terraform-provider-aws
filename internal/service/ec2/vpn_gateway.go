@@ -24,11 +24,19 @@ func ResourceVPNGateway() *schema.Resource {
 		Read:   resourceVPNGatewayRead,
 		Update: resourceVPNGatewayUpdate,
 		Delete: resourceVPNGatewayDelete,
+
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
 
 		Schema: map[string]*schema.Schema{
+			"amazon_side_asn": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				Computed:     true,
+				ValidateFunc: validAmazonSideASN,
+			},
 			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -38,24 +46,13 @@ func ResourceVPNGateway() *schema.Resource {
 				Optional: true,
 				ForceNew: true,
 			},
-
-			"amazon_side_asn": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				Computed:     true,
-				ValidateFunc: validAmazonSideASN,
-			},
-
+			"tags":     tftags.TagsSchema(),
+			"tags_all": tftags.TagsSchemaComputed(),
 			"vpc_id": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-
-			"tags": tftags.TagsSchema(),
-
-			"tags_all": tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
