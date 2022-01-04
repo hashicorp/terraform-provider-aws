@@ -20,9 +20,11 @@ FEATURES:
 * **New Resource:** `aws_memorydb_user` ([#22261](https://github.com/hashicorp/terraform-provider-aws/issues/22261))
 * **New Resource:** `aws_mskconnect_custom_plugin` ([#22333](https://github.com/hashicorp/terraform-provider-aws/issues/22333))
 * **New Resource:** `aws_vpc_endpoint_connection_accepter` ([#19083](https://github.com/hashicorp/terraform-provider-aws/issues/19083))
+* **New Resource:** `aws_vpc_ipam_organization_admin_account` ([#22394](https://github.com/hashicorp/terraform-provider-aws/issues/22394))
 
 ENHANCEMENTS:
 
+* data-source/aws_batch_job_queue: Add `scheduling_policy_arn` attribute ([#22348](https://github.com/hashicorp/terraform-provider-aws/issues/22348))
 * data-source/aws_cloudtrail_service_account: Add service account ID for `ap-southeast-3` AWS Region ([#22295](https://github.com/hashicorp/terraform-provider-aws/issues/22295))
 * data-source/aws_ecs_task_definition: Add `arn` attribute. ([#21856](https://github.com/hashicorp/terraform-provider-aws/issues/21856))
 * data-source/aws_elb_hosted_zone_id: Add hosted zone ID for `ap-southeast-3` AWS Region ([#22295](https://github.com/hashicorp/terraform-provider-aws/issues/22295))
@@ -36,6 +38,7 @@ ENHANCEMENTS:
 * resource/aws_codebuild_project: Add `public_project_alias` attribute. ([#22189](https://github.com/hashicorp/terraform-provider-aws/issues/22189))
 * resource/aws_codebuild_project: Add `secondary_source_version` argument ([#22345](https://github.com/hashicorp/terraform-provider-aws/issues/22345))
 * resource/aws_codebuild_project: Add plan time validation for `cache.modes` and `service_role`. ([#22189](https://github.com/hashicorp/terraform-provider-aws/issues/22189))
+* resource/aws_dax_cluster: Add `cluster_endpoint_encryption_type` argument ([#22396](https://github.com/hashicorp/terraform-provider-aws/issues/22396))
 * resource/aws_ecr_replication_configuration: Add `repository_filter` to `replication_configuration` block ([#21231](https://github.com/hashicorp/terraform-provider-aws/issues/21231))
 * resource/aws_ecr_replication_configuration: Increase `MaxItems` for `rule` to `10` and for `destination` to `25` ([#22281](https://github.com/hashicorp/terraform-provider-aws/issues/22281))
 * resource/aws_elasticsearch_domain: Tag on create ([#18082](https://github.com/hashicorp/terraform-provider-aws/issues/18082))
@@ -52,6 +55,7 @@ ENHANCEMENTS:
 
 BUG FIXES:
 
+* resource/aws_appstream_fleet: Correctly create resource with `stream_view` argument ([#22395](https://github.com/hashicorp/terraform-provider-aws/issues/22395))
 * resource/aws_codebuild_project: Fix plan validation to take into account computed values for `cache.location` ([#21458](https://github.com/hashicorp/terraform-provider-aws/issues/21458))
 * resource/aws_dynamodb_table: Remove extraneous `kms_key_arn` attribute from the `ttl` configuration block ([#21334](https://github.com/hashicorp/terraform-provider-aws/issues/21334))
 * resource/aws_ec2_traffic_mirror_filter_rule: Prevent crash during resource read ([#22315](https://github.com/hashicorp/terraform-provider-aws/issues/22315))
