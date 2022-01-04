@@ -16,8 +16,8 @@ import (
 
 func ResourceVPCIpamPreviewNextCidr() *schema.Resource {
 	return &schema.Resource{
-		Create: ResourceVPCIpamPreviewNextCidrCreate,
-		Read:   ResourceVPCIpamPreviewNextCidrRead,
+		Create: resourceVPCIpamPreviewNextCidrCreate,
+		Read:   resourceVPCIpamPreviewNextCidrRead,
 		Delete: schema.Noop,
 		Schema: map[string]*schema.Schema{
 			"cidr": {
@@ -64,17 +64,17 @@ func ResourceVPCIpamPreviewNextCidr() *schema.Resource {
 	}
 }
 
-func ResourceVPCIpamPreviewNextCidrCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceVPCIpamPreviewNextCidrCreate(d *schema.ResourceData, meta interface{}) error {
 	poolId := d.Get("ipam_pool_id").(string)
 	uniqueValue := resource.UniqueId()
 
 	// preview will not produce an IpamPoolAllocationId. Hence use the uniqueValue instead
 	d.SetId(encodeVPCIpamPreviewNextCidrID(uniqueValue, poolId))
 
-	return ResourceVPCIpamPreviewNextCidrRead(d, meta)
+	return resourceVPCIpamPreviewNextCidrRead(d, meta)
 }
 
-func ResourceVPCIpamPreviewNextCidrRead(d *schema.ResourceData, meta interface{}) error {
+func resourceVPCIpamPreviewNextCidrRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	uniqueValue, poolId, err := decodeVPCIpamPreviewNextCidrID(d.Id())
