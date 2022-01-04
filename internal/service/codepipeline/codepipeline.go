@@ -593,17 +593,19 @@ func resourceCodePipelineRead(d *schema.ResourceData, meta interface{}) error {
 func resourceCodePipelineUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CodePipelineConn
 
-	pipeline, err := expand(d)
-	if err != nil {
-		return err
-	}
-	params := &codepipeline.UpdatePipelineInput{
-		Pipeline: pipeline,
-	}
-	_, err = conn.UpdatePipeline(params)
+	if d.HasChangesExcept("tags", "tags_all") {
+		pipeline, err := expand(d)
+		if err != nil {
+			return err
+		}
+		params := &codepipeline.UpdatePipelineInput{
+			Pipeline: pipeline,
+		}
+		_, err = conn.UpdatePipeline(params)
 
-	if err != nil {
-		return fmt.Errorf("[ERROR] Error updating CodePipeline (%s): %w", d.Id(), err)
+		if err != nil {
+			return fmt.Errorf("[ERROR] Error updating CodePipeline (%s): %w", d.Id(), err)
+		}
 	}
 
 	arn := d.Get("arn").(string)
