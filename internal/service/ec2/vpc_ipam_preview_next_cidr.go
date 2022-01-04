@@ -38,10 +38,6 @@ func ResourceVPCIpamPreviewNextCidr() *schema.Resource {
 			// 		),
 			// 	},
 			// },
-			"id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 			"ipam_pool_id": {
 				Type:     schema.TypeString,
 				Required: true,
