@@ -82,7 +82,9 @@ resource "aws_vpc_ipam_pool_cidr" "test" {
 `
 
 func testAccVPCIpamPreviewNextCidrIpv4Basic(netmaskLength string) string {
-	return testAccVPCIpamPreviewNextCidrIpv4Base + fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		testAccVPCIpamPreviewNextCidrIpv4Base,
+		fmt.Sprintf(`
 resource "aws_vpc_ipam_preview_next_cidr" "test" {
   ipam_pool_id   = aws_vpc_ipam_pool.test.id
   netmask_length = %[1]q
@@ -91,7 +93,7 @@ resource "aws_vpc_ipam_preview_next_cidr" "test" {
     aws_vpc_ipam_pool_cidr.test
   ]
 }
-`, netmaskLength)
+`, netmaskLength))
 }
 
 // // temp comment out till bug is resolved
