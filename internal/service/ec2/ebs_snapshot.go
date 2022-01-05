@@ -89,7 +89,7 @@ func ResourceEBSSnapshot() *schema.Resource {
 					validation.StringInSlice([]string{"standard"}, false), //Enum slice does not include `standard` type.
 				),
 			},
-			"permenent_restore": {
+			"permanent_restore": {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
@@ -245,7 +245,7 @@ func resourceEBSSnapshotUpdate(d *schema.ResourceData, meta interface{}) error {
 				SnapshotId: aws.String(d.Id()),
 			}
 
-			if v, ok := d.GetOk("permenent_restore"); ok {
+			if v, ok := d.GetOk("permanent_restore"); ok {
 				input.PermanentRestore = aws.Bool(v.(bool))
 			}
 

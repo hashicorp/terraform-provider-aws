@@ -80,7 +80,7 @@ func ResourceEBSSnapshotCopy() *schema.Resource {
 					validation.StringInSlice([]string{"standard"}, false), //Enum slice does not include `standard` type.
 				),
 			},
-			"permenent_restore": {
+			"permanent_restore": {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
