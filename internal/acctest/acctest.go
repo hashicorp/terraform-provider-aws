@@ -1328,7 +1328,7 @@ func CheckACMPCACertificateAuthorityActivateCA(certificateAuthority *acmpca.Cert
 			TemplateArn:             aws.String(fmt.Sprintf("arn:%s:acm-pca:::template/RootCACertificate/V1", Partition())),
 			Validity: &acmpca.Validity{
 				Type:  aws.String(acmpca.ValidityPeriodTypeYears),
-				Value: aws.Int64(2),
+				Value: aws.Int64(10),
 			},
 		})
 
@@ -1396,7 +1396,7 @@ func CheckACMPCACertificateAuthorityActivateSubordinateCA(rootCertificateAuthori
 			TemplateArn:             aws.String(fmt.Sprintf("arn:%s:acm-pca:::template/SubordinateCACertificate_PathLen0/V1", Partition())),
 			Validity: &acmpca.Validity{
 				Type:  aws.String(acmpca.ValidityPeriodTypeYears),
-				Value: aws.Int64(1),
+				Value: aws.Int64(3),
 			},
 		})
 
