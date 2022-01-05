@@ -46,7 +46,7 @@ resource "aws_mskconnect_worker_configuration" "test" {
 }
 
 data "aws_mskconnect_worker_configuration" "test" {
-	name = aws_mskconnect_worker_configuration.test.name
+  name = aws_mskconnect_worker_configuration.test.name
 }
 `, name, content)
 }
