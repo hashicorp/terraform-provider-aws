@@ -6,7 +6,6 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/acmpca"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -172,11 +171,9 @@ func TestAccEC2CustomerGateway_4ByteASN(t *testing.T) {
 
 func TestAccEC2CustomerGateway_certificate(t *testing.T) {
 	var gateway ec2.CustomerGateway
-	var ca acmpca.CertificateAuthority
 	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_customer_gateway.test"
-	acmCAResourceName := "aws_acmpca_certificate_authority.test"
 	acmCertificateResourceName := "aws_acm_certificate.test"
 	domain := acctest.RandomDomainName()
 
@@ -186,14 +183,6 @@ func TestAccEC2CustomerGateway_certificate(t *testing.T) {
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckCustomerGatewayDestroy,
 		Steps: []resource.TestStep{
-			// We need to create and activate the CA before issuing a certificate.
-			{
-				Config: testAccCustomerGatewayConfigRootCA(domain),
-				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckACMPCACertificateAuthorityExists(acmCAResourceName, &ca),
-					acctest.CheckACMPCACertificateAuthorityActivateCA(&ca),
-				),
-			},
 			{
 				Config: testAccCustomerGatewayConfigCertificate(rName, rBgpAsn, domain),
 				Check: resource.ComposeTestCheckFunc(
@@ -205,14 +194,6 @@ func TestAccEC2CustomerGateway_certificate(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
-			},
-			{
-				Config: testAccCustomerGatewayConfigCertificate(rName, rBgpAsn, domain),
-				Check: resource.ComposeTestCheckFunc(
-					// CA must be DISABLED for deletion.
-					acctest.CheckACMPCACertificateAuthorityDisableCA(&ca),
-				),
-				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
@@ -335,9 +316,11 @@ resource "aws_customer_gateway" "test" {
 `, rName, rBgpAsn)
 }
 
-func testAccCustomerGatewayConfigRootCA(domain string) string {
+func testAccCustomerGatewayConfigCertificate(rName string, rBgpAsn int, domain string) string {
 	return fmt.Sprintf(`
-resource "aws_acmpca_certificate_authority" "test" {
+data "aws_partition" "current" {}
+
+resource "aws_acmpca_certificate_authority" "root" {
   permanent_deletion_time_in_days = 7
   type                            = "ROOT"
 
@@ -350,23 +333,66 @@ resource "aws_acmpca_certificate_authority" "test" {
     }
   }
 }
-`, domain)
+
+resource "aws_acmpca_certificate" "root" {
+  certificate_authority_arn   = aws_acmpca_certificate_authority.root.arn
+  certificate_signing_request = aws_acmpca_certificate_authority.root.certificate_signing_request
+  signing_algorithm           = "SHA512WITHRSA"
+
+  template_arn = "arn:${data.aws_partition.current.partition}:acm-pca:::template/RootCACertificate/V1"
+
+  validity {
+    type  = "YEARS"
+    value = 2
+  }
 }
 
-func testAccCustomerGatewayConfigPrivateCert(domain string) string {
-	return fmt.Sprintf(`
+resource "aws_acmpca_certificate_authority_certificate" "root" {
+  certificate_authority_arn = aws_acmpca_certificate_authority.root.arn
+
+  certificate       = aws_acmpca_certificate.root.certificate
+  certificate_chain = aws_acmpca_certificate.root.certificate_chain
+}
+
+resource "aws_acmpca_certificate_authority" "test" {
+  permanent_deletion_time_in_days = 7
+  type                            = "SUBORDINATE"
+
+  certificate_authority_configuration {
+    key_algorithm     = "RSA_2048"
+    signing_algorithm = "SHA512WITHRSA"
+
+    subject {
+      common_name = "sub.%[1]s"
+    }
+  }
+}
+
+resource "aws_acmpca_certificate" "test" {
+  certificate_authority_arn   = aws_acmpca_certificate_authority.root.arn
+  certificate_signing_request = aws_acmpca_certificate_authority.test.certificate_signing_request
+  signing_algorithm           = "SHA512WITHRSA"
+
+  template_arn = "arn:${data.aws_partition.current.partition}:acm-pca:::template/SubordinateCACertificate_PathLen0/V1"
+
+  validity {
+    type  = "YEARS"
+    value = 1
+  }
+}
+
+resource "aws_acmpca_certificate_authority_certificate" "test" {
+  certificate_authority_arn = aws_acmpca_certificate_authority.test.arn
+
+  certificate       = aws_acmpca_certificate.test.certificate
+  certificate_chain = aws_acmpca_certificate.test.certificate_chain
+}
+
 resource "aws_acm_certificate" "test" {
-  domain_name               = "test.%[1]s"
+  domain_name               = "test.sub.%[1]s"
   certificate_authority_arn = aws_acmpca_certificate_authority.test.arn
 }
-`, domain)
-}
 
-func testAccCustomerGatewayConfigCertificate(rName string, rBgpAsn int, domain string) string {
-	return acctest.ConfigCompose(
-		testAccCustomerGatewayConfigRootCA(domain),
-		testAccCustomerGatewayConfigPrivateCert(domain),
-		fmt.Sprintf(`
 resource "aws_customer_gateway" "test" {
   bgp_asn         = %[2]d
   ip_address      = "172.0.0.1"
@@ -377,5 +403,5 @@ resource "aws_customer_gateway" "test" {
     Name = %[1]q
   }
 }
-`, rName, rBgpAsn))
+`, rName, rBgpAsn)
 }
