@@ -26,10 +26,12 @@ const (
 
 func waitRoleARNIsNotUniqueID(conn *iam.IAM, id string, role *iam.Role) (*iam.Role, error) {
 	stateConf := &resource.StateChangeConf{
-		Pending: []string{RoleStatusARNIsUniqueID, RoleStatusNotFound},
-		Target:  []string{RoleStatusARNIsARN},
-		Refresh: statusRoleCreate(conn, id, role),
-		Timeout: PropagationTimeout,
+		Pending:                   []string{RoleStatusARNIsUniqueID, RoleStatusNotFound},
+		Target:                    []string{RoleStatusARNIsARN},
+		Refresh:                   statusRoleCreate(conn, id, role),
+		Timeout:                   PropagationTimeout,
+		NotFoundChecks:            10,
+		ContinuousTargetOccurence: 5,
 	}
 
 	outputRaw, err := stateConf.WaitForState()

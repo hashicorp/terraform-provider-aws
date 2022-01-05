@@ -133,7 +133,17 @@ func ResourceDomain() *schema.Resource {
 													Optional:     true,
 													ValidateFunc: validation.StringInSlice(sagemaker.AppInstanceType_Values(), false),
 												},
+												"lifecycle_config_arn": {
+													Type:         schema.TypeString,
+													Optional:     true,
+													ValidateFunc: verify.ValidARN,
+												},
 												"sagemaker_image_arn": {
+													Type:         schema.TypeString,
+													Optional:     true,
+													ValidateFunc: verify.ValidARN,
+												},
+												"sagemaker_image_version_arn": {
 													Type:         schema.TypeString,
 													Optional:     true,
 													ValidateFunc: verify.ValidARN,
@@ -162,7 +172,17 @@ func ResourceDomain() *schema.Resource {
 													Optional:     true,
 													ValidateFunc: validation.StringInSlice(sagemaker.AppInstanceType_Values(), false),
 												},
+												"lifecycle_config_arn": {
+													Type:         schema.TypeString,
+													Optional:     true,
+													ValidateFunc: verify.ValidARN,
+												},
 												"sagemaker_image_arn": {
+													Type:         schema.TypeString,
+													Optional:     true,
+													ValidateFunc: verify.ValidARN,
+												},
+												"sagemaker_image_version_arn": {
 													Type:         schema.TypeString,
 													Optional:     true,
 													ValidateFunc: verify.ValidARN,
@@ -199,7 +219,17 @@ func ResourceDomain() *schema.Resource {
 													Optional:     true,
 													ValidateFunc: validation.StringInSlice(sagemaker.AppInstanceType_Values(), false),
 												},
+												"lifecycle_config_arn": {
+													Type:         schema.TypeString,
+													Optional:     true,
+													ValidateFunc: verify.ValidARN,
+												},
 												"sagemaker_image_arn": {
+													Type:         schema.TypeString,
+													Optional:     true,
+													ValidateFunc: verify.ValidARN,
+												},
+												"sagemaker_image_version_arn": {
 													Type:         schema.TypeString,
 													Optional:     true,
 													ValidateFunc: verify.ValidARN,
@@ -556,8 +586,16 @@ func expandSagemakerDomainDefaultResourceSpec(l []interface{}) *sagemaker.Resour
 		config.InstanceType = aws.String(v)
 	}
 
+	if v, ok := m["lifecycle_config_arn"].(string); ok && v != "" {
+		config.LifecycleConfigArn = aws.String(v)
+	}
+
 	if v, ok := m["sagemaker_image_arn"].(string); ok && v != "" {
 		config.SageMakerImageArn = aws.String(v)
+	}
+
+	if v, ok := m["sagemaker_image_version_arn"].(string); ok && v != "" {
+		config.SageMakerImageVersionArn = aws.String(v)
 	}
 
 	return config
@@ -651,8 +689,16 @@ func flattenSagemakerDomainDefaultResourceSpec(config *sagemaker.ResourceSpec) [
 		m["instance_type"] = aws.StringValue(config.InstanceType)
 	}
 
+	if config.LifecycleConfigArn != nil {
+		m["lifecycle_config_arn"] = aws.StringValue(config.LifecycleConfigArn)
+	}
+
 	if config.SageMakerImageArn != nil {
 		m["sagemaker_image_arn"] = aws.StringValue(config.SageMakerImageArn)
+	}
+
+	if config.SageMakerImageVersionArn != nil {
+		m["sagemaker_image_version_arn"] = aws.StringValue(config.SageMakerImageVersionArn)
 	}
 
 	return []map[string]interface{}{m}

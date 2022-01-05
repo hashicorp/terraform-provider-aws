@@ -12,6 +12,8 @@ import (
 
 func TestAccEC2SubnetIDsDataSource_basic(t *testing.T) {
 	rInt := sdkacctest.RandIntRange(0, 256)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
@@ -19,10 +21,10 @@ func TestAccEC2SubnetIDsDataSource_basic(t *testing.T) {
 		CheckDestroy: testAccCheckVpcDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSubnetIDsDataSourceConfig(rInt),
+				Config: testAccSubnetIDsDataSourceConfig(rName, rInt),
 			},
 			{
-				Config: testAccSubnetIDsWithDataSourceDataSourceConfig(rInt),
+				Config: testAccSubnetIDsWithDataSourceDataSourceConfig(rName, rInt),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.aws_subnet_ids.selected", "ids.#", "3"),
 					resource.TestCheckResourceAttr("data.aws_subnet_ids.private", "ids.#", "2"),
@@ -34,7 +36,7 @@ func TestAccEC2SubnetIDsDataSource_basic(t *testing.T) {
 
 func TestAccEC2SubnetIDsDataSource_filter(t *testing.T) {
 	rInt := sdkacctest.RandIntRange(0, 256)
-	rName := "data.aws_subnet_ids.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -43,54 +45,54 @@ func TestAccEC2SubnetIDsDataSource_filter(t *testing.T) {
 		CheckDestroy: testAccCheckVpcDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSubnetIDsDataSource_filter(rInt),
+				Config: testAccSubnetIDsDataSource_filter(rName, rInt),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(rName, "ids.#", "2"),
+					resource.TestCheckResourceAttr("data.aws_subnet_ids.test", "ids.#", "2"),
 				),
 			},
 		},
 	})
 }
 
-func testAccSubnetIDsWithDataSourceDataSourceConfig(rInt int) string {
+func testAccSubnetIDsWithDataSourceDataSourceConfig(rName string, rInt int) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 resource "aws_vpc" "test" {
-  cidr_block = "172.%[1]d.0.0/16"
+  cidr_block = "172.%[2]d.0.0/16"
 
   tags = {
-    Name = "terraform-testacc-subnet-ids-data-source"
+    Name = %[1]q
   }
 }
 
 resource "aws_subnet" "test_public_a" {
   vpc_id            = aws_vpc.test.id
-  cidr_block        = "172.%[1]d.123.0/24"
+  cidr_block        = "172.%[2]d.123.0/24"
   availability_zone = data.aws_availability_zones.available.names[0]
 
   tags = {
-    Name = "tf-acc-subnet-ids-data-source-public-a"
+    Name = %[1]q
     Tier = "Public"
   }
 }
 
 resource "aws_subnet" "test_private_a" {
   vpc_id            = aws_vpc.test.id
-  cidr_block        = "172.%[1]d.125.0/24"
+  cidr_block        = "172.%[2]d.125.0/24"
   availability_zone = data.aws_availability_zones.available.names[0]
 
   tags = {
-    Name = "tf-acc-subnet-ids-data-source-private-a"
+    Name = %[1]q
     Tier = "Private"
   }
 }
 
 resource "aws_subnet" "test_private_b" {
   vpc_id            = aws_vpc.test.id
-  cidr_block        = "172.%[1]d.126.0/24"
+  cidr_block        = "172.%[2]d.126.0/24"
   availability_zone = data.aws_availability_zones.available.names[1]
 
   tags = {
-    Name = "tf-acc-subnet-ids-data-source-private-b"
+    Name = %[1]q
     Tier = "Private"
   }
 }
@@ -106,80 +108,92 @@ data "aws_subnet_ids" "private" {
     Tier = "Private"
   }
 }
-`, rInt))
+`, rName, rInt))
 }
 
-func testAccSubnetIDsDataSourceConfig(rInt int) string {
+func testAccSubnetIDsDataSourceConfig(rName string, rInt int) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 resource "aws_vpc" "test" {
-  cidr_block = "172.%[1]d.0.0/16"
+  cidr_block = "172.%[2]d.0.0/16"
 
   tags = {
-    Name = "terraform-testacc-subnet-ids-data-source"
+    Name = %[1]q
   }
 }
 
 resource "aws_subnet" "test_public_a" {
   vpc_id            = aws_vpc.test.id
-  cidr_block        = "172.%[1]d.123.0/24"
+  cidr_block        = "172.%[2]d.123.0/24"
   availability_zone = data.aws_availability_zones.available.names[0]
 
   tags = {
-    Name = "tf-acc-subnet-ids-data-source-public-a"
+    Name = %[1]q
     Tier = "Public"
   }
 }
 
 resource "aws_subnet" "test_private_a" {
   vpc_id            = aws_vpc.test.id
-  cidr_block        = "172.%[1]d.125.0/24"
+  cidr_block        = "172.%[2]d.125.0/24"
   availability_zone = data.aws_availability_zones.available.names[0]
 
   tags = {
-    Name = "tf-acc-subnet-ids-data-source-private-a"
+    Name = %[1]q
     Tier = "Private"
   }
 }
 
 resource "aws_subnet" "test_private_b" {
   vpc_id            = aws_vpc.test.id
-  cidr_block        = "172.%[1]d.126.0/24"
+  cidr_block        = "172.%[2]d.126.0/24"
   availability_zone = data.aws_availability_zones.available.names[1]
 
   tags = {
-    Name = "tf-acc-subnet-ids-data-source-private-b"
+    Name = %[1]q
     Tier = "Private"
   }
 }
-`, rInt))
+`, rName, rInt))
 }
 
-func testAccSubnetIDsDataSource_filter(rInt int) string {
+func testAccSubnetIDsDataSource_filter(rName string, rInt int) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 resource "aws_vpc" "test" {
-  cidr_block = "172.%[1]d.0.0/16"
+  cidr_block = "172.%[2]d.0.0/16"
 
   tags = {
-    Name = "terraform-testacc-subnet-ids-data-source"
+    Name = %[1]q
   }
 }
 
 resource "aws_subnet" "test_a_one" {
   vpc_id            = aws_vpc.test.id
-  cidr_block        = "172.%[1]d.1.0/24"
+  cidr_block        = "172.%[2]d.1.0/24"
   availability_zone = data.aws_availability_zones.available.names[0]
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_subnet" "test_a_two" {
   vpc_id            = aws_vpc.test.id
-  cidr_block        = "172.%[1]d.2.0/24"
+  cidr_block        = "172.%[2]d.2.0/24"
   availability_zone = data.aws_availability_zones.available.names[0]
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_subnet" "test_b" {
   vpc_id            = aws_vpc.test.id
-  cidr_block        = "172.%[1]d.3.0/24"
+  cidr_block        = "172.%[2]d.3.0/24"
   availability_zone = data.aws_availability_zones.available.names[1]
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 data "aws_subnet_ids" "test" {
@@ -190,5 +204,5 @@ data "aws_subnet_ids" "test" {
     values = [aws_subnet.test_a_one.availability_zone]
   }
 }
-`, rInt))
+`, rName, rInt))
 }

@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	elasticsearch "github.com/aws/aws-sdk-go/service/elasticsearchservice"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -13,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfelasticsearch "github.com/hashicorp/terraform-provider-aws/internal/service/elasticsearch"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func TestAccElasticsearchDomainSamlOptions_basic(t *testing.T) {
@@ -171,29 +170,23 @@ func TestAccElasticsearchDomainSamlOptions_Disabled(t *testing.T) {
 }
 
 func testAccCheckESDomainSAMLOptionsDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).ElasticsearchConn
-
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_elasticsearch_domain_saml_options" {
 			continue
 		}
 
-		resp, err := conn.DescribeElasticsearchDomain(&elasticsearch.DescribeElasticsearchDomainInput{
-			DomainName: aws.String(rs.Primary.Attributes["domain_name"]),
-		})
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ElasticsearchConn
+		_, err := tfelasticsearch.FindDomainByName(conn, rs.Primary.Attributes["domain_name"])
 
-		if err == nil {
-			return fmt.Errorf("Elasticsearch Domain still exists %s", resp)
+		if tfresource.NotFound(err) {
+			continue
 		}
 
-		awsErr, ok := err.(awserr.Error)
-		if !ok {
-			return err
-		}
-		if awsErr.Code() != "ResourceNotFoundException" {
+		if err != nil {
 			return err
 		}
 
+		return fmt.Errorf("Elasticsearch domain saml options %s still exists", rs.Primary.ID)
 	}
 
 	return nil
@@ -216,9 +209,7 @@ func testAccCheckESDomainSAMLOptions(esResource string, samlOptionsResource stri
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ElasticsearchConn
-		_, err := conn.DescribeElasticsearchDomain(&elasticsearch.DescribeElasticsearchDomainInput{
-			DomainName: aws.String(options.Primary.Attributes["domain_name"]),
-		})
+		_, err := tfelasticsearch.FindDomainByName(conn, options.Primary.Attributes["domain_name"])
 
 		return err
 	}

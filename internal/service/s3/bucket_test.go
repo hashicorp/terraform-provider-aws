@@ -54,6 +54,9 @@ func TestAccS3Bucket_Basic_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "bucket", bucketName),
 					testAccCheckS3BucketDomainName(resourceName, "bucket_domain_name", bucketName),
 					resource.TestCheckResourceAttr(resourceName, "bucket_regional_domain_name", testAccBucketRegionalDomainName(bucketName, region)),
+					resource.TestCheckResourceAttr(resourceName, "versioning.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "versioning.0.enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "versioning.0.mfa_delete", "false"),
 				),
 			},
 			{
@@ -939,10 +942,12 @@ func TestAccS3Bucket_Manage_versioning(t *testing.T) {
 		CheckDestroy: testAccCheckBucketDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketConfig_Basic(bucketName),
+				Config: testAccBucketWithVersioningConfig(bucketName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketExists(resourceName),
-					testAccCheckBucketVersioning(resourceName, ""),
+					resource.TestCheckResourceAttr(resourceName, "versioning.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "versioning.0.enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "versioning.0.mfa_delete", "false"),
 				),
 			},
 			{
@@ -952,18 +957,106 @@ func TestAccS3Bucket_Manage_versioning(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"force_destroy", "acl"},
 			},
 			{
-				Config: testAccBucketWithVersioningConfig(bucketName),
+				Config: testAccBucketWithVersioningConfig(bucketName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketExists(resourceName),
-					testAccCheckBucketVersioning(resourceName, s3.BucketVersioningStatusEnabled),
+					resource.TestCheckResourceAttr(resourceName, "versioning.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "versioning.0.enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "versioning.0.mfa_delete", "false"),
 				),
 			},
 			{
-				Config: testAccBucketWithDisableVersioningConfig(bucketName),
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"force_destroy", "acl"},
+			},
+		},
+	})
+}
+
+func TestAccS3Bucket_Manage_versioningDisabled(t *testing.T) {
+	bucketName := sdkacctest.RandomWithPrefix("tf-test-bucket")
+	resourceName := "aws_s3_bucket.bucket"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckBucketDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBucketWithVersioningConfig(bucketName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketExists(resourceName),
-					testAccCheckBucketVersioning(resourceName, s3.BucketVersioningStatusSuspended),
+					resource.TestCheckResourceAttr(resourceName, "versioning.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "versioning.0.enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "versioning.0.mfa_delete", "false"),
 				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"force_destroy", "acl"},
+			},
+		},
+	})
+}
+
+func TestAccS3Bucket_Manage_MfaDeleteDisabled(t *testing.T) {
+	bucketName := sdkacctest.RandomWithPrefix("tf-test-bucket")
+	resourceName := "aws_s3_bucket.bucket"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckBucketDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBucketWithVersioningMfaDeleteConfig(bucketName, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBucketExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "versioning.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "versioning.0.enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "versioning.0.mfa_delete", "false"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"force_destroy", "acl"},
+			},
+		},
+	})
+}
+
+func TestAccS3Bucket_Manage_versioningAndMfaDeleteDisabled(t *testing.T) {
+	bucketName := sdkacctest.RandomWithPrefix("tf-test-bucket")
+	resourceName := "aws_s3_bucket.bucket"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckBucketDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBucketWithVersioningVersioningAndMfaDeleteConfig(bucketName, false, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBucketExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "versioning.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "versioning.0.enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "versioning.0.mfa_delete", "false"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"force_destroy", "acl"},
 			},
 		},
 	})
@@ -3140,33 +3233,6 @@ func testAccCheckBucketWebsiteRoutingRules(n string, routingRules []*s3.RoutingR
 	}
 }
 
-func testAccCheckBucketVersioning(n string, versioningStatus string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		rs := s.RootModule().Resources[n]
-		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn
-
-		out, err := conn.GetBucketVersioning(&s3.GetBucketVersioningInput{
-			Bucket: aws.String(rs.Primary.ID),
-		})
-
-		if err != nil {
-			return fmt.Errorf("GetBucketVersioning error: %v", err)
-		}
-
-		if v := out.Status; v == nil {
-			if versioningStatus != "" {
-				return fmt.Errorf("bad error versioning status, found nil, expected: %s", versioningStatus)
-			}
-		} else {
-			if *v != versioningStatus {
-				return fmt.Errorf("bad error versioning status, expected: %s, got %s", versioningStatus, *v)
-			}
-		}
-
-		return nil
-	}
-}
-
 func testAccCheckBucketCors(n string, corsRules []*s3.CORSRule) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs := s.RootModule().Resources[n]
@@ -3740,28 +3806,41 @@ resource "aws_s3_bucket" "bucket" {
 `, bucketName)
 }
 
-func testAccBucketWithVersioningConfig(bucketName string) string {
+func testAccBucketWithVersioningConfig(bucketName string, enabled bool) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "bucket" {
   bucket = %[1]q
 
   versioning {
-    enabled = true
+    enabled = %[2]t
   }
 }
-`, bucketName)
+`, bucketName, enabled)
 }
 
-func testAccBucketWithDisableVersioningConfig(bucketName string) string {
+func testAccBucketWithVersioningMfaDeleteConfig(bucketName string, mfaDelete bool) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "bucket" {
   bucket = %[1]q
 
   versioning {
-    enabled = false
+    mfa_delete = %[2]t
   }
 }
-`, bucketName)
+`, bucketName, mfaDelete)
+}
+
+func testAccBucketWithVersioningVersioningAndMfaDeleteConfig(bucketName string, enabled, mfaDelete bool) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "bucket" {
+  bucket = %[1]q
+
+  versioning {
+    enabled    = %[2]t
+    mfa_delete = %[3]t
+  }
+}
+`, bucketName, enabled, mfaDelete)
 }
 
 func testAccBucketWithCORSConfig(bucketName string) string {

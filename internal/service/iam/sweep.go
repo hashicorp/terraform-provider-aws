@@ -537,7 +537,7 @@ func sweepServiceLinkedRoles(region string) error {
 
 			r := ResourceServiceLinkedRole()
 			d := r.Data(nil)
-			d.SetId(roleName)
+			d.SetId(aws.StringValue(role.Arn))
 			err := r.Delete(d, client)
 			if err != nil {
 				sweeperErr := fmt.Errorf("error deleting IAM Service Linked Role (%s): %w", roleName, err)
