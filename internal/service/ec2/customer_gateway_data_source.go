@@ -17,11 +17,10 @@ import (
 func DataSourceCustomerGateway() *schema.Resource {
 	return &schema.Resource{
 		Read: dataSourceCustomerGatewayRead,
+
 		Schema: map[string]*schema.Schema{
-			"filter": DataSourceFiltersSchema(),
-			"id": {
+			"arn": {
 				Type:     schema.TypeString,
-				Optional: true,
 				Computed: true,
 			},
 			"bgp_asn": {
@@ -32,16 +31,18 @@ func DataSourceCustomerGateway() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"filter": DataSourceFiltersSchema(),
+			"id": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
 			"ip_address": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"tags": tftags.TagsSchemaComputed(),
 			"type": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
