@@ -751,6 +751,47 @@ func WaitVPNGatewayVPCAttachmentDetached(conn *ec2.EC2, vpnGatewayID, vpcID stri
 }
 
 const (
+	customerGatewayCreatedTimeout = 10 * time.Minute
+	customerGatewayDeletedTimeout = 5 * time.Minute
+)
+
+func WaitCustomerGatewayCreated(conn *ec2.EC2, id string) (*ec2.CustomerGateway, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending:    []string{CustomerGatewayStatePending},
+		Target:     []string{CustomerGatewayStateAvailable},
+		Refresh:    StatusCustomerGatewayState(conn, id),
+		Timeout:    customerGatewayCreatedTimeout,
+		Delay:      10 * time.Second,
+		MinTimeout: 3 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*ec2.CustomerGateway); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func WaitCustomerGatewayDeleted(conn *ec2.EC2, id string) (*ec2.CustomerGateway, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{CustomerGatewayStateAvailable, CustomerGatewayStateDeleting},
+		Target:  []string{},
+		Refresh: StatusCustomerGatewayState(conn, id),
+		Timeout: customerGatewayDeletedTimeout,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*ec2.CustomerGateway); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+const (
 	HostCreatedTimeout = 10 * time.Minute
 	HostUpdatedTimeout = 10 * time.Minute
 	HostDeletedTimeout = 20 * time.Minute

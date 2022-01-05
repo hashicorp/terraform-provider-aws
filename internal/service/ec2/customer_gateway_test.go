@@ -94,36 +94,6 @@ func TestAccEC2CustomerGateway_tags(t *testing.T) {
 	})
 }
 
-func TestAccEC2CustomerGateway_similarAlreadyExists(t *testing.T) {
-	var gateway ec2.CustomerGateway
-	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
-	resourceName := "aws_customer_gateway.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckCustomerGatewayDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccCustomerGatewayConfig(rBgpAsn),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCustomerGateway(resourceName, &gateway),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{
-				Config:      testAccCustomerGatewayConfigIdentical(rBgpAsn),
-				ExpectError: regexp.MustCompile("An existing customer gateway"),
-			},
-		},
-	})
-}
-
 func TestAccEC2CustomerGateway_deviceName(t *testing.T) {
 	var gateway ec2.CustomerGateway
 	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
@@ -317,22 +287,6 @@ resource "aws_customer_gateway" "test" {
   }
 }
 `, rBgpAsn, tagKey1, tagValue1, tagKey2, tagValue2)
-}
-
-func testAccCustomerGatewayConfigIdentical(rBgpAsn int) string {
-	return fmt.Sprintf(`
-resource "aws_customer_gateway" "test" {
-  bgp_asn    = %[1]d
-  ip_address = "172.0.0.1"
-  type       = "ipsec.1"
-}
-
-resource "aws_customer_gateway" "identical" {
-  bgp_asn    = %[1]d
-  ip_address = "172.0.0.1"
-  type       = "ipsec.1"
-}
-`, rBgpAsn)
 }
 
 func testAccCustomerGatewayConfigDeviceName(rBgpAsn int) string {
