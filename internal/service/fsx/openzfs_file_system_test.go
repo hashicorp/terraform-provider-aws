@@ -16,6 +16,16 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+func init() {
+	acctest.RegisterServiceErrorCheckFunc(fsx.EndpointsID, testAccErrorCheckSkipFSx)
+}
+
+func testAccErrorCheckSkipFSx(t *testing.T) resource.ErrorCheckFunc {
+	return acctest.ErrorCheckSkipMessagesContaining(t,
+		"Amazon FSx does not currently support OpenZFS file system creation in the following Availability Zones",
+	)
+}
+
 func TestAccFSxOpenzfsFileSystem_basic(t *testing.T) {
 	var filesystem fsx.FileSystem
 	resourceName := "aws_fsx_openzfs_file_system.test"
