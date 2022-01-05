@@ -85,7 +85,6 @@ func resourceDNSSECConfigRead(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	}
 
-	d.Set("id", config.Id)
 	d.Set("owner_id", config.OwnerId)
 	d.Set("resource_id", config.ResourceId)
 	d.Set("validation_status", config.ValidationStatus)

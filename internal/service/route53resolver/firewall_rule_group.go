@@ -104,7 +104,6 @@ func resourceFirewallRuleGroupRead(d *schema.ResourceData, meta interface{}) err
 
 	arn := aws.StringValue(ruleGroup.Arn)
 	d.Set("arn", arn)
-	d.Set("id", ruleGroup.Id)
 	d.Set("name", ruleGroup.Name)
 	d.Set("owner_id", ruleGroup.OwnerId)
 	d.Set("share_status", ruleGroup.ShareStatus)
