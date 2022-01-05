@@ -17,9 +17,9 @@ import (
 
 func ResourceVPCIpamPoolCidrAllocation() *schema.Resource {
 	return &schema.Resource{
-		Create: ResourceVPCIpamPoolCidrAllocationCreate,
-		Read:   ResourceVPCIpamPoolCidrAllocationRead,
-		Delete: ResourceVPCIpamPoolCidrAllocationDelete,
+		Create: resourceVPCIpamPoolCidrAllocationCreate,
+		Read:   resourceVPCIpamPoolCidrAllocationRead,
+		Delete: resourceVPCIpamPoolCidrAllocationDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -32,7 +32,7 @@ func ResourceVPCIpamPoolCidrAllocation() *schema.Resource {
 				ConflictsWith: []string{"netmask_length"},
 				ValidateFunc: validation.Any(
 					verify.ValidIPv4CIDRNetworkAddress,
-					validation.IsCIDRNetwork(VPCCIDRMinIPv4, VPCCIDRMaxIPv4),
+					validation.IsCIDRNetwork(0, 32),
 				),
 			},
 			"description": {
@@ -53,7 +53,7 @@ func ResourceVPCIpamPoolCidrAllocation() *schema.Resource {
 				Type:          schema.TypeInt,
 				Optional:      true,
 				ForceNew:      true,
-				ValidateFunc:  validation.IntBetween(VPCCIDRMinIPv4, VPCCIDRMaxIPv4),
+				ValidateFunc:  validation.IntBetween(0, 32),
 				ConflictsWith: []string{"cidr"},
 			},
 			"resource_id": {
@@ -76,7 +76,7 @@ const (
 	IpamPoolAllocationNotFound = "InvalidIpamPoolCidrAllocationId.NotFound"
 )
 
-func ResourceVPCIpamPoolCidrAllocationCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceVPCIpamPoolCidrAllocationCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 	pool_id := d.Get("ipam_pool_id").(string)
 
@@ -104,10 +104,10 @@ func ResourceVPCIpamPoolCidrAllocationCreate(d *schema.ResourceData, meta interf
 	}
 	d.SetId(encodeIpamPoolCidrAllocationID(aws.StringValue(output.IpamPoolAllocation.IpamPoolAllocationId), pool_id))
 
-	return ResourceVPCIpamPoolCidrAllocationRead(d, meta)
+	return resourceVPCIpamPoolCidrAllocationRead(d, meta)
 }
 
-func ResourceVPCIpamPoolCidrAllocationRead(d *schema.ResourceData, meta interface{}) error {
+func resourceVPCIpamPoolCidrAllocationRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	cidr_allocation, pool_id, err := FindIpamPoolCidrAllocation(conn, d.Id())
@@ -140,7 +140,7 @@ func ResourceVPCIpamPoolCidrAllocationRead(d *schema.ResourceData, meta interfac
 	return nil
 }
 
-func ResourceVPCIpamPoolCidrAllocationDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceVPCIpamPoolCidrAllocationDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	input := &ec2.ReleaseIpamPoolAllocationInput{
