@@ -6,6 +6,7 @@ import (
 	"strconv"
 	"testing"
 
+	"github.com/aws/aws-sdk-go/service/acmpca"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -33,6 +34,7 @@ func TestAccEC2CustomerGateway_basic(t *testing.T) {
 					testAccCheckCustomerGatewayExists(resourceName, &gateway),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`customer-gateway/cgw-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "bgp_asn", strconv.Itoa(rBgpAsn)),
+					resource.TestCheckResourceAttr(resourceName, "certificate_arn", ""),
 					resource.TestCheckResourceAttr(resourceName, "device_name", ""),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "type", "ipsec.1"),
@@ -168,6 +170,54 @@ func TestAccEC2CustomerGateway_4ByteASN(t *testing.T) {
 	})
 }
 
+func TestAccEC2CustomerGateway_certificate(t *testing.T) {
+	var gateway ec2.CustomerGateway
+	var ca acmpca.CertificateAuthority
+	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_customer_gateway.test"
+	acmCAResourceName := "aws_acmpca_certificate_authority.test"
+	acmCertificateResourceName := "aws_acm_certificate.test"
+	domain := acctest.RandomDomainName()
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckCustomerGatewayDestroy,
+		Steps: []resource.TestStep{
+			// We need to create and activate the CA before issuing a certificate.
+			{
+				Config: testAccCustomerGatewayConfigRootCA(domain),
+				Check: resource.ComposeTestCheckFunc(
+					acctest.CheckACMPCACertificateAuthorityExists(acmCAResourceName, &ca),
+					acctest.CheckACMPCACertificateAuthorityActivateCA(&ca),
+				),
+			},
+			{
+				Config: testAccCustomerGatewayConfigCertificate(rName, rBgpAsn, domain),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCustomerGatewayExists(resourceName, &gateway),
+					resource.TestCheckResourceAttrPair(resourceName, "certificate_arn", acmCertificateResourceName, "arn"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccCustomerGatewayConfigCertificate(rName, rBgpAsn, domain),
+				Check: resource.ComposeTestCheckFunc(
+					// CA must be DISABLED for deletion.
+					acctest.CheckACMPCACertificateAuthorityDisableCA(&ca),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func testAccCheckCustomerGatewayDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
@@ -283,4 +333,49 @@ resource "aws_customer_gateway" "test" {
   }
 }
 `, rName, rBgpAsn)
+}
+
+func testAccCustomerGatewayConfigRootCA(domain string) string {
+	return fmt.Sprintf(`
+resource "aws_acmpca_certificate_authority" "test" {
+  permanent_deletion_time_in_days = 7
+  type                            = "ROOT"
+
+  certificate_authority_configuration {
+    key_algorithm     = "RSA_4096"
+    signing_algorithm = "SHA512WITHRSA"
+
+    subject {
+      common_name = %[1]q
+    }
+  }
+}
+`, domain)
+}
+
+func testAccCustomerGatewayConfigPrivateCert(domain string) string {
+	return fmt.Sprintf(`
+resource "aws_acm_certificate" "test" {
+  domain_name               = "test.%[1]s"
+  certificate_authority_arn = aws_acmpca_certificate_authority.test.arn
+}
+`, domain)
+}
+
+func testAccCustomerGatewayConfigCertificate(rName string, rBgpAsn int, domain string) string {
+	return acctest.ConfigCompose(
+		testAccCustomerGatewayConfigRootCA(domain),
+		testAccCustomerGatewayConfigPrivateCert(domain),
+		fmt.Sprintf(`
+resource "aws_customer_gateway" "test" {
+  bgp_asn         = %[2]d
+  ip_address      = "172.0.0.1"
+  type            = "ipsec.1"
+  certificate_arn = aws_acm_certificate.test.arn
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName, rBgpAsn))
 }

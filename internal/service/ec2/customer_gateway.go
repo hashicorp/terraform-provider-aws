@@ -39,6 +39,12 @@ func ResourceCustomerGateway() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: valid4ByteASN,
 			},
+			"certificate_arn": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: verify.ValidARN,
+			},
 			"device_name": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -84,6 +90,10 @@ func resourceCustomerGatewayCreate(d *schema.ResourceData, meta interface{}) err
 		PublicIp:          aws.String(d.Get("ip_address").(string)),
 		TagSpecifications: ec2TagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeCustomerGateway),
 		Type:              aws.String(d.Get("type").(string)),
+	}
+
+	if v, ok := d.GetOk("certificate_arn"); ok {
+		input.CertificateArn = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("device_name"); ok {
@@ -132,6 +142,7 @@ func resourceCustomerGatewayRead(d *schema.ResourceData, meta interface{}) error
 	}.String()
 	d.Set("arn", arn)
 	d.Set("bgp_asn", customerGateway.BgpAsn)
+	d.Set("certificate_arn", customerGateway.CertificateArn)
 	d.Set("device_name", customerGateway.DeviceName)
 	d.Set("ip_address", customerGateway.IpAddress)
 	d.Set("type", customerGateway.Type)
