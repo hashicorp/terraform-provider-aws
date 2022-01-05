@@ -328,7 +328,23 @@ func resourceDefaultSecurityGroupRead(d *schema.ResourceData, meta interface{}) 
 func resourceDefaultSecurityGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
-	group, err := FindSecurityGroupByID(conn, d.Id())
+	var group *ec2.SecurityGroup
+	var err error
+	err = resource.Retry(15 * time.Second, func() *resource.RetryError {
+		group, err = FindSecurityGroupByID(conn, d.Id())
+		if err != nil {
+			switch err.(type) {
+				case *resource.NotFoundError:
+					return resource.RetryableError(err)
+				default:
+					return resource.NonRetryableError(err)
+			}
+		}
+		return nil
+	})
+	if tfresource.TimedOut(err) {
+		group, err = FindSecurityGroupByID(conn, d.Id())
+	}
 	if err != nil {
 		return fmt.Errorf("error updating Default Security Group (%s): %w", d.Id(), err)
 	}
