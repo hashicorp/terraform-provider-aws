@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
@@ -110,40 +111,30 @@ func resourceCustomerGatewayRead(d *schema.ResourceData, meta interface{}) error
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	gatewayFilter := &ec2.Filter{
-		Name:   aws.String("customer-gateway-id"),
-		Values: []*string{aws.String(d.Id())},
-	}
+	customerGateway, err := FindCustomerGatewayByID(conn, d.Id())
 
-	resp, err := conn.DescribeCustomerGateways(&ec2.DescribeCustomerGatewaysInput{
-		Filters: []*ec2.Filter{gatewayFilter},
-	})
-	if err != nil {
-		if tfawserr.ErrMessageContains(err, "InvalidCustomerGatewayID.NotFound", "") {
-			log.Printf("[WARN] Customer Gateway (%s) not found, removing from state", d.Id())
-			d.SetId("")
-			return nil
-		} else {
-			log.Printf("[ERROR] Error finding CustomerGateway: %s", err)
-			return err
-		}
-	}
-
-	if len(resp.CustomerGateways) != 1 {
-		return fmt.Errorf("Error finding CustomerGateway: %s", d.Id())
-	}
-
-	if aws.StringValue(resp.CustomerGateways[0].State) == "deleted" {
-		log.Printf("[INFO] Customer Gateway is in `deleted` state: %s", d.Id())
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] EC2 Customer Gateway (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
-	customerGateway := resp.CustomerGateways[0]
+	if err != nil {
+		return fmt.Errorf("error reading EC2 Customer Gateway (%s): %w", d.Id(), err)
+	}
+
+	arn := arn.ARN{
+		Partition: meta.(*conns.AWSClient).Partition,
+		Service:   ec2.ServiceName,
+		Region:    meta.(*conns.AWSClient).Region,
+		AccountID: meta.(*conns.AWSClient).AccountID,
+		Resource:  fmt.Sprintf("customer-gateway/%s", d.Id()),
+	}.String()
+	d.Set("arn", arn)
 	d.Set("bgp_asn", customerGateway.BgpAsn)
+	d.Set("device_name", customerGateway.DeviceName)
 	d.Set("ip_address", customerGateway.IpAddress)
 	d.Set("type", customerGateway.Type)
-	d.Set("device_name", customerGateway.DeviceName)
 
 	tags := KeyValueTags(customerGateway.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
@@ -155,16 +146,6 @@ func resourceCustomerGatewayRead(d *schema.ResourceData, meta interface{}) error
 	if err := d.Set("tags_all", tags.Map()); err != nil {
 		return fmt.Errorf("error setting tags_all: %w", err)
 	}
-
-	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
-		Service:   ec2.ServiceName,
-		Region:    meta.(*conns.AWSClient).Region,
-		AccountID: meta.(*conns.AWSClient).AccountID,
-		Resource:  fmt.Sprintf("customer-gateway/%s", d.Id()),
-	}.String()
-
-	d.Set("arn", arn)
 
 	return nil
 }
