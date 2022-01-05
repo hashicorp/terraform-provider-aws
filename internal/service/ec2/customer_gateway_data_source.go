@@ -1,9 +1,7 @@
 package ec2
 
 import (
-	"errors"
 	"fmt"
-	"log"
 	"strconv"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -12,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func DataSourceCustomerGateway() *schema.Resource {
@@ -54,7 +53,7 @@ func dataSourceCustomerGatewayRead(d *schema.ResourceData, meta interface{}) err
 	conn := meta.(*conns.AWSClient).EC2Conn
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	input := ec2.DescribeCustomerGatewaysInput{}
+	input := &ec2.DescribeCustomerGatewaysInput{}
 
 	if v, ok := d.GetOk("filter"); ok {
 		input.Filters = BuildFiltersDataSource(v.(*schema.Set))
@@ -64,43 +63,13 @@ func dataSourceCustomerGatewayRead(d *schema.ResourceData, meta interface{}) err
 		input.CustomerGatewayIds = []*string{aws.String(v.(string))}
 	}
 
-	log.Printf("[DEBUG] Reading EC2 Customer Gateways: %s", input)
-	output, err := conn.DescribeCustomerGateways(&input)
+	cgw, err := FindCustomerGateway(conn, input)
 
 	if err != nil {
-		return fmt.Errorf("error reading EC2 Customer Gateways: %w", err)
+		return tfresource.SingularDataSourceFindError("EC2 Customer Gateway", err)
 	}
 
-	if output == nil || len(output.CustomerGateways) == 0 {
-		return errors.New("error reading EC2 Customer Gateways: no results found")
-	}
-
-	if len(output.CustomerGateways) > 1 {
-		return errors.New("error reading EC2 Customer Gateways: multiple results found, try adjusting search criteria")
-	}
-
-	cg := output.CustomerGateways[0]
-	if cg == nil {
-		return errors.New("error reading EC2 Customer Gateway: empty result")
-	}
-
-	d.Set("ip_address", cg.IpAddress)
-	d.Set("type", cg.Type)
-	d.Set("device_name", cg.DeviceName)
-	d.SetId(aws.StringValue(cg.CustomerGatewayId))
-
-	if v := aws.StringValue(cg.BgpAsn); v != "" {
-		asn, err := strconv.ParseInt(v, 0, 0)
-		if err != nil {
-			return fmt.Errorf("error parsing BGP ASN %q: %w", v, err)
-		}
-
-		d.Set("bgp_asn", int(asn))
-	}
-
-	if err := d.Set("tags", KeyValueTags(cg.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags for EC2 Customer Gateway %q: %w", aws.StringValue(cg.CustomerGatewayId), err)
-	}
+	d.SetId(aws.StringValue(cgw.CustomerGatewayId))
 
 	arn := arn.ARN{
 		Partition: meta.(*conns.AWSClient).Partition,
@@ -109,8 +78,25 @@ func dataSourceCustomerGatewayRead(d *schema.ResourceData, meta interface{}) err
 		AccountID: meta.(*conns.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("customer-gateway/%s", d.Id()),
 	}.String()
-
 	d.Set("arn", arn)
+	if v := aws.StringValue(cgw.BgpAsn); v != "" {
+		v, err := strconv.ParseInt(v, 0, 0)
+
+		if err != nil {
+			return err
+		}
+
+		d.Set("bgp_asn", v)
+	} else {
+		d.Set("bgp_asn", nil)
+	}
+	d.Set("device_name", cgw.DeviceName)
+	d.Set("ip_address", cgw.IpAddress)
+	d.Set("type", cgw.Type)
+
+	if err := d.Set("tags", KeyValueTags(cgw.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %w", err)
+	}
 
 	return nil
 }
