@@ -25,25 +25,28 @@ func ResourceCustomerGateway() *schema.Resource {
 		Read:   resourceCustomerGatewayRead,
 		Update: resourceCustomerGatewayUpdate,
 		Delete: resourceCustomerGatewayDelete,
+
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
 
 		Schema: map[string]*schema.Schema{
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"bgp_asn": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
 				ValidateFunc: valid4ByteASN,
 			},
-
 			"device_name": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(1, 255),
 			},
-
 			"ip_address": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -53,22 +56,13 @@ func ResourceCustomerGateway() *schema.Resource {
 					validation.IsIPv4Address,
 				),
 			},
-
-			"type": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				ValidateFunc: validation.StringInSlice([]string{
-					ec2.GatewayTypeIpsec1,
-				}, false),
-			},
-
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
-
-			"arn": {
-				Type:     schema.TypeString,
-				Computed: true,
+			"type": {
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringInSlice(ec2.GatewayType_Values(), false),
 			},
 		},
 
