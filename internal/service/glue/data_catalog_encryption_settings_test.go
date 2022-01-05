@@ -14,6 +14,8 @@ import (
 )
 
 func testAccDataCatalogEncryptionSettings_basic(t *testing.T) {
+	t.Skipf("Skipping aws_glue_data_catalog_encryption_settings tests")
+
 	var settings glue.DataCatalogEncryptionSettings
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
