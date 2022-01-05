@@ -132,7 +132,7 @@ func ResourceDataSource() *schema.Resource {
 								Schema: map[string]*schema.Schema{
 									"authorization_type": {
 										Type:         schema.TypeString,
-										Required:     true,
+										Optional:     true,
 										Default:      appsync.AuthorizationTypeAwsIam,
 										ValidateFunc: validation.StringInSlice(appsync.AuthorizationType_Values(), true),
 									},

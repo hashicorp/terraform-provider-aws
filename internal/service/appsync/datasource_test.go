@@ -36,6 +36,7 @@ func testAccAppSyncDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "elasticsearch_config.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "http_config.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "lambda_config.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "relational_database_config.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "type", "NONE"),
 				),
