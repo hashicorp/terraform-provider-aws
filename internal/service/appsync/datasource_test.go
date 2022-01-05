@@ -346,6 +346,34 @@ func testAccAppSyncDataSource_Type_http(t *testing.T) {
 	})
 }
 
+func testAccAppSyncDataSource_Type_http_auth(t *testing.T) {
+	rName := fmt.Sprintf("tfacctest%d", sdkacctest.RandInt())
+	resourceName := "aws_appsync_datasource.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appsync.EndpointsID, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, appsync.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckDestroyDataSource,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAppsyncDatasourceConfig_Type_HTTPAuth(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckExistsDataSource(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "http_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "http_config.0.endpoint", "http://example.com"),
+					resource.TestCheckResourceAttr(resourceName, "type", "HTTP"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccAppSyncDataSource_Type_lambda(t *testing.T) {
 	rName := fmt.Sprintf("tfacctest%d", sdkacctest.RandInt())
 	iamRoleResourceName := "aws_iam_role.test"
@@ -787,19 +815,38 @@ func testAccAppsyncDatasourceConfig_Type_HTTP(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_appsync_graphql_api" "test" {
   authentication_type = "API_KEY"
-  name                = %q
+  name                = %[1]q
 }
 
 resource "aws_appsync_datasource" "test" {
   api_id = aws_appsync_graphql_api.test.id
-  name   = %q
+  name   = %[1]q
   type   = "HTTP"
 
   http_config {
     endpoint = "http://example.com"
   }
 }
-`, rName, rName)
+`, rName)
+}
+
+func testAccAppsyncDatasourceConfig_Type_HTTPAuth(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_appsync_graphql_api" "test" {
+  authentication_type = "API_KEY"
+  name                = %[1]q
+}
+
+resource "aws_appsync_datasource" "test" {
+  api_id = aws_appsync_graphql_api.test.id
+  name   = %[1]q
+  type   = "HTTP"
+
+  http_config {
+    endpoint = "http://example.com"
+  }
+}
+`, rName)
 }
 
 func testAccAppsyncDatasourceConfig_Type_Lambda(rName string) string {
