@@ -33,7 +33,9 @@ func TestAccEC2CustomerGateway_basic(t *testing.T) {
 					testAccCheckCustomerGatewayExists(resourceName, &gateway),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`customer-gateway/cgw-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "bgp_asn", strconv.Itoa(rBgpAsn)),
+					resource.TestCheckResourceAttr(resourceName, "device_name", ""),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "type", "ipsec.1"),
 				),
 			},
 			{
@@ -41,11 +43,28 @@ func TestAccEC2CustomerGateway_basic(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
+		},
+	})
+}
+
+func TestAccEC2CustomerGateway_disappears(t *testing.T) {
+	var gateway ec2.CustomerGateway
+	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
+	resourceName := "aws_customer_gateway.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckCustomerGatewayDestroy,
+		Steps: []resource.TestStep{
 			{
-				Config: testAccCustomerGatewayConfigForceReplace(rBgpAsn),
+				Config: testAccCustomerGatewayConfig(rBgpAsn),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCustomerGatewayExists(resourceName, &gateway),
+					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceCustomerGateway(), resourceName),
 				),
+				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
@@ -96,6 +115,7 @@ func TestAccEC2CustomerGateway_tags(t *testing.T) {
 func TestAccEC2CustomerGateway_deviceName(t *testing.T) {
 	var gateway ec2.CustomerGateway
 	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_customer_gateway.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -105,13 +125,10 @@ func TestAccEC2CustomerGateway_deviceName(t *testing.T) {
 		CheckDestroy: testAccCheckCustomerGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCustomerGatewayConfigDeviceName(rBgpAsn),
+				Config: testAccCustomerGatewayConfigDeviceName(rName, rBgpAsn),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCustomerGatewayExists(resourceName, &gateway),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`customer-gateway/cgw-.+`)),
-					resource.TestCheckResourceAttr(resourceName, "bgp_asn", strconv.Itoa(rBgpAsn)),
 					resource.TestCheckResourceAttr(resourceName, "device_name", "test"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
 			{
@@ -123,32 +140,10 @@ func TestAccEC2CustomerGateway_deviceName(t *testing.T) {
 	})
 }
 
-func TestAccEC2CustomerGateway_disappears(t *testing.T) {
-	var gateway ec2.CustomerGateway
-	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
-	resourceName := "aws_customer_gateway.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckCustomerGatewayDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccCustomerGatewayConfig(rBgpAsn),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCustomerGatewayExists(resourceName, &gateway),
-					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceCustomerGateway(), resourceName),
-				),
-				ExpectNonEmptyPlan: true,
-			},
-		},
-	})
-}
-
 func TestAccEC2CustomerGateway_4ByteASN(t *testing.T) {
 	var gateway ec2.CustomerGateway
 	rBgpAsn := strconv.FormatInt(int64(sdkacctest.RandIntRange(64512, 65534))*10000, 10)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_customer_gateway.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -158,12 +153,10 @@ func TestAccEC2CustomerGateway_4ByteASN(t *testing.T) {
 		CheckDestroy: testAccCheckCustomerGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCustomerGatewayConfig4ByteAsn(rBgpAsn),
+				Config: testAccCustomerGatewayConfig4ByteAsn(rName, rBgpAsn),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCustomerGatewayExists(resourceName, &gateway),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`customer-gateway/cgw-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "bgp_asn", rBgpAsn),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
 			{
@@ -227,7 +220,7 @@ func testAccCheckCustomerGatewayExists(n string, v *ec2.CustomerGateway) resourc
 func testAccCustomerGatewayConfig(rBgpAsn int) string {
 	return fmt.Sprintf(`
 resource "aws_customer_gateway" "test" {
-  bgp_asn    = %d
+  bgp_asn    = %[1]d
   ip_address = "172.0.0.1"
   type       = "ipsec.1"
 }
@@ -263,34 +256,31 @@ resource "aws_customer_gateway" "test" {
 `, rBgpAsn, tagKey1, tagValue1, tagKey2, tagValue2)
 }
 
-func testAccCustomerGatewayConfigDeviceName(rBgpAsn int) string {
+func testAccCustomerGatewayConfigDeviceName(rName string, rBgpAsn int) string {
 	return fmt.Sprintf(`
 resource "aws_customer_gateway" "test" {
-  bgp_asn     = %[1]d
+  bgp_asn     = %[2]d
   ip_address  = "172.0.0.1"
   type        = "ipsec.1"
   device_name = "test"
+
+  tags = {
+    Name = %[1]q
+  }
 }
-`, rBgpAsn)
+`, rName, rBgpAsn)
 }
 
-// Change the ip_address.
-func testAccCustomerGatewayConfigForceReplace(rBgpAsn int) string {
+func testAccCustomerGatewayConfig4ByteAsn(rName, rBgpAsn string) string {
 	return fmt.Sprintf(`
 resource "aws_customer_gateway" "test" {
-  bgp_asn    = %d
-  ip_address = "172.10.10.1"
-  type       = "ipsec.1"
-}
-`, rBgpAsn)
-}
-
-func testAccCustomerGatewayConfig4ByteAsn(rBgpAsn string) string {
-	return fmt.Sprintf(`
-resource "aws_customer_gateway" "test" {
-  bgp_asn    = %[1]q
+  bgp_asn    = %[2]q
   ip_address = "172.0.0.1"
   type       = "ipsec.1"
+
+  tags = {
+    Name = %[1]q
+  }
 }
-`, rBgpAsn)
+`, rName, rBgpAsn)
 }
