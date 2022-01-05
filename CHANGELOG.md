@@ -48,6 +48,8 @@ ENHANCEMENTS:
 * resource/aws_codepipeline_webhook: Add plan time validation for `authentication_configuration.secret_token`, `filter.json_path`, `filter.match_equals`, `name`. ([#22406](https://github.com/hashicorp/terraform-provider-aws/issues/22406))
 * resource/aws_codepipeline_webhook: Allow updating `filter` in place. ([#22406](https://github.com/hashicorp/terraform-provider-aws/issues/22406))
 * resource/aws_dax_cluster: Add `cluster_endpoint_encryption_type` argument ([#22396](https://github.com/hashicorp/terraform-provider-aws/issues/22396))
+* resource/aws_dx_private_virtual_interface: Add `sitelink_enabled` argument ([#22350](https://github.com/hashicorp/terraform-provider-aws/issues/22350))
+* resource/aws_dx_transit_virtual_interface: Add `sitelink_enabled` argument ([#22350](https://github.com/hashicorp/terraform-provider-aws/issues/22350))
 * resource/aws_ecr_replication_configuration: Add `repository_filter` to `replication_configuration` block ([#21231](https://github.com/hashicorp/terraform-provider-aws/issues/21231))
 * resource/aws_ecr_replication_configuration: Increase `MaxItems` for `rule` to `10` and for `destination` to `25` ([#22281](https://github.com/hashicorp/terraform-provider-aws/issues/22281))
 * resource/aws_elasticsearch_domain: Tag on create ([#18082](https://github.com/hashicorp/terraform-provider-aws/issues/18082))
