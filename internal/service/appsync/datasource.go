@@ -444,6 +444,38 @@ func expandAppsyncDynamodbDataSourceConfig(l []interface{}, currentRegion string
 		result.UseCallerCredentials = aws.Bool(v.(bool))
 	}
 
+	if v, ok := configured["versioned"]; ok {
+		result.Versioned = aws.Bool(v.(bool))
+	}
+
+	if v, ok := configured["delta_sync_config"].([]interface{}); ok && len(v) > 0 {
+		result.DeltaSyncConfig = expandAppsyncDynamodbDataSourceDeltaSyncConfig(v)
+	}
+
+	return result
+}
+
+func expandAppsyncDynamodbDataSourceDeltaSyncConfig(l []interface{}) *appsync.DeltaSyncConfig {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	configured := l[0].(map[string]interface{})
+
+	result := &appsync.DeltaSyncConfig{}
+
+	if v, ok := configured["base_table_ttl"].(int); ok {
+		result.BaseTableTTL = aws.Int64(int64(v))
+	}
+
+	if v, ok := configured["delta_sync_table_ttl"].(int); ok {
+		result.DeltaSyncTableTTL = aws.Int64(int64(v))
+	}
+
+	if v, ok := configured["delta_sync_table_name"].(string); ok {
+		result.DeltaSyncTableName = aws.String(v)
+	}
+
 	return result
 }
 
@@ -459,6 +491,36 @@ func flattenAppsyncDynamodbDataSourceConfig(config *appsync.DynamodbDataSourceCo
 
 	if config.UseCallerCredentials != nil {
 		result["use_caller_credentials"] = aws.BoolValue(config.UseCallerCredentials)
+	}
+
+	if config.Versioned != nil {
+		result["versioned"] = aws.BoolValue(config.Versioned)
+	}
+
+	if config.DeltaSyncConfig != nil {
+		result["delte_sync_config"] = flattenAppsyncDynamodbDataSourceDeltaSyncConfig(config.DeltaSyncConfig)
+	}
+
+	return []map[string]interface{}{result}
+}
+
+func flattenAppsyncDynamodbDataSourceDeltaSyncConfig(config *appsync.DeltaSyncConfig) []map[string]interface{} {
+	if config == nil {
+		return nil
+	}
+
+	result := map[string]interface{}{}
+
+	if config.DeltaSyncTableName != nil {
+		result["delta_sync_table_name"] = aws.StringValue(config.DeltaSyncTableName)
+	}
+
+	if config.BaseTableTTL != nil {
+		result["base_table_ttl"] = aws.Int64Value(config.BaseTableTTL)
+	}
+
+	if config.DeltaSyncTableTTL != nil {
+		result["delta_sync_table_ttl"] = aws.Int64Value(config.DeltaSyncTableTTL)
 	}
 
 	return []map[string]interface{}{result}
@@ -507,6 +569,10 @@ func expandAppsyncHTTPDataSourceConfig(l []interface{}) *appsync.HttpDataSourceC
 		Endpoint: aws.String(configured["endpoint"].(string)),
 	}
 
+	if v, ok := configured["authorization_config"].([]interface{}); ok && len(v) > 0 {
+		result.AuthorizationConfig = expandAppsyncHTTPDataSourceAuthorizationConfig(v)
+	}
+
 	return result
 }
 
@@ -517,6 +583,77 @@ func flattenAppsyncHTTPDataSourceConfig(config *appsync.HttpDataSourceConfig) []
 
 	result := map[string]interface{}{
 		"endpoint": aws.StringValue(config.Endpoint),
+	}
+
+	if config.AuthorizationConfig != nil {
+		result["authorization_config"] = flattenAppsyncHTTPDataSourceAuthorizationConfig(config.AuthorizationConfig)
+	}
+
+	return []map[string]interface{}{result}
+}
+
+func expandAppsyncHTTPDataSourceAuthorizationConfig(l []interface{}) *appsync.AuthorizationConfig {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	configured := l[0].(map[string]interface{})
+
+	result := &appsync.AuthorizationConfig{
+		AuthorizationType: aws.String(configured["authorization_type"].(string)),
+	}
+
+	if v, ok := configured["aws_iam_confg"].([]interface{}); ok && len(v) > 0 {
+		result.AwsIamConfig = expandAppsyncHTTPDataSourceAwsIamConfig(v)
+	}
+
+	return result
+}
+
+func flattenAppsyncHTTPDataSourceAuthorizationConfig(config *appsync.AuthorizationConfig) []map[string]interface{} {
+	if config == nil {
+		return nil
+	}
+
+	result := map[string]interface{}{
+		"authorization_type": aws.StringValue(config.AuthorizationType),
+	}
+
+	if config.AwsIamConfig != nil {
+		result["aws_iam_confg"] = flattenAppsyncHTTPDataSourceAwsIamConfig(config.AwsIamConfig)
+	}
+
+	return []map[string]interface{}{result}
+}
+
+func expandAppsyncHTTPDataSourceAwsIamConfig(l []interface{}) *appsync.AwsIamConfig {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	configured := l[0].(map[string]interface{})
+
+	result := &appsync.AwsIamConfig{}
+
+	if v, ok := configured["signing_region"].(string); ok {
+		result.SigningRegion = aws.String(v)
+	}
+
+	if v, ok := configured["signing_service_name"].(string); ok {
+		result.SigningServiceName = aws.String(v)
+	}
+
+	return result
+}
+
+func flattenAppsyncHTTPDataSourceAwsIamConfig(config *appsync.AwsIamConfig) []map[string]interface{} {
+	if config == nil {
+		return nil
+	}
+
+	result := map[string]interface{}{
+		"signing_region":       aws.StringValue(config.SigningRegion),
+		"signing_service_name": aws.StringValue(config.SigningServiceName),
 	}
 
 	return []map[string]interface{}{result}
