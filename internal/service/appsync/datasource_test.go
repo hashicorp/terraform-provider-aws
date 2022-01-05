@@ -357,11 +357,16 @@ func testAccAppSyncDataSource_Type_http_auth(t *testing.T) {
 		CheckDestroy: testAccCheckDestroyDataSource,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAppsyncDatasourceConfig_Type_HTTPAuth(rName),
+				Config: testAccAppsyncDatasourceConfig_Type_HTTPAuth(rName, acctest.Region()),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExistsDataSource(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "http_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "http_config.0.endpoint", "http://example.com"),
+					resource.TestCheckResourceAttr(resourceName, "http_config.0.authorization_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "http_config.0.authorization_config.0.authorization_type", "AWS_IAM"),
+					resource.TestCheckResourceAttr(resourceName, "http_config.0.authorization_config.0.aws_iam_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "http_config.0.authorization_config.0.aws_iam_config.0.signing_region", acctest.Region()),
+					resource.TestCheckResourceAttr(resourceName, "http_config.0.authorization_config.0.aws_iam_config.0.signing_service_name", "3"),
 					resource.TestCheckResourceAttr(resourceName, "type", "HTTP"),
 				),
 			},
@@ -830,7 +835,7 @@ resource "aws_appsync_datasource" "test" {
 `, rName)
 }
 
-func testAccAppsyncDatasourceConfig_Type_HTTPAuth(rName string) string {
+func testAccAppsyncDatasourceConfig_Type_HTTPAuth(rName, region string) string {
 	return fmt.Sprintf(`
 resource "aws_appsync_graphql_api" "test" {
   authentication_type = "API_KEY"
@@ -844,9 +849,16 @@ resource "aws_appsync_datasource" "test" {
 
   http_config {
     endpoint = "http://example.com"
+
+    authorization_config {
+      aws_iam_config {
+        signing_region       = %[2]q
+        signing_service_name = "s3" 
+      }
+    }
   }
 }
-`, rName)
+`, rName, region)
 }
 
 func testAccAppsyncDatasourceConfig_Type_Lambda(rName string) string {

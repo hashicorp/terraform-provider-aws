@@ -20,6 +20,7 @@ func TestAccAppSync_serial(t *testing.T) {
 			"type":                          testAccAppSyncDataSource_type,
 			"Type_dynamoDB":                 testAccAppSyncDataSource_Type_dynamoDB,
 			"Type_http":                     testAccAppSyncDataSource_Type_http,
+			"Type_http_auth":                testAccAppSyncDataSource_Type_http_auth,
 			"Type_lambda":                   testAccAppSyncDataSource_Type_lambda,
 			"Type_none":                     testAccAppSyncDataSource_Type_none,
 		},

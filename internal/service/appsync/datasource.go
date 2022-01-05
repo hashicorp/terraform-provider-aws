@@ -275,7 +275,7 @@ func resourceDataSourceCreate(d *schema.ResourceData, meta interface{}) error {
 
 	_, err := conn.CreateDataSource(input)
 	if err != nil {
-		return err
+		return fmt.Errorf("error creating Appsync Datasource: %w", err)
 	}
 
 	d.SetId(d.Get("api_id").(string) + "-" + d.Get("name").(string))
@@ -603,7 +603,7 @@ func expandAppsyncHTTPDataSourceAuthorizationConfig(l []interface{}) *appsync.Au
 		AuthorizationType: aws.String(configured["authorization_type"].(string)),
 	}
 
-	if v, ok := configured["aws_iam_confg"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := configured["aws_iam_config"].([]interface{}); ok && len(v) > 0 {
 		result.AwsIamConfig = expandAppsyncHTTPDataSourceAwsIamConfig(v)
 	}
 
@@ -620,7 +620,7 @@ func flattenAppsyncHTTPDataSourceAuthorizationConfig(config *appsync.Authorizati
 	}
 
 	if config.AwsIamConfig != nil {
-		result["aws_iam_confg"] = flattenAppsyncHTTPDataSourceAwsIamConfig(config.AwsIamConfig)
+		result["aws_iam_config"] = flattenAppsyncHTTPDataSourceAwsIamConfig(config.AwsIamConfig)
 	}
 
 	return []map[string]interface{}{result}
