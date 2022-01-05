@@ -27,11 +27,6 @@ func ResourceDNSSECConfig() *schema.Resource {
 				Computed: true,
 			},
 
-			"id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
 			"owner_id": {
 				Type:     schema.TypeString,
 				Computed: true,

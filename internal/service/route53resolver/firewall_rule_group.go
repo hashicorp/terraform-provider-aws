@@ -30,11 +30,6 @@ func ResourceFirewallRuleGroup() *schema.Resource {
 				Computed: true,
 			},
 
-			"id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
 			"name": {
 				Type:         schema.TypeString,
 				Required:     true,
