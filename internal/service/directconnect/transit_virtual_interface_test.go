@@ -17,8 +17,9 @@ import (
 
 func TestAccDirectConnectTransitVirtualInterface_serial(t *testing.T) {
 	testCases := map[string]func(t *testing.T){
-		"basic": testAccTransitVirtualInterface_basic,
-		"tags":  testAccTransitVirtualInterface_Tags,
+		"basic":    testAccTransitVirtualInterface_basic,
+		"tags":     testAccTransitVirtualInterface_Tags,
+		"sitelink": testAccTransitVirtualInterfaceSiteLink_basic,
 	}
 
 	for name, tc := range testCases {
@@ -181,7 +182,7 @@ func testAccTransitVirtualInterface_Tags(t *testing.T) {
 	})
 }
 
-func TestAccTransitVirtualInterfaceSiteLink_basic(t *testing.T) {
+func testAccTransitVirtualInterfaceSiteLink_basic(t *testing.T) {
 	key := "DX_CONNECTION_ID"
 	connectionId := os.Getenv(key)
 	if connectionId == "" {
@@ -225,7 +226,7 @@ func TestAccTransitVirtualInterfaceSiteLink_basic(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccDxTransitVirtualInterfaceConfigSiteLink_basic(connectionId, rName, amzAsn, bgpAsn, vlan, false),
+				Config: testAccDxTransitVirtualInterfaceConfigSiteLink_updated(connectionId, rName, amzAsn, bgpAsn, vlan, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitVirtualInterfaceExists(resourceName, &vif),
 					resource.TestCheckResourceAttr(resourceName, "address_family", "ipv4"),
@@ -276,12 +277,12 @@ resource "aws_dx_gateway" "test" {
 func testAccDxTransitVirtualInterfaceConfig_basic(cid, rName string, amzAsn, bgpAsn, vlan int) string {
 	return testAccDxTransitVirtualInterfaceConfig_base(rName, amzAsn) + fmt.Sprintf(`
 resource "aws_dx_transit_virtual_interface" "test" {
-  address_family   = "ipv4"
-  bgp_asn          = %[3]d
-  dx_gateway_id    = aws_dx_gateway.test.id
-  connection_id    = %[1]q
-  name             = %[2]q
-  vlan             = %[4]d
+  address_family = "ipv4"
+  bgp_asn        = %[3]d
+  dx_gateway_id  = aws_dx_gateway.test.id
+  connection_id  = %[1]q
+  name           = %[2]q
+  vlan           = %[4]d
 }
 `, cid, rName, bgpAsn, vlan)
 }
@@ -289,13 +290,13 @@ resource "aws_dx_transit_virtual_interface" "test" {
 func testAccDxTransitVirtualInterfaceConfig_updated(cid, rName string, amzAsn, bgpAsn, vlan int) string {
 	return testAccDxTransitVirtualInterfaceConfig_base(rName, amzAsn) + fmt.Sprintf(`
 resource "aws_dx_transit_virtual_interface" "test" {
-  address_family   = "ipv4"
-  bgp_asn          = %[3]d
-  dx_gateway_id    = aws_dx_gateway.test.id
-  connection_id    = %[1]q
-  mtu              = 8500
-  name             = %[2]q
-  vlan             = %[4]d
+  address_family = "ipv4"
+  bgp_asn        = %[3]d
+  dx_gateway_id  = aws_dx_gateway.test.id
+  connection_id  = %[1]q
+  mtu            = 8500
+  name           = %[2]q
+  vlan           = %[4]d
 }
 `, cid, rName, bgpAsn, vlan)
 }
@@ -346,7 +347,22 @@ resource "aws_dx_transit_virtual_interface" "test" {
   dx_gateway_id    = aws_dx_gateway.test.id
   connection_id    = %[1]q
   name             = %[2]q
-  mtu			   = 8500
+  mtu              = 8500
+  sitelink_enabled = %[5]t
+  vlan             = %[4]d
+}
+`, cid, rName, bgpAsn, vlan, sitelink_enabled)
+}
+
+func testAccDxTransitVirtualInterfaceConfigSiteLink_updated(cid, rName string, amzAsn, bgpAsn, vlan int, sitelink_enabled bool) string {
+	return testAccDxTransitVirtualInterfaceConfig_base(rName, amzAsn) + fmt.Sprintf(`
+resource "aws_dx_transit_virtual_interface" "test" {
+  address_family   = "ipv4"
+  bgp_asn          = %[3]d
+  dx_gateway_id    = aws_dx_gateway.test.id
+  connection_id    = %[1]q
+  name             = %[2]q
+  mtu              = 8500
   sitelink_enabled = %[5]t
   vlan             = %[4]d
 }

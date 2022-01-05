@@ -217,7 +217,7 @@ func TestAccDirectConnectPrivateVirtualInterface_dxGateway(t *testing.T) {
 	})
 }
 
-func TestAccDirectConnectPrivateVirtualInterfaceSiteLink_basic(t *testing.T) {
+func TestAccDirectConnectPrivateVirtualInterface_siteLink(t *testing.T) {
 	key := "DX_CONNECTION_ID"
 	connectionId := os.Getenv(key)
 	if connectionId == "" {
@@ -239,7 +239,7 @@ func TestAccDirectConnectPrivateVirtualInterfaceSiteLink_basic(t *testing.T) {
 		CheckDestroy: testAccCheckPrivateVirtualInterfaceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDxPrivateVirtualInterfaceConfigSiteLink_dxGateway(connectionId, rName, amzAsn, bgpAsn, vlan, true),
+				Config: testAccDxPrivateVirtualInterfaceConfigSiteLink_basic(connectionId, rName, amzAsn, bgpAsn, vlan, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPrivateVirtualInterfaceExists(resourceName, &vif),
 					resource.TestCheckResourceAttr(resourceName, "address_family", "ipv4"),
@@ -261,7 +261,7 @@ func TestAccDirectConnectPrivateVirtualInterfaceSiteLink_basic(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccDxPrivateVirtualInterfaceConfigSiteLink_dxGateway(connectionId, rName, amzAsn, bgpAsn, vlan, false),
+				Config: testAccDxPrivateVirtualInterfaceConfigSiteLink_basicUpdated(connectionId, rName, amzAsn, bgpAsn, vlan, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPrivateVirtualInterfaceExists(resourceName, &vif),
 					resource.TestCheckResourceAttr(resourceName, "address_family", "ipv4"),
@@ -392,7 +392,26 @@ resource "aws_dx_private_virtual_interface" "test" {
 `, cid, rName, amzAsn, bgpAsn, vlan)
 }
 
-func testAccDxPrivateVirtualInterfaceConfigSiteLink_dxGateway(cid, rName string, amzAsn, bgpAsn, vlan int, sitelink_enabled bool) string {
+func testAccDxPrivateVirtualInterfaceConfigSiteLink_basic(cid, rName string, amzAsn, bgpAsn, vlan int, sitelink_enabled bool) string {
+	return fmt.Sprintf(`
+resource "aws_dx_gateway" "test" {
+  amazon_side_asn = %[3]d
+  name            = %[2]q
+}
+
+resource "aws_dx_private_virtual_interface" "test" {
+  address_family   = "ipv4"
+  bgp_asn          = %[4]d
+  dx_gateway_id    = aws_dx_gateway.test.id
+  connection_id    = %[1]q
+  name             = %[2]q
+  vlan             = %[5]d
+  sitelink_enabled = %[6]t
+}
+`, cid, rName, amzAsn, bgpAsn, vlan, sitelink_enabled)
+}
+
+func testAccDxPrivateVirtualInterfaceConfigSiteLink_basicUpdated(cid, rName string, amzAsn, bgpAsn, vlan int, sitelink_enabled bool) string {
 	return fmt.Sprintf(`
 resource "aws_dx_gateway" "test" {
   amazon_side_asn = %[3]d
