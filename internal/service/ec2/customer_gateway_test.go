@@ -172,11 +172,13 @@ func TestAccEC2CustomerGateway_4ByteASN(t *testing.T) {
 
 func TestAccEC2CustomerGateway_certificate(t *testing.T) {
 	var gateway ec2.CustomerGateway
-	var ca acmpca.CertificateAuthority
+	var caRoot acmpca.CertificateAuthority
+	var caSubordinate acmpca.CertificateAuthority
 	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_customer_gateway.test"
-	acmCAResourceName := "aws_acmpca_certificate_authority.test"
+	acmRootCAResourceName := "aws_acmpca_certificate_authority.root"
+	acmSubordinateCAResourceName := "aws_acmpca_certificate_authority.test"
 	acmCertificateResourceName := "aws_acm_certificate.test"
 	domain := acctest.RandomDomainName()
 
@@ -186,12 +188,14 @@ func TestAccEC2CustomerGateway_certificate(t *testing.T) {
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckCustomerGatewayDestroy,
 		Steps: []resource.TestStep{
-			// We need to create and activate the CA before issuing a certificate.
+			// We need to create and activate the CAs before issuing a certificate.
 			{
-				Config: testAccCustomerGatewayConfigRootCA(domain),
+				Config: testAccCustomerGatewayConfigCAs(domain),
 				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckACMPCACertificateAuthorityExists(acmCAResourceName, &ca),
-					acctest.CheckACMPCACertificateAuthorityActivateCA(&ca),
+					acctest.CheckACMPCACertificateAuthorityExists(acmRootCAResourceName, &caRoot),
+					acctest.CheckACMPCACertificateAuthorityExists(acmSubordinateCAResourceName, &caSubordinate),
+					acctest.CheckACMPCACertificateAuthorityActivateCA(&caRoot),
+					acctest.CheckACMPCACertificateAuthorityActivateSubordinateCA(&caRoot, &caSubordinate),
 				),
 			},
 			{
@@ -209,8 +213,9 @@ func TestAccEC2CustomerGateway_certificate(t *testing.T) {
 			{
 				Config: testAccCustomerGatewayConfigCertificate(rName, rBgpAsn, domain),
 				Check: resource.ComposeTestCheckFunc(
-					// CA must be DISABLED for deletion.
-					acctest.CheckACMPCACertificateAuthorityDisableCA(&ca),
+					// CAs must be DISABLED for deletion.
+					acctest.CheckACMPCACertificateAuthorityDisableCA(&caSubordinate),
+					acctest.CheckACMPCACertificateAuthorityDisableCA(&caRoot),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -335,9 +340,9 @@ resource "aws_customer_gateway" "test" {
 `, rName, rBgpAsn)
 }
 
-func testAccCustomerGatewayConfigRootCA(domain string) string {
+func testAccCustomerGatewayConfigCAs(domain string) string {
 	return fmt.Sprintf(`
-resource "aws_acmpca_certificate_authority" "test" {
+resource "aws_acmpca_certificate_authority" "root" {
   permanent_deletion_time_in_days = 7
   type                            = "ROOT"
 
@@ -350,23 +355,32 @@ resource "aws_acmpca_certificate_authority" "test" {
     }
   }
 }
-`, domain)
-}
 
-func testAccCustomerGatewayConfigPrivateCert(domain string) string {
-	return fmt.Sprintf(`
-resource "aws_acm_certificate" "test" {
-  domain_name               = "test.%[1]s"
-  certificate_authority_arn = aws_acmpca_certificate_authority.test.arn
+resource "aws_acmpca_certificate_authority" "test" {
+  permanent_deletion_time_in_days = 7
+  type                            = "SUBORDINATE"
+
+  certificate_authority_configuration {
+    key_algorithm     = "RSA_4096"
+    signing_algorithm = "SHA512WITHRSA"
+
+    subject {
+      common_name = "sub.%[1]s"
+    }
+  }
 }
 `, domain)
 }
 
 func testAccCustomerGatewayConfigCertificate(rName string, rBgpAsn int, domain string) string {
 	return acctest.ConfigCompose(
-		testAccCustomerGatewayConfigRootCA(domain),
-		testAccCustomerGatewayConfigPrivateCert(domain),
+		testAccCustomerGatewayConfigCAs(domain),
 		fmt.Sprintf(`
+resource "aws_acm_certificate" "test" {
+  domain_name               = "test.sub.%[3]s"
+  certificate_authority_arn = aws_acmpca_certificate_authority.test.arn
+}
+
 resource "aws_customer_gateway" "test" {
   bgp_asn         = %[2]d
   ip_address      = "172.0.0.1"
@@ -377,5 +391,5 @@ resource "aws_customer_gateway" "test" {
     Name = %[1]q
   }
 }
-`, rName, rBgpAsn))
+`, rName, rBgpAsn, domain))
 }
