@@ -48,7 +48,7 @@ func init() {
 		F:    sweepFSXOpenzfsFileSystems,
 	})
 
-	resource.AddTestSweepers("aws_fsx_ontap_volume", &resource.Sweeper{
+	resource.AddTestSweepers("aws_fsx_openzfs_volume", &resource.Sweeper{
 		Name: "aws_fsx_openzfs_volume",
 		F:    sweepFSXOpenzfsVolume,
 	})

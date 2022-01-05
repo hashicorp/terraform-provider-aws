@@ -1570,6 +1570,7 @@ func Provider() *schema.Provider {
 			"aws_sagemaker_app":                                       sagemaker.ResourceApp(),
 			"aws_sagemaker_app_image_config":                          sagemaker.ResourceAppImageConfig(),
 			"aws_sagemaker_code_repository":                           sagemaker.ResourceCodeRepository(),
+			"aws_sagemaker_device":                                    sagemaker.ResourceDevice(),
 			"aws_sagemaker_device_fleet":                              sagemaker.ResourceDeviceFleet(),
 			"aws_sagemaker_domain":                                    sagemaker.ResourceDomain(),
 			"aws_sagemaker_endpoint":                                  sagemaker.ResourceEndpoint(),
