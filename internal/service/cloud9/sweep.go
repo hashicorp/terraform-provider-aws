@@ -9,7 +9,6 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloud9"
-	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
@@ -23,50 +22,44 @@ func init() {
 }
 
 func sweepEnvironmentEC2s(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
+		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*AWSClient).cloud9conn
-	sweepResources := make([]*testSweepResource, 0)
-	var sweeperErrs *multierror.Error
-
+	conn := client.(*conns.AWSClient).Cloud9Conn
 	input := &cloud9.ListEnvironmentsInput{}
-	err = conn.ListEnvironmentsPages(input, func(page *cloud9.ListEnvironmentsOutput, lastPage bool) bool {
-		if len(page.EnvironmentIds) == 0 {
-			log.Printf("[INFO] No Cloud9 Environment EC2s to sweep")
-			return false
-		}
-		for _, envID := range page.EnvironmentIds {
-			id := aws.StringValue(envID)
+	sweepResources := make([]*sweep.SweepResource, 0)
 
-			log.Printf("[INFO] Deleting Cloud9 Environment EC2: %s", id)
+	err = conn.ListEnvironmentsPages(input, func(page *cloud9.ListEnvironmentsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.EnvironmentIds {
 			r := ResourceEnvironmentEC2()
 			d := r.Data(nil)
-			d.SetId(id)
+			d.SetId(aws.StringValue(v))
 
-			if err != nil {
-				log.Printf("[ERROR] %s", err)
-				sweeperErrs = multierror.Append(sweeperErrs, err)
-				continue
-			}
-			sweepResources = append(sweepResources, NewTestSweepResource(r, d, client))
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
+
 		return !lastPage
 	})
 
-	if err != nil {
-		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error retrieving Cloud9 Environment EC2s: %w", err))
-	}
-
-	if err = testSweepResourceOrchestrator(sweepResources); err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error sweeping Cloud9 Environment EC2 for %s: %w", region, err))
-	}
-
-	if testSweepSkipSweepError(errs.ErrorOrNil()) {
-		log.Printf("[WARN] Skipping Cloud9 Environment EC2s for %s: %s", region, errs)
+	if sweep.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping Cloud9 EC2 Environment sweep for %s: %s", region, err)
 		return nil
 	}
 
-	return sweeperErrs.ErrorOrNil()
+	if err != nil {
+		return fmt.Errorf("error listing Cloud9 EC2 Environments (%s): %w", region, err)
+	}
+
+	err = sweep.SweepOrchestrator(sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("error sweeping Cloud9 EC2 Environments (%s): %w", region, err)
+	}
+
+	return nil
 }
