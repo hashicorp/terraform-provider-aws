@@ -1,6 +1,7 @@
 package kafkaconnect_test
 
 import (
+	"encoding/base64"
 	"fmt"
 	"testing"
 
@@ -33,6 +34,78 @@ func TestAccKafkaConnectWorkerConfiguration_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
 					resource.TestCheckResourceAttrSet(resourceName, "latest_revision"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "properties_file_content", propertiesFileContent),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccKafkaConnectWorkerConfiguration_description(t *testing.T) {
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rDescription := sdkacctest.RandString(20)
+
+	propertiesFileContent := "key.converter=hello\nvalue.converter=world"
+
+	resourceName := "aws_mskconnect_worker_configuration.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(kafkaconnect.EndpointsID, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, kafkaconnect.EndpointsID),
+		CheckDestroy: nil,
+		Providers:    acctest.Providers,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccWorkerConfigurationDescription(rName, propertiesFileContent, rDescription),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWorkerConfigurationExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "description", rDescription),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccKafkaConnectWorkerConfiguration_properties_file_content(t *testing.T) {
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	propertiesFileContent := "key.converter=hello\nvalue.converter=world"
+	propertiesFileContentBase64 := base64.StdEncoding.EncodeToString([]byte(propertiesFileContent))
+
+	resourceName := "aws_mskconnect_worker_configuration.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(kafkaconnect.EndpointsID, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, kafkaconnect.EndpointsID),
+		CheckDestroy: nil,
+		Providers:    acctest.Providers,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccWorkerConfigurationBasic(rName, propertiesFileContent),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWorkerConfigurationExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "properties_file_content", propertiesFileContent),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccWorkerConfigurationBasic(rName, propertiesFileContentBase64),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWorkerConfigurationExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "properties_file_content", propertiesFileContent),
 				),
 			},
@@ -69,8 +142,18 @@ func testAccCheckWorkerConfigurationExists(name string) resource.TestCheckFunc {
 func testAccWorkerConfigurationBasic(name, content string) string {
 	return fmt.Sprintf(`
 resource "aws_mskconnect_worker_configuration" "test" {
-	name                    = %[1]q
-	properties_file_content = %[2]q
+  name                    = %[1]q
+  properties_file_content = %[2]q
 }
 `, name, content)
+}
+
+func testAccWorkerConfigurationDescription(name, content, description string) string {
+	return fmt.Sprintf(`
+resource "aws_mskconnect_worker_configuration" "test" {
+  name                    = %[1]q
+  properties_file_content = %[2]q
+  description             = %[3]q
+}
+`, name, content, description)
 }
