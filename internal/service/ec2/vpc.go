@@ -659,7 +659,7 @@ func resourceVPCUpdate(d *schema.ResourceData, meta interface{}) error {
 			}
 		}
 		// if an IPv6 CIDR blosk is to be assigned and no network border group is specified
-		// just create the new association and remove the existing one if a border group is configured
+		// just create the new association and remove the exising one if a border group is configured
 		if toAssign && borderNetworkGroup == "" {
 			log.Printf("[INFO] Modifying IPv6 Block Network Border Group")
 			modifyOpts := &ec2.AssociateVpcCidrBlockInput{
