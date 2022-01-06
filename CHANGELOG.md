@@ -17,6 +17,7 @@ FEATURES:
 * **New Resource:** `aws_datasync_location_fsx_lustre_file_system` ([#22346](https://github.com/hashicorp/terraform-provider-aws/issues/22346))
 * **New Resource:** `aws_datasync_location_hdfs` ([#22347](https://github.com/hashicorp/terraform-provider-aws/issues/22347))
 * **New Resource:** `aws_devicefarm_device_pool` ([#21025](https://github.com/hashicorp/terraform-provider-aws/issues/21025))
+* **New Resource:** `aws_devicefarm_network_profile` ([#22448](https://github.com/hashicorp/terraform-provider-aws/issues/22448))
 * **New Resource:** `aws_devicefarm_upload` ([#22443](https://github.com/hashicorp/terraform-provider-aws/issues/22443))
 * **New Resource:** `aws_fsx_openzfs_file_system` ([#22234](https://github.com/hashicorp/terraform-provider-aws/issues/22234))
 * **New Resource:** `aws_fsx_openzfs_snapshot` ([#22234](https://github.com/hashicorp/terraform-provider-aws/issues/22234))
