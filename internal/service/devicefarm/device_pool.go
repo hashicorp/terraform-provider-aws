@@ -146,7 +146,7 @@ func resourceDevicePoolRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("description", devicePool.Description)
 	d.Set("max_devices", devicePool.MaxDevices)
 
-	projectArn, err := decodeDevicefarmProjectArn(arn, meta)
+	projectArn, err := decodeDevicefarmProjectArn(arn, "devicepool", meta)
 	if err != nil {
 		return fmt.Errorf("error decoding project_arn (%s): %w", arn, err)
 	}
@@ -294,16 +294,16 @@ func flattenAwsDevicefarmDevicePoolRules(list []*devicefarm.Rule) []map[string]i
 	return result
 }
 
-func decodeDevicefarmProjectArn(id string, meta interface{}) (string, error) {
+func decodeDevicefarmProjectArn(id, typ string, meta interface{}) (string, error) {
 	poolArn, err := arn.Parse(id)
 	if err != nil {
 		return "", fmt.Errorf("Error parsing '%s': %w", id, err)
 	}
 
 	poolArnResouce := poolArn.Resource
-	parts := strings.Split(strings.TrimPrefix(poolArnResouce, "devicepool:"), "/")
+	parts := strings.Split(strings.TrimPrefix(poolArnResouce, fmt.Sprintf("%s:", typ)), "/")
 	if len(parts) != 2 {
-		return "", fmt.Errorf("Unexpected format of ID (%q), expected project-id/pool-id", poolArnResouce)
+		return "", fmt.Errorf("Unexpected format of ID (%q), expected project-id/%q-id", poolArnResouce, typ)
 	}
 
 	projectId := parts[0]
