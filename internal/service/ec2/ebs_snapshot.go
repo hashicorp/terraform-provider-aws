@@ -193,6 +193,7 @@ func resourceEBSSnapshotRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("kms_key_id", snapshot.KmsKeyId)
 	d.Set("volume_size", snapshot.VolumeSize)
 	d.Set("storage_tier", snapshot.StorageTier)
+	d.Set("volume_id", snapshot.VolumeId)
 
 	if snapshot.OutpostArn != nil {
 		d.Set("outpost_arn", snapshot.OutpostArn)
