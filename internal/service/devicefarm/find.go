@@ -82,3 +82,28 @@ func FindUploadByArn(conn *devicefarm.DeviceFarm, arn string) (*devicefarm.Uploa
 
 	return output.Upload, nil
 }
+
+func FindNetworkProfileByArn(conn *devicefarm.DeviceFarm, arn string) (*devicefarm.NetworkProfile, error) {
+
+	input := &devicefarm.GetNetworkProfileInput{
+		Arn: aws.String(arn),
+	}
+	output, err := conn.GetNetworkProfile(input)
+
+	if tfawserr.ErrCodeEquals(err, devicefarm.ErrCodeNotFoundException) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.NetworkProfile == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.NetworkProfile, nil
+}
