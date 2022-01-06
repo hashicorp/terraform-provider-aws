@@ -39,6 +39,9 @@ func TestAccDeviceFarmNetworkProfile_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeviceFarmNetworkProfileExists(resourceName, &pool),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "type", "PRIVATE"),
+					resource.TestCheckResourceAttr(resourceName, "downlink_bandwidth_bits", "104857600"),
+					resource.TestCheckResourceAttr(resourceName, "uplink_bandwidth_bits", "104857600"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttrPair(resourceName, "project_arn", "aws_devicefarm_project.test", "arn"),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "devicefarm", regexp.MustCompile(`networkprofile:.+`)),
@@ -54,6 +57,11 @@ func TestAccDeviceFarmNetworkProfile_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeviceFarmNetworkProfileExists(resourceName, &pool),
 					resource.TestCheckResourceAttr(resourceName, "name", rNameUpdated),
+					resource.TestCheckResourceAttr(resourceName, "type", "PRIVATE"),
+					resource.TestCheckResourceAttr(resourceName, "downlink_bandwidth_bits", "104857600"),
+					resource.TestCheckResourceAttr(resourceName, "uplink_bandwidth_bits", "104857600"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttrPair(resourceName, "project_arn", "aws_devicefarm_project.test", "arn"),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "devicefarm", regexp.MustCompile(`networkprofile:.+`)),
 				),
 			},
