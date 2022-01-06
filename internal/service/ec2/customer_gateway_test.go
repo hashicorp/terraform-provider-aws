@@ -342,7 +342,7 @@ resource "aws_customer_gateway" "test" {
   bgp_asn         = %[2]d
   ip_address      = "172.0.0.1"
   type            = "ipsec.1"
-  certificate_arn = aws_acmpca_certificate.test.arn
+  certificate_arn = aws_acm_certificate.test.arn
 }
 `, subDomain, rBgpAsn))
 }

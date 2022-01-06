@@ -142,6 +142,11 @@ func init() {
 		},
 	})
 
+	resource.AddTestSweepers("aws_customer_gateway", &resource.Sweeper{
+		Name: "aws_customer_gateway",
+		F:    sweepCustomerGateways,
+	})
+
 	resource.AddTestSweepers("aws_route_table", &resource.Sweeper{
 		Name: "aws_route_table",
 		F:    sweepRouteTables,
@@ -1153,6 +1158,43 @@ func sweepPlacementGroups(region string) error {
 
 	if err != nil {
 		return fmt.Errorf("error sweeping EC2 Placement Groups (%s): %w", region, err)
+	}
+
+	return nil
+}
+
+func sweepCustomerGateways(region string) error {
+	client, err := sweep.SharedRegionalSweepClient(region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %s", err)
+	}
+	conn := client.(*conns.AWSClient).EC2Conn
+	input := &ec2.DescribeCustomerGatewaysInput{}
+	sweepResources := make([]*sweep.SweepResource, 0)
+
+	output, err := conn.DescribeCustomerGateways(input)
+
+	if sweep.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping EC2 Customer Gateway sweep for %s: %s", region, err)
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("error listing EC2 Customer Gateways (%s): %w", region, err)
+	}
+
+	for _, customerGateway := range output.CustomerGateways {
+		r := ResourceCustomerGateway()
+		d := r.Data(nil)
+		d.SetId(aws.StringValue(customerGateway.CustomerGatewayId))
+
+		sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+	}
+
+	err = sweep.SweepOrchestrator(sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("error sweeping EC2 Customer Gateways (%s): %w", region, err)
 	}
 
 	return nil
