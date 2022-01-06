@@ -57,3 +57,28 @@ func FindProjectByArn(conn *devicefarm.DeviceFarm, arn string) (*devicefarm.Proj
 
 	return output.Project, nil
 }
+
+func FindUploadByArn(conn *devicefarm.DeviceFarm, arn string) (*devicefarm.Upload, error) {
+
+	input := &devicefarm.GetUploadInput{
+		Arn: aws.String(arn),
+	}
+	output, err := conn.GetUpload(input)
+
+	if tfawserr.ErrCodeEquals(err, devicefarm.ErrCodeNotFoundException) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.Upload == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.Upload, nil
+}

@@ -999,6 +999,7 @@ func Provider() *schema.Provider {
 
 			"aws_devicefarm_device_pool": devicefarm.ResourceDevicePool(),
 			"aws_devicefarm_project":     devicefarm.ResourceProject(),
+			"aws_devicefarm_upload":      devicefarm.ResourceUpload(),
 
 			"aws_detective_graph": detective.ResourceGraph(),
 
