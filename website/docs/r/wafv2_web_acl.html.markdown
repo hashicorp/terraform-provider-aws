@@ -383,6 +383,7 @@ The `statement` block supports the following arguments:
 * `not_statement` - (Optional) A logical rule statement used to negate the results of another rule statement. See [NOT Statement](#not-statement) below for details.
 * `or_statement` - (Optional) A logical rule statement used to combine other rule statements with OR logic. See [OR Statement](#or-statement) below for details.
 * `rate_based_statement` - (Optional) A rate-based rule tracks the rate of requests for each originating `IP address`, and triggers the rule action when the rate exceeds a limit that you specify on the number of requests in any `5-minute` time span. This statement can not be nested. See [Rate Based Statement](#rate-based-statement) below for details.
+* `regex_match_statement` - (Optional) A rule statement used to search web request components for a match against a single regular expression. See [Regex Match Statement](#regex-match-statement) below for details.
 * `regex_pattern_set_reference_statement` - (Optional) A rule statement used to search web request components for matches with regular expressions. See [Regex Pattern Set Reference Statement](#regex-pattern-set-reference-statement) below for details.
 * `rule_group_reference_statement` - (Optional) A rule statement used to run the rules that are defined in an WAFv2 Rule Group. See [Rule Group Reference Statement](#rule-group-reference-statement) below for details.
 * `size_constraint_statement` - (Optional) A rule statement that compares a number of bytes against the size of a request component, using a comparison operator, such as greater than (>) or less than (<). See [Size Constraint Statement](#size-constraint-statement) below for more details.
@@ -473,6 +474,16 @@ The `rate_based_statement` block supports the following arguments:
 * `forwarded_ip_config` - (Optional) The configuration for inspecting IP addresses in an HTTP header that you specify, instead of using the IP address that's reported by the web request origin. If `aggregate_key_type` is set to `FORWARDED_IP`, this block is required. See [Forwarded IP Config](#forwarded-ip-config) below for details.
 * `limit` - (Required) The limit on requests per 5-minute period for a single originating IP address.
 * `scope_down_statement` - (Optional) An optional nested statement that narrows the scope of the rate-based statement to matching web requests. This can be any nestable statement, and you can nest statements at any level below this scope-down statement. See [Statement](#statement) above for details.
+
+### Regex Match Statement
+
+A rule statement used to search web request components for a match against a single regular expression.
+
+The `regex_match_statement` block supports the following arguments:
+
+* `regex_string` - (Required) The string representing the regular expression. Minimum of `1` and maximum of `512` characters.
+* `field_to_match` - (Required) The part of a web request that you want AWS WAF to inspect. See [Field to Match](#field-to-match) below for details.
+* `text_transformation` - (Required) Text transformations eliminate some of the unusual formatting that attackers use in web requests in an effort to bypass detection. See [Text Transformation](#text-transformation) below for details.
 
 ### Regex Pattern Set Reference Statement
 

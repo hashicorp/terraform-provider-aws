@@ -1130,6 +1130,42 @@ func TestAccWAFV2RuleGroup_minimal(t *testing.T) {
 	})
 }
 
+func TestAccWAFV2RuleGroup_regexMatchStatement(t *testing.T) {
+	var v wafv2.RuleGroup
+	ruleGroupName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_wafv2_rule_group.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckScopeRegional(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, wafv2.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckRuleGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRuleGroupConfig_RegexMatchStatement(ruleGroupName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRuleGroupExists(resourceName, &v),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
+						"statement.#":                                               "1",
+						"statement.0.regex_match_statement.#":                       "1",
+						"statement.0.regex_match_statement.0.regex_string":          "one",
+						"statement.0.regex_match_statement.0.field_to_match.#":      "1",
+						"statement.0.regex_match_statement.0.text_transformation.#": "1",
+					}),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateIdFunc: testAccRuleGroupImportStateIdFunc(resourceName),
+			},
+		},
+	})
+}
+
 func TestAccWAFV2RuleGroup_regexPatternSetReferenceStatement(t *testing.T) {
 	var v wafv2.RuleGroup
 	ruleGroupName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -3123,6 +3159,52 @@ resource "aws_wafv2_rule_group" "test" {
               }
             }
           }
+        }
+      }
+    }
+
+    visibility_config {
+      cloudwatch_metrics_enabled = false
+      metric_name                = "friendly-rule-metric-name"
+      sampled_requests_enabled   = false
+    }
+  }
+
+  visibility_config {
+    cloudwatch_metrics_enabled = false
+    metric_name                = "friendly-metric-name"
+    sampled_requests_enabled   = false
+  }
+}
+`, name)
+}
+
+func testAccRuleGroupConfig_RegexMatchStatement(name string) string {
+	return fmt.Sprintf(`
+resource "aws_wafv2_rule_group" "test" {
+  capacity = 50
+  name     = "%s"
+  scope    = "REGIONAL"
+
+  rule {
+    name     = "rule-1"
+    priority = 1
+
+    action {
+      allow {}
+    }
+
+    statement {
+      regex_match_statement {
+        regex_string = "one"
+
+        field_to_match {
+          body {}
+        }
+
+        text_transformation {
+          priority = 2
+          type     = "NONE"
         }
       }
     }

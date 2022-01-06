@@ -142,6 +142,25 @@ resource "aws_wafv2_rule_group" "example" {
       or_statement {
         statement {
 
+          regex_match_statement {
+
+            regex_string = "two"
+
+            field_to_match {
+              single_header {
+                name = "user-agent"
+              }
+            }
+
+            text_transformation {
+              priority = 6
+              type     = "NONE"
+            }
+          }
+        }
+
+        statement {
+
           sqli_match_statement {
 
             field_to_match {
@@ -383,6 +402,7 @@ The `statement` block supports the following arguments:
 * `ip_set_reference_statement` - (Optional) A rule statement used to detect web requests coming from particular IP addresses or address ranges. See [IP Set Reference Statement](#ip-set-reference-statement) below for details.
 * `not_statement` - (Optional) A logical rule statement used to negate the results of another rule statement. See [NOT Statement](#not-statement) below for details.
 * `or_statement` - (Optional) A logical rule statement used to combine other rule statements with OR logic. See [OR Statement](#or-statement) below for details.
+* `regex_match_statement` - (Optional) A rule statement used to search web request components for a match against a single regular expression. See [Regex Match Statement](#regex-match-statement) below for details.
 * `regex_pattern_set_reference_statement` - (Optional) A rule statement used to search web request components for matches with regular expressions. See [Regex Pattern Set Reference Statement](#regex-pattern-set-reference-statement) below for details.
 * `size_constraint_statement` - (Optional) A rule statement that compares a number of bytes against the size of a request component, using a comparison operator, such as greater than (>) or less than (<). See [Size Constraint Statement](#size-constraint-statement) below for more details.
 * `sqli_match_statement` - (Optional) An SQL injection match condition identifies the part of web requests, such as the URI or the query string, that you want AWS WAF to inspect. See [SQL Injection Match Statement](#sql-injection-match-statement) below for details.
@@ -445,6 +465,16 @@ A logical rule statement used to combine other rule statements with `OR` logic. 
 The `or_statement` block supports the following arguments:
 
 * `statement` - (Required) The statements to combine with `OR` logic. You can use any statements that can be nested. See [Statement](#statement) above for details.
+
+### Regex Match Statement
+
+A rule statement used to search web request components for a match against a single regular expression.
+
+The `regex_match_statement` block supports the following arguments:
+
+* `regex_string` - (Required) The string representing the regular expression. Minimum of `1` and maximum of `512` characters.
+* `field_to_match` - (Required) The part of a web request that you want AWS WAF to inspect. See [Field to Match](#field-to-match) below for details.
+* `text_transformation` - (Required) Text transformations eliminate some of the unusual formatting that attackers use in web requests in an effort to bypass detection. See [Text Transformation](#text-transformation) below for details.
 
 ### Regex Pattern Set Reference Statement
 

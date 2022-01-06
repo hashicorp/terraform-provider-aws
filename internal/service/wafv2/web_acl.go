@@ -381,6 +381,7 @@ func wafv2WebACLRootStatementSchema(level int) *schema.Schema {
 				"not_statement":                         wafv2StatementSchema(level),
 				"or_statement":                          wafv2StatementSchema(level),
 				"rate_based_statement":                  wafv2RateBasedStatementSchema(level),
+				"regex_match_statement":                 wafv2RegexMatchStatementSchema(),
 				"regex_pattern_set_reference_statement": wafv2RegexPatternSetReferenceStatementSchema(),
 				"rule_group_reference_statement":        wafv2RuleGroupReferenceStatementSchema(),
 				"size_constraint_statement":             wafv2SizeConstraintSchema(),
@@ -471,6 +472,7 @@ func wafv2ScopeDownStatementSchema(level int) *schema.Schema {
 				"ip_set_reference_statement":            wafv2IpSetReferenceStatementSchema(),
 				"not_statement":                         wafv2StatementSchema(level),
 				"or_statement":                          wafv2StatementSchema(level),
+				"regex_match_statement":                 wafv2RegexMatchStatementSchema(),
 				"regex_pattern_set_reference_statement": wafv2RegexPatternSetReferenceStatementSchema(),
 				"size_constraint_statement":             wafv2SizeConstraintSchema(),
 				"sqli_match_statement":                  wafv2SqliMatchStatementSchema(),
@@ -627,6 +629,10 @@ func expandWafv2WebACLStatement(m map[string]interface{}) *wafv2.Statement {
 		statement.RateBasedStatement = expandWafv2RateBasedStatement(v.([]interface{}))
 	}
 
+	if v, ok := m["regex_match_statement"]; ok {
+		statement.RegexMatchStatement = expandWafv2RegexMatchStatement(v.([]interface{}))
+	}
+
 	if v, ok := m["regex_pattern_set_reference_statement"]; ok {
 		statement.RegexPatternSetReferenceStatement = expandWafv2RegexPatternSetReferenceStatement(v.([]interface{}))
 	}
@@ -781,6 +787,10 @@ func flattenWafv2WebACLStatement(s *wafv2.Statement) map[string]interface{} {
 
 	if s.RateBasedStatement != nil {
 		m["rate_based_statement"] = flattenWafv2RateBasedStatement(s.RateBasedStatement)
+	}
+
+	if s.RegexMatchStatement != nil {
+		m["regex_match_statement"] = flattenWafv2RegexMatchStatement(s.RegexMatchStatement)
 	}
 
 	if s.RegexPatternSetReferenceStatement != nil {

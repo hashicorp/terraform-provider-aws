@@ -68,6 +68,7 @@ func wafv2RootStatementSchema(level int) *schema.Schema {
 				"label_match_statement":                 wafv2LabelMatchStatementSchema(),
 				"not_statement":                         wafv2StatementSchema(level - 1),
 				"or_statement":                          wafv2StatementSchema(level - 1),
+				"regex_match_statement":                 wafv2RegexMatchStatementSchema(),
 				"regex_pattern_set_reference_statement": wafv2RegexPatternSetReferenceStatementSchema(),
 				"size_constraint_statement":             wafv2SizeConstraintSchema(),
 				"sqli_match_statement":                  wafv2SqliMatchStatementSchema(),
@@ -97,6 +98,7 @@ func wafv2StatementSchema(level int) *schema.Schema {
 								"label_match_statement":                 wafv2LabelMatchStatementSchema(),
 								"not_statement":                         wafv2StatementSchema(level - 1),
 								"or_statement":                          wafv2StatementSchema(level - 1),
+								"regex_match_statement":                 wafv2RegexMatchStatementSchema(),
 								"regex_pattern_set_reference_statement": wafv2RegexPatternSetReferenceStatementSchema(),
 								"size_constraint_statement":             wafv2SizeConstraintSchema(),
 								"sqli_match_statement":                  wafv2SqliMatchStatementSchema(),
@@ -124,6 +126,7 @@ func wafv2StatementSchema(level int) *schema.Schema {
 							"geo_match_statement":                   wafv2GeoMatchStatementSchema(),
 							"ip_set_reference_statement":            wafv2IpSetReferenceStatementSchema(),
 							"label_match_statement":                 wafv2LabelMatchStatementSchema(),
+							"regex_match_statement":                 wafv2RegexMatchStatementSchema(),
 							"regex_pattern_set_reference_statement": wafv2RegexPatternSetReferenceStatementSchema(),
 							"size_constraint_statement":             wafv2SizeConstraintSchema(),
 							"sqli_match_statement":                  wafv2SqliMatchStatementSchema(),
@@ -249,6 +252,25 @@ func wafv2LabelMatchStatementSchema() *schema.Schema {
 					Required:     true,
 					ValidateFunc: validation.StringInSlice(wafv2.LabelMatchScope_Values(), false),
 				},
+			},
+		},
+	}
+}
+
+func wafv2RegexMatchStatementSchema() *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeList,
+		Optional: true,
+		MaxItems: 1,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"regex_string": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: validation.StringLenBetween(1, 512),
+				},
+				"field_to_match":      wafv2FieldToMatchSchema(),
+				"text_transformation": wafv2TextTransformationSchema(),
 			},
 		},
 	}
@@ -910,6 +932,10 @@ func expandWafv2Statement(m map[string]interface{}) *wafv2.Statement {
 		statement.OrStatement = expandWafv2OrStatement(v.([]interface{}))
 	}
 
+	if v, ok := m["regex_match_statement"]; ok {
+		statement.RegexMatchStatement = expandWafv2RegexMatchStatement(v.([]interface{}))
+	}
+
 	if v, ok := m["regex_pattern_set_reference_statement"]; ok {
 		statement.RegexPatternSetReferenceStatement = expandWafv2RegexPatternSetReferenceStatement(v.([]interface{}))
 	}
@@ -1153,6 +1179,20 @@ func expandWafv2OrStatement(l []interface{}) *wafv2.OrStatement {
 
 	return &wafv2.OrStatement{
 		Statements: expandWafv2Statements(m["statement"].([]interface{})),
+	}
+}
+
+func expandWafv2RegexMatchStatement(l []interface{}) *wafv2.RegexMatchStatement {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]interface{})
+
+	return &wafv2.RegexMatchStatement{
+		RegexString:         aws.String(m["regex_string"].(string)),
+		FieldToMatch:        expandWafv2FieldToMatch(m["field_to_match"].([]interface{})),
+		TextTransformations: expandWafv2TextTransformations(m["text_transformation"].(*schema.Set).List()),
 	}
 }
 
@@ -1426,6 +1466,10 @@ func flattenWafv2Statement(s *wafv2.Statement) map[string]interface{} {
 		m["or_statement"] = flattenWafv2OrStatement(s.OrStatement)
 	}
 
+	if s.RegexMatchStatement != nil {
+		m["regex_match_statement"] = flattenWafv2RegexMatchStatement(s.RegexMatchStatement)
+	}
+
 	if s.RegexPatternSetReferenceStatement != nil {
 		m["regex_pattern_set_reference_statement"] = flattenWafv2RegexPatternSetReferenceStatement(s.RegexPatternSetReferenceStatement)
 	}
@@ -1630,6 +1674,20 @@ func flattenWafv2OrStatement(a *wafv2.OrStatement) interface{} {
 
 	m := map[string]interface{}{
 		"statement": flattenWafv2Statements(a.Statements),
+	}
+
+	return []interface{}{m}
+}
+
+func flattenWafv2RegexMatchStatement(r *wafv2.RegexMatchStatement) interface{} {
+	if r == nil {
+		return []interface{}{}
+	}
+
+	m := map[string]interface{}{
+		"regex_string":        aws.StringValue(r.RegexString),
+		"field_to_match":      flattenWafv2FieldToMatch(r.FieldToMatch),
+		"text_transformation": flattenWafv2TextTransformations(r.TextTransformations),
 	}
 
 	return []interface{}{m}
