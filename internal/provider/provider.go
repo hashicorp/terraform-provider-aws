@@ -872,7 +872,8 @@ func Provider() *schema.Provider {
 			"aws_chime_voice_connector_termination":             chime.ResourceVoiceConnectorTermination(),
 			"aws_chime_voice_connector_termination_credentials": chime.ResourceVoiceConnectorTerminationCredentials(),
 
-			"aws_cloud9_environment_ec2": cloud9.ResourceEnvironmentEC2(),
+			"aws_cloud9_environment_ec2":        cloud9.ResourceEnvironmentEC2(),
+			"aws_cloud9_environment_membership": cloud9.ResourceEnvironmentMembership(),
 
 			"aws_cloudcontrolapi_resource": cloudcontrol.ResourceResource(),
 
