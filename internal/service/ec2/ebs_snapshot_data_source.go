@@ -23,19 +23,41 @@ func DataSourceEBSSnapshot() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			//selection criteria
+			"data_encryption_key_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"description": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"encrypted": {
+				Type:     schema.TypeBool,
+				Computed: true,
+			},
 			"filter": DataSourceFiltersSchema(),
+			"kms_key_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"most_recent": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
 			},
-			"owners": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
+			"outpost_arn": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
-			"snapshot_ids": {
+			"owner_alias": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"owner_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"owners": {
 				Type:     schema.TypeList,
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -45,44 +67,16 @@ func DataSourceEBSSnapshot() *schema.Resource {
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			//Computed values returned
 			"snapshot_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"volume_id": {
-				Type:     schema.TypeString,
-				Computed: true,
+			"snapshot_ids": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"state": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"owner_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"owner_alias": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"encrypted": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"description": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"volume_size": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			"kms_key_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"data_encryption_key_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -90,11 +84,15 @@ func DataSourceEBSSnapshot() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"outpost_arn": {
+			"tags": tftags.TagsSchemaComputed(),
+			"volume_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags": tftags.TagsSchemaComputed(),
+			"volume_size": {
+				Type:     schema.TypeInt,
+				Computed: true,
+			},
 		},
 	}
 }

@@ -66,6 +66,10 @@ func ResourceEBSSnapshotImport() *schema.Resource {
 					},
 				},
 			},
+			"data_encryption_key_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"description": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -120,37 +124,33 @@ func ResourceEBSSnapshotImport() *schema.Resource {
 					},
 				},
 			},
-			"owner_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"owner_alias": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 			"encrypted": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				ForceNew: true,
-			},
-			"volume_size": {
-				Type:     schema.TypeInt,
-				Computed: true,
 			},
 			"kms_key_id": {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
 			},
+			"owner_alias": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"owner_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"permanent_restore": {
+				Type:     schema.TypeBool,
+				Optional: true,
+			},
 			"role_name": {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
 				Default:  "vmimport",
-			},
-			"data_encryption_key_id": {
-				Type:     schema.TypeString,
-				Computed: true,
 			},
 			"storage_tier": {
 				Type:     schema.TypeString,
@@ -161,16 +161,16 @@ func ResourceEBSSnapshotImport() *schema.Resource {
 					validation.StringInSlice([]string{"standard"}, false), //Enum slice does not include `standard` type.
 				),
 			},
-			"permanent_restore": {
-				Type:     schema.TypeBool,
-				Optional: true,
-			},
+			"tags":     tftags.TagsSchema(),
+			"tags_all": tftags.TagsSchemaComputed(),
 			"temporary_restore_days": {
 				Type:     schema.TypeInt,
 				Optional: true,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			"volume_size": {
+				Type:     schema.TypeInt,
+				Computed: true,
+			},
 		},
 	}
 }

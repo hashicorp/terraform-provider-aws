@@ -40,15 +40,22 @@ func ResourceEBSSnapshot() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"volume_id": {
+			"data_encryption_key_id": {
 				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Computed: true,
 			},
 			"description": {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
+			},
+			"encrypted": {
+				Type:     schema.TypeBool,
+				Computed: true,
+			},
+			"kms_key_id": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"outpost_arn": {
 				Type:         schema.TypeString,
@@ -56,29 +63,17 @@ func ResourceEBSSnapshot() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-			"owner_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 			"owner_alias": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"encrypted": {
+			"owner_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"permanent_restore": {
 				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"volume_size": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			"kms_key_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"data_encryption_key_id": {
-				Type:     schema.TypeString,
-				Computed: true,
+				Optional: true,
 			},
 			"storage_tier": {
 				Type:     schema.TypeString,
@@ -89,16 +84,21 @@ func ResourceEBSSnapshot() *schema.Resource {
 					validation.StringInSlice([]string{"standard"}, false), //Enum slice does not include `standard` type.
 				),
 			},
-			"permanent_restore": {
-				Type:     schema.TypeBool,
-				Optional: true,
-			},
+			"tags":     tftags.TagsSchema(),
+			"tags_all": tftags.TagsSchemaComputed(),
 			"temporary_restore_days": {
 				Type:     schema.TypeInt,
 				Optional: true,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			"volume_id": {
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+			},
+			"volume_size": {
+				Type:     schema.TypeInt,
+				Computed: true,
+			},
 		},
 	}
 }
