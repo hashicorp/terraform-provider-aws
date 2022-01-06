@@ -134,6 +134,10 @@ func ResourceEBSSnapshotImport() *schema.Resource {
 				Optional: true,
 				ForceNew: true,
 			},
+			"outpost_arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"owner_alias": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -166,6 +170,10 @@ func ResourceEBSSnapshotImport() *schema.Resource {
 			"temporary_restore_days": {
 				Type:     schema.TypeInt,
 				Optional: true,
+			},
+			"volume_id": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"volume_size": {
 				Type:     schema.TypeInt,
@@ -280,7 +288,7 @@ func resourceEBSSnapshotImportCreate(d *schema.ResourceData, meta interface{}) e
 		}
 	}
 
-	return resourceEBSSnapshotRead(d, meta)
+	return resourceEBSSnapshotImportRead(d, meta)
 }
 
 func resourceEBSSnapshotImportRead(d *schema.ResourceData, meta interface{}) error {
