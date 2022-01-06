@@ -4,6 +4,13 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"log"
+	"math"
+	"strings"
+	"time"
+
+	"gopkg.in/yaml.v2"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/codedeploy"
@@ -20,12 +27,6 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
-	"gopkg.in/yaml.v2"
-	_ "gopkg.in/yaml.v3"
-	"log"
-	"math"
-	"strings"
-	"time"
 )
 
 func ResourceService() *schema.Resource {
@@ -1097,7 +1098,7 @@ func flattenServiceRegistries(srs []*ecs.ServiceRegistry) []map[string]interface
 	return results
 }
 
-func codedeployUnpack(d *schema.ResourceData) (codedeploy.CreateDeploymentInput, error) {
+func expandCodeDeploy(d *schema.ResourceData) (codedeploy.CreateDeploymentInput, error) {
 
 	type LoadBalancerInfo struct {
 		ContainerPort string `json:"ContainerPort"`
@@ -1239,6 +1240,7 @@ func resourceServiceUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ECSConn
 	updateService := false
 	codedeployDeploy := false
+	codedeployIsController := d.Get("deployment_controller").(string) == ecs.DeploymentControllerTypeCodeDeploy
 
 	input := ecs.UpdateServiceInput{
 		Cluster:            aws.String(d.Get("cluster").(string)),
@@ -1321,7 +1323,7 @@ func resourceServiceUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	if d.HasChange("platform_version") {
 		updateService = true
-		if d.Get("deployment_controller").(string) == ecs.DeploymentControllerTypeCodeDeploy {
+		if codedeployIsController {
 			codedeployDeploy = true
 		} else {
 			input.PlatformVersion = aws.String(d.Get("platform_version").(string))
@@ -1335,7 +1337,7 @@ func resourceServiceUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	if d.HasChange("task_definition") {
 		updateService = true
-		if d.Get("deployment_controller").(string) == ecs.DeploymentControllerTypeCodeDeploy {
+		if codedeployIsController {
 			codedeployDeploy = true
 		} else {
 			input.TaskDefinition = aws.String(d.Get("task_definition").(string))
@@ -1344,7 +1346,7 @@ func resourceServiceUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	if d.HasChange("network_configuration") {
 		updateService = true
-		if d.Get("deployment_controller").(string) == ecs.DeploymentControllerTypeCodeDeploy {
+		if codedeployIsController {
 			codedeployDeploy = true
 		} else {
 			input.NetworkConfiguration = expandEcsNetworkConfiguration(d.Get("network_configuration").([]interface{}))
@@ -1353,7 +1355,7 @@ func resourceServiceUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	if d.HasChange("capacity_provider_strategy") {
 		updateService = true
-		if d.Get("deployment_controller").(string) == ecs.DeploymentControllerTypeCodeDeploy {
+		if codedeployIsController {
 			codedeployDeploy = true
 		} else {
 			input.CapacityProviderStrategy = expandEcsCapacityProviderStrategy(d.Get("capacity_provider_strategy").(*schema.Set))
@@ -1384,7 +1386,7 @@ func resourceServiceUpdate(d *schema.ResourceData, meta interface{}) error {
 			}
 			if codedeployDeploy {
 				codedeployConn := meta.(*conns.AWSClient).CodeDeployConn
-				codedeployInput, err := codedeployUnpack(d)
+				codedeployInput, err := expandCodeDeploy(d)
 				if err != nil {
 					return resource.NonRetryableError(err)
 				}
