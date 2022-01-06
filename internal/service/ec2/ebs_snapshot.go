@@ -185,19 +185,16 @@ func resourceEBSSnapshotRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error reading EBS Snapshot (%s): %w", d.Id(), err)
 	}
 
-	d.Set("description", snapshot.Description)
-	d.Set("owner_id", snapshot.OwnerId)
-	d.Set("encrypted", snapshot.Encrypted)
-	d.Set("owner_alias", snapshot.OwnerAlias)
 	d.Set("data_encryption_key_id", snapshot.DataEncryptionKeyId)
+	d.Set("description", snapshot.Description)
+	d.Set("encrypted", snapshot.Encrypted)
 	d.Set("kms_key_id", snapshot.KmsKeyId)
-	d.Set("volume_size", snapshot.VolumeSize)
+	d.Set("outpost_arn", snapshot.OutpostArn)
+	d.Set("owner_alias", snapshot.OwnerAlias)
+	d.Set("owner_id", snapshot.OwnerId)
 	d.Set("storage_tier", snapshot.StorageTier)
 	d.Set("volume_id", snapshot.VolumeId)
-
-	if snapshot.OutpostArn != nil {
-		d.Set("outpost_arn", snapshot.OutpostArn)
-	}
+	d.Set("volume_size", snapshot.VolumeSize)
 
 	tags := KeyValueTags(snapshot.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
