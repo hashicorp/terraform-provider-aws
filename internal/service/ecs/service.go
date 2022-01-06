@@ -4,13 +4,9 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"log"
-	"math"
-	"strings"
-	"time"
-
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
+	"github.com/aws/aws-sdk-go/service/codedeploy"
 	"github.com/aws/aws-sdk-go/service/ecs"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
@@ -24,6 +20,12 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"gopkg.in/yaml.v2"
+	_ "gopkg.in/yaml.v3"
+	"log"
+	"math"
+	"strings"
+	"time"
 )
 
 func ResourceService() *schema.Resource {
@@ -116,6 +118,61 @@ func ResourceService() *schema.Resource {
 								ecs.DeploymentControllerTypeEcs,
 								ecs.DeploymentControllerTypeExternal,
 							}, false),
+						},
+					},
+				},
+			},
+			"code_deploy": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"hooks": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"before_install": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+									"after_install": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+									"after_allow_test_traffic": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+									"before_allow_traffic": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+									"after_allow_traffic": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+								},
+							},
+						},
+						"application_name": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						"deployment_group_name": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						// TODO: There should be a way to get container name and port from task definition
+						"container_name": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						"container_port": {
+							Type:     schema.TypeString,
+							Required: true,
 						},
 					},
 				},
@@ -1040,9 +1097,148 @@ func flattenServiceRegistries(srs []*ecs.ServiceRegistry) []map[string]interface
 	return results
 }
 
+func codedeployUnpack(d *schema.ResourceData) (codedeploy.CreateDeploymentInput, error) {
+
+	type LoadBalancerInfo struct {
+		ContainerPort string `json:"ContainerPort"`
+		ContainerName string `json:"ContainerName"`
+	}
+
+	type AwsVpcConfiguration struct {
+		Subnets        []string `json:"Subnets"`
+		SecurityGroups []string `json:"SecurityGroups"`
+		AssignPublicIp string   `json:"AssignPublicIp"`
+	}
+
+	type NetworkConfiguration struct {
+		AwsVpcConfiguration `json:"AwsvpcConfiguration"`
+	}
+
+	type CapacityProvider struct {
+		Base             int    `json:"Base"`
+		CapacityProvider string `json:"CapacityProvider"`
+		Weight           int    `json:"Weight"`
+	}
+
+	type Properties struct {
+		TaskDefinition           string `json:"TaskDefinition"`
+		LoadBalancerInfo         `json:"LoadBalancerInfo"`
+		PlatformVersion          string `json:"PlatformVersion"`
+		NetworkConfiguration     `json:"NetworkConfiguration"`
+		CapacityProviderStrategy []CapacityProvider `json:"CapacityProviderStrategy"`
+	}
+
+	type TargetService struct {
+		Type       string `json:"Type"`
+		Properties `json:"Properties"`
+	}
+
+	type Resource struct {
+		TargetService `json:"TargetService"`
+	}
+
+	type AppSpec struct {
+		Version   string              `json:"version"`
+		Resources [1]Resource         `json:"Resources"`
+		Hooks     []map[string]string `json:"Hooks"`
+	}
+
+	codedeployBlock := d.Get("code_deploy").([]interface{})[0].(map[string]interface{})
+	codedeployInput := codedeploy.CreateDeploymentInput{
+		ApplicationName:     aws.String(codedeployBlock["application_name"].(string)),
+		DeploymentGroupName: aws.String(codedeployBlock["deployment_group_name"].(string)),
+	}
+	var hooks []map[string]string
+	for k, v := range codedeployBlock["hooks"].([]map[string]string)[0] {
+		if k == "before_install" {
+			hooks = append(hooks, map[string]string{"BeforeInstall": v})
+		} else if k == "after_install" {
+			hooks = append(hooks, map[string]string{"AfterInstall": v})
+		} else if k == "after_allow_test_traffic" {
+			hooks = append(hooks, map[string]string{"AfterAllowTestTraffic": v})
+		} else if k == "before_allow_traffic" {
+			hooks = append(hooks, map[string]string{"BeforeAllowTraffic": v})
+		} else if k == "after_allow_traffic" {
+			hooks = append(hooks, map[string]string{"AfterAllowTraffic": v})
+		}
+	}
+	appSpec := AppSpec{
+		Version: "0.0",
+		Resources: [1]Resource{
+			{TargetService{
+				Type: "AWS::ECS::Service",
+				Properties: Properties{
+					TaskDefinition: d.Get("task_definition").(string),
+					LoadBalancerInfo: LoadBalancerInfo{
+						ContainerName: codedeployBlock["container_name"].(string),
+						ContainerPort: codedeployBlock["container_port"].(string),
+					},
+				},
+			}},
+		},
+	}
+	if len(hooks) > 0 {
+		appSpec.Hooks = hooks
+	}
+
+	if d.HasChange("platform_version") {
+		appSpec.Resources[0].TargetService.Properties.PlatformVersion = d.Get("platform_version").(string)
+	}
+
+	if d.HasChange("network_configuration") {
+		raw := d.Get("network_configuration").([]interface{})[0].(map[string]interface{})
+		networkConfiguration := NetworkConfiguration{
+			AwsVpcConfiguration: AwsVpcConfiguration{},
+		}
+		if val, ok := raw["assign_public_ip"].(bool); ok {
+			networkConfiguration.AssignPublicIp = ecs.AssignPublicIpDisabled
+			if val {
+				networkConfiguration.AssignPublicIp = ecs.AssignPublicIpEnabled
+			}
+		}
+		if val, ok := raw["security_groups"]; ok {
+			networkConfiguration.SecurityGroups = val.([]string)
+		}
+		networkConfiguration.Subnets = raw["subnets"].([]string)
+		appSpec.Resources[0].TargetService.Properties.NetworkConfiguration = networkConfiguration
+	}
+
+	if d.HasChange("capacity_provider_strategy") {
+		list := d.Get("capacity_provider_strategy").(*schema.Set).List()
+		var capacityProviderStrategy []CapacityProvider
+		for _, raw := range list {
+			cp := raw.(map[string]interface{})
+			ps := CapacityProvider{}
+			if val, ok := cp["base"]; ok {
+				ps.Base = val.(int)
+			}
+			if val, ok := cp["weight"]; ok {
+				ps.Weight = val.(int)
+			}
+			if val, ok := cp["capacity_provider"]; ok {
+				ps.CapacityProvider = val.(string)
+			}
+			capacityProviderStrategy = append(capacityProviderStrategy, ps)
+		}
+		appSpec.Resources[0].TargetService.Properties.CapacityProviderStrategy = capacityProviderStrategy
+	}
+	appSpecYaml, err := yaml.Marshal(appSpec)
+	if err != nil {
+		return codedeployInput, fmt.Errorf("error creating AppSpec.yml: %s", err)
+	}
+	codedeployInput.Revision = &codedeploy.RevisionLocation{
+		AppSpecContent: &codedeploy.AppSpecContent{
+			Content: aws.String(string(appSpecYaml)),
+		},
+	}
+
+	return codedeployInput, nil
+}
+
 func resourceServiceUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ECSConn
 	updateService := false
+	codedeployDeploy := false
 
 	input := ecs.UpdateServiceInput{
 		Cluster:            aws.String(d.Get("cluster").(string)),
@@ -1125,7 +1321,11 @@ func resourceServiceUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	if d.HasChange("platform_version") {
 		updateService = true
-		input.PlatformVersion = aws.String(d.Get("platform_version").(string))
+		if d.Get("deployment_controller").(string) == ecs.DeploymentControllerTypeCodeDeploy {
+			codedeployDeploy = true
+		} else {
+			input.PlatformVersion = aws.String(d.Get("platform_version").(string))
+		}
 	}
 
 	if d.HasChange("health_check_grace_period_seconds") {
@@ -1135,17 +1335,29 @@ func resourceServiceUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	if d.HasChange("task_definition") {
 		updateService = true
-		input.TaskDefinition = aws.String(d.Get("task_definition").(string))
+		if d.Get("deployment_controller").(string) == ecs.DeploymentControllerTypeCodeDeploy {
+			codedeployDeploy = true
+		} else {
+			input.TaskDefinition = aws.String(d.Get("task_definition").(string))
+		}
 	}
 
 	if d.HasChange("network_configuration") {
 		updateService = true
-		input.NetworkConfiguration = expandEcsNetworkConfiguration(d.Get("network_configuration").([]interface{}))
+		if d.Get("deployment_controller").(string) == ecs.DeploymentControllerTypeCodeDeploy {
+			codedeployDeploy = true
+		} else {
+			input.NetworkConfiguration = expandEcsNetworkConfiguration(d.Get("network_configuration").([]interface{}))
+		}
 	}
 
 	if d.HasChange("capacity_provider_strategy") {
 		updateService = true
-		input.CapacityProviderStrategy = expandEcsCapacityProviderStrategy(d.Get("capacity_provider_strategy").(*schema.Set))
+		if d.Get("deployment_controller").(string) == ecs.DeploymentControllerTypeCodeDeploy {
+			codedeployDeploy = true
+		} else {
+			input.CapacityProviderStrategy = expandEcsCapacityProviderStrategy(d.Get("capacity_provider_strategy").(*schema.Set))
+		}
 	}
 
 	if d.HasChange("enable_execute_command") {
@@ -1169,6 +1381,17 @@ func resourceServiceUpdate(d *schema.ResourceData, meta interface{}) error {
 				}
 
 				return resource.NonRetryableError(err)
+			}
+			if codedeployDeploy {
+				codedeployConn := meta.(*conns.AWSClient).CodeDeployConn
+				codedeployInput, err := codedeployUnpack(d)
+				if err != nil {
+					return resource.NonRetryableError(err)
+				}
+				_, err = codedeployConn.CreateDeployment(&codedeployInput)
+				if err != nil {
+					return resource.NonRetryableError(err)
+				}
 			}
 			return nil
 		})
