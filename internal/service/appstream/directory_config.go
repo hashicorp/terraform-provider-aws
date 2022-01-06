@@ -151,16 +151,19 @@ func resourceDirectoryConfigUpdate(ctx context.Context, d *schema.ResourceData, 
 func resourceDirectoryConfigDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).AppStreamConn
 
+	log.Printf("[DEBUG] Deleting AppStream Directory Config: (%s)", d.Id())
 	_, err := conn.DeleteDirectoryConfigWithContext(ctx, &appstream.DeleteDirectoryConfigInput{
 		DirectoryName: aws.String(d.Id()),
 	})
 
+	if tfawserr.ErrCodeEquals(err, appstream.ErrCodeResourceNotFoundException) {
+		return nil
+	}
+
 	if err != nil {
-		if tfawserr.ErrCodeEquals(err, appstream.ErrCodeResourceNotFoundException) {
-			return nil
-		}
 		return diag.FromErr(fmt.Errorf("error deleting AppStream Directory Config (%s): %w", d.Id(), err))
 	}
+
 	return nil
 }
 
