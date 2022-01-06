@@ -2,6 +2,7 @@ package ec2_test
 
 import (
 	"fmt"
+	"os"
 	"regexp"
 	"strings"
 	"testing"
@@ -37,7 +38,6 @@ func TestAccVPC_basic(t *testing.T) {
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`vpc/vpc-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "assign_generated_ipv6_cidr_block", "false"),
-					resource.TestCheckResourceAttr(resourceName, "ipv6_cidr_block_network_border_group", "false"),
 					resource.TestMatchResourceAttr(resourceName, "default_route_table_id", regexp.MustCompile(`^rtb-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "cidr_block", "10.1.0.0/16"),
 					resource.TestCheckResourceAttr(resourceName, "enable_dns_support", "true"),
@@ -545,6 +545,12 @@ func TestAccVPC_assignGeneratedIPv6CIDRBlock(t *testing.T) {
 	var vpc ec2.Vpc
 	resourceName := "aws_vpc.test"
 
+	key := "AWS_DEFAULT_REGION"
+	regionId := os.Getenv(key)
+	if regionId == "" {
+		regionId = "us-east-1"
+	}
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
@@ -552,7 +558,7 @@ func TestAccVPC_assignGeneratedIPv6CIDRBlock(t *testing.T) {
 		CheckDestroy: testAccCheckVpcDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVpcConfigAssignGeneratedIpv6CidrBlock(true),
+				Config: testAccVpcConfigAssignGeneratedIpv6CidrBlock(true, regionId),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					acctest.CheckVPCExists(resourceName, &vpc),
 					testAccCheckVpcCidr(&vpc, "10.1.0.0/16"),
@@ -569,7 +575,7 @@ func TestAccVPC_assignGeneratedIPv6CIDRBlock(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"assign_generated_ipv6_cidr_block"},
 			},
 			{
-				Config: testAccVpcConfigAssignGeneratedIpv6CidrBlock(false),
+				Config: testAccVpcConfigAssignGeneratedIpv6CidrBlock(false, regionId),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					acctest.CheckVPCExists(resourceName, &vpc),
 					testAccCheckVpcCidr(&vpc, "10.1.0.0/16"),
@@ -580,7 +586,7 @@ func TestAccVPC_assignGeneratedIPv6CIDRBlock(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccVpcConfigAssignGeneratedIpv6CidrBlock(true),
+				Config: testAccVpcConfigAssignGeneratedIpv6CidrBlock(true, regionId),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					acctest.CheckVPCExists(resourceName, &vpc),
 					testAccCheckVpcCidr(&vpc, "10.1.0.0/16"),
@@ -595,6 +601,12 @@ func TestAccVPC_assignGeneratedIPv6CIDRBlock(t *testing.T) {
 }
 
 func TestAccVPC_assignGeneratedIPv6CIDRBlockWithBorder(t *testing.T) {
+	key := "AWS_DEFAULT_REGION"
+	regionId := os.Getenv(key)
+	if regionId != "us-west-2" {
+		t.Skipf("Testing for IPv6 Network Border Control must be in us-west-2, currently testing in %s.", regionId)
+	}
+
 	var vpc ec2.Vpc
 	resourceName := "aws_vpc.test"
 
@@ -1018,17 +1030,17 @@ resource "aws_vpc" "test" {
 }
 `
 
-func testAccVpcConfigAssignGeneratedIpv6CidrBlock(assignGeneratedIpv6CidrBlock bool) string {
+func testAccVpcConfigAssignGeneratedIpv6CidrBlock(assignGeneratedIpv6CidrBlock bool, regionId string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
-  assign_generated_ipv6_cidr_block = %t
-  cidr_block                       = "10.1.0.0/16"
-
+  assign_generated_ipv6_cidr_block     = %[1]t
+  cidr_block                           = "10.1.0.0/16"
+  ipv6_cidr_block_network_border_group = %[2]q
   tags = {
     Name = "terraform-testacc-vpc-ipv6"
   }
 }
-`, assignGeneratedIpv6CidrBlock)
+`, assignGeneratedIpv6CidrBlock, regionId)
 }
 
 const testAccVpcConfigUpdate = `
