@@ -6,15 +6,15 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/acmpca"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func TestAccEC2CustomerGateway_basic(t *testing.T) {
@@ -47,6 +47,49 @@ func TestAccEC2CustomerGateway_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCustomerGateway(resourceName, &gateway),
 				),
+			},
+		},
+	})
+}
+
+func TestAccEC2CustomerGateway_certificate(t *testing.T) {
+	var gateway ec2.CustomerGateway
+	var ca acmpca.CertificateAuthority
+
+	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
+	resourceName := "aws_customer_gateway.test"
+	acmCAResourceName := "aws_acmpca_certificate_authority.test"
+	acmCertificateResourceName := "aws_acm_certificate.test"
+	domain := acctest.RandomDomain()
+	subDomain := domain.RandomSubdomain().String()
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckCustomerGatewayDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCustomerGatewayCertConfigRootCA(domain.String()),
+				Check: resource.ComposeTestCheckFunc(
+					acctest.CheckACMPCACertificateAuthorityExists(acmCAResourceName, &ca),
+					acctest.CheckACMPCACertificateAuthorityActivateCA(&ca),
+				),
+			},
+			{
+				Config: testAccCustomerGatewayCertConfig(domain.String(), subDomain, rBgpAsn),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCustomerGateway(resourceName, &gateway),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`customer-gateway/cgw-.+`)),
+					resource.TestCheckResourceAttrPair(resourceName, "certificate_arn", acmCertificateResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "bgp_asn", strconv.Itoa(rBgpAsn)),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -214,30 +257,17 @@ func testAccCheckCustomerGatewayDestroy(s *terraform.State) error {
 			continue
 		}
 
-		gatewayFilter := &ec2.Filter{
-			Name:   aws.String("customer-gateway-id"),
-			Values: []*string{aws.String(rs.Primary.ID)},
-		}
+		_, err := tfec2.FindCustomerGatewayById(conn, rs.Primary.ID)
 
-		resp, err := conn.DescribeCustomerGateways(&ec2.DescribeCustomerGatewaysInput{
-			Filters: []*ec2.Filter{gatewayFilter},
-		})
-
-		if tfawserr.ErrMessageContains(err, "InvalidCustomerGatewayID.NotFound", "") {
+		if tfresource.NotFound(err) {
 			continue
 		}
 
-		if err == nil {
-			if len(resp.CustomerGateways) > 0 {
-				return fmt.Errorf("Customer gateway still exists: %v", resp.CustomerGateways)
-			}
-
-			if aws.StringValue(resp.CustomerGateways[0].State) == "deleted" {
-				continue
-			}
+		if err != nil {
+			return err
 		}
 
-		return err
+		return fmt.Errorf("Customer Gateway %s still exists", rs.Primary.ID)
 	}
 
 	return nil
@@ -254,27 +284,18 @@ func testAccCheckCustomerGateway(gatewayResource string, cgw *ec2.CustomerGatewa
 			return fmt.Errorf("No ID is set")
 		}
 
-		gateway, ok := s.RootModule().Resources[gatewayResource]
 		if !ok {
 			return fmt.Errorf("Not found: %s", gatewayResource)
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
-		gatewayFilter := &ec2.Filter{
-			Name:   aws.String("customer-gateway-id"),
-			Values: []*string{aws.String(gateway.Primary.ID)},
-		}
-
-		resp, err := conn.DescribeCustomerGateways(&ec2.DescribeCustomerGatewaysInput{
-			Filters: []*ec2.Filter{gatewayFilter},
-		})
+		resp, err := tfec2.FindCustomerGatewayById(conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
 		}
 
-		respGateway := resp.CustomerGateways[0]
-		*cgw = *respGateway
+		*cgw = *resp
 
 		return nil
 	}
@@ -288,6 +309,42 @@ resource "aws_customer_gateway" "test" {
   type       = "ipsec.1"
 }
 `, rBgpAsn)
+}
+
+func testAccCustomerGatewayCertConfigRootCA(domain string) string {
+	return fmt.Sprintf(`
+resource "aws_acmpca_certificate_authority" "test" {
+  permanent_deletion_time_in_days = 7
+  type                            = "ROOT"
+
+  certificate_authority_configuration {
+    key_algorithm     = "RSA_4096"
+    signing_algorithm = "SHA512WITHRSA"
+
+    subject {
+      common_name = %[1]q
+    }
+  }
+}
+`, domain)
+}
+
+func testAccCustomerGatewayCertConfig(domain, subDomain string, rBgpAsn int) string {
+	return acctest.ConfigCompose(
+		testAccCustomerGatewayCertConfigRootCA(domain),
+		fmt.Sprintf(`
+resource "aws_acm_certificate" "test" {
+  domain_name               = %[1]q
+  certificate_authority_arn = aws_acmpca_certificate_authority.test.arn
+}
+
+resource "aws_customer_gateway" "test" {
+  bgp_asn         = %[2]d
+  ip_address      = "172.0.0.1"
+  type            = "ipsec.1"
+  certificate_arn = aws_acmpca_certificate.test.arn
+}
+`, subDomain, rBgpAsn))
 }
 
 func testAccCustomerGatewayConfigTags1(rBgpAsn int, tagKey1, tagValue1 string) string {

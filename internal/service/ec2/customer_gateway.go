@@ -4,13 +4,11 @@ import (
 	"fmt"
 	"log"
 	"strconv"
-	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -37,6 +35,13 @@ func ResourceCustomerGateway() *schema.Resource {
 				ValidateFunc: valid4ByteASN,
 			},
 
+			"certificate_arn": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: verify.ValidARN,
+			},
+
 			"device_name": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -55,12 +60,10 @@ func ResourceCustomerGateway() *schema.Resource {
 			},
 
 			"type": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				ValidateFunc: validation.StringInSlice([]string{
-					ec2.GatewayTypeIpsec1,
-				}, false),
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringInSlice(ec2.GatewayType_Values(), false),
 			},
 
 			"tags":     tftags.TagsSchema(),
@@ -102,8 +105,8 @@ func resourceCustomerGatewayCreate(d *schema.ResourceData, meta interface{}) err
 
 	createOpts := &ec2.CreateCustomerGatewayInput{
 		BgpAsn:            aws.Int64(i64BgpAsn),
-		PublicIp:          aws.String(ipAddress),
 		Type:              aws.String(vpnType),
+		PublicIp:          aws.String(ipAddress),
 		TagSpecifications: ec2TagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeCustomerGateway),
 	}
 
@@ -111,11 +114,15 @@ func resourceCustomerGatewayCreate(d *schema.ResourceData, meta interface{}) err
 		createOpts.DeviceName = aws.String(deviceName)
 	}
 
+	if v, ok := d.GetOk("certificate_arn"); ok {
+		createOpts.CertificateArn = aws.String(v.(string))
+	}
+
 	// Create the Customer Gateway.
 	log.Printf("[DEBUG] Creating customer gateway")
 	resp, err := conn.CreateCustomerGateway(createOpts)
 	if err != nil {
-		return fmt.Errorf("Error creating customer gateway: %s", err)
+		return fmt.Errorf("Error creating customer gateway: %w", err)
 	}
 
 	// Store the ID
@@ -125,52 +132,12 @@ func resourceCustomerGatewayCreate(d *schema.ResourceData, meta interface{}) err
 	log.Printf("[INFO] Customer gateway ID: %s", cgId)
 
 	// Wait for the CustomerGateway to be available.
-	stateConf := &resource.StateChangeConf{
-		Pending:    []string{"pending"},
-		Target:     []string{"available"},
-		Refresh:    customerGatewayRefreshFunc(conn, cgId),
-		Timeout:    10 * time.Minute,
-		Delay:      10 * time.Second,
-		MinTimeout: 3 * time.Second,
-	}
-
-	_, stateErr := stateConf.WaitForState()
-
-	if stateErr != nil {
-		return fmt.Errorf(
-			"Error waiting for customer gateway (%s) to become ready: %s", cgId, err)
+	_, err = waitCustomerGatewayAvailable(conn, d.Id())
+	if err != nil {
+		return fmt.Errorf("error waiting for customer gateway (%s) to become available: %w", d.Id(), err)
 	}
 
 	return resourceCustomerGatewayRead(d, meta)
-}
-
-func customerGatewayRefreshFunc(conn *ec2.EC2, gatewayId string) resource.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		gatewayFilter := &ec2.Filter{
-			Name:   aws.String("customer-gateway-id"),
-			Values: []*string{aws.String(gatewayId)},
-		}
-
-		resp, err := conn.DescribeCustomerGateways(&ec2.DescribeCustomerGatewaysInput{
-			Filters: []*ec2.Filter{gatewayFilter},
-		})
-		if err != nil {
-			if tfawserr.ErrMessageContains(err, "InvalidCustomerGatewayID.NotFound", "") {
-				resp = nil
-			} else {
-				log.Printf("Error on CustomerGatewayRefresh: %s", err)
-				return nil, "", err
-			}
-		}
-
-		if resp == nil || len(resp.CustomerGateways) == 0 {
-			// handle consistency issues
-			return nil, "", nil
-		}
-
-		gateway := resp.CustomerGateways[0]
-		return gateway, *gateway.State, nil
-	}
 }
 
 func resourceCustomerGatewayExists(vpnType, ipAddress, bgpAsn, deviceName string, conn *ec2.EC2) (bool, error) {
@@ -203,7 +170,7 @@ func resourceCustomerGatewayExists(vpnType, ipAddress, bgpAsn, deviceName string
 		return false, err
 	}
 
-	if len(resp.CustomerGateways) > 0 && aws.StringValue(resp.CustomerGateways[0].State) != "deleted" {
+	if len(resp.CustomerGateways) > 0 && aws.StringValue(resp.CustomerGateways[0].State) != CustomerGatewayStateDeleted {
 		return true, nil
 	}
 
@@ -215,40 +182,22 @@ func resourceCustomerGatewayRead(d *schema.ResourceData, meta interface{}) error
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	gatewayFilter := &ec2.Filter{
-		Name:   aws.String("customer-gateway-id"),
-		Values: []*string{aws.String(d.Id())},
-	}
-
-	resp, err := conn.DescribeCustomerGateways(&ec2.DescribeCustomerGatewaysInput{
-		Filters: []*ec2.Filter{gatewayFilter},
-	})
-	if err != nil {
-		if tfawserr.ErrMessageContains(err, "InvalidCustomerGatewayID.NotFound", "") {
-			log.Printf("[WARN] Customer Gateway (%s) not found, removing from state", d.Id())
-			d.SetId("")
-			return nil
-		} else {
-			log.Printf("[ERROR] Error finding CustomerGateway: %s", err)
-			return err
-		}
-	}
-
-	if len(resp.CustomerGateways) != 1 {
-		return fmt.Errorf("Error finding CustomerGateway: %s", d.Id())
-	}
-
-	if aws.StringValue(resp.CustomerGateways[0].State) == "deleted" {
-		log.Printf("[INFO] Customer Gateway is in `deleted` state: %s", d.Id())
+	customerGateway, err := FindCustomerGatewayById(conn, d.Id())
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] Customer Gateway (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
-	customerGateway := resp.CustomerGateways[0]
+	if err != nil {
+		return fmt.Errorf("error reading Customer Gateway (%s): %w", d.Id(), err)
+	}
+
 	d.Set("bgp_asn", customerGateway.BgpAsn)
 	d.Set("ip_address", customerGateway.IpAddress)
 	d.Set("type", customerGateway.Type)
 	d.Set("device_name", customerGateway.DeviceName)
+	d.Set("certificate_arn", customerGateway.CertificateArn)
 
 	tags := KeyValueTags(customerGateway.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
@@ -295,66 +244,17 @@ func resourceCustomerGatewayDelete(d *schema.ResourceData, meta interface{}) err
 		CustomerGatewayId: aws.String(d.Id()),
 	})
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, "InvalidCustomerGatewayID.NotFound", "") {
+		if tfawserr.ErrCodeEquals(err, ErrCodeInvalidCustomerGatewayIDNotFound) {
 			return nil
-		} else {
-			return fmt.Errorf("[ERROR] Error deleting CustomerGateway: %s", err)
-		}
-	}
-
-	gatewayFilter := &ec2.Filter{
-		Name:   aws.String("customer-gateway-id"),
-		Values: []*string{aws.String(d.Id())},
-	}
-
-	input := &ec2.DescribeCustomerGatewaysInput{
-		Filters: []*ec2.Filter{gatewayFilter},
-	}
-	err = resource.Retry(5*time.Minute, func() *resource.RetryError {
-		resp, err := conn.DescribeCustomerGateways(input)
-
-		if err != nil {
-			if tfawserr.ErrMessageContains(err, "InvalidCustomerGatewayID.NotFound", "") {
-				return nil
-			}
-			return resource.NonRetryableError(err)
 		}
 
-		err = checkGatewayDeleteResponse(resp, d.Id())
-		if err != nil {
-			return resource.RetryableError(err)
-		}
-		return nil
-	})
-
-	if tfresource.TimedOut(err) {
-		var resp *ec2.DescribeCustomerGatewaysOutput
-		resp, err = conn.DescribeCustomerGateways(input)
-
-		if err != nil {
-			return checkGatewayDeleteResponse(resp, d.Id())
-		}
+		return fmt.Errorf("[ERROR] Error deleting Customer Gateway (%s): %w", d.Id(), err)
 	}
 
+	_, err = waitCustomerGatewayDeleted(conn, d.Id())
 	if err != nil {
-		return fmt.Errorf("Error deleting customer gateway: %s", err)
+		return fmt.Errorf("error waiting for customer gateway (%s) to become deleted: %w", d.Id(), err)
 	}
+
 	return nil
-
-}
-
-func checkGatewayDeleteResponse(resp *ec2.DescribeCustomerGatewaysOutput, id string) error {
-	if len(resp.CustomerGateways) != 1 {
-		return fmt.Errorf("Error finding CustomerGateway for delete: %s", id)
-	}
-
-	cgState := aws.StringValue(resp.CustomerGateways[0].State)
-	switch cgState {
-	case "pending", "available", "deleting":
-		return fmt.Errorf("Gateway (%s) in state (%s), retrying", id, cgState)
-	case "deleted":
-		return nil
-	default:
-		return fmt.Errorf("Unrecognized state (%s) for Customer Gateway delete on (%s)", *resp.CustomerGateways[0].State, id)
-	}
 }

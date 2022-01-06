@@ -1471,3 +1471,46 @@ func FindVPCEndpointConnectionByServiceIDAndVPCEndpointID(conn *ec2.EC2, service
 
 	return output, nil
 }
+
+func FindCustomerGatewayById(conn *ec2.EC2, id string) (*ec2.CustomerGateway, error) {
+	filter := &ec2.Filter{
+		Name:   aws.String("customer-gateway-id"),
+		Values: []*string{aws.String(id)},
+	}
+
+	input := &ec2.DescribeCustomerGatewaysInput{
+		Filters: []*ec2.Filter{filter},
+	}
+
+	output, err := conn.DescribeCustomerGateways(input)
+
+	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidCustomerGatewayIDNotFound) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || len(output.CustomerGateways) == 0 || output.CustomerGateways[0] == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	if count := len(output.CustomerGateways); count > 1 {
+		return nil, tfresource.NewTooManyResultsError(count, input)
+	}
+
+	customerGateway := output.CustomerGateways[0]
+
+	if state := aws.StringValue(customerGateway.State); state == CustomerGatewayStateDeleted {
+		return nil, &resource.NotFoundError{
+			Message:     state,
+			LastRequest: input,
+		}
+	}
+
+	return customerGateway, nil
+}
