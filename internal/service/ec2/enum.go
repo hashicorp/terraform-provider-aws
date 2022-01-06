@@ -53,3 +53,13 @@ const (
 	CustomerGatewayStateDeleting  = "deleting"
 	CustomerGatewayStatePending   = "pending"
 )
+
+const (
+	VpnConnectionTypeIpsec1 = "ipsec.1"
+)
+
+func VpnConnectionType_Values() []string {
+	return []string{
+		VpnConnectionTypeIpsec1,
+	}
+}
