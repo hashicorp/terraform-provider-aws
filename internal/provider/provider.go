@@ -577,7 +577,8 @@ func Provider() *schema.Provider {
 			"aws_msk_configuration": kafka.DataSourceConfiguration(),
 			"aws_msk_kafka_version": kafka.DataSourceVersion(),
 
-			"aws_mskconnect_custom_plugin": kafkaconnect.DataSourceCustomPlugin(),
+			"aws_mskconnect_custom_plugin":        kafkaconnect.DataSourceCustomPlugin(),
+			"aws_mskconnect_worker_configuration": kafkaconnect.DataSourceWorkerConfiguration(),
 
 			"aws_kinesis_stream":          kinesis.DataSourceStream(),
 			"aws_kinesis_stream_consumer": kinesis.DataSourceStreamConsumer(),
@@ -1337,7 +1338,8 @@ func Provider() *schema.Provider {
 			"aws_msk_configuration":            kafka.ResourceConfiguration(),
 			"aws_msk_scram_secret_association": kafka.ResourceScramSecretAssociation(),
 
-			"aws_mskconnect_custom_plugin": kafkaconnect.ResourceCustomPlugin(),
+			"aws_mskconnect_custom_plugin":        kafkaconnect.ResourceCustomPlugin(),
+			"aws_mskconnect_worker_configuration": kafkaconnect.ResourceWorkerConfiguration(),
 
 			"aws_kinesis_stream":          kinesis.ResourceStream(),
 			"aws_kinesis_stream_consumer": kinesis.ResourceStreamConsumer(),
