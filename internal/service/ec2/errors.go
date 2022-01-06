@@ -51,7 +51,6 @@ const (
 	ErrCodeInvalidVpcPeeringConnectionIDNotFound  = "InvalidVpcPeeringConnectionID.NotFound"
 	ErrCodeInvalidVpnGatewayAttachmentNotFound    = "InvalidVpnGatewayAttachment.NotFound"
 	ErrCodeInvalidVpnGatewayIDNotFound            = "InvalidVpnGatewayID.NotFound"
-	ErrCodeInvalidCustomerGatewayIDNotFound       = "InvalidCustomerGatewayID.NotFound"
 )
 
 func UnsuccessfulItemError(apiObject *ec2.UnsuccessfulItemError) error {

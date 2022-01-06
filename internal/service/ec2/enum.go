@@ -45,11 +45,3 @@ const (
 const (
 	InternetGatewayAttachmentStateAvailable = "available"
 )
-
-const (
-	// https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeCustomerGateways.html
-	CustomerGatewayStateAvailable = "available"
-	CustomerGatewayStateDeleted   = "deleted"
-	CustomerGatewayStateDeleting  = "deleting"
-	CustomerGatewayStatePending   = "pending"
-)
