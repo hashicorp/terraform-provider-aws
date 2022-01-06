@@ -227,7 +227,6 @@ func resourceEBSSnapshotImportCreate(d *schema.ResourceData, meta interface{}) e
 	}
 
 	err := resource.Retry(d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
-		var resp *ec2.ImportSnapshotOutput
 		resp, err := conn.ImportSnapshot(request)
 
 		if tfawserr.ErrMessageContains(err, "InvalidParameter", "provided does not exist or does not have sufficient permissions") {
@@ -242,7 +241,7 @@ func resourceEBSSnapshotImportCreate(d *schema.ResourceData, meta interface{}) e
 
 		res, err := WaitEBSSnapshotImportComplete(conn, importTaskId)
 		if err != nil {
-			return resource.NonRetryableError(fmt.Errorf("Error waiting for snapshot (%s) to be imported: %s", d.Id(), err))
+			return resource.NonRetryableError(fmt.Errorf("Error waiting for snapshot (%s) to be imported: %s", importTaskId, err))
 		}
 
 		d.SetId(aws.StringValue(res.SnapshotId))
