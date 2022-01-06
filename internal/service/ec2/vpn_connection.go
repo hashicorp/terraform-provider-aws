@@ -954,20 +954,21 @@ func resourceVPNConnectionUpdate(d *schema.ResourceData, meta interface{}) error
 func resourceVPNConnectionDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
+	log.Printf("[INFO] Deleting EC2 VPN Connection: %s", d.Id())
 	_, err := conn.DeleteVpnConnection(&ec2.DeleteVpnConnectionInput{
 		VpnConnectionId: aws.String(d.Id()),
 	})
 
-	if tfawserr.ErrMessageContains(err, "InvalidVpnConnectionID.NotFound", "") {
+	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidVpnConnectionIDNotFound) {
 		return nil
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting VPN Connection (%s): %s", d.Id(), err)
+		return fmt.Errorf("error deleting EC2 VPN Connection (%s): %w", d.Id(), err)
 	}
 
-	if err := WaitForVPNConnectionDeletion(conn, d.Id()); err != nil {
-		return fmt.Errorf("error waiting for VPN connection (%s) to delete: %s", d.Id(), err)
+	if _, err := WaitVPNConnectionDeleted(conn, d.Id()); err != nil {
+		return fmt.Errorf("error waiting for EC2 VPN Connection (%s) delete: %w", d.Id(), err)
 	}
 
 	return nil

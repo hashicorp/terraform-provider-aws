@@ -51,6 +51,7 @@ const (
 	ErrCodeInvalidVpcEndpointServiceIdNotFound    = "InvalidVpcEndpointServiceId.NotFound"
 	ErrCodeInvalidVpcIDNotFound                   = "InvalidVpcID.NotFound"
 	ErrCodeInvalidVpcPeeringConnectionIDNotFound  = "InvalidVpcPeeringConnectionID.NotFound"
+	ErrCodeInvalidVpnConnectionIDNotFound         = "InvalidVpnConnectionID.NotFound"
 	ErrCodeInvalidVpnGatewayAttachmentNotFound    = "InvalidVpnGatewayAttachment.NotFound"
 	ErrCodeInvalidVpnGatewayIDNotFound            = "InvalidVpnGatewayID.NotFound"
 )

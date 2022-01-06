@@ -1215,6 +1215,59 @@ func FindCustomerGateway(conn *ec2.EC2, input *ec2.DescribeCustomerGatewaysInput
 	return output.CustomerGateways[0], nil
 }
 
+func FindVPNConnectionByID(conn *ec2.EC2, id string) (*ec2.VpnConnection, error) {
+	input := &ec2.DescribeVpnConnectionsInput{
+		VpnConnectionIds: aws.StringSlice([]string{id}),
+	}
+
+	output, err := FindVPNConnection(conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if state := aws.StringValue(output.State); state == ec2.VpnStateDeleted {
+		return nil, &resource.NotFoundError{
+			Message:     state,
+			LastRequest: input,
+		}
+	}
+
+	// Eventual consistency check.
+	if aws.StringValue(output.VpnConnectionId) != id {
+		return nil, &resource.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
+}
+
+func FindVPNConnection(conn *ec2.EC2, input *ec2.DescribeVpnConnectionsInput) (*ec2.VpnConnection, error) {
+	output, err := conn.DescribeVpnConnections(input)
+
+	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidVpnConnectionIDNotFound) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || len(output.VpnConnections) == 0 || output.VpnConnections[0] == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	if count := len(output.VpnConnections); count > 1 {
+		return nil, tfresource.NewTooManyResultsError(count, input)
+	}
+
+	return output.VpnConnections[0], nil
+}
+
 func FindFlowLogByID(conn *ec2.EC2, id string) (*ec2.FlowLog, error) {
 	input := &ec2.DescribeFlowLogsInput{
 		FlowLogIds: aws.StringSlice([]string{id}),

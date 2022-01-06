@@ -792,6 +792,29 @@ func WaitCustomerGatewayDeleted(conn *ec2.EC2, id string) (*ec2.CustomerGateway,
 }
 
 const (
+	vpnConnectionDeletedTimeout = 30 * time.Minute
+)
+
+func WaitVPNConnectionDeleted(conn *ec2.EC2, id string) (*ec2.VpnConnection, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending:    []string{ec2.VpnStateDeleting},
+		Target:     []string{},
+		Refresh:    StatusVPNConnectionState(conn, id),
+		Timeout:    vpnConnectionDeletedTimeout,
+		Delay:      10 * time.Second,
+		MinTimeout: 10 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*ec2.VpnConnection); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+const (
 	HostCreatedTimeout = 10 * time.Minute
 	HostUpdatedTimeout = 10 * time.Minute
 	HostDeletedTimeout = 20 * time.Minute
