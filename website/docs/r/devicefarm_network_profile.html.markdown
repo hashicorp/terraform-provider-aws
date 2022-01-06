@@ -23,7 +23,6 @@ resource "aws_devicefarm_project" "example" {
 resource "aws_devicefarm_network_profile" "example" {
   name        = "example"
   project_arn = aws_devicefarm_project.example.arn
-  type        = "APPIUM_JAVA_TESTNG_TEST_SPEC"
 }
 ```
 
