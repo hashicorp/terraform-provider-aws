@@ -194,7 +194,7 @@ func TestAccEC2CustomerGateway_certificate(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckACMPCACertificateAuthorityExists(acmRootCAResourceName, &caRoot),
 					acctest.CheckACMPCACertificateAuthorityExists(acmSubordinateCAResourceName, &caSubordinate),
-					acctest.CheckACMPCACertificateAuthorityActivateCA(&caRoot),
+					acctest.CheckACMPCACertificateAuthorityActivateRootCA(&caRoot),
 					acctest.CheckACMPCACertificateAuthorityActivateSubordinateCA(&caRoot, &caSubordinate),
 				),
 			},
