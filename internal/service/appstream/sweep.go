@@ -161,6 +161,8 @@ func sweepImageBuilders(region string) error {
 	if err != nil {
 		return fmt.Errorf("error sweeping AppStream Image Builders (%s): %w", region, err)
 	}
+
+	return nil
 }
 
 func sweepStacks(region string) error {
