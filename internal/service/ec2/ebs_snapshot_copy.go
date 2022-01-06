@@ -45,6 +45,10 @@ func ResourceEBSSnapshotCopy() *schema.Resource {
 				Optional: true,
 				ForceNew: true,
 			},
+			"outpost_arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"owner_alias": {
 				Type:     schema.TypeString,
 				Computed: true,
