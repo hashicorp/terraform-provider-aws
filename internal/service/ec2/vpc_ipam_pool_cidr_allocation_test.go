@@ -150,7 +150,9 @@ resource "aws_vpc_ipam_pool_cidr" "test" {
 `
 
 func testAccVPCIpamPoolAllocationIpv4(cidr string) string {
-	return testAccVPCIpamPoolCidrPrivateBase + fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		testAccVPCIpamPoolCidrPrivateBase,
+		fmt.Sprintf(`
 resource "aws_vpc_ipam_pool_cidr_allocation" "test" {
   ipam_pool_id = aws_vpc_ipam_pool.test.id
   cidr         = %[1]q
@@ -158,11 +160,13 @@ resource "aws_vpc_ipam_pool_cidr_allocation" "test" {
     aws_vpc_ipam_pool_cidr.test
   ]
 }
-`, cidr)
+`, cidr))
 }
 
 func testAccVPCIpamPoolAllocationIpv4Netmask(netmask string) string {
-	return testAccVPCIpamPoolCidrPrivateBase + fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		testAccVPCIpamPoolCidrPrivateBase,
+		fmt.Sprintf(`
 resource "aws_vpc_ipam_pool_cidr_allocation" "test" {
   ipam_pool_id   = aws_vpc_ipam_pool.test.id
   netmask_length = %[1]q
@@ -170,5 +174,5 @@ resource "aws_vpc_ipam_pool_cidr_allocation" "test" {
     aws_vpc_ipam_pool_cidr.test
   ]
 }
-`, netmask)
+`, netmask))
 }
