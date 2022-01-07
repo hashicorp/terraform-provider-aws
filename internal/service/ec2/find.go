@@ -626,8 +626,8 @@ func FindSecurityGroups(conn *ec2.EC2, input *ec2.DescribeSecurityGroupsInput) (
 		return !lastPage
 	})
 
-	if tfawserr.ErrCodeEquals(err, InvalidSecurityGroupIDNotFound) ||
-		tfawserr.ErrCodeEquals(err, InvalidGroupNotFound) {
+	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidSecurityGroupIDNotFound) ||
+		tfawserr.ErrCodeEquals(err, ErrCodeInvalidGroupNotFound) {
 		return nil, &resource.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -672,23 +672,74 @@ func FindSpotInstanceRequestByID(conn *ec2.EC2, id string) (*ec2.SpotInstanceReq
 	return nil, nil
 }
 
-// FindSubnetByID looks up a Subnet by ID. When not found, returns nil and potentially an API error.
 func FindSubnetByID(conn *ec2.EC2, id string) (*ec2.Subnet, error) {
 	input := &ec2.DescribeSubnetsInput{
 		SubnetIds: aws.StringSlice([]string{id}),
 	}
 
-	output, err := conn.DescribeSubnets(input)
+	output, err := FindSubnet(conn, input)
 
 	if err != nil {
 		return nil, err
 	}
 
-	if output == nil || len(output.Subnets) == 0 || output.Subnets[0] == nil {
-		return nil, nil
+	// Eventual consistency check.
+	if aws.StringValue(output.SubnetId) != id {
+		return nil, &resource.NotFoundError{
+			LastRequest: input,
+		}
 	}
 
-	return output.Subnets[0], nil
+	return output, nil
+}
+
+func FindSubnet(conn *ec2.EC2, input *ec2.DescribeSubnetsInput) (*ec2.Subnet, error) {
+	output, err := FindSubnets(conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if len(output) == 0 || output[0] == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	if count := len(output); count > 1 {
+		return nil, tfresource.NewTooManyResultsError(count, input)
+	}
+
+	return output[0], nil
+}
+
+func FindSubnets(conn *ec2.EC2, input *ec2.DescribeSubnetsInput) ([]*ec2.Subnet, error) {
+	var output []*ec2.Subnet
+
+	err := conn.DescribeSubnetsPages(input, func(page *ec2.DescribeSubnetsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.Subnets {
+			if v != nil {
+				output = append(output, v)
+			}
+		}
+
+		return !lastPage
+	})
+
+	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidSubnetIDNotFound) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
 }
 
 func FindSubnetCidrReservationBySubnetIDAndReservationID(conn *ec2.EC2, subnetID, reservationID string) (*ec2.SubnetCidrReservation, error) {
@@ -727,6 +778,32 @@ func FindSubnetCidrReservationBySubnetIDAndReservationID(conn *ec2.EC2, subnetID
 		LastError:   err,
 		LastRequest: input,
 	}
+}
+
+func FindSubnetIPv6CIDRBlockAssociationByID(conn *ec2.EC2, associationID string) (*ec2.SubnetIpv6CidrBlockAssociation, error) {
+	input := &ec2.DescribeSubnetsInput{
+		Filters: BuildAttributeFilterList(map[string]string{
+			"ipv6-cidr-block-association.association-id": associationID,
+		}),
+	}
+
+	output, err := FindSubnet(conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	for _, association := range output.Ipv6CidrBlockAssociationSet {
+		if aws.StringValue(association.AssociationId) == associationID {
+			if state := aws.StringValue(association.Ipv6CidrBlockState.State); state == ec2.SubnetCidrBlockStateCodeDisassociated {
+				return nil, &resource.NotFoundError{Message: state}
+			}
+
+			return association, nil
+		}
+	}
+
+	return nil, &resource.NotFoundError{}
 }
 
 func FindTransitGatewayPrefixListReference(conn *ec2.EC2, transitGatewayRouteTableID string, prefixListID string) (*ec2.TransitGatewayPrefixListReference, error) {
@@ -895,7 +972,7 @@ func FindVPCEndpointByID(conn *ec2.EC2, vpcEndpointID string) (*ec2.VpcEndpoint,
 		return nil, err
 	}
 
-	if state := aws.StringValue(output.State); state == VPCEndpointStateDeleted {
+	if state := aws.StringValue(output.State); state == VpcEndpointStateDeleted {
 		return nil, &resource.NotFoundError{
 			Message:     state,
 			LastRequest: input,
@@ -915,7 +992,7 @@ func FindVPCEndpointByID(conn *ec2.EC2, vpcEndpointID string) (*ec2.VpcEndpoint,
 func FindVPCEndpoint(conn *ec2.EC2, input *ec2.DescribeVpcEndpointsInput) (*ec2.VpcEndpoint, error) {
 	output, err := conn.DescribeVpcEndpoints(input)
 
-	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidVPCEndpointIdNotFound) {
+	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidVpcEndpointIdNotFound) {
 		return nil, &resource.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -1009,44 +1086,133 @@ func FindVPNGatewayRoutePropagationExists(conn *ec2.EC2, routeTableID, gatewayID
 	}
 }
 
-// FindVPNGatewayVPCAttachment returns the attachment between the specified VPN gateway and VPC.
-// Returns nil and potentially an error if no attachment is found.
 func FindVPNGatewayVPCAttachment(conn *ec2.EC2, vpnGatewayID, vpcID string) (*ec2.VpcAttachment, error) {
 	vpnGateway, err := FindVPNGatewayByID(conn, vpnGatewayID)
+
 	if err != nil {
 		return nil, err
 	}
 
-	if vpnGateway == nil {
-		return nil, nil
-	}
-
 	for _, vpcAttachment := range vpnGateway.VpcAttachments {
 		if aws.StringValue(vpcAttachment.VpcId) == vpcID {
+			if state := aws.StringValue(vpcAttachment.State); state == ec2.AttachmentStatusDetached {
+				return nil, &resource.NotFoundError{
+					Message:     state,
+					LastRequest: vpcID,
+				}
+			}
+
 			return vpcAttachment, nil
 		}
 	}
 
-	return nil, nil
+	return nil, tfresource.NewEmptyResultError(vpcID)
 }
 
-// FindVPNGatewayByID returns the VPN gateway corresponding to the specified identifier.
-// Returns nil and potentially an error if no VPN gateway is found.
 func FindVPNGatewayByID(conn *ec2.EC2, id string) (*ec2.VpnGateway, error) {
 	input := &ec2.DescribeVpnGatewaysInput{
 		VpnGatewayIds: aws.StringSlice([]string{id}),
 	}
 
-	output, err := conn.DescribeVpnGateways(input)
+	output, err := FindVPNGateway(conn, input)
+
 	if err != nil {
 		return nil, err
 	}
 
-	if output == nil || len(output.VpnGateways) == 0 {
-		return nil, nil
+	if state := aws.StringValue(output.State); state == ec2.VpnStateDeleted {
+		return nil, &resource.NotFoundError{
+			Message:     state,
+			LastRequest: input,
+		}
+	}
+
+	// Eventual consistency check.
+	if aws.StringValue(output.VpnGatewayId) != id {
+		return nil, &resource.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
+}
+
+func FindVPNGateway(conn *ec2.EC2, input *ec2.DescribeVpnGatewaysInput) (*ec2.VpnGateway, error) {
+	output, err := conn.DescribeVpnGateways(input)
+
+	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidVpnGatewayIDNotFound) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || len(output.VpnGateways) == 0 || output.VpnGateways[0] == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	if count := len(output.VpnGateways); count > 1 {
+		return nil, tfresource.NewTooManyResultsError(count, input)
 	}
 
 	return output.VpnGateways[0], nil
+}
+
+func FindCustomerGatewayByID(conn *ec2.EC2, id string) (*ec2.CustomerGateway, error) {
+	input := &ec2.DescribeCustomerGatewaysInput{
+		CustomerGatewayIds: aws.StringSlice([]string{id}),
+	}
+
+	output, err := FindCustomerGateway(conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if state := aws.StringValue(output.State); state == CustomerGatewayStateDeleted {
+		return nil, &resource.NotFoundError{
+			Message:     state,
+			LastRequest: input,
+		}
+	}
+
+	// Eventual consistency check.
+	if aws.StringValue(output.CustomerGatewayId) != id {
+		return nil, &resource.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
+}
+
+func FindCustomerGateway(conn *ec2.EC2, input *ec2.DescribeCustomerGatewaysInput) (*ec2.CustomerGateway, error) {
+	output, err := conn.DescribeCustomerGateways(input)
+
+	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidCustomerGatewayIDNotFound) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || len(output.CustomerGateways) == 0 || output.CustomerGateways[0] == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	if count := len(output.CustomerGateways); count > 1 {
+		return nil, tfresource.NewTooManyResultsError(count, input)
+	}
+
+	return output.CustomerGateways[0], nil
 }
 
 func FindFlowLogByID(conn *ec2.EC2, id string) (*ec2.FlowLog, error) {
@@ -1348,4 +1514,111 @@ func FindPlacementGroupByName(conn *ec2.EC2, name string) (*ec2.PlacementGroup, 
 	}
 
 	return placementGroup, nil
+}
+
+func FindVPCEndpointConnectionByServiceIDAndVPCEndpointID(conn *ec2.EC2, serviceID, vpcEndpointID string) (*ec2.VpcEndpointConnection, error) {
+	input := &ec2.DescribeVpcEndpointConnectionsInput{
+		Filters: BuildAttributeFilterList(map[string]string{
+			"service-id": serviceID,
+			// "InvalidFilter: The filter vpc-endpoint-id  is invalid"
+			// "vpc-endpoint-id ": vpcEndpointID,
+		}),
+	}
+
+	var output *ec2.VpcEndpointConnection
+
+	err := conn.DescribeVpcEndpointConnectionsPages(input, func(page *ec2.DescribeVpcEndpointConnectionsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.VpcEndpointConnections {
+			if aws.StringValue(v.VpcEndpointId) == vpcEndpointID {
+				output = v
+
+				return false
+			}
+		}
+
+		return !lastPage
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	if vpcEndpointState := aws.StringValue(output.VpcEndpointState); vpcEndpointState == VpcEndpointStateDeleted {
+		return nil, &resource.NotFoundError{
+			Message:     vpcEndpointState,
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
+}
+
+func FindSnapshotById(conn *ec2.EC2, name string) (*ec2.Snapshot, error) {
+	input := &ec2.DescribeSnapshotsInput{
+		SnapshotIds: aws.StringSlice([]string{name}),
+	}
+
+	output, err := conn.DescribeSnapshots(input)
+
+	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidSnapshotNotFound) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || len(output.Snapshots) == 0 || output.Snapshots[0] == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	if count := len(output.Snapshots); count > 1 {
+		return nil, tfresource.NewTooManyResultsError(count, input)
+	}
+
+	return output.Snapshots[0], nil
+}
+
+func FindSnapshotTierStatusById(conn *ec2.EC2, id string) (*ec2.SnapshotTierStatus, error) {
+	filters := map[string]string{
+		"snapshot-id": id,
+	}
+
+	input := &ec2.DescribeSnapshotTierStatusInput{
+		Filters: BuildAttributeFilterList(filters),
+	}
+
+	output, err := conn.DescribeSnapshotTierStatus(input)
+
+	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidSnapshotNotFound) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || len(output.SnapshotTierStatuses) == 0 || output.SnapshotTierStatuses[0] == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	if count := len(output.SnapshotTierStatuses); count > 1 {
+		return nil, tfresource.NewTooManyResultsError(count, input)
+	}
+
+	return output.SnapshotTierStatuses[0], nil
 }

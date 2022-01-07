@@ -18,6 +18,16 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+func init() {
+	acctest.RegisterServiceErrorCheckFunc(sqs.EndpointsID, testAccErrorCheckSkipSQS)
+}
+
+func testAccErrorCheckSkipSQS(t *testing.T) resource.ErrorCheckFunc {
+	return acctest.ErrorCheckSkipMessagesContaining(t,
+		"Unknown Attribute RedriveAllowPolicy",
+	)
+}
+
 func TestAccSQSQueue_basic(t *testing.T) {
 	var queueAttributes map[string]string
 	resourceName := "aws_sqs_queue.test"
@@ -48,6 +58,7 @@ func TestAccSQSQueue_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "policy", ""),
 					resource.TestCheckResourceAttr(resourceName, "receive_wait_time_seconds", strconv.Itoa(tfsqs.DefaultQueueReceiveMessageWaitTimeSeconds)),
 					resource.TestCheckResourceAttr(resourceName, "redrive_policy", ""),
+					resource.TestCheckResourceAttr(resourceName, "redrive_allow_policy", ""),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttrPair(resourceName, "url", resourceName, "id"),
 					resource.TestCheckResourceAttr(resourceName, "visibility_timeout_seconds", strconv.Itoa(tfsqs.DefaultQueueVisibilityTimeout)),
@@ -455,6 +466,35 @@ func TestAccSQSQueue_redrivePolicy(t *testing.T) {
 					testAccCheckQueueExists(resourceName, &queueAttributes),
 					resource.TestCheckResourceAttr(resourceName, "delay_seconds", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "redrive_policy"),
+					resource.TestCheckResourceAttr(resourceName, "visibility_timeout_seconds", "300"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccSQSQueue_redriveAllowPolicy(t *testing.T) {
+	var queueAttributes map[string]string
+	resourceName := "aws_sqs_queue.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, sqs.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckQueueDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRedriveAllowPolicyConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckQueueExists(resourceName, &queueAttributes),
+					resource.TestCheckResourceAttr(resourceName, "delay_seconds", "0"),
+					//resource.TestCheckResourceAttrSet(resourceName, "redrive_allow_policy"),
 					resource.TestCheckResourceAttr(resourceName, "visibility_timeout_seconds", "300"),
 				),
 			},
@@ -1005,6 +1045,27 @@ resource "aws_sqs_queue" "test" {
 {
   "maxReceiveCount": 3,
   "deadLetterTargetArn": "${aws_sqs_queue.dlq.arn}"
+}
+EOF
+}
+
+resource "aws_sqs_queue" "dlq" {
+  name = "%[1]s-2"
+}
+`, rName)
+}
+
+func testAccRedriveAllowPolicyConfig(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_sqs_queue" "test" {
+  name                       = "%[1]s-1"
+  delay_seconds              = 0
+  visibility_timeout_seconds = 300
+
+  redrive_allow_policy = <<EOF
+{
+  "redrivePermission": "byQueue",
+  "sourceQueueArns": ["${aws_sqs_queue.dlq.arn}"]
 }
 EOF
 }

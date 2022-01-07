@@ -20,6 +20,14 @@ import (
 )
 
 func init() {
+	resource.AddTestSweepers("aws_customer_gateway", &resource.Sweeper{
+		Name: "aws_customer_gateway",
+		F:    sweepCustomerGateways,
+		Dependencies: []string{
+			"aws_vpn_connection",
+		},
+	})
+
 	resource.AddTestSweepers("aws_ec2_capacity_reservation", &resource.Sweeper{
 		Name: "aws_ec2_capacity_reservation",
 		F:    sweepCapacityReservations,
@@ -49,6 +57,11 @@ func init() {
 			"aws_instance",
 		},
 		F: sweepEBSVolumes,
+	})
+
+	resource.AddTestSweepers("aws_ebs_snapshot", &resource.Sweeper{
+		Name: "aws_ebs_snapshot",
+		F:    sweepEBSnapshots,
 	})
 
 	resource.AddTestSweepers("aws_egress_only_internet_gateway", &resource.Sweeper{
@@ -164,9 +177,12 @@ func init() {
 		Name: "aws_subnet",
 		F:    sweepSubnets,
 		Dependencies: []string{
+			"aws_appstream_fleet",
+			"aws_appstream_image_builder",
 			"aws_autoscaling_group",
 			"aws_batch_compute_environment",
 			"aws_elastic_beanstalk_environment",
+			"aws_cloud9_environment_ec2",
 			"aws_cloudhsm_v2_cluster",
 			"aws_db_subnet_group",
 			"aws_directory_service_directory",
@@ -183,6 +199,7 @@ func init() {
 			"aws_emr_studio",
 			"aws_fsx_lustre_file_system",
 			"aws_fsx_ontap_file_system",
+			"aws_fsx_openzfs_file_system",
 			"aws_fsx_windows_file_system",
 			"aws_lambda_function",
 			"aws_lb",
@@ -272,6 +289,39 @@ func init() {
 		F:    sweepVPNGateways,
 		Dependencies: []string{
 			"aws_dx_gateway_association",
+			"aws_vpn_connection",
+		},
+	})
+
+	resource.AddTestSweepers("aws_vpc_ipam_pool_cidr", &resource.Sweeper{
+		Name: "aws_vpc_ipam_pool_cidr",
+		F:    sweepIPAMPoolCIDRs,
+		Dependencies: []string{
+			"aws_vpc",
+		},
+	})
+
+	resource.AddTestSweepers("aws_vpc_ipam_pool", &resource.Sweeper{
+		Name: "aws_vpc_ipam_pool",
+		F:    sweepIPAMPools,
+		Dependencies: []string{
+			"aws_vpc_ipam_pool_cidr",
+		},
+	})
+
+	resource.AddTestSweepers("aws_vpc_ipam_scope", &resource.Sweeper{
+		Name: "aws_vpc_ipam_scope",
+		F:    sweepIPAMScopes,
+		Dependencies: []string{
+			"aws_vpc_ipam_pool",
+		},
+	})
+
+	resource.AddTestSweepers("aws_vpc_ipam", &resource.Sweeper{
+		Name: "aws_vpc_ipam",
+		F:    sweepIPAMs,
+		Dependencies: []string{
+			"aws_vpc_ipam_scope",
 		},
 	})
 }
@@ -512,6 +562,50 @@ func sweepEBSVolumes(region string) error {
 	}
 
 	return nil
+}
+
+func sweepEBSnapshots(region string) error {
+	client, err := sweep.SharedRegionalSweepClient(region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %s", err)
+	}
+	conn := client.(*conns.AWSClient).EC2Conn
+	sweepResources := make([]*sweep.SweepResource, 0)
+	var errs *multierror.Error
+
+	input := &ec2.DescribeSnapshotsInput{
+		Filters: []*ec2.Filter{
+			{
+				Name:   aws.String("owner-id"),
+				Values: aws.StringSlice([]string{client.(*conns.AWSClient).AccountID}),
+			},
+		},
+	}
+
+	err = conn.DescribeSnapshotsPages(input, func(page *ec2.DescribeSnapshotsOutput, lastPage bool) bool {
+		for _, volume := range page.Snapshots {
+			id := aws.StringValue(volume.SnapshotId)
+
+			r := ResourceEBSSnapshot()
+			d := r.Data(nil)
+			d.SetId(id)
+
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+		}
+
+		return !lastPage
+	})
+
+	if err = sweep.SweepOrchestrator(sweepResources); err != nil {
+		errs = multierror.Append(errs, fmt.Errorf("error sweeping EC2 EBS Snapshots for %s: %w", region, err))
+	}
+
+	if sweep.SkipSweepError(errs.ErrorOrNil()) {
+		log.Printf("[WARN] Skipping EC2 EBS Snapshot sweep for %s: %s", region, errs)
+		return nil
+	}
+
+	return errs.ErrorOrNil()
 }
 
 func sweepEgressOnlyInternetGateways(region string) error {
@@ -1998,57 +2092,289 @@ func sweepVPNGateways(region string) error {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 	conn := client.(*conns.AWSClient).EC2Conn
-	var sweeperErrs *multierror.Error
+	input := &ec2.DescribeVpnGatewaysInput{}
+	sweepResources := make([]*sweep.SweepResource, 0)
 
-	req := &ec2.DescribeVpnGatewaysInput{}
-	resp, err := conn.DescribeVpnGateways(req)
-	if err != nil {
-		if sweep.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping EC2 VPN Gateway sweep for %s: %s", region, err)
-			return nil
-		}
-		return fmt.Errorf("Error describing VPN Gateways: %s", err)
-	}
+	output, err := conn.DescribeVpnGateways(input)
 
-	if len(resp.VpnGateways) == 0 {
-		log.Print("[DEBUG] No VPN Gateways to sweep")
+	if sweep.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping EC2 VPN Gateway sweep for %s: %s", region, err)
 		return nil
 	}
 
-	for _, vpng := range resp.VpnGateways {
-		if aws.StringValue(vpng.State) == ec2.VpnStateDeleted {
+	if err != nil {
+		return fmt.Errorf("error listing EC2 VPN Gateways (%s): %w", region, err)
+	}
+
+	for _, v := range output.VpnGateways {
+		if aws.StringValue(v.State) == ec2.VpnStateDeleted {
 			continue
-		}
-
-		for _, vpcAttachment := range vpng.VpcAttachments {
-			if aws.StringValue(vpcAttachment.State) == ec2.AttachmentStatusDetached {
-				continue
-			}
-
-			r := ResourceVPNGatewayAttachment()
-			d := r.Data(nil)
-			d.Set("vpc_id", vpcAttachment.VpcId)
-			d.Set("vpn_gateway_id", vpng.VpnGatewayId)
-			err := r.Delete(d, client)
-
-			if err != nil {
-				log.Printf("[ERROR] %s", err)
-				sweeperErrs = multierror.Append(sweeperErrs, err)
-				continue
-			}
 		}
 
 		r := ResourceVPNGateway()
 		d := r.Data(nil)
-		d.SetId(aws.StringValue(vpng.VpnGatewayId))
-		err := r.Delete(d, client)
+		d.SetId(aws.StringValue(v.VpnGatewayId))
 
-		if err != nil {
-			log.Printf("[ERROR] %s", err)
-			sweeperErrs = multierror.Append(sweeperErrs, err)
+		for _, v := range v.VpcAttachments {
+			if aws.StringValue(v.State) != ec2.AttachmentStatusDetached {
+				d.Set("vpc_id", v.VpcId)
+
+				break
+			}
+		}
+
+		sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+	}
+
+	err = sweep.SweepOrchestrator(sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("error sweeping EC2 VPN Gateways (%s): %w", region, err)
+	}
+
+	return nil
+}
+
+func sweepCustomerGateways(region string) error {
+	client, err := sweep.SharedRegionalSweepClient(region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %s", err)
+	}
+	conn := client.(*conns.AWSClient).EC2Conn
+	input := &ec2.DescribeCustomerGatewaysInput{}
+	sweepResources := make([]*sweep.SweepResource, 0)
+
+	output, err := conn.DescribeCustomerGateways(input)
+
+	if sweep.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping EC2 Customer Gateway sweep for %s: %s", region, err)
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("error listing EC2 Customer Gateways (%s): %w", region, err)
+	}
+
+	for _, v := range output.CustomerGateways {
+		if aws.StringValue(v.State) == CustomerGatewayStateDeleted {
 			continue
 		}
+
+		r := ResourceCustomerGateway()
+		d := r.Data(nil)
+		d.SetId(aws.StringValue(v.CustomerGatewayId))
+
+		sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+	}
+
+	err = sweep.SweepOrchestrator(sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("error sweeping EC2 Customer Gateways (%s): %w", region, err)
+	}
+
+	return nil
+}
+
+func sweepIPAMPoolCIDRs(region string) error {
+	client, err := sweep.SharedRegionalSweepClient(region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %s", err)
+	}
+	conn := client.(*conns.AWSClient).EC2Conn
+	input := &ec2.DescribeIpamPoolsInput{}
+	var sweeperErrs *multierror.Error
+	sweepResources := make([]*sweep.SweepResource, 0)
+
+	err = conn.DescribeIpamPoolsPages(input, func(page *ec2.DescribeIpamPoolsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.IpamPools {
+			poolID := aws.StringValue(v.IpamPoolId)
+			input := &ec2.GetIpamPoolCidrsInput{
+				IpamPoolId: aws.String(poolID),
+			}
+
+			err := conn.GetIpamPoolCidrsPages(input, func(page *ec2.GetIpamPoolCidrsOutput, lastPage bool) bool {
+				if page == nil {
+					return !lastPage
+				}
+
+				for _, v := range page.IpamPoolCidrs {
+					r := ResourceVPCIpamPoolCidr()
+					d := r.Data(nil)
+					d.SetId(encodeIpamPoolCidrId(aws.StringValue(v.Cidr), poolID))
+
+					sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+				}
+
+				return !lastPage
+			})
+
+			if sweep.SkipSweepError(err) {
+				continue
+			}
+
+			if err != nil {
+				sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing IPAM Pool (%s) CIDRs (%s): %w", poolID, region, err))
+			}
+		}
+
+		return !lastPage
+	})
+
+	if sweep.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping IPAM Pool sweep for %s: %s", region, err)
+		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
+	}
+
+	if err != nil {
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing IPAM Pools (%s): %w", region, err))
+	}
+
+	err = sweep.SweepOrchestrator(sweepResources)
+
+	if err != nil {
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping IPAM Pools (%s): %w", region, err))
 	}
 
 	return sweeperErrs.ErrorOrNil()
+}
+
+func sweepIPAMPools(region string) error {
+	client, err := sweep.SharedRegionalSweepClient(region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %s", err)
+	}
+	conn := client.(*conns.AWSClient).EC2Conn
+	input := &ec2.DescribeIpamPoolsInput{}
+	sweepResources := make([]*sweep.SweepResource, 0)
+
+	err = conn.DescribeIpamPoolsPages(input, func(page *ec2.DescribeIpamPoolsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.IpamPools {
+			r := ResourceVPCIpamPool()
+			d := r.Data(nil)
+			d.SetId(aws.StringValue(v.IpamPoolId))
+
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+		}
+
+		return !lastPage
+	})
+
+	if sweep.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping IPAM Pool sweep for %s: %s", region, err)
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("error listing IPAM Pools (%s): %w", region, err)
+	}
+
+	err = sweep.SweepOrchestrator(sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("error sweeping IPAM Pools (%s): %w", region, err)
+	}
+
+	return nil
+}
+
+func sweepIPAMScopes(region string) error {
+	client, err := sweep.SharedRegionalSweepClient(region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %s", err)
+	}
+	conn := client.(*conns.AWSClient).EC2Conn
+	input := &ec2.DescribeIpamScopesInput{}
+	sweepResources := make([]*sweep.SweepResource, 0)
+
+	err = conn.DescribeIpamScopesPages(input, func(page *ec2.DescribeIpamScopesOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.IpamScopes {
+			scopeID := aws.StringValue(v.IpamScopeId)
+
+			if aws.BoolValue(v.IsDefault) {
+				log.Printf("[DEBUG] Skipping default IPAM Scope (%s)", scopeID)
+				continue
+			}
+
+			r := ResourceVPCIpamScope()
+			d := r.Data(nil)
+			d.SetId(scopeID)
+
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+		}
+
+		return !lastPage
+	})
+
+	if sweep.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping IPAM Scope sweep for %s: %s", region, err)
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("error listing IPAM Scopes (%s): %w", region, err)
+	}
+
+	err = sweep.SweepOrchestrator(sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("error sweeping IPAM Scopes (%s): %w", region, err)
+	}
+
+	return nil
+}
+
+func sweepIPAMs(region string) error {
+	client, err := sweep.SharedRegionalSweepClient(region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %s", err)
+	}
+	conn := client.(*conns.AWSClient).EC2Conn
+	input := &ec2.DescribeIpamsInput{}
+	sweepResources := make([]*sweep.SweepResource, 0)
+
+	err = conn.DescribeIpamsPages(input, func(page *ec2.DescribeIpamsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.Ipams {
+			r := ResourceVPCIpam()
+			d := r.Data(nil)
+			d.SetId(aws.StringValue(v.IpamId))
+
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+		}
+
+		return !lastPage
+	})
+
+	if sweep.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping IPAM sweep for %s: %s", region, err)
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("error listing IPAMs (%s): %w", region, err)
+	}
+
+	err = sweep.SweepOrchestrator(sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("error sweeping IPAMs (%s): %w", region, err)
+	}
+
+	return nil
 }

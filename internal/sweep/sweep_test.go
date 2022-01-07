@@ -23,6 +23,7 @@ import (
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/backup"
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/batch"
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/budgets"
+	_ "github.com/hashicorp/terraform-provider-aws/internal/service/cloud9"
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/cloudformation"
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/cloudfront"
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/cloudhsmv2"

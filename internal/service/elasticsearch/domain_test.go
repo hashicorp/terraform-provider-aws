@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfelasticsearch "github.com/hashicorp/terraform-provider-aws/internal/service/elasticsearch"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func TestAccElasticsearchDomain_basic(t *testing.T) {
@@ -36,9 +37,10 @@ func TestAccElasticsearchDomain_basic(t *testing.T) {
 				Config: testAccDomainConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(resourceName, &domain),
-					resource.TestCheckResourceAttr(
-						resourceName, "elasticsearch_version", "1.5"),
+					resource.TestCheckResourceAttr(resourceName, "elasticsearch_version", "1.5"),
 					resource.TestMatchResourceAttr(resourceName, "kibana_endpoint", regexp.MustCompile(`.*es\..*/_plugin/kibana/`)),
+					resource.TestCheckResourceAttr(resourceName, "vpc_options.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
 			{
@@ -323,7 +325,7 @@ func TestAccElasticsearchDomain_duplicate(t *testing.T) {
 						t.Fatal(err)
 					}
 
-					err = tfelasticsearch.WaitForDomainCreation(conn, rName[:28], rName[:28])
+					err = tfelasticsearch.WaitForDomainCreation(conn, rName[:28])
 					if err != nil {
 						t.Fatal(err)
 					}
@@ -982,10 +984,11 @@ func TestAccElasticsearchDomain_tags(t *testing.T) {
 		CheckDestroy: testAccCheckELBDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDomainConfig(rName),
+				Config: testAccDomainConfigTags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(resourceName, &domain),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
 			{
@@ -995,12 +998,20 @@ func TestAccElasticsearchDomain_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccDomainConfig_TagUpdate(rName),
+				Config: testAccDomainConfigTags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(resourceName, &domain),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.foo", "bar"),
-					resource.TestCheckResourceAttr(resourceName, "tags.new", "type"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+			{
+				Config: testAccDomainConfigTags1(rName, "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDomainExists(resourceName, &domain),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 		},
@@ -1164,6 +1175,27 @@ func TestAccElasticsearchDomain_Update_version(t *testing.T) {
 		}})
 }
 
+func TestAccElasticsearchDomain_disappears(t *testing.T) {
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_elasticsearch_domain.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckIamServiceLinkedRoleEs(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, elasticsearch.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckDomainDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDomainConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					acctest.CheckResourceDisappears(acctest.Provider, tfelasticsearch.ResourceDomain(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func testAccCheckDomainEndpointOptions(enforceHTTPS bool, tls string, status *elasticsearch.ElasticsearchDomainStatus) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		options := status.DomainEndpointOptions
@@ -1318,16 +1350,12 @@ func testAccCheckDomainExists(n string, domain *elasticsearch.ElasticsearchDomai
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ElasticsearchConn
-		opts := &elasticsearch.DescribeElasticsearchDomainInput{
-			DomainName: aws.String(rs.Primary.Attributes["domain_name"]),
-		}
-
-		resp, err := conn.DescribeElasticsearchDomain(opts)
+		resp, err := tfelasticsearch.FindDomainByName(conn, rs.Primary.Attributes["domain_name"])
 		if err != nil {
 			return fmt.Errorf("Error describing domain: %s", err.Error())
 		}
 
-		*domain = *resp.DomainStatus
+		*domain = *resp
 
 		return nil
 	}
@@ -1365,18 +1393,18 @@ func testAccCheckDomainDestroy(s *terraform.State) error {
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ElasticsearchConn
-		opts := &elasticsearch.DescribeElasticsearchDomainInput{
-			DomainName: aws.String(rs.Primary.Attributes["domain_name"]),
+		_, err := tfelasticsearch.FindDomainByName(conn, rs.Primary.Attributes["domain_name"])
+
+		if tfresource.NotFound(err) {
+			continue
 		}
 
-		_, err := conn.DescribeElasticsearchDomain(opts)
-		// Verify the error is what we want
 		if err != nil {
-			if awsErr, ok := err.(awserr.Error); ok && awsErr.Code() == "ResourceNotFoundException" {
-				continue
-			}
 			return err
 		}
+
+		return fmt.Errorf("Elasticsearch domain %s still exists", rs.Primary.ID)
+
 	}
 	return nil
 }
@@ -1731,7 +1759,7 @@ resource "aws_elasticsearch_domain" "test" {
 `, rName)
 }
 
-func testAccDomainConfig_TagUpdate(rName string) string {
+func testAccDomainConfigTags1(rName, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_elasticsearch_domain" "test" {
   domain_name = substr(%[1]q, 0, 28)
@@ -1742,11 +1770,26 @@ resource "aws_elasticsearch_domain" "test" {
   }
 
   tags = {
-    foo = "bar"
-    new = "type"
+    %[2]q = %[3]q
   }
 }
-`, rName)
+`, rName, tagKey1, tagValue1)
+}
+
+func testAccDomainConfigTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return fmt.Sprintf(`
+resource "aws_elasticsearch_domain" "test" {
+  domain_name = substr(%[1]q, 0, 28)
+  ebs_options {
+    ebs_enabled = true
+    volume_size = 10
+  }
+  tags = {
+    %[2]q = %[3]q
+    %[4]q = %[5]q
+  }
+}
+`, rName, tagKey1, tagValue1, tagKey2, tagValue2)
 }
 
 func testAccDomainConfigWithPolicy(rName string) string {
@@ -1773,7 +1816,6 @@ resource "aws_elasticsearch_domain" "test" {
     }]
   })
 }
-
 resource "aws_iam_role" "test" {
   name               = %[1]q
   assume_role_policy = data.aws_iam_policy_document.test.json

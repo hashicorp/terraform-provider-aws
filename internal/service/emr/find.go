@@ -40,6 +40,13 @@ func FindClusterByID(conn *emr.EMR, id string) (*emr.Cluster, error) {
 		return nil, err
 	}
 
+	// Eventual consistency check.
+	if aws.StringValue(output.Id) != id {
+		return nil, &resource.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
 	if state := aws.StringValue(output.Status.State); state == emr.ClusterStateTerminated || state == emr.ClusterStateTerminatedWithErrors {
 		return nil, &resource.NotFoundError{
 			Message:     state,

@@ -15,7 +15,7 @@ func TestAccDataSourceVPCIpamPool_basic(t *testing.T) {
 	dataSourceName := "data.aws_vpc_ipam_pool.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
+		PreCheck:   func() { acctest.PreCheck(t); testAccIPAMPreCheck(t) },
 		ErrorCheck: acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{

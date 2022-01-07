@@ -106,7 +106,7 @@ func TestAccACMPCACertificateAuthority_enabled(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "type", acmpca.CertificateAuthorityTypeRoot),
 					resource.TestCheckResourceAttr(resourceName, "enabled", "true"),
 					resource.TestCheckResourceAttr(resourceName, "status", acmpca.CertificateAuthorityStatusPendingCertificate),
-					acctest.CheckACMPCACertificateAuthorityActivateCA(&certificateAuthority),
+					acctest.CheckACMPCACertificateAuthorityActivateRootCA(&certificateAuthority),
 				),
 			},
 			{

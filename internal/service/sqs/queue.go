@@ -11,10 +11,10 @@ import (
 	"github.com/aws/aws-sdk-go/service/sqs"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/hashicorp/terraform-provider-aws/internal/attrmap"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -23,79 +23,63 @@ import (
 )
 
 var (
-	sqsQueueSchema = map[string]*schema.Schema{
+	queueSchema = map[string]*schema.Schema{
 		"arn": {
 			Type:     schema.TypeString,
 			Computed: true,
 		},
-
 		"content_based_deduplication": {
 			Type:     schema.TypeBool,
 			Default:  false,
 			Optional: true,
 		},
-
 		"deduplication_scope": {
 			Type:         schema.TypeString,
 			Optional:     true,
 			Computed:     true,
 			ValidateFunc: validation.StringInSlice(DeduplicationScope_Values(), false),
 		},
-
 		"delay_seconds": {
 			Type:         schema.TypeInt,
 			Optional:     true,
 			Default:      DefaultQueueDelaySeconds,
 			ValidateFunc: validation.IntBetween(0, 900),
 		},
-
 		"fifo_queue": {
 			Type:     schema.TypeBool,
 			Default:  false,
 			ForceNew: true,
 			Optional: true,
 		},
-
 		"fifo_throughput_limit": {
 			Type:         schema.TypeString,
 			Optional:     true,
 			Computed:     true,
 			ValidateFunc: validation.StringInSlice(FIFOThroughputLimit_Values(), false),
 		},
-
 		"kms_data_key_reuse_period_seconds": {
 			Type:         schema.TypeInt,
 			Optional:     true,
 			Computed:     true,
 			ValidateFunc: validation.IntBetween(60, 86_400),
 		},
-
 		"kms_master_key_id": {
 			Type:          schema.TypeString,
 			Optional:      true,
 			ConflictsWith: []string{"sqs_managed_sse_enabled"},
 		},
-
-		"sqs_managed_sse_enabled": {
-			Type:          schema.TypeBool,
-			Optional:      true,
-			ConflictsWith: []string{"kms_master_key_id"},
-		},
-
 		"max_message_size": {
 			Type:         schema.TypeInt,
 			Optional:     true,
 			Default:      DefaultQueueMaximumMessageSize,
 			ValidateFunc: validation.IntBetween(1024, 262_144),
 		},
-
 		"message_retention_seconds": {
 			Type:         schema.TypeInt,
 			Optional:     true,
 			Default:      DefaultQueueMessageRetentionPeriod,
 			ValidateFunc: validation.IntBetween(60, 1_209_600),
 		},
-
 		"name": {
 			Type:          schema.TypeString,
 			Optional:      true,
@@ -103,7 +87,6 @@ var (
 			ForceNew:      true,
 			ConflictsWith: []string{"name_prefix"},
 		},
-
 		"name_prefix": {
 			Type:          schema.TypeString,
 			Optional:      true,
@@ -111,7 +94,6 @@ var (
 			ForceNew:      true,
 			ConflictsWith: []string{"name"},
 		},
-
 		"policy": {
 			Type:             schema.TypeString,
 			Optional:         true,
@@ -123,13 +105,20 @@ var (
 				return json
 			},
 		},
-
 		"receive_wait_time_seconds": {
 			Type:     schema.TypeInt,
 			Optional: true,
 			Default:  DefaultQueueReceiveMessageWaitTimeSeconds,
 		},
-
+		"redrive_allow_policy": {
+			Type:         schema.TypeString,
+			Optional:     true,
+			ValidateFunc: validation.StringIsJSON,
+			StateFunc: func(v interface{}) string {
+				json, _ := structure.NormalizeJsonString(v)
+				return json
+			},
+		},
 		"redrive_policy": {
 			Type:         schema.TypeString,
 			Optional:     true,
@@ -139,45 +128,45 @@ var (
 				return json
 			},
 		},
-
+		"sqs_managed_sse_enabled": {
+			Type:          schema.TypeBool,
+			Optional:      true,
+			ConflictsWith: []string{"kms_master_key_id"},
+		},
+		"tags":     tftags.TagsSchema(),
+		"tags_all": tftags.TagsSchemaComputed(),
 		"url": {
 			Type:     schema.TypeString,
 			Computed: true,
 		},
-
 		"visibility_timeout_seconds": {
 			Type:         schema.TypeInt,
 			Optional:     true,
 			Default:      DefaultQueueVisibilityTimeout,
 			ValidateFunc: validation.IntBetween(0, 43_200),
 		},
-
-		"tags":     tftags.TagsSchema(),
-		"tags_all": tftags.TagsSchemaComputed(),
 	}
 
-	sqsQueueAttributeMap = create.AttrMap(map[string]string{
+	sqsQueueAttributeMap = attrmap.New(map[string]string{
+		"arn":                               sqs.QueueAttributeNameQueueArn,
+		"content_based_deduplication":       sqs.QueueAttributeNameContentBasedDeduplication,
+		"deduplication_scope":               sqs.QueueAttributeNameDeduplicationScope,
 		"delay_seconds":                     sqs.QueueAttributeNameDelaySeconds,
+		"fifo_queue":                        sqs.QueueAttributeNameFifoQueue,
+		"fifo_throughput_limit":             sqs.QueueAttributeNameFifoThroughputLimit,
+		"kms_data_key_reuse_period_seconds": sqs.QueueAttributeNameKmsDataKeyReusePeriodSeconds,
+		"kms_master_key_id":                 sqs.QueueAttributeNameKmsMasterKeyId,
 		"max_message_size":                  sqs.QueueAttributeNameMaximumMessageSize,
 		"message_retention_seconds":         sqs.QueueAttributeNameMessageRetentionPeriod,
-		"receive_wait_time_seconds":         sqs.QueueAttributeNameReceiveMessageWaitTimeSeconds,
-		"visibility_timeout_seconds":        sqs.QueueAttributeNameVisibilityTimeout,
 		"policy":                            sqs.QueueAttributeNamePolicy,
+		"receive_wait_time_seconds":         sqs.QueueAttributeNameReceiveMessageWaitTimeSeconds,
+		"redrive_allow_policy":              sqs.QueueAttributeNameRedriveAllowPolicy,
 		"redrive_policy":                    sqs.QueueAttributeNameRedrivePolicy,
-		"arn":                               sqs.QueueAttributeNameQueueArn,
-		"fifo_queue":                        sqs.QueueAttributeNameFifoQueue,
-		"content_based_deduplication":       sqs.QueueAttributeNameContentBasedDeduplication,
-		"kms_master_key_id":                 sqs.QueueAttributeNameKmsMasterKeyId,
-		"kms_data_key_reuse_period_seconds": sqs.QueueAttributeNameKmsDataKeyReusePeriodSeconds,
 		"sqs_managed_sse_enabled":           sqs.QueueAttributeNameSqsManagedSseEnabled,
-		"deduplication_scope":               sqs.QueueAttributeNameDeduplicationScope,
-		"fifo_throughput_limit":             sqs.QueueAttributeNameFifoThroughputLimit,
-	}, sqsQueueSchema)
+		"visibility_timeout_seconds":        sqs.QueueAttributeNameVisibilityTimeout,
+	}, queueSchema).WithIAMPolicyAttribute("policy")
 )
 
-// A number of these are marked as computed because if you don't
-// provide a value, SQS will provide you with defaults (which are the
-// default values specified below)
 func ResourceQueue() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceQueueCreate,
@@ -192,7 +181,7 @@ func ResourceQueue() *schema.Resource {
 			verify.SetTagsDiff,
 		),
 
-		Schema: sqsQueueSchema,
+		Schema: queueSchema,
 	}
 }
 
@@ -203,7 +192,6 @@ func resourceQueueCreate(d *schema.ResourceData, meta interface{}) error {
 
 	var name string
 	fifoQueue := d.Get("fifo_queue").(bool)
-
 	if fifoQueue {
 		name = create.NameWithSuffix(d.Get("name").(string), d.Get("name_prefix").(string), FIFOQueueNameSuffix)
 	} else {
@@ -220,14 +208,6 @@ func resourceQueueCreate(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	policy, err := structure.NormalizeJsonString(attributes[sqs.QueueAttributeNamePolicy])
-
-	if err != nil {
-		return fmt.Errorf("policy (%s) is invalid JSON: %w", attributes[sqs.QueueAttributeNamePolicy], err)
-	}
-
-	attributes[sqs.QueueAttributeNamePolicy] = policy
-
 	input.Attributes = aws.StringMap(attributes)
 
 	// Tag-on-create is currently only supported in AWS Commercial
@@ -236,32 +216,15 @@ func resourceQueueCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	log.Printf("[DEBUG] Creating SQS Queue: %s", input)
-	var output *sqs.CreateQueueOutput
-	err = resource.Retry(queueCreatedTimeout, func() *resource.RetryError {
-		var err error
-
-		output, err = conn.CreateQueue(input)
-
-		if tfawserr.ErrCodeEquals(err, sqs.ErrCodeQueueDeletedRecently) {
-			return resource.RetryableError(err)
-		}
-
-		if err != nil {
-			return resource.NonRetryableError(err)
-		}
-
-		return nil
-	})
-
-	if tfresource.TimedOut(err) {
-		output, err = conn.CreateQueue(input)
-	}
+	outputRaw, err := tfresource.RetryWhenAWSErrCodeEquals(queueCreatedTimeout, func() (interface{}, error) {
+		return conn.CreateQueue(input)
+	}, sqs.ErrCodeQueueDeletedRecently)
 
 	if err != nil {
 		return fmt.Errorf("error creating SQS Queue (%s): %w", name, err)
 	}
 
-	d.SetId(aws.StringValue(output.QueueUrl))
+	d.SetId(aws.StringValue(outputRaw.(*sqs.CreateQueueOutput).QueueUrl))
 
 	err = waitQueueAttributesPropagated(conn, d.Id(), attributes)
 
@@ -325,35 +288,9 @@ func resourceQueueRead(d *schema.ResourceData, meta interface{}) error {
 	}
 	d.Set("url", d.Id())
 
-	policyToSet, err := verify.PolicyToSet(d.Get("policy").(string), output[sqs.QueueAttributeNamePolicy])
-
-	if err != nil {
-		return err
-	}
-
-	d.Set("policy", policyToSet)
-
-	var tags tftags.KeyValueTags
-
-	err = resource.Retry(queueTagsTimeout, func() *resource.RetryError {
-		var err error
-
-		tags, err = ListTags(conn, d.Id())
-
-		if tfawserr.ErrCodeEquals(err, sqs.ErrCodeQueueDoesNotExist) {
-			return resource.RetryableError(err)
-		}
-
-		if err != nil {
-			return resource.NonRetryableError(err)
-		}
-
-		return nil
-	})
-
-	if tfresource.TimedOut(err) {
-		tags, err = ListTags(conn, d.Id())
-	}
+	outputRaw, err = tfresource.RetryWhenAWSErrCodeEquals(queueTagsTimeout, func() (interface{}, error) {
+		return ListTags(conn, d.Id())
+	}, sqs.ErrCodeQueueDoesNotExist)
 
 	if err != nil {
 		// Non-standard partitions (e.g. US Gov) and some local development
@@ -366,7 +303,7 @@ func resourceQueueRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error listing tags for SQS Queue (%s): %w", d.Id(), err)
 	}
 
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	tags := outputRaw.(tftags.KeyValueTags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
@@ -470,7 +407,6 @@ func resourceQueueCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, me
 		if !re.MatchString(name) {
 			return fmt.Errorf("invalid queue name: %s", name)
 		}
-
 	}
 
 	if !fifoQueue && contentBasedDeduplication {

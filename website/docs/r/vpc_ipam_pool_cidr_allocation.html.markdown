@@ -50,7 +50,7 @@ The following arguments are supported:
 * `cidr` - (Optional) The CIDR you want to assign to the pool.
 * `description` - (Optional) The description for the allocation.
 * `ipam_pool_id` - (Required) The ID of the pool to which you want to assign a CIDR.
-* `netmask_length` - (Optional) The netmask length of the CIDR you would like to allocate to the IPAM pool.
+* `netmask_length` - (Optional) The netmask length of the CIDR you would like to allocate to the IPAM pool. Valid Values: `0-32`.
 
 ## Attributes Reference
 

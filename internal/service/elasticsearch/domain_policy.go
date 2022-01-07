@@ -3,12 +3,9 @@ package elasticsearch
 import (
 	"fmt"
 	"log"
-	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	elasticsearch "github.com/aws/aws-sdk-go/service/elasticsearchservice"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -45,22 +42,20 @@ func ResourceDomainPolicy() *schema.Resource {
 
 func resourceDomainPolicyRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ElasticsearchConn
-	name := d.Get("domain_name").(string)
-	out, err := conn.DescribeElasticsearchDomain(&elasticsearch.DescribeElasticsearchDomainInput{
-		DomainName: aws.String(name),
-	})
-	if err != nil {
-		if awsErr, ok := err.(awserr.Error); ok && awsErr.Code() == "ResourceNotFoundException" {
-			log.Printf("[WARN] Elasticsearch Domain %q not found, removing", name)
-			d.SetId("")
-			return nil
-		}
-		return err
+
+	ds, err := FindDomainByName(conn, d.Get("domain_name").(string))
+
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] Elasticsearch Domain Policy (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
 	}
 
-	log.Printf("[DEBUG] Received Elasticsearch domain: %s", out)
+	if err != nil {
+		return fmt.Errorf("error reading Elasticsearch Domain Policy (%s): %w", d.Id(), err)
+	}
 
-	ds := out.DomainStatus
+	log.Printf("[DEBUG] Received Elasticsearch domain: %s", ds)
 
 	policies, err := verify.PolicyToSet(d.Get("access_policies").(string), aws.StringValue(ds.AccessPolicies))
 
@@ -92,32 +87,9 @@ func resourceDomainPolicyUpsert(d *schema.ResourceData, meta interface{}) error 
 	}
 
 	d.SetId("esd-policy-" + domainName)
-	input := &elasticsearch.DescribeElasticsearchDomainInput{
-		DomainName: aws.String(domainName),
-	}
-	var out *elasticsearch.DescribeElasticsearchDomainOutput
-	err = resource.Retry(50*time.Minute, func() *resource.RetryError {
-		var err error
-		out, err = conn.DescribeElasticsearchDomain(input)
-		if err != nil {
-			return resource.NonRetryableError(err)
-		}
 
-		if !*out.DomainStatus.Processing {
-			return nil
-		}
-
-		return resource.RetryableError(
-			fmt.Errorf("%q: Timeout while waiting for changes to be processed", d.Id()))
-	})
-	if tfresource.TimedOut(err) {
-		out, err = conn.DescribeElasticsearchDomain(input)
-		if err == nil && !*out.DomainStatus.Processing {
-			return nil
-		}
-	}
-	if err != nil {
-		return fmt.Errorf("Error upserting Elasticsearch domain policy: %s", err)
+	if err := waitForDomainUpdate(conn, d.Get("domain_name").(string)); err != nil {
+		return fmt.Errorf("error waiting for Elasticsearch Domain Policy (%s) to be updated: %w", d.Id(), err)
 	}
 
 	return resourceDomainPolicyRead(d, meta)
@@ -135,32 +107,10 @@ func resourceDomainPolicyDelete(d *schema.ResourceData, meta interface{}) error 
 	}
 
 	log.Printf("[DEBUG] Waiting for Elasticsearch domain policy %q to be deleted", d.Get("domain_name").(string))
-	input := &elasticsearch.DescribeElasticsearchDomainInput{
-		DomainName: aws.String(d.Get("domain_name").(string)),
-	}
-	var out *elasticsearch.DescribeElasticsearchDomainOutput
-	err = resource.Retry(60*time.Minute, func() *resource.RetryError {
-		var err error
-		out, err = conn.DescribeElasticsearchDomain(input)
-		if err != nil {
-			return resource.NonRetryableError(err)
-		}
 
-		if !*out.DomainStatus.Processing {
-			return nil
-		}
+	if err := waitForDomainUpdate(conn, d.Get("domain_name").(string)); err != nil {
+		return fmt.Errorf("error waiting for Elasticsearch Domain Policy (%s) to be deleted: %w", d.Id(), err)
+	}
 
-		return resource.RetryableError(
-			fmt.Errorf("%q: Timeout while waiting for policy to be deleted", d.Id()))
-	})
-	if tfresource.TimedOut(err) {
-		out, err := conn.DescribeElasticsearchDomain(input)
-		if err == nil && !*out.DomainStatus.Processing {
-			return nil
-		}
-	}
-	if err != nil {
-		return fmt.Errorf("Error deleting Elasticsearch domain policy: %s", err)
-	}
 	return nil
 }

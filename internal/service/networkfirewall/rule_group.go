@@ -87,10 +87,7 @@ func ResourceRuleGroup() *schema.Resource {
 															"definition": {
 																Type:     schema.TypeSet,
 																Required: true,
-																Elem: &schema.Schema{
-																	Type:         schema.TypeString,
-																	ValidateFunc: verify.ValidIPv4CIDRNetworkAddress,
-																},
+																Elem:     &schema.Schema{Type: schema.TypeString},
 															},
 														},
 													},

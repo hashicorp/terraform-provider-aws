@@ -344,12 +344,16 @@ func sweepPolicies(region string) error {
 
 			// Treat this sweeper as best effort for now. There are a lot of edge cases
 			// with lingering aws_iam_role resources in the HashiCorp testing accounts.
-			if tfawserr.ErrMessageContains(err, iam.ErrCodeDeleteConflictException, "") {
+			if tfawserr.ErrCodeEquals(err, iam.ErrCodeDeleteConflictException) {
 				log.Printf("[WARN] Ignoring IAM Policy (%s) deletion error: %s", arn, err)
 				continue
 			}
 
-			if tfawserr.ErrMessageContains(err, iam.ErrCodeNoSuchEntityException, "") {
+			if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
+				continue
+			}
+
+			if tfawserr.ErrMessageContains(err, "AccessDenied", "with an explicit deny") {
 				continue
 			}
 
@@ -537,7 +541,7 @@ func sweepServiceLinkedRoles(region string) error {
 
 			r := ResourceServiceLinkedRole()
 			d := r.Data(nil)
-			d.SetId(roleName)
+			d.SetId(aws.StringValue(role.Arn))
 			err := r.Delete(d, client)
 			if err != nil {
 				sweeperErr := fmt.Errorf("error deleting IAM Service Linked Role (%s): %w", roleName, err)
@@ -612,7 +616,7 @@ func sweepUsers(region string) error {
 		}
 		listUserPoliciesOutput, err := conn.ListUserPolicies(listUserPoliciesInput)
 
-		if tfawserr.ErrMessageContains(err, iam.ErrCodeNoSuchEntityException, "") {
+		if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
 			continue
 		}
 		if err != nil {
@@ -631,7 +635,7 @@ func sweepUsers(region string) error {
 			}
 
 			if _, err := conn.DeleteUserPolicy(input); err != nil {
-				if tfawserr.ErrMessageContains(err, iam.ErrCodeNoSuchEntityException, "") {
+				if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
 					continue
 				}
 				sweeperErr := fmt.Errorf("error deleting IAM User (%s) inline policy %q: %s", username, *inlinePolicyName, err)
@@ -646,7 +650,7 @@ func sweepUsers(region string) error {
 		}
 		listAttachedUserPoliciesOutput, err := conn.ListAttachedUserPolicies(listAttachedUserPoliciesInput)
 
-		if tfawserr.ErrMessageContains(err, iam.ErrCodeNoSuchEntityException, "") {
+		if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
 			continue
 		}
 		if err != nil {
@@ -717,7 +721,7 @@ func sweepUsers(region string) error {
 
 		_, err = conn.DeleteUser(input)
 
-		if tfawserr.ErrMessageContains(err, iam.ErrCodeNoSuchEntityException, "") {
+		if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
 			continue
 		}
 		if err != nil {

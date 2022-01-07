@@ -22,7 +22,7 @@ func TestAccVPCIpamPoolAllocation_ipv4Basic(t *testing.T) {
 	cidr := "172.2.0.0/28"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccIPAMPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckVPCIpamPoolAllocationDestroy,
@@ -52,7 +52,7 @@ func TestAccVPCIpamPoolAllocation_ipv4BasicNetmask(t *testing.T) {
 	netmask := "28"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccIPAMPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckVPCIpamPoolAllocationDestroy,
