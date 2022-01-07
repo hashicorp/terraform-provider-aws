@@ -1,4 +1,21 @@
 ## 3.72.0 (Unreleased)
+
+ENHANCEMENTS:
+
+* data-source/aws_customer_gateway: Add `certificate_arn` attribute ([#22435](https://github.com/hashicorp/terraform-provider-aws/issues/22435))
+* data-source/aws_ebs_snapshot: Add `storage_tier` and `outpost_arn` attributes. ([#22342](https://github.com/hashicorp/terraform-provider-aws/issues/22342))
+* data-source/aws_elb_service_account: Add account ID for `ap-southeast-3` AWS Region ([#22453](https://github.com/hashicorp/terraform-provider-aws/issues/22453))
+* resource/aws_cloudwatch_log_destination_policy: Add `force_update` argument. ([#22460](https://github.com/hashicorp/terraform-provider-aws/issues/22460))
+* resource/aws_cloudwatch_log_destination_policy: Add plan time validation for `access_policy`. ([#22460](https://github.com/hashicorp/terraform-provider-aws/issues/22460))
+* resource/aws_customer_gateway: Add `certificate_arn` argument ([#22435](https://github.com/hashicorp/terraform-provider-aws/issues/22435))
+* resource/aws_ebs_snapshot: Add `outpost_arn`, `storage_tier`, `permanent_restore`, `temporary_restore_days` arguments ([#22342](https://github.com/hashicorp/terraform-provider-aws/issues/22342))
+* resource/aws_ebs_snapshot_copy: Add `storage_tier`, `permanent_restore`, `temporary_restore_days` arguments ([#22342](https://github.com/hashicorp/terraform-provider-aws/issues/22342))
+* resource/aws_ebs_snapshot_import: Add `storage_tier`, `permanent_restore`, `temporary_restore_days` arguments ([#22342](https://github.com/hashicorp/terraform-provider-aws/issues/22342))
+
+BUG FIXES:
+
+* resource/aws_fsx_lustre_file_system: Add missing values to `per_unit_storage_throughput` validation ([#22462](https://github.com/hashicorp/terraform-provider-aws/issues/22462))
+
 ## 3.71.0 (January 06, 2022)
 
 FEATURES:
