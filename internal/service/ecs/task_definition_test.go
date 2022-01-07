@@ -64,7 +64,7 @@ func TestAccECSTaskDefinition_basic(t *testing.T) {
 }
 
 // Regression for https://github.com/hashicorp/terraform/issues/2370
-func TestAccECSTaskDefinition_withScratchVolume(t *testing.T) {
+func TestAccECSTaskDefinition_scratchVolume(t *testing.T) {
 	var def ecs.TaskDefinition
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -77,7 +77,7 @@ func TestAccECSTaskDefinition_withScratchVolume(t *testing.T) {
 		CheckDestroy: testAccCheckTaskDefinitionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTaskDefinitionWithScratchVolume(rName),
+				Config: testAccTaskDefinitionScratchVolume(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTaskDefinitionExists(resourceName, &def),
 				),
@@ -93,7 +93,7 @@ func TestAccECSTaskDefinition_withScratchVolume(t *testing.T) {
 	})
 }
 
-func TestAccECSTaskDefinition_withDockerVolume(t *testing.T) {
+func TestAccECSTaskDefinition_DockerVolume_basic(t *testing.T) {
 	var def ecs.TaskDefinition
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -106,7 +106,7 @@ func TestAccECSTaskDefinition_withDockerVolume(t *testing.T) {
 		CheckDestroy: testAccCheckTaskDefinitionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTaskDefinitionWithDockerVolumes(rName),
+				Config: testAccTaskDefinitionDockerVolumes(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTaskDefinitionExists(resourceName, &def),
 					resource.TestCheckResourceAttr(resourceName, "volume.#", "1"),
@@ -136,7 +136,7 @@ func TestAccECSTaskDefinition_withDockerVolume(t *testing.T) {
 	})
 }
 
-func TestAccECSTaskDefinition_withDockerVolumeMinimal(t *testing.T) {
+func TestAccECSTaskDefinition_DockerVolume_minimal(t *testing.T) {
 	var def ecs.TaskDefinition
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -149,7 +149,7 @@ func TestAccECSTaskDefinition_withDockerVolumeMinimal(t *testing.T) {
 		CheckDestroy: testAccCheckTaskDefinitionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTaskDefinitionWithDockerVolumesMinimalConfig(rName),
+				Config: testAccTaskDefinitionDockerVolumesMinimalConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTaskDefinitionExists(resourceName, &def),
 					resource.TestCheckResourceAttr(resourceName, "volume.#", "1"),
@@ -171,7 +171,7 @@ func TestAccECSTaskDefinition_withDockerVolumeMinimal(t *testing.T) {
 	})
 }
 
-func TestAccECSTaskDefinition_withRuntimePlatform(t *testing.T) {
+func TestAccECSTaskDefinition_runtimePlatform(t *testing.T) {
 	var def ecs.TaskDefinition
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -184,7 +184,7 @@ func TestAccECSTaskDefinition_withRuntimePlatform(t *testing.T) {
 		CheckDestroy: testAccCheckTaskDefinitionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTaskDefinitionWithRuntimePlatformMinimalConfig(rName),
+				Config: testAccTaskDefinitionRuntimePlatformMinimalConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTaskDefinitionExists(resourceName, &def),
 					resource.TestCheckResourceAttr(resourceName, "runtime_platform.#", "1"),
@@ -205,7 +205,7 @@ func TestAccECSTaskDefinition_withRuntimePlatform(t *testing.T) {
 	})
 }
 
-func TestAccECSTaskDefinition_Fargate_withRuntimePlatform(t *testing.T) {
+func TestAccECSTaskDefinition_Fargate_runtimePlatform(t *testing.T) {
 	var def ecs.TaskDefinition
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -218,7 +218,7 @@ func TestAccECSTaskDefinition_Fargate_withRuntimePlatform(t *testing.T) {
 		CheckDestroy: testAccCheckTaskDefinitionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFargateTaskDefinitionWithRuntimePlatformMinimalConfig(rName, true, true),
+				Config: testAccFargateTaskDefinitionRuntimePlatformMinimalConfig(rName, true, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTaskDefinitionExists(resourceName, &def),
 					resource.TestCheckResourceAttr(resourceName, "runtime_platform.#", "1"),
@@ -239,7 +239,7 @@ func TestAccECSTaskDefinition_Fargate_withRuntimePlatform(t *testing.T) {
 	})
 }
 
-func TestAccECSTaskDefinition_Fargate_withRuntimePlatformWithoutArch(t *testing.T) {
+func TestAccECSTaskDefinition_Fargate_runtimePlatformWithoutArch(t *testing.T) {
 	var def ecs.TaskDefinition
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -252,7 +252,7 @@ func TestAccECSTaskDefinition_Fargate_withRuntimePlatformWithoutArch(t *testing.
 		CheckDestroy: testAccCheckTaskDefinitionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFargateTaskDefinitionWithRuntimePlatformMinimalConfig(rName, false, true),
+				Config: testAccFargateTaskDefinitionRuntimePlatformMinimalConfig(rName, false, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTaskDefinitionExists(resourceName, &def),
 					resource.TestCheckResourceAttr(resourceName, "runtime_platform.#", "1"),
@@ -272,7 +272,7 @@ func TestAccECSTaskDefinition_Fargate_withRuntimePlatformWithoutArch(t *testing.
 	})
 }
 
-func TestAccECSTaskDefinition_withEFSVolumeMinimal(t *testing.T) {
+func TestAccECSTaskDefinition_EFSVolume_minimal(t *testing.T) {
 	var def ecs.TaskDefinition
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -285,7 +285,7 @@ func TestAccECSTaskDefinition_withEFSVolumeMinimal(t *testing.T) {
 		CheckDestroy: testAccCheckTaskDefinitionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTaskDefinitionWithEFSVolumeMinimal(rName),
+				Config: testAccTaskDefinitionEFSVolumeMinimal(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTaskDefinitionExists(resourceName, &def),
 					resource.TestCheckResourceAttr(resourceName, "volume.#", "1"),
@@ -307,7 +307,7 @@ func TestAccECSTaskDefinition_withEFSVolumeMinimal(t *testing.T) {
 	})
 }
 
-func TestAccECSTaskDefinition_withEFSVolume(t *testing.T) {
+func TestAccECSTaskDefinition_EFSVolume_basic(t *testing.T) {
 	var def ecs.TaskDefinition
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -320,7 +320,7 @@ func TestAccECSTaskDefinition_withEFSVolume(t *testing.T) {
 		CheckDestroy: testAccCheckTaskDefinitionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTaskDefinitionWithEFSVolume(rName, "/home/test"),
+				Config: testAccTaskDefinitionEFSVolume(rName, "/home/test"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTaskDefinitionExists(resourceName, &def),
 					resource.TestCheckResourceAttr(resourceName, "volume.#", "1"),
@@ -343,7 +343,7 @@ func TestAccECSTaskDefinition_withEFSVolume(t *testing.T) {
 	})
 }
 
-func TestAccECSTaskDefinition_withTransitEncryptionEFSVolume(t *testing.T) {
+func TestAccECSTaskDefinition_EFSVolume_transitEncryption(t *testing.T) {
 	var def ecs.TaskDefinition
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -355,7 +355,7 @@ func TestAccECSTaskDefinition_withTransitEncryptionEFSVolume(t *testing.T) {
 		CheckDestroy: testAccCheckTaskDefinitionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTaskDefinitionWithTransitEncryptionEFSVolume(rName, "ENABLED", 2999),
+				Config: testAccTaskDefinitionTransitEncryptionEFSVolume(rName, "ENABLED", 2999),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTaskDefinitionExists(resourceName, &def),
 					resource.TestCheckResourceAttr(resourceName, "volume.#", "1"),
@@ -380,7 +380,7 @@ func TestAccECSTaskDefinition_withTransitEncryptionEFSVolume(t *testing.T) {
 	})
 }
 
-func TestAccECSTaskDefinition_withEFSAccessPoint(t *testing.T) {
+func TestAccECSTaskDefinition_EFSVolume_accessPoint(t *testing.T) {
 	var def ecs.TaskDefinition
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -393,7 +393,7 @@ func TestAccECSTaskDefinition_withEFSAccessPoint(t *testing.T) {
 		CheckDestroy: testAccCheckTaskDefinitionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTaskDefinitionWithEFSAccessPoint(rName, "DISABLED"),
+				Config: testAccTaskDefinitionEFSAccessPoint(rName, "DISABLED"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTaskDefinitionExists(resourceName, &def),
 					resource.TestCheckResourceAttr(resourceName, "volume.#", "1"),
@@ -421,7 +421,7 @@ func TestAccECSTaskDefinition_withEFSAccessPoint(t *testing.T) {
 	})
 }
 
-func TestAccECSTaskDefinition_withFSxWinFileSystem(t *testing.T) {
+func TestAccECSTaskDefinition_fsxWinFileSystem(t *testing.T) {
 	var def ecs.TaskDefinition
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -444,7 +444,7 @@ func TestAccECSTaskDefinition_withFSxWinFileSystem(t *testing.T) {
 		CheckDestroy: testAccCheckTaskDefinitionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTaskDefinitionWithFSxVolume(domainName, rName),
+				Config: testAccTaskDefinitionFSxVolume(domainName, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTaskDefinitionExists(resourceName, &def),
 					resource.TestCheckResourceAttr(resourceName, "volume.#", "1"),
@@ -470,7 +470,7 @@ func TestAccECSTaskDefinition_withFSxWinFileSystem(t *testing.T) {
 	})
 }
 
-func TestAccECSTaskDefinition_withTaskScopedDockerVolume(t *testing.T) {
+func TestAccECSTaskDefinition_DockerVolume_taskScoped(t *testing.T) {
 	var def ecs.TaskDefinition
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -483,7 +483,7 @@ func TestAccECSTaskDefinition_withTaskScopedDockerVolume(t *testing.T) {
 		CheckDestroy: testAccCheckTaskDefinitionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTaskDefinitionWithTaskScopedDockerVolume(rName),
+				Config: testAccTaskDefinitionTaskScopedDockerVolume(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTaskDefinitionExists(resourceName, &def),
 					testAccCheckTaskDefinitionDockerVolumeConfigurationAutoprovisionNil(&def),
@@ -502,12 +502,10 @@ func TestAccECSTaskDefinition_withTaskScopedDockerVolume(t *testing.T) {
 }
 
 // Regression for https://github.com/hashicorp/terraform/issues/2694
-func TestAccECSTaskDefinition_withECSService(t *testing.T) {
+func TestAccECSTaskDefinition_service(t *testing.T) {
 	var def ecs.TaskDefinition
 	var service ecs.Service
 
-	clusterName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	svcName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_task_definition.test"
 
@@ -518,14 +516,14 @@ func TestAccECSTaskDefinition_withECSService(t *testing.T) {
 		CheckDestroy: testAccCheckTaskDefinitionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTaskDefinitionWithEcsService(clusterName, svcName, rName),
+				Config: testAccTaskDefinitionService(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTaskDefinitionExists(resourceName, &def),
 					testAccCheckServiceExists("aws_ecs_service.test", &service),
 				),
 			},
 			{
-				Config: testAccTaskDefinitionWithEcsServiceModified(clusterName, svcName, rName),
+				Config: testAccTaskDefinitionServiceModified(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTaskDefinitionExists(resourceName, &def),
 					testAccCheckServiceExists("aws_ecs_service.test", &service),
@@ -542,11 +540,9 @@ func TestAccECSTaskDefinition_withECSService(t *testing.T) {
 	})
 }
 
-func TestAccECSTaskDefinition_withTaskRoleARN(t *testing.T) {
+func TestAccECSTaskDefinition_taskRoleARN(t *testing.T) {
 	var def ecs.TaskDefinition
 
-	roleName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	policyName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_task_definition.test"
 
@@ -557,7 +553,7 @@ func TestAccECSTaskDefinition_withTaskRoleARN(t *testing.T) {
 		CheckDestroy: testAccCheckTaskDefinitionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTaskDefinitionWithTaskRoleARN(roleName, policyName, rName),
+				Config: testAccTaskDefinitionTaskRoleARN(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTaskDefinitionExists(resourceName, &def),
 				),
@@ -573,11 +569,9 @@ func TestAccECSTaskDefinition_withTaskRoleARN(t *testing.T) {
 	})
 }
 
-func TestAccECSTaskDefinition_withNetworkMode(t *testing.T) {
+func TestAccECSTaskDefinition_networkMode(t *testing.T) {
 	var def ecs.TaskDefinition
 
-	roleName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	policyName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_task_definition.test"
 
@@ -588,7 +582,7 @@ func TestAccECSTaskDefinition_withNetworkMode(t *testing.T) {
 		CheckDestroy: testAccCheckTaskDefinitionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTaskDefinitionWithNetworkMode(roleName, policyName, rName),
+				Config: testAccTaskDefinitionNetworkMode(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTaskDefinitionExists(resourceName, &def),
 					resource.TestCheckResourceAttr(resourceName, "network_mode", "bridge"),
@@ -605,11 +599,9 @@ func TestAccECSTaskDefinition_withNetworkMode(t *testing.T) {
 	})
 }
 
-func TestAccECSTaskDefinition_withIPCMode(t *testing.T) {
+func TestAccECSTaskDefinition_ipcMode(t *testing.T) {
 	var def ecs.TaskDefinition
 
-	roleName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	policyName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_task_definition.test"
 
@@ -620,7 +612,7 @@ func TestAccECSTaskDefinition_withIPCMode(t *testing.T) {
 		CheckDestroy: testAccCheckTaskDefinitionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTaskDefinitionWithIPcMode(roleName, policyName, rName),
+				Config: testAccTaskDefinitionIPcMode(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTaskDefinitionExists(resourceName, &def),
 					resource.TestCheckResourceAttr(resourceName, "ipc_mode", "host"),
@@ -637,11 +629,9 @@ func TestAccECSTaskDefinition_withIPCMode(t *testing.T) {
 	})
 }
 
-func TestAccECSTaskDefinition_withPidMode(t *testing.T) {
+func TestAccECSTaskDefinition_pidMode(t *testing.T) {
 	var def ecs.TaskDefinition
 
-	roleName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	policyName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_task_definition.test"
 
@@ -652,7 +642,7 @@ func TestAccECSTaskDefinition_withPidMode(t *testing.T) {
 		CheckDestroy: testAccCheckTaskDefinitionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTaskDefinitionWithPidMode(roleName, policyName, rName),
+				Config: testAccTaskDefinitionPIDMode(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTaskDefinitionExists(resourceName, &def),
 					resource.TestCheckResourceAttr(resourceName, "pid_mode", "host"),
@@ -767,7 +757,7 @@ func TestAccECSTaskDefinition_arrays(t *testing.T) {
 	})
 }
 
-func TestAccECSTaskDefinition_fargate(t *testing.T) {
+func TestAccECSTaskDefinition_Fargate_basic(t *testing.T) {
 	var conf ecs.TaskDefinition
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -841,8 +831,6 @@ func TestAccECSTaskDefinition_Fargate_ephemeralStorage(t *testing.T) {
 func TestAccECSTaskDefinition_executionRole(t *testing.T) {
 	var conf ecs.TaskDefinition
 
-	roleName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	policyName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_task_definition.test"
 
@@ -853,7 +841,7 @@ func TestAccECSTaskDefinition_executionRole(t *testing.T) {
 		CheckDestroy: testAccCheckTaskDefinitionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTaskDefinitionExecutionRole(roleName, policyName, rName),
+				Config: testAccTaskDefinitionExecutionRole(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTaskDefinitionExists(resourceName, &conf),
 				),
@@ -1259,7 +1247,6 @@ resource "aws_ecs_task_definition" "test" {
 ]
 TASK_DEFINITION
 
-
   volume {
     name      = "jenkins-home"
     host_path = "/ecs/jenkins-home"
@@ -1317,7 +1304,6 @@ resource "aws_ecs_task_definition" "test" {
 ]
 TASK_DEFINITION
 
-
   volume {
     name      = "jenkins-home"
     host_path = "/ecs/jenkins-home"
@@ -1369,7 +1355,6 @@ resource "aws_ecs_task_definition" "test" {
 	}
 ]
 TASK_DEFINITION
-
 
   volume {
     name      = "jenkins-home"
@@ -1472,7 +1457,6 @@ resource "aws_ecs_task_definition" "test" {
 ]
 TASK_DEFINITION
 
-
   volume {
     name      = "vol1"
     host_path = "/host/vol1"
@@ -1547,7 +1531,7 @@ TASK_DEFINITION
 `, rName, portMappings)
 }
 
-func testAccTaskDefinitionExecutionRole(roleName, policyName, rName string) string {
+func testAccTaskDefinitionExecutionRole(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "test" {
   name = %[1]q
@@ -1570,7 +1554,7 @@ EOF
 }
 
 resource "aws_iam_policy" "test" {
-  name        = %[2]q
+  name        = %[1]q
   description = "A test policy"
 
   policy = <<EOF
@@ -1600,7 +1584,7 @@ resource "aws_iam_role_policy_attachment" "test" {
 }
 
 resource "aws_ecs_task_definition" "test" {
-  family             = %[3]q
+  family             = %[1]q
   execution_role_arn = aws_iam_role.test.arn
 
   container_definitions = <<TASK_DEFINITION
@@ -1616,10 +1600,10 @@ resource "aws_ecs_task_definition" "test" {
 ]
 TASK_DEFINITION
 }
-`, roleName, policyName, rName)
+`, rName)
 }
 
-func testAccTaskDefinitionWithScratchVolume(rName string) string {
+func testAccTaskDefinitionScratchVolume(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ecs_task_definition" "test" {
   family = %[1]q
@@ -1636,7 +1620,6 @@ resource "aws_ecs_task_definition" "test" {
   }
 ]
 TASK_DEFINITION
-
 
   volume {
     name = %[1]q
@@ -1645,7 +1628,7 @@ TASK_DEFINITION
 `, rName)
 }
 
-func testAccTaskDefinitionWithDockerVolumes(rName string) string {
+func testAccTaskDefinitionDockerVolumes(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ecs_task_definition" "test" {
   family = %[1]q
@@ -1662,7 +1645,6 @@ resource "aws_ecs_task_definition" "test" {
   }
 ]
 TASK_DEFINITION
-
 
   volume {
     name = %[1]q
@@ -1688,7 +1670,7 @@ TASK_DEFINITION
 `, rName)
 }
 
-func testAccTaskDefinitionWithDockerVolumesMinimalConfig(rName string) string {
+func testAccTaskDefinitionDockerVolumesMinimalConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ecs_task_definition" "test" {
   family = %[1]q
@@ -1706,7 +1688,6 @@ resource "aws_ecs_task_definition" "test" {
 ]
 TASK_DEFINITION
 
-
   volume {
     name = %[1]q
 
@@ -1718,7 +1699,7 @@ TASK_DEFINITION
 `, rName)
 }
 
-func testAccTaskDefinitionWithRuntimePlatformMinimalConfig(rName string) string {
+func testAccTaskDefinitionRuntimePlatformMinimalConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ecs_task_definition" "test" {
   family                = %[1]q
@@ -1742,7 +1723,7 @@ TASK_DEFINITION
 `, rName)
 }
 
-func testAccFargateTaskDefinitionWithRuntimePlatformMinimalConfig(rName string, architecture bool, osFamily bool) string {
+func testAccFargateTaskDefinitionRuntimePlatformMinimalConfig(rName string, architecture bool, osFamily bool) string {
 
 	var arch string
 	if architecture {
@@ -1787,7 +1768,7 @@ TASK_DEFINITION
 `, rName, arch, os)
 }
 
-func testAccTaskDefinitionWithTaskScopedDockerVolume(rName string) string {
+func testAccTaskDefinitionTaskScopedDockerVolume(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ecs_task_definition" "test" {
   family = %[1]q
@@ -1804,7 +1785,6 @@ resource "aws_ecs_task_definition" "test" {
   }
 ]
 TASK_DEFINITION
-
 
   volume {
     name = %[1]q
@@ -1817,7 +1797,7 @@ TASK_DEFINITION
 `, rName)
 }
 
-func testAccTaskDefinitionWithEFSVolumeMinimal(rName string) string {
+func testAccTaskDefinitionEFSVolumeMinimal(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_efs_file_system" "test" {
   creation_token = %[1]q
@@ -1838,7 +1818,6 @@ resource "aws_ecs_task_definition" "test" {
   }
 ]
 TASK_DEFINITION
-
 
   volume {
     name = %[1]q
@@ -1851,7 +1830,7 @@ TASK_DEFINITION
 `, rName)
 }
 
-func testAccTaskDefinitionWithEFSVolume(rName, rDir string) string {
+func testAccTaskDefinitionEFSVolume(rName, rDir string) string {
 	return fmt.Sprintf(`
 resource "aws_efs_file_system" "test" {
   creation_token = %[1]q
@@ -1872,7 +1851,6 @@ resource "aws_ecs_task_definition" "test" {
   }
 ]
 TASK_DEFINITION
-
 
   volume {
     name = %[1]q
@@ -1886,7 +1864,7 @@ TASK_DEFINITION
 `, rName, rDir)
 }
 
-func testAccTaskDefinitionWithTransitEncryptionEFSVolume(rName, tEnc string, tEncPort int) string {
+func testAccTaskDefinitionTransitEncryptionEFSVolume(rName, tEnc string, tEncPort int) string {
 	return fmt.Sprintf(`
 resource "aws_efs_file_system" "test" {
   creation_token = %[1]q
@@ -1907,7 +1885,6 @@ resource "aws_ecs_task_definition" "test" {
   }
 ]
 TASK_DEFINITION
-
 
   volume {
     name = %[1]q
@@ -1923,7 +1900,7 @@ TASK_DEFINITION
 `, rName, tEnc, tEncPort)
 }
 
-func testAccTaskDefinitionWithEFSAccessPoint(rName, useIam string) string {
+func testAccTaskDefinitionEFSAccessPoint(rName, useIam string) string {
 	return fmt.Sprintf(`
 resource "aws_efs_file_system" "test" {
   creation_token = %[1]q
@@ -1953,7 +1930,6 @@ resource "aws_ecs_task_definition" "test" {
 ]
 TASK_DEFINITION
 
-
   volume {
     name = %[1]q
 
@@ -1971,7 +1947,7 @@ TASK_DEFINITION
 `, rName, useIam)
 }
 
-func testAccTaskDefinitionWithTaskRoleARN(roleName, policyName, rName string) string {
+func testAccTaskDefinitionTaskRoleARN(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "test" {
   name = %[1]q
@@ -1997,7 +1973,7 @@ EOF
 data "aws_partition" "current" {}
 
 resource "aws_iam_role_policy" "test" {
-  name = %[2]q
+  name = %[1]q
   role = aws_iam_role.test.id
 
   policy = <<EOF
@@ -2018,7 +1994,7 @@ EOF
 }
 
 resource "aws_ecs_task_definition" "test" {
-  family        = %[3]q
+  family        = %[1]q
   task_role_arn = aws_iam_role.test.arn
 
   container_definitions = <<TASK_DEFINITION
@@ -2034,15 +2010,14 @@ resource "aws_ecs_task_definition" "test" {
 ]
 TASK_DEFINITION
 
-
   volume {
-    name = %[3]q
+    name = %[1]q
   }
 }
-`, roleName, policyName, rName)
+`, rName)
 }
 
-func testAccTaskDefinitionWithIPcMode(roleName, policyName, rName string) string {
+func testAccTaskDefinitionIPcMode(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "test" {
   name = %[1]q
@@ -2068,7 +2043,7 @@ EOF
 data "aws_partition" "current" {}
 
 resource "aws_iam_role_policy" "test" {
-  name = %[2]q
+  name = %[1]q
   role = aws_iam_role.test.id
 
   policy = <<EOF
@@ -2090,7 +2065,7 @@ EOF
 }
 
 resource "aws_ecs_task_definition" "test" {
-  family        = %[3]q
+  family        = %[1]q
   task_role_arn = aws_iam_role.test.arn
   network_mode  = "bridge"
   ipc_mode      = "host"
@@ -2108,15 +2083,14 @@ resource "aws_ecs_task_definition" "test" {
 ]
 TASK_DEFINITION
 
-
   volume {
-    name = %[3]q
+    name = %[1]q
   }
 }
-`, roleName, policyName, rName)
+`, rName)
 }
 
-func testAccTaskDefinitionWithPidMode(roleName, policyName, rName string) string {
+func testAccTaskDefinitionPIDMode(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "test" {
   name = %[1]q
@@ -2142,7 +2116,7 @@ EOF
 data "aws_partition" "current" {}
 
 resource "aws_iam_role_policy" "test" {
-  name = %[2]q
+  name = %[1]q
   role = aws_iam_role.test.id
 
   policy = <<EOF
@@ -2164,7 +2138,7 @@ EOF
 }
 
 resource "aws_ecs_task_definition" "test" {
-  family        = %[3]q
+  family        = %[1]q
   task_role_arn = aws_iam_role.test.arn
   network_mode  = "bridge"
   pid_mode      = "host"
@@ -2182,15 +2156,14 @@ resource "aws_ecs_task_definition" "test" {
 ]
 TASK_DEFINITION
 
-
   volume {
-    name = %[3]q
+    name = %[1]q
   }
 }
-`, roleName, policyName, rName)
+`, rName)
 }
 
-func testAccTaskDefinitionWithNetworkMode(roleName, policyName, rName string) string {
+func testAccTaskDefinitionNetworkMode(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "test" {
   name = %[1]q
@@ -2216,7 +2189,7 @@ EOF
 data "aws_partition" "current" {}
 
 resource "aws_iam_role_policy" "test" {
-  name = %[2]q
+  name = %[1]q
   role = aws_iam_role.test.id
 
   policy = <<EOF
@@ -2238,7 +2211,7 @@ EOF
 }
 
 resource "aws_ecs_task_definition" "test" {
-  family        = %[3]q
+  family        = %[1]q
   task_role_arn = aws_iam_role.test.arn
   network_mode  = "bridge"
 
@@ -2255,29 +2228,28 @@ resource "aws_ecs_task_definition" "test" {
 ]
 TASK_DEFINITION
 
-
   volume {
-    name = %[3]q
+    name = %[1]q
   }
 }
-`, roleName, policyName, rName)
+`, rName)
 }
 
-func testAccTaskDefinitionWithEcsService(clusterName, svcName, rName string) string {
+func testAccTaskDefinitionService(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ecs_cluster" "test" {
   name = %[1]q
 }
 
 resource "aws_ecs_service" "test" {
-  name            = %[2]q
+  name            = %[1]q
   cluster         = aws_ecs_cluster.test.id
   task_definition = aws_ecs_task_definition.test.arn
   desired_count   = 1
 }
 
 resource "aws_ecs_task_definition" "test" {
-  family = %[3]q
+  family = %[1]q
 
   container_definitions = <<TASK_DEFINITION
 [
@@ -2292,29 +2264,28 @@ resource "aws_ecs_task_definition" "test" {
 ]
 TASK_DEFINITION
 
-
   volume {
-    name = %[3]q
+    name = %[1]q
   }
 }
-`, clusterName, svcName, rName)
+`, rName)
 }
 
-func testAccTaskDefinitionWithEcsServiceModified(clusterName, svcName, rName string) string {
+func testAccTaskDefinitionServiceModified(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ecs_cluster" "test" {
   name = %[1]q
 }
 
 resource "aws_ecs_service" "test" {
-  name            = %[2]q
+  name            = %[1]q
   cluster         = aws_ecs_cluster.test.id
   task_definition = aws_ecs_task_definition.test.arn
   desired_count   = 1
 }
 
 resource "aws_ecs_task_definition" "test" {
-  family = %[3]q
+  family = %[1]q
 
   container_definitions = <<TASK_DEFINITION
 [
@@ -2329,12 +2300,11 @@ resource "aws_ecs_task_definition" "test" {
 ]
 TASK_DEFINITION
 
-
   volume {
-    name = %[3]q
+    name = %[1]q
   }
 }
-`, clusterName, svcName, rName)
+`, rName)
 }
 
 func testAccTaskDefinitionModified(rName string) string {
@@ -2380,7 +2350,6 @@ resource "aws_ecs_task_definition" "test" {
 	}
 ]
 TASK_DEFINITION
-
 
   volume {
     name      = "jenkins-home"
@@ -2507,7 +2476,6 @@ resource "aws_ecs_task_definition" "test" {
 ]
 TASK_DEFINITION
 
-
   inference_accelerator {
     device_name = "device_1"
     device_type = "eia1.medium"
@@ -2516,7 +2484,7 @@ TASK_DEFINITION
 `, rName)
 }
 
-func testAccTaskDefinitionWithFSxVolume(domain, rName string) string {
+func testAccTaskDefinitionFSxVolume(domain, rName string) string {
 	return acctest.ConfigCompose(
 		testAccFSxWindowsFileSystemSubnetIds1Config(domain),
 		fmt.Sprintf(`
@@ -2581,7 +2549,6 @@ resource "aws_ecs_task_definition" "test" {
   }
 ]
 TASK_DEFINITION
-
 
   volume {
     name = %[1]q
