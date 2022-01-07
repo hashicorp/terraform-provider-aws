@@ -520,9 +520,11 @@ func flattenFsxOpenzfsVolumeNfsExports(rs []*fsx.OpenZFSNfsExport) []map[string]
 	exports := make([]map[string]interface{}, 0)
 
 	for _, export := range rs {
-		cfg := make(map[string]interface{})
-		cfg["client_configurations"] = flattenFsxOpenzfsVolumeClientConfigurations(export.ClientConfigurations)
-		exports = append(exports, cfg)
+		if export != nil {
+			cfg := make(map[string]interface{})
+			cfg["client_configurations"] = flattenFsxOpenzfsVolumeClientConfigurations(export.ClientConfigurations)
+			exports = append(exports, cfg)
+		}
 	}
 
 	if len(exports) > 0 {
@@ -536,10 +538,12 @@ func flattenFsxOpenzfsVolumeClientConfigurations(rs []*fsx.OpenZFSClientConfigur
 	configurations := make([]map[string]interface{}, 0)
 
 	for _, configuration := range rs {
-		cfg := make(map[string]interface{})
-		cfg["clients"] = aws.StringValue(configuration.Clients)
-		cfg["options"] = flex.FlattenStringList(configuration.Options)
-		configurations = append(configurations, cfg)
+		if configuration != nil {
+			cfg := make(map[string]interface{})
+			cfg["clients"] = aws.StringValue(configuration.Clients)
+			cfg["options"] = flex.FlattenStringList(configuration.Options)
+			configurations = append(configurations, cfg)
+		}
 	}
 
 	if len(configurations) > 0 {
@@ -553,11 +557,13 @@ func flattenFsxOpenzfsVolumeUserAndGroupQuotas(rs []*fsx.OpenZFSUserOrGroupQuota
 	quotas := make([]map[string]interface{}, 0)
 
 	for _, quota := range rs {
-		cfg := make(map[string]interface{})
-		cfg["id"] = aws.Int64Value(quota.Id)
-		cfg["storage_capacity_quota_gib"] = aws.Int64Value(quota.StorageCapacityQuotaGiB)
-		cfg["type"] = aws.StringValue(quota.Type)
-		quotas = append(quotas, cfg)
+		if quota != nil {
+			cfg := make(map[string]interface{})
+			cfg["id"] = aws.Int64Value(quota.Id)
+			cfg["storage_capacity_quota_gib"] = aws.Int64Value(quota.StorageCapacityQuotaGiB)
+			cfg["type"] = aws.StringValue(quota.Type)
+			quotas = append(quotas, cfg)
+		}
 	}
 
 	if len(quotas) > 0 {
