@@ -38,8 +38,8 @@ func TestAccCognitoIDPUserPoolClientDataSource_basic(t *testing.T) {
 func testAccUserPoolClientConfigDataSource_basic(rName string) string {
 	return testAccUserPoolClientConfig_basic(rName) + `
 data "aws_cognito_user_pool_client" "test" {
-	user_pool_id = aws_cognito_user_pool.test.id
-	client_id 	 = aws_cognito_user_pool_client.test.id
+  user_pool_id = aws_cognito_user_pool.test.id
+  client_id    = aws_cognito_user_pool_client.test.id
 }
 `
 }
