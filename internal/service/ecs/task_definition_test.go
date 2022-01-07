@@ -1020,24 +1020,24 @@ func testAccTaskDefinitionProxyConfigurationConfig(rName string, containerName s
 
 	return fmt.Sprintf(`
 resource "aws_ecs_cluster" "test" {
-  name = %q
+  name = %[1]q
 }
 
 resource "aws_ecs_task_definition" "test" {
-  family       = %q
+  family       = %[1]q
   network_mode = "awsvpc"
 
   proxy_configuration {
-    type           = %q
-    container_name = %q
+    type           = %[2]q
+    container_name = %[3]q
     properties = {
-      IgnoredUID         = %q
-      IgnoredGID         = %q
-      AppPorts           = %q
-      ProxyIngressPort   = %q
-      ProxyEgressPort    = %q
-      EgressIgnoredPorts = %q
-      EgressIgnoredIPs   = %q
+      IgnoredUID         = %[4]q
+      IgnoredGID         = %[5]q
+      AppPorts           = %[6]q
+      ProxyIngressPort   = %[7]q
+      ProxyEgressPort    = %[8]q
+      EgressIgnoredPorts = %[9]q
+      EgressIgnoredIPs   = %[10]q
     }
   }
 
@@ -1048,12 +1048,12 @@ resource "aws_ecs_task_definition" "test" {
     "essential": true,
     "image": "nginx:latest",
     "memory": 128,
-    "name": %q
+    "name": %[11]q
   }
 ]
 DEFINITION
 }
-`, rName, rName, proxyType, containerName, ignoredUid, ignoredGid, appPorts, proxyIngressPort, proxyEgressPort, egressIgnoredPorts, egressIgnoredIPs, containerName)
+`, rName, proxyType, containerName, ignoredUid, ignoredGid, appPorts, proxyIngressPort, proxyEgressPort, egressIgnoredPorts, egressIgnoredIPs, containerName)
 }
 
 func testAccCheckTaskDefinitionProxyConfiguration(after *ecs.TaskDefinition, containerName string, proxyType string,
@@ -1218,7 +1218,7 @@ func testAccCheckTaskDefinitionDockerVolumeConfigurationAutoprovisionNil(def *ec
 func testAccTaskDefinition_constraint(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 resource "aws_ecs_task_definition" "test" {
-  family = "%s"
+  family = %[1]q
 
   container_definitions = <<TASK_DEFINITION
 [
@@ -1276,7 +1276,7 @@ TASK_DEFINITION
 func testAccTaskDefinition(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ecs_task_definition" "test" {
-  family = "%s"
+  family = %[1]q
 
   container_definitions = <<TASK_DEFINITION
 [
@@ -1329,7 +1329,7 @@ TASK_DEFINITION
 func testAccTaskDefinitionUpdatedVolume(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ecs_task_definition" "test" {
-  family = "%s"
+  family = %[1]q
 
   container_definitions = <<TASK_DEFINITION
 [
@@ -1382,7 +1382,7 @@ TASK_DEFINITION
 func testAccTaskDefinitionArrays(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ecs_task_definition" "test" {
-  family = "%s"
+  family = %[1]q
 
   container_definitions = <<TASK_DEFINITION
 [
@@ -1494,7 +1494,7 @@ TASK_DEFINITION
 func testAccTaskDefinitionFargate(rName, portMappings string) string {
 	return fmt.Sprintf(`
 resource "aws_ecs_task_definition" "test" {
-  family                   = "%s"
+  family                   = %[1]q
   network_mode             = "awsvpc"
   requires_compatibilities = ["FARGATE"]
   cpu                      = "256"
@@ -1509,7 +1509,7 @@ resource "aws_ecs_task_definition" "test" {
     "command": ["sleep","360"],
     "memory": 10,
     "essential": true,
-    "portMappings": %s
+    "portMappings": %[2]s
   }
 ]
 TASK_DEFINITION
@@ -1520,7 +1520,7 @@ TASK_DEFINITION
 func testAccTaskDefinitionFargateEphemeralStorage(rName, portMappings string) string {
 	return fmt.Sprintf(`
 resource "aws_ecs_task_definition" "test" {
-  family                   = "%s"
+  family                   = %[1]q
   network_mode             = "awsvpc"
   requires_compatibilities = ["FARGATE"]
   cpu                      = "256"
@@ -1539,7 +1539,7 @@ resource "aws_ecs_task_definition" "test" {
     "command": ["sleep","360"],
     "memory": 10,
     "essential": true,
-    "portMappings": %s
+    "portMappings": %[2]s
   }
 ]
 TASK_DEFINITION
@@ -1550,7 +1550,7 @@ TASK_DEFINITION
 func testAccTaskDefinitionExecutionRole(roleName, policyName, rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "test" {
-  name = "%s"
+  name = %[1]q
 
   assume_role_policy = <<EOF
 {
@@ -1570,7 +1570,7 @@ EOF
 }
 
 resource "aws_iam_policy" "test" {
-  name        = "%s"
+  name        = %[2]q
   description = "A test policy"
 
   policy = <<EOF
@@ -1600,7 +1600,7 @@ resource "aws_iam_role_policy_attachment" "test" {
 }
 
 resource "aws_ecs_task_definition" "test" {
-  family             = "%s"
+  family             = %[3]q
   execution_role_arn = aws_iam_role.test.arn
 
   container_definitions = <<TASK_DEFINITION
@@ -2340,7 +2340,7 @@ TASK_DEFINITION
 func testAccTaskDefinitionModified(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ecs_task_definition" "test" {
-  family = "%s"
+  family = %[1]q
 
   container_definitions = <<TASK_DEFINITION
 [
@@ -2419,11 +2419,11 @@ var testValidTaskDefinitionInvalidCommandContainerDefinitions = `
 func testAccTaskDefinitionTags1Config(rName, tag1Key, tag1Value string) string {
 	return fmt.Sprintf(`
 resource "aws_ecs_cluster" "test" {
-  name = %q
+  name = %[1]q
 }
 
 resource "aws_ecs_task_definition" "test" {
-  family = %q
+  family = %[1]q
 
   container_definitions = <<DEFINITION
 [
@@ -2438,20 +2438,20 @@ resource "aws_ecs_task_definition" "test" {
 DEFINITION
 
   tags = {
-    %q = %q
+    %[2]q = %[3]q
   }
 }
-`, rName, rName, tag1Key, tag1Value)
+`, rName, tag1Key, tag1Value)
 }
 
 func testAccTaskDefinitionTags2Config(rName, tag1Key, tag1Value, tag2Key, tag2Value string) string {
 	return fmt.Sprintf(`
 resource "aws_ecs_cluster" "test" {
-  name = %q
+  name = %[1]q
 }
 
 resource "aws_ecs_task_definition" "test" {
-  family = %q
+  family = %[1]q
 
   container_definitions = <<DEFINITION
 [
@@ -2466,17 +2466,17 @@ resource "aws_ecs_task_definition" "test" {
 DEFINITION
 
   tags = {
-    %q = %q
-    %q = %q
+    %[2]q = %[3]q
+    %[4]q = %[5]q
   }
 }
-`, rName, rName, tag1Key, tag1Value, tag2Key, tag2Value)
+`, rName, tag1Key, tag1Value, tag2Key, tag2Value)
 }
 
 func testAccTaskDefinitionInferenceAcceleratorConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ecs_task_definition" "test" {
-  family = "%s"
+  family = %[1]q
 
   container_definitions = <<TASK_DEFINITION
 [
