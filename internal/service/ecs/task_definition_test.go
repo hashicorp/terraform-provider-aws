@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/service/ecs"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -174,7 +175,7 @@ func TestAccECSTaskDefinition_withRuntimePlatform(t *testing.T) {
 	resourceName := "aws_ecs_task_definition.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartition(endpoints.AwsPartitionID, t) }, // runtime platform not support on GovCloud
 		ErrorCheck:   acctest.ErrorCheck(t, ecs.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckTaskDefinitionDestroy,
@@ -207,7 +208,7 @@ func TestAccECSTaskDefinition_Fargate_withRuntimePlatform(t *testing.T) {
 	resourceName := "aws_ecs_task_definition.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartition(endpoints.AwsPartitionID, t) }, // runtime platform not support on GovCloud
 		ErrorCheck:   acctest.ErrorCheck(t, ecs.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckTaskDefinitionDestroy,
@@ -240,7 +241,7 @@ func TestAccECSTaskDefinition_Fargate_withRuntimePlatformWithoutArch(t *testing.
 	resourceName := "aws_ecs_task_definition.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartition(endpoints.AwsPartitionID, t) }, // runtime platform not support on GovCloud
 		ErrorCheck:   acctest.ErrorCheck(t, ecs.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckTaskDefinitionDestroy,
