@@ -59,6 +59,11 @@ func init() {
 		F: sweepEBSVolumes,
 	})
 
+	resource.AddTestSweepers("aws_ebs_snapshot", &resource.Sweeper{
+		Name: "aws_ebs_snapshot",
+		F:    sweepEBSnapshots,
+	})
+
 	resource.AddTestSweepers("aws_egress_only_internet_gateway", &resource.Sweeper{
 		Name: "aws_egress_only_internet_gateway",
 		F:    sweepEgressOnlyInternetGateways,
@@ -557,6 +562,50 @@ func sweepEBSVolumes(region string) error {
 	}
 
 	return nil
+}
+
+func sweepEBSnapshots(region string) error {
+	client, err := sweep.SharedRegionalSweepClient(region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %s", err)
+	}
+	conn := client.(*conns.AWSClient).EC2Conn
+	sweepResources := make([]*sweep.SweepResource, 0)
+	var errs *multierror.Error
+
+	input := &ec2.DescribeSnapshotsInput{
+		Filters: []*ec2.Filter{
+			{
+				Name:   aws.String("owner-id"),
+				Values: aws.StringSlice([]string{client.(*conns.AWSClient).AccountID}),
+			},
+		},
+	}
+
+	err = conn.DescribeSnapshotsPages(input, func(page *ec2.DescribeSnapshotsOutput, lastPage bool) bool {
+		for _, volume := range page.Snapshots {
+			id := aws.StringValue(volume.SnapshotId)
+
+			r := ResourceEBSSnapshot()
+			d := r.Data(nil)
+			d.SetId(id)
+
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+		}
+
+		return !lastPage
+	})
+
+	if err = sweep.SweepOrchestrator(sweepResources); err != nil {
+		errs = multierror.Append(errs, fmt.Errorf("error sweeping EC2 EBS Snapshots for %s: %w", region, err))
+	}
+
+	if sweep.SkipSweepError(errs.ErrorOrNil()) {
+		log.Printf("[WARN] Skipping EC2 EBS Snapshot sweep for %s: %s", region, errs)
+		return nil
+	}
+
+	return errs.ErrorOrNil()
 }
 
 func sweepEgressOnlyInternetGateways(region string) error {

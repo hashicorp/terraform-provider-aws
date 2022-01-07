@@ -1169,10 +1169,11 @@ func WaitVPCEndpointRouteTableAssociationReady(conn *ec2.EC2, vpcEndpointID, rou
 
 func WaitEBSSnapshotImportComplete(conn *ec2.EC2, importTaskID string) (*ec2.SnapshotTaskDetail, error) {
 	stateConf := &resource.StateChangeConf{
-		Pending: []string{EBSSnapshotImportStateActive,
+		Pending: []string{
+			EBSSnapshotImportStateActive,
 			EBSSnapshotImportStateUpdating,
 			EBSSnapshotImportStateValidating,
-			EBSSnapshotImportStateValidd,
+			EBSSnapshotImportStateValidated,
 			EBSSnapshotImportStateConverting,
 		},
 		Target:  []string{EBSSnapshotImportStateCompleted},
@@ -1181,12 +1182,15 @@ func WaitEBSSnapshotImportComplete(conn *ec2.EC2, importTaskID string) (*ec2.Sna
 		Delay:   10 * time.Second,
 	}
 
-	detail, err := stateConf.WaitForState()
-	if err != nil {
-		return nil, err
-	} else {
-		return detail.(*ec2.SnapshotTaskDetail), nil
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*ec2.SnapshotTaskDetail); ok {
+		tfresource.SetLastError(err, errors.New(aws.StringValue(output.StatusMessage)))
+
+		return output, err
 	}
+
+	return nil, err
 }
 
 func waitVPCEndpointConnectionAccepted(conn *ec2.EC2, serviceID, vpcEndpointID string, timeout time.Duration) (*ec2.VpcEndpointConnection, error) {
@@ -1206,4 +1210,21 @@ func waitVPCEndpointConnectionAccepted(conn *ec2.EC2, serviceID, vpcEndpointID s
 	}
 
 	return nil, err
+}
+
+func WaitEBSSnapshotTierArchive(conn *ec2.EC2, id string) (*ec2.SnapshotTierStatus, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{"standard"},
+		Target:  []string{ec2.TargetStorageTierArchive},
+		Refresh: StatusSnapshotTierStatus(conn, id),
+		Timeout: 60 * time.Minute,
+		Delay:   10 * time.Second,
+	}
+
+	detail, err := stateConf.WaitForState()
+	if err != nil {
+		return nil, err
+	} else {
+		return detail.(*ec2.SnapshotTierStatus), nil
+	}
 }
