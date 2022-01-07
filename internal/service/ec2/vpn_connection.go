@@ -21,46 +21,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-type XmlVpnConnectionConfig struct {
-	Tunnels []XmlIpsecTunnel `xml:"ipsec_tunnel"`
-}
-
-type XmlIpsecTunnel struct {
-	OutsideAddress   string `xml:"vpn_gateway>tunnel_outside_address>ip_address"`
-	BGPASN           string `xml:"vpn_gateway>bgp>asn"`
-	BGPHoldTime      int    `xml:"vpn_gateway>bgp>hold_time"`
-	PreSharedKey     string `xml:"ike>pre_shared_key"`
-	CgwInsideAddress string `xml:"customer_gateway>tunnel_inside_address>ip_address"`
-	VgwInsideAddress string `xml:"vpn_gateway>tunnel_inside_address>ip_address"`
-}
-
-type TunnelInfo struct {
-	Tunnel1Address          string
-	Tunnel1CgwInsideAddress string
-	Tunnel1VgwInsideAddress string
-	Tunnel1PreSharedKey     string
-	Tunnel1BGPASN           string
-	Tunnel1BGPHoldTime      int
-	Tunnel2Address          string
-	Tunnel2CgwInsideAddress string
-	Tunnel2VgwInsideAddress string
-	Tunnel2PreSharedKey     string
-	Tunnel2BGPASN           string
-	Tunnel2BGPHoldTime      int
-}
-
-func (slice XmlVpnConnectionConfig) Len() int {
-	return len(slice.Tunnels)
-}
-
-func (slice XmlVpnConnectionConfig) Less(i, j int) bool {
-	return slice.Tunnels[i].OutsideAddress < slice.Tunnels[j].OutsideAddress
-}
-
-func (slice XmlVpnConnectionConfig) Swap(i, j int) {
-	slice.Tunnels[i], slice.Tunnels[j] = slice.Tunnels[j], slice.Tunnels[i]
-}
-
 func ResourceVPNConnection() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceVPNConnectionCreate,
@@ -576,32 +536,44 @@ func resourceVPNConnectionRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("tunnel_inside_ip_version", nil)
 	}
 
-	// Set read only attributes.
 	d.Set("customer_gateway_configuration", vpnConnection.CustomerGatewayConfiguration)
-
+	// This element is present in the DescribeVpnConnections response only if the VPN connection is in the pending or available state.
 	if vpnConnection.CustomerGatewayConfiguration != nil {
-		tunnelInfo, err := XmlConfigToTunnelInfo(
+		tunnelInfo, err := CustomerGatewayConfigurationToTunnelInfo(
 			aws.StringValue(vpnConnection.CustomerGatewayConfiguration),
-			d.Get("tunnel1_preshared_key").(string),    // Not currently available during import
-			d.Get("tunnel1_inside_cidr").(string),      // Not currently available during import
-			d.Get("tunnel1_inside_ipv6_cidr").(string), // Not currently available during import
+			d.Get("tunnel1_preshared_key").(string), // Not currently available during import
+			d.Get("tunnel1_inside_cidr").(string),
+			d.Get("tunnel1_inside_ipv6_cidr").(string),
 		)
 
-		if err != nil {
-			log.Printf("[ERR] Error unmarshaling XML configuration for (%s): %s", d.Id(), err)
-		} else {
+		if err == nil {
 			d.Set("tunnel1_address", tunnelInfo.Tunnel1Address)
-			d.Set("tunnel1_cgw_inside_address", tunnelInfo.Tunnel1CgwInsideAddress)
-			d.Set("tunnel1_vgw_inside_address", tunnelInfo.Tunnel1VgwInsideAddress)
-			d.Set("tunnel1_preshared_key", tunnelInfo.Tunnel1PreSharedKey)
 			d.Set("tunnel1_bgp_asn", tunnelInfo.Tunnel1BGPASN)
 			d.Set("tunnel1_bgp_holdtime", tunnelInfo.Tunnel1BGPHoldTime)
+			d.Set("tunnel1_cgw_inside_address", tunnelInfo.Tunnel1CgwInsideAddress)
+			d.Set("tunnel1_preshared_key", tunnelInfo.Tunnel1PreSharedKey)
+			d.Set("tunnel1_vgw_inside_address", tunnelInfo.Tunnel1VgwInsideAddress)
 			d.Set("tunnel2_address", tunnelInfo.Tunnel2Address)
-			d.Set("tunnel2_preshared_key", tunnelInfo.Tunnel2PreSharedKey)
-			d.Set("tunnel2_cgw_inside_address", tunnelInfo.Tunnel2CgwInsideAddress)
-			d.Set("tunnel2_vgw_inside_address", tunnelInfo.Tunnel2VgwInsideAddress)
 			d.Set("tunnel2_bgp_asn", tunnelInfo.Tunnel2BGPASN)
 			d.Set("tunnel2_bgp_holdtime", tunnelInfo.Tunnel2BGPHoldTime)
+			d.Set("tunnel2_cgw_inside_address", tunnelInfo.Tunnel2CgwInsideAddress)
+			d.Set("tunnel2_preshared_key", tunnelInfo.Tunnel2PreSharedKey)
+			d.Set("tunnel2_vgw_inside_address", tunnelInfo.Tunnel2VgwInsideAddress)
+		} else {
+			log.Printf("[ERROR] Error unmarshaling Customer Gateway XML configuration for (%s): %s", d.Id(), err)
+
+			d.Set("tunnel1_address", nil)
+			d.Set("tunnel1_bgp_asn", nil)
+			d.Set("tunnel1_bgp_holdtime", nil)
+			d.Set("tunnel1_cgw_inside_address", nil)
+			d.Set("tunnel1_preshared_key", nil)
+			d.Set("tunnel1_vgw_inside_address", nil)
+			d.Set("tunnel2_address", nil)
+			d.Set("tunnel2_bgp_asn", nil)
+			d.Set("tunnel2_bgp_holdtime", nil)
+			d.Set("tunnel2_cgw_inside_address", nil)
+			d.Set("tunnel2_preshared_key", nil)
+			d.Set("tunnel2_vgw_inside_address", nil)
 		}
 	}
 
@@ -643,7 +615,7 @@ func resourceVPNConnectionUpdate(d *schema.ResourceData, meta interface{}) error
 		}
 	}
 
-	for _, prefix := range []string{"tunnel1_", "tunnel2_"} {
+	for i, prefix := range []string{"tunnel1_", "tunnel2_"} {
 		if options, address := expandModifyVpnTunnelOptionsSpecification(d, prefix), d.Get(prefix+"_address").(string); options != nil && address != "" {
 			input := &ec2.ModifyVpnTunnelOptionsInput{
 				TunnelOptions:             options,
@@ -651,15 +623,15 @@ func resourceVPNConnectionUpdate(d *schema.ResourceData, meta interface{}) error
 				VpnTunnelOutsideIpAddress: aws.String(address),
 			}
 
-			log.Printf("[DEBUG] Modifying EC2 VPN Connection tunnel options: %s", input)
+			log.Printf("[DEBUG] Modifying EC2 VPN Connection tunnel (%d) options: %s", i+1, input)
 			_, err := conn.ModifyVpnTunnelOptions(input)
 
 			if err != nil {
-				return fmt.Errorf("error modifying EC2 VPN Connection (%s) tunnel options: %w", d.Id(), err)
+				return fmt.Errorf("error modifying EC2 VPN Connection (%s) tunnel (%d) options: %w", d.Id(), i+1, err)
 			}
 
 			if _, err := WaitVPNConnectionUpdated(conn, d.Id()); err != nil {
-				return fmt.Errorf("error waiting for EC2 VPN Connection (%s) tunnel options update: %w", d.Id(), err)
+				return fmt.Errorf("error waiting for EC2 VPN Connection (%s) tunnel (%d) options update: %w", d.Id(), i+1, err)
 			}
 		}
 	}
@@ -1099,11 +1071,54 @@ func flattenVgwTelemetries(apiObjects []*ec2.VgwTelemetry) []interface{} {
 	return tfList
 }
 
+type XmlVpnConnectionConfig struct {
+	Tunnels []XmlIpsecTunnel `xml:"ipsec_tunnel"`
+}
+
+type XmlIpsecTunnel struct {
+	BGPASN           string `xml:"vpn_gateway>bgp>asn"`
+	BGPHoldTime      int    `xml:"vpn_gateway>bgp>hold_time"`
+	CgwInsideAddress string `xml:"customer_gateway>tunnel_inside_address>ip_address"`
+	OutsideAddress   string `xml:"vpn_gateway>tunnel_outside_address>ip_address"`
+	PreSharedKey     string `xml:"ike>pre_shared_key"`
+	VgwInsideAddress string `xml:"vpn_gateway>tunnel_inside_address>ip_address"`
+}
+
+type TunnelInfo struct {
+	Tunnel1Address          string
+	Tunnel1BGPASN           string
+	Tunnel1BGPHoldTime      int
+	Tunnel1CgwInsideAddress string
+	Tunnel1PreSharedKey     string
+	Tunnel1VgwInsideAddress string
+	Tunnel2Address          string
+	Tunnel2BGPASN           string
+	Tunnel2BGPHoldTime      int
+	Tunnel2CgwInsideAddress string
+	Tunnel2PreSharedKey     string
+	Tunnel2VgwInsideAddress string
+}
+
+func (slice XmlVpnConnectionConfig) Len() int {
+	return len(slice.Tunnels)
+}
+
+func (slice XmlVpnConnectionConfig) Less(i, j int) bool {
+	return slice.Tunnels[i].OutsideAddress < slice.Tunnels[j].OutsideAddress
+}
+
+func (slice XmlVpnConnectionConfig) Swap(i, j int) {
+	slice.Tunnels[i], slice.Tunnels[j] = slice.Tunnels[j], slice.Tunnels[i]
+}
+
+// CustomerGatewayConfigurationToTunnelInfo converts the configuration information for the
+// VPN connection's customer gateway (in the native XML format) to a TunnelInfo structure.
 // The tunnel1 parameters are optionally used to correctly order tunnel configurations.
-func XmlConfigToTunnelInfo(xmlConfig string, tunnel1PreSharedKey string, tunnel1InsideCidr string, tunnel1InsideIpv6Cidr string) (*TunnelInfo, error) {
+func CustomerGatewayConfigurationToTunnelInfo(xmlConfig string, tunnel1PreSharedKey string, tunnel1InsideCidr string, tunnel1InsideIpv6Cidr string) (*TunnelInfo, error) {
 	var vpnConfig XmlVpnConnectionConfig
+
 	if err := xml.Unmarshal([]byte(xmlConfig), &vpnConfig); err != nil {
-		return nil, fmt.Errorf("Error Unmarshalling XML: %s", err)
+		return nil, err
 	}
 
 	// XML tunnel ordering was commented here as being inconsistent since
@@ -1138,22 +1153,22 @@ func XmlConfigToTunnelInfo(xmlConfig string, tunnel1PreSharedKey string, tunnel1
 		sort.Sort(vpnConfig)
 	}
 
-	tunnelInfo := TunnelInfo{
+	tunnelInfo := &TunnelInfo{
 		Tunnel1Address:          vpnConfig.Tunnels[0].OutsideAddress,
-		Tunnel1PreSharedKey:     vpnConfig.Tunnels[0].PreSharedKey,
-		Tunnel1CgwInsideAddress: vpnConfig.Tunnels[0].CgwInsideAddress,
-		Tunnel1VgwInsideAddress: vpnConfig.Tunnels[0].VgwInsideAddress,
 		Tunnel1BGPASN:           vpnConfig.Tunnels[0].BGPASN,
 		Tunnel1BGPHoldTime:      vpnConfig.Tunnels[0].BGPHoldTime,
+		Tunnel1CgwInsideAddress: vpnConfig.Tunnels[0].CgwInsideAddress,
+		Tunnel1PreSharedKey:     vpnConfig.Tunnels[0].PreSharedKey,
+		Tunnel1VgwInsideAddress: vpnConfig.Tunnels[0].VgwInsideAddress,
 		Tunnel2Address:          vpnConfig.Tunnels[1].OutsideAddress,
-		Tunnel2PreSharedKey:     vpnConfig.Tunnels[1].PreSharedKey,
-		Tunnel2CgwInsideAddress: vpnConfig.Tunnels[1].CgwInsideAddress,
-		Tunnel2VgwInsideAddress: vpnConfig.Tunnels[1].VgwInsideAddress,
 		Tunnel2BGPASN:           vpnConfig.Tunnels[1].BGPASN,
 		Tunnel2BGPHoldTime:      vpnConfig.Tunnels[1].BGPHoldTime,
+		Tunnel2CgwInsideAddress: vpnConfig.Tunnels[1].CgwInsideAddress,
+		Tunnel2PreSharedKey:     vpnConfig.Tunnels[1].PreSharedKey,
+		Tunnel2VgwInsideAddress: vpnConfig.Tunnels[1].VgwInsideAddress,
 	}
 
-	return &tunnelInfo, nil
+	return tunnelInfo, nil
 }
 
 func validateVpnConnectionTunnelPreSharedKey() schema.SchemaValidateFunc {

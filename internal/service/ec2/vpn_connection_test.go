@@ -128,7 +128,7 @@ func TestXmlConfigToTunnelInfo(t *testing.T) {
 		testCase := testCase
 
 		t.Run(testCase.Name, func(t *testing.T) {
-			tunnelInfo, err := tfec2.XmlConfigToTunnelInfo(testCase.XML, testCase.Tunnel1PreSharedKey, testCase.Tunnel1InsideCidr, testCase.Tunnel1InsideIpv6Cidr)
+			tunnelInfo, err := tfec2.CustomerGatewayConfigurationToTunnelInfo(testCase.XML, testCase.Tunnel1PreSharedKey, testCase.Tunnel1InsideCidr, testCase.Tunnel1InsideIpv6Cidr)
 
 			if err == nil && testCase.ExpectError {
 				t.Fatalf("expected error, got none")
