@@ -17,7 +17,7 @@ Provides a resource to manage AWS Device Farm Instance Profiles.
 
 ```terraform
 resource "aws_devicefarm_instance_profile" "example" {
-  name        = "example"
+  name = "example"
 }
 ```
 
