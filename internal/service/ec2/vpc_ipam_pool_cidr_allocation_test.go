@@ -74,6 +74,33 @@ func TestAccVPCIpamPoolAllocation_ipv4BasicNetmask(t *testing.T) {
 	})
 }
 
+func TestAccVPCIpamPoolAllocation_ipv4DisallowedCidr(t *testing.T) {
+	resourceName := "aws_vpc_ipam_pool_cidr_allocation.test"
+	disallowedCidr := "172.2.0.0/28"
+	netmaskLength := "28"
+	expectedCidr := "172.2.0.16/28"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t); testAccIPAMPreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVPCIpamPoolAllocationIpv4DisallowedCidr(netmaskLength, disallowedCidr),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "cidr", expectedCidr),
+					resource.TestCheckResourceAttr(resourceName, "disallowed_cidrs.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "disallowed_cidrs.0", disallowedCidr),
+					resource.TestCheckResourceAttrSet(resourceName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "ipam_pool_id", "aws_vpc_ipam_pool.test", "id"),
+					resource.TestCheckResourceAttr(resourceName, "netmask_length", netmaskLength),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckVPCIpamAllocationExists(n string, allocation *ec2.IpamPoolAllocation) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -175,4 +202,23 @@ resource "aws_vpc_ipam_pool_cidr_allocation" "test" {
   ]
 }
 `, netmask))
+}
+
+func testAccVPCIpamPoolAllocationIpv4DisallowedCidr(netmaskLength, disallowedCidr string) string {
+	return acctest.ConfigCompose(
+		testAccVPCIpamPoolCidrPrivateBase,
+		fmt.Sprintf(`
+resource "aws_vpc_ipam_pool_cidr_allocation" "test" {
+  ipam_pool_id   = aws_vpc_ipam_pool.test.id
+  netmask_length = %[1]q
+
+  disallowed_cidrs = [
+    %[2]q
+  ]
+
+  depends_on = [
+    aws_vpc_ipam_pool_cidr.test
+  ]
+}
+`, netmaskLength, disallowedCidr))
 }
