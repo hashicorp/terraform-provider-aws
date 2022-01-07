@@ -1994,8 +1994,8 @@ func sweepVPNConnections(region string) error {
 	}
 	conn := client.(*conns.AWSClient).EC2Conn
 	input := &ec2.DescribeVpnConnectionsInput{}
+	sweepResources := make([]*sweep.SweepResource, 0)
 
-	// DescribeVpnConnections does not currently have any form of pagination
 	output, err := conn.DescribeVpnConnections(input)
 
 	if sweep.SkipSweepError(err) {
@@ -2004,34 +2004,25 @@ func sweepVPNConnections(region string) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("error retrieving EC2 VPN Connections: %s", err)
+		return fmt.Errorf("error listing EC2 VPN Connections (%s): %w", region, err)
 	}
 
-	for _, vpnConnection := range output.VpnConnections {
-		if aws.StringValue(vpnConnection.State) == ec2.VpnStateDeleted {
+	for _, v := range output.VpnConnections {
+		if aws.StringValue(v.State) == ec2.VpnStateDeleted {
 			continue
 		}
 
-		id := aws.StringValue(vpnConnection.VpnConnectionId)
-		input := &ec2.DeleteVpnConnectionInput{
-			VpnConnectionId: vpnConnection.VpnConnectionId,
-		}
+		r := ResourceVPNConnection()
+		d := r.Data(nil)
+		d.SetId(aws.StringValue(v.VpnConnectionId))
 
-		log.Printf("[INFO] Deleting EC2 VPN Connection: %s", id)
+		sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+	}
 
-		_, err := conn.DeleteVpnConnection(input)
+	err = sweep.SweepOrchestrator(sweepResources)
 
-		if tfawserr.ErrMessageContains(err, "InvalidVpnConnectionID.NotFound", "") {
-			continue
-		}
-
-		if err != nil {
-			return fmt.Errorf("error deleting EC2 VPN Connection (%s): %s", id, err)
-		}
-
-		if err := WaitForVPNConnectionDeletion(conn, id); err != nil {
-			return fmt.Errorf("error waiting for VPN connection (%s) to delete: %s", id, err)
-		}
+	if err != nil {
+		return fmt.Errorf("error sweeping EC2 VPN Connections (%s): %w", region, err)
 	}
 
 	return nil
