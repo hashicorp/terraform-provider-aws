@@ -39,7 +39,7 @@ func TestAccDeviceFarmInstanceProfile_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeviceFarmInstanceProfileExists(resourceName, &profile),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "reboot_after_user", "true"),
+					resource.TestCheckResourceAttr(resourceName, "reboot_after_use", "true"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "devicefarm", regexp.MustCompile(`instanceprofile:.+`)),
 				),
@@ -54,7 +54,7 @@ func TestAccDeviceFarmInstanceProfile_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeviceFarmInstanceProfileExists(resourceName, &profile),
 					resource.TestCheckResourceAttr(resourceName, "name", rNameUpdated),
-					resource.TestCheckResourceAttr(resourceName, "reboot_after_user", "true"),
+					resource.TestCheckResourceAttr(resourceName, "reboot_after_use", "true"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "devicefarm", regexp.MustCompile(`instanceprofile:.+`)),
 				),

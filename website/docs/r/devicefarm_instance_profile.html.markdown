@@ -27,7 +27,7 @@ resource "aws_devicefarm_instance_profile" "example" {
 * `exclude_app_packages_from_cleanup` - (Optional) An array of strings that specifies the list of app packages that should not be cleaned up from the device after a test run.
 * `name` - (Required) The name for the instance profile.
 * `package_cleanup` - (Optional) When set to `true`, Device Farm removes app packages after a test run. The default value is `false` for private devices.
-* `reboot_after_user` - (Optional) When set to `true`, Device Farm reboots the instance after a test run. The default value is `true`.
+* `reboot_after_use` - (Optional) When set to `true`, Device Farm reboots the instance after a test run. The default value is `true`.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attributes Reference

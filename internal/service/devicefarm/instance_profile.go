@@ -50,7 +50,7 @@ func ResourceInstanceProfile() *schema.Resource {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
-			"reboot_after_user": {
+			"reboot_after_use": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  true,
@@ -83,7 +83,7 @@ func resourceInstanceProfileCreate(d *schema.ResourceData, meta interface{}) err
 		input.PackageCleanup = aws.Bool(v.(bool))
 	}
 
-	if v, ok := d.GetOk("reboot_after_user"); ok {
+	if v, ok := d.GetOk("reboot_after_use"); ok {
 		input.RebootAfterUse = aws.Bool(v.(bool))
 	}
 
@@ -128,7 +128,7 @@ func resourceInstanceProfileRead(d *schema.ResourceData, meta interface{}) error
 	d.Set("description", instaceProf.Description)
 	d.Set("exclude_app_packages_from_cleanup", flex.FlattenStringSet(instaceProf.ExcludeAppPackagesFromCleanup))
 	d.Set("package_cleanup", instaceProf.PackageCleanup)
-	d.Set("reboot_after_user", instaceProf.RebootAfterUse)
+	d.Set("reboot_after_use", instaceProf.RebootAfterUse)
 
 	tags, err := ListTags(conn, arn)
 
@@ -174,8 +174,8 @@ func resourceInstanceProfileUpdate(d *schema.ResourceData, meta interface{}) err
 			input.PackageCleanup = aws.Bool(d.Get("package_cleanup").(bool))
 		}
 
-		if d.HasChange("reboot_after_user") {
-			input.RebootAfterUse = aws.Bool(d.Get("reboot_after_user").(bool))
+		if d.HasChange("reboot_after_use") {
+			input.RebootAfterUse = aws.Bool(d.Get("reboot_after_use").(bool))
 		}
 
 		log.Printf("[DEBUG] Updating DeviceFarm Instance Profile: %s", d.Id())
