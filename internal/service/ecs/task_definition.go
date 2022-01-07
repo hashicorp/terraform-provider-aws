@@ -59,28 +59,6 @@ func ResourceTaskDefinition() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
-			"cpu": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-			},
-
-			"family": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(1, 255),
-					validation.StringMatch(regexp.MustCompile("^[0-9A-Za-z_-]+$"), "see https://docs.aws.amazon.com/AmazonECS/latest/APIReference/API_TaskDefinition.html"),
-				),
-			},
-
-			"revision": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-
 			"container_definitions": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -103,6 +81,11 @@ func ResourceTaskDefinition() *schema.Resource {
 				},
 				ValidateFunc: ValidTaskDefinitionContainerDefinitions,
 			},
+			"cpu": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+			},
 			"ephemeral_storage": {
 				Type:     schema.TypeList,
 				MaxItems: 1,
@@ -119,26 +102,51 @@ func ResourceTaskDefinition() *schema.Resource {
 					},
 				},
 			},
-			"task_role_arn": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-
 			"execution_role_arn": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-
+			"family": {
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+				ValidateFunc: validation.All(
+					validation.StringLenBetween(1, 255),
+					validation.StringMatch(regexp.MustCompile("^[0-9A-Za-z_-]+$"), "see https://docs.aws.amazon.com/AmazonECS/latest/APIReference/API_TaskDefinition.html"),
+				),
+			},
+			"inference_accelerator": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				ForceNew: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"device_name": {
+							Type:     schema.TypeString,
+							Required: true,
+							ForceNew: true,
+						},
+						"device_type": {
+							Type:     schema.TypeString,
+							Required: true,
+							ForceNew: true,
+						},
+					},
+				},
+			},
+			"ipc_mode": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringInSlice(ecs.IpcMode_Values(), false),
+			},
 			"memory": {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
 			},
-
 			"network_mode": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -146,188 +154,12 @@ func ResourceTaskDefinition() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.StringInSlice(ecs.NetworkMode_Values(), false),
 			},
-
-			"runtime_platform": {
-				Type:     schema.TypeList,
-				MaxItems: 1,
-				Optional: true,
-				ForceNew: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"operating_system_family": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ForceNew:     true,
-							ValidateFunc: validation.StringInSlice(ecs.OSFamily_Values(), false),
-						},
-						"cpu_architecture": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ForceNew:     true,
-							ValidateFunc: validation.StringInSlice(ecs.CPUArchitecture_Values(), false),
-						},
-					},
-				},
+			"pid_mode": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringInSlice(ecs.PidMode_Values(), false),
 			},
-
-			"volume": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				ForceNew: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"name": {
-							Type:     schema.TypeString,
-							Required: true,
-							ForceNew: true,
-						},
-
-						"host_path": {
-							Type:     schema.TypeString,
-							Optional: true,
-							ForceNew: true,
-						},
-
-						"docker_volume_configuration": {
-							Type:     schema.TypeList,
-							Optional: true,
-							ForceNew: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"scope": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										Computed:     true,
-										ForceNew:     true,
-										ValidateFunc: validation.StringInSlice(ecs.Scope_Values(), false),
-									},
-									"autoprovision": {
-										Type:     schema.TypeBool,
-										Optional: true,
-										ForceNew: true,
-										Default:  false,
-									},
-									"driver": {
-										Type:     schema.TypeString,
-										ForceNew: true,
-										Optional: true,
-									},
-									"driver_opts": {
-										Type:     schema.TypeMap,
-										Elem:     &schema.Schema{Type: schema.TypeString},
-										ForceNew: true,
-										Optional: true,
-									},
-									"labels": {
-										Type:     schema.TypeMap,
-										Elem:     &schema.Schema{Type: schema.TypeString},
-										ForceNew: true,
-										Optional: true,
-									},
-								},
-							},
-						},
-						"efs_volume_configuration": {
-							Type:     schema.TypeList,
-							Optional: true,
-							ForceNew: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"file_system_id": {
-										Type:     schema.TypeString,
-										ForceNew: true,
-										Required: true,
-									},
-									"root_directory": {
-										Type:     schema.TypeString,
-										ForceNew: true,
-										Optional: true,
-										Default:  "/",
-									},
-									"transit_encryption": {
-										Type:         schema.TypeString,
-										ForceNew:     true,
-										Optional:     true,
-										ValidateFunc: validation.StringInSlice(ecs.EFSTransitEncryption_Values(), false),
-									},
-									"transit_encryption_port": {
-										Type:         schema.TypeInt,
-										ForceNew:     true,
-										Optional:     true,
-										ValidateFunc: validation.IsPortNumber,
-									},
-									"authorization_config": {
-										Type:     schema.TypeList,
-										Optional: true,
-										ForceNew: true,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"access_point_id": {
-													Type:     schema.TypeString,
-													ForceNew: true,
-													Optional: true,
-												},
-												"iam": {
-													Type:         schema.TypeString,
-													ForceNew:     true,
-													Optional:     true,
-													ValidateFunc: validation.StringInSlice(ecs.EFSAuthorizationConfigIAM_Values(), false),
-												},
-											},
-										},
-									},
-								},
-							},
-						},
-						"fsx_windows_file_server_volume_configuration": {
-							Type:     schema.TypeList,
-							Optional: true,
-							ForceNew: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"file_system_id": {
-										Type:     schema.TypeString,
-										ForceNew: true,
-										Required: true,
-									},
-									"root_directory": {
-										Type:     schema.TypeString,
-										ForceNew: true,
-										Required: true,
-									},
-									"authorization_config": {
-										Type:     schema.TypeList,
-										Required: true,
-										ForceNew: true,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"credentials_parameter": {
-													Type:         schema.TypeString,
-													ForceNew:     true,
-													Required:     true,
-													ValidateFunc: verify.ValidARN,
-												},
-												"domain": {
-													Type:     schema.TypeString,
-													ForceNew: true,
-													Required: true,
-												},
-											},
-										},
-									},
-								},
-							},
-						},
-					},
-				},
-				Set: resourceTaskDefinitionVolumeHash,
-			},
-
 			"placement_constraints": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -335,49 +167,20 @@ func ResourceTaskDefinition() *schema.Resource {
 				MaxItems: 10,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"expression": {
+							Type:     schema.TypeString,
+							ForceNew: true,
+							Optional: true,
+						},
 						"type": {
 							Type:         schema.TypeString,
 							ForceNew:     true,
 							Required:     true,
 							ValidateFunc: validation.StringInSlice(ecs.TaskDefinitionPlacementConstraintType_Values(), false),
 						},
-						"expression": {
-							Type:     schema.TypeString,
-							ForceNew: true,
-							Optional: true,
-						},
 					},
 				},
 			},
-
-			"requires_compatibilities": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				ForceNew: true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
-					ValidateFunc: validation.StringInSlice([]string{
-						"EC2",
-						"FARGATE",
-						"EXTERNAL",
-					}, false),
-				},
-			},
-
-			"ipc_mode": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringInSlice(ecs.IpcMode_Values(), false),
-			},
-
-			"pid_mode": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringInSlice(ecs.PidMode_Values(), false),
-			},
-
 			"proxy_configuration": {
 				Type:     schema.TypeList,
 				MaxItems: 1,
@@ -406,27 +209,212 @@ func ResourceTaskDefinition() *schema.Resource {
 					},
 				},
 			},
-
+			"requires_compatibilities": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				ForceNew: true,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+					ValidateFunc: validation.StringInSlice([]string{
+						"EC2",
+						"FARGATE",
+						"EXTERNAL",
+					}, false),
+				},
+			},
+			"revision": {
+				Type:     schema.TypeInt,
+				Computed: true,
+			},
+			"runtime_platform": {
+				Type:     schema.TypeList,
+				MaxItems: 1,
+				Optional: true,
+				ForceNew: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"cpu_architecture": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ForceNew:     true,
+							ValidateFunc: validation.StringInSlice(ecs.CPUArchitecture_Values(), false),
+						},
+						"operating_system_family": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ForceNew:     true,
+							ValidateFunc: validation.StringInSlice(ecs.OSFamily_Values(), false),
+						},
+					},
+				},
+			},
+			"skip_destroy": {
+				Type:     schema.TypeBool,
+				Default:  false,
+				Optional: true,
+			},
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
-			"inference_accelerator": {
+			"task_role_arn": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: verify.ValidARN,
+			},
+			"volume": {
 				Type:     schema.TypeSet,
 				Optional: true,
 				ForceNew: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"device_name": {
+						"docker_volume_configuration": {
+							Type:     schema.TypeList,
+							Optional: true,
+							ForceNew: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"autoprovision": {
+										Type:     schema.TypeBool,
+										Optional: true,
+										ForceNew: true,
+										Default:  false,
+									},
+									"driver": {
+										Type:     schema.TypeString,
+										ForceNew: true,
+										Optional: true,
+									},
+									"driver_opts": {
+										Type:     schema.TypeMap,
+										Elem:     &schema.Schema{Type: schema.TypeString},
+										ForceNew: true,
+										Optional: true,
+									},
+									"labels": {
+										Type:     schema.TypeMap,
+										Elem:     &schema.Schema{Type: schema.TypeString},
+										ForceNew: true,
+										Optional: true,
+									},
+									"scope": {
+										Type:         schema.TypeString,
+										Optional:     true,
+										Computed:     true,
+										ForceNew:     true,
+										ValidateFunc: validation.StringInSlice(ecs.Scope_Values(), false),
+									},
+								},
+							},
+						},
+						"efs_volume_configuration": {
+							Type:     schema.TypeList,
+							Optional: true,
+							ForceNew: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"authorization_config": {
+										Type:     schema.TypeList,
+										Optional: true,
+										ForceNew: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"access_point_id": {
+													Type:     schema.TypeString,
+													ForceNew: true,
+													Optional: true,
+												},
+												"iam": {
+													Type:         schema.TypeString,
+													ForceNew:     true,
+													Optional:     true,
+													ValidateFunc: validation.StringInSlice(ecs.EFSAuthorizationConfigIAM_Values(), false),
+												},
+											},
+										},
+									},
+									"file_system_id": {
+										Type:     schema.TypeString,
+										ForceNew: true,
+										Required: true,
+									},
+									"root_directory": {
+										Type:     schema.TypeString,
+										ForceNew: true,
+										Optional: true,
+										Default:  "/",
+									},
+									"transit_encryption": {
+										Type:         schema.TypeString,
+										ForceNew:     true,
+										Optional:     true,
+										ValidateFunc: validation.StringInSlice(ecs.EFSTransitEncryption_Values(), false),
+									},
+									"transit_encryption_port": {
+										Type:         schema.TypeInt,
+										ForceNew:     true,
+										Optional:     true,
+										ValidateFunc: validation.IsPortNumber,
+									},
+								},
+							},
+						},
+						"fsx_windows_file_server_volume_configuration": {
+							Type:     schema.TypeList,
+							Optional: true,
+							ForceNew: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"authorization_config": {
+										Type:     schema.TypeList,
+										Required: true,
+										ForceNew: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"credentials_parameter": {
+													Type:         schema.TypeString,
+													ForceNew:     true,
+													Required:     true,
+													ValidateFunc: verify.ValidARN,
+												},
+												"domain": {
+													Type:     schema.TypeString,
+													ForceNew: true,
+													Required: true,
+												},
+											},
+										},
+									},
+									"file_system_id": {
+										Type:     schema.TypeString,
+										ForceNew: true,
+										Required: true,
+									},
+									"root_directory": {
+										Type:     schema.TypeString,
+										ForceNew: true,
+										Required: true,
+									},
+								},
+							},
+						},
+						"host_path": {
 							Type:     schema.TypeString,
-							Required: true,
+							Optional: true,
 							ForceNew: true,
 						},
-						"device_type": {
+						"name": {
 							Type:     schema.TypeString,
 							Required: true,
 							ForceNew: true,
 						},
 					},
 				},
+				Set: resourceTaskDefinitionVolumeHash,
 			},
 		},
 	}
@@ -712,6 +700,11 @@ func resourceTaskDefinitionUpdate(d *schema.ResourceData, meta interface{}) erro
 }
 
 func resourceTaskDefinitionDelete(d *schema.ResourceData, meta interface{}) error {
+	if v, ok := d.GetOk("skip_destroy"); ok && v.(bool) {
+		log.Printf("[DEBUG] Retaining ECS Task Definition Revision %q", d.Id())
+		return nil
+	}
+
 	conn := meta.(*conns.AWSClient).ECSConn
 
 	_, err := conn.DeregisterTaskDefinition(&ecs.DeregisterTaskDefinitionInput{
