@@ -11,5 +11,5 @@ resource/aws_launch_template: Add the `instance_metadata_tags` argument to the `
 ```
 
 ```release-note:enhancement
-data-source/aws_launch_tenplate: Add the `instance_metadata_tags` attribute to the `metadata_options` configuration block
+data-source/aws_launch_template: Add the `instance_metadata_tags` attribute to the `metadata_options` configuration block
 ```
