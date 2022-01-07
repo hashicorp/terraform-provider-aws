@@ -234,6 +234,10 @@ func DataSourceLaunchTemplate() *schema.Resource {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},
+						"instance_metadata_tags": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
 					},
 				},
 			},
