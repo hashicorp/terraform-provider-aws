@@ -66,6 +66,6 @@ resource "aws_vpc_ipam_pool" "test" {
 }
 
 data "aws_vpc_ipam_pool" "test" {
-  depends_on = [aws_vpc_ipam_pool.test]
+	ipam_pool_id = aws_vpc_ipam_pool.test.id	
 }
 `

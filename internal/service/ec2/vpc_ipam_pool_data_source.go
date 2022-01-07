@@ -1,6 +1,7 @@
 package ec2
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -115,6 +116,11 @@ func dataSourceVPCIpamPoolRead(d *schema.ResourceData, meta interface{}) error {
 	if output == nil || len(output.IpamPools) == 0 || output.IpamPools[0] == nil {
 		return nil
 	}
+
+	if len(output.IpamPools) > 1 {
+		return fmt.Errorf("multiple IPAM Pools matched; use additional constraints to reduce matches to a single IPAM pool")
+	}
+
 	pool = output.IpamPools[0]
 
 	d.SetId(aws.StringValue(pool.IpamPoolId))
