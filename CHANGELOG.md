@@ -22,6 +22,8 @@ ENHANCEMENTS:
 * resource/aws_ebs_snapshot: Add `outpost_arn`, `storage_tier`, `permanent_restore`, `temporary_restore_days` arguments ([#22342](https://github.com/hashicorp/terraform-provider-aws/issues/22342))
 * resource/aws_ebs_snapshot_copy: Add `storage_tier`, `permanent_restore`, `temporary_restore_days` arguments ([#22342](https://github.com/hashicorp/terraform-provider-aws/issues/22342))
 * resource/aws_ebs_snapshot_import: Add `storage_tier`, `permanent_restore`, `temporary_restore_days` arguments ([#22342](https://github.com/hashicorp/terraform-provider-aws/issues/22342))
+* resource/aws_ecs_task_definition: Add `skip_destroy` argument to optionally prevent overwriting previous revision ([#22269](https://github.com/hashicorp/terraform-provider-aws/issues/22269))
+* resource/aws_ecs_task_definition: Add plan time validation for `family` ([#18610](https://github.com/hashicorp/terraform-provider-aws/issues/18610))
 * resource/aws_glue_crawler: add `delta_target` argument. ([#22472](https://github.com/hashicorp/terraform-provider-aws/issues/22472))
 * resource/aws_instance: Add the `instance_metadata_tags` argument to the `metadata_options` configuration block ([#22463](https://github.com/hashicorp/terraform-provider-aws/issues/22463))
 * resource/aws_launch_template: Add the `instance_metadata_tags` argument to the `metadata_options` configuration block ([#22463](https://github.com/hashicorp/terraform-provider-aws/issues/22463))
