@@ -6,8 +6,6 @@ import (
 	"regexp"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -15,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 type TunnelOptions struct {
@@ -734,70 +733,48 @@ func TestAccEC2VPNConnection_disappears(t *testing.T) {
 
 func testAccVPNConnectionDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_vpn_connection" {
 			continue
 		}
 
-		resp, err := conn.DescribeVpnConnections(&ec2.DescribeVpnConnectionsInput{
-			VpnConnectionIds: []*string{aws.String(rs.Primary.ID)},
-		})
+		_, err := tfec2.FindVPNConnectionByID(conn, rs.Primary.ID)
+
+		if tfresource.NotFound(err) {
+			continue
+		}
 
 		if err != nil {
-			if ec2err, ok := err.(awserr.Error); ok && ec2err.Code() == "InvalidVpnConnectionID.NotFound" {
-				// not found
-				return nil
-			}
 			return err
 		}
 
-		var vpn *ec2.VpnConnection
-		for _, v := range resp.VpnConnections {
-			if v.VpnConnectionId != nil && *v.VpnConnectionId == rs.Primary.ID {
-				vpn = v
-			}
-		}
-
-		if vpn == nil {
-			// vpn connection not found
-			return nil
-		}
-
-		if vpn.State != nil && *vpn.State == "deleted" {
-			return nil
-		}
-
+		return fmt.Errorf("EC2 VPN Connection %s still exists", rs.Primary.ID)
 	}
 
 	return nil
 }
 
-func testAccVPNConnectionExists(vpnConnectionResource string, vpnConnection *ec2.VpnConnection) resource.TestCheckFunc {
+func testAccVPNConnectionExists(n string, v *ec2.VpnConnection) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[vpnConnectionResource]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Not found: %s", vpnConnectionResource)
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No ID is set")
-		}
-		connection, ok := s.RootModule().Resources[vpnConnectionResource]
-		if !ok {
-			return fmt.Errorf("Not found: %s", vpnConnectionResource)
+			return fmt.Errorf("No EC2 VPN Connection ID is set")
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
-		resp, err := conn.DescribeVpnConnections(&ec2.DescribeVpnConnectionsInput{
-			VpnConnectionIds: []*string{aws.String(connection.Primary.ID)},
-		})
+		output, err := tfec2.FindVPNConnectionByID(conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
 		}
 
-		*vpnConnection = *resp.VpnConnections[0]
+		*v = *output
 
 		return nil
 	}

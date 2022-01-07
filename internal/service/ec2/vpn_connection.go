@@ -1,7 +1,6 @@
 package ec2
 
 import (
-	"bytes"
 	"encoding/xml"
 	"fmt"
 	"log"
@@ -17,8 +16,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
@@ -137,14 +136,6 @@ func ResourceVPNConnection() *schema.Resource {
 							Computed: true,
 						},
 					},
-				},
-				Set: func(v interface{}) int {
-					var buf bytes.Buffer
-					m := v.(map[string]interface{})
-					buf.WriteString(fmt.Sprintf("%s-", m["destination_cidr_block"].(string)))
-					buf.WriteString(fmt.Sprintf("%s-", m["source"].(string)))
-					buf.WriteString(fmt.Sprintf("%s-", m["state"].(string)))
-					return create.StringHashcode(buf.String())
 				},
 			},
 			"static_routes_only": {
@@ -441,12 +432,6 @@ func ResourceVPNConnection() *schema.Resource {
 						},
 					},
 				},
-				Set: func(v interface{}) int {
-					var buf bytes.Buffer
-					m := v.(map[string]interface{})
-					buf.WriteString(fmt.Sprintf("%s-", m["outside_ip_address"].(string)))
-					return create.StringHashcode(buf.String())
-				},
 			},
 			"vpn_gateway_id": {
 				Type:         schema.TypeString,
@@ -502,99 +487,59 @@ func resourceVPNConnectionRead(d *schema.ResourceData, meta interface{}) error {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	resp, err := conn.DescribeVpnConnections(&ec2.DescribeVpnConnectionsInput{
-		VpnConnectionIds: []*string{aws.String(d.Id())},
-	})
+	vpnConnection, err := FindVPNConnectionByID(conn, d.Id())
 
-	if tfawserr.ErrMessageContains(err, "InvalidVpnConnectionID.NotFound", "") {
+	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] EC2 VPN Connection (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading EC2 VPN Connection (%s): %s", d.Id(), err)
+		return fmt.Errorf("error reading EC2 VPN Connection (%s): %w", d.Id(), err)
 	}
 
-	if resp == nil || len(resp.VpnConnections) == 0 || resp.VpnConnections[0] == nil {
-		return fmt.Errorf("error reading EC2 VPN Connection (%s): empty response", d.Id())
-	}
+	arn := arn.ARN{
+		Partition: meta.(*conns.AWSClient).Partition,
+		Service:   ec2.ServiceName,
+		Region:    meta.(*conns.AWSClient).Region,
+		AccountID: meta.(*conns.AWSClient).AccountID,
+		Resource:  fmt.Sprintf("vpn-connection/%s", d.Id()),
+	}.String()
+	d.Set("arn", arn)
+	d.Set("customer_gateway_id", vpnConnection.CustomerGatewayId)
+	d.Set("type", vpnConnection.Type)
+	d.Set("vpn_gateway_id", vpnConnection.VpnGatewayId)
 
-	if len(resp.VpnConnections) > 1 {
-		return fmt.Errorf("error reading EC2 VPN Connection (%s): multiple responses", d.Id())
-	}
-
-	vpnConnection := resp.VpnConnections[0]
-
-	if aws.StringValue(vpnConnection.State) == ec2.VpnStateDeleted {
-		log.Printf("[WARN] EC2 VPN Connection (%s) already deleted, removing from state", d.Id())
-		d.SetId("")
-		return nil
-	}
-
-	var transitGatewayAttachmentID string
-	if vpnConnection.TransitGatewayId != nil {
+	if v := vpnConnection.TransitGatewayId; v != nil {
 		input := &ec2.DescribeTransitGatewayAttachmentsInput{
-			Filters: []*ec2.Filter{
-				{
-					Name:   aws.String("resource-id"),
-					Values: []*string{vpnConnection.VpnConnectionId},
-				},
-				{
-					Name:   aws.String("resource-type"),
-					Values: []*string{aws.String(ec2.TransitGatewayAttachmentResourceTypeVpn)},
-				},
-				{
-					Name:   aws.String("transit-gateway-id"),
-					Values: []*string{vpnConnection.TransitGatewayId},
-				},
-			},
+			Filters: BuildAttributeFilterList(map[string]string{
+				"resource-id":        d.Id(),
+				"resource-type":      ec2.TransitGatewayAttachmentResourceTypeVpn,
+				"transit-gateway-id": aws.StringValue(v),
+			}),
 		}
 
-		log.Printf("[DEBUG] Finding EC2 VPN Connection Transit Gateway Attachment: %s", input)
-
-		// At a large number of AWS Transit Gateway Attachments (999+), the AWS API call `DescribeTransitGatewayAttachments` will return
-		// an initial empty response with pagination token even when querying for a unique TGW Attachment.
-		// Thus, to continue iterating through response pages, even if a page is found to be empty (nil),
-		// we've changed the API call to `DescribeTransitGatewayAttachmentsPages`.
-
-		var results []*ec2.TransitGatewayAttachment
-
-		err := conn.DescribeTransitGatewayAttachmentsPages(input, func(page *ec2.DescribeTransitGatewayAttachmentsOutput, lastPage bool) bool {
-			if page == nil {
-				return !lastPage
-			}
-
-			for _, attachment := range page.TransitGatewayAttachments {
-				if attachment == nil {
-					continue
-				}
-				results = append(results, attachment)
-			}
-
-			return !lastPage
-		})
+		output, err := FindTransitGatewayAttachment(conn, input)
 
 		if err != nil {
-			return fmt.Errorf("error finding EC2 VPN Connection (%s) Transit Gateway Attachment: %s", d.Id(), err)
+			return fmt.Errorf("error reading EC2 VPN Connection (%s) Transit Gateway Attachment: %s", d.Id(), err)
 		}
 
-		if len(results) == 0 || results[0] == nil {
-			return fmt.Errorf("error finding EC2 VPN Connection (%s) Transit Gateway Attachment: empty response", d.Id())
-		}
-
-		if len(results) > 1 {
-			return fmt.Errorf("error reading EC2 VPN Connection (%s) Transit Gateway Attachment: multiple responses", d.Id())
-		}
-
-		transitGatewayAttachmentID = aws.StringValue(results[0].TransitGatewayAttachmentId)
+		d.Set("transit_gateway_attachment_id", output.TransitGatewayAttachmentId)
+		d.Set("transit_gateway_id", v)
+	} else {
+		d.Set("transit_gateway_attachment_id", nil)
+		d.Set("transit_gateway_id", nil)
 	}
 
-	// Set attributes under the user's control.
-	d.Set("vpn_gateway_id", vpnConnection.VpnGatewayId)
-	d.Set("customer_gateway_id", vpnConnection.CustomerGatewayId)
-	d.Set("transit_gateway_id", vpnConnection.TransitGatewayId)
-	d.Set("type", vpnConnection.Type)
+	if err := d.Set("routes", flattenVpnStaticRoutes(vpnConnection.Routes)); err != nil {
+		return fmt.Errorf("error setting routes: %w", err)
+	}
+
+	if err := d.Set("vgw_telemetry", flattenVgwTelemetries(vpnConnection.VgwTelemetry)); err != nil {
+		return fmt.Errorf("error setting vgw_telemetry: %w", err)
+	}
 
 	tags := KeyValueTags(vpnConnection.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
@@ -607,52 +552,30 @@ func resourceVPNConnectionRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error setting tags_all: %w", err)
 	}
 
-	if vpnConnection.Options != nil {
-		if err := d.Set("enable_acceleration", vpnConnection.Options.EnableAcceleration); err != nil {
-			return err
-		}
+	if v := vpnConnection.Options; v != nil {
+		d.Set("enable_acceleration", v.EnableAcceleration)
+		d.Set("local_ipv4_network_cidr", v.LocalIpv4NetworkCidr)
+		d.Set("local_ipv6_network_cidr", v.LocalIpv6NetworkCidr)
+		d.Set("remote_ipv4_network_cidr", v.RemoteIpv4NetworkCidr)
+		d.Set("remote_ipv6_network_cidr", v.RemoteIpv6NetworkCidr)
+		d.Set("static_routes_only", v.StaticRoutesOnly)
+		d.Set("tunnel_inside_ip_version", v.TunnelInsideIpVersion)
 
-		if err := d.Set("local_ipv4_network_cidr", vpnConnection.Options.LocalIpv4NetworkCidr); err != nil {
-			return err
-		}
-
-		if err := d.Set("local_ipv6_network_cidr", vpnConnection.Options.LocalIpv6NetworkCidr); err != nil {
-			return err
-		}
-
-		if err := d.Set("remote_ipv4_network_cidr", vpnConnection.Options.RemoteIpv4NetworkCidr); err != nil {
-			return err
-		}
-
-		if err := d.Set("remote_ipv6_network_cidr", vpnConnection.Options.RemoteIpv6NetworkCidr); err != nil {
-			return err
-		}
-
-		if err := d.Set("static_routes_only", vpnConnection.Options.StaticRoutesOnly); err != nil {
-			return err
-		}
-
-		if err := d.Set("tunnel_inside_ip_version", vpnConnection.Options.TunnelInsideIpVersion); err != nil {
-			return err
-		}
 		if err := flattenTunnelOptions(d, vpnConnection); err != nil {
 			return err
 		}
-
 	} else {
-		//If there no Options on the connection then we do not support it
-		d.Set("enable_acceleration", false)
-		d.Set("local_ipv4_network_cidr", "")
-		d.Set("local_ipv6_network_cidr", "")
-		d.Set("remote_ipv4_network_cidr", "")
-		d.Set("remote_ipv6_network_cidr", "")
-		d.Set("static_routes_only", false)
-		d.Set("tunnel_inside_ip_version", "")
+		d.Set("enable_acceleration", nil)
+		d.Set("local_ipv4_network_cidr", nil)
+		d.Set("local_ipv6_network_cidr", nil)
+		d.Set("remote_ipv4_network_cidr", nil)
+		d.Set("remote_ipv6_network_cidr", nil)
+		d.Set("static_routes_only", nil)
+		d.Set("tunnel_inside_ip_version", nil)
 	}
 
 	// Set read only attributes.
 	d.Set("customer_gateway_configuration", vpnConnection.CustomerGatewayConfiguration)
-	d.Set("transit_gateway_attachment_id", transitGatewayAttachmentID)
 
 	if vpnConnection.CustomerGatewayConfiguration != nil {
 		tunnelInfo, err := XmlConfigToTunnelInfo(
@@ -679,23 +602,6 @@ func resourceVPNConnectionRead(d *schema.ResourceData, meta interface{}) error {
 			d.Set("tunnel2_bgp_holdtime", tunnelInfo.Tunnel2BGPHoldTime)
 		}
 	}
-
-	if err := d.Set("vgw_telemetry", telemetryToMapList(vpnConnection.VgwTelemetry)); err != nil {
-		return err
-	}
-	if err := d.Set("routes", routesToMapList(vpnConnection.Routes)); err != nil {
-		return err
-	}
-
-	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
-		Service:   ec2.ServiceName,
-		Region:    meta.(*conns.AWSClient).Region,
-		AccountID: meta.(*conns.AWSClient).AccountID,
-		Resource:  fmt.Sprintf("vpn-connection/%s", d.Id()),
-	}.String()
-
-	d.Set("arn", arn)
 
 	return nil
 }
@@ -1220,41 +1126,92 @@ func flattenTunnelOptions(d *schema.ResourceData, vpnConnection *ec2.VpnConnecti
 	return nil
 }
 
-// routesToMapList turns the list of routes into a list of maps.
-func routesToMapList(routes []*ec2.VpnStaticRoute) []map[string]interface{} {
-	result := make([]map[string]interface{}, 0, len(routes))
-	for _, r := range routes {
-		staticRoute := make(map[string]interface{})
-		staticRoute["destination_cidr_block"] = aws.StringValue(r.DestinationCidrBlock)
-		staticRoute["state"] = aws.StringValue(r.State)
-
-		if r.Source != nil {
-			staticRoute["source"] = aws.StringValue(r.Source)
-		}
-
-		result = append(result, staticRoute)
+func flattenVpnStaticRoute(apiObject *ec2.VpnStaticRoute) map[string]interface{} {
+	if apiObject == nil {
+		return nil
 	}
 
-	return result
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.DestinationCidrBlock; v != nil {
+		tfMap["destination_cidr_block"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.Source; v != nil {
+		tfMap["source"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.State; v != nil {
+		tfMap["state"] = aws.StringValue(v)
+	}
+
+	return tfMap
 }
 
-// telemetryToMapList turns the VGW telemetry into a list of maps.
-func telemetryToMapList(telemetry []*ec2.VgwTelemetry) []map[string]interface{} {
-	result := make([]map[string]interface{}, 0, len(telemetry))
-	for _, t := range telemetry {
-		vgw := make(map[string]interface{})
-		vgw["accepted_route_count"] = aws.Int64Value(t.AcceptedRouteCount)
-		vgw["outside_ip_address"] = aws.StringValue(t.OutsideIpAddress)
-		vgw["status"] = aws.StringValue(t.Status)
-		vgw["status_message"] = aws.StringValue(t.StatusMessage)
-
-		// LastStatusChange is a time.Time(). Convert it into a string
-		// so it can be handled by schema's type system.
-		vgw["last_status_change"] = t.LastStatusChange.Format(time.RFC3339)
-		result = append(result, vgw)
+func flattenVpnStaticRoutes(apiObjects []*ec2.VpnStaticRoute) []interface{} {
+	if len(apiObjects) == 0 {
+		return nil
 	}
 
-	return result
+	var tfList []interface{}
+
+	for _, apiObject := range apiObjects {
+		if apiObject == nil {
+			continue
+		}
+
+		tfList = append(tfList, flattenVpnStaticRoute(apiObject))
+	}
+
+	return tfList
+}
+
+func flattenVgwTelemetry(apiObject *ec2.VgwTelemetry) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.AcceptedRouteCount; v != nil {
+		tfMap["accepted_route_count"] = aws.Int64Value(v)
+	}
+
+	if v := apiObject.LastStatusChange; v != nil {
+		tfMap["last_status_change"] = aws.TimeValue(v).Format(time.RFC3339)
+	}
+
+	if v := apiObject.OutsideIpAddress; v != nil {
+		tfMap["outside_ip_address"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.Status; v != nil {
+		tfMap["status"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.StatusMessage; v != nil {
+		tfMap["status_message"] = aws.StringValue(v)
+	}
+
+	return tfMap
+}
+
+func flattenVgwTelemetries(apiObjects []*ec2.VgwTelemetry) []interface{} {
+	if len(apiObjects) == 0 {
+		return nil
+	}
+
+	var tfList []interface{}
+
+	for _, apiObject := range apiObjects {
+		if apiObject == nil {
+			continue
+		}
+
+		tfList = append(tfList, flattenVgwTelemetry(apiObject))
+	}
+
+	return tfList
 }
 
 func modifyVpnTunnels(d *schema.ResourceData, conn *ec2.EC2) error {
