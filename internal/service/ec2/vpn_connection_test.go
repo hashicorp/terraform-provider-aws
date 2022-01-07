@@ -37,6 +37,115 @@ type TunnelOptions struct {
 	startupAction              string
 }
 
+func TestXmlConfigToTunnelInfo(t *testing.T) {
+	testCases := []struct {
+		Name                  string
+		XML                   string
+		Tunnel1PreSharedKey   string
+		Tunnel1InsideCidr     string
+		Tunnel1InsideIpv6Cidr string
+		ExpectError           bool
+		ExpectTunnelInfo      tfec2.TunnelInfo
+	}{
+		{
+			Name: "outside address sort",
+			XML:  testAccVPNTunnelInfoXML,
+			ExpectTunnelInfo: tfec2.TunnelInfo{
+				Tunnel1Address:          "1.1.1.1",
+				Tunnel1BGPASN:           "1111",
+				Tunnel1BGPHoldTime:      31,
+				Tunnel1CgwInsideAddress: "169.254.11.1",
+				Tunnel1PreSharedKey:     "FIRST_KEY",
+				Tunnel1VgwInsideAddress: "168.254.11.2",
+				Tunnel2Address:          "2.2.2.2",
+				Tunnel2BGPASN:           "2222",
+				Tunnel2BGPHoldTime:      32,
+				Tunnel2CgwInsideAddress: "169.254.12.1",
+				Tunnel2PreSharedKey:     "SECOND_KEY",
+				Tunnel2VgwInsideAddress: "169.254.12.2",
+			},
+		},
+		{
+			Name:                "Tunnel1PreSharedKey",
+			XML:                 testAccVPNTunnelInfoXML,
+			Tunnel1PreSharedKey: "SECOND_KEY",
+			ExpectTunnelInfo: tfec2.TunnelInfo{
+				Tunnel1Address:          "2.2.2.2",
+				Tunnel1BGPASN:           "2222",
+				Tunnel1BGPHoldTime:      32,
+				Tunnel1CgwInsideAddress: "169.254.12.1",
+				Tunnel1PreSharedKey:     "SECOND_KEY",
+				Tunnel1VgwInsideAddress: "169.254.12.2",
+				Tunnel2Address:          "1.1.1.1",
+				Tunnel2BGPASN:           "1111",
+				Tunnel2BGPHoldTime:      31,
+				Tunnel2CgwInsideAddress: "169.254.11.1",
+				Tunnel2PreSharedKey:     "FIRST_KEY",
+				Tunnel2VgwInsideAddress: "168.254.11.2",
+			},
+		},
+		{
+			Name:              "Tunnel1InsideCidr",
+			XML:               testAccVPNTunnelInfoXML,
+			Tunnel1InsideCidr: "169.254.12.0/30",
+			ExpectTunnelInfo: tfec2.TunnelInfo{
+				Tunnel1Address:          "2.2.2.2",
+				Tunnel1BGPASN:           "2222",
+				Tunnel1BGPHoldTime:      32,
+				Tunnel1CgwInsideAddress: "169.254.12.1",
+				Tunnel1PreSharedKey:     "SECOND_KEY",
+				Tunnel1VgwInsideAddress: "169.254.12.2",
+				Tunnel2Address:          "1.1.1.1",
+				Tunnel2BGPASN:           "1111",
+				Tunnel2BGPHoldTime:      31,
+				Tunnel2CgwInsideAddress: "169.254.11.1",
+				Tunnel2PreSharedKey:     "FIRST_KEY",
+				Tunnel2VgwInsideAddress: "168.254.11.2",
+			},
+		},
+		// IPv6 logic is equivalent to IPv4, so we can reuse configuration, expected, etc.
+		{
+			Name:                  "Tunnel1InsideIpv6Cidr",
+			XML:                   testAccVPNTunnelInfoXML,
+			Tunnel1InsideIpv6Cidr: "169.254.12.1",
+			ExpectTunnelInfo: tfec2.TunnelInfo{
+				Tunnel1Address:          "2.2.2.2",
+				Tunnel1BGPASN:           "2222",
+				Tunnel1BGPHoldTime:      32,
+				Tunnel1CgwInsideAddress: "169.254.12.1",
+				Tunnel1PreSharedKey:     "SECOND_KEY",
+				Tunnel1VgwInsideAddress: "169.254.12.2",
+				Tunnel2Address:          "1.1.1.1",
+				Tunnel2BGPASN:           "1111",
+				Tunnel2BGPHoldTime:      31,
+				Tunnel2CgwInsideAddress: "169.254.11.1",
+				Tunnel2PreSharedKey:     "FIRST_KEY",
+				Tunnel2VgwInsideAddress: "168.254.11.2",
+			},
+		},
+	}
+
+	for _, testCase := range testCases {
+		testCase := testCase
+
+		t.Run(testCase.Name, func(t *testing.T) {
+			tunnelInfo, err := tfec2.XmlConfigToTunnelInfo(testCase.XML, testCase.Tunnel1PreSharedKey, testCase.Tunnel1InsideCidr, testCase.Tunnel1InsideIpv6Cidr)
+
+			if err == nil && testCase.ExpectError {
+				t.Fatalf("expected error, got none")
+			}
+
+			if err != nil && !testCase.ExpectError {
+				t.Fatalf("expected no error, got: %s", err)
+			}
+
+			if actual, expected := *tunnelInfo, testCase.ExpectTunnelInfo; !reflect.DeepEqual(actual, expected) { // nosemgrep: prefer-aws-go-sdk-pointer-conversion-assignment
+				t.Errorf("expected tfec2.TunnelInfo:\n%+v\n\ngot:\n%+v\n\n", expected, actual)
+			}
+		})
+	}
+}
+
 func TestAccEC2VPNConnection_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
@@ -619,6 +728,10 @@ func TestAccEC2VPNConnection_disappears(t *testing.T) {
 	})
 }
 
+// TODO
+// TODO Add tests which update connection and tunnel options.
+// TODO
+
 func testAccVPNConnectionDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 	for _, rs := range s.RootModule().Resources {
@@ -687,115 +800,6 @@ func testAccVPNConnectionExists(vpnConnectionResource string, vpnConnection *ec2
 		*vpnConnection = *resp.VpnConnections[0]
 
 		return nil
-	}
-}
-
-func TestXmlConfigToTunnelInfo(t *testing.T) {
-	testCases := []struct {
-		Name                  string
-		XML                   string
-		Tunnel1PreSharedKey   string
-		Tunnel1InsideCidr     string
-		Tunnel1InsideIpv6Cidr string
-		ExpectError           bool
-		ExpectTunnelInfo      tfec2.TunnelInfo
-	}{
-		{
-			Name: "outside address sort",
-			XML:  testAccVPNTunnelInfoXML,
-			ExpectTunnelInfo: tfec2.TunnelInfo{
-				Tunnel1Address:          "1.1.1.1",
-				Tunnel1BGPASN:           "1111",
-				Tunnel1BGPHoldTime:      31,
-				Tunnel1CgwInsideAddress: "169.254.11.1",
-				Tunnel1PreSharedKey:     "FIRST_KEY",
-				Tunnel1VgwInsideAddress: "168.254.11.2",
-				Tunnel2Address:          "2.2.2.2",
-				Tunnel2BGPASN:           "2222",
-				Tunnel2BGPHoldTime:      32,
-				Tunnel2CgwInsideAddress: "169.254.12.1",
-				Tunnel2PreSharedKey:     "SECOND_KEY",
-				Tunnel2VgwInsideAddress: "169.254.12.2",
-			},
-		},
-		{
-			Name:                "Tunnel1PreSharedKey",
-			XML:                 testAccVPNTunnelInfoXML,
-			Tunnel1PreSharedKey: "SECOND_KEY",
-			ExpectTunnelInfo: tfec2.TunnelInfo{
-				Tunnel1Address:          "2.2.2.2",
-				Tunnel1BGPASN:           "2222",
-				Tunnel1BGPHoldTime:      32,
-				Tunnel1CgwInsideAddress: "169.254.12.1",
-				Tunnel1PreSharedKey:     "SECOND_KEY",
-				Tunnel1VgwInsideAddress: "169.254.12.2",
-				Tunnel2Address:          "1.1.1.1",
-				Tunnel2BGPASN:           "1111",
-				Tunnel2BGPHoldTime:      31,
-				Tunnel2CgwInsideAddress: "169.254.11.1",
-				Tunnel2PreSharedKey:     "FIRST_KEY",
-				Tunnel2VgwInsideAddress: "168.254.11.2",
-			},
-		},
-		{
-			Name:              "Tunnel1InsideCidr",
-			XML:               testAccVPNTunnelInfoXML,
-			Tunnel1InsideCidr: "169.254.12.0/30",
-			ExpectTunnelInfo: tfec2.TunnelInfo{
-				Tunnel1Address:          "2.2.2.2",
-				Tunnel1BGPASN:           "2222",
-				Tunnel1BGPHoldTime:      32,
-				Tunnel1CgwInsideAddress: "169.254.12.1",
-				Tunnel1PreSharedKey:     "SECOND_KEY",
-				Tunnel1VgwInsideAddress: "169.254.12.2",
-				Tunnel2Address:          "1.1.1.1",
-				Tunnel2BGPASN:           "1111",
-				Tunnel2BGPHoldTime:      31,
-				Tunnel2CgwInsideAddress: "169.254.11.1",
-				Tunnel2PreSharedKey:     "FIRST_KEY",
-				Tunnel2VgwInsideAddress: "168.254.11.2",
-			},
-		},
-		// IPv6 logic is equivalent to IPv4, so we can reuse configuration, expected, etc.
-		{
-			Name:                  "Tunnel1InsideIpv6Cidr",
-			XML:                   testAccVPNTunnelInfoXML,
-			Tunnel1InsideIpv6Cidr: "169.254.12.1",
-			ExpectTunnelInfo: tfec2.TunnelInfo{
-				Tunnel1Address:          "2.2.2.2",
-				Tunnel1BGPASN:           "2222",
-				Tunnel1BGPHoldTime:      32,
-				Tunnel1CgwInsideAddress: "169.254.12.1",
-				Tunnel1PreSharedKey:     "SECOND_KEY",
-				Tunnel1VgwInsideAddress: "169.254.12.2",
-				Tunnel2Address:          "1.1.1.1",
-				Tunnel2BGPASN:           "1111",
-				Tunnel2BGPHoldTime:      31,
-				Tunnel2CgwInsideAddress: "169.254.11.1",
-				Tunnel2PreSharedKey:     "FIRST_KEY",
-				Tunnel2VgwInsideAddress: "168.254.11.2",
-			},
-		},
-	}
-
-	for _, testCase := range testCases {
-		testCase := testCase
-
-		t.Run(testCase.Name, func(t *testing.T) {
-			tunnelInfo, err := tfec2.XmlConfigToTunnelInfo(testCase.XML, testCase.Tunnel1PreSharedKey, testCase.Tunnel1InsideCidr, testCase.Tunnel1InsideIpv6Cidr)
-
-			if err == nil && testCase.ExpectError {
-				t.Fatalf("expected error, got none")
-			}
-
-			if err != nil && !testCase.ExpectError {
-				t.Fatalf("expected no error, got: %s", err)
-			}
-
-			if actual, expected := *tunnelInfo, testCase.ExpectTunnelInfo; !reflect.DeepEqual(actual, expected) { // nosemgrep: prefer-aws-go-sdk-pointer-conversion-assignment
-				t.Errorf("expected tfec2.TunnelInfo:\n%+v\n\ngot:\n%+v\n\n", expected, actual)
-			}
-		})
 	}
 }
 

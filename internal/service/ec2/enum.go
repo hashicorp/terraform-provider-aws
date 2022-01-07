@@ -24,6 +24,10 @@ const (
 	VpcEndpointStateRejected          = "rejected"
 )
 
+const (
+	VpnStateModifying = "modifying"
+)
+
 // See https://docs.aws.amazon.com/vm-import/latest/userguide/vmimport-image-import.html#check-import-task-status
 const (
 	EBSSnapshotImportStateActive     = "active"

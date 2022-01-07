@@ -14,7 +14,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -466,63 +465,36 @@ func resourceVPNConnectionCreate(d *schema.ResourceData, meta interface{}) error
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
-	// Fill the connection options for the EC2 API
-	connectOpts := expandVpnConnectionOptions(d)
-
-	createOpts := &ec2.CreateVpnConnectionInput{
+	input := &ec2.CreateVpnConnectionInput{
 		CustomerGatewayId: aws.String(d.Get("customer_gateway_id").(string)),
-		Options:           connectOpts,
-		Type:              aws.String(d.Get("type").(string)),
+		Options:           expandVpnConnectionOptionsSpecification(d),
 		TagSpecifications: ec2TagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeVpnConnection),
+		Type:              aws.String(d.Get("type").(string)),
 	}
 
 	if v, ok := d.GetOk("transit_gateway_id"); ok {
-		createOpts.TransitGatewayId = aws.String(v.(string))
+		input.TransitGatewayId = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("vpn_gateway_id"); ok {
-		createOpts.VpnGatewayId = aws.String(v.(string))
+		input.VpnGatewayId = aws.String(v.(string))
 	}
 
-	// Create the VPN Connection
-	log.Printf("[DEBUG] Creating vpn connection")
-	resp, err := conn.CreateVpnConnection(createOpts)
+	log.Printf("[DEBUG] Creating EC2 VPN Connection: %s", input)
+	output, err := conn.CreateVpnConnection(input)
+
 	if err != nil {
-		return fmt.Errorf("Error creating vpn connection: %s", err)
+		return fmt.Errorf("error creating EC2 VPN Connection: %w", err)
 	}
 
-	d.SetId(aws.StringValue(resp.VpnConnection.VpnConnectionId))
+	d.SetId(aws.StringValue(output.VpnConnection.VpnConnectionId))
 
-	if err := waitForEc2VpnConnectionAvailable(conn, d.Id()); err != nil {
-		return fmt.Errorf("error waiting for VPN connection (%s) to become available: %s", d.Id(), err)
+	if _, err := WaitVPNConnectionCreated(conn, d.Id()); err != nil {
+		return fmt.Errorf("error waiting for EC2 VPN Connection (%s) create: %w", d.Id(), err)
 	}
 
 	// Read off the API to populate our RO fields.
 	return resourceVPNConnectionRead(d, meta)
-}
-
-func vpnConnectionRefreshFunc(conn *ec2.EC2, connectionId string) resource.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		resp, err := conn.DescribeVpnConnections(&ec2.DescribeVpnConnectionsInput{
-			VpnConnectionIds: []*string{aws.String(connectionId)},
-		})
-
-		if err != nil {
-			if tfawserr.ErrMessageContains(err, "InvalidVpnConnectionID.NotFound", "") {
-				resp = nil
-			} else {
-				log.Printf("Error on VPNConnectionRefresh: %s", err)
-				return nil, "", err
-			}
-		}
-
-		if resp == nil || len(resp.VpnConnections) == 0 {
-			return nil, "", nil
-		}
-
-		connection := resp.VpnConnections[0]
-		return connection, aws.StringValue(connection.State), nil
-	}
 }
 
 func resourceVPNConnectionRead(d *schema.ResourceData, meta interface{}) error {
@@ -728,211 +700,39 @@ func resourceVPNConnectionRead(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func flattenTunnelOptions(d *schema.ResourceData, vpnConnection *ec2.VpnConnection) error {
-	if len(vpnConnection.Options.TunnelOptions) >= 1 {
-		if err := d.Set("tunnel1_dpd_timeout_action", vpnConnection.Options.TunnelOptions[0].DpdTimeoutAction); err != nil {
-			return err
-		}
-
-		if err := d.Set("tunnel1_dpd_timeout_seconds", vpnConnection.Options.TunnelOptions[0].DpdTimeoutSeconds); err != nil {
-			return err
-		}
-
-		ikeVersions := []string{}
-		for _, ikeVersion := range vpnConnection.Options.TunnelOptions[0].IkeVersions {
-			ikeVersions = append(ikeVersions, *ikeVersion.Value)
-		}
-		if err := d.Set("tunnel1_ike_versions", ikeVersions); err != nil {
-			return err
-		}
-
-		phase1DHGroupNumbers := []int64{}
-		for _, phase1DHGroupNumber := range vpnConnection.Options.TunnelOptions[0].Phase1DHGroupNumbers {
-			phase1DHGroupNumbers = append(phase1DHGroupNumbers, *phase1DHGroupNumber.Value)
-		}
-		if err := d.Set("tunnel1_phase1_dh_group_numbers", phase1DHGroupNumbers); err != nil {
-			return err
-		}
-
-		phase1EncAlgorithms := []string{}
-		for _, phase1EncAlgorithm := range vpnConnection.Options.TunnelOptions[0].Phase1EncryptionAlgorithms {
-			phase1EncAlgorithms = append(phase1EncAlgorithms, *phase1EncAlgorithm.Value)
-		}
-		if err := d.Set("tunnel1_phase1_encryption_algorithms", phase1EncAlgorithms); err != nil {
-			return err
-		}
-
-		phase1IntegrityAlgorithms := []string{}
-		for _, phase1IntegrityAlgorithm := range vpnConnection.Options.TunnelOptions[0].Phase1IntegrityAlgorithms {
-			phase1IntegrityAlgorithms = append(phase1IntegrityAlgorithms, *phase1IntegrityAlgorithm.Value)
-		}
-		if err := d.Set("tunnel1_phase1_integrity_algorithms", phase1IntegrityAlgorithms); err != nil {
-			return err
-		}
-
-		if err := d.Set("tunnel1_phase1_lifetime_seconds", vpnConnection.Options.TunnelOptions[0].Phase1LifetimeSeconds); err != nil {
-			return err
-		}
-
-		phase2DHGroupNumbers := []int64{}
-		for _, phase2DHGroupNumber := range vpnConnection.Options.TunnelOptions[0].Phase2DHGroupNumbers {
-			phase2DHGroupNumbers = append(phase2DHGroupNumbers, *phase2DHGroupNumber.Value)
-		}
-		if err := d.Set("tunnel1_phase2_dh_group_numbers", phase2DHGroupNumbers); err != nil {
-			return err
-		}
-
-		phase2EncAlgorithms := []string{}
-		for _, phase2EncAlgorithm := range vpnConnection.Options.TunnelOptions[0].Phase2EncryptionAlgorithms {
-			phase2EncAlgorithms = append(phase2EncAlgorithms, *phase2EncAlgorithm.Value)
-		}
-		if err := d.Set("tunnel1_phase2_encryption_algorithms", phase2EncAlgorithms); err != nil {
-			return err
-		}
-
-		phase2IntegrityAlgorithms := []string{}
-		for _, phase2IntegrityAlgorithm := range vpnConnection.Options.TunnelOptions[0].Phase2IntegrityAlgorithms {
-			phase2IntegrityAlgorithms = append(phase2IntegrityAlgorithms, *phase2IntegrityAlgorithm.Value)
-		}
-		if err := d.Set("tunnel1_phase2_integrity_algorithms", phase2IntegrityAlgorithms); err != nil {
-			return err
-		}
-
-		if err := d.Set("tunnel1_phase2_lifetime_seconds", vpnConnection.Options.TunnelOptions[0].Phase2LifetimeSeconds); err != nil {
-			return err
-		}
-
-		if err := d.Set("tunnel1_rekey_fuzz_percentage", vpnConnection.Options.TunnelOptions[0].RekeyFuzzPercentage); err != nil {
-			return err
-		}
-
-		if err := d.Set("tunnel1_rekey_margin_time_seconds", vpnConnection.Options.TunnelOptions[0].RekeyMarginTimeSeconds); err != nil {
-			return err
-		}
-
-		if err := d.Set("tunnel1_replay_window_size", vpnConnection.Options.TunnelOptions[0].ReplayWindowSize); err != nil {
-			return err
-		}
-
-		if err := d.Set("tunnel1_startup_action", vpnConnection.Options.TunnelOptions[0].StartupAction); err != nil {
-			return err
-		}
-
-		if err := d.Set("tunnel1_inside_cidr", vpnConnection.Options.TunnelOptions[0].TunnelInsideCidr); err != nil {
-			return err
-		}
-
-		if err := d.Set("tunnel1_inside_ipv6_cidr", vpnConnection.Options.TunnelOptions[0].TunnelInsideIpv6Cidr); err != nil {
-			return err
-		}
-	}
-	if len(vpnConnection.Options.TunnelOptions) >= 2 {
-		if err := d.Set("tunnel2_dpd_timeout_action", vpnConnection.Options.TunnelOptions[1].DpdTimeoutAction); err != nil {
-			return err
-		}
-
-		if err := d.Set("tunnel2_dpd_timeout_seconds", vpnConnection.Options.TunnelOptions[1].DpdTimeoutSeconds); err != nil {
-			return err
-		}
-
-		ikeVersions := []string{}
-		for _, ikeVersion := range vpnConnection.Options.TunnelOptions[1].IkeVersions {
-			ikeVersions = append(ikeVersions, *ikeVersion.Value)
-		}
-		if err := d.Set("tunnel2_ike_versions", ikeVersions); err != nil {
-			return err
-		}
-
-		phase1DHGroupNumbers := []int64{}
-		for _, phase1DHGroupNumber := range vpnConnection.Options.TunnelOptions[1].Phase1DHGroupNumbers {
-			phase1DHGroupNumbers = append(phase1DHGroupNumbers, *phase1DHGroupNumber.Value)
-		}
-		if err := d.Set("tunnel2_phase1_dh_group_numbers", phase1DHGroupNumbers); err != nil {
-			return err
-		}
-
-		phase1EncAlgorithms := []string{}
-		for _, phase1EncAlgorithm := range vpnConnection.Options.TunnelOptions[1].Phase1EncryptionAlgorithms {
-			phase1EncAlgorithms = append(phase1EncAlgorithms, *phase1EncAlgorithm.Value)
-		}
-
-		if err := d.Set("tunnel2_phase1_encryption_algorithms", phase1EncAlgorithms); err != nil {
-			return err
-		}
-
-		phase1IntegrityAlgorithms := []string{}
-		for _, phase1IntegrityAlgorithm := range vpnConnection.Options.TunnelOptions[1].Phase1IntegrityAlgorithms {
-			phase1IntegrityAlgorithms = append(phase1IntegrityAlgorithms, *phase1IntegrityAlgorithm.Value)
-		}
-		if err := d.Set("tunnel2_phase1_integrity_algorithms", phase1IntegrityAlgorithms); err != nil {
-			return err
-		}
-
-		if err := d.Set("tunnel2_phase1_lifetime_seconds", vpnConnection.Options.TunnelOptions[1].Phase1LifetimeSeconds); err != nil {
-			return err
-		}
-
-		phase2DHGroupNumbers := []int64{}
-		for _, phase2DHGroupNumber := range vpnConnection.Options.TunnelOptions[1].Phase2DHGroupNumbers {
-			phase2DHGroupNumbers = append(phase2DHGroupNumbers, *phase2DHGroupNumber.Value)
-		}
-		if err := d.Set("tunnel2_phase2_dh_group_numbers", phase2DHGroupNumbers); err != nil {
-			return err
-		}
-
-		phase2EncAlgorithms := []string{}
-		for _, phase2EncAlgorithm := range vpnConnection.Options.TunnelOptions[1].Phase2EncryptionAlgorithms {
-			phase2EncAlgorithms = append(phase2EncAlgorithms, *phase2EncAlgorithm.Value)
-		}
-
-		if err := d.Set("tunnel2_phase2_encryption_algorithms", phase2EncAlgorithms); err != nil {
-			return err
-		}
-
-		phase2IntegrityAlgorithms := []string{}
-		for _, phase2IntegrityAlgorithm := range vpnConnection.Options.TunnelOptions[1].Phase2IntegrityAlgorithms {
-			phase2IntegrityAlgorithms = append(phase2IntegrityAlgorithms, *phase2IntegrityAlgorithm.Value)
-		}
-		if err := d.Set("tunnel2_phase2_integrity_algorithms", phase2IntegrityAlgorithms); err != nil {
-			return err
-		}
-
-		if err := d.Set("tunnel2_phase2_lifetime_seconds", vpnConnection.Options.TunnelOptions[1].Phase2LifetimeSeconds); err != nil {
-			return err
-		}
-
-		if err := d.Set("tunnel2_rekey_fuzz_percentage", vpnConnection.Options.TunnelOptions[1].RekeyFuzzPercentage); err != nil {
-			return err
-		}
-
-		if err := d.Set("tunnel2_rekey_margin_time_seconds", vpnConnection.Options.TunnelOptions[1].RekeyMarginTimeSeconds); err != nil {
-			return err
-		}
-
-		if err := d.Set("tunnel2_replay_window_size", vpnConnection.Options.TunnelOptions[1].ReplayWindowSize); err != nil {
-			return err
-		}
-
-		if err := d.Set("tunnel2_startup_action", vpnConnection.Options.TunnelOptions[1].StartupAction); err != nil {
-			return err
-		}
-
-		if err := d.Set("tunnel2_inside_cidr", vpnConnection.Options.TunnelOptions[1].TunnelInsideCidr); err != nil {
-			return err
-		}
-
-		if err := d.Set("tunnel2_inside_ipv6_cidr", vpnConnection.Options.TunnelOptions[1].TunnelInsideIpv6Cidr); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
 func resourceVPNConnectionUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
-	if err := modifyVpnConnectionOptions(d, conn); err != nil {
-		return err
+	if d.HasChanges("local_ipv4_network_cidr", "local_ipv6_network_cidr", "remote_ipv4_network_cidr", "remote_ipv6_network_cidr") {
+		input := &ec2.ModifyVpnConnectionOptionsInput{
+			VpnConnectionId: aws.String(d.Id()),
+		}
+
+		if d.HasChange("local_ipv4_network_cidr") {
+			input.LocalIpv4NetworkCidr = aws.String(d.Get("local_ipv4_network_cidr").(string))
+		}
+
+		if d.HasChange("local_ipv6_network_cidr") {
+			input.LocalIpv6NetworkCidr = aws.String(d.Get("local_ipv6_network_cidr").(string))
+		}
+
+		if d.HasChange("remote_ipv4_network_cidr") {
+			input.RemoteIpv4NetworkCidr = aws.String(d.Get("remote_ipv4_network_cidr").(string))
+		}
+
+		if d.HasChange("remote_ipv6_network_cidr") {
+			input.RemoteIpv6NetworkCidr = aws.String(d.Get("remote_ipv6_network_cidr").(string))
+		}
+
+		_, err := conn.ModifyVpnConnectionOptions(input)
+
+		if err != nil {
+			return fmt.Errorf("error modifying EC2 VPN Connection (%s) connection options: %w", d.Id(), err)
+		}
+
+		if _, err := WaitVPNConnectionUpdated(conn, d.Id()); err != nil {
+			return fmt.Errorf("error waiting for EC2 VPN Connection (%s) connection options update: %w", d.Id(), err)
+		}
 	}
 
 	if err := modifyVpnTunnels(d, conn); err != nil {
@@ -941,10 +741,9 @@ func resourceVPNConnectionUpdate(d *schema.ResourceData, meta interface{}) error
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
-		vpnConnectionID := d.Id()
 
-		if err := UpdateTags(conn, vpnConnectionID, o, n); err != nil {
-			return fmt.Errorf("error updating EC2 VPN Connection (%s) tags: %s", d.Id(), err)
+		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
+			return fmt.Errorf("error updating EC2 VPN Connection (%s) tags: %w", d.Id(), err)
 		}
 	}
 
@@ -974,7 +773,7 @@ func resourceVPNConnectionDelete(d *schema.ResourceData, meta interface{}) error
 	return nil
 }
 
-func expandVpnConnectionOptions(d *schema.ResourceData) *ec2.VpnConnectionOptionsSpecification {
+func expandVpnConnectionOptionsSpecification(d *schema.ResourceData) *ec2.VpnConnectionOptionsSpecification {
 	var connectOpts *ec2.VpnConnectionOptionsSpecification = new(ec2.VpnConnectionOptionsSpecification)
 	ipv := d.Get("tunnel_inside_ip_version").(string)
 	if ipv == "ipv6" {
@@ -1221,6 +1020,206 @@ func expandVpnTunnelOptions(d *schema.ResourceData) []*ec2.VpnTunnelOptionsSpeci
 	return options
 }
 
+func flattenTunnelOptions(d *schema.ResourceData, vpnConnection *ec2.VpnConnection) error {
+	if len(vpnConnection.Options.TunnelOptions) >= 1 {
+		if err := d.Set("tunnel1_dpd_timeout_action", vpnConnection.Options.TunnelOptions[0].DpdTimeoutAction); err != nil {
+			return err
+		}
+
+		if err := d.Set("tunnel1_dpd_timeout_seconds", vpnConnection.Options.TunnelOptions[0].DpdTimeoutSeconds); err != nil {
+			return err
+		}
+
+		ikeVersions := []string{}
+		for _, ikeVersion := range vpnConnection.Options.TunnelOptions[0].IkeVersions {
+			ikeVersions = append(ikeVersions, *ikeVersion.Value)
+		}
+		if err := d.Set("tunnel1_ike_versions", ikeVersions); err != nil {
+			return err
+		}
+
+		phase1DHGroupNumbers := []int64{}
+		for _, phase1DHGroupNumber := range vpnConnection.Options.TunnelOptions[0].Phase1DHGroupNumbers {
+			phase1DHGroupNumbers = append(phase1DHGroupNumbers, *phase1DHGroupNumber.Value)
+		}
+		if err := d.Set("tunnel1_phase1_dh_group_numbers", phase1DHGroupNumbers); err != nil {
+			return err
+		}
+
+		phase1EncAlgorithms := []string{}
+		for _, phase1EncAlgorithm := range vpnConnection.Options.TunnelOptions[0].Phase1EncryptionAlgorithms {
+			phase1EncAlgorithms = append(phase1EncAlgorithms, *phase1EncAlgorithm.Value)
+		}
+		if err := d.Set("tunnel1_phase1_encryption_algorithms", phase1EncAlgorithms); err != nil {
+			return err
+		}
+
+		phase1IntegrityAlgorithms := []string{}
+		for _, phase1IntegrityAlgorithm := range vpnConnection.Options.TunnelOptions[0].Phase1IntegrityAlgorithms {
+			phase1IntegrityAlgorithms = append(phase1IntegrityAlgorithms, *phase1IntegrityAlgorithm.Value)
+		}
+		if err := d.Set("tunnel1_phase1_integrity_algorithms", phase1IntegrityAlgorithms); err != nil {
+			return err
+		}
+
+		if err := d.Set("tunnel1_phase1_lifetime_seconds", vpnConnection.Options.TunnelOptions[0].Phase1LifetimeSeconds); err != nil {
+			return err
+		}
+
+		phase2DHGroupNumbers := []int64{}
+		for _, phase2DHGroupNumber := range vpnConnection.Options.TunnelOptions[0].Phase2DHGroupNumbers {
+			phase2DHGroupNumbers = append(phase2DHGroupNumbers, *phase2DHGroupNumber.Value)
+		}
+		if err := d.Set("tunnel1_phase2_dh_group_numbers", phase2DHGroupNumbers); err != nil {
+			return err
+		}
+
+		phase2EncAlgorithms := []string{}
+		for _, phase2EncAlgorithm := range vpnConnection.Options.TunnelOptions[0].Phase2EncryptionAlgorithms {
+			phase2EncAlgorithms = append(phase2EncAlgorithms, *phase2EncAlgorithm.Value)
+		}
+		if err := d.Set("tunnel1_phase2_encryption_algorithms", phase2EncAlgorithms); err != nil {
+			return err
+		}
+
+		phase2IntegrityAlgorithms := []string{}
+		for _, phase2IntegrityAlgorithm := range vpnConnection.Options.TunnelOptions[0].Phase2IntegrityAlgorithms {
+			phase2IntegrityAlgorithms = append(phase2IntegrityAlgorithms, *phase2IntegrityAlgorithm.Value)
+		}
+		if err := d.Set("tunnel1_phase2_integrity_algorithms", phase2IntegrityAlgorithms); err != nil {
+			return err
+		}
+
+		if err := d.Set("tunnel1_phase2_lifetime_seconds", vpnConnection.Options.TunnelOptions[0].Phase2LifetimeSeconds); err != nil {
+			return err
+		}
+
+		if err := d.Set("tunnel1_rekey_fuzz_percentage", vpnConnection.Options.TunnelOptions[0].RekeyFuzzPercentage); err != nil {
+			return err
+		}
+
+		if err := d.Set("tunnel1_rekey_margin_time_seconds", vpnConnection.Options.TunnelOptions[0].RekeyMarginTimeSeconds); err != nil {
+			return err
+		}
+
+		if err := d.Set("tunnel1_replay_window_size", vpnConnection.Options.TunnelOptions[0].ReplayWindowSize); err != nil {
+			return err
+		}
+
+		if err := d.Set("tunnel1_startup_action", vpnConnection.Options.TunnelOptions[0].StartupAction); err != nil {
+			return err
+		}
+
+		if err := d.Set("tunnel1_inside_cidr", vpnConnection.Options.TunnelOptions[0].TunnelInsideCidr); err != nil {
+			return err
+		}
+
+		if err := d.Set("tunnel1_inside_ipv6_cidr", vpnConnection.Options.TunnelOptions[0].TunnelInsideIpv6Cidr); err != nil {
+			return err
+		}
+	}
+	if len(vpnConnection.Options.TunnelOptions) >= 2 {
+		if err := d.Set("tunnel2_dpd_timeout_action", vpnConnection.Options.TunnelOptions[1].DpdTimeoutAction); err != nil {
+			return err
+		}
+
+		if err := d.Set("tunnel2_dpd_timeout_seconds", vpnConnection.Options.TunnelOptions[1].DpdTimeoutSeconds); err != nil {
+			return err
+		}
+
+		ikeVersions := []string{}
+		for _, ikeVersion := range vpnConnection.Options.TunnelOptions[1].IkeVersions {
+			ikeVersions = append(ikeVersions, *ikeVersion.Value)
+		}
+		if err := d.Set("tunnel2_ike_versions", ikeVersions); err != nil {
+			return err
+		}
+
+		phase1DHGroupNumbers := []int64{}
+		for _, phase1DHGroupNumber := range vpnConnection.Options.TunnelOptions[1].Phase1DHGroupNumbers {
+			phase1DHGroupNumbers = append(phase1DHGroupNumbers, *phase1DHGroupNumber.Value)
+		}
+		if err := d.Set("tunnel2_phase1_dh_group_numbers", phase1DHGroupNumbers); err != nil {
+			return err
+		}
+
+		phase1EncAlgorithms := []string{}
+		for _, phase1EncAlgorithm := range vpnConnection.Options.TunnelOptions[1].Phase1EncryptionAlgorithms {
+			phase1EncAlgorithms = append(phase1EncAlgorithms, *phase1EncAlgorithm.Value)
+		}
+
+		if err := d.Set("tunnel2_phase1_encryption_algorithms", phase1EncAlgorithms); err != nil {
+			return err
+		}
+
+		phase1IntegrityAlgorithms := []string{}
+		for _, phase1IntegrityAlgorithm := range vpnConnection.Options.TunnelOptions[1].Phase1IntegrityAlgorithms {
+			phase1IntegrityAlgorithms = append(phase1IntegrityAlgorithms, *phase1IntegrityAlgorithm.Value)
+		}
+		if err := d.Set("tunnel2_phase1_integrity_algorithms", phase1IntegrityAlgorithms); err != nil {
+			return err
+		}
+
+		if err := d.Set("tunnel2_phase1_lifetime_seconds", vpnConnection.Options.TunnelOptions[1].Phase1LifetimeSeconds); err != nil {
+			return err
+		}
+
+		phase2DHGroupNumbers := []int64{}
+		for _, phase2DHGroupNumber := range vpnConnection.Options.TunnelOptions[1].Phase2DHGroupNumbers {
+			phase2DHGroupNumbers = append(phase2DHGroupNumbers, *phase2DHGroupNumber.Value)
+		}
+		if err := d.Set("tunnel2_phase2_dh_group_numbers", phase2DHGroupNumbers); err != nil {
+			return err
+		}
+
+		phase2EncAlgorithms := []string{}
+		for _, phase2EncAlgorithm := range vpnConnection.Options.TunnelOptions[1].Phase2EncryptionAlgorithms {
+			phase2EncAlgorithms = append(phase2EncAlgorithms, *phase2EncAlgorithm.Value)
+		}
+
+		if err := d.Set("tunnel2_phase2_encryption_algorithms", phase2EncAlgorithms); err != nil {
+			return err
+		}
+
+		phase2IntegrityAlgorithms := []string{}
+		for _, phase2IntegrityAlgorithm := range vpnConnection.Options.TunnelOptions[1].Phase2IntegrityAlgorithms {
+			phase2IntegrityAlgorithms = append(phase2IntegrityAlgorithms, *phase2IntegrityAlgorithm.Value)
+		}
+		if err := d.Set("tunnel2_phase2_integrity_algorithms", phase2IntegrityAlgorithms); err != nil {
+			return err
+		}
+
+		if err := d.Set("tunnel2_phase2_lifetime_seconds", vpnConnection.Options.TunnelOptions[1].Phase2LifetimeSeconds); err != nil {
+			return err
+		}
+
+		if err := d.Set("tunnel2_rekey_fuzz_percentage", vpnConnection.Options.TunnelOptions[1].RekeyFuzzPercentage); err != nil {
+			return err
+		}
+
+		if err := d.Set("tunnel2_rekey_margin_time_seconds", vpnConnection.Options.TunnelOptions[1].RekeyMarginTimeSeconds); err != nil {
+			return err
+		}
+
+		if err := d.Set("tunnel2_replay_window_size", vpnConnection.Options.TunnelOptions[1].ReplayWindowSize); err != nil {
+			return err
+		}
+
+		if err := d.Set("tunnel2_startup_action", vpnConnection.Options.TunnelOptions[1].StartupAction); err != nil {
+			return err
+		}
+
+		if err := d.Set("tunnel2_inside_cidr", vpnConnection.Options.TunnelOptions[1].TunnelInsideCidr); err != nil {
+			return err
+		}
+
+		if err := d.Set("tunnel2_inside_ipv6_cidr", vpnConnection.Options.TunnelOptions[1].TunnelInsideIpv6Cidr); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 // routesToMapList turns the list of routes into a list of maps.
 func routesToMapList(routes []*ec2.VpnStaticRoute) []map[string]interface{} {
 	result := make([]map[string]interface{}, 0, len(routes))
@@ -1256,47 +1255,6 @@ func telemetryToMapList(telemetry []*ec2.VgwTelemetry) []map[string]interface{} 
 	}
 
 	return result
-}
-
-func modifyVpnConnectionOptions(d *schema.ResourceData, conn *ec2.EC2) error {
-	var connOpts *ec2.ModifyVpnConnectionOptionsInput = new(ec2.ModifyVpnConnectionOptionsInput)
-	connChanged := false
-
-	vpnConnectionID := d.Id()
-
-	if d.HasChange("local_ipv4_network_cidr") {
-		connChanged = true
-		connOpts.LocalIpv4NetworkCidr = aws.String(d.Get("local_ipv4_network_cidr").(string))
-	}
-
-	if d.HasChange("local_ipv6_network_cidr") {
-		connChanged = true
-		connOpts.LocalIpv6NetworkCidr = aws.String(d.Get("local_ipv6_network_cidr").(string))
-	}
-
-	if d.HasChange("remote_ipv4_network_cidr") {
-		connChanged = true
-		connOpts.RemoteIpv4NetworkCidr = aws.String(d.Get("remote_ipv4_network_cidr").(string))
-	}
-
-	if d.HasChange("remote_ipv6_network_cidr") {
-		connChanged = true
-		connOpts.RemoteIpv6NetworkCidr = aws.String(d.Get("remote_ipv6_network_cidr").(string))
-	}
-
-	if connChanged {
-		connOpts.VpnConnectionId = aws.String(vpnConnectionID)
-		_, err := conn.ModifyVpnConnectionOptions(connOpts)
-		if err != nil {
-			return fmt.Errorf("Error modifying vpn connection options: %s", err)
-		}
-
-		if err := waitForEc2VpnConnectionAvailableWhenModifying(conn, vpnConnectionID); err != nil {
-			return fmt.Errorf("error waiting for VPN connection (%s) to become available: %s", vpnConnectionID, err)
-		}
-	}
-
-	return nil
 }
 
 func modifyVpnTunnels(d *schema.ResourceData, conn *ec2.EC2) error {
@@ -1535,82 +1493,25 @@ func modifyVpnTunnelOptions(conn *ec2.EC2, vgwTelemetry *schema.Set, vpnConnecti
 	if v := vgwTelemetry; v.Len() > 0 {
 		vpnTunnelOutsideIPAddress := v.List()[vgwTelemetryTunIndex].(map[string]interface{})["outside_ip_address"].(string)
 
-		o := &ec2.ModifyVpnTunnelOptionsInput{
+		input := &ec2.ModifyVpnTunnelOptionsInput{
+			TunnelOptions:             optionsTun,
 			VpnConnectionId:           aws.String(vpnConnectionID),
 			VpnTunnelOutsideIpAddress: aws.String(vpnTunnelOutsideIPAddress),
-			TunnelOptions:             optionsTun,
 		}
 
-		_, err := conn.ModifyVpnTunnelOptions(o)
+		log.Printf("[DEBUG] Modifying EC2 VPN Connection tunnel options: %s", input)
+		_, err := conn.ModifyVpnTunnelOptions(input)
+
 		if err != nil {
-			return fmt.Errorf("Error modifying vpn tunnel options: %s", err)
+			return fmt.Errorf("error modifying EC2 VPN Connection (%s) tunnel options: %w", vpnConnectionID, err)
 		}
 
-		if err := waitForEc2VpnConnectionAvailableWhenModifying(conn, vpnConnectionID); err != nil {
-			return fmt.Errorf("error waiting for VPN connection (%s) to become available: %s", vpnConnectionID, err)
+		if _, err := WaitVPNConnectionUpdated(conn, vpnConnectionID); err != nil {
+			return fmt.Errorf("error waiting for EC2 VPN Connection (%s) tunnel options update: %w", vpnConnectionID, err)
 		}
 	}
 
 	return nil
-}
-
-func waitForEc2VpnConnectionAvailable(conn *ec2.EC2, id string) error {
-	// Wait for the connection to become available. This has an obscenely
-	// high default timeout because AWS VPN connections are notoriously
-	// slow at coming up or going down. There's also no point in checking
-	// more frequently than every ten seconds.
-	stateConf := &resource.StateChangeConf{
-		Pending:    []string{ec2.VpnStatePending},
-		Target:     []string{ec2.VpnStateAvailable},
-		Refresh:    vpnConnectionRefreshFunc(conn, id),
-		Timeout:    40 * time.Minute,
-		Delay:      10 * time.Second,
-		MinTimeout: 10 * time.Second,
-	}
-
-	_, err := stateConf.WaitForState()
-
-	return err
-}
-
-func waitForEc2VpnConnectionAvailableWhenModifying(conn *ec2.EC2, id string) error {
-	// Wait for the connection to become available. This has an obscenely
-	// high default timeout because AWS VPN connections are notoriously
-	// slow at coming up or going down. There's also no point in checking
-	// more frequently than every ten seconds.
-	stateConf := &resource.StateChangeConf{
-		Pending:    []string{"modifying"}, // VPN state modifying const is not available in SDK
-		Target:     []string{ec2.VpnStateAvailable},
-		Refresh:    vpnConnectionRefreshFunc(conn, id),
-		Timeout:    40 * time.Minute,
-		Delay:      10 * time.Second,
-		MinTimeout: 10 * time.Second,
-	}
-
-	_, err := stateConf.WaitForState()
-
-	return err
-}
-
-func WaitForVPNConnectionDeletion(conn *ec2.EC2, id string) error {
-	// These things can take quite a while to tear themselves down and any
-	// attempt to modify resources they reference (e.g. CustomerGateways or
-	// VPN Gateways) before deletion will result in an error. Furthermore,
-	// they don't just disappear. The go into "deleted" state. We need to
-	// wait to ensure any other modifications the user might make to their
-	// VPC stack can safely run.
-	stateConf := &resource.StateChangeConf{
-		Pending:    []string{ec2.VpnStateDeleting},
-		Target:     []string{ec2.VpnStateDeleted},
-		Refresh:    vpnConnectionRefreshFunc(conn, id),
-		Timeout:    30 * time.Minute,
-		Delay:      10 * time.Second,
-		MinTimeout: 10 * time.Second,
-	}
-
-	_, err := stateConf.WaitForState()
-
-	return err
 }
 
 // The tunnel1 parameters are optionally used to correctly order tunnel configurations.
