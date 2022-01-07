@@ -546,7 +546,7 @@ func ResourceDistribution() *schema.Resource {
 										Type:         schema.TypeInt,
 										Optional:     true,
 										Default:      30,
-										ValidateFunc: validation.IntBetween(1, 60),
+										ValidateFunc: validation.IntBetween(1, 180),
 									},
 									"origin_protocol_policy": {
 										Type:         schema.TypeString,
