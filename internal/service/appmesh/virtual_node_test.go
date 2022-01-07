@@ -102,7 +102,7 @@ func testAccVirtualNode_backendClientPolicyACM(t *testing.T) {
 				Config: testAccAppmeshVirtualNodeConfigRootCA(domain),
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckACMPCACertificateAuthorityExists(acmCAResourceName, &ca),
-					acctest.CheckACMPCACertificateAuthorityActivateCA(&ca),
+					acctest.CheckACMPCACertificateAuthorityActivateRootCA(&ca),
 				),
 			},
 			{
@@ -940,7 +940,7 @@ func testAccVirtualNode_listenerTLS(t *testing.T) {
 				Config: testAccAppmeshVirtualNodeConfigRootCA(domain),
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckACMPCACertificateAuthorityExists(acmCAResourceName, &ca),
-					acctest.CheckACMPCACertificateAuthorityActivateCA(&ca),
+					acctest.CheckACMPCACertificateAuthorityActivateRootCA(&ca),
 				),
 			},
 			{
