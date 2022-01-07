@@ -8,7 +8,7 @@ description: |-
 
 # Resource: aws_fsx_data_repository_association
 
-Manages a Manages a FSx for Lustre Data Repository Association.. See [Linking your file system to an S3 bucket](https://docs.aws.amazon.com/fsx/latest/LustreGuide/create-dra-linked-data-repo.html) for more information.
+Manages a FSx for Lustre Data Repository Association. See [Linking your file system to an S3 bucket](https://docs.aws.amazon.com/fsx/latest/LustreGuide/create-dra-linked-data-repo.html) for more information.
 
 ~> **NOTE:** Data Repository Associations are only compatiable with AWS FSx for Lustre File Systems and `PERSISTENT_2` deployment type.
 
