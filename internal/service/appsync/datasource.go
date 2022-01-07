@@ -635,11 +635,11 @@ func expandAppsyncHTTPDataSourceAwsIamConfig(l []interface{}) *appsync.AwsIamCon
 
 	result := &appsync.AwsIamConfig{}
 
-	if v, ok := configured["signing_region"].(string); ok {
+	if v, ok := configured["signing_region"].(string); ok && v != "" {
 		result.SigningRegion = aws.String(v)
 	}
 
-	if v, ok := configured["signing_service_name"].(string); ok {
+	if v, ok := configured["signing_service_name"].(string); ok && v != "" {
 		result.SigningServiceName = aws.String(v)
 	}
 

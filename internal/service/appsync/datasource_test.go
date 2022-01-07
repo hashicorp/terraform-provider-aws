@@ -361,12 +361,12 @@ func testAccAppSyncDataSource_Type_http_auth(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExistsDataSource(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "http_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "http_config.0.endpoint", "http://example.com"),
+					resource.TestCheckResourceAttr(resourceName, "http_config.0.endpoint", fmt.Sprintf("https://appsync.%s.amazonaws.com/", acctest.Region())),
 					resource.TestCheckResourceAttr(resourceName, "http_config.0.authorization_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "http_config.0.authorization_config.0.authorization_type", "AWS_IAM"),
 					resource.TestCheckResourceAttr(resourceName, "http_config.0.authorization_config.0.aws_iam_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "http_config.0.authorization_config.0.aws_iam_config.0.signing_region", acctest.Region()),
-					resource.TestCheckResourceAttr(resourceName, "http_config.0.authorization_config.0.aws_iam_config.0.signing_service_name", "3"),
+					resource.TestCheckResourceAttr(resourceName, "http_config.0.authorization_config.0.aws_iam_config.0.signing_service_name", "appsync"),
 					resource.TestCheckResourceAttr(resourceName, "type", "HTTP"),
 				),
 			},
@@ -394,7 +394,7 @@ func testAccAppsyncDatasource_Type_RelationalDatabase(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExistsDataSource(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "relational_database_config.0.http_endpoint_config.0.region", acctest.Region()),
-					resource.TestCheckResourceAttrPair(resourceName, "relational_database_config.0.http_endpoint_config.0.database_name", "aws_rds_cluster.test", "database_name"),
+					resource.TestCheckResourceAttrPair(resourceName, "relational_database_config.0.http_endpoint_config.0.db_cluster_identifier", "aws_rds_cluster.test", "id"),
 					resource.TestCheckResourceAttrPair(resourceName, "relational_database_config.0.http_endpoint_config.0.aws_secret_store_arn", "aws_secretsmanager_secret.test", "arn"),
 				),
 			},
@@ -423,6 +423,7 @@ func testAccAppsyncDatasource_Type_RelationalDatabaseWithOptions(t *testing.T) {
 					testAccCheckExistsDataSource(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "relational_database_config.0.http_endpoint_config.0.schema", "mydb"),
 					resource.TestCheckResourceAttr(resourceName, "relational_database_config.0.http_endpoint_config.0.region", acctest.Region()),
+					resource.TestCheckResourceAttrPair(resourceName, "relational_database_config.0.http_endpoint_config.0.db_cluster_identifier", "aws_rds_cluster.test", "id"),
 					resource.TestCheckResourceAttrPair(resourceName, "relational_database_config.0.http_endpoint_config.0.database_name", "aws_rds_cluster.test", "database_name"),
 					resource.TestCheckResourceAttrPair(resourceName, "relational_database_config.0.http_endpoint_config.0.aws_secret_store_arn", "aws_secretsmanager_secret.test", "arn"),
 				),
@@ -899,18 +900,55 @@ resource "aws_appsync_graphql_api" "test" {
   name                = %[1]q
 }
 
+resource "aws_iam_role" "test" {
+  name = %[1]q
+  assume_role_policy = jsonencode({
+    "Version" : "2012-10-17",
+    "Statement" : [
+      {
+        "Action" : "sts:AssumeRole",
+        "Principal" : {
+          "Service" : "appsync.amazonaws.com"
+        },
+        "Effect" : "Allow"
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy" "test" {
+  role = aws_iam_role.test.id
+  policy = jsonencode({
+    "Version" : "2012-10-17",
+    "Statement" : [
+      {
+        "Action" : [
+          "appsync:ListGraphqlApis"
+        ],
+        "Effect" : "Allow",
+        "Resource" : [
+          "*"
+        ]
+      }
+    ]
+  })
+}
+
 resource "aws_appsync_datasource" "test" {
-  api_id = aws_appsync_graphql_api.test.id
-  name   = %[1]q
-  type   = "HTTP"
+  api_id           = aws_appsync_graphql_api.test.id
+  name             = %[1]q
+  type             = "HTTP"
+  service_role_arn = aws_iam_role.test.arn
 
   http_config {
-    endpoint = "http://example.com"
+    endpoint = "https://appsync.%[2]s.amazonaws.com/"
 
     authorization_config {
+      authorization_type = "AWS_IAM"
+
       aws_iam_config {
         signing_region       = %[2]q
-        signing_service_name = "s3"
+        signing_service_name = "appsync"
       }
     }
   }
