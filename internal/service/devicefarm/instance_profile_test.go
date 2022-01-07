@@ -197,7 +197,7 @@ func testAccCheckDeviceFarmInstanceProfileDestroy(s *terraform.State) error {
 func testAccDeviceFarmInstanceProfileConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_devicefarm_instance_profile" "test" {
-  name        = %[1]q
+  name = %[1]q
 }
 `, rName)
 }
@@ -205,7 +205,7 @@ resource "aws_devicefarm_instance_profile" "test" {
 func testAccDeviceFarmInstanceProfileConfigTags1(rName, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_devicefarm_instance_profile" "test" {
-  name        = %[1]q
+  name = %[1]q
 
   tags = {
     %[2]q = %[3]q
@@ -217,7 +217,7 @@ resource "aws_devicefarm_instance_profile" "test" {
 func testAccDeviceFarmInstanceProfileConfigTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 resource "aws_devicefarm_instance_profile" "test" {
-  name        = %[1]q
+  name = %[1]q
 
   tags = {
     %[2]q = %[3]q
