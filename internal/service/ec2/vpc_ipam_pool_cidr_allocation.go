@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
@@ -39,6 +40,19 @@ func ResourceVPCIpamPoolCidrAllocation() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
+			},
+			"disallowed_cidrs": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				ForceNew: true,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+					ValidateFunc: validation.Any(
+						verify.ValidIPv4CIDRNetworkAddress,
+						// Follow the numbers used for netmask_length
+						validation.IsCIDRNetwork(0, 32),
+					),
+				},
 			},
 			"ipam_pool_allocation_id": {
 				Type:     schema.TypeString,
@@ -87,6 +101,10 @@ func resourceVPCIpamPoolCidrAllocationCreate(d *schema.ResourceData, meta interf
 
 	if v, ok := d.GetOk("cidr"); ok {
 		input.Cidr = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("disallowed_cidrs"); ok && v.(*schema.Set).Len() > 0 {
+		input.DisallowedCidrs = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
 	if v := d.Get("netmask_length"); v != 0 {
