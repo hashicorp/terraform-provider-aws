@@ -29,7 +29,7 @@ func testAccErrorCheckSkipECS(t *testing.T) resource.ErrorCheckFunc {
 func TestAccECSTaskDefinition_basic(t *testing.T) {
 	var def ecs.TaskDefinition
 
-	tdName := sdkacctest.RandomWithPrefix("tf-acc-td-basic")
+	tdName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_task_definition.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -53,10 +53,11 @@ func TestAccECSTaskDefinition_basic(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateIdFunc: testAccTaskDefinitionImportStateIdFunc(resourceName),
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateIdFunc:       testAccTaskDefinitionImportStateIdFunc(resourceName),
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"skip_destroy"},
 			},
 		},
 	})
@@ -66,7 +67,7 @@ func TestAccECSTaskDefinition_basic(t *testing.T) {
 func TestAccECSTaskDefinition_withScratchVolume(t *testing.T) {
 	var def ecs.TaskDefinition
 
-	tdName := sdkacctest.RandomWithPrefix("tf-acc-td-with-scratch-volume")
+	tdName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_task_definition.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -82,10 +83,11 @@ func TestAccECSTaskDefinition_withScratchVolume(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateIdFunc: testAccTaskDefinitionImportStateIdFunc(resourceName),
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateIdFunc:       testAccTaskDefinitionImportStateIdFunc(resourceName),
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"skip_destroy"},
 			},
 		},
 	})
@@ -94,7 +96,7 @@ func TestAccECSTaskDefinition_withScratchVolume(t *testing.T) {
 func TestAccECSTaskDefinition_withDockerVolume(t *testing.T) {
 	var def ecs.TaskDefinition
 
-	tdName := sdkacctest.RandomWithPrefix("tf-acc-td-with-docker-volume")
+	tdName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_task_definition.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -124,10 +126,11 @@ func TestAccECSTaskDefinition_withDockerVolume(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateIdFunc: testAccTaskDefinitionImportStateIdFunc(resourceName),
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateIdFunc:       testAccTaskDefinitionImportStateIdFunc(resourceName),
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"skip_destroy"},
 			},
 		},
 	})
@@ -136,7 +139,7 @@ func TestAccECSTaskDefinition_withDockerVolume(t *testing.T) {
 func TestAccECSTaskDefinition_withDockerVolumeMinimal(t *testing.T) {
 	var def ecs.TaskDefinition
 
-	tdName := sdkacctest.RandomWithPrefix("tf-acc-td-with-docker-volume")
+	tdName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_task_definition.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -158,10 +161,11 @@ func TestAccECSTaskDefinition_withDockerVolumeMinimal(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateIdFunc: testAccTaskDefinitionImportStateIdFunc(resourceName),
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateIdFunc:       testAccTaskDefinitionImportStateIdFunc(resourceName),
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"skip_destroy"},
 			},
 		},
 	})
@@ -170,7 +174,7 @@ func TestAccECSTaskDefinition_withDockerVolumeMinimal(t *testing.T) {
 func TestAccECSTaskDefinition_withRuntimePlatform(t *testing.T) {
 	var def ecs.TaskDefinition
 
-	tdName := sdkacctest.RandomWithPrefix("tf-acc-td-with-runtime-platform")
+	tdName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_task_definition.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -191,10 +195,11 @@ func TestAccECSTaskDefinition_withRuntimePlatform(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateIdFunc: testAccTaskDefinitionImportStateIdFunc(resourceName),
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateIdFunc:       testAccTaskDefinitionImportStateIdFunc(resourceName),
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"skip_destroy"},
 			},
 		},
 	})
@@ -203,7 +208,7 @@ func TestAccECSTaskDefinition_withRuntimePlatform(t *testing.T) {
 func TestAccECSTaskDefinition_Fargate_withRuntimePlatform(t *testing.T) {
 	var def ecs.TaskDefinition
 
-	tdName := sdkacctest.RandomWithPrefix("tf-acc-td-with-runtime-platform")
+	tdName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_task_definition.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -224,10 +229,11 @@ func TestAccECSTaskDefinition_Fargate_withRuntimePlatform(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateIdFunc: testAccTaskDefinitionImportStateIdFunc(resourceName),
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateIdFunc:       testAccTaskDefinitionImportStateIdFunc(resourceName),
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"skip_destroy"},
 			},
 		},
 	})
@@ -236,7 +242,7 @@ func TestAccECSTaskDefinition_Fargate_withRuntimePlatform(t *testing.T) {
 func TestAccECSTaskDefinition_Fargate_withRuntimePlatformWithoutArch(t *testing.T) {
 	var def ecs.TaskDefinition
 
-	tdName := sdkacctest.RandomWithPrefix("tf-acc-td-with-runtime-platform")
+	tdName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_task_definition.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -256,10 +262,11 @@ func TestAccECSTaskDefinition_Fargate_withRuntimePlatformWithoutArch(t *testing.
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateIdFunc: testAccTaskDefinitionImportStateIdFunc(resourceName),
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateIdFunc:       testAccTaskDefinitionImportStateIdFunc(resourceName),
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"skip_destroy"},
 			},
 		},
 	})
@@ -268,7 +275,7 @@ func TestAccECSTaskDefinition_Fargate_withRuntimePlatformWithoutArch(t *testing.
 func TestAccECSTaskDefinition_withEFSVolumeMinimal(t *testing.T) {
 	var def ecs.TaskDefinition
 
-	tdName := sdkacctest.RandomWithPrefix("tf-acc-td-with-efs-volume-min")
+	tdName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_task_definition.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -290,10 +297,11 @@ func TestAccECSTaskDefinition_withEFSVolumeMinimal(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateIdFunc: testAccTaskDefinitionImportStateIdFunc(resourceName),
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateIdFunc:       testAccTaskDefinitionImportStateIdFunc(resourceName),
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"skip_destroy"},
 			},
 		},
 	})
@@ -302,7 +310,7 @@ func TestAccECSTaskDefinition_withEFSVolumeMinimal(t *testing.T) {
 func TestAccECSTaskDefinition_withEFSVolume(t *testing.T) {
 	var def ecs.TaskDefinition
 
-	tdName := sdkacctest.RandomWithPrefix("tf-acc-td-with-efs-volume")
+	tdName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_task_definition.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -325,10 +333,11 @@ func TestAccECSTaskDefinition_withEFSVolume(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateIdFunc: testAccTaskDefinitionImportStateIdFunc(resourceName),
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateIdFunc:       testAccTaskDefinitionImportStateIdFunc(resourceName),
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"skip_destroy"},
 			},
 		},
 	})
@@ -337,7 +346,7 @@ func TestAccECSTaskDefinition_withEFSVolume(t *testing.T) {
 func TestAccECSTaskDefinition_withTransitEncryptionEFSVolume(t *testing.T) {
 	var def ecs.TaskDefinition
 
-	tdName := sdkacctest.RandomWithPrefix("tf-acc-td-with-efs-volume")
+	tdName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_task_definition.test"
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -361,10 +370,11 @@ func TestAccECSTaskDefinition_withTransitEncryptionEFSVolume(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateIdFunc: testAccTaskDefinitionImportStateIdFunc(resourceName),
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateIdFunc:       testAccTaskDefinitionImportStateIdFunc(resourceName),
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"skip_destroy"},
 			},
 		},
 	})
@@ -373,7 +383,7 @@ func TestAccECSTaskDefinition_withTransitEncryptionEFSVolume(t *testing.T) {
 func TestAccECSTaskDefinition_withEFSAccessPoint(t *testing.T) {
 	var def ecs.TaskDefinition
 
-	tdName := sdkacctest.RandomWithPrefix("tf-acc-td-with-efs-volume")
+	tdName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_task_definition.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -401,10 +411,11 @@ func TestAccECSTaskDefinition_withEFSAccessPoint(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateIdFunc: testAccTaskDefinitionImportStateIdFunc(resourceName),
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateIdFunc:       testAccTaskDefinitionImportStateIdFunc(resourceName),
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"skip_destroy"},
 			},
 		},
 	})
@@ -417,6 +428,10 @@ func TestAccECSTaskDefinition_withFSxWinFileSystem(t *testing.T) {
 	resourceName := "aws_ecs_task_definition.test"
 
 	domainName := acctest.RandomDomainName()
+
+	if testing.Short() {
+		t.Skip("skipping testing in short mode")
+	}
 
 	if acctest.Partition() == "aws-us-gov" {
 		t.Skip("Amazon FSx for Windows File Server volumes for ECS tasks are not supported in GovCloud partition")
@@ -445,10 +460,11 @@ func TestAccECSTaskDefinition_withFSxWinFileSystem(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateIdFunc: testAccTaskDefinitionImportStateIdFunc(resourceName),
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateIdFunc:       testAccTaskDefinitionImportStateIdFunc(resourceName),
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"skip_destroy"},
 			},
 		},
 	})
@@ -457,7 +473,7 @@ func TestAccECSTaskDefinition_withFSxWinFileSystem(t *testing.T) {
 func TestAccECSTaskDefinition_withTaskScopedDockerVolume(t *testing.T) {
 	var def ecs.TaskDefinition
 
-	tdName := sdkacctest.RandomWithPrefix("tf-acc-td-with-docker-volume")
+	tdName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_task_definition.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -475,10 +491,11 @@ func TestAccECSTaskDefinition_withTaskScopedDockerVolume(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateIdFunc: testAccTaskDefinitionImportStateIdFunc(resourceName),
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateIdFunc:       testAccTaskDefinitionImportStateIdFunc(resourceName),
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"skip_destroy"},
 			},
 		},
 	})
@@ -489,9 +506,9 @@ func TestAccECSTaskDefinition_withECSService(t *testing.T) {
 	var def ecs.TaskDefinition
 	var service ecs.Service
 
-	clusterName := sdkacctest.RandomWithPrefix("tf-acc-cluster-with-ecs-service")
-	svcName := sdkacctest.RandomWithPrefix("tf-acc-td-with-ecs-service")
-	tdName := sdkacctest.RandomWithPrefix("tf-acc-td-with-ecs-service")
+	clusterName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	svcName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	tdName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_task_definition.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -515,10 +532,11 @@ func TestAccECSTaskDefinition_withECSService(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateIdFunc: testAccTaskDefinitionImportStateIdFunc(resourceName),
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateIdFunc:       testAccTaskDefinitionImportStateIdFunc(resourceName),
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"skip_destroy"},
 			},
 		},
 	})
@@ -527,9 +545,9 @@ func TestAccECSTaskDefinition_withECSService(t *testing.T) {
 func TestAccECSTaskDefinition_withTaskRoleARN(t *testing.T) {
 	var def ecs.TaskDefinition
 
-	roleName := sdkacctest.RandomWithPrefix("tf-acc-role-ecs-td-with-task-role-arn")
-	policyName := sdkacctest.RandomWithPrefix("tf-acc-policy-ecs-td-with-task-role-arn")
-	tdName := sdkacctest.RandomWithPrefix("tf-acc-td-with-task-role-arn")
+	roleName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	policyName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	tdName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_task_definition.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -545,10 +563,11 @@ func TestAccECSTaskDefinition_withTaskRoleARN(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateIdFunc: testAccTaskDefinitionImportStateIdFunc(resourceName),
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateIdFunc:       testAccTaskDefinitionImportStateIdFunc(resourceName),
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"skip_destroy"},
 			},
 		},
 	})
@@ -557,9 +576,9 @@ func TestAccECSTaskDefinition_withTaskRoleARN(t *testing.T) {
 func TestAccECSTaskDefinition_withNetworkMode(t *testing.T) {
 	var def ecs.TaskDefinition
 
-	roleName := sdkacctest.RandomWithPrefix("tf-acc-ecs-td-with-network-mode")
-	policyName := sdkacctest.RandomWithPrefix("tf-acc-ecs-td-with-network-mode")
-	tdName := sdkacctest.RandomWithPrefix("tf-acc-td-with-network-mode")
+	roleName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	policyName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	tdName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_task_definition.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -576,10 +595,11 @@ func TestAccECSTaskDefinition_withNetworkMode(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateIdFunc: testAccTaskDefinitionImportStateIdFunc(resourceName),
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateIdFunc:       testAccTaskDefinitionImportStateIdFunc(resourceName),
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"skip_destroy"},
 			},
 		},
 	})
@@ -588,9 +608,9 @@ func TestAccECSTaskDefinition_withNetworkMode(t *testing.T) {
 func TestAccECSTaskDefinition_withIPCMode(t *testing.T) {
 	var def ecs.TaskDefinition
 
-	roleName := sdkacctest.RandomWithPrefix("tf-acc-ecs-td-with-ipc-mode")
-	policyName := sdkacctest.RandomWithPrefix("tf-acc-ecs-td-with-ipc-mode")
-	tdName := sdkacctest.RandomWithPrefix("tf-acc-td-with-ipc-mode")
+	roleName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	policyName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	tdName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_task_definition.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -607,10 +627,11 @@ func TestAccECSTaskDefinition_withIPCMode(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateIdFunc: testAccTaskDefinitionImportStateIdFunc(resourceName),
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateIdFunc:       testAccTaskDefinitionImportStateIdFunc(resourceName),
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"skip_destroy"},
 			},
 		},
 	})
@@ -619,9 +640,9 @@ func TestAccECSTaskDefinition_withIPCMode(t *testing.T) {
 func TestAccECSTaskDefinition_withPidMode(t *testing.T) {
 	var def ecs.TaskDefinition
 
-	roleName := sdkacctest.RandomWithPrefix("tf-acc-ecs-td-with-pid-mode")
-	policyName := sdkacctest.RandomWithPrefix("tf-acc-ecs-td-with-pid-mode")
-	tdName := sdkacctest.RandomWithPrefix("tf-acc-td-with-pid-mode")
+	roleName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	policyName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	tdName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_task_definition.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -638,10 +659,11 @@ func TestAccECSTaskDefinition_withPidMode(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateIdFunc: testAccTaskDefinitionImportStateIdFunc(resourceName),
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateIdFunc:       testAccTaskDefinitionImportStateIdFunc(resourceName),
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"skip_destroy"},
 			},
 		},
 	})
@@ -650,7 +672,7 @@ func TestAccECSTaskDefinition_withPidMode(t *testing.T) {
 func TestAccECSTaskDefinition_constraint(t *testing.T) {
 	var def ecs.TaskDefinition
 
-	tdName := sdkacctest.RandomWithPrefix("tf-acc-td-constraint")
+	tdName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_task_definition.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -668,10 +690,11 @@ func TestAccECSTaskDefinition_constraint(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateIdFunc: testAccTaskDefinitionImportStateIdFunc(resourceName),
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateIdFunc:       testAccTaskDefinitionImportStateIdFunc(resourceName),
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"skip_destroy"},
 			},
 		},
 	})
@@ -681,7 +704,7 @@ func TestAccECSTaskDefinition_changeVolumesForcesNewResource(t *testing.T) {
 	var before ecs.TaskDefinition
 	var after ecs.TaskDefinition
 
-	tdName := sdkacctest.RandomWithPrefix("tf-acc-td-change-vol-forces-new-resource")
+	tdName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_task_definition.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -704,10 +727,11 @@ func TestAccECSTaskDefinition_changeVolumesForcesNewResource(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateIdFunc: testAccTaskDefinitionImportStateIdFunc(resourceName),
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateIdFunc:       testAccTaskDefinitionImportStateIdFunc(resourceName),
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"skip_destroy"},
 			},
 		},
 	})
@@ -718,7 +742,7 @@ func TestAccECSTaskDefinition_arrays(t *testing.T) {
 	var conf ecs.TaskDefinition
 	resourceName := "aws_ecs_task_definition.test"
 
-	tdName := sdkacctest.RandomWithPrefix("tf-acc-td-arrays")
+	tdName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -733,10 +757,11 @@ func TestAccECSTaskDefinition_arrays(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateIdFunc: testAccTaskDefinitionImportStateIdFunc(resourceName),
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateIdFunc:       testAccTaskDefinitionImportStateIdFunc(resourceName),
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"skip_destroy"},
 			},
 		},
 	})
@@ -745,7 +770,7 @@ func TestAccECSTaskDefinition_arrays(t *testing.T) {
 func TestAccECSTaskDefinition_fargate(t *testing.T) {
 	var conf ecs.TaskDefinition
 
-	tdName := sdkacctest.RandomWithPrefix("tf-acc-td-fargate")
+	tdName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_task_definition.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -764,10 +789,11 @@ func TestAccECSTaskDefinition_fargate(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateIdFunc: testAccTaskDefinitionImportStateIdFunc(resourceName),
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateIdFunc:       testAccTaskDefinitionImportStateIdFunc(resourceName),
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"skip_destroy"},
 			},
 			{
 				ExpectNonEmptyPlan: false,
@@ -781,7 +807,7 @@ func TestAccECSTaskDefinition_fargate(t *testing.T) {
 func TestAccECSTaskDefinition_Fargate_ephemeralStorage(t *testing.T) {
 	var conf ecs.TaskDefinition
 
-	tdName := sdkacctest.RandomWithPrefix("tf-acc-td-fargate")
+	tdName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_task_definition.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -802,10 +828,11 @@ func TestAccECSTaskDefinition_Fargate_ephemeralStorage(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateIdFunc: testAccTaskDefinitionImportStateIdFunc(resourceName),
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateIdFunc:       testAccTaskDefinitionImportStateIdFunc(resourceName),
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"skip_destroy"},
 			},
 		},
 	})
@@ -814,9 +841,9 @@ func TestAccECSTaskDefinition_Fargate_ephemeralStorage(t *testing.T) {
 func TestAccECSTaskDefinition_executionRole(t *testing.T) {
 	var conf ecs.TaskDefinition
 
-	roleName := sdkacctest.RandomWithPrefix("tf-acc-role-ecs-td-execution-role")
-	policyName := sdkacctest.RandomWithPrefix("tf-acc-policy-ecs-td-execution-role")
-	tdName := sdkacctest.RandomWithPrefix("tf-acc-td-execution-role")
+	roleName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	policyName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	tdName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_task_definition.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -832,10 +859,11 @@ func TestAccECSTaskDefinition_executionRole(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateIdFunc: testAccTaskDefinitionImportStateIdFunc(resourceName),
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateIdFunc:       testAccTaskDefinitionImportStateIdFunc(resourceName),
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"skip_destroy"},
 			},
 		},
 	})
@@ -845,7 +873,7 @@ func TestAccECSTaskDefinition_executionRole(t *testing.T) {
 func TestAccECSTaskDefinition_disappears(t *testing.T) {
 	var def ecs.TaskDefinition
 
-	tdName := sdkacctest.RandomWithPrefix("tf-acc-td-basic")
+	tdName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_task_definition.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -890,10 +918,11 @@ func TestAccECSTaskDefinition_tags(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateIdFunc: testAccTaskDefinitionImportStateIdFunc(resourceName),
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateIdFunc:       testAccTaskDefinitionImportStateIdFunc(resourceName),
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"skip_destroy"},
 			},
 			{
 				Config: testAccTaskDefinitionTags2Config(rName, "key1", "value1updated", "key2", "value2"),
@@ -945,10 +974,11 @@ func TestAccECSTaskDefinition_proxy(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateIdFunc: testAccTaskDefinitionImportStateIdFunc(resourceName),
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateIdFunc:       testAccTaskDefinitionImportStateIdFunc(resourceName),
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"skip_destroy"},
 			},
 		},
 	})
@@ -957,7 +987,7 @@ func TestAccECSTaskDefinition_proxy(t *testing.T) {
 func TestAccECSTaskDefinition_inferenceAccelerator(t *testing.T) {
 	var def ecs.TaskDefinition
 
-	tdName := sdkacctest.RandomWithPrefix("tf-acc-td-basic")
+	tdName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_task_definition.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -974,10 +1004,11 @@ func TestAccECSTaskDefinition_inferenceAccelerator(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateIdFunc: testAccTaskDefinitionImportStateIdFunc(resourceName),
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateIdFunc:       testAccTaskDefinitionImportStateIdFunc(resourceName),
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"skip_destroy"},
 			},
 		},
 	})
