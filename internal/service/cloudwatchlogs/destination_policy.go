@@ -3,7 +3,6 @@ package cloudwatchlogs
 import (
 	"fmt"
 	"log"
-	"strconv"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudwatchlogs"
@@ -56,22 +55,16 @@ func resourceDestinationPolicyPut(d *schema.ResourceData, meta interface{}) erro
 
 	destination_name := d.Get("destination_name").(string)
 
-	policy, err := structure.NormalizeJsonString(d.Get("access_policy").(string))
-
-	if err != nil {
-		return fmt.Errorf("access_policy (%s) is invalid JSON: %w", policy, err)
-	}
-
 	params := &cloudwatchlogs.PutDestinationPolicyInput{
 		DestinationName: aws.String(destination_name),
-		AccessPolicy:    aws.String(policy),
+		AccessPolicy:    aws.String(d.Get("access_policy").(string)),
 	}
 
 	if v, ok := d.GetOk("force_update"); ok {
 		params.ForceUpdate = aws.Bool(v.(bool))
 	}
 
-	_, err = conn.PutDestinationPolicy(params)
+	_, err := conn.PutDestinationPolicy(params)
 
 	if err != nil {
 		return fmt.Errorf("Error creating CloudWatch Log Destination Policy with destination_name %s: %#v", destination_name, err)
@@ -94,23 +87,7 @@ func resourceDestinationPolicyRead(d *schema.ResourceData, meta interface{}) err
 		return nil
 	}
 
-	normalizedPolicy, err := structure.NormalizeJsonString(`"` + aws.StringValue(destination.AccessPolicy) + `"`)
-	if err != nil {
-		return fmt.Errorf("error normalizing Log Destination Policy policy JSON: %w", err)
-	}
-
-	policy, err := strconv.Unquote(normalizedPolicy)
-	if err != nil {
-		return fmt.Errorf("error unescaping Log Destination Policy policy: %w", err)
-	}
-
-	policyToSet, err := verify.SecondJSONUnlessEquivalent(d.Get("policy").(string), policy)
-
-	if err != nil {
-		return fmt.Errorf("while setting policy (%s), encountered: %w", policyToSet, err)
-	}
-
-	d.Set("access_policy", policyToSet)
+	d.Set("access_policy", destination.AccessPolicy)
 	d.Set("destination_name", destination.DestinationName)
 
 	return nil
