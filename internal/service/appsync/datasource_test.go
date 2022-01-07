@@ -853,7 +853,7 @@ resource "aws_appsync_datasource" "test" {
     authorization_config {
       aws_iam_config {
         signing_region       = %[2]q
-        signing_service_name = "s3" 
+        signing_service_name = "s3"
       }
     }
   }
