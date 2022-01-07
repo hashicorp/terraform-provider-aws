@@ -14,7 +14,7 @@ require (
 	github.com/hashicorp/go-cleanhttp v0.5.2
 	github.com/hashicorp/go-cty v1.4.1-0.20200414143053-d3edf31b6320
 	github.com/hashicorp/go-multierror v1.1.1
-	github.com/hashicorp/go-version v1.3.0
+	github.com/hashicorp/go-version v1.4.0
 	github.com/hashicorp/terraform-plugin-sdk/v2 v2.10.1
 	github.com/keybase/go-crypto v0.0.0-20161004153544-93f5b35093ba
 	github.com/mattbaird/jsonpatch v0.0.0-20200820163806-098863c1fc24
