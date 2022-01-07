@@ -94,9 +94,6 @@ func resourceMissionProfileCreate(d *schema.ResourceData, meta interface{}) erro
 	return resourceMissionProfileRead(d, meta)
 }
 
-func Tags(keyValueTags tftags.KeyValueTags) {
-	panic("unimplemented")
-}
 func resourceMissionProfileRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).GroundStationConn
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -117,7 +114,7 @@ func resourceMissionProfileRead(d *schema.ResourceData, meta interface{}) error 
 
 	d.Set("contact_post_pass_duration_seconds", output.ContactPostPassDurationSeconds)
 	d.Set("contact_pre_pass_duration_seconds", output.ContactPrePassDurationSeconds)
-	d.Set("dataflow_edges", flattenDataflowEdges(output.DataflowEdges))
+	d.Set("dataflow_edges", output.DataflowEdges)
 	d.Set("minimum_viable_contact_duration_seconds", output.MinimumViableContactDurationSeconds)
 	d.Set("name", output.Name)
 	d.Set("tracking_config_arn", output.TrackingConfigArn)
@@ -133,7 +130,7 @@ func resourceMissionProfileUpdate(d *schema.ResourceData, meta interface{}) erro
 
 	input := &groundstation.UpdateMissionProfileInput{
 		ContactPostPassDurationSeconds:      aws.Int64(int64(d.Get("contact_post_pass_duration_seconds").(int))),
-		ContactPrePassDurationSeconds:       aws.Int64(int64(d.Get("contact_pre_pass_duration_seconds").(int))),,
+		ContactPrePassDurationSeconds:       aws.Int64(int64(d.Get("contact_pre_pass_duration_seconds").(int))),
 		MinimumViableContactDurationSeconds: aws.Int64(int64(d.Get("minimum_viable_contact_duration_seconds").(int))),
 		Name:                                aws.String(d.Get("name").(string)),
 		TrackingConfigArn:                   aws.String(d.Get("tracking_config_arn").(string)),

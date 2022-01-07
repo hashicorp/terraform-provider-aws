@@ -2,10 +2,12 @@ package groundstation_test
 
 import (
 	"testing"
+
+	"github.com/aws/aws-sdk-go/service/groundstation"
 )
 
 func TestResourceMissionProfile(t *testing.T) {
-	r := resourceMissionProfile()
+	r := ResourceMissionProfile()
 	if r.Schema["contact_post_pass_duration_seconds"].Required {
 		t.Errorf("Expected contact_post_pass_duration_seconds to not be required")
 	}
@@ -24,7 +26,7 @@ func TestResourceMissionProfile(t *testing.T) {
 }
 
 func TestResourceMissionProfileCreate(t *testing.T) {
-	r := resourceMissionProfile()
+	r := ResourceMissionProfile()
 	d := r.TestResourceData()
 	d.SetId("test")
 	d.Set("name", "test")
