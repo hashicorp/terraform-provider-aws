@@ -2789,7 +2789,7 @@ resource "aws_glue_crawler" "test" {
   delta_target {
     connection_name = aws_glue_connection.test.name
     delta_tables    = [%[3]q]
-	write_manifest  = false
+    write_manifest  = false
   }
 }
 `, rName, connectionUrl, tableName)
