@@ -21,6 +21,9 @@ const (
 
 	userActiveTimeout  = 5 * time.Minute
 	userDeletedTimeout = 5 * time.Minute
+
+	snapshotAvailableTimeout = 120 * time.Minute
+	snapshotDeletedTimeout   = 120 * time.Minute
 )
 
 // waitACLActive waits for MemoryDB ACL to reach an active state after modifications.
@@ -130,6 +133,34 @@ func waitUserDeleted(ctx context.Context, conn *memorydb.MemoryDB, userId string
 		Target:  []string{},
 		Refresh: statusUser(ctx, conn, userId),
 		Timeout: userDeletedTimeout,
+	}
+
+	_, err := stateConf.WaitForStateContext(ctx)
+
+	return err
+}
+
+// waitSnapshotAvailable waits for MemoryDB snapshot to reach the available state.
+func waitSnapshotAvailable(ctx context.Context, conn *memorydb.MemoryDB, snapshotId string, timeout time.Duration) error {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{snapshotStatusCreating},
+		Target:  []string{snapshotStatusAvailable},
+		Refresh: statusSnapshot(ctx, conn, snapshotId),
+		Timeout: timeout,
+	}
+
+	_, err := stateConf.WaitForStateContext(ctx)
+
+	return err
+}
+
+// waitSnapshotDeleted waits for MemoryDB snapshot to be deleted.
+func waitSnapshotDeleted(ctx context.Context, conn *memorydb.MemoryDB, snapshotId string, timeout time.Duration) error {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{snapshotStatusDeleting},
+		Target:  []string{},
+		Refresh: statusSnapshot(ctx, conn, snapshotId),
+		Timeout: timeout,
 	}
 
 	_, err := stateConf.WaitForStateContext(ctx)

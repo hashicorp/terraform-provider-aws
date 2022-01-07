@@ -31,6 +31,10 @@ const (
 	clusterSnsTopicStatusActive   = "ACTIVE"
 	clusterSnsTopicStatusInactive = "INACTIVE"
 
+	snapshotStatusCreating  = "creating"
+	snapshotStatusAvailable = "available"
+	snapshotStatusDeleting  = "deleting"
+
 	userStatusActive    = "active"
 	userStatusDeleting  = "deleting"
 	userStatusModifying = "modifying"
@@ -110,6 +114,23 @@ func statusClusterSecurityGroups(ctx context.Context, conn *memorydb.MemoryDB, c
 		}
 
 		return cluster, clusterSecurityGroupStatusActive, nil
+	}
+}
+
+// statusSnapshot fetches the MemoryDB Snapshot and its status.
+func statusSnapshot(ctx context.Context, conn *memorydb.MemoryDB, snapshotName string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		snapshot, err := FindSnapshotByName(ctx, conn, snapshotName)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return snapshot, aws.StringValue(snapshot.Status), nil
 	}
 }
 

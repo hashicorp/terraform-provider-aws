@@ -1403,6 +1403,7 @@ func Provider() *schema.Provider {
 			"aws_memorydb_acl":             memorydb.ResourceACL(),
 			"aws_memorydb_cluster":         memorydb.ResourceCluster(),
 			"aws_memorydb_parameter_group": memorydb.ResourceParameterGroup(),
+			"aws_memorydb_snapshot":        memorydb.ResourceSnapshot(),
 			"aws_memorydb_subnet_group":    memorydb.ResourceSubnetGroup(),
 			"aws_memorydb_user":            memorydb.ResourceUser(),
 
