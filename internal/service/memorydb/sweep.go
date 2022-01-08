@@ -280,7 +280,59 @@ func sweepSnapshots(region string) error {
 }
 
 func sweepSubnetGroups(region string) error {
-	return nil
+	client, err := sweep.SharedRegionalSweepClient(region)
+
+	if err != nil {
+		return fmt.Errorf("error getting client: %w", err)
+	}
+
+	conn := client.(*conns.AWSClient).MemoryDBConn
+	sweepResources := make([]*sweep.SweepResource, 0)
+	var errs *multierror.Error
+
+	input := &memorydb.DescribeSubnetGroupsInput{}
+
+	for {
+		output, err := conn.DescribeSubnetGroups(input)
+
+		for _, SubnetGroup := range output.SubnetGroups {
+			r := ResourceSubnetGroup()
+			d := r.Data(nil)
+
+			id := aws.StringValue(SubnetGroup.Name)
+			if id == "default" {
+				continue // The default subnet group cannot be deleted.
+			}
+
+			d.SetId(id)
+
+			if err != nil {
+				err := fmt.Errorf("error reading MemoryDB Subnet Group (%s): %w", id, err)
+				log.Printf("[ERROR] %s", err)
+				errs = multierror.Append(errs, err)
+				continue
+			}
+
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+		}
+
+		if aws.StringValue(output.NextToken) == "" {
+			break
+		}
+
+		input.NextToken = output.NextToken
+	}
+
+	if err := sweep.SweepOrchestrator(sweepResources); err != nil {
+		errs = multierror.Append(errs, fmt.Errorf("error sweeping MemoryDB Subnet Group for %s: %w", region, err))
+	}
+
+	if sweep.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping MemoryDB Subnet Group sweep for %s: %s", region, errs)
+		return nil
+	}
+
+	return errs.ErrorOrNil()
 }
 
 func sweepUsers(region string) error {
