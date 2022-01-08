@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"log"
 	"math/rand"
-	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -30,7 +29,6 @@ const (
 var (
 	r53NoRecordsFound    = errors.New("No matching records found")
 	r53NoHostedZoneFound = errors.New("No matching Hosted Zone found")
-	r53ValidRecordTypes  = regexp.MustCompile("^(A|AAAA|CAA|CNAME|MX|NAPTR|NS|PTR|SOA|SPF|SRV|TXT|DS)$")
 )
 
 func ResourceRecord() *schema.Resource {
@@ -65,23 +63,9 @@ func ResourceRecord() *schema.Resource {
 			},
 
 			"type": {
-				Type:     schema.TypeString,
-				Required: true,
-				ValidateFunc: validation.StringInSlice([]string{
-					route53.RRTypeSoa,
-					route53.RRTypeA,
-					route53.RRTypeTxt,
-					route53.RRTypeNs,
-					route53.RRTypeCname,
-					route53.RRTypeMx,
-					route53.RRTypeNaptr,
-					route53.RRTypePtr,
-					route53.RRTypeSrv,
-					route53.RRTypeSpf,
-					route53.RRTypeAaaa,
-					route53.RRTypeCaa,
-					route53.RRTypeDs,
-				}, false),
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: validation.StringInSlice(route53.RRType_Values(), false),
 			},
 
 			"zone_id": {
@@ -982,7 +966,7 @@ func ParseRecordID(id string) [4]string {
 	if len(parts) >= 3 {
 		var recTypeIndex int = -1
 		for i, maybeRecType := range parts[1:] {
-			if r53ValidRecordTypes.MatchString(maybeRecType) {
+			if validRecordType(maybeRecType) {
 				recTypeIndex = i + 1
 				break
 			}
@@ -995,4 +979,13 @@ func ParseRecordID(id string) [4]string {
 		}
 	}
 	return [4]string{recZone, recName, recType, recSet}
+}
+
+func validRecordType(s string) bool {
+	for _, v := range route53.RRType_Values() {
+		if v == s {
+			return true
+		}
+	}
+	return false
 }
