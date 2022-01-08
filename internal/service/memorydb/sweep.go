@@ -64,7 +64,59 @@ func init() {
 }
 
 func sweepACLs(region string) error {
-	return nil
+	client, err := sweep.SharedRegionalSweepClient(region)
+
+	if err != nil {
+		return fmt.Errorf("error getting client: %w", err)
+	}
+
+	conn := client.(*conns.AWSClient).MemoryDBConn
+	sweepResources := make([]*sweep.SweepResource, 0)
+	var errs *multierror.Error
+
+	input := &memorydb.DescribeACLsInput{}
+
+	for {
+		output, err := conn.DescribeACLs(input)
+
+		for _, ACL := range output.ACLs {
+			r := ResourceACL()
+			d := r.Data(nil)
+
+			id := aws.StringValue(ACL.Name)
+			if id == "open-access" {
+				continue // The open-access parameter group cannot be deleted.
+			}
+
+			d.SetId(id)
+
+			if err != nil {
+				err := fmt.Errorf("error reading MemoryDB ACL (%s): %w", id, err)
+				log.Printf("[ERROR] %s", err)
+				errs = multierror.Append(errs, err)
+				continue
+			}
+
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+		}
+
+		if aws.StringValue(output.NextToken) == "" {
+			break
+		}
+
+		input.NextToken = output.NextToken
+	}
+
+	if err := sweep.SweepOrchestrator(sweepResources); err != nil {
+		errs = multierror.Append(errs, fmt.Errorf("error sweeping MemoryDB ACL for %s: %w", region, err))
+	}
+
+	if sweep.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping MemoryDB ACL sweep for %s: %s", region, errs)
+		return nil
+	}
+
+	return errs.ErrorOrNil()
 }
 
 func sweepClusters(region string) error {
