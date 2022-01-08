@@ -232,5 +232,57 @@ func sweepSubnetGroups(region string) error {
 }
 
 func sweepUsers(region string) error {
-	return nil
+	client, err := sweep.SharedRegionalSweepClient(region)
+
+	if err != nil {
+		return fmt.Errorf("error getting client: %w", err)
+	}
+
+	conn := client.(*conns.AWSClient).MemoryDBConn
+	sweepResources := make([]*sweep.SweepResource, 0)
+	var errs *multierror.Error
+
+	input := &memorydb.DescribeUsersInput{}
+
+	for {
+		output, err := conn.DescribeUsers(input)
+
+		for _, User := range output.Users {
+			r := ResourceUser()
+			d := r.Data(nil)
+
+			id := aws.StringValue(User.Name)
+			if id == "default" {
+				continue // The default user cannot be deleted.
+			}
+
+			d.SetId(id)
+
+			if err != nil {
+				err := fmt.Errorf("error reading MemoryDB User (%s): %w", id, err)
+				log.Printf("[ERROR] %s", err)
+				errs = multierror.Append(errs, err)
+				continue
+			}
+
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+		}
+
+		if aws.StringValue(output.NextToken) == "" {
+			break
+		}
+
+		input.NextToken = output.NextToken
+	}
+
+	if err := sweep.SweepOrchestrator(sweepResources); err != nil {
+		errs = multierror.Append(errs, fmt.Errorf("error sweeping MemoryDB User for %s: %w", region, err))
+	}
+
+	if sweep.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping MemoryDB User sweep for %s: %s", region, errs)
+		return nil
+	}
+
+	return errs.ErrorOrNil()
 }
