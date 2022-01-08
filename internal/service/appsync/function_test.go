@@ -36,6 +36,8 @@ func testAccAppSyncFunction_basic(t *testing.T) {
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "appsync", regexp.MustCompile("apis/.+/functions/.+")),
 					resource.TestCheckResourceAttr(resourceName, "name", rName2),
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					resource.TestCheckResourceAttr(resourceName, "max_batch_size", "0"),
+					resource.TestCheckResourceAttr(resourceName, "sync_config.#", "0"),
 					resource.TestCheckResourceAttrPair(resourceName, "api_id", "aws_appsync_graphql_api.test", "id"),
 					resource.TestCheckResourceAttrPair(resourceName, "data_source", "aws_appsync_datasource.test", "name"),
 				),
@@ -45,6 +47,36 @@ func testAccAppSyncFunction_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(resourceName, &config),
 					resource.TestCheckResourceAttr(resourceName, "name", rName3),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func testAccAppSyncFunction_syncConfig(t *testing.T) {
+	rName1 := fmt.Sprintf("tfacctest%d", sdkacctest.RandInt())
+	rName2 := fmt.Sprintf("tfexample%s", sdkacctest.RandString(8))
+	resourceName := "aws_appsync_function.test"
+	var config appsync.FunctionConfiguration
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appsync.EndpointsID, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, appsync.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckFunctionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccFunctionSyncConfig(rName1, rName2, acctest.Region()),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFunctionExists(resourceName, &config),
+					resource.TestCheckResourceAttr(resourceName, "sync_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "sync_config.0.conflict_detection", "VERSION"),
+					resource.TestCheckResourceAttr(resourceName, "sync_config.0.conflict_handler", "OPTIMISTIC_CONCURRENCY"),
 				),
 			},
 			{
@@ -227,6 +259,41 @@ EOF
 	$utils.appendError($ctx.result.body, $ctx.result.statusCode)
 #end
 EOF
+}
+`, testAccAppsyncDatasourceConfig_DynamoDBConfig_Region(r1, region), r2)
+}
+
+func testAccFunctionSyncConfig(r1, r2, region string) string {
+	return fmt.Sprintf(`
+%[1]s
+
+resource "aws_appsync_function" "test" {
+  api_id                   = aws_appsync_graphql_api.test.id
+  data_source              = aws_appsync_datasource.test.name
+  name                     = "%[2]s"
+  request_mapping_template = <<EOF
+{
+	"version": "2018-05-29",
+	"method": "GET",
+	"resourcePath": "/",
+	"params":{
+		"headers": $utils.http.copyheaders($ctx.request.headers)
+	}
+}
+EOF
+
+  response_mapping_template = <<EOF
+#if($ctx.result.statusCode == 200)
+	$ctx.result.body
+#else
+	$utils.appendError($ctx.result.body, $ctx.result.statusCode)
+#end
+EOF
+
+  sync_config {
+    conflict_detection = "VERSION"
+    conflict_handler   = "OPTIMISTIC_CONCURRENCY"
+  }
 }
 `, testAccAppsyncDatasourceConfig_DynamoDBConfig_Region(r1, region), r2)
 }

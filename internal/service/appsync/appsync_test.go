@@ -63,6 +63,7 @@ func TestAccAppSync_serial(t *testing.T) {
 			"disappears":              testAccAppSyncFunction_disappears,
 			"description":             testAccAppSyncFunction_description,
 			"responseMappingTemplate": testAccAppSyncFunction_responseMappingTemplate,
+			"sync":                    testAccAppSyncFunction_syncConfig,
 		},
 		"Resolver": {
 			"basic":             testAccAppSyncResolver_basic,

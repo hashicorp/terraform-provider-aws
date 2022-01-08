@@ -132,7 +132,7 @@ func resourceFunctionCreate(d *schema.ResourceData, meta interface{}) error {
 		input.ResponseMappingTemplate = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("max_batch_size"); ok {
+	if v, ok := d.GetOkExists("max_batch_size"); ok {
 		input.MaxBatchSize = aws.Int64(int64(v.(int)))
 	}
 
@@ -219,6 +219,10 @@ func resourceFunctionUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	if v, ok := d.GetOk("max_batch_size"); ok {
 		input.MaxBatchSize = aws.Int64(int64(v.(int)))
+	}
+
+	if v, ok := d.GetOk("sync_config"); ok && len(v.([]interface{})) > 0 {
+		input.SyncConfig = expandAppsyncSyncConfig(v.([]interface{}))
 	}
 
 	_, err = conn.UpdateFunction(input)
