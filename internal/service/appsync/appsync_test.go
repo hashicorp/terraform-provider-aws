@@ -81,6 +81,15 @@ func TestAccAppSync_serial(t *testing.T) {
 			"basic":      testAccAppSyncApiCache_basic,
 			"disappears": testAccAppSyncApiCache_disappears,
 		},
+		"DomainName": {
+			"basic":       testAccAppSyncDomainName_basic,
+			"disappears":  testAccAppSyncDomainName_disappears,
+			"description": testAccAppSyncDomainName_description,
+		},
+		"Association": {
+			"basic":      testAccAppSyncApiAssociation_basic,
+			"disappears": testAccAppSyncApiAssociation_disappears,
+		},
 	}
 
 	for group, m := range testCases {
