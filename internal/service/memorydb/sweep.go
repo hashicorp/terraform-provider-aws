@@ -67,7 +67,55 @@ func sweepACLs(region string) error {
 }
 
 func sweepClusters(region string) error {
-	return nil
+	client, err := sweep.SharedRegionalSweepClient(region)
+
+	if err != nil {
+		return fmt.Errorf("error getting client: %w", err)
+	}
+
+	conn := client.(*conns.AWSClient).MemoryDBConn
+	sweepResources := make([]*sweep.SweepResource, 0)
+	var errs *multierror.Error
+
+	input := &memorydb.DescribeClustersInput{}
+
+	for {
+		output, err := conn.DescribeClusters(input)
+
+		for _, Cluster := range output.Clusters {
+			r := ResourceCluster()
+			d := r.Data(nil)
+
+			id := aws.StringValue(Cluster.Name)
+			d.SetId(id)
+
+			if err != nil {
+				err := fmt.Errorf("error reading MemoryDB Cluster (%s): %w", id, err)
+				log.Printf("[ERROR] %s", err)
+				errs = multierror.Append(errs, err)
+				continue
+			}
+
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+		}
+
+		if aws.StringValue(output.NextToken) == "" {
+			break
+		}
+
+		input.NextToken = output.NextToken
+	}
+
+	if err := sweep.SweepOrchestrator(sweepResources); err != nil {
+		errs = multierror.Append(errs, fmt.Errorf("error sweeping MemoryDB Cluster for %s: %w", region, err))
+	}
+
+	if sweep.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping MemoryDB Cluster sweep for %s: %s", region, errs)
+		return nil
+	}
+
+	return errs.ErrorOrNil()
 }
 
 func sweepParameterGroups(region string) error {
