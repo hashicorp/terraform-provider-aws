@@ -102,19 +102,21 @@ func TestParseRecordId(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		parts := tfroute53.ParseRecordID(tc.Input)
-		if parts[0] != tc.Zone {
-			t.Fatalf("input: %s\noutput: %s\nexpected:%s", tc.Input, parts[0], tc.Zone)
-		}
-		if parts[1] != tc.Name {
-			t.Fatalf("input: %s\noutput: %s\nexpected:%s", tc.Input, parts[1], tc.Name)
-		}
-		if parts[2] != tc.Type {
-			t.Fatalf("input: %s\noutput: %s\nexpected:%s", tc.Input, parts[2], tc.Type)
-		}
-		if parts[3] != tc.Set {
-			t.Fatalf("input: %s\noutput: %s\nexpected:%s", tc.Input, parts[3], tc.Set)
-		}
+		t.Run(tc.Input, func(t *testing.T) {
+			parts := tfroute53.ParseRecordID(tc.Input)
+			if parts[0] != tc.Zone {
+				t.Fatalf("input: %s\nzone: %s\nexpected:%s", tc.Input, parts[0], tc.Zone)
+			}
+			if parts[1] != tc.Name {
+				t.Fatalf("input: %s\nname: %s\nexpected:%s", tc.Input, parts[1], tc.Name)
+			}
+			if parts[2] != tc.Type {
+				t.Fatalf("input: %s\ntype: %s\nexpected:%s", tc.Input, parts[2], tc.Type)
+			}
+			if parts[3] != tc.Set {
+				t.Fatalf("input: %s\nset: %s\nexpected:%s", tc.Input, parts[3], tc.Set)
+			}
+		})
 	}
 }
 
