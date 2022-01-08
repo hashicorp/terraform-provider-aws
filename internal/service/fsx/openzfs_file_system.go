@@ -108,6 +108,7 @@ func ResourceOpenzfsFileSystem() *schema.Resource {
 						"copy_tags_to_snapshots": {
 							Type:     schema.TypeBool,
 							Optional: true,
+							ForceNew: true,
 						},
 						"data_compression_type": {
 							Type:         schema.TypeString,

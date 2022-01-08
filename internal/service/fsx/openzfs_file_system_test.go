@@ -1102,26 +1102,26 @@ resource "aws_fsx_openzfs_file_system" "test" {
     copy_tags_to_snapshots = true
     data_compression_type  = %[2]q
 
-	user_and_group_quotas {
-		id                         = 10
-		storage_capacity_quota_gib = %[4]d
-		type                       = "USER"
-	  }
-	  user_and_group_quotas {
-		id                         = 20
-		storage_capacity_quota_gib = %[5]d
-		type                       = "GROUP"
-	  }
-	  user_and_group_quotas {
-		id                         = 5
-		storage_capacity_quota_gib = %[5]d
-		type                       = "GROUP"
-	  }
-	  user_and_group_quotas {
-		id                         = 100
-		storage_capacity_quota_gib = %[4]d
-		type                       = "USER"
-	  }
+    user_and_group_quotas {
+      id                         = 10
+      storage_capacity_quota_gib = %[4]d
+      type                       = "USER"
+    }
+    user_and_group_quotas {
+      id                         = 20
+      storage_capacity_quota_gib = %[5]d
+      type                       = "GROUP"
+    }
+    user_and_group_quotas {
+      id                         = 5
+      storage_capacity_quota_gib = %[5]d
+      type                       = "GROUP"
+    }
+    user_and_group_quotas {
+      id                         = 100
+      storage_capacity_quota_gib = %[4]d
+      type                       = "USER"
+    }
   }
 
   tags = {
