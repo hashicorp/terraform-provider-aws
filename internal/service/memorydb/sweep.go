@@ -6,6 +6,7 @@ package memorydb
 import (
 	"fmt"
 	"log"
+	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/memorydb"
@@ -119,7 +120,59 @@ func sweepClusters(region string) error {
 }
 
 func sweepParameterGroups(region string) error {
-	return nil
+	client, err := sweep.SharedRegionalSweepClient(region)
+
+	if err != nil {
+		return fmt.Errorf("error getting client: %w", err)
+	}
+
+	conn := client.(*conns.AWSClient).MemoryDBConn
+	sweepResources := make([]*sweep.SweepResource, 0)
+	var errs *multierror.Error
+
+	input := &memorydb.DescribeParameterGroupsInput{}
+
+	for {
+		output, err := conn.DescribeParameterGroups(input)
+
+		for _, ParameterGroup := range output.ParameterGroups {
+			r := ResourceParameterGroup()
+			d := r.Data(nil)
+
+			id := aws.StringValue(ParameterGroup.Name)
+			if strings.HasPrefix(id, "default.") {
+				continue // Default parameter groups cannot be deleted.
+			}
+
+			d.SetId(id)
+
+			if err != nil {
+				err := fmt.Errorf("error reading MemoryDB Parameter Group (%s): %w", id, err)
+				log.Printf("[ERROR] %s", err)
+				errs = multierror.Append(errs, err)
+				continue
+			}
+
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+		}
+
+		if aws.StringValue(output.NextToken) == "" {
+			break
+		}
+
+		input.NextToken = output.NextToken
+	}
+
+	if err := sweep.SweepOrchestrator(sweepResources); err != nil {
+		errs = multierror.Append(errs, fmt.Errorf("error sweeping MemoryDB Parameter Group for %s: %w", region, err))
+	}
+
+	if sweep.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping MemoryDB Parameter Group sweep for %s: %s", region, errs)
+		return nil
+	}
+
+	return errs.ErrorOrNil()
 }
 
 func sweepSnapshots(region string) error {
