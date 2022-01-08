@@ -364,7 +364,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 		return diag.Errorf("error creating MemoryDB Cluster (%s): %s", name, err)
 	}
 
-	if err := waitClusterAvailable(ctx, conn, name); err != nil {
+	if err := waitClusterAvailable(ctx, conn, name, d.Timeout(schema.TimeoutCreate)); err != nil {
 		return diag.Errorf("error waiting for MemoryDB Cluster (%s) to be created: %s", name, err)
 	}
 
@@ -463,7 +463,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 			return diag.Errorf("error updating MemoryDB Cluster (%s): %s", d.Id(), err)
 		}
 
-		if err := waitClusterAvailable(ctx, conn, d.Id()); err != nil {
+		if err := waitClusterAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return diag.Errorf("error waiting for MemoryDB Cluster (%s) to be modified: %s", d.Id(), err)
 		}
 
@@ -613,7 +613,7 @@ func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta int
 		return diag.Errorf("error deleting MemoryDB Cluster (%s): %s", d.Id(), err)
 	}
 
-	if err := waitClusterDeleted(ctx, conn, d.Id()); err != nil {
+	if err := waitClusterDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
 		return diag.Errorf("error waiting for MemoryDB Cluster (%s) to be deleted: %s", d.Id(), err)
 	}
 

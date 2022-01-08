@@ -55,12 +55,12 @@ func waitACLDeleted(ctx context.Context, conn *memorydb.MemoryDB, aclId string) 
 }
 
 // waitClusterAvailable waits for MemoryDB Cluster to reach an active state after modifications.
-func waitClusterAvailable(ctx context.Context, conn *memorydb.MemoryDB, clusterId string) error {
+func waitClusterAvailable(ctx context.Context, conn *memorydb.MemoryDB, clusterId string, timeout time.Duration) error {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{ClusterStatusCreating, ClusterStatusUpdating},
 		Target:  []string{ClusterStatusAvailable},
 		Refresh: statusCluster(ctx, conn, clusterId),
-		Timeout: clusterAvailableTimeout,
+		Timeout: timeout,
 	}
 
 	_, err := stateConf.WaitForStateContext(ctx)
@@ -69,12 +69,12 @@ func waitClusterAvailable(ctx context.Context, conn *memorydb.MemoryDB, clusterI
 }
 
 // waitClusterDeleted waits for MemoryDB Cluster to be deleted.
-func waitClusterDeleted(ctx context.Context, conn *memorydb.MemoryDB, clusterId string) error {
+func waitClusterDeleted(ctx context.Context, conn *memorydb.MemoryDB, clusterId string, timeout time.Duration) error {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{ClusterStatusDeleting},
 		Target:  []string{},
 		Refresh: statusCluster(ctx, conn, clusterId),
-		Timeout: clusterDeletedTimeout,
+		Timeout: timeout,
 	}
 
 	_, err := stateConf.WaitForStateContext(ctx)
