@@ -9,37 +9,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-const (
-	aclStatusActive    = "active"
-	aclStatusCreating  = "creating"
-	aclStatusDeleting  = "deleting"
-	aclStatusModifying = "modifying"
-
-	clusterStatusAvailable = "available"
-	clusterStatusCreating  = "creating"
-	clusterStatusDeleting  = "deleting"
-	clusterStatusUpdating  = "updating"
-
-	clusterParameterGroupStatusApplying = "applying"
-	clusterParameterGroupStatusInSync   = "in-sync"
-
-	clusterSecurityGroupStatusActive    = "active"
-	clusterSecurityGroupStatusModifying = "modifying"
-
-	clusterShardStatusAvailable = "available"
-
-	clusterSnsTopicStatusActive   = "ACTIVE"
-	clusterSnsTopicStatusInactive = "INACTIVE"
-
-	snapshotStatusCreating  = "creating"
-	snapshotStatusAvailable = "available"
-	snapshotStatusDeleting  = "deleting"
-
-	userStatusActive    = "active"
-	userStatusDeleting  = "deleting"
-	userStatusModifying = "modifying"
-)
-
 // statusACL fetches the MemoryDB ACL and its status.
 func statusACL(ctx context.Context, conn *memorydb.MemoryDB, aclName string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
@@ -108,12 +77,12 @@ func statusClusterSecurityGroups(ctx context.Context, conn *memorydb.MemoryDB, c
 			// When at least one security group change is being applied (whether
 			// that be adding or removing an SG), say that we're still in progress.
 
-			if aws.StringValue(sg.Status) != clusterSecurityGroupStatusActive {
-				return cluster, clusterSecurityGroupStatusModifying, nil
+			if aws.StringValue(sg.Status) != ClusterSecurityGroupStatusActive {
+				return cluster, ClusterSecurityGroupStatusModifying, nil
 			}
 		}
 
-		return cluster, clusterSecurityGroupStatusActive, nil
+		return cluster, ClusterSecurityGroupStatusActive, nil
 	}
 }
 

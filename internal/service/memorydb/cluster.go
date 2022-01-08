@@ -450,9 +450,9 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 			input.SnsTopicArn = aws.String(v)
 
 			if v == "" {
-				input.SnsTopicStatus = aws.String(clusterSnsTopicStatusInactive)
+				input.SnsTopicStatus = aws.String(ClusterSNSTopicStatusInactive)
 			} else {
-				input.SnsTopicStatus = aws.String(clusterSnsTopicStatusActive)
+				input.SnsTopicStatus = aws.String(ClusterSNSTopicStatusActive)
 			}
 		}
 
@@ -532,7 +532,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	// For the sake of caution, limit this search to stable shards.
 	var maxNumberOfNodesPerShard int64
 	for _, shard := range cluster.Shards {
-		if aws.StringValue(shard.Status) != clusterShardStatusAvailable {
+		if aws.StringValue(shard.Status) != ClusterShardStatusAvailable {
 			continue
 		}
 
@@ -562,7 +562,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("snapshot_retention_limit", cluster.SnapshotRetentionLimit)
 	d.Set("snapshot_window", cluster.SnapshotWindow)
 
-	if aws.StringValue(cluster.SnsTopicStatus) == clusterSnsTopicStatusActive {
+	if aws.StringValue(cluster.SnsTopicStatus) == ClusterSNSTopicStatusActive {
 		d.Set("sns_topic_arn", cluster.SnsTopicArn)
 	} else {
 		d.Set("sns_topic_arn", "")
