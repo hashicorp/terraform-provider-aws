@@ -739,7 +739,7 @@ resource "aws_subnet" "test" {
   cidr_block        = "10.0.${count.index}.0/24"
   vpc_id            = aws_vpc.test.id
 
-  ipv6_cidr_block				  = cidrsubnet(aws_vpc.test.ipv6_cidr_block, 8, count.index)
+  ipv6_cidr_block                 = cidrsubnet(aws_vpc.test.ipv6_cidr_block, 8, count.index)
   assign_ipv6_address_on_creation = true
 
   tags = {
