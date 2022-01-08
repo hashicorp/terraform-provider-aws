@@ -147,6 +147,13 @@ func ResourceCluster() *schema.Resource {
 								validation.StringMatch(regexp.MustCompile(`^(10|172\.(1[6-9]|2[0-9]|3[0-1])|192\.168)\..*`), "must be within 10.0.0.0/8, 172.16.0.0/12, or 192.168.0.0/16"),
 							),
 						},
+						"ip_family": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Computed:     true,
+							ForceNew:     true,
+							ValidateFunc: validation.StringInSlice(eks.IpFamily_Values(), false),
+						},
 					},
 				},
 			},
@@ -615,6 +622,10 @@ func expandEksNetworkConfigRequest(tfList []interface{}) *eks.KubernetesNetworkC
 		apiObject.ServiceIpv4Cidr = aws.String(v)
 	}
 
+	if v, ok := tfMap["ip_family"].(string); ok && v != "" {
+		apiObject.IpFamily = aws.String(v)
+	}
+
 	return apiObject
 }
 
@@ -748,6 +759,7 @@ func flattenEksNetworkConfig(apiObject *eks.KubernetesNetworkConfigResponse) []i
 
 	tfMap := map[string]interface{}{
 		"service_ipv4_cidr": aws.StringValue(apiObject.ServiceIpv4Cidr),
+		"ip_family":         aws.StringValue(apiObject.IpFamily),
 	}
 
 	return []interface{}{tfMap}
