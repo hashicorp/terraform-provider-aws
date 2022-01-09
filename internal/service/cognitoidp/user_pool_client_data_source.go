@@ -6,7 +6,6 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
@@ -190,12 +189,7 @@ func dataSourceUserPoolClientRead(d *schema.ResourceData, meta interface{}) erro
 	resp, err := conn.DescribeUserPoolClient(params)
 
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, cognitoidentityprovider.ErrCodeResourceNotFoundException, "") {
-			log.Printf("[WARN] Cognito User Pool Client %s is already gone", d.Id())
-			d.SetId("")
-			return nil
-		}
-		return err
+		return fmt.Errorf("error reading Cognito User Pool Client (%s): %w", clientId, err)
 	}
 
 	userPoolClient := resp.UserPoolClient
