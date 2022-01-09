@@ -137,6 +137,13 @@ func ResourceCluster() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"ip_family": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Computed:     true,
+							ForceNew:     true,
+							ValidateFunc: validation.StringInSlice(eks.IpFamily_Values(), false),
+						},
 						"service_ipv4_cidr": {
 							Type:     schema.TypeString,
 							Optional: true,
@@ -146,13 +153,6 @@ func ResourceCluster() *schema.Resource {
 								validation.IsCIDRNetwork(12, 24),
 								validation.StringMatch(regexp.MustCompile(`^(10|172\.(1[6-9]|2[0-9]|3[0-1])|192\.168)\..*`), "must be within 10.0.0.0/8, 172.16.0.0/12, or 192.168.0.0/16"),
 							),
-						},
-						"ip_family": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Computed:     true,
-							ForceNew:     true,
-							ValidateFunc: validation.StringInSlice(eks.IpFamily_Values(), false),
 						},
 					},
 				},
