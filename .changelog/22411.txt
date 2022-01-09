@@ -1,15 +1,15 @@
 ```release-note:enhancement
-resource/aws_appsync_datasource: Add Support for `delta_sync_config` and `versioned` attributes to the `dynamodb_config` block.
+resource/aws_appsync_datasource: Add `delta_sync_config` and `versioned` to the `dynamodb_config` configuration block
 ```
 
 ```release-note:enhancement
-resource/aws_appsync_datasource: Add Support for `authorization_config` attribute to the `http_config` block.
+resource/aws_appsync_datasource: Add `authorization_config` attribute to the `http_config` configuration block
 ```
 
 ```release-note:enhancement
-resource/aws_appsync_datasource: Add plan time validation for `service_role_arn`, `lambda_config.function_arn`
+resource/aws_appsync_datasource: Add plan time validation for `service_role_arn` and `lambda_config.function_arn`
 ```
 
 ```release-note:enhancement
-resource/aws_appsync_datasource: Add support for `relational_database_config` attribute.
+resource/aws_appsync_datasource: Add `relational_database_config` argument
 ```
