@@ -172,12 +172,6 @@ func TestAccEC2VPNConnection_basic(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
-			{
-				Config: testAccVPNConnectionUpdateConfig(rName, rBgpAsn),
-				Check: resource.ComposeTestCheckFunc(
-					testAccVPNConnectionExists(resourceName, &vpn),
-				),
-			},
 		},
 	})
 }
@@ -538,7 +532,7 @@ func TestAccEC2VPNConnection_withoutStaticRoutes(t *testing.T) {
 		CheckDestroy: testAccVPNConnectionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVPNConnectionUpdateConfig(rName, rBgpAsn),
+				Config: testAccVPNConnectionWithoutStaticRoutesConfig(rName, rBgpAsn),
 				Check: resource.ComposeTestCheckFunc(
 					testAccVPNConnectionExists(resourceName, &vpn),
 					resource.TestCheckResourceAttr(resourceName, "static_routes_only", "false"),
@@ -807,8 +801,7 @@ resource "aws_vpn_connection" "test" {
 `, rName, rBgpAsn)
 }
 
-// Change static_routes_only to be false, forcing a refresh.
-func testAccVPNConnectionUpdateConfig(rName string, rBgpAsn int) string {
+func testAccVPNConnectionWithoutStaticRoutesConfig(rName string, rBgpAsn int) string {
 	return fmt.Sprintf(`
 resource "aws_vpn_gateway" "test" {
   tags = {
@@ -822,7 +815,7 @@ resource "aws_customer_gateway" "test" {
   type       = "ipsec.1"
 
   tags = {
-    Name = "%[1]s-2"
+    Name = %[1]q
   }
 }
 

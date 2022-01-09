@@ -616,7 +616,7 @@ func resourceVPNConnectionUpdate(d *schema.ResourceData, meta interface{}) error
 	}
 
 	for i, prefix := range []string{"tunnel1_", "tunnel2_"} {
-		if options, address := expandModifyVpnTunnelOptionsSpecification(d, prefix), d.Get(prefix+"_address").(string); options != nil && address != "" {
+		if options, address := expandModifyVpnTunnelOptionsSpecification(d, prefix), d.Get(prefix+"address").(string); options != nil && address != "" {
 			input := &ec2.ModifyVpnTunnelOptionsInput{
 				TunnelOptions:             options,
 				VpnConnectionId:           aws.String(d.Id()),
