@@ -309,7 +309,7 @@ func TestAccMemoryDBCluster_delete_withFinalSnapshot(t *testing.T) {
 			{
 				Config: testAccClusterConfigBaseNetwork(), // empty Config not supported
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSnapshotExists(rName),
+					testAccCheckSnapshotExistsByName(rName),
 				),
 			},
 		},
@@ -1028,7 +1028,7 @@ func testAccCheckClusterExists(n string) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckSnapshotExists(snapshotName string) resource.TestCheckFunc {
+func testAccCheckSnapshotExistsByName(snapshotName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).MemoryDBConn
 
