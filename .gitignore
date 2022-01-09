@@ -41,8 +41,3 @@ aws/testdata/service/cloudformation/examplecompany-exampleservice-exampleresourc
 *.winfile eol=crlf
 /.vs
 node_modules
-
-
-# TFLINT
-
-.tflint.hcl
