@@ -46,24 +46,23 @@ func DataSourceUserPoolClient() *schema.Resource {
 					Schema: map[string]*schema.Schema{
 						"application_id": {
 							Type:     schema.TypeString,
-							Optional: true,
+							Computed: true,
 						},
 						"application_arn": {
 							Type:     schema.TypeString,
-							Optional: true,
+							Computed: true,
 						},
 						"external_id": {
 							Type:     schema.TypeString,
-							Optional: true,
+							Computed: true,
 						},
 						"role_arn": {
 							Type:     schema.TypeString,
-							Optional: true,
 							Computed: true,
 						},
 						"user_data_shared": {
 							Type:     schema.TypeBool,
-							Optional: true,
+							Computed: true,
 						},
 					},
 				},
@@ -124,7 +123,7 @@ func DataSourceUserPoolClient() *schema.Resource {
 			},
 			"read_attributes": {
 				Type:     schema.TypeSet,
-				Optional: true,
+				Computed: true,
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 				},
@@ -147,15 +146,15 @@ func DataSourceUserPoolClient() *schema.Resource {
 					Schema: map[string]*schema.Schema{
 						"access_token": {
 							Type:     schema.TypeString,
-							Optional: true,
+							Computed: true,
 						},
 						"id_token": {
 							Type:     schema.TypeString,
-							Optional: true,
+							Computed: true,
 						},
 						"refresh_token": {
 							Type:     schema.TypeString,
-							Optional: true,
+							Computed: true,
 						},
 					},
 				},
