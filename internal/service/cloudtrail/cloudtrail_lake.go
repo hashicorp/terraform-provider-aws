@@ -184,7 +184,7 @@ func resourceCloudTrailLakeCreate(ctx context.Context, d *schema.ResourceData, m
 	if v, ok := d.GetOk("multi_region_enabled"); ok {
 		input.MultiRegionEnabled = aws.Bool(v.(bool))
 	}
-	if v, ok := d.GetOk("multi_region_enabled"); ok {
+	if v, ok := d.GetOk("termination_protection_enabled"); ok {
 		input.TerminationProtectionEnabled = aws.Bool(v.(bool))
 	}
 
