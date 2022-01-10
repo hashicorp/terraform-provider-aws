@@ -113,7 +113,6 @@ func ResourceVPNConnection() *schema.Resource {
 			"transit_gateway_id": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				ForceNew:     true,
 				ExactlyOneOf: []string{"transit_gateway_id", "vpn_gateway_id"},
 			},
 			"tunnel_inside_ip_version": {
@@ -396,7 +395,6 @@ func ResourceVPNConnection() *schema.Resource {
 			"vpn_gateway_id": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				ForceNew:     true,
 				ExactlyOneOf: []string{"transit_gateway_id", "vpn_gateway_id"},
 			},
 		},
@@ -583,6 +581,30 @@ func resourceVPNConnectionRead(d *schema.ResourceData, meta interface{}) error {
 
 func resourceVPNConnectionUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
+
+	if d.HasChanges("transit_gateway_id", "vpn_gateway_id") {
+		input := &ec2.ModifyVpnConnectionInput{
+			VpnConnectionId: aws.String(d.Id()),
+		}
+
+		if hasChange, v := d.HasChange("transit_gateway_id"), d.Get("transit_gateway_id").(string); hasChange && v != "" {
+			input.TransitGatewayId = aws.String(v)
+		}
+
+		if hasChange, v := d.HasChange("vpn_gateway_id"), d.Get("vpn_gateway_id").(string); hasChange && v != "" {
+			input.VpnGatewayId = aws.String(v)
+		}
+
+		_, err := conn.ModifyVpnConnection(input)
+
+		if err != nil {
+			return fmt.Errorf("error modifying EC2 VPN Connection (%s): %w", d.Id(), err)
+		}
+
+		if _, err := WaitVPNConnectionUpdated(conn, d.Id()); err != nil {
+			return fmt.Errorf("error waiting for EC2 VPN Connection (%s) update: %w", d.Id(), err)
+		}
+	}
 
 	if d.HasChanges("local_ipv4_network_cidr", "local_ipv6_network_cidr", "remote_ipv4_network_cidr", "remote_ipv6_network_cidr") {
 		input := &ec2.ModifyVpnConnectionOptionsInput{

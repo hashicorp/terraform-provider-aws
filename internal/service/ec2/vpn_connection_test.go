@@ -6,6 +6,7 @@ import (
 	"regexp"
 	"testing"
 
+	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -239,16 +240,13 @@ func TestAccEC2VPNConnection_transitGatewayID(t *testing.T) {
 	resourceName := "aws_vpn_connection.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(t)
-			testAccPreCheckTransitGateway(t)
-		},
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckTransitGateway(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccVPNConnectionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVPNConnectionTransitGatewayIDConfig(rName, rBgpAsn),
+				Config: testAccVPNConnectionTransitGatewayConfig(rName, rBgpAsn),
 				Check: resource.ComposeTestCheckFunc(
 					testAccVPNConnectionExists(resourceName, &vpn),
 					resource.TestMatchResourceAttr(resourceName, "transit_gateway_attachment_id", regexp.MustCompile(`tgw-attach-.+`)),
@@ -1207,6 +1205,156 @@ func TestAccEC2VPNConnection_disappears(t *testing.T) {
 	})
 }
 
+func TestAccEC2VPNConnection_updateVPNGatewayID(t *testing.T) {
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
+	resourceName := "aws_vpn_connection.test"
+	var vpn1, vpn2 ec2.VpnConnection
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccVPNConnectionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVPNConnectionVPNGatewayIDConfig(rName, rBgpAsn),
+				Check: resource.ComposeTestCheckFunc(
+					testAccVPNConnectionExists(resourceName, &vpn1),
+					resource.TestCheckResourceAttrPair(resourceName, "vpn_gateway_id", "aws_vpn_gateway.test1", "id"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccVPNConnectionVPNGatewayIDUpdatedConfig(rName, rBgpAsn),
+				Check: resource.ComposeTestCheckFunc(
+					testAccVPNConnectionExists(resourceName, &vpn2),
+					testAccCheckVPNConnectionNotRecreated(&vpn1, &vpn2),
+					resource.TestCheckResourceAttrPair(resourceName, "vpn_gateway_id", "aws_vpn_gateway.test2", "id"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccEC2VPNConnection_updateTransitGatewayID(t *testing.T) {
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
+	resourceName := "aws_vpn_connection.test"
+	var vpn1, vpn2 ec2.VpnConnection
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckTransitGateway(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccVPNConnectionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVPNConnectionTransitGatewayIDConfig(rName, rBgpAsn),
+				Check: resource.ComposeTestCheckFunc(
+					testAccVPNConnectionExists(resourceName, &vpn1),
+					resource.TestCheckResourceAttrSet(resourceName, "transit_gateway_attachment_id"),
+					resource.TestCheckResourceAttrPair(resourceName, "transit_gateway_id", "aws_ec2_transit_gateway.test1", "id"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccVPNConnectionTransitGatewayIDUpdatedConfig(rName, rBgpAsn),
+				Check: resource.ComposeTestCheckFunc(
+					testAccVPNConnectionExists(resourceName, &vpn2),
+					testAccCheckVPNConnectionNotRecreated(&vpn1, &vpn2),
+					resource.TestCheckResourceAttrSet(resourceName, "transit_gateway_attachment_id"),
+					resource.TestCheckResourceAttrPair(resourceName, "transit_gateway_id", "aws_ec2_transit_gateway.test2", "id"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccEC2VPNConnection_vpnGatewayIDToTransitGatewayID(t *testing.T) {
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
+	resourceName := "aws_vpn_connection.test"
+	var vpn1, vpn2 ec2.VpnConnection
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccVPNConnectionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVPNConnectionTransitGatewayIDOrVPNGatewayIDConfig(rName, rBgpAsn, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccVPNConnectionExists(resourceName, &vpn1),
+					resource.TestCheckResourceAttr(resourceName, "transit_gateway_id", ""),
+					resource.TestCheckResourceAttrPair(resourceName, "vpn_gateway_id", "aws_vpn_gateway.test", "id"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccVPNConnectionTransitGatewayIDOrVPNGatewayIDConfig(rName, rBgpAsn, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccVPNConnectionExists(resourceName, &vpn2),
+					testAccCheckVPNConnectionNotRecreated(&vpn1, &vpn2),
+					resource.TestCheckResourceAttrPair(resourceName, "transit_gateway_id", "aws_ec2_transit_gateway.test", "id"),
+					resource.TestCheckResourceAttr(resourceName, "vpn_gateway_id", ""),
+				),
+			},
+		},
+	})
+}
+
+func TestAccEC2VPNConnection_transitGatewayIDToVPNGatewayID(t *testing.T) {
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
+	resourceName := "aws_vpn_connection.test"
+	var vpn1, vpn2 ec2.VpnConnection
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccVPNConnectionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVPNConnectionTransitGatewayIDOrVPNGatewayIDConfig(rName, rBgpAsn, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccVPNConnectionExists(resourceName, &vpn1),
+					resource.TestCheckResourceAttrPair(resourceName, "transit_gateway_id", "aws_ec2_transit_gateway.test", "id"),
+					resource.TestCheckResourceAttr(resourceName, "vpn_gateway_id", ""),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccVPNConnectionTransitGatewayIDOrVPNGatewayIDConfig(rName, rBgpAsn, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccVPNConnectionExists(resourceName, &vpn2),
+					testAccCheckVPNConnectionNotRecreated(&vpn1, &vpn2),
+					resource.TestCheckResourceAttr(resourceName, "transit_gateway_id", ""),
+					resource.TestCheckResourceAttrPair(resourceName, "vpn_gateway_id", "aws_vpn_gateway.test", "id"),
+				),
+			},
+		},
+	})
+}
+
 func testAccVPNConnectionDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
@@ -1256,6 +1404,16 @@ func testAccVPNConnectionExists(n string, v *ec2.VpnConnection) resource.TestChe
 	}
 }
 
+func testAccCheckVPNConnectionNotRecreated(before, after *ec2.VpnConnection) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		if before, after := aws.StringValue(before.VpnConnectionId), aws.StringValue(after.VpnConnectionId); before != after {
+			return fmt.Errorf("Expected EC2 VPN Connection IDs not to change, but got before: %s, after: %s", before, after)
+		}
+
+		return nil
+	}
+}
+
 func testAccVPNConnectionConfig(rName string, rBgpAsn int) string {
 	return fmt.Sprintf(`
 resource "aws_vpn_gateway" "test" {
@@ -1276,6 +1434,70 @@ resource "aws_customer_gateway" "test" {
 
 resource "aws_vpn_connection" "test" {
   vpn_gateway_id      = aws_vpn_gateway.test.id
+  customer_gateway_id = aws_customer_gateway.test.id
+  type                = "ipsec.1"
+}
+`, rName, rBgpAsn)
+}
+
+func testAccVPNConnectionVPNGatewayIDConfig(rName string, rBgpAsn int) string {
+	return fmt.Sprintf(`
+resource "aws_vpn_gateway" "test1" {
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_vpn_gateway" "test2" {
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_customer_gateway" "test" {
+  bgp_asn    = %[2]d
+  ip_address = "178.0.0.1"
+  type       = "ipsec.1"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_vpn_connection" "test" {
+  vpn_gateway_id      = aws_vpn_gateway.test1.id
+  customer_gateway_id = aws_customer_gateway.test.id
+  type                = "ipsec.1"
+}
+`, rName, rBgpAsn)
+}
+
+func testAccVPNConnectionVPNGatewayIDUpdatedConfig(rName string, rBgpAsn int) string {
+	return fmt.Sprintf(`
+resource "aws_vpn_gateway" "test1" {
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_vpn_gateway" "test2" {
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_customer_gateway" "test" {
+  bgp_asn    = %[2]d
+  ip_address = "178.0.0.1"
+  type       = "ipsec.1"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_vpn_connection" "test" {
+  vpn_gateway_id      = aws_vpn_gateway.test2.id
   customer_gateway_id = aws_customer_gateway.test.id
   type                = "ipsec.1"
 }
@@ -1414,7 +1636,7 @@ resource "aws_vpn_connection" "test" {
 `, rName, rBgpAsn, tunnelCidr, psk)
 }
 
-func testAccVPNConnectionTransitGatewayIDConfig(rName string, rBgpAsn int) string {
+func testAccVPNConnectionTransitGatewayConfig(rName string, rBgpAsn int) string {
 	return fmt.Sprintf(`
 resource "aws_ec2_transit_gateway" "test" {
   description = %[1]q
@@ -1434,6 +1656,70 @@ resource "aws_vpn_connection" "test" {
   customer_gateway_id = aws_customer_gateway.test.id
   transit_gateway_id  = aws_ec2_transit_gateway.test.id
   type                = aws_customer_gateway.test.type
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName, rBgpAsn)
+}
+
+func testAccVPNConnectionTransitGatewayIDConfig(rName string, rBgpAsn int) string {
+	return fmt.Sprintf(`
+resource "aws_ec2_transit_gateway" "test1" {
+  description = "%[1]s-1"
+}
+
+resource "aws_ec2_transit_gateway" "test2" {
+  description = "%[1]s-2"
+}
+
+resource "aws_customer_gateway" "test" {
+  bgp_asn    = %[2]d
+  ip_address = "178.0.0.1"
+  type       = "ipsec.1"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_vpn_connection" "test" {
+  customer_gateway_id = aws_customer_gateway.test.id
+  transit_gateway_id  = aws_ec2_transit_gateway.test1.id
+  type                = "ipsec.1"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName, rBgpAsn)
+}
+
+func testAccVPNConnectionTransitGatewayIDUpdatedConfig(rName string, rBgpAsn int) string {
+	return fmt.Sprintf(`
+resource "aws_ec2_transit_gateway" "test1" {
+  description = "%[1]s-1"
+}
+
+resource "aws_ec2_transit_gateway" "test2" {
+  description = "%[1]s-2"
+}
+
+resource "aws_customer_gateway" "test" {
+  bgp_asn    = %[2]d
+  ip_address = "178.0.0.1"
+  type       = "ipsec.1"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_vpn_connection" "test" {
+  customer_gateway_id = aws_customer_gateway.test.id
+  transit_gateway_id  = aws_ec2_transit_gateway.test2.id
+  type                = "ipsec.1"
 
   tags = {
     Name = %[1]q
@@ -1746,6 +2032,41 @@ resource "aws_vpn_connection" "test" {
   }
 }
 `, rName, rBgpAsn, localIpv4Cidr, remoteIpv4Cidr)
+}
+
+func testAccVPNConnectionTransitGatewayIDOrVPNGatewayIDConfig(rName string, rBgpAsn int, useTransitGateway bool) string {
+	return fmt.Sprintf(`
+resource "aws_vpn_gateway" "test" {
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_ec2_transit_gateway" "test" {
+  description = %[1]q
+}
+
+resource "aws_customer_gateway" "test" {
+  bgp_asn    = %[2]d
+  ip_address = "178.0.0.1"
+  type       = "ipsec.1"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_vpn_connection" "test" {
+  customer_gateway_id = aws_customer_gateway.test.id
+  transit_gateway_id  = %[3]t ? aws_ec2_transit_gateway.test.id : null
+  vpn_gateway_id      = %[3]t ? null : aws_vpn_gateway.test.id
+  type                = "ipsec.1"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName, rBgpAsn, useTransitGateway)
 }
 
 // Test our VPN tunnel config XML parsing
