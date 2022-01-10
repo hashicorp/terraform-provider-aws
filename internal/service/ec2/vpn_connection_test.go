@@ -1205,6 +1205,43 @@ func TestAccEC2VPNConnection_disappears(t *testing.T) {
 	})
 }
 
+func TestAccEC2VPNConnection_updateCustomerGatewayID(t *testing.T) {
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rBgpAsn1 := sdkacctest.RandIntRange(64512, 65534)
+	rBgpAsn2 := sdkacctest.RandIntRange(64512, 65534)
+	resourceName := "aws_vpn_connection.test"
+	var vpn1, vpn2 ec2.VpnConnection
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccVPNConnectionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVPNConnectionCustomerGatewayIDConfig(rName, rBgpAsn1, rBgpAsn2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccVPNConnectionExists(resourceName, &vpn1),
+					resource.TestCheckResourceAttrPair(resourceName, "customer_gateway_id", "aws_customer_gateway.test1", "id"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccVPNConnectionCustomerGatewayIDUpdatedConfig(rName, rBgpAsn1, rBgpAsn2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccVPNConnectionExists(resourceName, &vpn2),
+					testAccCheckVPNConnectionNotRecreated(&vpn1, &vpn2),
+					resource.TestCheckResourceAttrPair(resourceName, "customer_gateway_id", "aws_customer_gateway.test2", "id"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccEC2VPNConnection_updateVPNGatewayID(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
@@ -1438,6 +1475,78 @@ resource "aws_vpn_connection" "test" {
   type                = "ipsec.1"
 }
 `, rName, rBgpAsn)
+}
+
+func testAccVPNConnectionCustomerGatewayIDConfig(rName string, rBgpAsn1, rBgpAsn2 int) string {
+	return fmt.Sprintf(`
+resource "aws_vpn_gateway" "test" {
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_customer_gateway" "test1" {
+  bgp_asn    = %[2]d
+  ip_address = "178.0.0.1"
+  type       = "ipsec.1"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_customer_gateway" "test2" {
+	bgp_asn    = %[3]d
+	ip_address = "178.0.0.16"
+	type       = "ipsec.1"
+  
+	tags = {
+	  Name = %[1]q
+	}
+  }
+
+resource "aws_vpn_connection" "test" {
+  vpn_gateway_id      = aws_vpn_gateway.test.id
+  customer_gateway_id = aws_customer_gateway.test1.id
+  type                = "ipsec.1"
+}
+`, rName, rBgpAsn1, rBgpAsn2)
+}
+
+func testAccVPNConnectionCustomerGatewayIDUpdatedConfig(rName string, rBgpAsn1, rBgpAsn2 int) string {
+	return fmt.Sprintf(`
+resource "aws_vpn_gateway" "test" {
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_customer_gateway" "test1" {
+  bgp_asn    = %[2]d
+  ip_address = "178.0.0.1"
+  type       = "ipsec.1"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_customer_gateway" "test2" {
+	bgp_asn    = %[3]d
+	ip_address = "178.0.0.16"
+	type       = "ipsec.1"
+  
+	tags = {
+	  Name = %[1]q
+	}
+  }
+
+resource "aws_vpn_connection" "test" {
+  vpn_gateway_id      = aws_vpn_gateway.test.id
+  customer_gateway_id = aws_customer_gateway.test2.id
+  type                = "ipsec.1"
+}
+`, rName, rBgpAsn1, rBgpAsn2)
 }
 
 func testAccVPNConnectionVPNGatewayIDConfig(rName string, rBgpAsn int) string {

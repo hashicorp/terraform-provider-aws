@@ -43,7 +43,6 @@ func ResourceVPNConnection() *schema.Resource {
 			"customer_gateway_id": {
 				Type:     schema.TypeString,
 				Required: true,
-				ForceNew: true,
 			},
 			"enable_acceleration": {
 				Type:         schema.TypeBool,
@@ -582,9 +581,13 @@ func resourceVPNConnectionRead(d *schema.ResourceData, meta interface{}) error {
 func resourceVPNConnectionUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
-	if d.HasChanges("transit_gateway_id", "vpn_gateway_id") {
+	if d.HasChanges("customer_gateway_id", "transit_gateway_id", "vpn_gateway_id") {
 		input := &ec2.ModifyVpnConnectionInput{
 			VpnConnectionId: aws.String(d.Id()),
+		}
+
+		if d.HasChange("customer_gateway_id") {
+			input.CustomerGatewayId = aws.String(d.Get("customer_gateway_id").(string))
 		}
 
 		if hasChange, v := d.HasChange("transit_gateway_id"), d.Get("transit_gateway_id").(string); hasChange && v != "" {
