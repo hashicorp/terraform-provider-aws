@@ -521,9 +521,9 @@ func TestAccEC2VPNConnection_tunnelOptionsLesser(t *testing.T) {
 		phase1EncryptionAlgorithms: "\"AES128\", \"AES256\", \"AES128-GCM-16\", \"AES256-GCM-16\"",
 		phase1IntegrityAlgorithms:  "\"SHA2-256\", \"SHA2-384\", \"SHA2-512\"",
 		phase1LifetimeSeconds:      28800,
-		phase2DhGroupNumbers:       "14, 15, 16, 17, 18, 19, 20, 21",
-		phase2EncryptionAlgorithms: "\"AES128\", \"AES256\", \"AES128-GCM-16\", \"AES256-GCM-16\"",
-		phase2IntegrityAlgorithms:  "\"SHA2-256\", \"SHA2-384\", \"SHA2-512\"",
+		phase2DhGroupNumbers:       "2, 5, 22, 23, 24",
+		phase2EncryptionAlgorithms: "\"AES128\", \"AES128-GCM-16\"",
+		phase2IntegrityAlgorithms:  "\"SHA1\", \"SHA2-256\"",
 		phase2LifetimeSeconds:      3600,
 		rekeyFuzzPercentage:        100,
 		rekeyMarginTimeSeconds:     540,
@@ -534,22 +534,31 @@ func TestAccEC2VPNConnection_tunnelOptionsLesser(t *testing.T) {
 	tunnel2 := TunnelOptions{
 		psk:                        "abcdefgh",
 		tunnelCidr:                 "169.254.9.0/30",
-		dpdTimeoutAction:           "clear",
-		dpdTimeoutSeconds:          30,
-		ikeVersions:                "\"ikev1\", \"ikev2\"",
-		phase1DhGroupNumbers:       "14, 15, 16, 17, 18, 19, 20, 21",
-		phase1EncryptionAlgorithms: "\"AES128\", \"AES256\", \"AES128-GCM-16\", \"AES256-GCM-16\"",
-		phase1IntegrityAlgorithms:  "\"SHA2-256\", \"SHA2-384\", \"SHA2-512\"",
-		phase1LifetimeSeconds:      28800,
-		phase2DhGroupNumbers:       "14, 15, 16, 17, 18, 19, 20, 21",
+		dpdTimeoutAction:           "none",
+		dpdTimeoutSeconds:          45,
+		ikeVersions:                "\"ikev2\"",
+		phase1DhGroupNumbers:       "18, 19, 20, 21, 22, 23, 24",
+		phase1EncryptionAlgorithms: "\"AES128\", \"AES256\"",
+		phase1IntegrityAlgorithms:  "\"SHA2-384\", \"SHA2-512\"",
+		phase1LifetimeSeconds:      1800,
+		phase2DhGroupNumbers:       "15, 16, 17, 18, 19, 20, 21, 22",
 		phase2EncryptionAlgorithms: "\"AES128\", \"AES256\", \"AES128-GCM-16\", \"AES256-GCM-16\"",
 		phase2IntegrityAlgorithms:  "\"SHA2-256\", \"SHA2-384\", \"SHA2-512\"",
-		phase2LifetimeSeconds:      3600,
-		rekeyFuzzPercentage:        100,
-		rekeyMarginTimeSeconds:     540,
-		replayWindowSize:           1024,
-		startupAction:              "add",
+		phase2LifetimeSeconds:      1200,
+		rekeyFuzzPercentage:        90,
+		rekeyMarginTimeSeconds:     360,
+		replayWindowSize:           512,
+		startupAction:              "start",
 	}
+
+	// preshared_key and inside_cidr can't be updated in-place.
+	tunnel1Updated := tunnel2
+	tunnel1Updated.psk = tunnel1.psk
+	tunnel1Updated.tunnelCidr = tunnel1.tunnelCidr
+
+	tunnel2Updated := tunnel1
+	tunnel2Updated.psk = tunnel2.psk
+	tunnel2Updated.tunnelCidr = tunnel2.tunnelCidr
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -559,15 +568,213 @@ func TestAccEC2VPNConnection_tunnelOptionsLesser(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPNConnectionTunnelOptionsConfig(rName, rBgpAsn, "192.168.1.1/32", "192.168.1.2/32", tunnel1, tunnel2),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccVPNConnectionExists(resourceName, &vpn),
-					resource.TestCheckResourceAttr(resourceName, "static_routes_only", "false"),
-
+					resource.TestCheckResourceAttrSet(resourceName, "tunnel1_address"),
+					resource.TestCheckResourceAttrSet(resourceName, "tunnel1_bgp_asn"),
+					resource.TestCheckResourceAttr(resourceName, "tunnel1_bgp_holdtime", "30"),
+					resource.TestCheckResourceAttrSet(resourceName, "tunnel1_cgw_inside_address"),
+					resource.TestCheckResourceAttr(resourceName, "tunnel1_dpd_timeout_action", "clear"),
+					resource.TestCheckResourceAttr(resourceName, "tunnel1_dpd_timeout_seconds", "30"),
+					resource.TestCheckResourceAttr(resourceName, "tunnel1_ike_versions.#", "2"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "tunnel1_ike_versions.*", "ikev1"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "tunnel1_ike_versions.*", "ikev2"),
 					resource.TestCheckResourceAttr(resourceName, "tunnel1_inside_cidr", "169.254.8.0/30"),
+					resource.TestCheckResourceAttr(resourceName, "tunnel1_inside_ipv6_cidr", ""),
+					resource.TestCheckResourceAttr(resourceName, "tunnel1_phase1_dh_group_numbers.#", "8"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "tunnel1_phase1_dh_group_numbers.*", "14"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "tunnel1_phase1_dh_group_numbers.*", "15"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "tunnel1_phase1_dh_group_numbers.*", "16"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "tunnel1_phase1_dh_group_numbers.*", "17"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "tunnel1_phase1_dh_group_numbers.*", "18"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "tunnel1_phase1_dh_group_numbers.*", "19"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "tunnel1_phase1_dh_group_numbers.*", "20"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "tunnel1_phase1_dh_group_numbers.*", "21"),
+					resource.TestCheckResourceAttr(resourceName, "tunnel1_phase1_encryption_algorithms.#", "4"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "tunnel1_phase1_encryption_algorithms.*", "AES128"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "tunnel1_phase1_encryption_algorithms.*", "AES256"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "tunnel1_phase1_encryption_algorithms.*", "AES128-GCM-16"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "tunnel1_phase1_encryption_algorithms.*", "AES256-GCM-16"),
+					resource.TestCheckResourceAttr(resourceName, "tunnel1_phase1_integrity_algorithms.#", "3"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "tunnel1_phase1_integrity_algorithms.*", "SHA2-256"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "tunnel1_phase1_integrity_algorithms.*", "SHA2-384"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "tunnel1_phase1_integrity_algorithms.*", "SHA2-512"),
+					resource.TestCheckResourceAttr(resourceName, "tunnel1_phase1_lifetime_seconds", "28800"),
+					resource.TestCheckResourceAttr(resourceName, "tunnel1_phase2_dh_group_numbers.#", "5"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "tunnel1_phase2_dh_group_numbers.*", "2"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "tunnel1_phase2_dh_group_numbers.*", "5"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "tunnel1_phase2_dh_group_numbers.*", "22"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "tunnel1_phase2_dh_group_numbers.*", "23"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "tunnel1_phase2_dh_group_numbers.*", "24"),
+					resource.TestCheckResourceAttr(resourceName, "tunnel1_phase2_encryption_algorithms.#", "2"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "tunnel1_phase2_encryption_algorithms.*", "AES128"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "tunnel1_phase2_encryption_algorithms.*", "AES128-GCM-16"),
+					resource.TestCheckResourceAttr(resourceName, "tunnel1_phase2_integrity_algorithms.#", "2"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "tunnel1_phase2_integrity_algorithms.*", "SHA1"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "tunnel1_phase2_integrity_algorithms.*", "SHA2-256"),
+					resource.TestCheckResourceAttr(resourceName, "tunnel1_phase2_lifetime_seconds", "3600"),
 					resource.TestCheckResourceAttr(resourceName, "tunnel1_preshared_key", "12345678"),
-
+					resource.TestCheckResourceAttr(resourceName, "tunnel1_rekey_fuzz_percentage", "100"),
+					resource.TestCheckResourceAttr(resourceName, "tunnel1_rekey_margin_time_seconds", "540"),
+					resource.TestCheckResourceAttr(resourceName, "tunnel1_replay_window_size", "1024"),
+					resource.TestCheckResourceAttr(resourceName, "tunnel1_startup_action", "add"),
+					resource.TestCheckResourceAttrSet(resourceName, "tunnel1_vgw_inside_address"),
+					resource.TestCheckResourceAttrSet(resourceName, "tunnel2_address"),
+					resource.TestCheckResourceAttrSet(resourceName, "tunnel2_bgp_asn"),
+					resource.TestCheckResourceAttr(resourceName, "tunnel2_bgp_holdtime", "30"),
+					resource.TestCheckResourceAttrSet(resourceName, "tunnel2_cgw_inside_address"),
+					resource.TestCheckResourceAttr(resourceName, "tunnel2_dpd_timeout_action", "none"),
+					resource.TestCheckResourceAttr(resourceName, "tunnel2_dpd_timeout_seconds", "45"),
+					resource.TestCheckResourceAttr(resourceName, "tunnel2_ike_versions.#", "1"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "tunnel2_ike_versions.*", "ikev2"),
 					resource.TestCheckResourceAttr(resourceName, "tunnel2_inside_cidr", "169.254.9.0/30"),
+					resource.TestCheckResourceAttr(resourceName, "tunnel2_inside_ipv6_cidr", ""),
+					resource.TestCheckResourceAttr(resourceName, "tunnel2_phase1_dh_group_numbers.#", "7"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "tunnel2_phase1_dh_group_numbers.*", "18"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "tunnel2_phase1_dh_group_numbers.*", "19"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "tunnel2_phase1_dh_group_numbers.*", "20"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "tunnel2_phase1_dh_group_numbers.*", "21"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "tunnel2_phase1_dh_group_numbers.*", "22"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "tunnel2_phase1_dh_group_numbers.*", "23"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "tunnel2_phase1_dh_group_numbers.*", "24"),
+					resource.TestCheckResourceAttr(resourceName, "tunnel2_phase1_encryption_algorithms.#", "2"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "tunnel2_phase1_encryption_algorithms.*", "AES128"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "tunnel2_phase1_encryption_algorithms.*", "AES256"),
+					resource.TestCheckResourceAttr(resourceName, "tunnel2_phase1_integrity_algorithms.#", "2"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "tunnel2_phase1_integrity_algorithms.*", "SHA2-384"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "tunnel2_phase1_integrity_algorithms.*", "SHA2-512"),
+					resource.TestCheckResourceAttr(resourceName, "tunnel2_phase1_lifetime_seconds", "1800"),
+					resource.TestCheckResourceAttr(resourceName, "tunnel2_phase2_dh_group_numbers.#", "8"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "tunnel2_phase2_dh_group_numbers.*", "15"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "tunnel2_phase2_dh_group_numbers.*", "16"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "tunnel2_phase2_dh_group_numbers.*", "17"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "tunnel2_phase2_dh_group_numbers.*", "18"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "tunnel2_phase2_dh_group_numbers.*", "19"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "tunnel2_phase2_dh_group_numbers.*", "20"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "tunnel2_phase2_dh_group_numbers.*", "21"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "tunnel2_phase2_dh_group_numbers.*", "22"),
+					resource.TestCheckResourceAttr(resourceName, "tunnel2_phase2_encryption_algorithms.#", "4"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "tunnel2_phase2_encryption_algorithms.*", "AES128"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "tunnel2_phase2_encryption_algorithms.*", "AES256"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "tunnel2_phase2_encryption_algorithms.*", "AES128-GCM-16"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "tunnel2_phase2_encryption_algorithms.*", "AES256-GCM-16"),
+					resource.TestCheckResourceAttr(resourceName, "tunnel2_phase2_integrity_algorithms.#", "3"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "tunnel2_phase2_integrity_algorithms.*", "SHA2-256"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "tunnel2_phase2_integrity_algorithms.*", "SHA2-384"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "tunnel2_phase2_integrity_algorithms.*", "SHA2-512"),
+					resource.TestCheckResourceAttr(resourceName, "tunnel2_phase2_lifetime_seconds", "1200"),
 					resource.TestCheckResourceAttr(resourceName, "tunnel2_preshared_key", "abcdefgh"),
+					resource.TestCheckResourceAttr(resourceName, "tunnel2_rekey_fuzz_percentage", "90"),
+					resource.TestCheckResourceAttr(resourceName, "tunnel2_rekey_margin_time_seconds", "360"),
+					resource.TestCheckResourceAttr(resourceName, "tunnel2_replay_window_size", "512"),
+					resource.TestCheckResourceAttr(resourceName, "tunnel2_startup_action", "start"),
+					resource.TestCheckResourceAttrSet(resourceName, "tunnel2_vgw_inside_address"),
+				),
+			},
+			{
+				Config: testAccVPNConnectionTunnelOptionsConfig(rName, rBgpAsn, "192.168.1.1/32", "192.168.1.2/32", tunnel1Updated, tunnel2Updated),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccVPNConnectionExists(resourceName, &vpn),
+
+					resource.TestCheckResourceAttrSet(resourceName, "tunnel1_address"),
+					resource.TestCheckResourceAttrSet(resourceName, "tunnel1_bgp_asn"),
+					resource.TestCheckResourceAttr(resourceName, "tunnel1_bgp_holdtime", "30"),
+					resource.TestCheckResourceAttrSet(resourceName, "tunnel1_cgw_inside_address"),
+					resource.TestCheckResourceAttr(resourceName, "tunnel1_dpd_timeout_action", "none"),
+					resource.TestCheckResourceAttr(resourceName, "tunnel1_dpd_timeout_seconds", "45"),
+					resource.TestCheckResourceAttr(resourceName, "tunnel1_ike_versions.#", "1"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "tunnel1_ike_versions.*", "ikev2"),
+					resource.TestCheckResourceAttr(resourceName, "tunnel1_inside_cidr", "169.254.8.0/30"),
+					resource.TestCheckResourceAttr(resourceName, "tunnel1_inside_ipv6_cidr", ""),
+					resource.TestCheckResourceAttr(resourceName, "tunnel1_phase1_dh_group_numbers.#", "7"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "tunnel1_phase1_dh_group_numbers.*", "18"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "tunnel1_phase1_dh_group_numbers.*", "19"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "tunnel1_phase1_dh_group_numbers.*", "20"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "tunnel1_phase1_dh_group_numbers.*", "21"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "tunnel1_phase1_dh_group_numbers.*", "22"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "tunnel1_phase1_dh_group_numbers.*", "23"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "tunnel1_phase1_dh_group_numbers.*", "24"),
+					resource.TestCheckResourceAttr(resourceName, "tunnel1_phase1_encryption_algorithms.#", "2"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "tunnel1_phase1_encryption_algorithms.*", "AES128"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "tunnel1_phase1_encryption_algorithms.*", "AES256"),
+					resource.TestCheckResourceAttr(resourceName, "tunnel1_phase1_integrity_algorithms.#", "2"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "tunnel1_phase1_integrity_algorithms.*", "SHA2-384"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "tunnel1_phase1_integrity_algorithms.*", "SHA2-512"),
+					resource.TestCheckResourceAttr(resourceName, "tunnel1_phase1_lifetime_seconds", "1800"),
+					resource.TestCheckResourceAttr(resourceName, "tunnel1_phase2_dh_group_numbers.#", "8"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "tunnel1_phase2_dh_group_numbers.*", "15"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "tunnel1_phase2_dh_group_numbers.*", "16"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "tunnel1_phase2_dh_group_numbers.*", "17"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "tunnel1_phase2_dh_group_numbers.*", "18"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "tunnel1_phase2_dh_group_numbers.*", "19"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "tunnel1_phase2_dh_group_numbers.*", "20"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "tunnel1_phase2_dh_group_numbers.*", "21"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "tunnel1_phase2_dh_group_numbers.*", "22"),
+					resource.TestCheckResourceAttr(resourceName, "tunnel1_phase2_encryption_algorithms.#", "4"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "tunnel1_phase2_encryption_algorithms.*", "AES128"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "tunnel1_phase2_encryption_algorithms.*", "AES256"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "tunnel1_phase2_encryption_algorithms.*", "AES128-GCM-16"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "tunnel1_phase2_encryption_algorithms.*", "AES256-GCM-16"),
+					resource.TestCheckResourceAttr(resourceName, "tunnel1_phase2_integrity_algorithms.#", "3"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "tunnel1_phase2_integrity_algorithms.*", "SHA2-256"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "tunnel1_phase2_integrity_algorithms.*", "SHA2-384"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "tunnel1_phase2_integrity_algorithms.*", "SHA2-512"),
+					resource.TestCheckResourceAttr(resourceName, "tunnel1_phase2_lifetime_seconds", "1200"),
+					resource.TestCheckResourceAttr(resourceName, "tunnel1_preshared_key", "12345678"),
+					resource.TestCheckResourceAttr(resourceName, "tunnel1_rekey_fuzz_percentage", "90"),
+					resource.TestCheckResourceAttr(resourceName, "tunnel1_rekey_margin_time_seconds", "360"),
+					resource.TestCheckResourceAttr(resourceName, "tunnel1_replay_window_size", "512"),
+					resource.TestCheckResourceAttr(resourceName, "tunnel1_startup_action", "start"),
+					resource.TestCheckResourceAttrSet(resourceName, "tunnel1_vgw_inside_address"),
+					resource.TestCheckResourceAttrSet(resourceName, "tunnel2_address"),
+					resource.TestCheckResourceAttrSet(resourceName, "tunnel2_bgp_asn"),
+					resource.TestCheckResourceAttr(resourceName, "tunnel2_bgp_holdtime", "30"),
+					resource.TestCheckResourceAttrSet(resourceName, "tunnel2_cgw_inside_address"),
+					resource.TestCheckResourceAttr(resourceName, "tunnel2_dpd_timeout_action", "clear"),
+					resource.TestCheckResourceAttr(resourceName, "tunnel2_dpd_timeout_seconds", "30"),
+					resource.TestCheckResourceAttr(resourceName, "tunnel2_ike_versions.#", "2"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "tunnel2_ike_versions.*", "ikev1"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "tunnel2_ike_versions.*", "ikev2"),
+					resource.TestCheckResourceAttr(resourceName, "tunnel2_inside_cidr", "169.254.9.0/30"),
+					resource.TestCheckResourceAttr(resourceName, "tunnel2_inside_ipv6_cidr", ""),
+					resource.TestCheckResourceAttr(resourceName, "tunnel2_phase1_dh_group_numbers.#", "8"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "tunnel2_phase1_dh_group_numbers.*", "14"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "tunnel2_phase1_dh_group_numbers.*", "15"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "tunnel2_phase1_dh_group_numbers.*", "16"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "tunnel2_phase1_dh_group_numbers.*", "17"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "tunnel2_phase1_dh_group_numbers.*", "18"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "tunnel2_phase1_dh_group_numbers.*", "19"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "tunnel2_phase1_dh_group_numbers.*", "20"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "tunnel2_phase1_dh_group_numbers.*", "21"),
+					resource.TestCheckResourceAttr(resourceName, "tunnel2_phase1_encryption_algorithms.#", "4"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "tunnel2_phase1_encryption_algorithms.*", "AES128"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "tunnel2_phase1_encryption_algorithms.*", "AES256"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "tunnel2_phase1_encryption_algorithms.*", "AES128-GCM-16"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "tunnel2_phase1_encryption_algorithms.*", "AES256-GCM-16"),
+					resource.TestCheckResourceAttr(resourceName, "tunnel2_phase1_integrity_algorithms.#", "3"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "tunnel2_phase1_integrity_algorithms.*", "SHA2-256"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "tunnel2_phase1_integrity_algorithms.*", "SHA2-384"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "tunnel2_phase1_integrity_algorithms.*", "SHA2-512"),
+					resource.TestCheckResourceAttr(resourceName, "tunnel2_phase1_lifetime_seconds", "28800"),
+					resource.TestCheckResourceAttr(resourceName, "tunnel2_phase2_dh_group_numbers.#", "5"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "tunnel2_phase2_dh_group_numbers.*", "2"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "tunnel2_phase2_dh_group_numbers.*", "5"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "tunnel2_phase2_dh_group_numbers.*", "22"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "tunnel2_phase2_dh_group_numbers.*", "23"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "tunnel2_phase2_dh_group_numbers.*", "24"),
+					resource.TestCheckResourceAttr(resourceName, "tunnel2_phase2_encryption_algorithms.#", "2"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "tunnel2_phase2_encryption_algorithms.*", "AES128"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "tunnel2_phase2_encryption_algorithms.*", "AES128-GCM-16"),
+					resource.TestCheckResourceAttr(resourceName, "tunnel2_phase2_integrity_algorithms.#", "2"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "tunnel2_phase2_integrity_algorithms.*", "SHA1"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "tunnel2_phase2_integrity_algorithms.*", "SHA2-256"),
+					resource.TestCheckResourceAttr(resourceName, "tunnel2_phase2_lifetime_seconds", "3600"),
+					resource.TestCheckResourceAttr(resourceName, "tunnel2_preshared_key", "abcdefgh"),
+					resource.TestCheckResourceAttr(resourceName, "tunnel2_rekey_fuzz_percentage", "100"),
+					resource.TestCheckResourceAttr(resourceName, "tunnel2_rekey_margin_time_seconds", "540"),
+					resource.TestCheckResourceAttr(resourceName, "tunnel2_replay_window_size", "1024"),
+					resource.TestCheckResourceAttr(resourceName, "tunnel2_startup_action", "add"),
+					resource.TestCheckResourceAttrSet(resourceName, "tunnel2_vgw_inside_address"),
 				),
 			},
 		},
@@ -788,10 +995,6 @@ func TestAccEC2VPNConnection_disappears(t *testing.T) {
 	})
 }
 
-// TODO
-// TODO Add tests which update connection and tunnel options.
-// TODO
-
 func testAccVPNConnectionDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
@@ -890,6 +1093,10 @@ resource "aws_vpn_connection" "test" {
   customer_gateway_id = aws_customer_gateway.test.id
   type                = "ipsec.1"
   static_routes_only  = true
+
+  tags = {
+    Name = %[1]q
+  }
 }
 `, rName, rBgpAsn)
 }
@@ -916,6 +1123,10 @@ resource "aws_vpn_connection" "test" {
   type                = "ipsec.1"
   static_routes_only  = false
   enable_acceleration = true
+
+  tags = {
+    Name = %[1]q
+  }
 }
 `, rName, rBgpAsn)
 }
@@ -949,6 +1160,10 @@ resource "aws_vpn_connection" "test" {
 
   tunnel1_inside_ipv6_cidr = %[5]q
   tunnel2_inside_ipv6_cidr = %[6]q
+
+  tags = {
+    Name = %[1]q
+  }
 }
 `, rName, rBgpAsn, localIpv6NetworkCidr, remoteIpv6NetworkCidr, tunnel1InsideIpv6Cidr, tunnel2InsideIpv6Cidr)
 }
@@ -979,6 +1194,10 @@ resource "aws_vpn_connection" "test" {
 
   tunnel1_inside_cidr   = %[3]q
   tunnel1_preshared_key = %[4]q
+
+  tags = {
+    Name = %[1]q
+  }
 }
 `, rName, rBgpAsn, tunnelCidr, psk)
 }
@@ -1003,6 +1222,10 @@ resource "aws_vpn_connection" "test" {
   customer_gateway_id = aws_customer_gateway.test.id
   transit_gateway_id  = aws_ec2_transit_gateway.test.id
   type                = aws_customer_gateway.test.type
+
+  tags = {
+    Name = %[1]q
+  }
 }
 `, rName, rBgpAsn)
 }
@@ -1031,6 +1254,10 @@ resource "aws_vpn_connection" "test" {
   tunnel2_inside_cidr = %[4]q
   type                = "ipsec.1"
   vpn_gateway_id      = aws_vpn_gateway.test.id
+
+  tags = {
+    Name = %[1]q
+  }
 }
 `, rName, rBgpAsn, tunnel1InsideCidr, tunnel2InsideCidr)
 }
@@ -1058,6 +1285,10 @@ resource "aws_vpn_connection" "test" {
   tunnel1_inside_ipv6_cidr = %[3]q
   tunnel2_inside_ipv6_cidr = %[4]q
   type                     = "ipsec.1"
+
+  tags = {
+    Name = %[1]q
+  }
 }
 `, rName, rBgpAsn, tunnel1InsideIpv6Cidr, tunnel2InsideIpv6Cidr)
 }
@@ -1086,6 +1317,10 @@ resource "aws_vpn_connection" "test" {
   tunnel2_preshared_key = %[4]q
   type                  = "ipsec.1"
   vpn_gateway_id        = aws_vpn_gateway.test.id
+
+  tags = {
+    Name = %[1]q
+  }
 }
 `, rName, rBgpAsn, tunnel1PresharedKey, tunnel2PresharedKey)
 }
@@ -1119,7 +1354,6 @@ resource "aws_vpn_connection" "test" {
   vpn_gateway_id      = aws_vpn_gateway.test.id
   customer_gateway_id = aws_customer_gateway.test.id
   type                = "ipsec.1"
-  static_routes_only  = false
 
   local_ipv4_network_cidr  = %[3]q
   remote_ipv4_network_cidr = %[4]q
@@ -1159,6 +1393,10 @@ resource "aws_vpn_connection" "test" {
   tunnel2_rekey_margin_time_seconds    = %[36]d
   tunnel2_replay_window_size           = %[37]d
   tunnel2_startup_action               = %[38]q
+
+  tags = {
+    Name = %[1]q
+  }
 }
 `,
 		rName,
@@ -1290,6 +1528,10 @@ resource "aws_vpn_connection" "test" {
 
   local_ipv4_network_cidr  = %[3]q
   remote_ipv4_network_cidr = %[4]q
+
+  tags = {
+    Name = %[1]q
+  }
 }
 `, rName, rBgpAsn, localIpv4Cidr, remoteIpv4Cidr)
 }
