@@ -1497,14 +1497,14 @@ resource "aws_customer_gateway" "test1" {
 }
 
 resource "aws_customer_gateway" "test2" {
-	bgp_asn    = %[3]d
-	ip_address = "178.0.0.16"
-	type       = "ipsec.1"
-  
-	tags = {
-	  Name = %[1]q
-	}
+  bgp_asn    = %[3]d
+  ip_address = "178.0.0.16"
+  type       = "ipsec.1"
+
+  tags = {
+    Name = %[1]q
   }
+}
 
 resource "aws_vpn_connection" "test" {
   vpn_gateway_id      = aws_vpn_gateway.test.id
@@ -1533,14 +1533,14 @@ resource "aws_customer_gateway" "test1" {
 }
 
 resource "aws_customer_gateway" "test2" {
-	bgp_asn    = %[3]d
-	ip_address = "178.0.0.16"
-	type       = "ipsec.1"
-  
-	tags = {
-	  Name = %[1]q
-	}
+  bgp_asn    = %[3]d
+  ip_address = "178.0.0.16"
+  type       = "ipsec.1"
+
+  tags = {
+    Name = %[1]q
   }
+}
 
 resource "aws_vpn_connection" "test" {
   vpn_gateway_id      = aws_vpn_gateway.test.id
