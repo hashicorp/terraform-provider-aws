@@ -1059,7 +1059,7 @@ resource "aws_vpc" "test" {
 `
 
 func testAccVpcConfigAssignGeneratedIpv6CidrBlockWithBorder(assignGeneratedIpv6CidrBlock bool, networkBorderGroup string) string {
-	if networkBorderGroup == "us-west-2" { // lintignore:AWSAT003 // currently the only generally available local zone
+	if networkBorderGroup != "us-west-2-lax-1" { // lintignore:AWSAT003 // currently the only generally available local zone
 		return fmt.Sprintf(`
 data "aws_region" "current" {}
 
