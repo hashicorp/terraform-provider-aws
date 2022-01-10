@@ -537,44 +537,45 @@ func resourceVPNConnectionRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	d.Set("customer_gateway_configuration", vpnConnection.CustomerGatewayConfiguration)
-	// This element is present in the DescribeVpnConnections response only if the VPN connection is in the pending or available state.
-	if vpnConnection.CustomerGatewayConfiguration != nil {
-		tunnelInfo, err := CustomerGatewayConfigurationToTunnelInfo(
-			aws.StringValue(vpnConnection.CustomerGatewayConfiguration),
-			d.Get("tunnel1_preshared_key").(string), // Not currently available during import
-			d.Get("tunnel1_inside_cidr").(string),
-			d.Get("tunnel1_inside_ipv6_cidr").(string),
-		)
 
-		if err == nil {
-			d.Set("tunnel1_address", tunnelInfo.Tunnel1Address)
-			d.Set("tunnel1_bgp_asn", tunnelInfo.Tunnel1BGPASN)
-			d.Set("tunnel1_bgp_holdtime", tunnelInfo.Tunnel1BGPHoldTime)
-			d.Set("tunnel1_cgw_inside_address", tunnelInfo.Tunnel1CgwInsideAddress)
-			d.Set("tunnel1_preshared_key", tunnelInfo.Tunnel1PreSharedKey)
-			d.Set("tunnel1_vgw_inside_address", tunnelInfo.Tunnel1VgwInsideAddress)
-			d.Set("tunnel2_address", tunnelInfo.Tunnel2Address)
-			d.Set("tunnel2_bgp_asn", tunnelInfo.Tunnel2BGPASN)
-			d.Set("tunnel2_bgp_holdtime", tunnelInfo.Tunnel2BGPHoldTime)
-			d.Set("tunnel2_cgw_inside_address", tunnelInfo.Tunnel2CgwInsideAddress)
-			d.Set("tunnel2_preshared_key", tunnelInfo.Tunnel2PreSharedKey)
-			d.Set("tunnel2_vgw_inside_address", tunnelInfo.Tunnel2VgwInsideAddress)
-		} else {
+	tunnelInfo, err := CustomerGatewayConfigurationToTunnelInfo(
+		aws.StringValue(vpnConnection.CustomerGatewayConfiguration),
+		d.Get("tunnel1_preshared_key").(string), // Not currently available during import
+		d.Get("tunnel1_inside_cidr").(string),
+		d.Get("tunnel1_inside_ipv6_cidr").(string),
+	)
+
+	if err == nil {
+		d.Set("tunnel1_address", tunnelInfo.Tunnel1Address)
+		d.Set("tunnel1_bgp_asn", tunnelInfo.Tunnel1BGPASN)
+		d.Set("tunnel1_bgp_holdtime", tunnelInfo.Tunnel1BGPHoldTime)
+		d.Set("tunnel1_cgw_inside_address", tunnelInfo.Tunnel1CgwInsideAddress)
+		d.Set("tunnel1_preshared_key", tunnelInfo.Tunnel1PreSharedKey)
+		d.Set("tunnel1_vgw_inside_address", tunnelInfo.Tunnel1VgwInsideAddress)
+		d.Set("tunnel2_address", tunnelInfo.Tunnel2Address)
+		d.Set("tunnel2_bgp_asn", tunnelInfo.Tunnel2BGPASN)
+		d.Set("tunnel2_bgp_holdtime", tunnelInfo.Tunnel2BGPHoldTime)
+		d.Set("tunnel2_cgw_inside_address", tunnelInfo.Tunnel2CgwInsideAddress)
+		d.Set("tunnel2_preshared_key", tunnelInfo.Tunnel2PreSharedKey)
+		d.Set("tunnel2_vgw_inside_address", tunnelInfo.Tunnel2VgwInsideAddress)
+	} else {
+		// This element is present in the DescribeVpnConnections response only if the VPN connection is in the pending or available state.
+		if vpnConnection.CustomerGatewayConfiguration != nil {
 			log.Printf("[ERROR] Error unmarshaling Customer Gateway XML configuration for (%s): %s", d.Id(), err)
-
-			d.Set("tunnel1_address", nil)
-			d.Set("tunnel1_bgp_asn", nil)
-			d.Set("tunnel1_bgp_holdtime", nil)
-			d.Set("tunnel1_cgw_inside_address", nil)
-			d.Set("tunnel1_preshared_key", nil)
-			d.Set("tunnel1_vgw_inside_address", nil)
-			d.Set("tunnel2_address", nil)
-			d.Set("tunnel2_bgp_asn", nil)
-			d.Set("tunnel2_bgp_holdtime", nil)
-			d.Set("tunnel2_cgw_inside_address", nil)
-			d.Set("tunnel2_preshared_key", nil)
-			d.Set("tunnel2_vgw_inside_address", nil)
 		}
+
+		d.Set("tunnel1_address", nil)
+		d.Set("tunnel1_bgp_asn", nil)
+		d.Set("tunnel1_bgp_holdtime", nil)
+		d.Set("tunnel1_cgw_inside_address", nil)
+		d.Set("tunnel1_preshared_key", nil)
+		d.Set("tunnel1_vgw_inside_address", nil)
+		d.Set("tunnel2_address", nil)
+		d.Set("tunnel2_bgp_asn", nil)
+		d.Set("tunnel2_bgp_holdtime", nil)
+		d.Set("tunnel2_cgw_inside_address", nil)
+		d.Set("tunnel2_preshared_key", nil)
+		d.Set("tunnel2_vgw_inside_address", nil)
 	}
 
 	return nil
