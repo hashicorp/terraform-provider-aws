@@ -43,7 +43,7 @@ func TestAccDataSourceVPCIpamPool_basic(t *testing.T) {
 	})
 }
 
-const testAccVPCIpamPoolOptions = testAccVPCIpamPoolBase + `
+var testAccVPCIpamPoolOptions = acctest.ConfigCompose(testAccVPCIpamPoolBase, `
 resource "aws_vpc_ipam_pool" "test" {
   address_family                    = "ipv4"
   ipam_scope_id                     = aws_vpc_ipam.test.private_default_scope_id
@@ -58,6 +58,6 @@ resource "aws_vpc_ipam_pool" "test" {
 }
 
 data "aws_vpc_ipam_pool" "test" {
-	ipam_pool_id = aws_vpc_ipam_pool.test.id	
+  ipam_pool_id = aws_vpc_ipam_pool.test.id
 }
-`
+`)
