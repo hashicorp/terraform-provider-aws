@@ -22,7 +22,7 @@ resource "aws_vpc_ipam_preview_next_cidr" "example" {
   netmask_length = 28
 
   disallowed_cidrs = [
-	  "172.2.0.0/32"
+    "172.2.0.0/32"
   ]
 
   depends_on = [
