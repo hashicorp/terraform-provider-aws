@@ -507,7 +507,7 @@ func TestAccEC2VPNConnection_tunnelOptionsLesser(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
 	resourceName := "aws_vpn_connection.test"
-	var vpn ec2.VpnConnection
+	var vpn1, vpn2, vpn3, vpn4 ec2.VpnConnection
 
 	tunnel1 := TunnelOptions{
 		psk:                        "12345678",
@@ -549,13 +549,11 @@ func TestAccEC2VPNConnection_tunnelOptionsLesser(t *testing.T) {
 		startupAction:              "start",
 	}
 
-	// preshared_key and inside_cidr can't be updated in-place.
+	// inside_cidr can't be updated in-place.
 	tunnel1Updated := tunnel2
-	tunnel1Updated.psk = tunnel1.psk
 	tunnel1Updated.tunnelCidr = tunnel1.tunnelCidr
 
 	tunnel2Updated := tunnel1
-	tunnel2Updated.psk = tunnel2.psk
 	tunnel2Updated.tunnelCidr = tunnel2.tunnelCidr
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -567,7 +565,7 @@ func TestAccEC2VPNConnection_tunnelOptionsLesser(t *testing.T) {
 			{
 				Config: testAccVPNConnectionTunnelOptionsConfig(rName, rBgpAsn, "192.168.1.1/32", "192.168.1.2/32", tunnel1, tunnel2),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccVPNConnectionExists(resourceName, &vpn),
+					testAccVPNConnectionExists(resourceName, &vpn1),
 					resource.TestCheckResourceAttrSet(resourceName, "tunnel1_address"),
 					resource.TestCheckResourceAttrSet(resourceName, "tunnel1_bgp_asn"),
 					resource.TestCheckResourceAttr(resourceName, "tunnel1_bgp_holdtime", "30"),
@@ -673,7 +671,8 @@ func TestAccEC2VPNConnection_tunnelOptionsLesser(t *testing.T) {
 			{
 				Config: testAccVPNConnectionTunnelOptionsConfig(rName, rBgpAsn, "192.168.1.1/32", "192.168.1.2/32", tunnel1Updated, tunnel2),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccVPNConnectionExists(resourceName, &vpn),
+					testAccVPNConnectionExists(resourceName, &vpn2),
+					testAccCheckVPNConnectionNotRecreated(&vpn1, &vpn2),
 					resource.TestCheckResourceAttrSet(resourceName, "tunnel1_address"),
 					resource.TestCheckResourceAttrSet(resourceName, "tunnel1_bgp_asn"),
 					resource.TestCheckResourceAttr(resourceName, "tunnel1_bgp_holdtime", "30"),
@@ -718,7 +717,7 @@ func TestAccEC2VPNConnection_tunnelOptionsLesser(t *testing.T) {
 					resource.TestCheckTypeSetElemAttr(resourceName, "tunnel1_phase2_integrity_algorithms.*", "SHA2-384"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "tunnel1_phase2_integrity_algorithms.*", "SHA2-512"),
 					resource.TestCheckResourceAttr(resourceName, "tunnel1_phase2_lifetime_seconds", "1200"),
-					resource.TestCheckResourceAttr(resourceName, "tunnel1_preshared_key", "12345678"),
+					resource.TestCheckResourceAttr(resourceName, "tunnel1_preshared_key", "abcdefgh"),
 					resource.TestCheckResourceAttr(resourceName, "tunnel1_rekey_fuzz_percentage", "90"),
 					resource.TestCheckResourceAttr(resourceName, "tunnel1_rekey_margin_time_seconds", "360"),
 					resource.TestCheckResourceAttr(resourceName, "tunnel1_replay_window_size", "512"),
@@ -779,7 +778,8 @@ func TestAccEC2VPNConnection_tunnelOptionsLesser(t *testing.T) {
 			{
 				Config: testAccVPNConnectionTunnelOptionsConfig(rName, rBgpAsn, "192.168.1.1/32", "192.168.1.2/32", tunnel1Updated, tunnel2Updated),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccVPNConnectionExists(resourceName, &vpn),
+					testAccVPNConnectionExists(resourceName, &vpn3),
+					testAccCheckVPNConnectionNotRecreated(&vpn2, &vpn3),
 					resource.TestCheckResourceAttrSet(resourceName, "tunnel1_address"),
 					resource.TestCheckResourceAttrSet(resourceName, "tunnel1_bgp_asn"),
 					resource.TestCheckResourceAttr(resourceName, "tunnel1_bgp_holdtime", "30"),
@@ -824,7 +824,7 @@ func TestAccEC2VPNConnection_tunnelOptionsLesser(t *testing.T) {
 					resource.TestCheckTypeSetElemAttr(resourceName, "tunnel1_phase2_integrity_algorithms.*", "SHA2-384"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "tunnel1_phase2_integrity_algorithms.*", "SHA2-512"),
 					resource.TestCheckResourceAttr(resourceName, "tunnel1_phase2_lifetime_seconds", "1200"),
-					resource.TestCheckResourceAttr(resourceName, "tunnel1_preshared_key", "12345678"),
+					resource.TestCheckResourceAttr(resourceName, "tunnel1_preshared_key", "abcdefgh"),
 					resource.TestCheckResourceAttr(resourceName, "tunnel1_rekey_fuzz_percentage", "90"),
 					resource.TestCheckResourceAttr(resourceName, "tunnel1_rekey_margin_time_seconds", "360"),
 					resource.TestCheckResourceAttr(resourceName, "tunnel1_replay_window_size", "512"),
@@ -873,7 +873,7 @@ func TestAccEC2VPNConnection_tunnelOptionsLesser(t *testing.T) {
 					resource.TestCheckTypeSetElemAttr(resourceName, "tunnel2_phase2_integrity_algorithms.*", "SHA1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "tunnel2_phase2_integrity_algorithms.*", "SHA2-256"),
 					resource.TestCheckResourceAttr(resourceName, "tunnel2_phase2_lifetime_seconds", "3600"),
-					resource.TestCheckResourceAttr(resourceName, "tunnel2_preshared_key", "abcdefgh"),
+					resource.TestCheckResourceAttr(resourceName, "tunnel2_preshared_key", "12345678"),
 					resource.TestCheckResourceAttr(resourceName, "tunnel2_rekey_fuzz_percentage", "100"),
 					resource.TestCheckResourceAttr(resourceName, "tunnel2_rekey_margin_time_seconds", "540"),
 					resource.TestCheckResourceAttr(resourceName, "tunnel2_replay_window_size", "1024"),
@@ -885,7 +885,8 @@ func TestAccEC2VPNConnection_tunnelOptionsLesser(t *testing.T) {
 			{
 				Config: testAccVPNConnectionTunnelOptionsConfig(rName, rBgpAsn, "192.168.1.1/32", "192.168.1.2/32", tunnel1, tunnel2),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccVPNConnectionExists(resourceName, &vpn),
+					testAccVPNConnectionExists(resourceName, &vpn4),
+					testAccCheckVPNConnectionNotRecreated(&vpn3, &vpn4),
 					resource.TestCheckResourceAttrSet(resourceName, "tunnel1_address"),
 					resource.TestCheckResourceAttrSet(resourceName, "tunnel1_bgp_asn"),
 					resource.TestCheckResourceAttr(resourceName, "tunnel1_bgp_holdtime", "30"),

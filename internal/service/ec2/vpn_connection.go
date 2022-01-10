@@ -212,7 +212,6 @@ func ResourceVPNConnection() *schema.Resource {
 				Optional:     true,
 				Sensitive:    true,
 				Computed:     true,
-				ForceNew:     true,
 				ValidateFunc: validateVpnConnectionTunnelPreSharedKey(),
 			},
 			"tunnel1_rekey_fuzz_percentage": {
@@ -330,7 +329,6 @@ func ResourceVPNConnection() *schema.Resource {
 				Optional:     true,
 				Sensitive:    true,
 				Computed:     true,
-				ForceNew:     true,
 				ValidateFunc: validateVpnConnectionTunnelPreSharedKey(),
 			},
 			"tunnel2_rekey_fuzz_percentage": {
@@ -909,6 +907,12 @@ func expandModifyVpnTunnelOptionsSpecification(d *schema.ResourceData, prefix st
 
 	if key := prefix + "phase2_lifetime_seconds"; d.HasChange(key) {
 		apiObject.Phase2LifetimeSeconds = aws.Int64(int64(d.Get(key).(int)))
+
+		hasChange = true
+	}
+
+	if key := prefix + "preshared_key"; d.HasChange(key) {
+		apiObject.PreSharedKey = aws.String(d.Get(key).(string))
 
 		hasChange = true
 	}
