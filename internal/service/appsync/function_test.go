@@ -280,11 +280,11 @@ resource "aws_appsync_datasource" "test" {
     table_name = aws_dynamodb_table.test.name
 	versioned  = true
 
-	delta_sync_config {
+    delta_sync_config {
       base_table_ttl        = 60
       delta_sync_table_name = aws_dynamodb_table.test.name
       delta_sync_table_ttl  = 60
-	}
+    }
   }
 }
 
