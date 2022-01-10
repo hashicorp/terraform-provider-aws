@@ -723,6 +723,19 @@ func TestAccEC2VPNConnection_specifyIPv4(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "remote_ipv4_network_cidr", "10.222.33.0/24"),
 				),
 			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccVPNConnectionLocalRemoteIPv4CIDRsConfig(rName, rBgpAsn, "10.112.0.0/16", "10.222.32.0/24"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccVPNConnectionExists(resourceName, &vpn),
+					resource.TestCheckResourceAttr(resourceName, "local_ipv4_network_cidr", "10.112.0.0/16"),
+					resource.TestCheckResourceAttr(resourceName, "remote_ipv4_network_cidr", "10.222.32.0/24"),
+				),
+			},
 		},
 	})
 }
