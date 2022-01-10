@@ -45,7 +45,7 @@ func ResourceSelection() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"conditions": {
+			"condition": {
 				Type:     schema.TypeSet,
 				Optional: true,
 				ForceNew: true,
@@ -183,7 +183,7 @@ func resourceSelectionCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).BackupConn
 
 	selection := &backup.Selection{
-		Conditions:    expandBackupConditions(d.Get("conditions").(*schema.Set).List()),
+		Conditions:    expandBackupConditions(d.Get("condition").(*schema.Set).List()),
 		IamRoleArn:    aws.String(d.Get("iam_role_arn").(string)),
 		ListOfTags:    expandBackupConditionTags(d.Get("selection_tag").(*schema.Set).List()),
 		NotResources:  flex.ExpandStringSet(d.Get("not_resources").(*schema.Set)),
@@ -295,7 +295,7 @@ func resourceSelectionRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("iam_role_arn", resp.BackupSelection.IamRoleArn)
 
 	if conditions := resp.BackupSelection.Conditions; conditions != nil {
-		if err := d.Set("conditions", flattenBackupConditions(conditions)); err != nil {
+		if err := d.Set("condition", flattenBackupConditions(conditions)); err != nil {
 			return fmt.Errorf("error setting conditions: %s", err)
 		}
 	}

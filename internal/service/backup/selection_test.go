@@ -132,11 +132,11 @@ func TestAccBackupSelection_ConditionsWithTags(t *testing.T) {
 				Config: testAccBackupSelectionConfigWithConditionsTags(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSelectionExists(resourceName, &selection1),
-					resource.TestCheckResourceAttr(resourceName, "conditions.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "conditions.0.string_equals.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "conditions.0.string_like.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "conditions.0.string_not_equals.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "conditions.0.string_not_like.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "condition.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "condition.0.string_equals.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "condition.0.string_like.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "condition.0.string_not_equals.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "condition.0.string_not_like.#", "1"),
 				),
 			},
 			{
@@ -356,7 +356,7 @@ resource "aws_backup_selection" "test" {
     key   = "foo"
     value = "bar"
   }
-  conditions {}
+  condition {}
 
   not_resources = []
   resources = [
@@ -388,7 +388,7 @@ resource "aws_backup_selection" "test" {
     value = "far"
   }
 
-  conditions {}
+  condition {}
   not_resources = []
 
   resources = [
@@ -409,7 +409,7 @@ resource "aws_backup_selection" "test" {
 
   iam_role_arn = "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:role/service-role/AWSBackupDefaultServiceRole"
 
-  conditions {
+  condition {
     string_equals {
       key   = "aws:ResourceTag/Component"
       value = "rds"
@@ -481,7 +481,7 @@ resource "aws_backup_selection" "test" {
     value = "bar"
   }
 
-  conditions {}
+  condition {}
   not_resources = []
 
   resources = aws_ebs_volume.test[*].arn
@@ -504,7 +504,7 @@ resource "aws_backup_selection" "test" {
     key   = "foo"
     value = "bar"
   }
-  conditions {}
+  condition {}
 
   not_resources = ["arn:${data.aws_partition.current.partition}:fsx:*"]
   resources     = ["*"]
@@ -528,7 +528,7 @@ resource "aws_backup_selection" "test" {
     value = "bar2"
   }
 
-  conditions {}
+  condition {}
   not_resources = []
   resources = [
     "arn:${data.aws_partition.current.partition}:ec2:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:volume/*"
