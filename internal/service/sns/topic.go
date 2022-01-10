@@ -304,6 +304,12 @@ func resourceTopicRead(d *schema.ResourceData, meta interface{}) error {
 
 	tags, err := ListTags(conn, d.Id())
 
+	if tfawserr.ErrCodeContains(err, "AccessDenied") {
+		// ISO partitions may not support tagging and give Access Denied error
+		log.Printf("[DEBUG] Unable to read tags for SNS topic %s: %s", d.Id(), err)
+		return nil
+	}
+
 	if err != nil {
 		return fmt.Errorf("error listing tags for SNS Topic (%s): %w", d.Id(), err)
 	}
@@ -342,6 +348,12 @@ func resourceTopicUpdate(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
+			if tfawserr.ErrCodeContains(err, "AccessDenied") {
+				// ISO partitions may not support tagging and give Access Denied error
+				log.Printf("[DEBUG] Unable to update tags for SNS topic %s: %s", d.Id(), err)
+				return resourceTopicRead(d, meta)
+			}
+
 			return fmt.Errorf("error updating tags: %w", err)
 		}
 	}
