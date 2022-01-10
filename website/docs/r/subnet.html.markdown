@@ -76,9 +76,17 @@ In addition to all arguments above, the following attributes are exported:
 
 * `id` - The ID of the subnet
 * `arn` - The ARN of the subnet.
+* `assign_ipv6_address_on_creation` - Whether or not the network interfaces created in the specific subnet has been assigned an IPv6 address.
+* `availability_zone` - The AZ for the subnet.
+* `availability_zone_id` - The AZ ID of the subnet.
+* `cidr_block` - The IPv4 CIDR block for the subnet.
+* `ipv6_cidr_block` - The IPv6 network range for the subnet
 * `ipv6_cidr_block_association_id` - The association ID for the IPv6 CIDR block.
+* `map_public_ip_on_launch` - Whether or not subnet has a public IP Assigned.
+* `outpost_arn` - The Amazon Resource Name (ARN) of the Outpost.
 * `owner_id` - The ID of the AWS account that owns the subnet.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
+* `vpc_id` - The VPC ID.
 
 ## Timeouts
 
