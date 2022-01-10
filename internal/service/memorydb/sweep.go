@@ -10,7 +10,6 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/memorydb"
-	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
@@ -65,328 +64,282 @@ func init() {
 
 func sweepACLs(region string) error {
 	client, err := sweep.SharedRegionalSweepClient(region)
-
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-
 	conn := client.(*conns.AWSClient).MemoryDBConn
-	sweepResources := make([]*sweep.SweepResource, 0)
-	var errs *multierror.Error
-
 	input := &memorydb.DescribeACLsInput{}
+	sweepResources := make([]*sweep.SweepResource, 0)
 
-	for {
-		output, err := conn.DescribeACLs(input)
+	err = describeACLsPages(conn, input, func(page *memorydb.DescribeACLsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
 
-		for _, ACL := range output.ACLs {
+		for _, v := range page.ACLs {
+			id := aws.StringValue(v.Name)
+
+			if id == "open-access" {
+				continue // The open-access ACL cannot be deleted.
+			}
+
 			r := ResourceACL()
 			d := r.Data(nil)
-
-			id := aws.StringValue(ACL.Name)
-			if id == "open-access" {
-				continue // The open-access parameter group cannot be deleted.
-			}
-
 			d.SetId(id)
-
-			if err != nil {
-				err := fmt.Errorf("error reading MemoryDB ACL (%s): %w", id, err)
-				log.Printf("[ERROR] %s", err)
-				errs = multierror.Append(errs, err)
-				continue
-			}
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
 
-		if aws.StringValue(output.NextToken) == "" {
-			break
-		}
-
-		input.NextToken = output.NextToken
-	}
-
-	if err := sweep.SweepOrchestrator(sweepResources); err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error sweeping MemoryDB ACL for %s: %w", region, err))
-	}
+		return !lastPage
+	})
 
 	if sweep.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping MemoryDB ACL sweep for %s: %s", region, errs)
+		log.Printf("[WARN] Skipping MemoryDB ACL sweep for %s: %s", region, err)
 		return nil
 	}
 
-	return errs.ErrorOrNil()
+	if err != nil {
+		return fmt.Errorf("error listing MemoryDB ACLs (%s): %w", region, err)
+	}
+
+	err = sweep.SweepOrchestrator(sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("error sweeping MemoryDB ACLs (%s): %w", region, err)
+	}
+
+	return nil
 }
 
 func sweepClusters(region string) error {
 	client, err := sweep.SharedRegionalSweepClient(region)
-
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-
 	conn := client.(*conns.AWSClient).MemoryDBConn
-	sweepResources := make([]*sweep.SweepResource, 0)
-	var errs *multierror.Error
-
 	input := &memorydb.DescribeClustersInput{}
+	sweepResources := make([]*sweep.SweepResource, 0)
 
-	for {
-		output, err := conn.DescribeClusters(input)
+	err = describeClustersPages(conn, input, func(page *memorydb.DescribeClustersOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
 
-		for _, Cluster := range output.Clusters {
+		for _, v := range page.Clusters {
 			r := ResourceCluster()
 			d := r.Data(nil)
-
-			id := aws.StringValue(Cluster.Name)
-			d.SetId(id)
-
-			if err != nil {
-				err := fmt.Errorf("error reading MemoryDB Cluster (%s): %w", id, err)
-				log.Printf("[ERROR] %s", err)
-				errs = multierror.Append(errs, err)
-				continue
-			}
+			d.SetId(aws.StringValue(v.Name))
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
 
-		if aws.StringValue(output.NextToken) == "" {
-			break
-		}
-
-		input.NextToken = output.NextToken
-	}
-
-	if err := sweep.SweepOrchestrator(sweepResources); err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error sweeping MemoryDB Cluster for %s: %w", region, err))
-	}
+		return !lastPage
+	})
 
 	if sweep.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping MemoryDB Cluster sweep for %s: %s", region, errs)
+		log.Printf("[WARN] Skipping MemoryDB Cluster sweep for %s: %s", region, err)
 		return nil
 	}
 
-	return errs.ErrorOrNil()
+	if err != nil {
+		return fmt.Errorf("error listing MemoryDB Clusters (%s): %w", region, err)
+	}
+
+	err = sweep.SweepOrchestrator(sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("error sweeping MemoryDB Clusters (%s): %w", region, err)
+	}
+
+	return nil
 }
 
 func sweepParameterGroups(region string) error {
 	client, err := sweep.SharedRegionalSweepClient(region)
-
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-
 	conn := client.(*conns.AWSClient).MemoryDBConn
-	sweepResources := make([]*sweep.SweepResource, 0)
-	var errs *multierror.Error
-
 	input := &memorydb.DescribeParameterGroupsInput{}
+	sweepResources := make([]*sweep.SweepResource, 0)
 
-	for {
-		output, err := conn.DescribeParameterGroups(input)
+	err = describeParameterGroupsPages(conn, input, func(page *memorydb.DescribeParameterGroupsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
 
-		for _, ParameterGroup := range output.ParameterGroups {
-			r := ResourceParameterGroup()
-			d := r.Data(nil)
+		for _, v := range page.ParameterGroups {
+			id := aws.StringValue(v.Name)
 
-			id := aws.StringValue(ParameterGroup.Name)
 			if strings.HasPrefix(id, "default.") {
 				continue // Default parameter groups cannot be deleted.
 			}
 
-			d.SetId(id)
-
-			if err != nil {
-				err := fmt.Errorf("error reading MemoryDB Parameter Group (%s): %w", id, err)
-				log.Printf("[ERROR] %s", err)
-				errs = multierror.Append(errs, err)
-				continue
-			}
+			r := ResourceParameterGroup()
+			d := r.Data(nil)
+			d.SetId(aws.StringValue(v.Name))
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
 
-		if aws.StringValue(output.NextToken) == "" {
-			break
-		}
-
-		input.NextToken = output.NextToken
-	}
-
-	if err := sweep.SweepOrchestrator(sweepResources); err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error sweeping MemoryDB Parameter Group for %s: %w", region, err))
-	}
+		return !lastPage
+	})
 
 	if sweep.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping MemoryDB Parameter Group sweep for %s: %s", region, errs)
+		log.Printf("[WARN] Skipping MemoryDB Parameter Group sweep for %s: %s", region, err)
 		return nil
 	}
 
-	return errs.ErrorOrNil()
+	if err != nil {
+		return fmt.Errorf("error listing MemoryDB Parameter Groups (%s): %w", region, err)
+	}
+
+	err = sweep.SweepOrchestrator(sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("error sweeping MemoryDB Parameter Groups (%s): %w", region, err)
+	}
+
+	return nil
 }
 
 func sweepSnapshots(region string) error {
 	client, err := sweep.SharedRegionalSweepClient(region)
-
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-
 	conn := client.(*conns.AWSClient).MemoryDBConn
-	sweepResources := make([]*sweep.SweepResource, 0)
-	var errs *multierror.Error
-
 	input := &memorydb.DescribeSnapshotsInput{}
+	sweepResources := make([]*sweep.SweepResource, 0)
 
-	for {
-		output, err := conn.DescribeSnapshots(input)
+	err = describeSnapshotsPages(conn, input, func(page *memorydb.DescribeSnapshotsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
 
-		for _, Snapshot := range output.Snapshots {
+		for _, v := range page.Snapshots {
 			r := ResourceSnapshot()
 			d := r.Data(nil)
-
-			id := aws.StringValue(Snapshot.Name)
-			d.SetId(id)
-
-			if err != nil {
-				err := fmt.Errorf("error reading MemoryDB Snapshot (%s): %w", id, err)
-				log.Printf("[ERROR] %s", err)
-				errs = multierror.Append(errs, err)
-				continue
-			}
+			d.SetId(aws.StringValue(v.Name))
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
 
-		if aws.StringValue(output.NextToken) == "" {
-			break
-		}
-
-		input.NextToken = output.NextToken
-	}
-
-	if err := sweep.SweepOrchestrator(sweepResources); err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error sweeping MemoryDB Snapshot for %s: %w", region, err))
-	}
+		return !lastPage
+	})
 
 	if sweep.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping MemoryDB Snapshot sweep for %s: %s", region, errs)
+		log.Printf("[WARN] Skipping MemoryDB Snapshot sweep for %s: %s", region, err)
 		return nil
 	}
 
-	return errs.ErrorOrNil()
+	if err != nil {
+		return fmt.Errorf("error listing MemoryDB Snapshots (%s): %w", region, err)
+	}
+
+	err = sweep.SweepOrchestrator(sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("error sweeping MemoryDB Snapshots (%s): %w", region, err)
+	}
+
+	return nil
 }
 
 func sweepSubnetGroups(region string) error {
 	client, err := sweep.SharedRegionalSweepClient(region)
-
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-
 	conn := client.(*conns.AWSClient).MemoryDBConn
-	sweepResources := make([]*sweep.SweepResource, 0)
-	var errs *multierror.Error
-
 	input := &memorydb.DescribeSubnetGroupsInput{}
+	sweepResources := make([]*sweep.SweepResource, 0)
 
-	for {
-		output, err := conn.DescribeSubnetGroups(input)
+	err = describeSubnetGroupsPages(conn, input, func(page *memorydb.DescribeSubnetGroupsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
 
-		for _, SubnetGroup := range output.SubnetGroups {
-			r := ResourceSubnetGroup()
-			d := r.Data(nil)
+		for _, v := range page.SubnetGroups {
+			id := aws.StringValue(v.Name)
 
-			id := aws.StringValue(SubnetGroup.Name)
 			if id == "default" {
 				continue // The default subnet group cannot be deleted.
 			}
 
+			r := ResourceSubnetGroup()
+			d := r.Data(nil)
 			d.SetId(id)
-
-			if err != nil {
-				err := fmt.Errorf("error reading MemoryDB Subnet Group (%s): %w", id, err)
-				log.Printf("[ERROR] %s", err)
-				errs = multierror.Append(errs, err)
-				continue
-			}
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
 
-		if aws.StringValue(output.NextToken) == "" {
-			break
-		}
-
-		input.NextToken = output.NextToken
-	}
-
-	if err := sweep.SweepOrchestrator(sweepResources); err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error sweeping MemoryDB Subnet Group for %s: %w", region, err))
-	}
+		return !lastPage
+	})
 
 	if sweep.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping MemoryDB Subnet Group sweep for %s: %s", region, errs)
+		log.Printf("[WARN] Skipping MemoryDB Subnet Group sweep for %s: %s", region, err)
 		return nil
 	}
 
-	return errs.ErrorOrNil()
+	if err != nil {
+		return fmt.Errorf("error listing MemoryDB Subnet Groups (%s): %w", region, err)
+	}
+
+	err = sweep.SweepOrchestrator(sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("error sweeping MemoryDB Subnet Groups (%s): %w", region, err)
+	}
+
+	return nil
 }
 
 func sweepUsers(region string) error {
 	client, err := sweep.SharedRegionalSweepClient(region)
-
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-
 	conn := client.(*conns.AWSClient).MemoryDBConn
-	sweepResources := make([]*sweep.SweepResource, 0)
-	var errs *multierror.Error
-
 	input := &memorydb.DescribeUsersInput{}
+	sweepResources := make([]*sweep.SweepResource, 0)
 
-	for {
-		output, err := conn.DescribeUsers(input)
+	err = describeUsersPages(conn, input, func(page *memorydb.DescribeUsersOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
 
-		for _, User := range output.Users {
-			r := ResourceUser()
-			d := r.Data(nil)
+		for _, v := range page.Users {
+			id := aws.StringValue(v.Name)
 
-			id := aws.StringValue(User.Name)
 			if id == "default" {
 				continue // The default user cannot be deleted.
 			}
 
+			r := ResourceUser()
+			d := r.Data(nil)
 			d.SetId(id)
-
-			if err != nil {
-				err := fmt.Errorf("error reading MemoryDB User (%s): %w", id, err)
-				log.Printf("[ERROR] %s", err)
-				errs = multierror.Append(errs, err)
-				continue
-			}
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
 
-		if aws.StringValue(output.NextToken) == "" {
-			break
-		}
-
-		input.NextToken = output.NextToken
-	}
-
-	if err := sweep.SweepOrchestrator(sweepResources); err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error sweeping MemoryDB User for %s: %w", region, err))
-	}
+		return !lastPage
+	})
 
 	if sweep.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping MemoryDB User sweep for %s: %s", region, errs)
+		log.Printf("[WARN] Skipping MemoryDB User sweep for %s: %s", region, err)
 		return nil
 	}
 
-	return errs.ErrorOrNil()
+	if err != nil {
+		return fmt.Errorf("error listing MemoryDB Users (%s): %w", region, err)
+	}
+
+	err = sweep.SweepOrchestrator(sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("error sweeping MemoryDB Users (%s): %w", region, err)
+	}
+
+	return nil
 }
