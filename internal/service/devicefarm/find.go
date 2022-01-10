@@ -57,3 +57,78 @@ func FindProjectByArn(conn *devicefarm.DeviceFarm, arn string) (*devicefarm.Proj
 
 	return output.Project, nil
 }
+
+func FindUploadByArn(conn *devicefarm.DeviceFarm, arn string) (*devicefarm.Upload, error) {
+
+	input := &devicefarm.GetUploadInput{
+		Arn: aws.String(arn),
+	}
+	output, err := conn.GetUpload(input)
+
+	if tfawserr.ErrCodeEquals(err, devicefarm.ErrCodeNotFoundException) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.Upload == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.Upload, nil
+}
+
+func FindNetworkProfileByArn(conn *devicefarm.DeviceFarm, arn string) (*devicefarm.NetworkProfile, error) {
+
+	input := &devicefarm.GetNetworkProfileInput{
+		Arn: aws.String(arn),
+	}
+	output, err := conn.GetNetworkProfile(input)
+
+	if tfawserr.ErrCodeEquals(err, devicefarm.ErrCodeNotFoundException) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.NetworkProfile == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.NetworkProfile, nil
+}
+
+func FindInstanceProfileByArn(conn *devicefarm.DeviceFarm, arn string) (*devicefarm.InstanceProfile, error) {
+
+	input := &devicefarm.GetInstanceProfileInput{
+		Arn: aws.String(arn),
+	}
+	output, err := conn.GetInstanceProfile(input)
+
+	if tfawserr.ErrCodeEquals(err, devicefarm.ErrCodeNotFoundException) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.InstanceProfile == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.InstanceProfile, nil
+}

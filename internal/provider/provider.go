@@ -402,6 +402,7 @@ func Provider() *schema.Provider {
 
 			"aws_codestarconnections_connection": codestarconnections.DataSourceConnection(),
 
+			"aws_cognito_user_pool_client":              cognitoidp.DataSourceUserPoolClient(),
 			"aws_cognito_user_pool_clients":             cognitoidp.DataSourceUserPoolClients(),
 			"aws_cognito_user_pool_signing_certificate": cognitoidp.DataSourceUserPoolSigningCertificate(),
 			"aws_cognito_user_pools":                    cognitoidp.DataSourceUserPools(),
@@ -577,7 +578,8 @@ func Provider() *schema.Provider {
 			"aws_msk_configuration": kafka.DataSourceConfiguration(),
 			"aws_msk_kafka_version": kafka.DataSourceVersion(),
 
-			"aws_mskconnect_custom_plugin": kafkaconnect.DataSourceCustomPlugin(),
+			"aws_mskconnect_custom_plugin":        kafkaconnect.DataSourceCustomPlugin(),
+			"aws_mskconnect_worker_configuration": kafkaconnect.DataSourceWorkerConfiguration(),
 
 			"aws_kinesis_stream":          kinesis.DataSourceStream(),
 			"aws_kinesis_stream_consumer": kinesis.DataSourceStreamConsumer(),
@@ -871,7 +873,8 @@ func Provider() *schema.Provider {
 			"aws_chime_voice_connector_termination":             chime.ResourceVoiceConnectorTermination(),
 			"aws_chime_voice_connector_termination_credentials": chime.ResourceVoiceConnectorTerminationCredentials(),
 
-			"aws_cloud9_environment_ec2": cloud9.ResourceEnvironmentEC2(),
+			"aws_cloud9_environment_ec2":        cloud9.ResourceEnvironmentEC2(),
+			"aws_cloud9_environment_membership": cloud9.ResourceEnvironmentMembership(),
 
 			"aws_cloudcontrolapi_resource": cloudcontrol.ResourceResource(),
 
@@ -996,8 +999,11 @@ func Provider() *schema.Provider {
 			"aws_dax_parameter_group": dax.ResourceParameterGroup(),
 			"aws_dax_subnet_group":    dax.ResourceSubnetGroup(),
 
-			"aws_devicefarm_device_pool": devicefarm.ResourceDevicePool(),
-			"aws_devicefarm_project":     devicefarm.ResourceProject(),
+			"aws_devicefarm_device_pool":      devicefarm.ResourceDevicePool(),
+			"aws_devicefarm_instance_profile": devicefarm.ResourceInstanceProfile(),
+			"aws_devicefarm_network_profile":  devicefarm.ResourceNetworkProfile(),
+			"aws_devicefarm_project":          devicefarm.ResourceProject(),
+			"aws_devicefarm_upload":           devicefarm.ResourceUpload(),
 
 			"aws_detective_graph": detective.ResourceGraph(),
 
@@ -1337,7 +1343,8 @@ func Provider() *schema.Provider {
 			"aws_msk_configuration":            kafka.ResourceConfiguration(),
 			"aws_msk_scram_secret_association": kafka.ResourceScramSecretAssociation(),
 
-			"aws_mskconnect_custom_plugin": kafkaconnect.ResourceCustomPlugin(),
+			"aws_mskconnect_custom_plugin":        kafkaconnect.ResourceCustomPlugin(),
+			"aws_mskconnect_worker_configuration": kafkaconnect.ResourceWorkerConfiguration(),
 
 			"aws_kinesis_stream":          kinesis.ResourceStream(),
 			"aws_kinesis_stream_consumer": kinesis.ResourceStreamConsumer(),
@@ -1406,6 +1413,7 @@ func Provider() *schema.Provider {
 			"aws_memorydb_acl":             memorydb.ResourceACL(),
 			"aws_memorydb_cluster":         memorydb.ResourceCluster(),
 			"aws_memorydb_parameter_group": memorydb.ResourceParameterGroup(),
+			"aws_memorydb_snapshot":        memorydb.ResourceSnapshot(),
 			"aws_memorydb_subnet_group":    memorydb.ResourceSubnetGroup(),
 			"aws_memorydb_user":            memorydb.ResourceUser(),
 
@@ -1570,6 +1578,7 @@ func Provider() *schema.Provider {
 			"aws_sagemaker_app":                                       sagemaker.ResourceApp(),
 			"aws_sagemaker_app_image_config":                          sagemaker.ResourceAppImageConfig(),
 			"aws_sagemaker_code_repository":                           sagemaker.ResourceCodeRepository(),
+			"aws_sagemaker_device":                                    sagemaker.ResourceDevice(),
 			"aws_sagemaker_device_fleet":                              sagemaker.ResourceDeviceFleet(),
 			"aws_sagemaker_domain":                                    sagemaker.ResourceDomain(),
 			"aws_sagemaker_endpoint":                                  sagemaker.ResourceEndpoint(),

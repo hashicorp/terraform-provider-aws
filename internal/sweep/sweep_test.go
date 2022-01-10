@@ -76,6 +76,7 @@ import (
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/lexmodels"
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/licensemanager"
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/lightsail"
+	_ "github.com/hashicorp/terraform-provider-aws/internal/service/memorydb"
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/mq"
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/mwaa"
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/neptune"

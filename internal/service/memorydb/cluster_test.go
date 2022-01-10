@@ -270,6 +270,27 @@ func TestAccMemoryDBCluster_create_withPort(t *testing.T) {
 	})
 }
 
+func TestAccMemoryDBCluster_create_fromSnapshot(t *testing.T) {
+	rName1 := "tf-test-" + sdkacctest.RandString(8)
+	rName2 := "tf-test-" + sdkacctest.RandString(8)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, memorydb.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckClusterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_withSnapshotFromCluster(rName1, rName2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists("aws_memorydb_cluster.test1"),
+					testAccCheckClusterExists("aws_memorydb_cluster.test2"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccMemoryDBCluster_delete_withFinalSnapshot(t *testing.T) {
 	rName := "tf-test-" + sdkacctest.RandString(8)
 	resourceName := "aws_memorydb_cluster.test"
@@ -309,7 +330,7 @@ func TestAccMemoryDBCluster_delete_withFinalSnapshot(t *testing.T) {
 			{
 				Config: testAccClusterConfigBaseNetwork(), // empty Config not supported
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSnapshotExists(rName),
+					testAccCheckSnapshotExistsByName(rName),
 				),
 			},
 		},
@@ -1028,7 +1049,7 @@ func testAccCheckClusterExists(n string) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckSnapshotExists(snapshotName string) resource.TestCheckFunc {
+func testAccCheckSnapshotExistsByName(snapshotName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).MemoryDBConn
 
@@ -1416,6 +1437,36 @@ resource "aws_memorydb_cluster" "test" {
   subnet_group_name        = aws_memorydb_subnet_group.test.id
 }
 `, rName, retentionLimit),
+	)
+}
+
+func testAccClusterConfig_withSnapshotFromCluster(rName1, rName2 string) string {
+	return acctest.ConfigCompose(
+		testAccClusterConfigBaseNetwork(),
+		fmt.Sprintf(`
+resource "aws_memorydb_cluster" "test1" {
+  acl_name               = "open-access"
+  name                   = %[1]q
+  node_type              = "db.t4g.small"
+  num_replicas_per_shard = 0
+  num_shards             = 1
+  subnet_group_name      = aws_memorydb_subnet_group.test.id
+}
+
+resource "aws_memorydb_snapshot" "test" {
+  cluster_name = aws_memorydb_cluster.test1.name
+}
+
+resource "aws_memorydb_cluster" "test2" {
+  acl_name               = "open-access"
+  name                   = %[2]q
+  node_type              = "db.t4g.small"
+  num_replicas_per_shard = 0
+  num_shards             = 1
+  snapshot_name          = aws_memorydb_snapshot.test.name
+  subnet_group_name      = aws_memorydb_subnet_group.test.id
+}
+`, rName1, rName2),
 	)
 }
 
