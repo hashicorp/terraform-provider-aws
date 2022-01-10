@@ -1574,17 +1574,7 @@ func modifyVpnTunnels(d *schema.ResourceData, conn *ec2.EC2) error {
 		tun2Changed = true
 		options[1].StartupAction = aws.String(d.Get("tunnel2_startup_action").(string))
 	}
-	
-	if d.HasChange("tunnel1_preshared_key") {
-		tun1Changed = true
-		options[0].PreSharedKey = aws.String(d.Get("tunnel1_preshared_key").(string))
-	}
-	
-	if d.HasChange("tunnel2_preshared_key") {
-		tun2Changed = true
-		options[1].PreSharedKey = aws.String(d.Get("tunnel2_preshared_key").(string))
-	}
-	
+
 	if tun1Changed {
 		if err := modifyVpnTunnelOptions(conn, d.Get("vgw_telemetry").(*schema.Set), vpnConnectionID, vgwTelemetryTun1Index, options[0]); err != nil {
 			return err
