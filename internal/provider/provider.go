@@ -402,6 +402,7 @@ func Provider() *schema.Provider {
 
 			"aws_codestarconnections_connection": codestarconnections.DataSourceConnection(),
 
+			"aws_cognito_user_pool_client":              cognitoidp.DataSourceUserPoolClient(),
 			"aws_cognito_user_pool_clients":             cognitoidp.DataSourceUserPoolClients(),
 			"aws_cognito_user_pool_signing_certificate": cognitoidp.DataSourceUserPoolSigningCertificate(),
 			"aws_cognito_user_pools":                    cognitoidp.DataSourceUserPools(),
