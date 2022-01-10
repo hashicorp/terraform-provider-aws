@@ -1,15 +1,1145 @@
-## 3.40.0 (Unreleased)
+## 3.71.0 (Unreleased)
+
+FEATURES:
+
+* **New Data Source:** `aws_batch_scheduling_policy` ([#22335](https://github.com/hashicorp/terraform-provider-aws/issues/22335))
+* **New Data Source:** `aws_cognito_user_pool_clients` ([#22289](https://github.com/hashicorp/terraform-provider-aws/issues/22289))
+* **New Data Source:** `aws_cognito_user_pool_signing_certificate` ([#22285](https://github.com/hashicorp/terraform-provider-aws/issues/22285))
+* **New Data Source:** `aws_mskconnect_custom_plugin` ([#22333](https://github.com/hashicorp/terraform-provider-aws/issues/22333))
+* **New Data Source:** `aws_organizations_resource_tags` ([#22371](https://github.com/hashicorp/terraform-provider-aws/issues/22371))
+* **New Data Source:** `aws_ses_active_receipt_rule_set` ([#22310](https://github.com/hashicorp/terraform-provider-aws/issues/22310))
+* **New Data Source:** `aws_ses_domain_identity` ([#22321](https://github.com/hashicorp/terraform-provider-aws/issues/22321))
+* **New Data Source:** `aws_ses_email_identity` ([#22321](https://github.com/hashicorp/terraform-provider-aws/issues/22321))
+* **New Resource:** `aws_batch_scheduling_policy` ([#22262](https://github.com/hashicorp/terraform-provider-aws/issues/22262))
+* **New Resource:** `aws_codebuild_resource_policy` ([#22196](https://github.com/hashicorp/terraform-provider-aws/issues/22196))
+* **New Resource:** `aws_datasync_location_fsx_lustre_file_system` ([#22346](https://github.com/hashicorp/terraform-provider-aws/issues/22346))
+* **New Resource:** `aws_datasync_location_hdfs` ([#22347](https://github.com/hashicorp/terraform-provider-aws/issues/22347))
+* **New Resource:** `aws_devicefarm_device_pool` ([#21025](https://github.com/hashicorp/terraform-provider-aws/issues/21025))
+* **New Resource:** `aws_fsx_openzfs_file_system` ([#22234](https://github.com/hashicorp/terraform-provider-aws/issues/22234))
+* **New Resource:** `aws_fsx_openzfs_snapshot` ([#22234](https://github.com/hashicorp/terraform-provider-aws/issues/22234))
+* **New Resource:** `aws_fsx_openzfs_volume` ([#22234](https://github.com/hashicorp/terraform-provider-aws/issues/22234))
+* **New Resource:** `aws_memorydb_cluster` ([#22388](https://github.com/hashicorp/terraform-provider-aws/issues/22388))
+* **New Resource:** `aws_memorydb_parameter_group` ([#22304](https://github.com/hashicorp/terraform-provider-aws/issues/22304))
+* **New Resource:** `aws_memorydb_subnet_group` ([#22256](https://github.com/hashicorp/terraform-provider-aws/issues/22256))
+* **New Resource:** `aws_memorydb_user` ([#22261](https://github.com/hashicorp/terraform-provider-aws/issues/22261))
+* **New Resource:** `aws_mskconnect_custom_plugin` ([#22333](https://github.com/hashicorp/terraform-provider-aws/issues/22333))
+* **New Resource:** `aws_vpc_endpoint_connection_accepter` ([#19083](https://github.com/hashicorp/terraform-provider-aws/issues/19083))
+* **New Resource:** `aws_vpc_ipam_organization_admin_account` ([#22394](https://github.com/hashicorp/terraform-provider-aws/issues/22394))
+
+ENHANCEMENTS:
+
+* data-source/aws_batch_job_queue: Add `scheduling_policy_arn` attribute ([#22348](https://github.com/hashicorp/terraform-provider-aws/issues/22348))
+* data-source/aws_cloudtrail_service_account: Add service account ID for `ap-southeast-3` AWS Region ([#22295](https://github.com/hashicorp/terraform-provider-aws/issues/22295))
+* data-source/aws_ecs_task_definition: Add `arn` attribute. ([#21856](https://github.com/hashicorp/terraform-provider-aws/issues/21856))
+* data-source/aws_elb_hosted_zone_id: Add hosted zone ID for `ap-southeast-3` AWS Region ([#22295](https://github.com/hashicorp/terraform-provider-aws/issues/22295))
+* data-source/aws_s3_bucket: Add hosted zone ID for `ap-southeast-3` AWS Region ([#22295](https://github.com/hashicorp/terraform-provider-aws/issues/22295))
+* data-source/aws_ssm_parameters_by_path: Add `recursive` argument ([#22222](https://github.com/hashicorp/terraform-provider-aws/issues/22222))
+* data-source/aws_subnet: Add `enable_dns64`, `ipv6_native`, `enable_resource_name_dns_aaaa_record_on_launch`, `enable_resource_name_dns_a_record_on_launch` and `private_dns_hostname_type_on_launch` attributes ([#22339](https://github.com/hashicorp/terraform-provider-aws/issues/22339))
+* provider: Add validation for the `duration`, `external_id` and `session_name` arguments in the `assume_role` configuration block ([#18085](https://github.com/hashicorp/terraform-provider-aws/issues/18085))
+* resource/aws_batch_job_queue: Add `scheduling_policy_arn` attribute ([#22298](https://github.com/hashicorp/terraform-provider-aws/issues/22298))
+* resource/aws_cloud9_environment_ec2: Add plan time validations for `name`, `automatic_stop_time_minutes`, `description`. ([#18560](https://github.com/hashicorp/terraform-provider-aws/issues/18560))
+* resource/aws_cloudfront_distribution: Add plan time validation to `ordered_cache_behavior.forwarded_values.cookies`, `ordered_cache_behavior.lambda_function_association.event_type`, `ordered_cache_behavior.lambda_function_association.lambda_arn`, `ordered_cache_behavior.function_association.lambda_arn`, `ordered_cache_behavior.function_association.event_type`, `ordered_cache_behavior.viewer_protocol_policy`, `comment`, `default_cache_behavior.forwarded_values.cookies`, `default_cache_behavior.lambda_function_association.event_type`, `ordered_cache_behavior.lambda_function_association.lambda_arn`, `default_cache_behavior.function_association.lambda_arn`, `default_cache_behavior.function_association.event_type`, `default_cache_behavior.viewer_protocol_policy`, `origin.custom_origin_config.origin_keepalive_timeout`, `origin.custom_origin_config.origin_read_timeout`, `origin.custom_origin_config.origin_protocol_policy`, `origin.custom_origin_config.origin_ssl_protocols`, `price_class`, `viewer_certificate.acm_certificate_arn`, `viewer_certificate.minimum_protocol_version`, `viewer_certificate.ssl_support_method`. ([#21034](https://github.com/hashicorp/terraform-provider-aws/issues/21034))
+* resource/aws_codebuild_project: Add `artifacts.bucket_owner_access`, `secondary_artifacts.bucket_owner_access`, `logs_config.s3_logs.bucket_owner_access`, `project_visibility`, `resource_access_role` arguments. ([#22189](https://github.com/hashicorp/terraform-provider-aws/issues/22189))
+* resource/aws_codebuild_project: Add `public_project_alias` attribute. ([#22189](https://github.com/hashicorp/terraform-provider-aws/issues/22189))
+* resource/aws_codebuild_project: Add `secondary_source_version` argument ([#22345](https://github.com/hashicorp/terraform-provider-aws/issues/22345))
+* resource/aws_codebuild_project: Add plan time validation for `cache.modes` and `service_role`. ([#22189](https://github.com/hashicorp/terraform-provider-aws/issues/22189))
+* resource/aws_codepipeline: Add plan time validation to `name`, `role_arn`, `stage.name`, `stage.action.name`, `stage.action.name`, `stage.action.run_order`, `stage.action.namespace`, `action.configuration`, and `action.version` ([#18451](https://github.com/hashicorp/terraform-provider-aws/issues/18451))
+* resource/aws_codepipeline_webhook: Add `arn` attribute. ([#22406](https://github.com/hashicorp/terraform-provider-aws/issues/22406))
+* resource/aws_codepipeline_webhook: Add plan time validation for `authentication_configuration.secret_token`, `filter.json_path`, `filter.match_equals`, `name`. ([#22406](https://github.com/hashicorp/terraform-provider-aws/issues/22406))
+* resource/aws_codepipeline_webhook: Allow updating `filter` in place. ([#22406](https://github.com/hashicorp/terraform-provider-aws/issues/22406))
+* resource/aws_dax_cluster: Add `cluster_endpoint_encryption_type` argument ([#22396](https://github.com/hashicorp/terraform-provider-aws/issues/22396))
+* resource/aws_dx_private_virtual_interface: Add `sitelink_enabled` argument ([#22350](https://github.com/hashicorp/terraform-provider-aws/issues/22350))
+* resource/aws_dx_transit_virtual_interface: Add `sitelink_enabled` argument ([#22350](https://github.com/hashicorp/terraform-provider-aws/issues/22350))
+* resource/aws_ecr_replication_configuration: Add `repository_filter` to `replication_configuration` block ([#21231](https://github.com/hashicorp/terraform-provider-aws/issues/21231))
+* resource/aws_ecr_replication_configuration: Increase `MaxItems` for `rule` to `10` and for `destination` to `25` ([#22281](https://github.com/hashicorp/terraform-provider-aws/issues/22281))
+* resource/aws_elasticsearch_domain: Tag on create ([#18082](https://github.com/hashicorp/terraform-provider-aws/issues/18082))
+* resource/aws_kinesis_firehose_delivery_stream: Add `error_output_prefix` argument to `extended_s3_configuration` `s3_backup_configuration` configuration block ([#11229](https://github.com/hashicorp/terraform-provider-aws/issues/11229))
+* resource/aws_kinesis_firehose_delivery_stream: Add `error_output_prefix` argument to `redshift_configuration` `s3_backup_configuration` configuration block ([#11229](https://github.com/hashicorp/terraform-provider-aws/issues/11229))
+* resource/aws_kinesis_firehose_delivery_stream: Add `error_output_prefix` argument to `s3_configuration` configuration block ([#11229](https://github.com/hashicorp/terraform-provider-aws/issues/11229))
+* resource/aws_networkfirewall_resource_policy: Handle delete-after-create eventual consistency ([#22402](https://github.com/hashicorp/terraform-provider-aws/issues/22402))
+* resource/aws_s3_bucket: Add hosted zone ID for `ap-southeast-3` AWS Region ([#22295](https://github.com/hashicorp/terraform-provider-aws/issues/22295))
+* resource/aws_s3_bucket_object: Support objects greater than 5GB in size by using the [Amazon S3 upload manager](https://docs.aws.amazon.com/sdk-for-go/v1/developer-guide/sdk-utilities.html#upload-manager) ([#21727](https://github.com/hashicorp/terraform-provider-aws/issues/21727))
+* resource/aws_sagemaker_app: Add `lifecycle_config_arn` and `sagemaker_image_version_arn` arguments to `resource_spec` configuration block ([#21508](https://github.com/hashicorp/terraform-provider-aws/issues/21508))
+* resource/aws_sagemaker_domain: Add `lifecycle_config_arn` and `sagemaker_image_version_arn` arguments to `default_resource_spec` configuration block ([#21508](https://github.com/hashicorp/terraform-provider-aws/issues/21508))
+* resource/aws_sagemaker_user_profile: Add `lifecycle_config_arn` and `sagemaker_image_version_arn` arguments to `default_resource_spec` configuration block ([#21508](https://github.com/hashicorp/terraform-provider-aws/issues/21508))
+* resource/aws_subnet: Add `enable_dns64`, `ipv6_native`, `enable_resource_name_dns_aaaa_record_on_launch`, `enable_resource_name_dns_a_record_on_launch` and `private_dns_hostname_type_on_launch` arguments ([#22339](https://github.com/hashicorp/terraform-provider-aws/issues/22339))
+* resource/aws_timestreamwrite_table: Add `magnetic_store_write_properties` argument. ([#22363](https://github.com/hashicorp/terraform-provider-aws/issues/22363))
+
+BUG FIXES:
+
+* resource/aws_appstream_fleet: Correctly create resource with `stream_view` argument ([#22395](https://github.com/hashicorp/terraform-provider-aws/issues/22395))
+* resource/aws_codebuild_project: Fix plan validation to take into account computed values for `cache.location` ([#21458](https://github.com/hashicorp/terraform-provider-aws/issues/21458))
+* resource/aws_dynamodb_table: Remove extraneous `kms_key_arn` attribute from the `ttl` configuration block ([#21334](https://github.com/hashicorp/terraform-provider-aws/issues/21334))
+* resource/aws_ec2_traffic_mirror_filter_rule: Prevent crash during resource read ([#22315](https://github.com/hashicorp/terraform-provider-aws/issues/22315))
+* resource/aws_launch_template: Correctly set `default_version` and `latest_version` as Computed when `name`, `name_prefix` or `description` change ([#22277](https://github.com/hashicorp/terraform-provider-aws/issues/22277))
+* resource/aws_networkfirewall_rule_group: Allow any character in `ip_set` `definition` as per the AWS API docs ([#22284](https://github.com/hashicorp/terraform-provider-aws/issues/22284))
+* resource/aws_ses_event_destination: Allow `.` and `@` characters in `cloudwatch_destination.default_value` argument ([#22359](https://github.com/hashicorp/terraform-provider-aws/issues/22359))
+* resource/aws_ssoadmin_managed_policy_attachment: Fix missing call to `ProvisionPermissionSet` after detaching the managed policy ([#21773](https://github.com/hashicorp/terraform-provider-aws/issues/21773))
+
+## 3.70.0 (December 16, 2021)
+
+NOTES:
+
+* resource/aws_fsx_ontap_storage_virtual_machine: The `active_directory_configuration.self_managed_active_directory_configuration.organizational_unit_distinguidshed_name` attribute has been deprecated. All configurations using `active_directory_configuration.self_managed_active_directory_configuration.organizational_unit_distinguidshed_name` should be updated to use the new `active_directory_configuration.self_managed_active_directory_configuration.organizational_unit_distinguished_name` attribute instead ([#22246](https://github.com/hashicorp/terraform-provider-aws/issues/22246))
+
+FEATURES:
+
+* **New Data Source:** `aws_connect_bot_association` ([#21097](https://github.com/hashicorp/terraform-provider-aws/issues/21097))
+* **New Data Source:** `aws_connect_hours_of_operation` ([#22207](https://github.com/hashicorp/terraform-provider-aws/issues/22207))
+* **New Data Source:** `aws_connect_lambda_function_association` ([#21276](https://github.com/hashicorp/terraform-provider-aws/issues/21276))
+* **New Resource:** `aws_connect_bot_association` ([#21097](https://github.com/hashicorp/terraform-provider-aws/issues/21097))
+* **New Resource:** `aws_connect_hours_of_operation` ([#21934](https://github.com/hashicorp/terraform-provider-aws/issues/21934))
+* **New Resource:** `aws_connect_lambda_function_association` ([#21276](https://github.com/hashicorp/terraform-provider-aws/issues/21276))
+* **New Resource:** `aws_ecr_pull_through_cache_rule` ([#22172](https://github.com/hashicorp/terraform-provider-aws/issues/22172))
+* **New Resource:** `aws_ecr_registry_scanning_configuration` ([#22179](https://github.com/hashicorp/terraform-provider-aws/issues/22179))
+* **New Resource:** `aws_ecrpublic_repository_policy` ([#16901](https://github.com/hashicorp/terraform-provider-aws/issues/16901))
+
+ENHANCEMENTS:
+
+* data-source/aws_sagemaker_prebuilt_ecr_image: Add Hugging Face DLCs ([#21983](https://github.com/hashicorp/terraform-provider-aws/issues/21983))
+* resource/aws_appsync_graphql_api: Add `lambda_authorizer_config` argument ([#20857](https://github.com/hashicorp/terraform-provider-aws/issues/20857))
+* resource/aws_dynamodb_table: Allows restoring to point-in-time ([#19292](https://github.com/hashicorp/terraform-provider-aws/issues/19292))
+* resource/aws_fsx_backup: Add `volume_id` argument to support Amazon FSx for NetApp ONTAP backup ([#21960](https://github.com/hashicorp/terraform-provider-aws/issues/21960))
+* resource/aws_networkfirewall_firewall_policy: Add `stateful_default_actions` and `stateful_engine_options` configuration blocks. Add `priority` attribute to `stateful_rule_group_reference` block ([#21955](https://github.com/hashicorp/terraform-provider-aws/issues/21955))
+* resource/aws_networkfirewall_firewall_rule_group: Add `stateful_rule_options` configuration block ([#21955](https://github.com/hashicorp/terraform-provider-aws/issues/21955))
+* resource/aws_route: Extend creation timeout to 5 minutes ([#21531](https://github.com/hashicorp/terraform-provider-aws/issues/21531))
+* resource/aws_route_table: Extend creation timeout to 5 minutes ([#21531](https://github.com/hashicorp/terraform-provider-aws/issues/21531))
+* resource/iam_service_linked_role: Add `tags` argument ([#22185](https://github.com/hashicorp/terraform-provider-aws/issues/22185))
+
+BUG FIXES:
+
+* data-source/aws_s3_bucket: Correct Route 53 hosted zone ID for S3 websites in the `eu-south-1`, `af-south-1` and `us-gov-east-1` AWS Regions ([#22227](https://github.com/hashicorp/terraform-provider-aws/issues/22227))
+* resource/aws_cloudwatch_event_bus_policy: Fix erroneous diffs in `policy` when no changes made or policies are equivalent ([#22165](https://github.com/hashicorp/terraform-provider-aws/issues/22165))
+* resource/aws_ecr_lifecycle_policy: Fix erroneous diffs in `policy` when no changes made or policies are equivalent ([#22142](https://github.com/hashicorp/terraform-provider-aws/issues/22142))
+* resource/aws_elasticsearch_domain: Fix erroneous diffs in `access_policies` when no changes made or policies are equivalent ([#22157](https://github.com/hashicorp/terraform-provider-aws/issues/22157))
+* resource/aws_elasticsearch_domain: Fix erroneous diffs in `advanced_options` due to AWS defaults being returned ([#22157](https://github.com/hashicorp/terraform-provider-aws/issues/22157))
+* resource/aws_elasticsearch_domain_policy: Fix erroneous diffs in `access_policies` when no changes made or policies are equivalent ([#22157](https://github.com/hashicorp/terraform-provider-aws/issues/22157))
+* resource/aws_emr_cluster: Wait for the cluster to reach a terminated state on deletion ([#12578](https://github.com/hashicorp/terraform-provider-aws/issues/12578))
+* resource/aws_glacier_vault: Fix erroneous diffs in `access_policy` when no changes made or policies are equivalent ([#22166](https://github.com/hashicorp/terraform-provider-aws/issues/22166))
+* resource/aws_glacier_vault_lock: Fix erroneous diffs in `policy` when no changes made or policies are equivalent ([#22166](https://github.com/hashicorp/terraform-provider-aws/issues/22166))
+* resource/aws_glue_resource_policy: Fix erroneous diffs in `policy` when no changes made or policies are equivalent ([#22167](https://github.com/hashicorp/terraform-provider-aws/issues/22167))
+* resource/aws_iam_role: Fix eventual consistency problem with `arn` sometimes being a unique ID instead of the role ARN ([#22217](https://github.com/hashicorp/terraform-provider-aws/issues/22217))
+* resource/aws_iot_policy: Fix erroneous diffs in `policy` when no changes made or policies are equivalent ([#22169](https://github.com/hashicorp/terraform-provider-aws/issues/22169))
+* resource/aws_media_store_container_policy: Fix erroneous diffs in `policy` when no changes made or policies are equivalent ([#22170](https://github.com/hashicorp/terraform-provider-aws/issues/22170))
+* resource/aws_networkfirewall_resource_policy: Fix erroneous diffs in `policy` when no changes made or policies are equivalent ([#22171](https://github.com/hashicorp/terraform-provider-aws/issues/22171))
+* resource/aws_s3_access_point: Fix erroneous diffs in `policy` when no changes made or policies are equivalent ([#22255](https://github.com/hashicorp/terraform-provider-aws/issues/22255))
+* resource/aws_s3_bucket: Correct Route 53 hosted zone ID for S3 websites in the `eu-south-1`, `af-south-1` and `us-gov-east-1` AWS Regions ([#22227](https://github.com/hashicorp/terraform-provider-aws/issues/22227))
+* resource/aws_s3_bucket: Ensure `versioning` is set correctly when nested values are explicitly set to `false`. ([#22221](https://github.com/hashicorp/terraform-provider-aws/issues/22221))
+* resource/aws_s3control_access_point_policy: Fix erroneous diffs in `policy` when no changes made or policies are equivalent ([#22255](https://github.com/hashicorp/terraform-provider-aws/issues/22255))
+* resource/aws_s3control_bucket_policy: Fix erroneous diffs in `policy` when no changes made or policies are equivalent ([#22255](https://github.com/hashicorp/terraform-provider-aws/issues/22255))
+* resource/aws_s3control_multi_region_access_point_policy: Fix erroneous diffs in `policy` when no changes made or policies are equivalent ([#22255](https://github.com/hashicorp/terraform-provider-aws/issues/22255))
+* resource/aws_s3control_object_lambda_access_point_policy: Fix erroneous diffs in `policy` when no changes made or policies are equivalent ([#22255](https://github.com/hashicorp/terraform-provider-aws/issues/22255))
+* resource/aws_sagemaker_model_package_group_policy: Fix erroneous diffs in `resource_policy` when no changes made or policies are equivalent ([#22259](https://github.com/hashicorp/terraform-provider-aws/issues/22259))
+* resource/aws_secretsmanager_secret: Fix erroneous diffs in `policy` when no changes made or policies are equivalent ([#22217](https://github.com/hashicorp/terraform-provider-aws/issues/22217))
+* resource/aws_secretsmanager_secret_policy: Fix erroneous diffs in `policy` when no changes made or policies are equivalent ([#22217](https://github.com/hashicorp/terraform-provider-aws/issues/22217))
+* resource/aws_ses_identity_policy: Fix erroneous diffs in `policy` when no changes made or policies are equivalent ([#22214](https://github.com/hashicorp/terraform-provider-aws/issues/22214))
+* resource/aws_sns_topic: Fix erroneous diffs in `policy` when no changes made or policies are equivalent ([#22213](https://github.com/hashicorp/terraform-provider-aws/issues/22213))
+* resource/aws_sns_topic_policy: Fix erroneous diffs in `policy` when no changes made or policies are equivalent ([#22213](https://github.com/hashicorp/terraform-provider-aws/issues/22213))
+* resource/aws_sqs_queue: Fix "error reading, empty result" and various eventual consistency errors ([#22194](https://github.com/hashicorp/terraform-provider-aws/issues/22194))
+* resource/aws_sqs_queue: Fix erroneous diffs in `policy` when no changes made or policies are equivalent ([#22194](https://github.com/hashicorp/terraform-provider-aws/issues/22194))
+* resource/aws_sqs_queue_policy: Fix "error reading, empty result" and various eventual consistency errors ([#22194](https://github.com/hashicorp/terraform-provider-aws/issues/22194))
+* resource/aws_sqs_queue_policy: Fix erroneous diffs in `policy` when no changes made or policies are equivalent ([#22194](https://github.com/hashicorp/terraform-provider-aws/issues/22194))
+* resource/aws_ssoadmin_permission_set_inline_policy: Fix erroneous diffs in `inline_policy` when no changes made or policies are equivalent ([#22192](https://github.com/hashicorp/terraform-provider-aws/issues/22192))
+* resource/aws_transfer_access: Fix erroneous diffs in `policy` when no changes made or policies are equivalent ([#22193](https://github.com/hashicorp/terraform-provider-aws/issues/22193))
+* resource/aws_transfer_user: Fix erroneous diffs in `policy` when no changes made or policies are equivalent ([#22193](https://github.com/hashicorp/terraform-provider-aws/issues/22193))
+
+## 3.69.0 (December 09, 2021)
+
+FEATURES:
+
+* **New Resource:** `aws_codecommit_approval_rule_template_association` ([#13467](https://github.com/hashicorp/terraform-provider-aws/issues/13467))
+* **New Resource:** `aws_detective_graph` ([#22042](https://github.com/hashicorp/terraform-provider-aws/issues/22042))
+* **New Resource:** `aws_ec2_subnet_cidr_reservation` ([#22051](https://github.com/hashicorp/terraform-provider-aws/issues/22051))
+* **New Resource:** `aws_ecs_task_set` ([#22096](https://github.com/hashicorp/terraform-provider-aws/issues/22096))
+* **New Resource:** `aws_emr_studio` ([#21855](https://github.com/hashicorp/terraform-provider-aws/issues/21855))
+* **New Resource:** `aws_emr_studio_session_mapping` ([#22140](https://github.com/hashicorp/terraform-provider-aws/issues/22140))
+
+ENHANCEMENTS:
+
+* data-source/aws_dynamodb_table: Add `table_class` attribute ([#22110](https://github.com/hashicorp/terraform-provider-aws/issues/22110))
+* resource/aws_backup_region_settings: Add `resource_type_management_preference` argument ([#22021](https://github.com/hashicorp/terraform-provider-aws/issues/22021))
+* resource/aws_cloudtrail: Add plan time validations for `cloud_watch_logs_group_arn`, `cloud_watch_logs_role_arn`, `name`, `s3_key_prefix`. ([#21882](https://github.com/hashicorp/terraform-provider-aws/issues/21882))
+* resource/aws_dynamodb_table: Add `table_class` argument ([#22110](https://github.com/hashicorp/terraform-provider-aws/issues/22110))
+* resource/aws_ecs_task_definition: Add `runtime_platform` argument in support of Fargate for ECS Windows containers ([#22016](https://github.com/hashicorp/terraform-provider-aws/issues/22016))
+* resource/aws_elasticache_replication_group: Add `data_tiering_enabled` argument ([#22066](https://github.com/hashicorp/terraform-provider-aws/issues/22066))
+* resource/aws_elasticsearch_domain: Add `auto_tune_options` configuration block ([#21652](https://github.com/hashicorp/terraform-provider-aws/issues/21652))
+* resource/aws_kinesis_stream: Add `stream_mode_details` argument in support of Kinesis Data Streams On-Demand ([#22002](https://github.com/hashicorp/terraform-provider-aws/issues/22002))
+* resource/aws_lambda_event_source_mapping: Add `filter_criteria` argument ([#21937](https://github.com/hashicorp/terraform-provider-aws/issues/21937))
+* resource/aws_sqs_queue: Add `sqs_managed_sse_enabled` argument ([#21954](https://github.com/hashicorp/terraform-provider-aws/issues/21954))
+* resource/aws_transfer_server: Add `function` argument in support of custom identity providers ([#22039](https://github.com/hashicorp/terraform-provider-aws/issues/22039))
+
+BUG FIXES:
+
+* data-source/aws_ecs_cluster: Ensure that `setting` attribute is set consistently ([#22119](https://github.com/hashicorp/terraform-provider-aws/issues/22119))
+* resource/aws_api_gateway_rest_api: Fix erroneous diffs in `policy` when no changes made or policies are equivalent ([#22115](https://github.com/hashicorp/terraform-provider-aws/issues/22115))
+* resource/aws_api_gateway_rest_api_policy: Fix erroneous diffs in `policy` when no changes made or policies are equivalent ([#22115](https://github.com/hashicorp/terraform-provider-aws/issues/22115))
+* resource/aws_appstream_image_builder: Correctly create resource with `image_arn` argument ([#22077](https://github.com/hashicorp/terraform-provider-aws/issues/22077))
+* resource/aws_backup_vault_policy: Fix erroneous diffs in `policy` when no changes made or policies are equivalent ([#22130](https://github.com/hashicorp/terraform-provider-aws/issues/22130))
+* resource/aws_cloudwatch_log_resource_policy: Fix erroneous diffs in `policy_document` when no changes made or policies are equivalent ([#22135](https://github.com/hashicorp/terraform-provider-aws/issues/22135))
+* resource/aws_codeartifact_domain_permissions_policy: Fix erroneous diffs in `policy` when no changes made or policies are equivalent ([#22136](https://github.com/hashicorp/terraform-provider-aws/issues/22136))
+* resource/aws_codeartifact_repository_permissions_policy: Fix erroneous diffs in `policy` when no changes made or policies are equivalent ([#22136](https://github.com/hashicorp/terraform-provider-aws/issues/22136))
+* resource/aws_ecr_registry_policy: Fix order-related diffs in `policy` ([#22004](https://github.com/hashicorp/terraform-provider-aws/issues/22004))
+* resource/aws_ecr_repository_policy: Fix order-related diffs in `policy` ([#22004](https://github.com/hashicorp/terraform-provider-aws/issues/22004))
+* resource/aws_efs_file_system_policy: Fix erroneous diffs in `policy` when no changes made or policies are equivalent ([#22100](https://github.com/hashicorp/terraform-provider-aws/issues/22100))
+* resource/aws_iam_group_policy: Fix order-related diffs in `policy` ([#22067](https://github.com/hashicorp/terraform-provider-aws/issues/22067))
+* resource/aws_iam_policy: Fix order-related diffs in `policy` ([#22067](https://github.com/hashicorp/terraform-provider-aws/issues/22067))
+* resource/aws_iam_role: Fix order-related diffs in `policy` ([#22099](https://github.com/hashicorp/terraform-provider-aws/issues/22099))
+* resource/aws_iam_role: Prevent `arn` attribute from ever containing a unique ID immediately after role creation ([#22004](https://github.com/hashicorp/terraform-provider-aws/issues/22004))
+* resource/aws_iam_role_policy: Fix order-related diffs in `policy` ([#22067](https://github.com/hashicorp/terraform-provider-aws/issues/22067))
+* resource/aws_iam_user_policy: Fix order-related diffs in `policy` ([#22067](https://github.com/hashicorp/terraform-provider-aws/issues/22067))
+* resource/aws_lb: Correctly configure `enable_waf_fail_open` during resource creation ([#22072](https://github.com/hashicorp/terraform-provider-aws/issues/22072))
+* resource/aws_redshift_cluster: Adds retries to enabling and disabling the redshift cluster's logging ([#22080](https://github.com/hashicorp/terraform-provider-aws/issues/22080))
+* resource/aws_s3_bucket_replication_configuration: Fix `MalformedXML` errors for replication rules using XML schema V1 ([#22026](https://github.com/hashicorp/terraform-provider-aws/issues/22026))
+* resource/aws_vpc_endpoint: Fix erroneous diffs in `policy` when no changes made or policies are equivalent ([#22137](https://github.com/hashicorp/terraform-provider-aws/issues/22137))
+
+## 3.68.0 (December 02, 2021)
+
+FEATURES:
+
+* **New Data Source:** `aws_codecommit_approval_rule_template` ([#11487](https://github.com/hashicorp/terraform-provider-aws/issues/11487))
+* **New Data Source:** `aws_vpc_pool_data_source` ([#21998](https://github.com/hashicorp/terraform-provider-aws/issues/21998))
+* **New Resource:** `aws_codecommit_approval_rule_template` ([#11487](https://github.com/hashicorp/terraform-provider-aws/issues/11487))
+* **New Resource:** `aws_vpc_ipam` ([#21998](https://github.com/hashicorp/terraform-provider-aws/issues/21998))
+* **New Resource:** `aws_vpc_ipam_pool` ([#21998](https://github.com/hashicorp/terraform-provider-aws/issues/21998))
+* **New Resource:** `aws_vpc_ipam_scope` ([#21998](https://github.com/hashicorp/terraform-provider-aws/issues/21998))
+* **New Resource:** `aws_vpc_ipam_pool_cidr` ([#21998](https://github.com/hashicorp/terraform-provider-aws/issues/21998))
+* **New Resource:** `aws_vpc_ipam_pool_cidr_allocation` ([#21998](https://github.com/hashicorp/terraform-provider-aws/issues/21998))
+* **New Resource:** `aws_vpc_ipv6_cidr_block_association` ([#21998](https://github.com/hashicorp/terraform-provider-aws/issues/21998))
+
+ENHANCEMENTS:
+
+* data-source/aws_autoscaling_groups: Add support for tag filters ([#21966](https://github.com/hashicorp/terraform-provider-aws/issues/21966))
+* resource/aws_account_alternate_contact: Add `account_id` argument ([#21888](https://github.com/hashicorp/terraform-provider-aws/issues/21888))
+* resource/aws_lb_target_group: Add support for `connection_termination` argument for NLBs ([#21130](https://github.com/hashicorp/terraform-provider-aws/issues/21130))
+* resource/aws_synthetics_canary: Add `artifact_config` argument. ([#21963](https://github.com/hashicorp/terraform-provider-aws/issues/21963))
+* resource/aws_synthetics_canary: Make `artifact_s3_location` updateable. ([#21963](https://github.com/hashicorp/terraform-provider-aws/issues/21963))
+* resource/aws_vpc: `cidr_block` value can now either be set explicitly or computed computed via AWS IPAM ([#21998](https://github.com/hashicorp/terraform-provider-aws/issues/21998))
+* resource/aws_vpc_ipv4_cidr_block_association: `cidr_block` value can now either be set explicitly or computed via AWS IPAM ([#21998](https://github.com/hashicorp/terraform-provider-aws/issues/21998))
+
+BUG FIXES:
+
+* data-source/aws_cloudfront_distribution: Correct `hosted_zone_id` for AWS China regions ([#21943](https://github.com/hashicorp/terraform-provider-aws/issues/21943))
+* resource/aws_cloudfront_distribution: Correct `hosted_zone_id` for AWS China regions ([#21943](https://github.com/hashicorp/terraform-provider-aws/issues/21943))
+* resource/aws_kms_external_key: Fix order-related diffs in `policy` ([#21990](https://github.com/hashicorp/terraform-provider-aws/issues/21990))
+* resource/aws_kms_key: Fix order-related diffs in `policy` ([#21969](https://github.com/hashicorp/terraform-provider-aws/issues/21969))
+* resource/aws_kms_replica_external_key: Fix order-related diffs in `policy` ([#21990](https://github.com/hashicorp/terraform-provider-aws/issues/21990))
+* resource/aws_kms_replica_key: Fix order-related diffs in `policy` ([#21990](https://github.com/hashicorp/terraform-provider-aws/issues/21990))
+* resource/aws_s3_bucket: Fix order-related diffs in `policy` ([#21997](https://github.com/hashicorp/terraform-provider-aws/issues/21997))
+* resource/aws_s3_bucket_policy: Fix order-related diffs in `policy` ([#21997](https://github.com/hashicorp/terraform-provider-aws/issues/21997))
+* resource/aws_s3_bucket_replication_configuration: Mark `event_threshold` in `destination` `metrics` configuration block as `Optional` ([#21901](https://github.com/hashicorp/terraform-provider-aws/issues/21901))
+
+## 3.67.0 (November 25, 2021)
+
+FEATURES:
+
+* **New Data Source:** `aws_ec2_instance_types` ([#21850](https://github.com/hashicorp/terraform-provider-aws/issues/21850))
+* **New Data Source:** `aws_imagebuilder_image_recipes` ([#21814](https://github.com/hashicorp/terraform-provider-aws/issues/21814))
+* **New Resource:** `aws_account_alternate_contact` ([#21789](https://github.com/hashicorp/terraform-provider-aws/issues/21789))
+* **New Resource:** `aws_appstream_stack_fleet_association` ([#21484](https://github.com/hashicorp/terraform-provider-aws/issues/21484))
+* **New Resource:** `aws_appstream_stack_user_association` ([#21485](https://github.com/hashicorp/terraform-provider-aws/issues/21485))
+* **New Resource:** `aws_appstream_user` ([#21485](https://github.com/hashicorp/terraform-provider-aws/issues/21485))
+* **New Resource:** `aws_fsx_ontap_storage_virtual_machine` ([#21780](https://github.com/hashicorp/terraform-provider-aws/issues/21780))
+* **New Resource:** `aws_fsx_ontap_volume` ([#21889](https://github.com/hashicorp/terraform-provider-aws/issues/21889))
+
+ENHANCEMENTS:
+
+* data source/aws_lambda_function: Add `image_uri` attribute ([#21015](https://github.com/hashicorp/terraform-provider-aws/issues/21015))
+* data-source/aws_elb: Add `desync_mitigation_mode` attribute ([#14764](https://github.com/hashicorp/terraform-provider-aws/issues/14764))
+* data-source/aws_lb: Add `desync_mitigation_mode` attribute ([#14764](https://github.com/hashicorp/terraform-provider-aws/issues/14764))
+* data-source/aws_lb: Add `enable_waf_fail_open` attribute ([#16393](https://github.com/hashicorp/terraform-provider-aws/issues/16393))
+* resource/aws_athena_workgroup: Add `engine_version` argument ([#17733](https://github.com/hashicorp/terraform-provider-aws/issues/17733))
+* resource/aws_cloudtrail: Add `exclude_management_event_sources` argument ([#17203](https://github.com/hashicorp/terraform-provider-aws/issues/17203))
+* resource/aws_dlm_lifecycle_policy: Add `cross_region_copy_rule` argument in the `schedule` configuration block ([#12868](https://github.com/hashicorp/terraform-provider-aws/issues/12868))
+* resource/aws_ec2_fleet: Support in-place update of Launch Template config ([#15387](https://github.com/hashicorp/terraform-provider-aws/issues/15387))
+* resource/aws_ecs_service: Allow `capacity_provider_strategy` changes to be updated in place, when possible ([#20707](https://github.com/hashicorp/terraform-provider-aws/issues/20707))
+* resource/aws_elasticache_replication_group: Allow `auth_token` argument to be rotated without destroy and create ([#16203](https://github.com/hashicorp/terraform-provider-aws/issues/16203))
+* resource/aws_elb: Add `desync_mitigation_mode` argument ([#14764](https://github.com/hashicorp/terraform-provider-aws/issues/14764))
+* resource/aws_lb: Add `desync_mitigation_mode` argument ([#14764](https://github.com/hashicorp/terraform-provider-aws/issues/14764))
+* resource/aws_lb: Add `enable_waf_fail_open` argument ([#16393](https://github.com/hashicorp/terraform-provider-aws/issues/16393))
+* resource/aws_lb: Update `name` and `name_prefix` plan-time validation to exclude `"internal-"` ([#10693](https://github.com/hashicorp/terraform-provider-aws/issues/10693))
+* resource/aws_ssm_association: Add `s3_region` argument to `output_location` configuration block ([#21803](https://github.com/hashicorp/terraform-provider-aws/issues/21803))
+
+BUG FIXES:
+
+* data-source/aws_iam_policy_document: No longer show changes when there's a single condition ([#19533](https://github.com/hashicorp/terraform-provider-aws/issues/19533))
+* resource/aws_apprunner_service: Make instance_role_arn optional ([#20149](https://github.com/hashicorp/terraform-provider-aws/issues/20149))
+* resource/aws_autoscaling_group: Prevent infinite wait for capacity when increasing `min_size` and not specifying `desired_capacity` ([#12018](https://github.com/hashicorp/terraform-provider-aws/issues/12018))
+* resource/aws_ecs_service: Mark `enable_ecs_managed_tags` as `ForceNew` ([#7983](https://github.com/hashicorp/terraform-provider-aws/issues/7983))
+* resource/aws_imagebuilder_image_recipe: Enabled updates without failures due to `aws_imagebuilder_image_pipeline` dependencies. ([#21884](https://github.com/hashicorp/terraform-provider-aws/issues/21884))
+* resource/aws_rds_cluster_instance: Fix error from unexpected state `storage-optimization` ([#21900](https://github.com/hashicorp/terraform-provider-aws/issues/21900))
+* resource/aws_s3_bucket: Prevent `OperationAborted` conflict errors when simultaneously applying `aws_s3_bucket_policy`, `aws_s3_bucket_public_access_block` changes ([#12949](https://github.com/hashicorp/terraform-provider-aws/issues/12949))
+* resource/aws_s3_bucket_policy: Prevent `OperationAborted` conflict errors when simultaneously applying `aws_s3_bucket`, `aws_s3_bucket_public_access_block` changes ([#12949](https://github.com/hashicorp/terraform-provider-aws/issues/12949))
+* resource/aws_s3_bucket_public_access_block: Prevent `OperationAborted` conflict errors when simultaneously applying `aws_s3_bucket_policy`, `aws_s3_bucket` changes ([#12949](https://github.com/hashicorp/terraform-provider-aws/issues/12949))
+
+## 3.66.0 (November 18, 2021)
+
+FEATURES:
+
+* **New Data Source:** `aws_emr_release_labels` ([#21767](https://github.com/hashicorp/terraform-provider-aws/issues/21767))
+* **New Resource:** `aws_appstream_directory_config` ([#21505](https://github.com/hashicorp/terraform-provider-aws/issues/21505))
+* **New Resource:** `aws_iot_thing_group` ([#21799](https://github.com/hashicorp/terraform-provider-aws/issues/21799))
+* **New Resource:** `aws_iot_thing_group_membership` ([#21799](https://github.com/hashicorp/terraform-provider-aws/issues/21799))
+* **New Resource:** `aws_lambda_layer_version_permission` ([#11941](https://github.com/hashicorp/terraform-provider-aws/issues/11941))
+* **New Resource:** `aws_s3_bucket_replication_configuration` ([#20777](https://github.com/hashicorp/terraform-provider-aws/issues/20777))
+* **New Resource:** `aws_s3control_access_point_policy` ([#19294](https://github.com/hashicorp/terraform-provider-aws/issues/19294))
+* **New Resource:** `aws_s3control_multi_region_access_point` ([#21060](https://github.com/hashicorp/terraform-provider-aws/issues/21060))
+* **New Resource:** `aws_s3control_multi_region_access_point_policy` ([#21060](https://github.com/hashicorp/terraform-provider-aws/issues/21060))
+* **New Resource:** `aws_s3control_object_lambda_access_point` ([#19294](https://github.com/hashicorp/terraform-provider-aws/issues/19294))
+* **New Resource:** `aws_s3control_object_lambda_access_point_policy` ([#19294](https://github.com/hashicorp/terraform-provider-aws/issues/19294))
+* **New Resource:** `aws_securityhub_finding_aggregator` ([#21560](https://github.com/hashicorp/terraform-provider-aws/issues/21560))
+
+ENHANCEMENTS:
+
+* aws_s3_access_point: Add `alias` attribute ([#19294](https://github.com/hashicorp/terraform-provider-aws/issues/19294))
+* aws_s3_access_point: Add `endpoints` attribute ([#19294](https://github.com/hashicorp/terraform-provider-aws/issues/19294))
+* data-source/aws_ec2_instance_type: Add `encryption_in_transit_supported` attribute ([#21837](https://github.com/hashicorp/terraform-provider-aws/issues/21837))
+* resource/aws_emr_cluster: Add `auto_termination_policy` argument ([#21702](https://github.com/hashicorp/terraform-provider-aws/issues/21702))
+* resource/aws_iot_thing_type: Add `tags` argument and `tags_all` attribute to support resource tagging ([#21769](https://github.com/hashicorp/terraform-provider-aws/issues/21769))
+* resource/aws_kinesis_firehose_delivery_stream: Add `dynamic_partitioning_configuration` configuration block ([#20769](https://github.com/hashicorp/terraform-provider-aws/issues/20769))
+* resource/aws_lambda_layer_version: Add `skip_destroy` argument ([#11997](https://github.com/hashicorp/terraform-provider-aws/issues/11997))
+* resource/aws_neptune_cluster: Support in-place update of `engine_version` ([#21760](https://github.com/hashicorp/terraform-provider-aws/issues/21760))
+* resource/aws_route53_resolver_dnssec_config: Increase resource creation and deletion timeouts to 10 minutes ([#21797](https://github.com/hashicorp/terraform-provider-aws/issues/21797))
+* resource/aws_sagemaker_endpoint: Add `deployment_config` argument ([#21765](https://github.com/hashicorp/terraform-provider-aws/issues/21765))
+
+BUG FIXES:
+
+* aws_s3_access_point: `vpc_configuration.vpc_id` is _ForceNew_ ([#19294](https://github.com/hashicorp/terraform-provider-aws/issues/19294))
+* data-source/aws_cloudfront_response_headers_policy: Correctly set `custom_headers_config` attribute ([#21838](https://github.com/hashicorp/terraform-provider-aws/issues/21838))
+* resource/aws_autoscaling_group: Fix pending state in instance refresh ([#21777](https://github.com/hashicorp/terraform-provider-aws/issues/21777))
+* resource/aws_cloudfront_cache_policy: Fix 0 values for `default_ttl`, `max_ttl` and `min_ttl` arguments ([#21793](https://github.com/hashicorp/terraform-provider-aws/issues/21793))
+* resource/aws_internet_gateway: Allow `available` as a *pending* state during gateway detach ([#21794](https://github.com/hashicorp/terraform-provider-aws/issues/21794))
+* resource/aws_lambda_layer_version: Increase MaxItems for compatible_runtimes field to 15. ([#21825](https://github.com/hashicorp/terraform-provider-aws/issues/21825))
+* resource/aws_route: On route creation with high custom creation timeout configured, the aws_route resource does no longer give up before the create timeout is exceeded (previously it was giving up after 20 not found checks). ([#21831](https://github.com/hashicorp/terraform-provider-aws/issues/21831))
+* resource/aws_security_group: Fix lack of pagination when describing security groups ([#21743](https://github.com/hashicorp/terraform-provider-aws/issues/21743))
+
+## 3.65.0 (November 11, 2021)
+
+FEATURES:
+
+* **New Data Source:** `aws_key_pair` ([#15829](https://github.com/hashicorp/terraform-provider-aws/issues/15829))
+* **New Resource:** `aws_cloudfront_field_level_encryption_config` ([#15033](https://github.com/hashicorp/terraform-provider-aws/issues/15033))
+* **New Resource:** `aws_cloudfront_field_level_encryption_profile` ([#12509](https://github.com/hashicorp/terraform-provider-aws/issues/12509))
+* **New Resource:** `aws_docdb_global_cluster` ([#20978](https://github.com/hashicorp/terraform-provider-aws/issues/20978))
+* **New Resource:** `aws_s3_bucket_intelligent_tiering_configuration` ([#20329](https://github.com/hashicorp/terraform-provider-aws/issues/20329))
+
+ENHANCEMENTS:
+
+* resource/aws_batch_job_queue: Remove limit of 3 items from the `compute_environments` argument ([#21737](https://github.com/hashicorp/terraform-provider-aws/issues/21737))
+* resource/aws_cloudfront_function: Add `live_etag_version` attribute ([#19697](https://github.com/hashicorp/terraform-provider-aws/issues/19697))
+* resource/aws_datasync_s3_location: Add validation to `agent_arns`, `s3_bucket_arn` and `s3_config.bucket_access_role_arn` arguments ([#21661](https://github.com/hashicorp/terraform-provider-aws/issues/21661))
+* resource/aws_docdb_cluster: Add `global_cluster_identifier` argument ([#20978](https://github.com/hashicorp/terraform-provider-aws/issues/20978))
+* resource/aws_ebs_encryption_by_default: Add import support ([#21717](https://github.com/hashicorp/terraform-provider-aws/issues/21717))
+
+BUG FIXES:
+
+* data-source/aws_network_interface: Correctly set `attachment` attribute ([#21542](https://github.com/hashicorp/terraform-provider-aws/issues/21542))
+* data-source/aws_route: Fix lack of pagination when describing route tables ([#21710](https://github.com/hashicorp/terraform-provider-aws/issues/21710))
+* resource/aws_cloudfront_cache_policy: Fix assorted crashes ([#12509](https://github.com/hashicorp/terraform-provider-aws/issues/12509))
+* resource/aws_cloudfront_cache_policy: The `parameters_in_cache_key_and_forwarded_to_origin` argument is required ([#12509](https://github.com/hashicorp/terraform-provider-aws/issues/12509))
+* resource/aws_cloudfront_function: The `etag` attribute always the `DEVELOPMENT` version's value ([#19697](https://github.com/hashicorp/terraform-provider-aws/issues/19697))
+* resource/aws_cloudfront_origin_request_policy: Fix assorted crashes ([#12509](https://github.com/hashicorp/terraform-provider-aws/issues/12509))
+* resource/aws_default_route_table: Fix lack of pagination when describing route tables ([#21710](https://github.com/hashicorp/terraform-provider-aws/issues/21710))
+* resource/aws_eks_node_group: Respect order of configured `instance_types` ([#21404](https://github.com/hashicorp/terraform-provider-aws/issues/21404))
+* resource/aws_elasticsearch_domain: Fix tagging on creation ([#21738](https://github.com/hashicorp/terraform-provider-aws/issues/21738))
+* resource/aws_internet_gateway: Retry resource read after creation to deal with EC2 API eventual consistency ([#21542](https://github.com/hashicorp/terraform-provider-aws/issues/21542))
+* resource/aws_route_table: Fix lack of pagination when describing route tables ([#21710](https://github.com/hashicorp/terraform-provider-aws/issues/21710))
+* resource/aws_route_table_association: Fix lack of pagination when describing route tables ([#21710](https://github.com/hashicorp/terraform-provider-aws/issues/21710))
+* resource/aws_security_group_rule: Fix resource import for rules with `icmp` or `icmpv6` protocol ([#21163](https://github.com/hashicorp/terraform-provider-aws/issues/21163))
+* resource/aws_servicecatalog_provisioned_product: Allow empty values in provisioning parameters ([#21669](https://github.com/hashicorp/terraform-provider-aws/issues/21669))
+
+## 3.64.2 (November 05, 2021)
+
+BUG FIXES:
+
+* provider: Additional fixes to allow setting endpoints with non-standard, legacy keys. ([#21657](https://github.com/hashicorp/terraform-provider-aws/issues/21657))
+
+## 3.64.1 (November 05, 2021)
+
+BUG FIXES:
+
+* provider: Fix bug preventing custom endpoints from being set ([#21639](https://github.com/hashicorp/terraform-provider-aws/issues/21639))
+* provider: Fix bug preventing proper assignment of custom endpoints ([#21641](https://github.com/hashicorp/terraform-provider-aws/issues/21641))
+
+## 3.64.0 (November 04, 2021)
+
+FEATURES:
+
+* **New Data Source:** `aws_cloudfront_response_headers_policy` ([#21620](https://github.com/hashicorp/terraform-provider-aws/issues/21620))
+* **New Data Source:** `aws_iam_user_ssh_key` ([#21335](https://github.com/hashicorp/terraform-provider-aws/issues/21335))
+* **New Resource:** `aws_backup_vault_lock_configuration` ([#21315](https://github.com/hashicorp/terraform-provider-aws/issues/21315))
+* **New Resource:** `aws_cloudfront_response_headers_policy` ([#21620](https://github.com/hashicorp/terraform-provider-aws/issues/21620))
+* **New Resource:** `aws_kms_replica_external_key` ([#20533](https://github.com/hashicorp/terraform-provider-aws/issues/20533))
+* **New Resource:** `aws_kms_replica_key` ([#20533](https://github.com/hashicorp/terraform-provider-aws/issues/20533))
+* **New Resource:** `aws_prometheus_alert_manager_definition` ([#21431](https://github.com/hashicorp/terraform-provider-aws/issues/21431))
+* **New Resource:** `aws_prometheus_rule_group_namespace` ([#21470](https://github.com/hashicorp/terraform-provider-aws/issues/21470))
+
+ENHANCEMENTS:
+
+* data-source/aws_kms_key: Add `multi_region` and `multi_region_configuration` attributes ([#20533](https://github.com/hashicorp/terraform-provider-aws/issues/20533))
+* data-source/aws_launch_template: Add `network_card_index` attribute to `network_interfaces` configuration block ([#21555](https://github.com/hashicorp/terraform-provider-aws/issues/21555))
+* data-source/aws_network_interface: Add `arn` attribute ([#21265](https://github.com/hashicorp/terraform-provider-aws/issues/21265))
+* data-source/aws_s3_bucket: Return `hosted_zone_id` attribute for `cn-northwest-1` (Ningxia) region ([#21337](https://github.com/hashicorp/terraform-provider-aws/issues/21337))
+* resource/aws_apigateway_usage_plan : Add `throttle` argument for `api_stages` block. ([#21461](https://github.com/hashicorp/terraform-provider-aws/issues/21461))
+* resource/aws_batch_compute_environment: Add `ec2_configuration` argument to `compute_resources` configuration block ([#21565](https://github.com/hashicorp/terraform-provider-aws/issues/21565))
+* resource/aws_cloudfront_distribution: Add `response_headers_policy_id` argument to `default_cache_behavior` configuration block ([#21620](https://github.com/hashicorp/terraform-provider-aws/issues/21620))
+* resource/aws_cloudfront_distribution: Add `response_headers_policy_id` argument to `ordered_cache_behavior` configuration block ([#21620](https://github.com/hashicorp/terraform-provider-aws/issues/21620))
+* resource/aws_dms_endpoint: Add `include_transaction_details`, `include_partition_value`, `partition_include_schema_table`, `include_table_alter_operations`, `include_control_details` and `include_null_and_empty` arguments to `kinesis_settings` configuration block ([#20084](https://github.com/hashicorp/terraform-provider-aws/issues/20084))
+* resource/aws_eks_node_group: Support for `BOTTLEROCKET_ARM_64` and `BOTTLEROCKET_x86_64` `ami_type` argument values ([#21616](https://github.com/hashicorp/terraform-provider-aws/issues/21616))
+* resource/aws_glue_crawler: Add `dlq_event_queue_arn` and `event_queue_arn` arguments to the `s3_target` configuration block ([#21467](https://github.com/hashicorp/terraform-provider-aws/issues/21467))
+* resource/aws_glue_data_catalog_encryption_settings: Disable encryption on resource deletion ([#21452](https://github.com/hashicorp/terraform-provider-aws/issues/21452))
+* resource/aws_kinesisanalyticsv2_application: `runtime_environment` now supports `FLINK-1_13` ([#21341](https://github.com/hashicorp/terraform-provider-aws/issues/21341))
+* resource/aws_kms_external_key: Add `multi_region` argument ([#20533](https://github.com/hashicorp/terraform-provider-aws/issues/20533))
+* resource/aws_kms_key: Add `multi_region` argument ([#20533](https://github.com/hashicorp/terraform-provider-aws/issues/20533))
+* resource/aws_launch_template: Add `network_card_index` argument to `network_interfaces` configuration block ([#21555](https://github.com/hashicorp/terraform-provider-aws/issues/21555))
+* resource/aws_network_interface: Add `arn` and `owner_id` attributes ([#21265](https://github.com/hashicorp/terraform-provider-aws/issues/21265))
+* resource/aws_network_interface: Add `ipv4_prefix`, `ipv4_prefix_count`, `ipv6_prefix` and `ipv6_prefix_count` arguments ([#21265](https://github.com/hashicorp/terraform-provider-aws/issues/21265))
+* resource/aws_route53_key_signing_key: Deactivate key-signing key with `ACTION_NEEDED` status before deletion ([#21369](https://github.com/hashicorp/terraform-provider-aws/issues/21369))
+* resource/aws_s3_bucket: Add `metrics` and `replication_time` arguments to `replication_configuration.rules` configuration block to support Amazon S3 Replication Time Control ([#21176](https://github.com/hashicorp/terraform-provider-aws/issues/21176))
+* resource/aws_s3_bucket: Return `hosted_zone_id` attribute for `cn-northwest-1` (Ningxia) region ([#21337](https://github.com/hashicorp/terraform-provider-aws/issues/21337))
+* resource/aws_storage_gateway_nfs_file_share: Add `audit_destination_arn` argument. ([#21482](https://github.com/hashicorp/terraform-provider-aws/issues/21482))
+
+BUG FIXES:
+
+* aws/resource_aws_lex_slot_type: Correctly determine `version` attribute ([#21509](https://github.com/hashicorp/terraform-provider-aws/issues/21509))
+* resource/aws_cloudwatch_metric_alarm: Fix imported 'treat_missing_data' diff ([#21363](https://github.com/hashicorp/terraform-provider-aws/issues/21363))
+* resource/aws_codedeploy_deployment_group: Correctly update `deployment_group_name` argument ([#21362](https://github.com/hashicorp/terraform-provider-aws/issues/21362))
+* resource/aws_db_event_subscription: Fix adding new `event_categories` to existing resource ([#21338](https://github.com/hashicorp/terraform-provider-aws/issues/21338))
+* resource/aws_flow_log: parameters of destination_options block now properly force resource rebuild ([#21434](https://github.com/hashicorp/terraform-provider-aws/issues/21434))
+* resource/aws_kinesisanalyticsv2_application: Correctly update `run_configuration` argument ([#21303](https://github.com/hashicorp/terraform-provider-aws/issues/21303))
+* resource/aws_placement_group: `partition_count` argument is Computed, preventing spurious resource diffs ([#21555](https://github.com/hashicorp/terraform-provider-aws/issues/21555))
+
+## 3.63.0 (October 14, 2021)
+
+FEATURES:
+
+* **New Resource:** `aws_chime_voice_connector_termination_credentials` ([#21162](https://github.com/hashicorp/terraform-provider-aws/issues/21162))
+* **New Resource:** `aws_glue_partition_index` ([#21234](https://github.com/hashicorp/terraform-provider-aws/issues/21234))
+* **New Resource:** `aws_sagemaker_model_package_group_policy` ([#21250](https://github.com/hashicorp/terraform-provider-aws/issues/21250))
+
+ENHANCEMENTS:
+
+* data-source/aws_instance: Add `placement_partition_number` attribute ([#7777](https://github.com/hashicorp/terraform-provider-aws/issues/7777))
+* data-source/glue_connection: Add tagging support. ([#21226](https://github.com/hashicorp/terraform-provider-aws/issues/21226))
+* resource/aws_flow_log: Add `destination_options` argument to support Apache Parquet, Hive-compatible prefixes and hourly partitioned files ([#21285](https://github.com/hashicorp/terraform-provider-aws/issues/21285))
+* resource/aws_glue_resource_policy: Add `enable_hybrid` argument. ([#21239](https://github.com/hashicorp/terraform-provider-aws/issues/21239))
+* resource/aws_instance: Add `placement_partition_number` argument ([#7777](https://github.com/hashicorp/terraform-provider-aws/issues/7777))
+* resource/aws_placement_group: Add `partition_count` argument ([#15360](https://github.com/hashicorp/terraform-provider-aws/issues/15360))
+* resource/aws_rds_cluster: Add `db_instance_parameter_group_name` attribute to allow major version upgrade using custom parameter groups ([#17111](https://github.com/hashicorp/terraform-provider-aws/issues/17111))
+* resource/aws_rds_cluster: Add `enable_global_write_forwarding` attribute ([#17111](https://github.com/hashicorp/terraform-provider-aws/issues/17111))
+* resource/glue_connection: Add tagging support. ([#21226](https://github.com/hashicorp/terraform-provider-aws/issues/21226))
+* resource/rds_cluster_instance: Add `performance_insights_retention_period` attribute ([#17111](https://github.com/hashicorp/terraform-provider-aws/issues/17111))
+
+BUG FIXES:
+
+* resource/aws_glue_catalog_table: change `partition_index.keys` to list instead of set ([#21234](https://github.com/hashicorp/terraform-provider-aws/issues/21234))
+* resource/aws_imagebuilder_distribution_configuration: remove hard limit on distribution target accounts ([#21254](https://github.com/hashicorp/terraform-provider-aws/issues/21254))
+* resource/aws_rds_cluster: Add possible pending states for cluster update ([#17111](https://github.com/hashicorp/terraform-provider-aws/issues/17111))
+* resource/aws_rds_cluster_instance: Remove force new resource on the `engine_version` parameter to allow upgrade without remove instances ([#17111](https://github.com/hashicorp/terraform-provider-aws/issues/17111))
+* resource/glue_catalog_table: Ignore not exists errors on delete ([#21227](https://github.com/hashicorp/terraform-provider-aws/issues/21227))
+
+## 3.62.0 (October 08, 2021)
+
+FEATURES:
+
+* **New Resource:** `aws_dx_connection_confirmation` ([#16489](https://github.com/hashicorp/terraform-provider-aws/issues/16489))
+* **New Resource:** `aws_dx_hosted_connection` ([#16489](https://github.com/hashicorp/terraform-provider-aws/issues/16489))
+
+ENHANCEMENTS:
+
+* resource/aws_cloudformation_stack_set_instance: Add `deployment_targets` `organizational_unit_ids` argument ([#21193](https://github.com/hashicorp/terraform-provider-aws/issues/21193))
+* resource/aws_db_instance: Add `replica_mode` argument ([#17991](https://github.com/hashicorp/terraform-provider-aws/issues/17991))
+* resource/aws_default_route_table: Add [custom `timeouts`](https://www.terraform.io/docs/language/resources/syntax.html#operation-timeouts) block ([#21161](https://github.com/hashicorp/terraform-provider-aws/issues/21161))
+* resource/aws_dms_endpoint: Add `message_format`, `include_transaction_details`, `include_partition_value`, `partition_include_schema_table`, `include_table_alter_operations`, `include_control_details`, `message_max_bytes`, `include_null_and_empty`, `security_protocol`, `ssl_client_certificate_arn`, `ssl_client_key_arn`, `ssl_client_key_password`, `ssl_ca_certificate_arn`, `sasl_username`, `sasl_password` and `no_hex_prefix` arguments to `kafka_settings` configuration block ([#20904](https://github.com/hashicorp/terraform-provider-aws/issues/20904))
+* resource/aws_dms_endpoint: Add plan time validation for `mongodb_settings.auth_type`, `mongodb_settings.auth_mechanism`, `mongodb_settings.nesting_level` and `s3_settings.compression_type` arguments ([#21174](https://github.com/hashicorp/terraform-provider-aws/issues/21174))
+* resource/aws_dms_endpoint: Added missing `engine_name` values for sources and/or targets ([#21174](https://github.com/hashicorp/terraform-provider-aws/issues/21174))
+* resource/aws_dms_replication_task: Add `cdc_start_position` argument ([#21201](https://github.com/hashicorp/terraform-provider-aws/issues/21201))
+* resource/aws_dx_lag: Add `connection_id` argument ([#16489](https://github.com/hashicorp/terraform-provider-aws/issues/16489))
+* resource/aws_emr_cluster: Add `log_encryption_kms_key_id` argument ([#17706](https://github.com/hashicorp/terraform-provider-aws/issues/17706))
+* resource/aws_lex_bot: Added waiter support to account for `BUILDING` status ([#21122](https://github.com/hashicorp/terraform-provider-aws/issues/21122))
+* resource/aws_route_table: Add [custom `timeouts`](https://www.terraform.io/docs/language/resources/syntax.html#operation-timeouts) block ([#21161](https://github.com/hashicorp/terraform-provider-aws/issues/21161))
+* resource/aws_volume_attachment: Add `stop_instance_before_detaching` argument ([#21144](https://github.com/hashicorp/terraform-provider-aws/issues/21144))
+* resource/aws_vpn_gateway_route_propagation: Add [custom `timeouts`](https://www.terraform.io/docs/language/resources/syntax.html#operation-timeouts) block ([#21161](https://github.com/hashicorp/terraform-provider-aws/issues/21161))
+
+BUG FIXES:
+
+* aws/resource_aws_lex_bot: Correctly determine `version` attribute ([#20383](https://github.com/hashicorp/terraform-provider-aws/issues/20383))
+* aws/resource_aws_lex_intent: Correctly determine `version` attribute ([#20383](https://github.com/hashicorp/terraform-provider-aws/issues/20383))
+* resource/aws_appstream_fleet: More error validation in waiter ([#21125](https://github.com/hashicorp/terraform-provider-aws/issues/21125))
+* resource/aws_appstream_stack:  More error validation in waiter ([#21125](https://github.com/hashicorp/terraform-provider-aws/issues/21125))
+* resource/aws_autoscalingplans_scaling_plan: Fix updates to `scaling_instruction` argument ([#17987](https://github.com/hashicorp/terraform-provider-aws/issues/17987))
+* resource/aws_elasticache_replication_group: Properly updates tags on Replication Group member clusters when scaling up ([#21185](https://github.com/hashicorp/terraform-provider-aws/issues/21185))
+* resource/aws_elasticache_replication_group: Properly updates tags on the Replication Group in addition to the member clusters ([#21185](https://github.com/hashicorp/terraform-provider-aws/issues/21185))
+* resource/aws_lb_target_group: Handle attributes at creation: `deregistration_delay`, `load_balancing_algorithm_type`, `preserve_client_ip`, `proxy_protocol_v2`, `slow_start`, `stickiness`, and `lambda_multi_value_headers_enabled` ([#21187](https://github.com/hashicorp/terraform-provider-aws/issues/21187))
+* resource/aws_route: Use custom `timeouts` values ([#21161](https://github.com/hashicorp/terraform-provider-aws/issues/21161))
+* resource/aws_ses_configuration_set: Fix ARN ([#21188](https://github.com/hashicorp/terraform-provider-aws/issues/21188))
+
+## 3.61.0 (October 01, 2021)
+
+FEATURES:
+
+* **New Data Source:** `aws_cloudcontrolapi_resource` ([#21110](https://github.com/hashicorp/terraform-provider-aws/issues/21110))
+* **New Data Source:** `aws_db_proxy` ([#21053](https://github.com/hashicorp/terraform-provider-aws/issues/21053))
+* **New Data Source:** `aws_ec2_host` ([#10817](https://github.com/hashicorp/terraform-provider-aws/issues/10817))
+* **New Data Source:** `aws_kinesis_firehose_delivery_stream` ([#18445](https://github.com/hashicorp/terraform-provider-aws/issues/18445))
+* **New Data Source:** `aws_ssm_parameters_by_path` ([#9615](https://github.com/hashicorp/terraform-provider-aws/issues/9615))
+* **New Resource:** `aws_appstream_image_builder` ([#21036](https://github.com/hashicorp/terraform-provider-aws/issues/21036))
+* **New Resource:** `aws_cloudcontrolapi_resource` ([#21110](https://github.com/hashicorp/terraform-provider-aws/issues/21110))
+* **New Resource:** `aws_ec2_host` ([#10817](https://github.com/hashicorp/terraform-provider-aws/issues/10817))
+* **New Resource:** `aws_iot_authorizer` ([#14671](https://github.com/hashicorp/terraform-provider-aws/issues/14671))
+* **New Resource:** `aws_quicksight_data_source` ([#20710](https://github.com/hashicorp/terraform-provider-aws/issues/20710))
+* **New Resource:** `aws_redshift_scheduled_action` ([#13474](https://github.com/hashicorp/terraform-provider-aws/issues/13474))
+* **New Resource:** `aws_sagemaker_studio_lifecycle_config` ([#21041](https://github.com/hashicorp/terraform-provider-aws/issues/21041))
+
+ENHANCEMENTS:
+
+* data-source/aws_lambda_function: Add support for Graviton2 with `architectures` attribute ([#21091](https://github.com/hashicorp/terraform-provider-aws/issues/21091))
+* data-source/aws_lambda_layer_version: Add support for Graviton2 with `compatible_architectures` attribute ([#21091](https://github.com/hashicorp/terraform-provider-aws/issues/21091))
+* provider: Add parameter `http_proxy` to provider configuration ([#21077](https://github.com/hashicorp/terraform-provider-aws/issues/21077))
+* resource/aws_lb_target_group: Support `alb` value for `target_type` argument ([#21069](https://github.com/hashicorp/terraform-provider-aws/issues/21069))
+* resource/aws_lambda_function: Add support for Graviton2 with `architectures` argument ([#21091](https://github.com/hashicorp/terraform-provider-aws/issues/21091))
+* resource/aws_lambda_layer_version: Add support for Graviton2 with `compatible_architectures` argument ([#21091](https://github.com/hashicorp/terraform-provider-aws/issues/21091))
+* resource/aws_sagemaker_app_image_config: Add tagging support. ([#21037](https://github.com/hashicorp/terraform-provider-aws/issues/21037))
+* resource/aws_sagemaker_domain: Add `default_user_settings.jupyter_server_app_settings.lifecycle_config_arns` and `default_user_settings.kernel_gateway_app_settings.lifecycle_config_arns` arguments ([#21041](https://github.com/hashicorp/terraform-provider-aws/issues/21041))
+* resource/aws_user_profile: Add `user_settings.jupyter_server_app_settings.lifecycle_config_arns` and `user_settings.kernel_gateway_app_settings.lifecycle_config_arns` arguments ([#21041](https://github.com/hashicorp/terraform-provider-aws/issues/21041))
+
+BUG FIXES:
+
+* resource/aws_dx_connection: Mark `provider_name` as Computed to avoid resource recreation with pre-v3.56.0 configurations ([#21085](https://github.com/hashicorp/terraform-provider-aws/issues/21085))
+* resource/aws_dx_lag: Mark `provider_name` as Computed to avoid resource recreation with pre-v3.56.0 configurations ([#21085](https://github.com/hashicorp/terraform-provider-aws/issues/21085))
+* resource/aws_route_table_association: Wait for up to 40 not found checks when creating a new route table association ([#21062](https://github.com/hashicorp/terraform-provider-aws/issues/21062))
+
+## 3.60.0 (September 23, 2021)
+
+FEATURES:
+
+* **New Data Source:** `aws_cloudfront_log_delivery_canonical_user_id` ([#15167](https://github.com/hashicorp/terraform-provider-aws/issues/15167))
+* **New Data Source:** `aws_cloudwatch_log_groups` ([#17151](https://github.com/hashicorp/terraform-provider-aws/issues/17151))
+* **New Data Source:** `aws_connect_contact_flow` ([#16854](https://github.com/hashicorp/terraform-provider-aws/issues/16854))
+* **New Data Source:** `aws_connect_instance` ([#16709](https://github.com/hashicorp/terraform-provider-aws/issues/16709))
+* **New Data Source:** `aws_iam_users` ([#20877](https://github.com/hashicorp/terraform-provider-aws/issues/20877))
+* **New Data Source:** `aws_msk_broker_nodes` ([#20615](https://github.com/hashicorp/terraform-provider-aws/issues/20615))
+* **New Data Source:** `aws_msk_kafka_version` ([#20638](https://github.com/hashicorp/terraform-provider-aws/issues/20638))
+* **New Resource:** `aws_appstream_fleet` ([#20543](https://github.com/hashicorp/terraform-provider-aws/issues/20543))
+* **New Resource:** `aws_chime_voice_connector_streaming` ([#20933](https://github.com/hashicorp/terraform-provider-aws/issues/20933))
+* **New Resource:** `aws_connect_contact_flow` ([#16854](https://github.com/hashicorp/terraform-provider-aws/issues/16854))
+* **New Resource:** `aws_connect_instance` ([#16709](https://github.com/hashicorp/terraform-provider-aws/issues/16709))
+* **New Resource:** `aws_ec2_managed_prefix_list_entry` ([#19394](https://github.com/hashicorp/terraform-provider-aws/issues/19394))
+* **New Resource:** `aws_fsx_ontap_filesystem` ([#20951](https://github.com/hashicorp/terraform-provider-aws/issues/20951))
+* **New Resource:** `aws_sagemaker_flow_definition` ([#20825](https://github.com/hashicorp/terraform-provider-aws/issues/20825))
+
+ENHANCEMENTS:
+
+* data-source/efs_file_system: Add `transition_to_primary_storage_class` to `lifecycle_policy`. ([#20971](https://github.com/hashicorp/terraform-provider-aws/issues/20971))
+* resource/aws_msk_cluster: Add `zookeeper_connect_string_tls` attribute ([#15661](https://github.com/hashicorp/terraform-provider-aws/issues/15661))
+* resource/aws_msk_cluster: Configurable Create, Update and Delete timeouts ([#17726](https://github.com/hashicorp/terraform-provider-aws/issues/17726))
+
+BUG FIXES:
+
+* data-source/aws_launch_template: Fix `error setting metadata_options` ([#21008](https://github.com/hashicorp/terraform-provider-aws/issues/21008))
+* resource/aws_cognito_user_pool: Fix removal of `lambda_config` ([#20952](https://github.com/hashicorp/terraform-provider-aws/issues/20952))
+* resource/aws_msk_cluster: Don't recreate cluster if order of `broker_node_group_info.client_subnets` or `broker_node_group_info.security_groups` entries change ([#14627](https://github.com/hashicorp/terraform-provider-aws/issues/14627))
+* resource/efs_file_system: Allow multiple lifecycle policies. ([#20971](https://github.com/hashicorp/terraform-provider-aws/issues/20971))
+
+## 3.59.0 (September 16, 2021)
+
+FEATURES:
+
+* **New Data Source:** `aws_eks_clusters` ([#20315](https://github.com/hashicorp/terraform-provider-aws/issues/20315))
+* **New Data Source:** `aws_eks_node_group` ([#13564](https://github.com/hashicorp/terraform-provider-aws/issues/13564))
+* **New Data Source:** `aws_eks_node_groups` ([#13564](https://github.com/hashicorp/terraform-provider-aws/issues/13564))
+* **New Resource:** `aws_chime_voice_connector_logging` ([#20863](https://github.com/hashicorp/terraform-provider-aws/issues/20863))
+* **New Resource:** `aws_transfer_access` ([#20342](https://github.com/hashicorp/terraform-provider-aws/issues/20342))
+
+ENHANCEMENTS:
+
+* resource/aws_cloudtrail: Add `advanced_event_selector` argument ([#19368](https://github.com/hashicorp/terraform-provider-aws/issues/19368))
+* resource/aws_config_delivery_channel: Add `s3_kms_key_arn` argument ([#20600](https://github.com/hashicorp/terraform-provider-aws/issues/20600))
+* resource/aws_ec2_client_vpn_endpoint: Add `self_service_portal` and `authentication_options.self_service_saml_provider_arn` arguments to support self-service portal ([#17897](https://github.com/hashicorp/terraform-provider-aws/issues/17897))
+* resource/aws_ec2_managed_prefix_list: allow updating `max_entries`. ([#20797](https://github.com/hashicorp/terraform-provider-aws/issues/20797))
+* resource/aws_efs_file_system: Add `lifecycle_policy.transition_to_primary_storage_class` argument to support Intelligent-Tiering ([#20874](https://github.com/hashicorp/terraform-provider-aws/issues/20874))
+* resource/aws_efs_file_system_policy: Add `bypass_policy_lockout_safety_check` argument ([#20838](https://github.com/hashicorp/terraform-provider-aws/issues/20838))
+* resource/aws_iam_role: Add plan time validation for `path`, `permissions_boundary`, `managed_policy_arns`. ([#19532](https://github.com/hashicorp/terraform-provider-aws/issues/19532))
+* resource/aws_iam_role: Retry `assume_role_policy` updates for IAM eventual consistency ([#12436](https://github.com/hashicorp/terraform-provider-aws/issues/12436))
+* resource/aws_iam_role: `name_prefix` is now Computed ([#20785](https://github.com/hashicorp/terraform-provider-aws/issues/20785))
+* resource/aws_launch_template: add plan time validation to `spot_options.block_duration_minutes` ([#20796](https://github.com/hashicorp/terraform-provider-aws/issues/20796))
+* resource/aws_launch_template: add support for `http_protocol_ipv6` to `metadata_options`. ([#20796](https://github.com/hashicorp/terraform-provider-aws/issues/20796))
+* resource/aws_mwaa_environment: Increase resource creation timeout to 2 hours ([#20861](https://github.com/hashicorp/terraform-provider-aws/issues/20861))
+* resource/aws_route53_health_check: Add plan time validation for `regions` ([#20795](https://github.com/hashicorp/terraform-provider-aws/issues/20795))
+* resource/aws_sagemaker_endpoint_configuration: Add `async_inference_config` argument ([#20809](https://github.com/hashicorp/terraform-provider-aws/issues/20809))
+* resource/aws_transfer_server: Add `directory_id` argument to support Microsoft Active Directory (AD) authentication ([#20342](https://github.com/hashicorp/terraform-provider-aws/issues/20342))
+
+BUG FIXES:
+
+* resource/aws_cognito_user_pool: Fix continual diff on `email_configuration.configuration_set` ([#20791](https://github.com/hashicorp/terraform-provider-aws/issues/20791))
+* resource/aws_db_instance: Fix updating `license_model`. ([#20779](https://github.com/hashicorp/terraform-provider-aws/issues/20779))
+* resource/aws_iam_role: Change `name_prefix` validation to a range of 1 to 38 characters ([#20785](https://github.com/hashicorp/terraform-provider-aws/issues/20785))
+* resource/aws_imagebuilder_distribution_configuration: Improve validation error message of `name` argument ([#20842](https://github.com/hashicorp/terraform-provider-aws/issues/20842))
+* resource/aws_kms_key: Extends timeouts for policy and tag propagation to 5 minutes each ([#20914](https://github.com/hashicorp/terraform-provider-aws/issues/20914))
+* resource/aws_route53_health_check: Fix update for `ip_address` ([#20795](https://github.com/hashicorp/terraform-provider-aws/issues/20795))
+
+## 3.58.0 (September 09, 2021)
+
+FEATURES:
+
+* **New Resource:** `aws_chime_voice_connector_origination` ([#20676](https://github.com/hashicorp/terraform-provider-aws/issues/20676))
+* **New Resource:** `aws_chime_voice_connector_termination` ([#20667](https://github.com/hashicorp/terraform-provider-aws/issues/20667))
+* **New Resource:** `aws_quicksight_group_membership` ([#20687](https://github.com/hashicorp/terraform-provider-aws/issues/20687))
+
+## 3.57.0 (September 02, 2021)
+
+FEATURES:
+
+* **New Resource:** `aws_service_discovery_instance` ([#17498](https://github.com/hashicorp/terraform-provider-aws/issues/17498))
+
+ENHANCEMENTS:
+
+* data-source/aws_instance: Add `ipv6_addresses` attribute ([#17859](https://github.com/hashicorp/terraform-provider-aws/issues/17859))
+* resource/aws_athena_database: Read the database name from the `AwsDataCatalog` ([#19765](https://github.com/hashicorp/terraform-provider-aws/issues/19765))
+* resource/aws_cloudformation_stack_set: Retry when `OperationInProgress` errors are returned from the AWS API ([#10969](https://github.com/hashicorp/terraform-provider-aws/issues/10969))
+* resource/aws_cloudformation_stack_set_instance: Retry when `OperationInProgress` errors are returned from the AWS API ([#10969](https://github.com/hashicorp/terraform-provider-aws/issues/10969))
+* resource/aws_config_organization_conformance_pack: Add configurable timeouts ([#20560](https://github.com/hashicorp/terraform-provider-aws/issues/20560))
+* resource/aws_redshift_cluster: Add `cluster_nodes` attribute ([#4563](https://github.com/hashicorp/terraform-provider-aws/issues/4563))
+* resource/aws_s3_bucket: Retry on `PutBucketEncryption` HTTP 409 errors due to eventual consistency ([#11795](https://github.com/hashicorp/terraform-provider-aws/issues/11795))
+* resource/aws_sagemaker_notebook_instance: Add `platform_identifier` argument ([#20711](https://github.com/hashicorp/terraform-provider-aws/issues/20711))
+* resource/aws_service_discovery_service: Add `force_destroy` argument ([#3538](https://github.com/hashicorp/terraform-provider-aws/issues/3538))
+* resource_aws_route53_health_check: Add `RECOVERY_CONTROL` health check type and `routing_control_arn` argument ([#20731](https://github.com/hashicorp/terraform-provider-aws/issues/20731))
+* resource_vpn_connection: Handle paginated response when reading Transit Gateway Attachments ([#20775](https://github.com/hashicorp/terraform-provider-aws/issues/20775))
+
+BUG FIXES:
+
+* resource/aws_ecs_cluster: Ensure that `setting` attribute is set consistently ([#20720](https://github.com/hashicorp/terraform-provider-aws/issues/20720))
+* resource/aws_pinpoint_email_channel: When specifying the `configuration_set` parameter, use the name of the set instead of the ARN. ([#20691](https://github.com/hashicorp/terraform-provider-aws/issues/20691))
+* resource/aws_route53_record: Support `set_identifier` values containing `_` ([#13453](https://github.com/hashicorp/terraform-provider-aws/issues/13453))
+
+## 3.56.0 (August 26, 2021)
+
+FEATURES:
+
+* **New Data Source:** `aws_dx_connection` ([#17852](https://github.com/hashicorp/terraform-provider-aws/issues/17852))
+* **New Data Source:** `aws_dx_location` ([#9735](https://github.com/hashicorp/terraform-provider-aws/issues/9735))
+* **New Data Source:** `aws_dx_locations` ([#9735](https://github.com/hashicorp/terraform-provider-aws/issues/9735))
+* **New Resource:** `aws_appstream_stack` ([#20547](https://github.com/hashicorp/terraform-provider-aws/issues/20547))
+* **New Resource:** `aws_autoscaling_group_tag` ([#20009](https://github.com/hashicorp/terraform-provider-aws/issues/20009))
+* **New Resource:** `aws_dynamodb_tag` ([#13783](https://github.com/hashicorp/terraform-provider-aws/issues/13783))
+* **New Resource:** `aws_ecs_tag` ([#13783](https://github.com/hashicorp/terraform-provider-aws/issues/13783))
+* **New Resource:** `aws_route53recoverycontrolconfig_cluster` ([#20568](https://github.com/hashicorp/terraform-provider-aws/issues/20568))
+* **New Resource:** `aws_route53recoverycontrolconfig_control_panel` ([#20568](https://github.com/hashicorp/terraform-provider-aws/issues/20568))
+* **New Resource:** `aws_route53recoverycontrolconfig_routing_control` ([#20568](https://github.com/hashicorp/terraform-provider-aws/issues/20568))
+* **New Resource:** `aws_route53recoverycontrolconfig_safety_rule` ([#20568](https://github.com/hashicorp/terraform-provider-aws/issues/20568))
+* **New Resource:** `aws_route53recoveryreadiness_cell` ([#20526](https://github.com/hashicorp/terraform-provider-aws/issues/20526))
+* **New Resource:** `aws_route53recoveryreadiness_readiness_check` ([#20526](https://github.com/hashicorp/terraform-provider-aws/issues/20526))
+* **New Resource:** `aws_route53recoveryreadiness_recovery_group` ([#20526](https://github.com/hashicorp/terraform-provider-aws/issues/20526))
+* **New Resource:** `aws_route53recoveryreadiness_resource_set` ([#20526](https://github.com/hashicorp/terraform-provider-aws/issues/20526))
+
+ENHANCEMENTS:
+
+* data-source/aws_elasticache_user: Mark `passwords` attribute as sensitive. ([#20629](https://github.com/hashicorp/terraform-provider-aws/issues/20629))
+* data-source/aws_efs_file_system: Add ability to filter results by `tags` ([#20399](https://github.com/hashicorp/terraform-provider-aws/issues/20399))
+* data-source/aws_route53_delegation_set: Add `arn` attribute ([#20664](https://github.com/hashicorp/terraform-provider-aws/issues/20664))
+* data-source/aws_route53_zone: Add `arn` attribute ([#20652](https://github.com/hashicorp/terraform-provider-aws/issues/20652))
+* resource/aws_dx_connection: Add `owner_account_id` attribute ([#17852](https://github.com/hashicorp/terraform-provider-aws/issues/17852))
+* resource/aws_dx_connection: Add `provider_name` argument ([#17852](https://github.com/hashicorp/terraform-provider-aws/issues/17852))
+* resource/aws_dx_lag: Add `owner_account_id` attribute ([#17852](https://github.com/hashicorp/terraform-provider-aws/issues/17852))
+* resource/aws_dx_lag: Add `provider_name` argument ([#17852](https://github.com/hashicorp/terraform-provider-aws/issues/17852))
+* resource/aws_eks_node_group: Add `update_config` argument to support parallel node upgrades ([#20137](https://github.com/hashicorp/terraform-provider-aws/issues/20137))
+* resource/aws_elasticache_user: Mark `passwords` argument as sensitive. ([#20629](https://github.com/hashicorp/terraform-provider-aws/issues/20629))
+* resource/aws_fsx_lustre_filesystem: Allow creating filesystem from backup using `backup_id`. ([#20614](https://github.com/hashicorp/terraform-provider-aws/issues/20614))
+* resource/aws_fsx_windows_filesystem: Allow creating filesystem from backup using `backup_id`. ([#20643](https://github.com/hashicorp/terraform-provider-aws/issues/20643))
+* resource/aws_route53_delegation_set: Add `arn` attribute ([#20664](https://github.com/hashicorp/terraform-provider-aws/issues/20664))
+* resource/aws_route53_delegation_set: Add plan time validation for `reference_name` ([#20664](https://github.com/hashicorp/terraform-provider-aws/issues/20664))
+* resource/aws_route53_health_check: Add `arn` attribute. ([#20653](https://github.com/hashicorp/terraform-provider-aws/issues/20653))
+* resource/aws_route53_health_check: Add plan time validation for `failure_threshold`, `ip_address`, `fqdn`, `port`, `resource_path`, `search_string`, `child_healthchecks`. ([#20653](https://github.com/hashicorp/terraform-provider-aws/issues/20653))
+* resource/aws_route53_query_log: Add `arn` attribute. ([#20666](https://github.com/hashicorp/terraform-provider-aws/issues/20666))
+* resource/aws_route53_zone: Add `arn` attribute ([#20652](https://github.com/hashicorp/terraform-provider-aws/issues/20652))
+* resource/aws_route53_zone: Add plan time validation for `comment` ([#20652](https://github.com/hashicorp/terraform-provider-aws/issues/20652))
+* resource/aws_s3_bucket_inventory: Add missing values to `optional_fields` argument ([#20658](https://github.com/hashicorp/terraform-provider-aws/issues/20658))
+
+BUG FIXES:
+
+* data-source/aws_kms_public_key: Correctly base64 encode `public_key` value ([#19944](https://github.com/hashicorp/terraform-provider-aws/issues/19944))
+* data-source/aws_route53_resolver_rule: Fix lack of pagination when listing rules ([#20642](https://github.com/hashicorp/terraform-provider-aws/issues/20642))
+* resource/aws_codebuild_webhook: Only update `build_type` if a value is specified ([#20671](https://github.com/hashicorp/terraform-provider-aws/issues/20671))
+* resource/aws_route53_delegation_set: Properly remove from state when resource does not exist ([#20664](https://github.com/hashicorp/terraform-provider-aws/issues/20664))
+* resource/aws_route53_query_log: Properly remove from state when resource does not exist ([#20666](https://github.com/hashicorp/terraform-provider-aws/issues/20666))
+
+## 3.55.0 (August 19, 2021)
+
+FEATURES:
+
+* **New Data Source:** `aws_iam_roles` ([#18585](https://github.com/hashicorp/terraform-provider-aws/issues/18585))
+* **New Data Source:** `aws_subnets` ([#18803](https://github.com/hashicorp/terraform-provider-aws/issues/18803))
+* **New Resource:** `aws_chime_voice_connector_group` ([#20565](https://github.com/hashicorp/terraform-provider-aws/issues/20565))
+* **New Resource:** `aws_fsx_backup` ([#20569](https://github.com/hashicorp/terraform-provider-aws/issues/20569))
+* **New Resource:** `aws_sagemaker_device_fleet` ([#20058](https://github.com/hashicorp/terraform-provider-aws/issues/20058))
+* **New Resource:** `aws_sagemaker_human_task_ui` ([#20570](https://github.com/hashicorp/terraform-provider-aws/issues/20570))
+
+ENHANCEMENTS:
+
+* aws/resource_aws_appconfig_deployment: Add `state` attribute ([#20288](https://github.com/hashicorp/terraform-provider-aws/issues/20288))
+* resource/aws_db_parameter_group: Allow parameter values to be mixed case, prioritize certain parameters when chunking, and avoid diffs with mixed-case parameter names ([#18818](https://github.com/hashicorp/terraform-provider-aws/issues/18818))
+* resource/aws_dms_endpoint: Add `s3_settings.data_format`, `s3_settings.parquet_timestamp_in_millisecond`, `s3_settings.parquet_version`, `s3_settings.encryption_mode` and `s3_settings.server_side_encryption_kms_key_id` arguments. ([#17591](https://github.com/hashicorp/terraform-provider-aws/issues/17591))
+* resource/aws_lambda_function: Add support for `python3.9` `runtime` value ([#20593](https://github.com/hashicorp/terraform-provider-aws/issues/20593))
+* resource/aws_lambda_layer_version: Add support for `python3.9` `compatible_runtimes` value ([#20593](https://github.com/hashicorp/terraform-provider-aws/issues/20593))
+* resource/aws_wafv2: Add missing values to `text_transformation` argument for `aws_wafv2_web_acl` and `aws_wafv2_rule_group` resources ([#20564](https://github.com/hashicorp/terraform-provider-aws/issues/20564))
+
+BUG FIXES:
+
+* aws/resource_aws_appconfig_deployment: Remove internal waiter after start of deployment ([#20288](https://github.com/hashicorp/terraform-provider-aws/issues/20288))
+* aws/resource_aws_cloudwatch_event_rule: Correctly handle ARN in `event_bus_name` argument ([#20312](https://github.com/hashicorp/terraform-provider-aws/issues/20312))
+* aws/resource_aws_cloudwatch_event_target: Correctly handle ARN in `event_bus_name` argument ([#20312](https://github.com/hashicorp/terraform-provider-aws/issues/20312))
+* resource/aws_eks_addon: Treat `DEGRADED` as a pending state during creation ([#20562](https://github.com/hashicorp/terraform-provider-aws/issues/20562))
+* resource/aws_eks_identity_provider_config: Increase Create and Delete timeouts to 40 minutes ([#20561](https://github.com/hashicorp/terraform-provider-aws/issues/20561))
+* resource/aws_elasticache_user: Correctly update `passwords` ([#20530](https://github.com/hashicorp/terraform-provider-aws/issues/20530))
+* resource/aws_lambda_function: Fix `handler`, `runtime` attribute validation for `package_type` is `Zip` ([#20575](https://github.com/hashicorp/terraform-provider-aws/issues/20575))
+* resource/aws_lambda_function: fix Osaka ap-northeast-3 lambda function creation, failing due to code signer service not available in the region. ([#20555](https://github.com/hashicorp/terraform-provider-aws/issues/20555))
+* resource/aws_rds_cluster_parameter_group: Handle paginated response when reading parameters from RDS cluster parameter group. ([#16010](https://github.com/hashicorp/terraform-provider-aws/issues/16010))
+* resource/aws_storagegateway_smb_file_share: Only set `oplocks_enabled` if a value is specified in configuration ([#20579](https://github.com/hashicorp/terraform-provider-aws/issues/20579))
+
+## 3.54.0 (August 12, 2021)
+
+FEATURES:
+
+* **New Resource:** `aws_chime_voice_connector` ([#19504](https://github.com/hashicorp/terraform-provider-aws/issues/19504))
+* **New Resource:** `aws_shield_protection_group` ([#20491](https://github.com/hashicorp/terraform-provider-aws/issues/20491))
+
+ENHANCEMENTS:
+
+* data-source/aws_workspaces_directory: Add `workspace_access_properties.device_type_linux` attribute ([#20462](https://github.com/hashicorp/terraform-provider-aws/issues/20462))
+* resource/aws_athena_workgroup: Add `requester_pays_enabled` argument ([#20457](https://github.com/hashicorp/terraform-provider-aws/issues/20457))
+* resource/aws_cloudwatch_metric_alarm: Add support for `account_id` ([#20541](https://github.com/hashicorp/terraform-provider-aws/issues/20541))
+* resource/aws_codebuild_webhook: Add support for `build_type` ([#20480](https://github.com/hashicorp/terraform-provider-aws/issues/20480))
+* resource/aws_db_instance: Use engine_version and engine_version_actual to set and track engine versions ([#20207](https://github.com/hashicorp/terraform-provider-aws/issues/20207))
+* resource/aws_workspaces_directory: Add `workspace_access_properties.device_type_linux` argument ([#20462](https://github.com/hashicorp/terraform-provider-aws/issues/20462))
+
+BUG FIXES:
+
+* aws/resource_aws_imagebuilder_infrastructure_configuration: Always set `terminate_instance_on_failure` on create and update ([#20464](https://github.com/hashicorp/terraform-provider-aws/issues/20464))
+* resource/aws_iot_topic_rule: Correctly update resource on `error_action` change ([#16471](https://github.com/hashicorp/terraform-provider-aws/issues/16471))
+* resource/aws_iot_topic_rule: Enhance handling of IAM eventual consistency errors during create ([#20467](https://github.com/hashicorp/terraform-provider-aws/issues/20467))
+* resource/aws_synthetics_canary: Correctly report any resource creation errors ([#20463](https://github.com/hashicorp/terraform-provider-aws/issues/20463))
+
+## 3.53.0 (August 05, 2021)
+
+ENHANCEMENTS:
+
+* data-source/aws_acm_certificate: Add status attribute ([#20232](https://github.com/hashicorp/terraform-provider-aws/issues/20232))
+* data-source/aws_ec2_coip_pool: Add `arn` attribute ([#17046](https://github.com/hashicorp/terraform-provider-aws/issues/17046))
+* resource/aws_appconfig_deployment: Include predefined strategies in plan time validation of `deployment_strategy_id` ([#20420](https://github.com/hashicorp/terraform-provider-aws/issues/20420))
+* resource/aws_autoscaling_schedule: Add `time_zone` argument ([#19829](https://github.com/hashicorp/terraform-provider-aws/issues/19829))
+* resource/aws_db_instance: Add `customer_owned_ip_enabled` argument ([#17864](https://github.com/hashicorp/terraform-provider-aws/issues/17864))
+* resource/aws_db_instance: Add `nchar_character_set_name` argument ([#20437](https://github.com/hashicorp/terraform-provider-aws/issues/20437))
+* resource/aws_kms_external_key: Add `bypass_policy_lockout_safety_check` argument ([#18117](https://github.com/hashicorp/terraform-provider-aws/issues/18117))
+* resource/aws_kms_key: Add `bypass_policy_lockout_safety_check` argument ([#18117](https://github.com/hashicorp/terraform-provider-aws/issues/18117))
+* resource/aws_launch_template: Allow all supported resource types `tag_specifications.resource_type` ([#20409](https://github.com/hashicorp/terraform-provider-aws/issues/20409))
+* resource/aws_redshift_parameter_group: Make Redshift parameters case sensitive. ([#19772](https://github.com/hashicorp/terraform-provider-aws/issues/19772))
+
+BUG FIXES:
+
+* aws/resource_aws_amplify_branch: Correctly handle branch names that contain '/' ([#20426](https://github.com/hashicorp/terraform-provider-aws/issues/20426))
+* aws/resource_aws_apigateway_vpc_link: Ensure deletion does not return an error when resource is not found ([#20441](https://github.com/hashicorp/terraform-provider-aws/issues/20441))
+* aws/resource_aws_instance: Fix running `terraform plan` with with `skip_credentials_validation=true` ([#20357](https://github.com/hashicorp/terraform-provider-aws/issues/20357))
+* aws/resource_aws_instance: Fix state refresh when launch template was deleted ([#20357](https://github.com/hashicorp/terraform-provider-aws/issues/20357))
+
+## 3.52.0 (July 29, 2021)
+
+FEATURES:
+
+* **New Resource:** `aws_sagemaker_workforce` ([#20065](https://github.com/hashicorp/terraform-provider-aws/issues/20065))
+* **New Resource:** `aws_sagemaker_workteam` ([#20122](https://github.com/hashicorp/terraform-provider-aws/issues/20122))
+* **New Resource:** `aws_storagegateway_file_system_association` ([#20082](https://github.com/hashicorp/terraform-provider-aws/issues/20082))
+
+ENHANCEMENTS:
+
+* data-source/aws_ec2_instance_type_offerings: Add `locations` and `location_types` attributes ([#16704](https://github.com/hashicorp/terraform-provider-aws/issues/16704))
+* data-source/aws_lb: Add ability to filter results by `tags` ([#6458](https://github.com/hashicorp/terraform-provider-aws/issues/6458))
+* data-source/aws_qldb_ledger: Add `permissions_mode` attribute ([#20302](https://github.com/hashicorp/terraform-provider-aws/issues/20302))
+* resource/aws_budgets_budget: Add the `cost_filter` argument which allows multiple `values` to be specified per filter. This new argument will eventually replace the `cost_filters` argument ([#9092](https://github.com/hashicorp/terraform-provider-aws/issues/9092))
+* resource/aws_budgets_budget: Change `time_period_start` to an optional argument. If you don't specify a start date, AWS defaults to the start of your chosen time period ([#9092](https://github.com/hashicorp/terraform-provider-aws/issues/9092))
+* resource/aws_cognito_user_pool_client: Set `callback_urls` and `logout_urls` as computed. ([#20065](https://github.com/hashicorp/terraform-provider-aws/issues/20065))
+* resource/aws_dx_connection: Add support for `100Gbps` `bandwidth` [#20364](https://github.com/hashicorp/terraform-provider-aws/issues/20364))
+* resource/aws_dx_lag: Add support for `100Gbps` `connections_bandwidth` [#20364](https://github.com/hashicorp/terraform-provider-aws/issues/20364))
+* resource/aws_qldb_ledger: Add `permissions_mode` support ([#20302](https://github.com/hashicorp/terraform-provider-aws/issues/20302))
+* resource/aws_rds_cluster: Use engine_version and engine_version_actual to set and track engine versions ([#20211](https://github.com/hashicorp/terraform-provider-aws/issues/20211))
+* resource/aws_rds_cluster_instance: Use engine_version and engine_version_actual to set and track engine versions ([#20211](https://github.com/hashicorp/terraform-provider-aws/issues/20211))
+* resource/aws_s3_bucket_object: Existing resource can now be imported ([#10036](https://github.com/hashicorp/terraform-provider-aws/issues/10036))
+* resource/aws_sagemaker_model: Add `inference_execution_config`. ([#20066](https://github.com/hashicorp/terraform-provider-aws/issues/20066))
+* resource/aws_secretsmanager_secret: Add replica support ([#20293](https://github.com/hashicorp/terraform-provider-aws/issues/20293))
+* resource/aws_storagegateway_gateway: Add new option for gateway_type, `FILE_FSX_SMB`, to be used with `aws_storagegateway_file_system_association` ([#20082](https://github.com/hashicorp/terraform-provider-aws/issues/20082))
+
+BUG FIXES:
+
+* resource/aws_elasticache_user: Correctly handle user modifications and deletion ([#20339](https://github.com/hashicorp/terraform-provider-aws/issues/20339))
+* resource/aws_budgets_budget: Change the service name in the `arn` attribute from `budgetservice` to `budgets` ([#9092](https://github.com/hashicorp/terraform-provider-aws/issues/9092))
+* resource/aws_budgets_budget: Suppress plan differences with trailing zeroes for `limit_amount` ([#9092](https://github.com/hashicorp/terraform-provider-aws/issues/9092))
+* resource/aws_budgets_budget_action: Change the service name in the `arn` attribute from `budgetservice` to `budgets` ([#9092](https://github.com/hashicorp/terraform-provider-aws/issues/9092))
+* resource/aws_lex_bot: Fix computed `version` for dependent resources ([#20336](https://github.com/hashicorp/terraform-provider-aws/issues/20336))
+* resource/aws_lex_intent: Fix computed `version` for dependent resources ([#20336](https://github.com/hashicorp/terraform-provider-aws/issues/20336))
+* resource/aws_lex_slot_type: Fix computed `version` for dependent resources ([#20336](https://github.com/hashicorp/terraform-provider-aws/issues/20336))
+
+## 3.51.0 (July 22, 2021)
+
+FEATURES:
+
+* **New Data Source:** `aws_elasticache_user` ([#16629](https://github.com/hashicorp/terraform-provider-aws/issues/16629))
+* **New Resource:** `aws_appconfig_deployment` ([#20172](https://github.com/hashicorp/terraform-provider-aws/issues/20172))
+* **New Resource:** `aws_elasticache_user` ([#16629](https://github.com/hashicorp/terraform-provider-aws/issues/16629))
+* **New Resource:** `aws_elasticache_user_group` ([#16504](https://github.com/hashicorp/terraform-provider-aws/issues/16504))
+
+ENHANCEMENTS:
+
+* resource/aws_cloudwatch_event_target: Add support for Redshift event target. ([#20256](https://github.com/hashicorp/terraform-provider-aws/issues/20256))
+* resource/aws_glue_crawler: Add `sample_size` argument in `s3_target` block. ([#20203](https://github.com/hashicorp/terraform-provider-aws/issues/20203))
+* resource/aws_instance: Add support for configuration with Launch Template ([#10807](https://github.com/hashicorp/terraform-provider-aws/issues/10807))
+* resource/aws_servicecatalog_provisioned_product: Increase timeouts to align with CloudFormation (30 min.) ([#20254](https://github.com/hashicorp/terraform-provider-aws/issues/20254))
+* resource/aws_storagegateway_smb_file_share: Add `bucket_region`, `oplocks_enabled` and `vpc_endpoint_dns_name` arguments ([#20234](https://github.com/hashicorp/terraform-provider-aws/issues/20234))
+
+BUG FIXES:
+
+* aws/resource_aws_lambda_event_source_mapping: Ignore `InvalidParameterValueException` error caused by IAM propagation when creating Lambda event source mapping with Kinesis stream source ([#20229](https://github.com/hashicorp/terraform-provider-aws/issues/20229))
+* aws/resource_aws_route_table_association: Correctly handle `associated` as a pending state when waiting for deletion of an association ([#20265](https://github.com/hashicorp/terraform-provider-aws/issues/20265))
+
+## 3.50.0 (July 15, 2021)
+
+NOTES:
+
+* resource/aws_dx_gateway_association_proposal: If an accepted Proposal reaches end-of-life and is removed by AWS do not recreate the resource, instead refreshing Terraform state from the resource's Direct Connect Gateway ID and Associated Gateway ID. ([#19741](https://github.com/hashicorp/terraform-provider-aws/issues/19741))
+
+FEATURES:
+
+* **New Resource:** `aws_appconfig_application` ([#19307](https://github.com/hashicorp/terraform-provider-aws/issues/19307))
+* **New Resource:** `aws_appconfig_configuration_profile` ([#19320](https://github.com/hashicorp/terraform-provider-aws/issues/19320))
+* **New Resource:** `aws_appconfig_deployment_strategy` ([#19359](https://github.com/hashicorp/terraform-provider-aws/issues/19359))
+* **New Resource:** `aws_appconfig_environment` ([#19307](https://github.com/hashicorp/terraform-provider-aws/issues/19307))
+* **New Resource:** `aws_appconfig_hosted_configuration_version` ([#19324](https://github.com/hashicorp/terraform-provider-aws/issues/19324))
+* **New Resource:** `aws_config_organization_conformance_pack` ([#17298](https://github.com/hashicorp/terraform-provider-aws/issues/17298))
+* **New Resource:** `aws_securityhub_organization_configuration` ([#19108](https://github.com/hashicorp/terraform-provider-aws/issues/19108))
+* **New Resource:** `aws_securityhub_standards_control` ([#14714](https://github.com/hashicorp/terraform-provider-aws/issues/14714))
+
+ENHANCEMENTS:
+
+* resource/aws_cloudwatch_event_target: Add `enable_ecs_managed_tags`, `enable_execute_command`, `placement_constraints`, `propagate_tags`, and `tags` arguments to `ecs_target` block. ([#19975](https://github.com/hashicorp/terraform-provider-aws/issues/19975))
+* resource/aws_cognito_user_pool_client: Add the `enable_token_revocation` argument to support targeted sign out ([#20031](https://github.com/hashicorp/terraform-provider-aws/issues/20031))
+* resource/aws_fsx_windows_file_system: Add `aliases` argument ([#20054](https://github.com/hashicorp/terraform-provider-aws/issues/20054))
+* resource/aws_guardduty_detector: Add `datasources` argument ([#19954](https://github.com/hashicorp/terraform-provider-aws/issues/19954))
+* resource/aws_guardduty_organization_configuration: Add `datasources` argument ([#15241](https://github.com/hashicorp/terraform-provider-aws/issues/15241))
+* resource/aws_iam_access_key: Add encrypted SES SMTP password ([#19579](https://github.com/hashicorp/terraform-provider-aws/issues/19579))
+* resource/aws_kms_key: Add plan time validation to `description`. ([#19967](https://github.com/hashicorp/terraform-provider-aws/issues/19967))
+* resource/aws_s3_bucket: Add the delete_marker_replication_status argument for V2 replication configurations ([#19323](https://github.com/hashicorp/terraform-provider-aws/issues/19323))
+* resource/aws_s3_bucket_object: Add `source_hash` argument to compliment `etag`'s encryption limitations ([#11522](https://github.com/hashicorp/terraform-provider-aws/issues/11522))
+* resource/aws_sagemaker_domain: Add support for `retention_policy` ([#18562](https://github.com/hashicorp/terraform-provider-aws/issues/18562))
+* resource/aws_wafv2_web_acl: Support `scope_down_statement` on `managed_rule_group_statement` ([#19407](https://github.com/hashicorp/terraform-provider-aws/issues/19407))
+
+BUG FIXES:
+
+* resource/aws_cognito_user_pool_client: Allow the `default_redirect_uri` argument value to be an empty string ([#20031](https://github.com/hashicorp/terraform-provider-aws/issues/20031))
+* resource/aws_cognito_user_pool_client: Retry on `ConcurrentModificationException` ([#20031](https://github.com/hashicorp/terraform-provider-aws/issues/20031))
+* resource/aws_datasync_location_s3: Correctly parse S3 on Outposts location URI ([#19859](https://github.com/hashicorp/terraform-provider-aws/issues/19859))
+* resource/aws_db_instance: Ignore allocated_storage for replica at creation time ([#12548](https://github.com/hashicorp/terraform-provider-aws/issues/12548))
+* resource/aws_elasticache_replication_group: Cannot set `cluster_mode.replicas_per_node_group` when member of Global Replication Group ([#20111](https://github.com/hashicorp/terraform-provider-aws/issues/20111))
+
+## 3.49.0 (July 08, 2021)
+
+FEATURES:
+
+* **New Resource:** `aws_eks_identity_provider_config` ([#17959](https://github.com/hashicorp/terraform-provider-aws/issues/17959))
+* **New Resource:** `aws_rds_cluster_role_association` ([#12370](https://github.com/hashicorp/terraform-provider-aws/issues/12370))
+
+ENHANCEMENTS:
+
+* aws_rds_cluster: Set `iam_roles` as Computed to prevent drift when the `aws_rds_cluster_role_association` resource is used ([#12370](https://github.com/hashicorp/terraform-provider-aws/issues/12370))
+* resource/aws_transfer_server: Add `security_group_ids` argument to `endpoint_details` configuration block. ([#17539](https://github.com/hashicorp/terraform-provider-aws/issues/17539))
+
+BUG FIXES:
+
+* data-source/aws_lakeformation_permissions: Fix various problems with permissions including select-only ([#20108](https://github.com/hashicorp/terraform-provider-aws/issues/20108))
+* resource/aws_eks_cluster: Don't associate an `encryption_config` if there's already one ([#19986](https://github.com/hashicorp/terraform-provider-aws/issues/19986))
+* resource/aws_lakeformation_permissions: Fix various problems with permissions including select-only ([#20108](https://github.com/hashicorp/terraform-provider-aws/issues/20108))
+* resource/aws_ram_resource_share_accepter: Allow destroy even where AWS API provides no way to disassociate ([#19718](https://github.com/hashicorp/terraform-provider-aws/issues/19718))
+
+## 3.48.0 (July 02, 2021)
+
+FEATURES:
+
+* **New Data Source:** `aws_iam_session_context` ([#19957](https://github.com/hashicorp/terraform-provider-aws/issues/19957))
+* **New Data Source:** `aws_servicecatalog_launch_paths` ([#19572](https://github.com/hashicorp/terraform-provider-aws/issues/19572))
+* **New Data Source:** `aws_servicecatalog_portfolio_constraints` ([#19813](https://github.com/hashicorp/terraform-provider-aws/issues/19813))
+* **New Resource:** `aws_cloudfront_monitoring_subscription` ([#18083](https://github.com/hashicorp/terraform-provider-aws/issues/18083))
+* **New Resource:** `aws_servicecatalog_provisioned_product` ([#19459](https://github.com/hashicorp/terraform-provider-aws/issues/19459))
+
+ENHANCEMENTS:
+
+* resource/aws_fsx_windows_file_system: Add `audit_log_configuration` argument. ([#19970](https://github.com/hashicorp/terraform-provider-aws/issues/19970))
+
+BUG FIXES:
+
+* resource/aws_cloudwatch_event_target: Don't crash if `sqs_target` configuration block is empty. ([#19946](https://github.com/hashicorp/terraform-provider-aws/issues/19946))
+* resource/aws_mwaa_environment: Changes to the `kms_key` argument force resource recreation ([#19994](https://github.com/hashicorp/terraform-provider-aws/issues/19994))
+
+## 3.47.0 (June 24, 2021)
+
+FEATURES:
+
+* **New Resource:** `aws_cloudwatch_event_bus_policy` ([#16874](https://github.com/hashicorp/terraform-provider-aws/issues/16874))
+* **New Resource:** `aws_efs_backup_policy` ([#18006](https://github.com/hashicorp/terraform-provider-aws/issues/18006))
+* **New Resource:** `aws_elasticsearch_domain_saml_options` ([#19497](https://github.com/hashicorp/terraform-provider-aws/issues/19497))
+* **New Resource:** `aws_neptune_cluster_endpoint` ([#19898](https://github.com/hashicorp/terraform-provider-aws/issues/19898))
+
+ENHANCEMENTS:
+
+* resource/aws_default_route_table: Add retries when creating, deleting and replacing routes ([#19426](https://github.com/hashicorp/terraform-provider-aws/issues/19426))
+* resource/aws_default_route_table: Add retries when creating, deleting and replacing routes ([#19426](https://github.com/hashicorp/terraform-provider-aws/issues/19426))
+* resource/aws_ecs_capacity_provider: Allow updates to the `auto_scaling_group_provider` argument without recreating the resource ([#16942](https://github.com/hashicorp/terraform-provider-aws/issues/16942))
+* resource/aws_eks_cluster: Allow updates to `encryption_config` ([#19144](https://github.com/hashicorp/terraform-provider-aws/issues/19144))
+* resource/aws_lb_target_group: Add support for `app_cookie` stickiness type and `cookie_name` argument ([#18102](https://github.com/hashicorp/terraform-provider-aws/issues/18102))
+* resource/aws_main_route_table_association: Wait for association to reach the required state ([#19426](https://github.com/hashicorp/terraform-provider-aws/issues/19426))
+* resource/aws_neptune_cluster: Add `copy_tags_to_snapshot` argument ([#19899](https://github.com/hashicorp/terraform-provider-aws/issues/19899))
+* resource/aws_route: Add retries when creating, deleting and replacing routes ([#19426](https://github.com/hashicorp/terraform-provider-aws/issues/19426))
+* resource/aws_route_table: Add retries when creating, deleting and replacing routes ([#19426](https://github.com/hashicorp/terraform-provider-aws/issues/19426))
+* resource/aws_route_table_association: Wait for association to reach the required state ([#19426](https://github.com/hashicorp/terraform-provider-aws/issues/19426))
+
+BUG FIXES:
+
+* resource/aws_backup_vault_policy: Correctly handle deleting policy of deleted vault ([#19854](https://github.com/hashicorp/terraform-provider-aws/issues/19854))
+* resource/aws_backup_vault_policy: Correctly handle reading policy of deleted vault ([#19749](https://github.com/hashicorp/terraform-provider-aws/issues/19749))
+* resource/aws_glue_catalog_database: Set `location_uri` as compute to prevent drift when `target_table` has `location_uri` set. ([#19743](https://github.com/hashicorp/terraform-provider-aws/issues/19743))
+* resource/aws_glue_catalog_table: Fix updating `schema_reference` when columns are present. ([#19742](https://github.com/hashicorp/terraform-provider-aws/issues/19742))
+
+## 3.46.0 (June 17, 2021)
+
+FEATURES:
+
+* **New Data Source:** `aws_appmesh_virtual_service` ([#19774](https://github.com/hashicorp/terraform-provider-aws/issues/19774))
+* **New Data Source:** `aws_servicecatalog_portfolio` ([#19500](https://github.com/hashicorp/terraform-provider-aws/issues/19500))
+* **New Resource:** `aws_budgets_budget_action` ([#19554](https://github.com/hashicorp/terraform-provider-aws/issues/19554))
+* **New Resource:** `aws_route53_resolver_firewall_config` ([#18733](https://github.com/hashicorp/terraform-provider-aws/issues/18733))
+
+ENHANCEMENTS:
+
+* resource/aws_cloudwatch_log_metric_filter: Add support for `unit` in the `metric_transformation` block. ([#19804](https://github.com/hashicorp/terraform-provider-aws/issues/19804))
+* resource/aws_datasync_location_nfs: Add `mount_options` argument. ([#19767](https://github.com/hashicorp/terraform-provider-aws/issues/19767))
+* resource/aws_datasync_location_nfs: Add plan time validation for `on_prem_config.agent_arns`, `server_hostname`, and `subdirectory`. ([#19767](https://github.com/hashicorp/terraform-provider-aws/issues/19767))
+* resource/aws_datasync_location_nfs: Add support for updating. ([#19767](https://github.com/hashicorp/terraform-provider-aws/issues/19767))
+* resource/aws_ecs_cluster: Add plan time validation for `name`. ([#19785](https://github.com/hashicorp/terraform-provider-aws/issues/19785))
+* resource/aws_ecs_cluster: Add support for `configuration`. ([#19785](https://github.com/hashicorp/terraform-provider-aws/issues/19785))
+* resource/aws_eks_node_group: Allow minimum value of `0` for `desired_size` and `min_size` in the `scaling_config` configuration block ([#19810](https://github.com/hashicorp/terraform-provider-aws/issues/19810))
+* resource/aws_spot_fleet_request: Add `on_demand_allocation_strategy`, `on_demand_max_total_price`, and `on_demand_target_capacity` arguments ([#13127](https://github.com/hashicorp/terraform-provider-aws/issues/13127))
+
+BUG FIXES:
+
+* data-source/aws_directory_service_directory: Check VpcSettings and ConnectSettings for nil values ([#19820](https://github.com/hashicorp/terraform-provider-aws/issues/19820))
+* data-source/aws_lakeformation_permissions: Fix diffs resulting from order of column names and exclude column names ([#19817](https://github.com/hashicorp/terraform-provider-aws/issues/19817))
+* resource/aws_cognito_identity_provider: Fix updating `idp_identifiers` crash. ([#19819](https://github.com/hashicorp/terraform-provider-aws/issues/19819))
+* resource/aws_glue_trigger: Fix default timeouts for Create and Delete operations ([#19827](https://github.com/hashicorp/terraform-provider-aws/issues/19827))
+* resource/aws_lakeformation_permissions: Fix bug preventing updates (inconsistent result) ([#19817](https://github.com/hashicorp/terraform-provider-aws/issues/19817))
+* resource/aws_lakeformation_permissions: Fix bug where resource is not properly removed from state ([#19817](https://github.com/hashicorp/terraform-provider-aws/issues/19817))
+* resource/aws_lakeformation_permissions: Fix diffs resulting only from order of column names and exclude column names ([#19817](https://github.com/hashicorp/terraform-provider-aws/issues/19817))
+* resource/aws_lambda_event_source_mapping: Enhance handling of IAM eventual consistency errors during create ([#19831](https://github.com/hashicorp/terraform-provider-aws/issues/19831))
+* resource/aws_sqs_queue: Correctly handle the default `kms_data_key_reuse_period_seconds` value of `300` for unencrypted queues ([#19834](https://github.com/hashicorp/terraform-provider-aws/issues/19834))
+
+## 3.45.0 (June 10, 2021)
+
+FEATURES:
+
+* **New Data Source:** `aws_appmesh_mesh` ([#19577](https://github.com/hashicorp/terraform-provider-aws/issues/19577))
+* **New Data Source:** `aws_globalaccelerator_accelerator` ([#19647](https://github.com/hashicorp/terraform-provider-aws/issues/19647))
+
+ENHANCEMENTS:
+
+* data-source/aws_nat_gateway: Add `connectivity_type` attribute ([#19758](https://github.com/hashicorp/terraform-provider-aws/issues/19758))
+* data-source/aws_transfer_server: Add `domain` attribute. ([#19691](https://github.com/hashicorp/terraform-provider-aws/issues/19691))
+* resource/aws_cognito_user_pool: Add `custom_domain`, `domain`, and `estimated_number_of_users` attributes ([#16502](https://github.com/hashicorp/terraform-provider-aws/issues/16502))
+* resource/aws_cognito_user_pool: Add `custom_email_sender`, `custom_sms_sender`, and `kms_key_id` to `lambda_config` ([#16502](https://github.com/hashicorp/terraform-provider-aws/issues/16502))
+* resource/aws_cognito_user_pool: Add plan time validation for `name` ([#16502](https://github.com/hashicorp/terraform-provider-aws/issues/16502))
+* resource/aws_cognito_user_pool_client: Add plan time validation for `id_token_validity` and `access_token_validity`. ([#19702](https://github.com/hashicorp/terraform-provider-aws/issues/19702))
+* resource/aws_cur_report_definition: Add `arn` attribute. ([#19705](https://github.com/hashicorp/terraform-provider-aws/issues/19705))
+* resource/aws_cur_report_definition: Add plan time validation for `report_name`. ([#19705](https://github.com/hashicorp/terraform-provider-aws/issues/19705))
+* resource/aws_cur_report_definition: Support updating definition. ([#19705](https://github.com/hashicorp/terraform-provider-aws/issues/19705))
+* resource/aws_datasync_location_smb: Add plan time validation for `domain`, `agent_arns`, `password`, `server_hostname`, `subdirectory`, and `user`. ([#19753](https://github.com/hashicorp/terraform-provider-aws/issues/19753))
+* resource/aws_datasync_location_smb: Add support for updating. ([#19753](https://github.com/hashicorp/terraform-provider-aws/issues/19753))
+* resource/aws_default_vpc_dhcp_options: Add `owner_id` argument. ([#19656](https://github.com/hashicorp/terraform-provider-aws/issues/19656))
+* resource/aws_ecs_task_definition: Add plan time validation for `family` and `requires_compatibilities`. ([#19670](https://github.com/hashicorp/terraform-provider-aws/issues/19670))
+* resource/aws_ecs_task_definition: Add support for `ephemeral_storage`. ([#19694](https://github.com/hashicorp/terraform-provider-aws/issues/19694))
+* resource/aws_ecs_task_definition: Add support for `fsx_windows_file_server_volume_configuration`. ([#19670](https://github.com/hashicorp/terraform-provider-aws/issues/19670))
+* resource/aws_fsx_lustre_filesystem: Add `data_compression_type` argument. ([#19664](https://github.com/hashicorp/terraform-provider-aws/issues/19664))
+* resource/aws_nat_gateway: Add `connectivity_type` argument ([#19758](https://github.com/hashicorp/terraform-provider-aws/issues/19758))
+* resource/aws_sqs_queue: Add `deduplication_scope` and `fifo_throughput_limit` arguments ([#19639](https://github.com/hashicorp/terraform-provider-aws/issues/19639))
+* resource/aws_sqs_queue: Add `url` attribute ([#19639](https://github.com/hashicorp/terraform-provider-aws/issues/19639))
+* resource/aws_transfer_server: Add `domain` argument. ([#19691](https://github.com/hashicorp/terraform-provider-aws/issues/19691))
+* resource/aws_transfer_user: Add `posix_profile` argument. ([#19693](https://github.com/hashicorp/terraform-provider-aws/issues/19693))
+
+BUG FIXES:
+
+* data-source/aws_acmpca_certificate_authority: Fix `error setting tags` ([#19681](https://github.com/hashicorp/terraform-provider-aws/issues/19681))
+* data-source/aws_servicequotas_service_quota: Correctly handle errors embedded in API struct ([#19722](https://github.com/hashicorp/terraform-provider-aws/issues/19722))
+* resource/aws_batch_job_definition: Suppress differences for empty `linuxParameters.devices` and `linuxParameters.tmpfs` arrays in the `container_properties` argument ([#19666](https://github.com/hashicorp/terraform-provider-aws/issues/19666))
+* resource/aws_cloudwatch_event_target: Fix `ecs_target.launch_type` not allowing empty string values. ([#19703](https://github.com/hashicorp/terraform-provider-aws/issues/19555))
+* resource/aws_cloudwatch_event_target: Increase the maximum allowed value for the `input_transformer` `input_paths` argument to 100 ([#19703](https://github.com/hashicorp/terraform-provider-aws/issues/19703))
+* resource/aws_cloudwatch_metric_alarm: Allow extended statistics in the `stat` argument of the `metric` configuration block ([#19668](https://github.com/hashicorp/terraform-provider-aws/issues/19668))
+* resource/aws_cognito_user_pool: Suppress diff for empty `account_recovery_setting`. ([#19704](https://github.com/hashicorp/terraform-provider-aws/issues/19704))
+* resource/aws_cognito_user_pool_client: Fix plan time validation for `refresh_token_validity` ([#19702](https://github.com/hashicorp/terraform-provider-aws/issues/19702))
+* resource/aws_iot_topic_rule: Allow tags containing `@` character ([#19677](https://github.com/hashicorp/terraform-provider-aws/issues/19677))
+* resource/aws_lambda_function: Prevents perpetual diff in `vpc_config` ([#17610](https://github.com/hashicorp/terraform-provider-aws/issues/17610))
+* resource/aws_servicequotas_service_quota: Correctly handle errors embedded in API struct ([#19722](https://github.com/hashicorp/terraform-provider-aws/issues/19722))
+* resource/aws_sqs_queue: Allow `visibility_timeout_seconds` to be `0` when creating queue ([#19639](https://github.com/hashicorp/terraform-provider-aws/issues/19639))
+* resource/aws_sqs_queue: Ensure that queue attributes propagate completely during Create and Update ([#19639](https://github.com/hashicorp/terraform-provider-aws/issues/19639))
+
+## 3.44.0 (June 03, 2021)
+
+FEATURES:
+
+* **New Resource:** `aws_amplify_branch` ([#11937](https://github.com/hashicorp/terraform-provider-aws/issues/11937))
+* **New Resource:** `aws_amplify_domain_association` ([#11938](https://github.com/hashicorp/terraform-provider-aws/issues/11938))
+* **New Resource:** `aws_amplify_webhook` ([#11939](https://github.com/hashicorp/terraform-provider-aws/issues/11939))
+* **New Resource:** `aws_servicecatalog_principal_portfolio_association` ([#19470](https://github.com/hashicorp/terraform-provider-aws/issues/19470))
+
+ENHANCEMENTS:
+
+* data-source/aws_launch_configuration: Add `throughput` attribute to `ebs_block_device` and `root_block_device` configuration blocks to support GP3 volumes ([#19632](https://github.com/hashicorp/terraform-provider-aws/issues/19632))
+* resource/aws_acmpca_certificate_authority: Add `s3_object_acl` argument to `revocation_configuration.crl_configuration` configuration block ([#19578](https://github.com/hashicorp/terraform-provider-aws/issues/19578))
+* resource/aws_cloudwatch_log_metric_filter: Add `dimensions` argument to `metric_transformation` configuration block ([#19625](https://github.com/hashicorp/terraform-provider-aws/issues/19625))
+* resource/aws_cloudwatch_metric_alarm: Add plan time validation to `metric_query.metric.stat`. ([#19571](https://github.com/hashicorp/terraform-provider-aws/issues/19571))
+* resource/aws_devicefarm_project: Add `default_job_timeout_minutes` and `tags` argument ([#19574](https://github.com/hashicorp/terraform-provider-aws/issues/19574))
+* resource/aws_devicefarm_project: Add plan time validation for `name` ([#19574](https://github.com/hashicorp/terraform-provider-aws/issues/19574))
+* resource/aws_fsx_lustre_filesystem: Allow updating `storage_capacity`. ([#19568](https://github.com/hashicorp/terraform-provider-aws/issues/19568))
+* resource/aws_launch_configuration: Add `throughput` argument to `ebs_block_device` and `root_block_device` configuration blocks to support GP3 volumes ([#19632](https://github.com/hashicorp/terraform-provider-aws/issues/19632))
+
+BUG FIXES:
+
+* resource/aws_amplify_app: Mark the `enable_performance_mode` argument in the `auto_branch_creation_config` configuration block as `ForceNew` ([#11937](https://github.com/hashicorp/terraform-provider-aws/issues/11937))
+* resource/aws_cloudwatch_event_api_destination: Fix crash on resource update ([#19654](https://github.com/hashicorp/terraform-provider-aws/issues/19654))
+* resource/aws_elasticache_cluster: Fix provider-level `default_tags` support for resource ([#19615](https://github.com/hashicorp/terraform-provider-aws/issues/19615))
+* resource/aws_iam_access_key: Fix status not defaulting to Active ([#19606](https://github.com/hashicorp/terraform-provider-aws/issues/19606))
+
+## 3.43.0 (June 01, 2021)
+
+FEATURES:
+
+* **New Data Source:** `aws_cloudwatch_event_connection` ([#18905](https://github.com/hashicorp/terraform-provider-aws/issues/18905))
+* **New Resource:** `aws_amplify_app` ([#15966](https://github.com/hashicorp/terraform-provider-aws/issues/15966))
+* **New Resource:** `aws_amplify_backend_environment` ([#11936](https://github.com/hashicorp/terraform-provider-aws/issues/11936))
+* **New Resource:** `aws_cloudwatch_event_api_destination` ([#18905](https://github.com/hashicorp/terraform-provider-aws/issues/18905))
+* **New Resource:** `aws_cloudwatch_event_connection` ([#18905](https://github.com/hashicorp/terraform-provider-aws/issues/18905))
+* **New Resource:** `aws_schemas_discoverer` ([#19100](https://github.com/hashicorp/terraform-provider-aws/issues/19100))
+* **New Resource:** `aws_schemas_registry` ([#19100](https://github.com/hashicorp/terraform-provider-aws/issues/19100))
+* **New Resource:** `aws_schemas_schema` ([#19100](https://github.com/hashicorp/terraform-provider-aws/issues/19100))
+* **New Resource:** `aws_servicecatalog_budget_resource_association` ([#19452](https://github.com/hashicorp/terraform-provider-aws/issues/19452))
+* **New Resource:** `aws_servicecatalog_provisioning_artifact` ([#19316](https://github.com/hashicorp/terraform-provider-aws/issues/19316))
+* **New Resource:** `aws_servicecatalog_tag_option_resource_association` ([#19448](https://github.com/hashicorp/terraform-provider-aws/issues/19448))
+
+ENHANCEMENTS:
+
+* data-source/aws_msk_cluster: Add `bootstrap_brokers_sasl_iam` attribute ([#19404](https://github.com/hashicorp/terraform-provider-aws/issues/19404))
+* resource/aws_cloudfront_distribution: Add `connection_attempts`, `connection_timeout`, and `origin_shield`. ([#16049](https://github.com/hashicorp/terraform-provider-aws/issues/16049))
+* resource/aws_cloudtrail: Add `AWS::DynamoDB::Table` as an option for `event_selector`.`data_resource`.`type` ([#19559](https://github.com/hashicorp/terraform-provider-aws/issues/19559))
+* resource/aws_ec2_capacity_reservation: Add `outpost_arn` argument ([#19535](https://github.com/hashicorp/terraform-provider-aws/issues/19535))
+* resource/aws_ecs_service: Add support for ECS Anywhere with the `launch_type` `EXTERNAL` ([#19557](https://github.com/hashicorp/terraform-provider-aws/issues/19557))
+* resource/aws_eks_node_group: Add `taint` argument ([#19482](https://github.com/hashicorp/terraform-provider-aws/issues/19482))
+* resource/aws_elasticache_parameter_group: Add `tags` argument and `arn` and `tags_all` attributes ([#19551](https://github.com/hashicorp/terraform-provider-aws/issues/19551))
+* resource/aws_lambda_event_source_mapping: Add `function_response_types` argument to support AWS Lambda checkpointing ([#19425](https://github.com/hashicorp/terraform-provider-aws/issues/19425))
+* resource/aws_lambda_event_source_mapping: Add `queues` argument to support Amazon MQ for Apache ActiveMQ event sources ([#19425](https://github.com/hashicorp/terraform-provider-aws/issues/19425))
+* resource/aws_lambda_event_source_mapping: Add `self_managed_event_source` and `source_access_configuration` arguments to support self-managed Apache Kafka event sources ([#19425](https://github.com/hashicorp/terraform-provider-aws/issues/19425))
+* resource/aws_lambda_event_source_mapping: Add `tumbling_window_in_seconds` argument to support AWS Lambda streaming analytics calculations ([#19425](https://github.com/hashicorp/terraform-provider-aws/issues/19425))
+* resource/aws_msk_cluster: Add `bootstrap_brokers_sasl_iam` attribute ([#19404](https://github.com/hashicorp/terraform-provider-aws/issues/19404))
+* resource/aws_msk_cluster: Add `iam` argument to `client_authentication.sasl` configuration block ([#19404](https://github.com/hashicorp/terraform-provider-aws/issues/19404))
+* resource/aws_msk_configuration: `kafka_versions` argument is optional ([#17571](https://github.com/hashicorp/terraform-provider-aws/issues/17571))
+* resource/aws_sns_topic: Add `firehose_success_feedback_role_arn`, `firehose_success_feedback_sample_rate` and `firehose_failure_feedback_role_arn` arguments. ([#19528](https://github.com/hashicorp/terraform-provider-aws/issues/19528))
+* resource/aws_sns_topic: Add `owner` attribute. ([#19528](https://github.com/hashicorp/terraform-provider-aws/issues/19528))
+* resource/aws_sns_topic: Add plan time validation for `application_success_feedback_role_arn`, `application_failure_feedback_role_arn`, `http_success_feedback_role_arn`, `http_failure_feedback_role_arn`, `lambda_success_feedback_role_arn`, `lambda_failure_feedback_role_arn`, `sqs_success_feedback_role_arn`, `sqs_failure_feedback_role_arn`. ([#19528](https://github.com/hashicorp/terraform-provider-aws/issues/19528))
+
+BUG FIXES:
+
+* data-source/aws_launch_template: Add `interface_type` to `network_interfaces` attribute ([#19492](https://github.com/hashicorp/terraform-provider-aws/issues/19492))
+* data-source/aws_mq_broker: Correct type for `logs.audit` attribute ([#19502](https://github.com/hashicorp/terraform-provider-aws/issues/19502))
+* resource/aws_apprunner_service: Correctly configure `authentication_configuration`, `code_configuration`, and `image_configuration` nested arguments in API requests ([#19471](https://github.com/hashicorp/terraform-provider-aws/issues/19471))
+* resource/aws_apprunner_service: Handle asynchronous IAM eventual consistency error on creation ([#19483](https://github.com/hashicorp/terraform-provider-aws/issues/19483))
+* resource/aws_apprunner_service: Suppress `instance_configuration` `cpu` and `memory` differences ([#19483](https://github.com/hashicorp/terraform-provider-aws/issues/19483))
+* resource/aws_batch_job_definition: Don't crash when setting `timeout.attempt_duration_seconds` to `null` ([#19505](https://github.com/hashicorp/terraform-provider-aws/issues/19505))
+* resource/aws_cloudformation_stack: Avoid conflicts with `on_failure` and `disable_rollback` ([#10539](https://github.com/hashicorp/terraform-provider-aws/issues/10539))
+* resource/aws_cloudwatch_event_api_destination: Reduce the maximum allowed value for the `invocation_rate_limit_per_second` argument to `300` ([#19594](https://github.com/hashicorp/terraform-provider-aws/issues/19594))
+* resource/aws_ec2_managed_prefix_list: Fix crash with multiple description-only updates ([#19517](https://github.com/hashicorp/terraform-provider-aws/issues/19517))
+* resource/aws_eks_addon: Use `service_account_role_arn`, if set, on updates ([#19454](https://github.com/hashicorp/terraform-provider-aws/issues/19454))
+* resource/aws_glue_connection: `connection_properties` are optional ([#19375](https://github.com/hashicorp/terraform-provider-aws/issues/19375))
+* resource/aws_lb_listener_rule: Allow blank string for `action.redirect.query` nested argument ([#19496](https://github.com/hashicorp/terraform-provider-aws/issues/19496))
+* resource/aws_synthetics_canary: Change minimum `timeout_in_seconds` in `run_config` from `60` to `3` ([#19515](https://github.com/hashicorp/terraform-provider-aws/issues/19515))
+* resource/aws_vpn_connection: Allow `local_ipv4_network_cidr`, `remote_ipv4_network_cidr`, `local_ipv6_network_cidr`, and `remote_ipv6_network_cidr` to be CIDRs of any size ([#17573](https://github.com/hashicorp/terraform-provider-aws/issues/17573))
+
+## 3.42.0 (May 20, 2021)
+
+FEATURES:
+
+* **New Data Source:** `aws_service_discovery_dns_namespace` ([#6856](https://github.com/hashicorp/terraform-provider-aws/issues/6856))
+* **New Resource:** `aws_cloudwatch_metric_stream` ([#18870](https://github.com/hashicorp/terraform-provider-aws/issues/18870))
+* **New Resource:** `aws_servicecatalog_constraint` ([#19385](https://github.com/hashicorp/terraform-provider-aws/issues/19385))
+* **New Resource:** `aws_servicecatalog_product_portfolio_association` ([#19385](https://github.com/hashicorp/terraform-provider-aws/issues/19385))
+* **New Resource:** `aws_servicecatalog_service_action` ([#19369](https://github.com/hashicorp/terraform-provider-aws/issues/19369))
+
+ENHANCEMENTS:
+
+* resource/aws_autoscaling_policy: Add `PredictiveScaling` `policy_type` and `predictive_scaling_configuration` argument ([#19447](https://github.com/hashicorp/terraform-provider-aws/issues/19447))
+
+BUG FIXES:
+
+* resource/aws_networkfirewall_rule_group: Correctly update resource on `rules` change ([#19430](https://github.com/hashicorp/terraform-provider-aws/issues/19430))
+
+## 3.41.0 (May 19, 2021)
+
+FEATURES:
+
+* **New Data Source:** `aws_cloudfront_function` ([#19315](https://github.com/hashicorp/terraform-provider-aws/issues/19315))
+* **New Data Source:** `aws_glue_connection` ([#18802](https://github.com/hashicorp/terraform-provider-aws/issues/18802))
+* **New Data Source:** `aws_glue_data_catalog_encryption_settings` ([#18802](https://github.com/hashicorp/terraform-provider-aws/issues/18802))
+* **New Data Source:** `aws_organizations_delegated_administrators` ([#19389](https://github.com/hashicorp/terraform-provider-aws/issues/19389))
+* **New Data Source:** `aws_organizations_delegated_services` ([#19389](https://github.com/hashicorp/terraform-provider-aws/issues/19389))
+* **New Resource:** `aws_apprunner_auto_scaling_configuration_version` ([#19432](https://github.com/hashicorp/terraform-provider-aws/issues/19432))
+* **New Resource:** `aws_apprunner_connection` ([#19432](https://github.com/hashicorp/terraform-provider-aws/issues/19432))
+* **New Resource:** `aws_apprunner_custom_domain_association` ([#19432](https://github.com/hashicorp/terraform-provider-aws/issues/19432))
+* **New Resource:** `aws_apprunner_service` ([#19432](https://github.com/hashicorp/terraform-provider-aws/issues/19432))
+* **New Resource:** `aws_cloudfront_function` ([#19315](https://github.com/hashicorp/terraform-provider-aws/issues/19315))
+* **New Resource:** `aws_macie2_invitation_accepter` ([#19304](https://github.com/hashicorp/terraform-provider-aws/issues/19304))
+* **New Resource:** `aws_macie2_member` ([#19304](https://github.com/hashicorp/terraform-provider-aws/issues/19304))
+* **New Resource:** `aws_macie2_organization_admin_account` ([#19303](https://github.com/hashicorp/terraform-provider-aws/issues/19303))
+* **New Resource:** `aws_organizations_delegated_administrator` ([#19389](https://github.com/hashicorp/terraform-provider-aws/issues/19389))
+* **New Resource:** `aws_servicecatalog_organizations_access` ([#19278](https://github.com/hashicorp/terraform-provider-aws/issues/19278))
+* **New Resource:** `aws_servicecatalog_portfolio_share` ([#19278](https://github.com/hashicorp/terraform-provider-aws/issues/19278))
+
+ENHANCEMENTS:
+
+* data-source/aws_outposts_outpost: `owner_id` is now an optional argument ([#17585](https://github.com/hashicorp/terraform-provider-aws/issues/17585))
+* data-source/aws_outposts_outposts: Add `owner_id` argument ([#17585](https://github.com/hashicorp/terraform-provider-aws/issues/17585))
+* resource/aws_cloudfront_distribution: Add `function_association` argument to `ordered_cache_behavior` and `default_cache_behavior` configuration blocks ([#19315](https://github.com/hashicorp/terraform-provider-aws/issues/19315))
+* resource/aws_glue_catalog_database: Add `target_database` argument ([#19371](https://github.com/hashicorp/terraform-provider-aws/issues/19371))
+* resource/aws_glue_catalog_table: Add `target_table` argument ([#19372](https://github.com/hashicorp/terraform-provider-aws/issues/19372))
+* resource/aws_launch_template: Add `interface_type` argument to `network_interfaces` configuration block ([#18841](https://github.com/hashicorp/terraform-provider-aws/issues/18841))
+* resource/aws_network_interface: Add `interface_type` argument ([#18841](https://github.com/hashicorp/terraform-provider-aws/issues/18841))
+
+BUG FIXES:
+
+* resource/aws_lambda_function: Wait for successful completion of function code update ([#19386](https://github.com/hashicorp/terraform-provider-aws/issues/19386))
+* resource/aws_pinpoint_email_channel: `role_arn` argument is optional ([#19361](https://github.com/hashicorp/terraform-provider-aws/issues/19361))
+
+## 3.40.0 (May 13, 2021)
 
 FEATURES:
 
 * **New Resource:** `aws_macie2_custom_data_identifier` ([#19254](https://github.com/hashicorp/terraform-provider-aws/issues/19254))
+* **New Resource:** `aws_macie2_findings_filter` ([#19283](https://github.com/hashicorp/terraform-provider-aws/issues/19283))
+* **New Resource:** `aws_servicecatalog_tag_option` ([#19300](https://github.com/hashicorp/terraform-provider-aws/issues/19300))
 * **New Resource:** `aws_timestreamwrite_database` ([#15463](https://github.com/hashicorp/terraform-provider-aws/issues/15463))
+* **New Resource:** `aws_timestreamwrite_table` ([#19354](https://github.com/hashicorp/terraform-provider-aws/issues/19354))
 
 ENHANCEMENTS:
 
 * data-source/aws_codestarconnections_connection: Add `host_arn` attribute ([#19284](https://github.com/hashicorp/terraform-provider-aws/issues/19284))
 * data-source/aws_lb_listener: Add `tags` attribute. ([#19286](https://github.com/hashicorp/terraform-provider-aws/issues/19286))
+* resource/aws_ami_copy: Add `destination_outpost_arn` argument ([#17735](https://github.com/hashicorp/terraform-provider-aws/issues/17735))
+* resource/aws_cloudwatch_event_target: Add `http_target` argument ([#19337](https://github.com/hashicorp/terraform-provider-aws/issues/19337))
 * resource/aws_codestarconnections_connection: Add `host_arn` argument ([#19284](https://github.com/hashicorp/terraform-provider-aws/issues/19284))
+* resource/aws_datasync_location_s3: Add `agent_arns` argument ([#18547](https://github.com/hashicorp/terraform-provider-aws/issues/18547))
+* resource/aws_datasync_option: Add `private_link_endpoint`, `security_group_arns`, `subnet_arns` and `vpc_endpoint_id` arguments ([#16207](https://github.com/hashicorp/terraform-provider-aws/issues/16207))
+* resource/aws_datasync_task: Add `excludes` argument and `overwrite_mode`, `task_queueing`, and `transfer_mode` to the `options` configuration block ([#16204](https://github.com/hashicorp/terraform-provider-aws/issues/16204))
+* resource/aws_datasync_task: Add `schedule` argument ([#14452](https://github.com/hashicorp/terraform-provider-aws/issues/14452))
+* resource/aws_datasync_task: Add plan time validation to `cloudwatch_log_group_arn`, `destination_location_arn` and `source_location_arn` ([#14452](https://github.com/hashicorp/terraform-provider-aws/issues/14452))
+* resource/aws_eks_node_group: Add `node_group_name_prefix` argument ([#13938](https://github.com/hashicorp/terraform-provider-aws/issues/13938))
 * resource/aws_lambda_event_source_mapping: Support reading `starting_position` and `starting_position_timestamp` attributes ([#19253](https://github.com/hashicorp/terraform-provider-aws/issues/19253))
 * resource/aws_lb_listener: Add `tags` argument & `tags_all` attribute. ([#19286](https://github.com/hashicorp/terraform-provider-aws/issues/19286))
 * resource/aws_lb_listener_rule: Add plan time validation to `listener_arn`, `action.target_group_arn`, `action.forward.target_group.arn`, `action.redirect.host`, `action.redirect.path`, `action.redirect.query`, `action.redirect.status_code`, `action.fixed_response.message_body`, `action.authenticate_cognito.user_pool_arn`. ([#19285](https://github.com/hashicorp/terraform-provider-aws/issues/19285))
@@ -1733,4 +2863,4 @@ BUG FIXES
 
 For information on prior major releases, see their changelogs:
 
-* [2.x and earlier](https://github.com/hashicorp/terraform-provider-aws/blob/release/2.x/CHANGELOG.md)
+* [2.70.0 and earlier](https://github.com/hashicorp/terraform-provider-aws/blob/v2.70.0/CHANGELOG.md)

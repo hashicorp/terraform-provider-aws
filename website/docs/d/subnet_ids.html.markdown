@@ -45,7 +45,7 @@ data "aws_subnet_ids" "private" {
 }
 
 resource "aws_instance" "app" {
-  for_each      = data.aws_subnet_ids.example.ids
+  for_each      = data.aws_subnet_ids.private.ids
   ami           = var.ami
   instance_type = "t2.micro"
   subnet_id     = each.value

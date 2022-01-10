@@ -71,7 +71,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-CloudWatch dashboards can be imported using the `dashboard_name`, e.g.
+CloudWatch dashboards can be imported using the `dashboard_name`, e.g.,
 
 ```
 $ terraform import aws_cloudwatch_dashboard.sample <dashboard_name>
