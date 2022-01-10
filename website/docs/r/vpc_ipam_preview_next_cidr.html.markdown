@@ -21,6 +21,10 @@ resource "aws_vpc_ipam_preview_next_cidr" "example" {
   ipam_pool_id   = aws_vpc_ipam_pool.example.id
   netmask_length = 28
 
+  disallowed_cidrs = [
+    "172.2.0.0/32"
+  ]
+
   depends_on = [
     aws_vpc_ipam_pool_cidr.example
   ]
@@ -48,6 +52,7 @@ resource "aws_vpc_ipam" "example" {
 
 The following arguments are supported:
 
+* `disallowed_cidrs` - (Optional) Exclude a particular CIDR range from being returned by the pool.
 * `ipam_pool_id` - (Required) The ID of the pool to which you want to assign a CIDR.
 * `netmask_length` - (Optional) The netmask length of the CIDR you would like to preview from the IPAM pool.
 
