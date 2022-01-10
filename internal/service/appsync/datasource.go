@@ -498,7 +498,7 @@ func flattenAppsyncDynamodbDataSourceConfig(config *appsync.DynamodbDataSourceCo
 	}
 
 	if config.DeltaSyncConfig != nil {
-		result["delte_sync_config"] = flattenAppsyncDynamodbDataSourceDeltaSyncConfig(config.DeltaSyncConfig)
+		result["delta_sync_config"] = flattenAppsyncDynamodbDataSourceDeltaSyncConfig(config.DeltaSyncConfig)
 	}
 
 	return []map[string]interface{}{result}

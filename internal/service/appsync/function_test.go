@@ -59,8 +59,7 @@ func testAccAppSyncFunction_basic(t *testing.T) {
 }
 
 func testAccAppSyncFunction_syncConfig(t *testing.T) {
-	rName1 := fmt.Sprintf("tfacctest%d", sdkacctest.RandInt())
-	rName2 := fmt.Sprintf("tfexample%s", sdkacctest.RandString(8))
+	rName := fmt.Sprintf("tfacctest%d", sdkacctest.RandInt())
 	resourceName := "aws_appsync_function.test"
 	var config appsync.FunctionConfiguration
 
@@ -71,7 +70,7 @@ func testAccAppSyncFunction_syncConfig(t *testing.T) {
 		CheckDestroy: testAccCheckFunctionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFunctionSyncConfig(rName1, rName2, acctest.Region()),
+				Config: testAccFunctionSyncConfig(rName, acctest.Region()),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(resourceName, &config),
 					resource.TestCheckResourceAttr(resourceName, "sync_config.#", "1"),
@@ -263,14 +262,36 @@ EOF
 `, testAccAppsyncDatasourceConfig_DynamoDBConfig_Region(r1, region), r2)
 }
 
-func testAccFunctionSyncConfig(r1, r2, region string) string {
-	return fmt.Sprintf(`
-%[1]s
+func testAccFunctionSyncConfig(rName, region string) string {
+	return testAccAppsyncDatasourceConfig_base_DynamoDB(rName) + fmt.Sprintf(`
+resource "aws_appsync_graphql_api" "test" {
+  authentication_type = "API_KEY"
+  name                = %[1]q
+}
+
+resource "aws_appsync_datasource" "test" {
+  api_id           = aws_appsync_graphql_api.test.id
+  name             = %[1]q
+  service_role_arn = aws_iam_role.test.arn
+  type             = "AMAZON_DYNAMODB"
+
+  dynamodb_config {
+    region     = %[2]q
+    table_name = aws_dynamodb_table.test.name
+	versioned  = true
+
+	delta_sync_config {
+      base_table_ttl        = 60
+      delta_sync_table_name = aws_dynamodb_table.test.name
+      delta_sync_table_ttl  = 60
+	}
+  }
+}
 
 resource "aws_appsync_function" "test" {
   api_id                   = aws_appsync_graphql_api.test.id
   data_source              = aws_appsync_datasource.test.name
-  name                     = "%[2]s"
+  name                     = %[1]q
   request_mapping_template = <<EOF
 {
 	"version": "2018-05-29",
@@ -295,7 +316,7 @@ EOF
     conflict_handler   = "OPTIMISTIC_CONCURRENCY"
   }
 }
-`, testAccAppsyncDatasourceConfig_DynamoDBConfig_Region(r1, region), r2)
+`, rName, region)
 }
 
 func testAccFunctionDescriptionConfig(r1, r2, region, description string) string {
