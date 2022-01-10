@@ -2,12 +2,15 @@
 
 FEATURES:
 
+* **New Data Source:** `aws_cognito_user_pool_client` ([#22477](https://github.com/hashicorp/terraform-provider-aws/issues/22477))
 * **New Resource:** `aws_devicefarm_instance_profile` ([#22458](https://github.com/hashicorp/terraform-provider-aws/issues/22458))
+* **New Resource:** `aws_memorydb_snapshot` ([#22486](https://github.com/hashicorp/terraform-provider-aws/issues/22486))
 
 ENHANCEMENTS:
 
 * data-source/aws_customer_gateway: Add `certificate_arn` attribute ([#22435](https://github.com/hashicorp/terraform-provider-aws/issues/22435))
 * data-source/aws_ebs_snapshot: Add `storage_tier` and `outpost_arn` attributes. ([#22342](https://github.com/hashicorp/terraform-provider-aws/issues/22342))
+* data-source/aws_eks_cluster: Add `ip_family` to the `kubernetes_network_config` configuration block ([#22485](https://github.com/hashicorp/terraform-provider-aws/issues/22485))
 * data-source/aws_elb_service_account: Add account ID for `ap-southeast-3` AWS Region ([#22453](https://github.com/hashicorp/terraform-provider-aws/issues/22453))
 * data-source/aws_instance: Add the `instance_metadata_tags` attribute to the `metadata_options` configuration block ([#22463](https://github.com/hashicorp/terraform-provider-aws/issues/22463))
 * data-source/aws_launch_template: Add the `instance_metadata_tags` attribute to the `metadata_options` configuration block ([#22463](https://github.com/hashicorp/terraform-provider-aws/issues/22463))
@@ -16,6 +19,11 @@ ENHANCEMENTS:
 * data-source/aws_sagemaker_prebuilt_ecr_image: Add account IDs for the Factorization Machines image in `af-south-1`, `ap-northeast-3` and `eu-south-1` AWS Regions ([#22455](https://github.com/hashicorp/terraform-provider-aws/issues/22455))
 * data-source/aws_sagemaker_prebuilt_ecr_image: Add account IDs for the Spark ML Serving image in `af-south-1`, `ap-east-1`, `cn-north-1`, `cn-northwest-1`, `eu-north-1`, `eu-south-1`, `eu-west-3`, `me-south-1` and `sa-east-1` AWS Regions ([#22455](https://github.com/hashicorp/terraform-provider-aws/issues/22455))
 * data-source/aws_sagemaker_prebuilt_ecr_image: Add account IDs for the XGBoost image in `af-south-1`, `ap-northeast-3` and `eu-south-1` AWS Regions ([#22455](https://github.com/hashicorp/terraform-provider-aws/issues/22455))
+* resource/aws_appsync_datasource: Add `authorization_config` attribute to the `http_config` configuration block ([#22411](https://github.com/hashicorp/terraform-provider-aws/issues/22411))
+* resource/aws_appsync_datasource: Add `delta_sync_config` and `versioned` to the `dynamodb_config` configuration block ([#22411](https://github.com/hashicorp/terraform-provider-aws/issues/22411))
+* resource/aws_appsync_datasource: Add `relational_database_config` argument ([#22411](https://github.com/hashicorp/terraform-provider-aws/issues/22411))
+* resource/aws_appsync_datasource: Add plan time validation for `service_role_arn` and `lambda_config.function_arn` ([#22411](https://github.com/hashicorp/terraform-provider-aws/issues/22411))
+* resource/aws_backup_selection: Add `condition` configuration block and `not_resources` argument in support of fine-grained backup plan [resource assignment](https://docs.aws.amazon.com/aws-backup/latest/devguide/assigning-resources.html) ([#22074](https://github.com/hashicorp/terraform-provider-aws/issues/22074))
 * resource/aws_cloudwatch_log_destination_policy: Add `force_update` argument. ([#22460](https://github.com/hashicorp/terraform-provider-aws/issues/22460))
 * resource/aws_cloudwatch_log_destination_policy: Add plan time validation for `access_policy`. ([#22460](https://github.com/hashicorp/terraform-provider-aws/issues/22460))
 * resource/aws_customer_gateway: Add `certificate_arn` argument ([#22435](https://github.com/hashicorp/terraform-provider-aws/issues/22435))
@@ -24,14 +32,19 @@ ENHANCEMENTS:
 * resource/aws_ebs_snapshot_import: Add `storage_tier`, `permanent_restore`, `temporary_restore_days` arguments ([#22342](https://github.com/hashicorp/terraform-provider-aws/issues/22342))
 * resource/aws_ecs_task_definition: Add `skip_destroy` argument to optionally prevent overwriting previous revision ([#22269](https://github.com/hashicorp/terraform-provider-aws/issues/22269))
 * resource/aws_ecs_task_definition: Add plan time validation for `family` ([#18610](https://github.com/hashicorp/terraform-provider-aws/issues/18610))
+* resource/aws_eks_cluster: Add `ip_family` to the `kubernetes_network_config` configuration block ([#22485](https://github.com/hashicorp/terraform-provider-aws/issues/22485))
 * resource/aws_glue_crawler: add `delta_target` argument. ([#22472](https://github.com/hashicorp/terraform-provider-aws/issues/22472))
 * resource/aws_instance: Add the `instance_metadata_tags` argument to the `metadata_options` configuration block ([#22463](https://github.com/hashicorp/terraform-provider-aws/issues/22463))
 * resource/aws_launch_template: Add the `instance_metadata_tags` argument to the `metadata_options` configuration block ([#22463](https://github.com/hashicorp/terraform-provider-aws/issues/22463))
+* resource/aws_vpc_ipam_pool_cidr_allocation: Add `disallowed_cidrs` argument ([#22470](https://github.com/hashicorp/terraform-provider-aws/issues/22470))
+* resource/aws_vpc_ipam_preview_next_cidr: Add `disallowed_cidrs` argument ([#22501](https://github.com/hashicorp/terraform-provider-aws/issues/22501))
 
 BUG FIXES:
 
 * resource/aws_cloudfront_distribution: Increase the maximum valid `origin_read_timeout` value to `180` ([#22461](https://github.com/hashicorp/terraform-provider-aws/issues/22461))
 * resource/aws_fsx_lustre_file_system: Add missing values to `per_unit_storage_throughput` validation ([#22462](https://github.com/hashicorp/terraform-provider-aws/issues/22462))
+* resource/aws_memorydb_cluster: Correctly propagate configurable timeouts to waiters. ([#22489](https://github.com/hashicorp/terraform-provider-aws/issues/22489))
+* resource/aws_route53_record: Fix import with underscores in names ([#21556](https://github.com/hashicorp/terraform-provider-aws/issues/21556))
 
 ## 3.71.0 (January 06, 2022)
 
