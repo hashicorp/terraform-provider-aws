@@ -1,0 +1,3 @@
+```release-note:enhancement
+backup/aws_backup_selection: Add support for extended backup plan selections with support for excluding resources using the `not_resources` property and complex `conditions`
+```
