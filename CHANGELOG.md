@@ -30,7 +30,6 @@ BUG FIXES:
 
 * resource/aws_cloudfront_distribution: Increase the maximum valid `origin_read_timeout` value to `180` ([#22461](https://github.com/hashicorp/terraform-provider-aws/issues/22461))
 * resource/aws_fsx_lustre_file_system: Add missing values to `per_unit_storage_throughput` validation ([#22462](https://github.com/hashicorp/terraform-provider-aws/issues/22462))
-* resource/aws_vpc_ipam_pool: Modified ipam pool data source and test to fix github CI errors. [#22438](https://github.com/hashicorp/terraform-provider-aws/issues/22438)
 
 ## 3.71.0 (January 06, 2022)
 
