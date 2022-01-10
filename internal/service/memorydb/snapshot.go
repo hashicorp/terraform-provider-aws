@@ -3,7 +3,6 @@ package memorydb
 import (
 	"context"
 	"log"
-	"regexp"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/memorydb"
@@ -11,7 +10,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -123,16 +121,7 @@ func ResourceSnapshot() *schema.Resource {
 				Computed:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"name_prefix"},
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(1, 255),
-					validation.StringDoesNotMatch(
-						regexp.MustCompile(`[-][-]`),
-						"The name may not contain two consecutive hyphens."),
-					validation.StringMatch(
-						// Similar to ElastiCache, MemoryDB normalises names to lowercase.
-						regexp.MustCompile(`^[a-z0-9-]*[a-z0-9]$`),
-						"Only lowercase alphanumeric characters and hyphens allowed. The name may not end with a hyphen."),
-				),
+				ValidateFunc:  validateResourceName(snapshotNameMaxLength),
 			},
 			"name_prefix": {
 				Type:          schema.TypeString,
@@ -140,16 +129,7 @@ func ResourceSnapshot() *schema.Resource {
 				Computed:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"name"},
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(1, 255-resource.UniqueIDSuffixLength),
-					validation.StringDoesNotMatch(
-						regexp.MustCompile(`[-][-]`),
-						"The name may not contain two consecutive hyphens."),
-					validation.StringMatch(
-						// Similar to ElastiCache, MemoryDB normalises names to lowercase.
-						regexp.MustCompile(`^[a-z0-9-]+$`),
-						"Only lowercase alphanumeric characters and hyphens allowed."),
-				),
+				ValidateFunc:  validateResourceNamePrefix(snapshotNameMaxLength - resource.UniqueIDSuffixLength),
 			},
 			"source": {
 				Type:     schema.TypeString,
