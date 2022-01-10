@@ -150,6 +150,7 @@ func ResourceVPC() *schema.Resource {
 			},
 			"ipv6_cidr_block_network_border_group": {
 				Type:         schema.TypeString,
+				Computed:     true,
 				Optional:     true,
 				RequiredWith: []string{"assign_generated_ipv6_cidr_block"},
 			},

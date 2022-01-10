@@ -599,6 +599,8 @@ func TestAccVPC_assignGeneratedIPv6CIDRBlockWithBorder(t *testing.T) {
 	resourceName := "aws_vpc.test"
 	networkBorderGroup := "us-west-2-lax-1" // lintignore:AWSAT003 // currently the only generally available local zone
 
+	current_region := acctest.Region()
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckRegion(t, endpoints.UsWest2RegionID) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
@@ -624,13 +626,13 @@ func TestAccVPC_assignGeneratedIPv6CIDRBlockWithBorder(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"assign_generated_ipv6_cidr_block"},
 			},
 			{
-				Config: testAccVpcConfigAssignGeneratedIpv6CidrBlockWithBorder(false, ""),
+				Config: testAccVpcConfigAssignGeneratedIpv6CidrBlockWithBorder(false, current_region),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					acctest.CheckVPCExists(resourceName, &vpc),
 					testAccCheckVpcCidr(&vpc, "10.1.0.0/16"),
 					resource.TestCheckResourceAttr(resourceName, "assign_generated_ipv6_cidr_block", "false"),
 					resource.TestCheckResourceAttr(resourceName, "cidr_block", "10.1.0.0/16"),
-					resource.TestCheckResourceAttr(resourceName, "ipv6_cidr_block_network_border_group", ""),
+					resource.TestCheckResourceAttr(resourceName, "ipv6_cidr_block_network_border_group", current_region), // lintignore:AWSAT003 // currently the only generally available local zone
 					resource.TestCheckResourceAttr(resourceName, "ipv6_association_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "ipv6_cidr_block", ""),
 				),
@@ -1057,19 +1059,34 @@ resource "aws_vpc" "test" {
 `
 
 func testAccVpcConfigAssignGeneratedIpv6CidrBlockWithBorder(assignGeneratedIpv6CidrBlock bool, networkBorderGroup string) string {
-	return fmt.Sprintf(`
+	if networkBorderGroup == "us-west-2" { // lintignore:AWSAT003 // currently the only generally available local zone
+		return fmt.Sprintf(`
 data "aws_region" "current" {}
 
 resource "aws_vpc" "test" {
   assign_generated_ipv6_cidr_block     = %[1]t
   cidr_block                           = "10.1.0.0/16"
-  ipv6_cidr_block_network_border_group = %[2]q
-
+  ipv6_cidr_block_network_border_group = data.aws_region.current.name
   tags = {
-    Name = "terraform-testacc-vpc-ipv6-with-border-group"
+	  Name = "terraform-testacc-vpc-ipv6-with-border-group"
+	}
+}
+`, assignGeneratedIpv6CidrBlock, networkBorderGroup)
+	} else {
+		return fmt.Sprintf(`
+	data "aws_region" "current" {}
+	
+	resource "aws_vpc" "test" {
+		assign_generated_ipv6_cidr_block     = %[1]t
+		cidr_block                           = "10.1.0.0/16"
+		ipv6_cidr_block_network_border_group = %[2]q
+		
+		tags = {
+			Name = "terraform-testacc-vpc-ipv6-with-border-group"
   }
 }
 `, assignGeneratedIpv6CidrBlock, networkBorderGroup)
+	}
 }
 
 func testAccVPCTags1Config(tagKey1, tagValue1 string) string {
