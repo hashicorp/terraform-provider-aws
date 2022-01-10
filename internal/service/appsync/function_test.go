@@ -278,7 +278,7 @@ resource "aws_appsync_datasource" "test" {
   dynamodb_config {
     region     = %[2]q
     table_name = aws_dynamodb_table.test.name
-	versioned  = true
+    versioned  = true
 
     delta_sync_config {
       base_table_ttl        = 60
