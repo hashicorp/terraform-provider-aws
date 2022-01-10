@@ -66,32 +66,32 @@ func TestAccVPCIpamPreviewNextCidr_ipv4Allocated(t *testing.T) {
 	})
 }
 
-// // temp comment out till bug is resolved
-// func TestAccVPCIpamPreviewNextCidr_ipv4DisallowedCidr(t *testing.T) {
-// 	resourceName := "aws_vpc_ipam_preview_next_cidr.test"
-// 	disallowedCidr := "172.2.0.0/32"
-// 	netmaskLength := "28"
+func TestAccVPCIpamPreviewNextCidr_ipv4DisallowedCidr(t *testing.T) {
+	resourceName := "aws_vpc_ipam_preview_next_cidr.test"
+	disallowedCidr := "172.2.0.0/28"
+	netmaskLength := "28"
+	expectedCidr := "172.2.0.16/28"
 
-// 	resource.ParallelTest(t, resource.TestCase{
-// 		PreCheck:     func() { acctest.PreCheck(t); testAccIPAMPreCheck(t) },
-// 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-// 		Providers:    acctest.Providers,
-// 		CheckDestroy: nil,
-// 		Steps: []resource.TestStep{
-// 			{
-// 				Config: testAccVPCIpamPreviewNextCidrIpv4DisallowedCidr(netmaskLength, disallowedCidr),
-// 				Check: resource.ComposeTestCheckFunc(
-// 					resource.TestCheckResourceAttrSet(resourceName, "cidr"),
-// 					resource.TestCheckResourceAttr(resourceName, "disallowed_cidrs.#", "1"),
-// 					resource.TestCheckResourceAttr(resourceName, "disallowed_cidrs.0", disallowedCidr),
-// 					resource.TestCheckResourceAttrSet(resourceName, "id"),
-// 					resource.TestCheckResourceAttrPair(resourceName, "ipam_pool_id", "aws_vpc_ipam_pool.test", "id"),
-// 					resource.TestCheckResourceAttr(resourceName, "netmask_length", netmaskLength),
-// 				),
-// 			},
-// 		},
-// 	})
-// }
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t); testAccIPAMPreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVPCIpamPreviewNextCidrIpv4DisallowedCidr(netmaskLength, disallowedCidr),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "cidr", expectedCidr),
+					resource.TestCheckResourceAttr(resourceName, "disallowed_cidrs.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "disallowed_cidrs.0", disallowedCidr),
+					resource.TestCheckResourceAttrSet(resourceName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "ipam_pool_id", "aws_vpc_ipam_pool.test", "id"),
+					resource.TestCheckResourceAttr(resourceName, "netmask_length", netmaskLength),
+				),
+			},
+		},
+	})
+}
 
 const testAccVPCIpamPreviewNextCidrIpv4Base = `
 data "aws_region" "current" {}
@@ -150,20 +150,19 @@ resource "aws_vpc_ipam_pool_cidr_allocation" "test" {
 `, netmaskLength))
 }
 
-// // temp comment out till bug is resolved
-// func testAccVPCIpamPreviewNextCidrIpv4DisallowedCidr(netmaskLength, disallowedCidr string) string {
-// 	return testAccVPCIpamPreviewNextCidrIpv4Base + fmt.Sprintf(`
-// resource "aws_vpc_ipam_preview_next_cidr" "test" {
-//   ipam_pool_id   = aws_vpc_ipam_pool.test.id
-//   netmask_length = %[1]q
+func testAccVPCIpamPreviewNextCidrIpv4DisallowedCidr(netmaskLength, disallowedCidr string) string {
+	return testAccVPCIpamPreviewNextCidrIpv4Base + fmt.Sprintf(`
+resource "aws_vpc_ipam_preview_next_cidr" "test" {
+  ipam_pool_id   = aws_vpc_ipam_pool.test.id
+  netmask_length = %[1]q
 
-//   disallowed_cidrs = [
-//     %[2]q
-//   ]
+  disallowed_cidrs = [
+    %[2]q
+  ]
 
-//   depends_on = [
-//     aws_vpc_ipam_pool_cidr.test
-//   ]
-// }
-// `, netmaskLength, disallowedCidr)
-// }
+  depends_on = [
+    aws_vpc_ipam_pool_cidr.test
+  ]
+}
+`, netmaskLength, disallowedCidr)
+}
