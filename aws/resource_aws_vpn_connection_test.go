@@ -111,10 +111,6 @@ func TestAccAWSVpnConnection_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "transit_gateway_attachment_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "enable_acceleration", "false"),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`vpn-connection/vpn-.+`)),
-					resource.TestCheckResourceAttrPair(resourceName, "customer_gateway_id", "aws_customer_gateway.test", "id"),
-					resource.TestCheckResourceAttrPair(resourceName, "vpn_gateway_id", "aws_vpn_gateway.test", "id"),
-					resource.TestCheckResourceAttr(resourceName, "type", "ipsec.1"),
-					resource.TestCheckResourceAttr(resourceName, "static_routes_only", "true"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
@@ -148,7 +144,7 @@ func TestAccAWSVpnConnection_updateVpnGateway(t *testing.T) {
 				Config: testAccAwsVpnConnectionConfig(rBgpAsn),
 				Check: resource.ComposeTestCheckFunc(
 					testAccAwsVpnConnectionExists(resourceName, &vpn),
-					resource.TestCheckResourceAttrPair(resourceName, "vpn_gateway_id", "aws_vpn_gateway.test", "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "vpn_gateway_id", "aws_vpn_gateway.vpn_gateway", "id"),
 				),
 			},
 			{
@@ -160,52 +156,7 @@ func TestAccAWSVpnConnection_updateVpnGateway(t *testing.T) {
 				Config: testAccAwsVpnConnectionConfigUpdateVPNGateway(rBgpAsn),
 				Check: resource.ComposeTestCheckFunc(
 					testAccAwsVpnConnectionExists(resourceName, &vpn),
-					resource.TestCheckResourceAttrPair(resourceName, "vpn_gateway_id", "aws_vpn_gateway.test2", "id"),
-				),
-			},
-		},
-	})
-}
-
-func TestAccAWSVpnConnection_VpnGatewayToTransitGateway(t *testing.T) {
-	rBgpAsn := acctest.RandIntRange(64512, 65534)
-	rInt := acctest.RandInt()
-	resourceName := "aws_vpn_connection.test"
-	var vpn ec2.VpnConnection
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
-		CheckDestroy: testAccAwsVpnConnectionDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAwsVpnConnectionConfigUpdate(rInt, rBgpAsn),
-				Check: resource.ComposeTestCheckFunc(
-					testAccAwsVpnConnectionExists(resourceName, &vpn),
-					resource.TestCheckResourceAttrPair(resourceName, "vpn_gateway_id", "aws_vpn_gateway.test", "id"),
-					resource.TestCheckResourceAttr(resourceName, "transit_gateway_id", ""),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{
-				Config: testAccAwsVpnConnectionConfigTGWToVGW(rBgpAsn),
-				Check: resource.ComposeTestCheckFunc(
-					testAccAwsVpnConnectionExists(resourceName, &vpn),
-					resource.TestCheckResourceAttrPair(resourceName, "transit_gateway_id", "aws_ec2_transit_gateway.test", "id"),
-					resource.TestCheckResourceAttr(resourceName, "vpn_gateway_id", ""),
-				),
-			},
-			{
-				Config: testAccAwsVpnConnectionConfigUpdate(rInt, rBgpAsn),
-				Check: resource.ComposeTestCheckFunc(
-					testAccAwsVpnConnectionExists(resourceName, &vpn),
-					resource.TestCheckResourceAttrPair(resourceName, "vpn_gateway_id", "aws_vpn_gateway.test", "id"),
-					resource.TestCheckResourceAttr(resourceName, "transit_gateway_id", ""),
+					resource.TestCheckResourceAttrPair(resourceName, "vpn_gateway_id", "aws_vpn_gateway.vpn_gateway2", "id"),
 				),
 			},
 		},
@@ -820,13 +771,13 @@ func TestXmlConfigToTunnelInfo(t *testing.T) {
 
 func testAccAwsVpnConnectionConfig(rBgpAsn int) string {
 	return fmt.Sprintf(`
-resource "aws_vpn_gateway" "test" {
+resource "aws_vpn_gateway" "vpn_gateway" {
   tags = {
     Name = "vpn_gateway"
   }
 }
 
-resource "aws_customer_gateway" "test" {
+resource "aws_customer_gateway" "customer_gateway" {
   bgp_asn    = %d
   ip_address = "178.0.0.1"
   type       = "ipsec.1"
@@ -837,8 +788,8 @@ resource "aws_customer_gateway" "test" {
 }
 
 resource "aws_vpn_connection" "test" {
-  vpn_gateway_id      = aws_vpn_gateway.test.id
-  customer_gateway_id = aws_customer_gateway.test.id
+  vpn_gateway_id      = aws_vpn_gateway.vpn_gateway.id
+  customer_gateway_id = aws_customer_gateway.customer_gateway.id
   type                = "ipsec.1"
   static_routes_only  = true
 }
@@ -848,13 +799,13 @@ resource "aws_vpn_connection" "test" {
 // Change static_routes_only to be false, forcing a refresh.
 func testAccAwsVpnConnectionConfigUpdate(rInt, rBgpAsn int) string {
 	return fmt.Sprintf(`
-resource "aws_vpn_gateway" "test" {
+resource "aws_vpn_gateway" "vpn_gateway" {
   tags = {
     Name = "vpn_gateway"
   }
 }
 
-resource "aws_customer_gateway" "test" {
+resource "aws_customer_gateway" "customer_gateway" {
   bgp_asn    = %d
   ip_address = "178.0.0.1"
   type       = "ipsec.1"
@@ -865,8 +816,8 @@ resource "aws_customer_gateway" "test" {
 }
 
 resource "aws_vpn_connection" "test" {
-  vpn_gateway_id      = aws_vpn_gateway.test.id
-  customer_gateway_id = aws_customer_gateway.test.id
+  vpn_gateway_id      = aws_vpn_gateway.vpn_gateway.id
+  customer_gateway_id = aws_customer_gateway.customer_gateway.id
   type                = "ipsec.1"
   static_routes_only  = false
 }
@@ -875,19 +826,19 @@ resource "aws_vpn_connection" "test" {
 
 func testAccAwsVpnConnectionConfigUpdateVPNGateway(rBgpAsn int) string {
 	return fmt.Sprintf(`
-resource "aws_vpn_gateway" "test" {
+resource "aws_vpn_gateway" "vpn_gateway" {
   tags = {
     Name = "vpn_gateway"
   }
 }
 
-resource "aws_vpn_gateway" "test2" {
+resource "aws_vpn_gateway" "vpn_gateway2" {
   tags = {
     Name = "vpn_gateway2"
   }
 }
 
-resource "aws_customer_gateway" "test" {
+resource "aws_customer_gateway" "customer_gateway" {
   bgp_asn    = %d
   ip_address = "178.0.0.1"
   type       = "ipsec.1"
@@ -898,8 +849,8 @@ resource "aws_customer_gateway" "test" {
 }
 
 resource "aws_vpn_connection" "test" {
-  vpn_gateway_id      = aws_vpn_gateway.test2.id
-  customer_gateway_id = aws_customer_gateway.test.id
+  vpn_gateway_id      = aws_vpn_gateway.vpn_gateway2.id
+  customer_gateway_id = aws_customer_gateway.customer_gateway.id
   type                = "ipsec.1"
   static_routes_only  = true
 }
@@ -909,7 +860,7 @@ resource "aws_vpn_connection" "test" {
 func testAccAwsVpnConnectionConfigEnableAcceleration(rBgpAsn int) string {
 	return fmt.Sprintf(`
 resource "aws_ec2_transit_gateway" "test" {}
-resource "aws_customer_gateway" "test" {
+resource "aws_customer_gateway" "customer_gateway" {
   bgp_asn    = %d
   ip_address = "178.0.0.1"
   type       = "ipsec.1"
@@ -918,7 +869,7 @@ resource "aws_customer_gateway" "test" {
   }
 }
 resource "aws_vpn_connection" "test" {
-  customer_gateway_id = aws_customer_gateway.test.id
+  customer_gateway_id = aws_customer_gateway.customer_gateway.id
   transit_gateway_id  = aws_ec2_transit_gateway.test.id
   type                = "ipsec.1"
   static_routes_only  = false
@@ -930,7 +881,7 @@ resource "aws_vpn_connection" "test" {
 func testAccAwsVpnConnectionConfigIpv6(rBgpAsn int, localIpv6NetworkCidr string, remoteIpv6NetworkCidr string, tunnel1InsideIpv6Cidr string, tunnel2InsideIpv6Cidr string) string {
 	return fmt.Sprintf(`
 resource "aws_ec2_transit_gateway" "test" {}
-resource "aws_customer_gateway" "test" {
+resource "aws_customer_gateway" "customer_gateway" {
   bgp_asn    = %d
   ip_address = "178.0.0.1"
   type       = "ipsec.1"
@@ -939,7 +890,7 @@ resource "aws_customer_gateway" "test" {
   }
 }
 resource "aws_vpn_connection" "test" {
-  customer_gateway_id = aws_customer_gateway.test.id
+  customer_gateway_id = aws_customer_gateway.customer_gateway.id
   transit_gateway_id  = aws_ec2_transit_gateway.test.id
   type                = "ipsec.1"
   static_routes_only  = false
@@ -957,13 +908,13 @@ resource "aws_vpn_connection" "test" {
 
 func testAccAwsVpnConnectionConfigSingleTunnelOptions(rBgpAsn int, psk string, tunnelCidr string) string {
 	return fmt.Sprintf(`
-resource "aws_vpn_gateway" "test" {
+resource "aws_vpn_gateway" "vpn_gateway" {
   tags = {
     Name = "vpn_gateway"
   }
 }
 
-resource "aws_customer_gateway" "test" {
+resource "aws_customer_gateway" "customer_gateway" {
   bgp_asn    = %d
   ip_address = "178.0.0.1"
   type       = "ipsec.1"
@@ -974,8 +925,8 @@ resource "aws_customer_gateway" "test" {
 }
 
 resource "aws_vpn_connection" "test" {
-  vpn_gateway_id      = aws_vpn_gateway.test.id
-  customer_gateway_id = aws_customer_gateway.test.id
+  vpn_gateway_id      = aws_vpn_gateway.vpn_gateway.id
+  customer_gateway_id = aws_customer_gateway.customer_gateway.id
   type                = "ipsec.1"
   static_routes_only  = false
 
@@ -1026,62 +977,6 @@ resource "aws_customer_gateway" "test" {
 resource "aws_vpn_connection" "test" {
   customer_gateway_id = aws_customer_gateway.test.id
   transit_gateway_id  = aws_ec2_transit_gateway.test2.id
-  type                = aws_customer_gateway.test.type
-}
-`, rBgpAsn)
-}
-
-func testAccAwsVpnConnectionConfigTGWToVGW(rBgpAsn int) string {
-	return fmt.Sprintf(`
-resource "aws_vpn_gateway" "test" {
-  tags = {
-    Name = "vpn_gateway"
-  }
-}
-
-resource "aws_ec2_transit_gateway" "test" {}
-
-resource "aws_customer_gateway" "test" {
-  bgp_asn    = %d
-  ip_address = "178.0.0.1"
-  type       = "ipsec.1"
-
-  tags = {
-    Name = "tf-acc-test-ec2-vpn-connection-transit-gateway-id"
-  }
-}
-
-resource "aws_vpn_connection" "test" {
-  customer_gateway_id = aws_customer_gateway.test.id
-  transit_gateway_id  = aws_ec2_transit_gateway.test.id
-  type                = aws_customer_gateway.test.type
-}
-`, rBgpAsn)
-}
-
-func testAccAwsVpnConnectionConfigVGWToTGW(rBgpAsn int) string {
-	return fmt.Sprintf(`
-resource "aws_vpn_gateway" "test" {
-  tags = {
-    Name = "vpn_gateway"
-  }
-}
-
-resource "aws_ec2_transit_gateway" "test" {}
-
-resource "aws_customer_gateway" "test" {
-  bgp_asn    = %d
-  ip_address = "178.0.0.1"
-  type       = "ipsec.1"
-
-  tags = {
-    Name = "tf-acc-test-ec2-vpn-connection-transit-gateway-id"
-  }
-}
-
-resource "aws_vpn_connection" "test" {
-  customer_gateway_id = aws_customer_gateway.test.id
-  vpn_gateway_id      = aws_vpn_gateway.test.id
   type                = aws_customer_gateway.test.type
 }
 `, rBgpAsn)
@@ -1156,13 +1051,13 @@ func testAccAwsVpnConnectionConfigTunnelOptions(
 	tunnel2 TunnelOptions,
 ) string {
 	return fmt.Sprintf(`
-resource "aws_vpn_gateway" "test" {
+resource "aws_vpn_gateway" "vpn_gateway" {
   tags = {
     Name = "vpn_gateway"
   }
 }
 
-resource "aws_customer_gateway" "test" {
+resource "aws_customer_gateway" "customer_gateway" {
   bgp_asn    = %d
   ip_address = "178.0.0.1"
   type       = "ipsec.1"
@@ -1173,8 +1068,8 @@ resource "aws_customer_gateway" "test" {
 }
 
 resource "aws_vpn_connection" "test" {
-  vpn_gateway_id      = aws_vpn_gateway.test.id
-  customer_gateway_id = aws_customer_gateway.test.id
+  vpn_gateway_id      = aws_vpn_gateway.vpn_gateway.id
+  customer_gateway_id = aws_customer_gateway.customer_gateway.id
   type                = "ipsec.1"
   static_routes_only  = false
 
@@ -1259,13 +1154,13 @@ resource "aws_vpn_connection" "test" {
 
 func testAccAwsVpnConnectionConfigTags1(rBgpAsn int, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
-resource "aws_vpn_gateway" "test" {
+resource "aws_vpn_gateway" "vpn_gateway" {
   tags = {
     Name = "vpn_gateway"
   }
 }
 
-resource "aws_customer_gateway" "test" {
+resource "aws_customer_gateway" "customer_gateway" {
   bgp_asn    = %d
   ip_address = "178.0.0.1"
   type       = "ipsec.1"
@@ -1276,8 +1171,8 @@ resource "aws_customer_gateway" "test" {
 }
 
 resource "aws_vpn_connection" "test" {
-  vpn_gateway_id      = aws_vpn_gateway.test.id
-  customer_gateway_id = aws_customer_gateway.test.id
+  vpn_gateway_id      = aws_vpn_gateway.vpn_gateway.id
+  customer_gateway_id = aws_customer_gateway.customer_gateway.id
   type                = "ipsec.1"
   static_routes_only  = true
 
@@ -1290,13 +1185,13 @@ resource "aws_vpn_connection" "test" {
 
 func testAccAwsVpnConnectionConfigTags2(rBgpAsn int, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
-resource "aws_vpn_gateway" "test" {
+resource "aws_vpn_gateway" "vpn_gateway" {
   tags = {
     Name = "vpn_gateway"
   }
 }
 
-resource "aws_customer_gateway" "test" {
+resource "aws_customer_gateway" "customer_gateway" {
   bgp_asn    = %d
   ip_address = "178.0.0.1"
   type       = "ipsec.1"
@@ -1307,8 +1202,8 @@ resource "aws_customer_gateway" "test" {
 }
 
 resource "aws_vpn_connection" "test" {
-  vpn_gateway_id      = aws_vpn_gateway.test.id
-  customer_gateway_id = aws_customer_gateway.test.id
+  vpn_gateway_id      = aws_vpn_gateway.vpn_gateway.id
+  customer_gateway_id = aws_customer_gateway.customer_gateway.id
   type                = "ipsec.1"
   static_routes_only  = true
 
