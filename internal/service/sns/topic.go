@@ -319,7 +319,7 @@ func resourceTopicRead(d *schema.ResourceData, meta interface{}) error {
 
 	if tfawserr.ErrCodeContains(err, "AccessDenied") || tfawserr.ErrCodeContains(err, "AuthorizationError") {
 		// ISO partitions may not support tagging, giving error
-		log.Printf("[DEBUG] Unable to read tags for SNS topic %s: %s", d.Id(), err)
+		log.Printf("[WARN] Unable to read tags for SNS topic %s: %s", d.Id(), err)
 		return nil
 	}
 
@@ -363,7 +363,7 @@ func resourceTopicUpdate(d *schema.ResourceData, meta interface{}) error {
 		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
 			if tfawserr.ErrCodeContains(err, "AccessDenied") || tfawserr.ErrCodeContains(err, "InvalidAction") {
 				// ISO partitions may not support tagging, giving error
-				log.Printf("[DEBUG] Unable to update tags for SNS topic %s: %s", d.Id(), err)
+				log.Printf("[WARN] Unable to update tags for SNS topic %s: %s", d.Id(), err)
 				return resourceTopicRead(d, meta)
 			}
 
