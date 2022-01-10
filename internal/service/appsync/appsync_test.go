@@ -75,6 +75,7 @@ func TestAccAppSync_serial(t *testing.T) {
 			"multipleResolvers": testAccAppSyncResolver_multipleResolvers,
 			"pipeline":          testAccAppSyncResolver_pipeline,
 			"caching":           testAccAppSyncResolver_caching,
+			"sync":              testAccAppSyncResolver_syncConfig,
 		},
 	}
 
