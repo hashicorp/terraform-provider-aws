@@ -368,13 +368,16 @@ func resourceTopicUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
-		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
-			if tfawserr.ErrCodeContains(err, "AccessDenied") || tfawserr.ErrCodeContains(err, "AuthorizationError") || tfawserr.ErrCodeContains(err, "InvalidAction") {
-				// ISO partitions may not support tagging, giving error
-				log.Printf("[WARN] Unable to update tags for SNS topic %s: %s", d.Id(), err)
-				return resourceTopicRead(d, meta)
-			}
 
+		err := UpdateTags(conn, d.Id(), o, n)
+
+		if tfawserr.ErrCodeContains(err, "AccessDenied") || tfawserr.ErrCodeContains(err, "AuthorizationError") || tfawserr.ErrCodeContains(err, "InvalidAction") {
+			// ISO partitions may not support tagging, giving error
+			log.Printf("[WARN] Unable to update tags for SNS topic %s: %s", d.Id(), err)
+			return resourceTopicRead(d, meta)
+		}
+
+		if err != nil {
 			return fmt.Errorf("error updating SNS topic tags: %w", err)
 		}
 	}
