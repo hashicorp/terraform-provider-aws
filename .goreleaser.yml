@@ -1,8 +1,3 @@
-archives:
-  - files:
-      - none*
-    format: zip
-    name_template: '{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}'
 before:
   hooks:
     - go mod download
@@ -11,13 +6,13 @@ builds:
     flags:
       - -trimpath
     goarch:
-      - '386'
+#      - '386'
       - amd64
-      - arm
-      - arm64
+#      - arm
+#      - arm64
     goos:
       - darwin
-      - freebsd
+#      - freebsd
       - linux
       - windows
     ignore:
@@ -26,15 +21,9 @@ builds:
     ldflags:
       - -s -w -X version.ProviderVersion={{.Version}}
     mod_timestamp: '{{ .CommitTimestamp }}'
-changelog:
-  skip: true
 checksum:
   name_template: '{{ .ProjectName }}_{{ .Version }}_SHA256SUMS'
   algorithm: sha256
-env:
-  - CGO_ENABLED=0
-release:
-  disable: true
 signs:
   - artifacts: checksum
     args:
@@ -45,3 +34,8 @@ signs:
       - "${signature}"
       - "--detach-sign"
       - "${artifact}"
+release:
+  # If you want to manually examine the release before its live, uncomment this line:
+  # draft: true
+changelog:
+  skip: true
