@@ -4,6 +4,7 @@ FEATURES:
 
 * **New Data Source:** `aws_cognito_user_pool_client` ([#22477](https://github.com/hashicorp/terraform-provider-aws/issues/22477))
 * **New Resource:** `aws_connect_contact_flow_module` ([#22349](https://github.com/hashicorp/terraform-provider-aws/issues/22349))
+* **New Resource:** `aws_connect_quick_connect` ([#22250](https://github.com/hashicorp/terraform-provider-aws/issues/22250))
 * **New Resource:** `aws_devicefarm_instance_profile` ([#22458](https://github.com/hashicorp/terraform-provider-aws/issues/22458))
 * **New Resource:** `aws_memorydb_snapshot` ([#22486](https://github.com/hashicorp/terraform-provider-aws/issues/22486))
 
@@ -29,6 +30,7 @@ ENHANCEMENTS:
 * resource/aws_backup_selection: Add `condition` configuration block and `not_resources` argument in support of fine-grained backup plan [resource assignment](https://docs.aws.amazon.com/aws-backup/latest/devguide/assigning-resources.html) ([#22074](https://github.com/hashicorp/terraform-provider-aws/issues/22074))
 * resource/aws_cloudwatch_log_destination_policy: Add `force_update` argument. ([#22460](https://github.com/hashicorp/terraform-provider-aws/issues/22460))
 * resource/aws_cloudwatch_log_destination_policy: Add plan time validation for `access_policy`. ([#22460](https://github.com/hashicorp/terraform-provider-aws/issues/22460))
+* resource/aws_connect_contact_flow: add delete function ([#22303](https://github.com/hashicorp/terraform-provider-aws/issues/22303))
 * resource/aws_customer_gateway: Add `certificate_arn` argument ([#22435](https://github.com/hashicorp/terraform-provider-aws/issues/22435))
 * resource/aws_ebs_snapshot: Add `outpost_arn`, `storage_tier`, `permanent_restore`, `temporary_restore_days` arguments ([#22342](https://github.com/hashicorp/terraform-provider-aws/issues/22342))
 * resource/aws_ebs_snapshot_copy: Add `storage_tier`, `permanent_restore`, `temporary_restore_days` arguments ([#22342](https://github.com/hashicorp/terraform-provider-aws/issues/22342))
@@ -41,6 +43,9 @@ ENHANCEMENTS:
 * resource/aws_launch_template: Add the `instance_metadata_tags` argument to the `metadata_options` configuration block ([#22463](https://github.com/hashicorp/terraform-provider-aws/issues/22463))
 * resource/aws_vpc_ipam_pool_cidr_allocation: Add `disallowed_cidrs` argument ([#22470](https://github.com/hashicorp/terraform-provider-aws/issues/22470))
 * resource/aws_vpc_ipam_preview_next_cidr: Add `disallowed_cidrs` argument ([#22501](https://github.com/hashicorp/terraform-provider-aws/issues/22501))
+* resource/aws_vpn_connection: Add `vgw_telemetry.certificate_arn` attribute ([#19311](https://github.com/hashicorp/terraform-provider-aws/issues/19311))
+* resource/aws_vpn_connection: `customer_gateway_id`, `transit_gateway_id` and `vpn_gateway_id` can be updated without recreating the resource ([#19311](https://github.com/hashicorp/terraform-provider-aws/issues/19311))
+* resource/aws_vpn_connection: `tunnel1_preshared_key` and `tunnel2_preshared_key` can be updated without recreating the resource ([#19311](https://github.com/hashicorp/terraform-provider-aws/issues/19311))
 
 BUG FIXES:
 
@@ -52,6 +57,8 @@ BUG FIXES:
 * resource/aws_fsx_openzfs_file_system: Fix crash with nil `root_volume_configuration.nfs_exports` value ([#22480](https://github.com/hashicorp/terraform-provider-aws/issues/22480))
 * resource/aws_memorydb_cluster: Correctly propagate configurable timeouts to waiters. ([#22489](https://github.com/hashicorp/terraform-provider-aws/issues/22489))
 * resource/aws_route53_record: Fix import with underscores in names ([#21556](https://github.com/hashicorp/terraform-provider-aws/issues/21556))
+* resource/aws_ssm_parameter: Mark `version` as Computed when `value` changes ([#22522](https://github.com/hashicorp/terraform-provider-aws/issues/22522))
+* resource/aws_subnet: Resource-based naming is not available in the `ap-southeast-3` region ([#22531](https://github.com/hashicorp/terraform-provider-aws/issues/22531))
 
 ## 3.71.0 (January 06, 2022)
 
