@@ -598,8 +598,8 @@ func resourceServiceCreate(d *schema.ResourceData, meta interface{}) error {
 	if input.Tags == nil && len(tags) > 0 {
 		err := UpdateTags(conn, d.Id(), nil, tags)
 
+		// If default tags only, log and continue. Otherwise, error.
 		if v, ok := d.GetOk("tags"); (!ok || len(v.(map[string]interface{})) == 0) && (tfawserr.ErrCodeContains(err, ecs.ErrCodeAccessDeniedException) || tfawserr.ErrCodeContains(err, ecs.ErrCodeInvalidParameterException) || tfawserr.ErrCodeContains(err, ecs.ErrCodeUnsupportedFeatureException)) {
-			// If default tags only, log and continue. Otherwise, error.
 			log.Printf("[WARN] error adding tags after create for ECS Service (%s): %s", d.Id(), err)
 			return resourceServiceRead(d, meta)
 		}
@@ -1197,7 +1197,7 @@ func resourceServiceUpdate(d *schema.ResourceData, meta interface{}) error {
 		// Some partitions (i.e., ISO) may not support tagging, giving error
 		if tfawserr.ErrCodeContains(err, ecs.ErrCodeAccessDeniedException) || tfawserr.ErrCodeContains(err, ecs.ErrCodeInvalidParameterException) || tfawserr.ErrCodeContains(err, ecs.ErrCodeUnsupportedFeatureException) {
 			log.Printf("[WARN] Unable to update tags for ECS Service %s: %s", d.Id(), err)
-			return nil
+			return resourceServiceRead(d, meta)
 		}
 
 		if err != nil {

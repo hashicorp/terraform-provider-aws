@@ -366,22 +366,6 @@ func resourceClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		err := UpdateTags(conn, d.Id(), o, n)
-
-		// Some partitions (i.e., ISO) may not support tagging, giving error
-		if tfawserr.ErrCodeContains(err, ecs.ErrCodeAccessDeniedException) || tfawserr.ErrCodeContains(err, ecs.ErrCodeInvalidParameterException) || tfawserr.ErrCodeContains(err, ecs.ErrCodeUnsupportedFeatureException) {
-			log.Printf("[WARN] Unable to update tags for ECS Cluster %s: %s", d.Id(), err)
-			return nil
-		}
-
-		if err != nil {
-			return fmt.Errorf("error updating ECS Cluster (%s) tags: %w", d.Id(), err)
-		}
-	}
-
 	if d.HasChanges("capacity_providers", "default_capacity_provider_strategy") {
 		input := ecs.PutClusterCapacityProvidersInput{
 			Cluster:                         aws.String(d.Id()),
@@ -414,6 +398,22 @@ func resourceClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 
 		if _, err := waitClusterAvailable(conn, d.Id()); err != nil {
 			return fmt.Errorf("error waiting for ECS Cluster (%s) to become Available: %w", d.Id(), err)
+		}
+	}
+
+	if d.HasChange("tags_all") {
+		o, n := d.GetChange("tags_all")
+
+		err := UpdateTags(conn, d.Id(), o, n)
+
+		// Some partitions (i.e., ISO) may not support tagging, giving error
+		if tfawserr.ErrCodeContains(err, ecs.ErrCodeAccessDeniedException) || tfawserr.ErrCodeContains(err, ecs.ErrCodeInvalidParameterException) || tfawserr.ErrCodeContains(err, ecs.ErrCodeUnsupportedFeatureException) {
+			log.Printf("[WARN] Unable to update tags for ECS Cluster %s: %s", d.Id(), err)
+			return nil
+		}
+
+		if err != nil {
+			return fmt.Errorf("error updating ECS Cluster (%s) tags: %w", d.Id(), err)
 		}
 	}
 
