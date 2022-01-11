@@ -430,7 +430,7 @@ func TestAccECSTaskDefinition_fsxWinFileSystem(t *testing.T) {
 	domainName := acctest.RandomDomainName()
 
 	if testing.Short() {
-		t.Skip("skipping ~3400s test in short mode")
+		t.Skip("skipping long-running test in short mode")
 	}
 
 	if acctest.Partition() == "aws-us-gov" {
