@@ -422,6 +422,40 @@ func ResourceDeploymentGroup() *schema.Resource {
 				},
 			},
 
+			"on_premises_tag_set": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"on_premises_instance_tag_filter": {
+							Type:     schema.TypeSet,
+							Optional: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"key": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+
+									"type": {
+										Type:         schema.TypeString,
+										Optional:     true,
+										ValidateFunc: validateTagFilters,
+									},
+
+									"value": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+								},
+							},
+							Set: resourceAwsCodeDeployTagFilterHash,
+						},
+					},
+				},
+				Set: resourceAwsCodeDeployOnPremTagSetHash,
+			},
+
 			"on_premises_instance_tag_filter": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -510,6 +544,10 @@ func resourceDeploymentGroupCreate(d *schema.ResourceData, meta interface{}) err
 
 	if attr, ok := d.GetOk("autoscaling_groups"); ok {
 		input.AutoScalingGroups = flex.ExpandStringSet(attr.(*schema.Set))
+	}
+
+	if attr, ok := d.GetOk("on_premises_tag_set"); ok {
+		input.OnPremisesTagSet = buildOnPremisesTagSet(attr.(*schema.Set).List())
 	}
 
 	if attr, ok := d.GetOk("on_premises_instance_tag_filter"); ok {
@@ -655,8 +693,12 @@ func resourceDeploymentGroupRead(d *schema.ResourceData, meta interface{}) error
 		return fmt.Errorf("error setting on_premises_instance_tag_filter: %w", err)
 	}
 
-	if err := d.Set("trigger_configuration", TriggerConfigsToMap(group.TriggerConfigurations)); err != nil {
-		return fmt.Errorf("error setting trigger_configuration: %w", err)
+	if err := d.Set("on_premises_tag_set", ec2TagSetToMap(resp.DeploymentGroupInfo.Ec2TagSet)); err != nil {
+		return err
+	}
+
+	if err := d.Set("trigger_configuration", triggerConfigsToMap(resp.DeploymentGroupInfo.TriggerConfigurations)); err != nil {
+		return err
 	}
 
 	if err := d.Set("auto_rollback_configuration", AutoRollbackConfigToMap(group.AutoRollbackConfiguration)); err != nil {
@@ -737,6 +779,12 @@ func resourceDeploymentGroupUpdate(d *schema.ResourceData, meta interface{}) err
 			_, n := d.GetChange("on_premises_instance_tag_filter")
 			onPremFilters := buildOnPremTagFilters(n.(*schema.Set).List())
 			input.OnPremisesInstanceTagFilters = onPremFilters
+		}
+
+		if d.HasChange("on_premises_tag_set") {
+			_, n := d.GetChange("on_premises_tag_set")
+			onPremisesTagSet := buildOnPremisesTagSet(n.(*schema.Set).List())
+			input.OnPremisesTagSet = onPremisesTagSet
 		}
 
 		if d.HasChange("ec2_tag_set") {
@@ -894,7 +942,19 @@ func buildEC2TagSet(configured []interface{}) *codedeploy.EC2TagSet {
 	return &codedeploy.EC2TagSet{Ec2TagSetList: filterSets}
 }
 
-// BuildTriggerConfigs converts a raw schema list into a list of
+// buildOnPremisesTagSet converts raw schema lists into a codedeploy.OnPremisesTagSet.
+func buildOnPremisesTagSet(configured []interface{}) *codedeploy.OnPremisesTagSet {
+	filterSets := make([][]*codedeploy.TagFilter, 0)
+	for _, raw := range configured {
+		m := raw.(map[string]interface{})
+		rawFilters := m["on_premises_instance_tag_filter"].(*schema.Set)
+		filters := buildOnPremTagFilters(rawFilters.List())
+		filterSets = append(filterSets, filters)
+	}
+	return &codedeploy.OnPremisesTagSet{OnPremisesTagSetList: filterSets}
+}
+
+// buildTriggerConfigs converts a raw schema list into a list of
 // codedeploy.TriggerConfig.
 func BuildTriggerConfigs(configured []interface{}) []*codedeploy.TriggerConfig {
 	configs := make([]*codedeploy.TriggerConfig, 0, len(configured))
@@ -1179,11 +1239,11 @@ func ec2TagFiltersToMap(list []*codedeploy.EC2TagFilter) []map[string]interface{
 	return result
 }
 
-// onPremisesTagFiltersToMap converts lists of on-prem tag filters into a []map[string]string.
-func onPremisesTagFiltersToMap(list []*codedeploy.TagFilter) []map[string]string {
-	result := make([]map[string]string, 0, len(list))
+// onPremisesTagFiltersToMap converts lists of on-prem tag filters into a []map[string]interface{}.
+func onPremisesTagFiltersToMap(list []*codedeploy.TagFilter) []map[string]interface{} {
+	result := make([]map[string]interface{}, 0, len(list))
 	for _, tf := range list {
-		l := make(map[string]string)
+		l := make(map[string]interface{})
 		if v := tf.Key; aws.StringValue(v) != "" {
 			l["key"] = aws.StringValue(v)
 		}
@@ -1220,8 +1280,30 @@ func ec2TagSetToMap(tagSet *codedeploy.EC2TagSet) []map[string]interface{} {
 	return result
 }
 
-// TriggerConfigsToMap converts a list of []*codedeploy.TriggerConfig into a []map[string]interface{}
-func TriggerConfigsToMap(list []*codedeploy.TriggerConfig) []map[string]interface{} {
+// onPremisesTagSetToMap converts lists of tag filters into a [][]map[string]string.
+func onPremisesTagSetToMap(tagSet *codedeploy.OnPremisesTagSet) []map[string]interface{} {
+	var result []map[string]interface{}
+	if tagSet == nil {
+		result = make([]map[string]interface{}, 0)
+	} else {
+		result = make([]map[string]interface{}, 0, len(tagSet.OnPremisesTagSetList))
+		for _, filterSet := range tagSet.OnPremisesTagSetList {
+			filters := onPremisesTagFiltersToMap(filterSet)
+			filtersAsIntfSlice := make([]interface{}, 0, len(filters))
+			for _, item := range filters {
+				filtersAsIntfSlice = append(filtersAsIntfSlice, item)
+			}
+			tagFilters := map[string]interface{}{
+				"on_premises_instance_tag_filter": schema.NewSet(resourceAwsCodeDeployTagFilterHash, filtersAsIntfSlice),
+			}
+			result = append(result, tagFilters)
+		}
+	}
+	return result
+}
+
+// triggerConfigsToMap converts a list of []*codedeploy.TriggerConfig into a []map[string]interface{}
+func triggerConfigsToMap(list []*codedeploy.TriggerConfig) []map[string]interface{} {
 	result := make([]map[string]interface{}, 0, len(list))
 	for _, tc := range list {
 		item := make(map[string]interface{})
@@ -1480,7 +1562,19 @@ func resourceTagSetHash(v interface{}) int {
 	return int(x)
 }
 
-func resourceTriggerHashConfig(v interface{}) int {
+func resourceAwsCodeDeployOnPremTagSetHash(v interface{}) int {
+	tagSetMap := v.(map[string]interface{})
+	filterSet := tagSetMap["on_premises_instance_tag_filter"]
+	filterSetSlice := filterSet.(*schema.Set).List()
+
+	var x uint64 = 1
+	for i, filter := range filterSetSlice {
+		x = ((x << 7) | (x >> (64 - 7))) ^ uint64(i) ^ uint64(resourceAwsCodeDeployTagFilterHash(filter))
+	}
+	return int(x)
+}
+
+func resourceAwsCodeDeployTriggerConfigHash(v interface{}) int {
 	var buf bytes.Buffer
 	m := v.(map[string]interface{})
 	buf.WriteString(fmt.Sprintf("%s-", m["trigger_name"].(string)))
