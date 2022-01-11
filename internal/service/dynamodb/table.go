@@ -3,6 +3,7 @@ package dynamodb
 import (
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"reflect"
@@ -402,7 +403,7 @@ func resourceTableCreate(d *schema.ResourceData, meta interface{}) error {
 			for _, gsiObject := range gsiSet.List() {
 				gsi := gsiObject.(map[string]interface{})
 				if err := validateDynamoDbProvisionedThroughput(gsi, billingModeOverride); err != nil {
-					return fmt.Errorf("failed to create GSI: %v", err)
+					return fmt.Errorf("failed to create GSI: %w", err)
 				}
 
 				gsiObject := expandDynamoDbGlobalSecondaryIndex(gsi, billingModeOverride)
@@ -444,7 +445,7 @@ func resourceTableCreate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		if output == nil || output.TableDescription == nil {
-			return fmt.Errorf("error creating DynamoDB Table: empty response")
+			return errors.New("error creating DynamoDB Table: empty response")
 		}
 
 	} else {
@@ -485,7 +486,7 @@ func resourceTableCreate(d *schema.ResourceData, meta interface{}) error {
 			for _, gsiObject := range gsiSet.List() {
 				gsi := gsiObject.(map[string]interface{})
 				if err := validateDynamoDbProvisionedThroughput(gsi, billingMode); err != nil {
-					return fmt.Errorf("failed to create GSI: %v", err)
+					return fmt.Errorf("failed to create GSI: %w", err)
 				}
 
 				gsiObject := expandDynamoDbGlobalSecondaryIndex(gsi, billingMode)
@@ -538,7 +539,7 @@ func resourceTableCreate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		if output == nil || output.TableDescription == nil {
-			return fmt.Errorf("error creating DynamoDB Table: empty response")
+			return errors.New("error creating DynamoDB Table: empty response")
 		}
 	}
 
