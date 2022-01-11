@@ -3,6 +3,7 @@
 FEATURES:
 
 * **New Data Source:** `aws_cognito_user_pool_client` ([#22477](https://github.com/hashicorp/terraform-provider-aws/issues/22477))
+* **New Resource:** `aws_connect_contact_flow_module` ([#22349](https://github.com/hashicorp/terraform-provider-aws/issues/22349))
 * **New Resource:** `aws_devicefarm_instance_profile` ([#22458](https://github.com/hashicorp/terraform-provider-aws/issues/22458))
 * **New Resource:** `aws_memorydb_snapshot` ([#22486](https://github.com/hashicorp/terraform-provider-aws/issues/22486))
 
@@ -23,6 +24,8 @@ ENHANCEMENTS:
 * resource/aws_appsync_datasource: Add `delta_sync_config` and `versioned` to the `dynamodb_config` configuration block ([#22411](https://github.com/hashicorp/terraform-provider-aws/issues/22411))
 * resource/aws_appsync_datasource: Add `relational_database_config` argument ([#22411](https://github.com/hashicorp/terraform-provider-aws/issues/22411))
 * resource/aws_appsync_datasource: Add plan time validation for `service_role_arn` and `lambda_config.function_arn` ([#22411](https://github.com/hashicorp/terraform-provider-aws/issues/22411))
+* resource/aws_appsync_function: Add `max_batch_size` and `sync_config` arguments. ([#22484](https://github.com/hashicorp/terraform-provider-aws/issues/22484))
+* resource/aws_appsync_resolver: Add `max_batch_size` and `sync_config` arguments. ([#22510](https://github.com/hashicorp/terraform-provider-aws/issues/22510))
 * resource/aws_backup_selection: Add `condition` configuration block and `not_resources` argument in support of fine-grained backup plan [resource assignment](https://docs.aws.amazon.com/aws-backup/latest/devguide/assigning-resources.html) ([#22074](https://github.com/hashicorp/terraform-provider-aws/issues/22074))
 * resource/aws_cloudwatch_log_destination_policy: Add `force_update` argument. ([#22460](https://github.com/hashicorp/terraform-provider-aws/issues/22460))
 * resource/aws_cloudwatch_log_destination_policy: Add plan time validation for `access_policy`. ([#22460](https://github.com/hashicorp/terraform-provider-aws/issues/22460))
@@ -41,8 +44,12 @@ ENHANCEMENTS:
 
 BUG FIXES:
 
+* data-source/aws_vpc_ipam_pool: Return an error if more than 1 IPAM Pool matches ([#22438](https://github.com/hashicorp/terraform-provider-aws/issues/22438))
+* data-source/aws_vpc_ipam_pool: Set `address_family`, `allocation_default_netmask_length`, `allocation_max_netmask_length`, `allocation_min_netmask_length` and `tags` attributes ([#22438](https://github.com/hashicorp/terraform-provider-aws/issues/22438))
 * resource/aws_cloudfront_distribution: Increase the maximum valid `origin_read_timeout` value to `180` ([#22461](https://github.com/hashicorp/terraform-provider-aws/issues/22461))
 * resource/aws_fsx_lustre_file_system: Add missing values to `per_unit_storage_throughput` validation ([#22462](https://github.com/hashicorp/terraform-provider-aws/issues/22462))
+* resource/aws_fsx_openzfs_file_system: Change `root_volume_configuration.copy_tags_to_snapshots` to ForceNew ([#22480](https://github.com/hashicorp/terraform-provider-aws/issues/22480))
+* resource/aws_fsx_openzfs_file_system: Fix crash with nil `root_volume_configuration.nfs_exports` value ([#22480](https://github.com/hashicorp/terraform-provider-aws/issues/22480))
 * resource/aws_memorydb_cluster: Correctly propagate configurable timeouts to waiters. ([#22489](https://github.com/hashicorp/terraform-provider-aws/issues/22489))
 * resource/aws_route53_record: Fix import with underscores in names ([#21556](https://github.com/hashicorp/terraform-provider-aws/issues/21556))
 
