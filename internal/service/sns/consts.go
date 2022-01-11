@@ -72,7 +72,6 @@ const (
 )
 
 const (
-	ErrCodeInvalidAction      = "InvalidAction"
-	ErrCodeAccessDenied       = "AccessDenied"
-	ErrCodeAuthorizationError = "AuthorizationError"
+	ErrCodeInvalidAction = "InvalidAction"
+	ErrCodeAccessDenied  = "AccessDenied"
 )

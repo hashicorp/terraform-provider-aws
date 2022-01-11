@@ -251,7 +251,7 @@ func resourceTopicCreate(d *schema.ResourceData, meta interface{}) error {
 	output, err := conn.CreateTopic(input)
 
 	// Some partitions may not support tag-on-create
-	if input.Tags != nil && (tfawserr.ErrCodeContains(err, ErrCodeAccessDenied) || tfawserr.ErrCodeContains(err, ErrCodeInvalidAction) || tfawserr.ErrCodeContains(err, ErrCodeAuthorizationError)) {
+	if input.Tags != nil && (tfawserr.ErrCodeContains(err, ErrCodeAccessDenied) || tfawserr.ErrCodeContains(err, ErrCodeInvalidAction) || tfawserr.ErrCodeContains(err, sns.ErrCodeAuthorizationErrorException)) {
 		log.Printf("[WARN] SNS Topic (%s) create failed (%s) with tags. Trying create without tags.", d.Id(), err)
 		input.Tags = nil
 		output, err = conn.CreateTopic(input)
@@ -273,7 +273,7 @@ func resourceTopicCreate(d *schema.ResourceData, meta interface{}) error {
 	if input.Tags == nil && len(tags) > 0 {
 		err := UpdateTags(conn, d.Id(), nil, tags)
 
-		if v, ok := d.GetOk("tags"); !ok || len(v.(map[string]interface{})) == 0 && (tfawserr.ErrCodeContains(err, ErrCodeAccessDenied) || tfawserr.ErrCodeContains(err, ErrCodeInvalidAction) || tfawserr.ErrCodeContains(err, ErrCodeAuthorizationError)) {
+		if v, ok := d.GetOk("tags"); !ok || len(v.(map[string]interface{})) == 0 && (tfawserr.ErrCodeContains(err, ErrCodeAccessDenied) || tfawserr.ErrCodeContains(err, ErrCodeInvalidAction) || tfawserr.ErrCodeContains(err, sns.ErrCodeAuthorizationErrorException)) {
 			// if default tags only, log and continue (i.e., should error if explicitly setting tags and they can't be)
 			log.Printf("[WARN] error adding tags after create for SNS Topic (%s): %s", d.Id(), err)
 			return resourceTopicRead(d, meta)
@@ -326,7 +326,7 @@ func resourceTopicRead(d *schema.ResourceData, meta interface{}) error {
 
 	tags, err := ListTags(conn, d.Id())
 
-	if tfawserr.ErrCodeContains(err, ErrCodeAccessDenied) || tfawserr.ErrCodeContains(err, ErrCodeAuthorizationError) || tfawserr.ErrCodeContains(err, ErrCodeInvalidAction) {
+	if tfawserr.ErrCodeContains(err, ErrCodeAccessDenied) || tfawserr.ErrCodeContains(err, sns.ErrCodeAuthorizationErrorException) || tfawserr.ErrCodeContains(err, ErrCodeInvalidAction) {
 		// ISO partitions may not support tagging, giving error
 		log.Printf("[WARN] Unable to list tags for SNS topic %s: %s", d.Id(), err)
 		return nil
@@ -372,7 +372,7 @@ func resourceTopicUpdate(d *schema.ResourceData, meta interface{}) error {
 
 		err := UpdateTags(conn, d.Id(), o, n)
 
-		if tfawserr.ErrCodeContains(err, ErrCodeAccessDenied) || tfawserr.ErrCodeContains(err, ErrCodeAuthorizationError) || tfawserr.ErrCodeContains(err, ErrCodeInvalidAction) {
+		if tfawserr.ErrCodeContains(err, ErrCodeAccessDenied) || tfawserr.ErrCodeContains(err, sns.ErrCodeAuthorizationErrorException) || tfawserr.ErrCodeContains(err, ErrCodeInvalidAction) {
 			// ISO partitions may not support tagging, giving error
 			log.Printf("[WARN] Unable to update tags for SNS topic %s: %s", d.Id(), err)
 			return resourceTopicRead(d, meta)
