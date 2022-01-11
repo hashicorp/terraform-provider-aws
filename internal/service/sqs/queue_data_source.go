@@ -62,9 +62,9 @@ func dataSourceQueueRead(d *schema.ResourceData, meta interface{}) error {
 
 	tags, err := ListTags(conn, queueURL)
 
-	if tfawserr.ErrCodeContains(err, "AccessDenied") || tfawserr.ErrCodeContains(err, "AuthorizationError") {
-		// ISO partitions may not support tagging, giving error
-		log.Printf("[WARN] Unable to read tags for SQS queue data source %s: %s", d.Id(), err)
+	if tfawserr.ErrCodeContains(err, "AccessDenied") || tfawserr.ErrCodeContains(err, sqs.ErrCodeUnsupportedOperation) || tfawserr.ErrCodeContains(err, ErrCodeInvalidAction) {
+		// Some partitions may not support tagging, giving error
+		log.Printf("[WARN] Unable to list tags for SQS Queue %s: %s", d.Id(), err)
 		return nil
 	}
 
