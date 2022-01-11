@@ -443,7 +443,7 @@ func resourceServiceCreate(d *schema.ResourceData, meta interface{}) error {
 
 	deploymentMinimumHealthyPercent := d.Get("deployment_minimum_healthy_percent").(int)
 	schedulingStrategy := d.Get("scheduling_strategy").(string)
-	deploymentController := expandEcsDeploymentController(d.Get("deployment_controller").([]interface{}))
+	deploymentController := expandDeploymentController(d.Get("deployment_controller").([]interface{}))
 
 	input := ecs.CreateServiceInput{
 		ClientToken:          aws.String(resource.UniqueId()),
@@ -471,7 +471,7 @@ func resourceServiceCreate(d *schema.ResourceData, meta interface{}) error {
 
 	if v, ok := d.GetOk("deployment_circuit_breaker"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		input.DeploymentConfiguration = &ecs.DeploymentConfiguration{}
-		input.DeploymentConfiguration.DeploymentCircuitBreaker = expandECSDeploymentCircuitBreaker(v.([]interface{})[0].(map[string]interface{}))
+		input.DeploymentConfiguration.DeploymentCircuitBreaker = expandDeploymentCircuitBreaker(v.([]interface{})[0].(map[string]interface{}))
 	}
 
 	if v, ok := d.GetOk("cluster"); ok {
@@ -501,7 +501,7 @@ func resourceServiceCreate(d *schema.ResourceData, meta interface{}) error {
 		input.PlatformVersion = aws.String(v.(string))
 	}
 
-	input.CapacityProviderStrategy = expandEcsCapacityProviderStrategy(d.Get("capacity_provider_strategy").(*schema.Set))
+	input.CapacityProviderStrategy = expandCapacityProviderStrategy(d.Get("capacity_provider_strategy").(*schema.Set))
 
 	loadBalancers := expandLoadBalancers(d.Get("load_balancer").(*schema.Set).List())
 	if len(loadBalancers) > 0 {
@@ -512,7 +512,7 @@ func resourceServiceCreate(d *schema.ResourceData, meta interface{}) error {
 		input.Role = aws.String(v.(string))
 	}
 
-	input.NetworkConfiguration = expandEcsNetworkConfiguration(d.Get("network_configuration").([]interface{}))
+	input.NetworkConfiguration = expandNetworkConfiguration(d.Get("network_configuration").([]interface{}))
 
 	if v, ok := d.GetOk("ordered_placement_strategy"); ok {
 		ps, err := expandPlacementStrategy(v.([]interface{}))
@@ -724,7 +724,7 @@ func resourceServiceRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("deployment_minimum_healthy_percent", service.DeploymentConfiguration.MinimumHealthyPercent)
 
 		if service.DeploymentConfiguration.DeploymentCircuitBreaker != nil {
-			if err := d.Set("deployment_circuit_breaker", []interface{}{flattenECSDeploymentCircuitBreaker(service.DeploymentConfiguration.DeploymentCircuitBreaker)}); err != nil {
+			if err := d.Set("deployment_circuit_breaker", []interface{}{flattenDeploymentCircuitBreaker(service.DeploymentConfiguration.DeploymentCircuitBreaker)}); err != nil {
 				return fmt.Errorf("error setting deployment_circuit_break: %w", err)
 			}
 		} else {
@@ -732,15 +732,15 @@ func resourceServiceRead(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	if err := d.Set("deployment_controller", flattenEcsDeploymentController(service.DeploymentController)); err != nil {
+	if err := d.Set("deployment_controller", flattenDeploymentController(service.DeploymentController)); err != nil {
 		return fmt.Errorf("error setting deployment_controller for (%s): %w", d.Id(), err)
 	}
 
 	if service.LoadBalancers != nil {
-		d.Set("load_balancer", flattenECSLoadBalancers(service.LoadBalancers))
+		d.Set("load_balancer", flattenLoadBalancers(service.LoadBalancers))
 	}
 
-	if err := d.Set("capacity_provider_strategy", flattenEcsCapacityProviderStrategy(service.CapacityProviderStrategy)); err != nil {
+	if err := d.Set("capacity_provider_strategy", flattenCapacityProviderStrategy(service.CapacityProviderStrategy)); err != nil {
 		return fmt.Errorf("error setting capacity_provider_strategy: %w", err)
 	}
 
@@ -752,7 +752,7 @@ func resourceServiceRead(d *schema.ResourceData, meta interface{}) error {
 		log.Printf("[ERR] Error setting placement_constraints for (%s): %s", d.Id(), err)
 	}
 
-	if err := d.Set("network_configuration", flattenEcsNetworkConfiguration(service.NetworkConfiguration)); err != nil {
+	if err := d.Set("network_configuration", flattenNetworkConfiguration(service.NetworkConfiguration)); err != nil {
 		return fmt.Errorf("error setting network_configuration for (%s): %w", d.Id(), err)
 	}
 
@@ -774,7 +774,7 @@ func resourceServiceRead(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func expandEcsDeploymentController(l []interface{}) *ecs.DeploymentController {
+func expandDeploymentController(l []interface{}) *ecs.DeploymentController {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -788,7 +788,7 @@ func expandEcsDeploymentController(l []interface{}) *ecs.DeploymentController {
 	return deploymentController
 }
 
-func flattenEcsDeploymentController(deploymentController *ecs.DeploymentController) []interface{} {
+func flattenDeploymentController(deploymentController *ecs.DeploymentController) []interface{} {
 	m := map[string]interface{}{
 		"type": ecs.DeploymentControllerTypeEcs,
 	}
@@ -802,7 +802,7 @@ func flattenEcsDeploymentController(deploymentController *ecs.DeploymentControll
 	return []interface{}{m}
 }
 
-func expandECSDeploymentCircuitBreaker(tfMap map[string]interface{}) *ecs.DeploymentCircuitBreaker {
+func expandDeploymentCircuitBreaker(tfMap map[string]interface{}) *ecs.DeploymentCircuitBreaker {
 	if tfMap == nil {
 		return nil
 	}
@@ -815,7 +815,7 @@ func expandECSDeploymentCircuitBreaker(tfMap map[string]interface{}) *ecs.Deploy
 	return apiObject
 }
 
-func flattenECSDeploymentCircuitBreaker(apiObject *ecs.DeploymentCircuitBreaker) map[string]interface{} {
+func flattenDeploymentCircuitBreaker(apiObject *ecs.DeploymentCircuitBreaker) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -828,7 +828,7 @@ func flattenECSDeploymentCircuitBreaker(apiObject *ecs.DeploymentCircuitBreaker)
 	return tfMap
 }
 
-func flattenEcsNetworkConfiguration(nc *ecs.NetworkConfiguration) []interface{} {
+func flattenNetworkConfiguration(nc *ecs.NetworkConfiguration) []interface{} {
 	if nc == nil {
 		return nil
 	}
@@ -844,7 +844,7 @@ func flattenEcsNetworkConfiguration(nc *ecs.NetworkConfiguration) []interface{} 
 	return []interface{}{result}
 }
 
-func expandEcsNetworkConfiguration(nc []interface{}) *ecs.NetworkConfiguration {
+func expandNetworkConfiguration(nc []interface{}) *ecs.NetworkConfiguration {
 	if len(nc) == 0 {
 		return nil
 	}
@@ -864,7 +864,7 @@ func expandEcsNetworkConfiguration(nc []interface{}) *ecs.NetworkConfiguration {
 	return &ecs.NetworkConfiguration{AwsvpcConfiguration: awsVpcConfig}
 }
 
-func expandEcsCapacityProviderStrategy(cps *schema.Set) []*ecs.CapacityProviderStrategyItem {
+func expandCapacityProviderStrategy(cps *schema.Set) []*ecs.CapacityProviderStrategyItem {
 	list := cps.List()
 	results := make([]*ecs.CapacityProviderStrategyItem, 0)
 	for _, raw := range list {
@@ -885,7 +885,7 @@ func expandEcsCapacityProviderStrategy(cps *schema.Set) []*ecs.CapacityProviderS
 	return results
 }
 
-func flattenEcsCapacityProviderStrategy(cps []*ecs.CapacityProviderStrategyItem) []map[string]interface{} {
+func flattenCapacityProviderStrategy(cps []*ecs.CapacityProviderStrategyItem) []map[string]interface{} {
 	if cps == nil {
 		return nil
 	}
@@ -1085,7 +1085,7 @@ func resourceServiceUpdate(d *schema.ResourceData, meta interface{}) error {
 		input.DeploymentConfiguration.DeploymentCircuitBreaker = &ecs.DeploymentCircuitBreaker{}
 
 		if v, ok := d.GetOk("deployment_circuit_breaker"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-			input.DeploymentConfiguration.DeploymentCircuitBreaker = expandECSDeploymentCircuitBreaker(v.([]interface{})[0].(map[string]interface{}))
+			input.DeploymentConfiguration.DeploymentCircuitBreaker = expandDeploymentCircuitBreaker(v.([]interface{})[0].(map[string]interface{}))
 		}
 	}
 
@@ -1140,12 +1140,12 @@ func resourceServiceUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	if d.HasChange("network_configuration") {
 		updateService = true
-		input.NetworkConfiguration = expandEcsNetworkConfiguration(d.Get("network_configuration").([]interface{}))
+		input.NetworkConfiguration = expandNetworkConfiguration(d.Get("network_configuration").([]interface{}))
 	}
 
 	if d.HasChange("capacity_provider_strategy") {
 		updateService = true
-		input.CapacityProviderStrategy = expandEcsCapacityProviderStrategy(d.Get("capacity_provider_strategy").(*schema.Set))
+		input.CapacityProviderStrategy = expandCapacityProviderStrategy(d.Get("capacity_provider_strategy").(*schema.Set))
 	}
 
 	if d.HasChange("enable_execute_command") {

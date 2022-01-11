@@ -301,7 +301,7 @@ func resourceTaskSetCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if v, ok := d.GetOk("capacity_provider_strategy"); ok && v.(*schema.Set).Len() > 0 {
-		input.CapacityProviderStrategy = expandEcsCapacityProviderStrategy(v.(*schema.Set))
+		input.CapacityProviderStrategy = expandCapacityProviderStrategy(v.(*schema.Set))
 	}
 
 	if v, ok := d.GetOk("external_id"); ok {
@@ -317,7 +317,7 @@ func resourceTaskSetCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if v, ok := d.GetOk("network_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.NetworkConfiguration = expandEcsNetworkConfiguration(v.([]interface{}))
+		input.NetworkConfiguration = expandNetworkConfiguration(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("platform_version"); ok {
@@ -422,7 +422,7 @@ func resourceTaskSetRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("task_definition", taskSet.TaskDefinition)
 	d.Set("task_set_id", taskSet.Id)
 
-	if err := d.Set("capacity_provider_strategy", flattenEcsCapacityProviderStrategy(taskSet.CapacityProviderStrategy)); err != nil {
+	if err := d.Set("capacity_provider_strategy", flattenCapacityProviderStrategy(taskSet.CapacityProviderStrategy)); err != nil {
 		return fmt.Errorf("error setting capacity_provider_strategy: %w", err)
 	}
 
@@ -430,7 +430,7 @@ func resourceTaskSetRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error setting load_balancer: %w", err)
 	}
 
-	if err := d.Set("network_configuration", flattenEcsNetworkConfiguration(taskSet.NetworkConfiguration)); err != nil {
+	if err := d.Set("network_configuration", flattenNetworkConfiguration(taskSet.NetworkConfiguration)); err != nil {
 		return fmt.Errorf("error setting network_configuration: %w", err)
 	}
 

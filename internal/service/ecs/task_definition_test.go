@@ -17,10 +17,10 @@ import (
 )
 
 func init() {
-	acctest.RegisterServiceErrorCheckFunc(ecs.EndpointsID, testAccErrorCheckSkipECS)
+	acctest.RegisterServiceErrorCheckFunc(ecs.EndpointsID, testAccErrorCheckSkip)
 }
 
-func testAccErrorCheckSkipECS(t *testing.T) resource.ErrorCheckFunc {
+func testAccErrorCheckSkip(t *testing.T) resource.ErrorCheckFunc {
 	return acctest.ErrorCheckSkipMessagesContaining(t,
 		"Unsupported field 'inferenceAccelerators'",
 	)
@@ -713,7 +713,7 @@ func TestAccECSTaskDefinition_changeVolumesForcesNewResource(t *testing.T) {
 				Config: testAccTaskDefinitionUpdatedVolume(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTaskDefinitionExists(resourceName, &after),
-					testAccCheckEcsTaskDefinitionRecreated(t, &before, &after),
+					testAccCheckTaskDefinitionRecreated(t, &before, &after),
 				),
 			},
 			{
@@ -1099,7 +1099,7 @@ func testAccCheckTaskDefinitionProxyConfiguration(after *ecs.TaskDefinition, con
 	}
 }
 
-func testAccCheckEcsTaskDefinitionRecreated(t *testing.T,
+func testAccCheckTaskDefinitionRecreated(t *testing.T,
 	before, after *ecs.TaskDefinition) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if *before.Revision == *after.Revision {
