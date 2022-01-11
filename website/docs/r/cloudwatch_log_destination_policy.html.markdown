@@ -59,6 +59,10 @@ The following arguments are supported:
 
 No additional attributes are exported.
 
+## Attributes Reference
+
+No additional attributes are exported.
+
 ## Import
 
 CloudWatch Logs destination policies can be imported using the `destination_name`, e.g.,
