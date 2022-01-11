@@ -101,13 +101,16 @@ func ResourceParameter() *schema.Resource {
 			"tags_all": tftags.TagsSchemaComputed(),
 		},
 
-		CustomizeDiff: customdiff.All(
+		CustomizeDiff: customdiff.Sequence(
 			// Prevent the following error during tier update from Advanced to Standard:
 			// ValidationException: This parameter uses the advanced-parameter tier. You can't downgrade a parameter from the advanced-parameter tier to the standard-parameter tier. If necessary, you can delete the advanced parameter and recreate it as a standard parameter.
 			// In the case of Advanced to Intelligent-Tiering, a ValidationException is not thrown
 			// but rather no change occurs without resource re-creation
 			customdiff.ForceNewIfChange("tier", func(_ context.Context, old, new, meta interface{}) bool {
 				return old.(string) == ssm.ParameterTierAdvanced && (new.(string) == ssm.ParameterTierStandard || new.(string) == ssm.ParameterTierIntelligentTiering)
+			}),
+			customdiff.ComputedIf("version", func(_ context.Context, diff *schema.ResourceDiff, meta interface{}) bool {
+				return diff.HasChange("value")
 			}),
 			verify.SetTagsDiff,
 		),
