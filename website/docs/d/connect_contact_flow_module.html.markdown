@@ -49,4 +49,4 @@ In addition to all of the arguments above, the following attributes are exported
 * `description` - Specifies the description of the Contact Flow Module.
 * `tags` - A map of tags to assign to the Contact Flow Module.
 * `state` - Specifies the type of Contact Flow Module Module. Values are either `ACTIVE` or `ARCHIVED`.
-* `status` - The status of the Contact Flow Module Module. This attribute is returned only if `contact_flow_module_id` is used in the data source.
+* `status` - The status of the Contact Flow Module Module. Values are either `PUBLISHED` or `SAVED`.
