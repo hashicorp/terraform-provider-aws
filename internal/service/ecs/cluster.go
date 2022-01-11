@@ -218,11 +218,11 @@ func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
 
 	log.Printf("[DEBUG] ECS cluster %s created", aws.StringValue(out.Cluster.ClusterArn))
 
+	d.SetId(aws.StringValue(out.Cluster.ClusterArn))
+
 	if _, err := waitClusterAvailable(conn, d.Id()); err != nil {
 		return fmt.Errorf("error waiting for ECS Cluster (%s) to become Available: %w", d.Id(), err)
 	}
-
-	d.SetId(aws.StringValue(out.Cluster.ClusterArn))
 
 	// Some partitions (i.e., ISO) may not support tag-on-create, attempt tag after create
 	if input.Tags == nil && len(tags) > 0 {
