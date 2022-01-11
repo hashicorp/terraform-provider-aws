@@ -693,7 +693,7 @@ func resourceDeploymentGroupRead(d *schema.ResourceData, meta interface{}) error
 		return fmt.Errorf("error setting on_premises_instance_tag_filter: %w", err)
 	}
 
-	if err := d.Set("on_premises_tag_set", ec2TagSetToMap(resp.DeploymentGroupInfo.Ec2TagSet)); err != nil {
+	if err := d.Set("on_premises_tag_set", onPremisesTagSetToMap(resp.DeploymentGroupInfo.OnPremisesTagSet)); err != nil {
 		return err
 	}
 
