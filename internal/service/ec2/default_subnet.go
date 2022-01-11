@@ -194,6 +194,10 @@ func resourceDefaultSubnetCreate(d *schema.ResourceData, meta interface{}) error
 
 	// TODO Compare Subnet with desired configuration and update.
 
+	if err := modifySubnetAttributesOnCreate(conn, d, subnet); err != nil {
+		return err
+	}
+
 	return resourceSubnetRead(d, meta)
 }
 
