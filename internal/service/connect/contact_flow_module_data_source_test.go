@@ -41,6 +41,37 @@ func TestAccConnectContactFlowModuleDataSource_contactFlowModuleID(t *testing.T)
 	})
 }
 
+func TestAccConnectContactFlowModuleDataSource_name(t *testing.T) {
+	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName2 := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	resourceName := "aws_connect_contact_flow_module.test"
+	datasourceName := "data.aws_connect_contact_flow_module.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:   func() { acctest.PreCheck(t) },
+		ErrorCheck: acctest.ErrorCheck(t, connect.EndpointsID),
+		Providers:  acctest.Providers,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccContactFlowModuleDataSourceConfig_Name(rName, rName2),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttrPair(datasourceName, "id", resourceName, "id"),
+					resource.TestCheckResourceAttrPair(datasourceName, "arn", resourceName, "arn"),
+					resource.TestCheckResourceAttrPair(datasourceName, "contact_flow_module_id", resourceName, "contact_flow_module_id"),
+					resource.TestCheckResourceAttrPair(datasourceName, "instance_id", resourceName, "instance_id"),
+					resource.TestCheckResourceAttrPair(datasourceName, "name", resourceName, "name"),
+					resource.TestCheckResourceAttrPair(datasourceName, "description", resourceName, "description"),
+					resource.TestCheckResourceAttrPair(datasourceName, "content", resourceName, "content"),
+					resource.TestCheckResourceAttrSet(datasourceName, "state"),
+					// Using name does not return the "status" attribute
+					// https://docs.aws.amazon.com/connect/latest/APIReference/API_ListContactFlowModules.html#API_ListContactFlowModules_ResponseSyntax
+					resource.TestCheckResourceAttrPair(datasourceName, "tags.%", resourceName, "tags.%"),
+				),
+			},
+		},
+	})
+}
+
 func testAccContactFlowModuleBaseDataSourceConfig(rName, rName2 string) string {
 	return fmt.Sprintf(`
 resource "aws_connect_instance" "test" {
@@ -76,3 +107,13 @@ data "aws_connect_contact_flow_module" "test" {
 `)
 }
 
+func testAccContactFlowModuleDataSourceConfig_Name(rName, rName2 string) string {
+	return acctest.ConfigCompose(
+		testAccContactFlowModuleBaseDataSourceConfig(rName, rName2),
+		`
+data "aws_connect_contact_flow_module" "test" {
+  instance_id = aws_connect_instance.test.id
+  name        = aws_connect_contact_flow_module.test.name
+}
+`)
+}
