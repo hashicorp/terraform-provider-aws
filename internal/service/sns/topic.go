@@ -273,7 +273,8 @@ func resourceTopicCreate(d *schema.ResourceData, meta interface{}) error {
 	if input.Tags == nil && len(tags) > 0 {
 		err := UpdateTags(conn, d.Id(), nil, tags)
 
-		if tfawserr.ErrCodeContains(err, "AccessDenied") || tfawserr.ErrCodeContains(err, "InvalidAction") || tfawserr.ErrCodeContains(err, "AuthorizationError") {
+		if v, ok := d.GetOk("tags"); !ok || len(v.(map[string]interface{})) == 0 && (tfawserr.ErrCodeContains(err, "AccessDenied") || tfawserr.ErrCodeContains(err, "InvalidAction") || tfawserr.ErrCodeContains(err, "AuthorizationError")) {
+			// if default tags only, log and continue (i.e., should error if explicitly setting tags and they can't be)
 			log.Printf("[WARN] error adding tags after create for SNS Topic (%s): %s", d.Id(), err)
 			return resourceTopicRead(d, meta)
 		}
@@ -327,7 +328,7 @@ func resourceTopicRead(d *schema.ResourceData, meta interface{}) error {
 
 	if tfawserr.ErrCodeContains(err, "AccessDenied") || tfawserr.ErrCodeContains(err, "AuthorizationError") || tfawserr.ErrCodeContains(err, "InvalidAction") {
 		// ISO partitions may not support tagging, giving error
-		log.Printf("[WARN] Unable to read tags for SNS topic %s: %s", d.Id(), err)
+		log.Printf("[WARN] Unable to list tags for SNS topic %s: %s", d.Id(), err)
 		return nil
 	}
 
