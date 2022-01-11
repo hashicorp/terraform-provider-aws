@@ -855,6 +855,45 @@ func WaitVPNConnectionUpdated(conn *ec2.EC2, id string) (*ec2.VpnConnection, err
 }
 
 const (
+	vpnConnectionRouteCreatedTimeout = 15 * time.Second
+	vpnConnectionRouteDeletedTimeout = 15 * time.Second
+)
+
+func WaitVPNConnectionRouteCreated(conn *ec2.EC2, vpnConnectionID, cidrBlock string) (*ec2.VpnStaticRoute, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{ec2.VpnStatePending},
+		Target:  []string{ec2.VpnStateAvailable},
+		Refresh: StatusVPNConnectionRouteState(conn, vpnConnectionID, cidrBlock),
+		Timeout: vpnConnectionRouteCreatedTimeout,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*ec2.VpnStaticRoute); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func WaitVPNConnectionRouteDeleted(conn *ec2.EC2, vpnConnectionID, cidrBlock string) (*ec2.VpnStaticRoute, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{ec2.VpnStatePending, ec2.VpnStateAvailable, ec2.VpnStateDeleting},
+		Target:  []string{},
+		Refresh: StatusVPNConnectionRouteState(conn, vpnConnectionID, cidrBlock),
+		Timeout: vpnConnectionRouteDeletedTimeout,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*ec2.VpnStaticRoute); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+const (
 	HostCreatedTimeout = 10 * time.Minute
 	HostUpdatedTimeout = 10 * time.Minute
 	HostDeletedTimeout = 20 * time.Minute

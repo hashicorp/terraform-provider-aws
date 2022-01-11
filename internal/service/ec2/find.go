@@ -1268,6 +1268,31 @@ func FindVPNConnection(conn *ec2.EC2, input *ec2.DescribeVpnConnectionsInput) (*
 	return output.VpnConnections[0], nil
 }
 
+func FindVPNConnectionRouteByVPNConnectionIDAndCIDR(conn *ec2.EC2, vpnConnectionID, cidrBlock string) (*ec2.VpnStaticRoute, error) {
+	input := &ec2.DescribeVpnConnectionsInput{
+		Filters: BuildAttributeFilterList(map[string]string{
+			"route.destination-cidr-block": cidrBlock,
+			"vpn-connection-id":            vpnConnectionID,
+		}),
+	}
+
+	output, err := FindVPNConnection(conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	for _, v := range output.Routes {
+		if aws.StringValue(v.DestinationCidrBlock) == cidrBlock && aws.StringValue(v.State) != ec2.VpnStateDeleted {
+			return v, nil
+		}
+	}
+
+	return nil, &resource.NotFoundError{
+		LastError: fmt.Errorf("EC2 VPN Connection (%s) Route (%s) not found", vpnConnectionID, cidrBlock),
+	}
+}
+
 func FindTransitGatewayAttachment(conn *ec2.EC2, input *ec2.DescribeTransitGatewayAttachmentsInput) (*ec2.TransitGatewayAttachment, error) {
 	output, err := FindTransitGatewayAttachments(conn, input)
 
