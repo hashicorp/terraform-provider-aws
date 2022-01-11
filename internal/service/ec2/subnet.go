@@ -37,6 +37,7 @@ func ResourceSubnet() *schema.Resource {
 		SchemaVersion: 1,
 		MigrateState:  SubnetMigrateState,
 
+		// Keep in sync with aws_default_subnet's schema.
 		Schema: map[string]*schema.Schema{
 			"arn": {
 				Type:     schema.TypeString,
@@ -313,13 +314,13 @@ func resourceSubnetRead(d *schema.ResourceData, meta interface{}) error {
 	}, d.IsNewResource())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
-		log.Printf("[WARN] Subnet (%s) not found, removing from state", d.Id())
+		log.Printf("[WARN] EC2 Subnet (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading Subnet (%s): %w", d.Id(), err)
+		return fmt.Errorf("error reading EC2 Subnet (%s): %w", d.Id(), err)
 	}
 
 	subnet := outputRaw.(*ec2.Subnet)
