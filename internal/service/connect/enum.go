@@ -8,7 +8,11 @@ const BotAssociationStatusNotFound = "ResourceNotFoundException"
 const (
 	ListInstancesMaxResults = 10
 	// MaxResults Valid Range: Minimum value of 1. Maximum value of 1000
+	// https://docs.aws.amazon.com/connect/latest/APIReference/API_ListContactFlows.html
 	ListContactFlowsMaxResults = 60
+	// MaxResults Valid Range: Minimum value of 1. Maximum value of 1000
+	// https://docs.aws.amazon.com/connect/latest/APIReference/API_ListContactFlowModules.html
+	ListContactFlowModulesMaxResults = 60
 	// MaxResults Valid Range: Minimum value of 1. Maximum value of 25
 	ListBotsMaxResults = 25
 	// MaxResults Valid Range: Minimum value of 1. Maximum value of 1000
