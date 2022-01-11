@@ -228,7 +228,7 @@ func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
 	if input.Tags == nil && len(tags) > 0 {
 		err := UpdateTags(conn, d.Id(), nil, tags)
 
-		if v, ok := d.GetOk("tags"); !ok || len(v.(map[string]interface{})) == 0 && (tfawserr.ErrCodeContains(err, ecs.ErrCodeAccessDeniedException) || tfawserr.ErrCodeContains(err, ecs.ErrCodeInvalidParameterException) || tfawserr.ErrCodeContains(err, ecs.ErrCodeUnsupportedFeatureException)) {
+		if v, ok := d.GetOk("tags"); (!ok || len(v.(map[string]interface{})) == 0) && (tfawserr.ErrCodeContains(err, ecs.ErrCodeAccessDeniedException) || tfawserr.ErrCodeContains(err, ecs.ErrCodeInvalidParameterException) || tfawserr.ErrCodeContains(err, ecs.ErrCodeUnsupportedFeatureException)) {
 			// If default tags only, log and continue. Otherwise, error.
 			log.Printf("[WARN] error adding tags after create for ECS Cluster (%s): %s", d.Id(), err)
 			return resourceClusterRead(d, meta)
