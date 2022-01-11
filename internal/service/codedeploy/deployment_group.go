@@ -449,7 +449,7 @@ func ResourceDeploymentGroup() *schema.Resource {
 									},
 								},
 							},
-							Set: resourceAwsCodeDeployTagFilterHash,
+							Set: resourceTagFilterHash,
 						},
 					},
 				},
@@ -954,7 +954,7 @@ func buildOnPremisesTagSet(configured []interface{}) *codedeploy.OnPremisesTagSe
 	return &codedeploy.OnPremisesTagSet{OnPremisesTagSetList: filterSets}
 }
 
-// buildTriggerConfigs converts a raw schema list into a list of
+// BuildTriggerConfigs converts a raw schema list into a list of
 // codedeploy.TriggerConfig.
 func BuildTriggerConfigs(configured []interface{}) []*codedeploy.TriggerConfig {
 	configs := make([]*codedeploy.TriggerConfig, 0, len(configured))
