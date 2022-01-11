@@ -1,54 +1,47 @@
-name: Post Publish
+# This GitHub action can publish assets for release when a tag is created.
+# Currently its setup to run on any tag that matches the pattern "v*" (ie. v0.1.0).
+#
+# This uses an action (paultyng/ghaction-import-gpg) that assumes you set your 
+# private key in the `GPG_PRIVATE_KEY` secret and passphrase in the `PASSPHRASE`
+# secret. If you would rather own your own GPG handling, please fork this action
+# or use an alternative one for key handling.
+#
+# You will need to pass the `--batch` flag to `gpg` in your signing step 
+# in `goreleaser` to indicate this is being used in a non-interactive mode.
+#
+name: release
 on:
-  release:
-    types: [published]
+  push:
+    tags:
+      - 'v*'
 jobs:
-  tidy:
-    name: Tidy Asana
+  goreleaser:
     runs-on: ubuntu-latest
     steps:
-      - uses: breathingdust/github-asana-tidy@v1
+      -
+        name: Checkout
+        uses: actions/checkout@v2
+      -
+        name: Unshallow
+        run: git fetch --prune --unshallow
+      -
+        name: Set up Go
+        uses: actions/setup-go@v2
         with:
-          asana_pat: ${{ secrets.asana_pat }}
-          asana_target_section_gid: '1141945723817371'
-          asana_workspace_gid: '90955849329269'
-          asana_project_gid: '632425409545160'
-          asana_github_url_field_gid: '1134594824474912'
-          github_release_name: ${{ github.event.release.tag_name }}
+          go-version: 1.16
+      -
+        name: Import GPG key
+        id: import_gpg
+        uses: paultyng/ghaction-import-gpg@v2.1.0
+        env:
+          GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
+          PASSPHRASE: ${{ secrets.PASSPHRASE }}
+      -
+        name: Run GoReleaser
+        uses: goreleaser/goreleaser-action@v2
+        with:
+          version: latest
+          args: release --rm-dist
+        env:
+          GPG_FINGERPRINT: ${{ steps.import_gpg.outputs.fingerprint }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-  project-archive:
-    name: Archive Released Cards
-    runs-on: ubuntu-latest
-    steps:
-      - uses: breathingdust/github-project-archive@v1
-        with:
-          github_done_column_id: 11513756
-          github_release_name: ${{ github.event.release.tag_name }}
-          github_token: ${{ secrets.ORGSCOPED_GITHUB_TOKEN }}
-  changelog-newversion:
-      runs-on: ubuntu-latest
-      steps:
-        - uses: actions/checkout@v2
-          with:
-            fetch-depth: 0
-            ref: main
-        - run: |
-            CHANGELOG_FILE_NAME="CHANGELOG.md"
-            PREVIOUS_RELEASE_TAG=$(git describe --abbrev=0 --match='v*.*.*' --tags)
-            echo Previous release is: $PREVIOUS_RELEASE_TAG
-
-            NEW_RELEASE_LINE=$(echo $PREVIOUS_RELEASE_TAG | awk -F. '{
-                $1 = substr($1,2)
-                $2 += 1
-                printf("%s.%02d.%s\n\n", $1, $2, $3);
-            }')
-
-            echo New minor version is: v$NEW_RELEASE_LINE
-
-            echo -e "## $NEW_RELEASE_LINE (Unreleased)\n$(cat $CHANGELOG_FILE_NAME)" > $CHANGELOG_FILE_NAME
-        - run: |
-              git config --local user.email changelogbot@hashicorp.com
-              git config --local user.name changelogbot
-              git add CHANGELOG.md
-              git commit -m "Update CHANGELOG.md after ${{ github.event.release.tag_name }}" 
-              git push
