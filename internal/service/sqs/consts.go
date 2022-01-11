@@ -1,7 +1,9 @@
 package sqs
 
 const (
-	ErrCodeInvalidAction = "InvalidAction"
+	ErrCodeInvalidAction      = "InvalidAction"
+	ErrCodeAccessDenied       = "AccessDenied"
+	ErrCodeAuthorizationError = "AuthorizationError"
 )
 
 const (

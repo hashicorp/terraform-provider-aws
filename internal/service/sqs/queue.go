@@ -219,7 +219,7 @@ func resourceQueueCreate(d *schema.ResourceData, meta interface{}) error {
 	}, sqs.ErrCodeQueueDeletedRecently)
 
 	// Some partitions may not support tag-on-create
-	if input.Tags != nil && (tfawserr.ErrCodeContains(err, "AccessDenied") || tfawserr.ErrCodeContains(err, ErrCodeInvalidAction) || tfawserr.ErrCodeContains(err, "AuthorizationError")) {
+	if input.Tags != nil && (tfawserr.ErrCodeContains(err, ErrCodeAccessDenied) || tfawserr.ErrCodeContains(err, ErrCodeInvalidAction) || tfawserr.ErrCodeContains(err, ErrCodeAuthorizationError)) {
 		log.Printf("[WARN] SQS Queue (%s) create failed (%s) with tags. Trying create without tags.", d.Id(), err)
 		input.Tags = nil
 		outputRaw, err = tfresource.RetryWhenAWSErrCodeEquals(queueCreatedTimeout, func() (interface{}, error) {
@@ -243,7 +243,7 @@ func resourceQueueCreate(d *schema.ResourceData, meta interface{}) error {
 	if input.Tags == nil && len(tags) > 0 {
 		err := UpdateTags(conn, d.Id(), nil, tags)
 
-		if v, ok := d.GetOk("tags"); !ok || len(v.(map[string]interface{})) == 0 && (tfawserr.ErrCodeContains(err, "AccessDenied") || tfawserr.ErrCodeContains(err, sqs.ErrCodeUnsupportedOperation) || tfawserr.ErrCodeContains(err, ErrCodeInvalidAction)) {
+		if v, ok := d.GetOk("tags"); !ok || len(v.(map[string]interface{})) == 0 && (tfawserr.ErrCodeContains(err, ErrCodeAccessDenied) || tfawserr.ErrCodeContains(err, sqs.ErrCodeUnsupportedOperation) || tfawserr.ErrCodeContains(err, ErrCodeInvalidAction)) {
 			// if default tags only, log and continue (i.e., should error if explicitly setting tags and they can't be)
 			log.Printf("[WARN] error adding tags after create for SQS Queue (%s): %s", d.Id(), err)
 			return resourceQueueRead(d, meta)
@@ -307,7 +307,7 @@ func resourceQueueRead(d *schema.ResourceData, meta interface{}) error {
 		return ListTags(conn, d.Id())
 	}, sqs.ErrCodeQueueDoesNotExist)
 
-	if tfawserr.ErrCodeContains(err, "AccessDenied") || tfawserr.ErrCodeContains(err, sqs.ErrCodeUnsupportedOperation) || tfawserr.ErrCodeContains(err, ErrCodeInvalidAction) {
+	if tfawserr.ErrCodeContains(err, ErrCodeAccessDenied) || tfawserr.ErrCodeContains(err, sqs.ErrCodeUnsupportedOperation) || tfawserr.ErrCodeContains(err, ErrCodeInvalidAction) {
 		// Some partitions may not support tagging, giving error
 		log.Printf("[WARN] Unable to list tags for SQS Queue %s: %s", d.Id(), err)
 		return nil
@@ -364,7 +364,7 @@ func resourceQueueUpdate(d *schema.ResourceData, meta interface{}) error {
 		o, n := d.GetChange("tags_all")
 		err := UpdateTags(conn, d.Id(), o, n)
 
-		if tfawserr.ErrCodeContains(err, "AccessDenied") || tfawserr.ErrCodeContains(err, "AuthorizationError") || tfawserr.ErrCodeContains(err, "InvalidAction") {
+		if tfawserr.ErrCodeContains(err, ErrCodeAccessDenied) || tfawserr.ErrCodeContains(err, ErrCodeAuthorizationError) || tfawserr.ErrCodeContains(err, ErrCodeInvalidAction) {
 			// Some partitions may not support tagging, giving error
 			log.Printf("[WARN] Unable to update tags for SQS Queue %s: %s", d.Id(), err)
 			return resourceQueueRead(d, meta)
