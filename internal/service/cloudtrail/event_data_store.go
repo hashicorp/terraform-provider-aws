@@ -28,8 +28,8 @@ func ResourceEventDataStore() *schema.Resource {
 		},
 
 		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(snapshotAvailableTimeout),
-			Delete: schema.DefaultTimeout(snapshotDeletedTimeout),
+			Create: schema.DefaultTimeout(eventDataStoreAvailableTimeout),
+			Delete: schema.DefaultTimeout(eventDataStoreDeletedTimeout),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -223,7 +223,7 @@ func resourceEventDataStoreUpdate(ctx context.Context, d *schema.ResourceData, m
 func resourceEventDataStoreDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).CloudTrailConn
 
-	log.Printf("[DEBUG] Deleting Event Data Store: (%s)", d.Id())
+	log.Printf("[DEBUG] Deleting CloudTrail Event Data Store: (%s)", d.Id())
 	_, err := conn.DeleteEventDataStoreWithContext(ctx, &cloudtrail.DeleteEventDataStoreInput{
 		EventDataStore: aws.String(d.Id()),
 	})
@@ -233,7 +233,7 @@ func resourceEventDataStoreDelete(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	if err != nil {
-		return diag.Errorf("error deleting Event Data Store (%s): %s", d.Id(), err)
+		return diag.Errorf("error deleting CloudTrail Event Data Store (%s): %s", d.Id(), err)
 	}
 
 	if err := waitEventDataStoreDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
