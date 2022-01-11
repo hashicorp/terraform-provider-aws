@@ -545,7 +545,7 @@ func resourceTaskDefinitionCreate(d *schema.ResourceData, meta interface{}) erro
 		// If default tags only, log and continue. Otherwise, error.
 		if v, ok := d.GetOk("tags"); (!ok || len(v.(map[string]interface{})) == 0) && (tfawserr.ErrCodeContains(err, ecs.ErrCodeAccessDeniedException) || tfawserr.ErrCodeContains(err, ecs.ErrCodeInvalidParameterException) || tfawserr.ErrCodeContains(err, ecs.ErrCodeUnsupportedFeatureException)) {
 			log.Printf("[WARN] error adding tags after create for ECS Task Definition (%s): %s", d.Id(), err)
-			return resourceServiceRead(d, meta)
+			return resourceTaskDefinitionRead(d, meta)
 		}
 
 		if err != nil {
