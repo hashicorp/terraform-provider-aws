@@ -898,8 +898,8 @@ func Provider() *schema.Provider {
 			"aws_cloudhsm_v2_cluster": cloudhsmv2.ResourceCluster(),
 			"aws_cloudhsm_v2_hsm":     cloudhsmv2.ResourceHSM(),
 
-			"aws_cloudtrail":      cloudtrail.ResourceCloudTrail(),
-			"aws_cloudtrail_lake": cloudtrail.ResourceCloudTrailLake(),
+			"aws_cloudtrail":                  cloudtrail.ResourceCloudTrail(),
+			"aws_cloudtrail_event_data_store": cloudtrail.ResourceEventDataStore(),
 
 			"aws_cloudwatch_composite_alarm": cloudwatch.ResourceCompositeAlarm(),
 			"aws_cloudwatch_dashboard":       cloudwatch.ResourceDashboard(),

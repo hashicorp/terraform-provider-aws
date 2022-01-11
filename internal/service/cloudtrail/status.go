@@ -15,7 +15,7 @@ const (
 	eventDataStoreStatusDeleting  = "pending"
 )
 
-// statusEventDataStore fetches the Event Data Store and its status.
+// statusEventDataStore fetches the CloudTrail Event Data Store and its status.
 func statusEventDataStore(ctx context.Context, conn *cloudtrail.CloudTrail, eventDataStoreName string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		eventDataStore, err := FindEventDataStoreByName(ctx, conn, eventDataStoreName)

@@ -6,6 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudtrail"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -15,12 +16,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-func ResourceCloudTrailLake() *schema.Resource {
+func ResourceEventDataStore() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceCloudTrailLakeCreate,
-		ReadContext:   resourceCloudTrailLakeRead,
-		UpdateContext: resourceCloudTrailLakeUpdate,
-		DeleteContext: resourceCloudTrailLakeDelete,
+		CreateContext: resourceEventDataStoreCreate,
+		ReadContext:   resourceEventDataStoreRead,
+		UpdateContext: resourceEventDataStoreUpdate,
+		DeleteContext: resourceEventDataStoreDelete,
 
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
@@ -36,8 +37,9 @@ func ResourceCloudTrailLake() *schema.Resource {
 		Schema: map[string]*schema.Schema{
 			"name": {
 				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: verify.ValidARN,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringLenBetween(3, 128),
 			},
 			"advanced_event_selector": {
 				Type:          schema.TypeList,
@@ -163,7 +165,7 @@ func ResourceCloudTrailLake() *schema.Resource {
 	}
 }
 
-func resourceCloudTrailLakeCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceEventDataStoreCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).CloudTrailConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
@@ -192,14 +194,51 @@ func resourceCloudTrailLakeCreate(ctx context.Context, d *schema.ResourceData, m
 	_, err := conn.CreateEventDataStoreWithContext(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("error creating Event Data Store (%s): %s", name, err)
+		return diag.Errorf("error creating CloudTrail Event Data Store (%s): %s", name, err)
 	}
 
 	if err := waitEventDataStoreAvailable(ctx, conn, name, d.Timeout(schema.TimeoutCreate)); err != nil {
-		return diag.Errorf("error waiting for Event Data Store (%s) to be created: %s", name, err)
+		return diag.Errorf("error waiting for CloudTrail Event Data Store (%s) to be created: %s", name, err)
 	}
 
 	d.SetId(name)
 
-	return resouceCloudTrailLakeRead(ctx, d, meta)
+	return resourceEventDataStoreRead(ctx, d, meta)
+}
+
+func resourceEventDataStoreUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.AWSClient).CloudTrailConn
+
+	if d.HasChange("tags_all") {
+		o, n := d.GetChange("tags_all")
+
+		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+			return diag.Errorf("error updating CloudTrail Event Data Store (%s) tags: %s", d.Id(), err)
+		}
+	}
+
+	return resourceEventDataStoreRead(ctx, d, meta)
+}
+
+func resourceEventDataStoreDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.AWSClient).CloudTrailConn
+
+	log.Printf("[DEBUG] Deleting Event Data Store: (%s)", d.Id())
+	_, err := conn.DeleteEventDataStoreWithContext(ctx, &cloudtrail.DeleteEventDataStoreInput{
+		EventDataStore: aws.String(d.Id()),
+	})
+
+	if tfawserr.ErrCodeEquals(err, cloudtrail.ErrCodeEventDataStoreNotFoundException) {
+		return nil
+	}
+
+	if err != nil {
+		return diag.Errorf("error deleting Event Data Store (%s): %s", d.Id(), err)
+	}
+
+	if err := waitEventDataStoreDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+		return diag.Errorf("error waiting for CloudTrail Event Data Store (%s) to be deleted: %s", d.Id(), err)
+	}
+
+	return nil
 }
