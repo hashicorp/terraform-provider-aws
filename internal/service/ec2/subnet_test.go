@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -21,6 +22,12 @@ func TestAccEC2Subnet_basic(t *testing.T) {
 	var v ec2.Subnet
 	resourceName := "aws_subnet.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	// Resource-based naming is not available in the AWS Asia Pacific (Jakarta) Region.
+	defaultPrivateDNSHostnameTypeOnLaunch := "ip-name"
+	if acctest.Region() == endpoints.ApSoutheast3RegionID {
+		defaultPrivateDNSHostnameTypeOnLaunch = ""
+	}
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -46,7 +53,7 @@ func TestAccEC2Subnet_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "map_public_ip_on_launch", "false"),
 					resource.TestCheckResourceAttr(resourceName, "outpost_arn", ""),
 					acctest.CheckResourceAttrAccountID(resourceName, "owner_id"),
-					resource.TestCheckResourceAttr(resourceName, "private_dns_hostname_type_on_launch", "ip-name"),
+					resource.TestCheckResourceAttr(resourceName, "private_dns_hostname_type_on_launch", defaultPrivateDNSHostnameTypeOnLaunch),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
@@ -808,6 +815,11 @@ func TestAccEC2Subnet_enableDNS64(t *testing.T) {
 }
 
 func TestAccEC2Subnet_privateDnsNameOptionsOnLaunch(t *testing.T) {
+	// Resource-based naming is not available in the AWS Asia Pacific (Jakarta) Region.
+	if region := acctest.Region(); region == endpoints.ApSoutheast3RegionID {
+		t.Skipf("Resource-based naming is not available in the %s region", region)
+	}
+
 	var subnet ec2.Subnet
 	resourceName := "aws_subnet.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -855,6 +867,11 @@ func TestAccEC2Subnet_privateDnsNameOptionsOnLaunch(t *testing.T) {
 }
 
 func TestAccEC2Subnet_ipv6Native(t *testing.T) {
+	// IPv6-only subnets are not available in the AWS Asia Pacific (Jakarta) Region.
+	if region := acctest.Region(); region == endpoints.ApSoutheast3RegionID {
+		t.Skipf("Resource-based naming is not available in the %s region", region)
+	}
+
 	var v ec2.Subnet
 	resourceName := "aws_subnet.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
