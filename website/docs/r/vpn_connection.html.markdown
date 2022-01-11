@@ -129,6 +129,7 @@ In addition to all arguments above, the following attributes are exported:
 * `id` - The amazon-assigned ID of the VPN connection.
 * `customer_gateway_configuration` - The configuration information for the VPN connection's customer gateway (in the native XML format).
 * `customer_gateway_id` - The ID of the customer gateway to which the connection is attached.
+* `routes` - The static routes associated with the VPN connection. Detailed below.
 * `static_routes_only` - Whether the VPN connection uses static routes exclusively.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
 * `transit_gateway_attachment_id` - When associated with an EC2 Transit Gateway (`transit_gateway_id` argument), the attachment ID. See also the [`aws_ec2_tag` resource](/docs/providers/aws/r/ec2_tag.html) for tagging the EC2 Transit Gateway VPN Attachment.
@@ -144,8 +145,22 @@ In addition to all arguments above, the following attributes are exported:
 * `tunnel2_preshared_key` - The preshared key of the second VPN tunnel.
 * `tunnel2_bgp_asn` - The bgp asn number of the second VPN tunnel.
 * `tunnel2_bgp_holdtime` - The bgp holdtime of the second VPN tunnel.
+* `vgw_telemetry` - Telemetry for the VPN tunnels. Detailed below.
 * `vpn_gateway_id` - The ID of the virtual private gateway to which the connection is attached.
 
+### routes
+
+* `destination_cidr_block` - The CIDR block associated with the local subnet of the customer data center.
+* `source` - Indicates how the routes were provided.
+* `state` - The current state of the static route.
+
+### vgw_telemetry
+
+* `accepted_route_count` - The number of accepted routes.
+* `last_status_change` - The date and time of the last change in status.
+* `outside_ip_address` - The Internet-routable IP address of the virtual private gateway's outside interface.
+* `status` - The status of the VPN tunnel.
+* `status_message` - If an error occurs, a description of the error.
 
 ## Import
 
