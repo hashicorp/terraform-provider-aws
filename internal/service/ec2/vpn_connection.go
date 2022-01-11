@@ -993,7 +993,6 @@ func flattenTunnelOption(d *schema.ResourceData, prefix string, apiObject *ec2.T
 		i = append(i, v.Value)
 	}
 	d.Set(prefix+"phase2_dh_group_numbers", aws.Int64ValueSlice(i))
-	i = nil //nolint:ineffassign
 
 	for _, v := range apiObject.Phase2EncryptionAlgorithms {
 		s = append(s, v.Value)
@@ -1005,7 +1004,6 @@ func flattenTunnelOption(d *schema.ResourceData, prefix string, apiObject *ec2.T
 		s = append(s, v.Value)
 	}
 	d.Set(prefix+"phase2_integrity_algorithms", aws.StringValueSlice(s))
-	s = nil //nolint:ineffassign
 
 	d.Set(prefix+"phase2_lifetime_seconds", apiObject.Phase2LifetimeSeconds)
 
