@@ -243,7 +243,7 @@ func resourceQueueCreate(d *schema.ResourceData, meta interface{}) error {
 	if input.Tags == nil && len(tags) > 0 {
 		err := UpdateTags(conn, d.Id(), nil, tags)
 
-		if v, ok := d.GetOk("tags"); !ok || len(v.(map[string]interface{})) == 0 && (tfawserr.ErrCodeContains(err, ErrCodeAccessDenied) || tfawserr.ErrCodeContains(err, ErrCodeAuthorizationError) || tfawserr.ErrCodeContains(err, ErrCodeInvalidAction) || tfawserr.ErrCodeContains(err, sqs.ErrCodeUnsupportedOperation)) {
+		if v, ok := d.GetOk("tags"); (!ok || len(v.(map[string]interface{})) == 0) && (tfawserr.ErrCodeContains(err, ErrCodeAccessDenied) || tfawserr.ErrCodeContains(err, ErrCodeAuthorizationError) || tfawserr.ErrCodeContains(err, ErrCodeInvalidAction) || tfawserr.ErrCodeContains(err, sqs.ErrCodeUnsupportedOperation)) {
 			// if default tags only, log and continue (i.e., should error if explicitly setting tags and they can't be)
 			log.Printf("[WARN] error adding tags after create for SQS Queue (%s): %s", d.Id(), err)
 			return resourceQueueRead(d, meta)
