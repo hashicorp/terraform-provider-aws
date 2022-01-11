@@ -157,6 +157,7 @@ In addition to all arguments above, the following attributes are exported:
 ### vgw_telemetry
 
 * `accepted_route_count` - The number of accepted routes.
+* `certificate_arn` - The Amazon Resource Name (ARN) of the VPN tunnel endpoint certificate.
 * `last_status_change` - The date and time of the last change in status.
 * `outside_ip_address` - The Internet-routable IP address of the virtual private gateway's outside interface.
 * `status` - The status of the VPN tunnel.

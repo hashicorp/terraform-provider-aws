@@ -5,3 +5,7 @@ resource/aws_vpn_connection: `customer_gateway_id`, `transit_gateway_id` and `vp
 ```release-note:enhancement
 resource/aws_vpn_connection: `tunnel1_preshared_key` and `tunnel2_preshared_key` can be updated without recreating the resource
 ```
+
+```release-note:enhancement
+resource/aws_vpn_connection: Add `vgw_telemetry.certificate_arn` attribute
+```

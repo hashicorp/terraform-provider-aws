@@ -370,6 +370,10 @@ func ResourceVPNConnection() *schema.Resource {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},
+						"certificate_arn": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
 						"last_status_change": {
 							Type:     schema.TypeString,
 							Computed: true,
@@ -1062,6 +1066,10 @@ func flattenVgwTelemetry(apiObject *ec2.VgwTelemetry) map[string]interface{} {
 
 	if v := apiObject.AcceptedRouteCount; v != nil {
 		tfMap["accepted_route_count"] = aws.Int64Value(v)
+	}
+
+	if v := apiObject.CertificateArn; v != nil {
+		tfMap["certificate_arn"] = aws.StringValue(v)
 	}
 
 	if v := apiObject.LastStatusChange; v != nil {
