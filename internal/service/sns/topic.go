@@ -250,7 +250,7 @@ func resourceTopicCreate(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG] Creating SNS Topic: %s", input)
 	output, err := conn.CreateTopic(input)
 
-	// ISO partitions may not support tagging, giving error
+	// Some partitions may not support tag-on-create
 	if input.Tags != nil && (tfawserr.ErrCodeContains(err, "AccessDenied") || tfawserr.ErrCodeContains(err, "InvalidAction") || tfawserr.ErrCodeContains(err, "AuthorizationError")) {
 		log.Printf("[WARN] SNS Topic (%s) create failed (%s) with tags. Trying create without tags.", d.Id(), err)
 		input.Tags = nil
