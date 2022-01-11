@@ -31,8 +31,6 @@ func TestAccConnectContactFlowModuleDataSource_contactFlowModuleID(t *testing.T)
 					resource.TestCheckResourceAttrPair(datasourceName, "description", resourceName, "description"),
 					resource.TestCheckResourceAttrPair(datasourceName, "content", resourceName, "content"),
 					resource.TestCheckResourceAttrSet(datasourceName, "state"),
-					// Using contact_flow_module_id returns the "status" attribute
-					// https://docs.aws.amazon.com/connect/latest/APIReference/API_DescribeContactFlowModule.html#API_DescribeContactFlowModule_ResponseSyntax
 					resource.TestCheckResourceAttrSet(datasourceName, "status"),
 					resource.TestCheckResourceAttrPair(datasourceName, "tags.%", resourceName, "tags.%"),
 				),
@@ -63,8 +61,7 @@ func TestAccConnectContactFlowModuleDataSource_name(t *testing.T) {
 					resource.TestCheckResourceAttrPair(datasourceName, "description", resourceName, "description"),
 					resource.TestCheckResourceAttrPair(datasourceName, "content", resourceName, "content"),
 					resource.TestCheckResourceAttrSet(datasourceName, "state"),
-					// Using name does not return the "status" attribute
-					// https://docs.aws.amazon.com/connect/latest/APIReference/API_ListContactFlowModules.html#API_ListContactFlowModules_ResponseSyntax
+					resource.TestCheckResourceAttrSet(datasourceName, "status"),
 					resource.TestCheckResourceAttrPair(datasourceName, "tags.%", resourceName, "tags.%"),
 				),
 			},
