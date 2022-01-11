@@ -6,11 +6,11 @@ import (
 	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func ResourceVPNConnectionRoute() *schema.Resource {
@@ -70,14 +70,20 @@ func resourceVPNConnectionRouteRead(d *schema.ResourceData, meta interface{}) er
 		return err
 	}
 
-	route, err := findConnectionRoute(conn, cidrBlock, vpnConnectionID)
-	if err != nil {
-		return err
-	}
-	if route == nil {
-		// Something other than terraform eliminated the route.
+	_, err = FindVPNConnectionRouteByVPNConnectionIDAndCIDR(conn, vpnConnectionID, cidrBlock)
+
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] EC2 VPN Connection Route (%s) not found, removing from state", d.Id())
 		d.SetId("")
+		return nil
 	}
+
+	if err != nil {
+		return fmt.Errorf("error reading EC2 VPN Connection Route (%s): %w", d.Id(), err)
+	}
+
+	d.Set("destination_cidr_block", cidrBlock)
+	d.Set("vpn_connection_id", vpnConnectionID)
 
 	return nil
 }
@@ -110,38 +116,6 @@ func resourceVPNConnectionRouteDelete(d *schema.ResourceData, meta interface{}) 
 	}
 
 	return nil
-}
-
-func findConnectionRoute(conn *ec2.EC2, cidrBlock, vpnConnectionId string) (*ec2.VpnStaticRoute, error) {
-	resp, err := conn.DescribeVpnConnections(&ec2.DescribeVpnConnectionsInput{
-		Filters: []*ec2.Filter{
-			{
-				Name:   aws.String("route.destination-cidr-block"),
-				Values: []*string{aws.String(cidrBlock)},
-			},
-			{
-				Name:   aws.String("vpn-connection-id"),
-				Values: []*string{aws.String(vpnConnectionId)},
-			},
-		},
-	})
-	if err != nil {
-		if ec2err, ok := err.(awserr.Error); ok && ec2err.Code() == "InvalidVpnConnectionID.NotFound" {
-			return nil, nil
-		}
-		return nil, err
-	}
-	if resp == nil || len(resp.VpnConnections) == 0 {
-		return nil, nil
-	}
-	vpnConnection := resp.VpnConnections[0]
-
-	for _, r := range vpnConnection.Routes {
-		if aws.StringValue(r.DestinationCidrBlock) == cidrBlock && aws.StringValue(r.State) != "deleted" {
-			return r, nil
-		}
-	}
-	return nil, nil
 }
 
 const vpnConnectionRouteResourceIDSeparator = ":"
