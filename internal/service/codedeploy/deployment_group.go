@@ -440,7 +440,7 @@ func ResourceDeploymentGroup() *schema.Resource {
 									"type": {
 										Type:         schema.TypeString,
 										Optional:     true,
-										ValidateFunc: validateTagFilters,
+										ValidateFunc: validTagFilters,
 									},
 
 									"value": {
@@ -694,11 +694,11 @@ func resourceDeploymentGroupRead(d *schema.ResourceData, meta interface{}) error
 	}
 
 	if err := d.Set("on_premises_tag_set", onPremisesTagSetToMap(resp.DeploymentGroupInfo.OnPremisesTagSet)); err != nil {
-		return err
+		return fmt.Errorf("error setting on_premises_instance_tag_filter: %w", err)
 	}
 
-	if err := d.Set("trigger_configuration", triggerConfigsToMap(resp.DeploymentGroupInfo.TriggerConfigurations)); err != nil {
-		return err
+	if err := d.Set("trigger_configuration", TriggerConfigsToMap(group.TriggerConfigurations)); err != nil {
+		return fmt.Errorf("error setting trigger_configuration: %w", err)
 	}
 
 	if err := d.Set("auto_rollback_configuration", AutoRollbackConfigToMap(group.AutoRollbackConfiguration)); err != nil {
@@ -1302,8 +1302,8 @@ func onPremisesTagSetToMap(tagSet *codedeploy.OnPremisesTagSet) []map[string]int
 	return result
 }
 
-// triggerConfigsToMap converts a list of []*codedeploy.TriggerConfig into a []map[string]interface{}
-func triggerConfigsToMap(list []*codedeploy.TriggerConfig) []map[string]interface{} {
+// TriggerConfigsToMap converts a list of []*codedeploy.TriggerConfig into a []map[string]interface{}
+func TriggerConfigsToMap(list []*codedeploy.TriggerConfig) []map[string]interface{} {
 	result := make([]map[string]interface{}, 0, len(list))
 	for _, tc := range list {
 		item := make(map[string]interface{})
@@ -1574,7 +1574,7 @@ func resourceAwsCodeDeployOnPremTagSetHash(v interface{}) int {
 	return int(x)
 }
 
-func resourceAwsCodeDeployTriggerConfigHash(v interface{}) int {
+func resourceTriggerHashConfig(v interface{}) int {
 	var buf bytes.Buffer
 	m := v.(map[string]interface{})
 	buf.WriteString(fmt.Sprintf("%s-", m["trigger_name"].(string)))
