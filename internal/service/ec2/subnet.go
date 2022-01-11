@@ -604,3 +604,34 @@ func resourceSubnetDelete(d *schema.ResourceData, meta interface{}) error {
 
 	return nil
 }
+
+// modifySubnetAttributesOnCreate sets subnet attributes on resource Create.
+// Called after new subnet creation or existing default subnet adoption.
+func modifySubnetAttributesOnCreate(conn *ec2.EC2, d *schema.ResourceData, subnet *ec2.Subnet) error {
+	if new, old := d.Get("map_public_ip_on_launch").(bool), aws.BoolValue(subnet.MapPublicIpOnLaunch); old != new {
+		if err := modifySubnetMapPublicIpOnLaunch(conn, d.Id(), new); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func modifySubnetMapPublicIpOnLaunch(conn *ec2.EC2, subnetID string, v bool) error {
+	input := &ec2.ModifySubnetAttributeInput{
+		MapPublicIpOnLaunch: &ec2.AttributeBooleanValue{
+			Value: aws.Bool(v),
+		},
+		SubnetId: aws.String(subnetID),
+	}
+
+	if _, err := conn.ModifySubnetAttribute(input); err != nil {
+		return fmt.Errorf("error setting EC2 Subnet (%s) MapPublicIpOnLaunch: %w", subnetID, err)
+	}
+
+	if _, err := WaitSubnetMapPublicIPOnLaunchUpdated(conn, subnetID, v); err != nil {
+		return fmt.Errorf("error waiting for EC2 Subnet (%s) MapPublicIpOnLaunch update: %w", subnetID, err)
+	}
+
+	return nil
+}
