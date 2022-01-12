@@ -40,6 +40,40 @@ func FindAccountAssignment(conn *ssoadmin.SSOAdmin, principalId, principalType, 
 	return accountAssignment, err
 }
 
+// FindAccountAssignmentPrincipals returns the principal ids assigned to a permission set within a specified SSO instance.
+func FindAccountAssignmentPrincipals(conn *ssoadmin.SSOAdmin, principalType, accountId, permissionSetArn, instanceArn string) ([]*string, error) {
+	input := &ssoadmin.ListAccountAssignmentsInput{
+		AccountId:        aws.String(accountId),
+		InstanceArn:      aws.String(instanceArn),
+		PermissionSetArn: aws.String(permissionSetArn),
+	}
+
+	var principalIds []*string
+
+	err := conn.ListAccountAssignmentsPages(input, func(page *ssoadmin.ListAccountAssignmentsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, a := range page.AccountAssignments {
+			if a == nil {
+				continue
+			}
+
+			if aws.StringValue(a.PrincipalType) != principalType {
+				continue
+			}
+			
+			principalIds = append(principalIds, a.PrincipalId)
+			}
+		}
+
+		return !lastPage
+	})
+
+	return principalIds, err
+}
+
 // FindManagedPolicy returns the managed policy attached to a permission set within a specified SSO instance.
 // Returns an error if no managed policy is found.
 func FindManagedPolicy(conn *ssoadmin.SSOAdmin, managedPolicyArn, permissionSetArn, instanceArn string) (*ssoadmin.AttachedManagedPolicy, error) {

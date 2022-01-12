@@ -1693,6 +1693,7 @@ func Provider() *schema.Provider {
 			"aws_ssm_resource_data_sync":        ssm.ResourceResourceDataSync(),
 
 			"aws_ssoadmin_account_assignment":           ssoadmin.ResourceAccountAssignment(),
+			"aws_ssoadmin_account_assignments":           ssoadmin.ResourceAccountAssignments(),
 			"aws_ssoadmin_managed_policy_attachment":    ssoadmin.ResourceManagedPolicyAttachment(),
 			"aws_ssoadmin_permission_set":               ssoadmin.ResourcePermissionSet(),
 			"aws_ssoadmin_permission_set_inline_policy": ssoadmin.ResourcePermissionSetInlinePolicy(),
