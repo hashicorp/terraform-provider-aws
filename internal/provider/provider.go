@@ -952,8 +952,9 @@ func Provider() *schema.Provider {
 
 			"aws_codestarnotifications_notification_rule": codestarnotifications.ResourceNotificationRule(),
 
-			"aws_cognito_identity_pool":                  cognitoidentity.ResourcePool(),
-			"aws_cognito_identity_pool_roles_attachment": cognitoidentity.ResourcePoolRolesAttachment(),
+			"aws_cognito_identity_pool":                        cognitoidentity.ResourcePool(),
+			"aws_cognito_identity_pool_provider_principal_tag": cognitoidentity.ResourcePoolProviderPrincipalTag(),
+			"aws_cognito_identity_pool_roles_attachment":       cognitoidentity.ResourcePoolRolesAttachment(),
 
 			"aws_cognito_identity_provider":          cognitoidp.ResourceIdentityProvider(),
 			"aws_cognito_resource_server":            cognitoidp.ResourceResourceServer(),
