@@ -42,7 +42,7 @@ resource "aws_ssoadmin_account_assignments" "example" {
   instance_arn       = data.aws_ssoadmin_permission_set.example.instance_arn
   permission_set_arn = data.aws_ssoadmin_permission_set.example.arn
 
-  principal_ids  = [
+  principal_ids = [
     data.aws_identitystore_group.example1.group_id,
     data.aws_identitystore_group.example2.group_id
   ]
