@@ -30,7 +30,7 @@ resource "aws_secretsmanager_secret_policy" "example" {
 	  "Sid": "EnableAnotherAWSAccountToReadTheSecret",
 	  "Effect": "Allow",
 	  "Principal": {
-		"AWS": "arn:aws:iam::111122223333:root"
+		"AWS": "arn:aws:iam::123456789012:root"
 	  },
 	  "Action": "secretsmanager:GetSecretValue",
 	  "Resource": "*"
