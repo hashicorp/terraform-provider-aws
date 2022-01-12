@@ -3,12 +3,12 @@
 FEATURES:
 
 * **New Data Source:** `aws_cognito_user_pool_client` ([#22477](https://github.com/hashicorp/terraform-provider-aws/issues/22477))
+* **New Resource:** `aws_cognito_identity_pool_provider_principal_tag` ([#22514](https://github.com/hashicorp/terraform-provider-aws/issues/22514))
 * **New Resource:** `aws_connect_contact_flow_module` ([#22349](https://github.com/hashicorp/terraform-provider-aws/issues/22349))
 * **New Resource:** `aws_connect_quick_connect` ([#22250](https://github.com/hashicorp/terraform-provider-aws/issues/22250))
 * **New Resource:** `aws_devicefarm_instance_profile` ([#22458](https://github.com/hashicorp/terraform-provider-aws/issues/22458))
 * **New Resource:** `aws_memorydb_snapshot` ([#22486](https://github.com/hashicorp/terraform-provider-aws/issues/22486))
-* **New Resource:** `resource/aws_cognito_identity_pool_provider_principal_tag` ([#22514](https://github.com/hashicorp/terraform-provider-aws/issues/22514))
-* **New Resource:** `resource/aws_shield_protection_health_check_association` ([#21993](https://github.com/hashicorp/terraform-provider-aws/issues/21993))
+* **New Resource:** `aws_shield_protection_health_check_association` ([#21993](https://github.com/hashicorp/terraform-provider-aws/issues/21993))
 
 ENHANCEMENTS:
 
