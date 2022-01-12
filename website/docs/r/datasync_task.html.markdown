@@ -99,7 +99,12 @@ The following arguments are supported inside the `options` configuration block:
 ### excludes Argument Reference
 
 * `filter_type` - (Optional) The type of filter rule to apply. Valid values: `SIMPLE_PATTERN`.
-* `value` - (Optional) A single filter string that consists of the patterns to include or exclude. The patterns are delimited by "|" (that is, a pipe), for example: `/folder1|/folder2`
+* `value` - (Optional) A single filter string that consists of the patterns to exclude. The patterns are delimited by "|" (that is, a pipe), for example: `/folder1|/folder2`
+
+### includes Argument Reference
+
+* `filter_type` - (Optional) The type of filter rule to apply. Valid values: `SIMPLE_PATTERN`.
+* `value` - (Optional) A single filter string that consists of the patterns to include. The patterns are delimited by "|" (that is, a pipe), for example: `/folder1|/folder2`
 
 ## Attributes Reference
 
