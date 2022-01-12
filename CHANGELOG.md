@@ -14,6 +14,7 @@ ENHANCEMENTS:
 
 * data-source/aws_customer_gateway: Add `certificate_arn` attribute ([#22435](https://github.com/hashicorp/terraform-provider-aws/issues/22435))
 * data-source/aws_ebs_snapshot: Add `storage_tier` and `outpost_arn` attributes. ([#22342](https://github.com/hashicorp/terraform-provider-aws/issues/22342))
+* data-source/aws_ecr_repository: Allow some `tags` errors to be non-fatal to support non-standard AWS partitions (i.e., ISO) ([#22535](https://github.com/hashicorp/terraform-provider-aws/issues/22535))
 * data-source/aws_eks_cluster: Add `ip_family` to the `kubernetes_network_config` configuration block ([#22485](https://github.com/hashicorp/terraform-provider-aws/issues/22485))
 * data-source/aws_elb_service_account: Add account ID for `ap-southeast-3` AWS Region ([#22453](https://github.com/hashicorp/terraform-provider-aws/issues/22453))
 * data-source/aws_instance: Add the `instance_metadata_tags` attribute to the `metadata_options` configuration block ([#22463](https://github.com/hashicorp/terraform-provider-aws/issues/22463))
@@ -38,6 +39,7 @@ ENHANCEMENTS:
 * resource/aws_ebs_snapshot: Add `outpost_arn`, `storage_tier`, `permanent_restore`, `temporary_restore_days` arguments ([#22342](https://github.com/hashicorp/terraform-provider-aws/issues/22342))
 * resource/aws_ebs_snapshot_copy: Add `storage_tier`, `permanent_restore`, `temporary_restore_days` arguments ([#22342](https://github.com/hashicorp/terraform-provider-aws/issues/22342))
 * resource/aws_ebs_snapshot_import: Add `storage_tier`, `permanent_restore`, `temporary_restore_days` arguments ([#22342](https://github.com/hashicorp/terraform-provider-aws/issues/22342))
+* resource/aws_ecr_repository: Attempt `tags`-on-create, fallback to tag after create, and allow some `tags` errors to be non-fatal to support non-standard AWS partitions (i.e., ISO) ([#22535](https://github.com/hashicorp/terraform-provider-aws/issues/22535))
 * resource/aws_ecs_task_definition: Add `skip_destroy` argument to optionally prevent overwriting previous revision ([#22269](https://github.com/hashicorp/terraform-provider-aws/issues/22269))
 * resource/aws_ecs_task_definition: Add plan time validation for `family` ([#18610](https://github.com/hashicorp/terraform-provider-aws/issues/18610))
 * resource/aws_eks_cluster: Add `ip_family` to the `kubernetes_network_config` configuration block ([#22485](https://github.com/hashicorp/terraform-provider-aws/issues/22485))
