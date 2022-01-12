@@ -6,6 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -13,8 +14,9 @@ import (
 )
 
 func TestAccEC2EgressOnlyInternetGateway_basic(t *testing.T) {
-	var igw ec2.EgressOnlyInternetGateway
+	var v ec2.EgressOnlyInternetGateway
 	resourceName := "aws_egress_only_internet_gateway.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -23,9 +25,9 @@ func TestAccEC2EgressOnlyInternetGateway_basic(t *testing.T) {
 		CheckDestroy: testAccCheckEgressOnlyInternetGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEgressOnlyInternetGatewayConfig_basic,
+				Config: testAccEgressOnlyInternetGatewayConfig(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckEgressOnlyInternetGatewayExists(resourceName, &igw),
+					testAccCheckEgressOnlyInternetGatewayExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
@@ -41,6 +43,7 @@ func TestAccEC2EgressOnlyInternetGateway_basic(t *testing.T) {
 func TestAccEC2EgressOnlyInternetGateway_tags(t *testing.T) {
 	var v ec2.EgressOnlyInternetGateway
 	resourceName := "aws_egress_only_internet_gateway.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -49,7 +52,7 @@ func TestAccEC2EgressOnlyInternetGateway_tags(t *testing.T) {
 		CheckDestroy: testAccCheckEgressOnlyInternetGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEgressOnlyInternetGatewayTags1Config("key1", "value1"),
+				Config: testAccEgressOnlyInternetGatewayTags1Config(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEgressOnlyInternetGatewayExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -62,7 +65,7 @@ func TestAccEC2EgressOnlyInternetGateway_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccEgressOnlyInternetGatewayTags2Config("key1", "value1updated", "key2", "value2"),
+				Config: testAccEgressOnlyInternetGatewayTags2Config(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEgressOnlyInternetGatewayExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -71,7 +74,7 @@ func TestAccEC2EgressOnlyInternetGateway_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccEgressOnlyInternetGatewayTags1Config("key2", "value2"),
+				Config: testAccEgressOnlyInternetGatewayTags1Config(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEgressOnlyInternetGatewayExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -135,28 +138,30 @@ func testAccCheckEgressOnlyInternetGatewayExists(n string, igw *ec2.EgressOnlyIn
 	}
 }
 
-const testAccEgressOnlyInternetGatewayConfig_basic = `
+func testAccEgressOnlyInternetGatewayConfig(rName string) string {
+	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block                       = "10.1.0.0/16"
   assign_generated_ipv6_cidr_block = true
 
   tags = {
-    Name = "terraform-testacc-egress-only-igw-basic"
+    Name = %[1]q
   }
 }
 
 resource "aws_egress_only_internet_gateway" "test" {
   vpc_id = aws_vpc.test.id
 }
-`
+`, rName)
+}
 
-func testAccEgressOnlyInternetGatewayTags1Config(tagKey1, tagValue1 string) string {
+func testAccEgressOnlyInternetGatewayTags1Config(rName, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
 
   tags = {
-    Name = "terraform-testacc-egress-only-igw-tags"
+    Name = %[1]q
   }
 }
 
@@ -164,19 +169,19 @@ resource "aws_egress_only_internet_gateway" "test" {
   vpc_id = aws_vpc.test.id
 
   tags = {
-    %[1]q = %[2]q
+    %[2]q = %[3]q
   }
 }
-`, tagKey1, tagValue1)
+`, rName, tagKey1, tagValue1)
 }
 
-func testAccEgressOnlyInternetGatewayTags2Config(tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccEgressOnlyInternetGatewayTags2Config(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
 
   tags = {
-    Name = "terraform-testacc-egress-only-igw-tags"
+    Name = %[1]q
   }
 }
 
@@ -184,9 +189,9 @@ resource "aws_egress_only_internet_gateway" "test" {
   vpc_id = aws_vpc.test.id
 
   tags = {
-    %[1]q = %[2]q
-    %[3]q = %[4]q
+    %[2]q = %[3]q
+    %[4]q = %[5]q
   }
 }
-`, tagKey1, tagValue1, tagKey2, tagValue2)
+`, rName, tagKey1, tagValue1, tagKey2, tagValue2)
 }

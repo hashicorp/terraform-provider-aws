@@ -23,6 +23,7 @@ const (
 	ErrCodeInvalidCarrierGatewayIDNotFound           = "InvalidCarrierGatewayID.NotFound"
 	ErrCodeInvalidCustomerGatewayIDNotFound          = "InvalidCustomerGatewayID.NotFound"
 	ErrCodeInvalidFlowLogIdNotFound                  = "InvalidFlowLogId.NotFound"
+	ErrCodeInvalidGatewayIDNotFound                  = "InvalidGatewayID.NotFound"
 	ErrCodeInvalidGroupNotFound                      = "InvalidGroup.NotFound"
 	ErrCodeInvalidHostIDNotFound                     = "InvalidHostID.NotFound"
 	ErrCodeInvalidInstanceIDNotFound                 = "InvalidInstanceID.NotFound"
