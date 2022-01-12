@@ -112,7 +112,7 @@ resource "aws_spot_fleet_request" "foo" {
 -> In this example, we use a [`dynamic` block](/docs/configuration/expressions.html#dynamic-blocks) to define zero or more `launch_specification` blocks, producing one for each element in the list of subnet ids.
 
 ```terraform
-resource "aws_spot_fleet_request" "cheap_compute" {
+resource "aws_spot_fleet_request" "example" {
   iam_fleet_role                      = "arn:aws:iam::12345678:role/spot-fleet"
   target_capacity                     = 3
   valid_until                         = "2019-11-04T20:44:20Z"
@@ -120,16 +120,18 @@ resource "aws_spot_fleet_request" "cheap_compute" {
   fleet_type                          = request
   wait_for_fulfillment                = true
   terminate_instances_with_expiration = true
-  
+
+
   dynamic "launch_specification" {
+
     for_each = [for s in var.subnets : {
       subnet_id = s[1]
     }]
     content {
-      ami                         = "ami-1234"
-      instance_type               = "m4.4xlarge"
-      subnet_id                   = launch_specification.value.subnet_id
-      vpc_security_group_ids      = "sg-123456"
+      ami                    = "ami-1234"
+      instance_type          = "m4.4xlarge"
+      subnet_id              = launch_specification.value.subnet_id
+      vpc_security_group_ids = "sg-123456"
 
       root_block_device {
         volume_size           = "8"
