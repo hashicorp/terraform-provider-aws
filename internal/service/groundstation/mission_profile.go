@@ -5,14 +5,14 @@ import (
 	"log"
 	"regexp"
 
+	"github.com/Allieway/terraform-provider-aws/internal/conns"
+	tftags "github.com/Allieway/terraform-provider-aws/internal/tags"
+	"github.com/Allieway/terraform-provider-aws/internal/verify"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/groundstation"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceMissionProfile() *schema.Resource {
@@ -90,7 +90,7 @@ func resourceMissionProfileCreate(d *schema.ResourceData, meta interface{}) erro
 	}
 
 	d.SetId(aws.StringValue(output.MissionProfileId))
-	input.SetDataflowEdges(d.Get("dataflow_edges").([][]string))
+	input.SetDataflowEdges(d.Get("dataflow_edges").([][]*string))
 	return resourceMissionProfileRead(d, meta)
 }
 
@@ -144,11 +144,11 @@ func resourceMissionProfileUpdate(d *schema.ResourceData, meta interface{}) erro
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := UpdateTags(conn, d.Id(), o, n, "MissionProfile"); err != nil {
+		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
 			return fmt.Errorf("error updating tags: %s", err)
 		}
 	}
-	input.SetDataflowEdges(d.Get("dataflow_edges").([][]string))
+	input.SetDataflowEdges(d.Get("dataflow_edges").([][]*string))
 	return resourceMissionProfileRead(d, meta)
 }
 

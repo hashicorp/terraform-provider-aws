@@ -4,10 +4,10 @@ package groundstation
 import (
 	"fmt"
 
+	tftags "github.com/Allieway/terraform-provider-aws/internal/tags"
+	"github.com/Allieway/terraform-provider-aws/internal/tfresource"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/groundstation"
-	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 // GetTag fetches an individual groundstation service tag for a resource.

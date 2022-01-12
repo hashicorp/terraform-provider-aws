@@ -3,11 +3,11 @@ package groundstation_test
 import (
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/groundstation"
+	tfgroundstation "github.com/Allieway/terraform-provider-aws/internal/service/groundstation"
 )
 
 func TestResourceMissionProfile(t *testing.T) {
-	r := ResourceMissionProfile()
+	r := tfgroundstation.ResourceMissionProfile()
 	if r.Schema["contact_post_pass_duration_seconds"].Required {
 		t.Errorf("Expected contact_post_pass_duration_seconds to not be required")
 	}
@@ -26,7 +26,7 @@ func TestResourceMissionProfile(t *testing.T) {
 }
 
 func TestResourceMissionProfileCreate(t *testing.T) {
-	r := ResourceMissionProfile()
+	r := tfgroundstation.ResourceMissionProfile()
 	d := r.TestResourceData()
 	d.SetId("test")
 	d.Set("name", "test")
@@ -44,7 +44,7 @@ func TestResourceMissionProfileCreate(t *testing.T) {
 }
 
 func TestResourceMissionProfileRead(t *testing.T) {
-	r := resourceMissionProfile()
+	r := tfgroundstation.ResourceMissionProfile()
 	d := r.TestResourceData()
 	d.SetId("test")
 	d.Set("name", "test")
@@ -62,7 +62,7 @@ func TestResourceMissionProfileRead(t *testing.T) {
 }
 
 func TestResourceMissionProfileUpdate(t *testing.T) {
-	r := resourceMissionProfile()
+	r := tfgroundstation.ResourceMissionProfile()
 	d := r.TestResourceData()
 	d.SetId("test")
 	d.Set("name", "test")
@@ -80,7 +80,7 @@ func TestResourceMissionProfileUpdate(t *testing.T) {
 }
 
 func TestResourceMissionProfileDelete(t *testing.T) {
-	r := resourceMissionProfile()
+	r := tfgroundstation.ResourceMissionProfile()
 	d := r.TestResourceData()
 	d.SetId("test")
 	d.Set("name", "test")
