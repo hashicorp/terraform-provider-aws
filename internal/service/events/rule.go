@@ -202,8 +202,8 @@ func resourceRuleRead(d *schema.ResourceData, meta interface{}) error {
 
 	tags, err := ListTags(conn, arn)
 
+	// ISO partitions may not support tagging, giving error
 	if tfawserr.ErrCodeContains(err, ErrCodeAccessDenied) || tfawserr.ErrCodeContains(err, eventbridge.ErrCodeInternalException) || tfawserr.ErrCodeContains(err, eventbridge.ErrCodeOperationDisabledException) {
-		// ISO partitions may not support tagging, giving error
 		log.Printf("[WARN] Unable to list tags for EventBridge Rule %s: %s", d.Id(), err)
 		return nil
 	}
