@@ -65,6 +65,7 @@ BUG FIXES:
 * resource/aws_fsx_openzfs_file_system: Fix crash with nil `root_volume_configuration.nfs_exports` value ([#22480](https://github.com/hashicorp/terraform-provider-aws/issues/22480))
 * resource/aws_memorydb_cluster: Correctly propagate configurable timeouts to waiters. ([#22489](https://github.com/hashicorp/terraform-provider-aws/issues/22489))
 * resource/aws_route53_record: Fix import with underscores in names ([#21556](https://github.com/hashicorp/terraform-provider-aws/issues/21556))
+* resource/aws_sqs_queue: Don't timeout when a queue policy `Condition` value contains an empty array ([#22547](https://github.com/hashicorp/terraform-provider-aws/issues/22547))
 * resource/aws_ssm_parameter: Mark `version` as Computed when `value` changes ([#22522](https://github.com/hashicorp/terraform-provider-aws/issues/22522))
 * resource/aws_subnet: Resource-based naming is not available in the `ap-southeast-3` region ([#22531](https://github.com/hashicorp/terraform-provider-aws/issues/22531))
 
