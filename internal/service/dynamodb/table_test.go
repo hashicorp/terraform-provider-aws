@@ -537,6 +537,8 @@ func TestAccDynamoDBTable_BillingMode_payPerRequestToProvisioned(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInitialTableExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "billing_mode", dynamodb.BillingModePayPerRequest),
+					resource.TestCheckResourceAttr(resourceName, "read_capacity", "0"),
+					resource.TestCheckResourceAttr(resourceName, "write_capacity", "0"),
 				),
 			},
 			{
@@ -549,6 +551,46 @@ func TestAccDynamoDBTable_BillingMode_payPerRequestToProvisioned(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInitialTableExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "billing_mode", dynamodb.BillingModeProvisioned),
+					resource.TestCheckResourceAttr(resourceName, "read_capacity", "5"),
+					resource.TestCheckResourceAttr(resourceName, "write_capacity", "5"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccDynamoDBTable_BillingMode_payPerRequestToProvisionedIgnoreChanges(t *testing.T) {
+	var conf dynamodb.DescribeTableOutput
+	resourceName := "aws_dynamodb_table.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, dynamodb.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckTableDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBilling_payPerRequest(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInitialTableExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "billing_mode", dynamodb.BillingModePayPerRequest),
+					resource.TestCheckResourceAttr(resourceName, "read_capacity", "0"),
+					resource.TestCheckResourceAttr(resourceName, "write_capacity", "0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccBilling_provisioned_ignoreChanges(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInitialTableExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "billing_mode", dynamodb.BillingModeProvisioned),
+					resource.TestCheckResourceAttr(resourceName, "read_capacity", "1"),
+					resource.TestCheckResourceAttr(resourceName, "write_capacity", "1"),
 				),
 			},
 		},
@@ -571,6 +613,8 @@ func TestAccDynamoDBTable_BillingMode_provisionedToPayPerRequest(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInitialTableExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "billing_mode", dynamodb.BillingModeProvisioned),
+					resource.TestCheckResourceAttr(resourceName, "read_capacity", "5"),
+					resource.TestCheckResourceAttr(resourceName, "write_capacity", "5"),
 				),
 			},
 			{
@@ -583,6 +627,46 @@ func TestAccDynamoDBTable_BillingMode_provisionedToPayPerRequest(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInitialTableExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "billing_mode", dynamodb.BillingModePayPerRequest),
+					resource.TestCheckResourceAttr(resourceName, "read_capacity", "0"),
+					resource.TestCheckResourceAttr(resourceName, "write_capacity", "0"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccDynamoDBTable_BillingMode_provisionedToPayPerRequestIgnoreChanges(t *testing.T) {
+	var conf dynamodb.DescribeTableOutput
+	resourceName := "aws_dynamodb_table.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, dynamodb.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckTableDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBilling_provisioned(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInitialTableExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "billing_mode", dynamodb.BillingModeProvisioned),
+					resource.TestCheckResourceAttr(resourceName, "read_capacity", "5"),
+					resource.TestCheckResourceAttr(resourceName, "write_capacity", "5"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccBilling_payPerRequest_ignoreChanges(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInitialTableExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "billing_mode", dynamodb.BillingModePayPerRequest),
+					resource.TestCheckResourceAttr(resourceName, "read_capacity", "0"),
+					resource.TestCheckResourceAttr(resourceName, "write_capacity", "0"),
 				),
 			},
 		},
@@ -605,6 +689,8 @@ func TestAccDynamoDBTable_BillingModeGSI_payPerRequestToProvisioned(t *testing.T
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInitialTableExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "billing_mode", dynamodb.BillingModePayPerRequest),
+					resource.TestCheckResourceAttr(resourceName, "read_capacity", "0"),
+					resource.TestCheckResourceAttr(resourceName, "write_capacity", "0"),
 				),
 			},
 			{
@@ -1681,6 +1767,25 @@ resource "aws_dynamodb_table" "test" {
 `, rName)
 }
 
+func testAccBilling_payPerRequest_ignoreChanges(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_dynamodb_table" "test" {
+  name         = %[1]q
+  billing_mode = "PAY_PER_REQUEST"
+  hash_key     = "TestTableHashKey"
+
+  attribute {
+    name = "TestTableHashKey"
+    type = "S"
+  }
+
+  lifecycle {
+    ignore_changes = [read_capacity, write_capacity]
+  }
+}
+`, rName)
+}
+
 func testAccBilling_provisioned(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_dynamodb_table" "test" {
@@ -1694,6 +1799,28 @@ resource "aws_dynamodb_table" "test" {
   attribute {
     name = "TestTableHashKey"
     type = "S"
+  }
+}
+`, rName)
+}
+
+func testAccBilling_provisioned_ignoreChanges(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_dynamodb_table" "test" {
+  name         = %[1]q
+  billing_mode = "PROVISIONED"
+  hash_key     = "TestTableHashKey"
+
+  read_capacity  = 5
+  write_capacity = 5
+
+  attribute {
+    name = "TestTableHashKey"
+    type = "S"
+  }
+
+  lifecycle {
+    ignore_changes = [read_capacity, write_capacity]
   }
 }
 `, rName)
