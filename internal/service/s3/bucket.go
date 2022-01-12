@@ -49,7 +49,16 @@ func ResourceBucket() *schema.Resource {
 				Computed:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"bucket_prefix"},
-				ValidateFunc:  validation.StringLenBetween(0, 63),
+				ValidateFunc: validation.All(
+					// Between 3 and 63 characters in length
+					validation.StringLenBetween(3, 63),
+					validation.StringMatch(regexp.MustCompile(`^[0-9a-z-.]+$`), "only lowercase alphanumeric characters and hyphens allowed"),
+					validation.StringDoesNotMatch(regexp.MustCompile(`^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$`), "must not be formatted as an IP address"),
+					validation.StringDoesNotMatch(regexp.MustCompile(`^\.`), "cannot start with a period"),
+					validation.StringDoesNotMatch(regexp.MustCompile(`^.*\.$`), "cannot end with a period"),
+					// Only one period between labels
+					validation.StringDoesNotContainAny(".."),
+				),
 			},
 			"bucket_prefix": {
 				Type:          schema.TypeString,
