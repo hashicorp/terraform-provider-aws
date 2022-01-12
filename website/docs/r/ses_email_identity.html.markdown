@@ -1,12 +1,12 @@
 ---
+subcategory: "SES"
 layout: "aws"
-page_title: "AWS: ses_email_identity"
-sidebar_current: "docs-aws-resource-ses-email-identity"
+page_title: "AWS: aws_ses_email_identity"
 description: |-
   Provides an SES email identity resource
 ---
 
-# aws_ses_email_identity
+# Resource: aws_ses_email_identity
 
 Provides an SES email identity resource
 
@@ -24,7 +24,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_ses_email_identity" "example" {
   email = "email@example.com"
 }

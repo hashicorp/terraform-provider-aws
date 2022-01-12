@@ -1,7 +1,7 @@
 ---
+subcategory: "Lightsail"
 layout: "aws"
 page_title: "AWS: aws_lightsail_static_ip"
-sidebar_current: "docs-aws-resource-lightsail-static-ip"
 description: |-
   Provides an Lightsail Static IP
 ---
@@ -14,7 +14,7 @@ Allocates a static IP address.
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_lightsail_static_ip" "test" {
   name = "example"
 }
@@ -28,7 +28,7 @@ The following arguments are supported:
 
 ## Attributes Reference
 
-The following attributes are exported in addition to the arguments listed above:
+In addition to all arguments above, the following attributes are exported:
 
 * `arn` - The ARN of the Lightsail static IP
 * `ip_address` - The allocated static IP address

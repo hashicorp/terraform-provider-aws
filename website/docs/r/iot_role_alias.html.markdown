@@ -1,7 +1,7 @@
 ---
+subcategory: "IoT"
 layout: "aws"
 page_title: "AWS: aws_iot_role_alias"
-sidebar_current: "docs-aws-resource-iot-role_alias"
 description: |-
   Provides an IoT role alias.
 ---
@@ -12,17 +12,17 @@ Provides an IoT role alias.
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_iam_role" "role" {
   name = "dynamodb-access-role"
 
-  policy = <<EOF
+  assume_role_policy = <<EOF
 {
   "Version": "2012-10-17",
   "Statement": [
     {
       "Effect": "Allow",
-      "Principal": {"Service": "credentials.iot.amazonaws.com"},
+      "Principal": {"Service": "credentials.iot.amazonaws.com",
       "Action": "sts:AssumeRole"
     }
   ]
@@ -32,7 +32,7 @@ EOF
 
 resource "aws_iot_role_alias" "alias" {
   alias    = "Thermostat-dynamodb-access-role-alias"
-  role_arn = "${aws_iam_role.role.arn}"
+  role_arn = aws_iam_role.role.arn
 }
 ```
 
@@ -52,7 +52,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-IOT Role Alias can be imported via the alias, e.g.
+IOT Role Alias can be imported via the alias, e.g.,
 
 ```sh
 $ terraform import aws_iot_role_alias.example myalias
