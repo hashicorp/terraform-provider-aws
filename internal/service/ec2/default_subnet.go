@@ -187,13 +187,11 @@ func resourceDefaultSubnetCreate(d *schema.ResourceData, meta interface{}) error
 		_, err = WaitSubnetAvailable(conn, d.Id(), d.Timeout(schema.TimeoutCreate))
 
 		if err != nil {
-			return fmt.Errorf("error waiting for EC2 Default Subnet (%s) to become available: %w", d.Id(), err)
+			return fmt.Errorf("error waiting for EC2 Default Subnet (%s) create: %w", d.Id(), err)
 		}
 	} else {
 		return fmt.Errorf("error reading EC2 Default Subnet (%s): %w", d.Id(), err)
 	}
-
-	// TODO Compare Subnet with desired configuration and update.
 
 	if err := modifySubnetAttributesOnCreate(conn, d, subnet); err != nil {
 		return err
