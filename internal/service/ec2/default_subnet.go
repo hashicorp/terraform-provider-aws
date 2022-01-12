@@ -37,6 +37,7 @@ func ResourceDefaultSubnet() *schema.Resource {
 		//   - availability_zone is Required/ForceNew
 		//   - availability_zone_id is Computed-only
 		//   - cidr_block is Computed-only
+		//   - map_public_ip_on_launch has a Default of true
 		//   - outpost_arn is Computed-only
 		//   - vpc_id is Computed-only
 		// and additions:
@@ -117,7 +118,7 @@ func ResourceDefaultSubnet() *schema.Resource {
 			"map_public_ip_on_launch": {
 				Type:     schema.TypeBool,
 				Optional: true,
-				Default:  false,
+				Default:  true,
 			},
 			"outpost_arn": {
 				Type:     schema.TypeString,
