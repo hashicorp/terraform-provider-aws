@@ -166,7 +166,7 @@ func ResourceDataSet() *schema.Resource {
 			},
 
 			"field_folders": {
-				Type:     schema.TypeMap,
+				Type:     schema.TypeList,
 				Optional: true,
 				MinItems: 1,
 				MaxItems: 1000,
@@ -194,7 +194,7 @@ func ResourceDataSet() *schema.Resource {
 			},
 
 			"logical_table_map": {
-				Type:     schema.TypeMap,
+				Type:     schema.TypeList,
 				Optional: true,
 				MaxItems: 64,
 				// key length constraint 1 to 64
@@ -447,10 +447,12 @@ func ResourceDataSet() *schema.Resource {
 													ValidateFunc: validation.StringLenBetween(1, 128),
 												},
 												"tag_names": {
-													Type:         schema.TypeList,
-													Required:     true,
-													Elem:         &schema.Schema{Type: schema.TypeString},
-													ValidateFunc: validation.StringInSlice(quicksight.ColumnTagName_Values(), false),
+													Type:     schema.TypeList,
+													Required: true,
+													Elem: &schema.Schema{
+														Type:         schema.TypeString,
+														ValidateFunc: validation.StringInSlice(quicksight.ColumnTagName_Values(), false),
+													},
 												},
 											},
 										},
@@ -492,10 +494,8 @@ func ResourceDataSet() *schema.Resource {
 			},
 
 			"physical_table_map": {
-				Type:     schema.TypeMap,
+				Type:     schema.TypeList,
 				Required: true,
-				MinItems: 0,
-				MaxItems: 32,
 				// how do i validate key length?
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -760,12 +760,11 @@ func resourceAwsQuickSightDataSetCreate(ctx context.Context, d *schema.ResourceD
 	if v, ok := d.GetOk("aws_account_id"); ok {
 		awsAccountId = v.(string)
 	}
-
 	params := &quicksight.CreateDataSetInput{
 		AwsAccountId:     aws.String(awsAccountId),
 		DataSetId:        aws.String(id),
 		ImportMode:       aws.String(d.Get("import_mode").(string)),
-		PhysicalTableMap: expandQuickSightDataSetPhysicalTableMap(d.Get("physical_table_map").(map[string]interface{})),
+		PhysicalTableMap: expandQuickSightDataSetPhysicalTableMap(d.Get("physical_table_map").([]interface{})),
 		Name:             aws.String(d.Get("name").(string)),
 	}
 
@@ -782,7 +781,7 @@ func resourceAwsQuickSightDataSetCreate(ctx context.Context, d *schema.ResourceD
 	}
 
 	if v, ok := d.GetOk("data_set_usage_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		params.DataSetUsageConfiguration = expandQuickSightDataSetUsageConfiguration(v.(map[string]interface{}))
+		params.DataSetUsageConfiguration = expandQuickSightDataSetUsageConfiguration(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("field_folders"); ok && len(v.(map[string]interface{})) != 0 {
@@ -809,7 +808,6 @@ func resourceAwsQuickSightDataSetCreate(ctx context.Context, d *schema.ResourceD
 	if err != nil {
 		return diag.Errorf("error creating QuickSight Data Set: %s", err)
 	}
-
 	d.SetId(fmt.Sprintf("%s/%s", awsAccountId, id))
 
 	// confirm dataset has been created? having troubles due to a lack of output status and error handling.
@@ -949,7 +947,7 @@ func resourceAwsQuickSightDataSetUpdate(ctx context.Context, d *schema.ResourceD
 		}
 
 		if d.HasChange("data_set_usage_configuration") {
-			params.DataSetUsageConfiguration = expandQuickSightDataSetUsageConfiguration(d.Get("data_set_usage_configuration").(map[string]interface{}))
+			params.DataSetUsageConfiguration = expandQuickSightDataSetUsageConfiguration(d.Get("data_set_usage_configuration").([]interface{}))
 		}
 
 		if d.HasChange("field_folders") {
@@ -965,7 +963,7 @@ func resourceAwsQuickSightDataSetUpdate(ctx context.Context, d *schema.ResourceD
 		}
 
 		if d.HasChange("physical_table_map") {
-			params.PhysicalTableMap = expandQuickSightDataSetPhysicalTableMap(d.Get("physical_table_map").(map[string]interface{}))
+			params.PhysicalTableMap = expandQuickSightDataSetPhysicalTableMap(d.Get("physical_table_map").([]interface{}))
 		}
 
 		if d.HasChange("row_level_permission_data_set") {
@@ -1160,8 +1158,13 @@ func expandQuickSightDataSetColumnLevelPermissionRule(tfMap map[string]interface
 	return columnLevelPermissionRule
 }
 
-func expandQuickSightDataSetUsageConfiguration(tfMap map[string]interface{}) *quicksight.DataSetUsageConfiguration {
-	if len(tfMap) == 0 {
+func expandQuickSightDataSetUsageConfiguration(tfList []interface{}) *quicksight.DataSetUsageConfiguration {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
+
+	tfMap, ok := tfList[0].(map[string]interface{})
+	if !ok {
 		return nil
 	}
 
@@ -1597,13 +1600,13 @@ func expandQuickSightDataSetUntagColumnOperation(tfMap map[string]interface{}) *
 	return untagColumnOperation
 }
 
-func expandQuickSightDataSetPhysicalTableMap(tfMap map[string]interface{}) map[string]*quicksight.PhysicalTable {
-	if len(tfMap) == 0 {
+func expandQuickSightDataSetPhysicalTableMap(tfList []interface{}) map[string]*quicksight.PhysicalTable {
+	if len(tfList) == 0 {
 		return nil
 	}
 
 	physicalTableMap := make(map[string]*quicksight.PhysicalTable)
-	for k, v := range tfMap {
+	for _, v := range tfList {
 
 		vMap, ok := v.(map[string]interface{})
 		if !ok {
@@ -1612,19 +1615,25 @@ func expandQuickSightDataSetPhysicalTableMap(tfMap map[string]interface{}) map[s
 
 		physicalTable := &quicksight.PhysicalTable{}
 
-		if v, ok := vMap["custom_sql"].(map[string]interface{}); ok {
-			physicalTable.CustomSql = expandQuickSightDataSetCustomSql(v)
+		if tfList, ok := vMap["custom_sql"].([]interface{}); ok {
+			for _, v := range tfList {
+				physicalTable.CustomSql = expandQuickSightDataSetCustomSql(v.(map[string]interface{}))
+			}
 		}
 
-		if v, ok := vMap["relational_table"].(map[string]interface{}); ok {
-			physicalTable.RelationalTable = expandQuickSightDataSetRelationalTable(v)
+		if tfList, ok := vMap["relational_table"].([]interface{}); ok {
+			for _, v := range tfList {
+				physicalTable.RelationalTable = expandQuickSightDataSetRelationalTable(v.(map[string]interface{}))
+			}
 		}
 
-		if v, ok := vMap["s3_source"].(map[string]interface{}); ok {
-			physicalTable.S3Source = expandQuickSightDataSetS3Source(v)
+		if tfList, ok := vMap["s3_source"].([]interface{}); ok {
+			for _, v := range tfList {
+				physicalTable.S3Source = expandQuickSightDataSetS3Source(v.(map[string]interface{}))
+			}
 		}
 
-		physicalTableMap[k] = physicalTable
+		physicalTableMap["uniqueid"] = physicalTable
 	}
 
 	return physicalTableMap
@@ -1704,7 +1713,7 @@ func expandQuickSightDataSetRelationalTable(tfMap map[string]interface{}) *quick
 
 	relationalTable := &quicksight.RelationalTable{}
 
-	if v, ok := tfMap["columns"].([]interface{}); ok {
+	if v, ok := tfMap["input_columns"].([]interface{}); ok {
 		relationalTable.InputColumns = expandQuickSightDataSetInputColumns(v)
 	}
 
@@ -1734,7 +1743,7 @@ func expandQuickSightDataSetS3Source(tfMap map[string]interface{}) *quicksight.S
 
 	s3Source := &quicksight.S3Source{}
 
-	if v, ok := tfMap["columns"].([]interface{}); ok {
+	if v, ok := tfMap["input_columns"].([]interface{}); ok {
 		s3Source.InputColumns = expandQuickSightDataSetInputColumns(v)
 	}
 
@@ -1742,7 +1751,7 @@ func expandQuickSightDataSetS3Source(tfMap map[string]interface{}) *quicksight.S
 		s3Source.UploadSettings = expandQuickSightDataSetUploadSettings(v)
 	}
 
-	if v, ok := tfMap["data_source arn"].(string); ok {
+	if v, ok := tfMap["data_source_arn"].(string); ok {
 		s3Source.DataSourceArn = aws.String(v)
 	}
 
