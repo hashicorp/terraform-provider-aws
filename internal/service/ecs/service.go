@@ -443,14 +443,13 @@ func resourceServiceCreate(d *schema.ResourceData, meta interface{}) error {
 
 	deploymentMinimumHealthyPercent := d.Get("deployment_minimum_healthy_percent").(int)
 	schedulingStrategy := d.Get("scheduling_strategy").(string)
-	deploymentController := expandEcsDeploymentController(d.Get("deployment_controller").([]interface{}))
+	deploymentController := expandDeploymentController(d.Get("deployment_controller").([]interface{}))
 
 	input := ecs.CreateServiceInput{
 		ClientToken:          aws.String(resource.UniqueId()),
 		DeploymentController: deploymentController,
 		SchedulingStrategy:   aws.String(schedulingStrategy),
 		ServiceName:          aws.String(d.Get("name").(string)),
-		Tags:                 Tags(tags.IgnoreAWS()),
 		TaskDefinition:       aws.String(d.Get("task_definition").(string)),
 		EnableECSManagedTags: aws.Bool(d.Get("enable_ecs_managed_tags").(bool)),
 		EnableExecuteCommand: aws.Bool(d.Get("enable_execute_command").(bool)),
@@ -471,7 +470,7 @@ func resourceServiceCreate(d *schema.ResourceData, meta interface{}) error {
 
 	if v, ok := d.GetOk("deployment_circuit_breaker"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		input.DeploymentConfiguration = &ecs.DeploymentConfiguration{}
-		input.DeploymentConfiguration.DeploymentCircuitBreaker = expandECSDeploymentCircuitBreaker(v.([]interface{})[0].(map[string]interface{}))
+		input.DeploymentConfiguration.DeploymentCircuitBreaker = expandDeploymentCircuitBreaker(v.([]interface{})[0].(map[string]interface{}))
 	}
 
 	if v, ok := d.GetOk("cluster"); ok {
@@ -501,7 +500,7 @@ func resourceServiceCreate(d *schema.ResourceData, meta interface{}) error {
 		input.PlatformVersion = aws.String(v.(string))
 	}
 
-	input.CapacityProviderStrategy = expandEcsCapacityProviderStrategy(d.Get("capacity_provider_strategy").(*schema.Set))
+	input.CapacityProviderStrategy = expandCapacityProviderStrategy(d.Get("capacity_provider_strategy").(*schema.Set))
 
 	loadBalancers := expandLoadBalancers(d.Get("load_balancer").(*schema.Set).List())
 	if len(loadBalancers) > 0 {
@@ -512,7 +511,7 @@ func resourceServiceCreate(d *schema.ResourceData, meta interface{}) error {
 		input.Role = aws.String(v.(string))
 	}
 
-	input.NetworkConfiguration = expandEcsNetworkConfiguration(d.Get("network_configuration").([]interface{}))
+	input.NetworkConfiguration = expandNetworkConfiguration(d.Get("network_configuration").([]interface{}))
 
 	if v, ok := d.GetOk("ordered_placement_strategy"); ok {
 		ps, err := expandPlacementStrategy(v.([]interface{}))
@@ -557,56 +556,32 @@ func resourceServiceCreate(d *schema.ResourceData, meta interface{}) error {
 		input.ServiceRegistries = srs
 	}
 
-	log.Printf("[DEBUG] Creating ECS service: %s", input)
+	if len(tags) > 0 {
+		input.Tags = Tags(tags.IgnoreAWS()) // tags field doesn't exist in all partitions
+	}
 
-	// Retry due to AWS IAM & ECS eventual consistency
-	err := resource.Retry(tfiam.PropagationTimeout+serviceCreateTimeout, func() *resource.RetryError {
-		output, err := conn.CreateService(&input)
+	log.Printf("[DEBUG] Creating ECS Service: %s", input)
 
-		if err != nil {
-			if tfawserr.ErrCodeEquals(err, ecs.ErrCodeClusterNotFoundException) {
-				return resource.RetryableError(err)
-			}
+	output, err := retryServiceCreate(conn, input)
 
-			if tfawserr.ErrMessageContains(err, ecs.ErrCodeInvalidParameterException, "verify that the ECS service role being passed has the proper permissions") {
-				return resource.RetryableError(err)
-			}
+	// Some partitions (i.e., ISO) may not support tag-on-create
+	if input.Tags != nil && (tfawserr.ErrCodeContains(err, ecs.ErrCodeAccessDeniedException) || tfawserr.ErrCodeContains(err, ecs.ErrCodeInvalidParameterException) || tfawserr.ErrCodeContains(err, ecs.ErrCodeUnsupportedFeatureException)) {
+		log.Printf("[WARN] ECS Service (%s) create failed (%s) with tags. Trying create without tags.", d.Id(), err)
+		input.Tags = nil
 
-			if tfawserr.ErrMessageContains(err, ecs.ErrCodeInvalidParameterException, "does not have an associated load balancer") {
-				return resource.RetryableError(err)
-			}
-
-			if tfawserr.ErrMessageContains(err, ecs.ErrCodeInvalidParameterException, "Unable to assume the service linked role") {
-				return resource.RetryableError(err)
-			}
-
-			return resource.NonRetryableError(fmt.Errorf("error waiting for ECS service (%s) creation: %w", d.Get("name").(string), err))
-		}
-
-		log.Printf("[DEBUG] ECS service created: %s", aws.StringValue(output.Service.ServiceArn))
-		d.SetId(aws.StringValue(output.Service.ServiceArn))
-
-		return nil
-	})
-
-	if tfresource.TimedOut(err) {
-		output, err := conn.CreateService(&input)
-
-		if err != nil {
-			return fmt.Errorf("error creating ECS service: %w", err)
-		}
-
-		if output == nil || output.Service == nil {
-			return fmt.Errorf("error creating ECS service: empty response")
-		}
-
-		log.Printf("[DEBUG] ECS service created: %s", aws.StringValue(output.Service.ServiceArn))
-		d.SetId(aws.StringValue(output.Service.ServiceArn))
+		output, err = retryServiceCreate(conn, input)
 	}
 
 	if err != nil {
-		return fmt.Errorf("error creating %s service: %w", d.Get("name").(string), err)
+		return fmt.Errorf("error creating ECS service (%s): %w", d.Get("name").(string), err)
 	}
+
+	if output == nil || output.Service == nil {
+		return fmt.Errorf("error creating ECS service: empty response")
+	}
+
+	log.Printf("[DEBUG] ECS service created: %s", aws.StringValue(output.Service.ServiceArn))
+	d.SetId(aws.StringValue(output.Service.ServiceArn))
 
 	if d.Get("wait_for_steady_state").(bool) {
 		cluster := ""
@@ -616,6 +591,21 @@ func resourceServiceCreate(d *schema.ResourceData, meta interface{}) error {
 
 		if err := waitServiceStable(conn, d.Id(), cluster); err != nil {
 			return fmt.Errorf("error waiting for ECS service (%s) to become ready: %w", d.Id(), err)
+		}
+	}
+
+	// Some partitions (i.e., ISO) may not support tag-on-create, attempt tag after create
+	if input.Tags == nil && len(tags) > 0 {
+		err := UpdateTags(conn, d.Id(), nil, tags)
+
+		// If default tags only, log and continue. Otherwise, error.
+		if v, ok := d.GetOk("tags"); (!ok || len(v.(map[string]interface{})) == 0) && (tfawserr.ErrCodeContains(err, ecs.ErrCodeAccessDeniedException) || tfawserr.ErrCodeContains(err, ecs.ErrCodeInvalidParameterException) || tfawserr.ErrCodeContains(err, ecs.ErrCodeUnsupportedFeatureException)) {
+			log.Printf("[WARN] error adding tags after create for ECS Service (%s): %s", d.Id(), err)
+			return resourceServiceRead(d, meta)
+		}
+
+		if err != nil {
+			return fmt.Errorf("error creating ECS Service (%s) tags: %w", d.Id(), err)
 		}
 	}
 
@@ -724,7 +714,7 @@ func resourceServiceRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("deployment_minimum_healthy_percent", service.DeploymentConfiguration.MinimumHealthyPercent)
 
 		if service.DeploymentConfiguration.DeploymentCircuitBreaker != nil {
-			if err := d.Set("deployment_circuit_breaker", []interface{}{flattenECSDeploymentCircuitBreaker(service.DeploymentConfiguration.DeploymentCircuitBreaker)}); err != nil {
+			if err := d.Set("deployment_circuit_breaker", []interface{}{flattenDeploymentCircuitBreaker(service.DeploymentConfiguration.DeploymentCircuitBreaker)}); err != nil {
 				return fmt.Errorf("error setting deployment_circuit_break: %w", err)
 			}
 		} else {
@@ -732,15 +722,15 @@ func resourceServiceRead(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	if err := d.Set("deployment_controller", flattenEcsDeploymentController(service.DeploymentController)); err != nil {
+	if err := d.Set("deployment_controller", flattenDeploymentController(service.DeploymentController)); err != nil {
 		return fmt.Errorf("error setting deployment_controller for (%s): %w", d.Id(), err)
 	}
 
 	if service.LoadBalancers != nil {
-		d.Set("load_balancer", flattenECSLoadBalancers(service.LoadBalancers))
+		d.Set("load_balancer", flattenLoadBalancers(service.LoadBalancers))
 	}
 
-	if err := d.Set("capacity_provider_strategy", flattenEcsCapacityProviderStrategy(service.CapacityProviderStrategy)); err != nil {
+	if err := d.Set("capacity_provider_strategy", flattenCapacityProviderStrategy(service.CapacityProviderStrategy)); err != nil {
 		return fmt.Errorf("error setting capacity_provider_strategy: %w", err)
 	}
 
@@ -752,7 +742,7 @@ func resourceServiceRead(d *schema.ResourceData, meta interface{}) error {
 		log.Printf("[ERR] Error setting placement_constraints for (%s): %s", d.Id(), err)
 	}
 
-	if err := d.Set("network_configuration", flattenEcsNetworkConfiguration(service.NetworkConfiguration)); err != nil {
+	if err := d.Set("network_configuration", flattenNetworkConfiguration(service.NetworkConfiguration)); err != nil {
 		return fmt.Errorf("error setting network_configuration for (%s): %w", d.Id(), err)
 	}
 
@@ -761,6 +751,12 @@ func resourceServiceRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	tags := KeyValueTags(service.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+
+	// Some partitions (i.e., ISO) may not support tagging, giving error
+	if tfawserr.ErrCodeContains(err, ecs.ErrCodeAccessDeniedException) || tfawserr.ErrCodeContains(err, ecs.ErrCodeInvalidParameterException) || tfawserr.ErrCodeContains(err, ecs.ErrCodeUnsupportedFeatureException) {
+		log.Printf("[WARN] Unable to list tags for ECS Service %s: %s", d.Id(), err)
+		return nil
+	}
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
@@ -774,7 +770,7 @@ func resourceServiceRead(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func expandEcsDeploymentController(l []interface{}) *ecs.DeploymentController {
+func expandDeploymentController(l []interface{}) *ecs.DeploymentController {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -788,7 +784,7 @@ func expandEcsDeploymentController(l []interface{}) *ecs.DeploymentController {
 	return deploymentController
 }
 
-func flattenEcsDeploymentController(deploymentController *ecs.DeploymentController) []interface{} {
+func flattenDeploymentController(deploymentController *ecs.DeploymentController) []interface{} {
 	m := map[string]interface{}{
 		"type": ecs.DeploymentControllerTypeEcs,
 	}
@@ -802,7 +798,7 @@ func flattenEcsDeploymentController(deploymentController *ecs.DeploymentControll
 	return []interface{}{m}
 }
 
-func expandECSDeploymentCircuitBreaker(tfMap map[string]interface{}) *ecs.DeploymentCircuitBreaker {
+func expandDeploymentCircuitBreaker(tfMap map[string]interface{}) *ecs.DeploymentCircuitBreaker {
 	if tfMap == nil {
 		return nil
 	}
@@ -815,7 +811,7 @@ func expandECSDeploymentCircuitBreaker(tfMap map[string]interface{}) *ecs.Deploy
 	return apiObject
 }
 
-func flattenECSDeploymentCircuitBreaker(apiObject *ecs.DeploymentCircuitBreaker) map[string]interface{} {
+func flattenDeploymentCircuitBreaker(apiObject *ecs.DeploymentCircuitBreaker) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -828,7 +824,7 @@ func flattenECSDeploymentCircuitBreaker(apiObject *ecs.DeploymentCircuitBreaker)
 	return tfMap
 }
 
-func flattenEcsNetworkConfiguration(nc *ecs.NetworkConfiguration) []interface{} {
+func flattenNetworkConfiguration(nc *ecs.NetworkConfiguration) []interface{} {
 	if nc == nil {
 		return nil
 	}
@@ -844,7 +840,7 @@ func flattenEcsNetworkConfiguration(nc *ecs.NetworkConfiguration) []interface{} 
 	return []interface{}{result}
 }
 
-func expandEcsNetworkConfiguration(nc []interface{}) *ecs.NetworkConfiguration {
+func expandNetworkConfiguration(nc []interface{}) *ecs.NetworkConfiguration {
 	if len(nc) == 0 {
 		return nil
 	}
@@ -864,7 +860,7 @@ func expandEcsNetworkConfiguration(nc []interface{}) *ecs.NetworkConfiguration {
 	return &ecs.NetworkConfiguration{AwsvpcConfiguration: awsVpcConfig}
 }
 
-func expandEcsCapacityProviderStrategy(cps *schema.Set) []*ecs.CapacityProviderStrategyItem {
+func expandCapacityProviderStrategy(cps *schema.Set) []*ecs.CapacityProviderStrategyItem {
 	list := cps.List()
 	results := make([]*ecs.CapacityProviderStrategyItem, 0)
 	for _, raw := range list {
@@ -885,7 +881,7 @@ func expandEcsCapacityProviderStrategy(cps *schema.Set) []*ecs.CapacityProviderS
 	return results
 }
 
-func flattenEcsCapacityProviderStrategy(cps []*ecs.CapacityProviderStrategyItem) []map[string]interface{} {
+func flattenCapacityProviderStrategy(cps []*ecs.CapacityProviderStrategyItem) []map[string]interface{} {
 	if cps == nil {
 		return nil
 	}
@@ -1085,7 +1081,7 @@ func resourceServiceUpdate(d *schema.ResourceData, meta interface{}) error {
 		input.DeploymentConfiguration.DeploymentCircuitBreaker = &ecs.DeploymentCircuitBreaker{}
 
 		if v, ok := d.GetOk("deployment_circuit_breaker"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-			input.DeploymentConfiguration.DeploymentCircuitBreaker = expandECSDeploymentCircuitBreaker(v.([]interface{})[0].(map[string]interface{}))
+			input.DeploymentConfiguration.DeploymentCircuitBreaker = expandDeploymentCircuitBreaker(v.([]interface{})[0].(map[string]interface{}))
 		}
 	}
 
@@ -1140,12 +1136,12 @@ func resourceServiceUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	if d.HasChange("network_configuration") {
 		updateService = true
-		input.NetworkConfiguration = expandEcsNetworkConfiguration(d.Get("network_configuration").([]interface{}))
+		input.NetworkConfiguration = expandNetworkConfiguration(d.Get("network_configuration").([]interface{}))
 	}
 
 	if d.HasChange("capacity_provider_strategy") {
 		updateService = true
-		input.CapacityProviderStrategy = expandEcsCapacityProviderStrategy(d.Get("capacity_provider_strategy").(*schema.Set))
+		input.CapacityProviderStrategy = expandCapacityProviderStrategy(d.Get("capacity_provider_strategy").(*schema.Set))
 	}
 
 	if d.HasChange("enable_execute_command") {
@@ -1196,7 +1192,15 @@ func resourceServiceUpdate(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
+		err := UpdateTags(conn, d.Id(), o, n)
+
+		// Some partitions (i.e., ISO) may not support tagging, giving error
+		if tfawserr.ErrCodeContains(err, ecs.ErrCodeAccessDeniedException) || tfawserr.ErrCodeContains(err, ecs.ErrCodeInvalidParameterException) || tfawserr.ErrCodeContains(err, ecs.ErrCodeUnsupportedFeatureException) {
+			log.Printf("[WARN] Unable to update tags for ECS Service %s: %s", d.Id(), err)
+			return resourceServiceRead(d, meta)
+		}
+
+		if err != nil {
 			return fmt.Errorf("error updating ECS Service (%s) tags: %w", d.Id(), err)
 		}
 	}
@@ -1297,6 +1301,42 @@ func resourceLoadBalancerHash(v interface{}) int {
 	}
 
 	return create.StringHashcode(buf.String())
+}
+
+func retryServiceCreate(conn *ecs.ECS, input ecs.CreateServiceInput) (*ecs.CreateServiceOutput, error) {
+	var output *ecs.CreateServiceOutput
+	err := resource.Retry(tfiam.PropagationTimeout+serviceCreateTimeout, func() *resource.RetryError {
+		var err error
+		output, err = conn.CreateService(&input)
+
+		if err != nil {
+			if tfawserr.ErrCodeEquals(err, ecs.ErrCodeClusterNotFoundException) {
+				return resource.RetryableError(err)
+			}
+
+			if tfawserr.ErrMessageContains(err, ecs.ErrCodeInvalidParameterException, "verify that the ECS service role being passed has the proper permissions") {
+				return resource.RetryableError(err)
+			}
+
+			if tfawserr.ErrMessageContains(err, ecs.ErrCodeInvalidParameterException, "does not have an associated load balancer") {
+				return resource.RetryableError(err)
+			}
+
+			if tfawserr.ErrMessageContains(err, ecs.ErrCodeInvalidParameterException, "Unable to assume the service linked role") {
+				return resource.RetryableError(err)
+			}
+
+			return resource.NonRetryableError(err)
+		}
+
+		return nil
+	})
+
+	if tfresource.TimedOut(err) {
+		output, err = conn.CreateService(&input)
+	}
+
+	return output, err
 }
 
 func buildFamilyAndRevisionFromARN(arn string) string {
