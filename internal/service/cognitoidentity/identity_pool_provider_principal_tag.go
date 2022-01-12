@@ -16,26 +16,18 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
-func ResourceIdentityProviderPrincipalTag() *schema.Resource {
+func ResourcePoolProviderPrincipalTag() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceIdentityProviderPrincipalTagCreate,
-		Read:   resourceIdentityProviderPrincipalTagRead,
-		Update: resourceIdentityProviderPrincipalTagUpdate,
-		Delete: resourceIdentityProviderPrincipalTagDelete,
+		Create: resourcePoolProviderPrincipalTagCreate,
+		Read:   resourcePoolProviderPrincipalTagRead,
+		Update: resourcePoolProviderPrincipalTagUpdate,
+		Delete: resourcePoolProviderPrincipalTagDelete,
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
 
 		Schema: map[string]*schema.Schema{
-			"identity_provider_name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(1, 128),
-				),
-			},
 			"identity_pool_id": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -43,6 +35,14 @@ func ResourceIdentityProviderPrincipalTag() *schema.Resource {
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 55),
 					validation.StringMatch(regexp.MustCompile(`^[\w-]+:[0-9a-f-]+$`), "see https://docs.aws.amazon.com/cognitoidentity/latest/APIReference/API_SetPrincipalTagAttributeMap.html#API_SetPrincipalTagAttributeMap_ResponseSyntax"),
+				),
+			},
+			"identity_provider_name": {
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+				ValidateFunc: validation.All(
+					validation.StringLenBetween(1, 128),
 				),
 			},
 			"principal_tags": tftags.TagsSchema(),
@@ -55,7 +55,7 @@ func ResourceIdentityProviderPrincipalTag() *schema.Resource {
 	}
 }
 
-func resourceIdentityProviderPrincipalTagCreate(d *schema.ResourceData, meta interface{}) error {
+func resourcePoolProviderPrincipalTagCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CognitoIdentityConn
 	log.Print("[DEBUG] Creating Cognito Identity Provider Principal Tags")
 
@@ -82,14 +82,14 @@ func resourceIdentityProviderPrincipalTagCreate(d *schema.ResourceData, meta int
 
 	d.SetId(fmt.Sprintf("%s:%s", poolId, providerName))
 
-	return resourceIdentityProviderPrincipalTagRead(d, meta)
+	return resourcePoolProviderPrincipalTagRead(d, meta)
 }
 
-func resourceIdentityProviderPrincipalTagRead(d *schema.ResourceData, meta interface{}) error {
+func resourcePoolProviderPrincipalTagRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CognitoIdentityConn
 	log.Printf("[DEBUG] Reading Cognito Identity Provider Principal Tags: %s", d.Id())
 
-	poolId, providerName, err := DecodeIdentityProviderPrincipalTagsID(d.Id())
+	poolId, providerName, err := DecodePoolProviderPrincipalTagsID(d.Id())
 	if err != nil {
 		return err
 	}
@@ -119,11 +119,11 @@ func resourceIdentityProviderPrincipalTagRead(d *schema.ResourceData, meta inter
 	return nil
 }
 
-func resourceIdentityProviderPrincipalTagUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourcePoolProviderPrincipalTagUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CognitoIdentityConn
 	log.Print("[DEBUG] Updating Cognito Identity Provider Principal Tags")
 
-	poolId, providerName, err := DecodeIdentityProviderPrincipalTagsID(d.Id())
+	poolId, providerName, err := DecodePoolProviderPrincipalTagsID(d.Id())
 	if err != nil {
 		return err
 	}
@@ -143,14 +143,14 @@ func resourceIdentityProviderPrincipalTagUpdate(d *schema.ResourceData, meta int
 		}
 	}
 
-	return resourceIdentityProviderPrincipalTagRead(d, meta)
+	return resourcePoolProviderPrincipalTagRead(d, meta)
 }
 
-func resourceIdentityProviderPrincipalTagDelete(d *schema.ResourceData, meta interface{}) error {
+func resourcePoolProviderPrincipalTagDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CognitoIdentityConn
 	log.Printf("[DEBUG] Deleting Cognito Identity Provider Principal Tags: %s", d.Id())
 
-	poolId, providerName, err := DecodeIdentityProviderPrincipalTagsID(d.Id())
+	poolId, providerName, err := DecodePoolProviderPrincipalTagsID(d.Id())
 	if err != nil {
 		return err
 	}
@@ -173,7 +173,7 @@ func resourceIdentityProviderPrincipalTagDelete(d *schema.ResourceData, meta int
 	return nil
 }
 
-func DecodeIdentityProviderPrincipalTagsID(id string) (string, string, error) {
+func DecodePoolProviderPrincipalTagsID(id string) (string, string, error) {
 	idParts := strings.Split(id, ":")
 	if len(idParts) <= 2 {
 		return "", "", fmt.Errorf("expected ID in format UserPoolID:ProviderName, received: %s", id)

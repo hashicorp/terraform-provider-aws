@@ -87,7 +87,7 @@ func TestAccCognitoIdentityProviderPrincipalTags_disappears(t *testing.T) {
 				Config: testAccProviderPrincipalTagsConfig_basic(name),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckProviderPrincipalTagsExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfcognitoidentity.ResourceIdentityProviderPrincipalTag(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfcognitoidentity.ResourcePoolProviderPrincipalTag(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
