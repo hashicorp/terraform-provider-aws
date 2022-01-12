@@ -297,6 +297,10 @@ func TestAccELBV2Listener_LoadBalancerARN_gatewayLoadBalancer(t *testing.T) {
 	lbResourceName := "aws_lb.test"
 	resourceName := "aws_lb_listener.test"
 
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   testAccErrorCheckSkipELBV2(t),
@@ -322,6 +326,10 @@ func TestAccELBV2Listener_Protocol_tls(t *testing.T) {
 	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(key, "example.com")
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lb_listener.test"
+
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
