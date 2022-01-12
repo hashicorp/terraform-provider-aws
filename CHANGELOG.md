@@ -7,6 +7,8 @@ FEATURES:
 * **New Resource:** `aws_connect_quick_connect` ([#22250](https://github.com/hashicorp/terraform-provider-aws/issues/22250))
 * **New Resource:** `aws_devicefarm_instance_profile` ([#22458](https://github.com/hashicorp/terraform-provider-aws/issues/22458))
 * **New Resource:** `aws_memorydb_snapshot` ([#22486](https://github.com/hashicorp/terraform-provider-aws/issues/22486))
+* **New Resource:** `resource/aws_cognito_identity_pool_provider_principal_tag` ([#22514](https://github.com/hashicorp/terraform-provider-aws/issues/22514))
+* **New Resource:** `resource/aws_shield_protection_health_check_association` ([#21993](https://github.com/hashicorp/terraform-provider-aws/issues/21993))
 
 ENHANCEMENTS:
 
@@ -21,6 +23,7 @@ ENHANCEMENTS:
 * data-source/aws_sagemaker_prebuilt_ecr_image: Add account IDs for the Factorization Machines image in `af-south-1`, `ap-northeast-3` and `eu-south-1` AWS Regions ([#22455](https://github.com/hashicorp/terraform-provider-aws/issues/22455))
 * data-source/aws_sagemaker_prebuilt_ecr_image: Add account IDs for the Spark ML Serving image in `af-south-1`, `ap-east-1`, `cn-north-1`, `cn-northwest-1`, `eu-north-1`, `eu-south-1`, `eu-west-3`, `me-south-1` and `sa-east-1` AWS Regions ([#22455](https://github.com/hashicorp/terraform-provider-aws/issues/22455))
 * data-source/aws_sagemaker_prebuilt_ecr_image: Add account IDs for the XGBoost image in `af-south-1`, `ap-northeast-3` and `eu-south-1` AWS Regions ([#22455](https://github.com/hashicorp/terraform-provider-aws/issues/22455))
+* data-source/aws_sqs_queue: Allow some `tags` errors to be non-fatal to support non-standard AWS partitions (i.e., ISO) ([#22516](https://github.com/hashicorp/terraform-provider-aws/issues/22516))
 * resource/aws_appsync_datasource: Add `authorization_config` attribute to the `http_config` configuration block ([#22411](https://github.com/hashicorp/terraform-provider-aws/issues/22411))
 * resource/aws_appsync_datasource: Add `delta_sync_config` and `versioned` to the `dynamodb_config` configuration block ([#22411](https://github.com/hashicorp/terraform-provider-aws/issues/22411))
 * resource/aws_appsync_datasource: Add `relational_database_config` argument ([#22411](https://github.com/hashicorp/terraform-provider-aws/issues/22411))
@@ -41,6 +44,9 @@ ENHANCEMENTS:
 * resource/aws_glue_crawler: add `delta_target` argument. ([#22472](https://github.com/hashicorp/terraform-provider-aws/issues/22472))
 * resource/aws_instance: Add the `instance_metadata_tags` argument to the `metadata_options` configuration block ([#22463](https://github.com/hashicorp/terraform-provider-aws/issues/22463))
 * resource/aws_launch_template: Add the `instance_metadata_tags` argument to the `metadata_options` configuration block ([#22463](https://github.com/hashicorp/terraform-provider-aws/issues/22463))
+* resource/aws_sns_topic: Attempt `tags`-on-create, fallback to tag after create, and allow some `tags` errors to be non-fatal to support non-standard AWS partitions (i.e., ISO) ([#22511](https://github.com/hashicorp/terraform-provider-aws/issues/22511))
+* resource/aws_sqs_queue: Attempt `tags`-on-create, fallback to tag after create, and allow some `tags` errors to be non-fatal to support non-standard AWS partitions (i.e., ISO) ([#22516](https://github.com/hashicorp/terraform-provider-aws/issues/22516))
+* resource/aws_vpc: Add `ipv6_cidr_block_network_border_group` argument ([#22211](https://github.com/hashicorp/terraform-provider-aws/issues/22211))
 * resource/aws_vpc_ipam_pool_cidr_allocation: Add `disallowed_cidrs` argument ([#22470](https://github.com/hashicorp/terraform-provider-aws/issues/22470))
 * resource/aws_vpc_ipam_preview_next_cidr: Add `disallowed_cidrs` argument ([#22501](https://github.com/hashicorp/terraform-provider-aws/issues/22501))
 * resource/aws_vpn_connection: Add `vgw_telemetry.certificate_arn` attribute ([#19311](https://github.com/hashicorp/terraform-provider-aws/issues/19311))
