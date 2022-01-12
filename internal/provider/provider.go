@@ -1595,8 +1595,8 @@ func Provider() *schema.Provider {
 			"aws_sfn_state_machine": sfn.ResourceStateMachine(),
 
 			"aws_shield_protection":                          shield.ResourceProtection(),
-			"aws_shield_protection_health_check_association": shield.ResourceProtectionHealthCheckAssociation(),
 			"aws_shield_protection_group":                    shield.ResourceProtectionGroup(),
+			"aws_shield_protection_health_check_association": shield.ResourceProtectionHealthCheckAssociation(),
 
 			"aws_signer_signing_job":                signer.ResourceSigningJob(),
 			"aws_signer_signing_profile":            signer.ResourceSigningProfile(),
