@@ -179,7 +179,7 @@ func TestAccELBV2Listener_forwardWeighted(t *testing.T) {
 	})
 }
 
-func TestAccELBV2Listener_basicUdp(t *testing.T) {
+func TestAccELBV2Listener_Protocol_upd(t *testing.T) {
 	var conf elbv2.Listener
 	resourceName := "aws_lb_listener.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -251,7 +251,7 @@ func TestAccELBV2Listener_backwardsCompatibility(t *testing.T) {
 	})
 }
 
-func TestAccELBV2Listener_https(t *testing.T) {
+func TestAccELBV2Listener_Protocol_https(t *testing.T) {
 	var conf elbv2.Listener
 	key := acctest.TLSRSAPrivateKeyPEM(2048)
 	resourceName := "aws_lb_listener.test"
@@ -552,7 +552,7 @@ func TestAccELBV2Listener_DefaultAction_order(t *testing.T) {
 }
 
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/6171
-func TestAccELBV2Listener_DefaultActionOrder_recreates(t *testing.T) {
+func TestAccELBV2Listener_DefaultAction_orderRecreates(t *testing.T) {
 	var listener elbv2.Listener
 	key := acctest.TLSRSAPrivateKeyPEM(2048)
 	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(key, "example.com")
