@@ -9,3 +9,7 @@ data-source/aws_lb_listener: Allow some `tags` errors to be non-fatal to support
 ```release-note:enhancement
 resource/aws_lb_listener_rule: Attempt `tags`-on-create, fallback to tag after create, and allow some `tags` errors to be non-fatal to support non-standard AWS partitions (i.e., ISO)
 ```
+
+```release-note:enhancement
+resource/aws_lb: Attempt `tags`-on-create, fallback to tag after create, and allow some `tags` errors to be non-fatal to support non-standard AWS partitions (i.e., ISO)
+```
