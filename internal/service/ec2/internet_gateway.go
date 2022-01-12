@@ -104,11 +104,11 @@ func resourceInternetGatewayRead(d *schema.ResourceData, meta interface{}) error
 	}.String()
 	d.Set("arn", arn)
 	d.Set("owner_id", ownerID)
-	if len(ig.Attachments) == 1 && aws.StringValue(ig.Attachments[0].State) == ec2.AttachmentStatusAttached {
-		d.Set("vpc_id", ig.Attachments[0].VpcId)
-	} else {
+	if len(ig.Attachments) == 0 {
 		// Gateway exists but not attached to the VPC.
-		d.Set("vpc_id", nil)
+		d.Set("vpc_id", "")
+	} else {
+		d.Set("vpc_id", ig.Attachments[0].VpcId)
 	}
 
 	tags := KeyValueTags(ig.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)

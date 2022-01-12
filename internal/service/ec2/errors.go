@@ -57,6 +57,7 @@ const (
 	ErrCodeInvalidVpnConnectionIDNotFound            = "InvalidVpnConnectionID.NotFound"
 	ErrCodeInvalidVpnGatewayAttachmentNotFound       = "InvalidVpnGatewayAttachment.NotFound"
 	ErrCodeInvalidVpnGatewayIDNotFound               = "InvalidVpnGatewayID.NotFound"
+	ErrCodeNatGatewayNotFound                        = "NatGatewayNotFound"
 )
 
 func UnsuccessfulItemError(apiObject *ec2.UnsuccessfulItemError) error {

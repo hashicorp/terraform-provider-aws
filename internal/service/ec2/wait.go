@@ -810,6 +810,55 @@ func WaitCustomerGatewayDeleted(conn *ec2.EC2, id string) (*ec2.CustomerGateway,
 }
 
 const (
+	natGatewayCreatedTimeout = 10 * time.Minute
+	natGatewayDeletedTimeout = 30 * time.Minute
+)
+
+func WaitNATGatewayCreated(conn *ec2.EC2, id string) (*ec2.NatGateway, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{ec2.NatGatewayStatePending},
+		Target:  []string{ec2.NatGatewayStateAvailable},
+		Refresh: StatusNATGatewayState(conn, id),
+		Timeout: natGatewayCreatedTimeout,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*ec2.NatGateway); ok {
+		if state := aws.StringValue(output.State); state == ec2.NatGatewayStateFailed {
+			tfresource.SetLastError(err, fmt.Errorf("%s: %s", aws.StringValue(output.FailureCode), aws.StringValue(output.FailureMessage)))
+		}
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func WaitNATGatewayDeleted(conn *ec2.EC2, id string) (*ec2.NatGateway, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending:    []string{ec2.NatGatewayStateDeleting},
+		Target:     []string{},
+		Refresh:    StatusNATGatewayState(conn, id),
+		Timeout:    natGatewayDeletedTimeout,
+		Delay:      10 * time.Second,
+		MinTimeout: 10 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*ec2.NatGateway); ok {
+		if state := aws.StringValue(output.State); state == ec2.NatGatewayStateFailed {
+			tfresource.SetLastError(err, fmt.Errorf("%s: %s", aws.StringValue(output.FailureCode), aws.StringValue(output.FailureMessage)))
+		}
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+const (
 	vpnConnectionCreatedTimeout = 40 * time.Minute
 	vpnConnectionDeletedTimeout = 30 * time.Minute
 	vpnConnectionUpdatedTimeout = 30 * time.Minute
