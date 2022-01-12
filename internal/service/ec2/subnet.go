@@ -418,70 +418,26 @@ func resourceSubnetUpdate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if d.HasChange("enable_dns64") {
-		input := &ec2.ModifySubnetAttributeInput{
-			EnableDns64: &ec2.AttributeBooleanValue{
-				Value: aws.Bool(d.Get("enable_dns64").(bool)),
-			},
-			SubnetId: aws.String(d.Id()),
-		}
-
-		if _, err := conn.ModifySubnetAttribute(input); err != nil {
-			return fmt.Errorf("error setting EC2 Subnet (%s) EnableDns64: %w", d.Id(), err)
-		}
-
-		if _, err := WaitSubnetEnableDns64Updated(conn, d.Id(), d.Get("enable_dns64").(bool)); err != nil {
-			return fmt.Errorf("error waiting for EC2 Subnet (%s) EnableDns64 update: %w", d.Id(), err)
+		if err := modifySubnetEnableDns64(conn, d.Id(), d.Get("enable_dns64").(bool)); err != nil {
+			return err
 		}
 	}
 
 	if d.HasChange("enable_resource_name_dns_aaaa_record_on_launch") {
-		input := &ec2.ModifySubnetAttributeInput{
-			EnableResourceNameDnsAAAARecordOnLaunch: &ec2.AttributeBooleanValue{
-				Value: aws.Bool(d.Get("enable_resource_name_dns_aaaa_record_on_launch").(bool)),
-			},
-			SubnetId: aws.String(d.Id()),
-		}
-
-		if _, err := conn.ModifySubnetAttribute(input); err != nil {
-			return fmt.Errorf("error setting EC2 Subnet (%s) EnableResourceNameDnsAAAARecordOnLaunch: %w", d.Id(), err)
-		}
-
-		if _, err := WaitSubnetEnableResourceNameDnsAAAARecordOnLaunchUpdated(conn, d.Id(), d.Get("enable_resource_name_dns_aaaa_record_on_launch").(bool)); err != nil {
-			return fmt.Errorf("error waiting for EC2 Subnet (%s) EnableResourceNameDnsAAAARecordOnLaunch update: %w", d.Id(), err)
+		if err := modifySubnetEnableResourceNameDnsAAAARecordOnLaunch(conn, d.Id(), d.Get("enable_resource_name_dns_aaaa_record_on_launch").(bool)); err != nil {
+			return err
 		}
 	}
 
 	if d.HasChange("enable_resource_name_dns_a_record_on_launch") {
-		input := &ec2.ModifySubnetAttributeInput{
-			EnableResourceNameDnsARecordOnLaunch: &ec2.AttributeBooleanValue{
-				Value: aws.Bool(d.Get("enable_resource_name_dns_a_record_on_launch").(bool)),
-			},
-			SubnetId: aws.String(d.Id()),
-		}
-
-		if _, err := conn.ModifySubnetAttribute(input); err != nil {
-			return fmt.Errorf("error setting EC2 Subnet (%s) EnableResourceNameDnsARecordOnLaunch: %w", d.Id(), err)
-		}
-
-		if _, err := WaitSubnetEnableResourceNameDnsARecordOnLaunchUpdated(conn, d.Id(), d.Get("enable_resource_name_dns_a_record_on_launch").(bool)); err != nil {
-			return fmt.Errorf("error waiting for EC2 Subnet (%s) EnableResourceNameDnsARecordOnLaunch update: %w", d.Id(), err)
+		if err := modifySubnetEnableResourceNameDnsARecordOnLaunch(conn, d.Id(), d.Get("enable_resource_name_dns_a_record_on_launch").(bool)); err != nil {
+			return err
 		}
 	}
 
 	if d.HasChange("map_public_ip_on_launch") {
-		input := &ec2.ModifySubnetAttributeInput{
-			MapPublicIpOnLaunch: &ec2.AttributeBooleanValue{
-				Value: aws.Bool(d.Get("map_public_ip_on_launch").(bool)),
-			},
-			SubnetId: aws.String(d.Id()),
-		}
-
-		if _, err := conn.ModifySubnetAttribute(input); err != nil {
-			return fmt.Errorf("error setting EC2 Subnet (%s) MapPublicIpOnLaunch: %w", d.Id(), err)
-		}
-
-		if _, err := WaitSubnetMapPublicIPOnLaunchUpdated(conn, d.Id(), d.Get("map_public_ip_on_launch").(bool)); err != nil {
-			return fmt.Errorf("error waiting for EC2 Subnet (%s) MapPublicIpOnLaunch update: %w", d.Id(), err)
+		if err := modifySubnetMapPublicIpOnLaunch(conn, d.Id(), d.Get("map_public_ip_on_launch").(bool)); err != nil {
+			return err
 		}
 	}
 
@@ -608,10 +564,85 @@ func resourceSubnetDelete(d *schema.ResourceData, meta interface{}) error {
 // modifySubnetAttributesOnCreate sets subnet attributes on resource Create.
 // Called after new subnet creation or existing default subnet adoption.
 func modifySubnetAttributesOnCreate(conn *ec2.EC2, d *schema.ResourceData, subnet *ec2.Subnet) error {
+	if new, old := d.Get("enable_dns64").(bool), aws.BoolValue(subnet.EnableDns64); old != new {
+		if err := modifySubnetEnableDns64(conn, d.Id(), new); err != nil {
+			return err
+		}
+	}
+
+	if new, old := d.Get("enable_resource_name_dns_aaaa_record_on_launch").(bool), aws.BoolValue(subnet.PrivateDnsNameOptionsOnLaunch.EnableResourceNameDnsAAAARecord); old != new {
+		if err := modifySubnetEnableResourceNameDnsAAAARecordOnLaunch(conn, d.Id(), new); err != nil {
+			return err
+		}
+	}
+
+	if new, old := d.Get("enable_resource_name_dns_a_record_on_launch").(bool), aws.BoolValue(subnet.PrivateDnsNameOptionsOnLaunch.EnableResourceNameDnsARecord); old != new {
+		if err := modifySubnetEnableResourceNameDnsARecordOnLaunch(conn, d.Id(), new); err != nil {
+			return err
+		}
+	}
+
 	if new, old := d.Get("map_public_ip_on_launch").(bool), aws.BoolValue(subnet.MapPublicIpOnLaunch); old != new {
 		if err := modifySubnetMapPublicIpOnLaunch(conn, d.Id(), new); err != nil {
 			return err
 		}
+	}
+
+	return nil
+}
+
+func modifySubnetEnableDns64(conn *ec2.EC2, subnetID string, v bool) error {
+	input := &ec2.ModifySubnetAttributeInput{
+		EnableDns64: &ec2.AttributeBooleanValue{
+			Value: aws.Bool(v),
+		},
+		SubnetId: aws.String(subnetID),
+	}
+
+	if _, err := conn.ModifySubnetAttribute(input); err != nil {
+		return fmt.Errorf("error setting EC2 Subnet (%s) EnableDns64: %w", subnetID, err)
+	}
+
+	if _, err := WaitSubnetEnableDns64Updated(conn, subnetID, v); err != nil {
+		return fmt.Errorf("error waiting for EC2 Subnet (%s) EnableDns64 update: %w", subnetID, err)
+	}
+
+	return nil
+}
+
+func modifySubnetEnableResourceNameDnsAAAARecordOnLaunch(conn *ec2.EC2, subnetID string, v bool) error {
+	input := &ec2.ModifySubnetAttributeInput{
+		EnableResourceNameDnsAAAARecordOnLaunch: &ec2.AttributeBooleanValue{
+			Value: aws.Bool(v),
+		},
+		SubnetId: aws.String(subnetID),
+	}
+
+	if _, err := conn.ModifySubnetAttribute(input); err != nil {
+		return fmt.Errorf("error setting EC2 Subnet (%s) EnableResourceNameDnsAAAARecordOnLaunch: %w", subnetID, err)
+	}
+
+	if _, err := WaitSubnetEnableResourceNameDnsAAAARecordOnLaunchUpdated(conn, subnetID, v); err != nil {
+		return fmt.Errorf("error waiting for EC2 Subnet (%s) EnableResourceNameDnsAAAARecordOnLaunch update: %w", subnetID, err)
+	}
+
+	return nil
+}
+
+func modifySubnetEnableResourceNameDnsARecordOnLaunch(conn *ec2.EC2, subnetID string, v bool) error {
+	input := &ec2.ModifySubnetAttributeInput{
+		EnableResourceNameDnsARecordOnLaunch: &ec2.AttributeBooleanValue{
+			Value: aws.Bool(v),
+		},
+		SubnetId: aws.String(subnetID),
+	}
+
+	if _, err := conn.ModifySubnetAttribute(input); err != nil {
+		return fmt.Errorf("error setting EC2 Subnet (%s) EnableResourceNameDnsARecordOnLaunch: %w", subnetID, err)
+	}
+
+	if _, err := WaitSubnetEnableResourceNameDnsARecordOnLaunchUpdated(conn, subnetID, v); err != nil {
+		return fmt.Errorf("error waiting for EC2 Subnet (%s) EnableResourceNameDnsARecordOnLaunch update: %w", subnetID, err)
 	}
 
 	return nil
