@@ -4,13 +4,14 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func TestAccEC2EgressOnlyInternetGateway_basic(t *testing.T) {
@@ -93,24 +94,23 @@ func testAccCheckEgressOnlyInternetGatewayDestroy(s *terraform.State) error {
 			continue
 		}
 
-		describe, err := conn.DescribeEgressOnlyInternetGateways(&ec2.DescribeEgressOnlyInternetGatewaysInput{
-			EgressOnlyInternetGatewayIds: []*string{aws.String(rs.Primary.ID)},
-		})
+		_, err := tfec2.FindEgressOnlyInternetGatewayByID(conn, rs.Primary.ID)
 
-		if err == nil {
-			if len(describe.EgressOnlyInternetGateways) != 0 &&
-				*describe.EgressOnlyInternetGateways[0].EgressOnlyInternetGatewayId == rs.Primary.ID {
-				return fmt.Errorf("Egress Only Internet Gateway %q still exists", rs.Primary.ID)
-			}
+		if tfresource.NotFound(err) {
+			continue
 		}
 
-		return nil
+		if err != nil {
+			return err
+		}
+
+		return fmt.Errorf("EC2 Egress-only Internet Gateway %s still exists", rs.Primary.ID)
 	}
 
 	return nil
 }
 
-func testAccCheckEgressOnlyInternetGatewayExists(n string, igw *ec2.EgressOnlyInternetGateway) resource.TestCheckFunc {
+func testAccCheckEgressOnlyInternetGatewayExists(n string, v *ec2.EgressOnlyInternetGateway) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -118,21 +118,18 @@ func testAccCheckEgressOnlyInternetGatewayExists(n string, igw *ec2.EgressOnlyIn
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Egress Only IGW ID is set")
+			return fmt.Errorf("No EC2 Egress-only Internet Gateway ID is set")
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
-		resp, err := conn.DescribeEgressOnlyInternetGateways(&ec2.DescribeEgressOnlyInternetGatewaysInput{
-			EgressOnlyInternetGatewayIds: []*string{aws.String(rs.Primary.ID)},
-		})
+
+		output, err := tfec2.FindEgressOnlyInternetGatewayByID(conn, rs.Primary.ID)
+
 		if err != nil {
 			return err
 		}
-		if len(resp.EgressOnlyInternetGateways) == 0 {
-			return fmt.Errorf("Egress Only IGW not found")
-		}
 
-		*igw = *resp.EgressOnlyInternetGateways[0]
+		*v = *output
 
 		return nil
 	}
