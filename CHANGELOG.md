@@ -68,6 +68,7 @@ ENHANCEMENTS:
 * resource/aws_lb_listener: Attempt `tags`-on-create, fallback to tag after create, and allow some `tags` errors to be non-fatal to support non-standard AWS partitions (i.e., ISO) ([#22551](https://github.com/hashicorp/terraform-provider-aws/issues/22551))
 * resource/aws_lb_listener_rule: Attempt `tags`-on-create, fallback to tag after create, and allow some `tags` errors to be non-fatal to support non-standard AWS partitions (i.e., ISO) ([#22551](https://github.com/hashicorp/terraform-provider-aws/issues/22551))
 * resource/aws_lb_target_group: Attempt `tags`-on-create, fallback to tag after create, and allow some `tags` errors to be non-fatal to support non-standard AWS partitions (i.e., ISO) ([#22551](https://github.com/hashicorp/terraform-provider-aws/issues/22551))
+* resource/aws_s3_bucket: Add additional protection against `object_lock_configuration` causing errors in partitions (e.g., ISO) where not supported ([#22575](https://github.com/hashicorp/terraform-provider-aws/issues/22575))
 * resource/aws_sns_topic: Attempt `tags`-on-create, fallback to tag after create, and allow some `tags` errors to be non-fatal to support non-standard AWS partitions (i.e., ISO) ([#22511](https://github.com/hashicorp/terraform-provider-aws/issues/22511))
 * resource/aws_sqs_queue: Attempt `tags`-on-create, fallback to tag after create, and allow some `tags` errors to be non-fatal to support non-standard AWS partitions (i.e., ISO) ([#22516](https://github.com/hashicorp/terraform-provider-aws/issues/22516))
 * resource/aws_vpc: Add `ipv6_cidr_block_network_border_group` argument ([#22211](https://github.com/hashicorp/terraform-provider-aws/issues/22211))
@@ -89,6 +90,7 @@ BUG FIXES:
 * resource/aws_route53_record: Fix import with underscores in names ([#21556](https://github.com/hashicorp/terraform-provider-aws/issues/21556))
 * resource/aws_sqs_queue: Don't timeout when a queue policy `Condition` value contains an empty array ([#22547](https://github.com/hashicorp/terraform-provider-aws/issues/22547))
 * resource/aws_ssm_parameter: Mark `version` as Computed when `value` changes ([#22522](https://github.com/hashicorp/terraform-provider-aws/issues/22522))
+* resource/aws_subnet: Protect against errors when `availability_zone_id` is not supported in a partition (e.g., ISO) ([#22580](https://github.com/hashicorp/terraform-provider-aws/issues/22580))
 * resource/aws_subnet: Resource-based naming is not available in the `ap-southeast-3` region ([#22531](https://github.com/hashicorp/terraform-provider-aws/issues/22531))
 
 ## 3.71.0 (January 06, 2022)
