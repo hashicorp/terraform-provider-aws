@@ -6,6 +6,7 @@ package s3
 const (
 	ErrCodeNoSuchConfiguration                  = "NoSuchConfiguration"
 	ErrCodeNoSuchCORSConfiguration              = "NoSuchCORSConfiguration"
+	ErrCodeNoSuchLifecycleConfiguration         = "NoSuchLifecycleConfiguration"
 	ErrCodeNoSuchPublicAccessBlockConfiguration = "NoSuchPublicAccessBlockConfiguration"
 	ErrCodeNoSuchWebsiteConfiguration           = "NoSuchWebsiteConfiguration"
 	ErrCodeOperationAborted                     = "OperationAborted"
