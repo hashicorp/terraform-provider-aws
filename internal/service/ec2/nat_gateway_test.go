@@ -2,21 +2,22 @@ package ec2_test
 
 import (
 	"fmt"
-	"strings"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func TestAccEC2NatGateway_basic(t *testing.T) {
 	var natGateway ec2.NatGateway
 	resourceName := "aws_nat_gateway.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -25,10 +26,14 @@ func TestAccEC2NatGateway_basic(t *testing.T) {
 		CheckDestroy: testAccCheckNatGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccNatGatewayConfig,
-				Check: resource.ComposeTestCheckFunc(
+				Config: testAccNatGatewayConfig(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckNatGatewayExists(resourceName, &natGateway),
+					resource.TestCheckResourceAttrSet(resourceName, "allocation_id"),
 					resource.TestCheckResourceAttr(resourceName, "connectivity_type", "public"),
+					resource.TestCheckResourceAttrSet(resourceName, "network_interface_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "private_ip"),
+					resource.TestCheckResourceAttrSet(resourceName, "public_ip"),
 					resource.TestCheckResourceAttr(resourceName, "tags.#", "0"),
 				),
 			},
@@ -41,9 +46,10 @@ func TestAccEC2NatGateway_basic(t *testing.T) {
 	})
 }
 
-func TestAccEC2NatGateway_ConnectivityType_private(t *testing.T) {
+func TestAccEC2NatGateway_disappears(t *testing.T) {
 	var natGateway ec2.NatGateway
 	resourceName := "aws_nat_gateway.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -52,10 +58,39 @@ func TestAccEC2NatGateway_ConnectivityType_private(t *testing.T) {
 		CheckDestroy: testAccCheckNatGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccNatGatewayConfigConnectivityType("private"),
+				Config: testAccNatGatewayConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNatGatewayExists(resourceName, &natGateway),
+					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceNatGateway(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccEC2NatGateway_ConnectivityType_private(t *testing.T) {
+	var natGateway ec2.NatGateway
+	resourceName := "aws_nat_gateway.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckNatGatewayDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNatGatewayConfigConnectivityType(rName, "private"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckNatGatewayExists(resourceName, &natGateway),
+					resource.TestCheckResourceAttr(resourceName, "allocation_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "connectivity_type", "private"),
+					resource.TestCheckResourceAttrSet(resourceName, "network_interface_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "private_ip"),
+					resource.TestCheckResourceAttr(resourceName, "public_ip", ""),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
 				),
 			},
 			{
@@ -70,6 +105,7 @@ func TestAccEC2NatGateway_ConnectivityType_private(t *testing.T) {
 func TestAccEC2NatGateway_tags(t *testing.T) {
 	var natGateway ec2.NatGateway
 	resourceName := "aws_nat_gateway.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -78,7 +114,7 @@ func TestAccEC2NatGateway_tags(t *testing.T) {
 		CheckDestroy: testAccCheckNatGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccNatGatewayConfigTags1("key1", "value1"),
+				Config: testAccNatGatewayConfigTags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNatGatewayExists(resourceName, &natGateway),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -91,7 +127,7 @@ func TestAccEC2NatGateway_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccNatGatewayConfigTags2("key1", "value1updated", "key2", "value2"),
+				Config: testAccNatGatewayConfigTags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNatGatewayExists(resourceName, &natGateway),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -100,7 +136,7 @@ func TestAccEC2NatGateway_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccNatGatewayConfigTags1("key2", "value2"),
+				Config: testAccNatGatewayConfigTags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNatGatewayExists(resourceName, &natGateway),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -119,37 +155,23 @@ func testAccCheckNatGatewayDestroy(s *terraform.State) error {
 			continue
 		}
 
-		// Try to find the resource
-		resp, err := conn.DescribeNatGateways(&ec2.DescribeNatGatewaysInput{
-			NatGatewayIds: []*string{aws.String(rs.Primary.ID)},
-		})
-		if err == nil {
-			status := map[string]bool{
-				ec2.NatGatewayStateDeleted:  true,
-				ec2.NatGatewayStateDeleting: true,
-				ec2.NatGatewayStateFailed:   true,
-			}
-			if _, ok := status[strings.ToLower(*resp.NatGateways[0].State)]; len(resp.NatGateways) > 0 && !ok {
-				return fmt.Errorf("still exists")
-			}
+		_, err := tfec2.FindNATGatewayByID(conn, rs.Primary.ID)
 
-			return nil
+		if tfresource.NotFound(err) {
+			continue
 		}
 
-		// Verify the error is what we want
-		ec2err, ok := err.(awserr.Error)
-		if !ok {
+		if err != nil {
 			return err
 		}
-		if ec2err.Code() != "NatGatewayNotFound" {
-			return err
-		}
+
+		return fmt.Errorf("EC2 NAT Gateway %s still exists", rs.Primary.ID)
 	}
 
 	return nil
 }
 
-func testAccCheckNatGatewayExists(n string, ng *ec2.NatGateway) resource.TestCheckFunc {
+func testAccCheckNatGatewayExists(n string, v *ec2.NatGateway) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -157,32 +179,30 @@ func testAccCheckNatGatewayExists(n string, ng *ec2.NatGateway) resource.TestChe
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No ID is set")
+			return fmt.Errorf("No EC2 NAT Gateway ID is set")
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
-		resp, err := conn.DescribeNatGateways(&ec2.DescribeNatGatewaysInput{
-			NatGatewayIds: []*string{aws.String(rs.Primary.ID)},
-		})
+
+		output, err := tfec2.FindNATGatewayByID(conn, rs.Primary.ID)
+
 		if err != nil {
 			return err
 		}
-		if len(resp.NatGateways) == 0 {
-			return fmt.Errorf("NatGateway not found")
-		}
 
-		*ng = *resp.NatGateways[0]
+		*v = *output
 
 		return nil
 	}
 }
 
-const testAccNatGatewayConfigBase = `
+func testAccNatGatewayConfigBase(rName string) string {
+	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
   tags = {
-    Name = "terraform-testacc-nat-gw-basic"
+    Name = %[1]q
   }
 }
 
@@ -192,7 +212,7 @@ resource "aws_subnet" "private" {
   map_public_ip_on_launch = false
 
   tags = {
-    Name = "tf-acc-nat-gw-basic-private"
+    Name = %[1]q
   }
 }
 
@@ -202,48 +222,71 @@ resource "aws_subnet" "public" {
   map_public_ip_on_launch = true
 
   tags = {
-    Name = "tf-acc-nat-gw-basic-public"
+    Name = %[1]q
   }
 }
 
 resource "aws_internet_gateway" "test" {
   vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_eip" "test" {
   vpc = true
-}
-`
 
-const testAccNatGatewayConfig = testAccNatGatewayConfigBase + `
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName)
+}
+
+func testAccNatGatewayConfig(rName string) string {
+	return acctest.ConfigCompose(testAccNatGatewayConfigBase(rName), `
 resource "aws_nat_gateway" "test" {
   allocation_id = aws_eip.test.id
   subnet_id     = aws_subnet.public.id
 
   depends_on = [aws_internet_gateway.test]
 }
-`
+`)
+}
 
-func testAccNatGatewayConfigConnectivityType(connectivityType string) string {
+func testAccNatGatewayConfigConnectivityType(rName, connectivityType string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_subnet" "test" {
   cidr_block = cidrsubnet(aws_vpc.test.cidr_block, 8, 0)
   vpc_id     = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_nat_gateway" "test" {
-  connectivity_type = %[1]q
+  connectivity_type = %[2]q
   subnet_id         = aws_subnet.test.id
+
+  tags = {
+    Name = %[1]q
+  }
 }
-`, connectivityType)
+`, rName, connectivityType)
 }
 
-func testAccNatGatewayConfigTags1(tagKey1, tagValue1 string) string {
-	return testAccNatGatewayConfigBase + fmt.Sprintf(`
+func testAccNatGatewayConfigTags1(rName, tagKey1, tagValue1 string) string {
+	return acctest.ConfigCompose(testAccNatGatewayConfigBase(rName), fmt.Sprintf(`
 resource "aws_nat_gateway" "test" {
   allocation_id = aws_eip.test.id
   subnet_id     = aws_subnet.public.id
@@ -254,11 +297,11 @@ resource "aws_nat_gateway" "test" {
 
   depends_on = [aws_internet_gateway.test]
 }
-`, tagKey1, tagValue1)
+`, tagKey1, tagValue1))
 }
 
-func testAccNatGatewayConfigTags2(tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return testAccNatGatewayConfigBase + fmt.Sprintf(`
+func testAccNatGatewayConfigTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return acctest.ConfigCompose(testAccNatGatewayConfigBase(rName), fmt.Sprintf(`
 resource "aws_nat_gateway" "test" {
   allocation_id = aws_eip.test.id
   subnet_id     = aws_subnet.public.id
@@ -270,5 +313,5 @@ resource "aws_nat_gateway" "test" {
 
   depends_on = [aws_internet_gateway.test]
 }
-`, tagKey1, tagValue1, tagKey2, tagValue2)
+`, tagKey1, tagValue1, tagKey2, tagValue2))
 }
