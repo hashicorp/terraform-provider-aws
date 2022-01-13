@@ -8,6 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
@@ -63,6 +64,14 @@ func DataSourceResourceShare() *schema.Resource {
 			"status": {
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+
+			"resources": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
 			},
 		},
 	}
@@ -121,6 +130,28 @@ func dataSourceResourceShareRead(d *schema.ResourceData, meta interface{}) error
 		}
 
 		params.NextToken = resp.NextToken
+	}
+
+	listInput := &ram.ListResourcesInput{
+		ResourceOwner:     aws.String(d.Get("resource_owner").(string)),
+		ResourceShareArns: aws.StringSlice([]string{d.Get("arn").(string)}),
+	}
+
+	var resourceARNs []*string
+	err := conn.ListResourcesPages(listInput, func(page *ram.ListResourcesOutput, lastPage bool) bool {
+		for _, resource := range page.Resources {
+			resourceARNs = append(resourceARNs, resource.Arn)
+		}
+
+		return !lastPage
+	})
+
+	if err != nil {
+		return fmt.Errorf("error reading RAM resource share resources %s: %s", d.Id(), err)
+	}
+
+	if err := d.Set("resources", flex.FlattenStringList(resourceARNs)); err != nil {
+		return fmt.Errorf("unable to set resources: %s", err)
 	}
 
 	return nil
