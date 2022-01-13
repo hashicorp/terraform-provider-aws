@@ -1110,7 +1110,7 @@ func Provider() *schema.Provider {
 			"aws_key_pair":                                        ec2.ResourceKeyPair(),
 			"aws_launch_template":                                 ec2.ResourceLaunchTemplate(),
 			"aws_main_route_table_association":                    ec2.ResourceMainRouteTableAssociation(),
-			"aws_nat_gateway":                                     ec2.ResourceNatGateway(),
+			"aws_nat_gateway":                                     ec2.ResourceNATGateway(),
 			"aws_network_acl":                                     ec2.ResourceNetworkACL(),
 			"aws_network_acl_rule":                                ec2.ResourceNetworkACLRule(),
 			"aws_network_interface":                               ec2.ResourceNetworkInterface(),

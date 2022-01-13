@@ -61,7 +61,7 @@ func TestAccEC2NatGateway_disappears(t *testing.T) {
 				Config: testAccNatGatewayConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNatGatewayExists(resourceName, &natGateway),
-					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceNatGateway(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceNATGateway(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
