@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func ResourceAPICache() *schema.Resource {
@@ -78,31 +79,32 @@ func resourceAPICacheCreate(d *schema.ResourceData, meta interface{}) error {
 
 	_, err := conn.CreateApiCache(params)
 	if err != nil {
-		return fmt.Errorf("error creating Appsync API Cache: %s", err)
+		return fmt.Errorf("error creating Appsync API Cache: %w", err)
 	}
 
 	d.SetId(apiID)
+
+	if _, err := waitApiCacheAvailable(conn, d.Id()); err != nil {
+		return fmt.Errorf("error waiting for Appsync API Cache (%s) availability: %w", d.Id(), err)
+	}
+
 	return resourceAPICacheRead(d, meta)
 }
 
 func resourceAPICacheRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).AppSyncConn
 
-	input := &appsync.GetApiCacheInput{
-		ApiId: aws.String(d.Id()),
-	}
-
-	resp, err := conn.GetApiCache(input)
-	if err != nil {
-		return fmt.Errorf("error getting Appsync API Cache %q: %s", d.Id(), err)
-	}
-	if resp == nil && !d.IsNewResource() {
+	cache, err := FindApiCacheByID(conn, d.Id())
+	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] AppSync API Cache (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
-	cache := resp.ApiCache
+	if err != nil {
+		return fmt.Errorf("error getting Appsync API Cache %q: %s", d.Id(), err)
+	}
+
 	d.Set("api_id", d.Id())
 	d.Set("type", cache.Type)
 	d.Set("api_caching_behavior", cache.ApiCachingBehavior)
@@ -134,7 +136,11 @@ func resourceAPICacheUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	_, err := conn.UpdateApiCache(params)
 	if err != nil {
-		return fmt.Errorf("error updating Appsync API Cache %q: %s", d.Id(), err)
+		return fmt.Errorf("error updating Appsync API Cache %q: %w", d.Id(), err)
+	}
+
+	if _, err := waitApiCacheAvailable(conn, d.Id()); err != nil {
+		return fmt.Errorf("error waiting for Appsync API Cache (%s) availability: %w", d.Id(), err)
 	}
 
 	return resourceAPICacheRead(d, meta)
@@ -152,7 +158,11 @@ func resourceAPICacheDelete(d *schema.ResourceData, meta interface{}) error {
 		if tfawserr.ErrCodeEquals(err, appsync.ErrCodeNotFoundException) {
 			return nil
 		}
-		return err
+		return fmt.Errorf("error deleting Appsync API Cache: %w", err)
+	}
+
+	if _, err := waitApiCacheDeleted(conn, d.Id()); err != nil {
+		return fmt.Errorf("error waiting for Appsync API Cache (%s) to be deleted: %w", d.Id(), err)
 	}
 
 	return nil
