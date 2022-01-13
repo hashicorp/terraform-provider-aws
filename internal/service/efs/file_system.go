@@ -110,7 +110,7 @@ func ResourceFileSystem() *schema.Resource {
 			"lifecycle_policy": {
 				Type:     schema.TypeList,
 				Optional: true,
-				MaxItems: 2,
+				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"transition_to_ia": {
@@ -371,21 +371,34 @@ func resourceFileSystemDelete(d *schema.ResourceData, meta interface{}) error {
 func flattenEfsFileSystemLifecyclePolicies(apiObjects []*efs.LifecyclePolicy) []interface{} {
 	var tfList []interface{}
 
+	transition_to_ia := ""
+	transition_to_primary_storage_class := ""
+
 	for _, apiObject := range apiObjects {
 		if apiObject == nil {
 			continue
 		}
 
-		tfMap := make(map[string]interface{})
-
 		if apiObject.TransitionToIA != nil {
-			tfMap["transition_to_ia"] = aws.StringValue(apiObject.TransitionToIA)
+			transition_to_ia = aws.StringValue(apiObject.TransitionToIA)
 		}
 
 		if apiObject.TransitionToPrimaryStorageClass != nil {
-			tfMap["transition_to_primary_storage_class"] = aws.StringValue(apiObject.TransitionToPrimaryStorageClass)
+			transition_to_primary_storage_class = aws.StringValue(apiObject.TransitionToPrimaryStorageClass)
 		}
+	}
 
+	tfMap := make(map[string]interface{})
+
+	if transition_to_ia != "" {
+		tfMap["transition_to_ia"] = transition_to_ia
+	}
+
+	if transition_to_primary_storage_class != "" {
+		tfMap["transition_to_primary_storage_class"] = transition_to_primary_storage_class
+	}
+
+	if len(tfMap) > 0 {
 		tfList = append(tfList, tfMap)
 	}
 
@@ -394,6 +407,8 @@ func flattenEfsFileSystemLifecyclePolicies(apiObjects []*efs.LifecyclePolicy) []
 
 func expandEfsFileSystemLifecyclePolicies(tfList []interface{}) []*efs.LifecyclePolicy {
 	var apiObjects []*efs.LifecyclePolicy
+	transition_to_ia := ""
+	transition_to_primary_storage_class := ""
 
 	for _, tfMapRaw := range tfList {
 		tfMap, ok := tfMapRaw.(map[string]interface{})
@@ -402,16 +417,24 @@ func expandEfsFileSystemLifecyclePolicies(tfList []interface{}) []*efs.Lifecycle
 			continue
 		}
 
-		apiObject := &efs.LifecyclePolicy{}
-
 		if v, ok := tfMap["transition_to_ia"].(string); ok && v != "" {
-			apiObject.TransitionToIA = aws.String(v)
+			transition_to_ia = v
 		}
 
 		if v, ok := tfMap["transition_to_primary_storage_class"].(string); ok && v != "" {
-			apiObject.TransitionToPrimaryStorageClass = aws.String(v)
+			transition_to_primary_storage_class = v
 		}
+	}
 
+	if transition_to_ia != "" {
+		apiObject := &efs.LifecyclePolicy{}
+		apiObject.TransitionToIA = aws.String(transition_to_ia)
+		apiObjects = append(apiObjects, apiObject)
+	}
+
+	if transition_to_primary_storage_class != "" {
+		apiObject := &efs.LifecyclePolicy{}
+		apiObject.TransitionToPrimaryStorageClass = aws.String(transition_to_primary_storage_class)
 		apiObjects = append(apiObjects, apiObject)
 	}
 
