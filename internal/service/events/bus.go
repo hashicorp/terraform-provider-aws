@@ -68,13 +68,13 @@ func resourceBusCreate(d *schema.ResourceData, meta interface{}) error {
 
 	log.Printf("[DEBUG] Creating EventBridge event bus: %v", input)
 
-	_, err := conn.CreateEventBus(input)
+	output, err := conn.CreateEventBus(input)
 
 	// Some partitions may not support tag-on-create
 	if input.Tags != nil && (tfawserr.ErrCodeContains(err, ErrCodeAccessDenied) || tfawserr.ErrCodeContains(err, eventbridge.ErrCodeInternalException) || tfawserr.ErrCodeContains(err, eventbridge.ErrCodeOperationDisabledException)) {
 		log.Printf("[WARN] EventBridge Bus (%s) create failed (%s) with tags. Trying create without tags.", d.Id(), err)
 		input.Tags = nil
-		_, err = conn.CreateEventBus(input)
+		output, err = conn.CreateEventBus(input)
 	}
 
 	if err != nil {
@@ -87,7 +87,7 @@ func resourceBusCreate(d *schema.ResourceData, meta interface{}) error {
 
 	// Post-create tagging supported in some partitions
 	if input.Tags == nil && len(tags) > 0 {
-		err := UpdateTags(conn, d.Id(), nil, tags)
+		err := UpdateTags(conn, aws.StringValue(output.EventBusArn), nil, tags)
 
 		if v, ok := d.GetOk("tags"); (!ok || len(v.(map[string]interface{})) == 0) && (tfawserr.ErrCodeContains(err, ErrCodeAccessDenied) || tfawserr.ErrCodeContains(err, eventbridge.ErrCodeInternalException) || tfawserr.ErrCodeContains(err, eventbridge.ErrCodeOperationDisabledException)) {
 			log.Printf("[WARN] error adding tags after create for EventBridge Bus (%s): %s", d.Id(), err)
