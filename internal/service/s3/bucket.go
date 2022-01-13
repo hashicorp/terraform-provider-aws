@@ -1312,7 +1312,7 @@ func resourceBucketRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		log.Printf("[WARN] Unable to read S3 bucket (%s) object lock configuraton: %s", d.Id(), err)
+		log.Printf("[WARN] Unable to read S3 bucket (%s) object lock configuration: %s", d.Id(), err)
 	}
 
 	if err == nil {
