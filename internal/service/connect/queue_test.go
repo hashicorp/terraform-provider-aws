@@ -18,7 +18,8 @@ import (
 // Serialized acceptance tests due to Connect account limits (max 2 parallel tests)
 func TestAccConnectQueue_serial(t *testing.T) {
 	testCases := map[string]func(t *testing.T){
-		"basic": testAccQueue_basic,
+		"basic":      testAccQueue_basic,
+		"disappears": testAccQueue_disappears,
 	}
 
 	for name, tc := range testCases {
@@ -75,6 +76,32 @@ func testAccQueue_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "status", connect.QueueStatusEnabled),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 				),
+			},
+		},
+	})
+}
+
+func testAccQueue_disappears(t *testing.T) {
+	var v connect.DescribeQueueOutput
+	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName2 := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	resourceName := "aws_connect_queue.test"
+
+	t.Skip("Queues do not support deletion today")
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, connect.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckQueueDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccQueueBasicConfig(rName, rName2, "Disappear"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckQueueExists(resourceName, &v),
+					acctest.CheckResourceDisappears(acctest.Provider, tfconnect.ResourceQueue(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
