@@ -472,3 +472,21 @@ resource "aws_connect_queue" "test" {
 }
 `, rName2, OutboundCallerIdName))
 }
+
+func testAccQueueStatusConfig(rName, rName2, status string) string {
+	return acctest.ConfigCompose(
+		testAccQueueBaseConfig(rName),
+		fmt.Sprintf(`
+resource "aws_connect_queue" "test" {
+  instance_id           = aws_connect_instance.test.id
+  name                  = %[1]q
+  description           = "Test update status"
+  hours_of_operation_id = data.aws_connect_hours_of_operation.test.hours_of_operation_id
+  status                = %[2]q
+
+  tags = {
+    "Name" = "Test Queue",
+  }
+}
+`, rName2, status))
+}
