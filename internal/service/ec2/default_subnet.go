@@ -197,6 +197,17 @@ func resourceDefaultSubnetCreate(d *schema.ResourceData, meta interface{}) error
 		return err
 	}
 
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	newTags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{}))).IgnoreConfig(ignoreTagsConfig)
+	oldTags := KeyValueTags(subnet.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+
+	if !oldTags.Equal(newTags) {
+		if err := UpdateTags(conn, d.Id(), oldTags, newTags); err != nil {
+			return fmt.Errorf("error updating EC2 Default Subnet (%s) tags: %w", d.Id(), err)
+		}
+	}
+
 	return resourceSubnetRead(d, meta)
 }
 
