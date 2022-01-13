@@ -2,9 +2,11 @@ package sqs
 
 import (
 	"fmt"
+	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/sqs"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -59,6 +61,12 @@ func dataSourceQueueRead(d *schema.ResourceData, meta interface{}) error {
 	d.SetId(queueURL)
 
 	tags, err := ListTags(conn, queueURL)
+
+	if tfawserr.ErrCodeContains(err, ErrCodeAccessDenied) || tfawserr.ErrCodeContains(err, ErrCodeAuthorizationError) || tfawserr.ErrCodeContains(err, ErrCodeInvalidAction) || tfawserr.ErrCodeContains(err, sqs.ErrCodeUnsupportedOperation) {
+		// Some partitions may not support tagging, giving error
+		log.Printf("[WARN] Unable to list tags for SQS Queue %s: %s", d.Id(), err)
+		return nil
+	}
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for SQS Queue (%s): %w", queueURL, err)

@@ -371,6 +371,12 @@ func ResourceInstance() *schema.Resource {
 							Computed:     true,
 							ValidateFunc: validation.StringInSlice([]string{ec2.HttpTokensStateOptional, ec2.HttpTokensStateRequired}, false),
 						},
+						"instance_metadata_tags": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Default:      ec2.InstanceMetadataTagsStateDisabled,
+							ValidateFunc: validation.StringInSlice(ec2.InstanceMetadataTagsState_Values(), false),
+						},
 					},
 				},
 			},
@@ -457,9 +463,7 @@ func ResourceInstance() *schema.Resource {
 				Computed: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
-					// "You can only modify the volume size, volume type, and Delete on
-					// Termination flag on the block device mapping entry for the root
-					// device volume."
+					// "For the root volume, you can only modify the following: volume size, volume type, and the Delete on Termination flag."
 					// https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/block-device-mapping-concepts.html
 					Schema: map[string]*schema.Schema{
 						"delete_on_termination": {
@@ -1561,6 +1565,7 @@ func resourceInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 					// These parameters are not allowed unless HttpEndpoint is enabled
 					input.HttpTokens = aws.String(mo["http_tokens"].(string))
 					input.HttpPutResponseHopLimit = aws.Int64(int64(mo["http_put_response_hop_limit"].(int)))
+					input.InstanceMetadataTags = aws.String(mo["instance_metadata_tags"].(string))
 				}
 				_, err := conn.ModifyInstanceMetadataOptions(input)
 				if err != nil {
@@ -2940,6 +2945,10 @@ func expandEc2InstanceMetadataOptions(l []interface{}) *ec2.InstanceMetadataOpti
 		if v, ok := m["http_put_response_hop_limit"].(int); ok && v != 0 {
 			opts.HttpPutResponseHopLimit = aws.Int64(int64(v))
 		}
+
+		if v, ok := m["instance_metadata_tags"].(string); ok && v != "" {
+			opts.InstanceMetadataTags = aws.String(v)
+		}
 	}
 
 	return opts
@@ -3017,6 +3026,7 @@ func flattenEc2InstanceMetadataOptions(opts *ec2.InstanceMetadataOptionsResponse
 		"http_endpoint":               aws.StringValue(opts.HttpEndpoint),
 		"http_put_response_hop_limit": aws.Int64Value(opts.HttpPutResponseHopLimit),
 		"http_tokens":                 aws.StringValue(opts.HttpTokens),
+		"instance_metadata_tags":      aws.StringValue(opts.InstanceMetadataTags),
 	}
 
 	return []interface{}{m}

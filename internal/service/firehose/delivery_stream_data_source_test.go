@@ -19,7 +19,7 @@ func TestAccFirehoseDeliveryStreamDataSource_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, firehose.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckKinesisFirehoseDeliveryStreamDestroy,
+		CheckDestroy: testAccCheckDeliveryStreamDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDeliveryStreamBasicDataSourceConfig(rName),

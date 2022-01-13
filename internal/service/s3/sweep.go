@@ -33,6 +33,7 @@ func init() {
 		Dependencies: []string{
 			"aws_s3_access_point",
 			"aws_s3_bucket_object",
+			"aws_s3control_multi_region_access_point",
 		},
 	})
 }
@@ -66,7 +67,7 @@ func sweepBucketObjects(region string) error {
 		bucketName := aws.StringValue(bucket.Name)
 
 		hasPrefix := false
-		prefixes := []string{"mybucket.", "mylogs.", "tf-acc", "tf-object-test", "tf-test", "tf-emr-bootstrap"}
+		prefixes := []string{"tf-acc", "tf-object-test", "tf-test", "tf-emr-bootstrap"}
 
 		for _, prefix := range prefixes {
 			if strings.HasPrefix(bucketName, prefix) {
@@ -140,7 +141,7 @@ func sweepBuckets(region string) error {
 		name := aws.StringValue(bucket.Name)
 
 		sweepable := false
-		prefixes := []string{"mybucket.", "mylogs.", "tf-acc", "tf-object-test", "tf-test", "tf-emr-bootstrap", "terraform-remote-s3-test"}
+		prefixes := []string{"tf-acc", "tf-object-test", "tf-test", "tf-emr-bootstrap", "terraform-remote-s3-test"}
 
 		for _, prefix := range prefixes {
 			if strings.HasPrefix(name, prefix) {

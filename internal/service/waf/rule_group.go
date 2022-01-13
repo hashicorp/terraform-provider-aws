@@ -171,7 +171,7 @@ func resourceRuleGroupRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error setting tags_all: %w", err)
 	}
 
-	d.Set("activated_rule", flattenWafActivatedRules(rResp.ActivatedRules))
+	d.Set("activated_rule", FlattenActivatedRules(rResp.ActivatedRules))
 	d.Set("name", resp.RuleGroup.Name)
 	d.Set("metric_name", resp.RuleGroup.MetricName)
 
@@ -241,7 +241,7 @@ func updateWafRuleGroupResource(id string, oldRules, newRules []interface{}, con
 		req := &waf.UpdateRuleGroupInput{
 			ChangeToken: token,
 			RuleGroupId: aws.String(id),
-			Updates:     diffWafRuleGroupActivatedRules(oldRules, newRules),
+			Updates:     DiffRuleGroupActivatedRules(oldRules, newRules),
 		}
 
 		return conn.UpdateRuleGroup(req)

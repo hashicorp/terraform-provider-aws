@@ -68,7 +68,15 @@ func resourceBusCreate(d *schema.ResourceData, meta interface{}) error {
 
 	log.Printf("[DEBUG] Creating EventBridge event bus: %v", input)
 
-	_, err := conn.CreateEventBus(input)
+	output, err := conn.CreateEventBus(input)
+
+	// Some partitions may not support tag-on-create
+	if input.Tags != nil && (tfawserr.ErrCodeContains(err, ErrCodeAccessDenied) || tfawserr.ErrCodeContains(err, eventbridge.ErrCodeInternalException) || tfawserr.ErrCodeContains(err, eventbridge.ErrCodeOperationDisabledException)) {
+		log.Printf("[WARN] EventBridge Bus (%s) create failed (%s) with tags. Trying create without tags.", d.Id(), err)
+		input.Tags = nil
+		output, err = conn.CreateEventBus(input)
+	}
+
 	if err != nil {
 		return fmt.Errorf("Creating EventBridge event bus (%s) failed: %w", eventBusName, err)
 	}
@@ -76,6 +84,20 @@ func resourceBusCreate(d *schema.ResourceData, meta interface{}) error {
 	d.SetId(eventBusName)
 
 	log.Printf("[INFO] EventBridge event bus (%s) created", d.Id())
+
+	// Post-create tagging supported in some partitions
+	if input.Tags == nil && len(tags) > 0 {
+		err := UpdateTags(conn, aws.StringValue(output.EventBusArn), nil, tags)
+
+		if v, ok := d.GetOk("tags"); (!ok || len(v.(map[string]interface{})) == 0) && (tfawserr.ErrCodeContains(err, ErrCodeAccessDenied) || tfawserr.ErrCodeContains(err, eventbridge.ErrCodeInternalException) || tfawserr.ErrCodeContains(err, eventbridge.ErrCodeOperationDisabledException)) {
+			log.Printf("[WARN] error adding tags after create for EventBridge Bus (%s): %s", d.Id(), err)
+			return resourceBusRead(d, meta)
+		}
+
+		if err != nil {
+			return fmt.Errorf("error creating EventBridge Bus (%s) tags: %w", d.Id(), err)
+		}
+	}
 
 	return resourceBusRead(d, meta)
 }
@@ -106,9 +128,17 @@ func resourceBusRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("name", output.Name)
 
 	tags, err := ListTags(conn, aws.StringValue(output.Arn))
+
+	// ISO partitions may not support tagging, giving error
+	if tfawserr.ErrCodeContains(err, ErrCodeAccessDenied) || tfawserr.ErrCodeContains(err, eventbridge.ErrCodeInternalException) || tfawserr.ErrCodeContains(err, eventbridge.ErrCodeOperationDisabledException) {
+		log.Printf("[WARN] Unable to list tags for EventBridge Bus %s: %s", d.Id(), err)
+		return nil
+	}
+
 	if err != nil {
 		return fmt.Errorf("error listing tags for EventBridge event bus (%s): %w", d.Id(), err)
 	}
+
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
@@ -130,8 +160,15 @@ func resourceBusUpdate(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := UpdateTags(conn, arn, o, n); err != nil {
-			return fmt.Errorf("error updating CloudwWatch Events event bus (%s) tags: %w", arn, err)
+		err := UpdateTags(conn, arn, o, n)
+
+		if tfawserr.ErrCodeContains(err, ErrCodeAccessDenied) || tfawserr.ErrCodeContains(err, eventbridge.ErrCodeInternalException) || tfawserr.ErrCodeContains(err, eventbridge.ErrCodeOperationDisabledException) {
+			log.Printf("[WARN] Unable to update tags for EventBridge Bus %s: %s", d.Id(), err)
+			return resourceBusRead(d, meta)
+		}
+
+		if err != nil {
+			return fmt.Errorf("error updating EventBridge Bus tags: %w", err)
 		}
 	}
 

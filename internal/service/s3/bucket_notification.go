@@ -163,7 +163,7 @@ func resourceBucketNotificationPut(d *schema.ResourceData, meta interface{}) err
 		}
 
 		// Filter
-		filterRules := make([]*s3.FilterRule, 0, 2)
+		filterRules := make([]*s3.FilterRule, 0, filterRulesSliceStartLen)
 		if val, ok := c["filter_prefix"].(string); ok && val != "" {
 			filterRule := &s3.FilterRule{
 				Name:  aws.String("prefix"),
@@ -216,7 +216,7 @@ func resourceBucketNotificationPut(d *schema.ResourceData, meta interface{}) err
 		}
 
 		// Filter
-		filterRules := make([]*s3.FilterRule, 0, 2)
+		filterRules := make([]*s3.FilterRule, 0, filterRulesSliceStartLen)
 		if val, ok := c["filter_prefix"].(string); ok && val != "" {
 			filterRule := &s3.FilterRule{
 				Name:  aws.String("prefix"),
@@ -269,7 +269,7 @@ func resourceBucketNotificationPut(d *schema.ResourceData, meta interface{}) err
 		}
 
 		// Filter
-		filterRules := make([]*s3.FilterRule, 0, 2)
+		filterRules := make([]*s3.FilterRule, 0, filterRulesSliceStartLen)
 		if val, ok := c["filter_prefix"].(string); ok && val != "" {
 			filterRule := &s3.FilterRule{
 				Name:  aws.String("prefix"),

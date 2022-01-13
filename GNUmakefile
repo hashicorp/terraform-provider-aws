@@ -1,10 +1,18 @@
-SWEEP?=us-west-2,us-east-1,us-east-2
-TEST?=./...
-SWEEP_DIR?=./internal/sweep
-PKG_NAME=internal
-TEST_COUNT?=1
-ACCTEST_TIMEOUT?=180m
-ACCTEST_PARALLELISM?=20
+SWEEP               ?= us-west-2,us-east-1,us-east-2
+TEST                ?= ./...
+SWEEP_DIR           ?= ./internal/sweep
+PKG_NAME            ?= internal
+TEST_COUNT          ?= 1
+ACCTEST_TIMEOUT     ?= 180m
+ACCTEST_PARALLELISM ?= 20
+
+ifneq ($(origin PKG), undefined)
+	PKG_NAME = internal/service/$(PKG)
+endif
+
+ifneq ($(origin TESTS), undefined)
+	RUNARGS = -run='$(TESTS)'
+endif
 
 default: build
 
@@ -34,7 +42,7 @@ testacc: fmtcheck
 		echo "See the contributing guide for more information: https://github.com/hashicorp/terraform-provider-aws/blob/main/docs/contributing/running-and-writing-acceptance-tests.md"; \
 		exit 1; \
 	fi
-	TF_ACC=1 go test ./$(PKG_NAME)/... -v -count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) $(TESTARGS) -timeout $(ACCTEST_TIMEOUT)
+	TF_ACC=1 go test ./$(PKG_NAME)/... -v -count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) $(RUNARGS) $(TESTARGS) -timeout $(ACCTEST_TIMEOUT)
 
 fmt:
 	@echo "==> Fixing source code with gofmt..."

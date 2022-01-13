@@ -114,6 +114,33 @@ func FindImageVersionByName(conn *sagemaker.SageMaker, name string) (*sagemaker.
 	return output, nil
 }
 
+func FindDeviceByName(conn *sagemaker.SageMaker, deviceFleetName, deviceName string) (*sagemaker.DescribeDeviceOutput, error) {
+	input := &sagemaker.DescribeDeviceInput{
+		DeviceFleetName: aws.String(deviceFleetName),
+		DeviceName:      aws.String(deviceName),
+	}
+
+	output, err := conn.DescribeDevice(input)
+
+	if tfawserr.ErrMessageContains(err, ErrCodeValidationException, "No device with name") ||
+		tfawserr.ErrMessageContains(err, ErrCodeValidationException, "No device fleet with name") {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
+}
+
 // FindDeviceFleetByName returns the Device Fleet corresponding to the specified Device Fleet name.
 // Returns nil if no Device Fleet is found.
 func FindDeviceFleetByName(conn *sagemaker.SageMaker, id string) (*sagemaker.DescribeDeviceFleetOutput, error) {
@@ -319,6 +346,35 @@ func FindHumanTaskUIByName(conn *sagemaker.SageMaker, name string) (*sagemaker.D
 	}
 
 	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
+}
+
+func FindEndpointByName(conn *sagemaker.SageMaker, name string) (*sagemaker.DescribeEndpointOutput, error) {
+	input := &sagemaker.DescribeEndpointInput{
+		EndpointName: aws.String(name),
+	}
+
+	output, err := conn.DescribeEndpoint(input)
+
+	if tfawserr.ErrMessageContains(err, ErrCodeValidationException, "Could not find endpoint") {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	if aws.StringValue(output.EndpointStatus) == sagemaker.EndpointStatusDeleting {
 		return nil, tfresource.NewEmptyResultError(input)
 	}
 

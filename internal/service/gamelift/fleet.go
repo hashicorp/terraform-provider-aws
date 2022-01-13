@@ -653,7 +653,7 @@ func isGameliftEventFailure(event *gamelift.Event) bool {
 		gamelift.EventCodeServerProcessTerminatedUnhealthy,
 	}
 	for _, fc := range failureCodes {
-		if *event.EventCode == fc {
+		if aws.StringValue(event.EventCode) == fc {
 			return true
 		}
 	}

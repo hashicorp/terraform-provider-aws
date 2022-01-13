@@ -27,7 +27,7 @@ func ResourceContactFlow() *schema.Resource {
 		CreateContext: resourceContactFlowCreate,
 		ReadContext:   resourceContactFlowRead,
 		UpdateContext: resourceContactFlowUpdate,
-		DeleteContext: schema.NoopContext,
+		DeleteContext: resourceContactFlowDelete,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -258,31 +258,30 @@ func resourceContactFlowUpdate(ctx context.Context, d *schema.ResourceData, meta
 	return resourceContactFlowRead(ctx, d, meta)
 }
 
-//Contact Flows do not support deletion today. We will NoOp the Delete method. Users can rename their flows manually if they want.
-// func resourceContactFlowDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-// 	conn := meta.(*conns.AWSClient).ConnectConn
+func resourceContactFlowDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.AWSClient).ConnectConn
 
-// 	instanceID, contactFlowID, err := ContactFlowParseID(d.Id())
+	instanceID, contactFlowID, err := ContactFlowParseID(d.Id())
 
-// 	if err != nil {
-// 		return diag.FromErr(err)
-// 	}
+	if err != nil {
+		return diag.FromErr(err)
+	}
 
-// 	input := &connect.UpdateContactFlowNameInput{
-// 		ContactFlowId: aws.String(contactFlowID),
-// 		InstanceId:    aws.String(instanceID),
-// 		Name:          aws.String(fmt.Sprintf("%s:%s:%d", "zzTrash", d.Get("name").(string), time.Now().Unix())),
-// 		Description:   aws.String("DELETED"),
-// 	}
+	log.Printf("[DEBUG] Deleting Connect Contact Flow : %s", contactFlowID)
 
-// 	_, delerr := conn.UpdateContactFlowNameWithContext(ctx, input)
+	input := &connect.DeleteContactFlowInput{
+		ContactFlowId: aws.String(contactFlowID),
+		InstanceId:    aws.String(instanceID),
+	}
 
-// 	if delerr != nil {
-// 		return diag.FromErr(fmt.Errorf("Unable to delete contact flow: %s", delerr))
-// 	}
+	_, deleteContactFlowErr := conn.DeleteContactFlowWithContext(ctx, input)
 
-// 	return nil
-// }
+	if deleteContactFlowErr != nil {
+		return diag.FromErr(fmt.Errorf("error deleting Connect Contact Flow (%s): %w", d.Id(), deleteContactFlowErr))
+	}
+
+	return nil
+}
 
 func ContactFlowParseID(id string) (string, string, error) {
 	parts := strings.SplitN(id, ":", 2)

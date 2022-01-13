@@ -288,11 +288,11 @@ func (lt *opsworksLayerType) Read(d *schema.ResourceData, meta interface{}) erro
 
 	resp, err := conn.DescribeLayers(req)
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, opsworks.ErrCodeResourceNotFoundException, "") {
+		if !d.IsNewResource() && tfawserr.ErrMessageContains(err, opsworks.ErrCodeResourceNotFoundException, "") {
 			d.SetId("")
 			return nil
 		}
-		return err
+		return fmt.Errorf("error reading OpsWorks layer (%s): %w", d.Id(), err)
 	}
 
 	layer := resp.Layers[0]
@@ -317,7 +317,7 @@ func (lt *opsworksLayerType) Read(d *schema.ResourceData, meta interface{}) erro
 	} else {
 		policy, err := structure.NormalizeJsonString(*layer.CustomJson)
 		if err != nil {
-			return fmt.Errorf("policy contains an invalid JSON: %s", err)
+			return fmt.Errorf("policy contains an invalid JSON: %w", err)
 		}
 		d.Set("custom_json", policy)
 	}
@@ -355,7 +355,7 @@ func (lt *opsworksLayerType) Read(d *schema.ResourceData, meta interface{}) erro
 	tags, err := ListTags(conn, arn)
 
 	if err != nil {
-		return fmt.Errorf("error listing tags for Opsworks Layer (%s): %s", arn, err)
+		return fmt.Errorf("error listing tags for Opsworks Layer (%s): %w", arn, err)
 	}
 
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
@@ -418,8 +418,8 @@ func (lt *opsworksLayerType) Create(d *schema.ResourceData, meta interface{}) er
 	d.SetId(layerId)
 
 	loadBalancer := aws.String(d.Get("elastic_load_balancer").(string))
-	if loadBalancer != nil && *loadBalancer != "" {
-		log.Printf("[DEBUG] Attaching load balancer: %s", *loadBalancer)
+	if aws.StringValue(loadBalancer) != "" {
+		log.Printf("[DEBUG] Attaching load balancer: %s", aws.StringValue(loadBalancer))
 		_, err := conn.AttachElasticLoadBalancer(&opsworks.AttachElasticLoadBalancerInput{
 			ElasticLoadBalancerName: loadBalancer,
 			LayerId:                 &layerId,
@@ -439,7 +439,7 @@ func (lt *opsworksLayerType) Create(d *schema.ResourceData, meta interface{}) er
 
 	if len(tags) > 0 {
 		if err := UpdateTags(conn, arn, nil, tags); err != nil {
-			return fmt.Errorf("error updating Opsworks stack (%s) tags: %s", arn, err)
+			return fmt.Errorf("error updating Opsworks stack (%s) tags: %w", arn, err)
 		}
 	}
 
@@ -486,7 +486,7 @@ func (lt *opsworksLayerType) Update(d *schema.ResourceData, meta interface{}) er
 		loadBalancerOld := aws.String(lbo.(string))
 		loadBalancerNew := aws.String(lbn.(string))
 
-		if loadBalancerOld != nil && *loadBalancerOld != "" {
+		if aws.StringValue(loadBalancerOld) != "" {
 			log.Printf("[DEBUG] Dettaching load balancer: %s", *loadBalancerOld)
 			_, err := conn.DetachElasticLoadBalancer(&opsworks.DetachElasticLoadBalancerInput{
 				ElasticLoadBalancerName: loadBalancerOld,
@@ -497,7 +497,7 @@ func (lt *opsworksLayerType) Update(d *schema.ResourceData, meta interface{}) er
 			}
 		}
 
-		if loadBalancerNew != nil && *loadBalancerNew != "" {
+		if aws.StringValue(loadBalancerNew) != "" {
 			log.Printf("[DEBUG] Attaching load balancer: %s", *loadBalancerNew)
 			_, err := conn.AttachElasticLoadBalancer(&opsworks.AttachElasticLoadBalancerInput{
 				ElasticLoadBalancerName: loadBalancerNew,
@@ -519,7 +519,7 @@ func (lt *opsworksLayerType) Update(d *schema.ResourceData, meta interface{}) er
 
 		arn := d.Get("arn").(string)
 		if err := UpdateTags(conn, arn, o, n); err != nil {
-			return fmt.Errorf("error updating Opsworks Layer (%s) tags: %s", arn, err)
+			return fmt.Errorf("error updating Opsworks Layer (%s) tags: %w", arn, err)
 		}
 	}
 

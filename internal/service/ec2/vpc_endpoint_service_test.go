@@ -226,10 +226,10 @@ func TestAccEC2VPCEndpointService_PrivateDNS_name(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccVpcEndpointServiceConfigPrivateDnsName(rName1, rName2, "changed.com"),
+				Config: testAccVpcEndpointServiceConfigPrivateDnsName(rName1, rName2, "changed.example.com"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVpcEndpointServiceExists(resourceName, &svcCfg),
-					resource.TestCheckResourceAttr(resourceName, "private_dns_name", "changed.com"),
+					resource.TestCheckResourceAttr(resourceName, "private_dns_name", "changed.example.com"),
 					resource.TestCheckResourceAttr(resourceName, "private_dns_name_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "private_dns_name_configuration.0.type", "TXT"),
 				),

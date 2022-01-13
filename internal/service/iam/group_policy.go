@@ -138,9 +138,13 @@ func resourceGroupPolicyRead(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	if err := d.Set("policy", policy); err != nil {
-		return fmt.Errorf("error setting policy: %s", err)
+	policyToSet, err := verify.SecondJSONUnlessEquivalent(d.Get("policy").(string), policy)
+
+	if err != nil {
+		return fmt.Errorf("while setting policy (%s), encountered: %w", policyToSet, err)
 	}
+
+	d.Set("policy", policyToSet)
 
 	if err := d.Set("name", name); err != nil {
 		return fmt.Errorf("error setting name: %s", err)

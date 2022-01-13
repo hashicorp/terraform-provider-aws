@@ -29,6 +29,7 @@ func TestAccRoute53ResolverFirewallRuleGroup_basic(t *testing.T) {
 				Config: testAccRoute53ResolverFirewallRuleGroupConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoute53ResolverFirewallRuleGroupExists(resourceName, &v),
+					resource.TestCheckResourceAttrSet(resourceName, "id"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					acctest.CheckResourceAttrAccountID(resourceName, "owner_id"),
 					resource.TestCheckResourceAttr(resourceName, "share_status", "NOT_SHARED"),
@@ -82,6 +83,7 @@ func TestAccRoute53ResolverFirewallRuleGroup_tags(t *testing.T) {
 				Config: testAccRoute53ResolverFirewallRuleGroupConfigTags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoute53ResolverFirewallRuleGroupExists(resourceName, &v),
+					resource.TestCheckResourceAttrSet(resourceName, "id"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					acctest.CheckResourceAttrAccountID(resourceName, "owner_id"),
 					resource.TestCheckResourceAttr(resourceName, "share_status", "NOT_SHARED"),
@@ -98,6 +100,7 @@ func TestAccRoute53ResolverFirewallRuleGroup_tags(t *testing.T) {
 				Config: testAccRoute53ResolverFirewallRuleGroupConfigTags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoute53ResolverFirewallRuleGroupExists(resourceName, &v),
+					resource.TestCheckResourceAttrSet(resourceName, "id"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					acctest.CheckResourceAttrAccountID(resourceName, "owner_id"),
 					resource.TestCheckResourceAttr(resourceName, "share_status", "NOT_SHARED"),
@@ -110,6 +113,7 @@ func TestAccRoute53ResolverFirewallRuleGroup_tags(t *testing.T) {
 				Config: testAccRoute53ResolverFirewallRuleGroupConfigTags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoute53ResolverFirewallRuleGroupExists(resourceName, &v),
+					resource.TestCheckResourceAttrSet(resourceName, "id"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					acctest.CheckResourceAttrAccountID(resourceName, "owner_id"),
 					resource.TestCheckResourceAttr(resourceName, "share_status", "NOT_SHARED"),

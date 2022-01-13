@@ -98,7 +98,7 @@ func resourceModelRead(d *schema.ResourceData, meta interface{}) error {
 		ApiId:   aws.String(d.Get("api_id").(string)),
 		ModelId: aws.String(d.Id()),
 	})
-	if tfawserr.ErrMessageContains(err, apigatewayv2.ErrCodeNotFoundException, "") {
+	if tfawserr.ErrCodeEquals(err, apigatewayv2.ErrCodeNotFoundException) && !d.IsNewResource() {
 		log.Printf("[WARN] API Gateway v2 model (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil

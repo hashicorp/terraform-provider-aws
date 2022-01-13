@@ -68,6 +68,7 @@ provider "aws" {
 <div style="column-width: 14em;">
 <ul>
   <li><code>accessanalyzer</code></li>
+  <li><code>account</code></li>
   <li><code>acm</code></li>
   <li><code>acmpca</code></li>
   <li><code>alexaforbusiness</code></li>
@@ -202,6 +203,7 @@ provider "aws" {
   <li><code>iotthingsgraph</code></li>
   <li><code>iotwireless</code></li>
   <li><code>kafka</code></li>
+  <li><code>kafkaconnect</code></li>
   <li><code>kendra</code></li>
   <li><code>kinesis</code></li>
   <li><code>kinesisanalytics</code></li>

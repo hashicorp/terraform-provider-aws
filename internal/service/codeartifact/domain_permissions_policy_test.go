@@ -56,6 +56,35 @@ func testAccCodeArtifactDomainPermissionsPolicy_basic(t *testing.T) {
 	})
 }
 
+func testAccCodeArtifactDomainPermissionsPolicy_ignoreEquivalent(t *testing.T) {
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_codeartifact_domain_permissions_policy.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(codeartifact.EndpointsID, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, codeartifact.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckDomainPermissionsDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDomainPermissionsPolicyOrderConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDomainPermissionsExists(resourceName),
+					resource.TestCheckResourceAttrPair(resourceName, "resource_arn", "aws_codeartifact_domain.test", "arn"),
+					resource.TestCheckResourceAttr(resourceName, "domain", rName),
+					resource.TestMatchResourceAttr(resourceName, "policy_document", regexp.MustCompile("codeartifact:CreateRepository")),
+					resource.TestMatchResourceAttr(resourceName, "policy_document", regexp.MustCompile("codeartifact:ListRepositoriesInDomain")),
+					resource.TestCheckResourceAttrPair(resourceName, "domain_owner", "aws_codeartifact_domain.test", "owner"),
+				),
+			},
+			{
+				Config:   testAccDomainPermissionsPolicyNewOrderConfig(rName),
+				PlanOnly: true,
+			},
+		},
+	})
+}
+
 func testAccCodeArtifactDomainPermissionsPolicy_owner(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codeartifact_domain_permissions_policy.test"
@@ -283,6 +312,66 @@ resource "aws_codeartifact_domain_permissions_policy" "test" {
     ]
 }
 EOF
+}
+`, rName)
+}
+
+func testAccDomainPermissionsPolicyOrderConfig(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_kms_key" "test" {
+  description             = %[1]q
+  deletion_window_in_days = 7
+}
+
+resource "aws_codeartifact_domain" "test" {
+  domain         = %[1]q
+  encryption_key = aws_kms_key.test.arn
+}
+
+resource "aws_codeartifact_domain_permissions_policy" "test" {
+  domain = aws_codeartifact_domain.test.domain
+  policy_document = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Action = [
+        "codeartifact:CreateRepository",
+        "codeartifact:ListRepositoriesInDomain",
+      ]
+      Effect    = "Allow"
+      Principal = "*"
+      Resource  = aws_codeartifact_domain.test.arn
+    }]
+  })
+}
+`, rName)
+}
+
+func testAccDomainPermissionsPolicyNewOrderConfig(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_kms_key" "test" {
+  description             = %[1]q
+  deletion_window_in_days = 7
+}
+
+resource "aws_codeartifact_domain" "test" {
+  domain         = %[1]q
+  encryption_key = aws_kms_key.test.arn
+}
+
+resource "aws_codeartifact_domain_permissions_policy" "test" {
+  domain = aws_codeartifact_domain.test.domain
+  policy_document = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Action = [
+        "codeartifact:ListRepositoriesInDomain",
+        "codeartifact:CreateRepository",
+      ]
+      Effect    = "Allow"
+      Principal = "*"
+      Resource  = aws_codeartifact_domain.test.arn
+    }]
+  })
 }
 `, rName)
 }

@@ -363,7 +363,7 @@ func resourceVPCEndpointServiceDelete(d *schema.ResourceData, meta interface{}) 
 
 	output, err := conn.DeleteVpcEndpointServiceConfigurations(input)
 
-	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidVPCEndpointServiceIdNotFound) {
+	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidVpcEndpointServiceIdNotFound) {
 		return nil
 	}
 

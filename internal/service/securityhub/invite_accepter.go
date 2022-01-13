@@ -70,7 +70,7 @@ func resourceInviteAccepterGetInvitationID(conn *securityhub.SecurityHub, master
 
 	for _, invitation := range resp.Invitations {
 		log.Printf("[DEBUG] Invitation: %s", invitation)
-		if *invitation.AccountId == masterId {
+		if aws.StringValue(invitation.AccountId) == masterId {
 			return *invitation.InvitationId, nil
 		}
 	}

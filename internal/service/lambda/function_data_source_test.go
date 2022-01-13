@@ -206,6 +206,7 @@ func TestAccLambdaFunctionDataSource_image(t *testing.T) {
 				Config: testAccFunctionImageDataSourceConfig(rName, imageLatestID),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "code_signing_config_arn", resourceName, "code_signing_config_arn"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "image_uri", resourceName, "image_uri"),
 				),
 			},
 		},

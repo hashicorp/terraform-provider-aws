@@ -21,7 +21,7 @@ type Retryable func(error) (bool, error)
 func RetryWhenContext(ctx context.Context, timeout time.Duration, f func() (interface{}, error), retryable Retryable) (interface{}, error) {
 	var output interface{}
 
-	err := resource.Retry(timeout, func() *resource.RetryError {
+	err := resource.Retry(timeout, func() *resource.RetryError { // nosemgrep: helper-schema-resource-Retry-without-TimeoutError-check
 		var err error
 
 		output, err = f()

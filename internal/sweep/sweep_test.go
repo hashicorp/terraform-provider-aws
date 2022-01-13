@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	_ "github.com/hashicorp/terraform-provider-aws/internal/service/accessanalyzer"
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/acm"
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/acmpca"
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/amplify"
@@ -22,6 +23,7 @@ import (
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/backup"
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/batch"
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/budgets"
+	_ "github.com/hashicorp/terraform-provider-aws/internal/service/cloud9"
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/cloudformation"
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/cloudfront"
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/cloudhsmv2"
@@ -74,6 +76,7 @@ import (
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/lexmodels"
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/licensemanager"
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/lightsail"
+	_ "github.com/hashicorp/terraform-provider-aws/internal/service/memorydb"
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/mq"
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/mwaa"
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/neptune"

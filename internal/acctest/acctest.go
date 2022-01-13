@@ -375,6 +375,21 @@ func MatchResourceAttrRegionalHostname(resourceName, attributeName, serviceName 
 	}
 }
 
+// MatchResourceAttrGlobalHostname ensures the Terraform state regexp matches a formatted DNS hostname with partition DNS suffix and without region
+func MatchResourceAttrGlobalHostname(resourceName, attributeName, serviceName string, hostnamePrefixRegexp *regexp.Regexp) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		hostnameRegexpPattern := fmt.Sprintf("%s\\.%s\\.%s$", hostnamePrefixRegexp.String(), serviceName, PartitionDNSSuffix())
+
+		hostnameRegexp, err := regexp.Compile(hostnameRegexpPattern)
+
+		if err != nil {
+			return fmt.Errorf("Unable to compile hostname regexp (%s): %w", hostnameRegexp, err)
+		}
+
+		return resource.TestMatchResourceAttr(resourceName, attributeName, hostnameRegexp)(s)
+	}
+}
+
 // CheckResourceAttrGlobalARN ensures the Terraform state exactly matches a formatted ARN without region
 func CheckResourceAttrGlobalARN(resourceName, attributeName, arnService, arnResource string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
@@ -605,6 +620,10 @@ func PreCheckMultipleRegion(t *testing.T, regions int) {
 	}
 
 	if regions >= 3 {
+		if thirdRegionPartition() == "aws-us-gov" || Partition() == "aws-us-gov" {
+			t.Skipf("wanted %d regions, partition (%s) only has 2 regions", regions, Partition())
+		}
+
 		if Region() == ThirdRegion() {
 			t.Fatalf("%s and %s must be set to different values for acceptance tests", conns.EnvVarDefaultRegion, conns.EnvVarThirdRegion)
 		}
@@ -1283,22 +1302,27 @@ func ACMCertificateRandomSubDomain(rootDomain string) string {
 		rootDomain)
 }
 
-func CheckACMPCACertificateAuthorityActivateCA(certificateAuthority *acmpca.CertificateAuthority) resource.TestCheckFunc {
+func CheckACMPCACertificateAuthorityActivateRootCA(certificateAuthority *acmpca.CertificateAuthority) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := Provider.Meta().(*conns.AWSClient).ACMPCAConn
 
-		arn := aws.StringValue(certificateAuthority.Arn)
-
-		getCsrResp, err := conn.GetCertificateAuthorityCsr(&acmpca.GetCertificateAuthorityCsrInput{
-			CertificateAuthorityArn: aws.String(arn),
-		})
-		if err != nil {
-			return fmt.Errorf("error getting ACM PCA Certificate Authority (%s) CSR: %s", arn, err)
+		if v := aws.StringValue(certificateAuthority.Type); v != acmpca.CertificateAuthorityTypeRoot {
+			return fmt.Errorf("attempting to activate ACM PCA %s Certificate Authority", v)
 		}
 
-		issueCertResp, err := conn.IssueCertificate(&acmpca.IssueCertificateInput{
+		arn := aws.StringValue(certificateAuthority.Arn)
+
+		getCsrOutput, err := conn.GetCertificateAuthorityCsr(&acmpca.GetCertificateAuthorityCsrInput{
 			CertificateAuthorityArn: aws.String(arn),
-			Csr:                     []byte(aws.StringValue(getCsrResp.Csr)),
+		})
+
+		if err != nil {
+			return fmt.Errorf("error getting ACM PCA Certificate Authority (%s) CSR: %w", arn, err)
+		}
+
+		issueCertOutput, err := conn.IssueCertificate(&acmpca.IssueCertificateInput{
+			CertificateAuthorityArn: aws.String(arn),
+			Csr:                     []byte(aws.StringValue(getCsrOutput.Csr)),
 			IdempotencyToken:        aws.String(resource.UniqueId()),
 			SigningAlgorithm:        certificateAuthority.CertificateAuthorityConfiguration.SigningAlgorithm,
 			TemplateArn:             aws.String(fmt.Sprintf("arn:%s:acm-pca:::template/RootCACertificate/V1", Partition())),
@@ -1307,33 +1331,106 @@ func CheckACMPCACertificateAuthorityActivateCA(certificateAuthority *acmpca.Cert
 				Value: aws.Int64(10),
 			},
 		})
+
 		if err != nil {
-			return fmt.Errorf("error issuing ACM PCA Certificate Authority (%s) Root CA certificate from CSR: %s", arn, err)
+			return fmt.Errorf("error issuing ACM PCA Certificate Authority (%s) Root CA certificate from CSR: %w", arn, err)
 		}
 
 		// Wait for certificate status to become ISSUED.
 		err = conn.WaitUntilCertificateIssued(&acmpca.GetCertificateInput{
 			CertificateAuthorityArn: aws.String(arn),
-			CertificateArn:          issueCertResp.CertificateArn,
+			CertificateArn:          issueCertOutput.CertificateArn,
 		})
+
 		if err != nil {
-			return fmt.Errorf("error waiting for ACM PCA Certificate Authority (%s) Root CA certificate to become ISSUED: %s", arn, err)
+			return fmt.Errorf("error waiting for ACM PCA Certificate Authority (%s) Root CA certificate to become ISSUED: %w", arn, err)
 		}
 
-		getCertResp, err := conn.GetCertificate(&acmpca.GetCertificateInput{
+		getCertOutput, err := conn.GetCertificate(&acmpca.GetCertificateInput{
 			CertificateAuthorityArn: aws.String(arn),
-			CertificateArn:          issueCertResp.CertificateArn,
+			CertificateArn:          issueCertOutput.CertificateArn,
 		})
+
 		if err != nil {
-			return fmt.Errorf("error getting ACM PCA Certificate Authority (%s) issued Root CA certificate: %s", arn, err)
+			return fmt.Errorf("error getting ACM PCA Certificate Authority (%s) issued Root CA certificate: %w", arn, err)
 		}
 
 		_, err = conn.ImportCertificateAuthorityCertificate(&acmpca.ImportCertificateAuthorityCertificateInput{
 			CertificateAuthorityArn: aws.String(arn),
-			Certificate:             []byte(aws.StringValue(getCertResp.Certificate)),
+			Certificate:             []byte(aws.StringValue(getCertOutput.Certificate)),
 		})
+
 		if err != nil {
-			return fmt.Errorf("error importing ACM PCA Certificate Authority (%s) Root CA certificate: %s", arn, err)
+			return fmt.Errorf("error importing ACM PCA Certificate Authority (%s) Root CA certificate: %w", arn, err)
+		}
+
+		return err
+	}
+}
+
+func CheckACMPCACertificateAuthorityActivateSubordinateCA(rootCertificateAuthority, certificateAuthority *acmpca.CertificateAuthority) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := Provider.Meta().(*conns.AWSClient).ACMPCAConn
+
+		if v := aws.StringValue(certificateAuthority.Type); v != acmpca.CertificateAuthorityTypeSubordinate {
+			return fmt.Errorf("attempting to activate ACM PCA %s Certificate Authority", v)
+		}
+
+		arn := aws.StringValue(certificateAuthority.Arn)
+
+		getCsrOutput, err := conn.GetCertificateAuthorityCsr(&acmpca.GetCertificateAuthorityCsrInput{
+			CertificateAuthorityArn: aws.String(arn),
+		})
+
+		if err != nil {
+			return fmt.Errorf("error getting ACM PCA Certificate Authority (%s) CSR: %w", arn, err)
+		}
+
+		rootCertificateAuthorityArn := aws.StringValue(rootCertificateAuthority.Arn)
+
+		issueCertOutput, err := conn.IssueCertificate(&acmpca.IssueCertificateInput{
+			CertificateAuthorityArn: aws.String(rootCertificateAuthorityArn),
+			Csr:                     []byte(aws.StringValue(getCsrOutput.Csr)),
+			IdempotencyToken:        aws.String(resource.UniqueId()),
+			SigningAlgorithm:        certificateAuthority.CertificateAuthorityConfiguration.SigningAlgorithm,
+			TemplateArn:             aws.String(fmt.Sprintf("arn:%s:acm-pca:::template/SubordinateCACertificate_PathLen0/V1", Partition())),
+			Validity: &acmpca.Validity{
+				Type:  aws.String(acmpca.ValidityPeriodTypeYears),
+				Value: aws.Int64(3),
+			},
+		})
+
+		if err != nil {
+			return fmt.Errorf("error issuing ACM PCA Certificate Authority (%s) Subordinate CA certificate from CSR: %w", arn, err)
+		}
+
+		// Wait for certificate status to become ISSUED.
+		err = conn.WaitUntilCertificateIssued(&acmpca.GetCertificateInput{
+			CertificateAuthorityArn: aws.String(rootCertificateAuthorityArn),
+			CertificateArn:          issueCertOutput.CertificateArn,
+		})
+
+		if err != nil {
+			return fmt.Errorf("error waiting for ACM PCA Certificate Authority (%s) Subordinate CA certificate to become ISSUED: %w", arn, err)
+		}
+
+		getCertOutput, err := conn.GetCertificate(&acmpca.GetCertificateInput{
+			CertificateAuthorityArn: aws.String(rootCertificateAuthorityArn),
+			CertificateArn:          issueCertOutput.CertificateArn,
+		})
+
+		if err != nil {
+			return fmt.Errorf("error getting ACM PCA Certificate Authority (%s) issued Subordinate CA certificate: %w", arn, err)
+		}
+
+		_, err = conn.ImportCertificateAuthorityCertificate(&acmpca.ImportCertificateAuthorityCertificateInput{
+			CertificateAuthorityArn: aws.String(arn),
+			Certificate:             []byte(aws.StringValue(getCertOutput.Certificate)),
+			CertificateChain:        []byte(aws.StringValue(getCertOutput.CertificateChain)),
+		})
+
+		if err != nil {
+			return fmt.Errorf("error importing ACM PCA Certificate Authority (%s) Subordinate CA certificate: %w", arn, err)
 		}
 
 		return err
@@ -1353,14 +1450,19 @@ func CheckACMPCACertificateAuthorityDisableCA(certificateAuthority *acmpca.Certi
 	}
 }
 
-func CheckACMPCACertificateAuthorityExists(resourceName string, certificateAuthority *acmpca.CertificateAuthority) resource.TestCheckFunc {
+func CheckACMPCACertificateAuthorityExists(n string, certificateAuthority *acmpca.CertificateAuthority) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[resourceName]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Not found: %s", resourceName)
+			return fmt.Errorf("Not found: %s", n)
+		}
+
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("No ACM PCA Certificate Authority ID is set")
 		}
 
 		conn := Provider.Meta().(*conns.AWSClient).ACMPCAConn
+
 		input := &acmpca.DescribeCertificateAuthorityInput{
 			CertificateAuthorityArn: aws.String(rs.Primary.ID),
 		}
@@ -1372,7 +1474,7 @@ func CheckACMPCACertificateAuthorityExists(resourceName string, certificateAutho
 		}
 
 		if output == nil || output.CertificateAuthority == nil {
-			return fmt.Errorf("ACM PCA Certificate Authority %q does not exist", rs.Primary.ID)
+			return fmt.Errorf("ACM PCA Certificate Authority %s does not exist", rs.Primary.ID)
 		}
 
 		*certificateAuthority = *output.CertificateAuthority
@@ -1668,6 +1770,25 @@ resource "aws_security_group" "sg_for_lambda" {
   }
 }
 `, policyName, roleName, sgName)
+}
+
+func ConfigVpcWithSubnets(subnetCount int) string {
+	return ConfigCompose(
+		ConfigAvailableAZsNoOptIn(),
+		fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+}
+
+resource "aws_subnet" "test" {
+  count = %[1]d
+
+  vpc_id            = aws_vpc.test.id
+  availability_zone = data.aws_availability_zones.available.names[count.index]
+  cidr_block        = cidrsubnet(aws_vpc.test.cidr_block, 8, count.index)
+}
+`, subnetCount),
+	)
 }
 
 func CheckVPCExists(n string, vpc *ec2.Vpc) resource.TestCheckFunc {

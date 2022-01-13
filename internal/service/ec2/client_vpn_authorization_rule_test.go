@@ -210,7 +210,7 @@ func testAccCheckClientVPNAuthorizationRuleDestroy(s *terraform.State) error {
 		if err == nil {
 			return fmt.Errorf("Client VPN authorization rule (%s) still exists", rs.Primary.ID)
 		}
-		if tfawserr.ErrMessageContains(err, tfec2.ErrCodeClientVPNAuthorizationRuleNotFound, "") || tfawserr.ErrMessageContains(err, tfec2.ErrCodeClientVPNEndpointIdNotFound, "") {
+		if tfawserr.ErrMessageContains(err, tfec2.ErrCodeClientVpnAuthorizationRuleNotFound, "") || tfawserr.ErrMessageContains(err, tfec2.ErrCodeClientVpnEndpointIdNotFound, "") {
 			continue
 		}
 		return err

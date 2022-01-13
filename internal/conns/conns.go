@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/request"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/accessanalyzer"
+	"github.com/aws/aws-sdk-go/service/account"
 	"github.com/aws/aws-sdk-go/service/acm"
 	"github.com/aws/aws-sdk-go/service/acmpca"
 	"github.com/aws/aws-sdk-go/service/alexaforbusiness"
@@ -142,6 +143,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/iotthingsgraph"
 	"github.com/aws/aws-sdk-go/service/iotwireless"
 	"github.com/aws/aws-sdk-go/service/kafka"
+	"github.com/aws/aws-sdk-go/service/kafkaconnect"
 	"github.com/aws/aws-sdk-go/service/kendra"
 	"github.com/aws/aws-sdk-go/service/kinesis"
 	"github.com/aws/aws-sdk-go/service/kinesisanalytics"
@@ -286,6 +288,7 @@ import (
 
 const (
 	AccessAnalyzer                = "accessanalyzer"
+	Account                       = "account"
 	ACM                           = "acm"
 	ACMPCA                        = "acmpca"
 	AlexaForBusiness              = "alexaforbusiness"
@@ -422,6 +425,7 @@ const (
 	IoTWireless                   = "iotwireless"
 	IVS                           = "ivs"
 	Kafka                         = "kafka"
+	KafkaConnect                  = "kafkaconnect"
 	Kendra                        = "kendra"
 	Kinesis                       = "kinesis"
 	KinesisAnalytics              = "kinesisanalytics"
@@ -573,6 +577,7 @@ func init() {
 	serviceData = make(map[string]*ServiceDatum)
 
 	serviceData[AccessAnalyzer] = &ServiceDatum{AWSClientName: "AccessAnalyzer", AWSServiceName: accessanalyzer.ServiceName, AWSEndpointsID: accessanalyzer.EndpointsID, AWSServiceID: accessanalyzer.ServiceID, ProviderNameUpper: "AccessAnalyzer", HCLKeys: []string{"accessanalyzer"}}
+	serviceData[Account] = &ServiceDatum{AWSClientName: "Account", AWSServiceName: account.ServiceName, AWSEndpointsID: account.EndpointsID, AWSServiceID: account.ServiceID, ProviderNameUpper: "Account", HCLKeys: []string{"account"}}
 	serviceData[ACM] = &ServiceDatum{AWSClientName: "ACM", AWSServiceName: acm.ServiceName, AWSEndpointsID: acm.EndpointsID, AWSServiceID: acm.ServiceID, ProviderNameUpper: "ACM", HCLKeys: []string{"acm"}}
 	serviceData[ACMPCA] = &ServiceDatum{AWSClientName: "ACMPCA", AWSServiceName: acmpca.ServiceName, AWSEndpointsID: acmpca.EndpointsID, AWSServiceID: acmpca.ServiceID, ProviderNameUpper: "ACMPCA", HCLKeys: []string{"acmpca"}}
 	serviceData[AlexaForBusiness] = &ServiceDatum{AWSClientName: "AlexaForBusiness", AWSServiceName: alexaforbusiness.ServiceName, AWSEndpointsID: alexaforbusiness.EndpointsID, AWSServiceID: alexaforbusiness.ServiceID, ProviderNameUpper: "AlexaForBusiness", HCLKeys: []string{"alexaforbusiness"}}
@@ -706,6 +711,7 @@ func init() {
 	serviceData[IoTThingsGraph] = &ServiceDatum{AWSClientName: "IoTThingsGraph", AWSServiceName: iotthingsgraph.ServiceName, AWSEndpointsID: iotthingsgraph.EndpointsID, AWSServiceID: iotthingsgraph.ServiceID, ProviderNameUpper: "IoTThingsGraph", HCLKeys: []string{"iotthingsgraph"}}
 	serviceData[IoTWireless] = &ServiceDatum{AWSClientName: "IoTWireless", AWSServiceName: iotwireless.ServiceName, AWSEndpointsID: iotwireless.EndpointsID, AWSServiceID: iotwireless.ServiceID, ProviderNameUpper: "IoTWireless", HCLKeys: []string{"iotwireless"}}
 	serviceData[Kafka] = &ServiceDatum{AWSClientName: "Kafka", AWSServiceName: kafka.ServiceName, AWSEndpointsID: kafka.EndpointsID, AWSServiceID: kafka.ServiceID, ProviderNameUpper: "Kafka", HCLKeys: []string{"kafka"}}
+	serviceData[KafkaConnect] = &ServiceDatum{AWSClientName: "KafkaConnect", AWSServiceName: kafkaconnect.ServiceName, AWSEndpointsID: kafkaconnect.EndpointsID, AWSServiceID: kafkaconnect.ServiceID, ProviderNameUpper: "KafkaConnect", HCLKeys: []string{"kafkaconnect"}}
 	serviceData[Kendra] = &ServiceDatum{AWSClientName: "Kendra", AWSServiceName: kendra.ServiceName, AWSEndpointsID: kendra.EndpointsID, AWSServiceID: kendra.ServiceID, ProviderNameUpper: "Kendra", HCLKeys: []string{"kendra"}}
 	serviceData[Kinesis] = &ServiceDatum{AWSClientName: "Kinesis", AWSServiceName: kinesis.ServiceName, AWSEndpointsID: kinesis.EndpointsID, AWSServiceID: kinesis.ServiceID, ProviderNameUpper: "Kinesis", HCLKeys: []string{"kinesis"}}
 	serviceData[KinesisAnalytics] = &ServiceDatum{AWSClientName: "KinesisAnalytics", AWSServiceName: kinesisanalytics.ServiceName, AWSEndpointsID: kinesisanalytics.EndpointsID, AWSServiceID: kinesisanalytics.ServiceID, ProviderNameUpper: "KinesisAnalytics", HCLKeys: []string{"kinesisanalytics"}}
@@ -881,6 +887,7 @@ type Config struct {
 
 type AWSClient struct {
 	AccessAnalyzerConn                *accessanalyzer.AccessAnalyzer
+	AccountConn                       *account.Account
 	AccountID                         string
 	ACMConn                           *acm.ACM
 	ACMPCAConn                        *acmpca.ACMPCA
@@ -1018,6 +1025,7 @@ type AWSClient struct {
 	IoTThingsGraphConn                *iotthingsgraph.IoTThingsGraph
 	IoTWirelessConn                   *iotwireless.IoTWireless
 	KafkaConn                         *kafka.Kafka
+	KafkaConnectConn                  *kafkaconnect.KafkaConnect
 	KendraConn                        *kendra.Kendra
 	KinesisAnalyticsConn              *kinesisanalytics.KinesisAnalytics
 	KinesisAnalyticsV2Conn            *kinesisanalyticsv2.KinesisAnalyticsV2
@@ -1234,6 +1242,7 @@ func (c *Config) Client() (interface{}, error) {
 
 	client := &AWSClient{
 		AccessAnalyzerConn:                accessanalyzer.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[AccessAnalyzer])})),
+		AccountConn:                       account.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[Account])})),
 		AccountID:                         accountID,
 		ACMConn:                           acm.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[ACM])})),
 		ACMPCAConn:                        acmpca.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[ACMPCA])})),
@@ -1370,6 +1379,7 @@ func (c *Config) Client() (interface{}, error) {
 		IoTThingsGraphConn:                iotthingsgraph.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[IoTThingsGraph])})),
 		IoTWirelessConn:                   iotwireless.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[IoTWireless])})),
 		KafkaConn:                         kafka.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[Kafka])})),
+		KafkaConnectConn:                  kafkaconnect.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[KafkaConnect])})),
 		KendraConn:                        kendra.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[Kendra])})),
 		KinesisAnalyticsConn:              kinesisanalytics.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[KinesisAnalytics])})),
 		KinesisAnalyticsV2Conn:            kinesisanalyticsv2.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[KinesisAnalyticsV2])})),
@@ -1736,6 +1746,12 @@ func (c *Config) Client() (interface{}, error) {
 		// Retry on the following error:
 		// ConcurrentModificationException: AWS Organizations can't complete your request because it conflicts with another attempt to modify the same entity. Try again later.
 		if tfawserr.ErrMessageContains(r.Error, organizations.ErrCodeConcurrentModificationException, "Try again later") {
+			r.Retryable = aws.Bool(true)
+		}
+	})
+
+	client.S3Conn.Handlers.Retry.PushBack(func(r *request.Request) {
+		if tfawserr.ErrMessageContains(r.Error, "OperationAborted", "A conflicting conditional operation is currently in progress against this resource. Please try again.") {
 			r.Retryable = aws.Bool(true)
 		}
 	})

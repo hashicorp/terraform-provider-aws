@@ -51,6 +51,7 @@ In addition to the argument above, the following attributes are exported:
 * `ebs_performance_maximum_throughput` - The maximum throughput performance for an EBS-optimized instance type, in MBps.
 * `efa_supported` - Indicates whether Elastic Fabric Adapter (EFA) is supported.
 * `ena_support` - Indicates whether Elastic Network Adapter (ENA) is supported.
+* `encryption_in_transit_supported` - Indicates whether encryption in-transit between instances is supported.
 * `fpgas` - Describes the FPGA accelerator settings for the instance type.
     * `fpgas.#.count` - The count of FPGA accelerators for the instance type.
     * `fpgas.#.manufacturer` - The manufacturer of the FPGA accelerator.

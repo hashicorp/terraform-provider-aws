@@ -4,6 +4,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ecs"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func FindCapacityProviderByARN(conn *ecs.ECS, arn string) (*ecs.CapacityProvider, error) {
@@ -37,14 +38,10 @@ func FindCapacityProviderByARN(conn *ecs.ECS, arn string) (*ecs.CapacityProvider
 	return capacityProvider, nil
 }
 
-func FindClusterByARN(conn *ecs.ECS, arn string) (*ecs.DescribeClustersOutput, error) {
+func FindClusterByNameOrARN(conn *ecs.ECS, nameOrARN string) (*ecs.DescribeClustersOutput, error) {
 	input := &ecs.DescribeClustersInput{
-		Clusters: []*string{aws.String(arn)},
-		Include: []*string{
-			aws.String(ecs.ClusterFieldTags),
-			aws.String(ecs.ClusterFieldConfigurations),
-			aws.String(ecs.ClusterFieldSettings),
-		},
+		Clusters: aws.StringSlice([]string{nameOrARN}),
+		Include:  aws.StringSlice([]string{ecs.ClusterFieldTags, ecs.ClusterFieldConfigurations, ecs.ClusterFieldSettings}),
 	}
 
 	output, err := conn.DescribeClusters(input)
@@ -57,10 +54,7 @@ func FindClusterByARN(conn *ecs.ECS, arn string) (*ecs.DescribeClustersOutput, e
 	}
 
 	if output == nil {
-		return nil, &resource.NotFoundError{
-			Message:     "Empty result",
-			LastRequest: input,
-		}
+		return nil, tfresource.NewEmptyResultError(input)
 	}
 
 	return output, nil
