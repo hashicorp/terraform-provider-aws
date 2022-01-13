@@ -981,6 +981,7 @@ func Provider() *schema.Provider {
 			"aws_connect_instance":                    connect.ResourceInstance(),
 			"aws_connect_hours_of_operation":          connect.ResourceHoursOfOperation(),
 			"aws_connect_lambda_function_association": connect.ResourceLambdaFunctionAssociation(),
+			"aws_connect_queue":                       connect.ResourceQueue(),
 			"aws_connect_quick_connect":               connect.ResourceQuickConnect(),
 
 			"aws_cur_report_definition": cur.ResourceReportDefinition(),
