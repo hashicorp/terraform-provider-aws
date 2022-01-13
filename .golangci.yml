@@ -48,8 +48,8 @@ linters-settings:
           - request.WithWaiterMaxAttempts
           # AWS Provider
           - mapMaxItems
-          - wafv2RootStatementSchema
-          - wafv2WebACLRootStatementSchema
+          - rootStatementSchema
+          - webACLRootStatementSchema
           - nullable.*
           - sweep.SweepOrchestratorContext
           # Terraform Plugin SDK

@@ -359,7 +359,7 @@ func resourceTaskSetCreate(d *schema.ResourceData, meta interface{}) error {
 
 	// Some partitions (i.e., ISO) may not support tag-on-create, attempt tag after create
 	if input.Tags == nil && len(tags) > 0 {
-		err := UpdateTags(conn, d.Id(), nil, tags)
+		err := UpdateTags(conn, aws.StringValue(output.TaskSet.TaskSetArn), nil, tags)
 
 		if v, ok := d.GetOk("tags"); (!ok || len(v.(map[string]interface{})) == 0) && (tfawserr.ErrCodeContains(err, ecs.ErrCodeAccessDeniedException) || tfawserr.ErrCodeContains(err, ecs.ErrCodeInvalidParameterException) || tfawserr.ErrCodeContains(err, ecs.ErrCodeUnsupportedFeatureException)) {
 			// If default tags only, log and continue. Otherwise, error.
