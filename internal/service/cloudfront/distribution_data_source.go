@@ -86,7 +86,6 @@ func dataSourceDistributionRead(d *schema.ResourceData, meta interface{}) error 
 		d.Set("in_progress_validation_batches", distribution.InProgressInvalidationBatches)
 		d.Set("last_modified_time", aws.String(distribution.LastModifiedTime.String()))
 		d.Set("status", distribution.Status)
-		d.Set("aliases", distribution.DistributionConfig.Aliases.Items)
 		region := meta.(*conns.AWSClient).Region
 		if v, ok := endpoints.PartitionForRegion(endpoints.DefaultPartitions(), region); ok && v.ID() == endpoints.AwsCnPartitionID {
 			d.Set("hosted_zone_id", cloudFrontCNRoute53ZoneID)
@@ -95,6 +94,9 @@ func dataSourceDistributionRead(d *schema.ResourceData, meta interface{}) error 
 		}
 		if distributionConfig := distribution.DistributionConfig; distributionConfig != nil {
 			d.Set("enabled", distributionConfig.Enabled)
+			if aliases := distributionConfig.Aliases; aliases != nil {
+				d.Set("aliases", distribution.DistributionConfig.Aliases.Items)
+			}
 		}
 	}
 	tags, err := ListTags(conn, d.Get("arn").(string))
