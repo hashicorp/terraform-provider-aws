@@ -22,6 +22,7 @@ const (
 	ErrCodeInvalidAttachmentIDNotFound               = "InvalidAttachmentID.NotFound"
 	ErrCodeInvalidCarrierGatewayIDNotFound           = "InvalidCarrierGatewayID.NotFound"
 	ErrCodeInvalidCustomerGatewayIDNotFound          = "InvalidCustomerGatewayID.NotFound"
+	ErrCodeInvalidDhcpOptionIDNotFound               = "InvalidDhcpOptionID.NotFound"
 	ErrCodeInvalidFlowLogIdNotFound                  = "InvalidFlowLogId.NotFound"
 	ErrCodeInvalidGatewayIDNotFound                  = "InvalidGatewayID.NotFound"
 	ErrCodeInvalidGroupNotFound                      = "InvalidGroup.NotFound"

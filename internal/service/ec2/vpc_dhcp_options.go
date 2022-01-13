@@ -3,7 +3,6 @@ package ec2
 import (
 	"fmt"
 	"log"
-	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -25,133 +24,89 @@ func ResourceVPCDHCPOptions() *schema.Resource {
 		Read:   resourceVPCDHCPOptionsRead,
 		Update: resourceVPCDHCPOptionsUpdate,
 		Delete: resourceVPCDHCPOptionsDelete,
+
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
 
 		Schema: map[string]*schema.Schema{
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"domain_name": {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
 			},
-
 			"domain_name_servers": {
 				Type:     schema.TypeList,
 				Optional: true,
 				ForceNew: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-
-			"ntp_servers": {
-				Type:     schema.TypeList,
-				Optional: true,
-				ForceNew: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-
-			"netbios_node_type": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-			},
-
 			"netbios_name_servers": {
 				Type:     schema.TypeList,
 				Optional: true,
 				ForceNew: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-
-			"tags": tftags.TagsSchema(),
-
-			"tags_all": tftags.TagsSchemaComputed(),
-
+			"netbios_node_type": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+			},
+			"ntp_servers": {
+				Type:     schema.TypeList,
+				Optional: true,
+				ForceNew: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
 			"owner_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+			"tags":     tftags.TagsSchema(),
+			"tags_all": tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
+var (
+	optionsMap = newDHCPOptionsMap(map[string]string{
+		"domain_name":          "domain-name",
+		"domain_name_servers":  "domain-name-servers",
+		"netbios_name_servers": "netbios-name-servers",
+		"netbios_node_type":    "netbios-node-type",
+		"ntp_servers":          "ntp-servers",
+	})
+)
+
 func resourceVPCDHCPOptionsCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
-	setDHCPOption := func(key string) *ec2.NewDhcpConfiguration {
-		log.Printf("[DEBUG] Setting DHCP option %s...", key)
-		tfKey := strings.Replace(key, "-", "_", -1)
+	dhcpConfigurations, err := optionsMap.resourceDataToDhcpConfigurations(d)
 
-		value, ok := d.GetOk(tfKey)
-		if !ok {
-			return nil
-		}
-
-		if v, ok := value.(string); ok {
-			return &ec2.NewDhcpConfiguration{
-				Key: aws.String(key),
-				Values: []*string{
-					aws.String(v),
-				},
-			}
-		}
-
-		if v, ok := value.([]interface{}); ok {
-			var s []*string
-			for _, attr := range v {
-				s = append(s, aws.String(attr.(string)))
-			}
-
-			return &ec2.NewDhcpConfiguration{
-				Key:    aws.String(key),
-				Values: s,
-			}
-		}
-
-		return nil
-	}
-
-	createOpts := &ec2.CreateDhcpOptionsInput{
-		DhcpConfigurations: []*ec2.NewDhcpConfiguration{
-			setDHCPOption("domain-name"),
-			setDHCPOption("domain-name-servers"),
-			setDHCPOption("ntp-servers"),
-			setDHCPOption("netbios-node-type"),
-			setDHCPOption("netbios-name-servers"),
-		},
-		TagSpecifications: ec2TagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeDhcpOptions),
-	}
-
-	resp, err := conn.CreateDhcpOptions(createOpts)
 	if err != nil {
-		return fmt.Errorf("Error creating DHCP Options Set: %s", err)
+		return err
 	}
 
-	dos := resp.DhcpOptions
-	d.SetId(aws.StringValue(dos.DhcpOptionsId))
-	log.Printf("[INFO] DHCP Options Set ID: %s", d.Id())
+	input := &ec2.CreateDhcpOptionsInput{
+		DhcpConfigurations: dhcpConfigurations,
+		TagSpecifications:  ec2TagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeDhcpOptions),
+	}
 
-	// Wait for the DHCP Options to become available
-	log.Printf("[DEBUG] Waiting for DHCP Options (%s) to become available", d.Id())
-	stateConf := &resource.StateChangeConf{
-		Pending: []string{"pending"},
-		Target:  []string{"created"},
-		Refresh: resourceDHCPOptionsStateRefreshFunc(conn, d.Id()),
-		Timeout: 5 * time.Minute,
+	output, err := conn.CreateDhcpOptions(input)
+
+	if err != nil {
+		return fmt.Errorf("error creating EC2 DHCP Options Set: %w", err)
 	}
-	if _, err := stateConf.WaitForState(); err != nil {
-		return fmt.Errorf(
-			"Error waiting for DHCP Options (%s) to become available: %s",
-			d.Id(), err)
-	}
+
+	d.SetId(aws.StringValue(output.DhcpOptions.DhcpOptionsId))
 
 	return resourceVPCDHCPOptionsRead(d, meta)
 }
@@ -161,27 +116,38 @@ func resourceVPCDHCPOptionsRead(d *schema.ResourceData, meta interface{}) error 
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	req := &ec2.DescribeDhcpOptionsInput{
-		DhcpOptionsIds: []*string{
-			aws.String(d.Id()),
-		},
-	}
+	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(PropagationTimeout, func() (interface{}, error) {
+		return FindDhcpOptionsByID(conn, d.Id())
+	}, d.IsNewResource())
 
-	resp, err := conn.DescribeDhcpOptions(req)
-	if err != nil {
-		if isNoSuchDhcpOptionIDErr(err) {
-			log.Printf("[WARN] DHCP Options (%s) not found, removing from state", d.Id())
-			d.SetId("")
-			return nil
-		}
-		return fmt.Errorf("Error retrieving DHCP Options: %s", err.Error())
-	}
-
-	if len(resp.DhcpOptions) == 0 {
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] EC2 DHCP Options Set %s not found, removing from state", d.Id())
+		d.SetId("")
 		return nil
 	}
 
-	opts := resp.DhcpOptions[0]
+	if err != nil {
+		return fmt.Errorf("error reading EC2 DHCP Options Set (%s): %w", d.Id(), err)
+	}
+
+	opts := outputRaw.(*ec2.DhcpOptions)
+
+	ownerID := aws.StringValue(opts.OwnerId)
+	arn := arn.ARN{
+		Partition: meta.(*conns.AWSClient).Partition,
+		Service:   ec2.ServiceName,
+		Region:    meta.(*conns.AWSClient).Region,
+		AccountID: ownerID,
+		Resource:  fmt.Sprintf("dhcp-options/%s", d.Id()),
+	}.String()
+	d.Set("arn", arn)
+	d.Set("owner_id", ownerID)
+
+	err = optionsMap.dhcpConfigurationsToResourceData(opts.DhcpConfigurations, d)
+
+	if err != nil {
+		return err
+	}
 
 	tags := KeyValueTags(opts.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
@@ -194,33 +160,6 @@ func resourceVPCDHCPOptionsRead(d *schema.ResourceData, meta interface{}) error 
 		return fmt.Errorf("error setting tags_all: %w", err)
 	}
 
-	d.Set("owner_id", opts.OwnerId)
-
-	for _, cfg := range opts.DhcpConfigurations {
-		tfKey := strings.Replace(*cfg.Key, "-", "_", -1)
-
-		if _, ok := d.Get(tfKey).(string); ok {
-			d.Set(tfKey, cfg.Values[0].Value)
-		} else {
-			values := make([]string, 0, len(cfg.Values))
-			for _, v := range cfg.Values {
-				values = append(values, *v.Value)
-			}
-
-			d.Set(tfKey, values)
-		}
-	}
-
-	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
-		Service:   ec2.ServiceName,
-		Region:    meta.(*conns.AWSClient).Region,
-		AccountID: aws.StringValue(opts.OwnerId),
-		Resource:  fmt.Sprintf("dhcp-options/%s", d.Id()),
-	}.String()
-
-	d.Set("arn", arn)
-
 	return nil
 }
 
@@ -229,8 +168,9 @@ func resourceVPCDHCPOptionsUpdate(d *schema.ResourceData, meta interface{}) erro
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
+
 		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
-			return fmt.Errorf("error updating tags: %s", err)
+			return fmt.Errorf("error updating EC2 DHCP Options Set (%s) tags: %w", d.Id(), err)
 		}
 	}
 
@@ -343,4 +283,76 @@ func resourceDHCPOptionsStateRefreshFunc(conn *ec2.EC2, id string) resource.Stat
 
 func isNoSuchDhcpOptionIDErr(err error) bool {
 	return tfawserr.ErrMessageContains(err, "InvalidDhcpOptionID.NotFound", "") || tfawserr.ErrMessageContains(err, "InvalidDhcpOptionsID.NotFound", "")
+}
+
+// dhcpOptionsMap represents a mapping of Terraform resource attribute name to AWS API DHCP Option name.
+type dhcpOptionsMap struct {
+	tfToApi map[string]string
+	apiToTf map[string]string
+}
+
+func newDHCPOptionsMap(tfToApi map[string]string) *dhcpOptionsMap {
+	apiToTf := make(map[string]string)
+
+	for k, v := range tfToApi {
+		apiToTf[v] = k
+	}
+
+	return &dhcpOptionsMap{
+		tfToApi: tfToApi,
+		apiToTf: apiToTf,
+	}
+}
+
+// dhcpConfigurationsToResourceData sets Terraform ResourceData from a list of AWS API DHCP configurations.
+func (m *dhcpOptionsMap) dhcpConfigurationsToResourceData(dhcpConfigurations []*ec2.DhcpConfiguration, d *schema.ResourceData) error {
+	for _, dhcpConfiguration := range dhcpConfigurations {
+		apiName := aws.StringValue(dhcpConfiguration.Key)
+		if tfName, ok := m.apiToTf[apiName]; ok {
+			switch v := d.Get(tfName).(type) {
+			case string:
+				d.Set(tfName, dhcpConfiguration.Values[0].Value)
+			case []interface{}:
+				var values []*string
+				for _, v := range dhcpConfiguration.Values {
+					values = append(values, v.Value)
+				}
+				d.Set(tfName, aws.StringValueSlice(values))
+			default:
+				return fmt.Errorf("Attribute (%s) is of unsupported type: %T", tfName, v)
+			}
+		} else {
+			return fmt.Errorf("Unsupported DHCP option: %s", apiName)
+		}
+	}
+
+	return nil
+}
+
+// resourceDataToNewDhcpConfigurations returns a list of AWS API DHCP configurations from Terraform ResourceData.
+func (m *dhcpOptionsMap) resourceDataToDhcpConfigurations(d *schema.ResourceData) ([]*ec2.NewDhcpConfiguration, error) {
+	var output []*ec2.NewDhcpConfiguration
+
+	for tfName, apiName := range m.tfToApi {
+		switch v := d.Get(tfName).(type) {
+		case string:
+			output = append(output, &ec2.NewDhcpConfiguration{
+				Key:    aws.String(apiName),
+				Values: aws.StringSlice([]string{v}),
+			})
+		case []interface{}:
+			var values []string
+			for _, v := range v {
+				values = append(values, v.(string))
+			}
+			output = append(output, &ec2.NewDhcpConfiguration{
+				Key:    aws.String(apiName),
+				Values: aws.StringSlice(values),
+			})
+		default:
+			return nil, fmt.Errorf("Attribute (%s) is of unsupported type: %T", tfName, v)
+		}
+	}
+
+	return output, nil
 }
