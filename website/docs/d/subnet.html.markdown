@@ -55,7 +55,7 @@ The arguments of this data source act as filters for querying the available subn
 The following arguments are optional:
 
 * `availability_zone` - (Optional) Availability zone where the subnet must reside.
-* `availability_zone_id` - (Optional) ID of the Availability Zone for the subnet.
+* `availability_zone_id` - (Optional) ID of the Availability Zone for the subnet. This argument is not supported in all regions or partitions. If necessary, use `availability_zone` instead.
 * `cidr_block` - (Optional) CIDR block of the desired subnet.
 * `default_for_az` - (Optional) Whether the desired subnet must be the default subnet for its associated availability zone.
 * `filter` - (Optional) Configuration block. Detailed below.

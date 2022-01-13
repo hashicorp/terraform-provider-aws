@@ -145,10 +145,16 @@ func resourceSubnetCreate(d *schema.ResourceData, meta interface{}) error {
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
 	input := &ec2.CreateSubnetInput{
-		AvailabilityZone:   aws.String(d.Get("availability_zone").(string)),
-		AvailabilityZoneId: aws.String(d.Get("availability_zone_id").(string)),
-		TagSpecifications:  ec2TagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeSubnet),
-		VpcId:              aws.String(d.Get("vpc_id").(string)),
+		TagSpecifications: ec2TagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeSubnet),
+		VpcId:             aws.String(d.Get("vpc_id").(string)),
+	}
+
+	if v, ok := d.GetOk("availability_zone"); ok {
+		input.AvailabilityZone = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("availability_zone_id"); ok {
+		input.AvailabilityZoneId = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("cidr_block"); ok {
