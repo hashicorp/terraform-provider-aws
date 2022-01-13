@@ -109,7 +109,7 @@ resource "aws_spot_fleet_request" "foo" {
 }
 ```
 
--> In this example, we use a [`dynamic` block](/docs/configuration/expressions.html#dynamic-blocks) to define zero or more `launch_specification` blocks, producing one for each element in the list of subnet ids.
+-> In this example, we use a [`dynamic` block](https://www.terraform.io/language/expressions/dynamic-blocks) to define zero or more `launch_specification` blocks, producing one for each element in the list of subnet ids.
 
 ```terraform
 resource "aws_spot_fleet_request" "example" {
