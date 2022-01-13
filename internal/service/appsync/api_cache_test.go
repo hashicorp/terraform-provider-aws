@@ -118,6 +118,7 @@ resource "aws_appsync_api_cache" "test" {
   api_id               = aws_appsync_graphql_api.test.id
   type                 = "SMALL"
   api_caching_behavior = "FULL_REQUEST_CACHING"
+  ttl                  = 60
 }
 `, rName)
 }

@@ -827,6 +827,7 @@ func Provider() *schema.Provider {
 			"aws_appstream_user":                    appstream.ResourceUser(),
 			"aws_appstream_user_stack_association":  appstream.ResourceUserStackAssociation(),
 
+			"aws_appsync_api_cache":   appsync.ResourceAPICache(),
 			"aws_appsync_api_key":     appsync.ResourceAPIKey(),
 			"aws_appsync_datasource":  appsync.ResourceDataSource(),
 			"aws_appsync_function":    appsync.ResourceFunction(),
