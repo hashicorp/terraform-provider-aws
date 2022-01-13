@@ -116,10 +116,10 @@ resource "aws_spot_fleet_request" "example" {
   iam_fleet_role                      = "arn:aws:iam::12345678:role/spot-fleet"
   target_capacity                     = 3
   valid_until                         = "2019-11-04T20:44:20Z"
-  allocation_strategy                 = lowestPrice
-  fleet_type                          = request
-  wait_for_fulfillment                = true
-  terminate_instances_with_expiration = true
+  allocation_strategy                 = "lowestPrice"
+  fleet_type                          = "request"
+  wait_for_fulfillment                = "true"
+  terminate_instances_with_expiration = "true"
 
 
   dynamic "launch_specification" {
