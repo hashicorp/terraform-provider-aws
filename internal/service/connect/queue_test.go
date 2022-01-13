@@ -210,3 +210,46 @@ resource "aws_connect_queue" "test" {
 }
 `, rName2, label))
 }
+
+func testAccQueueHoursOfOperationConfig(rName, rName2, selectHoursOfOperationId string) string {
+	return acctest.ConfigCompose(
+		testAccQueueBaseConfig(rName),
+		fmt.Sprintf(`
+locals {
+  select_hours_of_operation_id = %[2]q
+}
+
+resource "aws_connect_hours_of_operation" "test" {
+  instance_id = aws_connect_instance.test.id
+  name        = %[1]q
+  description = "Example aws_connect_hours_of_operation to test updates"
+  time_zone   = "EST"
+
+  config {
+    day = "MONDAY"
+
+    end_time {
+      hours   = 23
+      minutes = 8
+    }
+
+    start_time {
+      hours   = 8
+      minutes = 0
+    }
+  }
+}
+
+resource "aws_connect_queue" "test" {
+  instance_id           = aws_connect_instance.test.id
+  name                  = %[1]q
+  description           = "Test update hours_of_operation_id"
+  hours_of_operation_id = local.select_hours_of_operation_id == "first" ? data.aws_connect_hours_of_operation.test.hours_of_operation_id : aws_connect_hours_of_operation.test.hours_of_operation_id
+
+  tags = {
+    "Name" = "Test Queue",
+  }
+}
+`, rName2, selectHoursOfOperationId))
+}
+
