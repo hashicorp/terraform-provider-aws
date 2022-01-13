@@ -294,11 +294,45 @@ func resourceMetricAlarmCreate(d *schema.ResourceData, meta interface{}) error {
 
 	log.Printf("[DEBUG] Creating CloudWatch Metric Alarm: %#v", params)
 	_, err = conn.PutMetricAlarm(&params)
+
+	// Some partitions (i.e., ISO) may not support tag-on-create
+	if params.Tags != nil && (tfawserr.ErrCodeContains(err, errCodeAccessDenied) || tfawserr.ErrCodeContains(err, cloudwatch.ErrCodeInternalServiceFault)) {
+		log.Printf("[WARN] CloudWatch Metric Alarm (%s) create failed (%s) with tags. Trying create without tags.", d.Id(), err)
+		params.Tags = nil
+
+		_, err = conn.PutMetricAlarm(&params)
+	}
+
 	if err != nil {
 		return fmt.Errorf("Creating metric alarm failed: %w", err)
 	}
+
 	d.SetId(d.Get("alarm_name").(string))
 	log.Println("[INFO] CloudWatch Metric Alarm created")
+
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+
+	// Some partitions (i.e., ISO) may not support tag-on-create, attempt tag after create
+	if params.Tags == nil && len(tags) > 0 {
+		resp, err := FindMetricAlarmByName(conn, d.Id())
+
+		if err != nil {
+			return fmt.Errorf("while finding metric alarm (%s): %w", d.Id(), err)
+		}
+
+		err = UpdateTags(conn, aws.StringValue(resp.AlarmArn), nil, tags)
+
+		// If default tags only, log and continue. Otherwise, error.
+		if v, ok := d.GetOk("tags"); (!ok || len(v.(map[string]interface{})) == 0) && (tfawserr.ErrCodeContains(err, errCodeAccessDenied) || tfawserr.ErrCodeContains(err, cloudwatch.ErrCodeInternalServiceFault)) {
+			log.Printf("[WARN] could not add tags after create for CloudWatch Metric Alarm (%s): %s", d.Id(), err)
+			return resourceMetricAlarmRead(d, meta)
+		}
+
+		if err != nil {
+			return fmt.Errorf("creating CloudWatch Metric Alarm (%s) tags: %w", d.Id(), err)
+		}
+	}
 
 	return resourceMetricAlarmRead(d, meta)
 }
@@ -372,6 +406,12 @@ func resourceMetricAlarmRead(d *schema.ResourceData, meta interface{}) error {
 
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
+	// Some partitions (i.e., ISO) may not support tagging, giving error
+	if tfawserr.ErrCodeContains(err, errCodeAccessDenied) || tfawserr.ErrCodeContains(err, cloudwatch.ErrCodeInternalServiceFault) {
+		log.Printf("[WARN] Unable to list tags for CloudWatch Metric Alarm %s: %s", d.Id(), err)
+		return nil
+	}
+
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %w", err)
@@ -399,7 +439,15 @@ func resourceMetricAlarmUpdate(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := UpdateTags(conn, arn, o, n); err != nil {
+		err := UpdateTags(conn, arn, o, n)
+
+		// Some partitions (i.e., ISO) may not support tagging, giving error
+		if tfawserr.ErrCodeContains(err, errCodeAccessDenied) || tfawserr.ErrCodeContains(err, cloudwatch.ErrCodeInternalServiceFault) {
+			log.Printf("[WARN] Unable to update tags for CloudWatch Metric Alarm %s: %s", arn, err)
+			return resourceMetricAlarmRead(d, meta)
+		}
+
+		if err != nil {
 			return fmt.Errorf("error updating CloudWatch Metric Alarm (%s) tags: %w", arn, err)
 		}
 	}
@@ -435,7 +483,10 @@ func getPutMetricAlarmInput(d *schema.ResourceData, meta interface{}) cloudwatch
 		ComparisonOperator: aws.String(d.Get("comparison_operator").(string)),
 		EvaluationPeriods:  aws.Int64(int64(d.Get("evaluation_periods").(int))),
 		TreatMissingData:   aws.String(d.Get("treat_missing_data").(string)),
-		Tags:               Tags(tags.IgnoreAWS()),
+	}
+
+	if len(tags) > 0 {
+		params.Tags = Tags(tags.IgnoreAWS())
 	}
 
 	if v := d.Get("actions_enabled"); v != nil {
