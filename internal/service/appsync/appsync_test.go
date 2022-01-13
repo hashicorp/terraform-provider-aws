@@ -1,6 +1,7 @@
 package appsync_test
 
 import (
+	"os"
 	"testing"
 )
 
@@ -103,4 +104,16 @@ func TestAccAppSync_serial(t *testing.T) {
 			}
 		})
 	}
+}
+
+func getAppsyncCertDomain(t *testing.T) string {
+	value := os.Getenv("AWS_APPSYNC_DOMAIN_NAME_CERTIFICATE_DOMAIN")
+	if value == "" {
+		t.Skip(
+			"Environment variable AWS_APPSYNC_DOMAIN_NAME_CERTIFICATE_DOMAIN is not set. " +
+				"This environment variable must be set to any non-empty value " +
+				"to enable the test.")
+	}
+
+	return value
 }

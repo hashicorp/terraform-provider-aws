@@ -3,12 +3,15 @@ package appsync
 import (
 	"fmt"
 	"log"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/appsync"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
@@ -119,11 +122,22 @@ func resourceDomainNameDelete(d *schema.ResourceData, meta interface{}) error {
 	input := &appsync.DeleteDomainNameInput{
 		DomainName: aws.String(d.Id()),
 	}
-	_, err := conn.DeleteDomainName(input)
-	if err != nil {
-		if tfawserr.ErrCodeEquals(err, appsync.ErrCodeNotFoundException) {
-			return nil
+
+	err := resource.Retry(5*time.Minute, func() *resource.RetryError {
+		_, err := conn.DeleteDomainName(input)
+		if tfawserr.ErrCodeEquals(err, appsync.ErrCodeConcurrentModificationException) {
+			return resource.RetryableError(fmt.Errorf("deleting Appsync Domain Name %q: %w", d.Id(), err))
 		}
+		if err != nil {
+			return resource.NonRetryableError(err)
+		}
+
+		return nil
+	})
+	if tfresource.TimedOut(err) {
+		_, err = conn.DeleteDomainName(input)
+	}
+	if err != nil {
 		return fmt.Errorf("error deleting Appsync Domain Name %q: %w", d.Id(), err)
 	}
 
