@@ -322,3 +322,21 @@ resource "aws_connect_queue" "test" {
 `, rName2, selectHoursOfOperationId))
 }
 
+func testAccQueueMaxContactsConfig(rName, rName2, maxContacts string) string {
+	return acctest.ConfigCompose(
+		testAccQueueBaseConfig(rName),
+		fmt.Sprintf(`
+resource "aws_connect_queue" "test" {
+  instance_id           = aws_connect_instance.test.id
+  name                  = %[1]q
+  description           = "Test update max contacts"
+  hours_of_operation_id = data.aws_connect_hours_of_operation.test.hours_of_operation_id
+  max_contacts          = %[2]q
+
+  tags = {
+    "Name" = "Test Queue",
+  }
+}
+`, rName2, maxContacts))
+}
+
