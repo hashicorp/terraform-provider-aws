@@ -1,3 +1,36 @@
+func testAccCheckQueueExists(resourceName string, function *connect.DescribeQueueOutput) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[resourceName]
+		if !ok {
+			return fmt.Errorf("Connect Queue not found: %s", resourceName)
+		}
+
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("Connect Queue ID not set")
+		}
+		instanceID, queueID, err := tfconnect.QueueParseID(rs.Primary.ID)
+
+		if err != nil {
+			return err
+		}
+
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectConn
+
+		params := &connect.DescribeQueueInput{
+			QueueId:    aws.String(queueID),
+			InstanceId: aws.String(instanceID),
+		}
+
+		getFunction, err := conn.DescribeQueue(params)
+		if err != nil {
+			return err
+		}
+
+		*function = *getFunction
+
+		return nil
+	}
+}
 func testAccQueueBaseConfig(rName string) string {
 	// Use the aws_connect_hours_of_operation data source with the default "Basic Hours" that comes with connect instances.
 	// Because if a resource is used, Terraform will not be able to delete it since queues do not have support for the delete api
