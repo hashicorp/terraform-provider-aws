@@ -22,6 +22,7 @@ func ResourceDefaultSubnet() *schema.Resource {
 		Read:   resourceSubnetRead,
 		Update: resourceSubnetUpdate,
 		Delete: resourceDefaultSubnetDelete,
+
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -42,7 +43,7 @@ func ResourceDefaultSubnet() *schema.Resource {
 		//   - vpc_id is Computed-only
 		// and additions:
 		//   - existing_default_subnet Computed-only, set in resourceDefaultSubnetCreate
-		//   - force_destroy Optional/Computed, default calculated via CustomizeDiff
+		//   - force_destroy Optional
 		Schema: map[string]*schema.Schema{
 			"arn": {
 				Type:     schema.TypeString,
@@ -69,7 +70,7 @@ func ResourceDefaultSubnet() *schema.Resource {
 			"customer_owned_ipv4_pool": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				RequiredWith: []string{"map_customer_owned_ip_on_launch", "outpost_arn"},
+				RequiredWith: []string{"map_customer_owned_ip_on_launch"},
 			},
 			"enable_dns64": {
 				Type:     schema.TypeBool,
@@ -93,7 +94,7 @@ func ResourceDefaultSubnet() *schema.Resource {
 			"force_destroy": {
 				Type:     schema.TypeBool,
 				Optional: true,
-				Computed: true,
+				Default:  false,
 			},
 			"ipv6_cidr_block": {
 				Type:         schema.TypeString,

@@ -371,15 +371,26 @@ func modifySubnetAttributesOnCreate(conn *ec2.EC2, d *schema.ResourceData, subne
 		}
 	}
 
+	// If we're disabling DNS64, do that before modifying the IPv6 CIDR block.
+	if new, old := d.Get("enable_dns64").(bool), aws.BoolValue(subnet.EnableDns64); old != new && !new {
+		if err := modifySubnetEnableDns64(conn, d.Id(), false); err != nil {
+			return err
+		}
+	}
+
+	var oldAssociationID string
+	var oldIPv6CIDRBlock string
 	for _, v := range subnet.Ipv6CidrBlockAssociationSet {
 		if aws.StringValue(v.Ipv6CidrBlockState.State) == ec2.SubnetCidrBlockStateCodeAssociated { //we can only ever have 1 IPv6 block associated at once
-			if new, old := d.Get("ipv6_cidr_block").(string), aws.StringValue(v.Ipv6CidrBlock); old != new {
-				if err := modifySubnetIPv6CIDRBlockAssociation(conn, d.Id(), aws.StringValue(v.AssociationId), new); err != nil {
-					return err
-				}
-			}
+			oldAssociationID = aws.StringValue(v.AssociationId)
+			oldIPv6CIDRBlock = aws.StringValue(v.Ipv6CidrBlock)
 
 			break
+		}
+	}
+	if new := d.Get("ipv6_cidr_block").(string); oldIPv6CIDRBlock != new {
+		if err := modifySubnetIPv6CIDRBlockAssociation(conn, d.Id(), oldAssociationID, new); err != nil {
+			return err
 		}
 	}
 
@@ -397,8 +408,9 @@ func modifySubnetAttributesOnCreate(conn *ec2.EC2, d *schema.ResourceData, subne
 		}
 	}
 
-	if new, old := d.Get("enable_dns64").(bool), aws.BoolValue(subnet.EnableDns64); old != new {
-		if err := modifySubnetEnableDns64(conn, d.Id(), new); err != nil {
+	// If we're enabling DNS64, do that after modifying the IPv6 CIDR block.
+	if new, old := d.Get("enable_dns64").(bool), aws.BoolValue(subnet.EnableDns64); old != new && new {
+		if err := modifySubnetEnableDns64(conn, d.Id(), true); err != nil {
 			return err
 		}
 	}
