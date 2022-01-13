@@ -208,7 +208,6 @@ func resourceAccountAssignmentsUpdate(d *schema.ResourceData, meta interface{}) 
 		}
 		if !found {
 			createPrincipalIDs = append(createPrincipalIDs, principalID)
-			log.Printf("[INFO] Add principal %s to target %s, permnission set %s", principalID, targetID, permissionSetArn)
 		}
 	}
 
@@ -229,7 +228,6 @@ func resourceAccountAssignmentsUpdate(d *schema.ResourceData, meta interface{}) 
 		}
 		if !found {
 			deletePrincipalIDs = append(deletePrincipalIDs, assignedID)
-			log.Printf("[INFO] Delete principal %s from target %s, permnission set %s", assignedID, targetID, permissionSetArn)
 		}
 	}
 
