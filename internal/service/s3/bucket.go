@@ -1304,9 +1304,18 @@ func resourceBucketRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	// Object Lock configuration.
-	if conf, err := readS3ObjectLockConfiguration(conn, d.Id()); err != nil {
+	conf, err := readS3ObjectLockConfiguration(conn, d.Id())
+
+	// Object lock not supported in all partitions (extra guard, also guards in read func)
+	if err != nil && (meta.(*conns.AWSClient).Partition == endpoints.AwsPartitionID || meta.(*conns.AWSClient).Partition == endpoints.AwsUsGovPartitionID) {
 		return fmt.Errorf("error getting S3 Bucket Object Lock configuration: %s", err)
-	} else {
+	}
+
+	if err != nil {
+		log.Printf("[WARN] Unable to read S3 bucket (%s) object lock configuration: %s", d.Id(), err)
+	}
+
+	if err == nil {
 		if err := d.Set("object_lock_configuration", conf); err != nil {
 			return fmt.Errorf("error setting object_lock_configuration: %s", err)
 		}
