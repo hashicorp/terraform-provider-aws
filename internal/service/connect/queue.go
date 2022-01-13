@@ -42,6 +42,11 @@ func ResourceQueue() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
+			"instance_id": {
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: validation.StringLenBetween(1, 100),
+			},
 			"max_contacts": {
 				Type:         schema.TypeInt,
 				Optional:     true,
@@ -74,11 +79,6 @@ func ResourceQueue() *schema.Resource {
 						},
 					},
 				},
-			},
-			"instance_id": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringLenBetween(1, 100),
 			},
 			"queue_id": {
 				Type:     schema.TypeString,
