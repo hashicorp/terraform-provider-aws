@@ -129,6 +129,10 @@ func resourceAccountAssignmentsRead(d *schema.ResourceData, meta interface{}) er
 
 	assignedIDs, err := FindAccountAssignmentPrincipals(conn, principalType, targetID, permissionSetArn, instanceArn)
 
+	if err != nil {
+		return fmt.Errorf("error listing SSO Account Assignments for AccountId (%s) PermissionSet (%s): %w", targetID, permissionSetArn, err)
+	}
+
 	d.Set("instance_arn", instanceArn)
 	d.Set("permission_set_arn", permissionSetArn)
 	d.Set("principal_ids", assignedIDs)
@@ -187,6 +191,10 @@ func resourceAccountAssignmentsUpdate(d *schema.ResourceData, meta interface{}) 
 	}
 
 	assignedIDs, err := FindAccountAssignmentPrincipals(conn, principalType, targetID, permissionSetArn, instanceArn)
+
+	if err != nil {
+		return fmt.Errorf("error listing SSO Account Assignments for AccountId (%s) PermissionSet (%s): %w", targetID, permissionSetArn, err)
+	}
 
 	var createPrincipalIDs []*string
 	for _, principalID := range principalIDs {

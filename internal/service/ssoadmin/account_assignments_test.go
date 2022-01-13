@@ -29,7 +29,7 @@ func TestAccSSOAdminAccountAssignments_Basic_group(t *testing.T) {
 		CheckDestroy: testAccCheckAccountAssignmentsDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAccountAssignmentBasicGroupConfig(groupName, rName),
+				Config: testAccAccountAssignmentsBasicGroupConfig(groupName, rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "target_type", "AWS_ACCOUNT"),
 					resource.TestCheckResourceAttr(resourceName, "principal_type", "GROUP"),
@@ -152,11 +152,7 @@ func testAccCheckAccountAssignmentsDestroy(s *terraform.State) error {
 		permissionSetArn := idParts[3]
 		instanceArn := idParts[4]
 
-		assignedIDs, err := tfssoadmin.FindAccountAssignmentPrincipals(conn, principalType, targetID, permissionSetArn, instanceArn)
-
-		if err != nil {
-			return fmt.Errorf("error reading SSO Account Assignment: %w", err)
-		}
+		assignedIDs, _ := tfssoadmin.FindAccountAssignmentPrincipals(conn, principalType, targetID, permissionSetArn, instanceArn)
 
 		if len(assignedIDs) > 0 {
 			return fmt.Errorf("SSO Account Assignments still exist")
