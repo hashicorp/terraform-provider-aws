@@ -16,7 +16,7 @@ const (
 	awsSSOAdminPermissionSetProvisionTimeout  = 10 * time.Minute
 )
 
-func waitAccountAssignmentCreated(conn *ssoadmin.SSOAdmin, instanceArn, requestID string) (*ssoadmin.AccountAssignmentOperationStatus, error) {
+func waitAccountAssignmentCreated(conn *ssoadmin.SSOAdmin, instanceArn, requestID string) (*ssoadmin.AccountAssignmentOperationStatus, error) { //nolint:unparam
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{ssoadmin.StatusValuesInProgress},
 		Target:     []string{ssoadmin.StatusValuesSucceeded},
@@ -34,7 +34,7 @@ func waitAccountAssignmentCreated(conn *ssoadmin.SSOAdmin, instanceArn, requestI
 	return nil, err
 }
 
-func waitAccountAssignmentDeleted(conn *ssoadmin.SSOAdmin, instanceArn, requestID string) (*ssoadmin.AccountAssignmentOperationStatus, error) {
+func waitAccountAssignmentDeleted(conn *ssoadmin.SSOAdmin, instanceArn, requestID string) (*ssoadmin.AccountAssignmentOperationStatus, error) { //nolint:unparam
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{ssoadmin.StatusValuesInProgress},
 		Target:     []string{ssoadmin.StatusValuesSucceeded},
