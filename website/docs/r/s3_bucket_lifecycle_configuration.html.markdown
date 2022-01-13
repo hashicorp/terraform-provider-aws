@@ -3,7 +3,7 @@ subcategory: "S3"
 layout: "aws"
 page_title: "AWS: aws_s3_bucket_lifecycle_configuration"
 description: |-
-Provides a S3 bucket lifecycle configuration resource.
+  Provides a S3 bucket lifecycle configuration resource.
 ---
 
 # Resource: aws_s3_bucket_lifecycle_configuration

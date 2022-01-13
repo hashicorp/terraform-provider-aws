@@ -275,10 +275,6 @@ func resourceBucketLifecycleConfigurationCreate(ctx context.Context, d *schema.R
 
 	d.SetId(bucket)
 
-	if err := waitForLifecycleConfigurationRulesStatus(ctx, conn, d.Id(), rules); err != nil {
-		return diag.FromErr(fmt.Errorf("error waiting for S3 lifecycle configuration for bucket (%s) to reach expected rules status: %w", d.Id(), err))
-	}
-
 	return resourceBucketLifecycleConfigurationRead(ctx, d, meta)
 }
 
