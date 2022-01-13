@@ -95,7 +95,7 @@ func dataSourceDistributionRead(d *schema.ResourceData, meta interface{}) error 
 		if distributionConfig := distribution.DistributionConfig; distributionConfig != nil {
 			d.Set("enabled", distributionConfig.Enabled)
 			if aliases := distributionConfig.Aliases; aliases != nil {
-				d.Set("aliases", distribution.DistributionConfig.Aliases.Items)
+				d.Set("aliases", aliases.Items)
 			}
 		}
 	}
