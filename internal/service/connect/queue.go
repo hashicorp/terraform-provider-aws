@@ -104,6 +104,59 @@ func ResourceQueue() *schema.Resource {
 	}
 }
 
+func resourceQueueCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.AWSClient).ConnectConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+
+	instanceID := d.Get("instance_id").(string)
+	name := d.Get("name").(string)
+
+	input := &connect.CreateQueueInput{
+		InstanceId: aws.String(instanceID),
+		Name:       aws.String(name),
+	}
+
+	if v, ok := d.GetOk("description"); ok {
+		input.Description = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("hours_of_operation_id"); ok {
+		input.HoursOfOperationId = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("max_contacts"); ok {
+		input.MaxContacts = aws.Int64(int64(v.(int)))
+	}
+
+	if v, ok := d.GetOk("outbound_caller_config"); ok {
+		input.OutboundCallerConfig = expandOutboundCallerConfig(v.([]interface{}))
+	}
+
+	if v, ok := d.GetOk("quick_connect_ids"); ok && v.(*schema.Set).Len() > 0 {
+		input.QuickConnectIds = flex.ExpandStringSet(v.(*schema.Set))
+	}
+
+	if len(tags) > 0 {
+		input.Tags = Tags(tags.IgnoreAWS())
+	}
+
+	log.Printf("[DEBUG] Creating Connect Queue %s", input)
+	output, err := conn.CreateQueueWithContext(ctx, input)
+
+	if err != nil {
+		return diag.FromErr(fmt.Errorf("error creating Connect Queue (%s): %w", name, err))
+	}
+
+	if output == nil {
+		return diag.FromErr(fmt.Errorf("error creating Connect Queue (%s): empty output", name))
+	}
+
+	d.SetId(fmt.Sprintf("%s:%s", instanceID, aws.StringValue(output.QueueId)))
+
+	return resourceQueueRead(ctx, d, meta)
+}
+
 func resourceQueueRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).ConnectConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
