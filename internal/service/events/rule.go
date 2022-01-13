@@ -350,6 +350,10 @@ func retryPutRule(conn *eventbridge.EventBridge, input *eventbridge.PutRuleInput
 		output, err = conn.PutRule(input)
 	}
 
+	if err != nil {
+		return "", err
+	}
+
 	if output == nil || output.RuleArn == nil {
 		return "", fmt.Errorf("empty output returned putting EventBridge Rule (%s)", aws.StringValue(input.EventBusName))
 	}

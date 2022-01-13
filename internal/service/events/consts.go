@@ -7,3 +7,7 @@ const (
 const (
 	DefaultEventBusName = "default"
 )
+
+const (
+	mapMaxItemsCount = 100
+)
