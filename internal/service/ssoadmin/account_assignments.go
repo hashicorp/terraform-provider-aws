@@ -201,7 +201,7 @@ func resourceAccountAssignmentsUpdate(d *schema.ResourceData, meta interface{}) 
 	for _, principalID := range principalIDs {
 		found := false
 		for _, assignedID := range assignedIDs {
-			if *principalID == *assignedID {
+			if aws.StringValue(principalID) == aws.StringValue(assignedID) {
 				found = true
 				break
 			}
@@ -222,7 +222,7 @@ func resourceAccountAssignmentsUpdate(d *schema.ResourceData, meta interface{}) 
 	for _, assignedID := range assignedIDs {
 		found := false
 		for _, principalID := range principalIDs {
-			if *principalID == *assignedID {
+			if aws.StringValue(principalID) == aws.StringValue(assignedID) {
 				found = true
 				break
 			}
