@@ -120,8 +120,13 @@ func resourceCompositeAlarmCreate(ctx context.Context, d *schema.ResourceData, m
 
 	// Some partitions (i.e., ISO) may not support tag-on-create, attempt tag after create
 	if input.Tags == nil && len(tags) > 0 {
-		arn := d.Get("arn").(string)
-		err := UpdateTags(conn, arn, nil, tags)
+		alarm, err := FindCompositeAlarmByName(ctx, conn, name)
+
+		if err != nil {
+			return diag.Errorf("error reading CloudWatch Composite Alarm (%s): %s", name, err)
+		}
+
+		err = UpdateTags(conn, aws.StringValue(alarm.AlarmArn), nil, tags)
 
 		// If default tags only, log and continue. Otherwise, error.
 		if v, ok := d.GetOk("tags"); (!ok || len(v.(map[string]interface{})) == 0) && (tfawserr.ErrCodeContains(err, errCodeAccessDenied) || tfawserr.ErrCodeContains(err, cloudwatch.ErrCodeInternalServiceFault)) {
