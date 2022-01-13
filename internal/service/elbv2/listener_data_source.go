@@ -3,10 +3,12 @@ package elbv2
 import (
 	"errors"
 	"fmt"
+	"log"
 	"sort"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/elbv2"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -338,6 +340,11 @@ func dataSourceListenerRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	tags, err := ListTags(conn, d.Id())
+
+	if tfawserr.ErrCodeContains(err, ErrCodeAccessDenied) || tfawserr.ErrCodeContains(err, elbv2.ErrCodeInvalidConfigurationRequestException) || tfawserr.ErrCodeContains(err, elbv2.ErrCodeOperationNotPermittedException) {
+		log.Printf("[WARN] Unable to list tags for ELBv2 Listener %s: %s", d.Id(), err)
+		return nil
+	}
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for (%s): %w", d.Id(), err)
