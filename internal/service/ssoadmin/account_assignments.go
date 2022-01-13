@@ -2,6 +2,7 @@ package ssoadmin
 
 import (
 	"fmt"
+	"log"
 	"regexp"
 	"strings"
 
@@ -200,13 +201,14 @@ func resourceAccountAssignmentsUpdate(d *schema.ResourceData, meta interface{}) 
 	for _, principalID := range principalIDs {
 		found := false
 		for _, assignedID := range assignedIDs {
-			if principalID == assignedID {
+			if *principalID == *assignedID {
 				found = true
 				break
 			}
 		}
 		if !found {
 			createPrincipalIDs = append(createPrincipalIDs, principalID)
+			log.Printf("[INFO] Add principal %s to target %s, permnission set %s", principalID, targetID, permissionSetArn)
 		}
 	}
 
@@ -220,13 +222,14 @@ func resourceAccountAssignmentsUpdate(d *schema.ResourceData, meta interface{}) 
 	for _, assignedID := range assignedIDs {
 		found := false
 		for _, principalID := range principalIDs {
-			if principalID == assignedID {
+			if *principalID == *assignedID {
 				found = true
 				break
 			}
 		}
 		if !found {
 			deletePrincipalIDs = append(deletePrincipalIDs, assignedID)
+			log.Printf("[INFO] Delete principal %s from target %s, permnission set %s", assignedID, targetID, permissionSetArn)
 		}
 	}
 
