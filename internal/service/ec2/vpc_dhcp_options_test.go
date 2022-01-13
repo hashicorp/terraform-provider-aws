@@ -170,7 +170,7 @@ func testAccCheckDHCPOptionsExists(n string, v *ec2.DhcpOptions) resource.TestCh
 func testAccDHCPOptionsConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc_dhcp_options" "test" {
-  domain_name          = "service.%s"
+  domain_name          = "service.%[1]s"
   domain_name_servers  = ["127.0.0.1", "10.0.0.2"]
   ntp_servers          = ["127.0.0.1"]
   netbios_name_servers = ["127.0.0.1"]

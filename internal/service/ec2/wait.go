@@ -1018,6 +1018,10 @@ func WaitHostDeleted(conn *ec2.EC2, id string) (*ec2.Host, error) {
 }
 
 const (
+	dhcpOptionSetDeletedTimeout = 3 * time.Minute
+)
+
+const (
 	internetGatewayAttachedTimeout = 4 * time.Minute
 	internetGatewayDeletedTimeout  = 10 * time.Minute
 	internetGatewayDetachedTimeout = 15 * time.Minute

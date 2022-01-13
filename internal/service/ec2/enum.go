@@ -67,3 +67,7 @@ func VpnConnectionType_Values() []string {
 		VpnConnectionTypeIpsec1,
 	}
 }
+
+const (
+	DefaultDHCPOptionsID = "default"
+)

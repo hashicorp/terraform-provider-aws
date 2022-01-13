@@ -3,14 +3,11 @@ package ec2
 import (
 	"fmt"
 	"log"
-	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -180,105 +177,42 @@ func resourceVPCDHCPOptionsUpdate(d *schema.ResourceData, meta interface{}) erro
 func resourceVPCDHCPOptionsDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
-	err := resource.Retry(3*time.Minute, func() *resource.RetryError {
-		_, err := conn.DeleteDhcpOptions(&ec2.DeleteDhcpOptionsInput{
-			DhcpOptionsId: aws.String(d.Id()),
-		})
+	vpcs, err := FindVPCsByDHCPOptionsID(conn, d.Id())
 
-		if err == nil {
-			return nil
-		}
-
-		ec2err, ok := err.(awserr.Error)
-		if !ok {
-			return resource.RetryableError(err)
-		}
-
-		switch ec2err.Code() {
-		case "InvalidDhcpOptionsID.NotFound", "InvalidDhcpOptionID.NotFound":
-			return nil
-		case "DependencyViolation":
-			// If it is a dependency violation, we want to disassociate
-			// all VPCs using the given DHCP Options ID, and retry deleting.
-			vpcs, err2 := FindVPCsByDHCPOptionsID(conn, d.Id())
-			if err2 != nil {
-				log.Printf("[ERROR] %s", err2)
-				return resource.RetryableError(err2)
-			}
-
-			for _, vpc := range vpcs {
-				log.Printf("[INFO] Disassociating DHCP Options Set %s from VPC %s...", d.Id(), *vpc.VpcId)
-				if _, err := conn.AssociateDhcpOptions(&ec2.AssociateDhcpOptionsInput{
-					DhcpOptionsId: aws.String("default"),
-					VpcId:         vpc.VpcId,
-				}); err != nil {
-					return resource.RetryableError(err)
-				}
-			}
-			return resource.RetryableError(err)
-		default:
-			return resource.NonRetryableError(err)
-		}
-	})
-
-	if tfresource.TimedOut(err) {
-		_, err = conn.DeleteDhcpOptions(&ec2.DeleteDhcpOptionsInput{
-			DhcpOptionsId: aws.String(d.Id()),
-		})
-	}
-	return err
-}
-
-func FindVPCsByDHCPOptionsID(conn *ec2.EC2, id string) ([]*ec2.Vpc, error) {
-	req := &ec2.DescribeVpcsInput{
-		Filters: []*ec2.Filter{
-			{
-				Name: aws.String("dhcp-options-id"),
-				Values: []*string{
-					aws.String(id),
-				},
-			},
-		},
-	}
-
-	resp, err := conn.DescribeVpcs(req)
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, "InvalidVpcID.NotFound", "") {
-			return nil, nil
-		}
-		return nil, err
+		return fmt.Errorf("error reading EC2 DHCP Options Set (%s) associated VPCs: %w", d.Id(), err)
 	}
 
-	return resp.Vpcs, nil
-}
+	for _, v := range vpcs {
+		vpcID := aws.StringValue(v.VpcId)
 
-func resourceDHCPOptionsStateRefreshFunc(conn *ec2.EC2, id string) resource.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		DescribeDhcpOpts := &ec2.DescribeDhcpOptionsInput{
-			DhcpOptionsIds: []*string{
-				aws.String(id),
-			},
+		log.Printf("[INFO] Disassociating EC2 DHCP Options Set (%s) from VPC (%s)", d.Id(), vpcID)
+		if _, err := conn.AssociateDhcpOptions(&ec2.AssociateDhcpOptionsInput{
+			DhcpOptionsId: aws.String(DefaultDHCPOptionsID),
+			VpcId:         aws.String(vpcID),
+		}); err != nil {
+			return fmt.Errorf("error disassociating EC2 DHCP Options Set (%s) from VPC (%s): %w", d.Id(), vpcID, err)
 		}
-
-		resp, err := conn.DescribeDhcpOptions(DescribeDhcpOpts)
-		if err != nil {
-			if isNoSuchDhcpOptionIDErr(err) {
-				resp = nil
-			} else {
-				log.Printf("Error on DHCPOptionsStateRefresh: %s", err)
-				return nil, "", err
-			}
-		}
-
-		if resp == nil {
-			// Sometimes AWS just has consistency issues and doesn't see
-			// our instance yet. Return an empty state.
-			return nil, "", nil
-		}
-
-		dos := resp.DhcpOptions[0]
-		return dos, "created", nil
 	}
+
+	input := &ec2.DeleteDhcpOptionsInput{
+		DhcpOptionsId: aws.String(d.Id()),
+	}
+
+	log.Printf("[INFO] Deleting EC2 DHCP Options Set: %s", d.Id())
+	_, err = tfresource.RetryWhenAWSErrCodeEquals(dhcpOptionSetDeletedTimeout, func() (interface{}, error) {
+		return conn.DeleteDhcpOptions(input)
+	}, ErrCodeDependencyViolation)
+
+	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidDhcpOptionIDNotFound) {
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("error deleting EC2 DHCP Options Set (%s): %w", d.Id(), err)
+	}
+
+	return nil
 }
 
 func isNoSuchDhcpOptionIDErr(err error) bool {
