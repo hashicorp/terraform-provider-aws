@@ -104,3 +104,53 @@ func ResourceQueue() *schema.Resource {
 	}
 }
 
+func expandOutboundCallerConfig(outboundCallerConfig []interface{}) *connect.OutboundCallerConfig {
+	if len(outboundCallerConfig) == 0 || outboundCallerConfig[0] == nil {
+		return nil
+	}
+
+	tfMap, ok := outboundCallerConfig[0].(map[string]interface{})
+	if !ok {
+		return nil
+	}
+
+	result := &connect.OutboundCallerConfig{}
+
+	if v, ok := tfMap["outbound_caller_id_name"].(string); ok && v != "" {
+		result.OutboundCallerIdName = aws.String(v)
+	}
+
+	// passing an empty string leads to an InvalidParameterException
+	if v, ok := tfMap["outbound_caller_id_number_id"].(string); ok && v != "" {
+		result.OutboundCallerIdNumberId = aws.String(v)
+	}
+
+	// passing an empty string leads to an InvalidParameterException
+	if v, ok := tfMap["outbound_flow_id"].(string); ok && v != "" {
+		result.OutboundFlowId = aws.String(v)
+	}
+
+	return result
+}
+
+func flattenOutboundCallerConfig(outboundCallerConfig *connect.OutboundCallerConfig) []interface{} {
+	if outboundCallerConfig == nil {
+		return []interface{}{}
+	}
+
+	values := map[string]interface{}{}
+
+	if v := outboundCallerConfig.OutboundCallerIdName; v != nil {
+		values["outbound_caller_id_name"] = aws.StringValue(v)
+	}
+
+	if v := outboundCallerConfig.OutboundCallerIdNumberId; v != nil {
+		values["outbound_caller_id_number_id"] = aws.StringValue(v)
+	}
+
+	if v := outboundCallerConfig.OutboundFlowId; v != nil {
+		values["outbound_flow_id"] = aws.StringValue(v)
+	}
+
+	return []interface{}{values}
+}
