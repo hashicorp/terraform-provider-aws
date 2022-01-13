@@ -986,7 +986,8 @@ func Provider() *schema.Provider {
 
 			"aws_cur_report_definition": cur.ResourceReportDefinition(),
 
-			"aws_datapipeline_pipeline": datapipeline.ResourcePipeline(),
+			"aws_datapipeline_pipeline":   datapipeline.ResourcePipeline(),
+			"aws_datapipeline_definition": datapipeline.ResourceDefinition(),
 
 			"aws_datasync_agent":                            datasync.ResourceAgent(),
 			"aws_datasync_location_efs":                     datasync.ResourceLocationEFS(),
