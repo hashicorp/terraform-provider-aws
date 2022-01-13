@@ -12,6 +12,7 @@ FEATURES:
 
 ENHANCEMENTS:
 
+* data-source/aws_cloudfront_distribution: Add `aliases` attribute ([#22552](https://github.com/hashicorp/terraform-provider-aws/issues/22552))
 * data-source/aws_customer_gateway: Add `certificate_arn` attribute ([#22435](https://github.com/hashicorp/terraform-provider-aws/issues/22435))
 * data-source/aws_ebs_snapshot: Add `storage_tier` and `outpost_arn` attributes. ([#22342](https://github.com/hashicorp/terraform-provider-aws/issues/22342))
 * data-source/aws_ecr_repository: Allow some `tags` errors to be non-fatal to support non-standard AWS partitions (i.e., ISO) ([#22535](https://github.com/hashicorp/terraform-provider-aws/issues/22535))
