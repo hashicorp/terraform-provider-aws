@@ -213,6 +213,105 @@ func resourceQueueRead(ctx context.Context, d *schema.ResourceData, meta interfa
 
 	return nil
 }
+
+func resourceQueueUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.AWSClient).ConnectConn
+
+	instanceID, queueID, err := QueueParseID(d.Id())
+
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	// Queue has 5 update APIs
+	// UpdateQueueHoursOfOperationWithContext: Updates the hours_of_operation_id of a queue.
+	// UpdateQueueMaxContactsWithContext: Updates the max_contacts of a queue.
+	// UpdateQueueNameWithContext: Updates the name and description of a queue.
+	// UpdateQueueOutboundCallerConfigWithContext: Updates the outbound_caller_config of a queue.
+	// UpdateQueueStatusWithContext: Updates the status of a queue. Valid Values: ENABLED | DISABLED
+
+	// updates to hours_of_operation_id
+	if d.HasChange("hours_of_operation_id") {
+		input := &connect.UpdateQueueHoursOfOperationInput{
+			InstanceId:         aws.String(instanceID),
+			QueueId:            aws.String(queueID),
+			HoursOfOperationId: aws.String(d.Get("hours_of_operation_id").(string)),
+		}
+		_, err = conn.UpdateQueueHoursOfOperationWithContext(ctx, input)
+
+		if err != nil {
+			return diag.FromErr(fmt.Errorf("[ERROR] Error updating Queue Hours of Operation (%s): %w", d.Id(), err))
+		}
+	}
+
+	// updates to max_contacts
+	if d.HasChange("max_contacts") {
+		input := &connect.UpdateQueueMaxContactsInput{
+			InstanceId:  aws.String(instanceID),
+			QueueId:     aws.String(queueID),
+			MaxContacts: aws.Int64(int64(d.Get("max_contacts").(int))),
+		}
+		_, err = conn.UpdateQueueMaxContactsWithContext(ctx, input)
+
+		if err != nil {
+			return diag.FromErr(fmt.Errorf("[ERROR] Error updating Queue Max Contacts (%s): %w", d.Id(), err))
+		}
+	}
+
+	// updates to name and/or description
+	if d.HasChanges("name", "description") {
+		input := &connect.UpdateQueueNameInput{
+			InstanceId:  aws.String(instanceID),
+			QueueId:     aws.String(queueID),
+			Name:        aws.String(d.Get("name").(string)),
+			Description: aws.String(d.Get("description").(string)),
+		}
+		_, err = conn.UpdateQueueNameWithContext(ctx, input)
+
+		if err != nil {
+			return diag.FromErr(fmt.Errorf("[ERROR] Error updating Queue Name and/or Description (%s): %w", d.Id(), err))
+		}
+	}
+
+	// updates to outbound_caller_config
+	if d.HasChange("outbound_caller_config") {
+		input := &connect.UpdateQueueOutboundCallerConfigInput{
+			InstanceId:           aws.String(instanceID),
+			QueueId:              aws.String(queueID),
+			OutboundCallerConfig: expandOutboundCallerConfig(d.Get("outbound_caller_config").([]interface{})),
+		}
+		_, err = conn.UpdateQueueOutboundCallerConfigWithContext(ctx, input)
+
+		if err != nil {
+			return diag.FromErr(fmt.Errorf("[ERROR] Error updating Queue Outbound Caller Config (%s): %w", d.Id(), err))
+		}
+	}
+
+	// updates to status
+	if d.HasChange("status") {
+		input := &connect.UpdateQueueStatusInput{
+			InstanceId: aws.String(instanceID),
+			QueueId:    aws.String(queueID),
+			Status:     aws.String(d.Get("status").(string)),
+		}
+		_, err = conn.UpdateQueueStatusWithContext(ctx, input)
+
+		if err != nil {
+			return diag.FromErr(fmt.Errorf("[ERROR] Error updating Queue Status (%s): %w", d.Id(), err))
+		}
+	}
+
+	// updates to tags
+	if d.HasChange("tags_all") {
+		o, n := d.GetChange("tags_all")
+		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
+			return diag.FromErr(fmt.Errorf("error updating tags: %w", err))
+		}
+	}
+
+	return resourceQueueRead(ctx, d, meta)
+}
+
 func expandOutboundCallerConfig(outboundCallerConfig []interface{}) *connect.OutboundCallerConfig {
 	if len(outboundCallerConfig) == 0 || outboundCallerConfig[0] == nil {
 		return nil
