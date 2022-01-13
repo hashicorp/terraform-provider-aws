@@ -8,7 +8,10 @@ import (
 	"github.com/aws/aws-sdk-go/service/ssoadmin"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfssoadmin "github.com/hashicorp/terraform-provider-aws/internal/service/ssoadmin"
 )
 
 func TestAccSSOAdminAccountAssignments_Basic_group(t *testing.T) {
@@ -23,7 +26,7 @@ func TestAccSSOAdminAccountAssignments_Basic_group(t *testing.T) {
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, ssoadmin.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAccountAssignmentDestroy,
+		CheckDestroy: testAccCheckAccountAssignmentsDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAccountAssignmentBasicGroupConfig(groupName, rName),
@@ -51,8 +54,9 @@ func TestAccSSOAdminAccountAssignments_Basic_user(t *testing.T) {
 			acctest.PreCheck(t)
 			testAccPreCheckInstances(t)
 		},
-		ErrorCheck: acctest.ErrorCheck(t, ssoadmin.EndpointsID),
-		Providers:  acctest.Providers,
+		ErrorCheck:   acctest.ErrorCheck(t, ssoadmin.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckAccountAssignmentsDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAccountAssignmentsBasicUserConfig(userName, rName),
@@ -127,4 +131,37 @@ resource "aws_ssoadmin_account_assignments" "test" {
   principal_ids      = [data.aws_identitystore_user.test.user_id]
 }
 `, userName))
+}
+
+func testAccCheckAccountAssignmentsDestroy(s *terraform.State) error {
+	conn := acctest.Provider.Meta().(*conns.AWSClient).SSOAdminConn
+
+	for _, rs := range s.RootModule().Resources {
+		if rs.Type != "aws_ssoadmin_account_assignments" {
+			continue
+		}
+
+		idParts, err := tfssoadmin.ParseAccountAssignmentsID(rs.Primary.ID)
+
+		if err != nil {
+			return fmt.Errorf("error parsing SSO Account Assignments ID (%s): %w", rs.Primary.ID, err)
+		}
+
+		principalType := idParts[0]
+		targetID := idParts[1]
+		permissionSetArn := idParts[3]
+		instanceArn := idParts[4]
+
+		assignedIDs, err := tfssoadmin.FindAccountAssignmentPrincipals(conn, principalType, targetID, permissionSetArn, instanceArn)
+
+		if err != nil {
+			return fmt.Errorf("error reading SSO Account Assignment: %w", err)
+		}
+
+		if len(assignedIDs) > 0 {
+			return fmt.Errorf("SSO Account Assignments still exist")
+		}
+	}
+
+	return nil
 }
