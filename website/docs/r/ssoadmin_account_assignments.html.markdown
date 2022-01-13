@@ -76,5 +76,5 @@ In addition to all arguments above, the following attributes are exported:
 SSO Account Assignments can be imported using the `principal_type`, `target_id`, `target_type`, `permission_set_arn`, `instance_arn` separated by commas (`,`) e.g.,
 
 ```
-$ terraform import aws_ssoadmin_account_assignment.example GROUP,1234567890,AWS_ACCOUNT,arn:aws:sso:::permissionSet/ssoins-0123456789abcdef/ps-0123456789abcdef,arn:aws:sso:::instance/ssoins-0123456789abcdef
+$ terraform import aws_ssoadmin_account_assignments.example GROUP,1234567890,AWS_ACCOUNT,arn:aws:sso:::permissionSet/ssoins-0123456789abcdef/ps-0123456789abcdef,arn:aws:sso:::instance/ssoins-0123456789abcdef
 ```
