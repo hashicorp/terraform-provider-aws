@@ -2,7 +2,6 @@ package ssoadmin
 
 import (
 	"fmt"
-	"log"
 	"regexp"
 	"strings"
 
