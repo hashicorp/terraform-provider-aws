@@ -2,7 +2,6 @@ package ssoadmin
 
 import (
 	"fmt"
-	"log"
 	"regexp"
 	"strings"
 
@@ -12,8 +11,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceAccountAssignments() *schema.Resource {
@@ -53,7 +52,7 @@ func ResourceAccountAssignments() *schema.Resource {
 						validation.StringLenBetween(1, 47),
 						validation.StringMatch(regexp.MustCompile(`^([0-9a-f]{10}-|)[A-Fa-f0-9]{8}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{12}$`), "must match ([0-9a-f]{10}-|)[A-Fa-f0-9]{8}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{12}"),
 					),
-				}
+				},
 			},
 
 			"principal_type": {
@@ -85,8 +84,8 @@ func resourceAccountAssignmentsCreate(d *schema.ResourceData, meta interface{}) 
 
 	principalIDs := []*string{}
 	if v, ok := d.GetOk("principal_ids"); ok {
-                principalIDs = flex.ExpandStringSet(v.(*schema.Set))
-        }
+		principalIDs = flex.ExpandStringSet(v.(*schema.Set))
+	}
 
 	instanceArn := d.Get("instance_arn").(string)
 	permissionSetArn := d.Get("permission_set_arn").(string)
@@ -101,11 +100,11 @@ func resourceAccountAssignmentsCreate(d *schema.ResourceData, meta interface{}) 
 		return fmt.Errorf("error listing SSO Account Assignments for AccountId (%s) PermissionSet (%s): %w", targetID, permissionSetArn, err)
 	}
 
-	if len(assignedIds) > 0 {
+	if len(assignedIDs) > 0 {
 		return fmt.Errorf("error creating SSO Account Assignments for %s: already exists", principalType)
 	}
 
-	err := CreateAccountAssignments(conn, instanceArn, permissionSetArn, targetType, targetID, principalType, principalIDs)
+	err = createAccountAssignments(conn, instanceArn, permissionSetArn, targetType, targetID, principalType, principalIDs)
 
 	if err != nil {
 		return fmt.Errorf("error creating SSO Account Assignments for %s: %w", principalType, err)
@@ -113,10 +112,10 @@ func resourceAccountAssignmentsCreate(d *schema.ResourceData, meta interface{}) 
 
 	d.SetId(fmt.Sprintf("%s,%s,%s,%s,%s", principalType, targetID, targetType, permissionSetArn, instanceArn))
 
-	return resourceAccountAssignmentRead(d, meta)
+	return resourceAccountAssignmentsRead(d, meta)
 }
 
-func resourceAccountAssignmentRead(d *schema.ResourceData, meta interface{}) error {
+func resourceAccountAssignmentsRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SSOAdminConn
 
 	idParts, err := ParseAccountAssignmentsID(d.Id())
@@ -133,16 +132,16 @@ func resourceAccountAssignmentRead(d *schema.ResourceData, meta interface{}) err
 	assignedIDs, err := FindAccountAssignmentPrincipals(conn, principalType, targetID, permissionSetArn, instanceArn)
 
 	d.Set("instance_arn", instanceArn)
-	d.Set("permission_set_arn", accountAssignment.PermissionSetArn)
+	d.Set("permission_set_arn", permissionSetArn)
 	d.Set("principal_ids", assignedIDs)
-	d.Set("principal_type", accountAssignment.PrincipalType)
-	d.Set("target_id", accountAssignment.AccountId)
+	d.Set("principal_type", principalType)
+	d.Set("target_id", targetID)
 	d.Set("target_type", targetType)
 
 	return nil
 }
 
-func resourceAccountAssignmentDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceAccountAssignmentsDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SSOAdminConn
 
 	idParts, err := ParseAccountAssignmentsID(d.Id())
@@ -158,10 +157,10 @@ func resourceAccountAssignmentDelete(d *schema.ResourceData, meta interface{}) e
 
 	principalIDs := []*string{}
 	if v, ok := d.GetOk("principal_ids"); ok {
-                principalIDs = flex.ExpandStringSet(v.(*schema.Set))
-        }
+		principalIDs = flex.ExpandStringSet(v.(*schema.Set))
+	}
 
-	err := DeleteAccountAssignments(conn, instanceArn, permissionSetArn, targetType, targetID, principalType, principalIDs)
+	err = deleteAccountAssignments(conn, instanceArn, permissionSetArn, targetType, targetID, principalType, principalIDs)
 
 	if err != nil {
 		return fmt.Errorf("error deleting SSO Account Assignments for %s: %w", principalType, err)
@@ -171,7 +170,7 @@ func resourceAccountAssignmentDelete(d *schema.ResourceData, meta interface{}) e
 }
 
 func resourceAccountAssignmentsUpdate(d *schema.ResourceData, meta interface{}) error {
-        conn := meta.(*conns.AWSClient).SSOAdminConn
+	conn := meta.(*conns.AWSClient).SSOAdminConn
 
 	idParts, err := ParseAccountAssignmentsID(d.Id())
 	if err != nil {
@@ -186,12 +185,12 @@ func resourceAccountAssignmentsUpdate(d *schema.ResourceData, meta interface{}) 
 
 	principalIDs := []*string{}
 	if v, ok := d.GetOk("principal_ids"); ok {
-                principalIDs = flex.ExpandStringSet(v.(*schema.Set))
-        }
+		principalIDs = flex.ExpandStringSet(v.(*schema.Set))
+	}
 
 	assignedIDs, err := FindAccountAssignmentPrincipals(conn, principalType, targetID, permissionSetArn, instanceArn)
 
-	var createPrincipalIDs = []string
+	var createPrincipalIDs []*string
 	for _, principalID := range principalIDs {
 		found := false
 		for _, assignedID := range assignedIDs {
@@ -204,14 +203,14 @@ func resourceAccountAssignmentsUpdate(d *schema.ResourceData, meta interface{}) 
 			createPrincipalIDs = append(createPrincipalIDs, principalID)
 		}
 	}
-	
-	err := CreateAccountAssignments(conn, instanceArn, permissionSetArn, targetType, targetID, principalType, createPrincipalIDs)
+
+	err = createAccountAssignments(conn, instanceArn, permissionSetArn, targetType, targetID, principalType, createPrincipalIDs)
 
 	if err != nil {
 		return fmt.Errorf("error creating SSO Account Assignments for %s: %w", principalType, err)
 	}
-	
-	var deletePrincipalIDs = []string
+
+	var deletePrincipalIDs []*string
 	for _, assignedID := range assignedIDs {
 		found := false
 		for _, principalID := range principalIDs {
@@ -225,22 +224,22 @@ func resourceAccountAssignmentsUpdate(d *schema.ResourceData, meta interface{}) 
 		}
 	}
 
-	err := DeleteAccountAssignments(conn, instanceArn, permissionSetArn, targetType, targetID, principalType, deletePrincipalIDs)
+	err = deleteAccountAssignments(conn, instanceArn, permissionSetArn, targetType, targetID, principalType, deletePrincipalIDs)
 
 	if err != nil {
 		return fmt.Errorf("error deleting SSO Account Assignments for %s: %w", principalType, err)
 	}
-	
+
 	return resourceAccountAssignmentsRead(d, meta)
 }
 
-func createAccountAssignments(conn *conns.AWSClient, instanceArn string, permissionSetArn string, targetType string, targetID string, principalType string, principalIDs []string) (error) {
-	
+func createAccountAssignments(conn *ssoadmin.SSOAdmin, instanceArn string, permissionSetArn string, targetType string, targetID string, principalType string, principalIDs []*string) error {
+
 	for _, principalID := range principalIDs {
 		input := &ssoadmin.CreateAccountAssignmentInput{
 			InstanceArn:      aws.String(instanceArn),
 			PermissionSetArn: aws.String(permissionSetArn),
-			PrincipalId:      aws.String(principalID),
+			PrincipalId:      aws.String(*principalID),
 			PrincipalType:    aws.String(principalType),
 			TargetId:         aws.String(targetID),
 			TargetType:       aws.String(targetType),
@@ -248,11 +247,11 @@ func createAccountAssignments(conn *conns.AWSClient, instanceArn string, permiss
 
 		output, err := conn.CreateAccountAssignment(input)
 		if err != nil {
-			return fmt.Errorf("error creating SSO Account Assignment for %s (%s): %w", principalType, principalID, err)
+			return fmt.Errorf("error creating SSO Account Assignment for %s (%s): %w", principalType, *principalID, err)
 		}
 
 		if output == nil || output.AccountAssignmentCreationStatus == nil {
-			return fmt.Errorf("error creating SSO Account Assignment for %s (%s): empty output", principalType, principalID)
+			return fmt.Errorf("error creating SSO Account Assignment for %s (%s): empty output", principalType, *principalID)
 
 		}
 
@@ -260,19 +259,19 @@ func createAccountAssignments(conn *conns.AWSClient, instanceArn string, permiss
 
 		_, err = waitAccountAssignmentCreated(conn, instanceArn, aws.StringValue(status.RequestId))
 		if err != nil {
-			return fmt.Errorf("error waiting for SSO Account Assignment for %s (%s) to be created: %w", principalType, principalID, err)
+			return fmt.Errorf("error waiting for SSO Account Assignment for %s (%s) to be created: %w", principalType, *principalID, err)
 		}
-		
+
 	}
 	return nil
 }
 
-func deleteAccountAssignments(conn *conns.AWSClient, instanceArn string, permissionSetArn string, targetType string, targetID string, principalType string, principalIDs []string) (error) {
+func deleteAccountAssignments(conn *ssoadmin.SSOAdmin, instanceArn string, permissionSetArn string, targetType string, targetID string, principalType string, principalIDs []*string) error {
 
-	for index, principalID := range principalIds {
-	
+	for _, principalID := range principalIDs {
+
 		input := &ssoadmin.DeleteAccountAssignmentInput{
-			PrincipalId:      aws.String(principalID),
+			PrincipalId:      aws.String(*principalID),
 			InstanceArn:      aws.String(instanceArn),
 			PermissionSetArn: aws.String(permissionSetArn),
 			TargetType:       aws.String(targetType),
@@ -285,28 +284,28 @@ func deleteAccountAssignments(conn *conns.AWSClient, instanceArn string, permiss
 			if tfawserr.ErrCodeEquals(err, ssoadmin.ErrCodeResourceNotFoundException) {
 				return nil
 			}
-			return fmt.Errorf("error deleting SSO Account Assignment for Principal (%s): %w", principalID, err)
+			return fmt.Errorf("error deleting SSO Account Assignment for Principal (%s): %w", *principalID, err)
 		}
 
 		if output == nil || output.AccountAssignmentDeletionStatus == nil {
-			return fmt.Errorf("error deleting SSO Account Assignment for Principal (%s): empty output", principalID)
+			return fmt.Errorf("error deleting SSO Account Assignment for Principal (%s): empty output", *principalID)
 		}
 
 		status := output.AccountAssignmentDeletionStatus
 
 		_, err = waitAccountAssignmentDeleted(conn, instanceArn, aws.StringValue(status.RequestId))
 		if err != nil {
-			return fmt.Errorf("error waiting for SSO Account Assignment for Principal (%s) to be deleted: %w", principalID, err)
+			return fmt.Errorf("error waiting for SSO Account Assignment for Principal (%s) to be deleted: %w", *principalID, err)
 		}
 	}
-	
+
 	return nil
 }
 
 func ParseAccountAssignmentsID(id string) ([]string, error) {
 	idParts := strings.Split(id, ",")
 	if len(idParts) != 5 || idParts[0] == "" || idParts[1] == "" || idParts[2] == "" ||
-		idParts[3] == "" || idParts[4] == ""  {
+		idParts[3] == "" || idParts[4] == "" {
 		return nil, fmt.Errorf("unexpected format for ID (%q), expected PRINCIPAL_TYPE,TARGET_ID,TARGET_TYPE,PERMISSION_SET_ARN,INSTANCE_ARN", id)
 	}
 	return idParts, nil

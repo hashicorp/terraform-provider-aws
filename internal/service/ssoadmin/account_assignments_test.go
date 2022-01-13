@@ -3,17 +3,12 @@ package ssoadmin_test
 import (
 	"fmt"
 	"os"
-	"regexp"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/ssoadmin"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	tfssoadmin "github.com/hashicorp/terraform-provider-aws/internal/service/ssoadmin"
 )
 
 func TestAccSSOAdminAccountAssignments_Basic_group(t *testing.T) {
@@ -25,7 +20,6 @@ func TestAccSSOAdminAccountAssignments_Basic_group(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			testAccPreCheckInstances(t)
-			testAccPreCheckIdentityStoreGroupName(t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, ssoadmin.EndpointsID),
 		Providers:    acctest.Providers,
@@ -34,10 +28,8 @@ func TestAccSSOAdminAccountAssignments_Basic_group(t *testing.T) {
 			{
 				Config: testAccAccountAssignmentBasicGroupConfig(groupName, rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAccountAssignmentExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "target_type", "AWS_ACCOUNT"),
 					resource.TestCheckResourceAttr(resourceName, "principal_type", "GROUP"),
-					resource.TestMatchResourceAttr(resourceName, "principal_ids", "PRINCIPAL_IDS"),
 				),
 			},
 			{
@@ -58,19 +50,15 @@ func TestAccSSOAdminAccountAssignments_Basic_user(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			testAccPreCheckInstances(t)
-			testAccPreCheckIdentityStoreUserName(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, ssoadmin.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAccountAssignmentDestroy,
+		ErrorCheck: acctest.ErrorCheck(t, ssoadmin.EndpointsID),
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAccountAssignmentBasicUserConfig(userName, rName),
+				Config: testAccAccountAssignmentsBasicUserConfig(userName, rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAccountAssignmentExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "target_type", "AWS_ACCOUNT"),
 					resource.TestCheckResourceAttr(resourceName, "principal_type", "USER"),
-					resource.TestMatchResourceAttr(resourceName, "principal_ids", "PRINCIPAL_IDS"),
 				),
 			},
 			{
@@ -95,7 +83,7 @@ resource "aws_ssoadmin_permission_set" "test" {
 `, rName)
 }
 
-func testAccAccountAssignmentBasicGroupConfig(groupName, rName string) string {
+func testAccAccountAssignmentsBasicGroupConfig(groupName, rName string) string {
 	return acctest.ConfigCompose(
 		testAccAccountAssignmentsBaseConfig(rName),
 		fmt.Sprintf(`
@@ -120,7 +108,7 @@ resource "aws_ssoadmin_account_assignments" "test" {
 
 func testAccAccountAssignmentsBasicUserConfig(userName, rName string) string {
 	return acctest.ConfigCompose(
-		testAccAccountAssignmentBaseConfig(rName),
+		testAccAccountAssignmentsBaseConfig(rName),
 		fmt.Sprintf(`
 data "aws_identitystore_user" "test" {
   identity_store_id = tolist(data.aws_ssoadmin_instances.test.identity_store_ids)[0]
@@ -139,18 +127,4 @@ resource "aws_ssoadmin_account_assignments" "test" {
   principal_ids      = [data.aws_identitystore_user.test.user_id]
 }
 `, userName))
-}
-
-func testAccPreCheckIdentityStoreGroupName(t *testing.T) {
-	if os.Getenv("AWS_IDENTITY_STORE_GROUP_NAME") == "" {
-		t.Skip("AWS_IDENTITY_STORE_GROUP_NAME env var must be set for AWS Identity Store Group acceptance test. " +
-			"This is required until ListGroups API returns results without filtering by name.")
-	}
-}
-
-func testAccPreCheckIdentityStoreUserName(t *testing.T) {
-	if os.Getenv("AWS_IDENTITY_STORE_USER_NAME") == "" {
-		t.Skip("AWS_IDENTITY_STORE_USER_NAME env var must be set for AWS Identity Store User acceptance test. " +
-			"This is required until ListUsers API returns results without filtering by name.")
-	}
 }

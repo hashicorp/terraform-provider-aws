@@ -63,9 +63,8 @@ func FindAccountAssignmentPrincipals(conn *ssoadmin.SSOAdmin, principalType, acc
 			if aws.StringValue(a.PrincipalType) != principalType {
 				continue
 			}
-			
+
 			principalIds = append(principalIds, a.PrincipalId)
-			}
 		}
 
 		return !lastPage
