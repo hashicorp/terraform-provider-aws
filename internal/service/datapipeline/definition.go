@@ -180,7 +180,7 @@ func resourceDefinitionCreate(ctx context.Context, d *schema.ResourceData, meta 
 		if aws.BoolValue(output.Errored) {
 			errors := getValidationError(output.ValidationErrors)
 			if strings.Contains(errors.Error(), "role") {
-				return resource.RetryableError(fmt.Errorf("error validating after creation DataPipeline Definition (%s): %w", d.Id(), errors))
+				return resource.RetryableError(fmt.Errorf("error validating after creation DataPipeline Definition (%s): %w", pipelineID, errors))
 			}
 		}
 
@@ -192,11 +192,11 @@ func resourceDefinitionCreate(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	if err != nil {
-		return diag.Errorf("error creating DataPipeline Definition (%s): %s", d.Id(), err)
+		return diag.Errorf("error creating DataPipeline Definition (%s): %s", pipelineID, err)
 	}
 
 	if aws.BoolValue(output.Errored) {
-		return diag.Errorf("error validating after creation DataPipeline Definition (%s): %s", d.Id(), getValidationError(output.ValidationErrors))
+		return diag.Errorf("error validating after creation DataPipeline Definition (%s): %s", pipelineID, getValidationError(output.ValidationErrors))
 	}
 
 	// Activate pipeline if enabled
@@ -206,7 +206,7 @@ func resourceDefinitionCreate(ctx context.Context, d *schema.ResourceData, meta 
 
 	_, err = conn.ActivatePipelineWithContext(ctx, input2)
 	if err != nil {
-		return diag.Errorf("error activating DataPipeline Definition (%s): %s", d.Id(), err)
+		return diag.Errorf("error activating DataPipeline Definition (%s): %s", pipelineID, err)
 	}
 
 	d.SetId(pipelineID)
