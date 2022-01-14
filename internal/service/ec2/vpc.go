@@ -322,36 +322,12 @@ func resourceVPCRead(d *schema.ResourceData, meta interface{}) error {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	var vpc *ec2.Vpc
+	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(PropagationTimeout, func() (interface{}, error) {
+		return FindVPCByID(conn, d.Id())
+	}, d.IsNewResource())
 
-	err := resource.Retry(VPCPropagationTimeout, func() *resource.RetryError {
-		var err error
-
-		vpc, err = FindVPCByID(conn, d.Id())
-
-		if d.IsNewResource() && tfawserr.ErrCodeEquals(err, "InvalidVpcID.NotFound") {
-			return resource.RetryableError(err)
-		}
-
-		if err != nil {
-			return resource.NonRetryableError(err)
-		}
-
-		if d.IsNewResource() && vpc == nil {
-			return resource.RetryableError(&resource.NotFoundError{
-				LastError: fmt.Errorf("EC2 VPC (%s) not found", d.Id()),
-			})
-		}
-
-		return nil
-	})
-
-	if tfresource.TimedOut(err) {
-		vpc, err = FindVPCByID(conn, d.Id())
-	}
-
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, "InvalidVpcID.NotFound") {
-		log.Printf("[WARN] EC2 VPC (%s) not found, removing from state", d.Id())
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] EC2 VPC %s not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
@@ -360,15 +336,7 @@ func resourceVPCRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error reading EC2 VPC (%s): %w", d.Id(), err)
 	}
 
-	if vpc == nil {
-		if d.IsNewResource() {
-			return fmt.Errorf("error reading EC2 VPC (%s): not found after creation", d.Id())
-		}
-
-		log.Printf("[WARN] EC2 VPC (%s) not found, removing from state", d.Id())
-		d.SetId("")
-		return nil
-	}
+	vpc := outputRaw.(*ec2.Vpc)
 
 	vpcid := d.Id()
 	d.Set("cidr_block", vpc.CidrBlock)

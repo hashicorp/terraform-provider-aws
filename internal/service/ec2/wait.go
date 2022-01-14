@@ -705,7 +705,6 @@ func WaitTransitGatewayRouteTablePropagationStateDisabled(conn *ec2.EC2, transit
 }
 
 const (
-	VPCPropagationTimeout          = 2 * time.Minute
 	VPCAttributePropagationTimeout = 5 * time.Minute
 )
 
