@@ -178,6 +178,8 @@ resource "aws_s3_bucket" "versioning_bucket" {
 
 ### Using replication configuration
 
+~> **NOTE:** See the [`aws_s3_bucket_replication_configuration` resource](/docs/providers/aws/r/s3_bucket_replication_configuration.html) to support bi-directional replication configuration and additional features.
+
 ```terraform
 provider "aws" {
   region = "eu-west-1"
@@ -277,12 +279,24 @@ resource "aws_s3_bucket" "source" {
 
     rules {
       id     = "foobar"
-      prefix = "foo"
       status = "Enabled"
 
+      filter {
+        tags = {}
+      }
       destination {
         bucket        = aws_s3_bucket.destination.arn
         storage_class = "STANDARD"
+
+        replication_time {
+          status  = "Enabled"
+          minutes = 15
+        }
+
+        metrics {
+          status  = "Enabled"
+          minutes = 15
+        }
       }
     }
   }
@@ -337,8 +351,8 @@ resource "aws_s3_bucket" "bucket" {
 
 The following arguments are supported:
 
-* `bucket` - (Optional, Forces new resource) The name of the bucket. If omitted, Terraform will assign a random, unique name. Must be less than or equal to 63 characters in length.
-* `bucket_prefix` - (Optional, Forces new resource) Creates a unique bucket name beginning with the specified prefix. Conflicts with `bucket`. Must be less than or equal to 37 characters in length.
+* `bucket` - (Optional, Forces new resource) The name of the bucket. If omitted, Terraform will assign a random, unique name. Must be lowercase and less than or equal to 63 characters in length. A full list of bucket naming rules [may be found here](https://docs.aws.amazon.com/AmazonS3/latest/userguide/bucketnamingrules.html).
+* `bucket_prefix` - (Optional, Forces new resource) Creates a unique bucket name beginning with the specified prefix. Conflicts with `bucket`. Must be lowercase and less than or equal to 37 characters in length. A full list of bucket naming rules [may be found here](https://docs.aws.amazon.com/AmazonS3/latest/userguide/bucketnamingrules.html).
 * `acl` - (Optional) The [canned ACL](https://docs.aws.amazon.com/AmazonS3/latest/dev/acl-overview.html#canned-acl) to apply. Valid values are `private`, `public-read`, `public-read-write`, `aws-exec-read`, `authenticated-read`, and `log-delivery-write`. Defaults to `private`.  Conflicts with `grant`.
 * `grant` - (Optional) An [ACL policy grant](https://docs.aws.amazon.com/AmazonS3/latest/dev/acl-overview.html#sample-acl) (documented below). Conflicts with `acl`.
 * `policy` - (Optional) A valid [bucket policy](https://docs.aws.amazon.com/AmazonS3/latest/dev/example-bucket-policies.html) JSON document. Note that if the policy document is not specific enough (but still valid), Terraform may view the policy as constantly changing in a `terraform plan`. In this case, please make sure you use the verbose/specific version of the policy. For more information about building AWS IAM policy documents with Terraform, see the [AWS IAM Policy Document Guide](https://learn.hashicorp.com/terraform/aws/iam-policy).
@@ -411,7 +425,7 @@ The `transition` object supports the following
 
 * `date` (Optional) Specifies the date after which you want the corresponding action to take effect.
 * `days` (Optional) Specifies the number of days after object creation when the specific rule action takes effect.
-* `storage_class` (Required) Specifies the Amazon S3 storage class to which you want the object to transition. Can be `ONEZONE_IA`, `STANDARD_IA`, `INTELLIGENT_TIERING`, `GLACIER`, or `DEEP_ARCHIVE`.
+* `storage_class` (Required) Specifies the Amazon S3 [storage class](https://docs.aws.amazon.com/AmazonS3/latest/API/API_Transition.html#AmazonS3-Type-Transition-StorageClass) to which you want the object to transition.
 
 The `noncurrent_version_expiration` object supports the following
 
@@ -420,9 +434,19 @@ The `noncurrent_version_expiration` object supports the following
 The `noncurrent_version_transition` object supports the following
 
 * `days` (Required) Specifies the number of days noncurrent object versions transition.
-* `storage_class` (Required) Specifies the Amazon S3 storage class to which you want the noncurrent object versions to transition. Can be `ONEZONE_IA`, `STANDARD_IA`, `INTELLIGENT_TIERING`, `GLACIER`, or `DEEP_ARCHIVE`.
+* `storage_class` (Required) Specifies the Amazon S3 [storage class](https://docs.aws.amazon.com/AmazonS3/latest/API/API_Transition.html#AmazonS3-Type-Transition-StorageClass) to which you want the object to transition.
 
 The `replication_configuration` object supports the following:
+
+~> **NOTE:** See the [`aws_s3_bucket_replication_configuration` resource documentation](/docs/providers/aws/r/s3_bucket_replication_configuration.html) to avoid conflicts. Replication configuration can only be defined in one resource not both.  When using the independent replication configuration resource the following lifecycle rule is needed on the `aws_s3_bucket` resource.
+
+```
+lifecycle {
+  ignore_changes = [
+    replication_configuration
+  ]
+}
+```
 
 * `role` - (Required) The ARN of the IAM role for Amazon S3 to assume when replicating the objects.
 * `rules` - (Required) Specifies the rules managing the replication (documented below).
@@ -447,11 +471,23 @@ Replication configuration V1 supports filtering based on only the `prefix` attri
 The `destination` object supports the following:
 
 * `bucket` - (Required) The ARN of the S3 bucket where you want Amazon S3 to store replicas of the object identified by the rule.
-* `storage_class` - (Optional) The class of storage used to store the object. Can be `STANDARD`, `REDUCED_REDUNDANCY`, `STANDARD_IA`, `ONEZONE_IA`, `INTELLIGENT_TIERING`, `GLACIER`, or `DEEP_ARCHIVE`.
+* `storage_class` - (Optional) The [storage class](https://docs.aws.amazon.com/AmazonS3/latest/API/API_Destination.html#AmazonS3-Type-Destination-StorageClass) used to store the object. By default, Amazon S3 uses the storage class of the source object to create the object replica.
 * `replica_kms_key_id` - (Optional) Destination KMS encryption key ARN for SSE-KMS replication. Must be used in conjunction with
   `sse_kms_encrypted_objects` source selection criteria.
 * `access_control_translation` - (Optional) Specifies the overrides to use for object owners on replication. Must be used in conjunction with `account_id` owner override configuration.
 * `account_id` - (Optional) The Account ID to use for overriding the object owner on replication. Must be used in conjunction with `access_control_translation` override configuration.
+* `replication_time` - (Optional) Enables S3 Replication Time Control (S3 RTC) (documented below).
+* `metrics` - (Optional) Enables replication metrics (required for S3 RTC) (documented below).
+
+The `replication_time` object supports the following:
+
+* `status` - (Optional) The status of RTC. Either `Enabled` or `Disabled`.
+* `minutes` - (Optional) Threshold within which objects are to be replicated. The only valid value is `15`.
+
+The `metrics` object supports the following:
+
+* `status` - (Optional) The status of replication metrics. Either `Enabled` or `Disabled`.
+* `minutes` - (Optional) Threshold within which objects are to be replicated. The only valid value is `15`.
 
 The `source_selection_criteria` object supports the following:
 
@@ -530,7 +566,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-S3 bucket can be imported using the `bucket`, e.g.
+S3 bucket can be imported using the `bucket`, e.g.,
 
 ```
 $ terraform import aws_s3_bucket.bucket bucket-name

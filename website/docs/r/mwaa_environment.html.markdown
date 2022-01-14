@@ -185,7 +185,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-MWAA Environment can be imported using `Name` e.g.
+MWAA Environment can be imported using `Name` e.g.,
 
 ```
 $ terraform import aws_mwaa_environment.example MyAirflowEnvironment

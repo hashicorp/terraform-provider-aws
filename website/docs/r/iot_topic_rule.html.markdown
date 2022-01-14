@@ -201,7 +201,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-IoT Topic Rules can be imported using the `name`, e.g.
+IoT Topic Rules can be imported using the `name`, e.g.,
 
 ```
 $ terraform import aws_iot_topic_rule.rule <name>

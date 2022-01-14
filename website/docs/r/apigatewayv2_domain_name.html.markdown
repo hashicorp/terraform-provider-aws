@@ -98,7 +98,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-`aws_apigatewayv2_domain_name` can be imported by using the domain name, e.g.
+`aws_apigatewayv2_domain_name` can be imported by using the domain name, e.g.,
 
 ```
 $ terraform import aws_apigatewayv2_domain_name.example ws-api.example.com

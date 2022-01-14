@@ -102,7 +102,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-ECS clusters can be imported using the `name`, e.g.
+ECS clusters can be imported using the `name`, e.g.,
 
 ```
 $ terraform import aws_ecs_cluster.stateless stateless-app

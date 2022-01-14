@@ -42,7 +42,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-KMS aliases can be imported using the `name`, e.g.
+KMS aliases can be imported using the `name`, e.g.,
 
 ```
 $ terraform import aws_kms_alias.a alias/my-key-alias

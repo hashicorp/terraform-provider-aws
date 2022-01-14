@@ -76,12 +76,12 @@ In addition to all arguments above, the following attributes are exported:
 For WebSocket APIs this attribute can additionally be used in an [`aws_iam_policy`](/docs/providers/aws/r/iam_policy.html) to authorize access to the [`@connections` API](https://docs.aws.amazon.com/apigateway/latest/developerguide/apigateway-how-to-call-websocket-api-connections.html).
 See the [Amazon API Gateway Developer Guide](https://docs.aws.amazon.com/apigateway/latest/developerguide/apigateway-websocket-control-access-iam.html) for details.
 * `invoke_url` - The URL to invoke the API pointing to the stage,
-  e.g. `wss://z4675bid1j.execute-api.eu-west-2.amazonaws.com/example-stage`, or `https://z4675bid1j.execute-api.eu-west-2.amazonaws.com/`
+  e.g., `wss://z4675bid1j.execute-api.eu-west-2.amazonaws.com/example-stage`, or `https://z4675bid1j.execute-api.eu-west-2.amazonaws.com/`
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
 
 ## Import
 
-`aws_apigatewayv2_stage` can be imported by using the API identifier and stage name, e.g.
+`aws_apigatewayv2_stage` can be imported by using the API identifier and stage name, e.g.,
 
 ```
 $ terraform import aws_apigatewayv2_stage.example aabbccddee/example-stage
