@@ -8,7 +8,6 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
@@ -244,11 +243,11 @@ func resourceVPCCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	vpcInfo := vpcInfo{
-		vpc:                          vpc,
-		classicLinkEnabled:           false,
-		classicLinkDNSSupportEnabled: false,
-		dnsHostnamesEnabled:          false,
-		dnsSupportEnabled:            true,
+		vpc:                         vpc,
+		enableClassicLink:           false,
+		enableClassicLinkDNSSupport: false,
+		enableDnsHostnames:          false,
+		enableDnsSupport:            true,
 	}
 
 	if err := modifyVPCAttributesOnCreate(conn, d, &vpcInfo); err != nil {
@@ -279,33 +278,19 @@ func resourceVPCRead(d *schema.ResourceData, meta interface{}) error {
 
 	vpc := outputRaw.(*ec2.Vpc)
 
-	vpcid := d.Id()
-	d.Set("cidr_block", vpc.CidrBlock)
-	d.Set("dhcp_options_id", vpc.DhcpOptionsId)
-	d.Set("instance_tenancy", vpc.InstanceTenancy)
-
-	// ARN
+	ownerID := aws.StringValue(vpc.OwnerId)
 	arn := arn.ARN{
 		Partition: meta.(*conns.AWSClient).Partition,
 		Service:   ec2.ServiceName,
 		Region:    meta.(*conns.AWSClient).Region,
-		AccountID: aws.StringValue(vpc.OwnerId),
+		AccountID: ownerID,
 		Resource:  fmt.Sprintf("vpc/%s", d.Id()),
 	}.String()
 	d.Set("arn", arn)
-
-	tags := KeyValueTags(vpc.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %s", err)
-	}
-
-	d.Set("owner_id", vpc.OwnerId)
+	d.Set("cidr_block", vpc.CidrBlock)
+	d.Set("dhcp_options_id", vpc.DhcpOptionsId)
+	d.Set("instance_tenancy", vpc.InstanceTenancy)
+	d.Set("owner_id", ownerID)
 
 	// Make sure those values are set, if an IPv6 block exists it'll be set in the loop
 	d.Set("ipv6_association_id", "")
@@ -328,88 +313,72 @@ func resourceVPCRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("ipv6_cidr_block_network_border_group", v.(string))
 	}
 
-	enableDnsHostnames, err := FindVPCAttribute(conn, aws.StringValue(vpc.VpcId), ec2.VpcAttributeNameEnableDnsHostnames)
+	enableDnsHostnames, err := FindVPCAttribute(conn, d.Id(), ec2.VpcAttributeNameEnableDnsHostnames)
 
 	if err != nil {
-		return fmt.Errorf("error reading EC2 VPC (%s) Attribute (%s): %w", aws.StringValue(vpc.VpcId), ec2.VpcAttributeNameEnableDnsHostnames, err)
+		return fmt.Errorf("error reading EC2 VPC (%s) Attribute (%s): %w", d.Id(), ec2.VpcAttributeNameEnableDnsHostnames, err)
 	}
 
 	d.Set("enable_dns_hostnames", enableDnsHostnames)
 
-	enableDnsSupport, err := FindVPCAttribute(conn, aws.StringValue(vpc.VpcId), ec2.VpcAttributeNameEnableDnsSupport)
+	enableDnsSupport, err := FindVPCAttribute(conn, d.Id(), ec2.VpcAttributeNameEnableDnsSupport)
 
 	if err != nil {
-		return fmt.Errorf("error reading EC2 VPC (%s) Attribute (%s): %w", aws.StringValue(vpc.VpcId), ec2.VpcAttributeNameEnableDnsSupport, err)
+		return fmt.Errorf("error reading EC2 VPC (%s) Attribute (%s): %w", d.Id(), ec2.VpcAttributeNameEnableDnsSupport, err)
 	}
 
 	d.Set("enable_dns_support", enableDnsSupport)
 
-	describeClassiclinkOpts := &ec2.DescribeVpcClassicLinkInput{
-		VpcIds: []*string{&vpcid},
-	}
+	classicLinkEnabled, err := FindVPCClassicLinkEnabled(conn, d.Id())
 
-	// Classic Link is only available in regions that support EC2 Classic
-	respClassiclink, err := conn.DescribeVpcClassicLink(describeClassiclinkOpts)
 	if err != nil {
-		if awsErr, ok := err.(awserr.Error); ok && awsErr.Code() == "UnsupportedOperation" {
-			log.Printf("[WARN] VPC Classic Link is not supported in this region")
-		} else if tfawserr.ErrMessageContains(err, "InvalidVpcID.NotFound", "") {
-			log.Printf("[WARN] VPC Classic Link functionality you requested is not available for this VPC")
-		} else {
-			return err
-		}
-	} else {
-		classiclink_enabled := false
-		for _, v := range respClassiclink.Vpcs {
-			if aws.StringValue(v.VpcId) == vpcid {
-				if v.ClassicLinkEnabled != nil {
-					classiclink_enabled = aws.BoolValue(v.ClassicLinkEnabled)
-				}
-				break
-			}
-		}
-		d.Set("enable_classiclink", classiclink_enabled)
+		return fmt.Errorf("error reading EC2 VPC (%s) ClassicLinkEnabled: %w", d.Id(), err)
 	}
 
-	describeClassiclinkDnsOpts := &ec2.DescribeVpcClassicLinkDnsSupportInput{
-		VpcIds: []*string{&vpcid},
-	}
+	d.Set("enable_classiclink", classicLinkEnabled)
 
-	respClassiclinkDnsSupport, err := conn.DescribeVpcClassicLinkDnsSupport(describeClassiclinkDnsOpts)
+	classicLinkDnsSupported, err := FindVPCClassicLinkDnsSupported(conn, d.Id())
+
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, "UnsupportedOperation", "The functionality you requested is not available in this region") ||
-			tfawserr.ErrMessageContains(err, "AuthFailure", "This request has been administratively disabled") {
-			log.Printf("[WARN] VPC Classic Link DNS Support is not supported in this region")
-		} else {
-			return err
-		}
-	} else {
-		classiclinkdns_enabled := false
-		for _, v := range respClassiclinkDnsSupport.Vpcs {
-			if aws.StringValue(v.VpcId) == vpcid {
-				if v.ClassicLinkDnsSupported != nil {
-					classiclinkdns_enabled = aws.BoolValue(v.ClassicLinkDnsSupported)
-				}
-				break
-			}
-		}
-		d.Set("enable_classiclink_dns_support", classiclinkdns_enabled)
+		return fmt.Errorf("error reading EC2 VPC (%s) ClassicLinkDnsSupported: %w", d.Id(), err)
 	}
 
-	routeTableId, err := resourceVPCSetMainRouteTable(conn, vpcid)
+	d.Set("enable_classiclink_dns_support", classicLinkDnsSupported)
+
+	routeTable, err := FindVPCMainRouteTable(conn, d.Id())
+
 	if err != nil {
-		log.Printf("[WARN] Unable to set Main Route Table: %s", err)
+		return fmt.Errorf("error reading EC2 VPC (%s) main Route Table: %w", d.Id(), err)
 	}
-	d.Set("main_route_table_id", routeTableId)
 
-	if err := resourceVPCSetDefaultNetworkACL(conn, d); err != nil {
-		log.Printf("[WARN] Unable to set Default Network ACL: %s", err)
+	d.Set("default_route_table_id", routeTable.RouteTableId)
+	d.Set("main_route_table_id", routeTable.RouteTableId)
+
+	nacl, err := FindVPCDefaultNetworkACL(conn, d.Id())
+
+	if err != nil {
+		return fmt.Errorf("error reading EC2 VPC (%s) default NACL: %w", d.Id(), err)
 	}
-	if err := resourceVPCSetDefaultSecurityGroup(conn, d); err != nil {
-		log.Printf("[WARN] Unable to set Default Security Group: %s", err)
+
+	d.Set("default_network_acl_id", nacl.NetworkAclId)
+
+	securityGroup, err := FindVPCDefaultSecurityGroup(conn, d.Id())
+
+	if err != nil {
+		return fmt.Errorf("error reading EC2 VPC (%s) default Security Group: %w", d.Id(), err)
 	}
-	if err := resourceVPCSetDefaultRouteTable(conn, d); err != nil {
-		log.Printf("[WARN] Unable to set Default Route Table: %s", err)
+
+	d.Set("default_security_group_id", securityGroup.GroupId)
+
+	tags := KeyValueTags(vpc.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+
+	//lintignore:AWSR002
+	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %w", err)
+	}
+
+	if err := d.Set("tags_all", tags.Map()); err != nil {
+		return fmt.Errorf("error setting tags_all: %w", err)
 	}
 
 	return nil
@@ -937,35 +906,35 @@ func waitForEc2VpcIpv6CidrBlockAssociationDelete(conn *ec2.EC2, vpcID, associati
 }
 
 type vpcInfo struct {
-	vpc                          *ec2.Vpc
-	classicLinkEnabled           bool
-	classicLinkDNSSupportEnabled bool
-	dnsHostnamesEnabled          bool
-	dnsSupportEnabled            bool
+	vpc                         *ec2.Vpc
+	enableClassicLink           bool
+	enableClassicLinkDNSSupport bool
+	enableDnsHostnames          bool
+	enableDnsSupport            bool
 }
 
 // modifyVPCAttributesOnCreate sets VPC attributes on resource Create.
 // Called after new VPC creation or existing default VPC adoption.
 func modifyVPCAttributesOnCreate(conn *ec2.EC2, d *schema.ResourceData, vpcInfo *vpcInfo) error {
-	if new, old := d.Get("enable_dns_hostnames").(bool), vpcInfo.dnsHostnamesEnabled; old != new {
+	if new, old := d.Get("enable_dns_hostnames").(bool), vpcInfo.enableDnsHostnames; old != new {
 		if err := modifyVPCDnsHostnames(conn, d.Id(), new); err != nil {
 			return err
 		}
 	}
 
-	if new, old := d.Get("enable_dns_support").(bool), vpcInfo.dnsSupportEnabled; old != new {
+	if new, old := d.Get("enable_dns_support").(bool), vpcInfo.enableDnsSupport; old != new {
 		if err := modifyVPCDnsSupport(conn, d.Id(), new); err != nil {
 			return err
 		}
 	}
 
-	if new, old := d.Get("enable_classiclink").(bool), vpcInfo.classicLinkEnabled; old != new {
+	if new, old := d.Get("enable_classiclink").(bool), vpcInfo.enableClassicLink; old != new {
 		if err := modifyVPCClassicLink(conn, d.Id(), new); err != nil {
 			return err
 		}
 	}
 
-	if new, old := d.Get("enable_classiclink_dns_support").(bool), vpcInfo.classicLinkDNSSupportEnabled; old != new {
+	if new, old := d.Get("enable_classiclink_dns_support").(bool), vpcInfo.enableClassicLinkDNSSupport; old != new {
 		if err := modifyVPCClassicLinkDnsSupport(conn, d.Id(), new); err != nil {
 			return err
 		}

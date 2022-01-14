@@ -71,3 +71,7 @@ func VpnConnectionType_Values() []string {
 const (
 	DefaultDHCPOptionsID = "default"
 )
+
+const (
+	DefaultSecurityGroupName = "default"
+)

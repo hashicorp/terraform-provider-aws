@@ -10,6 +10,7 @@ import (
 )
 
 const (
+	ErrCodeAuthFailure                               = "AuthFailure"
 	ErrCodeClientInvalidHostIDNotFound               = "Client.InvalidHostID.NotFound"
 	ErrCodeClientVpnAssociationIdNotFound            = "InvalidClientVpnAssociationId.NotFound"
 	ErrCodeClientVpnAuthorizationRuleNotFound        = "InvalidClientVpnEndpointAuthorizationRuleNotFound"
@@ -30,6 +31,7 @@ const (
 	ErrCodeInvalidInstanceIDNotFound                 = "InvalidInstanceID.NotFound"
 	ErrCodeInvalidInternetGatewayIDNotFound          = "InvalidInternetGatewayID.NotFound"
 	ErrCodeInvalidKeyPairNotFound                    = "InvalidKeyPair.NotFound"
+	ErrCodeInvalidNetworkAclIDNotFound               = "InvalidNetworkAclID.NotFound"
 	ErrCodeInvalidNetworkInterfaceIDNotFound         = "InvalidNetworkInterfaceID.NotFound"
 	ErrCodeInvalidParameter                          = "InvalidParameter"
 	ErrCodeInvalidParameterException                 = "InvalidParameterException"
@@ -59,6 +61,7 @@ const (
 	ErrCodeInvalidVpnGatewayAttachmentNotFound       = "InvalidVpnGatewayAttachment.NotFound"
 	ErrCodeInvalidVpnGatewayIDNotFound               = "InvalidVpnGatewayID.NotFound"
 	ErrCodeNatGatewayNotFound                        = "NatGatewayNotFound"
+	ErrCodeUnsupportedOperation                      = "UnsupportedOperation"
 )
 
 func UnsuccessfulItemError(apiObject *ec2.UnsuccessfulItemError) error {
