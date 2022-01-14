@@ -1,7 +1,7 @@
 name: "🚀 Feature Request"
 description: "I have a suggestion (and might want to implement myself 🙂)!"
 title: "[Feature Request]: "
-labels: ["enhancement"]
+labels: ["enhancement", "needs-triage"]
 body:
   - type: textarea
     attributes:
