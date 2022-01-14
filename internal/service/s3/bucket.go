@@ -122,10 +122,9 @@ func ResourceBucket() *schema.Resource {
 			},
 
 			"policy": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ValidateFunc:     validation.StringIsJSON,
-				DiffSuppressFunc: verify.SuppressEquivalentPolicyDiffs,
+				Type:       schema.TypeString,
+				Computed:   true,
+				Deprecated: "Use the aws_s3_bucket_policy resource instead",
 			},
 
 			"cors_rule": {
@@ -749,12 +748,6 @@ func resourceBucketUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	if d.HasChange("policy") {
-		if err := resourceBucketPolicyUpdate(conn, d); err != nil {
-			return err
-		}
-	}
-
 	if d.HasChange("versioning") {
 		v := d.Get("versioning").([]interface{})
 
@@ -853,40 +846,19 @@ func resourceBucketRead(d *schema.ResourceData, meta interface{}) error {
 
 	d.Set("bucket_domain_name", meta.(*conns.AWSClient).PartitionHostname(fmt.Sprintf("%s.s3", d.Get("bucket").(string))))
 
-	// Read the policy
-	if _, ok := d.GetOk("policy"); ok {
-
-		pol, err := verify.RetryOnAWSCode(s3.ErrCodeNoSuchBucket, func() (interface{}, error) {
-			return conn.GetBucketPolicy(&s3.GetBucketPolicyInput{
-				Bucket: aws.String(d.Id()),
-			})
+	// Read the policy if configured outside this resource e.g. with aws_s3_bucket_policy resource
+	pol, err := verify.RetryOnAWSCode(s3.ErrCodeNoSuchBucket, func() (interface{}, error) {
+		return conn.GetBucketPolicy(&s3.GetBucketPolicyInput{
+			Bucket: aws.String(d.Id()),
 		})
-		log.Printf("[DEBUG] S3 bucket: %s, read policy: %v", d.Id(), pol)
-		if err != nil {
-			if err := d.Set("policy", ""); err != nil {
-				return err
-			}
-		} else {
-			if v := pol.(*s3.GetBucketPolicyOutput).Policy; v == nil {
-				if err := d.Set("policy", ""); err != nil {
-					return err
-				}
-			} else {
-				policyToSet, err := verify.SecondJSONUnlessEquivalent(d.Get("policy").(string), aws.StringValue(v))
+	})
 
-				if err != nil {
-					return fmt.Errorf("while setting policy (%s), encountered: %w", aws.StringValue(v), err)
-				}
+	if err != nil && !tfawserr.ErrCodeEquals(err, ErrCodeNoSuchBucketPolicy) {
+		return fmt.Errorf("error getting S3 bucket (%s) policy: %w", d.Id(), err)
+	}
 
-				policyToSet, err = structure.NormalizeJsonString(policyToSet)
-
-				if err != nil {
-					return fmt.Errorf("policy (%s) contains invalid JSON: %w", d.Get("policy").(string), err)
-				}
-
-				d.Set("policy", policyToSet)
-			}
-		}
+	if output, ok := pol.(*s3.GetBucketPolicyOutput); ok {
+		d.Set("policy", output.Policy)
 	}
 
 	//Read the Grant ACL. Reset if `acl` (canned ACL) is set.
