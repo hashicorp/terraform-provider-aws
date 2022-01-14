@@ -894,7 +894,7 @@ func FindTransitGatewayRouteTablePropagation(conn *ec2.EC2, transitGatewayRouteT
 }
 
 // FindVPCAttribute looks up a VPC attribute.
-func FindVPCAttribute(conn *ec2.EC2, vpcID string, attribute string) (*bool, error) {
+func FindVPCAttribute(conn *ec2.EC2, vpcID string, attribute string) (bool, error) {
 	input := &ec2.DescribeVpcAttributeInput{
 		Attribute: aws.String(attribute),
 		VpcId:     aws.String(vpcID),
@@ -902,30 +902,36 @@ func FindVPCAttribute(conn *ec2.EC2, vpcID string, attribute string) (*bool, err
 
 	output, err := conn.DescribeVpcAttribute(input)
 
+	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidVpcIDNotFound) {
+		return false, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
 	if err != nil {
-		return nil, err
+		return false, err
 	}
 
 	if output == nil {
-		return nil, nil
+		return false, tfresource.NewEmptyResultError(input)
 	}
 
+	var v *ec2.AttributeBooleanValue
 	switch attribute {
 	case ec2.VpcAttributeNameEnableDnsHostnames:
-		if output.EnableDnsHostnames == nil {
-			return nil, nil
-		}
-
-		return output.EnableDnsHostnames.Value, nil
+		v = output.EnableDnsHostnames
 	case ec2.VpcAttributeNameEnableDnsSupport:
-		if output.EnableDnsSupport == nil {
-			return nil, nil
-		}
-
-		return output.EnableDnsSupport.Value, nil
+		v = output.EnableDnsSupport
+	default:
+		return false, fmt.Errorf("unsupported VPC attribute: %s", attribute)
 	}
 
-	return nil, fmt.Errorf("unimplemented VPC attribute: %s", attribute)
+	if v == nil {
+		return false, tfresource.NewEmptyResultError(input)
+	}
+
+	return aws.BoolValue(v.Value), nil
 }
 
 func FindVPC(conn *ec2.EC2, input *ec2.DescribeVpcsInput) (*ec2.Vpc, error) {

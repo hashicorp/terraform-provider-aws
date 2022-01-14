@@ -696,6 +696,10 @@ func TestAccVPC_tenancy(t *testing.T) {
 }
 
 func TestAccVPC_IpamIpv4BasicNetmask(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var vpc ec2.Vpc
 	resourceName := "aws_vpc.test"
 
@@ -717,6 +721,10 @@ func TestAccVPC_IpamIpv4BasicNetmask(t *testing.T) {
 }
 
 func TestAccVPC_IpamIpv4BasicExplicitCidr(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var vpc ec2.Vpc
 	resourceName := "aws_vpc.test"
 	cidr := "172.2.0.32/28"

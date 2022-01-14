@@ -515,12 +515,11 @@ func StatusVPCState(conn *ec2.EC2, id string) resource.StateRefreshFunc {
 	}
 }
 
-// StatusVPCAttribute fetches the Vpc and its attribute value
-func StatusVPCAttribute(conn *ec2.EC2, id string, attribute string) resource.StateRefreshFunc {
+func StatusVPCAttributeValue(conn *ec2.EC2, id string, attribute string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		attributeValue, err := FindVPCAttribute(conn, id, attribute)
 
-		if tfawserr.ErrCodeEquals(err, ErrCodeInvalidVpcIDNotFound) {
+		if tfresource.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -528,11 +527,7 @@ func StatusVPCAttribute(conn *ec2.EC2, id string, attribute string) resource.Sta
 			return nil, "", err
 		}
 
-		if attributeValue == nil {
-			return nil, "", nil
-		}
-
-		return attributeValue, strconv.FormatBool(aws.BoolValue(attributeValue)), nil
+		return attributeValue, strconv.FormatBool(attributeValue), nil
 	}
 }
 

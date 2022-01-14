@@ -733,7 +733,7 @@ const (
 func WaitVPCAttributeUpdated(conn *ec2.EC2, vpcID string, attribute string, expectedValue bool) (*ec2.Vpc, error) {
 	stateConf := &resource.StateChangeConf{
 		Target:     []string{strconv.FormatBool(expectedValue)},
-		Refresh:    StatusVPCAttribute(conn, vpcID, attribute),
+		Refresh:    StatusVPCAttributeValue(conn, vpcID, attribute),
 		Timeout:    VPCAttributePropagationTimeout,
 		Delay:      10 * time.Second,
 		MinTimeout: 3 * time.Second,
