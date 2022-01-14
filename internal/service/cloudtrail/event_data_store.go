@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
@@ -127,19 +128,18 @@ func ResourceEventDataStore() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"created_time": {
+			"created_timestamp": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"last_modified_time": {
+			"updated_timestamp": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"multi_region_enabled": {
-				Type:         schema.TypeBool,
-				Optional:     true,
-				Default:      false,
-				ValidateFunc: verify.ValidARN,
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
 			},
 			"organization_enabled": {
 				Type:     schema.TypeBool,
@@ -190,18 +190,22 @@ func resourceEventDataStoreCreate(ctx context.Context, d *schema.ResourceData, m
 		input.TerminationProtectionEnabled = aws.Bool(v.(bool))
 	}
 
+	if _, ok := d.GetOk("advanced_event_selector"); ok {
+		// Create AdvancedEventSelectors
+	}
+
 	log.Printf("[DEBUG] Creating Event Data Store: %s", input)
-	_, err := conn.CreateEventDataStoreWithContext(ctx, input)
+	output, err := conn.CreateEventDataStoreWithContext(ctx, input)
 
 	if err != nil {
 		return diag.Errorf("error creating CloudTrail Event Data Store (%s): %s", name, err)
 	}
 
-	if err := waitEventDataStoreAvailable(ctx, conn, name, d.Timeout(schema.TimeoutCreate)); err != nil {
+	if err := waitEventDataStoreAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return diag.Errorf("error waiting for CloudTrail Event Data Store (%s) to be created: %s", name, err)
 	}
 
-	d.SetId(name)
+	d.SetId(aws.StringValue(output.EventDataStoreArn))
 
 	return resourceEventDataStoreRead(ctx, d, meta)
 }
@@ -209,9 +213,53 @@ func resourceEventDataStoreCreate(ctx context.Context, d *schema.ResourceData, m
 func resourceEventDataStoreUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).CloudTrailConn
 
+	if d.HasChangesExcept("tags", "tags_all", "advanced_event_selector") {
+		input := &cloudtrail.UpdateEventDataStoreInput{
+			EventDataStore: aws.String(d.Id()),
+		}
+
+		if d.HasChange("name") {
+			input.Name = aws.String(d.Get("name").(string))
+		}
+
+		if d.HasChange("multi_region_enabled") {
+			input.MultiRegionEnabled = aws.Bool(d.Get("multi_region_enabled").(bool))
+		}
+
+		if d.HasChange("organization_enabled") {
+			input.MultiRegionEnabled = aws.Bool(d.Get("organization_enabled").(bool))
+		}
+
+		if d.HasChange("termination_protection_enabled") {
+			input.MultiRegionEnabled = aws.Bool(d.Get("termination_protection_enabled").(bool))
+		}
+
+		if d.HasChange("retention_period") {
+			input.RetentionPeriod = aws.Int64(int64(d.Get("retention_period").(int)))
+		}
+
+		log.Printf("[DEBUG] Updating CloudTrail Event Data Store (%s)", d.Id())
+
+		_, err := conn.UpdateEventDataStoreWithContext(ctx, input)
+
+		if err != nil {
+			return diag.Errorf("error updating CloudTrail Event Data Store (%s): %s", d.Id(), err)
+		}
+
+		if err := waitEventDataStoreAvailable(ctx, conn, d.Id(), eventDataStoreAvailableTimeout); err != nil {
+			return diag.Errorf("error waiting for CloudTrail Event Data Store (%s) to be modified: %s", d.Id(), err)
+		}
+	}
+
+	if !d.IsNewResource() && d.HasChange("advanced_event_selector") {
+		log.Printf("[DEBUG] Updating advanced event selector on CloudTrail Event Data Store: %s", d.Id())
+		// Update AdvancedEventSelectors.
+	}
+
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
+		log.Printf("[DEBUG] Updating CloudTrail Event Data Store (%s) tags", d.Id())
 		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return diag.Errorf("error updating CloudTrail Event Data Store (%s) tags: %s", d.Id(), err)
 		}
@@ -238,6 +286,54 @@ func resourceEventDataStoreDelete(ctx context.Context, d *schema.ResourceData, m
 
 	if err := waitEventDataStoreDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
 		return diag.Errorf("error waiting for CloudTrail Event Data Store (%s) to be deleted: %s", d.Id(), err)
+	}
+
+	return nil
+}
+
+func resourceEventDataStoreRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.AWSClient).CloudTrailConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+
+	eventDataStore, err := FindEventDataStoreByArn(ctx, conn, d.Id())
+
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] CloudTrail Event Data Store (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
+	}
+
+	if err != nil {
+		return diag.Errorf("error reading CloudTrail Event Data Store (%s): %s", d.Id(), err)
+	}
+
+	d.Set("arn", eventDataStore.EventDataStoreArn)
+
+	d.Set("advanced_event_selector", flattenAdvancedEventSelector(eventDataStore.AdvancedEventSelectors))
+
+	d.Set("created_timestamp", eventDataStore.CreatedTimestamp)
+	d.Set("Updated_timestamp", eventDataStore.UpdatedTimestamp)
+	d.Set("multi_region_enabled", eventDataStore.MultiRegionEnabled)
+	d.Set("organization_enabled", eventDataStore.OrganizationEnabled)
+	d.Set("retention_period", eventDataStore.RetentionPeriod)
+	d.Set("termination_protection_enabled", eventDataStore.TerminationProtectionEnabled)
+
+	tags, err := ListTags(conn, d.Id())
+
+	if err != nil {
+		return diag.Errorf("error listing tags for CloudTrail Event Data Store (%s): %s", d.Id(), err)
+	}
+
+	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+
+	//lintignore:AWSR002
+	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
+		return diag.Errorf("error setting tags for CloudTrail Event Data Store (%s): %s", d.Id(), err)
+	}
+
+	if err := d.Set("tags_all", tags.Map()); err != nil {
+		return diag.Errorf("error setting tags_all for CloudTrail Event Data Store (%s): %s", d.Id(), err)
 	}
 
 	return nil

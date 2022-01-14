@@ -9,9 +9,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
-func FindEventDataStoreByName(ctx context.Context, conn *cloudtrail.CloudTrail, name string) (*cloudtrail.GetEventDataStoreOutput, error) {
+func FindEventDataStoreByArn(ctx context.Context, conn *cloudtrail.CloudTrail, eventDataStoreArn string) (*cloudtrail.GetEventDataStoreOutput, error) {
 	input := cloudtrail.GetEventDataStoreInput{
-		EventDataStore: aws.String(name),
+		EventDataStore: aws.String(eventDataStoreArn),
 	}
 
 	output, err := conn.GetEventDataStoreWithContext(ctx, &input)

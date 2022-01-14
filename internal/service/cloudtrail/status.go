@@ -16,9 +16,9 @@ const (
 )
 
 // statusEventDataStore fetches the CloudTrail Event Data Store and its status.
-func statusEventDataStore(ctx context.Context, conn *cloudtrail.CloudTrail, eventDataStoreName string) resource.StateRefreshFunc {
+func statusEventDataStore(ctx context.Context, conn *cloudtrail.CloudTrail, eventDataStoreArn string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		eventDataStore, err := FindEventDataStoreByName(ctx, conn, eventDataStoreName)
+		eventDataStore, err := FindEventDataStoreByArn(ctx, conn, eventDataStoreArn)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
