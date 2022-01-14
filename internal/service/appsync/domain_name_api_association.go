@@ -11,13 +11,13 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func ResourceApiAssociation() *schema.Resource {
+func ResourceDomainNameApiAssociation() *schema.Resource {
 
 	return &schema.Resource{
-		Create: resourceApiAssociationCreate,
-		Read:   resourceApiAssociationRead,
-		Update: resourceApiAssociationUpdate,
-		Delete: resourceApiAssociationDelete,
+		Create: resourceDomainNameApiAssociationCreate,
+		Read:   resourceDomainNameApiAssociationRead,
+		Update: resourceDomainNameApiAssociationUpdate,
+		Delete: resourceDomainNameApiAssociationDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -36,7 +36,7 @@ func ResourceApiAssociation() *schema.Resource {
 	}
 }
 
-func resourceApiAssociationCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceDomainNameApiAssociationCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).AppSyncConn
 
 	params := &appsync.AssociateApiInput{
@@ -51,13 +51,13 @@ func resourceApiAssociationCreate(d *schema.ResourceData, meta interface{}) erro
 
 	d.SetId(aws.StringValue(resp.ApiAssociation.DomainName))
 
-	return resourceApiAssociationRead(d, meta)
+	return resourceDomainNameApiAssociationRead(d, meta)
 }
 
-func resourceApiAssociationRead(d *schema.ResourceData, meta interface{}) error {
+func resourceDomainNameApiAssociationRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).AppSyncConn
 
-	association, err := FindApiAssociationByID(conn, d.Id())
+	association, err := FindDomainNameApiAssociationByID(conn, d.Id())
 	if association == nil && !d.IsNewResource() {
 		log.Printf("[WARN] AppSync API Association (%s) not found, removing from state", d.Id())
 		d.SetId("")
@@ -74,7 +74,7 @@ func resourceApiAssociationRead(d *schema.ResourceData, meta interface{}) error 
 	return nil
 }
 
-func resourceApiAssociationUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceDomainNameApiAssociationUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).AppSyncConn
 
 	params := &appsync.AssociateApiInput{
@@ -87,10 +87,10 @@ func resourceApiAssociationUpdate(d *schema.ResourceData, meta interface{}) erro
 		return fmt.Errorf("error creating Appsync API Association: %w", err)
 	}
 
-	return resourceApiAssociationRead(d, meta)
+	return resourceDomainNameApiAssociationRead(d, meta)
 }
 
-func resourceApiAssociationDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceDomainNameApiAssociationDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).AppSyncConn
 
 	input := &appsync.DisassociateApiInput{
