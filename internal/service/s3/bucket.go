@@ -1316,55 +1316,6 @@ func resourceBucketDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func resourceBucketPolicyUpdate(conn *s3.S3, d *schema.ResourceData) error {
-	bucket := d.Get("bucket").(string)
-
-	policy, err := structure.NormalizeJsonString(d.Get("policy").(string))
-
-	if err != nil {
-		return fmt.Errorf("policy (%s) is an invalid JSON: %w", policy, err)
-	}
-
-	if policy != "" {
-		log.Printf("[DEBUG] S3 bucket: %s, put policy: %s", bucket, policy)
-
-		params := &s3.PutBucketPolicyInput{
-			Bucket: aws.String(bucket),
-			Policy: aws.String(policy),
-		}
-
-		err := resource.Retry(1*time.Minute, func() *resource.RetryError {
-			_, err := conn.PutBucketPolicy(params)
-			if tfawserr.ErrMessageContains(err, "MalformedPolicy", "") || tfawserr.ErrMessageContains(err, s3.ErrCodeNoSuchBucket, "") {
-				return resource.RetryableError(err)
-			}
-			if err != nil {
-				return resource.NonRetryableError(err)
-			}
-			return nil
-		})
-		if tfresource.TimedOut(err) {
-			_, err = conn.PutBucketPolicy(params)
-		}
-		if err != nil {
-			return fmt.Errorf("Error putting S3 policy: %s", err)
-		}
-	} else {
-		log.Printf("[DEBUG] S3 bucket: %s, delete policy: %s", bucket, policy)
-		_, err := verify.RetryOnAWSCode(s3.ErrCodeNoSuchBucket, func() (interface{}, error) {
-			return conn.DeleteBucketPolicy(&s3.DeleteBucketPolicyInput{
-				Bucket: aws.String(bucket),
-			})
-		})
-
-		if err != nil {
-			return fmt.Errorf("Error deleting S3 policy: %s", err)
-		}
-	}
-
-	return nil
-}
-
 func resourceBucketGrantsUpdate(conn *s3.S3, d *schema.ResourceData) error {
 	bucket := d.Get("bucket").(string)
 	rawGrants := d.Get("grant").(*schema.Set).List()
