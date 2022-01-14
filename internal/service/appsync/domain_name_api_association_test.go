@@ -22,7 +22,7 @@ func testAccAppSyncDomainNameApiAssociation_basic(t *testing.T) {
 	appsyncCertDomain := getAppsyncCertDomain(t)
 
 	rName := sdkacctest.RandString(8)
-	resourceName := "aws_appsync_domain_name.test"
+	resourceName := "aws_appsync_domain_name_api_association.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appsync.EndpointsID, t) },
@@ -62,7 +62,7 @@ func testAccAppSyncDomainNameApiAssociation_disappears(t *testing.T) {
 	appsyncCertDomain := getAppsyncCertDomain(t)
 
 	rName := sdkacctest.RandString(8)
-	resourceName := "aws_appsync_domain_name.test"
+	resourceName := "aws_appsync_domain_name_api_association.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appsync.EndpointsID, t) },

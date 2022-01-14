@@ -24,6 +24,14 @@ func init() {
 	resource.AddTestSweepers("aws_appsync_domain_name", &resource.Sweeper{
 		Name: "aws_appsync_domain_name",
 		F:    sweepDomainNames,
+		Dependencies: []string{
+			"aws_appsync_domain_name_api_association",
+		},
+	})
+
+	resource.AddTestSweepers("aws_appsync_domain_name_api_association", &resource.Sweeper{
+		Name: "aws_appsync_domain_name_api_association",
+		F:    sweepDomainNameAssociations,
 	})
 }
 
@@ -131,6 +139,61 @@ func sweepDomainNames(region string) error {
 
 	if sweep.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping AppSync Domain Name sweep for %s: %s", region, errs)
+		return nil
+	}
+
+	return errs.ErrorOrNil()
+}
+
+func sweepDomainNameAssociations(region string) error {
+	client, err := sweep.SharedRegionalSweepClient(region)
+	if err != nil {
+		return fmt.Errorf("Error getting client: %s", err)
+	}
+	conn := client.(*conns.AWSClient).AppSyncConn
+	sweepResources := make([]*sweep.SweepResource, 0)
+	var errs *multierror.Error
+
+	input := &appsync.ListDomainNamesInput{}
+
+	for {
+		output, err := conn.ListDomainNames(input)
+		if sweep.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping AppSync Domain Name Association sweep for %s: %s", region, err)
+			return nil
+		}
+
+		if err != nil {
+			err := fmt.Errorf("error reading AppSync Domain Name Association: %w", err)
+			log.Printf("[ERROR] %s", err)
+			errs = multierror.Append(errs, err)
+			break
+		}
+
+		for _, dm := range output.DomainNameConfigs {
+
+			r := ResourceDomainNameApiAssociation()
+			d := r.Data(nil)
+
+			id := aws.StringValue(dm.DomainName)
+			d.SetId(id)
+
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+		}
+
+		if aws.StringValue(output.NextToken) == "" {
+			break
+		}
+
+		input.NextToken = output.NextToken
+	}
+
+	if err := sweep.SweepOrchestrator(sweepResources); err != nil {
+		errs = multierror.Append(errs, fmt.Errorf("error sweeping AppSync Domain Name Association %s: %w", region, err))
+	}
+
+	if sweep.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping AppSync Domain Name Association sweep for %s: %s", region, errs)
 		return nil
 	}
 
