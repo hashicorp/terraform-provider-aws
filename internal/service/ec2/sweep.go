@@ -1746,30 +1746,34 @@ func sweepVPCDHCPOptions(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).EC2Conn
-
 	input := &ec2.DescribeDhcpOptionsInput{}
+	conn := client.(*conns.AWSClient).EC2Conn
+	sweepResources := make([]*sweep.SweepResource, 0)
 
 	err = conn.DescribeDhcpOptionsPages(input, func(page *ec2.DescribeDhcpOptionsOutput, lastPage bool) bool {
-		for _, dhcpOption := range page.DhcpOptions {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.DhcpOptions {
+			// Skip the default DHCP Options.
 			var defaultDomainNameFound, defaultDomainNameServersFound bool
 
-			// This skips the default dhcp configurations so they don't get deleted
-			for _, dhcpConfiguration := range dhcpOption.DhcpConfigurations {
-				if aws.StringValue(dhcpConfiguration.Key) == "domain-name" {
-					if len(dhcpConfiguration.Values) != 1 || dhcpConfiguration.Values[0] == nil {
+			for _, v := range v.DhcpConfigurations {
+				if aws.StringValue(v.Key) == "domain-name" {
+					if len(v.Values) != 1 || v.Values[0] == nil {
 						continue
 					}
 
-					if aws.StringValue(dhcpConfiguration.Values[0].Value) == RegionalPrivateDNSSuffix(region) {
+					if aws.StringValue(v.Values[0].Value) == RegionalPrivateDNSSuffix(region) {
 						defaultDomainNameFound = true
 					}
-				} else if aws.StringValue(dhcpConfiguration.Key) == "domain-name-servers" {
-					if len(dhcpConfiguration.Values) != 1 || dhcpConfiguration.Values[0] == nil {
+				} else if aws.StringValue(v.Key) == "domain-name-servers" {
+					if len(v.Values) != 1 || v.Values[0] == nil {
 						continue
 					}
 
-					if aws.StringValue(dhcpConfiguration.Values[0].Value) == "AmazonProvidedDNS" {
+					if aws.StringValue(v.Values[0].Value) == "AmazonProvidedDNS" {
 						defaultDomainNameServersFound = true
 					}
 				}
@@ -1779,26 +1783,29 @@ func sweepVPCDHCPOptions(region string) error {
 				continue
 			}
 
-			input := &ec2.DeleteDhcpOptionsInput{
-				DhcpOptionsId: dhcpOption.DhcpOptionsId,
-			}
+			r := ResourceVPCDHCPOptions()
+			d := r.Data(nil)
+			d.SetId(aws.StringValue(v.DhcpOptionsId))
 
-			_, err := conn.DeleteDhcpOptions(input)
-
-			if err != nil {
-				log.Printf("[ERROR] Error deleting EC2 DHCP Option (%s): %s", aws.StringValue(dhcpOption.DhcpOptionsId), err)
-			}
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
+
 		return !lastPage
 	})
 
 	if sweep.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping EC2 DHCP Option sweep for %s: %s", region, err)
+		log.Printf("[WARN] Skipping EC2 DHCP Options Set sweep for %s: %s", region, err)
 		return nil
 	}
 
 	if err != nil {
-		return fmt.Errorf("error describing DHCP Options: %s", err)
+		return fmt.Errorf("error listing EC2 DHCP Options Sets (%s): %w", region, err)
+	}
+
+	err = sweep.SweepOrchestrator(sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("error sweeping EC2 DHCP Options Sets (%s): %w", region, err)
 	}
 
 	return nil
