@@ -9,7 +9,7 @@ description: |-
 
 # Source: aws_datapipeline_definition
 
-Provides details about a Data Pipeline Definition resource.
+Provides details about a specific DataPipeline Definition.
 
 ## Example Usage
 

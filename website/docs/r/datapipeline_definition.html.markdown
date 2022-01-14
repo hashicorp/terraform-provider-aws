@@ -13,7 +13,7 @@ Provides a Data Pipeline Definition resource.
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_datapipeline_pipeline" "default" {
   name = "NAME OF PIPELINE"
 }
