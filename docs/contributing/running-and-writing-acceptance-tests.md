@@ -468,7 +468,7 @@ resource "aws_example_thing" "test" {
 
 Typically the `rName` is always the first argument to the test configuration function, if used, for consistency.
 
-Note that if `rName` is used multiple times in the `fmt.Sprintf()` statement, _do not_ repeat `rName` in the `fmt.Sprintf()` arguments. Using `fmt.Sprintf(..., rName, rName)`, for example, would not be correct. Instead, use the indexed `%[1]q` verb multiple times. For example:
+Note that if `rName` (or any other variable) is used multiple times in the `fmt.Sprintf()` statement, _do not_ repeat `rName` in the `fmt.Sprintf()` arguments. Using `fmt.Sprintf(..., rName, rName)`, for example, would not be correct. Instead, use the indexed `%[1]q` (or `%[x]q`, `%[x]s`, `%[x]t`, or `%[x]d`, where `x` represents the index number) verb multiple times. For example:
 
 ```go
 func testAccExampleThingConfigName(rName string) string {
