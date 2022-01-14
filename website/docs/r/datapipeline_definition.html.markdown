@@ -2,7 +2,6 @@
 subcategory: "DataPipeline"
 layout: "aws"
 page_title: "AWS: aws_datapipeline_definition"
-sidebar_current: "docs-aws-resource-datapipeline-definition"
 description: |-
   Provides a DataPipeline Definition.
 ---
