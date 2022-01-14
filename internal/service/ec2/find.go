@@ -977,16 +977,6 @@ func FindVPCs(conn *ec2.EC2, input *ec2.DescribeVpcsInput) ([]*ec2.Vpc, error) {
 	return output, nil
 }
 
-func FindVPCsByDHCPOptionsID(conn *ec2.EC2, id string) ([]*ec2.Vpc, error) {
-	input := &ec2.DescribeVpcsInput{
-		Filters: BuildAttributeFilterList(map[string]string{
-			"dhcp-options-id": id,
-		}),
-	}
-
-	return FindVPCs(conn, input)
-}
-
 func FindVPCByID(conn *ec2.EC2, id string) (*ec2.Vpc, error) {
 	input := &ec2.DescribeVpcsInput{
 		VpcIds: aws.StringSlice([]string{id}),

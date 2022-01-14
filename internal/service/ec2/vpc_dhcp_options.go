@@ -177,7 +177,11 @@ func resourceVPCDHCPOptionsUpdate(d *schema.ResourceData, meta interface{}) erro
 func resourceVPCDHCPOptionsDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
-	vpcs, err := FindVPCsByDHCPOptionsID(conn, d.Id())
+	vpcs, err := FindVPCs(conn, &ec2.DescribeVpcsInput{
+		Filters: BuildAttributeFilterList(map[string]string{
+			"dhcp-options-id": d.Id(),
+		}),
+	})
 
 	if err != nil {
 		return fmt.Errorf("error reading EC2 DHCP Options Set (%s) associated VPCs: %w", d.Id(), err)
@@ -219,10 +223,6 @@ func resourceVPCDHCPOptionsDelete(d *schema.ResourceData, meta interface{}) erro
 	}
 
 	return nil
-}
-
-func isNoSuchDhcpOptionIDErr(err error) bool {
-	return tfawserr.ErrMessageContains(err, "InvalidDhcpOptionID.NotFound", "") || tfawserr.ErrMessageContains(err, "InvalidDhcpOptionsID.NotFound", "")
 }
 
 // dhcpOptionsMap represents a mapping of Terraform resource attribute name to AWS API DHCP Option name.
@@ -276,19 +276,26 @@ func (m *dhcpOptionsMap) resourceDataToDhcpConfigurations(d *schema.ResourceData
 	for tfName, apiName := range m.tfToApi {
 		switch v := d.Get(tfName).(type) {
 		case string:
-			output = append(output, &ec2.NewDhcpConfiguration{
-				Key:    aws.String(apiName),
-				Values: aws.StringSlice([]string{v}),
-			})
+			if v != "" {
+				output = append(output, &ec2.NewDhcpConfiguration{
+					Key:    aws.String(apiName),
+					Values: aws.StringSlice([]string{v}),
+				})
+			}
 		case []interface{}:
 			var values []string
 			for _, v := range v {
-				values = append(values, v.(string))
+				v := v.(string)
+				if v != "" {
+					values = append(values, v)
+				}
 			}
-			output = append(output, &ec2.NewDhcpConfiguration{
-				Key:    aws.String(apiName),
-				Values: aws.StringSlice(values),
-			})
+			if len(values) > 0 {
+				output = append(output, &ec2.NewDhcpConfiguration{
+					Key:    aws.String(apiName),
+					Values: aws.StringSlice(values),
+				})
+			}
 		default:
 			return nil, fmt.Errorf("Attribute (%s) is of unsupported type: %T", tfName, v)
 		}
