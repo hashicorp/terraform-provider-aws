@@ -187,10 +187,16 @@ func resourceVPCDHCPOptionsDelete(d *schema.ResourceData, meta interface{}) erro
 		vpcID := aws.StringValue(v.VpcId)
 
 		log.Printf("[INFO] Disassociating EC2 DHCP Options Set (%s) from VPC (%s)", d.Id(), vpcID)
-		if _, err := conn.AssociateDhcpOptions(&ec2.AssociateDhcpOptionsInput{
+		_, err := conn.AssociateDhcpOptions(&ec2.AssociateDhcpOptionsInput{
 			DhcpOptionsId: aws.String(DefaultDHCPOptionsID),
 			VpcId:         aws.String(vpcID),
-		}); err != nil {
+		})
+
+		if tfawserr.ErrCodeEquals(err, ErrCodeInvalidVpcIDNotFound) {
+			continue
+		}
+
+		if err != nil {
 			return fmt.Errorf("error disassociating EC2 DHCP Options Set (%s) from VPC (%s): %w", d.Id(), vpcID, err)
 		}
 	}

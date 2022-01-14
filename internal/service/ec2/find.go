@@ -987,35 +987,41 @@ func FindVPCsByDHCPOptionsID(conn *ec2.EC2, id string) ([]*ec2.Vpc, error) {
 	return FindVPCs(conn, input)
 }
 
-// FindVPCByID looks up a Vpc by ID. When not found, returns nil and potentially an API error.
 func FindVPCByID(conn *ec2.EC2, id string) (*ec2.Vpc, error) {
 	input := &ec2.DescribeVpcsInput{
 		VpcIds: aws.StringSlice([]string{id}),
 	}
 
-	output, err := conn.DescribeVpcs(input)
+	output, err := FindVPC(conn, input)
 
 	if err != nil {
 		return nil, err
 	}
 
-	if output == nil {
-		return nil, nil
+	// Eventual consistency check.
+	if aws.StringValue(output.VpcId) != id {
+		return nil, &resource.NotFoundError{
+			LastRequest: input,
+		}
 	}
 
-	for _, vpc := range output.Vpcs {
-		if vpc == nil {
-			continue
-		}
+	return output, nil
+}
 
-		if aws.StringValue(vpc.VpcId) != id {
-			continue
-		}
+func FindVPCDHCPOptionsAssociation(conn *ec2.EC2, vpcID string, dhcpOptionsID string) error {
+	vpc, err := FindVPCByID(conn, vpcID)
 
-		return vpc, nil
+	if err != nil {
+		return err
 	}
 
-	return nil, nil
+	if aws.StringValue(vpc.DhcpOptionsId) != dhcpOptionsID {
+		return &resource.NotFoundError{
+			LastError: fmt.Errorf("EC2 VPC (%s) DHCP Options Set (%s) Association not found", vpcID, dhcpOptionsID),
+		}
+	}
+
+	return nil
 }
 
 // FindVPCEndpointByID returns the VPC endpoint corresponding to the specified identifier.
