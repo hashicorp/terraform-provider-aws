@@ -1,4 +1,5 @@
 ---
+subcategory: "DataPipeline"
 layout: "aws"
 page_title: "AWS: aws_datapipeline_definition"
 sidebar_current: "docs-aws-resource-datapipeline-definition"
@@ -75,12 +76,12 @@ resource "aws_datapipeline_definition" "example" {
 The following arguments are required:
 
 * `pipeline_id` - (Required) ID of the pipeline.
-* `pipeline_object` - (Required) Configuration block for the objects that define the pipeline. These objects overwrite the existing pipeline definition. See below
+* `pipeline_object` - (Required) Configuration block for the objects that define the pipeline. See below
 
 The following arguments are optional:
 
-* `parameter_object` - (Optional) Configuration block for the objects that define the pipeline. These objects overwrite the existing pipeline definition. See below
-* `parameter_value` - (Optional) Configuration block for the objects that define the pipeline. These objects overwrite the existing pipeline definition. See below
+* `parameter_object` - (Optional) Configuration block for the parameter objects used in the pipeline definition. See below
+* `parameter_value` - (Optional) Configuration block for the parameter values used in the pipeline definition. See below
 
 ### `pipeline_object`
 
