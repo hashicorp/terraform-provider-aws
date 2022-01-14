@@ -181,7 +181,7 @@ Some tests have been manually marked as long-running and can be skipped using th
 
 Where guards have been implemented, do not always skip long-running tests. However, for intermediate test runs during development, or to verify functionality unrelated to the specific long-running tests, skipping long-running tests makes work more efficient. We recommend that for the final test run before submitting a PR that you run affected tests without the `-short` flag.
 
-If you want to only run short-running tests, you can use either one of these equivalent statements. Note the use of `-short`.
+If you want to run only short-running tests, you can use either one of these equivalent statements. Note the use of `-short`.
 
 For example:
 
