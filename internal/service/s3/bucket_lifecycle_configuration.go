@@ -71,15 +71,14 @@ func ResourceBucketLifecycleConfiguration() *schema.Resource {
 										ValidateFunc: verify.ValidUTCTimestamp,
 									},
 									"days": {
-										Type:         schema.TypeInt,
-										Optional:     true,
-										Default:      0, // API returns 0
-										ValidateFunc: validation.IntAtLeast(1),
+										Type:     schema.TypeInt,
+										Optional: true,
+										Default:  0, // API returns 0
 									},
 									"expired_object_delete_marker": {
 										Type:     schema.TypeBool,
 										Optional: true,
-										Computed: true, // API returns false
+										Computed: true, // API returns false; conflicts with date and days
 									},
 								},
 							},
@@ -115,16 +114,14 @@ func ResourceBucketLifecycleConfiguration() *schema.Resource {
 										},
 									},
 									"object_size_greater_than": {
-										Type:         schema.TypeInt,
-										Optional:     true,
-										Default:      0, // API returns 0
-										ValidateFunc: validation.IntAtLeast(0),
+										Type:     schema.TypeInt,
+										Optional: true,
+										Default:  0, // API returns 0
 									},
 									"object_size_less_than": {
-										Type:         schema.TypeInt,
-										Optional:     true,
-										Default:      0, // API returns 0
-										ValidateFunc: validation.IntAtLeast(1),
+										Type:     schema.TypeInt,
+										Optional: true,
+										Default:  0, // API returns 0
 									},
 									"prefix": {
 										Type:     schema.TypeString,
