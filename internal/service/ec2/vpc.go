@@ -84,12 +84,22 @@ func ResourceVPC() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"default_route_table_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"default_security_group_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"default_route_table_id": {
-				Type:     schema.TypeString,
+			"enable_classiclink": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Computed: true,
+			},
+			"enable_classiclink_dns_support": {
+				Type:     schema.TypeBool,
+				Optional: true,
 				Computed: true,
 			},
 			"enable_dns_hostnames": {
@@ -101,16 +111,6 @@ func ResourceVPC() *schema.Resource {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  true,
-			},
-			"enable_classiclink": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Computed: true,
-			},
-			"enable_classiclink_dns_support": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Computed: true,
 			},
 			"instance_tenancy": {
 				Type:         schema.TypeString,
@@ -185,71 +185,57 @@ func resourceVPCCreate(d *schema.ResourceData, meta interface{}) error {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
-	// Create the VPC
-	createOpts := &ec2.CreateVpcInput{
-		InstanceTenancy:             aws.String(d.Get("instance_tenancy").(string)),
+	input := &ec2.CreateVpcInput{
 		AmazonProvidedIpv6CidrBlock: aws.Bool(d.Get("assign_generated_ipv6_cidr_block").(bool)),
+		InstanceTenancy:             aws.String(d.Get("instance_tenancy").(string)),
 		TagSpecifications:           ec2TagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeVpc),
 	}
 
 	if v, ok := d.GetOk("cidr_block"); ok {
-		createOpts.CidrBlock = aws.String(v.(string))
+		input.CidrBlock = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("ipv4_ipam_pool_id"); ok {
-		createOpts.Ipv4IpamPoolId = aws.String(v.(string))
+		input.Ipv4IpamPoolId = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("ipv4_netmask_length"); ok {
-		createOpts.Ipv4NetmaskLength = aws.Int64(int64(v.(int)))
-	}
-
-	if v, ok := d.GetOk("ipv6_ipam_pool_id"); ok {
-		createOpts.Ipv6IpamPoolId = aws.String(v.(string))
+		input.Ipv4NetmaskLength = aws.Int64(int64(v.(int)))
 	}
 
 	if v, ok := d.GetOk("ipv6_cidr_block"); ok {
-		createOpts.Ipv6CidrBlock = aws.String(v.(string))
-	}
-
-	if v, ok := d.GetOk("ipv6_netmask_length"); ok {
-		createOpts.Ipv6NetmaskLength = aws.Int64(int64(v.(int)))
+		input.Ipv6CidrBlock = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("ipv6_cidr_block_network_border_group"); ok {
-		createOpts.Ipv6CidrBlockNetworkBorderGroup = aws.String(v.(string))
+		input.Ipv6CidrBlockNetworkBorderGroup = aws.String(v.(string))
 	}
 
-	log.Printf("[DEBUG] VPC create config: %#v", *createOpts)
-	vpcResp, err := conn.CreateVpc(createOpts)
+	if v, ok := d.GetOk("ipv6_ipam_pool_id"); ok {
+		input.Ipv6IpamPoolId = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("ipv6_netmask_length"); ok {
+		input.Ipv6NetmaskLength = aws.Int64(int64(v.(int)))
+	}
+
+	log.Printf("[DEBUG] Creating EC2 VPC: %s", input)
+	output, err := conn.CreateVpc(input)
+
 	if err != nil {
-		return fmt.Errorf("Error creating VPC: %s", err)
+		return fmt.Errorf("error creating EC2 VPC: %w", err)
 	}
 
-	// Get the ID and store it
-	vpc := vpcResp.Vpc
+	vpc := output.Vpc
 	d.SetId(aws.StringValue(vpc.VpcId))
-	log.Printf("[INFO] VPC ID: %s", d.Id())
 
-	// Wait for the VPC to become available
-	log.Printf(
-		"[DEBUG] Waiting for VPC (%s) to become available",
-		d.Id())
-	stateConf := &resource.StateChangeConf{
-		Pending: []string{"pending"},
-		Target:  []string{"available"},
-		Refresh: VPCStateRefreshFunc(conn, d.Id()),
-		Timeout: 10 * time.Minute,
-	}
-	if _, err := stateConf.WaitForState(); err != nil {
-		return fmt.Errorf(
-			"Error waiting for VPC (%s) to become available: %s",
-			d.Id(), err)
+	if _, err := WaitVPCCreated(conn, d.Id()); err != nil {
+		return fmt.Errorf("error waiting for EC2 VPC (%s) create: %w", d.Id(), err)
 	}
 
 	if len(vpc.Ipv6CidrBlockAssociationSet) > 0 && vpc.Ipv6CidrBlockAssociationSet[0] != nil {
 		log.Printf("[DEBUG] Waiting for EC2 VPC (%s) IPv6 CIDR to become associated", d.Id())
-		if err := waitForEc2VpcIpv6CidrBlockAssociationCreate(conn, d.Id(), aws.StringValue(vpcResp.Vpc.Ipv6CidrBlockAssociationSet[0].AssociationId)); err != nil {
+		if err := waitForEc2VpcIpv6CidrBlockAssociationCreate(conn, d.Id(), aws.StringValue(output.Vpc.Ipv6CidrBlockAssociationSet[0].AssociationId)); err != nil {
 			return fmt.Errorf("error waiting for EC2 VPC (%s) IPv6 CIDR to become associated: %s", d.Id(), err)
 		}
 	}
@@ -738,36 +724,24 @@ func resourceVPCUpdate(d *schema.ResourceData, meta interface{}) error {
 
 func resourceVPCDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
-	vpcID := d.Id()
-	deleteVpcOpts := &ec2.DeleteVpcInput{
-		VpcId: &vpcID,
+
+	input := &ec2.DeleteVpcInput{
+		VpcId: aws.String(d.Id()),
 	}
-	log.Printf("[INFO] Deleting VPC: %s", d.Id())
 
-	err := resource.Retry(5*time.Minute, func() *resource.RetryError {
-		_, err := conn.DeleteVpc(deleteVpcOpts)
-		if err == nil {
-			return nil
-		}
+	log.Printf("[INFO] Deleting EC2 VPC: %s", d.Id())
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(vpcDeletedTimeout, func() (interface{}, error) {
+		return conn.DeleteVpc(input)
+	}, ErrCodeDependencyViolation)
 
-		if tfawserr.ErrMessageContains(err, "InvalidVpcID.NotFound", "") {
-			return nil
-		}
-		if tfawserr.ErrMessageContains(err, "DependencyViolation", "") {
-			return resource.RetryableError(err)
-		}
-		return resource.NonRetryableError(fmt.Errorf("Error deleting VPC: %s", err))
-	})
-	if tfresource.TimedOut(err) {
-		_, err = conn.DeleteVpc(deleteVpcOpts)
-		if tfawserr.ErrMessageContains(err, "InvalidVpcID.NotFound", "") {
-			return nil
-		}
+	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidVpcIDNotFound) {
+		return nil
 	}
 
 	if err != nil {
-		return fmt.Errorf("Error deleting VPC: %s", err)
+		return fmt.Errorf("error deleting EC2 VPC (%s): %w", d.Id(), err)
 	}
+
 	return nil
 }
 
@@ -804,34 +778,6 @@ func resourceVPCCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, v in
 	}
 
 	return nil
-}
-
-// VPCStateRefreshFunc returns a resource.StateRefreshFunc that is used to watch
-// a VPC.
-func VPCStateRefreshFunc(conn *ec2.EC2, id string) resource.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		describeVpcOpts := &ec2.DescribeVpcsInput{
-			VpcIds: []*string{aws.String(id)},
-		}
-		resp, err := conn.DescribeVpcs(describeVpcOpts)
-		if err != nil {
-			if ec2err, ok := err.(awserr.Error); ok && ec2err.Code() == "InvalidVpcID.NotFound" {
-				resp = nil
-			} else {
-				log.Printf("Error on VPCStateRefresh: %s", err)
-				return nil, "", err
-			}
-		}
-
-		if resp == nil {
-			// Sometimes AWS just has consistency issues and doesn't see
-			// our instance yet. Return an empty state.
-			return nil, "", nil
-		}
-
-		vpc := resp.Vpcs[0]
-		return vpc, *vpc.State, nil
-	}
 }
 
 func Ipv6CidrStateRefreshFunc(conn *ec2.EC2, id string, associationId string) resource.StateRefreshFunc {

@@ -705,6 +705,28 @@ func WaitTransitGatewayRouteTablePropagationStateDisabled(conn *ec2.EC2, transit
 }
 
 const (
+	vpcCreatedTimeout = 10 * time.Minute
+	vpcDeletedTimeout = 5 * time.Minute
+)
+
+func WaitVPCCreated(conn *ec2.EC2, id string) (*ec2.Vpc, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{ec2.VpcStatePending},
+		Target:  []string{ec2.VpcStateAvailable},
+		Refresh: StatusVPCState(conn, id),
+		Timeout: vpcCreatedTimeout,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*ec2.Vpc); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+const (
 	VPCAttributePropagationTimeout = 5 * time.Minute
 )
 
