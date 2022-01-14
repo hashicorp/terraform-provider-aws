@@ -86,12 +86,11 @@ func testAccQueue_basic(t *testing.T) {
 }
 
 func testAccQueue_disappears(t *testing.T) {
+	t.Skip("Queues do not support deletion today")
 	var v connect.DescribeQueueOutput
 	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	rName2 := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	resourceName := "aws_connect_queue.test"
-
-	t.Skip("Queues do not support deletion today")
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -180,14 +179,13 @@ func testAccQueue_updateHoursOfOperationId(t *testing.T) {
 }
 
 func testAccQueue_updateMaxContacts(t *testing.T) {
+	t.Skip("A bug in the service API has been reported")
 	var v connect.DescribeQueueOutput
 	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	rName2 := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	resourceName := "aws_connect_queue.test"
 	originalMaxContacts := "1"
 	updatedMaxContacts := "2"
-
-	t.Skip("A bug in the service API has been reported")
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -487,6 +485,7 @@ resource "aws_connect_queue" "test" {
 `, rName2, selectHoursOfOperationId))
 }
 
+//lint:ignore U1000 Ignore unused function temporarily
 func testAccQueueMaxContactsConfig(rName, rName2, maxContacts string) string {
 	return acctest.ConfigCompose(
 		testAccQueueBaseConfig(rName),
