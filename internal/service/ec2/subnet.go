@@ -384,8 +384,7 @@ func modifySubnetAttributesOnCreate(conn *ec2.EC2, d *schema.ResourceData, subne
 		}
 	}
 
-	var oldAssociationID string
-	var oldIPv6CIDRBlock string
+	var oldAssociationID, oldIPv6CIDRBlock string
 	for _, v := range subnet.Ipv6CidrBlockAssociationSet {
 		if aws.StringValue(v.Ipv6CidrBlockState.State) == ec2.SubnetCidrBlockStateCodeAssociated { //we can only ever have 1 IPv6 block associated at once
 			oldAssociationID = aws.StringValue(v.AssociationId)
@@ -479,7 +478,7 @@ func modifySubnetEnableDns64(conn *ec2.EC2, subnetID string, v bool) error {
 	}
 
 	if _, err := conn.ModifySubnetAttribute(input); err != nil {
-		return fmt.Errorf("error setting EC2 Subnet (%s) EnableDns64: %w", subnetID, err)
+		return fmt.Errorf("error modifying EC2 Subnet (%s) EnableDns64: %w", subnetID, err)
 	}
 
 	if _, err := WaitSubnetEnableDns64Updated(conn, subnetID, v); err != nil {
@@ -498,7 +497,7 @@ func modifySubnetEnableResourceNameDnsAAAARecordOnLaunch(conn *ec2.EC2, subnetID
 	}
 
 	if _, err := conn.ModifySubnetAttribute(input); err != nil {
-		return fmt.Errorf("error setting EC2 Subnet (%s) EnableResourceNameDnsAAAARecordOnLaunch: %w", subnetID, err)
+		return fmt.Errorf("error modifying EC2 Subnet (%s) EnableResourceNameDnsAAAARecordOnLaunch: %w", subnetID, err)
 	}
 
 	if _, err := WaitSubnetEnableResourceNameDnsAAAARecordOnLaunchUpdated(conn, subnetID, v); err != nil {
@@ -517,70 +516,11 @@ func modifySubnetEnableResourceNameDnsARecordOnLaunch(conn *ec2.EC2, subnetID st
 	}
 
 	if _, err := conn.ModifySubnetAttribute(input); err != nil {
-		return fmt.Errorf("error setting EC2 Subnet (%s) EnableResourceNameDnsARecordOnLaunch: %w", subnetID, err)
+		return fmt.Errorf("error modifying EC2 Subnet (%s) EnableResourceNameDnsARecordOnLaunch: %w", subnetID, err)
 	}
 
 	if _, err := WaitSubnetEnableResourceNameDnsARecordOnLaunchUpdated(conn, subnetID, v); err != nil {
 		return fmt.Errorf("error waiting for EC2 Subnet (%s) EnableResourceNameDnsARecordOnLaunch update: %w", subnetID, err)
-	}
-
-	return nil
-}
-
-func modifySubnetMapPublicIpOnLaunch(conn *ec2.EC2, subnetID string, v bool) error {
-	input := &ec2.ModifySubnetAttributeInput{
-		MapPublicIpOnLaunch: &ec2.AttributeBooleanValue{
-			Value: aws.Bool(v),
-		},
-		SubnetId: aws.String(subnetID),
-	}
-
-	if _, err := conn.ModifySubnetAttribute(input); err != nil {
-		return fmt.Errorf("error setting EC2 Subnet (%s) MapPublicIpOnLaunch: %w", subnetID, err)
-	}
-
-	if _, err := WaitSubnetMapPublicIPOnLaunchUpdated(conn, subnetID, v); err != nil {
-		return fmt.Errorf("error waiting for EC2 Subnet (%s) MapPublicIpOnLaunch update: %w", subnetID, err)
-	}
-
-	return nil
-}
-
-func modifySubnetOutpostRackAttributes(conn *ec2.EC2, subnetID string, customerOwnedIPv4Pool string, mapCustomerOwnedIPOnLaunch bool) error {
-	input := &ec2.ModifySubnetAttributeInput{
-		MapCustomerOwnedIpOnLaunch: &ec2.AttributeBooleanValue{
-			Value: aws.Bool(mapCustomerOwnedIPOnLaunch),
-		},
-		SubnetId: aws.String(subnetID),
-	}
-
-	if customerOwnedIPv4Pool != "" {
-		input.CustomerOwnedIpv4Pool = aws.String(customerOwnedIPv4Pool)
-	}
-
-	if _, err := conn.ModifySubnetAttribute(input); err != nil {
-		return fmt.Errorf("error setting EC2 Subnet (%s) CustomerOwnedIpv4Pool/MapCustomerOwnedIpOnLaunch: %w", subnetID, err)
-	}
-
-	if _, err := WaitSubnetMapCustomerOwnedIPOnLaunchUpdated(conn, subnetID, mapCustomerOwnedIPOnLaunch); err != nil {
-		return fmt.Errorf("error waiting for EC2 Subnet (%s) MapCustomerOwnedIpOnLaunch update: %w", subnetID, err)
-	}
-
-	return nil
-}
-
-func modifySubnetPrivateDnsHostnameTypeOnLaunch(conn *ec2.EC2, subnetID string, v string) error {
-	input := &ec2.ModifySubnetAttributeInput{
-		PrivateDnsHostnameTypeOnLaunch: aws.String(v),
-		SubnetId:                       aws.String(subnetID),
-	}
-
-	if _, err := conn.ModifySubnetAttribute(input); err != nil {
-		return fmt.Errorf("error setting EC2 Subnet (%s) PrivateDnsHostnameTypeOnLaunch: %w", subnetID, err)
-	}
-
-	if _, err := WaitSubnetPrivateDNSHostnameTypeOnLaunchUpdated(conn, subnetID, v); err != nil {
-		return fmt.Errorf("error waiting for EC2 Subnet (%s) PrivateDnsHostnameTypeOnLaunch update: %w", subnetID, err)
 	}
 
 	return nil
@@ -629,6 +569,65 @@ func modifySubnetIPv6CIDRBlockAssociation(conn *ec2.EC2, subnetID, associationID
 		if err != nil {
 			return fmt.Errorf("error waiting for EC2 Subnet (%s) CIDR block (%s) to become associated: %w", subnetID, associationID, err)
 		}
+	}
+
+	return nil
+}
+
+func modifySubnetMapPublicIpOnLaunch(conn *ec2.EC2, subnetID string, v bool) error {
+	input := &ec2.ModifySubnetAttributeInput{
+		MapPublicIpOnLaunch: &ec2.AttributeBooleanValue{
+			Value: aws.Bool(v),
+		},
+		SubnetId: aws.String(subnetID),
+	}
+
+	if _, err := conn.ModifySubnetAttribute(input); err != nil {
+		return fmt.Errorf("error modifying EC2 Subnet (%s) MapPublicIpOnLaunch: %w", subnetID, err)
+	}
+
+	if _, err := WaitSubnetMapPublicIPOnLaunchUpdated(conn, subnetID, v); err != nil {
+		return fmt.Errorf("error waiting for EC2 Subnet (%s) MapPublicIpOnLaunch update: %w", subnetID, err)
+	}
+
+	return nil
+}
+
+func modifySubnetOutpostRackAttributes(conn *ec2.EC2, subnetID string, customerOwnedIPv4Pool string, mapCustomerOwnedIPOnLaunch bool) error {
+	input := &ec2.ModifySubnetAttributeInput{
+		MapCustomerOwnedIpOnLaunch: &ec2.AttributeBooleanValue{
+			Value: aws.Bool(mapCustomerOwnedIPOnLaunch),
+		},
+		SubnetId: aws.String(subnetID),
+	}
+
+	if customerOwnedIPv4Pool != "" {
+		input.CustomerOwnedIpv4Pool = aws.String(customerOwnedIPv4Pool)
+	}
+
+	if _, err := conn.ModifySubnetAttribute(input); err != nil {
+		return fmt.Errorf("error modifying EC2 Subnet (%s) CustomerOwnedIpv4Pool/MapCustomerOwnedIpOnLaunch: %w", subnetID, err)
+	}
+
+	if _, err := WaitSubnetMapCustomerOwnedIPOnLaunchUpdated(conn, subnetID, mapCustomerOwnedIPOnLaunch); err != nil {
+		return fmt.Errorf("error waiting for EC2 Subnet (%s) MapCustomerOwnedIpOnLaunch update: %w", subnetID, err)
+	}
+
+	return nil
+}
+
+func modifySubnetPrivateDnsHostnameTypeOnLaunch(conn *ec2.EC2, subnetID string, v string) error {
+	input := &ec2.ModifySubnetAttributeInput{
+		PrivateDnsHostnameTypeOnLaunch: aws.String(v),
+		SubnetId:                       aws.String(subnetID),
+	}
+
+	if _, err := conn.ModifySubnetAttribute(input); err != nil {
+		return fmt.Errorf("error modifying EC2 Subnet (%s) PrivateDnsHostnameTypeOnLaunch: %w", subnetID, err)
+	}
+
+	if _, err := WaitSubnetPrivateDNSHostnameTypeOnLaunchUpdated(conn, subnetID, v); err != nil {
+		return fmt.Errorf("error waiting for EC2 Subnet (%s) PrivateDnsHostnameTypeOnLaunch update: %w", subnetID, err)
 	}
 
 	return nil
