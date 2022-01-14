@@ -47,7 +47,6 @@ func testAccAppSyncDomainNameApiAssociation_basic(t *testing.T) {
 				Config: testAccAppsyncDomainNameApiAssociationUpdatedConfig(appsyncCertDomain, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainNameApiAssociationExists(resourceName, &association),
-					resource.TestCheckResourceAttr(resourceName, "description", ""),
 					resource.TestCheckResourceAttrPair(resourceName, "domain_name", "aws_appsync_domain_name.test", "domain_name"),
 					resource.TestCheckResourceAttrPair(resourceName, "api_id", "aws_appsync_graphql_api.test2", "id"),
 				),

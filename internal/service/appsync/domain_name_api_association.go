@@ -51,8 +51,8 @@ func resourceDomainNameApiAssociationCreate(d *schema.ResourceData, meta interfa
 
 	d.SetId(aws.StringValue(resp.ApiAssociation.DomainName))
 
-	if _, err := waitDomainNameApiAssociation(conn, d.Id()); err != nil {
-		return fmt.Errorf("error waiting for  Appsync Domain Name API (%s) Association: %w", d.Id(), err)
+	if err := waitDomainNameApiAssociation(conn, d.Id()); err != nil {
+		return fmt.Errorf("error waiting for Appsync Domain Name API (%s) Association: %w", d.Id(), err)
 	}
 
 	return resourceDomainNameApiAssociationRead(d, meta)
@@ -91,8 +91,8 @@ func resourceDomainNameApiAssociationUpdate(d *schema.ResourceData, meta interfa
 		return fmt.Errorf("error creating Appsync Domain Name API Association: %w", err)
 	}
 
-	if _, err := waitDomainNameApiAssociation(conn, d.Id()); err != nil {
-		return fmt.Errorf("error waiting for  Appsync Domain Name API (%s) Association: %w", d.Id(), err)
+	if err := waitDomainNameApiAssociation(conn, d.Id()); err != nil {
+		return fmt.Errorf("error waiting for Appsync Domain Name API (%s) Association: %w", d.Id(), err)
 	}
 
 	return resourceDomainNameApiAssociationRead(d, meta)
@@ -112,8 +112,8 @@ func resourceDomainNameApiAssociationDelete(d *schema.ResourceData, meta interfa
 		return fmt.Errorf("error deleting Appsync Domain Name API Association: %w", err)
 	}
 
-	if _, err := waitDomainNameApiDisassociation(conn, d.Id()); err != nil {
-		return fmt.Errorf("error waiting for  Appsync Domain Name API (%s) Disassociation: %w", d.Id(), err)
+	if err := waitDomainNameApiDisassociation(conn, d.Id()); err != nil {
+		return fmt.Errorf("error waiting for Appsync Domain Name API (%s) Disassociation: %w", d.Id(), err)
 	}
 
 	return nil
