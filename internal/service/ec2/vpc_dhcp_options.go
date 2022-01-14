@@ -114,7 +114,7 @@ func resourceVPCDHCPOptionsRead(d *schema.ResourceData, meta interface{}) error 
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(PropagationTimeout, func() (interface{}, error) {
-		return FindDhcpOptionsByID(conn, d.Id())
+		return FindDHCPOptionsByID(conn, d.Id())
 	}, d.IsNewResource())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {

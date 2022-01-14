@@ -126,7 +126,7 @@ func testAccCheckDHCPOptionsDestroy(s *terraform.State) error {
 			continue
 		}
 
-		_, err := tfec2.FindDhcpOptionsByID(conn, rs.Primary.ID)
+		_, err := tfec2.FindDHCPOptionsByID(conn, rs.Primary.ID)
 
 		if tfresource.NotFound(err) {
 			continue
@@ -155,7 +155,7 @@ func testAccCheckDHCPOptionsExists(n string, v *ec2.DhcpOptions) resource.TestCh
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
-		output, err := tfec2.FindDhcpOptionsByID(conn, rs.Primary.ID)
+		output, err := tfec2.FindDHCPOptionsByID(conn, rs.Primary.ID)
 
 		if err != nil {
 			return err

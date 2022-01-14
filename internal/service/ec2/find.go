@@ -1428,8 +1428,8 @@ func FindTransitGatewayAttachmentByID(conn *ec2.EC2, id string) (*ec2.TransitGat
 	return output, nil
 }
 
-func FindDhcpOptions(conn *ec2.EC2, input *ec2.DescribeDhcpOptionsInput) (*ec2.DhcpOptions, error) {
-	output, err := FindDhcpOptionses(conn, input)
+func FindDHCPOptions(conn *ec2.EC2, input *ec2.DescribeDhcpOptionsInput) (*ec2.DhcpOptions, error) {
+	output, err := FindDHCPOptionses(conn, input)
 
 	if err != nil {
 		return nil, err
@@ -1446,7 +1446,7 @@ func FindDhcpOptions(conn *ec2.EC2, input *ec2.DescribeDhcpOptionsInput) (*ec2.D
 	return output[0], nil
 }
 
-func FindDhcpOptionses(conn *ec2.EC2, input *ec2.DescribeDhcpOptionsInput) ([]*ec2.DhcpOptions, error) {
+func FindDHCPOptionses(conn *ec2.EC2, input *ec2.DescribeDhcpOptionsInput) ([]*ec2.DhcpOptions, error) {
 	var output []*ec2.DhcpOptions
 
 	err := conn.DescribeDhcpOptionsPages(input, func(page *ec2.DescribeDhcpOptionsOutput, lastPage bool) bool {
@@ -1477,12 +1477,12 @@ func FindDhcpOptionses(conn *ec2.EC2, input *ec2.DescribeDhcpOptionsInput) ([]*e
 	return output, nil
 }
 
-func FindDhcpOptionsByID(conn *ec2.EC2, id string) (*ec2.DhcpOptions, error) {
+func FindDHCPOptionsByID(conn *ec2.EC2, id string) (*ec2.DhcpOptions, error) {
 	input := &ec2.DescribeDhcpOptionsInput{
 		DhcpOptionsIds: aws.StringSlice([]string{id}),
 	}
 
-	output, err := FindDhcpOptions(conn, input)
+	output, err := FindDHCPOptions(conn, input)
 
 	if err != nil {
 		return nil, err
