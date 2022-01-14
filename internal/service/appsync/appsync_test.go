@@ -88,8 +88,8 @@ func TestAccAppSync_serial(t *testing.T) {
 			"description": testAccAppSyncDomainName_description,
 		},
 		"Association": {
-			"basic":      testAccAppSyncApiAssociation_basic,
-			"disappears": testAccAppSyncApiAssociation_disappears,
+			"basic":      testAccAppSyncDomainNameApiAssociation_basic,
+			"disappears": testAccAppSyncDomainNameApiAssociation_disappears,
 		},
 	}
 

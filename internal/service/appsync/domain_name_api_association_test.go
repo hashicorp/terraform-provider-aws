@@ -16,7 +16,7 @@ import (
 )
 
 func testAccAppSyncDomainNameApiAssociation_basic(t *testing.T) {
-	var association appsync.DomainNameApiAssociation
+	var association appsync.ApiAssociation
 	rootDomain := acctest.ACMCertificateDomainFromEnv(t)
 	domain := acctest.ACMCertificateRandomSubDomain(rootDomain)
 
@@ -56,7 +56,7 @@ func testAccAppSyncDomainNameApiAssociation_basic(t *testing.T) {
 }
 
 func testAccAppSyncDomainNameApiAssociation_disappears(t *testing.T) {
-	var association appsync.DomainNameApiAssociation
+	var association appsync.ApiAssociation
 	rootDomain := acctest.ACMCertificateDomainFromEnv(t)
 	domain := acctest.ACMCertificateRandomSubDomain(rootDomain)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -106,7 +106,7 @@ func testAccCheckDomainNameApiAssociationDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckDomainNameApiAssociationExists(resourceName string, DomainNameApiAssociation *appsync.DomainNameApiAssociation) resource.TestCheckFunc {
+func testAccCheckDomainNameApiAssociationExists(resourceName string, DomainNameApiAssociation *appsync.ApiAssociation) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 
 		rs, ok := s.RootModule().Resources[resourceName]

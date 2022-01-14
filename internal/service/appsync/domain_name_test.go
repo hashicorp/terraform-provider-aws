@@ -177,7 +177,7 @@ resource "aws_appsync_domain_name" "test" {
   certificate_arn = data.aws_acm_certificate.test.arn
   description     = %[3]q
 }
-`, rName, domain, desc)
+`, domain, rName, desc)
 }
 
 func testAccAppsyncDomainNameBasicConfig(rName, domain string) string {
