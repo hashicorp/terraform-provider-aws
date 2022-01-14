@@ -76,7 +76,7 @@ func TestAccRAMResourceShareDataSource_resources(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "name", resourceName, "name"),
 					resource.TestCheckResourceAttrPair(datasourceName, "id", resourceName, "id"),
-					resource.TestCheckResourceAttr(datasourceName, "resources.%", "1"),
+					resource.TestCheckResourceAttr(datasourceName, "resources.#", "1"),
 				),
 			},
 		},
@@ -153,6 +153,8 @@ resource "aws_ram_resource_association" "test" {
 data "aws_ram_resource_share" "test" {
   name           = aws_ram_resource_share.test.name
   resource_owner = "SELF"
+
+  depends_on = [aws_ram_resource_association.test]
 }
 `, rName, rName, rName)
 }
