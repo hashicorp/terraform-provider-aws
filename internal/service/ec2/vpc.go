@@ -27,7 +27,6 @@ const (
 	VPCCIDRMaxIPv6 = 56
 )
 
-// acceptance tests for byoip related tests are in vpc_byoip_test.go
 func ResourceVPC() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{
@@ -36,7 +35,7 @@ func ResourceVPC() *schema.Resource {
 		Update: resourceVPCUpdate,
 		Delete: resourceVPCDelete,
 		Importer: &schema.ResourceImporter{
-			State: resourceVPCInstanceImport,
+			State: resourceVPCImport,
 		},
 
 		CustomizeDiff: customdiff.All(
@@ -226,78 +225,34 @@ func resourceVPCCreate(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error creating EC2 VPC: %w", err)
 	}
 
-	vpc := output.Vpc
-	d.SetId(aws.StringValue(vpc.VpcId))
+	d.SetId(aws.StringValue(output.Vpc.VpcId))
 
-	if _, err := WaitVPCCreated(conn, d.Id()); err != nil {
+	vpc, err := WaitVPCCreated(conn, d.Id())
+
+	if err != nil {
 		return fmt.Errorf("error waiting for EC2 VPC (%s) create: %w", d.Id(), err)
 	}
 
 	if len(vpc.Ipv6CidrBlockAssociationSet) > 0 && vpc.Ipv6CidrBlockAssociationSet[0] != nil {
-		log.Printf("[DEBUG] Waiting for EC2 VPC (%s) IPv6 CIDR to become associated", d.Id())
-		if err := waitForEc2VpcIpv6CidrBlockAssociationCreate(conn, d.Id(), aws.StringValue(output.Vpc.Ipv6CidrBlockAssociationSet[0].AssociationId)); err != nil {
-			return fmt.Errorf("error waiting for EC2 VPC (%s) IPv6 CIDR to become associated: %s", d.Id(), err)
+		associationID := aws.StringValue(output.Vpc.Ipv6CidrBlockAssociationSet[0].AssociationId)
+
+		_, err = WaitVPCIPv6CIDRBlockAssociationCreated(conn, associationID)
+
+		if err != nil {
+			return fmt.Errorf("error waiting for EC2 VPC (%s) CIDR block (%s) to become associated: %w", d.Id(), associationID, err)
 		}
 	}
 
-	// You cannot modify the DNS resolution and DNS hostnames attributes in the same request. Use separate requests for each attribute.
-	// Reference: https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_ModifyVpcAttribute.html
-
-	if d.Get("enable_dns_hostnames").(bool) {
-		input := &ec2.ModifyVpcAttributeInput{
-			EnableDnsHostnames: &ec2.AttributeBooleanValue{
-				Value: aws.Bool(true),
-			},
-			VpcId: aws.String(d.Id()),
-		}
-
-		if _, err := conn.ModifyVpcAttribute(input); err != nil {
-			return fmt.Errorf("error enabling EC2 VPC (%s) DNS Hostnames: %w", d.Id(), err)
-		}
-
-		if _, err := WaitVPCAttributeUpdated(conn, d.Id(), ec2.VpcAttributeNameEnableDnsHostnames, d.Get("enable_dns_hostnames").(bool)); err != nil {
-			return fmt.Errorf("error waiting for EC2 VPC (%s) DNS Hostnames to enable: %w", d.Id(), err)
-		}
+	vpcInfo := vpcInfo{
+		vpc:                          vpc,
+		classicLinkEnabled:           false,
+		classicLinkDNSSupportEnabled: false,
+		dnsHostnamesEnabled:          false,
+		dnsSupportEnabled:            true,
 	}
 
-	// By default, only the enableDnsSupport attribute is set to true in a VPC created any other way.
-	// Reference: https://docs.aws.amazon.com/vpc/latest/userguide/vpc-dns.html#vpc-dns-support
-
-	if !d.Get("enable_dns_support").(bool) {
-		input := &ec2.ModifyVpcAttributeInput{
-			EnableDnsSupport: &ec2.AttributeBooleanValue{
-				Value: aws.Bool(false),
-			},
-			VpcId: aws.String(d.Id()),
-		}
-
-		if _, err := conn.ModifyVpcAttribute(input); err != nil {
-			return fmt.Errorf("error disabling EC2 VPC (%s) DNS Support: %w", d.Id(), err)
-		}
-
-		if _, err := WaitVPCAttributeUpdated(conn, d.Id(), ec2.VpcAttributeNameEnableDnsSupport, d.Get("enable_dns_support").(bool)); err != nil {
-			return fmt.Errorf("error waiting for EC2 VPC (%s) DNS Support to disable: %w", d.Id(), err)
-		}
-	}
-
-	if d.Get("enable_classiclink").(bool) {
-		input := &ec2.EnableVpcClassicLinkInput{
-			VpcId: aws.String(d.Id()),
-		}
-
-		if _, err := conn.EnableVpcClassicLink(input); err != nil {
-			return fmt.Errorf("error enabling VPC (%s) ClassicLink: %s", d.Id(), err)
-		}
-	}
-
-	if d.Get("enable_classiclink_dns_support").(bool) {
-		input := &ec2.EnableVpcClassicLinkDnsSupportInput{
-			VpcId: aws.String(d.Id()),
-		}
-
-		if _, err := conn.EnableVpcClassicLinkDnsSupport(input); err != nil {
-			return fmt.Errorf("error enabling VPC (%s) ClassicLink DNS support: %s", d.Id(), err)
-		}
+	if err := modifyVPCAttributesOnCreate(conn, d, &vpcInfo); err != nil {
+		return err
 	}
 
 	return resourceVPCRead(d, meta)
@@ -715,7 +670,7 @@ func resourceVPCUpdate(d *schema.ResourceData, meta interface{}) error {
 		o, n := d.GetChange("tags_all")
 
 		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
-			return fmt.Errorf("error updating tags: %s", err)
+			return fmt.Errorf("error updating EC2 VPC (%s) tags: %w", d.Id(), err)
 		}
 	}
 
@@ -915,8 +870,7 @@ func resourceVPCSetMainRouteTable(conn *ec2.EC2, vpcid string) (string, error) {
 	return aws.StringValue(resp.RouteTables[0].RouteTableId), nil
 }
 
-func resourceVPCInstanceImport(
-	d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+func resourceVPCImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	d.Set("assign_generated_ipv6_cidr_block", false)
 	return []*schema.ResourceData{d}, nil
 }
@@ -980,4 +934,199 @@ func waitForEc2VpcIpv6CidrBlockAssociationDelete(conn *ec2.EC2, vpcID, associati
 	_, err := stateConf.WaitForState()
 
 	return err
+}
+
+type vpcInfo struct {
+	vpc                          *ec2.Vpc
+	classicLinkEnabled           bool
+	classicLinkDNSSupportEnabled bool
+	dnsHostnamesEnabled          bool
+	dnsSupportEnabled            bool
+}
+
+// modifyVPCAttributesOnCreate sets VPC attributes on resource Create.
+// Called after new VPC creation or existing default VPC adoption.
+func modifyVPCAttributesOnCreate(conn *ec2.EC2, d *schema.ResourceData, vpcInfo *vpcInfo) error {
+	if new, old := d.Get("enable_dns_hostnames").(bool), vpcInfo.dnsHostnamesEnabled; old != new {
+		if err := modifyVPCDnsHostnames(conn, d.Id(), new); err != nil {
+			return err
+		}
+	}
+
+	if new, old := d.Get("enable_dns_support").(bool), vpcInfo.dnsSupportEnabled; old != new {
+		if err := modifyVPCDnsSupport(conn, d.Id(), new); err != nil {
+			return err
+		}
+	}
+
+	if new, old := d.Get("enable_classiclink").(bool), vpcInfo.classicLinkEnabled; old != new {
+		if err := modifyVPCClassicLink(conn, d.Id(), new); err != nil {
+			return err
+		}
+	}
+
+	if new, old := d.Get("enable_classiclink_dns_support").(bool), vpcInfo.classicLinkDNSSupportEnabled; old != new {
+		if err := modifyVPCClassicLinkDnsSupport(conn, d.Id(), new); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func modifyVPCClassicLink(conn *ec2.EC2, vpcID string, v bool) error {
+	if v {
+		input := &ec2.EnableVpcClassicLinkInput{
+			VpcId: aws.String(vpcID),
+		}
+
+		if _, err := conn.EnableVpcClassicLink(input); err != nil {
+			return fmt.Errorf("error enabling EC2 VPC (%s) ClassicLink: %w", vpcID, err)
+		}
+	} else {
+		input := &ec2.DisableVpcClassicLinkInput{
+			VpcId: aws.String(vpcID),
+		}
+
+		if _, err := conn.DisableVpcClassicLink(input); err != nil {
+			return fmt.Errorf("error disabling EC2 VPC (%s) ClassicLink: %w", vpcID, err)
+		}
+	}
+
+	return nil
+}
+
+func modifyVPCClassicLinkDnsSupport(conn *ec2.EC2, vpcID string, v bool) error {
+	if v {
+		input := &ec2.EnableVpcClassicLinkDnsSupportInput{
+			VpcId: aws.String(vpcID),
+		}
+
+		if _, err := conn.EnableVpcClassicLinkDnsSupport(input); err != nil {
+			return fmt.Errorf("error enabling EC2 VPC (%s) ClassicLinkDnsSupport: %w", vpcID, err)
+		}
+	} else {
+		input := &ec2.DisableVpcClassicLinkDnsSupportInput{
+			VpcId: aws.String(vpcID),
+		}
+
+		if _, err := conn.DisableVpcClassicLinkDnsSupport(input); err != nil {
+			return fmt.Errorf("error disabling EC2 VPC (%s) ClassicLinkDnsSupport: %w", vpcID, err)
+		}
+	}
+
+	return nil
+}
+
+func modifyVPCDnsHostnames(conn *ec2.EC2, vpcID string, v bool) error {
+	input := &ec2.ModifyVpcAttributeInput{
+		EnableDnsHostnames: &ec2.AttributeBooleanValue{
+			Value: aws.Bool(v),
+		},
+		VpcId: aws.String(vpcID),
+	}
+
+	if _, err := conn.ModifyVpcAttribute(input); err != nil {
+		return fmt.Errorf("error modifying EC2 VPC (%s) EnableDnsHostnames: %w", vpcID, err)
+	}
+
+	if _, err := WaitVPCAttributeUpdated(conn, vpcID, ec2.VpcAttributeNameEnableDnsHostnames, v); err != nil {
+		return fmt.Errorf("error waiting for EC2 VPC (%s) EnableDnsHostnames update: %w", vpcID, err)
+	}
+
+	return nil
+}
+
+func modifyVPCDnsSupport(conn *ec2.EC2, vpcID string, v bool) error {
+	input := &ec2.ModifyVpcAttributeInput{
+		EnableDnsSupport: &ec2.AttributeBooleanValue{
+			Value: aws.Bool(v),
+		},
+		VpcId: aws.String(vpcID),
+	}
+
+	if _, err := conn.ModifyVpcAttribute(input); err != nil {
+		return fmt.Errorf("error modifying EC2 VPC (%s) EnableDnsSupport: %w", vpcID, err)
+	}
+
+	if _, err := WaitVPCAttributeUpdated(conn, vpcID, ec2.VpcAttributeNameEnableDnsSupport, v); err != nil {
+		return fmt.Errorf("error waiting for EC2 VPC (%s) EnableDnsSupport update: %w", vpcID, err)
+	}
+
+	return nil
+}
+
+func modifyVPCIPv6CIDRBlockAssociation(conn *ec2.EC2, vpcID, associationID string, amazonProvidedCIDRBlock bool, cidrBlock, ipamPoolID string, netmaskLength int, networkBorderGroup string) error {
+	if associationID != "" {
+		input := &ec2.DisassociateVpcCidrBlockInput{
+			AssociationId: aws.String(associationID),
+		}
+
+		_, err := conn.DisassociateVpcCidrBlock(input)
+
+		if err != nil {
+			return fmt.Errorf("error disassociating EC2 VPC (%s) CIDR block (%s): %w", vpcID, associationID, err)
+		}
+
+		_, err = WaitVPCIPv6CIDRBlockAssociationDeleted(conn, associationID)
+
+		if err != nil {
+			return fmt.Errorf("error waiting for EC2 VPC (%s) CIDR block (%s) to become disassociated: %w", vpcID, associationID, err)
+		}
+	}
+
+	if cidrBlock != "" || ipamPoolID != "" {
+		input := &ec2.AssociateVpcCidrBlockInput{
+			VpcId: aws.String(vpcID),
+		}
+
+		if amazonProvidedCIDRBlock {
+			input.AmazonProvidedIpv6CidrBlock = aws.Bool(amazonProvidedCIDRBlock)
+		}
+
+		if cidrBlock != "" {
+			input.Ipv6CidrBlock = aws.String(cidrBlock)
+		}
+
+		if networkBorderGroup != "" {
+			input.Ipv6CidrBlockNetworkBorderGroup = aws.String(networkBorderGroup)
+		}
+
+		if ipamPoolID != "" {
+			input.Ipv6IpamPoolId = aws.String(ipamPoolID)
+		}
+
+		if netmaskLength > 0 {
+			input.Ipv6NetmaskLength = aws.Int64(int64(netmaskLength))
+		}
+
+		output, err := conn.AssociateVpcCidrBlock(input)
+
+		if err != nil {
+			return fmt.Errorf("error associating EC2 VPC (%s) IPv6 CIDR block: %w", vpcID, err)
+		}
+
+		associationID := aws.StringValue(output.Ipv6CidrBlockAssociation.AssociationId)
+
+		_, err = WaitVPCIPv6CIDRBlockAssociationCreated(conn, associationID)
+
+		if err != nil {
+			return fmt.Errorf("error waiting for EC2 VPC (%s) CIDR block (%s) to become associated: %w", vpcID, associationID, err)
+		}
+	}
+
+	return nil
+}
+
+func modifyVPCTenancy(conn *ec2.EC2, vpcID string, v string) error {
+	input := &ec2.ModifyVpcTenancyInput{
+		InstanceTenancy: aws.String(v),
+		VpcId:           aws.String(vpcID),
+	}
+
+	if _, err := conn.ModifyVpcTenancy(input); err != nil {
+		return fmt.Errorf("error modifying EC2 VPC (%s) Tenancy: %w", vpcID, err)
+	}
+
+	return nil
 }

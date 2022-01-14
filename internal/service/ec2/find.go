@@ -1020,6 +1020,32 @@ func FindVPCDHCPOptionsAssociation(conn *ec2.EC2, vpcID string, dhcpOptionsID st
 	return nil
 }
 
+func FindVPCIPv6CIDRBlockAssociationByID(conn *ec2.EC2, associationID string) (*ec2.VpcIpv6CidrBlockAssociation, error) {
+	input := &ec2.DescribeVpcsInput{
+		Filters: BuildAttributeFilterList(map[string]string{
+			"ipv6-cidr-block-association.association-id": associationID,
+		}),
+	}
+
+	output, err := FindVPC(conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	for _, association := range output.Ipv6CidrBlockAssociationSet {
+		if aws.StringValue(association.AssociationId) == associationID {
+			if state := aws.StringValue(association.Ipv6CidrBlockState.State); state == ec2.VpcCidrBlockStateCodeDisassociated {
+				return nil, &resource.NotFoundError{Message: state}
+			}
+
+			return association, nil
+		}
+	}
+
+	return nil, &resource.NotFoundError{}
+}
+
 // FindVPCEndpointByID returns the VPC endpoint corresponding to the specified identifier.
 // Returns NotFoundError if no VPC endpoint is found.
 func FindVPCEndpointByID(conn *ec2.EC2, vpcEndpointID string) (*ec2.VpcEndpoint, error) {

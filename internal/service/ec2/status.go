@@ -531,6 +531,22 @@ func StatusVPCAttributeValue(conn *ec2.EC2, id string, attribute string) resourc
 	}
 }
 
+func StatusVPCIPv6CIDRBlockAssociationState(conn *ec2.EC2, id string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := FindVPCIPv6CIDRBlockAssociationByID(conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output.Ipv6CidrBlockState, aws.StringValue(output.Ipv6CidrBlockState.State), nil
+	}
+}
+
 const (
 	vpcPeeringConnectionStatusNotFound = "NotFound"
 	vpcPeeringConnectionStatusUnknown  = "Unknown"

@@ -705,8 +705,9 @@ func WaitTransitGatewayRouteTablePropagationStateDisabled(conn *ec2.EC2, transit
 }
 
 const (
-	vpcCreatedTimeout = 10 * time.Minute
-	vpcDeletedTimeout = 5 * time.Minute
+	vpcAttributePropagationTimeout = 5 * time.Minute
+	vpcCreatedTimeout              = 10 * time.Minute
+	vpcDeletedTimeout              = 5 * time.Minute
 )
 
 func WaitVPCCreated(conn *ec2.EC2, id string) (*ec2.Vpc, error) {
@@ -726,15 +727,11 @@ func WaitVPCCreated(conn *ec2.EC2, id string) (*ec2.Vpc, error) {
 	return nil, err
 }
 
-const (
-	VPCAttributePropagationTimeout = 5 * time.Minute
-)
-
 func WaitVPCAttributeUpdated(conn *ec2.EC2, vpcID string, attribute string, expectedValue bool) (*ec2.Vpc, error) {
 	stateConf := &resource.StateChangeConf{
 		Target:     []string{strconv.FormatBool(expectedValue)},
 		Refresh:    StatusVPCAttributeValue(conn, vpcID, attribute),
-		Timeout:    VPCAttributePropagationTimeout,
+		Timeout:    vpcAttributePropagationTimeout,
 		Delay:      10 * time.Second,
 		MinTimeout: 3 * time.Second,
 	}
@@ -742,6 +739,53 @@ func WaitVPCAttributeUpdated(conn *ec2.EC2, vpcID string, attribute string, expe
 	outputRaw, err := stateConf.WaitForState()
 
 	if output, ok := outputRaw.(*ec2.Vpc); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+const (
+	vpcIPv6CIDRBlockAssociationCreatedTimeout = 10 * time.Minute
+	vpcIPv6CIDRBlockAssociationDeletedTimeout = 5 * time.Minute
+)
+
+func WaitVPCIPv6CIDRBlockAssociationCreated(conn *ec2.EC2, id string) (*ec2.VpcCidrBlockState, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{ec2.VpcCidrBlockStateCodeAssociating, ec2.VpcCidrBlockStateCodeDisassociated, ec2.VpcCidrBlockStateCodeFailing},
+		Target:  []string{ec2.VpcCidrBlockStateCodeAssociated},
+		Refresh: StatusVPCIPv6CIDRBlockAssociationState(conn, id),
+		Timeout: vpcIPv6CIDRBlockAssociationCreatedTimeout,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*ec2.VpcCidrBlockState); ok {
+		if state := aws.StringValue(output.State); state == ec2.VpcCidrBlockStateCodeFailed {
+			tfresource.SetLastError(err, errors.New(aws.StringValue(output.StatusMessage)))
+		}
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func WaitVPCIPv6CIDRBlockAssociationDeleted(conn *ec2.EC2, id string) (*ec2.VpcCidrBlockState, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{ec2.VpcCidrBlockStateCodeAssociated, ec2.VpcCidrBlockStateCodeDisassociating, ec2.VpcCidrBlockStateCodeFailing},
+		Target:  []string{},
+		Refresh: StatusVPCIPv6CIDRBlockAssociationState(conn, id),
+		Timeout: vpcIPv6CIDRBlockAssociationDeletedTimeout,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*ec2.VpcCidrBlockState); ok {
+		if state := aws.StringValue(output.State); state == ec2.VpcCidrBlockStateCodeFailed {
+			tfresource.SetLastError(err, errors.New(aws.StringValue(output.StatusMessage)))
+		}
+
 		return output, err
 	}
 
