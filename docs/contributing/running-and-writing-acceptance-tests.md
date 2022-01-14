@@ -179,7 +179,7 @@ export AWS_THIRD_REGION=...
 
 Some tests have been manually marked as long-running and can be skipped using the `-short` flag. However, implementation of the long-running guards is a work in progress and many services have no tests guarded.
 
-Where guards have been implemented, do not always skip long-running tests. However, for intermediate test runs during development, or to verify functionality unrelated to the specific long-running tests, skipping long-running tests makes work more efficient. We recommend that for the final test run before submitting a PR that you run all tests without the `-short` flag.
+Where guards have been implemented, do not always skip long-running tests. However, for intermediate test runs during development, or to verify functionality unrelated to the specific long-running tests, skipping long-running tests makes work more efficient. We recommend that for the final test run before submitting a PR that you run affected tests without the `-short` flag.
 
 If you want to only run short-running tests, you can use either one of these equivalent statements. Note the use of `-short`.
 
