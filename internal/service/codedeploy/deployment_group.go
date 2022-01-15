@@ -422,6 +422,40 @@ func ResourceDeploymentGroup() *schema.Resource {
 				},
 			},
 
+			"on_premises_instance_tag_set": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"on_premises_instance_tag_filter": {
+							Type:     schema.TypeSet,
+							Optional: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"key": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+
+									"type": {
+										Type:         schema.TypeString,
+										Optional:     true,
+										ValidateFunc: validTagFilters,
+									},
+
+									"value": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+								},
+							},
+							Set: resourceTagFilterHash,
+						},
+					},
+				},
+				Set: resourceOnPremTagSetHash,
+			},
+
 			"on_premises_instance_tag_filter": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -510,6 +544,10 @@ func resourceDeploymentGroupCreate(d *schema.ResourceData, meta interface{}) err
 
 	if attr, ok := d.GetOk("autoscaling_groups"); ok {
 		input.AutoScalingGroups = flex.ExpandStringSet(attr.(*schema.Set))
+	}
+
+	if attr, ok := d.GetOk("on_premises_instance_tag_set"); ok {
+		input.OnPremisesTagSet = buildOnPremTagSet(attr.(*schema.Set).List())
 	}
 
 	if attr, ok := d.GetOk("on_premises_instance_tag_filter"); ok {
@@ -651,6 +689,10 @@ func resourceDeploymentGroupRead(d *schema.ResourceData, meta interface{}) error
 		return fmt.Errorf("error setting ecs_service: %w", err)
 	}
 
+	if err := d.Set("on_premises_instance_tag_set", onPremisesTagSetToMap(group.OnPremisesTagSet)); err != nil {
+		return fmt.Errorf("error settingn on_premises_instance_tag_set: %w", err)
+	}
+
 	if err := d.Set("on_premises_instance_tag_filter", onPremisesTagFiltersToMap(group.OnPremisesInstanceTagFilters)); err != nil {
 		return fmt.Errorf("error setting on_premises_instance_tag_filter: %w", err)
 	}
@@ -730,6 +772,12 @@ func resourceDeploymentGroupUpdate(d *schema.ResourceData, meta interface{}) err
 		if _, isEcs := d.GetOk("ecs_service"); d.HasChange("autoscaling_groups") || (d.HasChange("blue_green_deployment_config") && !isEcs) {
 			_, n := d.GetChange("autoscaling_groups")
 			input.AutoScalingGroups = flex.ExpandStringSet(n.(*schema.Set))
+		}
+
+		if d.HasChange("on_premises_instance_tag_set") {
+			_, n := d.GetChange("on_premises_instance_tag_set")
+			onPremTagSet := buildOnPremTagSet(n.(*schema.Set).List())
+			input.OnPremisesTagSet = onPremTagSet
 		}
 
 		// TagFilters aren't like tags. They don't append. They simply replace.
@@ -862,6 +910,18 @@ func buildOnPremTagFilters(configured []interface{}) []*codedeploy.TagFilter {
 	}
 
 	return filters
+}
+
+// buildOnPremTagSet connverts raw schema lists into a codedeploy.TagSet.
+func buildOnPremTagSet(configured []interface{}) *codedeploy.OnPremisesTagSet {
+	filterSets := make([][]*codedeploy.TagFilter, 0)
+	for _, raw := range configured {
+		m := raw.(map[string]interface{})
+		rawFilters := m["on_premises_instance_tag_filter"].(*schema.Set)
+		filters := buildOnPremTagFilters(rawFilters.List())
+		filterSets = append(filterSets, filters)
+	}
+	return &codedeploy.OnPremisesTagSet{OnPremisesTagSetList: filterSets}
 }
 
 // buildEC2TagFilters converts raw schema lists into a list of
@@ -1180,10 +1240,10 @@ func ec2TagFiltersToMap(list []*codedeploy.EC2TagFilter) []map[string]interface{
 }
 
 // onPremisesTagFiltersToMap converts lists of on-prem tag filters into a []map[string]string.
-func onPremisesTagFiltersToMap(list []*codedeploy.TagFilter) []map[string]string {
-	result := make([]map[string]string, 0, len(list))
+func onPremisesTagFiltersToMap(list []*codedeploy.TagFilter) []map[string]interface{} {
+	result := make([]map[string]interface{}, 0, len(list))
 	for _, tf := range list {
-		l := make(map[string]string)
+		l := make(map[string]interface{})
 		if v := tf.Key; aws.StringValue(v) != "" {
 			l["key"] = aws.StringValue(v)
 		}
@@ -1213,6 +1273,28 @@ func ec2TagSetToMap(tagSet *codedeploy.EC2TagSet) []map[string]interface{} {
 			}
 			tagFilters := map[string]interface{}{
 				"ec2_tag_filter": schema.NewSet(resourceTagFilterHash, filtersAsIntfSlice),
+			}
+			result = append(result, tagFilters)
+		}
+	}
+	return result
+}
+
+// onPremisesTagSetToMap converts lists of tag filters into a [][]map[string]string.
+func onPremisesTagSetToMap(tagSet *codedeploy.OnPremisesTagSet) []map[string]interface{} {
+	var result []map[string]interface{}
+	if tagSet == nil {
+		result = make([]map[string]interface{}, 0)
+	} else {
+		result = make([]map[string]interface{}, 0, len(tagSet.OnPremisesTagSetList))
+		for _, filterSet := range tagSet.OnPremisesTagSetList {
+			filters := onPremisesTagFiltersToMap(filterSet)
+			filtersAsIntfSlice := make([]interface{}, 0, len(filters))
+			for _, item := range filters {
+				filtersAsIntfSlice = append(filtersAsIntfSlice, item)
+			}
+			tagFilters := map[string]interface{}{
+				"on_premises_instance_tag_filter": schema.NewSet(resourceTagFilterHash, filtersAsIntfSlice),
 			}
 			result = append(result, tagFilters)
 		}
@@ -1471,6 +1553,18 @@ func resourceTagFilterHash(v interface{}) int {
 func resourceTagSetHash(v interface{}) int {
 	tagSetMap := v.(map[string]interface{})
 	filterSet := tagSetMap["ec2_tag_filter"]
+	filterSetSlice := filterSet.(*schema.Set).List()
+
+	var x uint64 = 1
+	for i, filter := range filterSetSlice {
+		x = ((x << 7) | (x >> (64 - 7))) ^ uint64(i) ^ uint64(resourceTagFilterHash(filter))
+	}
+	return int(x)
+}
+
+func resourceOnPremTagSetHash(v interface{}) int {
+	tagSetMap := v.(map[string]interface{})
+	filterSet := tagSetMap["on_premises_instance_tag_filter"]
 	filterSetSlice := filterSet.(*schema.Set).List()
 
 	var x uint64 = 1

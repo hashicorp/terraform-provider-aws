@@ -176,23 +176,51 @@ func TestAccCodeDeployDeploymentGroup_onPremiseTag(t *testing.T) {
 		CheckDestroy: testAccCheckDeploymentGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDeploymentGroupOnPremiseTags(rName),
+				Config: testAccDeploymentGroupOnPremiseTags(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeploymentGroupExists(resourceName, &group),
-					resource.TestCheckResourceAttr(
-						resourceName, "app_name", "tf-acc-test-"+rName),
-					resource.TestCheckResourceAttr(
-						resourceName, "deployment_group_name", "tf-acc-test-"+rName),
-					resource.TestCheckResourceAttr(
-						resourceName, "deployment_config_name", "CodeDeployDefault.OneAtATime"),
+					resource.TestCheckResourceAttr(resourceName, "app_name", "tf-acc-test-"+rName),
+					resource.TestCheckResourceAttr(resourceName, "deployment_group_name", "tf-acc-test-"+rName),
+					resource.TestCheckResourceAttr(resourceName, "deployment_config_name", "CodeDeployDefault.OneAtATime"),
+					resource.TestCheckResourceAttrPair(resourceName, "service_role_arn", "aws_iam_role.test", "arn"),
 
-					resource.TestCheckResourceAttr(
-						resourceName, "on_premises_instance_tag_filter.#", "1"),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "on_premises_instance_tag_filter.*", map[string]string{
+					resource.TestCheckResourceAttr(resourceName, "on_premises_instance_tag_set.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "on_premises_instance_tag_set.*", map[string]string{
+						"on_premises_instance_tag_filter.#": "1",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "on_premises_instance_tag_set.*.on_premises_instance_tag_filter.*", map[string]string{
 						"key":   "filterkey",
 						"type":  "KEY_AND_VALUE",
 						"value": "filtervalue",
 					}),
+					resource.TestCheckResourceAttr(resourceName, "on_premises_instance_tag_filter.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "alarm_configuration.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "auto_rollback_configuration.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "trigger_configuration.#", "0"),
+				),
+			},
+			{
+				Config: testAccDeploymentGroupOnPremiseTags(rName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDeploymentGroupExists(resourceName, &group),
+					resource.TestCheckResourceAttr(resourceName, "app_name", "tf-acc-test-"+rName),
+					resource.TestCheckResourceAttr(resourceName, "deployment_group_name", "tf-acc-test-"+rName),
+					resource.TestCheckResourceAttr(resourceName, "deployment_config_name", "CodeDeployDefault.OneAtATime"),
+					resource.TestCheckResourceAttrPair(resourceName, "service_role_arn", "aws_iam_role.test", "arn"),
+
+					resource.TestCheckResourceAttr(resourceName, "on_premises_instance_tag_set.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "on_premises_instance_tag_set.*", map[string]string{
+						"on_premises_instance_tag_filter.#": "1",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "on_premises_instance_tag_set.*.on_premises_instance_tag_filter.*", map[string]string{
+						"key":   "filterkey",
+						"type":  "KEY_AND_VALUE",
+						"value": "filtervalue",
+					}),
+					resource.TestCheckResourceAttr(resourceName, "on_premises_instance_tag_filter.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "alarm_configuration.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "auto_rollback_configuration.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "trigger_configuration.#", "0"),
 				),
 			},
 			{
@@ -2520,20 +2548,37 @@ EOF
 `, rName, tagGroupOrFilter)
 }
 
-func testAccDeploymentGroupOnPremiseTags(rName string) string {
-	return testAccDeploymentGroupBaseConfig(rName) + fmt.Sprintf(`
-resource "aws_codedeploy_deployment_group" "test" {
-  app_name              = aws_codedeploy_app.test.name
-  deployment_group_name = "tf-acc-test-%[1]s"
-  service_role_arn      = aws_iam_role.test.arn
-
+func testAccDeploymentGroupOnPremiseTags(rName string, tagGroup bool) string {
+	var tagGroupOrFilter string
+	if tagGroup {
+		tagGroupOrFilter = `
+on_premises_instance_tag_set {
   on_premises_instance_tag_filter {
     key   = "filterkey"
     type  = "KEY_AND_VALUE"
     value = "filtervalue"
   }
 }
-`, rName)
+`
+	} else {
+		tagGroupOrFilter = `
+on_premises_instance_tag_filter {
+  key   = "filterkey"
+  type  = "KEY_AND_VALUE"
+  value = "filtervalue"
+}
+`
+	}
+	return testAccDeploymentGroupBaseConfig(rName) + fmt.Sprintf(`
+resource "aws_codedeploy_deployment_group" "test" {
+  app_name              = aws_codedeploy_app.test.name
+  deployment_group_name = "tf-acc-test-%[1]s"
+  deployment_config_name = "CodeDeployDefault.OneAtATime"
+  service_role_arn      = aws_iam_role.test.arn
+
+  %[2]s
+  }
+`, rName, tagGroupOrFilter)
 }
 
 func baseCodeDeployConfig(rName string) string {
