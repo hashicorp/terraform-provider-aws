@@ -43,6 +43,32 @@ func TestAccElasticTranscoderPreset_basic(t *testing.T) {
 	})
 }
 
+func TestAccElasticTranscoderPreset_video_noCodec(t *testing.T) {
+	var preset elastictranscoder.Preset
+	resourceName := "aws_elastictranscoder_preset.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, elastictranscoder.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckElasticTranscoderPresetDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPresetVideoNoCodec(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckElasticTranscoderPresetExists(resourceName, &preset),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 //https://github.com/terraform-providers/terraform-provider-aws/issues/14090
 func TestAccElasticTranscoderPreset_audio_noBitRate(t *testing.T) {
 	var preset elastictranscoder.Preset
@@ -485,6 +511,46 @@ resource "aws_elastictranscoder_preset" "test" {
   }
 }
 `, rName, frameRate)
+}
+
+func testAccPresetVideoNoCodec(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_elastictranscoder_preset" "test" {
+  container = "webm"
+  type      = "Custom"
+  name      = %[1]q
+
+  audio {
+    codec              = "vorbis"
+    sample_rate        = 44100
+    bit_rate           = 128
+    channels           = 2
+    audio_packing_mode = "SingleTrack"
+  }
+
+  thumbnails {
+    format         = "png"
+    interval       = 300
+    max_width      = 640
+    max_height     = 360
+    sizing_policy  = "ShrinkToFit"
+    padding_policy = "NoPad"
+  }
+
+  video {
+    codec                = "vp9"
+    keyframes_max_dist   = 90
+    fixed_gop            = false
+    bit_rate             = 600
+    frame_rate           = 30
+    max_width            = 640
+    max_height           = 360
+    display_aspect_ratio = "auto"
+    sizing_policy        = "Fit"
+    padding_policy       = "NoPad"
+  }
+}
+`, rName)
 }
 
 func testAccPresetNoBitRateConfig(rName string) string {

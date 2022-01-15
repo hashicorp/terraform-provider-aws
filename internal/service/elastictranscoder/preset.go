@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 )
 
 func ResourcePreset() *schema.Resource {
@@ -648,13 +649,10 @@ func expandETVideoParams(d *schema.ResourceData) *elastictranscoder.VideoParamet
 		Watermarks: expandETVideoWatermarks(d),
 	}
 
-	if v, ok := d.GetOk("video_codec_options"); ok {
-		codecOpts := make(map[string]string)
-		for k, va := range v.(map[string]interface{}) {
-			codecOpts[k] = va.(string)
-		}
-
-		etVideoParams.CodecOptions = aws.StringMap(codecOpts)
+	if v, ok := d.GetOk("video_codec_options"); ok && len(v.(map[string]interface{})) > 0 {
+		etVideoParams.CodecOptions = flex.ExpandStringMap(v.(map[string]interface{}))
+	} else {
+		etVideoParams.CodecOptions = aws.StringMap(make(map[string]string, 0))
 	}
 
 	if v, ok := p["aspect_ratio"]; ok && v.(string) != "" {

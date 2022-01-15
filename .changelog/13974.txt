@@ -10,3 +10,7 @@ resource/aws_elastic_transcoder_preset: Add plan time validations to `audio.audi
 ```release-note:enhancement
 resource/aws_elastic_transcoder_preset: Allow `audio.bit_rate` to be computed.
 ```
+
+```release-note:bug
+resource/aws_elastic_transcoder_preset: Allow `video_codec_options` to be empty.
+```
