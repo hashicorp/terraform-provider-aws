@@ -84,7 +84,7 @@ func resourceAPICacheCreate(d *schema.ResourceData, meta interface{}) error {
 
 	d.SetId(apiID)
 
-	if _, err := waitApiCacheAvailable(conn, d.Id()); err != nil {
+	if err := waitApiCacheAvailable(conn, d.Id()); err != nil {
 		return fmt.Errorf("error waiting for Appsync API Cache (%s) availability: %w", d.Id(), err)
 	}
 
@@ -139,7 +139,7 @@ func resourceAPICacheUpdate(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error updating Appsync API Cache %q: %w", d.Id(), err)
 	}
 
-	if _, err := waitApiCacheAvailable(conn, d.Id()); err != nil {
+	if err := waitApiCacheAvailable(conn, d.Id()); err != nil {
 		return fmt.Errorf("error waiting for Appsync API Cache (%s) availability: %w", d.Id(), err)
 	}
 
@@ -161,7 +161,7 @@ func resourceAPICacheDelete(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error deleting Appsync API Cache: %w", err)
 	}
 
-	if _, err := waitApiCacheDeleted(conn, d.Id()); err != nil {
+	if err := waitApiCacheDeleted(conn, d.Id()); err != nil {
 		return fmt.Errorf("error waiting for Appsync API Cache (%s) to be deleted: %w", d.Id(), err)
 	}
 
