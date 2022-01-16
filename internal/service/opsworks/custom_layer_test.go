@@ -174,7 +174,7 @@ func TestAccOpsWorksCustomLayer_noVPC(t *testing.T) {
 	})
 }
 
-func TestAccOpsworksCustomLayer_cloudwatch(t *testing.T) {
+func TestAccOpsWorksCustomLayer_cloudwatch(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	var opslayer opsworks.Layer
 	resourceName := "aws_opsworks_custom_layer.test"
@@ -239,7 +239,7 @@ func TestAccOpsworksCustomLayer_cloudwatch(t *testing.T) {
 	})
 }
 
-func TestAccOpsworksCustomLayer_disappears(t *testing.T) {
+func TestAccOpsWorksCustomLayer_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	var opslayer opsworks.Layer
 	resourceName := "aws_opsworks_custom_layer.test"
