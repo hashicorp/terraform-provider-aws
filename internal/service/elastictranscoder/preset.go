@@ -652,7 +652,7 @@ func expandETVideoParams(d *schema.ResourceData) *elastictranscoder.VideoParamet
 	if v, ok := d.GetOk("video_codec_options"); ok && len(v.(map[string]interface{})) > 0 {
 		etVideoParams.CodecOptions = flex.ExpandStringMap(v.(map[string]interface{}))
 	} else {
-		etVideoParams.CodecOptions = aws.StringMap(make(map[string]string, 0))
+		etVideoParams.CodecOptions = aws.StringMap(make(map[string]string))
 	}
 
 	if v, ok := p["aspect_ratio"]; ok && v.(string) != "" {
