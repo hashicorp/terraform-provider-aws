@@ -19,7 +19,7 @@ import (
 // and `aws-opsworks-service-role`, and Opsworks stacks named `tf-acc`.
 
 func TestAccOpsWorksCustomLayer_basic(t *testing.T) {
-	name := sdkacctest.RandString(10)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	var opslayer opsworks.Layer
 	resourceName := "aws_opsworks_custom_layer.test"
 
@@ -30,10 +30,10 @@ func TestAccOpsWorksCustomLayer_basic(t *testing.T) {
 		CheckDestroy: testAccCheckCustomLayerDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCustomLayerVPCCreateConfig(name),
+				Config: testAccCustomLayerVPCCreateConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLayerExists(resourceName, &opslayer),
-					resource.TestCheckResourceAttr(resourceName, "name", name),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "auto_assign_elastic_ips", "false"),
 					resource.TestCheckResourceAttr(resourceName, "auto_healing", "true"),
 					resource.TestCheckResourceAttr(resourceName, "drain_elb_on_shutdown", "true"),
@@ -62,7 +62,7 @@ func TestAccOpsWorksCustomLayer_basic(t *testing.T) {
 }
 
 func TestAccOpsWorksCustomLayer_tags(t *testing.T) {
-	name := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	var opslayer opsworks.Layer
 	resourceName := "aws_opsworks_custom_layer.test"
 
@@ -73,7 +73,7 @@ func TestAccOpsWorksCustomLayer_tags(t *testing.T) {
 		CheckDestroy: testAccCheckCustomLayerDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCustomLayerTags1Config(name, "key1", "value1"),
+				Config: testAccCustomLayerTags1Config(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLayerExists(resourceName, &opslayer),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -86,7 +86,7 @@ func TestAccOpsWorksCustomLayer_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccCustomLayerTags2Config(name, "key1", "value1updated", "key2", "value2"),
+				Config: testAccCustomLayerTags2Config(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLayerExists(resourceName, &opslayer),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -95,7 +95,7 @@ func TestAccOpsWorksCustomLayer_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccCustomLayerTags1Config(name, "key2", "value2"),
+				Config: testAccCustomLayerTags1Config(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLayerExists(resourceName, &opslayer),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -139,6 +139,11 @@ func TestAccOpsWorksCustomLayer_noVPC(t *testing.T) {
 						"encrypted":       "false",
 					}),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 			{
 				Config: testAccCustomLayerUpdateConfig(rName),
