@@ -440,7 +440,7 @@ resource "aws_security_group" "tf-ops-acc-layer3" {
   }
 }
 
-resource "aws_opsworks_custom_layer" "tf-acc" {
+resource "aws_opsworks_custom_layer" "test" {
   stack_id               = aws_opsworks_stack.tf-acc.id
   name                   = "%[1]s"
   short_name             = "tf-ops-acc-custom-layer"
