@@ -177,7 +177,7 @@ resource "aws_s3_bucket" "test" {
 
   lifecycle {
     ignore_changes = [
-	  acceleration_status
+      acceleration_status
     ]
   }
 }
