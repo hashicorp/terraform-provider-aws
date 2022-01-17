@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func ResourceVPCIPv4CIDRBlockAssociation() *schema.Resource {
@@ -25,9 +26,9 @@ func ResourceVPCIPv4CIDRBlockAssociation() *schema.Resource {
 		},
 
 		CustomizeDiff: func(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
-			// cidr_block can be set by a value returned from IPAM or explicitly in config
+			// cidr_block can be set by a value returned from IPAM or explicitly in config.
 			if diff.Id() != "" && diff.HasChange("cidr_block") {
-				// if netmask is set then cidr_block is derived from ipam, ignore changes
+				// If netmask is set then cidr_block is derived from IPAM, ignore changes.
 				if diff.Get("ipv4_netmask_length") != 0 {
 					return diff.Clear("cidr_block")
 				}
@@ -110,40 +111,16 @@ func resourceVPCIPv4CIDRBlockAssociationCreate(d *schema.ResourceData, meta inte
 func resourceVPCIPv4CIDRBlockAssociationRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
-	input := &ec2.DescribeVpcsInput{
-		Filters: BuildAttributeFilterList(
-			map[string]string{
-				"cidr-block-association.association-id": d.Id(),
-			},
-		),
+	vpcCidrBlockAssociation, vpc, err := FindVPCCIDRBlockAssociationByID(conn, d.Id())
+
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] EC2 VPC IPv4 CIDR Block Association %s not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
 	}
 
-	log.Printf("[DEBUG] Describing VPCs: %s", input)
-	output, err := conn.DescribeVpcs(input)
 	if err != nil {
-		return fmt.Errorf("error describing VPCs: %s", err)
-	}
-
-	if output == nil || len(output.Vpcs) == 0 || output.Vpcs[0] == nil {
-		log.Printf("[WARN] IPv4 CIDR block association (%s) not found, removing from state", d.Id())
-		d.SetId("")
-		return nil
-	}
-
-	vpc := output.Vpcs[0]
-
-	var vpcCidrBlockAssociation *ec2.VpcCidrBlockAssociation
-	for _, cidrBlockAssociation := range vpc.CidrBlockAssociationSet {
-		if aws.StringValue(cidrBlockAssociation.AssociationId) == d.Id() {
-			vpcCidrBlockAssociation = cidrBlockAssociation
-			break
-		}
-	}
-
-	if vpcCidrBlockAssociation == nil {
-		log.Printf("[WARN] IPv4 CIDR block association (%s) not found, removing from state", d.Id())
-		d.SetId("")
-		return nil
+		return fmt.Errorf("error reading EC2 VPC IPv4 CIDR Block Association (%s): %w", d.Id(), err)
 	}
 
 	d.Set("cidr_block", vpcCidrBlockAssociation.CidrBlock)

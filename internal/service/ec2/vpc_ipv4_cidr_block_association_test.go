@@ -6,13 +6,14 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func TestAccVPCIPv4CIDRBlockAssociation_basic(t *testing.T) {
@@ -129,37 +130,23 @@ func testAccCheckVPCIPv4CIDRBlockAssociationDestroy(s *terraform.State) error {
 			continue
 		}
 
-		// Try to find the VPC
-		DescribeVpcOpts := &ec2.DescribeVpcsInput{
-			VpcIds: []*string{aws.String(rs.Primary.Attributes["vpc_id"])},
-		}
-		resp, err := conn.DescribeVpcs(DescribeVpcOpts)
-		if err == nil {
-			vpc := resp.Vpcs[0]
+		_, _, err := tfec2.FindVPCCIDRBlockAssociationByID(conn, rs.Primary.ID)
 
-			for _, ipv4Association := range vpc.CidrBlockAssociationSet {
-				if *ipv4Association.AssociationId == rs.Primary.ID {
-					return fmt.Errorf("VPC CIDR block association still exists")
-				}
-			}
-
-			return nil
+		if tfresource.NotFound(err) {
+			continue
 		}
 
-		// Verify the error is what we want
-		ec2err, ok := err.(awserr.Error)
-		if !ok {
+		if err != nil {
 			return err
 		}
-		if ec2err.Code() != "InvalidVpcID.NotFound" {
-			return err
-		}
+
+		return fmt.Errorf("EC2 VPC IPv4 CIDR Block Association %s still exists", rs.Primary.ID)
 	}
 
 	return nil
 }
 
-func testAccCheckVPCIPv4CIDRBlockAssociationExists(n string, association *ec2.VpcCidrBlockAssociation) resource.TestCheckFunc {
+func testAccCheckVPCIPv4CIDRBlockAssociationExists(n string, v *ec2.VpcCidrBlockAssociation) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -167,33 +154,18 @@ func testAccCheckVPCIPv4CIDRBlockAssociationExists(n string, association *ec2.Vp
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No VPC ID is set")
+			return fmt.Errorf("No EC2 VPC IPv4 CIDR Block Association is set")
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
-		DescribeVpcOpts := &ec2.DescribeVpcsInput{
-			VpcIds: []*string{aws.String(rs.Primary.Attributes["vpc_id"])},
-		}
-		resp, err := conn.DescribeVpcs(DescribeVpcOpts)
+
+		output, _, err := tfec2.FindVPCCIDRBlockAssociationByID(conn, rs.Primary.ID)
+
 		if err != nil {
 			return err
 		}
-		if len(resp.Vpcs) == 0 {
-			return fmt.Errorf("VPC not found")
-		}
 
-		vpc := resp.Vpcs[0]
-		found := false
-		for _, cidrAssociation := range vpc.CidrBlockAssociationSet {
-			if *cidrAssociation.AssociationId == rs.Primary.ID {
-				*association = *cidrAssociation
-				found = true
-			}
-		}
-
-		if !found {
-			return fmt.Errorf("VPC CIDR block association not found")
-		}
+		*v = *output
 
 		return nil
 	}

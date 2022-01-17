@@ -533,7 +533,7 @@ func StatusVPCAttributeValue(conn *ec2.EC2, id string, attribute string) resourc
 
 func StatusVPCCIDRBlockAssociationState(conn *ec2.EC2, id string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindVPCCIDRBlockAssociationByID(conn, id)
+		output, _, err := FindVPCCIDRBlockAssociationByID(conn, id)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -549,7 +549,7 @@ func StatusVPCCIDRBlockAssociationState(conn *ec2.EC2, id string) resource.State
 
 func StatusVPCIPv6CIDRBlockAssociationState(conn *ec2.EC2, id string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindVPCIPv6CIDRBlockAssociationByID(conn, id)
+		output, _, err := FindVPCIPv6CIDRBlockAssociationByID(conn, id)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
