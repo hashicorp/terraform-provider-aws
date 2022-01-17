@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"os"
 	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -45,6 +46,7 @@ func ResourceDataSet() *schema.Resource {
 			"output_columns": {
 				Type:     schema.TypeList,
 				Optional: true,
+				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"output_column": {
@@ -168,8 +170,7 @@ func ResourceDataSet() *schema.Resource {
 			"field_folders": {
 				Type:     schema.TypeList,
 				Optional: true,
-				MinItems: 1,
-				MaxItems: 1000,
+				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"columns": {
@@ -196,7 +197,7 @@ func ResourceDataSet() *schema.Resource {
 			"logical_table_map": {
 				Type:     schema.TypeList,
 				Optional: true,
-				MaxItems: 64,
+				MaxItems: 1,
 				// key length constraint 1 to 64
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -496,7 +497,7 @@ func ResourceDataSet() *schema.Resource {
 			"physical_table_map": {
 				Type:     schema.TypeList,
 				Required: true,
-				// how do i validate key length?
+				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"custom_sql": {
@@ -697,7 +698,7 @@ func ResourceDataSet() *schema.Resource {
 				},
 			},
 
-			"row_level_permission_tag_configurations": {
+			"row_level_permission_tag_configuration": {
 				Type:     schema.TypeList,
 				Optional: true,
 				MaxItems: 1,
@@ -886,9 +887,9 @@ func resourceAwsQuickSightDataSetRead(ctx context.Context, d *schema.ResourceDat
 		return diag.Errorf("error setting row_level_permission_tag_configuration: %s", err)
 	}
 
-	if err := d.Set("output_columns", flattenQuickSightOutputColumns(dataSet.OutputColumns)); err != nil {
-		return diag.Errorf("error setting output_columns: %s", err)
-	}
+	// if err := d.Set("output_columns", flattenQuickSightOutputColumns(dataSet.OutputColumns)); err != nil {
+	// 	return diag.Errorf("error setting output_columns: %s", err)
+	// }
 
 	tags, err := ListTags(conn, d.Get("arn").(string))
 
@@ -916,8 +917,8 @@ func resourceAwsQuickSightDataSetRead(ctx context.Context, d *schema.ResourceDat
 		return diag.Errorf("error describing QuickSight Data Source (%s) Permissions: %s", d.Id(), err)
 	}
 
-	if err := d.Set("permission", flattenQuickSightPermissions(permsResp.Permissions)); err != nil {
-		return diag.Errorf("error setting permission: %s", err)
+	if err := d.Set("permissions", flattenQuickSightPermissions(permsResp.Permissions)); err != nil {
+		return diag.Errorf("error setting permissions: %s", err)
 	}
 
 	return nil
@@ -926,7 +927,7 @@ func resourceAwsQuickSightDataSetRead(ctx context.Context, d *schema.ResourceDat
 func resourceAwsQuickSightDataSetUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).QuickSightConn
 
-	if d.HasChangesExcept("permission", "tags", "tags_all") {
+	if d.HasChangesExcept("permissions", "tags", "tags_all") {
 		awsAccountId, dataSetId, err := ParseDataSetID(d.Id())
 		if err != nil {
 			return diag.FromErr(err)
@@ -986,13 +987,13 @@ func resourceAwsQuickSightDataSetUpdate(ctx context.Context, d *schema.ResourceD
 		// }
 	}
 
-	if d.HasChange("permission") {
+	if d.HasChange("permissions") {
 		awsAccountId, dataSetId, err := ParseDataSetID(d.Id())
 		if err != nil {
 			return diag.FromErr(err)
 		}
 
-		oraw, nraw := d.GetChange("permission")
+		oraw, nraw := d.GetChange("permissions")
 		o := oraw.(*schema.Set).List()
 		n := nraw.(*schema.Set).List()
 
@@ -1633,6 +1634,7 @@ func expandQuickSightDataSetPhysicalTableMap(tfList []interface{}) map[string]*q
 			}
 		}
 
+		// use required terraform input?
 		physicalTableMap["uniqueid"] = physicalTable
 	}
 
@@ -1865,6 +1867,7 @@ func expandQuickSightDataSetRowLevelPermissionTagConfigurations(tfMap map[string
 	if tfMap == nil {
 		return nil
 	}
+	WriteToFile("result.txt", "1\n")
 
 	rowLevelPermissionTagConfiguration := &quicksight.RowLevelPermissionTagConfiguration{}
 
@@ -2020,7 +2023,7 @@ func flattenQuickSightColumnLevelPermissionRule(rule *quicksight.ColumnLevelPerm
 	return tfMap
 }
 
-func flattenQuickSightDataSetUsageConfiguration(configuration *quicksight.DataSetUsageConfiguration) map[string]interface{} {
+func flattenQuickSightDataSetUsageConfiguration(configuration *quicksight.DataSetUsageConfiguration) []interface{} {
 	if configuration == nil {
 		return nil
 	}
@@ -2035,25 +2038,27 @@ func flattenQuickSightDataSetUsageConfiguration(configuration *quicksight.DataSe
 		tfMap["disable_use_as_imported_source"] = aws.BoolValue(configuration.DisableUseAsImportedSource)
 	}
 
-	return tfMap
+	tfList := []interface{}{tfMap}
+	return tfList
 }
 
-func flattenQuickSightFieldFolders(folders map[string]*quicksight.FieldFolder) map[string]interface{} {
+func flattenQuickSightFieldFolders(folders map[string]*quicksight.FieldFolder) []interface{} {
 	if len(folders) == 0 {
 		return nil
 	}
 
-	tfMap := make(map[string]interface{})
+	var tfList []interface{}
 
-	for key, folder := range folders {
+	for _, folder := range folders {
 		if folder == nil {
 			continue
 		}
 
-		tfMap[key] = flattenQuickSightFieldFolder(folder)
+		tfMap := flattenQuickSightFieldFolder(folder)
+		tfList = append(tfList, tfMap)
 	}
 
-	return tfMap
+	return tfList
 }
 
 func flattenQuickSightFieldFolder(folder *quicksight.FieldFolder) map[string]interface{} {
@@ -2074,22 +2079,23 @@ func flattenQuickSightFieldFolder(folder *quicksight.FieldFolder) map[string]int
 	return tfMap
 }
 
-func flattenQuickSightLogicalTableMap(maps map[string]*quicksight.LogicalTable) map[string]interface{} {
+func flattenQuickSightLogicalTableMap(maps map[string]*quicksight.LogicalTable) []interface{} {
 	if len(maps) == 0 {
 		return nil
 	}
 
-	tfMap := make(map[string]interface{})
+	var tfList []interface{}
 
-	for key, table := range maps {
+	for _, table := range maps {
 		if table == nil {
 			continue
 		}
 
-		tfMap[key] = flattenQuickSightLogicalTable(table)
+		tfMap := flattenQuickSightLogicalTable(table)
+		tfList = append(tfList, tfMap)
 	}
 
-	return tfMap
+	return tfList
 }
 
 func flattenQuickSightLogicalTable(table *quicksight.LogicalTable) map[string]interface{} {
@@ -2378,7 +2384,7 @@ func flattenQuickSightUntagColumnOperation(operation *quicksight.UntagColumnOper
 	return tfMap
 }
 
-func flattenQuickSightLogicalTableSource(source *quicksight.LogicalTableSource) map[string]interface{} {
+func flattenQuickSightLogicalTableSource(source *quicksight.LogicalTableSource) []interface{} {
 	if source == nil {
 		return nil
 	}
@@ -2397,7 +2403,7 @@ func flattenQuickSightLogicalTableSource(source *quicksight.LogicalTableSource) 
 		tfMap["physical_table_id"] = aws.StringValue(source.PhysicalTableId)
 	}
 
-	return tfMap
+	return []interface{}{tfMap}
 }
 
 func flattenQuickSightJoinInstruction(instruction *quicksight.JoinInstruction) map[string]interface{} {
@@ -2448,22 +2454,23 @@ func flattenQuickSightJoinKeyProperties(prop *quicksight.JoinKeyProperties) map[
 	return tfMap
 }
 
-func flattenQuickSightPhysicalTableMap(maps map[string]*quicksight.PhysicalTable) map[string]interface{} {
+func flattenQuickSightPhysicalTableMap(maps map[string]*quicksight.PhysicalTable) []interface{} {
 	if len(maps) == 0 {
 		return nil
 	}
 
-	tfMap := make(map[string]interface{})
+	var tfList []interface{}
 
-	for key, table := range maps {
+	for _, table := range maps {
 		if table == nil {
 			continue
 		}
 
-		tfMap[key] = flattenQuickSightPhysicalTable(table)
+		tfMap := flattenQuickSightPhysicalTable(table)
+		tfList = append(tfList, tfMap)
 	}
 
-	return tfMap
+	return tfList
 }
 
 func flattenQuickSightPhysicalTable(table *quicksight.PhysicalTable) map[string]interface{} {
@@ -2580,7 +2587,7 @@ func flattenQuickSightRelationalTable(table *quicksight.RelationalTable) map[str
 	return tfMap
 }
 
-func flattenQuickSightS3Source(source *quicksight.S3Source) map[string]interface{} {
+func flattenQuickSightS3Source(source *quicksight.S3Source) []interface{} {
 	if source == nil {
 		return nil
 	}
@@ -2599,10 +2606,10 @@ func flattenQuickSightS3Source(source *quicksight.S3Source) map[string]interface
 		tfMap["upload_settings"] = flattenQuickSightUploadSettings(source.UploadSettings)
 	}
 
-	return tfMap
+	return []interface{}{tfMap}
 }
 
-func flattenQuickSightUploadSettings(settings *quicksight.UploadSettings) map[string]interface{} {
+func flattenQuickSightUploadSettings(settings *quicksight.UploadSettings) []interface{} {
 	if settings == nil {
 		return nil
 	}
@@ -2629,10 +2636,10 @@ func flattenQuickSightUploadSettings(settings *quicksight.UploadSettings) map[st
 		tfMap["text_qualifier"] = aws.StringValue(settings.TextQualifier)
 	}
 
-	return tfMap
+	return []interface{}{tfMap}
 }
 
-func flattenQuickSightRowLevelPermissionDataSet(set *quicksight.RowLevelPermissionDataSet) map[string]interface{} {
+func flattenQuickSightRowLevelPermissionDataSet(set *quicksight.RowLevelPermissionDataSet) []interface{} {
 	if set == nil {
 		return nil
 	}
@@ -2659,10 +2666,23 @@ func flattenQuickSightRowLevelPermissionDataSet(set *quicksight.RowLevelPermissi
 		tfMap["status"] = aws.StringValue(set.Status)
 	}
 
-	return tfMap
+	return []interface{}{tfMap}
 }
 
-func flattenQuickSightRowLevelPermissionTagConfiguration(configuration *quicksight.RowLevelPermissionTagConfiguration) map[string]interface{} {
+func WriteToFile(filename string, text string) {
+	f, err := os.OpenFile(filename, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0600)
+	if err != nil {
+		panic(err)
+	}
+
+	defer f.Close()
+
+	if _, err = f.WriteString(text); err != nil {
+		panic(err)
+	}
+}
+
+func flattenQuickSightRowLevelPermissionTagConfiguration(configuration *quicksight.RowLevelPermissionTagConfiguration) []interface{} {
 	if configuration == nil {
 		return nil
 	}
@@ -2677,7 +2697,7 @@ func flattenQuickSightRowLevelPermissionTagConfiguration(configuration *quicksig
 		tfMap["tag_rules"] = flattenQuickSightTagRules(configuration.TagRules)
 	}
 
-	return tfMap
+	return []interface{}{tfMap}
 }
 
 func flattenQuickSightTagRules(rules []*quicksight.RowLevelPermissionTagRule) []interface{} {
