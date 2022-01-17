@@ -241,3 +241,30 @@ func dataSourceVPCRead(d *schema.ResourceData, meta interface{}) error {
 
 	return nil
 }
+
+func resourceVPCSetMainRouteTable(conn *ec2.EC2, vpcid string) (string, error) {
+	filter1 := &ec2.Filter{
+		Name:   aws.String("association.main"),
+		Values: []*string{aws.String("true")},
+	}
+	filter2 := &ec2.Filter{
+		Name:   aws.String("vpc-id"),
+		Values: []*string{aws.String(vpcid)},
+	}
+
+	findOpts := &ec2.DescribeRouteTablesInput{
+		Filters: []*ec2.Filter{filter1, filter2},
+	}
+
+	resp, err := conn.DescribeRouteTables(findOpts)
+	if err != nil {
+		return "", err
+	}
+
+	if len(resp.RouteTables) < 1 || resp.RouteTables[0] == nil {
+		return "", fmt.Errorf("Main Route table not found")
+	}
+
+	// There Can Be Only 1 Main Route Table for a VPC
+	return aws.StringValue(resp.RouteTables[0].RouteTableId), nil
+}
