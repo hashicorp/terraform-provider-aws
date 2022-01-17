@@ -7,7 +7,6 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -16,9 +15,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
-
-// add sweeper to delete known test vpcs
 
 func TestAccVPC_basic(t *testing.T) {
 	var vpc ec2.Vpc
@@ -32,20 +30,30 @@ func TestAccVPC_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVpcConfig,
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					acctest.CheckVPCExists(resourceName, &vpc),
-					testAccCheckVpcCidr(&vpc, "10.1.0.0/16"),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`vpc/vpc-.+`)),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "assign_generated_ipv6_cidr_block", "false"),
-					resource.TestMatchResourceAttr(resourceName, "default_route_table_id", regexp.MustCompile(`^rtb-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "cidr_block", "10.1.0.0/16"),
+					resource.TestCheckResourceAttrSet(resourceName, "default_network_acl_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "default_route_table_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "default_security_group_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "dhcp_options_id"),
+					resource.TestCheckResourceAttr(resourceName, "enable_classiclink", "false"),
+					resource.TestCheckResourceAttr(resourceName, "enable_classiclink_dns_support", "false"),
+					resource.TestCheckResourceAttr(resourceName, "enable_dns_hostnames", "false"),
 					resource.TestCheckResourceAttr(resourceName, "enable_dns_support", "true"),
 					resource.TestCheckResourceAttr(resourceName, "instance_tenancy", "default"),
+					resource.TestCheckNoResourceAttr(resourceName, "ipv4_ipam_pool_id"),
+					resource.TestCheckNoResourceAttr(resourceName, "ipv4_netmask_length"),
 					resource.TestCheckResourceAttr(resourceName, "ipv6_association_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "ipv6_cidr_block", ""),
-					resource.TestMatchResourceAttr(resourceName, "main_route_table_id", regexp.MustCompile(`^rtb-.+`)),
+					resource.TestCheckResourceAttr(resourceName, "ipv6_cidr_block_network_border_group", ""),
+					resource.TestCheckResourceAttr(resourceName, "ipv6_ipam_pool_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "ipv6_netmask_length", "0"),
+					resource.TestCheckResourceAttrSet(resourceName, "main_route_table_id"),
 					acctest.CheckResourceAttrAccountID(resourceName, "owner_id"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
 			{
@@ -71,9 +79,53 @@ func TestAccVPC_disappears(t *testing.T) {
 				Config: testAccVpcConfig,
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckVPCExists(resourceName, &vpc),
-					testAccCheckVpcDisappears(&vpc),
+					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceVPC(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccVPC_tags(t *testing.T) {
+	var vpc ec2.Vpc
+	resourceName := "aws_vpc.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckVpcDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVPCTags1Config("key1", "value1"),
+				Check: resource.ComposeTestCheckFunc(
+					acctest.CheckVPCExists(resourceName, &vpc),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccVPCTags2Config("key1", "value1updated", "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					acctest.CheckVPCExists(resourceName, &vpc),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+			{
+				Config: testAccVPCTags1Config("key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					acctest.CheckVPCExists(resourceName, &vpc),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
 			},
 		},
 	})
@@ -555,7 +607,6 @@ func TestAccVPC_assignGeneratedIPv6CIDRBlock(t *testing.T) {
 				Config: testAccVpcConfigAssignGeneratedIpv6CidrBlock(true),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					acctest.CheckVPCExists(resourceName, &vpc),
-					testAccCheckVpcCidr(&vpc, "10.1.0.0/16"),
 					resource.TestCheckResourceAttr(resourceName, "assign_generated_ipv6_cidr_block", "true"),
 					resource.TestCheckResourceAttr(resourceName, "cidr_block", "10.1.0.0/16"),
 					resource.TestMatchResourceAttr(resourceName, "ipv6_association_id", regexp.MustCompile(`^vpc-cidr-assoc-.+`)),
@@ -572,7 +623,6 @@ func TestAccVPC_assignGeneratedIPv6CIDRBlock(t *testing.T) {
 				Config: testAccVpcConfigAssignGeneratedIpv6CidrBlock(false),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					acctest.CheckVPCExists(resourceName, &vpc),
-					testAccCheckVpcCidr(&vpc, "10.1.0.0/16"),
 					resource.TestCheckResourceAttr(resourceName, "assign_generated_ipv6_cidr_block", "false"),
 					resource.TestCheckResourceAttr(resourceName, "cidr_block", "10.1.0.0/16"),
 					resource.TestCheckResourceAttr(resourceName, "ipv6_association_id", ""),
@@ -583,7 +633,6 @@ func TestAccVPC_assignGeneratedIPv6CIDRBlock(t *testing.T) {
 				Config: testAccVpcConfigAssignGeneratedIpv6CidrBlock(true),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					acctest.CheckVPCExists(resourceName, &vpc),
-					testAccCheckVpcCidr(&vpc, "10.1.0.0/16"),
 					resource.TestCheckResourceAttr(resourceName, "assign_generated_ipv6_cidr_block", "true"),
 					resource.TestCheckResourceAttr(resourceName, "cidr_block", "10.1.0.0/16"),
 					resource.TestMatchResourceAttr(resourceName, "ipv6_association_id", regexp.MustCompile(`^vpc-cidr-assoc-.+`)),
@@ -631,18 +680,6 @@ func TestAccVPC_assignGeneratedIPv6CIDRBlockWithNetworkBorderGroup(t *testing.T)
 					resource.TestCheckResourceAttrSet(resourceName, "ipv6_association_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "ipv6_cidr_block"),
 					resource.TestCheckResourceAttr(resourceName, "ipv6_cidr_block_network_border_group", acctest.Region()),
-					resource.TestCheckResourceAttr(resourceName, "ipv6_ipam_pool_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "ipv6_netmask_length", "0"),
-				),
-			},
-			{
-				Config: testAccVpcConfigAssignGeneratedIpv6CidrBlockWithOptionalNetworkBorderGroup(rName, true),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					acctest.CheckVPCExists(resourceName, &vpc),
-					resource.TestCheckResourceAttr(resourceName, "assign_generated_ipv6_cidr_block", "true"),
-					resource.TestCheckResourceAttrSet(resourceName, "ipv6_association_id"),
-					resource.TestCheckResourceAttrSet(resourceName, "ipv6_cidr_block"),
-					resource.TestCheckResourceAttrPair(resourceName, "ipv6_cidr_block_network_border_group", azDataSourceName, "network_border_group"),
 					resource.TestCheckResourceAttr(resourceName, "ipv6_ipam_pool_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "ipv6_netmask_length", "0"),
 				),
@@ -737,51 +774,7 @@ func TestAccVPC_IpamIpv4BasicExplicitCidr(t *testing.T) {
 				Config: testAccVpcIpamIpv4ExplicitCidr(cidr),
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckVPCExists(resourceName, &vpc),
-					testAccCheckVpcCidr(&vpc, cidr),
-				),
-			},
-		},
-	})
-}
-
-func TestAccVPC_tags(t *testing.T) {
-	var vpc ec2.Vpc
-	resourceName := "aws_vpc.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckVpcDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccVPCTags1Config("key1", "value1"),
-				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckVPCExists(resourceName, &vpc),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{
-				Config: testAccVPCTags2Config("key1", "value1updated", "key2", "value2"),
-				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckVPCExists(resourceName, &vpc),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
-				),
-			},
-			{
-				Config: testAccVPCTags1Config("key2", "value2"),
-				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckVPCExists(resourceName, &vpc),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, "cidr_block", cidr),
 				),
 			},
 		},
@@ -802,7 +795,6 @@ func TestAccVPC_update(t *testing.T) {
 				Config: testAccVpcConfig,
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckVPCExists(resourceName, &vpc),
-					testAccCheckVpcCidr(&vpc, "10.1.0.0/16"),
 					resource.TestCheckResourceAttr(resourceName, "cidr_block", "10.1.0.0/16"),
 				),
 			},
@@ -932,27 +924,17 @@ func testAccCheckVpcDestroy(s *terraform.State) error {
 			continue
 		}
 
-		// Try to find the VPC
-		DescribeVpcOpts := &ec2.DescribeVpcsInput{
-			VpcIds: []*string{aws.String(rs.Primary.ID)},
-		}
-		resp, err := conn.DescribeVpcs(DescribeVpcOpts)
-		if err == nil {
-			if len(resp.Vpcs) > 0 {
-				return fmt.Errorf("VPCs still exist.")
-			}
+		_, err := tfec2.FindVPCByID(conn, rs.Primary.ID)
 
-			return nil
+		if tfresource.NotFound(err) {
+			continue
 		}
 
-		// Verify the error is what we want
-		ec2err, ok := err.(awserr.Error)
-		if !ok {
+		if err != nil {
 			return err
 		}
-		if ec2err.Code() != "InvalidVpcID.NotFound" {
-			return err
-		}
+
+		return fmt.Errorf("EC2 VPC %s still exists", rs.Primary.ID)
 	}
 
 	return nil
@@ -963,16 +945,6 @@ func testAccCheckVpcUpdateTags(vpc *ec2.Vpc, oldTags, newTags map[string]string)
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
 		return tfec2.UpdateTags(conn, aws.StringValue(vpc.VpcId), oldTags, newTags)
-	}
-}
-
-func testAccCheckVpcCidr(vpc *ec2.Vpc, expected string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		if aws.StringValue(vpc.CidrBlock) != expected {
-			return fmt.Errorf("Bad cidr: %s", aws.StringValue(vpc.CidrBlock))
-		}
-
-		return nil
 	}
 }
 
@@ -989,7 +961,7 @@ func testAccCheckVpcCidrPrefix(vpc *ec2.Vpc, expected string) resource.TestCheck
 func testAccCheckVpcIdsEqual(vpc1, vpc2 *ec2.Vpc) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if aws.StringValue(vpc1.VpcId) != aws.StringValue(vpc2.VpcId) {
-			return fmt.Errorf("VPC IDs not equal")
+			return fmt.Errorf("VPC IDs are not equal")
 		}
 
 		return nil
@@ -1003,20 +975,6 @@ func testAccCheckVpcIdsNotEqual(vpc1, vpc2 *ec2.Vpc) resource.TestCheckFunc {
 		}
 
 		return nil
-	}
-}
-
-func testAccCheckVpcDisappears(vpc *ec2.Vpc) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
-
-		input := &ec2.DeleteVpcInput{
-			VpcId: vpc.VpcId,
-		}
-
-		_, err := conn.DeleteVpc(input)
-
-		return err
 	}
 }
 

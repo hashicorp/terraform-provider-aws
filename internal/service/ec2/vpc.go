@@ -6,14 +6,12 @@ import (
 	"log"
 	"strconv"
 	"strings"
-	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -42,17 +40,6 @@ func ResourceVPC() *schema.Resource {
 		CustomizeDiff: customdiff.All(
 			resourceVPCCustomizeDiff,
 			verify.SetTagsDiff,
-			func(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
-				// cidr_block can be set by a value returned from IPAM or explicitly in config
-				if diff.Id() != "" && diff.HasChange("cidr_block") {
-					// if netmask is set then cidr_block is derived from ipam, ignore changes
-					if diff.Get("ipv4_netmask_length") != 0 {
-						return diff.Clear("cidr_block")
-					}
-					return diff.ForceNew("cidr_block")
-				}
-				return nil
-			},
 		),
 
 		SchemaVersion: 1,
@@ -80,15 +67,15 @@ func ResourceVPC() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"dhcp_options_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 			"default_route_table_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"default_security_group_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"dhcp_options_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -442,8 +429,6 @@ func resourceVPCUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	vpcid := d.Id()
-
 	if d.HasChanges("assign_generated_ipv6_cidr_block", "ipv6_cidr_block_network_border_group") {
 		associationID, err := modifyVPCIPv6CIDRBlockAssociation(conn, d.Id(),
 			d.Get("ipv6_association_id").(string),
@@ -458,151 +443,22 @@ func resourceVPCUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		d.Set("ipv6_association_id", associationID)
-		// toAssign := d.Get("assign_generated_ipv6_cidr_block").(bool)
-		// borderNetworkGroup := d.Get("ipv6_cidr_block_network_border_group").(string)
-		// existingCIDR := d.Get("ipv6_cidr_block").(string)
-
-		// log.Printf("[INFO] Modifying assign_generated_ipv6_cidr_block to %#v", toAssign)
-
-		// if toAssign && borderNetworkGroup != "" {
-		// 	// if an existing IPv6 CIDR block is assigned, we need to unassign it first
-		// 	if existingCIDR != "" {
-		// 		associationID := d.Get("ipv6_association_id").(string)
-		// 		modifyOpts := &ec2.DisassociateVpcCidrBlockInput{
-		// 			AssociationId: aws.String(associationID),
-		// 		}
-		// 		log.Printf("[INFO] Disabling assign_generated_ipv6_cidr_block vpc attribute for %s: %#v",
-		// 			d.Id(), modifyOpts)
-		// 		if _, err := conn.DisassociateVpcCidrBlock(modifyOpts); err != nil {
-		// 			return err
-		// 		}
-
-		// 		log.Printf("[DEBUG] Waiting for EC2 VPC (%s) IPv6 CIDR to become disassociated", d.Id())
-
-		// 		if err := waitForEc2VpcIpv6CidrBlockAssociationDelete(conn, d.Id(), associationID); err != nil {
-		// 			return fmt.Errorf("error waiting for EC2 VPC (%s) IPv6 CIDR to become disassociated: %s", d.Id(), err)
-		// 		}
-		// 	}
-
-		// 	modifyOpts := &ec2.AssociateVpcCidrBlockInput{
-		// 		VpcId:                           &vpcid,
-		// 		AmazonProvidedIpv6CidrBlock:     aws.Bool(toAssign),
-		// 		Ipv6CidrBlockNetworkBorderGroup: aws.String(borderNetworkGroup),
-		// 	}
-		// 	log.Printf("[INFO] Enabling assign_generated_ipv6_cidr_block vpc attribute for %s: %#v with border network group %s",
-		// 		d.Id(), modifyOpts, borderNetworkGroup)
-
-		// 	resp, err := conn.AssociateVpcCidrBlock(modifyOpts)
-
-		// 	if err != nil {
-		// 		return err
-		// 	}
-
-		// 	log.Printf("[DEBUG] Waiting for EC2 VPC (%s) IPv6 CIDR to become associated", d.Id())
-
-		// 	if err := waitForEc2VpcIpv6CidrBlockAssociationCreate(conn, d.Id(), aws.StringValue(resp.Ipv6CidrBlockAssociation.AssociationId)); err != nil {
-		// 		return fmt.Errorf("error waiting for EC2 VPC (%s) IPv6 CIDR to become associated: %s", d.Id(), err)
-		// 	}
-		// }
-		// // if no IPv6 CIDR block is assigned, we need to unassign the existing one
-		// if !toAssign {
-		// 	associationID := d.Get("ipv6_association_id").(string)
-		// 	modifyOpts := &ec2.DisassociateVpcCidrBlockInput{
-		// 		AssociationId: aws.String(associationID),
-		// 	}
-		// 	log.Printf("[INFO] Disabling assign_generated_ipv6_cidr_block vpc attribute for %s: %#v",
-		// 		d.Id(), modifyOpts)
-		// 	if _, err := conn.DisassociateVpcCidrBlock(modifyOpts); err != nil {
-		// 		return err
-		// 	}
-
-		// 	log.Printf("[DEBUG] Waiting for EC2 VPC (%s) IPv6 CIDR to become disassociated", d.Id())
-		// 	if err := waitForEc2VpcIpv6CidrBlockAssociationDelete(conn, d.Id(), associationID); err != nil {
-		// 		return fmt.Errorf("error waiting for EC2 VPC (%s) IPv6 CIDR to become disassociated: %s", d.Id(), err)
-		// 	}
-		// }
-		// // if an IPv6 CIDR blosk is to be assigned and no network border group is specified
-		// // just create the new association and remove the existing one if a border group is configured
-		// if toAssign && borderNetworkGroup == "" {
-		// 	log.Printf("[INFO] Modifying IPv6 Block Network Border Group")
-		// 	modifyOpts := &ec2.AssociateVpcCidrBlockInput{
-		// 		VpcId:                       &vpcid,
-		// 		AmazonProvidedIpv6CidrBlock: aws.Bool(d.Get("assign_generated_ipv6_cidr_block").(bool)),
-		// 	}
-		// 	if val := d.Get("ipv6_cidr_block"); val != "" {
-		// 		log.Printf("[INFO] Disabling assign_generated_ipv6_cidr_block vpc attribute for %s: %#v",
-		// 			d.Id(), modifyOpts)
-		// 		disassociationID := d.Get("ipv6_association_id").(string)
-		// 		disModifyOpts := &ec2.DisassociateVpcCidrBlockInput{
-		// 			AssociationId: aws.String(disassociationID),
-		// 		}
-		// 		log.Printf("[INFO] Dissaociating IPv6 Block Network Border Group")
-		// 		if _, err := conn.DisassociateVpcCidrBlock(disModifyOpts); err != nil {
-		// 			return err
-		// 		}
-		// 	}
-
-		// 	if v := d.Get("ipv6_cidr_block_network_border_group"); v != "" {
-		// 		modifyOpts.Ipv6CidrBlockNetworkBorderGroup = aws.String(v.(string))
-		// 		log.Printf("[INFO] Trying to associate IPv6 Block Network Border Group")
-		// 		if _, err := conn.AssociateVpcCidrBlock(modifyOpts); err != nil {
-		// 			return err
-		// 		}
-		// 	}
-		// 	if v := d.Get("ipv6_cidr_block_network_border_group"); v == "" {
-		// 		associationID := d.Get("ipv6_association_id").(string)
-		// 		modifyOpts := &ec2.DisassociateVpcCidrBlockInput{
-		// 			AssociationId: aws.String(associationID),
-		// 		}
-		// 		log.Printf("[INFO] Dissaociating IPv6 Block Network Border Group")
-		// 		if _, err := conn.DisassociateVpcCidrBlock(modifyOpts); err != nil {
-		// 			return err
-		// 		}
-		// 		if d.Get("assign_generated_ipv6_cidr_block").(bool) {
-		// 			log.Printf("[INFO] Trying to associate IPv6 Block Network Border Group")
-		// 			modifyOpts := &ec2.AssociateVpcCidrBlockInput{
-		// 				VpcId:                       &vpcid,
-		// 				AmazonProvidedIpv6CidrBlock: aws.Bool(d.Get("assign_generated_ipv6_cidr_block").(bool)),
-		// 			}
-		// 			if _, err := conn.AssociateVpcCidrBlock(modifyOpts); err != nil {
-		// 				return err
-		// 			}
-		// 		}
-		// 	}
-		// }
 	}
 
 	if d.HasChanges("ipv6_cidr_block", "ipv6_ipam_pool_id") {
-		log.Printf("[INFO] Modifying ipam IPv6 CIDR")
+		associationID, err := modifyVPCIPv6CIDRBlockAssociation(conn, d.Id(),
+			d.Get("ipv6_association_id").(string),
+			false,
+			d.Get("ipv6_cidr_block").(string),
+			d.Get("ipv6_ipam_pool_id").(string),
+			d.Get("ipv6_netmask_length").(int),
+			"")
 
-		// if assoc id exists it needs to be disassociated
-		if v, ok := d.GetOk("ipv6_association_id"); ok {
-			if err := ipv6DisassociateCidrBlock(conn, d.Id(), v.(string)); err != nil {
-				return err
-			}
+		if err != nil {
+			return err
 		}
-		if v := d.Get("ipv6_ipam_pool_id"); v != "" {
-			modifyOpts := &ec2.AssociateVpcCidrBlockInput{
-				VpcId:          &vpcid,
-				Ipv6IpamPoolId: aws.String(v.(string)),
-			}
 
-			if v := d.Get("ipv6_netmask_length"); v != 0 {
-				modifyOpts.Ipv6NetmaskLength = aws.Int64(int64(v.(int)))
-			}
-
-			if v := d.Get("ipv6_cidr_block"); v != "" {
-				modifyOpts.Ipv6CidrBlock = aws.String(v.(string))
-			}
-
-			resp, err := conn.AssociateVpcCidrBlock(modifyOpts)
-			if err != nil {
-				return err
-			}
-			if err := waitForEc2VpcIpv6CidrBlockAssociationCreate(conn, d.Id(), aws.StringValue(resp.Ipv6CidrBlockAssociation.AssociationId)); err != nil {
-				return fmt.Errorf("error waiting for EC2 VPC (%s) IPv6 CIDR to become associated: %w", d.Id(), err)
-			}
-		}
+		d.Set("ipv6_association_id", associationID)
 	}
 
 	if d.HasChange("tags_all") {
@@ -639,20 +495,9 @@ func resourceVPCDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func ipv6DisassociateCidrBlock(conn *ec2.EC2, id, allocationId string) error {
-	log.Printf("[INFO] Disassociating IPv6 CIDR association id: %s", allocationId)
-	modifyOpts := &ec2.DisassociateVpcCidrBlockInput{
-		AssociationId: aws.String(allocationId),
-	}
-	if _, err := conn.DisassociateVpcCidrBlock(modifyOpts); err != nil {
-		return err
-	}
-	log.Printf("[DEBUG] Waiting for EC2 VPC (%s) IPv6 CIDR to become disassociated", id)
-	if err := waitForEc2VpcIpv6CidrBlockAssociationDelete(conn, id, allocationId); err != nil {
-		return fmt.Errorf("error waiting for EC2 VPC (%s) IPv6 CIDR to become disassociated: %w", id, err)
-	}
-
-	return nil
+func resourceVPCImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+	d.Set("assign_generated_ipv6_cidr_block", false)
+	return []*schema.ResourceData{d}, nil
 }
 
 func resourceVPCCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
@@ -663,43 +508,16 @@ func resourceVPCCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, v in
 		}
 	}
 
-	return nil
-}
-
-func Ipv6CidrStateRefreshFunc(conn *ec2.EC2, id string, associationId string) resource.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		describeVpcOpts := &ec2.DescribeVpcsInput{
-			VpcIds: []*string{aws.String(id)},
+	// cidr_block can be set by a value returned from IPAM or explicitly in config.
+	if diff.Id() != "" && diff.HasChange("cidr_block") {
+		// If netmask is set then cidr_block is derived from IPAM, ignore changes.
+		if diff.Get("ipv4_netmask_length") != 0 {
+			return diff.Clear("cidr_block")
 		}
-		resp, err := conn.DescribeVpcs(describeVpcOpts)
-
-		if tfawserr.ErrMessageContains(err, "InvalidVpcID.NotFound", "") {
-			return nil, "", nil
-		}
-
-		if err != nil {
-			return nil, "", err
-		}
-
-		if resp == nil || len(resp.Vpcs) == 0 || resp.Vpcs[0] == nil || resp.Vpcs[0].Ipv6CidrBlockAssociationSet == nil {
-			// Sometimes AWS just has consistency issues and doesn't see
-			// our instance yet. Return an empty state.
-			return nil, "", nil
-		}
-
-		for _, association := range resp.Vpcs[0].Ipv6CidrBlockAssociationSet {
-			if aws.StringValue(association.AssociationId) == associationId {
-				return association, aws.StringValue(association.Ipv6CidrBlockState.State), nil
-			}
-		}
-
-		return nil, "", nil
+		return diff.ForceNew("cidr_block")
 	}
-}
 
-func resourceVPCImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-	d.Set("assign_generated_ipv6_cidr_block", false)
-	return []*schema.ResourceData{d}, nil
+	return nil
 }
 
 // vpcDescribe returns EC2 API information about the specified VPC.
@@ -730,37 +548,6 @@ func vpcDescribe(conn *ec2.EC2, vpcId string) (*ec2.Vpc, error) {
 	default:
 		return nil, fmt.Errorf("Found %d VPCs for %s, expected 1", n, vpcId)
 	}
-}
-
-func waitForEc2VpcIpv6CidrBlockAssociationCreate(conn *ec2.EC2, vpcID, associationID string) error {
-	stateConf := &resource.StateChangeConf{
-		Pending: []string{
-			ec2.VpcCidrBlockStateCodeAssociating,
-			ec2.VpcCidrBlockStateCodeDisassociated,
-		},
-		Target:  []string{ec2.VpcCidrBlockStateCodeAssociated},
-		Refresh: Ipv6CidrStateRefreshFunc(conn, vpcID, associationID),
-		Timeout: 10 * time.Minute,
-	}
-	_, err := stateConf.WaitForState()
-
-	return err
-}
-
-func waitForEc2VpcIpv6CidrBlockAssociationDelete(conn *ec2.EC2, vpcID, associationID string) error {
-	stateConf := &resource.StateChangeConf{
-		Pending: []string{
-			ec2.VpcCidrBlockStateCodeAssociated,
-			ec2.VpcCidrBlockStateCodeDisassociating,
-		},
-		Target:         []string{ec2.VpcCidrBlockStateCodeDisassociated},
-		Refresh:        Ipv6CidrStateRefreshFunc(conn, vpcID, associationID),
-		Timeout:        5 * time.Minute,
-		NotFoundChecks: 1,
-	}
-	_, err := stateConf.WaitForState()
-
-	return err
 }
 
 type vpcInfo struct {
