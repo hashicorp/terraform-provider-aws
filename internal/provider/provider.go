@@ -478,6 +478,7 @@ func Provider() *schema.Provider {
 			"aws_security_group":                             ec2.DataSourceSecurityGroup(),
 			"aws_security_groups":                            ec2.DataSourceSecurityGroups(),
 			"aws_subnet_ids":                                 ec2.DataSourceSubnetIDs(),
+			"aws_subnet_ids_categorized":                     ec2.DataSourceSubnetIDsCategorized(),
 			"aws_subnet":                                     ec2.DataSourceSubnet(),
 			"aws_subnets":                                    ec2.DataSourceSubnets(),
 			"aws_vpc_dhcp_options":                           ec2.DataSourceVPCDHCPOptions(),
