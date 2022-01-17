@@ -879,6 +879,7 @@ func TestAccVPC_IpamIpv4BasicNetmask(t *testing.T) {
 
 	var vpc ec2.Vpc
 	resourceName := "aws_vpc.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccIPAMPreCheck(t) },
@@ -887,7 +888,7 @@ func TestAccVPC_IpamIpv4BasicNetmask(t *testing.T) {
 		CheckDestroy: testAccCheckVpcDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVpcIpamIpv4(28),
+				Config: testAccVpcIpamIpv4(rName, 28),
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckVPCExists(resourceName, &vpc),
 					testAccCheckVpcCidrPrefix(&vpc, "28"),
@@ -905,6 +906,7 @@ func TestAccVPC_IpamIpv4BasicExplicitCidr(t *testing.T) {
 	var vpc ec2.Vpc
 	resourceName := "aws_vpc.test"
 	cidr := "172.2.0.32/28"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccIPAMPreCheck(t) },
@@ -913,7 +915,7 @@ func TestAccVPC_IpamIpv4BasicExplicitCidr(t *testing.T) {
 		CheckDestroy: testAccCheckVpcDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVpcIpamIpv4ExplicitCidr(cidr),
+				Config: testAccVpcIpamIpv4ExplicitCidr(rName, cidr),
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckVPCExists(resourceName, &vpc),
 					resource.TestCheckResourceAttr(resourceName, "cidr_block", cidr),
@@ -1197,12 +1199,17 @@ resource "aws_vpc" "test" {
 `, rName)
 }
 
-const testAccVpcIpamBase = `
+func testAccVpcIPv4IPAMConfigBase(rName string) string {
+	return fmt.Sprintf(`
 data "aws_region" "current" {}
 
 resource "aws_vpc_ipam" "test" {
   operating_regions {
     region_name = data.aws_region.current.name
+  }
+
+  tags = {
+    Name = %[1]q
   }
 }
 
@@ -1210,34 +1217,45 @@ resource "aws_vpc_ipam_pool" "test" {
   address_family = "ipv4"
   ipam_scope_id  = aws_vpc_ipam.test.private_default_scope_id
   locale         = data.aws_region.current.name
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_vpc_ipam_pool_cidr" "test" {
   ipam_pool_id = aws_vpc_ipam_pool.test.id
   cidr         = "172.2.0.0/16"
 }
-`
+`, rName)
+}
 
-func testAccVpcIpamIpv4(netmaskLength int) string {
-	return testAccVpcIpamBase + fmt.Sprintf(`
+func testAccVpcIpamIpv4(rName string, netmaskLength int) string {
+	return acctest.ConfigCompose(testAccVpcIPv4IPAMConfigBase(rName), fmt.Sprintf(`
 resource "aws_vpc" "test" {
   ipv4_ipam_pool_id   = aws_vpc_ipam_pool.test.id
-  ipv4_netmask_length = %[1]d
-  depends_on = [
-    aws_vpc_ipam_pool_cidr.test
-  ]
+  ipv4_netmask_length = %[2]d
+
+  tags = {
+    Name = %[1]q
+  }
+
+  depends_on = [aws_vpc_ipam_pool_cidr.test]
 }
-`, netmaskLength)
+`, rName, netmaskLength))
 }
 
-func testAccVpcIpamIpv4ExplicitCidr(cidr string) string {
-	return testAccVpcIpamBase + fmt.Sprintf(`
+func testAccVpcIpamIpv4ExplicitCidr(rName, cidr string) string {
+	return acctest.ConfigCompose(testAccVpcIPv4IPAMConfigBase(rName), fmt.Sprintf(`
 resource "aws_vpc" "test" {
   ipv4_ipam_pool_id = aws_vpc_ipam_pool.test.id
-  cidr_block        = %[1]q
-  depends_on = [
-    aws_vpc_ipam_pool_cidr.test
-  ]
+  cidr_block        = %[2]q
+
+  tags = {
+    Name = %[1]q
+  }
+
+  depends_on = [aws_vpc_ipam_pool_cidr.test]
 }
-`, cidr)
+`, rName, cidr))
 }

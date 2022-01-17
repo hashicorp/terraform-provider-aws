@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -47,8 +48,12 @@ func TestAccVPCIPv4CIDRBlockAssociation_basic(t *testing.T) {
 }
 
 func TestAccVPCIPv4CIDRBlockAssociation_IpamBasic(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var associationSecondary ec2.VpcCidrBlockAssociation
-	netmaskLength := "28"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccIPAMPreCheck(t) },
@@ -57,10 +62,10 @@ func TestAccVPCIPv4CIDRBlockAssociation_IpamBasic(t *testing.T) {
 		CheckDestroy: testAccCheckVPCIPv4CIDRBlockAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVPCIPv4CIDRBlockAssociationIpam(netmaskLength),
+				Config: testAccVPCIPv4CIDRBlockAssociationIpam(rName, 28),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVPCIPv4CIDRBlockAssociationExists("aws_vpc_ipv4_cidr_block_association.secondary_cidr", &associationSecondary),
-					testAccCheckVPCAssociationCIDRPrefix(&associationSecondary, netmaskLength),
+					testAccCheckVPCAssociationCIDRPrefix(&associationSecondary, "28"),
 				),
 			},
 		},
@@ -68,8 +73,13 @@ func TestAccVPCIPv4CIDRBlockAssociation_IpamBasic(t *testing.T) {
 }
 
 func TestAccVPCIPv4CIDRBlockAssociation_IpamBasicExplicitCIDR(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var associationSecondary ec2.VpcCidrBlockAssociation
 	cidr := "172.2.0.32/28"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccIPAMPreCheck(t) },
@@ -78,7 +88,7 @@ func TestAccVPCIPv4CIDRBlockAssociation_IpamBasicExplicitCIDR(t *testing.T) {
 		CheckDestroy: testAccCheckVPCIPv4CIDRBlockAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVPCIPv4CIDRBlockAssociationIpamExplicitCIDR(cidr),
+				Config: testAccVPCIPv4CIDRBlockAssociationIpamExplicitCIDR(rName, cidr),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVPCIPv4CIDRBlockAssociationExists("aws_vpc_ipv4_cidr_block_association.secondary_cidr", &associationSecondary),
 					testAccCheckAdditionalVPCIPv4CIDRBlock(&associationSecondary, cidr)),
@@ -206,44 +216,42 @@ resource "aws_vpc_ipv4_cidr_block_association" "tertiary_cidr" {
 }
 `
 
-func testAccVPCIPv4CIDRBlockAssociationIpam(netmaskLength string) string {
-	return testAccVpcIpamBase + fmt.Sprintf(`
+func testAccVPCIPv4CIDRBlockAssociationIpam(rName string, netmaskLength int) string {
+	return acctest.ConfigCompose(testAccVpcIPv4IPAMConfigBase(rName), fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
   tags = {
-    Name = "terraform-testacc-vpc-ipv4-cidr-block-association"
+    Name = %[1]q
   }
 }
 
 resource "aws_vpc_ipv4_cidr_block_association" "secondary_cidr" {
   ipv4_ipam_pool_id   = aws_vpc_ipam_pool.test.id
-  ipv4_netmask_length = %[1]q
+  ipv4_netmask_length = %[2]d
   vpc_id              = aws_vpc.test.id
-  depends_on = [
-    aws_vpc_ipam_pool_cidr.test
-  ]
+
+  depends_on = [aws_vpc_ipam_pool_cidr.test]
 }
-`, netmaskLength)
+`, rName, netmaskLength))
 }
 
-func testAccVPCIPv4CIDRBlockAssociationIpamExplicitCIDR(cidr string) string {
-	return testAccVpcIpamBase + fmt.Sprintf(`
+func testAccVPCIPv4CIDRBlockAssociationIpamExplicitCIDR(rName, cidr string) string {
+	return acctest.ConfigCompose(testAccVpcIPv4IPAMConfigBase(rName), fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
   tags = {
-    Name = "terraform-testacc-vpc-ipv4-cidr-block-association"
+    Name = %[1]q
   }
 }
 
 resource "aws_vpc_ipv4_cidr_block_association" "secondary_cidr" {
   ipv4_ipam_pool_id = aws_vpc_ipam_pool.test.id
-  cidr_block        = %[1]q
+  cidr_block        = %[2]q
   vpc_id            = aws_vpc.test.id
-  depends_on = [
-    aws_vpc_ipam_pool_cidr.test
-  ]
+
+  depends_on = [aws_vpc_ipam_pool_cidr.test]
 }
-`, cidr)
+`, rName, cidr))
 }
