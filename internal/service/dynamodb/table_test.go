@@ -413,6 +413,10 @@ func TestAccDynamoDBTable_Disappears_payPerRequestWithGSI(t *testing.T) {
 }
 
 func TestAccDynamoDBTable_extended(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var conf dynamodb.DescribeTableOutput
 	resourceName := "aws_dynamodb_table.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -598,6 +602,10 @@ func TestAccDynamoDBTable_BillingMode_payPerRequestToProvisionedIgnoreChanges(t 
 }
 
 func TestAccDynamoDBTable_BillingMode_provisionedToPayPerRequest(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var conf dynamodb.DescribeTableOutput
 	resourceName := "aws_dynamodb_table.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -636,6 +644,10 @@ func TestAccDynamoDBTable_BillingMode_provisionedToPayPerRequest(t *testing.T) {
 }
 
 func TestAccDynamoDBTable_BillingMode_provisionedToPayPerRequestIgnoreChanges(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var conf dynamodb.DescribeTableOutput
 	resourceName := "aws_dynamodb_table.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -892,6 +904,10 @@ func TestAccDynamoDBTable_gsiUpdateCapacity(t *testing.T) {
 }
 
 func TestAccDynamoDBTable_gsiUpdateOtherAttributes(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var conf dynamodb.DescribeTableOutput
 	resourceName := "aws_dynamodb_table.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -1017,6 +1033,10 @@ func TestAccDynamoDBTable_lsiNonKeyAttributes(t *testing.T) {
 
 // https://github.com/hashicorp/terraform-provider-aws/issues/566
 func TestAccDynamoDBTable_gsiUpdateNonKeyAttributes(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var conf dynamodb.DescribeTableOutput
 	resourceName := "aws_dynamodb_table.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -1220,6 +1240,10 @@ func TestAccDynamoDBTable_TTL_disabled(t *testing.T) {
 }
 
 func TestAccDynamoDBTable_attributeUpdate(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var conf dynamodb.DescribeTableOutput
 	resourceName := "aws_dynamodb_table.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -1321,6 +1345,10 @@ func TestAccDynamoDBTable_attributeUpdateValidation(t *testing.T) {
 }
 
 func TestAccDynamoDBTable_encryption(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var confBYOK, confEncEnabled, confEncDisabled dynamodb.DescribeTableOutput
 	resourceName := "aws_dynamodb_table.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -1380,6 +1408,10 @@ func TestAccDynamoDBTable_encryption(t *testing.T) {
 }
 
 func TestAccDynamoDBTable_Replica_multiple(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var table dynamodb.DescribeTableOutput
 	var providers []*schema.Provider
 	resourceName := "aws_dynamodb_table.test"
@@ -1426,6 +1458,10 @@ func TestAccDynamoDBTable_Replica_multiple(t *testing.T) {
 }
 
 func TestAccDynamoDBTable_Replica_single(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var conf dynamodb.DescribeTableOutput
 	var providers []*schema.Provider
 	resourceName := "aws_dynamodb_table.test"
@@ -1472,6 +1508,10 @@ func TestAccDynamoDBTable_Replica_single(t *testing.T) {
 }
 
 func TestAccDynamoDBTable_Replica_singleWithCMK(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var conf dynamodb.DescribeTableOutput
 	var providers []*schema.Provider
 	resourceName := "aws_dynamodb_table.test"
@@ -1544,6 +1584,10 @@ func TestAccDynamoDBTable_tableClassInfrequentAccess(t *testing.T) {
 }
 
 func TestAccDynamoDBTable_backup_encryption(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var confBYOK dynamodb.DescribeTableOutput
 	resourceName := "aws_dynamodb_table.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -1579,6 +1623,10 @@ func TestAccDynamoDBTable_backup_encryption(t *testing.T) {
 }
 
 func TestAccDynamoDBTable_backup_overrideEncryption(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var confBYOK dynamodb.DescribeTableOutput
 	resourceName := "aws_dynamodb_table.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
