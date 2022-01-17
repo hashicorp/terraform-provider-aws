@@ -82,12 +82,14 @@ func ResourceDomain() *schema.Resource {
 						"security_groups": {
 							Type:     schema.TypeSet,
 							Optional: true,
+							ForceNew: true,
 							MaxItems: 5,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
 						"execution_role": {
 							Type:         schema.TypeString,
 							Required:     true,
+							ForceNew:     true,
 							ValidateFunc: verify.ValidARN,
 						},
 						"sharing_settings": {
@@ -118,7 +120,6 @@ func ResourceDomain() *schema.Resource {
 						"tensor_board_app_settings": {
 							Type:     schema.TypeList,
 							Optional: true,
-							ForceNew: true,
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
@@ -157,7 +158,6 @@ func ResourceDomain() *schema.Resource {
 						"jupyter_server_app_settings": {
 							Type:     schema.TypeList,
 							Optional: true,
-							ForceNew: true,
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
@@ -204,7 +204,6 @@ func ResourceDomain() *schema.Resource {
 						"kernel_gateway_app_settings": {
 							Type:     schema.TypeList,
 							Optional: true,
-							ForceNew: true,
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
@@ -319,7 +318,7 @@ func resourceDomainCreate(d *schema.ResourceData, meta interface{}) error {
 		VpcId:                aws.String(d.Get("vpc_id").(string)),
 		AppNetworkAccessType: aws.String(d.Get("app_network_access_type").(string)),
 		SubnetIds:            flex.ExpandStringSet(d.Get("subnet_ids").(*schema.Set)),
-		DefaultUserSettings:  expandSagemakerDomainDefaultUserSettings(d.Get("default_user_settings").([]interface{})),
+		DefaultUserSettings:  expandSagemakerDomainDefaultUserSettings(d),
 	}
 
 	if len(tags) > 0 {
@@ -411,7 +410,7 @@ func resourceDomainUpdate(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("default_user_settings") {
 		input := &sagemaker.UpdateDomainInput{
 			DomainId:            aws.String(d.Id()),
-			DefaultUserSettings: expandSagemakerDomainDefaultUserSettings(d.Get("default_user_settings").([]interface{})),
+			DefaultUserSettings: expandSagemakerDomainDefaultUserSettings(d),
 		}
 
 		log.Printf("[DEBUG] sagemaker domain update config: %#v", *input)
@@ -477,7 +476,8 @@ func expandSagemakerRetentionPolicy(l []interface{}) *sagemaker.RetentionPolicy 
 	return config
 }
 
-func expandSagemakerDomainDefaultUserSettings(l []interface{}) *sagemaker.UserSettings {
+func expandSagemakerDomainDefaultUserSettings(d *schema.ResourceData) *sagemaker.UserSettings {
+	l := d.Get("default_user_settings").([]interface{})
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -486,27 +486,27 @@ func expandSagemakerDomainDefaultUserSettings(l []interface{}) *sagemaker.UserSe
 
 	config := &sagemaker.UserSettings{}
 
-	if v, ok := m["execution_role"].(string); ok && v != "" {
+	if v, ok := m["execution_role"].(string); ok && v != "" && d.HasChange("default_user_settings.execution_role") {
 		config.ExecutionRole = aws.String(v)
 	}
 
-	if v, ok := m["security_groups"].(*schema.Set); ok && v.Len() > 0 {
+	if v, ok := m["security_groups"].(*schema.Set); ok && v.Len() > 0 && d.HasChange("default_user_settings.security_groups") {
 		config.SecurityGroups = flex.ExpandStringSet(v)
 	}
 
-	if v, ok := m["tensor_board_app_settings"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["tensor_board_app_settings"].([]interface{}); ok && len(v) > 0 && d.HasChange("default_user_settings.tensor_board_app_settings") {
 		config.TensorBoardAppSettings = expandSagemakerDomainTensorBoardAppSettings(v)
 	}
 
-	if v, ok := m["kernel_gateway_app_settings"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["kernel_gateway_app_settings"].([]interface{}); ok && len(v) > 0 && d.HasChange("default_user_settings.kernel_gateway_app_settings") {
 		config.KernelGatewayAppSettings = expandSagemakerDomainKernelGatewayAppSettings(v)
 	}
 
-	if v, ok := m["jupyter_server_app_settings"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["jupyter_server_app_settings"].([]interface{}); ok && len(v) > 0 && d.HasChange("default_user_settings.jupyter_server_app_settings") {
 		config.JupyterServerAppSettings = expandSagemakerDomainJupyterServerAppSettings(v)
 	}
 
-	if v, ok := m["sharing_settings"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["sharing_settings"].([]interface{}); ok && len(v) > 0 && d.HasChange("default_user_settings.sharing_settings") {
 		config.SharingSettings = expandSagemakerDomainShareSettings(v)
 	}
 

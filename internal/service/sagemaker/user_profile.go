@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
@@ -277,8 +278,8 @@ func resourceUserProfileCreate(d *schema.ResourceData, meta interface{}) error {
 		DomainId:        aws.String(d.Get("domain_id").(string)),
 	}
 
-	if v, ok := d.GetOk("user_settings"); ok {
-		input.UserSettings = expandSagemakerDomainDefaultUserSettings(v.([]interface{}))
+	if _, ok := d.GetOk("user_settings"); ok {
+		input.UserSettings = expandSagemakerUserDefaultUserSettings(d)
 	}
 
 	if v, ok := d.GetOk("single_sign_on_user_identifier"); ok {
@@ -376,7 +377,7 @@ func resourceUserProfileUpdate(d *schema.ResourceData, meta interface{}) error {
 		input := &sagemaker.UpdateUserProfileInput{
 			UserProfileName: aws.String(userProfileName),
 			DomainId:        aws.String(domainID),
-			UserSettings:    expandSagemakerDomainDefaultUserSettings(d.Get("user_settings").([]interface{})),
+			UserSettings:    expandSagemakerUserDefaultUserSettings(d),
 		}
 
 		log.Printf("[DEBUG] SageMaker User Profile update config: %#v", *input)
@@ -444,4 +445,41 @@ func decodeSagemakerUserProfileName(id string) (string, string, error) {
 	userProfileName := parts[1]
 
 	return domainID, userProfileName, nil
+}
+
+func expandSagemakerUserDefaultUserSettings(d *schema.ResourceData) *sagemaker.UserSettings {
+	l := d.Get("user_settings").([]interface{})
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]interface{})
+
+	config := &sagemaker.UserSettings{}
+
+	if v, ok := m["execution_role"].(string); ok && v != "" {
+		config.ExecutionRole = aws.String(v)
+	}
+
+	if v, ok := m["security_groups"].(*schema.Set); ok && v.Len() > 0 {
+		config.SecurityGroups = flex.ExpandStringSet(v)
+	}
+
+	if v, ok := m["tensor_board_app_settings"].([]interface{}); ok && len(v) > 0 {
+		config.TensorBoardAppSettings = expandSagemakerDomainTensorBoardAppSettings(v)
+	}
+
+	if v, ok := m["kernel_gateway_app_settings"].([]interface{}); ok && len(v) > 0 {
+		config.KernelGatewayAppSettings = expandSagemakerDomainKernelGatewayAppSettings(v)
+	}
+
+	if v, ok := m["jupyter_server_app_settings"].([]interface{}); ok && len(v) > 0 {
+		config.JupyterServerAppSettings = expandSagemakerDomainJupyterServerAppSettings(v)
+	}
+
+	if v, ok := m["sharing_settings"].([]interface{}); ok && len(v) > 0 {
+		config.SharingSettings = expandSagemakerDomainShareSettings(v)
+	}
+
+	return config
 }
