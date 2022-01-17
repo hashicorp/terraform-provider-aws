@@ -16,6 +16,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+const (
+	VpcCidrBlockStateCodeDeleted = "deleted"
+)
+
 // acceptance tests for byoip related tests are in vpc_byoip_test.go
 func ResourceVPCIPv6CIDRBlockAssociation() *schema.Resource {
 	return &schema.Resource{

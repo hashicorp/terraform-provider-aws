@@ -1154,6 +1154,32 @@ func FindVPCDHCPOptionsAssociation(conn *ec2.EC2, vpcID string, dhcpOptionsID st
 	return nil
 }
 
+func FindVPCCIDRBlockAssociationByID(conn *ec2.EC2, id string) (*ec2.VpcCidrBlockAssociation, error) {
+	input := &ec2.DescribeVpcsInput{
+		Filters: BuildAttributeFilterList(map[string]string{
+			"cidr-block-association.association-id": id,
+		}),
+	}
+
+	output, err := FindVPC(conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	for _, association := range output.CidrBlockAssociationSet {
+		if aws.StringValue(association.AssociationId) == id {
+			if state := aws.StringValue(association.CidrBlockState.State); state == ec2.VpcCidrBlockStateCodeDisassociated {
+				return nil, &resource.NotFoundError{Message: state}
+			}
+
+			return association, nil
+		}
+	}
+
+	return nil, &resource.NotFoundError{}
+}
+
 func FindVPCIPv6CIDRBlockAssociationByID(conn *ec2.EC2, id string) (*ec2.VpcIpv6CidrBlockAssociation, error) {
 	input := &ec2.DescribeVpcsInput{
 		Filters: BuildAttributeFilterList(map[string]string{

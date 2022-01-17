@@ -17,6 +17,9 @@ import (
 
 func TestAccVPCIPv4CIDRBlockAssociation_basic(t *testing.T) {
 	var associationSecondary, associationTertiary ec2.VpcCidrBlockAssociation
+	resource1Name := "aws_vpc_ipv4_cidr_block_association.secondary_cidr"
+	resource2Name := "aws_vpc_ipv4_cidr_block_association.tertiary_cidr"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -25,21 +28,21 @@ func TestAccVPCIPv4CIDRBlockAssociation_basic(t *testing.T) {
 		CheckDestroy: testAccCheckVPCIPv4CIDRBlockAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVPCIPv4CIDRBlockAssociationConfig,
+				Config: testAccVPCIPv4CIDRBlockAssociationConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVPCIPv4CIDRBlockAssociationExists("aws_vpc_ipv4_cidr_block_association.secondary_cidr", &associationSecondary),
+					testAccCheckVPCIPv4CIDRBlockAssociationExists(resource1Name, &associationSecondary),
 					testAccCheckAdditionalVPCIPv4CIDRBlock(&associationSecondary, "172.2.0.0/16"),
-					testAccCheckVPCIPv4CIDRBlockAssociationExists("aws_vpc_ipv4_cidr_block_association.tertiary_cidr", &associationTertiary),
+					testAccCheckVPCIPv4CIDRBlockAssociationExists(resource2Name, &associationTertiary),
 					testAccCheckAdditionalVPCIPv4CIDRBlock(&associationTertiary, "170.2.0.0/16"),
 				),
 			},
 			{
-				ResourceName:      "aws_vpc_ipv4_cidr_block_association.secondary_cidr",
+				ResourceName:      resource1Name,
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
 			{
-				ResourceName:      "aws_vpc_ipv4_cidr_block_association.tertiary_cidr",
+				ResourceName:      resource2Name,
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -196,25 +199,27 @@ func testAccCheckVPCIPv4CIDRBlockAssociationExists(n string, association *ec2.Vp
 	}
 }
 
-const testAccVPCIPv4CIDRBlockAssociationConfig = `
-resource "aws_vpc" "foo" {
+func testAccVPCIPv4CIDRBlockAssociationConfig(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
 
   tags = {
-    Name = "terraform-testacc-vpc-ipv4-cidr-block-association"
+    Name = %[1]q
   }
 }
 
 resource "aws_vpc_ipv4_cidr_block_association" "secondary_cidr" {
-  vpc_id     = aws_vpc.foo.id
+  vpc_id     = aws_vpc.test.id
   cidr_block = "172.2.0.0/16"
 }
 
 resource "aws_vpc_ipv4_cidr_block_association" "tertiary_cidr" {
-  vpc_id     = aws_vpc.foo.id
+  vpc_id     = aws_vpc.test.id
   cidr_block = "170.2.0.0/16"
 }
-`
+`, rName)
+}
 
 func testAccVPCIPv4CIDRBlockAssociationIpam(rName string, netmaskLength int) string {
 	return acctest.ConfigCompose(testAccVpcIPv4IPAMConfigBase(rName), fmt.Sprintf(`
