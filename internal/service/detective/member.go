@@ -41,7 +41,6 @@ func ResourceMember() *schema.Resource {
 				Type:     schema.TypeBool,
 				Optional: true,
 				ForceNew: true,
-				Default:  false,
 			},
 			"disabled_reason": {
 				Type:     schema.TypeString,
