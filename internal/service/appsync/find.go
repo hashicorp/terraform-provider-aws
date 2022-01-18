@@ -31,3 +31,51 @@ func FindApiCacheByID(conn *appsync.AppSync, id string) (*appsync.ApiCache, erro
 
 	return out.ApiCache, nil
 }
+
+func FindDomainNameByID(conn *appsync.AppSync, id string) (*appsync.DomainNameConfig, error) {
+	input := &appsync.GetDomainNameInput{
+		DomainName: aws.String(id),
+	}
+	out, err := conn.GetDomainName(input)
+
+	if tfawserr.ErrCodeEquals(err, appsync.ErrCodeNotFoundException) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if out == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return out.DomainNameConfig, nil
+}
+
+func FindDomainNameApiAssociationByID(conn *appsync.AppSync, id string) (*appsync.ApiAssociation, error) {
+	input := &appsync.GetApiAssociationInput{
+		DomainName: aws.String(id),
+	}
+	out, err := conn.GetApiAssociation(input)
+
+	if tfawserr.ErrCodeEquals(err, appsync.ErrCodeNotFoundException) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if out == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return out.ApiAssociation, nil
+}

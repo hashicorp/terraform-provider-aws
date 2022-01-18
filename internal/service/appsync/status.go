@@ -22,3 +22,19 @@ func StatusApiCache(conn *appsync.AppSync, name string) resource.StateRefreshFun
 		return output, aws.StringValue(output.Status), nil
 	}
 }
+
+func statusDomainNameApiAssociation(conn *appsync.AppSync, id string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := FindDomainNameApiAssociationByID(conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, aws.StringValue(output.AssociationStatus), nil
+	}
+}

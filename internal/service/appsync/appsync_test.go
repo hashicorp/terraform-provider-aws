@@ -1,6 +1,7 @@
 package appsync_test
 
 import (
+	"os"
 	"testing"
 )
 
@@ -81,6 +82,15 @@ func TestAccAppSync_serial(t *testing.T) {
 			"basic":      testAccAppSyncApiCache_basic,
 			"disappears": testAccAppSyncApiCache_disappears,
 		},
+		"DomainName": {
+			"basic":       testAccAppSyncDomainName_basic,
+			"disappears":  testAccAppSyncDomainName_disappears,
+			"description": testAccAppSyncDomainName_description,
+		},
+		"DomainNameAssociation": {
+			"basic":      testAccAppSyncDomainNameApiAssociation_basic,
+			"disappears": testAccAppSyncDomainNameApiAssociation_disappears,
+		},
 	}
 
 	for group, m := range testCases {
@@ -94,4 +104,16 @@ func TestAccAppSync_serial(t *testing.T) {
 			}
 		})
 	}
+}
+
+func getAppsyncCertDomain(t *testing.T) string {
+	value := os.Getenv("AWS_APPSYNC_DOMAIN_NAME_CERTIFICATE_DOMAIN")
+	if value == "" {
+		t.Skip(
+			"Environment variable AWS_APPSYNC_DOMAIN_NAME_CERTIFICATE_DOMAIN is not set. " +
+				"This environment variable must be set to any non-empty value " +
+				"to enable the test.")
+	}
+
+	return value
 }
