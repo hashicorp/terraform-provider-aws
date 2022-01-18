@@ -2,6 +2,7 @@ package elbv2
 
 import (
 	"fmt"
+	"log"
 	"strconv"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -251,16 +252,6 @@ func dataSourceLoadBalancerRead(d *schema.ResourceData, meta interface{}) error 
 		return fmt.Errorf("error setting subnet_mapping: %w", err)
 	}
 
-	tags, err := ListTags(conn, d.Id())
-
-	if err != nil {
-		return fmt.Errorf("error listing tags for (%s): %w", d.Id(), err)
-	}
-
-	if err := d.Set("tags", tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
-	}
-
 	attributesResp, err := conn.DescribeLoadBalancerAttributes(&elbv2.DescribeLoadBalancerAttributesInput{
 		LoadBalancerArn: aws.String(d.Id()),
 	})
@@ -311,6 +302,21 @@ func dataSourceLoadBalancerRead(d *schema.ResourceData, meta interface{}) error 
 
 	if err := d.Set("access_logs", []interface{}{accessLogMap}); err != nil {
 		return fmt.Errorf("error setting access_logs: %w", err)
+	}
+
+	tags, err := ListTags(conn, d.Id())
+
+	if tfawserr.ErrCodeContains(err, ErrCodeAccessDenied) || tfawserr.ErrCodeContains(err, elbv2.ErrCodeInvalidConfigurationRequestException) || tfawserr.ErrCodeContains(err, elbv2.ErrCodeOperationNotPermittedException) {
+		log.Printf("[WARN] Unable to list tags for ELBv2 Load Balancer %s: %s", d.Id(), err)
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("error listing tags for (%s): %w", d.Id(), err)
+	}
+
+	if err := d.Set("tags", tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %w", err)
 	}
 
 	return nil

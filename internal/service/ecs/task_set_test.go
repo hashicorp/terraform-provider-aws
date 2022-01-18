@@ -40,6 +40,7 @@ func TestAccECSTaskSet_basic(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
+					"stability_status",
 					"wait_until_stable",
 					"wait_until_stable_timeout",
 				},

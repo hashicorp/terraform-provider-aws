@@ -34,7 +34,7 @@ func expandLoadBalancers(configured []interface{}) []*ecs.LoadBalancer {
 }
 
 // Flattens an array of ECS LoadBalancers into a []map[string]interface{}
-func flattenECSLoadBalancers(list []*ecs.LoadBalancer) []map[string]interface{} {
+func flattenLoadBalancers(list []*ecs.LoadBalancer) []map[string]interface{} {
 	result := make([]map[string]interface{}, 0, len(list))
 	for _, loadBalancer := range list {
 		l := map[string]interface{}{

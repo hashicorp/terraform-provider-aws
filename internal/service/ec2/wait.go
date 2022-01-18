@@ -585,6 +585,24 @@ func WaitSubnetMapPublicIPOnLaunchUpdated(conn *ec2.EC2, subnetID string, expect
 	return nil, err
 }
 
+func WaitSubnetPrivateDNSHostnameTypeOnLaunchUpdated(conn *ec2.EC2, subnetID string, expectedValue string) (*ec2.Subnet, error) {
+	stateConf := &resource.StateChangeConf{
+		Target:     []string{expectedValue},
+		Refresh:    StatusSubnetPrivateDNSHostnameTypeOnLaunch(conn, subnetID),
+		Timeout:    SubnetAttributePropagationTimeout,
+		Delay:      10 * time.Second,
+		MinTimeout: 3 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*ec2.Subnet); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
 const (
 	TransitGatewayPrefixListReferenceTimeout = 5 * time.Minute
 )
@@ -710,14 +728,15 @@ func WaitVPCAttributeUpdated(conn *ec2.EC2, vpcID string, attribute string, expe
 }
 
 const (
-	VPNGatewayVPCAttachmentAttachedTimeout = 15 * time.Minute
+	VPNGatewayDeletedTimeout = 5 * time.Minute
 
+	VPNGatewayVPCAttachmentAttachedTimeout = 15 * time.Minute
 	VPNGatewayVPCAttachmentDetachedTimeout = 30 * time.Minute
 )
 
 func WaitVPNGatewayVPCAttachmentAttached(conn *ec2.EC2, vpnGatewayID, vpcID string) (*ec2.VpcAttachment, error) {
 	stateConf := &resource.StateChangeConf{
-		Pending: []string{ec2.AttachmentStatusDetached, ec2.AttachmentStatusAttaching},
+		Pending: []string{ec2.AttachmentStatusAttaching},
 		Target:  []string{ec2.AttachmentStatusAttached},
 		Refresh: StatusVPNGatewayVPCAttachmentState(conn, vpnGatewayID, vpcID),
 		Timeout: VPNGatewayVPCAttachmentAttachedTimeout,
@@ -735,7 +754,7 @@ func WaitVPNGatewayVPCAttachmentAttached(conn *ec2.EC2, vpnGatewayID, vpcID stri
 func WaitVPNGatewayVPCAttachmentDetached(conn *ec2.EC2, vpnGatewayID, vpcID string) (*ec2.VpcAttachment, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{ec2.AttachmentStatusAttached, ec2.AttachmentStatusDetaching},
-		Target:  []string{ec2.AttachmentStatusDetached},
+		Target:  []string{},
 		Refresh: StatusVPNGatewayVPCAttachmentState(conn, vpnGatewayID, vpcID),
 		Timeout: VPNGatewayVPCAttachmentDetachedTimeout,
 	}
@@ -743,6 +762,149 @@ func WaitVPNGatewayVPCAttachmentDetached(conn *ec2.EC2, vpnGatewayID, vpcID stri
 	outputRaw, err := stateConf.WaitForState()
 
 	if output, ok := outputRaw.(*ec2.VpcAttachment); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+const (
+	customerGatewayCreatedTimeout = 10 * time.Minute
+	customerGatewayDeletedTimeout = 5 * time.Minute
+)
+
+func WaitCustomerGatewayCreated(conn *ec2.EC2, id string) (*ec2.CustomerGateway, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending:    []string{CustomerGatewayStatePending},
+		Target:     []string{CustomerGatewayStateAvailable},
+		Refresh:    StatusCustomerGatewayState(conn, id),
+		Timeout:    customerGatewayCreatedTimeout,
+		Delay:      10 * time.Second,
+		MinTimeout: 3 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*ec2.CustomerGateway); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func WaitCustomerGatewayDeleted(conn *ec2.EC2, id string) (*ec2.CustomerGateway, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{CustomerGatewayStateAvailable, CustomerGatewayStateDeleting},
+		Target:  []string{},
+		Refresh: StatusCustomerGatewayState(conn, id),
+		Timeout: customerGatewayDeletedTimeout,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*ec2.CustomerGateway); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+const (
+	vpnConnectionCreatedTimeout = 40 * time.Minute
+	vpnConnectionDeletedTimeout = 30 * time.Minute
+	vpnConnectionUpdatedTimeout = 30 * time.Minute
+)
+
+func WaitVPNConnectionCreated(conn *ec2.EC2, id string) (*ec2.VpnConnection, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending:    []string{ec2.VpnStatePending},
+		Target:     []string{ec2.VpnStateAvailable},
+		Refresh:    StatusVPNConnectionState(conn, id),
+		Timeout:    vpnConnectionCreatedTimeout,
+		Delay:      10 * time.Second,
+		MinTimeout: 10 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*ec2.VpnConnection); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func WaitVPNConnectionDeleted(conn *ec2.EC2, id string) (*ec2.VpnConnection, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending:    []string{ec2.VpnStateDeleting},
+		Target:     []string{},
+		Refresh:    StatusVPNConnectionState(conn, id),
+		Timeout:    vpnConnectionDeletedTimeout,
+		Delay:      10 * time.Second,
+		MinTimeout: 10 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*ec2.VpnConnection); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func WaitVPNConnectionUpdated(conn *ec2.EC2, id string) (*ec2.VpnConnection, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending:    []string{VpnStateModifying},
+		Target:     []string{ec2.VpnStateAvailable},
+		Refresh:    StatusVPNConnectionState(conn, id),
+		Timeout:    vpnConnectionUpdatedTimeout,
+		Delay:      10 * time.Second,
+		MinTimeout: 10 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*ec2.VpnConnection); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+const (
+	vpnConnectionRouteCreatedTimeout = 15 * time.Second
+	vpnConnectionRouteDeletedTimeout = 15 * time.Second
+)
+
+func WaitVPNConnectionRouteCreated(conn *ec2.EC2, vpnConnectionID, cidrBlock string) (*ec2.VpnStaticRoute, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{ec2.VpnStatePending},
+		Target:  []string{ec2.VpnStateAvailable},
+		Refresh: StatusVPNConnectionRouteState(conn, vpnConnectionID, cidrBlock),
+		Timeout: vpnConnectionRouteCreatedTimeout,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*ec2.VpnStaticRoute); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func WaitVPNConnectionRouteDeleted(conn *ec2.EC2, vpnConnectionID, cidrBlock string) (*ec2.VpnStaticRoute, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{ec2.VpnStatePending, ec2.VpnStateAvailable, ec2.VpnStateDeleting},
+		Target:  []string{},
+		Refresh: StatusVPNConnectionRouteState(conn, vpnConnectionID, cidrBlock),
+		Timeout: vpnConnectionRouteDeletedTimeout,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*ec2.VpnStaticRoute); ok {
 		return output, err
 	}
 
@@ -1127,10 +1289,11 @@ func WaitVPCEndpointRouteTableAssociationReady(conn *ec2.EC2, vpcEndpointID, rou
 
 func WaitEBSSnapshotImportComplete(conn *ec2.EC2, importTaskID string) (*ec2.SnapshotTaskDetail, error) {
 	stateConf := &resource.StateChangeConf{
-		Pending: []string{EBSSnapshotImportStateActive,
+		Pending: []string{
+			EBSSnapshotImportStateActive,
 			EBSSnapshotImportStateUpdating,
 			EBSSnapshotImportStateValidating,
-			EBSSnapshotImportStateValidd,
+			EBSSnapshotImportStateValidated,
 			EBSSnapshotImportStateConverting,
 		},
 		Target:  []string{EBSSnapshotImportStateCompleted},
@@ -1139,12 +1302,15 @@ func WaitEBSSnapshotImportComplete(conn *ec2.EC2, importTaskID string) (*ec2.Sna
 		Delay:   10 * time.Second,
 	}
 
-	detail, err := stateConf.WaitForState()
-	if err != nil {
-		return nil, err
-	} else {
-		return detail.(*ec2.SnapshotTaskDetail), nil
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*ec2.SnapshotTaskDetail); ok {
+		tfresource.SetLastError(err, errors.New(aws.StringValue(output.StatusMessage)))
+
+		return output, err
 	}
+
+	return nil, err
 }
 
 func waitVPCEndpointConnectionAccepted(conn *ec2.EC2, serviceID, vpcEndpointID string, timeout time.Duration) (*ec2.VpcEndpointConnection, error) {
@@ -1164,4 +1330,21 @@ func waitVPCEndpointConnectionAccepted(conn *ec2.EC2, serviceID, vpcEndpointID s
 	}
 
 	return nil, err
+}
+
+func WaitEBSSnapshotTierArchive(conn *ec2.EC2, id string) (*ec2.SnapshotTierStatus, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{"standard"},
+		Target:  []string{ec2.TargetStorageTierArchive},
+		Refresh: StatusSnapshotTierStatus(conn, id),
+		Timeout: 60 * time.Minute,
+		Delay:   10 * time.Second,
+	}
+
+	detail, err := stateConf.WaitForState()
+	if err != nil {
+		return nil, err
+	} else {
+		return detail.(*ec2.SnapshotTierStatus), nil
+	}
 }

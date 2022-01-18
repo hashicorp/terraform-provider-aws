@@ -523,6 +523,7 @@ func resourceDirectoryDelete(d *schema.ResourceData, meta interface{}) error {
 		DirectoryId: aws.String(d.Id()),
 	}
 
+	log.Printf("[DEBUG] Deleting Directory Service Directory: (%s)", d.Id())
 	err := resource.Retry(directoryApplicationDeauthorizedPropagationTimeout, func() *resource.RetryError {
 		_, err := conn.DeleteDirectory(input)
 

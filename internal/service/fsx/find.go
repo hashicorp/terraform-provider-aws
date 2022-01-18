@@ -170,3 +170,28 @@ func FindVolumeByID(conn *fsx.FSx, id string) (*fsx.Volume, error) {
 
 	return volumes[0], nil
 }
+
+func FindSnapshotByID(conn *fsx.FSx, id string) (*fsx.Snapshot, error) {
+	input := &fsx.DescribeSnapshotsInput{
+		SnapshotIds: aws.StringSlice([]string{id}),
+	}
+
+	output, err := conn.DescribeSnapshots(input)
+
+	if tfawserr.ErrCodeEquals(err, fsx.ErrCodeVolumeNotFound) || tfawserr.ErrCodeEquals(err, fsx.ErrCodeSnapshotNotFound) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || len(output.Snapshots) == 0 || output.Snapshots[0] == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.Snapshots[0], nil
+}

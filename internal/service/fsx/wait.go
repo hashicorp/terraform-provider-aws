@@ -203,10 +203,10 @@ func waitStorageVirtualMachineDeleted(conn *fsx.FSx, id string, timeout time.Dur
 	return nil, err
 }
 
-func waitVolumeCreated(conn *fsx.FSx, id string, timeout time.Duration) (*fsx.Volume, error) {
+func waitVolumeCreated(conn *fsx.FSx, id string, timeout time.Duration) (*fsx.Volume, error) { //nolint:unparam
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{fsx.VolumeLifecycleCreating, fsx.VolumeLifecyclePending},
-		Target:  []string{fsx.VolumeLifecycleCreated, fsx.VolumeLifecycleMisconfigured},
+		Target:  []string{fsx.VolumeLifecycleCreated, fsx.VolumeLifecycleMisconfigured, fsx.VolumeLifecycleAvailable},
 		Refresh: statusVolume(conn, id),
 		Timeout: timeout,
 		Delay:   30 * time.Second,
@@ -225,10 +225,10 @@ func waitVolumeCreated(conn *fsx.FSx, id string, timeout time.Duration) (*fsx.Vo
 	return nil, err
 }
 
-func waitVolumeUpdated(conn *fsx.FSx, id string, timeout time.Duration) (*fsx.Volume, error) {
+func waitVolumeUpdated(conn *fsx.FSx, id string, timeout time.Duration) (*fsx.Volume, error) { //nolint:unparam
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{fsx.VolumeLifecyclePending},
-		Target:  []string{fsx.VolumeLifecycleCreated, fsx.VolumeLifecycleMisconfigured},
+		Target:  []string{fsx.VolumeLifecycleCreated, fsx.VolumeLifecycleMisconfigured, fsx.VolumeLifecycleAvailable},
 		Refresh: statusVolume(conn, id),
 		Timeout: timeout,
 		Delay:   150 * time.Second,
@@ -247,9 +247,9 @@ func waitVolumeUpdated(conn *fsx.FSx, id string, timeout time.Duration) (*fsx.Vo
 	return nil, err
 }
 
-func waitVolumeDeleted(conn *fsx.FSx, id string, timeout time.Duration) (*fsx.Volume, error) {
+func waitVolumeDeleted(conn *fsx.FSx, id string, timeout time.Duration) (*fsx.Volume, error) { //nolint:unparam
 	stateConf := &resource.StateChangeConf{
-		Pending: []string{fsx.VolumeLifecycleCreated, fsx.VolumeLifecycleMisconfigured, fsx.VolumeLifecycleDeleting},
+		Pending: []string{fsx.VolumeLifecycleCreated, fsx.VolumeLifecycleMisconfigured, fsx.VolumeLifecycleAvailable, fsx.VolumeLifecycleDeleting},
 		Target:  []string{},
 		Refresh: statusVolume(conn, id),
 		Timeout: timeout,
@@ -263,6 +263,60 @@ func waitVolumeDeleted(conn *fsx.FSx, id string, timeout time.Duration) (*fsx.Vo
 			tfresource.SetLastError(err, errors.New(aws.StringValue(output.LifecycleTransitionReason.Message)))
 		}
 
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitSnapshotCreated(conn *fsx.FSx, id string, timeout time.Duration) (*fsx.Snapshot, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{fsx.SnapshotLifecycleCreating, fsx.SnapshotLifecyclePending},
+		Target:  []string{fsx.SnapshotLifecycleAvailable},
+		Refresh: statusSnapshot(conn, id),
+		Timeout: timeout,
+		Delay:   30 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*fsx.Snapshot); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitSnapshotUpdated(conn *fsx.FSx, id string, timeout time.Duration) (*fsx.Snapshot, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{fsx.SnapshotLifecyclePending},
+		Target:  []string{fsx.SnapshotLifecycleAvailable},
+		Refresh: statusSnapshot(conn, id),
+		Timeout: timeout,
+		Delay:   150 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*fsx.Snapshot); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitSnapshotDeleted(conn *fsx.FSx, id string, timeout time.Duration) (*fsx.Snapshot, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{fsx.SnapshotLifecyclePending, fsx.SnapshotLifecycleDeleting},
+		Target:  []string{},
+		Refresh: statusSnapshot(conn, id),
+		Timeout: timeout,
+		Delay:   30 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*fsx.Snapshot); ok {
 		return output, err
 	}
 

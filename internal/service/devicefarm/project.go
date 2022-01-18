@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
@@ -84,22 +85,18 @@ func resourceProjectRead(d *schema.ResourceData, meta interface{}) error {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	input := &devicefarm.GetProjectInput{
-		Arn: aws.String(d.Id()),
+	project, err := FindProjectByArn(conn, d.Id())
+
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] DeviceFarm Project (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
 	}
 
-	log.Printf("[DEBUG] Reading DeviceFarm Project: %s", d.Id())
-	out, err := conn.GetProject(input)
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, devicefarm.ErrCodeNotFoundException, "") {
-			log.Printf("[WARN] DeviceFarm Project (%s) not found, removing from state", d.Id())
-			d.SetId("")
-			return nil
-		}
-		return fmt.Errorf("Error reading DeviceFarm Project: %w", err)
+		return fmt.Errorf("error reading DeviceFarm Project (%s): %w", d.Id(), err)
 	}
 
-	project := out.Project
 	arn := aws.StringValue(project.Arn)
 	d.Set("name", project.Name)
 	d.Set("arn", arn)

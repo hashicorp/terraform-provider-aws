@@ -3,7 +3,6 @@ package memorydb
 import (
 	"context"
 	"log"
-	"regexp"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/memorydb"
@@ -48,16 +47,7 @@ func ResourceACL() *schema.Resource {
 				Computed:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"name_prefix"},
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(1, 40),
-					validation.StringDoesNotMatch(
-						regexp.MustCompile(`[-][-]`),
-						"The name may not contain two consecutive hyphens."),
-					validation.StringMatch(
-						// Similar to ElastiCache, MemoryDB normalises names to lowercase.
-						regexp.MustCompile(`^[a-z0-9-]*[a-z0-9]$`),
-						"Only lowercase alphanumeric characters and hyphens allowed. The name may not end with a hyphen."),
-				),
+				ValidateFunc:  validateResourceName(aclNameMaxLength),
 			},
 			"name_prefix": {
 				Type:          schema.TypeString,
@@ -65,16 +55,7 @@ func ResourceACL() *schema.Resource {
 				Computed:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"name"},
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(1, 40-resource.UniqueIDSuffixLength),
-					validation.StringDoesNotMatch(
-						regexp.MustCompile(`[-][-]`),
-						"The name may not contain two consecutive hyphens."),
-					validation.StringMatch(
-						// Similar to ElastiCache, MemoryDB normalises names to lowercase.
-						regexp.MustCompile(`^[a-z0-9-]+$`),
-						"Only lowercase alphanumeric characters and hyphens allowed."),
-				),
+				ValidateFunc:  validateResourceNamePrefix(aclNameMaxLength - resource.UniqueIDSuffixLength),
 			},
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
@@ -83,7 +64,7 @@ func ResourceACL() *schema.Resource {
 				Optional: true,
 				Elem: &schema.Schema{
 					Type:         schema.TypeString,
-					ValidateFunc: validation.StringLenBetween(1, 40),
+					ValidateFunc: validation.StringLenBetween(1, userNameMaxLength),
 				},
 			},
 		},

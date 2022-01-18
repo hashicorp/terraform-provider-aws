@@ -33,6 +33,31 @@ func FindCachePolicyByID(conn *cloudfront.CloudFront, id string) (*cloudfront.Ge
 	return output, nil
 }
 
+func FindDistributionByID(conn *cloudfront.CloudFront, id string) (*cloudfront.GetDistributionOutput, error) {
+	input := &cloudfront.GetDistributionInput{
+		Id: aws.String(id),
+	}
+
+	output, err := conn.GetDistribution(input)
+
+	if tfawserr.ErrCodeEquals(err, cloudfront.ErrCodeNoSuchDistribution) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.Distribution == nil || output.Distribution.DistributionConfig == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
+}
+
 func FindFieldLevelEncryptionConfigByID(conn *cloudfront.CloudFront, id string) (*cloudfront.GetFieldLevelEncryptionConfigOutput, error) {
 	input := &cloudfront.GetFieldLevelEncryptionConfigInput{
 		Id: aws.String(id),

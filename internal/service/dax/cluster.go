@@ -43,6 +43,20 @@ func ResourceCluster() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"cluster_endpoint_encryption_type": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringInSlice(dax.ClusterEndpointEncryptionType_Values(), false),
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					// API returns "NONE" by default.
+					if old == dax.ClusterEndpointEncryptionTypeNone && new == "" {
+						return true
+					}
+
+					return old == new
+				},
+			},
 			"cluster_name": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -209,6 +223,10 @@ func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
 		req.Description = aws.String(v.(string))
 	}
 
+	if v, ok := d.GetOk("cluster_endpoint_encryption_type"); ok {
+		req.ClusterEndpointEncryptionType = aws.String(v.(string))
+	}
+
 	if v, ok := d.GetOk("parameter_group_name"); ok {
 		req.ParameterGroupName = aws.String(v.(string))
 	}
@@ -307,6 +325,7 @@ func resourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 	c := res.Clusters[0]
 	d.Set("arn", c.ClusterArn)
 	d.Set("cluster_name", c.ClusterName)
+	d.Set("cluster_endpoint_encryption_type", c.ClusterEndpointEncryptionType)
 	d.Set("description", c.Description)
 	d.Set("iam_role_arn", c.IamRoleArn)
 	d.Set("node_type", c.NodeType)

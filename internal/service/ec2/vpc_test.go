@@ -8,6 +8,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
+	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -593,6 +594,64 @@ func TestAccVPC_assignGeneratedIPv6CIDRBlock(t *testing.T) {
 	})
 }
 
+func TestAccVPC_assignGeneratedIPv6CIDRBlockWithBorder(t *testing.T) {
+	var vpc ec2.Vpc
+	resourceName := "aws_vpc.test"
+	networkBorderGroup := "us-west-2-lax-1" // lintignore:AWSAT003 // currently the only generally available local zone
+
+	current_region := acctest.Region()
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckRegion(t, endpoints.UsWest2RegionID) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckVpcDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVpcConfigAssignGeneratedIpv6CidrBlockWithBorder(true, networkBorderGroup),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					acctest.CheckVPCExists(resourceName, &vpc),
+					testAccCheckVpcCidr(&vpc, "10.1.0.0/16"),
+					resource.TestCheckResourceAttr(resourceName, "assign_generated_ipv6_cidr_block", "true"),
+					resource.TestCheckResourceAttr(resourceName, "cidr_block", "10.1.0.0/16"),
+					resource.TestCheckResourceAttr(resourceName, "ipv6_cidr_block_network_border_group", networkBorderGroup),
+					resource.TestMatchResourceAttr(resourceName, "ipv6_association_id", regexp.MustCompile(`^vpc-cidr-assoc-.+`)),
+					resource.TestMatchResourceAttr(resourceName, "ipv6_cidr_block", regexp.MustCompile(`/56$`)),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"assign_generated_ipv6_cidr_block"},
+			},
+			{
+				Config: testAccVpcConfigAssignGeneratedIpv6CidrBlockWithBorder(false, current_region),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					acctest.CheckVPCExists(resourceName, &vpc),
+					testAccCheckVpcCidr(&vpc, "10.1.0.0/16"),
+					resource.TestCheckResourceAttr(resourceName, "assign_generated_ipv6_cidr_block", "false"),
+					resource.TestCheckResourceAttr(resourceName, "cidr_block", "10.1.0.0/16"),
+					resource.TestCheckResourceAttr(resourceName, "ipv6_cidr_block_network_border_group", current_region), // lintignore:AWSAT003 // currently the only generally available local zone
+					resource.TestCheckResourceAttr(resourceName, "ipv6_association_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "ipv6_cidr_block", ""),
+				),
+			},
+			{
+				Config: testAccVpcConfigAssignGeneratedIpv6CidrBlockWithBorder(true, networkBorderGroup),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					acctest.CheckVPCExists(resourceName, &vpc),
+					testAccCheckVpcCidr(&vpc, "10.1.0.0/16"),
+					resource.TestCheckResourceAttr(resourceName, "assign_generated_ipv6_cidr_block", "true"),
+					resource.TestCheckResourceAttr(resourceName, "cidr_block", "10.1.0.0/16"),
+					resource.TestCheckResourceAttr(resourceName, "ipv6_cidr_block_network_border_group", networkBorderGroup),
+					resource.TestMatchResourceAttr(resourceName, "ipv6_association_id", regexp.MustCompile(`^vpc-cidr-assoc-.+`)),
+					resource.TestMatchResourceAttr(resourceName, "ipv6_cidr_block", regexp.MustCompile(`/56$`)),
+				),
+			},
+		},
+	})
+}
 func TestAccVPC_tenancy(t *testing.T) {
 	var vpcDedicated ec2.Vpc
 	var vpcDefault ec2.Vpc
@@ -641,7 +700,7 @@ func TestAccVPC_IpamIpv4BasicNetmask(t *testing.T) {
 	resourceName := "aws_vpc.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccIPAMPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckVpcDestroy,
@@ -663,7 +722,7 @@ func TestAccVPC_IpamIpv4BasicExplicitCidr(t *testing.T) {
 	cidr := "172.2.0.32/28"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccIPAMPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckVpcDestroy,
@@ -750,102 +809,6 @@ func TestAccVPC_update(t *testing.T) {
 			},
 		},
 	})
-}
-
-func testAccCheckVpcDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
-
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_vpc" {
-			continue
-		}
-
-		// Try to find the VPC
-		DescribeVpcOpts := &ec2.DescribeVpcsInput{
-			VpcIds: []*string{aws.String(rs.Primary.ID)},
-		}
-		resp, err := conn.DescribeVpcs(DescribeVpcOpts)
-		if err == nil {
-			if len(resp.Vpcs) > 0 {
-				return fmt.Errorf("VPCs still exist.")
-			}
-
-			return nil
-		}
-
-		// Verify the error is what we want
-		ec2err, ok := err.(awserr.Error)
-		if !ok {
-			return err
-		}
-		if ec2err.Code() != "InvalidVpcID.NotFound" {
-			return err
-		}
-	}
-
-	return nil
-}
-
-func testAccCheckVpcUpdateTags(vpc *ec2.Vpc, oldTags, newTags map[string]string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
-
-		return tfec2.UpdateTags(conn, aws.StringValue(vpc.VpcId), oldTags, newTags)
-	}
-}
-
-func testAccCheckVpcCidr(vpc *ec2.Vpc, expected string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		if aws.StringValue(vpc.CidrBlock) != expected {
-			return fmt.Errorf("Bad cidr: %s", aws.StringValue(vpc.CidrBlock))
-		}
-
-		return nil
-	}
-}
-
-func testAccCheckVpcCidrPrefix(vpc *ec2.Vpc, expected string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		if strings.Split(aws.StringValue(vpc.CidrBlock), "/")[1] != expected {
-			return fmt.Errorf("Bad cidr prefix: got %s, expected %s", aws.StringValue(vpc.CidrBlock), expected)
-		}
-
-		return nil
-	}
-}
-
-func testAccCheckVpcIdsEqual(vpc1, vpc2 *ec2.Vpc) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		if aws.StringValue(vpc1.VpcId) != aws.StringValue(vpc2.VpcId) {
-			return fmt.Errorf("VPC IDs not equal")
-		}
-
-		return nil
-	}
-}
-
-func testAccCheckVpcIdsNotEqual(vpc1, vpc2 *ec2.Vpc) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		if aws.StringValue(vpc1.VpcId) == aws.StringValue(vpc2.VpcId) {
-			return fmt.Errorf("VPC IDs are equal")
-		}
-
-		return nil
-	}
-}
-
-func testAccCheckVpcDisappears(vpc *ec2.Vpc) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
-
-		input := &ec2.DeleteVpcInput{
-			VpcId: vpc.VpcId,
-		}
-
-		_, err := conn.DeleteVpc(input)
-
-		return err
-	}
 }
 
 // https://github.com/hashicorp/terraform/issues/1301
@@ -955,6 +918,102 @@ func TestAccVPC_classicLinkDNSSupportOptionSet(t *testing.T) {
 	})
 }
 
+func testAccCheckVpcDestroy(s *terraform.State) error {
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+
+	for _, rs := range s.RootModule().Resources {
+		if rs.Type != "aws_vpc" {
+			continue
+		}
+
+		// Try to find the VPC
+		DescribeVpcOpts := &ec2.DescribeVpcsInput{
+			VpcIds: []*string{aws.String(rs.Primary.ID)},
+		}
+		resp, err := conn.DescribeVpcs(DescribeVpcOpts)
+		if err == nil {
+			if len(resp.Vpcs) > 0 {
+				return fmt.Errorf("VPCs still exist.")
+			}
+
+			return nil
+		}
+
+		// Verify the error is what we want
+		ec2err, ok := err.(awserr.Error)
+		if !ok {
+			return err
+		}
+		if ec2err.Code() != "InvalidVpcID.NotFound" {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func testAccCheckVpcUpdateTags(vpc *ec2.Vpc, oldTags, newTags map[string]string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+
+		return tfec2.UpdateTags(conn, aws.StringValue(vpc.VpcId), oldTags, newTags)
+	}
+}
+
+func testAccCheckVpcCidr(vpc *ec2.Vpc, expected string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		if aws.StringValue(vpc.CidrBlock) != expected {
+			return fmt.Errorf("Bad cidr: %s", aws.StringValue(vpc.CidrBlock))
+		}
+
+		return nil
+	}
+}
+
+func testAccCheckVpcCidrPrefix(vpc *ec2.Vpc, expected string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		if strings.Split(aws.StringValue(vpc.CidrBlock), "/")[1] != expected {
+			return fmt.Errorf("Bad cidr prefix: got %s, expected %s", aws.StringValue(vpc.CidrBlock), expected)
+		}
+
+		return nil
+	}
+}
+
+func testAccCheckVpcIdsEqual(vpc1, vpc2 *ec2.Vpc) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		if aws.StringValue(vpc1.VpcId) != aws.StringValue(vpc2.VpcId) {
+			return fmt.Errorf("VPC IDs not equal")
+		}
+
+		return nil
+	}
+}
+
+func testAccCheckVpcIdsNotEqual(vpc1, vpc2 *ec2.Vpc) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		if aws.StringValue(vpc1.VpcId) == aws.StringValue(vpc2.VpcId) {
+			return fmt.Errorf("VPC IDs are equal")
+		}
+
+		return nil
+	}
+}
+
+func testAccCheckVpcDisappears(vpc *ec2.Vpc) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+
+		input := &ec2.DeleteVpcInput{
+			VpcId: vpc.VpcId,
+		}
+
+		_, err := conn.DeleteVpc(input)
+
+		return err
+	}
+}
+
 const testAccVpcConfig = `
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
@@ -962,16 +1021,30 @@ resource "aws_vpc" "test" {
 `
 
 func testAccVpcConfigAssignGeneratedIpv6CidrBlock(assignGeneratedIpv6CidrBlock bool) string {
-	return fmt.Sprintf(`
-resource "aws_vpc" "test" {
-  assign_generated_ipv6_cidr_block = %t
-  cidr_block                       = "10.1.0.0/16"
+	if assignGeneratedIpv6CidrBlock == true {
+		return fmt.Sprintf(`
+data "aws_region" "current" {}
 
+resource "aws_vpc" "test" {
+  assign_generated_ipv6_cidr_block     = %[1]t
+  cidr_block                           = "10.1.0.0/16"
+  ipv6_cidr_block_network_border_group = data.aws_region.current.name
   tags = {
-    Name = "terraform-testacc-vpc-ipv6"
+    Name = "terraform-testacc-vpc-ipv61"
   }
 }
-`, assignGeneratedIpv6CidrBlock)
+	`, assignGeneratedIpv6CidrBlock)
+	} else {
+		return fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  assign_generated_ipv6_cidr_block = %[1]t
+  cidr_block                       = "10.1.0.0/16"
+  tags = {
+    Name = "terraform-testacc-vpc-ipv62"
+  }
+}
+	`, assignGeneratedIpv6CidrBlock)
+	}
 }
 
 const testAccVpcConfigUpdate = `
@@ -984,6 +1057,37 @@ resource "aws_vpc" "test" {
   }
 }
 `
+
+func testAccVpcConfigAssignGeneratedIpv6CidrBlockWithBorder(assignGeneratedIpv6CidrBlock bool, networkBorderGroup string) string {
+	// lintignore:AWSAT003 // currently the only generally available local zone
+	if networkBorderGroup != "us-west-2-lax-1" {
+		return fmt.Sprintf(`
+data "aws_region" "current" {}
+
+resource "aws_vpc" "test" {
+  assign_generated_ipv6_cidr_block     = %[1]t
+  cidr_block                           = "10.1.0.0/16"
+  ipv6_cidr_block_network_border_group = data.aws_region.current.name
+  tags = {
+    Name = "terraform-testacc-vpc-ipv6-with-border-group"
+  }
+}
+`, assignGeneratedIpv6CidrBlock, networkBorderGroup)
+	} else {
+		return fmt.Sprintf(`
+data "aws_region" "current" {}
+
+resource "aws_vpc" "test" {
+  assign_generated_ipv6_cidr_block     = %[1]t
+  cidr_block                           = "10.1.0.0/16"
+  ipv6_cidr_block_network_border_group = %[2]q
+  tags = {
+    Name = "terraform-testacc-vpc-ipv6-with-border-group"
+  }
+}
+`, assignGeneratedIpv6CidrBlock, networkBorderGroup)
+	}
+}
 
 func testAccVPCTags1Config(tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`

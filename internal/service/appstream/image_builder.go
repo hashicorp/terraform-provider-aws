@@ -324,6 +324,7 @@ func resourceImageBuilderUpdate(ctx context.Context, d *schema.ResourceData, met
 func resourceImageBuilderDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).AppStreamConn
 
+	log.Printf("[DEBUG] Deleting AppStream Image Builder: (%s)", d.Id())
 	_, err := conn.DeleteImageBuilderWithContext(ctx, &appstream.DeleteImageBuilderInput{
 		Name: aws.String(d.Id()),
 	})

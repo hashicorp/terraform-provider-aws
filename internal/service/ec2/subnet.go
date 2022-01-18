@@ -145,11 +145,16 @@ func resourceSubnetCreate(d *schema.ResourceData, meta interface{}) error {
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
 	input := &ec2.CreateSubnetInput{
-		AvailabilityZone:   aws.String(d.Get("availability_zone").(string)),
-		AvailabilityZoneId: aws.String(d.Get("availability_zone_id").(string)),
-		Ipv6Native:         aws.Bool(d.Get("ipv6_native").(bool)),
-		TagSpecifications:  ec2TagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeSubnet),
-		VpcId:              aws.String(d.Get("vpc_id").(string)),
+		TagSpecifications: ec2TagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeSubnet),
+		VpcId:             aws.String(d.Get("vpc_id").(string)),
+	}
+
+	if v, ok := d.GetOk("availability_zone"); ok {
+		input.AvailabilityZone = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("availability_zone_id"); ok {
+		input.AvailabilityZoneId = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("cidr_block"); ok {
@@ -158,6 +163,10 @@ func resourceSubnetCreate(d *schema.ResourceData, meta interface{}) error {
 
 	if v, ok := d.GetOk("ipv6_cidr_block"); ok {
 		input.Ipv6CidrBlock = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("ipv6_native"); ok {
+		input.Ipv6Native = aws.Bool(v.(bool))
 	}
 
 	if v, ok := d.GetOk("outpost_arn"); ok {
@@ -290,6 +299,10 @@ func resourceSubnetCreate(d *schema.ResourceData, meta interface{}) error {
 
 		if _, err := conn.ModifySubnetAttribute(input); err != nil {
 			return fmt.Errorf("error setting EC2 Subnet (%s) PrivateDnsHostnameTypeOnLaunch: %w", d.Id(), err)
+		}
+
+		if _, err := WaitSubnetPrivateDNSHostnameTypeOnLaunchUpdated(conn, d.Id(), d.Get("private_dns_hostname_type_on_launch").(string)); err != nil {
+			return fmt.Errorf("error waiting for EC2 Subnet (%s) PrivateDnsHostnameTypeOnLaunch update: %w", d.Id(), err)
 		}
 	}
 
@@ -479,6 +492,10 @@ func resourceSubnetUpdate(d *schema.ResourceData, meta interface{}) error {
 
 		if _, err := conn.ModifySubnetAttribute(input); err != nil {
 			return fmt.Errorf("error setting EC2 Subnet (%s) PrivateDnsHostnameTypeOnLaunch: %w", d.Id(), err)
+		}
+
+		if _, err := WaitSubnetPrivateDNSHostnameTypeOnLaunchUpdated(conn, d.Id(), d.Get("private_dns_hostname_type_on_launch").(string)); err != nil {
+			return fmt.Errorf("error waiting for EC2 Subnet (%s) PrivateDnsHostnameTypeOnLaunch update: %w", d.Id(), err)
 		}
 	}
 
