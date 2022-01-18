@@ -20,17 +20,19 @@ resource "aws_cognito_user_pool" "pool" {
 }
 
 data "aws_cognito_user_pool_clients" "main" {
-  user_pool_id = aws_cognito_user_pool.main.id
+  user_pool_id = aws_cognito_user_pool.pool.id
 }
 
 data "aws_cognito_user_pool_client" "client" {
-  for_each     = data.aws_cognito_user_pool_clients.main.client_ids
+  for_each     = toset(data.aws_cognito_user_pool_clients.main.client_ids)
   client_id    = each.value
   user_pool_id = aws_cognito_user_pool.pool.id
 }
 
 output "names" {
-  value = data.aws_cognito_user_pool_client.client.*.name
+  value = [
+    for k, v in data.aws_cognito_user_pool_client.client : v
+  ].*.name
 }
 ```
 
