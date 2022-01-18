@@ -412,7 +412,9 @@ resource "aws_load_balancer_policy" "test-policy" {
 }
 
 func testAccPolicyConfig_policyTypeNameOnly(rName, policyType string) string {
-	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		acctest.ConfigAvailableAZsNoOptIn(),
+		fmt.Sprintf(`
 resource "aws_elb" "test" {
   name               = %[1]q
   availability_zones = [data.aws_availability_zones.available.names[0]]
