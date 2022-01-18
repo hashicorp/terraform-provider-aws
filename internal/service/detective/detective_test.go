@@ -35,23 +35,14 @@ func TestAccDetective_serial(t *testing.T) {
 	}
 }
 
-func testAccMemberFromEnv(t *testing.T, isAlternate bool) string {
-	var email string
-	if isAlternate {
-		email = os.Getenv("AWS_DETECTIVE_ALTERNATE_ACCOUNT_EMAIL")
-		if email == "" {
-			t.Skip(
-				"Environment variable AWS_DETECTIVE_ALTERNATE_ACCOUNT_EMAIL is not set. " +
-					"To properly test inviting Detective member account must be provided.")
-		}
-		return email
-	}
-
-	email = os.Getenv("AWS_DETECTIVE_ACCOUNT_EMAIL")
+func testAccMemberFromEnv(t *testing.T) string {
+	email := os.Getenv("AWS_DETECTIVE_MEMBER_EMAIL")
 	if email == "" {
 		t.Skip(
-			"Environment variable AWS_DETECTIVE_ACCOUNT_EMAIL is not set. " +
-				"To properly test inviting Detective member account must be provided")
+			"Environment variable AWS_DETECTIVE_MEMBER_EMAIL is not set. " +
+				"To properly test inviting Detective member accounts, " +
+				"a valid email associated with the alternate AWS acceptance " +
+				"test account must be provided.")
 	}
 	return email
 }
