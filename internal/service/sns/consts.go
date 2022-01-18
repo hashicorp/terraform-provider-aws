@@ -70,3 +70,8 @@ const (
 	TopicAttributeNameSQSSuccessFeedbackSampleRate         = "SQSSuccessFeedbackSampleRate"
 	TopicAttributeNameTopicArn                             = "TopicArn"
 )
+
+const (
+	ErrCodeAccessDenied  = "AccessDenied"
+	ErrCodeInvalidAction = "InvalidAction"
+)

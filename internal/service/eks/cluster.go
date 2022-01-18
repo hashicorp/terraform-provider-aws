@@ -137,6 +137,13 @@ func ResourceCluster() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"ip_family": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Computed:     true,
+							ForceNew:     true,
+							ValidateFunc: validation.StringInSlice(eks.IpFamily_Values(), false),
+						},
 						"service_ipv4_cidr": {
 							Type:     schema.TypeString,
 							Optional: true,
@@ -615,6 +622,10 @@ func expandEksNetworkConfigRequest(tfList []interface{}) *eks.KubernetesNetworkC
 		apiObject.ServiceIpv4Cidr = aws.String(v)
 	}
 
+	if v, ok := tfMap["ip_family"].(string); ok && v != "" {
+		apiObject.IpFamily = aws.String(v)
+	}
+
 	return apiObject
 }
 
@@ -748,6 +759,7 @@ func flattenEksNetworkConfig(apiObject *eks.KubernetesNetworkConfigResponse) []i
 
 	tfMap := map[string]interface{}{
 		"service_ipv4_cidr": aws.StringValue(apiObject.ServiceIpv4Cidr),
+		"ip_family":         aws.StringValue(apiObject.IpFamily),
 	}
 
 	return []interface{}{tfMap}

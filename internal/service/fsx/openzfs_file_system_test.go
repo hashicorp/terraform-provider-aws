@@ -237,6 +237,37 @@ func TestAccFSxOpenzfsFileSystem_rootVolume(t *testing.T) {
 					}),
 				),
 			},
+			{
+				Config: testAccOpenzfsFileSystemRootVolume4Config(rName, "NONE", "false", 128, 1024),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFsxOpenzfsFileSystemExists(resourceName, &filesystem1),
+					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.0.data_compression_type", "NONE"),
+					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.0.nfs_exports.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.0.read_only", "false"),
+					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.0.user_and_group_quotas.#", "4"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "root_volume_configuration.0.user_and_group_quotas.*", map[string]string{
+						"id":                         "10",
+						"storage_capacity_quota_gib": "128",
+						"type":                       "USER",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "root_volume_configuration.0.user_and_group_quotas.*", map[string]string{
+						"id":                         "20",
+						"storage_capacity_quota_gib": "1024",
+						"type":                       "GROUP",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "root_volume_configuration.0.user_and_group_quotas.*", map[string]string{
+						"id":                         "5",
+						"storage_capacity_quota_gib": "1024",
+						"type":                       "GROUP",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "root_volume_configuration.0.user_and_group_quotas.*", map[string]string{
+						"id":                         "100",
+						"storage_capacity_quota_gib": "128",
+						"type":                       "USER",
+					}),
+				),
+			},
 		},
 	})
 }
@@ -1031,6 +1062,46 @@ resource "aws_fsx_openzfs_file_system" "test" {
       }
     }
     read_only = %[3]s
+    user_and_group_quotas {
+      id                         = 10
+      storage_capacity_quota_gib = %[4]d
+      type                       = "USER"
+    }
+    user_and_group_quotas {
+      id                         = 20
+      storage_capacity_quota_gib = %[5]d
+      type                       = "GROUP"
+    }
+    user_and_group_quotas {
+      id                         = 5
+      storage_capacity_quota_gib = %[5]d
+      type                       = "GROUP"
+    }
+    user_and_group_quotas {
+      id                         = 100
+      storage_capacity_quota_gib = %[4]d
+      type                       = "USER"
+    }
+  }
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName, dataCompression, readOnly, userQuota, groupQuota))
+}
+
+func testAccOpenzfsFileSystemRootVolume4Config(rName, dataCompression, readOnly string, userQuota, groupQuota int) string {
+	return acctest.ConfigCompose(testAccOpenzfsFileSystemBaseConfig(rName), fmt.Sprintf(`
+resource "aws_fsx_openzfs_file_system" "test" {
+  storage_capacity    = 64
+  subnet_ids          = [aws_subnet.test1.id]
+  deployment_type     = "SINGLE_AZ_1"
+  throughput_capacity = 64
+  root_volume_configuration {
+    copy_tags_to_snapshots = true
+    data_compression_type  = %[2]q
+
     user_and_group_quotas {
       id                         = 10
       storage_capacity_quota_gib = %[4]d

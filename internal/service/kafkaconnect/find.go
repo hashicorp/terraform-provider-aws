@@ -32,3 +32,27 @@ func FindCustomPluginByARN(conn *kafkaconnect.KafkaConnect, arn string) (*kafkac
 
 	return output, nil
 }
+
+func FindWorkerConfigurationByARN(conn *kafkaconnect.KafkaConnect, arn string) (*kafkaconnect.DescribeWorkerConfigurationOutput, error) {
+	input := &kafkaconnect.DescribeWorkerConfigurationInput{
+		WorkerConfigurationArn: aws.String(arn),
+	}
+
+	output, err := conn.DescribeWorkerConfiguration(input)
+	if tfawserr.ErrCodeEquals(err, kafkaconnect.ErrCodeNotFoundException) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
+}

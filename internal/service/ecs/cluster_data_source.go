@@ -89,7 +89,7 @@ func dataSourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("running_tasks_count", cluster.RunningTasksCount)
 	d.Set("registered_container_instances_count", cluster.RegisteredContainerInstancesCount)
 
-	if err := d.Set("setting", flattenEcsSettings(cluster.Settings)); err != nil {
+	if err := d.Set("setting", flattenClusterSettings(cluster.Settings)); err != nil {
 		return fmt.Errorf("error setting setting: %w", err)
 	}
 

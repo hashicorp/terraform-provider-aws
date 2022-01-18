@@ -35,11 +35,14 @@ resource "aws_memorydb_user" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+The following arguments are required:
 
 * `access_string` - (Required) The access permissions string used for this user.
 * `authentication_mode` - (Required) Denotes the user's authentication properties. Detailed below.
 * `user_name` - (Required, Forces new resource) Name of the MemoryDB user. Up to 40 characters.
+
+The following arguments are optional:
+
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### authentication_mode Configuration Block

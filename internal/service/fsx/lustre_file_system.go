@@ -150,7 +150,11 @@ func ResourceLustreFileSystem() *schema.Resource {
 					40,
 					50,
 					100,
+					125,
 					200,
+					250,
+					500,
+					1000,
 				}),
 			},
 			"automatic_backup_retention_days": {

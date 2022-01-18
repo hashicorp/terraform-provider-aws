@@ -9,6 +9,8 @@ import (
 )
 
 func testAccDataCatalogEncryptionSettingsDataSource_basic(t *testing.T) {
+	t.Skipf("Skipping aws_glue_data_catalog_encryption_settings tests")
+
 	resourceName := "aws_glue_data_catalog_encryption_settings.test"
 	dataSourceName := "data.aws_glue_data_catalog_encryption_settings.test"
 

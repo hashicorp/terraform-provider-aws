@@ -7,7 +7,6 @@ import (
 	"regexp"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/service/sqs"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
@@ -210,8 +209,7 @@ func resourceQueueCreate(d *schema.ResourceData, meta interface{}) error {
 
 	input.Attributes = aws.StringMap(attributes)
 
-	// Tag-on-create is currently only supported in AWS Commercial
-	if len(tags) > 0 && meta.(*conns.AWSClient).Partition == endpoints.AwsPartitionID {
+	if len(tags) > 0 {
 		input.Tags = Tags(tags.IgnoreAWS())
 	}
 
@@ -219,6 +217,15 @@ func resourceQueueCreate(d *schema.ResourceData, meta interface{}) error {
 	outputRaw, err := tfresource.RetryWhenAWSErrCodeEquals(queueCreatedTimeout, func() (interface{}, error) {
 		return conn.CreateQueue(input)
 	}, sqs.ErrCodeQueueDeletedRecently)
+
+	// Some partitions may not support tag-on-create
+	if input.Tags != nil && (tfawserr.ErrCodeContains(err, ErrCodeAccessDenied) || tfawserr.ErrCodeContains(err, ErrCodeAuthorizationError) || tfawserr.ErrCodeContains(err, ErrCodeInvalidAction) || tfawserr.ErrCodeContains(err, sqs.ErrCodeUnsupportedOperation)) {
+		log.Printf("[WARN] SQS Queue (%s) create failed (%s) with tags. Trying create without tags.", d.Id(), err)
+		input.Tags = nil
+		outputRaw, err = tfresource.RetryWhenAWSErrCodeEquals(queueCreatedTimeout, func() (interface{}, error) {
+			return conn.CreateQueue(input)
+		}, sqs.ErrCodeQueueDeletedRecently)
+	}
 
 	if err != nil {
 		return fmt.Errorf("error creating SQS Queue (%s): %w", name, err)
@@ -232,9 +239,17 @@ func resourceQueueCreate(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error waiting for SQS Queue (%s) attributes to create: %w", d.Id(), err)
 	}
 
-	// Tag-on-create is currently only supported in AWS Commercial
-	if len(tags) > 0 && meta.(*conns.AWSClient).Partition != endpoints.AwsPartitionID {
-		if err := UpdateTags(conn, d.Id(), nil, tags); err != nil {
+	// Only post-create tagging supported in some partitions
+	if input.Tags == nil && len(tags) > 0 {
+		err := UpdateTags(conn, d.Id(), nil, tags)
+
+		if v, ok := d.GetOk("tags"); (!ok || len(v.(map[string]interface{})) == 0) && (tfawserr.ErrCodeContains(err, ErrCodeAccessDenied) || tfawserr.ErrCodeContains(err, ErrCodeAuthorizationError) || tfawserr.ErrCodeContains(err, ErrCodeInvalidAction) || tfawserr.ErrCodeContains(err, sqs.ErrCodeUnsupportedOperation)) {
+			// if default tags only, log and continue (i.e., should error if explicitly setting tags and they can't be)
+			log.Printf("[WARN] error adding tags after create for SQS Queue (%s): %s", d.Id(), err)
+			return resourceQueueRead(d, meta)
+		}
+
+		if err != nil {
 			return fmt.Errorf("error updating SQS Queue (%s) tags: %w", d.Id(), err)
 		}
 	}
@@ -292,14 +307,13 @@ func resourceQueueRead(d *schema.ResourceData, meta interface{}) error {
 		return ListTags(conn, d.Id())
 	}, sqs.ErrCodeQueueDoesNotExist)
 
-	if err != nil {
-		// Non-standard partitions (e.g. US Gov) and some local development
-		// solutions do not yet support this API call. Depending on the
-		// implementation it may return InvalidAction or AWS.SimpleQueueService.UnsupportedOperation
-		if tfawserr.ErrCodeEquals(err, ErrCodeInvalidAction) || tfawserr.ErrCodeEquals(err, sqs.ErrCodeUnsupportedOperation) {
-			return nil
-		}
+	if tfawserr.ErrCodeContains(err, ErrCodeAccessDenied) || tfawserr.ErrCodeContains(err, ErrCodeAuthorizationError) || tfawserr.ErrCodeContains(err, ErrCodeInvalidAction) || tfawserr.ErrCodeContains(err, sqs.ErrCodeUnsupportedOperation) {
+		// Some partitions may not support tagging, giving error
+		log.Printf("[WARN] Unable to list tags for SQS Queue %s: %s", d.Id(), err)
+		return nil
+	}
 
+	if err != nil {
 		return fmt.Errorf("error listing tags for SQS Queue (%s): %w", d.Id(), err)
 	}
 
@@ -348,7 +362,15 @@ func resourceQueueUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
-		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
+		err := UpdateTags(conn, d.Id(), o, n)
+
+		if tfawserr.ErrCodeContains(err, ErrCodeAccessDenied) || tfawserr.ErrCodeContains(err, ErrCodeAuthorizationError) || tfawserr.ErrCodeContains(err, ErrCodeInvalidAction) || tfawserr.ErrCodeContains(err, sqs.ErrCodeUnsupportedOperation) {
+			// Some partitions may not support tagging, giving error
+			log.Printf("[WARN] Unable to update tags for SQS Queue %s: %s", d.Id(), err)
+			return resourceQueueRead(d, meta)
+		}
+
+		if err != nil {
 			return fmt.Errorf("error updating SQS Queue (%s) tags: %w", d.Id(), err)
 		}
 	}

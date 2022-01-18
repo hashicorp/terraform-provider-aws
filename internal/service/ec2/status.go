@@ -244,6 +244,22 @@ func StatusInstanceIAMInstanceProfile(conn *ec2.EC2, id string) resource.StateRe
 	}
 }
 
+func StatusNATGatewayState(conn *ec2.EC2, id string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := FindNATGatewayByID(conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, aws.StringValue(output.State), nil
+	}
+}
+
 const (
 	RouteStatusReady = "ready"
 )
@@ -435,6 +451,22 @@ func StatusSubnetMapPublicIPOnLaunch(conn *ec2.EC2, id string) resource.StateRef
 	}
 }
 
+func StatusSubnetPrivateDNSHostnameTypeOnLaunch(conn *ec2.EC2, id string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := FindSubnetByID(conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, aws.StringValue(output.PrivateDnsNameOptionsOnLaunch.HostnameType), nil
+	}
+}
+
 func StatusTransitGatewayPrefixListReferenceState(conn *ec2.EC2, transitGatewayRouteTableID string, prefixListID string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		transitGatewayPrefixListReference, err := FindTransitGatewayPrefixListReference(conn, transitGatewayRouteTableID, prefixListID)
@@ -467,12 +499,11 @@ func StatusTransitGatewayRouteTablePropagationState(conn *ec2.EC2, transitGatewa
 	}
 }
 
-// StatusVPCAttribute fetches the Vpc and its attribute value
-func StatusVPCAttribute(conn *ec2.EC2, id string, attribute string) resource.StateRefreshFunc {
+func StatusVPCState(conn *ec2.EC2, id string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		attributeValue, err := FindVPCAttribute(conn, id, attribute)
+		output, err := FindVPCByID(conn, id)
 
-		if tfawserr.ErrCodeEquals(err, ErrCodeInvalidVpcIDNotFound) {
+		if tfresource.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -480,11 +511,55 @@ func StatusVPCAttribute(conn *ec2.EC2, id string, attribute string) resource.Sta
 			return nil, "", err
 		}
 
-		if attributeValue == nil {
+		return output, aws.StringValue(output.State), nil
+	}
+}
+
+func StatusVPCAttributeValue(conn *ec2.EC2, id string, attribute string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		attributeValue, err := FindVPCAttribute(conn, id, attribute)
+
+		if tfresource.NotFound(err) {
 			return nil, "", nil
 		}
 
-		return attributeValue, strconv.FormatBool(aws.BoolValue(attributeValue)), nil
+		if err != nil {
+			return nil, "", err
+		}
+
+		return attributeValue, strconv.FormatBool(attributeValue), nil
+	}
+}
+
+func StatusVPCCIDRBlockAssociationState(conn *ec2.EC2, id string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, _, err := FindVPCCIDRBlockAssociationByID(conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output.CidrBlockState, aws.StringValue(output.CidrBlockState.State), nil
+	}
+}
+
+func StatusVPCIPv6CIDRBlockAssociationState(conn *ec2.EC2, id string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, _, err := FindVPCIPv6CIDRBlockAssociationByID(conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output.Ipv6CidrBlockState, aws.StringValue(output.Ipv6CidrBlockState.State), nil
 	}
 }
 
@@ -525,27 +600,67 @@ func StatusVPCPeeringConnection(conn *ec2.EC2, vpcPeeringConnectionID string) re
 	}
 }
 
-const (
-	attachmentStateNotFound = "NotFound"
-	attachmentStateUnknown  = "Unknown"
-)
-
-// StatusVPNGatewayVPCAttachmentState fetches the attachment between the specified VPN gateway and VPC and its state
 func StatusVPNGatewayVPCAttachmentState(conn *ec2.EC2, vpnGatewayID, vpcID string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		vpcAttachment, err := FindVPNGatewayVPCAttachment(conn, vpnGatewayID, vpcID)
-		if tfawserr.ErrCodeEquals(err, ErrCodeInvalidVpnGatewayIDNotFound) {
-			return nil, attachmentStateNotFound, nil
+		output, err := FindVPNGatewayVPCAttachment(conn, vpnGatewayID, vpcID)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
 		}
+
 		if err != nil {
-			return nil, attachmentStateUnknown, err
+			return nil, "", err
 		}
 
-		if vpcAttachment == nil {
-			return nil, attachmentStateNotFound, nil
+		return output, aws.StringValue(output.State), nil
+	}
+}
+
+func StatusCustomerGatewayState(conn *ec2.EC2, id string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := FindCustomerGatewayByID(conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
 		}
 
-		return vpcAttachment, aws.StringValue(vpcAttachment.State), nil
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, aws.StringValue(output.State), nil
+	}
+}
+
+func StatusVPNConnectionState(conn *ec2.EC2, id string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := FindVPNConnectionByID(conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, aws.StringValue(output.State), nil
+	}
+}
+
+func StatusVPNConnectionRouteState(conn *ec2.EC2, vpnConnectionID, cidrBlock string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := FindVPNConnectionRouteByVPNConnectionIDAndCIDR(conn, vpnConnectionID, cidrBlock)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, aws.StringValue(output.State), nil
 	}
 }
 
@@ -725,5 +840,21 @@ func statusVPCEndpointConnectionVPCEndpointState(conn *ec2.EC2, serviceID, vpcEn
 		}
 
 		return output, aws.StringValue(output.VpcEndpointState), nil
+	}
+}
+
+func StatusSnapshotTierStatus(conn *ec2.EC2, id string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := FindSnapshotTierStatusById(conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, aws.StringValue(output.StorageTier), nil
 	}
 }

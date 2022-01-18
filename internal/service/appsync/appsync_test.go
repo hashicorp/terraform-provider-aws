@@ -20,8 +20,11 @@ func TestAccAppSync_serial(t *testing.T) {
 			"type":                          testAccAppSyncDataSource_type,
 			"Type_dynamoDB":                 testAccAppSyncDataSource_Type_dynamoDB,
 			"Type_http":                     testAccAppSyncDataSource_Type_http,
+			"Type_http_auth":                testAccAppSyncDataSource_Type_http_auth,
 			"Type_lambda":                   testAccAppSyncDataSource_Type_lambda,
 			"Type_none":                     testAccAppSyncDataSource_Type_none,
+			"Type_rdbms":                    testAccAppsyncDatasource_Type_RelationalDatabase,
+			"Type_rdbms_options":            testAccAppsyncDatasource_Type_RelationalDatabaseWithOptions,
 		},
 		"GraphQLAPI": {
 			"basic":                     testAccAppSyncGraphQLAPI_basic,
@@ -60,6 +63,7 @@ func TestAccAppSync_serial(t *testing.T) {
 			"disappears":              testAccAppSyncFunction_disappears,
 			"description":             testAccAppSyncFunction_description,
 			"responseMappingTemplate": testAccAppSyncFunction_responseMappingTemplate,
+			"sync":                    testAccAppSyncFunction_syncConfig,
 		},
 		"Resolver": {
 			"basic":             testAccAppSyncResolver_basic,
@@ -71,6 +75,7 @@ func TestAccAppSync_serial(t *testing.T) {
 			"multipleResolvers": testAccAppSyncResolver_multipleResolvers,
 			"pipeline":          testAccAppSyncResolver_pipeline,
 			"caching":           testAccAppSyncResolver_caching,
+			"sync":              testAccAppSyncResolver_syncConfig,
 		},
 	}
 
