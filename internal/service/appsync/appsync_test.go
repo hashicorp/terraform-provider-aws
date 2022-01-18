@@ -77,6 +77,10 @@ func TestAccAppSync_serial(t *testing.T) {
 			"caching":           testAccAppSyncResolver_caching,
 			"sync":              testAccAppSyncResolver_syncConfig,
 		},
+		"ApiCache": {
+			"basic":      testAccAppSyncApiCache_basic,
+			"disappears": testAccAppSyncApiCache_disappears,
+		},
 	}
 
 	for group, m := range testCases {
