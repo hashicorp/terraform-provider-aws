@@ -15,6 +15,10 @@ For AWS accounts created after 2013-12-04, each region comes with a Default VPC.
 **This is an advanced resource**, and has special caveats to be aware of when
 using it. Please read this document in its entirety before using this resource.
 
+The `aws_default_vpc` behaves differently from normal resources, in that
+Terraform does not _create_ this resource, but instead "adopts" it
+into management.
+
 ## Example Usage
 
 Basic usage with tags:
@@ -39,6 +43,13 @@ arguments are computed. The following arguments are still supported:
   for the VPC. Only valid in regions and accounts that support EC2 Classic.
   See the [ClassicLink documentation][1] for more information. Defaults false.
 * `tags` - (Optional) A map of tags to assign to the resource.
+
+### Removing `aws_default_vpc` from your configuration
+
+The `aws_default_vpc` resource allows you to manage a region's default VPC,
+but Terraform cannot destroy it. Removing this resource from your configuration
+will remove it from your statefile and management, but will not destroy the VPC.
+You can resume managing the VPC via the AWS Console.
 
 ## Attributes Reference
 
