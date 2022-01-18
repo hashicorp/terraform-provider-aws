@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"os"
 	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -821,7 +820,7 @@ func resourceAwsQuickSightDataSetRead(ctx context.Context, d *schema.ResourceDat
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	awsAccountId, dataSetId, err := ParseDataSourceID(d.Id())
+	awsAccountId, dataSetId, err := ParseDataSetID(d.Id())
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -851,7 +850,7 @@ func resourceAwsQuickSightDataSetRead(ctx context.Context, d *schema.ResourceDat
 
 	d.Set("arn", dataSet.Arn)
 	d.Set("aws_account_id", awsAccountId)
-	d.Set("data_source_id", dataSet.DataSetId)
+	d.Set("data_set_id", dataSet.DataSetId)
 	d.Set("name", dataSet.Name)
 	d.Set("import_mode", dataSet.ImportMode)
 
@@ -862,7 +861,6 @@ func resourceAwsQuickSightDataSetRead(ctx context.Context, d *schema.ResourceDat
 	if err := d.Set("column_level_permission_rules", flattenQuickSightColumnLevelPermissionRules(dataSet.ColumnLevelPermissionRules)); err != nil {
 		return diag.Errorf("error setting column_level_permission_rules: %s", err)
 	}
-
 	if err := d.Set("data_set_usage_configuration", flattenQuickSightDataSetUsageConfiguration(dataSet.DataSetUsageConfiguration)); err != nil {
 		return diag.Errorf("error setting data_set_usage_configuration: %s", err)
 	}
@@ -887,6 +885,7 @@ func resourceAwsQuickSightDataSetRead(ctx context.Context, d *schema.ResourceDat
 		return diag.Errorf("error setting row_level_permission_tag_configuration: %s", err)
 	}
 
+	// not sure how to prevent an error when setting output_columns
 	// if err := d.Set("output_columns", flattenQuickSightOutputColumns(dataSet.OutputColumns)); err != nil {
 	// 	return diag.Errorf("error setting output_columns: %s", err)
 	// }
@@ -920,7 +919,6 @@ func resourceAwsQuickSightDataSetRead(ctx context.Context, d *schema.ResourceDat
 	if err := d.Set("permissions", flattenQuickSightPermissions(permsResp.Permissions)); err != nil {
 		return diag.Errorf("error setting permissions: %s", err)
 	}
-
 	return nil
 }
 
@@ -1867,7 +1865,6 @@ func expandQuickSightDataSetRowLevelPermissionTagConfigurations(tfMap map[string
 	if tfMap == nil {
 		return nil
 	}
-	WriteToFile("result.txt", "1\n")
 
 	rowLevelPermissionTagConfiguration := &quicksight.RowLevelPermissionTagConfiguration{}
 
@@ -2667,19 +2664,6 @@ func flattenQuickSightRowLevelPermissionDataSet(set *quicksight.RowLevelPermissi
 	}
 
 	return []interface{}{tfMap}
-}
-
-func WriteToFile(filename string, text string) {
-	f, err := os.OpenFile(filename, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0600)
-	if err != nil {
-		panic(err)
-	}
-
-	defer f.Close()
-
-	if _, err = f.WriteString(text); err != nil {
-		panic(err)
-	}
 }
 
 func flattenQuickSightRowLevelPermissionTagConfiguration(configuration *quicksight.RowLevelPermissionTagConfiguration) []interface{} {
