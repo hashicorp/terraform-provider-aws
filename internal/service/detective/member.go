@@ -126,7 +126,7 @@ func resourceMemberCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		return diag.Errorf("error creating Detective Member: %s", err)
 	}
 
-	if _, err = MemberUpdated(ctx, conn, graphArn, accountId, detective.MemberStatusInvited); err != nil {
+	if _, err = MemberStatusUpdated(ctx, conn, graphArn, accountId, detective.MemberStatusInvited); err != nil {
 		return diag.Errorf("error waiting for Detective Member (%s) to be invited: %s", d.Id(), err)
 	}
 
