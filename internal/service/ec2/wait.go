@@ -25,6 +25,8 @@ const (
 	RouteNotFoundChecks                        = 1000 // Should exceed any reasonable custom timeout value.
 	RouteTableNotFoundChecks                   = 1000 // Should exceed any reasonable custom timeout value.
 	RouteTableAssociationCreatedNotFoundChecks = 1000 // Should exceed any reasonable custom timeout value.
+
+	SecurityGroupNotFoundChecks = 1000 // Should exceed any reasonable custom timeout value.
 )
 
 const (
@@ -414,10 +416,12 @@ func WaitRouteTableAssociationUpdated(conn *ec2.EC2, id string) (*ec2.RouteTable
 
 func WaitSecurityGroupCreated(conn *ec2.EC2, id string, timeout time.Duration) (*ec2.SecurityGroup, error) {
 	stateConf := &resource.StateChangeConf{
-		Pending: []string{SecurityGroupStatusNotFound},
-		Target:  []string{SecurityGroupStatusCreated},
-		Refresh: StatusSecurityGroup(conn, id),
-		Timeout: timeout,
+		Pending:                   []string{},
+		Target:                    []string{SecurityGroupStatusCreated},
+		Refresh:                   StatusSecurityGroup(conn, id),
+		Timeout:                   timeout,
+		NotFoundChecks:            SecurityGroupNotFoundChecks,
+		ContinuousTargetOccurence: 3,
 	}
 
 	outputRaw, err := stateConf.WaitForState()
@@ -705,15 +709,33 @@ func WaitTransitGatewayRouteTablePropagationStateDisabled(conn *ec2.EC2, transit
 }
 
 const (
-	VPCPropagationTimeout          = 2 * time.Minute
-	VPCAttributePropagationTimeout = 5 * time.Minute
+	vpcAttributePropagationTimeout = 5 * time.Minute
+	vpcCreatedTimeout              = 10 * time.Minute
+	vpcDeletedTimeout              = 5 * time.Minute
 )
+
+func WaitVPCCreated(conn *ec2.EC2, id string) (*ec2.Vpc, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{ec2.VpcStatePending},
+		Target:  []string{ec2.VpcStateAvailable},
+		Refresh: StatusVPCState(conn, id),
+		Timeout: vpcCreatedTimeout,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*ec2.Vpc); ok {
+		return output, err
+	}
+
+	return nil, err
+}
 
 func WaitVPCAttributeUpdated(conn *ec2.EC2, vpcID string, attribute string, expectedValue bool) (*ec2.Vpc, error) {
 	stateConf := &resource.StateChangeConf{
 		Target:     []string{strconv.FormatBool(expectedValue)},
-		Refresh:    StatusVPCAttribute(conn, vpcID, attribute),
-		Timeout:    VPCAttributePropagationTimeout,
+		Refresh:    StatusVPCAttributeValue(conn, vpcID, attribute),
+		Timeout:    vpcAttributePropagationTimeout,
 		Delay:      10 * time.Second,
 		MinTimeout: 3 * time.Second,
 	}
@@ -721,6 +743,103 @@ func WaitVPCAttributeUpdated(conn *ec2.EC2, vpcID string, attribute string, expe
 	outputRaw, err := stateConf.WaitForState()
 
 	if output, ok := outputRaw.(*ec2.Vpc); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func WaitVPCCIDRBlockAssociationCreated(conn *ec2.EC2, id string, timeout time.Duration) (*ec2.VpcCidrBlockState, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending:    []string{ec2.VpcCidrBlockStateCodeAssociating, ec2.VpcCidrBlockStateCodeDisassociated, ec2.VpcCidrBlockStateCodeFailing},
+		Target:     []string{ec2.VpcCidrBlockStateCodeAssociated},
+		Refresh:    StatusVPCCIDRBlockAssociationState(conn, id),
+		Timeout:    timeout,
+		Delay:      10 * time.Second,
+		MinTimeout: 5 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*ec2.VpcCidrBlockState); ok {
+		if state := aws.StringValue(output.State); state == ec2.VpcCidrBlockStateCodeFailed {
+			tfresource.SetLastError(err, errors.New(aws.StringValue(output.StatusMessage)))
+		}
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func WaitVPCCIDRBlockAssociationDeleted(conn *ec2.EC2, id string, timeout time.Duration) (*ec2.VpcCidrBlockState, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending:    []string{ec2.VpcCidrBlockStateCodeAssociated, ec2.VpcCidrBlockStateCodeDisassociating, ec2.VpcCidrBlockStateCodeFailing},
+		Target:     []string{},
+		Refresh:    StatusVPCCIDRBlockAssociationState(conn, id),
+		Timeout:    timeout,
+		Delay:      10 * time.Second,
+		MinTimeout: 5 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*ec2.VpcCidrBlockState); ok {
+		if state := aws.StringValue(output.State); state == ec2.VpcCidrBlockStateCodeFailed {
+			tfresource.SetLastError(err, errors.New(aws.StringValue(output.StatusMessage)))
+		}
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+const (
+	vpcIPv6CIDRBlockAssociationCreatedTimeout = 10 * time.Minute
+	vpcIPv6CIDRBlockAssociationDeletedTimeout = 5 * time.Minute
+)
+
+func WaitVPCIPv6CIDRBlockAssociationCreated(conn *ec2.EC2, id string, timeout time.Duration) (*ec2.VpcCidrBlockState, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending:    []string{ec2.VpcCidrBlockStateCodeAssociating, ec2.VpcCidrBlockStateCodeDisassociated, ec2.VpcCidrBlockStateCodeFailing},
+		Target:     []string{ec2.VpcCidrBlockStateCodeAssociated},
+		Refresh:    StatusVPCIPv6CIDRBlockAssociationState(conn, id),
+		Timeout:    timeout,
+		Delay:      10 * time.Second,
+		MinTimeout: 5 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*ec2.VpcCidrBlockState); ok {
+		if state := aws.StringValue(output.State); state == ec2.VpcCidrBlockStateCodeFailed {
+			tfresource.SetLastError(err, errors.New(aws.StringValue(output.StatusMessage)))
+		}
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func WaitVPCIPv6CIDRBlockAssociationDeleted(conn *ec2.EC2, id string, timeout time.Duration) (*ec2.VpcCidrBlockState, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending:    []string{ec2.VpcCidrBlockStateCodeAssociated, ec2.VpcCidrBlockStateCodeDisassociating, ec2.VpcCidrBlockStateCodeFailing},
+		Target:     []string{},
+		Refresh:    StatusVPCIPv6CIDRBlockAssociationState(conn, id),
+		Timeout:    timeout,
+		Delay:      10 * time.Second,
+		MinTimeout: 5 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*ec2.VpcCidrBlockState); ok {
+		if state := aws.StringValue(output.State); state == ec2.VpcCidrBlockStateCodeFailed {
+			tfresource.SetLastError(err, errors.New(aws.StringValue(output.StatusMessage)))
+		}
+
 		return output, err
 	}
 
@@ -803,6 +922,55 @@ func WaitCustomerGatewayDeleted(conn *ec2.EC2, id string) (*ec2.CustomerGateway,
 	outputRaw, err := stateConf.WaitForState()
 
 	if output, ok := outputRaw.(*ec2.CustomerGateway); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+const (
+	natGatewayCreatedTimeout = 10 * time.Minute
+	natGatewayDeletedTimeout = 30 * time.Minute
+)
+
+func WaitNATGatewayCreated(conn *ec2.EC2, id string) (*ec2.NatGateway, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{ec2.NatGatewayStatePending},
+		Target:  []string{ec2.NatGatewayStateAvailable},
+		Refresh: StatusNATGatewayState(conn, id),
+		Timeout: natGatewayCreatedTimeout,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*ec2.NatGateway); ok {
+		if state := aws.StringValue(output.State); state == ec2.NatGatewayStateFailed {
+			tfresource.SetLastError(err, fmt.Errorf("%s: %s", aws.StringValue(output.FailureCode), aws.StringValue(output.FailureMessage)))
+		}
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func WaitNATGatewayDeleted(conn *ec2.EC2, id string) (*ec2.NatGateway, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending:    []string{ec2.NatGatewayStateDeleting},
+		Target:     []string{},
+		Refresh:    StatusNATGatewayState(conn, id),
+		Timeout:    natGatewayDeletedTimeout,
+		Delay:      10 * time.Second,
+		MinTimeout: 10 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*ec2.NatGateway); ok {
+		if state := aws.StringValue(output.State); state == ec2.NatGatewayStateFailed {
+			tfresource.SetLastError(err, fmt.Errorf("%s: %s", aws.StringValue(output.FailureCode), aws.StringValue(output.FailureMessage)))
+		}
+
 		return output, err
 	}
 
@@ -967,6 +1135,10 @@ func WaitHostDeleted(conn *ec2.EC2, id string) (*ec2.Host, error) {
 
 	return nil, err
 }
+
+const (
+	dhcpOptionSetDeletedTimeout = 3 * time.Minute
+)
 
 const (
 	internetGatewayAttachedTimeout = 4 * time.Minute

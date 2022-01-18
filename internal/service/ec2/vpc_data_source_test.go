@@ -2,20 +2,19 @@ package ec2_test
 
 import (
 	"fmt"
-	"math/rand"
 	"testing"
-	"time"
 
 	"github.com/aws/aws-sdk-go/service/ec2"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccEC2VPCDataSource_basic(t *testing.T) {
-	rand.Seed(time.Now().UTC().UnixNano())
-	rInt := rand.Intn(254)
-	cidr := fmt.Sprintf("10.%d.0.0/16", rInt+1) // Prevent common 10.0.0.0/16 cidr_block matches
-	tag := fmt.Sprintf("terraform-testacc-vpc-data-source-basic-%d", rInt)
+	rInt1 := sdkacctest.RandIntRange(1, 128)
+	rInt2 := sdkacctest.RandIntRange(128, 254)
+	cidr := fmt.Sprintf("10.%d.%d.0/28", rInt1, rInt2)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	vpcResourceName := "aws_vpc.test"
 	ds1ResourceName := "data.aws_vpc.by_id"
@@ -29,86 +28,33 @@ func TestAccEC2VPCDataSource_basic(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVPCDataSourceConfig(cidr, tag),
+				Config: testAccVPCDataSourceConfig(rName, cidr),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(
-						ds1ResourceName, "id", vpcResourceName, "id"),
-					resource.TestCheckResourceAttrPair(
-						ds1ResourceName, "owner_id", vpcResourceName, "owner_id"),
-					resource.TestCheckResourceAttr(
-						ds1ResourceName, "cidr_block", cidr),
-					resource.TestCheckResourceAttr(
-						ds1ResourceName, "tags.Name", tag),
-					resource.TestCheckResourceAttr(
-						ds1ResourceName, "enable_dns_support", "true"),
-					resource.TestCheckResourceAttr(
-						ds1ResourceName, "enable_dns_hostnames", "false"),
-					resource.TestCheckResourceAttrSet(
-						ds1ResourceName, "arn"),
-					resource.TestCheckResourceAttrPair(
-						ds1ResourceName, "main_route_table_id", vpcResourceName, "main_route_table_id"),
+					resource.TestCheckResourceAttrPair(ds1ResourceName, "arn", vpcResourceName, "arn"),
+					resource.TestCheckResourceAttr(ds1ResourceName, "cidr_block", cidr),
+					resource.TestCheckResourceAttr(ds1ResourceName, "enable_dns_hostnames", "false"),
+					resource.TestCheckResourceAttr(ds1ResourceName, "enable_dns_support", "true"),
+					resource.TestCheckResourceAttrPair(ds1ResourceName, "id", vpcResourceName, "id"),
+					resource.TestCheckResourceAttrPair(ds1ResourceName, "ipv6_association_id", vpcResourceName, "ipv6_association_id"),
+					resource.TestCheckResourceAttrPair(ds1ResourceName, "ipv6_cidr_block", vpcResourceName, "ipv6_cidr_block"),
+					resource.TestCheckResourceAttrPair(ds1ResourceName, "main_route_table_id", vpcResourceName, "main_route_table_id"),
+					resource.TestCheckResourceAttrPair(ds1ResourceName, "owner_id", vpcResourceName, "owner_id"),
+					resource.TestCheckResourceAttr(ds1ResourceName, "tags.Name", rName),
 
-					resource.TestCheckResourceAttrPair(
-						ds2ResourceName, "id", vpcResourceName, "id"),
-					resource.TestCheckResourceAttrPair(
-						ds2ResourceName, "owner_id", vpcResourceName, "owner_id"),
-					resource.TestCheckResourceAttr(
-						ds2ResourceName, "cidr_block", cidr),
-					resource.TestCheckResourceAttr(
-						ds2ResourceName, "tags.Name", tag),
+					resource.TestCheckResourceAttrPair(ds2ResourceName, "id", vpcResourceName, "id"),
+					resource.TestCheckResourceAttrPair(ds2ResourceName, "owner_id", vpcResourceName, "owner_id"),
+					resource.TestCheckResourceAttr(ds2ResourceName, "cidr_block", cidr),
+					resource.TestCheckResourceAttr(ds2ResourceName, "tags.Name", rName),
 
-					resource.TestCheckResourceAttrPair(
-						ds3ResourceName, "id", vpcResourceName, "id"),
-					resource.TestCheckResourceAttrPair(
-						ds3ResourceName, "owner_id", vpcResourceName, "owner_id"),
-					resource.TestCheckResourceAttr(
-						ds3ResourceName, "cidr_block", cidr),
-					resource.TestCheckResourceAttr(
-						ds3ResourceName, "tags.Name", tag),
+					resource.TestCheckResourceAttrPair(ds3ResourceName, "id", vpcResourceName, "id"),
+					resource.TestCheckResourceAttrPair(ds3ResourceName, "owner_id", vpcResourceName, "owner_id"),
+					resource.TestCheckResourceAttr(ds3ResourceName, "cidr_block", cidr),
+					resource.TestCheckResourceAttr(ds3ResourceName, "tags.Name", rName),
 
-					resource.TestCheckResourceAttrPair(
-						ds4ResourceName, "id", vpcResourceName, "id"),
-					resource.TestCheckResourceAttrPair(
-						ds4ResourceName, "owner_id", vpcResourceName, "owner_id"),
-					resource.TestCheckResourceAttr(
-						ds4ResourceName, "cidr_block", cidr),
-					resource.TestCheckResourceAttr(
-						ds4ResourceName, "tags.Name", tag),
-				),
-			},
-		},
-	})
-}
-
-func TestAccEC2VPCDataSource_ipv6Associated(t *testing.T) {
-	rand.Seed(time.Now().UTC().UnixNano())
-	rInt := rand.Intn(255)
-	cidr := fmt.Sprintf("10.%d.0.0/16", rInt)
-	tag := fmt.Sprintf("terraform-testacc-vpc-data-source-ipv6-associated-%d", rInt)
-
-	vpcResourceName := "aws_vpc.test"
-	ds1ResourceName := "data.aws_vpc.by_id"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:  acctest.Providers,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccVPCIPv6DataSourceConfig(cidr, tag),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(
-						ds1ResourceName, "id", vpcResourceName, "id"),
-					resource.TestCheckResourceAttrPair(
-						ds1ResourceName, "owner_id", vpcResourceName, "owner_id"),
-					resource.TestCheckResourceAttr(
-						ds1ResourceName, "cidr_block", cidr),
-					resource.TestCheckResourceAttr(
-						ds1ResourceName, "tags.Name", tag),
-					resource.TestCheckResourceAttrSet(
-						"data.aws_vpc.by_id", "ipv6_association_id"),
-					resource.TestCheckResourceAttrSet(
-						"data.aws_vpc.by_id", "ipv6_cidr_block"),
+					resource.TestCheckResourceAttrPair(ds4ResourceName, "id", vpcResourceName, "id"),
+					resource.TestCheckResourceAttrPair(ds4ResourceName, "owner_id", vpcResourceName, "owner_id"),
+					resource.TestCheckResourceAttr(ds4ResourceName, "cidr_block", cidr),
+					resource.TestCheckResourceAttr(ds4ResourceName, "tags.Name", rName),
 				),
 			},
 		},
@@ -117,6 +63,7 @@ func TestAccEC2VPCDataSource_ipv6Associated(t *testing.T) {
 
 func TestAccEC2VPCDataSource_CIDRBlockAssociations_multiple(t *testing.T) {
 	dataSourceName := "data.aws_vpc.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -125,7 +72,7 @@ func TestAccEC2VPCDataSource_CIDRBlockAssociations_multiple(t *testing.T) {
 		CheckDestroy: testAccCheckVpcDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVPCCIDRBlockAssociationsMultipleDataSourceConfig(),
+				Config: testAccVPCCIDRBlockAssociationsMultipleDataSourceConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "cidr_block_associations.#", "2"),
 				),
@@ -134,30 +81,15 @@ func TestAccEC2VPCDataSource_CIDRBlockAssociations_multiple(t *testing.T) {
 	})
 }
 
-func testAccVPCIPv6DataSourceConfig(cidr, tag string) string {
+func testAccVPCDataSourceConfig(rName, cidr string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
-  cidr_block                       = "%s"
+  cidr_block = %[2]q
+
   assign_generated_ipv6_cidr_block = true
 
   tags = {
-    Name = "%s"
-  }
-}
-
-data "aws_vpc" "by_id" {
-  id = aws_vpc.test.id
-}
-`, cidr, tag)
-}
-
-func testAccVPCDataSourceConfig(cidr, tag string) string {
-	return fmt.Sprintf(`
-resource "aws_vpc" "test" {
-  cidr_block = "%s"
-
-  tags = {
-    Name = "%s"
+    Name = %[1]q
   }
 }
 
@@ -181,13 +113,17 @@ data "aws_vpc" "by_filter" {
     values = [aws_vpc.test.id]
   }
 }
-`, cidr, tag)
+`, rName, cidr)
 }
 
-func testAccVPCCIDRBlockAssociationsMultipleDataSourceConfig() string {
-	return `
+func testAccVPCCIDRBlockAssociationsMultipleDataSourceConfig(rName string) string {
+	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_vpc_ipv4_cidr_block_association" "test" {
@@ -198,5 +134,5 @@ resource "aws_vpc_ipv4_cidr_block_association" "test" {
 data "aws_vpc" "test" {
   id = aws_vpc_ipv4_cidr_block_association.test.vpc_id
 }
-`
+`, rName)
 }

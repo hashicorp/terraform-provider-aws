@@ -10,6 +10,7 @@ import (
 )
 
 const (
+	ErrCodeAuthFailure                               = "AuthFailure"
 	ErrCodeClientInvalidHostIDNotFound               = "Client.InvalidHostID.NotFound"
 	ErrCodeClientVpnAssociationIdNotFound            = "InvalidClientVpnAssociationId.NotFound"
 	ErrCodeClientVpnAuthorizationRuleNotFound        = "InvalidClientVpnEndpointAuthorizationRuleNotFound"
@@ -22,12 +23,15 @@ const (
 	ErrCodeInvalidAttachmentIDNotFound               = "InvalidAttachmentID.NotFound"
 	ErrCodeInvalidCarrierGatewayIDNotFound           = "InvalidCarrierGatewayID.NotFound"
 	ErrCodeInvalidCustomerGatewayIDNotFound          = "InvalidCustomerGatewayID.NotFound"
+	ErrCodeInvalidDhcpOptionIDNotFound               = "InvalidDhcpOptionID.NotFound"
 	ErrCodeInvalidFlowLogIdNotFound                  = "InvalidFlowLogId.NotFound"
+	ErrCodeInvalidGatewayIDNotFound                  = "InvalidGatewayID.NotFound"
 	ErrCodeInvalidGroupNotFound                      = "InvalidGroup.NotFound"
 	ErrCodeInvalidHostIDNotFound                     = "InvalidHostID.NotFound"
 	ErrCodeInvalidInstanceIDNotFound                 = "InvalidInstanceID.NotFound"
 	ErrCodeInvalidInternetGatewayIDNotFound          = "InvalidInternetGatewayID.NotFound"
 	ErrCodeInvalidKeyPairNotFound                    = "InvalidKeyPair.NotFound"
+	ErrCodeInvalidNetworkAclIDNotFound               = "InvalidNetworkAclID.NotFound"
 	ErrCodeInvalidNetworkInterfaceIDNotFound         = "InvalidNetworkInterfaceID.NotFound"
 	ErrCodeInvalidParameter                          = "InvalidParameter"
 	ErrCodeInvalidParameterException                 = "InvalidParameterException"
@@ -48,6 +52,7 @@ const (
 	ErrCodeInvalidSubnetIdNotFound                   = "InvalidSubnetId.NotFound"
 	ErrCodeInvalidTransitGatewayAttachmentIDNotFound = "InvalidTransitGatewayAttachmentID.NotFound"
 	ErrCodeInvalidTransitGatewayIDNotFound           = "InvalidTransitGatewayID.NotFound"
+	ErrCodeInvalidVpcCidrBlockAssociationIDNotFound  = "InvalidVpcCidrBlockAssociationID.NotFound"
 	ErrCodeInvalidVpcEndpointIdNotFound              = "InvalidVpcEndpointId.NotFound"
 	ErrCodeInvalidVpcEndpointNotFound                = "InvalidVpcEndpoint.NotFound"
 	ErrCodeInvalidVpcEndpointServiceIdNotFound       = "InvalidVpcEndpointServiceId.NotFound"
@@ -56,6 +61,8 @@ const (
 	ErrCodeInvalidVpnConnectionIDNotFound            = "InvalidVpnConnectionID.NotFound"
 	ErrCodeInvalidVpnGatewayAttachmentNotFound       = "InvalidVpnGatewayAttachment.NotFound"
 	ErrCodeInvalidVpnGatewayIDNotFound               = "InvalidVpnGatewayID.NotFound"
+	ErrCodeNatGatewayNotFound                        = "NatGatewayNotFound"
+	ErrCodeUnsupportedOperation                      = "UnsupportedOperation"
 )
 
 func UnsuccessfulItemError(apiObject *ec2.UnsuccessfulItemError) error {
