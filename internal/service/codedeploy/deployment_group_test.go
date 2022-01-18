@@ -2571,13 +2571,13 @@ on_premises_instance_tag_filter {
 	}
 	return testAccDeploymentGroupBaseConfig(rName) + fmt.Sprintf(`
 resource "aws_codedeploy_deployment_group" "test" {
-  app_name              = aws_codedeploy_app.test.name
-  deployment_group_name = "tf-acc-test-%[1]s"
+  app_name               = aws_codedeploy_app.test.name
+  deployment_group_name  = "tf-acc-test-%[1]s"
   deployment_config_name = "CodeDeployDefault.OneAtATime"
-  service_role_arn      = aws_iam_role.test.arn
+  service_role_arn       = aws_iam_role.test.arn
 
   %[2]s
-  }
+}
 `, rName, tagGroupOrFilter)
 }
 
