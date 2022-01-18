@@ -3,7 +3,7 @@ subcategory: "Detective"
 layout: "aws"
 page_title: "AWS: aws_detective_member"
 description: |-
-  Provides a resource to manage an Amazon  Detective.
+  Provides a resource to manage an Amazon Detective member.
 ---
 
 # Resource: aws_detective_member
@@ -42,13 +42,12 @@ In addition to all arguments above, the following attributes are exported:
 * `status` - Current membership status of the member account.
 * `administrator_id` - AWS account ID for the administrator account.
 * `volume_usage_in_bytes` - Data volume in bytes per day for the member account.
-* `volume_usage_updated_time` - Date and time, in UTC and extended RFC 3339 format, of the member account data volume was last updated.
 * `invited_time` - Date and time, in UTC and extended RFC 3339 format, when an Amazon Detective membership invitation was last sent to the account.
-* `updated_time` - Date and time, in UTC and extended RFC 3339 format, of the most recent change.
+* `updated_time` - Date and time, in UTC and extended RFC 3339 format, of the most recent change to the member account's status.
 
 ## Import
 
-`aws_detective_member` can be imported using the account ID of the member account and the arn of a graph, e.g.
+`aws_detective_member` can be imported using the ARN of the graph followed by the account ID of the member account, e.g.
 
 ```
 $ terraform import aws_detective_member.example arn:aws:detective:us-east1:graph:testing/123456789012
