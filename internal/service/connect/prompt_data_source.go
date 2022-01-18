@@ -29,7 +29,6 @@ func DataSourcePrompt() *schema.Resource {
 			},
 			"prompt_id": {
 				Type:     schema.TypeString,
-				Optional: true,
 				Computed: true,
 			},
 		},
