@@ -1,11 +1,9 @@
 package ec2_test
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -133,36 +131,7 @@ func destroyDefaultVPCBeforeTest(t *testing.T) {
 }
 
 func testAccCheckDefaultVPCDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
-
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_vpc" {
-			continue
-		}
-
-		// Try to find the VPC
-		DescribeVpcOpts := &ec2.DescribeVpcsInput{
-			VpcIds: []*string{aws.String(rs.Primary.ID)},
-		}
-		resp, err := conn.DescribeVpcs(DescribeVpcOpts)
-		if err == nil {
-			if len(resp.Vpcs) > 0 {
-				return fmt.Errorf("VPCs still exist.")
-			}
-
-			return nil
-		}
-
-		// Verify the error is what we want
-		ec2err, ok := err.(awserr.Error)
-		if !ok {
-			return err
-		}
-		if ec2err.Code() != "InvalidVpcID.NotFound" {
-			return err
-		}
-	}
-
+	// We expect VPC to still exist
 	return nil
 }
 
