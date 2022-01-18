@@ -325,29 +325,22 @@ func resourceCloudSearchDomainRead(d *schema.ResourceData, meta interface{}) err
 		return fmt.Errorf("error setting scaling_parameters: %w", err)
 	}
 
-	// TODO...
-
 	// Read index fields.
 	indexResults, err := conn.DescribeIndexFields(&cloudsearch.DescribeIndexFieldsInput{
 		DomainName: aws.String(d.Get("name").(string)),
 	})
+
 	if err != nil {
+		return fmt.Errorf("error reading CloudSearch Domain (%s) index fields: %w", d.Id(), err)
+	}
+
+	if tfList, err := flattenIndexFieldStatuses(indexResults.IndexFields); err != nil {
 		return err
+	} else if err := d.Set("index_field", tfList); err != nil {
+		return fmt.Errorf("error setting index_field: %w", err)
 	}
 
-	result := make([]map[string]interface{}, 0, len(indexResults.IndexFields))
-
-	for _, raw := range indexResults.IndexFields {
-		// Don't read in any fields that are pending deletion.
-		if *raw.Status.PendingDeletion {
-			continue
-		}
-
-		result = append(result, readIndexField(raw.Options))
-	}
-	d.Set("index", result)
-
-	return err
+	return nil
 }
 
 func resourceCloudSearchDomainUpdate(d *schema.ResourceData, meta interface{}) error {
@@ -762,119 +755,6 @@ func generateIndexFieldInput(index map[string]interface{}) (*cloudsearch.IndexFi
 	}
 
 	return input, nil
-}
-
-func readIndexField(raw *cloudsearch.IndexField) map[string]interface{} {
-	index := map[string]interface{}{
-		"name": raw.IndexFieldName,
-		"type": raw.IndexFieldType,
-	}
-
-	switch *raw.IndexFieldType {
-	case "date":
-		index["default_value"] = raw.DateOptions.DefaultValue
-		index["facet"] = raw.DateOptions.FacetEnabled
-		index["return"] = raw.DateOptions.ReturnEnabled
-		index["search"] = raw.DateOptions.SearchEnabled
-		index["sort"] = raw.DateOptions.SortEnabled
-
-		// Options that aren't valid for this type.
-		index["highlight"] = false
-	case "date-array":
-		index["default_value"] = raw.DateArrayOptions.DefaultValue
-		index["facet"] = raw.DateArrayOptions.FacetEnabled
-		index["return"] = raw.DateArrayOptions.ReturnEnabled
-		index["search"] = raw.DateArrayOptions.SearchEnabled
-
-		// Options that aren't valid for this type.
-		index["highlight"] = false
-		index["sort"] = false
-	case "double":
-		index["default_value"] = raw.DoubleOptions.DefaultValue
-		index["facet"] = raw.DoubleOptions.FacetEnabled
-		index["return"] = raw.DoubleOptions.ReturnEnabled
-		index["search"] = raw.DoubleOptions.SearchEnabled
-		index["sort"] = raw.DoubleOptions.SortEnabled
-
-		// Options that aren't valid for this type.
-		index["highlight"] = false
-	case "double-array":
-		index["default_value"] = raw.DoubleArrayOptions.DefaultValue
-		index["facet"] = raw.DoubleArrayOptions.FacetEnabled
-		index["return"] = raw.DoubleArrayOptions.ReturnEnabled
-		index["search"] = raw.DoubleArrayOptions.SearchEnabled
-
-		// Options that aren't valid for this type.
-		index["highlight"] = false
-		index["sort"] = false
-	case "int":
-		index["default_value"] = raw.IntOptions.DefaultValue
-		index["facet"] = raw.IntOptions.FacetEnabled
-		index["return"] = raw.IntOptions.ReturnEnabled
-		index["search"] = raw.IntOptions.SearchEnabled
-		index["sort"] = raw.IntOptions.SortEnabled
-
-		// Options that aren't valid for this type.
-		index["highlight"] = false
-	case "int-array":
-		index["default_value"] = raw.IntArrayOptions.DefaultValue
-		index["facet"] = raw.IntArrayOptions.FacetEnabled
-		index["return"] = raw.IntArrayOptions.ReturnEnabled
-		index["search"] = raw.IntArrayOptions.SearchEnabled
-
-		// Options that aren't valid for this type.
-		index["highlight"] = false
-		index["sort"] = false
-	case "latlon":
-		index["default_value"] = raw.LatLonOptions.DefaultValue
-		index["facet"] = raw.LatLonOptions.FacetEnabled
-		index["return"] = raw.LatLonOptions.ReturnEnabled
-		index["search"] = raw.LatLonOptions.SearchEnabled
-		index["sort"] = raw.LatLonOptions.SortEnabled
-
-		// Options that aren't valid for this type.
-		index["highlight"] = false
-	case "literal":
-		index["default_value"] = raw.LiteralOptions.DefaultValue
-		index["facet"] = raw.LiteralOptions.FacetEnabled
-		index["return"] = raw.LiteralOptions.ReturnEnabled
-		index["search"] = raw.LiteralOptions.SearchEnabled
-		index["sort"] = raw.LiteralOptions.SortEnabled
-
-		// Options that aren't valid for this type.
-		index["highlight"] = false
-	case "literal-array":
-		index["default_value"] = raw.LiteralArrayOptions.DefaultValue
-		index["facet"] = raw.LiteralArrayOptions.FacetEnabled
-		index["return"] = raw.LiteralArrayOptions.ReturnEnabled
-		index["search"] = raw.LiteralArrayOptions.SearchEnabled
-
-		// Options that aren't valid for this type.
-		index["highlight"] = false
-		index["sort"] = false
-	case "text":
-		index["default_value"] = raw.TextOptions.DefaultValue
-		index["analysis_scheme"] = raw.TextOptions.AnalysisScheme
-		index["highlight"] = raw.TextOptions.HighlightEnabled
-		index["return"] = raw.TextOptions.ReturnEnabled
-		index["sort"] = raw.TextOptions.SortEnabled
-
-		// Options that aren't valid for this type.
-		index["facet"] = false
-		index["search"] = false
-	case "text-array":
-		index["default_value"] = raw.TextArrayOptions.DefaultValue
-		index["analysis_scheme"] = raw.TextArrayOptions.AnalysisScheme
-		index["highlight"] = raw.TextArrayOptions.HighlightEnabled
-		index["return"] = raw.TextArrayOptions.ReturnEnabled
-
-		// Options that aren't valid for this type.
-		index["facet"] = false
-		index["search"] = false
-		index["sort"] = false
-	}
-
-	return index
 }
 
 func FindDomainStatusByName(conn *cloudsearch.CloudSearch, name string) (*cloudsearch.DomainStatus, error) {
@@ -1312,6 +1192,293 @@ func expandIndexField(tfMap map[string]interface{}) (*cloudsearch.IndexField, er
 	}
 
 	return apiObject, nil
+}
+
+func flattenIndexFieldStatus(apiObject *cloudsearch.IndexFieldStatus) (map[string]interface{}, error) {
+	if apiObject == nil || apiObject.Options == nil || apiObject.Status == nil {
+		return nil, nil
+	}
+
+	// Don't read in any fields that are pending deletion.
+	if aws.BoolValue(apiObject.Status.PendingDeletion) {
+		return nil, nil
+	}
+
+	field := apiObject.Options
+	tfMap := map[string]interface{}{}
+
+	if v := field.IndexFieldName; v != nil {
+		tfMap["name"] = aws.StringValue(v)
+	}
+
+	fieldType := field.IndexFieldType
+	if fieldType != nil {
+		tfMap["name"] = aws.StringValue(fieldType)
+	}
+
+	switch fieldType := aws.StringValue(fieldType); fieldType {
+	case cloudsearch.IndexFieldTypeDate:
+		options := field.DateOptions
+
+		if v := options.DefaultValue; v != nil {
+			tfMap["default_value"] = aws.StringValue(v)
+		}
+
+		if v := options.FacetEnabled; v != nil {
+			tfMap["facet"] = aws.BoolValue(v)
+		}
+
+		if v := options.ReturnEnabled; v != nil {
+			tfMap["return"] = aws.BoolValue(v)
+		}
+
+		if v := options.SearchEnabled; v != nil {
+			tfMap["search"] = aws.BoolValue(v)
+		}
+
+		if v := options.SortEnabled; v != nil {
+			tfMap["sort"] = aws.BoolValue(v)
+		}
+
+	case cloudsearch.IndexFieldTypeDateArray:
+		options := field.DateArrayOptions
+
+		if v := options.DefaultValue; v != nil {
+			tfMap["default_value"] = aws.StringValue(v)
+		}
+
+		if v := options.FacetEnabled; v != nil {
+			tfMap["facet"] = aws.BoolValue(v)
+		}
+
+		if v := options.ReturnEnabled; v != nil {
+			tfMap["return"] = aws.BoolValue(v)
+		}
+
+		if v := options.SearchEnabled; v != nil {
+			tfMap["search"] = aws.BoolValue(v)
+		}
+
+	case cloudsearch.IndexFieldTypeDouble:
+		options := field.DoubleOptions
+
+		if v := options.DefaultValue; v != nil {
+			tfMap["default_value"] = strconv.FormatFloat(aws.Float64Value(v), 'f', -1, 64)
+		}
+
+		if v := options.FacetEnabled; v != nil {
+			tfMap["facet"] = aws.BoolValue(v)
+		}
+
+		if v := options.ReturnEnabled; v != nil {
+			tfMap["return"] = aws.BoolValue(v)
+		}
+
+		if v := options.SearchEnabled; v != nil {
+			tfMap["search"] = aws.BoolValue(v)
+		}
+
+		if v := options.SortEnabled; v != nil {
+			tfMap["sort"] = aws.BoolValue(v)
+		}
+
+	case cloudsearch.IndexFieldTypeDoubleArray:
+		options := field.DoubleArrayOptions
+
+		if v := options.DefaultValue; v != nil {
+			tfMap["default_value"] = strconv.FormatFloat(aws.Float64Value(v), 'f', -1, 64)
+		}
+
+		if v := options.FacetEnabled; v != nil {
+			tfMap["facet"] = aws.BoolValue(v)
+		}
+
+		if v := options.ReturnEnabled; v != nil {
+			tfMap["return"] = aws.BoolValue(v)
+		}
+
+		if v := options.SearchEnabled; v != nil {
+			tfMap["search"] = aws.BoolValue(v)
+		}
+
+	case cloudsearch.IndexFieldTypeInt:
+		options := field.IntOptions
+
+		if v := options.DefaultValue; v != nil {
+			tfMap["default_value"] = strconv.FormatInt(aws.Int64Value(v), 10)
+		}
+
+		if v := options.FacetEnabled; v != nil {
+			tfMap["facet"] = aws.BoolValue(v)
+		}
+
+		if v := options.ReturnEnabled; v != nil {
+			tfMap["return"] = aws.BoolValue(v)
+		}
+
+		if v := options.SearchEnabled; v != nil {
+			tfMap["search"] = aws.BoolValue(v)
+		}
+
+		if v := options.SortEnabled; v != nil {
+			tfMap["sort"] = aws.BoolValue(v)
+		}
+
+	case cloudsearch.IndexFieldTypeIntArray:
+		options := field.IntArrayOptions
+
+		if v := options.DefaultValue; v != nil {
+			tfMap["default_value"] = strconv.FormatInt(aws.Int64Value(v), 10)
+		}
+
+		if v := options.FacetEnabled; v != nil {
+			tfMap["facet"] = aws.BoolValue(v)
+		}
+
+		if v := options.ReturnEnabled; v != nil {
+			tfMap["return"] = aws.BoolValue(v)
+		}
+
+		if v := options.SearchEnabled; v != nil {
+			tfMap["search"] = aws.BoolValue(v)
+		}
+
+	case cloudsearch.IndexFieldTypeLatlon:
+		options := field.LatLonOptions
+
+		if v := options.DefaultValue; v != nil {
+			tfMap["default_value"] = aws.StringValue(v)
+		}
+
+		if v := options.FacetEnabled; v != nil {
+			tfMap["facet"] = aws.BoolValue(v)
+		}
+
+		if v := options.ReturnEnabled; v != nil {
+			tfMap["return"] = aws.BoolValue(v)
+		}
+
+		if v := options.SearchEnabled; v != nil {
+			tfMap["search"] = aws.BoolValue(v)
+		}
+
+		if v := options.SortEnabled; v != nil {
+			tfMap["sort"] = aws.BoolValue(v)
+		}
+
+	case cloudsearch.IndexFieldTypeLiteral:
+		options := field.LiteralOptions
+
+		if v := options.DefaultValue; v != nil {
+			tfMap["default_value"] = aws.StringValue(v)
+		}
+
+		if v := options.FacetEnabled; v != nil {
+			tfMap["facet"] = aws.BoolValue(v)
+		}
+
+		if v := options.ReturnEnabled; v != nil {
+			tfMap["return"] = aws.BoolValue(v)
+		}
+
+		if v := options.SearchEnabled; v != nil {
+			tfMap["search"] = aws.BoolValue(v)
+		}
+
+		if v := options.SortEnabled; v != nil {
+			tfMap["sort"] = aws.BoolValue(v)
+		}
+
+	case cloudsearch.IndexFieldTypeLiteralArray:
+		options := field.LiteralArrayOptions
+
+		if v := options.DefaultValue; v != nil {
+			tfMap["default_value"] = aws.StringValue(v)
+		}
+
+		if v := options.FacetEnabled; v != nil {
+			tfMap["facet"] = aws.BoolValue(v)
+		}
+
+		if v := options.ReturnEnabled; v != nil {
+			tfMap["return"] = aws.BoolValue(v)
+		}
+
+		if v := options.SearchEnabled; v != nil {
+			tfMap["search"] = aws.BoolValue(v)
+		}
+
+	case cloudsearch.IndexFieldTypeText:
+		options := field.TextOptions
+
+		if v := options.AnalysisScheme; v != nil {
+			tfMap["analysis_scheme"] = aws.StringValue(v)
+		}
+
+		if v := options.DefaultValue; v != nil {
+			tfMap["default_value"] = aws.StringValue(v)
+		}
+
+		if v := options.HighlightEnabled; v != nil {
+			tfMap["highlight"] = aws.BoolValue(v)
+		}
+
+		if v := options.ReturnEnabled; v != nil {
+			tfMap["return"] = aws.BoolValue(v)
+		}
+
+		if v := options.SortEnabled; v != nil {
+			tfMap["sort"] = aws.BoolValue(v)
+		}
+
+	case cloudsearch.IndexFieldTypeTextArray:
+		options := field.TextArrayOptions
+
+		if v := options.AnalysisScheme; v != nil {
+			tfMap["analysis_scheme"] = aws.StringValue(v)
+		}
+
+		if v := options.DefaultValue; v != nil {
+			tfMap["default_value"] = aws.StringValue(v)
+		}
+
+		if v := options.HighlightEnabled; v != nil {
+			tfMap["highlight"] = aws.BoolValue(v)
+		}
+
+		if v := options.ReturnEnabled; v != nil {
+			tfMap["return"] = aws.BoolValue(v)
+		}
+
+	default:
+		return nil, fmt.Errorf("unsupported index_field type: %s", fieldType)
+	}
+
+	return tfMap, nil
+}
+
+func flattenIndexFieldStatuses(apiObjects []*cloudsearch.IndexFieldStatus) ([]interface{}, error) {
+	if len(apiObjects) == 0 {
+		return nil, nil
+	}
+
+	var tfList []interface{}
+
+	for _, apiObject := range apiObjects {
+		if apiObject == nil {
+			continue
+		}
+
+		tfMap, err := flattenIndexFieldStatus(apiObject)
+
+		if err != nil {
+			return nil, err
+		}
+
+		tfList = append(tfList, tfMap)
+	}
+
+	return tfList, nil
 }
 
 func expandScalingParameters(tfMap map[string]interface{}) *cloudsearch.ScalingParameters {
