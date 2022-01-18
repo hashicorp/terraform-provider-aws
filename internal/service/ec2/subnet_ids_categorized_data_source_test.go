@@ -21,7 +21,7 @@ func TestAccEC2SubnetIDsCategorizedDataSource_basic(t *testing.T) {
 		CheckDestroy: testAccCheckVpcDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSubnetIDsCategorizedDataSourceConfig(rName, rInt),
+				Config: testAccSubnetIDsCategorizedDataSourceConfigBase(rName, rInt),
 			},
 			{
 				Config: testAccSubnetIDsWithDataSourceCategorizedDataSourceConfig(rName, rInt),
@@ -97,7 +97,7 @@ func TestAccEC2SubnetIDsCategorizedDataSourceWithNoGateway_ids(t *testing.T) {
 	})
 }
 
-func testAccSubnetIDsWithDataSourceCategorizedDataSourceConfig(rName string, rInt int) string {
+func testAccSubnetIDsCategorizedDataSourceConfigBase(rName string, rInt int) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "172.%[2]d.0.0/16"
@@ -136,6 +136,11 @@ resource "aws_subnet" "test_b" {
     Name = %[1]q
   }
 }
+`, rName, rInt))
+}
+
+func testAccSubnetIDsWithDataSourceCategorizedDataSourceConfig(rName string, rInt int) string {
+	return acctest.ConfigCompose(testAccSubnetIDsCategorizedDataSourceConfigBase(rName, rInt), `
 
 data "aws_subnet_ids_categorized" "categorized" {
   vpc_id = aws_vpc.test.id
@@ -147,68 +152,18 @@ data "aws_subnet_ids_categorized" "categorized" {
     aws_subnet.test_b,
   ]
 }
-`, rName, rInt))
-}
-
-func testAccSubnetIDsCategorizedDataSourceConfig(rName string, rInt int) string {
-	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
-resource "aws_vpc" "test" {
-  cidr_block = "172.%[2]d.0.0/16"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_subnet" "test_a_one" {
-  vpc_id            = aws_vpc.test.id
-  cidr_block        = "172.%[2]d.123.0/24"
-  availability_zone = data.aws_availability_zones.available.names[0]
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_subnet" "test_a_two" {
-  vpc_id            = aws_vpc.test.id
-  cidr_block        = "172.%[2]d.125.0/24"
-  availability_zone = data.aws_availability_zones.available.names[0]
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_subnet" "test_b" {
-  vpc_id            = aws_vpc.test.id
-  cidr_block        = "172.%[2]d.126.0/24"
-  availability_zone = data.aws_availability_zones.available.names[1]
-
-  tags = {
-    Name = %[1]q
-  }
-}
-`, rName, rInt))
+`)
 }
 
 // Here the route to the IGW is declared in a specific route table created by the configuration.
 // Public subnets are determined as being directly associated with this route table
 func testAccSubnetIDsCategorizedDataSourceWithExplicitPublicRoute_ids(rName string, rInt int) string {
-	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
-resource "aws_vpc" "test" {
-  cidr_block = "172.%[2]d.0.0/16"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
+	return acctest.ConfigCompose(testAccSubnetIDsCategorizedDataSourceConfigBase(rName, rInt), fmt.Sprintf(`
 resource "aws_internet_gateway" "gw" {
   vpc_id = aws_vpc.test.id
 
   tags = {
-    Name = "test"
+    Name = %[1]q
   }
 }
 
@@ -219,42 +174,16 @@ resource "aws_route_table" "public" {
     cidr_block = "0.0.0.0/0"
     gateway_id = aws_internet_gateway.gw.id
   }
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 # Make subnet test_a_one public
 resource "aws_route_table_association" "a_one" {
   subnet_id      = aws_subnet.test_a_one.id
   route_table_id = aws_route_table.public.id
-}
-
-resource "aws_subnet" "test_a_one" {
-  vpc_id            = aws_vpc.test.id
-  cidr_block        = "172.%[2]d.1.0/24"
-  availability_zone = data.aws_availability_zones.available.names[0]
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_subnet" "test_a_two" {
-  vpc_id            = aws_vpc.test.id
-  cidr_block        = "172.%[2]d.2.0/24"
-  availability_zone = data.aws_availability_zones.available.names[0]
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_subnet" "test_b" {
-  vpc_id            = aws_vpc.test.id
-  cidr_block        = "172.%[2]d.3.0/24"
-  availability_zone = data.aws_availability_zones.available.names[1]
-
-  tags = {
-    Name = %[1]q
-  }
 }
 
 data "aws_subnet_ids_categorized" "categorized" {
@@ -265,21 +194,13 @@ data "aws_subnet_ids_categorized" "categorized" {
     aws_route_table_association.a_one
   ]
 }
-`, rName, rInt))
+`, rName))
 }
 
 // Here the route to the IGW is added to the main route table.
 // Public subnets are therefore those _not_ associated with any other route table.
 func testAccSubnetIDsCategorizedDataSourceWithImplicitPublicRoute_ids(rName string, rInt int) string {
-	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
-resource "aws_vpc" "test" {
-  cidr_block = "172.%[2]d.0.0/16"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
+	return acctest.ConfigCompose(testAccSubnetIDsCategorizedDataSourceConfigBase(rName, rInt), fmt.Sprintf(`
 data "aws_route_table" "main" {
   vpc_id = aws_vpc.test.id
 
@@ -295,7 +216,7 @@ resource "aws_internet_gateway" "gw" {
   vpc_id = aws_vpc.test.id
 
   tags = {
-    Name = "test"
+    Name = %[1]q
   }
 }
 
@@ -307,42 +228,16 @@ resource "aws_route" "public" {
 
 resource "aws_route_table" "private" {
   vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 # Make subnet test_a_one private
 resource "aws_route_table_association" "a_one" {
   subnet_id      = aws_subnet.test_a_one.id
   route_table_id = aws_route_table.private.id
-}
-
-resource "aws_subnet" "test_a_one" {
-  vpc_id            = aws_vpc.test.id
-  cidr_block        = "172.%[2]d.1.0/24"
-  availability_zone = data.aws_availability_zones.available.names[0]
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_subnet" "test_a_two" {
-  vpc_id            = aws_vpc.test.id
-  cidr_block        = "172.%[2]d.2.0/24"
-  availability_zone = data.aws_availability_zones.available.names[0]
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_subnet" "test_b" {
-  vpc_id            = aws_vpc.test.id
-  cidr_block        = "172.%[2]d.3.0/24"
-  availability_zone = data.aws_availability_zones.available.names[1]
-
-  tags = {
-    Name = %[1]q
-  }
 }
 
 data "aws_subnet_ids_categorized" "categorized" {
@@ -354,58 +249,24 @@ data "aws_subnet_ids_categorized" "categorized" {
   ]
 }
 
-`, rName, rInt))
+`, rName))
 }
 
 // Here there is no gateway, thus all subnets are private including those on the main route table
 func testAccSubnetIDsCategorizedDataSourceWithNoGateway_ids(rName string, rInt int) string {
-	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
-resource "aws_vpc" "test" {
-  cidr_block = "172.%[2]d.0.0/16"
+	return acctest.ConfigCompose(testAccSubnetIDsCategorizedDataSourceConfigBase(rName, rInt), fmt.Sprintf(`
+resource "aws_route_table" "private" {
+  vpc_id = aws_vpc.test.id
 
   tags = {
     Name = %[1]q
   }
-}
-
-resource "aws_route_table" "private" {
-  vpc_id = aws_vpc.test.id
 }
 
 # Take subnet test_a_one off the main route table
 resource "aws_route_table_association" "a_one" {
   subnet_id      = aws_subnet.test_a_one.id
   route_table_id = aws_route_table.private.id
-}
-
-resource "aws_subnet" "test_a_one" {
-  vpc_id            = aws_vpc.test.id
-  cidr_block        = "172.%[2]d.1.0/24"
-  availability_zone = data.aws_availability_zones.available.names[0]
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_subnet" "test_a_two" {
-  vpc_id            = aws_vpc.test.id
-  cidr_block        = "172.%[2]d.2.0/24"
-  availability_zone = data.aws_availability_zones.available.names[0]
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_subnet" "test_b" {
-  vpc_id            = aws_vpc.test.id
-  cidr_block        = "172.%[2]d.3.0/24"
-  availability_zone = data.aws_availability_zones.available.names[1]
-
-  tags = {
-    Name = %[1]q
-  }
 }
 
 data "aws_subnet_ids_categorized" "categorized" {
@@ -419,5 +280,5 @@ data "aws_subnet_ids_categorized" "categorized" {
   ]
 }
 
-`, rName, rInt))
+`, rName))
 }
