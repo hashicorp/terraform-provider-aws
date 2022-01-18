@@ -13,7 +13,6 @@ func ResourceDefaultVPC() *schema.Resource {
 	// reuse aws_vpc schema, and methods for READ, UPDATE, DELETE
 	dvpc := ResourceVPC()
 	dvpc.Create = resourceDefaultVPCCreate
-	dvpc.Delete = resourceDefaultVPCDelete
 
 	// cidr_block is a computed value for Default VPCs
 	dvpc.Schema["cidr_block"] = &schema.Schema{
@@ -47,73 +46,4 @@ func resourceDefaultVPCCreate(d *schema.ResourceData, meta interface{}) error {
 	d.SetId(aws.StringValue(resp.Vpc.VpcId))
 
 	return resourceVPCUpdate(d, meta)
-}
-
-func resourceDefaultVPCDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
-	vpcId := d.Id()
-
-	//delete all subnets
-	reqDS := &ec2.DescribeSubnetsInput{
-		Filters: []*ec2.Filter{
-			{
-				Name:   aws.String("vpc-id"),
-				Values: aws.StringSlice([]string{vpcId}),
-			},
-		},
-	}
-
-	respDS, err := conn.DescribeSubnets(reqDS)
-	if err != nil {
-		return fmt.Errorf("Error describing default subnets: %s", err)
-	}
-	for _, subnet := range respDS.Subnets {
-		_, err := conn.DeleteSubnet(&ec2.DeleteSubnetInput{
-			SubnetId: subnet.SubnetId,
-		})
-		if err != nil {
-			return fmt.Errorf("Error deleting default subnet: %s", err)
-		}
-	}
-
-	//delete internet gateway
-	reqIG := &ec2.DescribeInternetGatewaysInput{
-		Filters: []*ec2.Filter{
-			{
-				Name:   aws.String("attachment.vpc-id"),
-				Values: aws.StringSlice([]string{vpcId}),
-			},
-		},
-	}
-
-	respIG, err := conn.DescribeInternetGateways(reqIG)
-	if err != nil {
-		return fmt.Errorf("Error describing default internet gateways: %s", err)
-	}
-	for _, ig := range respIG.InternetGateways {
-		_, err := conn.DetachInternetGateway(&ec2.DetachInternetGatewayInput{
-			InternetGatewayId: ig.InternetGatewayId,
-			VpcId:             ig.Attachments[0].VpcId,
-		})
-		if err != nil {
-			return fmt.Errorf("Error detaching default internet gateway: %s", err)
-		}
-		_, err = conn.DeleteInternetGateway(&ec2.DeleteInternetGatewayInput{
-			InternetGatewayId: ig.InternetGatewayId,
-		})
-		if err != nil {
-			return fmt.Errorf("Error deleting default internet gateway: %s", err)
-		}
-	}
-
-	delReq := &ec2.DeleteVpcInput{
-		VpcId: aws.String(vpcId),
-	}
-
-	_, err = conn.DeleteVpc(delReq)
-	if err != nil {
-		return fmt.Errorf("Error deleting default VPC: %s", err)
-	}
-
-	return nil
 }
