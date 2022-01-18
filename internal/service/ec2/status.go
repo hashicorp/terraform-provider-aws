@@ -318,24 +318,21 @@ func StatusRouteTableAssociationState(conn *ec2.EC2, id string) resource.StateRe
 
 const (
 	SecurityGroupStatusCreated = "Created"
-
-	SecurityGroupStatusNotFound = "NotFound"
-
-	SecurityGroupStatusUnknown = "Unknown"
 )
 
-// StatusSecurityGroup fetches the security group and its status
 func StatusSecurityGroup(conn *ec2.EC2, id string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		group, err := FindSecurityGroupByID(conn, id)
+		output, err := FindSecurityGroupByID(conn, id)
+
 		if tfresource.NotFound(err) {
-			return nil, SecurityGroupStatusNotFound, nil
-		}
-		if err != nil {
-			return nil, SecurityGroupStatusUnknown, err
+			return nil, "", nil
 		}
 
-		return group, SecurityGroupStatusCreated, nil
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, SecurityGroupStatusCreated, nil
 	}
 }
 

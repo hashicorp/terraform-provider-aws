@@ -25,6 +25,8 @@ const (
 	RouteNotFoundChecks                        = 1000 // Should exceed any reasonable custom timeout value.
 	RouteTableNotFoundChecks                   = 1000 // Should exceed any reasonable custom timeout value.
 	RouteTableAssociationCreatedNotFoundChecks = 1000 // Should exceed any reasonable custom timeout value.
+
+	SecurityGroupNotFoundChecks = 1000 // Should exceed any reasonable custom timeout value.
 )
 
 const (
@@ -414,10 +416,12 @@ func WaitRouteTableAssociationUpdated(conn *ec2.EC2, id string) (*ec2.RouteTable
 
 func WaitSecurityGroupCreated(conn *ec2.EC2, id string, timeout time.Duration) (*ec2.SecurityGroup, error) {
 	stateConf := &resource.StateChangeConf{
-		Pending: []string{SecurityGroupStatusNotFound},
-		Target:  []string{SecurityGroupStatusCreated},
-		Refresh: StatusSecurityGroup(conn, id),
-		Timeout: timeout,
+		Pending:                   []string{},
+		Target:                    []string{SecurityGroupStatusCreated},
+		Refresh:                   StatusSecurityGroup(conn, id),
+		Timeout:                   timeout,
+		NotFoundChecks:            SecurityGroupNotFoundChecks,
+		ContinuousTargetOccurence: 3,
 	}
 
 	outputRaw, err := stateConf.WaitForState()
