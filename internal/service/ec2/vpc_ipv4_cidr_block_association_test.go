@@ -51,6 +51,31 @@ func TestAccVPCIPv4CIDRBlockAssociation_basic(t *testing.T) {
 	})
 }
 
+func TestAccVPCIPv4CIDRBlockAssociation_disappears(t *testing.T) {
+	var associationSecondary, associationTertiary ec2.VpcCidrBlockAssociation
+	resource1Name := "aws_vpc_ipv4_cidr_block_association.secondary_cidr"
+	resource2Name := "aws_vpc_ipv4_cidr_block_association.tertiary_cidr"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckVPCIPv4CIDRBlockAssociationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVPCIPv4CIDRBlockAssociationConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVPCIPv4CIDRBlockAssociationExists(resource1Name, &associationSecondary),
+					testAccCheckVPCIPv4CIDRBlockAssociationExists(resource2Name, &associationTertiary),
+					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceVPCIPv4CIDRBlockAssociation(), resource1Name),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func TestAccVPCIPv4CIDRBlockAssociation_IpamBasic(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
