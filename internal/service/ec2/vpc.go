@@ -224,10 +224,10 @@ func resourceVPCCreate(d *schema.ResourceData, meta interface{}) error {
 	if len(vpc.Ipv6CidrBlockAssociationSet) > 0 && vpc.Ipv6CidrBlockAssociationSet[0] != nil {
 		associationID := aws.StringValue(output.Vpc.Ipv6CidrBlockAssociationSet[0].AssociationId)
 
-		_, err = WaitVPCIPv6CIDRBlockAssociationCreated(conn, associationID)
+		_, err = WaitVPCIPv6CIDRBlockAssociationCreated(conn, associationID, vpcIPv6CIDRBlockAssociationCreatedTimeout)
 
 		if err != nil {
-			return fmt.Errorf("error waiting for EC2 VPC (%s) CIDR block (%s) to become associated: %w", d.Id(), associationID, err)
+			return fmt.Errorf("error waiting for EC2 VPC (%s) IPv6 CIDR block (%s) to become associated: %w", d.Id(), associationID, err)
 		}
 	}
 
@@ -520,36 +520,6 @@ func resourceVPCCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, v in
 	return nil
 }
 
-// vpcDescribe returns EC2 API information about the specified VPC.
-// If the VPC doesn't exist, return nil.
-func vpcDescribe(conn *ec2.EC2, vpcId string) (*ec2.Vpc, error) {
-	resp, err := conn.DescribeVpcs(&ec2.DescribeVpcsInput{
-		VpcIds: aws.StringSlice([]string{vpcId}),
-	})
-	if err != nil {
-		if !tfawserr.ErrMessageContains(err, "InvalidVpcID.NotFound", "") {
-			return nil, err
-		}
-		resp = nil
-	}
-
-	if resp == nil {
-		return nil, nil
-	}
-
-	n := len(resp.Vpcs)
-	switch n {
-	case 0:
-		return nil, nil
-
-	case 1:
-		return resp.Vpcs[0], nil
-
-	default:
-		return nil, fmt.Errorf("Found %d VPCs for %s, expected 1", n, vpcId)
-	}
-}
-
 type vpcInfo struct {
 	vpc                         *ec2.Vpc
 	enableClassicLink           bool
@@ -684,10 +654,10 @@ func modifyVPCIPv6CIDRBlockAssociation(conn *ec2.EC2, vpcID, associationID strin
 			return "", fmt.Errorf("error disassociating EC2 VPC (%s) CIDR block (%s): %w", vpcID, associationID, err)
 		}
 
-		_, err = WaitVPCIPv6CIDRBlockAssociationDeleted(conn, associationID)
+		_, err = WaitVPCIPv6CIDRBlockAssociationDeleted(conn, associationID, vpcIPv6CIDRBlockAssociationDeletedTimeout)
 
 		if err != nil {
-			return "", fmt.Errorf("error waiting for EC2 VPC (%s) CIDR block (%s) to become disassociated: %w", vpcID, associationID, err)
+			return "", fmt.Errorf("error waiting for EC2 VPC (%s) IPv6 CIDR block (%s) to become disassociated: %w", vpcID, associationID, err)
 		}
 	}
 
@@ -724,10 +694,10 @@ func modifyVPCIPv6CIDRBlockAssociation(conn *ec2.EC2, vpcID, associationID strin
 
 		associationID = aws.StringValue(output.Ipv6CidrBlockAssociation.AssociationId)
 
-		_, err = WaitVPCIPv6CIDRBlockAssociationCreated(conn, associationID)
+		_, err = WaitVPCIPv6CIDRBlockAssociationCreated(conn, associationID, vpcIPv6CIDRBlockAssociationCreatedTimeout)
 
 		if err != nil {
-			return "", fmt.Errorf("error waiting for EC2 VPC (%s) CIDR block (%s) to become associated: %w", vpcID, associationID, err)
+			return "", fmt.Errorf("error waiting for EC2 VPC (%s) IPv6 CIDR block (%s) to become associated: %w", vpcID, associationID, err)
 		}
 	}
 

@@ -796,12 +796,14 @@ const (
 	vpcIPv6CIDRBlockAssociationDeletedTimeout = 5 * time.Minute
 )
 
-func WaitVPCIPv6CIDRBlockAssociationCreated(conn *ec2.EC2, id string) (*ec2.VpcCidrBlockState, error) {
+func WaitVPCIPv6CIDRBlockAssociationCreated(conn *ec2.EC2, id string, timeout time.Duration) (*ec2.VpcCidrBlockState, error) {
 	stateConf := &resource.StateChangeConf{
-		Pending: []string{ec2.VpcCidrBlockStateCodeAssociating, ec2.VpcCidrBlockStateCodeDisassociated, ec2.VpcCidrBlockStateCodeFailing},
-		Target:  []string{ec2.VpcCidrBlockStateCodeAssociated},
-		Refresh: StatusVPCIPv6CIDRBlockAssociationState(conn, id),
-		Timeout: vpcIPv6CIDRBlockAssociationCreatedTimeout,
+		Pending:    []string{ec2.VpcCidrBlockStateCodeAssociating, ec2.VpcCidrBlockStateCodeDisassociated, ec2.VpcCidrBlockStateCodeFailing},
+		Target:     []string{ec2.VpcCidrBlockStateCodeAssociated},
+		Refresh:    StatusVPCIPv6CIDRBlockAssociationState(conn, id),
+		Timeout:    timeout,
+		Delay:      10 * time.Second,
+		MinTimeout: 5 * time.Second,
 	}
 
 	outputRaw, err := stateConf.WaitForState()
@@ -817,12 +819,14 @@ func WaitVPCIPv6CIDRBlockAssociationCreated(conn *ec2.EC2, id string) (*ec2.VpcC
 	return nil, err
 }
 
-func WaitVPCIPv6CIDRBlockAssociationDeleted(conn *ec2.EC2, id string) (*ec2.VpcCidrBlockState, error) {
+func WaitVPCIPv6CIDRBlockAssociationDeleted(conn *ec2.EC2, id string, timeout time.Duration) (*ec2.VpcCidrBlockState, error) {
 	stateConf := &resource.StateChangeConf{
-		Pending: []string{ec2.VpcCidrBlockStateCodeAssociated, ec2.VpcCidrBlockStateCodeDisassociating, ec2.VpcCidrBlockStateCodeFailing},
-		Target:  []string{},
-		Refresh: StatusVPCIPv6CIDRBlockAssociationState(conn, id),
-		Timeout: vpcIPv6CIDRBlockAssociationDeletedTimeout,
+		Pending:    []string{ec2.VpcCidrBlockStateCodeAssociated, ec2.VpcCidrBlockStateCodeDisassociating, ec2.VpcCidrBlockStateCodeFailing},
+		Target:     []string{},
+		Refresh:    StatusVPCIPv6CIDRBlockAssociationState(conn, id),
+		Timeout:    timeout,
+		Delay:      10 * time.Second,
+		MinTimeout: 5 * time.Second,
 	}
 
 	outputRaw, err := stateConf.WaitForState()

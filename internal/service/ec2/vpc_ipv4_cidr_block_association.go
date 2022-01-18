@@ -102,7 +102,7 @@ func resourceVPCIPv4CIDRBlockAssociationCreate(d *schema.ResourceData, meta inte
 	_, err = WaitVPCCIDRBlockAssociationCreated(conn, d.Id(), d.Timeout(schema.TimeoutCreate))
 
 	if err != nil {
-		return fmt.Errorf("error waiting for EC2 VPC (%s) CIDR block (%s) to become associated: %w", vpcID, d.Id(), err)
+		return fmt.Errorf("error waiting for EC2 VPC (%s) IPv4 CIDR block (%s) to become associated: %w", vpcID, d.Id(), err)
 	}
 
 	return resourceVPCIPv4CIDRBlockAssociationRead(d, meta)
@@ -148,7 +148,7 @@ func resourceVPCIPv4CIDRBlockAssociationDelete(d *schema.ResourceData, meta inte
 	_, err = WaitVPCCIDRBlockAssociationDeleted(conn, d.Id(), d.Timeout(schema.TimeoutDelete))
 
 	if err != nil {
-		return fmt.Errorf("error waiting for EC2 VPC CIDR block (%s) to become disassociated: %w", d.Id(), err)
+		return fmt.Errorf("error waiting for EC2 VPC IPv4 CIDR block (%s) to become disassociated: %w", d.Id(), err)
 	}
 
 	return nil
