@@ -1063,8 +1063,8 @@ resource "aws_vpc" "test" {
 func testAccVpcConfigAssignGeneratedIpv6CidrBlock(rName string, assignGeneratedIpv6CidrBlock bool) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
-  assign_generated_ipv6_cidr_block     = %[2]t
-  cidr_block                           = "10.1.0.0/16"
+  assign_generated_ipv6_cidr_block = %[2]t
+  cidr_block                       = "10.1.0.0/16"
 
   tags = {
     Name = %[1]q
