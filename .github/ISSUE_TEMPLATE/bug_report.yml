@@ -15,7 +15,7 @@ body:
         * [Registry](https://registry.terraform.io/) issues
         * Spans resources across multiple providers
 
-        If you are running into one of these scenarios, we recommend opening an issue in the [Terraform core repository](https://github.com/hashicorp/terraform/) instead.
+        If you are running into one of these scenarios, we recommend opening an issue in the [Terraform Core repository](https://github.com/hashicorp/terraform/) instead.
   - type: textarea
     attributes:
       label: Community Note
