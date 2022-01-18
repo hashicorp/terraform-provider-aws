@@ -80,7 +80,7 @@ func testAccDetectiveMember_disappears(t *testing.T) {
 	})
 }
 
-func testAccDetectiveMember_invitationMessage(t *testing.T) {
+func testAccDetectiveMember_message(t *testing.T) {
 	var detectiveOutput detective.MemberDetail
 	var providers []*schema.Provider
 	resourceName := "aws_detective_member.member"
