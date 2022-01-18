@@ -45,5 +45,5 @@ func resourceDefaultVPCCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 	d.SetId(aws.StringValue(resp.Vpc.VpcId))
 
-	return resourceVPCUpdate(d, meta)
+	return resourceVPCRead(d, meta)
 }
