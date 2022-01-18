@@ -68,6 +68,53 @@ func ResourceDomain() *schema.Resource {
 					},
 				},
 			},
+			// The index_field schema is based on the AWS Console screen, not the API model.
+			"index_field": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"analysis_scheme": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"default_value": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"facet": {
+							Type:     schema.TypeBool,
+							Optional: true,
+						},
+						"highlight": {
+							Type:     schema.TypeBool,
+							Optional: true,
+						},
+						"name": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validateIndexName,
+						},
+						"return": {
+							Type:     schema.TypeBool,
+							Optional: true,
+						},
+						"search": {
+							Type:     schema.TypeBool,
+							Optional: true,
+						},
+						"sort": {
+							Type:     schema.TypeBool,
+							Optional: true,
+						},
+						"type": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validation.StringInSlice(cloudsearch.IndexFieldType_Values(), false),
+						},
+					},
+				},
+			},
 			"multi_az": {
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -108,66 +155,6 @@ func ResourceDomain() *schema.Resource {
 			"search_service_endpoint": {
 				Type:     schema.TypeString,
 				Computed: true,
-			},
-
-			"index": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"name": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validateIndexName,
-						},
-
-						"type": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.StringInSlice(cloudsearch.IndexFieldType_Values(), false),
-						},
-
-						"search": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  false,
-						},
-
-						"facet": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  false,
-						},
-
-						"return": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  false,
-						},
-
-						"sort": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  false,
-						},
-
-						"highlight": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  false,
-						},
-
-						"analysis_scheme": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-
-						"default_value": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-					},
-				},
 			},
 		},
 	}
@@ -232,21 +219,31 @@ func resourceCloudSearchDomainCreate(d *schema.ResourceData, meta interface{}) e
 		}
 	}
 
-	if v, ok := d.GetOk("index"); ok && v.(*schema.Set).Len() > 0 {
-		for _, v := range v.(*schema.Set).List() {
-			field, err := generateIndexFieldInput(v.(map[string]interface{}))
+	if v, ok := d.GetOk("index_field"); ok && v.(*schema.Set).Len() > 0 {
+		for _, tfMapRaw := range v.(*schema.Set).List() {
+			tfMap, ok := tfMapRaw.(map[string]interface{})
+
+			if !ok {
+				continue
+			}
+
+			apiObject, err := expandIndexField(tfMap)
 
 			if err != nil {
 				return err
 			}
 
+			if apiObject == nil {
+				continue
+			}
+
 			_, err = conn.DefineIndexField(&cloudsearch.DefineIndexFieldInput{
 				DomainName: aws.String(d.Id()),
-				IndexField: field,
+				IndexField: apiObject,
 			})
 
 			if err != nil {
-				return fmt.Errorf("error defining CloudSearch Domain (%s) index field (%s): %w", d.Id(), aws.StringValue(field.IndexFieldName), err)
+				return fmt.Errorf("error defining CloudSearch Domain (%s) index field (%s): %w", d.Id(), aws.StringValue(apiObject.IndexFieldName), err)
 			}
 		}
 
@@ -1105,6 +1102,216 @@ func flattenDomainEndpointOptions(apiObject *cloudsearch.DomainEndpointOptions) 
 	}
 
 	return tfMap
+}
+
+func expandIndexField(tfMap map[string]interface{}) (*cloudsearch.IndexField, error) {
+	if tfMap == nil {
+		return nil, nil
+	}
+
+	apiObject := &cloudsearch.IndexField{}
+
+	if v, ok := tfMap["name"].(string); ok && v != "" {
+		apiObject.IndexFieldName = aws.String(v)
+	}
+
+	fieldType, ok := tfMap["type"].(string)
+	if ok && fieldType != "" {
+		apiObject.IndexFieldType = aws.String(fieldType)
+	}
+
+	analysisScheme, _ := tfMap["analysis_scheme"].(string)
+	facetEnabled, _ := tfMap["facet"].(bool)
+	highlightEnabled, _ := tfMap["highlight"].(bool)
+	returnEnabled, _ := tfMap["return"].(bool)
+	searchEnabled, _ := tfMap["search"].(bool)
+	sortEnabled, _ := tfMap["sort"].(bool)
+
+	switch fieldType {
+	case cloudsearch.IndexFieldTypeDate:
+		options := &cloudsearch.DateOptions{
+			FacetEnabled:  aws.Bool(facetEnabled),
+			ReturnEnabled: aws.Bool(returnEnabled),
+			SearchEnabled: aws.Bool(searchEnabled),
+			SortEnabled:   aws.Bool(sortEnabled),
+		}
+
+		if v, ok := tfMap["default_value"].(string); ok && v != "" {
+			options.DefaultValue = aws.String(v)
+		}
+
+		apiObject.DateOptions = options
+
+	case cloudsearch.IndexFieldTypeDateArray:
+		options := &cloudsearch.DateArrayOptions{
+			FacetEnabled:  aws.Bool(facetEnabled),
+			ReturnEnabled: aws.Bool(returnEnabled),
+			SearchEnabled: aws.Bool(searchEnabled),
+		}
+
+		if v, ok := tfMap["default_value"].(string); ok && v != "" {
+			options.DefaultValue = aws.String(v)
+		}
+
+		apiObject.DateArrayOptions = options
+
+	case cloudsearch.IndexFieldTypeDouble:
+		options := &cloudsearch.DoubleOptions{
+			FacetEnabled:  aws.Bool(facetEnabled),
+			ReturnEnabled: aws.Bool(returnEnabled),
+			SearchEnabled: aws.Bool(searchEnabled),
+			SortEnabled:   aws.Bool(sortEnabled),
+		}
+
+		if v, ok := tfMap["default_value"].(string); ok && v != "" {
+			v, err := strconv.ParseFloat(v, 64)
+
+			if err != nil {
+				return nil, err
+			}
+
+			options.DefaultValue = aws.Float64(v)
+		}
+
+		apiObject.DoubleOptions = options
+
+	case cloudsearch.IndexFieldTypeDoubleArray:
+		options := &cloudsearch.DoubleArrayOptions{
+			FacetEnabled:  aws.Bool(facetEnabled),
+			ReturnEnabled: aws.Bool(returnEnabled),
+			SearchEnabled: aws.Bool(searchEnabled),
+		}
+
+		if v, ok := tfMap["default_value"].(string); ok && v != "" {
+			v, err := strconv.ParseFloat(v, 64)
+
+			if err != nil {
+				return nil, err
+			}
+
+			options.DefaultValue = aws.Float64(v)
+		}
+
+		apiObject.DoubleArrayOptions = options
+
+	case cloudsearch.IndexFieldTypeInt:
+		options := &cloudsearch.IntOptions{
+			FacetEnabled:  aws.Bool(facetEnabled),
+			ReturnEnabled: aws.Bool(returnEnabled),
+			SearchEnabled: aws.Bool(searchEnabled),
+			SortEnabled:   aws.Bool(sortEnabled),
+		}
+
+		if v, ok := tfMap["default_value"].(string); ok && v != "" {
+			v, err := strconv.Atoi(v)
+
+			if err != nil {
+				return nil, err
+			}
+
+			options.DefaultValue = aws.Int64(int64(v))
+		}
+
+		apiObject.IntOptions = options
+
+	case cloudsearch.IndexFieldTypeIntArray:
+		options := &cloudsearch.IntArrayOptions{
+			FacetEnabled:  aws.Bool(facetEnabled),
+			ReturnEnabled: aws.Bool(returnEnabled),
+			SearchEnabled: aws.Bool(searchEnabled),
+		}
+
+		if v, ok := tfMap["default_value"].(string); ok && v != "" {
+			v, err := strconv.Atoi(v)
+
+			if err != nil {
+				return nil, err
+			}
+
+			options.DefaultValue = aws.Int64(int64(v))
+		}
+
+		apiObject.IntArrayOptions = options
+
+	case cloudsearch.IndexFieldTypeLatlon:
+		options := &cloudsearch.LatLonOptions{
+			FacetEnabled:  aws.Bool(facetEnabled),
+			ReturnEnabled: aws.Bool(returnEnabled),
+			SearchEnabled: aws.Bool(searchEnabled),
+			SortEnabled:   aws.Bool(sortEnabled),
+		}
+
+		if v, ok := tfMap["default_value"].(string); ok && v != "" {
+			options.DefaultValue = aws.String(v)
+		}
+
+		apiObject.LatLonOptions = options
+
+	case cloudsearch.IndexFieldTypeLiteral:
+		options := &cloudsearch.LiteralOptions{
+			FacetEnabled:  aws.Bool(facetEnabled),
+			ReturnEnabled: aws.Bool(returnEnabled),
+			SearchEnabled: aws.Bool(searchEnabled),
+			SortEnabled:   aws.Bool(sortEnabled),
+		}
+
+		if v, ok := tfMap["default_value"].(string); ok && v != "" {
+			options.DefaultValue = aws.String(v)
+		}
+
+		apiObject.LiteralOptions = options
+
+	case cloudsearch.IndexFieldTypeLiteralArray:
+		options := &cloudsearch.LiteralArrayOptions{
+			FacetEnabled:  aws.Bool(facetEnabled),
+			ReturnEnabled: aws.Bool(returnEnabled),
+			SearchEnabled: aws.Bool(searchEnabled),
+		}
+
+		if v, ok := tfMap["default_value"].(string); ok && v != "" {
+			options.DefaultValue = aws.String(v)
+		}
+
+		apiObject.LiteralArrayOptions = options
+
+	case cloudsearch.IndexFieldTypeText:
+		options := &cloudsearch.TextOptions{
+			HighlightEnabled: aws.Bool(highlightEnabled),
+			ReturnEnabled:    aws.Bool(returnEnabled),
+			SortEnabled:      aws.Bool(sortEnabled),
+		}
+
+		if analysisScheme != "" {
+			options.AnalysisScheme = aws.String(analysisScheme)
+		}
+
+		if v, ok := tfMap["default_value"].(string); ok && v != "" {
+			options.DefaultValue = aws.String(v)
+		}
+
+		apiObject.TextOptions = options
+
+	case cloudsearch.IndexFieldTypeTextArray:
+		options := &cloudsearch.TextArrayOptions{
+			HighlightEnabled: aws.Bool(highlightEnabled),
+			ReturnEnabled:    aws.Bool(returnEnabled),
+		}
+
+		if analysisScheme != "" {
+			options.AnalysisScheme = aws.String(analysisScheme)
+		}
+
+		if v, ok := tfMap["default_value"].(string); ok && v != "" {
+			options.DefaultValue = aws.String(v)
+		}
+
+		apiObject.TextArrayOptions = options
+
+	default:
+		return nil, fmt.Errorf("unsupported index_field type: %s", fieldType)
+	}
+
+	return apiObject, nil
 }
 
 func expandScalingParameters(tfMap map[string]interface{}) *cloudsearch.ScalingParameters {
