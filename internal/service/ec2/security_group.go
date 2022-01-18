@@ -343,26 +343,12 @@ func resourceSecurityGroupRead(d *schema.ResourceData, meta interface{}) error {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	var sg *ec2.SecurityGroup
-	var err error
+	sg, err := FindSecurityGroupByID(conn, d.Id())
 	var nfe *resource.NotFoundError
-	err = resource.Retry(15 * time.Second, func() *resource.RetryError {
-		sg, err = FindSecurityGroupByID(conn, d.Id())
-		if !d.IsNewResource() && errors.As(err, &nfe) {
-			log.Printf("[WARN] Security group (%s) not found, removing from state", d.Id())
-			d.SetId("")
-			return nil
-		}
-		if d.IsNewResource() && errors.As(err, &nfe) {
-			return resource.RetryableError(err)
-		}
-		if err != nil {
-			return resource.NonRetryableError(err)
-		}
+	if !d.IsNewResource() && errors.As(err, &nfe) {
+		log.Printf("[WARN] Security group (%s) not found, removing from state", d.Id())
+		d.SetId("")
 		return nil
-	})
-	if tfresource.TimedOut(err) {
-		sg, err = FindSecurityGroupByID(conn, d.Id())
 	}
 	if err != nil {
 		return fmt.Errorf("error reading Security Group (%s): %w", d.Id(), err)
@@ -419,22 +405,7 @@ func resourceSecurityGroupRead(d *schema.ResourceData, meta interface{}) error {
 func resourceSecurityGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
-	var group *ec2.SecurityGroup
-	var err error
-	var nfe *resource.NotFoundError
-	err = resource.Retry(15 * time.Second, func() *resource.RetryError {
-		group, err = FindSecurityGroupByID(conn, d.Id())
-		if errors.As(err, &nfe) {
-			return resource.RetryableError(err)
-		} 
-		if err != nil {
-			return resource.NonRetryableError(err)
-		}
-		return nil
-	})
-	if tfresource.TimedOut(err) {
-		group, err = FindSecurityGroupByID(conn, d.Id())
-	}
+	group, err := FindSecurityGroupByID(conn, d.Id())
 	if err != nil {
 		return fmt.Errorf("error updating Security Group (%s): %w", d.Id(), err)
 	}
