@@ -2439,18 +2439,13 @@ func readSecurityGroups(d *schema.ResourceData, instance *ec2.Instance, conn *ec
 
 	// If the instance is in a VPC, find out if that VPC is Default to determine
 	// whether to store names.
-	if aws.StringValue(instance.VpcId) != "" {
-		out, err := conn.DescribeVpcs(&ec2.DescribeVpcsInput{
-			VpcIds: []*string{instance.VpcId},
-		})
+	if vpcID := aws.StringValue(instance.VpcId); vpcID != "" {
+		vpc, err := FindVPCByID(conn, vpcID)
+
 		if err != nil {
-			log.Printf("[WARN] Unable to describe VPC %q: %s", aws.StringValue(instance.VpcId), err)
-		} else if len(out.Vpcs) == 0 {
-			// This may happen in Eucalyptus Cloud
-			log.Printf("[WARN] Unable to retrieve VPCs")
+			log.Printf("[WARN] error reading EC2 Instance (%s) VPC (%s): %s", d.Id(), vpcID, err)
 		} else {
-			isInDefaultVpc := aws.BoolValue(out.Vpcs[0].IsDefault)
-			useName = isInDefaultVpc
+			useName = aws.BoolValue(vpc.IsDefault)
 		}
 	}
 
