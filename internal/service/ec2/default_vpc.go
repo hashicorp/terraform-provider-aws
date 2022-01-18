@@ -2,6 +2,7 @@ package ec2
 
 import (
 	"fmt"
+	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
@@ -10,9 +11,10 @@ import (
 )
 
 func ResourceDefaultVPC() *schema.Resource {
-	// reuse aws_vpc schema, and methods for READ, UPDATE, DELETE
+	// reuse aws_vpc schema, and methods for READ, UPDATE
 	dvpc := ResourceVPC()
 	dvpc.Create = resourceDefaultVPCCreate
+	dvpc.Delete = resourceDefaultVPCDelete
 
 	// cidr_block is a computed value for Default VPCs
 	dvpc.Schema["cidr_block"] = &schema.Schema{
@@ -35,15 +37,30 @@ func ResourceDefaultVPC() *schema.Resource {
 
 func resourceDefaultVPCCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
-	req := &ec2.CreateDefaultVpcInput{
-		DryRun: aws.Bool(false),
+	req := &ec2.DescribeVpcsInput{
+		Filters: []*ec2.Filter{
+			{
+				Name:   aws.String("isDefault"),
+				Values: aws.StringSlice([]string{"true"}),
+			},
+		},
 	}
 
-	resp, err := conn.CreateDefaultVpc(req)
+	resp, err := conn.DescribeVpcs(req)
 	if err != nil {
-		return fmt.Errorf("Error creating default VPC: %s", err)
+		return err
 	}
-	d.SetId(aws.StringValue(resp.Vpc.VpcId))
 
-	return resourceVPCRead(d, meta)
+	if resp.Vpcs == nil || len(resp.Vpcs) == 0 {
+		return fmt.Errorf("No default VPC found in this region.")
+	}
+
+	d.SetId(aws.StringValue(resp.Vpcs[0].VpcId))
+
+	return resourceVPCUpdate(d, meta)
+}
+
+func resourceDefaultVPCDelete(d *schema.ResourceData, meta interface{}) error {
+	log.Printf("[WARN] Cannot destroy Default VPC. Terraform will remove this resource from the state file, however resources may remain.")
+	return nil
 }
