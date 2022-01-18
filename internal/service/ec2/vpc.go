@@ -282,13 +282,21 @@ func resourceVPCRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("owner_id", ownerID)
 
 	if v, err := FindVPCClassicLinkEnabled(conn, d.Id()); err != nil {
-		return fmt.Errorf("error reading EC2 VPC (%s) ClassicLinkEnabled: %w", d.Id(), err)
+		if tfresource.NotFound(err) {
+			d.Set("enable_classiclink", nil)
+		} else {
+			return fmt.Errorf("error reading EC2 VPC (%s) ClassicLinkEnabled: %w", d.Id(), err)
+		}
 	} else {
 		d.Set("enable_classiclink", v)
 	}
 
 	if v, err := FindVPCClassicLinkDnsSupported(conn, d.Id()); err != nil {
-		return fmt.Errorf("error reading EC2 VPC (%s) ClassicLinkDnsSupported: %w", d.Id(), err)
+		if tfresource.NotFound(err) {
+			d.Set("enable_classiclink_dns_support", nil)
+		} else {
+			return fmt.Errorf("error reading EC2 VPC (%s) ClassicLinkDnsSupported: %w", d.Id(), err)
+		}
 	} else {
 		d.Set("enable_classiclink_dns_support", v)
 	}
