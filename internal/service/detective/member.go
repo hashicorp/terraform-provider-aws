@@ -74,6 +74,10 @@ func ResourceMember() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"volume_usage_in_bytes": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 		},
 	}
 }
@@ -168,6 +172,7 @@ func resourceMemberRead(ctx context.Context, d *schema.ResourceData, meta interf
 	d.Set("invited_time", aws.TimeValue(resp.InvitedTime).Format(time.RFC3339))
 	d.Set("status", resp.Status)
 	d.Set("updated_time", aws.TimeValue(resp.UpdatedTime).Format(time.RFC3339))
+	d.Set("volume_usage_in_bytes", resp.VolumeUsageInBytes)
 
 	return nil
 }
