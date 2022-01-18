@@ -18,9 +18,9 @@ import (
 func testAccDetectiveMember_basic(t *testing.T) {
 	var providers []*schema.Provider
 	var detectiveOutput detective.MemberDetail
-	resourceName := "aws_detective_member.member"
+	resourceName := "aws_detective_member.test"
 	dataSourceAlternate := "data.aws_caller_identity.member"
-	email := testAccMemberFromEnv(t, false)
+	email := testAccMemberFromEnv(t)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
@@ -56,8 +56,8 @@ func testAccDetectiveMember_basic(t *testing.T) {
 func testAccDetectiveMember_disappears(t *testing.T) {
 	var providers []*schema.Provider
 	var detectiveOutput detective.MemberDetail
-	resourceName := "aws_detective_member.member"
-	email := testAccMemberFromEnv(t, false)
+	resourceName := "aws_detective_member.test"
+	email := testAccMemberFromEnv(t)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
@@ -83,9 +83,9 @@ func testAccDetectiveMember_disappears(t *testing.T) {
 func testAccDetectiveMember_message(t *testing.T) {
 	var detectiveOutput detective.MemberDetail
 	var providers []*schema.Provider
-	resourceName := "aws_detective_member.member"
+	resourceName := "aws_detective_member.test"
 	dataSourceAlternate := "data.aws_caller_identity.member"
-	email := testAccMemberFromEnv(t, true)
+	email := testAccMemberFromEnv(t)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
@@ -195,11 +195,11 @@ data "aws_caller_identity" "member" {
   provider = "awsalternate"
 }
 
-resource "aws_detective_graph" "member" {}
+resource "aws_detective_graph" "test" {}
 
-resource "aws_detective_member" "member" {
+resource "aws_detective_member" "test" {
   account_id    = data.aws_caller_identity.member.account_id
-  graph_arn     = aws_detective_graph.member.id
+  graph_arn     = aws_detective_graph.test.id
   email_address = %[1]q
 }
 `, email)
@@ -211,11 +211,11 @@ data "aws_caller_identity" "member" {
   provider = "awsalternate"
 }
 
-resource "aws_detective_graph" "member" {}
+resource "aws_detective_graph" "test" {}
 
-resource "aws_detective_member" "member" {
+resource "aws_detective_member" "test" {
   account_id    = data.aws_caller_identity.member.account_id
-  graph_arn     = aws_detective_graph.member.id
+  graph_arn     = aws_detective_graph.test.id
   email_address = %[1]q
   message       = "This is a message of the invitation"
 }

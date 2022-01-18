@@ -18,8 +18,8 @@ import (
 
 func testAccDetectiveInvitationAccepter_basic(t *testing.T) {
 	var providers []*schema.Provider
-	resourceName := "aws_detective_invitation_accepter.member"
-	email := testAccMemberFromEnv(t, false)
+	resourceName := "aws_detective_invitation_accepter.test"
+	email := testAccMemberFromEnv(t)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
@@ -103,18 +103,20 @@ data "aws_caller_identity" "member" {
   provider = "awsalternate"
 }
 
-resource "aws_detective_graph" "admin" {}
+resource "aws_detective_graph" "test" {}
 
-resource "aws_detective_member" "member" {
+resource "aws_detective_member" "test" {
   account_id    = data.aws_caller_identity.member.account_id
-  graph_arn     = aws_detective_graph.admin.id
+  graph_arn     = aws_detective_graph.test.id
   email_address = %[1]q
   message       = "This is a message of the invite"
 }
 
-resource "aws_detective_invitation_accepter" "member" {
+resource "aws_detective_invitation_accepter" "test" {
   provider  = "awsalternate"
-  graph_arn = aws_detective_member.member.graph_arn
+  graph_arn = aws_detective_member.test.graph_arn
+
+  depends_on = [aws_detective_member.test]
 }
 `, email)
 }
