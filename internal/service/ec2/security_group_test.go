@@ -643,6 +643,28 @@ func TestAccEC2SecurityGroup_basic(t *testing.T) {
 	})
 }
 
+func TestAccEC2SecurityGroup_disappears(t *testing.T) {
+	var group ec2.SecurityGroup
+	resourceName := "aws_security_group.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckSecurityGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSecurityGroupConfig,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSecurityGroupExists(resourceName, &group),
+					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceSecurityGroup(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func TestAccEC2SecurityGroup_egressMode(t *testing.T) {
 	var securityGroup1, securityGroup2, securityGroup3 ec2.SecurityGroup
 	resourceName := "aws_security_group.test"
