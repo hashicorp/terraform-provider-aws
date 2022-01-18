@@ -107,7 +107,7 @@ resource "aws_vpc" "test" {
   }
 }
 
-resource "aws_subnet" "test_public_a" {
+resource "aws_subnet" "test_a_one" {
   vpc_id            = aws_vpc.test.id
   cidr_block        = "172.%[2]d.123.0/24"
   availability_zone = data.aws_availability_zones.available.names[0]
@@ -117,7 +117,7 @@ resource "aws_subnet" "test_public_a" {
   }
 }
 
-resource "aws_subnet" "test_private_a" {
+resource "aws_subnet" "test_a_two" {
   vpc_id            = aws_vpc.test.id
   cidr_block        = "172.%[2]d.125.0/24"
   availability_zone = data.aws_availability_zones.available.names[0]
@@ -127,7 +127,7 @@ resource "aws_subnet" "test_private_a" {
   }
 }
 
-resource "aws_subnet" "test_private_b" {
+resource "aws_subnet" "test_b" {
   vpc_id            = aws_vpc.test.id
   cidr_block        = "172.%[2]d.126.0/24"
   availability_zone = data.aws_availability_zones.available.names[1]
@@ -139,6 +139,13 @@ resource "aws_subnet" "test_private_b" {
 
 data "aws_subnet_ids_categorized" "categorized" {
   vpc_id = aws_vpc.test.id
+
+  # Ensure data source not read till all referenced resources exist
+  depends_on = [
+    aws_subnet.test_a_one,
+    aws_subnet.test_a_two,
+    aws_subnet.test_b,
+  ]
 }
 `, rName, rInt))
 }
@@ -153,7 +160,7 @@ resource "aws_vpc" "test" {
   }
 }
 
-resource "aws_subnet" "test_public_a" {
+resource "aws_subnet" "test_a_one" {
   vpc_id            = aws_vpc.test.id
   cidr_block        = "172.%[2]d.123.0/24"
   availability_zone = data.aws_availability_zones.available.names[0]
@@ -163,7 +170,7 @@ resource "aws_subnet" "test_public_a" {
   }
 }
 
-resource "aws_subnet" "test_private_a" {
+resource "aws_subnet" "test_a_two" {
   vpc_id            = aws_vpc.test.id
   cidr_block        = "172.%[2]d.125.0/24"
   availability_zone = data.aws_availability_zones.available.names[0]
@@ -173,7 +180,7 @@ resource "aws_subnet" "test_private_a" {
   }
 }
 
-resource "aws_subnet" "test_private_b" {
+resource "aws_subnet" "test_b" {
   vpc_id            = aws_vpc.test.id
   cidr_block        = "172.%[2]d.126.0/24"
   availability_zone = data.aws_availability_zones.available.names[1]
@@ -350,7 +357,7 @@ data "aws_subnet_ids_categorized" "categorized" {
 `, rName, rInt))
 }
 
-// Here these is no gateway, thus all subnets are private including those on the main route table
+// Here there is no gateway, thus all subnets are private including those on the main route table
 func testAccSubnetIDsCategorizedDataSourceWithNoGateway_ids(rName string, rInt int) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 resource "aws_vpc" "test" {
