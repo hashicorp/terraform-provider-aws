@@ -1,0 +1,2 @@
+```release-note:enhancement
+resource/aws_autoscaling_policy: Add customized metric specification in `predictive_scaling_configuration` argument
