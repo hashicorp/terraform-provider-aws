@@ -180,7 +180,7 @@ The following arguments are optional:
 ### cluster_mode (**DEPRECATED**)
 
 * `num_node_groups` - (Optional, **Deprecated** use root-level `num_node_groups` instead) Number of node groups (shards) for this Redis replication group. Changing this number will trigger an online resizing operation before other settings modifications. Required unless `global_replication_group_id` is set.
-* `replicas_per_node_group` - (Required, **Deprecated** use root-level `replicas_per_node_group` instead) Number of replica nodes in each node group. Valid values are 0 to 5. Changing this number will trigger an online resizing operation before other settings modifications.
+* `replicas_per_node_group` - (Optional, Required with `cluster_mode` `num_node_groups`, **Deprecated** use root-level `replicas_per_node_group` instead) Number of replica nodes in each node group. Valid values are 0 to 5. Changing this number will trigger an online resizing operation before other settings modifications.
 
 ## Attributes Reference
 

@@ -97,7 +97,8 @@ func ResourceReplicationGroup() *schema.Resource {
 						},
 						"replicas_per_node_group": {
 							Type:          schema.TypeInt,
-							Required:      true,
+							Optional:      true,
+							Computed:      true,
 							ConflictsWith: []string{"replicas_per_node_group"},
 							Deprecated:    "Use root-level replicas_per_node_group instead",
 						},
@@ -117,6 +118,7 @@ func ResourceReplicationGroup() *schema.Resource {
 			"description": {
 				Type:          schema.TypeString,
 				Optional:      true,
+				Computed:      true,
 				ConflictsWith: []string{"replication_group_description"},
 			},
 			"engine": {
@@ -236,11 +238,13 @@ func ResourceReplicationGroup() *schema.Resource {
 			"replicas_per_node_group": {
 				Type:          schema.TypeInt,
 				Optional:      true,
+				Computed:      true,
 				ConflictsWith: []string{"cluster_mode"},
 			},
 			"replication_group_description": {
 				Type:          schema.TypeString,
 				Optional:      true,
+				Computed:      true,
 				ConflictsWith: []string{"description"},
 				Deprecated:    "Use description instead",
 			},
@@ -371,12 +375,20 @@ func resourceReplicationGroupCreate(d *schema.ResourceData, meta interface{}) er
 		Tags:                    Tags(tags.IgnoreAWS()),
 	}
 
-	if v, ok := d.GetOk("data_tiering_enabled"); ok {
-		params.DataTieringEnabled = aws.Bool(v.(bool))
-	}
-
 	if v, ok := d.GetOk("description"); ok {
 		params.ReplicationGroupDescription = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("replication_group_description"); ok {
+		params.ReplicationGroupDescription = aws.String(v.(string))
+	}
+
+	if params.ReplicationGroupDescription == nil {
+		return errors.New("one of replication_group_description or description must be configured")
+	}
+
+	if v, ok := d.GetOk("data_tiering_enabled"); ok {
+		params.DataTieringEnabled = aws.Bool(v.(bool))
 	}
 
 	if v, ok := d.GetOk("global_replication_group_id"); ok {
@@ -406,10 +418,6 @@ func resourceReplicationGroupCreate(d *schema.ResourceData, meta interface{}) er
 
 	if v, ok := d.GetOk("port"); ok {
 		params.Port = aws.Int64(int64(v.(int)))
-	}
-
-	if v, ok := d.GetOk("replication_group_description"); ok {
-		params.ReplicationGroupDescription = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("subnet_group_name"); ok {
