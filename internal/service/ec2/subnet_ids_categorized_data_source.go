@@ -150,6 +150,9 @@ func getCategorizedSubnets(conn *ec2.EC2, vpcId string) (*subnetInfo, error) {
 	if len(natGateways) > 0 {
 		// further categorize private subnets
 		si.privateNatSubnetIds, si.privateNoNatSubnetIds = categorizePrivateSubnetIds(natGateways, routeTables, si.privateSubnetIds)
+	} else {
+		// All private subnets are no-NAT
+		si.privateNoNatSubnetIds = si.privateSubnetIds
 	}
 
 	return &si, nil
@@ -235,12 +238,14 @@ func categorizePrivateSubnetIds(natGateways []*ec2.NatGateway, routeTables []*ec
 func findRouteTableForGateway(routeTables []*ec2.RouteTable, gatewayId string) *ec2.RouteTable {
 	for _, t := range routeTables {
 		for _, r := range t.Routes {
-			if r.GatewayId != nil && aws.StringValue(r.GatewayId) == gatewayId {
+			if (r.GatewayId != nil && aws.StringValue(r.GatewayId) == gatewayId) || (r.NatGatewayId != nil && aws.StringValue(r.NatGatewayId) == gatewayId) {
+				log.Printf("[INFO] aws_subnet_ids_categorized: Route table for %s: %s\n", gatewayId, aws.StringValue(t.RouteTableId))
 				return t
 			}
 		}
 	}
 
+	log.Printf("[WARN] aws_subnet_ids_categorized: Route table for %s not found\n", gatewayId)
 	return nil
 }
 
