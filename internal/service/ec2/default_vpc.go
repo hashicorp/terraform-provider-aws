@@ -238,6 +238,51 @@ func resourceDefaultVPCCreate(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
+	// Configure IPv6.
+	var associationID, oldIPv6PoolID, oldIPv6CIDRBlock, oldIPv6CIDRBlockNetworkBorderGroup string
+	var oldAssignGeneratedIPv6CIDRBlock bool
+
+	if v := defaultIPv6CIDRBlockAssociation(vpcInfo.vpc, ""); v != nil {
+		associationID = aws.StringValue(v.AssociationId)
+		oldIPv6CIDRBlock = aws.StringValue(v.Ipv6CidrBlock)
+		oldIPv6CIDRBlockNetworkBorderGroup = aws.StringValue(v.NetworkBorderGroup)
+		ipv6PoolID := aws.StringValue(v.Ipv6Pool)
+		if ipv6PoolID == AmazonIPv6PoolID {
+			oldAssignGeneratedIPv6CIDRBlock = true
+		} else {
+			oldIPv6PoolID = ipv6PoolID
+		}
+	}
+
+	if newAssignGeneratedIPv6CIDRBlock, newIPv6CIDRBlockNetworkBorderGroup := d.Get("assign_generated_ipv6_cidr_block").(bool), d.Get("ipv6_cidr_block_network_border_group").(string); oldAssignGeneratedIPv6CIDRBlock != newAssignGeneratedIPv6CIDRBlock || oldIPv6CIDRBlockNetworkBorderGroup != newIPv6CIDRBlockNetworkBorderGroup {
+		_, err := modifyVPCIPv6CIDRBlockAssociation(conn, d.Id(),
+			associationID,
+			newAssignGeneratedIPv6CIDRBlock,
+			"",
+			"",
+			0,
+			newIPv6CIDRBlockNetworkBorderGroup)
+
+		if err != nil {
+			return err
+		}
+	}
+
+	if newIPv6CIDRBlock, newIPv6PoolID := d.Get("ipv6_cidr_block").(string), d.Get("ipv6_ipam_pool_id").(string); oldIPv6CIDRBlock != newIPv6CIDRBlock || oldIPv6PoolID != newIPv6PoolID {
+		_, err := modifyVPCIPv6CIDRBlockAssociation(conn, d.Id(),
+			associationID,
+			false,
+			newIPv6CIDRBlock,
+			newIPv6PoolID,
+			d.Get("ipv6_netmask_length").(int),
+			"")
+
+		if err != nil {
+			return err
+		}
+	}
+
+	// Configure tags.
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 	newTags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{}))).IgnoreConfig(ignoreTagsConfig)
