@@ -34,6 +34,9 @@ func ResourceDefaultSubnet() *schema.Resource {
 			Delete: schema.DefaultTimeout(20 * time.Minute),
 		},
 
+		SchemaVersion: 1,
+		MigrateState:  SubnetMigrateState,
+
 		// Keep in sync with aws_subnet's schema with the following changes:
 		//   - availability_zone is Required/ForceNew
 		//   - availability_zone_id is Computed-only
