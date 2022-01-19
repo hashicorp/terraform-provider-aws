@@ -45,6 +45,8 @@ func ResourceVPC() *schema.Resource {
 		SchemaVersion: 1,
 		MigrateState:  VPCMigrateState,
 
+		// Keep in sync with aws_default_vpc's schema.
+		// See notes in default_vpc.go.
 		Schema: map[string]*schema.Schema{
 			"arn": {
 				Type:     schema.TypeString,
