@@ -191,7 +191,11 @@ func resourceEventDataStoreCreate(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	if _, ok := d.GetOk("advanced_event_selector"); ok {
-		// Create AdvancedEventSelectors
+		input.AdvancedEventSelectors = expandAdvancedEventSelector(d.Get("advanced_event_selector").([]interface{}))
+	}
+
+	if err := input.Validate(); err != nil {
+		return diag.Errorf("Error validating CloudTrail Event Data Store (%s): %s", name, err)
 	}
 
 	log.Printf("[DEBUG] Creating Event Data Store: %s", input)
@@ -213,7 +217,7 @@ func resourceEventDataStoreCreate(ctx context.Context, d *schema.ResourceData, m
 func resourceEventDataStoreUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).CloudTrailConn
 
-	if d.HasChangesExcept("tags", "tags_all", "advanced_event_selector") {
+	if d.HasChangesExcept("tags", "tags_all") {
 		input := &cloudtrail.UpdateEventDataStoreInput{
 			EventDataStore: aws.String(d.Id()),
 		}
@@ -238,6 +242,10 @@ func resourceEventDataStoreUpdate(ctx context.Context, d *schema.ResourceData, m
 			input.RetentionPeriod = aws.Int64(int64(d.Get("retention_period").(int)))
 		}
 
+		if d.HasChange("advanced_event_selector") {
+			input.AdvancedEventSelectors = expandAdvancedEventSelector(d.Get("advanced_event_selector").([]interface{}))
+		}
+
 		log.Printf("[DEBUG] Updating CloudTrail Event Data Store (%s)", d.Id())
 
 		_, err := conn.UpdateEventDataStoreWithContext(ctx, input)
@@ -249,11 +257,6 @@ func resourceEventDataStoreUpdate(ctx context.Context, d *schema.ResourceData, m
 		if err := waitEventDataStoreAvailable(ctx, conn, d.Id(), eventDataStoreAvailableTimeout); err != nil {
 			return diag.Errorf("error waiting for CloudTrail Event Data Store (%s) to be modified: %s", d.Id(), err)
 		}
-	}
-
-	if !d.IsNewResource() && d.HasChange("advanced_event_selector") {
-		log.Printf("[DEBUG] Updating advanced event selector on CloudTrail Event Data Store: %s", d.Id())
-		// Update AdvancedEventSelectors.
 	}
 
 	if d.HasChange("tags_all") {
@@ -310,14 +313,14 @@ func resourceEventDataStoreRead(ctx context.Context, d *schema.ResourceData, met
 
 	d.Set("arn", eventDataStore.EventDataStoreArn)
 
-	d.Set("advanced_event_selector", flattenAdvancedEventSelector(eventDataStore.AdvancedEventSelectors))
-
 	d.Set("created_timestamp", eventDataStore.CreatedTimestamp)
 	d.Set("Updated_timestamp", eventDataStore.UpdatedTimestamp)
 	d.Set("multi_region_enabled", eventDataStore.MultiRegionEnabled)
 	d.Set("organization_enabled", eventDataStore.OrganizationEnabled)
 	d.Set("retention_period", eventDataStore.RetentionPeriod)
 	d.Set("termination_protection_enabled", eventDataStore.TerminationProtectionEnabled)
+
+	d.Set("advanced_event_selector", flattenAdvancedEventSelector(eventDataStore.AdvancedEventSelectors))
 
 	tags, err := ListTags(conn, d.Id())
 
