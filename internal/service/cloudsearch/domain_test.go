@@ -34,7 +34,7 @@ func TestAccCloudSearchDomain_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "endpoint_options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_options.0.enforce_https", "false"),
 					resource.TestCheckResourceAttrSet(resourceName, "endpoint_options.0.tls_security_policy"),
-					resource.TestCheckResourceAttr(resourceName, "index.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "index_field.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "multi_az", "false"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "scaling_parameters.#", "1"),
@@ -70,6 +70,44 @@ func TestAccCloudSearchDomain_disappears(t *testing.T) {
 					acctest.CheckResourceDisappears(acctest.Provider, tfcloudsearch.ResourceDomain(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccCloudSearchDomain_indexFields(t *testing.T) {
+	var v cloudsearch.DomainStatus
+	resourceName := "aws_cloudsearch_domain.test"
+	rName := acctest.ResourcePrefix + "-" + sdkacctest.RandString(28-(len(acctest.ResourcePrefix)+1))
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudsearch.EndpointsID, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, cloudsearch.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCloudSearchDomainDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCloudSearchDomainIndexFieldsConfig(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCloudSearchDomainExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "index_field.#", "2"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "index_field.*", map[string]string{
+						"name":          "int_test",
+						"type":          "int",
+						"default_value": "2",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "index_field.*", map[string]string{
+						"name":   "literal_test",
+						"type":   "literal",
+						"facet":  "true",
+						"search": "true",
+					}),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -201,6 +239,29 @@ func testAccCloudSearchDomainConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudsearch_domain" "test" {
   name = %[1]q
+}
+`, rName)
+}
+
+func testAccCloudSearchDomainIndexFieldsConfig(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_cloudsearch_domain" "test" {
+  name = %[1]q
+
+  index_field {
+    name          = "int_test"
+    type          = "int"
+    default_value = "2"
+  }
+
+  index_field {
+    name   = "literal_test"
+    type   = "literal"
+    facet  = true
+    return = false
+    search = true
+    sort   = false
+  }
 }
 `, rName)
 }
