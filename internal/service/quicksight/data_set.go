@@ -150,16 +150,19 @@ func ResourceDataSet() *schema.Resource {
 
 			"data_set_usage_configuration": {
 				Type:     schema.TypeList,
+				Computed: true,
 				Optional: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"disable_use_as_direct_query_source": {
 							Type:     schema.TypeBool,
+							Computed: true,
 							Optional: true,
 						},
 						"disable_use_as_imported_source": {
 							Type:     schema.TypeBool,
+							Computed: true,
 							Optional: true,
 						},
 					},
@@ -196,6 +199,7 @@ func ResourceDataSet() *schema.Resource {
 			"logical_table_map": {
 				Type:     schema.TypeList,
 				Optional: true,
+				Computed: true,
 				MaxItems: 1,
 				// key length constraint 1 to 64
 				Elem: &schema.Resource{
@@ -213,10 +217,12 @@ func ResourceDataSet() *schema.Resource {
 								Schema: map[string]*schema.Schema{
 									"data_set_arn": {
 										Type:     schema.TypeString,
+										Computed: true,
 										Optional: true,
 									},
 									"join_instruction": {
 										Type:     schema.TypeList,
+										Computed: true,
 										Optional: true,
 										MaxItems: 1,
 										Elem: &schema.Resource{
@@ -243,12 +249,14 @@ func ResourceDataSet() *schema.Resource {
 												},
 												"left_join_key_properties": {
 													Type:     schema.TypeList,
+													Computed: true,
 													Optional: true,
 													MaxItems: 1,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
 															"unique_key": {
 																Type:     schema.TypeBool,
+																Computed: true,
 																Optional: true,
 															},
 														},
@@ -256,12 +264,14 @@ func ResourceDataSet() *schema.Resource {
 												},
 												"right_join_key_properties": {
 													Type:     schema.TypeList,
+													Computed: true,
 													Optional: true,
 													MaxItems: 1,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
 															"unique_key": {
 																Type:     schema.TypeBool,
+																Computed: true,
 																Optional: true,
 															},
 														},
@@ -272,6 +282,7 @@ func ResourceDataSet() *schema.Resource {
 									},
 									"physical_table_id": {
 										Type:         schema.TypeString,
+										Computed:     true,
 										Optional:     true,
 										ValidateFunc: validation.StringLenBetween(1, 64),
 									},
@@ -280,6 +291,7 @@ func ResourceDataSet() *schema.Resource {
 						},
 						"data_transforms": {
 							Type:     schema.TypeList,
+							Computed: true,
 							Optional: true,
 							MinItems: 1,
 							MaxItems: 2048,
@@ -287,6 +299,7 @@ func ResourceDataSet() *schema.Resource {
 								Schema: map[string]*schema.Schema{
 									"cast_column_type_operation": {
 										Type:     schema.TypeList,
+										Computed: true,
 										Optional: true,
 										MaxItems: 1,
 										Elem: &schema.Resource{
@@ -303,6 +316,7 @@ func ResourceDataSet() *schema.Resource {
 												},
 												"format": {
 													Type:         schema.TypeString,
+													Computed:     true,
 													Optional:     true,
 													ValidateFunc: validation.StringLenBetween(0, 32),
 												},
@@ -311,6 +325,7 @@ func ResourceDataSet() *schema.Resource {
 									},
 									"create_columns_operation": {
 										Type:     schema.TypeList,
+										Computed: true,
 										Optional: true,
 										MaxItems: 1,
 										Elem: &schema.Resource{
@@ -345,6 +360,7 @@ func ResourceDataSet() *schema.Resource {
 									},
 									"filter_operation": {
 										Type:     schema.TypeList,
+										Computed: true,
 										Optional: true,
 										MaxItems: 1,
 										Elem: &schema.Resource{
@@ -359,6 +375,7 @@ func ResourceDataSet() *schema.Resource {
 									},
 									"project_operation": {
 										Type:     schema.TypeList,
+										Computed: true,
 										Optional: true,
 										MaxItems: 1,
 										Elem: &schema.Resource{
@@ -375,6 +392,7 @@ func ResourceDataSet() *schema.Resource {
 									},
 									"rename_column_operation": {
 										Type:     schema.TypeList,
+										Computed: true,
 										Optional: true,
 										MaxItems: 1,
 										Elem: &schema.Resource{
@@ -394,6 +412,7 @@ func ResourceDataSet() *schema.Resource {
 									},
 									"tag_column_operation": {
 										Type:     schema.TypeList,
+										Computed: true,
 										Optional: true,
 										MaxItems: 1,
 										Elem: &schema.Resource{
@@ -412,12 +431,14 @@ func ResourceDataSet() *schema.Resource {
 														Schema: map[string]*schema.Schema{
 															"column_description": {
 																Type:     schema.TypeList,
+																Computed: true,
 																Optional: true,
 																MaxItems: 1,
 																Elem: &schema.Resource{
 																	Schema: map[string]*schema.Schema{
 																		"text": {
 																			Type:         schema.TypeString,
+																			Computed:     true,
 																			Optional:     true,
 																			ValidateFunc: validation.StringLenBetween(0, 500),
 																		},
@@ -426,6 +447,7 @@ func ResourceDataSet() *schema.Resource {
 															},
 															"column_geographic_role": {
 																Type:         schema.TypeString,
+																Computed:     true,
 																Optional:     true,
 																ValidateFunc: validation.StringInSlice(quicksight.GeoSpatialDataRole_Values(), false),
 															},
@@ -437,6 +459,7 @@ func ResourceDataSet() *schema.Resource {
 									},
 									"untag_column_operation": {
 										Type:     schema.TypeList,
+										Computed: true,
 										Optional: true,
 										MaxItems: 1,
 										Elem: &schema.Resource{
@@ -593,6 +616,7 @@ func ResourceDataSet() *schema.Resource {
 						},
 						"s3_source": {
 							Type:     schema.TypeList,
+							Computed: true,
 							Optional: true,
 							MaxItems: 1,
 							Elem: &schema.Resource{
@@ -624,31 +648,37 @@ func ResourceDataSet() *schema.Resource {
 									},
 									"upload_settings": {
 										Type:     schema.TypeList,
+										Computed: true,
 										Optional: true,
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"contains_header": {
 													Type:     schema.TypeBool,
+													Computed: true,
 													Optional: true,
 												},
 												"delimiter": {
 													Type:         schema.TypeString,
+													Computed:     true,
 													Optional:     true,
 													ValidateFunc: validation.StringLenBetween(1, 1),
 												},
 												"format": {
 													Type:         schema.TypeString,
+													Computed:     true,
 													Optional:     true,
 													ValidateFunc: validation.StringInSlice(quicksight.FileFormat_Values(), false),
 												},
 												"start_from_row": {
 													Type:         schema.TypeInt,
+													Computed:     true,
 													Optional:     true,
 													ValidateFunc: validation.IntAtLeast(1),
 												},
 												"text_qualifier": {
 													Type:         schema.TypeString,
+													Computed:     true,
 													Optional:     true,
 													ValidateFunc: validation.StringInSlice(quicksight.TextQualifier_Values(), false),
 												},
@@ -1632,7 +1662,7 @@ func expandQuickSightDataSetPhysicalTableMap(tfList []interface{}) map[string]*q
 			}
 		}
 
-		// use required terraform input?
+		// use virtual attribute here
 		physicalTableMap["uniqueid"] = physicalTable
 	}
 

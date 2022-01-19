@@ -17,7 +17,7 @@ import (
 
 func TestAccQuickSightDataSet_basic(t *testing.T) {
 	var dataSet quicksight.DataSet
-	resourceName := "aws_quicksight_data_set.test"
+	resourceName := "aws_quicksight_data_set.dset"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rId := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -31,16 +31,15 @@ func TestAccQuickSightDataSet_basic(t *testing.T) {
 				Config: testAccDataSetConfig(rId, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckQuickSightDataSetExists(resourceName, &dataSet),
-					// resource.TestCheckResourceAttr(resourceName, "data_set_id", rId),
-					// acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "quicksight", fmt.Sprintf("dataset/%s", rId)),
-					// resource.TestCheckResourceAttr(resourceName, "name", rName),
-					// resource.TestCheckResourceAttr(resourceName, "parameters.#", "1"),
-					// resource.TestCheckResourceAttr(resourceName, "parameters.0.s3.#", "1"),
-					// resource.TestCheckResourceAttr(resourceName, "parameters.0.s3.0.manifest_file_location.#", "1"),
-					// resource.TestCheckResourceAttr(resourceName, "parameters.0.s3.0.manifest_file_location.0.bucket", rName),
-					// resource.TestCheckResourceAttr(resourceName, "parameters.0.s3.0.manifest_file_location.0.key", rName),
-					// resource.TestCheckResourceAttr(resourceName, "type", quicksight.DataSourceTypeS3),
-					// resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "data_set_id", rId),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "quicksight", fmt.Sprintf("dataset/%s", rId)),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "import_mode", "SPICE"),
+					resource.TestCheckResourceAttr(resourceName, "physical_table_map.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "physical_table_map.0.s3_source.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "physical_table_map.0.s3_source.0.input_columns.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "physical_table_map.0.s3_source.0.input_columns.0.name", "ColumnId-1"),
+					resource.TestCheckResourceAttr(resourceName, "physical_table_map.0.s3_source.0.input_columns.0.type", "STRING"),
 				),
 			},
 			{
@@ -120,25 +119,74 @@ func testAccCheckQuickSightDataSetDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccBaseDataSetConfig() string {
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	rId := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+func testAccBaseDataSetConfig(rId string, rName string) string {
 	return acctest.ConfigCompose(
 		testAccBaseDataSourceConfig(rName),
-		testAccDataSourceConfig(rName, rId),
-	)
+		fmt.Sprintf(`
+data "aws_partition" "partition" {}
+
+resource "aws_s3_bucket" "s3bucket" {
+	acl           = "public-read"
+	bucket        = %[1]q
+	force_destroy = true
+}
+		
+resource "aws_s3_bucket_object" "object" {
+	bucket  = aws_s3_bucket.test.bucket
+	key     = %[1]q
+	content = <<EOF
+	{
+		"fileLocations": [
+			{
+				"URIs": [
+					"https://${aws_s3_bucket.test.bucket}.s3.${data.aws_partition.current.dns_suffix}/%[1]s"
+				]
+			}
+		],
+		"globalUploadSettings": {
+			"format": "JSON"
+		}
+	}
+	EOF
+	acl     = "public-read"
+}
+		
+resource "aws_quicksight_data_source" "dsource" {
+	data_source_id = %[1]q
+	name           = %[2]q
+		
+	parameters {
+		s3 {
+			manifest_file_location {
+				bucket = aws_s3_bucket.test.bucket
+				key    = aws_s3_bucket_object.test.key
+			}
+		}
+	}
+		
+	type = "S3"
+}
+`, rId, rName))
 }
 
 func testAccDataSetConfig(rId, rName string) string {
 	return acctest.ConfigCompose(
-		testAccBaseDataSetConfig(),
+		testAccBaseDataSetConfig(rId, rName),
 		fmt.Sprintf(`
-resource "aws_quicksight_data_set" "test" {
-  data_set_id = %[1]q
-  name        = %[2]q
-
-  import_mode = "SPICE"
-  physical_table_map 
+resource "aws_quicksight_data_set" "dset" {
+	
+	data_set_id = %[1]q
+	name        = %[2]q
+	import_mode = "SPICE"
+	physical_table_map {
+		s3_source {
+			data_source_arn = aws_quicksight_data_source.dsource.arn
+			input_columns {
+				name = "ColumnId-1"
+				type = "STRING"
+			}
+		}
+	}
 }
 `, rId, rName))
 }
