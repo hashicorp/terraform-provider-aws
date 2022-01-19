@@ -109,78 +109,31 @@ func TestAccCloudSearchDomain_indexFields(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
-		},
-	})
-}
-
-func TestAccCloudSearchDomain_simple(t *testing.T) {
-	var v cloudsearch.DomainStatus
-	resourceName := "aws_cloudsearch_domain.test"
-	rName := acctest.ResourcePrefix + "-" + sdkacctest.RandString(28-(len(acctest.ResourcePrefix)+1))
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudsearch.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, cloudsearch.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCloudSearchDomainDestroy,
-		Steps: []resource.TestStep{
 			{
-				Config: testAccCloudSearchDomainConfig_simple(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Config: testAccCloudSearchDomainIndexFieldsUpdatedConfig(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCloudSearchDomainExists(resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "index_field.#", "3"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "index_field.*", map[string]string{
+						"name":          "literal_test",
+						"type":          "literal",
+						"default_value": "literally testing",
+						"return":        "true",
+						"sort":          "true",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "index_field.*", map[string]string{
+						"name":          "double_array_test",
+						"type":          "double-array",
+						"default_value": "-12.34",
+						"search":        "true",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "index_field.*", map[string]string{
+						"name":            "text_test",
+						"type":            "text",
+						"analysis_scheme": "_en_default_",
+						"highlight":       "true",
+					}),
 				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{
-				Config: testAccCloudSearchDomainConfig_basicIndexMix(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCloudSearchDomainExists(resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-		},
-	})
-}
-
-func TestAccCloudSearchDomain_textAnalysisScheme(t *testing.T) {
-	var v cloudsearch.DomainStatus
-	resourceName := "aws_cloudsearch_domain.test"
-	rName := acctest.ResourcePrefix + "-" + sdkacctest.RandString(28-(len(acctest.ResourcePrefix)+1))
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudsearch.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, cloudsearch.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCloudSearchDomainDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccCloudSearchDomainConfig_textAnalysisScheme(rName, "_en_default_"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCloudSearchDomainExists(resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "name", acctest.RandomFQDomainName()),
-				),
-			},
-			{
-				Config: testAccCloudSearchDomainConfig_textAnalysisScheme(rName, "_fr_default_"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCloudSearchDomainExists(resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
 			},
 		},
 	})
@@ -266,286 +219,36 @@ resource "aws_cloudsearch_domain" "test" {
 `, rName)
 }
 
-func testAccCloudSearchDomainConfig_simple(name string) string {
+func testAccCloudSearchDomainIndexFieldsUpdatedConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudsearch_domain" "test" {
-  name = "%s"
+  name = %[1]q
 
-  index {
-    name   = "date_test"
-    type   = "date"
-    facet  = true
-    search = true
-    return = true
-    sort   = true
-  }
-
-  index {
-    name   = "date_array_test"
-    type   = "date-array"
-    facet  = true
-    search = true
-    return = true
-  }
-
-  index {
-    name   = "double_test"
-    type   = "double"
-    facet  = true
-    search = true
-    return = true
-    sort   = true
-  }
-
-  index {
-    name   = "double_array_test"
-    type   = "double-array"
-    facet  = true
-    search = true
-    return = true
-  }
-
-  index {
-    name   = "int_test"
-    type   = "int"
-    facet  = true
-    search = true
-    return = true
-    sort   = true
-  }
-
-  index {
-    name   = "int_array_test"
-    type   = "int-array"
-    facet  = true
-    search = true
-    return = true
-  }
-
-  index {
-    name   = "latlon_test"
-    type   = "latlon"
-    facet  = true
-    search = true
-    return = true
-    sort   = true
-  }
-
-  index {
+  index_field {
     name   = "literal_test"
     type   = "literal"
-    facet  = true
-    search = true
+    facet  = false
     return = true
+    search = false
     sort   = true
+
+    default_value = "literally testing"
   }
 
-  index {
-    name   = "literal_array_test"
-    type   = "literal-array"
-    facet  = true
-    search = true
-    return = true
-  }
-
-  index {
-    name            = "text_test"
-    type            = "text"
-    analysis_scheme = "_en_default_"
-    highlight       = true
-    return          = true
-    sort            = true
-  }
-
-  index {
-    name            = "text_array_test"
-    type            = "text-array"
-    analysis_scheme = "_en_default_"
-    highlight       = true
-    return          = true
-  }
-
-  wait_for_endpoints      = false
-  service_access_policies = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [{
-    "Effect": "Allow",
-    "Principal": {
-      "AWS": ["*"]
-    },
-    "Action": ["cloudsearch:*"]
-  }]
-}
-EOF
-}
-`, name)
-}
-
-func testAccCloudSearchDomainConfig_basicIndexMix(name string) string {
-	return fmt.Sprintf(`
-resource "aws_cloudsearch_domain" "test" {
-  name = "%s"
-
-  index {
-    name            = "how_about_one_up_here"
-    type            = "text"
-    analysis_scheme = "_en_default_"
-  }
-
-  index {
-    name   = "date_test"
-    type   = "date"
-    facet  = true
-    search = true
-    return = true
-    sort   = true
-  }
-
-  index {
-    name   = "double_test_2"
-    type   = "double"
-    facet  = true
-    search = true
-    return = true
-    sort   = true
-  }
-
-  index {
+  index_field {
     name   = "double_array_test"
     type   = "double-array"
-    facet  = true
     search = true
-    return = true
+
+    default_value = "-12.34"
   }
 
-  index {
-    name   = "just_another_index_name"
-    type   = "literal-array"
-    facet  = true
-    search = true
-    return = true
-  }
-
-  index {
+  index_field {
     name            = "text_test"
     type            = "text"
     analysis_scheme = "_en_default_"
     highlight       = true
-    return          = true
-    sort            = true
   }
-
-  index {
-    name = "captain_janeway_is_pretty_cool"
-    type = "double"
-  }
-
-  wait_for_endpoints      = false
-  service_access_policies = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [{
-    "Effect": "Allow",
-    "Principal": {
-      "AWS": ["*"]
-    },
-    "Action": ["cloudsearch:*"]
-  }]
 }
-EOF
-}
-`, name)
-}
-
-// NOTE: I'd like to get text and text arrays field to work properly without having to explicitly set the
-// `analysis_scheme` field, but I cannot find a way to suppress the diff Terraform ends up generating as a result.
-func testAccCloudSearchDomainConfig_textAnalysisScheme(name string, scheme string) string {
-	return fmt.Sprintf(`
-resource "aws_cloudsearch_domain" "test" {
-  name = "%s"
-
-  #index {
-  #  name = "use_default_scheme"
-  #  type = "text"
-  #}
-
-  index {
-    name            = "specify_scheme"
-    type            = "text"
-    analysis_scheme = "%s"
-  }
-
-  wait_for_endpoints      = false
-  service_access_policies = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [{
-    "Effect": "Allow",
-    "Principal": {
-      "AWS": ["*"]
-    },
-    "Action": ["cloudsearch:*"]
-  }]
-}
-EOF
-}
-`, name, scheme)
-}
-
-func testAccCloudSearchDomainConfig_withInstanceType(name string, instance_type string) string {
-	return fmt.Sprintf(`
-resource "aws_cloudsearch_domain" "test" {
-  name = "%s"
-
-  instance_type = "%s"
-
-  wait_for_endpoints      = false
-  service_access_policies = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [{
-    "Effect": "Allow",
-    "Principal": {
-      "AWS": ["*"]
-    },
-    "Action": ["cloudsearch:*"]
-  }]
-}
-EOF
-}
-`, name, instance_type)
-}
-
-func testAccCloudSearchDomainConfig_withIndex(name string, index_name string, index_type string) string {
-	return fmt.Sprintf(`
-resource "aws_cloudsearch_domain" "test" {
-  name = "%s"
-
-  index {
-    name            = "%s"
-    type            = "%s"
-    facet           = false
-    search          = false
-    return          = true
-    sort            = true
-    highlight       = false
-    analysis_scheme = "_en_default_"
-  }
-
-  wait_for_endpoints      = false
-  service_access_policies = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [{
-    "Effect": "Allow",
-    "Principal": {
-      "AWS": ["*"]
-    },
-    "Action": ["cloudsearch:*"]
-  }]
-}
-EOF
-}
-`, name, index_name, index_type)
+`, rName)
 }
