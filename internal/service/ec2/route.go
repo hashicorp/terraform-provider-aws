@@ -110,6 +110,7 @@ func ResourceRoute() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
+				Deprecated:   "Use network_interface_id instead",
 				ExactlyOneOf: routeValidTargets,
 			},
 			"local_gateway_id": {
