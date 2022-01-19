@@ -255,7 +255,7 @@ func resourceDefaultVPCCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if newAssignGeneratedIPv6CIDRBlock, newIPv6CIDRBlockNetworkBorderGroup := d.Get("assign_generated_ipv6_cidr_block").(bool), d.Get("ipv6_cidr_block_network_border_group").(string); oldAssignGeneratedIPv6CIDRBlock != newAssignGeneratedIPv6CIDRBlock || oldIPv6CIDRBlockNetworkBorderGroup != newIPv6CIDRBlockNetworkBorderGroup {
-		_, err := modifyVPCIPv6CIDRBlockAssociation(conn, d.Id(),
+		associationID, err := modifyVPCIPv6CIDRBlockAssociation(conn, d.Id(),
 			associationID,
 			newAssignGeneratedIPv6CIDRBlock,
 			"",
@@ -266,10 +266,12 @@ func resourceDefaultVPCCreate(d *schema.ResourceData, meta interface{}) error {
 		if err != nil {
 			return err
 		}
+
+		d.Set("ipv6_association_id", associationID)
 	}
 
 	if newIPv6CIDRBlock, newIPv6PoolID := d.Get("ipv6_cidr_block").(string), d.Get("ipv6_ipam_pool_id").(string); oldIPv6CIDRBlock != newIPv6CIDRBlock || oldIPv6PoolID != newIPv6PoolID {
-		_, err := modifyVPCIPv6CIDRBlockAssociation(conn, d.Id(),
+		associationID, err := modifyVPCIPv6CIDRBlockAssociation(conn, d.Id(),
 			associationID,
 			false,
 			newIPv6CIDRBlock,
@@ -280,6 +282,8 @@ func resourceDefaultVPCCreate(d *schema.ResourceData, meta interface{}) error {
 		if err != nil {
 			return err
 		}
+
+		d.Set("ipv6_association_id", associationID)
 	}
 
 	// Configure tags.
