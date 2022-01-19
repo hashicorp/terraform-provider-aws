@@ -1487,37 +1487,27 @@ func sweepSpotFleetRequests(region string) error {
 
 func sweepSubnets(region string) error {
 	client, err := sweep.SharedRegionalSweepClient(region)
-
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-
 	conn := client.(*conns.AWSClient).EC2Conn
-	sweepResources := make([]*sweep.SweepResource, 0)
-	var errs *multierror.Error
-
 	input := &ec2.DescribeSubnetsInput{}
+	sweepResources := make([]*sweep.SweepResource, 0)
 
 	err = conn.DescribeSubnetsPages(input, func(page *ec2.DescribeSubnetsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
 
-		for _, subnet := range page.Subnets {
-			if subnet == nil {
-				continue
-			}
-
-			id := aws.StringValue(subnet.SubnetId)
-
-			if aws.BoolValue(subnet.DefaultForAz) {
-				log.Printf("[DEBUG] Skipping default EC2 Subnet: %s", id)
+		for _, v := range page.Subnets {
+			// Skip default subnets.
+			if aws.BoolValue(v.DefaultForAz) {
 				continue
 			}
 
 			r := ResourceSubnet()
 			d := r.Data(nil)
-			d.SetId(id)
+			d.SetId(aws.StringValue(v.SubnetId))
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
@@ -1525,20 +1515,22 @@ func sweepSubnets(region string) error {
 		return !lastPage
 	})
 
-	if err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error describing EC2 Subnets for %s: %w", region, err))
-	}
-
-	if err = sweep.SweepOrchestrator(sweepResources); err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error sweeping EC2 Subnets for %s: %w", region, err))
-	}
-
-	if sweep.SkipSweepError(errs.ErrorOrNil()) {
-		log.Printf("[WARN] Skipping EC2 Subnet sweep for %s: %s", region, errs)
+	if sweep.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping EC2 Subnet sweep for %s: %s", region, err)
 		return nil
 	}
 
-	return errs.ErrorOrNil()
+	if err != nil {
+		return fmt.Errorf("error listing EC2 Subnets (%s): %w", region, err)
+	}
+
+	err = sweep.SweepOrchestrator(sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("error sweeping EC2 Subnets (%s): %w", region, err)
+	}
+
+	return nil
 }
 
 func sweepTransitGatewayPeeringAttachments(region string) error {
@@ -1997,37 +1989,27 @@ func sweepVPCPeeringConnections(region string) error {
 
 func sweepVPCs(region string) error {
 	client, err := sweep.SharedRegionalSweepClient(region)
-
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-
 	conn := client.(*conns.AWSClient).EC2Conn
-	sweepResources := make([]*sweep.SweepResource, 0)
-	var errs *multierror.Error
-
 	input := &ec2.DescribeVpcsInput{}
+	sweepResources := make([]*sweep.SweepResource, 0)
 
 	err = conn.DescribeVpcsPages(input, func(page *ec2.DescribeVpcsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
 
-		for _, vpc := range page.Vpcs {
-			if vpc == nil {
-				continue
-			}
-
-			id := aws.StringValue(vpc.VpcId)
-
-			if aws.BoolValue(vpc.IsDefault) {
-				log.Printf("[DEBUG] Skipping default EC2 VPC: %s", id)
+		for _, v := range page.Vpcs {
+			// Skip default VPCs.
+			if aws.BoolValue(v.IsDefault) {
 				continue
 			}
 
 			r := ResourceVPC()
 			d := r.Data(nil)
-			d.SetId(id)
+			d.SetId(aws.StringValue(v.VpcId))
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
@@ -2035,20 +2017,22 @@ func sweepVPCs(region string) error {
 		return !lastPage
 	})
 
-	if err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error describing EC2 VPCs for %s: %w", region, err))
-	}
-
-	if err = sweep.SweepOrchestrator(sweepResources); err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error sweeping EC2 VPCs for %s: %w", region, err))
-	}
-
-	if sweep.SkipSweepError(errs.ErrorOrNil()) {
-		log.Printf("[WARN] Skipping EC2 VPCs sweep for %s: %s", region, errs)
+	if sweep.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping EC2 VPC sweep for %s: %s", region, err)
 		return nil
 	}
 
-	return errs.ErrorOrNil()
+	if err != nil {
+		return fmt.Errorf("error listing EC2 VPCs (%s): %w", region, err)
+	}
+
+	err = sweep.SweepOrchestrator(sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("error sweeping EC2 VPCs (%s): %w", region, err)
+	}
+
+	return nil
 }
 
 func sweepVPNConnections(region string) error {
