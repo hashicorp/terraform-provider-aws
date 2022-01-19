@@ -12,11 +12,35 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccEC2DefaultVPC_basic(t *testing.T) {
+func TestAccEC2DefaultVPCAndSubnet_serial(t *testing.T) {
+	testCases := map[string]map[string]func(t *testing.T){
+		"VPC": {
+			"basic":                        testAccEC2DefaultVPC_basic,
+			"assignGeneratedIPv6CIDRBlock": testAccEC2DefaultVPC_assignGeneratedIPv6CIDRBlock,
+		},
+		"Subnet": {
+			"basic": testAccEC2DefaultSubnet_basic,
+		},
+	}
+
+	for group, m := range testCases {
+		m := m
+		t.Run(group, func(t *testing.T) {
+			for name, tc := range m {
+				tc := tc
+				t.Run(name, func(t *testing.T) {
+					tc(t)
+				})
+			}
+		})
+	}
+}
+
+func testAccEC2DefaultVPC_basic(t *testing.T) {
 	var v ec2.Vpc
 	resourceName := "aws_default_vpc.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    acctest.Providers,
@@ -52,12 +76,12 @@ func TestAccEC2DefaultVPC_basic(t *testing.T) {
 	})
 }
 
-func TestAccEC2DefaultVPC_assignGeneratedIPv6CIDRBlock(t *testing.T) {
+func testAccEC2DefaultVPC_assignGeneratedIPv6CIDRBlock(t *testing.T) {
 	var v ec2.Vpc
 	resourceName := "aws_default_vpc.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    acctest.Providers,
