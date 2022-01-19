@@ -1012,7 +1012,9 @@ func Provider() *schema.Provider {
 			"aws_devicefarm_project":          devicefarm.ResourceProject(),
 			"aws_devicefarm_upload":           devicefarm.ResourceUpload(),
 
-			"aws_detective_graph": detective.ResourceGraph(),
+			"aws_detective_graph":               detective.ResourceGraph(),
+			"aws_detective_invitation_accepter": detective.ResourceInvitationAccepter(),
+			"aws_detective_member":              detective.ResourceMember(),
 
 			"aws_dx_bgp_peer":                                  directconnect.ResourceBGPPeer(),
 			"aws_dx_connection":                                directconnect.ResourceConnection(),
