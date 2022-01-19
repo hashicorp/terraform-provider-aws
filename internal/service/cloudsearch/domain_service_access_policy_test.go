@@ -128,7 +128,7 @@ resource "aws_cloudsearch_domain" "test" {
 
 resource "aws_cloudsearch_domain_service_access_policy" "test" {
   domain_name = aws_cloudsearch_domain.test.id
-  
+
   access_policy = <<POLICY
 {
   "Version":"2012-10-17",
@@ -156,7 +156,7 @@ resource "aws_cloudsearch_domain" "test" {
 
 resource "aws_cloudsearch_domain_service_access_policy" "test" {
   domain_name = aws_cloudsearch_domain.test.id
-  
+
   access_policy = <<POLICY
 {
   "Version":"2012-10-17",
