@@ -121,8 +121,9 @@ func ResourceRouteTable() *schema.Resource {
 							Optional: true,
 						},
 						"instance_id": {
-							Type:     schema.TypeString,
-							Optional: true,
+							Type:       schema.TypeString,
+							Optional:   true,
+							Deprecated: "Use network_interface_id instead",
 						},
 						"local_gateway_id": {
 							Type:     schema.TypeString,
