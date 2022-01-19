@@ -1,6 +1,8 @@
 package ecs
 
 import (
+	"context"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ecs"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -58,4 +60,18 @@ func FindClusterByNameOrARN(conn *ecs.ECS, nameOrARN string) (*ecs.DescribeClust
 	}
 
 	return output, nil
+}
+
+func FindOneClusterByNameOrARN(ctx context.Context, conn *ecs.ECS, nameOrArn string) (*ecs.Cluster, error) {
+	output, err := FindClusterByNameOrARN(conn, nameOrArn)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if len(output.Clusters) == 0 || output.Clusters[0] == nil {
+		return nil, &resource.NotFoundError{}
+	}
+
+	return output.Clusters[0], nil
 }
