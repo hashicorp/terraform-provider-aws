@@ -38,6 +38,7 @@ func ResourceSubnet() *schema.Resource {
 		MigrateState:  SubnetMigrateState,
 
 		// Keep in sync with aws_default_subnet's schema.
+		// See notes in default_subnet.go.
 		Schema: map[string]*schema.Schema{
 			"arn": {
 				Type:     schema.TypeString,

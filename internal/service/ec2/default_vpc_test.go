@@ -10,7 +10,8 @@ import (
 )
 
 func TestAccEC2DefaultVPC_basic(t *testing.T) {
-	var vpc ec2.Vpc
+	var v ec2.Vpc
+	resourceName := "aws_default_vpc.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -19,25 +20,29 @@ func TestAccEC2DefaultVPC_basic(t *testing.T) {
 		CheckDestroy: testAccCheckDefaultVPCDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDefaultVPCBasicConfig,
-				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckVPCExists("aws_default_vpc.foo", &vpc),
-					resource.TestCheckResourceAttr("aws_default_vpc.foo", "cidr_block", "172.31.0.0/16"),
-					resource.TestCheckResourceAttr(
-						"aws_default_vpc.foo", "cidr_block", "172.31.0.0/16"),
-					resource.TestCheckResourceAttr(
-						"aws_default_vpc.foo", "tags.%", "1"),
-					resource.TestCheckResourceAttr(
-						"aws_default_vpc.foo", "tags.Name", "Default VPC"),
-					resource.TestCheckResourceAttrSet(
-						"aws_default_vpc.foo", "arn"),
-					resource.TestCheckResourceAttr(
-						"aws_default_vpc.foo", "assign_generated_ipv6_cidr_block", "false"),
-					resource.TestCheckResourceAttr(
-						"aws_default_vpc.foo", "ipv6_association_id", ""),
-					resource.TestCheckResourceAttr(
-						"aws_default_vpc.foo", "ipv6_cidr_block", ""),
-					acctest.CheckResourceAttrAccountID("aws_default_vpc.foo", "owner_id"),
+				Config: testAccDefaultVPCConfig,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					acctest.CheckVPCExists(resourceName, &v),
+					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "assign_generated_ipv6_cidr_block", "false"),
+					resource.TestCheckResourceAttr(resourceName, "cidr_block", "172.31.0.0/16"),
+					resource.TestCheckResourceAttrSet(resourceName, "default_network_acl_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "default_route_table_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "default_security_group_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "dhcp_options_id"),
+					resource.TestCheckResourceAttr(resourceName, "enable_classiclink", "false"),
+					resource.TestCheckResourceAttr(resourceName, "enable_classiclink_dns_support", "false"),
+					resource.TestCheckResourceAttr(resourceName, "enable_dns_hostnames", "true"),
+					resource.TestCheckResourceAttr(resourceName, "enable_dns_support", "true"),
+					resource.TestCheckResourceAttr(resourceName, "instance_tenancy", "default"),
+					resource.TestCheckResourceAttr(resourceName, "ipv6_association_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "ipv6_cidr_block", ""),
+					resource.TestCheckResourceAttr(resourceName, "ipv6_cidr_block_network_border_group", ""),
+					resource.TestCheckResourceAttr(resourceName, "ipv6_ipam_pool_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "ipv6_netmask_length", "0"),
+					resource.TestCheckResourceAttrSet(resourceName, "main_route_table_id"),
+					acctest.CheckResourceAttrAccountID(resourceName, "owner_id"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
 		},
@@ -49,10 +54,6 @@ func testAccCheckDefaultVPCDestroy(s *terraform.State) error {
 	return nil
 }
 
-const testAccDefaultVPCBasicConfig = `
-resource "aws_default_vpc" "foo" {
-  tags = {
-    Name = "Default VPC"
-  }
-}
+const testAccDefaultVPCConfig = `
+resource "aws_default_vpc" "test" {}
 `
