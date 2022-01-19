@@ -1632,6 +1632,7 @@ func Provider() *schema.Provider {
 			"aws_s3_bucket_public_access_block":               s3.ResourceBucketPublicAccessBlock(),
 			"aws_s3_bucket_replication_configuration":         s3.ResourceBucketReplicationConfiguration(),
 			"aws_s3_bucket_versioning":                        s3.ResourceBucketVersioning(),
+			"aws_s3_bucket_website_configuration":             s3.ResourceBucketWebsiteConfiguration(),
 			"aws_s3_object":                                   s3.ResourceObject(),
 			"aws_s3_object_copy":                              s3.ResourceObjectCopy(),
 			"aws_s3_bucket_object":                            s3.ResourceBucketObject(), // DEPRECATED: use aws_s3_object instead
