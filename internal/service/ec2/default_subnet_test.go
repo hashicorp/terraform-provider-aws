@@ -9,12 +9,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccEC2DefaultSubnet_basic(t *testing.T) {
+func testAccEC2DefaultSubnet_basic(t *testing.T) {
 	var v ec2.Subnet
 	resourceName := "aws_default_subnet.test"
 	availabilityZonesDataSourceName := "data.aws_availability_zones.available"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    acctest.Providers,
