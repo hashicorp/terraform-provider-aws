@@ -1,4 +1,28 @@
 ## 3.73.0 (Unreleased)
+
+FEATURES:
+
+* **New Data Source:** `aws_cloudfront_origin_access_identity` ([#22572](https://github.com/hashicorp/terraform-provider-aws/issues/22572))
+* **New Resource:** `aws_appsync_api_cache` ([#22578](https://github.com/hashicorp/terraform-provider-aws/issues/22578))
+* **New Resource:** `aws_appsync_domain_name` ([#22487](https://github.com/hashicorp/terraform-provider-aws/issues/22487))
+* **New Resource:** `aws_appsync_domain_name_api_association` ([#22487](https://github.com/hashicorp/terraform-provider-aws/issues/22487))
+
+ENHANCEMENTS:
+
+* data-source/aws_cognito_user_pool_clients: Add `client_names` attribute ([#22615](https://github.com/hashicorp/terraform-provider-aws/issues/22615))
+* data-source/aws_imagebuilder_image_recipe: Add `user_data_base64` attribute ([#21763](https://github.com/hashicorp/terraform-provider-aws/issues/21763))
+* resource/aws_dynamodb_table: Add special case handling when switching `billing_mode` from `PAY_PER_REQUEST` to `PROVISIONED` and provisioned throughput is ignored. ([#22630](https://github.com/hashicorp/terraform-provider-aws/issues/22630))
+* resource/aws_imagebuilder_image_recipe: Add `user_data_base64` argument ([#21763](https://github.com/hashicorp/terraform-provider-aws/issues/21763))
+* resource/aws_opsworks_custom_layer: Add plan time validation for `ebs_volume.type` and `custom_json`. ([#12433](https://github.com/hashicorp/terraform-provider-aws/issues/12433))
+* resource/aws_opsworks_custom_layer: Add support for `cloudwatch_configuration` ([#12433](https://github.com/hashicorp/terraform-provider-aws/issues/12433))
+* resource/aws_security_group: Ensure that the Security Group is found 3 times in a row before declaring that it has been created ([#22420](https://github.com/hashicorp/terraform-provider-aws/issues/22420))
+
+BUG FIXES:
+
+* resource/aws_apprunner_custom_domain_association: Add the status `binding_certificate` as a valid target when waiting for creation. ([#20222](https://github.com/hashicorp/terraform-provider-aws/issues/20222))
+* resource/aws_cloudfront_distribution: Increase the maximum valid `origin_keepalive_timeout` value to `180` ([#22632](https://github.com/hashicorp/terraform-provider-aws/issues/22632))
+* resource/aws_load_balancer_policy: Suppress `policy_attribute` differences ([#21776](https://github.com/hashicorp/terraform-provider-aws/issues/21776))
+
 ## 3.72.0 (January 13, 2022)
 
 FEATURES:

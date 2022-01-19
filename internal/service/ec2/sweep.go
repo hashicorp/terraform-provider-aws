@@ -128,7 +128,7 @@ func init() {
 
 	resource.AddTestSweepers("aws_nat_gateway", &resource.Sweeper{
 		Name: "aws_nat_gateway",
-		F:    sweepNatGateways,
+		F:    sweepNATGateways,
 	})
 
 	resource.AddTestSweepers("aws_network_acl", &resource.Sweeper{
@@ -614,39 +614,39 @@ func sweepEgressOnlyInternetGateways(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).EC2Conn
-
 	input := &ec2.DescribeEgressOnlyInternetGatewaysInput{}
+	conn := client.(*conns.AWSClient).EC2Conn
+	sweepResources := make([]*sweep.SweepResource, 0)
+
 	err = conn.DescribeEgressOnlyInternetGatewaysPages(input, func(page *ec2.DescribeEgressOnlyInternetGatewaysOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
 
-		for _, gateway := range page.EgressOnlyInternetGateways {
-			id := aws.StringValue(gateway.EgressOnlyInternetGatewayId)
-			input := &ec2.DeleteEgressOnlyInternetGatewayInput{
-				EgressOnlyInternetGatewayId: gateway.EgressOnlyInternetGatewayId,
-			}
+		for _, v := range page.EgressOnlyInternetGateways {
+			r := ResourceEgressOnlyInternetGateway()
+			d := r.Data(nil)
+			d.SetId(aws.StringValue(v.EgressOnlyInternetGatewayId))
 
-			log.Printf("[INFO] Deleting EC2 Egress Only Internet Gateway: %s", id)
-
-			_, err := conn.DeleteEgressOnlyInternetGateway(input)
-
-			if err != nil {
-				log.Printf("[ERROR] Error deleting EC2 Egress Only Internet Gateway (%s): %s", id, err)
-			}
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
 
 		return !lastPage
 	})
 
 	if sweep.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping EC2 Egress Only Internet Gateway sweep for %s: %s", region, err)
+		log.Printf("[WARN] Skipping EC2 Egress-only Internet Gateway sweep for %s: %s", region, err)
 		return nil
 	}
 
 	if err != nil {
-		return fmt.Errorf("Error describing EC2 Egress Only Internet Gateways: %s", err)
+		return fmt.Errorf("error listing EC2 Egress-only Internet Gateways (%s): %w", region, err)
+	}
+
+	err = sweep.SweepOrchestrator(sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("error sweeping EC2 Egress-only Internet Gateways (%s): %w", region, err)
 	}
 
 	return nil
@@ -1017,37 +1017,44 @@ func sweepLaunchTemplates(region string) error {
 	return sweeperErrs.ErrorOrNil()
 }
 
-func sweepNatGateways(region string) error {
+func sweepNATGateways(region string) error {
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
+	input := &ec2.DescribeNatGatewaysInput{}
 	conn := client.(*conns.AWSClient).EC2Conn
+	sweepResources := make([]*sweep.SweepResource, 0)
 
-	req := &ec2.DescribeNatGatewaysInput{}
-	resp, err := conn.DescribeNatGateways(req)
-	if err != nil {
-		if sweep.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping EC2 NAT Gateway sweep for %s: %s", region, err)
-			return nil
+	err = conn.DescribeNatGatewaysPages(input, func(page *ec2.DescribeNatGatewaysOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
 		}
-		return fmt.Errorf("Error describing NAT Gateways: %s", err)
-	}
 
-	if len(resp.NatGateways) == 0 {
-		log.Print("[DEBUG] No AWS NAT Gateways to sweep")
+		for _, v := range page.NatGateways {
+			r := ResourceNATGateway()
+			d := r.Data(nil)
+			d.SetId(aws.StringValue(v.NatGatewayId))
+
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+		}
+
+		return !lastPage
+	})
+
+	if sweep.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping EC2 NAT Gateway sweep for %s: %s", region, err)
 		return nil
 	}
 
-	for _, natGateway := range resp.NatGateways {
-		_, err := conn.DeleteNatGateway(&ec2.DeleteNatGatewayInput{
-			NatGatewayId: natGateway.NatGatewayId,
-		})
-		if err != nil {
-			return fmt.Errorf(
-				"Error deleting NAT Gateway (%s): %s",
-				*natGateway.NatGatewayId, err)
-		}
+	if err != nil {
+		return fmt.Errorf("error listing EC2 NAT Gateways (%s): %w", region, err)
+	}
+
+	err = sweep.SweepOrchestrator(sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("error sweeping EC2 NAT Gateways (%s): %w", region, err)
 	}
 
 	return nil
@@ -1739,30 +1746,34 @@ func sweepVPCDHCPOptions(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).EC2Conn
-
 	input := &ec2.DescribeDhcpOptionsInput{}
+	conn := client.(*conns.AWSClient).EC2Conn
+	sweepResources := make([]*sweep.SweepResource, 0)
 
 	err = conn.DescribeDhcpOptionsPages(input, func(page *ec2.DescribeDhcpOptionsOutput, lastPage bool) bool {
-		for _, dhcpOption := range page.DhcpOptions {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.DhcpOptions {
+			// Skip the default DHCP Options.
 			var defaultDomainNameFound, defaultDomainNameServersFound bool
 
-			// This skips the default dhcp configurations so they don't get deleted
-			for _, dhcpConfiguration := range dhcpOption.DhcpConfigurations {
-				if aws.StringValue(dhcpConfiguration.Key) == "domain-name" {
-					if len(dhcpConfiguration.Values) != 1 || dhcpConfiguration.Values[0] == nil {
+			for _, v := range v.DhcpConfigurations {
+				if aws.StringValue(v.Key) == "domain-name" {
+					if len(v.Values) != 1 || v.Values[0] == nil {
 						continue
 					}
 
-					if aws.StringValue(dhcpConfiguration.Values[0].Value) == RegionalPrivateDNSSuffix(region) {
+					if aws.StringValue(v.Values[0].Value) == RegionalPrivateDNSSuffix(region) {
 						defaultDomainNameFound = true
 					}
-				} else if aws.StringValue(dhcpConfiguration.Key) == "domain-name-servers" {
-					if len(dhcpConfiguration.Values) != 1 || dhcpConfiguration.Values[0] == nil {
+				} else if aws.StringValue(v.Key) == "domain-name-servers" {
+					if len(v.Values) != 1 || v.Values[0] == nil {
 						continue
 					}
 
-					if aws.StringValue(dhcpConfiguration.Values[0].Value) == "AmazonProvidedDNS" {
+					if aws.StringValue(v.Values[0].Value) == "AmazonProvidedDNS" {
 						defaultDomainNameServersFound = true
 					}
 				}
@@ -1772,26 +1783,29 @@ func sweepVPCDHCPOptions(region string) error {
 				continue
 			}
 
-			input := &ec2.DeleteDhcpOptionsInput{
-				DhcpOptionsId: dhcpOption.DhcpOptionsId,
-			}
+			r := ResourceVPCDHCPOptions()
+			d := r.Data(nil)
+			d.SetId(aws.StringValue(v.DhcpOptionsId))
 
-			_, err := conn.DeleteDhcpOptions(input)
-
-			if err != nil {
-				log.Printf("[ERROR] Error deleting EC2 DHCP Option (%s): %s", aws.StringValue(dhcpOption.DhcpOptionsId), err)
-			}
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
+
 		return !lastPage
 	})
 
 	if sweep.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping EC2 DHCP Option sweep for %s: %s", region, err)
+		log.Printf("[WARN] Skipping EC2 DHCP Options Set sweep for %s: %s", region, err)
 		return nil
 	}
 
 	if err != nil {
-		return fmt.Errorf("error describing DHCP Options: %s", err)
+		return fmt.Errorf("error listing EC2 DHCP Options Sets (%s): %w", region, err)
+	}
+
+	err = sweep.SweepOrchestrator(sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("error sweeping EC2 DHCP Options Sets (%s): %w", region, err)
 	}
 
 	return nil

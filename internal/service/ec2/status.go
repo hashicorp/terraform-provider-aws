@@ -244,6 +244,22 @@ func StatusInstanceIAMInstanceProfile(conn *ec2.EC2, id string) resource.StateRe
 	}
 }
 
+func StatusNATGatewayState(conn *ec2.EC2, id string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := FindNATGatewayByID(conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, aws.StringValue(output.State), nil
+	}
+}
+
 const (
 	RouteStatusReady = "ready"
 )
@@ -302,24 +318,21 @@ func StatusRouteTableAssociationState(conn *ec2.EC2, id string) resource.StateRe
 
 const (
 	SecurityGroupStatusCreated = "Created"
-
-	SecurityGroupStatusNotFound = "NotFound"
-
-	SecurityGroupStatusUnknown = "Unknown"
 )
 
-// StatusSecurityGroup fetches the security group and its status
 func StatusSecurityGroup(conn *ec2.EC2, id string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		group, err := FindSecurityGroupByID(conn, id)
+		output, err := FindSecurityGroupByID(conn, id)
+
 		if tfresource.NotFound(err) {
-			return nil, SecurityGroupStatusNotFound, nil
-		}
-		if err != nil {
-			return nil, SecurityGroupStatusUnknown, err
+			return nil, "", nil
 		}
 
-		return group, SecurityGroupStatusCreated, nil
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, SecurityGroupStatusCreated, nil
 	}
 }
 
@@ -483,12 +496,11 @@ func StatusTransitGatewayRouteTablePropagationState(conn *ec2.EC2, transitGatewa
 	}
 }
 
-// StatusVPCAttribute fetches the Vpc and its attribute value
-func StatusVPCAttribute(conn *ec2.EC2, id string, attribute string) resource.StateRefreshFunc {
+func StatusVPCState(conn *ec2.EC2, id string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		attributeValue, err := FindVPCAttribute(conn, id, attribute)
+		output, err := FindVPCByID(conn, id)
 
-		if tfawserr.ErrCodeEquals(err, ErrCodeInvalidVpcIDNotFound) {
+		if tfresource.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -496,11 +508,55 @@ func StatusVPCAttribute(conn *ec2.EC2, id string, attribute string) resource.Sta
 			return nil, "", err
 		}
 
-		if attributeValue == nil {
+		return output, aws.StringValue(output.State), nil
+	}
+}
+
+func StatusVPCAttributeValue(conn *ec2.EC2, id string, attribute string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		attributeValue, err := FindVPCAttribute(conn, id, attribute)
+
+		if tfresource.NotFound(err) {
 			return nil, "", nil
 		}
 
-		return attributeValue, strconv.FormatBool(aws.BoolValue(attributeValue)), nil
+		if err != nil {
+			return nil, "", err
+		}
+
+		return attributeValue, strconv.FormatBool(attributeValue), nil
+	}
+}
+
+func StatusVPCCIDRBlockAssociationState(conn *ec2.EC2, id string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, _, err := FindVPCCIDRBlockAssociationByID(conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output.CidrBlockState, aws.StringValue(output.CidrBlockState.State), nil
+	}
+}
+
+func StatusVPCIPv6CIDRBlockAssociationState(conn *ec2.EC2, id string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, _, err := FindVPCIPv6CIDRBlockAssociationByID(conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output.Ipv6CidrBlockState, aws.StringValue(output.Ipv6CidrBlockState.State), nil
 	}
 }
 

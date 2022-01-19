@@ -3,6 +3,7 @@ package dynamodb
 import (
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"reflect"
@@ -25,6 +26,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+const dynamoDbProvisionedThroughputMinValue = 1
+
 func ResourceTable() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{
@@ -42,7 +45,7 @@ func ResourceTable() *schema.Resource {
 			Update: schema.DefaultTimeout(updateTableTimeoutTotal),
 		},
 
-		CustomizeDiff: customdiff.Sequence(
+		CustomizeDiff: customdiff.All(
 			func(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
 				return validStreamSpec(diff)
 			},
@@ -66,6 +69,20 @@ func ResourceTable() *schema.Resource {
 					}
 				}
 				return nil
+			},
+			func(_ context.Context, diff *schema.ResourceDiff, _ interface{}) error {
+				if v := diff.Get("restore_source_name"); v != "" {
+					return nil
+				}
+
+				var errs *multierror.Error
+				if err := validateDynamoDbProvisionedThroughputField(diff, "read_capacity"); err != nil {
+					errs = multierror.Append(errs, err)
+				}
+				if err := validateDynamoDbProvisionedThroughputField(diff, "write_capacity"); err != nil {
+					errs = multierror.Append(errs, err)
+				}
+				return errs.ErrorOrNil()
 			},
 			verify.SetTagsDiff,
 		),
@@ -107,13 +124,10 @@ func ResourceTable() *schema.Resource {
 				},
 			},
 			"billing_mode": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  dynamodb.BillingModeProvisioned,
-				ValidateFunc: validation.StringInSlice([]string{
-					dynamodb.BillingModePayPerRequest,
-					dynamodb.BillingModeProvisioned,
-				}, false),
+				Type:         schema.TypeString,
+				Optional:     true,
+				Default:      dynamodb.BillingModeProvisioned,
+				ValidateFunc: validation.StringInSlice(dynamodb.BillingMode_Values(), false),
 			},
 			"global_secondary_index": {
 				Type:     schema.TypeSet,
@@ -401,8 +415,8 @@ func resourceTableCreate(d *schema.ResourceData, meta interface{}) error {
 
 			for _, gsiObject := range gsiSet.List() {
 				gsi := gsiObject.(map[string]interface{})
-				if err := validateDynamoDbProvisionedThroughput(gsi, billingModeOverride); err != nil {
-					return fmt.Errorf("failed to create GSI: %v", err)
+				if err := validateDynamoDbGSIProvisionedThroughput(gsi, billingModeOverride); err != nil {
+					return fmt.Errorf("failed to create GSI: %w", err)
 				}
 
 				gsiObject := expandDynamoDbGlobalSecondaryIndex(gsi, billingModeOverride)
@@ -444,7 +458,7 @@ func resourceTableCreate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		if output == nil || output.TableDescription == nil {
-			return fmt.Errorf("error creating DynamoDB Table: empty response")
+			return errors.New("error creating DynamoDB Table: empty response")
 		}
 
 	} else {
@@ -460,10 +474,6 @@ func resourceTableCreate(d *schema.ResourceData, meta interface{}) error {
 		capacityMap := map[string]interface{}{
 			"write_capacity": d.Get("write_capacity"),
 			"read_capacity":  d.Get("read_capacity"),
-		}
-
-		if err := validateDynamoDbProvisionedThroughput(capacityMap, billingMode); err != nil {
-			return err
 		}
 
 		req.ProvisionedThroughput = expandDynamoDbProvisionedThroughput(capacityMap, billingMode)
@@ -484,8 +494,8 @@ func resourceTableCreate(d *schema.ResourceData, meta interface{}) error {
 
 			for _, gsiObject := range gsiSet.List() {
 				gsi := gsiObject.(map[string]interface{})
-				if err := validateDynamoDbProvisionedThroughput(gsi, billingMode); err != nil {
-					return fmt.Errorf("failed to create GSI: %v", err)
+				if err := validateDynamoDbGSIProvisionedThroughput(gsi, billingMode); err != nil {
+					return fmt.Errorf("failed to create GSI: %w", err)
 				}
 
 				gsiObject := expandDynamoDbGlobalSecondaryIndex(gsi, billingMode)
@@ -538,7 +548,7 @@ func resourceTableCreate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		if output == nil || output.TableDescription == nil {
-			return fmt.Errorf("error creating DynamoDB Table: empty response")
+			return errors.New("error creating DynamoDB Table: empty response")
 		}
 	}
 
@@ -706,7 +716,9 @@ func resourceTableRead(d *schema.ResourceData, meta interface{}) error {
 
 func resourceTableUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DynamoDBConn
-	billingMode := d.Get("billing_mode").(string)
+	o, n := d.GetChange("billing_mode")
+	billingMode := n.(string)
+	oldBillingMode := o.(string)
 
 	// Global Secondary Index operations must occur in multiple phases
 	// to prevent various error scenarios. If there are no detected required
@@ -764,12 +776,8 @@ func resourceTableUpdate(d *schema.ResourceData, meta interface{}) error {
 			"read_capacity":  d.Get("read_capacity"),
 		}
 
-		if err := validateDynamoDbProvisionedThroughput(capacityMap, billingMode); err != nil {
-			return err
-		}
-
 		input.BillingMode = aws.String(billingMode)
-		input.ProvisionedThroughput = expandDynamoDbProvisionedThroughput(capacityMap, billingMode)
+		input.ProvisionedThroughput = expandDynamoDbProvisionedThroughputUpdate(d.Id(), capacityMap, billingMode, oldBillingMode)
 	}
 
 	if d.HasChanges("stream_enabled", "stream_view_type") {
@@ -1090,7 +1098,7 @@ func UpdateDiffGSI(oldGsi, newGsi []interface{}, billingMode string) (ops []*dyn
 	for _, gsidata := range newGsi {
 		m := gsidata.(map[string]interface{})
 		// validate throughput input early, to avoid unnecessary processing
-		if e = validateDynamoDbProvisionedThroughput(m, billingMode); e != nil {
+		if e = validateDynamoDbGSIProvisionedThroughput(m, billingMode); e != nil {
 			return
 		}
 		newGsis[m["name"].(string)] = m
@@ -1528,15 +1536,28 @@ func expandDynamoDbGlobalSecondaryIndex(data map[string]interface{}, billingMode
 }
 
 func expandDynamoDbProvisionedThroughput(data map[string]interface{}, billingMode string) *dynamodb.ProvisionedThroughput {
+	return expandDynamoDbProvisionedThroughputUpdate("", data, billingMode, "")
+}
 
+func expandDynamoDbProvisionedThroughputUpdate(id string, data map[string]interface{}, billingMode, oldBillingMode string) *dynamodb.ProvisionedThroughput {
 	if billingMode == dynamodb.BillingModePayPerRequest {
 		return nil
 	}
 
 	return &dynamodb.ProvisionedThroughput{
-		WriteCapacityUnits: aws.Int64(int64(data["write_capacity"].(int))),
-		ReadCapacityUnits:  aws.Int64(int64(data["read_capacity"].(int))),
+		ReadCapacityUnits:  aws.Int64(expandDynamoDbProvisionedThroughputField(id, data, "read_capacity", billingMode, oldBillingMode)),
+		WriteCapacityUnits: aws.Int64(expandDynamoDbProvisionedThroughputField(id, data, "write_capacity", billingMode, oldBillingMode)),
 	}
+}
+
+func expandDynamoDbProvisionedThroughputField(id string, data map[string]interface{}, key, billingMode, oldBillingMode string) int64 {
+	v := data[key].(int)
+	if v == 0 && billingMode == dynamodb.BillingModeProvisioned && oldBillingMode == dynamodb.BillingModePayPerRequest {
+		log.Printf("[WARN] Overriding %[1]s on DynamoDB Table (%[2]s) to %[3]d. Switching from billing mode %[4]q to %[5]q without value for %[1]s. Assuming changes are being ignored.",
+			key, id, dynamoDbProvisionedThroughputMinValue, oldBillingMode, billingMode)
+		v = dynamoDbProvisionedThroughputMinValue
+	}
+	return int64(v)
 }
 
 func expandDynamoDbProjection(data map[string]interface{}) *dynamodb.Projection {
@@ -1661,7 +1682,7 @@ func validateDynamoDbTableAttributes(d *schema.ResourceDiff) error {
 	return err.ErrorOrNil()
 }
 
-func validateDynamoDbProvisionedThroughput(data map[string]interface{}, billingMode string) error {
+func validateDynamoDbGSIProvisionedThroughput(data map[string]interface{}, billingMode string) error {
 	// if billing mode is PAY_PER_REQUEST, don't need to validate the throughput settings
 	if billingMode == dynamodb.BillingModePayPerRequest {
 		return nil
@@ -1682,5 +1703,24 @@ func validateDynamoDbProvisionedThroughput(data map[string]interface{}, billingM
 		return fmt.Errorf("read capacity must be > 0 when billing mode is %s", dynamodb.BillingModeProvisioned)
 	}
 
+	return nil
+}
+
+func validateDynamoDbProvisionedThroughputField(diff *schema.ResourceDiff, key string) error {
+	oldBillingMode, billingMode := diff.GetChange("billing_mode")
+	v := diff.Get(key).(int)
+	if billingMode == dynamodb.BillingModeProvisioned {
+		if v < dynamoDbProvisionedThroughputMinValue {
+			// Assuming the field is ignored, likely due to autoscaling
+			if oldBillingMode == dynamodb.BillingModePayPerRequest {
+				return nil
+			}
+			return fmt.Errorf("%s must be at least 1 when billing_mode is %q", key, billingMode)
+		}
+	} else if billingMode == dynamodb.BillingModePayPerRequest && oldBillingMode != dynamodb.BillingModeProvisioned {
+		if v != 0 {
+			return fmt.Errorf("%s can not be set when billing_mode is %q", key, dynamodb.BillingModePayPerRequest)
+		}
+	}
 	return nil
 }

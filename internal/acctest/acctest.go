@@ -29,6 +29,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider"
+	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	tforganizations "github.com/hashicorp/terraform-provider-aws/internal/service/organizations"
 	tfsts "github.com/hashicorp/terraform-provider-aws/internal/service/sts"
 )
@@ -1791,7 +1792,7 @@ resource "aws_subnet" "test" {
 	)
 }
 
-func CheckVPCExists(n string, vpc *ec2.Vpc) resource.TestCheckFunc {
+func CheckVPCExists(n string, v *ec2.Vpc) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -1803,18 +1804,14 @@ func CheckVPCExists(n string, vpc *ec2.Vpc) resource.TestCheckFunc {
 		}
 
 		conn := Provider.Meta().(*conns.AWSClient).EC2Conn
-		DescribeVpcOpts := &ec2.DescribeVpcsInput{
-			VpcIds: []*string{aws.String(rs.Primary.ID)},
-		}
-		resp, err := conn.DescribeVpcs(DescribeVpcOpts)
+
+		output, err := tfec2.FindVPCByID(conn, rs.Primary.ID)
+
 		if err != nil {
 			return err
 		}
-		if len(resp.Vpcs) == 0 || resp.Vpcs[0] == nil {
-			return fmt.Errorf("VPC not found")
-		}
 
-		*vpc = *resp.Vpcs[0]
+		*v = *output
 
 		return nil
 	}
