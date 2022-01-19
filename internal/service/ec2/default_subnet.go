@@ -201,6 +201,7 @@ func resourceDefaultSubnetCreate(d *schema.ResourceData, meta interface{}) error
 		return err
 	}
 
+	// Configure tags.
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 	newTags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{}))).IgnoreConfig(ignoreTagsConfig)
