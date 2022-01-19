@@ -177,6 +177,30 @@ func TestAccCloudSearchDomain_update(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
+			{
+				Config: testAccCloudSearchDomainAllOptionsUpdatedConfig(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCloudSearchDomainExists(resourceName, &v),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "cloudsearch", fmt.Sprintf("domain/%s", rName)),
+					resource.TestCheckResourceAttrSet(resourceName, "domain_id"),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_options.0.enforce_https", "true"),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_options.0.tls_security_policy", "Policy-Min-TLS-1-2-2019-07"),
+					resource.TestCheckResourceAttr(resourceName, "index_field.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "index_field.*", map[string]string{
+						"name":            "text_array_test",
+						"type":            "text-array",
+						"return":          "true",
+						"analysis_scheme": "_fr_default_",
+					}),
+					resource.TestCheckResourceAttr(resourceName, "multi_az", "false"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "scaling_parameters.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "scaling_parameters.0.desired_instance_type", "search.medium"),
+					resource.TestCheckResourceAttr(resourceName, "scaling_parameters.0.desired_partition_count", "1"),
+					resource.TestCheckResourceAttr(resourceName, "scaling_parameters.0.desired_replication_count", "2"),
+				),
+			},
 		},
 	})
 }
@@ -316,6 +340,34 @@ resource "aws_cloudsearch_domain" "test" {
   index_field {
     name = "latlon_test"
     type = "latlon"
+  }
+}
+`, rName)
+}
+
+func testAccCloudSearchDomainAllOptionsUpdatedConfig(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_cloudsearch_domain" "test" {
+  name = %[1]q
+
+  endpoint_options {
+    enforce_https       = true
+    tls_security_policy = "Policy-Min-TLS-1-2-2019-07"
+  }
+
+  multi_az = false
+
+  scaling_parameters {
+    desired_instance_type     = "search.medium"
+    desired_partition_count   = 1
+    desired_replication_count = 2
+  }
+
+  index_field {
+    name            = "text_array_test"
+    type            = "text-array"
+    return          = true
+    analysis_scheme = "_fr_default_"
   }
 }
 `, rName)
