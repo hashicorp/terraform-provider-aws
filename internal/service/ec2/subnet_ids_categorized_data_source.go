@@ -12,10 +12,10 @@ import (
 )
 
 type subnetInfo struct {
-	publicSubnetIds       []string
-	privateSubnetIds      []string
-	privateNatSubnetIds   []string
-	privateNoNatSubnetIds []string
+	publicSubnetIds          []string
+	privateSubnetIds         []string
+	privateRoutedSubnetIds   []string
+	privateIsolatedSubnetIds []string
 }
 
 func DataSourceSubnetIDsCategorized() *schema.Resource {
@@ -36,12 +36,12 @@ func DataSourceSubnetIDsCategorized() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"private_subnet_nat_ids": {
+			"private_subnet_routed_ids": {
 				Type:     schema.TypeSet,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"private_subnet_nonat_ids": {
+			"private_subnet_isolated_ids": {
 				Type:     schema.TypeSet,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -67,8 +67,8 @@ func dataSourceSubnetIDsCategorizedRead(d *schema.ResourceData, meta interface{}
 		d.SetId(vpcId)
 		d.Set("public_subnet_ids", (*pSubnetInfo).publicSubnetIds)
 		d.Set("private_subnet_ids", (*pSubnetInfo).privateSubnetIds)
-		d.Set("private_subnet_nat_ids", (*pSubnetInfo).privateNatSubnetIds)
-		d.Set("private_subnet_nonat_ids", (*pSubnetInfo).privateNoNatSubnetIds)
+		d.Set("private_subnet_routed_ids", (*pSubnetInfo).privateRoutedSubnetIds)
+		d.Set("private_subnet_isolated_ids", (*pSubnetInfo).privateIsolatedSubnetIds)
 	} else {
 		return errors.New("Error reading vpc_id argument")
 	}
@@ -77,13 +77,13 @@ func dataSourceSubnetIDsCategorizedRead(d *schema.ResourceData, meta interface{}
 }
 
 // Read IGW, subnets and route tables for specified VPC, and then categorize to public and private.
-// Returns: Two arrays - one of public subnet IDs and one of private subnet IDs.
+// Returns: subnetInfo struct containing the categorized subnet IDs.
 func getCategorizedSubnets(conn *ec2.EC2, vpcId string) (*subnetInfo, error) {
 	si := subnetInfo{
-		publicSubnetIds:       []string{},
-		privateSubnetIds:      []string{},
-		privateNatSubnetIds:   []string{},
-		privateNoNatSubnetIds: []string{},
+		publicSubnetIds:          []string{},
+		privateSubnetIds:         []string{},
+		privateRoutedSubnetIds:   []string{},
+		privateIsolatedSubnetIds: []string{},
 	}
 
 	allSubnetIds, err := getAllSubnetIds(conn, vpcId)
@@ -130,7 +130,7 @@ func getCategorizedSubnets(conn *ec2.EC2, vpcId string) (*subnetInfo, error) {
 	// Condition for all subnets are private and isolated
 	// NAT won't work without IGW
 	if !(haveRouteTables && haveInternetGateway) {
-		si.privateNoNatSubnetIds = allSubnetIds
+		si.privateIsolatedSubnetIds = allSubnetIds
 		si.privateSubnetIds = allSubnetIds
 
 		return &si, nil
@@ -149,10 +149,10 @@ func getCategorizedSubnets(conn *ec2.EC2, vpcId string) (*subnetInfo, error) {
 
 	if len(natGateways) > 0 {
 		// further categorize private subnets
-		si.privateNatSubnetIds, si.privateNoNatSubnetIds = categorizePrivateSubnetIds(natGateways, routeTables, si.privateSubnetIds)
+		si.privateRoutedSubnetIds, si.privateIsolatedSubnetIds = categorizePrivateSubnetIds(natGateways, routeTables, si.privateSubnetIds)
 	} else {
 		// All private subnets are no-NAT
-		si.privateNoNatSubnetIds = si.privateSubnetIds
+		si.privateIsolatedSubnetIds = si.privateSubnetIds
 	}
 
 	return &si, nil
@@ -184,7 +184,7 @@ func categorizeSubnetIds(igw *ec2.InternetGateway, routeTables []*ec2.RouteTable
 			}
 		}
 
-		// What reamins is therefore private
+		// What remains is therefore private
 		return publicSubnetIds, setDifference(allSubnetIds, publicSubnetIds)
 	}
 
@@ -300,7 +300,7 @@ func getAllSubnetIds(conn *ec2.EC2, vpcId string) ([]string, error) {
 }
 
 // Get the internet gateway for the specified VPC
-// Returns: InternetGateway, or nil if there isn't one
+// Returns: *InternetGateway, or nil if there isn't one
 func findInternetGateway(conn *ec2.EC2, vpcId string) (*ec2.InternetGateway, error) {
 
 	igws, err := FindInternetGateways(conn, &ec2.DescribeInternetGatewaysInput{
