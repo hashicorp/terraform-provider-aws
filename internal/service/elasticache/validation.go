@@ -14,7 +14,7 @@ import (
 
 const (
 	redisVersionPreV6RegexpRaw  = `[1-5](\.[[:digit:]]+){2}`
-	redisVersionPostV6RegexpRaw = `([6-9]|[[:digit:]]{2})\.x`
+	redisVersionPostV6RegexpRaw = `([6-9]|[[:digit:]]{2})\.([[:digit:]]+|x)`
 
 	redisVersionRegexpRaw = redisVersionPreV6RegexpRaw + "|" + redisVersionPostV6RegexpRaw
 )
