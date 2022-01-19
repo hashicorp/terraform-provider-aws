@@ -177,10 +177,10 @@ The following arguments are optional:
 * `transit_encryption_enabled` - (Optional) Whether to enable encryption in transit.
 * `user_group_ids` - (Optional) User Group ID to associate with the replication group. Only a maximum of one (1) user group ID is valid. **NOTE:** This argument _is_ a set because the AWS specification allows for multiple IDs. However, in practice, AWS only allows a maximum size of one.
 
-### cluster_mode
+### cluster_mode (**DEPRECATED**)
 
-* `num_node_groups` - (Optional) Number of node groups (shards) for this Redis replication group. Changing this number will trigger an online resizing operation before other settings modifications. Required unless `global_replication_group_id` is set.
-* `replicas_per_node_group` - (Required) Number of replica nodes in each node group. Valid values are 0 to 5. Changing this number will trigger an online resizing operation before other settings modifications.
+* `num_node_groups` - (Optional, **Deprecated** use root-level `num_node_groups` instead) Number of node groups (shards) for this Redis replication group. Changing this number will trigger an online resizing operation before other settings modifications. Required unless `global_replication_group_id` is set.
+* `replicas_per_node_group` - (Required, **Deprecated** use root-level `replicas_per_node_group` instead) Number of replica nodes in each node group. Valid values are 0 to 5. Changing this number will trigger an online resizing operation before other settings modifications.
 
 ## Attributes Reference
 
