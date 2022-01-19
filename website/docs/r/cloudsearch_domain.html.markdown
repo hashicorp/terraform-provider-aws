@@ -16,10 +16,13 @@ Terraform waits for the domain to become `Active` when applying a configuration.
 
 ```terraform
 resource "aws_cloudsearch_domain" "example" {
-  name          = "example-domain"
-  instance_type = "search.medium"
+  name = "example-domain"
 
-  index {
+  scaling_parameters {
+    desired_instance_type = "search.medium"
+  }
+
+  index_field {
     name            = "headline"
     type            = "text"
     search          = true
@@ -29,7 +32,7 @@ resource "aws_cloudsearch_domain" "example" {
     analysis_scheme = "_en_default_"
   }
 
-  index {
+  index_field {
     name   = "price"
     type   = "double"
     search = true
@@ -45,14 +48,10 @@ resource "aws_cloudsearch_domain" "example" {
 The following arguments are supported:
 
 * `endpoint_options` - (Optional) Domain endpoint options. Documented below.
+* `index_field` - (Optional) The index fields for documents added to the domain. Documented below.
 * `multi_az` - (Optional) Whether or not to maintain extra instances for the domain in a second Availability Zone to ensure high availability.
 * `name` - (Required) The name of the CloudSearch domain.
 * `scaling_parameters` - (Optional) Domain scaling parameters. Documented below.
-
-* `instance_type` - (Optional) The type of instance to start.
-* `replication_count` - (Optional) The amount of replicas.
-* `partition_count` - (Optional) The amount of partitions on each instance. Currently only supported by `search.2xlarge`.
-* `index` - (Required) See [Indices](#indices) below for details.
 
 ### endpoint_options
 
@@ -69,19 +68,19 @@ This configuration block supports the following attributes:
 * `desired_partition_count` - (Optional) The number of partitions you want to preconfigure for your domain. Only valid when you select `search.2xlarge` as the instance type.
 * `desired_replication_count` - (Optional) The number of replicas you want to preconfigure for each index partition.
 
-### Indices
+### index_field
 
-Each of the `index` entities represents an index field of the domain.
+This configuration block supports the following attributes:
 
-* `name` - (Required) Represents the property field name.
-* `type` - (Required) Represents the property type. It can be one of `int,int-array,double,double-array,literal,literal-array,text,text-array,date,date-array,lation` [AWS's Docs](http://docs.aws.amazon.com/cloudsearch/latest/developerguide/configuring-index-fields.html)
-* `search` - (Required) You can set whether this index should be searchable or not. (index of type text ist always searchable)
+* `name` - (Required) A unique name for the field. Field names must begin with a letter and be at least 3 and no more than 64 characters long. The allowed characters are: `a`-`z` (lower-case letters), `0`-`9`, and `_` (underscore). The name `score` is reserved and cannot be used as a field name.
+* `type` - (Required) The field type. Valid values: `date`, `date-array`, `double`, `double-array`, `int`, `int-array`, `literal`, `literal-array`, `text`, `text-array`.
+* `analysis_scheme` - (Optional) The analysis scheme you want to use for a `text` field. The analysis scheme specifies the language-specific text processing options that are used during indexing.
+* `default_value` - (Optional) The default value for the field. This value is used when no value is specified for the field in the document data.
 * `facet` - (Optional) You can get facet information by enabling this.
-* `return` - (Required) You can enable returning the value of all searchable fields.
-* `sort` - (Optional) You can enable the property to be sortable.
 * `highlight` - (Optional) You can highlight information.
-* `analysis_scheme` - (Optional) Only needed with type `text`. [AWS's Docs - supported languages](http://docs.aws.amazon.com/cloudsearch/latest/developerguide/text-processing.html)
-* `default_value` - (Optional) The default value.
+* `return` - (Optional) You can enable returning the value of all searchable fields.
+* `search` - (Optional) You can set whether this index should be searchable or not.
+* `sort` - (Optional) You can enable the property to be sortable.
 
 ## Attributes Reference
 
