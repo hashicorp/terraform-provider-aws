@@ -198,7 +198,7 @@ func statusAccessPolicyState(conn *cloudsearch.CloudSearch, name string) resourc
 	}
 }
 
-func waitAccessPolicyActive(conn *cloudsearch.CloudSearch, name string, timeout time.Duration) (*cloudsearch.AccessPoliciesStatus, error) {
+func waitAccessPolicyActive(conn *cloudsearch.CloudSearch, name string, timeout time.Duration) (*cloudsearch.AccessPoliciesStatus, error) { //nolint:unparam
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{cloudsearch.OptionStateProcessing},
 		Target:  []string{cloudsearch.OptionStateActive},

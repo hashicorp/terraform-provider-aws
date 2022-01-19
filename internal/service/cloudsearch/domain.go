@@ -671,7 +671,7 @@ func statusDomainProcessing(conn *cloudsearch.CloudSearch, name string) resource
 	}
 }
 
-func waitDomainActive(conn *cloudsearch.CloudSearch, name string, timeout time.Duration) (*cloudsearch.DomainStatus, error) {
+func waitDomainActive(conn *cloudsearch.CloudSearch, name string, timeout time.Duration) (*cloudsearch.DomainStatus, error) { //nolint:unparam
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{"true"},
 		Target:  []string{"false"},
