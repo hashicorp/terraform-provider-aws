@@ -139,6 +139,48 @@ func TestAccCloudSearchDomain_indexFields(t *testing.T) {
 	})
 }
 
+func TestAccCloudSearchDomain_update(t *testing.T) {
+	var v cloudsearch.DomainStatus
+	resourceName := "aws_cloudsearch_domain.test"
+	rName := acctest.ResourcePrefix + "-" + sdkacctest.RandString(28-(len(acctest.ResourcePrefix)+1))
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudsearch.EndpointsID, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, cloudsearch.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCloudSearchDomainDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCloudSearchDomainAllOptionsConfig(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCloudSearchDomainExists(resourceName, &v),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "cloudsearch", fmt.Sprintf("domain/%s", rName)),
+					resource.TestCheckResourceAttrSet(resourceName, "domain_id"),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_options.0.enforce_https", "true"),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_options.0.tls_security_policy", "Policy-Min-TLS-1-0-2019-07"),
+					resource.TestCheckResourceAttr(resourceName, "index_field.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "index_field.*", map[string]string{
+						"name": "latlon_test",
+						"type": "latlon",
+					}),
+					resource.TestCheckResourceAttr(resourceName, "multi_az", "true"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "scaling_parameters.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "scaling_parameters.0.desired_instance_type", "search.small"),
+					resource.TestCheckResourceAttr(resourceName, "scaling_parameters.0.desired_partition_count", "1"),
+					resource.TestCheckResourceAttr(resourceName, "scaling_parameters.0.desired_replication_count", "1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccCloudSearchDomainExists(n string, v *cloudsearch.DomainStatus) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -248,6 +290,32 @@ resource "aws_cloudsearch_domain" "test" {
     type            = "text"
     analysis_scheme = "_en_default_"
     highlight       = true
+  }
+}
+`, rName)
+}
+
+func testAccCloudSearchDomainAllOptionsConfig(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_cloudsearch_domain" "test" {
+  name = %[1]q
+
+  endpoint_options {
+    enforce_https       = true
+    tls_security_policy = "Policy-Min-TLS-1-0-2019-07"
+  }
+
+  multi_az = true
+
+  scaling_parameters {
+    desired_instance_type     = "search.small"
+    desired_partition_count   = 1
+    desired_replication_count = 1
+  }
+
+  index_field {
+    name = "latlon_test"
+    type = "latlon"
   }
 }
 `, rName)
