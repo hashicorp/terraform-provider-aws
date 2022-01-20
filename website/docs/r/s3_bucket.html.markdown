@@ -430,6 +430,7 @@ The `transition` object supports the following
 The `noncurrent_version_expiration` object supports the following
 
 * `days` (Required) Specifies the number of days noncurrent object versions expire.
+* `newer_versions` (Optional) Specifies how many noncurrent versions Amazon S3 will retain. If there are this many more recent noncurrent versions, Amazon S3 will take the associated action.
 
 The `noncurrent_version_transition` object supports the following
 

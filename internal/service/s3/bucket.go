@@ -324,6 +324,11 @@ func ResourceBucket() *schema.Resource {
 										Optional:     true,
 										ValidateFunc: validation.IntAtLeast(1),
 									},
+									"newer_versions": {
+										Type:         schema.TypeInt,
+										Optional:     true,
+										ValidateFunc: validation.IntAtLeast(1),
+									},
 								},
 							},
 						},
@@ -1221,6 +1226,9 @@ func resourceBucketRead(d *schema.ResourceData, meta interface{}) error {
 				e := make(map[string]interface{})
 				if lifecycleRule.NoncurrentVersionExpiration.NoncurrentDays != nil {
 					e["days"] = int(aws.Int64Value(lifecycleRule.NoncurrentVersionExpiration.NoncurrentDays))
+				}
+				if lifecycleRule.NoncurrentVersionExpiration.NewerNoncurrentVersions != nil {
+					e["newer_versions"] = int(aws.Int64Value(lifecycleRule.NoncurrentVersionExpiration.NewerNoncurrentVersions))
 				}
 				rule["noncurrent_version_expiration"] = []interface{}{e}
 			}
@@ -2293,12 +2301,14 @@ func resourceBucketLifecycleUpdate(conn *s3.S3, d *schema.ResourceData) error {
 		nc_expiration := d.Get(fmt.Sprintf("lifecycle_rule.%d.noncurrent_version_expiration", i)).([]interface{})
 		if len(nc_expiration) > 0 && nc_expiration[0] != nil {
 			e := nc_expiration[0].(map[string]interface{})
-
+			i := &s3.NoncurrentVersionExpiration{}
 			if val, ok := e["days"].(int); ok && val > 0 {
-				rule.NoncurrentVersionExpiration = &s3.NoncurrentVersionExpiration{
-					NoncurrentDays: aws.Int64(int64(val)),
-				}
+				i.NoncurrentDays = aws.Int64(int64(val))
 			}
+			if val, ok := e["newer_versions"].(int); ok && val > 0 {
+				i.NewerNoncurrentVersions = aws.Int64(int64(val))
+			}
+			rule.NoncurrentVersionExpiration = i
 		}
 
 		// Transitions
