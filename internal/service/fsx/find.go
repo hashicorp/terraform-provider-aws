@@ -93,6 +93,45 @@ func FindFileSystemByID(conn *fsx.FSx, id string) (*fsx.FileSystem, error) {
 	return filesystems[0], nil
 }
 
+func FindDataRepositoryAssociationByID(conn *fsx.FSx, id string) (*fsx.DataRepositoryAssociation, error) {
+	input := &fsx.DescribeDataRepositoryAssociationsInput{
+		AssociationIds: []*string{aws.String(id)},
+	}
+
+	var associations []*fsx.DataRepositoryAssociation
+
+	err := conn.DescribeDataRepositoryAssociationsPages(input, func(page *fsx.DescribeDataRepositoryAssociationsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		associations = append(associations, page.Associations...)
+
+		return !lastPage
+	})
+
+	if tfawserr.ErrCodeEquals(err, fsx.ErrCodeDataRepositoryAssociationNotFound) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if len(associations) == 0 || associations[0] == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	if count := len(associations); count > 1 {
+		return nil, tfresource.NewTooManyResultsError(count, input)
+	}
+
+	return associations[0], nil
+}
+
 func FindStorageVirtualMachineByID(conn *fsx.FSx, id string) (*fsx.StorageVirtualMachine, error) {
 	input := &fsx.DescribeStorageVirtualMachinesInput{
 		StorageVirtualMachineIds: []*string{aws.String(id)},
