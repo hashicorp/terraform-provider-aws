@@ -21,7 +21,8 @@ func TestAccEC2DefaultVPCAndSubnet_serial(t *testing.T) {
 			"assignGeneratedIPv6CIDRBlock": testAccEC2DefaultVPC_assignGeneratedIPv6CIDRBlock,
 		},
 		"Subnet": {
-			"basic": testAccEC2DefaultSubnet_basic,
+			"basic":                         testAccEC2DefaultSubnet_basic,
+			"privateDnsNameOptionsOnLaunch": testAccEC2DefaultSubnet_privateDnsNameOptionsOnLaunch,
 		},
 	}
 
