@@ -53,5 +53,5 @@ In addition to all arguments above, the following attributes are exported:
 DeviceFarm Test Grid Projects can be imported by their arn:
 
 ```
-$ terraform import aws_devicefarm_test_grid_project.example arn:aws:devicefarm:us-west-2:123456789012:test_grid_project:4fa784c7-ccb4-4dbf-ba4f-02198320daa1
+$ terraform import aws_devicefarm_test_grid_project.example arn:aws:devicefarm:us-west-2:123456789012:testgrid-project:4fa784c7-ccb4-4dbf-ba4f-02198320daa1
 ```
