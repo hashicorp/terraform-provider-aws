@@ -8,11 +8,28 @@ Provide AWS Lambda Function result.
 
 # Resource: aws_lambda_invocation
 
-Use this resource to invoke custom lambda functions.
-The lambda function is invoked with [RequestResponse](https://docs.aws.amazon.com/lambda/latest/dg/API_Invoke.html#API_Invoke_RequestSyntax)
-invocation type.
+Use this resource to invoke a lambda function. The lambda function is invoked with the [RequestResponse](https://docs.aws.amazon.com/lambda/latest/dg/API_Invoke.html#API_Invoke_RequestSyntax) invocation type.
+
+~> **NOTE:** This resource _only_ invokes the function when the arguments call for a create or update. In other words, after an initial invocation on _apply_, if the arguments do not change, a subsequent _apply_ does not invoke the function again. To dynamically invoke the function, see the `triggers` example below. To always invoke a function on each _apply_, see the [`aws_lambda_invocation`](/docs/providers/aws/d/lambda_invocation.html) data source.
 
 ## Example Usage
+
+```terraform
+resource "aws_lambda_invocation" "example" {
+  function_name = aws_lambda_function.lambda_function_test.function_name
+
+  input = jsonencode({
+    key1 = "value1"
+    key2 = "value2"
+  })
+}
+
+output "result_entry" {
+  value = jsondecode(data.aws_lambda_invocation.example.result)["key1"]
+}
+```
+
+### Dynamically Invocation Example Using Triggers
 
 ```hcl
 resource "aws_lambda_invocation" "example" {
@@ -24,25 +41,24 @@ resource "aws_lambda_invocation" "example" {
     ]))
   }
   
-  input = <<JSON
-{
-  "key1": "value1",
-  "key2": "value2"
-}
-JSON
-}
-output "result_entry" {
-  value = jsondecode(aws_lambda_invocation.example.result)["key1"]
+  input = jsonencode({
+    key1 = "value1"
+    key2 = "value2"
+  })
 }
 ```
 
 ## Argument Reference
 
-* `function_name` - (Required) The name of the lambda function.
-* `input` - (Required) A string in JSON format that is passed as payload to the lambda function.
-* `qualifier` - (Optional) The qualifier (a.k.a version) of the lambda function. Defaults
-  to `$LATEST`.
-* `triggers` - (Optional) A map of arbitrary keys and values that, when changed, will trigger a re-invocation. To force a re-invocation without changing these keys/values, use the [`terraform taint` command](https://www.terraform.io/docs/commands/taint.html).
+The following arguments are required:
+
+* `function_name` - (Required) Name of the lambda function.
+* `input` - (Required) JSON payload to the lambda function.
+
+The following arguments are optional:
+
+* `qualifier` - (Optional) Qualifier (i.e., version) of the lambda function. Defaults to `$LATEST`.
+* `triggers` - (Optional) Map of arbitrary keys and values that, when changed, will trigger a re-invocation. To force a re-invocation without changing these keys/values, use the [`terraform taint` command](https://www.terraform.io/docs/commands/taint.html).
 
 ## Attributes Reference
 

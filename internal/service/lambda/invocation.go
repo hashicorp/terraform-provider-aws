@@ -16,38 +16,35 @@ func ResourceInvocation() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceInvocationCreate,
 		Read:   resourceInvocationRead,
-		Update: resourceInvocationCreate,
 		Delete: resourceInvocationDelete,
 
 		Schema: map[string]*schema.Schema{
 			"function_name": {
 				Type:     schema.TypeString,
 				Required: true,
+				ForceNew: true,
 			},
-
+			"input": {
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringIsJSON,
+			},
 			"qualifier": {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
 				Default:  FunctionVersionLatest,
 			},
-
-			"input": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringIsJSON,
+			"result": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
-
 			"triggers": {
 				Type:     schema.TypeMap,
 				Optional: true,
 				ForceNew: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-
-			"result": {
-				Type:     schema.TypeString,
-				Computed: true,
 			},
 		},
 	}
@@ -86,6 +83,6 @@ func resourceInvocationRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceInvocationDelete(d *schema.ResourceData, meta interface{}) error {
-	log.Printf("[DEBUG] Lambda Invocation (%s) deleted by removing from state", d.Id())
+	log.Printf("[DEBUG] Lambda Invocation (%s) \"deleted\" by removing from state", d.Id())
 	return nil
 }
