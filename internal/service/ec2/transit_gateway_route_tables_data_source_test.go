@@ -19,7 +19,7 @@ func testAccTransitGatewayRouteTablesDataSource_basic(t *testing.T) {
 			{
 				Config: testAccTransitGatewayRouteTablesDataSourceConfig,
 				Check: resource.ComposeTestCheckFunc(
-					testCheckResourceAttrGreaterThanValue(dataSourceName, "ids.#", "0"),
+					acctest.CheckResourceAttrGreaterThanValue(dataSourceName, "ids.#", "0"),
 				),
 			},
 		},
@@ -37,7 +37,7 @@ func testAccTransitGatewayRouteTablesDataSource_Filter(t *testing.T) {
 			{
 				Config: testAccTransitGatewayRouteTablesTransitGatewayFilterDataSource,
 				Check: resource.ComposeTestCheckFunc(
-					testCheckResourceAttrGreaterThanValue(dataSourceName, "ids.#", "0"),
+					acctest.CheckResourceAttrGreaterThanValue(dataSourceName, "ids.#", "0"),
 				),
 			},
 		},
