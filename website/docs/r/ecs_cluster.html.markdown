@@ -10,6 +10,8 @@ description: |-
 
 Provides an ECS cluster.
 
+~> **NOTE on Clusters and Cluster Capacity Providers:** Terraform provides both a standalone [`aws_ecs_cluster_capacity_providers`](ecs_cluster_capacity_providers.html) resource, as well as allowing the capacity providers and default strategies to be managed in-line by the [`aws_ecs_cluster`](ecs_cluster.html) resource. You cannot use a Cluster with in-line capacity providers in conjunction with the Capacity Providers resource, as doing so will cause a conflict and will lead to mutual overwrites.
+
 ## Example Usage
 
 ```terraform

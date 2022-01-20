@@ -1,6 +1,7 @@
 package ecs
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"time"
@@ -42,7 +43,7 @@ func ResourceCluster() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(1, 255),
+				ValidateFunc: validateClusterName,
 			},
 			"arn": {
 				Type:     schema.TypeString,
@@ -51,6 +52,7 @@ func ResourceCluster() *schema.Resource {
 			"capacity_providers": {
 				Type:     schema.TypeSet,
 				Optional: true,
+				Computed: true,
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 				},
@@ -114,6 +116,7 @@ func ResourceCluster() *schema.Resource {
 			"default_capacity_provider_strategy": {
 				Type:     schema.TypeSet,
 				Optional: true,
+				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"base": {
@@ -373,25 +376,8 @@ func resourceClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 			DefaultCapacityProviderStrategy: expandCapacityProviderStrategy(d.Get("default_capacity_provider_strategy").(*schema.Set)),
 		}
 
-		err := resource.Retry(ecsClusterTimeoutUpdate, func() *resource.RetryError {
-			_, err := conn.PutClusterCapacityProviders(&input)
-			if err != nil {
-				if tfawserr.ErrMessageContains(err, ecs.ErrCodeClientException, "Cluster was not ACTIVE") {
-					return resource.RetryableError(err)
-				}
-				if tfawserr.ErrMessageContains(err, ecs.ErrCodeResourceInUseException, "") {
-					return resource.RetryableError(err)
-				}
-				if tfawserr.ErrMessageContains(err, ecs.ErrCodeUpdateInProgressException, "") {
-					return resource.RetryableError(err)
-				}
-				return resource.NonRetryableError(err)
-			}
-			return nil
-		})
-		if tfresource.TimedOut(err) {
-			_, err = conn.PutClusterCapacityProviders(&input)
-		}
+		err := retryClusterCapacityProvidersPut(context.Background(), conn, &input)
+
 		if err != nil {
 			return fmt.Errorf("error changing ECS cluster capacity provider settings (%s): %w", d.Id(), err)
 		}
