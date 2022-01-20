@@ -1,5 +1,5 @@
 ```release-note:enhancement
-resource/aws_fsx_lustre_file_system: Support PERSISTENT_2 for deployement_type
+resource/aws_fsx_lustre_file_system: Add `file_system_type_version` argument
 ```
 
 ```release-note:new-resource
