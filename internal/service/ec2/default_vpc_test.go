@@ -36,12 +36,18 @@ func TestAccEC2DefaultVPCAndSubnet_serial(t *testing.T) {
 	}
 }
 
+func testAccPreCheckDefaultVPCAvailable(t *testing.T) {
+	if !hasDefaultVPC(t) {
+		t.Skip("skipping since no default VPC is available")
+	}
+}
+
 func testAccEC2DefaultVPC_basic(t *testing.T) {
 	var v ec2.Vpc
 	resourceName := "aws_default_vpc.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckDefaultVPCAvailable(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckDefaultVPCDestroy,
@@ -61,6 +67,8 @@ func testAccEC2DefaultVPC_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "enable_classiclink_dns_support", "false"),
 					resource.TestCheckResourceAttr(resourceName, "enable_dns_hostnames", "true"),
 					resource.TestCheckResourceAttr(resourceName, "enable_dns_support", "true"),
+					resource.TestCheckResourceAttr(resourceName, "existing_default_vpc", "true"),
+					resource.TestCheckResourceAttr(resourceName, "force_destroy", "false"),
 					resource.TestCheckResourceAttr(resourceName, "instance_tenancy", "default"),
 					resource.TestCheckResourceAttr(resourceName, "ipv6_association_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "ipv6_cidr_block", ""),
@@ -82,7 +90,7 @@ func testAccEC2DefaultVPC_assignGeneratedIPv6CIDRBlock(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckDefaultVPCAvailable(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckDefaultVPCDestroy,
@@ -102,6 +110,8 @@ func testAccEC2DefaultVPC_assignGeneratedIPv6CIDRBlock(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "enable_classiclink_dns_support", "false"),
 					resource.TestCheckResourceAttr(resourceName, "enable_dns_hostnames", "true"),
 					resource.TestCheckResourceAttr(resourceName, "enable_dns_support", "true"),
+					resource.TestCheckResourceAttr(resourceName, "existing_default_vpc", "true"),
+					resource.TestCheckResourceAttr(resourceName, "force_destroy", "false"),
 					resource.TestCheckResourceAttr(resourceName, "instance_tenancy", "default"),
 					resource.TestCheckResourceAttrSet(resourceName, "ipv6_association_id"),
 					resource.TestMatchResourceAttr(resourceName, "ipv6_cidr_block", regexp.MustCompile(`/56$`)),
