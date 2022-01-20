@@ -136,8 +136,6 @@ func ResourceUser() *schema.Resource {
 func resourceUserCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CognitoIDPConn
 
-	log.Print("[DEBUG] Creating Cognito User")
-
 	username := d.Get("username").(string)
 	userPoolId := d.Get("user_pool_id").(string)
 
@@ -180,9 +178,11 @@ func resourceUserCreate(d *schema.ResourceData, meta interface{}) error {
 		params.TemporaryPassword = aws.String(v.(string))
 	}
 
+	log.Print("[DEBUG] Creating Cognito User")
+
 	resp, err := conn.AdminCreateUser(params)
 	if err != nil {
-		return fmt.Errorf("Error creating Cognito User (%s/%s): %w", userPoolId, username, err)
+		return fmt.Errorf("error creating Cognito User (%s/%s): %w", userPoolId, username, err)
 	}
 
 	d.SetId(fmt.Sprintf("%s/%s", aws.StringValue(params.UserPoolId), aws.StringValue(resp.User.Username)))
@@ -195,7 +195,7 @@ func resourceUserCreate(d *schema.ResourceData, meta interface{}) error {
 
 		_, err := conn.AdminDisableUser(disableParams)
 		if err != nil {
-			return fmt.Errorf("Error disabling Cognito User (%s): %w", d.Id(), err)
+			return fmt.Errorf("error disabling Cognito User (%s): %w", d.Id(), err)
 		}
 	}
 
@@ -209,7 +209,7 @@ func resourceUserCreate(d *schema.ResourceData, meta interface{}) error {
 
 		_, err := conn.AdminSetUserPassword(setPasswordParams)
 		if err != nil {
-			return fmt.Errorf("Error setting Cognito User's password (%s): %w", d.Id(), err)
+			return fmt.Errorf("error setting Cognito User's password (%s): %w", d.Id(), err)
 		}
 	}
 
@@ -233,7 +233,7 @@ func resourceUserRead(d *schema.ResourceData, meta interface{}) error {
 			d.SetId("")
 			return nil
 		}
-		return fmt.Errorf("Error reading Cognito User (%s): %w", d.Id(), err)
+		return fmt.Errorf("error reading Cognito User (%s): %w", d.Id(), err)
 	}
 
 	if err := d.Set("attributes", flattenUserAttributes(user.UserAttributes)); err != nil {
@@ -278,7 +278,7 @@ func resourceUserUpdate(d *schema.ResourceData, meta interface{}) error {
 
 			_, err := conn.AdminUpdateUserAttributes(params)
 			if err != nil {
-				return fmt.Errorf("Error updating Cognito User Attributes (%s): %w", d.Id(), err)
+				return fmt.Errorf("error updating Cognito User Attributes (%s): %w", d.Id(), err)
 			}
 		}
 		if len(del) > 0 {
@@ -289,7 +289,7 @@ func resourceUserUpdate(d *schema.ResourceData, meta interface{}) error {
 			}
 			_, err := conn.AdminDeleteUserAttributes(params)
 			if err != nil {
-				return fmt.Errorf("Error updating Cognito User Attributes (%s): %w", d.Id(), err)
+				return fmt.Errorf("error updating Cognito User Attributes (%s): %w", d.Id(), err)
 			}
 		}
 	}
@@ -304,7 +304,7 @@ func resourceUserUpdate(d *schema.ResourceData, meta interface{}) error {
 			}
 			_, err := conn.AdminEnableUser(enableParams)
 			if err != nil {
-				return fmt.Errorf("Error enabling Cognito User (%s): %w", d.Id(), err)
+				return fmt.Errorf("error enabling Cognito User (%s): %w", d.Id(), err)
 			}
 		} else {
 			disableParams := &cognitoidentityprovider.AdminDisableUserInput{
@@ -313,7 +313,7 @@ func resourceUserUpdate(d *schema.ResourceData, meta interface{}) error {
 			}
 			_, err := conn.AdminDisableUser(disableParams)
 			if err != nil {
-				return fmt.Errorf("Error disabling Cognito User (%s): %w", d.Id(), err)
+				return fmt.Errorf("error disabling Cognito User (%s): %w", d.Id(), err)
 			}
 		}
 	}
@@ -331,7 +331,7 @@ func resourceUserUpdate(d *schema.ResourceData, meta interface{}) error {
 
 			_, err := conn.AdminSetUserPassword(setPasswordParams)
 			if err != nil {
-				return fmt.Errorf("Error changing Cognito User's temporary password (%s): %w", d.Id(), err)
+				return fmt.Errorf("error changing Cognito User's temporary password (%s): %w", d.Id(), err)
 			}
 		} else {
 			d.Set("temporary_password", nil)
@@ -351,7 +351,7 @@ func resourceUserUpdate(d *schema.ResourceData, meta interface{}) error {
 
 			_, err := conn.AdminSetUserPassword(setPasswordParams)
 			if err != nil {
-				return fmt.Errorf("Error changing Cognito User's password (%s): %w", d.Id(), err)
+				return fmt.Errorf("error changing Cognito User's password (%s): %w", d.Id(), err)
 			}
 		} else {
 			d.Set("password", nil)
@@ -373,7 +373,7 @@ func resourceUserDelete(d *schema.ResourceData, meta interface{}) error {
 
 	_, err := conn.AdminDeleteUser(params)
 	if err != nil {
-		return fmt.Errorf("Error deleting Cognito User (%s): %w", d.Id(), err)
+		return fmt.Errorf("error deleting Cognito User (%s): %w", d.Id(), err)
 	}
 
 	return nil
@@ -382,7 +382,7 @@ func resourceUserDelete(d *schema.ResourceData, meta interface{}) error {
 func resourceUserImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	idSplit := strings.Split(d.Id(), "/")
 	if len(idSplit) != 2 {
-		return nil, errors.New("Error importing Cognito User. Must specify user_pool_id/username")
+		return nil, errors.New("error importing Cognito User. Must specify user_pool_id/username")
 	}
 	userPoolId := idSplit[0]
 	name := idSplit[1]
