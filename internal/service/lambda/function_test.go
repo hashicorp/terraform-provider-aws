@@ -23,10 +23,10 @@ import (
 )
 
 func init() {
-	acctest.RegisterServiceErrorCheckFunc(lambda.EndpointsID, testAccErrorCheckSkipLambda)
+	acctest.RegisterServiceErrorCheckFunc(lambda.EndpointsID, testAccErrorCheckSkip)
 }
 
-func testAccErrorCheckSkipLambda(t *testing.T) resource.ErrorCheckFunc {
+func testAccErrorCheckSkip(t *testing.T) resource.ErrorCheckFunc {
 	return acctest.ErrorCheckSkipMessagesContaining(t,
 		"InvalidParameterValueException: Unsupported source arn",
 		"InvalidParameterValueException: CompatibleArchitectures are not",
@@ -47,7 +47,7 @@ func TestAccLambdaFunction_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckLambdaFunctionDestroy,
+		CheckDestroy: testAccCheckFunctionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBasicConfig(funcName, policyName, roleName, sgName),
@@ -96,7 +96,7 @@ func TestAccLambdaFunction_unpublishedCodeUpdate(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckLambdaFunctionDestroy,
+		CheckDestroy: testAccCheckFunctionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFilenameConfig(initialFilename, funcName, policyName, roleName, sgName),
@@ -143,7 +143,7 @@ func TestAccLambdaFunction_disappears(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckLambdaFunctionDestroy,
+		CheckDestroy: testAccCheckFunctionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBasicConfig(rName, rName, rName, rName),
@@ -180,7 +180,7 @@ func TestAccLambdaFunction_codeSigning(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckSingerSigningProfile(t, "AWSLambda-SHA384-ECDSA") },
 		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckLambdaFunctionDestroy,
+		CheckDestroy: testAccCheckFunctionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCSCCreateConfig(roleName, funcName),
@@ -239,7 +239,7 @@ func TestAccLambdaFunction_concurrency(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckLambdaFunctionDestroy,
+		CheckDestroy: testAccCheckFunctionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBasicConcurrencyConfig(funcName, policyName, roleName, sgName),
@@ -283,7 +283,7 @@ func TestAccLambdaFunction_concurrencyCycle(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckLambdaFunctionDestroy,
+		CheckDestroy: testAccCheckFunctionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBasicConfig(funcName, policyName, roleName, sgName),
@@ -333,7 +333,7 @@ func TestAccLambdaFunction_expectFilenameAndS3Attributes(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckLambdaFunctionDestroy,
+		CheckDestroy: testAccCheckFunctionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccWithoutFilenameAndS3AttributesConfig(funcName, policyName, roleName, sgName),
@@ -357,7 +357,7 @@ func TestAccLambdaFunction_envVariables(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckLambdaFunctionDestroy,
+		CheckDestroy: testAccCheckFunctionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBasicConfig(funcName, policyName, roleName, sgName),
@@ -415,7 +415,7 @@ func TestAccLambdaFunction_EnvironmentVariables_noValue(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckLambdaFunctionDestroy,
+		CheckDestroy: testAccCheckFunctionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEnvironmentVariablesNoValueConfig(rName),
@@ -449,7 +449,7 @@ func TestAccLambdaFunction_encryptedEnvVariables(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckLambdaFunctionDestroy,
+		CheckDestroy: testAccCheckFunctionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEncryptedEnvVariablesConfig(keyDesc, funcName, policyName, roleName, sgName),
@@ -497,7 +497,7 @@ func TestAccLambdaFunction_versioned(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckLambdaFunctionDestroy,
+		CheckDestroy: testAccCheckFunctionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPublishableConfig("test-fixtures/lambdatest.zip", funcName, policyName, roleName, sgName, true),
@@ -544,7 +544,7 @@ func TestAccLambdaFunction_versionedUpdate(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckLambdaFunctionDestroy,
+		CheckDestroy: testAccCheckFunctionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPublishableConfig("test-fixtures/lambdatest.zip", funcName, policyName, roleName, sgName, true),
@@ -619,7 +619,7 @@ func TestAccLambdaFunction_enablePublish(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckLambdaFunctionDestroy,
+		CheckDestroy: testAccCheckFunctionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPublishableConfig(fileName, funcName, policyName, roleName, sgName, false),
@@ -683,7 +683,7 @@ func TestAccLambdaFunction_disablePublish(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckLambdaFunctionDestroy,
+		CheckDestroy: testAccCheckFunctionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPublishableConfig(fileName, funcName, policyName, roleName, sgName, true),
@@ -733,7 +733,7 @@ func TestAccLambdaFunction_deadLetter(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckLambdaFunctionDestroy,
+		CheckDestroy: testAccCheckFunctionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccWithDeadLetterConfig(funcName, topicName, policyName, roleName, sgName),
@@ -785,7 +785,7 @@ func TestAccLambdaFunction_deadLetterUpdated(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckLambdaFunctionDestroy,
+		CheckDestroy: testAccCheckFunctionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccWithDeadLetterConfig(funcName, topic1Name, policyName, roleName, sgName),
@@ -825,7 +825,7 @@ func TestAccLambdaFunction_nilDeadLetter(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckLambdaFunctionDestroy,
+		CheckDestroy: testAccCheckFunctionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccWithNilDeadLetterConfig(funcName, policyName, roleName, sgName),
@@ -850,7 +850,7 @@ func TestAccLambdaFunction_fileSystem(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckLambdaFunctionDestroy,
+		CheckDestroy: testAccCheckFunctionDestroy,
 		Steps: []resource.TestStep{
 			// Ensure a function with lambda file system configuration can be created
 			{
@@ -919,7 +919,7 @@ func TestAccLambdaFunction_image(t *testing.T) {
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckLambdaFunctionDestroy,
+		CheckDestroy: testAccCheckFunctionDestroy,
 		Steps: []resource.TestStep{
 			// Ensure a function with lambda image configuration can be created
 			{
@@ -978,7 +978,7 @@ func TestAccLambdaFunction_architectures(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckLambdaFunctionDestroy,
+		CheckDestroy: testAccCheckFunctionDestroy,
 		Steps: []resource.TestStep{
 			// Ensure function with arm64 architecture can be created
 			{
@@ -1031,7 +1031,7 @@ func TestAccLambdaFunction_architecturesUpdate(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckLambdaFunctionDestroy,
+		CheckDestroy: testAccCheckFunctionDestroy,
 		Steps: []resource.TestStep{
 			// Ensure function with arm64 architecture can be created
 			{
@@ -1085,7 +1085,7 @@ func TestAccLambdaFunction_architecturesWithLayer(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckLambdaFunctionDestroy,
+		CheckDestroy: testAccCheckFunctionDestroy,
 		Steps: []resource.TestStep{
 			// Ensure function with arm64 architecture can be created
 			{
@@ -1141,7 +1141,7 @@ func TestAccLambdaFunction_tracing(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckLambdaFunctionDestroy,
+		CheckDestroy: testAccCheckFunctionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccWithTracingConfig(funcName, policyName, roleName, sgName),
@@ -1185,7 +1185,7 @@ func TestAccLambdaFunction_KMSKeyARN_noEnvironmentVariables(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckLambdaFunctionDestroy,
+		CheckDestroy: testAccCheckFunctionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccKMSKeyARNNoEnvironmentVariablesConfig(rName),
@@ -1220,7 +1220,7 @@ func TestAccLambdaFunction_layers(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckLambdaFunctionDestroy,
+		CheckDestroy: testAccCheckFunctionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccWithLayersConfig(funcName, layerName, policyName, roleName, sgName),
@@ -1258,7 +1258,7 @@ func TestAccLambdaFunction_layersUpdate(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckLambdaFunctionDestroy,
+		CheckDestroy: testAccCheckFunctionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccWithLayersConfig(funcName, layerName, policyName, roleName, sgName),
@@ -1304,7 +1304,7 @@ func TestAccLambdaFunction_vpc(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckLambdaFunctionDestroy,
+		CheckDestroy: testAccCheckFunctionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccWithVPCConfig(funcName, policyName, roleName, sgName),
@@ -1339,7 +1339,7 @@ func TestAccLambdaFunction_vpcRemoval(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckLambdaFunctionDestroy,
+		CheckDestroy: testAccCheckFunctionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccWithVPCConfig(rName, rName, rName, rName),
@@ -1380,7 +1380,7 @@ func TestAccLambdaFunction_vpcUpdate(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckLambdaFunctionDestroy,
+		CheckDestroy: testAccCheckFunctionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccWithVPCConfig(funcName, policyName, roleName, sgName),
@@ -1432,7 +1432,7 @@ func TestAccLambdaFunction_VPC_withInvocation(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckLambdaFunctionDestroy,
+		CheckDestroy: testAccCheckFunctionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccWithVPCConfig(funcName, policyName, roleName, sgName),
@@ -1466,7 +1466,7 @@ func TestAccLambdaFunction_VPCPublishNo_changes(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckLambdaFunctionDestroy,
+		CheckDestroy: testAccCheckFunctionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccWithVPCPublishConfig(funcName, policyName, roleName, sgName),
@@ -1508,7 +1508,7 @@ func TestAccLambdaFunction_VPCPublishHas_changes(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckLambdaFunctionDestroy,
+		CheckDestroy: testAccCheckFunctionDestroy,
 
 		Steps: []resource.TestStep{
 			{
@@ -1547,7 +1547,7 @@ func TestAccLambdaFunction_VPC_properIAMDependencies(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckLambdaFunctionDestroy,
+		CheckDestroy: testAccCheckFunctionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCProperIAMDependenciesConfig(rName),
@@ -1577,7 +1577,7 @@ func TestAccLambdaFunction_emptyVPC(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckLambdaFunctionDestroy,
+		CheckDestroy: testAccCheckFunctionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccWithEmptyVPCConfig(funcName, policyName, roleName, sgName),
@@ -1609,7 +1609,7 @@ func TestAccLambdaFunction_s3(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckLambdaFunctionDestroy,
+		CheckDestroy: testAccCheckFunctionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccS3Config(bucketName, roleName, funcName),
@@ -1650,7 +1650,7 @@ func TestAccLambdaFunction_localUpdate(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckLambdaFunctionDestroy,
+		CheckDestroy: testAccCheckFunctionDestroy,
 		Steps: []resource.TestStep{
 			{
 				PreConfig: func() {
@@ -1718,7 +1718,7 @@ func TestAccLambdaFunction_LocalUpdate_nameOnly(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckLambdaFunctionDestroy,
+		CheckDestroy: testAccCheckFunctionDestroy,
 		Steps: []resource.TestStep{
 			{
 				PreConfig: func() {
@@ -1779,7 +1779,7 @@ func TestAccLambdaFunction_S3Update_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckLambdaFunctionDestroy,
+		CheckDestroy: testAccCheckFunctionDestroy,
 		Steps: []resource.TestStep{
 			{
 				PreConfig: func() {
@@ -1842,7 +1842,7 @@ func TestAccLambdaFunction_S3Update_unversioned(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckLambdaFunctionDestroy,
+		CheckDestroy: testAccCheckFunctionDestroy,
 		Steps: []resource.TestStep{
 			{
 				PreConfig: func() {
@@ -1898,7 +1898,7 @@ func TestAccLambdaFunction_tags(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckLambdaFunctionDestroy,
+		CheckDestroy: testAccCheckFunctionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBasicConfig(funcName, policyName, roleName, sgName),
@@ -1994,7 +1994,7 @@ func TestAccLambdaFunction_runtimes(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckLambdaFunctionDestroy,
+		CheckDestroy: testAccCheckFunctionDestroy,
 		Steps:        steps,
 	})
 }
@@ -2010,7 +2010,7 @@ func TestAccLambdaFunction_Zip_validation(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckLambdaFunctionDestroy,
+		CheckDestroy: testAccCheckFunctionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccZipWithoutHandlerConfig(funcName, policyName, roleName, sgName),
@@ -2024,7 +2024,7 @@ func TestAccLambdaFunction_Zip_validation(t *testing.T) {
 	})
 }
 
-func testAccCheckLambdaFunctionDestroy(s *terraform.State) error {
+func testAccCheckFunctionDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).LambdaConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -3415,7 +3415,7 @@ resource "aws_lambda_function" "test" {
 `, funcName)
 }
 
-func TestFlattenLambdaImageConfigShouldNotFailWithEmptyImageConfig(t *testing.T) {
+func TestFlattenImageConfigShouldNotFailWithEmptyImageConfig(t *testing.T) {
 	t.Parallel()
 	response := lambda.ImageConfigResponse{}
 	tflambda.FlattenImageConfig(&response)

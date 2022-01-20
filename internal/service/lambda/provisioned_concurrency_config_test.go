@@ -24,7 +24,7 @@ func TestAccLambdaProvisionedConcurrencyConfig_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckLambdaProvisionedConcurrencyConfigDestroy,
+		CheckDestroy: testAccCheckProvisionedConcurrencyConfigDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccProvisionedConcurrencyQualifierFunctionVersionConfig(rName),
@@ -54,7 +54,7 @@ func TestAccLambdaProvisionedConcurrencyConfig_Disappears_lambdaFunction(t *test
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckLambdaProvisionedConcurrencyConfigDestroy,
+		CheckDestroy: testAccCheckProvisionedConcurrencyConfigDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccProvisionedConcurrencyProvisionedConcurrentExecutionsConfig(rName, 1),
@@ -77,7 +77,7 @@ func TestAccLambdaProvisionedConcurrencyConfig_Disappears_lambdaProvisionedConcu
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckLambdaProvisionedConcurrencyConfigDestroy,
+		CheckDestroy: testAccCheckProvisionedConcurrencyConfigDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccProvisionedConcurrencyProvisionedConcurrentExecutionsConfig(rName, 1),
@@ -99,7 +99,7 @@ func TestAccLambdaProvisionedConcurrencyConfig_provisionedConcurrentExecutions(t
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckLambdaProvisionedConcurrencyConfigDestroy,
+		CheckDestroy: testAccCheckProvisionedConcurrencyConfigDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccProvisionedConcurrencyProvisionedConcurrentExecutionsConfig(rName, 1),
@@ -137,7 +137,7 @@ func TestAccLambdaProvisionedConcurrencyConfig_Qualifier_aliasName(t *testing.T)
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckLambdaProvisionedConcurrencyConfigDestroy,
+		CheckDestroy: testAccCheckProvisionedConcurrencyConfigDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccProvisionedConcurrencyQualifierAliasNameConfig(rName),
@@ -155,7 +155,7 @@ func TestAccLambdaProvisionedConcurrencyConfig_Qualifier_aliasName(t *testing.T)
 	})
 }
 
-func testAccCheckLambdaProvisionedConcurrencyConfigDestroy(s *terraform.State) error {
+func testAccCheckProvisionedConcurrencyConfigDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).LambdaConn
 
 	for _, rs := range s.RootModule().Resources {
