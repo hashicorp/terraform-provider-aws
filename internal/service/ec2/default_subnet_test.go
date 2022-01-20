@@ -1,9 +1,11 @@
 package ec2_test
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/ec2"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -70,6 +72,45 @@ func testAccEC2DefaultSubnet_basic(t *testing.T) {
 	})
 }
 
+func testAccEC2DefaultSubnet_privateDnsNameOptionsOnLaunch(t *testing.T) {
+	var v ec2.Subnet
+	resourceName := "aws_default_subnet.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckDefaultSubnetAvailable(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckDefaultSubnetDestroyExists,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDefaultSubnetPrivateDnsNameOptionsOnLaunchConfig(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckSubnetExists(resourceName, &v),
+					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckResourceAttrSet(resourceName, "availability_zone"),
+					resource.TestCheckResourceAttrSet(resourceName, "availability_zone_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "cidr_block"),
+					resource.TestCheckResourceAttr(resourceName, "customer_owned_ipv4_pool", ""),
+					resource.TestCheckResourceAttr(resourceName, "enable_dns64", "false"),
+					resource.TestCheckResourceAttr(resourceName, "enable_resource_name_dns_aaaa_record_on_launch", "false"),
+					resource.TestCheckResourceAttr(resourceName, "enable_resource_name_dns_a_record_on_launch", "false"),
+					resource.TestCheckResourceAttr(resourceName, "ipv6_cidr_block", ""),
+					resource.TestCheckResourceAttr(resourceName, "ipv6_native", "false"),
+					resource.TestCheckResourceAttr(resourceName, "map_customer_owned_ip_on_launch", "false"),
+					resource.TestCheckResourceAttr(resourceName, "map_public_ip_on_launch", "false"),
+					resource.TestCheckResourceAttr(resourceName, "outpost_arn", ""),
+					acctest.CheckResourceAttrAccountID(resourceName, "owner_id"),
+					resource.TestCheckResourceAttr(resourceName, "private_dns_hostname_type_on_launch", "resource-name"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
+					resource.TestCheckResourceAttrSet(resourceName, "vpc_id"),
+				),
+			},
+		},
+	})
+}
+
 // testAccCheckDefaultSubnetDestroyExists runs after all resources are destroyed.
 // It verifies that the default subnet still exists.
 func testAccCheckDefaultSubnetDestroyExists(s *terraform.State) error {
@@ -109,4 +150,19 @@ resource "aws_default_subnet" "test" {
   availability_zone = data.aws_subnet.test.availability_zone
 }
 `)
+}
+
+func testAccDefaultSubnetPrivateDnsNameOptionsOnLaunchConfig(rName string) string {
+	return acctest.ConfigCompose(testAccDefaultSubnetConfigBaseExisting, fmt.Sprintf(`
+resource "aws_default_subnet" "test" {
+  availability_zone = data.aws_subnet.test.availability_zone
+
+  map_public_ip_on_launch             = false
+  private_dns_hostname_type_on_launch = "resource-name"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName))
 }
