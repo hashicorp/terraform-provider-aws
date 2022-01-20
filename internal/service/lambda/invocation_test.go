@@ -225,7 +225,7 @@ resource "aws_lambda_invocation" "test" {
 
   input = jsonencode({
     key1 = {
-      subkey1 = "subvalue1"}
+      subkey1 = "subvalue1"
     }
     key2 = {
       subkey2 = "subvalue2"
@@ -254,7 +254,7 @@ resource "aws_lambda_function" "test" {
 
   environment {
     variables = {
-      TEST_DATA   = %[2]q
+      TEST_DATA = %[2]q
     }
   }
 }
@@ -270,7 +270,7 @@ resource "aws_lambda_invocation" "test" {
 
   input = jsonencode({
     key1 = {
-      subkey1 = "subvalue1"}
+      subkey1 = "subvalue1"
     }
     key2 = {
       subkey2 = "subvalue2"
