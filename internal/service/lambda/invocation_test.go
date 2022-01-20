@@ -150,7 +150,7 @@ resource "aws_lambda_function" "test" {
 
   environment {
     variables = {
-      TEST_DATA = %[1]q
+      TEST_DATA = %[2]q
     }
   }
 }
