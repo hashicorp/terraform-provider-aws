@@ -7,7 +7,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
@@ -22,7 +21,7 @@ func TestAccEC2VPCsDataSource_basic(t *testing.T) {
 			{
 				Config: testAccVPCsDataSourceConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testCheckResourceAttrGreaterThanValue("data.aws_vpcs.test", "ids.#", "0"),
+					acctest.CheckResourceAttrGreaterThanValue("data.aws_vpcs.test", "ids.#", "0"),
 				),
 			},
 		},
@@ -58,7 +57,7 @@ func TestAccEC2VPCsDataSource_filters(t *testing.T) {
 			{
 				Config: testAccVPCsDataSourceConfig_filters(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testCheckResourceAttrGreaterThanValue("data.aws_vpcs.test", "ids.#", "0"),
+					acctest.CheckResourceAttrGreaterThanValue("data.aws_vpcs.test", "ids.#", "0"),
 				),
 			},
 		},
@@ -81,26 +80,6 @@ func TestAccEC2VPCsDataSource_empty(t *testing.T) {
 			},
 		},
 	})
-}
-
-func testCheckResourceAttrGreaterThanValue(n, key, value string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[n]
-		if !ok {
-			return fmt.Errorf("Not found: %s", n)
-		}
-
-		if v, ok := rs.Primary.Attributes[key]; !ok || !(v > value) {
-			if !ok {
-				return fmt.Errorf("%s: Attribute %q not found", n, key)
-			}
-
-			return fmt.Errorf("%s: Attribute %q is not greater than %q, got %q", n, key, value, v)
-		}
-
-		return nil
-
-	}
 }
 
 func testAccVPCsDataSourceConfig(rName string) string {
