@@ -88,7 +88,7 @@ func TestAccRDSInstance_onlyMajorVersion(t *testing.T) {
 	var dbInstance1 rds.DBInstance
 	resourceName := "aws_db_instance.test"
 	engine := "mysql"
-	engineVersion1 := "8.0"
+	engineVersion := "8.0"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -97,11 +97,11 @@ func TestAccRDSInstance_onlyMajorVersion(t *testing.T) {
 		CheckDestroy: testAccCheckClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceConfig_MajorVersionOnly(engine, engineVersion1),
+				Config: testAccInstanceConfig_MajorVersionOnly(engine, engineVersion),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &dbInstance1),
 					resource.TestCheckResourceAttr(resourceName, "engine", engine),
-					resource.TestCheckResourceAttr(resourceName, "engine_version", engineVersion1),
+					resource.TestCheckResourceAttr(resourceName, "engine_version", engineVersion),
 				),
 			},
 			{
@@ -3644,11 +3644,11 @@ func testAccInstanceConfig_MajorVersionOnly(engine, engineVersion string) string
 resource "aws_db_instance" "test" {
   allocated_storage       = 10
   backup_retention_period = 0
-  engine                  = %[1]q
-  engine_version          = %[2]q
+  engine                  = data.aws_rds_orderable_db_instance.test.engine
+  engine_version          = %[1]q
   instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
   name                    = "baz"
-  parameter_group_name    = "default.%[1]s%[2]s"
+  parameter_group_name    = "default.%[2]s%[1]s"
   password                = "barbarbarbar"
   skip_final_snapshot     = true
   username                = "foo"
@@ -3658,7 +3658,7 @@ resource "aws_db_instance" "test" {
   # validation error).
   maintenance_window = "Fri:09:00-Fri:09:30"
 }
-`, engine, engineVersion))
+`, engineVersion, engine))
 }
 
 func testAccInstanceConfig_namePrefix() string {
