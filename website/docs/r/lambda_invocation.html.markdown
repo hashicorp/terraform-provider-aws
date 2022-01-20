@@ -3,7 +3,7 @@ subcategory: "Lambda"
 layout: "aws"
 page_title: "AWS: aws_lambda_invocation"
 description: |-
-Provide AWS Lambda Function result.
+  Invoke AWS Lambda Function
 ---
 
 # Resource: aws_lambda_invocation
