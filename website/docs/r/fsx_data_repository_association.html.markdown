@@ -58,10 +58,9 @@ The configuration for an Amazon S3 data repository linked to an Amazon FSx Lustr
 * `delete_data_in_filesystem` - (Optional) Set to true to delete files from the file system upon deleting this data repository association. Defaults to `false`.
 * `tags` - (Optional) A map of tags to assign to the data repository association. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-
 #### S3 arguments
 
-* `auto_export_policy` - (Optional) Specifies the type of updated objects that will be automatically exported from your file system to the linked S3 bucket. See the [`events` configuration](#events-arguments) block. 
+* `auto_export_policy` - (Optional) Specifies the type of updated objects that will be automatically exported from your file system to the linked S3 bucket. See the [`events` configuration](#events-arguments) block.
 * `auto_import_policy` - (Optional) Specifies the type of updated objects that will be automatically imported from the linked S3 bucket to your file system. See the [`events` configuration](#events-arguments) block.
 
 #### Events arguments
