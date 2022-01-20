@@ -3,6 +3,7 @@ package lambda
 import (
 	"crypto/md5"
 	"fmt"
+	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/lambda"
@@ -15,7 +16,7 @@ func ResourceInvocation() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceInvocationCreate,
 		Read:   resourceInvocationRead,
-		Update: resourceInvocationUpdate,
+		Update: resourceInvocationCreate,
 		Delete: resourceInvocationDelete,
 
 		Schema: map[string]*schema.Schema{
@@ -27,6 +28,7 @@ func ResourceInvocation() *schema.Resource {
 			"qualifier": {
 				Type:     schema.TypeString,
 				Optional: true,
+				ForceNew: true,
 				Default:  FunctionVersionLatest,
 			},
 
@@ -39,6 +41,7 @@ func ResourceInvocation() *schema.Resource {
 			"triggers": {
 				Type:     schema.TypeMap,
 				Optional: true,
+				ForceNew: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 
@@ -65,18 +68,15 @@ func resourceInvocationCreate(d *schema.ResourceData, meta interface{}) error {
 	})
 
 	if err != nil {
-		return err
+		return fmt.Errorf("Lambda Invocation (%s) failed: %w", d.Id(), err)
 	}
 
 	if res.FunctionError != nil {
 		return fmt.Errorf("Lambda function (%s) returned error: (%s)", functionName, string(res.Payload))
 	}
 
-	if err = d.Set("result", string(res.Payload)); err != nil {
-		return err
-	}
-
 	d.SetId(fmt.Sprintf("%s_%s_%x", functionName, qualifier, md5.Sum(input)))
+	d.Set("result", string(res.Payload))
 
 	return nil
 }
@@ -85,12 +85,7 @@ func resourceInvocationRead(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func resourceInvocationUpdate(d *schema.ResourceData, meta interface{}) error {
-	return resourceInvocationCreate(d, meta)
-}
-
 func resourceInvocationDelete(d *schema.ResourceData, meta interface{}) error {
-	d.SetId("")
-	d.Set("result", nil)
+	log.Printf("[DEBUG] Lambda Invocation (%s) deleted by removing from state", d.Id())
 	return nil
 }

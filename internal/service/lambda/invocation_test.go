@@ -11,6 +11,7 @@ import (
 )
 
 func TestAccLambdaInvocation_basic(t *testing.T) {
+	resourceName := "aws_lambda_invocation.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	testData := "value3"
 
@@ -22,7 +23,7 @@ func TestAccLambdaInvocation_basic(t *testing.T) {
 			{
 				Config: testAccConfigInvocation_basic(rName, testData),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInvocationResult("aws_lambda_invocation.invocation_test", `{"key1":"value1","key2":"value2","key3":"`+testData+`"}`),
+					testAccCheckInvocationResult(resourceName, fmt.Sprintf(`{"key1":"value1","key2":"value2","key3":%q}`, testData)),
 				),
 			},
 		},
@@ -30,6 +31,7 @@ func TestAccLambdaInvocation_basic(t *testing.T) {
 }
 
 func TestAccLambdaInvocation_qualifier(t *testing.T) {
+	resourceName := "aws_lambda_invocation.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	testData := "value3"
 
@@ -41,7 +43,7 @@ func TestAccLambdaInvocation_qualifier(t *testing.T) {
 			{
 				Config: testAccConfigInvocation_qualifier(rName, testData),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInvocationResult("aws_lambda_invocation.invocation_test", `{"key1":"value1","key2":"value2","key3":"`+testData+`"}`),
+					testAccCheckInvocationResult(resourceName, `{"key1":"value1","key2":"value2","key3":"`+testData+`"}`),
 				),
 			},
 		},
@@ -49,6 +51,7 @@ func TestAccLambdaInvocation_qualifier(t *testing.T) {
 }
 
 func TestAccLambdaInvocation_complex(t *testing.T) {
+	resourceName := "aws_lambda_invocation.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	testData := "value3"
 
@@ -60,7 +63,7 @@ func TestAccLambdaInvocation_complex(t *testing.T) {
 			{
 				Config: testAccConfigInvocation_complex(rName, testData),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInvocationResult("aws_lambda_invocation.invocation_test", `{"key1":{"subkey1":"subvalue1"},"key2":{"subkey2":"subvalue2","subkey3":{"a": "b"}},"key3":"`+testData+`"}`),
+					testAccCheckInvocationResult(resourceName, `{"key1":{"subkey1":"subvalue1"},"key2":{"subkey2":"subvalue2","subkey3":{"a": "b"}},"key3":"`+testData+`"}`),
 				),
 			},
 		},
@@ -68,7 +71,7 @@ func TestAccLambdaInvocation_complex(t *testing.T) {
 }
 
 func TestAccLambdaInvocation_triggers(t *testing.T) {
-	resourceName := "aws_lambda_invocation.invocation_test"
+	resourceName := "aws_lambda_invocation.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	testData := "value3"
 	testData2 := "value4"
@@ -107,131 +110,144 @@ func testAccCheckInvocationDestroy(s *terraform.State) error {
 
 func testAccConfigInvocation_base(roleName string) string {
 	return fmt.Sprintf(`
-data "aws_iam_policy_document" "lambda_assume_role_policy" {
+data "aws_partition" "current" {}
+
+data "aws_iam_policy_document" "test" {
   statement {
     effect  = "Allow"
     actions = ["sts:AssumeRole"]
     principals {
       type        = "Service"
-      identifiers = ["lambda.amazonaws.com"]
+      identifiers = ["lambda.${data.aws_partition.current.dns_suffix}"]
     }
   }
 }
-resource "aws_iam_role" "lambda_role" {
-  name               = "%s"
-  assume_role_policy = "${data.aws_iam_policy_document.lambda_assume_role_policy.json}"
+
+resource "aws_iam_role" "test" {
+  name               = %[1]q
+  assume_role_policy = data.aws_iam_policy_document.test.json
 }
-resource "aws_iam_role_policy_attachment" "lambda_role_policy" {
-  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
-  role       = "${aws_iam_role.lambda_role.name}"
+
+resource "aws_iam_role_policy_attachment" "test" {
+  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+  role       = aws_iam_role.test.name
 }
 `, roleName)
 }
 
 func testAccConfigInvocation_basic(rName, testData string) string {
-	return fmt.Sprintf(testAccConfigInvocation_base(rName)+`
-resource "aws_lambda_function" "lambda" {
-  depends_on = ["aws_iam_role_policy_attachment.lambda_role_policy"]
-
-  filename      = "test-fixtures/lambda_invocation.zip"
-  function_name = "%s"
-  role          = "${aws_iam_role.lambda_role.arn}"
-  handler       = "lambda_invocation.handler"
-  runtime       = "nodejs14.x"
-
-  environment {
-    variables = {
-      TEST_DATA = "%s"
-    }
-  }
-}
-
-resource "aws_lambda_invocation" "invocation_test" {
-  function_name = "${aws_lambda_function.lambda.function_name}"
-
-  input = <<JSON
-{
-  "key1": "value1",
-  "key2": "value2"
-}
-JSON
-}
-`, rName, testData)
-}
-
-func testAccConfigInvocation_qualifier(rName, testData string) string {
-	return fmt.Sprintf(testAccConfigInvocation_base(rName)+`
-resource "aws_lambda_function" "lambda" {
-  depends_on = ["aws_iam_role_policy_attachment.lambda_role_policy"]
-
-  filename      = "test-fixtures/lambda_invocation.zip"
-  function_name = "%s"
-  role          = "${aws_iam_role.lambda_role.arn}"
-  handler       = "lambda_invocation.handler"
-  runtime       = "nodejs14.x"
-  publish       = true
-
-  environment {
-    variables = {
-      TEST_DATA = "%s"
-    }
-  }
-}
-
-resource "aws_lambda_invocation" "invocation_test" {
-  function_name = "${aws_lambda_function.lambda.function_name}"
-  qualifier     = "${aws_lambda_function.lambda.version}"
-
-  input = <<JSON
-{
-  "key1": "value1",
-  "key2": "value2"
-}
-JSON
-}
-`, rName, testData)
-}
-
-func testAccConfigInvocation_complex(rName, testData string) string {
-	return fmt.Sprintf(testAccConfigInvocation_base(rName)+`
-resource "aws_lambda_function" "lambda" {
-  depends_on = ["aws_iam_role_policy_attachment.lambda_role_policy"]
-
-  filename      = "test-fixtures/lambda_invocation.zip"
-  function_name = "%s"
-  role          = "${aws_iam_role.lambda_role.arn}"
-  handler       = "lambda_invocation.handler"
-  runtime       = "nodejs14.x"
-  publish       = true
-
-  environment {
-    variables = {
-      TEST_DATA = "%s"
-    }
-  }
-}
-
-resource "aws_lambda_invocation" "invocation_test" {
-  function_name = "${aws_lambda_function.lambda.function_name}"
-
-  input = <<JSON
-{
-  "key1": {"subkey1": "subvalue1"},
-  "key2": {"subkey2": "subvalue2", "subkey3": {"a": "b"}}
-}
-JSON
-}
-`, rName, testData)
-}
-
-func testAccConfigInvocation_triggers(rName, testData string) string {
-	return testAccConfigInvocation_base(rName) + fmt.Sprintf(`
-resource "aws_lambda_function" "lambda" {
-  depends_on = ["aws_iam_role_policy_attachment.lambda_role_policy"]
+	return acctest.ConfigCompose(
+		testAccConfigInvocation_base(rName),
+		fmt.Sprintf(`
+resource "aws_lambda_function" "test" {
+  depends_on = [aws_iam_role_policy_attachment.test]
 
   filename      = "test-fixtures/lambda_invocation.zip"
   function_name = %[1]q
-  role          = "${aws_iam_role.lambda_role.arn}"
+  role          = aws_iam_role.test.arn
+  handler       = "lambda_invocation.handler"
+  runtime       = "nodejs14.x"
+
+  environment {
+    variables = {
+      TEST_DATA = %[1]q
+    }
+  }
+}
+
+resource "aws_lambda_invocation" "test" {
+  function_name = aws_lambda_function.test.function_name
+
+  input = jsonencode({
+    key1 = "value1"
+    key2 = "value2"
+  })
+}
+`, rName, testData))
+}
+
+func testAccConfigInvocation_qualifier(rName, testData string) string {
+	return acctest.ConfigCompose(
+		testAccConfigInvocation_base(rName),
+		fmt.Sprintf(`
+resource "aws_lambda_function" "test" {
+  depends_on = [aws_iam_role_policy_attachment.test]
+
+  filename      = "test-fixtures/lambda_invocation.zip"
+  function_name = %[1]q
+  role          = aws_iam_role.test.arn
+  handler       = "lambda_invocation.handler"
+  runtime       = "nodejs14.x"
+  publish       = true
+
+  environment {
+    variables = {
+      TEST_DATA = %[2]q
+    }
+  }
+}
+
+resource "aws_lambda_invocation" "test" {
+  function_name = aws_lambda_function.test.function_name
+  qualifier     = aws_lambda_function.test.version
+
+  input = jsonencode({
+    key1 = "value1"
+    key2 = "value2"
+  })
+}
+`, rName, testData))
+}
+
+func testAccConfigInvocation_complex(rName, testData string) string {
+	return acctest.ConfigCompose(
+		testAccConfigInvocation_base(rName),
+		fmt.Sprintf(`
+resource "aws_lambda_function" "test" {
+  depends_on = [aws_iam_role_policy_attachment.test]
+
+  filename      = "test-fixtures/lambda_invocation.zip"
+  function_name = %[1]q
+  role          = aws_iam_role.test.arn
+  handler       = "lambda_invocation.handler"
+  runtime       = "nodejs14.x"
+  publish       = true
+
+  environment {
+    variables = {
+      TEST_DATA = %[2]q
+    }
+  }
+}
+
+resource "aws_lambda_invocation" "test" {
+  function_name = aws_lambda_function.test.function_name
+
+  input = jsonencode({
+    key1 = {
+      subkey1 = "subvalue1"}
+    }
+    key2 = {
+      subkey2 = "subvalue2"
+      subkey3 = {
+        a = "b"
+      }
+    }
+  })
+}
+`, rName, testData))
+}
+
+func testAccConfigInvocation_triggers(rName, testData string) string {
+	return acctest.ConfigCompose(
+		testAccConfigInvocation_base(rName),
+		fmt.Sprintf(`
+resource "aws_lambda_function" "test" {
+  depends_on = [aws_iam_role_policy_attachment.test]
+
+  filename      = "test-fixtures/lambda_invocation.zip"
+  function_name = %[1]q
+  role          = aws_iam_role.test.arn
   handler       = "lambda_invocation.handler"
   runtime       = "nodejs14.x"
   publish       = true
@@ -243,21 +259,26 @@ resource "aws_lambda_function" "lambda" {
   }
 }
 
-resource "aws_lambda_invocation" "invocation_test" {
-  function_name = "${aws_lambda_function.lambda.function_name}"
+resource "aws_lambda_invocation" "test" {
+  function_name = aws_lambda_function.test.function_name
 
   triggers = {
     redeployment = sha1(jsonencode([
-      aws_lambda_function.lambda.environment
+      aws_lambda_function.test.environment
     ]))
   }
 
-  input = <<JSON
-{
-  "key1": {"subkey1": "subvalue1"},
-  "key2": {"subkey2": "subvalue2", "subkey3": {"a": "b"}}
+  input = jsonencode({
+    key1 = {
+      subkey1 = "subvalue1"}
+    }
+    key2 = {
+      subkey2 = "subvalue2"
+      subkey3 = {
+        a = "b"
+      }
+    }
+  })
 }
-JSON
-}
-`, rName, testData)
+`, rName, testData))
 }
