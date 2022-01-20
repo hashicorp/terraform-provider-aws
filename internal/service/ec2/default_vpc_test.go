@@ -27,8 +27,9 @@ func TestAccEC2DefaultVPCAndSubnet_serial(t *testing.T) {
 			"notFound.forceDestroy":                 testAccEC2DefaultVPC_NotFound_forceDestroy,
 		},
 		"Subnet": {
-			"basic":                         testAccEC2DefaultSubnet_basic,
-			"privateDnsNameOptionsOnLaunch": testAccEC2DefaultSubnet_privateDnsNameOptionsOnLaunch,
+			"existing.basic":                         testAccEC2DefaultSubnet_Existing_basic,
+			"existing.ipv6":                          testAccEC2DefaultSubnet_Existing_ipv6,
+			"existing.privateDnsNameOptionsOnLaunch": testAccEC2DefaultSubnet_Existing_privateDnsNameOptionsOnLaunch,
 		},
 	}
 
