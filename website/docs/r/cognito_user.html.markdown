@@ -81,6 +81,8 @@ The following arguments are optional:
 * `temporary_password` - (Optional) The user's temporary password. Conflicts with `password`.
 * `validation_data` - (Optional) The user's validation data. This is an array of name-value pairs that contain user attributes and attribute values that you can use for custom validation, such as restricting the types of user accounts that can be registered. Amazon Cognito does not store the `validation_data` value. For more information, see [Customizing User Pool Workflows with Lambda Triggers](https://docs.aws.amazon.com/cognito/latest/developerguide/cognito-user-identity-pools-working-with-aws-lambda-triggers.html).
 
+~> **NOTE:** Clearing `password` or `temporary_password` does not reset user's password in Cognito.
+
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
