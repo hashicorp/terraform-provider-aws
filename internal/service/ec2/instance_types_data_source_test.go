@@ -21,7 +21,7 @@ func TestAccEC2InstanceTypesDataSource_basic(t *testing.T) {
 			{
 				Config: testAccInstanceTypesDataSourceConfig(),
 				Check: resource.ComposeTestCheckFunc(
-					testCheckResourceAttrGreaterThanValue(dataSourceName, "instance_types.#", "0"),
+					acctest.CheckResourceAttrGreaterThanValue(dataSourceName, "instance_types.#", "0"),
 				),
 			},
 		},
@@ -40,7 +40,7 @@ func TestAccEC2InstanceTypesDataSource_filter(t *testing.T) {
 			{
 				Config: testAccInstanceTypesDataSourceConfigFilter(),
 				Check: resource.ComposeTestCheckFunc(
-					testCheckResourceAttrGreaterThanValue(dataSourceName, "instance_types.#", "0"),
+					acctest.CheckResourceAttrGreaterThanValue(dataSourceName, "instance_types.#", "0"),
 				),
 			},
 		},
