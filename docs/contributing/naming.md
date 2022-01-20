@@ -144,6 +144,7 @@ There are three types of tests in the AWS Provider: (regular) acceptance tests, 
 ### Acceptance Test Rule
 
 Acceptance test names have a minimum of two (e.g., `TestAccBackupPlan_tags`) or a maximum of three (e.g., `TestAccDynamoDBTable_Replica_multiple`) parts, joined with underscores:
+
 1. First part: All have a _prefix_ (i.e., `TestAcc`), _service name_ (e.g., `Backup`, `DynamoDB`), and _resource name_ (e.g., `Plan`, `Table`), [MixedCaps](#mixedcaps) without underscores between.
 2. Middle part (Optional): _Test group_ (e.g., `Replica`), uppercase, [MixedCaps](#mixedcaps). Consider a metaphor where tests are chapters in a book. If it is helpful, tests can be grouped together like chapters in a book that are sometimes grouped into parts or sections of the book.
 3. Last part: _Test identifier_ (e.g., `basic`, `tags`, or `multiple`), lowercase, [mixedCaps](#mixedcaps)). The identifier should make the test's purpose clear but be concise. For example, the identifier `conflictsWithCloudFrontDefaultCertificate` (41 characters) conveys no more information than `conflictDefaultCertificate` (26 characters), since "CloudFront" is implied and "with" is _always_ implicit. Avoid words that convey no meaning or whose meaning is implied. For example, "with" (e.g., `_withTags`) is not needed because we imply the name is telling us what the test is _with_. `withTags` can be simplified to `tags`.
@@ -152,12 +153,14 @@ Acceptance test names have a minimum of two (e.g., `TestAccBackupPlan_tags`) or 
 ### Serialized Acceptance Test Rule
 
 The names of serialized acceptance tests follow all the regular acceptance test name rules **_except_** serialized acceptance test names:
+
 1. Start with `testAcc` instead of `TestAcc`
 2. Do not include the name of the service (e.g., a serialized acceptance test would be called `testAccApp_basic` not `testAccAmplifyApp_basic`).
 
 ### Unit Test Rule
 
 Unit test names follow the same rule as acceptance test names except unit test names:
+
 1. Start with `Test` not `TestAcc`
 2. Do not include the name of the service
 3. Usually do not have any underscores
