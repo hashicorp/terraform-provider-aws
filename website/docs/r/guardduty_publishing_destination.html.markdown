@@ -140,7 +140,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-GuardDuty PublishingDestination can be imported using the the master GuardDuty detector ID and PublishingDestinationID, e.g.
+GuardDuty PublishingDestination can be imported using the the master GuardDuty detector ID and PublishingDestinationID, e.g.,
 
 ```
 $ terraform import aws_guardduty_publishing_destination.test a4b86f26fa42e7e7cf0d1c333ea77777:a4b86f27a0e464e4a7e0516d242f1234

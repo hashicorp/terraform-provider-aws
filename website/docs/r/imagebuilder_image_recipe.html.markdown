@@ -48,6 +48,7 @@ The following attributes are optional:
 * `block_device_mapping` - (Optional) Configuration block(s) with block device mappings for the the image recipe. Detailed below.
 * `description` - (Optional) Description of the image recipe.
 * `tags` - (Optional) Key-value map of resource tags for the image recipe. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `user_data_base64` (Optional) Base64 encoded user data. Use this to provide commands or a command script to run when you launch your build instance.
 * `working_directory` - (Optional) The working directory to be used during build and test workflows.
 
 ### block_device_mapping
@@ -89,7 +90,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-`aws_imagebuilder_image_recipe` resources can be imported by using the Amazon Resource Name (ARN), e.g.
+`aws_imagebuilder_image_recipe` resources can be imported by using the Amazon Resource Name (ARN), e.g.,
 
 ```
 $ terraform import aws_imagebuilder_image_recipe.example arn:aws:imagebuilder:us-east-1:123456789012:image-recipe/example/1.0.0

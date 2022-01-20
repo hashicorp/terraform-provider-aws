@@ -1,0 +1,3 @@
+```release-note:new-resource
+aws_ecs_task_set
+```

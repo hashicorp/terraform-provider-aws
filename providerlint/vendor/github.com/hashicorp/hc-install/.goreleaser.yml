@@ -1,0 +1,29 @@
+project_name: tfinstall
+builds:
+  - env:
+      - CGO_ENABLED=0
+    main: ./cmd/hcinstall/main.go
+    mod_timestamp: '{{ .CommitTimestamp }}'
+    id: "tfinstall"
+    binary: tfinstall
+    flags:
+      - -trimpath
+    ldflags:
+    - '-s -w -X main.version={{.Version}} -X main.commit={{.Commit}}'
+    goos:
+      - linux
+      - darwin
+      - windows
+    goarch:
+      - amd64
+      - arm
+      - arm64
+archives:
+  - files: []
+    format: zip
+    name_template: '{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}'
+checksum:
+  name_template: '{{ .ProjectName }}_{{ .Version }}_SHA256SUMS'
+  algorithm: sha256
+changelog:
+  skip: true

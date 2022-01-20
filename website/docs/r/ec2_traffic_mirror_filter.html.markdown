@@ -41,7 +41,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Traffic mirror filter can be imported using the `id`, e.g.
+Traffic mirror filter can be imported using the `id`, e.g.,
 
 ```
 $ terraform import aws_ec2_traffic_mirror_filter.foo tmf-0fbb93ddf38198f64

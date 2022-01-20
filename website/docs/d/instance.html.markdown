@@ -89,6 +89,7 @@ interpolation.
   This attribute is only exported if `get_password_data` is true.
   See [GetPasswordData](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_GetPasswordData.html) for more information.
 * `placement_group` - The placement group of the Instance.
+* `placement_partition_number` - The number of the partition the instance is in.
 * `private_dns` - The private DNS name assigned to the Instance. Can only be
   used inside the Amazon EC2, and only available if you've enabled DNS hostnames
   for your VPC.
@@ -121,6 +122,7 @@ interpolation.
     * `http_endpoint` - The state of the metadata service: `enabled`, `disabled`.
     * `http_tokens` - If session tokens are required: `optional`, `required`.
     * `http_put_response_hop_limit` - The desired HTTP PUT response hop limit for instance metadata requests.
+    * `instance_metadata_tags` - If access to instance tags is allowed from the metadata service: `enabled`, `disabled`.
 * `enclave_options` - The enclave options of the Instance.
     * `enabled` - Whether Nitro Enclaves are enabled.
 
