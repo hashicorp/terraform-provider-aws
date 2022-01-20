@@ -31,7 +31,7 @@ output "result_entry" {
 
 ### Dynamically Invocation Example Using Triggers
 
-```hcl
+```terraform
 resource "aws_lambda_invocation" "example" {
   function_name = aws_lambda_function.lambda_function_test.function_name
 
