@@ -3987,8 +3987,8 @@ func testAccPreCheckEC2ClassicOrHasDefaultVPCWithDefaultSubnets(t *testing.T) {
 	}
 }
 
-// hasDefaultVPC returns whether the current AWS region has a default VPC.
-func hasDefaultVPC(t *testing.T) bool {
+// defaultVPC returns the ID of the default VPC for the current AWS Region, or "" if none exists.
+func defaultVPC(t *testing.T) string {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
 	output, err := conn.DescribeAccountAttributes(&ec2.DescribeAccountAttributesInput{
@@ -3996,20 +3996,24 @@ func hasDefaultVPC(t *testing.T) bool {
 	})
 
 	if acctest.PreCheckSkipError(err) {
-		return false
+		return ""
 	}
 
 	if err != nil {
 		t.Fatalf("error describing EC2 account attributes: %s", err)
 	}
 
-	if len(output.AccountAttributes) == 0 ||
-		len(output.AccountAttributes[0].AttributeValues) == 0 ||
-		aws.StringValue(output.AccountAttributes[0].AttributeValues[0].AttributeValue) == "none" {
-		return false
+	if len(output.AccountAttributes) > 0 && len(output.AccountAttributes[0].AttributeValues) > 0 {
+		if v := aws.StringValue(output.AccountAttributes[0].AttributeValues[0].AttributeValue); v != "none" {
+			return v
+		}
 	}
 
-	return true
+	return ""
+}
+
+func hasDefaultVPC(t *testing.T) bool {
+	return defaultVPC(t) != ""
 }
 
 // defaultSubnetCount returns the number of default subnets in the current region's default VPC.
