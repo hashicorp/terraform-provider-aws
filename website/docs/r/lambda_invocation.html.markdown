@@ -62,4 +62,6 @@ The following arguments are optional:
 
 ## Attributes Reference
 
+In addition to all arguments above, the following attributes are exported:
+
 * `result` - String result of the lambda function invocation.
