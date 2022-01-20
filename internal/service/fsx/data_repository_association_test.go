@@ -523,9 +523,9 @@ func testAccCheckFsxDataRepositoryAssociationRecreated(i, j *fsx.DataRepositoryA
 func testAccDataRepositoryAssociationBucketConfig(bucketName string) string {
 	return acctest.ConfigCompose(testAccLustreFileSystemBaseConfig(), fmt.Sprintf(`
 resource "aws_fsx_lustre_file_system" "test" {
-  storage_capacity = 1200
-  subnet_ids       = [aws_subnet.test1.id]
-  deployment_type  = "PERSISTENT_2"
+  storage_capacity            = 1200
+  subnet_ids                  = [aws_subnet.test1.id]
+  deployment_type             = "PERSISTENT_2"
   per_unit_storage_throughput = 125
 }
 
@@ -539,9 +539,9 @@ resource "aws_s3_bucket" "test" {
 func testAccFsxDataRepositoryAssociationFileSystemPathConfig(bucketName, fileSystemPath string) string {
 	return acctest.ConfigCompose(testAccDataRepositoryAssociationBucketConfig(bucketName), fmt.Sprintf(`
 resource "aws_fsx_data_repository_association" "test" {
-  file_system_id = aws_fsx_lustre_file_system.test.id
+  file_system_id       = aws_fsx_lustre_file_system.test.id
   data_repository_path = "s3://%[1]s"
-  file_system_path = %[2]q
+  file_system_path     = %[2]q
 }
 `, bucketName, fileSystemPath))
 }
@@ -550,9 +550,9 @@ func testAccFsxDataRepositoryAssociationImportedFileChunkSizeConfig(bucketName, 
 	bucketPath := fmt.Sprintf("s3://%s", bucketName)
 	return acctest.ConfigCompose(testAccDataRepositoryAssociationBucketConfig(bucketName), fmt.Sprintf(`
 resource "aws_fsx_data_repository_association" "test" {
-  file_system_id = aws_fsx_lustre_file_system.test.id
-  data_repository_path = %[1]q
-  file_system_path = %[2]q
+  file_system_id           = aws_fsx_lustre_file_system.test.id
+  data_repository_path     = %[1]q
+  file_system_path         = %[2]q
   imported_file_chunk_size = %[3]d
 }
 `, bucketPath, fileSystemPath, fileChunkSize))
@@ -562,9 +562,9 @@ func testAccFsxDataRepositoryAssociationDeleteDataInFilesystemConfig(bucketName,
 	bucketPath := fmt.Sprintf("s3://%s", bucketName)
 	return acctest.ConfigCompose(testAccDataRepositoryAssociationBucketConfig(bucketName), fmt.Sprintf(`
 resource "aws_fsx_data_repository_association" "test" {
-  file_system_id = aws_fsx_lustre_file_system.test.id
-  data_repository_path = %[1]q
-  file_system_path = %[2]q
+  file_system_id            = aws_fsx_lustre_file_system.test.id
+  data_repository_path      = %[1]q
+  file_system_path          = %[2]q
   delete_data_in_filesystem = %[3]q
 }
 `, bucketPath, fileSystemPath, deleteDataInFilesystem))
@@ -575,15 +575,15 @@ func testAccFsxDataRepositoryAssociationS3AutoExportPolicyConfig(bucketName, fil
 	eventsString := strings.Replace(fmt.Sprintf("%q", events), " ", ", ", -1)
 	return acctest.ConfigCompose(testAccDataRepositoryAssociationBucketConfig(bucketName), fmt.Sprintf(`
 resource "aws_fsx_data_repository_association" "test" {
-	file_system_id = aws_fsx_lustre_file_system.test.id
-	data_repository_path = %[1]q
-	file_system_path = %[2]q
+  file_system_id       = aws_fsx_lustre_file_system.test.id
+  data_repository_path = %[1]q
+  file_system_path     = %[2]q
 
-	s3 {
-		auto_export_policy {
-			events = %[3]s
-		}
-	}
+  s3 {
+    auto_export_policy {
+      events = %[3]s
+    }
+  }
 }
 `, bucketPath, fileSystemPath, eventsString))
 }
@@ -593,14 +593,14 @@ func testAccFsxDataRepositoryAssociationS3AutoImportPolicyConfig(bucketName, fil
 	eventsString := strings.Replace(fmt.Sprintf("%q", events), " ", ", ", -1)
 	return acctest.ConfigCompose(testAccDataRepositoryAssociationBucketConfig(bucketName), fmt.Sprintf(`
 resource "aws_fsx_data_repository_association" "test" {
-  file_system_id = aws_fsx_lustre_file_system.test.id
+  file_system_id       = aws_fsx_lustre_file_system.test.id
   data_repository_path = %[1]q
-  file_system_path = %[2]q
+  file_system_path     = %[2]q
 
   s3 {
-	  auto_import_policy {
-		  events = %[3]s
-	  }
+    auto_import_policy {
+      events = %[3]s
+    }
   }
 }
 `, bucketPath, fileSystemPath, eventsString))
@@ -610,17 +610,18 @@ func testAccFsxDataRepositoryAssociationS3FullPolicyConfig(bucketName, fileSyste
 	bucketPath := fmt.Sprintf("s3://%s", bucketName)
 	return acctest.ConfigCompose(testAccDataRepositoryAssociationBucketConfig(bucketName), fmt.Sprintf(`
 resource "aws_fsx_data_repository_association" "test" {
-  file_system_id = aws_fsx_lustre_file_system.test.id
+  file_system_id       = aws_fsx_lustre_file_system.test.id
   data_repository_path = %[1]q
-  file_system_path = %[2]q
+  file_system_path     = %[2]q
 
   s3 {
-	  auto_export_policy {
-		  events = ["NEW", "CHANGED", "DELETED"]
-	  }
-	  auto_import_policy {
-		  events = ["NEW", "CHANGED", "DELETED"]
-	  }
+    auto_export_policy {
+      events = ["NEW", "CHANGED", "DELETED"]
+    }
+
+    auto_import_policy {
+      events = ["NEW", "CHANGED", "DELETED"]
+    }
   }
 }
 `, bucketPath, fileSystemPath))
