@@ -23,7 +23,7 @@ data "aws_vpc_ipam_preview_next_cidr" "test" {
 
   depends_on = [
     aws_vpc_ipam_pool_cidr.test
-  ]
+]
 }
 
 resource "aws_vpc_ipam_pool_cidr_allocation" "test" {
