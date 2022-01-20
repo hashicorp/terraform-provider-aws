@@ -250,26 +250,26 @@ func resourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	var out *ecs.DescribeClustersOutput
+	var cluster *ecs.Cluster
 	err := resource.Retry(2*time.Minute, func() *resource.RetryError {
 		var err error
-		out, err = FindClusterByNameOrARN(conn, d.Id())
+		cluster, err = FindClusterByNameOrARN(context.Background(), conn, d.Id())
+
+		if tfresource.NotFound(err) {
+			if d.IsNewResource() {
+				return resource.RetryableError(err)
+			}
+			return resource.NonRetryableError(err)
+		}
 
 		if err != nil {
 			return resource.NonRetryableError(err)
 		}
 
-		if out == nil || len(out.Failures) > 0 {
-			if d.IsNewResource() {
-				return resource.RetryableError(&resource.NotFoundError{})
-			}
-			return resource.NonRetryableError(&resource.NotFoundError{})
-		}
-
 		return nil
 	})
 	if tfresource.TimedOut(err) {
-		out, err = FindClusterByNameOrARN(conn, d.Id())
+		cluster, err = FindClusterByNameOrARN(context.Background(), conn, d.Id())
 	}
 
 	if tfresource.NotFound(err) {
@@ -280,20 +280,6 @@ func resourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 
 	if err != nil {
 		return fmt.Errorf("error reading ECS Cluster (%s): %s", d.Id(), err)
-	}
-
-	var cluster *ecs.Cluster
-	for _, c := range out.Clusters {
-		if aws.StringValue(c.ClusterArn) == d.Id() {
-			cluster = c
-			break
-		}
-	}
-
-	if cluster == nil {
-		log.Printf("[WARN] ECS Cluster (%s) not found, removing from state", d.Id())
-		d.SetId("")
-		return nil
 	}
 
 	// Status==INACTIVE means deleted cluster
