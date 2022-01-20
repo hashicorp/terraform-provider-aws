@@ -29,7 +29,7 @@ output "result_entry" {
 }
 ```
 
-### Dynamically Invocation Example Using Triggers
+### Dynamic Invocation Example Using Triggers
 
 ```terraform
 resource "aws_lambda_invocation" "example" {
@@ -37,7 +37,7 @@ resource "aws_lambda_invocation" "example" {
 
   triggers = {
     redeployment = sha1(jsonencode([
-      aws_lambda_function.example
+      aws_lambda_function.example.environment
     ]))
   }
 
