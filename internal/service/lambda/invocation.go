@@ -1,4 +1,4 @@
-package aws
+package lambda
 
 import (
 	"crypto/md5"
@@ -10,12 +10,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
-func resourceAwsLambdaInvocation() *schema.Resource {
+func ResourceInvocation() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsLambdaInvocationCreate,
-		Read:   resourceAwsLambdaInvocationRead,
-		Update: resourceAwsLambdaInvocationUpdate,
-		Delete: resourceAwsLambdaInvocationDelete,
+		Create: resourceInvocationCreate,
+		Read:   resourceInvocationRead,
+		Update: resourceInvocationUpdate,
+		Delete: resourceInvocationDelete,
 
 		Schema: map[string]*schema.Schema{
 			"function_name": {
@@ -49,7 +49,7 @@ func resourceAwsLambdaInvocation() *schema.Resource {
 	}
 }
 
-func resourceAwsLambdaInvocationCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceInvocationCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).lambdaconn
 
 	functionName := d.Get("function_name").(string)
@@ -80,15 +80,15 @@ func resourceAwsLambdaInvocationCreate(d *schema.ResourceData, meta interface{})
 	return nil
 }
 
-func resourceAwsLambdaInvocationRead(d *schema.ResourceData, meta interface{}) error {
+func resourceInvocationRead(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func resourceAwsLambdaInvocationUpdate(d *schema.ResourceData, meta interface{}) error {
-	return resourceAwsLambdaInvocationCreate(d, meta)
+func resourceInvocationUpdate(d *schema.ResourceData, meta interface{}) error {
+	return resourceInvocationCreate(d, meta)
 }
 
-func resourceAwsLambdaInvocationDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceInvocationDelete(d *schema.ResourceData, meta interface{}) error {
 	d.SetId("")
 	d.Set("result", nil)
 	return nil
