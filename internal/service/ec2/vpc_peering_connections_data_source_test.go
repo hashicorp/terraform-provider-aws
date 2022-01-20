@@ -24,6 +24,22 @@ func TestAccEC2VPCPeeringConnectionsDataSource_basic(t *testing.T) {
 	})
 }
 
+func TestAccEC2VPCPeeringConnectionsDataSource_NoMatches(t *testing.T) {
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVPCPeeringConnectionsDataSourceConfig_NoMatches,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.aws_vpc_peering_connections.test", "ids.#", "0"),
+				),
+			},
+		},
+	})
+}
+
 const testAccVPCPeeringConnectionsDataSourceConfig = `
 resource "aws_vpc" "foo" {
   cidr_block = "10.1.0.0/16"
@@ -78,6 +94,14 @@ data "aws_vpc_peering_connections" "test_by_filters" {
   filter {
     name   = "vpc-peering-connection-id"
     values = [aws_vpc_peering_connection.conn1.id, aws_vpc_peering_connection.conn2.id]
+  }
+}
+`
+
+const testAccVPCPeeringConnectionsDataSourceConfig_NoMatches = `
+data "aws_vpc_peering_connections" "test" {
+  tags = {
+    Name = "Non-Existent"
   }
 }
 `
