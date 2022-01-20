@@ -164,8 +164,10 @@ func TestAccLambdaFunction_codeSigning(t *testing.T) {
 
 	// We are hardcoding the region here, because go aws sdk endpoints
 	// package does not support Signer service
-	if got, want := acctest.Region(), endpoints.ApNortheast3RegionID; got == want {
-		t.Skipf("Lambda code signing config is not supported in %s region", got)
+	for _, want := range []string{endpoints.ApNortheast3RegionID, endpoints.ApSoutheast3RegionID} {
+		if got := acctest.Region(); got == want {
+			t.Skipf("Lambda code signing config is not supported in %s region", got)
+		}
 	}
 
 	var conf lambda.GetFunctionOutput
