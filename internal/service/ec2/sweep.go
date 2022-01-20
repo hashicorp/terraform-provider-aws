@@ -325,6 +325,11 @@ func init() {
 			"aws_vpc_ipam_scope",
 		},
 	})
+
+	resource.AddTestSweepers("aws_ami", &resource.Sweeper{
+		Name: "aws_ami",
+		F:    sweepAMIs,
+	})
 }
 
 func sweepCapacityReservations(region string) error {
@@ -2380,6 +2385,46 @@ func sweepIPAMs(region string) error {
 
 	if err != nil {
 		return fmt.Errorf("error sweeping IPAMs (%s): %w", region, err)
+	}
+
+	return nil
+}
+
+func sweepAMIs(region string) error {
+	client, err := sweep.SharedRegionalSweepClient(region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %s", err)
+	}
+
+	conn := client.(*conns.AWSClient).EC2Conn
+	input := &ec2.DescribeImagesInput{
+		Owners: []*string{aws.String("self")},
+	}
+	sweepResources := make([]*sweep.SweepResource, 0)
+
+	output, err := conn.DescribeImages(input)
+
+	if sweep.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping AMI sweep for %s: %s", region, err)
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("error listing AMIs (%s): %w", region, err)
+	}
+
+	for _, v := range output.Images {
+		r := ResourceAMI()
+		d := r.Data(nil)
+		d.SetId(aws.StringValue(v.ImageId))
+
+		sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+	}
+
+	err = sweep.SweepOrchestrator(sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("error sweeping AMIs (%s): %w", region, err)
 	}
 
 	return nil
