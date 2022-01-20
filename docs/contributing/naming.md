@@ -4,9 +4,9 @@
 
 - [Service Identifier](#service-identifier)
 - [Packages](#packages)
+- [Resources and Data Sources](#resources-and-data-sources)
 - [Files](#files)
 - [MixedCaps](#mixedcaps)
-- [Resources and Data Sources](#resources-and-data-sources)
 - [Functions](#functions)
 - [Variables and Constants](#variables-and-constants)
 - [Acceptance and Unit Tests](#acceptance-and-unit-tests)
@@ -54,6 +54,20 @@ Package names are not seen or used by practitioners. However, they should still 
 5. Avoid useless names like `helper`. These names convey zero information. Everything in the AWS Provider is helping something or someone do something so the name `helper` doesn't narrow down the purpose of the package within the codebase.
 6. Use a name that is not too narrow or too broad as Go packages should not be too big or too small. Tiny packages can be combined using a broader name encompassing both. For example, `verify` is a good name because it tells you _what_ the package does and allows a broad set of validation, comparison, and checking functionality.
 
+## Resources and Data Sources
+
+When creating a new resource or data source, it is important to get names right. Once practitioners rely on names, we can only change them through breaking changes. If you are unsure about what to call a resource or data source, discuss it with the community and maintainers.
+
+### Rule
+
+1. Follow the [AWS SDK for Go v2](https://pkg.go.dev/github.com/aws/aws-sdk-go-v2). Almost always, the API operations make determining the name simple. For example, the [Amazon CloudWatch Evidently](https://pkg.go.dev/github.com/aws/aws-sdk-go-v2/service/evidently) service includes `CreateExperiment`, `GetExperiment`, `UpdateExperiment`, and `DeleteExperiment`. Thus, the resource (or data source) name is "Experiment."
+2. Give a resource its Terraform configuration (i.e., HCL) name (e.g., `aws_imagebuilder_image_pipeline`) by joining these three parts with underscores:
+    * `aws` prefix
+    * [Service identifier](#service-identifier) (service identifiers do not include underscores), all lower case (e.g., `imagebuilder`)
+    * Resource (or data source) name in snake case (spaces replaced with underscores, if any), all lower case (e.g., `image_pipeline`)
+3. Name the main resource function `Resource<ResourceName>()`, with the resource name in [MixedCaps](#mixedcaps). Do not include the service name or identifier. For example, define `ResourceImagePipeline()` in a file called `internal/service/imagebuilder/image_pipeline.go`.
+4. Similarly, name the main data source function `DataSource<ResourceName>()`, with the data source name in [MixedCaps](#mixedcaps). Do not include the service name or identifier. For example, define `DataSourceImagePipeline()` in a file called `internal/service/imagebuilder/image_pipeline_data_source.go`.
+
 ## Files
 
 File names should follow Go and Markdown conventions with these additional points.
@@ -89,21 +103,6 @@ For example, an initialism such as "VPC" should either be all capitalized ("VPC"
 ### Rule
 
 1. Use _mixedCaps_ for function, type, method, variable, and constant names in the Terraform AWS Provider Go code.
-
-## Resources and Data Sources
-
-When creating a new resource or data source, it is important to get names right. Once practitioners rely on names, we can only change them through breaking changes. If you are unsure about what to call a resource or data source, discuss it with the community and maintainers.
-
-### Rule
-
-1. Follow the [AWS SDK for Go v2](https://pkg.go.dev/github.com/aws/aws-sdk-go-v2). Almost always, the API operations make determining the name simple. For example, the [Amazon CloudWatch Evidently](https://pkg.go.dev/github.com/aws/aws-sdk-go-v2/service/evidently) service includes `CreateExperiment`, `GetExperiment`, `UpdateExperiment`, and `DeleteExperiment`. Thus, the resource (or data source) name is "Experiment."
-2. Give a resource its Terraform configuration (i.e., HCL) name (e.g., `aws_imagebuilder_image_pipeline`) by joining these three parts with underscores:
-    * `aws` prefix
-    * [Service identifier](#service-identifier) (service identifiers do not include underscores), all lower case (e.g., `imagebuilder`)
-    * Resource (or data source) name in snake case (spaces replaced with underscores, if any), all lower case (e.g., `image_pipeline`)
-3. Name the main resource function `Resource<ResourceName>()`, with the resource name in [MixedCaps](#mixedcaps). Do not include the service name or identifier. For example, define `ResourceImagePipeline()` in a file called `internal/service/imagebuilder/image_pipeline.go`.
-4. Similarly, name the main data source function `DataSource<ResourceName>()`, with the data source name in [MixedCaps](#mixedcaps). Do not include the service name or identifier. For example, define `DataSourceImagePipeline()` in a file called `internal/service/imagebuilder/image_pipeline_data_source.go`.
-5. Do not include "AWS" or "Aws" in the name.
 
 ## Functions
 
