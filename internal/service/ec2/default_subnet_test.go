@@ -13,7 +13,7 @@ import (
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 )
 
-func testAccPreCheckDefaultSubnetAvailable(t *testing.T) {
+func testAccPreCheckDefaultSubnetExists(t *testing.T) {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
 	input := &ec2.DescribeSubnetsInput{
@@ -35,12 +35,12 @@ func testAccPreCheckDefaultSubnetAvailable(t *testing.T) {
 	}
 }
 
-func testAccEC2DefaultSubnet_basic(t *testing.T) {
+func testAccEC2DefaultSubnet_Existing_basic(t *testing.T) {
 	var v ec2.Subnet
 	resourceName := "aws_default_subnet.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckDefaultSubnetAvailable(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckDefaultSubnetExists(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckDefaultSubnetDestroyExists,
@@ -50,6 +50,7 @@ func testAccEC2DefaultSubnet_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSubnetExists(resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "assign_ipv6_address_on_creation", "false"),
 					resource.TestCheckResourceAttrSet(resourceName, "availability_zone"),
 					resource.TestCheckResourceAttrSet(resourceName, "availability_zone_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "cidr_block"),
@@ -58,6 +59,44 @@ func testAccEC2DefaultSubnet_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "enable_resource_name_dns_aaaa_record_on_launch", "false"),
 					resource.TestCheckResourceAttr(resourceName, "enable_resource_name_dns_a_record_on_launch", "false"),
 					resource.TestCheckResourceAttr(resourceName, "ipv6_cidr_block", ""),
+					resource.TestCheckResourceAttr(resourceName, "ipv6_native", "false"),
+					resource.TestCheckResourceAttr(resourceName, "map_customer_owned_ip_on_launch", "false"),
+					resource.TestCheckResourceAttr(resourceName, "map_public_ip_on_launch", "true"),
+					resource.TestCheckResourceAttr(resourceName, "outpost_arn", ""),
+					acctest.CheckResourceAttrAccountID(resourceName, "owner_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "private_dns_hostname_type_on_launch"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttrSet(resourceName, "vpc_id"),
+				),
+			},
+		},
+	})
+}
+
+func testAccEC2DefaultSubnet_Existing_ipv6(t *testing.T) {
+	var v ec2.Subnet
+	resourceName := "aws_default_subnet.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckDefaultSubnetExists(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckDefaultSubnetDestroyExists,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDefaultSubnetIPv6Config(),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckSubnetExists(resourceName, &v),
+					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "assign_ipv6_address_on_creation", "true"),
+					resource.TestCheckResourceAttrSet(resourceName, "availability_zone"),
+					resource.TestCheckResourceAttrSet(resourceName, "availability_zone_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "cidr_block"),
+					resource.TestCheckResourceAttr(resourceName, "customer_owned_ipv4_pool", ""),
+					resource.TestCheckResourceAttr(resourceName, "enable_dns64", "true"),
+					resource.TestCheckResourceAttr(resourceName, "enable_resource_name_dns_aaaa_record_on_launch", "false"),
+					resource.TestCheckResourceAttr(resourceName, "enable_resource_name_dns_a_record_on_launch", "false"),
+					resource.TestCheckResourceAttrSet(resourceName, "ipv6_cidr_block"),
 					resource.TestCheckResourceAttr(resourceName, "ipv6_native", "false"),
 					resource.TestCheckResourceAttr(resourceName, "map_customer_owned_ip_on_launch", "false"),
 					resource.TestCheckResourceAttr(resourceName, "map_public_ip_on_launch", "true"),
@@ -72,13 +111,13 @@ func testAccEC2DefaultSubnet_basic(t *testing.T) {
 	})
 }
 
-func testAccEC2DefaultSubnet_privateDnsNameOptionsOnLaunch(t *testing.T) {
+func testAccEC2DefaultSubnet_Existing_privateDnsNameOptionsOnLaunch(t *testing.T) {
 	var v ec2.Subnet
 	resourceName := "aws_default_subnet.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckDefaultSubnetAvailable(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckDefaultSubnetExists(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckDefaultSubnetDestroyExists,
@@ -88,6 +127,7 @@ func testAccEC2DefaultSubnet_privateDnsNameOptionsOnLaunch(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSubnetExists(resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "assign_ipv6_address_on_creation", "false"),
 					resource.TestCheckResourceAttrSet(resourceName, "availability_zone"),
 					resource.TestCheckResourceAttrSet(resourceName, "availability_zone_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "cidr_block"),
@@ -148,6 +188,24 @@ func testAccDefaultSubnetConfig() string {
 	return acctest.ConfigCompose(testAccDefaultSubnetConfigBaseExisting, `
 resource "aws_default_subnet" "test" {
   availability_zone = data.aws_subnet.test.availability_zone
+}
+`)
+}
+
+func testAccDefaultSubnetIPv6Config() string {
+	return acctest.ConfigCompose(testAccDefaultSubnetConfigBaseExisting, `
+resource "aws_default_vpc" "test" {
+  assign_generated_ipv6_cidr_block = true
+}
+
+resource "aws_default_subnet" "test" {
+  availability_zone = data.aws_subnet.test.availability_zone
+
+  ipv6_cidr_block                 = cidrsubnet(aws_default_vpc.test.ipv6_cidr_block, 8, 1)
+  assign_ipv6_address_on_creation = true
+  enable_dns64                    = true
+
+  private_dns_hostname_type_on_launch = "ip-name"
 }
 `)
 }
