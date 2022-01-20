@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/lambda"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func ResourceInvocation() *schema.Resource {
@@ -26,7 +27,7 @@ func ResourceInvocation() *schema.Resource {
 			"qualifier": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Default:  "$LATEST",
+				Default:  FunctionVersionLatest,
 			},
 
 			"input": {
@@ -50,7 +51,7 @@ func ResourceInvocation() *schema.Resource {
 }
 
 func resourceInvocationCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).lambdaconn
+	conn := meta.(*conns.AWSClient).LambdaConn
 
 	functionName := d.Get("function_name").(string)
 	qualifier := d.Get("qualifier").(string)

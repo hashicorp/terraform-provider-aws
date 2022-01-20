@@ -1,110 +1,111 @@
-package aws
+package lambda_test
 
 import (
 	"fmt"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccResourceAwsLambdaInvocation_basic(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+func TestAccLambdaInvocation_basic(t *testing.T) {
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	testData := "value3"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckLambdaInvocationDestroy,
+		PreCheck:     func() { acctest.PreCheck(t) },
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckInvocationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccResourceAwsLambdaInvocation_basic_config(rName, testData),
+				Config: testAccConfigInvocation_basic(rName, testData),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLambdaInvocationResult("aws_lambda_invocation.invocation_test", `{"key1":"value1","key2":"value2","key3":"`+testData+`"}`),
+					testAccCheckInvocationResult("aws_lambda_invocation.invocation_test", `{"key1":"value1","key2":"value2","key3":"`+testData+`"}`),
 				),
 			},
 		},
 	})
 }
 
-func TestAccResourceAwsLambdaInvocation_qualifier(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+func TestAccLambdaInvocation_qualifier(t *testing.T) {
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	testData := "value3"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckLambdaInvocationDestroy,
+		PreCheck:     func() { acctest.PreCheck(t) },
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckInvocationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccResourceAwsLambdaInvocation_qualifier_config(rName, testData),
+				Config: testAccConfigInvocation_qualifier(rName, testData),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLambdaInvocationResult("aws_lambda_invocation.invocation_test", `{"key1":"value1","key2":"value2","key3":"`+testData+`"}`),
+					testAccCheckInvocationResult("aws_lambda_invocation.invocation_test", `{"key1":"value1","key2":"value2","key3":"`+testData+`"}`),
 				),
 			},
 		},
 	})
 }
 
-func TestAccResourceAwsLambdaInvocation_complex(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+func TestAccLambdaInvocation_complex(t *testing.T) {
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	testData := "value3"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckLambdaInvocationDestroy,
+		PreCheck:     func() { acctest.PreCheck(t) },
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckInvocationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccResourceAwsLambdaInvocation_complex_config(rName, testData),
+				Config: testAccConfigInvocation_complex(rName, testData),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLambdaInvocationResult("aws_lambda_invocation.invocation_test", `{"key1":{"subkey1":"subvalue1"},"key2":{"subkey2":"subvalue2","subkey3":{"a": "b"}},"key3":"`+testData+`"}`),
+					testAccCheckInvocationResult("aws_lambda_invocation.invocation_test", `{"key1":{"subkey1":"subvalue1"},"key2":{"subkey2":"subvalue2","subkey3":{"a": "b"}},"key3":"`+testData+`"}`),
 				),
 			},
 		},
 	})
 }
 
-func TestAccResourceAwsLambdaInvocation_Triggers(t *testing.T) {
+func TestAccLambdaInvocation_triggers(t *testing.T) {
 	resourceName := "aws_lambda_invocation.invocation_test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	testData := "value3"
 	testData2 := "value4"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckLambdaInvocationDestroy,
+		PreCheck:     func() { acctest.PreCheck(t) },
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckInvocationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccResourceAwsLambdaInvocation_Triggers_config(rName, testData),
+				Config: testAccConfigInvocation_triggers(rName, testData),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLambdaInvocationResult(resourceName, `{"key1":{"subkey1":"subvalue1"},"key2":{"subkey2":"subvalue2","subkey3":{"a": "b"}},"key3":"`+testData+`"}`),
+					testAccCheckInvocationResult(resourceName, `{"key1":{"subkey1":"subvalue1"},"key2":{"subkey2":"subvalue2","subkey3":{"a": "b"}},"key3":"`+testData+`"}`),
 				),
 			},
 			{
-				Config: testAccResourceAwsLambdaInvocation_Triggers_config(rName, testData),
+				Config: testAccConfigInvocation_triggers(rName, testData),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLambdaInvocationResult(resourceName, `{"key1":{"subkey1":"subvalue1"},"key2":{"subkey2":"subvalue2","subkey3":{"a": "b"}},"key3":"`+testData+`"}`),
+					testAccCheckInvocationResult(resourceName, `{"key1":{"subkey1":"subvalue1"},"key2":{"subkey2":"subvalue2","subkey3":{"a": "b"}},"key3":"`+testData+`"}`),
 				),
 			},
 			{
-				Config: testAccResourceAwsLambdaInvocation_Triggers_config(rName, testData2),
+				Config: testAccConfigInvocation_triggers(rName, testData2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLambdaInvocationResult(resourceName, `{"key1":{"subkey1":"subvalue1"},"key2":{"subkey2":"subvalue2","subkey3":{"a": "b"}},"key3":"`+testData2+`"}`),
+					testAccCheckInvocationResult(resourceName, `{"key1":{"subkey1":"subvalue1"},"key2":{"subkey2":"subvalue2","subkey3":{"a": "b"}},"key3":"`+testData2+`"}`),
 				),
 			},
 		},
 	})
 }
 
-func testAccCheckLambdaInvocationDestroy(s *terraform.State) error {
+func testAccCheckInvocationDestroy(s *terraform.State) error {
 	// Nothing to check on destroy
 	return nil
 }
 
-func testAccResourceAwsLambdaInvocation_base_config(roleName string) string {
+func testAccConfigInvocation_base(roleName string) string {
 	return fmt.Sprintf(`
 data "aws_iam_policy_document" "lambda_assume_role_policy" {
   statement {
@@ -127,8 +128,8 @@ resource "aws_iam_role_policy_attachment" "lambda_role_policy" {
 `, roleName)
 }
 
-func testAccResourceAwsLambdaInvocation_basic_config(rName, testData string) string {
-	return fmt.Sprintf(testAccResourceAwsLambdaInvocation_base_config(rName)+`
+func testAccConfigInvocation_basic(rName, testData string) string {
+	return fmt.Sprintf(testAccConfigInvocation_base(rName)+`
 resource "aws_lambda_function" "lambda" {
   depends_on = ["aws_iam_role_policy_attachment.lambda_role_policy"]
 
@@ -158,8 +159,8 @@ JSON
 `, rName, testData)
 }
 
-func testAccResourceAwsLambdaInvocation_qualifier_config(rName, testData string) string {
-	return fmt.Sprintf(testAccResourceAwsLambdaInvocation_base_config(rName)+`
+func testAccConfigInvocation_qualifier(rName, testData string) string {
+	return fmt.Sprintf(testAccConfigInvocation_base(rName)+`
 resource "aws_lambda_function" "lambda" {
   depends_on = ["aws_iam_role_policy_attachment.lambda_role_policy"]
 
@@ -191,8 +192,8 @@ JSON
 `, rName, testData)
 }
 
-func testAccResourceAwsLambdaInvocation_complex_config(rName, testData string) string {
-	return fmt.Sprintf(testAccResourceAwsLambdaInvocation_base_config(rName)+`
+func testAccConfigInvocation_complex(rName, testData string) string {
+	return fmt.Sprintf(testAccConfigInvocation_base(rName)+`
 resource "aws_lambda_function" "lambda" {
   depends_on = ["aws_iam_role_policy_attachment.lambda_role_policy"]
 
@@ -223,8 +224,8 @@ JSON
 `, rName, testData)
 }
 
-func testAccResourceAwsLambdaInvocation_Triggers_config(rName, testData string) string {
-	return testAccResourceAwsLambdaInvocation_base_config(rName) + fmt.Sprintf(`
+func testAccConfigInvocation_triggers(rName, testData string) string {
+	return testAccConfigInvocation_base(rName) + fmt.Sprintf(`
 resource "aws_lambda_function" "lambda" {
   depends_on = ["aws_iam_role_policy_attachment.lambda_role_policy"]
 
