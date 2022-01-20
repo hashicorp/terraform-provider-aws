@@ -4,6 +4,8 @@ _Please Note: This documentation is intended for Terraform AWS Provider code dev
 
 The Terraform AWS Provider codebase bridges the implementation of a [Terraform Plugin](https://www.terraform.io/docs/extend/how-terraform-works.html) and an AWS API client to support AWS operations and data types as Terraform Resources. An important aspect of performing resource and remote actions is properly handling those operations, but those operations are not guaranteed to succeed every time. Some common examples include where network connections are unreliable, necessary permissions are not properly setup, incorrect Terraform configurations, or the remote system responds unexpectedly. All these situations lead to an unexpected workflow action that must be surfaced to the Terraform user interface for operators to troubleshoot. This guide is intended to explain and show various Terraform AWS Provider code implementations that are considered best practice for surfacing these issues properly to operators and code maintainers.
 
+For further details about how the AWS Go SDK and the Terraform AWS Provider resource logic handle retryable errors, see the [Retries and Waiters documentation](retries-and-waiters.md).
+
 - [General Guidelines and Helpers](#general-guidelines-and-helpers)
     - [Naming and Check Style](#naming-and-check-style)
     - [Wrap Errors](#wrap-errors)
@@ -61,7 +63,7 @@ For most use cases in this codebase, this means if code is receiving an error an
 return fmt.Errorf("adding some additional message: %w", err)
 ```
 
-This type of error wrapping should be applied to all Terraform resource logic. It should also be applied to any nested functions that contains two or more error conditions (e.g. a function that calls an update API and waits for the update to finish) so practitioners and code maintainers have a clear idea which generated the error. When returning errors in those situations, it is important to only include necessary additional context. Resource logic will typically include the information such as the type of operation and resource identifier (e.g. `error updating Service Thing (%s): %w`), so these messages can be more terse such as `error waiting for completion: %w`.
+This type of error wrapping should be applied to all Terraform resource logic. It should also be applied to any nested functions that contains two or more error conditions (e.g., a function that calls an update API and waits for the update to finish) so practitioners and code maintainers have a clear idea which generated the error. When returning errors in those situations, it is important to only include necessary additional context. Resource logic will typically include the information such as the type of operation and resource identifier (e.g., `error updating Service Thing (%s): %w`), so these messages can be more terse such as `error waiting for completion: %w`.
 
 ### AWS Go SDK Errors
 
@@ -69,7 +71,7 @@ The [AWS Go SDK documentation](https://docs.aws.amazon.com/sdk-for-go/) includes
 
 For the purposes of this documentation, the most important concepts with handling these errors are:
 
-- Each response error (which eventually implements `awserr.Error`) has a `string` error code (`Code`) and `string` error message (`Message`). When printed as a string, they format as: `Code: Message`, e.g. `InvalidParameterValueException: IAM Role arn:aws:iam::123456789012:role/XXX cannot be assumed by AWS Backup`.
+- Each response error (which eventually implements `awserr.Error`) has a `string` error code (`Code`) and `string` error message (`Message`). When printed as a string, they format as: `Code: Message`, e.g., `InvalidParameterValueException: IAM Role arn:aws:iam::123456789012:role/XXX cannot be assumed by AWS Backup`.
 - Error handling is almost exclusively done via those `string` fields and not other response information, such as HTTP Status Codes.
 - When the error code is non-specific, the error message should also be checked. Unfortunately, AWS APIs generally do not provide documentation or API modeling with the contents of these messages and often the Terraform AWS Provider code must rely on substring matching.
 - Not all errors are returned in the response error from an AWS Go SDK operation. This is service and sometimes API call specific. For example, the [EC2 `DeleteVpcEndpoints` API call](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DeleteVpcEndpoints.html) can return a "successful" response (in terms of no response error) but include information in an `Unsuccessful` field in the response body.
@@ -105,7 +107,7 @@ _The codebase also contains an older style `isAWSErr(err, "CodeEquals", "Message
 
 Each AWS Go SDK service API typically implements common error codes, which get exported as public constants in the AWS Go SDK. In the [AWS Go SDK API Reference](https://docs.aws.amazon.com/sdk-for-go/api/), these can be found in each of the service packages under the `Constants` section (typically named `ErrCode{ExceptionName}`).
 
-If an AWS Go SDK service API is missing an error code constant, an AWS Support case should be submitted and a new constant can be added to `aws/internal/service/{SERVICE}/errors.go` file (created if not present), e.g.
+If an AWS Go SDK service API is missing an error code constant, an AWS Support case should be submitted and a new constant can be added to `internal/service/{SERVICE}/errors.go` file (created if not present), e.g.
 
 ```go
 const(
@@ -117,7 +119,7 @@ Then referencing code can use it via:
 
 ```go
 // imports
-tf{SERVICE} "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/{SERVICE}"
+tf{SERVICE} "github.com/hashicorp/terraform-provider-aws/internal/service/{SERVICE}"
 
 // logic
 tfawserr.ErrCodeEquals(err, tf{SERVICE}.ErrCodeInvalidParameterException)
@@ -127,7 +129,7 @@ e.g.
 
 ```go
 // imports
-tfec2 "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ec2"
+tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 
 // logic
 tfawserr.ErrCodeEquals(err, tfec2.ErrCodeInvalidParameterException)
@@ -140,7 +142,7 @@ The Terraform Plugin SDK includes some error types which are used in certain ope
 * [`resource.NotFoundError`](https://pkg.go.dev/github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource#NotFoundError)
 * [`resource.TimeoutError`](https://pkg.go.dev/github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource#TimeoutError): Returned from [`resource.Retry()`](https://pkg.go.dev/github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource#Retry), [`resource.RetryContext()`](https://pkg.go.dev/github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource#RetryContext), [`(resource.StateChangeConf).WaitForState()`](https://pkg.go.dev/github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource#StateChangeConf.WaitForState), and [`(resource.StateChangeConf).WaitForStateContext()`](https://pkg.go.dev/github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource#StateChangeConf.WaitForStateContext)
 
-The Terraform AWS Provider codebase implements some additional helpers for working with these in the `github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource` package:
+The Terraform AWS Provider codebase implements some additional helpers for working with these in the `github.com/hashicorp/terraform-provider-aws/internal/tfresource` package:
 
 - `tfresource.NotFound(err)`: Returns true if the error is a `resource.NotFoundError`.
 - `tfresource.TimedOut(err)`: Returns true if the error is a `resource.TimeoutError` and contains no `LastError`. This typically signifies that the retry logic was never signaled for a retry, which can happen when AWS Go SDK operations are automatically retrying before returning.
@@ -200,7 +202,7 @@ func resourceServiceThingRead(d *schema.ResourceData, meta interface{}) error {
 }
 ```
 
-Future documentation will show how to properly retry the remote operation for a short period of time until it is successful to remove the error completely.
+If the remote system is not strongly read-after-write consistent, see the [Retries and Waiters documentation on Resource Lifecycle Retries](retries-and-waiters.md#resource-lifecycle-retries) for how to prevent consistency-type errors.
 
 #### Creation Error Message Context
 
@@ -276,7 +278,7 @@ if err != nil {
 }
 ```
 
-Code that also uses waiters or other operations that return errors should follow a similar pattern:
+Code that also uses [waiters](retries-and-waiters.md) or other operations that return errors should follow a similar pattern:
 
 ```go
 if _, err := waiter.VpcDeleted(conn, d.Id()); err != nil {

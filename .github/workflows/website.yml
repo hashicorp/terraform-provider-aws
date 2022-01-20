@@ -6,18 +6,16 @@ on:
   push:
     branches:
       - main
-      - 'release/**'
+      - "release/**"
   pull_request:
     paths:
       - .github/workflows/website.yml
       - .go-version
       - .markdownlinkcheck.json
       - .markdownlint.yml
+      - .tflint.hcl
       - website/docs/**
       - tools/go.mod
-
-env:
-  GO111MODULE: on
 
 jobs:
   markdown-link-check:
@@ -27,27 +25,27 @@ jobs:
       - uses: gaurav-nelson/github-action-markdown-link-check@v1
         name: markdown-link-check website/docs/**/*.markdown
         with:
-          use-quiet-mode: 'yes'
-          use-verbose-mode: 'yes'
-          config-file: '.markdownlinkcheck.json'
-          folder-path: 'website/docs'
-          file-extension: '.markdown'
+          use-quiet-mode: "yes"
+          use-verbose-mode: "yes"
+          config-file: ".markdownlinkcheck.json"
+          folder-path: "website/docs"
+          file-extension: ".markdown"
       - uses: gaurav-nelson/github-action-markdown-link-check@v1
         name: markdown-link-check website/docs/**/*.md
         with:
-          use-quiet-mode: 'yes'
-          use-verbose-mode: 'yes'
-          config-file: '.markdownlinkcheck.json'
-          folder-path: 'website/docs'
-          file-extension: '.md'
+          use-quiet-mode: "yes"
+          use-verbose-mode: "yes"
+          config-file: ".markdownlinkcheck.json"
+          folder-path: "website/docs"
+          file-extension: ".md"
   markdown-lint:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
       - uses: avto-dev/markdown-lint@v1
         with:
-          config: '.markdownlint.yml'
-          args: 'website/docs'
+          config: ".markdownlint.yml"
+          args: "website/docs"
   misspell:
     runs-on: ubuntu-latest
     steps:
@@ -98,7 +96,17 @@ jobs:
           path: ~/go/pkg/mod
           key: ${{ runner.os }}-go-pkg-mod-${{ hashFiles('go.sum') }}
       - run: cd tools && go install github.com/katbyte/terrafmt
+
       - run: cd tools && go install github.com/terraform-linters/tflint
+
+      - uses: actions/cache@v2
+        name: Cache plugin dir
+        with:
+          path: ~/.tflint.d/plugins
+          key: ${{ matrix.os }}-tflint-${{ hashFiles('.tflint.hcl') }}
+
+      - run: tflint --init
+
       - run: |
           exit_code=0
 
@@ -109,9 +117,10 @@ jobs:
           shared_rules=(
               "--enable-rule=terraform_comment_syntax"
               "--disable-rule=aws_cloudwatch_event_target_invalid_arn"
-              "--disable-rule=aws_cognito_user_pool_domain_invalid_domain"
               "--disable-rule=aws_db_instance_default_parameter_group"
               "--disable-rule=aws_elasticache_cluster_default_parameter_group"
+              "--disable-rule=aws_elasticache_replication_group_default_parameter_group"
+              "--disable-rule=aws_iam_policy_sid_invalid_characters"
               "--disable-rule=aws_iam_saml_provider_invalid_saml_metadata_document"
               "--disable-rule=aws_iam_server_certificate_invalid_certificate_body"
               "--disable-rule=aws_iam_server_certificate_invalid_private_key"
@@ -143,7 +152,7 @@ jobs:
                 "--enable-rule=terraform_deprecated_index"
                 )
             fi
-            # echo "Let's go with $filename..."
+            
             # We need to capture the output and error code here. We don't want to exit on the first error
             set +e
             ./scripts/validate-terraform-file.sh "$filename" "${rules[@]}"
