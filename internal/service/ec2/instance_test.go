@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"reflect"
 	"regexp"
-	"sort"
 	"strings"
 	"testing"
 	"time"
@@ -3934,17 +3933,22 @@ func testAccPreCheckEC2ClassicOrHasDefaultVPCWithDefaultSubnets(t *testing.T) {
 func hasDefaultVPC(t *testing.T) bool {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
-	resp, err := conn.DescribeAccountAttributes(&ec2.DescribeAccountAttributesInput{
+	output, err := conn.DescribeAccountAttributes(&ec2.DescribeAccountAttributesInput{
 		AttributeNames: aws.StringSlice([]string{ec2.AccountAttributeNameDefaultVpc}),
 	})
-	if acctest.PreCheckSkipError(err) ||
-		len(resp.AccountAttributes) == 0 ||
-		len(resp.AccountAttributes[0].AttributeValues) == 0 ||
-		aws.StringValue(resp.AccountAttributes[0].AttributeValues[0].AttributeValue) == "none" {
+
+	if acctest.PreCheckSkipError(err) {
 		return false
 	}
+
 	if err != nil {
 		t.Fatalf("error describing EC2 account attributes: %s", err)
+	}
+
+	if len(output.AccountAttributes) == 0 ||
+		len(output.AccountAttributes[0].AttributeValues) == 0 ||
+		aws.StringValue(output.AccountAttributes[0].AttributeValues[0].AttributeValue) == "none" {
+		return false
 	}
 
 	return true
@@ -3955,66 +3959,24 @@ func defaultSubnetCount(t *testing.T) int {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
 	input := &ec2.DescribeSubnetsInput{
-		Filters: buildAttributeFilterList(map[string]string{
-			"defaultForAz": "true",
-		}),
+		Filters: tfec2.BuildAttributeFilterList(
+			map[string]string{
+				"defaultForAz": "true",
+			},
+		),
 	}
-	output, err := conn.DescribeSubnets(input)
+
+	subnets, err := tfec2.FindSubnets(conn, input)
+
 	if acctest.PreCheckSkipError(err) {
 		return 0
 	}
+
 	if err != nil {
-		t.Fatalf("error describing default subnets: %s", err)
+		t.Fatalf("error listing default subnets: %s", err)
 	}
 
-	return len(output.Subnets)
-}
-
-// buildAttributeFilterList takes a flat map of scalar attributes (most
-// likely values extracted from a *schema.ResourceData on an EC2-querying
-// data source) and produces a []*ec2.Filter representing an exact match
-// for each of the given non-empty attributes.
-//
-// The keys of the given attributes map are the attribute names expected
-// by the EC2 API, which are usually either in camelcase or with dash-separated
-// words. We conventionally map these to underscore-separated identifiers
-// with the same words when presenting these as data source query attributes
-// in Terraform.
-//
-// It's the callers responsibility to transform any non-string values into
-// the appropriate string serialization required by the AWS API when
-// encoding the given filter. Any attributes given with empty string values
-// are ignored, assuming that the user wishes to leave that attribute
-// unconstrained while filtering.
-//
-// The purpose of this function is to create values to pass in
-// for the "Filters" attribute on most of the "Describe..." API functions in
-// the EC2 API, to aid in the implementation of Terraform data sources that
-// retrieve data about EC2 objects.
-func buildAttributeFilterList(attrs map[string]string) []*ec2.Filter {
-	var filters []*ec2.Filter
-
-	// sort the filters by name to make the output deterministic
-	var names []string
-	for filterName := range attrs {
-		names = append(names, filterName)
-	}
-
-	sort.Strings(names)
-
-	for _, filterName := range names {
-		value := attrs[filterName]
-		if value == "" {
-			continue
-		}
-
-		filters = append(filters, &ec2.Filter{
-			Name:   aws.String(filterName),
-			Values: []*string{aws.String(value)},
-		})
-	}
-
-	return filters
+	return len(subnets)
 }
 
 func testAccAvailableAZsWavelengthZonesExcludeConfig(excludeZoneIds ...string) string {
