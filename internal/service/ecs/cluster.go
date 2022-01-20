@@ -223,7 +223,7 @@ func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
 
 	d.SetId(aws.StringValue(out.Cluster.ClusterArn))
 
-	if _, err := waitClusterAvailable(conn, d.Id()); err != nil {
+	if _, err := waitClusterAvailable(context.Background(), conn, d.Id()); err != nil {
 		return fmt.Errorf("error waiting for ECS Cluster (%s) to become Available: %w", d.Id(), err)
 	}
 
@@ -350,7 +350,7 @@ func resourceClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 			return fmt.Errorf("error changing ECS cluster (%s): %w", d.Id(), err)
 		}
 
-		if _, err := waitClusterAvailable(conn, d.Id()); err != nil {
+		if _, err := waitClusterAvailable(context.Background(), conn, d.Id()); err != nil {
 			return fmt.Errorf("error waiting for ECS Cluster (%s) to become Available: %w", d.Id(), err)
 		}
 	}
@@ -368,7 +368,7 @@ func resourceClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 			return fmt.Errorf("error changing ECS cluster capacity provider settings (%s): %w", d.Id(), err)
 		}
 
-		if _, err := waitClusterAvailable(conn, d.Id()); err != nil {
+		if _, err := waitClusterAvailable(context.Background(), conn, d.Id()); err != nil {
 			return fmt.Errorf("error waiting for ECS Cluster (%s) to become Available: %w", d.Id(), err)
 		}
 	}

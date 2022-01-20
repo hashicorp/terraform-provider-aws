@@ -91,7 +91,7 @@ func resourceClusterCapacityProvidersPut(ctx context.Context, d *schema.Resource
 		return diag.Errorf("error updating ECS Cluster (%s) capacity providers: %s", clusterName, err)
 	}
 
-	if _, err := waitClusterAvailable(conn, clusterName); err != nil {
+	if _, err := waitClusterAvailable(ctx, conn, clusterName); err != nil {
 		return diag.Errorf("error waiting for ECS Cluster (%s) to become available: %s", clusterName, err)
 	}
 
@@ -156,7 +156,7 @@ func resourceClusterCapacityProvidersDelete(ctx context.Context, d *schema.Resou
 		return diag.Errorf("error deleting ECS Cluster (%s) capacity providers: %s", d.Id(), err)
 	}
 
-	if _, err := waitClusterAvailable(conn, d.Id()); err != nil {
+	if _, err := waitClusterAvailable(ctx, conn, d.Id()); err != nil {
 		return diag.Errorf("error waiting for ECS Cluster (%s) to become available: %s", d.Id(), err)
 	}
 
