@@ -34,7 +34,6 @@ func ResourceUser() *schema.Resource {
 					Type: schema.TypeString,
 				},
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					log.Printf("[DEBUG] k = %v, old = %v, new = %v", k, old, new)
 					if k == "attributes.sub" || k == "attributes.%" {
 						return true
 					}
