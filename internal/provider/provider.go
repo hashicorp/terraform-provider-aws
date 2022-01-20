@@ -50,6 +50,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/configservice"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/connect"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/cur"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/dataexchange"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/datapipeline"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/datasync"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/dax"
@@ -994,6 +995,8 @@ func Provider() *schema.Provider {
 			"aws_connect_quick_connect":               connect.ResourceQuickConnect(),
 
 			"aws_cur_report_definition": cur.ResourceReportDefinition(),
+
+			"aws_dataexchange_data_set": dataexchange.ResourceDataSet(),
 
 			"aws_datapipeline_pipeline": datapipeline.ResourcePipeline(),
 
