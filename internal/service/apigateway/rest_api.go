@@ -73,6 +73,11 @@ func ResourceRestAPI() *schema.Resource {
 				Optional: true,
 			},
 
+			"fail_on_warnings": {
+				Type:     schema.TypeBool,
+				Optional: true,
+			},
+
 			"disable_execute_api_endpoint": {
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -180,6 +185,11 @@ func resourceRestAPICreate(d *schema.ResourceData, meta interface{}) error {
 		params.DisableExecuteApiEndpoint = aws.Bool(v.(bool))
 	}
 
+	var failOnWarnings *bool = false
+	if v, ok := d.GetOk("fail_on_warnings"); ok {
+		failOnWarnings = aws.Bool(v.(bool))
+	}
+
 	if v, ok := d.GetOk("policy"); ok {
 		policy, err := structure.NormalizeJsonString(v.(string))
 
@@ -215,9 +225,10 @@ func resourceRestAPICreate(d *schema.ResourceData, meta interface{}) error {
 		log.Printf("[DEBUG] Initializing API Gateway from OpenAPI spec %s", d.Id())
 
 		input := &apigateway.PutRestApiInput{
-			RestApiId: gateway.Id,
-			Mode:      aws.String(apigateway.PutModeOverwrite),
-			Body:      []byte(body.(string)),
+			RestApiId:      gateway.Id,
+			Mode:           aws.String(apigateway.PutModeOverwrite),
+			Body:           []byte(body.(string)),
+			FailOnWarnings: failOnWarnings,
 		}
 
 		if v, ok := d.GetOk("parameters"); ok && len(v.(map[string]interface{})) > 0 {
@@ -591,14 +602,20 @@ func resourceRestAPIUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	if d.HasChanges("body", "parameters") {
+	var failOnWarnings *bool = false
+	if v, ok := d.GetOk("fail_on_warnings"); ok {
+		failOnWarnings = aws.Bool(v.(bool))
+	}
+
+	if d.HasChanges("body", "fail_on_warnings", "parameters") {
 		if body, ok := d.GetOk("body"); ok {
 			log.Printf("[DEBUG] Updating API Gateway from OpenAPI spec: %s", d.Id())
 
 			input := &apigateway.PutRestApiInput{
-				RestApiId: aws.String(d.Id()),
-				Mode:      aws.String(apigateway.PutModeOverwrite),
-				Body:      []byte(body.(string)),
+				RestApiId:      aws.String(d.Id()),
+				Mode:           aws.String(apigateway.PutModeOverwrite),
+				Body:           []byte(body.(string)),
+				FailOnWarnings: failOnWarnings,
 			}
 
 			if v, ok := d.GetOk("parameters"); ok && len(v.(map[string]interface{})) > 0 {
