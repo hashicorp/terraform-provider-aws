@@ -10,6 +10,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 )
 
 func TestAccEC2DefaultVPCAndSubnet_serial(t *testing.T) {
@@ -50,7 +52,7 @@ func testAccEC2DefaultVPC_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckDefaultVPCAvailable(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDefaultVPCDestroy,
+		CheckDestroy: testAccCheckDefaultVPCDestroyExists,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDefaultVPCConfig,
@@ -93,7 +95,7 @@ func testAccEC2DefaultVPC_assignGeneratedIPv6CIDRBlock(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckDefaultVPCAvailable(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDefaultVPCDestroy,
+		CheckDestroy: testAccCheckDefaultVPCDestroyExists,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDefaultVPCAssignGeneratedIPv6CIDRBlockConfig(rName),
@@ -128,8 +130,23 @@ func testAccEC2DefaultVPC_assignGeneratedIPv6CIDRBlock(t *testing.T) {
 	})
 }
 
-func testAccCheckDefaultVPCDestroy(s *terraform.State) error {
-	// We expect VPC to still exist
+// testAccCheckDefaultVPCDestroyExists runs after all resources are destroyed.
+// It verifies that the default VPC still exists.
+func testAccCheckDefaultVPCDestroyExists(s *terraform.State) error {
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+
+	for _, rs := range s.RootModule().Resources {
+		if rs.Type != "aws_default_vpc" {
+			continue
+		}
+
+		_, err := tfec2.FindVPCByID(conn, rs.Primary.ID)
+
+		if err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 
