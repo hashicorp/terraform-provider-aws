@@ -190,7 +190,19 @@ func resourceSubnetCreate(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error waiting for EC2 Subnet (%s) create: %w", d.Id(), err)
 	}
 
-	if err := modifySubnetAttributesOnCreate(conn, d, subnet); err != nil {
+	for _, v := range subnet.Ipv6CidrBlockAssociationSet {
+		if aws.StringValue(v.Ipv6CidrBlockState.State) == ec2.SubnetCidrBlockStateCodeAssociating { //we can only ever have 1 IPv6 block associated at once
+			associationID := aws.StringValue(v.AssociationId)
+
+			_, err = WaitSubnetIPv6CIDRBlockAssociationCreated(conn, associationID)
+
+			if err != nil {
+				return fmt.Errorf("error waiting for EC2 Subnet (%s) IPv6 CIDR block (%s) to become associated: %w", d.Id(), associationID, err)
+			}
+		}
+	}
+
+	if err := modifySubnetAttributesOnCreate(conn, d, subnet, false); err != nil {
 		return err
 	}
 
@@ -370,7 +382,7 @@ func resourceSubnetDelete(d *schema.ResourceData, meta interface{}) error {
 
 // modifySubnetAttributesOnCreate sets subnet attributes on resource Create.
 // Called after new subnet creation or existing default subnet adoption.
-func modifySubnetAttributesOnCreate(conn *ec2.EC2, d *schema.ResourceData, subnet *ec2.Subnet) error {
+func modifySubnetAttributesOnCreate(conn *ec2.EC2, d *schema.ResourceData, subnet *ec2.Subnet, computedIPv6CidrBlock bool) error {
 	// If we're disabling IPv6 assignment for new ENIs, do that before modifying the IPv6 CIDR block.
 	if new, old := d.Get("assign_ipv6_address_on_creation").(bool), aws.BoolValue(subnet.AssignIpv6AddressOnCreation); old != new && !new {
 		if err := modifySubnetAssignIpv6AddressOnCreation(conn, d.Id(), false); err != nil {
@@ -385,18 +397,22 @@ func modifySubnetAttributesOnCreate(conn *ec2.EC2, d *schema.ResourceData, subne
 		}
 	}
 
-	var oldAssociationID, oldIPv6CIDRBlock string
-	for _, v := range subnet.Ipv6CidrBlockAssociationSet {
-		if aws.StringValue(v.Ipv6CidrBlockState.State) == ec2.SubnetCidrBlockStateCodeAssociated { //we can only ever have 1 IPv6 block associated at once
-			oldAssociationID = aws.StringValue(v.AssociationId)
-			oldIPv6CIDRBlock = aws.StringValue(v.Ipv6CidrBlock)
+	// Creating a new IPv6-native default subnet assigns a computed IPv6 CIDR block.
+	// Don't attempt to do anything with it.
+	if !computedIPv6CidrBlock {
+		var oldAssociationID, oldIPv6CIDRBlock string
+		for _, v := range subnet.Ipv6CidrBlockAssociationSet {
+			if aws.StringValue(v.Ipv6CidrBlockState.State) == ec2.SubnetCidrBlockStateCodeAssociated { //we can only ever have 1 IPv6 block associated at once
+				oldAssociationID = aws.StringValue(v.AssociationId)
+				oldIPv6CIDRBlock = aws.StringValue(v.Ipv6CidrBlock)
 
-			break
+				break
+			}
 		}
-	}
-	if new := d.Get("ipv6_cidr_block").(string); oldIPv6CIDRBlock != new {
-		if err := modifySubnetIPv6CIDRBlockAssociation(conn, d.Id(), oldAssociationID, new); err != nil {
-			return err
+		if new := d.Get("ipv6_cidr_block").(string); oldIPv6CIDRBlock != new {
+			if err := modifySubnetIPv6CIDRBlockAssociation(conn, d.Id(), oldAssociationID, new); err != nil {
+				return err
+			}
 		}
 	}
 
@@ -539,13 +555,13 @@ func modifySubnetIPv6CIDRBlockAssociation(conn *ec2.EC2, subnetID, associationID
 		_, err := conn.DisassociateSubnetCidrBlock(input)
 
 		if err != nil {
-			return fmt.Errorf("error disassociating EC2 Subnet (%s) CIDR block (%s): %w", subnetID, associationID, err)
+			return fmt.Errorf("error disassociating EC2 Subnet (%s) IPv6 CIDR block (%s): %w", subnetID, associationID, err)
 		}
 
 		_, err = WaitSubnetIPv6CIDRBlockAssociationDeleted(conn, associationID)
 
 		if err != nil {
-			return fmt.Errorf("error waiting for EC2 Subnet (%s) CIDR block (%s) to become disassociated: %w", subnetID, associationID, err)
+			return fmt.Errorf("error waiting for EC2 Subnet (%s) IPv6 CIDR block (%s) to become disassociated: %w", subnetID, associationID, err)
 		}
 	}
 
@@ -560,7 +576,7 @@ func modifySubnetIPv6CIDRBlockAssociation(conn *ec2.EC2, subnetID, associationID
 		if err != nil {
 			//The big question here is, do we want to try to reassociate the old one??
 			//If we have a failure here, then we may be in a situation that we have nothing associated
-			return fmt.Errorf("error associating EC2 Subnet (%s) CIDR block (%s): %w", subnetID, cidrBlock, err)
+			return fmt.Errorf("error associating EC2 Subnet (%s) IPv6 CIDR block (%s): %w", subnetID, cidrBlock, err)
 		}
 
 		associationID := aws.StringValue(output.Ipv6CidrBlockAssociation.AssociationId)
@@ -568,7 +584,7 @@ func modifySubnetIPv6CIDRBlockAssociation(conn *ec2.EC2, subnetID, associationID
 		_, err = WaitSubnetIPv6CIDRBlockAssociationCreated(conn, associationID)
 
 		if err != nil {
-			return fmt.Errorf("error waiting for EC2 Subnet (%s) CIDR block (%s) to become associated: %w", subnetID, associationID, err)
+			return fmt.Errorf("error waiting for EC2 Subnet (%s) IPv6 CIDR block (%s) to become associated: %w", subnetID, associationID, err)
 		}
 	}
 
