@@ -26,3 +26,6 @@ data-source/aws_lb_listener: Further refine tag error handling for ISO regions
 resource/aws_lb_listener_rule: Further refine tag error handling for ISO regions
 ```
 
+```release-note:bug
+resource/aws_lb_listener: Further refine tag error handling for ISO regions
+```
