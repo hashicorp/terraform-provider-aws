@@ -13,3 +13,7 @@ resource/aws_cloudwatch_composite_alarm: Further refine tag error handling for I
 ```release-note:bug
 resource/aws_cloudwatch_metric_alarm: Further refine tag error handling for ISO regions
 ```
+
+```release-note:bug
+resource/aws_cloudwatch_metric_stream: Further refine tag error handling for ISO regions
+```
