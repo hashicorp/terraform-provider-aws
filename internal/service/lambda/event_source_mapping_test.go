@@ -438,6 +438,10 @@ func TestAccLambdaEventSourceMapping_Kinesis_tumblingWindowInSeconds(t *testing.
 }
 
 func TestAccLambdaEventSourceMapping_Kinesis_maximumRetryAttempts(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var conf lambda.EventSourceMappingConfiguration
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lambda_event_source_mapping.test"
@@ -714,6 +718,10 @@ func TestAccLambdaEventSourceMapping_Kinesis_destination(t *testing.T) {
 }
 
 func TestAccLambdaEventSourceMapping_msk(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var v lambda.EventSourceMappingConfiguration
 	resourceName := "aws_lambda_event_source_mapping.test"
 	eventSourceResourceName := "aws_msk_cluster.test"
@@ -802,6 +810,10 @@ func TestAccLambdaEventSourceMapping_selfManagedKafka(t *testing.T) {
 }
 
 func TestAccLambdaEventSourceMapping_activeMQ(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var v lambda.EventSourceMappingConfiguration
 	resourceName := "aws_lambda_event_source_mapping.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -840,6 +852,10 @@ func TestAccLambdaEventSourceMapping_activeMQ(t *testing.T) {
 }
 
 func TestAccLambdaEventSourceMapping_rabbitMQ(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var v lambda.EventSourceMappingConfiguration
 	resourceName := "aws_lambda_event_source_mapping.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -878,6 +894,10 @@ func TestAccLambdaEventSourceMapping_rabbitMQ(t *testing.T) {
 }
 
 func TestAccLambdaEventSourceMapping_SQS_filterCriteria(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var conf lambda.EventSourceMappingConfiguration
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lambda_event_source_mapping.test"

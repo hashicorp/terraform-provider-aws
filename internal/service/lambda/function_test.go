@@ -74,6 +74,10 @@ func TestAccLambdaFunction_basic(t *testing.T) {
 }
 
 func TestAccLambdaFunction_unpublishedCodeUpdate(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var conf1, conf2 lambda.GetFunctionOutput
 
 	initialFilename := "test-fixtures/lambdatest.zip"
@@ -226,6 +230,10 @@ func TestAccLambdaFunction_codeSigning(t *testing.T) {
 }
 
 func TestAccLambdaFunction_concurrency(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var conf lambda.GetFunctionOutput
 
 	rString := sdkacctest.RandString(8)
@@ -270,6 +278,10 @@ func TestAccLambdaFunction_concurrency(t *testing.T) {
 }
 
 func TestAccLambdaFunction_concurrencyCycle(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var conf lambda.GetFunctionOutput
 
 	rString := sdkacctest.RandString(8)
@@ -344,6 +356,10 @@ func TestAccLambdaFunction_expectFilenameAndS3Attributes(t *testing.T) {
 }
 
 func TestAccLambdaFunction_envVariables(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var conf lambda.GetFunctionOutput
 
 	rString := sdkacctest.RandString(8)
@@ -407,6 +423,10 @@ func TestAccLambdaFunction_envVariables(t *testing.T) {
 }
 
 func TestAccLambdaFunction_EnvironmentVariables_noValue(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var conf lambda.GetFunctionOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lambda_function.test"
@@ -435,6 +455,10 @@ func TestAccLambdaFunction_EnvironmentVariables_noValue(t *testing.T) {
 }
 
 func TestAccLambdaFunction_encryptedEnvVariables(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var conf lambda.GetFunctionOutput
 
 	rString := sdkacctest.RandString(8)
@@ -482,6 +506,10 @@ func TestAccLambdaFunction_encryptedEnvVariables(t *testing.T) {
 }
 
 func TestAccLambdaFunction_versioned(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var conf lambda.GetFunctionOutput
 
 	rString := sdkacctest.RandString(8)
@@ -520,6 +548,10 @@ func TestAccLambdaFunction_versioned(t *testing.T) {
 }
 
 func TestAccLambdaFunction_versionedUpdate(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var conf lambda.GetFunctionOutput
 
 	path, zipFile, err := createTempFile("lambda_localUpdate")
@@ -602,6 +634,10 @@ func TestAccLambdaFunction_versionedUpdate(t *testing.T) {
 }
 
 func TestAccLambdaFunction_enablePublish(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var conf1, conf2, conf3 lambda.GetFunctionOutput
 
 	rString := sdkacctest.RandString(8)
@@ -666,6 +702,10 @@ func TestAccLambdaFunction_enablePublish(t *testing.T) {
 }
 
 func TestAccLambdaFunction_disablePublish(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var conf1, conf2 lambda.GetFunctionOutput
 
 	rString := sdkacctest.RandString(8)
@@ -719,6 +759,10 @@ func TestAccLambdaFunction_disablePublish(t *testing.T) {
 }
 
 func TestAccLambdaFunction_deadLetter(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var conf lambda.GetFunctionOutput
 
 	rString := sdkacctest.RandString(8)
@@ -770,6 +814,10 @@ func TestAccLambdaFunction_deadLetter(t *testing.T) {
 }
 
 func TestAccLambdaFunction_deadLetterUpdated(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var conf lambda.GetFunctionOutput
 
 	rString := sdkacctest.RandString(8)
@@ -815,6 +863,10 @@ func TestAccLambdaFunction_deadLetterUpdated(t *testing.T) {
 }
 
 func TestAccLambdaFunction_nilDeadLetter(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	rString := sdkacctest.RandString(8)
 	funcName := fmt.Sprintf("tf_acc_lambda_func_nil_dlcfg_%s", rString)
 	policyName := fmt.Sprintf("tf_acc_policy_lambda_func_nil_dlcfg_%s", rString)
@@ -837,6 +889,10 @@ func TestAccLambdaFunction_nilDeadLetter(t *testing.T) {
 }
 
 func TestAccLambdaFunction_fileSystem(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var conf lambda.GetFunctionOutput
 	resourceName := "aws_lambda_function.test"
 
@@ -965,6 +1021,10 @@ func TestAccLambdaFunction_image(t *testing.T) {
 }
 
 func TestAccLambdaFunction_architectures(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var conf lambda.GetFunctionOutput
 	resourceName := "aws_lambda_function.test"
 
@@ -1018,6 +1078,10 @@ func TestAccLambdaFunction_architectures(t *testing.T) {
 }
 
 func TestAccLambdaFunction_architecturesUpdate(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var conf lambda.GetFunctionOutput
 	resourceName := "aws_lambda_function.test"
 
@@ -1071,6 +1135,10 @@ func TestAccLambdaFunction_architecturesUpdate(t *testing.T) {
 }
 
 func TestAccLambdaFunction_architecturesWithLayer(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var conf lambda.GetFunctionOutput
 	resourceName := "aws_lambda_function.test"
 
@@ -1125,6 +1193,10 @@ func TestAccLambdaFunction_architecturesWithLayer(t *testing.T) {
 }
 
 func TestAccLambdaFunction_tracing(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	if got, want := acctest.Partition(), endpoints.AwsUsGovPartitionID; got == want {
 		t.Skipf("Lambda tracing config is not supported in %s partition", got)
 	}
@@ -1176,6 +1248,10 @@ func TestAccLambdaFunction_tracing(t *testing.T) {
 // value and the kms_key_arn check begins failing, the documentation should be updated.
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/6366
 func TestAccLambdaFunction_KMSKeyARN_noEnvironmentVariables(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var function1 lambda.GetFunctionOutput
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -1206,6 +1282,10 @@ func TestAccLambdaFunction_KMSKeyARN_noEnvironmentVariables(t *testing.T) {
 }
 
 func TestAccLambdaFunction_layers(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var conf lambda.GetFunctionOutput
 
 	rString := sdkacctest.RandString(8)
@@ -1243,6 +1323,10 @@ func TestAccLambdaFunction_layers(t *testing.T) {
 }
 
 func TestAccLambdaFunction_layersUpdate(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var conf lambda.GetFunctionOutput
 
 	rString := sdkacctest.RandString(8)
@@ -1291,6 +1375,10 @@ func TestAccLambdaFunction_layersUpdate(t *testing.T) {
 }
 
 func TestAccLambdaFunction_vpc(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var conf lambda.GetFunctionOutput
 
 	rString := sdkacctest.RandString(8)
@@ -1330,6 +1418,10 @@ func TestAccLambdaFunction_vpc(t *testing.T) {
 }
 
 func TestAccLambdaFunction_vpcRemoval(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var conf lambda.GetFunctionOutput
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -1366,6 +1458,10 @@ func TestAccLambdaFunction_vpcRemoval(t *testing.T) {
 }
 
 func TestAccLambdaFunction_vpcUpdate(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var conf lambda.GetFunctionOutput
 
 	rString := sdkacctest.RandString(8)
@@ -1419,6 +1515,10 @@ func TestAccLambdaFunction_vpcUpdate(t *testing.T) {
 // See https://github.com/hashicorp/terraform/issues/5767
 // and https://github.com/hashicorp/terraform/issues/10272
 func TestAccLambdaFunction_VPC_withInvocation(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var conf lambda.GetFunctionOutput
 
 	rString := sdkacctest.RandString(8)
@@ -1454,6 +1554,10 @@ func TestAccLambdaFunction_VPC_withInvocation(t *testing.T) {
 // See https://github.com/hashicorp/terraform-provider-aws/issues/17385
 // When the vpc config doesn't change the version shouldn't change
 func TestAccLambdaFunction_VPCPublishNo_changes(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var conf lambda.GetFunctionOutput
 
 	rString := sdkacctest.RandString(8)
@@ -1495,6 +1599,10 @@ func TestAccLambdaFunction_VPCPublishNo_changes(t *testing.T) {
 // See https://github.com/hashicorp/terraform-provider-aws/issues/17385
 // When the vpc config changes the version should change
 func TestAccLambdaFunction_VPCPublishHas_changes(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var conf lambda.GetFunctionOutput
 
 	rString := sdkacctest.RandString(8)
@@ -1537,6 +1645,10 @@ func TestAccLambdaFunction_VPCPublishHas_changes(t *testing.T) {
 
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/10044
 func TestAccLambdaFunction_VPC_properIAMDependencies(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var function lambda.GetFunctionOutput
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -1631,6 +1743,10 @@ func TestAccLambdaFunction_s3(t *testing.T) {
 }
 
 func TestAccLambdaFunction_localUpdate(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var conf lambda.GetFunctionOutput
 
 	path, zipFile, err := createTempFile("lambda_localUpdate")
@@ -1695,6 +1811,10 @@ func TestAccLambdaFunction_localUpdate(t *testing.T) {
 }
 
 func TestAccLambdaFunction_LocalUpdate_nameOnly(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var conf lambda.GetFunctionOutput
 
 	rString := sdkacctest.RandString(8)
@@ -1943,6 +2063,10 @@ func TestAccLambdaFunction_tags(t *testing.T) {
 }
 
 func TestAccLambdaFunction_runtimes(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var v lambda.GetFunctionOutput
 	resourceName := "aws_lambda_function.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)

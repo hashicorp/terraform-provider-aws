@@ -705,18 +705,17 @@ func testAccErrorCheckSkipService(t *testing.T) resource.ErrorCheckFunc {
 
 #### Long-Running Test Guards
 
-For any acceptance tests that typically run longer than 300 seconds (5 minutes), add a `-short` test guard before the `resource.ParallelTest()` (or `resource.Test()`) statement.
+For any acceptance tests that typically run longer than 300 seconds (5 minutes), add a `-short` test guard at the top of the test function.
 
 For example:
 
 ```go
 func TestAccExampleThing_longRunningTest(t *testing.T) {
-  rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-  resourceName := "aws_example_thing.test"
-
   if testing.Short() {
     t.Skip("skipping long-running test in short mode")
   }
+
+  // ... omitted for brevity ...
 
   resource.ParallelTest(t, resource.TestCase{
     // ... omitted for brevity ...

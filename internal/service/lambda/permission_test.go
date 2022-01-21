@@ -225,6 +225,10 @@ func TestAccLambdaPermission_StatementID_duplicate(t *testing.T) {
 }
 
 func TestAccLambdaPermission_withRawFunctionName(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var statement tflambda.PolicyStatement
 
 	rString := sdkacctest.RandString(8)
