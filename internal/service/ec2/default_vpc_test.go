@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -82,7 +83,11 @@ func testAccEC2DefaultVPC_Existing_basic(t *testing.T) {
 	resourceName := "aws_default_vpc.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckDefaultVPCExists(t) },
+		PreCheck: func() {
+			acctest.PreCheck(t)
+			acctest.PreCheckRegionNot(t, endpoints.UsWest2RegionID, endpoints.UsGovWest1RegionID)
+			testAccPreCheckDefaultVPCExists(t)
+		},
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckDefaultVPCDestroyExists,
@@ -125,7 +130,11 @@ func testAccEC2DefaultVPC_Existing_assignGeneratedIPv6CIDRBlock(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckDefaultVPCExists(t) },
+		PreCheck: func() {
+			acctest.PreCheck(t)
+			acctest.PreCheckRegionNot(t, endpoints.UsWest2RegionID, endpoints.UsGovWest1RegionID)
+			testAccPreCheckDefaultVPCExists(t)
+		},
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckDefaultVPCDestroyExists,
@@ -168,7 +177,11 @@ func testAccEC2DefaultVPC_Existing_forceDestroy(t *testing.T) {
 	resourceName := "aws_default_vpc.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckDefaultVPCExists(t) },
+		PreCheck: func() {
+			acctest.PreCheck(t)
+			acctest.PreCheckRegionNot(t, endpoints.UsWest2RegionID, endpoints.UsGovWest1RegionID)
+			testAccPreCheckDefaultVPCExists(t)
+		},
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckDefaultVPCDestroyNotFound,
@@ -191,7 +204,11 @@ func testAccEC2DefaultVPC_NotFound_basic(t *testing.T) {
 	resourceName := "aws_default_vpc.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckDefaultVPCNotFound(t) },
+		PreCheck: func() {
+			acctest.PreCheck(t)
+			acctest.PreCheckRegionNot(t, endpoints.UsWest2RegionID, endpoints.UsGovWest1RegionID)
+			testAccPreCheckDefaultVPCNotFound(t)
+		},
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckDefaultVPCDestroyExists,
@@ -234,7 +251,11 @@ func testAccEC2DefaultVPC_NotFound_assignGeneratedIPv6CIDRBlock(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckDefaultVPCNotFound(t) },
+		PreCheck: func() {
+			acctest.PreCheck(t)
+			acctest.PreCheckRegionNot(t, endpoints.UsWest2RegionID, endpoints.UsGovWest1RegionID)
+			testAccPreCheckDefaultVPCNotFound(t)
+		},
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckDefaultVPCDestroyExists,
@@ -277,7 +298,11 @@ func testAccEC2DefaultVPC_NotFound_forceDestroy(t *testing.T) {
 	resourceName := "aws_default_vpc.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckDefaultVPCNotFound(t) },
+		PreCheck: func() {
+			acctest.PreCheck(t)
+			acctest.PreCheckRegionNot(t, endpoints.UsWest2RegionID, endpoints.UsGovWest1RegionID)
+			testAccPreCheckDefaultVPCNotFound(t)
+		},
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckDefaultVPCDestroyNotFound,
