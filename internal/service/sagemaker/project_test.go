@@ -334,6 +334,8 @@ resource "aws_servicecatalog_constraint" "test" {
   parameters = jsonencode({
     "RoleArn" : aws_iam_role.test.arn
   })
+
+  depends_on = [aws_iam_role_policy.test]
 }
 
 data "aws_caller_identity" "current" {}
@@ -350,7 +352,7 @@ resource "aws_servicecatalog_principal_portfolio_association" "test" {
 }
 
 func testAccProjectBasicConfig(rName string) string {
-	return testAccProjectBaseConfig(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccProjectBaseConfig(rName), fmt.Sprintf(`
 resource "aws_sagemaker_project" "test" {
   project_name = %[1]q
 
@@ -358,11 +360,11 @@ resource "aws_sagemaker_project" "test" {
     product_id = aws_servicecatalog_constraint.test.product_id
   }
 }
-`, rName)
+`, rName))
 }
 
 func testAccProjectDescription(rName, desc string) string {
-	return testAccProjectBaseConfig(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccProjectBaseConfig(rName), fmt.Sprintf(`
 resource "aws_sagemaker_project" "test" {
   project_name        = %[1]q
   project_description = %[2]q
@@ -371,11 +373,11 @@ resource "aws_sagemaker_project" "test" {
     product_id = aws_servicecatalog_constraint.test.product_id
   }
 }
-`, rName, desc)
+`, rName, desc))
 }
 
 func testAccProjectTagsConfig1(rName, tagKey1, tagValue1 string) string {
-	return testAccProjectBaseConfig(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccProjectBaseConfig(rName), fmt.Sprintf(`
 resource "aws_sagemaker_project" "test" {
   project_name = %[1]q
 
@@ -387,11 +389,11 @@ resource "aws_sagemaker_project" "test" {
     %[2]q = %[3]q
   }
 }
-`, rName, tagKey1, tagValue1)
+`, rName, tagKey1, tagValue1))
 }
 
 func testAccProjectTagsConfig2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return testAccProjectBaseConfig(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccProjectBaseConfig(rName), fmt.Sprintf(`
 resource "aws_sagemaker_project" "test" {
   project_name = %[1]q
 
@@ -404,5 +406,5 @@ resource "aws_sagemaker_project" "test" {
     %[4]q = %[5]q
   }
 }
-`, rName, tagKey1, tagValue1, tagKey2, tagValue2)
+`, rName, tagKey1, tagValue1, tagKey2, tagValue2))
 }

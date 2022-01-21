@@ -479,7 +479,7 @@ func WaitProjectCreated(conn *sagemaker.SageMaker, name string) (*sagemaker.Desc
 func WaitProjectUpdated(conn *sagemaker.SageMaker, name string) (*sagemaker.DescribeProjectOutput, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{sagemaker.ProjectStatusPending, sagemaker.ProjectStatusUpdateInProgress},
-		Target:  []string{sagemaker.ProjectStatusUpdateCompleted, sagemaker.ProjectStatusCreateCompleted}, //For some reason CreateCompleted is returned.
+		Target:  []string{sagemaker.ProjectStatusUpdateCompleted},
 		Refresh: StatusProject(conn, name),
 		Timeout: ProjectCreatedTimeout,
 	}

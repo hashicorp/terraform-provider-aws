@@ -194,6 +194,12 @@ func resourceProjectUpdate(d *schema.ResourceData, meta interface{}) error {
 			input.ServiceCatalogProvisioningUpdateDetails = expandProjectServiceCatalogProvisioningDetailsUpdate(d.Get("service_catalog_provisioning_details").([]interface{}))
 		}
 
+		_, err := conn.UpdateProject(input)
+
+		if err != nil {
+			return fmt.Errorf("error updating SageMaker Project (%s): %w", d.Id(), err)
+		}
+
 		if _, err := WaitProjectUpdated(conn, d.Id()); err != nil {
 			return fmt.Errorf("error waiting for Sagemaker Project (%s) to be updated: %w", d.Id(), err)
 		}
@@ -203,7 +209,7 @@ func resourceProjectUpdate(d *schema.ResourceData, meta interface{}) error {
 		o, n := d.GetChange("tags_all")
 
 		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("error updating SageMaker Project (%s) tags: %s", d.Id(), err)
+			return fmt.Errorf("error updating SageMaker Project (%s) tags: %w", d.Id(), err)
 		}
 	}
 
