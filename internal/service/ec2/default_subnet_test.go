@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
@@ -77,7 +78,11 @@ func testAccEC2DefaultSubnet_Existing_basic(t *testing.T) {
 	resourceName := "aws_default_subnet.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckDefaultSubnetExists(t) },
+		PreCheck: func() {
+			acctest.PreCheck(t)
+			acctest.PreCheckRegionNot(t, endpoints.UsWest2RegionID, endpoints.UsGovWest1RegionID)
+			testAccPreCheckDefaultSubnetExists(t)
+		},
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckDefaultSubnetDestroyExists,
@@ -117,7 +122,11 @@ func testAccEC2DefaultSubnet_Existing_forceDestroy(t *testing.T) {
 	resourceName := "aws_default_subnet.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckDefaultSubnetExists(t) },
+		PreCheck: func() {
+			acctest.PreCheck(t)
+			acctest.PreCheckRegionNot(t, endpoints.UsWest2RegionID, endpoints.UsGovWest1RegionID)
+			testAccPreCheckDefaultSubnetExists(t)
+		},
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckDefaultSubnetDestroyNotFound,
@@ -139,7 +148,11 @@ func testAccEC2DefaultSubnet_Existing_ipv6(t *testing.T) {
 	resourceName := "aws_default_subnet.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckDefaultSubnetExists(t) },
+		PreCheck: func() {
+			acctest.PreCheck(t)
+			acctest.PreCheckRegionNot(t, endpoints.UsWest2RegionID, endpoints.UsGovWest1RegionID)
+			testAccPreCheckDefaultSubnetExists(t)
+		},
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckDefaultSubnetDestroyNotFound,
@@ -180,7 +193,11 @@ func testAccEC2DefaultSubnet_Existing_privateDnsNameOptionsOnLaunch(t *testing.T
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckDefaultSubnetExists(t) },
+		PreCheck: func() {
+			acctest.PreCheck(t)
+			acctest.PreCheckRegionNot(t, endpoints.UsWest2RegionID, endpoints.UsGovWest1RegionID)
+			testAccPreCheckDefaultSubnetExists(t)
+		},
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckDefaultSubnetDestroyExists,
@@ -221,7 +238,11 @@ func testAccEC2DefaultSubnet_NotFound_basic(t *testing.T) {
 	resourceName := "aws_default_subnet.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckDefaultSubnetNotFound(t) },
+		PreCheck: func() {
+			acctest.PreCheck(t)
+			acctest.PreCheckRegionNot(t, endpoints.UsWest2RegionID, endpoints.UsGovWest1RegionID)
+			testAccPreCheckDefaultSubnetNotFound(t)
+		},
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckDefaultSubnetDestroyExists,
@@ -261,7 +282,11 @@ func testAccEC2DefaultSubnet_NotFound_ipv6Native(t *testing.T) {
 	resourceName := "aws_default_subnet.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckDefaultSubnetNotFound(t) },
+		PreCheck: func() {
+			acctest.PreCheck(t)
+			acctest.PreCheckRegionNot(t, endpoints.UsWest2RegionID, endpoints.UsGovWest1RegionID)
+			testAccPreCheckDefaultSubnetNotFound(t)
+		},
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckDefaultSubnetDestroyNotFound,
@@ -276,15 +301,15 @@ func testAccEC2DefaultSubnet_NotFound_ipv6Native(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "availability_zone_id"),
 					resource.TestCheckResourceAttr(resourceName, "cidr_block", ""),
 					resource.TestCheckResourceAttr(resourceName, "customer_owned_ipv4_pool", ""),
-					resource.TestCheckResourceAttr(resourceName, "enable_dns64", "true"),
+					resource.TestCheckResourceAttr(resourceName, "enable_dns64", "false"),
 					resource.TestCheckResourceAttr(resourceName, "enable_resource_name_dns_aaaa_record_on_launch", "true"),
 					resource.TestCheckResourceAttr(resourceName, "enable_resource_name_dns_a_record_on_launch", "false"),
-					resource.TestCheckResourceAttr(resourceName, "existing_default_subnet", "true"),
+					resource.TestCheckResourceAttr(resourceName, "existing_default_subnet", "false"),
 					resource.TestCheckResourceAttr(resourceName, "force_destroy", "true"),
 					resource.TestCheckResourceAttrSet(resourceName, "ipv6_cidr_block"),
 					resource.TestCheckResourceAttr(resourceName, "ipv6_native", "true"),
 					resource.TestCheckResourceAttr(resourceName, "map_customer_owned_ip_on_launch", "false"),
-					resource.TestCheckResourceAttr(resourceName, "map_public_ip_on_launch", "true"),
+					resource.TestCheckResourceAttr(resourceName, "map_public_ip_on_launch", "false"),
 					resource.TestCheckResourceAttr(resourceName, "outpost_arn", ""),
 					acctest.CheckResourceAttrAccountID(resourceName, "owner_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "private_dns_hostname_type_on_launch"),
@@ -444,7 +469,7 @@ resource "aws_default_subnet" "test" {
 
   private_dns_hostname_type_on_launch = "ip-name"
 
-  # force-destroy so that the default VPC can have IPv6 disabled.
+  # force_destroy so that the default VPC can have IPv6 disabled.
   force_destroy = true
 
   depends_on = [aws_default_vpc.test]
@@ -463,10 +488,11 @@ resource "aws_default_subnet" "test" {
 
   assign_ipv6_address_on_creation = true
   ipv6_native                     = true
+  map_public_ip_on_launch         = false
 
   enable_resource_name_dns_aaaa_record_on_launch = true
 
-  # force-destroy so that the default VPC can have IPv6 disabled.
+  # force_destroy so that the default VPC can have IPv6 disabled.
   force_destroy = true
 
   depends_on = [aws_default_vpc.test]

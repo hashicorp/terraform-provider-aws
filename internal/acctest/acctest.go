@@ -652,6 +652,15 @@ func PreCheckRegion(t *testing.T, region string) {
 	}
 }
 
+// PreCheckRegionNot checks that the test region is not one of the specified regions.
+func PreCheckRegionNot(t *testing.T, regions ...string) {
+	for _, region := range regions {
+		if Region() == region {
+			t.Skipf("skipping tests; %s (%s) not supported", conns.EnvVarDefaultRegion, region)
+		}
+	}
+}
+
 // PreCheckPartition checks that the test partition is the specified partition.
 func PreCheckPartition(partition string, t *testing.T) {
 	if Partition() != partition {
