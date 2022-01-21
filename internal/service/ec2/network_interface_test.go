@@ -1501,7 +1501,7 @@ resource "aws_network_interface" "test" {
   subnet_id               = aws_subnet.test.id
   security_groups         = [aws_security_group.test.id]
   private_ip_list_enabled = true
-  private_ip_list         = ["%[1]s"] 
+  private_ip_list         = ["%[1]s"]
 }
 `, strings.Join(privateIPs, `", "`)))
 }
