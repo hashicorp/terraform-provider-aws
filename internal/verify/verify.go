@@ -35,12 +35,13 @@ func checkYAMLString(yamlString interface{}) (string, error) {
 }
 
 const (
-	ErrCodeAccessDenied               = "AccessDenied"
-	ErrCodeUnknownOperation           = "UnknownOperationException"
-	ErrCodeValidationError            = "ValidationError"
-	ErrCodeOperationDisabledException = "OperationDisabledException"
-	ErrCodeInternalException          = "InternalException"
-	ErrCodeInternalServiceFault       = "InternalServiceError"
+	ErrCodeAccessDenied                   = "AccessDenied"
+	ErrCodeUnknownOperation               = "UnknownOperationException"
+	ErrCodeValidationError                = "ValidationError"
+	ErrCodeOperationDisabledException     = "OperationDisabledException"
+	ErrCodeInternalException              = "InternalException"
+	ErrCodeInternalServiceFault           = "InternalServiceError"
+	ErrCodeOperationNotPermittedException = "OperationNotPermitted"
 )
 
 func CheckISOErrorTagsUnsupported(err error) bool {
@@ -65,6 +66,10 @@ func CheckISOErrorTagsUnsupported(err error) bool {
 	}
 
 	if tfawserr.ErrCodeContains(err, ErrCodeInternalServiceFault) {
+		return true
+	}
+
+	if tfawserr.ErrCodeContains(err, ErrCodeOperationNotPermittedException) {
 		return true
 	}
 
