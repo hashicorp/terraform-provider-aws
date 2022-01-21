@@ -1,12 +1,12 @@
 ---
 subcategory: "Data Exchange"
 layout: "aws"
-page_title: "AWS: aws_dataexchance_data_set"
+page_title: "AWS: aws_dataexchange_data_set"
 description: |-
   Provides a DataExchange DataSet
 ---
 
-# Resource: aws_dataexchance_data_set
+# Resource: aws_dataexchange_data_set
 
 Provides a resource to manage AWS Data Exchange DataSets.
 
@@ -42,5 +42,5 @@ In addition to all arguments above, the following attributes are exported:
 DataExchange DataSets can be imported by their arn:
 
 ```
-$ terraform import aws_dataexchance_data_set.example arn:aws:dataexchange:us-west-2:123456789012:data-sets/4fa784c7-ccb4-4dbf-ba4f-02198320daa1
+$ terraform import aws_dataexchange_data_set.example arn:aws:dataexchange:us-west-2:123456789012:data-sets/4fa784c7-ccb4-4dbf-ba4f-02198320daa1
 ```
