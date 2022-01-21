@@ -132,3 +132,28 @@ func FindInstanceProfileByArn(conn *devicefarm.DeviceFarm, arn string) (*devicef
 
 	return output.InstanceProfile, nil
 }
+
+func FindTestGridProjectByArn(conn *devicefarm.DeviceFarm, arn string) (*devicefarm.TestGridProject, error) {
+
+	input := &devicefarm.GetTestGridProjectInput{
+		ProjectArn: aws.String(arn),
+	}
+	output, err := conn.GetTestGridProject(input)
+
+	if tfawserr.ErrCodeEquals(err, devicefarm.ErrCodeNotFoundException) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.TestGridProject == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.TestGridProject, nil
+}
