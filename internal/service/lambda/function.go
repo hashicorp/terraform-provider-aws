@@ -848,16 +848,16 @@ func resourceFunctionRead(d *schema.ResourceData, meta interface{}) error {
 	// Currently, this functionality is only enabled in AWS Commercial partition
 	// and other partitions return ambiguous error codes (e.g. AccessDeniedException
 	// in AWS GovCloud (US)) so we cannot just ignore the error as would typically.
-	if meta.(*conns.AWSClient).Partition != endpoints.AwsPartitionID {
+	if partition := meta.(*conns.AWSClient).Partition; partition != endpoints.AwsPartitionID {
 		return nil
 	}
 
-	// Currently, this functionality is not enabled in ap-northeast-3 (Osaka) region
+	// Currently, this functionality is not enabled in ap-northeast-3 (Osaka) and ap-southeast-3 (Jakarta) region
 	// and returns ambiguous error codes (e.g. AccessDeniedException)
 	// so we cannot just ignore the error as would typically.
 	// We are hardcoding the region here, because go aws sdk endpoints
 	// package does not support Signer service
-	if meta.(*conns.AWSClient).Region == endpoints.ApNortheast3RegionID {
+	if region := meta.(*conns.AWSClient).Region; region == endpoints.ApNortheast3RegionID || region == endpoints.ApSoutheast3RegionID {
 		return nil
 	}
 
