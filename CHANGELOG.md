@@ -4,6 +4,28 @@ FEATURES:
 
 * **New Resource:** `aws_devicefarm_test_grid_project` ([#22688](https://github.com/hashicorp/terraform-provider-aws/issues/22688))
 
+ENHANCEMENTS:
+
+* resource/aws_api_gateway_stage: Add `web_acl_arn` attribute ([#18561](https://github.com/hashicorp/terraform-provider-aws/issues/18561))
+
+BUG FIXES:
+
+* data-source/aws_lb: Further refine tag error handling for ISO regions ([#22717](https://github.com/hashicorp/terraform-provider-aws/issues/22717))
+* data-source/aws_lb: Further refine tag error handling for ISO regions ([#22717](https://github.com/hashicorp/terraform-provider-aws/issues/22717))
+* data-source/aws_lb_listener: Further refine tag error handling for ISO regions ([#22717](https://github.com/hashicorp/terraform-provider-aws/issues/22717))
+* data-source/aws_lb_target_group: Further refine tag error handling for ISO regions ([#22717](https://github.com/hashicorp/terraform-provider-aws/issues/22717))
+* resource/aws_cloudwatch_composite_alarm: Further refine tag error handling for ISO regions ([#22717](https://github.com/hashicorp/terraform-provider-aws/issues/22717))
+* resource/aws_cloudwatch_event_bus: Further refine tag error handling for ISO regions ([#22717](https://github.com/hashicorp/terraform-provider-aws/issues/22717))
+* resource/aws_cloudwatch_event_rule: Further refine tag error handling for ISO regions ([#22717](https://github.com/hashicorp/terraform-provider-aws/issues/22717))
+* resource/aws_cloudwatch_metric_alarm: Further refine tag error handling for ISO regions ([#22717](https://github.com/hashicorp/terraform-provider-aws/issues/22717))
+* resource/aws_cloudwatch_metric_stream: Further refine tag error handling for ISO regions ([#22717](https://github.com/hashicorp/terraform-provider-aws/issues/22717))
+* resource/aws_internet_gateway: No longer give up before the attachment timeout (4m) is exceeded (previously it was giving up after 20 not found checks). ([#22713](https://github.com/hashicorp/terraform-provider-aws/issues/22713))
+* resource/aws_lambda_function: Prevent errors when attempting to configure code signing in the `ap-southeast-3` AWS Region ([#22693](https://github.com/hashicorp/terraform-provider-aws/issues/22693))
+* resource/aws_lb: Further refine tag error handling for ISO regions ([#22717](https://github.com/hashicorp/terraform-provider-aws/issues/22717))
+* resource/aws_lb_listener: Further refine tag error handling for ISO regions ([#22717](https://github.com/hashicorp/terraform-provider-aws/issues/22717))
+* resource/aws_lb_listener_rule: Further refine tag error handling for ISO regions ([#22717](https://github.com/hashicorp/terraform-provider-aws/issues/22717))
+* resource/aws_lb_target_group: Further refine tag error handling for ISO regions ([#22717](https://github.com/hashicorp/terraform-provider-aws/issues/22717))
+
 ## 3.73.0 (January 21, 2022)
 
 FEATURES:
