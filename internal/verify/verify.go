@@ -35,12 +35,14 @@ func checkYAMLString(yamlString interface{}) (string, error) {
 }
 
 const (
-	ErrCodeAccessDenied     = "AccessDenied"
-	ErrCodeUnknownOperation = "UnknownOperationException"
-	ErrCodeValidationError  = "ValidationError"
+	ErrCodeAccessDenied               = "AccessDenied"
+	ErrCodeUnknownOperation           = "UnknownOperationException"
+	ErrCodeValidationError            = "ValidationError"
+	ErrCodeOperationDisabledException = "OperationDisabledException"
+	ErrCodeInternalException          = "InternalException"
 )
 
-func checkISOErrorTagsUnsupported(err error) bool {
+func CheckISOErrorTagsUnsupported(err error) bool {
 	if tfawserr.ErrCodeContains(err, ErrCodeAccessDenied) {
 		return true
 	}
@@ -50,6 +52,14 @@ func checkISOErrorTagsUnsupported(err error) bool {
 	}
 
 	if tfawserr.ErrMessageContains(err, ErrCodeValidationError, "not support tagging") {
+		return true
+	}
+
+	if tfawserr.ErrCodeContains(err, ErrCodeOperationDisabledException) {
+		return true
+	}
+
+	if tfawserr.ErrCodeContains(err, ErrCodeInternalException) {
 		return true
 	}
 
