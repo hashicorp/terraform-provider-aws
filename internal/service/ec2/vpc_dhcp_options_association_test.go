@@ -106,6 +106,32 @@ func TestAccEC2VPCDHCPOptionsAssociation_disappears(t *testing.T) {
 	})
 }
 
+func TestAccEC2VPCDHCPOptionsAssociation_default(t *testing.T) {
+	resourceName := "aws_vpc_dhcp_options_association.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckVPCDHCPOptionsAssociationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVPCDHCPOptionsAssociationDefaultConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVPCDHCPOptionsAssociationExist(resourceName),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportStateIdFunc: testAccVPCDHCPOptionsAssociationVPCImportIdFunc(resourceName),
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccVPCDHCPOptionsAssociationVPCImportIdFunc(resourceName string) resource.ImportStateIdFunc {
 	return func(s *terraform.State) (string, error) {
 		rs, ok := s.RootModule().Resources[resourceName]
@@ -201,6 +227,23 @@ resource "aws_vpc_dhcp_options" "test" {
 resource "aws_vpc_dhcp_options_association" "test" {
   vpc_id          = aws_vpc.test.id
   dhcp_options_id = aws_vpc_dhcp_options.test.id
+}
+`, rName)
+}
+
+func testAccVPCDHCPOptionsAssociationDefaultConfig(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  cidr_block = "10.1.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_vpc_dhcp_options_association" "test" {
+  vpc_id          = aws_vpc.test.id
+  dhcp_options_id = "default"
 }
 `, rName)
 }
