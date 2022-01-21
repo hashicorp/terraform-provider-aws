@@ -40,6 +40,7 @@ const (
 	ErrCodeValidationError            = "ValidationError"
 	ErrCodeOperationDisabledException = "OperationDisabledException"
 	ErrCodeInternalException          = "InternalException"
+	ErrCodeInternalServiceFault       = "InternalServiceError"
 )
 
 func CheckISOErrorTagsUnsupported(err error) bool {
@@ -60,6 +61,10 @@ func CheckISOErrorTagsUnsupported(err error) bool {
 	}
 
 	if tfawserr.ErrCodeContains(err, ErrCodeInternalException) {
+		return true
+	}
+
+	if tfawserr.ErrCodeContains(err, ErrCodeInternalServiceFault) {
 		return true
 	}
 
