@@ -12,6 +12,7 @@ import (
 const (
 	ErrCodeAuthFailure                               = "AuthFailure"
 	ErrCodeClientInvalidHostIDNotFound               = "Client.InvalidHostID.NotFound"
+	ErrCodeDefaultSubnetAlreadyExistsInAvailabilityZone = "DefaultSubnetAlreadyExistsInAvailabilityZone"
 	ErrCodeDependencyViolation                       = "DependencyViolation"
 	ErrCodeGatewayNotAttached                        = "Gateway.NotAttached"
 	ErrCodeIncorrectState                            = "IncorrectState"
