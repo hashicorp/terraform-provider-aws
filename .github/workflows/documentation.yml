@@ -25,6 +25,8 @@ jobs:
         file-extension: '.md'
         base-branch: "main"
         check-modified-files-only: "yes"
+        env:
+          UV_THREADPOOL_SIZE: 128
   markdown-lint:
     runs-on: ubuntu-latest
     steps:
