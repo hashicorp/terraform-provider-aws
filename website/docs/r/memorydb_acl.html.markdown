@@ -23,7 +23,7 @@ resource "aws_memorydb_acl" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+The following arguments are optional:
 
 * `name` - (Optional, Forces new resource) Name of the ACL. If omitted, Terraform will assign a random, unique name. Conflicts with `name_prefix`.
 * `name_prefix` - (Optional, Forces new resource) Creates a unique name beginning with the specified prefix. Conflicts with `name`.

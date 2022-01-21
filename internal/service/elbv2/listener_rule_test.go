@@ -500,6 +500,10 @@ func TestAccELBV2ListenerRule_priority(t *testing.T) {
 	lbName := fmt.Sprintf("testrule-basic-%s", sdkacctest.RandString(13))
 	targetGroupName := fmt.Sprintf("testtargetgroup-%s", sdkacctest.RandString(10))
 
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, elbv2.EndpointsID),
@@ -1036,6 +1040,10 @@ func TestAccELBV2ListenerRule_conditionUpdateMixed(t *testing.T) {
 
 	resourceName := "aws_lb_listener_rule.static"
 	frontEndListenerResourceName := "aws_lb_listener.front_end"
+
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },

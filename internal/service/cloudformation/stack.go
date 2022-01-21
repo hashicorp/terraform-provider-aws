@@ -128,10 +128,12 @@ func resourceStackCreate(d *schema.ResourceData, meta interface{}) error {
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
 	requestToken := resource.UniqueId()
-	input := cloudformation.CreateStackInput{
-		StackName:          aws.String(d.Get("name").(string)),
+	name := d.Get("name").(string)
+	input := &cloudformation.CreateStackInput{
 		ClientRequestToken: aws.String(requestToken),
+		StackName:          aws.String(name),
 	}
+
 	if v, ok := d.GetOk("template_body"); ok {
 		template, err := verify.NormalizeJSONOrYAMLString(v)
 		if err != nil {
@@ -179,26 +181,17 @@ func resourceStackCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	log.Printf("[DEBUG] Creating CloudFormation Stack: %s", input)
-	resp, err := conn.CreateStack(&input)
+	output, err := conn.CreateStack(input)
+
 	if err != nil {
-		return fmt.Errorf("creating CloudFormation stack failed: %w", err)
+		return fmt.Errorf("error creating CloudFormation Stack (%s): %w", name, err)
 	}
 
-	d.SetId(aws.StringValue(resp.StackId))
+	d.SetId(aws.StringValue(output.StackId))
 
-	stack, err := WaitStackCreated(conn, d.Id(), requestToken, d.Timeout(schema.TimeoutCreate))
-	if err != nil {
-		if stack != nil {
-			status := aws.StringValue(stack.StackStatus)
-			if status == cloudformation.StackStatusDeleteComplete || status == cloudformation.StackStatusDeleteFailed {
-				// Need to validate if this is actually necessary
-				d.SetId("")
-			}
-		}
-		return fmt.Errorf("error waiting for CloudFormation Stack creation: %w", err)
+	if _, err := WaitStackCreated(conn, d.Id(), requestToken, d.Timeout(schema.TimeoutCreate)); err != nil {
+		return fmt.Errorf("error waiting for CloudFormation Stack (%s) create: %w", d.Id(), err)
 	}
-
-	log.Printf("[INFO] CloudFormation Stack %q created", d.Id())
 
 	return resourceStackRead(d, meta)
 }

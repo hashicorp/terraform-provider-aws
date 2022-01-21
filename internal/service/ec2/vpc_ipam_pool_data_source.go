@@ -1,6 +1,7 @@
 package ec2
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -45,7 +46,7 @@ func DataSourceVPCIpamPool() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			"allocation_resource_tags": tftags.TagsSchema(),
+			"allocation_resource_tags": tftags.TagsSchemaComputed(),
 			"auto_import": {
 				Type:     schema.TypeBool,
 				Computed: true,
@@ -93,6 +94,8 @@ func DataSourceVPCIpamPool() *schema.Resource {
 
 func dataSourceVPCIpamPoolRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+
 	input := &ec2.DescribeIpamPoolsInput{}
 
 	if v, ok := d.GetOk("ipam_pool_id"); ok {
@@ -115,26 +118,36 @@ func dataSourceVPCIpamPoolRead(d *schema.ResourceData, meta interface{}) error {
 	if output == nil || len(output.IpamPools) == 0 || output.IpamPools[0] == nil {
 		return nil
 	}
+
+	if len(output.IpamPools) > 1 {
+		return fmt.Errorf("multiple IPAM Pools matched; use additional constraints to reduce matches to a single IPAM pool")
+	}
+
 	pool = output.IpamPools[0]
 
 	d.SetId(aws.StringValue(pool.IpamPoolId))
 
-	if pool.PubliclyAdvertisable != nil {
-		d.Set("publicly_advertisable", pool.PubliclyAdvertisable)
-	}
-	scopeId := strings.Split(*pool.IpamScopeArn, "/")[1]
-
+	d.Set("address_family", pool.AddressFamily)
+	d.Set("allocation_default_netmask_length", pool.AllocationDefaultNetmaskLength)
+	d.Set("allocation_max_netmask_length", pool.AllocationMaxNetmaskLength)
+	d.Set("allocation_min_netmask_length", pool.AllocationMinNetmaskLength)
 	d.Set("allocation_resource_tags", KeyValueTags(ec2TagsFromIpamAllocationTags(pool.AllocationResourceTags)).Map())
-	d.Set("auto_import", pool.AutoImport)
 	d.Set("arn", pool.IpamPoolArn)
+	d.Set("auto_import", pool.AutoImport)
+	d.Set("aws_service", pool.AwsService)
 	d.Set("description", pool.Description)
-	d.Set("ipam_scope_id", scopeId)
+	scopeID := strings.Split(aws.StringValue(pool.IpamScopeArn), "/")[1]
+	d.Set("ipam_scope_id", scopeID)
 	d.Set("ipam_scope_type", pool.IpamScopeType)
 	d.Set("locale", pool.Locale)
 	d.Set("pool_depth", pool.PoolDepth)
-	d.Set("aws_service", pool.AwsService)
+	d.Set("publicly_advertisable", pool.PubliclyAdvertisable)
 	d.Set("source_ipam_pool_id", pool.SourceIpamPoolId)
 	d.Set("state", pool.State)
+
+	if err := d.Set("tags", KeyValueTags(pool.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %w", err)
+	}
 
 	return nil
 }

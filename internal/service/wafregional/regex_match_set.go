@@ -143,13 +143,13 @@ func resourceRegexMatchSetDelete(d *schema.ResourceData, meta interface{}) error
 	region := meta.(*conns.AWSClient).Region
 
 	err := DeleteRegexMatchSetResource(conn, region, "global", d.Id(), getRegexMatchTuplesFromResourceData(d))
+
 	if tfawserr.ErrCodeEquals(err, wafregional.ErrCodeWAFNonexistentItemException) {
-		log.Printf("[WARN] WAF Regional Regex Match Set (%s) not found, removing from state", d.Id())
-		d.SetId("")
 		return nil
 	}
+
 	if err != nil {
-		return err
+		return fmt.Errorf("error deleting WAF Regional Regex Match Set (%s): %w", d.Id(), err)
 	}
 
 	return nil

@@ -10,8 +10,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	// "github.com/hashicorp/terraform-provider-aws/internal/flex"
-	// "github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceVPCIpamPreviewNextCidr() *schema.Resource {
@@ -24,20 +24,19 @@ func ResourceVPCIpamPreviewNextCidr() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			// // temp comment out till bug is resolved
-			// "disallowed_cidrs": {
-			// 	Type:     schema.TypeSet,
-			// 	Optional: true,
-			// 	ForceNew: true,
-			// 	Elem: &schema.Schema{
-			// 		Type: schema.TypeString,
-			// 		ValidateFunc: validation.Any(
-			// 			verify.ValidIPv4CIDRNetworkAddress,
-			// 			// Follow the numbers used for netmask_length
-			// 			validation.IsCIDRNetwork(0, 32),
-			// 		),
-			// 	},
-			// },
+			"disallowed_cidrs": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				ForceNew: true,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+					ValidateFunc: validation.Any(
+						verify.ValidIPv4CIDRNetworkAddress,
+						// Follow the numbers used for netmask_length
+						validation.IsCIDRNetwork(0, 32),
+					),
+				},
+			},
 			"ipam_pool_id": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -70,9 +69,9 @@ func resourceVPCIpamPreviewNextCidrCreate(d *schema.ResourceData, meta interface
 		PreviewNextCidr: aws.Bool(true),
 	}
 
-	// if v, ok := d.GetOk("disallowed_cidrs"); ok && v.(*schema.Set).Len() > 0 {
-	// 	input.DisallowedCidrs = flex.ExpandStringSet(v.(*schema.Set))
-	// }
+	if v, ok := d.GetOk("disallowed_cidrs"); ok && v.(*schema.Set).Len() > 0 {
+		input.DisallowedCidrs = flex.ExpandStringSet(v.(*schema.Set))
+	}
 
 	if v, ok := d.GetOk("netmask_length"); ok {
 		input.NetmaskLength = aws.Int64(int64(v.(int)))

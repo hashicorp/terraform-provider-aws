@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/service/ecr"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -114,8 +115,11 @@ func resourceRepositoryCreate(d *schema.ResourceData, meta interface{}) error {
 	input := ecr.CreateRepositoryInput{
 		ImageTagMutability:      aws.String(d.Get("image_tag_mutability").(string)),
 		RepositoryName:          aws.String(d.Get("name").(string)),
-		Tags:                    Tags(tags.IgnoreAWS()),
 		EncryptionConfiguration: expandEcrRepositoryEncryptionConfiguration(d.Get("encryption_configuration").([]interface{})),
+	}
+
+	if len(tags) > 0 {
+		input.Tags = Tags(tags.IgnoreAWS())
 	}
 
 	imageScanningConfigs := d.Get("image_scanning_configuration").([]interface{})
@@ -131,6 +135,15 @@ func resourceRepositoryCreate(d *schema.ResourceData, meta interface{}) error {
 
 	log.Printf("[DEBUG] Creating ECR repository: %#v", input)
 	out, err := conn.CreateRepository(&input)
+
+	// Some partitions (i.e., ISO) may not support tag-on-create
+	if input.Tags != nil && meta.(*conns.AWSClient).Partition != endpoints.AwsPartitionID && (tfawserr.ErrCodeContains(err, ErrCodeAccessDenied) || tfawserr.ErrCodeContains(err, ecr.ErrCodeInvalidParameterException) || tfawserr.ErrCodeContains(err, ecr.ErrCodeValidationException)) {
+		log.Printf("[WARN] ECR Repository (%s) create failed (%s) with tags. Trying create without tags.", d.Id(), err)
+		input.Tags = nil
+
+		out, err = conn.CreateRepository(&input)
+	}
+
 	if err != nil {
 		return fmt.Errorf("error creating ECR repository: %s", err)
 	}
@@ -140,6 +153,21 @@ func resourceRepositoryCreate(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG] ECR repository created: %q", *repository.RepositoryArn)
 
 	d.SetId(aws.StringValue(repository.RepositoryName))
+
+	// Some partitions (i.e., ISO) may not support tag-on-create, attempt tag after create
+	if input.Tags == nil && len(tags) > 0 && meta.(*conns.AWSClient).Partition != endpoints.AwsPartitionID {
+		err := UpdateTags(conn, aws.StringValue(repository.RepositoryArn), nil, tags)
+
+		// If default tags only, log and continue. Otherwise, error.
+		if v, ok := d.GetOk("tags"); (!ok || len(v.(map[string]interface{})) == 0) && (tfawserr.ErrCodeContains(err, ErrCodeAccessDenied) || tfawserr.ErrCodeContains(err, ecr.ErrCodeInvalidParameterException) || tfawserr.ErrCodeContains(err, ecr.ErrCodeValidationException)) {
+			log.Printf("[WARN] error adding tags after create for ECR Repository (%s): %s", d.Id(), err)
+			return resourceRepositoryRead(d, meta)
+		}
+
+		if err != nil {
+			return fmt.Errorf("error creating ECR Repository (%s) tags: %w", d.Id(), err)
+		}
+	}
 
 	return resourceRepositoryRead(d, meta)
 }
@@ -198,10 +226,26 @@ func resourceRepositoryRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("repository_url", repository.RepositoryUri)
 	d.Set("image_tag_mutability", repository.ImageTagMutability)
 
+	if err := d.Set("image_scanning_configuration", flattenImageScanningConfiguration(repository.ImageScanningConfiguration)); err != nil {
+		return fmt.Errorf("error setting image_scanning_configuration for ECR Repository (%s): %w", arn, err)
+	}
+
+	if err := d.Set("encryption_configuration", flattenEcrRepositoryEncryptionConfiguration(repository.EncryptionConfiguration)); err != nil {
+		return fmt.Errorf("error setting encryption_configuration for ECR Repository (%s): %w", arn, err)
+	}
+
 	tags, err := ListTags(conn, arn)
+
+	// Some partitions (i.e., ISO) may not support tagging, giving error
+	if meta.(*conns.AWSClient).Partition != endpoints.AwsPartitionID && (tfawserr.ErrCodeContains(err, ErrCodeAccessDenied) || tfawserr.ErrCodeContains(err, ecr.ErrCodeInvalidParameterException) || tfawserr.ErrCodeContains(err, ecr.ErrCodeValidationException)) {
+		log.Printf("[WARN] Unable to list tags for ECR Repository %s: %s", d.Id(), err)
+		return nil
+	}
+
 	if err != nil {
 		return fmt.Errorf("error listing tags for ECR Repository (%s): %w", arn, err)
 	}
+
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
@@ -211,14 +255,6 @@ func resourceRepositoryRead(d *schema.ResourceData, meta interface{}) error {
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
 		return fmt.Errorf("error setting tags_all: %w", err)
-	}
-
-	if err := d.Set("image_scanning_configuration", flattenImageScanningConfiguration(repository.ImageScanningConfiguration)); err != nil {
-		return fmt.Errorf("error setting image_scanning_configuration for ECR Repository (%s): %w", arn, err)
-	}
-
-	if err := d.Set("encryption_configuration", flattenEcrRepositoryEncryptionConfiguration(repository.EncryptionConfiguration)); err != nil {
-		return fmt.Errorf("error setting encryption_configuration for ECR Repository (%s): %w", arn, err)
 	}
 
 	return nil
@@ -288,8 +324,16 @@ func resourceRepositoryUpdate(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := UpdateTags(conn, arn, o, n); err != nil {
-			return fmt.Errorf("error updating ECR Repository (%s) tags: %s", arn, err)
+		err := UpdateTags(conn, arn, o, n)
+
+		if meta.(*conns.AWSClient).Partition != endpoints.AwsPartitionID && (tfawserr.ErrCodeContains(err, ErrCodeAccessDenied) || tfawserr.ErrCodeContains(err, ecr.ErrCodeInvalidParameterException) || tfawserr.ErrCodeContains(err, ecr.ErrCodeValidationException)) {
+			// Some partitions may not support tagging, giving error
+			log.Printf("[WARN] Unable to update tags for ECR Repository %s: %s", d.Id(), err)
+			return resourceRepositoryRead(d, meta)
+		}
+
+		if err != nil {
+			return fmt.Errorf("error updating ECR Repository (%s) tags: %w", d.Id(), err)
 		}
 	}
 

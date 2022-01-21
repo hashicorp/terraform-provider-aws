@@ -22,7 +22,7 @@ func TestAccEC2DefaultVPC_basic(t *testing.T) {
 				Config: testAccDefaultVPCBasicConfig,
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckVPCExists("aws_default_vpc.foo", &vpc),
-					testAccCheckVpcCidr(&vpc, "172.31.0.0/16"),
+					resource.TestCheckResourceAttr("aws_default_vpc.foo", "cidr_block", "172.31.0.0/16"),
 					resource.TestCheckResourceAttr(
 						"aws_default_vpc.foo", "cidr_block", "172.31.0.0/16"),
 					resource.TestCheckResourceAttr(

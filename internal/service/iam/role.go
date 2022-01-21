@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	awspolicy "github.com/hashicorp/awspolicyequivalence"
@@ -199,25 +200,21 @@ func resourceRoleCreate(d *schema.ResourceData, meta interface{}) error {
 		request.Tags = Tags(tags.IgnoreAWS())
 	}
 
-	outputRaw, err := tfresource.RetryWhen(
-		PropagationTimeout,
-		func() (interface{}, error) {
-			return conn.CreateRole(request)
-		},
-		func(err error) (bool, error) {
-			if tfawserr.ErrMessageContains(err, iam.ErrCodeMalformedPolicyDocumentException, "Invalid principal in policy") {
-				return true, err
-			}
+	output, err := retryCreateRole(conn, request)
 
-			return false, err
-		},
-	)
+	// Some partitions (i.e., ISO) may not support tag-on-create
+	if request.Tags != nil && meta.(*conns.AWSClient).Partition != endpoints.AwsPartitionID && (tfawserr.ErrCodeContains(err, ErrCodeAccessDenied) || tfawserr.ErrCodeContains(err, iam.ErrCodeInvalidInputException) || tfawserr.ErrCodeContains(err, iam.ErrCodeServiceFailureException)) {
+		log.Printf("[WARN] IAM Role (%s) create failed (%s) with tags. Trying create without tags.", d.Id(), err)
+		request.Tags = nil
+
+		output, err = retryCreateRole(conn, request)
+	}
 
 	if err != nil {
 		return fmt.Errorf("error creating IAM Role (%s): %w", name, err)
 	}
 
-	roleName := aws.StringValue(outputRaw.(*iam.CreateRoleOutput).Role.RoleName)
+	roleName := aws.StringValue(output.Role.RoleName)
 
 	if v, ok := d.GetOk("inline_policy"); ok && v.(*schema.Set).Len() > 0 {
 		policies := expandRoleInlinePolicies(roleName, v.(*schema.Set).List())
@@ -234,6 +231,22 @@ func resourceRoleCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	d.SetId(roleName)
+
+	// Some partitions (i.e., ISO) may not support tag-on-create, attempt tag after create
+	if request.Tags == nil && len(tags) > 0 && meta.(*conns.AWSClient).Partition != endpoints.AwsPartitionID {
+		err := roleUpdateTags(conn, d.Id(), nil, tags)
+
+		// If default tags only, log and continue. Otherwise, error.
+		if v, ok := d.GetOk("tags"); (!ok || len(v.(map[string]interface{})) == 0) && (tfawserr.ErrCodeContains(err, ErrCodeAccessDenied) || tfawserr.ErrCodeContains(err, iam.ErrCodeInvalidInputException) || tfawserr.ErrCodeContains(err, iam.ErrCodeServiceFailureException)) {
+			log.Printf("[WARN] error adding tags after create for IAM Role (%s): %s", d.Id(), err)
+			return resourceRoleRead(d, meta)
+		}
+
+		if err != nil {
+			return fmt.Errorf("error creating IAM Role (%s) tags: %w", d.Id(), err)
+		}
+	}
+
 	return resourceRoleRead(d, meta)
 }
 
@@ -277,17 +290,6 @@ func resourceRoleRead(d *schema.ResourceData, meta interface{}) error {
 	}
 	d.Set("unique_id", role.RoleId)
 
-	tags := KeyValueTags(role.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
-	}
-
 	assumeRolePolicy, err := url.QueryUnescape(*role.AssumeRolePolicyDocument)
 	if err != nil {
 		return err
@@ -317,6 +319,23 @@ func resourceRoleRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("reading managed policies for IAM role %s, error: %s", d.Id(), err)
 	}
 	d.Set("managed_policy_arns", managedPolicies)
+
+	tags := KeyValueTags(role.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+
+	// Some partitions (i.e., ISO) may not support tagging, giving error
+	if meta.(*conns.AWSClient).Partition != endpoints.AwsPartitionID && (tfawserr.ErrCodeContains(err, ErrCodeAccessDenied) || tfawserr.ErrCodeContains(err, iam.ErrCodeInvalidInputException) || tfawserr.ErrCodeContains(err, iam.ErrCodeServiceFailureException)) {
+		log.Printf("[WARN] Unable to list tags for IAM Role %s: %s", d.Id(), err)
+		return nil
+	}
+
+	//lintignore:AWSR002
+	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %w", err)
+	}
+
+	if err := d.Set("tags_all", tags.Map()); err != nil {
+		return fmt.Errorf("error setting tags_all: %w", err)
+	}
 
 	return nil
 }
@@ -401,14 +420,6 @@ func resourceRoleUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := roleUpdateTags(conn, d.Id(), o, n); err != nil {
-			return fmt.Errorf("error updating IAM Role (%s) tags: %s", d.Id(), err)
-		}
-	}
-
 	if d.HasChange("inline_policy") && inlinePoliciesActualDiff(d) {
 		roleName := d.Get("name").(string)
 
@@ -472,6 +483,22 @@ func resourceRoleUpdate(d *schema.ResourceData, meta interface{}) error {
 
 		if err := addRoleManagedPolicies(roleName, add, meta); err != nil {
 			return err
+		}
+	}
+
+	if d.HasChange("tags_all") {
+		o, n := d.GetChange("tags_all")
+
+		err := roleUpdateTags(conn, d.Id(), o, n)
+
+		// Some partitions may not support tagging, giving error
+		if meta.(*conns.AWSClient).Partition != endpoints.AwsPartitionID && (tfawserr.ErrCodeContains(err, ErrCodeAccessDenied) || tfawserr.ErrCodeContains(err, iam.ErrCodeInvalidInputException) || tfawserr.ErrCodeContains(err, iam.ErrCodeServiceFailureException)) {
+			log.Printf("[WARN] Unable to update tags for IAM Role %s: %s", d.Id(), err)
+			return resourceRoleRead(d, meta)
+		}
+
+		if err != nil {
+			return fmt.Errorf("error updating IAM Role (%s) tags: %w", d.Id(), err)
 		}
 	}
 
@@ -580,6 +607,33 @@ func deleteRoleInstanceProfiles(conn *iam.IAM, roleName string) error {
 	}
 
 	return nil
+}
+
+func retryCreateRole(conn *iam.IAM, input *iam.CreateRoleInput) (*iam.CreateRoleOutput, error) {
+	outputRaw, err := tfresource.RetryWhen(
+		PropagationTimeout,
+		func() (interface{}, error) {
+			return conn.CreateRole(input)
+		},
+		func(err error) (bool, error) {
+			if tfawserr.ErrMessageContains(err, iam.ErrCodeMalformedPolicyDocumentException, "Invalid principal in policy") {
+				return true, err
+			}
+
+			return false, err
+		},
+	)
+
+	if err != nil {
+		return nil, err
+	}
+
+	output, ok := outputRaw.(*iam.CreateRoleOutput)
+	if !ok || output == nil || aws.StringValue(output.Role.RoleName) == "" {
+		return nil, fmt.Errorf("create IAM role (%s) returned an empty result", aws.StringValue(input.RoleName))
+	}
+
+	return output, err
 }
 
 func readRolePolicyAttachments(conn *iam.IAM, roleName string) ([]*string, error) {

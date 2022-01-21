@@ -24,6 +24,10 @@ const (
 	VpcEndpointStateRejected          = "rejected"
 )
 
+const (
+	VpnStateModifying = "modifying"
+)
+
 // See https://docs.aws.amazon.com/vm-import/latest/userguide/vmimport-image-import.html#check-import-task-status
 const (
 	EBSSnapshotImportStateActive     = "active"
@@ -52,4 +56,26 @@ const (
 	CustomerGatewayStateDeleted   = "deleted"
 	CustomerGatewayStateDeleting  = "deleting"
 	CustomerGatewayStatePending   = "pending"
+)
+
+const (
+	VpnConnectionTypeIpsec1 = "ipsec.1"
+)
+
+func VpnConnectionType_Values() []string {
+	return []string{
+		VpnConnectionTypeIpsec1,
+	}
+}
+
+const (
+	AmazonIPv6PoolID = "Amazon"
+)
+
+const (
+	DefaultDHCPOptionsID = "default"
+)
+
+const (
+	DefaultSecurityGroupName = "default"
 )

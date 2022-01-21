@@ -486,13 +486,13 @@ func resourceAMIUpdate(d *schema.ResourceData, meta interface{}) error {
 func resourceAMIDelete(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*conns.AWSClient).EC2Conn
 
-	req := &ec2.DeregisterImageInput{
+	log.Printf("[INFO] Deleting AMI: %s", d.Id())
+	_, err := client.DeregisterImage(&ec2.DeregisterImageInput{
 		ImageId: aws.String(d.Id()),
-	}
+	})
 
-	_, err := client.DeregisterImage(req)
 	if err != nil {
-		return err
+		return fmt.Errorf("error deregistering AMI (%s): %w", d.Id(), err)
 	}
 
 	// If we're managing the EBS snapshots then we need to delete those too.
@@ -524,7 +524,7 @@ func resourceAMIDelete(d *schema.ResourceData, meta interface{}) error {
 
 	// Verify that the image is actually removed, if not we need to wait for it to be removed
 	if err := AMIWaitForDestroy(d.Timeout(schema.TimeoutDelete), d.Id(), client); err != nil {
-		return err
+		return fmt.Errorf("error waiting for AMI (%s) delete: %w", d.Id(), err)
 	}
 
 	return nil

@@ -1,37 +1,160 @@
-## 3.72.0 (Unreleased)
+## 3.74.0 (Unreleased)
 
 FEATURES:
 
-* **New Resource:** `aws_devicefarm_instance_profile` ([#22458](https://github.com/hashicorp/terraform-provider-aws/issues/22458))
+* **New Resource:** `aws_devicefarm_test_grid_project` ([#22688](https://github.com/hashicorp/terraform-provider-aws/issues/22688))
 
 ENHANCEMENTS:
 
+* resource/aws_api_gateway_stage: Add `web_acl_arn` attribute ([#18561](https://github.com/hashicorp/terraform-provider-aws/issues/18561))
+
+BUG FIXES:
+
+* data-source/aws_lb: Further refine tag error handling for ISO regions ([#22717](https://github.com/hashicorp/terraform-provider-aws/issues/22717))
+* data-source/aws_lb: Further refine tag error handling for ISO regions ([#22717](https://github.com/hashicorp/terraform-provider-aws/issues/22717))
+* data-source/aws_lb_listener: Further refine tag error handling for ISO regions ([#22717](https://github.com/hashicorp/terraform-provider-aws/issues/22717))
+* data-source/aws_lb_target_group: Further refine tag error handling for ISO regions ([#22717](https://github.com/hashicorp/terraform-provider-aws/issues/22717))
+* resource/aws_cloudwatch_composite_alarm: Further refine tag error handling for ISO regions ([#22717](https://github.com/hashicorp/terraform-provider-aws/issues/22717))
+* resource/aws_cloudwatch_event_bus: Further refine tag error handling for ISO regions ([#22717](https://github.com/hashicorp/terraform-provider-aws/issues/22717))
+* resource/aws_cloudwatch_event_rule: Further refine tag error handling for ISO regions ([#22717](https://github.com/hashicorp/terraform-provider-aws/issues/22717))
+* resource/aws_cloudwatch_metric_alarm: Further refine tag error handling for ISO regions ([#22717](https://github.com/hashicorp/terraform-provider-aws/issues/22717))
+* resource/aws_cloudwatch_metric_stream: Further refine tag error handling for ISO regions ([#22717](https://github.com/hashicorp/terraform-provider-aws/issues/22717))
+* resource/aws_internet_gateway: No longer give up before the attachment timeout (4m) is exceeded (previously it was giving up after 20 not found checks). ([#22713](https://github.com/hashicorp/terraform-provider-aws/issues/22713))
+* resource/aws_lambda_function: Prevent errors when attempting to configure code signing in the `ap-southeast-3` AWS Region ([#22693](https://github.com/hashicorp/terraform-provider-aws/issues/22693))
+* resource/aws_lb: Further refine tag error handling for ISO regions ([#22717](https://github.com/hashicorp/terraform-provider-aws/issues/22717))
+* resource/aws_lb_listener: Further refine tag error handling for ISO regions ([#22717](https://github.com/hashicorp/terraform-provider-aws/issues/22717))
+* resource/aws_lb_listener_rule: Further refine tag error handling for ISO regions ([#22717](https://github.com/hashicorp/terraform-provider-aws/issues/22717))
+* resource/aws_lb_target_group: Further refine tag error handling for ISO regions ([#22717](https://github.com/hashicorp/terraform-provider-aws/issues/22717))
+
+## 3.73.0 (January 21, 2022)
+
+FEATURES:
+
+* **New Data Source:** `aws_cloudfront_origin_access_identity` ([#22572](https://github.com/hashicorp/terraform-provider-aws/issues/22572))
+* **New Data Source:** `aws_vpc_ipam_preview_next_cidr` ([#22643](https://github.com/hashicorp/terraform-provider-aws/issues/22643))
+* **New Resource:** `aws_appsync_api_cache` ([#22578](https://github.com/hashicorp/terraform-provider-aws/issues/22578))
+* **New Resource:** `aws_appsync_domain_name` ([#22487](https://github.com/hashicorp/terraform-provider-aws/issues/22487))
+* **New Resource:** `aws_appsync_domain_name_api_association` ([#22487](https://github.com/hashicorp/terraform-provider-aws/issues/22487))
+* **New Resource:** `aws_cloudsearch_domain` ([#17723](https://github.com/hashicorp/terraform-provider-aws/issues/17723))
+* **New Resource:** `aws_cloudsearch_domain_service_access_policy` ([#17723](https://github.com/hashicorp/terraform-provider-aws/issues/17723))
+* **New Resource:** `aws_detective_invitation_accepter` ([#22163](https://github.com/hashicorp/terraform-provider-aws/issues/22163))
+* **New Resource:** `aws_detective_member` ([#22163](https://github.com/hashicorp/terraform-provider-aws/issues/22163))
+* **New Resource:** `aws_fsx_data_repository_association` ([#22291](https://github.com/hashicorp/terraform-provider-aws/issues/22291))
+* **New Resource:** `aws_lambda_invocation` ([#19488](https://github.com/hashicorp/terraform-provider-aws/issues/19488))
+
+
+ENHANCEMENTS:
+
+* data-source/aws_cognito_user_pool_clients: Add `client_names` attribute ([#22615](https://github.com/hashicorp/terraform-provider-aws/issues/22615))
+* data-source/aws_imagebuilder_image_recipe: Add `user_data_base64` attribute ([#21763](https://github.com/hashicorp/terraform-provider-aws/issues/21763))
+* resource/aws_dynamodb_table: Add special case handling when switching `billing_mode` from `PAY_PER_REQUEST` to `PROVISIONED` and provisioned throughput is ignored. ([#22630](https://github.com/hashicorp/terraform-provider-aws/issues/22630))
+* resource/aws_fsx_lustre_file_system: Add `file_system_type_version` argument ([#22291](https://github.com/hashicorp/terraform-provider-aws/issues/22291))
+* resource/aws_imagebuilder_image_recipe: Add `user_data_base64` argument ([#21763](https://github.com/hashicorp/terraform-provider-aws/issues/21763))
+* resource/aws_opsworks_custom_layer: Add plan time validation for `ebs_volume.type` and `custom_json`. ([#12433](https://github.com/hashicorp/terraform-provider-aws/issues/12433))
+* resource/aws_opsworks_custom_layer: Add support for `cloudwatch_configuration` ([#12433](https://github.com/hashicorp/terraform-provider-aws/issues/12433))
+* resource/aws_security_group: Ensure that the Security Group is found 3 times in a row before declaring that it has been created ([#22420](https://github.com/hashicorp/terraform-provider-aws/issues/22420))
+
+BUG FIXES:
+
+* resource/aws_apprunner_custom_domain_association: Add the status `binding_certificate` as a valid target when waiting for creation. ([#20222](https://github.com/hashicorp/terraform-provider-aws/issues/20222))
+* resource/aws_cloudfront_distribution: Increase the maximum valid `origin_keepalive_timeout` value to `180` ([#22632](https://github.com/hashicorp/terraform-provider-aws/issues/22632))
+* resource/aws_ecr_lifecycle_policy: Fix diffs in `policy` when no changes are detected ([#22665](https://github.com/hashicorp/terraform-provider-aws/issues/22665))
+* resource/aws_load_balancer_policy: Suppress `policy_attribute` differences ([#21776](https://github.com/hashicorp/terraform-provider-aws/issues/21776))
+
+## 3.72.0 (January 13, 2022)
+
+FEATURES:
+
+* **New Data Source:** `aws_cognito_user_pool_client` ([#22477](https://github.com/hashicorp/terraform-provider-aws/issues/22477))
+* **New Resource:** `aws_cognito_identity_pool_provider_principal_tag` ([#22514](https://github.com/hashicorp/terraform-provider-aws/issues/22514))
+* **New Resource:** `aws_connect_contact_flow_module` ([#22349](https://github.com/hashicorp/terraform-provider-aws/issues/22349))
+* **New Resource:** `aws_connect_quick_connect` ([#22250](https://github.com/hashicorp/terraform-provider-aws/issues/22250))
+* **New Resource:** `aws_devicefarm_instance_profile` ([#22458](https://github.com/hashicorp/terraform-provider-aws/issues/22458))
+* **New Resource:** `aws_memorydb_snapshot` ([#22486](https://github.com/hashicorp/terraform-provider-aws/issues/22486))
+* **New Resource:** `aws_shield_protection_health_check_association` ([#21993](https://github.com/hashicorp/terraform-provider-aws/issues/21993))
+
+ENHANCEMENTS:
+
+* data-source/aws_cloudfront_distribution: Add `aliases` attribute ([#22552](https://github.com/hashicorp/terraform-provider-aws/issues/22552))
 * data-source/aws_customer_gateway: Add `certificate_arn` attribute ([#22435](https://github.com/hashicorp/terraform-provider-aws/issues/22435))
 * data-source/aws_ebs_snapshot: Add `storage_tier` and `outpost_arn` attributes. ([#22342](https://github.com/hashicorp/terraform-provider-aws/issues/22342))
+* data-source/aws_ecr_repository: Allow some `tags` errors to be non-fatal to support non-standard AWS partitions (i.e., ISO) ([#22535](https://github.com/hashicorp/terraform-provider-aws/issues/22535))
+* data-source/aws_eks_cluster: Add `ip_family` to the `kubernetes_network_config` configuration block ([#22485](https://github.com/hashicorp/terraform-provider-aws/issues/22485))
 * data-source/aws_elb_service_account: Add account ID for `ap-southeast-3` AWS Region ([#22453](https://github.com/hashicorp/terraform-provider-aws/issues/22453))
+* data-source/aws_iam_role: Allow some `tags` errors to be non-fatal to support non-standard AWS partitions (i.e., ISO) ([#22544](https://github.com/hashicorp/terraform-provider-aws/issues/22544))
+* data-source/aws_iam_user: Allow some `tags` errors to be non-fatal to support non-standard AWS partitions (i.e., ISO) ([#22544](https://github.com/hashicorp/terraform-provider-aws/issues/22544))
 * data-source/aws_instance: Add the `instance_metadata_tags` attribute to the `metadata_options` configuration block ([#22463](https://github.com/hashicorp/terraform-provider-aws/issues/22463))
 * data-source/aws_launch_template: Add the `instance_metadata_tags` attribute to the `metadata_options` configuration block ([#22463](https://github.com/hashicorp/terraform-provider-aws/issues/22463))
+* data-source/aws_lb: Allow some `tags` errors to be non-fatal to support non-standard AWS partitions (i.e., ISO) ([#22551](https://github.com/hashicorp/terraform-provider-aws/issues/22551))
+* data-source/aws_lb_listener: Allow some `tags` errors to be non-fatal to support non-standard AWS partitions (i.e., ISO) ([#22551](https://github.com/hashicorp/terraform-provider-aws/issues/22551))
+* data-source/aws_lb_target_group: Allow some `tags` errors to be non-fatal to support non-standard AWS partitions (i.e., ISO) ([#22551](https://github.com/hashicorp/terraform-provider-aws/issues/22551))
 * data-source/aws_sagemaker_prebuilt_ecr_image: Add account IDs for the BlazingText image in `af-south-1` and `eu-south-1` AWS Regions ([#22455](https://github.com/hashicorp/terraform-provider-aws/issues/22455))
 * data-source/aws_sagemaker_prebuilt_ecr_image: Add account IDs for the DeepAR Forecasting image in `af-south-1` and `eu-south-1` AWS Regions ([#22455](https://github.com/hashicorp/terraform-provider-aws/issues/22455))
 * data-source/aws_sagemaker_prebuilt_ecr_image: Add account IDs for the Factorization Machines image in `af-south-1`, `ap-northeast-3` and `eu-south-1` AWS Regions ([#22455](https://github.com/hashicorp/terraform-provider-aws/issues/22455))
 * data-source/aws_sagemaker_prebuilt_ecr_image: Add account IDs for the Spark ML Serving image in `af-south-1`, `ap-east-1`, `cn-north-1`, `cn-northwest-1`, `eu-north-1`, `eu-south-1`, `eu-west-3`, `me-south-1` and `sa-east-1` AWS Regions ([#22455](https://github.com/hashicorp/terraform-provider-aws/issues/22455))
 * data-source/aws_sagemaker_prebuilt_ecr_image: Add account IDs for the XGBoost image in `af-south-1`, `ap-northeast-3` and `eu-south-1` AWS Regions ([#22455](https://github.com/hashicorp/terraform-provider-aws/issues/22455))
+* data-source/aws_sqs_queue: Allow some `tags` errors to be non-fatal to support non-standard AWS partitions (i.e., ISO) ([#22516](https://github.com/hashicorp/terraform-provider-aws/issues/22516))
+* resource/aws_appsync_datasource: Add `authorization_config` attribute to the `http_config` configuration block ([#22411](https://github.com/hashicorp/terraform-provider-aws/issues/22411))
+* resource/aws_appsync_datasource: Add `delta_sync_config` and `versioned` to the `dynamodb_config` configuration block ([#22411](https://github.com/hashicorp/terraform-provider-aws/issues/22411))
+* resource/aws_appsync_datasource: Add `relational_database_config` argument ([#22411](https://github.com/hashicorp/terraform-provider-aws/issues/22411))
+* resource/aws_appsync_datasource: Add plan time validation for `service_role_arn` and `lambda_config.function_arn` ([#22411](https://github.com/hashicorp/terraform-provider-aws/issues/22411))
+* resource/aws_appsync_function: Add `max_batch_size` and `sync_config` arguments. ([#22484](https://github.com/hashicorp/terraform-provider-aws/issues/22484))
+* resource/aws_appsync_resolver: Add `max_batch_size` and `sync_config` arguments. ([#22510](https://github.com/hashicorp/terraform-provider-aws/issues/22510))
+* resource/aws_backup_selection: Add `condition` configuration block and `not_resources` argument in support of fine-grained backup plan [resource assignment](https://docs.aws.amazon.com/aws-backup/latest/devguide/assigning-resources.html) ([#22074](https://github.com/hashicorp/terraform-provider-aws/issues/22074))
+* resource/aws_cloudwatch_composite_alarm: Attempt `tags`-on-create, fallback to tag after create, and allow some `tags` errors to be non-fatal to support non-standard AWS partitions (i.e., ISO) ([#22556](https://github.com/hashicorp/terraform-provider-aws/issues/22556))
+* resource/aws_cloudwatch_event_bus: Attempt `tags`-on-create, fallback to tag after create, and allow some `tags` errors to be non-fatal to support non-standard AWS partitions (i.e., ISO) ([#22550](https://github.com/hashicorp/terraform-provider-aws/issues/22550))
+* resource/aws_cloudwatch_event_rule: Attempt `tags`-on-create, fallback to tag after create, and allow some `tags` errors to be non-fatal to support non-standard AWS partitions (i.e., ISO) ([#22550](https://github.com/hashicorp/terraform-provider-aws/issues/22550))
 * resource/aws_cloudwatch_log_destination_policy: Add `force_update` argument. ([#22460](https://github.com/hashicorp/terraform-provider-aws/issues/22460))
 * resource/aws_cloudwatch_log_destination_policy: Add plan time validation for `access_policy`. ([#22460](https://github.com/hashicorp/terraform-provider-aws/issues/22460))
+* resource/aws_cloudwatch_metric_alarm: Attempt `tags`-on-create, fallback to tag after create, and allow some `tags` errors to be non-fatal to support non-standard AWS partitions (i.e., ISO) ([#22556](https://github.com/hashicorp/terraform-provider-aws/issues/22556))
+* resource/aws_cloudwatch_metric_stream: Attempt `tags`-on-create, fallback to tag after create, and allow some `tags` errors to be non-fatal to support non-standard AWS partitions (i.e., ISO) ([#22556](https://github.com/hashicorp/terraform-provider-aws/issues/22556))
+* resource/aws_connect_contact_flow: add delete function ([#22303](https://github.com/hashicorp/terraform-provider-aws/issues/22303))
 * resource/aws_customer_gateway: Add `certificate_arn` argument ([#22435](https://github.com/hashicorp/terraform-provider-aws/issues/22435))
 * resource/aws_ebs_snapshot: Add `outpost_arn`, `storage_tier`, `permanent_restore`, `temporary_restore_days` arguments ([#22342](https://github.com/hashicorp/terraform-provider-aws/issues/22342))
 * resource/aws_ebs_snapshot_copy: Add `storage_tier`, `permanent_restore`, `temporary_restore_days` arguments ([#22342](https://github.com/hashicorp/terraform-provider-aws/issues/22342))
 * resource/aws_ebs_snapshot_import: Add `storage_tier`, `permanent_restore`, `temporary_restore_days` arguments ([#22342](https://github.com/hashicorp/terraform-provider-aws/issues/22342))
+* resource/aws_ecr_repository: Attempt `tags`-on-create, fallback to tag after create, and allow some `tags` errors to be non-fatal to support non-standard AWS partitions (i.e., ISO) ([#22535](https://github.com/hashicorp/terraform-provider-aws/issues/22535))
+* resource/aws_ecs_capacity_provider: Attempt `tags`-on-create, fallback to tag after create, and allow some `tags` errors to be non-fatal to support non-standard AWS partitions (i.e., ISO) ([#22529](https://github.com/hashicorp/terraform-provider-aws/issues/22529))
+* resource/aws_ecs_cluster: Attempt `tags`-on-create, fallback to tag after create, and allow some `tags` errors to be non-fatal to support non-standard AWS partitions (i.e., ISO) ([#22529](https://github.com/hashicorp/terraform-provider-aws/issues/22529))
+* resource/aws_ecs_service: Attempt `tags`-on-create, fallback to tag after create, and allow some `tags` errors to be non-fatal to support non-standard AWS partitions (i.e., ISO) ([#22529](https://github.com/hashicorp/terraform-provider-aws/issues/22529))
 * resource/aws_ecs_task_definition: Add `skip_destroy` argument to optionally prevent overwriting previous revision ([#22269](https://github.com/hashicorp/terraform-provider-aws/issues/22269))
 * resource/aws_ecs_task_definition: Add plan time validation for `family` ([#18610](https://github.com/hashicorp/terraform-provider-aws/issues/18610))
+* resource/aws_ecs_task_definition: Attempt `tags`-on-create, fallback to tag after create, and allow some `tags` errors to be non-fatal to support non-standard AWS partitions (i.e., ISO) ([#22529](https://github.com/hashicorp/terraform-provider-aws/issues/22529))
+* resource/aws_ecs_task_set: Attempt `tags`-on-create, fallback to tag after create, and allow some `tags` errors to be non-fatal to support non-standard AWS partitions (i.e., ISO) ([#22529](https://github.com/hashicorp/terraform-provider-aws/issues/22529))
+* resource/aws_eks_cluster: Add `ip_family` to the `kubernetes_network_config` configuration block ([#22485](https://github.com/hashicorp/terraform-provider-aws/issues/22485))
 * resource/aws_glue_crawler: add `delta_target` argument. ([#22472](https://github.com/hashicorp/terraform-provider-aws/issues/22472))
+* resource/aws_iam_role: Attempt `tags`-on-create, fallback to tag after create, and allow some `tags` errors to be non-fatal to support non-standard AWS partitions (i.e., ISO) ([#22544](https://github.com/hashicorp/terraform-provider-aws/issues/22544))
+* resource/aws_iam_user: Attempt `tags`-on-create, fallback to tag after create, and allow some `tags` errors to be non-fatal to support non-standard AWS partitions (i.e., ISO) ([#22544](https://github.com/hashicorp/terraform-provider-aws/issues/22544))
 * resource/aws_instance: Add the `instance_metadata_tags` argument to the `metadata_options` configuration block ([#22463](https://github.com/hashicorp/terraform-provider-aws/issues/22463))
 * resource/aws_launch_template: Add the `instance_metadata_tags` argument to the `metadata_options` configuration block ([#22463](https://github.com/hashicorp/terraform-provider-aws/issues/22463))
+* resource/aws_lb: Attempt `tags`-on-create, fallback to tag after create, and allow some `tags` errors to be non-fatal to support non-standard AWS partitions (i.e., ISO) ([#22551](https://github.com/hashicorp/terraform-provider-aws/issues/22551))
+* resource/aws_lb_listener: Attempt `tags`-on-create, fallback to tag after create, and allow some `tags` errors to be non-fatal to support non-standard AWS partitions (i.e., ISO) ([#22551](https://github.com/hashicorp/terraform-provider-aws/issues/22551))
+* resource/aws_lb_listener_rule: Attempt `tags`-on-create, fallback to tag after create, and allow some `tags` errors to be non-fatal to support non-standard AWS partitions (i.e., ISO) ([#22551](https://github.com/hashicorp/terraform-provider-aws/issues/22551))
+* resource/aws_lb_target_group: Attempt `tags`-on-create, fallback to tag after create, and allow some `tags` errors to be non-fatal to support non-standard AWS partitions (i.e., ISO) ([#22551](https://github.com/hashicorp/terraform-provider-aws/issues/22551))
+* resource/aws_s3_bucket: Add additional protection against `object_lock_configuration` causing errors in partitions (e.g., ISO) where not supported ([#22575](https://github.com/hashicorp/terraform-provider-aws/issues/22575))
+* resource/aws_sns_topic: Attempt `tags`-on-create, fallback to tag after create, and allow some `tags` errors to be non-fatal to support non-standard AWS partitions (i.e., ISO) ([#22511](https://github.com/hashicorp/terraform-provider-aws/issues/22511))
+* resource/aws_sqs_queue: Attempt `tags`-on-create, fallback to tag after create, and allow some `tags` errors to be non-fatal to support non-standard AWS partitions (i.e., ISO) ([#22516](https://github.com/hashicorp/terraform-provider-aws/issues/22516))
+* resource/aws_vpc: Add `ipv6_cidr_block_network_border_group` argument ([#22211](https://github.com/hashicorp/terraform-provider-aws/issues/22211))
+* resource/aws_vpc_ipam_pool_cidr_allocation: Add `disallowed_cidrs` argument ([#22470](https://github.com/hashicorp/terraform-provider-aws/issues/22470))
+* resource/aws_vpc_ipam_preview_next_cidr: Add `disallowed_cidrs` argument ([#22501](https://github.com/hashicorp/terraform-provider-aws/issues/22501))
+* resource/aws_vpn_connection: Add `vgw_telemetry.certificate_arn` attribute ([#19311](https://github.com/hashicorp/terraform-provider-aws/issues/19311))
+* resource/aws_vpn_connection: `customer_gateway_id`, `transit_gateway_id` and `vpn_gateway_id` can be updated without recreating the resource ([#19311](https://github.com/hashicorp/terraform-provider-aws/issues/19311))
+* resource/aws_vpn_connection: `tunnel1_preshared_key` and `tunnel2_preshared_key` can be updated without recreating the resource ([#19311](https://github.com/hashicorp/terraform-provider-aws/issues/19311))
 
 BUG FIXES:
 
+* data-source/aws_vpc_ipam_pool: Return an error if more than 1 IPAM Pool matches ([#22438](https://github.com/hashicorp/terraform-provider-aws/issues/22438))
+* data-source/aws_vpc_ipam_pool: Set `address_family`, `allocation_default_netmask_length`, `allocation_max_netmask_length`, `allocation_min_netmask_length` and `tags` attributes ([#22438](https://github.com/hashicorp/terraform-provider-aws/issues/22438))
 * resource/aws_cloudfront_distribution: Increase the maximum valid `origin_read_timeout` value to `180` ([#22461](https://github.com/hashicorp/terraform-provider-aws/issues/22461))
 * resource/aws_fsx_lustre_file_system: Add missing values to `per_unit_storage_throughput` validation ([#22462](https://github.com/hashicorp/terraform-provider-aws/issues/22462))
+* resource/aws_fsx_openzfs_file_system: Change `root_volume_configuration.copy_tags_to_snapshots` to ForceNew ([#22480](https://github.com/hashicorp/terraform-provider-aws/issues/22480))
+* resource/aws_fsx_openzfs_file_system: Fix crash with nil `root_volume_configuration.nfs_exports` value ([#22480](https://github.com/hashicorp/terraform-provider-aws/issues/22480))
+* resource/aws_memorydb_cluster: Correctly propagate configurable timeouts to waiters. ([#22489](https://github.com/hashicorp/terraform-provider-aws/issues/22489))
+* resource/aws_route53_record: Fix import with underscores in names ([#21556](https://github.com/hashicorp/terraform-provider-aws/issues/21556))
+* resource/aws_sqs_queue: Don't timeout when a queue policy `Condition` value contains an empty array ([#22547](https://github.com/hashicorp/terraform-provider-aws/issues/22547))
+* resource/aws_ssm_parameter: Mark `version` as Computed when `value` changes ([#22522](https://github.com/hashicorp/terraform-provider-aws/issues/22522))
+* resource/aws_subnet: Protect against errors when `availability_zone_id` is not supported in a partition (e.g., ISO) ([#22580](https://github.com/hashicorp/terraform-provider-aws/issues/22580))
+* resource/aws_subnet: Resource-based naming is not available in the `ap-southeast-3` region ([#22531](https://github.com/hashicorp/terraform-provider-aws/issues/22531))
 
 ## 3.71.0 (January 06, 2022)
 
