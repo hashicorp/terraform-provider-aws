@@ -2,6 +2,7 @@ package ec2
 
 import (
 	"fmt"
+	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
@@ -177,13 +178,12 @@ func dataSourceVPCRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("enable_dns_support", v)
 	}
 
-	routeTable, err := FindVPCMainRouteTable(conn, d.Id())
-
-	if err != nil {
-		return fmt.Errorf("error reading EC2 VPC (%s) main Route Table: %w", d.Id(), err)
+	if v, err := FindVPCMainRouteTable(conn, d.Id()); err != nil {
+		log.Printf("[WARN] Error reading EC2 VPC (%s) main Route Table: %s", d.Id(), err)
+		d.Set("main_route_table_id", nil)
+	} else {
+		d.Set("main_route_table_id", v.RouteTableId)
 	}
-
-	d.Set("main_route_table_id", routeTable.RouteTableId)
 
 	cidrAssociations := []interface{}{}
 	for _, v := range vpc.CidrBlockAssociationSet {
