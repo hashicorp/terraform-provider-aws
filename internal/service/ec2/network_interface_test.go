@@ -681,7 +681,7 @@ func TestAccEC2NetworkInterface_ENI_ipv6PrefixCount(t *testing.T) {
 	})
 }
 
-type privateIpListTestConfigData struct {
+type privateIPListTestConfigData struct {
 	private_ips             []string
 	private_ips_count       string
 	private_ip_list_enabled string
@@ -689,11 +689,11 @@ type privateIpListTestConfigData struct {
 	replacesInterface       bool
 }
 
-func TestAccEC2NetworkInterface_PrivateIpsSet(t *testing.T) {
+func TestAccEC2NetworkInterface_privateIPsSet(t *testing.T) {
 	var networkInterface, lastInterface ec2.NetworkInterface
 	resourceName := "aws_network_interface.test"
 
-	testConfigs := []privateIpListTestConfigData{
+	testConfigs := []privateIPListTestConfigData{
 
 		{[]string{"44", "59", "123"}, "", "", []string{}, false},       // Configuration with three private_ips
 		{[]string{"123", "44", "59"}, "", "", []string{}, false},       // Change order of private_ips
@@ -761,12 +761,12 @@ func TestAccEC2NetworkInterface_PrivateIpsSet(t *testing.T) {
 	})
 }
 
-func TestAccEC2NetworkInterface_PrivateIpList(t *testing.T) {
+func TestAccEC2NetworkInterface_privateIPList(t *testing.T) {
 	var networkInterface, lastInterface ec2.NetworkInterface
 	resourceName := "aws_network_interface.test"
 
 	// private_ips, private_ips_count, private_ip_list_enabed, private_ip_list, replacesInterface
-	testConfigs := []privateIpListTestConfigData{
+	testConfigs := []privateIPListTestConfigData{
 		{[]string{"17"}, "", "", []string{}, true},                               // Build a set incrementally in order
 		{[]string{"17", "45"}, "", "", []string{}, false},                        //   Add to set
 		{[]string{"17", "45", "89"}, "", "", []string{}, false},                  //   Add to set
@@ -931,9 +931,9 @@ func testAccCheckENIMakeExternalAttachment(n string, conf *ec2.NetworkInterface)
 	}
 }
 
-func testAccCheckENIPrivateIPList(testConfig privateIpListTestConfigData, iface *ec2.NetworkInterface) resource.TestCheckFunc {
+func testAccCheckENIPrivateIPList(testConfig privateIPListTestConfigData, iface *ec2.NetworkInterface) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		havePrivateIps := tfec2.FlattenNetworkInterfacePrivateIpAddresses(iface.PrivateIpAddresses)
+		havePrivateIps := tfec2.FlattenNetworkInterfacePrivateIPAddresses(iface.PrivateIpAddresses)
 	PRIVATE_IPS_LOOP:
 		// every IP from private_ips should be present on the interface
 		for _, needIp := range testConfig.private_ips {
@@ -1370,7 +1370,7 @@ resource "aws_network_interface" "test" {
 `, rName, ipv6PrefixCount))
 }
 
-func testAccENIConfig_privateIPList(testConfig privateIpListTestConfigData, rName string) string {
+func testAccENIConfig_privateIPList(testConfig privateIPListTestConfigData, rName string) string {
 	var config strings.Builder
 
 	config.WriteString(fmt.Sprintf(`

@@ -341,7 +341,7 @@ func resourceNetworkInterfaceCreate(d *schema.ResourceData, meta interface{}) er
 
 	if v, ok := d.GetOk("ipv4_prefixes"); ok && v.(*schema.Set).Len() > 0 {
 		ipv4PrefixesSpecified = true
-		input.Ipv4Prefixes = expandIpv4PrefixSpecificationRequests(v.(*schema.Set).List())
+		input.Ipv4Prefixes = expandIPv4PrefixSpecificationRequests(v.(*schema.Set).List())
 	}
 
 	if v, ok := d.GetOk("ipv4_prefix_count"); ok {
@@ -353,12 +353,12 @@ func resourceNetworkInterfaceCreate(d *schema.ResourceData, meta interface{}) er
 	}
 
 	if v, ok := d.GetOk("ipv6_addresses"); ok && v.(*schema.Set).Len() > 0 {
-		input.Ipv6Addresses = expandInstanceIpv6Addresses(v.(*schema.Set).List())
+		input.Ipv6Addresses = expandInstanceIPv6Addresses(v.(*schema.Set).List())
 	}
 
 	if v, ok := d.GetOk("ipv6_prefixes"); ok && v.(*schema.Set).Len() > 0 {
 		ipv6PrefixesSpecified = true
-		input.Ipv6Prefixes = expandIpv6PrefixSpecificationRequests(v.(*schema.Set).List())
+		input.Ipv6Prefixes = expandIPv6PrefixSpecificationRequests(v.(*schema.Set).List())
 	}
 
 	if v, ok := d.GetOk("ipv6_prefix_count"); ok {
@@ -367,7 +367,7 @@ func resourceNetworkInterfaceCreate(d *schema.ResourceData, meta interface{}) er
 
 	if d.Get("private_ip_list_enabled").(bool) {
 		if v, ok := d.GetOk("private_ip_list"); ok && len(v.([]interface{})) > 0 {
-			input.PrivateIpAddresses = expandPrivateIpAddressSpecifications(v.([]interface{}))
+			input.PrivateIpAddresses = expandPrivateIPAddressSpecifications(v.([]interface{}))
 		}
 	} else {
 		if v, ok := d.GetOk("private_ips"); ok && v.(*schema.Set).Len() > 0 {
@@ -389,7 +389,7 @@ func resourceNetworkInterfaceCreate(d *schema.ResourceData, meta interface{}) er
 					break
 				}
 			}
-			input.PrivateIpAddresses = expandPrivateIpAddressSpecifications(count_limited_ips)
+			input.PrivateIpAddresses = expandPrivateIPAddressSpecifications(count_limited_ips)
 		} else {
 			if v, ok := d.GetOk("private_ips_count"); ok {
 				input.SecondaryPrivateIpAddressCount = aws.Int64(int64(v.(int)))
@@ -515,7 +515,7 @@ func resourceNetworkInterfaceRead(d *schema.ResourceData, meta interface{}) erro
 	d.Set("description", eni.Description)
 	d.Set("interface_type", eni.InterfaceType)
 
-	if err := d.Set("ipv4_prefixes", flattenIpv4PrefixSpecifications(eni.Ipv4Prefixes)); err != nil {
+	if err := d.Set("ipv4_prefixes", flattenIPv4PrefixSpecifications(eni.Ipv4Prefixes)); err != nil {
 		return fmt.Errorf("error setting ipv4_prefixes: %w", err)
 	}
 
@@ -531,7 +531,7 @@ func resourceNetworkInterfaceRead(d *schema.ResourceData, meta interface{}) erro
 		return fmt.Errorf("error setting ipv6_addresses: %w", err)
 	}
 
-	if err := d.Set("ipv6_prefixes", flattenIpv6PrefixSpecifications(eni.Ipv6Prefixes)); err != nil {
+	if err := d.Set("ipv6_prefixes", flattenIPv6PrefixSpecifications(eni.Ipv6Prefixes)); err != nil {
 		return fmt.Errorf("error setting ipv6_prefixes: %w", err)
 	}
 
@@ -543,13 +543,13 @@ func resourceNetworkInterfaceRead(d *schema.ResourceData, meta interface{}) erro
 	d.Set("private_dns_name", eni.PrivateDnsName)
 	d.Set("private_ip", eni.PrivateIpAddress)
 
-	if err := d.Set("private_ips", FlattenNetworkInterfacePrivateIpAddresses(eni.PrivateIpAddresses)); err != nil {
+	if err := d.Set("private_ips", FlattenNetworkInterfacePrivateIPAddresses(eni.PrivateIpAddresses)); err != nil {
 		return fmt.Errorf("error setting private_ips: %w", err)
 	}
 
 	d.Set("private_ips_count", len(eni.PrivateIpAddresses)-1)
 
-	if err := d.Set("private_ip_list", FlattenNetworkInterfacePrivateIpAddresses(eni.PrivateIpAddresses)); err != nil {
+	if err := d.Set("private_ip_list", FlattenNetworkInterfacePrivateIPAddresses(eni.PrivateIpAddresses)); err != nil {
 		return fmt.Errorf("error setting private_ip_list: %s", err)
 	}
 
@@ -1222,7 +1222,7 @@ func flattenNetworkInterfaceAttachment(apiObject *ec2.NetworkInterfaceAttachment
 	return tfMap
 }
 
-func expandPrivateIpAddressSpecification(tfString string) *ec2.PrivateIpAddressSpecification {
+func expandPrivateIPAddressSpecification(tfString string) *ec2.PrivateIpAddressSpecification {
 	if tfString == "" {
 		return nil
 	}
@@ -1234,7 +1234,7 @@ func expandPrivateIpAddressSpecification(tfString string) *ec2.PrivateIpAddressS
 	return apiObject
 }
 
-func expandPrivateIpAddressSpecifications(tfList []interface{}) []*ec2.PrivateIpAddressSpecification {
+func expandPrivateIPAddressSpecifications(tfList []interface{}) []*ec2.PrivateIpAddressSpecification {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -1248,7 +1248,7 @@ func expandPrivateIpAddressSpecifications(tfList []interface{}) []*ec2.PrivateIp
 			continue
 		}
 
-		apiObject := expandPrivateIpAddressSpecification(tfString)
+		apiObject := expandPrivateIPAddressSpecification(tfString)
 
 		if apiObject == nil {
 			continue
@@ -1264,7 +1264,7 @@ func expandPrivateIpAddressSpecifications(tfList []interface{}) []*ec2.PrivateIp
 	return apiObjects
 }
 
-func expandInstanceIpv6Address(tfString string) *ec2.InstanceIpv6Address {
+func expandInstanceIPv6Address(tfString string) *ec2.InstanceIpv6Address {
 	if tfString == "" {
 		return nil
 	}
@@ -1276,7 +1276,7 @@ func expandInstanceIpv6Address(tfString string) *ec2.InstanceIpv6Address {
 	return apiObject
 }
 
-func expandInstanceIpv6Addresses(tfList []interface{}) []*ec2.InstanceIpv6Address {
+func expandInstanceIPv6Addresses(tfList []interface{}) []*ec2.InstanceIpv6Address {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -1290,7 +1290,7 @@ func expandInstanceIpv6Addresses(tfList []interface{}) []*ec2.InstanceIpv6Addres
 			continue
 		}
 
-		apiObject := expandInstanceIpv6Address(tfString)
+		apiObject := expandInstanceIPv6Address(tfString)
 
 		if apiObject == nil {
 			continue
@@ -1302,7 +1302,7 @@ func expandInstanceIpv6Addresses(tfList []interface{}) []*ec2.InstanceIpv6Addres
 	return apiObjects
 }
 
-func flattenNetworkInterfacePrivateIpAddress(apiObject *ec2.NetworkInterfacePrivateIpAddress) string {
+func flattenNetworkInterfacePrivateIPAddress(apiObject *ec2.NetworkInterfacePrivateIpAddress) string {
 	if apiObject == nil {
 		return ""
 	}
@@ -1316,7 +1316,7 @@ func flattenNetworkInterfacePrivateIpAddress(apiObject *ec2.NetworkInterfacePriv
 	return tfString
 }
 
-func FlattenNetworkInterfacePrivateIpAddresses(apiObjects []*ec2.NetworkInterfacePrivateIpAddress) []string {
+func FlattenNetworkInterfacePrivateIPAddresses(apiObjects []*ec2.NetworkInterfacePrivateIpAddress) []string {
 	if len(apiObjects) == 0 {
 		return nil
 	}
@@ -1328,7 +1328,7 @@ func FlattenNetworkInterfacePrivateIpAddresses(apiObjects []*ec2.NetworkInterfac
 			continue
 		}
 
-		tfList = append(tfList, flattenNetworkInterfacePrivateIpAddress(apiObject))
+		tfList = append(tfList, flattenNetworkInterfacePrivateIPAddress(apiObject))
 	}
 
 	return tfList
@@ -1366,7 +1366,7 @@ func flattenNetworkInterfaceIPv6Addresses(apiObjects []*ec2.NetworkInterfaceIpv6
 	return tfList
 }
 
-func expandIpv4PrefixSpecificationRequest(tfString string) *ec2.Ipv4PrefixSpecificationRequest {
+func expandIPv4PrefixSpecificationRequest(tfString string) *ec2.Ipv4PrefixSpecificationRequest {
 	if tfString == "" {
 		return nil
 	}
@@ -1378,7 +1378,7 @@ func expandIpv4PrefixSpecificationRequest(tfString string) *ec2.Ipv4PrefixSpecif
 	return apiObject
 }
 
-func expandIpv4PrefixSpecificationRequests(tfList []interface{}) []*ec2.Ipv4PrefixSpecificationRequest {
+func expandIPv4PrefixSpecificationRequests(tfList []interface{}) []*ec2.Ipv4PrefixSpecificationRequest {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -1392,7 +1392,7 @@ func expandIpv4PrefixSpecificationRequests(tfList []interface{}) []*ec2.Ipv4Pref
 			continue
 		}
 
-		apiObject := expandIpv4PrefixSpecificationRequest(tfString)
+		apiObject := expandIPv4PrefixSpecificationRequest(tfString)
 
 		if apiObject == nil {
 			continue
@@ -1404,7 +1404,7 @@ func expandIpv4PrefixSpecificationRequests(tfList []interface{}) []*ec2.Ipv4Pref
 	return apiObjects
 }
 
-func expandIpv6PrefixSpecificationRequest(tfString string) *ec2.Ipv6PrefixSpecificationRequest {
+func expandIPv6PrefixSpecificationRequest(tfString string) *ec2.Ipv6PrefixSpecificationRequest {
 	if tfString == "" {
 		return nil
 	}
@@ -1416,7 +1416,7 @@ func expandIpv6PrefixSpecificationRequest(tfString string) *ec2.Ipv6PrefixSpecif
 	return apiObject
 }
 
-func expandIpv6PrefixSpecificationRequests(tfList []interface{}) []*ec2.Ipv6PrefixSpecificationRequest {
+func expandIPv6PrefixSpecificationRequests(tfList []interface{}) []*ec2.Ipv6PrefixSpecificationRequest {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -1430,7 +1430,7 @@ func expandIpv6PrefixSpecificationRequests(tfList []interface{}) []*ec2.Ipv6Pref
 			continue
 		}
 
-		apiObject := expandIpv6PrefixSpecificationRequest(tfString)
+		apiObject := expandIPv6PrefixSpecificationRequest(tfString)
 
 		if apiObject == nil {
 			continue
@@ -1442,7 +1442,7 @@ func expandIpv6PrefixSpecificationRequests(tfList []interface{}) []*ec2.Ipv6Pref
 	return apiObjects
 }
 
-func flattenIpv4PrefixSpecification(apiObject *ec2.Ipv4PrefixSpecification) string {
+func flattenIPv4PrefixSpecification(apiObject *ec2.Ipv4PrefixSpecification) string {
 	if apiObject == nil {
 		return ""
 	}
@@ -1456,7 +1456,7 @@ func flattenIpv4PrefixSpecification(apiObject *ec2.Ipv4PrefixSpecification) stri
 	return tfString
 }
 
-func flattenIpv4PrefixSpecifications(apiObjects []*ec2.Ipv4PrefixSpecification) []string {
+func flattenIPv4PrefixSpecifications(apiObjects []*ec2.Ipv4PrefixSpecification) []string {
 	if len(apiObjects) == 0 {
 		return nil
 	}
@@ -1468,13 +1468,13 @@ func flattenIpv4PrefixSpecifications(apiObjects []*ec2.Ipv4PrefixSpecification) 
 			continue
 		}
 
-		tfList = append(tfList, flattenIpv4PrefixSpecification(apiObject))
+		tfList = append(tfList, flattenIPv4PrefixSpecification(apiObject))
 	}
 
 	return tfList
 }
 
-func flattenIpv6PrefixSpecification(apiObject *ec2.Ipv6PrefixSpecification) string {
+func flattenIPv6PrefixSpecification(apiObject *ec2.Ipv6PrefixSpecification) string {
 	if apiObject == nil {
 		return ""
 	}
@@ -1488,7 +1488,7 @@ func flattenIpv6PrefixSpecification(apiObject *ec2.Ipv6PrefixSpecification) stri
 	return tfString
 }
 
-func flattenIpv6PrefixSpecifications(apiObjects []*ec2.Ipv6PrefixSpecification) []string {
+func flattenIPv6PrefixSpecifications(apiObjects []*ec2.Ipv6PrefixSpecification) []string {
 	if len(apiObjects) == 0 {
 		return nil
 	}
@@ -1500,7 +1500,7 @@ func flattenIpv6PrefixSpecifications(apiObjects []*ec2.Ipv6PrefixSpecification) 
 			continue
 		}
 
-		tfList = append(tfList, flattenIpv6PrefixSpecification(apiObject))
+		tfList = append(tfList, flattenIPv6PrefixSpecification(apiObject))
 	}
 
 	return tfList
