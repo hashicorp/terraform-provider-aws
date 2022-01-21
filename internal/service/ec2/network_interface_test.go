@@ -689,7 +689,7 @@ type privateIpListTestConfigData struct {
 	replacesInterface       bool
 }
 
-func TestAccAWSENI_PrivateIpsSet(t *testing.T) {
+func TestAccEC2NetworkInterface_PrivateIpsSet(t *testing.T) {
 	var networkInterface, lastInterface ec2.NetworkInterface
 	resourceName := "aws_network_interface.test"
 
@@ -709,10 +709,10 @@ func TestAccAWSENI_PrivateIpsSet(t *testing.T) {
 
 	testSteps := make([]resource.TestStep, len(testConfigs)*2)
 	testSteps[0] = resource.TestStep{
-		Config: testAccAWSENIConfigPrivateIpList(testConfigs[0], resourceName),
+		Config: testAccENIConfig_privateIPList(testConfigs[0], resourceName),
 		Check: resource.ComposeTestCheckFunc(
 			testAccCheckENIExists(resourceName, &networkInterface),
-			testAccCheckAWSENIPrivateIpList(testConfigs[0], &networkInterface),
+			testAccCheckENIPrivateIPList(testConfigs[0], &networkInterface),
 			testAccCheckENIExists(resourceName, &lastInterface),
 		),
 	}
@@ -729,21 +729,21 @@ func TestAccAWSENI_PrivateIpsSet(t *testing.T) {
 		}
 		if testConfig.replacesInterface {
 			testSteps[i*2] = resource.TestStep{
-				Config: testAccAWSENIConfigPrivateIpList(testConfigs[i], resourceName),
+				Config: testAccENIConfig_privateIPList(testConfigs[i], resourceName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckENIExists(resourceName, &networkInterface),
-					testAccCheckAWSENIPrivateIpList(testConfigs[i], &networkInterface),
-					testAccCheckAWSENIDifferent(&lastInterface, &networkInterface), // different
+					testAccCheckENIPrivateIPList(testConfigs[i], &networkInterface),
+					testAccCheckENIDifferent(&lastInterface, &networkInterface), // different
 					testAccCheckENIExists(resourceName, &lastInterface),
 				),
 			}
 		} else {
 			testSteps[i*2] = resource.TestStep{
-				Config: testAccAWSENIConfigPrivateIpList(testConfigs[i], resourceName),
+				Config: testAccENIConfig_privateIPList(testConfigs[i], resourceName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckENIExists(resourceName, &networkInterface),
-					testAccCheckAWSENIPrivateIpList(testConfigs[i], &networkInterface),
-					testAccCheckAWSENISame(&lastInterface, &networkInterface), // same
+					testAccCheckENIPrivateIPList(testConfigs[i], &networkInterface),
+					testAccCheckENISame(&lastInterface, &networkInterface), // same
 					testAccCheckENIExists(resourceName, &lastInterface),
 				),
 			}
@@ -761,7 +761,7 @@ func TestAccAWSENI_PrivateIpsSet(t *testing.T) {
 	})
 }
 
-func TestAccAWSENI_PrivateIpList(t *testing.T) {
+func TestAccEC2NetworkInterface_PrivateIpList(t *testing.T) {
 	var networkInterface, lastInterface ec2.NetworkInterface
 	resourceName := "aws_network_interface.test"
 
@@ -785,10 +785,10 @@ func TestAccAWSENI_PrivateIpList(t *testing.T) {
 
 	testSteps := make([]resource.TestStep, len(testConfigs)*2)
 	testSteps[0] = resource.TestStep{
-		Config: testAccAWSENIConfigPrivateIpList(testConfigs[0], resourceName),
+		Config: testAccENIConfig_privateIPList(testConfigs[0], resourceName),
 		Check: resource.ComposeTestCheckFunc(
 			testAccCheckENIExists(resourceName, &networkInterface),
-			testAccCheckAWSENIPrivateIpList(testConfigs[0], &networkInterface),
+			testAccCheckENIPrivateIPList(testConfigs[0], &networkInterface),
 			testAccCheckENIExists(resourceName, &lastInterface),
 		),
 	}
@@ -805,21 +805,21 @@ func TestAccAWSENI_PrivateIpList(t *testing.T) {
 		}
 		if testConfig.replacesInterface {
 			testSteps[i*2] = resource.TestStep{
-				Config: testAccAWSENIConfigPrivateIpList(testConfigs[i], resourceName),
+				Config: testAccENIConfig_privateIPList(testConfigs[i], resourceName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckENIExists(resourceName, &networkInterface),
-					testAccCheckAWSENIPrivateIpList(testConfigs[i], &networkInterface),
-					testAccCheckAWSENIDifferent(&lastInterface, &networkInterface), // different
+					testAccCheckENIPrivateIPList(testConfigs[i], &networkInterface),
+					testAccCheckENIDifferent(&lastInterface, &networkInterface), // different
 					testAccCheckENIExists(resourceName, &lastInterface),
 				),
 			}
 		} else {
 			testSteps[i*2] = resource.TestStep{
-				Config: testAccAWSENIConfigPrivateIpList(testConfigs[i], resourceName),
+				Config: testAccENIConfig_privateIPList(testConfigs[i], resourceName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckENIExists(resourceName, &networkInterface),
-					testAccCheckAWSENIPrivateIpList(testConfigs[i], &networkInterface),
-					testAccCheckAWSENISame(&lastInterface, &networkInterface), // same
+					testAccCheckENIPrivateIPList(testConfigs[i], &networkInterface),
+					testAccCheckENISame(&lastInterface, &networkInterface), // same
 					testAccCheckENIExists(resourceName, &lastInterface),
 				),
 			}
@@ -931,7 +931,7 @@ func testAccCheckENIMakeExternalAttachment(n string, conf *ec2.NetworkInterface)
 	}
 }
 
-func testAccCheckAWSENIPrivateIpList(testConfig privateIpListTestConfigData, iface *ec2.NetworkInterface) resource.TestCheckFunc {
+func testAccCheckENIPrivateIPList(testConfig privateIpListTestConfigData, iface *ec2.NetworkInterface) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		havePrivateIps := tfec2.FlattenNetworkInterfacePrivateIpAddresses(iface.PrivateIpAddresses)
 	PRIVATE_IPS_LOOP:
@@ -961,7 +961,7 @@ func testAccCheckAWSENIPrivateIpList(testConfig privateIpListTestConfigData, ifa
 	}
 }
 
-func testAccCheckAWSENISame(iface1 *ec2.NetworkInterface, iface2 *ec2.NetworkInterface) resource.TestCheckFunc {
+func testAccCheckENISame(iface1 *ec2.NetworkInterface, iface2 *ec2.NetworkInterface) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if aws.StringValue(iface1.NetworkInterfaceId) != aws.StringValue(iface2.NetworkInterfaceId) {
 			return fmt.Errorf("Interface %s should not have been replaced with %s", aws.StringValue(iface1.NetworkInterfaceId), aws.StringValue(iface2.NetworkInterfaceId))
@@ -970,7 +970,7 @@ func testAccCheckAWSENISame(iface1 *ec2.NetworkInterface, iface2 *ec2.NetworkInt
 	}
 }
 
-func testAccCheckAWSENIDifferent(iface1 *ec2.NetworkInterface, iface2 *ec2.NetworkInterface) resource.TestCheckFunc {
+func testAccCheckENIDifferent(iface1 *ec2.NetworkInterface, iface2 *ec2.NetworkInterface) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if aws.StringValue(iface1.NetworkInterfaceId) == aws.StringValue(iface2.NetworkInterfaceId) {
 			return fmt.Errorf("Interface %s should have been replaced, have %s", aws.StringValue(iface1.NetworkInterfaceId), aws.StringValue(iface2.NetworkInterfaceId))
@@ -1370,7 +1370,7 @@ resource "aws_network_interface" "test" {
 `, rName, ipv6PrefixCount))
 }
 
-func testAccAWSENIConfigPrivateIpList(testConfig privateIpListTestConfigData, rName string) string {
+func testAccENIConfig_privateIPList(testConfig privateIpListTestConfigData, rName string) string {
 	var config strings.Builder
 
 	config.WriteString(fmt.Sprintf(`
