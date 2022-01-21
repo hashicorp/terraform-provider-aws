@@ -1899,45 +1899,47 @@ func readBlockDevices(d *schema.ResourceData, instance *ec2.Instance, conn *ec2.
 		return err
 	}
 
-	var ebsBlockDevices []map[string]interface{}
-	var rootBlockDevice []interface{}
+	// Special handling for instances where the only block device is the root device:
+	// The call to readBlockDevicesFromInstance above will return the block device
+	// in ibds["root"] not ibds["ebs"], thus to set the state correctly,
+	// the root block device must be copied over to ibds["ebs"]
+	if ibds != nil {
+		if _, ok := d.GetOk("ebs_block_device"); ok {
+			if v, ok := ibds["ebs"].([]map[string]interface{}); ok && len(v) == 0 {
+				if root, ok := ibds["root"].(map[string]interface{}); ok {
+					// Make deep copy of data
+					m := make(map[string]interface{})
 
-	if _, ok := d.GetOk("ebs_block_device"); ok && ibds != nil {
-		if v, ok := ibds["ebs"].([]map[string]interface{}); ok {
-			// This handles cases where the root device block is of type "EBS"
-			// and #readBlockDevicesFromInstance only returns 1 reference to a block-device
-			// stored in ibds["root"]
-			if len(v) == 0 {
-				ebs := make(map[string]interface{})
-
-				rootMap, ok := ibds["root"].(map[string]interface{})
-				if ok {
-					for k, v := range rootMap {
-						ebs[k] = v
+					for k, v := range root {
+						m[k] = v
 					}
-				}
 
-				if snapshotId, ok := ibds["snapshot_id"].(string); ok {
-					ebs["snapshot_id"] = snapshotId
-				}
+					if snapshotID, ok := ibds["snapshot_id"].(string); ok {
+						m["snapshot_id"] = snapshotID
+					}
 
-				ebsBlockDevices = []map[string]interface{}{ebs}
-			} else {
-				ebsBlockDevices = v
+					ibds["ebs"] = []interface{}{m}
+				}
 			}
 		}
+	}
 
-		if v, ok := ibds["root"].(map[string]interface{}); ok {
-			rootBlockDevice = []interface{}{v}
+	if err := d.Set("ebs_block_device", ibds["ebs"]); err != nil {
+		return err
+	}
+
+	// This handles the import case which needs to be defaulted to empty
+	if _, ok := d.GetOk("root_block_device"); !ok {
+		if err := d.Set("root_block_device", []interface{}{}); err != nil {
+			return err
 		}
 	}
 
-	if err := d.Set("ebs_block_device", ebsBlockDevices); err != nil {
-		return err
-	}
-
-	if err := d.Set("root_block_device", rootBlockDevice); err != nil {
-		return err
+	if ibds["root"] != nil {
+		roots := []interface{}{ibds["root"]}
+		if err := d.Set("root_block_device", roots); err != nil {
+			return err
+		}
 	}
 
 	return nil
