@@ -1902,7 +1902,7 @@ func readBlockDevices(d *schema.ResourceData, instance *ec2.Instance, conn *ec2.
 	var ebsBlockDevices []map[string]interface{}
 	var rootBlockDevice []interface{}
 
-	if ibds != nil {
+	if _, ok := d.GetOk("ebs_block_device"); ok && ibds != nil {
 		if v, ok := ibds["ebs"].([]map[string]interface{}); ok {
 			// This handles cases where the root device block is of type "EBS"
 			// and #readBlockDevicesFromInstance only returns 1 reference to a block-device
