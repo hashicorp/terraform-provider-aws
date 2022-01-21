@@ -304,6 +304,7 @@ The following arguments are supported:
 * `topic` - (Optional) The notification configuration to SNS Topic (documented below).
 * `queue` - (Optional) The notification configuration to SQS Queue (documented below).
 * `lambda_function` - (Optional, Multiple) Used to configure notifications to a Lambda Function (documented below).
+* `eventbridge` - (Optional) Set to true to enable Amazon EventBridge notifications.
 
 The `topic` notification configuration supports the following:
 
