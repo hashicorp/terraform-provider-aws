@@ -671,7 +671,7 @@ func modifyVPCIPv6CIDRBlockAssociation(conn *ec2.EC2, vpcID, associationID strin
 		_, err := conn.DisassociateVpcCidrBlock(input)
 
 		if err != nil {
-			return "", fmt.Errorf("error disassociating EC2 VPC (%s) CIDR block (%s): %w", vpcID, associationID, err)
+			return "", fmt.Errorf("error disassociating EC2 VPC (%s) IPv6 CIDR block (%s): %w", vpcID, associationID, err)
 		}
 
 		_, err = WaitVPCIPv6CIDRBlockAssociationDeleted(conn, associationID, vpcIPv6CIDRBlockAssociationDeletedTimeout)
