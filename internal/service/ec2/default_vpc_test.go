@@ -28,8 +28,11 @@ func TestAccEC2DefaultVPCAndSubnet_serial(t *testing.T) {
 		},
 		"Subnet": {
 			"existing.basic":                         testAccEC2DefaultSubnet_Existing_basic,
+			"existing.forceDestroy":                  testAccEC2DefaultSubnet_Existing_forceDestroy,
 			"existing.ipv6":                          testAccEC2DefaultSubnet_Existing_ipv6,
 			"existing.privateDnsNameOptionsOnLaunch": testAccEC2DefaultSubnet_Existing_privateDnsNameOptionsOnLaunch,
+			"notFound.basic":                         testAccEC2DefaultSubnet_NotFound_basic,
+			"notFound.ipv6Native":                    testAccEC2DefaultSubnet_NotFound_ipv6Native,
 		},
 	}
 
@@ -174,6 +177,7 @@ func testAccEC2DefaultVPC_Existing_forceDestroy(t *testing.T) {
 				Config: testAccDefaultVPCForceDestroyConfig,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					acctest.CheckVPCExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "existing_default_vpc", "true"),
 					resource.TestCheckResourceAttr(resourceName, "force_destroy", "true"),
 					testAccCheckDefaultVPCEmpty(&v),
 				),
@@ -282,6 +286,7 @@ func testAccEC2DefaultVPC_NotFound_forceDestroy(t *testing.T) {
 				Config: testAccDefaultVPCForceDestroyConfig,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					acctest.CheckVPCExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "existing_default_vpc", "false"),
 					resource.TestCheckResourceAttr(resourceName, "force_destroy", "true"),
 					testAccCheckDefaultVPCEmpty(&v),
 				),
