@@ -382,14 +382,14 @@ func resourceNetworkInterfaceCreate(d *schema.ResourceData, meta interface{}) er
 				}
 			}
 			// truncate the list
-			count_limited_ips := make([]interface{}, totalPrivateIPs)
+			countLimitedIPs := make([]interface{}, totalPrivateIPs)
 			for i, ip := range privateIPs {
-				count_limited_ips[i] = ip.(string)
+				countLimitedIPs[i] = ip.(string)
 				if i == totalPrivateIPs-1 {
 					break
 				}
 			}
-			input.PrivateIpAddresses = expandPrivateIPAddressSpecifications(count_limited_ips)
+			input.PrivateIpAddresses = expandPrivateIPAddressSpecifications(countLimitedIPs)
 		} else {
 			if v, ok := d.GetOk("private_ips_count"); ok {
 				input.SecondaryPrivateIpAddressCount = aws.Int64(int64(v.(int)))
