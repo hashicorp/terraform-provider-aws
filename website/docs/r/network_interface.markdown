@@ -52,7 +52,7 @@ The following arguments are optional:
 
 * `attachment` - (Optional) Configuration block to define the attachment of the ENI. See below.
 * `description` - (Optional) Description for the network interface.
-* `interface_type` - (Optional) Type of network interface to create. Set to `efa` for Elastic Fabric Adapter.
+* `interface_type` - (Optional) Type of network interface to create. Set to `efa` for Elastic Fabric Adapter. Changing `interface_type` will cause the resource to be destroyed and re-created.
 * `ipv4_prefix_count` - (Optional) Number of IPv4 prefixes that AWS automatically assigns to the network interface.
 * `ipv4_prefixes` - (Optional) One or more IPv4 prefixes assigned to the network interface.
 * `ipv6_address_count` - (Optional) Number of IPv6 addresses to assign to a network interface. You can't use this option if specifying specific `ipv6_addresses`. If your subnet has the AssignIpv6AddressOnCreation attribute set to `true`, you can specify `0` to override this setting.
@@ -68,8 +68,6 @@ The following arguments are optional:
 * `security_groups` - (Optional) List of security group IDs to assign to the ENI.
 * `source_dest_check` - (Optional) Whether to enable source destination checking for the ENI. Default true.
 * `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
-
--> **NOTE:** Changing `interface_type` will cause the resource to be destroyed and re-created.
 
 ### `attachment`
 
