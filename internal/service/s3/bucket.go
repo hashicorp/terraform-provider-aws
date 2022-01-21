@@ -781,13 +781,13 @@ func resourceBucketUpdate(d *schema.ResourceData, meta interface{}) error {
 
 		if d.IsNewResource() {
 			if versioning := expandVersioningWhenIsNewResource(v); versioning != nil {
-				err := resourceBucketVersioningUpdate(conn, d.Id(), versioning)
+				err := resourceBucketInternalVersioningUpdate(conn, d.Id(), versioning)
 				if err != nil {
 					return err
 				}
 			}
 		} else {
-			if err := resourceBucketVersioningUpdate(conn, d.Id(), expandVersioning(v)); err != nil {
+			if err := resourceBucketInternalVersioningUpdate(conn, d.Id(), expandVersioning(v)); err != nil {
 				return err
 			}
 		}
@@ -1851,7 +1851,7 @@ func resourceBucketACLUpdate(conn *s3.S3, d *schema.ResourceData) error {
 	return nil
 }
 
-func resourceBucketVersioningUpdate(conn *s3.S3, bucket string, versioningConfig *s3.VersioningConfiguration) error {
+func resourceBucketInternalVersioningUpdate(conn *s3.S3, bucket string, versioningConfig *s3.VersioningConfiguration) error {
 	input := &s3.PutBucketVersioningInput{
 		Bucket:                  aws.String(bucket),
 		VersioningConfiguration: versioningConfig,
