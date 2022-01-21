@@ -16,13 +16,13 @@ For a detailed example of setting up Lambda and API Gateway, see [Serverless App
 
 ~> **NOTE:** Due to [AWS Lambda improved VPC networking changes that began deploying in September 2019](https://aws.amazon.com/blogs/compute/announcing-improved-vpc-networking-for-aws-lambda-functions/), EC2 subnets and security groups associated with Lambda Functions can take up to 45 minutes to successfully delete. Terraform AWS Provider version 2.31.0 and later automatically handles this increased timeout, however prior versions require setting the customizable deletion timeouts of those Terraform resources to 45 minutes (`delete = "45m"`). AWS and HashiCorp are working together to reduce the amount of time required for resource deletion and updates can be tracked in this [GitHub issue](https://github.com/hashicorp/terraform-provider-aws/issues/10329).
 
--> To give an external source (like a CloudWatch Event Rule, SNS, or S3) permission to access the Lambda function, use the [`aws_lambda_permission`](lambda_permission.html) resource. See [Lambda Permission Model][4] for more details. On the other hand, the `role` argument of this resource is the function's execution role for identity and access to AWS services and resources.
+-> To give an external source (like an EventBridge Rule, SNS, or S3) permission to access the Lambda function, use the [`aws_lambda_permission`](lambda_permission.html) resource. See [Lambda Permission Model][4] for more details. On the other hand, the `role` argument of this resource is the function's execution role for identity and access to AWS services and resources.
 
 ## Example Usage
 
 ### Basic Example
 
-```hcl
+```terraform
 resource "aws_iam_role" "iam_for_lambda" {
   name = "iam_for_lambda"
 
@@ -47,7 +47,7 @@ resource "aws_lambda_function" "test_lambda" {
   filename      = "lambda_function_payload.zip"
   function_name = "lambda_function_name"
   role          = aws_iam_role.iam_for_lambda.arn
-  handler       = "exports.test"
+  handler       = "index.test"
 
   # The filebase64sha256() function is available in Terraform 0.11.12 and later
   # For Terraform 0.11.11 and earlier, use the base64sha256() function and the file() function:
@@ -68,7 +68,7 @@ resource "aws_lambda_function" "test_lambda" {
 
 ~> **NOTE:** The `aws_lambda_layer_version` attribute values for `arn` and `layer_arn` were swapped in version 2.0.0 of the Terraform AWS Provider. For version 1.x, use `layer_arn` references. For version 2.x, use `arn` references.
 
-```hcl
+```terraform
 resource "aws_lambda_layer_version" "example" {
   # ... other configuration ...
 }
@@ -83,7 +83,7 @@ resource "aws_lambda_function" "example" {
 
 Lambda File Systems allow you to connect an Amazon Elastic File System (EFS) file system to a Lambda function to share data across function invocations, access existing data including large files, and save function state.
 
-```hcl
+```terraform
 # A lambda function connected to an EFS file system
 resource "aws_lambda_function" "example" {
   # ... other configuration ...
@@ -141,11 +141,15 @@ resource "aws_efs_access_point" "access_point_for_lambda" {
 }
 ```
 
+### Lambda retries
+
+Lambda Functions allow you to configure error handling for asynchronous invocation. The settings that it supports are `Maximum age of event` and `Retry attempts` as stated in [Lambda documentation for Configuring error handling for asynchronous invocation](https://docs.aws.amazon.com/lambda/latest/dg/invocation-async.html#invocation-async-errors). To configure these settings, refer to the [aws_lambda_function_event_invoke_config resource](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/lambda_function_event_invoke_config).
+
 ## CloudWatch Logging and Permissions
 
 For more information about CloudWatch Logs for Lambda, see the [Lambda User Guide](https://docs.aws.amazon.com/lambda/latest/dg/monitoring-functions-logs.html).
 
-```hcl
+```terraform
 variable "lambda_function_name" {
   default = "lambda_function_name"
 }
@@ -214,6 +218,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `architectures` - (Optional) Instruction set architecture for your Lambda function. Valid values are `["x86_64"]` and `["arm64"]`. Default is `["x86_64"]`. Removing this attribute, function's architecture stay the same.
 * `code_signing_config_arn` - (Optional) To enable code signing for this function, specify the ARN of a code-signing configuration. A code-signing configuration includes a set of signing profiles, which define the trusted publishers for this function.
 * `dead_letter_config` - (Optional) Configuration block. Detailed below.
 * `description` - (Optional) Description of what your Lambda Function does.
@@ -234,7 +239,7 @@ The following arguments are optional:
 * `s3_key` - (Optional) S3 key of an object containing the function's deployment package. Conflicts with `filename` and `image_uri`.
 * `s3_object_version` - (Optional) Object version containing the function's deployment package. Conflicts with `filename` and `image_uri`.
 * `source_code_hash` - (Optional) Used to trigger updates. Must be set to a base64-encoded SHA256 hash of the package file specified with either `filename` or `s3_key`. The usual way to set this is `filebase64sha256("file.zip")` (Terraform 0.11.12 and later) or `base64sha256(file("file.zip"))` (Terraform 0.11.11 and earlier), where "file.zip" is the local filename of the lambda function source archive.
-* `tags` - (Optional) Map of tags to assign to the object.
+* `tags` - (Optional) Map of tags to assign to the object. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `timeout` - (Optional) Amount of time your Lambda Function has to run in seconds. Defaults to `3`. See [Limits][5].
 * `tracing_config` - (Optional) Configuration block. Detailed below.
 * `vpc_config` - (Optional) Configuration block. Detailed below.
@@ -251,7 +256,7 @@ Dead letter queue configuration that specifies the queue or topic where Lambda s
 
 ### file_system_config
 
-Connection settings for an EFS file system. Before creating or updating Lambda functions with `file_system_config`, EFS mount targets much be in available lifecycle state. Use `depends_on` to explicitly declare this dependency. See [Using Amazon EFS with Lambda][12].
+Connection settings for an EFS file system. Before creating or updating Lambda functions with `file_system_config`, EFS mount targets must be in available lifecycle state. Use `depends_on` to explicitly declare this dependency. See [Using Amazon EFS with Lambda][12].
 
 * `arn` - (Required) Amazon Resource Name (ARN) of the Amazon EFS Access Point that provides access to the file system.
 * `local_mount_path` - (Required) Path where the function can access the file system, starting with /mnt/.
@@ -279,7 +284,7 @@ For network connectivity to AWS resources in a VPC, specify a list of security g
 
 ## Attributes Reference
 
-In addition to arguments above, the following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `arn` - Amazon Resource Name (ARN) identifying your Lambda Function.
 * `invoke_arn` - ARN to be used for invoking Lambda Function from API Gateway - to be used in [`aws_api_gateway_integration`](/docs/providers/aws/r/api_gateway_integration.html)'s `uri`.
@@ -288,6 +293,7 @@ In addition to arguments above, the following attributes are exported:
 * `signing_job_arn` - ARN of the signing job.
 * `signing_profile_version_arn` - ARN of the signing profile version.
 * `source_code_size` - Size in bytes of the function .zip file.
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
 * `version` - Latest published version of your Lambda Function.
 * `vpc_config.vpc_id` - ID of the VPC.
 
@@ -313,7 +319,7 @@ In addition to arguments above, the following attributes are exported:
 
 ## Import
 
-Lambda Functions can be imported using the `function_name`, e.g.
+Lambda Functions can be imported using the `function_name`, e.g.,
 
 ```
 $ terraform import aws_lambda_function.test_lambda my_test_lambda_function

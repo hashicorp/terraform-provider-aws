@@ -12,7 +12,7 @@ Use this data source to get information about an Elasticache Replication Group.
 
 ## Example Usage
 
-```hcl
+```terraform
 data "aws_elasticache_replication_group" "bar" {
   replication_group_id = "example"
 }

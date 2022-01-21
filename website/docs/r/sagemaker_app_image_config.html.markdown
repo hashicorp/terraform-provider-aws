@@ -14,7 +14,7 @@ Provides a Sagemaker App Image Config resource.
 
 ### Basic usage
 
-```hcl
+```terraform
 resource "aws_sagemaker_app_image_config" "test" {
   app_image_config_name = "example"
 
@@ -28,7 +28,7 @@ resource "aws_sagemaker_app_image_config" "test" {
 
 ### Default File System Config
 
-```hcl
+```terraform
 resource "aws_sagemaker_app_image_config" "test" {
   app_image_config_name = "example"
 
@@ -48,7 +48,7 @@ The following arguments are supported:
 
 * `app_image_config_name` - (Required) The name of the App Image Config.
 * `kernel_gateway_image_config` - (Optional) The configuration for the file system and kernels in a SageMaker image running as a KernelGateway app. See [Kernel Gateway Image Config](#kernel-gateway-image-config) details below.
-* `tags` - (Optional) A map of tags to assign to the resource.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### Kernel Gateway Image Config
 
@@ -74,10 +74,11 @@ In addition to all arguments above, the following attributes are exported:
 
 * `id` - The name of the App Image Config.
 * `arn` - The Amazon Resource Name (ARN) assigned by AWS to this App Image Config.
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
 
 ## Import
 
-Sagemaker App Image Configs can be imported using the `name`, e.g.
+Sagemaker App Image Configs can be imported using the `name`, e.g.,
 
 ```
 $ terraform import aws_sagemaker_app_image_config.example example

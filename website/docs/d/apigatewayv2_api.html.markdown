@@ -12,7 +12,7 @@ Provides details about a specific Amazon API Gateway Version 2 API.
 
 ## Example Usage
 
-```hcl
+```terraform
 data "aws_apigatewayv2_api" "example" {
   api_id = "aabbccddee"
 }

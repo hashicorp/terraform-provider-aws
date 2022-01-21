@@ -14,6 +14,8 @@ on:
 jobs:
   markdown-link-check:
     runs-on: ubuntu-latest
+    env:
+      UV_THREADPOOL_SIZE: 128
     steps:
     - uses: actions/checkout@v2
     - uses: gaurav-nelson/github-action-markdown-link-check@v1
@@ -23,6 +25,8 @@ jobs:
         config-file: '.markdownlinkcheck.json'
         folder-path: 'docs'
         file-extension: '.md'
+        base-branch: "main"
+        check-modified-files-only: "yes"
   markdown-lint:
     runs-on: ubuntu-latest
     steps:

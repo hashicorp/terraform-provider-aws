@@ -12,7 +12,7 @@ Provides information about a Lambda Layer Version.
 
 ## Example Usage
 
-```hcl
+```terraform
 variable "layer_name" {
   type = string
 }
@@ -27,8 +27,9 @@ data "aws_lambda_layer_version" "existing" {
 The following arguments are supported:
 
 * `layer_name` - (Required) Name of the lambda layer.
-* `version` - (Optional) Specific layer version. Conflicts with `compatible_runtime`. If omitted, the latest available layer version will be used.
+* `version` - (Optional) Specific layer version. Conflicts with `compatible_runtime` and `compatible_architecture`. If omitted, the latest available layer version will be used.
 * `compatible_runtime` (Optional) Specific runtime the layer version must support. Conflicts with `version`. If specified, the latest available layer version supporting the provided runtime will be used.
+* `compatible_architecture` (Optional) Specific architecture the layer version could support. Conflicts with `version`. If specified, the latest available layer version supporting the provided architecture will be used.
 
 ## Attributes Reference
 
@@ -37,6 +38,7 @@ In addition to all arguments above, the following attributes are exported:
 * `description` - Description of the specific Lambda Layer version.
 * `license_info` - License info associated with the specific Lambda Layer version.
 * `compatible_runtimes` - A list of [Runtimes][1] the specific Lambda Layer version is compatible with.
+* `compatible_architectures` - A list of [Architectures][2] the specific Lambda Layer version is compatible with.
 * `arn` - The Amazon Resource Name (ARN) of the Lambda Layer with version.
 * `layer_arn` - The Amazon Resource Name (ARN) of the Lambda Layer without version.
 * `created_date` - The date this resource was created.
@@ -47,4 +49,4 @@ In addition to all arguments above, the following attributes are exported:
 * `version` - This Lamba Layer version.
 
 [1]: https://docs.aws.amazon.com/lambda/latest/dg/API_GetLayerVersion.html#SSS-GetLayerVersion-response-CompatibleRuntimes
-
+[2]: https://docs.aws.amazon.com/lambda/latest/dg/API_GetLayerVersion.html#SSS-GetLayerVersion-response-CompatibleArchitectures

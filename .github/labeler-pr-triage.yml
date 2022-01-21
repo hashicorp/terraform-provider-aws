@@ -1,0 +1,647 @@
+client-connections:
+  - 'internal/conns/**/*'
+create:
+  - 'internal/create/**/*'
+dependencies:
+  - '.github/dependabot.yml'
+documentation:
+  - '**/*.md'
+  - 'docs/**/*'
+  - 'website/**/*'
+examples:
+  - 'examples/**/*'
+flex:
+  - 'internal/flex/**/*'
+generators:
+  - 'internal/**/*_gen.go'
+  - 'internal/**/*_gen_test.go'
+  - 'internal/**/generate.go'
+  - 'internal/generate/**/*'
+linter:
+  - '.github/workflows/acctest-terraform-lint.yml'
+  - '.github/workflows/terraform_provider.yml'
+  - '.github/workflows/website.yml'
+  - '.golangci.yml'
+  - '.markdownlinkcheck.json'
+  - '.markdownlint.yml'
+  - '.semgrep.yml'
+  - '.tflint.hcl'
+  - 'providerlint/**/*'
+  - 'staticcheck.conf'
+pre-service-packages:
+  - '**/data_source_aws_*'
+  - '**/resource_aws_*'
+  - 'aws/**/*'
+  - 'awsproviderlint/**/*'
+provider:
+  - '.gitignore'
+  - '.go-version'
+  - '*.md'
+  - 'docs/contributing/**/*'
+  - 'internal/provider/**/*'
+  - 'main.go'
+  - 'website/docs/index.html.markdown'
+repository:
+  - '.github/**/*'
+  - 'GNUmakefile'
+  - 'infrastructure/**/*'
+service/accessanalyzer:
+  - 'internal/service/accessanalyzer/**/*'
+  - 'website/**/accessanalyzer_*'
+service/account:
+  - 'internal/service/account/**/*'
+  - 'website/**/account_*'
+service/acm:
+  - 'internal/service/acm/**/*'
+  - 'website/**/acm_*'
+service/acmpca:
+  - 'internal/service/acmpca/**/*'
+  - 'website/**/acmpca_*'
+service/alexaforbusiness:
+  - 'internal/service/alexaforbusiness/**/*'
+  - 'website/**/alexaforbusiness_*'
+service/amp:
+  - 'internal/service/amp/**/*'
+  - 'website/**/prometheus_*'
+service/amplify:
+  - 'internal/service/amplify/**/*'
+  - 'website/**/amplify_*'
+service/apigateway:
+  - 'internal/service/apigateway/**/*'
+  - 'website/**/api_gateway_[^v][^2][^_]*'
+  - 'website/**/api_gateway_vpc_link*'
+service/apigatewayv2:
+  - 'internal/service/apigatewayv2/**/*'
+  - 'website/**/api_gateway_v2_*'
+  - 'website/**/apigatewayv2_*'
+service/appconfig:
+  - 'internal/service/appconfig/**/*'
+  - 'website/**/appconfig_*'
+service/applicationautoscaling:
+  - 'internal/service/appautoscaling/**/*'
+  - 'website/**/appautoscaling_*'
+service/applicationinsights:
+  - 'internal/service/applicationinsights/**/*'
+  - 'website/**/applicationinsights_*'
+service/appmesh:
+  - 'internal/service/appmesh/**/*'
+  - 'website/**/appmesh_*'
+service/apprunner:
+  - 'internal/service/apprunner/**/*'
+  - 'website/**/apprunner_*'
+service/appstream:
+  - 'internal/service/appstream/**/*'
+  - 'website/**/appstream_*'
+service/appsync:
+  - 'internal/service/appsync/**/*'
+  - 'website/**/appsync_*'
+service/athena:
+  - 'internal/service/athena/**/*'
+  - 'website/**/athena_*'
+service/auditmanager:
+  - 'internal/service/auditmanager/**/*'
+  - 'website/**/auditmanager_*'
+service/autoscaling:
+  - 'internal/service/autoscaling/**/*'
+  - 'website/**/autoscaling_*'
+  - '*_aws_launch_configuration*'
+  - 'website/**/launch_configuration*'
+service/autoscalingplans:
+  - 'internal/service/autoscalingplans/**/*'
+  - 'website/**/autoscalingplans_*'
+service/backup:
+  - 'internal/service/backup/**/*'
+  - 'website/**/backup_*'
+service/batch:
+  - 'internal/service/batch/**/*'
+  - 'website/**/batch_*'
+service/budgets:
+  - 'internal/service/budgets/**/*'
+  - 'website/**/budgets_*'
+service/chime:
+  - 'internal/service/chime/**/*'
+  - 'website/**/chime_*'
+service/cloud9:
+  - 'internal/service/cloud9/**/*'
+  - 'website/**/cloud9_*'
+service/cloudcontrolapi:
+  - 'internal/service/cloudcontrol/**/*'
+  - 'website/**/cloudcontrol*'
+service/clouddirectory:
+  - 'internal/service/clouddirectory/**/*'
+  - 'website/**/clouddirectory_*'
+service/cloudformation:
+  - 'internal/service/cloudformation/**/*'
+  - 'website/**/cloudformation_*'
+service/cloudfront:
+  - 'internal/service/cloudfront/**/*'
+  - 'website/**/cloudfront_*'
+service/cloudhsmv2:
+  - 'internal/service/cloudhsmv2/**/*'
+  - 'website/**/cloudhsm_v2_*'
+service/cloudsearch:
+  - 'internal/service/cloudsearch/**/*'
+  - 'website/**/cloudsearch_*'
+service/cloudtrail:
+  - 'internal/service/cloudtrail/**/*'
+  - 'website/**/cloudtrail*'
+service/cloudwatch:
+  - 'internal/service/cloudwatch/**/*'
+  - 'website/**/cloudwatch_dashboard*'
+  - 'website/**/cloudwatch_metric_alarm*'
+service/cloudwatchlogs:
+  - 'internal/service/cloudwatchlogs/**/*'
+  - 'website/**/cloudwatch_log_*'
+  - 'website/**/cloudwatch_query_definition*'
+service/codeartifact:
+  - 'internal/service/codeartifact/**/*'
+  - 'website/**/codeartifact_*'
+service/codebuild:
+  - 'internal/service/codebuild/**/*'
+  - 'website/**/codebuild_*'
+service/codecommit:
+  - 'internal/service/codecommit/**/*'
+  - 'website/**/codecommit_*'
+service/codedeploy:
+  - 'internal/service/codedeploy/**/*'
+  - 'website/**/codedeploy_*'
+service/codepipeline:
+  - 'internal/service/codepipeline/**/*'
+  - 'website/**/codepipeline_*'
+service/codestar:
+  - 'internal/service/codestar/**/*'
+  - 'website/**/codestar_*'
+service/codestarconnections:
+  - 'internal/service/codestarconnections/**/*'
+  - 'website/**/codestarconnections_*'
+service/codestarnotifications:
+  - 'internal/service/codestarnotifications/**/*'
+  - 'website/**/codestarnotifications_*'
+service/cognito:
+  - 'internal/service/cognitoidentity/**/*'
+  - 'website/**/cognito_identity_pool*'
+service/cognitoidentityprovider:
+  - 'internal/service/cognitoidp/**/*'
+  - 'website/**/cognito_identity_provider*'
+  - 'website/**/cognito_resource_server*'
+  - 'website/**/cognito_user*'
+service/comprehend:
+  - 'internal/service/comprehend/**/*'
+  - 'website/**/comprehend_*'
+service/configservice:
+  - 'internal/service/configservice/**/*'
+  - 'website/**/config_*'
+service/connect:
+  - 'internal/service/connect/**/*'
+  - 'website/**/connect_*'
+service/costandusagereportservice:
+  - 'internal/service/cur/**/*'
+  - 'website/**/cur_*'
+service/databasemigrationservice:
+  - 'internal/service/dms/**/*'
+  - 'website/**/dms_*'
+service/dataexchange:
+  - 'internal/service/dataexchange/**/*'
+  - 'website/**/dataexchange_*'
+service/datapipeline:
+  - 'internal/service/datapipeline/**/*'
+  - 'website/**/datapipeline_*'
+service/datasync:
+  - 'internal/service/datasync/**/*'
+  - 'website/**/datasync_*'
+service/dax:
+  - 'internal/service/dax/**/*'
+  - 'website/**/dax_*'
+service/detective:
+  - 'internal/service/detective/**/*'
+  - 'website/**/detective_*'
+service/devicefarm:
+  - 'internal/service/devicefarm/**/*'
+  - 'website/**/devicefarm_*'
+service/directconnect:
+  - 'internal/service/directconnect/**/*'
+  - 'website/**/dx_*'
+service/directoryservice:
+  - 'internal/service/ds/**/*'
+  - 'website/**/directory_service_*'
+service/dlm:
+  - 'internal/service/dlm/**/*'
+  - 'website/**/dlm_*'
+service/docdb:
+  - 'internal/service/docdb/**/*'
+  - 'website/**/docdb_*'
+service/dynamodb:
+  - 'internal/service/dynamodb/**/*'
+  - 'website/**/dynamodb_*'
+service/ec2:
+  - 'internal/service/ec2/**/*'
+  - 'website/**/ec2_*'
+  - 'website/**/availability_zone*'
+  - 'website/**/customer_gateway*'
+  - 'website/**/default_network_acl*'
+  - 'website/**/default_route_table*'
+  - 'website/**/default_security_group*'
+  - 'website/**/default_subnet*'
+  - 'website/**/default_vpc*'
+  - 'website/**/ebs_*'
+  - 'website/**/egress_only_internet_gateway*'
+  - 'website/**/eip*'
+  - 'website/**/flow_log*'
+  - 'website/**/instance*'
+  - 'website/**/internet_gateway*'
+  - 'website/**/key_pair*'
+  - 'website/**/launch_template*'
+  - 'website/**/main_route_table_association*'
+  - 'website/**/nat_gateway*'
+  - 'website/**/network_acl*'
+  - 'website/**/network_interface*'
+  - 'website/**/placement_group*'
+  - 'website/**/prefix_list*'
+  - 'website/**/route_table*'
+  - 'website/**/route.*'
+  - 'website/**/security_group*'
+  - 'website/**/snapshot_create_volume_permission*'
+  - 'website/**/spot_*'
+  - 'website/**/subnet*'
+  - 'website/**/vpc*'
+  - 'website/**/vpn*'
+  - 'website/**/volume_attachment*'
+service/ecr:
+  - 'internal/service/ecr/**/*'
+  - 'website/**/ecr_*'
+service/ecrpublic:
+  - 'internal/service/ecrpublic/**/*'
+  - 'website/**/ecrpublic_*'
+service/ecs:
+  - 'internal/service/ecs/**/*'
+  - 'website/**/ecs_*'
+service/efs:
+  - 'internal/service/efs/**/*'
+  - 'website/**/efs_*'
+service/eks:
+  - 'internal/service/eks/**/*'
+  - 'website/**/eks_*'
+service/elastictranscoder:
+  - 'internal/service/elastictranscoder/**/*'
+  - 'website/**/elastictranscoder_*'
+  - 'website/**/elastic_transcoder_*'
+service/elasticache:
+  - 'internal/service/elasticache/**/*'
+  - 'website/**/elasticache_*'
+service/elasticbeanstalk:
+  - 'internal/service/elasticbeanstalk/**/*'
+  - 'website/**/elastic_beanstalk_*'
+service/elasticsearch:
+  - 'internal/service/elasticsearch/**/*'
+  - 'website/**/elasticsearch_*'
+service/elb:
+  - 'internal/service/elb/**/*'
+  - 'website/**/app_cookie_stickiness_policy*'
+  - 'website/**/elb*'
+  - 'website/**/lb_cookie_stickiness_policy*'
+  - 'website/**/lb_ssl_negotiation_policy*'
+  - 'website/**/load_balancer*'
+  - 'website/**/proxy_protocol_policy*'
+service/elbv2:
+  - 'internal/service/elbv2/**/*'
+  - 'website/**/lb.*'
+  - 'website/**/lb_listener*'
+  - 'website/**/lb_target_group*'
+service/emr:
+  - 'internal/service/emr/**/*'
+  - 'website/**/emr_*'
+service/emrcontainers:
+  - 'internal/service/emrcontainers/**/*'
+  - 'website/**/emrcontainers_*'
+service/events:
+  - 'internal/service/events/**/*'
+  - 'website/**/cloudwatch_event_*'
+service/firehose:
+  - 'internal/service/firehose/**/*'
+  - 'website/**/firehose_*'
+service/fms:
+  - 'internal/service/fms/**/*'
+  - 'website/**/fms_*'
+service/fsx:
+  - 'internal/service/fsx/**/*'
+  - 'website/**/fsx_*'
+service/gamelift:
+  - 'internal/service/gamelift/**/*'
+  - 'website/**/gamelift_*'
+service/glacier:
+  - 'internal/service/glacier/**/*'
+  - 'website/**/glacier_*'
+service/globalaccelerator:
+  - 'internal/service/globalaccelerator/**/*'
+  - 'website/**/globalaccelerator_*'
+service/glue:
+  - 'internal/service/glue/**/*'
+  - 'website/**/glue_*'
+service/greengrass:
+  - 'internal/service/greengrass/**/*'
+  - 'website/**/greengrass_*'
+service/guardduty:
+  - 'internal/service/guardduty/**/*'
+  - 'website/**/guardduty_*'
+service/iam:
+  - 'internal/service/iam/**/*'
+  - 'website/**/iam_*'
+service/identitystore:
+  - 'internal/service/identitystore/**/*'
+  - 'website/**/identitystore_*'
+service/imagebuilder:
+  - 'internal/service/imagebuilder/**/*'
+  - 'website/**/imagebuilder_*'
+service/inspector:
+  - 'internal/service/inspector/**/*'
+  - 'website/**/inspector_*'
+service/iot:
+  - 'internal/service/iot/**/*'
+  - 'website/**/iot_*'
+service/iotanalytics:
+  - 'internal/service/iotanalytics/**/*'
+  - 'website/**/iotanalytics_*'
+service/iotevents:
+  - 'internal/service/iotevents/**/*'
+  - 'website/**/iotevents_*'
+service/kafka:
+  - 'internal/service/kafka/**/*'
+  - 'website/**/msk_*'
+service/kafkaconnect:
+  - 'internal/service/kafkaconnect/**/*'
+  - 'website/**/mskconnect_*'
+service/kinesis:
+  - 'internal/service/kinesis/**/*'
+  - '*_aws_kinesis_stream*'
+  - 'website/kinesis_stream*'
+service/kinesisanalytics:
+  - 'internal/service/kinesisanalytics/**/*'
+  - 'website/**/kinesis_analytics_*'
+service/kinesisanalyticsv2:
+  - 'internal/service/kinesisanalyticsv2/**/*'
+  - 'website/**/kinesisanalyticsv2_*'
+service/kms:
+  - 'internal/service/kms/**/*'
+  - 'website/**/kms_*'
+service/lakeformation:
+  - 'internal/service/lakeformation/**/*'
+  - 'website/**/lakeformation_*'
+service/lambda:
+  - 'internal/service/lambda/**/*'
+  - 'website/**/lambda_*'
+service/lexmodels:
+  - 'internal/service/lexmodels/**/*'
+  - 'website/**/lex_*'
+service/licensemanager:
+  - 'internal/service/licensemanager/**/*'
+  - 'website/**/licensemanager_*'
+service/lightsail:
+  - 'internal/service/lightsail/**/*'
+  - 'website/**/lightsail_*'
+service/location:
+  - 'internal/service/location/**/*'
+  - 'website/**/location_*'
+service/machinelearning:
+  - 'internal/service/machinelearning/**/*'
+  - 'website/**/machinelearning_*'
+service/macie:
+  - 'internal/service/macie/**/*'
+  - 'website/**/macie_*'
+service/macie2:
+  - 'internal/service/macie2/**/*'
+  - 'website/**/macie2_*'
+service/marketplacecatalog:
+  - 'internal/service/marketplacecatalog/**/*'
+  - 'website/**/marketplace_catalog_*'
+service/mediaconnect:
+  - 'internal/service/mediaconnect/**/*'
+  - 'website/**/media_connect_*'
+service/mediaconvert:
+  - 'internal/service/mediaconvert/**/*'
+  - 'website/**/media_convert_*'
+service/medialive:
+  - 'internal/service/medialive/**/*'
+  - 'website/**/media_live_*'
+service/mediapackage:
+  - 'internal/service/mediapackage/**/*'
+  - 'website/**/media_package_*'
+service/mediastore:
+  - 'internal/service/mediastore/**/*'
+  - 'website/**/media_store_*'
+service/mediatailor:
+  - 'internal/service/mediatailor/**/*'
+  - 'website/**/media_tailor_*'
+service/memorydb:
+  - 'internal/service/memorydb/**/*'
+  - 'website/**/memorydb_*'
+service/mobile:
+  - 'internal/service/mobile/**/*'
+  - 'website/**/mobile_*'
+service/mq:
+  - 'internal/service/mq/**/*'
+  - 'website/**/mq_*'
+service/mwaa:
+  - 'internal/service/mwaa/**/*'
+  - 'website/**/mwaa_*'
+service/meta:
+  - 'internal/service/meta/**/*'
+  - 'website/**/arn*'
+  - 'website/**/ip_ranges*'
+  - 'website/**/billing_service_account*'
+  - 'website/**/default_tags*'
+  - 'website/**/partition*'
+  - 'website/**/region*'
+service/neptune:
+  - 'internal/service/neptune/**/*'
+  - 'website/**/neptune_*'
+service/networkfirewall:
+  - 'internal/service/networkfirewall/**/*'
+  - 'website/**/networkfirewall_*'
+service/networkmanager:
+  - 'internal/service/networkmanager/**/*'
+  - 'website/**/networkmanager_*'
+service/opsworks:
+  - 'internal/service/opsworks/**/*'
+  - 'website/**/opsworks_*'
+service/organizations:
+  - 'internal/service/organizations/**/*'
+  - 'website/**/organizations_*'
+service/outposts:
+  - 'internal/service/outposts/**/*'
+  - 'website/**/outposts_*'
+service/pinpoint:
+  - 'internal/service/pinpoint/**/*'
+  - 'website/**/pinpoint_*'
+service/polly:
+  - 'internal/service/polly/**/*'
+  - 'website/**/polly_*'
+service/pricing:
+  - 'internal/service/pricing/**/*'
+  - 'website/**/pricing_*'
+service/qldb:
+  - 'internal/service/qldb/**/*'
+  - 'website/**/qldb_*'
+service/quicksight:
+  - 'internal/service/quicksight/**/*'
+  - 'website/**/quicksight_*'
+service/ram:
+  - 'internal/service/ram/**/*'
+  - 'website/**/ram_*'
+service/rds:
+  - 'internal/service/rds/**/*'
+  - 'website/**/db_*'
+  - 'website/**/rds_*'
+service/redshift:
+  - 'internal/service/redshift/**/*'
+  - 'website/**/redshift_*'
+service/resourcegroups:
+  - 'internal/service/resourcegroups/**/*'
+  - 'website/**/resourcegroups_*'
+service/resourcegroupstaggingapi:
+  - 'internal/service/resourcegroupstaggingapi/**/*'
+  - 'website/**/resourcegroupstaggingapi_*'
+service/robomaker:
+  - 'internal/service/robomaker/**/*'
+  - 'website/**/robomaker_*'
+service/route53:
+  - 'internal/service/route53/**/*'
+  - 'website/**/route53_delegation_set*'
+  - 'website/**/route53_health_check*'
+  - 'website/**/route53_query_log*'
+  - 'website/**/route53_record*'
+  - 'website/**/route53_vpc_association_authorization*'
+  - 'website/**/route53_zone*'
+service/route53domains:
+  - 'internal/service/route53domains/**/*'
+  - 'website/**/route53domains_*'
+service/route53recoverycontrolconfig:
+  - 'internal/service/route53recoverycontrolconfig/**/*'
+  - 'website/**/route53recoverycontrolconfig_*'
+service/route53recoveryreadiness:
+  - 'internal/service/route53recoveryreadiness/**/*'
+  - 'website/**/route53recoveryreadiness_*'
+service/route53resolver:
+  - 'internal/service/route53resolver/**/*'
+  - 'website/**/route53_resolver_*'
+service/s3:
+  - 'internal/service/s3/**/*'
+  - 'website/**/s3_bucket*'
+  - 'website/**/s3_object*'
+  - 'website/**/canonical_user_id*'
+service/s3control:
+  - 'internal/service/s3control/**/*'
+  - 'website/**/s3_account_*'
+  - 'website/**/s3control_*'
+service/s3outposts:
+  - 'internal/service/s3outposts/**/*'
+  - 'website/**/s3outposts_*'
+service/sagemaker:
+  - 'internal/service/sagemaker/**/*'
+  - 'website/**/sagemaker_*'
+service/schemas:
+  - 'internal/service/schemas/**/*'
+  - 'website/**/schemas_*'
+service/secretsmanager:
+  - 'internal/service/secretsmanager/**/*'
+  - 'website/**/secretsmanager_*'
+service/securityhub:
+  - 'internal/service/securityhub/**/*'
+  - 'website/**/securityhub_*'
+service/serverlessrepo:
+  - 'internal/service/serverlessrepo/**/*'
+  - 'website/**/serverlessapplicationrepository_*'
+service/servicecatalog:
+  - 'internal/service/servicecatalog/**/*'
+  - 'website/**/servicecatalog_*'
+service/servicediscovery:
+  - 'internal/service/servicediscovery/**/*'
+  - 'website/**/service_discovery_*'
+service/servicequotas:
+  - 'internal/service/servicequotas/**/*'
+  - 'website/**/servicequotas_*'
+service/ses:
+  - 'internal/service/ses/**/*'
+  - 'website/**/ses_*'
+service/sfn:
+  - 'internal/service/sfn/**/*'
+  - 'website/**/sfn_*'
+service/shield:
+  - 'internal/service/shield/**/*'
+  - 'website/**/shield_*'
+service/signer:
+  - 'website/**/signer_*'
+service/simpledb:
+  - 'internal/service/simpledb/**/*'
+  - 'website/**/simpledb_*'
+service/snowball:
+  - 'internal/service/snowball/**/*'
+  - 'website/**/snowball_*'
+service/sns:
+  - 'internal/service/sns/**/*'
+  - 'website/**/sns_*'
+service/sqs:
+  - 'internal/service/sqs/**/*'
+  - 'website/**/sqs_*'
+service/ssm:
+  - 'internal/service/ssm/**/*'
+  - 'website/**/ssm_*'
+service/ssoadmin:
+  - 'internal/service/ssoadmin/**/*'
+  - 'website/**/ssoadmin_*'
+service/storagegateway:
+  - 'internal/service/storagegateway/**/*'
+  - 'website/**/storagegateway_*'
+service/sts:
+  - 'internal/service/sts/**/*'
+  - 'website/**/caller_identity*'
+service/swf:
+  - 'internal/service/swf/**/*'
+  - 'website/**/swf_*'
+service/synthetics:
+  - 'internal/service/synthetics/**/*'
+  - 'website/**/synthetics_*'
+service/timestreamwrite:
+  - 'internal/service/timestreamwrite/**/*'
+  - 'website/**/timestreamwrite_*'
+service/transfer:
+  - 'internal/service/transfer/**/*'
+  - 'website/**/transfer_*'
+service/waf:
+  - 'internal/service/waf/**/*'
+  - 'internal/service/wafregional/**/*'
+  - 'website/**/waf_*'
+  - 'website/**/wafregional_*'
+service/wafv2:
+  - 'internal/service/wafv2/**/*'
+  - 'website/**/wafv2_*'
+service/workdocs:
+  - 'internal/service/workdocs/**/*'
+  - 'website/**/workdocs_*'
+service/worklink:
+  - 'internal/service/worklink/**/*'
+  - 'website/**/worklink_*'
+service/workmail:
+  - 'internal/service/workmail/**/*'
+  - 'website/**/workmail_*'
+service/workspaces:
+  - 'internal/service/workspaces/**/*'
+  - 'website/**/workspaces_*'
+service/xray:
+  - 'internal/service/xray/**/*'
+  - 'website/**/xray_*'
+sweeper:
+  - 'internal/sweep/**/*'
+  - 'internal/service/**/sweep.go'
+tags:
+  - 'internal/**/tag_gen.go'
+  - 'internal/**/tag_gen_test.go'
+  - 'internal/**/tag_test.go'
+  - 'internal/**/tags_gen.go'
+  - 'internal/tags/**/*'
+tests:
+  - '**/*_test.go'
+  - 'internal/**/test-fixtures/**/*'
+  - 'internal/**/testdata/**/*'
+  - 'internal/acctest/**/*'
+verify:
+  - 'internal/verify/**/*'
