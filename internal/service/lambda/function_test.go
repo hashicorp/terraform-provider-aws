@@ -179,7 +179,7 @@ func TestAccLambdaFunction_codeSigning(t *testing.T) {
 	cscUpdateResourceName := "aws_lambda_code_signing_config.code_signing_config_2"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckSingerSigningProfile(t, "AWSLambda-SHA384-ECDSA") },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckSignerSigningProfile(t, "AWSLambda-SHA384-ECDSA") },
 		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckLambdaFunctionDestroy,
@@ -3423,12 +3423,29 @@ func TestFlattenLambdaImageConfigShouldNotFailWithEmptyImageConfig(t *testing.T)
 	tflambda.FlattenImageConfig(&response)
 }
 
-func testAccPreCheckSingerSigningProfile(t *testing.T, platformID string) {
+func testAccPreCheckSignerSigningProfile(t *testing.T, platformID string) {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).SignerConn
 
-	input := &signer.ListSigningPlatformsInput{}
+	var foundPlatform bool
+	err := conn.ListSigningPlatformsPages(&signer.ListSigningPlatformsInput{}, func(page *signer.ListSigningPlatformsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
 
-	output, err := conn.ListSigningPlatforms(input)
+		for _, platform := range page.Platforms {
+			if platform == nil {
+				continue
+			}
+
+			if aws.StringValue(platform.PlatformId) == platformID {
+				foundPlatform = true
+
+				return false
+			}
+		}
+
+		return !lastPage
+	})
 
 	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)
@@ -3438,19 +3455,7 @@ func testAccPreCheckSingerSigningProfile(t *testing.T, platformID string) {
 		t.Fatalf("unexpected PreCheck error: %s", err)
 	}
 
-	if output == nil {
-		t.Skip("skipping acceptance testing: empty response")
+	if !foundPlatform {
+		t.Skipf("skipping acceptance testing: Signing Platform (%s) not found", platformID)
 	}
-
-	for _, platform := range output.Platforms {
-		if platform == nil {
-			continue
-		}
-
-		if aws.StringValue(platform.PlatformId) == platformID {
-			return
-		}
-	}
-
-	t.Skipf("skipping acceptance testing: Signing Platform (%s) not found", platformID)
 }
