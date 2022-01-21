@@ -1,4 +1,9 @@
 ## 3.74.0 (Unreleased)
+
+FEATURES:
+
+* **New Resource:** `aws_devicefarm_test_grid_project` ([#22688](https://github.com/hashicorp/terraform-provider-aws/issues/22688))
+
 ## 3.73.0 (January 21, 2022)
 
 FEATURES:
