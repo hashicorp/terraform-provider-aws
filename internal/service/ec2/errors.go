@@ -45,6 +45,7 @@ const (
 	ErrCodeInvalidRouteTableIDNotFound               = "InvalidRouteTableID.NotFound"
 	ErrCodeInvalidRouteTableIdNotFound               = "InvalidRouteTableId.NotFound"
 	ErrCodeInvalidSecurityGroupIDNotFound            = "InvalidSecurityGroupID.NotFound"
+	ErrCodeInvalidSnapshotInUse                      = "InvalidSnapshot.InUse"
 	ErrCodeInvalidSnapshotNotFound                   = "InvalidSnapshot.NotFound"
 	ErrCodeInvalidSpotInstanceRequestIDNotFound      = "InvalidSpotInstanceRequestID.NotFound"
 	ErrCodeInvalidSubnetCidrReservationIDNotFound    = "InvalidSubnetCidrReservationID.NotFound"
