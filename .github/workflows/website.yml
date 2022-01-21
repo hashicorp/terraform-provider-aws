@@ -30,6 +30,8 @@ jobs:
           config-file: ".markdownlinkcheck.json"
           folder-path: "website/docs"
           file-extension: ".markdown"
+          base-branch: "main"
+          check-modified-files-only: "yes"
       - uses: gaurav-nelson/github-action-markdown-link-check@v1
         name: markdown-link-check website/docs/**/*.md
         with:
