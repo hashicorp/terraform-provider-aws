@@ -1,4 +1,4 @@
-## 3.73.0 (Unreleased)
+## 3.73.0 (January 21, 2022)
 
 FEATURES:
 
