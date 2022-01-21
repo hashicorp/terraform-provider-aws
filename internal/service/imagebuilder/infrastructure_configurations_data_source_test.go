@@ -2,11 +2,12 @@ package imagebuilder_test
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/aws/aws-sdk-go/service/imagebuilder"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"testing"
 )
 
 func TestAccImageBuilderInfrastructureConfigurationsDataSource_filter(t *testing.T) {
@@ -40,13 +41,13 @@ resource "aws_iam_instance_profile" "test" {
 }
 
 resource "aws_imagebuilder_infrastructure_configuration" "test" {
-  name = %[1]q
+  name                  = %[1]q
   instance_profile_name = aws_iam_instance_profile.test.name
 }
 
 data "aws_imagebuilder_infrastructure_configurations" "test" {
   filter {
-    name = "name"
+    name   = "name"
     values = [aws_imagebuilder_infrastructure_configuration.test.name]
   }
 }
