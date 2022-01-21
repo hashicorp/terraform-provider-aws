@@ -140,6 +140,11 @@ func init() {
 		Name: "aws_sagemaker_workteam",
 		F:    sweepWorkteams,
 	})
+
+	resource.AddTestSweepers("aws_sagemaker_project", &resource.Sweeper{
+		Name: "aws_sagemaker_project",
+		F:    sweepProjects,
+	})
 }
 
 func sweepAppImagesConfig(region string) error {
@@ -921,6 +926,44 @@ func sweepWorkteams(region string) error {
 
 	if err != nil {
 		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error retrieving Sagemaker Workteams: %w", err))
+	}
+
+	return sweeperErrs.ErrorOrNil()
+}
+
+func sweepProjects(region string) error {
+	client, err := sweep.SharedRegionalSweepClient(region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %s", err)
+	}
+	conn := client.(*conns.AWSClient).SageMakerConn
+	var sweeperErrs *multierror.Error
+
+	err = conn.ListProjectsPages(&sagemaker.ListProjectsInput{}, func(page *sagemaker.ListProjectsOutput, lastPage bool) bool {
+		for _, project := range page.ProjectSummaryList {
+			name := aws.StringValue(project.ProjectName)
+
+			r := ResourceProject()
+			d := r.Data(nil)
+			d.SetId(name)
+			err := r.Delete(d, client)
+			if err != nil {
+				log.Printf("[ERROR] %s", err)
+				sweeperErrs = multierror.Append(sweeperErrs, err)
+				continue
+			}
+		}
+
+		return !lastPage
+	})
+
+	if sweep.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping SageMaker Project sweep for %s: %s", region, err)
+		return sweeperErrs.ErrorOrNil()
+	}
+
+	if err != nil {
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error retrieving Sagemaker Projects: %w", err))
 	}
 
 	return sweeperErrs.ErrorOrNil()

@@ -203,6 +203,16 @@ func ResourceLustreFileSystem() *schema.Resource {
 				ValidateFunc: validation.StringInSlice(fsx.DataCompressionType_Values(), false),
 				Default:      fsx.DataCompressionTypeNone,
 			},
+			"file_system_type_version": {
+				Type:     schema.TypeString,
+				ForceNew: true,
+				Computed: true,
+				Optional: true,
+				ValidateFunc: validation.All(
+					validation.StringLenBetween(1, 20),
+					validation.StringMatch(regexp.MustCompile(`^[0-9].[0-9]+$`), "must be in format x.y"),
+				),
+			},
 		},
 
 		CustomizeDiff: customdiff.Sequence(
@@ -251,7 +261,7 @@ func resourceLustreFileSystemCreate(d *schema.ResourceData, meta interface{}) er
 		},
 	}
 
-	//Applicable only for TypePersistent1
+	//Applicable only for TypePersistent1 and TypePersistent2
 	if v, ok := d.GetOk("kms_key_id"); ok {
 		input.KmsKeyId = aws.String(v.(string))
 		backupInput.KmsKeyId = aws.String(v.(string))
@@ -320,6 +330,11 @@ func resourceLustreFileSystemCreate(d *schema.ResourceData, meta interface{}) er
 	if v, ok := d.GetOk("data_compression_type"); ok {
 		input.LustreConfiguration.DataCompressionType = aws.String(v.(string))
 		backupInput.LustreConfiguration.DataCompressionType = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("file_system_type_version"); ok {
+		input.FileSystemTypeVersion = aws.String(v.(string))
+		backupInput.FileSystemTypeVersion = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("backup_id"); ok {
@@ -485,6 +500,7 @@ func resourceLustreFileSystemRead(d *schema.ResourceData, meta interface{}) erro
 	d.Set("daily_automatic_backup_start_time", lustreConfig.DailyAutomaticBackupStartTime)
 	d.Set("copy_tags_to_backups", lustreConfig.CopyTagsToBackups)
 	d.Set("data_compression_type", lustreConfig.DataCompressionType)
+	d.Set("file_system_type_version", filesystem.FileSystemTypeVersion)
 
 	return nil
 }

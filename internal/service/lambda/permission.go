@@ -217,7 +217,7 @@ func resourcePermissionRead(d *schema.ResourceData, meta interface{}) error {
 			return resource.NonRetryableError(err)
 		}
 
-		statement, err = getLambdaPolicyStatement(out, d.Id())
+		statement, err = getPolicyStatement(out, d.Id())
 		if err != nil {
 			return resource.RetryableError(err)
 		}
@@ -228,7 +228,7 @@ func resourcePermissionRead(d *schema.ResourceData, meta interface{}) error {
 
 		if err == nil {
 			var psErr error
-			statement, psErr = getLambdaPolicyStatement(out, d.Id())
+			statement, psErr = getPolicyStatement(out, d.Id())
 
 			// handle the resource not existing
 			if awsErr, ok := psErr.(awserr.Error); ok {
@@ -364,7 +364,7 @@ func resourcePermissionDelete(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	}
 
-	statement, err := getLambdaPolicyStatement(resp, d.Id())
+	statement, err := getPolicyStatement(resp, d.Id())
 
 	if tfresource.NotFound(err) {
 		return nil
@@ -382,7 +382,7 @@ func resourcePermissionDelete(d *schema.ResourceData, meta interface{}) error {
 
 	return nil
 }
-func getLambdaPolicyStatement(out *lambda.GetPolicyOutput, statemendId string) (statement *PolicyStatement, err error) {
+func getPolicyStatement(out *lambda.GetPolicyOutput, statemendId string) (statement *PolicyStatement, err error) {
 	policyInBytes := []byte(*out.Policy)
 	policy := Policy{}
 	err = json.Unmarshal(policyInBytes, &policy)

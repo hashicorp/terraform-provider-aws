@@ -191,10 +191,10 @@ type lifecyclePolicyRuleAction struct {
 }
 
 type lifecyclePolicyRule struct {
-	RulePriority *int64                        `locationName:"countNumber" type:"integer" required:"true"`
+	RulePriority *int64                        `locationName:"rulePriority" type:"integer" required:"true"`
 	Description  *string                       `locationName:"description" type:"string"`
-	Selection    *lifecyclePolicyRuleSelection `location:"selection" type:"structure" required:"true"`
-	Action       *lifecyclePolicyRuleAction    `location:"action" type:"structure" required:"true"`
+	Selection    *lifecyclePolicyRuleSelection `locationName:"selection" type:"structure" required:"true"`
+	Action       *lifecyclePolicyRuleAction    `locationName:"action" type:"structure" required:"true"`
 }
 
 type lifecyclePolicy struct {

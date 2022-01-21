@@ -15,7 +15,7 @@ import (
 	tfdetective "github.com/hashicorp/terraform-provider-aws/internal/service/detective"
 )
 
-func TestAccDetectiveGraph_basic(t *testing.T) {
+func testAccDetectiveGraph_basic(t *testing.T) {
 	var graphOutput detective.Graph
 	resourceName := "aws_detective_graph.test"
 
@@ -41,7 +41,7 @@ func TestAccDetectiveGraph_basic(t *testing.T) {
 	})
 }
 
-func TestAccDetectiveGraph_tags(t *testing.T) {
+func testAccDetectiveGraph_tags(t *testing.T) {
 	var graph1, graph2 detective.Graph
 	resourceName := "aws_detective_graph.test"
 
@@ -97,7 +97,7 @@ func TestAccDetectiveGraph_tags(t *testing.T) {
 	})
 }
 
-func TestAccDetectiveGraph_disappears(t *testing.T) {
+func testAccDetectiveGraph_disappears(t *testing.T) {
 	var graphOutput detective.Graph
 	resourceName := "aws_detective_graph.test"
 

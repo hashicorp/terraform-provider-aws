@@ -67,3 +67,15 @@ func VpnConnectionType_Values() []string {
 		VpnConnectionTypeIpsec1,
 	}
 }
+
+const (
+	AmazonIPv6PoolID = "Amazon"
+)
+
+const (
+	DefaultDHCPOptionsID = "default"
+)
+
+const (
+	DefaultSecurityGroupName = "default"
+)

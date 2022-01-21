@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func ResourceMethodSettings() *schema.Resource {
@@ -97,14 +98,10 @@ func ResourceMethodSettings() *schema.Resource {
 							Computed: true,
 						},
 						"unauthorized_cache_control_header_strategy": {
-							Type:     schema.TypeString,
-							Optional: true,
-							ValidateFunc: validation.StringInSlice([]string{
-								apigateway.UnauthorizedCacheControlHeaderStrategyFailWith403,
-								apigateway.UnauthorizedCacheControlHeaderStrategySucceedWithResponseHeader,
-								apigateway.UnauthorizedCacheControlHeaderStrategySucceedWithoutResponseHeader,
-							}, false),
-							Computed: true,
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validation.StringInSlice(apigateway.UnauthorizedCacheControlHeaderStrategy_Values(), false),
+							Computed:     true,
 						},
 					},
 				},
@@ -137,14 +134,9 @@ func flattenMethodSettings(settings *apigateway.MethodSetting) []interface{} {
 func resourceMethodSettingsRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).APIGatewayConn
 
-	input := &apigateway.GetStageInput{
-		RestApiId: aws.String(d.Get("rest_api_id").(string)),
-		StageName: aws.String(d.Get("stage_name").(string)),
-	}
+	stage, err := FindStageByName(conn, d.Get("rest_api_id").(string), d.Get("stage_name").(string))
 
-	stage, err := conn.GetStage(input)
-
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, apigateway.ErrCodeNotFoundException) {
+	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] API Gateway Stage Method Settings (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
