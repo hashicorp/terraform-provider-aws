@@ -779,6 +779,10 @@ func TestAccEC2NetworkInterface_privateIPSet(t *testing.T) {
 }
 
 func TestAccEC2NetworkInterface_privateIPList(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var networkInterface, lastInterface ec2.NetworkInterface
 	resourceName := "aws_network_interface.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
