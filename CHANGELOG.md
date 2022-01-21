@@ -13,6 +13,8 @@ FEATURES:
 * **New Resource:** `aws_detective_invitation_accepter` ([#22163](https://github.com/hashicorp/terraform-provider-aws/issues/22163))
 * **New Resource:** `aws_detective_member` ([#22163](https://github.com/hashicorp/terraform-provider-aws/issues/22163))
 * **New Resource:** `aws_fsx_data_repository_association` ([#22291](https://github.com/hashicorp/terraform-provider-aws/issues/22291))
+* **New Resource:** `aws_lambda_invocation` ([#19488](https://github.com/hashicorp/terraform-provider-aws/issues/19488))
+
 
 ENHANCEMENTS:
 
