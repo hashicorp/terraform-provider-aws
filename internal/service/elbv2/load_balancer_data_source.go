@@ -306,7 +306,7 @@ func dataSourceLoadBalancerRead(d *schema.ResourceData, meta interface{}) error 
 
 	tags, err := ListTags(conn, d.Id())
 
-	if tfawserr.ErrCodeContains(err, ErrCodeAccessDenied) || tfawserr.ErrCodeContains(err, elbv2.ErrCodeInvalidConfigurationRequestException) || tfawserr.ErrCodeContains(err, elbv2.ErrCodeOperationNotPermittedException) {
+	if verify.CheckISOErrorTagsUnsupported(err) {
 		log.Printf("[WARN] Unable to list tags for ELBv2 Load Balancer %s: %s", d.Id(), err)
 		return nil
 	}
