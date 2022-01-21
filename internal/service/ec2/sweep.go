@@ -62,6 +62,9 @@ func init() {
 	resource.AddTestSweepers("aws_ebs_snapshot", &resource.Sweeper{
 		Name: "aws_ebs_snapshot",
 		F:    sweepEBSnapshots,
+		Dependencies: []string{
+			"aws_ami",
+		},
 	})
 
 	resource.AddTestSweepers("aws_egress_only_internet_gateway", &resource.Sweeper{
