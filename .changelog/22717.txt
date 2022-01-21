@@ -1,3 +1,7 @@
 ```release-note:bug
 resource/aws_cloudwatch_event_rule: Further refine tag error handling for ISO regions
 ```
+
+```release-note:bug
+resource/aws_cloudwatch_event_bus: Further refine tag error handling for ISO regions
+```
