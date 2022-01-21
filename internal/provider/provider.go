@@ -456,6 +456,7 @@ func Provider() *schema.Provider {
 			"aws_ec2_spot_price":                             ec2.DataSourceSpotPrice(),
 			"aws_ec2_transit_gateway":                        ec2.DataSourceTransitGateway(),
 			"aws_ec2_transit_gateway_dx_gateway_attachment":  ec2.DataSourceTransitGatewayDxGatewayAttachment(),
+			"aws_ec2_transit_gateway_multicast_domain":       ec2.DataSourceTransitGatewayMulticastDomain(),
 			"aws_ec2_transit_gateway_peering_attachment":     ec2.DataSourceTransitGatewayPeeringAttachment(),
 			"aws_ec2_transit_gateway_route_table":            ec2.DataSourceTransitGatewayRouteTable(),
 			"aws_ec2_transit_gateway_route_tables":           ec2.DataSourceTransitGatewayRouteTables(),
