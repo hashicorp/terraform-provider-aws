@@ -40,6 +40,8 @@ jobs:
           config-file: ".markdownlinkcheck.json"
           folder-path: "website/docs"
           file-extension: ".md"
+          base-branch: "main"
+          check-modified-files-only: "yes"
   markdown-lint:
     runs-on: ubuntu-latest
     steps:
