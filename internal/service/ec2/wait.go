@@ -25,8 +25,8 @@ const (
 	RouteNotFoundChecks                        = 1000 // Should exceed any reasonable custom timeout value.
 	RouteTableNotFoundChecks                   = 1000 // Should exceed any reasonable custom timeout value.
 	RouteTableAssociationCreatedNotFoundChecks = 1000 // Should exceed any reasonable custom timeout value.
-
-	SecurityGroupNotFoundChecks = 1000 // Should exceed any reasonable custom timeout value.
+	SecurityGroupNotFoundChecks                = 1000 // Should exceed any reasonable custom timeout value.
+	InternetGatewayNotFoundChecks              = 1000 // Should exceed any reasonable custom timeout value.
 )
 
 const (
@@ -1148,10 +1148,11 @@ const (
 
 func WaitInternetGatewayAttached(conn *ec2.EC2, internetGatewayID, vpcID string, timeout time.Duration) (*ec2.InternetGatewayAttachment, error) {
 	stateConf := &resource.StateChangeConf{
-		Pending: []string{ec2.AttachmentStatusAttaching},
-		Target:  []string{InternetGatewayAttachmentStateAvailable},
-		Timeout: timeout,
-		Refresh: StatusInternetGatewayAttachmentState(conn, internetGatewayID, vpcID),
+		Pending:        []string{ec2.AttachmentStatusAttaching},
+		Target:         []string{InternetGatewayAttachmentStateAvailable},
+		Timeout:        timeout,
+		NotFoundChecks: InternetGatewayNotFoundChecks,
+		Refresh:        StatusInternetGatewayAttachmentState(conn, internetGatewayID, vpcID),
 	}
 
 	outputRaw, err := stateConf.WaitForState()
