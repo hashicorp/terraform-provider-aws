@@ -37,12 +37,12 @@ func TestAccImageBuilderDistributionConfigurationsDataSource_filter(t *testing.T
 func testAccConfigDistributionConfigurations_filter(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_imagebuilder_distribution_configuration" "test" {
-  name                  = %[1]q
+  name = %[1]q
 
   distribution {
     ami_distribution_configuration {
-	    name = "test-{{ imagebuilder:buildDate }}"
-	}
+        name = "test-{{ imagebuilder:buildDate }}"
+    }
 
     region = "us-west-2"
   }
