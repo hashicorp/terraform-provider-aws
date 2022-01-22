@@ -21,7 +21,7 @@ data "aws_api_gateway_export" "example" {
     artifactId      = "example"
     artifactVersion = "example"
     invokerPackage  = "example"
-  }  
+  }
 }
 ```
 
