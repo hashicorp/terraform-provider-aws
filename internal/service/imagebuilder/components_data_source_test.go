@@ -64,7 +64,7 @@ func testAccConfigComponentWithDataSource(rName string) string {
 		`
 data "aws_imagebuilder_components" "test" {
   filter {
-    name = "name"
+    name   = "name"
     values = [aws_imagebuilder_component.test.name]  
   }
 }
