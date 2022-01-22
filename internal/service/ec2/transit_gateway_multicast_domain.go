@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
@@ -29,6 +30,25 @@ func ResourceTransitGatewayMulticastDomain() *schema.Resource {
 				Required: true,
 			},
 			"tags": tftags.TagsSchema(),
+			"igmpv2_support": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Default:  "disable",
+			},
+			"static_source_support": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Default:  "disable",
+			},
+			"auto_accept_shared_associations": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Default:  ec2.AutoAcceptSharedAssociationsValueDisable,
+				ValidateFunc: validation.StringInSlice([]string{
+					ec2.AutoAcceptSharedAssociationsValueEnable,
+					ec2.AutoAcceptSharedAssociationsValueDisable,
+				}, false),
+			},
 			"association": {
 				Type:       schema.TypeSet,
 				Computed:   true,
@@ -102,13 +122,31 @@ func ResourceTransitGatewayMulticastDomain() *schema.Resource {
 func resourceTransitGatewayMulticastDomainCreate(d *schema.ResourceData, meta interface{}) error {
 	// create the domain
 	conn := meta.(*conns.AWSClient).EC2Conn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+
 	input := &ec2.CreateTransitGatewayMulticastDomainInput{
 		TransitGatewayId: aws.String(d.Get("transit_gateway_id").(string)),
-		TagSpecifications: ec2TagSpecificationsFromMap(d.Get("tags").(map[string]interface{}),
-			ec2.ResourceTypeTransitGatewayMulticastDomain),
+		Options:          &ec2.CreateTransitGatewayMulticastDomainRequestOptions{},
+
+		TagSpecifications: ec2TagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeTransitGatewayMulticastDomain),
+		// TagSpecifications: ec2TagSpecificationsFromMap(d.Get("tags").(map[string]interface{}),ec2.ResourceTypeTransitGatewayMulticastDomain),
+	}
+	// log.Printf("[DEBUG] Creating EC2 Transit Gateway Multicast Domain: %s", input),
+
+	if v, ok := d.GetOk("igmpv2_support"); ok {
+		input.Options.Igmpv2Support = aws.String(v.(string))
 	}
 
-	log.Printf("[DEBUG] Creating EC2 Transit Gateway Multicast Domain: %s", input)
+	if v, ok := d.GetOk("static_source_support"); ok {
+		input.Options.StaticSourcesSupport = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("auto_accept_shared_associations"); ok {
+		input.Options.AutoAcceptSharedAssociations = aws.String(v.(string))
+	}
+	log.Printf("[WARN] %v", input)
+
 	output, err := conn.CreateTransitGatewayMulticastDomain(input)
 	if err != nil {
 		return fmt.Errorf("error creating EC2 Transit Gateway Multicast Domain: %s", err)
@@ -162,6 +200,10 @@ func resourceTransitGatewayMulticastDomainRead(d *schema.ResourceData, meta inte
 		return nil
 	}
 
+	d.Set("igmpv2_support", multicastDomain.Options.Igmpv2Support)
+	d.Set("static_source_support", multicastDomain.Options.StaticSourcesSupport)
+	d.Set("auto_accept_shared_associations", multicastDomain.Options.AutoAcceptSharedAssociations)
+
 	// if err := d.Set("tags", ec2TagSpecificationsFromKeyValueTags(multicastDomain.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 	tags := KeyValueTags(multicastDomain.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 	//lintignore:AWSR002
@@ -175,6 +217,7 @@ func resourceTransitGatewayMulticastDomainRead(d *schema.ResourceData, meta inte
 func resourceTransitGatewayMulticastDomainUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 	id := d.Id()
+
 	if d.HasChange("tags") {
 		o, n := d.GetChange("tags")
 		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
@@ -599,12 +642,23 @@ func resourceTransitGatewayMulticastDomainGroupRegister(conn *ec2.EC2, id string
 		}
 
 		log.Printf(
-			"[DEBUG] Registering members to EC2 Transit Gateway Multicast Domain (%s): %s", id, input)
+			"[DEBUG] Registering members to EC2 Transit Gateway Multifvcast Domain (%s): %s", id, input)
 		if _, err := conn.RegisterTransitGatewayMulticastGroupMembers(input); err != nil {
 			return fmt.Errorf(
 				"error registering EC2 Transit Gateway Multicast Domain (%s) members: %s", id, err)
 		}
 	} else {
+		multicastDomain, err := DescribeTransitGatewayMulticastDomain(conn, id)
+		staticSourcesSupport := aws.StringValue(multicastDomain.Options.StaticSourcesSupport)
+
+		if err != nil {
+			return fmt.Errorf("error reading EC2 Transit Gateway Multicast Domain (%s): %s", id, err)
+		}
+
+		if staticSourcesSupport == "disable" {
+			return fmt.Errorf("multicast domain %s does not have static sources - resource %v", id, multicastDomain)
+		}
+
 		input := &ec2.RegisterTransitGatewayMulticastGroupSourcesInput{
 			GroupIpAddress:                  aws.String(groupData["group_ip_address"].(string)),
 			NetworkInterfaceIds:             flex.ExpandStringSet(groupData["network_interface_ids"].(*schema.Set)),
