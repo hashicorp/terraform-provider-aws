@@ -54,11 +54,12 @@ func dataSourceSdkRead(d *schema.ResourceData, meta interface{}) error {
 
 	restApiId := d.Get("rest_api_id").(string)
 	stageName := d.Get("stage_name").(string)
+	sdkType := d.Get("sdk_type").(string)
 
 	input := &apigateway.GetSdkInput{
 		RestApiId: aws.String(restApiId),
 		StageName: aws.String(stageName),
-		SdkType:   aws.String(d.Get("sdk_type").(string)),
+		SdkType:   aws.String(sdkType),
 	}
 
 	if v, ok := d.GetOk("parameters"); ok && len(v.(map[string]interface{})) > 0 {
@@ -70,7 +71,7 @@ func dataSourceSdkRead(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	d.SetId(fmt.Sprintf("%s:%s", restApiId, stageName))
+	d.SetId(fmt.Sprintf("%s:%s:%s", restApiId, stageName, sdkType))
 	d.Set("body", string(export.Body))
 	d.Set("content_type", export.ContentType)
 	d.Set("content_disposition", export.ContentDisposition)
