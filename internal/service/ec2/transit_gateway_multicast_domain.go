@@ -541,7 +541,7 @@ func resourceTransitGatewayMulticastDomainAssociate(conn *ec2.EC2, id string, as
 	}
 
 	// wait for associations
-	if err := waitForTransitGatewayMulticastDomainDisassociation(conn, id, subnetIDs); err != nil {
+	if err := waitForTransitGatewayMulticastDomainAssociation(conn, id, subnetIDs); err != nil {
 		return fmt.Errorf(
 			"error waiting for EC2 Transit Gateway Multicast Domain (%s) associations: %s", id, err)
 	}
