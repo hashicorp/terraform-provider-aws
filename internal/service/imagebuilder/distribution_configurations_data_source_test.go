@@ -41,7 +41,7 @@ resource "aws_imagebuilder_distribution_configuration" "test" {
 
   distribution {
     ami_distribution_configuration {
-        name = "test-{{ imagebuilder:buildDate }}"
+      name = "test-{{ imagebuilder:buildDate }}"
     }
 
     region = "us-west-2"
