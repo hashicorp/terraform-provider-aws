@@ -1102,6 +1102,7 @@ func Provider() *schema.Provider {
 			"aws_ec2_transit_gateway_route_table_propagation":     ec2.ResourceTransitGatewayRouteTablePropagation(),
 			"aws_ec2_transit_gateway_vpc_attachment":              ec2.ResourceTransitGatewayVPCAttachment(),
 			"aws_ec2_transit_gateway_vpc_attachment_accepter":     ec2.ResourceTransitGatewayVPCAttachmentAccepter(),
+			"aws_ec2_transit_gateway_multicast_domain":            ec2.ResourceTransitGatewayMulticastDomain(),
 			"aws_egress_only_internet_gateway":                    ec2.ResourceEgressOnlyInternetGateway(),
 			"aws_eip":                                             ec2.ResourceEIP(),
 			"aws_eip_association":                                 ec2.ResourceEIPAssociation(),

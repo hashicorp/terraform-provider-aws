@@ -1,9 +1,8 @@
-package ec2
+package ec2_test
 
 import (
 	"fmt"
-	"log"
-	"os"
+	// "log"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -13,26 +12,31 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	// "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 )
 
-func init() {
-	// TODO: Remove once multicast support is extended beyond us-east-1
-	os.Setenv("AWS_DEFAULT_REGION", "us-east-1")
-}
+// func init() {
+// 	// TODO: Remove once multicast support is extended beyond us-east-1
+// 	os.Setenv("AWS_DEFAULT_REGION", "us-east-1")
+// }
 
-func TestAccAWSEc2TransitGatewayMulticastDomain_basic(t *testing.T) {
-	var domain ec2.TransitGatewayMulticastDomain
+func TestAccAWSTransitGatewayMulticastDomain_basic(t *testing.T) {
+	var domain *ec2.TransitGatewayMulticastDomain
 	resourceName := "aws_ec2_transit_gateway_multicast_domain.test"
+
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSEc2TransitGatewayMulticastDomainDestroy,
+		PreCheck: func() {
+			acctest.PreCheck(t)
+			testAccPreCheckTransitGateway(t)
+		},
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckTransitGatewayMulticastDomainDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEc2TransitGatewayMulticastDomainConfig(),
+				Config: testAccAWSTransitGatewayMulticastDomainConfig(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEc2TransitGatewayMulticastDomainExists(resourceName, &domain),
+					testAccCheckTransitGatewayMulticastDomainExists(resourceName, domain),
 					resource.TestCheckResourceAttrSet(resourceName, "transit_gateway_id"),
 				),
 			},
@@ -40,189 +44,205 @@ func TestAccAWSEc2TransitGatewayMulticastDomain_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSEc2TransitGatewayMulticastDomain_disappears(t *testing.T) {
-	var domain ec2.TransitGatewayMulticastDomain
-	resourceName := "aws_ec2_transit_gateway_multicast_domain.test"
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSEc2TransitGatewayMulticastDomainDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAWSEc2TransitGatewayMulticastDomainConfig(),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEc2TransitGatewayMulticastDomainExists(resourceName, &domain),
-					testAccCheckAWSEc2TransitGatewayMulticastDomainDisappears(&domain),
-				),
-				ExpectNonEmptyPlan: true,
-			},
-		},
-	})
-}
+// func testAccAWSTransitGatewayMulticastDomain_disappears(t *testing.T) {
+// 	var domain tfec2.TransitGatewayMulticastDomain
+// 	resourceName := "aws_ec2_transit_gateway_multicast_domain.test"
 
-func TestAccAWSEc2TransitGatewayMulticastDomain_Tags(t *testing.T) {
-	var domain1 ec2.TransitGatewayMulticastDomain
-	resourceName := "aws_ec2_transit_gateway_multicast_domain.test"
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSEc2TransitGatewayMulticastDomainDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAWSEc2TransitGatewayMulticastDomainConfigTags1("key1", "value1"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEc2TransitGatewayMulticastDomainExists(resourceName, &domain1),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
-				),
-			},
-			{
-				Config: testAccAWSEc2TransitGatewayMulticastDomainConfigTags2("key1", "value1updated", "key2", "value2"),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
-				),
-			},
-			{
-				Config: testAccAWSEc2TransitGatewayMulticastDomainConfigTags1("key2", "value2"),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
-				),
-			},
-		},
-	})
-}
+// 	resource.ParallelTest(t, resource.TestCase{
+// 		PreCheck: func() {
+// 			acctest.PreCheck(t)
+// 			testAccPreCheckTransitGateway(t)
+// 		},
+// 		Providers:    acctest.Providers,
+// 		CheckDestroy: testAccCheckTransitGatewayMulticastDomainDestroy,
+// 		Steps: []resource.TestStep{
+// 			{
+// 				Config: testAccAWSTransitGatewayMulticastDomainConfig(),
+// 				Check: resource.ComposeTestCheckFunc(
+// 					testAccCheckTransitGatewayMulticastDomainExists(resourceName, &domain),
+// 					testAccCheckTransitGatewayMulticastDomainDisappears(&domain),
+// 				),
+// 				ExpectNonEmptyPlan: true,
+// 			},
+// 		},
+// 	})
+// }
 
-func TestAccAWSEc2TransitGatewayMulticastDomain_Associations(t *testing.T) {
-	var domain1 ec2.TransitGatewayMulticastDomain
-	var attachment1, attachment2 ec2.TransitGatewayVpcAttachment
-	var subnet1, subnet2 ec2.Subnet
-	resourceName := "aws_ec2_transit_gateway_multicast_domain.test"
-	attachmentName1 := "aws_ec2_transit_gateway_vpc_attachment.test1"
-	attachmentName2 := "aws_ec2_transit_gateway_vpc_attachment.test2"
-	subnetName1 := "aws_subnet.test1"
-	subnetName2 := "aws_subnet.test2"
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSEc2TransitGatewayMulticastDomainDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAWSEc2TransitGatewayMulticastDomainConfigAssociation1(),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEc2TransitGatewayMulticastDomainExists(resourceName, &domain1),
-					testAccCheckAWSEc2TransitGatewayVpcAttachmentExists(attachmentName1, &attachment1),
-					testAccCheckSubnetExists(subnetName1, &subnet1),
-					testAccCheckSubnetExists(subnetName2, &subnet2),
-					testAccCheckAWSEc2TransitGatewayMulticastDomainAssociations(&domain1, 1, map[*ec2.TransitGatewayVpcAttachment][]*ec2.Subnet{
-						&attachment1: {&subnet1},
-					}),
-				),
-			},
-			{
-				Config: testAccAWSEc2TransitGatewayMulticastDomainConfigAssociation2(),
-				Check: testAccCheckAWSEc2TransitGatewayMulticastDomainAssociations(&domain1, 2, map[*ec2.TransitGatewayVpcAttachment][]*ec2.Subnet{
-					&attachment1: {
-						&subnet1,
-						&subnet2,
-					},
-				}),
-			},
-			{
-				Config: testAccAWSEc2TransitGatewayMulticastDomainConfigAssociation3(),
-				Check: testAccCheckAWSEc2TransitGatewayMulticastDomainAssociations(&domain1, 2, map[*ec2.TransitGatewayVpcAttachment][]*ec2.Subnet{
-					&attachment1: {
-						&subnet1,
-						&subnet2,
-					},
-				}),
-			},
-			{
-				Config: testAccAWSEc2TransitGatewayMulticastDomainConfigAssociation4(),
-				Check: testAccCheckAWSEc2TransitGatewayMulticastDomainAssociations(&domain1, 1, map[*ec2.TransitGatewayVpcAttachment][]*ec2.Subnet{
-					&attachment1: {&subnet1},
-				}),
-			},
-			{
-				Config: testAccAWSEc2TransitGatewayMulticastDomainConfigAssociation5(),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEc2TransitGatewayVpcAttachmentExists(attachmentName2, &attachment2),
-					testAccCheckSubnetExists(subnetName2, &subnet2),
-					testAccCheckAWSEc2TransitGatewayMulticastDomainAssociations(&domain1, 2, map[*ec2.TransitGatewayVpcAttachment][]*ec2.Subnet{
-						&attachment1: {&subnet1},
-						&attachment2: {&subnet2},
-					}),
-				),
-			},
-		},
-	})
-}
+// func testAccAWSTransitGatewayMulticastDomain_Tags(t *testing.T) {
+// 	var domain1 tfec2.TransitGatewayMulticastDomain
+// 	resourceName := "aws_ec2_transit_gateway_multicast_domain.test"
 
-func TestAccAWSEc2TransitGatewayMulticastDomain_Groups(t *testing.T) {
-	var domain1 ec2.TransitGatewayMulticastDomain
-	var instance1, instance2 ec2.Instance
-	resourceName := "aws_ec2_transit_gateway_multicast_domain.test"
-	instanceName1 := "aws_instance.test1"
-	instanceName2 := "aws_instance.test2"
-	// Note: Currently only one source per-group is allowed
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSEc2TransitGatewayMulticastDomainDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAWSEc2TransitGatewayMulticastDomainConfigGroup1(),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceExists(instanceName1, &instance1),
-					testAccCheckAWSEc2TransitGatewayMulticastDomainExists(resourceName, &domain1),
-					testAccCheckAWSEc2TransitGatewayMulticastDomainGroups(&domain1, 1, true, map[string][]*ec2.Instance{
-						"224.0.0.1": {&instance1},
-					}),
-					testAccCheckAWSEc2TransitGatewayMulticastDomainGroups(&domain1, 1, false, map[string][]*ec2.Instance{
-						"224.0.0.1": {&instance1},
-					}),
-				),
-			},
-			{
-				Config: testAccAWSEc2TransitGatewayMulticastDomainConfigGroup2(),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceExists(instanceName2, &instance2),
-					testAccCheckAWSEc2TransitGatewayMulticastDomainGroups(&domain1, 2, true, map[string][]*ec2.Instance{
-						"224.0.0.1": {&instance1, &instance2},
-					}),
-					testAccCheckAWSEc2TransitGatewayMulticastDomainGroups(&domain1, 1, false, map[string][]*ec2.Instance{
-						"224.0.0.1": {&instance1},
-					})),
-			},
-			{
-				Config: testAccAWSEc2TransitGatewayMulticastDomainConfigGroup3(),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEc2TransitGatewayMulticastDomainGroups(&domain1, 2, true, map[string][]*ec2.Instance{
-						"224.0.0.1": {&instance1, &instance2},
-					}),
-					testAccCheckAWSEc2TransitGatewayMulticastDomainGroups(&domain1, 1, false, map[string][]*ec2.Instance{
-						"224.0.0.1": {&instance1},
-					})),
-			},
-			{
-				Config: testAccAWSEc2TransitGatewayMulticastDomainConfigGroup4(),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEc2TransitGatewayMulticastDomainGroups(&domain1, 2, true, map[string][]*ec2.Instance{
-						"224.0.0.1": {&instance1},
-						"224.0.0.2": {&instance2},
-					}),
-					testAccCheckAWSEc2TransitGatewayMulticastDomainGroups(&domain1, 2, false, map[string][]*ec2.Instance{
-						"224.0.0.1": {&instance1},
-						"224.0.0.2": {&instance2},
-					})),
-			},
-		},
-	})
-}
+// 	resource.ParallelTest(t, resource.TestCase{
+// 		PreCheck: func() {
+// 			acctest.PreCheck(t)
+// 			testAccPreCheckTransitGateway(t)
+// 		},
+// 		Providers:    acctest.Providers,
+// 		CheckDestroy: testAccCheckTransitGatewayMulticastDomainDestroy,
+// 		Steps: []resource.TestStep{
+// 			{
+// 				Config: testAccAWSTransitGatewayMulticastDomainConfigTags1("key1", "value1"),
+// 				Check: resource.ComposeTestCheckFunc(
+// 					testAccCheckTransitGatewayMulticastDomainExists(resourceName, &domain1),
+// 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+// 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+// 				),
+// 			},
+// 			{
+// 				Config: testAccAWSTransitGatewayMulticastDomainConfigTags2("key1", "value1updated", "key2", "value2"),
+// 				Check: resource.ComposeTestCheckFunc(
+// 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+// 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+// 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+// 				),
+// 			},
+// 			{
+// 				Config: testAccAWSTransitGatewayMulticastDomainConfigTags1("key2", "value2"),
+// 				Check: resource.ComposeTestCheckFunc(
+// 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+// 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+// 				),
+// 			},
+// 		},
+// 	})
+// }
 
-func testAccCheckAWSEc2TransitGatewayMulticastDomainExists(resourceName string, multicastDomain *ec2.TransitGatewayMulticastDomain) resource.TestCheckFunc {
+// func testAccAWSTransitGatewayMulticastDomain_Associations(t *testing.T) {
+// 	var domain1 tfec2.TransitGatewayMulticastDomain
+// 	var attachment1, attachment2 tfec2.TransitGatewayVpcAttachment
+// 	var subnet1, subnet2 ec2.Subnet
+// 	resourceName := "aws_ec2_transit_gateway_multicast_domain.test"
+// 	attachmentName1 := "aws_ec2_transit_gateway_vpc_attachment.test1"
+// 	attachmentName2 := "aws_ec2_transit_gateway_vpc_attachment.test2"
+// 	subnetName1 := "aws_subnet.test1"
+// 	subnetName2 := "aws_subnet.test2"
+
+// 	resource.ParallelTest(t, resource.TestCase{
+// 		PreCheck: func() {
+// 			acctest.PreCheck(t)
+// 			testAccPreCheckTransitGateway(t)
+// 		},
+// 		Providers:    acctest.Providers,
+// 		CheckDestroy: testAccCheckTransitGatewayMulticastDomainDestroy,
+// 		Steps: []resource.TestStep{
+// 			{
+// 				Config: testAccAWSTransitGatewayMulticastDomainConfigAssociation1(),
+// 				Check: resource.ComposeTestCheckFunc(
+// 					testAccCheckTransitGatewayMulticastDomainExists(resourceName, &domain1),
+// 					// testAccCheckTransitGatewayVPCAttachmentExists(attachmentName1, &attachment1),
+// 					// testAccCheckSubnetExists(subnetName1, &subnet1),
+// 					// testAccCheckSubnetExists(subnetName2, &subnet2),
+// 					testAccCheckTransitGatewayMulticastDomainAssociations(&domain1, 1, map[*tfec2.TransitGatewayVpcAttachment][]*ec2.Subnet{
+// 						&attachment1: {&subnet1},
+// 					}),
+// 				),
+// 			},
+// 			{
+// 				Config: testAccAWSTransitGatewayMulticastDomainConfigAssociation2(),
+// 				Check: testAccCheckTransitGatewayMulticastDomainAssociations(&domain1, 2, map[*tfec2.TransitGatewayVpcAttachment][]*ec2.Subnet{
+// 					&attachment1: {
+// 						&subnet1,
+// 						&subnet2,
+// 					},
+// 				}),
+// 			},
+// 			{
+// 				Config: testAccAWSTransitGatewayMulticastDomainConfigAssociation3(),
+// 				Check: testAccCheckTransitGatewayMulticastDomainAssociations(&domain1, 2, map[*tfec2.TransitGatewayVpcAttachment][]*ec2.Subnet{
+// 					&attachment1: {
+// 						&subnet1,
+// 						&subnet2,
+// 					},
+// 				}),
+// 			},
+// 			{
+// 				Config: testAccAWSTransitGatewayMulticastDomainConfigAssociation4(),
+// 				Check: testAccCheckTransitGatewayMulticastDomainAssociations(&domain1, 1, map[*tfec2.TransitGatewayVpcAttachment][]*ec2.Subnet{
+// 					&attachment1: {&subnet1},
+// 				}),
+// 			},
+// 			{
+// 				Config: testAccAWSTransitGatewayMulticastDomainConfigAssociation5(),
+// 				Check: resource.ComposeTestCheckFunc(
+// 					// testAccCheckTransitGatewayVpcAttachmentExists(attachmentName2, &attachment2),
+// 					// testAccCheckSubnetExists(subnetName2, &subnet2),
+// 					testAccCheckTransitGatewayMulticastDomainAssociations(&domain1, 2, map[*tfec2.TransitGatewayVpcAttachment][]*ec2.Subnet{
+// 						&attachment1: {&subnet1},
+// 						&attachment2: {&subnet2},
+// 					}),
+// 				),
+// 			},
+// 		},
+// 	})
+// }
+
+// func testAccAWSTransitGatewayMulticastDomain_Groups(t *testing.T) {
+// 	var domain1 tfec2.TransitGatewayMulticastDomain
+// 	var instance1, instance2 ec2.Instance
+// 	resourceName := "aws_ec2_transit_gateway_multicast_domain.test"
+// 	instanceName1 := "aws_instance.test1"
+// 	instanceName2 := "aws_instance.test2"
+// 	// Note: Currently only one source per-group is allowed
+
+// 	resource.ParallelTest(t, resource.TestCase{
+// 		PreCheck: func() {
+// 			acctest.PreCheck(t)
+// 			testAccPreCheckTransitGateway(t)
+// 		},
+// 		Providers:    acctest.Providers,
+// 		CheckDestroy: testAccCheckTransitGatewayMulticastDomainDestroy,
+// 		Steps: []resource.TestStep{
+// 			{
+// 				Config: testAccAWSTransitGatewayMulticastDomainConfigGroup1(),
+// 				Check: resource.ComposeTestCheckFunc(
+// 					testAccCheckInstanceExists(instanceName1, &instance1),
+// 					testAccCheckTransitGatewayMulticastDomainExists(resourceName, &domain1),
+// 					testAccCheckTransitGatewayMulticastDomainGroups(&domain1, 1, true, map[string][]*ec2.Instance{
+// 						"224.0.0.1": {&instance1},
+// 					}),
+// 					testAccCheckTransitGatewayMulticastDomainGroups(&domain1, 1, false, map[string][]*ec2.Instance{
+// 						"224.0.0.1": {&instance1},
+// 					}),
+// 				),
+// 			},
+// 			{
+// 				Config: testAccAWSTransitGatewayMulticastDomainConfigGroup2(),
+// 				Check: resource.ComposeTestCheckFunc(
+// 					testAccCheckInstanceExists(instanceName2, &instance2),
+// 					testAccCheckTransitGatewayMulticastDomainGroups(&domain1, 2, true, map[string][]*ec2.Instance{
+// 						"224.0.0.1": {&instance1, &instance2},
+// 					}),
+// 					testAccCheckTransitGatewayMulticastDomainGroups(&domain1, 1, false, map[string][]*ec2.Instance{
+// 						"224.0.0.1": {&instance1},
+// 					})),
+// 			},
+// 			{
+// 				Config: testAccAWSTransitGatewayMulticastDomainConfigGroup3(),
+// 				Check: resource.ComposeTestCheckFunc(
+// 					testAccCheckTransitGatewayMulticastDomainGroups(&domain1, 2, true, map[string][]*ec2.Instance{
+// 						"224.0.0.1": {&instance1, &instance2},
+// 					}),
+// 					testAccCheckTransitGatewayMulticastDomainGroups(&domain1, 1, false, map[string][]*ec2.Instance{
+// 						"224.0.0.1": {&instance1},
+// 					})),
+// 			},
+// 			{
+// 				Config: testAccAWSTransitGatewayMulticastDomainConfigGroup4(),
+// 				Check: resource.ComposeTestCheckFunc(
+// 					testAccCheckTransitGatewayMulticastDomainGroups(&domain1, 2, true, map[string][]*ec2.Instance{
+// 						"224.0.0.1": {&instance1},
+// 						"224.0.0.2": {&instance2},
+// 					}),
+// 					testAccCheckTransitGatewayMulticastDomainGroups(&domain1, 2, false, map[string][]*ec2.Instance{
+// 						"224.0.0.1": {&instance1},
+// 						"224.0.0.2": {&instance2},
+// 					})),
+// 			},
+// 		},
+// 	})
+// }
+
+func testAccCheckTransitGatewayMulticastDomainExists(resourceName string, multicastDomain *ec2.TransitGatewayMulticastDomain) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
@@ -234,8 +254,8 @@ func testAccCheckAWSEc2TransitGatewayMulticastDomainExists(resourceName string, 
 			return fmt.Errorf("no EC2 Transit Gateway Multicast Domain ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).ec2conn
-		domain, err := ec2DescribeTransitGatewayMulticastDomain(conn, id)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+		domain, err := tfec2.DescribeTransitGatewayMulticastDomain(conn, id)
 		if err != nil {
 			return err
 		}
@@ -256,9 +276,9 @@ func testAccCheckAWSEc2TransitGatewayMulticastDomainExists(resourceName string, 
 	}
 }
 
-func testAccCheckAWSEc2TransitGatewayMulticastDomainDisappears(domain *ec2.TransitGatewayMulticastDomain) resource.TestCheckFunc {
+func testAccCheckTransitGatewayMulticastDomainDisappears(domain *tfec2.TransitGatewayMulticastDomain) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).ec2conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 		id := aws.StringValue(domain.TransitGatewayMulticastDomainId)
 		input := &ec2.DeleteTransitGatewayMulticastDomainInput{
 			TransitGatewayMulticastDomainId: aws.String(id),
@@ -269,20 +289,20 @@ func testAccCheckAWSEc2TransitGatewayMulticastDomainDisappears(domain *ec2.Trans
 			return err
 		}
 
-		return waitForEc2TransitGatewayMulticastDomainDeletion(conn, id)
+		return waitForTransitGatewayMulticastDomainDeletion(conn, id)
 	}
 }
 
-func testAccCheckAWSEc2TransitGatewayMulticastDomainDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).ec2conn
+func testAccCheckTransitGatewayMulticastDomainDestroy(s *terraform.State) error {
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_ec2_transit_gateway_multicast_domain" {
 			continue
 		}
 
 		id := rs.Primary.ID
-		domain, err := ec2DescribeTransitGatewayMulticastDomain(conn, id)
-		if isAWSErr(err, "InvalidTransitGatewayMulticastDomainId.NotFound", "") {
+		domain, err := tfec2.DescribeTransitGatewayMulticastDomain(conn, id)
+		if tfawserr.ErrMessageContains(err, "InvalidTransitGatewayMulticastDomainId.NotFound", "") {
 			continue
 		}
 
@@ -305,12 +325,12 @@ func testAccCheckAWSEc2TransitGatewayMulticastDomainDestroy(s *terraform.State) 
 	return nil
 }
 
-func testAccCheckAWSEc2TransitGatewayMulticastDomainAssociations(domain *ec2.TransitGatewayMulticastDomain, count int, expected map[*ec2.TransitGatewayVpcAttachment][]*ec2.Subnet) resource.TestCheckFunc {
+func testAccCheckTransitGatewayMulticastDomainAssociations(domain *tfec2.TransitGatewayMulticastDomain, count int, expected map[*tfec2.TransitGatewayVpcAttachment][]*ec2.Subnet) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).ec2conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 		id := aws.StringValue(domain.TransitGatewayMulticastDomainId)
 
-		assocSet, err := ec2GetTransitGatewayMulticastDomainAssociations(conn, id)
+		assocSet, err := GetTransitGatewayMulticastDomainAssociations(conn, id)
 		if err != nil {
 			return err
 		}
@@ -354,18 +374,18 @@ func testAccCheckAWSEc2TransitGatewayMulticastDomainAssociations(domain *ec2.Tra
 	}
 }
 
-func testAccCheckAWSEc2TransitGatewayMulticastDomainGroups(domain *ec2.TransitGatewayMulticastDomain, count int, member bool, expected map[string][]*ec2.Instance) resource.TestCheckFunc {
+func testAccCheckTransitGatewayMulticastDomainGroups(domain *tfec2.TransitGatewayMulticastDomain, count int, member bool, expected map[string][]*ec2.Instance) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).ec2conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 		id := aws.StringValue(domain.TransitGatewayMulticastDomainId)
 
-		groups, err := ec2SearchTransitGatewayMulticastDomainGroupsByType(conn, id, member)
+		groups, err := SearchTransitGatewayMulticastDomainGroupsByType(conn, id, member)
 		if err != nil {
 			return err
 		}
 
 		groupLen := len(groups)
-		groupType := resourceAwsEc2TransitGatewayMulticastDomainGroupType(member)
+		groupType := resourceTransitGatewayMulticastDomainGroupType(member)
 		if groupLen != count {
 			return fmt.Errorf(
 				"expected %d EC2 Transit Gateway Multicast Domain groups of type %s; got %d",
@@ -404,7 +424,7 @@ func testAccCheckAWSEc2TransitGatewayMulticastDomainGroups(domain *ec2.TransitGa
 	}
 }
 
-func testAccAWSEc2TransitGatewayMulticastDomainConfig() string {
+func testAccAWSTransitGatewayMulticastDomainConfig() string {
 	return fmt.Sprintf(`
 resource "aws_ec2_transit_gateway" "test" {
   multicast_support = "enable"
@@ -415,7 +435,7 @@ resource "aws_ec2_transit_gateway_multicast_domain" "test" {
 `)
 }
 
-func testAccAWSEc2TransitGatewayMulticastDomainConfigAssociation1() string {
+func aws_ec2_transit_gateway_multicast_domain() string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test1" {
   cidr_block = "10.0.0.0/16"
@@ -448,7 +468,7 @@ resource "aws_ec2_transit_gateway_multicast_domain" "test" {
 `)
 }
 
-func testAccAWSEc2TransitGatewayMulticastDomainConfigAssociation2() string {
+func testAccAWSTransitGatewayMulticastDomainConfigAssociation2() string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test1" {
   cidr_block = "10.0.0.0/16"
@@ -481,7 +501,7 @@ resource "aws_ec2_transit_gateway_multicast_domain" "test" {
 `)
 }
 
-func testAccAWSEc2TransitGatewayMulticastDomainConfigAssociation3() string {
+func testAccAWSTransitGatewayMulticastDomainConfigAssociation3() string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test1" {
   cidr_block = "10.0.0.0/16"
@@ -518,7 +538,7 @@ resource "aws_ec2_transit_gateway_multicast_domain" "test" {
 `)
 }
 
-func testAccAWSEc2TransitGatewayMulticastDomainConfigAssociation4() string {
+func testAccAWSTransitGatewayMulticastDomainConfigAssociation4() string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test1" {
   cidr_block = "10.0.0.0/16"
@@ -555,7 +575,7 @@ resource "aws_ec2_transit_gateway_multicast_domain" "test" {
 `)
 }
 
-func testAccAWSEc2TransitGatewayMulticastDomainConfigAssociation5() string {
+func testAccAWSTransitGatewayMulticastDomainConfigAssociation5() string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test1" {
   cidr_block = "10.0.0.0/16"
@@ -600,7 +620,7 @@ resource "aws_ec2_transit_gateway_multicast_domain" "test" {
 `)
 }
 
-func testAccAWSEc2TransitGatewayMulticastDomainConfigGroup1() string {
+func testAccAWSTransitGatewayMulticastDomainConfigGroup1() string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test1" {
   cidr_block = "10.0.0.0/16"
@@ -641,7 +661,7 @@ resource "aws_ec2_transit_gateway_multicast_domain" "test" {
 `)
 }
 
-func testAccAWSEc2TransitGatewayMulticastDomainConfigGroup2() string {
+func testAccAWSTransitGatewayMulticastDomainConfigGroup2() string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test1" {
   cidr_block = "10.0.0.0/16"
@@ -687,7 +707,7 @@ resource "aws_ec2_transit_gateway_multicast_domain" "test" {
 `)
 }
 
-func testAccAWSEc2TransitGatewayMulticastDomainConfigGroup3() string {
+func testAccAWSTransitGatewayMulticastDomainConfigGroup3() string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test1" {
   cidr_block = "10.0.0.0/16"
@@ -737,7 +757,7 @@ resource "aws_ec2_transit_gateway_multicast_domain" "test" {
 `)
 }
 
-func testAccAWSEc2TransitGatewayMulticastDomainConfigGroup4() string {
+func testAccAWSTransitGatewayMulticastDomainConfigGroup4() string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test1" {
   cidr_block = "10.0.0.0/16"
@@ -791,7 +811,7 @@ resource "aws_ec2_transit_gateway_multicast_domain" "test" {
 `)
 }
 
-func testAccAWSEc2TransitGatewayMulticastDomainConfigTags1(tagKey1, tagValue1 string) string {
+func testAccAWSTransitGatewayMulticastDomainConfigTags1(tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_ec2_transit_gateway" "test" {
   multicast_support = "enable"
@@ -805,7 +825,7 @@ resource "aws_ec2_transit_gateway_multicast_domain" "test" {
 `, tagKey1, tagValue1)
 }
 
-func testAccAWSEc2TransitGatewayMulticastDomainConfigTags2(tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccAWSTransitGatewayMulticastDomainConfigTags2(tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 resource "aws_ec2_transit_gateway" "test" {
   multicast_support = "enable"

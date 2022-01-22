@@ -1,9 +1,11 @@
 package ec2_test
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/ec2"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
@@ -25,7 +27,7 @@ func testAccTransitGatewayMulticastDomain_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, "transit_gateway_id", dataSourceName, "transit_gateway_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "aws_ec2_transit_gateway_multicast_domain", dataSourceName, "vpc_id"),
-					resource.TestCheckResourceAttrPair(resourceName, "sources", dataSourceName, mCSources),
+					resource.TestCheckResourceAttrPair(resourceName, "sources", dataSourceName, mCastSenders),
 					resource.TestCheckResourceAttrPair(resourceName, "members", dataSourceName, mCastMembers),
 				),
 			},
@@ -33,7 +35,7 @@ func testAccTransitGatewayMulticastDomain_basic(t *testing.T) {
 	})
 }
 
-func testAccTransitGatewayVPCAttachmentFilterDataSourceConfig(rName string, mCastSenders string, mCastMembers string) string {
+func testAccTransitGatewayMulticastDomainDataSourceConfig(rName string, mCastSenders string, mCastMembers string) string {
 	return fmt.Sprintf(`
 
 data "aws_ami" "amazon_linux" {
@@ -122,6 +124,5 @@ data "aws_ec2_transit_gateway_multicast_domain" "test" {
 	transit_gateway_id = aws_ec2_transit_gateway.test.id
 }
 
-`
+`, rName, mCastSenders, mCastMembers)
 }
-
