@@ -313,30 +313,27 @@ func resourceVPCRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("enable_dns_support", v)
 	}
 
-	nacl, err := FindVPCDefaultNetworkACL(conn, d.Id())
-
-	if err != nil {
-		return fmt.Errorf("error reading EC2 VPC (%s) default NACL: %w", d.Id(), err)
+	if v, err := FindVPCDefaultNetworkACL(conn, d.Id()); err != nil {
+		log.Printf("[WARN] Error reading EC2 VPC (%s) default NACL: %s", d.Id(), err)
+	} else {
+		d.Set("default_network_acl_id", v.NetworkAclId)
 	}
 
-	d.Set("default_network_acl_id", nacl.NetworkAclId)
-
-	routeTable, err := FindVPCMainRouteTable(conn, d.Id())
-
-	if err != nil {
-		return fmt.Errorf("error reading EC2 VPC (%s) main Route Table: %w", d.Id(), err)
+	if v, err := FindVPCMainRouteTable(conn, d.Id()); err != nil {
+		log.Printf("[WARN] Error reading EC2 VPC (%s) main Route Table: %s", d.Id(), err)
+		d.Set("default_route_table_id", nil)
+		d.Set("main_route_table_id", nil)
+	} else {
+		d.Set("default_route_table_id", v.RouteTableId)
+		d.Set("main_route_table_id", v.RouteTableId)
 	}
 
-	d.Set("default_route_table_id", routeTable.RouteTableId)
-	d.Set("main_route_table_id", routeTable.RouteTableId)
-
-	securityGroup, err := FindVPCDefaultSecurityGroup(conn, d.Id())
-
-	if err != nil {
-		return fmt.Errorf("error reading EC2 VPC (%s) default Security Group: %w", d.Id(), err)
+	if v, err := FindVPCDefaultSecurityGroup(conn, d.Id()); err != nil {
+		log.Printf("[WARN] Error reading EC2 VPC (%s) default Security Group: %s", d.Id(), err)
+		d.Set("default_security_group_id", nil)
+	} else {
+		d.Set("default_security_group_id", v.GroupId)
 	}
-
-	d.Set("default_security_group_id", securityGroup.GroupId)
 
 	d.Set("assign_generated_ipv6_cidr_block", nil)
 	d.Set("ipv6_cidr_block", nil)
