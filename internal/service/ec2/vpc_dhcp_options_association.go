@@ -154,9 +154,17 @@ func VPCDHCPOptionsAssociationCreateResourceID(dhcpOptionsID, vpcID string) stri
 func VPCDHCPOptionsAssociationParseResourceID(id string) (string, string, error) {
 	parts := strings.Split(id, vpcDHCPOptionsAssociationResourceIDSeparator)
 
-	// DHCP Options ID and VPC ID themselves contain '-'.
-	if len(parts) == 4 && parts[0] != "" && parts[1] != "" && parts[2] != "" && parts[3] != "" {
-		return strings.Join([]string{parts[0], parts[1]}, vpcDHCPOptionsAssociationResourceIDSeparator), strings.Join([]string{parts[2], parts[3]}, vpcDHCPOptionsAssociationResourceIDSeparator), nil
+	// The DHCP Options ID either contains '-' or is the special value "default".
+	// The VPC ID contains '-'.
+	switch n := len(parts); n {
+	case 3:
+		if parts[0] == DefaultDHCPOptionsID && parts[1] != "" && parts[2] != "" {
+			return parts[0], strings.Join([]string{parts[1], parts[2]}, vpcDHCPOptionsAssociationResourceIDSeparator), nil
+		}
+	case 4:
+		if parts[0] != "" && parts[1] != "" && parts[2] != "" && parts[3] != "" {
+			return strings.Join([]string{parts[0], parts[1]}, vpcDHCPOptionsAssociationResourceIDSeparator), strings.Join([]string{parts[2], parts[3]}, vpcDHCPOptionsAssociationResourceIDSeparator), nil
+		}
 	}
 
 	return "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected DHCPOptionsID%[2]sVPCID", id, vpcDHCPOptionsAssociationResourceIDSeparator)
