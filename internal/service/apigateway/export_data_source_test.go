@@ -43,7 +43,7 @@ resource "aws_api_gateway_stage" "test" {
 data "aws_api_gateway_export" "test" {
   rest_api_id = aws_api_gateway_stage.test.rest_api_id
   stage_name  = aws_api_gateway_stage.test.stage_name
-  export_type = "oas30"  
+  export_type = "oas30"
 }
 `
 }
