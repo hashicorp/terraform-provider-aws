@@ -46,7 +46,7 @@ data "aws_api_gateway_sdk" "test" {
   sdk_type    = "android"
 
   parameters = {
-	groupId         = "test"
+    groupId         = "test"
     artifactId      = "test"
     artifactVersion = "test"
     invokerPackage  = "test"
