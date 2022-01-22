@@ -15,6 +15,13 @@ data "aws_api_gateway_export" "example" {
   rest_api_id = aws_api_gateway_stage.example.rest_api_id
   stage_name  = aws_api_gateway_stage.example.stage_name
   sdk_type    = "android"
+
+  parameters = {
+    groupId         = "example"
+    artifactId      = "example"
+    artifactVersion = "example"
+    invokerPackage  = "example"
+  }  
 }
 ```
 
