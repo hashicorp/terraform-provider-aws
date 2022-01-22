@@ -354,6 +354,7 @@ func Provider() *schema.Provider {
 			"aws_api_gateway_export":      apigateway.DataSourceExport(),
 			"aws_api_gateway_resource":    apigateway.DataSourceResource(),
 			"aws_api_gateway_rest_api":    apigateway.DataSourceRestAPI(),
+			"aws_api_gateway_sdk":         apigateway.DataSourceSdk(),
 			"aws_api_gateway_vpc_link":    apigateway.DataSourceVPCLink(),
 
 			"aws_apigatewayv2_api":  apigatewayv2.DataSourceAPI(),
