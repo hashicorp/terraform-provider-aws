@@ -14,7 +14,7 @@ description: |-
 data "aws_api_gateway_export" "example" {
   rest_api_id = aws_api_gateway_stage.example.rest_api_id
   stage_name  = aws_api_gateway_stage.example.stage_name
-  sdk_type = "oas30"
+  sdk_type    = "android"
 }
 ```
 
