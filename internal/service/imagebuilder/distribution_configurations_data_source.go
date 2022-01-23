@@ -11,7 +11,7 @@ import (
 
 func DataSourceDistributionConfigurations() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceDistributionConfigurations,
+		Read: dataSourceDistributionConfigurationsRead,
 		Schema: map[string]*schema.Schema{
 			"arns": {
 				Type:     schema.TypeSet,
@@ -28,7 +28,7 @@ func DataSourceDistributionConfigurations() *schema.Resource {
 	}
 }
 
-func dataSourceDistributionConfigurations(d *schema.ResourceData, meta interface{}) error {
+func dataSourceDistributionConfigurationsRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ImageBuilderConn
 
 	input := &imagebuilder.ListDistributionConfigurationsInput{}
