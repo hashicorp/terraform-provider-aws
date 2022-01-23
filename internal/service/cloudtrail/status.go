@@ -10,9 +10,9 @@ import (
 )
 
 const (
-	eventDataStoreStatusCreating  = "created"
-	eventDataStoreStatusAvailable = "enabled"
-	eventDataStoreStatusDeleting  = "pending"
+	eventDataStoreStatusCreating  = "CREATED"
+	eventDataStoreStatusAvailable = "ENABLED"
+	eventDataStoreStatusDeleting  = "PENDING_DELETION"
 )
 
 // statusEventDataStore fetches the CloudTrail Event Data Store and its status.

@@ -30,8 +30,8 @@ func waitEventDataStoreAvailable(ctx context.Context, conn *cloudtrail.CloudTrai
 // waitEventDataStoreDeleted waits for CloudTrail Event Data Store to be deleted.
 func waitEventDataStoreDeleted(ctx context.Context, conn *cloudtrail.CloudTrail, eventDataStoreArn string, timeout time.Duration) error {
 	stateConf := &resource.StateChangeConf{
-		Pending: []string{eventDataStoreStatusDeleting},
-		Target:  []string{},
+		Pending: []string{},
+		Target:  []string{eventDataStoreStatusDeleting},
 		Refresh: statusEventDataStore(ctx, conn, eventDataStoreArn),
 		Timeout: timeout,
 	}

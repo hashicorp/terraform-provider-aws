@@ -11,7 +11,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -43,9 +42,8 @@ func ResourceEventDataStore() *schema.Resource {
 				ValidateFunc: validation.StringLenBetween(3, 128),
 			},
 			"advanced_event_selector": {
-				Type:          schema.TypeList,
-				Optional:      true,
-				ConflictsWith: []string{"event_selector"},
+				Type:     schema.TypeList,
+				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"field_selector": {
@@ -148,7 +146,7 @@ func ResourceEventDataStore() *schema.Resource {
 			},
 			"retention_period": {
 				Type:     schema.TypeInt,
-				Optional: false,
+				Required: true,
 				ValidateFunc: validation.All(
 					validation.IntBetween(7, 2555),
 				),
@@ -170,15 +168,16 @@ func resourceEventDataStoreCreate(ctx context.Context, d *schema.ResourceData, m
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
-	name := create.Name(d.Get("name").(string), d.Get("name_prefix").(string))
+	name := d.Get("name").(string)
 	input := &cloudtrail.CreateEventDataStoreInput{
-		AdvancedEventSelectors: []*cloudtrail.AdvancedEventSelector{},
-		Name:                   aws.String(name),
-		RetentionPeriod:        aws.Int64(d.Get("retention_period").(int64)),
+		Name: aws.String(name),
 	}
 
 	if len(tags) > 0 {
 		input.TagsList = Tags(tags.IgnoreAWS())
+	}
+	if value, ok := d.GetOk("retention_period"); ok {
+		input.RetentionPeriod = aws.Int64(int64(value.(int)))
 	}
 	if v, ok := d.GetOk("organization_enabled"); ok {
 		input.OrganizationEnabled = aws.Bool(v.(bool))
@@ -205,11 +204,13 @@ func resourceEventDataStoreCreate(ctx context.Context, d *schema.ResourceData, m
 		return diag.Errorf("error creating CloudTrail Event Data Store (%s): %s", name, err)
 	}
 
-	if err := waitEventDataStoreAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+	eventDataStoreArn := aws.StringValue(output.EventDataStoreArn)
+
+	if err := waitEventDataStoreAvailable(ctx, conn, eventDataStoreArn, d.Timeout(schema.TimeoutCreate)); err != nil {
 		return diag.Errorf("error waiting for CloudTrail Event Data Store (%s) to be created: %s", name, err)
 	}
 
-	d.SetId(aws.StringValue(output.EventDataStoreArn))
+	d.SetId(eventDataStoreArn)
 
 	return resourceEventDataStoreRead(ctx, d, meta)
 }
