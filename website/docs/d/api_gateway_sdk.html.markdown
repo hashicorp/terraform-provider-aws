@@ -6,7 +6,7 @@ description: |-
   Gets an API Gateway client SDK
 ---
 
-# Data Source: aws_api_gateway_export
+# Data Source: aws_api_gateway_sdk
 
 ## Example Usage
 
