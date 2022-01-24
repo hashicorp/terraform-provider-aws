@@ -1521,3 +1521,19 @@ func WaitEBSSnapshotTierArchive(conn *ec2.EC2, id string) (*ec2.SnapshotTierStat
 		return detail.(*ec2.SnapshotTierStatus), nil
 	}
 }
+
+// WaitVolumeAttachmentAttached waits for a VolumeAttachment to return Attached
+func WaitVolumeAttachmentAttached(conn *ec2.EC2, name, volumeID, instanceID string) error {
+	stateConf := &resource.StateChangeConf{
+		Pending:    []string{ec2.VolumeAttachmentStateAttaching},
+		Target:     []string{ec2.VolumeAttachmentStateAttached},
+		Refresh:    volumeAttachmentStateRefreshFunc(conn, name, volumeID, instanceID),
+		Timeout:    5 * time.Minute,
+		Delay:      10 * time.Second,
+		MinTimeout: 3 * time.Second,
+	}
+
+	_, err := stateConf.WaitForState()
+
+	return err
+}
