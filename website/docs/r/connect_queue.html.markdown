@@ -15,6 +15,8 @@ Provides an Amazon Connect Queue resource. For more information see
 
 ## Example Usage
 
+### Basic
+
 ```terraform
 resource "aws_connect_queue" "test" {
   instance_id           = "aaaaaaaa-bbbb-cccc-dddd-111111111111"
@@ -28,6 +30,24 @@ resource "aws_connect_queue" "test" {
 }
 ```
 
+### With Quick Connect IDs
+
+```terraform
+resource "aws_connect_queue" "test" {
+  instance_id           = "aaaaaaaa-bbbb-cccc-dddd-111111111111"
+  name                  = "Example Name"
+  description           = "Example Description"
+  hours_of_operation_id = "12345678-1234-1234-1234-123456789012"
+
+  quick_connect_ids = [
+    "12345678-abcd-1234-abcd-123456789012"
+  ]
+
+  tags = {
+    "Name" = "Example Queue with Quick Connect IDs",
+  }
+}
+```
 ## Argument Reference
 
 The following arguments are supported:
