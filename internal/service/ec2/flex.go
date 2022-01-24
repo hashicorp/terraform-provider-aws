@@ -9,14 +9,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-func flattenAttributeValues(l []*ec2.AttributeValue) []string {
-	values := make([]string, 0, len(l))
-	for _, v := range l {
-		values = append(values, aws.StringValue(v.Value))
-	}
-	return values
-}
-
 //Flattens security group identifiers into a []string, where the elements returned are the GroupIDs
 func FlattenGroupIdentifiers(dtos []*ec2.GroupIdentifier) []string {
 	ids := make([]string, 0, len(dtos))

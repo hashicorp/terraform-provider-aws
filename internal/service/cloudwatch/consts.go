@@ -1,10 +1,6 @@
 package cloudwatch
 
 const (
-	errCodeAccessDenied = "AccessDenied"
-)
-
-const (
 	lowSampleCountPercentilesEvaluate          = "evaluate"
 	lowSampleCountPercentilesmissingDataIgnore = "ignore"
 )

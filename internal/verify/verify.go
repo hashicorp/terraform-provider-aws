@@ -1,6 +1,7 @@
 package verify
 
 import (
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"gopkg.in/yaml.v2"
 )
 
@@ -31,4 +32,46 @@ func checkYAMLString(yamlString interface{}) (string, error) {
 	err := yaml.Unmarshal([]byte(s), &y)
 
 	return s, err
+}
+
+const (
+	ErrCodeAccessDenied                   = "AccessDenied"
+	ErrCodeUnknownOperation               = "UnknownOperationException"
+	ErrCodeValidationError                = "ValidationError"
+	ErrCodeOperationDisabledException     = "OperationDisabledException"
+	ErrCodeInternalException              = "InternalException"
+	ErrCodeInternalServiceFault           = "InternalServiceError"
+	ErrCodeOperationNotPermittedException = "OperationNotPermitted"
+)
+
+func CheckISOErrorTagsUnsupported(err error) bool {
+	if tfawserr.ErrCodeContains(err, ErrCodeAccessDenied) {
+		return true
+	}
+
+	if tfawserr.ErrCodeContains(err, ErrCodeUnknownOperation) {
+		return true
+	}
+
+	if tfawserr.ErrMessageContains(err, ErrCodeValidationError, "not support tagging") {
+		return true
+	}
+
+	if tfawserr.ErrCodeContains(err, ErrCodeOperationDisabledException) {
+		return true
+	}
+
+	if tfawserr.ErrCodeContains(err, ErrCodeInternalException) {
+		return true
+	}
+
+	if tfawserr.ErrCodeContains(err, ErrCodeInternalServiceFault) {
+		return true
+	}
+
+	if tfawserr.ErrCodeContains(err, ErrCodeOperationNotPermittedException) {
+		return true
+	}
+
+	return false
 }

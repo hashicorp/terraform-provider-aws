@@ -340,24 +340,24 @@ func resourceFleetCreate(d *schema.ResourceData, meta interface{}) error {
 		OnDemandOptions:                  expandEc2OnDemandOptionsRequest(d.Get("on_demand_options").([]interface{})),
 		ReplaceUnhealthyInstances:        aws.Bool(d.Get("replace_unhealthy_instances").(bool)),
 		SpotOptions:                      expandEc2SpotOptionsRequest(d.Get("spot_options").([]interface{})),
+		TagSpecifications:                ec2TagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeFleet),
 		TargetCapacitySpecification:      expandEc2TargetCapacitySpecificationRequest(d.Get("target_capacity_specification").([]interface{})),
 		TerminateInstancesWithExpiration: aws.Bool(d.Get("terminate_instances_with_expiration").(bool)),
-		TagSpecifications:                ec2TagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeFleet),
 		Type:                             aws.String(d.Get("type").(string)),
 	}
 
 	if d.Get("type").(string) != ec2.FleetTypeMaintain {
 		if input.SpotOptions.MaintenanceStrategies != nil {
 			log.Printf("[WARN] EC2 Fleet (%s) has an invalid configuration and can not be created. Capacity Rebalance maintenance strategies can only be specified for fleets of type maintain.", input)
-			d.SetId("")
 			return nil
 		}
 	}
 
 	log.Printf("[DEBUG] Creating EC2 Fleet: %s", input)
 	output, err := conn.CreateFleet(input)
+
 	if err != nil {
-		return fmt.Errorf("error creating EC2 Fleet: %s", err)
+		return fmt.Errorf("error creating EC2 Fleet: %w", err)
 	}
 
 	d.SetId(aws.StringValue(output.FleetId))

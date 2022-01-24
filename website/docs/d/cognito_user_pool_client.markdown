@@ -12,25 +12,10 @@ Provides a Cognito User Pool Client resource.
 
 ## Example Usage
 
-### Get User Pool Client names
-
 ```terraform
-resource "aws_cognito_user_pool" "pool" {
-  name = "pool"
-}
-
-data "aws_cognito_user_pool_clients" "main" {
-  user_pool_id = aws_cognito_user_pool.main.id
-}
-
 data "aws_cognito_user_pool_client" "client" {
-  for_each     = data.aws_cognito_user_pool_clients.main.client_ids
-  client_id    = each.value
-  user_pool_id = aws_cognito_user_pool.pool.id
-}
-
-output "names" {
-  value = data.aws_cognito_user_pool_client.client.*.name
+  client_id    = "38fjsnc484p94kpqsnet7mpld0"
+  user_pool_id = "us-west-2_aaaaaaaaa"
 }
 ```
 

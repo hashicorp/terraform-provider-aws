@@ -149,7 +149,7 @@ func resourceMetricStreamCreate(ctx context.Context, d *schema.ResourceData, met
 	output, err := conn.PutMetricStreamWithContext(ctx, &params)
 
 	// Some partitions (i.e., ISO) may not support tag-on-create
-	if params.Tags != nil && (tfawserr.ErrCodeContains(err, errCodeAccessDenied) || tfawserr.ErrCodeContains(err, cloudwatch.ErrCodeInternalServiceFault)) {
+	if params.Tags != nil && verify.CheckISOErrorTagsUnsupported(err) {
 		log.Printf("[WARN] CloudWatch Metric Stream (%s) create failed (%s) with tags. Trying create without tags.", d.Id(), err)
 		params.Tags = nil
 
@@ -168,7 +168,7 @@ func resourceMetricStreamCreate(ctx context.Context, d *schema.ResourceData, met
 		err := UpdateTags(conn, aws.StringValue(output.Arn), nil, tags)
 
 		// If default tags only, log and continue. Otherwise, error.
-		if v, ok := d.GetOk("tags"); (!ok || len(v.(map[string]interface{})) == 0) && (tfawserr.ErrCodeContains(err, errCodeAccessDenied) || tfawserr.ErrCodeContains(err, cloudwatch.ErrCodeInternalServiceFault)) {
+		if v, ok := d.GetOk("tags"); (!ok || len(v.(map[string]interface{})) == 0) && verify.CheckISOErrorTagsUnsupported(err) {
 			log.Printf("[WARN] error adding tags after create for CloudWatch Metric Stream (%s): %s", d.Id(), err)
 			return resourceMetricStreamRead(ctx, d, meta)
 		}
@@ -227,7 +227,7 @@ func resourceMetricStreamRead(ctx context.Context, d *schema.ResourceData, meta 
 	tags, err := ListTags(conn, aws.StringValue(output.Arn))
 
 	// Some partitions (i.e., ISO) may not support tagging, giving error
-	if tfawserr.ErrCodeContains(err, errCodeAccessDenied) || tfawserr.ErrCodeContains(err, cloudwatch.ErrCodeInternalServiceFault) {
+	if verify.CheckISOErrorTagsUnsupported(err) {
 		log.Printf("[WARN] Unable to list tags for CloudWatch Metric Stream %s: %s", d.Id(), err)
 		return nil
 	}

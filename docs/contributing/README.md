@@ -14,6 +14,7 @@ To improve the review and merge process, please do your best to follow the docum
 - [FAQ](faq.md)
 - [Core Services](core-services.md)
 - [Provider Design](provider-design.md)
+- [Naming Conventions](naming.md)
 
 ## Process
 

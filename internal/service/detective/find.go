@@ -50,3 +50,82 @@ func FindDetectiveGraphByArn(conn *detective.Detective, ctx context.Context, arn
 
 	return result, nil
 }
+
+func FindInvitationByGraphArn(ctx context.Context, conn *detective.Detective, graphARN string) (*string, error) {
+	input := &detective.ListInvitationsInput{}
+
+	var result *string
+
+	err := conn.ListInvitationsPagesWithContext(ctx, input, func(page *detective.ListInvitationsOutput, lastPage bool) bool {
+		for _, invitation := range page.Invitations {
+			if aws.StringValue(invitation.GraphArn) == graphARN {
+				result = invitation.GraphArn
+				return false
+			}
+		}
+		return !lastPage
+	})
+	if tfawserr.ErrCodeEquals(err, detective.ErrCodeResourceNotFoundException) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	if result == nil {
+		return nil, &resource.NotFoundError{
+			Message:     fmt.Sprintf("No member found with arn %q ", graphARN),
+			LastRequest: input,
+		}
+	}
+
+	return result, nil
+}
+
+func FindMemberByGraphArnAndAccountID(ctx context.Context, conn *detective.Detective, graphARN string, accountID string) (*detective.MemberDetail, error) {
+	input := &detective.ListMembersInput{
+		GraphArn: aws.String(graphARN),
+	}
+
+	var result *detective.MemberDetail
+
+	err := conn.ListMembersPagesWithContext(ctx, input, func(page *detective.ListMembersOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, member := range page.MemberDetails {
+			if member == nil {
+				continue
+			}
+
+			if aws.StringValue(member.AccountId) == accountID {
+				result = member
+				return false
+			}
+		}
+
+		return !lastPage
+	})
+	if tfawserr.ErrCodeEquals(err, detective.ErrCodeResourceNotFoundException) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	if result == nil {
+		return nil, &resource.NotFoundError{
+			Message:     fmt.Sprintf("No member found with arn %q and accountID %q", graphARN, accountID),
+			LastRequest: input,
+		}
+	}
+
+	return result, nil
+}
