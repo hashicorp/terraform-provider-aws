@@ -832,12 +832,53 @@ func expandVpnTunnelOptionsSpecification(d *schema.ResourceData, prefix string) 
 }
 
 func expandModifyVpnTunnelOptionsSpecification(d *schema.ResourceData, prefix string) *ec2.ModifyVpnTunnelOptionsSpecification {
+	// https://docs.aws.amazon.com/vpn/latest/s2svpn/VPNTunnels.html.
+	var (
+		defaultDPDTimeoutAction           = VpnTunnelOptionsDPDTimeoutActionClear
+		defaultDPDTimeoutSeconds          = 30
+		defaultIKEVersions                = []string{VpnTunnelOptionsIKEVersion1, VpnTunnelOptionsIKEVersion2}
+		defaultPhase1DHGroupNumbers       = []int{2, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24}
+		defaultPhase1EncryptionAlgorithms = []string{
+			VpnTunnelOptionsPhase1EncryptionAlgorithmAES128,
+			VpnTunnelOptionsPhase1EncryptionAlgorithmAES256,
+			VpnTunnelOptionsPhase1EncryptionAlgorithmAES128_GCM_16,
+			VpnTunnelOptionsPhase1EncryptionAlgorithmAES256_GCM_16,
+		}
+		defaultPhase1IntegrityAlgorithms = []string{
+			VpnTunnelOptionsPhase1IntegrityAlgorithmSHA1,
+			VpnTunnelOptionsPhase1IntegrityAlgorithmSHA2_256,
+			VpnTunnelOptionsPhase1IntegrityAlgorithmSHA2_384,
+			VpnTunnelOptionsPhase1IntegrityAlgorithmSHA2_512,
+		}
+		defaultPhase1LifetimeSeconds      = 28800
+		defaultPhase2DHGroupNumbers       = []int{2, 5, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24}
+		defaultPhase2EncryptionAlgorithms = []string{
+			VpnTunnelOptionsPhase2EncryptionAlgorithmAES128,
+			VpnTunnelOptionsPhase2EncryptionAlgorithmAES256,
+			VpnTunnelOptionsPhase2EncryptionAlgorithmAES128_GCM_16,
+			VpnTunnelOptionsPhase2EncryptionAlgorithmAES256_GCM_16,
+		}
+		defaultPhase2IntegrityAlgorithms = []string{
+			VpnTunnelOptionsPhase2IntegrityAlgorithmSHA1,
+			VpnTunnelOptionsPhase2IntegrityAlgorithmSHA2_256,
+			VpnTunnelOptionsPhase2IntegrityAlgorithmSHA2_384,
+			VpnTunnelOptionsPhase2IntegrityAlgorithmSHA2_512,
+		}
+		defaultPhase2LifetimeSeconds  = 3600
+		defaultRekeyFuzzPercentage    = 100
+		defaultRekeyMarginTimeSeconds = 540
+		defaultReplayWindowSize       = 1024
+		defaultStartupAction          = VpnTunnelOptionsStartupActionAdd
+	)
+
 	apiObject := &ec2.ModifyVpnTunnelOptionsSpecification{}
 	hasChange := false
 
 	if key := prefix + "dpd_timeout_action"; d.HasChange(key) {
 		if v, ok := d.GetOk(key); ok {
 			apiObject.DPDTimeoutAction = aws.String(v.(string))
+		} else {
+			apiObject.DPDTimeoutAction = aws.String(defaultDPDTimeoutAction)
 		}
 
 		hasChange = true
@@ -846,6 +887,8 @@ func expandModifyVpnTunnelOptionsSpecification(d *schema.ResourceData, prefix st
 	if key := prefix + "dpd_timeout_seconds"; d.HasChange(key) {
 		if v, ok := d.GetOk(key); ok {
 			apiObject.DPDTimeoutSeconds = aws.Int64(int64(v.(int)))
+		} else {
+			apiObject.DPDTimeoutSeconds = aws.Int64(int64(defaultDPDTimeoutSeconds))
 		}
 
 		hasChange = true
@@ -855,6 +898,10 @@ func expandModifyVpnTunnelOptionsSpecification(d *schema.ResourceData, prefix st
 		if v, ok := d.GetOk(key); ok && v.(*schema.Set).Len() > 0 {
 			for _, v := range d.Get(key).(*schema.Set).List() {
 				apiObject.IKEVersions = append(apiObject.IKEVersions, &ec2.IKEVersionsRequestListValue{Value: aws.String(v.(string))})
+			}
+		} else {
+			for _, v := range defaultIKEVersions {
+				apiObject.IKEVersions = append(apiObject.IKEVersions, &ec2.IKEVersionsRequestListValue{Value: aws.String(v)})
 			}
 		}
 
@@ -866,6 +913,10 @@ func expandModifyVpnTunnelOptionsSpecification(d *schema.ResourceData, prefix st
 			for _, v := range d.Get(key).(*schema.Set).List() {
 				apiObject.Phase1DHGroupNumbers = append(apiObject.Phase1DHGroupNumbers, &ec2.Phase1DHGroupNumbersRequestListValue{Value: aws.Int64(int64(v.(int)))})
 			}
+		} else {
+			for _, v := range defaultPhase1DHGroupNumbers {
+				apiObject.Phase1DHGroupNumbers = append(apiObject.Phase1DHGroupNumbers, &ec2.Phase1DHGroupNumbersRequestListValue{Value: aws.Int64(int64(v))})
+			}
 		}
 
 		hasChange = true
@@ -875,6 +926,10 @@ func expandModifyVpnTunnelOptionsSpecification(d *schema.ResourceData, prefix st
 		if v, ok := d.GetOk(key); ok && v.(*schema.Set).Len() > 0 {
 			for _, v := range d.Get(key).(*schema.Set).List() {
 				apiObject.Phase1EncryptionAlgorithms = append(apiObject.Phase1EncryptionAlgorithms, &ec2.Phase1EncryptionAlgorithmsRequestListValue{Value: aws.String(v.(string))})
+			}
+		} else {
+			for _, v := range defaultPhase1EncryptionAlgorithms {
+				apiObject.Phase1EncryptionAlgorithms = append(apiObject.Phase1EncryptionAlgorithms, &ec2.Phase1EncryptionAlgorithmsRequestListValue{Value: aws.String(v)})
 			}
 		}
 
@@ -886,6 +941,10 @@ func expandModifyVpnTunnelOptionsSpecification(d *schema.ResourceData, prefix st
 			for _, v := range d.Get(key).(*schema.Set).List() {
 				apiObject.Phase1IntegrityAlgorithms = append(apiObject.Phase1IntegrityAlgorithms, &ec2.Phase1IntegrityAlgorithmsRequestListValue{Value: aws.String(v.(string))})
 			}
+		} else {
+			for _, v := range defaultPhase1IntegrityAlgorithms {
+				apiObject.Phase1IntegrityAlgorithms = append(apiObject.Phase1IntegrityAlgorithms, &ec2.Phase1IntegrityAlgorithmsRequestListValue{Value: aws.String(v)})
+			}
 		}
 
 		hasChange = true
@@ -894,6 +953,8 @@ func expandModifyVpnTunnelOptionsSpecification(d *schema.ResourceData, prefix st
 	if key := prefix + "phase1_lifetime_seconds"; d.HasChange(key) {
 		if v, ok := d.GetOk(key); ok {
 			apiObject.Phase1LifetimeSeconds = aws.Int64(int64(v.(int)))
+		} else {
+			apiObject.Phase1LifetimeSeconds = aws.Int64(int64(defaultPhase1LifetimeSeconds))
 		}
 
 		hasChange = true
@@ -903,6 +964,10 @@ func expandModifyVpnTunnelOptionsSpecification(d *schema.ResourceData, prefix st
 		if v, ok := d.GetOk(key); ok && v.(*schema.Set).Len() > 0 {
 			for _, v := range d.Get(key).(*schema.Set).List() {
 				apiObject.Phase2DHGroupNumbers = append(apiObject.Phase2DHGroupNumbers, &ec2.Phase2DHGroupNumbersRequestListValue{Value: aws.Int64(int64(v.(int)))})
+			}
+		} else {
+			for _, v := range defaultPhase2DHGroupNumbers {
+				apiObject.Phase2DHGroupNumbers = append(apiObject.Phase2DHGroupNumbers, &ec2.Phase2DHGroupNumbersRequestListValue{Value: aws.Int64(int64(v))})
 			}
 		}
 
@@ -914,6 +979,10 @@ func expandModifyVpnTunnelOptionsSpecification(d *schema.ResourceData, prefix st
 			for _, v := range d.Get(key).(*schema.Set).List() {
 				apiObject.Phase2EncryptionAlgorithms = append(apiObject.Phase2EncryptionAlgorithms, &ec2.Phase2EncryptionAlgorithmsRequestListValue{Value: aws.String(v.(string))})
 			}
+		} else {
+			for _, v := range defaultPhase2EncryptionAlgorithms {
+				apiObject.Phase2EncryptionAlgorithms = append(apiObject.Phase2EncryptionAlgorithms, &ec2.Phase2EncryptionAlgorithmsRequestListValue{Value: aws.String(v)})
+			}
 		}
 
 		hasChange = true
@@ -924,6 +993,10 @@ func expandModifyVpnTunnelOptionsSpecification(d *schema.ResourceData, prefix st
 			for _, v := range d.Get(key).(*schema.Set).List() {
 				apiObject.Phase2IntegrityAlgorithms = append(apiObject.Phase2IntegrityAlgorithms, &ec2.Phase2IntegrityAlgorithmsRequestListValue{Value: aws.String(v.(string))})
 			}
+		} else {
+			for _, v := range defaultPhase2IntegrityAlgorithms {
+				apiObject.Phase2IntegrityAlgorithms = append(apiObject.Phase2IntegrityAlgorithms, &ec2.Phase2IntegrityAlgorithmsRequestListValue{Value: aws.String(v)})
+			}
 		}
 
 		hasChange = true
@@ -932,6 +1005,8 @@ func expandModifyVpnTunnelOptionsSpecification(d *schema.ResourceData, prefix st
 	if key := prefix + "phase2_lifetime_seconds"; d.HasChange(key) {
 		if v, ok := d.GetOk(key); ok {
 			apiObject.Phase2LifetimeSeconds = aws.Int64(int64(v.(int)))
+		} else {
+			apiObject.Phase2LifetimeSeconds = aws.Int64(int64(defaultPhase2LifetimeSeconds))
 		}
 
 		hasChange = true
@@ -946,6 +1021,8 @@ func expandModifyVpnTunnelOptionsSpecification(d *schema.ResourceData, prefix st
 	if key := prefix + "rekey_fuzz_percentage"; d.HasChange(key) {
 		if v, ok := d.GetOk(key); ok {
 			apiObject.RekeyFuzzPercentage = aws.Int64(int64(v.(int)))
+		} else {
+			apiObject.RekeyFuzzPercentage = aws.Int64(int64(defaultRekeyFuzzPercentage))
 		}
 
 		hasChange = true
@@ -954,6 +1031,8 @@ func expandModifyVpnTunnelOptionsSpecification(d *schema.ResourceData, prefix st
 	if key := prefix + "rekey_margin_time_seconds"; d.HasChange(key) {
 		if v, ok := d.GetOk(key); ok {
 			apiObject.RekeyMarginTimeSeconds = aws.Int64(int64(v.(int)))
+		} else {
+			apiObject.RekeyMarginTimeSeconds = aws.Int64(int64(defaultRekeyMarginTimeSeconds))
 		}
 
 		hasChange = true
@@ -962,6 +1041,8 @@ func expandModifyVpnTunnelOptionsSpecification(d *schema.ResourceData, prefix st
 	if key := prefix + "replay_window_size"; d.HasChange(key) {
 		if v, ok := d.GetOk(key); ok {
 			apiObject.ReplayWindowSize = aws.Int64(int64(v.(int)))
+		} else {
+			apiObject.ReplayWindowSize = aws.Int64(int64(defaultReplayWindowSize))
 		}
 
 		hasChange = true
@@ -970,6 +1051,8 @@ func expandModifyVpnTunnelOptionsSpecification(d *schema.ResourceData, prefix st
 	if key := prefix + "startup_action"; d.HasChange(key) {
 		if v, ok := d.GetOk(key); ok {
 			apiObject.StartupAction = aws.String(v.(string))
+		} else {
+			apiObject.StartupAction = aws.String(defaultStartupAction)
 		}
 
 		hasChange = true
