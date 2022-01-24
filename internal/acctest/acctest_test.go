@@ -499,6 +499,32 @@ func TestAccAcctestProvider_AssumeRole_empty(t *testing.T) {
 	})
 }
 
+func TestAccAcctestProvider_assumeRoleFIPS(t *testing.T) {
+	var providers []*schema.Provider
+	region := "us-west-2"
+	rName := sdkacctest.RandomWithPrefix(ResourcePrefix)
+	role := fmt.Sprintf("arn:aws:iam::%s:role/%s", "067819342479", rName)
+	stsEndpoint := "https://sts-fips.us-west-2.amazonaws.com"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { PreCheck(t) },
+		ErrorCheck:        ErrorCheck(t),
+		ProviderFactories: FactoriesInternal(&providers),
+		CheckDestroy:      nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccXYZ1Config(rName),
+			},
+			{
+				Config: testAccXYZ2Config(rName, region, role, stsEndpoint),
+				Check: resource.ComposeTestCheckFunc(
+					CheckCallerIdentityAccountID("data.aws_caller_identity.current"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckPartition(providers *[]*schema.Provider, expectedPartition string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if providers == nil {
@@ -1094,4 +1120,66 @@ provider "aws" {
   skip_requesting_account_id  = true
 }
 `, region))
+}
+
+func testAccXYZ1Config(rName string) string {
+	return ConfigCompose(
+		fmt.Sprintf(`
+data "aws_partition" "current" {}
+
+resource "aws_iam_role" "test" {
+  name = %[1]q
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Action = "sts:AssumeRole",
+      Principal = {
+        "AWS" = "arn:aws:iam::067819342479:user/yakdriver",
+      }
+      Effect = "Allow"
+      Sid    = ""
+    }]
+  })
+}
+`, rName))
+}
+
+func testAccXYZ2Config(rName, region, role, stsEndpoint string) string {
+	//lintignore:AT004
+	return ConfigCompose(
+		testAccProviderConfigBase,
+		fmt.Sprintf(`
+provider "aws" {
+  region = %[2]q
+
+  assume_role {
+    role_arn = %[3]q
+  }
+
+  #endpoints {
+  #  sts = %[4]q
+  #}
+}
+
+data "aws_caller_identity" "current" {}
+
+data "aws_partition" "current" {}
+
+resource "aws_iam_role" "test" {
+  name = %[1]q
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Action = "sts:AssumeRole",
+      Principal = {
+        "AWS" = "arn:aws:iam::067819342479:user/yakdriver",
+      }
+      Effect = "Allow"
+      Sid    = ""
+    }]
+  })
+}
+`, rName, region, role, stsEndpoint))
 }
