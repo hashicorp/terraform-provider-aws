@@ -1,12 +1,12 @@
 ---
 subcategory: "API Gateway v2 (WebSocket and HTTP APIs)"
 layout: "aws"
-page_title: "AWS: aws_apigatewayv2_api"
+page_title: "AWS: aws_apigatewayv2_export"
 description: |-
   Exports a definition of an API in a particular output format and specification.
 ---
 
-# Data Source: aws_apigatewayv2_api
+# Data Source: aws_apigatewayv2_export
 
 Exports a definition of an API in a particular output format and specification.
 
