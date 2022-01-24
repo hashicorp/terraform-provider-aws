@@ -378,7 +378,7 @@ func resourceTargetGroupCreate(d *schema.ResourceData, meta interface{}) error {
 	resp, err := conn.CreateTargetGroup(params)
 
 	// Some partitions may not support tag-on-create
-	if params.Tags != nil && (tfawserr.ErrCodeContains(err, ErrCodeAccessDenied) || tfawserr.ErrCodeContains(err, elbv2.ErrCodeInvalidConfigurationRequestException) || tfawserr.ErrCodeContains(err, elbv2.ErrCodeOperationNotPermittedException)) {
+	if params.Tags != nil && verify.CheckISOErrorTagsUnsupported(err) {
 		log.Printf("[WARN] ELBv2 Target Group (%s) create failed (%s) with tags. Trying create without tags.", groupName, err)
 		params.Tags = nil
 		resp, err = conn.CreateTargetGroup(params)
@@ -535,7 +535,7 @@ func resourceTargetGroupCreate(d *schema.ResourceData, meta interface{}) error {
 		err := UpdateTags(conn, d.Id(), nil, tags)
 
 		// if default tags only, log and continue (i.e., should error if explicitly setting tags and they can't be)
-		if v, ok := d.GetOk("tags"); (!ok || len(v.(map[string]interface{})) == 0) && (tfawserr.ErrCodeContains(err, ErrCodeAccessDenied) || tfawserr.ErrCodeContains(err, elbv2.ErrCodeInvalidConfigurationRequestException) || tfawserr.ErrCodeContains(err, elbv2.ErrCodeOperationNotPermittedException)) {
+		if v, ok := d.GetOk("tags"); (!ok || len(v.(map[string]interface{})) == 0) && verify.CheckISOErrorTagsUnsupported(err) {
 			log.Printf("[WARN] error adding tags after create for ELBv2 Target Group (%s): %s", d.Id(), err)
 			return resourceTargetGroupRead(d, meta)
 		}
@@ -796,7 +796,7 @@ func resourceTargetGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		// ISO partitions may not support tagging, giving error
-		if tfawserr.ErrCodeContains(err, ErrCodeAccessDenied) || tfawserr.ErrCodeContains(err, elbv2.ErrCodeInvalidConfigurationRequestException) || tfawserr.ErrCodeContains(err, elbv2.ErrCodeOperationNotPermittedException) {
+		if verify.CheckISOErrorTagsUnsupported(err) {
 			log.Printf("[WARN] Unable to update tags for ELBv2 Target Group %s: %s", d.Id(), err)
 			return resourceTargetGroupRead(d, meta)
 		}
@@ -985,7 +985,7 @@ func flattenTargetGroupResource(d *schema.ResourceData, meta interface{}, target
 
 	tags, err := ListTags(conn, d.Id())
 
-	if tfawserr.ErrCodeContains(err, ErrCodeAccessDenied) || tfawserr.ErrCodeContains(err, elbv2.ErrCodeInvalidConfigurationRequestException) || tfawserr.ErrCodeContains(err, elbv2.ErrCodeOperationNotPermittedException) {
+	if verify.CheckISOErrorTagsUnsupported(err) {
 		log.Printf("[WARN] Unable to list tags for ELBv2 Target Group %s: %s", d.Id(), err)
 		return nil
 	}

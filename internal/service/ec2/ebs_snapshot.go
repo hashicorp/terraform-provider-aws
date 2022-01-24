@@ -272,26 +272,18 @@ func resourceEBSSnapshotUpdate(d *schema.ResourceData, meta interface{}) error {
 
 func resourceEBSSnapshotDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
-	input := &ec2.DeleteSnapshotInput{
-		SnapshotId: aws.String(d.Id()),
+
+	log.Printf("[INFO] Deleting EBS Snapshot: %s", d.Id())
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(d.Timeout(schema.TimeoutDelete), func() (interface{}, error) {
+		return conn.DeleteSnapshot(&ec2.DeleteSnapshotInput{
+			SnapshotId: aws.String(d.Id()),
+		})
+	}, ErrCodeInvalidSnapshotInUse)
+
+	if err != nil {
+		return fmt.Errorf("error deleting EBS Snapshot (%s): %w", d.Id(), err)
 	}
 
-	err := resource.Retry(d.Timeout(schema.TimeoutDelete), func() *resource.RetryError {
-		_, err := conn.DeleteSnapshot(input)
-		if err == nil {
-			return nil
-		}
-		if tfawserr.ErrMessageContains(err, "SnapshotInUse", "") {
-			return resource.RetryableError(fmt.Errorf("EBS SnapshotInUse - trying again while it detaches"))
-		}
-		return resource.NonRetryableError(err)
-	})
-	if tfresource.TimedOut(err) {
-		_, err = conn.DeleteSnapshot(input)
-	}
-	if err != nil {
-		return fmt.Errorf("Error deleting EBS snapshot: %w", err)
-	}
 	return nil
 }
 

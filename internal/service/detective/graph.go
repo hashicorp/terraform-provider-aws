@@ -55,7 +55,7 @@ func resourceGraphCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 	var output *detective.CreateGraphOutput
 	var err error
-	err = resource.RetryContext(ctx, DetectiveOperationTimeout, func() *resource.RetryError {
+	err = resource.RetryContext(ctx, GraphOperationTimeout, func() *resource.RetryError {
 		output, err = conn.CreateGraphWithContext(ctx, input)
 		if err != nil {
 			if tfawserr.ErrCodeEquals(err, detective.ErrCodeInternalServerException) {

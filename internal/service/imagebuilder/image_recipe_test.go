@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfimagebuilder "github.com/hashicorp/terraform-provider-aws/internal/service/imagebuilder"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func TestAccImageBuilderImageRecipe_basic(t *testing.T) {
@@ -537,6 +538,32 @@ func TestAccImageBuilderImageRecipe_pipelineUpdateDependency(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckImageRecipeExists(resourceName),
 				),
+			},
+		},
+	})
+}
+
+func TestAccImageBuilderImageRecipe_userDataBase64(t *testing.T) {
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_imagebuilder_image_recipe.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, imagebuilder.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckImageRecipeDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccImageRecipeUserDataBase64Config(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckImageRecipeExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "user_data_base64", verify.Base64Encode([]byte("hello world"))),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -1086,6 +1113,23 @@ resource "aws_imagebuilder_image_recipe" "test" {
   name         = %[1]q
   parent_image = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:image/amazon-linux-2-x86/x.x.x"
   version      = "1.0.0"
+}
+`, rName))
+}
+
+func testAccImageRecipeUserDataBase64Config(rName string) string {
+	return acctest.ConfigCompose(
+		testAccImageRecipeBaseConfig(rName),
+		fmt.Sprintf(`
+resource "aws_imagebuilder_image_recipe" "test" {
+  component {
+    component_arn = aws_imagebuilder_component.test.arn
+  }
+
+  name             = %[1]q
+  parent_image     = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:image/amazon-linux-2-x86/x.x.x"
+  version          = "1.0.0"
+  user_data_base64 = base64encode("hello world")
 }
 `, rName))
 }

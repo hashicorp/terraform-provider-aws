@@ -82,6 +82,7 @@ The following arguments are supported:
 * `access_control_allow_origins` - (Optional) Object that contains an attribute `items` that contains a list of origins that CloudFront can use as the value for the `Access-Control-Allow-Origin` HTTP response header.
 * `access_control_expose_headers` - (Optional) Object that contains an attribute `items` that contains a list of HTTP headers that CloudFront includes as values for the `Access-Control-Expose-Headers` HTTP response header.
 * `access_control_max_age_sec` - (Required) A number that CloudFront uses as the value for the `Access-Control-Max-Age` HTTP response header.
+* `origin_override` - (Required) A Boolean value that determines how CloudFront behaves for the HTTP response header.
 
 ### Custom Header
 

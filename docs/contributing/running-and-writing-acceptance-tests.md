@@ -177,7 +177,7 @@ export AWS_THIRD_REGION=...
 
 ### Running Only Short Tests
 
-Some tests have been manually marked as long-running (longer than 300 seconds) and can be skipped using the `-short` flag. However, implementation of the long-running guards is a work in progress and many services have no tests guarded.
+Some tests have been manually marked as long-running (longer than 300 seconds) and can be skipped using the `-short` flag. However, we are adding long-running guards little by little and many services have no guarded tests.
 
 Where guards have been implemented, do not always skip long-running tests. However, for intermediate test runs during development, or to verify functionality unrelated to the specific long-running tests, skipping long-running tests makes work more efficient. We recommend that for the final test run before submitting a PR that you run affected tests without the `-short` flag.
 
@@ -705,18 +705,17 @@ func testAccErrorCheckSkipService(t *testing.T) resource.ErrorCheckFunc {
 
 #### Long-Running Test Guards
 
-For any acceptance tests that typically run longer than 300 seconds (5 minutes), add a `-short` test guard before the `resource.ParallelTest()` (or `resource.Test()`) statement.
+For any acceptance tests that typically run longer than 300 seconds (5 minutes), add a `-short` test guard at the top of the test function.
 
 For example:
 
 ```go
 func TestAccExampleThing_longRunningTest(t *testing.T) {
-  rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-  resourceName := "aws_example_thing.test"
-
   if testing.Short() {
     t.Skip("skipping long-running test in short mode")
   }
+
+  // ... omitted for brevity ...
 
   resource.ParallelTest(t, resource.TestCase{
     // ... omitted for brevity ...

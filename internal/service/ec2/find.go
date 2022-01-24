@@ -154,6 +154,57 @@ func FindInstanceByID(conn *ec2.EC2, id string) (*ec2.Instance, error) {
 	return output.Reservations[0].Instances[0], nil
 }
 
+func FindNetworkACL(conn *ec2.EC2, input *ec2.DescribeNetworkAclsInput) (*ec2.NetworkAcl, error) {
+	output, err := FindNetworkACLs(conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if len(output) == 0 || output[0] == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	if count := len(output); count > 1 {
+		return nil, tfresource.NewTooManyResultsError(count, input)
+	}
+
+	return output[0], nil
+}
+
+func FindNetworkACLs(conn *ec2.EC2, input *ec2.DescribeNetworkAclsInput) ([]*ec2.NetworkAcl, error) {
+	var output []*ec2.NetworkAcl
+
+	err := conn.DescribeNetworkAclsPages(input, func(page *ec2.DescribeNetworkAclsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.NetworkAcls {
+			if v == nil {
+				continue
+			}
+
+			output = append(output, v)
+		}
+
+		return !lastPage
+	})
+
+	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidNetworkAclIDNotFound) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
+}
+
 // FindNetworkACLByID looks up a NetworkAcl by ID. When not found, returns nil and potentially an API error.
 func FindNetworkACLByID(conn *ec2.EC2, id string) (*ec2.NetworkAcl, error) {
 	input := &ec2.DescribeNetworkAclsInput{
@@ -183,6 +234,8 @@ func FindNetworkACLByID(conn *ec2.EC2, id string) (*ec2.NetworkAcl, error) {
 	}
 
 	return nil, nil
+
+	// TODO: Layer on top of FindNetworkACL and modify callers to handle NotFoundError.
 }
 
 // FindNetworkACLEntry looks up a FindNetworkACLEntry by Network ACL ID, Egress, and Rule Number. When not found, returns nil and potentially an API error.
@@ -446,9 +499,6 @@ func FindRouteTableByID(conn *ec2.EC2, routeTableID string) (*ec2.RouteTable, er
 	return FindRouteTable(conn, input)
 }
 
-// FindRouteTable returns the route table corresponding to the specified input.
-// Returns EmptyResultError if no route table is found or TooManyResultsError if more than 1
-// matching route table is found.
 func FindRouteTable(conn *ec2.EC2, input *ec2.DescribeRouteTablesInput) (*ec2.RouteTable, error) {
 	output, err := FindRouteTables(conn, input)
 
@@ -467,8 +517,6 @@ func FindRouteTable(conn *ec2.EC2, input *ec2.DescribeRouteTablesInput) (*ec2.Ro
 	return output[0], nil
 }
 
-// FindRouteTables returns an array of route tables for the specified input.
-// Returns NotFoundError if no route table is found for a specified route table ID.
 func FindRouteTables(conn *ec2.EC2, input *ec2.DescribeRouteTablesInput) ([]*ec2.RouteTable, error) {
 	var output []*ec2.RouteTable
 
@@ -565,12 +613,25 @@ func FindRouteByPrefixListIDDestination(conn *ec2.EC2, routeTableID, prefixListI
 	}
 }
 
-// FindSecurityGroupByID looks up a security group by ID. Returns a resource.NotFoundError if not found.
 func FindSecurityGroupByID(conn *ec2.EC2, id string) (*ec2.SecurityGroup, error) {
 	input := &ec2.DescribeSecurityGroupsInput{
 		GroupIds: aws.StringSlice([]string{id}),
 	}
-	return FindSecurityGroup(conn, input)
+
+	output, err := FindSecurityGroup(conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	// Eventual consistency check.
+	if aws.StringValue(output.GroupId) != id {
+		return nil, &resource.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
 }
 
 // FindSecurityGroupByNameAndVPCID looks up a security group by name and VPC ID. Returns a resource.NotFoundError if not found.
@@ -605,8 +666,6 @@ func FindSecurityGroup(conn *ec2.EC2, input *ec2.DescribeSecurityGroupsInput) (*
 	return output[0], nil
 }
 
-// FindSecurityGroups returns an array of security groups that match an ec2.DescribeSecurityGroupsInput.
-// Returns a resource.NotFoundError if no group is found for a specified SecurityGroup or SecurityGroupId.
 func FindSecurityGroups(conn *ec2.EC2, input *ec2.DescribeSecurityGroupsInput) ([]*ec2.SecurityGroup, error) {
 	var output []*ec2.SecurityGroup
 
@@ -615,19 +674,18 @@ func FindSecurityGroups(conn *ec2.EC2, input *ec2.DescribeSecurityGroupsInput) (
 			return !lastPage
 		}
 
-		for _, sg := range page.SecurityGroups {
-			if sg == nil {
+		for _, v := range page.SecurityGroups {
+			if v == nil {
 				continue
 			}
 
-			output = append(output, sg)
+			output = append(output, v)
 		}
 
 		return !lastPage
 	})
 
-	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidSecurityGroupIDNotFound) ||
-		tfawserr.ErrCodeEquals(err, ErrCodeInvalidGroupNotFound) {
+	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidGroupNotFound, ErrCodeInvalidSecurityGroupIDNotFound) {
 		return nil, &resource.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -893,8 +951,7 @@ func FindTransitGatewayRouteTablePropagation(conn *ec2.EC2, transitGatewayRouteT
 	return result, nil
 }
 
-// FindVPCAttribute looks up a VPC attribute.
-func FindVPCAttribute(conn *ec2.EC2, vpcID string, attribute string) (*bool, error) {
+func FindVPCAttribute(conn *ec2.EC2, vpcID string, attribute string) (bool, error) {
 	input := &ec2.DescribeVpcAttributeInput{
 		Attribute: aws.String(attribute),
 		VpcId:     aws.String(vpcID),
@@ -902,61 +959,284 @@ func FindVPCAttribute(conn *ec2.EC2, vpcID string, attribute string) (*bool, err
 
 	output, err := conn.DescribeVpcAttribute(input)
 
+	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidVpcIDNotFound) {
+		return false, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return false, err
+	}
+
+	if output == nil {
+		return false, tfresource.NewEmptyResultError(input)
+	}
+
+	var v *ec2.AttributeBooleanValue
+	switch attribute {
+	case ec2.VpcAttributeNameEnableDnsHostnames:
+		v = output.EnableDnsHostnames
+	case ec2.VpcAttributeNameEnableDnsSupport:
+		v = output.EnableDnsSupport
+	default:
+		return false, fmt.Errorf("unsupported VPC attribute: %s", attribute)
+	}
+
+	if v == nil {
+		return false, tfresource.NewEmptyResultError(input)
+	}
+
+	return aws.BoolValue(v.Value), nil
+}
+
+func FindVPCClassicLinkEnabled(conn *ec2.EC2, vpcID string) (bool, error) {
+	input := &ec2.DescribeVpcClassicLinkInput{
+		VpcIds: aws.StringSlice([]string{vpcID}),
+	}
+
+	output, err := conn.DescribeVpcClassicLink(input)
+
+	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidVpcIDNotFound, ErrCodeUnsupportedOperation) {
+		return false, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return false, err
+	}
+
+	if output == nil || len(output.Vpcs) == 0 || output.Vpcs[0] == nil {
+		return false, tfresource.NewEmptyResultError(input)
+	}
+
+	if count := len(output.Vpcs); count > 1 {
+		return false, tfresource.NewTooManyResultsError(count, input)
+	}
+
+	vpc := output.Vpcs[0]
+
+	// Eventual consistency check.
+	if aws.StringValue(vpc.VpcId) != vpcID {
+		return false, &resource.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	return aws.BoolValue(vpc.ClassicLinkEnabled), nil
+}
+
+func FindVPCClassicLinkDnsSupported(conn *ec2.EC2, vpcID string) (bool, error) {
+	input := &ec2.DescribeVpcClassicLinkDnsSupportInput{
+		VpcIds: aws.StringSlice([]string{vpcID}),
+	}
+
+	output, err := conn.DescribeVpcClassicLinkDnsSupport(input)
+
+	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidVpcIDNotFound, ErrCodeUnsupportedOperation) ||
+		tfawserr.ErrMessageContains(err, ErrCodeAuthFailure, "This request has been administratively disabled") {
+		return false, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return false, err
+	}
+
+	if output == nil || len(output.Vpcs) == 0 || output.Vpcs[0] == nil {
+		return false, tfresource.NewEmptyResultError(input)
+	}
+
+	if count := len(output.Vpcs); count > 1 {
+		return false, tfresource.NewTooManyResultsError(count, input)
+	}
+
+	vpc := output.Vpcs[0]
+
+	// Eventual consistency check.
+	if aws.StringValue(vpc.VpcId) != vpcID {
+		return false, &resource.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	return aws.BoolValue(vpc.ClassicLinkDnsSupported), nil
+}
+
+func FindVPC(conn *ec2.EC2, input *ec2.DescribeVpcsInput) (*ec2.Vpc, error) {
+	output, err := FindVPCs(conn, input)
+
 	if err != nil {
 		return nil, err
 	}
 
-	if output == nil {
-		return nil, nil
+	if len(output) == 0 || output[0] == nil {
+		return nil, tfresource.NewEmptyResultError(input)
 	}
 
-	switch attribute {
-	case ec2.VpcAttributeNameEnableDnsHostnames:
-		if output.EnableDnsHostnames == nil {
-			return nil, nil
-		}
-
-		return output.EnableDnsHostnames.Value, nil
-	case ec2.VpcAttributeNameEnableDnsSupport:
-		if output.EnableDnsSupport == nil {
-			return nil, nil
-		}
-
-		return output.EnableDnsSupport.Value, nil
+	if count := len(output); count > 1 {
+		return nil, tfresource.NewTooManyResultsError(count, input)
 	}
 
-	return nil, fmt.Errorf("unimplemented VPC attribute: %s", attribute)
+	return output[0], nil
 }
 
-// FindVPCByID looks up a Vpc by ID. When not found, returns nil and potentially an API error.
+func FindVPCs(conn *ec2.EC2, input *ec2.DescribeVpcsInput) ([]*ec2.Vpc, error) {
+	var output []*ec2.Vpc
+
+	err := conn.DescribeVpcsPages(input, func(page *ec2.DescribeVpcsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.Vpcs {
+			if v != nil {
+				output = append(output, v)
+			}
+		}
+
+		return !lastPage
+	})
+
+	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidVpcIDNotFound) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
+}
+
 func FindVPCByID(conn *ec2.EC2, id string) (*ec2.Vpc, error) {
 	input := &ec2.DescribeVpcsInput{
 		VpcIds: aws.StringSlice([]string{id}),
 	}
 
-	output, err := conn.DescribeVpcs(input)
+	output, err := FindVPC(conn, input)
 
 	if err != nil {
 		return nil, err
 	}
 
-	if output == nil {
-		return nil, nil
+	// Eventual consistency check.
+	if aws.StringValue(output.VpcId) != id {
+		return nil, &resource.NotFoundError{
+			LastRequest: input,
+		}
 	}
 
-	for _, vpc := range output.Vpcs {
-		if vpc == nil {
-			continue
-		}
+	return output, nil
+}
 
-		if aws.StringValue(vpc.VpcId) != id {
-			continue
-		}
+func FindVPCDHCPOptionsAssociation(conn *ec2.EC2, vpcID string, dhcpOptionsID string) error {
+	vpc, err := FindVPCByID(conn, vpcID)
 
-		return vpc, nil
+	if err != nil {
+		return err
 	}
 
-	return nil, nil
+	if aws.StringValue(vpc.DhcpOptionsId) != dhcpOptionsID {
+		return &resource.NotFoundError{
+			LastError: fmt.Errorf("EC2 VPC (%s) DHCP Options Set (%s) Association not found", vpcID, dhcpOptionsID),
+		}
+	}
+
+	return nil
+}
+
+func FindVPCCIDRBlockAssociationByID(conn *ec2.EC2, id string) (*ec2.VpcCidrBlockAssociation, *ec2.Vpc, error) {
+	input := &ec2.DescribeVpcsInput{
+		Filters: BuildAttributeFilterList(map[string]string{
+			"cidr-block-association.association-id": id,
+		}),
+	}
+
+	vpc, err := FindVPC(conn, input)
+
+	if err != nil {
+		return nil, nil, err
+	}
+
+	for _, association := range vpc.CidrBlockAssociationSet {
+		if aws.StringValue(association.AssociationId) == id {
+			if state := aws.StringValue(association.CidrBlockState.State); state == ec2.VpcCidrBlockStateCodeDisassociated {
+				return nil, nil, &resource.NotFoundError{Message: state}
+			}
+
+			return association, vpc, nil
+		}
+	}
+
+	return nil, nil, &resource.NotFoundError{}
+}
+
+func FindVPCIPv6CIDRBlockAssociationByID(conn *ec2.EC2, id string) (*ec2.VpcIpv6CidrBlockAssociation, *ec2.Vpc, error) {
+	input := &ec2.DescribeVpcsInput{
+		Filters: BuildAttributeFilterList(map[string]string{
+			"ipv6-cidr-block-association.association-id": id,
+		}),
+	}
+
+	vpc, err := FindVPC(conn, input)
+
+	if err != nil {
+		return nil, nil, err
+	}
+
+	for _, association := range vpc.Ipv6CidrBlockAssociationSet {
+		if aws.StringValue(association.AssociationId) == id {
+			if state := aws.StringValue(association.Ipv6CidrBlockState.State); state == ec2.VpcCidrBlockStateCodeDisassociated {
+				return nil, nil, &resource.NotFoundError{Message: state}
+			}
+
+			return association, vpc, nil
+		}
+	}
+
+	return nil, nil, &resource.NotFoundError{}
+}
+
+func FindVPCDefaultNetworkACL(conn *ec2.EC2, id string) (*ec2.NetworkAcl, error) {
+	input := &ec2.DescribeNetworkAclsInput{
+		Filters: BuildAttributeFilterList(map[string]string{
+			"default": "true",
+			"vpc-id":  id,
+		}),
+	}
+
+	return FindNetworkACL(conn, input)
+}
+
+func FindVPCDefaultSecurityGroup(conn *ec2.EC2, id string) (*ec2.SecurityGroup, error) {
+	input := &ec2.DescribeSecurityGroupsInput{
+		Filters: BuildAttributeFilterList(map[string]string{
+			"group-name": DefaultSecurityGroupName,
+			"vpc-id":     id,
+		}),
+	}
+
+	return FindSecurityGroup(conn, input)
+}
+
+func FindVPCMainRouteTable(conn *ec2.EC2, id string) (*ec2.RouteTable, error) {
+	input := &ec2.DescribeRouteTablesInput{
+		Filters: BuildAttributeFilterList(map[string]string{
+			"association.main": "true",
+			"vpc-id":           id,
+		}),
+	}
+
+	return FindRouteTable(conn, input)
 }
 
 // FindVPCEndpointByID returns the VPC endpoint corresponding to the specified identifier.
@@ -1363,6 +1643,139 @@ func FindTransitGatewayAttachmentByID(conn *ec2.EC2, id string) (*ec2.TransitGat
 	return output, nil
 }
 
+func FindDHCPOptions(conn *ec2.EC2, input *ec2.DescribeDhcpOptionsInput) (*ec2.DhcpOptions, error) {
+	output, err := FindDHCPOptionses(conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if len(output) == 0 || output[0] == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	if count := len(output); count > 1 {
+		return nil, tfresource.NewTooManyResultsError(count, input)
+	}
+
+	return output[0], nil
+}
+
+func FindDHCPOptionses(conn *ec2.EC2, input *ec2.DescribeDhcpOptionsInput) ([]*ec2.DhcpOptions, error) {
+	var output []*ec2.DhcpOptions
+
+	err := conn.DescribeDhcpOptionsPages(input, func(page *ec2.DescribeDhcpOptionsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.DhcpOptions {
+			if v != nil {
+				output = append(output, v)
+			}
+		}
+
+		return !lastPage
+	})
+
+	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidDhcpOptionIDNotFound) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
+}
+
+func FindDHCPOptionsByID(conn *ec2.EC2, id string) (*ec2.DhcpOptions, error) {
+	input := &ec2.DescribeDhcpOptionsInput{
+		DhcpOptionsIds: aws.StringSlice([]string{id}),
+	}
+
+	output, err := FindDHCPOptions(conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	// Eventual consistency check.
+	if aws.StringValue(output.DhcpOptionsId) != id {
+		return nil, &resource.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
+}
+
+func FindEgressOnlyInternetGateway(conn *ec2.EC2, input *ec2.DescribeEgressOnlyInternetGatewaysInput) (*ec2.EgressOnlyInternetGateway, error) {
+	output, err := FindEgressOnlyInternetGateways(conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if len(output) == 0 || output[0] == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	if count := len(output); count > 1 {
+		return nil, tfresource.NewTooManyResultsError(count, input)
+	}
+
+	return output[0], nil
+}
+
+func FindEgressOnlyInternetGateways(conn *ec2.EC2, input *ec2.DescribeEgressOnlyInternetGatewaysInput) ([]*ec2.EgressOnlyInternetGateway, error) {
+	var output []*ec2.EgressOnlyInternetGateway
+
+	err := conn.DescribeEgressOnlyInternetGatewaysPages(input, func(page *ec2.DescribeEgressOnlyInternetGatewaysOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.EgressOnlyInternetGateways {
+			if v != nil {
+				output = append(output, v)
+			}
+		}
+
+		return !lastPage
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
+}
+
+func FindEgressOnlyInternetGatewayByID(conn *ec2.EC2, id string) (*ec2.EgressOnlyInternetGateway, error) {
+	input := &ec2.DescribeEgressOnlyInternetGatewaysInput{
+		EgressOnlyInternetGatewayIds: aws.StringSlice([]string{id}),
+	}
+
+	output, err := FindEgressOnlyInternetGateway(conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	// Eventual consistency check.
+	if aws.StringValue(output.EgressOnlyInternetGatewayId) != id {
+		return nil, &resource.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
+}
+
 func FindFlowLogByID(conn *ec2.EC2, id string) (*ec2.FlowLog, error) {
 	input := &ec2.DescribeFlowLogsInput{
 		FlowLogIds: aws.StringSlice([]string{id}),
@@ -1624,6 +2037,83 @@ func FindManagedPrefixListEntryByIDAndCIDR(conn *ec2.EC2, id, cidr string) (*ec2
 	}
 
 	return nil, &resource.NotFoundError{}
+}
+
+func FindNATGateway(conn *ec2.EC2, input *ec2.DescribeNatGatewaysInput) (*ec2.NatGateway, error) {
+	output, err := FindNATGateways(conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if len(output) == 0 || output[0] == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	if count := len(output); count > 1 {
+		return nil, tfresource.NewTooManyResultsError(count, input)
+	}
+
+	return output[0], nil
+}
+
+func FindNATGateways(conn *ec2.EC2, input *ec2.DescribeNatGatewaysInput) ([]*ec2.NatGateway, error) {
+	var output []*ec2.NatGateway
+
+	err := conn.DescribeNatGatewaysPages(input, func(page *ec2.DescribeNatGatewaysOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.NatGateways {
+			if v != nil {
+				output = append(output, v)
+			}
+		}
+
+		return !lastPage
+	})
+
+	if tfawserr.ErrCodeEquals(err, ErrCodeNatGatewayNotFound) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
+}
+
+func FindNATGatewayByID(conn *ec2.EC2, id string) (*ec2.NatGateway, error) {
+	input := &ec2.DescribeNatGatewaysInput{
+		NatGatewayIds: aws.StringSlice([]string{id}),
+	}
+
+	output, err := FindNATGateway(conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if state := aws.StringValue(output.State); state == ec2.NatGatewayStateDeleted {
+		return nil, &resource.NotFoundError{
+			Message:     state,
+			LastRequest: input,
+		}
+	}
+
+	// Eventual consistency check.
+	if aws.StringValue(output.NatGatewayId) != id {
+		return nil, &resource.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
 }
 
 func FindPlacementGroupByName(conn *ec2.EC2, name string) (*ec2.PlacementGroup, error) {

@@ -89,7 +89,7 @@ func resourceAliasCreate(d *schema.ResourceData, meta interface{}) error {
 		FunctionName:    aws.String(functionName),
 		FunctionVersion: aws.String(d.Get("function_version").(string)),
 		Name:            aws.String(aliasName),
-		RoutingConfig:   expandLambdaAliasRoutingConfiguration(d.Get("routing_config").([]interface{})),
+		RoutingConfig:   expandAliasRoutingConfiguration(d.Get("routing_config").([]interface{})),
 	}
 
 	aliasConfiguration, err := conn.CreateAlias(params)
@@ -131,7 +131,7 @@ func resourceAliasRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("arn", aliasConfiguration.AliasArn)
 	d.SetId(aws.StringValue(aliasConfiguration.AliasArn))
 
-	invokeArn := lambdaFunctionInvokeArn(*aliasConfiguration.AliasArn, meta)
+	invokeArn := functionInvokeArn(*aliasConfiguration.AliasArn, meta)
 	d.Set("invoke_arn", invokeArn)
 
 	if err := d.Set("routing_config", flattenAliasRoutingConfiguration(aliasConfiguration.RoutingConfig)); err != nil {
@@ -173,7 +173,7 @@ func resourceAliasUpdate(d *schema.ResourceData, meta interface{}) error {
 		FunctionName:    aws.String(d.Get("function_name").(string)),
 		FunctionVersion: aws.String(d.Get("function_version").(string)),
 		Name:            aws.String(d.Get("name").(string)),
-		RoutingConfig:   expandLambdaAliasRoutingConfiguration(d.Get("routing_config").([]interface{})),
+		RoutingConfig:   expandAliasRoutingConfiguration(d.Get("routing_config").([]interface{})),
 	}
 
 	_, err := conn.UpdateAlias(params)
@@ -184,7 +184,7 @@ func resourceAliasUpdate(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func expandLambdaAliasRoutingConfiguration(l []interface{}) *lambda.AliasRoutingConfiguration {
+func expandAliasRoutingConfiguration(l []interface{}) *lambda.AliasRoutingConfiguration {
 	aliasRoutingConfiguration := &lambda.AliasRoutingConfiguration{}
 
 	if len(l) == 0 || l[0] == nil {
