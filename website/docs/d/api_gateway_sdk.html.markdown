@@ -1,9 +1,9 @@
 ---
 subcategory: "API Gateway (REST APIs)"
 layout: "aws"
-page_title: "AWS: aws_api_gateway_export"
+page_title: "AWS: aws_api_gateway_sdk"
 description: |-
-  Get information on an API Gateway REST API Key
+  Gets an API Gateway client SDK
 ---
 
 # Data Source: aws_api_gateway_export
@@ -11,7 +11,7 @@ description: |-
 ## Example Usage
 
 ```terraform
-data "aws_api_gateway_export" "example" {
+data "aws_api_gateway_sdk" "example" {
   rest_api_id = aws_api_gateway_stage.example.rest_api_id
   stage_name  = aws_api_gateway_stage.example.stage_name
   sdk_type    = "android"
