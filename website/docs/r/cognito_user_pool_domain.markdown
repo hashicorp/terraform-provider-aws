@@ -14,7 +14,7 @@ Provides a Cognito User Pool Domain resource.
 
 ### Amazon Cognito domain
 
-```hcl
+```terraform
 resource "aws_cognito_user_pool_domain" "main" {
   domain       = "example-domain"
   user_pool_id = aws_cognito_user_pool.example.id
@@ -27,7 +27,7 @@ resource "aws_cognito_user_pool" "example" {
 
 ### Custom Cognito domain
 
-```hcl
+```terraform
 resource "aws_cognito_user_pool_domain" "main" {
   domain          = "example-domain.example.com"
   certificate_arn = aws_acm_certificate.cert.arn
@@ -74,7 +74,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Cognito User Pool Domains can be imported using the `domain`, e.g.
+Cognito User Pool Domains can be imported using the `domain`, e.g.,
 
 ```
 $ terraform import aws_cognito_user_pool_domain.main <domain>

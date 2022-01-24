@@ -12,7 +12,7 @@ Provides a WAF Regex Pattern Set Resource
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_waf_regex_pattern_set" "example" {
   name                  = "tf_waf_regex_pattern_set"
   regex_pattern_strings = ["one", "two"]
@@ -35,7 +35,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-AWS WAF Regex Pattern Set can be imported using their ID, e.g.
+AWS WAF Regex Pattern Set can be imported using their ID, e.g.,
 
 ```
 $ terraform import aws_waf_regex_pattern_set.example a1b2c3d4-d5f6-7777-8888-9999aaaabbbbcccc

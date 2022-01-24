@@ -16,7 +16,7 @@ Get permissions for a principal to access metadata in the Data Catalog and data 
 
 ### Permissions For A Lake Formation S3 Resource
 
-```hcl
+```terraform
 data "aws_lakeformation_permissions" "test" {
   principal = aws_iam_role.workflow_role.arn
 
@@ -28,7 +28,7 @@ data "aws_lakeformation_permissions" "test" {
 
 ### Permissions For A Glue Catalog Database
 
-```hcl
+```terraform
 data "aws_lakeformation_permissions" "test" {
   principal = aws_iam_role.workflow_role.arn
 
@@ -99,8 +99,8 @@ The following arguments are required:
 The following arguments are optional:
 
 * `catalog_id` - (Optional) Identifier for the Data Catalog. By default, it is the account ID of the caller.
-* `column_names` - (Optional) List of column names for the table. At least one of `column_names` or `excluded_column_names` is required.
-* `excluded_column_names` - (Optional) List of column names for the table to exclude. At least one of `column_names` or `excluded_column_names` is required.
+* `column_names` - (Optional) Set of column names for the table. At least one of `column_names` or `excluded_column_names` is required.
+* `excluded_column_names` - (Optional) Set of column names for the table to exclude. At least one of `column_names` or `excluded_column_names` is required.
 
 ## Attributes Reference
 

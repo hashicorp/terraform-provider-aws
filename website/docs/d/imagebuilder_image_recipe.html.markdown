@@ -12,7 +12,7 @@ Provides details about an Image Builder Image Recipe.
 
 ## Example Usage
 
-```hcl
+```terraform
 data "aws_imagebuilder_image_recipe" "example" {
   arn = "arn:aws:imagebuilder:us-east-1:aws:image-recipe/example/1.0.0"
 }
@@ -49,5 +49,6 @@ In addition to all arguments above, the following attributes are exported:
 * `parent_image` - Platform of the image recipe.
 * `platform` - Platform of the image recipe.
 * `tags` - Key-value map of resource tags for the image recipe.
+* `user_data_base64` - Base64 encoded contents of user data. Commands or a command script to run when build instance is launched.
 * `version` - Version of the image recipe.
 * `working_directory` - The working directory used during build and test workflows.

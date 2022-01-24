@@ -12,7 +12,7 @@ Provides a budgets budget resource. Budgets use the cost visualisation provided 
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_budgets_budget" "ec2" {
   name              = "budget-ec2-monthly"
   budget_type       = "COST"
@@ -22,8 +22,11 @@ resource "aws_budgets_budget" "ec2" {
   time_period_start = "2017-07-01_00:00"
   time_unit         = "MONTHLY"
 
-  cost_filters = {
-    Service = "Amazon Elastic Compute Cloud - Compute"
+  cost_filter {
+    name = "Service"
+    values = [
+      "Amazon Elastic Compute Cloud - Compute",
+    ]
   }
 
   notification {
@@ -38,7 +41,7 @@ resource "aws_budgets_budget" "ec2" {
 
 Create a budget for *$100*.
 
-```hcl
+```terraform
 resource "aws_budgets_budget" "cost" {
   # ...
   budget_type  = "COST"
@@ -49,7 +52,7 @@ resource "aws_budgets_budget" "cost" {
 
 Create a budget for s3 with a limit of *3 GB* of storage.
 
-```hcl
+```terraform
 resource "aws_budgets_budget" "s3" {
   # ...
   budget_type  = "USAGE"
@@ -60,7 +63,7 @@ resource "aws_budgets_budget" "s3" {
 
 Create a Savings Plan Utilization Budget
 
-```hcl
+```terraform
 resource "aws_budgets_budget" "savings_plan_utilization" {
   # ...
   budget_type  = "SAVINGS_PLANS_UTILIZATION"
@@ -84,7 +87,7 @@ resource "aws_budgets_budget" "savings_plan_utilization" {
 
 Create a RI Utilization Budget
 
-```hcl
+```terraform
 resource "aws_budgets_budget" "ri_utilization" {
   # ...
   budget_type  = "RI_UTILIZATION"
@@ -114,6 +117,8 @@ resource "aws_budgets_budget" "ri_utilization" {
 
 ## Argument Reference
 
+~> **NOTE:** The `cost_filters` attribute will be deprecated and eventually removed in future releases, please use `cost_filter` instead.
+
 For more detailed documentation about each argument, refer to the [AWS official
 documentation](http://docs.aws.amazon.com/awsaccountbilling/latest/aboutv2/data-type-budget.html).
 
@@ -123,22 +128,24 @@ The following arguments are supported:
 * `name` - (Optional) The name of a budget. Unique within accounts.
 * `name_prefix` - (Optional) The prefix of the name of a budget. Unique within accounts.
 * `budget_type` - (Required) Whether this budget tracks monetary cost or usage.
-* `cost_filters` - (Optional) Map of [CostFilters](#CostFilters) key/value pairs to apply to the budget.
-* `cost_types` - (Optional) Object containing [CostTypes](#CostTypes) The types of cost included in a budget, such as tax and subscriptions..
+* `cost_filter` - (Optional) A list of [CostFilter](#Cost-Filter) name/values pair to apply to budget.
+* `cost_filters` - (Optional) Map of [CostFilters](#Cost-Filters) key/value pairs to apply to the budget.
+* `cost_types` - (Optional) Object containing [CostTypes](#Cost-Types) The types of cost included in a budget, such as tax and subscriptions.
 * `limit_amount` - (Required) The amount of cost or usage being measured for a budget.
 * `limit_unit` - (Required) The unit of measurement used for the budget forecast, actual spend, or budget threshold, such as dollars or GB. See [Spend](http://docs.aws.amazon.com/awsaccountbilling/latest/aboutv2/data-type-spend.html) documentation.
 * `time_period_end` - (Optional) The end of the time period covered by the budget. There are no restrictions on the end date. Format: `2017-01-01_12:00`.
-* `time_period_start` - (Required) The start of the time period covered by the budget. The start date must come before the end date. Format: `2017-01-01_12:00`.
-* `time_unit` - (Required) The length of time until a budget resets the actual and forecasted spend. Valid values: `MONTHLY`, `QUARTERLY`, `ANNUALLY`.
-* `notification` - (Optional) Object containing [Budget Notifications](#BudgetNotification). Can be used multiple times to define more than one budget notification
+* `time_period_start` - (Optional) The start of the time period covered by the budget. If you don't specify a start date, AWS defaults to the start of your chosen time period. The start date must come before the end date. Format: `2017-01-01_12:00`.
+* `time_unit` - (Required) The length of time until a budget resets the actual and forecasted spend. Valid values: `MONTHLY`, `QUARTERLY`, `ANNUALLY`, and `DAILY`.
+* `notification` - (Optional) Object containing [Budget Notifications](#Budget-Notification). Can be used multiple times to define more than one budget notification
 
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 
 * `id` - id of resource.
+* `arn` - The ARN of the budget.
 
-### CostTypes
+### Cost Types
 
 Valid keys for `cost_types` parameter.
 
@@ -156,9 +163,9 @@ Valid keys for `cost_types` parameter.
 
 Refer to [AWS CostTypes documentation](https://docs.aws.amazon.com/aws-cost-management/latest/APIReference/API_budgets_CostTypes.html) for further detail.
 
-### CostFilters
+### Cost Filter
 
-Valid keys for `cost_filters` parameter vary depending on the `budget_type` value.
+Valid name for `cost_filter` parameter vary depending on the `budget_type` value.
 
 * `cost`
     * `AZ`
@@ -177,7 +184,11 @@ Valid keys for `cost_filters` parameter vary depending on the `budget_type` valu
 
 Refer to [AWS CostFilter documentation](http://docs.aws.amazon.com/awsaccountbilling/latest/aboutv2/data-type-filter.html) for further detail.
 
-### BudgetNotification
+### Cost Filters
+
+Valid key for `cost_filters` is same as `cost_filter`. Please refer to [Cost Filter](#Cost-Filter).
+
+### Budget Notification
 
 Valid keys for `notification` parameter.
 
@@ -188,9 +199,8 @@ Valid keys for `notification` parameter.
 * `subscriber_email_addresses` - (Optional) E-Mail addresses to notify. Either this or `subscriber_sns_topic_arns` is required.
 * `subscriber_sns_topic_arns` - (Optional) SNS topics to notify. Either this or `subscriber_email_addresses` is required.
 
-
 ## Import
 
-Budgets can be imported using `AccountID:BudgetName`, e.g.
+Budgets can be imported using `AccountID:BudgetName`, e.g.,
 
 `$ terraform import aws_budgets_budget.myBudget 123456789012:myBudget`
