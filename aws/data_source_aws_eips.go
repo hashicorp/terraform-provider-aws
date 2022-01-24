@@ -29,7 +29,8 @@ func dataSourceAwsEips() *schema.Resource {
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"tags": tagsSchemaComputed(),
+			"filter": ec2CustomFiltersSchema(),
+			"tags":   tagsSchemaComputed(),
 		},
 	}
 }
@@ -43,6 +44,12 @@ func dataSourceAwsEipsRead(d *schema.ResourceData, meta interface{}) error {
 	var rawPublicIps []string
 
 	req := &ec2.DescribeAddressesInput{}
+
+	req.Filters = []*ec2.Filter{}
+
+	req.Filters = append(req.Filters, buildEC2CustomFilterList(
+		d.Get("filter").(*schema.Set),
+	)...)
 
 	req.Filters = append(req.Filters, buildEC2TagFilterList(
 		tagsFromMap(d.Get("tags").(map[string]interface{})),
