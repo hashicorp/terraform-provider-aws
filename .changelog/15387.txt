@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_ec2_fleet: Support in-place update of Launch Template config
+```

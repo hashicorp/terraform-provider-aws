@@ -1,78 +1,46 @@
-Terraform Provider
-==================
+<a href="https://terraform.io">
+    <img src=".github/terraform_logo.svg" alt="Terraform logo" title="Terraform" align="right" height="50" />
+</a>
 
-- Website: https://www.terraform.io
-- [![Gitter chat](https://badges.gitter.im/hashicorp-terraform/Lobby.png)](https://gitter.im/hashicorp-terraform/Lobby)
-- Mailing list: [Google Groups](http://groups.google.com/group/terraform-tool)
+# Terraform Provider for AWS
 
-<img src="https://cdn.rawgit.com/hashicorp/terraform-website/master/content/source/assets/images/logo-hashicorp.svg" width="600px">
+[![Forums][discuss-badge]][discuss]
 
-Requirements
-------------
+[discuss-badge]: https://img.shields.io/badge/discuss-terraform--aws-623CE4.svg?style=flat
+[discuss]: https://discuss.hashicorp.com/c/terraform-providers/tf-aws/
 
-- [Terraform](https://www.terraform.io/downloads.html) 0.10+
-- [Go](https://golang.org/doc/install) 1.12 (to build the provider plugin)
+- Website: [terraform.io](https://terraform.io)
+- Tutorials: [learn.hashicorp.com](https://learn.hashicorp.com/terraform?track=getting-started#getting-started)
+- Forum: [discuss.hashicorp.com](https://discuss.hashicorp.com/c/terraform-providers/tf-aws/)
+- Chat: [gitter](https://gitter.im/hashicorp-terraform/Lobby)
+- Mailing List: [Google Groups](http://groups.google.com/group/terraform-tool)
 
-Building the Provider
----------------------
+The Terraform AWS provider is a plugin for Terraform that allows for the full lifecycle management of AWS resources.
+This provider is maintained internally by the HashiCorp AWS Provider team.
 
-Clone repository to: `$GOPATH/src/github.com/terraform-providers/terraform-provider-aws`
+Please note: We take Terraform's security and our users' trust very seriously. If you believe you have found a security issue in the Terraform AWS Provider, please responsibly disclose by contacting us at security@hashicorp.com.
 
-```sh
-$ mkdir -p $GOPATH/src/github.com/terraform-providers; cd $GOPATH/src/github.com/terraform-providers
-$ git clone git@github.com:terraform-providers/terraform-provider-aws
-```
+## Quick Starts
 
-Enter the provider directory and build the provider
+- [Using the provider](https://registry.terraform.io/providers/hashicorp/aws/latest/docs)
+- [Provider development](docs/contributing)
 
-```sh
-$ cd $GOPATH/src/github.com/terraform-providers/terraform-provider-aws
-$ make build
-```
+## Documentation
 
-Using the Provider
-----------------------
-If you're building the provider, follow the instructions to [install it as a plugin.](https://www.terraform.io/docs/plugins/basics.html#installing-a-plugin) After placing it into your plugins directory,  run `terraform init` to initialize it. Documentation about the provider specific configuration options can be found on the [provider's website](https://www.terraform.io/docs/providers/aws/index.html).
+Full, comprehensive documentation is available on the Terraform website:
 
-Developing the Provider
----------------------------
+https://terraform.io/docs/providers/aws/index.html
 
-If you wish to work on the provider, you'll first need [Go](http://www.golang.org) installed on your machine (version 1.12+ is *required*). You'll also need to correctly setup a [GOPATH](http://golang.org/doc/code.html#GOPATH), as well as adding `$GOPATH/bin` to your `$PATH`.
+## Roadmap
 
-To compile the provider, run `make build`. This will build the provider and put the provider binary in the `$GOPATH/bin` directory.
+Our roadmap for expanding support in Terraform for AWS resources can be found in our [Roadmap](ROADMAP.md) which is published quarterly.
 
-```sh
-$ make build
-...
-$ $GOPATH/bin/terraform-provider-aws
-...
-```
+## Frequently Asked Questions
 
-Testing the Provider
----------------------------
+Responses to our most frequently asked questions can be found in our [FAQ](docs/contributing/faq.md )
 
-In order to test the provider, you can simply run `make test`.
+## Contributing
 
-*Note:* Make sure no `AWS_ACCESS_KEY_ID` or `AWS_SECRET_ACCESS_KEY` variables are set, and there's no `[default]` section in the AWS credentials file `~/.aws/credentials`.
+The Terraform AWS Provider is the work of thousands of contributors. We appreciate your help!
 
-```sh
-$ make test
-```
-
-In order to run the full suite of Acceptance tests, run `make testacc`.
-
-*Note:* Acceptance tests create real resources, and often cost money to run.
-
-```sh
-$ make testacc
-```
-
-Contributing
----------------------------
-
-Terraform is the work of thousands of contributors. We appreciate your help!
-
-To contribute, please read the contribution guidelines: [Contributing to Terraform - AWS Provider](.github/CONTRIBUTING.md)
-
-Issues on GitHub are intended to be related to bugs or feature requests with provider codebase. See https://www.terraform.io/docs/extend/community/index.html for a list of community resources to ask questions about Terraform.
-
+To contribute, please read the contribution guidelines: [Contributing to Terraform - AWS Provider](docs/contributing)

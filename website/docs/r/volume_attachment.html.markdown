@@ -1,7 +1,7 @@
 ---
+subcategory: "EC2"
 layout: "aws"
 page_title: "AWS: aws_volume_attachment"
-sidebar_current: "docs-aws-resource-volume-attachment"
 description: |-
   Provides an AWS EBS Volume Attachment
 ---
@@ -15,17 +15,17 @@ detach volumes from AWS Instances.
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_volume_attachment" "ebs_att" {
   device_name = "/dev/sdh"
-  volume_id   = "${aws_ebs_volume.example.id}"
-  instance_id = "${aws_instance.web.id}"
+  volume_id   = aws_ebs_volume.example.id
+  instance_id = aws_instance.web.id
 }
 
 resource "aws_instance" "web" {
   ami               = "ami-21f78e11"
   availability_zone = "us-west-2a"
-  instance_type     = "t1.micro"
+  instance_type     = "t2.micro"
 
   tags = {
     Name = "HelloWorld"
@@ -55,12 +55,25 @@ to detach the volume from the instance to which it is attached at destroy
 time, and instead just remove the attachment from Terraform state. This is
 useful when destroying an instance which has volumes created by some other
 means attached.
+* `stop_instance_before_detaching` - (Optional, Boolean) Set this to true to ensure that the target instance is stopped
+before trying to detach the volume. Stops the instance, if it is not already stopped.
 
 ## Attributes Reference
+
+In addition to all arguments above, the following attributes are exported:
 
 * `device_name` - The device name exposed to the instance
 * `instance_id` - ID of the Instance
 * `volume_id` - ID of the Volume
+
+## Import
+
+EBS Volume Attachments can be imported using `DEVICE_NAME:VOLUME_ID:INSTANCE_ID`, e.g.,
+
+```
+$ terraform import aws_volume_attachment.example /dev/sdh:vol-049df61146c4d7901:i-12345678
+```
+
 
 [1]: https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/device_naming.html#available-ec2-device-names
 [2]: https://docs.aws.amazon.com/AWSEC2/latest/WindowsGuide/device_naming.html#available-ec2-device-names

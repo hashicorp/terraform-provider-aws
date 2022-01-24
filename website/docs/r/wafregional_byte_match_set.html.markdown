@@ -1,7 +1,7 @@
 ---
+subcategory: "WAF Regional"
 layout: "aws"
-page_title: "AWS: wafregional_byte_match_set"
-sidebar_current: "docs-aws-resource-wafregional-bytematchset"
+page_title: "AWS: aws_wafregional_byte_match_set"
 description: |-
   Provides a AWS WAF Regional ByteMatchSet resource for use with ALB.
 ---
@@ -12,7 +12,7 @@ Provides a WAF Regional Byte Match Set Resource for use with Application Load Ba
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_wafregional_byte_match_set" "byte_set" {
   name = "tf_waf_byte_match_set"
 
@@ -56,3 +56,11 @@ FieldToMatch(field_to_match) support following:
 In addition to all arguments above, the following attributes are exported:
 
 * `id` - The ID of the WAF ByteMatchSet.
+
+## Import
+
+WAF Regional Byte Match Set can be imported using the id, e.g.,
+
+```
+$ terraform import aws_wafregional_byte_match_set.byte_set a1b2c3d4-d5f6-7777-8888-9999aaaabbbbcccc
+```
