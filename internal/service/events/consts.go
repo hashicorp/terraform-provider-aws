@@ -1,9 +1,9 @@
 package events
 
 const (
-	ErrCodeAccessDenied = "AccessDenied"
+	DefaultEventBusName = "default"
 )
 
 const (
-	DefaultEventBusName = "default"
+	mapMaxItemsCount = 100
 )

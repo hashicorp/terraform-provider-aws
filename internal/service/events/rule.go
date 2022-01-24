@@ -121,13 +121,13 @@ func resourceRuleCreate(d *schema.ResourceData, meta interface{}) error {
 
 	log.Printf("[DEBUG] Creating EventBridge Rule: %s", input)
 
-	err = retryPutRule(conn, input)
+	arn, err := retryPutRule(conn, input)
 
 	// Some partitions may not support tag-on-create
-	if input.Tags != nil && (tfawserr.ErrCodeContains(err, ErrCodeAccessDenied) || tfawserr.ErrCodeContains(err, eventbridge.ErrCodeInternalException) || tfawserr.ErrCodeContains(err, eventbridge.ErrCodeOperationDisabledException)) {
+	if input.Tags != nil && verify.CheckISOErrorTagsUnsupported(err) {
 		log.Printf("[WARN] EventBridge Rule (%s) create failed (%s) with tags. Trying create without tags.", d.Id(), err)
 		input.Tags = nil
-		err = retryPutRule(conn, input)
+		arn, err = retryPutRule(conn, input)
 	}
 
 	if err != nil {
@@ -138,9 +138,9 @@ func resourceRuleCreate(d *schema.ResourceData, meta interface{}) error {
 
 	// Post-create tagging supported in some partitions
 	if input.Tags == nil && len(tags) > 0 {
-		err := UpdateTags(conn, d.Id(), nil, tags)
+		err := UpdateTags(conn, arn, nil, tags)
 
-		if v, ok := d.GetOk("tags"); (!ok || len(v.(map[string]interface{})) == 0) && (tfawserr.ErrCodeContains(err, ErrCodeAccessDenied) || tfawserr.ErrCodeContains(err, eventbridge.ErrCodeInternalException) || tfawserr.ErrCodeContains(err, eventbridge.ErrCodeOperationDisabledException)) {
+		if v, ok := d.GetOk("tags"); (!ok || len(v.(map[string]interface{})) == 0) && verify.CheckISOErrorTagsUnsupported(err) {
 			log.Printf("[WARN] error adding tags after create for EventBridge Rule (%s): %s", d.Id(), err)
 			return resourceRuleRead(d, meta)
 		}
@@ -203,7 +203,7 @@ func resourceRuleRead(d *schema.ResourceData, meta interface{}) error {
 	tags, err := ListTags(conn, arn)
 
 	// ISO partitions may not support tagging, giving error
-	if tfawserr.ErrCodeContains(err, ErrCodeAccessDenied) || tfawserr.ErrCodeContains(err, eventbridge.ErrCodeInternalException) || tfawserr.ErrCodeContains(err, eventbridge.ErrCodeOperationDisabledException) {
+	if verify.CheckISOErrorTagsUnsupported(err) {
 		log.Printf("[WARN] Unable to list tags for EventBridge Rule %s: %s", d.Id(), err)
 		return nil
 	}
@@ -270,7 +270,7 @@ func resourceRuleUpdate(d *schema.ResourceData, meta interface{}) error {
 
 		err := UpdateTags(conn, arn, o, n)
 
-		if tfawserr.ErrCodeContains(err, ErrCodeAccessDenied) || tfawserr.ErrCodeContains(err, eventbridge.ErrCodeInternalException) || tfawserr.ErrCodeContains(err, eventbridge.ErrCodeOperationDisabledException) {
+		if verify.CheckISOErrorTagsUnsupported(err) {
 			log.Printf("[WARN] Unable to update tags for EventBridge Rule %s: %s", d.Id(), err)
 			return resourceRuleRead(d, meta)
 		}
@@ -329,9 +329,11 @@ func resourceRuleDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func retryPutRule(conn *eventbridge.EventBridge, input *eventbridge.PutRuleInput) error {
+func retryPutRule(conn *eventbridge.EventBridge, input *eventbridge.PutRuleInput) (string, error) {
+	var output *eventbridge.PutRuleOutput
 	err := resource.Retry(tfiam.PropagationTimeout, func() *resource.RetryError {
-		_, err := conn.PutRule(input)
+		var err error
+		output, err = conn.PutRule(input)
 
 		if tfawserr.ErrMessageContains(err, "ValidationException", "cannot be assumed by principal") {
 			return resource.RetryableError(err)
@@ -345,10 +347,18 @@ func retryPutRule(conn *eventbridge.EventBridge, input *eventbridge.PutRuleInput
 	})
 
 	if tfresource.TimedOut(err) {
-		_, err = conn.PutRule(input)
+		output, err = conn.PutRule(input)
 	}
 
-	return err
+	if err != nil {
+		return "", err
+	}
+
+	if output == nil || output.RuleArn == nil {
+		return "", fmt.Errorf("empty output returned putting EventBridge Rule (%s)", aws.StringValue(input.EventBusName))
+	}
+
+	return aws.StringValue(output.RuleArn), nil
 }
 
 func buildPutRuleInputStruct(d *schema.ResourceData, name string) (*eventbridge.PutRuleInput, error) {

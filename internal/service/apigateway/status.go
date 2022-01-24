@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/apigateway"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func apiGatewayVpcLinkStatus(conn *apigateway.APIGateway, vpcLinkId string) resource.StateRefreshFunc {
@@ -27,5 +28,20 @@ func apiGatewayVpcLinkStatus(conn *apigateway.APIGateway, vpcLinkId string) reso
 		}
 
 		return output, aws.StringValue(output.Status), nil
+	}
+}
+
+func stageCacheStatus(conn *apigateway.APIGateway, restApiId, name string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := FindStageByName(conn, restApiId, name)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, aws.StringValue(output.CacheClusterStatus), nil
 	}
 }

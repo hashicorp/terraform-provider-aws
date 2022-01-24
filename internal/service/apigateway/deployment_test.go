@@ -87,7 +87,7 @@ func TestAccAPIGatewayDeployment_triggers(t *testing.T) {
 				Config: testAccDeploymentTriggersConfig("description1", "https://example.com"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeploymentExists(resourceName, &deployment1),
-					testAccCheckDeploymentStageExists(resourceName, &stage),
+					testAccCheckStageExists(resourceName, &stage),
 					resource.TestCheckResourceAttr(resourceName, "description", "description1"),
 					resource.TestCheckResourceAttr(resourceName, "stage_description", "description1"),
 				),
@@ -100,7 +100,7 @@ func TestAccAPIGatewayDeployment_triggers(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeploymentExists(resourceName, &deployment2),
 					testAccCheckDeploymentRecreated(&deployment1, &deployment2),
-					testAccCheckDeploymentStageExists(resourceName, &stage),
+					testAccCheckStageExists(resourceName, &stage),
 					resource.TestCheckResourceAttr(resourceName, "description", "description1"),
 					resource.TestCheckResourceAttr(resourceName, "stage_description", "description1"),
 				),
@@ -110,7 +110,7 @@ func TestAccAPIGatewayDeployment_triggers(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeploymentExists(resourceName, &deployment3),
 					testAccCheckDeploymentNotRecreated(&deployment2, &deployment3),
-					testAccCheckDeploymentStageExists(resourceName, &stage),
+					testAccCheckStageExists(resourceName, &stage),
 					resource.TestCheckResourceAttr(resourceName, "description", "description1"),
 					resource.TestCheckResourceAttr(resourceName, "stage_description", "description1"),
 				),
@@ -120,7 +120,7 @@ func TestAccAPIGatewayDeployment_triggers(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeploymentExists(resourceName, &deployment4),
 					testAccCheckDeploymentRecreated(&deployment3, &deployment4),
-					testAccCheckDeploymentStageExists(resourceName, &stage),
+					testAccCheckStageExists(resourceName, &stage),
 					resource.TestCheckResourceAttr(resourceName, "description", "description2"),
 					resource.TestCheckResourceAttr(resourceName, "stage_description", "description2"),
 				),
@@ -172,7 +172,7 @@ func TestAccAPIGatewayDeployment_stageDescription(t *testing.T) {
 				Config: testAccDeploymentStageDescriptionConfig("description1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeploymentExists(resourceName, &deployment),
-					testAccCheckDeploymentStageExists(resourceName, &stage),
+					testAccCheckStageExists(resourceName, &stage),
 					resource.TestCheckResourceAttr(resourceName, "stage_description", "description1"),
 				),
 			},
@@ -195,7 +195,7 @@ func TestAccAPIGatewayDeployment_stageName(t *testing.T) {
 				Config: testAccDeploymentStageNameConfig("test"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeploymentExists(resourceName, &deployment),
-					testAccCheckDeploymentStageExists(resourceName, &stage),
+					testAccCheckStageExists(resourceName, &stage),
 					resource.TestCheckResourceAttr(resourceName, "stage_name", "test"),
 				),
 			},
@@ -279,30 +279,6 @@ func testAccCheckDeploymentExists(n string, res *apigateway.Deployment) resource
 		}
 
 		*res = *describe
-
-		return nil
-	}
-}
-
-func testAccCheckDeploymentStageExists(resourceName string, res *apigateway.Stage) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn
-
-		rs, ok := s.RootModule().Resources[resourceName]
-		if !ok {
-			return fmt.Errorf("Deployment not found: %s", resourceName)
-		}
-
-		req := &apigateway.GetStageInput{
-			StageName: aws.String(rs.Primary.Attributes["stage_name"]),
-			RestApiId: aws.String(rs.Primary.Attributes["rest_api_id"]),
-		}
-		stage, err := conn.GetStage(req)
-		if err != nil {
-			return err
-		}
-
-		*res = *stage
 
 		return nil
 	}

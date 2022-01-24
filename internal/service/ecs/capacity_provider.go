@@ -136,6 +136,8 @@ func resourceCapacityProviderCreate(d *schema.ResourceData, meta interface{}) er
 		return fmt.Errorf("error creating ECS Capacity Provider (%s): %w", name, err)
 	}
 
+	d.SetId(aws.StringValue(output.CapacityProvider.CapacityProviderArn))
+
 	// Some partitions (i.e., ISO) may not support tag-on-create, attempt tag after create
 	if input.Tags == nil && len(tags) > 0 {
 		err := UpdateTags(conn, d.Id(), nil, tags)
@@ -150,8 +152,6 @@ func resourceCapacityProviderCreate(d *schema.ResourceData, meta interface{}) er
 			return fmt.Errorf("error creating ECS Capacity Provider (%s) tags: %w", name, err)
 		}
 	}
-
-	d.SetId(aws.StringValue(output.CapacityProvider.CapacityProviderArn))
 
 	return resourceCapacityProviderRead(d, meta)
 }

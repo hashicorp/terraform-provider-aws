@@ -455,3 +455,36 @@ func FindStudioLifecycleConfigByName(conn *sagemaker.SageMaker, name string) (*s
 
 	return output, nil
 }
+
+func FindProjectByName(conn *sagemaker.SageMaker, name string) (*sagemaker.DescribeProjectOutput, error) {
+	input := &sagemaker.DescribeProjectInput{
+		ProjectName: aws.String(name),
+	}
+
+	output, err := conn.DescribeProject(input)
+
+	if tfawserr.ErrMessageContains(err, "ValidationException", "does not exist") {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	status := aws.StringValue(output.ProjectStatus)
+	if status == sagemaker.ProjectStatusDeleteCompleted {
+		return nil, &resource.NotFoundError{
+			Message:     status,
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
+}
