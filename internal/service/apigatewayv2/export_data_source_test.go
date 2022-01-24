@@ -77,28 +77,33 @@ resource "aws_apigatewayv2_route" "test" {
 }
 
 func testAccExportHTTPDataSourceBasicConfig(rName string) string {
-	return testAccExportHTTPDataSourceConfigBase(rName) + `
+	return acctest.ConfigCompose(testAccExportHTTPDataSourceConfigBase(rName), `
 data "aws_apigatewayv2_export" "test" {
   api_id        = aws_apigatewayv2_route.test.api_id
   specification = "OAS30"
   output_type   = "JSON"
 }
-`
+`)
 }
 
 func testAccExportHTTPDataSourceStageConfig(rName string) string {
-	return testAccExportHTTPDataSourceConfigBase(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccExportHTTPDataSourceConfigBase(rName), fmt.Sprintf(`
 resource "aws_apigatewayv2_stage" "test" {
+  api_id        = aws_apigatewayv2_deployment.test.api_id
+  name          = %[1]q
+  deployment_id = aws_apigatewayv2_deployment.test.id
+}
+
+resource "aws_apigatewayv2_deployment" "test" {
   api_id      = aws_apigatewayv2_route.test.api_id
-  name        = %[1]q
-  auto_deploy = true
+  description = %[1]q
 }
 
 data "aws_apigatewayv2_export" "test" {
-  api_id        = aws_apigatewayv2_route.test.api_id
+  api_id        = aws_apigatewayv2_api.test.id
   specification = "OAS30"
   output_type   = "JSON"
   stage_name    = aws_apigatewayv2_stage.test.name
 }
-`, rName)
+`, rName))
 }
