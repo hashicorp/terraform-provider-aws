@@ -67,6 +67,12 @@ func ResourceClientVPNEndpoint() *schema.Resource {
 				Default:      ec2.TransportProtocolUdp,
 				ValidateFunc: validation.StringInSlice(ec2.TransportProtocol_Values(), false),
 			},
+			"session_timeout_hours": {
+				Type:         schema.TypeInt,
+				Optional:     true,
+				Default:      24,
+				ValidateFunc: validation.IntInSlice([]int{8, 10, 12, 24}),
+			},
 			"authentication_options": {
 				Type:     schema.TypeList,
 				Required: true,
@@ -169,6 +175,10 @@ func resourceClientVPNEndpointCreate(d *schema.ResourceData, meta interface{}) e
 		req.DnsServers = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
+	if v, ok := d.GetOk("session_timeout_hours"); ok {
+		req.SessionTimeoutHours = aws.Int64(int64(v.(int)))
+	}
+
 	if v, ok := d.GetOk("authentication_options"); ok {
 		authOptions := v.([]interface{})
 		authRequests := make([]*ec2.ClientVpnAuthenticationRequest, 0, len(authOptions))
@@ -249,6 +259,7 @@ func resourceClientVPNEndpointRead(d *schema.ResourceData, meta interface{}) err
 	d.Set("transport_protocol", result.ClientVpnEndpoints[0].TransportProtocol)
 	d.Set("dns_name", result.ClientVpnEndpoints[0].DnsName)
 	d.Set("dns_servers", result.ClientVpnEndpoints[0].DnsServers)
+	d.Set("session_timeout_hours", result.ClientVpnEndpoints[0].SessionTimeoutHours)
 
 	if result.ClientVpnEndpoints[0].Status != nil {
 		d.Set("status", result.ClientVpnEndpoints[0].Status.Code)
@@ -343,6 +354,10 @@ func resourceClientVPNEndpointUpdate(d *schema.ResourceData, meta interface{}) e
 
 	if d.HasChange("self_service_portal") {
 		req.SelfServicePortal = aws.String(d.Get("self_service_portal").(string))
+	}
+
+	if d.HasChange("session_timeout_hours") {
+		req.SessionTimeoutHours = aws.Int64(d.Get("session_timeout_hours").(int64))
 	}
 
 	if d.HasChange("connection_log_options") {
