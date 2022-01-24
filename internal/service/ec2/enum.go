@@ -59,6 +59,32 @@ const (
 )
 
 const (
+	VpnTunnelOptionsDPDTimeoutActionClear   = "clear"
+	VpnTunnelOptionsDPDTimeoutActionNone    = "none"
+	VpnTunnelOptionsDPDTimeoutActionRestart = "restart"
+)
+
+func VpnTunnelOptionsDPDTimeoutAction_Values() []string {
+	return []string{
+		VpnTunnelOptionsDPDTimeoutActionClear,
+		VpnTunnelOptionsDPDTimeoutActionNone,
+		VpnTunnelOptionsDPDTimeoutActionRestart,
+	}
+}
+
+const (
+	VpnTunnelOptionsStartupActionAdd   = "add"
+	VpnTunnelOptionsStartupActionStart = "start"
+)
+
+func VpnTunnelOptionsStartupAction_Values() []string {
+	return []string{
+		VpnTunnelOptionsStartupActionAdd,
+		VpnTunnelOptionsStartupActionStart,
+	}
+}
+
+const (
 	VpnConnectionTypeIpsec1 = "ipsec.1"
 )
 

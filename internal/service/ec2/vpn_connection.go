@@ -55,26 +55,26 @@ func ResourceVPNConnection() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
-				ValidateFunc: validateLocalIpv4NetworkCidr(),
+				ValidateFunc: validation.IsCIDRNetwork(0, 32),
 			},
 			"local_ipv6_network_cidr": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
-				ValidateFunc: validateLocalIpv6NetworkCidr(),
+				ValidateFunc: validation.IsCIDRNetwork(0, 128),
 				RequiredWith: []string{"transit_gateway_id"},
 			},
 			"remote_ipv4_network_cidr": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
-				ValidateFunc: validateLocalIpv4NetworkCidr(),
+				ValidateFunc: validation.IsCIDRNetwork(0, 32),
 			},
 			"remote_ipv6_network_cidr": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
-				ValidateFunc: validateLocalIpv6NetworkCidr(),
+				ValidateFunc: validation.IsCIDRNetwork(0, 128),
 				RequiredWith: []string{"transit_gateway_id"},
 			},
 			"routes": {
@@ -140,12 +140,14 @@ func ResourceVPNConnection() *schema.Resource {
 			"tunnel1_dpd_timeout_action": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				ValidateFunc: validateVpnConnectionTunnelDpdTimeoutAction(),
+				Default:      VpnTunnelOptionsDPDTimeoutActionClear,
+				ValidateFunc: validation.StringInSlice(VpnTunnelOptionsDPDTimeoutAction_Values(), false),
 			},
 			"tunnel1_dpd_timeout_seconds": {
 				Type:         schema.TypeInt,
 				Optional:     true,
-				ValidateFunc: validateVpnConnectionTunnelDpdTimeoutSeconds(),
+				Default:      30,
+				ValidateFunc: validation.IntAtLeast(30),
 			},
 			"tunnel1_ike_versions": {
 				Type:     schema.TypeSet,
@@ -185,7 +187,8 @@ func ResourceVPNConnection() *schema.Resource {
 			"tunnel1_phase1_lifetime_seconds": {
 				Type:         schema.TypeInt,
 				Optional:     true,
-				ValidateFunc: validateVpnConnectionTunnelPhase1LifetimeSeconds(),
+				Default:      28800,
+				ValidateFunc: validation.IntBetween(900, 28800),
 			},
 			"tunnel1_phase2_dh_group_numbers": {
 				Type:     schema.TypeSet,
@@ -205,7 +208,8 @@ func ResourceVPNConnection() *schema.Resource {
 			"tunnel1_phase2_lifetime_seconds": {
 				Type:         schema.TypeInt,
 				Optional:     true,
-				ValidateFunc: validateVpnConnectionTunnelPhase2LifetimeSeconds(),
+				Default:      3600,
+				ValidateFunc: validation.IntBetween(900, 3600),
 			},
 			"tunnel1_preshared_key": {
 				Type:         schema.TypeString,
@@ -217,22 +221,26 @@ func ResourceVPNConnection() *schema.Resource {
 			"tunnel1_rekey_fuzz_percentage": {
 				Type:         schema.TypeInt,
 				Optional:     true,
-				ValidateFunc: validateVpnConnectionTunnelRekeyFuzzPercentage(),
+				Default:      100,
+				ValidateFunc: validation.IntBetween(0, 100),
 			},
 			"tunnel1_rekey_margin_time_seconds": {
 				Type:         schema.TypeInt,
 				Optional:     true,
-				ValidateFunc: validateVpnConnectionTunnelRekeyMarginTimeSeconds(),
+				Default:      540,
+				ValidateFunc: validation.IntBetween(60, 1800),
 			},
 			"tunnel1_replay_window_size": {
 				Type:         schema.TypeInt,
 				Optional:     true,
-				ValidateFunc: validateVpnConnectionTunnelReplayWindowSize(),
+				Default:      1024,
+				ValidateFunc: validation.IntBetween(64, 2048),
 			},
 			"tunnel1_startup_action": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				ValidateFunc: validateVpnConnectionTunnelStartupAction(),
+				Default:      VpnTunnelOptionsStartupActionAdd,
+				ValidateFunc: validation.StringInSlice(VpnTunnelOptionsStartupAction_Values(), false),
 			},
 			"tunnel1_vgw_inside_address": {
 				Type:     schema.TypeString,
@@ -257,12 +265,14 @@ func ResourceVPNConnection() *schema.Resource {
 			"tunnel2_dpd_timeout_action": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				ValidateFunc: validateVpnConnectionTunnelDpdTimeoutAction(),
+				Default:      VpnTunnelOptionsDPDTimeoutActionClear,
+				ValidateFunc: validation.StringInSlice(VpnTunnelOptionsDPDTimeoutAction_Values(), false),
 			},
 			"tunnel2_dpd_timeout_seconds": {
 				Type:         schema.TypeInt,
 				Optional:     true,
-				ValidateFunc: validateVpnConnectionTunnelDpdTimeoutSeconds(),
+				Default:      30,
+				ValidateFunc: validation.IntAtLeast(30),
 			},
 			"tunnel2_ike_versions": {
 				Type:     schema.TypeSet,
@@ -302,7 +312,8 @@ func ResourceVPNConnection() *schema.Resource {
 			"tunnel2_phase1_lifetime_seconds": {
 				Type:         schema.TypeInt,
 				Optional:     true,
-				ValidateFunc: validateVpnConnectionTunnelPhase1LifetimeSeconds(),
+				Default:      28800,
+				ValidateFunc: validation.IntBetween(900, 28800),
 			},
 			"tunnel2_phase2_dh_group_numbers": {
 				Type:     schema.TypeSet,
@@ -322,7 +333,8 @@ func ResourceVPNConnection() *schema.Resource {
 			"tunnel2_phase2_lifetime_seconds": {
 				Type:         schema.TypeInt,
 				Optional:     true,
-				ValidateFunc: validateVpnConnectionTunnelPhase2LifetimeSeconds(),
+				Default:      3600,
+				ValidateFunc: validation.IntBetween(900, 3600),
 			},
 			"tunnel2_preshared_key": {
 				Type:         schema.TypeString,
@@ -334,22 +346,26 @@ func ResourceVPNConnection() *schema.Resource {
 			"tunnel2_rekey_fuzz_percentage": {
 				Type:         schema.TypeInt,
 				Optional:     true,
-				ValidateFunc: validateVpnConnectionTunnelRekeyFuzzPercentage(),
+				Default:      100,
+				ValidateFunc: validation.IntBetween(0, 100),
 			},
 			"tunnel2_rekey_margin_time_seconds": {
 				Type:         schema.TypeInt,
 				Optional:     true,
-				ValidateFunc: validateVpnConnectionTunnelRekeyMarginTimeSeconds(),
+				Default:      540,
+				ValidateFunc: validation.IntBetween(60, 1800),
 			},
 			"tunnel2_replay_window_size": {
 				Type:         schema.TypeInt,
 				Optional:     true,
-				ValidateFunc: validateVpnConnectionTunnelReplayWindowSize(),
+				Default:      1024,
+				ValidateFunc: validation.IntBetween(64, 2048),
 			},
 			"tunnel2_startup_action": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				ValidateFunc: validateVpnConnectionTunnelStartupAction(),
+				Default:      VpnTunnelOptionsStartupActionAdd,
+				ValidateFunc: validation.StringInSlice(VpnTunnelOptionsStartupAction_Values(), false),
 			},
 			"tunnel2_vgw_inside_address": {
 				Type:     schema.TypeString,
@@ -1239,77 +1255,5 @@ func validateVpnConnectionTunnelInsideIpv6CIDR() schema.SchemaValidateFunc {
 	return validation.All(
 		validation.IsCIDRNetwork(126, 126),
 		validation.StringMatch(regexp.MustCompile(`^fd00:`), "must be within fd00::/8"),
-	)
-}
-
-func validateLocalIpv4NetworkCidr() schema.SchemaValidateFunc {
-	return validation.All(
-		validation.IsCIDRNetwork(0, 32),
-	)
-}
-
-func validateLocalIpv6NetworkCidr() schema.SchemaValidateFunc {
-	return validation.All(
-		validation.IsCIDRNetwork(0, 128),
-	)
-}
-
-func validateVpnConnectionTunnelDpdTimeoutAction() schema.SchemaValidateFunc {
-	allowedDpdTimeoutActions := []string{
-		"clear",
-		"none",
-		"restart",
-	}
-
-	return validation.All(
-		validation.StringInSlice(allowedDpdTimeoutActions, false),
-	)
-}
-
-func validateVpnConnectionTunnelDpdTimeoutSeconds() schema.SchemaValidateFunc {
-	return validation.All(
-		//validation.IntBetween(0, 30)
-		validation.IntAtLeast(30), // Must be 30 or higher
-	)
-}
-
-func validateVpnConnectionTunnelPhase1LifetimeSeconds() schema.SchemaValidateFunc {
-	return validation.All(
-		validation.IntBetween(900, 28800),
-	)
-}
-
-func validateVpnConnectionTunnelPhase2LifetimeSeconds() schema.SchemaValidateFunc {
-	return validation.All(
-		validation.IntBetween(900, 3600),
-	)
-}
-
-func validateVpnConnectionTunnelRekeyFuzzPercentage() schema.SchemaValidateFunc {
-	return validation.All(
-		validation.IntBetween(0, 100),
-	)
-}
-
-func validateVpnConnectionTunnelRekeyMarginTimeSeconds() schema.SchemaValidateFunc {
-	return validation.All(
-		validation.IntBetween(60, 1800),
-	)
-}
-
-func validateVpnConnectionTunnelReplayWindowSize() schema.SchemaValidateFunc {
-	return validation.All(
-		validation.IntBetween(64, 2048),
-	)
-}
-
-func validateVpnConnectionTunnelStartupAction() schema.SchemaValidateFunc {
-	allowedStartupAction := []string{
-		"add",
-		"start",
-	}
-
-	return validation.All(
-		validation.StringInSlice(allowedStartupAction, false),
 	)
 }
