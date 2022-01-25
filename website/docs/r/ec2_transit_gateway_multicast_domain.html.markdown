@@ -47,5 +47,6 @@ The `association` block supports:
 * `subnet_ids` - (Required, Minimum items: 1) List of subnets identifiers to associate. The listed subnets must reside within the specified EC2 Transit Gateway Attachment.
 
 The `members` and `sources` blocks support:
+
 * `group_ip_address` - (Required) Multicast Group IP address. Must be valid IPv4 or IPv6 IP Address in the 224.0.0.0/4 or ff00::/8 CIDR range.
 * `network_interface_ids` - (Required, Minimum items: 1) List of Network Interface Identifiers to create Multicast Group for.
