@@ -17,20 +17,19 @@ func DataSourceSecurityGroups() *schema.Resource {
 		Read: dataSourceSecurityGroupsRead,
 
 		Schema: map[string]*schema.Schema{
+			"arns": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
 			"filter": DataSourceFiltersSchema(),
-			"tags":   tftags.TagsSchemaComputed(),
-
 			"ids": {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
+			"tags": tftags.TagsSchemaComputed(),
 			"vpc_ids": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"arns": {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
