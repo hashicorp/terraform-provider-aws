@@ -552,65 +552,6 @@ resource "aws_ec2_transit_gateway_multicast_domain" "test" {
 `, rName)
 }
 
-// func testAccTransitGatewayMulticastDomainConfigAssociation3(rName string) string {
-// 	return fmt.Sprintf(`
-// data "aws_availability_zones" "available" {
-//   state = "available"
-// }
-
-// resource "aws_vpc" "test1" {
-//   cidr_block = "10.0.0.0/16"
-//   tags = {
-//     Name = %[1]q
-//   }
-// }
-// resource "aws_subnet" "test1" {
-//   vpc_id            = aws_vpc.test1.id
-//   cidr_block        = "10.0.1.0/24"
-//   availability_zone = data.aws_availability_zones.available.names[0]
-//   tags = {
-//     Name = %[1]q
-//   }
-// }
-// resource "aws_subnet" "test2" {
-//   vpc_id            = aws_vpc.test1.id
-//   cidr_block        = "10.0.2.0/24"
-//   availability_zone = data.aws_availability_zones.available.names[1]
-//   tags = {
-//     Name = %[1]q
-//   }
-// }
-// resource "aws_ec2_transit_gateway" "test" {
-//   multicast_support = "enable"
-//   tags = {
-//     Name = %[1]q
-//   }
-// }
-// resource "aws_ec2_transit_gateway_vpc_attachment" "test1" {
-//   subnet_ids         = [aws_subnet.test2.id]
-//   transit_gateway_id = aws_ec2_transit_gateway.test.id
-//   vpc_id             = aws_vpc.test1.id
-//   tags = {
-//     Name = %[1]q
-//   }
-// }
-// resource "aws_ec2_transit_gateway_multicast_domain" "test" {
-//   transit_gateway_id = aws_ec2_transit_gateway.test.id
-//   association {
-//     transit_gateway_attachment_id = aws_ec2_transit_gateway_vpc_attachment.test1.id
-//     subnet_ids                    = [aws_subnet.test1.id]
-//   }
-//   association {
-//     transit_gateway_attachment_id = aws_ec2_transit_gateway_vpc_attachment.test1.id
-//     subnet_ids                    = [aws_subnet.test2.id]
-//   }
-//   tags = {
-//     Name = %[1]q
-//   }
-// }
-// `, rName)
-// }
-
 func testAccTransitGatewayMulticastDomainConfigAssociation3(rName string) string {
 	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {
