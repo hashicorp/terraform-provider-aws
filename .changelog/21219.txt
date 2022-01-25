@@ -1,0 +1,3 @@
+```release-note:note
+data-source/aws_security_groups: If no security groups match the specified criteria an empty list is returned (previously an error was raised)
+```
