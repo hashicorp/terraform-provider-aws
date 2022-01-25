@@ -107,7 +107,7 @@ const (
 	VpnTunnelOptionsPhase1IntegrityAlgorithmSHA2_512 = "SHA2-512"
 )
 
-func VVpnTunnelOptionsPhase1IntegrityAlgorithm_Values() []string {
+func VpnTunnelOptionsPhase1IntegrityAlgorithm_Values() []string {
 	return []string{
 		VpnTunnelOptionsPhase1IntegrityAlgorithmSHA1,
 		VpnTunnelOptionsPhase1IntegrityAlgorithmSHA2_256,
@@ -139,7 +139,7 @@ const (
 	VpnTunnelOptionsPhase2IntegrityAlgorithmSHA2_512 = "SHA2-512"
 )
 
-func VVpnTunnelOptionsPhase2IntegrityAlgorithm_Values() []string {
+func VpnTunnelOptionsPhase2IntegrityAlgorithm_Values() []string {
 	return []string{
 		VpnTunnelOptionsPhase2IntegrityAlgorithmSHA1,
 		VpnTunnelOptionsPhase2IntegrityAlgorithmSHA2_256,

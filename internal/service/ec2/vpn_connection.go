@@ -163,7 +163,10 @@ func ResourceVPNConnection() *schema.Resource {
 			"tunnel1_ike_versions": {
 				Type:     schema.TypeSet,
 				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
+				Elem: &schema.Schema{
+					Type:         schema.TypeString,
+					ValidateFunc: validation.StringInSlice(VpnTunnelOptionsIKEVersion_Values(), false),
+				},
 			},
 			"tunnel1_inside_cidr": {
 				Type:         schema.TypeString,
@@ -188,12 +191,18 @@ func ResourceVPNConnection() *schema.Resource {
 			"tunnel1_phase1_encryption_algorithms": {
 				Type:     schema.TypeSet,
 				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
+				Elem: &schema.Schema{
+					Type:         schema.TypeString,
+					ValidateFunc: validation.StringInSlice(VpnTunnelOptionsPhase1EncryptionAlgorithm_Values(), false),
+				},
 			},
 			"tunnel1_phase1_integrity_algorithms": {
 				Type:     schema.TypeSet,
 				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
+				Elem: &schema.Schema{
+					Type:         schema.TypeString,
+					ValidateFunc: validation.StringInSlice(VpnTunnelOptionsPhase1IntegrityAlgorithm_Values(), false),
+				},
 			},
 			"tunnel1_phase1_lifetime_seconds": {
 				Type:         schema.TypeInt,
@@ -214,12 +223,18 @@ func ResourceVPNConnection() *schema.Resource {
 			"tunnel1_phase2_encryption_algorithms": {
 				Type:     schema.TypeSet,
 				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
+				Elem: &schema.Schema{
+					Type:         schema.TypeString,
+					ValidateFunc: validation.StringInSlice(VpnTunnelOptionsPhase2EncryptionAlgorithm_Values(), false),
+				},
 			},
 			"tunnel1_phase2_integrity_algorithms": {
 				Type:     schema.TypeSet,
 				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
+				Elem: &schema.Schema{
+					Type:         schema.TypeString,
+					ValidateFunc: validation.StringInSlice(VpnTunnelOptionsPhase2IntegrityAlgorithm_Values(), false),
+				},
 			},
 			"tunnel1_phase2_lifetime_seconds": {
 				Type:         schema.TypeInt,
@@ -328,7 +343,10 @@ func ResourceVPNConnection() *schema.Resource {
 			"tunnel2_ike_versions": {
 				Type:     schema.TypeSet,
 				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
+				Elem: &schema.Schema{
+					Type:         schema.TypeString,
+					ValidateFunc: validation.StringInSlice(VpnTunnelOptionsIKEVersion_Values(), false),
+				},
 			},
 			"tunnel2_inside_cidr": {
 				Type:         schema.TypeString,
@@ -353,12 +371,18 @@ func ResourceVPNConnection() *schema.Resource {
 			"tunnel2_phase1_encryption_algorithms": {
 				Type:     schema.TypeSet,
 				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
+				Elem: &schema.Schema{
+					Type:         schema.TypeString,
+					ValidateFunc: validation.StringInSlice(VpnTunnelOptionsPhase1EncryptionAlgorithm_Values(), false),
+				},
 			},
 			"tunnel2_phase1_integrity_algorithms": {
 				Type:     schema.TypeSet,
 				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
+				Elem: &schema.Schema{
+					Type:         schema.TypeString,
+					ValidateFunc: validation.StringInSlice(VpnTunnelOptionsPhase1IntegrityAlgorithm_Values(), false),
+				},
 			},
 			"tunnel2_phase1_lifetime_seconds": {
 				Type:         schema.TypeInt,
@@ -379,12 +403,18 @@ func ResourceVPNConnection() *schema.Resource {
 			"tunnel2_phase2_encryption_algorithms": {
 				Type:     schema.TypeSet,
 				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
+				Elem: &schema.Schema{
+					Type:         schema.TypeString,
+					ValidateFunc: validation.StringInSlice(VpnTunnelOptionsPhase2EncryptionAlgorithm_Values(), false),
+				},
 			},
 			"tunnel2_phase2_integrity_algorithms": {
 				Type:     schema.TypeSet,
 				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
+				Elem: &schema.Schema{
+					Type:         schema.TypeString,
+					ValidateFunc: validation.StringInSlice(VpnTunnelOptionsPhase2IntegrityAlgorithm_Values(), false),
+				},
 			},
 			"tunnel2_phase2_lifetime_seconds": {
 				Type:         schema.TypeInt,
