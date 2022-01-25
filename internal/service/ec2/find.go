@@ -253,23 +253,85 @@ func FindHost(conn *ec2.EC2, input *ec2.DescribeHostsInput) (*ec2.Host, error) {
 	return host, nil
 }
 
-// FindInstanceByID looks up a Instance by ID. When not found, returns nil and potentially an API error.
-func FindInstanceByID(conn *ec2.EC2, id string) (*ec2.Instance, error) {
-	input := &ec2.DescribeInstancesInput{
-		InstanceIds: aws.StringSlice([]string{id}),
-	}
+func FindInstances(conn *ec2.EC2, input *ec2.DescribeInstancesInput) ([]*ec2.Instance, error) {
+	var output []*ec2.Instance
 
-	output, err := conn.DescribeInstances(input)
+	err := conn.DescribeInstancesPages(input, func(page *ec2.DescribeInstancesOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.Reservations {
+			if v != nil {
+				for _, v := range v.Instances {
+					if v != nil {
+						output = append(output, v)
+					}
+				}
+			}
+		}
+
+		return !lastPage
+	})
+
+	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidInstanceIDNotFound) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
 
 	if err != nil {
 		return nil, err
 	}
 
-	if output == nil || len(output.Reservations) == 0 || output.Reservations[0] == nil || len(output.Reservations[0].Instances) == 0 || output.Reservations[0].Instances[0] == nil {
-		return nil, nil
+	return output, nil
+}
+
+func FindInstance(conn *ec2.EC2, input *ec2.DescribeInstancesInput) (*ec2.Instance, error) {
+	output, err := FindInstances(conn, input)
+
+	if err != nil {
+		return nil, err
 	}
 
-	return output.Reservations[0].Instances[0], nil
+	if len(output) == 0 || output[0] == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	if count := len(output); count > 1 {
+		return nil, tfresource.NewTooManyResultsError(count, input)
+	}
+
+	return output[0], nil
+}
+
+func FindInstanceByID(conn *ec2.EC2, id string) (*ec2.Instance, error) {
+	input := &ec2.DescribeInstancesInput{
+		InstanceIds: aws.StringSlice([]string{id}),
+	}
+
+	output, err := FindInstance(conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if state := aws.StringValue(output.State.Name); state == ec2.InstanceStateNameTerminated {
+		return nil, &resource.NotFoundError{
+			Message:     state,
+			LastRequest: input,
+		}
+	}
+
+	// Eventual consistency check.
+	if aws.StringValue(output.InstanceId) != id {
+		return nil, &resource.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
 }
 
 func FindNetworkACL(conn *ec2.EC2, input *ec2.DescribeNetworkAclsInput) (*ec2.NetworkAcl, error) {
