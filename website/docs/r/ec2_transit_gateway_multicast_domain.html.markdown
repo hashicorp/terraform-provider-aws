@@ -51,7 +51,7 @@ The `members` and `sources` blocks support:
 * `group_ip_address` - (Required) Multicast Group IP address. Must be valid IPv4 or IPv6 IP Address in the 224.0.0.0/4 or ff00::/8 CIDR range.
 * `network_interface_ids` - (Required, Minimum items: 1) List of Network Interface Identifiers to create Multicast Group for.
 
-# Import
+## Import
 
 `aws_ec2_transit_gateway_multicast_domain` can be imported by using the EC2 Transit Gateway Multicast Domain identifier, e.g.,
 
