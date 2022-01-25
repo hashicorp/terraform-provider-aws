@@ -170,27 +170,19 @@ func resourceEventDataStoreCreate(ctx context.Context, d *schema.ResourceData, m
 
 	name := d.Get("name").(string)
 	input := &cloudtrail.CreateEventDataStoreInput{
-		Name: aws.String(name),
-	}
-
-	if len(tags) > 0 {
-		input.TagsList = Tags(tags.IgnoreAWS())
-	}
-	if value, ok := d.GetOk("retention_period"); ok {
-		input.RetentionPeriod = aws.Int64(int64(value.(int)))
-	}
-	if v, ok := d.GetOk("organization_enabled"); ok {
-		input.OrganizationEnabled = aws.Bool(v.(bool))
-	}
-	if v, ok := d.GetOk("multi_region_enabled"); ok {
-		input.MultiRegionEnabled = aws.Bool(v.(bool))
-	}
-	if v, ok := d.GetOk("termination_protection_enabled"); ok {
-		input.TerminationProtectionEnabled = aws.Bool(v.(bool))
+		Name:                         aws.String(name),
+		OrganizationEnabled:          aws.Bool(d.Get("organization_enabled").(bool)),
+		MultiRegionEnabled:           aws.Bool(d.Get("multi_region_enabled").(bool)),
+		TerminationProtectionEnabled: aws.Bool(d.Get("termination_protection_enabled").(bool)),
+		RetentionPeriod:              aws.Int64(int64(d.Get("retention_period").(int))),
 	}
 
 	if _, ok := d.GetOk("advanced_event_selector"); ok {
 		input.AdvancedEventSelectors = expandAdvancedEventSelector(d.Get("advanced_event_selector").([]interface{}))
+	}
+
+	if len(tags) > 0 {
+		input.TagsList = Tags(tags.IgnoreAWS())
 	}
 
 	if err := input.Validate(); err != nil {
@@ -243,7 +235,7 @@ func resourceEventDataStoreUpdate(ctx context.Context, d *schema.ResourceData, m
 			input.RetentionPeriod = aws.Int64(int64(d.Get("retention_period").(int)))
 		}
 
-		if d.HasChange("advanced_event_selector") {
+		if !d.IsNewResource() && d.HasChange("advanced_event_selector") {
 			input.AdvancedEventSelectors = expandAdvancedEventSelector(d.Get("advanced_event_selector").([]interface{}))
 		}
 
@@ -320,7 +312,6 @@ func resourceEventDataStoreRead(ctx context.Context, d *schema.ResourceData, met
 	d.Set("organization_enabled", eventDataStore.OrganizationEnabled)
 	d.Set("retention_period", eventDataStore.RetentionPeriod)
 	d.Set("termination_protection_enabled", eventDataStore.TerminationProtectionEnabled)
-
 	d.Set("advanced_event_selector", flattenAdvancedEventSelector(eventDataStore.AdvancedEventSelectors))
 
 	tags, err := ListTags(conn, d.Id())
