@@ -21,3 +21,7 @@ data-source/aws_ec2_transit_gateway_route_tables: The type of the `ids` attribut
 ```release-note:note
 data-source/aws_ec2_coip_pools: The type of the `pool_ids` attributes has changed from Set to List. If no COIP pools match the specified criteria an empty list is returned (previously an error was raised)
 ```
+
+```release-note:note
+data-source/aws_ec2_local_gateway_route_tables: The type of the `ids` attributes has changed from Set to List. If no local gateway route tables match the specified criteria an empty list is returned (previously an error was raised)
+```
