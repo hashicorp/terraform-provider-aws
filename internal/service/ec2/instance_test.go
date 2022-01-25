@@ -306,6 +306,33 @@ func TestAccEC2Instance_EBSBlockDevice_invalidThroughputForVolumeType(t *testing
 	})
 }
 
+// TestAccEC2Instance_EBSBlockDevice_RootBlockDevice_removed verifies block device mappings
+// removed outside terraform no longer result in a panic.
+// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/20821
+func TestAccEC2Instance_EBSBlockDevice_RootBlockDevice_removed(t *testing.T) {
+	var instance ec2.Instance
+	resourceName := "aws_instance.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfigEBSAndRootBlockDevice,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(resourceName, &instance),
+					// Instance must be stopped before detaching a root block device
+					testAccCheckStopInstance(&instance),
+					testAccCheckDetachVolumes(&instance),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func TestAccEC2Instance_RootBlockDevice_kmsKeyARN(t *testing.T) {
 	var instance ec2.Instance
 	kmsKeyResourceName := "aws_kms_key.test"
@@ -3854,6 +3881,37 @@ func testAccCheckStopInstance(instance *ec2.Instance) resource.TestCheckFunc {
 	}
 }
 
+func testAccCheckDetachVolumes(instance *ec2.Instance) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client := acctest.Provider.Meta().(*conns.AWSClient)
+		conn := client.EC2Conn
+
+		for _, bd := range instance.BlockDeviceMappings {
+			if bd.Ebs != nil && bd.Ebs.VolumeId != nil {
+				name := aws.StringValue(bd.DeviceName)
+				volID := aws.StringValue(bd.Ebs.VolumeId)
+				instanceID := aws.StringValue(instance.InstanceId)
+
+				// Make sure in correct state before detaching
+				if err := tfec2.WaitVolumeAttachmentAttached(conn, name, volID, instanceID); err != nil {
+					return err
+				}
+
+				r := tfec2.ResourceVolumeAttachment()
+				d := r.Data(nil)
+				d.Set("device_name", name)
+				d.Set("volume_id", volID)
+				d.Set("instance_id", instanceID)
+
+				if err := r.Delete(d, client); err != nil {
+					return err
+				}
+			}
+		}
+		return nil
+	}
+}
+
 func TestInstanceHostIDSchema(t *testing.T) {
 	actualSchema := tfec2.ResourceInstance().Schema["host_id"]
 	expectedSchema := &schema.Schema{
@@ -5041,6 +5099,27 @@ resource "aws_instance" "test" {
     volume_size = 10
     volume_type = "gp2"
     throughput  = 300
+  }
+}
+`)
+
+var testAccInstanceConfigEBSAndRootBlockDevice = acctest.ConfigCompose(
+	acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
+	`
+resource "aws_instance" "test" {
+  ami = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+
+  instance_type = "t2.medium"
+
+  root_block_device {
+    volume_type           = "gp2"
+    volume_size           = 9
+    delete_on_termination = true
+  }
+
+  ebs_block_device {
+    device_name = "/dev/sdb"
+    volume_size = 9
   }
 }
 `)
