@@ -9,3 +9,7 @@ data-source/aws_route_tables: The type of the `ids` attributes has changed from 
 ```release-note:note
 data-source/aws_network_interfaces: The type of the `ids` attributes has changed from Set to List. If no network interfaces match the specified criteria an empty list is returned (previously an error was raised)
 ```
+
+```release-note:note
+data-source/aws_network_acls: The type of the `ids` attributes has changed from Set to List. If no NACLs match the specified criteria an empty list is returned (previously an error was raised)
+```
