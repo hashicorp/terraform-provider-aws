@@ -2,7 +2,6 @@ package ec2
 
 import (
 	"fmt"
-	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
@@ -40,71 +39,49 @@ func DataSourceSecurityGroups() *schema.Resource {
 
 func dataSourceSecurityGroupsRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
-	req := &ec2.DescribeSecurityGroupsInput{}
 
-	filters, filtersOk := d.GetOk("filter")
-	tags, tagsOk := d.GetOk("tags")
+	input := &ec2.DescribeSecurityGroupsInput{}
 
-	if !filtersOk && !tagsOk {
-		return fmt.Errorf("One of filters or tags must be assigned")
-	}
-
-	if filtersOk {
-		req.Filters = append(req.Filters,
-			BuildFiltersDataSource(filters.(*schema.Set))...)
-	}
-	if tagsOk {
-		req.Filters = append(req.Filters, BuildTagFilterList(
+	if tags, tagsOk := d.GetOk("tags"); tagsOk {
+		input.Filters = append(input.Filters, BuildTagFilterList(
 			Tags(tftags.New(tags.(map[string]interface{}))),
 		)...)
 	}
 
-	log.Printf("[DEBUG] Reading Security Groups with request: %s", req)
-
-	var ids, vpcIds, arns []string
-	for {
-		resp, err := conn.DescribeSecurityGroups(req)
-		if err != nil {
-			return fmt.Errorf("error reading security groups: %w", err)
-		}
-
-		for _, sg := range resp.SecurityGroups {
-			ids = append(ids, aws.StringValue(sg.GroupId))
-			vpcIds = append(vpcIds, aws.StringValue(sg.VpcId))
-
-			arn := arn.ARN{
-				Partition: meta.(*conns.AWSClient).Partition,
-				Service:   ec2.ServiceName,
-				Region:    meta.(*conns.AWSClient).Region,
-				AccountID: aws.StringValue(sg.OwnerId),
-				Resource:  fmt.Sprintf("security-group/%s", aws.StringValue(sg.GroupId)),
-			}.String()
-
-			arns = append(arns, arn)
-		}
-
-		if resp.NextToken == nil {
-			break
-		}
-		req.NextToken = resp.NextToken
+	if filters, filtersOk := d.GetOk("filter"); filtersOk {
+		input.Filters = append(input.Filters,
+			BuildFiltersDataSource(filters.(*schema.Set))...)
 	}
 
-	log.Printf("[DEBUG] Found %d security groups via given filter: %s", len(ids), req)
+	if len(input.Filters) == 0 {
+		input.Filters = nil
+	}
+
+	output, err := FindSecurityGroups(conn, input)
+
+	if err != nil {
+		return fmt.Errorf("error reading EC2 Security Groups: %w", err)
+	}
+
+	var arns, securityGroupIDs, vpcIDs []string
+
+	for _, v := range output {
+		arn := arn.ARN{
+			Partition: meta.(*conns.AWSClient).Partition,
+			Service:   ec2.ServiceName,
+			Region:    meta.(*conns.AWSClient).Region,
+			AccountID: aws.StringValue(v.OwnerId),
+			Resource:  fmt.Sprintf("security-group/%s", aws.StringValue(v.GroupId)),
+		}.String()
+		arns = append(arns, arn)
+		securityGroupIDs = append(securityGroupIDs, aws.StringValue(v.GroupId))
+		vpcIDs = append(vpcIDs, aws.StringValue(v.VpcId))
+	}
 
 	d.SetId(meta.(*conns.AWSClient).Region)
-
-	err := d.Set("ids", ids)
-	if err != nil {
-		return err
-	}
-
-	if err = d.Set("vpc_ids", vpcIds); err != nil {
-		return fmt.Errorf("error setting vpc_ids: %s", err)
-	}
-
-	if err = d.Set("arns", arns); err != nil {
-		return fmt.Errorf("error setting arns: %s", err)
-	}
+	d.Set("arns", arns)
+	d.Set("ids", securityGroupIDs)
+	d.Set("vpc_ids", vpcIDs)
 
 	return nil
 }
