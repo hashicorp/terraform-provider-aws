@@ -63,15 +63,16 @@ func dataSourceInstancesRead(d *schema.ResourceData, meta interface{}) error {
 		})
 	}
 
-	if tags, tagsOk := d.GetOk("instance_tags"); tagsOk {
-		input.Filters = append(input.Filters, BuildTagFilterList(
-			Tags(tftags.New(tags.(map[string]interface{}))),
-		)...)
-	}
+	input.Filters = append(input.Filters, BuildTagFilterList(
+		Tags(tftags.New(d.Get("tags").(map[string]interface{}))),
+	)...)
 
-	if filters, filtersOk := d.GetOk("filter"); filtersOk {
-		input.Filters = append(input.Filters,
-			BuildFiltersDataSource(filters.(*schema.Set))...)
+	input.Filters = append(input.Filters, BuildFiltersDataSource(
+		d.Get("filter").(*schema.Set),
+	)...)
+
+	if len(input.Filters) == 0 {
+		input.Filters = nil
 	}
 
 	output, err := FindInstances(conn, input)
