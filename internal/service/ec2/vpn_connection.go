@@ -1,20 +1,19 @@
 package ec2
 
 import (
-	"context"
 	"encoding/xml"
 	"fmt"
 	"log"
 	"net"
 	"regexp"
 	"sort"
+	"strconv"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -32,11 +31,6 @@ func ResourceVPNConnection() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
-
-		CustomizeDiff: customdiff.All(
-			resourceVPNConnectionCustomizeDiff,
-			verify.SetTagsDiff,
-		),
 
 		Schema: map[string]*schema.Schema{
 			"arn": {
@@ -148,11 +142,23 @@ func ResourceVPNConnection() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringInSlice(VpnTunnelOptionsDPDTimeoutAction_Values(), false),
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					if old == defaultVpnTunnelOptionsDPDTimeoutAction && new == "" {
+						return true
+					}
+					return false
+				},
 			},
 			"tunnel1_dpd_timeout_seconds": {
 				Type:         schema.TypeInt,
 				Optional:     true,
 				ValidateFunc: validation.IntAtLeast(30),
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					if old == strconv.Itoa(defaultVpnTunnelOptionsDPDTimeoutSeconds) && new == "0" {
+						return true
+					}
+					return false
+				},
 			},
 			"tunnel1_ike_versions": {
 				Type:     schema.TypeSet,
@@ -202,6 +208,12 @@ func ResourceVPNConnection() *schema.Resource {
 				Type:         schema.TypeInt,
 				Optional:     true,
 				ValidateFunc: validation.IntBetween(900, 28800),
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					if old == strconv.Itoa(defaultVpnTunnelOptionsPhase1LifetimeSeconds) && new == "0" {
+						return true
+					}
+					return false
+				},
 			},
 			"tunnel1_phase2_dh_group_numbers": {
 				Type:     schema.TypeSet,
@@ -228,6 +240,12 @@ func ResourceVPNConnection() *schema.Resource {
 				Type:         schema.TypeInt,
 				Optional:     true,
 				ValidateFunc: validation.IntBetween(900, 3600),
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					if old == strconv.Itoa(defaultVpnTunnelOptionsPhase2LifetimeSeconds) && new == "0" {
+						return true
+					}
+					return false
+				},
 			},
 			"tunnel1_preshared_key": {
 				Type:         schema.TypeString,
@@ -240,21 +258,45 @@ func ResourceVPNConnection() *schema.Resource {
 				Type:         schema.TypeInt,
 				Optional:     true,
 				ValidateFunc: validation.IntBetween(0, 100),
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					if old == strconv.Itoa(defaultVpnTunnelOptionsRekeyFuzzPercentage) && new == "0" {
+						return true
+					}
+					return false
+				},
 			},
 			"tunnel1_rekey_margin_time_seconds": {
 				Type:         schema.TypeInt,
 				Optional:     true,
 				ValidateFunc: validation.IntBetween(60, 1800),
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					if old == strconv.Itoa(defaultVpnTunnelOptionsRekeyMarginTimeSeconds) && new == "0" {
+						return true
+					}
+					return false
+				},
 			},
 			"tunnel1_replay_window_size": {
 				Type:         schema.TypeInt,
 				Optional:     true,
 				ValidateFunc: validation.IntBetween(64, 2048),
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					if old == strconv.Itoa(defaultVpnTunnelOptionsReplayWindowSize) && new == "0" {
+						return true
+					}
+					return false
+				},
 			},
 			"tunnel1_startup_action": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringInSlice(VpnTunnelOptionsStartupAction_Values(), false),
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					if old == defaultVpnTunnelOptionsStartupAction && new == "" {
+						return true
+					}
+					return false
+				},
 			},
 			"tunnel1_vgw_inside_address": {
 				Type:     schema.TypeString,
@@ -280,11 +322,23 @@ func ResourceVPNConnection() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringInSlice(VpnTunnelOptionsDPDTimeoutAction_Values(), false),
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					if old == defaultVpnTunnelOptionsDPDTimeoutAction && new == "" {
+						return true
+					}
+					return false
+				},
 			},
 			"tunnel2_dpd_timeout_seconds": {
 				Type:         schema.TypeInt,
 				Optional:     true,
 				ValidateFunc: validation.IntAtLeast(30),
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					if old == strconv.Itoa(defaultVpnTunnelOptionsDPDTimeoutSeconds) && new == "0" {
+						return true
+					}
+					return false
+				},
 			},
 			"tunnel2_ike_versions": {
 				Type:     schema.TypeSet,
@@ -334,6 +388,12 @@ func ResourceVPNConnection() *schema.Resource {
 				Type:         schema.TypeInt,
 				Optional:     true,
 				ValidateFunc: validation.IntBetween(900, 28800),
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					if old == strconv.Itoa(defaultVpnTunnelOptionsPhase1LifetimeSeconds) && new == "0" {
+						return true
+					}
+					return false
+				},
 			},
 			"tunnel2_phase2_dh_group_numbers": {
 				Type:     schema.TypeSet,
@@ -360,6 +420,12 @@ func ResourceVPNConnection() *schema.Resource {
 				Type:         schema.TypeInt,
 				Optional:     true,
 				ValidateFunc: validation.IntBetween(900, 3600),
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					if old == strconv.Itoa(defaultVpnTunnelOptionsPhase2LifetimeSeconds) && new == "0" {
+						return true
+					}
+					return false
+				},
 			},
 			"tunnel2_preshared_key": {
 				Type:         schema.TypeString,
@@ -372,21 +438,45 @@ func ResourceVPNConnection() *schema.Resource {
 				Type:         schema.TypeInt,
 				Optional:     true,
 				ValidateFunc: validation.IntBetween(0, 100),
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					if old == strconv.Itoa(defaultVpnTunnelOptionsRekeyFuzzPercentage) && new == "0" {
+						return true
+					}
+					return false
+				},
 			},
 			"tunnel2_rekey_margin_time_seconds": {
 				Type:         schema.TypeInt,
 				Optional:     true,
 				ValidateFunc: validation.IntBetween(60, 1800),
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					if old == strconv.Itoa(defaultVpnTunnelOptionsRekeyMarginTimeSeconds) && new == "0" {
+						return true
+					}
+					return false
+				},
 			},
 			"tunnel2_replay_window_size": {
 				Type:         schema.TypeInt,
 				Optional:     true,
 				ValidateFunc: validation.IntBetween(64, 2048),
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					if old == strconv.Itoa(defaultVpnTunnelOptionsReplayWindowSize) && new == "0" {
+						return true
+					}
+					return false
+				},
 			},
 			"tunnel2_startup_action": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringInSlice(VpnTunnelOptionsStartupAction_Values(), false),
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					if old == defaultVpnTunnelOptionsStartupAction && new == "" {
+						return true
+					}
+					return false
+				},
 			},
 			"tunnel2_vgw_inside_address": {
 				Type:     schema.TypeString,
@@ -436,6 +526,8 @@ func ResourceVPNConnection() *schema.Resource {
 				ExactlyOneOf: []string{"transit_gateway_id", "vpn_gateway_id"},
 			},
 		},
+
+		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -767,110 +859,6 @@ func resourceVPNConnectionDelete(d *schema.ResourceData, meta interface{}) error
 
 	if _, err := WaitVPNConnectionDeleted(conn, d.Id()); err != nil {
 		return fmt.Errorf("error waiting for EC2 VPN Connection (%s) delete: %w", d.Id(), err)
-	}
-
-	return nil
-}
-
-func resourceVPNConnectionCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
-	slicesEqual := func(got []interface{}, want []string) bool {
-		var input []string
-
-		for _, v := range got {
-			input = append(input, v.(string))
-		}
-
-		sort.Strings(input)
-
-		if len(input) != len(want) {
-			return false
-		}
-
-		sort.Strings(want)
-
-		for i := range input {
-			if input[i] != want[i] {
-				return false
-			}
-		}
-
-		return true
-	}
-
-	if diff.Id() != "" {
-		for _, prefix := range []string{"tunnel1_", "tunnel2_"} {
-			if key := prefix + "dpd_timeout_action"; diff.HasChange(key) {
-				if old, new := diff.GetChange(key); old.(string) == defaultVpnTunnelOptionsDPDTimeoutAction && new.(string) == "" {
-					if err := diff.Clear(key); err != nil {
-						log.Printf("[ERROR] diff.Clear(%s): %s", key, err)
-					}
-				}
-			}
-
-			if key := prefix + "dpd_timeout_seconds"; diff.HasChange(key) {
-				if old, new := diff.GetChange(key); old.(int) == defaultVpnTunnelOptionsDPDTimeoutSeconds && new.(int) == 0 {
-					if err := diff.Clear(key); err != nil {
-						log.Printf("[ERROR] diff.Clear(%s): %s", key, err)
-					}
-				}
-			}
-
-			if key := prefix + "ike_versions"; diff.HasChange(key) {
-				if old, new := diff.GetChange(key); slicesEqual(old.(*schema.Set).List(), defaultVpnTunnelOptionsIKEVersions) && new.(*schema.Set).Len() == 0 {
-					if err := diff.Clear(key); err != nil {
-						log.Printf("[ERROR] diff.Clear(%s): %s", key, err)
-					}
-				}
-			}
-
-			if key := prefix + "phase1_lifetime_seconds"; diff.HasChange(key) {
-				if old, new := diff.GetChange(key); old.(int) == defaultVpnTunnelOptionsPhase1LifetimeSeconds && new.(int) == 0 {
-					if err := diff.Clear(key); err != nil {
-						log.Printf("[ERROR] diff.Clear(%s): %s", key, err)
-					}
-				}
-			}
-
-			if key := prefix + "phase2_lifetime_seconds"; diff.HasChange(key) {
-				if old, new := diff.GetChange(key); old.(int) == defaultVpnTunnelOptionsPhase2LifetimeSeconds && new.(int) == 0 {
-					if err := diff.Clear(key); err != nil {
-						log.Printf("[ERROR] diff.Clear(%s): %s", key, err)
-					}
-				}
-			}
-
-			if key := prefix + "rekey_fuzz_percentage"; diff.HasChange(key) {
-				if old, new := diff.GetChange(key); old.(int) == defaultVpnTunnelOptionsRekeyFuzzPercentage && new.(int) == 0 {
-					if err := diff.Clear(key); err != nil {
-						log.Printf("[ERROR] diff.Clear(%s): %s", key, err)
-					}
-				}
-			}
-
-			if key := prefix + "rekey_margin_time_seconds"; diff.HasChange(key) {
-				if old, new := diff.GetChange(key); old.(int) == defaultVpnTunnelOptionsRekeyMarginTimeSeconds && new.(int) == 0 {
-					if err := diff.Clear(key); err != nil {
-						log.Printf("[ERROR] diff.Clear(%s): %s", key, err)
-					}
-				}
-			}
-
-			if key := prefix + "replay_window_size"; diff.HasChange(key) {
-				if old, new := diff.GetChange(key); old.(int) == defaultVpnTunnelOptionsReplayWindowSize && new.(int) == 0 {
-					if err := diff.Clear(key); err != nil {
-						log.Printf("[ERROR] diff.Clear(%s): %s", key, err)
-					}
-				}
-			}
-
-			if key := prefix + "startup_action"; diff.HasChange(key) {
-				if old, new := diff.GetChange(key); old.(string) == defaultVpnTunnelOptionsStartupAction && new.(string) == "" {
-					if err := diff.Clear(key); err != nil {
-						log.Printf("[ERROR] diff.Clear(%s): %s", key, err)
-					}
-				}
-			}
-		}
 	}
 
 	return nil
