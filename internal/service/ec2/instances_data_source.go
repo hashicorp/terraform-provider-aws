@@ -51,11 +51,6 @@ func DataSourceInstances() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"allow_no_results": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
 		},
 	}
 }
@@ -65,7 +60,6 @@ func dataSourceInstancesRead(d *schema.ResourceData, meta interface{}) error {
 
 	filters, filtersOk := d.GetOk("filter")
 	tags, tagsOk := d.GetOk("instance_tags")
-	allowNoResults := d.Get("allow_no_results").(bool)
 
 	if !filtersOk && !tagsOk {
 		return fmt.Errorf("One of filters or instance_tags must be assigned")
@@ -115,7 +109,7 @@ func dataSourceInstancesRead(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	if len(instanceIds) < 1 && allowNoResults == false {
+	if len(instanceIds) < 1 {
 		return fmt.Errorf("Your query returned no results. Please change your search criteria and try again.")
 	}
 
