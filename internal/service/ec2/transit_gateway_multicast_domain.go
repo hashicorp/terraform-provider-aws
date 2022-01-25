@@ -156,7 +156,7 @@ func resourceTransitGatewayMulticastDomainCreate(d *schema.ResourceData, meta in
 	d.SetId(id)
 
 	// wait for the domain to become available
-	if err := waitForTransitGatewayMulticastDomainCreation(conn, d.Id()); err != nil {
+	if err := WaitForTransitGatewayMulticastDomainCreation(conn, d.Id()); err != nil {
 		return fmt.Errorf("error waiting for EC2 Transit Gateway Multicast Domain (%s) availability: %s", id, err)
 	}
 
@@ -268,7 +268,7 @@ func resourceTransitGatewayMulticastDomainDelete(d *schema.ResourceData, meta in
 		return fmt.Errorf("error deleting EC2 Transit Gateway Multicast Domain: %s", err)
 	}
 
-	if err := waitForTransitGatewayMulticastDomainDeletion(conn, id); err != nil {
+	if err := WaitForTransitGatewayMulticastDomainDeletion(conn, id); err != nil {
 		return fmt.Errorf("error waiting for EC2 Transit Gateway Multicast Domain (%s) deletion: %s", id, err)
 	}
 
@@ -344,7 +344,7 @@ func resourceTransitGatewayMulticastDomainGroupsRead(d *schema.ResourceData, met
 		return err
 	}
 
-	groupType := resourceTransitGatewayMulticastDomainGroupType(member)
+	groupType := ResourceTransitGatewayMulticastDomainGroupType(member)
 	localGroups := d.Get(groupType).(*schema.Set).List()
 
 	groups := &schema.Set{F: resourceTransitGatewayMulticastDomainGroupsHash}
@@ -498,7 +498,7 @@ func resourceTransitGatewayMulticastDomainAssociationsUpdate(d *schema.ResourceD
 func resourceTransitGatewayMulticastDomainGroupsUpdate(d *schema.ResourceData, meta interface{}, member bool) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 	id := d.Id()
-	key := resourceTransitGatewayMulticastDomainGroupType(member)
+	key := ResourceTransitGatewayMulticastDomainGroupType(member)
 
 	if !d.HasChange(key) {
 		return nil
@@ -558,7 +558,7 @@ func resourceTransitGatewayMulticastDomainDisassociate(conn *ec2.EC2, id string,
 	}
 
 	// wait for subnets to be disassociated
-	if err := waitForTransitGatewayMulticastDomainDisassociation(conn, id, subnetIDs); err != nil {
+	if err := WaitForTransitGatewayMulticastDomainDisassociation(conn, id, subnetIDs); err != nil {
 		return fmt.Errorf(
 			"error waiting for EC2 Transit Gateway Multicast Domain (%s) to disassociate subnets: %s",
 			id, err)
@@ -584,7 +584,7 @@ func resourceTransitGatewayMulticastDomainAssociate(conn *ec2.EC2, id string, as
 	}
 
 	// wait for associations
-	if err := waitForTransitGatewayMulticastDomainAssociation(conn, id, subnetIDs); err != nil {
+	if err := WaitForTransitGatewayMulticastDomainAssociation(conn, id, subnetIDs); err != nil {
 		return fmt.Errorf(
 			"error waiting for EC2 Transit Gateway Multicast Domain (%s) associations: %s", id, err)
 	}
@@ -623,7 +623,7 @@ func resourceTransitGatewayMulticastDomainGroupDeregister(conn *ec2.EC2, id stri
 		}
 	}
 
-	if err := waitForTransitGatewayMulticastDomainGroupDeregister(conn, id, groupData, member); err != nil {
+	if err := WaitForTransitGatewayMulticastDomainGroupDeregister(conn, id, groupData, member); err != nil {
 		return fmt.Errorf(
 			"error validating EC2 Transit Gateway Multicast Domain (%s) group deregistration: %s", id, err)
 	}
@@ -673,7 +673,7 @@ func resourceTransitGatewayMulticastDomainGroupRegister(conn *ec2.EC2, id string
 		}
 	}
 
-	if err := waitForTransitGatewayMulticastDomainGroupDeregister(conn, id, groupData, member); err != nil {
+	if err := WaitForTransitGatewayMulticastDomainGroupDeregister(conn, id, groupData, member); err != nil {
 		return fmt.Errorf(
 			"error validating EC2 Transit Gateway Multicast Domain (%s) group registration: %s", id, err)
 	}
@@ -698,7 +698,7 @@ func resourceTransitGatewayMulticastDomainDisassociateAll(d *schema.ResourceData
 func resourceTransitGatewayMulticastDomainGroupsDeregisterAll(d *schema.ResourceData, meta interface{}, member bool) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 	id := d.Id()
-	key := resourceTransitGatewayMulticastDomainGroupType(member)
+	key := ResourceTransitGatewayMulticastDomainGroupType(member)
 	// deregister groups
 	groups := d.Get(key).(*schema.Set)
 	for _, group := range groups.List() {
@@ -736,7 +736,7 @@ func resourceTransitGatewayMulticastDomainGroupsHash(meta interface{}) int {
 	return create.StringHashcode(buf.String())
 }
 
-func resourceTransitGatewayMulticastDomainGroupType(member bool) string {
+func ResourceTransitGatewayMulticastDomainGroupType(member bool) string {
 	if member {
 		return "members"
 	}

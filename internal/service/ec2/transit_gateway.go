@@ -1198,7 +1198,7 @@ func waitForTransitGatewayVPCAttachmentUpdate(conn *ec2.EC2, transitGatewayAttac
 	return err
 }
 
-func waitForTransitGatewayMulticastDomainCreation(conn *ec2.EC2, domainID string) error {
+func WaitForTransitGatewayMulticastDomainCreation(conn *ec2.EC2, domainID string) error {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{ec2.TransitGatewayMulticastDomainStatePending},
 		Target:  []string{ec2.TransitGatewayMulticastDomainStateAvailable},
@@ -1212,7 +1212,7 @@ func waitForTransitGatewayMulticastDomainCreation(conn *ec2.EC2, domainID string
 	return err
 }
 
-func waitForTransitGatewayMulticastDomainDeletion(conn *ec2.EC2, domainID string) error {
+func WaitForTransitGatewayMulticastDomainDeletion(conn *ec2.EC2, domainID string) error {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{
 			ec2.TransitGatewayMulticastDomainStateAvailable,
@@ -1234,7 +1234,7 @@ func waitForTransitGatewayMulticastDomainDeletion(conn *ec2.EC2, domainID string
 	return err
 }
 
-func waitForTransitGatewayMulticastDomainAssociation(conn *ec2.EC2, domainID string, subnetIDs []*string) error {
+func WaitForTransitGatewayMulticastDomainAssociation(conn *ec2.EC2, domainID string, subnetIDs []*string) error {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{ec2.AssociationStatusCodeAssociating},
 		Target:  []string{ec2.AssociationStatusCodeAssociated},
@@ -1248,7 +1248,7 @@ func waitForTransitGatewayMulticastDomainAssociation(conn *ec2.EC2, domainID str
 	return err
 }
 
-func waitForTransitGatewayMulticastDomainDisassociation(conn *ec2.EC2, domainID string, subnetIDs []*string) error {
+func WaitForTransitGatewayMulticastDomainDisassociation(conn *ec2.EC2, domainID string, subnetIDs []*string) error {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{
 			ec2.AssociationStatusCodeAssociated,
@@ -1270,7 +1270,7 @@ func waitForTransitGatewayMulticastDomainDisassociation(conn *ec2.EC2, domainID 
 	return err
 }
 
-func waitForTransitGatewayMulticastDomainGroupRegister(conn *ec2.EC2, domainID string, groupData map[string]interface{}, member bool) error {
+func WaitForTransitGatewayMulticastDomainGroupRegister(conn *ec2.EC2, domainID string, groupData map[string]interface{}, member bool) error {
 	filters := SearchTransitGatewayMulticastDomainGroupIpFilters(member, groupData["group_ip_address"].(string))
 	netIDs := groupData["network_interface_ids"].(*schema.Set)
 
@@ -1313,7 +1313,7 @@ func waitForTransitGatewayMulticastDomainGroupRegister(conn *ec2.EC2, domainID s
 	return nil
 }
 
-func waitForTransitGatewayMulticastDomainGroupDeregister(conn *ec2.EC2, domainID string, groupData map[string]interface{}, member bool) error {
+func WaitForTransitGatewayMulticastDomainGroupDeregister(conn *ec2.EC2, domainID string, groupData map[string]interface{}, member bool) error {
 	filters := SearchTransitGatewayMulticastDomainGroupIpFilters(member, groupData["group_ip_address"].(string))
 	netIDs := groupData["network_interface_ids"].(*schema.Set)
 

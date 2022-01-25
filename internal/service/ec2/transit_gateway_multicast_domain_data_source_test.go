@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func testAccTransitGatewayMulticastDomain_basic(t *testing.T) {
+func testAccTransitGatewayMulticastDomainDataSource_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	mCastSenders := "224.0.0.1"
 	mCastMembers := "224.0.0.1"
