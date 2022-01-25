@@ -150,7 +150,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Notes
 
-If both VPCs are not in the same AWS account do not enable the `auto_accept` attribute.
+If both VPCs are not in the same AWS account and region do not enable the `auto_accept` attribute.
 The accepter can manage its side of the connection using the `aws_vpc_peering_connection_accepter` resource
 or accept the connection manually using the AWS Management Console, AWS CLI, through SDKs, etc.
 
