@@ -1024,6 +1024,7 @@ func TestAccEC2VPNConnection_tunnelOptionsLesser(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "tunnel_inside_ip_version", "ipv4"),
 					resource.TestCheckResourceAttr(resourceName, "vgw_telemetry.#", "2"),
 				),
+				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
