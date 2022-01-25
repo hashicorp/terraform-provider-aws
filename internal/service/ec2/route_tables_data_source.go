@@ -13,6 +13,7 @@ import (
 func DataSourceRouteTables() *schema.Resource {
 	return &schema.Resource{
 		Read: dataSourceRouteTablesRead,
+
 		Schema: map[string]*schema.Schema{
 			"filter": DataSourceFiltersSchema(),
 			"ids": {
