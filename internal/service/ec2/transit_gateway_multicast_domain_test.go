@@ -564,7 +564,7 @@ resource "aws_ec2_transit_gateway_multicast_domain" "test" {
   transit_gateway_id = aws_ec2_transit_gateway.test.id
   association {
     transit_gateway_attachment_id = aws_ec2_transit_gateway_vpc_attachment.test1.id
-     subnet_ids                    = [aws_subnet.test1.id, aws_subnet.test2.id]
+    subnet_ids                    = [aws_subnet.test1.id, aws_subnet.test2.id]
   }
   tags = {
     Name = %[1]q
@@ -815,14 +815,13 @@ resource "aws_instance" "test1" {
   tags = {
     Name = %[1]q
   }
-  lifecycle {    
+  lifecycle {
     ignore_changes = [
       iam_instance_profile,
       tags,
       tags_all,
-      ]
+    ]
   }
-
 }
 
 resource "aws_ec2_transit_gateway" "test" {
@@ -851,11 +850,11 @@ resource "aws_ec2_transit_gateway_multicast_domain" "test" {
     subnet_ids                    = [aws_subnet.test1.id]
   }
   members {
-    group_ip_address = "224.0.0.1"
+    group_ip_address      = "224.0.0.1"
     network_interface_ids = [aws_instance.test1.primary_network_interface_id]
   }
   sources {
-    group_ip_address = "224.0.0.1"
+    group_ip_address      = "224.0.0.1"
     network_interface_ids = [aws_instance.test1.primary_network_interface_id]
   }
   tags = {
@@ -870,7 +869,7 @@ func testAccTransitGatewayMulticastDomainConfigGroup2(rName string) string {
 data "aws_availability_zones" "available" {
   state = "available"
 }
-  
+
 data "aws_ami" "amazon_linux" {
   most_recent = true
   owners      = ["amazon"]
@@ -911,12 +910,12 @@ resource "aws_instance" "test1" {
   tags = {
     Name = %[1]q
   }
-  lifecycle {    
+  lifecycle {
     ignore_changes = [
       iam_instance_profile,
       tags,
       tags_all,
-      ]
+    ]
   }
 }
 resource "aws_instance" "test2" {
@@ -926,12 +925,12 @@ resource "aws_instance" "test2" {
   tags = {
     Name = %[1]q
   }
-  lifecycle {    
+  lifecycle {
     ignore_changes = [
       iam_instance_profile,
       tags,
       tags_all,
-      ]
+    ]
   }
 }
 resource "aws_ec2_transit_gateway" "test" {
@@ -950,19 +949,19 @@ resource "aws_ec2_transit_gateway_vpc_attachment" "test1" {
 }
 resource "aws_ec2_transit_gateway_multicast_domain" "test" {
   transit_gateway_id = aws_ec2_transit_gateway.test.id
-  
+
   static_source_support = "enable"
-  
+
   association {
     transit_gateway_attachment_id = aws_ec2_transit_gateway_vpc_attachment.test1.id
     subnet_ids                    = [aws_subnet.test1.id]
   }
   members {
-    group_ip_address = "224.0.0.1"
+    group_ip_address      = "224.0.0.1"
     network_interface_ids = [aws_instance.test1.primary_network_interface_id, aws_instance.test2.primary_network_interface_id]
   }
   sources {
-    group_ip_address = "224.0.0.1"
+    group_ip_address      = "224.0.0.1"
     network_interface_ids = [aws_instance.test1.primary_network_interface_id]
   }
   tags = {
@@ -1017,12 +1016,12 @@ resource "aws_instance" "test1" {
   tags = {
     Name = %[1]q
   }
-  lifecycle {    
+  lifecycle {
     ignore_changes = [
       iam_instance_profile,
       tags,
       tags_all,
-      ]
+    ]
   }
 }
 resource "aws_instance" "test2" {
@@ -1032,12 +1031,12 @@ resource "aws_instance" "test2" {
   tags = {
     Name = %[1]q
   }
-  lifecycle {    
+  lifecycle {
     ignore_changes = [
       iam_instance_profile,
       tags,
       tags_all,
-      ]
+    ]
   }
 }
 resource "aws_ec2_transit_gateway" "test" {
@@ -1064,15 +1063,15 @@ resource "aws_ec2_transit_gateway_multicast_domain" "test" {
     subnet_ids                    = [aws_subnet.test1.id]
   }
   members {
-    group_ip_address = "224.0.0.1"
+    group_ip_address      = "224.0.0.1"
     network_interface_ids = [aws_instance.test1.primary_network_interface_id]
   }
   members {
-    group_ip_address = "224.0.0.1"
+    group_ip_address      = "224.0.0.1"
     network_interface_ids = [aws_instance.test2.primary_network_interface_id]
   }
   sources {
-    group_ip_address = "224.0.0.1"
+    group_ip_address      = "224.0.0.1"
     network_interface_ids = [aws_instance.test1.primary_network_interface_id]
   }
   tags = {
@@ -1128,12 +1127,12 @@ resource "aws_instance" "test1" {
   tags = {
     Name = %[1]q
   }
-  lifecycle {    
+  lifecycle {
     ignore_changes = [
       iam_instance_profile,
       tags,
       tags_all,
-      ]
+    ]
   }
 }
 resource "aws_instance" "test2" {
@@ -1168,19 +1167,19 @@ resource "aws_ec2_transit_gateway_multicast_domain" "test" {
     subnet_ids                    = [aws_subnet.test1.id]
   }
   members {
-    group_ip_address = "224.0.0.1"
+    group_ip_address      = "224.0.0.1"
     network_interface_ids = [aws_instance.test1.primary_network_interface_id]
   }
   members {
-    group_ip_address = "224.0.0.2"
+    group_ip_address      = "224.0.0.2"
     network_interface_ids = [aws_instance.test2.primary_network_interface_id]
   }
   sources {
-    group_ip_address = "224.0.0.1"
+    group_ip_address      = "224.0.0.1"
     network_interface_ids = [aws_instance.test1.primary_network_interface_id]
   }
   sources {
-    group_ip_address = "224.0.0.2"
+    group_ip_address      = "224.0.0.2"
     network_interface_ids = [aws_instance.test2.primary_network_interface_id]
   }
   tags = {
@@ -1201,7 +1200,7 @@ resource "aws_ec2_transit_gateway" "test" {
 resource "aws_ec2_transit_gateway_multicast_domain" "test" {
   transit_gateway_id = aws_ec2_transit_gateway.test.id
   tags = {
-    Name = %[1]q
+    Name                          = %[1]q
     %[2]q = %[3]q
   }
 }
@@ -1216,7 +1215,7 @@ resource "aws_ec2_transit_gateway" "test" {
 resource "aws_ec2_transit_gateway_multicast_domain" "test" {
   transit_gateway_id = aws_ec2_transit_gateway.test.id
   tags = {
-    Name = %[1]q
+    Name                          = %[1]q
     %[2]q = %[3]q
     %[4]q = %[5]q
   }
