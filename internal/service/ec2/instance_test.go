@@ -5105,7 +5105,7 @@ resource "aws_instance" "test" {
 
 var testAccInstanceConfigEBSAndRootBlockDevice = acctest.ConfigCompose(
 	acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
-	fmt.Sprintf(`
+	`
 resource "aws_instance" "test" {
   ami = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
 
@@ -5122,7 +5122,7 @@ resource "aws_instance" "test" {
     volume_size = 9
   }
 }
-`))
+`)
 
 func testAccInstanceConfigBlockDeviceTagsVolumeTags() string {
 	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHvmEbsAmi(), `
