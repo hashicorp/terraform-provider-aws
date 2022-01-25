@@ -79,6 +79,31 @@ func FindClientVPNRouteByID(conn *ec2.EC2, routeID string) (*ec2.DescribeClientV
 	return FindClientVPNRoute(conn, endpointID, targetSubnetID, destinationCidr)
 }
 
+func FindEIPs(conn *ec2.EC2, input *ec2.DescribeAddressesInput) ([]*ec2.Address, error) {
+	var addresses []*ec2.Address
+
+	output, err := conn.DescribeAddresses(input)
+
+	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidAddressNotFound, ErrCodeInvalidAllocationIDNotFound) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	for _, v := range output.Addresses {
+		if v != nil {
+			addresses = append(addresses, v)
+		}
+	}
+
+	return addresses, nil
+}
+
 func FindHostByID(conn *ec2.EC2, id string) (*ec2.Host, error) {
 	input := &ec2.DescribeHostsInput{
 		HostIds: aws.StringSlice([]string{id}),
