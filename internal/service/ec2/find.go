@@ -79,12 +79,24 @@ func FindClientVPNRouteByID(conn *ec2.EC2, routeID string) (*ec2.DescribeClientV
 	return FindClientVPNRoute(conn, endpointID, targetSubnetID, destinationCidr)
 }
 
-func FindEIPs(conn *ec2.EC2, input *ec2.DescribeAddressesInput) ([]*ec2.Address, error) {
-	var addresses []*ec2.Address
+func FindCOIPPools(conn *ec2.EC2, input *ec2.DescribeCoipPoolsInput) ([]*ec2.CoipPool, error) {
+	var output []*ec2.CoipPool
 
-	output, err := conn.DescribeAddresses(input)
+	err := conn.DescribeCoipPoolsPages(input, func(page *ec2.DescribeCoipPoolsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
 
-	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidAddressNotFound, ErrCodeInvalidAllocationIDNotFound) {
+		for _, v := range page.CoipPools {
+			if v != nil {
+				output = append(output, v)
+			}
+		}
+
+		return !lastPage
+	})
+
+	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidPoolIDNotFound) {
 		return nil, &resource.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -95,13 +107,25 @@ func FindEIPs(conn *ec2.EC2, input *ec2.DescribeAddressesInput) ([]*ec2.Address,
 		return nil, err
 	}
 
-	for _, v := range output.Addresses {
-		if v != nil {
-			addresses = append(addresses, v)
-		}
+	return output, nil
+}
+
+func FindCOIPPool(conn *ec2.EC2, input *ec2.DescribeCoipPoolsInput) (*ec2.CoipPool, error) {
+	output, err := FindCOIPPools(conn, input)
+
+	if err != nil {
+		return nil, err
 	}
 
-	return addresses, nil
+	if len(output) == 0 || output[0] == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	if count := len(output); count > 1 {
+		return nil, tfresource.NewTooManyResultsError(count, input)
+	}
+
+	return output[0], nil
 }
 
 func FindHostByID(conn *ec2.EC2, id string) (*ec2.Host, error) {
