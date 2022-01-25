@@ -7,6 +7,7 @@ import (
 	"net"
 	"regexp"
 	"sort"
+	"strconv"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -141,11 +142,23 @@ func ResourceVPNConnection() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringInSlice(VpnTunnelOptionsDPDTimeoutAction_Values(), false),
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					if old == defaultVpnTunnelOptionsDPDTimeoutAction && new == "" {
+						return true
+					}
+					return false
+				},
 			},
 			"tunnel1_dpd_timeout_seconds": {
 				Type:         schema.TypeInt,
 				Optional:     true,
 				ValidateFunc: validation.IntAtLeast(30),
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					if old == strconv.Itoa(defaultVpnTunnelOptionsDPDTimeoutSeconds) && new == "0" {
+						return true
+					}
+					return false
+				},
 			},
 			"tunnel1_ike_versions": {
 				Type:     schema.TypeSet,
@@ -186,6 +199,12 @@ func ResourceVPNConnection() *schema.Resource {
 				Type:         schema.TypeInt,
 				Optional:     true,
 				ValidateFunc: validation.IntBetween(900, 28800),
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					if old == strconv.Itoa(defaultVpnTunnelOptionsPhase1LifetimeSeconds) && new == "0" {
+						return true
+					}
+					return false
+				},
 			},
 			"tunnel1_phase2_dh_group_numbers": {
 				Type:     schema.TypeSet,
@@ -206,6 +225,12 @@ func ResourceVPNConnection() *schema.Resource {
 				Type:         schema.TypeInt,
 				Optional:     true,
 				ValidateFunc: validation.IntBetween(900, 3600),
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					if old == strconv.Itoa(defaultVpnTunnelOptionsPhase2LifetimeSeconds) && new == "0" {
+						return true
+					}
+					return false
+				},
 			},
 			"tunnel1_preshared_key": {
 				Type:         schema.TypeString,
@@ -218,21 +243,45 @@ func ResourceVPNConnection() *schema.Resource {
 				Type:         schema.TypeInt,
 				Optional:     true,
 				ValidateFunc: validation.IntBetween(0, 100),
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					if old == strconv.Itoa(defaultVpnTunnelOptionsRekeyFuzzPercentage) && new == "0" {
+						return true
+					}
+					return false
+				},
 			},
 			"tunnel1_rekey_margin_time_seconds": {
 				Type:         schema.TypeInt,
 				Optional:     true,
 				ValidateFunc: validation.IntBetween(60, 1800),
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					if old == strconv.Itoa(defaultVpnTunnelOptionsRekeyMarginTimeSeconds) && new == "0" {
+						return true
+					}
+					return false
+				},
 			},
 			"tunnel1_replay_window_size": {
 				Type:         schema.TypeInt,
 				Optional:     true,
 				ValidateFunc: validation.IntBetween(64, 2048),
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					if old == strconv.Itoa(defaultVpnTunnelOptionsReplayWindowSize) && new == "0" {
+						return true
+					}
+					return false
+				},
 			},
 			"tunnel1_startup_action": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringInSlice(VpnTunnelOptionsStartupAction_Values(), false),
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					if old == defaultVpnTunnelOptionsStartupAction && new == "" {
+						return true
+					}
+					return false
+				},
 			},
 			"tunnel1_vgw_inside_address": {
 				Type:     schema.TypeString,
@@ -258,11 +307,23 @@ func ResourceVPNConnection() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringInSlice(VpnTunnelOptionsDPDTimeoutAction_Values(), false),
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					if old == defaultVpnTunnelOptionsDPDTimeoutAction && new == "" {
+						return true
+					}
+					return false
+				},
 			},
 			"tunnel2_dpd_timeout_seconds": {
 				Type:         schema.TypeInt,
 				Optional:     true,
 				ValidateFunc: validation.IntAtLeast(30),
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					if old == strconv.Itoa(defaultVpnTunnelOptionsDPDTimeoutSeconds) && new == "0" {
+						return true
+					}
+					return false
+				},
 			},
 			"tunnel2_ike_versions": {
 				Type:     schema.TypeSet,
@@ -303,6 +364,12 @@ func ResourceVPNConnection() *schema.Resource {
 				Type:         schema.TypeInt,
 				Optional:     true,
 				ValidateFunc: validation.IntBetween(900, 28800),
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					if old == strconv.Itoa(defaultVpnTunnelOptionsPhase1LifetimeSeconds) && new == "0" {
+						return true
+					}
+					return false
+				},
 			},
 			"tunnel2_phase2_dh_group_numbers": {
 				Type:     schema.TypeSet,
@@ -323,6 +390,12 @@ func ResourceVPNConnection() *schema.Resource {
 				Type:         schema.TypeInt,
 				Optional:     true,
 				ValidateFunc: validation.IntBetween(900, 3600),
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					if old == strconv.Itoa(defaultVpnTunnelOptionsPhase2LifetimeSeconds) && new == "0" {
+						return true
+					}
+					return false
+				},
 			},
 			"tunnel2_preshared_key": {
 				Type:         schema.TypeString,
@@ -335,21 +408,45 @@ func ResourceVPNConnection() *schema.Resource {
 				Type:         schema.TypeInt,
 				Optional:     true,
 				ValidateFunc: validation.IntBetween(0, 100),
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					if old == strconv.Itoa(defaultVpnTunnelOptionsRekeyFuzzPercentage) && new == "0" {
+						return true
+					}
+					return false
+				},
 			},
 			"tunnel2_rekey_margin_time_seconds": {
 				Type:         schema.TypeInt,
 				Optional:     true,
 				ValidateFunc: validation.IntBetween(60, 1800),
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					if old == strconv.Itoa(defaultVpnTunnelOptionsRekeyMarginTimeSeconds) && new == "0" {
+						return true
+					}
+					return false
+				},
 			},
 			"tunnel2_replay_window_size": {
 				Type:         schema.TypeInt,
 				Optional:     true,
 				ValidateFunc: validation.IntBetween(64, 2048),
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					if old == strconv.Itoa(defaultVpnTunnelOptionsReplayWindowSize) && new == "0" {
+						return true
+					}
+					return false
+				},
 			},
 			"tunnel2_startup_action": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringInSlice(VpnTunnelOptionsStartupAction_Values(), false),
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					if old == defaultVpnTunnelOptionsStartupAction && new == "" {
+						return true
+					}
+					return false
+				},
 			},
 			"tunnel2_vgw_inside_address": {
 				Type:     schema.TypeString,
@@ -403,6 +500,45 @@ func ResourceVPNConnection() *schema.Resource {
 		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
+
+// https://docs.aws.amazon.com/vpn/latest/s2svpn/VPNTunnels.html.
+var (
+	defaultVpnTunnelOptionsDPDTimeoutAction           = VpnTunnelOptionsDPDTimeoutActionClear
+	defaultVpnTunnelOptionsDPDTimeoutSeconds          = 30
+	defaultVpnTunnelOptionsIKEVersions                = []string{VpnTunnelOptionsIKEVersion1, VpnTunnelOptionsIKEVersion2}
+	defaultVpnTunnelOptionsPhase1DHGroupNumbers       = []int{2, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24}
+	defaultVpnTunnelOptionsPhase1EncryptionAlgorithms = []string{
+		VpnTunnelOptionsPhase1EncryptionAlgorithmAES128,
+		VpnTunnelOptionsPhase1EncryptionAlgorithmAES256,
+		VpnTunnelOptionsPhase1EncryptionAlgorithmAES128_GCM_16,
+		VpnTunnelOptionsPhase1EncryptionAlgorithmAES256_GCM_16,
+	}
+	defaultVpnTunnelOptionsPhase1IntegrityAlgorithms = []string{
+		VpnTunnelOptionsPhase1IntegrityAlgorithmSHA1,
+		VpnTunnelOptionsPhase1IntegrityAlgorithmSHA2_256,
+		VpnTunnelOptionsPhase1IntegrityAlgorithmSHA2_384,
+		VpnTunnelOptionsPhase1IntegrityAlgorithmSHA2_512,
+	}
+	defaultVpnTunnelOptionsPhase1LifetimeSeconds      = 28800
+	defaultVpnTunnelOptionsPhase2DHGroupNumbers       = []int{2, 5, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24}
+	defaultVpnTunnelOptionsPhase2EncryptionAlgorithms = []string{
+		VpnTunnelOptionsPhase2EncryptionAlgorithmAES128,
+		VpnTunnelOptionsPhase2EncryptionAlgorithmAES256,
+		VpnTunnelOptionsPhase2EncryptionAlgorithmAES128_GCM_16,
+		VpnTunnelOptionsPhase2EncryptionAlgorithmAES256_GCM_16,
+	}
+	defaultVpnTunnelOptionsPhase2IntegrityAlgorithms = []string{
+		VpnTunnelOptionsPhase2IntegrityAlgorithmSHA1,
+		VpnTunnelOptionsPhase2IntegrityAlgorithmSHA2_256,
+		VpnTunnelOptionsPhase2IntegrityAlgorithmSHA2_384,
+		VpnTunnelOptionsPhase2IntegrityAlgorithmSHA2_512,
+	}
+	defaultVpnTunnelOptionsPhase2LifetimeSeconds  = 3600
+	defaultVpnTunnelOptionsRekeyFuzzPercentage    = 100
+	defaultVpnTunnelOptionsRekeyMarginTimeSeconds = 540
+	defaultVpnTunnelOptionsReplayWindowSize       = 1024
+	defaultVpnTunnelOptionsStartupAction          = VpnTunnelOptionsStartupActionAdd
+)
 
 func resourceVPNConnectionCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
@@ -832,45 +968,6 @@ func expandVpnTunnelOptionsSpecification(d *schema.ResourceData, prefix string) 
 }
 
 func expandModifyVpnTunnelOptionsSpecification(d *schema.ResourceData, prefix string) *ec2.ModifyVpnTunnelOptionsSpecification {
-	// https://docs.aws.amazon.com/vpn/latest/s2svpn/VPNTunnels.html.
-	var (
-		defaultVpnTunnelOptionsDPDTimeoutAction           = VpnTunnelOptionsDPDTimeoutActionClear
-		defaultVpnTunnelOptionsDPDTimeoutSeconds          = 30
-		defaultVpnTunnelOptionsIKEVersions                = []string{VpnTunnelOptionsIKEVersion1, VpnTunnelOptionsIKEVersion2}
-		defaultVpnTunnelOptionsPhase1DHGroupNumbers       = []int{2, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24}
-		defaultVpnTunnelOptionsPhase1EncryptionAlgorithms = []string{
-			VpnTunnelOptionsPhase1EncryptionAlgorithmAES128,
-			VpnTunnelOptionsPhase1EncryptionAlgorithmAES256,
-			VpnTunnelOptionsPhase1EncryptionAlgorithmAES128_GCM_16,
-			VpnTunnelOptionsPhase1EncryptionAlgorithmAES256_GCM_16,
-		}
-		defaultVpnTunnelOptionsPhase1IntegrityAlgorithms = []string{
-			VpnTunnelOptionsPhase1IntegrityAlgorithmSHA1,
-			VpnTunnelOptionsPhase1IntegrityAlgorithmSHA2_256,
-			VpnTunnelOptionsPhase1IntegrityAlgorithmSHA2_384,
-			VpnTunnelOptionsPhase1IntegrityAlgorithmSHA2_512,
-		}
-		defaultVpnTunnelOptionsPhase1LifetimeSeconds      = 28800
-		defaultVpnTunnelOptionsPhase2DHGroupNumbers       = []int{2, 5, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24}
-		defaultVpnTunnelOptionsPhase2EncryptionAlgorithms = []string{
-			VpnTunnelOptionsPhase2EncryptionAlgorithmAES128,
-			VpnTunnelOptionsPhase2EncryptionAlgorithmAES256,
-			VpnTunnelOptionsPhase2EncryptionAlgorithmAES128_GCM_16,
-			VpnTunnelOptionsPhase2EncryptionAlgorithmAES256_GCM_16,
-		}
-		defaultVpnTunnelOptionsPhase2IntegrityAlgorithms = []string{
-			VpnTunnelOptionsPhase2IntegrityAlgorithmSHA1,
-			VpnTunnelOptionsPhase2IntegrityAlgorithmSHA2_256,
-			VpnTunnelOptionsPhase2IntegrityAlgorithmSHA2_384,
-			VpnTunnelOptionsPhase2IntegrityAlgorithmSHA2_512,
-		}
-		defaultVpnTunnelOptionsPhase2LifetimeSeconds  = 3600
-		defaultVpnTunnelOptionsRekeyFuzzPercentage    = 100
-		defaultVpnTunnelOptionsRekeyMarginTimeSeconds = 540
-		defaultVpnTunnelOptionsReplayWindowSize       = 1024
-		defaultVpnTunnelOptionsStartupAction          = VpnTunnelOptionsStartupActionAdd
-	)
-
 	apiObject := &ec2.ModifyVpnTunnelOptionsSpecification{}
 	hasChange := false
 
