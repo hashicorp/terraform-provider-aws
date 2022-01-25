@@ -13,14 +13,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	// "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 )
-
-// func init() {
-// 	// TODO: Remove once multicast support is extended beyond us-east-1
-// 	os.Setenv("AWS_DEFAULT_REGION", "us-east-1")
-// }
 
 func testAccTransitGatewayMulticastDomain_basic(t *testing.T) {
 	var domain ec2.TransitGatewayMulticastDomain
@@ -46,7 +40,7 @@ func testAccTransitGatewayMulticastDomain_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSTransitGatewayMulticastDomain_disappears(t *testing.T) {
+func testAccAWSTransitGatewayMulticastDomain_disappears(t *testing.T) {
 	var domain ec2.TransitGatewayMulticastDomain
 	resourceName := "aws_ec2_transit_gateway_multicast_domain.test"
 	rName := fmt.Sprintf("tf-testacc-tgwmulticast-%s", sdkacctest.RandString(8))
@@ -71,7 +65,7 @@ func TestAccAWSTransitGatewayMulticastDomain_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSTransitGatewayMulticastDomain_Tags(t *testing.T) {
+func testAccAWSTransitGatewayMulticastDomain_Tags(t *testing.T) {
 	// When checking for the number of tags, the Name tag will account for an additional value in the tags attribute count
 	var domain1 ec2.TransitGatewayMulticastDomain
 	resourceName := "aws_ec2_transit_gateway_multicast_domain.test"
@@ -112,7 +106,7 @@ func TestAccAWSTransitGatewayMulticastDomain_Tags(t *testing.T) {
 	})
 }
 
-func TestAccAWSTransitGatewayMulticastDomain_Associations(t *testing.T) {
+func testAccAWSTransitGatewayMulticastDomain_Associations(t *testing.T) {
 	var domain1 ec2.TransitGatewayMulticastDomain
 	var attachment1, attachment2 ec2.TransitGatewayVpcAttachment
 	var subnet1, subnet2 ec2.Subnet
@@ -157,28 +151,13 @@ func TestAccAWSTransitGatewayMulticastDomain_Associations(t *testing.T) {
 					}),
 				),
 			},
-			// {
-			// 	Config: testAccTransitGatewayMulticastDomainConfigAssociation3(rName),
-			// 	Check: resource.ComposeTestCheckFunc(
-			// 		testAccCheckTransitGatewayMulticastDomainExists(resourceName, &domain1),
-			// 		testAccCheckTransitGatewayVPCAttachmentExists(attachmentName1, &attachment1),
-			// 		testAccCheckSubnetExists(subnetName1, &subnet1),
-			// 		testAccCheckSubnetExists(subnetName2, &subnet2),
-			// 		testAccCheckTransitGatewayMulticastDomainAssociations(&domain1, 2, map[*ec2.TransitGatewayVpcAttachment][]*ec2.Subnet{
-			// 			&attachment1: {
-			// 				&subnet1,
-			// 				&subnet2,
-			// 			},
-			// 		}),
-			// 	),
-			// },
 			{
 				Config: testAccTransitGatewayMulticastDomainConfigAssociation3(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitGatewayMulticastDomainExists(resourceName, &domain1),
 					testAccCheckTransitGatewayVPCAttachmentExists(attachmentName1, &attachment1),
 					testAccCheckSubnetExists(subnetName1, &subnet1),
-					testAccCheckTransitGatewayMulticastDomainAssociations(&domain1, 2, map[*ec2.TransitGatewayVpcAttachment][]*ec2.Subnet{
+					testAccCheckTransitGatewayMulticastDomainAssociations(&domain1, 1, map[*ec2.TransitGatewayVpcAttachment][]*ec2.Subnet{
 						&attachment1: {
 							&subnet1,
 						},
@@ -202,7 +181,7 @@ func TestAccAWSTransitGatewayMulticastDomain_Associations(t *testing.T) {
 	})
 }
 
-func TestAccTransitGatewayMulticastDomain_Groups(t *testing.T) {
+func testAccTransitGatewayMulticastDomain_Groups(t *testing.T) {
 	var domain1 ec2.TransitGatewayMulticastDomain
 	var instance1, instance2 ec2.Instance
 	rName := fmt.Sprintf("tf-testacc-tgwmulticast-%s", sdkacctest.RandString(8))

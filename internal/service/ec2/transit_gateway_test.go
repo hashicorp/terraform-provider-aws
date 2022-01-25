@@ -85,6 +85,13 @@ func TestAccEC2TransitGateway_serial(t *testing.T) {
 			"Tags":  testAccTransitGatewayVPCAttachmentAccepter_Tags,
 			"TransitGatewayDefaultRouteTableAssociationAndPropagation": testAccTransitGatewayVPCAttachmentAccepter_TransitGatewayDefaultRouteTableAssociationAndPropagation,
 		},
+		"MulticastDomain": {
+			"basic":      testAccTransitGatewayMulticastDomain_basic,
+			"dissapears": testAccAWSTransitGatewayMulticastDomain_disappears,
+			"Tags":       testAccAWSTransitGatewayMulticastDomain_Tags,
+			"TransitGatewayMulticastDomainAssociation": testAccAWSTransitGatewayMulticastDomain_Associations,
+			"TransitGatewayMulticastDomainGroups":      testAccTransitGatewayMulticastDomain_Groups,
+		},
 	}
 
 	for group, m := range testCases {
