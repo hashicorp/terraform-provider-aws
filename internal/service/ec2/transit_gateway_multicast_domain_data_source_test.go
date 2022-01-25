@@ -12,7 +12,7 @@ import (
 
 func testAccTransitGatewayMulticastDomainDataSource_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	mCastSenders := "224.0.0.1"
+	mCastSource := "224.0.0.1"
 	mCastMembers := "224.0.0.1"
 	resourceName := "aws_ec2_transit_gateway_multicast_domain.test"
 	dataSourceName := "data.aws_ec2_transit_gateway_multicast_domain.test"
@@ -23,11 +23,11 @@ func testAccTransitGatewayMulticastDomainDataSource_basic(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTransitGatewayMulticastDomainDataSourceConfig(rName, mCastSenders, mCastMembers),
+				Config: testAccTransitGatewayMulticastDomainDataSourceConfig(rName, mCastSource, mCastMembers),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, "transit_gateway_id", dataSourceName, "transit_gateway_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "aws_ec2_transit_gateway_multicast_domain", dataSourceName, "vpc_id"),
-					resource.TestCheckResourceAttrPair(resourceName, "sources", dataSourceName, mCastSenders),
+					resource.TestCheckResourceAttrPair(resourceName, "sources", dataSourceName, mCastSource),
 					resource.TestCheckResourceAttrPair(resourceName, "members", dataSourceName, mCastMembers),
 				),
 			},
@@ -35,94 +35,108 @@ func testAccTransitGatewayMulticastDomainDataSource_basic(t *testing.T) {
 	})
 }
 
-func testAccTransitGatewayMulticastDomainDataSourceConfig(rName string, mCastSenders string, mCastMembers string) string {
+func testAccTransitGatewayMulticastDomainDataSourceConfig(rName string, mCastSource string, mCastMembers string) string {
 	return fmt.Sprintf(`
+data "aws_availability_zones" "available" {
+  state = "available"
+}
 
 data "aws_ami" "amazon_linux" {
   most_recent = true
   owners      = ["amazon"]
-	
+
   filter {
     name = "name"
-	values = [
-	  "amzn-ami-hvm-*-x86_64-gp2",
-	]
+    values = [
+      "amzn-ami-hvm-*-x86_64-gp2",
+    ]
   }
-	
+
   filter {
     name = "owner-alias"
     values = [
-  	"amazon",
+      "amazon",
     ]
   }
 }
-
-resource "aws_vpc" "test" {
+resource "aws_vpc" "test1" {
   cidr_block = "10.0.0.0/16"
   tags = {
     Name = %[1]q
   }
 }
-	
-resource "aws_subnet" "test" {
-  vpc_id      = aws_vpc.test.id
-  cidr_block  = "10.0.1.0/24"
+resource "aws_subnet" "test1" {
+  vpc_id            = aws_vpc.test1.id
+  cidr_block        = "10.0.1.0/24"
+  availability_zone = data.aws_availability_zones.available.names[0]
   tags = {
     Name = %[1]q
   }
 }
-
-resource "aws_instance" "test" {
+resource "aws_instance" "test1" {
   ami           = data.aws_ami.amazon_linux.id
   instance_type = "t2.micro"
-  subnet_id     = aws_subnet.test.id
+  subnet_id     = aws_subnet.test1.id
   tags = {
     Name = %[1]q
   }
+  lifecycle {
+    ignore_changes = [
+      iam_instance_profile,
+      tags,
+      tags_all,
+    ]
+  }
 }
-
+resource "aws_instance" "test2" {
+  ami           = data.aws_ami.amazon_linux.id
+  instance_type = "t2.micro"
+  subnet_id     = aws_subnet.test1.id
+  tags = {
+    Name = %[1]q
+  }
+  lifecycle {
+    ignore_changes = [
+      iam_instance_profile,
+      tags,
+      tags_all,
+    ]
+  }
+}
 resource "aws_ec2_transit_gateway" "test" {
   multicast_support = "enable"
   tags = {
     Name = %[1]q
   }
 }
-
-resource "aws_ec2_transit_gateway_vpc_attachment" "test" {
-  subnet_ids         = [aws_subnet.test.id]
+resource "aws_ec2_transit_gateway_vpc_attachment" "test1" {
+  subnet_ids         = [aws_subnet.test1.id]
   transit_gateway_id = aws_ec2_transit_gateway.test.id
   vpc_id             = aws_vpc.test1.id
-    tags = {
+  tags = {
     Name = %[1]q
   }
 }
-
 resource "aws_ec2_transit_gateway_multicast_domain" "test" {
   transit_gateway_id = aws_ec2_transit_gateway.test.id
-  
+
+  static_source_support = "enable"
+
   association {
     transit_gateway_attachment_id = aws_ec2_transit_gateway_vpc_attachment.test1.id
-    subnet_ids                    = [aws_subnet.test.id]
+    subnet_ids                    = [aws_subnet.test1.id]
   }
-
   members {
-    group_ip_address = "224.0.0.1"
-	network_interface_ids = [aws_instance.test.primary_network_interface_id]
-	}
-	
+    group_ip_address      = %[2]q
+    network_interface_ids = [aws_instance.test1.primary_network_interface_id]
+  }
   sources {
-    group_ip_address = "224.0.0.1"
-	  network_interface_ids = [aws_instance.test.primary_network_interface_id]
-	}
-
-	tags = {
-		Name = %[1]q
-	  }
+    group_ip_address      = %[3]q
+    network_interface_ids = [aws_instance.test1.primary_network_interface_id]
+  }
+  tags = {
+    Name = %[1]q
+  }
 }
-
-data "aws_ec2_transit_gateway_multicast_domain" "test" {
-	transit_gateway_id = aws_ec2_transit_gateway.test.id
-}
-
-`, rName, mCastSenders, mCastMembers)
+`, rName, mCastSource, mCastMembers)
 }
