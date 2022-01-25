@@ -1899,17 +1899,28 @@ func readBlockDevices(d *schema.ResourceData, instance *ec2.Instance, conn *ec2.
 		return err
 	}
 
-	// This handles cases where the root device block is of type "EBS"
-	// and #readBlockDevicesFromInstance only returns 1 reference to a block-device
-	// stored in ibds["root"]
-	if _, ok := d.GetOk("ebs_block_device"); ok {
-		if len(ibds["ebs"].([]map[string]interface{})) == 0 {
-			ebs := make(map[string]interface{})
-			for k, v := range ibds["root"].(map[string]interface{}) {
-				ebs[k] = v
+	// Special handling for instances where the only block device is the root device:
+	// The call to readBlockDevicesFromInstance above will return the block device
+	// in ibds["root"] not ibds["ebs"], thus to set the state correctly,
+	// the root block device must be copied over to ibds["ebs"]
+	if ibds != nil {
+		if _, ok := d.GetOk("ebs_block_device"); ok {
+			if v, ok := ibds["ebs"].([]map[string]interface{}); ok && len(v) == 0 {
+				if root, ok := ibds["root"].(map[string]interface{}); ok {
+					// Make deep copy of data
+					m := make(map[string]interface{})
+
+					for k, v := range root {
+						m[k] = v
+					}
+
+					if snapshotID, ok := ibds["snapshot_id"].(string); ok {
+						m["snapshot_id"] = snapshotID
+					}
+
+					ibds["ebs"] = []interface{}{m}
+				}
 			}
-			ebs["snapshot_id"] = ibds["snapshot_id"]
-			ibds["ebs"] = append(ibds["ebs"].([]map[string]interface{}), ebs)
 		}
 	}
 
