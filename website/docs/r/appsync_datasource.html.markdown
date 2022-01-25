@@ -1,23 +1,24 @@
 ---
+subcategory: "AppSync"
 layout: "aws"
 page_title: "AWS: aws_appsync_datasource"
-sidebar_current: "docs-aws-resource-appsync-datasource"
 description: |-
   Provides an AppSync DataSource.
 ---
 
-# aws_appsync_datasource
+# Resource: aws_appsync_datasource
 
 Provides an AppSync DataSource.
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_dynamodb_table" "example" {
-  name = "example"
+  name           = "example"
   read_capacity  = 1
   write_capacity = 1
-  hash_key = "UserId"
+  hash_key       = "UserId"
+
   attribute {
     name = "UserId"
     type = "S"
@@ -45,7 +46,7 @@ EOF
 
 resource "aws_iam_role_policy" "example" {
   name = "example"
-  role = "${aws_iam_role.example.id}"
+  role = aws_iam_role.example.id
 
   policy = <<EOF
 {
@@ -67,18 +68,18 @@ EOF
 
 resource "aws_appsync_graphql_api" "example" {
   authentication_type = "API_KEY"
-  name = "tf_appsync_example"
+  name                = "tf_appsync_example"
 }
 
 resource "aws_appsync_datasource" "example" {
-  api_id = "${aws_appsync_graphql_api.example.id}"
-  name = "tf_appsync_example"
-  type = "AMAZON_DYNAMODB"
+  api_id           = aws_appsync_graphql_api.example.id
+  name             = "tf_appsync_example"
+  service_role_arn = aws_iam_role.example.arn
+  type             = "AMAZON_DYNAMODB"
+
   dynamodb_config {
-    region = "us-west-2"
-    table_name = "${aws_dynamodb_table.example.name}"
+    table_name = aws_dynamodb_table.example.name
   }
-  service_role_arn = "${aws_iam_role.example.arn}"
 }
 ```
 
@@ -88,27 +89,67 @@ The following arguments are supported:
 
 * `api_id` - (Required) The API ID for the GraphQL API for the DataSource.
 * `name` - (Required) A user-supplied name for the DataSource.
-* `type` - (Required) The type of the DataSource. Valid values: `AWS_LAMBDA`, `AMAZON_DYNAMODB` and `AMAZON_ELASTICSEARCH`, `NONE`.
+* `type` - (Required) The type of the DataSource. Valid values: `AWS_LAMBDA`, `AMAZON_DYNAMODB`, `AMAZON_ELASTICSEARCH`, `HTTP`, `NONE`, `RELATIONAL_DATABASE`.
 * `description` - (Optional) A description of the DataSource.
 * `service_role_arn` - (Optional) The IAM service role ARN for the data source.
 * `dynamodb_config` - (Optional) DynamoDB settings. See [below](#dynamodb_config)
 * `elasticsearch_config` - (Optional) Amazon Elasticsearch settings. See [below](#elasticsearch_config)
+* `http_config` - (Optional) HTTP settings. See [below](#http_config)
 * `lambda_config` - (Optional) AWS Lambda settings. See [below](#lambda_config)
+* `relational_database_config` (Optional) AWS RDS settings. See [Relational Database Config](#relational_database_config)
 
 ### dynamodb_config
 
 The following arguments are supported:
 
-* `region` - (Required) The AWS region.
-* `table_name` - (Required) The table name.
-* `use_caller_credentials` - (Optional) Set to TRUE to use Amazon Cognito credentials with this data source.
+* `table_name` - (Required) Name of the DynamoDB table.
+* `region` - (Optional) AWS region of the DynamoDB table. Defaults to current region.
+* `use_caller_credentials` - (Optional) Set to `true` to use Amazon Cognito credentials with this data source.
 
 ### elasticsearch_config
 
 The following arguments are supported:
 
-* `region` - (Required) The AWS region.
-* `endpoint` - (Required) The endpoint.
+* `endpoint` - (Required) HTTP endpoint of the Elasticsearch domain.
+* `region` - (Optional) AWS region of Elasticsearch domain. Defaults to current region.
+
+### http_config
+
+The following arguments are supported:
+
+* `endpoint` - (Required) HTTP URL.
+* `authorization_config` - (Optional) The authorization configuration in case the HTTP endpoint requires authorization. See [Authorization Config](#authorization_config).
+
+#### authorization_config
+
+The following arguments are supported:
+
+* `authorization_type` - (Optional) The authorization type that the HTTP endpoint requires. Default values is `AWS_IAM`.
+* `aws_iam_config` - (Optional) The Identity and Access Management (IAM) settings. See [AWS IAM Config](#aws_iam_config).
+
+##### aws_iam_config
+
+The following arguments are supported:
+
+* `signing_region` - (Optional) The signing Amazon Web Services Region for IAM authorization.
+* `signing_service_name`- (Optional) The signing service name for IAM authorization.
+
+### relational_database_config
+
+The following arguments are supported:
+
+* `http_endpoint_config` - (Required) The Amazon RDS HTTP endpoint configuration. See [HTTP Endpoint Config](#http_endpoint_config).
+* `source_type` - (Optional) Source type for the relational database. Valid values: `RDS_HTTP_ENDPOINT`.
+
+#### http_endpoint_config
+
+The following arguments are supported:
+
+* `db_cluster_identifier` - (Required) Amazon RDS cluster identifier.
+* `aws_secret_store_arn` - (Required) AWS secret store ARN for database credentials.
+* `database_name` - (Optional) Logical database name.
+* `region` - (Optional) AWS Region for RDS HTTP endpoint. Defaults to current region.
+* `schema` - (Optional) Logical schema name.
 
 ### lambda_config
 
@@ -121,3 +162,11 @@ The following arguments are supported:
 In addition to all arguments above, the following attributes are exported:
 
 * `arn` - The ARN
+
+## Import
+
+`aws_appsync_datasource` can be imported with their `api_id`, a hyphen, and `name`, e.g.,
+
+```
+$ terraform import aws_appsync_datasource.example abcdef123456-example
+```

@@ -1,18 +1,18 @@
 ---
+subcategory: "RDS"
 layout: "aws"
 page_title: "AWS: aws_rds_cluster"
-sidebar_current: "docs-aws-datasource-rds-cluster"
 description: |-
-  Provides a RDS cluster data source.
+  Provides an RDS cluster data source.
 ---
 
 # Data Source: aws_rds_cluster
 
-Provides information about a RDS cluster.
+Provides information about an RDS cluster.
 
 ## Example Usage
 
-```hcl
+```terraform
 data "aws_rds_cluster" "clusterName" {
   cluster_identifier = "clusterName"
 }

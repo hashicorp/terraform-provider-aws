@@ -1,26 +1,28 @@
 ---
+subcategory: "DynamoDB Accelerator (DAX)"
 layout: "aws"
 page_title: "AWS: aws_dax_parameter_group"
-sidebar_current: "docs-aws-resource-dax-parameter-group"
 description: |-
   Provides an DAX Parameter Group resource.
 ---
 
-# aws_dax_parameter_group
+# Resource: aws_dax_parameter_group
 
 Provides a DAX Parameter Group resource.
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_dax_parameter_group" "example" {
   name = "example"
+
   parameters {
-    name = "query-ttl-millis"
+    name  = "query-ttl-millis"
     value = "100000"
   }
+
   parameters {
-    name = "record-ttl-millis"
+    name  = "record-ttl-millis"
     value = "100000"
   }
 }
@@ -51,7 +53,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-DAX Parameter Group can be imported using the `name`, e.g.
+DAX Parameter Group can be imported using the `name`, e.g.,
 
 ```
 $ terraform import aws_dax_parameter_group.example my_dax_pg
