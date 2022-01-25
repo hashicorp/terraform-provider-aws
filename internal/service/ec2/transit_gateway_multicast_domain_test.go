@@ -26,6 +26,7 @@ func testAccTransitGatewayMulticastDomain_basic(t *testing.T) {
 			acctest.PreCheck(t)
 			testAccPreCheckTransitGateway(t)
 		},
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckTransitGatewayMulticastDomainDestroy,
 		Steps: []resource.TestStep{
@@ -50,6 +51,7 @@ func testAccAWSTransitGatewayMulticastDomain_disappears(t *testing.T) {
 			acctest.PreCheck(t)
 			testAccPreCheckTransitGateway(t)
 		},
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckTransitGatewayMulticastDomainDestroy,
 		Steps: []resource.TestStep{
@@ -76,6 +78,7 @@ func testAccAWSTransitGatewayMulticastDomain_Tags(t *testing.T) {
 			acctest.PreCheck(t)
 			testAccPreCheckTransitGateway(t)
 		},
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckTransitGatewayMulticastDomainDestroy,
 		Steps: []resource.TestStep{
@@ -122,6 +125,7 @@ func testAccAWSTransitGatewayMulticastDomain_Associations(t *testing.T) {
 			acctest.PreCheck(t)
 			testAccPreCheckTransitGateway(t)
 		},
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckTransitGatewayMulticastDomainDestroy,
 		Steps: []resource.TestStep{
@@ -191,6 +195,7 @@ func testAccTransitGatewayMulticastDomain_Groups(t *testing.T) {
 	// Note: Currently only one source per-group is allowed
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckTransitGatewayMulticastDomainDestroy,
 		Steps: []resource.TestStep{
