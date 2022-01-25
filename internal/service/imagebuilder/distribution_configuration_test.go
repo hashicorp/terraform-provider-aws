@@ -863,18 +863,18 @@ func testAccDistributionConfigurationDistributionContainerDistributionConfigurat
 data "aws_region" "current" {}
 
 resource "aws_imagebuilder_distribution_configuration" "test" {
-    name = %[1]q
+  name = %[1]q
 
-    distribution {
-      container_distribution_configuration {
-        target_repository {
-          repository_name = %[2]q
-          service         = "ECR"
-		} 
-	  }
-	  
-      region = data.aws_region.current.name
+  distribution {
+    container_distribution_configuration {
+      target_repository {
+        repository_name = %[2]q
+        service         = "ECR"
+      }
     }
+
+    region = data.aws_region.current.name
+  }
 }
 `, rName, repositoryName)
 }
@@ -884,20 +884,20 @@ func testAccDistributionConfigurationDistributionContainerDistributionConfigurat
 data "aws_region" "current" {}
 
 resource "aws_imagebuilder_distribution_configuration" "test" {
-    name = %[1]q
+  name = %[1]q
 
-    distribution {
-      container_distribution_configuration {
-        target_repository {
-          repository_name = "repository-name"
-          service         = "ECR"
-		} 
+  distribution {
+    container_distribution_configuration {
+      target_repository {
+        repository_name = "repository-name"
+        service         = "ECR"
+      }
 
-        description = %[2]q
-	  }
-
-      region = data.aws_region.current.name
+      description = %[2]q
     }
+
+    region = data.aws_region.current.name
+  }
 }
 `, rName, description)
 }
@@ -907,20 +907,20 @@ func testAccDistributionConfigurationDistributionContainerDistributionConfigurat
 data "aws_region" "current" {}
 
 resource "aws_imagebuilder_distribution_configuration" "test" {
-    name = %[1]q
+  name = %[1]q
 
-    distribution {
-      container_distribution_configuration {
-        target_repository {
-          repository_name = "repository-name"
-          service         = "ECR"
-		} 
+  distribution {
+    container_distribution_configuration {
+      target_repository {
+        repository_name = "repository-name"
+        service         = "ECR"
+      }
 
-        container_tags = [%[2]q]
-	  }
-
-      region = data.aws_region.current.name
+      container_tags = [%[2]q]
     }
+
+    region = data.aws_region.current.name
+  }
 }
 `, rName, containerTag)
 }
