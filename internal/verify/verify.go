@@ -1,7 +1,7 @@
 package verify
 
 import (
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"gopkg.in/yaml.v2"
 )
 
@@ -15,22 +15,6 @@ func SliceContainsString(slice []interface{}, s string) (int, bool) {
 		}
 	}
 	return -1, false
-}
-
-func NormalizeJSONOrYAMLString(templateString interface{}) (string, error) {
-	if looksLikeJsonString(templateString) {
-		return structure.NormalizeJsonString(templateString.(string))
-	}
-
-	return checkYAMLString(templateString)
-}
-
-func PointersMapToStringList(pointers map[string]*string) map[string]interface{} {
-	list := make(map[string]interface{}, len(pointers))
-	for i, v := range pointers {
-		list[i] = *v
-	}
-	return list
 }
 
 // Takes a value containing YAML string and passes it through
@@ -48,4 +32,46 @@ func checkYAMLString(yamlString interface{}) (string, error) {
 	err := yaml.Unmarshal([]byte(s), &y)
 
 	return s, err
+}
+
+const (
+	ErrCodeAccessDenied                   = "AccessDenied"
+	ErrCodeUnknownOperation               = "UnknownOperationException"
+	ErrCodeValidationError                = "ValidationError"
+	ErrCodeOperationDisabledException     = "OperationDisabledException"
+	ErrCodeInternalException              = "InternalException"
+	ErrCodeInternalServiceFault           = "InternalServiceError"
+	ErrCodeOperationNotPermittedException = "OperationNotPermitted"
+)
+
+func CheckISOErrorTagsUnsupported(err error) bool {
+	if tfawserr.ErrCodeContains(err, ErrCodeAccessDenied) {
+		return true
+	}
+
+	if tfawserr.ErrCodeContains(err, ErrCodeUnknownOperation) {
+		return true
+	}
+
+	if tfawserr.ErrMessageContains(err, ErrCodeValidationError, "not support tagging") {
+		return true
+	}
+
+	if tfawserr.ErrCodeContains(err, ErrCodeOperationDisabledException) {
+		return true
+	}
+
+	if tfawserr.ErrCodeContains(err, ErrCodeInternalException) {
+		return true
+	}
+
+	if tfawserr.ErrCodeContains(err, ErrCodeInternalServiceFault) {
+		return true
+	}
+
+	if tfawserr.ErrCodeContains(err, ErrCodeOperationNotPermittedException) {
+		return true
+	}
+
+	return false
 }

@@ -12,7 +12,8 @@ import (
 
 func TestAccDynamoDBTableDataSource_basic(t *testing.T) {
 	datasourceName := "data.aws_dynamodb_table.test"
-	tableName := fmt.Sprintf("testAccAWSdynamodbtable-basic-%s", sdkacctest.RandString(10))
+	resourceName := "aws_dynamodb_table.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
@@ -20,23 +21,24 @@ func TestAccDynamoDBTableDataSource_basic(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTableBasicDataSourceConfig(tableName),
+				Config: testAccTableBasicDataSourceConfig(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(datasourceName, "name", tableName),
-					resource.TestCheckResourceAttr(datasourceName, "read_capacity", "20"),
-					resource.TestCheckResourceAttr(datasourceName, "write_capacity", "20"),
-					resource.TestCheckResourceAttr(datasourceName, "hash_key", "UserId"),
-					resource.TestCheckResourceAttr(datasourceName, "range_key", "GameTitle"),
-					resource.TestCheckResourceAttr(datasourceName, "attribute.#", "3"),
-					resource.TestCheckResourceAttr(datasourceName, "global_secondary_index.#", "1"),
-					resource.TestCheckResourceAttr(datasourceName, "ttl.#", "1"),
-					resource.TestCheckResourceAttr(datasourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(datasourceName, "tags.Name", "dynamodb-table-1"),
-					resource.TestCheckResourceAttr(datasourceName, "tags.Environment", "test"),
-					resource.TestCheckResourceAttr(datasourceName, "server_side_encryption.#", "0"),
-					resource.TestCheckResourceAttr(datasourceName, "billing_mode", "PROVISIONED"),
-					resource.TestCheckResourceAttr(datasourceName, "point_in_time_recovery.#", "1"),
-					resource.TestCheckResourceAttr(datasourceName, "point_in_time_recovery.0.enabled", "false"),
+					resource.TestCheckResourceAttrPair(datasourceName, "name", resourceName, "name"),
+					resource.TestCheckResourceAttrPair(datasourceName, "read_capacity", resourceName, "read_capacity"),
+					resource.TestCheckResourceAttrPair(datasourceName, "write_capacity", resourceName, "write_capacity"),
+					resource.TestCheckResourceAttrPair(datasourceName, "hash_key", resourceName, "hash_key"),
+					resource.TestCheckResourceAttrPair(datasourceName, "range_key", resourceName, "range_key"),
+					resource.TestCheckResourceAttrPair(datasourceName, "attribute.#", resourceName, "attribute.#"),
+					resource.TestCheckResourceAttrPair(datasourceName, "global_secondary_index.#", resourceName, "global_secondary_index.#"),
+					resource.TestCheckResourceAttrPair(datasourceName, "ttl.#", resourceName, "ttl.#"),
+					resource.TestCheckResourceAttrPair(datasourceName, "tags.%", resourceName, "tags.%"),
+					resource.TestCheckResourceAttrPair(datasourceName, "tags.Name", resourceName, "tags.Name"),
+					resource.TestCheckResourceAttrPair(datasourceName, "tags.Environment", resourceName, "tags.Environment"),
+					resource.TestCheckResourceAttrPair(datasourceName, "server_side_encryption.#", resourceName, "server_side_encryption.#"),
+					resource.TestCheckResourceAttrPair(datasourceName, "billing_mode", resourceName, "billing_mode"),
+					resource.TestCheckResourceAttrPair(datasourceName, "point_in_time_recovery.#", resourceName, "point_in_time_recovery.#"),
+					resource.TestCheckResourceAttrPair(datasourceName, "point_in_time_recovery.0.enabled", resourceName, "point_in_time_recovery.0.enabled"),
+					resource.TestCheckResourceAttrPair(datasourceName, "table_class", resourceName, "table_class"),
 				),
 			},
 		},

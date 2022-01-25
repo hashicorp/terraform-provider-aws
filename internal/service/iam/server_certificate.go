@@ -1,6 +1,6 @@
 package iam
 
-import (
+import ( // nosemgrep: aws-sdk-go-multiple-service-imports
 	"crypto/sha1"
 	"encoding/hex"
 	"fmt"

@@ -81,12 +81,12 @@ func resourceDocumentationVersionRead(d *schema.ResourceData, meta interface{}) 
 		RestApiId:            aws.String(apiId),
 	})
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, apigateway.ErrCodeNotFoundException, "") {
+		if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, apigateway.ErrCodeNotFoundException) {
 			log.Printf("[WARN] API Gateway Documentation Version (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
 		}
-		return err
+		return fmt.Errorf("error reading API Gateway Documentation Version (%s): %w", d.Id(), err)
 	}
 
 	d.Set("rest_api_id", apiId)

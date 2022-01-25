@@ -191,6 +191,10 @@ func DataSourceFunction() *schema.Resource {
 					Type: schema.TypeString,
 				},
 			},
+			"image_uri": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 		},
 	}
 }
@@ -249,14 +253,18 @@ func dataSourceFunctionRead(d *schema.ResourceData, meta interface{}) error {
 
 	d.Set("description", function.Description)
 
-	if err := d.Set("environment", flattenLambdaEnvironment(function.Environment)); err != nil {
+	if err := d.Set("environment", flattenEnvironment(function.Environment)); err != nil {
 		return fmt.Errorf("error setting environment: %w", err)
 	}
 
 	d.Set("handler", function.Handler)
-	d.Set("invoke_arn", lambdaFunctionInvokeArn(aws.StringValue(function.FunctionArn), meta))
+	d.Set("invoke_arn", functionInvokeArn(aws.StringValue(function.FunctionArn), meta))
 	d.Set("kms_key_arn", function.KMSKeyArn)
 	d.Set("last_modified", function.LastModified)
+
+	if output.Code != nil {
+		d.Set("image_uri", output.Code.ImageUri)
+	}
 
 	if err := d.Set("layers", flattenLayers(function.Layers)); err != nil {
 		return fmt.Errorf("Error setting layers for Lambda Function (%s): %w", d.Id(), err)
@@ -309,7 +317,7 @@ func dataSourceFunctionRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error setting vpc_config: %w", err)
 	}
 
-	if err := d.Set("file_system_config", flattenLambdaFileSystemConfigs(function.FileSystemConfigs)); err != nil {
+	if err := d.Set("file_system_config", flattenFileSystemConfigs(function.FileSystemConfigs)); err != nil {
 		return fmt.Errorf("error setting file_system_config: %w", err)
 	}
 

@@ -14,8 +14,8 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/kms"
 	"github.com/aws/aws-sdk-go/service/s3"
+	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -23,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/kms"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -48,98 +49,74 @@ func ResourceBucketObject() *schema.Resource {
 		),
 
 		Schema: map[string]*schema.Schema{
-			"bucket": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.NoZeroValues,
-			},
-
-			"key": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.NoZeroValues,
-			},
-
 			"acl": {
 				Type:         schema.TypeString,
 				Default:      s3.ObjectCannedACLPrivate,
 				Optional:     true,
 				ValidateFunc: validation.StringInSlice(s3.ObjectCannedACL_Values(), false),
 			},
-
+			"bucket": {
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.NoZeroValues,
+			},
 			"bucket_key_enabled": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
 			},
-
 			"cache_control": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-
-			"content_disposition": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-
-			"content_encoding": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-
-			"content_language": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-
-			"metadata": {
-				Type:         schema.TypeMap,
-				ValidateFunc: validateMetadataIsLowerCase,
-				Optional:     true,
-				Elem:         &schema.Schema{Type: schema.TypeString},
-			},
-
-			"content_type": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-
-			"source": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				ConflictsWith: []string{"content", "content_base64"},
-			},
-
 			"content": {
 				Type:          schema.TypeString,
 				Optional:      true,
 				ConflictsWith: []string{"source", "content_base64"},
 			},
-
 			"content_base64": {
 				Type:          schema.TypeString,
 				Optional:      true,
 				ConflictsWith: []string{"source", "content"},
 			},
-
-			"storage_class": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: validation.StringInSlice(s3.ObjectStorageClass_Values(), false),
+			"content_disposition": {
+				Type:     schema.TypeString,
+				Optional: true,
 			},
-
-			"server_side_encryption": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringInSlice(s3.ServerSideEncryption_Values(), false),
-				Computed:     true,
+			"content_encoding": {
+				Type:     schema.TypeString,
+				Optional: true,
 			},
-
+			"content_language": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			"content_type": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"etag": {
+				Type: schema.TypeString,
+				// This will conflict with SSE-C and SSE-KMS encryption and multi-part upload
+				// if/when it's actually implemented. The Etag then won't match raw-file MD5.
+				// See http://docs.aws.amazon.com/AmazonS3/latest/API/RESTCommonResponseHeaders.html
+				Optional:      true,
+				Computed:      true,
+				ConflictsWith: []string{"kms_key_id"},
+			},
+			"force_destroy": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
+			"key": {
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.NoZeroValues,
+			},
 			"kms_key_id": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -153,55 +130,55 @@ func ResourceBucketObject() *schema.Resource {
 					return false
 				},
 			},
-
-			"etag": {
-				Type: schema.TypeString,
-				// This will conflict with SSE-C and SSE-KMS encryption and multi-part upload
-				// if/when it's actually implemented. The Etag then won't match raw-file MD5.
-				// See http://docs.aws.amazon.com/AmazonS3/latest/API/RESTCommonResponseHeaders.html
-				Optional:      true,
-				Computed:      true,
-				ConflictsWith: []string{"kms_key_id"},
+			"metadata": {
+				Type:         schema.TypeMap,
+				ValidateFunc: validateMetadataIsLowerCase,
+				Optional:     true,
+				Elem:         &schema.Schema{Type: schema.TypeString},
 			},
-
-			"version_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
-
-			"website_redirect": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-
-			"force_destroy": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-
 			"object_lock_legal_hold_status": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringInSlice(s3.ObjectLockLegalHoldStatus_Values(), false),
 			},
-
 			"object_lock_mode": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringInSlice(s3.ObjectLockMode_Values(), false),
 			},
-
 			"object_lock_retain_until_date": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.IsRFC3339Time,
 			},
-
+			"server_side_encryption": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.StringInSlice(s3.ServerSideEncryption_Values(), false),
+				Computed:     true,
+			},
+			"source": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				ConflictsWith: []string{"content", "content_base64"},
+			},
 			"source_hash": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			"storage_class": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: validation.StringInSlice(s3.ObjectStorageClass_Values(), false),
+			},
+			"tags":     tftags.TagsSchema(),
+			"tags_all": tftags.TagsSchemaComputed(),
+			"version_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"website_redirect": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -209,127 +186,8 @@ func ResourceBucketObject() *schema.Resource {
 	}
 }
 
-func resourceBucketObjectPut(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).S3Conn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
-
-	var body io.ReadSeeker
-
-	if v, ok := d.GetOk("source"); ok {
-		source := v.(string)
-		path, err := homedir.Expand(source)
-		if err != nil {
-			return fmt.Errorf("Error expanding homedir in source (%s): %s", source, err)
-		}
-		file, err := os.Open(path)
-		if err != nil {
-			return fmt.Errorf("Error opening S3 bucket object source (%s): %s", path, err)
-		}
-
-		body = file
-		defer func() {
-			err := file.Close()
-			if err != nil {
-				log.Printf("[WARN] Error closing S3 bucket object source (%s): %s", path, err)
-			}
-		}()
-	} else if v, ok := d.GetOk("content"); ok {
-		content := v.(string)
-		body = bytes.NewReader([]byte(content))
-	} else if v, ok := d.GetOk("content_base64"); ok {
-		content := v.(string)
-		// We can't do streaming decoding here (with base64.NewDecoder) because
-		// the AWS SDK requires an io.ReadSeeker but a base64 decoder can't seek.
-		contentRaw, err := base64.StdEncoding.DecodeString(content)
-		if err != nil {
-			return fmt.Errorf("error decoding content_base64: %s", err)
-		}
-		body = bytes.NewReader(contentRaw)
-	}
-
-	bucket := d.Get("bucket").(string)
-	key := d.Get("key").(string)
-
-	putInput := &s3.PutObjectInput{
-		Bucket: aws.String(bucket),
-		Key:    aws.String(key),
-		ACL:    aws.String(d.Get("acl").(string)),
-		Body:   body,
-	}
-
-	if v, ok := d.GetOk("storage_class"); ok {
-		putInput.StorageClass = aws.String(v.(string))
-	}
-
-	if v, ok := d.GetOk("cache_control"); ok {
-		putInput.CacheControl = aws.String(v.(string))
-	}
-
-	if v, ok := d.GetOk("content_type"); ok {
-		putInput.ContentType = aws.String(v.(string))
-	}
-
-	if v, ok := d.GetOk("metadata"); ok {
-		putInput.Metadata = flex.ExpandStringMap(v.(map[string]interface{}))
-	}
-
-	if v, ok := d.GetOk("content_encoding"); ok {
-		putInput.ContentEncoding = aws.String(v.(string))
-	}
-
-	if v, ok := d.GetOk("content_language"); ok {
-		putInput.ContentLanguage = aws.String(v.(string))
-	}
-
-	if v, ok := d.GetOk("content_disposition"); ok {
-		putInput.ContentDisposition = aws.String(v.(string))
-	}
-
-	if v, ok := d.GetOk("bucket_key_enabled"); ok {
-		putInput.BucketKeyEnabled = aws.Bool(v.(bool))
-	}
-
-	if v, ok := d.GetOk("server_side_encryption"); ok {
-		putInput.ServerSideEncryption = aws.String(v.(string))
-	}
-
-	if v, ok := d.GetOk("kms_key_id"); ok {
-		putInput.SSEKMSKeyId = aws.String(v.(string))
-		putInput.ServerSideEncryption = aws.String(s3.ServerSideEncryptionAwsKms)
-	}
-
-	if len(tags) > 0 {
-		// The tag-set must be encoded as URL Query parameters.
-		putInput.Tagging = aws.String(tags.IgnoreAWS().UrlEncode())
-	}
-
-	if v, ok := d.GetOk("website_redirect"); ok {
-		putInput.WebsiteRedirectLocation = aws.String(v.(string))
-	}
-
-	if v, ok := d.GetOk("object_lock_legal_hold_status"); ok {
-		putInput.ObjectLockLegalHoldStatus = aws.String(v.(string))
-	}
-
-	if v, ok := d.GetOk("object_lock_mode"); ok {
-		putInput.ObjectLockMode = aws.String(v.(string))
-	}
-
-	if v, ok := d.GetOk("object_lock_retain_until_date"); ok {
-		putInput.ObjectLockRetainUntilDate = expandS3ObjectDate(v.(string))
-	}
-
-	if _, err := conn.PutObject(putInput); err != nil {
-		return fmt.Errorf("Error putting object in S3 bucket (%s): %s", bucket, err)
-	}
-
-	d.SetId(key)
-	return resourceBucketObjectRead(d, meta)
-}
-
 func resourceBucketObjectCreate(d *schema.ResourceData, meta interface{}) error {
-	return resourceBucketObjectPut(d, meta)
+	return resourceBucketObjectUpload(d, meta)
 }
 
 func resourceBucketObjectRead(d *schema.ResourceData, meta interface{}) error {
@@ -385,7 +243,7 @@ func resourceBucketObjectRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("content_encoding", resp.ContentEncoding)
 	d.Set("content_language", resp.ContentLanguage)
 	d.Set("content_type", resp.ContentType)
-	metadata := verify.PointersMapToStringList(resp.Metadata)
+	metadata := flex.PointersMapToStringList(resp.Metadata)
 
 	// AWS Go SDK capitalizes metadata, this is a workaround. https://github.com/aws/aws-sdk-go/issues/445
 	for k, v := range metadata {
@@ -448,7 +306,7 @@ func resourceBucketObjectRead(d *schema.ResourceData, meta interface{}) error {
 
 func resourceBucketObjectUpdate(d *schema.ResourceData, meta interface{}) error {
 	if hasS3BucketObjectContentChanges(d) {
-		return resourceBucketObjectPut(d, meta)
+		return resourceBucketObjectUpload(d, meta)
 	}
 
 	conn := meta.(*conns.AWSClient).S3Conn
@@ -560,20 +418,141 @@ func resourceBucketObjectImport(d *schema.ResourceData, meta interface{}) ([]*sc
 	return []*schema.ResourceData{d}, nil
 }
 
+func resourceBucketObjectUpload(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*conns.AWSClient).S3Conn
+	uploader := s3manager.NewUploaderWithClient(conn)
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+
+	var body io.ReadSeeker
+
+	if v, ok := d.GetOk("source"); ok {
+		source := v.(string)
+		path, err := homedir.Expand(source)
+		if err != nil {
+			return fmt.Errorf("Error expanding homedir in source (%s): %s", source, err)
+		}
+		file, err := os.Open(path)
+		if err != nil {
+			return fmt.Errorf("Error opening S3 bucket object source (%s): %s", path, err)
+		}
+
+		body = file
+		defer func() {
+			err := file.Close()
+			if err != nil {
+				log.Printf("[WARN] Error closing S3 bucket object source (%s): %s", path, err)
+			}
+		}()
+	} else if v, ok := d.GetOk("content"); ok {
+		content := v.(string)
+		body = bytes.NewReader([]byte(content))
+	} else if v, ok := d.GetOk("content_base64"); ok {
+		content := v.(string)
+		// We can't do streaming decoding here (with base64.NewDecoder) because
+		// the AWS SDK requires an io.ReadSeeker but a base64 decoder can't seek.
+		contentRaw, err := base64.StdEncoding.DecodeString(content)
+		if err != nil {
+			return fmt.Errorf("error decoding content_base64: %s", err)
+		}
+		body = bytes.NewReader(contentRaw)
+	} else {
+		body = bytes.NewReader([]byte{})
+	}
+
+	bucket := d.Get("bucket").(string)
+	key := d.Get("key").(string)
+
+	input := &s3manager.UploadInput{
+		ACL:    aws.String(d.Get("acl").(string)),
+		Body:   body,
+		Bucket: aws.String(bucket),
+		Key:    aws.String(key),
+	}
+
+	if v, ok := d.GetOk("storage_class"); ok {
+		input.StorageClass = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("cache_control"); ok {
+		input.CacheControl = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("content_type"); ok {
+		input.ContentType = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("metadata"); ok {
+		input.Metadata = flex.ExpandStringMap(v.(map[string]interface{}))
+	}
+
+	if v, ok := d.GetOk("content_encoding"); ok {
+		input.ContentEncoding = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("content_language"); ok {
+		input.ContentLanguage = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("content_disposition"); ok {
+		input.ContentDisposition = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("bucket_key_enabled"); ok {
+		input.BucketKeyEnabled = aws.Bool(v.(bool))
+	}
+
+	if v, ok := d.GetOk("server_side_encryption"); ok {
+		input.ServerSideEncryption = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("kms_key_id"); ok {
+		input.SSEKMSKeyId = aws.String(v.(string))
+		input.ServerSideEncryption = aws.String(s3.ServerSideEncryptionAwsKms)
+	}
+
+	if len(tags) > 0 {
+		// The tag-set must be encoded as URL Query parameters.
+		input.Tagging = aws.String(tags.IgnoreAWS().UrlEncode())
+	}
+
+	if v, ok := d.GetOk("website_redirect"); ok {
+		input.WebsiteRedirectLocation = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("object_lock_legal_hold_status"); ok {
+		input.ObjectLockLegalHoldStatus = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("object_lock_mode"); ok {
+		input.ObjectLockMode = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("object_lock_retain_until_date"); ok {
+		input.ObjectLockRetainUntilDate = expandS3ObjectDate(v.(string))
+	}
+
+	if _, err := uploader.Upload(input); err != nil {
+		return fmt.Errorf("Error uploading object to S3 bucket (%s): %s", bucket, err)
+	}
+
+	d.SetId(key)
+
+	return resourceBucketObjectRead(d, meta)
+}
+
 func resourceBucketObjectSetKMS(d *schema.ResourceData, meta interface{}, sseKMSKeyId *string) error {
 	// Only set non-default KMS key ID (one that doesn't match default)
 	if sseKMSKeyId != nil {
 		// retrieve S3 KMS Default Master Key
 		conn := meta.(*conns.AWSClient).KMSConn
-		kmsresp, err := conn.DescribeKey(&kms.DescribeKeyInput{
-			KeyId: aws.String("alias/aws/s3"),
-		})
+		keyMetadata, err := kms.FindKeyByID(conn, DefaultKmsKeyAlias)
 		if err != nil {
-			return fmt.Errorf("Failed to describe default S3 KMS key (alias/aws/s3): %s", err)
+			return fmt.Errorf("Failed to describe default S3 KMS key (%s): %s", DefaultKmsKeyAlias, err)
 		}
 
-		if *sseKMSKeyId != *kmsresp.KeyMetadata.Arn {
-			log.Printf("[DEBUG] S3 object is encrypted using a non-default KMS Key ID: %s", *sseKMSKeyId)
+		if aws.StringValue(sseKMSKeyId) != aws.StringValue(keyMetadata.Arn) {
+			log.Printf("[DEBUG] S3 object is encrypted using a non-default KMS Key ID: %s", aws.StringValue(sseKMSKeyId))
 			d.Set("kms_key_id", sseKMSKeyId)
 		}
 	}

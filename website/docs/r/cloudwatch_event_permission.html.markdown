@@ -12,6 +12,8 @@ Provides a resource to create an EventBridge permission to support cross-account
 
 ~> **Note:** EventBridge was formerly known as CloudWatch Events. The functionality is identical.
 
+~> **Note:** The EventBridge bus policy resource  (`aws_cloudwatch_event_bus_policy`) is incompatible with the EventBridge permission resource (`aws_cloudwatch_event_permission`) and will overwrite permissions.
+
 ## Example Usage
 
 ### Account Access

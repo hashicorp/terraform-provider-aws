@@ -4,16 +4,15 @@ import (
 	"fmt"
 	"regexp"
 	"testing"
-	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloud9"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfcloud9 "github.com/hashicorp/terraform-provider-aws/internal/service/cloud9"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func TestAccCloud9EnvironmentEC2_basic(t *testing.T) {
@@ -172,7 +171,8 @@ func TestAccCloud9EnvironmentEC2_disappears(t *testing.T) {
 				Config: testAccEnvironmentEC2Config(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEnvironmentEC2Exists(resourceName, &conf),
-					testAccCheckEnvironmentEC2Disappears(&conf),
+					acctest.CheckResourceDisappears(acctest.Provider, tfcloud9.ResourceEnvironmentEC2(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfcloud9.ResourceEnvironmentEC2(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -193,60 +193,14 @@ func testAccCheckEnvironmentEC2Exists(n string, res *cloud9.Environment) resourc
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).Cloud9Conn
 
-		out, err := conn.DescribeEnvironments(&cloud9.DescribeEnvironmentsInput{
-			EnvironmentIds: []*string{aws.String(rs.Primary.ID)},
-		})
+		out, err := tfcloud9.FindEnvironmentByID(conn, rs.Primary.ID)
 		if err != nil {
-			if tfawserr.ErrMessageContains(err, cloud9.ErrCodeNotFoundException, "") {
-				return fmt.Errorf("Cloud9 Environment EC2 (%q) not found", rs.Primary.ID)
-			}
 			return err
 		}
-		if len(out.Environments) == 0 {
-			return fmt.Errorf("Cloud9 Environment EC2 (%q) not found", rs.Primary.ID)
-		}
-		env := out.Environments[0]
 
-		*res = *env
+		*res = *out
 
 		return nil
-	}
-}
-
-func testAccCheckEnvironmentEC2Disappears(res *cloud9.Environment) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).Cloud9Conn
-
-		_, err := conn.DeleteEnvironment(&cloud9.DeleteEnvironmentInput{
-			EnvironmentId: res.Id,
-		})
-
-		if err != nil {
-			return err
-		}
-
-		input := &cloud9.DescribeEnvironmentsInput{
-			EnvironmentIds: []*string{res.Id},
-		}
-		var out *cloud9.DescribeEnvironmentsOutput
-		err = resource.Retry(20*time.Minute, func() *resource.RetryError { // Deleting instances can take a long time
-			out, err = conn.DescribeEnvironments(input)
-			if err != nil {
-				if tfawserr.ErrMessageContains(err, cloud9.ErrCodeNotFoundException, "") {
-					return nil
-				}
-				if tfawserr.ErrMessageContains(err, "AccessDeniedException", "is not authorized to access this resource") {
-					return nil
-				}
-				return resource.NonRetryableError(err)
-			}
-			if len(out.Environments) == 0 {
-				return nil
-			}
-			return resource.RetryableError(fmt.Errorf("Cloud9 EC2 Environment %q still exists", aws.StringValue(res.Id)))
-		})
-
-		return err
 	}
 }
 
@@ -258,21 +212,14 @@ func testAccCheckEnvironmentEC2Destroy(s *terraform.State) error {
 			continue
 		}
 
-		out, err := conn.DescribeEnvironments(&cloud9.DescribeEnvironmentsInput{
-			EnvironmentIds: []*string{aws.String(rs.Primary.ID)},
-		})
-		if err != nil {
-			if tfawserr.ErrMessageContains(err, cloud9.ErrCodeNotFoundException, "") {
-				return nil
-			}
-			// :'-(
-			if tfawserr.ErrMessageContains(err, "AccessDeniedException", "is not authorized to access this resource") {
-				return nil
-			}
-			return err
+		_, err := tfcloud9.FindEnvironmentByID(conn, rs.Primary.ID)
+
+		if tfresource.NotFound(err) {
+			continue
 		}
-		if len(out.Environments) == 0 {
-			return nil
+
+		if err != nil {
+			return err
 		}
 
 		return fmt.Errorf("Cloud9 Environment EC2 %q still exists.", rs.Primary.ID)
@@ -330,8 +277,6 @@ resource "aws_route" "test" {
 func testAccEnvironmentEC2Config(name string) string {
 	return testAccEnvironmentEC2BaseConfig() + fmt.Sprintf(`
 resource "aws_cloud9_environment_ec2" "test" {
-  depends_on = [aws_route.test]
-
   instance_type = "t2.micro"
   name          = %[1]q
   subnet_id     = aws_subnet.test.id
@@ -345,8 +290,6 @@ data "aws_caller_identity" "current" {}
 func testAccEnvironmentEC2AllFieldsConfig(name, description, userName string) string {
 	return testAccEnvironmentEC2BaseConfig() + fmt.Sprintf(`
 resource "aws_cloud9_environment_ec2" "test" {
-  depends_on = [aws_route.test]
-
   automatic_stop_time_minutes = 60
   description                 = %[2]q
   instance_type               = "t2.micro"
@@ -364,8 +307,6 @@ resource "aws_iam_user" "test" {
 func testAccEnvironmentEC2Tags1Config(name, tagKey1, tagValue1 string) string {
 	return testAccEnvironmentEC2BaseConfig() + fmt.Sprintf(`
 resource "aws_cloud9_environment_ec2" "test" {
-  depends_on = [aws_route.test]
-
   instance_type = "t2.micro"
   name          = %[1]q
   subnet_id     = aws_subnet.test.id
@@ -380,8 +321,6 @@ resource "aws_cloud9_environment_ec2" "test" {
 func testAccEnvironmentEC2Tags2Config(name, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return testAccEnvironmentEC2BaseConfig() + fmt.Sprintf(`
 resource "aws_cloud9_environment_ec2" "test" {
-  depends_on = [aws_route.test]
-
   instance_type = "t2.micro"
   name          = %[1]q
   subnet_id     = aws_subnet.test.id

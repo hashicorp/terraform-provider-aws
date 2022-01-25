@@ -50,7 +50,7 @@ func ResourceRouteTable() *schema.Resource {
 		},
 
 		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(2 * time.Minute),
+			Create: schema.DefaultTimeout(5 * time.Minute),
 			Update: schema.DefaultTimeout(2 * time.Minute),
 			Delete: schema.DefaultTimeout(5 * time.Minute),
 		},
@@ -240,11 +240,12 @@ func resourceRouteTableRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error setting propagating_vgws: %w", err)
 	}
 
-	if err := d.Set("route", flattenEc2Routes(routeTable.Routes)); err != nil {
+	if err := d.Set("route", flattenEc2Routes(conn, routeTable.Routes)); err != nil {
 		return fmt.Errorf("error setting route: %w", err)
 	}
 
-	tags := KeyValueTags(routeTable.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	//Ignore the AmazonFSx service tag in addition to standard ignores
+	tags := KeyValueTags(routeTable.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Ignore(tftags.New([]string{"AmazonFSx"}))
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
@@ -849,7 +850,7 @@ func flattenEc2Route(apiObject *ec2.Route) map[string]interface{} {
 	return tfMap
 }
 
-func flattenEc2Routes(apiObjects []*ec2.Route) []interface{} {
+func flattenEc2Routes(conn *ec2.EC2, apiObjects []*ec2.Route) []interface{} {
 	if len(apiObjects) == 0 {
 		return nil
 	}
@@ -873,6 +874,18 @@ func flattenEc2Routes(apiObjects []*ec2.Route) []interface{} {
 			// Skipping because VPC endpoint routes are handled separately
 			// See aws_vpc_endpoint
 			continue
+		}
+
+		// Skip cross-account ENIs for AWS services.
+		if networkInterfaceID := aws.StringValue(apiObject.NetworkInterfaceId); networkInterfaceID != "" {
+			networkInterface, err := FindNetworkInterfaceByID(conn, networkInterfaceID)
+
+			if err == nil && networkInterface.Attachment != nil {
+				if ownerID, instanceOwnerID := aws.StringValue(networkInterface.OwnerId), aws.StringValue(networkInterface.Attachment.InstanceOwnerId); ownerID != "" && instanceOwnerID != ownerID {
+					log.Printf("[DEBUG] Skip cross-account ENI (%s)", networkInterfaceID)
+					continue
+				}
+			}
 		}
 
 		tfList = append(tfList, flattenEc2Route(apiObject))

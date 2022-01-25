@@ -142,7 +142,7 @@ func FindResourceDataSyncItem(conn *ssm.SSM, name string) (*ssm.ResourceDataSync
 			return nil, err
 		}
 		for _, v := range resp.ResourceDataSyncItems {
-			if *v.SyncName == name {
+			if aws.StringValue(v.SyncName) == name {
 				return v, nil
 			}
 		}

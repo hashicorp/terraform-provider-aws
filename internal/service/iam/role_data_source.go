@@ -2,11 +2,14 @@ package iam
 
 import (
 	"fmt"
+	"log"
 	"net/url"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/service/iam"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -86,7 +89,6 @@ func dataSourceRoleRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("permissions_boundary", output.Role.PermissionsBoundary.PermissionsBoundaryArn)
 	}
 	d.Set("unique_id", output.Role.RoleId)
-	d.Set("tags", KeyValueTags(output.Role.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map())
 
 	assumRolePolicy, err := url.QueryUnescape(aws.StringValue(output.Role.AssumeRolePolicyDocument))
 	if err != nil {
@@ -94,6 +96,19 @@ func dataSourceRoleRead(d *schema.ResourceData, meta interface{}) error {
 	}
 	if err := d.Set("assume_role_policy", assumRolePolicy); err != nil {
 		return fmt.Errorf("error setting assume_role_policy: %w", err)
+	}
+
+	tags := KeyValueTags(output.Role.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+
+	// Some partitions (i.e., ISO) may not support tagging, giving error
+	if meta.(*conns.AWSClient).Partition != endpoints.AwsPartitionID && (tfawserr.ErrCodeContains(err, ErrCodeAccessDenied) || tfawserr.ErrCodeContains(err, iam.ErrCodeInvalidInputException) || tfawserr.ErrCodeContains(err, iam.ErrCodeServiceFailureException)) {
+		log.Printf("[WARN] Unable to list tags for IAM Role %s: %s", d.Id(), err)
+		return nil
+	}
+
+	//lintignore:AWSR002
+	if err := d.Set("tags", tags.Map()); err != nil {
+		return fmt.Errorf("error setting tags: %w", err)
 	}
 
 	d.SetId(name)

@@ -283,7 +283,7 @@ func testAccTransitGatewayPeeringAttachmentConfig_sameAccount_base(rName string)
 }
 
 func testAccTransitGatewayPeeringAttachmentConfig_differentAccount_base(rName string) string {
-	return acctest.ConfigAlternateAccountAlternateRegionProvider() + testAccTransitGatewayPeeringAttachmentConfig_base(rName)
+	return testAccAlternateAccountAlternateRegionProviderConfig() + testAccTransitGatewayPeeringAttachmentConfig_base(rName)
 }
 
 func testAccTransitGatewayPeeringAttachmentBasicConfig_sameAccount(rName string) string {

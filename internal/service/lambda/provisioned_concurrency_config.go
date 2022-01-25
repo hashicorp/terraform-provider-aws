@@ -70,7 +70,7 @@ func resourceProvisionedConcurrencyConfigCreate(d *schema.ResourceData, meta int
 
 	d.SetId(fmt.Sprintf("%s:%s", functionName, qualifier))
 
-	if err := waitForLambdaProvisionedConcurrencyConfigStatusReady(conn, functionName, qualifier, d.Timeout(schema.TimeoutCreate)); err != nil {
+	if err := waitForProvisionedConcurrencyConfigStatusReady(conn, functionName, qualifier, d.Timeout(schema.TimeoutCreate)); err != nil {
 		return fmt.Errorf("error waiting for Lambda Provisioned Concurrency Config (%s) to be ready: %s", d.Id(), err)
 	}
 
@@ -131,7 +131,7 @@ func resourceProvisionedConcurrencyConfigUpdate(d *schema.ResourceData, meta int
 		return fmt.Errorf("error putting Lambda Provisioned Concurrency Config (%s:%s): %s", functionName, qualifier, err)
 	}
 
-	if err := waitForLambdaProvisionedConcurrencyConfigStatusReady(conn, functionName, qualifier, d.Timeout(schema.TimeoutUpdate)); err != nil {
+	if err := waitForProvisionedConcurrencyConfigStatusReady(conn, functionName, qualifier, d.Timeout(schema.TimeoutUpdate)); err != nil {
 		return fmt.Errorf("error waiting for Lambda Provisioned Concurrency Config (%s) to be ready: %s", d.Id(), err)
 	}
 
@@ -175,7 +175,7 @@ func ProvisionedConcurrencyConfigParseID(id string) (string, string, error) {
 	return parts[0], parts[1], nil
 }
 
-func refreshLambdaProvisionedConcurrencyConfigStatus(conn *lambda.Lambda, functionName, qualifier string) resource.StateRefreshFunc {
+func refreshProvisionedConcurrencyConfigStatus(conn *lambda.Lambda, functionName, qualifier string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		input := &lambda.GetProvisionedConcurrencyConfigInput{
 			FunctionName: aws.String(functionName),
@@ -198,11 +198,11 @@ func refreshLambdaProvisionedConcurrencyConfigStatus(conn *lambda.Lambda, functi
 	}
 }
 
-func waitForLambdaProvisionedConcurrencyConfigStatusReady(conn *lambda.Lambda, functionName, qualifier string, timeout time.Duration) error {
+func waitForProvisionedConcurrencyConfigStatusReady(conn *lambda.Lambda, functionName, qualifier string, timeout time.Duration) error {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{lambda.ProvisionedConcurrencyStatusEnumInProgress},
 		Target:  []string{lambda.ProvisionedConcurrencyStatusEnumReady},
-		Refresh: refreshLambdaProvisionedConcurrencyConfigStatus(conn, functionName, qualifier),
+		Refresh: refreshProvisionedConcurrencyConfigStatus(conn, functionName, qualifier),
 		Timeout: timeout,
 		Delay:   5 * time.Second,
 	}

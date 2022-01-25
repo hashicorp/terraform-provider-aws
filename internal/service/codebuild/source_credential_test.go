@@ -5,13 +5,14 @@ import (
 	"regexp"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/codebuild"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfcodebuild "github.com/hashicorp/terraform-provider-aws/internal/service/codebuild"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func TestAccCodeBuildSourceCredential_basic(t *testing.T) {
@@ -91,6 +92,30 @@ func TestAccCodeBuildSourceCredential_basicAuth(t *testing.T) {
 	})
 }
 
+func TestAccCodeBuildSourceCredential_disappears(t *testing.T) {
+	var sourceCredentialsInfo codebuild.SourceCredentialsInfo
+	token := sdkacctest.RandomWithPrefix("token")
+	resourceName := "aws_codebuild_source_credential.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, codebuild.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckSourceCredentialDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSourceCredential_Basic("PERSONAL_ACCESS_TOKEN", "GITHUB_ENTERPRISE", token),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSourceCredentialExists(resourceName, &sourceCredentialsInfo),
+					acctest.CheckResourceDisappears(acctest.Provider, tfcodebuild.ResourceSourceCredential(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfcodebuild.ResourceSourceCredential(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func testAccCheckSourceCredentialDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).CodeBuildConn
 
@@ -99,20 +124,17 @@ func testAccCheckSourceCredentialDestroy(s *terraform.State) error {
 			continue
 		}
 
-		resp, err := conn.ListSourceCredentials(&codebuild.ListSourceCredentialsInput{})
+		_, err := tfcodebuild.FindSourceCredentialByARN(conn, rs.Primary.ID)
+
+		if tfresource.NotFound(err) {
+			continue
+		}
+
 		if err != nil {
 			return err
 		}
 
-		if len(resp.SourceCredentialsInfos) == 0 {
-			return nil
-		}
-
-		for _, sourceCredentialsInfo := range resp.SourceCredentialsInfos {
-			if rs.Primary.ID == aws.StringValue(sourceCredentialsInfo.Arn) {
-				return fmt.Errorf("Found Source Credential %s", rs.Primary.ID)
-			}
-		}
+		return fmt.Errorf("CodeBuild Source Credential %s still exists", rs.Primary.ID)
 	}
 	return nil
 }
@@ -126,23 +148,18 @@ func testAccCheckSourceCredentialExists(name string, sourceCredential *codebuild
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).CodeBuildConn
 
-		resp, err := conn.ListSourceCredentials(&codebuild.ListSourceCredentialsInput{})
+		output, err := tfcodebuild.FindSourceCredentialByARN(conn, rs.Primary.ID)
 		if err != nil {
 			return err
 		}
 
-		if len(resp.SourceCredentialsInfos) == 0 {
-			return fmt.Errorf("Source Credential %s not found", rs.Primary.ID)
+		if output == nil {
+			return fmt.Errorf("CodeBuild Source Credential (%s) not found", rs.Primary.ID)
 		}
 
-		for _, sourceCredentialsInfo := range resp.SourceCredentialsInfos {
-			if rs.Primary.ID == aws.StringValue(sourceCredentialsInfo.Arn) {
-				*sourceCredential = *sourceCredentialsInfo
-				return nil
-			}
-		}
+		*sourceCredential = *output
 
-		return fmt.Errorf("Source Credential %s not found", rs.Primary.ID)
+		return nil
 	}
 }
 

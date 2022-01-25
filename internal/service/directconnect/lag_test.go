@@ -289,13 +289,13 @@ resource "aws_dx_lag" "test" {
   name                  = %[1]q
   connection_id         = aws_dx_connection.test.id
   connections_bandwidth = aws_dx_connection.test.bandwidth
-  location              = tolist(data.aws_dx_locations.test.location_codes)[0]
+  location              = aws_dx_connection.test.location
 }
 
 resource "aws_dx_connection" "test" {
   name      = %[1]q
   bandwidth = "1Gbps"
-  location  = tolist(data.aws_dx_locations.test.location_codes)[0]
+  location  = tolist(data.aws_dx_locations.test.location_codes)[1]
 }
 `, rName)
 }

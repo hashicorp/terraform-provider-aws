@@ -72,7 +72,7 @@ func TestAccEC2EIPAssociation_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckEC2VPCOnly(t) },
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckEC2VPCOnly(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckEIPAssociationDestroy,
@@ -182,6 +182,16 @@ func TestAccEC2EIPAssociation_disappears(t *testing.T) {
 			},
 		},
 	})
+}
+
+func testAccPreCheckEC2VPCOnly(t *testing.T) {
+	client := acctest.Provider.Meta().(*conns.AWSClient)
+	platforms := client.SupportedPlatforms
+	region := client.Region
+	if conns.HasEC2Classic(platforms) {
+		t.Skipf("This test can only in regions without EC2 Classic, platforms available in %s: %q",
+			region, platforms)
+	}
 }
 
 func testAccCheckEIPAssociationExists(name string, res *ec2.Address) resource.TestCheckFunc {
@@ -419,7 +429,7 @@ resource "aws_eip_association" "test" {
 func testAccEIPAssociationConfig_ec2Classic() string {
 	return acctest.ConfigCompose(
 		acctest.ConfigEC2ClassicRegionProvider(),
-		acctest.ConfigLatestAmazonLinuxPvEbsAmi(),
+		testAccLatestAmazonLinuxPVEBSAMIConfig(),
 		acctest.AvailableEC2InstanceTypeForRegion("t1.micro", "m3.medium", "m3.large", "c3.large", "r3.large"),
 		`
 resource "aws_eip" "test" {}

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"reflect"
 	"regexp"
+	"sort"
 	"strings"
 	"testing"
 	"time"
@@ -181,7 +182,7 @@ func TestAccEC2Instance_basic(t *testing.T) {
 		// No subnet_id specified requires default VPC with default subnets or EC2-Classic.
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			acctest.PreCheckEC2ClassicOrHasDefaultVPCWithDefaultSubnets(t)
+			testAccPreCheckEC2ClassicOrHasDefaultVPCWithDefaultSubnets(t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    acctest.Providers,
@@ -300,6 +301,33 @@ func TestAccEC2Instance_EBSBlockDevice_invalidThroughputForVolumeType(t *testing
 			{
 				Config:      testAccInstanceConfigEBSBlockDeviceInvalidThroughput,
 				ExpectError: regexp.MustCompile(`error creating resource: throughput attribute not supported for ebs_block_device with volume_type gp2`),
+			},
+		},
+	})
+}
+
+// TestAccEC2Instance_EBSBlockDevice_RootBlockDevice_removed verifies block device mappings
+// removed outside terraform no longer result in a panic.
+// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/20821
+func TestAccEC2Instance_EBSBlockDevice_RootBlockDevice_removed(t *testing.T) {
+	var instance ec2.Instance
+	resourceName := "aws_instance.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfigEBSAndRootBlockDevice,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(resourceName, &instance),
+					// Instance must be stopped before detaching a root block device
+					testAccCheckStopInstance(&instance),
+					testAccCheckDetachVolumes(&instance),
+				),
+				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
@@ -3498,6 +3526,7 @@ func TestAccEC2Instance_metadataOptions(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "metadata_options.0.http_endpoint", "disabled"),
 					resource.TestCheckResourceAttr(resourceName, "metadata_options.0.http_tokens", "optional"),
 					resource.TestCheckResourceAttr(resourceName, "metadata_options.0.http_put_response_hop_limit", "1"),
+					resource.TestCheckResourceAttr(resourceName, "metadata_options.0.instance_metadata_tags", "disabled"),
 				),
 			},
 			{
@@ -3508,6 +3537,7 @@ func TestAccEC2Instance_metadataOptions(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "metadata_options.0.http_endpoint", "enabled"),
 					resource.TestCheckResourceAttr(resourceName, "metadata_options.0.http_tokens", "required"),
 					resource.TestCheckResourceAttr(resourceName, "metadata_options.0.http_put_response_hop_limit", "2"),
+					resource.TestCheckResourceAttr(resourceName, "metadata_options.0.instance_metadata_tags", "enabled"),
 				),
 			},
 			{
@@ -3851,6 +3881,37 @@ func testAccCheckStopInstance(instance *ec2.Instance) resource.TestCheckFunc {
 	}
 }
 
+func testAccCheckDetachVolumes(instance *ec2.Instance) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client := acctest.Provider.Meta().(*conns.AWSClient)
+		conn := client.EC2Conn
+
+		for _, bd := range instance.BlockDeviceMappings {
+			if bd.Ebs != nil && bd.Ebs.VolumeId != nil {
+				name := aws.StringValue(bd.DeviceName)
+				volID := aws.StringValue(bd.Ebs.VolumeId)
+				instanceID := aws.StringValue(instance.InstanceId)
+
+				// Make sure in correct state before detaching
+				if err := tfec2.WaitVolumeAttachmentAttached(conn, name, volID, instanceID); err != nil {
+					return err
+				}
+
+				r := tfec2.ResourceVolumeAttachment()
+				d := r.Data(nil)
+				d.Set("device_name", name)
+				d.Set("volume_id", volID)
+				d.Set("instance_id", instanceID)
+
+				if err := r.Delete(d, client); err != nil {
+					return err
+				}
+			}
+		}
+		return nil
+	}
+}
+
 func TestInstanceHostIDSchema(t *testing.T) {
 	actualSchema := tfec2.ResourceInstance().Schema["host_id"]
 	expectedSchema := &schema.Schema{
@@ -3913,6 +3974,105 @@ func driftTags(instance *ec2.Instance) resource.TestCheckFunc {
 		})
 		return err
 	}
+}
+
+// testAccPreCheckEC2ClassicOrHasDefaultVPCWithDefaultSubnets checks that the test region has either
+// - The EC2-Classic platform available, or
+// - A default VPC with default subnets.
+// This check is useful to ensure that an instance can be launched without specifying a subnet.
+func testAccPreCheckEC2ClassicOrHasDefaultVPCWithDefaultSubnets(t *testing.T) {
+	client := acctest.Provider.Meta().(*conns.AWSClient)
+
+	if !conns.HasEC2Classic(client.SupportedPlatforms) && !(hasDefaultVPC(t) && defaultSubnetCount(t) > 0) {
+		t.Skipf("skipping tests; %s does not have EC2-Classic or a default VPC with default subnets", client.Region)
+	}
+}
+
+// hasDefaultVPC returns whether the current AWS region has a default VPC.
+func hasDefaultVPC(t *testing.T) bool {
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+
+	resp, err := conn.DescribeAccountAttributes(&ec2.DescribeAccountAttributesInput{
+		AttributeNames: aws.StringSlice([]string{ec2.AccountAttributeNameDefaultVpc}),
+	})
+	if acctest.PreCheckSkipError(err) ||
+		len(resp.AccountAttributes) == 0 ||
+		len(resp.AccountAttributes[0].AttributeValues) == 0 ||
+		aws.StringValue(resp.AccountAttributes[0].AttributeValues[0].AttributeValue) == "none" {
+		return false
+	}
+	if err != nil {
+		t.Fatalf("error describing EC2 account attributes: %s", err)
+	}
+
+	return true
+}
+
+// defaultSubnetCount returns the number of default subnets in the current region's default VPC.
+func defaultSubnetCount(t *testing.T) int {
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+
+	input := &ec2.DescribeSubnetsInput{
+		Filters: buildAttributeFilterList(map[string]string{
+			"defaultForAz": "true",
+		}),
+	}
+	output, err := conn.DescribeSubnets(input)
+	if acctest.PreCheckSkipError(err) {
+		return 0
+	}
+	if err != nil {
+		t.Fatalf("error describing default subnets: %s", err)
+	}
+
+	return len(output.Subnets)
+}
+
+// buildAttributeFilterList takes a flat map of scalar attributes (most
+// likely values extracted from a *schema.ResourceData on an EC2-querying
+// data source) and produces a []*ec2.Filter representing an exact match
+// for each of the given non-empty attributes.
+//
+// The keys of the given attributes map are the attribute names expected
+// by the EC2 API, which are usually either in camelcase or with dash-separated
+// words. We conventionally map these to underscore-separated identifiers
+// with the same words when presenting these as data source query attributes
+// in Terraform.
+//
+// It's the callers responsibility to transform any non-string values into
+// the appropriate string serialization required by the AWS API when
+// encoding the given filter. Any attributes given with empty string values
+// are ignored, assuming that the user wishes to leave that attribute
+// unconstrained while filtering.
+//
+// The purpose of this function is to create values to pass in
+// for the "Filters" attribute on most of the "Describe..." API functions in
+// the EC2 API, to aid in the implementation of Terraform data sources that
+// retrieve data about EC2 objects.
+func buildAttributeFilterList(attrs map[string]string) []*ec2.Filter {
+	var filters []*ec2.Filter
+
+	// sort the filters by name to make the output deterministic
+	var names []string
+	for filterName := range attrs {
+		names = append(names, filterName)
+	}
+
+	sort.Strings(names)
+
+	for _, filterName := range names {
+		value := attrs[filterName]
+		if value == "" {
+			continue
+		}
+
+		filters = append(filters, &ec2.Filter{
+			Name:   aws.String(filterName),
+			Values: []*string{aws.String(value)},
+		})
+	}
+
+	return filters
 }
 
 func testAccAvailableAZsWavelengthZonesExcludeConfig(excludeZoneIds ...string) string {
@@ -4016,7 +4176,7 @@ resource "aws_instance" "test" {
 
 func testAccInstanceConfigAtLeastOneOtherEbsVolume(rName string) string {
 	return acctest.ConfigCompose(
-		acctest.ConfigLatestAmazonLinuxHvmInstanceStoreAmi(),
+		testAccLatestAmazonLinuxHVMInstanceStoreAMIConfig(),
 		testAccInstanceVPCConfig(rName, false),
 		fmt.Sprintf(`
 # Ensure that there is at least 1 EBS volume in the current region.
@@ -4129,7 +4289,7 @@ resource "aws_instance" "test" {
 }
 
 func testAccInstanceConfigRootInstanceStore() string {
-	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHvmInstanceStoreAmi(), `
+	return acctest.ConfigCompose(testAccLatestAmazonLinuxHVMInstanceStoreAMIConfig(), `
 resource "aws_instance" "test" {
   ami = data.aws_ami.amzn-ami-minimal-hvm-instance-store.id
 
@@ -4939,6 +5099,27 @@ resource "aws_instance" "test" {
     volume_size = 10
     volume_type = "gp2"
     throughput  = 300
+  }
+}
+`)
+
+var testAccInstanceConfigEBSAndRootBlockDevice = acctest.ConfigCompose(
+	acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
+	`
+resource "aws_instance" "test" {
+  ami = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+
+  instance_type = "t2.medium"
+
+  root_block_device {
+    volume_type           = "gp2"
+    volume_size           = 9
+    delete_on_termination = true
+  }
+
+  ebs_block_device {
+    device_name = "/dev/sdb"
+    volume_size = 9
   }
 }
 `)
@@ -5756,8 +5937,25 @@ resource "aws_instance" "test" {
 `, rName))
 }
 
+// testAccLatestWindowsServer2016CoreAMIConfig returns the configuration for a data source that
+// describes the latest Microsoft Windows Server 2016 Core AMI.
+// The data source is named 'win2016core-ami'.
+func testAccLatestWindowsServer2016CoreAMIConfig() string {
+	return `
+data "aws_ami" "win2016core-ami" {
+  most_recent = true
+  owners      = ["amazon"]
+
+  filter {
+    name   = "name"
+    values = ["Windows_Server-2016-English-Core-Base-*"]
+  }
+}
+`
+}
+
 func testAccInstanceConfig_getPasswordData(rName, publicKey string, val bool) string {
-	return acctest.ConfigCompose(acctest.ConfigLatestWindowsServer2016CoreAmi(), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccLatestWindowsServer2016CoreAMIConfig(), fmt.Sprintf(`
 resource "aws_key_pair" "test" {
   key_name   = %[1]q
   public_key = %[2]q
@@ -6146,6 +6344,7 @@ resource "aws_instance" "test" {
     http_endpoint               = "enabled"
     http_tokens                 = "required"
     http_put_response_hop_limit = 2
+    instance_metadata_tags      = "enabled"
   }
 }
 `, rName))
@@ -6174,8 +6373,30 @@ resource "aws_instance" "test" {
 `, name, enabled))
 }
 
+// testAccLatestAmazonLinuxPVEBSAMIConfig returns the configuration for a data source that
+// describes the latest Amazon Linux AMI using PV virtualization and an EBS root device.
+// The data source is named 'amzn-ami-minimal-pv-ebs'.
+func testAccLatestAmazonLinuxPVEBSAMIConfig() string {
+	return `
+data "aws_ami" "amzn-ami-minimal-pv-ebs" {
+  most_recent = true
+  owners      = ["amazon"]
+
+  filter {
+    name   = "name"
+    values = ["amzn-ami-minimal-pv-*"]
+  }
+
+  filter {
+    name   = "root-device-type"
+    values = ["ebs"]
+  }
+}
+`
+}
+
 func testAccInstanceDynamicEBSBlockDevicesConfig() string {
-	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxPvEbsAmi(), `
+	return acctest.ConfigCompose(testAccLatestAmazonLinuxPVEBSAMIConfig(), `
 resource "aws_instance" "test" {
   ami = data.aws_ami.amzn-ami-minimal-pv-ebs.id
   # tflint-ignore: aws_instance_previous_type

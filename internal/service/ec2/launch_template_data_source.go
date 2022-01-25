@@ -234,6 +234,10 @@ func DataSourceLaunchTemplate() *schema.Resource {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},
+						"instance_metadata_tags": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
 					},
 				},
 			},
@@ -299,6 +303,10 @@ func DataSourceLaunchTemplate() *schema.Resource {
 							Type:     schema.TypeSet,
 							Computed: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
+						},
+						"network_card_index": {
+							Type:     schema.TypeInt,
+							Optional: true,
 						},
 						"network_interface_id": {
 							Type:     schema.TypeString,

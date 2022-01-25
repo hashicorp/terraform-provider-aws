@@ -500,6 +500,10 @@ func TestAccELBV2ListenerRule_priority(t *testing.T) {
 	lbName := fmt.Sprintf("testrule-basic-%s", sdkacctest.RandString(13))
 	targetGroupName := fmt.Sprintf("testtargetgroup-%s", sdkacctest.RandString(10))
 
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, elbv2.EndpointsID),
@@ -1037,6 +1041,10 @@ func TestAccELBV2ListenerRule_conditionUpdateMixed(t *testing.T) {
 	resourceName := "aws_lb_listener_rule.static"
 	frontEndListenerResourceName := "aws_lb_listener.front_end"
 
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, elbv2.EndpointsID),
@@ -1277,7 +1285,7 @@ func TestAccELBV2ListenerRule_conditionUpdateMultiple(t *testing.T) {
 						"host_header.#":          "1",
 						"host_header.0.values.#": "1",
 					}),
-					resource.TestCheckTypeSetElemAttr(resourceName, "condition.*.host_header.0.values.*", "foobar.com"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "condition.*.host_header.0.values.*", "example.com"),
 				),
 			},
 		},
@@ -3684,7 +3692,7 @@ func testAccListenerRuleConfig_conditionMultiple_updated(lbName string) string {
 	return testAccListenerRuleConfig_condition_base(`
 condition {
   host_header {
-    values = ["foobar.com"]
+    values = ["example.com"]
   }
 }
 

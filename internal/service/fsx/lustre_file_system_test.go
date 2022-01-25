@@ -355,6 +355,41 @@ func TestAccFSxLustreFileSystem_storageCapacityUpdate(t *testing.T) {
 	})
 }
 
+func TestAccFSxLustreFileSystem_fileSystemTypeVersion(t *testing.T) {
+	var filesystem1, filesystem2 fsx.FileSystem
+	resourceName := "aws_fsx_lustre_file_system.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, fsx.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckFsxLustreFileSystemDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLustreFileSystemFileSystemTypeVersionConfig("2.10"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFsxLustreFileSystemExists(resourceName, &filesystem1),
+					resource.TestCheckResourceAttr(resourceName, "file_system_type_version", "2.10"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"security_group_ids"},
+			},
+			{
+				Config: testAccLustreFileSystemFileSystemTypeVersionConfig("2.12"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFsxLustreFileSystemExists(resourceName, &filesystem2),
+					testAccCheckFsxLustreFileSystemRecreated(&filesystem1, &filesystem2),
+					resource.TestCheckResourceAttr(resourceName, "file_system_type_version", "2.12"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccFSxLustreFileSystem_tags(t *testing.T) {
 	var filesystem1, filesystem2, filesystem3 fsx.FileSystem
 	resourceName := "aws_fsx_lustre_file_system.test"
@@ -525,12 +560,45 @@ func TestAccFSxLustreFileSystem_deploymentTypePersistent1(t *testing.T) {
 		CheckDestroy: testAccCheckFsxLustreFileSystemDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLustreFileSystemPersistentDeploymentType(50),
+				Config: testAccLustreFileSystemPersistent1DeploymentType(50),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFsxLustreFileSystemExists(resourceName, &filesystem),
-					// per_unit_storage_throughput is only available with deployment_type=PERSISTENT_1, so we test both here.
+					// per_unit_storage_throughput=50 is only available with deployment_type=PERSISTENT_1, so we test both here.
 					resource.TestCheckResourceAttr(resourceName, "per_unit_storage_throughput", "50"),
 					resource.TestCheckResourceAttr(resourceName, "deployment_type", fsx.LustreDeploymentTypePersistent1),
+					resource.TestCheckResourceAttr(resourceName, "automatic_backup_retention_days", "0"),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "kms_key_id", "kms", regexp.MustCompile(`key/.+`)),
+					// We don't know the randomly generated mount_name ahead of time like for SCRATCH_1 deployment types.
+					resource.TestCheckResourceAttrSet(resourceName, "mount_name"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"security_group_ids"},
+			},
+		},
+	})
+}
+
+func TestAccFSxLustreFileSystem_deploymentTypePersistent2(t *testing.T) {
+	var filesystem fsx.FileSystem
+	resourceName := "aws_fsx_lustre_file_system.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, fsx.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckFsxLustreFileSystemDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLustreFileSystemPersistent2DeploymentType(125),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFsxLustreFileSystemExists(resourceName, &filesystem),
+					// per_unit_storage_throughput=125 is only available with deployment_type=PERSISTENT_2, so we test both here.
+					resource.TestCheckResourceAttr(resourceName, "per_unit_storage_throughput", "125"),
+					resource.TestCheckResourceAttr(resourceName, "deployment_type", fsx.LustreDeploymentTypePersistent2),
 					resource.TestCheckResourceAttr(resourceName, "automatic_backup_retention_days", "0"),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "kms_key_id", "kms", regexp.MustCompile(`key/.+`)),
 					// We don't know the randomly generated mount_name ahead of time like for SCRATCH_1 deployment types.
@@ -971,6 +1039,17 @@ resource "aws_fsx_lustre_file_system" "test" {
 `)
 }
 
+func testAccLustreFileSystemFileSystemTypeVersionConfig(fileSystemTypeVersion string) string {
+	return acctest.ConfigCompose(testAccLustreFileSystemBaseConfig(), fmt.Sprintf(`
+resource "aws_fsx_lustre_file_system" "test" {
+  file_system_type_version = %[1]q
+  storage_capacity         = 1200
+  subnet_ids               = [aws_subnet.test1.id]
+  deployment_type          = data.aws_partition.current.partition == "aws-us-gov" ? "SCRATCH_2" : null # GovCloud does not support SCRATCH_1
+}
+`, fileSystemTypeVersion))
+}
+
 func testAccLustreFileSystemStorageCapacityConfig(storageCapacity int) string {
 	return acctest.ConfigCompose(testAccLustreFileSystemBaseConfig(), fmt.Sprintf(`
 resource "aws_fsx_lustre_file_system" "test" {
@@ -1076,12 +1155,23 @@ resource "aws_fsx_lustre_file_system" "test" {
 `, deploymentType))
 }
 
-func testAccLustreFileSystemPersistentDeploymentType(perUnitStorageThroughput int) string {
+func testAccLustreFileSystemPersistent1DeploymentType(perUnitStorageThroughput int) string {
 	return acctest.ConfigCompose(testAccLustreFileSystemBaseConfig(), fmt.Sprintf(`
 resource "aws_fsx_lustre_file_system" "test" {
   storage_capacity            = 1200
   subnet_ids                  = [aws_subnet.test1.id]
   deployment_type             = "PERSISTENT_1"
+  per_unit_storage_throughput = %[1]d
+}
+`, perUnitStorageThroughput))
+}
+
+func testAccLustreFileSystemPersistent2DeploymentType(perUnitStorageThroughput int) string {
+	return acctest.ConfigCompose(testAccLustreFileSystemBaseConfig(), fmt.Sprintf(`
+resource "aws_fsx_lustre_file_system" "test" {
+  storage_capacity            = 1200
+  subnet_ids                  = [aws_subnet.test1.id]
+  deployment_type             = "PERSISTENT_2"
   per_unit_storage_throughput = %[1]d
 }
 `, perUnitStorageThroughput))

@@ -85,7 +85,7 @@ func resourceAttachmentRead(d *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		return err
 	}
-	if asg == nil {
+	if asg == nil && !d.IsNewResource() {
 		log.Printf("[WARN] Autoscaling Group (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil

@@ -286,6 +286,8 @@ func awsServiceName(s string) (string, error) {
 	}
 
 	switch s {
+	case "amp":
+		return "prometheusservice", nil
 	case "cloudcontrol":
 		return "cloudcontrolapi", nil
 	case "cognitoidp":
@@ -294,9 +296,11 @@ func awsServiceName(s string) (string, error) {
 		return "databasemigrationservice", nil
 	case "ds":
 		return "directoryservice", nil
-	case "resourcegroupstagging":
-		return "resourcegroupstaggingapi", nil
-	case "serverlessapprepo":
+	case "events":
+		return "eventbridge", nil
+	case "lexmodels":
+		return "lexmodelbuildingservice", nil
+	case "serverlessrepo":
 		return "serverlessapplicationrepository", nil
 	}
 
@@ -315,6 +319,10 @@ func awsServiceNameUpper(s string) (string, error) {
 	}
 
 	switch s {
+	case "amp":
+		return awsServiceNames["prometheusservice"], nil
+	case "appautoscaling":
+		return awsServiceNames["applicationautoscaling"], nil
 	case "cloudcontrol":
 		return awsServiceNames["cloudcontrolapi"], nil
 	case "cognitoidp":
@@ -323,9 +331,11 @@ func awsServiceNameUpper(s string) (string, error) {
 		return awsServiceNames["databasemigrationservice"], nil
 	case "ds":
 		return awsServiceNames["directoryservice"], nil
-	case "resourcegroupstagging":
-		return awsServiceNames["resourcegroupstaggingapi"], nil
-	case "serverlessapprepo":
+	case "events":
+		return awsServiceNames["eventbridge"], nil
+	case "lexmodels":
+		return awsServiceNames["lexmodelbuildingservice"], nil
+	case "serverlessrepo":
 		return awsServiceNames["serverlessapplicationrepository"], nil
 	}
 
@@ -384,7 +394,6 @@ func init() {
 	awsServiceNames["cloudsearchdomain"] = "CloudSearchDomain"
 	awsServiceNames["cloudtrail"] = "CloudTrail"
 	awsServiceNames["cloudwatch"] = "CloudWatch"
-	awsServiceNames["cloudwatchevents"] = "CloudWatchEvents"
 	awsServiceNames["cloudwatchlogs"] = "CloudWatchLogs"
 	awsServiceNames["codeartifact"] = "CodeArtifact"
 	awsServiceNames["codebuild"] = "CodeBuild"
@@ -495,7 +504,7 @@ func init() {
 	awsServiceNames["kms"] = "KMS"
 	awsServiceNames["lakeformation"] = "LakeFormation"
 	awsServiceNames["lambda"] = "Lambda"
-	awsServiceNames["lexmodelbuilding"] = "LexModelBuilding"
+	awsServiceNames["lexmodelbuildingservice"] = "LexModelBuildingService"
 	awsServiceNames["lexmodelsv2"] = "LexModelsV2"
 	awsServiceNames["lexruntime"] = "LexRuntime"
 	awsServiceNames["lexruntimev2"] = "LexRuntimeV2"
@@ -530,7 +539,6 @@ func init() {
 	awsServiceNames["mq"] = "MQ"
 	awsServiceNames["mturk"] = "MTurk"
 	awsServiceNames["mwaa"] = "MWAA"
-	awsServiceNames["nas"] = "NAS"
 	awsServiceNames["neptune"] = "Neptune"
 	awsServiceNames["networkfirewall"] = "NetworkFirewall"
 	awsServiceNames["networkmanager"] = "NetworkManager"
@@ -548,7 +556,7 @@ func init() {
 	awsServiceNames["pinpointsmsvoice"] = "PinpointSMSVoice"
 	awsServiceNames["polly"] = "Polly"
 	awsServiceNames["pricing"] = "Pricing"
-	awsServiceNames["prometheus"] = "Prometheus"
+	awsServiceNames["prometheusservice"] = "PrometheusService"
 	awsServiceNames["proton"] = "Proton"
 	awsServiceNames["qldb"] = "QLDB"
 	awsServiceNames["qldbsession"] = "QLDBSession"
