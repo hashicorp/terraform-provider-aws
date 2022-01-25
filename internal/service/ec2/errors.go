@@ -43,6 +43,7 @@ const (
 	ErrCodeInvalidPermissionMalformed                = "InvalidPermission.Malformed"
 	ErrCodeInvalidPermissionNotFound                 = "InvalidPermission.NotFound"
 	ErrCodeInvalidPlacementGroupUnknown              = "InvalidPlacementGroup.Unknown"
+	ErrCodeInvalidPoolIDNotFound                        = "InvalidPoolID.NotFound"
 	ErrCodeInvalidPrefixListIDNotFound               = "InvalidPrefixListID.NotFound"
 	ErrCodeInvalidRouteNotFound                      = "InvalidRoute.NotFound"
 	ErrCodeInvalidRouteTableIDNotFound               = "InvalidRouteTableID.NotFound"
