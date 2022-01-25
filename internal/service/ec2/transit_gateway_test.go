@@ -87,7 +87,7 @@ func TestAccEC2TransitGateway_serial(t *testing.T) {
 		},
 		"MulticastDomain": {
 			"basic":      testAccTransitGatewayMulticastDomain_basic,
-			"dissapears": testAccAWSTransitGatewayMulticastDomain_disappears,
+			"disappears": testAccAWSTransitGatewayMulticastDomain_disappears,
 			"Tags":       testAccAWSTransitGatewayMulticastDomain_Tags,
 			"TransitGatewayMulticastDomainAssociation": testAccAWSTransitGatewayMulticastDomain_Associations,
 			"TransitGatewayMulticastDomainGroups":      testAccTransitGatewayMulticastDomain_Groups,
