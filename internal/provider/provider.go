@@ -50,6 +50,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/configservice"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/connect"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/cur"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/dataexchange"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/datapipeline"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/datasync"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/dax"
@@ -350,12 +351,15 @@ func Provider() *schema.Provider {
 
 			"aws_api_gateway_api_key":     apigateway.DataSourceAPIKey(),
 			"aws_api_gateway_domain_name": apigateway.DataSourceDomainName(),
+			"aws_api_gateway_export":      apigateway.DataSourceExport(),
 			"aws_api_gateway_resource":    apigateway.DataSourceResource(),
 			"aws_api_gateway_rest_api":    apigateway.DataSourceRestAPI(),
+			"aws_api_gateway_sdk":         apigateway.DataSourceSdk(),
 			"aws_api_gateway_vpc_link":    apigateway.DataSourceVPCLink(),
 
-			"aws_apigatewayv2_api":  apigatewayv2.DataSourceAPI(),
-			"aws_apigatewayv2_apis": apigatewayv2.DataSourceAPIs(),
+			"aws_apigatewayv2_api":    apigatewayv2.DataSourceAPI(),
+			"aws_apigatewayv2_apis":   apigatewayv2.DataSourceAPIs(),
+			"aws_apigatewayv2_export": apigatewayv2.DataSourceExport(),
 
 			"aws_appmesh_mesh":            appmesh.DataSourceMesh(),
 			"aws_appmesh_virtual_service": appmesh.DataSourceVirtualService(),
@@ -464,6 +468,7 @@ func Provider() *schema.Provider {
 			"aws_ec2_transit_gateway_vpc_attachment":         ec2.DataSourceTransitGatewayVPCAttachment(),
 			"aws_ec2_transit_gateway_vpn_attachment":         ec2.DataSourceTransitGatewayVPNAttachment(),
 			"aws_eip":                                        ec2.DataSourceEIP(),
+			"aws_eips":                                       ec2.DataSourceEIPs(),
 			"aws_instance":                                   ec2.DataSourceInstance(),
 			"aws_instances":                                  ec2.DataSourceInstances(),
 			"aws_internet_gateway":                           ec2.DataSourceInternetGateway(),
@@ -564,14 +569,16 @@ func Provider() *schema.Provider {
 			"aws_identitystore_group": identitystore.DataSourceGroup(),
 			"aws_identitystore_user":  identitystore.DataSourceUser(),
 
-			"aws_imagebuilder_component":                    imagebuilder.DataSourceComponent(),
-			"aws_imagebuilder_components":                   imagebuilder.DataSourceComponents(),
-			"aws_imagebuilder_distribution_configuration":   imagebuilder.DataSourceDistributionConfiguration(),
-			"aws_imagebuilder_image":                        imagebuilder.DataSourceImage(),
-			"aws_imagebuilder_image_pipeline":               imagebuilder.DataSourceImagePipeline(),
-			"aws_imagebuilder_image_recipe":                 imagebuilder.DataSourceImageRecipe(),
-			"aws_imagebuilder_image_recipes":                imagebuilder.DataSourceImageRecipes(),
-			"aws_imagebuilder_infrastructure_configuration": imagebuilder.DataSourceInfrastructureConfiguration(),
+			"aws_imagebuilder_component":                     imagebuilder.DataSourceComponent(),
+			"aws_imagebuilder_components":                    imagebuilder.DataSourceComponents(),
+			"aws_imagebuilder_distribution_configuration":    imagebuilder.DataSourceDistributionConfiguration(),
+			"aws_imagebuilder_distribution_configurations":   imagebuilder.DataSourceDistributionConfigurations(),
+			"aws_imagebuilder_image":                         imagebuilder.DataSourceImage(),
+			"aws_imagebuilder_image_pipeline":                imagebuilder.DataSourceImagePipeline(),
+			"aws_imagebuilder_image_recipe":                  imagebuilder.DataSourceImageRecipe(),
+			"aws_imagebuilder_image_recipes":                 imagebuilder.DataSourceImageRecipes(),
+			"aws_imagebuilder_infrastructure_configuration":  imagebuilder.DataSourceInfrastructureConfiguration(),
+			"aws_imagebuilder_infrastructure_configurations": imagebuilder.DataSourceInfrastructureConfigurations(),
 
 			"aws_inspector_rules_packages": inspector.DataSourceRulesPackages(),
 
@@ -995,6 +1002,8 @@ func Provider() *schema.Provider {
 			"aws_connect_quick_connect":               connect.ResourceQuickConnect(),
 
 			"aws_cur_report_definition": cur.ResourceReportDefinition(),
+
+			"aws_dataexchange_data_set": dataexchange.ResourceDataSet(),
 
 			"aws_datapipeline_pipeline": datapipeline.ResourcePipeline(),
 

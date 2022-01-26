@@ -9,6 +9,13 @@ NOTES:
 
 FEATURES:
 
+* **New Data Source:** `aws_api_gateway_export` ([#22731](https://github.com/hashicorp/terraform-provider-aws/issues/22731))
+* **New Data Source:** `aws_api_gateway_sdk` ([#22731](https://github.com/hashicorp/terraform-provider-aws/issues/22731))
+* **New Data Source:** `aws_apigatewayv2_export` ([#22732](https://github.com/hashicorp/terraform-provider-aws/issues/22732))
+* **New Data Source:** `aws_imagebuilder_components` ([#21881](https://github.com/hashicorp/terraform-provider-aws/issues/21881))
+* **New Data Source:** `aws_imagebuilder_distribution_configurations` ([#22733](https://github.com/hashicorp/terraform-provider-aws/issues/22733))
+* **New Data Source:** `aws_imagebuilder_infrastructure_configurations` ([#22723](https://github.com/hashicorp/terraform-provider-aws/issues/22723))
+* **New Resource:** `aws_dataexchange_data_set` ([#22697](https://github.com/hashicorp/terraform-provider-aws/issues/22697))
 * **New Resource:** `aws_devicefarm_test_grid_project` ([#22688](https://github.com/hashicorp/terraform-provider-aws/issues/22688))
 * **New Resource:** `aws_sagemaker_project` ([#21534](https://github.com/hashicorp/terraform-provider-aws/issues/21534))
 
