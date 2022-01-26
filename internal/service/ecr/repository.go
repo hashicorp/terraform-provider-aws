@@ -137,7 +137,7 @@ func resourceRepositoryCreate(d *schema.ResourceData, meta interface{}) error {
 	out, err := conn.CreateRepository(&input)
 
 	// Some partitions (i.e., ISO) may not support tag-on-create
-	if input.Tags != nil && meta.(*conns.AWSClient).Partition != endpoints.AwsPartitionID && (tfawserr.ErrCodeContains(err, ErrCodeAccessDenied) || tfawserr.ErrCodeContains(err, ecr.ErrCodeInvalidParameterException) || tfawserr.ErrCodeContains(err, ecr.ErrCodeValidationException)) {
+	if input.Tags != nil && meta.(*conns.AWSClient).Partition != endpoints.AwsPartitionID && verify.CheckISOErrorTagsUnsupported(err) {
 		log.Printf("[WARN] ECR Repository (%s) create failed (%s) with tags. Trying create without tags.", d.Id(), err)
 		input.Tags = nil
 
@@ -159,7 +159,7 @@ func resourceRepositoryCreate(d *schema.ResourceData, meta interface{}) error {
 		err := UpdateTags(conn, aws.StringValue(repository.RepositoryArn), nil, tags)
 
 		// If default tags only, log and continue. Otherwise, error.
-		if v, ok := d.GetOk("tags"); (!ok || len(v.(map[string]interface{})) == 0) && (tfawserr.ErrCodeContains(err, ErrCodeAccessDenied) || tfawserr.ErrCodeContains(err, ecr.ErrCodeInvalidParameterException) || tfawserr.ErrCodeContains(err, ecr.ErrCodeValidationException)) {
+		if v, ok := d.GetOk("tags"); (!ok || len(v.(map[string]interface{})) == 0) && verify.CheckISOErrorTagsUnsupported(err) {
 			log.Printf("[WARN] error adding tags after create for ECR Repository (%s): %s", d.Id(), err)
 			return resourceRepositoryRead(d, meta)
 		}
@@ -237,7 +237,7 @@ func resourceRepositoryRead(d *schema.ResourceData, meta interface{}) error {
 	tags, err := ListTags(conn, arn)
 
 	// Some partitions (i.e., ISO) may not support tagging, giving error
-	if meta.(*conns.AWSClient).Partition != endpoints.AwsPartitionID && (tfawserr.ErrCodeContains(err, ErrCodeAccessDenied) || tfawserr.ErrCodeContains(err, ecr.ErrCodeInvalidParameterException) || tfawserr.ErrCodeContains(err, ecr.ErrCodeValidationException)) {
+	if meta.(*conns.AWSClient).Partition != endpoints.AwsPartitionID && verify.CheckISOErrorTagsUnsupported(err) {
 		log.Printf("[WARN] Unable to list tags for ECR Repository %s: %s", d.Id(), err)
 		return nil
 	}
@@ -326,8 +326,8 @@ func resourceRepositoryUpdate(d *schema.ResourceData, meta interface{}) error {
 
 		err := UpdateTags(conn, arn, o, n)
 
-		if meta.(*conns.AWSClient).Partition != endpoints.AwsPartitionID && (tfawserr.ErrCodeContains(err, ErrCodeAccessDenied) || tfawserr.ErrCodeContains(err, ecr.ErrCodeInvalidParameterException) || tfawserr.ErrCodeContains(err, ecr.ErrCodeValidationException)) {
-			// Some partitions may not support tagging, giving error
+		// Some partitions may not support tagging, giving error
+		if meta.(*conns.AWSClient).Partition != endpoints.AwsPartitionID && verify.CheckISOErrorTagsUnsupported(err) {
 			log.Printf("[WARN] Unable to update tags for ECR Repository %s: %s", d.Id(), err)
 			return resourceRepositoryRead(d, meta)
 		}
