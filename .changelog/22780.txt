@@ -1,3 +1,7 @@
 ```release-note:bug
 data-source/aws_ecr_repository: Further refine tag error handling in ISO partitions
 ```
+
+```release-note:bug
+resource/aws_ecr_repository: Further refine tag error handling in ISO partitions
+```
