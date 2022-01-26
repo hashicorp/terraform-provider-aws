@@ -57,6 +57,7 @@ const (
 	ErrCodeInvalidSubnetIdNotFound                      = "InvalidSubnetId.NotFound"
 	ErrCodeInvalidTransitGatewayAttachmentIDNotFound    = "InvalidTransitGatewayAttachmentID.NotFound"
 	ErrCodeInvalidTransitGatewayIDNotFound              = "InvalidTransitGatewayID.NotFound"
+	ErrCodeInvalidVolumeNotFound                     = "InvalidVolume.NotFound"
 	ErrCodeInvalidVpcCidrBlockAssociationIDNotFound     = "InvalidVpcCidrBlockAssociationID.NotFound"
 	ErrCodeInvalidVpcEndpointIdNotFound                 = "InvalidVpcEndpointId.NotFound"
 	ErrCodeInvalidVpcEndpointNotFound                   = "InvalidVpcEndpoint.NotFound"
