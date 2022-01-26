@@ -169,6 +169,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/macie"
 	"github.com/aws/aws-sdk-go/service/macie2"
 	"github.com/aws/aws-sdk-go/service/managedblockchain"
+	"github.com/aws/aws-sdk-go/service/managedgrafana"
 	"github.com/aws/aws-sdk-go/service/marketplacecatalog"
 	"github.com/aws/aws-sdk-go/service/marketplacecommerceanalytics"
 	"github.com/aws/aws-sdk-go/service/marketplaceentitlementservice"
@@ -451,6 +452,7 @@ const (
 	Macie                         = "macie"
 	Macie2                        = "macie2"
 	ManagedBlockchain             = "managedblockchain"
+	ManagedGrafana                = "managedgrafana"
 	MarketplaceCatalog            = "marketplacecatalog"
 	MarketplaceCommerceAnalytics  = "marketplacecommerceanalytics"
 	MarketplaceEntitlement        = "marketplaceentitlement"
@@ -737,6 +739,7 @@ func init() {
 	serviceData[Macie] = &ServiceDatum{AWSClientName: "Macie", AWSServiceName: macie.ServiceName, AWSEndpointsID: macie.EndpointsID, AWSServiceID: macie.ServiceID, ProviderNameUpper: "Macie", HCLKeys: []string{"macie"}}
 	serviceData[Macie2] = &ServiceDatum{AWSClientName: "Macie2", AWSServiceName: macie2.ServiceName, AWSEndpointsID: macie2.EndpointsID, AWSServiceID: macie2.ServiceID, ProviderNameUpper: "Macie2", HCLKeys: []string{"macie2"}}
 	serviceData[ManagedBlockchain] = &ServiceDatum{AWSClientName: "ManagedBlockchain", AWSServiceName: managedblockchain.ServiceName, AWSEndpointsID: managedblockchain.EndpointsID, AWSServiceID: managedblockchain.ServiceID, ProviderNameUpper: "ManagedBlockchain", HCLKeys: []string{"managedblockchain"}}
+	serviceData[ManagedGrafana] = &ServiceDatum{AWSClientName: "ManagedGrafana", AWSServiceName: managedgrafana.ServiceName, AWSEndpointsID: managedgrafana.EndpointsID, AWSServiceID: managedgrafana.ServiceID, ProviderNameUpper: "ManagedGrafana", HCLKeys: []string{"managedgrafana"}}
 	serviceData[MarketplaceCatalog] = &ServiceDatum{AWSClientName: "MarketplaceCatalog", AWSServiceName: marketplacecatalog.ServiceName, AWSEndpointsID: marketplacecatalog.EndpointsID, AWSServiceID: marketplacecatalog.ServiceID, ProviderNameUpper: "MarketplaceCatalog", HCLKeys: []string{"marketplacecatalog"}}
 	serviceData[MarketplaceCommerceAnalytics] = &ServiceDatum{AWSClientName: "MarketplaceCommerceAnalytics", AWSServiceName: marketplacecommerceanalytics.ServiceName, AWSEndpointsID: marketplacecommerceanalytics.EndpointsID, AWSServiceID: marketplacecommerceanalytics.ServiceID, ProviderNameUpper: "MarketplaceCommerceAnalytics", HCLKeys: []string{"marketplacecommerceanalytics"}}
 	serviceData[MarketplaceEntitlement] = &ServiceDatum{AWSClientName: "MarketplaceEntitlementService", AWSServiceName: marketplaceentitlementservice.ServiceName, AWSEndpointsID: marketplaceentitlementservice.EndpointsID, AWSServiceID: marketplaceentitlementservice.ServiceID, ProviderNameUpper: "MarketplaceEntitlement", HCLKeys: []string{"marketplaceentitlement", "marketplaceentitlementservice"}}
@@ -1051,6 +1054,7 @@ type AWSClient struct {
 	Macie2Conn                        *macie2.Macie2
 	MacieConn                         *macie.Macie
 	ManagedBlockchainConn             *managedblockchain.ManagedBlockchain
+	ManagedGrafanaConn                *managedgrafana.ManagedGrafana
 	MarketplaceCatalogConn            *marketplacecatalog.MarketplaceCatalog
 	MarketplaceCommerceAnalyticsConn  *marketplacecommerceanalytics.MarketplaceCommerceAnalytics
 	MarketplaceEntitlementConn        *marketplaceentitlementservice.MarketplaceEntitlementService
@@ -1405,6 +1409,7 @@ func (c *Config) Client() (interface{}, error) {
 		Macie2Conn:                        macie2.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[Macie2])})),
 		MacieConn:                         macie.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[Macie])})),
 		ManagedBlockchainConn:             managedblockchain.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[ManagedBlockchain])})),
+		ManagedGrafanaConn:                managedgrafana.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[ManagedGrafana])})),
 		MarketplaceCatalogConn:            marketplacecatalog.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[MarketplaceCatalog])})),
 		MarketplaceCommerceAnalyticsConn:  marketplacecommerceanalytics.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[MarketplaceCommerceAnalytics])})),
 		MarketplaceEntitlementConn:        marketplaceentitlementservice.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[MarketplaceEntitlement])})),

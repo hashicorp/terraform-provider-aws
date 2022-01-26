@@ -134,6 +134,7 @@ variable "service_labels" {
     "macie",
     "macie2",
     "managedblockchain",
+    "managedgrafana",
     "marketplacecatalog",
     "mediaconnect",
     "mediaconvert",

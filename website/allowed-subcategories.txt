@@ -95,6 +95,7 @@ Location Service
 MQ
 Macie
 Macie Classic
+Managed Grafana
 Managed Streaming for Kafka (MSK)
 Kafka Connect (MSK Connect)
 MediaConvert

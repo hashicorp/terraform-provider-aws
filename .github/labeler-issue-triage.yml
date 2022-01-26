@@ -240,6 +240,8 @@ service/macie:
   - '((\*|-) ?`?|(data|resource) "?)aws_macie_'
 service/macie2:
   - '((\*|-) ?`?|(data|resource) "?)aws_macie2_'
+service/managedgrafana:
+  - '((\*|-) ?`?|(data|resource) "?)aws_managed_grafana_'
 service/marketplacecatalog:
   - '((\*|-) ?`?|(data|resource) "?)aws_marketplace_catalog_'
 service/mediaconnect:

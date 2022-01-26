@@ -410,6 +410,9 @@ service/macie:
 service/macie2:
   - 'internal/service/macie2/**/*'
   - 'website/**/macie2_*'
+service/managedgrafana:
+  - 'internal/service/managedgrafana/**/*'
+  - 'website/**/managed_grafana_*'
 service/marketplacecatalog:
   - 'internal/service/marketplacecatalog/**/*'
   - 'website/**/marketplace_catalog_*'

@@ -229,6 +229,7 @@ provider "aws" {
   <li><code>macie</code></li>
   <li><code>macie2</code></li>
   <li><code>managedblockchain</code></li>
+  <li><code>managedgrafana</code></li>
   <li><code>marketplacecatalog</code></li>
   <li><code>marketplacecommerceanalytics</code></li>
   <li><code>marketplaceentitlement</code> (or <code>marketplaceentitlementservice</code>)</li>
