@@ -17,3 +17,7 @@ resource/aws_ecs_cluster: Further refine tag error handling in ISO partitions
 ```release-note:bug
 resource/aws_ecs_service: Further refine tag error handling in ISO partitions
 ```
+
+```release-note:bug
+resource/aws_ecs_task_definition: Further refine tag error handling in ISO partitions
+```

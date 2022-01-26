@@ -12,7 +12,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/private/protocol/json/jsonutil"
 	"github.com/aws/aws-sdk-go/service/ecs"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -519,7 +518,7 @@ func resourceTaskDefinitionCreate(d *schema.ResourceData, meta interface{}) erro
 	out, err := conn.RegisterTaskDefinition(&input)
 
 	// Some partitions (i.e., ISO) may not support tag-on-create
-	if input.Tags != nil && (tfawserr.ErrCodeContains(err, ecs.ErrCodeAccessDeniedException) || tfawserr.ErrCodeContains(err, ecs.ErrCodeInvalidParameterException) || tfawserr.ErrCodeContains(err, ecs.ErrCodeUnsupportedFeatureException)) {
+	if input.Tags != nil && verify.CheckISOErrorTagsUnsupported(err) {
 		log.Printf("[WARN] ECS Task Definition (%s) create failed (%s) with tags. Trying create without tags.", d.Id(), err)
 		input.Tags = nil
 
@@ -543,7 +542,7 @@ func resourceTaskDefinitionCreate(d *schema.ResourceData, meta interface{}) erro
 		err := UpdateTags(conn, aws.StringValue(taskDefinition.TaskDefinitionArn), nil, tags)
 
 		// If default tags only, log and continue. Otherwise, error.
-		if v, ok := d.GetOk("tags"); (!ok || len(v.(map[string]interface{})) == 0) && (tfawserr.ErrCodeContains(err, ecs.ErrCodeAccessDeniedException) || tfawserr.ErrCodeContains(err, ecs.ErrCodeInvalidParameterException) || tfawserr.ErrCodeContains(err, ecs.ErrCodeUnsupportedFeatureException)) {
+		if v, ok := d.GetOk("tags"); (!ok || len(v.(map[string]interface{})) == 0) && verify.CheckISOErrorTagsUnsupported(err) {
 			log.Printf("[WARN] error adding tags after create for ECS Task Definition (%s): %s", d.Id(), err)
 			return resourceTaskDefinitionRead(d, meta)
 		}
@@ -638,7 +637,7 @@ func resourceTaskDefinitionRead(d *schema.ResourceData, meta interface{}) error 
 	tags := KeyValueTags(out.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	// Some partitions (i.e., ISO) may not support tagging, giving error
-	if tfawserr.ErrCodeContains(err, ecs.ErrCodeAccessDeniedException) || tfawserr.ErrCodeContains(err, ecs.ErrCodeInvalidParameterException) || tfawserr.ErrCodeContains(err, ecs.ErrCodeUnsupportedFeatureException) {
+	if verify.CheckISOErrorTagsUnsupported(err) {
 		log.Printf("[WARN] Unable to list tags for ECS Task Definition %s: %s", d.Id(), err)
 		return nil
 	}
@@ -726,7 +725,7 @@ func resourceTaskDefinitionUpdate(d *schema.ResourceData, meta interface{}) erro
 		err := UpdateTags(conn, d.Get("arn").(string), o, n)
 
 		// Some partitions (i.e., ISO) may not support tagging, giving error
-		if tfawserr.ErrCodeContains(err, ecs.ErrCodeAccessDeniedException) || tfawserr.ErrCodeContains(err, ecs.ErrCodeInvalidParameterException) || tfawserr.ErrCodeContains(err, ecs.ErrCodeUnsupportedFeatureException) {
+		if verify.CheckISOErrorTagsUnsupported(err) {
 			log.Printf("[WARN] Unable to update tags for ECS Task Definition %s: %s", d.Id(), err)
 			return nil
 		}
