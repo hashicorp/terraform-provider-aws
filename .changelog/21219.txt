@@ -49,3 +49,7 @@ data-source/aws_ip_ranges: If no ranges match the specified criteria an empty li
 ```release-note:note
 data-source/aws_efs_access_points: The type of the `ids` and `arns` attributes has changed from Set to List. If no access points match the specified criteria an empty list is returned (previously an error was raised)
 ```
+
+```release-note:note
+data-source/aws_emr_release_labels: The type of the `ids` attribute has changed from Set to List. If no release labels match the specified criteria an empty list is returned (previously an error was raised)
+```
