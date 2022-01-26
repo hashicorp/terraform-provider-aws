@@ -209,13 +209,7 @@ func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
 
 	// Some partitions (i.e., ISO) may not support tag-on-create
 	if input.Tags != nil && verify.CheckISOErrorTagsUnsupported(err) {
-		resID := "Undefined"
-
-		if out != nil && out.Cluster != nil && out.Cluster.ClusterArn != nil {
-			resID = aws.StringValue(out.Cluster.ClusterArn)
-		}
-
-		log.Printf("[WARN] ECS tagging failure creating Cluster (%s) with tags: %s. Trying create without tags.", resID, err)
+		log.Printf("[WARN] ECS tagging failure creating Cluster (%s) with tags: %s. Trying create without tags.", clusterName, err)
 		input.Tags = nil
 
 		out, err = retryClusterCreate(conn, input)

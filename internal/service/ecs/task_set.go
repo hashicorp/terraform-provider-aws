@@ -336,13 +336,7 @@ func resourceTaskSetCreate(d *schema.ResourceData, meta interface{}) error {
 
 	// Some partitions (i.e., ISO) may not support tag-on-create
 	if input.Tags != nil && verify.CheckISOErrorTagsUnsupported(err) {
-		resID := "Undefined"
-
-		if output != nil && output.TaskSet != nil && output.TaskSet.Id != nil {
-			resID = fmt.Sprintf("%s,%s,%s", aws.StringValue(output.TaskSet.Id), service, cluster)
-		}
-
-		log.Printf("[WARN] ECS tagging failure creating Task Set (%s) with tags: %s. Trying create without tags.", resID, err)
+		log.Printf("[WARN] ECS tagging failure creating Task Set with tags: %s. Trying create without tags.", err)
 		input.Tags = nil
 
 		output, err = retryTaskSetCreate(conn, input)

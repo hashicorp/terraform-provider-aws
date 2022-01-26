@@ -519,13 +519,7 @@ func resourceTaskDefinitionCreate(d *schema.ResourceData, meta interface{}) erro
 
 	// Some partitions (i.e., ISO) may not support tag-on-create
 	if input.Tags != nil && verify.CheckISOErrorTagsUnsupported(err) {
-		resID := "Undefined"
-
-		if out != nil && out.TaskDefinition != nil && out.TaskDefinition.Family != nil {
-			resID = aws.StringValue(out.TaskDefinition.Family)
-		}
-
-		log.Printf("[WARN] ECS tagging failure creating Task Definition (%s) with tags: %s. Trying create without tags.", resID, err)
+		log.Printf("[WARN] ECS tagging failure creating Task Definition (%s) with tags: %s. Trying create without tags.", d.Get("family").(string), err)
 		input.Tags = nil
 
 		out, err = conn.RegisterTaskDefinition(&input)

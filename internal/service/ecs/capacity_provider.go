@@ -127,13 +127,7 @@ func resourceCapacityProviderCreate(d *schema.ResourceData, meta interface{}) er
 
 	// Some partitions (i.e., ISO) may not support tag-on-create
 	if input.Tags != nil && verify.CheckISOErrorTagsUnsupported(err) {
-		resID := "Undefined"
-
-		if output != nil && output.CapacityProvider != nil && output.CapacityProvider.CapacityProviderArn != nil {
-			resID = aws.StringValue(output.CapacityProvider.CapacityProviderArn)
-		}
-
-		log.Printf("[WARN] ECS tagging failure creating Capacity Provider (%s) with tags: %s. Trying create without tags.", resID, err)
+		log.Printf("[WARN] ECS tagging failure creating Capacity Provider (%s) with tags: %s. Trying create without tags.", name, err)
 		input.Tags = nil
 
 		output, err = conn.CreateCapacityProvider(&input)

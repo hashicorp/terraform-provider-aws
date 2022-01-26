@@ -566,13 +566,7 @@ func resourceServiceCreate(d *schema.ResourceData, meta interface{}) error {
 
 	// Some partitions (i.e., ISO) may not support tag-on-create
 	if input.Tags != nil && verify.CheckISOErrorTagsUnsupported(err) {
-		resID := "Undefined"
-
-		if output != nil && output.Service != nil && output.Service.ServiceArn != nil {
-			resID = aws.StringValue(output.Service.ServiceArn)
-		}
-
-		log.Printf("[WARN] ECS tagging failure creating Service (%s) with tags: %s. Trying create without tags.", resID, err)
+		log.Printf("[WARN] ECS tagging failure creating Service (%s) with tags: %s. Trying create without tags.", d.Get("name").(string), err)
 		input.Tags = nil
 
 		output, err = retryServiceCreate(conn, input)
