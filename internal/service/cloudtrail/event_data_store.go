@@ -44,17 +44,20 @@ func ResourceEventDataStore() *schema.Resource {
 			"advanced_event_selector": {
 				Type:     schema.TypeList,
 				Optional: true,
+				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"field_selector": {
 							Type:     schema.TypeSet,
-							Required: true,
+							Optional: true,
+							Computed: true,
 							MinItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"ends_with": {
 										Type:     schema.TypeList,
 										Optional: true,
+										Computed: true,
 										MinItems: 1,
 										Elem: &schema.Schema{
 											Type:         schema.TypeString,
@@ -64,6 +67,7 @@ func ResourceEventDataStore() *schema.Resource {
 									"equals": {
 										Type:     schema.TypeList,
 										Optional: true,
+										Computed: true,
 										MinItems: 1,
 										Elem: &schema.Schema{
 											Type:         schema.TypeString,
@@ -72,12 +76,14 @@ func ResourceEventDataStore() *schema.Resource {
 									},
 									"field": {
 										Type:         schema.TypeString,
-										Required:     true,
+										Optional:     true,
+										Computed:     true,
 										ValidateFunc: validation.StringInSlice(field_Values(), false),
 									},
 									"not_ends_with": {
 										Type:     schema.TypeList,
 										Optional: true,
+										Computed: true,
 										MinItems: 1,
 										Elem: &schema.Schema{
 											Type:         schema.TypeString,
@@ -87,6 +93,7 @@ func ResourceEventDataStore() *schema.Resource {
 									"not_equals": {
 										Type:     schema.TypeList,
 										Optional: true,
+										Computed: true,
 										MinItems: 1,
 										Elem: &schema.Schema{
 											Type:         schema.TypeString,
@@ -96,6 +103,7 @@ func ResourceEventDataStore() *schema.Resource {
 									"not_starts_with": {
 										Type:     schema.TypeList,
 										Optional: true,
+										Computed: true,
 										MinItems: 1,
 										Elem: &schema.Schema{
 											Type:         schema.TypeString,
@@ -105,6 +113,7 @@ func ResourceEventDataStore() *schema.Resource {
 									"starts_with": {
 										Type:     schema.TypeList,
 										Optional: true,
+										Computed: true,
 										MinItems: 1,
 										Elem: &schema.Schema{
 											Type:         schema.TypeString,
@@ -117,6 +126,7 @@ func ResourceEventDataStore() *schema.Resource {
 						"name": {
 							Type:         schema.TypeString,
 							Optional:     true,
+							Computed:     true,
 							ValidateFunc: validation.StringLenBetween(0, 1000),
 						},
 					},
