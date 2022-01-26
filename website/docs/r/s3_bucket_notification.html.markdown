@@ -298,37 +298,40 @@ For Terraform's [JSON syntax](https://www.terraform.io/docs/configuration/syntax
 
 ## Argument Reference
 
+The following arguments are required:
+
+* `bucket` - (Required) Name of the bucket for notification configuration.
+
 The following arguments are supported:
 
-* `bucket` - (Required) The name of the bucket to put notification configuration.
-* `topic` - (Optional) The notification configuration to SNS Topic (documented below).
-* `queue` - (Optional) The notification configuration to SQS Queue (documented below).
-* `lambda_function` - (Optional, Multiple) Used to configure notifications to a Lambda Function (documented below).
-* `eventbridge` - (Optional) Set to true to enable Amazon EventBridge notifications.
+* `eventbridge` - (Optional) Whether to enable Amazon EventBridge notifications.
+* `lambda_function` - (Optional, Multiple) Used to configure notifications to a Lambda Function. See below.
+* `queue` - (Optional) Notification configuration to SQS Queue. See below.
+* `topic` - (Optional) Notification configuration to SNS Topic. See below.
 
-The `topic` notification configuration supports the following:
+### `topic`
 
-* `id` - (Optional) Specifies unique identifier for each of the notification configurations.
-* `topic_arn` - (Required) Specifies Amazon SNS topic ARN.
+* `events` - (Required) [Event](http://docs.aws.amazon.com/AmazonS3/latest/dev/NotificationHowTo.html#notification-how-to-event-types-and-destinations) for which to send notifications.
+* `filter_prefix` - (Optional) Object key name prefix.
+* `filter_suffix` - (Optional) Object key name suffix.
+* `id` - (Optional) Unique identifier for each of the notification configurations.
+* `topic_arn` - (Required) SNS topic ARN.
+
+### `queue`
+
 * `events` - (Required) Specifies [event](http://docs.aws.amazon.com/AmazonS3/latest/dev/NotificationHowTo.html#notification-how-to-event-types-and-destinations) for which to send notifications.
-* `filter_prefix` - (Optional) Specifies object key name prefix.
-* `filter_suffix` - (Optional) Specifies object key name suffix.
+* `filter_prefix` - (Optional) Object key name prefix.
+* `filter_suffix` - (Optional) Object key name suffix.
+* `id` - (Optional) Unique identifier for each of the notification configurations.
+* `queue_arn` - (Required) SQS queue ARN.
 
-The `queue` notification configuration supports the following:
+### `lambda_function`
 
-* `id` - (Optional) Specifies unique identifier for each of the notification configurations.
-* `queue_arn` - (Required) Specifies Amazon SQS queue ARN.
-* `events` - (Required) Specifies [event](http://docs.aws.amazon.com/AmazonS3/latest/dev/NotificationHowTo.html#notification-how-to-event-types-and-destinations) for which to send notifications.
-* `filter_prefix` - (Optional) Specifies object key name prefix.
-* `filter_suffix` - (Optional) Specifies object key name suffix.
-
-The `lambda_function` notification configuration supports the following:
-
-* `id` - (Optional) Specifies unique identifier for each of the notification configurations.
-* `lambda_function_arn` - (Required) Specifies Amazon Lambda function ARN.
-* `events` - (Required) Specifies [event](http://docs.aws.amazon.com/AmazonS3/latest/dev/NotificationHowTo.html#notification-how-to-event-types-and-destinations) for which to send notifications.
-* `filter_prefix` - (Optional) Specifies object key name prefix.
-* `filter_suffix` - (Optional) Specifies object key name suffix.
+* `events` - (Required) [Event](http://docs.aws.amazon.com/AmazonS3/latest/dev/NotificationHowTo.html#notification-how-to-event-types-and-destinations) for which to send notifications.
+* `filter_prefix` - (Optional) Object key name prefix.
+* `filter_suffix` - (Optional) Object key name suffix.
+* `id` - (Optional) Unique identifier for each of the notification configurations.
+* `lambda_function_arn` - (Required) Lambda function ARN.
 
 ## Attributes Reference
 
