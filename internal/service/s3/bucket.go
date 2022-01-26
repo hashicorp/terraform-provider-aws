@@ -806,7 +806,7 @@ func resourceBucketUpdate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if d.HasChange("logging") {
-		if err := resourceBucketLoggingUpdate(conn, d); err != nil {
+		if err := resourceBucketInternalLoggingUpdate(conn, d); err != nil {
 			return err
 		}
 	}
@@ -1868,7 +1868,7 @@ func resourceBucketInternalVersioningUpdate(conn *s3.S3, bucket string, versioni
 	return nil
 }
 
-func resourceBucketLoggingUpdate(conn *s3.S3, d *schema.ResourceData) error {
+func resourceBucketInternalLoggingUpdate(conn *s3.S3, d *schema.ResourceData) error {
 	logging := d.Get("logging").(*schema.Set).List()
 	bucket := d.Get("bucket").(string)
 	loggingStatus := &s3.BucketLoggingStatus{}
