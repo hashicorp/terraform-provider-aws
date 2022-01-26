@@ -2116,6 +2116,7 @@ resource "aws_elasticache_user" "test0" {
   engine        = "REDIS"
   passwords     = ["password123456789"]
 }
+
 resource "aws_elasticache_user_group" "test0" {
   user_group_id = "%[2]s-0"
   engine        = "REDIS"
@@ -2129,6 +2130,7 @@ resource "aws_elasticache_user" "test1" {
   engine        = "REDIS"
   passwords     = ["password123456789"]
 }
+
 resource "aws_elasticache_user_group" "test1" {
   user_group_id = "%[2]s-1"
   engine        = "REDIS"
@@ -2144,10 +2146,8 @@ resource "aws_elasticache_replication_group" "test" {
   auto_minor_version_upgrade    = false
   maintenance_window            = "tue:06:30-tue:07:30"
   snapshot_window               = "01:00-02:00"
-	transit_encryption_enabled    = true
-	user_group_ids                = [aws_elasticache_user_group.test%[3]d.id]
-}
-
+  transit_encryption_enabled    = true
+  user_group_ids                = [aws_elasticache_user_group.test%[3]d.id]
 }
 `, rName, userGroup, flag)
 
