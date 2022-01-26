@@ -420,6 +420,7 @@ func Provider() *schema.Provider {
 			"aws_connect_instance":                    connect.DataSourceInstance(),
 			"aws_connect_lambda_function_association": connect.DataSourceLambdaFunctionAssociation(),
 			"aws_connect_prompt":                      connect.DataSourcePrompt(),
+			"aws_connect_queue":                       connect.DataSourceQueue(),
 			"aws_connect_quick_connect":               connect.DataSourceQuickConnect(),
 
 			"aws_cur_report_definition": cur.DataSourceReportDefinition(),
