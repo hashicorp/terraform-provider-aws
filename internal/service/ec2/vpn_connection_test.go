@@ -402,7 +402,6 @@ func TestAccEC2VPNConnection_tunnelOptions(t *testing.T) {
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccVPNConnectionDestroy,
 		Steps: []resource.TestStep{
-			// Checking CIDR blocks
 			{
 				Config:      testAccVPNConnectionSingleTunnelOptionsConfig(rName, rBgpAsn, "12345678", "not-a-cidr"),
 				ExpectError: regexp.MustCompile(`invalid CIDR address: not-a-cidr`),
@@ -443,8 +442,6 @@ func TestAccEC2VPNConnection_tunnelOptions(t *testing.T) {
 				Config:      testAccVPNConnectionSingleTunnelOptionsConfig(rName, rBgpAsn, "12345678", "169.254.169.252/30"),
 				ExpectError: badCidrRangeErr,
 			},
-
-			// Checking PreShared Key
 			{
 				Config:      testAccVPNConnectionSingleTunnelOptionsConfig(rName, rBgpAsn, "1234567", "169.254.254.0/30"),
 				ExpectError: regexp.MustCompile(`expected length of \w+ to be in the range \(8 - 64\)`),
@@ -461,25 +458,6 @@ func TestAccEC2VPNConnection_tunnelOptions(t *testing.T) {
 				Config:      testAccVPNConnectionSingleTunnelOptionsConfig(rName, rBgpAsn, "1234567!", "169.254.254.0/30"),
 				ExpectError: regexp.MustCompile(`can only contain alphanumeric, period and underscore characters`),
 			},
-
-			// Should pre-check:
-			// - local_ipv4_network_cidr
-			// - local_ipv6_network_cidr
-			// - remote_ipv4_network_cidr
-			// - remote_ipv6_network_cidr
-			// - tunnel_inside_ip_version
-			// - tunnel1_dpd_timeout_action
-			// - tunnel1_dpd_timeout_seconds
-			// - tunnel1_phase1_lifetime_seconds
-			// - tunnel1_phase2_lifetime_seconds
-			// - tunnel1_rekey_fuzz_percentage
-			// - tunnel1_rekey_margin_time_seconds
-			// - tunnel1_replay_window_size
-			// - tunnel1_startup_action
-			// - tunnel1_inside_cidr
-			// - tunnel1_inside_ipv6_cidr
-
-			//Try actual building
 			{
 				Config: testAccVPNConnectionTunnelOptionsConfig(rName, rBgpAsn, "192.168.1.1/32", "192.168.1.2/32", tunnel1, tunnel2),
 				Check: resource.ComposeTestCheckFunc(
@@ -507,7 +485,7 @@ func TestAccEC2VPNConnection_tunnelOptionsLesser(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
 	resourceName := "aws_vpn_connection.test"
-	var vpn1, vpn2, vpn3, vpn4 ec2.VpnConnection
+	var vpn1, vpn2, vpn3, vpn4, vpn5 ec2.VpnConnection
 
 	tunnel1 := TunnelOptions{
 		psk:                        "12345678",
@@ -987,6 +965,66 @@ func TestAccEC2VPNConnection_tunnelOptionsLesser(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "tunnel2_startup_action", "start"),
 					resource.TestCheckResourceAttrSet(resourceName, "tunnel2_vgw_inside_address"),
 				),
+			},
+			// Test resetting to defaults.
+			// [local|remote]_ipv[4|6]_network_cidr, tunnel[1|2]_inside_[ipv6_]cidr and tunnel[1|2]_preshared_key are Computed so no diffs will be detected.
+			{
+				Config: testAccVPNConnectionConfig(rName, rBgpAsn),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccVPNConnectionExists(resourceName, &vpn5),
+					testAccCheckVPNConnectionNotRecreated(&vpn4, &vpn5),
+					resource.TestCheckResourceAttrSet(resourceName, "tunnel1_address"),
+					resource.TestCheckResourceAttrSet(resourceName, "tunnel1_bgp_asn"),
+					resource.TestCheckResourceAttr(resourceName, "tunnel1_bgp_holdtime", "30"),
+					resource.TestCheckResourceAttrSet(resourceName, "tunnel1_cgw_inside_address"),
+					resource.TestCheckResourceAttr(resourceName, "tunnel1_dpd_timeout_action", "clear"),
+					resource.TestCheckResourceAttr(resourceName, "tunnel1_dpd_timeout_seconds", "30"),
+					resource.TestCheckResourceAttr(resourceName, "tunnel1_ike_versions.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "tunnel1_inside_cidr", "169.254.8.0/30"),
+					resource.TestCheckResourceAttr(resourceName, "tunnel1_inside_ipv6_cidr", ""),
+					resource.TestCheckNoResourceAttr(resourceName, "tunnel1_phase1_dh_group_numbers"),
+					resource.TestCheckNoResourceAttr(resourceName, "tunnel1_phase1_encryption_algorithms"),
+					resource.TestCheckNoResourceAttr(resourceName, "tunnel1_phase1_integrity_algorithms"),
+					resource.TestCheckResourceAttr(resourceName, "tunnel1_phase1_lifetime_seconds", "28800"),
+					resource.TestCheckResourceAttr(resourceName, "tunnel1_phase1_dh_group_numbers.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "tunnel1_phase1_encryption_algorithms.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "tunnel1_phase1_integrity_algorithms.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "tunnel1_phase2_dh_group_numbers.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "tunnel1_phase2_encryption_algorithms.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "tunnel1_phase2_integrity_algorithms.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "tunnel1_phase2_lifetime_seconds", "3600"),
+					resource.TestCheckResourceAttr(resourceName, "tunnel1_preshared_key", "12345678"),
+					resource.TestCheckResourceAttr(resourceName, "tunnel1_rekey_fuzz_percentage", "100"),
+					resource.TestCheckResourceAttr(resourceName, "tunnel1_rekey_margin_time_seconds", "540"),
+					resource.TestCheckResourceAttr(resourceName, "tunnel1_replay_window_size", "1024"),
+					resource.TestCheckResourceAttr(resourceName, "tunnel1_startup_action", "add"),
+					resource.TestCheckResourceAttrSet(resourceName, "tunnel1_vgw_inside_address"),
+					resource.TestCheckResourceAttrSet(resourceName, "tunnel2_address"),
+					resource.TestCheckResourceAttrSet(resourceName, "tunnel2_bgp_asn"),
+					resource.TestCheckResourceAttr(resourceName, "tunnel2_bgp_holdtime", "30"),
+					resource.TestCheckResourceAttrSet(resourceName, "tunnel2_cgw_inside_address"),
+					resource.TestCheckResourceAttr(resourceName, "tunnel2_dpd_timeout_action", "clear"),
+					resource.TestCheckResourceAttr(resourceName, "tunnel2_dpd_timeout_seconds", "30"),
+					resource.TestCheckResourceAttr(resourceName, "tunnel2_ike_versions.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "tunnel2_inside_cidr", "169.254.9.0/30"),
+					resource.TestCheckResourceAttr(resourceName, "tunnel2_inside_ipv6_cidr", ""),
+					resource.TestCheckResourceAttr(resourceName, "tunnel2_phase1_dh_group_numbers.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "tunnel2_phase1_encryption_algorithms.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "tunnel2_phase1_integrity_algorithms.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "tunnel2_phase2_dh_group_numbers.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "tunnel2_phase2_encryption_algorithms.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "tunnel2_phase2_integrity_algorithms.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "tunnel2_phase2_lifetime_seconds", "3600"),
+					resource.TestCheckResourceAttr(resourceName, "tunnel2_preshared_key", "abcdefgh"),
+					resource.TestCheckResourceAttr(resourceName, "tunnel2_rekey_fuzz_percentage", "100"),
+					resource.TestCheckResourceAttr(resourceName, "tunnel2_rekey_margin_time_seconds", "540"),
+					resource.TestCheckResourceAttr(resourceName, "tunnel2_replay_window_size", "1024"),
+					resource.TestCheckResourceAttr(resourceName, "tunnel2_startup_action", "add"),
+					resource.TestCheckResourceAttrSet(resourceName, "tunnel2_vgw_inside_address"),
+					resource.TestCheckResourceAttr(resourceName, "tunnel_inside_ip_version", "ipv4"),
+					resource.TestCheckResourceAttr(resourceName, "vgw_telemetry.#", "2"),
+				),
+				ExpectNonEmptyPlan: true,
 			},
 		},
 	})

@@ -59,6 +59,108 @@ const (
 )
 
 const (
+	VpnTunnelOptionsDPDTimeoutActionClear   = "clear"
+	VpnTunnelOptionsDPDTimeoutActionNone    = "none"
+	VpnTunnelOptionsDPDTimeoutActionRestart = "restart"
+)
+
+func VpnTunnelOptionsDPDTimeoutAction_Values() []string {
+	return []string{
+		VpnTunnelOptionsDPDTimeoutActionClear,
+		VpnTunnelOptionsDPDTimeoutActionNone,
+		VpnTunnelOptionsDPDTimeoutActionRestart,
+	}
+}
+
+const (
+	VpnTunnelOptionsIKEVersion1 = "ikev1"
+	VpnTunnelOptionsIKEVersion2 = "ikev2"
+)
+
+func VpnTunnelOptionsIKEVersion_Values() []string {
+	return []string{
+		VpnTunnelOptionsIKEVersion1,
+		VpnTunnelOptionsIKEVersion2,
+	}
+}
+
+const (
+	VpnTunnelOptionsPhase1EncryptionAlgorithmAES128        = "AES128"
+	VpnTunnelOptionsPhase1EncryptionAlgorithmAES256        = "AES256"
+	VpnTunnelOptionsPhase1EncryptionAlgorithmAES128_GCM_16 = "AES128-GCM-16"
+	VpnTunnelOptionsPhase1EncryptionAlgorithmAES256_GCM_16 = "AES256-GCM-16"
+)
+
+func VpnTunnelOptionsPhase1EncryptionAlgorithm_Values() []string {
+	return []string{
+		VpnTunnelOptionsPhase1EncryptionAlgorithmAES128,
+		VpnTunnelOptionsPhase1EncryptionAlgorithmAES256,
+		VpnTunnelOptionsPhase1EncryptionAlgorithmAES128_GCM_16,
+		VpnTunnelOptionsPhase1EncryptionAlgorithmAES256_GCM_16,
+	}
+}
+
+const (
+	VpnTunnelOptionsPhase1IntegrityAlgorithmSHA1     = "SHA1"
+	VpnTunnelOptionsPhase1IntegrityAlgorithmSHA2_256 = "SHA2-256"
+	VpnTunnelOptionsPhase1IntegrityAlgorithmSHA2_384 = "SHA2-384"
+	VpnTunnelOptionsPhase1IntegrityAlgorithmSHA2_512 = "SHA2-512"
+)
+
+func VpnTunnelOptionsPhase1IntegrityAlgorithm_Values() []string {
+	return []string{
+		VpnTunnelOptionsPhase1IntegrityAlgorithmSHA1,
+		VpnTunnelOptionsPhase1IntegrityAlgorithmSHA2_256,
+		VpnTunnelOptionsPhase1IntegrityAlgorithmSHA2_384,
+		VpnTunnelOptionsPhase1IntegrityAlgorithmSHA2_512,
+	}
+}
+
+const (
+	VpnTunnelOptionsPhase2EncryptionAlgorithmAES128        = "AES128"
+	VpnTunnelOptionsPhase2EncryptionAlgorithmAES256        = "AES256"
+	VpnTunnelOptionsPhase2EncryptionAlgorithmAES128_GCM_16 = "AES128-GCM-16"
+	VpnTunnelOptionsPhase2EncryptionAlgorithmAES256_GCM_16 = "AES256-GCM-16"
+)
+
+func VpnTunnelOptionsPhase2EncryptionAlgorithm_Values() []string {
+	return []string{
+		VpnTunnelOptionsPhase2EncryptionAlgorithmAES128,
+		VpnTunnelOptionsPhase2EncryptionAlgorithmAES256,
+		VpnTunnelOptionsPhase2EncryptionAlgorithmAES128_GCM_16,
+		VpnTunnelOptionsPhase2EncryptionAlgorithmAES256_GCM_16,
+	}
+}
+
+const (
+	VpnTunnelOptionsPhase2IntegrityAlgorithmSHA1     = "SHA1"
+	VpnTunnelOptionsPhase2IntegrityAlgorithmSHA2_256 = "SHA2-256"
+	VpnTunnelOptionsPhase2IntegrityAlgorithmSHA2_384 = "SHA2-384"
+	VpnTunnelOptionsPhase2IntegrityAlgorithmSHA2_512 = "SHA2-512"
+)
+
+func VpnTunnelOptionsPhase2IntegrityAlgorithm_Values() []string {
+	return []string{
+		VpnTunnelOptionsPhase2IntegrityAlgorithmSHA1,
+		VpnTunnelOptionsPhase2IntegrityAlgorithmSHA2_256,
+		VpnTunnelOptionsPhase2IntegrityAlgorithmSHA2_384,
+		VpnTunnelOptionsPhase2IntegrityAlgorithmSHA2_512,
+	}
+}
+
+const (
+	VpnTunnelOptionsStartupActionAdd   = "add"
+	VpnTunnelOptionsStartupActionStart = "start"
+)
+
+func VpnTunnelOptionsStartupAction_Values() []string {
+	return []string{
+		VpnTunnelOptionsStartupActionAdd,
+		VpnTunnelOptionsStartupActionStart,
+	}
+}
+
+const (
 	VpnConnectionTypeIpsec1 = "ipsec.1"
 )
 
