@@ -24,7 +24,7 @@ const (
 	// MaxResults Valid Range: Minimum value of 1. Maximum value of 1000
 	// https://docs.aws.amazon.com/connect/latest/APIReference/API_ListPrompts.html
 	ListPromptsMaxResults = 60
-	// ListLambdaFunctionsMaxResults Valid Range: Minimum value of 1. Maximum value of 1000.
+	// ListQuickConnectsMaxResults Valid Range: Minimum value of 1. Maximum value of 1000.
 	// https://docs.aws.amazon.com/connect/latest/APIReference/API_ListQuickConnects.html
 	ListQuickConnectsMaxResults = 60
 )
