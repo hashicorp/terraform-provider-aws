@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccConnectQueueDataSource_QueueID(t *testing.T) {
+func TestAccConnectQueueDataSource_queueID(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	resourceName := "aws_connect_queue.test"
 	datasourceName := "data.aws_connect_queue.test"
