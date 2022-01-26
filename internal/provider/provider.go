@@ -415,9 +415,12 @@ func Provider() *schema.Provider {
 
 			"aws_connect_bot_association":             connect.DataSourceBotAssociation(),
 			"aws_connect_contact_flow":                connect.DataSourceContactFlow(),
+			"aws_connect_contact_flow_module":         connect.DataSourceContactFlowModule(),
 			"aws_connect_hours_of_operation":          connect.DataSourceHoursOfOperation(),
 			"aws_connect_instance":                    connect.DataSourceInstance(),
 			"aws_connect_lambda_function_association": connect.DataSourceLambdaFunctionAssociation(),
+			"aws_connect_prompt":                      connect.DataSourcePrompt(),
+			"aws_connect_quick_connect":               connect.DataSourceQuickConnect(),
 
 			"aws_cur_report_definition": cur.DataSourceReportDefinition(),
 
@@ -468,6 +471,7 @@ func Provider() *schema.Provider {
 			"aws_ec2_transit_gateway_vpc_attachment":         ec2.DataSourceTransitGatewayVPCAttachment(),
 			"aws_ec2_transit_gateway_vpn_attachment":         ec2.DataSourceTransitGatewayVPNAttachment(),
 			"aws_eip":                                        ec2.DataSourceEIP(),
+			"aws_eips":                                       ec2.DataSourceEIPs(),
 			"aws_instance":                                   ec2.DataSourceInstance(),
 			"aws_instances":                                  ec2.DataSourceInstances(),
 			"aws_internet_gateway":                           ec2.DataSourceInternetGateway(),
@@ -998,7 +1002,9 @@ func Provider() *schema.Provider {
 			"aws_connect_instance":                    connect.ResourceInstance(),
 			"aws_connect_hours_of_operation":          connect.ResourceHoursOfOperation(),
 			"aws_connect_lambda_function_association": connect.ResourceLambdaFunctionAssociation(),
+			"aws_connect_queue":                       connect.ResourceQueue(),
 			"aws_connect_quick_connect":               connect.ResourceQuickConnect(),
+			"aws_connect_security_profile":            connect.ResourceSecurityProfile(),
 
 			"aws_cur_report_definition": cur.ResourceReportDefinition(),
 
@@ -1188,13 +1194,14 @@ func Provider() *schema.Provider {
 			"aws_ecrpublic_repository":        ecrpublic.ResourceRepository(),
 			"aws_ecrpublic_repository_policy": ecrpublic.ResourceRepositoryPolicy(),
 
-			"aws_ecs_account_setting_default": ecs.ResourceAccountSettingDefault(),
-			"aws_ecs_capacity_provider":       ecs.ResourceCapacityProvider(),
-			"aws_ecs_cluster":                 ecs.ResourceCluster(),
-			"aws_ecs_service":                 ecs.ResourceService(),
-			"aws_ecs_tag":                     ecs.ResourceTag(),
-			"aws_ecs_task_definition":         ecs.ResourceTaskDefinition(),
-			"aws_ecs_task_set":                ecs.ResourceTaskSet(),
+			"aws_ecs_account_setting_default":    ecs.ResourceAccountSettingDefault(),
+			"aws_ecs_capacity_provider":          ecs.ResourceCapacityProvider(),
+			"aws_ecs_cluster":                    ecs.ResourceCluster(),
+			"aws_ecs_cluster_capacity_providers": ecs.ResourceClusterCapacityProviders(),
+			"aws_ecs_service":                    ecs.ResourceService(),
+			"aws_ecs_tag":                        ecs.ResourceTag(),
+			"aws_ecs_task_definition":            ecs.ResourceTaskDefinition(),
+			"aws_ecs_task_set":                   ecs.ResourceTaskSet(),
 
 			"aws_efs_access_point":       efs.ResourceAccessPoint(),
 			"aws_efs_backup_policy":      efs.ResourceBackupPolicy(),
@@ -1586,6 +1593,7 @@ func Provider() *schema.Provider {
 			"aws_s3_bucket_policy":                            s3.ResourceBucketPolicy(),
 			"aws_s3_bucket_public_access_block":               s3.ResourceBucketPublicAccessBlock(),
 			"aws_s3_bucket_replication_configuration":         s3.ResourceBucketReplicationConfiguration(),
+			"aws_s3_bucket_versioning":                        s3.ResourceBucketVersioning(),
 			"aws_s3_object_copy":                              s3.ResourceObjectCopy(),
 
 			"aws_s3_access_point":                             s3control.ResourceAccessPoint(),

@@ -111,6 +111,47 @@ func ResourceDistributionConfiguration() *schema.Resource {
 								},
 							},
 						},
+						"container_distribution_configuration": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"container_tags": {
+										Type:     schema.TypeSet,
+										Optional: true,
+										Elem: &schema.Schema{
+											Type:         schema.TypeString,
+											ValidateFunc: validation.StringLenBetween(1, 1024),
+										},
+									},
+									"description": {
+										Type:         schema.TypeString,
+										Optional:     true,
+										ValidateFunc: validation.StringLenBetween(1, 1024),
+									},
+									"target_repository": {
+										Type:     schema.TypeList,
+										Required: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"repository_name": {
+													Type:         schema.TypeString,
+													Required:     true,
+													ValidateFunc: validation.StringLenBetween(1, 1024),
+												},
+												"service": {
+													Type:         schema.TypeString,
+													Required:     true,
+													ValidateFunc: validation.StringInSlice([]string{"ECR"}, false),
+												},
+											},
+										},
+									},
+								},
+							},
+						},
 						"license_configuration_arns": {
 							Type:     schema.TypeSet,
 							Optional: true,
@@ -317,6 +358,28 @@ func expandAMIDistributionConfiguration(tfMap map[string]interface{}) *imagebuil
 	return apiObject
 }
 
+func expandContainerDistributionConfiguration(tfMap map[string]interface{}) *imagebuilder.ContainerDistributionConfiguration {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &imagebuilder.ContainerDistributionConfiguration{}
+
+	if v, ok := tfMap["container_tags"].(*schema.Set); ok && v.Len() > 0 {
+		apiObject.ContainerTags = flex.ExpandStringSet(v)
+	}
+
+	if v, ok := tfMap["description"].(string); ok && v != "" {
+		apiObject.Description = aws.String(v)
+	}
+
+	if v, ok := tfMap["target_repository"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		apiObject.TargetRepository = expandTargetContainerRepository(v[0].(map[string]interface{}))
+	}
+
+	return apiObject
+}
+
 func expandDistribution(tfMap map[string]interface{}) *imagebuilder.Distribution {
 	if tfMap == nil {
 		return nil
@@ -326,6 +389,10 @@ func expandDistribution(tfMap map[string]interface{}) *imagebuilder.Distribution
 
 	if v, ok := tfMap["ami_distribution_configuration"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		apiObject.AmiDistributionConfiguration = expandAMIDistributionConfiguration(v[0].(map[string]interface{}))
+	}
+
+	if v, ok := tfMap["container_distribution_configuration"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		apiObject.ContainerDistributionConfiguration = expandContainerDistributionConfiguration(v[0].(map[string]interface{}))
 	}
 
 	if v, ok := tfMap["license_configuration_arns"].(*schema.Set); ok && v.Len() > 0 {
@@ -390,6 +457,24 @@ func expandLaunchPermissionConfiguration(tfMap map[string]interface{}) *imagebui
 	return apiObject
 }
 
+func expandTargetContainerRepository(tfMap map[string]interface{}) *imagebuilder.TargetContainerRepository {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &imagebuilder.TargetContainerRepository{}
+
+	if v, ok := tfMap["repository_name"].(string); ok && v != "" {
+		apiObject.RepositoryName = aws.String(v)
+	}
+
+	if v, ok := tfMap["service"].(string); ok && v != "" {
+		apiObject.Service = aws.String(v)
+	}
+
+	return apiObject
+}
+
 func flattenAMIDistributionConfiguration(apiObject *imagebuilder.AmiDistributionConfiguration) map[string]interface{} {
 	if apiObject == nil {
 		return nil
@@ -424,6 +509,28 @@ func flattenAMIDistributionConfiguration(apiObject *imagebuilder.AmiDistribution
 	return tfMap
 }
 
+func flattenContainerDistributionConfiguration(apiObject *imagebuilder.ContainerDistributionConfiguration) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.ContainerTags; v != nil {
+		tfMap["container_tags"] = aws.StringValueSlice(v)
+	}
+
+	if v := apiObject.Description; v != nil {
+		tfMap["description"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.TargetRepository; v != nil {
+		tfMap["target_repository"] = []interface{}{flattenTargetContainerRepository(v)}
+	}
+
+	return tfMap
+}
+
 func flattenDistribution(apiObject *imagebuilder.Distribution) map[string]interface{} {
 	if apiObject == nil {
 		return nil
@@ -433,6 +540,10 @@ func flattenDistribution(apiObject *imagebuilder.Distribution) map[string]interf
 
 	if v := apiObject.AmiDistributionConfiguration; v != nil {
 		tfMap["ami_distribution_configuration"] = []interface{}{flattenAMIDistributionConfiguration(v)}
+	}
+
+	if v := apiObject.ContainerDistributionConfiguration; v != nil {
+		tfMap["container_distribution_configuration"] = []interface{}{flattenContainerDistributionConfiguration(v)}
 	}
 
 	if v := apiObject.LicenseConfigurationArns; v != nil {
@@ -477,6 +588,24 @@ func flattenLaunchPermissionConfiguration(apiObject *imagebuilder.LaunchPermissi
 
 	if v := apiObject.UserIds; v != nil {
 		tfMap["user_ids"] = aws.StringValueSlice(v)
+	}
+
+	return tfMap
+}
+
+func flattenTargetContainerRepository(apiObject *imagebuilder.TargetContainerRepository) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.RepositoryName; v != nil {
+		tfMap["repository_name"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.Service; v != nil {
+		tfMap["service"] = aws.StringValue(v)
 	}
 
 	return tfMap

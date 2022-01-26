@@ -1,6 +1,7 @@
 package ecs
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"time"
@@ -42,7 +43,7 @@ func ResourceCluster() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(1, 255),
+				ValidateFunc: validateClusterName,
 			},
 			"arn": {
 				Type:     schema.TypeString,
@@ -51,6 +52,7 @@ func ResourceCluster() *schema.Resource {
 			"capacity_providers": {
 				Type:     schema.TypeSet,
 				Optional: true,
+				Computed: true,
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 				},
@@ -114,6 +116,7 @@ func ResourceCluster() *schema.Resource {
 			"default_capacity_provider_strategy": {
 				Type:     schema.TypeSet,
 				Optional: true,
+				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"base": {
@@ -220,7 +223,7 @@ func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
 
 	d.SetId(aws.StringValue(out.Cluster.ClusterArn))
 
-	if _, err := waitClusterAvailable(conn, d.Id()); err != nil {
+	if _, err := waitClusterAvailable(context.Background(), conn, d.Id()); err != nil {
 		return fmt.Errorf("error waiting for ECS Cluster (%s) to become Available: %w", d.Id(), err)
 	}
 
@@ -247,26 +250,23 @@ func resourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	var out *ecs.DescribeClustersOutput
-	err := resource.Retry(2*time.Minute, func() *resource.RetryError {
+	var cluster *ecs.Cluster
+	err := resource.Retry(clusterReadTimeout, func() *resource.RetryError {
 		var err error
-		out, err = FindClusterByNameOrARN(conn, d.Id())
+		cluster, err = FindClusterByNameOrARN(context.Background(), conn, d.Id())
+
+		if d.IsNewResource() && tfresource.NotFound(err) {
+			return resource.RetryableError(err)
+		}
 
 		if err != nil {
 			return resource.NonRetryableError(err)
 		}
 
-		if out == nil || len(out.Failures) > 0 {
-			if d.IsNewResource() {
-				return resource.RetryableError(&resource.NotFoundError{})
-			}
-			return resource.NonRetryableError(&resource.NotFoundError{})
-		}
-
 		return nil
 	})
 	if tfresource.TimedOut(err) {
-		out, err = FindClusterByNameOrARN(conn, d.Id())
+		cluster, err = FindClusterByNameOrARN(context.Background(), conn, d.Id())
 	}
 
 	if tfresource.NotFound(err) {
@@ -277,20 +277,6 @@ func resourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 
 	if err != nil {
 		return fmt.Errorf("error reading ECS Cluster (%s): %s", d.Id(), err)
-	}
-
-	var cluster *ecs.Cluster
-	for _, c := range out.Clusters {
-		if aws.StringValue(c.ClusterArn) == d.Id() {
-			cluster = c
-			break
-		}
-	}
-
-	if cluster == nil {
-		log.Printf("[WARN] ECS Cluster (%s) not found, removing from state", d.Id())
-		d.SetId("")
-		return nil
 	}
 
 	// Status==INACTIVE means deleted cluster
@@ -361,7 +347,7 @@ func resourceClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 			return fmt.Errorf("error changing ECS cluster (%s): %w", d.Id(), err)
 		}
 
-		if _, err := waitClusterAvailable(conn, d.Id()); err != nil {
+		if _, err := waitClusterAvailable(context.Background(), conn, d.Id()); err != nil {
 			return fmt.Errorf("error waiting for ECS Cluster (%s) to become Available: %w", d.Id(), err)
 		}
 	}
@@ -373,30 +359,13 @@ func resourceClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 			DefaultCapacityProviderStrategy: expandCapacityProviderStrategy(d.Get("default_capacity_provider_strategy").(*schema.Set)),
 		}
 
-		err := resource.Retry(ecsClusterTimeoutUpdate, func() *resource.RetryError {
-			_, err := conn.PutClusterCapacityProviders(&input)
-			if err != nil {
-				if tfawserr.ErrMessageContains(err, ecs.ErrCodeClientException, "Cluster was not ACTIVE") {
-					return resource.RetryableError(err)
-				}
-				if tfawserr.ErrMessageContains(err, ecs.ErrCodeResourceInUseException, "") {
-					return resource.RetryableError(err)
-				}
-				if tfawserr.ErrMessageContains(err, ecs.ErrCodeUpdateInProgressException, "") {
-					return resource.RetryableError(err)
-				}
-				return resource.NonRetryableError(err)
-			}
-			return nil
-		})
-		if tfresource.TimedOut(err) {
-			_, err = conn.PutClusterCapacityProviders(&input)
-		}
+		err := retryClusterCapacityProvidersPut(context.Background(), conn, &input)
+
 		if err != nil {
 			return fmt.Errorf("error changing ECS cluster capacity provider settings (%s): %w", d.Id(), err)
 		}
 
-		if _, err := waitClusterAvailable(conn, d.Id()); err != nil {
+		if _, err := waitClusterAvailable(context.Background(), conn, d.Id()); err != nil {
 			return fmt.Errorf("error waiting for ECS Cluster (%s) to become Available: %w", d.Id(), err)
 		}
 	}

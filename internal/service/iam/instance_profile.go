@@ -240,7 +240,7 @@ func resourceInstanceProfileRead(d *schema.ResourceData, meta interface{}) error
 					return fmt.Errorf("removing role %s to IAM instance profile %s: %w", roleName, d.Id(), err)
 				}
 			}
-			return fmt.Errorf("reading IAM Role %s attcahed to IAM Instance Profile %s: %w", roleName, d.Id(), err)
+			return fmt.Errorf("reading IAM Role %s attached to IAM Instance Profile %s: %w", roleName, d.Id(), err)
 		}
 	}
 
