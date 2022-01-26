@@ -212,7 +212,6 @@ func resourceTransitGatewayMulticastDomainRead(d *schema.ResourceData, meta inte
 	d.Set("static_source_support", multicastDomain.Options.StaticSourcesSupport)
 	d.Set("auto_accept_shared_associations", multicastDomain.Options.AutoAcceptSharedAssociations)
 
-	// if err := d.Set("tags", ec2TagSpecificationsFromKeyValueTags(multicastDomain.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 	tags := KeyValueTags(multicastDomain.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.Map()); err != nil {

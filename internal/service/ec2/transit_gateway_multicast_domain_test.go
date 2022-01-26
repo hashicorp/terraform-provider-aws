@@ -143,37 +143,7 @@ func testAccAWSTransitGatewayMulticastDomain_Associations(t *testing.T) {
 			{
 				Config: testAccTransitGatewayMulticastDomainConfigAssociation2(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTransitGatewayMulticastDomainExists(resourceName, &domain1),
-					testAccCheckTransitGatewayVPCAttachmentExists(attachmentName1, &attachment1),
-					testAccCheckSubnetExists(subnetName1, &subnet1),
-					testAccCheckSubnetExists(subnetName2, &subnet2),
-					testAccCheckTransitGatewayMulticastDomainAssociations(&domain1, 2, map[*ec2.TransitGatewayVpcAttachment][]*ec2.Subnet{
-						&attachment1: {
-							&subnet1,
-							&subnet2,
-						},
-					}),
-				),
-			},
-			{
-				Config: testAccTransitGatewayMulticastDomainConfigAssociation3(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTransitGatewayMulticastDomainExists(resourceName, &domain1),
-					testAccCheckTransitGatewayVPCAttachmentExists(attachmentName1, &attachment1),
-					testAccCheckSubnetExists(subnetName1, &subnet1),
-					testAccCheckTransitGatewayMulticastDomainAssociations(&domain1, 1, map[*ec2.TransitGatewayVpcAttachment][]*ec2.Subnet{
-						&attachment1: {
-							&subnet1,
-						},
-					}),
-				),
-			},
-			{
-				Config: testAccTransitGatewayMulticastDomainConfigAssociation4(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTransitGatewayVPCAttachmentExists(attachmentName1, &attachment1),
 					testAccCheckTransitGatewayVPCAttachmentExists(attachmentName2, &attachment2),
-					testAccCheckSubnetExists(subnetName1, &subnet1),
 					testAccCheckSubnetExists(subnetName2, &subnet2),
 					testAccCheckTransitGatewayMulticastDomainAssociations(&domain1, 2, map[*ec2.TransitGatewayVpcAttachment][]*ec2.Subnet{
 						&attachment1: {&subnet1},
@@ -451,7 +421,6 @@ resource "aws_ec2_transit_gateway_multicast_domain" "test" {
 
 func testAccTransitGatewayMulticastDomainConfigAssociation1(rName string) string {
 	return fmt.Sprintf(`
-
 data "aws_availability_zones" "available" {
   state = "available"
 }
@@ -502,117 +471,6 @@ resource "aws_ec2_transit_gateway_multicast_domain" "test" {
 }
 
 func testAccTransitGatewayMulticastDomainConfigAssociation2(rName string) string {
-	return fmt.Sprintf(`
-
-data "aws_availability_zones" "available" {
-  state = "available"
-}
-
-resource "aws_vpc" "test1" {
-  cidr_block = "10.0.0.0/16"
-  tags = {
-    Name = %[1]q
-  }
-}
-resource "aws_subnet" "test1" {
-  vpc_id            = aws_vpc.test1.id
-  cidr_block        = "10.0.1.0/24"
-  availability_zone = data.aws_availability_zones.available.names[0]
-  tags = {
-    Name = %[1]q
-  }
-}
-resource "aws_subnet" "test2" {
-  vpc_id            = aws_vpc.test1.id
-  cidr_block        = "10.0.2.0/24"
-  availability_zone = data.aws_availability_zones.available.names[1]
-  tags = {
-    Name = %[1]q
-  }
-}
-resource "aws_ec2_transit_gateway" "test" {
-  multicast_support = "enable"
-  tags = {
-    Name = %[1]q
-  }
-}
-resource "aws_ec2_transit_gateway_vpc_attachment" "test1" {
-  subnet_ids         = [aws_subnet.test1.id, aws_subnet.test2.id]
-  transit_gateway_id = aws_ec2_transit_gateway.test.id
-  vpc_id             = aws_vpc.test1.id
-  tags = {
-    Name = %[1]q
-  }
-}
-resource "aws_ec2_transit_gateway_multicast_domain" "test" {
-  transit_gateway_id = aws_ec2_transit_gateway.test.id
-  association {
-    transit_gateway_attachment_id = aws_ec2_transit_gateway_vpc_attachment.test1.id
-    subnet_ids                    = [aws_subnet.test1.id, aws_subnet.test2.id]
-  }
-  tags = {
-    Name = %[1]q
-  }
-}
-`, rName)
-}
-
-func testAccTransitGatewayMulticastDomainConfigAssociation3(rName string) string {
-	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  state = "available"
-}
-
-resource "aws_vpc" "test1" {
-  cidr_block = "10.0.0.0/16"
-  tags = {
-    Name = %[1]q
-  }
-}
-resource "aws_subnet" "test1" {
-  vpc_id            = aws_vpc.test1.id
-  cidr_block        = "10.0.1.0/24"
-  availability_zone = data.aws_availability_zones.available.names[0]
-  tags = {
-    Name = %[1]q
-  }
-}
-resource "aws_subnet" "test2" {
-  vpc_id            = aws_vpc.test1.id
-  cidr_block        = "10.0.2.0/24"
-  availability_zone = data.aws_availability_zones.available.names[1]
-  tags = {
-    Name = %[1]q
-  }
-}
-resource "aws_ec2_transit_gateway" "test" {
-  multicast_support = "enable"
-  tags = {
-    Name = %[1]q
-  }
-}
-resource "aws_ec2_transit_gateway_vpc_attachment" "test1" {
-  subnet_ids         = [aws_subnet.test1.id, aws_subnet.test2.id]
-  transit_gateway_id = aws_ec2_transit_gateway.test.id
-  vpc_id             = aws_vpc.test1.id
-  tags = {
-    Name = %[1]q
-  }
-}
-resource "aws_ec2_transit_gateway_multicast_domain" "test" {
-  transit_gateway_id = aws_ec2_transit_gateway.test.id
-  association {
-    transit_gateway_attachment_id = aws_ec2_transit_gateway_vpc_attachment.test1.id
-    subnet_ids                    = [aws_subnet.test1.id]
-  }
-  tags = {
-    Name = %[1]q
-  }
-}
-`, rName)
-}
-
-func testAccTransitGatewayMulticastDomainConfigAssociation4(rName string) string {
 	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {
   state = "available"
