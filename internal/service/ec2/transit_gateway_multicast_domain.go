@@ -30,6 +30,14 @@ func ResourceTransitGatewayMulticastDomain() *schema.Resource {
 				Required: true,
 			},
 			"tags": tftags.TagsSchema(),
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"owner_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"igmpv2_support": {
 				Type:     schema.TypeString,
 				Optional: true,

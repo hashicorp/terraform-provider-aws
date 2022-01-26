@@ -12,7 +12,7 @@ Manages an EC2 Transit Gateway Multicast Domain.
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_ec2_transit_gateway_multicast_domain" "main" {
   transit_gateway_id = aws_ec2_transit_gateway.main.id
 

@@ -25,16 +25,22 @@ func DataSourceTransitGatewayMulticastDomain() *schema.Resource {
 			},
 			"transit_gateway_attachment_id": {
 				Type:     schema.TypeString,
-				Optional: true,
 				Computed: true,
 			},
 			"transit_gateway_id": {
 				Type:     schema.TypeString,
-				Optional: true,
 				Computed: true,
 			},
-			"tags":   tftags.TagsSchema(),
+			"tags":   tftags.TagsSchemaComputed(),
 			"filter": DataSourceFiltersSchema(),
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"owner_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"igmpv2_support": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -134,10 +140,10 @@ func dataSourceTransitGatewayMulticastDomainRead(d *schema.ResourceData, meta in
 		input.TransitGatewayMulticastDomainIds = []*string{aws.String(v.(string))}
 	}
 
-	input.Filters = BuildCustomFilterList(d.Get("filter").(*schema.Set))
-	if v := d.Get("tags").(map[string]interface{}); len(v) > 0 {
-		input.Filters = append(input.Filters, ec2TagFiltersFromMap(v)...)
+	if v, ok := d.GetOk("filter"); ok {
+		input.Filters = BuildFiltersDataSource(v.(*schema.Set))
 	}
+
 	if len(input.Filters) == 0 {
 		// Don't send an empty filters list; the EC2 API won't accept it.
 		input.Filters = nil
@@ -165,7 +171,6 @@ func dataSourceTransitGatewayMulticastDomainRead(d *schema.ResourceData, meta in
 		return errors.New("error reading EC2 Transit Gateway Multicast Domain: missing options")
 	}
 
-	d.Set("id", transitGatewayMulticastDomain.TransitGatewayMulticastDomainId)
 	d.Set("transit_gateway_id", transitGatewayMulticastDomain.TransitGatewayId)
 	d.Set("owner_id", transitGatewayMulticastDomain.OwnerId)
 	d.Set("arn", transitGatewayMulticastDomain.TransitGatewayMulticastDomainArn)
@@ -178,7 +183,7 @@ func dataSourceTransitGatewayMulticastDomainRead(d *schema.ResourceData, meta in
 	d.Set("static_source_support", transitGatewayMulticastDomain.Options.StaticSourcesSupport)
 	d.Set("auto_accept_shared_associations", transitGatewayMulticastDomain.Options.AutoAcceptSharedAssociations)
 
-	d.SetId(aws.StringValue(transitGatewayMulticastDomain.TransitGatewayId))
+	d.SetId(aws.StringValue(transitGatewayMulticastDomain.TransitGatewayMulticastDomainId))
 
 	return nil
 }

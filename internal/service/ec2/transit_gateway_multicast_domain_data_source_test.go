@@ -43,9 +43,7 @@ func testAccTransitGatewayMulticastDomainDataSource_Filter(t *testing.T) {
 				Config: testAccTransitGatewayMulticastDomainFilterDataSourceConfig(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, "id", dataSourceName, "id"),
-					resource.TestCheckResourceAttrPair(resourceName, "arn", dataSourceName, "arn"),
 					resource.TestCheckResourceAttrPair(resourceName, "transit_gateway_id", dataSourceName, "transit_gateway_id"),
-					resource.TestCheckResourceAttrPair(resourceName, "owner_id", dataSourceName, "owner_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "tags.%", dataSourceName, "tags.%"),
 				),
 			},
@@ -67,9 +65,7 @@ func testAccTransitGatewayMulticastDomainDataSource_ID(t *testing.T) {
 				Config: testAccTransitGatewayMulticastDomainIDDataSourceConfig(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, "id", dataSourceName, "id"),
-					resource.TestCheckResourceAttrPair(resourceName, "arn", dataSourceName, "arn"),
 					resource.TestCheckResourceAttrPair(resourceName, "transit_gateway_id", dataSourceName, "transit_gateway_id"),
-					resource.TestCheckResourceAttrPair(resourceName, "owner_id", dataSourceName, "owner_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "tags.%", dataSourceName, "tags.%"),
 				),
 			},
@@ -79,23 +75,40 @@ func testAccTransitGatewayMulticastDomainDataSource_ID(t *testing.T) {
 
 func testAccTransitGatewayMulticastDomainFilterDataSourceConfig() string {
 	return `
-resource "aws_ec2_transit_gateway_multicast_domain" "test" {}
+
+resource "aws_ec2_transit_gateway" "test" {
+  multicast_support = "enable"
+}
+
+resource "aws_ec2_transit_gateway_multicast_domain" "test" {
+  transit_gateway_id = aws_ec2_transit_gateway.test.id
+}
 
 data "aws_ec2_transit_gateway_multicast_domain" "test" {
   filter {
     name   = "transit-gateway-multicast-domain-id"
     values = [aws_ec2_transit_gateway_multicast_domain.test.id]
   }
+
+  depends_on = [aws_ec2_transit_gateway_multicast_domain.test]
 }
 `
 }
 
 func testAccTransitGatewayMulticastDomainIDDataSourceConfig() string {
 	return `
-resource "aws_ec2_transit_gateway_multicast_domain" "test" {}
+resource "aws_ec2_transit_gateway" "test" {
+  multicast_support = "enable"
+}
+
+resource "aws_ec2_transit_gateway_multicast_domain" "test" {
+  transit_gateway_id = aws_ec2_transit_gateway.test.id
+}
 
 data "aws_ec2_transit_gateway_multicast_domain" "test" {
   id = aws_ec2_transit_gateway_multicast_domain.test.id
+
+  depends_on = [aws_ec2_transit_gateway_multicast_domain.test]
 }
 `
 }
