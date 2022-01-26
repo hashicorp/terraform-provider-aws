@@ -15,24 +15,26 @@ import (
 
 func DataSourceTransitGatewayMulticastDomain() *schema.Resource {
 	return &schema.Resource{
-		Read: resourceTransitGatewayMulticastDomainRead,
+		Read: dataSourceTransitGatewayMulticastDomainRead,
 
 		Schema: map[string]*schema.Schema{
 			"id": {
 				Type:     schema.TypeString,
-				ForceNew: true,
-				Required: true,
+				Optional: true,
+				Computed: true,
 			},
 			"transit_gateway_attachment_id": {
 				Type:     schema.TypeString,
-				Required: true,
+				Optional: true,
+				Computed: true,
 			},
 			"transit_gateway_id": {
 				Type:     schema.TypeString,
-				ForceNew: true,
-				Required: true,
+				Optional: true,
+				Computed: true,
 			},
-			"tags": tftags.TagsSchema(),
+			"tags":   tftags.TagsSchema(),
+			"filter": DataSourceFiltersSchema(),
 			"igmpv2_support": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -61,12 +63,12 @@ func DataSourceTransitGatewayMulticastDomain() *schema.Resource {
 					Schema: map[string]*schema.Schema{
 						"transit_gateway_attachment_id": {
 							Type:     schema.TypeString,
-							Required: true,
+							Optional: true,
 						},
 						"subnet_ids": {
 							Type:     schema.TypeSet,
 							Elem:     &schema.Schema{Type: schema.TypeString},
-							Required: true,
+							Optional: true,
 							MinItems: 1,
 							Set:      schema.HashString,
 						},
@@ -83,12 +85,12 @@ func DataSourceTransitGatewayMulticastDomain() *schema.Resource {
 					Schema: map[string]*schema.Schema{
 						"group_ip_address": {
 							Type:     schema.TypeString,
-							Required: true,
+							Optional: true,
 						},
 						"network_interface_ids": {
 							Type:     schema.TypeSet,
 							Elem:     &schema.Schema{Type: schema.TypeString},
-							Required: true,
+							Optional: true,
 							MinItems: 1,
 							Set:      schema.HashString,
 						},
@@ -105,12 +107,12 @@ func DataSourceTransitGatewayMulticastDomain() *schema.Resource {
 					Schema: map[string]*schema.Schema{
 						"group_ip_address": {
 							Type:     schema.TypeString,
-							Required: true,
+							Optional: true,
 						},
 						"network_interface_ids": {
 							Type:     schema.TypeSet,
 							Elem:     &schema.Schema{Type: schema.TypeString},
-							Required: true,
+							Optional: true,
 							MinItems: 1,
 							Set:      schema.HashString,
 						},
