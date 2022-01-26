@@ -351,12 +351,15 @@ func Provider() *schema.Provider {
 
 			"aws_api_gateway_api_key":     apigateway.DataSourceAPIKey(),
 			"aws_api_gateway_domain_name": apigateway.DataSourceDomainName(),
+			"aws_api_gateway_export":      apigateway.DataSourceExport(),
 			"aws_api_gateway_resource":    apigateway.DataSourceResource(),
 			"aws_api_gateway_rest_api":    apigateway.DataSourceRestAPI(),
+			"aws_api_gateway_sdk":         apigateway.DataSourceSdk(),
 			"aws_api_gateway_vpc_link":    apigateway.DataSourceVPCLink(),
 
-			"aws_apigatewayv2_api":  apigatewayv2.DataSourceAPI(),
-			"aws_apigatewayv2_apis": apigatewayv2.DataSourceAPIs(),
+			"aws_apigatewayv2_api":    apigatewayv2.DataSourceAPI(),
+			"aws_apigatewayv2_apis":   apigatewayv2.DataSourceAPIs(),
+			"aws_apigatewayv2_export": apigatewayv2.DataSourceExport(),
 
 			"aws_appmesh_mesh":            appmesh.DataSourceMesh(),
 			"aws_appmesh_virtual_service": appmesh.DataSourceVirtualService(),
@@ -412,10 +415,12 @@ func Provider() *schema.Provider {
 
 			"aws_connect_bot_association":             connect.DataSourceBotAssociation(),
 			"aws_connect_contact_flow":                connect.DataSourceContactFlow(),
+			"aws_connect_contact_flow_module":         connect.DataSourceContactFlowModule(),
 			"aws_connect_hours_of_operation":          connect.DataSourceHoursOfOperation(),
 			"aws_connect_instance":                    connect.DataSourceInstance(),
 			"aws_connect_lambda_function_association": connect.DataSourceLambdaFunctionAssociation(),
 			"aws_connect_prompt":                      connect.DataSourcePrompt(),
+			"aws_connect_quick_connect":               connect.DataSourceQuickConnect(),
 
 			"aws_cur_report_definition": cur.DataSourceReportDefinition(),
 
@@ -569,6 +574,7 @@ func Provider() *schema.Provider {
 			"aws_imagebuilder_component":                     imagebuilder.DataSourceComponent(),
 			"aws_imagebuilder_components":                    imagebuilder.DataSourceComponents(),
 			"aws_imagebuilder_distribution_configuration":    imagebuilder.DataSourceDistributionConfiguration(),
+			"aws_imagebuilder_distribution_configurations":   imagebuilder.DataSourceDistributionConfigurations(),
 			"aws_imagebuilder_image":                         imagebuilder.DataSourceImage(),
 			"aws_imagebuilder_image_pipeline":                imagebuilder.DataSourceImagePipeline(),
 			"aws_imagebuilder_image_recipe":                  imagebuilder.DataSourceImageRecipe(),
@@ -995,7 +1001,9 @@ func Provider() *schema.Provider {
 			"aws_connect_instance":                    connect.ResourceInstance(),
 			"aws_connect_hours_of_operation":          connect.ResourceHoursOfOperation(),
 			"aws_connect_lambda_function_association": connect.ResourceLambdaFunctionAssociation(),
+			"aws_connect_queue":                       connect.ResourceQueue(),
 			"aws_connect_quick_connect":               connect.ResourceQuickConnect(),
+			"aws_connect_security_profile":            connect.ResourceSecurityProfile(),
 
 			"aws_cur_report_definition": cur.ResourceReportDefinition(),
 

@@ -2,6 +2,13 @@
 
 FEATURES:
 
+* **New Data Source:** `aws_api_gateway_export` ([#22731](https://github.com/hashicorp/terraform-provider-aws/issues/22731))
+* **New Data Source:** `aws_api_gateway_sdk` ([#22731](https://github.com/hashicorp/terraform-provider-aws/issues/22731))
+* **New Data Source:** `aws_apigatewayv2_export` ([#22732](https://github.com/hashicorp/terraform-provider-aws/issues/22732))
+* **New Data Source:** `aws_imagebuilder_components` ([#21881](https://github.com/hashicorp/terraform-provider-aws/issues/21881))
+* **New Data Source:** `aws_imagebuilder_distribution_configurations` ([#22733](https://github.com/hashicorp/terraform-provider-aws/issues/22733))
+* **New Data Source:** `aws_imagebuilder_infrastructure_configurations` ([#22723](https://github.com/hashicorp/terraform-provider-aws/issues/22723))
+* **New Resource:** `aws_dataexchange_data_set` ([#22697](https://github.com/hashicorp/terraform-provider-aws/issues/22697))
 * **New Resource:** `aws_devicefarm_test_grid_project` ([#22688](https://github.com/hashicorp/terraform-provider-aws/issues/22688))
 * **New Resource:** `aws_sagemaker_project` ([#21534](https://github.com/hashicorp/terraform-provider-aws/issues/21534))
 
@@ -17,11 +24,13 @@ BUG FIXES:
 * data-source/aws_lb_listener: Further refine tag error handling for ISO regions ([#22717](https://github.com/hashicorp/terraform-provider-aws/issues/22717))
 * data-source/aws_lb_target_group: Further refine tag error handling for ISO regions ([#22717](https://github.com/hashicorp/terraform-provider-aws/issues/22717))
 * data-source/aws_vpc: Suppress errors if main route table cannot be found ([#22724](https://github.com/hashicorp/terraform-provider-aws/issues/22724))
+* resource/aws_cloudfront_distribution: Increase the maximum valid `origin_keepalive_timeout` value to `180` ([#22632](https://github.com/hashicorp/terraform-provider-aws/issues/22632))
 * resource/aws_cloudwatch_composite_alarm: Further refine tag error handling for ISO regions ([#22717](https://github.com/hashicorp/terraform-provider-aws/issues/22717))
 * resource/aws_cloudwatch_event_bus: Further refine tag error handling for ISO regions ([#22717](https://github.com/hashicorp/terraform-provider-aws/issues/22717))
 * resource/aws_cloudwatch_event_rule: Further refine tag error handling for ISO regions ([#22717](https://github.com/hashicorp/terraform-provider-aws/issues/22717))
 * resource/aws_cloudwatch_metric_alarm: Further refine tag error handling for ISO regions ([#22717](https://github.com/hashicorp/terraform-provider-aws/issues/22717))
 * resource/aws_cloudwatch_metric_stream: Further refine tag error handling for ISO regions ([#22717](https://github.com/hashicorp/terraform-provider-aws/issues/22717))
+* resource/aws_instance: Prevent panic when reading the instance's block device mappings ([#22719](https://github.com/hashicorp/terraform-provider-aws/issues/22719))
 * resource/aws_internet_gateway: No longer give up before the attachment timeout (4m) is exceeded (previously it was giving up after 20 not found checks). ([#22713](https://github.com/hashicorp/terraform-provider-aws/issues/22713))
 * resource/aws_lambda_function: Prevent errors when attempting to configure code signing in the `ap-southeast-3` AWS Region ([#22693](https://github.com/hashicorp/terraform-provider-aws/issues/22693))
 * resource/aws_lb: Further refine tag error handling for ISO regions ([#22717](https://github.com/hashicorp/terraform-provider-aws/issues/22717))

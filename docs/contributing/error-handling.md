@@ -225,7 +225,7 @@ if err != nil {
 Code that also uses waiters or other operations that return errors should follow a similar pattern, including the resource identifier since it has typically been set before this execution:
 
 ```go
-if _, err := waiter.VpcAvailable(conn, d.Id()); err != nil {
+if _, err := VpcAvailable(conn, d.Id()); err != nil {
     return fmt.Errorf("error waiting for EC2 VPC (%s) availability: %w", d.Id(), err)
 }
 ```
@@ -281,7 +281,7 @@ if err != nil {
 Code that also uses [waiters](retries-and-waiters.md) or other operations that return errors should follow a similar pattern:
 
 ```go
-if _, err := waiter.VpcDeleted(conn, d.Id()); err != nil {
+if _, err := VpcDeleted(conn, d.Id()); err != nil {
     return fmt.Errorf("error waiting for EC2 VPC (%s) deletion: %w", d.Id(), err)
 }
 ```
@@ -364,7 +364,7 @@ if err != nil {
 Code that also uses waiters or other operations that return errors should follow a similar pattern:
 
 ```go
-if _, err := waiter.VpcAvailable(conn, d.Id()); err != nil {
+if _, err := VpcAvailable(conn, d.Id()); err != nil {
     return fmt.Errorf("error waiting for EC2 VPC (%s) update: %w", d.Id(), err)
 }
 ```
