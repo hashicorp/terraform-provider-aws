@@ -64,7 +64,7 @@ func dataSourceInstancesRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	input.Filters = append(input.Filters, BuildTagFilterList(
-		Tags(tftags.New(d.Get("tags").(map[string]interface{}))),
+		Tags(tftags.New(d.Get("instance_tags").(map[string]interface{}))),
 	)...)
 
 	input.Filters = append(input.Filters, BuildFiltersDataSource(
