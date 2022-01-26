@@ -52,7 +52,7 @@ func testAccSecurityProfile_basic(t *testing.T) {
 
 					resource.TestCheckResourceAttr(resourceName, "name", rName2),
 					resource.TestCheckResourceAttr(resourceName, "description", "Created"),
-					resource.TestCheckResourceAttr(resourceName, "permissions.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "permissions.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 				),
 			},
@@ -72,7 +72,7 @@ func testAccSecurityProfile_basic(t *testing.T) {
 
 					resource.TestCheckResourceAttr(resourceName, "name", rName2),
 					resource.TestCheckResourceAttr(resourceName, "description", "Updated"),
-					resource.TestCheckResourceAttr(resourceName, "permissions.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "permissions.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 				),
 			},
@@ -188,11 +188,6 @@ resource "aws_connect_security_profile" "test" {
   instance_id = aws_connect_instance.test.id
   name        = %[1]q
   description = %[2]q
-
-  permissions = [
-    "BasicAgentAccess",
-    "OutboundCallAccess",
-  ]
 
   tags = {
     "Name" = "Test Security Profile"
