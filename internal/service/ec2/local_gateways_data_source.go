@@ -14,7 +14,7 @@ func DataSourceLocalGateways() *schema.Resource {
 	return &schema.Resource{
 		Read: dataSourceLocalGatewaysRead,
 		Schema: map[string]*schema.Schema{
-			"filter": CustomFiltersSchema(),
+			"filter": DataSourceFiltersSchema(),
 			"ids": {
 				Type:     schema.TypeList,
 				Computed: true,
