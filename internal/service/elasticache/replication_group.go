@@ -597,8 +597,8 @@ func resourceReplicationGroupRead(d *schema.ResourceData, meta interface{}) erro
 
 		d.Set("user_group_ids", rgp.UserGroupIds)
 
-		d.Set("auto_minor_version_upgrade", c.AutoMinorVersionUpgrade)
 		d.Set("at_rest_encryption_enabled", c.AtRestEncryptionEnabled)
+		d.Set("auto_minor_version_upgrade", c.AutoMinorVersionUpgrade)
 		d.Set("transit_encryption_enabled", c.TransitEncryptionEnabled)
 
 		if c.AuthTokenEnabled != nil && !aws.BoolValue(c.AuthTokenEnabled) {
