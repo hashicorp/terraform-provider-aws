@@ -302,20 +302,20 @@ The following arguments are required:
 
 * `bucket` - (Required) Name of the bucket for notification configuration.
 
-The following arguments are supported:
+The following arguments are optional:
 
 * `eventbridge` - (Optional) Whether to enable Amazon EventBridge notifications.
 * `lambda_function` - (Optional, Multiple) Used to configure notifications to a Lambda Function. See below.
 * `queue` - (Optional) Notification configuration to SQS Queue. See below.
 * `topic` - (Optional) Notification configuration to SNS Topic. See below.
 
-### `topic`
+### `lambda_function`
 
 * `events` - (Required) [Event](http://docs.aws.amazon.com/AmazonS3/latest/dev/NotificationHowTo.html#notification-how-to-event-types-and-destinations) for which to send notifications.
 * `filter_prefix` - (Optional) Object key name prefix.
 * `filter_suffix` - (Optional) Object key name suffix.
 * `id` - (Optional) Unique identifier for each of the notification configurations.
-* `topic_arn` - (Required) SNS topic ARN.
+* `lambda_function_arn` - (Required) Lambda function ARN.
 
 ### `queue`
 
@@ -325,13 +325,13 @@ The following arguments are supported:
 * `id` - (Optional) Unique identifier for each of the notification configurations.
 * `queue_arn` - (Required) SQS queue ARN.
 
-### `lambda_function`
+### `topic`
 
 * `events` - (Required) [Event](http://docs.aws.amazon.com/AmazonS3/latest/dev/NotificationHowTo.html#notification-how-to-event-types-and-destinations) for which to send notifications.
 * `filter_prefix` - (Optional) Object key name prefix.
 * `filter_suffix` - (Optional) Object key name suffix.
 * `id` - (Optional) Unique identifier for each of the notification configurations.
-* `lambda_function_arn` - (Required) Lambda function ARN.
+* `topic_arn` - (Required) SNS topic ARN.
 
 ## Attributes Reference
 
