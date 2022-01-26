@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
@@ -17,28 +18,105 @@ func DataSourceTransitGatewayMulticastDomain() *schema.Resource {
 		Read: resourceTransitGatewayMulticastDomainRead,
 
 		Schema: map[string]*schema.Schema{
-			"filter": CustomFiltersSchema(),
 			"id": {
 				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
+				ForceNew: true,
+				Required: true,
 			},
-			"peer_account_id": {
+			"transit_gateway_attachment_id": {
 				Type:     schema.TypeString,
-				Computed: true,
+				Required: true,
 			},
-			"peer_region": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"peer_transit_gateway_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"tags": tftags.TagsSchemaComputed(),
 			"transit_gateway_id": {
 				Type:     schema.TypeString,
-				Computed: true,
+				ForceNew: true,
+				Required: true,
+			},
+			"tags": tftags.TagsSchema(),
+			"igmpv2_support": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Default:  "disable",
+			},
+			"static_source_support": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Default:  "disable",
+			},
+			"auto_accept_shared_associations": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Default:  ec2.AutoAcceptSharedAssociationsValueDisable,
+				ValidateFunc: validation.StringInSlice([]string{
+					ec2.AutoAcceptSharedAssociationsValueEnable,
+					ec2.AutoAcceptSharedAssociationsValueDisable,
+				}, false),
+			},
+			"association": {
+				Type:       schema.TypeSet,
+				Computed:   true,
+				Optional:   true,
+				ConfigMode: schema.SchemaConfigModeAttr,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"transit_gateway_attachment_id": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						"subnet_ids": {
+							Type:     schema.TypeSet,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+							Required: true,
+							MinItems: 1,
+							Set:      schema.HashString,
+						},
+					},
+				},
+				Set: resourceTransitGatewayMulticastDomainAssociationsHash,
+			},
+			"members": {
+				Type:       schema.TypeSet,
+				Computed:   true,
+				Optional:   true,
+				ConfigMode: schema.SchemaConfigModeAttr,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"group_ip_address": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						"network_interface_ids": {
+							Type:     schema.TypeSet,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+							Required: true,
+							MinItems: 1,
+							Set:      schema.HashString,
+						},
+					},
+				},
+				Set: resourceTransitGatewayMulticastDomainGroupsHash,
+			},
+			"sources": {
+				Type:       schema.TypeSet,
+				Computed:   true,
+				Optional:   true,
+				ConfigMode: schema.SchemaConfigModeAttr,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"group_ip_address": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						"network_interface_ids": {
+							Type:     schema.TypeSet,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+							Required: true,
+							MinItems: 1,
+							Set:      schema.HashString,
+						},
+					},
+				},
+				Set: resourceTransitGatewayMulticastDomainGroupsHash,
 			},
 		},
 	}
@@ -48,10 +126,10 @@ func dataSourceTransitGatewayMulticastDomainRead(d *schema.ResourceData, meta in
 	conn := meta.(*conns.AWSClient).EC2Conn
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	input := &ec2.DescribeTransitGatewayPeeringAttachmentsInput{}
+	input := &ec2.DescribeTransitGatewayMulticastDomainsInput{}
 
 	if v, ok := d.GetOk("id"); ok {
-		input.TransitGatewayAttachmentIds = aws.StringSlice([]string{v.(string)})
+		input.TransitGatewayMulticastDomainIds = []*string{aws.String(v.(string))}
 	}
 
 	input.Filters = BuildCustomFilterList(d.Get("filter").(*schema.Set))
@@ -63,45 +141,42 @@ func dataSourceTransitGatewayMulticastDomainRead(d *schema.ResourceData, meta in
 		input.Filters = nil
 	}
 
-	log.Printf("[DEBUG] Reading EC2 Transit Gateway Peering Attachments: %s", input)
-	output, err := conn.DescribeTransitGatewayPeeringAttachments(input)
+	log.Printf("[DEBUG] Reading EC2 Transit Gateway Multicast Domains: %s", input)
+	output, err := conn.DescribeTransitGatewayMulticastDomains(input)
 
 	if err != nil {
-		return fmt.Errorf("error reading EC2 Transit Gateway Peering Attachments: %ws", err)
+		log.Printf("[DEBUG] Reading EC2 Transit Gateway Multicast Domains: %s", input)
+		return fmt.Errorf("error reading EC2 Transit Gateway Multicast Domains: %ws", err)
 	}
 
-	if output == nil || len(output.TransitGatewayPeeringAttachments) == 0 {
-		return errors.New("error reading EC2 Transit Gateway Peering Attachment: no results found")
+	if output == nil || len(output.TransitGatewayMulticastDomains) == 0 {
+		return errors.New("error reading EC2 Transit Gateway Multicast Domains: no results found")
 	}
 
-	if len(output.TransitGatewayPeeringAttachments) > 1 {
-		return errors.New("error reading EC2 Transit Gateway Peering Attachment: multiple results found, try adjusting search criteria")
+	transitGatewayMulticastDomain := output.TransitGatewayMulticastDomains[0]
+
+	if transitGatewayMulticastDomain == nil {
+		return errors.New("error reading EC2 Transit Gateway Multicast Domain: empty result")
 	}
 
-	transitGatewayPeeringAttachment := output.TransitGatewayPeeringAttachments[0]
-
-	if transitGatewayPeeringAttachment == nil {
-		return errors.New("error reading EC2 Transit Gateway Peering Attachment: empty result")
+	if transitGatewayMulticastDomain.Options == nil {
+		return errors.New("error reading EC2 Transit Gateway Multicast Domain: missing options")
 	}
 
-	local := transitGatewayPeeringAttachment.RequesterTgwInfo
-	peer := transitGatewayPeeringAttachment.AccepterTgwInfo
+	d.Set("id", transitGatewayMulticastDomain.TransitGatewayMulticastDomainId)
+	d.Set("transit_gateway_id", transitGatewayMulticastDomain.TransitGatewayId)
+	d.Set("owner_id", transitGatewayMulticastDomain.OwnerId)
+	d.Set("arn", transitGatewayMulticastDomain.TransitGatewayMulticastDomainArn)
 
-	if aws.StringValue(transitGatewayPeeringAttachment.AccepterTgwInfo.OwnerId) == meta.(*conns.AWSClient).AccountID && aws.StringValue(transitGatewayPeeringAttachment.AccepterTgwInfo.Region) == meta.(*conns.AWSClient).Region {
-		local = transitGatewayPeeringAttachment.AccepterTgwInfo
-		peer = transitGatewayPeeringAttachment.RequesterTgwInfo
-	}
-
-	d.Set("peer_account_id", peer.OwnerId)
-	d.Set("peer_region", peer.Region)
-	d.Set("peer_transit_gateway_id", peer.TransitGatewayId)
-	d.Set("transit_gateway_id", local.TransitGatewayId)
-
-	if err := d.Set("tags", KeyValueTags(transitGatewayPeeringAttachment.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set("tags", KeyValueTags(transitGatewayMulticastDomain.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %w", err)
 	}
 
-	d.SetId(aws.StringValue(transitGatewayPeeringAttachment.TransitGatewayAttachmentId))
+	d.Set("igmpv2_support", transitGatewayMulticastDomain.Options.Igmpv2Support)
+	d.Set("static_source_support", transitGatewayMulticastDomain.Options.StaticSourcesSupport)
+	d.Set("auto_accept_shared_associations", transitGatewayMulticastDomain.Options.AutoAcceptSharedAssociations)
+
+	d.SetId(aws.StringValue(transitGatewayMulticastDomain.TransitGatewayId))
 
 	return nil
 }

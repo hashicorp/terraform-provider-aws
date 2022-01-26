@@ -1,142 +1,101 @@
 package ec2_test
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/ec2"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func testAccTransitGatewayMulticastDomainDataSource_basic(t *testing.T) {
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	mCastSource := "224.0.0.1"
-	mCastMembers := "224.0.0.1"
-	resourceName := "aws_ec2_transit_gateway_multicast_domain.test"
+func TestAccTransitGatewayMulticastDomainDataSource_serial(t *testing.T) {
+	testCases := map[string]map[string]func(t *testing.T){
+		"MulticastDomain": {
+			"Filter": testAccTransitGatewayMulticastDomainDataSource_Filter,
+			"ID":     testAccTransitGatewayMulticastDomainDataSource_ID,
+		},
+	}
+
+	for group, m := range testCases {
+		m := m
+		t.Run(group, func(t *testing.T) {
+			for name, tc := range m {
+				tc := tc
+				t.Run(name, func(t *testing.T) {
+					tc(t)
+				})
+			}
+		})
+	}
+}
+
+func testAccTransitGatewayMulticastDomainDataSource_Filter(t *testing.T) {
 	dataSourceName := "data.aws_ec2_transit_gateway_multicast_domain.test"
+	resourceName := "aws_ec2_transit_gateway_multicast_domain.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t); testAccPreCheckTransitGateway(t) },
-		ErrorCheck: acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckTransitGateway(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckTransitGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTransitGatewayMulticastDomainDataSourceConfig(rName, mCastSource, mCastMembers),
+				Config: testAccTransitGatewayMulticastDomainFilterDataSourceConfig(),
 				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrPair(resourceName, "id", dataSourceName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "arn", dataSourceName, "arn"),
 					resource.TestCheckResourceAttrPair(resourceName, "transit_gateway_id", dataSourceName, "transit_gateway_id"),
-					resource.TestCheckResourceAttrPair(resourceName, "aws_ec2_transit_gateway_multicast_domain", dataSourceName, "vpc_id"),
-					resource.TestCheckResourceAttrPair(resourceName, "sources", dataSourceName, mCastSource),
-					resource.TestCheckResourceAttrPair(resourceName, "members", dataSourceName, mCastMembers),
+					resource.TestCheckResourceAttrPair(resourceName, "owner_id", dataSourceName, "owner_id"),
+					resource.TestCheckResourceAttrPair(resourceName, "tags.%", dataSourceName, "tags.%"),
 				),
 			},
 		},
 	})
 }
 
-func testAccTransitGatewayMulticastDomainDataSourceConfig(rName string, mCastSource string, mCastMembers string) string {
-	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  state = "available"
+func testAccTransitGatewayMulticastDomainDataSource_ID(t *testing.T) {
+	dataSourceName := "data.aws_ec2_transit_gateway_multicast_domain.test"
+	resourceName := "aws_ec2_transit_gateway_multicast_domain.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckTransitGateway(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckTransitGatewayDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTransitGatewayMulticastDomainIDDataSourceConfig(),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrPair(resourceName, "id", dataSourceName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "arn", dataSourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "transit_gateway_id", dataSourceName, "transit_gateway_id"),
+					resource.TestCheckResourceAttrPair(resourceName, "owner_id", dataSourceName, "owner_id"),
+					resource.TestCheckResourceAttrPair(resourceName, "tags.%", dataSourceName, "tags.%"),
+				),
+			},
+		},
+	})
 }
 
-data "aws_ami" "amazon_linux" {
-  most_recent = true
-  owners      = ["amazon"]
+func testAccTransitGatewayMulticastDomainFilterDataSourceConfig() string {
+	return `
+resource "aws_ec2_transit_gateway_multicast_domain" "test" {}
 
+data "aws_ec2_transit_gateway_multicast_domain" "test" {
   filter {
-    name = "name"
-    values = [
-      "amzn-ami-hvm-*-x86_64-gp2",
-    ]
+    name   = "transit-gateway-multicast-domain-id"
+    values = [aws_ec2_transit_gateway_multicast_domain.test.id]
   }
+}
+`
+}
 
-  filter {
-    name = "owner-alias"
-    values = [
-      "amazon",
-    ]
-  }
-}
-resource "aws_vpc" "test1" {
-  cidr_block = "10.0.0.0/16"
-  tags = {
-    Name = %[1]q
-  }
-}
-resource "aws_subnet" "test1" {
-  vpc_id            = aws_vpc.test1.id
-  cidr_block        = "10.0.1.0/24"
-  availability_zone = data.aws_availability_zones.available.names[0]
-  tags = {
-    Name = %[1]q
-  }
-}
-resource "aws_instance" "test1" {
-  ami           = data.aws_ami.amazon_linux.id
-  instance_type = "t2.micro"
-  subnet_id     = aws_subnet.test1.id
-  tags = {
-    Name = %[1]q
-  }
-  lifecycle {
-    ignore_changes = [
-      iam_instance_profile,
-      tags,
-      tags_all,
-    ]
-  }
-}
-resource "aws_instance" "test2" {
-  ami           = data.aws_ami.amazon_linux.id
-  instance_type = "t2.micro"
-  subnet_id     = aws_subnet.test1.id
-  tags = {
-    Name = %[1]q
-  }
-  lifecycle {
-    ignore_changes = [
-      iam_instance_profile,
-      tags,
-      tags_all,
-    ]
-  }
-}
-resource "aws_ec2_transit_gateway" "test" {
-  multicast_support = "enable"
-  tags = {
-    Name = %[1]q
-  }
-}
-resource "aws_ec2_transit_gateway_vpc_attachment" "test1" {
-  subnet_ids         = [aws_subnet.test1.id]
-  transit_gateway_id = aws_ec2_transit_gateway.test.id
-  vpc_id             = aws_vpc.test1.id
-  tags = {
-    Name = %[1]q
-  }
-}
-resource "aws_ec2_transit_gateway_multicast_domain" "test" {
-  transit_gateway_id = aws_ec2_transit_gateway.test.id
+func testAccTransitGatewayMulticastDomainIDDataSourceConfig() string {
+	return `
+resource "aws_ec2_transit_gateway_multicast_domain" "test" {}
 
-  static_source_support = "enable"
-
-  association {
-    transit_gateway_attachment_id = aws_ec2_transit_gateway_vpc_attachment.test1.id
-    subnet_ids                    = [aws_subnet.test1.id]
-  }
-  members {
-    group_ip_address      = %[2]q
-    network_interface_ids = [aws_instance.test1.primary_network_interface_id]
-  }
-  sources {
-    group_ip_address      = %[3]q
-    network_interface_ids = [aws_instance.test1.primary_network_interface_id]
-  }
-  tags = {
-    Name = %[1]q
-  }
+data "aws_ec2_transit_gateway_multicast_domain" "test" {
+  id = aws_ec2_transit_gateway_multicast_domain.test.id
 }
-`, rName, mCastSource, mCastMembers)
+`
 }
