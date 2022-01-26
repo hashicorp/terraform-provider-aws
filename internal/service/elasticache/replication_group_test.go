@@ -99,6 +99,10 @@ func TestAccElastiCacheReplicationGroup_uppercase(t *testing.T) {
 }
 
 func TestAccElastiCacheReplicationGroup_EngineVersion_update(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var v1, v2, v3, v4, v5 elasticache.ReplicationGroup
 	var c1, c2, c3, c4, c5 map[string]*elasticache.CacheCluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -1869,7 +1873,7 @@ func TestAccElastiCacheReplicationGroup_GlobalReplicationGroupID_disappears(t *t
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
- // nosemgrep: acceptance-test-naming-parent-disappears
+	// nosemgrep: acceptance-test-naming-parent-disappears
 	var providers []*schema.Provider
 	var rg elasticache.ReplicationGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
