@@ -251,6 +251,10 @@ func resourceEventDataStoreUpdate(ctx context.Context, d *schema.ResourceData, m
 
 		log.Printf("[DEBUG] Updating CloudTrail Event Data Store (%s)", d.Id())
 
+		if err := input.Validate(); err != nil {
+			return diag.Errorf("Error validating CloudTrail Event Data Store (%s): %s", d.Id(), err)
+		}
+
 		_, err := conn.UpdateEventDataStoreWithContext(ctx, input)
 
 		if err != nil {
