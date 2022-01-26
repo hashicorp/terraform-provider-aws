@@ -284,7 +284,6 @@ func ResourceReplicationGroup() *schema.Resource {
 			"user_group_ids": {
 				Type:          schema.TypeSet,
 				Optional:      true,
-				Default:       nil,
 				Elem:          &schema.Schema{Type: schema.TypeString},
 				Set:           schema.HashString,
 				ConflictsWith: []string{"auth_token"},
