@@ -286,7 +286,6 @@ func ResourceReplicationGroup() *schema.Resource {
 				Optional:      true,
 				Default:       nil,
 				Elem:          &schema.Schema{Type: schema.TypeString},
-				MaxItems:      1, //at the moment the aws sdk only supports 1 user group id to be associated with a cluster
 				Set:           schema.HashString,
 				ConflictsWith: []string{"auth_token"},
 			},
