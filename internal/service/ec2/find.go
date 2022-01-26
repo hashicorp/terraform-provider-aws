@@ -221,6 +221,55 @@ func FindCOIPPool(conn *ec2.EC2, input *ec2.DescribeCoipPoolsInput) (*ec2.CoipPo
 	return output[0], nil
 }
 
+func FindEBSVolumes(conn *ec2.EC2, input *ec2.DescribeVolumesInput) ([]*ec2.Volume, error) {
+	var output []*ec2.Volume
+
+	err := conn.DescribeVolumesPages(input, func(page *ec2.DescribeVolumesOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.Volumes {
+			if v != nil {
+				output = append(output, v)
+			}
+		}
+
+		return !lastPage
+	})
+
+	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidVolumeNotFound) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
+}
+
+func FindEBSVolume(conn *ec2.EC2, input *ec2.DescribeVolumesInput) (*ec2.Volume, error) {
+	output, err := FindEBSVolumes(conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if len(output) == 0 || output[0] == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	if count := len(output); count > 1 {
+		return nil, tfresource.NewTooManyResultsError(count, input)
+	}
+
+	return output[0], nil
+}
+
 func FindHostByID(conn *ec2.EC2, id string) (*ec2.Host, error) {
 	input := &ec2.DescribeHostsInput{
 		HostIds: aws.StringSlice([]string{id}),

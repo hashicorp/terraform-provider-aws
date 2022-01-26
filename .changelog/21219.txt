@@ -33,3 +33,7 @@ data-source/aws_ec2_local_gateway_virtual_interface_groups: The type of the `ids
 ```release-note:note
 data-source/aws_ec2_local_gateways: The type of the `ids` attribute has changed from Set to List. If no local gateways match the specified criteria an empty list is returned (previously an error was raised)
 ```
+
+```release-note:note
+data-source/aws_ebs_volumes: The type of the `ids` attribute has changed from Set to List. If no volumes match the specified criteria an empty list is returned (previously an error was raised)
+```
