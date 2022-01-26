@@ -1,6 +1,7 @@
 package ecs
 
 import (
+	"context"
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -85,11 +86,11 @@ func statusService(conn *ecs.ECS, id, cluster string) resource.StateRefreshFunc 
 	}
 }
 
-func statusCluster(conn *ecs.ECS, arn string) resource.StateRefreshFunc {
+func statusCluster(ctx context.Context, conn *ecs.ECS, arn string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindClusterByNameOrARN(conn, arn)
+		cluster, err := FindClusterByNameOrARN(ctx, conn, arn)
 
-		if tfawserr.ErrCodeEquals(err, ecs.ErrCodeClusterNotFoundException) {
+		if tfresource.NotFound(err) {
 			return nil, clusterStatusNone, nil
 		}
 
@@ -97,11 +98,7 @@ func statusCluster(conn *ecs.ECS, arn string) resource.StateRefreshFunc {
 			return nil, clusterStatusError, err
 		}
 
-		if len(output.Clusters) == 0 {
-			return nil, clusterStatusNone, nil
-		}
-
-		return output, aws.StringValue(output.Clusters[0].Status), err
+		return cluster, aws.StringValue(cluster.Status), err
 	}
 }
 
