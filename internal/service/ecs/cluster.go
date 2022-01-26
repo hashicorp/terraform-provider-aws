@@ -50,9 +50,10 @@ func ResourceCluster() *schema.Resource {
 				Computed: true,
 			},
 			"capacity_providers": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Computed: true,
+				Type:       schema.TypeSet,
+				Optional:   true,
+				Computed:   true,
+				Deprecated: "Use the aws_ecs_cluster_capacity_providers resource instead",
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 				},
@@ -114,9 +115,10 @@ func ResourceCluster() *schema.Resource {
 				},
 			},
 			"default_capacity_provider_strategy": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Computed: true,
+				Type:       schema.TypeSet,
+				Optional:   true,
+				Computed:   true,
+				Deprecated: "Use the aws_ecs_cluster_capacity_providers resource instead",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"base": {
