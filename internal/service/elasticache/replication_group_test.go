@@ -2273,32 +2273,22 @@ resource "aws_elasticache_replication_group" "test" {
 
 func testAccReplicationGroupUserGroup(rName, userGroup string, flag int) string {
 	return fmt.Sprintf(`
-resource "aws_elasticache_user" "test0" {
-  user_id       = "%[2]s-0"
+resource "aws_elasticache_user" "test" {
+  count = 2
+
+  user_id       = "%[2]s-${count.index}"
   user_name     = "default"
   access_string = "on ~app::* -@all +@read +@hash +@bitmap +@geo -setbit -bitfield -hset -hsetnx -hmset -hincrby -hincrbyfloat -hdel -bitop -geoadd -georadius -georadiusbymember"
   engine        = "REDIS"
   passwords     = ["password123456789"]
 }
 
-resource "aws_elasticache_user_group" "test0" {
-  user_group_id = "%[2]s-0"
-  engine        = "REDIS"
-  user_ids      = [aws_elasticache_user.test0.user_id]
-}
+resource "aws_elasticache_user_group" "test" {
+  count = 2
 
-resource "aws_elasticache_user" "test1" {
-  user_id       = "%[2]s-1"
-  user_name     = "default"
-  access_string = "on ~app::* -@all +@read +@hash +@bitmap +@geo -setbit -bitfield -hset -hsetnx -hmset -hincrby -hincrbyfloat -hdel -bitop -geoadd -georadius -georadiusbymember"
+  user_group_id = "%[2]s-${count.index}"
   engine        = "REDIS"
-  passwords     = ["password123456789"]
-}
-
-resource "aws_elasticache_user_group" "test1" {
-  user_group_id = "%[2]s-1"
-  engine        = "REDIS"
-  user_ids      = [aws_elasticache_user.test1.user_id]
+  user_ids      = [aws_elasticache_user.test[count.index].user_id]
 }
 
 resource "aws_elasticache_replication_group" "test" {
@@ -2311,7 +2301,7 @@ resource "aws_elasticache_replication_group" "test" {
   maintenance_window            = "tue:06:30-tue:07:30"
   snapshot_window               = "01:00-02:00"
   transit_encryption_enabled    = true
-  user_group_ids                = [aws_elasticache_user_group.test%[3]d.id]
+  user_group_ids                = [aws_elasticache_user_group.test[%[3]d].id]
 }
 `, rName, userGroup, flag)
 
