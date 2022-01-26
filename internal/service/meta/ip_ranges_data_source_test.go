@@ -27,6 +27,8 @@ func TestAccMetaIPRangesDataSource_basic(t *testing.T) {
 					testAccIPRangesCheckAttributes("data.aws_ip_ranges.some"),
 					testAccIPRangesCheckCIDRBlocksAttribute("data.aws_ip_ranges.some", "cidr_blocks"),
 					testAccIPRangesCheckCIDRBlocksAttribute("data.aws_ip_ranges.some", "ipv6_cidr_blocks"),
+					resource.TestCheckResourceAttr("data.aws_ip_ranges.none", "cidr_blocks.#", "0"),
+					resource.TestCheckResourceAttr("data.aws_ip_ranges.none", "ipv6_cidr_blocks.#", "0"),
 				),
 			},
 		},
@@ -162,6 +164,11 @@ const testAccIPRangesConfig = `
 data "aws_ip_ranges" "some" {
   regions  = ["eu-west-1", "eu-central-1"]
   services = ["ec2"]
+}
+
+data "aws_ip_ranges" "none" {
+  regions  = ["mars-1"]
+  services = ["blueorigin"]
 }
 `
 
