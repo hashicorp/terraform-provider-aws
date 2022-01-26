@@ -19,27 +19,30 @@ data "aws_elb_service_account" "main" {}
 resource "aws_s3_bucket" "elb_logs" {
   bucket = "my-elb-tf-test-bucket"
   acl    = "private"
-
-  policy = <<POLICY
-{
-  "Id": "Policy",
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Action": [
-        "s3:PutObject"
-      ],
-      "Effect": "Allow",
-      "Resource": "arn:aws:s3:::my-elb-tf-test-bucket/AWSLogs/*",
-      "Principal": {
-        "AWS": [
-          "${data.aws_elb_service_account.main.arn}"
-        ]
-      }
-    }
-  ]
 }
-POLICY
+
+data "aws_iam_policy_document" "elb_logging" {
+  statement {
+    principals {
+      type        = "AWS"
+      identifiers = ["${data.aws_elb_service_account.main.arn}"]
+    }
+
+    actions = [
+      "s3:PutObject",
+    ]
+
+    effect = "Allow"
+
+    resources = [
+      "arn:aws:s3:::my-elb-tf-test-bucket/AWSLogs/*",
+    ]
+  }
+}
+
+resource "aws_s3_bucket_policy" "allow_elb_logging" {
+  bucket = aws_s3_bucket.elb_logs.id
+  policy = data.aws_iam_policy_document.elb_logging.json
 }
 
 resource "aws_elb" "bar" {
