@@ -101,7 +101,7 @@ func resourceUserCreate(d *schema.ResourceData, meta interface{}) error {
 	createResp, err := conn.CreateUser(request)
 
 	// Some partitions (i.e., ISO) may not support tag-on-create
-	if request.Tags != nil && meta.(*conns.AWSClient).Partition != endpoints.AwsPartitionID && (tfawserr.ErrCodeContains(err, ErrCodeAccessDenied) || tfawserr.ErrCodeContains(err, iam.ErrCodeInvalidInputException) || tfawserr.ErrCodeContains(err, iam.ErrCodeServiceFailureException)) {
+	if request.Tags != nil && meta.(*conns.AWSClient).Partition != endpoints.AwsPartitionID && verify.CheckISOErrorTagsUnsupported(err) {
 		log.Printf("[WARN] IAM User (%s) create failed (%s) with tags. Trying create without tags.", d.Get("name").(string), err)
 		request.Tags = nil
 
@@ -119,7 +119,7 @@ func resourceUserCreate(d *schema.ResourceData, meta interface{}) error {
 		err := userUpdateTags(conn, d.Id(), nil, tags)
 
 		// If default tags only, log and continue. Otherwise, error.
-		if v, ok := d.GetOk("tags"); (!ok || len(v.(map[string]interface{})) == 0) && (tfawserr.ErrCodeContains(err, ErrCodeAccessDenied) || tfawserr.ErrCodeContains(err, iam.ErrCodeInvalidInputException) || tfawserr.ErrCodeContains(err, iam.ErrCodeServiceFailureException)) {
+		if v, ok := d.GetOk("tags"); (!ok || len(v.(map[string]interface{})) == 0) && verify.CheckISOErrorTagsUnsupported(err) {
 			log.Printf("[WARN] error adding tags after create for IAM User (%s): %s", d.Id(), err)
 			return resourceUserRead(d, meta)
 		}
@@ -188,7 +188,7 @@ func resourceUserRead(d *schema.ResourceData, meta interface{}) error {
 	tags := KeyValueTags(output.User.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	// Some partitions (i.e., ISO) may not support tagging, giving error
-	if meta.(*conns.AWSClient).Partition != endpoints.AwsPartitionID && (tfawserr.ErrCodeContains(err, ErrCodeAccessDenied) || tfawserr.ErrCodeContains(err, iam.ErrCodeInvalidInputException) || tfawserr.ErrCodeContains(err, iam.ErrCodeServiceFailureException)) {
+	if meta.(*conns.AWSClient).Partition != endpoints.AwsPartitionID && verify.CheckISOErrorTagsUnsupported(err) {
 		log.Printf("[WARN] Unable to list tags for IAM User %s: %s", d.Id(), err)
 		return nil
 	}
@@ -260,7 +260,7 @@ func resourceUserUpdate(d *schema.ResourceData, meta interface{}) error {
 		err := userUpdateTags(conn, d.Id(), o, n)
 
 		// Some partitions may not support tagging, giving error
-		if meta.(*conns.AWSClient).Partition != endpoints.AwsPartitionID && (tfawserr.ErrCodeContains(err, ErrCodeAccessDenied) || tfawserr.ErrCodeContains(err, iam.ErrCodeInvalidInputException) || tfawserr.ErrCodeContains(err, iam.ErrCodeServiceFailureException)) {
+		if meta.(*conns.AWSClient).Partition != endpoints.AwsPartitionID && verify.CheckISOErrorTagsUnsupported(err) {
 			log.Printf("[WARN] Unable to update tags for IAM User %s: %s", d.Id(), err)
 			return resourceUserRead(d, meta)
 		}
