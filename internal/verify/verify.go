@@ -36,12 +36,15 @@ func checkYAMLString(yamlString interface{}) (string, error) {
 
 const (
 	ErrCodeAccessDenied                   = "AccessDenied"
-	ErrCodeUnknownOperation               = "UnknownOperationException"
-	ErrCodeValidationError                = "ValidationError"
-	ErrCodeOperationDisabledException     = "OperationDisabledException"
 	ErrCodeInternalException              = "InternalException"
-	ErrCodeInternalServiceFault           = "InternalServiceError"
+	ErrCodeInternalServiceError           = "InternalServiceError"
+	ErrCodeInvalidParameterException      = "InvalidParameterException"
+	ErrCodeInvalidRequest                 = "InvalidRequest"
+	ErrCodeOperationDisabledException     = "OperationDisabledException"
 	ErrCodeOperationNotPermittedException = "OperationNotPermitted"
+	ErrCodeUnknownOperationException      = "UnknownOperationException"
+	ErrCodeValidationError                = "ValidationError"
+	ErrCodeValidationException            = "ValidationException"
 )
 
 func CheckISOErrorTagsUnsupported(err error) bool {
@@ -49,11 +52,19 @@ func CheckISOErrorTagsUnsupported(err error) bool {
 		return true
 	}
 
-	if tfawserr.ErrCodeContains(err, ErrCodeUnknownOperation) {
+	if tfawserr.ErrCodeContains(err, ErrCodeInternalException) {
 		return true
 	}
 
-	if tfawserr.ErrMessageContains(err, ErrCodeValidationError, "not support tagging") {
+	if tfawserr.ErrCodeContains(err, ErrCodeInternalServiceError) {
+		return true
+	}
+
+	if tfawserr.ErrCodeContains(err, ErrCodeInvalidParameterException) {
+		return true
+	}
+
+	if tfawserr.ErrCodeContains(err, ErrCodeInvalidRequest) {
 		return true
 	}
 
@@ -61,15 +72,19 @@ func CheckISOErrorTagsUnsupported(err error) bool {
 		return true
 	}
 
-	if tfawserr.ErrCodeContains(err, ErrCodeInternalException) {
-		return true
-	}
-
-	if tfawserr.ErrCodeContains(err, ErrCodeInternalServiceFault) {
-		return true
-	}
-
 	if tfawserr.ErrCodeContains(err, ErrCodeOperationNotPermittedException) {
+		return true
+	}
+
+	if tfawserr.ErrCodeContains(err, ErrCodeUnknownOperationException) {
+		return true
+	}
+
+	if tfawserr.ErrMessageContains(err, ErrCodeValidationError, "not support tagging") {
+		return true
+	}
+
+	if tfawserr.ErrCodeContains(err, ErrCodeValidationException) {
 		return true
 	}
 
