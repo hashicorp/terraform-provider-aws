@@ -136,7 +136,7 @@ func TestAccECSClusterCapacityProviders_destroy(t *testing.T) {
 	})
 }
 
-func TestAccECSClusterCapacityProviders_update_capacityProviders(t *testing.T) {
+func TestAccECSClusterCapacityProviders_Update_capacityProviders(t *testing.T) {
 	var cluster ecs.Cluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_cluster_capacity_providers.test"
@@ -203,7 +203,7 @@ func TestAccECSClusterCapacityProviders_update_capacityProviders(t *testing.T) {
 	})
 }
 
-func TestAccECSClusterCapacityProviders_update_defaultCapacityProviderStrategy(t *testing.T) {
+func TestAccECSClusterCapacityProviders_Update_defaultStrategy(t *testing.T) {
 	var cluster ecs.Cluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_cluster_capacity_providers.test"

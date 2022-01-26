@@ -251,15 +251,12 @@ func resourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	var cluster *ecs.Cluster
-	err := resource.Retry(2*time.Minute, func() *resource.RetryError {
+	err := resource.Retry(clusterReadTimeout, func() *resource.RetryError {
 		var err error
 		cluster, err = FindClusterByNameOrARN(context.Background(), conn, d.Id())
 
-		if tfresource.NotFound(err) {
-			if d.IsNewResource() {
-				return resource.RetryableError(err)
-			}
-			return resource.NonRetryableError(err)
+		if d.IsNewResource() && tfresource.NotFound(err) {
+			return resource.RetryableError(err)
 		}
 
 		if err != nil {
