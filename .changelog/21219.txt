@@ -53,3 +53,15 @@ data-source/aws_efs_access_points: The type of the `ids` and `arns` attributes h
 ```release-note:note
 data-source/aws_emr_release_labels: The type of the `ids` attribute has changed from Set to List. If no release labels match the specified criteria an empty list is returned (previously an error was raised)
 ```
+
+```release-note:note
+data-source/aws_inspector_rules_packages: If no rules packages match the specified criteria an empty list is returned (previously an error was raised)
+```
+
+```release-note:note
+data-source/aws_db_event_categories: The type of the `ids` attribute has changed from Set to List. If no event categories match the specified criteria an empty list is returned (previously an error was raised)
+```
+
+```release-note:note
+data-source/aws_ssoadmin_instances: The type of the `identity_store_ids` and `arns` attributes has changed from Set to List. If no instances match the specified criteria an empty list is returned (previously an error was raised)
+```
