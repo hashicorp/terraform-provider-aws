@@ -566,7 +566,13 @@ func resourceServiceCreate(d *schema.ResourceData, meta interface{}) error {
 
 	// Some partitions (i.e., ISO) may not support tag-on-create
 	if input.Tags != nil && verify.CheckISOErrorTagsUnsupported(err) {
-		log.Printf("[WARN] ECS Service (%s) create failed (%s) with tags. Trying create without tags.", d.Id(), err)
+		resID := "Undefined"
+
+		if output != nil && output.Service != nil && output.Service.ServiceArn != nil {
+			resID = aws.StringValue(output.Service.ServiceArn)
+		}
+
+		log.Printf("[WARN] ECS tagging failure creating Service (%s) with tags: %s. Trying create without tags.", resID, err)
 		input.Tags = nil
 
 		output, err = retryServiceCreate(conn, input)
@@ -600,12 +606,12 @@ func resourceServiceCreate(d *schema.ResourceData, meta interface{}) error {
 
 		// If default tags only, log and continue. Otherwise, error.
 		if v, ok := d.GetOk("tags"); (!ok || len(v.(map[string]interface{})) == 0) && verify.CheckISOErrorTagsUnsupported(err) {
-			log.Printf("[WARN] error adding tags after create for ECS Service (%s): %s", d.Id(), err)
+			log.Printf("[WARN] ECS tagging failure adding tags after create for Service (%s): %s", d.Id(), err)
 			return resourceServiceRead(d, meta)
 		}
 
 		if err != nil {
-			return fmt.Errorf("error creating ECS Service (%s) tags: %w", d.Id(), err)
+			return fmt.Errorf("ECS tagging failure adding tags after create for Service (%s): %w", d.Id(), err)
 		}
 	}
 
@@ -754,7 +760,7 @@ func resourceServiceRead(d *schema.ResourceData, meta interface{}) error {
 
 	// Some partitions (i.e., ISO) may not support tagging, giving error
 	if verify.CheckISOErrorTagsUnsupported(err) {
-		log.Printf("[WARN] Unable to list tags for ECS Service %s: %s", d.Id(), err)
+		log.Printf("[WARN] ECS tagging failure listing tags for Service (%s): %s", d.Id(), err)
 		return nil
 	}
 
@@ -1156,12 +1162,12 @@ func resourceServiceUpdate(d *schema.ResourceData, meta interface{}) error {
 
 		// Some partitions (i.e., ISO) may not support tagging, giving error
 		if verify.CheckISOErrorTagsUnsupported(err) {
-			log.Printf("[WARN] Unable to update tags for ECS Service %s: %s", d.Id(), err)
+			log.Printf("[WARN] ECS tagging failure updating tags for Service (%s): %s", d.Id(), err)
 			return resourceServiceRead(d, meta)
 		}
 
 		if err != nil {
-			return fmt.Errorf("error updating ECS Service (%s) tags: %w", d.Id(), err)
+			return fmt.Errorf("ECS tagging failure updating tags for Service (%s): %w", d.Id(), err)
 		}
 	}
 

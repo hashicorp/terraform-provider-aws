@@ -209,7 +209,13 @@ func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
 
 	// Some partitions (i.e., ISO) may not support tag-on-create
 	if input.Tags != nil && verify.CheckISOErrorTagsUnsupported(err) {
-		log.Printf("[WARN] ECS Cluster (%s) create failed (%s) with tags. Trying create without tags.", d.Id(), err)
+		resID := "Undefined"
+
+		if out != nil && out.Cluster != nil && out.Cluster.ClusterArn != nil {
+			resID = aws.StringValue(out.Cluster.ClusterArn)
+		}
+
+		log.Printf("[WARN] ECS tagging failure creating Cluster (%s) with tags: %s. Trying create without tags.", resID, err)
 		input.Tags = nil
 
 		out, err = retryClusterCreate(conn, input)
@@ -233,12 +239,12 @@ func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
 
 		if v, ok := d.GetOk("tags"); (!ok || len(v.(map[string]interface{})) == 0) && verify.CheckISOErrorTagsUnsupported(err) {
 			// If default tags only, log and continue. Otherwise, error.
-			log.Printf("[WARN] error adding tags after create for ECS Cluster (%s): %s", d.Id(), err)
+			log.Printf("[WARN] ECS tagging failure adding tags after create for Cluster (%s): %s", d.Id(), err)
 			return resourceClusterRead(d, meta)
 		}
 
 		if err != nil {
-			return fmt.Errorf("error creating ECS Cluster (%s) tags: %w", clusterName, err)
+			return fmt.Errorf("ECS tagging failure adding tags after create for Cluster (%s): %w", d.Id(), err)
 		}
 	}
 
@@ -310,7 +316,7 @@ func resourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 
 	// Some partitions (i.e., ISO) may not support tagging, giving error
 	if verify.CheckISOErrorTagsUnsupported(err) {
-		log.Printf("[WARN] Unable to list tags for ECS Cluster %s: %s", d.Id(), err)
+		log.Printf("[WARN] ECS tagging failure listing tags for Cluster (%s): %s", d.Id(), err)
 		return nil
 	}
 
@@ -377,12 +383,12 @@ func resourceClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 
 		// Some partitions (i.e., ISO) may not support tagging, giving error
 		if verify.CheckISOErrorTagsUnsupported(err) {
-			log.Printf("[WARN] Unable to update tags for ECS Cluster %s: %s", d.Id(), err)
+			log.Printf("[WARN] ECS tagging failure updating tags for Cluster (%s): %s", d.Id(), err)
 			return nil
 		}
 
 		if err != nil {
-			return fmt.Errorf("error updating ECS Cluster (%s) tags: %w", d.Id(), err)
+			return fmt.Errorf("ECS tagging failure updating tags for Cluster (%s): %w", d.Id(), err)
 		}
 	}
 
