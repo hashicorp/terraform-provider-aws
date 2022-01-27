@@ -1611,8 +1611,6 @@ func (c *Config) Client() (interface{}, error) {
 		Region:   aws.String(stsRegion),
 	}
 
-	fmt.Printf("setting sts region to: %s\n", stsRegion)
-
 	client.STSConn = sts.New(sess.Copy(stsConfig))
 
 	// Services that require multiple client configurations
