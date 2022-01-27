@@ -18,7 +18,7 @@ func TestAccDataPipelinePipelineDataSource_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDataPipelineDefinitionDestroy,
+		CheckDestroy:      testAccCheckDataPipelinePipelineDefinitionDestroy,
 		ErrorCheck:        acctest.ErrorCheck(t, datapipeline.EndpointsID),
 		Steps: []resource.TestStep{
 			{

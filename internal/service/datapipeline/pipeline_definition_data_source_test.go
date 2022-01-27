@@ -10,19 +10,19 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccDataPipelineDefinitionDataSource_basic(t *testing.T) {
-	dataSourceName := "aws_datapipeline_definition.test"
-	resourceName := "aws_datapipeline_definition.test"
+func TestAccDataPipelinePipelineDefinitionDataSource_basic(t *testing.T) {
+	dataSourceName := "aws_datapipeline_pipeline_definition.test"
+	resourceName := "aws_datapipeline_pipeline_definition.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDataPipelineDefinitionDestroy,
+		CheckDestroy:      testAccCheckDataPipelinePipelineDefinitionDestroy,
 		ErrorCheck:        acctest.ErrorCheck(t, datapipeline.EndpointsID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataPipelineDefinitionDataSourceConfig(rName),
+				Config: testAccDataPipelinePipelineDefinitionDataSourceConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "pipeline_id", resourceName, "id"),
 					resource.TestCheckResourceAttr(dataSourceName, "pipeline_object.#", "1"),
@@ -32,13 +32,13 @@ func TestAccDataPipelineDefinitionDataSource_basic(t *testing.T) {
 	})
 }
 
-func testAccDataPipelineDefinitionDataSourceConfig(name string) string {
+func testAccDataPipelinePipelineDefinitionDataSourceConfig(name string) string {
 	return fmt.Sprintf(`
 resource "aws_datapipeline_pipeline" "default" {
   name = %[1]q
 }
 
-resource "aws_datapipeline_definition" "test" {
+resource "aws_datapipeline_pipeline_definition" "test" {
   pipeline_id = aws_datapipeline_pipeline.default.id
   pipeline_object {
     id   = "Default"
@@ -50,8 +50,8 @@ resource "aws_datapipeline_definition" "test" {
   }
 }
 
-data "aws_datapipeline_definition" "test" {
-  pipeline_id = aws_datapipeline_definition.test.pipeline_id
+data "aws_datapipeline_pipeline_definition" "test" {
+  pipeline_id = aws_datapipeline_pipeline_definition.test.pipeline_id
 }
 `, name)
 }

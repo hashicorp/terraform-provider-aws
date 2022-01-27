@@ -1,19 +1,19 @@
 ---
 subcategory: "DataPipeline"
 layout: "aws"
-page_title: "AWS: aws_datapipeline_definition"
+page_title: "AWS: aws_datapipeline_pipeline_definition"
 description: |-
   Provides details about a specific DataPipeline Definition.
 ---
 
-# Source: aws_datapipeline_definition
+# Source: aws_datapipeline_pipeline_definition
 
 Provides details about a specific DataPipeline Definition.
 
 ## Example Usage
 
 ```terraform
-data "aws_datapipeline_definition" "example" {
+data "aws_datapipeline_pipeline_definition" "example" {
   pipeline_id = "PIPELINE ID"
 }
 ```

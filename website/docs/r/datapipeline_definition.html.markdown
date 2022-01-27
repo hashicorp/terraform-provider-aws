@@ -1,12 +1,12 @@
 ---
 subcategory: "DataPipeline"
 layout: "aws"
-page_title: "AWS: aws_datapipeline_definition"
+page_title: "AWS: aws_datapipeline_pipeline_definition"
 description: |-
   Provides a DataPipeline Definition.
 ---
 
-# Resource: aws_datapipeline_definition
+# Resource: aws_datapipeline_pipeline_definition
 
 Provides a Data Pipeline Definition resource.
 
@@ -17,7 +17,7 @@ resource "aws_datapipeline_pipeline" "default" {
   name = "NAME OF PIPELINE"
 }
 
-resource "aws_datapipeline_definition" "example" {
+resource "aws_datapipeline_pipeline_definition" "example" {
   pipeline_id = aws_datapipeline_pipeline.default.id
   pipeline_object {
     id   = "Default"
@@ -118,8 +118,8 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-`aws_datapipeline_definition` can be imported using the id, e.g.
+`aws_datapipeline_pipeline_definition` can be imported using the id, e.g.
 
 ```
-$ terraform import aws_datapipeline_definition.example pipelineId
+$ terraform import aws_datapipeline_pipeline_definition.example pipelineId
 ```

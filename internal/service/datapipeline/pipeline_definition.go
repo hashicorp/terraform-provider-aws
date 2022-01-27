@@ -20,10 +20,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func ResourceDefinition() *schema.Resource {
+func ResourcePipelineDefinition() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceDefinitionCreate,
-		ReadContext:   resourceDefinitionRead,
+		CreateContext: resourcePipelineDefinitionCreate,
+		ReadContext:   resourcePipelineDefinitionRead,
 		DeleteContext: schema.NoopContext,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
@@ -149,7 +149,7 @@ func ResourceDefinition() *schema.Resource {
 	}
 }
 
-func resourceDefinitionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePipelineDefinitionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).DataPipelineConn
 
 	pipelineID := d.Get("pipeline_id").(string)
@@ -180,7 +180,7 @@ func resourceDefinitionCreate(ctx context.Context, d *schema.ResourceData, meta 
 		if aws.BoolValue(output.Errored) {
 			errors := getValidationError(output.ValidationErrors)
 			if strings.Contains(errors.Error(), "role") {
-				return resource.RetryableError(fmt.Errorf("error validating after creation DataPipeline Definition (%s): %w", pipelineID, errors))
+				return resource.RetryableError(fmt.Errorf("error validating after creation DataPipeline Pipeline Definition (%s): %w", pipelineID, errors))
 			}
 		}
 
@@ -192,11 +192,11 @@ func resourceDefinitionCreate(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	if err != nil {
-		return diag.Errorf("error creating DataPipeline Definition (%s): %s", pipelineID, err)
+		return diag.Errorf("error creating DataPipeline Pipeline Definition (%s): %s", pipelineID, err)
 	}
 
 	if aws.BoolValue(output.Errored) {
-		return diag.Errorf("error validating after creation DataPipeline Definition (%s): %s", pipelineID, getValidationError(output.ValidationErrors))
+		return diag.Errorf("error validating after creation DataPipeline Pipeline Definition (%s): %s", pipelineID, getValidationError(output.ValidationErrors))
 	}
 
 	// Activate pipeline if enabled
@@ -206,15 +206,15 @@ func resourceDefinitionCreate(ctx context.Context, d *schema.ResourceData, meta 
 
 	_, err = conn.ActivatePipelineWithContext(ctx, input2)
 	if err != nil {
-		return diag.Errorf("error activating DataPipeline Definition (%s): %s", pipelineID, err)
+		return diag.Errorf("error activating DataPipeline Pipeline Definition (%s): %s", pipelineID, err)
 	}
 
 	d.SetId(pipelineID)
 
-	return resourceDefinitionRead(ctx, d, meta)
+	return resourcePipelineDefinitionRead(ctx, d, meta)
 }
 
-func resourceDefinitionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePipelineDefinitionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).DataPipelineConn
 	input := &datapipeline.GetPipelineDefinitionInput{
 		PipelineId: aws.String(d.Id()),
@@ -224,23 +224,23 @@ func resourceDefinitionRead(ctx context.Context, d *schema.ResourceData, meta in
 
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, datapipeline.ErrCodePipelineNotFoundException) ||
 		tfawserr.ErrCodeEquals(err, datapipeline.ErrCodePipelineDeletedException) {
-		log.Printf("[WARN] DataPipeline Definition (%s) not found, removing from state", d.Id())
+		log.Printf("[WARN] DataPipeline Pipeline Definition (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if err != nil {
-		return diag.Errorf("error reading DataPipeline Definition (%s): %s", d.Id(), err)
+		return diag.Errorf("error reading DataPipeline Pipeline Definition (%s): %s", d.Id(), err)
 	}
 
 	if err = d.Set("parameter_object", flattenDataPipelineParameterObjects(resp.ParameterObjects)); err != nil {
-		return diag.Errorf("error setting `%s` for DataPipeline Definition (%s): %s", "parameter_object", d.Id(), err)
+		return diag.Errorf("error setting `%s` for DataPipeline Pipeline Definition (%s): %s", "parameter_object", d.Id(), err)
 	}
 	if err = d.Set("parameter_value", flattenDataPipelineParameterValues(resp.ParameterValues)); err != nil {
-		return diag.Errorf("error setting `%s` for DataPipeline Definition (%s): %s", "parameter_object", d.Id(), err)
+		return diag.Errorf("error setting `%s` for DataPipeline Pipeline Definition (%s): %s", "parameter_object", d.Id(), err)
 	}
 	if err = d.Set("pipeline_object", flattenDataPipelineObjects(resp.PipelineObjects)); err != nil {
-		return diag.Errorf("error setting `%s` for DataPipeline Definition (%s): %s", "parameter_object", d.Id(), err)
+		return diag.Errorf("error setting `%s` for DataPipeline Pipeline Definition (%s): %s", "parameter_object", d.Id(), err)
 	}
 	d.Set("pipeline_id", d.Id())
 

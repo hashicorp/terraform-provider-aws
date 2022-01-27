@@ -415,8 +415,8 @@ func Provider() *schema.Provider {
 
 			"aws_cur_report_definition": cur.DataSourceReportDefinition(),
 
-			"aws_datapipeline_definition": datapipeline.DataSourceDefinition(),
-			"aws_datapipeline_pipeline":   datapipeline.DataSourcePipeline(),
+			"aws_datapipeline_pipeline_definition": datapipeline.DataSourcePipelineDefinition(),
+			"aws_datapipeline_pipeline":            datapipeline.DataSourcePipeline(),
 
 			"aws_docdb_engine_version":        docdb.DataSourceEngineVersion(),
 			"aws_docdb_orderable_db_instance": docdb.DataSourceOrderableDBInstance(),
@@ -989,8 +989,8 @@ func Provider() *schema.Provider {
 
 			"aws_cur_report_definition": cur.ResourceReportDefinition(),
 
-			"aws_datapipeline_pipeline":   datapipeline.ResourcePipeline(),
-			"aws_datapipeline_definition": datapipeline.ResourceDefinition(),
+			"aws_datapipeline_pipeline":            datapipeline.ResourcePipeline(),
+			"aws_datapipeline_pipeline_definition": datapipeline.ResourcePipelineDefinition(),
 
 			"aws_datasync_agent":                            datasync.ResourceAgent(),
 			"aws_datasync_location_efs":                     datasync.ResourceLocationEFS(),
