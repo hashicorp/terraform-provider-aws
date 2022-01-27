@@ -888,8 +888,12 @@ type Config struct {
 	SkipRequestingAccountId bool
 	SkipMetadataApiCheck    bool
 	S3ForcePathStyle        bool
+	STSRegion               string
 
 	TerraformVersion string
+
+	UseDualStackEndpoint bool
+	UseFIPSEndpoint      bool
 }
 
 type AWSClient struct {
@@ -1240,6 +1244,8 @@ func (c *Config) Client() (interface{}, error) {
 		StsEndpoint:             c.Endpoints[STS],
 		Token:                   c.Token,
 		APNInfo:                 StdUserAgentProducts(c.TerraformVersion),
+		//UseDualStackEndpoint:        c.UseDualStackEndpoint,
+		//UseFIPSEndpoint:             c.UseFIPSEndpoint,
 	}
 
 	if c.AssumeRoleARN != "" {
@@ -1553,7 +1559,6 @@ func (c *Config) Client() (interface{}, error) {
 		SSOConn:                           sso.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[SSO])})),
 		SSOOIDCConn:                       ssooidc.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[SSOOIDC])})),
 		StorageGatewayConn:                storagegateway.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[StorageGateway])})),
-		STSConn:                           sts.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[STS])})),
 		SupportConn:                       support.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[Support])})),
 		SWFConn:                           swf.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[SWF])})),
 		SyntheticsConn:                    synthetics.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[Synthetics])})),
@@ -1593,6 +1598,20 @@ func (c *Config) Client() (interface{}, error) {
 	shieldConfig := &aws.Config{
 		Endpoint: aws.String(c.Endpoints[Shield]),
 	}
+
+	// Services that require different region handling
+	stsRegion := c.STSRegion
+
+	if stsRegion == "" {
+		stsRegion = c.Region
+	}
+
+	stsConfig := &aws.Config{
+		Endpoint: aws.String(c.Endpoints[STS]),
+		Region:   aws.String(stsRegion),
+	}
+
+	client.STSConn = sts.New(sess.Copy(stsConfig))
 
 	// Services that require multiple client configurations
 	s3Config := &aws.Config{
