@@ -173,24 +173,27 @@ func Provider() *schema.Provider {
 	provider := &schema.Provider{
 		Schema: map[string]*schema.Schema{
 			"access_key": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Default:     "",
-				Description: descriptions["access_key"],
+				Type:     schema.TypeString,
+				Optional: true,
+				Default:  "",
+				Description: "The access key for API operations. You can retrieve this\n" +
+					"from the 'Security & Credentials' section of the AWS console.",
 			},
 
 			"secret_key": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Default:     "",
-				Description: descriptions["secret_key"],
+				Type:     schema.TypeString,
+				Optional: true,
+				Default:  "",
+				Description: "The secret key for API operations. You can retrieve this\n" +
+					"from the 'Security & Credentials' section of the AWS console.",
 			},
 
 			"profile": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Default:     "",
-				Description: descriptions["profile"],
+				Type:     schema.TypeString,
+				Optional: true,
+				Default:  "",
+				Description: "The profile for API operations. If not set, the default profile\n" +
+					"created with `aws configure` will be used.",
 			},
 
 			"assume_role": assumeRoleSchema(),
@@ -203,17 +206,19 @@ func Provider() *schema.Provider {
 			},
 
 			"shared_credentials_file": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Default:     "",
-				Description: descriptions["shared_credentials_file"],
+				Type:     schema.TypeString,
+				Optional: true,
+				Default:  "",
+				Description: "The path to the shared credentials file. If not set\n" +
+					"this defaults to ~/.aws/credentials.",
 			},
 
 			"token": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Default:     "",
-				Description: descriptions["token"],
+				Type:     schema.TypeString,
+				Optional: true,
+				Default:  "",
+				Description: "session token. A session token is only required if you are\n" +
+					"using temporary security credentials.",
 			},
 
 			"region": {
@@ -223,15 +228,18 @@ func Provider() *schema.Provider {
 					"AWS_REGION",
 					"AWS_DEFAULT_REGION",
 				}, nil),
-				Description:  descriptions["region"],
+				Description: "The region where AWS operations will take place. Examples\n" +
+					"are us-east-1, us-west-2, etc.", // lintignore:AWSAT003,
 				InputDefault: "us-east-1", // lintignore:AWSAT003
 			},
 
 			"max_retries": {
-				Type:        schema.TypeInt,
-				Optional:    true,
-				Default:     25,
-				Description: descriptions["max_retries"],
+				Type:     schema.TypeInt,
+				Optional: true,
+				Default:  25,
+				Description: "The maximum number of times an AWS API request is\n" +
+					"being executed. If the API request still fails, an error is\n" +
+					"thrown.",
 			},
 
 			"allowed_account_ids": {
@@ -268,9 +276,10 @@ func Provider() *schema.Provider {
 			},
 
 			"http_proxy": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: descriptions["http_proxy"],
+				Type:     schema.TypeString,
+				Optional: true,
+				Description: "The address of an HTTP proxy to use when accessing the AWS API. " +
+					"Can also be configured using the `HTTP_PROXY` or `HTTPS_PROXY` environment variables.",
 			},
 
 			"endpoints": endpointsSchema(),
@@ -301,52 +310,61 @@ func Provider() *schema.Provider {
 			},
 
 			"insecure": {
-				Type:        schema.TypeBool,
-				Optional:    true,
-				Default:     false,
-				Description: descriptions["insecure"],
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+				Description: "Explicitly allow the provider to perform \"insecure\" SSL requests. If omitted, " +
+					"default value is `false`",
 			},
 
 			"skip_credentials_validation": {
-				Type:        schema.TypeBool,
-				Optional:    true,
-				Default:     false,
-				Description: descriptions["skip_credentials_validation"],
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+				Description: "Skip the credentials validation via STS API. " +
+					"Used for AWS API implementations that do not have STS available/implemented.",
 			},
 
 			"skip_get_ec2_platforms": {
-				Type:        schema.TypeBool,
-				Optional:    true,
-				Default:     false,
-				Description: descriptions["skip_get_ec2_platforms"],
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+				Description: "Skip getting the supported EC2 platforms. " +
+					"Used by users that don't have ec2:DescribeAccountAttributes permissions.",
 			},
 
 			"skip_region_validation": {
-				Type:        schema.TypeBool,
-				Optional:    true,
-				Default:     false,
-				Description: descriptions["skip_region_validation"],
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+				Description: "Skip static validation of region name. " +
+					"Used by users of alternative AWS-like APIs or users w/ access to regions that are not public (yet).",
 			},
 
 			"skip_requesting_account_id": {
-				Type:        schema.TypeBool,
-				Optional:    true,
-				Default:     false,
-				Description: descriptions["skip_requesting_account_id"],
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+				Description: "Skip requesting the account ID. " +
+					"Used for AWS API implementations that do not have IAM/STS API and/or metadata API.",
 			},
 
 			"skip_metadata_api_check": {
-				Type:        schema.TypeBool,
-				Optional:    true,
-				Default:     false,
-				Description: descriptions["skip_metadata_api_check"],
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+				Description: "Skip the AWS Metadata API check. " +
+					"Used for AWS API implementations that do not have a metadata api endpoint.",
 			},
 
 			"s3_force_path_style": {
-				Type:        schema.TypeBool,
-				Optional:    true,
-				Default:     false,
-				Description: descriptions["s3_force_path_style"],
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+				Description: "Set this to true to force the request to use path-style addressing,\n" +
+					"i.e., http://s3.amazonaws.com/BUCKET/KEY. By default, the S3 client will\n" +
+					"use virtual hosted bucket addressing when possible\n" +
+					"(http://BUCKET.s3.amazonaws.com/KEY). Specific to the Amazon S3 service.",
 			},
 		},
 
@@ -1827,62 +1845,6 @@ func Provider() *schema.Provider {
 	return provider
 }
 
-var descriptions map[string]string
-
-func init() {
-	descriptions = map[string]string{
-		"region": "The region where AWS operations will take place. Examples\n" +
-			"are us-east-1, us-west-2, etc.", // lintignore:AWSAT003
-
-		"access_key": "The access key for API operations. You can retrieve this\n" +
-			"from the 'Security & Credentials' section of the AWS console.",
-
-		"secret_key": "The secret key for API operations. You can retrieve this\n" +
-			"from the 'Security & Credentials' section of the AWS console.",
-
-		"profile": "The profile for API operations. If not set, the default profile\n" +
-			"created with `aws configure` will be used.",
-
-		"shared_credentials_file": "The path to the shared credentials file. If not set\n" +
-			"this defaults to ~/.aws/credentials.",
-
-		"token": "session token. A session token is only required if you are\n" +
-			"using temporary security credentials.",
-
-		"max_retries": "The maximum number of times an AWS API request is\n" +
-			"being executed. If the API request still fails, an error is\n" +
-			"thrown.",
-
-		"http_proxy": "The address of an HTTP proxy to use when accessing the AWS API. " +
-			"Can also be configured using the `HTTP_PROXY` or `HTTPS_PROXY` environment variables.",
-
-		"endpoint": "Use this to override the default service endpoint URL",
-
-		"insecure": "Explicitly allow the provider to perform \"insecure\" SSL requests. If omitted, " +
-			"default value is `false`",
-
-		"skip_credentials_validation": "Skip the credentials validation via STS API. " +
-			"Used for AWS API implementations that do not have STS available/implemented.",
-
-		"skip_get_ec2_platforms": "Skip getting the supported EC2 platforms. " +
-			"Used by users that don't have ec2:DescribeAccountAttributes permissions.",
-
-		"skip_region_validation": "Skip static validation of region name. " +
-			"Used by users of alternative AWS-like APIs or users w/ access to regions that are not public (yet).",
-
-		"skip_requesting_account_id": "Skip requesting the account ID. " +
-			"Used for AWS API implementations that do not have IAM/STS API and/or metadata API.",
-
-		"skip_medatadata_api_check": "Skip the AWS Metadata API check. " +
-			"Used for AWS API implementations that do not have a metadata api endpoint.",
-
-		"s3_force_path_style": "Set this to true to force the request to use path-style addressing,\n" +
-			"i.e., http://s3.amazonaws.com/BUCKET/KEY. By default, the S3 client will\n" +
-			"use virtual hosted bucket addressing when possible\n" +
-			"(http://BUCKET.s3.amazonaws.com/KEY). Specific to the Amazon S3 service.",
-	}
-}
-
 func providerConfigure(d *schema.ResourceData, terraformVersion string) (interface{}, error) {
 	config := conns.Config{
 		AccessKey:               d.Get("access_key").(string),
@@ -2081,7 +2043,7 @@ func endpointsSchema() *schema.Schema {
 			Type:        schema.TypeString,
 			Optional:    true,
 			Default:     "",
-			Description: descriptions["endpoint"],
+			Description: "Use this to override the default service endpoint URL",
 		}
 	}
 
