@@ -204,14 +204,14 @@ func resourceRoleCreate(d *schema.ResourceData, meta interface{}) error {
 
 	// Some partitions (i.e., ISO) may not support tag-on-create
 	if request.Tags != nil && meta.(*conns.AWSClient).Partition != endpoints.AwsPartitionID && verify.CheckISOErrorTagsUnsupported(err) {
-		log.Printf("[WARN] IAM Role (%s) create failed (%s) with tags. Trying create without tags.", d.Id(), err)
+		log.Printf("[WARN] failed creating IAM Role (%s) with tags: %s. Trying create without tags.", name, err)
 		request.Tags = nil
 
 		output, err = retryCreateRole(conn, request)
 	}
 
 	if err != nil {
-		return fmt.Errorf("error creating IAM Role (%s): %w", name, err)
+		return fmt.Errorf("failed creating IAM Role (%s): %w", name, err)
 	}
 
 	roleName := aws.StringValue(output.Role.RoleName)
@@ -238,12 +238,12 @@ func resourceRoleCreate(d *schema.ResourceData, meta interface{}) error {
 
 		// If default tags only, log and continue. Otherwise, error.
 		if v, ok := d.GetOk("tags"); (!ok || len(v.(map[string]interface{})) == 0) && verify.CheckISOErrorTagsUnsupported(err) {
-			log.Printf("[WARN] error adding tags after create for IAM Role (%s): %s", d.Id(), err)
+			log.Printf("[WARN] failed adding tags after create for IAM Role (%s): %s", d.Id(), err)
 			return resourceRoleRead(d, meta)
 		}
 
 		if err != nil {
-			return fmt.Errorf("error creating IAM Role (%s) tags: %w", d.Id(), err)
+			return fmt.Errorf("failed adding tags after create for IAM Role (%s): %w", d.Id(), err)
 		}
 	}
 
@@ -324,7 +324,7 @@ func resourceRoleRead(d *schema.ResourceData, meta interface{}) error {
 
 	// Some partitions (i.e., ISO) may not support tagging, giving error
 	if meta.(*conns.AWSClient).Partition != endpoints.AwsPartitionID && verify.CheckISOErrorTagsUnsupported(err) {
-		log.Printf("[WARN] Unable to list tags for IAM Role %s: %s", d.Id(), err)
+		log.Printf("[WARN] failed listing tags for IAM Role (%s): %s", d.Id(), err)
 		return nil
 	}
 
@@ -493,12 +493,12 @@ func resourceRoleUpdate(d *schema.ResourceData, meta interface{}) error {
 
 		// Some partitions may not support tagging, giving error
 		if meta.(*conns.AWSClient).Partition != endpoints.AwsPartitionID && verify.CheckISOErrorTagsUnsupported(err) {
-			log.Printf("[WARN] Unable to update tags for IAM Role %s: %s", d.Id(), err)
+			log.Printf("[WARN] failed updating tags for IAM Role %s: %s", d.Id(), err)
 			return resourceRoleRead(d, meta)
 		}
 
 		if err != nil {
-			return fmt.Errorf("error updating IAM Role (%s) tags: %w", d.Id(), err)
+			return fmt.Errorf("failed updating tags for IAM Role (%s): %w", d.Id(), err)
 		}
 	}
 
