@@ -39,6 +39,57 @@ resource "aws_autoscaling_group" "bar" {
 }
 ```
 
+### Create predictive scaling policy using custom metrics
+```terraform
+resource "aws_autoscaling_policy" "example" {
+  autoscaling_group_name = "my-test-asg"
+  name                   = "foo"
+  policy_type            = "PredictiveScaling"
+  predictive_scaling_configuration {
+    metric_specification {
+      target_value = 10
+      customized_scaling_metric_specification {
+        metric_data_queries {
+          id = "scaling"
+          metric_stat {
+            metric {
+              metric_name = "CPUUtilization"
+              namespace   = "AWS/EC2"
+              dimensions {
+                name  = "AutoScalingGroupName"
+                value = "my-test-asg"
+              }
+            }
+            stat = "Average"
+          }
+        }
+      }
+      customized_load_metric_specification {
+        metric_data_queries {
+          id         = "load_sum"
+          expression = "SUM(SEARCH('{AWS/EC2,AutoScalingGroupName} MetricName=\"CPUUtilization\" my-test-asg', 'Sum', 3600))"
+        }
+      }
+      customized_capacity_metric_specification {
+        metric_data_queries {
+          id          = "capacity_sum"
+          expression  = "SUM(SEARCH('{AWS/AutoScaling,AutoScalingGroupName} MetricName=\"GroupInServiceIntances\" my-test-asg', 'Average', 300))"
+          return_data = false
+        }
+        metric_data_queries {
+          id          = "load_sum"
+          expression  = "SUM(SEARCH('{AWS/EC2,AutoScalingGroupName} MetricName=\"CPUUtilization\" my-test-asg', 'Sum', 300))"
+          return_data = false
+        }
+        metric_data_queries {
+          id         = "weighted_average"
+          expression = "load_sum / capacity_sum"
+        }
+      }
+    }
+  }
+}
+```
 ## Argument Reference
 
 * `name` - (Required) The name of the policy.
@@ -190,15 +241,15 @@ The following arguments are supported:
 ##### customized_scaling_metric_specification
 The following arguments are supported:
 
-* `metric_data_queries` - (Required) A list of up to 10 structure that defines custom scaling metric in predictive scaling policy
+* `metric_data_queries` - (Required) A list of up to 10 structures that defines custom scaling metric in predictive scaling policy
 
 ##### customized_load_metric_specification
 The following arguments are supported:
-* `metric_data_queries` - (Required) A list of up to 10 structure that defines custom load metric in predictive scaling policy
+* `metric_data_queries` - (Required) A list of up to 10 structures that defines custom load metric in predictive scaling policy
 
 ##### customized_capacity_metric_specification
 The following arguments are supported:
-* `metric_data_queries` - (Required) A list of up to 10 structure that defines custom capacity metric in predictive scaling policy
+* `metric_data_queries` - (Required) A list of up to 10 structures that defines custom capacity metric in predictive scaling policy
 
 ##### metric_data_queries
 The following arguments are supported:
@@ -219,57 +270,6 @@ The following arguments are supported:
 * `namespace` - (Required) The namespace of the metric.
 * `dimensions` - (Optional) The dimensions of the metric.
 
-### Example predictive scaling policy using custom metric
-
-```terraform
-resource "aws_autoscaling_policy" "example" {
-  # ... other configuration ...
-
-  predictive_scaling_configuration {
-    metric_specification {
-      target_value = 10
-      customized_scaling_metric_specification {
-        metric_data_queries { 
-          id = "scaling"
-          metric_stat { 
-            metric { 
-              metric_name = "CPUUtilization"
-              namespace = "AWS/EC2"
-              dimensions { 
-                name = "AutoScalingGroupName"
-                value = "ASG-myapp" 
-              } 
-            }
-            stat = "Average" 
-          }
-        }
-      }
-      customized_load_metric_specification {
-        metric_data_queries { 
-          id = "load_sum"
-          expression = "SUM(SEARCH('{AWS/EC2,AutoScalingGroupName} MetricName=\"CPUUtilization\" ASG-myapp', 'Sum', 3600))"        
-        }
-      }
-      customized_capacity_metric_specification {
-        metric_data_queries { 
-          id = "capacity_sum"
-          expression = "SUM(SEARCH('{AWS/AutoScaling,AutoScalingGroupName} MetricName=\"GroupInServiceIntances\" ASG-myapp', 'Average', 300))"
-          return_data = false
-        }
-        metric_data_queries { 
-          id = "load_sum"
-          expression = "SUM(SEARCH('{AWS/EC2,AutoScalingGroupName} MetricName=\"CPUUtilization\" ASG-myapp', 'Sum', 300))"
-          return_data = false
-        }
-        metric_data_queries { 
-          id = "weighted_average"
-          expression = "load_sum / capacity_sum"
-        }
-      }
-    }
-  }
-}
-```
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:

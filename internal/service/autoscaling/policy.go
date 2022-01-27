@@ -101,12 +101,14 @@ func ResourcePolicy() *schema.Resource {
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
 															"id": {
-																Type:     schema.TypeString,
-																Required: true,
+																Type:         schema.TypeString,
+																Required:     true,
+																ValidateFunc: validation.StringLenBetween(1, 255),
 															},
 															"expression": {
-																Type:     schema.TypeString,
-																Optional: true,
+																Type:         schema.TypeString,
+																Optional:     true,
+																ValidateFunc: validation.StringLenBetween(1, 1023),
 															},
 															"metric_stat": {
 																Type:     schema.TypeList,
@@ -129,7 +131,7 @@ func ResourcePolicy() *schema.Resource {
 																						Required: true,
 																					},
 																					"dimensions": {
-																						Type:     schema.TypeList,
+																						Type:     schema.TypeSet,
 																						Optional: true,
 																						Elem: &schema.Resource{
 																							Schema: map[string]*schema.Schema{
@@ -148,8 +150,9 @@ func ResourcePolicy() *schema.Resource {
 																			},
 																		},
 																		"stat": {
-																			Type:     schema.TypeString,
-																			Required: true,
+																			Type:         schema.TypeString,
+																			Required:     true,
+																			ValidateFunc: validation.StringLenBetween(1, 100),
 																		},
 																		"unit": {
 																			Type:     schema.TypeString,
@@ -159,8 +162,9 @@ func ResourcePolicy() *schema.Resource {
 																},
 															},
 															"label": {
-																Type:     schema.TypeString,
-																Optional: true,
+																Type:         schema.TypeString,
+																Optional:     true,
+																ValidateFunc: validation.StringLenBetween(1, 2047),
 															},
 															"return_data": {
 																Type:     schema.TypeBool,
@@ -187,12 +191,14 @@ func ResourcePolicy() *schema.Resource {
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
 															"id": {
-																Type:     schema.TypeString,
-																Required: true,
+																Type:         schema.TypeString,
+																Required:     true,
+																ValidateFunc: validation.StringLenBetween(1, 255),
 															},
 															"expression": {
-																Type:     schema.TypeString,
-																Optional: true,
+																Type:         schema.TypeString,
+																Optional:     true,
+																ValidateFunc: validation.StringLenBetween(1, 1023),
 															},
 															"metric_stat": {
 																Type:     schema.TypeList,
@@ -215,7 +221,7 @@ func ResourcePolicy() *schema.Resource {
 																						Required: true,
 																					},
 																					"dimensions": {
-																						Type:     schema.TypeList,
+																						Type:     schema.TypeSet,
 																						Optional: true,
 																						Elem: &schema.Resource{
 																							Schema: map[string]*schema.Schema{
@@ -234,8 +240,9 @@ func ResourcePolicy() *schema.Resource {
 																			},
 																		},
 																		"stat": {
-																			Type:     schema.TypeString,
-																			Required: true,
+																			Type:         schema.TypeString,
+																			Required:     true,
+																			ValidateFunc: validation.StringLenBetween(1, 100),
 																		},
 																		"unit": {
 																			Type:     schema.TypeString,
@@ -245,8 +252,9 @@ func ResourcePolicy() *schema.Resource {
 																},
 															},
 															"label": {
-																Type:     schema.TypeString,
-																Optional: true,
+																Type:         schema.TypeString,
+																Optional:     true,
+																ValidateFunc: validation.StringLenBetween(1, 2047),
 															},
 															"return_data": {
 																Type:     schema.TypeBool,
@@ -273,12 +281,14 @@ func ResourcePolicy() *schema.Resource {
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
 															"id": {
-																Type:     schema.TypeString,
-																Required: true,
+																Type:         schema.TypeString,
+																Required:     true,
+																ValidateFunc: validation.StringLenBetween(1, 255),
 															},
 															"expression": {
-																Type:     schema.TypeString,
-																Optional: true,
+																Type:         schema.TypeString,
+																Optional:     true,
+																ValidateFunc: validation.StringLenBetween(1, 1023),
 															},
 															"metric_stat": {
 																Type:     schema.TypeList,
@@ -301,7 +311,7 @@ func ResourcePolicy() *schema.Resource {
 																						Required: true,
 																					},
 																					"dimensions": {
-																						Type:     schema.TypeList,
+																						Type:     schema.TypeSet,
 																						Optional: true,
 																						Elem: &schema.Resource{
 																							Schema: map[string]*schema.Schema{
@@ -320,8 +330,9 @@ func ResourcePolicy() *schema.Resource {
 																			},
 																		},
 																		"stat": {
-																			Type:     schema.TypeString,
-																			Required: true,
+																			Type:         schema.TypeString,
+																			Required:     true,
+																			ValidateFunc: validation.StringLenBetween(1, 100),
 																		},
 																		"unit": {
 																			Type:     schema.TypeString,
@@ -331,8 +342,9 @@ func ResourcePolicy() *schema.Resource {
 																},
 															},
 															"label": {
-																Type:     schema.TypeString,
-																Optional: true,
+																Type:         schema.TypeString,
+																Optional:     true,
+																ValidateFunc: validation.StringLenBetween(1, 2047),
 															},
 															"return_data": {
 																Type:     schema.TypeBool,
@@ -995,7 +1007,7 @@ func expandMetricDataQueries(metricDataQuerySlices []interface{}) []*autoscaling
 				Namespace:  aws.String(metricSpec["namespace"].(string)),
 			}
 			if v, ok := metricSpec["dimensions"]; ok {
-				dims := v.([]interface{})
+				dims := v.(*schema.Set).List()
 				dimList := make([]*autoscaling.MetricDimension, len(dims))
 				for i := range dimList {
 					dim := dims[i].(map[string]interface{})
