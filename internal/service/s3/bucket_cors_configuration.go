@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/s3"
@@ -107,7 +106,7 @@ func resourceBucketCorsConfigurationCreate(ctx context.Context, d *schema.Resour
 		return diag.FromErr(fmt.Errorf("error creating S3 bucket (%s) CORS configuration: %w", bucket, err))
 	}
 
-	d.SetId(resourceBucketCorsConfigurationCreateResourceID(bucket, expectedBucketOwner))
+	d.SetId(CreateResourceID(bucket, expectedBucketOwner))
 
 	return resourceBucketCorsConfigurationRead(ctx, d, meta)
 }
@@ -115,7 +114,7 @@ func resourceBucketCorsConfigurationCreate(ctx context.Context, d *schema.Resour
 func resourceBucketCorsConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).S3Conn
 
-	bucket, expectedBucketOwner, err := resourceBucketCorsConfigurationParseResourceID(d.Id())
+	bucket, expectedBucketOwner, err := ParseResourceID(d.Id())
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -162,7 +161,7 @@ func resourceBucketCorsConfigurationRead(ctx context.Context, d *schema.Resource
 func resourceBucketCorsConfigurationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).S3Conn
 
-	bucket, expectedBucketOwner, err := resourceBucketCorsConfigurationParseResourceID(d.Id())
+	bucket, expectedBucketOwner, err := ParseResourceID(d.Id())
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -190,7 +189,7 @@ func resourceBucketCorsConfigurationUpdate(ctx context.Context, d *schema.Resour
 func resourceBucketCorsConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).S3Conn
 
-	bucket, expectedBucketOwner, err := resourceBucketCorsConfigurationParseResourceID(d.Id())
+	bucket, expectedBucketOwner, err := ParseResourceID(d.Id())
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -214,35 +213,6 @@ func resourceBucketCorsConfigurationDelete(ctx context.Context, d *schema.Resour
 	}
 
 	return nil
-}
-
-func resourceBucketCorsConfigurationCreateResourceID(bucket, expectedBucketOwner string) string {
-	if bucket == "" {
-		return expectedBucketOwner
-	}
-
-	if expectedBucketOwner == "" {
-		return bucket
-	}
-
-	parts := []string{bucket, expectedBucketOwner}
-	id := strings.Join(parts, ",")
-
-	return id
-}
-
-func resourceBucketCorsConfigurationParseResourceID(id string) (string, string, error) {
-	parts := strings.Split(id, ",")
-
-	if len(parts) == 1 && parts[0] != "" {
-		return parts[0], "", nil
-	}
-
-	if len(parts) == 2 && parts[0] != "" && parts[1] != "" {
-		return parts[0], parts[1], nil
-	}
-
-	return "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected BUCKET or BUCKET,EXPECTED_BUCKET_OWNER", id)
 }
 
 func expandBucketCorsConfigurationCorsRules(l []interface{}) []*s3.CORSRule {

@@ -3,7 +3,7 @@ subcategory: "S3"
 layout: "aws"
 page_title: "AWS: aws_s3_bucket_cors_configuration"
 description: |-
-Provides an S3 bucket CORS configuration resource.
+  Provides an S3 bucket CORS configuration resource.
 ---
 
 # Resource: aws_s3_bucket_cors_configuration

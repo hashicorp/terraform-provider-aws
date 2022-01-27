@@ -226,8 +226,17 @@ func testAccCheckBucketCorsConfigurationDestroy(s *terraform.State) error {
 			continue
 		}
 
+		bucket, expectedBucketOwner, err := tfs3.ParseResourceID(rs.Primary.ID)
+		if err != nil {
+			return err
+		}
+
 		input := &s3.GetBucketCorsInput{
-			Bucket: aws.String(rs.Primary.ID),
+			Bucket: aws.String(bucket),
+		}
+
+		if expectedBucketOwner != "" {
+			input.ExpectedBucketOwner = aws.String(expectedBucketOwner)
 		}
 
 		output, err := conn.GetBucketCors(input)
@@ -261,8 +270,17 @@ func testAccCheckBucketCorsConfigurationExists(resourceName string) resource.Tes
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn
 
+		bucket, expectedBucketOwner, err := tfs3.ParseResourceID(rs.Primary.ID)
+		if err != nil {
+			return err
+		}
+
 		input := &s3.GetBucketCorsInput{
-			Bucket: aws.String(rs.Primary.ID),
+			Bucket: aws.String(bucket),
+		}
+
+		if expectedBucketOwner != "" {
+			input.ExpectedBucketOwner = aws.String(expectedBucketOwner)
 		}
 
 		output, err := conn.GetBucketCors(input)
