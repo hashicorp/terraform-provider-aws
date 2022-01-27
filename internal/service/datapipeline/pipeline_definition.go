@@ -45,7 +45,7 @@ func ResourcePipelineDefinition() *schema.Resource {
 										Type:         schema.TypeString,
 										Required:     true,
 										ForceNew:     true,
-										ValidateFunc: validation.StringLenBetween(0, 256),
+										ValidateFunc: validation.StringLenBetween(1, 256),
 									},
 									"string_value": {
 										Type:         schema.TypeString,
