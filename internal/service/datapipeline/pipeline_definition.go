@@ -139,7 +139,7 @@ func ResourcePipelineDefinition() *schema.Resource {
 							Type:         schema.TypeString,
 							Required:     true,
 							ForceNew:     true,
-							ValidateFunc: validation.StringLenBetween(0, 1024),
+							ValidateFunc: validation.StringLenBetween(1, 1024),
 						},
 					},
 				},
