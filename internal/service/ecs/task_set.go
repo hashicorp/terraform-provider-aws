@@ -336,7 +336,7 @@ func resourceTaskSetCreate(d *schema.ResourceData, meta interface{}) error {
 
 	// Some partitions (i.e., ISO) may not support tag-on-create
 	if input.Tags != nil && verify.CheckISOErrorTagsUnsupported(err) {
-		log.Printf("[WARN] ECS tagging failure creating Task Set with tags: %s. Trying create without tags.", err)
+		log.Printf("[WARN] ECS tagging failed creating Task Set with tags: %s. Trying create without tags.", err)
 		input.Tags = nil
 
 		output, err = retryTaskSetCreate(conn, input)
@@ -363,12 +363,12 @@ func resourceTaskSetCreate(d *schema.ResourceData, meta interface{}) error {
 
 		if v, ok := d.GetOk("tags"); (!ok || len(v.(map[string]interface{})) == 0) && verify.CheckISOErrorTagsUnsupported(err) {
 			// If default tags only, log and continue. Otherwise, error.
-			log.Printf("[WARN] ECS tagging failure adding tags after create for Task Set (%s): %s", d.Id(), err)
+			log.Printf("[WARN] ECS tagging failed adding tags after create for Task Set (%s): %s", d.Id(), err)
 			return resourceTaskSetRead(d, meta)
 		}
 
 		if err != nil {
-			return fmt.Errorf("ECS tagging failure adding tags after create for Task Set (%s): %w", d.Id(), err)
+			return fmt.Errorf("ECS tagging failed adding tags after create for Task Set (%s): %w", d.Id(), err)
 		}
 	}
 
@@ -451,7 +451,7 @@ func resourceTaskSetRead(d *schema.ResourceData, meta interface{}) error {
 
 	// Some partitions (i.e., ISO) may not support tagging, giving error
 	if verify.CheckISOErrorTagsUnsupported(err) {
-		log.Printf("[WARN] ECS tagging failure listing tags for Task Set (%s): %s", d.Id(), err)
+		log.Printf("[WARN] ECS tagging failed listing tags for Task Set (%s): %s", d.Id(), err)
 		return nil
 	}
 
@@ -505,12 +505,12 @@ func resourceTaskSetUpdate(d *schema.ResourceData, meta interface{}) error {
 
 		// Some partitions (i.e., ISO) may not support tagging, giving error
 		if verify.CheckISOErrorTagsUnsupported(err) {
-			log.Printf("[WARN] ECS tagging failure updating tags for Task Set (%s): %s", d.Id(), err)
+			log.Printf("[WARN] ECS tagging failed updating tags for Task Set (%s): %s", d.Id(), err)
 			return resourceTaskSetRead(d, meta)
 		}
 
 		if err != nil {
-			return fmt.Errorf("ECS tagging failure updating tags for Task Set (%s): %w", d.Id(), err)
+			return fmt.Errorf("ECS tagging failed updating tags for Task Set (%s): %w", d.Id(), err)
 		}
 	}
 

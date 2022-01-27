@@ -519,14 +519,14 @@ func resourceTaskDefinitionCreate(d *schema.ResourceData, meta interface{}) erro
 
 	// Some partitions (i.e., ISO) may not support tag-on-create
 	if input.Tags != nil && verify.CheckISOErrorTagsUnsupported(err) {
-		log.Printf("[WARN] ECS tagging failure creating Task Definition (%s) with tags: %s. Trying create without tags.", d.Get("family").(string), err)
+		log.Printf("[WARN] ECS tagging failed creating Task Definition (%s) with tags: %s. Trying create without tags.", d.Get("family").(string), err)
 		input.Tags = nil
 
 		out, err = conn.RegisterTaskDefinition(&input)
 	}
 
 	if err != nil {
-		return fmt.Errorf("error creating ECS Task Definition (%s): %w", d.Get("family").(string), err)
+		return fmt.Errorf("failed creating ECS Task Definition (%s): %w", d.Get("family").(string), err)
 	}
 
 	taskDefinition := *out.TaskDefinition // nosemgrep: prefer-aws-go-sdk-pointer-conversion-assignment // false positive
@@ -543,12 +543,12 @@ func resourceTaskDefinitionCreate(d *schema.ResourceData, meta interface{}) erro
 
 		// If default tags only, log and continue. Otherwise, error.
 		if v, ok := d.GetOk("tags"); (!ok || len(v.(map[string]interface{})) == 0) && verify.CheckISOErrorTagsUnsupported(err) {
-			log.Printf("[WARN] ECS tagging failure adding tags after create for Task Definition (%s): %s", d.Id(), err)
+			log.Printf("[WARN] ECS tagging failed adding tags after create for Task Definition (%s): %s", d.Id(), err)
 			return resourceTaskDefinitionRead(d, meta)
 		}
 
 		if err != nil {
-			return fmt.Errorf("ECS tagging failure adding tags after create for Task Definition (%s): %w", d.Id(), err)
+			return fmt.Errorf("ECS tagging failed adding tags after create for Task Definition (%s): %w", d.Id(), err)
 		}
 	}
 
@@ -638,7 +638,7 @@ func resourceTaskDefinitionRead(d *schema.ResourceData, meta interface{}) error 
 
 	// Some partitions (i.e., ISO) may not support tagging, giving error
 	if verify.CheckISOErrorTagsUnsupported(err) {
-		log.Printf("[WARN] ECS tagging failure listing tags for Task Definition (%s): %s", d.Id(), err)
+		log.Printf("[WARN] ECS tagging failed listing tags for Task Definition (%s): %s", d.Id(), err)
 		return nil
 	}
 
@@ -726,12 +726,12 @@ func resourceTaskDefinitionUpdate(d *schema.ResourceData, meta interface{}) erro
 
 		// Some partitions (i.e., ISO) may not support tagging, giving error
 		if verify.CheckISOErrorTagsUnsupported(err) {
-			log.Printf("[WARN] ECS tagging failure updating tags for Task Definition (%s): %s", d.Id(), err)
+			log.Printf("[WARN] ECS tagging failed updating tags for Task Definition (%s): %s", d.Id(), err)
 			return nil
 		}
 
 		if err != nil {
-			return fmt.Errorf("ECS tagging failure updating tags for Task Definition (%s): %w", d.Id(), err)
+			return fmt.Errorf("ECS tagging failed updating tags for Task Definition (%s): %w", d.Id(), err)
 		}
 	}
 
