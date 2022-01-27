@@ -117,13 +117,14 @@ func dataSourceRepositoryRead(d *schema.ResourceData, meta interface{}) error {
 
 	// Some partitions (i.e., ISO) may not support tagging, giving error
 	if meta.(*conns.AWSClient).Partition != endpoints.AwsPartitionID && verify.CheckISOErrorTagsUnsupported(err) {
-		log.Printf("[WARN] Unable to list tags for ECR Repository %s: %s", d.Id(), err)
+		log.Printf("[WARN] failed listing tags for ECR Repository (%s): %s", d.Id(), err)
 		return nil
 	}
 
 	if err != nil {
-		return fmt.Errorf("error listing tags for ECR Repository (%s): %w", arn, err)
+		return fmt.Errorf("failed listing tags for ECR Repository (%s): %w", arn, err)
 	}
+
 	if err := d.Set("tags", tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags for ECR Repository (%s): %w", arn, err)
 	}
