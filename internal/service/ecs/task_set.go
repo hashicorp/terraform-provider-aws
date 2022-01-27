@@ -335,8 +335,8 @@ func resourceTaskSetCreate(d *schema.ResourceData, meta interface{}) error {
 	output, err := retryTaskSetCreate(conn, input)
 
 	// Some partitions (i.e., ISO) may not support tag-on-create
-	if input.Tags != nil && (tfawserr.ErrCodeContains(err, ecs.ErrCodeAccessDeniedException) || tfawserr.ErrCodeContains(err, ecs.ErrCodeInvalidParameterException) || tfawserr.ErrCodeContains(err, ecs.ErrCodeUnsupportedFeatureException)) {
-		log.Printf("[WARN] ECS Task Set (%s) create failed (%s) with tags. Trying create without tags.", d.Id(), err)
+	if input.Tags != nil && verify.CheckISOErrorTagsUnsupported(err) {
+		log.Printf("[WARN] ECS tagging failed creating Task Set with tags: %s. Trying create without tags.", err)
 		input.Tags = nil
 
 		output, err = retryTaskSetCreate(conn, input)
@@ -361,14 +361,14 @@ func resourceTaskSetCreate(d *schema.ResourceData, meta interface{}) error {
 	if input.Tags == nil && len(tags) > 0 {
 		err := UpdateTags(conn, aws.StringValue(output.TaskSet.TaskSetArn), nil, tags)
 
-		if v, ok := d.GetOk("tags"); (!ok || len(v.(map[string]interface{})) == 0) && (tfawserr.ErrCodeContains(err, ecs.ErrCodeAccessDeniedException) || tfawserr.ErrCodeContains(err, ecs.ErrCodeInvalidParameterException) || tfawserr.ErrCodeContains(err, ecs.ErrCodeUnsupportedFeatureException)) {
+		if v, ok := d.GetOk("tags"); (!ok || len(v.(map[string]interface{})) == 0) && verify.CheckISOErrorTagsUnsupported(err) {
 			// If default tags only, log and continue. Otherwise, error.
-			log.Printf("[WARN] error adding tags after create for ECS Task Set (%s): %s", d.Id(), err)
+			log.Printf("[WARN] ECS tagging failed adding tags after create for Task Set (%s): %s", d.Id(), err)
 			return resourceTaskSetRead(d, meta)
 		}
 
 		if err != nil {
-			return fmt.Errorf("error creating ECS Task Set (%s) tags: %w", d.Id(), err)
+			return fmt.Errorf("ECS tagging failed adding tags after create for Task Set (%s): %w", d.Id(), err)
 		}
 	}
 
@@ -450,8 +450,8 @@ func resourceTaskSetRead(d *schema.ResourceData, meta interface{}) error {
 	tags := KeyValueTags(taskSet.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	// Some partitions (i.e., ISO) may not support tagging, giving error
-	if tfawserr.ErrCodeContains(err, ecs.ErrCodeAccessDeniedException) || tfawserr.ErrCodeContains(err, ecs.ErrCodeInvalidParameterException) || tfawserr.ErrCodeContains(err, ecs.ErrCodeUnsupportedFeatureException) {
-		log.Printf("[WARN] Unable to list tags for ECS Task Set %s: %s", d.Id(), err)
+	if verify.CheckISOErrorTagsUnsupported(err) {
+		log.Printf("[WARN] ECS tagging failed listing tags for Task Set (%s): %s", d.Id(), err)
 		return nil
 	}
 
@@ -504,13 +504,13 @@ func resourceTaskSetUpdate(d *schema.ResourceData, meta interface{}) error {
 		err := UpdateTags(conn, d.Get("arn").(string), o, n)
 
 		// Some partitions (i.e., ISO) may not support tagging, giving error
-		if tfawserr.ErrCodeContains(err, ecs.ErrCodeAccessDeniedException) || tfawserr.ErrCodeContains(err, ecs.ErrCodeInvalidParameterException) || tfawserr.ErrCodeContains(err, ecs.ErrCodeUnsupportedFeatureException) {
-			log.Printf("[WARN] Unable to update tags for ECS Task Set %s: %s", d.Id(), err)
+		if verify.CheckISOErrorTagsUnsupported(err) {
+			log.Printf("[WARN] ECS tagging failed updating tags for Task Set (%s): %s", d.Id(), err)
 			return resourceTaskSetRead(d, meta)
 		}
 
 		if err != nil {
-			return fmt.Errorf("error updating ECS Task Set (%s) tags: %w", d.Id(), err)
+			return fmt.Errorf("ECS tagging failed updating tags for Task Set (%s): %w", d.Id(), err)
 		}
 	}
 
