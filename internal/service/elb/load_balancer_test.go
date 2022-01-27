@@ -1240,17 +1240,18 @@ data "aws_availability_zones" "available" {
 
 func testAccLoadBalancerAccessLogsCommon(r string) string {
 	return fmt.Sprintf(`
-data "aws_elb_service_account" "current" {
-}
+data "aws_elb_service_account" "current" {}
 
-data "aws_partition" "current" {
-}
+data "aws_partition" "current" {}
 
 resource "aws_s3_bucket" "accesslogs_bucket" {
   bucket        = "%[1]s"
   acl           = "private"
   force_destroy = true
+}
 
+resource "aws_s3_bucket_policy" "test" {
+  bucket = aws_s3_bucket.accesslogs_bucket.id
   policy = <<EOF
 {
   "Id": "Policy1446577137248",
