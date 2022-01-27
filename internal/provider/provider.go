@@ -424,8 +424,8 @@ func Provider() *schema.Provider {
 
 			"aws_cur_report_definition": cur.DataSourceReportDefinition(),
 
-			"aws_datapipeline_pipeline_definition": datapipeline.DataSourcePipelineDefinition(),
 			"aws_datapipeline_pipeline":            datapipeline.DataSourcePipeline(),
+			"aws_datapipeline_pipeline_definition": datapipeline.DataSourcePipelineDefinition(),
 
 			"aws_docdb_engine_version":        docdb.DataSourceEngineVersion(),
 			"aws_docdb_orderable_db_instance": docdb.DataSourceOrderableDBInstance(),
