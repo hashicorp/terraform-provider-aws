@@ -222,7 +222,7 @@ resource "aws_datapipeline_pipeline_definition" "test" {
   }
 
   parameter_value {
-    id = %[2]q
+    id           = %[2]q
     string_value = "aws sts get-caller-identity"
   }
 
