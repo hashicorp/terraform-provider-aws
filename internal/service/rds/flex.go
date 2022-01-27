@@ -20,6 +20,7 @@ func ExpandClusterScalingConfiguration(l []interface{}) *rds.ScalingConfiguratio
 		AutoPause:             aws.Bool(m["auto_pause"].(bool)),
 		MaxCapacity:           aws.Int64(int64(m["max_capacity"].(int))),
 		MinCapacity:           aws.Int64(int64(m["min_capacity"].(int))),
+		SecondsBeforeTimeout:  aws.Int64(int64(m["seconds_before_timeout"].(int))),
 		SecondsUntilAutoPause: aws.Int64(int64(m["seconds_until_auto_pause"].(int))),
 	}
 
@@ -39,6 +40,7 @@ func flattenRDSScalingConfigurationInfo(scalingConfigurationInfo *rds.ScalingCon
 		"auto_pause":               aws.BoolValue(scalingConfigurationInfo.AutoPause),
 		"max_capacity":             aws.Int64Value(scalingConfigurationInfo.MaxCapacity),
 		"min_capacity":             aws.Int64Value(scalingConfigurationInfo.MinCapacity),
+		"seconds_before_timeout":   aws.Int64Value(scalingConfigurationInfo.SecondsBeforeTimeout),
 		"seconds_until_auto_pause": aws.Int64Value(scalingConfigurationInfo.SecondsUntilAutoPause),
 		"timeout_action":           aws.StringValue(scalingConfigurationInfo.TimeoutAction),
 	}

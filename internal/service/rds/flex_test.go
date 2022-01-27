@@ -100,6 +100,7 @@ func TestExpandClusterScalingConfiguration_basic(t *testing.T) {
 						"auto_pause":               false,
 						"max_capacity":             32,
 						"min_capacity":             4,
+						"seconds_before_timeout":   301,
 						"seconds_until_auto_pause": 600,
 						"timeout_action":           "ForceApplyCapacityChange",
 					},
