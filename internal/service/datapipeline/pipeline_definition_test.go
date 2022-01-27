@@ -31,6 +31,10 @@ func TestAccDataPipelinePipelineDefinition_basic(t *testing.T) {
 				Config: testAccDataPipelinePipelineDefinitionConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataPipelinePipelineDefinitionExists(resourceName, &pipelineOutput),
+					resource.TestCheckResourceAttr(resourceName, "pipeline_object.0.id", "Default"),
+					resource.TestCheckResourceAttr(resourceName, "pipeline_object.0.name", "Default"),
+					resource.TestCheckResourceAttr(resourceName, "pipeline_object.0.field.0.key", "workerGroup"),
+					resource.TestCheckResourceAttr(resourceName, "pipeline_object.0.field.0.string_value", "workerGroup"),
 				),
 			},
 			{
@@ -76,15 +80,17 @@ func TestAccDataPipelinePipelineDefinition_complete(t *testing.T) {
 		ErrorCheck:        acctest.ErrorCheck(t, datapipeline.EndpointsID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataPipelinePipelineDefinitionConfigComplete(rName),
+				Config: testAccDataPipelinePipelineDefinitionConfigComplete(rName, "myAWSCLICmd"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataPipelinePipelineDefinitionExists(resourceName, &pipelineOutput),
+					resource.TestCheckResourceAttr(resourceName, "parameter_object.0.id", "myAWSCLICmd"),
 				),
 			},
 			{
-				Config: testAccDataPipelinePipelineDefinitionConfigCompleteUpdate(rName),
+				Config: testAccDataPipelinePipelineDefinitionConfigComplete(rName, "myAWSCLICmd2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataPipelinePipelineDefinitionExists(resourceName, &pipelineOutput),
+					resource.TestCheckResourceAttr(resourceName, "parameter_object.0.id", "myAWSCLICmd2"),
 				),
 			},
 			{
@@ -166,7 +172,7 @@ resource "aws_datapipeline_pipeline_definition" "test" {
 `, name)
 }
 
-func testAccDataPipelinePipelineDefinitionConfigComplete(name string) string {
+func testAccDataPipelinePipelineDefinitionConfigComplete(name string, parameterObjectID string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "test" {
   name = %[1]q
@@ -199,7 +205,7 @@ resource "aws_datapipeline_pipeline_definition" "test" {
   pipeline_id = aws_datapipeline_pipeline.default.id
 
   parameter_object {
-    id = "myAWSCLICmd"
+    id = %[2]q
 
     attribute {
       key          = "description"
@@ -216,7 +222,7 @@ resource "aws_datapipeline_pipeline_definition" "test" {
   }
 
   parameter_value {
-    id           = "myAWSCLICmd"
+    id = %[2]q
     string_value = "aws sts get-caller-identity"
   }
 
@@ -226,7 +232,7 @@ resource "aws_datapipeline_pipeline_definition" "test" {
 
     field {
       key          = "command"
-      string_value = "(sudo yum -y update aws-cli) && (#{myAWSCLICmd})"
+      string_value = "(sudo yum -y update aws-cli) && (#{%[2]s})"
     }
     field {
       key       = "runsOn"
@@ -297,139 +303,5 @@ resource "aws_datapipeline_pipeline_definition" "test" {
     }
   }
 }
-`, name)
-}
-
-func testAccDataPipelinePipelineDefinitionConfigCompleteUpdate(name string) string {
-	return fmt.Sprintf(`
-resource "aws_iam_role" "test" {
-  name = %[1]q
-
-  assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect": "Allow",
-      "Principal": {
-        "Service": [
-          "datapipeline.amazonaws.com",
-          "ec2.amazonaws.com"
-        ]
-      },
-      "Action": "sts:AssumeRole"
-    }
-  ]
-}
-EOF
-
-}
-
-resource "aws_datapipeline_pipeline" "default" {
-  name = %[1]q
-}
-
-resource "aws_datapipeline_pipeline_definition" "test" {
-  pipeline_id = aws_datapipeline_pipeline.default.id
-
-  parameter_object {
-    id = "myAWSCLICmd"
-
-    attribute {
-      key          = "description"
-      string_value = "AWS CLI command"
-    }
-    attribute {
-      key          = "type"
-      string_value = "String"
-    }
-    attribute {
-      key          = "watermark"
-      string_value = "aws [options] <command> <subcommand> [parameters]"
-    }
-  }
-
-  parameter_value {
-    id           = "myAWSCLICmd"
-    string_value = "aws sts get-caller-identity"
-  }
-
-  pipeline_object {
-    id   = "CliActivity"
-    name = "CliActivity"
-
-    field {
-      key          = "command"
-      string_value = "(sudo yum -y update aws-cli) && (#{myAWSCLICmd})"
-    }
-    field {
-      key       = "runsOn"
-      ref_value = "Ec2Instance"
-    }
-    field {
-      key          = "type"
-      string_value = "ShellCommandActivity"
-    }
-  }
-  pipeline_object {
-    id   = "Default"
-    name = "Default"
-
-    field {
-      key          = "failureAndRerunMode"
-      string_value = "CASCADE"
-    }
-    field {
-      key          = "resourceRole"
-      string_value = aws_iam_role.test.name
-    }
-    field {
-      key          = "role"
-      string_value = aws_iam_role.test.name
-    }
-    field {
-      key       = "schedule"
-      ref_value = "DefaultSchedule"
-    }
-    field {
-      key          = "scheduleType"
-      string_value = "cron"
-    }
-  }
-  pipeline_object {
-    id   = "Ec2Instance"
-    name = "Ec2Instance"
-
-    field {
-      key          = "instanceType"
-      string_value = "t1.micro"
-    }
-    field {
-      key          = "terminateAfter"
-      string_value = "50 minutes"
-    }
-    field {
-      key          = "type"
-      string_value = "Ec2Resource"
-    }
-  }
-  pipeline_object {
-    id   = "DefaultSchedule"
-    name = "Every 2 day"
-
-    field {
-      key          = "period"
-      string_value = "1 days"
-    }
-    field {
-      key          = "startAt"
-      string_value = "FIRST_ACTIVATION_DATE_TIME"
-    }
-    field {
-      key          = "type"
-      string_value = "Schedule"
-    }
-  }
-}
-`, name)
+`, name, parameterObjectID)
 }
