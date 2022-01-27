@@ -1,7 +1,6 @@
 package datapipeline
 
 import (
-	"bytes"
 	"context"
 	"fmt"
 	"log"
@@ -16,7 +15,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
@@ -55,7 +53,6 @@ func ResourcePipelineDefinition() *schema.Resource {
 									},
 								},
 							},
-							Set: parameterAttributestHash,
 						},
 						"id": {
 							Type:         schema.TypeString,
@@ -65,7 +62,6 @@ func ResourcePipelineDefinition() *schema.Resource {
 						},
 					},
 				},
-				Set: parameterObjectHash,
 			},
 			"parameter_value": {
 				Type:     schema.TypeSet,
@@ -87,7 +83,6 @@ func ResourcePipelineDefinition() *schema.Resource {
 						},
 					},
 				},
-				Set: parameterValuesHash,
 			},
 			"pipeline_id": {
 				Type:         schema.TypeString,
@@ -127,7 +122,6 @@ func ResourcePipelineDefinition() *schema.Resource {
 									},
 								},
 							},
-							Set: pipelineFieldHash,
 						},
 						"id": {
 							Type:         schema.TypeString,
@@ -143,7 +137,6 @@ func ResourcePipelineDefinition() *schema.Resource {
 						},
 					},
 				},
-				Set: pipelineObjectHash,
 			},
 		},
 	}
@@ -579,48 +572,6 @@ func flattenDataPipelinePipelineDefinitionObjects(apiObjects []*datapipeline.Pip
 	}
 
 	return tfList
-}
-
-func parameterObjectHash(v interface{}) int {
-	var buf bytes.Buffer
-	m := v.(map[string]interface{})
-	buf.WriteString(fmt.Sprintf("%+v", m["attribute"].(*schema.Set)))
-	buf.WriteString(m["id"].(string))
-	return create.StringHashcode(buf.String())
-}
-
-func parameterAttributestHash(v interface{}) int {
-	var buf bytes.Buffer
-	m := v.(map[string]interface{})
-	buf.WriteString(m["key"].(string))
-	buf.WriteString(m["string_value"].(string))
-	return create.StringHashcode(buf.String())
-}
-
-func parameterValuesHash(v interface{}) int {
-	var buf bytes.Buffer
-	m := v.(map[string]interface{})
-	buf.WriteString(m["id"].(string))
-	buf.WriteString(m["string_value"].(string))
-	return create.StringHashcode(buf.String())
-}
-
-func pipelineObjectHash(v interface{}) int {
-	var buf bytes.Buffer
-	m := v.(map[string]interface{})
-	buf.WriteString(fmt.Sprintf("%+v", m["field"].(*schema.Set)))
-	buf.WriteString(m["id"].(string))
-	buf.WriteString(m["name"].(string))
-	return create.StringHashcode(buf.String())
-}
-
-func pipelineFieldHash(v interface{}) int {
-	var buf bytes.Buffer
-	m := v.(map[string]interface{})
-	buf.WriteString(m["key"].(string))
-	buf.WriteString(m["ref_value"].(string))
-	buf.WriteString(m["string_value"].(string))
-	return create.StringHashcode(buf.String())
 }
 
 func getValidationError(validationError []*datapipeline.ValidationError) error {

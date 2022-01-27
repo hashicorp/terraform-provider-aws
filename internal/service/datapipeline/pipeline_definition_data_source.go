@@ -36,7 +36,6 @@ func DataSourcePipelineDefinition() *schema.Resource {
 									},
 								},
 							},
-							Set: parameterAttributestHash,
 						},
 						"id": {
 							Type:     schema.TypeString,
@@ -44,7 +43,6 @@ func DataSourcePipelineDefinition() *schema.Resource {
 						},
 					},
 				},
-				Set: parameterObjectHash,
 			},
 			"parameter_value": {
 				Type:     schema.TypeSet,
@@ -62,7 +60,6 @@ func DataSourcePipelineDefinition() *schema.Resource {
 						},
 					},
 				},
-				Set: parameterValuesHash,
 			},
 			"pipeline_id": {
 				Type:         schema.TypeString,
@@ -94,7 +91,6 @@ func DataSourcePipelineDefinition() *schema.Resource {
 									},
 								},
 							},
-							Set: pipelineFieldHash,
 						},
 						"id": {
 							Type:     schema.TypeString,
@@ -106,7 +102,6 @@ func DataSourcePipelineDefinition() *schema.Resource {
 						},
 					},
 				},
-				Set: pipelineObjectHash,
 			},
 		},
 	}
