@@ -152,7 +152,7 @@ func resourceBucketCorsConfigurationRead(ctx context.Context, d *schema.Resource
 	d.Set("expected_bucket_owner", expectedBucketOwner)
 
 	if err := d.Set("cors_rule", flattenBucketCorsConfigurationCorsRules(output.CORSRules)); err != nil {
-		return diag.FromErr(fmt.Errorf("error setting rule: %w", err))
+		return diag.FromErr(fmt.Errorf("error setting cors_rule: %w", err))
 	}
 
 	return nil
