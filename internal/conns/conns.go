@@ -1226,8 +1226,9 @@ func (c *Config) Client() (interface{}, error) {
 		}
 	}
 
-	awsbaseConfig := awsbase.Config{
+	awsbaseConfig := &awsbase.Config{
 		AccessKey:               c.AccessKey,
+		APNInfo:                 StdUserAgentProducts(c.TerraformVersion),
 		CallerDocumentationURL:  "https://registry.terraform.io/providers/hashicorp/aws",
 		CallerName:              "Terraform AWS Provider",
 		DebugLogging:            logging.IsDebugOrHigher(),
@@ -1243,7 +1244,6 @@ func (c *Config) Client() (interface{}, error) {
 		SkipRequestingAccountId: c.SkipRequestingAccountId,
 		StsEndpoint:             c.Endpoints[STS],
 		Token:                   c.Token,
-		APNInfo:                 StdUserAgentProducts(c.TerraformVersion),
 		//UseDualStackEndpoint:        c.UseDualStackEndpoint,
 		//UseFIPSEndpoint:             c.UseFIPSEndpoint,
 	}
@@ -1610,6 +1610,8 @@ func (c *Config) Client() (interface{}, error) {
 		Endpoint: aws.String(c.Endpoints[STS]),
 		Region:   aws.String(stsRegion),
 	}
+
+	fmt.Printf("setting sts region to: %s\n", stsRegion)
 
 	client.STSConn = sts.New(sess.Copy(stsConfig))
 
