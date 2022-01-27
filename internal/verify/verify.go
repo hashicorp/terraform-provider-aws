@@ -46,6 +46,7 @@ const (
 	ErrCodeOperationNotPermitted       = "OperationNotPermitted"
 	ErrCodeUnknownOperationException   = "UnknownOperationException"
 	ErrCodeUnsupportedFeatureException = "UnsupportedFeatureException"
+	ErrCodeUnsupportedOperation        = "UnsupportedOperation"
 	ErrCodeValidationError             = "ValidationError"
 	ErrCodeValidationException         = "ValidationException"
 )
@@ -92,6 +93,10 @@ func CheckISOErrorTagsUnsupported(err error) bool {
 	}
 
 	if tfawserr.ErrCodeContains(err, ErrCodeUnsupportedFeatureException) {
+		return true
+	}
+
+	if tfawserr.ErrCodeContains(err, ErrCodeUnsupportedOperation) {
 		return true
 	}
 
