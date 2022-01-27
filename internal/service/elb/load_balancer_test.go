@@ -1182,6 +1182,9 @@ resource "aws_elb" "test" {
 func testAccLoadBalancerAccessLogsOn(r string) string {
 	return `
 resource "aws_elb" "test" {
+  # Must have bucket policy attached first
+  depends_on = [aws_s3_bucket_policy.test]
+
   availability_zones = [data.aws_availability_zones.available.names[0], data.aws_availability_zones.available.names[1], data.aws_availability_zones.available.names[2]]
 
   listener {
@@ -1211,6 +1214,9 @@ data "aws_availability_zones" "available" {
 func testAccLoadBalancerAccessLogsDisabled(r string) string {
 	return `
 resource "aws_elb" "test" {
+  # Must have bucket policy attached first
+  depends_on = [aws_s3_bucket_policy.test]
+
   availability_zones = [data.aws_availability_zones.available.names[0], data.aws_availability_zones.available.names[1], data.aws_availability_zones.available.names[2]]
 
   listener {
