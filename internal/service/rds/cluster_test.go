@@ -3503,7 +3503,7 @@ resource "aws_rds_cluster" "test" {
     auto_pause               = %t
     max_capacity             = %d
     min_capacity             = %d
-	seconds_before_timeout   = %d
+    seconds_before_timeout   = %d
     seconds_until_auto_pause = %d
     timeout_action           = "%s"
   }
@@ -3523,7 +3523,7 @@ resource "aws_rds_cluster" "test" {
   scaling_configuration {
     auto_pause               = %t
     max_capacity             = %d
-	seconds_before_timeout   = %d
+    seconds_before_timeout   = %d
     seconds_until_auto_pause = %d
     timeout_action           = "%s"
   }
@@ -3905,7 +3905,7 @@ resource "aws_rds_cluster" "test" {
     auto_pause               = false
     max_capacity             = 128
     min_capacity             = 4
-	seconds_before_timeout   = 301
+    seconds_before_timeout   = 301
     seconds_until_auto_pause = 301
     timeout_action           = "RollbackCapacityChange"
   }
