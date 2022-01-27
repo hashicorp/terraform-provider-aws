@@ -177,7 +177,7 @@ func ResourceCertificate() *schema.Resource {
 						// AWS Provider 3.0 -- plan-time validation prevents "domain_name"
 						// argument to accept a string with trailing period; thus, trim of trailing period
 						// no longer required here
-						"domain_name": diff.Get("domain_name").(string),
+						"domain_name": strings.ToLower(diff.Get("domain_name").(string)),
 					}}
 
 					if sanSet, ok := diff.Get("subject_alternative_names").(*schema.Set); ok {
@@ -192,7 +192,7 @@ func ResourceCertificate() *schema.Resource {
 								// AWS Provider 3.0 -- plan-time validation prevents "subject_alternative_names"
 								// argument to accept strings with trailing period; thus, trim of trailing period
 								// no longer required here
-								"domain_name": san,
+								"domain_name": strings.ToLower(san),
 							}
 
 							domainValidationOptionsList = append(domainValidationOptionsList, m)
