@@ -50,9 +50,6 @@ func ResourceTable() *schema.Resource {
 				return validStreamSpec(diff)
 			},
 			func(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
-				return validateDynamoDbTableAttributes(diff)
-			},
-			func(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
 				if diff.Id() != "" && diff.HasChange("server_side_encryption") {
 					o, n := diff.GetChange("server_side_encryption")
 					if isDynamoDbTableOptionDisabled(o) && isDynamoDbTableOptionDisabled(n) {
@@ -60,6 +57,9 @@ func ResourceTable() *schema.Resource {
 					}
 				}
 				return nil
+			},
+			func(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
+				return verifyAttributes(diff)
 			},
 			func(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
 				if diff.Id() != "" && diff.HasChange("point_in_time_recovery") {
@@ -129,40 +129,51 @@ func ResourceTable() *schema.Resource {
 				Default:      dynamodb.BillingModeProvisioned,
 				ValidateFunc: validation.StringInSlice(dynamodb.BillingMode_Values(), false),
 			},
+			"manage_index_as_own_resource": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
 			"global_secondary_index": {
 				Type:     schema.TypeSet,
 				Optional: true,
+				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"hash_key": {
 							Type:     schema.TypeString,
-							Required: true,
+							Computed: true,
 						},
 						"name": {
 							Type:     schema.TypeString,
-							Required: true,
+							Computed: true,
 						},
 						"non_key_attributes": {
 							Type:     schema.TypeSet,
 							Optional: true,
+							Computed: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
 						"projection_type": {
 							Type:         schema.TypeString,
-							Required:     true,
+							Computed:     true,
+							Optional:     true,
 							ValidateFunc: validation.StringInSlice(dynamodb.ProjectionType_Values(), false),
 						},
 						"range_key": {
 							Type:     schema.TypeString,
 							Optional: true,
+							Computed: true,
 						},
 						"read_capacity": {
 							Type:     schema.TypeInt,
 							Optional: true,
+							Computed: true,
 						},
 						"write_capacity": {
 							Type:     schema.TypeInt,
 							Optional: true,
+							Computed: true,
 						},
 					},
 				},
@@ -711,6 +722,10 @@ func resourceTableRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error setting tags_all: %w", err)
 	}
 
+	if err := validateDynamoDbTableAttributes(d); err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -726,7 +741,7 @@ func resourceTableUpdate(d *schema.ResourceData, meta interface{}) error {
 	// will signal the problems.
 	var gsiUpdates []*dynamodb.GlobalSecondaryIndexUpdate
 
-	if d.HasChange("global_secondary_index") {
+	if d.HasChange("global_secondary_index") && !d.Get("manage_index_as_own_resource").(bool) {
 		var err error
 		o, n := d.GetChange("global_secondary_index")
 		gsiUpdates, err = UpdateDiffGSI(o.(*schema.Set).List(), n.(*schema.Set).List(), billingMode)
@@ -758,7 +773,7 @@ func resourceTableUpdate(d *schema.ResourceData, meta interface{}) error {
 			return fmt.Errorf("error deleting DynamoDB Table (%s) Global Secondary Index (%s): %w", d.Id(), idxName, err)
 		}
 
-		if _, err := waitDynamoDBGSIDeleted(conn, d.Id(), idxName); err != nil {
+		if err := waitDynamoDBGSIDeleted(conn, d.Id(), idxName); err != nil {
 			return fmt.Errorf("error waiting for DynamoDB Table (%s) Global Secondary Index (%s) deletion: %w", d.Id(), idxName, err)
 		}
 	}
@@ -1618,7 +1633,7 @@ func expandDynamoDbEncryptAtRestOptions(vOptions []interface{}) *dynamodb.SSESpe
 
 // validators
 
-func validateDynamoDbTableAttributes(d *schema.ResourceDiff) error {
+func validateDynamoDbTableAttributes(d *schema.ResourceData) error {
 	// Collect all indexed attributes
 	indexedAttributes := map[string]bool{}
 
@@ -1720,6 +1735,39 @@ func validateDynamoDbProvisionedThroughputField(diff *schema.ResourceDiff, key s
 	} else if billingMode == dynamodb.BillingModePayPerRequest && oldBillingMode != dynamodb.BillingModeProvisioned {
 		if v != 0 {
 			return fmt.Errorf("%s can not be set when billing_mode is %q", key, dynamodb.BillingModePayPerRequest)
+		}
+	}
+	return nil
+}
+
+func verifyAttributes(diff *schema.ResourceDiff) error {
+	// GSI's can append their own attributes.
+	// With the creation of gsi as its own resource we want to ignore these diffs
+	gsiList := diff.Get("global_secondary_index").(*schema.Set).List()
+	if diff.HasChange("attribute") {
+		old, new := diff.GetChange("attribute")
+		for _, idx := range gsiList {
+			// Billing mode doesn't matter because were not going to use it here
+			gsi := expandDynamoDbGlobalSecondaryIndex(
+				idx.(map[string]interface{}),
+				dynamodb.BillingModePayPerRequest,
+			)
+			for _, keySchema := range gsi.KeySchema {
+				for _, att := range expandDynamoDbAttributes(old.(*schema.Set).List()) {
+					if aws.StringValue(att.AttributeName) == aws.StringValue(keySchema.AttributeName) {
+						if err := diff.Clear("attribute"); err != nil {
+							return err
+						}
+					}
+				}
+				for _, att := range expandDynamoDbAttributes(new.(*schema.Set).List()) {
+					if aws.StringValue(att.AttributeName) == aws.StringValue(keySchema.AttributeName) {
+						if err := diff.Clear("attribute"); err != nil {
+							return err
+						}
+					}
+				}
+			}
 		}
 	}
 	return nil

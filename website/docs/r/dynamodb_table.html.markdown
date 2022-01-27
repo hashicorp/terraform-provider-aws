@@ -113,6 +113,7 @@ definition after you have created the resource.
 * `global_secondary_index` - (Optional) Describe a GSI for the table;
   subject to the normal limits on the number of GSIs, projected
 attributes, etc.
+* `manage_index_as_own_resource` (Optional) - designed to be able to migrate and use aws_dynamodb_table_gsi
 * `point_in_time_recovery` - (Optional) Enable point-in-time recovery options.
 * `replica` - (Optional) Configuration block(s) with [DynamoDB Global Tables V2 (version 2019.11.21)](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/globaltables.V2.html) replication configurations. Detailed below.
 * `restore_source_name` - (Optional) The name of the table to restore. Must match the name of an existing table.

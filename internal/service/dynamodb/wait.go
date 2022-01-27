@@ -156,7 +156,7 @@ func waitDynamoDBGSIActive(conn *dynamodb.DynamoDB, tableName, indexName string)
 	return nil, err
 }
 
-func waitDynamoDBGSIDeleted(conn *dynamodb.DynamoDB, tableName, indexName string) (*dynamodb.GlobalSecondaryIndexDescription, error) {
+func waitDynamoDBGSIDeleted(conn *dynamodb.DynamoDB, tableName, indexName string) error {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{
 			dynamodb.IndexStatusActive,
@@ -170,11 +170,11 @@ func waitDynamoDBGSIDeleted(conn *dynamodb.DynamoDB, tableName, indexName string
 
 	outputRaw, err := stateConf.WaitForState()
 
-	if output, ok := outputRaw.(*dynamodb.GlobalSecondaryIndexDescription); ok {
-		return output, err
+	if _, ok := outputRaw.(*dynamodb.GlobalSecondaryIndexDescription); ok {
+		return nil
 	}
 
-	return nil, err
+	return err
 }
 
 func waitDynamoDBPITRUpdated(conn *dynamodb.DynamoDB, tableName string, toEnable bool) (*dynamodb.PointInTimeRecoveryDescription, error) {

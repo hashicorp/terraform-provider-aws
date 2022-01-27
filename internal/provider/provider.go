@@ -1080,6 +1080,7 @@ func Provider() *schema.Provider {
 			"aws_dynamodb_table":                         dynamodb.ResourceTable(),
 			"aws_dynamodb_table_item":                    dynamodb.ResourceTableItem(),
 			"aws_dynamodb_tag":                           dynamodb.ResourceTag(),
+			"aws_dynamodb_table_gsi":                     dynamodb.ResourceAwsDynamoDbTableGsi(),
 
 			"aws_ami":                                             ec2.ResourceAMI(),
 			"aws_ami_copy":                                        ec2.ResourceAMICopy(),
