@@ -179,69 +179,6 @@ func Provider() *schema.Provider {
 				Description: "The access key for API operations. You can retrieve this\n" +
 					"from the 'Security & Credentials' section of the AWS console.",
 			},
-
-			"secret_key": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  "",
-				Description: "The secret key for API operations. You can retrieve this\n" +
-					"from the 'Security & Credentials' section of the AWS console.",
-			},
-
-			"profile": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  "",
-				Description: "The profile for API operations. If not set, the default profile\n" +
-					"created with `aws configure` will be used.",
-			},
-
-			"assume_role": assumeRoleSchema(),
-
-			"shared_config_file": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Default:     "",
-				Description: "The path to the shared config file. If not set, defaults to ~/.aws/config.",
-			},
-
-			"shared_credentials_file": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  "",
-				Description: "The path to the shared credentials file. If not set\n" +
-					"this defaults to ~/.aws/credentials.",
-			},
-
-			"token": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  "",
-				Description: "session token. A session token is only required if you are\n" +
-					"using temporary security credentials.",
-			},
-
-			"region": {
-				Type:     schema.TypeString,
-				Required: true,
-				DefaultFunc: schema.MultiEnvDefaultFunc([]string{
-					"AWS_REGION",
-					"AWS_DEFAULT_REGION",
-				}, nil),
-				Description: "The region where AWS operations will take place. Examples\n" +
-					"are us-east-1, us-west-2, etc.", // lintignore:AWSAT003,
-				InputDefault: "us-east-1", // lintignore:AWSAT003
-			},
-
-			"max_retries": {
-				Type:     schema.TypeInt,
-				Optional: true,
-				Default:  25,
-				Description: "The maximum number of times an AWS API request is\n" +
-					"being executed. If the API request still fails, an error is\n" +
-					"thrown.",
-			},
-
 			"allowed_account_ids": {
 				Type:          schema.TypeSet,
 				Elem:          &schema.Schema{Type: schema.TypeString},
@@ -249,15 +186,7 @@ func Provider() *schema.Provider {
 				ConflictsWith: []string{"forbidden_account_ids"},
 				Set:           schema.HashString,
 			},
-
-			"forbidden_account_ids": {
-				Type:          schema.TypeSet,
-				Elem:          &schema.Schema{Type: schema.TypeString},
-				Optional:      true,
-				ConflictsWith: []string{"allowed_account_ids"},
-				Set:           schema.HashString,
-			},
-
+			"assume_role": assumeRoleSchema(),
 			"default_tags": {
 				Type:        schema.TypeList,
 				Optional:    true,
@@ -274,16 +203,20 @@ func Provider() *schema.Provider {
 					},
 				},
 			},
-
+			"endpoints": endpointsSchema(),
+			"forbidden_account_ids": {
+				Type:          schema.TypeSet,
+				Elem:          &schema.Schema{Type: schema.TypeString},
+				Optional:      true,
+				ConflictsWith: []string{"allowed_account_ids"},
+				Set:           schema.HashString,
+			},
 			"http_proxy": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Description: "The address of an HTTP proxy to use when accessing the AWS API. " +
 					"Can also be configured using the `HTTP_PROXY` or `HTTPS_PROXY` environment variables.",
 			},
-
-			"endpoints": endpointsSchema(),
-
 			"ignore_tags": {
 				Type:        schema.TypeList,
 				Optional:    true,
@@ -308,7 +241,6 @@ func Provider() *schema.Provider {
 					},
 				},
 			},
-
 			"insecure": {
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -316,47 +248,32 @@ func Provider() *schema.Provider {
 				Description: "Explicitly allow the provider to perform \"insecure\" SSL requests. If omitted, " +
 					"default value is `false`",
 			},
-
-			"skip_credentials_validation": {
-				Type:     schema.TypeBool,
+			"max_retries": {
+				Type:     schema.TypeInt,
 				Optional: true,
-				Default:  false,
-				Description: "Skip the credentials validation via STS API. " +
-					"Used for AWS API implementations that do not have STS available/implemented.",
+				Default:  25,
+				Description: "The maximum number of times an AWS API request is\n" +
+					"being executed. If the API request still fails, an error is\n" +
+					"thrown.",
 			},
-
-			"skip_get_ec2_platforms": {
-				Type:     schema.TypeBool,
+			"profile": {
+				Type:     schema.TypeString,
 				Optional: true,
-				Default:  false,
-				Description: "Skip getting the supported EC2 platforms. " +
-					"Used by users that don't have ec2:DescribeAccountAttributes permissions.",
+				Default:  "",
+				Description: "The profile for API operations. If not set, the default profile\n" +
+					"created with `aws configure` will be used.",
 			},
-
-			"skip_region_validation": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-				Description: "Skip static validation of region name. " +
-					"Used by users of alternative AWS-like APIs or users w/ access to regions that are not public (yet).",
+			"region": {
+				Type:     schema.TypeString,
+				Required: true,
+				DefaultFunc: schema.MultiEnvDefaultFunc([]string{
+					"AWS_REGION",
+					"AWS_DEFAULT_REGION",
+				}, nil),
+				Description: "The region where AWS operations will take place. Examples\n" +
+					"are us-east-1, us-west-2, etc.", // lintignore:AWSAT003,
+				InputDefault: "us-east-1", // lintignore:AWSAT003
 			},
-
-			"skip_requesting_account_id": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-				Description: "Skip requesting the account ID. " +
-					"Used for AWS API implementations that do not have IAM/STS API and/or metadata API.",
-			},
-
-			"skip_metadata_api_check": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-				Description: "Skip the AWS Metadata API check. " +
-					"Used for AWS API implementations that do not have a metadata api endpoint.",
-			},
-
 			"s3_force_path_style": {
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -365,6 +282,85 @@ func Provider() *schema.Provider {
 					"i.e., http://s3.amazonaws.com/BUCKET/KEY. By default, the S3 client will\n" +
 					"use virtual hosted bucket addressing when possible\n" +
 					"(http://BUCKET.s3.amazonaws.com/KEY). Specific to the Amazon S3 service.",
+			},
+			"secret_key": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Default:  "",
+				Description: "The secret key for API operations. You can retrieve this\n" +
+					"from the 'Security & Credentials' section of the AWS console.",
+			},
+			"shared_config_file": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Default:     "",
+				Description: "The path to the shared config file. If not set, defaults to ~/.aws/config.",
+			},
+			"shared_credentials_file": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Default:  "",
+				Description: "The path to the shared credentials file. If not set\n" +
+					"this defaults to ~/.aws/credentials.",
+			},
+			"skip_credentials_validation": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+				Description: "Skip the credentials validation via STS API. " +
+					"Used for AWS API implementations that do not have STS available/implemented.",
+			},
+			"skip_get_ec2_platforms": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+				Description: "Skip getting the supported EC2 platforms. " +
+					"Used by users that don't have ec2:DescribeAccountAttributes permissions.",
+			},
+			"skip_metadata_api_check": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+				Description: "Skip the AWS Metadata API check. " +
+					"Used for AWS API implementations that do not have a metadata api endpoint.",
+			},
+			"skip_region_validation": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+				Description: "Skip static validation of region name. " +
+					"Used by users of alternative AWS-like APIs or users w/ access to regions that are not public (yet).",
+			},
+			"skip_requesting_account_id": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+				Description: "Skip requesting the account ID. " +
+					"Used for AWS API implementations that do not have IAM/STS API and/or metadata API.",
+			},
+			"sts_region": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Region where the STS endpoint resides",
+			},
+			"token": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Default:  "",
+				Description: "session token. A session token is only required if you are\n" +
+					"using temporary security credentials.",
+			},
+			"use_dualstack_endpoint": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     false,
+				Description: "Resolve an endpoint with DualStack capability",
+			},
+			"use_fips_endpoint": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     false,
+				Description: "Resolve an endpoint with FIPS capability",
 			},
 		},
 
@@ -1848,25 +1844,28 @@ func Provider() *schema.Provider {
 func providerConfigure(d *schema.ResourceData, terraformVersion string) (interface{}, error) {
 	config := conns.Config{
 		AccessKey:               d.Get("access_key").(string),
-		SecretKey:               d.Get("secret_key").(string),
-		Profile:                 d.Get("profile").(string),
-		Token:                   d.Get("token").(string),
-		Region:                  d.Get("region").(string),
-		SharedConfigFile:        d.Get("shared_config_file").(string),
-		SharedCredentialsFile:   d.Get("shared_credentials_file").(string),
 		DefaultTagsConfig:       expandProviderDefaultTags(d.Get("default_tags").([]interface{})),
 		Endpoints:               make(map[string]string),
-		MaxRetries:              d.Get("max_retries").(int),
+		HTTPProxy:               d.Get("http_proxy").(string),
 		IgnoreTagsConfig:        expandProviderIgnoreTags(d.Get("ignore_tags").([]interface{})),
 		Insecure:                d.Get("insecure").(bool),
-		HTTPProxy:               d.Get("http_proxy").(string),
+		MaxRetries:              d.Get("max_retries").(int),
+		Profile:                 d.Get("profile").(string),
+		Region:                  d.Get("region").(string),
+		S3ForcePathStyle:        d.Get("s3_force_path_style").(bool),
+		SecretKey:               d.Get("secret_key").(string),
+		SharedConfigFile:        d.Get("shared_config_file").(string),
+		SharedCredentialsFile:   d.Get("shared_credentials_file").(string),
 		SkipCredsValidation:     d.Get("skip_credentials_validation").(bool),
 		SkipGetEC2Platforms:     d.Get("skip_get_ec2_platforms").(bool),
+		SkipMetadataApiCheck:    d.Get("skip_metadata_api_check").(bool),
 		SkipRegionValidation:    d.Get("skip_region_validation").(bool),
 		SkipRequestingAccountId: d.Get("skip_requesting_account_id").(bool),
-		SkipMetadataApiCheck:    d.Get("skip_metadata_api_check").(bool),
-		S3ForcePathStyle:        d.Get("s3_force_path_style").(bool),
+		STSRegion:               d.Get("sts_region").(string),
 		TerraformVersion:        terraformVersion,
+		Token:                   d.Get("token").(string),
+		UseDualStackEndpoint:    d.Get("use_dualstack_endpoint").(bool),
+		UseFIPSEndpoint:         d.Get("use_fips_endpoint").(bool),
 	}
 
 	if l, ok := d.Get("assume_role").([]interface{}); ok && len(l) > 0 && l[0] != nil {
