@@ -40,7 +40,7 @@ func dataSourcePipelineRead(ctx context.Context, d *schema.ResourceData, meta in
 
 	v, err := PipelineRetrieve(pipelineId, conn)
 	if err != nil {
-		return diag.Errorf("Error describing DataPipeline (%s): %s", pipelineId, err)
+		return diag.Errorf("Error describing DataPipeline Pipeline (%s): %s", pipelineId, err)
 	}
 
 	d.Set("name", v.Name)

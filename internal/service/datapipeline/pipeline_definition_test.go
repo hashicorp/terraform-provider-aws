@@ -110,7 +110,7 @@ func testAccCheckDataPipelinePipelineDefinitionExists(resourceName string, datap
 		}
 
 		if resp == nil {
-			return fmt.Errorf("datapipeline_pipeline_definition %q does not exist", rs.Primary.ID)
+			return fmt.Errorf("DataPipeline Pipeline Definition %q does not exist", rs.Primary.ID)
 		}
 
 		*datapipelineOutput = *resp
@@ -135,11 +135,11 @@ func testAccCheckDataPipelinePipelineDefinitionDestroy(s *terraform.State) error
 		}
 
 		if err != nil {
-			return fmt.Errorf("problem while checking DataPipeline Pipeline Definition was destroyed: %w", err)
+			return fmt.Errorf("problem while checking if DataPipeline Pipeline Definition was destroyed: %w", err)
 		}
 
 		if resp != nil {
-			return fmt.Errorf("datapipeline_pipeline_definition %q still exists", rs.Primary.ID)
+			return fmt.Errorf("DataPipeline Pipeline Definition %q still exists", rs.Primary.ID)
 		}
 	}
 

@@ -127,13 +127,13 @@ func dataSourcePipelineDefinitionRead(ctx context.Context, d *schema.ResourceDat
 	}
 
 	if err = d.Set("parameter_object", flattenDataPipelineParameterObjects(resp.ParameterObjects)); err != nil {
-		return diag.Errorf("error setting `%s` for DataPipeline Definition (%s): %s", "parameter_object", pipelineID, err)
+		return diag.Errorf("error setting `%s` for DataPipeline Pipeline Definition (%s): %s", "parameter_object", pipelineID, err)
 	}
 	if err = d.Set("parameter_value", flattenDataPipelineParameterValues(resp.ParameterValues)); err != nil {
-		return diag.Errorf("error setting `%s` for DataPipeline Definition (%s): %s", "parameter_object", pipelineID, err)
+		return diag.Errorf("error setting `%s` for DataPipeline Pipeline Definition (%s): %s", "parameter_object", pipelineID, err)
 	}
 	if err = d.Set("pipeline_object", flattenDataPipelineObjects(resp.PipelineObjects)); err != nil {
-		return diag.Errorf("error setting `%s` for DataPipeline Definition (%s): %s", "parameter_object", pipelineID, err)
+		return diag.Errorf("error setting `%s` for DataPipeline Pipeline Definition (%s): %s", "parameter_object", pipelineID, err)
 	}
 	d.SetId(pipelineID)
 
