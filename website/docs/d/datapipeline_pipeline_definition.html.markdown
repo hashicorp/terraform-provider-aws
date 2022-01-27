@@ -8,13 +8,13 @@ description: |-
 
 # Source: aws_datapipeline_pipeline_definition
 
-Provides details about a specific DataPipeline Definition.
+Provides details about a specific DataPipeline Pipeline Definition.
 
 ## Example Usage
 
 ```terraform
 data "aws_datapipeline_pipeline_definition" "example" {
-  pipeline_id = "PIPELINE ID"
+  pipeline_id = "pipelineID"
 }
 ```
 

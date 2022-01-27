@@ -8,13 +8,13 @@ description: |-
 
 # Resource: aws_datapipeline_pipeline_definition
 
-Provides a Data Pipeline Definition resource.
+Provides a DataPipeline Pipeline Definition resource.
 
 ## Example Usage
 
 ```terraform
 resource "aws_datapipeline_pipeline" "default" {
-  name = "NAME OF PIPELINE"
+  name = "tf-pipeline-default"
 }
 
 resource "aws_datapipeline_pipeline_definition" "example" {
@@ -121,5 +121,5 @@ In addition to all arguments above, the following attributes are exported:
 `aws_datapipeline_pipeline_definition` can be imported using the id, e.g.
 
 ```
-$ terraform import aws_datapipeline_pipeline_definition.example pipelineId
+$ terraform import aws_datapipeline_pipeline_definition.example df-1234567890
 ```
