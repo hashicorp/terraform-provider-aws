@@ -125,7 +125,7 @@ func resourceRuleCreate(d *schema.ResourceData, meta interface{}) error {
 
 	// Some partitions may not support tag-on-create
 	if input.Tags != nil && verify.CheckISOErrorTagsUnsupported(err) {
-		log.Printf("[WARN] EventBridge Rule (%s) create failed (%s) with tags. Trying create without tags.", d.Id(), err)
+		log.Printf("[WARN] EventBridge Rule (%s) create failed (%s) with tags. Trying create without tags.", name, err)
 		input.Tags = nil
 		arn, err = retryPutRule(conn, input)
 	}
