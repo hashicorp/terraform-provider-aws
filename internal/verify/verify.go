@@ -35,21 +35,27 @@ func checkYAMLString(yamlString interface{}) (string, error) {
 }
 
 const (
-	ErrCodeAccessDenied                   = "AccessDenied"
-	ErrCodeInternalException              = "InternalException"
-	ErrCodeInternalServiceError           = "InternalServiceError"
-	ErrCodeInvalidParameterException      = "InvalidParameterException"
-	ErrCodeInvalidRequest                 = "InvalidRequest"
-	ErrCodeOperationDisabledException     = "OperationDisabledException"
-	ErrCodeOperationNotPermittedException = "OperationNotPermitted"
-	ErrCodeUnknownOperationException      = "UnknownOperationException"
-	ErrCodeUnsupportedFeatureException    = "UnsupportedFeatureException"
-	ErrCodeValidationError                = "ValidationError"
-	ErrCodeValidationException            = "ValidationException"
+	ErrCodeAccessDenied                = "AccessDenied"
+	ErrCodeAuthorizationError          = "AuthorizationError"
+	ErrCodeInternalException           = "InternalException"
+	ErrCodeInternalServiceError        = "InternalServiceError"
+	ErrCodeInvalidAction               = "InvalidAction"
+	ErrCodeInvalidParameterException   = "InvalidParameterException"
+	ErrCodeInvalidRequest              = "InvalidRequest"
+	ErrCodeOperationDisabledException  = "OperationDisabledException"
+	ErrCodeOperationNotPermitted       = "OperationNotPermitted"
+	ErrCodeUnknownOperationException   = "UnknownOperationException"
+	ErrCodeUnsupportedFeatureException = "UnsupportedFeatureException"
+	ErrCodeValidationError             = "ValidationError"
+	ErrCodeValidationException         = "ValidationException"
 )
 
 func CheckISOErrorTagsUnsupported(err error) bool {
 	if tfawserr.ErrCodeContains(err, ErrCodeAccessDenied) {
+		return true
+	}
+
+	if tfawserr.ErrCodeContains(err, ErrCodeAuthorizationError) {
 		return true
 	}
 
@@ -58,6 +64,10 @@ func CheckISOErrorTagsUnsupported(err error) bool {
 	}
 
 	if tfawserr.ErrCodeContains(err, ErrCodeInternalServiceError) {
+		return true
+	}
+
+	if tfawserr.ErrCodeContains(err, ErrCodeInvalidAction) {
 		return true
 	}
 
@@ -73,7 +83,7 @@ func CheckISOErrorTagsUnsupported(err error) bool {
 		return true
 	}
 
-	if tfawserr.ErrCodeContains(err, ErrCodeOperationNotPermittedException) {
+	if tfawserr.ErrCodeContains(err, ErrCodeOperationNotPermitted) {
 		return true
 	}
 

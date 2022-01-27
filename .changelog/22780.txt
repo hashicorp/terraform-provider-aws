@@ -25,3 +25,7 @@ resource/aws_ecs_task_definition: Further refine tag error handling in ISO parti
 ```release-note:bug
 resource/aws_ecs_task_set: Further refine tag error handling in ISO partitions
 ```
+
+```release-note:bug
+resource/aws_sns_topic: Further refine tag error handling in ISO partitions
+```
