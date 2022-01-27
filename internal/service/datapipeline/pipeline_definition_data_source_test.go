@@ -11,7 +11,7 @@ import (
 )
 
 func TestAccDataPipelinePipelineDefinitionDataSource_basic(t *testing.T) {
-	dataSourceName := "aws_datapipeline_pipeline_definition.test"
+	dataSourceName := "data.aws_datapipeline_pipeline_definition.test"
 	resourceName := "aws_datapipeline_pipeline_definition.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
@@ -25,7 +25,11 @@ func TestAccDataPipelinePipelineDefinitionDataSource_basic(t *testing.T) {
 				Config: testAccDataPipelinePipelineDefinitionDataSourceConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "pipeline_id", resourceName, "id"),
-					resource.TestCheckResourceAttr(dataSourceName, "pipeline_object.#", "1"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "pipeline_object.#", resourceName, "pipeline_object.#"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "pipeline_object.0.id", resourceName, "pipeline_object.0.id"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "pipeline_object.0.name", resourceName, "pipeline_object.0.name"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "pipeline_object.0.field.0.key", resourceName, "pipeline_object.0.field.0.key"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "pipeline_object.0.field.0.string_value", resourceName, "pipeline_object.0.field.0.string_value"),
 				),
 			},
 		},
