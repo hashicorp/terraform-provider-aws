@@ -26,6 +26,7 @@ ENHANCEMENTS:
 * resource/aws_iot_role_alias: Increase the maximum allowed value of the `credential_duration` argument to `43200` (12 hours) ([#22757](https://github.com/hashicorp/terraform-provider-aws/issues/22757))
 * resource/aws_network_interface: Add `private_ip_list`, `private_ip_list_enabled`, `ipv6_address_list`, and `ipv6_address_list_enabled` attributes ([#17846](https://github.com/hashicorp/terraform-provider-aws/issues/17846))
 * resource/aws_s3_bucket_notification: Add `eventbridge` argument ([#22045](https://github.com/hashicorp/terraform-provider-aws/issues/22045))
+* resource/aws_vpc_endpoint_subnet_association: Fix resource importing ([#22796](https://github.com/hashicorp/terraform-provider-aws/issues/22796))
 
 BUG FIXES:
 
