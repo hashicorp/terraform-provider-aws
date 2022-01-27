@@ -20,8 +20,9 @@ import (
 
 func ResourcePipelineDefinition() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourcePipelineDefinitionCreate,
+		CreateContext: resourcePipelineDefinitionPut,
 		ReadContext:   resourcePipelineDefinitionRead,
+		UpdateContext: resourcePipelineDefinitionPut,
 		DeleteContext: schema.NoopContext,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
@@ -30,25 +31,21 @@ func ResourcePipelineDefinition() *schema.Resource {
 			"parameter_object": {
 				Type:     schema.TypeSet,
 				Optional: true,
-				ForceNew: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"attribute": {
 							Type:     schema.TypeSet,
 							Optional: true,
-							ForceNew: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"key": {
 										Type:         schema.TypeString,
 										Required:     true,
-										ForceNew:     true,
 										ValidateFunc: validation.StringLenBetween(1, 256),
 									},
 									"string_value": {
 										Type:         schema.TypeString,
 										Required:     true,
-										ForceNew:     true,
 										ValidateFunc: validation.StringLenBetween(0, 10240),
 									},
 								},
@@ -57,7 +54,6 @@ func ResourcePipelineDefinition() *schema.Resource {
 						"id": {
 							Type:         schema.TypeString,
 							Required:     true,
-							ForceNew:     true,
 							ValidateFunc: validation.StringLenBetween(1, 256),
 						},
 					},
@@ -66,19 +62,16 @@ func ResourcePipelineDefinition() *schema.Resource {
 			"parameter_value": {
 				Type:     schema.TypeSet,
 				Optional: true,
-				ForceNew: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"id": {
 							Type:         schema.TypeString,
 							Required:     true,
-							ForceNew:     true,
 							ValidateFunc: validation.StringLenBetween(1, 256),
 						},
 						"string_value": {
 							Type:         schema.TypeString,
 							Required:     true,
-							ForceNew:     true,
 							ValidateFunc: validation.StringLenBetween(0, 10240),
 						},
 					},
@@ -93,31 +86,26 @@ func ResourcePipelineDefinition() *schema.Resource {
 			"pipeline_object": {
 				Type:     schema.TypeSet,
 				Required: true,
-				ForceNew: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"field": {
 							Type:     schema.TypeSet,
 							Optional: true,
-							ForceNew: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"key": {
 										Type:         schema.TypeString,
 										Required:     true,
-										ForceNew:     true,
 										ValidateFunc: validation.StringLenBetween(1, 256),
 									},
 									"ref_value": {
 										Type:         schema.TypeString,
 										Optional:     true,
-										ForceNew:     true,
 										ValidateFunc: validation.StringLenBetween(1, 256),
 									},
 									"string_value": {
 										Type:         schema.TypeString,
 										Optional:     true,
-										ForceNew:     true,
 										ValidateFunc: validation.StringLenBetween(0, 10240),
 									},
 								},
@@ -126,13 +114,11 @@ func ResourcePipelineDefinition() *schema.Resource {
 						"id": {
 							Type:         schema.TypeString,
 							Required:     true,
-							ForceNew:     true,
 							ValidateFunc: validation.StringLenBetween(1, 1024),
 						},
 						"name": {
 							Type:         schema.TypeString,
 							Required:     true,
-							ForceNew:     true,
 							ValidateFunc: validation.StringLenBetween(1, 1024),
 						},
 					},
@@ -142,7 +128,7 @@ func ResourcePipelineDefinition() *schema.Resource {
 	}
 }
 
-func resourcePipelineDefinitionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePipelineDefinitionPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).DataPipelineConn
 
 	pipelineID := d.Get("pipeline_id").(string)
