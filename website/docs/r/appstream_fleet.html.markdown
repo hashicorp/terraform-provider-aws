@@ -43,19 +43,20 @@ resource "aws_appstream_fleet" "test_fleet" {
 
 The following arguments are required:
 
-* `compute_capacity` - (Required) Configuration block for the desired capacity of the fleet. See below.
 * `instance_type` - (Required) Instance type to use when launching fleet instances.
 * `name` - (Required) Unique name for the fleet.
 
 The following arguments are optional:
 
+* `compute_capacity` - (Required) Configuration block for the desired capacity of the fleet. See below.
 * `description` - (Optional) Description to display.
 * `disconnect_timeout_in_seconds` - (Optional) Amount of time that a streaming session remains active after users disconnect.
 * `display_name` - (Optional) Human-readable friendly name for the AppStream fleet.
 * `domain_join_info` - (Optional) Configuration block for the name of the directory and organizational unit (OU) to use to join the fleet to a Microsoft Active Directory domain. See below.
 * `enable_default_internet_access` - (Optional) Enables or disables default internet access for the fleet.
-* `fleet_type` - (Optional) Fleet type. Valid values are: `ON_DEMAND`, `ALWAYS_ON`
+* `fleet_type` - (Optional) Fleet type. Valid values are: `ON_DEMAND`, `ALWAYS_ON`, `ELASTIC`
 * `iam_role_arn` - (Optional) ARN of the IAM role to apply to the fleet.
+* `platform` - (Optional) ARN of the IAM role to apply to the fleet.
 * `idle_disconnect_timeout_in_seconds` - (Optional) Amount of time that users can be idle (inactive) before they are disconnected from their streaming session and the `disconnect_timeout_in_seconds` time interval begins.
 * `image_name` - (Optional) Name of the image used to create the fleet.
 * `image_arn` - (Optional) ARN of the public, private, or shared image to use.

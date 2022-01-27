@@ -37,7 +37,7 @@ func ResourceFleet() *schema.Resource {
 			"compute_capacity": {
 				Type:     schema.TypeList,
 				MaxItems: 1,
-				Required: true,
+				Required: false,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"available": {
@@ -148,6 +148,11 @@ func ResourceFleet() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
+			"platform": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+			},
 			"stream_view": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -191,11 +196,14 @@ func resourceFleetCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	input := &appstream.CreateFleetInput{
 		Name:            aws.String(d.Get("name").(string)),
 		InstanceType:    aws.String(d.Get("instance_type").(string)),
-		ComputeCapacity: expandComputeCapacity(d.Get("compute_capacity").([]interface{})),
 	}
 
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+
+	if v, ok := d.GetOk("compute_capacity"); ok {
+		input.Description = expandComputeCapacity(d.Get("compute_capacity").([]interface{}))
+	}
 
 	if v, ok := d.GetOk("description"); ok {
 		input.Description = aws.String(v.(string))
@@ -234,6 +242,10 @@ func resourceFleetCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	if v, ok := d.GetOk("iam_role_arn"); ok {
+		input.IamRoleArn = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("platform"); ok {
 		input.IamRoleArn = aws.String(v.(string))
 	}
 
@@ -344,6 +356,7 @@ func resourceFleetRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	d.Set("instance_type", fleet.InstanceType)
 	d.Set("max_user_duration_in_seconds", fleet.MaxUserDurationInSeconds)
 	d.Set("name", fleet.Name)
+	d.Set("platform", fleet.Platform)
 	d.Set("state", fleet.State)
 	d.Set("stream_view", fleet.StreamView)
 
@@ -384,7 +397,7 @@ func resourceFleetUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 	shouldStop := false
 
-	if d.HasChanges("description", "domain_join_info", "enable_default_internet_access", "iam_role_arn", "instance_type", "max_user_duration_in_seconds", "stream_view", "vpc_config") {
+	if d.HasChanges("description", "domain_join_info", "enable_default_internet_access", "iam_role_arn", "instance_type","platform", "max_user_duration_in_seconds", "stream_view", "vpc_config") {
 		shouldStop = true
 	}
 
@@ -431,6 +444,10 @@ func resourceFleetUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 
 	if d.HasChange("image_name") {
 		input.ImageName = aws.String(d.Get("image_name").(string))
+	}
+
+	if d.HasChange("platform") {
+		input.ImageName = aws.String(d.Get("platform").(string))
 	}
 
 	if d.HasChange("image_arn") {
