@@ -48,6 +48,7 @@ The following attributes are optional:
 * `block_device_mapping` - (Optional) Configuration block(s) with block device mappings for the the image recipe. Detailed below.
 * `description` - (Optional) Description of the image recipe.
 * `tags` - (Optional) Key-value map of resource tags for the image recipe. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `user_data_base64` (Optional) Base64 encoded user data. Use this to provide commands or a command script to run when you launch your build instance.
 * `working_directory` - (Optional) The working directory to be used during build and test workflows.
 
 ### block_device_mapping

@@ -42,7 +42,7 @@ func TestAccIoTRoleAlias_basic(t *testing.T) {
 					testAccCheckRoleAliasExists(resourceName),
 					testAccCheckRoleAliasExists(resourceName2),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "iot", fmt.Sprintf("rolealias/%s", alias)),
-					resource.TestCheckResourceAttr(resourceName, "credential_duration", "1800"),
+					resource.TestCheckResourceAttr(resourceName, "credential_duration", "43200"),
 				),
 			},
 			{
@@ -175,7 +175,7 @@ EOF
 resource "aws_iot_role_alias" "ra" {
   alias               = "%s"
   role_arn            = aws_iam_role.role.arn
-  credential_duration = 1800
+  credential_duration = 43200
 }
 
 resource "aws_iot_role_alias" "ra2" {

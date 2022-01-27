@@ -435,7 +435,7 @@ func resourceListenerCreate(d *schema.ResourceData, meta interface{}) error {
 	output, err := retryListenerCreate(conn, params)
 
 	// Some partitions may not support tag-on-create
-	if params.Tags != nil && (tfawserr.ErrCodeContains(err, ErrCodeAccessDenied) || tfawserr.ErrCodeContains(err, elbv2.ErrCodeInvalidConfigurationRequestException) || tfawserr.ErrCodeContains(err, elbv2.ErrCodeOperationNotPermittedException)) {
+	if params.Tags != nil && verify.CheckISOErrorTagsUnsupported(err) {
 		log.Printf("[WARN] ELBv2 Listener (%s) create failed (%s) with tags. Trying create without tags.", lbArn, err)
 		params.Tags = nil
 		output, err = retryListenerCreate(conn, params)
@@ -451,7 +451,7 @@ func resourceListenerCreate(d *schema.ResourceData, meta interface{}) error {
 	if params.Tags == nil && len(tags) > 0 {
 		err := UpdateTags(conn, d.Id(), nil, tags)
 
-		if v, ok := d.GetOk("tags"); (!ok || len(v.(map[string]interface{})) == 0) && (tfawserr.ErrCodeContains(err, ErrCodeAccessDenied) || tfawserr.ErrCodeContains(err, elbv2.ErrCodeInvalidConfigurationRequestException) || tfawserr.ErrCodeContains(err, elbv2.ErrCodeOperationNotPermittedException)) {
+		if v, ok := d.GetOk("tags"); (!ok || len(v.(map[string]interface{})) == 0) && verify.CheckISOErrorTagsUnsupported(err) {
 			// if default tags only, log and continue (i.e., should error if explicitly setting tags and they can't be)
 			log.Printf("[WARN] error adding tags after create for ELBv2 Listener (%s): %s", d.Id(), err)
 			return resourceListenerRead(d, meta)
@@ -534,7 +534,7 @@ func resourceListenerRead(d *schema.ResourceData, meta interface{}) error {
 
 	tags, err := ListTags(conn, d.Id())
 
-	if tfawserr.ErrCodeContains(err, ErrCodeAccessDenied) || tfawserr.ErrCodeContains(err, elbv2.ErrCodeInvalidConfigurationRequestException) || tfawserr.ErrCodeContains(err, elbv2.ErrCodeOperationNotPermittedException) {
+	if verify.CheckISOErrorTagsUnsupported(err) {
 		log.Printf("[WARN] Unable to list tags for ELBv2 Listener %s: %s", d.Id(), err)
 		return nil
 	}
@@ -643,7 +643,7 @@ func resourceListenerUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		// ISO partitions may not support tagging, giving error
-		if tfawserr.ErrCodeContains(err, ErrCodeAccessDenied) || tfawserr.ErrCodeContains(err, elbv2.ErrCodeInvalidConfigurationRequestException) || tfawserr.ErrCodeContains(err, elbv2.ErrCodeOperationNotPermittedException) {
+		if verify.CheckISOErrorTagsUnsupported(err) {
 			log.Printf("[WARN] Unable to update tags for ELBv2 Listener %s: %s", d.Id(), err)
 			return resourceListenerRead(d, meta)
 		}

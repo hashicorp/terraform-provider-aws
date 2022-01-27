@@ -32,6 +32,12 @@ func ResourceBucketNotification() *schema.Resource {
 				ForceNew: true,
 			},
 
+			"eventbridge": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
+
 			"topic": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -134,6 +140,13 @@ func ResourceBucketNotification() *schema.Resource {
 func resourceBucketNotificationPut(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).S3Conn
 	bucket := d.Get("bucket").(string)
+
+	// EventBridge
+	eventbridgeNotifications := d.Get("eventbridge").(bool)
+	var eventbridgeConfig *s3.EventBridgeConfiguration
+	if eventbridgeNotifications {
+		eventbridgeConfig = &s3.EventBridgeConfiguration{}
+	}
 
 	// TopicNotifications
 	topicNotifications := d.Get("topic").([]interface{})
@@ -295,6 +308,9 @@ func resourceBucketNotificationPut(d *schema.ResourceData, meta interface{}) err
 	}
 
 	notificationConfiguration := &s3.NotificationConfiguration{}
+	if eventbridgeConfig != nil {
+		notificationConfiguration.EventBridgeConfiguration = eventbridgeConfig
+	}
 	if len(lambdaConfigs) > 0 {
 		notificationConfiguration.LambdaFunctionConfigurations = lambdaConfigs
 	}
@@ -379,6 +395,9 @@ func resourceBucketNotificationRead(d *schema.ResourceData, meta interface{}) er
 	log.Printf("[DEBUG] S3 Bucket: %s, get notification: %v", d.Id(), notificationConfigs)
 
 	d.Set("bucket", d.Id())
+
+	// EventBridge Notification
+	d.Set("eventbridge", notificationConfigs.EventBridgeConfiguration != nil)
 
 	// Topic Notification
 	if err := d.Set("topic", flattenTopicConfigurations(notificationConfigs.TopicConfigurations)); err != nil {

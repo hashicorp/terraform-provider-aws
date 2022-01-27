@@ -34,6 +34,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/cloudformation"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/cloudfront"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/cloudhsmv2"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/cloudsearch"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/cloudtrail"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/cloudwatch"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/cloudwatchlogs"
@@ -49,6 +50,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/configservice"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/connect"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/cur"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/dataexchange"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/datapipeline"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/datasync"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/dax"
@@ -349,12 +351,15 @@ func Provider() *schema.Provider {
 
 			"aws_api_gateway_api_key":     apigateway.DataSourceAPIKey(),
 			"aws_api_gateway_domain_name": apigateway.DataSourceDomainName(),
+			"aws_api_gateway_export":      apigateway.DataSourceExport(),
 			"aws_api_gateway_resource":    apigateway.DataSourceResource(),
 			"aws_api_gateway_rest_api":    apigateway.DataSourceRestAPI(),
+			"aws_api_gateway_sdk":         apigateway.DataSourceSdk(),
 			"aws_api_gateway_vpc_link":    apigateway.DataSourceVPCLink(),
 
-			"aws_apigatewayv2_api":  apigatewayv2.DataSourceAPI(),
-			"aws_apigatewayv2_apis": apigatewayv2.DataSourceAPIs(),
+			"aws_apigatewayv2_api":    apigatewayv2.DataSourceAPI(),
+			"aws_apigatewayv2_apis":   apigatewayv2.DataSourceAPIs(),
+			"aws_apigatewayv2_export": apigatewayv2.DataSourceExport(),
 
 			"aws_appmesh_mesh":            appmesh.DataSourceMesh(),
 			"aws_appmesh_virtual_service": appmesh.DataSourceVirtualService(),
@@ -381,6 +386,7 @@ func Provider() *schema.Provider {
 			"aws_cloudfront_distribution":                   cloudfront.DataSourceDistribution(),
 			"aws_cloudfront_function":                       cloudfront.DataSourceFunction(),
 			"aws_cloudfront_log_delivery_canonical_user_id": cloudfront.DataSourceLogDeliveryCanonicalUserID(),
+			"aws_cloudfront_origin_access_identity":         cloudfront.DataSourceOriginAccessIdentity(),
 			"aws_cloudfront_origin_request_policy":          cloudfront.DataSourceOriginRequestPolicy(),
 			"aws_cloudfront_response_headers_policy":        cloudfront.DataSourceResponseHeadersPolicy(),
 
@@ -409,9 +415,12 @@ func Provider() *schema.Provider {
 
 			"aws_connect_bot_association":             connect.DataSourceBotAssociation(),
 			"aws_connect_contact_flow":                connect.DataSourceContactFlow(),
+			"aws_connect_contact_flow_module":         connect.DataSourceContactFlowModule(),
 			"aws_connect_hours_of_operation":          connect.DataSourceHoursOfOperation(),
 			"aws_connect_instance":                    connect.DataSourceInstance(),
 			"aws_connect_lambda_function_association": connect.DataSourceLambdaFunctionAssociation(),
+			"aws_connect_prompt":                      connect.DataSourcePrompt(),
+			"aws_connect_quick_connect":               connect.DataSourceQuickConnect(),
 
 			"aws_cur_report_definition": cur.DataSourceReportDefinition(),
 
@@ -470,7 +479,7 @@ func Provider() *schema.Provider {
 			"aws_internet_gateway":                           ec2.DataSourceInternetGateway(),
 			"aws_key_pair":                                   ec2.DataSourceKeyPair(),
 			"aws_launch_template":                            ec2.DataSourceLaunchTemplate(),
-			"aws_nat_gateway":                                ec2.DataSourceNatGateway(),
+			"aws_nat_gateway":                                ec2.DataSourceNATGateway(),
 			"aws_network_acls":                               ec2.DataSourceNetworkACLs(),
 			"aws_network_interface":                          ec2.DataSourceNetworkInterface(),
 			"aws_network_interfaces":                         ec2.DataSourceNetworkInterfaces(),
@@ -487,6 +496,7 @@ func Provider() *schema.Provider {
 			"aws_vpc_endpoint_service":                       ec2.DataSourceVPCEndpointService(),
 			"aws_vpc_endpoint":                               ec2.DataSourceVPCEndpoint(),
 			"aws_vpc_ipam_pool":                              ec2.DataSourceVPCIpamPool(),
+			"aws_vpc_ipam_preview_next_cidr":                 ec2.DataSourceVPCIpamPreviewNextCidr(),
 			"aws_vpc_peering_connection":                     ec2.DataSourceVPCPeeringConnection(),
 			"aws_vpc_peering_connections":                    ec2.DataSourceVPCPeeringConnections(),
 			"aws_vpc":                                        ec2.DataSourceVPC(),
@@ -564,13 +574,16 @@ func Provider() *schema.Provider {
 			"aws_identitystore_group": identitystore.DataSourceGroup(),
 			"aws_identitystore_user":  identitystore.DataSourceUser(),
 
-			"aws_imagebuilder_component":                    imagebuilder.DataSourceComponent(),
-			"aws_imagebuilder_distribution_configuration":   imagebuilder.DataSourceDistributionConfiguration(),
-			"aws_imagebuilder_image":                        imagebuilder.DataSourceImage(),
-			"aws_imagebuilder_image_pipeline":               imagebuilder.DataSourceImagePipeline(),
-			"aws_imagebuilder_image_recipe":                 imagebuilder.DataSourceImageRecipe(),
-			"aws_imagebuilder_image_recipes":                imagebuilder.DataSourceImageRecipes(),
-			"aws_imagebuilder_infrastructure_configuration": imagebuilder.DataSourceInfrastructureConfiguration(),
+			"aws_imagebuilder_component":                     imagebuilder.DataSourceComponent(),
+			"aws_imagebuilder_components":                    imagebuilder.DataSourceComponents(),
+			"aws_imagebuilder_distribution_configuration":    imagebuilder.DataSourceDistributionConfiguration(),
+			"aws_imagebuilder_distribution_configurations":   imagebuilder.DataSourceDistributionConfigurations(),
+			"aws_imagebuilder_image":                         imagebuilder.DataSourceImage(),
+			"aws_imagebuilder_image_pipeline":                imagebuilder.DataSourceImagePipeline(),
+			"aws_imagebuilder_image_recipe":                  imagebuilder.DataSourceImageRecipe(),
+			"aws_imagebuilder_image_recipes":                 imagebuilder.DataSourceImageRecipes(),
+			"aws_imagebuilder_infrastructure_configuration":  imagebuilder.DataSourceInfrastructureConfiguration(),
+			"aws_imagebuilder_infrastructure_configurations": imagebuilder.DataSourceInfrastructureConfigurations(),
 
 			"aws_inspector_rules_packages": inspector.DataSourceRulesPackages(),
 
@@ -830,11 +843,14 @@ func Provider() *schema.Provider {
 			"aws_appstream_user":                    appstream.ResourceUser(),
 			"aws_appstream_user_stack_association":  appstream.ResourceUserStackAssociation(),
 
-			"aws_appsync_api_key":     appsync.ResourceAPIKey(),
-			"aws_appsync_datasource":  appsync.ResourceDataSource(),
-			"aws_appsync_function":    appsync.ResourceFunction(),
-			"aws_appsync_graphql_api": appsync.ResourceGraphQLAPI(),
-			"aws_appsync_resolver":    appsync.ResourceResolver(),
+			"aws_appsync_api_cache":                   appsync.ResourceAPICache(),
+			"aws_appsync_api_key":                     appsync.ResourceAPIKey(),
+			"aws_appsync_datasource":                  appsync.ResourceDataSource(),
+			"aws_appsync_domain_name":                 appsync.ResourceDomainName(),
+			"aws_appsync_domain_name_api_association": appsync.ResourceDomainNameApiAssociation(),
+			"aws_appsync_function":                    appsync.ResourceFunction(),
+			"aws_appsync_graphql_api":                 appsync.ResourceGraphQLAPI(),
+			"aws_appsync_resolver":                    appsync.ResourceResolver(),
 
 			"aws_athena_database":    athena.ResourceDatabase(),
 			"aws_athena_named_query": athena.ResourceNamedQuery(),
@@ -901,6 +917,9 @@ func Provider() *schema.Provider {
 
 			"aws_cloudhsm_v2_cluster": cloudhsmv2.ResourceCluster(),
 			"aws_cloudhsm_v2_hsm":     cloudhsmv2.ResourceHSM(),
+
+			"aws_cloudsearch_domain":                       cloudsearch.ResourceDomain(),
+			"aws_cloudsearch_domain_service_access_policy": cloudsearch.ResourceDomainServiceAccessPolicy(),
 
 			"aws_cloudtrail": cloudtrail.ResourceCloudTrail(),
 
@@ -985,9 +1004,13 @@ func Provider() *schema.Provider {
 			"aws_connect_instance":                    connect.ResourceInstance(),
 			"aws_connect_hours_of_operation":          connect.ResourceHoursOfOperation(),
 			"aws_connect_lambda_function_association": connect.ResourceLambdaFunctionAssociation(),
+			"aws_connect_queue":                       connect.ResourceQueue(),
 			"aws_connect_quick_connect":               connect.ResourceQuickConnect(),
+			"aws_connect_security_profile":            connect.ResourceSecurityProfile(),
 
 			"aws_cur_report_definition": cur.ResourceReportDefinition(),
+
+			"aws_dataexchange_data_set": dataexchange.ResourceDataSet(),
 
 			"aws_datapipeline_pipeline":            datapipeline.ResourcePipeline(),
 			"aws_datapipeline_pipeline_definition": datapipeline.ResourcePipelineDefinition(),
@@ -1006,13 +1029,16 @@ func Provider() *schema.Provider {
 			"aws_dax_parameter_group": dax.ResourceParameterGroup(),
 			"aws_dax_subnet_group":    dax.ResourceSubnetGroup(),
 
-			"aws_devicefarm_device_pool":      devicefarm.ResourceDevicePool(),
-			"aws_devicefarm_instance_profile": devicefarm.ResourceInstanceProfile(),
-			"aws_devicefarm_network_profile":  devicefarm.ResourceNetworkProfile(),
-			"aws_devicefarm_project":          devicefarm.ResourceProject(),
-			"aws_devicefarm_upload":           devicefarm.ResourceUpload(),
+			"aws_devicefarm_device_pool":       devicefarm.ResourceDevicePool(),
+			"aws_devicefarm_instance_profile":  devicefarm.ResourceInstanceProfile(),
+			"aws_devicefarm_network_profile":   devicefarm.ResourceNetworkProfile(),
+			"aws_devicefarm_project":           devicefarm.ResourceProject(),
+			"aws_devicefarm_test_grid_project": devicefarm.ResourceTestGridProject(),
+			"aws_devicefarm_upload":            devicefarm.ResourceUpload(),
 
-			"aws_detective_graph": detective.ResourceGraph(),
+			"aws_detective_graph":               detective.ResourceGraph(),
+			"aws_detective_invitation_accepter": detective.ResourceInvitationAccepter(),
+			"aws_detective_member":              detective.ResourceMember(),
 
 			"aws_dx_bgp_peer":                                  directconnect.ResourceBGPPeer(),
 			"aws_dx_connection":                                directconnect.ResourceConnection(),
@@ -1114,7 +1140,7 @@ func Provider() *schema.Provider {
 			"aws_key_pair":                                        ec2.ResourceKeyPair(),
 			"aws_launch_template":                                 ec2.ResourceLaunchTemplate(),
 			"aws_main_route_table_association":                    ec2.ResourceMainRouteTableAssociation(),
-			"aws_nat_gateway":                                     ec2.ResourceNatGateway(),
+			"aws_nat_gateway":                                     ec2.ResourceNATGateway(),
 			"aws_network_acl":                                     ec2.ResourceNetworkACL(),
 			"aws_network_acl_rule":                                ec2.ResourceNetworkACLRule(),
 			"aws_network_interface":                               ec2.ResourceNetworkInterface(),
@@ -1171,13 +1197,14 @@ func Provider() *schema.Provider {
 			"aws_ecrpublic_repository":        ecrpublic.ResourceRepository(),
 			"aws_ecrpublic_repository_policy": ecrpublic.ResourceRepositoryPolicy(),
 
-			"aws_ecs_account_setting_default": ecs.ResourceAccountSettingDefault(),
-			"aws_ecs_capacity_provider":       ecs.ResourceCapacityProvider(),
-			"aws_ecs_cluster":                 ecs.ResourceCluster(),
-			"aws_ecs_service":                 ecs.ResourceService(),
-			"aws_ecs_tag":                     ecs.ResourceTag(),
-			"aws_ecs_task_definition":         ecs.ResourceTaskDefinition(),
-			"aws_ecs_task_set":                ecs.ResourceTaskSet(),
+			"aws_ecs_account_setting_default":    ecs.ResourceAccountSettingDefault(),
+			"aws_ecs_capacity_provider":          ecs.ResourceCapacityProvider(),
+			"aws_ecs_cluster":                    ecs.ResourceCluster(),
+			"aws_ecs_cluster_capacity_providers": ecs.ResourceClusterCapacityProviders(),
+			"aws_ecs_service":                    ecs.ResourceService(),
+			"aws_ecs_tag":                        ecs.ResourceTag(),
+			"aws_ecs_task_definition":            ecs.ResourceTaskDefinition(),
+			"aws_ecs_task_set":                   ecs.ResourceTaskSet(),
 
 			"aws_efs_access_point":       efs.ResourceAccessPoint(),
 			"aws_efs_backup_policy":      efs.ResourceBackupPolicy(),
@@ -1250,6 +1277,7 @@ func Provider() *schema.Provider {
 
 			"aws_fsx_backup":                        fsx.ResourceBackup(),
 			"aws_fsx_lustre_file_system":            fsx.ResourceLustreFileSystem(),
+			"aws_fsx_data_repository_association":   fsx.ResourceDataRepositoryAssociation(),
 			"aws_fsx_ontap_file_system":             fsx.ResourceOntapFileSystem(),
 			"aws_fsx_ontap_storage_virtual_machine": fsx.ResourceOntapStorageVirtualMachine(),
 			"aws_fsx_ontap_volume":                  fsx.ResourceOntapVolume(),
@@ -1379,6 +1407,7 @@ func Provider() *schema.Provider {
 			"aws_lambda_event_source_mapping":           lambda.ResourceEventSourceMapping(),
 			"aws_lambda_function":                       lambda.ResourceFunction(),
 			"aws_lambda_function_event_invoke_config":   lambda.ResourceFunctionEventInvokeConfig(),
+			"aws_lambda_invocation":                     lambda.ResourceInvocation(),
 			"aws_lambda_layer_version":                  lambda.ResourceLayerVersion(),
 			"aws_lambda_layer_version_permission":       lambda.ResourceLayerVersionPermission(),
 			"aws_lambda_permission":                     lambda.ResourcePermission(),
@@ -1600,6 +1629,7 @@ func Provider() *schema.Provider {
 			"aws_sagemaker_model_package_group_policy":                sagemaker.ResourceModelPackageGroupPolicy(),
 			"aws_sagemaker_notebook_instance":                         sagemaker.ResourceNotebookInstance(),
 			"aws_sagemaker_notebook_instance_lifecycle_configuration": sagemaker.ResourceNotebookInstanceLifeCycleConfiguration(),
+			"aws_sagemaker_project":                                   sagemaker.ResourceProject(),
 			"aws_sagemaker_studio_lifecycle_config":                   sagemaker.ResourceStudioLifecycleConfig(),
 			"aws_sagemaker_user_profile":                              sagemaker.ResourceUserProfile(),
 			"aws_sagemaker_workforce":                                 sagemaker.ResourceWorkforce(),

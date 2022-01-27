@@ -102,15 +102,15 @@ func resourceCompositeAlarmCreate(ctx context.Context, d *schema.ResourceData, m
 	_, err := conn.PutCompositeAlarmWithContext(ctx, &input)
 
 	// Some partitions (i.e., ISO) may not support tag-on-create
-	if input.Tags != nil && (tfawserr.ErrCodeContains(err, errCodeAccessDenied) || tfawserr.ErrCodeContains(err, cloudwatch.ErrCodeInternalServiceFault)) {
-		log.Printf("[WARN] CloudWatch Composite Alarm (%s) create failed (%s) with tags. Trying create without tags.", d.Id(), err)
+	if input.Tags != nil && verify.CheckISOErrorTagsUnsupported(err) {
+		log.Printf("[WARN] failed creating CloudWatch Composite Alarm (%s) with tags: %s. Trying create without tags.", name, err)
 		input.Tags = nil
 
 		_, err = conn.PutCompositeAlarmWithContext(ctx, &input)
 	}
 
 	if err != nil {
-		return diag.Errorf("error creating CloudWatch Composite Alarm (%s): %s", name, err)
+		return diag.Errorf("failed creating CloudWatch Composite Alarm (%s): %s", name, err)
 	}
 
 	d.SetId(name)
@@ -129,13 +129,13 @@ func resourceCompositeAlarmCreate(ctx context.Context, d *schema.ResourceData, m
 		err = UpdateTags(conn, aws.StringValue(alarm.AlarmArn), nil, tags)
 
 		// If default tags only, log and continue. Otherwise, error.
-		if v, ok := d.GetOk("tags"); (!ok || len(v.(map[string]interface{})) == 0) && (tfawserr.ErrCodeContains(err, errCodeAccessDenied) || tfawserr.ErrCodeContains(err, cloudwatch.ErrCodeInternalServiceFault)) {
-			log.Printf("[WARN] error adding tags after create for CloudWatch Composite Alarm (%s): %s", d.Id(), err)
+		if v, ok := d.GetOk("tags"); (!ok || len(v.(map[string]interface{})) == 0) && verify.CheckISOErrorTagsUnsupported(err) {
+			log.Printf("[WARN] failed adding tags after create for CloudWatch Composite Alarm (%s): %s", d.Id(), err)
 			return resourceCompositeAlarmRead(ctx, d, meta)
 		}
 
 		if err != nil {
-			return diag.Errorf("error creating CloudWatch Composite Alarm (%s) tags: %s", d.Id(), err)
+			return diag.Errorf("failed adding tags after create for CloudWatch Composite Alarm (%s): %s", d.Id(), err)
 		}
 	}
 
@@ -191,13 +191,13 @@ func resourceCompositeAlarmRead(ctx context.Context, d *schema.ResourceData, met
 	tags, err := ListTags(conn, aws.StringValue(alarm.AlarmArn))
 
 	// Some partitions (i.e., ISO) may not support tagging, giving error
-	if tfawserr.ErrCodeContains(err, errCodeAccessDenied) || tfawserr.ErrCodeContains(err, cloudwatch.ErrCodeInternalServiceFault) {
-		log.Printf("[WARN] Unable to list tags for CloudWatch Composite Alarm %s: %s", d.Id(), err)
+	if verify.CheckISOErrorTagsUnsupported(err) {
+		log.Printf("[WARN] failed listing tags for CloudWatch Composite Alarm (%s): %s", d.Id(), err)
 		return nil
 	}
 
 	if err != nil {
-		return diag.Errorf("error listing tags of alarm: %s", err)
+		return diag.Errorf("failed listing tags for CloudWatch Composite Alarm (%s): %s", d.Id(), err)
 	}
 
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
@@ -232,13 +232,13 @@ func resourceCompositeAlarmUpdate(ctx context.Context, d *schema.ResourceData, m
 		err := UpdateTags(conn, arn, o, n)
 
 		// Some partitions (i.e., ISO) may not support tagging, giving error
-		if tfawserr.ErrCodeContains(err, errCodeAccessDenied) || tfawserr.ErrCodeContains(err, cloudwatch.ErrCodeInternalServiceFault) {
-			log.Printf("[WARN] Unable to update tags for CloudWatch Composite Alarm %s: %s", arn, err)
+		if verify.CheckISOErrorTagsUnsupported(err) {
+			log.Printf("[WARN] failed updating tags for CloudWatch Composite Alarm (%s): %s", d.Id(), err)
 			return resourceCompositeAlarmRead(ctx, d, meta)
 		}
 
 		if err != nil {
-			return diag.Errorf("error updating CloudWatch Composite Alarm (%s) tags: %s", arn, err)
+			return diag.Errorf("failed updating tags for CloudWatch Composite Alarm (%s): %s", d.Id(), err)
 		}
 	}
 

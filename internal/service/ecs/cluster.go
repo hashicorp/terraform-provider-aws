@@ -1,6 +1,7 @@
 package ecs
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"time"
@@ -42,7 +43,7 @@ func ResourceCluster() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(1, 255),
+				ValidateFunc: validateClusterName,
 			},
 			"arn": {
 				Type:     schema.TypeString,
@@ -51,6 +52,7 @@ func ResourceCluster() *schema.Resource {
 			"capacity_providers": {
 				Type:     schema.TypeSet,
 				Optional: true,
+				Computed: true,
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 				},
@@ -114,6 +116,7 @@ func ResourceCluster() *schema.Resource {
 			"default_capacity_provider_strategy": {
 				Type:     schema.TypeSet,
 				Optional: true,
+				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"base": {
@@ -205,22 +208,22 @@ func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
 	out, err := retryClusterCreate(conn, input)
 
 	// Some partitions (i.e., ISO) may not support tag-on-create
-	if input.Tags != nil && (tfawserr.ErrCodeContains(err, ecs.ErrCodeAccessDeniedException) || tfawserr.ErrCodeContains(err, ecs.ErrCodeInvalidParameterException) || tfawserr.ErrCodeContains(err, ecs.ErrCodeUnsupportedFeatureException)) {
-		log.Printf("[WARN] ECS Cluster (%s) create failed (%s) with tags. Trying create without tags.", d.Id(), err)
+	if input.Tags != nil && verify.CheckISOErrorTagsUnsupported(err) {
+		log.Printf("[WARN] ECS tagging failed creating Cluster (%s) with tags: %s. Trying create without tags.", clusterName, err)
 		input.Tags = nil
 
 		out, err = retryClusterCreate(conn, input)
 	}
 
 	if err != nil {
-		return fmt.Errorf("error creating ECS Cluster (%s): %w", clusterName, err)
+		return fmt.Errorf("failed creating ECS Cluster (%s): %w", clusterName, err)
 	}
 
 	log.Printf("[DEBUG] ECS cluster %s created", aws.StringValue(out.Cluster.ClusterArn))
 
 	d.SetId(aws.StringValue(out.Cluster.ClusterArn))
 
-	if _, err := waitClusterAvailable(conn, d.Id()); err != nil {
+	if _, err := waitClusterAvailable(context.Background(), conn, d.Id()); err != nil {
 		return fmt.Errorf("error waiting for ECS Cluster (%s) to become Available: %w", d.Id(), err)
 	}
 
@@ -228,14 +231,14 @@ func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
 	if input.Tags == nil && len(tags) > 0 {
 		err := UpdateTags(conn, d.Id(), nil, tags)
 
-		if v, ok := d.GetOk("tags"); (!ok || len(v.(map[string]interface{})) == 0) && (tfawserr.ErrCodeContains(err, ecs.ErrCodeAccessDeniedException) || tfawserr.ErrCodeContains(err, ecs.ErrCodeInvalidParameterException) || tfawserr.ErrCodeContains(err, ecs.ErrCodeUnsupportedFeatureException)) {
+		if v, ok := d.GetOk("tags"); (!ok || len(v.(map[string]interface{})) == 0) && verify.CheckISOErrorTagsUnsupported(err) {
 			// If default tags only, log and continue. Otherwise, error.
-			log.Printf("[WARN] error adding tags after create for ECS Cluster (%s): %s", d.Id(), err)
+			log.Printf("[WARN] ECS tagging failed adding tags after create for Cluster (%s): %s", d.Id(), err)
 			return resourceClusterRead(d, meta)
 		}
 
 		if err != nil {
-			return fmt.Errorf("error creating ECS Cluster (%s) tags: %w", clusterName, err)
+			return fmt.Errorf("ECS tagging failed adding tags after create for Cluster (%s): %w", d.Id(), err)
 		}
 	}
 
@@ -247,26 +250,23 @@ func resourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	var out *ecs.DescribeClustersOutput
-	err := resource.Retry(2*time.Minute, func() *resource.RetryError {
+	var cluster *ecs.Cluster
+	err := resource.Retry(clusterReadTimeout, func() *resource.RetryError {
 		var err error
-		out, err = FindClusterByNameOrARN(conn, d.Id())
+		cluster, err = FindClusterByNameOrARN(context.Background(), conn, d.Id())
+
+		if d.IsNewResource() && tfresource.NotFound(err) {
+			return resource.RetryableError(err)
+		}
 
 		if err != nil {
 			return resource.NonRetryableError(err)
 		}
 
-		if out == nil || len(out.Failures) > 0 {
-			if d.IsNewResource() {
-				return resource.RetryableError(&resource.NotFoundError{})
-			}
-			return resource.NonRetryableError(&resource.NotFoundError{})
-		}
-
 		return nil
 	})
 	if tfresource.TimedOut(err) {
-		out, err = FindClusterByNameOrARN(conn, d.Id())
+		cluster, err = FindClusterByNameOrARN(context.Background(), conn, d.Id())
 	}
 
 	if tfresource.NotFound(err) {
@@ -277,20 +277,6 @@ func resourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 
 	if err != nil {
 		return fmt.Errorf("error reading ECS Cluster (%s): %s", d.Id(), err)
-	}
-
-	var cluster *ecs.Cluster
-	for _, c := range out.Clusters {
-		if aws.StringValue(c.ClusterArn) == d.Id() {
-			cluster = c
-			break
-		}
-	}
-
-	if cluster == nil {
-		log.Printf("[WARN] ECS Cluster (%s) not found, removing from state", d.Id())
-		d.SetId("")
-		return nil
 	}
 
 	// Status==INACTIVE means deleted cluster
@@ -323,8 +309,8 @@ func resourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 	tags := KeyValueTags(cluster.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	// Some partitions (i.e., ISO) may not support tagging, giving error
-	if tfawserr.ErrCodeContains(err, ecs.ErrCodeAccessDeniedException) || tfawserr.ErrCodeContains(err, ecs.ErrCodeInvalidParameterException) || tfawserr.ErrCodeContains(err, ecs.ErrCodeUnsupportedFeatureException) {
-		log.Printf("[WARN] Unable to list tags for ECS Cluster %s: %s", d.Id(), err)
+	if verify.CheckISOErrorTagsUnsupported(err) {
+		log.Printf("[WARN] ECS tagging failed listing tags for Cluster (%s): %s", d.Id(), err)
 		return nil
 	}
 
@@ -361,7 +347,7 @@ func resourceClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 			return fmt.Errorf("error changing ECS cluster (%s): %w", d.Id(), err)
 		}
 
-		if _, err := waitClusterAvailable(conn, d.Id()); err != nil {
+		if _, err := waitClusterAvailable(context.Background(), conn, d.Id()); err != nil {
 			return fmt.Errorf("error waiting for ECS Cluster (%s) to become Available: %w", d.Id(), err)
 		}
 	}
@@ -373,30 +359,13 @@ func resourceClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 			DefaultCapacityProviderStrategy: expandCapacityProviderStrategy(d.Get("default_capacity_provider_strategy").(*schema.Set)),
 		}
 
-		err := resource.Retry(ecsClusterTimeoutUpdate, func() *resource.RetryError {
-			_, err := conn.PutClusterCapacityProviders(&input)
-			if err != nil {
-				if tfawserr.ErrMessageContains(err, ecs.ErrCodeClientException, "Cluster was not ACTIVE") {
-					return resource.RetryableError(err)
-				}
-				if tfawserr.ErrMessageContains(err, ecs.ErrCodeResourceInUseException, "") {
-					return resource.RetryableError(err)
-				}
-				if tfawserr.ErrMessageContains(err, ecs.ErrCodeUpdateInProgressException, "") {
-					return resource.RetryableError(err)
-				}
-				return resource.NonRetryableError(err)
-			}
-			return nil
-		})
-		if tfresource.TimedOut(err) {
-			_, err = conn.PutClusterCapacityProviders(&input)
-		}
+		err := retryClusterCapacityProvidersPut(context.Background(), conn, &input)
+
 		if err != nil {
 			return fmt.Errorf("error changing ECS cluster capacity provider settings (%s): %w", d.Id(), err)
 		}
 
-		if _, err := waitClusterAvailable(conn, d.Id()); err != nil {
+		if _, err := waitClusterAvailable(context.Background(), conn, d.Id()); err != nil {
 			return fmt.Errorf("error waiting for ECS Cluster (%s) to become Available: %w", d.Id(), err)
 		}
 	}
@@ -407,13 +376,13 @@ func resourceClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 		err := UpdateTags(conn, d.Id(), o, n)
 
 		// Some partitions (i.e., ISO) may not support tagging, giving error
-		if tfawserr.ErrCodeContains(err, ecs.ErrCodeAccessDeniedException) || tfawserr.ErrCodeContains(err, ecs.ErrCodeInvalidParameterException) || tfawserr.ErrCodeContains(err, ecs.ErrCodeUnsupportedFeatureException) {
-			log.Printf("[WARN] Unable to update tags for ECS Cluster %s: %s", d.Id(), err)
+		if verify.CheckISOErrorTagsUnsupported(err) {
+			log.Printf("[WARN] ECS tagging failed updating tags for Cluster (%s): %s", d.Id(), err)
 			return nil
 		}
 
 		if err != nil {
-			return fmt.Errorf("error updating ECS Cluster (%s) tags: %w", d.Id(), err)
+			return fmt.Errorf("ECS tagging failed updating tags for Cluster (%s): %w", d.Id(), err)
 		}
 	}
 

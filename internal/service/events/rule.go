@@ -124,8 +124,8 @@ func resourceRuleCreate(d *schema.ResourceData, meta interface{}) error {
 	arn, err := retryPutRule(conn, input)
 
 	// Some partitions may not support tag-on-create
-	if input.Tags != nil && (tfawserr.ErrCodeContains(err, ErrCodeAccessDenied) || tfawserr.ErrCodeContains(err, eventbridge.ErrCodeInternalException) || tfawserr.ErrCodeContains(err, eventbridge.ErrCodeOperationDisabledException)) {
-		log.Printf("[WARN] EventBridge Rule (%s) create failed (%s) with tags. Trying create without tags.", d.Id(), err)
+	if input.Tags != nil && verify.CheckISOErrorTagsUnsupported(err) {
+		log.Printf("[WARN] EventBridge Rule (%s) create failed (%s) with tags. Trying create without tags.", name, err)
 		input.Tags = nil
 		arn, err = retryPutRule(conn, input)
 	}
@@ -140,7 +140,7 @@ func resourceRuleCreate(d *schema.ResourceData, meta interface{}) error {
 	if input.Tags == nil && len(tags) > 0 {
 		err := UpdateTags(conn, arn, nil, tags)
 
-		if v, ok := d.GetOk("tags"); (!ok || len(v.(map[string]interface{})) == 0) && (tfawserr.ErrCodeContains(err, ErrCodeAccessDenied) || tfawserr.ErrCodeContains(err, eventbridge.ErrCodeInternalException) || tfawserr.ErrCodeContains(err, eventbridge.ErrCodeOperationDisabledException)) {
+		if v, ok := d.GetOk("tags"); (!ok || len(v.(map[string]interface{})) == 0) && verify.CheckISOErrorTagsUnsupported(err) {
 			log.Printf("[WARN] error adding tags after create for EventBridge Rule (%s): %s", d.Id(), err)
 			return resourceRuleRead(d, meta)
 		}
@@ -203,7 +203,7 @@ func resourceRuleRead(d *schema.ResourceData, meta interface{}) error {
 	tags, err := ListTags(conn, arn)
 
 	// ISO partitions may not support tagging, giving error
-	if tfawserr.ErrCodeContains(err, ErrCodeAccessDenied) || tfawserr.ErrCodeContains(err, eventbridge.ErrCodeInternalException) || tfawserr.ErrCodeContains(err, eventbridge.ErrCodeOperationDisabledException) {
+	if verify.CheckISOErrorTagsUnsupported(err) {
 		log.Printf("[WARN] Unable to list tags for EventBridge Rule %s: %s", d.Id(), err)
 		return nil
 	}
@@ -270,7 +270,7 @@ func resourceRuleUpdate(d *schema.ResourceData, meta interface{}) error {
 
 		err := UpdateTags(conn, arn, o, n)
 
-		if tfawserr.ErrCodeContains(err, ErrCodeAccessDenied) || tfawserr.ErrCodeContains(err, eventbridge.ErrCodeInternalException) || tfawserr.ErrCodeContains(err, eventbridge.ErrCodeOperationDisabledException) {
+		if verify.CheckISOErrorTagsUnsupported(err) {
 			log.Printf("[WARN] Unable to update tags for EventBridge Rule %s: %s", d.Id(), err)
 			return resourceRuleRead(d, meta)
 		}

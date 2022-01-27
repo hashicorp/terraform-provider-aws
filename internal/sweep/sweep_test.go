@@ -27,6 +27,7 @@ import (
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/cloudformation"
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/cloudfront"
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/cloudhsmv2"
+	_ "github.com/hashicorp/terraform-provider-aws/internal/service/cloudsearch"
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/cloudtrail"
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/cloudwatch"
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/cloudwatchlogs"
