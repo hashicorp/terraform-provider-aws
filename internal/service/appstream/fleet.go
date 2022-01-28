@@ -137,6 +137,12 @@ func ResourceFleet() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
+			"max_concurrent_sessions": {
+				Type:         schema.TypeInt,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: validation.IntBetween(1, 100000),
+			},
 			"max_user_duration_in_seconds": {
 				Type:         schema.TypeInt,
 				Optional:     true,
@@ -249,6 +255,10 @@ func resourceFleetCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		input.Platform = aws.String(v.(string))
 	}
 
+	if v, ok := d.GetOk("max_concurrent_sessions"); ok {
+		input.MaxConcurrentSessions = aws.Int64(int64(v.(int)))
+	}
+
 	if v, ok := d.GetOk("max_user_duration_in_seconds"); ok {
 		input.MaxUserDurationInSeconds = aws.Int64(int64(v.(int)))
 	}
@@ -355,6 +365,7 @@ func resourceFleetRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	d.Set("image_arn", fleet.ImageArn)
 	d.Set("instance_type", fleet.InstanceType)
 	d.Set("max_user_duration_in_seconds", fleet.MaxUserDurationInSeconds)
+	d.Set("max_concurrent_sessions", fleet.MaxConcurrentSessions)
 	d.Set("name", fleet.Name)
 	d.Set("platform", fleet.Platform)
 	d.Set("state", fleet.State)
@@ -397,7 +408,7 @@ func resourceFleetUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 	shouldStop := false
 
-	if d.HasChanges("description", "domain_join_info", "enable_default_internet_access", "iam_role_arn", "instance_type", "platform", "max_user_duration_in_seconds", "stream_view", "vpc_config") {
+	if d.HasChanges("description", "domain_join_info", "enable_default_internet_access", "iam_role_arn", "instance_type", "max_concurrent_sessions", "platform", "max_user_duration_in_seconds", "stream_view", "vpc_config") {
 		shouldStop = true
 	}
 
@@ -468,6 +479,10 @@ func resourceFleetUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 
 	if d.HasChange("max_user_duration_in_seconds") {
 		input.MaxUserDurationInSeconds = aws.Int64(int64(d.Get("max_user_duration_in_seconds").(int)))
+	}
+
+	if d.HasChange("max_concurrent_sessions") {
+		input.MaxUserDurationInSeconds = aws.Int64(int64(d.Get("max_concurrent_sessions").(int)))
 	}
 
 	if d.HasChange("vpc_config") {

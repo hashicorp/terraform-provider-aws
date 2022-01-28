@@ -56,7 +56,8 @@ The following arguments are optional:
 * `enable_default_internet_access` - (Optional) Enables or disables default internet access for the fleet.
 * `fleet_type` - (Optional) Fleet type. Valid values are: `ON_DEMAND`, `ALWAYS_ON`, `ELASTIC`
 * `iam_role_arn` - (Optional) ARN of the IAM role to apply to the fleet.
-* `platform` - (Optional) ARN of the IAM role to apply to the fleet.
+* `platform` - (Optional) Platform of ELASTIC fleet.  Either WINDOWS o AMAZON_LINUX
+* `max_concurrent_sessions` - (Optional) The maximum concurrent sessions of an Elastic Fleet.
 * `idle_disconnect_timeout_in_seconds` - (Optional) Amount of time that users can be idle (inactive) before they are disconnected from their streaming session and the `disconnect_timeout_in_seconds` time interval begins.
 * `image_name` - (Optional) Name of the image used to create the fleet.
 * `image_arn` - (Optional) ARN of the public, private, or shared image to use.
