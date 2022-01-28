@@ -631,7 +631,6 @@ resource "aws_kinesis_firehose_delivery_stream" "example" {
 * `enabled` - (Optional) Enables or disables [dynamic partitioning](https://docs.aws.amazon.com/firehose/latest/dev/dynamic-partitioning.html). Defaults to `false`.
 * `retry_duration` - (Optional) Total amount of seconds Firehose spends on retries. Valid values between 0 and 7200. Default is 300.
 
-
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
