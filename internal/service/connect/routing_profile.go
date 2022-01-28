@@ -21,6 +21,9 @@ func ResourceRoutingProfile() *schema.Resource {
 		CreateContext: resourceRoutingProfileCreate,
 		ReadContext:   resourceRoutingProfileRead,
 		UpdateContext: resourceRoutingProfileUpdate,
+		// Routing profiles do not support deletion today. NoOp the Delete method.
+		// Users can rename their routing profiles manually if they want.
+		DeleteContext: schema.NoopContext,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -307,6 +310,27 @@ func resourceRoutingProfileUpdate(ctx context.Context, d *schema.ResourceData, m
 
 	return resourceRoutingProfileRead(ctx, d, meta)
 }
+
+// func resourceRoutingProfileDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+// 	conn := meta.(*conns.AWSClient).ConnectConn
+
+// 	instanceID, routingProfileID, err := RoutingProfileParseID(d.Id())
+
+// 	if err != nil {
+// 		return diag.FromErr(err)
+// 	}
+
+// 	_, err = conn.DeleteRoutingProfileWithContext(ctx, &connect.DeleteRoutingProfileInput{
+// 		InstanceId:       aws.String(instanceID),
+// 		RoutingProfileId: aws.String(routingProfileID),
+// 	})
+
+// 	if err != nil {
+// 		return diag.FromErr(fmt.Errorf("error deleting RoutingProfile (%s): %w", d.Id(), err))
+// 	}
+
+// 	return nil
+// }
 
 func expandRoutingProfileMediaConcurrencies(mediaConcurrencies []interface{}) []*connect.MediaConcurrency {
 	if len(mediaConcurrencies) == 0 {
