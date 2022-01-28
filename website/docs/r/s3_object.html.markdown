@@ -1,12 +1,12 @@
 ---
 subcategory: "S3"
 layout: "aws"
-page_title: "AWS: aws_s3_bucket_object"
+page_title: "AWS: aws_s3_object"
 description: |-
   Provides a S3 bucket object resource.
 ---
 
-# Resource: aws_s3_bucket_object
+# Resource: aws_s3_object
 
 Provides a S3 bucket object resource.
 
@@ -15,7 +15,7 @@ Provides a S3 bucket object resource.
 ### Uploading a file to a bucket
 
 ```terraform
-resource "aws_s3_bucket_object" "object" {
+resource "aws_s3_object" "object" {
   bucket = "your_bucket_name"
   key    = "new_object_key"
   source = "path/to/file"
@@ -40,7 +40,7 @@ resource "aws_s3_bucket" "examplebucket" {
   acl    = "private"
 }
 
-resource "aws_s3_bucket_object" "examplebucket_object" {
+resource "aws_s3_object" "examplebucket_object" {
   key        = "someobject"
   bucket     = aws_s3_bucket.examplebucket.id
   source     = "index.html"
@@ -56,7 +56,7 @@ resource "aws_s3_bucket" "examplebucket" {
   acl    = "private"
 }
 
-resource "aws_s3_bucket_object" "examplebucket_object" {
+resource "aws_s3_object" "examplebucket_object" {
   key                    = "someobject"
   bucket                 = aws_s3_bucket.examplebucket.id
   source                 = "index.html"
@@ -72,7 +72,7 @@ resource "aws_s3_bucket" "examplebucket" {
   acl    = "private"
 }
 
-resource "aws_s3_bucket_object" "examplebucket_object" {
+resource "aws_s3_object" "examplebucket_object" {
   key                    = "someobject"
   bucket                 = aws_s3_bucket.examplebucket.id
   source                 = "index.html"
@@ -96,7 +96,7 @@ resource "aws_s3_bucket" "examplebucket" {
   }
 }
 
-resource "aws_s3_bucket_object" "examplebucket_object" {
+resource "aws_s3_object" "examplebucket_object" {
   key    = "someobject"
   bucket = aws_s3_bucket.examplebucket.id
   source = "important.txt"
@@ -161,11 +161,11 @@ In addition to all arguments above, the following attributes are exported:
 Objects can be imported using the `id`. The `id` is the bucket name and the key together e.g.,
 
 ```
-$ terraform import aws_s3_bucket_object.object some-bucket-name/some/key.txt
+$ terraform import aws_s3_object.object some-bucket-name/some/key.txt
 ```
 
 Additionally, s3 url syntax can be used, e.g.,
 
 ```
-$ terraform import aws_s3_bucket_object.object s3://some-bucket-name/some/key.txt
+$ terraform import aws_s3_object.object s3://some-bucket-name/some/key.txt
 ```
