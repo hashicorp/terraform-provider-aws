@@ -155,28 +155,12 @@ func resourceClientVPNEndpointCreate(d *schema.ResourceData, meta interface{}) e
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
-	req := &ec2.CreateClientVpnEndpointInput{
+	input := &ec2.CreateClientVpnEndpointInput{
 		ClientCidrBlock:      aws.String(d.Get("client_cidr_block").(string)),
 		ServerCertificateArn: aws.String(d.Get("server_certificate_arn").(string)),
-		TransportProtocol:    aws.String(d.Get("transport_protocol").(string)),
 		SplitTunnel:          aws.Bool(d.Get("split_tunnel").(bool)),
 		TagSpecifications:    ec2TagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeClientVpnEndpoint),
-	}
-
-	if v, ok := d.GetOk("description"); ok {
-		req.Description = aws.String(v.(string))
-	}
-
-	if v, ok := d.GetOk("self_service_portal"); ok {
-		req.SelfServicePortal = aws.String(v.(string))
-	}
-
-	if v, ok := d.GetOk("dns_servers"); ok {
-		req.DnsServers = flex.ExpandStringSet(v.(*schema.Set))
-	}
-
-	if v, ok := d.GetOk("session_timeout_hours"); ok {
-		req.SessionTimeoutHours = aws.Int64(int64(v.(int)))
+		TransportProtocol:    aws.String(d.Get("transport_protocol").(string)),
 	}
 
 	if v, ok := d.GetOk("authentication_options"); ok {
@@ -189,7 +173,7 @@ func resourceClientVPNEndpointCreate(d *schema.ResourceData, meta interface{}) e
 			authReq := expandEc2ClientVpnAuthenticationRequest(auth)
 			authRequests = append(authRequests, authReq)
 		}
-		req.AuthenticationOptions = authRequests
+		input.AuthenticationOptions = authRequests
 	}
 
 	if v, ok := d.GetOk("connection_log_options"); ok {
@@ -208,16 +192,33 @@ func resourceClientVPNEndpointCreate(d *schema.ResourceData, meta interface{}) e
 			connLogReq.CloudwatchLogStream = aws.String(attrs["cloudwatch_log_stream"].(string))
 		}
 
-		req.ConnectionLogOptions = connLogReq
+		input.ConnectionLogOptions = connLogReq
 	}
 
-	resp, err := conn.CreateClientVpnEndpoint(req)
+	if v, ok := d.GetOk("description"); ok {
+		input.Description = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("dns_servers"); ok {
+		input.DnsServers = flex.ExpandStringSet(v.(*schema.Set))
+	}
+
+	if v, ok := d.GetOk("self_service_portal"); ok {
+		input.SelfServicePortal = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("session_timeout_hours"); ok {
+		input.SessionTimeoutHours = aws.Int64(int64(v.(int)))
+	}
+
+	log.Printf("[DEBUG] Creating EC2 Client VPN Endpoint: %s", input)
+	output, err := conn.CreateClientVpnEndpoint(input)
 
 	if err != nil {
-		return fmt.Errorf("Error creating Client VPN endpoint: %w", err)
+		return fmt.Errorf("error creating EC2 Client VPN Endpoint: %w", err)
 	}
 
-	d.SetId(aws.StringValue(resp.ClientVpnEndpointId))
+	d.SetId(aws.StringValue(output.ClientVpnEndpointId))
 
 	return resourceClientVPNEndpointRead(d, meta)
 }
@@ -305,17 +306,6 @@ func resourceClientVPNEndpointRead(d *schema.ResourceData, meta interface{}) err
 	return nil
 }
 
-func resourceClientVPNEndpointDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
-
-	err := DeleteClientVPNEndpoint(conn, d.Id())
-	if err != nil {
-		return fmt.Errorf("error deleting Client VPN endpoint: %w", err)
-	}
-
-	return nil
-}
-
 func resourceClientVPNEndpointUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
@@ -395,6 +385,29 @@ func resourceClientVPNEndpointUpdate(d *schema.ResourceData, meta interface{}) e
 	return resourceClientVPNEndpointRead(d, meta)
 }
 
+func resourceClientVPNEndpointDelete(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*conns.AWSClient).EC2Conn
+
+	log.Printf("[DEBUG] Deleting EC2 Client VPN Endpoint: %s", d.Id())
+	_, err := conn.DeleteClientVpnEndpoint(&ec2.DeleteClientVpnEndpointInput{
+		ClientVpnEndpointId: aws.String(d.Id()),
+	})
+
+	if tfawserr.ErrCodeEquals(err, ErrCodeClientVpnEndpointIdNotFound) {
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("error deleting EC2 Client VPN Endpoint (%s): %w", d.Id(), err)
+	}
+
+	if _, err := WaitClientVPNEndpointDeleted(conn, d.Id()); err != nil {
+		return fmt.Errorf("error waiting for EC2 Client VPN Endpoint (%s) delete: %w", d.Id(), err)
+	}
+
+	return nil
+}
+
 func flattenConnLoggingConfig(lopts *ec2.ConnectionLogResponseOptions) []map[string]interface{} {
 	m := make(map[string]interface{})
 	if lopts.CloudwatchLogGroup != nil {
@@ -458,20 +471,4 @@ func expandEc2ClientVpnAuthenticationRequest(data map[string]interface{}) *ec2.C
 	}
 
 	return req
-}
-
-func DeleteClientVPNEndpoint(conn *ec2.EC2, endpointID string) error {
-	_, err := conn.DeleteClientVpnEndpoint(&ec2.DeleteClientVpnEndpointInput{
-		ClientVpnEndpointId: aws.String(endpointID),
-	})
-	if tfawserr.ErrMessageContains(err, ErrCodeClientVpnEndpointIdNotFound, "") {
-		return nil
-	}
-	if err != nil {
-		return err
-	}
-
-	_, err = WaitClientVPNEndpointDeleted(conn, endpointID)
-
-	return err
 }
