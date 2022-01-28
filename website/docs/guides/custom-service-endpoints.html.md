@@ -177,6 +177,7 @@ provider "aws" {
   <li><code>globalaccelerator</code></li>
   <li><code>glue</code></li>
   <li><code>gluedatabrew</code></li>
+  <li><code>grafana</code></li>
   <li><code>greengrass</code></li>
   <li><code>greengrassv2</code></li>
   <li><code>groundstation</code></li>
@@ -229,7 +230,6 @@ provider "aws" {
   <li><code>macie</code></li>
   <li><code>macie2</code></li>
   <li><code>managedblockchain</code></li>
-  <li><code>managedgrafana</code></li>
   <li><code>marketplacecatalog</code></li>
   <li><code>marketplacecommerceanalytics</code></li>
   <li><code>marketplaceentitlement</code> (or <code>marketplaceentitlementservice</code>)</li>

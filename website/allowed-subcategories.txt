@@ -74,6 +74,7 @@ Gamelift
 Glacier
 Global Accelerator
 Glue
+Grafana
 GuardDuty
 IAM
 Identity Store
@@ -95,7 +96,6 @@ Location Service
 MQ
 Macie
 Macie Classic
-Managed Grafana
 Managed Streaming for Kafka (MSK)
 Kafka Connect (MSK Connect)
 MediaConvert
