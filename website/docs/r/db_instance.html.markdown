@@ -97,6 +97,7 @@ encoding in Oracle and Microsoft SQL instances (collation). This can't be change
 Supported in Amazon RDS](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Appendix.OracleCharacterSets.html)
 or [Server-Level Collation for Microsoft SQL Server](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Appendix.SQLServer.CommonDBATasks.Collation.html) for more information.
 * `copy_tags_to_snapshot` – (Optional, boolean) Copy all Instance `tags` to snapshots. Default is `false`.
+* `db_name` - (Optional) The name of the database to create when the DB instance is created. If this parameter is not specified, no database is created in the DB instance. Note that this does not apply for Oracle or SQL Server engines. See the [AWS documentation](https://awscli.amazonaws.com/v2/documentation/api/latest/reference/rds/create-db-instance.html) for more details on what applies for those engines. If you are providing an Oracle db name, it needs to be in all upper case.
 * `db_subnet_group_name` - (Optional) Name of [DB subnet group](/docs/providers/aws/r/db_subnet_group.html). DB instance will
 be created in the VPC associated with the DB subnet group. If unspecified, will
 be created in the `default` VPC, or in EC2 Classic, if available. When working
@@ -153,7 +154,7 @@ information on the [AWS
 Documentation](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_Monitoring.html)
 what IAM permissions are needed to allow Enhanced Monitoring for RDS Instances.
 * `multi_az` - (Optional) Specifies if the RDS instance is multi-AZ
-* `name` - (Optional) The name of the database to create when the DB instance is created. If this parameter is not specified, no database is created in the DB instance. Note that this does not apply for Oracle or SQL Server engines. See the [AWS documentation](https://awscli.amazonaws.com/v2/documentation/api/latest/reference/rds/create-db-instance.html) for more details on what applies for those engines. If you are providing an Oracle db name, it needs to be in all upper case. Cannot be specified for a replica.
+* `name` - (Optional, **Deprecated** use `db_name` instead) The name of the database to create when the DB instance is created. If this parameter is not specified, no database is created in the DB instance. Note that this does not apply for Oracle or SQL Server engines. See the [AWS documentation](https://awscli.amazonaws.com/v2/documentation/api/latest/reference/rds/create-db-instance.html) for more details on what applies for those engines. If you are providing an Oracle db name, it needs to be in all upper case.
 * `nchar_character_set_name` - (Optional, Forces new resource) The national character set is used in the NCHAR, NVARCHAR2, and NCLOB data types for Oracle instances. This can't be changed. See [Oracle Character Sets
 Supported in Amazon RDS](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Appendix.OracleCharacterSets.html).
 * `option_group_name` - (Optional) Name of the DB option group to associate.
@@ -280,6 +281,7 @@ In addition to all arguments above, the following attributes are exported:
 * `backup_window` - The backup window.
 * `ca_cert_identifier` - Specifies the identifier of the CA certificate for the
 DB instance.
+* `db_name` - The database name.
 * `domain` - The ID of the Directory Service Active Directory domain the instance is joined to
 * `domain_iam_role_name` - The name of the IAM role to be used when making API calls to the Directory Service.
 * `endpoint` - The connection endpoint in `address:port` format.
