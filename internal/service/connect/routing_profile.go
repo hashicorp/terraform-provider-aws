@@ -107,6 +107,39 @@ func ResourceRoutingProfile() *schema.Resource {
 					},
 				},
 			},
+			// used to update the queue configs by first disassociating the existing set and re-associating them
+			"queue_configs_associated": {
+				Type:     schema.TypeSet,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"channel": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"delay": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
+						"priority": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
+						"queue_arn": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"queue_id": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"queue_name": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
 			"routing_profile_id": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -209,6 +242,7 @@ func resourceRoutingProfileRead(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	d.Set("queue_configs", queueConfigs)
+	d.Set("queue_configs_associated", queueConfigs)
 
 	tags := KeyValueTags(routingProfile.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
@@ -286,17 +320,40 @@ func resourceRoutingProfileUpdate(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	// updates to queue configs
-	inputQueueConfig := &connect.UpdateRoutingProfileQueuesInput{
+	// There are 3 APIs for this
+	// AssociateRoutingProfileQueues - Associates a set of queues with a routing profile.
+	// DisassociateRoutingProfileQueues - Disassociates a set of queues from a routing profile.
+	// UpdateRoutingProfileQueues - Updates the properties associated with a set of queues for a routing profile.
+	// since the update only updates the existing queues that are associated, we will instead disassociate (if there are any queues)
+	// and then associate all the queues again to ensure new queues can be added and unused queues can be removed
+	inputQueueAssociate := &connect.AssociateRoutingProfileQueuesInput{
+		InstanceId:       aws.String(instanceID),
+		RoutingProfileId: aws.String(routingProfileID),
+	}
+
+	inputQueueDisassociate := &connect.DisassociateRoutingProfileQueuesInput{
 		InstanceId:       aws.String(instanceID),
 		RoutingProfileId: aws.String(routingProfileID),
 	}
 
 	if d.HasChange("queue_configs") {
-		queueConfigs := expandRoutingProfileQueueConfigs(d.Get("queue_configs").(*schema.Set).List())
-		inputQueueConfig.QueueConfigs = queueConfigs
-		_, err = conn.UpdateRoutingProfileQueuesWithContext(ctx, inputQueueConfig)
-		if err != nil {
-			return diag.FromErr(fmt.Errorf("[ERROR] Error updating RoutingProfile Queue Configs (%s): %w", d.Id(), err))
+		// first disassociate all existing queues
+		currentAssociatedQueueReferences := expandRoutingProfileQueueReferences(d.Get("queue_configs_associated").(*schema.Set).List())
+		if currentAssociatedQueueReferences != nil {
+			inputQueueDisassociate.QueueReferences = currentAssociatedQueueReferences
+			_, err = conn.DisassociateRoutingProfileQueuesWithContext(ctx, inputQueueDisassociate)
+			if err != nil {
+				return diag.FromErr(fmt.Errorf("[ERROR] Error updating RoutingProfile Queue Configs, specifically disassociating queues from routing profile (%s): %w", d.Id(), err))
+			}
+		}
+		// re-associate the queues
+		updatedQueueConfigs := expandRoutingProfileQueueConfigs(d.Get("queue_configs").(*schema.Set).List())
+		if updatedQueueConfigs != nil {
+			inputQueueAssociate.QueueConfigs = updatedQueueConfigs
+			_, err = conn.AssociateRoutingProfileQueuesWithContext(ctx, inputQueueAssociate)
+			if err != nil {
+				return diag.FromErr(fmt.Errorf("[ERROR] Error updating RoutingProfile Queue Configs, specifically associating queues to routing profile (%s): %w", d.Id(), err))
+			}
 		}
 	}
 
@@ -389,6 +446,26 @@ func expandRoutingProfileQueueConfigs(queueConfigs []interface{}) []*connect.Rou
 	}
 
 	return queueConfigsExpanded
+}
+
+func expandRoutingProfileQueueReferences(queueConfigs []interface{}) []*connect.RoutingProfileQueueReference {
+	if len(queueConfigs) == 0 {
+		return nil
+	}
+
+	queueReferencesExpanded := []*connect.RoutingProfileQueueReference{}
+
+	for _, queueConfig := range queueConfigs {
+		data := queueConfig.(map[string]interface{})
+		queueReferenceExpanded := &connect.RoutingProfileQueueReference{
+			Channel: aws.String(data["channel"].(string)),
+			QueueId: aws.String(data["queue_id"].(string)),
+		}
+
+		queueReferencesExpanded = append(queueReferencesExpanded, queueReferenceExpanded)
+	}
+
+	return queueReferencesExpanded
 }
 
 func getConnectRoutingProfileQueueConfigs(ctx context.Context, conn *connect.Connect, instanceID, routingProfileID string) ([]interface{}, error) {
