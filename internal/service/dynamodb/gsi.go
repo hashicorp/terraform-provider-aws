@@ -135,7 +135,7 @@ func resourceAwsDynamoDbTableGsiCreate(d *schema.ResourceData, meta interface{})
 		ProjectionType: aws.String(d.Get("projection_type").(string)),
 	}
 
-	if v, ok := d.Get("non_key_attributes").(*schema.Set); ok {
+	if v, ok := d.Get("non_key_attributes").(*schema.Set); ok && len(v.List()) > 0 {
 		projection.NonKeyAttributes = flex.ExpandStringList(v.List())
 	}
 
@@ -258,11 +258,17 @@ func resourceAwsDynamoDbTableGsiRead(d *schema.ResourceData, meta interface{}) e
 	}
 
 	gsi := findDynamoDbGsi(&result.Table.GlobalSecondaryIndexes, index)
+	d.Set("name", index)
 	d.Set("table_name", tableName)
 	d.Set("write_capacity", gsi.ProvisionedThroughput.WriteCapacityUnits)
 	d.Set("read_capacity", gsi.ProvisionedThroughput.ReadCapacityUnits)
 	d.Set("projection_type", gsi.Projection.ProjectionType)
 	d.Set("non_key_attributes", gsi.Projection.NonKeyAttributes)
+	if result.Table.BillingModeSummary != nil {
+		d.Set("billing_mode", result.Table.BillingModeSummary.BillingMode)
+	} else {
+		d.Set("billing_mode", dynamodb.BillingModeProvisioned)
+	}
 
 	gsiAttributeNames := make(map[string]struct{}, len(gsi.KeySchema))
 	for _, attribute := range gsi.KeySchema {
