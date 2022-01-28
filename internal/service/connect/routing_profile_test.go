@@ -550,7 +550,7 @@ func testAccRoutingProfileQueueConfig2(rName, rName2, rName3, rName4, label stri
 resource "aws_connect_queue" "test" {
   instance_id           = aws_connect_instance.test.id
   name                  = %[2]q
-  description           = "Additonal queue to routing profile queue config"
+  description           = "Additional queue to routing profile queue config"
   hours_of_operation_id = data.aws_connect_hours_of_operation.test.hours_of_operation_id
 }
 
