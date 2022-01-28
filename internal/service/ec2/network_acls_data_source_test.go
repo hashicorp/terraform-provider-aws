@@ -23,7 +23,7 @@ func TestAccEC2NetworkACLsDataSource_basic(t *testing.T) {
 			{
 				Config: testAccNetworkACLsDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testCheckResourceAttrGreaterThanValue(dataSourceName, "ids.#", "1"),
+					acctest.CheckResourceAttrGreaterThanValue(dataSourceName, "ids.#", "1"),
 				),
 			},
 		},
