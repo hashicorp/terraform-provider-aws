@@ -46,41 +46,27 @@ description: |-
    }
  }
 
- resource "aws_dynamodb_table_gsi" "basic-dynamodb-table-gsi" {
-   name               = "GameTitleIndex"
-   hash_key           = "GameTitle"
-   range_key          = "TopScore"
-   write_capacity     = 10
-   read_capacity      = 10
-   projection_type    = "INCLUDE"
-   non_key_attributes = ["UserId"]
+resource "aws_dynamodb_table_gsi" "gsi" {
+  table_name         = aws_dynamodb_table.basic-dynamodb-table.id
+  name               = "PlayerNameIndex"
+  hash_key           = "PlayerName"
+  range_key          = "TopScore"
+  write_capacity     = 10
+  read_capacity      = 10
+  projection_type    = "INCLUDE"
+  non_key_attributes = ["OpponentId"]
 
-   attribute {
-     name = "GameTitle"
-     type = "S"
-   }
+  attribute {
+    name = "PlayerName"
+    type = "S"
+  }
 
-   attribute {
-     name = "TopScore"
-     type = "N"
-   }
- }
- ```
-
- Notes: `attribute` can be lists
-
- ``terraform
-   attribute = [{
-     name = "UserId"
-     type = "S"
-   }, {
-     name = "GameTitle"
-     type = "S"
-   }, {
-     name = "TopScore"
-     type = "N"
-   }]
- ```
+  attribute {
+    name = "TopScore"
+    type = "N"
+  }
+}
+```
 
 ## Argument Reference
 
@@ -133,8 +119,8 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-DynamoDB tables can be imported using the `index name`, e.g.,
+DynamoDB tables can be imported using the `table-name:index-name`, e.g.,
 
 ```
-$ terraform import aws_dynamodb_table_gsi.basic-dynamodb-index GameScores
+$ terraform import aws_dynamodb_table_gsi.basic-dynamodb-index GameScores:PlayerNameIndex
 ```

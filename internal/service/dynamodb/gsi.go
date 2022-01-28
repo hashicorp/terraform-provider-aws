@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"log"
+	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -24,6 +25,9 @@ func ResourceAwsDynamoDbTableGsi() *schema.Resource {
 		Read:   resourceAwsDynamoDbTableGsiRead,
 		Update: resourceAwsDynamoDbTableGsiUpdate,
 		Delete: resourceAwsDynamoDbTableGsiDelete,
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(10 * time.Minute),
@@ -185,10 +189,10 @@ func resourceAwsDynamoDbTableGsiCreate(d *schema.ResourceData, meta interface{})
 
 	gsiDescription := findDynamoDbGsi(&output.TableDescription.GlobalSecondaryIndexes, indexName)
 	d.SetId(
-		aws.StringValue(gsiDescription.IndexName),
+		combineDynamoGSIId(tableName, aws.StringValue(gsiDescription.IndexName)),
 	)
 
-	_, err = waitDynamoDBGSIActive(conn, d.Get("table_name").(string), d.Id())
+	_, err = waitDynamoDBGSIActive(conn, tableName, aws.StringValue(gsiDescription.IndexName))
 	return err
 }
 
@@ -200,12 +204,13 @@ func resourceAwsDynamoDbTableGsiUpdate(d *schema.ResourceData, meta interface{})
 		"read_capacity":  d.Get("read_capacity"),
 	}
 	billingMode := d.Get("billing_mode").(string)
+	tableName, index := parseDynamoGSIId(d.Id())
 	req := &dynamodb.UpdateTableInput{
-		TableName: aws.String(d.Get("table_name").(string)),
+		TableName: aws.String(tableName),
 		GlobalSecondaryIndexUpdates: []*dynamodb.GlobalSecondaryIndexUpdate{
 			{
 				Update: &dynamodb.UpdateGlobalSecondaryIndexAction{
-					IndexName:             aws.String(d.Id()),
+					IndexName:             aws.String(index),
 					ProvisionedThroughput: expandDynamoDbProvisionedThroughput(capacityMap, billingMode),
 				},
 			},
@@ -237,14 +242,13 @@ func resourceAwsDynamoDbTableGsiUpdate(d *schema.ResourceData, meta interface{})
 		return err
 	}
 
-	_, err = waitDynamoDBGSIActive(conn, d.Get("table_name").(string), d.Id())
+	_, err = waitDynamoDBGSIActive(conn, d.Get("table_name").(string), index)
 	return err
 }
 
 func resourceAwsDynamoDbTableGsiRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DynamoDBConn
-	tableName := d.Get("table_name").(string)
-	d.Set("table_name", tableName)
+	tableName, index := parseDynamoGSIId(d.Id())
 
 	result, err := conn.DescribeTable(&dynamodb.DescribeTableInput{
 		TableName: aws.String(tableName),
@@ -253,7 +257,8 @@ func resourceAwsDynamoDbTableGsiRead(d *schema.ResourceData, meta interface{}) e
 		return err
 	}
 
-	gsi := findDynamoDbGsi(&result.Table.GlobalSecondaryIndexes, d.Id())
+	gsi := findDynamoDbGsi(&result.Table.GlobalSecondaryIndexes, index)
+	d.Set("table_name", tableName)
 	d.Set("write_capacity", gsi.ProvisionedThroughput.WriteCapacityUnits)
 	d.Set("read_capacity", gsi.ProvisionedThroughput.ReadCapacityUnits)
 	d.Set("projection_type", gsi.Projection.ProjectionType)
@@ -288,13 +293,14 @@ func resourceAwsDynamoDbTableGsiRead(d *schema.ResourceData, meta interface{}) e
 
 func resourceAwsDynamoDbTableGsiDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DynamoDBConn
+	tableName, index := parseDynamoGSIId(d.Id())
 
 	req := &dynamodb.UpdateTableInput{
-		TableName: aws.String(d.Get("table_name").(string)),
+		TableName: &tableName,
 		GlobalSecondaryIndexUpdates: []*dynamodb.GlobalSecondaryIndexUpdate{
 			{
 				Delete: &dynamodb.DeleteGlobalSecondaryIndexAction{
-					IndexName: aws.String(d.Id()),
+					IndexName: aws.String(index),
 				},
 			},
 		},
@@ -321,7 +327,7 @@ func resourceAwsDynamoDbTableGsiDelete(d *schema.ResourceData, meta interface{})
 		return err
 	}
 
-	err = waitDynamoDBGSIDeleted(conn, d.Get("table_name").(string), d.Id())
+	err = waitDynamoDBGSIDeleted(conn, tableName, index)
 	return err
 }
 
@@ -332,4 +338,13 @@ func findDynamoDbGsi(gsiList *[]*dynamodb.GlobalSecondaryIndexDescription, targe
 		}
 	}
 	return nil
+}
+
+func parseDynamoGSIId(id string) (string, string) {
+	parts := strings.Split(id, ":")
+	return parts[0], parts[1]
+}
+
+func combineDynamoGSIId(tableName string, index string) string {
+	return fmt.Sprintf("%s:%s", tableName, index)
 }
