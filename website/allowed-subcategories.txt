@@ -4,9 +4,13 @@ ACM
 API Gateway (REST APIs)
 API Gateway v2 (WebSocket and HTTP APIs)
 Access Analyzer
+Account
+Amplify Console
 AppConfig
 AppMesh
+App Runner
 AppSync
+AppStream
 Application Autoscaling
 Athena
 Audit Manager
@@ -16,10 +20,13 @@ Amazon Managed Service for Prometheus (AMP)
 Backup
 Batch
 Budgets
+Chime
 Cloud9
+Cloud Control API
 CloudFormation
 CloudFront
 CloudHSM v2
+CloudSearch
 CloudTrail
 CloudWatch
 CodeArtifact
@@ -33,6 +40,7 @@ Cognito
 Config
 Connect
 Cost and Usage Report
+Data Exchange
 Data Lifecycle Manager (DLM)
 DataPipeline
 DataSync
@@ -57,8 +65,9 @@ Elastic Load Balancing v2 (ALB/NLB)
 Elastic Map Reduce (EMR)
 Elastic Map Reduce Containers
 Elastic Transcoder
-ElasticSearch
+Elasticsearch
 EventBridge (CloudWatch Events)
+EventBridge Schemas
 File System (FSx)
 Firewall Manager (FMS)
 Gamelift
@@ -82,13 +91,16 @@ Lambda
 Lex
 License Manager
 Lightsail
+Location Service
 MQ
 Macie
 Macie Classic
 Managed Streaming for Kafka (MSK)
+Kafka Connect (MSK Connect)
 MediaConvert
 MediaPackage
 MediaStore
+MemoryDB
 Managed Workflows for Apache Airflow (MWAA)
 Neptune
 Network Firewall
@@ -105,6 +117,8 @@ Redshift
 Resource Groups
 Resource Groups Tagging API
 Route53 Domains
+Route53 Recovery Control Config
+Route53 Recovery Readiness
 Route53 Resolver
 Route53
 S3

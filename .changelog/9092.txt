@@ -1,0 +1,19 @@
+```release-note:enhancement
+resource/aws_budgets_budget: Add the `cost_filter` argument which allows multiple `values` to be specified per filter. This new argument will eventually replace the `cost_filters` argument
+```
+
+```release-note:enhancement
+resource/aws_budgets_budget: Change `time_period_start` to an optional argument. If you don't specify a start date, AWS defaults to the start of your chosen time period
+```
+
+```release-note:bug
+resource/aws_budgets_budget: Change the service name in the `arn` attribute from `budgetservice` to `budgets`
+```
+
+```release-note:bug
+resource/aws_budgets_budget: Suppress plan differences with trailing zeroes for `limit_amount`
+```
+
+```release-note:bug
+resource/aws_budgets_budget_action: Change the service name in the `arn` attribute from `budgetservice` to `budgets`
+```

@@ -67,7 +67,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-`aws_cloudformation_type` can be imported with their type version Amazon Resource Name (ARN), e.g.
+`aws_cloudformation_type` can be imported with their type version Amazon Resource Name (ARN), e.g.,
 
 ```
 terraform import aws_cloudformation_type.example arn:aws:cloudformation:us-east-1:123456789012:type/resource/ExampleCompany-ExampleService-ExampleType/1

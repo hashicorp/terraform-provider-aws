@@ -77,6 +77,8 @@ This means that omitting this argument is interpreted as ignoring any existing r
 
 ### route Argument Reference
 
+This argument is processed in [attribute-as-blocks mode](https://www.terraform.io/docs/configuration/attr-as-blocks.html).
+
 One of the following destination arguments must be supplied:
 
 * `cidr_block` - (Required) The CIDR block of the route.
@@ -109,6 +111,14 @@ attribute once the route resource is created.
 * `arn` - The ARN of the route table.
 * `owner_id` - The ID of the AWS account that owns the route table.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
+
+## Timeouts
+
+`aws_route_table` provides the following [Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
+
+- `create` - (Default `5 minutes`) Used for route creation
+- `update` - (Default `2 minutes`) Used for route creation
+- `delete` - (Default `5 minutes`) Used for route deletion
 
 ## Import
 
