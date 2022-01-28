@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Comment if maintainers cannot edit
-        if: ${{ ( env.ALLOW_LISTED == false ) && ( env.MAINTAINER_CAN_MODIFY == false ) }}
+        if: ${{ ( env.ALLOW_LISTED == 'false' ) && ( env.MAINTAINER_CAN_MODIFY == 'false' ) }}
         uses: peter-evans/create-or-update-comment@v1
         with:
           issue-number: ${{ github.event.pull_request.number }}
