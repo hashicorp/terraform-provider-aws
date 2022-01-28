@@ -685,8 +685,8 @@ func Provider() *schema.Provider {
 
 			"aws_canonical_user_id": s3.DataSourceCanonicalUserID(),
 			"aws_s3_bucket":         s3.DataSourceBucket(),
-			"aws_s3_object":         s3.DataSourceBucketObject(),
-			"aws_s3_objects":        s3.DataSourceBucketObjects(),
+			"aws_s3_object":         s3.DataSourceObject(),
+			"aws_s3_objects":        s3.DataSourceObjects(),
 
 			"aws_sagemaker_prebuilt_ecr_image": sagemaker.DataSourcePrebuiltECRImage(),
 
@@ -1593,7 +1593,7 @@ func Provider() *schema.Provider {
 			"aws_s3_bucket_inventory":                         s3.ResourceBucketInventory(),
 			"aws_s3_bucket_metric":                            s3.ResourceBucketMetric(),
 			"aws_s3_bucket_notification":                      s3.ResourceBucketNotification(),
-			"aws_s3_object":                                   s3.ResourceBucketObject(),
+			"aws_s3_object":                                   s3.ResourceObject(),
 			"aws_s3_bucket_ownership_controls":                s3.ResourceBucketOwnershipControls(),
 			"aws_s3_bucket_policy":                            s3.ResourceBucketPolicy(),
 			"aws_s3_bucket_public_access_block":               s3.ResourceBucketPublicAccessBlock(),
