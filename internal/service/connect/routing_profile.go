@@ -18,7 +18,8 @@ import (
 
 func ResourceRoutingProfile() *schema.Resource {
 	return &schema.Resource{
-		ReadContext: resourceRoutingProfileRead,
+		CreateContext: resourceRoutingProfileCreate,
+		ReadContext:   resourceRoutingProfileRead,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -112,6 +113,46 @@ func ResourceRoutingProfile() *schema.Resource {
 	}
 }
 
+func resourceRoutingProfileCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.AWSClient).ConnectConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+
+	instanceID := d.Get("instance_id").(string)
+	name := d.Get("name").(string)
+
+	input := &connect.CreateRoutingProfileInput{
+		DefaultOutboundQueueId: aws.String(d.Get("default_outbound_queue_id").(string)),
+		Description:            aws.String(d.Get("description").(string)),
+		InstanceId:             aws.String(instanceID),
+		MediaConcurrencies:     expandRoutingProfileMediaConcurrencies(d.Get("media_concurrencies").(*schema.Set).List()),
+		Name:                   aws.String(name),
+	}
+
+	if v, ok := d.GetOk("queue_configs"); ok && v.(*schema.Set).Len() > 0 {
+		input.QueueConfigs = expandRoutingProfileQueueConfigs(v.(*schema.Set).List())
+	}
+
+	if len(tags) > 0 {
+		input.Tags = Tags(tags.IgnoreAWS())
+	}
+
+	log.Printf("[DEBUG] Creating Connect Routing Profile %s", input)
+	output, err := conn.CreateRoutingProfileWithContext(ctx, input)
+
+	if err != nil {
+		return diag.FromErr(fmt.Errorf("error creating Connect Routing Profile (%s): %w", name, err))
+	}
+
+	if output == nil {
+		return diag.FromErr(fmt.Errorf("error creating Connect Routing Profile (%s): empty output", name))
+	}
+
+	d.SetId(fmt.Sprintf("%s:%s", instanceID, aws.StringValue(output.RoutingProfileId)))
+
+	return resourceRoutingProfileRead(ctx, d, meta)
+}
+
 func resourceRoutingProfileRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).ConnectConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
@@ -179,6 +220,25 @@ func resourceRoutingProfileRead(ctx context.Context, d *schema.ResourceData, met
 	return nil
 }
 
+func expandRoutingProfileMediaConcurrencies(mediaConcurrencies []interface{}) []*connect.MediaConcurrency {
+	if len(mediaConcurrencies) == 0 {
+		return nil
+	}
+
+	mediaConcurrenciesExpanded := []*connect.MediaConcurrency{}
+
+	for _, mediaConcurrency := range mediaConcurrencies {
+		data := mediaConcurrency.(map[string]interface{})
+		mediaConcurrencyExpanded := &connect.MediaConcurrency{
+			Channel:     aws.String(data["channel"].(string)),
+			Concurrency: aws.Int64(int64(data["concurrency"].(int))),
+		}
+		mediaConcurrenciesExpanded = append(mediaConcurrenciesExpanded, mediaConcurrencyExpanded)
+	}
+
+	return mediaConcurrenciesExpanded
+}
+
 func flattenRoutingProfileMediaConcurrencies(mediaConcurrencies []*connect.MediaConcurrency) []interface{} {
 	mediaConcurrenciesList := []interface{}{}
 
@@ -191,6 +251,32 @@ func flattenRoutingProfileMediaConcurrencies(mediaConcurrencies []*connect.Media
 		mediaConcurrenciesList = append(mediaConcurrenciesList, values)
 	}
 	return mediaConcurrenciesList
+}
+
+func expandRoutingProfileQueueConfigs(queueConfigs []interface{}) []*connect.RoutingProfileQueueConfig {
+	if len(queueConfigs) == 0 {
+		return nil
+	}
+
+	queueConfigsExpanded := []*connect.RoutingProfileQueueConfig{}
+
+	for _, queueConfig := range queueConfigs {
+		data := queueConfig.(map[string]interface{})
+		queueConfigExpanded := &connect.RoutingProfileQueueConfig{
+			Delay:    aws.Int64(int64(data["delay"].(int))),
+			Priority: aws.Int64(int64(data["priority"].(int))),
+		}
+
+		qr := connect.RoutingProfileQueueReference{
+			Channel: aws.String(data["channel"].(string)),
+			QueueId: aws.String(data["queue_id"].(string)),
+		}
+		queueConfigExpanded.QueueReference = &qr
+
+		queueConfigsExpanded = append(queueConfigsExpanded, queueConfigExpanded)
+	}
+
+	return queueConfigsExpanded
 }
 
 func getConnectRoutingProfileQueueConfigs(ctx context.Context, conn *connect.Connect, instanceID, routingProfileID string) ([]interface{}, error) {
