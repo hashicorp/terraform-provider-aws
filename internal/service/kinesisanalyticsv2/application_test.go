@@ -595,7 +595,7 @@ func TestAccKinesisAnalyticsV2Application_EnvironmentProperties_update(t *testin
 	resourceName := "aws_kinesisanalyticsv2_application.test"
 	iamRoleResourceName := "aws_iam_role.test.0"
 	s3BucketResourceName := "aws_s3_bucket.test"
-	s3BucketObjectResourceName := "aws_s3_bucket_object.test.0"
+	s3BucketObjectResourceName := "aws_s3_object.test.0"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -791,8 +791,8 @@ func TestAccKinesisAnalyticsV2Application_FlinkApplication_update(t *testing.T) 
 	resourceName := "aws_kinesisanalyticsv2_application.test"
 	iamRoleResourceName := "aws_iam_role.test.0"
 	s3BucketResourceName := "aws_s3_bucket.test"
-	s3BucketObject1ResourceName := "aws_s3_bucket_object.test.0"
-	s3BucketObject2ResourceName := "aws_s3_bucket_object.test.1"
+	s3BucketObject1ResourceName := "aws_s3_object.test.0"
+	s3BucketObject2ResourceName := "aws_s3_object.test.1"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -912,8 +912,8 @@ func TestAccKinesisAnalyticsV2Application_FlinkApplicationEnvironmentProperties_
 	iamRole1ResourceName := "aws_iam_role.test.0"
 	iamRole2ResourceName := "aws_iam_role.test.1"
 	s3BucketResourceName := "aws_s3_bucket.test"
-	s3BucketObject1ResourceName := "aws_s3_bucket_object.test.0"
-	s3BucketObject2ResourceName := "aws_s3_bucket_object.test.1"
+	s3BucketObject1ResourceName := "aws_s3_object.test.0"
+	s3BucketObject2ResourceName := "aws_s3_object.test.1"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -1064,7 +1064,7 @@ func TestAccKinesisAnalyticsV2Application_FlinkApplication_restoreFromSnapshot(t
 	resourceName := "aws_kinesisanalyticsv2_application.test"
 	iamRoleResourceName := "aws_iam_role.test.0"
 	s3BucketResourceName := "aws_s3_bucket.test"
-	s3BucketObjectResourceName := "aws_s3_bucket_object.test"
+	s3BucketObjectResourceName := "aws_s3_object.test"
 	snapshotResourceName := "aws_kinesisanalyticsv2_application_snapshot.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -1335,7 +1335,7 @@ func TestAccKinesisAnalyticsV2Application_FlinkApplicationStartApplication_onCre
 	resourceName := "aws_kinesisanalyticsv2_application.test"
 	iamRoleResourceName := "aws_iam_role.test.0"
 	s3BucketResourceName := "aws_s3_bucket.test"
-	s3BucketObjectResourceName := "aws_s3_bucket_object.test.0"
+	s3BucketObjectResourceName := "aws_s3_object.test.0"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -1411,7 +1411,7 @@ func TestAccKinesisAnalyticsV2Application_FlinkApplicationStartApplication_onUpd
 	resourceName := "aws_kinesisanalyticsv2_application.test"
 	iamRoleResourceName := "aws_iam_role.test.0"
 	s3BucketResourceName := "aws_s3_bucket.test"
-	s3BucketObjectResourceName := "aws_s3_bucket_object.test.0"
+	s3BucketObjectResourceName := "aws_s3_object.test.0"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -1583,8 +1583,8 @@ func TestAccKinesisAnalyticsV2Application_FlinkApplication_updateRunning(t *test
 	resourceName := "aws_kinesisanalyticsv2_application.test"
 	iamRoleResourceName := "aws_iam_role.test.0"
 	s3BucketResourceName := "aws_s3_bucket.test"
-	s3BucketObject1ResourceName := "aws_s3_bucket_object.test.0"
-	s3BucketObject2ResourceName := "aws_s3_bucket_object.test.1"
+	s3BucketObject1ResourceName := "aws_s3_object.test.0"
+	s3BucketObject2ResourceName := "aws_s3_object.test.1"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -3592,7 +3592,7 @@ func TestAccKinesisAnalyticsV2Application_SQLApplicationVPC_add(t *testing.T) {
 	resourceName := "aws_kinesisanalyticsv2_application.test"
 	iamRoleResourceName := "aws_iam_role.test.0"
 	s3BucketResourceName := "aws_s3_bucket.test"
-	s3BucketObjectResourceName := "aws_s3_bucket_object.test.0"
+	s3BucketObjectResourceName := "aws_s3_object.test.0"
 	vpcResourceName := "aws_vpc.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -3716,7 +3716,7 @@ func TestAccKinesisAnalyticsV2Application_SQLApplicationVPC_delete(t *testing.T)
 	resourceName := "aws_kinesisanalyticsv2_application.test"
 	iamRoleResourceName := "aws_iam_role.test.0"
 	s3BucketResourceName := "aws_s3_bucket.test"
-	s3BucketObjectResourceName := "aws_s3_bucket_object.test.0"
+	s3BucketObjectResourceName := "aws_s3_object.test.0"
 	vpcResourceName := "aws_vpc.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -3840,7 +3840,7 @@ func TestAccKinesisAnalyticsV2Application_SQLApplicationVPC_update(t *testing.T)
 	resourceName := "aws_kinesisanalyticsv2_application.test"
 	iamRoleResourceName := "aws_iam_role.test.0"
 	s3BucketResourceName := "aws_s3_bucket.test"
-	s3BucketObjectResourceName := "aws_s3_bucket_object.test.0"
+	s3BucketObjectResourceName := "aws_s3_object.test.0"
 	vpcResourceName := "aws_vpc.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -3968,7 +3968,7 @@ func TestAccKinesisAnalyticsV2Application_RunConfiguration_Update(t *testing.T) 
 	resourceName := "aws_kinesisanalyticsv2_application.test"
 	iamRoleResourceName := "aws_iam_role.test.0"
 	s3BucketResourceName := "aws_s3_bucket.test"
-	s3BucketObjectResourceName := "aws_s3_bucket_object.test"
+	s3BucketObjectResourceName := "aws_s3_object.test"
 	snapshotResourceName := "aws_kinesisanalyticsv2_application_snapshot.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -4260,7 +4260,7 @@ resource "aws_s3_bucket" "test" {
   bucket = %[1]q
 }
 
-resource "aws_s3_bucket_object" "test" {
+resource "aws_s3_object" "test" {
   count = 2
 
   bucket = aws_s3_bucket.test.bucket
@@ -4453,7 +4453,7 @@ resource "aws_kinesisanalyticsv2_application" "test" {
       code_content {
         s3_content_location {
           bucket_arn = aws_s3_bucket.test.arn
-          file_key   = aws_s3_bucket_object.test[0].key
+          file_key   = aws_s3_object.test[0].key
         }
       }
 
@@ -4500,7 +4500,7 @@ resource "aws_kinesisanalyticsv2_application" "test" {
       code_content {
         s3_content_location {
           bucket_arn = aws_s3_bucket.test.arn
-          file_key   = aws_s3_bucket_object.test[0].key
+          file_key   = aws_s3_object.test[0].key
         }
       }
 
@@ -4553,7 +4553,7 @@ resource "aws_kinesisanalyticsv2_application" "test" {
       code_content {
         s3_content_location {
           bucket_arn = aws_s3_bucket.test.arn
-          file_key   = aws_s3_bucket_object.test[0].key
+          file_key   = aws_s3_object.test[0].key
         }
       }
 
@@ -4583,8 +4583,8 @@ resource "aws_kinesisanalyticsv2_application" "test" {
       code_content {
         s3_content_location {
           bucket_arn     = aws_s3_bucket.test.arn
-          file_key       = aws_s3_bucket_object.test[0].key
-          object_version = aws_s3_bucket_object.test[0].version_id
+          file_key       = aws_s3_object.test[0].key
+          object_version = aws_s3_object.test[0].version_id
         }
       }
 
@@ -4639,8 +4639,8 @@ resource "aws_kinesisanalyticsv2_application" "test" {
       code_content {
         s3_content_location {
           bucket_arn     = aws_s3_bucket.test.arn
-          file_key       = aws_s3_bucket_object.test[1].key
-          object_version = aws_s3_bucket_object.test[1].version_id
+          file_key       = aws_s3_object.test[1].key
+          object_version = aws_s3_object.test[1].version_id
         }
       }
 
@@ -4691,8 +4691,8 @@ resource "aws_kinesisanalyticsv2_application" "test" {
       code_content {
         s3_content_location {
           bucket_arn     = aws_s3_bucket.test.arn
-          file_key       = aws_s3_bucket_object.test[0].key
-          object_version = aws_s3_bucket_object.test[0].version_id
+          file_key       = aws_s3_object.test[0].key
+          object_version = aws_s3_object.test[0].version_id
         }
       }
 
@@ -4766,8 +4766,8 @@ resource "aws_kinesisanalyticsv2_application" "test" {
       code_content {
         s3_content_location {
           bucket_arn     = aws_s3_bucket.test.arn
-          file_key       = aws_s3_bucket_object.test[1].key
-          object_version = aws_s3_bucket_object.test[1].version_id
+          file_key       = aws_s3_object.test[1].key
+          object_version = aws_s3_object.test[1].version_id
         }
       }
 
@@ -4849,7 +4849,7 @@ resource "aws_s3_bucket" "test" {
   bucket = %[1]q
 }
 
-resource "aws_s3_bucket_object" "test" {
+resource "aws_s3_object" "test" {
   bucket = aws_s3_bucket.test.bucket
   key    = "flink-app.jar"
   source = "test-fixtures/flink-app.jar"
@@ -4875,7 +4875,7 @@ resource "aws_kinesisanalyticsv2_application" "test" {
       code_content {
         s3_content_location {
           bucket_arn = aws_s3_bucket.test.arn
-          file_key   = aws_s3_bucket_object.test.key
+          file_key   = aws_s3_object.test.key
         }
       }
 
@@ -4939,7 +4939,7 @@ resource "aws_s3_bucket" "test" {
   bucket = %[1]q
 }
 
-resource "aws_s3_bucket_object" "test" {
+resource "aws_s3_object" "test" {
   bucket = aws_s3_bucket.test.bucket
   key    = "flink-app.jar"
   source = "test-fixtures/flink-app.jar"
@@ -4965,7 +4965,7 @@ resource "aws_kinesisanalyticsv2_application" "test" {
       code_content {
         s3_content_location {
           bucket_arn = aws_s3_bucket.test.arn
-          file_key   = aws_s3_bucket_object.test.key
+          file_key   = aws_s3_object.test.key
         }
       }
 
@@ -5743,7 +5743,7 @@ resource "aws_kinesisanalyticsv2_application" "test" {
       code_content {
         s3_content_location {
           bucket_arn = aws_s3_bucket.test.arn
-          file_key   = aws_s3_bucket_object.test[0].key
+          file_key   = aws_s3_object.test[0].key
         }
       }
 
@@ -5775,7 +5775,7 @@ resource "aws_kinesisanalyticsv2_application" "test" {
       code_content {
         s3_content_location {
           bucket_arn = aws_s3_bucket.test.arn
-          file_key   = aws_s3_bucket_object.test[0].key
+          file_key   = aws_s3_object.test[0].key
         }
       }
 
@@ -5807,7 +5807,7 @@ resource "aws_kinesisanalyticsv2_application" "test" {
       code_content {
         s3_content_location {
           bucket_arn = aws_s3_bucket.test.arn
-          file_key   = aws_s3_bucket_object.test[0].key
+          file_key   = aws_s3_object.test[0].key
         }
       }
 
