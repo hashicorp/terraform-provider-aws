@@ -305,8 +305,8 @@ func testAccClientVPNEndpoint_withLogGroup(t *testing.T) {
 }
 
 func testAccClientVPNEndpoint_withDNSServers(t *testing.T) {
-	var v1, v2 ec2.ClientVpnEndpoint
-	rStr := sdkacctest.RandString(5)
+	var v ec2.ClientVpnEndpoint
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ec2_client_vpn_endpoint.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -316,15 +316,25 @@ func testAccClientVPNEndpoint_withDNSServers(t *testing.T) {
 		CheckDestroy: testAccCheckClientVPNEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEc2ClientVpnEndpointConfig(rStr),
+				Config: testAccEc2ClientVpnEndpointConfigWithDNSServers(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClientVPNEndpointExists(resourceName, &v1),
+					testAccCheckClientVPNEndpointExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "dns_servers.#", "2"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "dns_servers.*", "8.8.8.8"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "dns_servers.*", "8.8.4.4"),
 				),
 			},
 			{
-				Config: testAccEc2ClientVpnEndpointConfigWithDNSServers(rStr),
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccEc2ClientVpnEndpointConfigWithDNSServersUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClientVPNEndpointExists(resourceName, &v2),
+					testAccCheckClientVPNEndpointExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "dns_servers.#", "1"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "dns_servers.*", "4.4.4.4"),
 				),
 			},
 		},
@@ -593,9 +603,9 @@ resource "aws_ec2_client_vpn_endpoint" "test" {
 }
 
 func testAccEc2ClientVpnEndpointConfigWithDNSServers(rName string) string {
-	return testAccEc2ClientVpnEndpointConfigAcmCertificateBase() + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccEc2ClientVpnEndpointConfigAcmCertificateBase(), fmt.Sprintf(`
 resource "aws_ec2_client_vpn_endpoint" "test" {
-  description            = "terraform-testacc-clientvpn-%s"
+  description            = %[1]q
   server_certificate_arn = aws_acm_certificate.test.arn
   client_cidr_block      = "10.0.0.0/16"
 
@@ -610,7 +620,28 @@ resource "aws_ec2_client_vpn_endpoint" "test" {
     enabled = false
   }
 }
-`, rName)
+`, rName))
+}
+
+func testAccEc2ClientVpnEndpointConfigWithDNSServersUpdated(rName string) string {
+	return acctest.ConfigCompose(testAccEc2ClientVpnEndpointConfigAcmCertificateBase(), fmt.Sprintf(`
+resource "aws_ec2_client_vpn_endpoint" "test" {
+  description            = %[1]q
+  server_certificate_arn = aws_acm_certificate.test.arn
+  client_cidr_block      = "10.0.0.0/16"
+
+  dns_servers = ["4.4.4.4"]
+
+  authentication_options {
+    type                       = "certificate-authentication"
+    root_certificate_chain_arn = aws_acm_certificate.test.arn
+  }
+
+  connection_log_options {
+    enabled = false
+  }
+}
+`, rName))
 }
 
 func testAccEc2ClientVpnEndpointConfigWithMicrosoftAD(rName, domain string) string {
