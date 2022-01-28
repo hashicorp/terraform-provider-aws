@@ -278,10 +278,15 @@ func resourceClientVPNEndpointUpdate(d *schema.ResourceData, meta interface{}) e
 		}
 
 		if d.HasChange("dns_servers") {
+			dnsServers := d.Get("dns_servers").(*schema.Set)
+			enabled := dnsServers.Len() > 0
+
 			input.DnsServers = &ec2.DnsServersOptionsModifyStructure{
-				CustomDnsServers: flex.ExpandStringSet(d.Get("dns_servers").(*schema.Set)),
+				Enabled: aws.Bool(enabled),
 			}
-			input.DnsServers.Enabled = aws.Bool(len(input.DnsServers.CustomDnsServers) > 0)
+			if enabled {
+				input.DnsServers.CustomDnsServers = flex.ExpandStringSet(dnsServers)
+			}
 		}
 
 		if d.HasChange("self_service_portal") {

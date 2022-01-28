@@ -337,6 +337,13 @@ func testAccClientVPNEndpoint_withDNSServers(t *testing.T) {
 					resource.TestCheckTypeSetElemAttr(resourceName, "dns_servers.*", "4.4.4.4"),
 				),
 			},
+			{
+				Config: testAccEc2ClientVpnEndpointConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClientVPNEndpointExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "dns_servers.#", "0"),
+				),
+			},
 		},
 	})
 }
