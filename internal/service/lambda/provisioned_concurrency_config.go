@@ -56,6 +56,8 @@ func resourceProvisionedConcurrencyConfigCreate(d *schema.ResourceData, meta int
 	functionName := d.Get("function_name").(string)
 	qualifier := d.Get("qualifier").(string)
 
+	functionName = ProvisionedConcurrencyConfigCanonicalizeFunctionName(functionName)
+
 	input := &lambda.PutProvisionedConcurrencyConfigInput{
 		FunctionName:                    aws.String(functionName),
 		ProvisionedConcurrentExecutions: aws.Int64(int64(d.Get("provisioned_concurrent_executions").(int))),
@@ -173,6 +175,15 @@ func ProvisionedConcurrencyConfigParseID(id string) (string, string, error) {
 	}
 
 	return parts[0], parts[1], nil
+}
+
+func ProvisionedConcurrencyConfigCanonicalizeFunctionName(f string) string {
+	parsed, err := GetFunctionNameFromARN(f)
+	// It is already a function name
+	if err != nil {
+		return f
+	}
+	return parsed
 }
 
 func refreshProvisionedConcurrencyConfigStatus(conn *lambda.Lambda, functionName, qualifier string) resource.StateRefreshFunc {
