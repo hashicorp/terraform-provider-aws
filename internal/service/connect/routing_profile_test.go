@@ -18,9 +18,10 @@ import (
 // Serialized acceptance tests due to Connect account limits (max 2 parallel tests)
 func TestAccConnectRoutingProfile_serial(t *testing.T) {
 	testCases := map[string]func(t *testing.T){
-		"basic":              testAccRoutingProfile_basic,
-		"disappears":         testAccRoutingProfile_disappears,
-		"update_concurrency": testAccRoutingProfile_updateConcurrency,
+		"basic":                         testAccRoutingProfile_basic,
+		"disappears":                    testAccRoutingProfile_disappears,
+		"update_concurrency":            testAccRoutingProfile_updateConcurrency,
+		"update_default_outbound_queue": testAccRoutingProfile_updateDefaultOutboundQueue,
 	}
 
 	for name, tc := range testCases {
@@ -166,6 +167,61 @@ func testAccRoutingProfile_updateConcurrency(t *testing.T) {
 	})
 }
 
+func testAccRoutingProfile_updateDefaultOutboundQueue(t *testing.T) {
+	var v connect.DescribeRoutingProfileOutput
+	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName2 := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName3 := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName4 := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	resourceName := "aws_connect_routing_profile.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, connect.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckRoutingProfileDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRoutingProfileDefaultOutboundQueueConfig(rName, rName2, rName3, rName4, "first"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRoutingProfileExists(resourceName, &v),
+					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "default_outbound_queue_id", "aws_connect_queue.default_outbound_queue", "queue_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "description"),
+					resource.TestCheckResourceAttrPair(resourceName, "instance_id", "aws_connect_instance.test", "id"),
+					resource.TestCheckResourceAttr(resourceName, "media_concurrencies.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "media_concurrencies.0.channel", connect.ChannelVoice),
+					resource.TestCheckResourceAttr(resourceName, "media_concurrencies.0.concurrency", "1"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName3),
+					resource.TestCheckResourceAttrSet(resourceName, "routing_profile_id"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccRoutingProfileDefaultOutboundQueueConfig(rName, rName2, rName3, rName4, "second"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckRoutingProfileExists(resourceName, &v),
+					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "default_outbound_queue_id", "aws_connect_queue.default_outbound_queue_update", "queue_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "description"),
+					resource.TestCheckResourceAttrPair(resourceName, "instance_id", "aws_connect_instance.test", "id"),
+					resource.TestCheckResourceAttr(resourceName, "media_concurrencies.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "media_concurrencies.0.channel", connect.ChannelVoice),
+					resource.TestCheckResourceAttr(resourceName, "media_concurrencies.0.concurrency", "1"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName3),
+					resource.TestCheckResourceAttrSet(resourceName, "routing_profile_id"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckRoutingProfileExists(resourceName string, function *connect.DescribeRoutingProfileOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
@@ -301,4 +357,37 @@ resource "aws_connect_routing_profile" "test" {
   }
 }
 `, rName3, label))
+}
+
+func testAccRoutingProfileDefaultOutboundQueueConfig(rName, rName2, rName3, rName4, selectDefaultOutboundQueue string) string {
+	return acctest.ConfigCompose(
+		testAccRoutingProfileBaseConfig(rName, rName2),
+		fmt.Sprintf(`
+locals {
+  select_default_outbound_queue_id = %[3]q
+}
+
+resource "aws_connect_queue" "default_outbound_queue_update" {
+  instance_id           = aws_connect_instance.test.id
+  name                  = %[2]q
+  description           = "Default Outbound Queue for Routing Profiles"
+  hours_of_operation_id = data.aws_connect_hours_of_operation.test.hours_of_operation_id
+}
+
+resource "aws_connect_routing_profile" "test" {
+  instance_id               = aws_connect_instance.test.id
+  name                      = %[1]q
+  default_outbound_queue_id = local.select_default_outbound_queue_id == "first" ? aws_connect_queue.default_outbound_queue.queue_id : aws_connect_queue.default_outbound_queue_update.queue_id
+  description               = "Test updating the default outbound queue id"
+
+  media_concurrencies {
+    channel     = "VOICE"
+    concurrency = 1
+  }
+
+  tags = {
+    "Name" = "Test Routing Profile",
+  }
+}
+`, rName3, rName4, selectDefaultOutboundQueue))
 }
