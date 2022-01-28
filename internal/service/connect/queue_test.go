@@ -730,7 +730,7 @@ resource "aws_connect_queue" "test" {
 
   quick_connect_ids = [
     aws_connect_quick_connect.test1.quick_connect_id,
-	aws_connect_quick_connect.test2.quick_connect_id,
+    aws_connect_quick_connect.test2.quick_connect_id,
   ]
 
   tags = {
