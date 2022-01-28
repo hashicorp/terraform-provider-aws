@@ -163,36 +163,12 @@ func resourceClientVPNEndpointCreate(d *schema.ResourceData, meta interface{}) e
 		TransportProtocol:    aws.String(d.Get("transport_protocol").(string)),
 	}
 
-	if v, ok := d.GetOk("authentication_options"); ok {
-		authOptions := v.([]interface{})
-		authRequests := make([]*ec2.ClientVpnAuthenticationRequest, 0, len(authOptions))
-
-		for _, authOpt := range authOptions {
-			auth := authOpt.(map[string]interface{})
-
-			authReq := expandEc2ClientVpnAuthenticationRequest(auth)
-			authRequests = append(authRequests, authReq)
-		}
-		input.AuthenticationOptions = authRequests
+	if v, ok := d.GetOk("authentication_options"); ok && len(v.([]interface{})) > 0 {
+		input.AuthenticationOptions = expandClientVpnAuthenticationRequests(v.([]interface{}))
 	}
 
-	if v, ok := d.GetOk("connection_log_options"); ok {
-		connLogSet := v.([]interface{})
-		attrs := connLogSet[0].(map[string]interface{})
-
-		connLogReq := &ec2.ConnectionLogOptions{
-			Enabled: aws.Bool(attrs["enabled"].(bool)),
-		}
-
-		if attrs["enabled"].(bool) && attrs["cloudwatch_log_group"].(string) != "" {
-			connLogReq.CloudwatchLogGroup = aws.String(attrs["cloudwatch_log_group"].(string))
-		}
-
-		if attrs["enabled"].(bool) && attrs["cloudwatch_log_stream"].(string) != "" {
-			connLogReq.CloudwatchLogStream = aws.String(attrs["cloudwatch_log_stream"].(string))
-		}
-
-		input.ConnectionLogOptions = connLogReq
+	if v, ok := d.GetOk("connection_log_options"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		input.ConnectionLogOptions = expandConnectionLogOptions(v.([]interface{})[0].(map[string]interface{}))
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -408,6 +384,102 @@ func resourceClientVPNEndpointDelete(d *schema.ResourceData, meta interface{}) e
 	return nil
 }
 
+func expandClientVpnAuthenticationRequest(tfMap map[string]interface{}) *ec2.ClientVpnAuthenticationRequest {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &ec2.ClientVpnAuthenticationRequest{}
+
+	var authnType string
+	if v, ok := tfMap["type"].(string); ok && v != "" {
+		authnType = v
+		apiObject.Type = aws.String(v)
+	}
+
+	switch authnType {
+	case ec2.ClientVpnAuthenticationTypeCertificateAuthentication:
+		if v, ok := tfMap["root_certificate_chain_arn"].(string); ok && v != "" {
+			apiObject.MutualAuthentication = &ec2.CertificateAuthenticationRequest{
+				ClientRootCertificateChainArn: aws.String(v),
+			}
+		}
+
+	case ec2.ClientVpnAuthenticationTypeDirectoryServiceAuthentication:
+		if v, ok := tfMap["active_directory_id"].(string); ok && v != "" {
+			apiObject.ActiveDirectory = &ec2.DirectoryServiceAuthenticationRequest{
+				DirectoryId: aws.String(v),
+			}
+		}
+
+	case ec2.ClientVpnAuthenticationTypeFederatedAuthentication:
+		if v, ok := tfMap["saml_provider_arn"].(string); ok && v != "" {
+			apiObject.FederatedAuthentication = &ec2.FederatedAuthenticationRequest{
+				SAMLProviderArn: aws.String(v),
+			}
+
+			if v, ok := tfMap["self_service_saml_provider_arn"].(string); ok && v != "" {
+				apiObject.FederatedAuthentication.SelfServiceSAMLProviderArn = aws.String(v)
+			}
+		}
+	}
+
+	return apiObject
+}
+
+func expandClientVpnAuthenticationRequests(tfList []interface{}) []*ec2.ClientVpnAuthenticationRequest {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	var apiObjects []*ec2.ClientVpnAuthenticationRequest
+
+	for _, tfMapRaw := range tfList {
+		tfMap, ok := tfMapRaw.(map[string]interface{})
+
+		if !ok {
+			continue
+		}
+
+		apiObject := expandClientVpnAuthenticationRequest(tfMap)
+
+		if apiObject == nil {
+			continue
+		}
+
+		apiObjects = append(apiObjects, apiObject)
+	}
+
+	return apiObjects
+}
+
+func expandConnectionLogOptions(tfMap map[string]interface{}) *ec2.ConnectionLogOptions {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &ec2.ConnectionLogOptions{}
+
+	var enabled bool
+	if v, ok := tfMap["enabled"].(bool); ok {
+		enabled = v
+	}
+
+	if enabled {
+		if v, ok := tfMap["cloudwatch_log_group"].(string); ok && v != "" {
+			apiObject.CloudwatchLogGroup = aws.String(v)
+		}
+
+		if v, ok := tfMap["cloudwatch_log_stream"].(string); ok && v != "" {
+			apiObject.CloudwatchLogStream = aws.String(v)
+		}
+	}
+
+	apiObject.Enabled = aws.Bool(enabled)
+
+	return apiObject
+}
+
 func flattenConnLoggingConfig(lopts *ec2.ConnectionLogResponseOptions) []map[string]interface{} {
 	m := make(map[string]interface{})
 	if lopts.CloudwatchLogGroup != nil {
@@ -439,36 +511,4 @@ func flattenAuthOptsConfig(aopts []*ec2.ClientVpnAuthentication) []map[string]in
 		result = append([]map[string]interface{}{r}, result...)
 	}
 	return result
-}
-
-func expandEc2ClientVpnAuthenticationRequest(data map[string]interface{}) *ec2.ClientVpnAuthenticationRequest {
-	req := &ec2.ClientVpnAuthenticationRequest{
-		Type: aws.String(data["type"].(string)),
-	}
-
-	if data["type"].(string) == ec2.ClientVpnAuthenticationTypeCertificateAuthentication {
-		req.MutualAuthentication = &ec2.CertificateAuthenticationRequest{
-			ClientRootCertificateChainArn: aws.String(data["root_certificate_chain_arn"].(string)),
-		}
-	}
-
-	if data["type"].(string) == ec2.ClientVpnAuthenticationTypeDirectoryServiceAuthentication {
-		req.ActiveDirectory = &ec2.DirectoryServiceAuthenticationRequest{
-			DirectoryId: aws.String(data["active_directory_id"].(string)),
-		}
-	}
-
-	if data["type"].(string) == ec2.ClientVpnAuthenticationTypeFederatedAuthentication {
-		fedReq := &ec2.FederatedAuthenticationRequest{
-			SAMLProviderArn: aws.String(data["saml_provider_arn"].(string)),
-		}
-
-		if v, ok := data["self_service_saml_provider_arn"].(string); ok && v != "" {
-			fedReq.SelfServiceSAMLProviderArn = aws.String(v)
-		}
-
-		req.FederatedAuthentication = fedReq
-	}
-
-	return req
 }
