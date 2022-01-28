@@ -205,18 +205,17 @@ func resourceSafetyRuleUpdate(d *schema.ResourceData, meta interface{}) error {
 func resourceSafetyRuleDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).Route53RecoveryControlConfigConn
 
-	input := &r53rcc.DeleteSafetyRuleInput{
+	log.Printf("[INFO] Deleting Route53 Recovery Control Config Safety Rule: %s", d.Id())
+	_, err := conn.DeleteSafetyRule(&r53rcc.DeleteSafetyRuleInput{
 		SafetyRuleArn: aws.String(d.Id()),
-	}
-
-	_, err := conn.DeleteSafetyRule(input)
+	})
 
 	if tfawserr.ErrCodeEquals(err, r53rcc.ErrCodeResourceNotFoundException) {
 		return nil
 	}
 
 	if err != nil {
-		return fmt.Errorf("Error deleting Route53 Recovery Control Config Safety Rule: %s", err)
+		return fmt.Errorf("Error deleting Route53 Recovery Control Config Safety Rule: %w", err)
 	}
 
 	_, err = waitRoute53RecoveryControlConfigSafetyRuleDeleted(conn, d.Id())

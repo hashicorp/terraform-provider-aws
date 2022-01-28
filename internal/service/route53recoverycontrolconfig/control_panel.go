@@ -134,18 +134,17 @@ func resourceControlPanelUpdate(d *schema.ResourceData, meta interface{}) error 
 func resourceControlPanelDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).Route53RecoveryControlConfigConn
 
-	input := &r53rcc.DeleteControlPanelInput{
+	log.Printf("[INFO] Deleting Route53 Recovery Control Config Control Panel: %s", d.Id())
+	_, err := conn.DeleteControlPanel(&r53rcc.DeleteControlPanelInput{
 		ControlPanelArn: aws.String(d.Id()),
-	}
-
-	_, err := conn.DeleteControlPanel(input)
+	})
 
 	if tfawserr.ErrCodeEquals(err, r53rcc.ErrCodeResourceNotFoundException) {
 		return nil
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting Route53 Recovery Control Config Control Panel: %s", err)
+		return fmt.Errorf("error deleting Route53 Recovery Control Config Control Panel: %w", err)
 	}
 
 	_, err = waitRoute53RecoveryControlConfigControlPanelDeleted(conn, d.Id())

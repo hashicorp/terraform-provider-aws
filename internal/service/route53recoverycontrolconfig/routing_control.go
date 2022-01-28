@@ -133,11 +133,10 @@ func resourceRoutingControlUpdate(d *schema.ResourceData, meta interface{}) erro
 func resourceRoutingControlDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).Route53RecoveryControlConfigConn
 
-	input := &r53rcc.DeleteRoutingControlInput{
+	log.Printf("[INFO] Deleting Route53 Recovery Control Config Routing Control: %s", d.Id())
+	_, err := conn.DeleteRoutingControl(&r53rcc.DeleteRoutingControlInput{
 		RoutingControlArn: aws.String(d.Id()),
-	}
-
-	_, err := conn.DeleteRoutingControl(input)
+	})
 
 	if tfawserr.ErrCodeEquals(err, r53rcc.ErrCodeResourceNotFoundException) {
 		return nil
