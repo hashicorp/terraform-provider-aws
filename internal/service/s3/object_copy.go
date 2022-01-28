@@ -349,7 +349,7 @@ func resourceObjectCopyRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("object_lock_mode", resp.ObjectLockMode)
 	d.Set("object_lock_retain_until_date", flattenS3ObjectDate(resp.ObjectLockRetainUntilDate))
 
-	if err := resourceBucketObjectSetKMS(d, meta, resp.SSEKMSKeyId); err != nil {
+	if err := resourceObjectSetKMS(d, meta, resp.SSEKMSKeyId); err != nil {
 		return fmt.Errorf("bucket object KMS: %w", err)
 	}
 
@@ -647,7 +647,7 @@ func resourceObjectCopyDoCopy(d *schema.ResourceData, meta interface{}) error {
 	d.Set("version_id", output.VersionId)
 
 	d.SetId(d.Get("key").(string))
-	return resourceBucketObjectRead(d, meta)
+	return resourceObjectRead(d, meta)
 }
 
 type s3Grants struct {

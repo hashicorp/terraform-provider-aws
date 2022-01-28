@@ -24,7 +24,7 @@ import (
 func init() {
 	resource.AddTestSweepers("aws_s3_object", &resource.Sweeper{
 		Name: "aws_s3_object",
-		F:    sweepBucketObjects,
+		F:    sweepObjects,
 	})
 
 	resource.AddTestSweepers("aws_s3_bucket", &resource.Sweeper{
@@ -38,7 +38,7 @@ func init() {
 	})
 }
 
-func sweepBucketObjects(region string) error {
+func sweepObjects(region string) error {
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)

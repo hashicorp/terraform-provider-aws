@@ -30,21 +30,21 @@ import (
 	"github.com/mitchellh/go-homedir"
 )
 
-const s3BucketObjectCreationTimeout = 2 * time.Minute
+const s3ObjectCreationTimeout = 2 * time.Minute
 
-func ResourceBucketObject() *schema.Resource {
+func ResourceObject() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceBucketObjectCreate,
-		Read:   resourceBucketObjectRead,
-		Update: resourceBucketObjectUpdate,
-		Delete: resourceBucketObjectDelete,
+		Create: resourceObjectCreate,
+		Read:   resourceObjectRead,
+		Update: resourceObjectUpdate,
+		Delete: resourceObjectDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: resourceBucketObjectImport,
+			State: resourceObjectImport,
 		},
 
 		CustomizeDiff: customdiff.Sequence(
-			resourceBucketObjectCustomizeDiff,
+			resourceObjectCustomizeDiff,
 			verify.SetTagsDiff,
 		),
 
@@ -186,11 +186,11 @@ func ResourceBucketObject() *schema.Resource {
 	}
 }
 
-func resourceBucketObjectCreate(d *schema.ResourceData, meta interface{}) error {
-	return resourceBucketObjectUpload(d, meta)
+func resourceObjectCreate(d *schema.ResourceData, meta interface{}) error {
+	return resourceObjectUpload(d, meta)
 }
 
-func resourceBucketObjectRead(d *schema.ResourceData, meta interface{}) error {
+func resourceObjectRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).S3Conn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -205,7 +205,7 @@ func resourceBucketObjectRead(d *schema.ResourceData, meta interface{}) error {
 
 	var resp *s3.HeadObjectOutput
 
-	err := resource.Retry(s3BucketObjectCreationTimeout, func() *resource.RetryError {
+	err := resource.Retry(s3ObjectCreationTimeout, func() *resource.RetryError {
 		var err error
 
 		resp, err = conn.HeadObject(input)
@@ -261,7 +261,7 @@ func resourceBucketObjectRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("object_lock_mode", resp.ObjectLockMode)
 	d.Set("object_lock_retain_until_date", flattenS3ObjectDate(resp.ObjectLockRetainUntilDate))
 
-	if err := resourceBucketObjectSetKMS(d, meta, resp.SSEKMSKeyId); err != nil {
+	if err := resourceObjectSetKMS(d, meta, resp.SSEKMSKeyId); err != nil {
 		return fmt.Errorf("bucket object KMS: %w", err)
 	}
 
@@ -304,9 +304,9 @@ func resourceBucketObjectRead(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func resourceBucketObjectUpdate(d *schema.ResourceData, meta interface{}) error {
-	if hasS3BucketObjectContentChanges(d) {
-		return resourceBucketObjectUpload(d, meta)
+func resourceObjectUpdate(d *schema.ResourceData, meta interface{}) error {
+	if hasS3ObjectContentChanges(d) {
+		return resourceObjectUpload(d, meta)
 	}
 
 	conn := meta.(*conns.AWSClient).S3Conn
@@ -372,10 +372,10 @@ func resourceBucketObjectUpdate(d *schema.ResourceData, meta interface{}) error 
 		}
 	}
 
-	return resourceBucketObjectRead(d, meta)
+	return resourceObjectRead(d, meta)
 }
 
-func resourceBucketObjectDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceObjectDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).S3Conn
 
 	bucket := d.Get("bucket").(string)
@@ -399,7 +399,7 @@ func resourceBucketObjectDelete(d *schema.ResourceData, meta interface{}) error 
 	return nil
 }
 
-func resourceBucketObjectImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+func resourceObjectImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	id := d.Id()
 	id = strings.TrimPrefix(id, "s3://")
 	parts := strings.Split(id, "/")
@@ -418,7 +418,7 @@ func resourceBucketObjectImport(d *schema.ResourceData, meta interface{}) ([]*sc
 	return []*schema.ResourceData{d}, nil
 }
 
-func resourceBucketObjectUpload(d *schema.ResourceData, meta interface{}) error {
+func resourceObjectUpload(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).S3Conn
 	uploader := s3manager.NewUploaderWithClient(conn)
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
@@ -538,10 +538,10 @@ func resourceBucketObjectUpload(d *schema.ResourceData, meta interface{}) error 
 
 	d.SetId(key)
 
-	return resourceBucketObjectRead(d, meta)
+	return resourceObjectRead(d, meta)
 }
 
-func resourceBucketObjectSetKMS(d *schema.ResourceData, meta interface{}, sseKMSKeyId *string) error {
+func resourceObjectSetKMS(d *schema.ResourceData, meta interface{}, sseKMSKeyId *string) error {
 	// Only set non-default KMS key ID (one that doesn't match default)
 	if sseKMSKeyId != nil {
 		// retrieve S3 KMS Default Master Key
@@ -572,8 +572,8 @@ func validateMetadataIsLowerCase(v interface{}, k string) (ws []string, errors [
 	return
 }
 
-func resourceBucketObjectCustomizeDiff(_ context.Context, d *schema.ResourceDiff, meta interface{}) error {
-	if hasS3BucketObjectContentChanges(d) {
+func resourceObjectCustomizeDiff(_ context.Context, d *schema.ResourceDiff, meta interface{}) error {
+	if hasS3ObjectContentChanges(d) {
 		return d.SetNewComputed("version_id")
 	}
 
@@ -585,7 +585,7 @@ func resourceBucketObjectCustomizeDiff(_ context.Context, d *schema.ResourceDiff
 	return nil
 }
 
-func hasS3BucketObjectContentChanges(d verify.ResourceDiffer) bool {
+func hasS3ObjectContentChanges(d verify.ResourceDiffer) bool {
 	for _, key := range []string{
 		"bucket_key_enabled",
 		"cache_control",
