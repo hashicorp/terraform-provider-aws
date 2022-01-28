@@ -378,7 +378,7 @@ resource "aws_dynamodb_table" "test" {
 resource "aws_dynamodb_table_item" "test" {
   table_name = aws_dynamodb_table.test.name
   hash_key   = aws_dynamodb_table.test.hash_key
-	skip_destroy = %[1]t
+  skip_destroy = %t
 
   item = <<ITEM
 %s
