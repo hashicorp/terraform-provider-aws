@@ -34,7 +34,7 @@ resource "aws_s3_bucket" "prod" {
 POLICY
 }
 
-resource "aws_s3_bucket_object" "prod" {
+resource "aws_s3_object" "prod" {
   provider = aws.prod
 
   bucket = aws_s3_bucket.prod.id
@@ -50,7 +50,7 @@ provider "aws" {
   secret_key = var.test_secret_key
 }
 
-resource "aws_s3_bucket_object" "test" {
+resource "aws_s3_object" "test" {
   provider = aws.test
 
   bucket = aws_s3_bucket.prod.id
