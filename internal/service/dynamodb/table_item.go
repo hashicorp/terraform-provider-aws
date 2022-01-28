@@ -42,6 +42,10 @@ func ResourceTableItem() *schema.Resource {
 				Required:     true,
 				ValidateFunc: validateDynamoDbTableItem,
 			},
+			"skip_destroy": {
+				Type:     schema.TypeBool,
+				Optional: true,
+			},
 		},
 	}
 }
@@ -207,6 +211,12 @@ func resourceTableItemRead(d *schema.ResourceData, meta interface{}) error {
 
 func resourceTableItemDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DynamoDBConn
+
+	if _, ok := d.GetOk("skip_destroy"); ok {
+		log.Printf("[INFO] Found skip_destroy to be true, removing DynamoDB Table Item %q from state", d.Id())
+		d.SetId("")
+		return nil
+	}
 
 	attributes, err := ExpandTableItemAttributes(d.Get("item").(string))
 	if err != nil {
