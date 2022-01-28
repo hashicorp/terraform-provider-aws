@@ -53,6 +53,7 @@ The following arguments are supported:
 * `range_key` - (Optional) Range key to use for lookups and identification of the item. Required if there is range key defined in the table.
 * `item` - (Required) JSON representation of a map of attribute name/value pairs, one for each attribute.
   Only the primary key attributes are required; you can optionally provide other attribute name-value pairs for the item.
+* `skip_destroy` - (Optional, Boolean) Set this to true if you do not wish to remove the table item. Instead the table item will be removed from Terraform state.
 
 ## Attributes Reference
 
