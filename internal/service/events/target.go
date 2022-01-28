@@ -157,7 +157,6 @@ func ResourceTarget() *schema.Resource {
 						"launch_type": {
 							Type:     schema.TypeString,
 							Optional: true,
-							Default:  eventbridge.LaunchTypeEc2,
 							ValidateFunc: validation.Any(
 								validation.StringIsEmpty,
 								validation.StringInSlice(eventbridge.LaunchType_Values(), false),
