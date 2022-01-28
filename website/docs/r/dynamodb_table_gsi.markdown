@@ -19,45 +19,34 @@ description: |-
 
  ```terraform
  resource "aws_dynamodb_table" "basic-dynamodb-table" {
-   name           = "GameScores"
-   read_capacity  = 20
-   write_capacity = 20
-   hash_key       = "UserId"
-   range_key      = "GameTitle"
+  name                         = "GameScores"
+  read_capacity                = 1
+  write_capacity               = 1
+  hash_key                     = "UserId"
+  range_key                    = "TopScoreDateTime"
+  manage_index_as_own_resource = true
 
-   attribute {
-     name = "UserId"
-     type = "S"
-   }
-
-   attribute {
-     name = "GameTitle"
-     type = "S"
-   }
-
-   ttl {
-     attribute_name = "TimeToExist"
-     enabled        = false
-   }
-
-   tags {
-     Name        = "dynamodb-table-1"
-     Environment = "production"
-   }
- }
+  attribute {
+    name = "UserId"
+    type = "S"
+  }
+  attribute {
+    name = "TopScoreDateTime"
+    type = "S"
+  }
+}
 
 resource "aws_dynamodb_table_gsi" "gsi" {
   table_name         = aws_dynamodb_table.basic-dynamodb-table.id
-  name               = "PlayerNameIndex"
-  hash_key           = "PlayerName"
+  name               = "GameTitleIndex"
+  hash_key           = "GameTitle"
   range_key          = "TopScore"
   write_capacity     = 10
   read_capacity      = 10
   projection_type    = "INCLUDE"
-  non_key_attributes = ["OpponentId"]
-
+  non_key_attributes = ["Wins"]
   attribute {
-    name = "PlayerName"
+    name = "GameTitle"
     type = "S"
   }
 
@@ -72,6 +61,7 @@ resource "aws_dynamodb_table_gsi" "gsi" {
 
  The following arguments are supported:
 
+* `table_name` - (Required) The name of the table to attach to.
 * `name` - (Required) The name of the GSI, this needs to be unique
    within the table definition.
 * `hash_key` - (Required, Forces new resource) The attribute to use as the hash (partition) key for the GSI. Must also be defined as an `attribute`, see below.
