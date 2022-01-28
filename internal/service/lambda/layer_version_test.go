@@ -349,7 +349,7 @@ resource "aws_s3_bucket" "lambda_bucket" {
   bucket = %[1]q
 }
 
-resource "aws_s3_bucket_object" "lambda_code" {
+resource "aws_s3_object" "lambda_code" {
   bucket = aws_s3_bucket.lambda_bucket.id
   key    = "lambdatest.zip"
   source = "test-fixtures/lambdatest.zip"
@@ -357,7 +357,7 @@ resource "aws_s3_bucket_object" "lambda_code" {
 
 resource "aws_lambda_layer_version" "lambda_layer_test" {
   s3_bucket  = aws_s3_bucket.lambda_bucket.id
-  s3_key     = aws_s3_bucket_object.lambda_code.id
+  s3_key     = aws_s3_object.lambda_code.id
   layer_name = %[1]q
 }
 `, rName)
