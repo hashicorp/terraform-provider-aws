@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/connect"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -44,4 +45,35 @@ func testAccCheckRoutingProfileExists(resourceName string, function *connect.Des
 
 		return nil
 	}
+}
+
+func testAccCheckRoutingProfileDestroy(s *terraform.State) error {
+	for _, rs := range s.RootModule().Resources {
+		if rs.Type != "aws_connect_routing_profile" {
+			continue
+		}
+
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectConn
+
+		instanceID, routingProfileID, err := tfconnect.RoutingProfileParseID(rs.Primary.ID)
+
+		if err != nil {
+			return err
+		}
+
+		params := &connect.DescribeRoutingProfileInput{
+			InstanceId:       aws.String(instanceID),
+			RoutingProfileId: aws.String(routingProfileID),
+		}
+
+		_, experr := conn.DescribeRoutingProfile(params)
+		// Verify the error is what we want
+		if experr != nil {
+			if awsErr, ok := experr.(awserr.Error); ok && awsErr.Code() == "ResourceNotFoundException" {
+				continue
+			}
+			return experr
+		}
+	}
+	return nil
 }
