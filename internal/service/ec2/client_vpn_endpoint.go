@@ -29,49 +29,9 @@ func ResourceClientVPNEndpoint() *schema.Resource {
 		CustomizeDiff: verify.SetTagsDiff,
 
 		Schema: map[string]*schema.Schema{
-			"description": {
+			"arn": {
 				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"client_cidr_block": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.IsCIDR,
-			},
-			"dns_servers": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"server_certificate_arn": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			"split_tunnel": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			"self_service_portal": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Default:      ec2.SelfServicePortalDisabled,
-				ValidateFunc: validation.StringInSlice(ec2.SelfServicePortal_Values(), false),
-			},
-			"transport_protocol": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				Default:      ec2.TransportProtocolUdp,
-				ValidateFunc: validation.StringInSlice(ec2.TransportProtocol_Values(), false),
-			},
-			"session_timeout_hours": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				Default:      24,
-				ValidateFunc: validation.IntInSlice([]int{8, 10, 12, 24}),
+				Computed: true,
 			},
 			"authentication_options": {
 				Type:     schema.TypeList,
@@ -79,11 +39,16 @@ func ResourceClientVPNEndpoint() *schema.Resource {
 				MaxItems: 2,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"type": {
+						"active_directory_id": {
+							Type:     schema.TypeString,
+							Optional: true,
+							ForceNew: true,
+						},
+						"root_certificate_chain_arn": {
 							Type:         schema.TypeString,
-							Required:     true,
+							Optional:     true,
 							ForceNew:     true,
-							ValidateFunc: validation.StringInSlice(ec2.ClientVpnAuthenticationType_Values(), false),
+							ValidateFunc: verify.ValidARN,
 						},
 						"saml_provider_arn": {
 							Type:         schema.TypeString,
@@ -97,19 +62,20 @@ func ResourceClientVPNEndpoint() *schema.Resource {
 							ForceNew:     true,
 							ValidateFunc: verify.ValidARN,
 						},
-						"active_directory_id": {
-							Type:     schema.TypeString,
-							Optional: true,
-							ForceNew: true,
-						},
-						"root_certificate_chain_arn": {
+						"type": {
 							Type:         schema.TypeString,
-							Optional:     true,
+							Required:     true,
 							ForceNew:     true,
-							ValidateFunc: verify.ValidARN,
+							ValidateFunc: validation.StringInSlice(ec2.ClientVpnAuthenticationType_Values(), false),
 						},
 					},
 				},
+			},
+			"client_cidr_block": {
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.IsCIDR,
 			},
 			"connection_log_options": {
 				Type:     schema.TypeList,
@@ -132,9 +98,40 @@ func ResourceClientVPNEndpoint() *schema.Resource {
 					},
 				},
 			},
+			"description": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
 			"dns_name": {
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+			"dns_servers": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
+			"self_service_portal": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Default:      ec2.SelfServicePortalDisabled,
+				ValidateFunc: validation.StringInSlice(ec2.SelfServicePortal_Values(), false),
+			},
+			"server_certificate_arn": {
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: verify.ValidARN,
+			},
+			"session_timeout_hours": {
+				Type:         schema.TypeInt,
+				Optional:     true,
+				Default:      24,
+				ValidateFunc: validation.IntInSlice([]int{8, 10, 12, 24}),
+			},
+			"split_tunnel": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
 			},
 			"status": {
 				Type:     schema.TypeString,
@@ -142,9 +139,12 @@ func ResourceClientVPNEndpoint() *schema.Resource {
 			},
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
-			"arn": {
-				Type:     schema.TypeString,
-				Computed: true,
+			"transport_protocol": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				Default:      ec2.TransportProtocolUdp,
+				ValidateFunc: validation.StringInSlice(ec2.TransportProtocol_Values(), false),
 			},
 		},
 	}
