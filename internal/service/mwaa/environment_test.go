@@ -311,7 +311,7 @@ func TestAccMWAAEnvironment_pluginsS3ObjectVersion(t *testing.T) {
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_mwaa_environment.test"
-	s3BucketObjectResourceName := "aws_s3_bucket_object.plugins"
+	s3BucketObjectResourceName := "aws_s3_object.plugins"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -532,7 +532,7 @@ resource "aws_s3_bucket_public_access_block" "test" {
   block_public_policy = true
 }
 
-resource "aws_s3_bucket_object" "dags" {
+resource "aws_s3_object" "dags" {
   bucket       = aws_s3_bucket.test.id
   acl          = "private"
   key          = "dags/"
@@ -585,7 +585,7 @@ POLICY
 func testAccEnvironmentBasicConfig(rName string) string {
 	return testAccEnvironmentBase(rName) + fmt.Sprintf(`
 resource "aws_mwaa_environment" "test" {
-  dag_s3_path        = aws_s3_bucket_object.dags.key
+  dag_s3_path        = aws_s3_object.dags.key
   execution_role_arn = aws_iam_role.test.arn
   name               = %[1]q
 
@@ -607,7 +607,7 @@ resource "aws_mwaa_environment" "test" {
     "core.parallelism"          = %[3]q
   }
 
-  dag_s3_path        = aws_s3_bucket_object.dags.key
+  dag_s3_path        = aws_s3_object.dags.key
   execution_role_arn = aws_iam_role.test.arn
   name               = %[1]q
 
@@ -624,7 +624,7 @@ resource "aws_mwaa_environment" "test" {
 func testAccEnvironmentLoggingConfigurationConfig(rName, logEnabled, logLevel string) string {
 	return testAccEnvironmentBase(rName) + fmt.Sprintf(`
 resource "aws_mwaa_environment" "test" {
-  dag_s3_path        = aws_s3_bucket_object.dags.key
+  dag_s3_path        = aws_s3_object.dags.key
   execution_role_arn = aws_iam_role.test.arn
 
   logging_configuration {
@@ -675,7 +675,7 @@ resource "aws_mwaa_environment" "test" {
   }
 
   airflow_version    = "1.10.12"
-  dag_s3_path        = aws_s3_bucket_object.dags.key
+  dag_s3_path        = aws_s3_object.dags.key
   environment_class  = "mw1.medium"
   execution_role_arn = aws_iam_role.test.arn
   kms_key            = aws_kms_key.test.arn
@@ -716,8 +716,8 @@ resource "aws_mwaa_environment" "test" {
     subnet_ids         = aws_subnet.private[*].id
   }
 
-  plugins_s3_path                 = aws_s3_bucket_object.plugins.key
-  requirements_s3_path            = aws_s3_bucket_object.requirements.key
+  plugins_s3_path                 = aws_s3_object.plugins.key
+  requirements_s3_path            = aws_s3_object.requirements.key
   source_bucket_arn               = aws_s3_bucket.test.arn
   webserver_access_mode           = "PUBLIC_ONLY"
   weekly_maintenance_window_start = "SAT:03:00"
@@ -759,14 +759,14 @@ resource "aws_kms_key" "test" {
 POLICY
 }
 
-resource "aws_s3_bucket_object" "plugins" {
+resource "aws_s3_object" "plugins" {
   bucket  = aws_s3_bucket.test.id
   acl     = "private"
   key     = "plugins.zip"
   content = ""
 }
 
-resource "aws_s3_bucket_object" "requirements" {
+resource "aws_s3_object" "requirements" {
   bucket  = aws_s3_bucket.test.id
   acl     = "private"
   key     = "requirements.txt"
@@ -779,7 +779,7 @@ resource "aws_s3_bucket_object" "requirements" {
 func testAccEnvironmentPluginsS3ObjectVersionConfig(rName, content string) string {
 	return testAccEnvironmentBase(rName) + fmt.Sprintf(`
 resource "aws_mwaa_environment" "test" {
-  dag_s3_path        = aws_s3_bucket_object.dags.key
+  dag_s3_path        = aws_s3_object.dags.key
   execution_role_arn = aws_iam_role.test.arn
   name               = %[1]q
 
@@ -788,13 +788,13 @@ resource "aws_mwaa_environment" "test" {
     subnet_ids         = aws_subnet.private[*].id
   }
 
-  plugins_s3_path           = aws_s3_bucket_object.plugins.key
-  plugins_s3_object_version = aws_s3_bucket_object.plugins.version_id
+  plugins_s3_path           = aws_s3_object.plugins.key
+  plugins_s3_object_version = aws_s3_object.plugins.version_id
 
   source_bucket_arn = aws_s3_bucket.test.arn
 }
 
-resource "aws_s3_bucket_object" "plugins" {
+resource "aws_s3_object" "plugins" {
   bucket  = aws_s3_bucket.test.id
   acl     = "private"
   key     = "plugins.zip"
