@@ -6,7 +6,6 @@ import (
 	"regexp"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -15,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/experimental/sync"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 const clientVpnEndpointDefaultLimit = 5
@@ -81,7 +81,7 @@ func TestAccEC2ClientVPNEndpoint_serial(t *testing.T) {
 
 func testAccClientVPNEndpoint_basic(t *testing.T) {
 	var v ec2.ClientVpnEndpoint
-	rStr := sdkacctest.RandString(5)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ec2_client_vpn_endpoint.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -91,13 +91,31 @@ func testAccClientVPNEndpoint_basic(t *testing.T) {
 		CheckDestroy: testAccCheckClientVPNEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEc2ClientVpnEndpointConfig(rStr),
-				Check: resource.ComposeTestCheckFunc(
+				Config: testAccEc2ClientVpnEndpointConfig(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClientVPNEndpointExists(resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`client-vpn-endpoint/cvpn-endpoint-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "authentication_options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "authentication_options.0.type", "certificate-authentication"),
+					resource.TestCheckResourceAttr(resourceName, "authentication_options.0.active_directory_id", ""),
+					resource.TestCheckResourceAttrSet(resourceName, "authentication_options.0.root_certificate_chain_arn"),
+					resource.TestCheckResourceAttr(resourceName, "authentication_options.0.saml_provider_arn", ""),
+					resource.TestCheckResourceAttr(resourceName, "authentication_options.0.self_service_saml_provider_arn", ""),
+					resource.TestCheckResourceAttr(resourceName, "client_cidr_block", "10.0.0.0/16"),
+					resource.TestCheckResourceAttr(resourceName, "connection_log_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "connection_log_options.0.cloudwatch_log_group", ""),
+					resource.TestCheckResourceAttr(resourceName, "connection_log_options.0.cloudwatch_log_stream", ""),
+					resource.TestCheckResourceAttr(resourceName, "connection_log_options.0.enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "description", rName),
+					resource.TestCheckResourceAttrSet(resourceName, "dns_name"),
+					resource.TestCheckResourceAttr(resourceName, "dns_servers.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "self_service_portal", "disabled"),
+					resource.TestCheckResourceAttrSet(resourceName, "server_certificate_arn"),
+					resource.TestCheckResourceAttr(resourceName, "session_timeout_hours", "24"),
+					resource.TestCheckResourceAttr(resourceName, "split_tunnel", "false"),
 					resource.TestCheckResourceAttr(resourceName, "status", ec2.ClientVpnEndpointStatusCodePendingAssociate),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "transport_protocol", "udp"),
 				),
 			},
 			{
@@ -422,42 +440,41 @@ func testAccCheckClientVPNEndpointDestroy(s *terraform.State) error {
 			continue
 		}
 
-		input := &ec2.DescribeClientVpnEndpointsInput{
-			ClientVpnEndpointIds: aws.StringSlice([]string{rs.Primary.ID}),
+		_, err := tfec2.FindClientVPNEndpointByID(conn, rs.Primary.ID)
+
+		if tfresource.NotFound(err) {
+			continue
 		}
 
-		resp, _ := conn.DescribeClientVpnEndpoints(input)
-		for _, v := range resp.ClientVpnEndpoints {
-			if aws.StringValue(v.ClientVpnEndpointId) == rs.Primary.ID {
-				return fmt.Errorf("Client VPN endpoint (%s) not deleted", rs.Primary.ID)
-			}
+		if err != nil {
+			return err
 		}
+
+		return fmt.Errorf("EC2 Client VPN Endpoint %s still exists", rs.Primary.ID)
 	}
 	return nil
 }
 
-func testAccCheckClientVPNEndpointExists(name string, endpoint *ec2.ClientVpnEndpoint) resource.TestCheckFunc {
+func testAccCheckClientVPNEndpointExists(name string, v *ec2.ClientVpnEndpoint) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
 			return fmt.Errorf("Not found: %s", name)
 		}
 
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("No EC2 Client VPN Endpoint ID is set")
+		}
+
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
-		input := &ec2.DescribeClientVpnEndpointsInput{
-			ClientVpnEndpointIds: aws.StringSlice([]string{rs.Primary.ID}),
-		}
-		result, err := conn.DescribeClientVpnEndpoints(input)
+		output, err := tfec2.FindClientVPNEndpointByID(conn, rs.Primary.ID)
+
 		if err != nil {
 			return err
 		}
 
-		if result == nil || len(result.ClientVpnEndpoints) == 0 || result.ClientVpnEndpoints[0] == nil {
-			return fmt.Errorf("EC2 Client VPN Endpoint (%s) not found", rs.Primary.ID)
-		}
-
-		*endpoint = *result.ClientVpnEndpoints[0]
+		*v = *output
 
 		return nil
 	}
@@ -505,9 +522,9 @@ resource "aws_subnet" "test" {
 }
 
 func testAccEc2ClientVpnEndpointConfig(rName string) string {
-	return testAccEc2ClientVpnEndpointConfigAcmCertificateBase() + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccEc2ClientVpnEndpointConfigAcmCertificateBase(), fmt.Sprintf(`
 resource "aws_ec2_client_vpn_endpoint" "test" {
-  description            = "terraform-testacc-clientvpn-%s"
+  description            = %[1]q
   server_certificate_arn = aws_acm_certificate.test.arn
   client_cidr_block      = "10.0.0.0/16"
 
@@ -520,7 +537,7 @@ resource "aws_ec2_client_vpn_endpoint" "test" {
     enabled = false
   }
 }
-`, rName)
+`, rName))
 }
 
 func testAccEc2ClientVpnEndpointConfigWithLogGroup(rName string) string {
