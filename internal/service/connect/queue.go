@@ -200,6 +200,14 @@ func resourceQueueRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	d.Set("queue_id", resp.Queue.QueueId)
 	d.Set("status", resp.Queue.Status)
 
+	// reading quick_connect_ids requires a separate API call
+	quickConnectIds, err := getConnectQueueQuickConnectIds(ctx, conn, instanceID, queueID)
+
+	if err != nil {
+		return diag.FromErr(fmt.Errorf("error finding Connect Queue Quick Connect ID for Queue (%s): %w", queueID, err))
+	}
+
+	d.Set("quick_connect_ids", flex.FlattenStringSet(quickConnectIds))
 	tags := KeyValueTags(resp.Queue.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
@@ -361,6 +369,38 @@ func flattenOutboundCallerConfig(outboundCallerConfig *connect.OutboundCallerCon
 	}
 
 	return []interface{}{values}
+}
+
+func getConnectQueueQuickConnectIds(ctx context.Context, conn *connect.Connect, instanceID, queueID string) ([]*string, error) {
+	var result []*string
+
+	input := &connect.ListQueueQuickConnectsInput{
+		InstanceId: aws.String(instanceID),
+		MaxResults: aws.Int64(ListQueueQuickConnectsMaxResults),
+		QueueId:    aws.String(queueID),
+	}
+
+	err := conn.ListQueueQuickConnectsPagesWithContext(ctx, input, func(page *connect.ListQueueQuickConnectsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, qc := range page.QuickConnectSummaryList {
+			if qc == nil {
+				continue
+			}
+
+			result = append(result, qc.Id)
+		}
+
+		return !lastPage
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	return result, nil
 }
 
 func QueueParseID(id string) (string, string, error) {
