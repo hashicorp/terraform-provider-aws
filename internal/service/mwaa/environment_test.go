@@ -311,7 +311,7 @@ func TestAccMWAAEnvironment_pluginsS3ObjectVersion(t *testing.T) {
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_mwaa_environment.test"
-	s3BucketObjectResourceName := "aws_s3_object.plugins"
+	s3ObjectResourceName := "aws_s3_object.plugins"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -323,7 +323,7 @@ func TestAccMWAAEnvironment_pluginsS3ObjectVersion(t *testing.T) {
 				Config: testAccEnvironmentPluginsS3ObjectVersionConfig(rName, "test"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEnvironmentExists(resourceName, &environment),
-					resource.TestCheckResourceAttrPair(resourceName, "plugins_s3_object_version", s3BucketObjectResourceName, "version_id"),
+					resource.TestCheckResourceAttrPair(resourceName, "plugins_s3_object_version", s3ObjectResourceName, "version_id"),
 				),
 			},
 			{
@@ -335,7 +335,7 @@ func TestAccMWAAEnvironment_pluginsS3ObjectVersion(t *testing.T) {
 				Config: testAccEnvironmentPluginsS3ObjectVersionConfig(rName, "test-updated"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEnvironmentExists(resourceName, &environment),
-					resource.TestCheckResourceAttrPair(resourceName, "plugins_s3_object_version", s3BucketObjectResourceName, "version_id"),
+					resource.TestCheckResourceAttrPair(resourceName, "plugins_s3_object_version", s3ObjectResourceName, "version_id"),
 				),
 			},
 			{
