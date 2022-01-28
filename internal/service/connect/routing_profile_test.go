@@ -18,7 +18,8 @@ import (
 // Serialized acceptance tests due to Connect account limits (max 2 parallel tests)
 func TestAccConnectRoutingProfile_serial(t *testing.T) {
 	testCases := map[string]func(t *testing.T){
-		"basic": testAccRoutingProfile_basic,
+		"basic":      testAccRoutingProfile_basic,
+		"disappears": testAccRoutingProfile_disappears,
 	}
 
 	for name, tc := range testCases {
@@ -80,6 +81,32 @@ func testAccRoutingProfile_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "routing_profile_id"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 				),
+			},
+		},
+	})
+}
+
+func testAccRoutingProfile_disappears(t *testing.T) {
+	t.Skip("Routing Profiles do not support deletion today")
+	var v connect.DescribeRoutingProfileOutput
+	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName2 := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName3 := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	resourceName := "aws_connect_routing_profile.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, connect.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckRoutingProfileDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRoutingProfileBasicConfig(rName, rName2, rName3, "Disappear"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRoutingProfileExists(resourceName, &v),
+					acctest.CheckResourceDisappears(acctest.Provider, tfconnect.ResourceRoutingProfile(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
