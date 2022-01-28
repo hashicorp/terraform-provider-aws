@@ -37,7 +37,7 @@ func ResourceFleet() *schema.Resource {
 			"compute_capacity": {
 				Type:     schema.TypeList,
 				MaxItems: 1,
-				Required: false,
+				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"available": {
@@ -194,15 +194,15 @@ func ResourceFleet() *schema.Resource {
 func resourceFleetCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).AppStreamConn
 	input := &appstream.CreateFleetInput{
-		Name:            aws.String(d.Get("name").(string)),
-		InstanceType:    aws.String(d.Get("instance_type").(string)),
+		Name:         aws.String(d.Get("name").(string)),
+		InstanceType: aws.String(d.Get("instance_type").(string)),
 	}
 
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
 	if v, ok := d.GetOk("compute_capacity"); ok {
-		input.Description = expandComputeCapacity(d.Get("compute_capacity").([]interface{}))
+		input.ComputeCapacity = expandComputeCapacity(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -246,7 +246,7 @@ func resourceFleetCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	if v, ok := d.GetOk("platform"); ok {
-		input.IamRoleArn = aws.String(v.(string))
+		input.Platform = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("max_user_duration_in_seconds"); ok {
@@ -397,7 +397,7 @@ func resourceFleetUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 	shouldStop := false
 
-	if d.HasChanges("description", "domain_join_info", "enable_default_internet_access", "iam_role_arn", "instance_type","platform", "max_user_duration_in_seconds", "stream_view", "vpc_config") {
+	if d.HasChanges("description", "domain_join_info", "enable_default_internet_access", "iam_role_arn", "instance_type", "platform", "max_user_duration_in_seconds", "stream_view", "vpc_config") {
 		shouldStop = true
 	}
 
