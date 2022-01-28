@@ -77,35 +77,19 @@ func StatusLocalGatewayRouteTableVPCAssociationState(conn *ec2.EC2, localGateway
 	}
 }
 
-const (
-	ClientVPNEndpointStatusNotFound = "NotFound"
-
-	ClientVPNEndpointStatusUnknown = "Unknown"
-)
-
-// StatusClientVPNEndpoint fetches the Client VPN endpoint and its Status
-func StatusClientVPNEndpoint(conn *ec2.EC2, endpointID string) resource.StateRefreshFunc {
+func StatusClientVPNEndpointState(conn *ec2.EC2, id string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		result, err := conn.DescribeClientVpnEndpoints(&ec2.DescribeClientVpnEndpointsInput{
-			ClientVpnEndpointIds: aws.StringSlice([]string{endpointID}),
-		})
-		if tfawserr.ErrCodeEquals(err, ErrCodeInvalidClientVpnEndpointIdNotFound) {
-			return nil, ClientVPNEndpointStatusNotFound, nil
+		output, err := FindClientVPNEndpointByID(conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
 		}
+
 		if err != nil {
-			return nil, ClientVPNEndpointStatusUnknown, err
+			return nil, "", err
 		}
 
-		if result == nil || len(result.ClientVpnEndpoints) == 0 || result.ClientVpnEndpoints[0] == nil {
-			return nil, ClientVPNEndpointStatusNotFound, nil
-		}
-
-		endpoint := result.ClientVpnEndpoints[0]
-		if endpoint.Status == nil || endpoint.Status.Code == nil {
-			return endpoint, ClientVPNEndpointStatusUnknown, nil
-		}
-
-		return endpoint, aws.StringValue(endpoint.Status.Code), nil
+		return output, aws.StringValue(output.Status.Code), nil
 	}
 }
 

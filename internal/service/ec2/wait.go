@@ -121,13 +121,15 @@ func WaitClientVPNEndpointDeleted(conn *ec2.EC2, id string) (*ec2.ClientVpnEndpo
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{ec2.ClientVpnEndpointStatusCodeDeleting},
 		Target:  []string{},
-		Refresh: StatusClientVPNEndpoint(conn, id),
+		Refresh: StatusClientVPNEndpointState(conn, id),
 		Timeout: ClientVPNEndpointDeletedTimout,
 	}
 
 	outputRaw, err := stateConf.WaitForState()
 
 	if output, ok := outputRaw.(*ec2.ClientVpnEndpoint); ok {
+		tfresource.SetLastError(err, errors.New(aws.StringValue(output.Status.Message)))
+
 		return output, err
 	}
 

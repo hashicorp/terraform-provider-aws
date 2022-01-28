@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
@@ -36,6 +37,7 @@ func ResourceClientVPNEndpoint() *schema.Resource {
 			"authentication_options": {
 				Type:     schema.TypeList,
 				Required: true,
+				ForceNew: true,
 				MaxItems: 2,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -204,70 +206,16 @@ func resourceClientVPNEndpointRead(d *schema.ResourceData, meta interface{}) err
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	result, err := conn.DescribeClientVpnEndpoints(&ec2.DescribeClientVpnEndpointsInput{
-		ClientVpnEndpointIds: []*string{aws.String(d.Id())},
-	})
+	ep, err := FindClientVPNEndpointByID(conn, d.Id())
 
-	if tfawserr.ErrMessageContains(err, ErrCodeInvalidClientVpnAssociationIdNotFound, "") || tfawserr.ErrMessageContains(err, ErrCodeInvalidClientVpnEndpointIdNotFound, "") {
+	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] EC2 Client VPN Endpoint (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if err != nil {
-		return fmt.Errorf("Error reading Client VPN endpoint: %w", err)
-	}
-
-	if result == nil || len(result.ClientVpnEndpoints) == 0 || result.ClientVpnEndpoints[0] == nil {
-		log.Printf("[WARN] EC2 Client VPN Endpoint (%s) not found, removing from state", d.Id())
-		d.SetId("")
-		return nil
-	}
-
-	if result.ClientVpnEndpoints[0].Status != nil && aws.StringValue(result.ClientVpnEndpoints[0].Status.Code) == ec2.ClientVpnEndpointStatusCodeDeleted {
-		log.Printf("[WARN] EC2 Client VPN Endpoint (%s) not found, removing from state", d.Id())
-		d.SetId("")
-		return nil
-	}
-
-	d.Set("description", result.ClientVpnEndpoints[0].Description)
-	d.Set("client_cidr_block", result.ClientVpnEndpoints[0].ClientCidrBlock)
-	d.Set("server_certificate_arn", result.ClientVpnEndpoints[0].ServerCertificateArn)
-	d.Set("transport_protocol", result.ClientVpnEndpoints[0].TransportProtocol)
-	d.Set("dns_name", result.ClientVpnEndpoints[0].DnsName)
-	d.Set("dns_servers", result.ClientVpnEndpoints[0].DnsServers)
-	d.Set("session_timeout_hours", result.ClientVpnEndpoints[0].SessionTimeoutHours)
-
-	if result.ClientVpnEndpoints[0].Status != nil {
-		d.Set("status", result.ClientVpnEndpoints[0].Status.Code)
-	}
-	d.Set("split_tunnel", result.ClientVpnEndpoints[0].SplitTunnel)
-
-	if aws.StringValue(result.ClientVpnEndpoints[0].SelfServicePortalUrl) != "" {
-		d.Set("self_service_portal", ec2.SelfServicePortalEnabled)
-	} else {
-		d.Set("self_service_portal", ec2.SelfServicePortalDisabled)
-	}
-
-	err = d.Set("authentication_options", flattenAuthOptsConfig(result.ClientVpnEndpoints[0].AuthenticationOptions))
-	if err != nil {
-		return fmt.Errorf("error setting authentication_options: %w", err)
-	}
-
-	err = d.Set("connection_log_options", flattenConnLoggingConfig(result.ClientVpnEndpoints[0].ConnectionLogOptions))
-	if err != nil {
-		return fmt.Errorf("error setting connection_log_options: %w", err)
-	}
-
-	tags := KeyValueTags(result.ClientVpnEndpoints[0].Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
+		return fmt.Errorf("error reading EC2 Client VPN Endpoint (%s): %w", d.Id(), err)
 	}
 
 	arn := arn.ARN{
@@ -278,6 +226,41 @@ func resourceClientVPNEndpointRead(d *schema.ResourceData, meta interface{}) err
 		Resource:  fmt.Sprintf("client-vpn-endpoint/%s", d.Id()),
 	}.String()
 	d.Set("arn", arn)
+	if err := d.Set("authentication_options", flattenClientVpnAuthentications(ep.AuthenticationOptions)); err != nil {
+		return fmt.Errorf("error setting authentication_options: %w", err)
+	}
+	d.Set("client_cidr_block", ep.ClientCidrBlock)
+	if ep.ConnectionLogOptions != nil {
+		if err := d.Set("connection_log_options", []interface{}{flattenConnectionLogResponseOptions(ep.ConnectionLogOptions)}); err != nil {
+			return fmt.Errorf("error setting connection_log_options: %w", err)
+		}
+	} else {
+		d.Set("connection_log_options", nil)
+	}
+	d.Set("description", ep.Description)
+	d.Set("dns_name", ep.DnsName)
+	d.Set("dns_servers", ep.DnsServers)
+	if aws.StringValue(ep.SelfServicePortalUrl) != "" {
+		d.Set("self_service_portal", ec2.SelfServicePortalEnabled)
+	} else {
+		d.Set("self_service_portal", ec2.SelfServicePortalDisabled)
+	}
+	d.Set("server_certificate_arn", ep.ServerCertificateArn)
+	d.Set("session_timeout_hours", ep.SessionTimeoutHours)
+	d.Set("split_tunnel", ep.SplitTunnel)
+	d.Set("status", ep.Status.Code)
+	d.Set("transport_protocol", ep.TransportProtocol)
+
+	tags := KeyValueTags(ep.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+
+	//lintignore:AWSR002
+	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %w", err)
+	}
+
+	if err := d.Set("tags_all", tags.Map()); err != nil {
+		return fmt.Errorf("error setting tags_all: %w", err)
+	}
 
 	return nil
 }
@@ -285,74 +268,52 @@ func resourceClientVPNEndpointRead(d *schema.ResourceData, meta interface{}) err
 func resourceClientVPNEndpointUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
-	req := &ec2.ModifyClientVpnEndpointInput{
-		ClientVpnEndpointId: aws.String(d.Id()),
-	}
-
-	if d.HasChange("description") {
-		req.Description = aws.String(d.Get("description").(string))
-	}
-
-	if d.HasChange("dns_servers") {
-		dnsValue := flex.ExpandStringSet(d.Get("dns_servers").(*schema.Set))
-		var enabledValue *bool
-
-		if len(dnsValue) > 0 {
-			enabledValue = aws.Bool(true)
-		} else {
-			enabledValue = aws.Bool(false)
+	if d.HasChangesExcept("tags", "tags_all") {
+		input := &ec2.ModifyClientVpnEndpointInput{
+			ClientVpnEndpointId: aws.String(d.Id()),
 		}
 
-		dnsMod := &ec2.DnsServersOptionsModifyStructure{
-			CustomDnsServers: dnsValue,
-			Enabled:          enabledValue,
+		if d.HasChange("description") {
+			input.Description = aws.String(d.Get("description").(string))
 		}
-		req.DnsServers = dnsMod
-	}
 
-	if d.HasChange("server_certificate_arn") {
-		req.ServerCertificateArn = aws.String(d.Get("server_certificate_arn").(string))
-	}
-
-	if d.HasChange("split_tunnel") {
-		req.SplitTunnel = aws.Bool(d.Get("split_tunnel").(bool))
-	}
-
-	if d.HasChange("self_service_portal") {
-		req.SelfServicePortal = aws.String(d.Get("self_service_portal").(string))
-	}
-
-	if d.HasChange("session_timeout_hours") {
-		req.SessionTimeoutHours = aws.Int64(d.Get("session_timeout_hours").(int64))
-	}
-
-	if d.HasChange("connection_log_options") {
-		if v, ok := d.GetOk("connection_log_options"); ok {
-			connSet := v.([]interface{})
-			attrs := connSet[0].(map[string]interface{})
-
-			connReq := &ec2.ConnectionLogOptions{
-				Enabled: aws.Bool(attrs["enabled"].(bool)),
+		if d.HasChange("dns_servers") {
+			input.DnsServers = &ec2.DnsServersOptionsModifyStructure{
+				CustomDnsServers: flex.ExpandStringSet(d.Get("dns_servers").(*schema.Set)),
 			}
-
-			if attrs["enabled"].(bool) && attrs["cloudwatch_log_group"].(string) != "" {
-				connReq.CloudwatchLogGroup = aws.String(attrs["cloudwatch_log_group"].(string))
-			}
-
-			if attrs["enabled"].(bool) && attrs["cloudwatch_log_stream"].(string) != "" {
-				connReq.CloudwatchLogStream = aws.String(attrs["cloudwatch_log_stream"].(string))
-			}
-
-			req.ConnectionLogOptions = connReq
+			input.DnsServers.Enabled = aws.Bool(len(input.DnsServers.CustomDnsServers) > 0)
 		}
-	}
 
-	if _, err := conn.ModifyClientVpnEndpoint(req); err != nil {
-		return fmt.Errorf("Error modifying Client VPN endpoint: %w", err)
+		if d.HasChange("self_service_portal") {
+			input.SelfServicePortal = aws.String(d.Get("self_service_portal").(string))
+		}
+
+		if d.HasChange("session_timeout_hours") {
+			input.SessionTimeoutHours = aws.Int64(d.Get("session_timeout_hours").(int64))
+		}
+
+		if d.HasChange("server_certificate_arn") {
+			input.ServerCertificateArn = aws.String(d.Get("server_certificate_arn").(string))
+		}
+
+		if d.HasChange("split_tunnel") {
+			input.SplitTunnel = aws.Bool(d.Get("split_tunnel").(bool))
+		}
+
+		if d.HasChange("connection_log_options") {
+			if v, ok := d.GetOk("connection_log_options"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+				input.ConnectionLogOptions = expandConnectionLogOptions(v.([]interface{})[0].(map[string]interface{}))
+			}
+		}
+
+		if _, err := conn.ModifyClientVpnEndpoint(input); err != nil {
+			return fmt.Errorf("error modifying EC2 Client VPN Endpoint (%s): %w", d.Id(), err)
+		}
 	}
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
+
 		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
 			return fmt.Errorf("error updating EC2 Client VPN Endpoint (%s) tags: %w", d.Id(), err)
 		}
@@ -453,6 +414,56 @@ func expandClientVpnAuthenticationRequests(tfList []interface{}) []*ec2.ClientVp
 	return apiObjects
 }
 
+func flattenClientVpnAuthentication(apiObject *ec2.ClientVpnAuthentication) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.Type; v != nil {
+		tfMap["type"] = aws.StringValue(v)
+	}
+
+	if apiObject.MutualAuthentication != nil {
+		if v := apiObject.MutualAuthentication.ClientRootCertificateChain; v != nil {
+			tfMap["root_certificate_chain_arn"] = aws.StringValue(v)
+		}
+	} else if apiObject.ActiveDirectory != nil {
+		if v := apiObject.ActiveDirectory.DirectoryId; v != nil {
+			tfMap["active_directory_id"] = aws.StringValue(v)
+		}
+	} else if apiObject.FederatedAuthentication != nil {
+		if v := apiObject.FederatedAuthentication.SamlProviderArn; v != nil {
+			tfMap["saml_provider_arn"] = aws.StringValue(v)
+		}
+
+		if v := apiObject.FederatedAuthentication.SelfServiceSamlProviderArn; v != nil {
+			tfMap["self_service_saml_provider_arn"] = aws.StringValue(v)
+		}
+	}
+
+	return tfMap
+}
+
+func flattenClientVpnAuthentications(apiObjects []*ec2.ClientVpnAuthentication) []interface{} {
+	if len(apiObjects) == 0 {
+		return nil
+	}
+
+	var tfList []interface{}
+
+	for _, apiObject := range apiObjects {
+		if apiObject == nil {
+			continue
+		}
+
+		tfList = append(tfList, flattenClientVpnAuthentication(apiObject))
+	}
+
+	return tfList
+}
+
 func expandConnectionLogOptions(tfMap map[string]interface{}) *ec2.ConnectionLogOptions {
 	if tfMap == nil {
 		return nil
@@ -480,35 +491,24 @@ func expandConnectionLogOptions(tfMap map[string]interface{}) *ec2.ConnectionLog
 	return apiObject
 }
 
-func flattenConnLoggingConfig(lopts *ec2.ConnectionLogResponseOptions) []map[string]interface{} {
-	m := make(map[string]interface{})
-	if lopts.CloudwatchLogGroup != nil {
-		m["cloudwatch_log_group"] = *lopts.CloudwatchLogGroup
+func flattenConnectionLogResponseOptions(apiObject *ec2.ConnectionLogResponseOptions) map[string]interface{} {
+	if apiObject == nil {
+		return nil
 	}
-	if lopts.CloudwatchLogStream != nil {
-		m["cloudwatch_log_stream"] = *lopts.CloudwatchLogStream
-	}
-	m["enabled"] = *lopts.Enabled
-	return []map[string]interface{}{m}
-}
 
-func flattenAuthOptsConfig(aopts []*ec2.ClientVpnAuthentication) []map[string]interface{} {
-	result := make([]map[string]interface{}, 0, len(aopts))
-	for _, aopt := range aopts {
-		r := map[string]interface{}{
-			"type": aws.StringValue(aopt.Type),
-		}
-		if aopt.MutualAuthentication != nil {
-			r["root_certificate_chain_arn"] = aws.StringValue(aopt.MutualAuthentication.ClientRootCertificateChain)
-		}
-		if aopt.FederatedAuthentication != nil {
-			r["saml_provider_arn"] = aws.StringValue(aopt.FederatedAuthentication.SamlProviderArn)
-			r["self_service_saml_provider_arn"] = aws.StringValue(aopt.FederatedAuthentication.SelfServiceSamlProviderArn)
-		}
-		if aopt.ActiveDirectory != nil {
-			r["active_directory_id"] = aws.StringValue(aopt.ActiveDirectory.DirectoryId)
-		}
-		result = append([]map[string]interface{}{r}, result...)
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.CloudwatchLogGroup; v != nil {
+		tfMap["cloudwatch_log_group"] = aws.StringValue(v)
 	}
-	return result
+
+	if v := apiObject.CloudwatchLogStream; v != nil {
+		tfMap["cloudwatch_log_stream"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.Enabled; v != nil {
+		tfMap["enabled"] = aws.BoolValue(v)
+	}
+
+	return tfMap
 }
