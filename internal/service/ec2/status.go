@@ -89,7 +89,7 @@ func StatusClientVPNEndpoint(conn *ec2.EC2, endpointID string) resource.StateRef
 		result, err := conn.DescribeClientVpnEndpoints(&ec2.DescribeClientVpnEndpointsInput{
 			ClientVpnEndpointIds: aws.StringSlice([]string{endpointID}),
 		})
-		if tfawserr.ErrCodeEquals(err, ErrCodeClientVpnEndpointIdNotFound) {
+		if tfawserr.ErrCodeEquals(err, ErrCodeInvalidClientVpnEndpointIdNotFound) {
 			return nil, ClientVPNEndpointStatusNotFound, nil
 		}
 		if err != nil {
@@ -119,7 +119,7 @@ const (
 func StatusClientVPNAuthorizationRule(conn *ec2.EC2, authorizationRuleID string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		result, err := FindClientVPNAuthorizationRuleByID(conn, authorizationRuleID)
-		if tfawserr.ErrCodeEquals(err, ErrCodeClientVpnAuthorizationRuleNotFound) {
+		if tfawserr.ErrCodeEquals(err, ErrCodeInvalidClientVpnAuthorizationRuleNotFound) {
 			return nil, ClientVPNAuthorizationRuleStatusNotFound, nil
 		}
 		if err != nil {
@@ -156,7 +156,7 @@ func StatusClientVPNNetworkAssociation(conn *ec2.EC2, cvnaID string, cvepID stri
 			AssociationIds:      []*string{aws.String(cvnaID)},
 		})
 
-		if tfawserr.ErrCodeEquals(err, ErrCodeClientVpnAssociationIdNotFound) || tfawserr.ErrCodeEquals(err, ErrCodeClientVpnEndpointIdNotFound) {
+		if tfawserr.ErrCodeEquals(err, ErrCodeInvalidClientVpnAssociationIdNotFound) || tfawserr.ErrCodeEquals(err, ErrCodeInvalidClientVpnEndpointIdNotFound) {
 			return nil, ClientVPNNetworkAssociationStatusNotFound, nil
 		}
 		if err != nil {
@@ -186,7 +186,7 @@ const (
 func StatusClientVPNRoute(conn *ec2.EC2, routeID string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		result, err := FindClientVPNRouteByID(conn, routeID)
-		if tfawserr.ErrCodeEquals(err, ErrCodeClientVpnRouteNotFound) {
+		if tfawserr.ErrCodeEquals(err, ErrCodeInvalidClientVpnRouteNotFound) {
 			return nil, ClientVPNRouteStatusNotFound, nil
 		}
 		if err != nil {
