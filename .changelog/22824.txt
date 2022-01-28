@@ -1,0 +1,11 @@
+```release-note:enhancement
+resource/aws_s3_bucket_object: Rename resource to `aws_s3_object`
+```
+
+```release-note:enhancement
+data-source/aws_s3_bucket_object: Rename data source to `aws_s3_object`
+```
+
+```release-note:enhancement
+data-source/aws_s3_bucket_objects: Rename data source to `aws_s3_objects`
+```
