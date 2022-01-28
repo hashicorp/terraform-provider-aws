@@ -20,6 +20,7 @@ func ResourceRoutingProfile() *schema.Resource {
 	return &schema.Resource{
 		CreateContext: resourceRoutingProfileCreate,
 		ReadContext:   resourceRoutingProfileRead,
+		UpdateContext: resourceRoutingProfileUpdate,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -218,6 +219,93 @@ func resourceRoutingProfileRead(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	return nil
+}
+
+func resourceRoutingProfileUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.AWSClient).ConnectConn
+
+	instanceID, routingProfileID, err := RoutingProfileParseID(d.Id())
+
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	// RoutingProfile has 4 update APIs
+	// UpdateRoutingProfileConcurrency: Updates the channels that agents can handle in the Contact Control Panel (CCP) for a routing profile.
+	// UpdateRoutingProfileDefaultOutboundQueue: Updates the default outbound queue of a routing profile.
+	// UpdateRoutingProfileName: Updates the name and description of a routing profile.
+	// UpdateRoutingProfileQueues: Updates the properties associated with a set of queues for a routing profile.
+
+	// updates to concurrency
+	inputConcurrency := &connect.UpdateRoutingProfileConcurrencyInput{
+		InstanceId:       aws.String(instanceID),
+		RoutingProfileId: aws.String(routingProfileID),
+	}
+
+	if d.HasChange("media_concurrencies") {
+		mediaConcurrencies := expandRoutingProfileMediaConcurrencies(d.Get("media_concurrencies").(*schema.Set).List())
+		inputConcurrency.MediaConcurrencies = mediaConcurrencies
+		_, err = conn.UpdateRoutingProfileConcurrencyWithContext(ctx, inputConcurrency)
+		if err != nil {
+			return diag.FromErr(fmt.Errorf("[ERROR] Error updating RoutingProfile Media Concurrency (%s): %w", d.Id(), err))
+		}
+	}
+
+	// updates to default outbound queue id
+	inputDefaultOutboundQueue := &connect.UpdateRoutingProfileDefaultOutboundQueueInput{
+		InstanceId:       aws.String(instanceID),
+		RoutingProfileId: aws.String(routingProfileID),
+	}
+
+	if d.HasChange("default_outbound_queue_id") {
+		inputDefaultOutboundQueue.DefaultOutboundQueueId = aws.String(d.Get("default_outbound_queue_id").(string))
+		_, err = conn.UpdateRoutingProfileDefaultOutboundQueueWithContext(ctx, inputDefaultOutboundQueue)
+
+		if err != nil {
+			return diag.FromErr(fmt.Errorf("[ERROR] Error updating RoutingProfile Default Outbound Queue ID (%s): %w", d.Id(), err))
+		}
+	}
+
+	// updates to name and/or description
+	inputNameDesc := &connect.UpdateRoutingProfileNameInput{
+		InstanceId:       aws.String(instanceID),
+		RoutingProfileId: aws.String(routingProfileID),
+	}
+
+	if d.HasChanges("name", "description") {
+		inputNameDesc.Name = aws.String(d.Get("name").(string))
+		inputNameDesc.Description = aws.String(d.Get("description").(string))
+		_, err = conn.UpdateRoutingProfileNameWithContext(ctx, inputNameDesc)
+
+		if err != nil {
+			return diag.FromErr(fmt.Errorf("[ERROR] Error updating RoutingProfile Name (%s): %w", d.Id(), err))
+		}
+	}
+
+	// updates to queue configs
+	inputQueueConfig := &connect.UpdateRoutingProfileQueuesInput{
+		InstanceId:       aws.String(instanceID),
+		RoutingProfileId: aws.String(routingProfileID),
+	}
+
+	if d.HasChange("queue_configs") {
+		queueConfigs := expandRoutingProfileQueueConfigs(d.Get("queue_configs").(*schema.Set).List())
+		inputQueueConfig.QueueConfigs = queueConfigs
+		_, err = conn.UpdateRoutingProfileQueuesWithContext(ctx, inputQueueConfig)
+		if err != nil {
+			return diag.FromErr(fmt.Errorf("[ERROR] Error updating RoutingProfile Queue Configs (%s): %w", d.Id(), err))
+		}
+	}
+
+	// updates to tags
+	if d.HasChange("tags_all") {
+		o, n := d.GetChange("tags_all")
+		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
+			return diag.FromErr(fmt.Errorf("error updating tags: %w", err))
+		}
+	}
+
+	return resourceRoutingProfileRead(ctx, d, meta)
 }
 
 func expandRoutingProfileMediaConcurrencies(mediaConcurrencies []interface{}) []*connect.MediaConcurrency {
