@@ -437,8 +437,10 @@ func FindMainRouteTableAssociationByVPCID(conn *ec2.EC2, vpcID string) (*ec2.Rou
 
 	for _, association := range routeTable.Associations {
 		if aws.BoolValue(association.Main) {
-			if state := aws.StringValue(association.AssociationState.State); state == ec2.RouteTableAssociationStateCodeDisassociated {
-				continue
+			if association.AssociationState != nil {
+				if state := aws.StringValue(association.AssociationState.State); state == ec2.RouteTableAssociationStateCodeDisassociated {
+					continue
+				}
 			}
 
 			return association, nil
@@ -465,8 +467,10 @@ func FindRouteTableAssociationByID(conn *ec2.EC2, associationID string) (*ec2.Ro
 
 	for _, association := range routeTable.Associations {
 		if aws.StringValue(association.RouteTableAssociationId) == associationID {
-			if state := aws.StringValue(association.AssociationState.State); state == ec2.RouteTableAssociationStateCodeDisassociated {
-				return nil, &resource.NotFoundError{Message: state}
+			if association.AssociationState != nil {
+				if state := aws.StringValue(association.AssociationState.State); state == ec2.RouteTableAssociationStateCodeDisassociated {
+					return nil, &resource.NotFoundError{Message: state}
+				}
 			}
 
 			return association, nil
