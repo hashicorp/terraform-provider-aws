@@ -220,21 +220,20 @@ func ResourceBucket() *schema.Resource {
 			},
 
 			"versioning": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Computed: true,
-				MaxItems: 1,
+				Type:       schema.TypeList,
+				Computed:   true,
+				Deprecated: "Use the aws_s3_bucket_versioning resource instead",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"enabled": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  false,
+							Type:       schema.TypeBool,
+							Computed:   true,
+							Deprecated: "Use the aws_s3_bucket_versioning resource instead",
 						},
 						"mfa_delete": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  false,
+							Type:       schema.TypeBool,
+							Computed:   true,
+							Deprecated: "Use the aws_s3_bucket_versioning resource instead",
 						},
 					},
 				},
@@ -748,23 +747,6 @@ func resourceBucketUpdate(d *schema.ResourceData, meta interface{}) error {
 		})
 		if err != nil {
 			return fmt.Errorf("error updating S3 Bucket (%s) tags: %s", d.Id(), err)
-		}
-	}
-
-	if d.HasChange("versioning") {
-		v := d.Get("versioning").([]interface{})
-
-		if d.IsNewResource() {
-			if versioning := expandVersioningWhenIsNewResource(v); versioning != nil {
-				err := resourceBucketInternalVersioningUpdate(conn, d.Id(), versioning)
-				if err != nil {
-					return err
-				}
-			}
-		} else {
-			if err := resourceBucketInternalVersioningUpdate(conn, d.Id(), expandVersioning(v)); err != nil {
-				return err
-			}
 		}
 	}
 
@@ -1369,23 +1351,6 @@ func resourceBucketACLUpdate(conn *s3.S3, d *schema.ResourceData) error {
 	})
 	if err != nil {
 		return fmt.Errorf("Error putting S3 ACL: %s", err)
-	}
-
-	return nil
-}
-
-func resourceBucketInternalVersioningUpdate(conn *s3.S3, bucket string, versioningConfig *s3.VersioningConfiguration) error {
-	input := &s3.PutBucketVersioningInput{
-		Bucket:                  aws.String(bucket),
-		VersioningConfiguration: versioningConfig,
-	}
-
-	_, err := verify.RetryOnAWSCode(s3.ErrCodeNoSuchBucket, func() (interface{}, error) {
-		return conn.PutBucketVersioning(input)
-	})
-
-	if err != nil {
-		return fmt.Errorf("error putting S3 versioning for bucket (%s): %w", bucket, err)
 	}
 
 	return nil
@@ -2232,71 +2197,6 @@ func expandS3ObjectLockConfiguration(vConf []interface{}) *s3.ObjectLockConfigur
 }
 
 // Versioning functions
-
-func expandVersioning(l []interface{}) *s3.VersioningConfiguration {
-	if len(l) == 0 || l[0] == nil {
-		return nil
-	}
-
-	tfMap, ok := l[0].(map[string]interface{})
-
-	if !ok {
-		return nil
-	}
-
-	output := &s3.VersioningConfiguration{}
-
-	if v, ok := tfMap["enabled"].(bool); ok {
-		if v {
-			output.Status = aws.String(s3.BucketVersioningStatusEnabled)
-		} else {
-			output.Status = aws.String(s3.BucketVersioningStatusSuspended)
-		}
-	}
-
-	if v, ok := tfMap["mfa_delete"].(bool); ok {
-		if v {
-			output.MFADelete = aws.String(s3.MFADeleteEnabled)
-		} else {
-			output.MFADelete = aws.String(s3.MFADeleteDisabled)
-		}
-	}
-
-	return output
-}
-
-func expandVersioningWhenIsNewResource(l []interface{}) *s3.VersioningConfiguration {
-	if len(l) == 0 || l[0] == nil {
-		return nil
-	}
-
-	tfMap, ok := l[0].(map[string]interface{})
-
-	if !ok {
-		return nil
-	}
-
-	output := &s3.VersioningConfiguration{}
-
-	// Only set and return a non-nil VersioningConfiguration with at least one of
-	// MFADelete or Status enabled as the PutBucketVersioning API request
-	// does not need to be made for new buckets that don't require versioning.
-	// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/4494
-
-	if v, ok := tfMap["enabled"].(bool); ok && v {
-		output.Status = aws.String(s3.BucketVersioningStatusEnabled)
-	}
-
-	if v, ok := tfMap["mfa_delete"].(bool); ok && v {
-		output.MFADelete = aws.String(s3.MFADeleteEnabled)
-	}
-
-	if output.MFADelete == nil && output.Status == nil {
-		return nil
-	}
-
-	return output
-}
 
 func flattenVersioning(versioning *s3.GetBucketVersioningOutput) []interface{} {
 	if versioning == nil {

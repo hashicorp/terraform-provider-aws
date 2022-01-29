@@ -51,6 +51,7 @@ func ResourceBucketVersioning() *schema.Resource {
 						"mfa_delete": {
 							Type:         schema.TypeString,
 							Optional:     true,
+							Computed:     true,
 							ValidateFunc: validation.StringInSlice(s3.MFADelete_Values(), false),
 						},
 						"status": {
@@ -197,6 +198,11 @@ func resourceBucketVersioningDelete(ctx context.Context, d *schema.ResourceData,
 	_, err = conn.PutBucketVersioningWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, s3.ErrCodeNoSuchBucket) {
+		return nil
+	}
+
+	if tfawserr.ErrMessageContains(err, ErrCodeInvalidBucketState, "An Object Lock configuration is present on this bucket, so the versioning state cannot be changed") {
+		log.Printf("[WARN] S3 bucket versioning cannot be suspended with Object Lock Configuration present on bucket (%s), removing from state", bucket)
 		return nil
 	}
 
