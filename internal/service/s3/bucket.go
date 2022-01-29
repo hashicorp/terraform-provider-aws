@@ -381,10 +381,9 @@ func ResourceBucket() *schema.Resource {
 			},
 
 			"acceleration_status": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: validation.StringInSlice(s3.BucketAccelerateStatus_Values(), false),
+				Type:       schema.TypeString,
+				Computed:   true,
+				Deprecated: "Use the aws_s3_bucket_accelerate_configuration resource instead",
 			},
 
 			"request_payer": {
@@ -804,12 +803,6 @@ func resourceBucketUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	if d.HasChange("acceleration_status") {
-		if err := resourceBucketAccelerationUpdate(conn, d); err != nil {
-			return err
-		}
-	}
-
 	if d.HasChange("replication_configuration") {
 		if err := resourceBucketInternalReplicationConfigurationUpdate(conn, d); err != nil {
 			return err
@@ -1007,9 +1000,10 @@ func resourceBucketRead(d *schema.ResourceData, meta interface{}) error {
 	})
 
 	// Amazon S3 Transfer Acceleration might not be supported in the region
-	if err != nil && !tfawserr.ErrMessageContains(err, "MethodNotAllowed", "") && !tfawserr.ErrMessageContains(err, "UnsupportedArgument", "") {
-		return fmt.Errorf("error getting S3 Bucket acceleration configuration: %s", err)
+	if err != nil && !tfawserr.ErrCodeEquals(err, ErrCodeMethodNotAllowed, ErrCodeUnsupportedArgument) {
+		return fmt.Errorf("error getting S3 Bucket acceleration configuration: %w", err)
 	}
+
 	if accelerate, ok := accelerateResponse.(*s3.GetBucketAccelerateConfigurationOutput); ok {
 		d.Set("acceleration_status", accelerate.Status)
 	}
@@ -1644,28 +1638,6 @@ func resourceBucketInternalLoggingUpdate(conn *s3.S3, d *schema.ResourceData) er
 	})
 	if err != nil {
 		return fmt.Errorf("Error putting S3 logging: %s", err)
-	}
-
-	return nil
-}
-
-func resourceBucketAccelerationUpdate(conn *s3.S3, d *schema.ResourceData) error {
-	bucket := d.Get("bucket").(string)
-	enableAcceleration := d.Get("acceleration_status").(string)
-
-	i := &s3.PutBucketAccelerateConfigurationInput{
-		Bucket: aws.String(bucket),
-		AccelerateConfiguration: &s3.AccelerateConfiguration{
-			Status: aws.String(enableAcceleration),
-		},
-	}
-	log.Printf("[DEBUG] S3 put bucket acceleration: %#v", i)
-
-	_, err := verify.RetryOnAWSCode(s3.ErrCodeNoSuchBucket, func() (interface{}, error) {
-		return conn.PutBucketAccelerateConfiguration(i)
-	})
-	if err != nil {
-		return fmt.Errorf("Error putting S3 acceleration: %s", err)
 	}
 
 	return nil

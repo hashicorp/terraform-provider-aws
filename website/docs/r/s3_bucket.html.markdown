@@ -358,15 +358,9 @@ The following arguments are supported:
 * `versioning` - (Optional) A state of [versioning](https://docs.aws.amazon.com/AmazonS3/latest/dev/Versioning.html) (documented below)
 * `logging` - (Optional) A settings of [bucket logging](https://docs.aws.amazon.com/AmazonS3/latest/UG/ManagingBucketLogging.html) (documented below).
 * `lifecycle_rule` - (Optional) A configuration of [object lifecycle management](http://docs.aws.amazon.com/AmazonS3/latest/dev/object-lifecycle-mgmt.html) (documented below).
-* `acceleration_status` - (Optional) Sets the accelerate configuration of an existing bucket. Can be `Enabled` or `Suspended`.
-Can be either `BucketOwner` or `Requester`. By default, the owner of the S3 bucket would incur
-the costs of any data transfer. See [Requester Pays Buckets](http://docs.aws.amazon.com/AmazonS3/latest/dev/RequesterPaysBuckets.html)
-developer guide for more information.
 * `replication_configuration` - (Optional) A configuration of [replication configuration](http://docs.aws.amazon.com/AmazonS3/latest/dev/crr.html) (documented below).
 * `server_side_encryption_configuration` - (Optional) A configuration of [server-side encryption configuration](http://docs.aws.amazon.com/AmazonS3/latest/dev/bucket-encryption.html) (documented below)
 * `object_lock_configuration` - (Optional) A configuration of [S3 object locking](https://docs.aws.amazon.com/AmazonS3/latest/dev/object-lock.html) (documented below)
-
-~> **NOTE:** You cannot use `acceleration_status` in `cn-north-1` or `us-gov-west-1`
 
 The `versioning` object supports the following:
 
@@ -532,6 +526,7 @@ Once you create a bucket with S3 Object Lock enabled, you can't disable Object L
 In addition to all arguments above, the following attributes are exported:
 
 * `id` - The name of the bucket.
+* `acceleration_status` - (Optional) The accelerate configuration status of the bucket. Not available in `cn-north-1` or `us-gov-west-1`.
 * `arn` - The ARN of the bucket. Will be of format `arn:aws:s3:::bucketname`.
 * `bucket_domain_name` - The bucket domain name. Will be of format `bucketname.s3.amazonaws.com`.
 * `bucket_regional_domain_name` - The bucket region-specific domain name. The bucket domain name including the region name, please refer [here](https://docs.aws.amazon.com/general/latest/gr/rande.html#s3_region) for format. Note: The AWS CloudFront allows specifying S3 region-specific endpoint when creating S3 origin, it will prevent [redirect issues](https://forums.aws.amazon.com/thread.jspa?threadID=216814) from CloudFront to S3 Origin URL.
