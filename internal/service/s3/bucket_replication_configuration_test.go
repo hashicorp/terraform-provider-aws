@@ -978,10 +978,6 @@ resource "aws_s3_bucket" "destination" {
   versioning {
     enabled = true
   }
-
-  lifecycle {
-    ignore_changes = [replication_configuration]
-  }
 }
 
 resource "aws_s3_bucket" "source" {
@@ -989,10 +985,6 @@ resource "aws_s3_bucket" "source" {
 
   versioning {
     enabled = true
-  }
-
-  lifecycle {
-    ignore_changes = [replication_configuration]
   }
 }`, rName)
 }
@@ -1090,9 +1082,6 @@ resource "aws_s3_bucket" "destination2" {
   versioning {
     enabled = true
   }
-  lifecycle {
-    ignore_changes = [replication_configuration]
-  }
 }
 
 resource "aws_s3_bucket" "destination3" {
@@ -1101,9 +1090,6 @@ resource "aws_s3_bucket" "destination3" {
 
   versioning {
     enabled = true
-  }
-  lifecycle {
-    ignore_changes = [replication_configuration]
   }
 }
 
@@ -1176,9 +1162,6 @@ resource "aws_s3_bucket" "destination2" {
   versioning {
     enabled = true
   }
-  lifecycle {
-    ignore_changes = [replication_configuration]
-  }
 }
 
 resource "aws_s3_bucket" "destination3" {
@@ -1187,9 +1170,6 @@ resource "aws_s3_bucket" "destination3" {
 
   versioning {
     enabled = true
-  }
-  lifecycle {
-    ignore_changes = [replication_configuration]
   }
 }
 
@@ -1248,9 +1228,6 @@ resource "aws_s3_bucket" "destination2" {
 
   versioning {
     enabled = true
-  }
-  lifecycle {
-    ignore_changes = [replication_configuration]
   }
 }
 
@@ -1495,10 +1472,6 @@ resource "aws_s3_bucket" "destination" {
   versioning {
     enabled = true
   }
-
-  lifecycle {
-    ignore_changes = [replication_configuration]
-  }
 }
 
 resource "aws_s3_bucket" "source" {
@@ -1507,10 +1480,6 @@ resource "aws_s3_bucket" "source" {
 
   versioning {
     enabled = true
-  }
-
-  lifecycle {
-    ignore_changes = [replication_configuration]
   }
 }
 
@@ -1568,10 +1537,6 @@ resource "aws_s3_bucket" "destination" {
   versioning {
     enabled = true
   }
-
-  lifecycle {
-    ignore_changes = [replication_configuration]
-  }
 }
 
 resource "aws_s3_bucket" "source" {
@@ -1580,10 +1545,6 @@ resource "aws_s3_bucket" "source" {
 
   versioning {
     enabled = true
-  }
-
-  lifecycle {
-    ignore_changes = [replication_configuration]
   }
 }
 
