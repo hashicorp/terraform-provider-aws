@@ -1,0 +1,3 @@
+```release-note:note
+resource/aws_s3_bucket: The `cors_rule` argument has been deprecated and is now read-only. Use the `aws_s3_bucket_cors_configuration` resource instead.
+```
