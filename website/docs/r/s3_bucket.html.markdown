@@ -152,25 +152,8 @@ See the [`aws_s3_bucket_replication_configuration` resource](s3_bucket_replicati
 
 ### Enable Default Server Side Encryption
 
-```terraform
-resource "aws_kms_key" "mykey" {
-  description             = "This key is used to encrypt objects"
-  deletion_window_in_days = 10
-}
-
-resource "aws_s3_bucket" "mybucket" {
-  bucket = "mybucket"
-
-  server_side_encryption_configuration {
-    rule {
-      apply_server_side_encryption_by_default {
-        kms_master_key_id = aws_kms_key.mykey.arn
-        sse_algorithm     = "aws:kms"
-      }
-    }
-  }
-}
-```
+The `server_side_encryption_configuration` argument is read-only as of version 4.0.
+See the [`aws_s3_bucket_server_side_encryption_configuration` resource](s3_bucket_server_side_encryption_configuration.html.markdown) for configuration details.
 
 ### Using ACL policy grants
 
@@ -208,7 +191,6 @@ The following arguments are supported:
 * `force_destroy` - (Optional, Default:`false`) A boolean that indicates all objects (including any [locked objects](https://docs.aws.amazon.com/AmazonS3/latest/dev/object-lock-overview.html)) should be deleted from the bucket so that the bucket can be destroyed without error. These objects are *not* recoverable.
 * `versioning` - (Optional) A state of [versioning](https://docs.aws.amazon.com/AmazonS3/latest/dev/Versioning.html) (documented below)
 * `lifecycle_rule` - (Optional) A configuration of [object lifecycle management](http://docs.aws.amazon.com/AmazonS3/latest/dev/object-lifecycle-mgmt.html) (documented below).
-* `server_side_encryption_configuration` - (Optional) A configuration of [server-side encryption configuration](http://docs.aws.amazon.com/AmazonS3/latest/dev/bucket-encryption.html) (documented below)
 * `object_lock_configuration` - (Optional) A configuration of [S3 object locking](https://docs.aws.amazon.com/AmazonS3/latest/dev/object-lock.html) (documented below)
 
 The `versioning` object supports the following:
@@ -250,20 +232,6 @@ The `noncurrent_version_transition` object supports the following
 
 * `days` (Required) Specifies the number of days noncurrent object versions transition.
 * `storage_class` (Required) Specifies the Amazon S3 [storage class](https://docs.aws.amazon.com/AmazonS3/latest/API/API_Transition.html#AmazonS3-Type-Transition-StorageClass) to which you want the object to transition.
-
-The `server_side_encryption_configuration` object supports the following:
-
-* `rule` - (required) A single object for server-side encryption by default configuration. (documented below)
-
-The `rule` object supports the following:
-
-* `apply_server_side_encryption_by_default` - (required) A single object for setting server-side encryption by default. (documented below)
-* `bucket_key_enabled` - (Optional) Whether or not to use [Amazon S3 Bucket Keys](https://docs.aws.amazon.com/AmazonS3/latest/dev/bucket-key.html) for SSE-KMS.
-
-The `apply_server_side_encryption_by_default` object supports the following:
-
-* `sse_algorithm` - (required) The server-side encryption algorithm to use. Valid values are `AES256` and `aws:kms`
-* `kms_master_key_id` - (optional) The AWS KMS master key ID used for the SSE-KMS encryption. This can only be used when you set the value of `sse_algorithm` as `aws:kms`. The default `aws/s3` AWS KMS master key is used if this element is absent while the `sse_algorithm` is `aws:kms`.
 
 The `grant` object supports the following:
 
@@ -341,6 +309,12 @@ In addition to all arguments above, the following attributes are exported:
                 * `enabled` - Whether this criteria is enabled.
         * `status` - The status of the rule.
 * `request_payer` - Either `BucketOwner` or `Requester` that pays for the download and request fees.
+* `server_side_encryption_configuration` - The [server-side encryption configuration](http://docs.aws.amazon.com/AmazonS3/latest/dev/bucket-encryption.html).
+    * `rule` - (required) Information about a particular server-side encryption configuration rule.
+        * `apply_server_side_encryption_by_default` - The default server-side encryption applied to new objects in the bucket.
+            * `kms_master_key_id` - (optional) The AWS KMS master key ID used for the SSE-KMS encryption.
+            * `sse_algorithm` - (required) The server-side encryption algorithm used.
+        * `bucket_key_enabled` - (Optional) Whether an [Amazon S3 Bucket Key](https://docs.aws.amazon.com/AmazonS3/latest/dev/bucket-key.html) is used for SSE-KMS.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
 * `website` - The website configuration, if configured.
     * `error_document` - The name of the error document for the website.
