@@ -244,26 +244,22 @@ func ResourceBucket() *schema.Resource {
 
 			"logging": {
 				Type:     schema.TypeSet,
-				Optional: true,
+				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"target_bucket": {
-							Type:     schema.TypeString,
-							Required: true,
+							Type:       schema.TypeString,
+							Computed:   true,
+							Deprecated: "Use the aws_s3_bucket_logging resource instead",
 						},
 						"target_prefix": {
-							Type:     schema.TypeString,
-							Optional: true,
+							Type:       schema.TypeString,
+							Computed:   true,
+							Deprecated: "Use the aws_s3_bucket_logging resource instead",
 						},
 					},
 				},
-				Set: func(v interface{}) int {
-					var buf bytes.Buffer
-					m := v.(map[string]interface{})
-					buf.WriteString(fmt.Sprintf("%s-", m["target_bucket"]))
-					buf.WriteString(fmt.Sprintf("%s-", m["target_prefix"]))
-					return create.StringHashcode(buf.String())
-				},
+				Deprecated: "Use the aws_s3_bucket_logging resource instead",
 			},
 
 			"lifecycle_rule": {
@@ -791,12 +787,6 @@ func resourceBucketUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	if d.HasChange("logging") {
-		if err := resourceBucketInternalLoggingUpdate(conn, d); err != nil {
-			return err
-		}
-	}
-
 	if d.HasChange("lifecycle_rule") {
 		if err := resourceBucketLifecycleUpdate(conn, d); err != nil {
 			return err
@@ -1024,7 +1014,7 @@ func resourceBucketRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("request_payer", payer.Payer)
 	}
 
-	// Read the logging configuration
+	// Read the logging configuration if configured outside this resource
 	loggingResponse, err := verify.RetryOnAWSCode(s3.ErrCodeNoSuchBucket, func() (interface{}, error) {
 		return conn.GetBucketLogging(&s3.GetBucketLoggingInput{
 			Bucket: aws.String(d.Id()),
@@ -1035,20 +1025,10 @@ func resourceBucketRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error getting S3 Bucket logging: %s", err)
 	}
 
-	lcl := make([]map[string]interface{}, 0, 1)
-	if logging, ok := loggingResponse.(*s3.GetBucketLoggingOutput); ok && logging.LoggingEnabled != nil {
-		v := logging.LoggingEnabled
-		lc := make(map[string]interface{})
-		if aws.StringValue(v.TargetBucket) != "" {
-			lc["target_bucket"] = aws.StringValue(v.TargetBucket)
+	if logging, ok := loggingResponse.(*s3.GetBucketLoggingOutput); ok {
+		if err := d.Set("logging", flattenBucketLoggingEnabled(logging.LoggingEnabled)); err != nil {
+			return fmt.Errorf("error setting logging: %s", err)
 		}
-		if aws.StringValue(v.TargetPrefix) != "" {
-			lc["target_prefix"] = aws.StringValue(v.TargetPrefix)
-		}
-		lcl = append(lcl, lc)
-	}
-	if err := d.Set("logging", lcl); err != nil {
-		return fmt.Errorf("error setting logging: %s", err)
 	}
 
 	// Read the lifecycle configuration
@@ -1608,41 +1588,6 @@ func resourceBucketInternalVersioningUpdate(conn *s3.S3, bucket string, versioni
 	return nil
 }
 
-func resourceBucketInternalLoggingUpdate(conn *s3.S3, d *schema.ResourceData) error {
-	logging := d.Get("logging").(*schema.Set).List()
-	bucket := d.Get("bucket").(string)
-	loggingStatus := &s3.BucketLoggingStatus{}
-
-	if len(logging) > 0 {
-		c := logging[0].(map[string]interface{})
-
-		loggingEnabled := &s3.LoggingEnabled{}
-		if val, ok := c["target_bucket"]; ok {
-			loggingEnabled.TargetBucket = aws.String(val.(string))
-		}
-		if val, ok := c["target_prefix"]; ok {
-			loggingEnabled.TargetPrefix = aws.String(val.(string))
-		}
-
-		loggingStatus.LoggingEnabled = loggingEnabled
-	}
-
-	i := &s3.PutBucketLoggingInput{
-		Bucket:              aws.String(bucket),
-		BucketLoggingStatus: loggingStatus,
-	}
-	log.Printf("[DEBUG] S3 put bucket logging: %#v", i)
-
-	_, err := verify.RetryOnAWSCode(s3.ErrCodeNoSuchBucket, func() (interface{}, error) {
-		return conn.PutBucketLogging(i)
-	})
-	if err != nil {
-		return fmt.Errorf("Error putting S3 logging: %s", err)
-	}
-
-	return nil
-}
-
 func resourceBucketInternalServerSideEncryptionConfigurationUpdate(conn *s3.S3, d *schema.ResourceData) error {
 	bucket := d.Get("bucket").(string)
 	serverSideEncryptionConfiguration := d.Get("server_side_encryption_configuration").([]interface{})
@@ -2065,6 +2010,23 @@ func resourceBucketLifecycleUpdate(conn *s3.S3, d *schema.ResourceData) error {
 	}
 
 	return nil
+}
+
+func flattenBucketLoggingEnabled(loggingEnabled *s3.LoggingEnabled) []interface{} {
+	if loggingEnabled == nil {
+		return []interface{}{}
+	}
+
+	m := make(map[string]interface{})
+
+	if loggingEnabled.TargetBucket != nil {
+		m["target_bucket"] = aws.StringValue(loggingEnabled.TargetBucket)
+	}
+	if loggingEnabled.TargetPrefix != nil {
+		m["target_prefix"] = aws.StringValue(loggingEnabled.TargetPrefix)
+	}
+
+	return []interface{}{m}
 }
 
 func flattenServerSideEncryptionConfiguration(c *s3.ServerSideEncryptionConfiguration) []map[string]interface{} {
