@@ -399,7 +399,6 @@ const (
 	GlobalAccelerator             = "globalaccelerator"
 	Glue                          = "glue"
 	GlueDataBrew                  = "gluedatabrew"
-	Grafana                       = "managedgrafana"
 	Greengrass                    = "greengrass"
 	GreengrassV2                  = "greengrassv2"
 	GroundStation                 = "groundstation"
@@ -453,6 +452,7 @@ const (
 	Macie                         = "macie"
 	Macie2                        = "macie2"
 	ManagedBlockchain             = "managedblockchain"
+	ManagedGrafana                = "managedgrafana"
 	MarketplaceCatalog            = "marketplacecatalog"
 	MarketplaceCommerceAnalytics  = "marketplacecommerceanalytics"
 	MarketplaceEntitlement        = "marketplaceentitlement"
@@ -687,7 +687,6 @@ func init() {
 	serviceData[GlobalAccelerator] = &ServiceDatum{AWSClientName: "GlobalAccelerator", AWSServiceName: globalaccelerator.ServiceName, AWSEndpointsID: globalaccelerator.EndpointsID, AWSServiceID: globalaccelerator.ServiceID, ProviderNameUpper: "GlobalAccelerator", HCLKeys: []string{"globalaccelerator"}}
 	serviceData[Glue] = &ServiceDatum{AWSClientName: "Glue", AWSServiceName: glue.ServiceName, AWSEndpointsID: glue.EndpointsID, AWSServiceID: glue.ServiceID, ProviderNameUpper: "Glue", HCLKeys: []string{"glue"}}
 	serviceData[GlueDataBrew] = &ServiceDatum{AWSClientName: "GlueDataBrew", AWSServiceName: gluedatabrew.ServiceName, AWSEndpointsID: gluedatabrew.EndpointsID, AWSServiceID: gluedatabrew.ServiceID, ProviderNameUpper: "GlueDataBrew", HCLKeys: []string{"gluedatabrew"}}
-	serviceData[Grafana] = &ServiceDatum{AWSClientName: "ManagedGrafana", AWSServiceName: managedgrafana.ServiceName, AWSEndpointsID: managedgrafana.EndpointsID, AWSServiceID: managedgrafana.ServiceID, ProviderNameUpper: "Grafana", HCLKeys: []string{"grafana"}}
 	serviceData[Greengrass] = &ServiceDatum{AWSClientName: "Greengrass", AWSServiceName: greengrass.ServiceName, AWSEndpointsID: greengrass.EndpointsID, AWSServiceID: greengrass.ServiceID, ProviderNameUpper: "Greengrass", HCLKeys: []string{"greengrass"}}
 	serviceData[GreengrassV2] = &ServiceDatum{AWSClientName: "GreengrassV2", AWSServiceName: greengrassv2.ServiceName, AWSEndpointsID: greengrassv2.EndpointsID, AWSServiceID: greengrassv2.ServiceID, ProviderNameUpper: "GreengrassV2", HCLKeys: []string{"greengrassv2"}}
 	serviceData[GroundStation] = &ServiceDatum{AWSClientName: "GroundStation", AWSServiceName: groundstation.ServiceName, AWSEndpointsID: groundstation.EndpointsID, AWSServiceID: groundstation.ServiceID, ProviderNameUpper: "GroundStation", HCLKeys: []string{"groundstation"}}
@@ -740,6 +739,7 @@ func init() {
 	serviceData[Macie] = &ServiceDatum{AWSClientName: "Macie", AWSServiceName: macie.ServiceName, AWSEndpointsID: macie.EndpointsID, AWSServiceID: macie.ServiceID, ProviderNameUpper: "Macie", HCLKeys: []string{"macie"}}
 	serviceData[Macie2] = &ServiceDatum{AWSClientName: "Macie2", AWSServiceName: macie2.ServiceName, AWSEndpointsID: macie2.EndpointsID, AWSServiceID: macie2.ServiceID, ProviderNameUpper: "Macie2", HCLKeys: []string{"macie2"}}
 	serviceData[ManagedBlockchain] = &ServiceDatum{AWSClientName: "ManagedBlockchain", AWSServiceName: managedblockchain.ServiceName, AWSEndpointsID: managedblockchain.EndpointsID, AWSServiceID: managedblockchain.ServiceID, ProviderNameUpper: "ManagedBlockchain", HCLKeys: []string{"managedblockchain"}}
+	serviceData[ManagedGrafana] = &ServiceDatum{AWSClientName: "ManagedGrafana", AWSServiceName: managedgrafana.ServiceName, AWSEndpointsID: managedgrafana.EndpointsID, AWSServiceID: managedgrafana.ServiceID, ProviderNameUpper: "ManagedGrafana", HCLKeys: []string{"managedgrafana"}}
 	serviceData[MarketplaceCatalog] = &ServiceDatum{AWSClientName: "MarketplaceCatalog", AWSServiceName: marketplacecatalog.ServiceName, AWSEndpointsID: marketplacecatalog.EndpointsID, AWSServiceID: marketplacecatalog.ServiceID, ProviderNameUpper: "MarketplaceCatalog", HCLKeys: []string{"marketplacecatalog"}}
 	serviceData[MarketplaceCommerceAnalytics] = &ServiceDatum{AWSClientName: "MarketplaceCommerceAnalytics", AWSServiceName: marketplacecommerceanalytics.ServiceName, AWSEndpointsID: marketplacecommerceanalytics.EndpointsID, AWSServiceID: marketplacecommerceanalytics.ServiceID, ProviderNameUpper: "MarketplaceCommerceAnalytics", HCLKeys: []string{"marketplacecommerceanalytics"}}
 	serviceData[MarketplaceEntitlement] = &ServiceDatum{AWSClientName: "MarketplaceEntitlementService", AWSServiceName: marketplaceentitlementservice.ServiceName, AWSEndpointsID: marketplaceentitlementservice.EndpointsID, AWSServiceID: marketplaceentitlementservice.ServiceID, ProviderNameUpper: "MarketplaceEntitlement", HCLKeys: []string{"marketplaceentitlement", "marketplaceentitlementservice"}}
