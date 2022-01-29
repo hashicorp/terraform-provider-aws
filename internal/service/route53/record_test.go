@@ -571,6 +571,9 @@ func TestAccRoute53Record_Alias_elb(t *testing.T) {
 }
 
 func TestAccRoute53Record_Alias_s3(t *testing.T) {
+	// TODO: remove skip once aws_s3_bucket_website_configuration resource is available in the provider
+	t.Skipf("skipping acceptance testing: aws_s3_bucket 'website' is read-only, migrate configuration to aws_s3_bucket_website_configuration")
+
 	var record1 route53.ResourceRecordSet
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_route53_record.alias"

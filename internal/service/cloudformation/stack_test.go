@@ -299,6 +299,9 @@ func TestAccCloudFormationStack_withParams(t *testing.T) {
 
 // Regression for https://github.com/hashicorp/terraform/issues/4534
 func TestAccCloudFormationStack_WithURL_withParams(t *testing.T) {
+	// TODO: remove skip once aws_s3_bucket_website_configuration resource is available in the provider
+	t.Skipf("skipping acceptance testing: aws_s3_bucket 'website' is read-only, migrate configuration to aws_s3_bucket_website_configuration")
+
 	var stack cloudformation.Stack
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cloudformation_stack.test"
@@ -332,6 +335,9 @@ func TestAccCloudFormationStack_WithURL_withParams(t *testing.T) {
 }
 
 func TestAccCloudFormationStack_WithURLWithParams_withYAML(t *testing.T) {
+	// TODO: remove skip once aws_s3_bucket_website_configuration resource is available in the provider
+	t.Skipf("skipping acceptance testing: aws_s3_bucket 'website' is read-only, migrate configuration to aws_s3_bucket_website_configuration")
+
 	var stack cloudformation.Stack
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cloudformation_stack.test"
@@ -360,6 +366,9 @@ func TestAccCloudFormationStack_WithURLWithParams_withYAML(t *testing.T) {
 
 // Test for https://github.com/hashicorp/terraform/issues/5653
 func TestAccCloudFormationStack_WithURLWithParams_noUpdate(t *testing.T) {
+	// TODO: remove skip once aws_s3_bucket_website_configuration resource is available in the provider
+	t.Skipf("skipping acceptance testing: aws_s3_bucket 'website' is read-only, migrate configuration to aws_s3_bucket_website_configuration")
+
 	var stack cloudformation.Stack
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cloudformation_stack.test"
