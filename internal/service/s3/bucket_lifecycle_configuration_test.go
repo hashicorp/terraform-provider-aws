@@ -532,12 +532,6 @@ func testAccBucketLifecycleConfigurationBasicConfig(rName string) string {
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
   acl    = "private"
-
-  lifecycle {
-    ignore_changes = [
-      lifecycle_rule
-    ]
-  }
 }
 
 resource "aws_s3_bucket_lifecycle_configuration" "test" {
@@ -562,12 +556,6 @@ func testAccBucketLifecycleConfiguration_Basic_StatusConfig(rName, status string
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
   acl    = "private"
-
-  lifecycle {
-    ignore_changes = [
-      lifecycle_rule
-    ]
-  }
 }
 
 resource "aws_s3_bucket_lifecycle_configuration" "test" {
@@ -592,12 +580,6 @@ func testAccBucketLifecycleConfiguration_Basic_UpdateConfig(rName, date, prefix 
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
   acl    = "private"
-
-  lifecycle {
-    ignore_changes = [
-      lifecycle_rule
-    ]
-  }
 }
 
 resource "aws_s3_bucket_lifecycle_configuration" "test" {
@@ -624,12 +606,6 @@ func testAccBucketLifecycleConfiguration_Basic_PrefixConfig(rName, prefix string
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
   acl    = "private"
-
-  lifecycle {
-    ignore_changes = [
-      lifecycle_rule
-    ]
-  }
 }
 
 resource "aws_s3_bucket_lifecycle_configuration" "test" {
@@ -654,12 +630,6 @@ func testAccBucketLifecycleConfiguration_RuleExpiration_ExpiredDeleteMarkerConfi
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
   acl    = "private"
-
-  lifecycle {
-    ignore_changes = [
-      lifecycle_rule
-    ]
-  }
 }
 
 resource "aws_s3_bucket_lifecycle_configuration" "test" {
@@ -685,12 +655,6 @@ func testAccBucketLifecycleConfiguration_RuleExpiration_EmptyConfigurationBlockC
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
   acl    = "private"
-
-  lifecycle {
-    ignore_changes = [
-      lifecycle_rule
-    ]
-  }
 }
 
 resource "aws_s3_bucket_lifecycle_configuration" "test" {
@@ -714,12 +678,6 @@ func testAccBucketLifecycleConfiguration_RuleAbortIncompleteMultipartUploadConfi
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
   acl    = "private"
-
-  lifecycle {
-    ignore_changes = [
-      lifecycle_rule
-    ]
-  }
 }
 
 resource "aws_s3_bucket_lifecycle_configuration" "test" {
@@ -745,12 +703,6 @@ func testAccBucketLifecycleConfiguration_MultipleRulesConfig(rName, date string)
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
   acl    = "private"
-
-  lifecycle {
-    ignore_changes = [
-      lifecycle_rule
-    ]
-  }
 }
 
 resource "aws_s3_bucket_lifecycle_configuration" "test" {
@@ -809,12 +761,6 @@ func testAccBucketLifecycleConfiguration_NonCurrentVersionExpirationConfig(rName
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
   acl    = "private"
-
-  lifecycle {
-    ignore_changes = [
-      lifecycle_rule
-    ]
-  }
 }
 
 resource "aws_s3_bucket_lifecycle_configuration" "test" {
@@ -843,12 +789,6 @@ func testAccBucketLifecycleConfiguration_NonCurrentVersionTransitionConfig(rName
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
   acl    = "private"
-
-  lifecycle {
-    ignore_changes = [
-      lifecycle_rule
-    ]
-  }
 }
 
 resource "aws_s3_bucket_lifecycle_configuration" "test" {
