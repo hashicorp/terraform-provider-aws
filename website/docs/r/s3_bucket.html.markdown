@@ -39,24 +39,8 @@ See the [`aws_s3_bucket_website_configuration` resource](s3_bucket_website_confi
 
 ### Using CORS
 
-```terraform
-resource "aws_s3_bucket" "b" {
-  bucket = "s3-website-test.hashicorp.com"
-
-  cors_rule {
-    allowed_headers = ["*"]
-    allowed_methods = ["PUT", "POST"]
-    allowed_origins = ["https://s3-website-test.hashicorp.com"]
-    expose_headers  = ["ETag"]
-    max_age_seconds = 3000
-  }
-}
-
-resource "aws_s3_bucket_acl" "example" {
-  bucket = aws_s3_bucket.b.id
-  acl    = "public-read"
-}
-```
+The `cors_rule` argument is read-only as of version 4.0 of the Terraform AWS Provider.
+See the [`aws_s3_bucket_cors_configuration` resource](s3_bucket_cors_configuration.html.markdown) for configuration details.
 
 ### Using versioning
 
@@ -371,7 +355,6 @@ The following arguments are supported:
 
 * `tags` - (Optional) A map of tags to assign to the bucket. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `force_destroy` - (Optional, Default:`false`) A boolean that indicates all objects (including any [locked objects](https://docs.aws.amazon.com/AmazonS3/latest/dev/object-lock-overview.html)) should be deleted from the bucket so that the bucket can be destroyed without error. These objects are *not* recoverable.
-* `cors_rule` - (Optional) A rule of [Cross-Origin Resource Sharing](https://docs.aws.amazon.com/AmazonS3/latest/dev/cors.html) (documented below).
 * `versioning` - (Optional) A state of [versioning](https://docs.aws.amazon.com/AmazonS3/latest/dev/Versioning.html) (documented below)
 * `logging` - (Optional) A settings of [bucket logging](https://docs.aws.amazon.com/AmazonS3/latest/UG/ManagingBucketLogging.html) (documented below).
 * `lifecycle_rule` - (Optional) A configuration of [object lifecycle management](http://docs.aws.amazon.com/AmazonS3/latest/dev/object-lifecycle-mgmt.html) (documented below).
@@ -384,14 +367,6 @@ developer guide for more information.
 * `object_lock_configuration` - (Optional) A configuration of [S3 object locking](https://docs.aws.amazon.com/AmazonS3/latest/dev/object-lock.html) (documented below)
 
 ~> **NOTE:** You cannot use `acceleration_status` in `cn-north-1` or `us-gov-west-1`
-
-The `CORS` object supports the following:
-
-* `allowed_headers` (Optional) Specifies which headers are allowed.
-* `allowed_methods` (Required) Specifies which methods are allowed. Can be `GET`, `PUT`, `POST`, `DELETE` or `HEAD`.
-* `allowed_origins` (Required) Specifies which origins are allowed.
-* `expose_headers` (Optional) Specifies expose header in the response.
-* `max_age_seconds` (Optional) Specifies time in seconds that browser can cache the response for a preflight request.
 
 The `versioning` object supports the following:
 
@@ -560,6 +535,12 @@ In addition to all arguments above, the following attributes are exported:
 * `arn` - The ARN of the bucket. Will be of format `arn:aws:s3:::bucketname`.
 * `bucket_domain_name` - The bucket domain name. Will be of format `bucketname.s3.amazonaws.com`.
 * `bucket_regional_domain_name` - The bucket region-specific domain name. The bucket domain name including the region name, please refer [here](https://docs.aws.amazon.com/general/latest/gr/rande.html#s3_region) for format. Note: The AWS CloudFront allows specifying S3 region-specific endpoint when creating S3 origin, it will prevent [redirect issues](https://forums.aws.amazon.com/thread.jspa?threadID=216814) from CloudFront to S3 Origin URL.
+* `cors_rule` - Set of origins and methods ([cross-origin](https://docs.aws.amazon.com/AmazonS3/latest/dev/cors.html) access allowed).
+    * `allowed_headers` - Set of headers that are specified in the Access-Control-Request-Headers header.
+    * `allowed_methods` - Set of HTTP methods that the origin is allowed to execute.
+    * `allowed_origins` - Set of origins customers are able to access the bucket from.
+    * `expose_headers` - Set of headers in the response that customers are able to access from their applications.
+    * `max_age_seconds` The time in seconds that browser can cache the response for a preflight request.
 * `hosted_zone_id` - The [Route 53 Hosted Zone ID](https://docs.aws.amazon.com/general/latest/gr/rande.html#s3_website_region_endpoints) for this bucket's region.
 * `region` - The AWS region this bucket resides in.
 * `request_payer` - Either `BucketOwner` or `Requester` that pays for the download and request fees.

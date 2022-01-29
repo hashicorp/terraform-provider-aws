@@ -129,33 +129,39 @@ func ResourceBucket() *schema.Resource {
 			},
 
 			"cors_rule": {
-				Type:     schema.TypeList,
-				Optional: true,
+				Type:       schema.TypeList,
+				Computed:   true,
+				Deprecated: "Use the aws_s3_bucket_cors_configuration resource instead",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"allowed_headers": {
-							Type:     schema.TypeList,
-							Optional: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
+							Type:       schema.TypeList,
+							Computed:   true,
+							Deprecated: "Use the aws_s3_bucket_cors_configuration resource instead",
+							Elem:       &schema.Schema{Type: schema.TypeString},
 						},
 						"allowed_methods": {
-							Type:     schema.TypeList,
-							Required: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
+							Type:       schema.TypeList,
+							Computed:   true,
+							Deprecated: "Use the aws_s3_bucket_cors_configuration resource instead",
+							Elem:       &schema.Schema{Type: schema.TypeString},
 						},
 						"allowed_origins": {
-							Type:     schema.TypeList,
-							Required: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
+							Type:       schema.TypeList,
+							Computed:   true,
+							Deprecated: "Use the aws_s3_bucket_cors_configuration resource instead",
+							Elem:       &schema.Schema{Type: schema.TypeString},
 						},
 						"expose_headers": {
-							Type:     schema.TypeList,
-							Optional: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
+							Type:       schema.TypeList,
+							Computed:   true,
+							Deprecated: "Use the aws_s3_bucket_cors_configuration resource instead",
+							Elem:       &schema.Schema{Type: schema.TypeString},
 						},
 						"max_age_seconds": {
-							Type:     schema.TypeInt,
-							Optional: true,
+							Type:       schema.TypeInt,
+							Computed:   true,
+							Deprecated: "Use the aws_s3_bucket_cors_configuration resource instead",
 						},
 					},
 				},
@@ -757,12 +763,6 @@ func resourceBucketUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	if d.HasChange("cors_rule") {
-		if err := resourceBucketCorsUpdate(conn, d); err != nil {
-			return err
-		}
-	}
-
 	if d.HasChange("versioning") {
 		v := d.Get("versioning").([]interface{})
 
@@ -948,30 +948,16 @@ func resourceBucketRead(d *schema.ResourceData, meta interface{}) error {
 			Bucket: aws.String(d.Id()),
 		})
 	})
-	if err != nil && !tfawserr.ErrMessageContains(err, "NoSuchCORSConfiguration", "") {
+	if err != nil && !tfawserr.ErrCodeEquals(err, ErrCodeNoSuchCorsConfiguration) {
 		return fmt.Errorf("error getting S3 Bucket CORS configuration: %s", err)
 	}
 
-	corsRules := make([]map[string]interface{}, 0)
-	if cors, ok := corsResponse.(*s3.GetBucketCorsOutput); ok && len(cors.CORSRules) > 0 {
-		corsRules = make([]map[string]interface{}, 0, len(cors.CORSRules))
-		for _, ruleObject := range cors.CORSRules {
-			rule := make(map[string]interface{})
-			rule["allowed_headers"] = flex.FlattenStringList(ruleObject.AllowedHeaders)
-			rule["allowed_methods"] = flex.FlattenStringList(ruleObject.AllowedMethods)
-			rule["allowed_origins"] = flex.FlattenStringList(ruleObject.AllowedOrigins)
-			// Both the "ExposeHeaders" and "MaxAgeSeconds" might not be set.
-			if ruleObject.AllowedOrigins != nil {
-				rule["expose_headers"] = flex.FlattenStringList(ruleObject.ExposeHeaders)
-			}
-			if ruleObject.MaxAgeSeconds != nil {
-				rule["max_age_seconds"] = int(aws.Int64Value(ruleObject.MaxAgeSeconds))
-			}
-			corsRules = append(corsRules, rule)
+	if output, ok := corsResponse.(*s3.GetBucketCorsOutput); ok {
+		if err := d.Set("cors_rule", flattenBucketCorsRules(output.CORSRules)); err != nil {
+			return fmt.Errorf("error setting cors_rule: %w", err)
 		}
-	}
-	if err := d.Set("cors_rule", corsRules); err != nil {
-		return fmt.Errorf("error setting cors_rule: %s", err)
+	} else {
+		d.Set("cors_rule", nil)
 	}
 
 	// Read the website configuration
@@ -1507,72 +1493,6 @@ func resourceBucketGrantsUpdate(conn *s3.S3, d *schema.ResourceData) error {
 			return fmt.Errorf("Error putting S3 Grants: %s", err)
 		}
 	}
-	return nil
-}
-
-func resourceBucketCorsUpdate(conn *s3.S3, d *schema.ResourceData) error {
-	bucket := d.Get("bucket").(string)
-	rawCors := d.Get("cors_rule").([]interface{})
-
-	if len(rawCors) == 0 {
-		// Delete CORS
-		log.Printf("[DEBUG] S3 bucket: %s, delete CORS", bucket)
-
-		_, err := verify.RetryOnAWSCode(s3.ErrCodeNoSuchBucket, func() (interface{}, error) {
-			return conn.DeleteBucketCors(&s3.DeleteBucketCorsInput{
-				Bucket: aws.String(bucket),
-			})
-		})
-		if err != nil {
-			return fmt.Errorf("Error deleting S3 CORS: %s", err)
-		}
-	} else {
-		// Put CORS
-		rules := make([]*s3.CORSRule, 0, len(rawCors))
-		for _, cors := range rawCors {
-			corsMap := cors.(map[string]interface{})
-			r := &s3.CORSRule{}
-			for k, v := range corsMap {
-				log.Printf("[DEBUG] S3 bucket: %s, put CORS: %#v, %#v", bucket, k, v)
-				if k == "max_age_seconds" {
-					r.MaxAgeSeconds = aws.Int64(int64(v.(int)))
-				} else {
-					vMap := make([]*string, len(v.([]interface{})))
-					for i, vv := range v.([]interface{}) {
-						if str, ok := vv.(string); ok {
-							vMap[i] = aws.String(str)
-						}
-					}
-					switch k {
-					case "allowed_headers":
-						r.AllowedHeaders = vMap
-					case "allowed_methods":
-						r.AllowedMethods = vMap
-					case "allowed_origins":
-						r.AllowedOrigins = vMap
-					case "expose_headers":
-						r.ExposeHeaders = vMap
-					}
-				}
-			}
-			rules = append(rules, r)
-		}
-		corsInput := &s3.PutBucketCorsInput{
-			Bucket: aws.String(bucket),
-			CORSConfiguration: &s3.CORSConfiguration{
-				CORSRules: rules,
-			},
-		}
-		log.Printf("[DEBUG] S3 bucket: %s, put CORS: %#v", bucket, corsInput)
-
-		_, err := verify.RetryOnAWSCode(s3.ErrCodeNoSuchBucket, func() (interface{}, error) {
-			return conn.PutBucketCors(corsInput)
-		})
-		if err != nil {
-			return fmt.Errorf("Error putting S3 CORS: %s", err)
-		}
-	}
-
 	return nil
 }
 
@@ -2193,6 +2113,42 @@ func flattenServerSideEncryptionConfiguration(c *s3.ServerSideEncryptionConfigur
 		"rule": rules,
 	})
 	return encryptionConfiguration
+}
+
+func flattenBucketCorsRules(rules []*s3.CORSRule) []interface{} {
+	var results []interface{}
+
+	for _, rule := range rules {
+		if rule == nil {
+			continue
+		}
+
+		m := make(map[string]interface{})
+
+		if len(rule.AllowedHeaders) > 0 {
+			m["allowed_headers"] = flex.FlattenStringSet(rule.AllowedHeaders)
+		}
+
+		if len(rule.AllowedMethods) > 0 {
+			m["allowed_methods"] = flex.FlattenStringSet(rule.AllowedMethods)
+		}
+
+		if len(rule.AllowedOrigins) > 0 {
+			m["allowed_origins"] = flex.FlattenStringSet(rule.AllowedOrigins)
+		}
+
+		if len(rule.ExposeHeaders) > 0 {
+			m["expose_headers"] = flex.FlattenStringSet(rule.ExposeHeaders)
+		}
+
+		if rule.MaxAgeSeconds != nil {
+			m["max_age_seconds"] = int(aws.Int64Value(rule.MaxAgeSeconds))
+		}
+
+		results = append(results, m)
+	}
+
+	return results
 }
 
 func flattenBucketWebsite(ws *s3.GetBucketWebsiteOutput) ([]interface{}, error) {
