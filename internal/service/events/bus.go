@@ -72,7 +72,7 @@ func resourceBusCreate(d *schema.ResourceData, meta interface{}) error {
 
 	// Some partitions may not support tag-on-create
 	if input.Tags != nil && verify.CheckISOErrorTagsUnsupported(err) {
-		log.Printf("[WARN] EventBridge Bus (%s) create failed (%s) with tags. Trying create without tags.", d.Id(), err)
+		log.Printf("[WARN] EventBridge Bus (%s) create failed (%s) with tags. Trying create without tags.", eventBusName, err)
 		input.Tags = nil
 		output, err = conn.CreateEventBus(input)
 	}

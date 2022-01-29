@@ -219,8 +219,9 @@ func resourceQueueCreate(d *schema.ResourceData, meta interface{}) error {
 	}, sqs.ErrCodeQueueDeletedRecently)
 
 	// Some partitions may not support tag-on-create
-	if input.Tags != nil && (tfawserr.ErrCodeContains(err, ErrCodeAccessDenied) || tfawserr.ErrCodeContains(err, ErrCodeAuthorizationError) || tfawserr.ErrCodeContains(err, ErrCodeInvalidAction) || tfawserr.ErrCodeContains(err, sqs.ErrCodeUnsupportedOperation)) {
-		log.Printf("[WARN] SQS Queue (%s) create failed (%s) with tags. Trying create without tags.", d.Id(), err)
+	if input.Tags != nil && verify.CheckISOErrorTagsUnsupported(err) {
+		log.Printf("[WARN] failed creating SQS Queue (%s) with tags: %s. Trying create without tags.", name, err)
+
 		input.Tags = nil
 		outputRaw, err = tfresource.RetryWhenAWSErrCodeEquals(queueCreatedTimeout, func() (interface{}, error) {
 			return conn.CreateQueue(input)
@@ -228,7 +229,7 @@ func resourceQueueCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("error creating SQS Queue (%s): %w", name, err)
+		return fmt.Errorf("failed creating SQS Queue (%s): %w", name, err)
 	}
 
 	d.SetId(aws.StringValue(outputRaw.(*sqs.CreateQueueOutput).QueueUrl))
@@ -243,14 +244,14 @@ func resourceQueueCreate(d *schema.ResourceData, meta interface{}) error {
 	if input.Tags == nil && len(tags) > 0 {
 		err := UpdateTags(conn, d.Id(), nil, tags)
 
-		if v, ok := d.GetOk("tags"); (!ok || len(v.(map[string]interface{})) == 0) && (tfawserr.ErrCodeContains(err, ErrCodeAccessDenied) || tfawserr.ErrCodeContains(err, ErrCodeAuthorizationError) || tfawserr.ErrCodeContains(err, ErrCodeInvalidAction) || tfawserr.ErrCodeContains(err, sqs.ErrCodeUnsupportedOperation)) {
+		if v, ok := d.GetOk("tags"); (!ok || len(v.(map[string]interface{})) == 0) && verify.CheckISOErrorTagsUnsupported(err) {
 			// if default tags only, log and continue (i.e., should error if explicitly setting tags and they can't be)
-			log.Printf("[WARN] error adding tags after create for SQS Queue (%s): %s", d.Id(), err)
+			log.Printf("[WARN] failed adding tags after create for SQS Queue (%s): %s", d.Id(), err)
 			return resourceQueueRead(d, meta)
 		}
 
 		if err != nil {
-			return fmt.Errorf("error updating SQS Queue (%s) tags: %w", d.Id(), err)
+			return fmt.Errorf("failed adding tags after create for SQS Queue (%s): %w", d.Id(), err)
 		}
 	}
 
@@ -307,14 +308,14 @@ func resourceQueueRead(d *schema.ResourceData, meta interface{}) error {
 		return ListTags(conn, d.Id())
 	}, sqs.ErrCodeQueueDoesNotExist)
 
-	if tfawserr.ErrCodeContains(err, ErrCodeAccessDenied) || tfawserr.ErrCodeContains(err, ErrCodeAuthorizationError) || tfawserr.ErrCodeContains(err, ErrCodeInvalidAction) || tfawserr.ErrCodeContains(err, sqs.ErrCodeUnsupportedOperation) {
+	if verify.CheckISOErrorTagsUnsupported(err) {
 		// Some partitions may not support tagging, giving error
-		log.Printf("[WARN] Unable to list tags for SQS Queue %s: %s", d.Id(), err)
+		log.Printf("[WARN] failed listing tags for SQS Queue (%s): %s", d.Id(), err)
 		return nil
 	}
 
 	if err != nil {
-		return fmt.Errorf("error listing tags for SQS Queue (%s): %w", d.Id(), err)
+		return fmt.Errorf("failed listing tags for SQS Queue (%s): %w", d.Id(), err)
 	}
 
 	tags := outputRaw.(tftags.KeyValueTags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
@@ -364,14 +365,14 @@ func resourceQueueUpdate(d *schema.ResourceData, meta interface{}) error {
 		o, n := d.GetChange("tags_all")
 		err := UpdateTags(conn, d.Id(), o, n)
 
-		if tfawserr.ErrCodeContains(err, ErrCodeAccessDenied) || tfawserr.ErrCodeContains(err, ErrCodeAuthorizationError) || tfawserr.ErrCodeContains(err, ErrCodeInvalidAction) || tfawserr.ErrCodeContains(err, sqs.ErrCodeUnsupportedOperation) {
+		if verify.CheckISOErrorTagsUnsupported(err) {
 			// Some partitions may not support tagging, giving error
-			log.Printf("[WARN] Unable to update tags for SQS Queue %s: %s", d.Id(), err)
+			log.Printf("[WARN] failed updating tags for SQS Queue (%s): %s", d.Id(), err)
 			return resourceQueueRead(d, meta)
 		}
 
 		if err != nil {
-			return fmt.Errorf("error updating SQS Queue (%s) tags: %w", d.Id(), err)
+			return fmt.Errorf("failed updating tags for SQS Queue (%s): %w", d.Id(), err)
 		}
 	}
 

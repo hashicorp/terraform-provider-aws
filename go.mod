@@ -4,11 +4,11 @@ go 1.16
 
 require (
 	github.com/agl/ed25519 v0.0.0-20170116200512-5312a6153412 // indirect
-	github.com/aws/aws-sdk-go v1.42.38
+	github.com/aws/aws-sdk-go v1.42.43
 	github.com/beevik/etree v1.1.0
 	github.com/evanphx/json-patch v0.5.2 // indirect
 	github.com/fatih/color v1.9.0 // indirect
-	github.com/hashicorp/aws-cloudformation-resource-schema-sdk-go v0.14.0
+	github.com/hashicorp/aws-cloudformation-resource-schema-sdk-go v0.15.0
 	github.com/hashicorp/aws-sdk-go-base v1.0.0
 	github.com/hashicorp/awspolicyequivalence v1.5.0
 	github.com/hashicorp/go-cleanhttp v0.5.2
