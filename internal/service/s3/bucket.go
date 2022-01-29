@@ -382,10 +382,9 @@ func ResourceBucket() *schema.Resource {
 			},
 
 			"request_payer": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: validation.StringInSlice(s3.Payer_Values(), false),
+				Type:       schema.TypeString,
+				Computed:   true,
+				Deprecated: "Use the aws_s3_bucket_request_payment_configuration resource instead",
 			},
 
 			"replication_configuration": {
@@ -807,12 +806,6 @@ func resourceBucketUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	if d.HasChange("acceleration_status") {
 		if err := resourceBucketAccelerationUpdate(conn, d); err != nil {
-			return err
-		}
-	}
-
-	if d.HasChange("request_payer") {
-		if err := resourceBucketRequestPayerUpdate(conn, d); err != nil {
 			return err
 		}
 	}
@@ -1753,28 +1746,6 @@ func resourceBucketAccelerationUpdate(conn *s3.S3, d *schema.ResourceData) error
 	})
 	if err != nil {
 		return fmt.Errorf("Error putting S3 acceleration: %s", err)
-	}
-
-	return nil
-}
-
-func resourceBucketRequestPayerUpdate(conn *s3.S3, d *schema.ResourceData) error {
-	bucket := d.Get("bucket").(string)
-	payer := d.Get("request_payer").(string)
-
-	i := &s3.PutBucketRequestPaymentInput{
-		Bucket: aws.String(bucket),
-		RequestPaymentConfiguration: &s3.RequestPaymentConfiguration{
-			Payer: aws.String(payer),
-		},
-	}
-	log.Printf("[DEBUG] S3 put bucket request payer: %#v", i)
-
-	_, err := verify.RetryOnAWSCode(s3.ErrCodeNoSuchBucket, func() (interface{}, error) {
-		return conn.PutBucketRequestPayment(i)
-	})
-	if err != nil {
-		return fmt.Errorf("Error putting S3 request payer: %s", err)
 	}
 
 	return nil
