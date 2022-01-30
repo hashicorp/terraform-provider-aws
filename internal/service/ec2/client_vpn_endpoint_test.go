@@ -81,7 +81,6 @@ func TestAccEC2ClientVPNEndpoint_serial(t *testing.T) {
 
 func testAccClientVPNEndpoint_basic(t *testing.T) {
 	var v ec2.ClientVpnEndpoint
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ec2_client_vpn_endpoint.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -91,7 +90,7 @@ func testAccClientVPNEndpoint_basic(t *testing.T) {
 		CheckDestroy: testAccCheckClientVPNEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEc2ClientVpnEndpointConfig(rName),
+				Config: testAccEc2ClientVpnEndpointConfigBasic(),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClientVPNEndpointExists(resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`client-vpn-endpoint/cvpn-endpoint-.+`)),
@@ -106,7 +105,7 @@ func testAccClientVPNEndpoint_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "connection_log_options.0.cloudwatch_log_group", ""),
 					resource.TestCheckResourceAttr(resourceName, "connection_log_options.0.cloudwatch_log_stream", ""),
 					resource.TestCheckResourceAttr(resourceName, "connection_log_options.0.enabled", "false"),
-					resource.TestCheckResourceAttr(resourceName, "description", rName),
+					resource.TestCheckResourceAttr(resourceName, "description", ""),
 					resource.TestCheckResourceAttrSet(resourceName, "dns_name"),
 					resource.TestCheckResourceAttr(resourceName, "dns_servers.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "self_service_portal", "disabled"),
@@ -129,7 +128,6 @@ func testAccClientVPNEndpoint_basic(t *testing.T) {
 
 func testAccClientVPNEndpoint_disappears(t *testing.T) {
 	var v ec2.ClientVpnEndpoint
-	rStr := sdkacctest.RandString(5)
 	resourceName := "aws_ec2_client_vpn_endpoint.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -139,7 +137,7 @@ func testAccClientVPNEndpoint_disappears(t *testing.T) {
 		CheckDestroy: testAccCheckClientVPNEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEc2ClientVpnEndpointConfig(rStr),
+				Config: testAccEc2ClientVpnEndpointConfigBasic(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClientVPNEndpointExists(resourceName, &v),
 					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceClientVPNEndpoint(), resourceName),
@@ -553,6 +551,24 @@ resource "aws_subnet" "test" {
 }
 `, domain),
 	)
+}
+
+func testAccEc2ClientVpnEndpointConfigBasic() string {
+	return acctest.ConfigCompose(testAccEc2ClientVpnEndpointConfigAcmCertificateBase(), `
+resource "aws_ec2_client_vpn_endpoint" "test" {
+  server_certificate_arn = aws_acm_certificate.test.arn
+  client_cidr_block      = "10.0.0.0/16"
+
+  authentication_options {
+    type                       = "certificate-authentication"
+    root_certificate_chain_arn = aws_acm_certificate.test.arn
+  }
+
+  connection_log_options {
+    enabled = false
+  }
+}
+`)
 }
 
 func testAccEc2ClientVpnEndpointConfig(rName string) string {

@@ -273,6 +273,12 @@ func resourceClientVPNEndpointUpdate(d *schema.ResourceData, meta interface{}) e
 			ClientVpnEndpointId: aws.String(d.Id()),
 		}
 
+		if d.HasChange("connection_log_options") {
+			if v, ok := d.GetOk("connection_log_options"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+				input.ConnectionLogOptions = expandConnectionLogOptions(v.([]interface{})[0].(map[string]interface{}))
+			}
+		}
+
 		if d.HasChange("description") {
 			input.Description = aws.String(d.Get("description").(string))
 		}
@@ -303,12 +309,6 @@ func resourceClientVPNEndpointUpdate(d *schema.ResourceData, meta interface{}) e
 
 		if d.HasChange("split_tunnel") {
 			input.SplitTunnel = aws.Bool(d.Get("split_tunnel").(bool))
-		}
-
-		if d.HasChange("connection_log_options") {
-			if v, ok := d.GetOk("connection_log_options"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-				input.ConnectionLogOptions = expandConnectionLogOptions(v.([]interface{})[0].(map[string]interface{}))
-			}
 		}
 
 		if _, err := conn.ModifyClientVpnEndpoint(input); err != nil {
