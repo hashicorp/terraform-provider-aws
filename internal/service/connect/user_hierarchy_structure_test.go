@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/connect"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -43,6 +44,41 @@ func testAccCheckUserHierarchyStructureExists(resourceName string, function *con
 
 		return nil
 	}
+}
+
+func testAccCheckUserHierarchyStructureDestroy(s *terraform.State) error {
+	for _, rs := range s.RootModule().Resources {
+		if rs.Type != "aws_connect_user_hierarchy_structure" {
+			continue
+		}
+
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectConn
+
+		instanceID, _, err := tfconnect.UserHierarchyStructureParseID(rs.Primary.ID)
+
+		if err != nil {
+			return err
+		}
+
+		params := &connect.DescribeUserHierarchyStructureInput{
+			InstanceId: aws.String(instanceID),
+		}
+
+		resp, experr := conn.DescribeUserHierarchyStructure(params)
+		// Verify the error is what we want
+		if experr != nil {
+			if awsErr, ok := experr.(awserr.Error); ok && awsErr.Code() == "ResourceNotFoundException" {
+				continue
+			}
+			return experr
+		}
+
+		// API returns an empty list for HierarchyStructure if there are none
+		if resp.HierarchyStructure == nil {
+			continue
+		}
+	}
+	return nil
 }
 
 func testAccUserHierarchyStructureBaseConfig(rName string) string {
