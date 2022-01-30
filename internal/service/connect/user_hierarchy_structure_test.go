@@ -18,7 +18,8 @@ import (
 //Serialized acceptance tests due to Connect account limits (max 2 parallel tests)
 func TestAccConnectUserHierarchyStructure_serial(t *testing.T) {
 	testCases := map[string]func(t *testing.T){
-		"basic": testAccUserHierarchyStructure_basic,
+		"basic":      testAccUserHierarchyStructure_basic,
+		"disappears": testAccUserHierarchyStructure_disappears,
 	}
 
 	for name, tc := range testCases {
@@ -188,6 +189,30 @@ func testAccUserHierarchyStructure_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "instance_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "instance_id", "aws_connect_instance.test", "id"),
 				),
+			},
+		},
+	})
+}
+
+func testAccUserHierarchyStructure_disappears(t *testing.T) {
+	var v connect.DescribeUserHierarchyStructureOutput
+	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	resourceName := "aws_connect_user_hierarchy_structure.test"
+	levelOneName := sdkacctest.RandomWithPrefix("resource-test-terraform")
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, connect.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckUserHierarchyStructureDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccUserHierarchyStructureBasicConfig(rName, levelOneName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckUserHierarchyStructureExists(resourceName, &v),
+					acctest.CheckResourceDisappears(acctest.Provider, tfconnect.ResourceUserHierarchyStructure(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
