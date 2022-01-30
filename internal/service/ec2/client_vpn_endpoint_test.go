@@ -32,16 +32,17 @@ func init() {
 func TestAccEC2ClientVPNEndpoint_serial(t *testing.T) {
 	testCases := map[string]map[string]func(t *testing.T){
 		"Endpoint": {
-			"basic":                  testAccClientVPNEndpoint_basic,
-			"disappears":             testAccClientVPNEndpoint_disappears,
-			"msADAuth":               testAccClientVPNEndpoint_msADAuth,
-			"mutualAuthAndMsADAuth":  testAccClientVPNEndpoint_mutualAuthAndMsADAuth,
-			"federatedAuth":          testAccClientVPNEndpoint_federatedAuth,
-			"withLogGroup":           testAccClientVPNEndpoint_withLogGroup,
-			"withDNSServers":         testAccClientVPNEndpoint_withDNSServers,
-			"tags":                   testAccClientVPNEndpoint_tags,
-			"simpleAttributesUpdate": testAccClientVPNEndpoint_simpleAttributesUpdate,
-			"selfServicePortal":      testAccClientVPNEndpoint_selfServicePortal,
+			"basic":                        testAccClientVPNEndpoint_basic,
+			"disappears":                   testAccClientVPNEndpoint_disappears,
+			"msADAuth":                     testAccClientVPNEndpoint_msADAuth,
+			"mutualAuthAndMsADAuth":        testAccClientVPNEndpoint_mutualAuthAndMsADAuth,
+			"federatedAuth":                testAccClientVPNEndpoint_federatedAuth,
+			"federatedAuthWithSelfService": testAccClientVPNEndpoint_federatedAuthWithSelfServiceProvider,
+			"withLogGroup":                 testAccClientVPNEndpoint_withLogGroup,
+			"withDNSServers":               testAccClientVPNEndpoint_withDNSServers,
+			"tags":                         testAccClientVPNEndpoint_tags,
+			"simpleAttributesUpdate":       testAccClientVPNEndpoint_simpleAttributesUpdate,
+			"selfServicePortal":            testAccClientVPNEndpoint_selfServicePortal,
 		},
 		"AuthorizationRule": {
 			"basic":      testAccClientVPNAuthorizationRule_basic,
@@ -255,9 +256,10 @@ func testAccClientVPNEndpoint_mutualAuthAndMsADAuth(t *testing.T) {
 
 func testAccClientVPNEndpoint_federatedAuth(t *testing.T) {
 	var v ec2.ClientVpnEndpoint
-	rStr := sdkacctest.RandString(5)
-	idpEntityId := fmt.Sprintf("https://%s", acctest.RandomDomainName())
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	idpEntityID := fmt.Sprintf("https://%s", acctest.RandomDomainName())
 	resourceName := "aws_ec2_client_vpn_endpoint.test"
+	samlProviderResourceName := "aws_iam_saml_provider.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckClientVPNSyncronize(t) },
@@ -266,12 +268,12 @@ func testAccClientVPNEndpoint_federatedAuth(t *testing.T) {
 		CheckDestroy: testAccCheckClientVPNEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEc2ClientVpnEndpointConfigWithFederatedAuth(rStr, idpEntityId),
+				Config: testAccEc2ClientVpnEndpointConfigWithFederatedAuth(rName, idpEntityID),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClientVPNEndpointExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "authentication_options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "authentication_options.0.type", "federated-authentication"),
-					resource.TestCheckResourceAttrSet(resourceName, "authentication_options.0.saml_provider_arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "authentication_options.0.saml_provider_arn", samlProviderResourceName, "arn"),
 				),
 			},
 			{
@@ -279,15 +281,38 @@ func testAccClientVPNEndpoint_federatedAuth(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
+		},
+	})
+}
+
+func testAccClientVPNEndpoint_federatedAuthWithSelfServiceProvider(t *testing.T) {
+	var v ec2.ClientVpnEndpoint
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	idpEntityID := fmt.Sprintf("https://%s", acctest.RandomDomainName())
+	resourceName := "aws_ec2_client_vpn_endpoint.test"
+	samlProvider1ResourceName := "aws_iam_saml_provider.test1"
+	samlProvider2ResourceName := "aws_iam_saml_provider.test2"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckClientVPNSyncronize(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckClientVPNEndpointDestroy,
+		Steps: []resource.TestStep{
 			{
-				Config: testAccEc2ClientVpnEndpointConfigWithFederatedAuthSelfServiceSamlProviderArn(rStr, idpEntityId),
+				Config: testAccEc2ClientVpnEndpointConfigWithFederatedAuthAndSelfServiceSamlProvider(rName, idpEntityID),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClientVPNEndpointExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "authentication_options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "authentication_options.0.type", "federated-authentication"),
-					resource.TestCheckResourceAttrSet(resourceName, "authentication_options.0.saml_provider_arn"),
-					resource.TestCheckResourceAttrSet(resourceName, "authentication_options.0.self_service_saml_provider_arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "authentication_options.0.saml_provider_arn", samlProvider1ResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "authentication_options.0.self_service_saml_provider_arn", samlProvider2ResourceName, "arn"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -741,12 +766,12 @@ resource "aws_ec2_client_vpn_endpoint" "test" {
 `, rName))
 }
 
-func testAccEc2ClientVpnEndpointConfigWithFederatedAuth(rName, idpEntityId string) string {
+func testAccEc2ClientVpnEndpointConfigWithFederatedAuth(rName, idpEntityID string) string {
 	return acctest.ConfigCompose(
 		testAccEc2ClientVpnEndpointConfigAcmCertificateBase("test"),
 		fmt.Sprintf(`
-resource "aws_iam_saml_provider" "default" {
-  name                   = "myprovider-%[1]s"
+resource "aws_iam_saml_provider" "test" {
+  name                   = %[1]q
   saml_metadata_document = templatefile("./test-fixtures/saml-metadata.xml.tpl", { entity_id = %[2]q })
 }
 
@@ -756,7 +781,7 @@ resource "aws_ec2_client_vpn_endpoint" "test" {
 
   authentication_options {
     type              = "federated-authentication"
-    saml_provider_arn = aws_iam_saml_provider.default.arn
+    saml_provider_arn = aws_iam_saml_provider.test.arn
   }
 
   connection_log_options {
@@ -767,18 +792,18 @@ resource "aws_ec2_client_vpn_endpoint" "test" {
     Name = %[1]q
   }
 }
-`, rName, idpEntityId))
+`, rName, idpEntityID))
 }
 
-func testAccEc2ClientVpnEndpointConfigWithFederatedAuthSelfServiceSamlProviderArn(rName, idpEntityID string) string {
+func testAccEc2ClientVpnEndpointConfigWithFederatedAuthAndSelfServiceSamlProvider(rName, idpEntityID string) string {
 	return acctest.ConfigCompose(testAccEc2ClientVpnEndpointConfigAcmCertificateBase("test"), fmt.Sprintf(`
-resource "aws_iam_saml_provider" "default" {
-  name                   = "myprovider-%[1]s"
+resource "aws_iam_saml_provider" "test1" {
+  name                   = %[1]q
   saml_metadata_document = templatefile("./test-fixtures/saml-metadata.xml.tpl", { entity_id = %[2]q })
 }
 
-resource "aws_iam_saml_provider" "self_service" {
-  name                   = "myprovider-selfservice-%[1]s"
+resource "aws_iam_saml_provider" "test2" {
+  name                   = "%[1]s-self-service"
   saml_metadata_document = templatefile("./test-fixtures/saml-metadata.xml.tpl", { entity_id = %[2]q })
 }
 
@@ -788,8 +813,8 @@ resource "aws_ec2_client_vpn_endpoint" "test" {
 
   authentication_options {
     type                           = "federated-authentication"
-    saml_provider_arn              = aws_iam_saml_provider.default.arn
-    self_service_saml_provider_arn = aws_iam_saml_provider.self_service.arn
+    saml_provider_arn              = aws_iam_saml_provider.test1.arn
+    self_service_saml_provider_arn = aws_iam_saml_provider.test2.arn
   }
 
   connection_log_options {
