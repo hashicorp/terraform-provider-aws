@@ -428,7 +428,7 @@ func expandComponentParameter(tfMap map[string]interface{}) *imagebuilder.Compon
 		apiObject.Name = aws.String(v)
 	}
 
-	if v, ok := tfMap["value"].(string); ok {
+	if v, ok := tfMap["value"].(string); ok && v != "" {
 		// ImageBuilder API quirk
 		// Even though Value is a slice, only one element is accepted.
 		apiObject.Value = aws.StringSlice([]string{v})
