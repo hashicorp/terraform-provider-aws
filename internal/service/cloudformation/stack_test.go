@@ -444,6 +444,27 @@ func TestAccCloudFormationStack_onFailure(t *testing.T) {
 	})
 }
 
+func TestAccCloudFormationStack_withIAM(t *testing.T) {
+	var stack cloudformation.Stack
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_cloudformation_stack.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, cloudformation.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccStackConfig_withIAM(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCloudFormationStackExists(resourceName, &stack),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckCloudFormationStackExists(n string, stack *cloudformation.Stack) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -999,6 +1020,65 @@ resource "aws_s3_bucket" "test" {
 resource "aws_cloudformation_stack" "test" {
   name       = %[1]q
   on_failure = "DO_NOTHING"
+
+  template_body = jsonencode({
+    AWSTemplateFormatVersion = "2010-09-09"
+    Resources = {
+      S3Bucket = {
+        Type = "AWS::S3::Bucket"
+      }
+    }
+  })
+}
+`, rName)
+}
+
+func testAccStackConfig_withIAM(rName string) string {
+	return fmt.Sprintf(`
+data "aws_iam_policy_document" "test" {
+  statement {
+    actions = ["sts:AssumeRole"]
+    principals {
+      type        = "Service"
+      identifiers = ["cloudformation.amazonaws.com"]
+    }
+  }
+}
+
+resource "aws_iam_role" "test" {
+  assume_role_policy = data.aws_iam_policy_document.test.json
+}
+
+resource "aws_iam_policy" "test" {
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Effect   = "Allow"
+        Action   = ["s3:*"]
+        Resource = "*"
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "test" {
+  policy_arn = aws_iam_policy.test.arn
+  role       = aws_iam_role.test.name
+}
+
+data "aws_iam_role" "test" {
+  # This is introduced so the aws_cloudformation_stack has a dependency on the role_attachment
+  # instead of the role directly. Without it, the policy may not exist before cloudformation
+  # has a chance to delete it's resources
+  name = aws_iam_role_policy_attachment.test.role
+}
+
+resource "aws_cloudformation_stack" "test" {
+  name = %[1]q
+
+  on_failure   = "DO_NOTHING"
+  iam_role_arn = aws_iam_role.test.arn
 
   template_body = jsonencode({
     AWSTemplateFormatVersion = "2010-09-09"

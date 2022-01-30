@@ -13,7 +13,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
@@ -181,13 +183,31 @@ func resourceStackCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	log.Printf("[DEBUG] Creating CloudFormation Stack: %s", input)
-	output, err := conn.CreateStack(input)
+
+	err := resource.Retry(tfiam.PropagationTimeout, func() *resource.RetryError {
+		output, err := conn.CreateStack(input)
+		if tfawserr.ErrMessageContains(err, "ValidationError", "is invalid or cannot be assumed") {
+			return resource.RetryableError(err)
+		}
+
+		if err != nil {
+			return resource.NonRetryableError(err)
+		}
+
+		d.SetId(aws.StringValue(output.StackId))
+		return nil
+	})
+
+	var output *cloudformation.CreateStackOutput
+
+	if tfresource.TimedOut(err) {
+		output, err = conn.CreateStack(input)
+		d.SetId(aws.StringValue(output.StackId))
+	}
 
 	if err != nil {
 		return fmt.Errorf("error creating CloudFormation Stack (%s): %w", name, err)
 	}
-
-	d.SetId(aws.StringValue(output.StackId))
 
 	if _, err := WaitStackCreated(conn, d.Id(), requestToken, d.Timeout(schema.TimeoutCreate)); err != nil {
 		return fmt.Errorf("error waiting for CloudFormation Stack (%s) create: %w", d.Id(), err)
@@ -359,7 +379,24 @@ func resourceStackUpdate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	log.Printf("[DEBUG] Updating CloudFormation stack: %s", input)
-	_, err := conn.UpdateStack(input)
+
+	err := resource.Retry(tfiam.PropagationTimeout, func() *resource.RetryError {
+		_, err := conn.UpdateStack(input)
+		if tfawserr.ErrMessageContains(err, "ValidationError", "is invalid or cannot be assumed") {
+			return resource.RetryableError(err)
+		}
+
+		if err != nil {
+			return resource.NonRetryableError(err)
+		}
+
+		return nil
+	})
+
+	if tfresource.TimedOut(err) {
+		_, err = conn.UpdateStack(input)
+	}
+
 	if tfawserr.ErrMessageContains(err, "ValidationError", "No updates are to be performed.") {
 		log.Printf("[DEBUG] Current CloudFormation stack has no updates")
 	} else if err != nil {

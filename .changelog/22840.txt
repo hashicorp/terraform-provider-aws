@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_cloudformation_stack: Add retry logic to create and update function on IAM Role failure
+```
