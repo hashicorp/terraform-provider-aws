@@ -300,7 +300,7 @@ func resourceClientVPNEndpointUpdate(d *schema.ResourceData, meta interface{}) e
 		}
 
 		if d.HasChange("session_timeout_hours") {
-			input.SessionTimeoutHours = aws.Int64(d.Get("session_timeout_hours").(int64))
+			input.SessionTimeoutHours = aws.Int64(int64(d.Get("session_timeout_hours").(int)))
 		}
 
 		if d.HasChange("server_certificate_arn") {
