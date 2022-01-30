@@ -20,6 +20,7 @@ func ResourceUserHierarchyStructure() *schema.Resource {
 	return &schema.Resource{
 		CreateContext: resourceUserHierarchyStructureCreate,
 		ReadContext:   resourceUserHierarchyStructureRead,
+		UpdateContext: resourceUserHierarchyStructureUpdate,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -206,6 +207,29 @@ func resourceUserHierarchyStructureRead(ctx context.Context, d *schema.ResourceD
 	d.Set("instance_id", instanceID)
 
 	return nil
+}
+
+func resourceUserHierarchyStructureUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.AWSClient).ConnectConn
+
+	instanceID, _, err := UserHierarchyStructureParseID(d.Id())
+
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	if d.HasChange("hierarchy_structure") {
+		_, err := conn.UpdateUserHierarchyStructureWithContext(ctx, &connect.UpdateUserHierarchyStructureInput{
+			HierarchyStructure: expandUserHierarchyStructure(d.Get("hierarchy_structure").([]interface{})),
+			InstanceId:         aws.String(instanceID),
+		})
+
+		if err != nil {
+			return diag.FromErr(fmt.Errorf("error updating UserHierarchyStructure Name (%s): %w", d.Id(), err))
+		}
+	}
+
+	return resourceUserHierarchyStructureRead(ctx, d, meta)
 }
 
 func expandUserHierarchyStructure(userHierarchyStructure []interface{}) *connect.HierarchyStructureUpdate {
