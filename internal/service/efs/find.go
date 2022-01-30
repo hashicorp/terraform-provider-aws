@@ -82,3 +82,28 @@ func FindFileSystemPolicyByID(conn *efs.EFS, id string) (*efs.DescribeFileSystem
 
 	return output, nil
 }
+
+func FindReplicationConfigurationByID(conn *efs.EFS, id string) (*efs.DescribeReplicationConfigurationsOutput, error) {
+	input := &efs.DescribeReplicationConfigurationsInput{
+		FileSystemId: aws.String(id),
+	}
+
+	output, err := conn.DescribeReplicationConfigurations(input)
+
+	if tfawserr.ErrCodeEquals(err, efs.ErrCodeFileSystemNotFound) || tfawserr.ErrCodeEquals(err, efs.ErrCodeReplicationNotFound) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
+}

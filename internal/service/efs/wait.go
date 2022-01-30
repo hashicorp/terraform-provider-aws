@@ -20,6 +20,9 @@ const (
 
 	backupPolicyDisabledTimeout = 10 * time.Minute
 	backupPolicyEnabledTimeout  = 10 * time.Minute
+
+	replicationConfigurationDeletedTimeout = 20 * time.Minute //TODO tune
+	replicationConfigurationEnabledTimeout = 10 * time.Minute //TODO tune
 )
 
 // waitAccessPointCreated waits for an Operation to return Success
@@ -124,6 +127,40 @@ func waitBackupPolicyEnabled(conn *efs.EFS, id string) (*efs.BackupPolicy, error
 	outputRaw, err := stateConf.WaitForState()
 
 	if output, ok := outputRaw.(*efs.BackupPolicy); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitReplicationConfigurationDeleted(conn *efs.EFS, id string) (*efs.ReplicationConfigurationDescription, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{efs.ReplicationStatusDeleting},
+		Target:  []string{},
+		Refresh: statusReplicationConfiguration(conn, id),
+		Timeout: replicationConfigurationDeletedTimeout,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*efs.ReplicationConfigurationDescription); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitReplicationConfigurationEnabled(conn *efs.EFS, id string) (*efs.ReplicationConfigurationDescription, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{efs.ReplicationStatusEnabling},
+		Target:  []string{efs.ReplicationStatusEnabled},
+		Refresh: statusReplicationConfiguration(conn, id),
+		Timeout: replicationConfigurationEnabledTimeout,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*efs.ReplicationConfigurationDescription); ok {
 		return output, err
 	}
 
