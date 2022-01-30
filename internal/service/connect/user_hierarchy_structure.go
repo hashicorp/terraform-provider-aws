@@ -21,6 +21,7 @@ func ResourceUserHierarchyStructure() *schema.Resource {
 		CreateContext: resourceUserHierarchyStructureCreate,
 		ReadContext:   resourceUserHierarchyStructureRead,
 		UpdateContext: resourceUserHierarchyStructureUpdate,
+		DeleteContext: resourceUserHierarchyStructureDelete,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -230,6 +231,27 @@ func resourceUserHierarchyStructureUpdate(ctx context.Context, d *schema.Resourc
 	}
 
 	return resourceUserHierarchyStructureRead(ctx, d, meta)
+}
+
+func resourceUserHierarchyStructureDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.AWSClient).ConnectConn
+
+	instanceID, _, err := UserHierarchyStructureParseID(d.Id())
+
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	_, err = conn.UpdateUserHierarchyStructureWithContext(ctx, &connect.UpdateUserHierarchyStructureInput{
+		HierarchyStructure: &connect.HierarchyStructureUpdate{},
+		InstanceId:         aws.String(instanceID),
+	})
+
+	if err != nil {
+		return diag.FromErr(fmt.Errorf("error deleting UserHierarchyStructure (%s): %w", d.Id(), err))
+	}
+
+	return nil
 }
 
 func expandUserHierarchyStructure(userHierarchyStructure []interface{}) *connect.HierarchyStructureUpdate {
