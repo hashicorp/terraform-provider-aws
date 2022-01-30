@@ -81,7 +81,7 @@ Each level block supports the following arguments:
 In addition to all arguments above, the following attributes are exported:
 
 * `hierarchy_structure` - In addition to the arguments defined initially, there are attributes added to the levels created. These additional attributes are documented below.
-* `id` - The identifier of the hosting Amazon Connect Instance and identifier of the User Hierarchy Structure separated by a colon (`:`).
+* `id` - The identifier of the hosting Amazon Connect Instance.
 
 A level block supports the following additional attributes:
 
@@ -90,8 +90,8 @@ A level block supports the following additional attributes:
 
 ## Import
 
-Amazon Connect User Hierarchy Structures can be imported using the `instance_id` and the `UTC RFC3339 value` separated by a colon (`:`), e.g.,
+Amazon Connect User Hierarchy Structures can be imported using the `instance_id`, e.g.,
 
 ```
-$ terraform import aws_connect_user_hierarchy_structure.example f1288a1f-6193-445a-b47e-af739b2:2022-05-09T06:36:13Z
+$ terraform import aws_connect_user_hierarchy_structure.example f1288a1f-6193-445a-b47e-af739b2
 ```

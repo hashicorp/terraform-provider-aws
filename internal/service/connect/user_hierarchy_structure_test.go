@@ -228,11 +228,7 @@ func testAccCheckUserHierarchyStructureExists(resourceName string, function *con
 		if rs.Primary.ID == "" {
 			return fmt.Errorf("Connect User Hierarchy Structure ID not set")
 		}
-		instanceID, _, err := tfconnect.UserHierarchyStructureParseID(rs.Primary.ID)
-
-		if err != nil {
-			return err
-		}
+		instanceID := rs.Primary.ID
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectConn
 
@@ -259,11 +255,7 @@ func testAccCheckUserHierarchyStructureDestroy(s *terraform.State) error {
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectConn
 
-		instanceID, _, err := tfconnect.UserHierarchyStructureParseID(rs.Primary.ID)
-
-		if err != nil {
-			return err
-		}
+		instanceID := rs.Primary.ID
 
 		params := &connect.DescribeUserHierarchyStructureInput{
 			InstanceId: aws.String(instanceID),

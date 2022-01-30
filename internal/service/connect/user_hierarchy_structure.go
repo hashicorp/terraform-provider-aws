@@ -4,8 +4,6 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"strings"
-	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/connect"
@@ -171,10 +169,7 @@ func resourceUserHierarchyStructureCreate(ctx context.Context, d *schema.Resourc
 		return diag.FromErr(fmt.Errorf("error creating Connect User Hierarchy Structure for Connect Instance (%s): %w", instanceID, err))
 	}
 
-	// since user hierarchy structures do not have an ID or ARN, use the timestamp to generate a unique value
-	timestamp := time.Now().UTC()
-
-	d.SetId(fmt.Sprintf("%s:%s", instanceID, timestamp.Format(time.RFC3339)))
+	d.SetId(instanceID)
 
 	return resourceUserHierarchyStructureRead(ctx, d, meta)
 }
@@ -182,11 +177,7 @@ func resourceUserHierarchyStructureCreate(ctx context.Context, d *schema.Resourc
 func resourceUserHierarchyStructureRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).ConnectConn
 
-	instanceID, _, err := UserHierarchyStructureParseID(d.Id())
-
-	if err != nil {
-		return diag.FromErr(err)
-	}
+	instanceID := d.Id()
 
 	resp, err := conn.DescribeUserHierarchyStructureWithContext(ctx, &connect.DescribeUserHierarchyStructureInput{
 		InstanceId: aws.String(instanceID),
@@ -218,11 +209,7 @@ func resourceUserHierarchyStructureRead(ctx context.Context, d *schema.ResourceD
 func resourceUserHierarchyStructureUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).ConnectConn
 
-	instanceID, _, err := UserHierarchyStructureParseID(d.Id())
-
-	if err != nil {
-		return diag.FromErr(err)
-	}
+	instanceID := d.Id()
 
 	if d.HasChange("hierarchy_structure") {
 		_, err := conn.UpdateUserHierarchyStructureWithContext(ctx, &connect.UpdateUserHierarchyStructureInput{
@@ -241,13 +228,9 @@ func resourceUserHierarchyStructureUpdate(ctx context.Context, d *schema.Resourc
 func resourceUserHierarchyStructureDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).ConnectConn
 
-	instanceID, _, err := UserHierarchyStructureParseID(d.Id())
+	instanceID := d.Id()
 
-	if err != nil {
-		return diag.FromErr(err)
-	}
-
-	_, err = conn.UpdateUserHierarchyStructureWithContext(ctx, &connect.UpdateUserHierarchyStructureInput{
+	_, err := conn.UpdateUserHierarchyStructureWithContext(ctx, &connect.UpdateUserHierarchyStructureInput{
 		HierarchyStructure: &connect.HierarchyStructureUpdate{},
 		InstanceId:         aws.String(instanceID),
 	})
@@ -341,14 +324,4 @@ func flattenUserHierarchyStructureLevel(userHierarchyStructureLevel *connect.Hie
 	}
 
 	return []interface{}{level}
-}
-
-func UserHierarchyStructureParseID(id string) (string, string, error) {
-	parts := strings.SplitN(id, ":", 2)
-
-	if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
-		return "", "", fmt.Errorf("unexpected format of ID (%s), expected instanceID:hierarchyStructureID", id)
-	}
-
-	return parts[0], parts[1], nil
 }
