@@ -33,7 +33,7 @@ resource "aws_imagebuilder_image_recipe" "example" {
     }
 
     parameter {
-      name  = "Parameter2
+      name  = "Parameter2"
       value = "Value2"
     }
   }
