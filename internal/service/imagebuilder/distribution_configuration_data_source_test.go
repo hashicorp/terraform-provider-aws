@@ -55,12 +55,12 @@ resource "aws_imagebuilder_distribution_configuration" "test" {
       name = "{{ imagebuilder:buildDate }}"
     }
 
-	container_distribution_configuration {
-		target_repository {
-			repository_name = "repository-name"
-			service = "ECR"
-		}
-	}
+    container_distribution_configuration {
+      target_repository {
+        repository_name = "repository-name"
+        service         = "ECR"
+      }
+    }
 
     region = data.aws_region.current.name
   }
