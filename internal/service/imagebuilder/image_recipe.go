@@ -604,7 +604,7 @@ func flattenComponentParameter(apiObject *imagebuilder.ComponentParameter) map[s
 
 	if v := apiObject.Value; v != nil {
 		// ImageBuilder API quirk
-		// Even though Value is a slice, only first element is used.
+		// Even though Value is a slice, only one element is accepted.
 		tfMap["value"] = aws.StringValueSlice(v)[0]
 	}
 
