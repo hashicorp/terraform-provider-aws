@@ -17,3 +17,7 @@ resource/aws_ec2_client_vpn_endpoint: Add `client_connect_options` argument
 ```release-note:enhancement
 resource/aws_ec2_client_vpn_endpoint: Add `client_login_banner_options` argument
 ```
+
+```release-note:enhancement
+resource/aws_ec2_client_vpn_endpoint: Add `vpc_id` and `security_group_ids` arguments
+```

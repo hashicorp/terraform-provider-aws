@@ -43,12 +43,14 @@ The following arguments are supported:
 * `connection_log_options` - (Required) Information about the client connection logging options.
 * `description` - (Optional) A brief description of the Client VPN endpoint.
 * `dns_servers` - (Optional) Information about the DNS servers to be used for DNS resolution. A Client VPN endpoint can have up to two DNS servers. If no DNS server is specified, the DNS address of the connecting device is used.
+* `security_group_ids` - (Optional) The IDs of one or more security groups to apply to the target network. You must also specify the ID of the VPC that contains the security groups via the `vpc_id` argument.
 * `self_service_portal` - (Optional) Specify whether to enable the self-service portal for the Client VPN endpoint. Values can be `enabled` or `disabled`. Default value is `disabled`.
 * `server_certificate_arn` - (Required) The ARN of the ACM server certificate.
 * `session_timeout_hours` - (Optional) The maximum session duration is a trigger by which end-users are required to re-authenticate prior to establishing a VPN session. Default value is `24` - Valid values: `8 | 10 | 12 | 24`
 * `split_tunnel` - (Optional) Indicates whether split-tunnel is enabled on VPN endpoint. Default value is `false`.
 * `tags` - (Optional) A mapping of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://www.terraform.io/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `transport_protocol` - (Optional) The transport protocol to be used by the VPN session. Default value is `udp`.
+* `vpc_id` - (Optional) The ID of the VPC to associate with the Client VPN endpoint. Requires `security_group_ids` to be configured.
 * `vpn_port` - (Optional) The port number for the Client VPN endpoint. Valid values are `443` and `1194`. Default value is `443`.
 
 ### `authentication_options` Argument Reference

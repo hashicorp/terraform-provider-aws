@@ -155,6 +155,12 @@ func ResourceClientVPNEndpoint() *schema.Resource {
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
+			"security_group_ids": {
+				Type:         schema.TypeSet,
+				Optional:     true,
+				Elem:         &schema.Schema{Type: schema.TypeString},
+				RequiredWith: []string{"vpc_id"},
+			},
 			"self_service_portal": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -189,6 +195,11 @@ func ResourceClientVPNEndpoint() *schema.Resource {
 				ForceNew:     true,
 				Default:      ec2.TransportProtocolUdp,
 				ValidateFunc: validation.StringInSlice(ec2.TransportProtocol_Values(), false),
+			},
+			"vpc_id": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				RequiredWith: []string{"security_group_ids"},
 			},
 			"vpn_port": {
 				Type:     schema.TypeInt,
@@ -241,12 +252,20 @@ func resourceClientVPNEndpointCreate(d *schema.ResourceData, meta interface{}) e
 		input.DnsServers = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
+	if v, ok := d.GetOk("security_group_ids"); ok {
+		input.SecurityGroupIds = flex.ExpandStringSet(v.(*schema.Set))
+	}
+
 	if v, ok := d.GetOk("self_service_portal"); ok {
 		input.SelfServicePortal = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("session_timeout_hours"); ok {
 		input.SessionTimeoutHours = aws.Int64(int64(v.(int)))
+	}
+
+	if v, ok := d.GetOk("vpc_id"); ok {
+		input.VpcId = aws.String(v.(string))
 	}
 
 	log.Printf("[DEBUG] Creating EC2 Client VPN Endpoint: %s", input)
@@ -313,7 +332,8 @@ func resourceClientVPNEndpointRead(d *schema.ResourceData, meta interface{}) err
 	}
 	d.Set("description", ep.Description)
 	d.Set("dns_name", ep.DnsName)
-	d.Set("dns_servers", ep.DnsServers)
+	d.Set("dns_servers", aws.StringValueSlice(ep.DnsServers))
+	d.Set("security_group_ids", aws.StringValueSlice(ep.SecurityGroupIds))
 	if aws.StringValue(ep.SelfServicePortalUrl) != "" {
 		d.Set("self_service_portal", ec2.SelfServicePortalEnabled)
 	} else {
@@ -324,6 +344,7 @@ func resourceClientVPNEndpointRead(d *schema.ResourceData, meta interface{}) err
 	d.Set("split_tunnel", ep.SplitTunnel)
 	d.Set("status", ep.Status.Code)
 	d.Set("transport_protocol", ep.TransportProtocol)
+	d.Set("vpc_id", ep.VpcId)
 	d.Set("vpn_port", ep.VpnPort)
 
 	tags := KeyValueTags(ep.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
@@ -385,6 +406,12 @@ func resourceClientVPNEndpointUpdate(d *schema.ResourceData, meta interface{}) e
 			}
 		}
 
+		if d.HasChange("security_group_ids") {
+			if v, ok := d.GetOk("security_group_ids"); ok {
+				input.SecurityGroupIds = flex.ExpandStringSet(v.(*schema.Set))
+			}
+		}
+
 		if d.HasChange("self_service_portal") {
 			input.SelfServicePortal = aws.String(d.Get("self_service_portal").(string))
 		}
@@ -399,6 +426,10 @@ func resourceClientVPNEndpointUpdate(d *schema.ResourceData, meta interface{}) e
 
 		if d.HasChange("split_tunnel") {
 			input.SplitTunnel = aws.Bool(d.Get("split_tunnel").(bool))
+		}
+
+		if d.HasChange("vpc_id") {
+			input.VpcId = aws.String(d.Get("vpc_id").(string))
 		}
 
 		if d.HasChange("vpn_port") {
