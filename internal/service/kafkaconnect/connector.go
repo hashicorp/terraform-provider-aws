@@ -528,10 +528,12 @@ func expandWorkerLogDelivery(tfList []interface{}) *kafkaconnect.WorkerLogDelive
 		return nil
 	}
 
-	workerLogDelivery := tfList[0].(map[string]interface{})
+	tfMap := tfList[0].(map[string]interface{})
 
 	return &kafkaconnect.WorkerLogDelivery{
-		CloudWatchLogs: expandCloudwatchLogDelivery(workerLogDelivery["cloudwatch"].([]interface{})),
+		CloudWatchLogs: expandCloudwatchLogDelivery(tfMap["cloudwatch"].([]interface{})),
+		Firehose: expandFirehoseLogDelivery(tfMap["firehose"].([]interface{})),
+		S3: expandS3LogDelivery(tfMap["s3"].([]interface{})),
 	}
 }
 
@@ -540,10 +542,56 @@ func expandCloudwatchLogDelivery(tfList []interface{}) *kafkaconnect.CloudWatchL
 		return nil
 	}
 
-	cloudwatchLogDelivery := tfList[0].(map[string]interface{})
+	tfMap := tfList[0].(map[string]interface{})
 
-	return &kafkaconnect.CloudWatchLogsLogDelivery{
-		Enabled:  aws.Bool(cloudwatchLogDelivery["enabled"].(bool)),
-		LogGroup: aws.String(cloudwatchLogDelivery["log_group"].(string)),
+	logDelivery := &kafkaconnect.CloudWatchLogsLogDelivery{
+		Enabled:  aws.Bool(tfMap["enabled"].(bool)),
 	}
+
+	if v, ok := tfMap["log_group"].(string); ok && v != "" {
+		logDelivery.LogGroup = aws.String(v)
+	}
+
+	return logDelivery
+}
+
+func expandFirehoseLogDelivery(tfList []interface{}) *kafkaconnect.FirehoseLogDelivery {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	tfMap := tfList[0].(map[string]interface{})
+
+	logDelivery := &kafkaconnect.FirehoseLogDelivery{
+		Enabled: aws.Bool(tfMap["enabled"].(bool)),
+	}
+
+	if v, ok := tfMap["delivery_stream"].(string); ok && v != "" {
+		logDelivery.DeliveryStream = aws.String(v)
+	}
+
+	return logDelivery
+}
+
+
+func expandS3LogDelivery(tfList []interface{}) *kafkaconnect.S3LogDelivery {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	tfMap := tfList[0].(map[string]interface{})
+
+	logDelivery := &kafkaconnect.S3LogDelivery{
+		Enabled: aws.Bool(tfMap["enabled"].(bool)),
+	}
+
+	if v, ok := tfMap["bucket"].(string); ok && v != "" {
+		logDelivery.Bucket = aws.String(v)
+	}
+
+	if v, ok := tfMap["prefix"].(string); ok && v != "" {
+		logDelivery.Prefix = aws.String(v)
+	}
+
+	return logDelivery
 }
