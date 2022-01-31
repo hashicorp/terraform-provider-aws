@@ -112,7 +112,7 @@ func testAccCheckObjectCopyExists(n string) resource.TestCheckFunc {
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No S3 Bucket Object ID is set")
+			return fmt.Errorf("No S3 Object ID is set")
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn

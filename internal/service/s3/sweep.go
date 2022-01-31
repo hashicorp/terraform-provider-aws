@@ -50,16 +50,16 @@ func sweepBucketObjects(region string) error {
 	output, err := conn.ListBuckets(input)
 
 	if sweep.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping S3 Bucket Objects sweep for %s: %s", region, err)
+		log.Printf("[WARN] Skipping S3 Objects sweep for %s: %s", region, err)
 		return nil
 	}
 
 	if err != nil {
-		return fmt.Errorf("error listing S3 Bucket Objects: %s", err)
+		return fmt.Errorf("error listing S3 Objects: %s", err)
 	}
 
 	if len(output.Buckets) == 0 {
-		log.Print("[DEBUG] No S3 Bucket Objects to sweep")
+		log.Print("[DEBUG] No S3 Objects to sweep")
 		return nil
 	}
 

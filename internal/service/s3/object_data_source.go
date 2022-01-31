@@ -150,7 +150,7 @@ func dataSourceBucketObjectRead(d *schema.ResourceData, meta interface{}) error 
 		uniqueId += "@" + v.(string)
 	}
 
-	log.Printf("[DEBUG] Reading S3 Bucket Object: %s", input)
+	log.Printf("[DEBUG] Reading S3 Object: %s", input)
 	out, err := conn.HeadObject(&input)
 	if err != nil {
 		return fmt.Errorf("failed getting S3 Bucket (%s) Object (%s): %w", bucket, key, err)
