@@ -161,7 +161,7 @@ resource "aws_s3_bucket" "test" {
   force_destroy = true
 }
 
-resource "aws_s3_bucket_object" "test" {
+resource "aws_s3_object" "test" {
   bucket = aws_s3_bucket.test.id
   key    = "%[1]s.json"
 
@@ -196,7 +196,7 @@ resource "aws_servicecatalog_product" "test" {
   provisioning_artifact_parameters {
     disable_template_validation = true
     name                        = %[1]q
-    template_url                = "https://${aws_s3_bucket.test.bucket_regional_domain_name}/${aws_s3_bucket_object.test.key}"
+    template_url                = "https://${aws_s3_bucket.test.bucket_regional_domain_name}/${aws_s3_object.test.key}"
     type                        = "CLOUD_FORMATION_TEMPLATE"
   }
 
