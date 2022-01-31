@@ -239,7 +239,7 @@ func testAccClientVPNNetworkAssociationImportStateIdFunc(resourceName string) re
 			return "", fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		return tfec2.ClientVPNNetworkAssociationCreateID(rs.Primary.Attributes["client_vpn_endpoint_id"], rs.Primary.ID), nil
+		return fmt.Sprintf("%s,%s", rs.Primary.Attributes["client_vpn_endpoint_id"], rs.Primary.ID), nil
 	}
 }
 

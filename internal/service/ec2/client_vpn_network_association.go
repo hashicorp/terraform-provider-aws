@@ -3,6 +3,7 @@ package ec2
 import (
 	"fmt"
 	"log"
+	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
@@ -18,6 +19,7 @@ func ResourceClientVPNNetworkAssociation() *schema.Resource {
 		Read:   resourceClientVPNNetworkAssociationRead,
 		Update: resourceClientVPNNetworkAssociationUpdate,
 		Delete: resourceClientVPNNetworkAssociationDelete,
+
 		Importer: &schema.ResourceImporter{
 			State: resourceClientVPNNetworkAssociationImport,
 		},
@@ -61,20 +63,21 @@ func ResourceClientVPNNetworkAssociation() *schema.Resource {
 func resourceClientVPNNetworkAssociationCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
-	req := &ec2.AssociateClientVpnTargetNetworkInput{
+	input := &ec2.AssociateClientVpnTargetNetworkInput{
 		ClientVpnEndpointId: aws.String(d.Get("client_vpn_endpoint_id").(string)),
 		SubnetId:            aws.String(d.Get("subnet_id").(string)),
 	}
 
-	log.Printf("[DEBUG] Creating Client VPN network association: %#v", req)
-	resp, err := conn.AssociateClientVpnTargetNetwork(req)
+	log.Printf("[DEBUG] Creating EC2 Client VPN Network Association: %s", input)
+
+	output, err := conn.AssociateClientVpnTargetNetwork(input)
+
 	if err != nil {
-		return fmt.Errorf("Error creating Client VPN network association: %w", err)
+		return fmt.Errorf("error creating EC2 Client VPN Network Association: %w", err)
 	}
 
-	d.SetId(aws.StringValue(resp.AssociationId))
+	d.SetId(aws.StringValue(output.AssociationId))
 
-	log.Printf("[DEBUG] Waiting for Client VPN endpoint to associate with target network: %s", d.Id())
 	targetNetwork, err := WaitClientVPNNetworkAssociationAssociated(conn, d.Id(), d.Get("client_vpn_endpoint_id").(string))
 	if err != nil {
 		return fmt.Errorf("error waiting for Client VPN endpoint to associate with target network: %w", err)
@@ -189,12 +192,14 @@ func DeleteClientVPNNetworkAssociation(conn *ec2.EC2, networkAssociationID, clie
 }
 
 func resourceClientVPNNetworkAssociationImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-	endpointID, associationID, err := ClientVPNNetworkAssociationParseID(d.Id())
-	if err != nil {
-		return nil, err
+	parts := strings.Split(d.Id(), ",")
+
+	if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
+		return nil, fmt.Errorf("unexpected format for ID (%[1]s), expected EndpointID%[2]sAssociationID", d.Id(), ",")
 	}
 
-	d.SetId(associationID)
-	d.Set("client_vpn_endpoint_id", endpointID)
+	d.SetId(parts[1])
+	d.Set("client_vpn_endpoint_id", parts[0])
+
 	return []*schema.ResourceData{d}, nil
 }
