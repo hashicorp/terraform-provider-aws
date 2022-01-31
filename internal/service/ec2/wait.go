@@ -157,39 +157,42 @@ func WaitClientVPNEndpointClientConnectResponseOptionsUpdated(conn *ec2.EC2, id 
 }
 
 const (
-	ClientVPNAuthorizationRuleActiveTimeout = 10 * time.Minute
-
-	ClientVPNAuthorizationRuleRevokedTimeout = 10 * time.Minute
+	ClientVPNAuthorizationRuleCreatedTimeout = 10 * time.Minute
+	ClientVPNAuthorizationRuleDeletedTimeout = 10 * time.Minute
 )
 
-func WaitClientVPNAuthorizationRuleAuthorized(conn *ec2.EC2, authorizationRuleID string) (*ec2.AuthorizationRule, error) {
+func WaitClientVPNAuthorizationRuleCreated(conn *ec2.EC2, endpointID, targetNetworkCIDR, accessGroupID string) (*ec2.AuthorizationRule, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{ec2.ClientVpnAuthorizationRuleStatusCodeAuthorizing},
 		Target:  []string{ec2.ClientVpnAuthorizationRuleStatusCodeActive},
-		Refresh: StatusClientVPNAuthorizationRule(conn, authorizationRuleID),
-		Timeout: ClientVPNAuthorizationRuleActiveTimeout,
+		Refresh: StatusClientVPNAuthorizationRule(conn, endpointID, targetNetworkCIDR, accessGroupID),
+		Timeout: ClientVPNAuthorizationRuleCreatedTimeout,
 	}
 
 	outputRaw, err := stateConf.WaitForState()
 
 	if output, ok := outputRaw.(*ec2.AuthorizationRule); ok {
+		tfresource.SetLastError(err, errors.New(aws.StringValue(output.Status.Message)))
+
 		return output, err
 	}
 
 	return nil, err
 }
 
-func WaitClientVPNAuthorizationRuleRevoked(conn *ec2.EC2, authorizationRuleID string) (*ec2.AuthorizationRule, error) {
+func WaitClientVPNAuthorizationRuleDeleted(conn *ec2.EC2, endpointID, targetNetworkCIDR, accessGroupID string) (*ec2.AuthorizationRule, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{ec2.ClientVpnAuthorizationRuleStatusCodeRevoking},
 		Target:  []string{},
-		Refresh: StatusClientVPNAuthorizationRule(conn, authorizationRuleID),
-		Timeout: ClientVPNAuthorizationRuleRevokedTimeout,
+		Refresh: StatusClientVPNAuthorizationRule(conn, endpointID, targetNetworkCIDR, accessGroupID),
+		Timeout: ClientVPNAuthorizationRuleDeletedTimeout,
 	}
 
 	outputRaw, err := stateConf.WaitForState()
 
 	if output, ok := outputRaw.(*ec2.AuthorizationRule); ok {
+		tfresource.SetLastError(err, errors.New(aws.StringValue(output.Status.Message)))
+
 		return output, err
 	}
 

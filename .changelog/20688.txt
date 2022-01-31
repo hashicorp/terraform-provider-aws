@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_ec2_client_vpn_authorization_rule: Don't raise an error when `InvalidClientVpnEndpointId.NotFound` is returned during refresh
+```

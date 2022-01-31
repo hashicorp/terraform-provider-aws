@@ -123,30 +123,71 @@ func FindClientVPNEndpointClientConnectResponseOptionsByID(conn *ec2.EC2, id str
 	return output.ClientConnectOptions, nil
 }
 
-func FindClientVPNAuthorizationRule(conn *ec2.EC2, endpointID, targetNetworkCidr, accessGroupID string) (*ec2.DescribeClientVpnAuthorizationRulesOutput, error) {
+func FindClientVPNAuthorizationRule(conn *ec2.EC2, input *ec2.DescribeClientVpnAuthorizationRulesInput) (*ec2.AuthorizationRule, error) {
+	output, err := FindClientVPNAuthorizationRules(conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if len(output) == 0 || output[0] == nil || output[0].Status == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	if count := len(output); count > 1 {
+		return nil, tfresource.NewTooManyResultsError(count, input)
+	}
+
+	return output[0], nil
+}
+
+func FindClientVPNAuthorizationRules(conn *ec2.EC2, input *ec2.DescribeClientVpnAuthorizationRulesInput) ([]*ec2.AuthorizationRule, error) {
+	var output []*ec2.AuthorizationRule
+
+	err := conn.DescribeClientVpnAuthorizationRulesPages(input, func(page *ec2.DescribeClientVpnAuthorizationRulesOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.AuthorizationRules {
+			if v == nil {
+				continue
+			}
+
+			output = append(output, v)
+		}
+
+		return !lastPage
+	})
+
+	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidClientVpnEndpointIdNotFound) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
+}
+
+func FindClientVPNAuthorizationRuleByEndpointIDTargetNetworkCIDRAndGroupID(conn *ec2.EC2, endpointID, targetNetworkCIDR, accessGroupID string) (*ec2.AuthorizationRule, error) {
 	filters := map[string]string{
-		"destination-cidr": targetNetworkCidr,
+		"destination-cidr": targetNetworkCIDR,
 	}
 	if accessGroupID != "" {
 		filters["group-id"] = accessGroupID
 	}
-
 	input := &ec2.DescribeClientVpnAuthorizationRulesInput{
 		ClientVpnEndpointId: aws.String(endpointID),
 		Filters:             BuildAttributeFilterList(filters),
 	}
 
-	return conn.DescribeClientVpnAuthorizationRules(input)
+	return FindClientVPNAuthorizationRule(conn, input)
 
-}
-
-func FindClientVPNAuthorizationRuleByID(conn *ec2.EC2, authorizationRuleID string) (*ec2.DescribeClientVpnAuthorizationRulesOutput, error) {
-	endpointID, targetNetworkCidr, accessGroupID, err := ClientVPNAuthorizationRuleParseID(authorizationRuleID)
-	if err != nil {
-		return nil, err
-	}
-
-	return FindClientVPNAuthorizationRule(conn, endpointID, targetNetworkCidr, accessGroupID)
 }
 
 func FindClientVPNRoute(conn *ec2.EC2, endpointID, targetSubnetID, destinationCidr string) (*ec2.DescribeClientVpnRoutesOutput, error) {
