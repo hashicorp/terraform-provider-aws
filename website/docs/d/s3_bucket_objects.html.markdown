@@ -1,12 +1,12 @@
 ---
 subcategory: "S3"
 layout: "aws"
-page_title: "AWS: aws_s3_bucket_objects"
+page_title: "AWS: aws_s3_objects"
 description: |-
     Returns keys and metadata of S3 objects
 ---
 
-# Data Source: aws_s3_bucket_objects
+# Data Source: aws_s3_objects
 
 ~> **NOTE on `max_keys`:** Retrieving very large numbers of keys can adversely affect Terraform's performance.
 
@@ -17,14 +17,14 @@ The bucket-objects data source returns keys (i.e., file names) and other metadat
 The following example retrieves a list of all object keys in an S3 bucket and creates corresponding Terraform object data sources:
 
 ```terraform
-data "aws_s3_bucket_objects" "my_objects" {
+data "aws_s3_objects" "my_objects" {
   bucket = "ourcorp"
 }
 
-data "aws_s3_bucket_object" "object_info" {
-  count  = length(data.aws_s3_bucket_objects.my_objects.keys)
-  key    = element(data.aws_s3_bucket_objects.my_objects.keys, count.index)
-  bucket = data.aws_s3_bucket_objects.my_objects.bucket
+data "aws_s3_object" "object_info" {
+  count  = length(data.aws_s3_objects.my_objects.keys)
+  key    = element(data.aws_s3_objects.my_objects.keys, count.index)
+  bucket = data.aws_s3_objects.my_objects.bucket
 }
 ```
 
