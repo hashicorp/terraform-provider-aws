@@ -24,6 +24,10 @@ resource "aws_imagebuilder_distribution_configuration" "example" {
 
       name = "example-{{ imagebuilder:buildDate }}"
 
+      launch_template_configuration {
+        launch_template_id = "lt-0aaa1bcde2ff3456"
+      }
+
       launch_permission {
         user_ids = ["123456789012"]
       }
@@ -57,6 +61,7 @@ The following arguments are optional:
 
 * `ami_distribution_configuration` - (Optional) Configuration block with Amazon Machine Image (AMI) distribution settings. Detailed below.
 * `container_distribution_configuration` - (Optional) Configuration block with container distribution settings. Detailed below.
+* `launch_template_configuration` - (Optional) Set of launch template configuration settings that apply to image distribution. Detailed below.
 * `license_configuration_arns` - (Optional) Set of Amazon Resource Names (ARNs) of License Manager License Configurations.
 
 ### ami_distribution_configuration
@@ -87,6 +92,11 @@ The following arguments are optional:
 
 * `repository_name` - (Required) The name of the container repository where the output container image is stored. This name is prefixed by the repository location.
 * `service` - (Required) The service in which this image is registered. Valid values: `ECR`.
+
+### launch_template_configuration
+
+* `default` - (Optional) Indicates whether to set the specified Amazon EC2 launch template as the default launch template. Defaults to `true`.
+* `launch_template_id` - (Required) The ID of the Amazon EC2 launch template to use.
 
 ## Attributes Reference
 
