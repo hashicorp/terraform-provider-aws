@@ -3,12 +3,12 @@ subcategory: "S3"
 layout: "aws"
 page_title: "AWS: aws_s3_object"
 description: |-
-  Provides a S3 bucket object resource.
+  Provides an S3 object resource.
 ---
 
 # Resource: aws_s3_object
 
-Provides a S3 bucket object resource.
+Provides an S3 object resource.
 
 ## Example Usage
 
