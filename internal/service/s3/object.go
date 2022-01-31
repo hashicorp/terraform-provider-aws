@@ -262,7 +262,7 @@ func resourceObjectRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("object_lock_retain_until_date", flattenS3ObjectDate(resp.ObjectLockRetainUntilDate))
 
 	if err := resourceObjectSetKMS(d, meta, resp.SSEKMSKeyId); err != nil {
-		return fmt.Errorf("bucket object KMS: %w", err)
+		return fmt.Errorf("object KMS: %w", err)
 	}
 
 	// See https://forums.aws.amazon.com/thread.jspa?threadID=44003
@@ -749,7 +749,7 @@ func DeleteAllObjectVersions(conn *s3.S3, bucketName, key string, force, ignoreO
 	return nil
 }
 
-// deleteS3ObjectVersion deletes a specific bucket object version.
+// deleteS3ObjectVersion deletes a specific object version.
 // Set force to true to override any S3 object lock protections.
 func deleteS3ObjectVersion(conn *s3.S3, b, k, v string, force bool) error {
 	input := &s3.DeleteObjectInput{
