@@ -43,6 +43,10 @@ func ResourceConnector() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
+			"state": {
+				Type: schema.TypeString,
+				Computed: true,
+			},
 			"capacity": {
 				Type:     schema.TypeList,
 				MaxItems: 1,
@@ -71,7 +75,7 @@ func ResourceConnector() *schema.Resource {
 									"scale_in_policy": {
 										Type:     schema.TypeList,
 										MaxItems: 1,
-										Required: true,
+										Optional: true,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"cpu_utilization_percentage": {
@@ -84,7 +88,7 @@ func ResourceConnector() *schema.Resource {
 									"scale_out_policy": {
 										Type:     schema.TypeList,
 										MaxItems: 1,
-										Required: true,
+										Optional: true,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"cpu_utilization_percentage": {
@@ -118,7 +122,7 @@ func ResourceConnector() *schema.Resource {
 					},
 				},
 			},
-			"connector_configuration": {
+			"configuration": {
 				Type: schema.TypeMap,
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
@@ -184,6 +188,7 @@ func ResourceConnector() *schema.Resource {
 			},
 			"custom_plugin": {
 				Type: schema.TypeSet,
+				Required: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"arn": {
@@ -196,7 +201,6 @@ func ResourceConnector() *schema.Resource {
 						},
 					},
 				},
-				Required: true,
 			},
 			"service_execution_role_arn": {
 				Type:     schema.TypeString,
@@ -217,7 +221,7 @@ func ResourceConnector() *schema.Resource {
 									"cloudwatch": {
 										Type:     schema.TypeList,
 										MaxItems: 1,
-										Required: true,
+										Optional: true,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"enabled": {
@@ -226,7 +230,45 @@ func ResourceConnector() *schema.Resource {
 												},
 												"log_group": {
 													Type:     schema.TypeString,
+													Optional: true,
+												},
+											},
+										},
+									},
+									"firehose": {
+										Type: schema.TypeList,
+										MaxItems: 1,
+										Optional: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"enabled": {
+													Type: schema.TypeBool,
 													Required: true,
+												},
+												"delivery_stream": {
+													Type: schema.TypeString,
+													Optional: true,
+												},
+											},
+										},
+									},
+									"s3": {
+										Type: schema.TypeList,
+										MaxItems: 1,
+										Optional: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"enabled": {
+													Type: schema.TypeBool,
+													Required: true,
+												},
+												"bucket": {
+													Type: schema.TypeString,
+													Optional: true,
+												},
+												"prefix": {
+													Type: schema.TypeString,
+													Optional: true,
 												},
 											},
 										},
@@ -324,7 +366,7 @@ func resourceConnectorDelete(d *schema.ResourceData, meta interface{}) error {
 	_, err = waitConnectorDeleted(conn, d.Id(), d.Timeout(schema.TimeoutDelete))
 
 	if err != nil {
-		return fmt.Errorf("error waiting for MSK Connect Conector (%s) delete: %w", d.Id(), err)
+		return fmt.Errorf("error waiting for MSK Connect Connector (%s) delete: %w", d.Id(), err)
 	}
 
 	return nil
@@ -335,11 +377,11 @@ func expandCapacity(tfList []interface{}) *kafkaconnect.Capacity {
 		return nil
 	}
 
-	capacity := tfList[0].(map[string]interface{})
+	tfMap := tfList[0].(map[string]interface{})
 
 	return &kafkaconnect.Capacity{
-		AutoScaling:         expandAutoscaling(capacity["autoscaling"].([]interface{})),
-		ProvisionedCapacity: expandProvisionedCapacity((capacity["provisioned_capacity"].([]interface{}))),
+		AutoScaling:         expandAutoscaling(tfMap["autoscaling"].([]interface{})),
+		ProvisionedCapacity: expandProvisionedCapacity((tfMap["provisioned_capacity"].([]interface{}))),
 	}
 }
 
@@ -348,14 +390,14 @@ func expandAutoscaling(tfList []interface{}) *kafkaconnect.AutoScaling {
 		return nil
 	}
 
-	autoscaling := tfList[0].(map[string]interface{})
+	tfMap := tfList[0].(map[string]interface{})
 
 	return &kafkaconnect.AutoScaling{
-		MaxWorkerCount: aws.Int64(int64(autoscaling["max_worker_count"].(int))),
-		McuCount:       aws.Int64(int64(autoscaling["mcu_count"].(int))),
-		MinWorkerCount: aws.Int64(int64(autoscaling["min_worker_count"].(int))),
-		ScaleInPolicy:  expandScaleInPolicy(autoscaling["scale_in_policy"].([]interface{})),
-		ScaleOutPolicy: expandScaleOutPolicy(autoscaling["scale_out_policy"].([]interface{})),
+		MaxWorkerCount: aws.Int64(int64(tfMap["max_worker_count"].(int))),
+		McuCount:       aws.Int64(int64(tfMap["mcu_count"].(int))),
+		MinWorkerCount: aws.Int64(int64(tfMap["min_worker_count"].(int))),
+		ScaleInPolicy:  expandScaleInPolicy(tfMap["scale_in_policy"].([]interface{})),
+		ScaleOutPolicy: expandScaleOutPolicy(tfMap["scale_out_policy"].([]interface{})),
 	}
 }
 
@@ -364,10 +406,10 @@ func expandScaleInPolicy(tfList []interface{}) *kafkaconnect.ScaleInPolicy {
 		return nil
 	}
 
-	policy := tfList[0].(map[string]interface{})
+	tfMap := tfList[0].(map[string]interface{})
 
 	return &kafkaconnect.ScaleInPolicy{
-		CpuUtilizationPercentage: aws.Int64(int64(policy["cpu_utilization_percentage"].(int))),
+		CpuUtilizationPercentage: aws.Int64(int64(tfMap["cpu_utilization_percentage"].(int))),
 	}
 }
 
@@ -376,10 +418,10 @@ func expandScaleOutPolicy(tfList []interface{}) *kafkaconnect.ScaleOutPolicy {
 		return nil
 	}
 
-	policy := tfList[0].(map[string]interface{})
+	tfMap := tfList[0].(map[string]interface{})
 
 	return &kafkaconnect.ScaleOutPolicy{
-		CpuUtilizationPercentage: aws.Int64(int64(policy["cpu_utilization_percentage"].(int))),
+		CpuUtilizationPercentage: aws.Int64(int64(tfMap["cpu_utilization_percentage"].(int))),
 	}
 }
 
@@ -388,11 +430,11 @@ func expandProvisionedCapacity(tfList []interface{}) *kafkaconnect.ProvisionedCa
 		return nil
 	}
 
-	capacity := tfList[0].(map[string]interface{})
+	tfMap := tfList[0].(map[string]interface{})
 
 	return &kafkaconnect.ProvisionedCapacity{
-		McuCount:    aws.Int64(int64(capacity["mcu_count"].(int))),
-		WorkerCount: aws.Int64(int64(capacity["worker_count"].(int))),
+		McuCount:    aws.Int64(int64(tfMap["mcu_count"].(int))),
+		WorkerCount: aws.Int64(int64(tfMap["worker_count"].(int))),
 	}
 }
 
@@ -407,11 +449,11 @@ func expandKafkaCluster(tfList []interface{}) *kafkaconnect.KafkaCluster {
 }
 
 func expandApacheKafkaCluster(tfList interface{}) *kafkaconnect.ApacheKafkaCluster {
-	cluster := tfList.(map[string]interface{})
+	tfMap := tfList.(map[string]interface{})
 
 	return &kafkaconnect.ApacheKafkaCluster{
-		BootstrapServers: aws.String(cluster["bootstrap_servers"].(string)),
-		Vpc:              expandVpc(cluster),
+		BootstrapServers: aws.String(tfMap["bootstrap_servers"].(string)),
+		Vpc:              expandVpc(tfMap),
 	}
 }
 
@@ -441,17 +483,17 @@ func expandKafkaClientAuthentication(tfList []interface{}) *kafkaconnect.KafkaCl
 		return nil
 	}
 
-	cluster := tfList[0].(map[string]interface{})
+	tfMap := tfList[0].(map[string]interface{})
 
-	clientAuthList := cluster["client_authentication"].([]interface{})
+	clientAuthList := tfMap["client_authentication"].([]interface{})
 	if len(clientAuthList) == 0 {
 		return nil
 	}
 
-	clientAuth := clientAuthList[0].(map[string]interface{})
+	clientAuthMap := clientAuthList[0].(map[string]interface{})
 
 	return &kafkaconnect.KafkaClusterClientAuthentication{
-		AuthenticationType: aws.String(clientAuth["authentication_type"].(string)),
+		AuthenticationType: aws.String(clientAuthMap["authentication_type"].(string)),
 	}
 }
 
@@ -460,17 +502,17 @@ func expandKafkaEncryptionInTransit(tfList []interface{}) *kafkaconnect.KafkaClu
 		return nil
 	}
 
-	cluster := tfList[0].(map[string]interface{})
+	tfMap := tfList[0].(map[string]interface{})
 
-	encryptionList := cluster["encryption_at_transit"].([]interface{})
+	encryptionList := tfMap["encryption_at_transit"].([]interface{})
 	if len(encryptionList) == 0 {
 		return nil
 	}
 
-	encryption := encryptionList[0].(map[string]interface{})
+	encryptionMap := encryptionList[0].(map[string]interface{})
 
 	return &kafkaconnect.KafkaClusterEncryptionInTransit{
-		EncryptionType: aws.String(encryption["encryption_type"].(string)),
+		EncryptionType: aws.String(encryptionMap["encryption_type"].(string)),
 	}
 }
 
@@ -479,14 +521,14 @@ func expandPlugins(tfSet *schema.Set) []*kafkaconnect.Plugin {
 		return nil
 	}
 
-	plugins := make([]*kafkaconnect.Plugin, tfSet.Len())
+	pluginList := make([]*kafkaconnect.Plugin, tfSet.Len())
 
 	tfList := tfSet.List()
 
 	for i, plugin := range tfList {
 		pluginMap := plugin.(map[string]interface{})
 
-		plugins[i] = &kafkaconnect.Plugin{
+		pluginList[i] = &kafkaconnect.Plugin{
 			CustomPlugin: &kafkaconnect.CustomPlugin{
 				CustomPluginArn: aws.String(pluginMap["arn"].(string)),
 				Revision:        aws.Int64(int64(pluginMap["revision"].(int))),
@@ -494,7 +536,7 @@ func expandPlugins(tfSet *schema.Set) []*kafkaconnect.Plugin {
 		}
 	}
 
-	return plugins
+	return pluginList
 }
 
 func expandConnectorConfiguration(tfMap map[string]interface{}) map[string]*string {
@@ -502,13 +544,13 @@ func expandConnectorConfiguration(tfMap map[string]interface{}) map[string]*stri
 		return nil
 	}
 
-	config := make(map[string]*string)
+	configMap := make(map[string]*string)
 
 	for k, v := range tfMap {
-		config[k] = aws.String(v.(string))
+		configMap[k] = aws.String(v.(string))
 	}
 
-	return config
+	return configMap
 }
 
 func expandLogDelivery(tfList []interface{}) *kafkaconnect.LogDelivery {
@@ -516,10 +558,10 @@ func expandLogDelivery(tfList []interface{}) *kafkaconnect.LogDelivery {
 		return nil
 	}
 
-	logDelivery := tfList[0].(map[string]interface{})
+	tfMap := tfList[0].(map[string]interface{})
 
 	return &kafkaconnect.LogDelivery{
-		WorkerLogDelivery: expandWorkerLogDelivery(logDelivery["worker_log_delivery"].([]interface{})),
+		WorkerLogDelivery: expandWorkerLogDelivery(tfMap["worker_log_delivery"].([]interface{})),
 	}
 }
 
