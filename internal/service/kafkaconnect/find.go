@@ -56,3 +56,27 @@ func FindWorkerConfigurationByARN(conn *kafkaconnect.KafkaConnect, arn string) (
 
 	return output, nil
 }
+
+func FindConnectorByARN(conn *kafkaconnect.KafkaConnect, arn string) (*kafkaconnect.DescribeConnectorOutput, error) {
+	input := &kafkaconnect.DescribeConnectorInput{
+		ConnectorArn: aws.String(arn),
+	}
+
+	output, err := conn.DescribeConnector(input)
+	if tfawserr.ErrCodeEquals(err, kafkaconnect.ErrCodeNotFoundException) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
+}

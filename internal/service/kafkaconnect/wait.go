@@ -23,3 +23,37 @@ func waitCustomPluginCreated(conn *kafkaconnect.KafkaConnect, arn string, timeou
 
 	return nil, err
 }
+
+func waitConnectorCreated(conn *kafkaconnect.KafkaConnect, arn string, timeout time.Duration) (*kafkaconnect.DescribeConnectorOutput, error) {
+	stateconf := &resource.StateChangeConf{
+		Pending: []string{kafkaconnect.ConnectorStateCreating},
+		Target:  []string{kafkaconnect.ConnectorStateRunning},
+		Refresh: statusConnectorState(conn, arn),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateconf.WaitForState()
+
+	if output, ok := outputRaw.(*kafkaconnect.DescribeConnectorOutput); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitConnectorDeleted(conn *kafkaconnect.KafkaConnect, arn string, timeout time.Duration) (*kafkaconnect.DescribeConnectorOutput, error) {
+	stateconf := &resource.StateChangeConf{
+		Pending: []string{kafkaconnect.ConnectorStateDeleting},
+		Target:  []string{},
+		Refresh: statusConnectorState(conn, arn),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateconf.WaitForState()
+
+	if output, ok := outputRaw.(*kafkaconnect.DescribeConnectorOutput); ok {
+		return output, err
+	}
+
+	return nil, err
+}
