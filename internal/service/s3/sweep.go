@@ -93,7 +93,7 @@ func sweepObjects(region string) error {
 			continue
 		}
 
-		objectLockEnabled, err := bucketObjectLockEnabled(conn, bucketName)
+		objectLockEnabled, err := objectLockEnabled(conn, bucketName)
 
 		if err != nil {
 			log.Printf("[ERROR] Error getting S3 Bucket (%s) Object Lock: %s", bucketName, err)
@@ -217,7 +217,7 @@ func bucketRegion(conn *s3.S3, bucket string) (string, error) {
 	return region, nil
 }
 
-func bucketObjectLockEnabled(conn *s3.S3, bucket string) (bool, error) {
+func objectLockEnabled(conn *s3.S3, bucket string) (bool, error) {
 	input := &s3.GetObjectLockConfigurationInput{
 		Bucket: aws.String(bucket),
 	}
