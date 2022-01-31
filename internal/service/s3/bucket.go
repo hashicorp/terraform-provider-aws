@@ -842,7 +842,7 @@ func resourceBucketUpdate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if d.HasChange("object_lock_configuration") {
-		if err := resourceBucketObjectLockConfigurationUpdate(conn, d); err != nil {
+		if err := resourceObjectLockConfigurationUpdate(conn, d); err != nil {
 			return err
 		}
 	}
@@ -2014,7 +2014,7 @@ func resourceBucketServerSideEncryptionConfigurationUpdate(conn *s3.S3, d *schem
 	return nil
 }
 
-func resourceBucketObjectLockConfigurationUpdate(conn *s3.S3, d *schema.ResourceData) error {
+func resourceObjectLockConfigurationUpdate(conn *s3.S3, d *schema.ResourceData) error {
 	// S3 Object Lock configuration cannot be deleted, only updated.
 	req := &s3.PutObjectLockConfigurationInput{
 		Bucket:                  aws.String(d.Get("bucket").(string)),

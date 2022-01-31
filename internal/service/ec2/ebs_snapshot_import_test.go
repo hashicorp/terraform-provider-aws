@@ -136,7 +136,7 @@ func TestAccEC2EBSSnapshotImport_disappears(t *testing.T) {
 	})
 }
 
-func TestAccEC2EBSSnapshotImport_Disappears_s3BucketObject(t *testing.T) {
+func TestAccEC2EBSSnapshotImport_Disappears_s3Object(t *testing.T) {
 	var v ec2.Snapshot
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	parentResourceName := "aws_s3_object.image"
@@ -155,7 +155,7 @@ func TestAccEC2EBSSnapshotImport_Disappears_s3BucketObject(t *testing.T) {
 					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "ec2", regexp.MustCompile(`snapshot/snap-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					acctest.CheckResourceAttrAccountID(resourceName, "owner_id"),
-					acctest.CheckResourceDisappears(acctest.Provider, tfs3.ResourceBucketObject(), parentResourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfs3.ResourceObject(), parentResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
