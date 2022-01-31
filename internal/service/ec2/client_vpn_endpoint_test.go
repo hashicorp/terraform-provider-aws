@@ -47,10 +47,11 @@ func TestAccEC2ClientVPNEndpoint_serial(t *testing.T) {
 			"selfServicePortal":            testAccClientVPNEndpoint_selfServicePortal,
 		},
 		"AuthorizationRule": {
-			"basic":      testAccClientVPNAuthorizationRule_basic,
-			"groups":     testAccClientVPNAuthorizationRule_groups,
-			"Subnets":    testAccClientVPNAuthorizationRule_Subnets,
-			"disappears": testAccClientVPNAuthorizationRule_disappears,
+			"basic":              testAccClientVPNAuthorizationRule_basic,
+			"groups":             testAccClientVPNAuthorizationRule_groups,
+			"subnets":            testAccClientVPNAuthorizationRule_subnets,
+			"disappears":         testAccClientVPNAuthorizationRule_disappears,
+			"disappearsEndpoint": testAccClientVPNAuthorizationRule_Disappears_endpoint,
 		},
 		"NetworkAssociation": {
 			"basic":           testAccClientVPNNetworkAssociation_basic,

@@ -109,37 +109,19 @@ func StatusClientVPNEndpointClientConnectResponseOptionsState(conn *ec2.EC2, id 
 	}
 }
 
-const (
-	ClientVPNAuthorizationRuleStatusNotFound = "NotFound"
-
-	ClientVPNAuthorizationRuleStatusUnknown = "Unknown"
-)
-
-// StatusClientVPNAuthorizationRule fetches the Client VPN authorization rule and its Status
-func StatusClientVPNAuthorizationRule(conn *ec2.EC2, authorizationRuleID string) resource.StateRefreshFunc {
+func StatusClientVPNAuthorizationRule(conn *ec2.EC2, endpointID, targetNetworkCIDR, accessGroupID string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		result, err := FindClientVPNAuthorizationRuleByID(conn, authorizationRuleID)
-		if tfawserr.ErrCodeEquals(err, ErrCodeInvalidClientVpnAuthorizationRuleNotFound) {
-			return nil, ClientVPNAuthorizationRuleStatusNotFound, nil
+		output, err := FindClientVPNAuthorizationRuleByEndpointIDTargetNetworkCIDRAndGroupID(conn, endpointID, targetNetworkCIDR, accessGroupID)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
 		}
+
 		if err != nil {
-			return nil, ClientVPNAuthorizationRuleStatusUnknown, err
+			return nil, "", err
 		}
 
-		if result == nil || len(result.AuthorizationRules) == 0 || result.AuthorizationRules[0] == nil {
-			return nil, ClientVPNAuthorizationRuleStatusNotFound, nil
-		}
-
-		if len(result.AuthorizationRules) > 1 {
-			return nil, ClientVPNAuthorizationRuleStatusUnknown, fmt.Errorf("internal error: found %d results for Client VPN authorization rule (%s) status, need 1", len(result.AuthorizationRules), authorizationRuleID)
-		}
-
-		rule := result.AuthorizationRules[0]
-		if rule.Status == nil || rule.Status.Code == nil {
-			return rule, ClientVPNAuthorizationRuleStatusUnknown, nil
-		}
-
-		return rule, aws.StringValue(rule.Status.Code), nil
+		return output, aws.StringValue(output.Status.Code), nil
 	}
 }
 
