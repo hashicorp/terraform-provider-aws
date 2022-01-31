@@ -32,11 +32,6 @@ func ResourceClientVPNNetworkAssociation() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"subnet_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
 			"security_groups": {
 				Type:     schema.TypeSet,
 				MinItems: 1,
@@ -49,6 +44,11 @@ func ResourceClientVPNNetworkAssociation() *schema.Resource {
 			"status": {
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+			"subnet_id": {
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
 			},
 			"vpc_id": {
 				Type:     schema.TypeString,
