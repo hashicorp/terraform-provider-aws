@@ -23,6 +23,11 @@ func ResourceClientVPNAuthorizationRule() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(ClientVPNAuthorizationRuleCreatedTimeout),
+			Delete: schema.DefaultTimeout(ClientVPNAuthorizationRuleDeletedTimeout),
+		},
+
 		Schema: map[string]*schema.Schema{
 			"access_group_id": {
 				Type:         schema.TypeString,
@@ -92,7 +97,7 @@ func resourceClientVPNAuthorizationRuleCreate(d *schema.ResourceData, meta inter
 
 	d.SetId(id)
 
-	if _, err := WaitClientVPNAuthorizationRuleCreated(conn, endpointID, targetNetworkCIDR, accessGroupID); err != nil {
+	if _, err := WaitClientVPNAuthorizationRuleCreated(conn, endpointID, targetNetworkCIDR, accessGroupID, d.Timeout(schema.TimeoutCreate)); err != nil {
 		return fmt.Errorf("error waiting for EC2 Client VPN Authorization Rule (%s) create: %w", d.Id(), err)
 	}
 
@@ -158,7 +163,7 @@ func resourceClientVPNAuthorizationRuleDelete(d *schema.ResourceData, meta inter
 		return fmt.Errorf("error revoking EC2 Client VPN Authorization Rule (%s): %w", d.Id(), err)
 	}
 
-	if _, err := WaitClientVPNAuthorizationRuleDeleted(conn, endpointID, targetNetworkCIDR, accessGroupID); err != nil {
+	if _, err := WaitClientVPNAuthorizationRuleDeleted(conn, endpointID, targetNetworkCIDR, accessGroupID, d.Timeout(schema.TimeoutDelete)); err != nil {
 		return fmt.Errorf("error waiting for EC2 Client VPN Authorization Rule (%s) delete: %w", d.Id(), err)
 	}
 

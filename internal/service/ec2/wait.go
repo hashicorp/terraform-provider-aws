@@ -161,12 +161,12 @@ const (
 	ClientVPNAuthorizationRuleDeletedTimeout = 10 * time.Minute
 )
 
-func WaitClientVPNAuthorizationRuleCreated(conn *ec2.EC2, endpointID, targetNetworkCIDR, accessGroupID string) (*ec2.AuthorizationRule, error) {
+func WaitClientVPNAuthorizationRuleCreated(conn *ec2.EC2, endpointID, targetNetworkCIDR, accessGroupID string, timeout time.Duration) (*ec2.AuthorizationRule, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{ec2.ClientVpnAuthorizationRuleStatusCodeAuthorizing},
 		Target:  []string{ec2.ClientVpnAuthorizationRuleStatusCodeActive},
 		Refresh: StatusClientVPNAuthorizationRule(conn, endpointID, targetNetworkCIDR, accessGroupID),
-		Timeout: ClientVPNAuthorizationRuleCreatedTimeout,
+		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForState()
@@ -180,12 +180,12 @@ func WaitClientVPNAuthorizationRuleCreated(conn *ec2.EC2, endpointID, targetNetw
 	return nil, err
 }
 
-func WaitClientVPNAuthorizationRuleDeleted(conn *ec2.EC2, endpointID, targetNetworkCIDR, accessGroupID string) (*ec2.AuthorizationRule, error) {
+func WaitClientVPNAuthorizationRuleDeleted(conn *ec2.EC2, endpointID, targetNetworkCIDR, accessGroupID string, timeout time.Duration) (*ec2.AuthorizationRule, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{ec2.ClientVpnAuthorizationRuleStatusCodeRevoking},
 		Target:  []string{},
 		Refresh: StatusClientVPNAuthorizationRule(conn, endpointID, targetNetworkCIDR, accessGroupID),
-		Timeout: ClientVPNAuthorizationRuleDeletedTimeout,
+		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForState()
