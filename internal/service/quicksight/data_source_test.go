@@ -471,7 +471,7 @@ resource "aws_s3_bucket" "test" {
   force_destroy = true
 }
 
-resource "aws_s3_bucket_object" "test" {
+resource "aws_s3_object" "test" {
   bucket  = aws_s3_bucket.test.bucket
   key     = %[1]q
   content = <<EOF
@@ -505,7 +505,7 @@ resource "aws_quicksight_data_source" "test" {
     s3 {
       manifest_file_location {
         bucket = aws_s3_bucket.test.bucket
-        key    = aws_s3_bucket_object.test.key
+        key    = aws_s3_object.test.key
       }
     }
   }
@@ -527,7 +527,7 @@ resource "aws_quicksight_data_source" "test" {
     s3 {
       manifest_file_location {
         bucket = aws_s3_bucket.test.bucket
-        key    = aws_s3_bucket_object.test.key
+        key    = aws_s3_object.test.key
       }
     }
   }
@@ -553,7 +553,7 @@ resource "aws_quicksight_data_source" "test" {
     s3 {
       manifest_file_location {
         bucket = aws_s3_bucket.test.bucket
-        key    = aws_s3_bucket_object.test.key
+        key    = aws_s3_object.test.key
       }
     }
   }
@@ -598,7 +598,7 @@ resource "aws_quicksight_data_source" "test" {
     s3 {
       manifest_file_location {
         bucket = aws_s3_bucket.test.bucket
-        key    = aws_s3_bucket_object.test.key
+        key    = aws_s3_object.test.key
       }
     }
   }
@@ -631,7 +631,7 @@ resource "aws_quicksight_data_source" "test" {
     s3 {
       manifest_file_location {
         bucket = aws_s3_bucket.test.bucket
-        key    = aws_s3_bucket_object.test.key
+        key    = aws_s3_object.test.key
       }
     }
   }

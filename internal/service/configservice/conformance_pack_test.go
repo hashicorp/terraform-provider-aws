@@ -657,7 +657,7 @@ resource "aws_s3_bucket" "test" {
   force_destroy = true
 }
 
-resource "aws_s3_bucket_object" "test" {
+resource "aws_s3_object" "test" {
   bucket  = aws_s3_bucket.test.id
   key     = %[1]q
   content = <<EOT
@@ -675,7 +675,7 @@ EOT
 resource "aws_config_conformance_pack" "test" {
   depends_on      = [aws_config_configuration_recorder.test]
   name            = %q
-  template_s3_uri = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_bucket_object.test.id}"
+  template_s3_uri = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.test.id}"
 }
 `, bucketName, rName))
 }
@@ -689,7 +689,7 @@ resource "aws_s3_bucket" "test" {
   force_destroy = true
 }
 
-resource "aws_s3_bucket_object" "test" {
+resource "aws_s3_object" "test" {
   bucket  = aws_s3_bucket.test.id
   key     = %[1]q
   content = <<EOT
@@ -717,7 +717,7 @@ Resources:
         SourceIdentifier: IAM_PASSWORD_POLICY
     Type: AWS::Config::ConfigRule
 EOT
-  template_s3_uri = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_bucket_object.test.id}"
+  template_s3_uri = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.test.id}"
 }
 `, rName))
 }
