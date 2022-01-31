@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"os"
 	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -86,7 +87,7 @@ func ResourceDataSet() *schema.Resource {
 				MaxItems: 8,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"geo_spacial_column_group": {
+						"geo_spatial_column_group": {
 							Type:     schema.TypeList,
 							Optional: true,
 							MaxItems: 1,
@@ -814,16 +815,16 @@ func resourceAwsQuickSightDataSetCreate(ctx context.Context, d *schema.ResourceD
 		params.DataSetUsageConfiguration = expandQuickSightDataSetUsageConfiguration(v.([]interface{}))
 	}
 
-	if v, ok := d.GetOk("field_folders"); ok && len(v.(map[string]interface{})) != 0 {
-		params.FieldFolders = expandQuickSightDataSetFieldFolders(v.(map[string]interface{}))
+	if v, ok := d.GetOk("field_folders"); ok && len(v.([]interface{})) != 0 {
+		params.FieldFolders = expandQuickSightDataSetFieldFolders(v.([]interface{}))
 	}
 
-	if v, ok := d.GetOk("logical_table_map"); ok && len(v.(map[string]interface{})) != 0 {
-		params.LogicalTableMap = expandQuickSightDataSetLogicalTableMap(v.(map[string]interface{}))
+	if v, ok := d.GetOk("logical_table_map"); ok && len(v.([]interface{})) != 0 {
+		params.LogicalTableMap = expandQuickSightDataSetLogicalTableMap(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("permissions"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		params.Permissions = expandQuickSightDataSetResourcePermissions(v.([]interface{}))
+		params.Permissions = expandQuickSightDataSourcePermissions(v.(*schema.Set).List())
 	}
 
 	if v, ok := d.GetOk("row_level_permission_data_set"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
@@ -980,7 +981,7 @@ func resourceAwsQuickSightDataSetUpdate(ctx context.Context, d *schema.ResourceD
 		}
 
 		if d.HasChange("field_folders") {
-			params.FieldFolders = expandQuickSightDataSetFieldFolders(d.Get("field_folders").(map[string]interface{}))
+			params.FieldFolders = expandQuickSightDataSetFieldFolders(d.Get("field_folders").([]interface{}))
 		}
 
 		if d.HasChange("import_mode") {
@@ -988,7 +989,7 @@ func resourceAwsQuickSightDataSetUpdate(ctx context.Context, d *schema.ResourceD
 		}
 
 		if d.HasChange("logical_table_map") {
-			params.LogicalTableMap = expandQuickSightDataSetLogicalTableMap(d.Get("logical_table_map").(map[string]interface{}))
+			params.LogicalTableMap = expandQuickSightDataSetLogicalTableMap(d.Get("logical_table_map").([]interface{}))
 		}
 
 		if d.HasChange("physical_table_map") {
@@ -1115,12 +1116,24 @@ func expandQuickSightDataSetColumnGroup(tfMap map[string]interface{}) *quicksigh
 	}
 
 	columnGroup := &quicksight.ColumnGroup{}
-
-	if tfMapRaw, ok := tfMap["geo_spatial_column_group"].(map[string]interface{}); ok {
-		columnGroup.GeoSpatialColumnGroup = expandQuickSightDataSetGeoSpatialColumnGroup(tfMapRaw)
+	if tfMapRaw, ok := tfMap["geo_spatial_column_group"].([]interface{}); ok {
+		columnGroup.GeoSpatialColumnGroup = expandQuickSightDataSetGeoSpatialColumnGroup(tfMapRaw[0].(map[string]interface{}))
 	}
 
 	return columnGroup
+}
+
+func WriteToFile(filename string, text string) {
+	f, err := os.OpenFile(filename, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0600)
+	if err != nil {
+		panic(err)
+	}
+
+	defer f.Close()
+
+	if _, err = f.WriteString(text); err != nil {
+		panic(err)
+	}
 }
 
 func expandQuickSightDataSetGeoSpatialColumnGroup(tfMap map[string]interface{}) *quicksight.GeoSpatialColumnGroup {
@@ -1130,8 +1143,14 @@ func expandQuickSightDataSetGeoSpatialColumnGroup(tfMap map[string]interface{}) 
 
 	geoSpatialColumnGroup := &quicksight.GeoSpatialColumnGroup{}
 
-	if v, ok := tfMap["columns"].([]string); ok {
-		geoSpatialColumnGroup.Columns = aws.StringSlice(v)
+	// this feels really weird
+	if v, ok := tfMap["columns"].([]interface{}); ok {
+		var fin []string
+		for _, str := range v {
+			fin = append(fin, str.(string))
+		}
+
+		geoSpatialColumnGroup.Columns = aws.StringSlice(fin)
 	}
 
 	if v, ok := tfMap["country_code"].(string); ok {
@@ -1210,42 +1229,48 @@ func expandQuickSightDataSetUsageConfiguration(tfList []interface{}) *quicksight
 	return usageConfiguration
 }
 
-func expandQuickSightDataSetFieldFolders(tfMap map[string]interface{}) map[string]*quicksight.FieldFolder {
-	if len(tfMap) == 0 {
+func expandQuickSightDataSetFieldFolders(tfList []interface{}) map[string]*quicksight.FieldFolder {
+	if len(tfList) == 0 {
 		return nil
 	}
 
 	fieldFolderMap := make(map[string]*quicksight.FieldFolder)
-	for k, v := range tfMap {
+	for _, v := range tfList {
 
-		vMap, ok := v.(map[string]interface{})
+		tfMap, ok := v.(map[string]interface{})
 		if !ok {
 			continue
 		}
 
 		fieldFolder := &quicksight.FieldFolder{}
 
-		if v, ok := vMap["columns"].([]string); ok {
-			fieldFolder.Columns = aws.StringSlice(v)
+		// this feels really weird
+		if v, ok := tfMap["columns"].([]interface{}); ok {
+			var fin []string
+			for _, str := range v {
+				fin = append(fin, str.(string))
+			}
+
+			fieldFolder.Columns = aws.StringSlice(fin)
 		}
 
-		if v, ok := vMap["description"].(string); ok {
+		if v, ok := tfMap["description"].(string); ok {
 			fieldFolder.Description = aws.String(v)
 		}
 
-		fieldFolderMap[k] = fieldFolder
+		fieldFolderMap["uniqueid"] = fieldFolder
 	}
 
 	return fieldFolderMap
 }
 
-func expandQuickSightDataSetLogicalTableMap(tfMap map[string]interface{}) map[string]*quicksight.LogicalTable {
-	if len(tfMap) == 0 {
+func expandQuickSightDataSetLogicalTableMap(tfList []interface{}) map[string]*quicksight.LogicalTable {
+	if len(tfList) == 0 {
 		return nil
 	}
 
 	logicalTableMap := make(map[string]*quicksight.LogicalTable)
-	for k, v := range tfMap {
+	for _, v := range tfList {
 
 		vMap, ok := v.(map[string]interface{})
 		if !ok {
@@ -1258,15 +1283,15 @@ func expandQuickSightDataSetLogicalTableMap(tfMap map[string]interface{}) map[st
 			logicalTable.Alias = aws.String(v)
 		}
 
-		if v, ok := vMap["logical_table_source"].(map[string]interface{}); ok {
-			logicalTable.Source = expandQuickSightDataSetLogicalTableSource(v)
+		if v, ok := vMap["source"].([]interface{}); ok {
+			logicalTable.Source = expandQuickSightDataSetLogicalTableSource(v[0].(map[string]interface{}))
 		}
 
 		if v, ok := vMap["data_transforms"].([]interface{}); ok {
 			logicalTable.DataTransforms = expandQuickSightDataSetDataTransforms(v)
 		}
 
-		logicalTableMap[k] = logicalTable
+		logicalTableMap["s3PhysicalTable"] = logicalTable
 	}
 
 	return logicalTableMap
@@ -1663,7 +1688,7 @@ func expandQuickSightDataSetPhysicalTableMap(tfList []interface{}) map[string]*q
 		}
 
 		// use virtual attribute here
-		physicalTableMap["uniqueid"] = physicalTable
+		physicalTableMap["s3PhysicalTable"] = physicalTable
 	}
 
 	return physicalTableMap
@@ -1816,49 +1841,6 @@ func expandQuickSightDataSetUploadSettings(tfMap map[string]interface{}) *quicks
 	}
 
 	return uploadSettings
-}
-
-func expandQuickSightDataSetResourcePermissions(tfList []interface{}) []*quicksight.ResourcePermission {
-	if len(tfList) == 0 {
-		return nil
-	}
-
-	var resourcePermissions []*quicksight.ResourcePermission
-
-	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
-		if !ok {
-			continue
-		}
-
-		resourcePermission := expandQuickSightDataSetResourcePermission(tfMap)
-
-		if resourcePermission == nil {
-			continue
-		}
-
-		resourcePermissions = append(resourcePermissions, resourcePermission)
-	}
-
-	return resourcePermissions
-}
-
-func expandQuickSightDataSetResourcePermission(tfMap map[string]interface{}) *quicksight.ResourcePermission {
-	if tfMap == nil {
-		return nil
-	}
-
-	resourcePermission := &quicksight.ResourcePermission{}
-
-	if v, ok := tfMap["actions"].([]string); ok {
-		resourcePermission.Actions = aws.StringSlice(v)
-	}
-
-	if v, ok := tfMap["permission_policy"].(string); ok {
-		resourcePermission.Principal = aws.String(v)
-	}
-
-	return resourcePermission
 }
 
 func expandQuickSightDataSetRowLevelPermissionDataSet(tfMap map[string]interface{}) *quicksight.RowLevelPermissionDataSet {
