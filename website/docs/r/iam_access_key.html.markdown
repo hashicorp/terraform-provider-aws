@@ -85,7 +85,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-IAM Access Keys can be imported using the identifier, e.g.
+IAM Access Keys can be imported using the identifier, e.g.,
 
 ```
 $ terraform import aws_iam_access_key.example AKIA1234567890

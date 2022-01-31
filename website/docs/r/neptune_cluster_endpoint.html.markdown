@@ -42,7 +42,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-`aws_neptune_cluster_endpoint` can be imported by using the `cluster-identifier:endpoint-identfier`, e.g.
+`aws_neptune_cluster_endpoint` can be imported by using the `cluster-identifier:endpoint-identfier`, e.g.,
 
 ```
 $ terraform import aws_neptune_cluster_endpoint.example my-cluster:my-endpoint

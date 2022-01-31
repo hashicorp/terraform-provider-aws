@@ -85,7 +85,7 @@ No additional attributes are exported.
 
 ## Import
 
-SSM resource data sync can be imported using the `name`, e.g.
+SSM resource data sync can be imported using the `name`, e.g.,
 
 ```sh
 $ terraform import aws_ssm_resource_data_sync.example example-name

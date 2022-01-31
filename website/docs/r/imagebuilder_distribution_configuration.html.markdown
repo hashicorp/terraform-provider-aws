@@ -56,6 +56,7 @@ The following arguments are required:
 The following arguments are optional:
 
 * `ami_distribution_configuration` - (Optional) Configuration block with Amazon Machine Image (AMI) distribution settings. Detailed below.
+* `container_distribution_configuration` - (Optional) Configuration block with container distribution settings. Detailed below.
 * `license_configuration_arns` - (Optional) Set of Amazon Resource Names (ARNs) of License Manager License Configurations.
 
 ### ami_distribution_configuration
@@ -76,6 +77,17 @@ The following arguments are optional:
 * `user_groups` - (Optional) Set of EC2 launch permission user groups to assign. Use `all` to distribute a public AMI.
 * `user_ids` - (Optional) Set of AWS Account identifiers to assign.
 
+### container_distribution_configuration
+
+* `container_tags` - (Optional) Set of tags that are attached to the container distribution configuration.
+* `description` - (Optional) Description of the container distribution configuration.
+* `target_repository` (Required) Configuration block with the destination repository for the container distribution configuration.
+
+### target_repository
+
+* `repository_name` - (Required) The name of the container repository where the output container image is stored. This name is prefixed by the repository location.
+* `service` - (Required) The service in which this image is registered. Valid values: `ECR`.
+
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
@@ -87,7 +99,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-`aws_imagebuilder_distribution_configurations` resources can be imported by using the Amazon Resource Name (ARN), e.g.
+`aws_imagebuilder_distribution_configurations` resources can be imported by using the Amazon Resource Name (ARN), e.g.,
 
 ```
 $ terraform import aws_imagebuilder_distribution_configuration.example arn:aws:imagebuilder:us-east-1:123456789012:distribution-configuration/example

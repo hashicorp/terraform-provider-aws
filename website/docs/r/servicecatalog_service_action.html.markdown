@@ -55,7 +55,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-`aws_servicecatalog_service_action` can be imported using the service action ID, e.g.
+`aws_servicecatalog_service_action` can be imported using the service action ID, e.g.,
 
 ```
 $ terraform import aws_servicecatalog_service_action.example act-f1w12eperfslh
