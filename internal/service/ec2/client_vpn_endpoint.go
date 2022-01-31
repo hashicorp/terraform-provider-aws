@@ -100,6 +100,27 @@ func ResourceClientVPNEndpoint() *schema.Resource {
 					},
 				},
 			},
+			"client_login_banner_options": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Computed: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"banner_text": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Computed:     true,
+							ValidateFunc: validation.StringLenBetween(0, 1400),
+						},
+						"enabled": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Computed: true,
+						},
+					},
+				},
+			},
 			"connection_log_options": {
 				Type:     schema.TypeList,
 				Required: true,
@@ -204,6 +225,10 @@ func resourceClientVPNEndpointCreate(d *schema.ResourceData, meta interface{}) e
 		input.ClientConnectOptions = expandClientConnectOptions(v.([]interface{})[0].(map[string]interface{}))
 	}
 
+	if v, ok := d.GetOk("client_login_banner_options"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		input.ClientLoginBannerOptions = expandClientLoginBannerOptions(v.([]interface{})[0].(map[string]interface{}))
+	}
+
 	if v, ok := d.GetOk("connection_log_options"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		input.ConnectionLogOptions = expandConnectionLogOptions(v.([]interface{})[0].(map[string]interface{}))
 	}
@@ -272,6 +297,13 @@ func resourceClientVPNEndpointRead(d *schema.ResourceData, meta interface{}) err
 	} else {
 		d.Set("client_connect_options", nil)
 	}
+	if ep.ClientLoginBannerOptions != nil {
+		if err := d.Set("client_login_banner_options", []interface{}{flattenClientLoginBannerResponseOptions(ep.ClientLoginBannerOptions)}); err != nil {
+			return fmt.Errorf("error setting client_login_banner_options: %w", err)
+		}
+	} else {
+		d.Set("client_login_banner_options", nil)
+	}
 	if ep.ConnectionLogOptions != nil {
 		if err := d.Set("connection_log_options", []interface{}{flattenConnectionLogResponseOptions(ep.ConnectionLogOptions)}); err != nil {
 			return fmt.Errorf("error setting connection_log_options: %w", err)
@@ -322,6 +354,12 @@ func resourceClientVPNEndpointUpdate(d *schema.ResourceData, meta interface{}) e
 
 			if v, ok := d.GetOk("client_connect_options"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 				input.ClientConnectOptions = expandClientConnectOptions(v.([]interface{})[0].(map[string]interface{}))
+			}
+		}
+
+		if d.HasChange("client_login_banner_options") {
+			if v, ok := d.GetOk("client_login_banner_options"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+				input.ClientLoginBannerOptions = expandClientLoginBannerOptions(v.([]interface{})[0].(map[string]interface{}))
 			}
 		}
 
@@ -561,8 +599,49 @@ func flattenClientConnectResponseOptions(apiObject *ec2.ClientConnectResponseOpt
 
 	tfMap := map[string]interface{}{}
 
+	if v := apiObject.Enabled; v != nil {
+		tfMap["enabled"] = aws.BoolValue(v)
+	}
+
 	if v := apiObject.LambdaFunctionArn; v != nil {
 		tfMap["lambda_function_arn"] = aws.StringValue(v)
+	}
+
+	return tfMap
+}
+
+func expandClientLoginBannerOptions(tfMap map[string]interface{}) *ec2.ClientLoginBannerOptions {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &ec2.ClientLoginBannerOptions{}
+
+	var enabled bool
+	if v, ok := tfMap["enabled"].(bool); ok {
+		enabled = v
+	}
+
+	if enabled {
+		if v, ok := tfMap["banner_text"].(string); ok && v != "" {
+			apiObject.BannerText = aws.String(v)
+		}
+	}
+
+	apiObject.Enabled = aws.Bool(enabled)
+
+	return apiObject
+}
+
+func flattenClientLoginBannerResponseOptions(apiObject *ec2.ClientLoginBannerResponseOptions) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.BannerText; v != nil {
+		tfMap["banner_text"] = aws.StringValue(v)
 	}
 
 	if v := apiObject.Enabled; v != nil {

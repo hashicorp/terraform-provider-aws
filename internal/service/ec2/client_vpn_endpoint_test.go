@@ -39,6 +39,7 @@ func TestAccEC2ClientVPNEndpoint_serial(t *testing.T) {
 			"federatedAuth":                testAccClientVPNEndpoint_federatedAuth,
 			"federatedAuthWithSelfService": testAccClientVPNEndpoint_federatedAuthWithSelfServiceProvider,
 			"withClientConnect":            testAccClientVPNEndpoint_withClientConnectOptions,
+			"withClientLoginBanner":        testAccClientVPNEndpoint_withClientLoginBannerOptions,
 			"withLogGroup":                 testAccClientVPNEndpoint_withConnectionLogOptions,
 			"withDNSServers":               testAccClientVPNEndpoint_withDNSServers,
 			"tags":                         testAccClientVPNEndpoint_tags,
@@ -106,6 +107,8 @@ func testAccClientVPNEndpoint_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "client_connect_options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "client_connect_options.0.enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "client_connect_options.0.lambda_function_arn", ""),
+					resource.TestCheckResourceAttr(resourceName, "client_login_banner_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "client_login_banner_options.0.enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "connection_log_options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "connection_log_options.0.cloudwatch_log_group", ""),
 					resource.TestCheckResourceAttr(resourceName, "connection_log_options.0.cloudwatch_log_stream", ""),
@@ -378,6 +381,53 @@ func testAccClientVPNEndpoint_withClientConnectOptions(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "client_connect_options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "client_connect_options.0.enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "client_connect_options.0.lambda_function_arn", ""),
+				),
+			},
+		},
+	})
+}
+
+func testAccClientVPNEndpoint_withClientLoginBannerOptions(t *testing.T) {
+	var v ec2.ClientVpnEndpoint
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_ec2_client_vpn_endpoint.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheckClientVPNSyncronize(t); acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckClientVPNEndpointDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEc2ClientVpnEndpointConfigWithClientLoginBannerOptions(rName, true, "Options 1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClientVPNEndpointExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "client_login_banner_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "client_login_banner_options.0.enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "client_login_banner_options.0.banner_text", "Options 1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccEc2ClientVpnEndpointConfigWithClientLoginBannerOptions(rName, true, "Options 2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClientVPNEndpointExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "client_login_banner_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "client_login_banner_options.0.enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "client_login_banner_options.0.banner_text", "Options 2"),
+				),
+			},
+			{
+				Config: testAccEc2ClientVpnEndpointConfigWithClientLoginBannerOptions(rName, false, ""),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClientVPNEndpointExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "client_login_banner_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "client_login_banner_options.0.enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "client_login_banner_options.0.banner_text", ""),
 				),
 			},
 		},
@@ -752,6 +802,38 @@ resource "aws_ec2_client_vpn_endpoint" "test" {
   }
 }
 `, rName, enabled, lambdaFunctionIndex))
+}
+
+func testAccEc2ClientVpnEndpointConfigWithClientLoginBannerOptions(rName string, enabled bool, bannerText string) string {
+	return acctest.ConfigCompose(testAccEc2ClientVpnEndpointConfigAcmCertificateBase("test"), fmt.Sprintf(`
+locals {
+  enabled     = %[2]t
+  banner_text = local.enabled ? %[3]q : null
+}
+
+resource "aws_ec2_client_vpn_endpoint" "test" {
+  server_certificate_arn = aws_acm_certificate.test.arn
+  client_cidr_block      = "10.0.0.0/16"
+
+  authentication_options {
+    type                       = "certificate-authentication"
+    root_certificate_chain_arn = aws_acm_certificate.test.arn
+  }
+
+  client_login_banner_options {
+    enabled     = local.enabled
+    banner_text = local.banner_text
+  }
+
+  connection_log_options {
+    enabled = false
+  }
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName, enabled, bannerText))
 }
 
 func testAccEc2ClientVpnEndpointConfigWithConnectionLogOptions(rName string, logStreamIndex int) string {

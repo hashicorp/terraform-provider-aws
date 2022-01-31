@@ -39,6 +39,7 @@ The following arguments are supported:
 * `authentication_options` - (Required) Information about the authentication method to be used to authenticate clients.
 * `client_cidr_block` - (Required) The IPv4 address range, in CIDR notation, from which to assign client IP addresses. The address range cannot overlap with the local CIDR of the VPC in which the associated subnet is located, or the routes that you add manually. The address range cannot be changed after the Client VPN endpoint has been created. The CIDR block should be /22 or greater.
 * `client_connect_options` - (Optional) The options for managing connection authorization for new client connections.
+* `client_login_banner_options` - (Optional) Options for enabling a customizable text banner that will be displayed on AWS provided clients when a VPN session is established.
 * `connection_log_options` - (Required) Information about the client connection logging options.
 * `description` - (Optional) A brief description of the Client VPN endpoint.
 * `dns_servers` - (Optional) Information about the DNS servers to be used for DNS resolution. A Client VPN endpoint can have up to two DNS servers. If no DNS server is specified, the DNS address of the connecting device is used.
@@ -64,6 +65,11 @@ One of the following arguments must be supplied:
 
 * `enabled` - (Optional) Indicates whether client connect options are enabled. The default is `false` (not enabled).
 * `lambda_function_arn` - (Optional) The Amazon Resource Name (ARN) of the Lambda function used for connection authorization.
+
+### `client_login_banner_options` Argument reference
+
+* `banner_text` - (Optional) Customizable text that will be displayed in a banner on AWS provided clients when a VPN session is established. UTF-8 encoded characters only. Maximum of 1400 characters.
+* `enabled` - (Optional) Enable or disable a customizable text banner that will be displayed on AWS provided clients when a VPN session is established. The default is `false` (not enabled).
 
 ### `connection_log_options` Argument Reference
 
