@@ -38,22 +38,26 @@ func ResourceFleet() *schema.Resource {
 				Type:     schema.TypeList,
 				MaxItems: 1,
 				Optional: true,
+				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"available": {
 							Type:     schema.TypeInt,
+							Optional: true,
 							Computed: true,
 						},
 						"desired_instances": {
 							Type:     schema.TypeInt,
-							Required: true,
+							Optional: true,
 						},
 						"in_use": {
 							Type:     schema.TypeInt,
+							Optional: true,
 							Computed: true,
 						},
 						"running": {
 							Type:     schema.TypeInt,
+							Optional: true,
 							Computed: true,
 						},
 					},

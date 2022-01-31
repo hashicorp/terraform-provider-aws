@@ -195,13 +195,14 @@ func TestAccAppStreamFleet_completeWithoutStop(t *testing.T) {
 	})
 }
 
-func TestAccAppStreamFleet_withTags(t *testing.T) {
+func TestAccAppStreamFleet_elasticWithTags(t *testing.T) {
 	var fleetOutput appstream.Fleet
 	resourceName := "aws_appstream_fleet.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	description := "Description of a test"
-	fleetType := "ON_DEMAND"
+	fleetType := "ELASTIC"
 	instanceType := "stream.standard.small"
+	platform := "WINDOWS_SERVER_2019"
 	displayName := "display name of a test"
 	displayNameUpdated := "display name of a test updated"
 
@@ -215,13 +216,14 @@ func TestAccAppStreamFleet_withTags(t *testing.T) {
 		ErrorCheck:        acctest.ErrorCheck(t, appstream.EndpointsID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFleetWithTagsConfig(rName, description, fleetType, instanceType, displayName),
+				Config: testAccFleetElasticWithTagsConfig(rName, description, fleetType, instanceType, displayName, platform),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(resourceName, &fleetOutput),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "state", appstream.FleetStateRunning),
 					resource.TestCheckResourceAttr(resourceName, "instance_type", instanceType),
 					resource.TestCheckResourceAttr(resourceName, "description", description),
+					resource.TestCheckResourceAttr(resourceName, "platform", platform),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key", "value"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "1"),
@@ -230,13 +232,14 @@ func TestAccAppStreamFleet_withTags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccFleetWithTagsConfig(rName, description, fleetType, instanceType, displayNameUpdated),
+				Config: testAccFleetElasticWithTagsConfig(rName, description, fleetType, instanceType, displayNameUpdated, platform),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(resourceName, &fleetOutput),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "state", appstream.FleetStateRunning),
 					resource.TestCheckResourceAttr(resourceName, "instance_type", instanceType),
 					resource.TestCheckResourceAttr(resourceName, "description", description),
+					resource.TestCheckResourceAttr(resourceName, "platform", platform),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key", "value"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "1"),
@@ -397,7 +400,7 @@ resource "aws_appstream_fleet" "test" {
 `, name, description, fleetType, instanceType, displayName))
 }
 
-func testAccFleetWithTagsConfig(name, description, fleetType, instanceType, displayName string) string {
+func testAccFleetElasticWithTagsConfig(name, description, fleetType, instanceType, displayName, platform string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigAvailableAZsNoOptIn(),
 		fmt.Sprintf(`
@@ -414,18 +417,14 @@ resource "aws_subnet" "test" {
 
 resource "aws_appstream_fleet" "test" {
   name       = %[1]q
-  image_name = "Amazon-AppStream2-Sample-Image-02-04-2019"
-
-  compute_capacity {
-    desired_instances = 1
-  }
-
   description                        = %[2]q
   display_name                       = %[5]q
   idle_disconnect_timeout_in_seconds = 70
   enable_default_internet_access     = false
   fleet_type                         = %[3]q
   instance_type                      = %[4]q
+  platform                           = %[6]q
+  max_concurrent_sessions            = 10
   max_user_duration_in_seconds       = 1000
 
   tags = {
@@ -436,5 +435,5 @@ resource "aws_appstream_fleet" "test" {
     subnet_ids = aws_subnet.test.*.id
   }
 }
-`, name, description, fleetType, instanceType, displayName))
+`, name, description, fleetType, instanceType, displayName, platform))
 }
