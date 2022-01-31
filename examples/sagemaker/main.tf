@@ -86,7 +86,7 @@ resource "aws_s3_bucket" "foo" {
   force_destroy = true
 }
 
-resource "aws_s3_bucket_object" "object" {
+resource "aws_s3_object" "object" {
   bucket = aws_s3_bucket.foo.bucket
   key    = "model.tar.gz"
   source = "model.tar.gz"
