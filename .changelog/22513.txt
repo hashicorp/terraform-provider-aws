@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_dynamodb_table: Add `manage_index_as_own_resource` arguments.
+```
+
+```release-note:new-resource
+aws_dynamodb_table_gsi
+```
