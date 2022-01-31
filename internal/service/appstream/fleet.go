@@ -482,7 +482,7 @@ func resourceFleetUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	if d.HasChange("max_concurrent_sessions") {
-		input.MaxUserDurationInSeconds = aws.Int64(int64(d.Get("max_concurrent_sessions").(int)))
+		input.MaxConcurrentSessions = aws.Int64(int64(d.Get("max_concurrent_sessions").(int)))
 	}
 
 	if d.HasChange("vpc_config") {
