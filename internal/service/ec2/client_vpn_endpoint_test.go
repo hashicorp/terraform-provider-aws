@@ -665,6 +665,10 @@ resource "aws_cloudwatch_log_stream" "test2" {
   log_group_name = aws_cloudwatch_log_group.test.name
 }
 
+locals {
+  index = %[2]d
+}
+
 resource "aws_ec2_client_vpn_endpoint" "test" {
   server_certificate_arn = aws_acm_certificate.test.arn
   client_cidr_block      = "10.0.0.0/16"
@@ -677,7 +681,7 @@ resource "aws_ec2_client_vpn_endpoint" "test" {
   connection_log_options {
     enabled               = true
     cloudwatch_log_group  = aws_cloudwatch_log_group.test.name
-    cloudwatch_log_stream = aws_cloudwatch_log_stream.test%[2]d.name
+    cloudwatch_log_stream = local.index == 1 ? aws_cloudwatch_log_stream.test1.name : aws_cloudwatch_log_stream.test2.name
   }
 
   tags = {
