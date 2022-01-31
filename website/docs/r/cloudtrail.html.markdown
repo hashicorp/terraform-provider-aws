@@ -93,7 +93,7 @@ resource "aws_cloudtrail" "example" {
 }
 ```
 
-#### Logging All S3 Bucket Object Events By Using Basic Event Selectors
+#### Logging All S3 Object Events By Using Basic Event Selectors
 
 ```terraform
 resource "aws_cloudtrail" "example" {
@@ -136,7 +136,7 @@ resource "aws_cloudtrail" "example" {
 }
 ```
 
-#### Logging All S3 Bucket Object Events Except For Two S3 Buckets By Using Advanced Event Selectors
+#### Logging All S3 Object Events Except For Two S3 Buckets By Using Advanced Event Selectors
 
 ```terraform
 data "aws_s3_bucket" "not-important-bucket-1" {

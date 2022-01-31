@@ -1308,7 +1308,7 @@ func resourceBucketRead(d *schema.ResourceData, meta interface{}) error {
 
 	// Object lock not supported in all partitions (extra guard, also guards in read func)
 	if err != nil && (meta.(*conns.AWSClient).Partition == endpoints.AwsPartitionID || meta.(*conns.AWSClient).Partition == endpoints.AwsUsGovPartitionID) {
-		return fmt.Errorf("error getting S3 Bucket Object Lock configuration: %s", err)
+		return fmt.Errorf("error getting S3 Object Lock configuration: %s", err)
 	}
 
 	if err != nil {

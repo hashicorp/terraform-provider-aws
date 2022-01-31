@@ -235,7 +235,7 @@ func resourceBucketObjectRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error reading S3 Object (%s): %w", d.Id(), err)
 	}
 
-	log.Printf("[DEBUG] Reading S3 Bucket Object meta: %s", resp)
+	log.Printf("[DEBUG] Reading S3 Object meta: %s", resp)
 
 	d.Set("bucket_key_enabled", resp.BucketKeyEnabled)
 	d.Set("cache_control", resp.CacheControl)
