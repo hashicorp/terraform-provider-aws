@@ -16,9 +16,9 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
-func DataSourceBucketObject() *schema.Resource {
+func DataSourceObject() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceBucketObjectRead,
+		Read: dataSourceObjectRead,
 
 		Schema: map[string]*schema.Schema{
 			"body": {
@@ -125,7 +125,7 @@ func DataSourceBucketObject() *schema.Resource {
 	}
 }
 
-func dataSourceBucketObjectRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceObjectRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).S3Conn
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
