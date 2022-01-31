@@ -139,7 +139,7 @@ func TestAccEC2EBSSnapshotImport_disappears(t *testing.T) {
 func TestAccEC2EBSSnapshotImport_Disappears_s3BucketObject(t *testing.T) {
 	var v ec2.Snapshot
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	parentResourceName := "aws_s3_bucket_object.image"
+	parentResourceName := "aws_s3_object.image"
 	resourceName := "aws_ebs_snapshot_import.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -170,7 +170,7 @@ resource "aws_s3_bucket" "images" {
   force_destroy = true
 }
 
-resource "aws_s3_bucket_object" "image" {
+resource "aws_s3_object" "image" {
   bucket         = aws_s3_bucket.images.id
   key            = "diskimage.vhd"
   content_base64 = %[1]q
@@ -245,7 +245,7 @@ resource "aws_ebs_snapshot_import" "test" {
     format      = "VHD"
     user_bucket {
       s3_bucket = aws_s3_bucket.images.id
-      s3_key    = aws_s3_bucket_object.image.key
+      s3_key    = aws_s3_object.image.key
     }
   }
 
@@ -267,7 +267,7 @@ resource "aws_ebs_snapshot_import" "test" {
     format      = "VHD"
     user_bucket {
       s3_bucket = aws_s3_bucket.images.id
-      s3_key    = aws_s3_bucket_object.image.key
+      s3_key    = aws_s3_object.image.key
     }
   }
 
@@ -290,7 +290,7 @@ resource "aws_ebs_snapshot_import" "test" {
     format      = "VHD"
     user_bucket {
       s3_bucket = aws_s3_bucket.images.id
-      s3_key    = aws_s3_bucket_object.image.key
+      s3_key    = aws_s3_object.image.key
     }
   }
 
@@ -316,7 +316,7 @@ resource "aws_ebs_snapshot_import" "test" {
     format      = "VHD"
     user_bucket {
       s3_bucket = aws_s3_bucket.images.id
-      s3_key    = aws_s3_bucket_object.image.key
+      s3_key    = aws_s3_object.image.key
     }
   }
 

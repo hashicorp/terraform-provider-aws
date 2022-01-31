@@ -3171,7 +3171,7 @@ resource "aws_s3_bucket" "test" {
   force_destroy = true
 }
 
-resource "aws_s3_bucket_object" "test" {
+resource "aws_s3_object" "test" {
   bucket  = aws_s3_bucket.test.bucket
   key     = %[1]q
   content = "test"
@@ -3189,7 +3189,7 @@ resource "aws_codebuild_project" "test" {
     compute_type = "BUILD_GENERAL1_SMALL"
     image        = "2"
     type         = "LINUX_CONTAINER"
-    certificate  = "${aws_s3_bucket.test.bucket}/${aws_s3_bucket_object.test.key}"
+    certificate  = "${aws_s3_bucket.test.bucket}/${aws_s3_object.test.key}"
   }
 
   source {
@@ -3956,7 +3956,7 @@ resource "aws_s3_bucket" "test" {
   bucket = %[1]q
 }
 
-resource "aws_s3_bucket_object" "test" {
+resource "aws_s3_object" "test" {
   bucket  = aws_s3_bucket.test.bucket
   content = "test"
   key     = "test.txt"
@@ -3977,7 +3977,7 @@ resource "aws_codebuild_project" "test" {
   }
 
   source {
-    location = "${aws_s3_bucket.test.bucket}/${aws_s3_bucket_object.test.key}"
+    location = "${aws_s3_bucket.test.bucket}/${aws_s3_object.test.key}"
     type     = "S3"
   }
 }

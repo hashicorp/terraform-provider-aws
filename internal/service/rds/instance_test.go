@@ -3835,7 +3835,7 @@ resource "aws_s3_bucket" "xtrabackup" {
   bucket = %[1]q
 }
 
-resource "aws_s3_bucket_object" "xtrabackup_db" {
+resource "aws_s3_object" "xtrabackup_db" {
   bucket = aws_s3_bucket.xtrabackup.id
   key    = "%[2]s/mysql-5-6-xtrabackup.tar.gz"
   source = "./testdata/mysql-5-6-xtrabackup.tar.gz"
