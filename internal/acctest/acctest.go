@@ -652,6 +652,15 @@ func PreCheckRegion(t *testing.T, region string) {
 	}
 }
 
+// PreCheckRegionNot checks that the test region is not one of the specified regions.
+func PreCheckRegionNot(t *testing.T, regions ...string) {
+	for _, region := range regions {
+		if Region() == region {
+			t.Skipf("skipping tests; %s (%s) not supported", conns.EnvVarDefaultRegion, region)
+		}
+	}
+}
+
 // PreCheckPartition checks that the test partition is the specified partition.
 func PreCheckPartition(partition string, t *testing.T) {
 	if Partition() != partition {
@@ -1842,5 +1851,25 @@ func CheckCallerIdentityAccountID(n string) resource.TestCheckFunc {
 		}
 
 		return nil
+	}
+}
+
+func CheckResourceAttrGreaterThanValue(n, key, value string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Not found: %s", n)
+		}
+
+		if v, ok := rs.Primary.Attributes[key]; !ok || !(v > value) {
+			if !ok {
+				return fmt.Errorf("%s: Attribute %q not found", n, key)
+			}
+
+			return fmt.Errorf("%s: Attribute %q is not greater than %q, got %q", n, key, value, v)
+		}
+
+		return nil
+
 	}
 }

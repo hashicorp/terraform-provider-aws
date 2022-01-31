@@ -200,16 +200,12 @@ func StatusInstanceIAMInstanceProfile(conn *ec2.EC2, id string) resource.StateRe
 	return func() (interface{}, string, error) {
 		instance, err := FindInstanceByID(conn, id)
 
-		if tfawserr.ErrCodeEquals(err, ErrCodeInvalidInstanceIDNotFound) {
+		if tfresource.NotFound(err) {
 			return nil, "", nil
 		}
 
 		if err != nil {
 			return nil, "", err
-		}
-
-		if instance == nil {
-			return nil, "", nil
 		}
 
 		if instance.IamInstanceProfile == nil || instance.IamInstanceProfile.Arn == nil {
@@ -358,7 +354,7 @@ func StatusSubnetIPv6CIDRBlockAssociationState(conn *ec2.EC2, id string) resourc
 	}
 }
 
-func StatusSubnetMapCustomerOwnedIPOnLaunch(conn *ec2.EC2, id string) resource.StateRefreshFunc {
+func StatusSubnetAssignIpv6AddressOnCreation(conn *ec2.EC2, id string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindSubnetByID(conn, id)
 
@@ -370,7 +366,7 @@ func StatusSubnetMapCustomerOwnedIPOnLaunch(conn *ec2.EC2, id string) resource.S
 			return nil, "", err
 		}
 
-		return output, strconv.FormatBool(aws.BoolValue(output.MapCustomerOwnedIpOnLaunch)), nil
+		return output, strconv.FormatBool(aws.BoolValue(output.AssignIpv6AddressOnCreation)), nil
 	}
 }
 
@@ -419,6 +415,22 @@ func StatusSubnetEnableResourceNameDnsARecordOnLaunch(conn *ec2.EC2, id string) 
 		}
 
 		return output, strconv.FormatBool(aws.BoolValue(output.PrivateDnsNameOptionsOnLaunch.EnableResourceNameDnsARecord)), nil
+	}
+}
+
+func StatusSubnetMapCustomerOwnedIPOnLaunch(conn *ec2.EC2, id string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := FindSubnetByID(conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, strconv.FormatBool(aws.BoolValue(output.MapCustomerOwnedIpOnLaunch)), nil
 	}
 }
 

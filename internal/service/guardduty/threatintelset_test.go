@@ -171,7 +171,7 @@ resource "aws_s3_bucket" "test" {
   force_destroy = true
 }
 
-resource "aws_s3_bucket_object" "test" {
+resource "aws_s3_object" "test" {
   acl     = "public-read"
   content = "10.0.0.0/8\n"
   bucket  = aws_s3_bucket.test.id
@@ -182,7 +182,7 @@ resource "aws_guardduty_threatintelset" "test" {
   name        = "%s"
   detector_id = aws_guardduty_detector.test.id
   format      = "TXT"
-  location    = "https://s3.amazonaws.com/${aws_s3_bucket_object.test.bucket}/${aws_s3_bucket_object.test.key}"
+  location    = "https://s3.amazonaws.com/${aws_s3_object.test.bucket}/${aws_s3_object.test.key}"
   activate    = %t
 }
 `, bucketName, keyName, threatintelsetName, activate)
@@ -198,7 +198,7 @@ resource "aws_s3_bucket" "test" {
   force_destroy = true
 }
 
-resource "aws_s3_bucket_object" "test" {
+resource "aws_s3_object" "test" {
   acl     = "public-read"
   content = "10.0.0.0/8\n"
   bucket  = aws_s3_bucket.test.id
@@ -209,7 +209,7 @@ resource "aws_guardduty_threatintelset" "test" {
   activate    = true
   detector_id = aws_guardduty_detector.test.id
   format      = "TXT"
-  location    = "https://s3.amazonaws.com/${aws_s3_bucket_object.test.bucket}/${aws_s3_bucket_object.test.key}"
+  location    = "https://s3.amazonaws.com/${aws_s3_object.test.bucket}/${aws_s3_object.test.key}"
   name        = %[1]q
 
   tags = {
@@ -229,7 +229,7 @@ resource "aws_s3_bucket" "test" {
   force_destroy = true
 }
 
-resource "aws_s3_bucket_object" "test" {
+resource "aws_s3_object" "test" {
   acl     = "public-read"
   content = "10.0.0.0/8\n"
   bucket  = aws_s3_bucket.test.id
@@ -240,7 +240,7 @@ resource "aws_guardduty_threatintelset" "test" {
   activate    = true
   detector_id = aws_guardduty_detector.test.id
   format      = "TXT"
-  location    = "https://s3.amazonaws.com/${aws_s3_bucket_object.test.bucket}/${aws_s3_bucket_object.test.key}"
+  location    = "https://s3.amazonaws.com/${aws_s3_object.test.bucket}/${aws_s3_object.test.key}"
   name        = %[1]q
 
   tags = {

@@ -3,6 +3,7 @@ package cloudwatchlogs
 import (
 	"fmt"
 
+	"github.com/aws/aws-sdk-go/aws"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -52,7 +53,7 @@ func dataSourceGroupRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	d.SetId(name)
-	d.Set("arn", logGroup.Arn)
+	d.Set("arn", TrimLogGroupARNWildcardSuffix(aws.StringValue(logGroup.Arn)))
 	d.Set("creation_time", logGroup.CreationTime)
 	d.Set("retention_in_days", logGroup.RetentionInDays)
 	d.Set("kms_key_id", logGroup.KmsKeyId)

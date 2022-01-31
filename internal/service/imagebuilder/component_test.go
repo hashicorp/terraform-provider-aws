@@ -546,7 +546,7 @@ resource "aws_s3_bucket" "test" {
   bucket = %[1]q
 }
 
-resource "aws_s3_bucket_object" "test" {
+resource "aws_s3_object" "test" {
   bucket = aws_s3_bucket.test.bucket
   content = yamlencode({
     phases = [{
@@ -568,7 +568,7 @@ resource "aws_s3_bucket_object" "test" {
 resource "aws_imagebuilder_component" "test" {
   name     = %[1]q
   platform = "Linux"
-  uri      = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_bucket_object.test.key}"
+  uri      = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.test.key}"
   version  = "1.0.0"
 }
 `, rName)

@@ -142,7 +142,7 @@ The `mongodb_settings` configuration block supports the following arguments:
 
 The `s3_settings` configuration block supports the following arguments:
 
-* `bucket_folder` - (Optional) S3 Bucket Object prefix.
+* `bucket_folder` - (Optional) S3 Object prefix.
 * `bucket_name` - (Optional) S3 Bucket name.
 * `compression_type` - (Optional) Set to compress target files. Defaults to `NONE`. Valid values are `GZIP` and `NONE`.
 * `csv_delimiter` - (Optional) Delimiter used to separate columns in the source files. Defaults to `,`.

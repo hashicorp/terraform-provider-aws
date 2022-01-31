@@ -1894,7 +1894,7 @@ resource "aws_s3_bucket" "tester" {
   acl    = "public-read"
 }
 
-resource "aws_s3_bucket_object" "testobject" {
+resource "aws_s3_object" "testobject" {
   bucket  = aws_s3_bucket.tester.bucket
   key     = "testscript.sh"
   content = <<EOF
@@ -2888,7 +2888,7 @@ resource "aws_emr_cluster" "test" {
   }
 
   bootstrap_action {
-    path = "s3://${aws_s3_bucket_object.testobject.bucket}/${aws_s3_bucket_object.testobject.key}"
+    path = "s3://${aws_s3_object.testobject.bucket}/${aws_s3_object.testobject.key}"
     name = "test"
 
     args = ["1",
@@ -2952,7 +2952,7 @@ resource "aws_emr_cluster" "test" {
   }
 
   bootstrap_action {
-    path = "s3://${aws_s3_bucket_object.testobject.bucket}/${aws_s3_bucket_object.testobject.key}"
+    path = "s3://${aws_s3_object.testobject.bucket}/${aws_s3_object.testobject.key}"
     name = "test"
 
     args = ["1",
@@ -3028,7 +3028,7 @@ resource "aws_emr_cluster" "test" {
   }
 
   bootstrap_action {
-    path = "s3://${aws_s3_bucket_object.testobject.bucket}/${aws_s3_bucket_object.testobject.key}"
+    path = "s3://${aws_s3_object.testobject.bucket}/${aws_s3_object.testobject.key}"
     name = "test"
 
     args = ["1",

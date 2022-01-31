@@ -1348,7 +1348,7 @@ resource "aws_s3_bucket" "test" {
   bucket = %[1]q
 }
 
-resource "aws_s3_bucket_object" "test" {
+resource "aws_s3_object" "test" {
   acl    = "public-read"
   bucket = aws_s3_bucket.test.bucket
 
@@ -1362,7 +1362,7 @@ CONTENT
 resource "aws_cloudformation_stack_set" "test" {
   administration_role_arn = aws_iam_role.test.arn
   name                    = %[1]q
-  template_url            = "https://${aws_s3_bucket.test.bucket_regional_domain_name}/${aws_s3_bucket_object.test.key}"
+  template_url            = "https://${aws_s3_bucket.test.bucket_regional_domain_name}/${aws_s3_object.test.key}"
 }
 `, rName, testAccStackSetTemplateBodyVPC(rName+"1"))
 }
@@ -1397,7 +1397,7 @@ resource "aws_s3_bucket" "test" {
   bucket = %[1]q
 }
 
-resource "aws_s3_bucket_object" "test" {
+resource "aws_s3_object" "test" {
   acl    = "public-read"
   bucket = aws_s3_bucket.test.bucket
 
@@ -1411,7 +1411,7 @@ CONTENT
 resource "aws_cloudformation_stack_set" "test" {
   administration_role_arn = aws_iam_role.test.arn
   name                    = %[1]q
-  template_url            = "https://${aws_s3_bucket.test.bucket_regional_domain_name}/${aws_s3_bucket_object.test.key}"
+  template_url            = "https://${aws_s3_bucket.test.bucket_regional_domain_name}/${aws_s3_object.test.key}"
 }
 `, rName, testAccStackSetTemplateBodyVPC(rName+"2"))
 }

@@ -101,6 +101,7 @@ variable "service_labels" {
     "glacier",
     "globalaccelerator",
     "glue",
+    "grafana",
     "greengrass",
     "groundstation",
     "guardduty",

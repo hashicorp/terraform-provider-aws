@@ -323,7 +323,7 @@ func resourceObjectCopyRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error reading S3 Object (%s): empty response", d.Id())
 	}
 
-	log.Printf("[DEBUG] Reading S3 Bucket Object meta: %s", resp)
+	log.Printf("[DEBUG] Reading S3 Object meta: %s", resp)
 
 	d.Set("bucket_key_enabled", resp.BucketKeyEnabled)
 	d.Set("cache_control", resp.CacheControl)
@@ -349,8 +349,8 @@ func resourceObjectCopyRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("object_lock_mode", resp.ObjectLockMode)
 	d.Set("object_lock_retain_until_date", flattenS3ObjectDate(resp.ObjectLockRetainUntilDate))
 
-	if err := resourceBucketObjectSetKMS(d, meta, resp.SSEKMSKeyId); err != nil {
-		return fmt.Errorf("bucket object KMS: %w", err)
+	if err := resourceObjectSetKMS(d, meta, resp.SSEKMSKeyId); err != nil {
+		return fmt.Errorf("object KMS: %w", err)
 	}
 
 	// See https://forums.aws.amazon.com/thread.jspa?threadID=44003
@@ -647,7 +647,7 @@ func resourceObjectCopyDoCopy(d *schema.ResourceData, meta interface{}) error {
 	d.Set("version_id", output.VersionId)
 
 	d.SetId(d.Get("key").(string))
-	return resourceBucketObjectRead(d, meta)
+	return resourceObjectRead(d, meta)
 }
 
 type s3Grants struct {

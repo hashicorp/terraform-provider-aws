@@ -474,6 +474,7 @@ func Provider() *schema.Provider {
 			"aws_ec2_transit_gateway_vpc_attachment":         ec2.DataSourceTransitGatewayVPCAttachment(),
 			"aws_ec2_transit_gateway_vpn_attachment":         ec2.DataSourceTransitGatewayVPNAttachment(),
 			"aws_eip":                                        ec2.DataSourceEIP(),
+			"aws_eips":                                       ec2.DataSourceEIPs(),
 			"aws_instance":                                   ec2.DataSourceInstance(),
 			"aws_instances":                                  ec2.DataSourceInstances(),
 			"aws_internet_gateway":                           ec2.DataSourceInternetGateway(),
@@ -684,8 +685,8 @@ func Provider() *schema.Provider {
 
 			"aws_canonical_user_id": s3.DataSourceCanonicalUserID(),
 			"aws_s3_bucket":         s3.DataSourceBucket(),
-			"aws_s3_bucket_object":  s3.DataSourceBucketObject(),
-			"aws_s3_bucket_objects": s3.DataSourceBucketObjects(),
+			"aws_s3_object":         s3.DataSourceObject(),
+			"aws_s3_objects":        s3.DataSourceObjects(),
 
 			"aws_sagemaker_prebuilt_ecr_image": sagemaker.DataSourcePrebuiltECRImage(),
 
@@ -1587,15 +1588,17 @@ func Provider() *schema.Provider {
 
 			"aws_s3_bucket":                                   s3.ResourceBucket(),
 			"aws_s3_bucket_analytics_configuration":           s3.ResourceBucketAnalyticsConfiguration(),
+			"aws_s3_bucket_cors_configuration":                s3.ResourceBucketCorsConfiguration(),
 			"aws_s3_bucket_intelligent_tiering_configuration": s3.ResourceBucketIntelligentTieringConfiguration(),
 			"aws_s3_bucket_inventory":                         s3.ResourceBucketInventory(),
 			"aws_s3_bucket_metric":                            s3.ResourceBucketMetric(),
 			"aws_s3_bucket_notification":                      s3.ResourceBucketNotification(),
-			"aws_s3_bucket_object":                            s3.ResourceBucketObject(),
 			"aws_s3_bucket_ownership_controls":                s3.ResourceBucketOwnershipControls(),
 			"aws_s3_bucket_policy":                            s3.ResourceBucketPolicy(),
 			"aws_s3_bucket_public_access_block":               s3.ResourceBucketPublicAccessBlock(),
 			"aws_s3_bucket_replication_configuration":         s3.ResourceBucketReplicationConfiguration(),
+			"aws_s3_bucket_versioning":                        s3.ResourceBucketVersioning(),
+			"aws_s3_object":                                   s3.ResourceObject(),
 			"aws_s3_object_copy":                              s3.ResourceObjectCopy(),
 
 			"aws_s3_access_point":                             s3control.ResourceAccessPoint(),
