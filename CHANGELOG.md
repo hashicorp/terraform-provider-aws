@@ -18,6 +18,8 @@ NOTES:
 * data-source/aws_network_acls: The type of the `ids` attribute has changed from Set to List. If no NACLs match the specified criteria an empty list is returned (previously an error was raised) ([#21219](https://github.com/hashicorp/terraform-provider-aws/issues/21219))
 * data-source/aws_network_interfaces: The type of the `ids` attribute has changed from Set to List. If no network interfaces match the specified criteria an empty list is returned (previously an error was raised) ([#21219](https://github.com/hashicorp/terraform-provider-aws/issues/21219))
 * data-source/aws_route_tables: The type of the `ids` attribute has changed from Set to List. If no route tables match the specified criteria an empty list is returned (previously an error was raised) ([#21219](https://github.com/hashicorp/terraform-provider-aws/issues/21219))
+* data-source/aws_s3_bucket_object: The data source has been renamed. Use `aws_s3_object` instead ([#22850](https://github.com/hashicorp/terraform-provider-aws/issues/22850))
+* data-source/aws_s3_bucket_objects: The data source has been renamed. Use `aws_s3_objects` instead ([#22850](https://github.com/hashicorp/terraform-provider-aws/issues/22850))
 * data-source/aws_security_groups: If no security groups match the specified criteria an empty list is returned (previously an error was raised) ([#21219](https://github.com/hashicorp/terraform-provider-aws/issues/21219))
 * data-source/aws_ssoadmin_instances: The type of the `identity_store_ids` and `arns` attributes has changed from Set to List. If no instances match the specified criteria an empty list is returned (previously an error was raised) ([#21219](https://github.com/hashicorp/terraform-provider-aws/issues/21219))
 * data-source/aws_vpcs: The type of the `ids` attributes has changed from Set to List. If no VPCs match the specified criteria an empty list is returned (previously an error was raised) ([#22253](https://github.com/hashicorp/terraform-provider-aws/issues/22253))
@@ -26,6 +28,7 @@ NOTES:
 * resource/aws_ecs_cluster: The `capacity_providers` and `default_capacity_provider_strategy` arguments have been deprecated. Use the `aws_ecs_cluster_capacity_providers` resource instead. ([#22783](https://github.com/hashicorp/terraform-provider-aws/issues/22783))
 * resource/aws_route: The `instance_id` argument has been deprecated. All configurations using `instance_id` should be updated to use the `network_interface_id` argument instead ([#22664](https://github.com/hashicorp/terraform-provider-aws/issues/22664))
 * resource/aws_route_table: The `instance_id` argument of the `route` configuration block has been deprecated. All configurations using `route` `instance_id` should be updated to use the `route` `network_interface_id` argument instead ([#22664](https://github.com/hashicorp/terraform-provider-aws/issues/22664))
+* resource/aws_s3_bucket_object: The resource has been renamed. Use `aws_s3_object` instead ([#22850](https://github.com/hashicorp/terraform-provider-aws/issues/22850))
 
 FEATURES:
 
