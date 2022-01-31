@@ -19,7 +19,7 @@ resource "aws_s3_bucket" "example" {
   bucket = "example"
 }
 
-resource "aws_s3_bucket_object" "example" {
+resource "aws_s3_object" "example" {
   bucket = aws_s3_bucket.example.id
   key    = "debezium.zip"
   source = "debezium.zip"
@@ -31,7 +31,7 @@ resource "aws_mskconnect_custom_plugin" "example" {
   location {
     s3 {
       bucket_arn = aws_s3_bucket.example.arn
-      file_key   = aws_s3_bucket_object.example.key
+      file_key   = aws_s3_object.example.key
     }
   }
 }
