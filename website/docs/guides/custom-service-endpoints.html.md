@@ -177,7 +177,7 @@ provider "aws" {
   <li><code>globalaccelerator</code></li>
   <li><code>glue</code></li>
   <li><code>gluedatabrew</code></li>
-  <li><code>grafana</code></li>
+  <li><code>grafana</code> (or <code>managedgrafana</code>, <code>amg</code>)</li></li>
   <li><code>greengrass</code></li>
   <li><code>greengrassv2</code></li>
   <li><code>groundstation</code></li>
