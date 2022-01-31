@@ -1426,7 +1426,7 @@ func resourceBucketDelete(d *schema.ResourceData, meta interface{}) error {
 	if tfawserr.ErrMessageContains(err, "BucketNotEmpty", "") {
 		if d.Get("force_destroy").(bool) {
 			// Use a S3 service client that can handle multiple slashes in URIs.
-			// While aws_s3_bucket_object resources cannot create these object
+			// While aws_s3_object resources cannot create these object
 			// keys, other AWS services and applications using the S3 Bucket can.
 			conn = meta.(*conns.AWSClient).S3ConnURICleaningDisabled
 

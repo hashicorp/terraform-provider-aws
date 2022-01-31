@@ -17,7 +17,7 @@ func TestAccS3ObjectCopy_basic(t *testing.T) {
 	rName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_s3_object_copy.test"
-	sourceName := "aws_s3_bucket_object.source"
+	sourceName := "aws_s3_object.source"
 	key := "HundBegraven"
 	sourceKey := "WshngtnNtnls"
 
@@ -136,7 +136,7 @@ resource "aws_s3_bucket" "source" {
   bucket = %[1]q
 }
 
-resource "aws_s3_bucket_object" "source" {
+resource "aws_s3_object" "source" {
   bucket  = aws_s3_bucket.source.bucket
   key     = %[2]q
   content = "Ingen ko på isen"
@@ -149,7 +149,7 @@ resource "aws_s3_bucket" "target" {
 resource "aws_s3_object_copy" "test" {
   bucket = aws_s3_bucket.target.bucket
   key    = %[4]q
-  source = "${aws_s3_bucket.source.bucket}/${aws_s3_bucket_object.source.key}"
+  source = "${aws_s3_bucket.source.bucket}/${aws_s3_object.source.key}"
 
   grant {
     uri         = "http://acs.amazonaws.com/groups/global/AllUsers"
@@ -171,7 +171,7 @@ resource "aws_s3_bucket" "source" {
   bucket = "%[1]s-source"
 }
 
-resource "aws_s3_bucket_object" "source" {
+resource "aws_s3_object" "source" {
   bucket  = aws_s3_bucket.source.bucket
   content = "Ingen ko på isen"
   key     = "test"
@@ -194,7 +194,7 @@ resource "aws_s3_bucket" "target" {
 resource "aws_s3_object_copy" "test" {
   bucket = aws_s3_bucket.target.bucket
   key    = "test"
-  source = "${aws_s3_bucket.source.bucket}/${aws_s3_bucket_object.source.key}"
+  source = "${aws_s3_bucket.source.bucket}/${aws_s3_object.source.key}"
 }
 `, rName)
 }
@@ -210,7 +210,7 @@ resource "aws_s3_bucket" "source" {
   bucket = "%[1]s-source"
 }
 
-resource "aws_s3_bucket_object" "source" {
+resource "aws_s3_object" "source" {
   bucket  = aws_s3_bucket.source.bucket
   content = "Ingen ko på isen"
   key     = "test"
@@ -225,7 +225,7 @@ resource "aws_s3_object_copy" "test" {
   bucket_key_enabled = true
   key                = "test"
   kms_key_id         = aws_kms_key.test.arn
-  source             = "${aws_s3_bucket.source.bucket}/${aws_s3_bucket_object.source.key}"
+  source             = "${aws_s3_bucket.source.bucket}/${aws_s3_object.source.key}"
 }
 `, rName)
 }
