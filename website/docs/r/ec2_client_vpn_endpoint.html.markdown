@@ -38,7 +38,7 @@ The following arguments are supported:
 
 * `authentication_options` - (Required) Information about the authentication method to be used to authenticate clients.
 * `client_cidr_block` - (Required) The IPv4 address range, in CIDR notation, from which to assign client IP addresses. The address range cannot overlap with the local CIDR of the VPC in which the associated subnet is located, or the routes that you add manually. The address range cannot be changed after the Client VPN endpoint has been created. The CIDR block should be /22 or greater.
-* `client_connect_options` - (Optional) Information about a client connect handler.
+* `client_connect_options` - (Optional) The options for managing connection authorization for new client connections.
 * `connection_log_options` - (Required) Information about the client connection logging options.
 * `description` - (Optional) A brief description of the Client VPN endpoint.
 * `dns_servers` - (Optional) Information about the DNS servers to be used for DNS resolution. A Client VPN endpoint can have up to two DNS servers. If no DNS server is specified, the DNS address of the connecting device is used.
@@ -62,8 +62,8 @@ One of the following arguments must be supplied:
 
 ### `client_connect_options` Argument reference
 
-* `enabled` - (Required) Indicates whether a client connect handler is enabled.
-* `lambda_function_arn` - (Optional) The ARN of the Lambda function that implements a client connect handler.
+* `enabled` - (Optional) Indicates whether client connect options are enabled. The default is `false` (not enabled).
+* `lambda_function_arn` - (Optional) The Amazon Resource Name (ARN) of the Lambda function used for connection authorization.
 
 ### `connection_log_options` Argument Reference
 
