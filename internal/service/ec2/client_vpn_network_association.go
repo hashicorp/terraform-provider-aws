@@ -165,30 +165,27 @@ func resourceClientVPNNetworkAssociationRead(d *schema.ResourceData, meta interf
 func resourceClientVPNNetworkAssociationDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
-	err := DeleteClientVPNNetworkAssociation(conn, d.Id(), d.Get("client_vpn_endpoint_id").(string))
+	endpointID := d.Get("client_vpn_endpoint_id").(string)
+
+	log.Printf("[DEBUG] Deleting EC2 Client VPN Network Association: %s", d.Id())
+	_, err := conn.DisassociateClientVpnTargetNetwork(&ec2.DisassociateClientVpnTargetNetworkInput{
+		ClientVpnEndpointId: aws.String(endpointID),
+		AssociationId:       aws.String(d.Id()),
+	})
+
+	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidClientVpnAssociationIdNotFound, ErrCodeInvalidClientVpnEndpointIdNotFound) {
+		return nil
+	}
+
 	if err != nil {
-		return fmt.Errorf("error deleting Client VPN network association: %w", err)
+		return fmt.Errorf("error disassociating EC2 Client VPN Network Association (%s): %w", d.Id(), err)
+	}
+
+	if _, err := WaitClientVPNNetworkAssociationDisassociated(conn, d.Id(), endpointID); err != nil {
+		return fmt.Errorf("error waiting for EC2 Client VPN Network Association (%s) delete: %w", d.Id(), err)
 	}
 
 	return nil
-}
-
-func DeleteClientVPNNetworkAssociation(conn *ec2.EC2, networkAssociationID, clientVpnEndpointID string) error {
-	_, err := conn.DisassociateClientVpnTargetNetwork(&ec2.DisassociateClientVpnTargetNetworkInput{
-		ClientVpnEndpointId: aws.String(clientVpnEndpointID),
-		AssociationId:       aws.String(networkAssociationID),
-	})
-
-	if tfawserr.ErrMessageContains(err, ErrCodeInvalidClientVpnAssociationIdNotFound, "") || tfawserr.ErrMessageContains(err, ErrCodeInvalidClientVpnEndpointIdNotFound, "") {
-		return nil
-	}
-	if err != nil {
-		return err
-	}
-
-	_, err = WaitClientVPNNetworkAssociationDisassociated(conn, networkAssociationID, clientVpnEndpointID)
-
-	return err
 }
 
 func resourceClientVPNNetworkAssociationImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
