@@ -24,38 +24,9 @@ func ResourceTransitGatewayMulticastDomain() *schema.Resource {
 		Delete: resourceTransitGatewayMulticastDomainDelete,
 
 		Schema: map[string]*schema.Schema{
-			"transit_gateway_id": {
-				Type:     schema.TypeString,
-				ForceNew: true,
-				Required: true,
-			},
-			"tags": tftags.TagsSchema(),
 			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
-			},
-			"owner_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"igmpv2_support": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  "disable",
-			},
-			"static_source_support": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  "disable",
-			},
-			"auto_accept_shared_associations": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  ec2.AutoAcceptSharedAssociationsValueDisable,
-				ValidateFunc: validation.StringInSlice([]string{
-					ec2.AutoAcceptSharedAssociationsValueEnable,
-					ec2.AutoAcceptSharedAssociationsValueDisable,
-				}, false),
 			},
 			"association": {
 				Type:       schema.TypeSet,
@@ -79,6 +50,20 @@ func ResourceTransitGatewayMulticastDomain() *schema.Resource {
 				},
 				Set: resourceTransitGatewayMulticastDomainAssociationsHash,
 			},
+			"auto_accept_shared_associations": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Default:  ec2.AutoAcceptSharedAssociationsValueDisable,
+				ValidateFunc: validation.StringInSlice([]string{
+					ec2.AutoAcceptSharedAssociationsValueEnable,
+					ec2.AutoAcceptSharedAssociationsValueDisable,
+				}, false),
+			},
+			"igmpv2_support": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Default:  "disable",
+			},
 			"members": {
 				Type:       schema.TypeSet,
 				Computed:   true,
@@ -100,6 +85,10 @@ func ResourceTransitGatewayMulticastDomain() *schema.Resource {
 					},
 				},
 				Set: resourceTransitGatewayMulticastDomainGroupsHash,
+			},
+			"owner_id": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"sources": {
 				Type:       schema.TypeSet,
@@ -123,6 +112,17 @@ func ResourceTransitGatewayMulticastDomain() *schema.Resource {
 				},
 				Set: resourceTransitGatewayMulticastDomainGroupsHash,
 			},
+			"static_source_support": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Default:  "disable",
+			},
+			"tags": tftags.TagsSchema(),
+			"transit_gateway_id": {
+				Type:     schema.TypeString,
+				ForceNew: true,
+				Required: true,
+			},
 		},
 	}
 }
@@ -138,9 +138,9 @@ func resourceTransitGatewayMulticastDomainCreate(d *schema.ResourceData, meta in
 		Options:          &ec2.CreateTransitGatewayMulticastDomainRequestOptions{},
 
 		TagSpecifications: ec2TagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeTransitGatewayMulticastDomain),
-		// TagSpecifications: ec2TagSpecificationsFromMap(d.Get("tags").(map[string]interface{}),ec2.ResourceTypeTransitGatewayMulticastDomain),
 	}
-	// log.Printf("[DEBUG] Creating EC2 Transit Gateway Multicast Domain: %s", input),
+
+	log.Printf("[DEBUG] Creating EC2 Transit Gateway Multicast Domain: %s", input)
 
 	if v, ok := d.GetOk("igmpv2_support"); ok {
 		input.Options.Igmpv2Support = aws.String(v.(string))

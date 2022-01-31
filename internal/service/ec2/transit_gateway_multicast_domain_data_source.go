@@ -18,47 +18,9 @@ func DataSourceTransitGatewayMulticastDomain() *schema.Resource {
 		Read: dataSourceTransitGatewayMulticastDomainRead,
 
 		Schema: map[string]*schema.Schema{
-			"id": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"transit_gateway_attachment_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"transit_gateway_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"tags":   tftags.TagsSchemaComputed(),
-			"filter": DataSourceFiltersSchema(),
 			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
-			},
-			"owner_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"igmpv2_support": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  "disable",
-			},
-			"static_source_support": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  "disable",
-			},
-			"auto_accept_shared_associations": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  ec2.AutoAcceptSharedAssociationsValueDisable,
-				ValidateFunc: validation.StringInSlice([]string{
-					ec2.AutoAcceptSharedAssociationsValueEnable,
-					ec2.AutoAcceptSharedAssociationsValueDisable,
-				}, false),
 			},
 			"association": {
 				Type:       schema.TypeSet,
@@ -82,6 +44,26 @@ func DataSourceTransitGatewayMulticastDomain() *schema.Resource {
 				},
 				Set: resourceTransitGatewayMulticastDomainAssociationsHash,
 			},
+			"auto_accept_shared_associations": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Default:  ec2.AutoAcceptSharedAssociationsValueDisable,
+				ValidateFunc: validation.StringInSlice([]string{
+					ec2.AutoAcceptSharedAssociationsValueEnable,
+					ec2.AutoAcceptSharedAssociationsValueDisable,
+				}, false),
+			},
+			"filter": DataSourceFiltersSchema(),
+			"id": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"igmpv2_support": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Default:  "disable",
+			},
 			"members": {
 				Type:       schema.TypeSet,
 				Computed:   true,
@@ -104,6 +86,10 @@ func DataSourceTransitGatewayMulticastDomain() *schema.Resource {
 				},
 				Set: resourceTransitGatewayMulticastDomainGroupsHash,
 			},
+			"owner_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"sources": {
 				Type:       schema.TypeSet,
 				Computed:   true,
@@ -125,6 +111,20 @@ func DataSourceTransitGatewayMulticastDomain() *schema.Resource {
 					},
 				},
 				Set: resourceTransitGatewayMulticastDomainGroupsHash,
+			},
+			"static_source_support": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Default:  "disable",
+			},
+			"tags": tftags.TagsSchemaComputed(),
+			"transit_gateway_attachment_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"transit_gateway_id": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 		},
 	}
