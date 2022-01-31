@@ -116,6 +116,7 @@ func testAccClientVPNEndpoint_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "status", ec2.ClientVpnEndpointStatusCodePendingAssociate),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "transport_protocol", "udp"),
+					resource.TestCheckResourceAttr(resourceName, "vpn_port", "443"),
 				),
 			},
 			{
@@ -448,6 +449,8 @@ func testAccClientVPNEndpoint_simpleAttributesUpdate(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "server_certificate_arn", serverCertificate1ResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "session_timeout_hours", "12"),
 					resource.TestCheckResourceAttr(resourceName, "split_tunnel", "true"),
+					resource.TestCheckResourceAttr(resourceName, "transport_protocol", "tcp"),
+					resource.TestCheckResourceAttr(resourceName, "vpn_port", "1194"),
 				),
 			},
 			{
@@ -463,6 +466,8 @@ func testAccClientVPNEndpoint_simpleAttributesUpdate(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "server_certificate_arn", serverCertificate2ResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "session_timeout_hours", "10"),
 					resource.TestCheckResourceAttr(resourceName, "split_tunnel", "false"),
+					resource.TestCheckResourceAttr(resourceName, "transport_protocol", "tcp"),
+					resource.TestCheckResourceAttr(resourceName, "vpn_port", "443"),
 				),
 			},
 		},
@@ -903,6 +908,8 @@ resource "aws_ec2_client_vpn_endpoint" "test" {
   server_certificate_arn = aws_acm_certificate.test1.arn
   split_tunnel           = true
   session_timeout_hours  = 12
+  transport_protocol     = "tcp"
+  vpn_port               = 1194
 
   authentication_options {
     type                       = "certificate-authentication"
@@ -931,6 +938,8 @@ resource "aws_ec2_client_vpn_endpoint" "test" {
   server_certificate_arn = aws_acm_certificate.test2.arn
   split_tunnel           = false
   session_timeout_hours  = 10
+  transport_protocol     = "tcp"
+  vpn_port               = 443
 
   authentication_options {
     type                       = "certificate-authentication"

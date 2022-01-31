@@ -148,6 +148,15 @@ func ResourceClientVPNEndpoint() *schema.Resource {
 				Default:      ec2.TransportProtocolUdp,
 				ValidateFunc: validation.StringInSlice(ec2.TransportProtocol_Values(), false),
 			},
+			"vpn_port": {
+				Type:     schema.TypeInt,
+				Optional: true,
+				Default:  443,
+				ValidateFunc: validation.IntInSlice([]int{
+					443,
+					1194,
+				}),
+			},
 		},
 	}
 }
@@ -163,6 +172,7 @@ func resourceClientVPNEndpointCreate(d *schema.ResourceData, meta interface{}) e
 		SplitTunnel:          aws.Bool(d.Get("split_tunnel").(bool)),
 		TagSpecifications:    ec2TagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeClientVpnEndpoint),
 		TransportProtocol:    aws.String(d.Get("transport_protocol").(string)),
+		VpnPort:              aws.Int64(int64(d.Get("vpn_port").(int))),
 	}
 
 	if v, ok := d.GetOk("authentication_options"); ok && len(v.([]interface{})) > 0 {
@@ -250,6 +260,7 @@ func resourceClientVPNEndpointRead(d *schema.ResourceData, meta interface{}) err
 	d.Set("split_tunnel", ep.SplitTunnel)
 	d.Set("status", ep.Status.Code)
 	d.Set("transport_protocol", ep.TransportProtocol)
+	d.Set("vpn_port", ep.VpnPort)
 
 	tags := KeyValueTags(ep.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
@@ -309,6 +320,10 @@ func resourceClientVPNEndpointUpdate(d *schema.ResourceData, meta interface{}) e
 
 		if d.HasChange("split_tunnel") {
 			input.SplitTunnel = aws.Bool(d.Get("split_tunnel").(bool))
+		}
+
+		if d.HasChange("vpn_port") {
+			input.VpnPort = aws.Int64(int64(d.Get("vpn_port").(int)))
 		}
 
 		if _, err := conn.ModifyClientVpnEndpoint(input); err != nil {
