@@ -350,7 +350,7 @@ func resourceObjectCopyRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("object_lock_retain_until_date", flattenS3ObjectDate(resp.ObjectLockRetainUntilDate))
 
 	if err := resourceObjectSetKMS(d, meta, resp.SSEKMSKeyId); err != nil {
-		return fmt.Errorf("bucket object KMS: %w", err)
+		return fmt.Errorf("object KMS: %w", err)
 	}
 
 	// See https://forums.aws.amazon.com/thread.jspa?threadID=44003

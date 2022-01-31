@@ -163,7 +163,7 @@ resource "aws_s3_object_copy" "test" {
 func testAccObjectCopyConfig_BucketKeyEnabled_Bucket(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_kms_key" "test" {
-  description             = "Encrypts test bucket objects"
+  description             = "Encrypts test objects"
   deletion_window_in_days = 7
 }
 
@@ -202,7 +202,7 @@ resource "aws_s3_object_copy" "test" {
 func testAccObjectCopyConfig_BucketKeyEnabled_Object(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_kms_key" "test" {
-  description             = "Encrypts test bucket objects"
+  description             = "Encrypts test objects"
   deletion_window_in_days = 7
 }
 

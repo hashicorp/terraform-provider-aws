@@ -2001,7 +2001,7 @@ resource "aws_s3_object" "object" {
 func testAccObjectConfig_objectBucketKeyEnabled(rName string, content string) string {
 	return fmt.Sprintf(`
 resource "aws_kms_key" "test" {
-  description             = "Encrypts test bucket objects"
+  description             = "Encrypts test objects"
   deletion_window_in_days = 7
 }
 
@@ -2022,7 +2022,7 @@ resource "aws_s3_object" "object" {
 func testAccObjectConfig_bucketBucketKeyEnabled(rName string, content string) string {
 	return fmt.Sprintf(`
 resource "aws_kms_key" "test" {
-  description             = "Encrypts test bucket objects"
+  description             = "Encrypts test objects"
   deletion_window_in_days = 7
 }
 
@@ -2051,7 +2051,7 @@ resource "aws_s3_object" "object" {
 func testAccObjectConfig_defaultBucketSSE(rName string, content string) string {
 	return fmt.Sprintf(`
 resource "aws_kms_key" "test" {
-  description             = "Encrypts test bucket objects"
+  description             = "Encrypts test objects"
   deletion_window_in_days = 7
 }
 
