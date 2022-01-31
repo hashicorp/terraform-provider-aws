@@ -40,7 +40,7 @@ resource "aws_s3_bucket" "examplebucket" {
   acl    = "private"
 }
 
-resource "aws_s3_object" "examplebucket_object" {
+resource "aws_s3_object" "example" {
   key        = "someobject"
   bucket     = aws_s3_bucket.examplebucket.id
   source     = "index.html"
@@ -56,7 +56,7 @@ resource "aws_s3_bucket" "examplebucket" {
   acl    = "private"
 }
 
-resource "aws_s3_object" "examplebucket_object" {
+resource "aws_s3_object" "example" {
   key                    = "someobject"
   bucket                 = aws_s3_bucket.examplebucket.id
   source                 = "index.html"
@@ -72,7 +72,7 @@ resource "aws_s3_bucket" "examplebucket" {
   acl    = "private"
 }
 
-resource "aws_s3_object" "examplebucket_object" {
+resource "aws_s3_object" "example" {
   key                    = "someobject"
   bucket                 = aws_s3_bucket.examplebucket.id
   source                 = "index.html"
@@ -96,7 +96,7 @@ resource "aws_s3_bucket" "examplebucket" {
   }
 }
 
-resource "aws_s3_object" "examplebucket_object" {
+resource "aws_s3_object" "example" {
   key    = "someobject"
   bucket = aws_s3_bucket.examplebucket.id
   source = "important.txt"

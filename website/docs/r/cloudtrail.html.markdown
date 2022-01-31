@@ -151,7 +151,7 @@ resource "aws_cloudtrail" "example" {
   # ... other configuration ...
 
   advanced_event_selector {
-    name = "Log all S3 buckets objects events except for two S3 buckets"
+    name = "Log all S3 objects events except for two S3 buckets"
 
     field_selector {
       field  = "eventCategory"
