@@ -38,7 +38,8 @@ func TestAccEC2ClientVPNEndpoint_serial(t *testing.T) {
 			"msADAuthAndMutualAuth":        testAccClientVPNEndpoint_msADAuthAndMutualAuth,
 			"federatedAuth":                testAccClientVPNEndpoint_federatedAuth,
 			"federatedAuthWithSelfService": testAccClientVPNEndpoint_federatedAuthWithSelfServiceProvider,
-			"withLogGroup":                 testAccClientVPNEndpoint_withLogGroup,
+			"withClientConnect":            testAccClientVPNEndpoint_withClientConnectOptions,
+			"withLogGroup":                 testAccClientVPNEndpoint_withConnectionLogOptions,
 			"withDNSServers":               testAccClientVPNEndpoint_withDNSServers,
 			"tags":                         testAccClientVPNEndpoint_tags,
 			"simpleAttributesUpdate":       testAccClientVPNEndpoint_simpleAttributesUpdate,
@@ -102,6 +103,7 @@ func testAccClientVPNEndpoint_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "authentication_options.0.saml_provider_arn", ""),
 					resource.TestCheckResourceAttr(resourceName, "authentication_options.0.self_service_saml_provider_arn", ""),
 					resource.TestCheckResourceAttr(resourceName, "client_cidr_block", "10.0.0.0/16"),
+					resource.TestCheckResourceAttr(resourceName, "client_connect_options.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "connection_log_options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "connection_log_options.0.cloudwatch_log_group", ""),
 					resource.TestCheckResourceAttr(resourceName, "connection_log_options.0.cloudwatch_log_stream", ""),
@@ -331,7 +333,56 @@ func testAccClientVPNEndpoint_federatedAuthWithSelfServiceProvider(t *testing.T)
 	})
 }
 
-func testAccClientVPNEndpoint_withLogGroup(t *testing.T) {
+func testAccClientVPNEndpoint_withClientConnectOptions(t *testing.T) {
+	var v ec2.ClientVpnEndpoint
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_ec2_client_vpn_endpoint.test"
+	lambdaFunction1ResourceName := "aws_lambda_function.test1"
+	lambdaFunction2ResourceName := "aws_lambda_function.test2"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheckClientVPNSyncronize(t); acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckClientVPNEndpointDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEc2ClientVpnEndpointConfigWithClientConnectOptions(rName, true, 1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClientVPNEndpointExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "client_connect_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "client_connect_options.0.enabled", "true"),
+					resource.TestCheckResourceAttrPair(resourceName, "client_connect_options.0.lambda_function_arn", lambdaFunction1ResourceName, "arn"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccEc2ClientVpnEndpointConfigWithClientConnectOptions(rName, true, 2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClientVPNEndpointExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "client_connect_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "client_connect_options.0.enabled", "true"),
+					resource.TestCheckResourceAttrPair(resourceName, "client_connect_options.0.lambda_function_arn", lambdaFunction2ResourceName, "arn"),
+				),
+			},
+			{
+				Config: testAccEc2ClientVpnEndpointConfigWithClientConnectOptions(rName, false, 0),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClientVPNEndpointExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "client_connect_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "client_connect_options.0.enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "client_connect_options.0.lambda_function_arn", ""),
+				),
+			},
+		},
+	})
+}
+
+func testAccClientVPNEndpoint_withConnectionLogOptions(t *testing.T) {
 	var v ec2.ClientVpnEndpoint
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ec2_client_vpn_endpoint.test"
@@ -346,7 +397,7 @@ func testAccClientVPNEndpoint_withLogGroup(t *testing.T) {
 		CheckDestroy: testAccCheckClientVPNEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEc2ClientVpnEndpointConfigWithLogGroup(rName, 1),
+				Config: testAccEc2ClientVpnEndpointConfigWithConnectionLogOptions(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClientVPNEndpointExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "connection_log_options.#", "1"),
@@ -361,7 +412,7 @@ func testAccClientVPNEndpoint_withLogGroup(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccEc2ClientVpnEndpointConfigWithLogGroup(rName, 2),
+				Config: testAccEc2ClientVpnEndpointConfigWithConnectionLogOptions(rName, 2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClientVPNEndpointExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "connection_log_options.#", "1"),
@@ -649,7 +700,59 @@ resource "aws_ec2_client_vpn_endpoint" "test" {
 `, rName))
 }
 
-func testAccEc2ClientVpnEndpointConfigWithLogGroup(rName string, logStreamIndex int) string {
+func testAccEc2ClientVpnEndpointConfigWithClientConnectOptions(rName string, enabled bool, lambdaFunctionIndex int) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigLambdaBase(rName, rName, rName),
+		testAccEc2ClientVpnEndpointConfigAcmCertificateBase("test"),
+		fmt.Sprintf(`
+resource "aws_lambda_function" "test1" {
+  filename      = "test-fixtures/lambdatest.zip"
+  function_name = "AWSClientVPN-%[1]s-1"
+  role          = aws_iam_role.iam_for_lambda.arn
+  handler       = "index.handler"
+  runtime       = "nodejs14.x"
+}
+
+resource "aws_lambda_function" "test2" {
+  filename      = "test-fixtures/lambdatest.zip"
+  function_name = "AWSClientVPN-%[1]s-2"
+  role          = aws_iam_role.iam_for_lambda.arn
+  handler       = "index.handler"
+  runtime       = "nodejs14.x"
+}
+
+locals {
+  enabled             = %[2]t
+  index               = %[3]d
+  lambda_function_arn = local.enabled ? (local.index == 1 ? aws_lambda_function.test1.arn : aws_lambda_function.test2.arn) : null
+}
+
+resource "aws_ec2_client_vpn_endpoint" "test" {
+  server_certificate_arn = aws_acm_certificate.test.arn
+  client_cidr_block      = "10.0.0.0/16"
+
+  authentication_options {
+    type                       = "certificate-authentication"
+    root_certificate_chain_arn = aws_acm_certificate.test.arn
+  }
+
+  client_connect_options {
+    enabled             = local.enabled
+    lambda_function_arn = local.lambda_function_arn
+  }
+
+  connection_log_options {
+    enabled = false
+  }
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName, enabled, lambdaFunctionIndex))
+}
+
+func testAccEc2ClientVpnEndpointConfigWithConnectionLogOptions(rName string, logStreamIndex int) string {
 	return acctest.ConfigCompose(testAccEc2ClientVpnEndpointConfigAcmCertificateBase("test"), fmt.Sprintf(`
 resource "aws_cloudwatch_log_group" "test" {
   name = %[1]q

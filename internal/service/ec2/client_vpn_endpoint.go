@@ -79,6 +79,24 @@ func ResourceClientVPNEndpoint() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.IsCIDR,
 			},
+			"client_connect_options": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"enabled": {
+							Type:     schema.TypeBool,
+							Required: true,
+						},
+						"lambda_function_arn": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: verify.ValidARN,
+						},
+					},
+				},
+			},
 			"connection_log_options": {
 				Type:     schema.TypeList,
 				Required: true,
@@ -179,6 +197,10 @@ func resourceClientVPNEndpointCreate(d *schema.ResourceData, meta interface{}) e
 		input.AuthenticationOptions = expandClientVpnAuthenticationRequests(v.([]interface{}))
 	}
 
+	if v, ok := d.GetOk("client_connect_options"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		input.ClientConnectOptions = expandClientConnectOptions(v.([]interface{})[0].(map[string]interface{}))
+	}
+
 	if v, ok := d.GetOk("connection_log_options"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		input.ConnectionLogOptions = expandConnectionLogOptions(v.([]interface{})[0].(map[string]interface{}))
 	}
@@ -240,6 +262,13 @@ func resourceClientVPNEndpointRead(d *schema.ResourceData, meta interface{}) err
 		return fmt.Errorf("error setting authentication_options: %w", err)
 	}
 	d.Set("client_cidr_block", ep.ClientCidrBlock)
+	if ep.ClientConnectOptions != nil {
+		if err := d.Set("client_connect_options", []interface{}{flattenClientConnectResponseOptions(ep.ClientConnectOptions)}); err != nil {
+			return fmt.Errorf("error setting client_connect_options: %w", err)
+		}
+	} else {
+		d.Set("client_connect_options", nil)
+	}
 	if ep.ConnectionLogOptions != nil {
 		if err := d.Set("connection_log_options", []interface{}{flattenConnectionLogResponseOptions(ep.ConnectionLogOptions)}); err != nil {
 			return fmt.Errorf("error setting connection_log_options: %w", err)
@@ -282,6 +311,12 @@ func resourceClientVPNEndpointUpdate(d *schema.ResourceData, meta interface{}) e
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &ec2.ModifyClientVpnEndpointInput{
 			ClientVpnEndpointId: aws.String(d.Id()),
+		}
+
+		if d.HasChange("client_connect_options") {
+			if v, ok := d.GetOk("client_connect_options"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+				input.ClientConnectOptions = expandClientConnectOptions(v.([]interface{})[0].(map[string]interface{}))
+			}
 		}
 
 		if d.HasChange("connection_log_options") {
@@ -482,6 +517,47 @@ func flattenClientVpnAuthentications(apiObjects []*ec2.ClientVpnAuthentication) 
 	}
 
 	return tfList
+}
+
+func expandClientConnectOptions(tfMap map[string]interface{}) *ec2.ClientConnectOptions {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &ec2.ClientConnectOptions{}
+
+	var enabled bool
+	if v, ok := tfMap["enabled"].(bool); ok {
+		enabled = v
+	}
+
+	if enabled {
+		if v, ok := tfMap["lambda_function_arn"].(string); ok && v != "" {
+			apiObject.LambdaFunctionArn = aws.String(v)
+		}
+	}
+
+	apiObject.Enabled = aws.Bool(enabled)
+
+	return apiObject
+}
+
+func flattenClientConnectResponseOptions(apiObject *ec2.ClientConnectResponseOptions) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.LambdaFunctionArn; v != nil {
+		tfMap["lambda_function_arn"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.Enabled; v != nil {
+		tfMap["enabled"] = aws.BoolValue(v)
+	}
+
+	return tfMap
 }
 
 func expandConnectionLogOptions(tfMap map[string]interface{}) *ec2.ConnectionLogOptions {

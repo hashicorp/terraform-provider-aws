@@ -9,3 +9,7 @@ resource/aws_ec2_client_vpn_endpoint: Prevent `InvalidParameterValue: DNS server
 ```release-note:enhancement
 resource/aws_ec2_client_vpn_endpoint: Add `vpn_port` argument
 ```
+
+```release-note:enhancement
+resource/aws_ec2_client_vpn_endpoint: Add `client_connect_options` argument
+```

@@ -38,6 +38,7 @@ The following arguments are supported:
 
 * `authentication_options` - (Required) Information about the authentication method to be used to authenticate clients.
 * `client_cidr_block` - (Required) The IPv4 address range, in CIDR notation, from which to assign client IP addresses. The address range cannot overlap with the local CIDR of the VPC in which the associated subnet is located, or the routes that you add manually. The address range cannot be changed after the Client VPN endpoint has been created. The CIDR block should be /22 or greater.
+* `client_connect_options` - (Optional) Information about a client connect handler.
 * `connection_log_options` - (Required) Information about the client connection logging options.
 * `description` - (Optional) A brief description of the Client VPN endpoint.
 * `dns_servers` - (Optional) Information about the DNS servers to be used for DNS resolution. A Client VPN endpoint can have up to two DNS servers. If no DNS server is specified, the DNS address of the connecting device is used.
@@ -58,6 +59,11 @@ One of the following arguments must be supplied:
 * `saml_provider_arn` - (Optional) The ARN of the IAM SAML identity provider if type is `federated-authentication`.
 * `self_service_saml_provider_arn` - (Optional) The ARN of the IAM SAML identity provider for the self service portal if type is `federated-authentication`.
 * `type` - (Required) The type of client authentication to be used. Specify `certificate-authentication` to use certificate-based authentication, `directory-service-authentication` to use Active Directory authentication, or `federated-authentication` to use Federated Authentication via SAML 2.0.
+
+### `client_connect_options` Argument reference
+
+* `enabled` - (Required) Indicates whether a client connect handler is enabled.
+* `lambda_function_arn` - (Optional) The ARN of the Lambda function that implements a client connect handler.
 
 ### `connection_log_options` Argument Reference
 
