@@ -13,7 +13,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
@@ -181,13 +183,24 @@ func resourceStackCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	log.Printf("[DEBUG] Creating CloudFormation Stack: %s", input)
-	output, err := conn.CreateStack(input)
+	outputRaw, err := tfresource.RetryWhen(tfiam.PropagationTimeout,
+		func() (interface{}, error) {
+			return conn.CreateStack(input)
+		},
+		func(err error) (bool, error) {
+			if tfawserr.ErrMessageContains(err, "ValidationError", "is invalid or cannot be assumed") {
+				return true, err
+			}
+
+			return false, err
+		},
+	)
 
 	if err != nil {
 		return fmt.Errorf("error creating CloudFormation Stack (%s): %w", name, err)
 	}
 
-	d.SetId(aws.StringValue(output.StackId))
+	d.SetId(aws.StringValue(outputRaw.(*cloudformation.CreateStackOutput).StackId))
 
 	if _, err := WaitStackCreated(conn, d.Id(), requestToken, d.Timeout(schema.TimeoutCreate)); err != nil {
 		return fmt.Errorf("error waiting for CloudFormation Stack (%s) create: %w", d.Id(), err)
@@ -358,20 +371,28 @@ func resourceStackUpdate(d *schema.ResourceData, meta interface{}) error {
 		input.RoleARN = aws.String(d.Get("iam_role_arn").(string))
 	}
 
-	log.Printf("[DEBUG] Updating CloudFormation stack: %s", input)
-	_, err := conn.UpdateStack(input)
-	if tfawserr.ErrMessageContains(err, "ValidationError", "No updates are to be performed.") {
-		log.Printf("[DEBUG] Current CloudFormation stack has no updates")
-	} else if err != nil {
-		return fmt.Errorf("error updating CloudFormation stack (%s): %w", d.Id(), err)
+	log.Printf("[DEBUG] Updating CloudFormation Stack: %s", input)
+	_, err := tfresource.RetryWhen(tfiam.PropagationTimeout,
+		func() (interface{}, error) {
+			return conn.UpdateStack(input)
+		},
+		func(err error) (bool, error) {
+			if tfawserr.ErrMessageContains(err, "ValidationError", "is invalid or cannot be assumed") {
+				return true, err
+			}
+
+			return false, err
+		},
+	)
+
+	if err != nil {
+		return fmt.Errorf("error updating CloudFormation Stack (%s): %w", d.Id(), err)
 	}
 
 	_, err = WaitStackUpdated(conn, d.Id(), requestToken, d.Timeout(schema.TimeoutUpdate))
 	if err != nil {
-		return fmt.Errorf("error waiting for CloudFormation Stack update: %w", err)
+		return fmt.Errorf("error waiting for CloudFormation Stack (%s) update: %w", d.Id(), err)
 	}
-
-	log.Printf("[INFO] CloudFormation stack (%s) updated", d.Id())
 
 	return resourceStackRead(d, meta)
 }
