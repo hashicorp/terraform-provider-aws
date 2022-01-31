@@ -77,35 +77,35 @@ func StatusLocalGatewayRouteTableVPCAssociationState(conn *ec2.EC2, localGateway
 	}
 }
 
-const (
-	ClientVPNEndpointStatusNotFound = "NotFound"
-
-	ClientVPNEndpointStatusUnknown = "Unknown"
-)
-
-// StatusClientVPNEndpoint fetches the Client VPN endpoint and its Status
-func StatusClientVPNEndpoint(conn *ec2.EC2, endpointID string) resource.StateRefreshFunc {
+func StatusClientVPNEndpointState(conn *ec2.EC2, id string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		result, err := conn.DescribeClientVpnEndpoints(&ec2.DescribeClientVpnEndpointsInput{
-			ClientVpnEndpointIds: aws.StringSlice([]string{endpointID}),
-		})
-		if tfawserr.ErrCodeEquals(err, ErrCodeClientVpnEndpointIdNotFound) {
-			return nil, ClientVPNEndpointStatusNotFound, nil
+		output, err := FindClientVPNEndpointByID(conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
 		}
+
 		if err != nil {
-			return nil, ClientVPNEndpointStatusUnknown, err
+			return nil, "", err
 		}
 
-		if result == nil || len(result.ClientVpnEndpoints) == 0 || result.ClientVpnEndpoints[0] == nil {
-			return nil, ClientVPNEndpointStatusNotFound, nil
+		return output, aws.StringValue(output.Status.Code), nil
+	}
+}
+
+func StatusClientVPNEndpointClientConnectResponseOptionsState(conn *ec2.EC2, id string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := FindClientVPNEndpointClientConnectResponseOptionsByID(conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
 		}
 
-		endpoint := result.ClientVpnEndpoints[0]
-		if endpoint.Status == nil || endpoint.Status.Code == nil {
-			return endpoint, ClientVPNEndpointStatusUnknown, nil
+		if err != nil {
+			return nil, "", err
 		}
 
-		return endpoint, aws.StringValue(endpoint.Status.Code), nil
+		return output, aws.StringValue(output.Status.Code), nil
 	}
 }
 
@@ -119,7 +119,7 @@ const (
 func StatusClientVPNAuthorizationRule(conn *ec2.EC2, authorizationRuleID string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		result, err := FindClientVPNAuthorizationRuleByID(conn, authorizationRuleID)
-		if tfawserr.ErrCodeEquals(err, ErrCodeClientVpnAuthorizationRuleNotFound) {
+		if tfawserr.ErrCodeEquals(err, ErrCodeInvalidClientVpnAuthorizationRuleNotFound) {
 			return nil, ClientVPNAuthorizationRuleStatusNotFound, nil
 		}
 		if err != nil {
@@ -156,7 +156,7 @@ func StatusClientVPNNetworkAssociation(conn *ec2.EC2, cvnaID string, cvepID stri
 			AssociationIds:      []*string{aws.String(cvnaID)},
 		})
 
-		if tfawserr.ErrCodeEquals(err, ErrCodeClientVpnAssociationIdNotFound) || tfawserr.ErrCodeEquals(err, ErrCodeClientVpnEndpointIdNotFound) {
+		if tfawserr.ErrCodeEquals(err, ErrCodeInvalidClientVpnAssociationIdNotFound) || tfawserr.ErrCodeEquals(err, ErrCodeInvalidClientVpnEndpointIdNotFound) {
 			return nil, ClientVPNNetworkAssociationStatusNotFound, nil
 		}
 		if err != nil {
@@ -186,7 +186,7 @@ const (
 func StatusClientVPNRoute(conn *ec2.EC2, routeID string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		result, err := FindClientVPNRouteByID(conn, routeID)
-		if tfawserr.ErrCodeEquals(err, ErrCodeClientVpnRouteNotFound) {
+		if tfawserr.ErrCodeEquals(err, ErrCodeInvalidClientVpnRouteNotFound) {
 			return nil, ClientVPNRouteStatusNotFound, nil
 		}
 		if err != nil {

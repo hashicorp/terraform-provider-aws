@@ -30,6 +30,99 @@ func FindCarrierGatewayByID(conn *ec2.EC2, id string) (*ec2.CarrierGateway, erro
 	return output.CarrierGateways[0], nil
 }
 
+func FindClientVPNEndpoint(conn *ec2.EC2, input *ec2.DescribeClientVpnEndpointsInput) (*ec2.ClientVpnEndpoint, error) {
+	output, err := FindClientVPNEndpoints(conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if len(output) == 0 || output[0] == nil || output[0].Status == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	if count := len(output); count > 1 {
+		return nil, tfresource.NewTooManyResultsError(count, input)
+	}
+
+	return output[0], nil
+}
+
+func FindClientVPNEndpoints(conn *ec2.EC2, input *ec2.DescribeClientVpnEndpointsInput) ([]*ec2.ClientVpnEndpoint, error) {
+	var output []*ec2.ClientVpnEndpoint
+
+	err := conn.DescribeClientVpnEndpointsPages(input, func(page *ec2.DescribeClientVpnEndpointsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.ClientVpnEndpoints {
+			if v == nil {
+				continue
+			}
+
+			output = append(output, v)
+		}
+
+		return !lastPage
+	})
+
+	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidClientVpnEndpointIdNotFound) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
+}
+
+func FindClientVPNEndpointByID(conn *ec2.EC2, id string) (*ec2.ClientVpnEndpoint, error) {
+	input := &ec2.DescribeClientVpnEndpointsInput{
+		ClientVpnEndpointIds: aws.StringSlice([]string{id}),
+	}
+
+	output, err := FindClientVPNEndpoint(conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if state := aws.StringValue(output.Status.Code); state == ec2.ClientVpnEndpointStatusCodeDeleted {
+		return nil, &resource.NotFoundError{
+			Message:     state,
+			LastRequest: input,
+		}
+	}
+
+	// Eventual consistency check.
+	if aws.StringValue(output.ClientVpnEndpointId) != id {
+		return nil, &resource.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
+}
+
+func FindClientVPNEndpointClientConnectResponseOptionsByID(conn *ec2.EC2, id string) (*ec2.ClientConnectResponseOptions, error) {
+	output, err := FindClientVPNEndpointByID(conn, id)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output.ClientConnectOptions == nil || output.ClientConnectOptions.Status == nil {
+		return nil, tfresource.NewEmptyResultError(id)
+	}
+
+	return output.ClientConnectOptions, nil
+}
+
 func FindClientVPNAuthorizationRule(conn *ec2.EC2, endpointID, targetNetworkCidr, accessGroupID string) (*ec2.DescribeClientVpnAuthorizationRulesOutput, error) {
 	filters := map[string]string{
 		"destination-cidr": targetNetworkCidr,

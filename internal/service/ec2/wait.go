@@ -114,20 +114,42 @@ func WaitLocalGatewayRouteTableVPCAssociationDisassociated(conn *ec2.EC2, localG
 }
 
 const (
-	ClientVPNEndpointDeletedTimout = 5 * time.Minute
+	ClientVPNEndpointDeletedTimeout          = 5 * time.Minute
+	ClientVPNEndpointAttributeUpdatedTimeout = 5 * time.Minute
 )
 
 func WaitClientVPNEndpointDeleted(conn *ec2.EC2, id string) (*ec2.ClientVpnEndpoint, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{ec2.ClientVpnEndpointStatusCodeDeleting},
 		Target:  []string{},
-		Refresh: StatusClientVPNEndpoint(conn, id),
-		Timeout: ClientVPNEndpointDeletedTimout,
+		Refresh: StatusClientVPNEndpointState(conn, id),
+		Timeout: ClientVPNEndpointDeletedTimeout,
 	}
 
 	outputRaw, err := stateConf.WaitForState()
 
 	if output, ok := outputRaw.(*ec2.ClientVpnEndpoint); ok {
+		tfresource.SetLastError(err, errors.New(aws.StringValue(output.Status.Message)))
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func WaitClientVPNEndpointClientConnectResponseOptionsUpdated(conn *ec2.EC2, id string) (*ec2.ClientConnectResponseOptions, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{ec2.ClientVpnEndpointAttributeStatusCodeApplying},
+		Target:  []string{ec2.ClientVpnEndpointAttributeStatusCodeApplied},
+		Refresh: StatusClientVPNEndpointClientConnectResponseOptionsState(conn, id),
+		Timeout: ClientVPNEndpointAttributeUpdatedTimeout,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*ec2.ClientConnectResponseOptions); ok {
+		tfresource.SetLastError(err, errors.New(aws.StringValue(output.Status.Message)))
+
 		return output, err
 	}
 

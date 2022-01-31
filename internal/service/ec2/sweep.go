@@ -423,44 +423,45 @@ func sweepCarrierGateway(region string) error {
 
 func sweepClientVPNEndpoints(region string) error {
 	client, err := sweep.SharedRegionalSweepClient(region)
-
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-
 	conn := client.(*conns.AWSClient).EC2Conn
-
-	var sweeperErrs *multierror.Error
-
 	input := &ec2.DescribeClientVpnEndpointsInput{}
+	sweepResources := make([]*sweep.SweepResource, 0)
+
 	err = conn.DescribeClientVpnEndpointsPages(input, func(page *ec2.DescribeClientVpnEndpointsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
 
-		for _, clientVpnEndpoint := range page.ClientVpnEndpoints {
-			id := aws.StringValue(clientVpnEndpoint.ClientVpnEndpointId)
-			log.Printf("[INFO] Deleting Client VPN endpoint: %s", id)
-			err := DeleteClientVPNEndpoint(conn, id)
-			if err != nil {
-				sweeperErr := fmt.Errorf("error deleting Client VPN endpoint (%s): %w", id, err)
-				log.Printf("[ERROR] %s", sweeperErr)
-				sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
-				continue
-			}
+		for _, v := range page.ClientVpnEndpoints {
+			r := ResourceClientVPNEndpoint()
+			d := r.Data(nil)
+			d.SetId(aws.StringValue(v.ClientVpnEndpointId))
+
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
 
 		return !lastPage
 	})
+
 	if sweep.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping Client VPN endpoint sweep for %s: %s", region, err)
-		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
-	}
-	if err != nil {
-		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error retrieving Client VPN endpoints: %w", err))
+		log.Printf("[WARN] Skipping EC2 Client VPN Endpoint sweep for %s: %s", region, err)
+		return nil
 	}
 
-	return sweeperErrs.ErrorOrNil()
+	if err != nil {
+		return fmt.Errorf("error listing EC2 Client VPN Endpoints (%s): %w", region, err)
+	}
+
+	err = sweep.SweepOrchestrator(sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("error sweeping EC2 Client VPN Endpoints (%s): %w", region, err)
+	}
+
+	return nil
 }
 
 func sweepClientVPNNetworkAssociations(region string) error {
