@@ -313,7 +313,7 @@ func resourceClientVPNEndpointRead(d *schema.ResourceData, meta interface{}) err
 	}
 	d.Set("description", ep.Description)
 	d.Set("dns_name", ep.DnsName)
-	d.Set("dns_servers", ep.DnsServers)
+	d.Set("dns_servers", aws.StringValueSlice(ep.DnsServers))
 	if aws.StringValue(ep.SelfServicePortalUrl) != "" {
 		d.Set("self_service_portal", ec2.SelfServicePortalEnabled)
 	} else {
