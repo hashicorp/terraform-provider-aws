@@ -810,7 +810,8 @@ func testAccEc2ClientVpnEndpointConfigWithClientLoginBannerOptions(rName string,
 	return acctest.ConfigCompose(testAccEc2ClientVpnEndpointConfigAcmCertificateBase("test"), fmt.Sprintf(`
 locals {
   enabled     = %[2]t
-  banner_text = local.enabled ? %[3]q : null
+  text        = %[3]q
+  banner_text = local.enabled ? local.text : null
 }
 
 resource "aws_ec2_client_vpn_endpoint" "test" {
