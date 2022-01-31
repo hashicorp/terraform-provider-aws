@@ -123,7 +123,7 @@ func testAccCheckObjectCopyExists(n string) resource.TestCheckFunc {
 				IfMatch: aws.String(rs.Primary.Attributes["etag"]),
 			})
 		if err != nil {
-			return fmt.Errorf("S3Bucket Object error: %s", err)
+			return fmt.Errorf("S3 Object error: %s", err)
 		}
 
 		return nil
