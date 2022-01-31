@@ -305,7 +305,7 @@ func resourceBucketObjectRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceBucketObjectUpdate(d *schema.ResourceData, meta interface{}) error {
-	if hasS3BucketObjectContentChanges(d) {
+	if hasS3ObjectContentChanges(d) {
 		return resourceBucketObjectUpload(d, meta)
 	}
 
@@ -573,7 +573,7 @@ func validateMetadataIsLowerCase(v interface{}, k string) (ws []string, errors [
 }
 
 func resourceBucketObjectCustomizeDiff(_ context.Context, d *schema.ResourceDiff, meta interface{}) error {
-	if hasS3BucketObjectContentChanges(d) {
+	if hasS3ObjectContentChanges(d) {
 		return d.SetNewComputed("version_id")
 	}
 
@@ -585,7 +585,7 @@ func resourceBucketObjectCustomizeDiff(_ context.Context, d *schema.ResourceDiff
 	return nil
 }
 
-func hasS3BucketObjectContentChanges(d verify.ResourceDiffer) bool {
+func hasS3ObjectContentChanges(d verify.ResourceDiffer) bool {
 	for _, key := range []string{
 		"bucket_key_enabled",
 		"cache_control",
