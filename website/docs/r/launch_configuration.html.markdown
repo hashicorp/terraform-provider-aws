@@ -213,7 +213,7 @@ Each `ephemeral_block_device` supports the following:
 * `device_name` - The name of the block device to mount on the instance.
 * `virtual_name` - The [Instance Store Device
   Name](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/InstanceStorage.html#InstanceStoreDeviceNames)
-  (e.g. `"ephemeral0"`)
+  (e.g., `"ephemeral0"`)
 
 Each AWS Instance type has a different set of Instance Store block devices
 available for attachment. AWS [publishes a
@@ -240,7 +240,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Launch configurations can be imported using the `name`, e.g.
+Launch configurations can be imported using the `name`, e.g.,
 
 ```
 $ terraform import aws_launch_configuration.as_conf terraform-lg-123456

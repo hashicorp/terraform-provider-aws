@@ -8,7 +8,7 @@ description: |-
 
 # Resource: aws_datapipeline_pipeline
 
-Provides a Data Pipeline resource.
+Provides a DataPipeline Pipeline resource.
 
 ## Example Usage
 
@@ -35,7 +35,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-`aws_datapipeline_pipeline` can be imported by using the id (Pipeline ID), e.g.
+`aws_datapipeline_pipeline` can be imported by using the id (Pipeline ID), e.g.,
 
 ```
 $ terraform import aws_datapipeline_pipeline.default df-1234567890

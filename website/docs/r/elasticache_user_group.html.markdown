@@ -47,7 +47,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-ElastiCache user groups can be imported using the `user_group_id`, e.g.
+ElastiCache user groups can be imported using the `user_group_id`, e.g.,
 
 ```
 $ terraform import aws_elasticache_user_group.my_user_group userGoupId1

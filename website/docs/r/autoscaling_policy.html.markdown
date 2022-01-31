@@ -111,21 +111,6 @@ resource "aws_autoscaling_policy" "example" {
 
     target_value = 40.0
   }
-
-  target_tracking_configuration {
-    customized_metric_specification {
-      metric_dimension {
-        name  = "fuga"
-        value = "fuga"
-      }
-
-      metric_name = "hoge"
-      namespace   = "hoge"
-      statistic   = "Average"
-    }
-
-    target_value = 40.0
-  }
 }
 ```
 

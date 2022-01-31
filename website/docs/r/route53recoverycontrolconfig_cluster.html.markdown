@@ -39,7 +39,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Route53 Recovery Control Config cluster can be imported via the cluster ARN, e.g.
+Route53 Recovery Control Config cluster can be imported via the cluster ARN, e.g.,
 
 ```
 $ terraform import aws_route53recoverycontrolconfig_cluster.mycluster arn:aws:route53-recovery-control::313517334327:cluster/f9ae13be-a11e-4ec7-8522-94a70468e6ea

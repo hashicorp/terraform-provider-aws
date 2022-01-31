@@ -87,7 +87,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Feature Groups can be imported using the `name`, e.g.
+Feature Groups can be imported using the `name`, e.g.,
 
 ```
 $ terraform import aws_sagemaker_feature_group.test_feature_group feature_group-foo
