@@ -2580,7 +2580,7 @@ func TestAccS3Bucket_Basic_forceDestroy(t *testing.T) {
 
 // By default, the AWS Go SDK cleans up URIs by removing extra slashes
 // when the service API requests use the URI as part of making a request.
-// While the aws_s3_bucket_object resource automatically cleans the key
+// While the aws_s3_object resource automatically cleans the key
 // to not contain these extra slashes, out-of-band handling and other AWS
 // services may create keys with extra slashes (empty "directory" prefixes).
 func TestAccS3Bucket_Basic_forceDestroyWithEmptyPrefixes(t *testing.T) {

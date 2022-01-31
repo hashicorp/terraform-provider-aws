@@ -22,8 +22,8 @@ import (
 )
 
 func init() {
-	resource.AddTestSweepers("aws_s3_bucket_object", &resource.Sweeper{
-		Name: "aws_s3_bucket_object",
+	resource.AddTestSweepers("aws_s3_object", &resource.Sweeper{
+		Name: "aws_s3_object",
 		F:    sweepBucketObjects,
 	})
 
@@ -32,7 +32,7 @@ func init() {
 		F:    sweepBuckets,
 		Dependencies: []string{
 			"aws_s3_access_point",
-			"aws_s3_bucket_object",
+			"aws_s3_object",
 			"aws_s3control_multi_region_access_point",
 		},
 	})
