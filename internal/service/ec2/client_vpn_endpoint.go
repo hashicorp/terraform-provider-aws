@@ -312,11 +312,14 @@ func resourceClientVPNEndpointUpdate(d *schema.ResourceData, meta interface{}) e
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	if d.HasChangesExcept("tags", "tags_all") {
+		var waitForClientConnectResponseOptionsUpdate bool
 		input := &ec2.ModifyClientVpnEndpointInput{
 			ClientVpnEndpointId: aws.String(d.Id()),
 		}
 
 		if d.HasChange("client_connect_options") {
+			waitForClientConnectResponseOptionsUpdate = true
+
 			if v, ok := d.GetOk("client_connect_options"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 				input.ClientConnectOptions = expandClientConnectOptions(v.([]interface{})[0].(map[string]interface{}))
 			}
@@ -366,6 +369,12 @@ func resourceClientVPNEndpointUpdate(d *schema.ResourceData, meta interface{}) e
 
 		if _, err := conn.ModifyClientVpnEndpoint(input); err != nil {
 			return fmt.Errorf("error modifying EC2 Client VPN Endpoint (%s): %w", d.Id(), err)
+		}
+
+		if waitForClientConnectResponseOptionsUpdate {
+			if _, err := WaitClientVPNEndpointClientConnectResponseOptionsUpdated(conn, d.Id()); err != nil {
+				return fmt.Errorf("error waiting for EC2 Client VPN Endpoint (%s) ClientConnectResponseOptions update: %w", d.Id(), err)
+			}
 		}
 	}
 

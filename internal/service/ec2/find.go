@@ -109,6 +109,20 @@ func FindClientVPNEndpointByID(conn *ec2.EC2, id string) (*ec2.ClientVpnEndpoint
 	return output, nil
 }
 
+func FindClientVPNEndpointClientConnectResponseOptionsByID(conn *ec2.EC2, id string) (*ec2.ClientConnectResponseOptions, error) {
+	output, err := FindClientVPNEndpointByID(conn, id)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output.ClientConnectOptions == nil || output.ClientConnectOptions.Status == nil {
+		return nil, tfresource.NewEmptyResultError(id)
+	}
+
+	return output.ClientConnectOptions, nil
+}
+
 func FindClientVPNAuthorizationRule(conn *ec2.EC2, endpointID, targetNetworkCidr, accessGroupID string) (*ec2.DescribeClientVpnAuthorizationRulesOutput, error) {
 	filters := map[string]string{
 		"destination-cidr": targetNetworkCidr,
