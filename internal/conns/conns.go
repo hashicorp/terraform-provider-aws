@@ -169,6 +169,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/macie"
 	"github.com/aws/aws-sdk-go/service/macie2"
 	"github.com/aws/aws-sdk-go/service/managedblockchain"
+	"github.com/aws/aws-sdk-go/service/managedgrafana"
 	"github.com/aws/aws-sdk-go/service/marketplacecatalog"
 	"github.com/aws/aws-sdk-go/service/marketplacecommerceanalytics"
 	"github.com/aws/aws-sdk-go/service/marketplaceentitlementservice"
@@ -398,6 +399,7 @@ const (
 	GlobalAccelerator             = "globalaccelerator"
 	Glue                          = "glue"
 	GlueDataBrew                  = "gluedatabrew"
+	Grafana                       = "grafana"
 	Greengrass                    = "greengrass"
 	GreengrassV2                  = "greengrassv2"
 	GroundStation                 = "groundstation"
@@ -685,6 +687,7 @@ func init() {
 	serviceData[GlobalAccelerator] = &ServiceDatum{AWSClientName: "GlobalAccelerator", AWSServiceName: globalaccelerator.ServiceName, AWSEndpointsID: globalaccelerator.EndpointsID, AWSServiceID: globalaccelerator.ServiceID, ProviderNameUpper: "GlobalAccelerator", HCLKeys: []string{"globalaccelerator"}}
 	serviceData[Glue] = &ServiceDatum{AWSClientName: "Glue", AWSServiceName: glue.ServiceName, AWSEndpointsID: glue.EndpointsID, AWSServiceID: glue.ServiceID, ProviderNameUpper: "Glue", HCLKeys: []string{"glue"}}
 	serviceData[GlueDataBrew] = &ServiceDatum{AWSClientName: "GlueDataBrew", AWSServiceName: gluedatabrew.ServiceName, AWSEndpointsID: gluedatabrew.EndpointsID, AWSServiceID: gluedatabrew.ServiceID, ProviderNameUpper: "GlueDataBrew", HCLKeys: []string{"gluedatabrew"}}
+	serviceData[Grafana] = &ServiceDatum{AWSClientName: "Grafana", AWSServiceName: managedgrafana.ServiceName, AWSEndpointsID: managedgrafana.EndpointsID, AWSServiceID: managedgrafana.ServiceID, ProviderNameUpper: "Grafana", HCLKeys: []string{"grafana", "managedgrafana", "amg"}}
 	serviceData[Greengrass] = &ServiceDatum{AWSClientName: "Greengrass", AWSServiceName: greengrass.ServiceName, AWSEndpointsID: greengrass.EndpointsID, AWSServiceID: greengrass.ServiceID, ProviderNameUpper: "Greengrass", HCLKeys: []string{"greengrass"}}
 	serviceData[GreengrassV2] = &ServiceDatum{AWSClientName: "GreengrassV2", AWSServiceName: greengrassv2.ServiceName, AWSEndpointsID: greengrassv2.EndpointsID, AWSServiceID: greengrassv2.ServiceID, ProviderNameUpper: "GreengrassV2", HCLKeys: []string{"greengrassv2"}}
 	serviceData[GroundStation] = &ServiceDatum{AWSClientName: "GroundStation", AWSServiceName: groundstation.ServiceName, AWSEndpointsID: groundstation.EndpointsID, AWSServiceID: groundstation.ServiceID, ProviderNameUpper: "GroundStation", HCLKeys: []string{"groundstation"}}
@@ -998,6 +1001,7 @@ type AWSClient struct {
 	GlobalAcceleratorConn             *globalaccelerator.GlobalAccelerator
 	GlueConn                          *glue.Glue
 	GlueDataBrewConn                  *gluedatabrew.GlueDataBrew
+	GrafanaConn                       *managedgrafana.ManagedGrafana
 	GreengrassConn                    *greengrass.Greengrass
 	GreengrassV2Conn                  *greengrassv2.GreengrassV2
 	GroundStationConn                 *groundstation.GroundStation
@@ -1352,6 +1356,7 @@ func (c *Config) Client() (interface{}, error) {
 		GlacierConn:                       glacier.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[Glacier])})),
 		GlueConn:                          glue.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[Glue])})),
 		GlueDataBrewConn:                  gluedatabrew.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[GlueDataBrew])})),
+		GrafanaConn:                       managedgrafana.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[Grafana])})),
 		GreengrassConn:                    greengrass.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[Greengrass])})),
 		GreengrassV2Conn:                  greengrassv2.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[GreengrassV2])})),
 		GroundStationConn:                 groundstation.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[GroundStation])})),
