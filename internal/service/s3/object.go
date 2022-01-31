@@ -434,14 +434,14 @@ func resourceBucketObjectUpload(d *schema.ResourceData, meta interface{}) error 
 		}
 		file, err := os.Open(path)
 		if err != nil {
-			return fmt.Errorf("Error opening S3 bucket object source (%s): %s", path, err)
+			return fmt.Errorf("Error opening S3 object source (%s): %s", path, err)
 		}
 
 		body = file
 		defer func() {
 			err := file.Close()
 			if err != nil {
-				log.Printf("[WARN] Error closing S3 bucket object source (%s): %s", path, err)
+				log.Printf("[WARN] Error closing S3 object source (%s): %s", path, err)
 			}
 		}()
 	} else if v, ok := d.GetOk("content"); ok {
