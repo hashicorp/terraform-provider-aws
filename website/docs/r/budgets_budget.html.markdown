@@ -128,9 +128,9 @@ The following arguments are supported:
 * `name` - (Optional) The name of a budget. Unique within accounts.
 * `name_prefix` - (Optional) The prefix of the name of a budget. Unique within accounts.
 * `budget_type` - (Required) Whether this budget tracks monetary cost or usage.
-* `cost_filter` - (Optional) A list of [CostFilter](#Cost-Filter) name/values pair to apply to budget.
-* `cost_filters` - (Optional) Map of [CostFilters](#Cost-Filters) key/value pairs to apply to the budget.
-* `cost_types` - (Optional) Object containing [CostTypes](#Cost-Types) The types of cost included in a budget, such as tax and subscriptions.
+* `cost_filter` - (Optional) A list of [CostFilter](#cost-filter) name/values pair to apply to budget.
+* `cost_filters` - (Optional) Map of [CostFilters](#cost-filters) key/value pairs to apply to the budget.
+* `cost_types` - (Optional) Object containing [CostTypes](#cost-types) The types of cost included in a budget, such as tax and subscriptions.
 * `limit_amount` - (Required) The amount of cost or usage being measured for a budget.
 * `limit_unit` - (Required) The unit of measurement used for the budget forecast, actual spend, or budget threshold, such as dollars or GB. See [Spend](http://docs.aws.amazon.com/awsaccountbilling/latest/aboutv2/data-type-spend.html) documentation.
 * `time_period_end` - (Optional) The end of the time period covered by the budget. There are no restrictions on the end date. Format: `2017-01-01_12:00`.
@@ -186,7 +186,7 @@ Refer to [AWS CostFilter documentation](http://docs.aws.amazon.com/awsaccountbil
 
 ### Cost Filters
 
-Valid key for `cost_filters` is same as `cost_filter`. Please refer to [Cost Filter](#Cost-Filter).
+Valid key for `cost_filters` is same as `cost_filter`. Please refer to [Cost Filter](#cost-filter).
 
 ### Budget Notification
 
