@@ -40,12 +40,26 @@ func ResourceDetector() *schema.Resource {
 
 			"datasources": {
 				Type:     schema.TypeList,
-				MaxItems: 1,
+				MaxItems: 2,
 				Optional: true,
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"s3_logs": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Computed: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"enable": {
+										Type:     schema.TypeBool,
+										Required: true,
+									},
+								},
+							},
+						},
+						"kubernetes_audit_logs": {
 							Type:     schema.TypeList,
 							Optional: true,
 							Computed: true,
@@ -246,6 +260,9 @@ func expandGuardDutyDataSourceConfigurations(tfMap map[string]interface{}) *guar
 	if v, ok := tfMap["s3_logs"].([]interface{}); ok && len(v) > 0 {
 		apiObject.S3Logs = expandGuardDutyS3LogsConfiguration(v[0].(map[string]interface{}))
 	}
+	if v, ok := tfMap["kubernetes_audit_logs"].([]interface{}); ok && len(v) > 0 {
+		apiObject.Kubernetes = expandGuardDutyKubernetesAuditLogsConfiguration(v[0].(map[string]interface{}))
+	}
 
 	return apiObject
 }
@@ -264,6 +281,21 @@ func expandGuardDutyS3LogsConfiguration(tfMap map[string]interface{}) *guardduty
 	return apiObject
 }
 
+func expandGuardDutyKubernetesAuditLogsConfiguration(tfMap map[string]interface{}) *guardduty.KubernetesConfiguration {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &guardduty.KubernetesConfiguration{}
+
+	if v, ok := tfMap["enable"].(bool); ok {
+		apiObject.AuditLogs = &guardduty.KubernetesAuditLogsConfiguration{}
+		apiObject.AuditLogs.Enable = aws.Bool(v)
+	}
+
+	return apiObject
+}
+
 func flattenGuardDutyDataSourceConfigurationsResult(apiObject *guardduty.DataSourceConfigurationsResult) map[string]interface{} {
 	if apiObject == nil {
 		return nil
@@ -273,6 +305,10 @@ func flattenGuardDutyDataSourceConfigurationsResult(apiObject *guardduty.DataSou
 
 	if v := apiObject.S3Logs; v != nil {
 		tfMap["s3_logs"] = []interface{}{flattenGuardDutyS3LogsConfigurationResult(v)}
+	}
+
+	if v := apiObject.Kubernetes; v != nil {
+		tfMap["kubernetes_audit_logs"] = []interface{}{flattenGuardDutyKubernetesAuditLogsConfiguration(v)}
 	}
 
 	return tfMap
@@ -286,6 +322,20 @@ func flattenGuardDutyS3LogsConfigurationResult(apiObject *guardduty.S3LogsConfig
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.Status; v != nil {
+		tfMap["enable"] = aws.StringValue(v) == guardduty.DataSourceStatusEnabled
+	}
+
+	return tfMap
+}
+
+func flattenGuardDutyKubernetesAuditLogsConfiguration(apiObject *guardduty.KubernetesConfigurationResult) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.AuditLogs.Status; v != nil {
 		tfMap["enable"] = aws.StringValue(v) == guardduty.DataSourceStatusEnabled
 	}
 

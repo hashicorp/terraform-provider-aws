@@ -143,6 +143,42 @@ func testAccDetector_datasources_s3logs(t *testing.T) {
 	})
 }
 
+func testAccDetector_datasources_kubernetes_audit_logs(t *testing.T) {
+	resourceName := "aws_guardduty_detector.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, guardduty.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckDetectorDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGuardDutyDetectorConfigDatasourcesKubernetesAuditLogs(true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDetectorExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "datasources.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "datasources.0.kubernetes_audit_logs.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "datasources.0.kubernetes_audit_logs.0.enable", "true"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccGuardDutyDetectorConfigDatasourcesKubernetesAuditLogs(false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDetectorExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "datasources.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "datasources.0.kubernetes_audit_logs.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "datasources.0.kubernetes_audit_logs.0.enable", "false"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckDetectorDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).GuardDutyConn
 
@@ -228,6 +264,18 @@ func testAccGuardDutyDetectorConfigDatasourcesS3Logs(enable bool) string {
 resource "aws_guardduty_detector" "test" {
   datasources {
     s3_logs {
+      enable = %[1]t
+    }
+  }
+}
+`, enable)
+}
+
+func testAccGuardDutyDetectorConfigDatasourcesKubernetesAuditLogs(enable bool) string {
+	return fmt.Sprintf(`
+resource "aws_guardduty_detector" "test" {
+  datasources {
+    kubernetes_audit_logs {
       enable = %[1]t
     }
   }

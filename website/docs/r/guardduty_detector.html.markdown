@@ -22,6 +22,9 @@ resource "aws_guardduty_detector" "MyDetector" {
     s3_logs {
       enable = true
     }
+    kubernetes_audit_logs {
+      enabled = false
+    }
   }
 }
 ```
@@ -40,12 +43,19 @@ The following arguments are supported:
 The `datasources` block supports the following:
 
 * `s3_logs` - (Optional) Describes whether S3 data event logs are enabled as a data source. See [S3 Logs](#s3-logs) below for more details.
+* `kubernetes_audit_logs` - (Optional) Describes whether Kubernetes audit log events are enabled as a data source.  See [Kubernetes Audit Logs](#kubernetes-audit-logs) below for more details.
 
 ### S3 Logs
 
 This `s3_logs` block supports the following:
 
 * `enable` - (Required) If true, enables [S3 Protection](https://docs.aws.amazon.com/guardduty/latest/ug/s3_detection.html). Defaults to `true`.
+
+### Kubernetes Audit Logs
+
+This `kubernetes_audit_logs` block supports the following:
+
+* `enable` - (Required) If true, enables [Kubernetes Protection](https://docs.aws.amazon.com/guardduty/latest/ug/kubernetes-protection.html). Defaults to `true`.
 
 ## Attributes Reference
 
