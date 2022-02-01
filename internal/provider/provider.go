@@ -695,7 +695,8 @@ func Provider() *schema.Provider {
 			"aws_s3_bucket":         s3.DataSourceBucket(),
 			"aws_s3_object":         s3.DataSourceObject(),
 			"aws_s3_objects":        s3.DataSourceObjects(),
-			"aws_s3_bucket_object":  s3.DataSourceBucketObject(), // DEPRECATED: use aws_s3_object instead
+			"aws_s3_bucket_object":  s3.DataSourceBucketObject(),  // DEPRECATED: use aws_s3_object instead
+			"aws_s3_bucket_objects": s3.DataSourceBucketObjects(), // DEPRECATED: use aws_s3_objects instead
 
 			"aws_sagemaker_prebuilt_ecr_image": sagemaker.DataSourcePrebuiltECRImage(),
 
