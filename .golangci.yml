@@ -47,11 +47,7 @@ linters-settings:
           - request.ConstantWaiterDelay
           - request.WithWaiterMaxAttempts
           # AWS Provider
-          - mapMaxItems
-          - rootStatementSchema
-          - webACLRootStatementSchema
           - nullable.*
-          - sweep.SweepOrchestratorContext
           # Terraform Plugin SDK
           - resource.Retry
           - schema.DefaultTimeout

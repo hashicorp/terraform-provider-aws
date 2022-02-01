@@ -335,7 +335,7 @@ func ResourceTarget() *schema.Resource {
 							Optional: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 							ValidateFunc: validation.All(
-								mapMaxItems(mapMaxItemsCount),
+								mapMaxItems(targetInputTransformerMaxInputPaths),
 								mapKeysDoNotMatch(regexp.MustCompile(`^AWS.*$`), "input_path must not start with \"AWS\""),
 							),
 						},
