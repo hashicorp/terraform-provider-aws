@@ -45,6 +45,7 @@ func TestAccEC2ClientVPNEndpoint_serial(t *testing.T) {
 			"tags":                         testAccClientVPNEndpoint_tags,
 			"simpleAttributesUpdate":       testAccClientVPNEndpoint_simpleAttributesUpdate,
 			"selfServicePortal":            testAccClientVPNEndpoint_selfServicePortal,
+			"basicDataSource":              testAccClientVPNEndpointDataSource_basic,
 		},
 		"AuthorizationRule": {
 			"basic":              testAccClientVPNAuthorizationRule_basic,

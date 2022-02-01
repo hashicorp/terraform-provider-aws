@@ -7,26 +7,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 )
 
-const clientVPNNetworkAssociationIDSeparator = ","
-
-func ClientVPNNetworkAssociationCreateID(endpointID, associationID string) string {
-	parts := []string{endpointID, associationID}
-	id := strings.Join(parts, clientVPNNetworkAssociationIDSeparator)
-
-	return id
-}
-
-func ClientVPNNetworkAssociationParseID(id string) (string, string, error) {
-	parts := strings.Split(id, clientVPNNetworkAssociationIDSeparator)
-
-	if len(parts) == 2 && parts[0] != "" && parts[1] != "" {
-		return parts[0], parts[1], nil
-	}
-
-	return "", "",
-		fmt.Errorf("unexpected format for ID (%[1]s), expected EndpointID%[2]sAssociationID", id, clientVPNNetworkAssociationIDSeparator)
-}
-
 const clientVpnRouteIDSeparator = ","
 
 func ClientVPNRouteCreateID(endpointID, targetSubnetID, destinationCidr string) string {
