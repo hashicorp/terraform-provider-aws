@@ -197,7 +197,7 @@ func resourceWorkspaceUpdate(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("authentication_providers") {
 		updateWorkspaceAuthenticationInput := &managedgrafana.UpdateWorkspaceAuthenticationInput{
 			WorkspaceId:             aws.String(d.Id()),
-			AuthenticationProviders: aws.StringSlice(d.Get("authentication_providers").([]string)),
+			AuthenticationProviders: flex.ExpandStringList(d.Get("authentication_providers").([]interface{})),
 		}
 		_, err := conn.UpdateWorkspaceAuthentication(updateWorkspaceAuthenticationInput)
 
