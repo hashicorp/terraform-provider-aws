@@ -217,6 +217,11 @@ func Provider() *schema.Provider {
 				Description: "The address of an HTTP proxy to use when accessing the AWS API. " +
 					"Can also be configured using the `HTTP_PROXY` or `HTTPS_PROXY` environment variables.",
 			},
+			"iam_endpoint": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "IAM endpoint to use that can have a distinct region",
+			},
 			"ignore_tags": {
 				Type:        schema.TypeList,
 				Optional:    true,
@@ -338,10 +343,10 @@ func Provider() *schema.Provider {
 				Description: "Skip requesting the account ID. " +
 					"Used for AWS API implementations that do not have IAM/STS API and/or metadata API.",
 			},
-			"sts_region": {
+			"sts_endpoint": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "Region where the STS endpoint resides",
+				Description: "STS endpoint to use that can have a distinct region",
 			},
 			"token": {
 				Type:     schema.TypeString,
