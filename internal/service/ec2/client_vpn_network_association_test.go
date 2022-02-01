@@ -279,7 +279,7 @@ resource "aws_subnet" "test2" {
 }
 
 func testAccEc2ClientVpnNetworkAssociationConfigBasic(rName string) string {
-	return acctest.ConfigCompose(testAccEc2ClientVpnNetworkAssociationBaseConfig("test"), `
+	return acctest.ConfigCompose(testAccEc2ClientVpnNetworkAssociationBaseConfig(rName), `
 resource "aws_ec2_client_vpn_network_association" "test" {
   client_vpn_endpoint_id = aws_ec2_client_vpn_endpoint.test.id
   subnet_id              = aws_subnet.test1.id
