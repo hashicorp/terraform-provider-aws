@@ -29,7 +29,7 @@ func TestAccGrafanaWorkspace_basic(t *testing.T) {
 					testAccCheckWorkspaceExists(resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "id"),
 					resource.TestCheckResourceAttr(resourceName, "account_access_type", managedgrafana.AccountAccessTypeCurrentAccount),
-					resource.TestCheckResourceAttr(resourceName, "authentication_providers", managedgrafana.AuthenticationProviderTypesSaml),
+					resource.TestCheckResourceAttr(resourceName, "permission_type", managedgrafana.PermissionTypeCustomerManaged),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "status", managedgrafana.WorkspaceStatusActive),
 				),
@@ -47,7 +47,8 @@ func testAccWorkspaceConfigBasic(name string) string {
 	return fmt.Sprintf(`
 resource "aws_grafana_workspace" "test" {
 	account_access_type = "CURRENT_ACCOUNT"
-	authentication_providers = "AWS_SSO"
+	authentication_providers = ["AWS_SSO"]
+	permission_type = "CUSTOMER_MANAGED"
 	name = %[1]q
 }
 `, name)

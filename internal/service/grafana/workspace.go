@@ -45,12 +45,12 @@ func ResourceWorkspace() *schema.Resource {
 			},
 			"saml_configuration_status": {
 				Type:         schema.TypeString,
-				Required:     false,
+				Optional:     true,
 				ValidateFunc: validation.StringInSlice(managedgrafana.SamlConfigurationStatus_Values(), false),
 			},
 			"organization_role_name": {
 				Type:     schema.TypeString,
-				Required: false,
+				Optional: true,
 			},
 			"permission_type": {
 				Type:         schema.TypeString,
@@ -59,36 +59,36 @@ func ResourceWorkspace() *schema.Resource {
 			},
 			"stack_set_name": {
 				Type:     schema.TypeString,
-				Required: false,
+				Optional: true,
 			},
 			"data_sources": {
 				Type:     schema.TypeList,
-				Required: false,
+				Optional: true,
 			},
 			"description": {
 				Type:     schema.TypeString,
-				Required: false,
+				Optional: true,
 			},
 			"name": {
 				Type:     schema.TypeString,
-				Required: false,
+				Optional: true,
 			},
 			"notification_destinations": {
 				Type:     schema.TypeList,
-				Required: false,
+				Optional: true,
 			},
 			"organizational_units": {
 				Type:     schema.TypeString,
-				Required: false,
+				Optional: true,
 			},
 			"status": {
-				Type: schema.TypeString,
-				Required: false,
+				Type:         schema.TypeString,
+				Optional:     true,
 				ValidateFunc: validation.StringInSlice(managedgrafana.WorkspaceStatus_Values(), false),
 			},
 			"role_arn": {
 				Type:     schema.TypeString,
-				Required: false,
+				Optional: true,
 			},
 		},
 	}
@@ -188,7 +188,7 @@ func resourceWorkspaceRead(d *schema.ResourceData, meta interface{}) error {
 
 func resourceWorkspaceUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).GrafanaConn
-	
+
 	if d.HasChange("authentication_providers") {
 		updateWorkspaceAuthenticationInput := &managedgrafana.UpdateWorkspaceAuthenticationInput{
 			WorkspaceId:             aws.String(d.Id()),
