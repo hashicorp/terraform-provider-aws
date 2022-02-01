@@ -8,6 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"log"
 	"time"
@@ -39,9 +40,9 @@ func ResourceWorkspace() *schema.Resource {
 				ValidateFunc: validation.StringInSlice(managedgrafana.AccountAccessType_Values(), false),
 			},
 			"authentication_providers": {
-				Type:         schema.TypeList,
-				Required:     true,
-				ValidateFunc: validation.StringInSlice(managedgrafana.AuthenticationProviderTypes_Values(), false),
+				Type:     schema.TypeList,
+				Required: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"saml_configuration_status": {
 				Type:         schema.TypeString,
@@ -64,6 +65,7 @@ func ResourceWorkspace() *schema.Resource {
 			"data_sources": {
 				Type:     schema.TypeList,
 				Optional: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"description": {
 				Type:     schema.TypeString,
@@ -76,6 +78,7 @@ func ResourceWorkspace() *schema.Resource {
 			"notification_destinations": {
 				Type:     schema.TypeList,
 				Optional: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"organizational_units": {
 				Type:     schema.TypeString,
@@ -98,7 +101,7 @@ func resourceWorkspaceCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).GrafanaConn
 	input := &managedgrafana.CreateWorkspaceInput{
 		AccountAccessType:       aws.String(d.Get("account_access_type").(string)),
-		AuthenticationProviders: aws.StringSlice(d.Get("authentication_providers").([]string)),
+		AuthenticationProviders: flex.ExpandStringList(d.Get("authentication_providers").([]interface{})),
 	}
 
 	if v, ok := d.GetOk("organization_role_name"); ok {
