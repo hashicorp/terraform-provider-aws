@@ -1312,6 +1312,36 @@ func TestAccS3BucketObject_ignoreTags(t *testing.T) {
 	})
 }
 
+func TestAccS3BucketObject_bucketObjectBucket(t *testing.T) {
+	var obj1 s3.GetObjectOutput
+	resourceName1 := "aws_s3_bucket_object.test"
+	resourceName2 := "aws_s3_object.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckBucketObjectDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBucketObjectConfig_objectBucketObject1(rName, "hink"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBucketObjectExists(resourceName1, &obj1),
+					testAccCheckBucketObjectBody(&obj1, "hink"),
+				),
+			},
+			{
+				Config: testAccBucketObjectConfig_objectBucketObject2(rName, "hink"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBucketObjectExists(resourceName2, &obj1),
+					testAccCheckBucketObjectBody(&obj1, "hink"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckBucketObjectVersionIdDiffers(first, second *s3.GetObjectOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if first.VersionId == nil {
@@ -2074,6 +2104,34 @@ resource "aws_s3_bucket" "test" {
 resource "aws_s3_object" "object" {
   bucket  = aws_s3_bucket.test.bucket
   key     = "test-key"
+  content = %[2]q
+}
+`, rName, content)
+}
+
+func testAccBucketObjectConfig_objectBucketObject1(rName string, content string) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket = %[1]q
+}
+
+resource "aws_s3_bucket_object" "test" {
+  bucket  = aws_s3_bucket.test.bucket
+  key     = %[1]q
+  content = %[2]q
+}
+`, rName, content)
+}
+
+func testAccBucketObjectConfig_objectBucketObject2(rName string, content string) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket = %[1]q
+}
+
+resource "aws_s3_object" "test" {
+  bucket  = aws_s3_bucket.test.bucket
+  key     = %[1]q
   content = %[2]q
 }
 `, rName, content)
