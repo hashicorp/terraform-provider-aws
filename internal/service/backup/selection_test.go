@@ -117,7 +117,7 @@ func TestAccBackupSelection_withTags(t *testing.T) {
 	})
 }
 
-func TestAccBackupSelection_ConditionsWithTags(t *testing.T) {
+func TestAccBackupSelection_conditionsWithTags(t *testing.T) {
 	var selection1 backup.GetBackupSelectionOutput
 	resourceName := "aws_backup_selection.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
