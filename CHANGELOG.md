@@ -40,6 +40,7 @@ ENHANCEMENTS:
 
 * data-source/aws_cloudwatch_log_group: Automatically trim `:*` suffix from `arn` attribute ([#22043](https://github.com/hashicorp/terraform-provider-aws/issues/22043))
 * data-source/aws_imagebuilder_distribution_configuration: Add `container_distribution_configuration` attribute to the `distribution` configuration block ([#22838](https://github.com/hashicorp/terraform-provider-aws/issues/22838))
+* resource/aws_ec2_client_vpn_authorization_rule: Configurable Create and Delete timeouts ([#20688](https://github.com/hashicorp/terraform-provider-aws/issues/20688))
 * resource/aws_ec2_client_vpn_endpoint: Add `client_connect_options` argument ([#22793](https://github.com/hashicorp/terraform-provider-aws/issues/22793))
 * resource/aws_ec2_client_vpn_endpoint: Add `client_login_banner_options` argument ([#22793](https://github.com/hashicorp/terraform-provider-aws/issues/22793))
 * resource/aws_ec2_client_vpn_endpoint: Add `session_timeout_hours` argument ([#22793](https://github.com/hashicorp/terraform-provider-aws/issues/22793))
@@ -52,6 +53,7 @@ BUG FIXES:
 
 * data-source/aws_vpc_peering_connections: Return empty array instead of error when no connections found. ([#17382](https://github.com/hashicorp/terraform-provider-aws/issues/17382))
 * resource/aws_cloudformation_stack: Retry resource Create and Update for IAM eventual consistency ([#22840](https://github.com/hashicorp/terraform-provider-aws/issues/22840))
+* resource/aws_ec2_client_vpn_authorization_rule: Don't raise an error when `InvalidClientVpnEndpointId.NotFound` is returned during refresh ([#20688](https://github.com/hashicorp/terraform-provider-aws/issues/20688))
 * resource/aws_route_table_association: Handle nil 'AssociationState' in ISO regions ([#22806](https://github.com/hashicorp/terraform-provider-aws/issues/22806))
 
 ## 3.74.0 (January 28, 2022)
