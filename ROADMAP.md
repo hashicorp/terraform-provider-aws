@@ -57,6 +57,10 @@ Issue: [#20853](https://github.com/hashicorp/terraform-provider-aws/issues/20853
 
 _[Amazon OpenSearch Service](https://aws.amazon.com/opensearch-service/) is a distributed, open-source search and analytics suite used for a broad set of use cases like real-time application monitoring, log analytics, and website search_
 
+Affected Resource(s):
+
+- `aws_elasticsearch_domain`
+
 ### Amazon Managed Grafana
 
 Issue: [#16789](https://github.com/hashicorp/terraform-provider-aws/issues/16789)
