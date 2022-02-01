@@ -51,8 +51,8 @@ func testAccDistributionConfigurationARNDataSourceConfig(rName string) string {
 data "aws_region" "current" {}
 
 resource "aws_launch_template" "test" {
-	instance_type = "t2.micro"
-	name = %[1]q
+  instance_type = "t2.micro"
+  name          = %[1]q
 }
 
 resource "aws_imagebuilder_distribution_configuration" "test" {
@@ -70,10 +70,10 @@ resource "aws_imagebuilder_distribution_configuration" "test" {
       }
     }
 
-	launch_template_configuration {
-		default = false
-		launch_template_id = aws_launch_template.test.id
-	}
+    launch_template_configuration {
+      default            = false
+      launch_template_id = aws_launch_template.test.id
+    }
 
     region = data.aws_region.current.name
   }
