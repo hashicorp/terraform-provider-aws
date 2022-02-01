@@ -55,7 +55,7 @@ func waitWorkspaceDeleted(conn *managedgrafana.ManagedGrafana, id string, timeou
 
 	if output, ok := outputRaw.(*managedgrafana.WorkspaceDescription); ok {
 		if status := aws.StringValue(output.Status); status == managedgrafana.WorkspaceStatusFailed {
-			tfresource.SetLastError(err, fmt.Errorf("%s", output.Status))
+			tfresource.SetLastError(err, fmt.Errorf("%s", status))
 		}
 
 		return output, err

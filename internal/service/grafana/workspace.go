@@ -81,6 +81,11 @@ func ResourceWorkspace() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: false,
 			},
+			"status": {
+				Type: schema.TypeString,
+				Required: false,
+				ValidateFunc: validation.StringInSlice(managedgrafana.WorkspaceStatus_Values(), false),
+			},
 			"role_arn": {
 				Type:     schema.TypeString,
 				Required: false,
@@ -175,6 +180,7 @@ func resourceWorkspaceRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("name", workspace.Name)
 	d.Set("notification_destinations", workspace.NotificationDestinations)
 	d.Set("organizational_units", workspace.OrganizationalUnits)
+	d.Set("status", workspace.Status)
 	d.Set("role_arn", workspace.WorkspaceRoleArn)
 
 	return nil
@@ -182,7 +188,7 @@ func resourceWorkspaceRead(d *schema.ResourceData, meta interface{}) error {
 
 func resourceWorkspaceUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).GrafanaConn
-
+	
 	if d.HasChange("authentication_providers") {
 		updateWorkspaceAuthenticationInput := &managedgrafana.UpdateWorkspaceAuthenticationInput{
 			WorkspaceId:             aws.String(d.Id()),
