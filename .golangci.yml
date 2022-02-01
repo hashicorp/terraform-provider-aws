@@ -72,4 +72,4 @@ linters-settings:
       - gomnd
 
 run:
-  timeout: 25m
+  timeout: 35m
