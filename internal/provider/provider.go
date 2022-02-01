@@ -195,6 +195,13 @@ func Provider() *schema.Provider {
 
 			"assume_role": assumeRoleSchema(),
 
+			"shared_config_file": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Default:     "",
+				Description: "The path to the shared config file. If not set, defaults to ~/.aws/config.",
+			},
+
 			"shared_credentials_file": {
 				Type:        schema.TypeString,
 				Optional:    true,
@@ -1883,7 +1890,8 @@ func providerConfigure(d *schema.ResourceData, terraformVersion string) (interfa
 		Profile:                 d.Get("profile").(string),
 		Token:                   d.Get("token").(string),
 		Region:                  d.Get("region").(string),
-		CredsFilename:           d.Get("shared_credentials_file").(string),
+		SharedConfigFile:        d.Get("shared_config_file").(string),
+		SharedCredentialsFile:   d.Get("shared_credentials_file").(string),
 		DefaultTagsConfig:       expandProviderDefaultTags(d.Get("default_tags").([]interface{})),
 		Endpoints:               make(map[string]string),
 		MaxRetries:              d.Get("max_retries").(int),
