@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func ResourceClientVPNNetworkAssociation() *schema.Resource {
@@ -63,8 +64,9 @@ func ResourceClientVPNNetworkAssociation() *schema.Resource {
 func resourceClientVPNNetworkAssociationCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
+	endpointID := d.Get("client_vpn_endpoint_id").(string)
 	input := &ec2.AssociateClientVpnTargetNetworkInput{
-		ClientVpnEndpointId: aws.String(d.Get("client_vpn_endpoint_id").(string)),
+		ClientVpnEndpointId: aws.String(endpointID),
 		SubnetId:            aws.String(d.Get("subnet_id").(string)),
 	}
 
@@ -78,25 +80,53 @@ func resourceClientVPNNetworkAssociationCreate(d *schema.ResourceData, meta inte
 
 	d.SetId(aws.StringValue(output.AssociationId))
 
-	targetNetwork, err := WaitClientVPNNetworkAssociationAssociated(conn, d.Id(), d.Get("client_vpn_endpoint_id").(string))
+	targetNetwork, err := WaitClientVPNNetworkAssociationCreated(conn, d.Id(), endpointID)
+
 	if err != nil {
-		return fmt.Errorf("error waiting for Client VPN endpoint to associate with target network: %w", err)
+		return fmt.Errorf("error waiting for EC2 Client VPN Network Association (%s) create: %w", d.Id(), err)
 	}
 
 	if v, ok := d.GetOk("security_groups"); ok {
-		sgReq := &ec2.ApplySecurityGroupsToClientVpnTargetNetworkInput{
-			ClientVpnEndpointId: aws.String(d.Get("client_vpn_endpoint_id").(string)),
-			VpcId:               targetNetwork.VpcId,
+		input := &ec2.ApplySecurityGroupsToClientVpnTargetNetworkInput{
+			ClientVpnEndpointId: aws.String(endpointID),
 			SecurityGroupIds:    flex.ExpandStringSet(v.(*schema.Set)),
+			VpcId:               targetNetwork.VpcId,
 		}
 
-		_, err := conn.ApplySecurityGroupsToClientVpnTargetNetwork(sgReq)
+		_, err := conn.ApplySecurityGroupsToClientVpnTargetNetwork(input)
+
 		if err != nil {
-			return fmt.Errorf("Error applying security groups to Client VPN network association: %s", err)
+			return fmt.Errorf("error applying Security Groups to EC2 Client VPN Network Association (%s): %w", d.Id(), err)
 		}
 	}
 
 	return resourceClientVPNNetworkAssociationRead(d, meta)
+}
+
+func resourceClientVPNNetworkAssociationRead(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*conns.AWSClient).EC2Conn
+
+	endpointID := d.Get("client_vpn_endpoint_id").(string)
+	network, err := FindClientVPNNetworkAssociationByIDs(conn, d.Id(), endpointID)
+
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] EC2 Client VPN Network Association (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("error reading EC2 Client VPN Network Association (%s): %w", d.Id(), err)
+	}
+
+	d.Set("association_id", network.AssociationId)
+	d.Set("client_vpn_endpoint_id", network.ClientVpnEndpointId)
+	d.Set("security_groups", aws.StringValueSlice(network.SecurityGroups))
+	d.Set("status", network.Status.Code)
+	d.Set("subnet_id", network.TargetNetworkId)
+	d.Set("vpc_id", network.VpcId)
+
+	return nil
 }
 
 func resourceClientVPNNetworkAssociationUpdate(d *schema.ResourceData, meta interface{}) error {
@@ -110,56 +140,11 @@ func resourceClientVPNNetworkAssociationUpdate(d *schema.ResourceData, meta inte
 		}
 
 		if _, err := conn.ApplySecurityGroupsToClientVpnTargetNetwork(input); err != nil {
-			return fmt.Errorf("error applying security groups to Client VPN Target Network: %s", err)
+			return fmt.Errorf("error applying Security Groups to EC2 Client VPN Network Association (%s): %w", d.Id(), err)
 		}
 	}
 
 	return resourceClientVPNNetworkAssociationRead(d, meta)
-}
-
-func resourceClientVPNNetworkAssociationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
-	var err error
-
-	result, err := conn.DescribeClientVpnTargetNetworks(&ec2.DescribeClientVpnTargetNetworksInput{
-		ClientVpnEndpointId: aws.String(d.Get("client_vpn_endpoint_id").(string)),
-		AssociationIds:      []*string{aws.String(d.Id())},
-	})
-
-	if tfawserr.ErrMessageContains(err, ErrCodeInvalidClientVpnAssociationIdNotFound, "") || tfawserr.ErrMessageContains(err, ErrCodeInvalidClientVpnEndpointIdNotFound, "") {
-		log.Printf("[WARN] EC2 Client VPN Network Association (%s) not found, removing from state", d.Id())
-		d.SetId("")
-		return nil
-	}
-
-	if err != nil {
-		return fmt.Errorf("Error reading Client VPN network association: %w", err)
-	}
-
-	if result == nil || len(result.ClientVpnTargetNetworks) == 0 || result.ClientVpnTargetNetworks[0] == nil {
-		log.Printf("[WARN] EC2 Client VPN Network Association (%s) not found, removing from state", d.Id())
-		d.SetId("")
-		return nil
-	}
-
-	network := result.ClientVpnTargetNetworks[0]
-	if network.Status != nil && aws.StringValue(network.Status.Code) == ec2.AssociationStatusCodeDisassociated {
-		log.Printf("[WARN] EC2 Client VPN Network Association (%s) not found, removing from state", d.Id())
-		d.SetId("")
-		return nil
-	}
-
-	d.Set("client_vpn_endpoint_id", network.ClientVpnEndpointId)
-	d.Set("association_id", network.AssociationId)
-	d.Set("status", network.Status.Code)
-	d.Set("subnet_id", network.TargetNetworkId)
-	d.Set("vpc_id", network.VpcId)
-
-	if err := d.Set("security_groups", aws.StringValueSlice(network.SecurityGroups)); err != nil {
-		return fmt.Errorf("error setting security_groups: %w", err)
-	}
-
-	return nil
 }
 
 func resourceClientVPNNetworkAssociationDelete(d *schema.ResourceData, meta interface{}) error {
@@ -181,7 +166,7 @@ func resourceClientVPNNetworkAssociationDelete(d *schema.ResourceData, meta inte
 		return fmt.Errorf("error disassociating EC2 Client VPN Network Association (%s): %w", d.Id(), err)
 	}
 
-	if _, err := WaitClientVPNNetworkAssociationDisassociated(conn, d.Id(), endpointID); err != nil {
+	if _, err := WaitClientVPNNetworkAssociationDeleted(conn, d.Id(), endpointID); err != nil {
 		return fmt.Errorf("error waiting for EC2 Client VPN Network Association (%s) delete: %w", d.Id(), err)
 	}
 
