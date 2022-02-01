@@ -103,7 +103,7 @@ func TestAccAPIGatewayStage_cache(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccStageConfigCacheConfig(rName, "0.5"),
+				Config: testAccStageConfigCacheConfig(rName, true, "0.5"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStageExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "cache_cluster_size", "0.5"),
@@ -112,12 +112,16 @@ func TestAccAPIGatewayStage_cache(t *testing.T) {
 			},
 
 			{
-				Config: testAccStageConfigCacheConfig(rName, "1.6"),
+				Config: testAccStageConfigCacheConfig(rName, true, "1.6"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStageExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "cache_cluster_size", "1.6"),
 					resource.TestCheckResourceAttr(resourceName, "cache_cluster_enabled", "true"),
 				),
+			},
+			{
+				Config:      testAccStageConfigCacheConfig(rName, false, "13.5"),
+				ExpectError: regexp.MustCompile("^error with API Gateway Stage: cache_cluster_size is set to 13.5 but cache cluster is not enabled for this stage. Unset cache_cluster_size or set cache_cluster_enabled to true.$"),
 			},
 			{
 				Config: testAccStageConfigBasic(rName),
@@ -644,16 +648,17 @@ resource "aws_api_gateway_stage" "test" {
 `
 }
 
-func testAccStageConfigCacheConfig(rName, size string) string {
+func testAccStageConfigCacheConfig(rName string, enabled bool, size string) string {
 	return testAccStageConfig_base(rName) + fmt.Sprintf(`
 resource "aws_api_gateway_stage" "test" {
   rest_api_id           = aws_api_gateway_rest_api.test.id
   stage_name            = "prod"
   deployment_id         = aws_api_gateway_deployment.dev.id
-  cache_cluster_enabled = true
-  cache_cluster_size    = %[1]q
+  cache_cluster_enabled = %[1]t
+  cache_cluster_size    = %[2]q
 }
-`, size)
+`, enabled, size)
+
 }
 
 func testAccStageConfig_accessLogSettings(rName string, format string) string {

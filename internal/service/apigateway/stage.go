@@ -1,6 +1,7 @@
 package apigateway
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"strings"
@@ -9,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/apigateway"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -122,10 +124,9 @@ func ResourceStage() *schema.Resource {
 			},
 		},
 
-		CustomizeDiff: verify.SetTagsDiff,
+		CustomizeDiff: customdiff.All(verify.SetTagsDiff, validateCacheClusterConfiguration),
 	}
 }
-
 func resourceStageCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).APIGatewayConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
@@ -450,4 +451,15 @@ func flattenApiGatewayStageAccessLogSettings(accessLogSettings *apigateway.Acces
 		})
 	}
 	return result
+}
+
+func validateCacheClusterConfiguration(ctx context.Context, diff *schema.ResourceDiff, meta interface{}) error {
+	cacheSize, cacheSizeSet := diff.GetOk("cache_cluster_size")
+	_, cacheEnabledSet := diff.GetOk("cache_cluster_enabled")
+
+	if cacheSizeSet && !cacheEnabledSet {
+		return fmt.Errorf("error with API Gateway Stage: cache_cluster_size is set to %s but cache cluster is not enabled for this stage. Unset cache_cluster_size or set cache_cluster_enabled to true.", cacheSize.(string))
+	}
+
+	return nil
 }
