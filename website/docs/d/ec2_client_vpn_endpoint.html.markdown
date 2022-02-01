@@ -3,12 +3,12 @@ subcategory: "EC2"
 layout: "aws"
 page_title: "AWS: aws_ec2_client_vpn_endpoint"
 description: |-
-  Get information on an EC2 Client VPN Endpoint
+  Get information on an EC2 Client VPN endpoint
 ---
 
 # Data Source: aws_ec2_client_vpn_endpoint
 
-Get information on an EC2 Client VPN Endpoint.
+Get information on an EC2 Client VPN endpoint.
 
 ## Example Usage
 
@@ -35,7 +35,7 @@ data "aws_ec2_client_vpn_endpoint" "example" {
 
 The following arguments are supported:
 
-* `client_vpn_endpoint_id` - (Optional) The ID of the Client VPN Endpoint.
+* `client_vpn_endpoint_id` - (Optional) The ID of the Client VPN endpoint.
 * `filter` - (Optional) One or more configuration blocks containing name-values filters. Detailed below.
 * `tags` - (Optional) Map of tags, each pair of which must exactly match a pair on the desired endpoint.
 
@@ -52,4 +52,18 @@ The following arguments are required:
 
 In addition to all arguments above, the following attributes are exported:
 
-* `arn` -  The ARN of the Client VPN Endpoint.
+* `arn` -  The ARN of the Client VPN endpoint.
+* `authentication_options` - Information about the authentication method used by the Client VPN endpoint.
+* `client_cidr_block` - The IPv4 address range, in CIDR notation, from which client IP addresses are assigned.
+* `client_connect_options` - The options for managing connection authorization for new client connections.
+* `client_login_banner_options` - Options for enabling a customizable text banner that will be displayed on AWS provided clients when a VPN session is established.
+* `connection_log_options` - Information about the client connection logging options for the Client VPN endpoint.
+* `description` - A brief description of the endpoint.
+* `dns_name` - The DNS name to be used by clients when connecting to the Client VPN endpoint.
+* `dns_servers` - Information about the DNS servers to be used for DNS resolution.
+* `self_service_portal` - Indicates whether the self-service portal for the Client VPN endpoint is enabled.
+* `server_certificate_arn` - The ARN of the server certificate.
+* `session_timeout_hours` - The maximum VPN session duration time in hours.
+* `split_tunnel` - Indicates whether split-tunnel is enabled in the AWS Client VPN endpoint.
+* `transport_protocol` - The transport protocol used by the Client VPN endpoint.
+* `vpn_port` - The port number for the Client VPN endpoint.
