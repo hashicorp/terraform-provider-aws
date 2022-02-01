@@ -47,10 +47,28 @@ func testAccWorkspaceConfigBasic(name string) string {
 	return fmt.Sprintf(`
 resource "aws_grafana_workspace" "test" {
 	account_access_type = "CURRENT_ACCOUNT"
-	authentication_providers = ["AWS_SSO"]
+	authentication_providers = ["SAML"]
 	permission_type = "CUSTOMER_MANAGED"
 	name = %[1]q
+	role_arn = aws_iam_role.test.arn
 }
+
+resource "aws_iam_role" "test" {
+	name = %[1]q
+	assume_role_policy = jsonencode({
+	  Version = "2012-10-17"
+	  Statement = [
+		{
+		  Action = "sts:AssumeRole"
+		  Effect = "Allow"
+		  Sid    = ""
+		  Principal = {
+			Service = "grafana.amazonaws.com"
+		  }
+		},
+	  ]
+	})
+  }
 `, name)
 }
 

@@ -81,8 +81,9 @@ func ResourceWorkspace() *schema.Resource {
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"organizational_units": {
-				Type:     schema.TypeString,
+				Type:     schema.TypeList,
 				Optional: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"status": {
 				Type:         schema.TypeString,
@@ -90,8 +91,9 @@ func ResourceWorkspace() *schema.Resource {
 				ValidateFunc: validation.StringInSlice(managedgrafana.WorkspaceStatus_Values(), false),
 			},
 			"role_arn": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: verify.ValidARN,
 			},
 		},
 	}
@@ -117,7 +119,7 @@ func resourceWorkspaceCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if v, ok := d.GetOk("data_sources"); ok {
-		input.WorkspaceDataSources = aws.StringSlice(v.([]string))
+		input.WorkspaceDataSources = flex.ExpandStringList(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -129,11 +131,11 @@ func resourceWorkspaceCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if v, ok := d.GetOk("notification_destinations"); ok {
-		input.WorkspaceNotificationDestinations = aws.StringSlice(v.([]string))
+		input.WorkspaceNotificationDestinations = flex.ExpandStringList(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("organizational_units"); ok {
-		input.WorkspaceOrganizationalUnits = aws.StringSlice(v.([]string))
+		input.WorkspaceOrganizationalUnits = flex.ExpandStringList(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("role_arn"); ok {
@@ -227,7 +229,7 @@ func resourceWorkspaceUpdate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if d.HasChange("data_sources") {
-		input.WorkspaceDataSources = aws.StringSlice(d.Get("data_sources").([]string))
+		input.WorkspaceDataSources = flex.ExpandStringList(d.Get("data_sources").([]interface{}))
 	}
 
 	if d.HasChange("description") {
@@ -239,11 +241,11 @@ func resourceWorkspaceUpdate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if d.HasChange("notification_destinations") {
-		input.WorkspaceNotificationDestinations = aws.StringSlice(d.Get("notification_destinations").([]string))
+		input.WorkspaceNotificationDestinations = flex.ExpandStringList(d.Get("notification_destinations").([]interface{}))
 	}
 
 	if d.HasChange("organizational_units") {
-		input.WorkspaceOrganizationalUnits = aws.StringSlice(d.Get("organizational_units").([]string))
+		input.WorkspaceOrganizationalUnits = flex.ExpandStringList(d.Get("organizational_units").([]interface{}))
 	}
 
 	if d.HasChange("role_arn") {
