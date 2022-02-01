@@ -867,7 +867,7 @@ resource "aws_cloudwatch_log_stream" "test2" {
 
 locals {
   log_stream_index = %[2]d
-  log_stream       = local.log_stream_index == 0 ? null : ( local.log_stream_index == 1 ? aws_cloudwatch_log_stream.test1.name : aws_cloudwatch_log_stream.test2.name)
+  log_stream       = local.log_stream_index == 0 ? null : (local.log_stream_index == 1 ? aws_cloudwatch_log_stream.test1.name : aws_cloudwatch_log_stream.test2.name)
 }
 
 resource "aws_ec2_client_vpn_endpoint" "test" {
