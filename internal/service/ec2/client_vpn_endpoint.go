@@ -151,7 +151,7 @@ func ResourceClientVPNEndpoint() *schema.Resource {
 				Computed: true,
 			},
 			"dns_servers": {
-				Type:     schema.TypeSet,
+				Type:     schema.TypeList,
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
@@ -237,8 +237,8 @@ func resourceClientVPNEndpointCreate(d *schema.ResourceData, meta interface{}) e
 		input.Description = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("dns_servers"); ok {
-		input.DnsServers = flex.ExpandStringSet(v.(*schema.Set))
+	if v, ok := d.GetOk("dns_servers"); ok && len(v.([]interface{})) > 0 {
+		input.DnsServers = flex.ExpandStringList(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("self_service_portal"); ok {
@@ -374,14 +374,14 @@ func resourceClientVPNEndpointUpdate(d *schema.ResourceData, meta interface{}) e
 		}
 
 		if d.HasChange("dns_servers") {
-			dnsServers := d.Get("dns_servers").(*schema.Set)
-			enabled := dnsServers.Len() > 0
+			dnsServers := d.Get("dns_servers").([]interface{})
+			enabled := len(dnsServers) > 0
 
 			input.DnsServers = &ec2.DnsServersOptionsModifyStructure{
 				Enabled: aws.Bool(enabled),
 			}
 			if enabled {
-				input.DnsServers.CustomDnsServers = flex.ExpandStringSet(dnsServers)
+				input.DnsServers.CustomDnsServers = flex.ExpandStringList(dnsServers)
 			}
 		}
 
