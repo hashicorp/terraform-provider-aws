@@ -154,44 +154,49 @@ func resourceVPCIpamUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
+
 		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
-			return fmt.Errorf("error updating tags: %w", err)
-		}
-	}
-	input := &ec2.ModifyIpamInput{
-		IpamId: aws.String(d.Id()),
-	}
-
-	if d.HasChange("description") {
-		input.Description = aws.String(d.Get("description").(string))
-	}
-
-	if d.HasChange("operating_regions") {
-		o, n := d.GetChange("operating_regions")
-		if o == nil {
-			o = new(schema.Set)
-		}
-		if n == nil {
-			n = new(schema.Set)
-		}
-
-		os := o.(*schema.Set)
-		ns := n.(*schema.Set)
-		operatingRegionUpdateAdd := expandIpamOperatingRegionsUpdateAddRegions(ns.Difference(os).List())
-		operatingRegionUpdateRemove := expandIpamOperatingRegionsUpdateDeleteRegions(os.Difference(ns).List())
-
-		if len(operatingRegionUpdateAdd) != 0 {
-			input.AddOperatingRegions = operatingRegionUpdateAdd
-		}
-
-		if len(operatingRegionUpdateRemove) != 0 {
-			input.RemoveOperatingRegions = operatingRegionUpdateRemove
+			return fmt.Errorf("error updating IPAM (%s) tags: %w", d.Id(), err)
 		}
 	}
 
-	_, err := conn.ModifyIpam(input)
-	if err != nil {
-		return fmt.Errorf("Error modifying operating regions to ipam: %w", err)
+	if d.HasChangesExcept("tags", "tags_all") {
+		input := &ec2.ModifyIpamInput{
+			IpamId: aws.String(d.Id()),
+		}
+
+		if d.HasChange("description") {
+			input.Description = aws.String(d.Get("description").(string))
+		}
+
+		if d.HasChange("operating_regions") {
+			o, n := d.GetChange("operating_regions")
+			if o == nil {
+				o = new(schema.Set)
+			}
+			if n == nil {
+				n = new(schema.Set)
+			}
+
+			os := o.(*schema.Set)
+			ns := n.(*schema.Set)
+			operatingRegionUpdateAdd := expandIpamOperatingRegionsUpdateAddRegions(ns.Difference(os).List())
+			operatingRegionUpdateRemove := expandIpamOperatingRegionsUpdateDeleteRegions(os.Difference(ns).List())
+
+			if len(operatingRegionUpdateAdd) != 0 {
+				input.AddOperatingRegions = operatingRegionUpdateAdd
+			}
+
+			if len(operatingRegionUpdateRemove) != 0 {
+				input.RemoveOperatingRegions = operatingRegionUpdateRemove
+			}
+		}
+
+		_, err := conn.ModifyIpam(input)
+
+		if err != nil {
+			return fmt.Errorf("error modifying IPAM (%s): %w", d.Id(), err)
+		}
 	}
 
 	return nil
