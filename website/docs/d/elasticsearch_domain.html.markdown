@@ -1,9 +1,9 @@
 ---
-subcategory: "ElasticSearch"
+subcategory: "Elasticsearch"
 layout: "aws"
 page_title: "AWS: aws_elasticsearch_domain"
 description: |-
-  Get information on an ElasticSearch Domain resource.
+  Get information on an Elasticsearch Domain resource.
 ---
 
 # Data Source: aws_elasticsearch_domain
@@ -12,7 +12,7 @@ Use this data source to get information about an Elasticsearch Domain
 
 ## Example Usage
 
-```hcl
+```terraform
 data "aws_elasticsearch_domain" "my_domain" {
   domain_name = "my-domain-name"
 }
@@ -35,6 +35,15 @@ The following attributes are exported:
     * `enabled` - Whether advanced security is enabled.
     * `internal_user_database_enabled` - Whether the internal user database is enabled.
 * `arn` – The Amazon Resource Name (ARN) of the domain.
+* `auto_tune_options` - Configuration of the Auto-Tune options of the domain.
+    * `desired_state` - The Auto-Tune desired state for the domain.
+    * `maintenance_schedule` - A list of the nested configurations for the Auto-Tune maintenance windows of the domain.
+        * `start_at` - Date and time at which the Auto-Tune maintenance schedule starts in [RFC3339 format](https://tools.ietf.org/html/rfc3339#section-5.8).
+        * `duration` - Configuration block for the duration of the Auto-Tune maintenance window.
+            * `value` - An integer specifying the value of the duration of an Auto-Tune maintenance window.
+            * `unit` - The unit of time specifying the duration of an Auto-Tune maintenance window.
+        * `cron_expression_for_recurrence` - A cron expression specifying the recurrence pattern for an Auto-Tune maintenance schedule.
+    * `rollback_on_disable` - Whether the domain is set to roll back to default Auto-Tune settings when disabling Auto-Tune.
 * `cluster_config` - Cluster configuration of the domain.
     * `instance_type` - Instance type of data nodes in the cluster.
     * `instance_count` - Number of instances in the cluster.
@@ -46,7 +55,7 @@ The following attributes are exported:
         * `availability_zone_count` - Number of availability zones used.
     * `warm_enabled` - Indicates warm storage is enabled.
     * `warm_count` - The number of warm nodes in the cluster.
-    * `warm_type` - The instance type for the Elasticsearch cluster's warm nodes.   
+    * `warm_type` - The instance type for the Elasticsearch cluster's warm nodes.
 * `cognito_options` - Domain Amazon Cognito Authentication options for Kibana.
     * `enabled` - Whether Amazon Cognito Authentication is enabled.
     * `user_pool_id` - The Cognito User pool used by the domain.
@@ -59,9 +68,8 @@ The following attributes are exported:
     * `ebs_enabled` - Whether EBS volumes are attached to data nodes in the domain.
     * `volume_type` - The type of EBS volumes attached to data nodes.
     * `volume_size` - The size of EBS volumes attached to data nodes (in GB).
-    * `iops` - The baseline input/output (I/O) performance of EBS volumes
-	attached to data nodes.
-* `elasticsearch_version` – ElasticSearch version for the domain.
+    * `iops` - The baseline input/output (I/O) performance of EBS volumes attached to data nodes.
+* `elasticsearch_version` – Elasticsearch version for the domain.
 * `encryption_at_rest` - Domain encryption at rest related options.
     * `enabled` - Whether encryption at rest is enabled in the domain.
     * `kms_key_id` - The KMS key id used to encrypt data at rest.
@@ -75,8 +83,7 @@ The following attributes are exported:
     * `enabled` - Whether node to node encryption is enabled.
 * `processing` – Status of a configuration change in the domain.
 * `snapshot_options` – Domain snapshot related options.
-    * `automated_snapshot_start_hour` - Hour during which the service takes an automated daily
-	snapshot of the indices in the domain.
+    * `automated_snapshot_start_hour` - Hour during which the service takes an automated daily snapshot of the indices in the domain.
 * `tags` - The tags assigned to the domain.
 * `vpc_options` - VPC Options for private Elasticsearch domains.
     * `availability_zones` - The availability zones used by the domain.
