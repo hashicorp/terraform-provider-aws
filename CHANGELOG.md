@@ -43,6 +43,8 @@ ENHANCEMENTS:
 * data-source/aws_cloudwatch_log_group: Automatically trim `:*` suffix from `arn` attribute ([#22043](https://github.com/hashicorp/terraform-provider-aws/issues/22043))
 * data-source/aws_imagebuilder_distribution_configuration: Add `container_distribution_configuration` attribute to the `distribution` configuration block ([#22838](https://github.com/hashicorp/terraform-provider-aws/issues/22838))
 * data-source/aws_imagebuilder_image_recipe: Add `parameter` attribute to the `component` configuration block ([#22856](https://github.com/hashicorp/terraform-provider-aws/issues/22856))
+* provider: Add support for `shared_config_file` parameter ([#20587](https://github.com/hashicorp/terraform-provider-aws/issues/20587))
+* provider: Updates AWS authentication to use AWS SDK for Go v2 <https://aws.github.io/aws-sdk-go-v2/docs/> ([#20587](https://github.com/hashicorp/terraform-provider-aws/issues/20587))
 * resource/aws_ec2_client_vpn_authorization_rule: Configurable Create and Delete timeouts ([#20688](https://github.com/hashicorp/terraform-provider-aws/issues/20688))
 * resource/aws_ec2_client_vpn_endpoint: Add `client_connect_options` argument ([#22793](https://github.com/hashicorp/terraform-provider-aws/issues/22793))
 * resource/aws_ec2_client_vpn_endpoint: Add `client_login_banner_options` argument ([#22793](https://github.com/hashicorp/terraform-provider-aws/issues/22793))
