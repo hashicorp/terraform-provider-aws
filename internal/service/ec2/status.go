@@ -111,7 +111,7 @@ func StatusClientVPNEndpointClientConnectResponseOptionsState(conn *ec2.EC2, id 
 
 func StatusClientVPNAuthorizationRule(conn *ec2.EC2, endpointID, targetNetworkCIDR, accessGroupID string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindClientVPNAuthorizationRuleByEndpointIDTargetNetworkCIDRAndGroupID(conn, endpointID, targetNetworkCIDR, accessGroupID)
+		output, err := FindClientVPNAuthorizationRuleByThreePartKey(conn, endpointID, targetNetworkCIDR, accessGroupID)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil

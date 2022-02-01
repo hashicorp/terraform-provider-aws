@@ -235,7 +235,7 @@ func testAccCheckClientVPNAuthorizationRuleDestroy(s *terraform.State) error {
 			return err
 		}
 
-		_, err = tfec2.FindClientVPNAuthorizationRuleByEndpointIDTargetNetworkCIDRAndGroupID(conn, endpointID, targetNetworkCIDR, accessGroupID)
+		_, err = tfec2.FindClientVPNAuthorizationRuleByThreePartKey(conn, endpointID, targetNetworkCIDR, accessGroupID)
 
 		if tfresource.NotFound(err) {
 			continue
@@ -270,7 +270,7 @@ func testAccCheckClientVPNAuthorizationRuleExists(name string, v *ec2.Authorizat
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
-		output, err := tfec2.FindClientVPNAuthorizationRuleByEndpointIDTargetNetworkCIDRAndGroupID(conn, endpointID, targetNetworkCIDR, accessGroupID)
+		output, err := tfec2.FindClientVPNAuthorizationRuleByThreePartKey(conn, endpointID, targetNetworkCIDR, accessGroupID)
 
 		if err != nil {
 			return err

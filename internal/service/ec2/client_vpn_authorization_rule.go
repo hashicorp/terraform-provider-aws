@@ -113,7 +113,7 @@ func resourceClientVPNAuthorizationRuleRead(d *schema.ResourceData, meta interfa
 		return err
 	}
 
-	rule, err := FindClientVPNAuthorizationRuleByEndpointIDTargetNetworkCIDRAndGroupID(conn, endpointID, targetNetworkCIDR, accessGroupID)
+	rule, err := FindClientVPNAuthorizationRuleByThreePartKey(conn, endpointID, targetNetworkCIDR, accessGroupID)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] EC2 Client VPN Authorization Rule (%s) not found, removing from state", d.Id())

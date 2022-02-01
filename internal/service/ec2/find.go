@@ -174,7 +174,7 @@ func FindClientVPNAuthorizationRules(conn *ec2.EC2, input *ec2.DescribeClientVpn
 	return output, nil
 }
 
-func FindClientVPNAuthorizationRuleByEndpointIDTargetNetworkCIDRAndGroupID(conn *ec2.EC2, endpointID, targetNetworkCIDR, accessGroupID string) (*ec2.AuthorizationRule, error) {
+func FindClientVPNAuthorizationRuleByThreePartKey(conn *ec2.EC2, endpointID, targetNetworkCIDR, accessGroupID string) (*ec2.AuthorizationRule, error) {
 	filters := map[string]string{
 		"destination-cidr": targetNetworkCIDR,
 	}
@@ -187,7 +187,6 @@ func FindClientVPNAuthorizationRuleByEndpointIDTargetNetworkCIDRAndGroupID(conn 
 	}
 
 	return FindClientVPNAuthorizationRule(conn, input)
-
 }
 
 func FindClientVPNRoute(conn *ec2.EC2, endpointID, targetSubnetID, destinationCidr string) (*ec2.DescribeClientVpnRoutesOutput, error) {
