@@ -48,27 +48,23 @@ func ResourceSelection() *schema.Resource {
 			"condition": {
 				Type:     schema.TypeSet,
 				Optional: true,
-				Computed: true,
 				ForceNew: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"string_equals": {
 							Type:     schema.TypeSet,
 							Optional: true,
-							Computed: true,
 							ForceNew: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"key": {
 										Type:     schema.TypeString,
 										Required: true,
-										Computed: true,
 										ForceNew: true,
 									},
 									"value": {
 										Type:     schema.TypeString,
 										Required: true,
-										Computed: true,
 										ForceNew: true,
 									},
 								},
@@ -77,20 +73,17 @@ func ResourceSelection() *schema.Resource {
 						"string_like": {
 							Type:     schema.TypeSet,
 							Optional: true,
-							Computed: true,
 							ForceNew: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"key": {
 										Type:     schema.TypeString,
 										Required: true,
-										Computed: true,
 										ForceNew: true,
 									},
 									"value": {
 										Type:     schema.TypeString,
 										Required: true,
-										Computed: true,
 										ForceNew: true,
 									},
 								},
@@ -99,20 +92,17 @@ func ResourceSelection() *schema.Resource {
 						"string_not_equals": {
 							Type:     schema.TypeSet,
 							Optional: true,
-							Computed: true,
 							ForceNew: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"key": {
 										Type:     schema.TypeString,
 										Required: true,
-										Computed: true,
 										ForceNew: true,
 									},
 									"value": {
 										Type:     schema.TypeString,
 										Required: true,
-										Computed: true,
 										ForceNew: true,
 									},
 								},
@@ -121,20 +111,17 @@ func ResourceSelection() *schema.Resource {
 						"string_not_like": {
 							Type:     schema.TypeSet,
 							Optional: true,
-							Computed: true,
 							ForceNew: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"key": {
 										Type:     schema.TypeString,
 										Required: true,
-										Computed: true,
 										ForceNew: true,
 									},
 									"value": {
 										Type:     schema.TypeString,
 										Required: true,
-										Computed: true,
 										ForceNew: true,
 									},
 								},
@@ -179,7 +166,6 @@ func ResourceSelection() *schema.Resource {
 			"not_resources": {
 				Type:     schema.TypeSet,
 				Optional: true,
-				Computed: true,
 				ForceNew: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
