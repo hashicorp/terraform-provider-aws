@@ -187,10 +187,11 @@ func resourceVPCIpamUpdate(d *schema.ResourceData, meta interface{}) error {
 		if len(operatingRegionUpdateRemove) != 0 {
 			input.RemoveOperatingRegions = operatingRegionUpdateRemove
 		}
-		_, err := conn.ModifyIpam(input)
-		if err != nil {
-			return fmt.Errorf("Error modifying operating regions to ipam: %w", err)
-		}
+	}
+
+	_, err := conn.ModifyIpam(input)
+	if err != nil {
+		return fmt.Errorf("Error modifying operating regions to ipam: %w", err)
 	}
 
 	return nil
