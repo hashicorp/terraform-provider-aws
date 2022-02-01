@@ -180,7 +180,7 @@ jobs:
       with:
         path: ~/go/pkg/mod
         key: ${{ runner.os }}-go-pkg-mod-${{ hashFiles('go.sum') }}
-    - run: go install golang.org/x/tools/cmd/goimports
+    - run: go install golang.org/x/tools/cmd/goimports@latest
     - run: make gen
     - name: Check for Git Differences
       run: |
