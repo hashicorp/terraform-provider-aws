@@ -114,19 +114,25 @@ $ terraform plan
 
 ### Shared Credentials File
 
-You can use an [AWS credentials or configuration file](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-files.html) to specify your credentials. The default location is `$HOME/.aws/credentials` on Linux and macOS, or `"%USERPROFILE%\.aws\credentials"` on Windows. You can optionally specify a different location in the Terraform configuration by providing the `shared_credentials_file` argument or using the `AWS_SHARED_CREDENTIALS_FILE` environment variable. This method also supports a `profile` configuration and matching `AWS_PROFILE` environment variable:
+You can use [AWS credentials or configuration files](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-files.html) to specify your credentials and configuration.
+The default locations are `$HOME/.aws/credentials` and `$HOME/.aws/config` on Linux and macOS,
+or `"%USERPROFILE%\.aws\credentials"` and `"%USERPROFILE%\.aws\config"`on Windows.
+You can optionally specify a different location in the Terraform configuration by providing the `shared_credentials_file` and `shared_config_file` arguments or
+using the `AWS_SHARED_CREDENTIALS_FILE` and `AWS_CONFIG_FILE` environment variables.
+This method also supports the `profile` configuration or corresponding `AWS_PROFILE` environment variable:
 
 Usage:
 
 ```terraform
 provider "aws" {
   region                  = "us-west-2"
+  shared_config_file      = "/Users/tf_user/.aws/config"
   shared_credentials_file = "/Users/tf_user/.aws/creds"
   profile                 = "customprofile"
 }
 ```
 
-Please note that the [AWS Go SDK](https://aws.amazon.com/sdk-for-go/), the underlying authentication handler used by the Terraform AWS Provider, does not support all AWS CLI features.
+Please note that the [AWS SDK for Go v2](https://aws.amazon.com/sdk-for-go-v2/), the underlying authentication handler used by the Terraform AWS Provider, does not support all AWS CLI features.
 
 ### CodeBuild, ECS, and EKS Roles
 
@@ -136,7 +142,7 @@ If you're running Terraform on EKS and have configured [IAM Roles for Service Ac
 
 ### Custom User-Agent Information
 
-By default, the underlying AWS client used by the Terraform AWS Provider creates requests with User-Agent headers including information about Terraform and AWS Go SDK versions. To provide additional information in the User-Agent headers, the `TF_APPEND_USER_AGENT` environment variable can be set and its value will be directly added to HTTP requestsE.g.,
+By default, the underlying AWS client used by the Terraform AWS Provider creates requests with User-Agent headers including information about Terraform and AWS SDK for Go versions. To provide additional information in the User-Agent headers, the `TF_APPEND_USER_AGENT` environment variable can be set and its value will be directly added to HTTP requestsE.g.,
 
 ```sh
 $ export TF_APPEND_USER_AGENT="JenkinsAgent/i-12345678 BuildID/1234 (Optional Extra Information)"
@@ -206,8 +212,13 @@ In addition to [generic `provider` arguments](https://www.terraform.io/docs/conf
 [Custom Service Endpoints Guide](/docs/providers/aws/guides/custom-service-endpoints.html)
 for more information about connecting to alternate AWS endpoints or AWS compatible solutions.
 
+* `shared_config_file` = (Optional) This is the path to the shared config file.
+  If this is not set, `~/.aws/config` will be used.
+  Can also be configured using the `AWS_CONFIG_FILE` environment variable.
+
 * `shared_credentials_file` = (Optional) This is the path to the shared credentials file.
   If this is not set and a profile is specified, `~/.aws/credentials` will be used.
+  Can also be configured using the `AWS_SHARED_CREDENTIALS_FILE` environment variable.
 
 * `token` - (Optional) Session token for validating temporary credentials. Typically provided after successful identity federation or Multi-Factor Authentication (MFA) login. With MFA login, this is the session token provided afterward, not the 6 digit MFA code used to get temporary credentials.  It can also be sourced from the `AWS_SESSION_TOKEN` environment variable.
 

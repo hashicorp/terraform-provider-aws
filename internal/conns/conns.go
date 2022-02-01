@@ -855,13 +855,14 @@ func init() {
 }
 
 type Config struct {
-	AccessKey     string
-	SecretKey     string
-	CredsFilename string
-	Profile       string
-	Token         string
-	Region        string
-	MaxRetries    int
+	AccessKey             string
+	SecretKey             string
+	SharedConfigFile      string
+	SharedCredentialsFile string
+	Profile               string
+	Token                 string
+	Region                string
+	MaxRetries            int
 
 	AssumeRoleARN               string
 	AssumeRoleDurationSeconds   int
@@ -1245,8 +1246,12 @@ func (c *Config) Client() (interface{}, error) {
 		awsbaseConfig.AssumeRole = c.assumeRole()
 	}
 
-	if c.CredsFilename != "" {
-		awsbaseConfig.SharedCredentialsFiles = []string{c.CredsFilename}
+	if c.SharedConfigFile != "" {
+		awsbaseConfig.SharedConfigFiles = []string{c.SharedConfigFile}
+	}
+
+	if c.SharedCredentialsFile != "" {
+		awsbaseConfig.SharedCredentialsFiles = []string{c.SharedCredentialsFile}
 	}
 
 	ctx := context.Background()
