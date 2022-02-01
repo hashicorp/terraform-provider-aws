@@ -87,7 +87,7 @@ func TestAccACMPCACertificateAuthority_disappears(t *testing.T) {
 	})
 }
 
-func TestAccACMPCACertificateAuthority_enabled(t *testing.T) {
+func TestAccACMPCACertificateAuthority_enabledDeprecated(t *testing.T) {
 	var certificateAuthority acmpca.CertificateAuthority
 	resourceName := "aws_acmpca_certificate_authority.test"
 
