@@ -8,7 +8,7 @@ Each weekly release will include necessary tasks that lead to the completion of 
 
 This roadmap does not describe all the work that will be included within this timeframe, but it does describe our focus. We will include other work as events occur.
 
-In the period spanning November 2021 to Janury 2022, 627 Pull Requests were opened in the provider and 506 were merged, adding support for:
+In the period spanning November 2021 to Janury 2022, 668 Pull Requests were opened in the provider and 730 were closed/merged, adding support for:
 
 - Managing Amazon CloudSearch Domains
 - ECS Task Sets
@@ -45,25 +45,17 @@ Support for Global Networks will include:
 
 New Resource(s):
 
-- aws_networkmanager_global_network
-- aws_networkmanager_site
-- aws_networkmanager_link
-- aws_networkmanager_device
-- aws_networkmanager_transit_gateway_registration
-
+- `aws_networkmanager_global_network`
+- `aws_networkmanager_site`
+- `aws_networkmanager_link`
+- `aws_networkmanager_device`
+- `aws_networkmanager_transit_gateway_registration`
 
 ### Amazon OpenSearch Service
 
 Issue: [#20853](https://github.com/hashicorp/terraform-provider-aws/issues/20853)
 
 _[Amazon OpenSearch Service](https://aws.amazon.com/opensearch-service/) is a distributed, open-source search and analytics suite used for a broad set of use cases like real-time application monitoring, log analytics, and website search_
-
-Support for Amazon OpenSearch Service will include:
-
-New Resource(s):
-
-- `aws_elasticsearch_domain`
-
 
 ### Amazon Managed Grafana
 
@@ -75,11 +67,8 @@ Support for Amazon Managed Grafana will include:
 
 New Resource(s):
 
-- 
-
-New Datasource(s):
-
-- 
+- `aws_grafana_workspace`
+- `aws_grafana_license_association`
 
 ## Enhancements to Existing Services
 
