@@ -25,6 +25,11 @@ func ResourceClientVPNNetworkAssociation() *schema.Resource {
 			State: resourceClientVPNNetworkAssociationImport,
 		},
 
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(ClientVPNNetworkAssociationCreatedTimeout),
+			Delete: schema.DefaultTimeout(ClientVPNNetworkAssociationDeletedTimeout),
+		},
+
 		Schema: map[string]*schema.Schema{
 			"association_id": {
 				Type:     schema.TypeString,
@@ -80,7 +85,7 @@ func resourceClientVPNNetworkAssociationCreate(d *schema.ResourceData, meta inte
 
 	d.SetId(aws.StringValue(output.AssociationId))
 
-	targetNetwork, err := WaitClientVPNNetworkAssociationCreated(conn, d.Id(), endpointID)
+	targetNetwork, err := WaitClientVPNNetworkAssociationCreated(conn, d.Id(), endpointID, d.Timeout(schema.TimeoutCreate))
 
 	if err != nil {
 		return fmt.Errorf("error waiting for EC2 Client VPN Network Association (%s) create: %w", d.Id(), err)
@@ -166,7 +171,7 @@ func resourceClientVPNNetworkAssociationDelete(d *schema.ResourceData, meta inte
 		return fmt.Errorf("error disassociating EC2 Client VPN Network Association (%s): %w", d.Id(), err)
 	}
 
-	if _, err := WaitClientVPNNetworkAssociationDeleted(conn, d.Id(), endpointID); err != nil {
+	if _, err := WaitClientVPNNetworkAssociationDeleted(conn, d.Id(), endpointID, d.Timeout(schema.TimeoutDelete)); err != nil {
 		return fmt.Errorf("error waiting for EC2 Client VPN Network Association (%s) delete: %w", d.Id(), err)
 	}
 

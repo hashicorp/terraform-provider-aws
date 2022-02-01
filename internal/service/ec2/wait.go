@@ -207,12 +207,12 @@ const (
 	ClientVPNNetworkAssociationStatusPollInterval = 10 * time.Second
 )
 
-func WaitClientVPNNetworkAssociationCreated(conn *ec2.EC2, associationID, endpointID string) (*ec2.TargetNetwork, error) {
+func WaitClientVPNNetworkAssociationCreated(conn *ec2.EC2, associationID, endpointID string, timeout time.Duration) (*ec2.TargetNetwork, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending:      []string{ec2.AssociationStatusCodeAssociating},
 		Target:       []string{ec2.AssociationStatusCodeAssociated},
 		Refresh:      StatusClientVPNNetworkAssociation(conn, associationID, endpointID),
-		Timeout:      ClientVPNNetworkAssociationCreatedTimeout,
+		Timeout:      timeout,
 		Delay:        ClientVPNNetworkAssociationCreatedDelay,
 		PollInterval: ClientVPNNetworkAssociationStatusPollInterval,
 	}
@@ -228,12 +228,12 @@ func WaitClientVPNNetworkAssociationCreated(conn *ec2.EC2, associationID, endpoi
 	return nil, err
 }
 
-func WaitClientVPNNetworkAssociationDeleted(conn *ec2.EC2, associationID, endpointID string) (*ec2.TargetNetwork, error) {
+func WaitClientVPNNetworkAssociationDeleted(conn *ec2.EC2, associationID, endpointID string, timeout time.Duration) (*ec2.TargetNetwork, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending:      []string{ec2.AssociationStatusCodeDisassociating},
 		Target:       []string{},
 		Refresh:      StatusClientVPNNetworkAssociation(conn, associationID, endpointID),
-		Timeout:      ClientVPNNetworkAssociationDeletedTimeout,
+		Timeout:      timeout,
 		Delay:        ClientVPNNetworkAssociationDeletedDelay,
 		PollInterval: ClientVPNNetworkAssociationStatusPollInterval,
 	}
