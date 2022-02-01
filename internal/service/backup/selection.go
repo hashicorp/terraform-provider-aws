@@ -48,6 +48,7 @@ func ResourceSelection() *schema.Resource {
 			"condition": {
 				Type:     schema.TypeSet,
 				Optional: true,
+				Computed: true,
 				ForceNew: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -166,6 +167,7 @@ func ResourceSelection() *schema.Resource {
 			"not_resources": {
 				Type:     schema.TypeSet,
 				Optional: true,
+				Computed: true,
 				ForceNew: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
