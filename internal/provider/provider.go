@@ -4,7 +4,9 @@ import (
 	"fmt"
 	"log"
 	"regexp"
+	"time"
 
+	awsbase "github.com/hashicorp/aws-sdk-go-base/v2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -203,6 +205,18 @@ func Provider() *schema.Provider {
 					},
 				},
 			},
+			"ec2_metadata_service_endpoint": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Description: "Address of the EC2 metadata service endpoint to use. " +
+					"Can also be configured using the `AWS_EC2_METADATA_SERVICE_ENDPOINT` environment variable.",
+			},
+			"ec2_metadata_service_endpoint_mode": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Description: "Protocol to use with EC2 metadata service endpoint." +
+					"Valid values are `IPv4` and `IPv6`. Can also be configured using the `AWS_EC2_METADATA_SERVICE_ENDPOINT_MODE` environment variable.",
+			},
 			"endpoints": endpointsSchema(),
 			"forbidden_account_ids": {
 				Type:          schema.TypeSet,
@@ -216,11 +230,6 @@ func Provider() *schema.Provider {
 				Optional: true,
 				Description: "The address of an HTTP proxy to use when accessing the AWS API. " +
 					"Can also be configured using the `HTTP_PROXY` or `HTTPS_PROXY` environment variables.",
-			},
-			"iam_endpoint": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "IAM endpoint to use that can have a distinct region",
 			},
 			"ignore_tags": {
 				Type:        schema.TypeList,
@@ -342,11 +351,6 @@ func Provider() *schema.Provider {
 				Default:  false,
 				Description: "Skip requesting the account ID. " +
 					"Used for AWS API implementations that do not have IAM/STS API and/or metadata API.",
-			},
-			"sts_endpoint": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "STS endpoint to use that can have a distinct region",
 			},
 			"token": {
 				Type:     schema.TypeString,
@@ -1848,93 +1852,35 @@ func Provider() *schema.Provider {
 
 func providerConfigure(d *schema.ResourceData, terraformVersion string) (interface{}, error) {
 	config := conns.Config{
-		AccessKey:               d.Get("access_key").(string),
-		DefaultTagsConfig:       expandProviderDefaultTags(d.Get("default_tags").([]interface{})),
-		Endpoints:               make(map[string]string),
-		HTTPProxy:               d.Get("http_proxy").(string),
-		IgnoreTagsConfig:        expandProviderIgnoreTags(d.Get("ignore_tags").([]interface{})),
-		Insecure:                d.Get("insecure").(bool),
-		MaxRetries:              d.Get("max_retries").(int),
-		Profile:                 d.Get("profile").(string),
-		Region:                  d.Get("region").(string),
-		S3ForcePathStyle:        d.Get("s3_force_path_style").(bool),
-		SecretKey:               d.Get("secret_key").(string),
-		SharedConfigFile:        d.Get("shared_config_file").(string),
-		SharedCredentialsFile:   d.Get("shared_credentials_file").(string),
-		SkipCredsValidation:     d.Get("skip_credentials_validation").(bool),
-		SkipGetEC2Platforms:     d.Get("skip_get_ec2_platforms").(bool),
-		SkipMetadataApiCheck:    d.Get("skip_metadata_api_check").(bool),
-		SkipRegionValidation:    d.Get("skip_region_validation").(bool),
-		SkipRequestingAccountId: d.Get("skip_requesting_account_id").(bool),
-		STSRegion:               d.Get("sts_region").(string),
-		TerraformVersion:        terraformVersion,
-		Token:                   d.Get("token").(string),
-		UseDualStackEndpoint:    d.Get("use_dualstack_endpoint").(bool),
-		UseFIPSEndpoint:         d.Get("use_fips_endpoint").(bool),
+		AccessKey:                      d.Get("access_key").(string),
+		DefaultTagsConfig:              expandProviderDefaultTags(d.Get("default_tags").([]interface{})),
+		EC2MetadataServiceEndpoint:     d.Get("ec2_metadata_service_endpoint").(string),
+		EC2MetadataServiceEndpointMode: d.Get("ec2_metadata_service_endpoint_mode").(string),
+		Endpoints:                      make(map[string]string),
+		HTTPProxy:                      d.Get("http_proxy").(string),
+		IgnoreTagsConfig:               expandProviderIgnoreTags(d.Get("ignore_tags").([]interface{})),
+		Insecure:                       d.Get("insecure").(bool),
+		MaxRetries:                     d.Get("max_retries").(int),
+		Profile:                        d.Get("profile").(string),
+		Region:                         d.Get("region").(string),
+		S3ForcePathStyle:               d.Get("s3_force_path_style").(bool),
+		SecretKey:                      d.Get("secret_key").(string),
+		SharedConfigFile:               d.Get("shared_config_file").(string),
+		SharedCredentialsFile:          d.Get("shared_credentials_file").(string),
+		SkipCredsValidation:            d.Get("skip_credentials_validation").(bool),
+		SkipGetEC2Platforms:            d.Get("skip_get_ec2_platforms").(bool),
+		SkipMetadataApiCheck:           d.Get("skip_metadata_api_check").(bool),
+		SkipRegionValidation:           d.Get("skip_region_validation").(bool),
+		SkipRequestingAccountId:        d.Get("skip_requesting_account_id").(bool),
+		TerraformVersion:               terraformVersion,
+		Token:                          d.Get("token").(string),
+		UseDualStackEndpoint:           d.Get("use_dualstack_endpoint").(bool),
+		UseFIPSEndpoint:                d.Get("use_fips_endpoint").(bool),
 	}
 
 	if l, ok := d.Get("assume_role").([]interface{}); ok && len(l) > 0 && l[0] != nil {
-		m := l[0].(map[string]interface{})
-
-		if v, ok := m["duration_seconds"].(int); ok && v != 0 {
-			config.AssumeRoleDurationSeconds = v
-		}
-
-		if v, ok := m["external_id"].(string); ok && v != "" {
-			config.AssumeRoleExternalID = v
-		}
-
-		if v, ok := m["policy"].(string); ok && v != "" {
-			config.AssumeRolePolicy = v
-		}
-
-		if policyARNSet, ok := m["policy_arns"].(*schema.Set); ok && policyARNSet.Len() > 0 {
-			for _, policyARNRaw := range policyARNSet.List() {
-				policyARN, ok := policyARNRaw.(string)
-
-				if !ok {
-					continue
-				}
-
-				config.AssumeRolePolicyARNs = append(config.AssumeRolePolicyARNs, policyARN)
-			}
-		}
-
-		if v, ok := m["role_arn"].(string); ok && v != "" {
-			config.AssumeRoleARN = v
-		}
-
-		if v, ok := m["session_name"].(string); ok && v != "" {
-			config.AssumeRoleSessionName = v
-		}
-
-		if tagMapRaw, ok := m["tags"].(map[string]interface{}); ok && len(tagMapRaw) > 0 {
-			config.AssumeRoleTags = make(map[string]string)
-
-			for k, vRaw := range tagMapRaw {
-				v, ok := vRaw.(string)
-
-				if !ok {
-					continue
-				}
-
-				config.AssumeRoleTags[k] = v
-			}
-		}
-
-		if transitiveTagKeySet, ok := m["transitive_tag_keys"].(*schema.Set); ok && transitiveTagKeySet.Len() > 0 {
-			for _, transitiveTagKeyRaw := range transitiveTagKeySet.List() {
-				transitiveTagKey, ok := transitiveTagKeyRaw.(string)
-
-				if !ok {
-					continue
-				}
-
-				config.AssumeRoleTransitiveTagKeys = append(config.AssumeRoleTransitiveTagKeys, transitiveTagKey)
-			}
-		}
-
-		log.Printf("[INFO] assume_role configuration set: (ARN: %q, SessionID: %q, ExternalID: %q)", config.AssumeRoleARN, config.AssumeRoleSessionName, config.AssumeRoleExternalID)
+		config.AssumeRole = expandAssumeRole(l[0].(map[string]interface{}))
+		log.Printf("[INFO] assume_role configuration set: (ARN: %q, SessionID: %q, ExternalID: %q)", config.AssumeRole.RoleARN, config.AssumeRole.SessionName, config.AssumeRole.ExternalID)
 	}
 
 	endpointsSet := d.Get("endpoints").(*schema.Set)
@@ -2058,6 +2004,70 @@ func endpointsSchema() *schema.Schema {
 			Schema: endpointsAttributes,
 		},
 	}
+}
+
+func expandAssumeRole(m map[string]interface{}) *awsbase.AssumeRole {
+	assumeRole := awsbase.AssumeRole{}
+
+	if v, ok := m["duration_seconds"].(int); ok && v != 0 {
+		assumeRole.Duration = time.Duration(v) * time.Second
+	}
+
+	if v, ok := m["external_id"].(string); ok && v != "" {
+		assumeRole.ExternalID = v
+	}
+
+	if v, ok := m["policy"].(string); ok && v != "" {
+		assumeRole.Policy = v
+	}
+
+	if policyARNSet, ok := m["policy_arns"].(*schema.Set); ok && policyARNSet.Len() > 0 {
+		for _, policyARNRaw := range policyARNSet.List() {
+			policyARN, ok := policyARNRaw.(string)
+
+			if !ok {
+				continue
+			}
+
+			assumeRole.PolicyARNs = append(assumeRole.PolicyARNs, policyARN)
+		}
+	}
+
+	if v, ok := m["role_arn"].(string); ok && v != "" {
+		assumeRole.RoleARN = v
+	}
+
+	if v, ok := m["session_name"].(string); ok && v != "" {
+		assumeRole.SessionName = v
+	}
+
+	if tagMapRaw, ok := m["tags"].(map[string]interface{}); ok && len(tagMapRaw) > 0 {
+		assumeRole.Tags = make(map[string]string)
+
+		for k, vRaw := range tagMapRaw {
+			v, ok := vRaw.(string)
+
+			if !ok {
+				continue
+			}
+
+			assumeRole.Tags[k] = v
+		}
+	}
+
+	if transitiveTagKeySet, ok := m["transitive_tag_keys"].(*schema.Set); ok && transitiveTagKeySet.Len() > 0 {
+		for _, transitiveTagKeyRaw := range transitiveTagKeySet.List() {
+			transitiveTagKey, ok := transitiveTagKeyRaw.(string)
+
+			if !ok {
+				continue
+			}
+
+			assumeRole.TransitiveTagKeys = append(assumeRole.TransitiveTagKeys, transitiveTagKey)
+		}
+	}
+
+	return &assumeRole
 }
 
 func expandProviderDefaultTags(l []interface{}) *tftags.DefaultConfig {
