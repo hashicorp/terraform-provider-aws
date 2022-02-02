@@ -27,6 +27,8 @@ Upgrade topics:
 - [Plural Data Source Behavior](#plural-data-source-behavior)
 - [Data Source: aws_cloudwatch_log_group](#data-source-aws_cloudwatch_log_group)
 - [Data Source: aws_subnet_ids](#data-source-aws_subnet_ids)
+- [Data Source: aws_s3_bucket_object](#data-source-aws_s3_bucket_object)
+- [Data Source: aws_s3_bucket_objects](#data-source-aws_s3_bucket_objects)
 - [Resource: aws_batch_compute_environment](#resource-aws_batch_compute_environment)
 - [Resource: aws_cloudwatch_event_target](#resource-aws_cloudwatch_event_target)
 - [Resource: aws_elasticache_cluster](#resource-aws_elasticache_cluster)
@@ -34,6 +36,7 @@ Upgrade topics:
 - [Resource: aws_elasticache_replication_group](#resource-aws_elasticache_replication_group)
 - [Resource: aws_network_interface](#resource-aws_network_interface)
 - [Resource: aws_s3_bucket](#resource-aws_s3_bucket)
+- [Resource: aws_s3_bucket_object](#resource-aws_s3_bucket_object)
 - [Resource: aws_spot_instance_request](#resource-aws_spot_instance_request)
 
 <!-- /TOC -->
@@ -307,6 +310,14 @@ output "subnet_cidr_blocks" {
 }
 ```
 
+## Data Source: aws_s3_bucket_object
+
+The `aws_s3_bucket_object` data source is deprecated and will be removed in a future version. Use `aws_s3_object` instead, where new features and fixes will be added.
+
+## Data Source: aws_s3_bucket_objects
+
+The `aws_s3_bucket_objects` data source is deprecated and will be removed in a future version. Use `aws_s3_objects` instead, where new features and fixes will be added.
+
 ## Resource: aws_batch_compute_environment
 
 No `compute_resources` can be specified when `type` is `UNMANAGED`.
@@ -452,6 +463,18 @@ resource "aws_spot_instance_request" "example" {
   # ... other configuration ...
   instance_interruption_behavior =  "hibernate"
 }
+```
+
+## Resource: aws_s3_bucket_object
+
+The `aws_s3_bucket_object` resource is deprecated and will be removed in a future version. Use `aws_s3_object` instead, where new features and fixes will be added.
+
+When replacing `aws_s3_bucket_object` with `aws_s3_object` in your configuration, on the next apply, Terraform will recreate the object. If you prefer to not have Terraform recreate the object, import the object using `aws_s3_object`.
+
+For example, the following will import an S3 object into state, assuming the configuration exists, as `aws_s3_object.example`:
+
+```console
+% terraform import aws_s3_object.example s3://some-bucket-name/some/key.txt
 ```
 
 ## EC2-Classic Resource and Data Source Support
