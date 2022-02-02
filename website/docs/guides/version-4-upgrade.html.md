@@ -33,7 +33,6 @@ Upgrade topics:
 - [Resource: aws_elasticache_replication_group](#resource-aws_elasticache_replication_group)
 - [Resource: aws_network_interface](#resource-aws_network_interface)
 - [Resource: aws_s3_bucket](#resource-aws_s3_bucket)
-- [Resource: aws_vpn_connection](#resource-aws_vpn_connection)
 
 <!-- /TOC -->
 
@@ -227,10 +226,6 @@ output "elasticache_global_replication_group_version_result" {
 ## Resource: aws_s3_bucket
 
 !> **WARNING:** This topic is placeholder documentation.
-
-## Resource: aws_vpn_connection
-
-Default values
 
 ## EC2-Classic Resource and Data Source Support
 
