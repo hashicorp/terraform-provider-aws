@@ -285,7 +285,6 @@ import (
 	awsbase "github.com/hashicorp/aws-sdk-go-base/v2"
 	awsbasev1 "github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/logging"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/version"
 )
@@ -1226,7 +1225,7 @@ func (c *Config) Client() (interface{}, error) {
 		AccessKey:               c.AccessKey,
 		CallerDocumentationURL:  "https://registry.terraform.io/providers/hashicorp/aws",
 		CallerName:              "Terraform AWS Provider",
-		DebugLogging:            logging.IsDebugOrHigher(),
+		DebugLogging:            true, // Until https://github.com/hashicorp/aws-sdk-go-base/issues/96 is implemented
 		IamEndpoint:             c.Endpoints[IAM],
 		Insecure:                c.Insecure,
 		HTTPProxy:               c.HTTPProxy,
