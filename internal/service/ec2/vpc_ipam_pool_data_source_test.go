@@ -34,6 +34,7 @@ func TestAccDataSourceVPCIpamPool_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, "locale", resourceName, "locale"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "pool_depth", resourceName, "pool_depth"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "publicly_advertisable", resourceName, "publicly_advertisable"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "ipam_pool_id", resourceName, "id"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "source_ipam_pool_id", resourceName, "source_ipam_pool_id"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "state", resourceName, "state"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "tags.%", resourceName, "tags.%"),
@@ -58,6 +59,6 @@ resource "aws_vpc_ipam_pool" "test" {
 }
 
 data "aws_vpc_ipam_pool" "test" {
-  ipam_pool_id = aws_vpc_ipam_pool.test.id
+  id = aws_vpc_ipam_pool.test.id
 }
 `)

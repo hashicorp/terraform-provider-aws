@@ -17,11 +17,15 @@ func DataSourceVPCIpamPool() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"filter": DataSourceFiltersSchema(),
-			"ipam_pool_id": {
+			"id": {
 				Type:     schema.TypeString,
+				Computed: true,
 				Optional: true,
 			},
-			// computed
+			"ipam_pool_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -56,10 +60,6 @@ func DataSourceVPCIpamPool() *schema.Resource {
 				Computed: true,
 			},
 			"description": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"id": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -98,9 +98,8 @@ func dataSourceVPCIpamPoolRead(d *schema.ResourceData, meta interface{}) error {
 
 	input := &ec2.DescribeIpamPoolsInput{}
 
-	if v, ok := d.GetOk("ipam_pool_id"); ok {
+	if v, ok := d.GetOk("id"); ok {
 		input.IpamPoolIds = aws.StringSlice([]string{v.(string)})
-
 	}
 
 	filters, filtersOk := d.GetOk("filter")
@@ -142,6 +141,7 @@ func dataSourceVPCIpamPoolRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("locale", pool.Locale)
 	d.Set("pool_depth", pool.PoolDepth)
 	d.Set("publicly_advertisable", pool.PubliclyAdvertisable)
+	d.Set("ipam_pool_id", pool.IpamPoolId)
 	d.Set("source_ipam_pool_id", pool.SourceIpamPoolId)
 	d.Set("state", pool.State)
 
