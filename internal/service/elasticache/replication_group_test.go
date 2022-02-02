@@ -2124,41 +2124,9 @@ resource "aws_elasticache_replication_group" "test" {
 }
 
 func testAccReplicationGroupConfig_Uppercase(rName string) string {
-	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
-resource "aws_vpc" "test" {
-  cidr_block = "192.168.0.0/16"
-
-  tags = {
-    Name = "terraform-testacc-elasticache-replication-group-number-cache-clusters"
-  }
-}
-
-resource "aws_subnet" "test" {
-  count = 2
-
-  availability_zone = data.aws_availability_zones.available.names[count.index]
-  cidr_block        = "192.168.${count.index}.0/24"
-  vpc_id            = aws_vpc.test.id
-
-  tags = {
-    Name = "tf-acc-elasticache-replication-group-number-cache-clusters"
-  }
-}
-
-resource "aws_elasticache_subnet_group" "test" {
-  name       = %[1]q
-  subnet_ids = aws_subnet.test[*].id
-}
-
+	return acctest.ConfigCompose(
+		acctest.ConfigVpcWithSubnets(2),
+		fmt.Sprintf(`
 resource "aws_elasticache_replication_group" "test" {
   node_type                     = "cache.t2.micro"
   number_cache_clusters         = 1
@@ -2167,7 +2135,13 @@ resource "aws_elasticache_replication_group" "test" {
   replication_group_id          = %[1]q
   subnet_group_name             = aws_elasticache_subnet_group.test.name
 }
-`, rName)
+
+resource "aws_elasticache_subnet_group" "test" {
+  name       = %[1]q
+  subnet_ids = aws_subnet.test[*].id
+}
+`, rName),
+	)
 }
 
 func testAccReplicationGroupConfig_EngineVersion(rName, engineVersion string) string {
@@ -2308,38 +2282,24 @@ resource "aws_elasticache_replication_group" "test" {
 }
 
 func testAccReplicationGroupInVPCConfig(rName string) string {
-	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
-resource "aws_vpc" "test" {
-  cidr_block = "192.168.0.0/16"
-
-  tags = {
-    Name = "terraform-testacc-elasticache-replication-group-in-vpc"
-  }
-}
-
-resource "aws_subnet" "test" {
-  vpc_id            = aws_vpc.test.id
-  cidr_block        = "192.168.0.0/20"
-  availability_zone = data.aws_availability_zones.available.names[0]
-
-  tags = {
-    Name = "tf-acc-elasticache-replication-group-in-vpc"
-  }
+	return acctest.ConfigCompose(
+		acctest.ConfigVpcWithSubnets(1),
+		fmt.Sprintf(`
+resource "aws_elasticache_replication_group" "test" {
+  replication_group_id          = %[1]q
+  replication_group_description = "test description"
+  node_type                     = "cache.t3.small"
+  number_cache_clusters         = 1
+  port                          = 6379
+  subnet_group_name             = aws_elasticache_subnet_group.test.name
+  security_group_ids            = [aws_security_group.test.id]
+  availability_zones            = [data.aws_availability_zones.available.names[0]]
+  auto_minor_version_upgrade    = false
 }
 
 resource "aws_elasticache_subnet_group" "test" {
-  name        = %[1]q
-  description = "tf-test-cache-subnet-group-descr"
-  subnet_ids  = [aws_subnet.test.id]
+  name       = %[1]q
+  subnet_ids = aws_subnet.test[*].id
 }
 
 resource "aws_security_group" "test" {
@@ -2354,19 +2314,8 @@ resource "aws_security_group" "test" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 }
-
-resource "aws_elasticache_replication_group" "test" {
-  replication_group_id          = %[1]q
-  replication_group_description = "test description"
-  node_type                     = "cache.t3.small"
-  number_cache_clusters         = 1
-  port                          = 6379
-  subnet_group_name             = aws_elasticache_subnet_group.test.name
-  security_group_ids            = [aws_security_group.test.id]
-  availability_zones            = [data.aws_availability_zones.available.names[0]]
-  auto_minor_version_upgrade    = false
-}
-`, rName)
+`, rName),
+	)
 }
 
 func testAccReplicationGroupConfig_MultiAZNotInVPC_Basic(rName string) string {
@@ -2383,16 +2332,9 @@ resource "aws_elasticache_replication_group" "test" {
 }
 
 func testAccReplicationGroupConfig_MultiAZNotInVPC_AvailabilityZones(rName string) string {
-	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
+	return acctest.ConfigCompose(
+		acctest.ConfigAvailableAZsNoOptIn(),
+		fmt.Sprintf(`
 resource "aws_elasticache_replication_group" "test" {
   replication_group_id          = %[1]q
   replication_group_description = "test description"
@@ -2402,69 +2344,14 @@ resource "aws_elasticache_replication_group" "test" {
   multi_az_enabled              = true
   availability_zones            = [data.aws_availability_zones.available.names[0], data.aws_availability_zones.available.names[1]]
 }
-`, rName)
+`, rName),
+	)
 }
 
 func testAccReplicationGroupMultiAZInVPCConfig(rName string) string {
-	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
-resource "aws_vpc" "test" {
-  cidr_block = "192.168.0.0/16"
-  tags = {
-    Name = "terraform-testacc-elasticache-replication-group-multi-az-in-vpc"
-  }
-}
-
-resource "aws_subnet" "test" {
-  vpc_id            = aws_vpc.test.id
-  cidr_block        = "192.168.0.0/20"
-  availability_zone = data.aws_availability_zones.available.names[0]
-
-  tags = {
-    Name = "tf-acc-elasticache-replication-group-multi-az-in-vpc-foo"
-  }
-}
-
-resource "aws_subnet" "test2" {
-  vpc_id            = aws_vpc.test.id
-  cidr_block        = "192.168.16.0/20"
-  availability_zone = data.aws_availability_zones.available.names[1]
-
-  tags = {
-    Name = "tf-acc-elasticache-replication-group-multi-az-in-vpc-bar"
-  }
-}
-
-resource "aws_elasticache_subnet_group" "test" {
-  name        = %[1]q
-  description = "tf-test-cache-subnet-group-descr"
-  subnet_ids = [
-    aws_subnet.test.id,
-    aws_subnet.test2.id,
-  ]
-}
-
-resource "aws_security_group" "test" {
-  name        = %[1]q
-  description = "tf-test-security-group-descr"
-  vpc_id      = aws_vpc.test.id
-
-  ingress {
-    from_port   = -1
-    to_port     = -1
-    protocol    = "icmp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-}
-
+	return acctest.ConfigCompose(
+		acctest.ConfigVpcWithSubnets(2),
+		fmt.Sprintf(`
 resource "aws_elasticache_replication_group" "test" {
   replication_group_id          = %[1]q
   replication_group_description = "test description"
@@ -2479,7 +2366,26 @@ resource "aws_elasticache_replication_group" "test" {
   snapshot_window               = "02:00-03:00"
   snapshot_retention_limit      = 7
 }
-`, rName)
+
+resource "aws_elasticache_subnet_group" "test" {
+  name       = %[1]q
+  subnet_ids = aws_subnet.test[*].id
+}
+
+resource "aws_security_group" "test" {
+  name        = %[1]q
+  description = "tf-test-security-group-descr"
+  vpc_id      = aws_vpc.test.id
+
+  ingress {
+    from_port   = -1
+    to_port     = -1
+    protocol    = "icmp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+}
+`, rName),
+	)
 }
 
 func testAccReplicationGroupConfig_MultiAZ_NoAutomaticFailover(rName string) string {
@@ -2496,66 +2402,9 @@ resource "aws_elasticache_replication_group" "test" {
 }
 
 func testAccReplicationGroupRedisClusterInVPCConfig(rName string) string {
-	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
-resource "aws_vpc" "test" {
-  cidr_block = "192.168.0.0/16"
-
-  tags = {
-    Name = "terraform-testacc-elasticache-replication-group-redis-cluster-in-vpc"
-  }
-}
-
-resource "aws_subnet" "test" {
-  vpc_id            = aws_vpc.test.id
-  cidr_block        = "192.168.0.0/20"
-  availability_zone = data.aws_availability_zones.available.names[0]
-
-  tags = {
-    Name = "tf-acc-elasticache-replication-group-redis-cluster-in-vpc-foo"
-  }
-}
-
-resource "aws_subnet" "test2" {
-  vpc_id            = aws_vpc.test.id
-  cidr_block        = "192.168.16.0/20"
-  availability_zone = data.aws_availability_zones.available.names[1]
-
-  tags = {
-    Name = "tf-acc-elasticache-replication-group-redis-cluster-in-vpc-bar"
-  }
-}
-
-resource "aws_elasticache_subnet_group" "test" {
-  name        = %[1]q
-  description = "tf-test-cache-subnet-group-descr"
-  subnet_ids = [
-    aws_subnet.test.id,
-    aws_subnet.test2.id,
-  ]
-}
-
-resource "aws_security_group" "test" {
-  name        = %[1]q
-  description = "tf-test-security-group-descr"
-  vpc_id      = aws_vpc.test.id
-
-  ingress {
-    from_port   = -1
-    to_port     = -1
-    protocol    = "icmp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-}
-
+	return acctest.ConfigCompose(
+		acctest.ConfigVpcWithSubnets(2),
+		fmt.Sprintf(`
 resource "aws_elasticache_replication_group" "test" {
   replication_group_id          = %[1]q
   replication_group_description = "test description"
@@ -2571,60 +2420,14 @@ resource "aws_elasticache_replication_group" "test" {
   engine_version                = "3.2.4"
   maintenance_window            = "thu:03:00-thu:04:00"
 }
-`, rName)
-}
-
-func testAccReplicationGroupNativeRedisClusterErrorConfig(rInt int, rName string) string {
-	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
-resource "aws_vpc" "test" {
-  cidr_block = "192.168.0.0/16"
-
-  tags = {
-    Name = "terraform-testacc-elasticache-replication-group-native-redis-cluster-err"
-  }
-}
-
-resource "aws_subnet" "test" {
-  vpc_id            = aws_vpc.test.id
-  cidr_block        = "192.168.0.0/20"
-  availability_zone = data.aws_availability_zones.available.names[0]
-
-  tags = {
-    Name = "tf-acc-elasticache-replication-group-native-redis-cluster-err-test"
-  }
-}
-
-resource "aws_subnet" "test2" {
-  vpc_id            = aws_vpc.test.id
-  cidr_block        = "192.168.16.0/20"
-  availability_zone = data.aws_availability_zones.available.names[1]
-
-  tags = {
-    Name = "tf-acc-elasticache-replication-group-native-redis-cluster-err-test"
-  }
-}
 
 resource "aws_elasticache_subnet_group" "test" {
-  name        = "tf-test-cache-subnet-%03[1]d"
-  description = "tf-test-cache-subnet-group-descr"
-
-  subnet_ids = [
-    aws_subnet.test.id,
-    aws_subnet.test.id,
-  ]
+  name       = %[1]q
+  subnet_ids = aws_subnet.test[*].id
 }
 
 resource "aws_security_group" "test" {
-  name        = "tf-test-security-group-%03[1]d"
+  name        = %[1]q
   description = "tf-test-security-group-descr"
   vpc_id      = aws_vpc.test.id
 
@@ -2635,7 +2438,14 @@ resource "aws_security_group" "test" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 }
+`, rName),
+	)
+}
 
+func testAccReplicationGroupNativeRedisClusterErrorConfig(rInt int, rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigVpcWithSubnets(2),
+		fmt.Sprintf(`
 resource "aws_elasticache_replication_group" "test" {
   replication_group_id          = %[2]q
   replication_group_description = "test description"
@@ -2652,7 +2462,26 @@ resource "aws_elasticache_replication_group" "test" {
 
   number_cache_clusters = 3
 }
-`, rInt, rName)
+
+resource "aws_elasticache_subnet_group" "test" {
+  name       = "tf-test-cache-subnet-%03[1]d"
+  subnet_ids = aws_subnet.test[*].id
+}
+
+resource "aws_security_group" "test" {
+  name        = "tf-test-security-group-%03[1]d"
+  description = "tf-test-security-group-descr"
+  vpc_id      = aws_vpc.test.id
+
+  ingress {
+    from_port   = -1
+    to_port     = -1
+    protocol    = "icmp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+}
+`, rInt, rName),
+	)
 }
 
 func testAccReplicationGroupNativeRedisClusterConfig(rName string, numNodeGroups, replicasPerNodeGroup int) string {
@@ -2749,7 +2578,8 @@ resource "aws_elasticache_replication_group" "test" {
     replicas_per_node_group = 1
   }
 }
-`, rName))
+`, rName),
+	)
 }
 
 func testAccReplicationGroupNativeRedisClusterConfig_SingleNode(rName string) string {
@@ -2768,66 +2598,16 @@ resource "aws_elasticache_replication_group" "test" {
     replicas_per_node_group = 0
   }
 }
-`, rName))
+`, rName),
+	)
 }
 
 func testAccReplicationGroup_UseCMKKMSKeyID(rInt int, rString string) string {
-	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
-resource "aws_vpc" "foo" {
-  cidr_block = "192.168.0.0/16"
-
-  tags = {
-    Name = "terraform-testacc-elasticache-replication-group-at-rest-encryption"
-  }
-}
-
-resource "aws_subnet" "foo" {
-  vpc_id            = aws_vpc.foo.id
-  cidr_block        = "192.168.0.0/20"
-  availability_zone = data.aws_availability_zones.available.names[0]
-
-  tags = {
-    Name = "tf-acc-elasticache-replication-group-at-rest-encryption"
-  }
-}
-
-resource "aws_elasticache_subnet_group" "bar" {
-  name        = "tf-test-cache-subnet-%03d"
-  description = "tf-test-cache-subnet-group-descr"
-
-  subnet_ids = [
-    aws_subnet.foo.id,
-  ]
-}
-
-resource "aws_security_group" "bar" {
-  name        = "tf-test-security-group-%03d"
-  description = "tf-test-security-group-descr"
-  vpc_id      = aws_vpc.foo.id
-
-  ingress {
-    from_port   = -1
-    to_port     = -1
-    protocol    = "icmp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-}
-
-resource "aws_kms_key" "bar" {
-  description = "tf-test-cmk-kms-key-id"
-}
-
-resource "aws_elasticache_replication_group" "bar" {
-  replication_group_id          = "tf-%s"
+	return acctest.ConfigCompose(
+		acctest.ConfigVpcWithSubnets(1),
+		fmt.Sprintf(`
+resource "aws_elasticache_replication_group" "bar" { # TODO: rename
+  replication_group_id          = "tf-%[2]s"
   replication_group_description = "test description"
   node_type                     = "cache.t2.micro"
   number_cache_clusters         = "1"
@@ -2840,49 +2620,14 @@ resource "aws_elasticache_replication_group" "bar" {
   at_rest_encryption_enabled    = true
   kms_key_id                    = aws_kms_key.bar.arn
 }
-`, rInt, rInt, rString)
+
+resource "aws_elasticache_subnet_group" "bar" {
+  name       = "tf-test-cache-subnet-%03[1]d"
+  subnet_ids = aws_subnet.test[*].id
 }
 
-func testAccReplicationGroup_EnableAtRestEncryptionConfig(rInt int, rString string) string {
-	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
-resource "aws_vpc" "test" {
-  cidr_block = "192.168.0.0/16"
-
-  tags = {
-    Name = "terraform-testacc-elasticache-replication-group-at-rest-encryption"
-  }
-}
-
-resource "aws_subnet" "test" {
-  vpc_id            = aws_vpc.test.id
-  cidr_block        = "192.168.0.0/20"
-  availability_zone = data.aws_availability_zones.available.names[0]
-
-  tags = {
-    Name = "tf-acc-elasticache-replication-group-at-rest-encryption"
-  }
-}
-
-resource "aws_elasticache_subnet_group" "test" {
-  name        = "tf-test-cache-subnet-%03d"
-  description = "tf-test-cache-subnet-group-descr"
-
-  subnet_ids = [
-    aws_subnet.test.id,
-  ]
-}
-
-resource "aws_security_group" "test" {
-  name        = "tf-test-security-group-%03d"
+resource "aws_security_group" "bar" {
+  name        = "tf-test-security-group-%03[1]d"
   description = "tf-test-security-group-descr"
   vpc_id      = aws_vpc.test.id
 
@@ -2894,8 +2639,19 @@ resource "aws_security_group" "test" {
   }
 }
 
+resource "aws_kms_key" "bar" {
+  description = "tf-test-cmk-kms-key-id"
+}
+`, rInt, rString),
+	)
+}
+
+func testAccReplicationGroup_EnableAtRestEncryptionConfig(rInt int, rString string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigVpcWithSubnets(1),
+		fmt.Sprintf(`
 resource "aws_elasticache_replication_group" "test" {
-  replication_group_id          = "tf-%s"
+  replication_group_id          = "tf-%[2]s"
   replication_group_description = "test description"
   node_type                     = "cache.t2.micro"
   number_cache_clusters         = "1"
@@ -2907,49 +2663,14 @@ resource "aws_elasticache_replication_group" "test" {
   engine_version                = "3.2.6"
   at_rest_encryption_enabled    = true
 }
-`, rInt, rInt, rString)
-}
-
-func testAccReplicationGroup_EnableAuthTokenTransitEncryptionConfig(rInt int, rString10 string, rString16 string) string {
-	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
-resource "aws_vpc" "test" {
-  cidr_block = "192.168.0.0/16"
-
-  tags = {
-    Name = "terraform-testacc-elasticache-replication-group-auth-token-transit-encryption"
-  }
-}
-
-resource "aws_subnet" "test" {
-  vpc_id            = aws_vpc.test.id
-  cidr_block        = "192.168.0.0/20"
-  availability_zone = data.aws_availability_zones.available.names[0]
-
-  tags = {
-    Name = "tf-acc-elasticache-replication-group-auth-token-transit-encryption"
-  }
-}
 
 resource "aws_elasticache_subnet_group" "test" {
-  name        = "tf-test-cache-subnet-%03d"
-  description = "tf-test-cache-subnet-group-descr"
-
-  subnet_ids = [
-    aws_subnet.test.id,
-  ]
+  name       = "tf-test-cache-subnet-%03[1]d"
+  subnet_ids = aws_subnet.test[*].id
 }
 
 resource "aws_security_group" "test" {
-  name        = "tf-test-security-group-%03d"
+  name        = "tf-test-security-group-%03[1]d"
   description = "tf-test-security-group-descr"
   vpc_id      = aws_vpc.test.id
 
@@ -2960,9 +2681,16 @@ resource "aws_security_group" "test" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 }
+`, rInt, rString),
+	)
+}
 
+func testAccReplicationGroup_EnableAuthTokenTransitEncryptionConfig(rInt int, rString10 string, rString16 string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigVpcWithSubnets(1),
+		fmt.Sprintf(`
 resource "aws_elasticache_replication_group" "test" {
-  replication_group_id          = "tf-%s"
+  replication_group_id          = "tf-%[2]s"
   replication_group_description = "test description"
   node_type                     = "cache.t2.micro"
   number_cache_clusters         = "1"
@@ -2973,49 +2701,35 @@ resource "aws_elasticache_replication_group" "test" {
   availability_zones            = [data.aws_availability_zones.available.names[0]]
   engine_version                = "5.0.6"
   transit_encryption_enabled    = true
-  auth_token                    = "%s"
+  auth_token                    = "%[3]s"
 }
-`, rInt, rInt, rString10, rString16)
+
+resource "aws_elasticache_subnet_group" "test" {
+  name       = "tf-test-cache-subnet-%03[1]d"
+  subnet_ids = aws_subnet.test[*].id
+}
+
+resource "aws_security_group" "test" {
+  name        = "tf-test-security-group-%03[1]d"
+  description = "tf-test-security-group-descr"
+  vpc_id      = aws_vpc.test.id
+
+  ingress {
+    from_port   = -1
+    to_port     = -1
+    protocol    = "icmp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+}
+`, rInt, rString10, rString16),
+	)
 }
 
 func testAccReplicationGroupConfig_NumberCacheClusters(rName string, numberCacheClusters int) string {
 	return acctest.ConfigCompose(
+		acctest.ConfigVpcWithSubnets(2),
 		testAccReplicationGroupClusterData(numberCacheClusters),
 		fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
-resource "aws_vpc" "test" {
-  cidr_block = "192.168.0.0/16"
-
-  tags = {
-    Name = "terraform-testacc-elasticache-replication-group-number-cache-clusters"
-  }
-}
-
-resource "aws_subnet" "test" {
-  count = 2
-
-  availability_zone = data.aws_availability_zones.available.names[count.index]
-  cidr_block        = "192.168.${count.index}.0/24"
-  vpc_id            = aws_vpc.test.id
-
-  tags = {
-    Name = "tf-acc-elasticache-replication-group-number-cache-clusters"
-  }
-}
-
-resource "aws_elasticache_subnet_group" "test" {
-  name       = "%[1]s"
-  subnet_ids = aws_subnet.test[*].id
-}
-
 resource "aws_elasticache_replication_group" "test" {
   node_type                     = "cache.t2.micro"
   number_cache_clusters         = %[2]d
@@ -3027,46 +2741,19 @@ resource "aws_elasticache_replication_group" "test" {
     key = "value"
   }
 }
-`, rName, numberCacheClusters),
-	)
-}
-
-func testAccReplicationGroupConfig_FailoverMultiAZ(rName string, numberCacheClusters int, autoFailover, multiAZ bool) string {
-	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
-resource "aws_vpc" "test" {
-  cidr_block = "192.168.0.0/16"
-
-  tags = {
-    Name = "terraform-testacc-elasticache-replication-group-number-cache-clusters"
-  }
-}
-
-resource "aws_subnet" "test" {
-  count = 2
-
-  availability_zone = data.aws_availability_zones.available.names[count.index]
-  cidr_block        = "192.168.${count.index}.0/24"
-  vpc_id            = aws_vpc.test.id
-
-  tags = {
-    Name = "tf-acc-elasticache-replication-group-number-cache-clusters"
-  }
-}
 
 resource "aws_elasticache_subnet_group" "test" {
   name       = "%[1]s"
   subnet_ids = aws_subnet.test[*].id
 }
+`, rName, numberCacheClusters),
+	)
+}
 
+func testAccReplicationGroupConfig_FailoverMultiAZ(rName string, numberCacheClusters int, autoFailover, multiAZ bool) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigVpcWithSubnets(2),
+		fmt.Sprintf(`
 resource "aws_elasticache_replication_group" "test" {
   # InvalidParameterCombination: Automatic failover is not supported for T1 and T2 cache node types.
   automatic_failover_enabled    = %[3]t
@@ -3077,7 +2764,13 @@ resource "aws_elasticache_replication_group" "test" {
   replication_group_description = "Terraform Acceptance Testing - number_cache_clusters"
   subnet_group_name             = aws_elasticache_subnet_group.test.name
 }
-`, rName, numberCacheClusters, autoFailover, multiAZ)
+
+resource "aws_elasticache_subnet_group" "test" {
+  name       = "%[1]s"
+  subnet_ids = aws_subnet.test[*].id
+}
+`, rName, numberCacheClusters, autoFailover, multiAZ),
+	)
 }
 
 func testAccReplicationGroupTags1Config(rName, tagKey1, tagValue1 string) string {
@@ -3203,7 +2896,8 @@ resource "aws_elasticache_replication_group" "primary" {
   engine_version        = "5.0.6"
   number_cache_clusters = 1
 }
-`, rName))
+`, rName),
+	)
 }
 
 func testAccReplicationGroupConfig_GlobalReplicationGroupId_Basic(rName string) string {
@@ -3241,7 +2935,8 @@ resource "aws_elasticache_replication_group" "primary" {
   engine_version        = "5.0.6"
   number_cache_clusters = 2
 }
-`, rName))
+`, rName),
+	)
 }
 
 func testAccReplicationGroupConfig_GlobalReplicationGroupId_Full(rName string, numCacheClusters int) string {
@@ -3292,7 +2987,8 @@ resource "aws_elasticache_replication_group" "primary" {
   at_rest_encryption_enabled = true
   transit_encryption_enabled = true
 }
-`, rName, numCacheClusters))
+`, rName, numCacheClusters),
+	)
 }
 
 func testAccReplicationGroupConfig_GlobalReplicationGroupId_ClusterMode(rName string, primaryReplicaCount, secondaryReplicaCount int) string {
@@ -3341,7 +3037,8 @@ resource "aws_elasticache_replication_group" "primary" {
     replicas_per_node_group = %[2]d
   }
 }
-`, rName, primaryReplicaCount, secondaryReplicaCount))
+`, rName, primaryReplicaCount, secondaryReplicaCount),
+	)
 }
 
 func testAccReplicationGroupConfig_GlobalReplicationGroupId_ClusterMode_NumNodeGroupsOnSecondary(rName string) string {
@@ -3391,42 +3088,29 @@ resource "aws_elasticache_replication_group" "primary" {
     replicas_per_node_group = 1
   }
 }
-`, rName))
+`, rName),
+	)
 }
 
 func testAccReplicationGroupConfigDataTiering(rName string) string {
-	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
-resource "aws_vpc" "test" {
-  cidr_block = "192.168.0.0/16"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_subnet" "test" {
-  vpc_id            = aws_vpc.test.id
-  cidr_block        = "192.168.0.0/20"
-  availability_zone = data.aws_availability_zones.available.names[0]
-
-  tags = {
-    Name = %[1]q
-  }
+	return acctest.ConfigCompose(
+		acctest.ConfigVpcWithSubnets(1),
+		fmt.Sprintf(`
+resource "aws_elasticache_replication_group" "test" {
+  replication_group_id          = %[1]q
+  replication_group_description = "test description"
+  node_type                     = "cache.r6gd.xlarge"
+  data_tiering_enabled          = true
+  port                          = 6379
+  subnet_group_name             = aws_elasticache_subnet_group.test.name
+  security_group_ids            = [aws_security_group.test.id]
+  availability_zones            = [data.aws_availability_zones.available.names[0]]
+  auto_minor_version_upgrade    = false
 }
 
 resource "aws_elasticache_subnet_group" "test" {
-  name        = %[1]q
-  description = "tf-test-cache-subnet-group-descr"
-  subnet_ids  = [aws_subnet.test.id]
+  name       = %[1]q
+  subnet_ids = aws_subnet.test[*].id
 }
 
 resource "aws_security_group" "test" {
@@ -3441,19 +3125,8 @@ resource "aws_security_group" "test" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 }
-
-resource "aws_elasticache_replication_group" "test" {
-  replication_group_id          = %[1]q
-  replication_group_description = "test description"
-  node_type                     = "cache.r6gd.xlarge"
-  data_tiering_enabled          = true
-  port                          = 6379
-  subnet_group_name             = aws_elasticache_subnet_group.test.name
-  security_group_ids            = [aws_security_group.test.id]
-  availability_zones            = [data.aws_availability_zones.available.names[0]]
-  auto_minor_version_upgrade    = false
-}
-`, rName)
+`, rName),
+	)
 }
 
 func resourceReplicationGroupDisableAutomaticFailover(conn *elasticache.ElastiCache, replicationGroupID string, timeout time.Duration) error {
