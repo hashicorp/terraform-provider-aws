@@ -207,7 +207,7 @@ func ResourceOntapFileSystem() *schema.Resource {
 				Type:         schema.TypeInt,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validation.IntInSlice([]int{512, 1024, 2048}),
+				ValidateFunc: validation.IntInSlice([]int{128, 512, 1024, 2048}),
 			},
 			"vpc_id": {
 				Type:     schema.TypeString,
