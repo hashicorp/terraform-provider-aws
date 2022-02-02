@@ -7385,7 +7385,7 @@ func testAccInstanceConfig_SnapshotIdentifier_Io1Storage(rName string, iops int)
 	return fmt.Sprintf(`
 data "aws_rds_orderable_db_instance" "test" {
   engine         = "mariadb"
-  engine_version = "10.2.15"
+  engine_version = "10.5.12"
   license_model  = "general-public-license"
   storage_type   = "io1"
 
