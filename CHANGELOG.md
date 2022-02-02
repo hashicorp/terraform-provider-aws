@@ -55,6 +55,7 @@ ENHANCEMENTS:
 * resource/aws_ec2_client_vpn_endpoint: Add `session_timeout_hours` argument ([#22793](https://github.com/hashicorp/terraform-provider-aws/issues/22793))
 * resource/aws_ec2_client_vpn_endpoint: Add `vpn_port` argument ([#22793](https://github.com/hashicorp/terraform-provider-aws/issues/22793))
 * resource/aws_ec2_client_vpn_network_association: Configurable Create and Delete timeouts ([#20689](https://github.com/hashicorp/terraform-provider-aws/issues/20689))
+* resource/aws_fsx_ontap_file_system: Reduce the minimum valid value of the `throughput_capacity` argument to `128` (128 MB/s) ([#22898](https://github.com/hashicorp/terraform-provider-aws/issues/22898))
 * resource/aws_imagebuilder_distribution_configuration: Add `launch_template_configuration` argument to the `distribution` configuration block ([#22842](https://github.com/hashicorp/terraform-provider-aws/issues/22842))
 * resource/aws_imagebuilder_image_recipe: Add `parameter` argument to the `component` configuration block ([#22837](https://github.com/hashicorp/terraform-provider-aws/issues/22837))
 * resource/aws_vpn_connection: Add the ability to revert changes to unconfigured tunnel options made outside of Terraform to their [documented default values](https://docs.aws.amazon.com/vpn/latest/s2svpn/VPNTunnels.html) ([#17031](https://github.com/hashicorp/terraform-provider-aws/issues/17031))
