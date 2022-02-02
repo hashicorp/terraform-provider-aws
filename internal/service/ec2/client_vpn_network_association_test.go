@@ -60,7 +60,7 @@ func testAccClientVPNNetworkAssociation_multipleSubnets(t *testing.T) {
 	var assoc ec2.TargetNetwork
 	var group ec2.SecurityGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceNames := []string{"aws_ec2_client_vpn_network_association.test", "aws_ec2_client_vpn_network_association.test2"}
+	resourceNames := []string{"aws_ec2_client_vpn_network_association.test1", "aws_ec2_client_vpn_network_association.test2"}
 	endpointResourceName := "aws_ec2_client_vpn_endpoint.test"
 	subnetResourceNames := []string{"aws_subnet.test1", "aws_subnet.test2"}
 	vpcResourceName := "aws_vpc.test"
@@ -289,7 +289,7 @@ resource "aws_ec2_client_vpn_network_association" "test" {
 
 func testAccEc2ClientVpnNetworkAssociationConfigMultipleSubnets(rName string) string {
 	return acctest.ConfigCompose(testAccEc2ClientVpnNetworkAssociationBaseConfig(rName), `
-resource "aws_ec2_client_vpn_network_association" "test" {
+resource "aws_ec2_client_vpn_network_association" "test1" {
   client_vpn_endpoint_id = aws_ec2_client_vpn_endpoint.test.id
   subnet_id              = aws_subnet.test1.id
 }
