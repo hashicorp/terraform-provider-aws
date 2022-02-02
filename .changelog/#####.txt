@@ -5,3 +5,7 @@ resource/aws_ec2_client_vpn_network_association: The `security_groups` argument 
 ```release-note:enhancement
 resource/aws_ec2_client_vpn_endpoint: Add `security_group_ids` and `vpc_id` arguments
 ```
+
+```release-note:enhancement
+data-source/aws_ec2_client_vpn_endpoint: Add `security_group_ids` and `vpc_id` attributes
+```
