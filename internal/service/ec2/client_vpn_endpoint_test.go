@@ -1321,7 +1321,7 @@ func testAccEc2ClientVpnEndpointConfigSecurityGroups(rName string, nSecurityGrou
 		fmt.Sprintf(`
 locals {
   security_group_count = %[2]d
-  security_group_ids   = local.security_group_count == 0 ? null : (local.security_group_count == 1? [aws_security_group.test1.id] : [aws_security_group.test1.id, aws_security_group.test2.id])
+  security_group_ids   = local.security_group_count == 0 ? null : (local.security_group_count == 1 ? [aws_security_group.test1.id] : [aws_security_group.test1.id, aws_security_group.test2.id])
 }
 
 resource "aws_ec2_client_vpn_endpoint" "test" {
