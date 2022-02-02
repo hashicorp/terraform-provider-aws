@@ -108,6 +108,60 @@ creation and deletion are now supported.
 
 ## Data Source: aws_cloudwatch_log_group
 
+### Removal of arn Wildcard Suffix
+
+Previously, the data source returned the Amazon Resource Name (ARN) directly from the API, which included a `:*` suffix to denote all CloudWatch Log Streams under the CloudWatch Log Group. Most other AWS resources that return ARNs and many other AWS services do not use the `:*` suffix. The suffix is now automatically removed. For example, the data source previously returned an ARN such as `arn:aws:logs:us-east-1:123456789012:log-group:/example:*` but will now return `arn:aws:logs:us-east-1:123456789012:log-group:/example`.
+
+Workarounds, such as using `replace()` as shown below, should be removed:
+
+```terraform
+data "aws_cloudwatch_log_group" "example" {
+  name = "example"
+}
+resource "aws_datasync_task" "example" {
+  # ... other configuration ...
+  cloudwatch_log_group_arn = replace(data.aws_cloudwatch_log_group.example.arn, ":*", "")
+}
+```
+
+Removing the `:*` suffix is a breaking change for some configurations. Fix these configurations using string interpolations as demonstrated below. For example, this configuration is now broken:
+
+```terraform
+data "aws_iam_policy_document" "ad-log-policy" {
+  statement {
+    actions = [
+      "logs:CreateLogStream",
+      "logs:PutLogEvents"
+    ]
+    principals {
+      identifiers = ["ds.amazonaws.com"]
+      type        = "Service"
+    }
+    resources = [data.aws_cloudwatch_log_group.example.arn]
+    effect = "Allow"
+  }
+}
+```
+
+An updated configuration:
+
+```terraform
+data "aws_iam_policy_document" "ad-log-policy" {
+  statement {
+    actions = [
+      "logs:CreateLogStream",
+      "logs:PutLogEvents"
+    ]
+    principals {
+      identifiers = ["ds.amazonaws.com"]
+      type        = "Service"
+    }
+    resources = ["${data.aws_cloudwatch_log_group.example.arn}:*"]
+    effect = "Allow"
+  }
+}
+```
+
 ## Data Source: aws_subnet_ids
 
 The `aws_subnet_ids` data source has been deprecated and will be removed removed in a future version. Use the `aws_subnets` data source instead.
