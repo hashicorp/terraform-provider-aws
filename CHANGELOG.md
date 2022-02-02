@@ -1,5 +1,9 @@
 ## 3.74.1 (Unreleased)
 
+BUG FIXES:
+
+* resource/aws_backup_selection: Fix permanent diffs for `condition` and `not_resources` arguments causing resource recreation ([#22882](https://github.com/hashicorp/terraform-provider-aws/issues/22882))
+
 ## 3.74.0 (January 28, 2022)
 
 FEATURES:
