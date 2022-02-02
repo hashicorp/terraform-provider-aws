@@ -179,8 +179,9 @@ func ResourceClientVPNEndpoint() *schema.Resource {
 				Default:  false,
 			},
 			"status": {
-				Type:     schema.TypeString,
-				Computed: true,
+				Type:       schema.TypeString,
+				Computed:   true,
+				Deprecated: `This attribute has been deprecated.`,
 			},
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),

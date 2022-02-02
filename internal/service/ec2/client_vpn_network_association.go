@@ -50,8 +50,9 @@ func ResourceClientVPNNetworkAssociation() *schema.Resource {
 				Set:      schema.HashString,
 			},
 			"status": {
-				Type:     schema.TypeString,
-				Computed: true,
+				Type:       schema.TypeString,
+				Computed:   true,
+				Deprecated: `This attribute has been deprecated.`,
 			},
 			"subnet_id": {
 				Type:     schema.TypeString,
