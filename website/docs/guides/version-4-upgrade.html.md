@@ -33,6 +33,7 @@ Upgrade topics:
 - [Resource: aws_elasticache_replication_group](#resource-aws_elasticache_replication_group)
 - [Resource: aws_network_interface](#resource-aws_network_interface)
 - [Resource: aws_s3_bucket](#resource-aws_s3_bucket)
+- [Resource: aws_spot_instance_request](#resource-aws_spot_instance_request)
 
 <!-- /TOC -->
 
@@ -280,6 +281,30 @@ output "elasticache_global_replication_group_version_result" {
 ## Resource: aws_s3_bucket
 
 !> **WARNING:** This topic is placeholder documentation.
+
+## Resource: aws_spot_instance_request
+
+### instance_interruption_behaviour Argument removal
+
+Switch your Terraform configuration to the `engine_version_actual` attribute instead.
+
+For example, given this previous configuration:
+
+```terraform
+resource "aws_spot_instance_request" "example" {
+  # ... other configuration ...
+  instance_interruption_behaviour = "hibernate"
+}
+```
+
+An updated configuration:
+
+```terraform
+resource "aws_spot_instance_request" "example" {
+  # ... other configuration ...
+  instance_interruption_behavior =  "hibernate"
+}
+```
 
 ## EC2-Classic Resource and Data Source Support
 
