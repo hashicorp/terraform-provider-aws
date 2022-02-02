@@ -45,6 +45,7 @@ func TestAccEC2ClientVPNEndpoint_serial(t *testing.T) {
 			"tags":                         testAccClientVPNEndpoint_tags,
 			"simpleAttributesUpdate":       testAccClientVPNEndpoint_simpleAttributesUpdate,
 			"selfServicePortal":            testAccClientVPNEndpoint_selfServicePortal,
+			"vpcNoSecurityGroups":          testAccClientVPNEndpoint_vpcNoSecurityGroups,
 			"basicDataSource":              testAccClientVPNEndpointDataSource_basic,
 		},
 		"AuthorizationRule": {
@@ -626,6 +627,37 @@ func testAccClientVPNEndpoint_selfServicePortal(t *testing.T) {
 	})
 }
 
+func testAccClientVPNEndpoint_vpcNoSecurityGroups(t *testing.T) {
+	var v ec2.ClientVpnEndpoint
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_ec2_client_vpn_endpoint.test"
+	defaultSecurityGroupResourceName := "aws_default_security_group.test"
+	vpcResourceName := "aws_vpc.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheckClientVPNSyncronize(t); acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckClientVPNEndpointDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEc2ClientVpnEndpointConfigSecurityGroups(rName, 0),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClientVPNEndpointExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "1"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "security_group_ids.*", defaultSecurityGroupResourceName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "vpc_id", vpcResourceName, "id"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccPreCheckClientVPNSyncronize(t *testing.T) {
 	sync.TestAccPreCheckSyncronize(t, testAccEc2ClientVpnEndpointSemaphore, "Client VPN")
 }
@@ -724,6 +756,53 @@ resource "aws_subnet" "test" {
   }
 }
 `, rName, domain))
+}
+
+func testAccEc2ClientVpnEndpointConfigVPCBase(rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigAvailableAZsNoOptIn(),
+		fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_subnet" "test" {
+  count             = 2
+  availability_zone = data.aws_availability_zones.available.names[count.index]
+  cidr_block        = cidrsubnet(aws_vpc.test.cidr_block, 8, count.index)
+  vpc_id            = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_default_security_group" "test" {
+  vpc_id = aws_vpc.test.id
+}
+
+resource "aws_security_group" "test1" {
+  name   = "%[1]s-1"
+  vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_security_group" "test2" {
+  name   = "%[1]s-2"
+  vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName))
 }
 
 func testAccEc2ClientVpnEndpointConfigBasic() string {
@@ -1190,4 +1269,39 @@ resource "aws_ec2_client_vpn_endpoint" "test" {
   }
 }
 `, rName, selfServicePortal, idpEntityID))
+}
+
+func testAccEc2ClientVpnEndpointConfigSecurityGroups(rName string, nSecurityGroups int) string {
+	return acctest.ConfigCompose(
+		testAccEc2ClientVpnEndpointConfigAcmCertificateBase("test"),
+		testAccEc2ClientVpnEndpointConfigVPCBase(rName),
+		fmt.Sprintf(`
+locals {
+  security_group_count = %[2]d
+  security_group_ids   = local.security_group_count == 0 ? null : (local.security_group_count == 1? [aws_security_group.test1.id] : [aws_security_group.test1.id, aws_security_group.test2.id])
+}
+
+resource "aws_ec2_client_vpn_endpoint" "test" {
+  server_certificate_arn = aws_acm_certificate.test.arn
+  client_cidr_block      = "10.0.0.0/16"
+
+  authentication_options {
+    type                       = "certificate-authentication"
+    root_certificate_chain_arn = aws_acm_certificate.test.arn
+  }
+
+  connection_log_options {
+    enabled = false
+  }
+
+  tags = {
+    Name = %[1]q
+  }
+
+  vpc_id             = aws_vpc.test.id
+  security_group_ids = local.security_group_ids
+
+  depends_on = [aws_subnet.test[0], aws_subnet.test[1]]
+}
+`, rName, nSecurityGroups))
 }

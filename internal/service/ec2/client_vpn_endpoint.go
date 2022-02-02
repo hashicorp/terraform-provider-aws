@@ -201,10 +201,9 @@ func ResourceClientVPNEndpoint() *schema.Resource {
 				ValidateFunc: validation.StringInSlice(ec2.TransportProtocol_Values(), false),
 			},
 			"vpc_id": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				RequiredWith: []string{"security_group_ids"},
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
 			},
 			"vpn_port": {
 				Type:     schema.TypeInt,
