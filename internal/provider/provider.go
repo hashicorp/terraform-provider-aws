@@ -1144,7 +1144,6 @@ func Provider() *schema.Provider {
 			"aws_ec2_client_vpn_endpoint":                         ec2.ResourceClientVPNEndpoint(),
 			"aws_ec2_client_vpn_network_association":              ec2.ResourceClientVPNNetworkAssociation(),
 			"aws_ec2_client_vpn_route":                            ec2.ResourceClientVPNRoute(),
-			"aws_ec2_client_vpn_security_groups_association":      ec2.ResourceClientVPNSecurityGroupsAssociation(),
 			"aws_ec2_fleet":                                       ec2.ResourceFleet(),
 			"aws_ec2_host":                                        ec2.ResourceHost(),
 			"aws_ec2_local_gateway_route":                         ec2.ResourceLocalGatewayRoute(),
