@@ -428,8 +428,9 @@ func ResourceGroup() *schema.Resource {
 			},
 
 			"tag": {
-				Type:     schema.TypeSet,
-				Optional: true,
+				Type:          schema.TypeSet,
+				Optional:      true,
+				ConflictsWith: []string{"tags"},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"key": {
@@ -468,6 +469,7 @@ func ResourceGroup() *schema.Resource {
 					Elem: &schema.Schema{Type: schema.TypeString},
 				},
 				ConflictsWith: []string{"tag"},
+				Deprecated:    "Use tag instead",
 				// Terraform 0.11 and earlier can provide incorrect type
 				// information during difference handling, in which boolean
 				// values are represented as "0" and "1". This Set function
