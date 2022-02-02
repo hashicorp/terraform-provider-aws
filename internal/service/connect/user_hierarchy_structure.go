@@ -30,121 +30,26 @@ func ResourceUserHierarchyStructure() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"level_one": {
-							Type:     schema.TypeList,
-							Optional: true,
-							Computed: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"arn": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"id": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"name": {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: validation.StringLenBetween(1, 50),
-									},
-								},
-							},
-						},
-						"level_two": {
-							Type:     schema.TypeList,
-							Optional: true,
-							Computed: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"arn": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"id": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"name": {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: validation.StringLenBetween(1, 50),
-									},
-								},
-							},
-						},
-						"level_three": {
-							Type:     schema.TypeList,
-							Optional: true,
-							Computed: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"arn": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"id": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"name": {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: validation.StringLenBetween(1, 50),
-									},
-								},
-							},
-						},
-						"level_four": {
-							Type:     schema.TypeList,
-							Optional: true,
-							Computed: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"arn": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"id": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"name": {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: validation.StringLenBetween(1, 50),
-									},
-								},
-							},
-						},
-						"level_five": {
-							Type:     schema.TypeList,
-							Optional: true,
-							Computed: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"arn": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"id": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"name": {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: validation.StringLenBetween(1, 50),
-									},
-								},
-							},
-						},
+						"level_one": func() *schema.Schema {
+							schema := connectUserHierarchyLevelSchema()
+							return schema
+						}(),
+						"level_two": func() *schema.Schema {
+							schema := connectUserHierarchyLevelSchema()
+							return schema
+						}(),
+						"level_three": func() *schema.Schema {
+							schema := connectUserHierarchyLevelSchema()
+							return schema
+						}(),
+						"level_four": func() *schema.Schema {
+							schema := connectUserHierarchyLevelSchema()
+							return schema
+						}(),
+						"level_five": func() *schema.Schema {
+							schema := connectUserHierarchyLevelSchema()
+							return schema
+						}(),
 					},
 				},
 			},
@@ -152,6 +57,33 @@ func ResourceUserHierarchyStructure() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringLenBetween(1, 100),
+			},
+		},
+	}
+}
+
+// Each level shares the same schema
+func connectUserHierarchyLevelSchema() *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeList,
+		Optional: true,
+		Computed: true,
+		MaxItems: 1,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"arn": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"name": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: validation.StringLenBetween(1, 50),
+				},
 			},
 		},
 	}
