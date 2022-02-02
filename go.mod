@@ -9,7 +9,8 @@ require (
 	github.com/evanphx/json-patch v0.5.2 // indirect
 	github.com/fatih/color v1.9.0 // indirect
 	github.com/hashicorp/aws-cloudformation-resource-schema-sdk-go v0.15.0
-	github.com/hashicorp/aws-sdk-go-base v1.0.0
+	github.com/hashicorp/aws-sdk-go-base/v2 v2.0.0-beta.5
+	github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2 v2.0.0-beta.6
 	github.com/hashicorp/awspolicyequivalence v1.5.0
 	github.com/hashicorp/go-cleanhttp v0.5.2
 	github.com/hashicorp/go-cty v1.4.1-0.20200414143053-d3edf31b6320

@@ -1,9 +1,11 @@
 package conns
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"strings"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/endpoints"
@@ -280,9 +282,9 @@ import (
 	"github.com/aws/aws-sdk-go/service/workmailmessageflow"
 	"github.com/aws/aws-sdk-go/service/workspaces"
 	"github.com/aws/aws-sdk-go/service/xray"
-	awsbase "github.com/hashicorp/aws-sdk-go-base"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/logging"
+	awsbase "github.com/hashicorp/aws-sdk-go-base/v2"
+	awsbasev1 "github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/version"
 )
@@ -852,13 +854,14 @@ func init() {
 }
 
 type Config struct {
-	AccessKey     string
-	SecretKey     string
-	CredsFilename string
-	Profile       string
-	Token         string
-	Region        string
-	MaxRetries    int
+	AccessKey             string
+	SecretKey             string
+	SharedConfigFile      string
+	SharedCredentialsFile string
+	Profile               string
+	Token                 string
+	Region                string
+	MaxRetries            int
 
 	AssumeRoleARN               string
 	AssumeRoleDurationSeconds   int
@@ -1187,6 +1190,27 @@ func (client *AWSClient) RegionalHostname(prefix string) string {
 	return fmt.Sprintf("%s.%s.%s", prefix, client.Region, client.DNSSuffix)
 }
 
+func (c *Config) assumeRole() *awsbase.AssumeRole {
+	if c.AssumeRoleARN == "" {
+		return nil
+	}
+
+	assumeRole := &awsbase.AssumeRole{
+		RoleARN:           c.AssumeRoleARN,
+		ExternalID:        c.AssumeRoleExternalID,
+		Policy:            c.AssumeRolePolicy,
+		PolicyARNs:        c.AssumeRolePolicyARNs,
+		SessionName:       c.AssumeRoleSessionName,
+		Tags:              c.AssumeRoleTags,
+		TransitiveTagKeys: c.AssumeRoleTransitiveTagKeys,
+	}
+
+	if c.AssumeRoleDurationSeconds != 0 {
+		assumeRole.Duration = time.Duration(c.AssumeRoleDurationSeconds) * time.Second
+	}
+	return assumeRole
+}
+
 // Client configures and returns a fully initialized AWSClient
 func (c *Config) Client() (interface{}, error) {
 	// Get the auth and region. This can fail if keys/regions were not
@@ -1197,46 +1221,76 @@ func (c *Config) Client() (interface{}, error) {
 		}
 	}
 
-	awsbaseConfig := &awsbase.Config{
-		AccessKey:                   c.AccessKey,
-		AssumeRoleARN:               c.AssumeRoleARN,
-		AssumeRoleDurationSeconds:   c.AssumeRoleDurationSeconds,
-		AssumeRoleExternalID:        c.AssumeRoleExternalID,
-		AssumeRolePolicy:            c.AssumeRolePolicy,
-		AssumeRolePolicyARNs:        c.AssumeRolePolicyARNs,
-		AssumeRoleSessionName:       c.AssumeRoleSessionName,
-		AssumeRoleTags:              c.AssumeRoleTags,
-		AssumeRoleTransitiveTagKeys: c.AssumeRoleTransitiveTagKeys,
-		CallerDocumentationURL:      "https://registry.terraform.io/providers/hashicorp/aws",
-		CallerName:                  "Terraform AWS Provider",
-		CredsFilename:               c.CredsFilename,
-		DebugLogging:                logging.IsDebugOrHigher(),
-		IamEndpoint:                 c.Endpoints[IAM],
-		Insecure:                    c.Insecure,
-		HTTPProxy:                   c.HTTPProxy,
-		MaxRetries:                  c.MaxRetries,
-		Profile:                     c.Profile,
-		Region:                      c.Region,
-		SecretKey:                   c.SecretKey,
-		SkipCredsValidation:         c.SkipCredsValidation,
-		SkipMetadataApiCheck:        c.SkipMetadataApiCheck,
-		SkipRequestingAccountId:     c.SkipRequestingAccountId,
-		StsEndpoint:                 c.Endpoints[STS],
-		Token:                       c.Token,
-		UserAgentProducts:           StdUserAgentProducts(c.TerraformVersion),
+	awsbaseConfig := awsbase.Config{
+		AccessKey:               c.AccessKey,
+		CallerDocumentationURL:  "https://registry.terraform.io/providers/hashicorp/aws",
+		CallerName:              "Terraform AWS Provider",
+		DebugLogging:            true, // Until https://github.com/hashicorp/aws-sdk-go-base/issues/96 is implemented
+		IamEndpoint:             c.Endpoints[IAM],
+		Insecure:                c.Insecure,
+		HTTPProxy:               c.HTTPProxy,
+		MaxRetries:              c.MaxRetries,
+		Profile:                 c.Profile,
+		Region:                  c.Region,
+		SecretKey:               c.SecretKey,
+		SkipCredsValidation:     c.SkipCredsValidation,
+		SkipEC2MetadataApiCheck: c.SkipMetadataApiCheck,
+		SkipRequestingAccountId: c.SkipRequestingAccountId,
+		StsEndpoint:             c.Endpoints[STS],
+		Token:                   c.Token,
+		APNInfo:                 StdUserAgentProducts(c.TerraformVersion),
 	}
 
-	sess, accountID, Partition, err := awsbase.GetSessionWithAccountIDAndPartition(awsbaseConfig)
+	if c.AssumeRoleARN != "" {
+		awsbaseConfig.AssumeRole = c.assumeRole()
+	}
+
+	if c.SharedConfigFile != "" {
+		awsbaseConfig.SharedConfigFiles = []string{c.SharedConfigFile}
+	}
+
+	if c.SharedCredentialsFile != "" {
+		awsbaseConfig.SharedCredentialsFiles = []string{c.SharedCredentialsFile}
+	}
+
+	ctx := context.Background()
+	cfg, err := awsbase.GetAwsConfig(ctx, &awsbaseConfig)
 	if err != nil {
 		return nil, fmt.Errorf("error configuring Terraform AWS Provider: %w", err)
 	}
 
-	if accountID == "" {
-		log.Printf("[WARN] AWS account ID not found for provider. See https://www.terraform.io/docs/providers/aws/index.html#skip_requesting_account_id for implications.")
+	sess, err := awsbasev1.GetSession(&cfg, &awsbaseConfig)
+	if err != nil {
+		return nil, fmt.Errorf("error creating AWS SDK v1 session: %w", err)
 	}
 
-	if err := awsbase.ValidateAccountID(accountID, c.AllowedAccountIds, c.ForbiddenAccountIds); err != nil {
-		return nil, err
+	accountID, Partition, err := awsbase.GetAwsAccountIDAndPartition(ctx, cfg, &awsbaseConfig)
+	if err != nil {
+		return nil, fmt.Errorf("error retrieving account details: %w", err)
+	}
+
+	if accountID == "" {
+		log.Println("[WARN] AWS account ID not found for provider. See https://www.terraform.io/docs/providers/aws/index.html#skip_requesting_account_id for implications.")
+	}
+
+	if len(c.ForbiddenAccountIds) > 0 {
+		for _, forbiddenAccountID := range c.AllowedAccountIds {
+			if accountID == forbiddenAccountID {
+				return nil, fmt.Errorf("AWS Account ID not allowed: %s", accountID)
+			}
+		}
+	}
+	if len(c.AllowedAccountIds) > 0 {
+		found := false
+		for _, allowedAccountID := range c.AllowedAccountIds {
+			if accountID == allowedAccountID {
+				found = true
+				break
+			}
+		}
+		if !found {
+			return nil, fmt.Errorf("AWS Account ID not allowed: %s", accountID)
+		}
 	}
 
 	DNSSuffix := "amazonaws.com"
@@ -1822,12 +1876,13 @@ func (c *Config) Client() (interface{}, error) {
 	return client, nil
 }
 
-func StdUserAgentProducts(terraformVersion string) []*awsbase.UserAgentProduct {
-	return []*awsbase.UserAgentProduct{
-		{Name: "APN", Version: "1.0"},
-		{Name: "HashiCorp", Version: "1.0"},
-		{Name: "Terraform", Version: terraformVersion, Extra: []string{"+https://www.terraform.io"}},
-		{Name: "terraform-provider-aws", Version: version.ProviderVersion, Extra: []string{"+https://registry.terraform.io/providers/hashicorp/aws"}},
+func StdUserAgentProducts(terraformVersion string) *awsbase.APNInfo {
+	return &awsbase.APNInfo{
+		PartnerName: "HashiCorp",
+		Products: []awsbase.UserAgentProduct{
+			{Name: "Terraform", Version: terraformVersion, Comment: "+https://www.terraform.io"},
+			{Name: "terraform-provider-aws", Version: version.ProviderVersion, Comment: "+https://registry.terraform.io/providers/hashicorp/aws"},
+		},
 	}
 }
 
@@ -1838,12 +1893,9 @@ func NewSessionForRegion(cfg *aws.Config, region, terraformVersion string) (*ses
 		return nil, err
 	}
 
-	userAgentProducts := StdUserAgentProducts(terraformVersion)
-	// Copied from github.com/hashicorp/aws-sdk-go-base@v1.0.0/session.go:
-	for i := len(userAgentProducts) - 1; i >= 0; i-- {
-		product := userAgentProducts[i]
-		session.Handlers.Build.PushFront(request.MakeAddToUserAgentHandler(product.Name, product.Version, product.Extra...))
-	}
+	apnInfo := StdUserAgentProducts(terraformVersion)
+
+	awsbasev1.SetSessionUserAgent(session, apnInfo, awsbase.UserAgentProducts{})
 
 	return session.Copy(&aws.Config{Region: aws.String(region)}), nil
 }

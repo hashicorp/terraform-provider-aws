@@ -123,6 +123,22 @@ func DataSourceDistributionConfiguration() *schema.Resource {
 								},
 							},
 						},
+						"launch_template_configuration": {
+							Type:     schema.TypeSet,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"default": {
+										Type:     schema.TypeBool,
+										Computed: true,
+									},
+									"launch_template_id": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+								},
+							},
+						},
 						"license_configuration_arns": {
 							Type:     schema.TypeSet,
 							Computed: true,

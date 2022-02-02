@@ -195,6 +195,13 @@ func Provider() *schema.Provider {
 
 			"assume_role": assumeRoleSchema(),
 
+			"shared_config_file": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Default:     "",
+				Description: "The path to the shared config file. If not set, defaults to ~/.aws/config.",
+			},
+
 			"shared_credentials_file": {
 				Type:        schema.TypeString,
 				Optional:    true,
@@ -450,6 +457,7 @@ func Provider() *schema.Provider {
 			"aws_ebs_snapshot_ids":                           ec2.DataSourceEBSSnapshotIDs(),
 			"aws_ebs_volume":                                 ec2.DataSourceEBSVolume(),
 			"aws_ebs_volumes":                                ec2.DataSourceEBSVolumes(),
+			"aws_ec2_client_vpn_endpoint":                    ec2.DataSourceClientVPNEndpoint(),
 			"aws_ec2_coip_pool":                              ec2.DataSourceCoIPPool(),
 			"aws_ec2_coip_pools":                             ec2.DataSourceCoIPPools(),
 			"aws_ec2_host":                                   ec2.DataSourceHost(),
@@ -1882,7 +1890,8 @@ func providerConfigure(d *schema.ResourceData, terraformVersion string) (interfa
 		Profile:                 d.Get("profile").(string),
 		Token:                   d.Get("token").(string),
 		Region:                  d.Get("region").(string),
-		CredsFilename:           d.Get("shared_credentials_file").(string),
+		SharedConfigFile:        d.Get("shared_config_file").(string),
+		SharedCredentialsFile:   d.Get("shared_credentials_file").(string),
 		DefaultTagsConfig:       expandProviderDefaultTags(d.Get("default_tags").([]interface{})),
 		Endpoints:               make(map[string]string),
 		MaxRetries:              d.Get("max_retries").(int),

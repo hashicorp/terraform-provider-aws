@@ -86,7 +86,7 @@ In addition to all arguments above, the following attributes are exported:
 * `arn` - The ARN of the Client VPN endpoint.
 * `dns_name` - The DNS name to be used by clients when establishing their VPN session.
 * `id` - The ID of the Client VPN endpoint.
-* `status` - The current state of the Client VPN endpoint.
+* `status` - **Deprecated** The current state of the Client VPN endpoint.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://www.terraform.io/docs/providers/aws/index.html#default_tags-configuration-block).
 
 ## Import

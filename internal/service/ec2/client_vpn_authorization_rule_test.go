@@ -235,7 +235,7 @@ func testAccCheckClientVPNAuthorizationRuleDestroy(s *terraform.State) error {
 			return err
 		}
 
-		_, err = tfec2.FindClientVPNAuthorizationRuleByEndpointIDTargetNetworkCIDRAndGroupID(conn, endpointID, targetNetworkCIDR, accessGroupID)
+		_, err = tfec2.FindClientVPNAuthorizationRuleByThreePartKey(conn, endpointID, targetNetworkCIDR, accessGroupID)
 
 		if tfresource.NotFound(err) {
 			continue
@@ -270,7 +270,7 @@ func testAccCheckClientVPNAuthorizationRuleExists(name string, v *ec2.Authorizat
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
-		output, err := tfec2.FindClientVPNAuthorizationRuleByEndpointIDTargetNetworkCIDRAndGroupID(conn, endpointID, targetNetworkCIDR, accessGroupID)
+		output, err := tfec2.FindClientVPNAuthorizationRuleByThreePartKey(conn, endpointID, targetNetworkCIDR, accessGroupID)
 
 		if err != nil {
 			return err
@@ -282,8 +282,11 @@ func testAccCheckClientVPNAuthorizationRuleExists(name string, v *ec2.Authorizat
 	}
 }
 
-func testAccEc2ClientVpnAuthorizationRuleVpcBase(rName string, subnetCount int) string {
-	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptInDefaultExclude(), fmt.Sprintf(`
+func testAccEc2ClientVpnAuthorizationRuleBaseConfig(rName string, subnetCount int) string {
+	return acctest.ConfigCompose(
+		testAccEc2ClientVpnEndpointConfig(rName),
+		acctest.ConfigAvailableAZsNoOptInDefaultExclude(),
+		fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
 
@@ -306,47 +309,14 @@ resource "aws_subnet" "test" {
 `, rName, subnetCount))
 }
 
-func testAccEc2ClientVpnAuthorizationRuleAcmCertificateBase() string {
-	key := acctest.TLSRSAPrivateKeyPEM(2048)
-	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(key, "example.com")
-
-	return fmt.Sprintf(`
-resource "aws_acm_certificate" "test" {
-  certificate_body = "%[1]s"
-  private_key      = "%[2]s"
-}
-`, acctest.TLSPEMEscapeNewlines(certificate), acctest.TLSPEMEscapeNewlines(key))
-}
-
 func testAccEc2ClientVpnAuthorizationRuleConfigBasic(rName string) string {
-	return acctest.ConfigCompose(
-		testAccEc2ClientVpnAuthorizationRuleVpcBase(rName, 1),
-		testAccEc2ClientVpnAuthorizationRuleAcmCertificateBase(),
-		fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccEc2ClientVpnAuthorizationRuleBaseConfig(rName, 1), `
 resource "aws_ec2_client_vpn_authorization_rule" "test" {
   client_vpn_endpoint_id = aws_ec2_client_vpn_endpoint.test.id
   target_network_cidr    = aws_subnet.test[0].cidr_block
   authorize_all_groups   = true
 }
-
-resource "aws_ec2_client_vpn_endpoint" "test" {
-  server_certificate_arn = aws_acm_certificate.test.arn
-  client_cidr_block      = "10.0.0.0/16"
-
-  authentication_options {
-    type                       = "certificate-authentication"
-    root_certificate_chain_arn = aws_acm_certificate.test.arn
-  }
-
-  connection_log_options {
-    enabled = false
-  }
-
-  tags = {
-    Name = %[1]q
-  }
-}
-`, rName))
+`)
 }
 
 func testAccEc2ClientVpnAuthorizationRuleConfigGroups(rName string, groupNames map[string]string) string {
@@ -361,28 +331,7 @@ resource "aws_ec2_client_vpn_authorization_rule" %[1]q {
 `, k, v)
 	}
 
-	return acctest.ConfigCompose(
-		testAccEc2ClientVpnAuthorizationRuleVpcBase(rName, 1),
-		testAccEc2ClientVpnAuthorizationRuleAcmCertificateBase(),
-		b.String(),
-		fmt.Sprintf(`
-resource "aws_ec2_client_vpn_endpoint" "test" {
-  server_certificate_arn = aws_acm_certificate.test.arn
-  client_cidr_block      = "10.0.0.0/16"
-
-  authentication_options {
-    type                       = "certificate-authentication"
-    root_certificate_chain_arn = aws_acm_certificate.test.arn
-  }
-
-  connection_log_options {
-    enabled = false
-  }
-
-  tags = {
-    Name = %[1]q
-  }
-}`, rName))
+	return acctest.ConfigCompose(testAccEc2ClientVpnAuthorizationRuleBaseConfig(rName, 1), b.String())
 }
 
 func testAccEc2ClientVpnAuthorizationRuleConfigSubnets(rName string, subnetCount int, groupNames map[string]int) string {
@@ -397,26 +346,5 @@ resource "aws_ec2_client_vpn_authorization_rule" %[1]q {
 `, k, v)
 	}
 
-	return acctest.ConfigCompose(
-		testAccEc2ClientVpnAuthorizationRuleVpcBase(rName, subnetCount),
-		testAccEc2ClientVpnAuthorizationRuleAcmCertificateBase(),
-		b.String(),
-		fmt.Sprintf(`
-resource "aws_ec2_client_vpn_endpoint" "test" {
-  server_certificate_arn = aws_acm_certificate.test.arn
-  client_cidr_block      = "10.0.0.0/16"
-
-  authentication_options {
-    type                       = "certificate-authentication"
-    root_certificate_chain_arn = aws_acm_certificate.test.arn
-  }
-
-  connection_log_options {
-    enabled = false
-  }
-
-  tags = {
-    Name = %[1]q
-  }
-}`, rName))
+	return acctest.ConfigCompose(testAccEc2ClientVpnAuthorizationRuleBaseConfig(rName, subnetCount), b.String())
 }
