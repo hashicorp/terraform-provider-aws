@@ -105,7 +105,109 @@ creation and deletion are now supported.
 
 ### Resource: aws_default_subnet
 
+The `aws_default_subnet` resource behaves differently from normal resources in that if a default subnet exists in the specified Availability Zone, Terraform does not _create_ this resource, but instead "adopts" it into management.
+If no default subnet exists, Terraform creates a new default subnet.
+By default, `terraform destroy` does not delete the default subnet but does remove the resource from Terraform state.
+Set the `force_destroy` argument to `true` to delete the default subnet.
+
+For example, given this previous configuration with no existing default subnet:
+
+```terraform
+terraform {
+  required_providers {
+    aws = {
+      source = "hashicorp/aws"
+    }
+  }
+  required_version = ">= 0.13"
+}
+
+provider "aws" {
+  region = "eu-west-2"
+}
+
+resource "aws_default_subnet" "default" {}
+```
+
+The following error was thrown on `terraform apply`:
+
+```
+│ Error: Default subnet not found.
+│
+│   with aws_default_subnet.default,
+│   on main.tf line 5, in resource "aws_default_subnet" "default":
+│    5: resource "aws_default_subnet" "default" {}
+```
+
+Now after upgrading, the above configuration will apply successfully.
+
+To delete the default subnet, the above configuration should be updated to:
+
+```terraform
+terraform {
+  required_providers {
+    aws = {
+      source = "hashicorp/aws"
+    }
+  }
+  required_version = ">= 0.13"
+}
+
+resource "aws_default_subnet" "default" {
+  force_destroy = true
+}
+```
+
 ### Resource: aws_default_vpc
+
+The `aws_default_vpc` resource behaves differently from normal resources in that if a default VPC exists, Terraform does not _create_ this resource, but instead "adopts" it into management.
+If no default VPC exists, Terraform creates a new default VPC, which leads to the implicit creation of [other resources](https://docs.aws.amazon.com/vpc/latest/userguide/default-vpc.html#default-vpc-components).
+By default, `terraform destroy` does not delete the default VPC but does remove the resource from Terraform state.
+Set the `force_destroy` argument to `true` to delete the default VPC.
+
+For example, given this previous configuration with no existing default VPC:
+
+```terraform
+terraform {
+  required_providers {
+    aws = {
+      source = "hashicorp/aws"
+    }
+  }
+  required_version = ">= 0.13"
+}
+
+resource "aws_default_vpc" "default" {}
+```
+
+The following error was thrown on `terraform apply`:
+
+```
+│ Error: No default VPC found in this region.
+│
+│   with aws_default_vpc.default,
+│   on main.tf line 5, in resource "aws_default_vpc" "default":
+│    5: resource "aws_default_vpc" "default" {}
+```
+
+Now after upgrading, the above configuration will apply successfully.
+
+To delete the default VPC, the above configuration should be updated to:
+
+```terraform
+terraform {
+  required_providers {
+    aws = {
+      source = "hashicorp/aws"
+    }
+  }
+  required_version = ">= 0.13"
+}
+
+resource "aws_default_vpc" "default" {
+  force_destroy = true
+}
+```
 
 ## Data Source: aws_cloudwatch_log_group
 
@@ -276,7 +378,11 @@ output "elasticache_global_replication_group_version_result" {
 
 ## Resource: aws_elasticache_replication_group
 
+!> **WARNING:** This topic is placeholder documentation.
+
 ## Resource: aws_network_interface
+
+!> **WARNING:** This topic is placeholder documentation.
 
 ## Resource: aws_s3_bucket
 
