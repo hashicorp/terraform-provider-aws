@@ -66,6 +66,7 @@ ENHANCEMENTS:
 * data-source/aws_imagebuilder_distribution_configuration: Add `container_distribution_configuration` attribute to the `distribution` configuration block ([#22838](https://github.com/hashicorp/terraform-provider-aws/issues/22838))
 * data-source/aws_imagebuilder_distribution_configuration: Add `launch_template_configuration` attribute to the `distribution` configuration block ([#22884](https://github.com/hashicorp/terraform-provider-aws/issues/22884))
 * data-source/aws_imagebuilder_image_recipe: Add `parameter` attribute to the `component` configuration block ([#22856](https://github.com/hashicorp/terraform-provider-aws/issues/22856))
+* provider: Add `ec2_metadata_service_endpoint`, `ec2_metadata_service_endpoint_mode`, `use_dualstack_endpoint`, `use_fips_endpoint` arguments ([#22804](https://github.com/hashicorp/terraform-provider-aws/issues/22804))
 * provider: Add support for `shared_config_file` parameter ([#20587](https://github.com/hashicorp/terraform-provider-aws/issues/20587))
 * provider: Updates AWS authentication to use AWS SDK for Go v2 <https://aws.github.io/aws-sdk-go-v2/docs/> ([#20587](https://github.com/hashicorp/terraform-provider-aws/issues/20587))
 * resource/aws_autoscaling_attachment: Add `lb_target_group_arn` argument ([#22662](https://github.com/hashicorp/terraform-provider-aws/issues/22662))
