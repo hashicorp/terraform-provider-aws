@@ -408,6 +408,7 @@ func TestAccElastiCacheReplicationGroup_updateAuthToken(t *testing.T) {
 	}
 
 	var rg elasticache.ReplicationGroup
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_elasticache_replication_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -417,7 +418,7 @@ func TestAccElastiCacheReplicationGroup_updateAuthToken(t *testing.T) {
 		CheckDestroy: testAccCheckReplicationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccReplicationGroup_EnableAuthTokenTransitEncryptionConfig(1, "one", sdkacctest.RandString(16)),
+				Config: testAccReplicationGroup_EnableAuthTokenTransitEncryptionConfig(rName, sdkacctest.RandString(16)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReplicationGroupExists(resourceName, &rg),
 					resource.TestCheckResourceAttr(
@@ -431,7 +432,7 @@ func TestAccElastiCacheReplicationGroup_updateAuthToken(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"apply_immediately", "auth_token", "availability_zones"},
 			},
 			{
-				Config: testAccReplicationGroup_EnableAuthTokenTransitEncryptionConfig(1, "one", sdkacctest.RandString(16)),
+				Config: testAccReplicationGroup_EnableAuthTokenTransitEncryptionConfig(rName, sdkacctest.RandString(16)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReplicationGroupExists(resourceName, &rg),
 				),
@@ -993,7 +994,6 @@ func TestAccElastiCacheReplicationGroup_ClusterMode_singleNode(t *testing.T) {
 }
 
 func TestAccElastiCacheReplicationGroup_clusteringAndCacheNodesCausesError(t *testing.T) {
-	rInt := sdkacctest.RandInt()
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -1003,7 +1003,7 @@ func TestAccElastiCacheReplicationGroup_clusteringAndCacheNodesCausesError(t *te
 		CheckDestroy: testAccCheckReplicationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccReplicationGroupNativeRedisClusterErrorConfig(rInt, rName),
+				Config:      testAccReplicationGroupNativeRedisClusterErrorConfig(rName),
 				ExpectError: regexp.MustCompile(`"cluster_mode.0.num_node_groups": conflicts with number_cache_clusters`),
 			},
 		},
@@ -1064,7 +1064,7 @@ func TestAccElastiCacheReplicationGroup_enableAuthTokenTransitEncryption(t *test
 		CheckDestroy: testAccCheckReplicationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccReplicationGroup_EnableAuthTokenTransitEncryptionConfig(sdkacctest.RandInt(), sdkacctest.RandString(10), sdkacctest.RandString(16)),
+				Config: testAccReplicationGroup_EnableAuthTokenTransitEncryptionConfig(sdkacctest.RandString(10), sdkacctest.RandString(16)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReplicationGroupExists(resourceName, &rg),
 					resource.TestCheckResourceAttr(
@@ -1087,6 +1087,7 @@ func TestAccElastiCacheReplicationGroup_enableAtRestEncryption(t *testing.T) {
 	}
 
 	var rg elasticache.ReplicationGroup
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_elasticache_replication_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -1096,7 +1097,7 @@ func TestAccElastiCacheReplicationGroup_enableAtRestEncryption(t *testing.T) {
 		CheckDestroy: testAccCheckReplicationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccReplicationGroup_EnableAtRestEncryptionConfig(sdkacctest.RandInt(), sdkacctest.RandString(10)),
+				Config: testAccReplicationGroup_EnableAtRestEncryptionConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReplicationGroupExists(resourceName, &rg),
 					resource.TestCheckResourceAttr(resourceName, "at_rest_encryption_enabled", "true"),
@@ -1118,6 +1119,7 @@ func TestAccElastiCacheReplicationGroup_useCMKKMSKeyID(t *testing.T) {
 	}
 
 	var rg elasticache.ReplicationGroup
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, elasticache.EndpointsID),
@@ -1125,7 +1127,7 @@ func TestAccElastiCacheReplicationGroup_useCMKKMSKeyID(t *testing.T) {
 		CheckDestroy: testAccCheckReplicationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccReplicationGroup_UseCMKKMSKeyID(sdkacctest.RandInt(), sdkacctest.RandString(10)),
+				Config: testAccReplicationGroup_UseCMKKMSKeyID(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReplicationGroupExists("aws_elasticache_replication_group.bar", &rg),
 					resource.TestCheckResourceAttrSet("aws_elasticache_replication_group.bar", "kms_key_id"),
@@ -2442,12 +2444,12 @@ resource "aws_security_group" "test" {
 	)
 }
 
-func testAccReplicationGroupNativeRedisClusterErrorConfig(rInt int, rName string) string {
+func testAccReplicationGroupNativeRedisClusterErrorConfig(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigVpcWithSubnets(2),
 		fmt.Sprintf(`
 resource "aws_elasticache_replication_group" "test" {
-  replication_group_id          = %[2]q
+  replication_group_id          = %[1]q
   replication_group_description = "test description"
   node_type                     = "cache.t2.micro"
   port                          = 6379
@@ -2464,12 +2466,12 @@ resource "aws_elasticache_replication_group" "test" {
 }
 
 resource "aws_elasticache_subnet_group" "test" {
-  name       = "tf-test-cache-subnet-%03[1]d"
+  name       = %[1]q
   subnet_ids = aws_subnet.test[*].id
 }
 
 resource "aws_security_group" "test" {
-  name        = "tf-test-security-group-%03[1]d"
+  name        = %[1]q
   description = "tf-test-security-group-descr"
   vpc_id      = aws_vpc.test.id
 
@@ -2480,7 +2482,7 @@ resource "aws_security_group" "test" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 }
-`, rInt, rName),
+`, rName),
 	)
 }
 
@@ -2602,12 +2604,12 @@ resource "aws_elasticache_replication_group" "test" {
 	)
 }
 
-func testAccReplicationGroup_UseCMKKMSKeyID(rInt int, rString string) string {
+func testAccReplicationGroup_UseCMKKMSKeyID(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigVpcWithSubnets(1),
 		fmt.Sprintf(`
 resource "aws_elasticache_replication_group" "bar" { # TODO: rename
-  replication_group_id          = "tf-%[2]s"
+  replication_group_id          = %[1]q
   replication_group_description = "test description"
   node_type                     = "cache.t2.micro"
   number_cache_clusters         = "1"
@@ -2622,12 +2624,12 @@ resource "aws_elasticache_replication_group" "bar" { # TODO: rename
 }
 
 resource "aws_elasticache_subnet_group" "bar" {
-  name       = "tf-test-cache-subnet-%03[1]d"
+  name       = %[1]q
   subnet_ids = aws_subnet.test[*].id
 }
 
 resource "aws_security_group" "bar" {
-  name        = "tf-test-security-group-%03[1]d"
+  name        = %[1]q
   description = "tf-test-security-group-descr"
   vpc_id      = aws_vpc.test.id
 
@@ -2642,16 +2644,16 @@ resource "aws_security_group" "bar" {
 resource "aws_kms_key" "bar" {
   description = "tf-test-cmk-kms-key-id"
 }
-`, rInt, rString),
+`, rName),
 	)
 }
 
-func testAccReplicationGroup_EnableAtRestEncryptionConfig(rInt int, rString string) string {
+func testAccReplicationGroup_EnableAtRestEncryptionConfig(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigVpcWithSubnets(1),
 		fmt.Sprintf(`
 resource "aws_elasticache_replication_group" "test" {
-  replication_group_id          = "tf-%[2]s"
+  replication_group_id          = %[1]q
   replication_group_description = "test description"
   node_type                     = "cache.t2.micro"
   number_cache_clusters         = "1"
@@ -2665,12 +2667,12 @@ resource "aws_elasticache_replication_group" "test" {
 }
 
 resource "aws_elasticache_subnet_group" "test" {
-  name       = "tf-test-cache-subnet-%03[1]d"
+  name       = %[1]q
   subnet_ids = aws_subnet.test[*].id
 }
 
 resource "aws_security_group" "test" {
-  name        = "tf-test-security-group-%03[1]d"
+  name        = %[1]q
   description = "tf-test-security-group-descr"
   vpc_id      = aws_vpc.test.id
 
@@ -2681,16 +2683,16 @@ resource "aws_security_group" "test" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 }
-`, rInt, rString),
+`, rName),
 	)
 }
 
-func testAccReplicationGroup_EnableAuthTokenTransitEncryptionConfig(rInt int, rString10 string, rString16 string) string {
+func testAccReplicationGroup_EnableAuthTokenTransitEncryptionConfig(rName string, authToken string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigVpcWithSubnets(1),
 		fmt.Sprintf(`
 resource "aws_elasticache_replication_group" "test" {
-  replication_group_id          = "tf-%[2]s"
+  replication_group_id          = %[1]q
   replication_group_description = "test description"
   node_type                     = "cache.t2.micro"
   number_cache_clusters         = "1"
@@ -2701,16 +2703,16 @@ resource "aws_elasticache_replication_group" "test" {
   availability_zones            = [data.aws_availability_zones.available.names[0]]
   engine_version                = "5.0.6"
   transit_encryption_enabled    = true
-  auth_token                    = "%[3]s"
+  auth_token                    = "%[2]s"
 }
 
 resource "aws_elasticache_subnet_group" "test" {
-  name       = "tf-test-cache-subnet-%03[1]d"
+  name       = %[1]q
   subnet_ids = aws_subnet.test[*].id
 }
 
 resource "aws_security_group" "test" {
-  name        = "tf-test-security-group-%03[1]d"
+  name        = %[1]q
   description = "tf-test-security-group-descr"
   vpc_id      = aws_vpc.test.id
 
@@ -2721,7 +2723,7 @@ resource "aws_security_group" "test" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 }
-`, rInt, rString10, rString16),
+`, rName, authToken),
 	)
 }
 
@@ -2760,13 +2762,13 @@ resource "aws_elasticache_replication_group" "test" {
   multi_az_enabled              = %[4]t
   node_type                     = "cache.t3.medium"
   number_cache_clusters         = %[2]d
-  replication_group_id          = "%[1]s"
+  replication_group_id          = %[1]q
   replication_group_description = "Terraform Acceptance Testing - number_cache_clusters"
   subnet_group_name             = aws_elasticache_subnet_group.test.name
 }
 
 resource "aws_elasticache_subnet_group" "test" {
-  name       = "%[1]s"
+  name       = %[1]q
   subnet_ids = aws_subnet.test[*].id
 }
 `, rName, numberCacheClusters, autoFailover, multiAZ),
