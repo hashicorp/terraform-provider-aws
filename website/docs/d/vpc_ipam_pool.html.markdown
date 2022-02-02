@@ -32,21 +32,29 @@ resource "aws_vpc" "test" {
 ## Argument Reference
 
 The arguments of this data source act as filters for querying the available
-VPCs in the current region. The given filters must match exactly one
-VPC whose data will be exported as attributes.
+IPAM pools in the current region. The given filters must match exactly one
+IPAM pool whose data will be exported as attributes.
 
-* `id` -
-* `filter` - Custom filter block as described below.
+* `id` - (Optional) The ID of the specific IPAM pool to retrieve.
+* `filter` - (Optional) Custom filter block as described below.
+
+More complex filters can be expressed using one or more `filter` sub-blocks,
+which take the following arguments:
+
+* `name` - (Required) The name of the field to filter by, as defined by
+  [the underlying AWS API](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeIpamPools.html).
+
+* `values` - (Required) Set of values that are accepted for the given field.
+  An IPAM pool will be selected if any one of the given values matches.
 
 ## Attributes Reference
 
 All of the argument attributes except `filter` blocks are also exported as
 result attributes. This data source will complete the data by populating
 any fields that are not included in the configuration with the data for
-the selected VPC.
+the selected IPAM pool.
 
 The following attribute is additionally exported:
-
 
 * `address_family` - The IP protocol assigned to this pool.
 * `publicly_advertisable` - Defines whether or not IPv6 pool space is publicly ∂advertisable over the internet.
@@ -60,5 +68,6 @@ The following attribute is additionally exported:
 * `description` - A description for the IPAM pool.
 * `ipam_scope_id` - The ID of the scope the pool belongs to.
 * `locale` - Locale is the Region where your pool is available for allocations. You can only create pools with locales that match the operating Regions of the IPAM. You can only create VPCs from a pool whose locale matches the VPC's Region.
+* `ipam_pool_id` - The ID of the IPAM pool.
 * `source_ipam_pool_id` - The ID of the source IPAM pool.
 * `tags` - A map of tags to assigned to the resource.
