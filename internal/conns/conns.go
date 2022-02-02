@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log"
 	"strings"
-	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/endpoints"
@@ -854,41 +853,34 @@ func init() {
 }
 
 type Config struct {
-	AccessKey             string
-	SecretKey             string
-	SharedConfigFile      string
-	SharedCredentialsFile string
-	Profile               string
-	Token                 string
-	Region                string
-	MaxRetries            int
-
-	AssumeRoleARN               string
-	AssumeRoleDurationSeconds   int
-	AssumeRoleExternalID        string
-	AssumeRolePolicy            string
-	AssumeRolePolicyARNs        []string
-	AssumeRoleSessionName       string
-	AssumeRoleTags              map[string]string
-	AssumeRoleTransitiveTagKeys []string
-
-	AllowedAccountIds   []string
-	ForbiddenAccountIds []string
-
-	DefaultTagsConfig *tftags.DefaultConfig
-	Endpoints         map[string]string
-	IgnoreTagsConfig  *tftags.IgnoreConfig
-	Insecure          bool
-	HTTPProxy         string
-
-	SkipCredsValidation     bool
-	SkipGetEC2Platforms     bool
-	SkipRegionValidation    bool
-	SkipRequestingAccountId bool
-	SkipMetadataApiCheck    bool
-	S3ForcePathStyle        bool
-
-	TerraformVersion string
+	AccessKey                      string
+	AllowedAccountIds              []string
+	AssumeRole                     *awsbase.AssumeRole
+	DefaultTagsConfig              *tftags.DefaultConfig
+	EC2MetadataServiceEndpoint     string
+	EC2MetadataServiceEndpointMode string
+	Endpoints                      map[string]string
+	ForbiddenAccountIds            []string
+	HTTPProxy                      string
+	IgnoreTagsConfig               *tftags.IgnoreConfig
+	Insecure                       bool
+	MaxRetries                     int
+	Profile                        string
+	Region                         string
+	S3ForcePathStyle               bool
+	SecretKey                      string
+	SharedConfigFile               string
+	SharedCredentialsFile          string
+	SkipCredsValidation            bool
+	SkipGetEC2Platforms            bool
+	SkipMetadataApiCheck           bool
+	SkipRegionValidation           bool
+	SkipRequestingAccountId        bool
+	STSRegion                      string
+	TerraformVersion               string
+	Token                          string
+	UseDualStackEndpoint           bool
+	UseFIPSEndpoint                bool
 }
 
 type AWSClient struct {
@@ -1190,27 +1182,6 @@ func (client *AWSClient) RegionalHostname(prefix string) string {
 	return fmt.Sprintf("%s.%s.%s", prefix, client.Region, client.DNSSuffix)
 }
 
-func (c *Config) assumeRole() *awsbase.AssumeRole {
-	if c.AssumeRoleARN == "" {
-		return nil
-	}
-
-	assumeRole := &awsbase.AssumeRole{
-		RoleARN:           c.AssumeRoleARN,
-		ExternalID:        c.AssumeRoleExternalID,
-		Policy:            c.AssumeRolePolicy,
-		PolicyARNs:        c.AssumeRolePolicyARNs,
-		SessionName:       c.AssumeRoleSessionName,
-		Tags:              c.AssumeRoleTags,
-		TransitiveTagKeys: c.AssumeRoleTransitiveTagKeys,
-	}
-
-	if c.AssumeRoleDurationSeconds != 0 {
-		assumeRole.Duration = time.Duration(c.AssumeRoleDurationSeconds) * time.Second
-	}
-	return assumeRole
-}
-
 // Client configures and returns a fully initialized AWSClient
 func (c *Config) Client() (interface{}, error) {
 	// Get the auth and region. This can fail if keys/regions were not
@@ -1223,6 +1194,7 @@ func (c *Config) Client() (interface{}, error) {
 
 	awsbaseConfig := awsbase.Config{
 		AccessKey:               c.AccessKey,
+		APNInfo:                 StdUserAgentProducts(c.TerraformVersion),
 		CallerDocumentationURL:  "https://registry.terraform.io/providers/hashicorp/aws",
 		CallerName:              "Terraform AWS Provider",
 		DebugLogging:            true, // Until https://github.com/hashicorp/aws-sdk-go-base/issues/96 is implemented
@@ -1238,11 +1210,17 @@ func (c *Config) Client() (interface{}, error) {
 		SkipRequestingAccountId: c.SkipRequestingAccountId,
 		StsEndpoint:             c.Endpoints[STS],
 		Token:                   c.Token,
-		APNInfo:                 StdUserAgentProducts(c.TerraformVersion),
+		UseDualStackEndpoint:    c.UseDualStackEndpoint,
+		UseFIPSEndpoint:         c.UseFIPSEndpoint,
 	}
 
-	if c.AssumeRoleARN != "" {
-		awsbaseConfig.AssumeRole = c.assumeRole()
+	if c.AssumeRole != nil && c.AssumeRole.RoleARN != "" {
+		awsbaseConfig.AssumeRole = c.AssumeRole
+	}
+
+	if c.EC2MetadataServiceEndpoint != "" {
+		awsbaseConfig.EC2MetadataServiceEndpoint = c.EC2MetadataServiceEndpoint
+		awsbaseConfig.EC2MetadataServiceEndpointMode = c.EC2MetadataServiceEndpointMode
 	}
 
 	if c.SharedConfigFile != "" {
