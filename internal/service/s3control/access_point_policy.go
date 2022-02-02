@@ -7,8 +7,10 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/s3control"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -39,7 +41,12 @@ func ResourceAccessPointPolicy() *schema.Resource {
 			"policy": {
 				Type:             schema.TypeString,
 				Required:         true,
+				ValidateFunc:     validation.StringIsJSON,
 				DiffSuppressFunc: verify.SuppressEquivalentPolicyDiffs,
+				StateFunc: func(v interface{}) string {
+					json, _ := structure.NormalizeJsonString(v)
+					return json
+				},
 			},
 		},
 	}
@@ -60,10 +67,16 @@ func resourceAccessPointPolicyCreate(d *schema.ResourceData, meta interface{}) e
 		return err
 	}
 
+	policy, err := structure.NormalizeJsonString(d.Get("policy").(string))
+
+	if err != nil {
+		return fmt.Errorf("policy (%s) is invalid JSON: %w", d.Get("policy").(string), err)
+	}
+
 	input := &s3control.PutAccessPointPolicyInput{
 		AccountId: aws.String(accountID),
 		Name:      aws.String(name),
-		Policy:    aws.String(d.Get("policy").(string)),
+		Policy:    aws.String(policy),
 	}
 
 	log.Printf("[DEBUG] Creating S3 Access Point Policy: %s", input)
@@ -100,7 +113,18 @@ func resourceAccessPointPolicyRead(d *schema.ResourceData, meta interface{}) err
 	}
 
 	d.Set("has_public_access_policy", status.IsPublic)
-	d.Set("policy", policy)
+
+	if policy != "" {
+		policyToSet, err := verify.PolicyToSet(d.Get("policy").(string), policy)
+
+		if err != nil {
+			return err
+		}
+
+		d.Set("policy", policyToSet)
+	} else {
+		d.Set("policy", "")
+	}
 
 	return nil
 }
@@ -114,10 +138,16 @@ func resourceAccessPointPolicyUpdate(d *schema.ResourceData, meta interface{}) e
 		return err
 	}
 
+	policy, err := structure.NormalizeJsonString(d.Get("policy").(string))
+
+	if err != nil {
+		return fmt.Errorf("policy (%s) is invalid JSON: %w", d.Get("policy").(string), err)
+	}
+
 	input := &s3control.PutAccessPointPolicyInput{
 		AccountId: aws.String(accountID),
 		Name:      aws.String(name),
-		Policy:    aws.String(d.Get("policy").(string)),
+		Policy:    aws.String(policy),
 	}
 
 	log.Printf("[DEBUG] Updating S3 Access Point Policy: %s", input)

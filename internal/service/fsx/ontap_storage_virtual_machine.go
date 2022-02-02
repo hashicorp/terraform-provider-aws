@@ -8,7 +8,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/fsx"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -83,10 +83,19 @@ func ResourceOntapStorageVirtualMachine() *schema.Resource {
 										ValidateFunc: validation.StringLenBetween(1, 256),
 									},
 									"organizational_unit_distinguidshed_name": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ForceNew:     true,
-										ValidateFunc: validation.StringLenBetween(1, 2000),
+										Type:          schema.TypeString,
+										Optional:      true,
+										ForceNew:      true,
+										ValidateFunc:  validation.StringLenBetween(1, 2000),
+										Deprecated:    "use 'organizational_unit_distinguished_name' instead",
+										ConflictsWith: []string{"active_directory_configuration.0.self_managed_active_directory_configuration.0.organizational_unit_distinguished_name"},
+									},
+									"organizational_unit_distinguished_name": {
+										Type:          schema.TypeString,
+										Optional:      true,
+										ForceNew:      true,
+										ValidateFunc:  validation.StringLenBetween(1, 2000),
+										ConflictsWith: []string{"active_directory_configuration.0.self_managed_active_directory_configuration.0.organizational_unit_distinguidshed_name"},
 									},
 									"password": {
 										Type:         schema.TypeString,
@@ -423,6 +432,8 @@ func expandFsxOntapSvmSelfManagedActiveDirectoryConfiguration(cfg []interface{})
 
 	if v, ok := conf["organizational_unit_distinguidshed_name"].(string); ok && len(v) > 0 {
 		out.OrganizationalUnitDistinguishedName = aws.String(v)
+	} else if v, ok := conf["organizational_unit_distinguished_name"].(string); ok && len(v) > 0 {
+		out.OrganizationalUnitDistinguishedName = aws.String(v)
 	}
 
 	if v, ok := conf["password"].(string); ok && len(v) > 0 {
@@ -512,7 +523,11 @@ func flattenFsxOntapSelfManagedActiveDirectoryConfiguration(d *schema.ResourceDa
 	}
 
 	if rs.OrganizationalUnitDistinguishedName != nil {
-		m["organizational_unit_distinguidshed_name"] = aws.StringValue(rs.OrganizationalUnitDistinguishedName)
+		if _, ok := d.GetOk("active_directory_configuration.0.self_managed_active_directory_configuration.0.organizational_unit_distinguidshed_name"); ok {
+			m["organizational_unit_distinguidshed_name"] = aws.StringValue(rs.OrganizationalUnitDistinguishedName)
+		} else {
+			m["organizational_unit_distinguished_name"] = aws.StringValue(rs.OrganizationalUnitDistinguishedName)
+		}
 	}
 
 	if rs.UserName != nil {

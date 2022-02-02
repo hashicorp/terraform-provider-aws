@@ -20,6 +20,8 @@ on:
 jobs:
   markdown-link-check:
     runs-on: ubuntu-latest
+    env:
+      UV_THREADPOOL_SIZE: 128
     steps:
       - uses: actions/checkout@v2
       - uses: gaurav-nelson/github-action-markdown-link-check@v1
@@ -30,6 +32,8 @@ jobs:
           config-file: ".markdownlinkcheck.json"
           folder-path: "website/docs"
           file-extension: ".markdown"
+          base-branch: "main"
+          check-modified-files-only: "yes"
       - uses: gaurav-nelson/github-action-markdown-link-check@v1
         name: markdown-link-check website/docs/**/*.md
         with:
@@ -38,6 +42,8 @@ jobs:
           config-file: ".markdownlinkcheck.json"
           folder-path: "website/docs"
           file-extension: ".md"
+          base-branch: "main"
+          check-modified-files-only: "yes"
   markdown-lint:
     runs-on: ubuntu-latest
     steps:
@@ -152,7 +158,7 @@ jobs:
                 "--enable-rule=terraform_deprecated_index"
                 )
             fi
-            
+
             # We need to capture the output and error code here. We don't want to exit on the first error
             set +e
             ./scripts/validate-terraform-file.sh "$filename" "${rules[@]}"

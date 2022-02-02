@@ -8,7 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/glue"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -157,6 +157,10 @@ func ResourceTrigger() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"start_on_creation": {
+				Type:     schema.TypeBool,
+				Optional: true,
+			},
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
 			"type": {
@@ -210,6 +214,10 @@ func resourceTriggerCreate(d *schema.ResourceData, meta interface{}) error {
 
 	if v, ok := d.GetOk("workflow_name"); ok {
 		input.WorkflowName = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("start_on_creation"); ok {
+		input.StartOnCreation = aws.Bool(v.(bool))
 	}
 
 	log.Printf("[DEBUG] Creating Glue Trigger: %s", input)

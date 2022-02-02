@@ -6,7 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/elastictranscoder"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -346,8 +346,8 @@ func resourcePresetCreate(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("Error creating Elastic Transcoder Preset: %s", err)
 	}
 
-	if resp.Warning != nil && *resp.Warning != "" {
-		log.Printf("[WARN] Elastic Transcoder Preset: %s", *resp.Warning)
+	if aws.StringValue(resp.Warning) != "" {
+		log.Printf("[WARN] Elastic Transcoder Preset: %s", aws.StringValue(resp.Warning))
 	}
 
 	d.SetId(aws.StringValue(resp.Preset.Id))

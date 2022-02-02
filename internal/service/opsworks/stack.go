@@ -9,7 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/opsworks"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -248,7 +248,7 @@ func resourceStackCustomCookbooksSource(d *schema.ResourceData) *opsworks.Source
 
 func resourceSetStackCustomCookbooksSource(d *schema.ResourceData, v *opsworks.Source) error {
 	nv := make([]interface{}, 0, 1)
-	if v != nil && v.Type != nil && *v.Type != "" {
+	if v != nil && aws.StringValue(v.Type) != "" {
 		m := make(map[string]interface{})
 		if v.Type != nil {
 			m["type"] = *v.Type
@@ -417,7 +417,7 @@ func opsworksConnForRegion(region string, meta interface{}) (*opsworks.OpsWorks,
 	originalConn := meta.(*conns.AWSClient).OpsWorksConn
 
 	// Regions are the same, no need to reconfigure
-	if originalConn.Config.Region != nil && *originalConn.Config.Region == region {
+	if aws.StringValue(originalConn.Config.Region) == region {
 		return originalConn, nil
 	}
 

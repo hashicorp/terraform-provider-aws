@@ -6,7 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -94,7 +94,7 @@ func resourceClientVPNRouteRead(d *schema.ResourceData, meta interface{}) error 
 		d.Get("destination_cidr_block").(string),
 	)
 
-	if tfawserr.ErrMessageContains(err, ErrCodeClientVPNRouteNotFound, "") {
+	if tfawserr.ErrMessageContains(err, ErrCodeInvalidClientVpnRouteNotFound, "") {
 		log.Printf("[WARN] EC2 Client VPN Route (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -148,7 +148,7 @@ func deleteClientVpnRoute(conn *ec2.EC2, input *ec2.DeleteClientVpnRouteInput) e
 	)
 
 	_, err := conn.DeleteClientVpnRoute(input)
-	if tfawserr.ErrMessageContains(err, ErrCodeClientVPNRouteNotFound, "") {
+	if tfawserr.ErrMessageContains(err, ErrCodeInvalidClientVpnRouteNotFound, "") {
 		return nil
 	}
 	if err != nil {

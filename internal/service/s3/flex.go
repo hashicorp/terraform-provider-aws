@@ -298,20 +298,8 @@ func ExpandRules(l []interface{}) []*s3.ReplicationRule {
 			rule.ExistingObjectReplication = ExpandExistingObjectReplication(v)
 		}
 
-		if v, ok := tfMap["filter"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-			rule.Filter = ExpandFilter(v)
-		}
-
 		if v, ok := tfMap["id"].(string); ok && v != "" {
 			rule.ID = aws.String(v)
-		}
-
-		if v, ok := tfMap["prefix"].(string); ok && v != "" {
-			rule.Prefix = aws.String(v)
-		}
-
-		if v, ok := tfMap["priority"].(int); ok && rule.Filter != nil {
-			rule.Priority = aws.Int64(int64(v))
 		}
 
 		if v, ok := tfMap["source_selection_criteria"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
@@ -320,6 +308,15 @@ func ExpandRules(l []interface{}) []*s3.ReplicationRule {
 
 		if v, ok := tfMap["status"].(string); ok && v != "" {
 			rule.Status = aws.String(v)
+		}
+
+		if v, ok := tfMap["filter"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+			// XML schema V2
+			rule.Filter = ExpandFilter(v)
+			rule.Priority = aws.Int64(int64(tfMap["priority"].(int)))
+		} else {
+			// XML schema V1
+			rule.Prefix = aws.String(tfMap["prefix"].(string))
 		}
 
 		rules = append(rules, rule)

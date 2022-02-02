@@ -14,7 +14,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/service/lambda"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -482,11 +482,11 @@ func resourceFunctionCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if v, ok := d.GetOk("file_system_config"); ok && len(v.([]interface{})) > 0 {
-		params.FileSystemConfigs = expandLambdaFileSystemConfigs(v.([]interface{}))
+		params.FileSystemConfigs = expandFileSystemConfigs(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("image_config"); ok && len(v.([]interface{})) > 0 {
-		params.ImageConfig = expandLambdaImageConfigs(v.([]interface{}))
+		params.ImageConfig = expandImageConfigs(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("vpc_config"); ok && len(v.([]interface{})) > 0 {
@@ -595,7 +595,7 @@ func resourceFunctionCreate(d *schema.ResourceData, meta interface{}) error {
 
 	d.SetId(d.Get("function_name").(string))
 
-	if err := waitForLambdaFunctionCreation(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+	if err := waitForFunctionCreation(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return fmt.Errorf("error waiting for Lambda Function (%s) creation: %w", d.Id(), err)
 	}
 
@@ -751,7 +751,7 @@ func resourceFunctionRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error setting signing job arn for Lambda Function: %w", err)
 	}
 
-	fileSystemConfigs := flattenLambdaFileSystemConfigs(function.FileSystemConfigs)
+	fileSystemConfigs := flattenFileSystemConfigs(function.FileSystemConfigs)
 	log.Printf("[INFO] Setting Lambda %s file system configs %#v from API", d.Id(), fileSystemConfigs)
 	if err := d.Set("file_system_config", fileSystemConfigs); err != nil {
 		return fmt.Errorf("error setting file system config for Lambda Function (%s): %w", d.Id(), err)
@@ -786,7 +786,7 @@ func resourceFunctionRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error setting vpc_config for Lambda Function (%s): %w", d.Id(), err)
 	}
 
-	environment := flattenLambdaEnvironment(function.Environment)
+	environment := flattenEnvironment(function.Environment)
 	log.Printf("[INFO] Setting Lambda %s environment %#v from API", d.Id(), environment)
 	if err := d.Set("environment", environment); err != nil {
 		log.Printf("[ERR] Error setting environment for Lambda Function (%s): %s", d.Id(), err)
@@ -842,22 +842,22 @@ func resourceFunctionRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("qualified_arn", lastQualifiedArn)
 	}
 
-	invokeArn := lambdaFunctionInvokeArn(*function.FunctionArn, meta)
+	invokeArn := functionInvokeArn(*function.FunctionArn, meta)
 	d.Set("invoke_arn", invokeArn)
 
 	// Currently, this functionality is only enabled in AWS Commercial partition
 	// and other partitions return ambiguous error codes (e.g. AccessDeniedException
 	// in AWS GovCloud (US)) so we cannot just ignore the error as would typically.
-	if meta.(*conns.AWSClient).Partition != endpoints.AwsPartitionID {
+	if partition := meta.(*conns.AWSClient).Partition; partition != endpoints.AwsPartitionID {
 		return nil
 	}
 
-	// Currently, this functionality is not enabled in ap-northeast-3 (Osaka) region
+	// Currently, this functionality is not enabled in ap-northeast-3 (Osaka) and ap-southeast-3 (Jakarta) region
 	// and returns ambiguous error codes (e.g. AccessDeniedException)
 	// so we cannot just ignore the error as would typically.
 	// We are hardcoding the region here, because go aws sdk endpoints
 	// package does not support Signer service
-	if meta.(*conns.AWSClient).Region == endpoints.ApNortheast3RegionID {
+	if region := meta.(*conns.AWSClient).Region; region == endpoints.ApNortheast3RegionID || region == endpoints.ApSoutheast3RegionID {
 		return nil
 	}
 
@@ -990,13 +990,13 @@ func resourceFunctionUpdate(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("file_system_config") {
 		configReq.FileSystemConfigs = make([]*lambda.FileSystemConfig, 0)
 		if v, ok := d.GetOk("file_system_config"); ok && len(v.([]interface{})) > 0 {
-			configReq.FileSystemConfigs = expandLambdaFileSystemConfigs(v.([]interface{}))
+			configReq.FileSystemConfigs = expandFileSystemConfigs(v.([]interface{}))
 		}
 	}
 	if d.HasChange("image_config") {
 		configReq.ImageConfig = &lambda.ImageConfig{}
 		if v, ok := d.GetOk("image_config"); ok && len(v.([]interface{})) > 0 {
-			configReq.ImageConfig = expandLambdaImageConfigs(v.([]interface{}))
+			configReq.ImageConfig = expandImageConfigs(v.([]interface{}))
 		}
 	}
 	if d.HasChange("memory_size") {
@@ -1138,7 +1138,7 @@ func resourceFunctionUpdate(d *schema.ResourceData, meta interface{}) error {
 			}
 		}
 
-		if err := waitForLambdaFunctionUpdate(conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+		if err := waitForFunctionUpdate(conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return fmt.Errorf("error waiting for Lambda Function (%s) configuration update: %w", d.Id(), err)
 		}
 	}
@@ -1188,7 +1188,7 @@ func resourceFunctionUpdate(d *schema.ResourceData, meta interface{}) error {
 			return fmt.Errorf("error modifying Lambda Function (%s) Code: %w", d.Id(), err)
 		}
 
-		if err := waitForLambdaFunctionUpdate(conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+		if err := waitForFunctionUpdate(conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return fmt.Errorf("error waiting for Lambda Function (%s) code update: %w", d.Id(), err)
 		}
 	}
@@ -1287,7 +1287,7 @@ func readEnvironmentVariables(ev map[string]interface{}) map[string]string {
 	return variables
 }
 
-func lambdaFunctionInvokeArn(functionArn string, meta interface{}) string {
+func functionInvokeArn(functionArn string, meta interface{}) string {
 	return arn.ARN{
 		Partition: meta.(*conns.AWSClient).Partition,
 		Service:   "apigateway",
@@ -1297,7 +1297,7 @@ func lambdaFunctionInvokeArn(functionArn string, meta interface{}) string {
 	}.String()
 }
 
-func refreshLambdaFunctionLastUpdateStatus(conn *lambda.Lambda, functionName string) resource.StateRefreshFunc {
+func refreshFunctionLastUpdateStatus(conn *lambda.Lambda, functionName string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		input := &lambda.GetFunctionInput{
 			FunctionName: aws.String(functionName),
@@ -1323,7 +1323,7 @@ func refreshLambdaFunctionLastUpdateStatus(conn *lambda.Lambda, functionName str
 	}
 }
 
-func refreshLambdaFunctionState(conn *lambda.Lambda, functionName string) resource.StateRefreshFunc {
+func refreshFunctionState(conn *lambda.Lambda, functionName string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		input := &lambda.GetFunctionInput{
 			FunctionName: aws.String(functionName),
@@ -1349,11 +1349,11 @@ func refreshLambdaFunctionState(conn *lambda.Lambda, functionName string) resour
 	}
 }
 
-func waitForLambdaFunctionCreation(conn *lambda.Lambda, functionName string, timeout time.Duration) error {
+func waitForFunctionCreation(conn *lambda.Lambda, functionName string, timeout time.Duration) error {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{lambda.StatePending},
 		Target:  []string{lambda.StateActive},
-		Refresh: refreshLambdaFunctionState(conn, functionName),
+		Refresh: refreshFunctionState(conn, functionName),
 		Timeout: timeout,
 		Delay:   5 * time.Second,
 	}
@@ -1363,11 +1363,11 @@ func waitForLambdaFunctionCreation(conn *lambda.Lambda, functionName string, tim
 	return err
 }
 
-func waitForLambdaFunctionUpdate(conn *lambda.Lambda, functionName string, timeout time.Duration) error {
+func waitForFunctionUpdate(conn *lambda.Lambda, functionName string, timeout time.Duration) error {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{lambda.LastUpdateStatusInProgress},
 		Target:  []string{lambda.LastUpdateStatusSuccessful},
-		Refresh: refreshLambdaFunctionLastUpdateStatus(conn, functionName),
+		Refresh: refreshFunctionLastUpdateStatus(conn, functionName),
 		Timeout: timeout,
 		Delay:   5 * time.Second,
 	}
@@ -1377,7 +1377,7 @@ func waitForLambdaFunctionUpdate(conn *lambda.Lambda, functionName string, timeo
 	return err
 }
 
-func flattenLambdaEnvironment(apiObject *lambda.EnvironmentResponse) []interface{} {
+func flattenEnvironment(apiObject *lambda.EnvironmentResponse) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -1391,7 +1391,7 @@ func flattenLambdaEnvironment(apiObject *lambda.EnvironmentResponse) []interface
 	return []interface{}{tfMap}
 }
 
-func flattenLambdaFileSystemConfigs(fscList []*lambda.FileSystemConfig) []map[string]interface{} {
+func flattenFileSystemConfigs(fscList []*lambda.FileSystemConfig) []map[string]interface{} {
 	results := make([]map[string]interface{}, 0, len(fscList))
 	for _, fsc := range fscList {
 		f := make(map[string]interface{})
@@ -1403,7 +1403,7 @@ func flattenLambdaFileSystemConfigs(fscList []*lambda.FileSystemConfig) []map[st
 	return results
 }
 
-func expandLambdaFileSystemConfigs(fscMaps []interface{}) []*lambda.FileSystemConfig {
+func expandFileSystemConfigs(fscMaps []interface{}) []*lambda.FileSystemConfig {
 	fileSystemConfigs := make([]*lambda.FileSystemConfig, 0, len(fscMaps))
 	for _, fsc := range fscMaps {
 		fscMap := fsc.(map[string]interface{})
@@ -1429,7 +1429,7 @@ func FlattenImageConfig(response *lambda.ImageConfigResponse) []map[string]inter
 	return []map[string]interface{}{settings}
 }
 
-func expandLambdaImageConfigs(imageConfigMaps []interface{}) *lambda.ImageConfig {
+func expandImageConfigs(imageConfigMaps []interface{}) *lambda.ImageConfig {
 	imageConfig := &lambda.ImageConfig{}
 	// only one image_config block is allowed
 	if len(imageConfigMaps) == 1 && imageConfigMaps[0] != nil {
