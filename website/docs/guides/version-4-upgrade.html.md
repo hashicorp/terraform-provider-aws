@@ -28,6 +28,7 @@ Upgrade topics:
 - [Data Source: aws_cloudwatch_log_group](#data-source-aws_cloudwatch_log_group)
 - [Data Source: aws_subnet_ids](#data-source-aws_subnet_ids)
 - [Resource: aws_batch_compute_environment](#resource-aws_batch_compute_environment)
+- [Resource: aws_cloudwatch_event_target](#resource-aws_cloudwatch_event_target)
 - [Resource: aws_elasticache_cluster](#resource-aws_elasticache_cluster)
 - [Resource: aws_elasticache_global_replication_group](#resource-aws_elasticache_global_replication_group)
 - [Resource: aws_elasticache_replication_group](#resource-aws_elasticache_replication_group)
@@ -349,6 +350,47 @@ resource "aws_batch_compute_environment" "test" {
 
   service_role = aws_iam_role.batch_service.arn
   type         = "UNMANAGED"
+}
+```
+
+## Resource: aws_cloudwatch_event_target
+
+### Removal of `ecs_target` `launch_type` default value
+
+Previously, the `ecs_target` `launch_type` argument defaulted to `EC2` if no value was configured in Terraform.
+
+Workarounds, such as using the empty string `""` as shown below, should be removed:
+
+```terraform
+resource "aws_cloudwatch_event_target" "test" {
+  arn      = aws_ecs_cluster.test.id
+  rule     = aws_cloudwatch_event_rule.test.id
+  role_arn = aws_iam_role.test.arn
+  ecs_target {
+    launch_type         = ""
+    task_count          = 1
+    task_definition_arn = aws_ecs_task_definition.task.arn
+    network_configuration {
+      subnets = [aws_subnet.subnet.id]
+    }
+  }
+}
+```
+
+An updated configuration:
+
+```terraform
+resource "aws_cloudwatch_event_target" "test" {
+  arn      = aws_ecs_cluster.test.id
+  rule     = aws_cloudwatch_event_rule.test.id
+  role_arn = aws_iam_role.test.arn
+  ecs_target {
+    task_count          = 1
+    task_definition_arn = aws_ecs_task_definition.task.arn
+    network_configuration {
+      subnets = [aws_subnet.subnet.id]
+    }
+  }
 }
 ```
 
