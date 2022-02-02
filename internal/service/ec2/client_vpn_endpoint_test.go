@@ -451,6 +451,16 @@ func testAccClientVPNEndpoint_withConnectionLogOptions(t *testing.T) {
 		CheckDestroy: testAccCheckClientVPNEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
+				Config: testAccEc2ClientVpnEndpointConfigWithConnectionLogOptions(rName, 0),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClientVPNEndpointExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "connection_log_options.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "connection_log_options.0.cloudwatch_log_group", logGroupResourceName, "name"),
+					resource.TestCheckResourceAttrSet(resourceName, "connection_log_options.0.cloudwatch_log_stream"),
+					resource.TestCheckResourceAttr(resourceName, "connection_log_options.0.enabled", "true"),
+				),
+			},
+			{
 				Config: testAccEc2ClientVpnEndpointConfigWithConnectionLogOptions(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClientVPNEndpointExists(resourceName, &v),
@@ -856,7 +866,8 @@ resource "aws_cloudwatch_log_stream" "test2" {
 }
 
 locals {
-  index = %[2]d
+  log_stream_index = %[2]d
+  log_stream       = local.log_stream_index == 0 ? null : (local.log_stream_index == 1 ? aws_cloudwatch_log_stream.test1.name : aws_cloudwatch_log_stream.test2.name)
 }
 
 resource "aws_ec2_client_vpn_endpoint" "test" {
@@ -871,7 +882,7 @@ resource "aws_ec2_client_vpn_endpoint" "test" {
   connection_log_options {
     enabled               = true
     cloudwatch_log_group  = aws_cloudwatch_log_group.test.name
-    cloudwatch_log_stream = local.index == 1 ? aws_cloudwatch_log_stream.test1.name : aws_cloudwatch_log_stream.test2.name
+    cloudwatch_log_stream = local.log_stream
   }
 
   tags = {

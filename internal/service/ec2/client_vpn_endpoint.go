@@ -134,6 +134,7 @@ func ResourceClientVPNEndpoint() *schema.Resource {
 						"cloudwatch_log_stream": {
 							Type:     schema.TypeString,
 							Optional: true,
+							Computed: true,
 						},
 						"enabled": {
 							Type:     schema.TypeBool,
