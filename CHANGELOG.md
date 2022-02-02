@@ -1,5 +1,9 @@
 ## 4.0.0 (Unreleased)
 
+BREAKING CHANGES:
+
+* resource/aws_batch_compute_environment: No `compute_resources` configuration block can be specified when `type` is `UNMANAGED` ([#22805](https://github.com/hashicorp/terraform-provider-aws/issues/22805))
+
 NOTES:
 
 * data-source/aws_cognito_user_pools: The type of the `ids` and `arns` attributes has changed from Set to List. If no volumes match the specified criteria an empty list is returned (previously an error was raised) ([#21219](https://github.com/hashicorp/terraform-provider-aws/issues/21219))
