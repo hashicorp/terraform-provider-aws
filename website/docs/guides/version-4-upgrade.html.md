@@ -14,7 +14,7 @@ Most of the changes outlined in this guide have been previously marked as deprec
 
 ~> **NOTE:** Version 4.0.0 of the AWS Provider will be the last major version to support [EC2-Classic resources](#ec2-classic-resource-and-data-source-support) as AWS plans to fully retire EC2-Classic Networking. See the [AWS News Blog](https://aws.amazon.com/blogs/aws/ec2-classic-is-retiring-heres-how-to-prepare/) for additional details.
 
-~> **NOTE:** Version 4.0.0 and 4.X versions of the AWS Provider will be the last versions compatible with Terraform 0.12-0.14.
+~> **NOTE:** Version 4.0.0 and 4.x.x versions of the AWS Provider will be the last versions compatible with Terraform 0.12-0.15.
 
 Upgrade topics:
 
@@ -29,6 +29,7 @@ Upgrade topics:
 - [Data Source: aws_subnet_ids](#data-source-aws_subnet_ids)
 - [Resource: aws_batch_compute_environment](#resource-aws_batch_compute_environment)
 - [Resource: aws_elasticache_cluster](#resource-aws_elasticache_cluster)
+- [Resource: aws_elasticache_global_replication_group](#resource-aws_elasticache_global_replication_group)
 - [Resource: aws_elasticache_replication_group](#resource-aws_elasticache_replication_group)
 - [Resource: aws_network_interface](#resource-aws_network_interface)
 - [Resource: aws_s3_bucket](#resource-aws_s3_bucket)
@@ -196,6 +197,28 @@ resource "aws_batch_compute_environment" "test" {
 ```
 
 ## Resource: aws_elasticache_cluster
+
+## Resource: aws_elasticache_global_replication_group
+
+### actual_engine_version Attribute removal
+
+Switch your Terraform configuration to the `engine_version_actual` attribute instead.
+
+For example, given this previous configuration:
+
+```terraform
+output "elasticache_global_replication_group_version_result" {
+  value = aws_elasticache_global_replication_group.example.actual_engine_version
+}
+```
+
+An updated configuration:
+
+```terraform
+output "elasticache_global_replication_group_version_result" {
+  value = aws_elasticache_global_replication_group.example.engine_version_actual
+}
+```
 
 ## Resource: aws_elasticache_replication_group
 
