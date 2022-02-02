@@ -89,7 +89,7 @@ func ResourceBucketWebsiteConfiguration() *schema.Resource {
 				},
 			},
 			"routing_rule": {
-				Type:     schema.TypeSet,
+				Type:     schema.TypeList,
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -167,8 +167,8 @@ func resourceBucketWebsiteConfigurationCreate(ctx context.Context, d *schema.Res
 		websiteConfig.RedirectAllRequestsTo = expandS3BucketWebsiteConfigurationRedirectAllRequestsTo(v.([]interface{}))
 	}
 
-	if v, ok := d.GetOk("routing_rule"); ok && v.(*schema.Set).Len() > 0 {
-		websiteConfig.RoutingRules = expandS3BucketWebsiteConfigurationRoutingRules(v.(*schema.Set).List())
+	if v, ok := d.GetOk("routing_rule"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		websiteConfig.RoutingRules = expandS3BucketWebsiteConfigurationRoutingRules(v.([]interface{}))
 	}
 
 	input := &s3.PutBucketWebsiteInput{
@@ -270,8 +270,8 @@ func resourceBucketWebsiteConfigurationUpdate(ctx context.Context, d *schema.Res
 		websiteConfig.RedirectAllRequestsTo = expandS3BucketWebsiteConfigurationRedirectAllRequestsTo(v.([]interface{}))
 	}
 
-	if v, ok := d.GetOk("routing_rule"); ok && v.(*schema.Set).Len() > 0 {
-		websiteConfig.RoutingRules = expandS3BucketWebsiteConfigurationRoutingRules(v.(*schema.Set).List())
+	if v, ok := d.GetOk("routing_rule"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		websiteConfig.RoutingRules = expandS3BucketWebsiteConfigurationRoutingRules(v.([]interface{}))
 	}
 
 	input := &s3.PutBucketWebsiteInput{

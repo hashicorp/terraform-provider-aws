@@ -44,7 +44,7 @@ The following arguments are supported:
 * `expected_bucket_owner` - (Optional, Forces new resource) The account ID of the expected bucket owner.
 * `index_document` - (Optional, Required if `redirect_all_requests_to` is not specified) The name of the index document for the website [detailed below](#index_document).
 * `redirect_all_requests_to` - (Optional, Required if `index_document` is not specified) The redirect behavior for every request to this bucket's website endpoint [detailed below](#redirect_all_requests_to). Conflicts with `error_document`, `index_document`, and `routing_rule`.
-* `routing_rule` - (Optional, Conflicts with `redirect_all_requests_to`) Set of rules that define when a redirect is applied and the redirect behavior [detailed below](#routing_rule).
+* `routing_rule` - (Optional, Conflicts with `redirect_all_requests_to`) List of rules that define when a redirect is applied and the redirect behavior [detailed below](#routing_rule).
 
 ### error_document
 
