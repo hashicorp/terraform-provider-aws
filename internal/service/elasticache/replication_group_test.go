@@ -1,6 +1,7 @@
 package elasticache_test
 
 import (
+	"errors"
 	"fmt"
 	"regexp"
 	"strconv"
@@ -104,7 +105,6 @@ func TestAccElastiCacheReplicationGroup_EngineVersion_update(t *testing.T) {
 	}
 
 	var v1, v2, v3, v4, v5 elasticache.ReplicationGroup
-	var c1, c2, c3, c4, c5 map[string]*elasticache.CacheCluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_elasticache_replication_group.test"
 
@@ -118,7 +118,6 @@ func TestAccElastiCacheReplicationGroup_EngineVersion_update(t *testing.T) {
 				Config: testAccReplicationGroupConfig_EngineVersion(rName, "3.2.6"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReplicationGroupExists(resourceName, &v1),
-					testAccCheckReplicationGroupMemberClusters(resourceName, &c1),
 					resource.TestCheckResourceAttr(resourceName, "engine_version", "3.2.6"),
 					resource.TestCheckResourceAttr(resourceName, "engine_version_actual", "3.2.6"),
 				),
@@ -127,8 +126,7 @@ func TestAccElastiCacheReplicationGroup_EngineVersion_update(t *testing.T) {
 				Config: testAccReplicationGroupConfig_EngineVersion(rName, "3.2.4"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReplicationGroupExists(resourceName, &v2),
-					testAccCheckReplicationGroupMemberClusters(resourceName, &c2),
-					testAccCheckReplicationGroupRecreated(&c1, &c2),
+					testAccCheckReplicationGroupRecreated(&v1, &v2),
 					resource.TestCheckResourceAttr(resourceName, "engine_version", "3.2.4"),
 					resource.TestCheckResourceAttr(resourceName, "engine_version_actual", "3.2.4"),
 				),
@@ -137,8 +135,7 @@ func TestAccElastiCacheReplicationGroup_EngineVersion_update(t *testing.T) {
 				Config: testAccReplicationGroupConfig_EngineVersion(rName, "3.2.10"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReplicationGroupExists(resourceName, &v3),
-					testAccCheckReplicationGroupMemberClusters(resourceName, &c3),
-					testAccCheckReplicationGroupNotRecreated(&c2, &c3),
+					testAccCheckReplicationGroupNotRecreated(&v2, &v3),
 					resource.TestCheckResourceAttr(resourceName, "engine_version", "3.2.10"),
 					resource.TestCheckResourceAttr(resourceName, "engine_version_actual", "3.2.10"),
 				),
@@ -147,8 +144,7 @@ func TestAccElastiCacheReplicationGroup_EngineVersion_update(t *testing.T) {
 				Config: testAccReplicationGroupConfig_EngineVersion(rName, "6.x"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReplicationGroupExists(resourceName, &v4),
-					testAccCheckReplicationGroupMemberClusters(resourceName, &c4),
-					testAccCheckReplicationGroupNotRecreated(&c3, &c4),
+					testAccCheckReplicationGroupNotRecreated(&v3, &v4),
 					resource.TestCheckResourceAttr(resourceName, "engine_version", "6.x"),
 					resource.TestMatchResourceAttr(resourceName, "engine_version_actual", regexp.MustCompile(`^6\.[[:digit:]]+\.[[:digit:]]+$`)),
 				),
@@ -157,8 +153,7 @@ func TestAccElastiCacheReplicationGroup_EngineVersion_update(t *testing.T) {
 				Config: testAccReplicationGroupConfig_EngineVersion(rName, "5.0.6"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReplicationGroupExists(resourceName, &v5),
-					testAccCheckReplicationGroupMemberClusters(resourceName, &c5),
-					testAccCheckReplicationGroupRecreated(&c4, &c5),
+					testAccCheckReplicationGroupRecreated(&v4, &v5),
 					resource.TestCheckResourceAttr(resourceName, "engine_version", "5.0.6"),
 					resource.TestCheckResourceAttr(resourceName, "engine_version_actual", "5.0.6"),
 				),
@@ -2167,33 +2162,6 @@ func testAccCheckReplicationDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckReplicationGroupMemberClusters(n string, v *map[string]*elasticache.CacheCluster) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		var rg elasticache.ReplicationGroup
-
-		err := testAccCheckReplicationGroupExists(n, &rg)(s)
-		if err != nil {
-			return err
-		}
-
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ElastiCacheConn
-
-		clusters := make(map[string]*elasticache.CacheCluster, len(rg.MemberClusters))
-		for _, clusterID := range rg.MemberClusters {
-			c, err := tfelasticache.FindCacheClusterWithNodeInfoByID(conn, aws.StringValue(clusterID))
-			if err != nil {
-				return fmt.Errorf("could not read ElastiCache replication group (%s) member cluster (%s): %w", n, aws.StringValue(clusterID), err)
-			}
-
-			clusters[aws.StringValue(c.CacheClusterId)] = c
-		}
-
-		*v = clusters
-
-		return nil
-	}
-}
-
 func testAccCheckReplicationGroupUserGroup(resourceName, userGroupID string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
@@ -2219,34 +2187,20 @@ func testAccCheckReplicationGroupUserGroup(resourceName, userGroupID string) res
 	}
 }
 
-func testAccCheckReplicationGroupRecreated(i, j *map[string]*elasticache.CacheCluster) resource.TestCheckFunc {
+func testAccCheckReplicationGroupRecreated(i, j *elasticache.ReplicationGroup) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		for key, iv := range *i {
-			jv, ok := (*j)[key]
-			if !ok {
-				continue
-			}
-
-			if aws.TimeValue(iv.CacheClusterCreateTime).Equal(aws.TimeValue(jv.CacheClusterCreateTime)) {
-				return fmt.Errorf("ElastiCache replication group not recreated: member cluster (%s) not recreated", key)
-			}
+		if aws.TimeValue(i.ReplicationGroupCreateTime).Equal(aws.TimeValue(j.ReplicationGroupCreateTime)) {
+			return errors.New("ElastiCache Replication Group not recreated")
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckReplicationGroupNotRecreated(i, j *map[string]*elasticache.CacheCluster) resource.TestCheckFunc {
+func testAccCheckReplicationGroupNotRecreated(i, j *elasticache.ReplicationGroup) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		for key, iv := range *i {
-			jv, ok := (*j)[key]
-			if !ok {
-				continue
-			}
-
-			if !aws.TimeValue(iv.CacheClusterCreateTime).Equal(aws.TimeValue(jv.CacheClusterCreateTime)) {
-				return fmt.Errorf("ElastiCache replication group recreated: member cluster (%s) recreated", key)
-			}
+		if !aws.TimeValue(i.ReplicationGroupCreateTime).Equal(aws.TimeValue(j.ReplicationGroupCreateTime)) {
+			return errors.New("ElastiCache Replication Group recreated")
 		}
 
 		return nil
