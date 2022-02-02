@@ -38,7 +38,7 @@ The following arguments are supported:
 
 * `client_vpn_endpoint_id` - (Required) The ID of the Client VPN endpoint.
 * `subnet_id` - (Required) The ID of the subnet to associate with the Client VPN endpoint.
-* `security_groups` - (Optional) A list of up to five custom security groups to apply to the target network. If not specified, the VPC's default security group is assigned.
+* `security_groups` - (Optional, **Deprecated** use the `aws_ec2_client_vpn_security_group_association` resource instead) A list of up to five custom security groups to apply to the target network. If not specified, the VPC's default security group is assigned.
 
 ## Attributes Reference
 
@@ -46,7 +46,6 @@ In addition to all arguments above, the following attributes are exported:
 
 * `id` - The unique ID of the target network association.
 * `association_id` - The unique ID of the target network association.
-* `security_groups` - The IDs of the security groups applied to the target network association.
 * `status` - **Deprecated** The current state of the target network association.
 * `vpc_id` - The ID of the VPC in which the target subnet is located.
 
