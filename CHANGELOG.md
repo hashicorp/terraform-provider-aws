@@ -3,6 +3,7 @@
 BREAKING CHANGES:
 
 * resource/aws_batch_compute_environment: No `compute_resources` configuration block can be specified when `type` is `UNMANAGED` ([#22805](https://github.com/hashicorp/terraform-provider-aws/issues/22805))
+* resource/aws_cloudwatch_event_target: The `ecs_target` `launch_type` argument no longer has a default value (previously was `EC2`) ([#22803](https://github.com/hashicorp/terraform-provider-aws/issues/22803))
 
 NOTES:
 
