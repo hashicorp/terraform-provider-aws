@@ -412,6 +412,8 @@ func resourceClientVPNEndpointUpdate(d *schema.ResourceData, meta interface{}) e
 
 		if d.HasChange("security_group_ids") {
 			input.SecurityGroupIds = flex.ExpandStringSet(d.Get("security_group_ids").(*schema.Set))
+			// "InvalidParameterValue: Security Groups cannot be modified without specifying Vpc Id"
+			input.VpcId = aws.String(d.Get("vpc_id").(string))
 		}
 
 		if d.HasChange("self_service_portal") {
