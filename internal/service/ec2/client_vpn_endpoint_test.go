@@ -690,7 +690,7 @@ resource "aws_acm_certificate" %[1]q {
 `, n, acctest.TLSPEMEscapeNewlines(certificate), acctest.TLSPEMEscapeNewlines(key))
 }
 
-func testAccEc2ClientVpnEndpointMsADBase(rName, domain string) string {
+func testAccEc2ClientVpnEndpointConfigMsADBase(rName, domain string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigAvailableAZsNoOptIn(),
 		fmt.Sprintf(`
@@ -945,7 +945,7 @@ resource "aws_ec2_client_vpn_endpoint" "test" {
 func testAccEc2ClientVpnEndpointConfigWithMicrosoftAD(rName, domain string) string {
 	return acctest.ConfigCompose(
 		testAccEc2ClientVpnEndpointConfigAcmCertificateBase("test"),
-		testAccEc2ClientVpnEndpointMsADBase(rName, domain),
+		testAccEc2ClientVpnEndpointConfigMsADBase(rName, domain),
 		fmt.Sprintf(`
 resource "aws_ec2_client_vpn_endpoint" "test" {
   server_certificate_arn = aws_acm_certificate.test.arn
@@ -970,7 +970,7 @@ resource "aws_ec2_client_vpn_endpoint" "test" {
 func testAccEc2ClientVpnEndpointConfigWithMutualAuthAndMicrosoftAD(rName, domain string) string {
 	return acctest.ConfigCompose(
 		testAccEc2ClientVpnEndpointConfigAcmCertificateBase("test"),
-		testAccEc2ClientVpnEndpointMsADBase(rName, domain),
+		testAccEc2ClientVpnEndpointConfigMsADBase(rName, domain),
 		fmt.Sprintf(`
 resource "aws_ec2_client_vpn_endpoint" "test" {
   server_certificate_arn = aws_acm_certificate.test.arn
