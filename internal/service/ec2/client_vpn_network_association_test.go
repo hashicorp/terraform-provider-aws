@@ -60,7 +60,7 @@ func testAccClientVPNNetworkAssociation_multipleSubnets(t *testing.T) {
 	var assoc ec2.TargetNetwork
 	var group ec2.SecurityGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceNames := []string{"aws_ec2_client_vpn_network_association.test", "aws_ec2_client_vpn_network_association.test2"}
+	resourceNames := []string{"aws_ec2_client_vpn_network_association.test1", "aws_ec2_client_vpn_network_association.test2"}
 	endpointResourceName := "aws_ec2_client_vpn_endpoint.test"
 	subnetResourceNames := []string{"aws_subnet.test1", "aws_subnet.test2"}
 	vpcResourceName := "aws_vpc.test"
@@ -165,6 +165,42 @@ func testAccClientVPNNetworkAssociation_securityGroups(t *testing.T) {
 					testAccCheckDefaultSecurityGroupExists(securityGroup1ResourceName, &group21),
 					resource.TestCheckResourceAttr(resourceName, "security_groups.#", "1"),
 					testAccCheckClientVPNNetworkAssociationSecurityGroupID(resourceName, "security_groups.*", &group21),
+				),
+			},
+		},
+	})
+}
+
+func testAccClientVPNNetworkAssociation_multipleSubnetsWithSecurityGroups(t *testing.T) {
+	var assoc1, assoc2 ec2.TargetNetwork
+	var group1, group2 ec2.SecurityGroup
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resource1Name := "aws_ec2_client_vpn_network_association.test1"
+	resource2Name := "aws_ec2_client_vpn_network_association.test2"
+	securityGroup1ResourceName := "aws_security_group.test1"
+	securityGroup2ResourceName := "aws_security_group.test2"
+	subnet1ResourceName := "aws_subnet.test1"
+	subnet2ResourceName := "aws_subnet.test2"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckClientVPNSyncronize(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckClientVPNNetworkAssociationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEc2ClientVpnNetworkAssociationMultipleSubnetsWithSecurityGroupsConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClientVPNNetworkAssociationExists(resource1Name, &assoc1),
+					testAccCheckClientVPNNetworkAssociationExists(resource2Name, &assoc2),
+					testAccCheckDefaultSecurityGroupExists(securityGroup1ResourceName, &group1),
+					testAccCheckDefaultSecurityGroupExists(securityGroup2ResourceName, &group2),
+					resource.TestCheckResourceAttr(resource1Name, "security_groups.#", "1"),
+					resource.TestCheckResourceAttr(resource2Name, "security_groups.#", "1"),
+					testAccCheckClientVPNNetworkAssociationSecurityGroupID(resource1Name, "security_groups.*", &group1),
+					testAccCheckClientVPNNetworkAssociationSecurityGroupID(resource2Name, "security_groups.*", &group2),
+					resource.TestCheckResourceAttrPair(resource1Name, "subnet_id", subnet1ResourceName, "id"),
+					resource.TestCheckResourceAttrPair(resource2Name, "subnet_id", subnet2ResourceName, "id"),
 				),
 			},
 		},
@@ -289,7 +325,7 @@ resource "aws_ec2_client_vpn_network_association" "test" {
 
 func testAccEc2ClientVpnNetworkAssociationConfigMultipleSubnets(rName string) string {
 	return acctest.ConfigCompose(testAccEc2ClientVpnNetworkAssociationBaseConfig(rName), `
-resource "aws_ec2_client_vpn_network_association" "test" {
+resource "aws_ec2_client_vpn_network_association" "test1" {
   client_vpn_endpoint_id = aws_ec2_client_vpn_endpoint.test.id
   subnet_id              = aws_subnet.test1.id
 }
@@ -339,6 +375,42 @@ resource "aws_ec2_client_vpn_network_association" "test" {
   client_vpn_endpoint_id = aws_ec2_client_vpn_endpoint.test.id
   subnet_id              = aws_subnet.test1.id
   security_groups        = [aws_security_group.test1.id]
+}
+
+resource "aws_security_group" "test1" {
+  name   = "%[1]s-1"
+  vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_security_group" "test2" {
+  name   = "%[1]s-2"
+  vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName))
+}
+
+func testAccEc2ClientVpnNetworkAssociationMultipleSubnetsWithSecurityGroupsConfig(rName string) string {
+	return acctest.ConfigCompose(
+		testAccEc2ClientVpnNetworkAssociationBaseConfig(rName),
+		fmt.Sprintf(`
+resource "aws_ec2_client_vpn_network_association" "test1" {
+  client_vpn_endpoint_id = aws_ec2_client_vpn_endpoint.test.id
+  subnet_id              = aws_subnet.test1.id
+  security_groups        = [aws_security_group.test1.id]
+}
+
+resource "aws_ec2_client_vpn_network_association" "test2" {
+  client_vpn_endpoint_id = aws_ec2_client_vpn_endpoint.test.id
+  subnet_id              = aws_subnet.test2.id
+  security_groups        = [aws_security_group.test2.id]
 }
 
 resource "aws_security_group" "test1" {
