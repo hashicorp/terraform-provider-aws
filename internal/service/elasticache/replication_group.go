@@ -116,10 +116,10 @@ func ResourceReplicationGroup() *schema.Resource {
 				ForceNew: true,
 			},
 			"description": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ConflictsWith: []string{"replication_group_description"},
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ExactlyOneOf: []string{"description", "replication_group_description"},
 			},
 			"engine": {
 				Type:         schema.TypeString,
@@ -242,11 +242,11 @@ func ResourceReplicationGroup() *schema.Resource {
 				ConflictsWith: []string{"cluster_mode"},
 			},
 			"replication_group_description": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ConflictsWith: []string{"description"},
-				Deprecated:    "Use description instead",
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ExactlyOneOf: []string{"description", "replication_group_description"},
+				Deprecated:   "Use description instead",
 			},
 			"replication_group_id": {
 				Type:         schema.TypeString,
@@ -378,13 +378,8 @@ func resourceReplicationGroupCreate(d *schema.ResourceData, meta interface{}) er
 	if v, ok := d.GetOk("description"); ok {
 		params.ReplicationGroupDescription = aws.String(v.(string))
 	}
-
 	if v, ok := d.GetOk("replication_group_description"); ok {
 		params.ReplicationGroupDescription = aws.String(v.(string))
-	}
-
-	if params.ReplicationGroupDescription == nil {
-		return errors.New("one of replication_group_description or description must be configured")
 	}
 
 	if v, ok := d.GetOk("data_tiering_enabled"); ok {
