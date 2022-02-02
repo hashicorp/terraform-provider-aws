@@ -5,5 +5,5 @@ const (
 )
 
 const (
-	mapMaxItemsCount = 100
+	targetInputTransformerMaxInputPaths = 100
 )
