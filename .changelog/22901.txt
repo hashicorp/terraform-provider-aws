@@ -1,0 +1,3 @@
+```release-note:bug
+datasource/aws_vpc_ipam_pool: `aws_vpc_ipam_pool.id` attribute is computed, preventing errors in plan operations
+```
