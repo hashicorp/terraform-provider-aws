@@ -9,7 +9,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/rds"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -3835,7 +3835,7 @@ resource "aws_s3_bucket" "xtrabackup" {
   bucket = %[1]q
 }
 
-resource "aws_s3_bucket_object" "xtrabackup_db" {
+resource "aws_s3_object" "xtrabackup_db" {
   bucket = aws_s3_bucket.xtrabackup.id
   key    = "%[2]s/mysql-5-6-xtrabackup.tar.gz"
   source = "./testdata/mysql-5-6-xtrabackup.tar.gz"

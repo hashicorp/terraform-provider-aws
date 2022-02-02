@@ -49,7 +49,7 @@ func TestAccVPCIpam_basic(t *testing.T) {
 	})
 }
 
-func TestAccVPCIpam_modifyRegion(t *testing.T) {
+func TestAccVPCIpam_modify(t *testing.T) {
 	var providers []*schema.Provider
 	resourceName := "aws_vpc_ipam.test"
 
@@ -77,13 +77,19 @@ func TestAccVPCIpam_modifyRegion(t *testing.T) {
 			{
 				Config: testAccVPCIpamOperatingRegion(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "description", "test ipam"),
+					resource.TestCheckResourceAttr(resourceName, "description", "test"),
 				),
 			},
 			{
 				Config: testAccVPCIpamBase,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "description", "test"),
+				),
+			},
+			{
+				Config: testAccVPCIpamBaseAlternateDescription,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "description", "test ipam"),
 				),
 			},
 		},
@@ -162,6 +168,17 @@ resource "aws_vpc_ipam" "test" {
 }
 `
 
+const testAccVPCIpamBaseAlternateDescription = `
+data "aws_region" "current" {}
+
+resource "aws_vpc_ipam" "test" {
+  description = "test ipam"
+  operating_regions {
+    region_name = data.aws_region.current.name
+  }
+}
+`
+
 func testAccVPCIpamOperatingRegion() string {
 	return acctest.ConfigCompose(
 		acctest.ConfigMultipleRegionProvider(2), `
@@ -173,7 +190,7 @@ data "aws_region" "alternate" {
 
 
 resource "aws_vpc_ipam" "test" {
-  description = "test ipam"
+  description = "test"
   operating_regions {
     region_name = data.aws_region.current.name
   }

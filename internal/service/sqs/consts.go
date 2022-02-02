@@ -1,12 +1,6 @@
 package sqs
 
 const (
-	ErrCodeAccessDenied       = "AccessDenied"
-	ErrCodeAuthorizationError = "AuthorizationError"
-	ErrCodeInvalidAction      = "InvalidAction"
-)
-
-const (
 	FIFOQueueNameSuffix = ".fifo"
 )
 

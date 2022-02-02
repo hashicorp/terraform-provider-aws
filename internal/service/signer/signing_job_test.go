@@ -65,7 +65,7 @@ resource "aws_s3_bucket" "destination" {
   force_destroy = true
 }
 
-resource "aws_s3_bucket_object" "source" {
+resource "aws_s3_object" "source" {
   bucket = aws_s3_bucket.source.bucket
   key    = "lambdatest.zip"
   source = "test-fixtures/lambdatest.zip"
@@ -76,9 +76,9 @@ resource "aws_signer_signing_job" "test" {
 
   source {
     s3 {
-      bucket  = aws_s3_bucket_object.source.bucket
-      key     = aws_s3_bucket_object.source.key
-      version = aws_s3_bucket_object.source.version_id
+      bucket  = aws_s3_object.source.bucket
+      key     = aws_s3_object.source.key
+      version = aws_s3_object.source.version_id
     }
   }
 

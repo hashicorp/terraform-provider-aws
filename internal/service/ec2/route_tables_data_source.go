@@ -2,7 +2,6 @@ package ec2
 
 import (
 	"fmt"
-	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
@@ -14,22 +13,18 @@ import (
 func DataSourceRouteTables() *schema.Resource {
 	return &schema.Resource{
 		Read: dataSourceRouteTablesRead,
+
 		Schema: map[string]*schema.Schema{
-
-			"filter": CustomFiltersSchema(),
-
+			"filter": DataSourceFiltersSchema(),
+			"ids": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
 			"tags": tftags.TagsSchemaComputed(),
-
 			"vpc_id": {
 				Type:     schema.TypeString,
 				Optional: true,
-			},
-
-			"ids": {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				Set:      schema.HashString,
 			},
 		},
 	}
@@ -38,45 +33,42 @@ func DataSourceRouteTables() *schema.Resource {
 func dataSourceRouteTablesRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
-	req := &ec2.DescribeRouteTablesInput{}
+	input := &ec2.DescribeRouteTablesInput{}
 
 	if v, ok := d.GetOk("vpc_id"); ok {
-		req.Filters = BuildAttributeFilterList(
+		input.Filters = append(input.Filters, BuildAttributeFilterList(
 			map[string]string{
 				"vpc-id": v.(string),
 			},
-		)
+		)...)
 	}
 
-	req.Filters = append(req.Filters, BuildTagFilterList(
+	input.Filters = append(input.Filters, BuildTagFilterList(
 		Tags(tftags.New(d.Get("tags").(map[string]interface{}))),
 	)...)
 
-	req.Filters = append(req.Filters, BuildCustomFilterList(
+	input.Filters = append(input.Filters, BuildFiltersDataSource(
 		d.Get("filter").(*schema.Set),
 	)...)
 
-	log.Printf("[DEBUG] DescribeRouteTables %s\n", req)
-	resp, err := conn.DescribeRouteTables(req)
+	if len(input.Filters) == 0 {
+		input.Filters = nil
+	}
+
+	output, err := FindRouteTables(conn, input)
+
 	if err != nil {
-		return err
+		return fmt.Errorf("error reading EC2 Route Tables: %w", err)
 	}
 
-	if resp == nil || len(resp.RouteTables) == 0 {
-		return fmt.Errorf("no matching route tables found for vpc with id %s", d.Get("vpc_id").(string))
-	}
+	var routeTableIDs []string
 
-	routeTables := make([]string, 0)
-
-	for _, routeTable := range resp.RouteTables {
-		routeTables = append(routeTables, aws.StringValue(routeTable.RouteTableId))
+	for _, v := range output {
+		routeTableIDs = append(routeTableIDs, aws.StringValue(v.RouteTableId))
 	}
 
 	d.SetId(meta.(*conns.AWSClient).Region)
-
-	if err = d.Set("ids", routeTables); err != nil {
-		return fmt.Errorf("error setting ids: %w", err)
-	}
+	d.Set("ids", routeTableIDs)
 
 	return nil
 }

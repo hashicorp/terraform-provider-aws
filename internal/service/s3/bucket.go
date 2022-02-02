@@ -19,7 +19,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/request"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
@@ -781,13 +781,13 @@ func resourceBucketUpdate(d *schema.ResourceData, meta interface{}) error {
 
 		if d.IsNewResource() {
 			if versioning := expandVersioningWhenIsNewResource(v); versioning != nil {
-				err := resourceBucketVersioningUpdate(conn, d.Id(), versioning)
+				err := resourceBucketInternalVersioningUpdate(conn, d.Id(), versioning)
 				if err != nil {
 					return err
 				}
 			}
 		} else {
-			if err := resourceBucketVersioningUpdate(conn, d.Id(), expandVersioning(v)); err != nil {
+			if err := resourceBucketInternalVersioningUpdate(conn, d.Id(), expandVersioning(v)); err != nil {
 				return err
 			}
 		}
@@ -842,7 +842,7 @@ func resourceBucketUpdate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if d.HasChange("object_lock_configuration") {
-		if err := resourceBucketObjectLockConfigurationUpdate(conn, d); err != nil {
+		if err := resourceObjectLockConfigurationUpdate(conn, d); err != nil {
 			return err
 		}
 	}
@@ -1308,7 +1308,7 @@ func resourceBucketRead(d *schema.ResourceData, meta interface{}) error {
 
 	// Object lock not supported in all partitions (extra guard, also guards in read func)
 	if err != nil && (meta.(*conns.AWSClient).Partition == endpoints.AwsPartitionID || meta.(*conns.AWSClient).Partition == endpoints.AwsUsGovPartitionID) {
-		return fmt.Errorf("error getting S3 Bucket Object Lock configuration: %s", err)
+		return fmt.Errorf("error getting S3 Object Lock configuration: %s", err)
 	}
 
 	if err != nil {
@@ -1426,7 +1426,7 @@ func resourceBucketDelete(d *schema.ResourceData, meta interface{}) error {
 	if tfawserr.ErrMessageContains(err, "BucketNotEmpty", "") {
 		if d.Get("force_destroy").(bool) {
 			// Use a S3 service client that can handle multiple slashes in URIs.
-			// While aws_s3_bucket_object resources cannot create these object
+			// While aws_s3_object resources cannot create these object
 			// keys, other AWS services and applications using the S3 Bucket can.
 			conn = meta.(*conns.AWSClient).S3ConnURICleaningDisabled
 
@@ -1851,7 +1851,7 @@ func resourceBucketACLUpdate(conn *s3.S3, d *schema.ResourceData) error {
 	return nil
 }
 
-func resourceBucketVersioningUpdate(conn *s3.S3, bucket string, versioningConfig *s3.VersioningConfiguration) error {
+func resourceBucketInternalVersioningUpdate(conn *s3.S3, bucket string, versioningConfig *s3.VersioningConfiguration) error {
 	input := &s3.PutBucketVersioningInput{
 		Bucket:                  aws.String(bucket),
 		VersioningConfiguration: versioningConfig,
@@ -2014,7 +2014,7 @@ func resourceBucketServerSideEncryptionConfigurationUpdate(conn *s3.S3, d *schem
 	return nil
 }
 
-func resourceBucketObjectLockConfigurationUpdate(conn *s3.S3, d *schema.ResourceData) error {
+func resourceObjectLockConfigurationUpdate(conn *s3.S3, d *schema.ResourceData) error {
 	// S3 Object Lock configuration cannot be deleted, only updated.
 	req := &s3.PutObjectLockConfigurationInput{
 		Bucket:                  aws.String(d.Get("bucket").(string)),

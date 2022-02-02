@@ -7,7 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/imagebuilder"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -416,6 +416,32 @@ func TestAccImageBuilderImageRecipe_component(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccImageBuilderImageRecipe_componentParameter(t *testing.T) {
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_imagebuilder_image_recipe.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, imagebuilder.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckImageRecipeDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccImageRecipeComponentParameterConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckImageRecipeExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "component.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "component.0.parameter.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "component.0.parameter.0.name", "Parameter1"),
+					resource.TestCheckResourceAttr(resourceName, "component.0.parameter.0.value", "Value1"),
+					resource.TestCheckResourceAttr(resourceName, "component.0.parameter.1.name", "Parameter2"),
+					resource.TestCheckResourceAttr(resourceName, "component.0.parameter.1.value", "Value2"),
+				),
 			},
 		},
 	})
@@ -908,6 +934,58 @@ resource "aws_imagebuilder_image_recipe" "test" {
   version      = "1.0.0"
 }
 `, rName))
+}
+
+func testAccImageRecipeComponentParameterConfig(rName string) string {
+	return fmt.Sprintf(`
+data "aws_region" "current" {}
+
+data "aws_partition" "current" {}
+
+resource "aws_imagebuilder_component" "test" {
+  data = <<EOF
+phases:
+  - name: build
+    steps:
+      - name: example
+        action: ExecuteBash
+        inputs:
+          commands:
+            - echo {{ Parameter1 }}
+            - echo {{ Parameter2 }}
+parameters:
+  - Parameter1:
+      type: string
+  - Parameter2:
+      type: string  
+schemaVersion: 1.0
+EOF
+
+  name     = %[1]q
+  platform = "Linux"
+  version  = "1.0.0"
+}
+
+resource "aws_imagebuilder_image_recipe" "test" {
+  component {
+    component_arn = aws_imagebuilder_component.test.arn
+
+    parameter {
+      name  = "Parameter1"
+      value = "Value1"
+    }
+
+    parameter {
+      name  = "Parameter2"
+      value = "Value2"
+    }
+  }
+
+  name         = %[1]q
+  parent_image = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:image/amazon-linux-2-x86/x.x.x"
+  version      = "1.0.0"
+}
+`, rName)
 }
 
 func testAccImageRecipeDescriptionConfig(rName string, description string) string {

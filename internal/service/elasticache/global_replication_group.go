@@ -8,7 +8,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/elasticache"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -76,11 +76,6 @@ func ResourceGlobalReplicationGroup() *schema.Resource {
 			"engine_version_actual": {
 				Type:     schema.TypeString,
 				Computed: true,
-			},
-			"actual_engine_version": {
-				Type:       schema.TypeString,
-				Computed:   true,
-				Deprecated: "Use engine_version_actual instead",
 			},
 			"global_replication_group_id": {
 				Type:     schema.TypeString,
@@ -200,7 +195,6 @@ func resourceGlobalReplicationGroupRead(d *schema.ResourceData, meta interface{}
 	d.Set("cluster_enabled", globalReplicationGroup.ClusterEnabled)
 	d.Set("engine", globalReplicationGroup.Engine)
 	d.Set("engine_version_actual", globalReplicationGroup.EngineVersion)
-	d.Set("actual_engine_version", globalReplicationGroup.EngineVersion)
 	d.Set("global_replication_group_description", globalReplicationGroup.GlobalReplicationGroupDescription)
 	d.Set("global_replication_group_id", globalReplicationGroup.GlobalReplicationGroupId)
 	d.Set("transit_encryption_enabled", globalReplicationGroup.TransitEncryptionEnabled)
