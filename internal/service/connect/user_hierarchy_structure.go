@@ -34,6 +34,7 @@ func ResourceUserHierarchyStructure() *schema.Resource {
 							Type:     schema.TypeList,
 							Optional: true,
 							Computed: true,
+							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"arn": {
@@ -56,6 +57,7 @@ func ResourceUserHierarchyStructure() *schema.Resource {
 							Type:     schema.TypeList,
 							Optional: true,
 							Computed: true,
+							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"arn": {
@@ -78,6 +80,7 @@ func ResourceUserHierarchyStructure() *schema.Resource {
 							Type:     schema.TypeList,
 							Optional: true,
 							Computed: true,
+							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"arn": {
@@ -100,6 +103,7 @@ func ResourceUserHierarchyStructure() *schema.Resource {
 							Type:     schema.TypeList,
 							Optional: true,
 							Computed: true,
+							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"arn": {
@@ -122,6 +126,7 @@ func ResourceUserHierarchyStructure() *schema.Resource {
 							Type:     schema.TypeList,
 							Optional: true,
 							Computed: true,
+							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"arn": {
