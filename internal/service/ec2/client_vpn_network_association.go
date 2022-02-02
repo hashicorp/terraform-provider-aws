@@ -48,7 +48,7 @@ func ResourceClientVPNNetworkAssociation() *schema.Resource {
 				Computed:   true,
 				Elem:       &schema.Schema{Type: schema.TypeString},
 				Set:        schema.HashString,
-				Deprecated: "Use the `aws_ec2_client_vpn_security_group_association` resource instead.",
+				Deprecated: "Use the `security_group_ids` attribute of the `aws_ec2_client_vpn_endpoint` resource instead.",
 			},
 			"status": {
 				Type:       schema.TypeString,
