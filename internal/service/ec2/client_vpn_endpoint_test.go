@@ -515,8 +515,8 @@ func testAccClientVPNEndpoint_withDNSServers(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClientVPNEndpointExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "dns_servers.#", "2"),
-					resource.TestCheckTypeSetElemAttr(resourceName, "dns_servers.*", "8.8.8.8"),
-					resource.TestCheckTypeSetElemAttr(resourceName, "dns_servers.*", "8.8.4.4"),
+					resource.TestCheckResourceAttr(resourceName, "dns_servers.0", "8.8.8.8"),
+					resource.TestCheckResourceAttr(resourceName, "dns_servers.1", "8.8.4.4"),
 				),
 			},
 			{
@@ -529,7 +529,7 @@ func testAccClientVPNEndpoint_withDNSServers(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClientVPNEndpointExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "dns_servers.#", "1"),
-					resource.TestCheckTypeSetElemAttr(resourceName, "dns_servers.*", "4.4.4.4"),
+					resource.TestCheckResourceAttr(resourceName, "dns_servers.0", "4.4.4.4"),
 				),
 			},
 			{
