@@ -421,8 +421,7 @@ func TestAccElastiCacheReplicationGroup_updateAuthToken(t *testing.T) {
 				Config: testAccReplicationGroup_EnableAuthTokenTransitEncryptionConfig(rName, sdkacctest.RandString(16)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReplicationGroupExists(resourceName, &rg),
-					resource.TestCheckResourceAttr(
-						resourceName, "transit_encryption_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "transit_encryption_enabled", "true"),
 				),
 			},
 			{
@@ -1067,8 +1066,7 @@ func TestAccElastiCacheReplicationGroup_enableAuthTokenTransitEncryption(t *test
 				Config: testAccReplicationGroup_EnableAuthTokenTransitEncryptionConfig(sdkacctest.RandString(10), sdkacctest.RandString(16)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReplicationGroupExists(resourceName, &rg),
-					resource.TestCheckResourceAttr(
-						resourceName, "transit_encryption_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "transit_encryption_enabled", "true"),
 				),
 			},
 			{
@@ -1120,6 +1118,7 @@ func TestAccElastiCacheReplicationGroup_useCMKKMSKeyID(t *testing.T) {
 
 	var rg elasticache.ReplicationGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_elasticache_replication_group.test"
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, elasticache.EndpointsID),
@@ -1129,8 +1128,8 @@ func TestAccElastiCacheReplicationGroup_useCMKKMSKeyID(t *testing.T) {
 			{
 				Config: testAccReplicationGroup_UseCMKKMSKeyID(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckReplicationGroupExists("aws_elasticache_replication_group.bar", &rg),
-					resource.TestCheckResourceAttrSet("aws_elasticache_replication_group.bar", "kms_key_id"),
+					testAccCheckReplicationGroupExists(resourceName, &rg),
+					resource.TestCheckResourceAttrSet(resourceName, "kms_key_id"),
 				),
 			},
 		},
@@ -2608,27 +2607,27 @@ func testAccReplicationGroup_UseCMKKMSKeyID(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigVpcWithSubnets(1),
 		fmt.Sprintf(`
-resource "aws_elasticache_replication_group" "bar" { # TODO: rename
+resource "aws_elasticache_replication_group" "test" {
   replication_group_id          = %[1]q
   replication_group_description = "test description"
   node_type                     = "cache.t2.micro"
   number_cache_clusters         = "1"
   port                          = 6379
-  subnet_group_name             = aws_elasticache_subnet_group.bar.name
-  security_group_ids            = [aws_security_group.bar.id]
+  subnet_group_name             = aws_elasticache_subnet_group.test.name
+  security_group_ids            = [aws_security_group.test.id]
   parameter_group_name          = "default.redis3.2"
   availability_zones            = [data.aws_availability_zones.available.names[0]]
   engine_version                = "3.2.6"
   at_rest_encryption_enabled    = true
-  kms_key_id                    = aws_kms_key.bar.arn
+  kms_key_id                    = aws_kms_key.test.arn
 }
 
-resource "aws_elasticache_subnet_group" "bar" {
+resource "aws_elasticache_subnet_group" "test" {
   name       = %[1]q
   subnet_ids = aws_subnet.test[*].id
 }
 
-resource "aws_security_group" "bar" {
+resource "aws_security_group" "test" {
   name        = %[1]q
   description = "tf-test-security-group-descr"
   vpc_id      = aws_vpc.test.id
@@ -2641,7 +2640,7 @@ resource "aws_security_group" "bar" {
   }
 }
 
-resource "aws_kms_key" "bar" {
+resource "aws_kms_key" "test" {
   description = "tf-test-cmk-kms-key-id"
 }
 `, rName),
