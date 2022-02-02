@@ -568,7 +568,7 @@ rules:
         - internal/service/mq/forge_test.go
         - internal/service/route53/sweep.go
         - internal/service/s3/bucket_test.go
-        - internal/service/s3/bucket_object_test.go
+        - internal/service/s3/object_test.go
         - internal/service/storagegateway/cached_iscsi_volume.go
         - internal/service/storagegateway/cached_iscsi_volume_test.go
         - internal/service/storagegateway/stored_iscsi_volume_test.go

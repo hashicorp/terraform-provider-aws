@@ -195,6 +195,13 @@ func Provider() *schema.Provider {
 
 			"assume_role": assumeRoleSchema(),
 
+			"shared_config_file": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Default:     "",
+				Description: "The path to the shared config file. If not set, defaults to ~/.aws/config.",
+			},
+
 			"shared_credentials_file": {
 				Type:        schema.TypeString,
 				Optional:    true,
@@ -424,6 +431,9 @@ func Provider() *schema.Provider {
 
 			"aws_cur_report_definition": cur.DataSourceReportDefinition(),
 
+			"aws_datapipeline_pipeline":            datapipeline.DataSourcePipeline(),
+			"aws_datapipeline_pipeline_definition": datapipeline.DataSourcePipelineDefinition(),
+
 			"aws_docdb_engine_version":        docdb.DataSourceEngineVersion(),
 			"aws_docdb_orderable_db_instance": docdb.DataSourceOrderableDBInstance(),
 
@@ -447,6 +457,7 @@ func Provider() *schema.Provider {
 			"aws_ebs_snapshot_ids":                           ec2.DataSourceEBSSnapshotIDs(),
 			"aws_ebs_volume":                                 ec2.DataSourceEBSVolume(),
 			"aws_ebs_volumes":                                ec2.DataSourceEBSVolumes(),
+			"aws_ec2_client_vpn_endpoint":                    ec2.DataSourceClientVPNEndpoint(),
 			"aws_ec2_coip_pool":                              ec2.DataSourceCoIPPool(),
 			"aws_ec2_coip_pools":                             ec2.DataSourceCoIPPools(),
 			"aws_ec2_host":                                   ec2.DataSourceHost(),
@@ -471,6 +482,7 @@ func Provider() *schema.Provider {
 			"aws_ec2_transit_gateway_vpc_attachment":         ec2.DataSourceTransitGatewayVPCAttachment(),
 			"aws_ec2_transit_gateway_vpn_attachment":         ec2.DataSourceTransitGatewayVPNAttachment(),
 			"aws_eip":                                        ec2.DataSourceEIP(),
+			"aws_eips":                                       ec2.DataSourceEIPs(),
 			"aws_instance":                                   ec2.DataSourceInstance(),
 			"aws_instances":                                  ec2.DataSourceInstances(),
 			"aws_internet_gateway":                           ec2.DataSourceInternetGateway(),
@@ -681,8 +693,8 @@ func Provider() *schema.Provider {
 
 			"aws_canonical_user_id": s3.DataSourceCanonicalUserID(),
 			"aws_s3_bucket":         s3.DataSourceBucket(),
-			"aws_s3_bucket_object":  s3.DataSourceBucketObject(),
-			"aws_s3_bucket_objects": s3.DataSourceBucketObjects(),
+			"aws_s3_object":         s3.DataSourceObject(),
+			"aws_s3_objects":        s3.DataSourceObjects(),
 
 			"aws_sagemaker_prebuilt_ecr_image": sagemaker.DataSourcePrebuiltECRImage(),
 
@@ -1010,7 +1022,8 @@ func Provider() *schema.Provider {
 
 			"aws_dataexchange_data_set": dataexchange.ResourceDataSet(),
 
-			"aws_datapipeline_pipeline": datapipeline.ResourcePipeline(),
+			"aws_datapipeline_pipeline":            datapipeline.ResourcePipeline(),
+			"aws_datapipeline_pipeline_definition": datapipeline.ResourcePipelineDefinition(),
 
 			"aws_datasync_agent":                            datasync.ResourceAgent(),
 			"aws_datasync_location_efs":                     datasync.ResourceLocationEFS(),
@@ -1194,13 +1207,14 @@ func Provider() *schema.Provider {
 			"aws_ecrpublic_repository":        ecrpublic.ResourceRepository(),
 			"aws_ecrpublic_repository_policy": ecrpublic.ResourceRepositoryPolicy(),
 
-			"aws_ecs_account_setting_default": ecs.ResourceAccountSettingDefault(),
-			"aws_ecs_capacity_provider":       ecs.ResourceCapacityProvider(),
-			"aws_ecs_cluster":                 ecs.ResourceCluster(),
-			"aws_ecs_service":                 ecs.ResourceService(),
-			"aws_ecs_tag":                     ecs.ResourceTag(),
-			"aws_ecs_task_definition":         ecs.ResourceTaskDefinition(),
-			"aws_ecs_task_set":                ecs.ResourceTaskSet(),
+			"aws_ecs_account_setting_default":    ecs.ResourceAccountSettingDefault(),
+			"aws_ecs_capacity_provider":          ecs.ResourceCapacityProvider(),
+			"aws_ecs_cluster":                    ecs.ResourceCluster(),
+			"aws_ecs_cluster_capacity_providers": ecs.ResourceClusterCapacityProviders(),
+			"aws_ecs_service":                    ecs.ResourceService(),
+			"aws_ecs_tag":                        ecs.ResourceTag(),
+			"aws_ecs_task_definition":            ecs.ResourceTaskDefinition(),
+			"aws_ecs_task_set":                   ecs.ResourceTaskSet(),
 
 			"aws_efs_access_point":       efs.ResourceAccessPoint(),
 			"aws_efs_backup_policy":      efs.ResourceBackupPolicy(),
@@ -1583,15 +1597,17 @@ func Provider() *schema.Provider {
 
 			"aws_s3_bucket":                                   s3.ResourceBucket(),
 			"aws_s3_bucket_analytics_configuration":           s3.ResourceBucketAnalyticsConfiguration(),
+			"aws_s3_bucket_cors_configuration":                s3.ResourceBucketCorsConfiguration(),
 			"aws_s3_bucket_intelligent_tiering_configuration": s3.ResourceBucketIntelligentTieringConfiguration(),
 			"aws_s3_bucket_inventory":                         s3.ResourceBucketInventory(),
 			"aws_s3_bucket_metric":                            s3.ResourceBucketMetric(),
 			"aws_s3_bucket_notification":                      s3.ResourceBucketNotification(),
-			"aws_s3_bucket_object":                            s3.ResourceBucketObject(),
 			"aws_s3_bucket_ownership_controls":                s3.ResourceBucketOwnershipControls(),
 			"aws_s3_bucket_policy":                            s3.ResourceBucketPolicy(),
 			"aws_s3_bucket_public_access_block":               s3.ResourceBucketPublicAccessBlock(),
 			"aws_s3_bucket_replication_configuration":         s3.ResourceBucketReplicationConfiguration(),
+			"aws_s3_bucket_versioning":                        s3.ResourceBucketVersioning(),
+			"aws_s3_object":                                   s3.ResourceObject(),
 			"aws_s3_object_copy":                              s3.ResourceObjectCopy(),
 
 			"aws_s3_access_point":                             s3control.ResourceAccessPoint(),
@@ -1875,7 +1891,8 @@ func providerConfigure(d *schema.ResourceData, terraformVersion string) (interfa
 		Profile:                 d.Get("profile").(string),
 		Token:                   d.Get("token").(string),
 		Region:                  d.Get("region").(string),
-		CredsFilename:           d.Get("shared_credentials_file").(string),
+		SharedConfigFile:        d.Get("shared_config_file").(string),
+		SharedCredentialsFile:   d.Get("shared_credentials_file").(string),
 		DefaultTagsConfig:       expandProviderDefaultTags(d.Get("default_tags").([]interface{})),
 		Endpoints:               make(map[string]string),
 		MaxRetries:              d.Get("max_retries").(int),

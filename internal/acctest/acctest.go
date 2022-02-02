@@ -20,7 +20,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/aws/aws-sdk-go/service/organizations"
 	"github.com/aws/aws-sdk-go/service/outposts"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -649,6 +649,15 @@ func PreCheckMultipleRegion(t *testing.T, regions int) {
 func PreCheckRegion(t *testing.T, region string) {
 	if Region() != region {
 		t.Skipf("skipping tests; %s (%s) does not equal %s", conns.EnvVarDefaultRegion, Region(), region)
+	}
+}
+
+// PreCheckRegionNot checks that the test region is not one of the specified regions.
+func PreCheckRegionNot(t *testing.T, regions ...string) {
+	for _, region := range regions {
+		if Region() == region {
+			t.Skipf("skipping tests; %s (%s) not supported", conns.EnvVarDefaultRegion, region)
+		}
 	}
 }
 
@@ -1842,5 +1851,25 @@ func CheckCallerIdentityAccountID(n string) resource.TestCheckFunc {
 		}
 
 		return nil
+	}
+}
+
+func CheckResourceAttrGreaterThanValue(n, key, value string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Not found: %s", n)
+		}
+
+		if v, ok := rs.Primary.Attributes[key]; !ok || !(v > value) {
+			if !ok {
+				return fmt.Errorf("%s: Attribute %q not found", n, key)
+			}
+
+			return fmt.Errorf("%s: Attribute %q is not greater than %q, got %q", n, key, value, v)
+		}
+
+		return nil
+
 	}
 }
