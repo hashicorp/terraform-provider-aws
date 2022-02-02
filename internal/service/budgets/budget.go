@@ -53,6 +53,7 @@ func ResourceBudget() *schema.Resource {
 				Computed:      true,
 				Elem:          &schema.Schema{Type: schema.TypeString},
 				ConflictsWith: []string{"cost_filter"},
+				Deprecated:    "Use the attribute \"cost_filter\" instead.",
 			},
 			"cost_filter": {
 				Type:     schema.TypeSet,
