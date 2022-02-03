@@ -836,7 +836,7 @@ func resourceBucketUpdate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if d.HasChange("server_side_encryption_configuration") {
-		if err := resourceBucketServerSideEncryptionConfigurationUpdate(conn, d); err != nil {
+		if err := resourceBucketInternalServerSideEncryptionConfigurationUpdate(conn, d); err != nil {
 			return err
 		}
 	}
@@ -1947,7 +1947,7 @@ func resourceBucketRequestPayerUpdate(conn *s3.S3, d *schema.ResourceData) error
 	return nil
 }
 
-func resourceBucketServerSideEncryptionConfigurationUpdate(conn *s3.S3, d *schema.ResourceData) error {
+func resourceBucketInternalServerSideEncryptionConfigurationUpdate(conn *s3.S3, d *schema.ResourceData) error {
 	bucket := d.Get("bucket").(string)
 	serverSideEncryptionConfiguration := d.Get("server_side_encryption_configuration").([]interface{})
 	if len(serverSideEncryptionConfiguration) == 0 {
