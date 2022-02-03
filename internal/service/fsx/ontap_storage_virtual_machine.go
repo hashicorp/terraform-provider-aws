@@ -35,6 +35,9 @@ func ResourceOntapStorageVirtualMachine() *schema.Resource {
 			Delete: schema.DefaultTimeout(30 * time.Minute),
 		},
 
+		SchemaVersion: 1,
+		MigrateState:  resourceOntapStorageVirtualMachineMigrateState,
+
 		Schema: map[string]*schema.Schema{
 			"arn": {
 				Type:     schema.TypeString,
@@ -81,14 +84,6 @@ func ResourceOntapStorageVirtualMachine() *schema.Resource {
 										Optional:     true,
 										ForceNew:     true,
 										ValidateFunc: validation.StringLenBetween(1, 256),
-									},
-									"organizational_unit_distinguidshed_name": {
-										Type:          schema.TypeString,
-										Optional:      true,
-										ForceNew:      true,
-										ValidateFunc:  validation.StringLenBetween(1, 2000),
-										Deprecated:    "use 'organizational_unit_distinguished_name' instead",
-										ConflictsWith: []string{"active_directory_configuration.0.self_managed_active_directory_configuration.0.organizational_unit_distinguished_name"},
 									},
 									"organizational_unit_distinguished_name": {
 										Type:          schema.TypeString,
