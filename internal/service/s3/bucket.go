@@ -1177,7 +1177,7 @@ func resourceBucketRead(d *schema.ResourceData, meta interface{}) error {
 			Bucket: aws.String(d.Id()),
 		})
 	})
-	if err != nil && !tfawserr.ErrMessageContains(err, ErrCodeServerSideEncryptionNotFound, "encryption configuration was not found") {
+	if err != nil && !tfawserr.ErrMessageContains(err, ErrCodeServerSideEncryptionConfigurationNotFound, "encryption configuration was not found") {
 		return fmt.Errorf("error getting S3 Bucket encryption: %w", err)
 	}
 
