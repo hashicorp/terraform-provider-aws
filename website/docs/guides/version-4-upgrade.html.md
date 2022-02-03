@@ -561,7 +561,7 @@ resource "aws_route53_record" "alias" {
   
   alias {
     zone_id                = aws_s3_bucket.website.hosted_zone_id
-    name                   = aws_s3_bucket_website_configuration.test.website_domain
+    name                   = aws_s3_bucket_website_configuration.example.website_domain
     evaluate_target_health = true
   }
 }
