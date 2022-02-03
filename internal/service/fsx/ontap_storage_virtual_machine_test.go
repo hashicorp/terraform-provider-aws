@@ -277,7 +277,7 @@ func TestAccFSxOntapStorageVirtualMachine_activeDirectory(t *testing.T) {
 	})
 }
 
-func TestAccFSxOntapStorageVirtualMachine_activeDirectoryDeprecatedOrganizationalUnitDistinguishedName(t *testing.T) {
+func TestAccFSxOntapStorageVirtualMachine_activeDirectoryDeprecatedMigrateDistinguidshed(t *testing.T) {
 	var storageVirtualMachine1 fsx.StorageVirtualMachine
 	resourceName := "aws_fsx_ontap_storage_virtual_machine.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -293,7 +293,7 @@ func TestAccFSxOntapStorageVirtualMachine_activeDirectoryDeprecatedOrganizationa
 		CheckDestroy: testAccCheckFsxOntapStorageVirtualMachineDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFsxOntapStorageVirutalMachineSelfManagedActiveDirectoryConfigDeprecatedOrganizationalUnitDistinguishedName(rName, netBiosName, domainNetbiosName, domainName, domainPassword1),
+				Config: testAccFsxOntapStorageVirutalMachineSelfManagedActiveDirectoryConfigDeprecatedMigrateDistinguidshed(rName, netBiosName, domainNetbiosName, domainName, domainPassword1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFsxOntapStorageVirtualMachineExists(resourceName, &storageVirtualMachine1),
 					resource.TestCheckResourceAttr(resourceName, "active_directory_configuration.#", "1"),
@@ -521,7 +521,7 @@ resource "aws_fsx_ontap_storage_virtual_machine" "test" {
 `, rName, netBiosName, domainName, domainPassword, domainNetbiosName))
 }
 
-func testAccFsxOntapStorageVirutalMachineSelfManagedActiveDirectoryConfigDeprecatedOrganizationalUnitDistinguishedName(rName string, netBiosName string, domainNetbiosName string, domainName string, domainPassword string) string {
+func testAccFsxOntapStorageVirutalMachineSelfManagedActiveDirectoryConfigDeprecatedMigrateDistinguidshed(rName string, netBiosName string, domainNetbiosName string, domainName string, domainPassword string) string {
 	return acctest.ConfigCompose(testAccOntapStorageVirtualMachineADConfig(rName, domainName, domainPassword), fmt.Sprintf(`
 resource "aws_fsx_ontap_storage_virtual_machine" "test" {
   file_system_id = aws_fsx_ontap_file_system.test.id
@@ -531,11 +531,11 @@ resource "aws_fsx_ontap_storage_virtual_machine" "test" {
   active_directory_configuration {
     netbios_name = %[2]q
     self_managed_active_directory_configuration {
-      dns_ips                                = aws_directory_service_directory.test.dns_ip_addresses
-      domain_name                            = %[3]q
-      password                               = %[4]q
-      username                               = "Admin"
-      organizational_unit_distinguished_name = "OU=computers,OU=%[5]s"
+      dns_ips                                 = aws_directory_service_directory.test.dns_ip_addresses
+      domain_name                             = %[3]q
+      password                                = %[4]q
+      username                                = "Admin"
+      organizational_unit_distinguidshed_name = "OU=computers,OU=%[5]s"
     }
   }
 }
