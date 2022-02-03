@@ -9,7 +9,7 @@ const (
 	ErrCodeNoSuchLifecycleConfiguration              = "NoSuchLifecycleConfiguration"
 	ErrCodeNoSuchPublicAccessBlockConfiguration      = "NoSuchPublicAccessBlockConfiguration"
 	ErrCodeNoSuchWebsiteConfiguration                = "NoSuchWebsiteConfiguration"
-	ErrCodeNotImplemented                       = "NotImplemented"
+	ErrCodeNotImplemented                            = "NotImplemented"
 	ErrCodeObjectLockConfigurationNotFound           = "ObjectLockConfigurationNotFoundError"
 	ErrCodeOperationAborted                          = "OperationAborted"
 	ErrCodeServerSideEncryptionConfigurationNotFound = "ServerSideEncryptionConfigurationNotFoundError"
