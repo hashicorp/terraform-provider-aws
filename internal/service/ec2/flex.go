@@ -9,29 +9,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-//Flattens network interface attachment into a map[string]interface
-func FlattenAttachment(a *ec2.NetworkInterfaceAttachment) map[string]interface{} {
-	att := make(map[string]interface{})
-	if a.InstanceId != nil {
-		att["instance"] = *a.InstanceId
-	}
-	if a.DeviceIndex != nil {
-		att["device_index"] = *a.DeviceIndex
-	}
-	if a.AttachmentId != nil {
-		att["attachment_id"] = *a.AttachmentId
-	}
-	return att
-}
-
-func flattenAttributeValues(l []*ec2.AttributeValue) []string {
-	values := make([]string, 0, len(l))
-	for _, v := range l {
-		values = append(values, aws.StringValue(v.Value))
-	}
-	return values
-}
-
 //Flattens security group identifiers into a []string, where the elements returned are the GroupIDs
 func FlattenGroupIdentifiers(dtos []*ec2.GroupIdentifier) []string {
 	ids := make([]string, 0, len(dtos))
@@ -51,18 +28,6 @@ type GroupIdentifier struct {
 	GroupName *string
 
 	Description *string
-}
-
-func expandIP6Addresses(ips []interface{}) []*ec2.InstanceIpv6Address {
-	dtos := make([]*ec2.InstanceIpv6Address, 0, len(ips))
-	for _, v := range ips {
-		ipv6Address := &ec2.InstanceIpv6Address{
-			Ipv6Address: aws.String(v.(string)),
-		}
-
-		dtos = append(dtos, ipv6Address)
-	}
-	return dtos
 }
 
 // Takes the result of flatmap.Expand for an array of ingress/egress security
@@ -173,67 +138,6 @@ func ExpandIPPerms(
 	}
 
 	return perms, nil
-}
-
-func flattenNetworkInterfaceAssociation(a *ec2.NetworkInterfaceAssociation) []interface{} {
-	tfMap := map[string]interface{}{}
-
-	if a.AllocationId != nil {
-		tfMap["allocation_id"] = aws.StringValue(a.AllocationId)
-	}
-	if a.AssociationId != nil {
-		tfMap["association_id"] = aws.StringValue(a.AssociationId)
-	}
-	if a.CarrierIp != nil {
-		tfMap["carrier_ip"] = aws.StringValue(a.CarrierIp)
-	}
-	if a.CustomerOwnedIp != nil {
-		tfMap["customer_owned_ip"] = aws.StringValue(a.CustomerOwnedIp)
-	}
-	if a.IpOwnerId != nil {
-		tfMap["ip_owner_id"] = aws.StringValue(a.IpOwnerId)
-	}
-	if a.PublicDnsName != nil {
-		tfMap["public_dns_name"] = aws.StringValue(a.PublicDnsName)
-	}
-	if a.PublicIp != nil {
-		tfMap["public_ip"] = aws.StringValue(a.PublicIp)
-	}
-
-	return []interface{}{tfMap}
-}
-
-func flattenNetworkInterfaceIPv6Address(niia []*ec2.NetworkInterfaceIpv6Address) []string {
-	ips := make([]string, 0, len(niia))
-	for _, v := range niia {
-		ips = append(ips, *v.Ipv6Address)
-	}
-	return ips
-}
-
-//Flattens an array of private ip addresses into a []string, where the elements returned are the IP strings e.g. "192.168.0.0"
-func FlattenNetworkInterfacesPrivateIPAddresses(dtos []*ec2.NetworkInterfacePrivateIpAddress) []string {
-	ips := make([]string, 0, len(dtos))
-	for _, v := range dtos {
-		ip := *v.PrivateIpAddress
-		ips = append(ips, ip)
-	}
-	return ips
-}
-
-//Expands an array of IPs into a ec2 Private IP Address Spec
-func ExpandPrivateIPAddresses(ips []interface{}) []*ec2.PrivateIpAddressSpecification {
-	dtos := make([]*ec2.PrivateIpAddressSpecification, 0, len(ips))
-	for i, v := range ips {
-		new_private_ip := &ec2.PrivateIpAddressSpecification{
-			PrivateIpAddress: aws.String(v.(string)),
-		}
-
-		new_private_ip.Primary = aws.Bool(i == 0)
-
-		dtos = append(dtos, new_private_ip)
-	}
-	return dtos
 }
 
 // Flattens an array of UserSecurityGroups into a []*GroupIdentifier

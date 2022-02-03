@@ -11,7 +11,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/elbv2"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -204,6 +204,11 @@ func ResourceTargetGroup() *schema.Resource {
 				Optional: true,
 				Default:  false,
 			},
+			"connection_termination": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
 			"slow_start": {
 				Type:         schema.TypeInt,
 				Optional:     true,
@@ -371,6 +376,14 @@ func resourceTargetGroupCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	resp, err := conn.CreateTargetGroup(params)
+
+	// Some partitions may not support tag-on-create
+	if params.Tags != nil && verify.CheckISOErrorTagsUnsupported(err) {
+		log.Printf("[WARN] ELBv2 Target Group (%s) create failed (%s) with tags. Trying create without tags.", groupName, err)
+		params.Tags = nil
+		resp, err = conn.CreateTargetGroup(params)
+	}
+
 	if err != nil {
 		return fmt.Errorf("error creating LB Target Group: %w", err)
 	}
@@ -433,6 +446,13 @@ func resourceTargetGroupCreate(d *schema.ResourceData, meta interface{}) error {
 		if v, ok := d.GetOk("proxy_protocol_v2"); ok {
 			attrs = append(attrs, &elbv2.TargetGroupAttribute{
 				Key:   aws.String("proxy_protocol_v2.enabled"),
+				Value: aws.String(strconv.FormatBool(v.(bool))),
+			})
+		}
+
+		if v, ok := d.GetOk("connection_termination"); ok {
+			attrs = append(attrs, &elbv2.TargetGroupAttribute{
+				Key:   aws.String("deregistration_delay.connection_termination.enabled"),
 				Value: aws.String(strconv.FormatBool(v.(bool))),
 			})
 		}
@@ -510,6 +530,21 @@ func resourceTargetGroupCreate(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
+	// Post-create tagging supported in some partitions
+	if params.Tags == nil && len(tags) > 0 {
+		err := UpdateTags(conn, d.Id(), nil, tags)
+
+		// if default tags only, log and continue (i.e., should error if explicitly setting tags and they can't be)
+		if v, ok := d.GetOk("tags"); (!ok || len(v.(map[string]interface{})) == 0) && verify.CheckISOErrorTagsUnsupported(err) {
+			log.Printf("[WARN] error adding tags after create for ELBv2 Target Group (%s): %s", d.Id(), err)
+			return resourceTargetGroupRead(d, meta)
+		}
+
+		if err != nil {
+			return fmt.Errorf("error creating ELBv2 Target Group (%s) tags: %w", d.Id(), err)
+		}
+	}
+
 	return resourceTargetGroupRead(d, meta)
 }
 
@@ -569,33 +604,6 @@ func resourceTargetGroupRead(d *schema.ResourceData, meta interface{}) error {
 
 func resourceTargetGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ELBV2Conn
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		err := resource.Retry(loadBalancerTagPropagationTimeout, func() *resource.RetryError {
-			err := UpdateTags(conn, d.Id(), o, n)
-
-			if tfawserr.ErrCodeEquals(err, elbv2.ErrCodeTargetGroupNotFoundException) {
-				log.Printf("[DEBUG] Retrying tagging of LB (%s)", d.Id())
-				return resource.RetryableError(err)
-			}
-
-			if err != nil {
-				return resource.NonRetryableError(err)
-			}
-
-			return nil
-		})
-
-		if tfresource.TimedOut(err) {
-			err = UpdateTags(conn, d.Id(), o, n)
-		}
-
-		if err != nil {
-			return fmt.Errorf("error updating LB Target Group (%s) tags: %w", d.Id(), err)
-		}
-	}
 
 	if d.HasChange("health_check") {
 		var params *elbv2.ModifyTargetGroupInput
@@ -668,6 +676,13 @@ func resourceTargetGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 			attrs = append(attrs, &elbv2.TargetGroupAttribute{
 				Key:   aws.String("proxy_protocol_v2.enabled"),
 				Value: aws.String(strconv.FormatBool(d.Get("proxy_protocol_v2").(bool))),
+			})
+		}
+
+		if d.HasChange("connection_termination") {
+			attrs = append(attrs, &elbv2.TargetGroupAttribute{
+				Key:   aws.String("deregistration_delay.connection_termination.enabled"),
+				Value: aws.String(strconv.FormatBool(d.Get("connection_termination").(bool))),
 			})
 		}
 
@@ -755,6 +770,39 @@ func resourceTargetGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 		_, err := conn.ModifyTargetGroupAttributes(params)
 		if err != nil {
 			return fmt.Errorf("error modifying Target Group Attributes: %w", err)
+		}
+	}
+
+	if d.HasChange("tags_all") {
+		o, n := d.GetChange("tags_all")
+
+		err := resource.Retry(loadBalancerTagPropagationTimeout, func() *resource.RetryError {
+			err := UpdateTags(conn, d.Id(), o, n)
+
+			if tfawserr.ErrCodeEquals(err, elbv2.ErrCodeTargetGroupNotFoundException) {
+				log.Printf("[DEBUG] Retrying tagging of LB (%s)", d.Id())
+				return resource.RetryableError(err)
+			}
+
+			if err != nil {
+				return resource.NonRetryableError(err)
+			}
+
+			return nil
+		})
+
+		if tfresource.TimedOut(err) {
+			err = UpdateTags(conn, d.Id(), o, n)
+		}
+
+		// ISO partitions may not support tagging, giving error
+		if verify.CheckISOErrorTagsUnsupported(err) {
+			log.Printf("[WARN] Unable to update tags for ELBv2 Target Group %s: %s", d.Id(), err)
+			return resourceTargetGroupRead(d, meta)
+		}
+
+		if err != nil {
+			return fmt.Errorf("error updating LB Target Group (%s) tags: %w", d.Id(), err)
 		}
 	}
 
@@ -902,6 +950,12 @@ func flattenTargetGroupResource(d *schema.ResourceData, meta interface{}, target
 				return fmt.Errorf("error converting proxy_protocol_v2.enabled to bool: %s", aws.StringValue(attr.Value))
 			}
 			d.Set("proxy_protocol_v2", enabled)
+		case "deregistration_delay.connection_termination.enabled":
+			enabled, err := strconv.ParseBool(aws.StringValue(attr.Value))
+			if err != nil {
+				return fmt.Errorf("error converting deregistration_delay.connection_termination.enabled to bool: %s", aws.StringValue(attr.Value))
+			}
+			d.Set("connection_termination", enabled)
 		case "slow_start.duration_seconds":
 			slowStart, err := strconv.Atoi(aws.StringValue(attr.Value))
 			if err != nil {
@@ -930,6 +984,11 @@ func flattenTargetGroupResource(d *schema.ResourceData, meta interface{}, target
 	}
 
 	tags, err := ListTags(conn, d.Id())
+
+	if verify.CheckISOErrorTagsUnsupported(err) {
+		log.Printf("[WARN] Unable to list tags for ELBv2 Target Group %s: %s", d.Id(), err)
+		return nil
+	}
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for LB Target Group (%s): %w", d.Id(), err)

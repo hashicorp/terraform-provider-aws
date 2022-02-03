@@ -16,6 +16,7 @@ const (
 	CustomDomainAssociationStatusCreating                        = "creating"
 	CustomDomainAssociationStatusDeleting                        = "deleting"
 	CustomDomainAssociationStatusPendingCertificateDNSValidation = "pending_certificate_dns_validation"
+	CustomDomainAssociationStatusBindingCertificate              = "binding_certificate"
 )
 
 func StatusAutoScalingConfiguration(ctx context.Context, conn *apprunner.AppRunner, arn string) resource.StateRefreshFunc {

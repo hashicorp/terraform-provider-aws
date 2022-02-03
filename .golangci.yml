@@ -47,11 +47,7 @@ linters-settings:
           - request.ConstantWaiterDelay
           - request.WithWaiterMaxAttempts
           # AWS Provider
-          - mapMaxItems
-          - wafv2RootStatementSchema
-          - wafv2WebACLRootStatementSchema
           - nullable.*
-          - sweep.SweepOrchestratorContext
           # Terraform Plugin SDK
           - resource.Retry
           - schema.DefaultTimeout
@@ -72,4 +68,4 @@ linters-settings:
       - gomnd
 
 run:
-  timeout: 20m
+  timeout: 35m

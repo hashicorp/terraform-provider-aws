@@ -1,6 +1,7 @@
 package appsync_test
 
 import (
+	"os"
 	"testing"
 )
 
@@ -20,8 +21,11 @@ func TestAccAppSync_serial(t *testing.T) {
 			"type":                          testAccAppSyncDataSource_type,
 			"Type_dynamoDB":                 testAccAppSyncDataSource_Type_dynamoDB,
 			"Type_http":                     testAccAppSyncDataSource_Type_http,
+			"Type_http_auth":                testAccAppSyncDataSource_Type_http_auth,
 			"Type_lambda":                   testAccAppSyncDataSource_Type_lambda,
 			"Type_none":                     testAccAppSyncDataSource_Type_none,
+			"Type_rdbms":                    testAccAppsyncDatasource_Type_RelationalDatabase,
+			"Type_rdbms_options":            testAccAppsyncDatasource_Type_RelationalDatabaseWithOptions,
 		},
 		"GraphQLAPI": {
 			"basic":                     testAccAppSyncGraphQLAPI_basic,
@@ -32,6 +36,7 @@ func TestAccAppSync_serial(t *testing.T) {
 			"AuthenticationType_awsIAM": testAccAppSyncGraphQLAPI_AuthenticationType_awsIAM,
 			"AuthenticationType_amazonCognitoUserPools": testAccAppSyncGraphQLAPI_AuthenticationType_amazonCognitoUserPools,
 			"AuthenticationType_openIDConnect":          testAccAppSyncGraphQLAPI_AuthenticationType_openIDConnect,
+			"AuthenticationType_awsLambda":              testAccAppSyncGraphQLAPI_AuthenticationType_awsLambda,
 			"log":                                       testAccAppSyncGraphQLAPI_log,
 			"Log_fieldLogLevel":                         testAccAppSyncGraphQLAPI_Log_fieldLogLevel,
 			"Log_excludeVerboseContent":                 testAccAppSyncGraphQLAPI_Log_excludeVerboseContent,
@@ -42,11 +47,15 @@ func TestAccAppSync_serial(t *testing.T) {
 			"name":                                      testAccAppSyncGraphQLAPI_name,
 			"UserPool_awsRegion":                        testAccAppSyncGraphQLAPI_UserPool_awsRegion,
 			"UserPool_defaultAction":                    testAccAppSyncGraphQLAPI_UserPool_defaultAction,
+			"LambdaAuthorizerConfig_authorizerUri":      testAccAppSyncGraphQLAPI_LambdaAuthorizerConfig_authorizerUri,
+			"LambdaAuthorizerConfig_identityValidationExpression": testAccAppSyncGraphQLAPI_LambdaAuthorizerConfig_identityValidationExpression,
+			"LambdaAuthorizerConfig_authorizerResultTtlInSeconds": testAccAppSyncGraphQLAPI_LambdaAuthorizerConfig_authorizerResultTtlInSeconds,
 			"tags":                                      testAccAppSyncGraphQLAPI_tags,
 			"AdditionalAuthentication_apiKey":           testAccAppSyncGraphQLAPI_AdditionalAuthentication_apiKey,
 			"AdditionalAuthentication_awsIAM":           testAccAppSyncGraphQLAPI_AdditionalAuthentication_awsIAM,
 			"AdditionalAuthentication_cognitoUserPools": testAccAppSyncGraphQLAPI_AdditionalAuthentication_cognitoUserPools,
 			"AdditionalAuthentication_openIDConnect":    testAccAppSyncGraphQLAPI_AdditionalAuthentication_openIDConnect,
+			"AdditionalAuthentication_awsLambda":        testAccAppSyncGraphQLAPI_AdditionalAuthentication_awsLambda,
 			"AdditionalAuthentication_multiple":         testAccAppSyncGraphQLAPI_AdditionalAuthentication_multiple,
 			"xrayEnabled":                               testAccAppSyncGraphQLAPI_xrayEnabled,
 		},
@@ -55,6 +64,7 @@ func TestAccAppSync_serial(t *testing.T) {
 			"disappears":              testAccAppSyncFunction_disappears,
 			"description":             testAccAppSyncFunction_description,
 			"responseMappingTemplate": testAccAppSyncFunction_responseMappingTemplate,
+			"sync":                    testAccAppSyncFunction_syncConfig,
 		},
 		"Resolver": {
 			"basic":             testAccAppSyncResolver_basic,
@@ -66,6 +76,20 @@ func TestAccAppSync_serial(t *testing.T) {
 			"multipleResolvers": testAccAppSyncResolver_multipleResolvers,
 			"pipeline":          testAccAppSyncResolver_pipeline,
 			"caching":           testAccAppSyncResolver_caching,
+			"sync":              testAccAppSyncResolver_syncConfig,
+		},
+		"ApiCache": {
+			"basic":      testAccAppSyncApiCache_basic,
+			"disappears": testAccAppSyncApiCache_disappears,
+		},
+		"DomainName": {
+			"basic":       testAccAppSyncDomainName_basic,
+			"disappears":  testAccAppSyncDomainName_disappears,
+			"description": testAccAppSyncDomainName_description,
+		},
+		"DomainNameAssociation": {
+			"basic":      testAccAppSyncDomainNameApiAssociation_basic,
+			"disappears": testAccAppSyncDomainNameApiAssociation_disappears,
 		},
 	}
 
@@ -80,4 +104,16 @@ func TestAccAppSync_serial(t *testing.T) {
 			}
 		})
 	}
+}
+
+func getAppsyncCertDomain(t *testing.T) string {
+	value := os.Getenv("AWS_APPSYNC_DOMAIN_NAME_CERTIFICATE_DOMAIN")
+	if value == "" {
+		t.Skip(
+			"Environment variable AWS_APPSYNC_DOMAIN_NAME_CERTIFICATE_DOMAIN is not set. " +
+				"This environment variable must be set to any non-empty value " +
+				"to enable the test.")
+	}
+
+	return value
 }

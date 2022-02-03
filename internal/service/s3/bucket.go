@@ -19,7 +19,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/request"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
@@ -346,7 +346,7 @@ func ResourceBucket() *schema.Resource {
 									"storage_class": {
 										Type:         schema.TypeString,
 										Required:     true,
-										ValidateFunc: validBucketLifecycleTransitionStorageClass(),
+										ValidateFunc: validation.StringInSlice(s3.TransitionStorageClass_Values(), false),
 									},
 								},
 							},
@@ -365,7 +365,7 @@ func ResourceBucket() *schema.Resource {
 									"storage_class": {
 										Type:         schema.TypeString,
 										Required:     true,
-										ValidateFunc: validBucketLifecycleTransitionStorageClass(),
+										ValidateFunc: validation.StringInSlice(s3.TransitionStorageClass_Values(), false),
 									},
 								},
 							},
@@ -452,6 +452,48 @@ func ResourceBucket() *schema.Resource {
 																Type:         schema.TypeString,
 																Required:     true,
 																ValidateFunc: validation.StringInSlice(s3.OwnerOverride_Values(), false),
+															},
+														},
+													},
+												},
+												"replication_time": {
+													Type:     schema.TypeList,
+													Optional: true,
+													MaxItems: 1,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"minutes": {
+																Type:         schema.TypeInt,
+																Optional:     true,
+																Default:      15,
+																ValidateFunc: validation.IntBetween(15, 15),
+															},
+															"status": {
+																Type:         schema.TypeString,
+																Optional:     true,
+																Default:      s3.ReplicationTimeStatusEnabled,
+																ValidateFunc: validation.StringInSlice(s3.ReplicationTimeStatus_Values(), false),
+															},
+														},
+													},
+												},
+												"metrics": {
+													Type:     schema.TypeList,
+													Optional: true,
+													MaxItems: 1,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"minutes": {
+																Type:         schema.TypeInt,
+																Optional:     true,
+																Default:      15,
+																ValidateFunc: validation.IntBetween(10, 15),
+															},
+															"status": {
+																Type:         schema.TypeString,
+																Optional:     true,
+																Default:      s3.MetricsStatusEnabled,
+																ValidateFunc: validation.StringInSlice(s3.MetricsStatus_Values(), false),
 															},
 														},
 													},
@@ -735,10 +777,22 @@ func resourceBucketUpdate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if d.HasChange("versioning") {
-		if err := resourceBucketVersioningUpdate(conn, d); err != nil {
-			return err
+		v := d.Get("versioning").([]interface{})
+
+		if d.IsNewResource() {
+			if versioning := expandVersioningWhenIsNewResource(v); versioning != nil {
+				err := resourceBucketInternalVersioningUpdate(conn, d.Id(), versioning)
+				if err != nil {
+					return err
+				}
+			}
+		} else {
+			if err := resourceBucketInternalVersioningUpdate(conn, d.Id(), expandVersioning(v)); err != nil {
+				return err
+			}
 		}
 	}
+
 	if d.HasChange("acl") && !d.IsNewResource() {
 		if err := resourceBucketACLUpdate(conn, d); err != nil {
 			return err
@@ -752,7 +806,7 @@ func resourceBucketUpdate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if d.HasChange("logging") {
-		if err := resourceBucketLoggingUpdate(conn, d); err != nil {
+		if err := resourceBucketInternalLoggingUpdate(conn, d); err != nil {
 			return err
 		}
 	}
@@ -776,19 +830,19 @@ func resourceBucketUpdate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if d.HasChange("replication_configuration") {
-		if err := resourceBucketReplicationConfigurationUpdate(conn, d); err != nil {
+		if err := resourceBucketInternalReplicationConfigurationUpdate(conn, d); err != nil {
 			return err
 		}
 	}
 
 	if d.HasChange("server_side_encryption_configuration") {
-		if err := resourceBucketServerSideEncryptionConfigurationUpdate(conn, d); err != nil {
+		if err := resourceBucketInternalServerSideEncryptionConfigurationUpdate(conn, d); err != nil {
 			return err
 		}
 	}
 
 	if d.HasChange("object_lock_configuration") {
-		if err := resourceBucketObjectLockConfigurationUpdate(conn, d); err != nil {
+		if err := resourceBucketInternalObjectLockConfigurationUpdate(conn, d); err != nil {
 			return err
 		}
 	}
@@ -869,11 +923,19 @@ func resourceBucketRead(d *schema.ResourceData, meta interface{}) error {
 					return err
 				}
 			} else {
-				policy, err := structure.NormalizeJsonString(aws.StringValue(v))
+				policyToSet, err := verify.SecondJSONUnlessEquivalent(d.Get("policy").(string), aws.StringValue(v))
+
 				if err != nil {
-					return fmt.Errorf("policy contains an invalid JSON: %s", err)
+					return fmt.Errorf("while setting policy (%s), encountered: %w", aws.StringValue(v), err)
 				}
-				d.Set("policy", policy)
+
+				policyToSet, err = structure.NormalizeJsonString(policyToSet)
+
+				if err != nil {
+					return fmt.Errorf("policy (%s) contains invalid JSON: %w", d.Get("policy").(string), err)
+				}
+
+				d.Set("policy", policyToSet)
 			}
 		}
 	}
@@ -1004,28 +1066,15 @@ func resourceBucketRead(d *schema.ResourceData, meta interface{}) error {
 			Bucket: aws.String(d.Id()),
 		})
 	})
+
 	if err != nil {
-		return err
+		return fmt.Errorf("error getting S3 Bucket versioning (%s): %w", d.Id(), err)
 	}
 
-	vcl := make([]map[string]interface{}, 0, 1)
 	if versioning, ok := versioningResponse.(*s3.GetBucketVersioningOutput); ok {
-		vc := make(map[string]interface{})
-		if versioning.Status != nil && aws.StringValue(versioning.Status) == s3.BucketVersioningStatusEnabled {
-			vc["enabled"] = true
-		} else {
-			vc["enabled"] = false
+		if err := d.Set("versioning", flattenVersioning(versioning)); err != nil {
+			return fmt.Errorf("error setting versioning: %w", err)
 		}
-
-		if versioning.MFADelete != nil && aws.StringValue(versioning.MFADelete) == s3.MFADeleteEnabled {
-			vc["mfa_delete"] = true
-		} else {
-			vc["mfa_delete"] = false
-		}
-		vcl = append(vcl, vc)
-	}
-	if err := d.Set("versioning", vcl); err != nil {
-		return fmt.Errorf("error setting versioning: %s", err)
 	}
 
 	// Read the acceleration status
@@ -1255,9 +1304,18 @@ func resourceBucketRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	// Object Lock configuration.
-	if conf, err := readS3ObjectLockConfiguration(conn, d.Id()); err != nil {
-		return fmt.Errorf("error getting S3 Bucket Object Lock configuration: %s", err)
-	} else {
+	conf, err := readS3ObjectLockConfiguration(conn, d.Id())
+
+	// Object lock not supported in all partitions (extra guard, also guards in read func)
+	if err != nil && (meta.(*conns.AWSClient).Partition == endpoints.AwsPartitionID || meta.(*conns.AWSClient).Partition == endpoints.AwsUsGovPartitionID) {
+		return fmt.Errorf("error getting S3 Object Lock configuration: %s", err)
+	}
+
+	if err != nil {
+		log.Printf("[WARN] Unable to read S3 bucket (%s) object lock configuration: %s", d.Id(), err)
+	}
+
+	if err == nil {
 		if err := d.Set("object_lock_configuration", conf); err != nil {
 			return fmt.Errorf("error setting object_lock_configuration: %s", err)
 		}
@@ -1368,7 +1426,7 @@ func resourceBucketDelete(d *schema.ResourceData, meta interface{}) error {
 	if tfawserr.ErrMessageContains(err, "BucketNotEmpty", "") {
 		if d.Get("force_destroy").(bool) {
 			// Use a S3 service client that can handle multiple slashes in URIs.
-			// While aws_s3_bucket_object resources cannot create these object
+			// While aws_s3_object resources cannot create these object
 			// keys, other AWS services and applications using the S3 Bucket can.
 			conn = meta.(*conns.AWSClient).S3ConnURICleaningDisabled
 
@@ -1402,7 +1460,12 @@ func resourceBucketDelete(d *schema.ResourceData, meta interface{}) error {
 
 func resourceBucketPolicyUpdate(conn *s3.S3, d *schema.ResourceData) error {
 	bucket := d.Get("bucket").(string)
-	policy := d.Get("policy").(string)
+
+	policy, err := structure.NormalizeJsonString(d.Get("policy").(string))
+
+	if err != nil {
+		return fmt.Errorf("policy (%s) is an invalid JSON: %w", policy, err)
+	}
 
 	if policy != "" {
 		log.Printf("[DEBUG] S3 bucket: %s, put policy: %s", bucket, policy)
@@ -1788,47 +1851,24 @@ func resourceBucketACLUpdate(conn *s3.S3, d *schema.ResourceData) error {
 	return nil
 }
 
-func resourceBucketVersioningUpdate(conn *s3.S3, d *schema.ResourceData) error {
-	v := d.Get("versioning").([]interface{})
-	bucket := d.Get("bucket").(string)
-	vc := &s3.VersioningConfiguration{}
-
-	if len(v) > 0 {
-		c := v[0].(map[string]interface{})
-
-		if c["enabled"].(bool) {
-			vc.Status = aws.String(s3.BucketVersioningStatusEnabled)
-		} else {
-			vc.Status = aws.String(s3.BucketVersioningStatusSuspended)
-		}
-
-		if c["mfa_delete"].(bool) {
-			vc.MFADelete = aws.String(s3.MFADeleteEnabled)
-		} else {
-			vc.MFADelete = aws.String(s3.MFADeleteDisabled)
-		}
-
-	} else {
-		vc.Status = aws.String(s3.BucketVersioningStatusSuspended)
-	}
-
-	i := &s3.PutBucketVersioningInput{
+func resourceBucketInternalVersioningUpdate(conn *s3.S3, bucket string, versioningConfig *s3.VersioningConfiguration) error {
+	input := &s3.PutBucketVersioningInput{
 		Bucket:                  aws.String(bucket),
-		VersioningConfiguration: vc,
+		VersioningConfiguration: versioningConfig,
 	}
-	log.Printf("[DEBUG] S3 put bucket versioning: %#v", i)
 
 	_, err := verify.RetryOnAWSCode(s3.ErrCodeNoSuchBucket, func() (interface{}, error) {
-		return conn.PutBucketVersioning(i)
+		return conn.PutBucketVersioning(input)
 	})
+
 	if err != nil {
-		return fmt.Errorf("Error putting S3 versioning: %s", err)
+		return fmt.Errorf("error putting S3 versioning for bucket (%s): %w", bucket, err)
 	}
 
 	return nil
 }
 
-func resourceBucketLoggingUpdate(conn *s3.S3, d *schema.ResourceData) error {
+func resourceBucketInternalLoggingUpdate(conn *s3.S3, d *schema.ResourceData) error {
 	logging := d.Get("logging").(*schema.Set).List()
 	bucket := d.Get("bucket").(string)
 	loggingStatus := &s3.BucketLoggingStatus{}
@@ -1907,7 +1947,7 @@ func resourceBucketRequestPayerUpdate(conn *s3.S3, d *schema.ResourceData) error
 	return nil
 }
 
-func resourceBucketServerSideEncryptionConfigurationUpdate(conn *s3.S3, d *schema.ResourceData) error {
+func resourceBucketInternalServerSideEncryptionConfigurationUpdate(conn *s3.S3, d *schema.ResourceData) error {
 	bucket := d.Get("bucket").(string)
 	serverSideEncryptionConfiguration := d.Get("server_side_encryption_configuration").([]interface{})
 	if len(serverSideEncryptionConfiguration) == 0 {
@@ -1974,7 +2014,7 @@ func resourceBucketServerSideEncryptionConfigurationUpdate(conn *s3.S3, d *schem
 	return nil
 }
 
-func resourceBucketObjectLockConfigurationUpdate(conn *s3.S3, d *schema.ResourceData) error {
+func resourceBucketInternalObjectLockConfigurationUpdate(conn *s3.S3, d *schema.ResourceData) error {
 	// S3 Object Lock configuration cannot be deleted, only updated.
 	req := &s3.PutObjectLockConfigurationInput{
 		Bucket:                  aws.String(d.Get("bucket").(string)),
@@ -1991,7 +2031,7 @@ func resourceBucketObjectLockConfigurationUpdate(conn *s3.S3, d *schema.Resource
 	return nil
 }
 
-func resourceBucketReplicationConfigurationUpdate(conn *s3.S3, d *schema.ResourceData) error {
+func resourceBucketInternalReplicationConfigurationUpdate(conn *s3.S3, d *schema.ResourceData) error {
 	bucket := d.Get("bucket").(string)
 	replicationConfiguration := d.Get("replication_configuration").([]interface{})
 
@@ -2068,6 +2108,26 @@ func resourceBucketReplicationConfigurationUpdate(conn *s3.S3, d *schema.Resourc
 					ruleAclTranslation := &s3.AccessControlTranslation{}
 					ruleAclTranslation.Owner = aws.String(aclTranslationValues["owner"].(string))
 					ruleDestination.AccessControlTranslation = ruleAclTranslation
+				}
+
+				// replication metrics (required for RTC)
+				if metrics, ok := bd["metrics"].([]interface{}); ok && len(metrics) > 0 {
+					metricsConfig := &s3.Metrics{}
+					metricsValues := metrics[0].(map[string]interface{})
+					metricsConfig.EventThreshold = &s3.ReplicationTimeValue{}
+					metricsConfig.Status = aws.String(metricsValues["status"].(string))
+					metricsConfig.EventThreshold.Minutes = aws.Int64(int64(metricsValues["minutes"].(int)))
+					ruleDestination.Metrics = metricsConfig
+				}
+
+				// replication time control (RTC)
+				if rtc, ok := bd["replication_time"].([]interface{}); ok && len(rtc) > 0 {
+					rtcValues := rtc[0].(map[string]interface{})
+					rtcConfig := &s3.ReplicationTime{}
+					rtcConfig.Status = aws.String(rtcValues["status"].(string))
+					rtcConfig.Time = &s3.ReplicationTimeValue{}
+					rtcConfig.Time.Minutes = aws.Int64(int64(rtcValues["minutes"].(int)))
+					ruleDestination.ReplicationTime = rtcConfig
 				}
 			}
 		}
@@ -2355,6 +2415,22 @@ func flattenBucketReplicationConfiguration(r *s3.ReplicationConfiguration) []map
 			if v.Destination.StorageClass != nil {
 				rd["storage_class"] = aws.StringValue(v.Destination.StorageClass)
 			}
+			if v.Destination.ReplicationTime != nil {
+				rtc := map[string]interface{}{
+					"minutes": int(aws.Int64Value(v.Destination.ReplicationTime.Time.Minutes)),
+					"status":  aws.StringValue(v.Destination.ReplicationTime.Status),
+				}
+				rd["replication_time"] = []interface{}{rtc}
+			}
+			if v.Destination.Metrics != nil {
+				metrics := map[string]interface{}{
+					"status": aws.StringValue(v.Destination.Metrics.Status),
+				}
+				if v.Destination.Metrics.EventThreshold != nil {
+					metrics["minutes"] = int(aws.Int64Value(v.Destination.Metrics.EventThreshold.Minutes))
+				}
+				rd["metrics"] = []interface{}{metrics}
+			}
 			if v.Destination.EncryptionConfiguration != nil {
 				if v.Destination.EncryptionConfiguration.ReplicaKmsKeyID != nil {
 					rd["replica_kms_key_id"] = aws.StringValue(v.Destination.EncryptionConfiguration.ReplicaKmsKeyID)
@@ -2633,6 +2709,12 @@ func destinationHash(v interface{}) int {
 	if v, ok := m["access_control_translation"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		buf.WriteString(fmt.Sprintf("%d-", accessControlTranslationHash(v[0])))
 	}
+	if v, ok := m["replication_time"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		buf.WriteString(fmt.Sprintf("%d-", replicationTimeHash(v[0])))
+	}
+	if v, ok := m["metrics"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		buf.WriteString(fmt.Sprintf("%d-", metricsHash(v[0])))
+	}
 	return create.StringHashcode(buf.String())
 }
 
@@ -2645,6 +2727,40 @@ func accessControlTranslationHash(v interface{}) int {
 	}
 
 	if v, ok := m["owner"]; ok {
+		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
+	}
+	return create.StringHashcode(buf.String())
+}
+
+func metricsHash(v interface{}) int {
+	var buf bytes.Buffer
+	m, ok := v.(map[string]interface{})
+
+	if !ok {
+		return 0
+	}
+
+	if v, ok := m["minutes"]; ok {
+		buf.WriteString(fmt.Sprintf("%d-", v.(int)))
+	}
+	if v, ok := m["status"]; ok {
+		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
+	}
+	return create.StringHashcode(buf.String())
+}
+
+func replicationTimeHash(v interface{}) int {
+	var buf bytes.Buffer
+	m, ok := v.(map[string]interface{})
+
+	if !ok {
+		return 0
+	}
+
+	if v, ok := m["minutes"]; ok {
+		buf.WriteString(fmt.Sprintf("%d-", v.(int)))
+	}
+	if v, ok := m["status"]; ok {
 		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
 	}
 	return create.StringHashcode(buf.String())
@@ -2743,6 +2859,95 @@ func expandS3ObjectLockConfiguration(vConf []interface{}) *s3.ObjectLockConfigur
 	}
 
 	return conf
+}
+
+// Versioning functions
+
+func expandVersioning(l []interface{}) *s3.VersioningConfiguration {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	tfMap, ok := l[0].(map[string]interface{})
+
+	if !ok {
+		return nil
+	}
+
+	output := &s3.VersioningConfiguration{}
+
+	if v, ok := tfMap["enabled"].(bool); ok {
+		if v {
+			output.Status = aws.String(s3.BucketVersioningStatusEnabled)
+		} else {
+			output.Status = aws.String(s3.BucketVersioningStatusSuspended)
+		}
+	}
+
+	if v, ok := tfMap["mfa_delete"].(bool); ok {
+		if v {
+			output.MFADelete = aws.String(s3.MFADeleteEnabled)
+		} else {
+			output.MFADelete = aws.String(s3.MFADeleteDisabled)
+		}
+	}
+
+	return output
+}
+
+func expandVersioningWhenIsNewResource(l []interface{}) *s3.VersioningConfiguration {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	tfMap, ok := l[0].(map[string]interface{})
+
+	if !ok {
+		return nil
+	}
+
+	output := &s3.VersioningConfiguration{}
+
+	// Only set and return a non-nil VersioningConfiguration with at least one of
+	// MFADelete or Status enabled as the PutBucketVersioning API request
+	// does not need to be made for new buckets that don't require versioning.
+	// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/4494
+
+	if v, ok := tfMap["enabled"].(bool); ok && v {
+		output.Status = aws.String(s3.BucketVersioningStatusEnabled)
+	}
+
+	if v, ok := tfMap["mfa_delete"].(bool); ok && v {
+		output.MFADelete = aws.String(s3.MFADeleteEnabled)
+	}
+
+	if output.MFADelete == nil && output.Status == nil {
+		return nil
+	}
+
+	return output
+}
+
+func flattenVersioning(versioning *s3.GetBucketVersioningOutput) []interface{} {
+	if versioning == nil {
+		return []interface{}{}
+	}
+
+	vc := make(map[string]interface{})
+
+	if aws.StringValue(versioning.Status) == s3.BucketVersioningStatusEnabled {
+		vc["enabled"] = true
+	} else {
+		vc["enabled"] = false
+	}
+
+	if aws.StringValue(versioning.MFADelete) == s3.MFADeleteEnabled {
+		vc["mfa_delete"] = true
+	} else {
+		vc["mfa_delete"] = false
+	}
+
+	return []interface{}{vc}
 }
 
 func flattenS3ObjectLockConfiguration(conf *s3.ObjectLockConfiguration) []interface{} {

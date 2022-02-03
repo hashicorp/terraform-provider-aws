@@ -8,7 +8,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/signer"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -97,7 +97,7 @@ func resourceSigningProfilePermissionCreate(d *schema.ResourceData, meta interfa
 			return err
 		}
 	} else {
-		revisionId = *getProfilePermissionsOutput.RevisionId
+		revisionId = aws.StringValue(getProfilePermissionsOutput.RevisionId)
 	}
 
 	statementId := create.Name(d.Get("statement_id").(string), d.Get("statement_id_prefix").(string))

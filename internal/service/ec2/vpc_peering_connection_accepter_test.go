@@ -330,7 +330,7 @@ resource "aws_vpc_peering_connection_accepter" "peer" {
 }
 
 func testAccVPCPeeringConnectionAccepterDifferentRegionDifferentAccountConfig(rName string) string {
-	return acctest.ConfigAlternateAccountAlternateRegionProvider() + fmt.Sprintf(`
+	return testAccAlternateAccountAlternateRegionProviderConfig() + fmt.Sprintf(`
 resource "aws_vpc" "main" {
   cidr_block = "10.0.0.0/16"
 

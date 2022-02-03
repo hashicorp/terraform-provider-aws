@@ -7,7 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/imagebuilder"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -134,6 +134,23 @@ func ResourceImageRecipe() *schema.Resource {
 							Required:     true,
 							ValidateFunc: verify.ValidARN,
 						},
+						"parameter": {
+							Type:     schema.TypeSet,
+							Optional: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"name": {
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: validation.StringLenBetween(1, 256),
+									},
+									"value": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+								},
+							},
+						},
 					},
 				},
 			},
@@ -168,6 +185,24 @@ func ResourceImageRecipe() *schema.Resource {
 			},
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
+			"user_data_base64": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+				Computed: true,
+				ValidateFunc: validation.All(
+					validation.StringLenBetween(1, 21847),
+					func(v interface{}, name string) (warns []string, errs []error) {
+						s := v.(string)
+						if !verify.IsBase64Encoded([]byte(s)) {
+							errs = append(errs, fmt.Errorf(
+								"%s: must be base64-encoded", name,
+							))
+						}
+						return
+					},
+				),
+			},
 			"version": {
 				Type:         schema.TypeString,
 				Required:     true,
@@ -196,11 +231,11 @@ func resourceImageRecipeCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if v, ok := d.GetOk("block_device_mapping"); ok && v.(*schema.Set).Len() > 0 {
-		input.BlockDeviceMappings = expandImageBuilderInstanceBlockDeviceMappings(v.(*schema.Set).List())
+		input.BlockDeviceMappings = expandInstanceBlockDeviceMappings(v.(*schema.Set).List())
 	}
 
 	if v, ok := d.GetOk("component"); ok && len(v.([]interface{})) > 0 {
-		input.Components = expandImageBuilderComponentConfigurations(v.([]interface{}))
+		input.Components = expandComponentConfigurations(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -217,6 +252,12 @@ func resourceImageRecipeCreate(d *schema.ResourceData, meta interface{}) error {
 
 	if len(tags) > 0 {
 		input.Tags = Tags(tags.IgnoreAWS())
+	}
+
+	if v, ok := d.GetOk("user_data_base64"); ok {
+		input.AdditionalInstanceConfiguration = &imagebuilder.AdditionalInstanceConfiguration{
+			UserDataOverride: aws.String(v.(string)),
+		}
 	}
 
 	if v, ok := d.GetOk("version"); ok {
@@ -269,8 +310,8 @@ func resourceImageRecipeRead(d *schema.ResourceData, meta interface{}) error {
 	imageRecipe := output.ImageRecipe
 
 	d.Set("arn", imageRecipe.Arn)
-	d.Set("block_device_mapping", flattenImageBuilderInstanceBlockDeviceMappings(imageRecipe.BlockDeviceMappings))
-	d.Set("component", flattenImageBuilderComponentConfigurations(imageRecipe.Components))
+	d.Set("block_device_mapping", flattenInstanceBlockDeviceMappings(imageRecipe.BlockDeviceMappings))
+	d.Set("component", flattenComponentConfigurations(imageRecipe.Components))
 	d.Set("date_created", imageRecipe.DateCreated)
 	d.Set("description", imageRecipe.Description)
 	d.Set("name", imageRecipe.Name)
@@ -287,6 +328,11 @@ func resourceImageRecipeRead(d *schema.ResourceData, meta interface{}) error {
 	if err := d.Set("tags_all", tags.Map()); err != nil {
 		return fmt.Errorf("error setting tags_all: %w", err)
 	}
+
+	if imageRecipe.AdditionalInstanceConfiguration != nil {
+		d.Set("user_data_base64", imageRecipe.AdditionalInstanceConfiguration.UserDataOverride)
+	}
+
 	d.Set("version", imageRecipe.Version)
 	d.Set("working_directory", imageRecipe.WorkingDirectory)
 
@@ -327,7 +373,7 @@ func resourceImageRecipeDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func expandImageBuilderComponentConfiguration(tfMap map[string]interface{}) *imagebuilder.ComponentConfiguration {
+func expandComponentConfiguration(tfMap map[string]interface{}) *imagebuilder.ComponentConfiguration {
 	if tfMap == nil {
 		return nil
 	}
@@ -338,10 +384,60 @@ func expandImageBuilderComponentConfiguration(tfMap map[string]interface{}) *ima
 		apiObject.ComponentArn = aws.String(v)
 	}
 
+	if v, ok := tfMap["parameter"].(*schema.Set); ok && v.Len() > 0 {
+		apiObject.Parameters = expandComponentParameters(v.List())
+	}
+
 	return apiObject
 }
 
-func expandImageBuilderComponentConfigurations(tfList []interface{}) []*imagebuilder.ComponentConfiguration {
+func expandComponentParameters(tfList []interface{}) []*imagebuilder.ComponentParameter {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	var apiObjects []*imagebuilder.ComponentParameter
+
+	for _, tfMapRaw := range tfList {
+		tfMap, ok := tfMapRaw.(map[string]interface{})
+
+		if !ok {
+			continue
+		}
+
+		apiObject := expandComponentParameter(tfMap)
+
+		if apiObject == nil {
+			continue
+		}
+
+		apiObjects = append(apiObjects, apiObject)
+	}
+
+	return apiObjects
+}
+
+func expandComponentParameter(tfMap map[string]interface{}) *imagebuilder.ComponentParameter {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &imagebuilder.ComponentParameter{}
+
+	if v, ok := tfMap["name"].(string); ok && v != "" {
+		apiObject.Name = aws.String(v)
+	}
+
+	if v, ok := tfMap["value"].(string); ok && v != "" {
+		// ImageBuilder API quirk
+		// Even though Value is a slice, only one element is accepted.
+		apiObject.Value = aws.StringSlice([]string{v})
+	}
+
+	return apiObject
+}
+
+func expandComponentConfigurations(tfList []interface{}) []*imagebuilder.ComponentConfiguration {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -355,7 +451,7 @@ func expandImageBuilderComponentConfigurations(tfList []interface{}) []*imagebui
 			continue
 		}
 
-		apiObject := expandImageBuilderComponentConfiguration(tfMap)
+		apiObject := expandComponentConfiguration(tfMap)
 
 		if apiObject == nil {
 			continue
@@ -367,7 +463,7 @@ func expandImageBuilderComponentConfigurations(tfList []interface{}) []*imagebui
 	return apiObjects
 }
 
-func expandImageBuilderEbsInstanceBlockDeviceSpecification(tfMap map[string]interface{}) *imagebuilder.EbsInstanceBlockDeviceSpecification {
+func expandEBSInstanceBlockDeviceSpecification(tfMap map[string]interface{}) *imagebuilder.EbsInstanceBlockDeviceSpecification {
 	if tfMap == nil {
 		return nil
 	}
@@ -407,7 +503,7 @@ func expandImageBuilderEbsInstanceBlockDeviceSpecification(tfMap map[string]inte
 	return apiObject
 }
 
-func expandImageBuilderInstanceBlockDeviceMapping(tfMap map[string]interface{}) *imagebuilder.InstanceBlockDeviceMapping {
+func expandInstanceBlockDeviceMapping(tfMap map[string]interface{}) *imagebuilder.InstanceBlockDeviceMapping {
 	if tfMap == nil {
 		return nil
 	}
@@ -419,7 +515,7 @@ func expandImageBuilderInstanceBlockDeviceMapping(tfMap map[string]interface{}) 
 	}
 
 	if v, ok := tfMap["ebs"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		apiObject.Ebs = expandImageBuilderEbsInstanceBlockDeviceSpecification(v[0].(map[string]interface{}))
+		apiObject.Ebs = expandEBSInstanceBlockDeviceSpecification(v[0].(map[string]interface{}))
 	}
 
 	if v, ok := tfMap["no_device"].(bool); ok && v {
@@ -433,7 +529,7 @@ func expandImageBuilderInstanceBlockDeviceMapping(tfMap map[string]interface{}) 
 	return apiObject
 }
 
-func expandImageBuilderInstanceBlockDeviceMappings(tfList []interface{}) []*imagebuilder.InstanceBlockDeviceMapping {
+func expandInstanceBlockDeviceMappings(tfList []interface{}) []*imagebuilder.InstanceBlockDeviceMapping {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -447,7 +543,7 @@ func expandImageBuilderInstanceBlockDeviceMappings(tfList []interface{}) []*imag
 			continue
 		}
 
-		apiObject := expandImageBuilderInstanceBlockDeviceMapping(tfMap)
+		apiObject := expandInstanceBlockDeviceMapping(tfMap)
 
 		if apiObject == nil {
 			continue
@@ -459,7 +555,7 @@ func expandImageBuilderInstanceBlockDeviceMappings(tfList []interface{}) []*imag
 	return apiObjects
 }
 
-func flattenImageBuilderComponentConfiguration(apiObject *imagebuilder.ComponentConfiguration) map[string]interface{} {
+func flattenComponentConfiguration(apiObject *imagebuilder.ComponentConfiguration) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -470,10 +566,14 @@ func flattenImageBuilderComponentConfiguration(apiObject *imagebuilder.Component
 		tfMap["component_arn"] = aws.StringValue(v)
 	}
 
+	if v := apiObject.Parameters; v != nil {
+		tfMap["parameter"] = flattenComponentParameters(v)
+	}
+
 	return tfMap
 }
 
-func flattenImageBuilderComponentConfigurations(apiObjects []*imagebuilder.ComponentConfiguration) []interface{} {
+func flattenComponentParameters(apiObjects []*imagebuilder.ComponentParameter) []interface{} {
 	if len(apiObjects) == 0 {
 		return nil
 	}
@@ -485,13 +585,51 @@ func flattenImageBuilderComponentConfigurations(apiObjects []*imagebuilder.Compo
 			continue
 		}
 
-		tfList = append(tfList, flattenImageBuilderComponentConfiguration(apiObject))
+		tfList = append(tfList, flattenComponentParameter(apiObject))
 	}
 
 	return tfList
 }
 
-func flattenImageBuilderEbsInstanceBlockDeviceSpecification(apiObject *imagebuilder.EbsInstanceBlockDeviceSpecification) map[string]interface{} {
+func flattenComponentParameter(apiObject *imagebuilder.ComponentParameter) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.Name; v != nil {
+		tfMap["name"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.Value; v != nil {
+		// ImageBuilder API quirk
+		// Even though Value is a slice, only one element is accepted.
+		tfMap["value"] = aws.StringValueSlice(v)[0]
+	}
+
+	return tfMap
+}
+
+func flattenComponentConfigurations(apiObjects []*imagebuilder.ComponentConfiguration) []interface{} {
+	if len(apiObjects) == 0 {
+		return nil
+	}
+
+	var tfList []interface{}
+
+	for _, apiObject := range apiObjects {
+		if apiObject == nil {
+			continue
+		}
+
+		tfList = append(tfList, flattenComponentConfiguration(apiObject))
+	}
+
+	return tfList
+}
+
+func flattenEBSInstanceBlockDeviceSpecification(apiObject *imagebuilder.EbsInstanceBlockDeviceSpecification) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -529,7 +667,7 @@ func flattenImageBuilderEbsInstanceBlockDeviceSpecification(apiObject *imagebuil
 	return tfMap
 }
 
-func flattenImageBuilderInstanceBlockDeviceMapping(apiObject *imagebuilder.InstanceBlockDeviceMapping) map[string]interface{} {
+func flattenInstanceBlockDeviceMapping(apiObject *imagebuilder.InstanceBlockDeviceMapping) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -541,7 +679,7 @@ func flattenImageBuilderInstanceBlockDeviceMapping(apiObject *imagebuilder.Insta
 	}
 
 	if v := apiObject.Ebs; v != nil {
-		tfMap["ebs"] = []interface{}{flattenImageBuilderEbsInstanceBlockDeviceSpecification(v)}
+		tfMap["ebs"] = []interface{}{flattenEBSInstanceBlockDeviceSpecification(v)}
 	}
 
 	if v := apiObject.NoDevice; v != nil {
@@ -555,7 +693,7 @@ func flattenImageBuilderInstanceBlockDeviceMapping(apiObject *imagebuilder.Insta
 	return tfMap
 }
 
-func flattenImageBuilderInstanceBlockDeviceMappings(apiObjects []*imagebuilder.InstanceBlockDeviceMapping) []interface{} {
+func flattenInstanceBlockDeviceMappings(apiObjects []*imagebuilder.InstanceBlockDeviceMapping) []interface{} {
 	if len(apiObjects) == 0 {
 		return nil
 	}
@@ -567,7 +705,7 @@ func flattenImageBuilderInstanceBlockDeviceMappings(apiObjects []*imagebuilder.I
 			continue
 		}
 
-		tfList = append(tfList, flattenImageBuilderInstanceBlockDeviceMapping(apiObject))
+		tfList = append(tfList, flattenInstanceBlockDeviceMapping(apiObject))
 	}
 
 	return tfList

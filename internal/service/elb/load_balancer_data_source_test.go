@@ -29,6 +29,7 @@ func TestAccELBLoadBalancerDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(dataSourceName, "internal", "true"),
 					resource.TestCheckResourceAttr(dataSourceName, "subnets.#", "2"),
 					resource.TestCheckResourceAttr(dataSourceName, "security_groups.#", "1"),
+					resource.TestCheckResourceAttr(dataSourceName, "desync_mitigation_mode", "defensive"),
 					resource.TestCheckResourceAttr(dataSourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(dataSourceName, "tags.Name", rName),
 					resource.TestCheckResourceAttr(dataSourceName, "tags.TestName", t.Name()),

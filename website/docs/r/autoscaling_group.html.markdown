@@ -371,10 +371,10 @@ The following arguments are supported:
 * `suspended_processes` - (Optional) A list of processes to suspend for the Auto Scaling Group. The allowed values are `Launch`, `Terminate`, `HealthCheck`, `ReplaceUnhealthy`, `AZRebalance`, `AlarmNotification`, `ScheduledActions`, `AddToLoadBalancer`.
 Note that if you suspend either the `Launch` or `Terminate` process types, it can prevent your Auto Scaling Group from functioning properly.
 * `tag` (Optional) Configuration block(s) containing resource tags. Conflicts with `tags`. See [Tag](#tag-and-tags) below for more details.
-* `tags` (Optional) Set of maps containing resource tags. Conflicts with `tag`. See [Tags](#tag-and-tags) below for more details.
+* `tags` (Optional, **Deprecated** use `tag` instead) Set of maps containing resource tags. Conflicts with `tag`. See [Tags](#tag-and-tags) below for more details.
 * `placement_group` (Optional) The name of the placement group into which you'll launch your instances, if any.
 * `metrics_granularity` - (Optional) The granularity to associate with the metrics to collect. The only valid value is `1Minute`. Default is `1Minute`.
-* `enabled_metrics` - (Optional) A list of metrics to collect. The allowed values are `GroupDesiredCapacity`, `GroupInServiceCapacity`, `GroupPendingCapacity`, `GroupMinSize`, `GroupMaxSize`, `GroupInServiceInstances`, `GroupPendingInstances`, `GroupStandbyInstances`, `GroupStandbyCapacity`, `GroupTerminatingCapacity`, `GroupTerminatingInstances`, `GroupTotalCapacity`, `GroupTotalInstances`.
+* `enabled_metrics` - (Optional) A list of metrics to collect. The allowed values are defined by the [underlying AWS API](https://docs.aws.amazon.com/autoscaling/ec2/APIReference/API_EnableMetricsCollection.html).
 * `wait_for_capacity_timeout` (Default: "10m") A maximum
   [duration](https://golang.org/pkg/time/#ParseDuration) that Terraform should
   wait for ASG instances to be healthy before timing out.  (See also [Waiting
@@ -423,7 +423,7 @@ This configuration block supports the following:
 * `on_demand_base_capacity` - (Optional) Absolute minimum amount of desired capacity that must be fulfilled by on-demand instances. Default: `0`.
 * `on_demand_percentage_above_base_capacity` - (Optional) Percentage split between on-demand and Spot instances above the base on-demand capacity. Default: `100`.
 * `spot_allocation_strategy` - (Optional) How to allocate capacity across the Spot pools. Valid values: `lowest-price`, `capacity-optimized`, `capacity-optimized-prioritized`. Default: `lowest-price`.
-* `spot_instance_pools` - (Optional) Number of Spot pools per availability zone to allocate capacity. EC2 Auto Scaling selects the cheapest Spot pools and evenly allocates Spot capacity across the number of Spot pools that you specify. Default: `2`.
+* `spot_instance_pools` - (Optional) Number of Spot pools per availability zone to allocate capacity. EC2 Auto Scaling selects the cheapest Spot pools and evenly allocates Spot capacity across the number of Spot pools that you specify. Only available with `spot_allocation_strategy` set to `lowest-price`. Otherwise it must be set to `0`, if it has been defined before. Default: `2`.
 * `spot_max_price` - (Optional) Maximum price per unit hour that the user is willing to pay for the Spot instances. Default: an empty string which means the on-demand price.
 
 #### mixed_instances_policy launch_template
@@ -473,11 +473,15 @@ This configuration block supports the following:
 
 * `strategy` - (Required) The strategy to use for instance refresh. The only allowed value is `Rolling`. See [StartInstanceRefresh Action](https://docs.aws.amazon.com/autoscaling/ec2/APIReference/API_StartInstanceRefresh.html#API_StartInstanceRefresh_RequestParameters) for more information.
 * `preferences` - (Optional) Override default parameters for Instance Refresh.
+    * `checkpoint_delay` - (Optional) The number of seconds to wait after a checkpoint. Defaults to `3600`.
+    * `checkpoint_percentages` - (Optional) List of percentages for each checkpoint. Values must be unique and in ascending order. To replace all instances, the final number must be `100`.
     * `instance_warmup` - (Optional) The number of seconds until a newly launched instance is configured and ready to use. Default behavior is to use the Auto Scaling Group's health check grace period.
     * `min_healthy_percentage` - (Optional) The amount of capacity in the Auto Scaling group that must remain healthy during an instance refresh to allow the operation to continue, as a percentage of the desired capacity of the Auto Scaling group. Defaults to `90`.
 * `triggers` - (Optional) Set of additional property names that will trigger an Instance Refresh. A refresh will always be triggered by a change in any of `launch_configuration`, `launch_template`, or `mixed_instances_policy`.
 
 ~> **NOTE:** A refresh is started when any of the following Auto Scaling Group properties change: `launch_configuration`, `launch_template`, `mixed_instances_policy`. Additional properties can be specified in the `triggers` property of `instance_refresh`.
+
+~> **NOTE:** A refresh will not start when `version = "$Latest"` is configured in the `launch_template` block. To trigger the instance refresh when a launch template is changed, configure `version` to use the `latest_version` attribute of the `aws_launch_template` resource.
 
 ~> **NOTE:** Auto Scaling Groups support up to one active instance refresh at a time. When this resource is updated, any existing refresh is cancelled.
 

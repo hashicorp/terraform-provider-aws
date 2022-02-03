@@ -35,7 +35,7 @@ func ResourceLogSubscription() *schema.Resource {
 }
 
 func resourceLogSubscriptionCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DirectoryServiceConn
+	conn := meta.(*conns.AWSClient).DSConn
 
 	directoryId := d.Get("directory_id")
 	logGroupName := d.Get("log_group_name")
@@ -56,7 +56,7 @@ func resourceLogSubscriptionCreate(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceLogSubscriptionRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DirectoryServiceConn
+	conn := meta.(*conns.AWSClient).DSConn
 
 	directoryId := d.Id()
 
@@ -83,7 +83,7 @@ func resourceLogSubscriptionRead(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceLogSubscriptionDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DirectoryServiceConn
+	conn := meta.(*conns.AWSClient).DSConn
 
 	directoryId := d.Id()
 

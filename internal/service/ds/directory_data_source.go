@@ -6,7 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/directoryservice"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
@@ -131,7 +131,7 @@ func DataSourceDirectory() *schema.Resource {
 }
 
 func dataSourceDirectoryRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DirectoryServiceConn
+	conn := meta.(*conns.AWSClient).DSConn
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	directoryID := d.Get("directory_id").(string)

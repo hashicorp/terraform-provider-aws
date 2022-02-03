@@ -10,7 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/autoscaling"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -662,8 +662,30 @@ func testAccCheckLaunchConfigurationExists(n string, res *autoscaling.LaunchConf
 	}
 }
 
+// configLatestAmazonLinuxPvInstanceStoreAmi returns the configuration for a data source that
+// describes the latest Amazon Linux AMI using PV virtualization and an instance store root device.
+// The data source is named 'amzn-ami-minimal-pv-ebs'.
+func testAccLatestAmazonLinuxPVInstanceStoreAMIConfig() string {
+	return `
+data "aws_ami" "amzn-ami-minimal-pv-instance-store" {
+  most_recent = true
+  owners      = ["amazon"]
+
+  filter {
+    name   = "name"
+    values = ["amzn-ami-minimal-pv-*"]
+  }
+
+  filter {
+    name   = "root-device-type"
+    values = ["instance-store"]
+  }
+}
+`
+}
+
 func testAccLaunchConfigurationWithInstanceStoreAMIConfig(rName string) string {
-	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxPvInstanceStoreAmi(), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccLatestAmazonLinuxPVInstanceStoreAMIConfig(), fmt.Sprintf(`
 resource "aws_launch_configuration" "test" {
   name     = %[1]q
   image_id = data.aws_ami.amzn-ami-minimal-pv-instance-store.id

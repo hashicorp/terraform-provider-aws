@@ -10,7 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -292,11 +292,12 @@ func resourceEIPRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("public_dns", meta.(*conns.AWSClient).PartitionHostname(fmt.Sprintf("ec2-%s.%s", ConvertIPToDashIP(*address.PublicIp), RegionalPublicDNSSuffix(region))))
 	}
 
-	d.Set("public_ipv4_pool", address.PublicIpv4Pool)
+	d.Set("allocation_id", address.AllocationId)
 	d.Set("carrier_ip", address.CarrierIp)
 	d.Set("customer_owned_ipv4_pool", address.CustomerOwnedIpv4Pool)
 	d.Set("customer_owned_ip", address.CustomerOwnedIp)
 	d.Set("network_border_group", address.NetworkBorderGroup)
+	d.Set("public_ipv4_pool", address.PublicIpv4Pool)
 
 	// On import (domain never set, which it must've been if we created),
 	// set the 'vpc' attribute depending on if we're in a VPC.

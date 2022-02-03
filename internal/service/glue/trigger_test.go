@@ -6,7 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/glue"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -257,6 +257,35 @@ func TestAccGlueTrigger_schedule(t *testing.T) {
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"enabled"},
+			},
+		},
+	})
+}
+
+func TestAccGlueTrigger_startOnCreate(t *testing.T) {
+	var trigger glue.Trigger
+
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_glue_trigger.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckTriggerDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTriggerConfig_ScheduleStart(rName, "cron(1 2 * * ? *)"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTriggerExists(resourceName, &trigger),
+					resource.TestCheckResourceAttr(resourceName, "schedule", "cron(1 2 * * ? *)"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"start_on_creation"},
 			},
 		},
 	})
@@ -675,6 +704,21 @@ resource "aws_glue_trigger" "test" {
   name     = %[1]q
   schedule = %[2]q
   type     = "SCHEDULED"
+
+  actions {
+    job_name = aws_glue_job.test.name
+  }
+}
+`, rName, schedule))
+}
+
+func testAccTriggerConfig_ScheduleStart(rName, schedule string) string {
+	return acctest.ConfigCompose(testAccJobConfig_Required(rName), fmt.Sprintf(`
+resource "aws_glue_trigger" "test" {
+  name              = %[1]q
+  schedule          = %[2]q
+  type              = "SCHEDULED"
+  start_on_creation = true
 
   actions {
     job_name = aws_glue_job.test.name

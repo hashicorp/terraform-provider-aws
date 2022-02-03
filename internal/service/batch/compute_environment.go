@@ -35,6 +35,10 @@ func ResourceComputeEnvironment() *schema.Resource {
 		),
 
 		Schema: map[string]*schema.Schema{
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"compute_environment_name": {
 				Type:          schema.TypeString,
 				Optional:      true,
@@ -77,6 +81,30 @@ func ResourceComputeEnvironment() *schema.Resource {
 							Type:     schema.TypeInt,
 							Optional: true,
 							Computed: true,
+						},
+						"ec2_configuration": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Computed: true,
+							ForceNew: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"image_id_override": {
+										Type:         schema.TypeString,
+										Optional:     true,
+										Computed:     true,
+										ForceNew:     true,
+										ValidateFunc: validation.StringLenBetween(1, 256),
+									},
+									"image_type": {
+										Type:         schema.TypeString,
+										Optional:     true,
+										ForceNew:     true,
+										ValidateFunc: validation.StringLenBetween(1, 256),
+									},
+								},
+							},
 						},
 						"ec2_key_pair": {
 							Type:     schema.TypeString,
@@ -164,6 +192,10 @@ func ResourceComputeEnvironment() *schema.Resource {
 					},
 				},
 			},
+			"ecs_cluster_arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"service_role": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -179,6 +211,14 @@ func ResourceComputeEnvironment() *schema.Resource {
 				ValidateFunc: validation.StringInSlice(batch.CEState_Values(), true),
 				Default:      batch.CEStateEnabled,
 			},
+			"status": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"status_reason": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
 			"type": {
@@ -189,22 +229,6 @@ func ResourceComputeEnvironment() *schema.Resource {
 					return strings.ToUpper(val.(string))
 				},
 				ValidateFunc: validation.StringInSlice(batch.CEType_Values(), true),
-			},
-			"arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"ecs_cluster_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"status": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"status_reason": {
-				Type:     schema.TypeString,
-				Computed: true,
 			},
 		},
 	}
@@ -224,12 +248,8 @@ func resourceComputeEnvironmentCreate(d *schema.ResourceData, meta interface{}) 
 		Type:                   aws.String(computeEnvironmentType),
 	}
 
-	// TODO Check in CustomizeDiff that UNMANAGED compute environment has no compute_resources.
-	// TODO This would be a breaking change.
-	if computeEnvironmentType := strings.ToUpper(computeEnvironmentType); computeEnvironmentType == batch.CETypeManaged {
-		if v, ok := d.GetOk("compute_resources"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-			input.ComputeResources = expandBatchComputeResource(v.([]interface{})[0].(map[string]interface{}))
-		}
+	if v, ok := d.GetOk("compute_resources"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		input.ComputeResources = expandBatchComputeResource(v.([]interface{})[0].(map[string]interface{}))
 	}
 
 	if v, ok := d.GetOk("state"); ok {
@@ -285,15 +305,12 @@ func resourceComputeEnvironmentRead(d *schema.ResourceData, meta interface{}) er
 	d.Set("status_reason", computeEnvironment.StatusReason)
 	d.Set("type", computeEnvironmentType)
 
-	// TODO See above on how to remove check on type.
-	if computeEnvironmentType == batch.CETypeManaged {
-		if computeEnvironment.ComputeResources != nil {
-			if err := d.Set("compute_resources", []interface{}{flattenBatchComputeResource(computeEnvironment.ComputeResources)}); err != nil {
-				return fmt.Errorf("error setting compute_resources: %w", err)
-			}
-		} else {
-			d.Set("compute_resources", nil)
+	if computeEnvironment.ComputeResources != nil {
+		if err := d.Set("compute_resources", []interface{}{flattenBatchComputeResource(computeEnvironment.ComputeResources)}); err != nil {
+			return fmt.Errorf("error setting compute_resources: %w", err)
 		}
+	} else {
+		d.Set("compute_resources", nil)
 	}
 
 	tags := KeyValueTags(computeEnvironment.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
@@ -326,7 +343,6 @@ func resourceComputeEnvironmentUpdate(d *schema.ResourceData, meta interface{}) 
 			input.State = aws.String(d.Get("state").(string))
 		}
 
-		// TODO See above on how to remove check on type.
 		if computeEnvironmentType := strings.ToUpper(d.Get("type").(string)); computeEnvironmentType == batch.CETypeManaged {
 			// "At least one compute-resources attribute must be specified"
 			computeResourceUpdate := &batch.ComputeResourceUpdate{
@@ -411,6 +427,13 @@ func resourceComputeEnvironmentDelete(d *schema.ResourceData, meta interface{}) 
 }
 
 func resourceComputeEnvironmentCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, meta interface{}) error {
+	if computeEnvironmentType := strings.ToUpper(diff.Get("type").(string)); computeEnvironmentType == batch.CETypeUnmanaged {
+		// UNMANAGED compute environments can have no compute_resources configured.
+		if v, ok := diff.GetOk("compute_resources"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+			return fmt.Errorf("no `compute_resources` can be specified when `type` is %q", computeEnvironmentType)
+		}
+	}
+
 	if diff.Id() != "" {
 		// Update.
 
@@ -459,6 +482,10 @@ func expandBatchComputeResource(tfMap map[string]interface{}) *batch.ComputeReso
 
 	if v, ok := tfMap["desired_vcpus"].(int); ok && v != 0 {
 		apiObject.DesiredvCpus = aws.Int64(int64(v))
+	}
+
+	if v, ok := tfMap["ec2_configuration"].([]interface{}); ok && len(v) > 0 {
+		apiObject.Ec2Configuration = expandBatchEc2Configurations(v)
 	}
 
 	if v, ok := tfMap["ec2_key_pair"].(string); ok && v != "" {
@@ -514,6 +541,50 @@ func expandBatchComputeResource(tfMap map[string]interface{}) *batch.ComputeReso
 	return apiObject
 }
 
+func expandBatchEc2Configuration(tfMap map[string]interface{}) *batch.Ec2Configuration {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &batch.Ec2Configuration{}
+
+	if v, ok := tfMap["image_id_override"].(string); ok && v != "" {
+		apiObject.ImageIdOverride = aws.String(v)
+	}
+
+	if v, ok := tfMap["image_type"].(string); ok && v != "" {
+		apiObject.ImageType = aws.String(v)
+	}
+
+	return apiObject
+}
+
+func expandBatchEc2Configurations(tfList []interface{}) []*batch.Ec2Configuration {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	var apiObjects []*batch.Ec2Configuration
+
+	for _, tfMapRaw := range tfList {
+		tfMap, ok := tfMapRaw.(map[string]interface{})
+
+		if !ok {
+			continue
+		}
+
+		apiObject := expandBatchEc2Configuration(tfMap)
+
+		if apiObject == nil {
+			continue
+		}
+
+		apiObjects = append(apiObjects, apiObject)
+	}
+
+	return apiObjects
+}
+
 func expandBatchLaunchTemplateSpecification(tfMap map[string]interface{}) *batch.LaunchTemplateSpecification {
 	if tfMap == nil {
 		return nil
@@ -553,6 +624,10 @@ func flattenBatchComputeResource(apiObject *batch.ComputeResource) map[string]in
 
 	if v := apiObject.DesiredvCpus; v != nil {
 		tfMap["desired_vcpus"] = aws.Int64Value(v)
+	}
+
+	if v := apiObject.Ec2Configuration; v != nil {
+		tfMap["ec2_configuration"] = flattenBatchEc2Configurations(v)
 	}
 
 	if v := apiObject.Ec2KeyPair; v != nil {
@@ -604,6 +679,42 @@ func flattenBatchComputeResource(apiObject *batch.ComputeResource) map[string]in
 	}
 
 	return tfMap
+}
+
+func flattenBatchEc2Configuration(apiObject *batch.Ec2Configuration) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.ImageIdOverride; v != nil {
+		tfMap["image_id_override"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.ImageType; v != nil {
+		tfMap["image_type"] = aws.StringValue(v)
+	}
+
+	return tfMap
+}
+
+func flattenBatchEc2Configurations(apiObjects []*batch.Ec2Configuration) []interface{} {
+	if len(apiObjects) == 0 {
+		return nil
+	}
+
+	var tfList []interface{}
+
+	for _, apiObject := range apiObjects {
+		if apiObject == nil {
+			continue
+		}
+
+		tfList = append(tfList, flattenBatchEc2Configuration(apiObject))
+	}
+
+	return tfList
 }
 
 func flattenBatchLaunchTemplateSpecification(apiObject *batch.LaunchTemplateSpecification) map[string]interface{} {

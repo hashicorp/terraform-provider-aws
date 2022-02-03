@@ -18,7 +18,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/cloudformation"
 	"github.com/aws/aws-sdk-go/service/cloudfront"
 	"github.com/aws/aws-sdk-go/service/s3"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -30,6 +30,18 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
+
+func init() {
+	acctest.RegisterServiceErrorCheckFunc(s3.EndpointsID, testAccErrorCheckSkip)
+}
+
+// testAccErrorCheckSkip skips tests that have error messages indicating unsupported features
+func testAccErrorCheckSkip(t *testing.T) resource.ErrorCheckFunc {
+	return acctest.ErrorCheckSkipMessagesContaining(t,
+		"Number of distinct destination bucket ARNs cannot exceed",
+		"destination is not allowed",
+	)
+}
 
 func TestAccS3Bucket_Basic_basic(t *testing.T) {
 	bucketName := sdkacctest.RandomWithPrefix("tf-test-bucket")
@@ -54,6 +66,9 @@ func TestAccS3Bucket_Basic_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "bucket", bucketName),
 					testAccCheckS3BucketDomainName(resourceName, "bucket_domain_name", bucketName),
 					resource.TestCheckResourceAttr(resourceName, "bucket_regional_domain_name", testAccBucketRegionalDomainName(bucketName, region)),
+					resource.TestCheckResourceAttr(resourceName, "versioning.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "versioning.0.enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "versioning.0.mfa_delete", "false"),
 				),
 			},
 			{
@@ -939,10 +954,12 @@ func TestAccS3Bucket_Manage_versioning(t *testing.T) {
 		CheckDestroy: testAccCheckBucketDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketConfig_Basic(bucketName),
+				Config: testAccBucketWithVersioningConfig(bucketName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketExists(resourceName),
-					testAccCheckBucketVersioning(resourceName, ""),
+					resource.TestCheckResourceAttr(resourceName, "versioning.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "versioning.0.enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "versioning.0.mfa_delete", "false"),
 				),
 			},
 			{
@@ -952,18 +969,106 @@ func TestAccS3Bucket_Manage_versioning(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"force_destroy", "acl"},
 			},
 			{
-				Config: testAccBucketWithVersioningConfig(bucketName),
+				Config: testAccBucketWithVersioningConfig(bucketName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketExists(resourceName),
-					testAccCheckBucketVersioning(resourceName, s3.BucketVersioningStatusEnabled),
+					resource.TestCheckResourceAttr(resourceName, "versioning.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "versioning.0.enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "versioning.0.mfa_delete", "false"),
 				),
 			},
 			{
-				Config: testAccBucketWithDisableVersioningConfig(bucketName),
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"force_destroy", "acl"},
+			},
+		},
+	})
+}
+
+func TestAccS3Bucket_Manage_versioningDisabled(t *testing.T) {
+	bucketName := sdkacctest.RandomWithPrefix("tf-test-bucket")
+	resourceName := "aws_s3_bucket.bucket"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckBucketDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBucketWithVersioningConfig(bucketName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketExists(resourceName),
-					testAccCheckBucketVersioning(resourceName, s3.BucketVersioningStatusSuspended),
+					resource.TestCheckResourceAttr(resourceName, "versioning.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "versioning.0.enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "versioning.0.mfa_delete", "false"),
 				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"force_destroy", "acl"},
+			},
+		},
+	})
+}
+
+func TestAccS3Bucket_Manage_MfaDeleteDisabled(t *testing.T) {
+	bucketName := sdkacctest.RandomWithPrefix("tf-test-bucket")
+	resourceName := "aws_s3_bucket.bucket"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckBucketDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBucketWithVersioningMfaDeleteConfig(bucketName, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBucketExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "versioning.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "versioning.0.enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "versioning.0.mfa_delete", "false"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"force_destroy", "acl"},
+			},
+		},
+	})
+}
+
+func TestAccS3Bucket_Manage_versioningAndMfaDeleteDisabled(t *testing.T) {
+	bucketName := sdkacctest.RandomWithPrefix("tf-test-bucket")
+	resourceName := "aws_s3_bucket.bucket"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckBucketDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBucketWithVersioningVersioningAndMfaDeleteConfig(bucketName, false, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBucketExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "versioning.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "versioning.0.enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "versioning.0.mfa_delete", "false"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"force_destroy", "acl"},
 			},
 		},
 	})
@@ -1493,7 +1598,7 @@ func TestAccS3Bucket_Replication_multipleDestinationsEmptyFilter(t *testing.T) {
 			acctest.PreCheck(t)
 			acctest.PreCheckMultipleRegion(t, 2)
 		},
-		ErrorCheck:        testAccErrorCheckSkipS3(t),
+		ErrorCheck:        acctest.ErrorCheck(t, s3.EndpointsID),
 		ProviderFactories: acctest.FactoriesAlternate(&providers),
 		CheckDestroy:      acctest.CheckWithProviders(testAccCheckBucketDestroyWithProvider, &providers),
 		Steps: []resource.TestStep{
@@ -1560,7 +1665,7 @@ func TestAccS3Bucket_Replication_multipleDestinationsNonEmptyFilter(t *testing.T
 			acctest.PreCheck(t)
 			acctest.PreCheckMultipleRegion(t, 2)
 		},
-		ErrorCheck:        testAccErrorCheckSkipS3(t),
+		ErrorCheck:        acctest.ErrorCheck(t, s3.EndpointsID),
 		ProviderFactories: acctest.FactoriesAlternate(&providers),
 		CheckDestroy:      acctest.CheckWithProviders(testAccCheckBucketDestroyWithProvider, &providers),
 		Steps: []resource.TestStep{
@@ -1631,7 +1736,7 @@ func TestAccS3Bucket_Replication_twoDestination(t *testing.T) {
 			acctest.PreCheck(t)
 			acctest.PreCheckMultipleRegion(t, 2)
 		},
-		ErrorCheck:        testAccErrorCheckSkipS3(t),
+		ErrorCheck:        acctest.ErrorCheck(t, s3.EndpointsID),
 		ProviderFactories: acctest.FactoriesAlternate(&providers),
 		CheckDestroy:      acctest.CheckWithProviders(testAccCheckBucketDestroyWithProvider, &providers),
 		Steps: []resource.TestStep{
@@ -2217,6 +2322,201 @@ func TestAccS3Bucket_Replication_schemaV2SameRegion(t *testing.T) {
 	})
 }
 
+func TestAccS3Bucket_Replication_RTC_valid(t *testing.T) {
+	rInt := sdkacctest.RandInt()
+	alternateRegion := acctest.AlternateRegion()
+	region := acctest.Region()
+	partition := acctest.Partition()
+	iamRoleResourceName := "aws_iam_role.role"
+	resourceName := "aws_s3_bucket.bucket"
+
+	// record the initialized providers so that we can use them to check for the instances in each region
+	var providers []*schema.Provider
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(t)
+			acctest.PreCheckMultipleRegion(t, 2)
+		},
+		ErrorCheck:        acctest.ErrorCheck(t, s3.EndpointsID),
+		ProviderFactories: acctest.FactoriesAlternate(&providers),
+		CheckDestroy:      acctest.CheckWithProviders(testAccCheckBucketDestroyWithProvider, &providers),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBucketReplicationWithReplicationConfigurationWithRTCConfig(rInt, 15),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBucketExistsWithProvider(resourceName, acctest.RegionProviderFunc(region, &providers)),
+					resource.TestCheckResourceAttr(resourceName, "replication_configuration.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "replication_configuration.0.role", iamRoleResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "replication_configuration.0.rules.#", "1"),
+					testAccCheckBucketExistsWithProvider("aws_s3_bucket.destination", acctest.RegionProviderFunc(alternateRegion, &providers)),
+					testAccCheckBucketReplicationRules(
+						resourceName,
+						[]*s3.ReplicationRule{
+							{
+								ID: aws.String("rtc"),
+								DeleteMarkerReplication: &s3.DeleteMarkerReplication{
+									Status: aws.String(s3.DeleteMarkerReplicationStatusDisabled),
+								},
+								Destination: &s3.Destination{
+									Bucket:       aws.String(fmt.Sprintf("arn:%s:s3:::tf-test-bucket-destination-%d", partition, rInt)),
+									StorageClass: aws.String(s3.StorageClassStandard),
+									Metrics: &s3.Metrics{
+										EventThreshold: &s3.ReplicationTimeValue{
+											Minutes: aws.Int64(15),
+										},
+										Status: aws.String(s3.MetricsStatusEnabled),
+									},
+									ReplicationTime: &s3.ReplicationTime{
+										Time: &s3.ReplicationTimeValue{
+											Minutes: aws.Int64(15),
+										},
+										Status: aws.String(s3.ReplicationTimeStatusEnabled),
+									},
+								},
+								Filter: &s3.ReplicationRuleFilter{
+									Prefix: aws.String(""),
+								},
+								Status:   aws.String(s3.ReplicationRuleStatusEnabled),
+								Priority: aws.Int64(0),
+							},
+						},
+					),
+				),
+			},
+			{
+				Config: testAccBucketReplicationWithReplicationConfigurationWithRTCNoMinutesConfig(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBucketExistsWithProvider(resourceName, acctest.RegionProviderFunc(region, &providers)),
+					resource.TestCheckResourceAttr(resourceName, "replication_configuration.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "replication_configuration.0.role", iamRoleResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "replication_configuration.0.rules.#", "1"),
+					testAccCheckBucketExistsWithProvider("aws_s3_bucket.destination", acctest.RegionProviderFunc(alternateRegion, &providers)),
+					testAccCheckBucketReplicationRules(
+						resourceName,
+						[]*s3.ReplicationRule{
+							{
+								ID: aws.String("rtc-no-minutes"),
+								DeleteMarkerReplication: &s3.DeleteMarkerReplication{
+									Status: aws.String(s3.DeleteMarkerReplicationStatusDisabled),
+								},
+								Destination: &s3.Destination{
+									Bucket:       aws.String(fmt.Sprintf("arn:%s:s3:::tf-test-bucket-destination-%d", partition, rInt)),
+									StorageClass: aws.String(s3.StorageClassStandard),
+									Metrics: &s3.Metrics{
+										EventThreshold: &s3.ReplicationTimeValue{
+											Minutes: aws.Int64(15),
+										},
+										Status: aws.String(s3.MetricsStatusEnabled),
+									},
+									ReplicationTime: &s3.ReplicationTime{
+										Time: &s3.ReplicationTimeValue{
+											Minutes: aws.Int64(15),
+										},
+										Status: aws.String(s3.ReplicationTimeStatusEnabled),
+									},
+								},
+								Filter: &s3.ReplicationRuleFilter{
+									Prefix: aws.String(""),
+								},
+								Status:   aws.String(s3.ReplicationRuleStatusEnabled),
+								Priority: aws.Int64(0),
+							},
+						},
+					),
+				),
+			},
+			{
+				Config: testAccBucketReplicationWithReplicationConfigurationWithRTCNoStatusConfig(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBucketExistsWithProvider(resourceName, acctest.RegionProviderFunc(region, &providers)),
+					resource.TestCheckResourceAttr(resourceName, "replication_configuration.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "replication_configuration.0.role", iamRoleResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "replication_configuration.0.rules.#", "1"),
+					testAccCheckBucketExistsWithProvider("aws_s3_bucket.destination", acctest.RegionProviderFunc(alternateRegion, &providers)),
+					testAccCheckBucketReplicationRules(
+						resourceName,
+						[]*s3.ReplicationRule{
+							{
+								ID: aws.String("rtc-no-status"),
+								DeleteMarkerReplication: &s3.DeleteMarkerReplication{
+									Status: aws.String(s3.DeleteMarkerReplicationStatusDisabled),
+								},
+								Destination: &s3.Destination{
+									Bucket:       aws.String(fmt.Sprintf("arn:%s:s3:::tf-test-bucket-destination-%d", partition, rInt)),
+									StorageClass: aws.String(s3.StorageClassStandard),
+									Metrics: &s3.Metrics{
+										EventThreshold: &s3.ReplicationTimeValue{
+											Minutes: aws.Int64(15),
+										},
+										Status: aws.String(s3.MetricsStatusEnabled),
+									},
+									ReplicationTime: &s3.ReplicationTime{
+										Time: &s3.ReplicationTimeValue{
+											Minutes: aws.Int64(15),
+										},
+										Status: aws.String(s3.ReplicationTimeStatusEnabled),
+									},
+								},
+								Filter: &s3.ReplicationRuleFilter{
+									Prefix: aws.String("foo"),
+								},
+								Priority: aws.Int64(0),
+								Status:   aws.String(s3.ReplicationRuleStatusEnabled),
+							},
+						},
+					),
+				),
+			},
+			{
+				Config: testAccBucketReplicationWithReplicationConfigurationWithRTCNoConfigConfig(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBucketExistsWithProvider(resourceName, acctest.RegionProviderFunc(region, &providers)),
+					resource.TestCheckResourceAttr(resourceName, "replication_configuration.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "replication_configuration.0.role", iamRoleResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "replication_configuration.0.rules.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "replication_configuration.0.rules.0.destination.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "replication_configuration.0.rules.0.destination.0.replication_time.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "replication_configuration.0.rules.0.destination.0.metrics.#", "1"),
+					testAccCheckBucketExistsWithProvider("aws_s3_bucket.destination", acctest.RegionProviderFunc(alternateRegion, &providers)),
+					testAccCheckBucketReplicationRules(
+						resourceName,
+						[]*s3.ReplicationRule{
+							{
+								ID: aws.String("rtc-no-config"),
+								DeleteMarkerReplication: &s3.DeleteMarkerReplication{
+									Status: aws.String(s3.DeleteMarkerReplicationStatusDisabled),
+								},
+								Destination: &s3.Destination{
+									Bucket:       aws.String(fmt.Sprintf("arn:%s:s3:::tf-test-bucket-destination-%d", partition, rInt)),
+									StorageClass: aws.String(s3.StorageClassStandard),
+									Metrics: &s3.Metrics{
+										EventThreshold: &s3.ReplicationTimeValue{
+											Minutes: aws.Int64(15),
+										},
+										Status: aws.String(s3.MetricsStatusEnabled),
+									},
+									ReplicationTime: &s3.ReplicationTime{
+										Time: &s3.ReplicationTimeValue{
+											Minutes: aws.Int64(15),
+										},
+										Status: aws.String(s3.ReplicationTimeStatusEnabled),
+									},
+								},
+								Filter: &s3.ReplicationRuleFilter{
+									Prefix: aws.String("foo"),
+								},
+								Priority: aws.Int64(0),
+								Status:   aws.String(s3.ReplicationRuleStatusEnabled),
+							},
+						},
+					),
+				),
+			},
+		},
+	})
+}
+
 func TestAccS3Bucket_Manage_objectLock(t *testing.T) {
 	bucketName := sdkacctest.RandomWithPrefix("tf-test-bucket")
 	resourceName := "aws_s3_bucket.arbitrary"
@@ -2228,7 +2528,7 @@ func TestAccS3Bucket_Manage_objectLock(t *testing.T) {
 		CheckDestroy: testAccCheckBucketDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketObjectLockEnabledNoDefaultRetention(bucketName),
+				Config: testAccObjectLockEnabledNoDefaultRetention(bucketName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "object_lock_configuration.#", "1"),
@@ -2243,7 +2543,7 @@ func TestAccS3Bucket_Manage_objectLock(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"force_destroy", "acl"},
 			},
 			{
-				Config: testAccBucketObjectLockEnabledWithDefaultRetention(bucketName),
+				Config: testAccObjectLockEnabledWithDefaultRetention(bucketName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "object_lock_configuration.#", "1"),
@@ -2280,7 +2580,7 @@ func TestAccS3Bucket_Basic_forceDestroy(t *testing.T) {
 
 // By default, the AWS Go SDK cleans up URIs by removing extra slashes
 // when the service API requests use the URI as part of making a request.
-// While the aws_s3_bucket_object resource automatically cleans the key
+// While the aws_s3_object resource automatically cleans the key
 // to not contain these extra slashes, out-of-band handling and other AWS
 // services may create keys with extra slashes (empty "directory" prefixes).
 func TestAccS3Bucket_Basic_forceDestroyWithEmptyPrefixes(t *testing.T) {
@@ -2600,13 +2900,6 @@ func TestWebsiteEndpoint(t *testing.T) {
 			t.Errorf("WebsiteEndpointUrl(\"bucket-name\", %q) => %q, want %q", testCase.LocationConstraint, got.Endpoint, testCase.Expected)
 		}
 	}
-}
-
-// testAccErrorCheckSkipS3 skips tests that have error messages indicating unsupported features
-func testAccErrorCheckSkipS3(t *testing.T) resource.ErrorCheckFunc {
-	return acctest.ErrorCheckSkipMessagesContaining(t,
-		"Number of distinct destination bucket ARNs cannot exceed",
-	)
 }
 
 func testAccCheckBucketDestroy(s *terraform.State) error {
@@ -2939,33 +3232,6 @@ func testAccCheckBucketWebsiteRoutingRules(n string, routingRules []*s3.RoutingR
 
 		if !reflect.DeepEqual(out.RoutingRules, routingRules) {
 			return fmt.Errorf("bad routing rule, expected: %v, got %v", routingRules, out.RoutingRules)
-		}
-
-		return nil
-	}
-}
-
-func testAccCheckBucketVersioning(n string, versioningStatus string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		rs := s.RootModule().Resources[n]
-		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn
-
-		out, err := conn.GetBucketVersioning(&s3.GetBucketVersioningInput{
-			Bucket: aws.String(rs.Primary.ID),
-		})
-
-		if err != nil {
-			return fmt.Errorf("GetBucketVersioning error: %v", err)
-		}
-
-		if v := out.Status; v == nil {
-			if versioningStatus != "" {
-				return fmt.Errorf("bad error versioning status, found nil, expected: %s", versioningStatus)
-			}
-		} else {
-			if *v != versioningStatus {
-				return fmt.Errorf("bad error versioning status, expected: %s, got %s", versioningStatus, *v)
-			}
 		}
 
 		return nil
@@ -3545,28 +3811,41 @@ resource "aws_s3_bucket" "bucket" {
 `, bucketName)
 }
 
-func testAccBucketWithVersioningConfig(bucketName string) string {
+func testAccBucketWithVersioningConfig(bucketName string, enabled bool) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "bucket" {
   bucket = %[1]q
 
   versioning {
-    enabled = true
+    enabled = %[2]t
   }
 }
-`, bucketName)
+`, bucketName, enabled)
 }
 
-func testAccBucketWithDisableVersioningConfig(bucketName string) string {
+func testAccBucketWithVersioningMfaDeleteConfig(bucketName string, mfaDelete bool) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "bucket" {
   bucket = %[1]q
 
   versioning {
-    enabled = false
+    mfa_delete = %[2]t
   }
 }
-`, bucketName)
+`, bucketName, mfaDelete)
+}
+
+func testAccBucketWithVersioningVersioningAndMfaDeleteConfig(bucketName string, enabled, mfaDelete bool) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "bucket" {
+  bucket = %[1]q
+
+  versioning {
+    enabled    = %[2]t
+    mfa_delete = %[3]t
+  }
+}
+`, bucketName, enabled, mfaDelete)
 }
 
 func testAccBucketWithCORSConfig(bucketName string) string {
@@ -3961,6 +4240,136 @@ resource "aws_s3_bucket" "bucket" {
   }
 }
 `, randInt, storageClass)
+}
+
+func testAccBucketReplicationWithReplicationConfigurationWithRTCConfig(randInt int, minutes int) string {
+	return acctest.ConfigCompose(
+		testAccBucketReplicationBasicConfig(randInt),
+		fmt.Sprintf(`
+resource "aws_s3_bucket" "bucket" {
+  bucket = "tf-test-bucket-rtc-%[1]d"
+  acl    = "private"
+  versioning {
+    enabled = true
+  }
+  replication_configuration {
+    role = aws_iam_role.role.arn
+    rules {
+      id     = "rtc"
+      status = "Enabled"
+      filter {
+        tags = {}
+      }
+      destination {
+        bucket        = aws_s3_bucket.destination.arn
+        storage_class = "STANDARD"
+        metrics {
+          status  = "Enabled"
+          minutes = %[2]d
+        }
+        replication_time {
+          status  = "Enabled"
+          minutes = %[2]d
+        }
+      }
+    }
+  }
+}
+`, randInt, minutes))
+}
+
+func testAccBucketReplicationWithReplicationConfigurationWithRTCNoMinutesConfig(randInt int) string {
+	return acctest.ConfigCompose(
+		testAccBucketReplicationBasicConfig(randInt),
+		fmt.Sprintf(`
+resource "aws_s3_bucket" "bucket" {
+  bucket = "tf-test-bucket-rtc-no-minutes-%[1]d"
+  acl    = "private"
+  versioning {
+    enabled = true
+  }
+  replication_configuration {
+    role = aws_iam_role.role.arn
+    rules {
+      id     = "rtc-no-minutes"
+      status = "Enabled"
+      filter {
+        tags = {}
+      }
+      destination {
+        bucket        = aws_s3_bucket.destination.arn
+        storage_class = "STANDARD"
+        metrics {}
+        replication_time {
+          status = "Enabled"
+        }
+      }
+    }
+  }
+}
+`, randInt))
+}
+
+func testAccBucketReplicationWithReplicationConfigurationWithRTCNoStatusConfig(randInt int) string {
+	return acctest.ConfigCompose(
+		testAccBucketReplicationBasicConfig(randInt),
+		fmt.Sprintf(`
+resource "aws_s3_bucket" "bucket" {
+  bucket = "tf-test-bucket-rtc-no-minutes-%[1]d"
+  acl    = "private"
+  versioning {
+    enabled = true
+  }
+  replication_configuration {
+    role = aws_iam_role.role.arn
+    rules {
+      id     = "rtc-no-status"
+      status = "Enabled"
+      filter {
+        prefix = "foo"
+      }
+      destination {
+        bucket        = aws_s3_bucket.destination.arn
+        storage_class = "STANDARD"
+        metrics {}
+        replication_time {
+          minutes = 15
+        }
+      }
+    }
+  }
+}
+`, randInt))
+}
+
+func testAccBucketReplicationWithReplicationConfigurationWithRTCNoConfigConfig(randInt int) string {
+	return acctest.ConfigCompose(
+		testAccBucketReplicationBasicConfig(randInt),
+		fmt.Sprintf(`
+resource "aws_s3_bucket" "bucket" {
+  bucket = "tf-test-bucket-rtc-no-config-%[1]d"
+  acl    = "private"
+  versioning {
+    enabled = true
+  }
+  replication_configuration {
+    role = aws_iam_role.role.arn
+    rules {
+      id     = "rtc-no-config"
+      status = "Enabled"
+      filter {
+        prefix = "foo"
+      }
+      destination {
+        bucket        = aws_s3_bucket.destination.arn
+        storage_class = "STANDARD"
+        metrics {}
+        replication_time {}
+      }
+    }
+  }
+}
+`, randInt))
 }
 
 func testAccBucketReplicationWithMultipleDestinationsEmptyFilterConfig(randInt int) string {
@@ -4633,7 +5042,7 @@ resource "aws_s3_bucket" "bucket" {
 `, randInt)
 }
 
-func testAccBucketObjectLockEnabledNoDefaultRetention(bucketName string) string {
+func testAccObjectLockEnabledNoDefaultRetention(bucketName string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "arbitrary" {
   bucket = %[1]q
@@ -4645,7 +5054,7 @@ resource "aws_s3_bucket" "arbitrary" {
 `, bucketName)
 }
 
-func testAccBucketObjectLockEnabledWithDefaultRetention(bucketName string) string {
+func testAccObjectLockEnabledWithDefaultRetention(bucketName string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "arbitrary" {
   bucket = %[1]q

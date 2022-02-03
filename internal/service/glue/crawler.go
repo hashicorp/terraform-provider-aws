@@ -9,7 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/glue"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
@@ -112,21 +112,31 @@ func ResourceCrawler() *schema.Resource {
 				Type:         schema.TypeList,
 				Optional:     true,
 				MinItems:     1,
-				AtLeastOneOf: []string{"s3_target", "dynamodb_target", "mongodb_target", "jdbc_target", "catalog_target"},
+				AtLeastOneOf: []string{"s3_target", "dynamodb_target", "mongodb_target", "jdbc_target", "catalog_target", "delta_target"},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"connection_name": {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
-						"path": {
-							Type:     schema.TypeString,
-							Required: true,
+						"dlq_event_queue_arn": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: verify.ValidARN,
+						},
+						"event_queue_arn": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: verify.ValidARN,
 						},
 						"exclusions": {
 							Type:     schema.TypeList,
 							Optional: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
+						},
+						"path": {
+							Type:     schema.TypeString,
+							Required: true,
 						},
 						"sample_size": {
 							Type:         schema.TypeInt,
@@ -140,7 +150,7 @@ func ResourceCrawler() *schema.Resource {
 				Type:         schema.TypeList,
 				Optional:     true,
 				MinItems:     1,
-				AtLeastOneOf: []string{"s3_target", "dynamodb_target", "mongodb_target", "jdbc_target", "catalog_target"},
+				AtLeastOneOf: []string{"s3_target", "dynamodb_target", "mongodb_target", "jdbc_target", "catalog_target", "delta_target"},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"path": {
@@ -164,7 +174,7 @@ func ResourceCrawler() *schema.Resource {
 				Type:         schema.TypeList,
 				Optional:     true,
 				MinItems:     1,
-				AtLeastOneOf: []string{"s3_target", "dynamodb_target", "mongodb_target", "jdbc_target", "catalog_target"},
+				AtLeastOneOf: []string{"s3_target", "dynamodb_target", "mongodb_target", "jdbc_target", "catalog_target", "delta_target"},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"connection_name": {
@@ -187,7 +197,7 @@ func ResourceCrawler() *schema.Resource {
 				Type:         schema.TypeList,
 				Optional:     true,
 				MinItems:     1,
-				AtLeastOneOf: []string{"s3_target", "dynamodb_target", "mongodb_target", "jdbc_target", "catalog_target"},
+				AtLeastOneOf: []string{"s3_target", "dynamodb_target", "mongodb_target", "jdbc_target", "catalog_target", "delta_target"},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"connection_name": {
@@ -206,11 +216,34 @@ func ResourceCrawler() *schema.Resource {
 					},
 				},
 			},
+			"delta_target": {
+				Type:         schema.TypeList,
+				Optional:     true,
+				MinItems:     1,
+				AtLeastOneOf: []string{"s3_target", "dynamodb_target", "mongodb_target", "jdbc_target", "catalog_target", "delta_target"},
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"connection_name": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						"delta_tables": {
+							Type:     schema.TypeSet,
+							Required: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+						},
+						"write_manifest": {
+							Type:     schema.TypeBool,
+							Required: true,
+						},
+					},
+				},
+			},
 			"catalog_target": {
 				Type:         schema.TypeList,
 				Optional:     true,
 				MinItems:     1,
-				AtLeastOneOf: []string{"s3_target", "dynamodb_target", "mongodb_target", "jdbc_target", "catalog_target"},
+				AtLeastOneOf: []string{"s3_target", "dynamodb_target", "mongodb_target", "jdbc_target", "catalog_target", "delta_target"},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"database_name": {
@@ -301,6 +334,11 @@ func resourceCrawlerCreate(d *schema.ResourceData, meta interface{}) error {
 
 			// InvalidInputException: Unable to retrieve connection tf-acc-test-8656357591012534997: User: arn:aws:sts::*******:assumed-role/tf-acc-test-8656357591012534997/AWS-Crawler is not authorized to perform: glue:GetConnection on resource: * (Service: AmazonDataCatalog; Status Code: 400; Error Code: AccessDeniedException; Request ID: 4d72b66f-9c75-11e8-9faf-5b526c7be968)
 			if tfawserr.ErrMessageContains(err, glue.ErrCodeInvalidInputException, "is not authorized") {
+				return resource.RetryableError(err)
+			}
+
+			// InvalidInputException: SQS queue arn:aws:sqs:us-west-2:*******:tf-acc-test-4317277351691904203 does not exist or the role provided does not have access to it.
+			if tfawserr.ErrMessageContains(err, glue.ErrCodeInvalidInputException, "SQS queue") && tfawserr.ErrMessageContains(err, glue.ErrCodeInvalidInputException, "does not exist or the role provided does not have access to it") {
 				return resource.RetryableError(err)
 			}
 
@@ -465,6 +503,10 @@ func expandGlueCrawlerTargets(d *schema.ResourceData) *glue.CrawlerTargets {
 		crawlerTargets.MongoDBTargets = expandGlueMongoDBTargets(v.([]interface{}))
 	}
 
+	if v, ok := d.GetOk("delta_target"); ok {
+		crawlerTargets.DeltaTargets = expandGlueDeltaTargets(v.([]interface{}))
+	}
+
 	return crawlerTargets
 }
 
@@ -522,6 +564,14 @@ func expandGlueS3Target(cfg map[string]interface{}) *glue.S3Target {
 
 	if v, ok := cfg["sample_size"]; ok && v.(int) > 0 {
 		target.SampleSize = aws.Int64(int64(v.(int)))
+	}
+
+	if v, ok := cfg["event_queue_arn"]; ok {
+		target.EventQueueArn = aws.String(v.(string))
+	}
+
+	if v, ok := cfg["dlq_event_queue_arn"]; ok {
+		target.DlqEventQueueArn = aws.String(v.(string))
 	}
 
 	return target
@@ -597,6 +647,29 @@ func expandGlueMongoDBTarget(cfg map[string]interface{}) *glue.MongoDBTarget {
 	return target
 }
 
+func expandGlueDeltaTargets(targets []interface{}) []*glue.DeltaTarget {
+	if len(targets) < 1 {
+		return []*glue.DeltaTarget{}
+	}
+
+	perms := make([]*glue.DeltaTarget, len(targets))
+	for i, rawCfg := range targets {
+		cfg := rawCfg.(map[string]interface{})
+		perms[i] = expandGlueDeltaTarget(cfg)
+	}
+	return perms
+}
+
+func expandGlueDeltaTarget(cfg map[string]interface{}) *glue.DeltaTarget {
+	target := &glue.DeltaTarget{
+		ConnectionName: aws.String(cfg["connection_name"].(string)),
+		DeltaTables:    flex.ExpandStringSet(cfg["delta_tables"].(*schema.Set)),
+		WriteManifest:  aws.Bool(cfg["write_manifest"].(bool)),
+	}
+
+	return target
+}
+
 func resourceCrawlerUpdate(d *schema.ResourceData, meta interface{}) error {
 	glueConn := meta.(*conns.AWSClient).GlueConn
 	name := d.Get("name").(string)
@@ -622,6 +695,11 @@ func resourceCrawlerUpdate(d *schema.ResourceData, meta interface{}) error {
 
 				// InvalidInputException: Unable to retrieve connection tf-acc-test-8656357591012534997: User: arn:aws:sts::*******:assumed-role/tf-acc-test-8656357591012534997/AWS-Crawler is not authorized to perform: glue:GetConnection on resource: * (Service: AmazonDataCatalog; Status Code: 400; Error Code: AccessDeniedException; Request ID: 4d72b66f-9c75-11e8-9faf-5b526c7be968)
 				if tfawserr.ErrMessageContains(err, glue.ErrCodeInvalidInputException, "is not authorized") {
+					return resource.RetryableError(err)
+				}
+
+				// InvalidInputException: SQS queue arn:aws:sqs:us-west-2:*******:tf-acc-test-4317277351691904203 does not exist or the role provided does not have access to it.
+				if tfawserr.ErrMessageContains(err, glue.ErrCodeInvalidInputException, "SQS queue") && tfawserr.ErrMessageContains(err, glue.ErrCodeInvalidInputException, "does not exist or the role provided does not have access to it") {
 					return resource.RetryableError(err)
 				}
 
@@ -725,6 +803,10 @@ func resourceCrawlerRead(d *schema.ResourceData, meta interface{}) error {
 		if err := d.Set("mongodb_target", flattenGlueMongoDBTargets(crawler.Targets.MongoDBTargets)); err != nil {
 			return fmt.Errorf("error setting mongodb_target: %w", err)
 		}
+
+		if err := d.Set("delta_target", flattenGlueDeltaTargets(crawler.Targets.DeltaTargets)); err != nil {
+			return fmt.Errorf("error setting delta_target: %w", err)
+		}
 	}
 
 	tags, err := ListTags(glueConn, crawlerARN)
@@ -767,6 +849,9 @@ func flattenGlueS3Targets(s3Targets []*glue.S3Target) []map[string]interface{} {
 		if s3Target.SampleSize != nil {
 			attrs["sample_size"] = aws.Int64Value(s3Target.SampleSize)
 		}
+
+		attrs["event_queue_arn"] = aws.StringValue(s3Target.EventQueueArn)
+		attrs["dlq_event_queue_arn"] = aws.StringValue(s3Target.DlqEventQueueArn)
 
 		result = append(result, attrs)
 	}
@@ -822,6 +907,20 @@ func flattenGlueMongoDBTargets(mongoDBTargets []*glue.MongoDBTarget) []map[strin
 		attrs["connection_name"] = aws.StringValue(mongoDBTarget.ConnectionName)
 		attrs["path"] = aws.StringValue(mongoDBTarget.Path)
 		attrs["scan_all"] = aws.BoolValue(mongoDBTarget.ScanAll)
+
+		result = append(result, attrs)
+	}
+	return result
+}
+
+func flattenGlueDeltaTargets(deltaTargets []*glue.DeltaTarget) []map[string]interface{} {
+	result := make([]map[string]interface{}, 0)
+
+	for _, deltaTarget := range deltaTargets {
+		attrs := make(map[string]interface{})
+		attrs["connection_name"] = aws.StringValue(deltaTarget.ConnectionName)
+		attrs["delta_tables"] = flex.FlattenStringSet(deltaTarget.DeltaTables)
+		attrs["write_manifest"] = aws.BoolValue(deltaTarget.WriteManifest)
 
 		result = append(result, attrs)
 	}

@@ -8,10 +8,11 @@ import (
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/waf"
 	"github.com/aws/aws-sdk-go/service/wafregional"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfwaf "github.com/hashicorp/terraform-provider-aws/internal/service/waf"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
@@ -258,7 +259,7 @@ func updateWafRateBasedRuleResourceWR(id string, oldP, newP []interface{}, rateL
 		req := &waf.UpdateRateBasedRuleInput{
 			ChangeToken: token,
 			RuleId:      aws.String(id),
-			Updates:     diffWafRulePredicates(oldP, newP),
+			Updates:     tfwaf.DiffRulePredicates(oldP, newP),
 			RateLimit:   aws.Int64(int64(rateLimit.(int))),
 		}
 

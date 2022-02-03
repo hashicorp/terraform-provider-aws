@@ -2,12 +2,13 @@ package sagemaker_test
 
 import (
 	"fmt"
+	"os"
 	"regexp"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/sagemaker"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -204,6 +205,45 @@ func testAccUserProfile_kernelGatewayAppSettings_lifecycleconfig(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "user_settings.0.kernel_gateway_app_settings.0.lifecycle_config_arns.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "user_settings.0.kernel_gateway_app_settings.0.default_resource_spec.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "user_settings.0.kernel_gateway_app_settings.0.default_resource_spec.0.instance_type", "ml.t3.micro"),
+					resource.TestCheckResourceAttrPair(resourceName, "user_settings.0.kernel_gateway_app_settings.0.default_resource_spec.0.lifecycle_config_arn", "aws_sagemaker_studio_lifecycle_config.test", "arn"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func testAccUserProfile_kernelGatewayAppSettings_imageconfig(t *testing.T) {
+
+	if os.Getenv("SAGEMAKER_IMAGE_VERSION_BASE_IMAGE") == "" {
+		t.Skip("Environment variable SAGEMAKER_IMAGE_VERSION_BASE_IMAGE is not set")
+	}
+
+	var domain sagemaker.DescribeUserProfileOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_sagemaker_user_profile.test"
+	baseImage := os.Getenv("SAGEMAKER_IMAGE_VERSION_BASE_IMAGE")
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckUserProfileDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccUserProfileKernelGatewayAppSettingsImageConfig(rName, baseImage),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckUserProfileExists(resourceName, &domain),
+					resource.TestCheckResourceAttr(resourceName, "user_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "user_settings.0.kernel_gateway_app_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "user_settings.0.kernel_gateway_app_settings.0.lifecycle_config_arns.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "user_settings.0.kernel_gateway_app_settings.0.default_resource_spec.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "user_settings.0.kernel_gateway_app_settings.0.default_resource_spec.0.instance_type", "ml.t3.micro"),
+					resource.TestCheckResourceAttrPair(resourceName, "user_settings.0.kernel_gateway_app_settings.0.default_resource_spec.0.sagemaker_image_version_arn", "aws_sagemaker_image_version.test", "arn"),
 				),
 			},
 			{
@@ -513,7 +553,8 @@ resource "aws_sagemaker_user_profile" "test" {
 
     kernel_gateway_app_settings {
       default_resource_spec {
-        instance_type = "ml.t3.micro"
+        instance_type        = "ml.t3.micro"
+        lifecycle_config_arn = aws_sagemaker_studio_lifecycle_config.test.arn
       }
 
       lifecycle_config_arns = [aws_sagemaker_studio_lifecycle_config.test.arn]
@@ -521,4 +562,47 @@ resource "aws_sagemaker_user_profile" "test" {
   }
 }
 `, rName)
+}
+
+func testAccUserProfileKernelGatewayAppSettingsImageConfig(rName, baseImage string) string {
+	return testAccUserProfileBaseConfig(rName) + fmt.Sprintf(`
+data "aws_partition" "current" {}
+
+resource "aws_iam_role_policy_attachment" "test" {
+  role       = aws_iam_role.test.name
+  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/AmazonSageMakerFullAccess"
+}
+
+resource "aws_sagemaker_image" "test" {
+  image_name = %[1]q
+  role_arn   = aws_image_role.test.arn
+
+  depends_on = [aws_iam_role_policy_attachment.test]
+}
+
+resource "aws_sagemaker_image_version" "test" {
+  image_name = aws_sagemaker_image.test.id
+  base_image = %[2]q
+
+  depends_on = [aws_iam_role_policy_attachment.test]
+}
+
+resource "aws_sagemaker_user_profile" "test" {
+  domain_id         = aws_sagemaker_domain.test.id
+  user_profile_name = %[1]q
+
+  user_settings {
+    execution_role = aws_iam_role.test.arn
+
+    kernel_gateway_app_settings {
+      default_resource_spec {
+        instance_type               = "ml.t3.micro"
+        sagemaker_image_version_arn = aws_sagemaker_image_version.test.arn
+      }
+    }
+  }
+
+  depends_on = [aws_iam_role_policy_attachment.test]
+}
+`, rName, baseImage)
 }

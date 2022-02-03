@@ -7,7 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ssm"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -89,6 +89,11 @@ func ResourceAssociation() *schema.Resource {
 						"s3_key_prefix": {
 							Type:     schema.TypeString,
 							Optional: true,
+						},
+						"s3_region": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validation.StringLenBetween(3, 20),
 						},
 					},
 				},
@@ -360,6 +365,10 @@ func expandSSMAssociationOutputLocation(config []interface{}) *ssm.InstanceAssoc
 		S3OutputLocation.OutputS3KeyPrefix = aws.String(v.(string))
 	}
 
+	if v, ok := locationConfig["s3_region"].(string); ok && v != "" {
+		S3OutputLocation.OutputS3Region = aws.String(v)
+	}
+
 	return &ssm.InstanceAssociationOutputLocation{
 		S3Location: S3OutputLocation,
 	}
@@ -377,6 +386,10 @@ func flattenAssociationOutoutLocation(location *ssm.InstanceAssociationOutputLoc
 
 	if location.S3Location.OutputS3KeyPrefix != nil {
 		item["s3_key_prefix"] = *location.S3Location.OutputS3KeyPrefix
+	}
+
+	if location.S3Location.OutputS3Region != nil {
+		item["s3_region"] = *location.S3Location.OutputS3Region
 	}
 
 	result = append(result, item)

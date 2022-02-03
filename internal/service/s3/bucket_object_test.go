@@ -1,5 +1,9 @@
 package s3_test
 
+// WARNING: This code is DEPRECATED and will be removed in a future release!!
+// DO NOT apply fixes or enhancements to this file.
+// INSTEAD, apply fixes and enhancements to "object_test.go".
+
 import (
 	"encoding/base64"
 	"fmt"
@@ -1308,6 +1312,45 @@ func TestAccS3BucketObject_ignoreTags(t *testing.T) {
 	})
 }
 
+func TestAccS3BucketObject_bucketObjectBucket(t *testing.T) {
+	var obj1 s3.GetObjectOutput
+	resourceName1 := "aws_s3_bucket_object.test"
+	resourceName2 := "aws_s3_object.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckBucketObjectDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBucketObjectConfig_objectBucketObject1(rName, "hink"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBucketObjectExists(resourceName1, &obj1),
+					testAccCheckBucketObjectBody(&obj1, "hink"),
+				),
+			},
+			{
+				Config: testAccBucketObjectConfig_objectBucketObject2(rName, "hink"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBucketObjectExists(resourceName2, &obj1),
+					testAccCheckBucketObjectBody(&obj1, "hink"),
+				),
+				PlanOnly:           true,
+				ExpectNonEmptyPlan: true,
+			},
+			{
+				Config: testAccBucketObjectConfig_objectBucketObject2(rName, "hink"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckObjectExists(resourceName2, &obj1),
+					testAccCheckObjectBody(&obj1, "hink"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckBucketObjectVersionIdDiffers(first, second *s3.GetObjectOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if first.VersionId == nil {
@@ -1371,7 +1414,7 @@ func testAccCheckBucketObjectExists(n string, obj *s3.GetObjectOutput) resource.
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No S3 Bucket Object ID is set")
+			return fmt.Errorf("No S3 Object ID is set")
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn
@@ -1405,7 +1448,7 @@ func testAccCheckBucketObjectExists(n string, obj *s3.GetObjectOutput) resource.
 		}
 
 		if err != nil {
-			return fmt.Errorf("S3Bucket Object error: %s", err)
+			return fmt.Errorf("S3 Object error: %s", err)
 		}
 
 		*obj = *out
@@ -2001,7 +2044,7 @@ resource "aws_s3_bucket_object" "object" {
 func testAccBucketObjectConfig_objectBucketKeyEnabled(rName string, content string) string {
 	return fmt.Sprintf(`
 resource "aws_kms_key" "test" {
-  description             = "Encrypts test bucket objects"
+  description             = "Encrypts test objects"
   deletion_window_in_days = 7
 }
 
@@ -2022,7 +2065,7 @@ resource "aws_s3_bucket_object" "object" {
 func testAccBucketObjectConfig_bucketBucketKeyEnabled(rName string, content string) string {
 	return fmt.Sprintf(`
 resource "aws_kms_key" "test" {
-  description             = "Encrypts test bucket objects"
+  description             = "Encrypts test objects"
   deletion_window_in_days = 7
 }
 
@@ -2051,7 +2094,7 @@ resource "aws_s3_bucket_object" "object" {
 func testAccBucketObjectConfig_defaultBucketSSE(rName string, content string) string {
 	return fmt.Sprintf(`
 resource "aws_kms_key" "test" {
-  description             = "Encrypts test bucket objects"
+  description             = "Encrypts test objects"
   deletion_window_in_days = 7
 }
 
@@ -2070,6 +2113,34 @@ resource "aws_s3_bucket" "test" {
 resource "aws_s3_bucket_object" "object" {
   bucket  = aws_s3_bucket.test.bucket
   key     = "test-key"
+  content = %[2]q
+}
+`, rName, content)
+}
+
+func testAccBucketObjectConfig_objectBucketObject1(rName string, content string) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket = %[1]q
+}
+
+resource "aws_s3_bucket_object" "test" {
+  bucket  = aws_s3_bucket.test.bucket
+  key     = %[1]q
+  content = %[2]q
+}
+`, rName, content)
+}
+
+func testAccBucketObjectConfig_objectBucketObject2(rName string, content string) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket = %[1]q
+}
+
+resource "aws_s3_object" "test" {
+  bucket  = aws_s3_bucket.test.bucket
+  key     = %[1]q
   content = %[2]q
 }
 `, rName, content)

@@ -8,7 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/codepipeline"
 	"github.com/aws/aws-sdk-go/service/codestarconnections"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -1652,14 +1652,14 @@ func TestExpandArtifactStoresValidation(t *testing.T) {
 		_, err := tfcodepipeline.ExpandArtifactStores(tc.Input)
 		if tc.ExpectedError == "" {
 			if err != nil {
-				t.Errorf("%s: Did not expect an error, but got: %w", tc.Name, err)
+				t.Errorf("%s: Did not expect an error, but got: %s", tc.Name, err)
 			}
 		} else {
 			if err == nil {
 				t.Errorf("%s: Expected an error, but did not get one", tc.Name)
 			} else {
 				if err.Error() != tc.ExpectedError {
-					t.Errorf("%s: Expected error %q, got %w", tc.Name, tc.ExpectedError, err)
+					t.Errorf("%s: Expected error %q, got %s", tc.Name, tc.ExpectedError, err)
 				}
 			}
 		}
