@@ -37,14 +37,14 @@ To create a single shard primary with single read replica:
 
 ```terraform
 resource "aws_elasticache_replication_group" "example" {
-  automatic_failover_enabled    = true
-  preferred_cache_cluster_azs   = ["us-west-2a", "us-west-2b"]
-  replication_group_id          = "tf-rep-group-1"
-  replication_group_description = "test description"
-  node_type                     = "cache.m4.large"
-  number_cache_clusters         = 2
-  parameter_group_name          = "default.redis3.2"
-  port                          = 6379
+  automatic_failover_enabled  = true
+  preferred_cache_cluster_azs = ["us-west-2a", "us-west-2b"]
+  replication_group_id        = "tf-rep-group-1"
+  description                 = "example description"
+  node_type                   = "cache.m4.large"
+  number_cache_clusters       = 2
+  parameter_group_name        = "default.redis3.2"
+  port                        = 6379
 }
 ```
 
@@ -55,14 +55,14 @@ You have two options for adjusting the number of replicas:
 
 ```terraform
 resource "aws_elasticache_replication_group" "example" {
-  automatic_failover_enabled    = true
-  preferred_cache_cluster_azs   = ["us-west-2a", "us-west-2b"]
-  replication_group_id          = "tf-rep-group-1"
-  replication_group_description = "test description"
-  node_type                     = "cache.m4.large"
-  number_cache_clusters         = 2
-  parameter_group_name          = "default.redis3.2"
-  port                          = 6379
+  automatic_failover_enabled  = true
+  preferred_cache_cluster_azs = ["us-west-2a", "us-west-2b"]
+  replication_group_id        = "tf-rep-group-1"
+  description                 = "example description"
+  node_type                   = "cache.m4.large"
+  number_cache_clusters       = 2
+  parameter_group_name        = "default.redis3.2"
+  port                        = 6379
 
   lifecycle {
     ignore_changes = [number_cache_clusters]
@@ -83,12 +83,12 @@ To create two shards with a primary and a single read replica each:
 
 ```terraform
 resource "aws_elasticache_replication_group" "baz" {
-  replication_group_id          = "tf-redis-cluster"
-  replication_group_description = "test description"
-  node_type                     = "cache.t2.small"
-  port                          = 6379
-  parameter_group_name          = "default.redis3.2.cluster.on"
-  automatic_failover_enabled    = true
+  replication_group_id       = "tf-redis-cluster"
+  description                = "example description"
+  node_type                  = "cache.t2.small"
+  port                       = 6379
+  parameter_group_name       = "default.redis3.2.cluster.on"
+  automatic_failover_enabled = true
 
   num_node_groups         = 2
   replicas_per_node_group = 1
@@ -107,9 +107,9 @@ A Global Replication Group can have one one two secondary Replication Groups in 
 
 ```terraform
 resource "aws_elasticache_replication_group" "secondary" {
-  replication_group_id          = "example-secondary"
-  replication_group_description = "secondary replication group"
-  global_replication_group_id   = aws_elasticache_global_replication_group.example.global_replication_group_id
+  replication_group_id        = "example-secondary"
+  description                 = "secondary replication group"
+  global_replication_group_id = aws_elasticache_global_replication_group.example.global_replication_group_id
 
   number_cache_clusters = 1
 }
@@ -124,8 +124,8 @@ resource "aws_elasticache_global_replication_group" "example" {
 resource "aws_elasticache_replication_group" "primary" {
   provider = aws.other_region
 
-  replication_group_id          = "example-primary"
-  replication_group_description = "primary replication group"
+  replication_group_id = "example-primary"
+  description          = "primary replication group"
 
   engine         = "redis"
   engine_version = "5.0.6"
@@ -139,8 +139,9 @@ resource "aws_elasticache_replication_group" "primary" {
 
 The following arguments are required:
 
-* `replication_group_description` – (Required) User-created description for the replication group.
+* `description` – (Required) User-created description for the replication group.
 * `replication_group_id` – (Required) Replication group identifier. This parameter is stored as a lowercase string.
+* `replication_group_description` – (**Deprecated** use `description` instead) User-created description for the replication group.
 
 The following arguments are optional:
 
