@@ -32,10 +32,12 @@ Upgrade topics:
 - [Resource: aws_batch_compute_environment](#resource-aws_batch_compute_environment)
 - [Resource: aws_cloudwatch_event_target](#resource-aws_cloudwatch_event_target)
 - [Resource: aws_customer_gateway](#resource-aws_customer_gateway)
+- [Resource: aws_default_network_acl](#resource-aws_default_network_acl)
 - [Resource: aws_elasticache_cluster](#resource-aws_elasticache_cluster)
 - [Resource: aws_elasticache_global_replication_group](#resource-aws_elasticache_global_replication_group)
 - [Resource: aws_elasticache_replication_group](#resource-aws_elasticache_replication_group)
 - [Resource: aws_fsx_ontap_storage_virtual_machine](#resource-aws_fsx_ontap_storage_virtual_machine)
+- [Resource: aws_network_acl](#resource-aws_network_acl)
 - [Resource: aws_network_interface](#resource-aws_network_interface)
 - [Resource: aws_s3_bucket](#resource-aws_s3_bucket)
 - [Resource: aws_s3_bucket_object](#resource-aws_s3_bucket_object)
@@ -411,6 +413,35 @@ resource "aws_cloudwatch_event_target" "test" {
 
 Previously, `ip_address` could be set to `""`, which would result in an AWS error. However, this value is no longer accepted by the provider.
 
+## Resource: aws_default_network_acl
+
+Previously, `egress.*.cidr_block`, `egress.*.ipv6_cidr_block`, `ingress.*.cidr_block`, or `ingress.*.ipv6_cidr_block` could be set to `""`. However, the value `""` is no longer valid.
+
+For example, previously this type of configuration was valid:
+
+```terraform
+resource "aws_default_network_acl" "default" {
+  # ...
+  egress {
+    cidr_block      = "0.0.0.0/0"
+    ipv6_cidr_block = ""
+    # ...
+  }
+}
+```
+
+Now, set the argument to null (`ipv6_cidr_block = null`) or simply remove the empty-value configuration:
+
+```terraform
+resource "aws_default_network_acl" "default" {
+  # ...
+  egress {
+    cidr_block      = "0.0.0.0/0"
+    # ...
+  }
+}
+```
+
 ## Resource: aws_elasticache_cluster
 
 ### Error raised if neither `engine` nor `replication_group_id` is specified
@@ -468,6 +499,35 @@ output "elasticache_global_replication_group_version_result" {
 ## Resource: aws_fsx_ontap_storage_virtual_machine
 
 We removed the misspelled argument `active_directory_configuration.0.self_managed_active_directory_configuration.0.organizational_unit_distinguidshed_name` that was previously deprecated. Use `active_directory_configuration.0.self_managed_active_directory_configuration.0.organizational_unit_distinguished_name` now instead. Terraform will automatically migrate the state to `active_directory_configuration.0.self_managed_active_directory_configuration.0.organizational_unit_distinguished_name` during planning.
+
+## Resource: aws_network_acl
+
+Previously, `egress.*.cidr_block`, `egress.*.ipv6_cidr_block`, `ingress.*.cidr_block`, or `ingress.*.ipv6_cidr_block` could be set to `""`. However, the value `""` is no longer valid.
+
+For example, previously this type of configuration was valid:
+
+```terraform
+resource "aws_network_acl" "default" {
+  # ...
+  egress {
+    cidr_block      = "0.0.0.0/0"
+    ipv6_cidr_block = ""
+    # ...
+  }
+}
+```
+
+Now, set the argument to null (`ipv6_cidr_block = null`) or simply remove the empty-value configuration:
+
+```terraform
+resource "aws_network_acl" "default" {
+  # ...
+  egress {
+    cidr_block      = "0.0.0.0/0"
+    # ...
+  }
+}
+```
 
 ## Resource: aws_network_interface
 

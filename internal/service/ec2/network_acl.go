@@ -88,20 +88,14 @@ func ResourceNetworkACL() *schema.Resource {
 							Required: true,
 						},
 						"cidr_block": {
-							Type:     schema.TypeString,
-							Optional: true,
-							ValidateFunc: validation.Any(
-								validation.StringIsEmpty,
-								validation.IsCIDR,
-							),
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validation.IsCIDR,
 						},
 						"ipv6_cidr_block": {
-							Type:     schema.TypeString,
-							Optional: true,
-							ValidateFunc: validation.Any(
-								validation.StringIsEmpty,
-								validation.IsCIDR,
-							),
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validation.IsCIDR,
 						},
 						"icmp_type": {
 							Type:     schema.TypeInt,
@@ -153,20 +147,14 @@ func ResourceNetworkACL() *schema.Resource {
 							Required: true,
 						},
 						"cidr_block": {
-							Type:     schema.TypeString,
-							Optional: true,
-							ValidateFunc: validation.Any(
-								validation.StringIsEmpty,
-								validation.IsCIDR,
-							),
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validation.IsCIDR,
 						},
 						"ipv6_cidr_block": {
-							Type:     schema.TypeString,
-							Optional: true,
-							ValidateFunc: validation.Any(
-								validation.StringIsEmpty,
-								validation.IsCIDR,
-							),
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validation.IsCIDR,
 						},
 						"icmp_type": {
 							Type:     schema.TypeInt,
