@@ -17,6 +17,7 @@ func ResourceClientVPNRoute() *schema.Resource {
 		Create: resourceClientVPNRouteCreate,
 		Read:   resourceClientVPNRouteRead,
 		Delete: resourceClientVPNRouteDelete,
+
 		Importer: &schema.ResourceImporter{
 			State: resourceClientVPNRouteImport,
 		},
@@ -27,21 +28,16 @@ func ResourceClientVPNRoute() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"destination_cidr_block": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidIPv4CIDRNetworkAddress,
-			},
 			"description": {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
 			},
-			"target_vpc_subnet_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+			"destination_cidr_block": {
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: verify.ValidIPv4CIDRNetworkAddress,
 			},
 			"origin": {
 				Type:     schema.TypeString,
@@ -50,6 +46,11 @@ func ResourceClientVPNRoute() *schema.Resource {
 			"type": {
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+			"target_vpc_subnet_id": {
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
 			},
 		},
 	}
