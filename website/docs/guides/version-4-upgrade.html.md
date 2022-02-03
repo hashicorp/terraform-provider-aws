@@ -34,6 +34,7 @@ Upgrade topics:
 - [Resource: aws_elasticache_cluster](#resource-aws_elasticache_cluster)
 - [Resource: aws_elasticache_global_replication_group](#resource-aws_elasticache_global_replication_group)
 - [Resource: aws_elasticache_replication_group](#resource-aws_elasticache_replication_group)
+- [Resource: aws_fsx_ontap_storage_virtual_machine](#resource-aws_fsx_ontap_storage_virtual_machine)
 - [Resource: aws_network_interface](#resource-aws_network_interface)
 - [Resource: aws_s3_bucket](#resource-aws_s3_bucket)
 - [Resource: aws_s3_bucket_object](#resource-aws_s3_bucket_object)
@@ -432,6 +433,10 @@ output "elasticache_global_replication_group_version_result" {
 ## Resource: aws_elasticache_replication_group
 
 !> **WARNING:** This topic is placeholder documentation.
+
+## Resource: aws_fsx_ontap_storage_virtual_machine
+
+We removed the misspelled argument `active_directory_configuration.0.self_managed_active_directory_configuration.0.organizational_unit_distinguidshed_name` that was previously deprecated. Use `active_directory_configuration.0.self_managed_active_directory_configuration.0.organizational_unit_distinguished_name` now instead. This is available for state upgrade.
 
 ## Resource: aws_network_interface
 
