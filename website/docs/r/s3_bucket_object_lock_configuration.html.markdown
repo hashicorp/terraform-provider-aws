@@ -43,6 +43,7 @@ The following arguments are supported:
 * `expected_bucket_owner` - (Optional, Forces new resource) The account ID of the expected bucket owner.
 * `object_lock_enabled` - (Optional, Forces new resource) Indicates whether this bucket has an Object Lock configuration enabled. Defaults to `Enabled`. Valid values: `Enabled`.
 * `rule` - (Required) Configuration block for specifying the Object Lock rule for the specified object [detailed below](#rule).
+* `token` - (Optional) A token to allow Object Lock to be enabled for an existing bucket.
 
 ### rule
 
