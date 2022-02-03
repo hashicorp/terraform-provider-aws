@@ -32,6 +32,7 @@ Upgrade topics:
 - [Resource: aws_batch_compute_environment](#resource-aws_batch_compute_environment)
 - [Resource: aws_cloudwatch_event_target](#resource-aws_cloudwatch_event_target)
 - [Resource: aws_customer_gateway](#resource-aws_customer_gateway)
+- [Resource: aws_default_network_acl](#resource-aws_default_network_acl)
 - [Resource: aws_elasticache_cluster](#resource-aws_elasticache_cluster)
 - [Resource: aws_elasticache_global_replication_group](#resource-aws_elasticache_global_replication_group)
 - [Resource: aws_elasticache_replication_group](#resource-aws_elasticache_replication_group)
@@ -410,6 +411,35 @@ resource "aws_cloudwatch_event_target" "test" {
 ## Resource: aws_customer_gateway
 
 Previously, `ip_address` could be set to `""`, which would result in an AWS error. However, this value is no longer accepted by the provider.
+
+## Resource: aws_default_network_acl
+
+Previously, `egress.*.cidr_block`, `egress.*.ipv6_cidr_block`, `ingress.*.cidr_block`, or `ingress.*.ipv6_cidr_block` could be set to `""`. However, the value `""` is no longer valid.
+
+For example, previously this type of configuration was valid:
+
+```terraform
+resource "aws_default_network_acl" "default" {
+  // ...
+  egress {
+    cidr_block      = "0.0.0.0/0"
+    ipv6_cidr_block = ""
+    // ...
+  }
+}
+```
+
+Now, simply remove the empty-value configuration:
+
+```terraform
+resource "aws_default_network_acl" "default" {
+  // ...
+  egress {
+    cidr_block      = "0.0.0.0/0"
+    // ...
+  }
+}
+```
 
 ## Resource: aws_elasticache_cluster
 
