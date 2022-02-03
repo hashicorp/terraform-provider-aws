@@ -38,9 +38,6 @@ func TestAccS3BucketDataSource_basic(t *testing.T) {
 }
 
 func TestAccS3BucketDataSource_website(t *testing.T) {
-	// TODO: remove skip once aws_s3_bucket_website_configuration resource is available in the provider
-	t.Skipf("skipping acceptance testing: aws_s3_bucket 'website' is read-only, migrate configuration to aws_s3_bucket_website_configuration")
-
 	bucketName := sdkacctest.RandomWithPrefix("tf-test-bucket")
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -53,8 +50,8 @@ func TestAccS3BucketDataSource_website(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketExists("data.aws_s3_bucket.bucket"),
 					resource.TestCheckResourceAttrPair("data.aws_s3_bucket.bucket", "bucket", "aws_s3_bucket.bucket", "id"),
-					resource.TestCheckResourceAttrPair("data.aws_s3_bucket.bucket", "website_domain", "aws_s3_bucket.bucket", "website_domain"),
-					resource.TestCheckResourceAttrPair("data.aws_s3_bucket.bucket", "website_endpoint", "aws_s3_bucket.bucket", "website_endpoint"),
+					resource.TestCheckResourceAttrPair("data.aws_s3_bucket.bucket", "website_domain", "aws_s3_bucket_website_configuration.test", "website_domain"),
+					resource.TestCheckResourceAttrPair("data.aws_s3_bucket.bucket", "website_endpoint", "aws_s3_bucket_website_configuration.test", "website_endpoint"),
 				),
 			},
 		},
@@ -78,13 +75,21 @@ func testAccBucketWebsiteDataSourceConfig(bucketName string) string {
 resource "aws_s3_bucket" "bucket" {
   bucket = %[1]q
   acl    = "public-read"
-  website {
-    index_document = "index.html"
-    error_document = "error.html"
+}
+
+resource "aws_s3_bucket_website_configuration" "test" {
+  bucket = aws_s3_bucket.bucket.id
+  index_document {
+    suffix = "index.html"
+  }
+  error_document {
+    key = "error.html"
   }
 }
+
 data "aws_s3_bucket" "bucket" {
-  bucket = aws_s3_bucket.bucket.id
+  # Must have bucket website configured first
+  bucket = aws_s3_bucket_website_configuration.test.id
 }
 `, bucketName)
 }
