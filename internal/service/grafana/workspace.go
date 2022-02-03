@@ -4,7 +4,9 @@ import (
 	"fmt"
 	"log"
 	"time"
-	
+)
+
+import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/managedgrafana"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
