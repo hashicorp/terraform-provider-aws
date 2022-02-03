@@ -62,27 +62,27 @@ func resourceClientVPNRouteCreate(d *schema.ResourceData, meta interface{}) erro
 
 	endpointID := d.Get("client_vpn_endpoint_id").(string)
 	targetSubnetID := d.Get("target_vpc_subnet_id").(string)
-	destinationCidr := d.Get("destination_cidr_block").(string)
-
-	req := &ec2.CreateClientVpnRouteInput{
+	destinationCIDR := d.Get("destination_cidr_block").(string)
+	id := ClientVPNRouteCreateResourceID(endpointID, targetSubnetID, destinationCIDR)
+	input := &ec2.CreateClientVpnRouteInput{
 		ClientVpnEndpointId:  aws.String(endpointID),
-		DestinationCidrBlock: aws.String(destinationCidr),
+		DestinationCidrBlock: aws.String(destinationCIDR),
 		TargetVpcSubnetId:    aws.String(targetSubnetID),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
-		req.Description = aws.String(v.(string))
+		input.Description = aws.String(v.(string))
 	}
 
-	id := ClientVPNRouteCreateResourceID(endpointID, targetSubnetID, destinationCidr)
-
-	_, err := conn.CreateClientVpnRoute(req)
+	_, err := conn.CreateClientVpnRoute(input)
 
 	if err != nil {
-		return fmt.Errorf("error creating client VPN route %q: %w", id, err)
+		return fmt.Errorf("error creating EC@ Client VPN Route (%s): %w", id, err)
 	}
 
 	d.SetId(id)
+
+	// TODO Wait for created.
 
 	return resourceClientVPNRouteRead(d, meta)
 }
@@ -130,36 +130,32 @@ func resourceClientVPNRouteRead(d *schema.ResourceData, meta interface{}) error 
 func resourceClientVPNRouteDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
-	err := deleteClientVpnRoute(conn, &ec2.DeleteClientVpnRouteInput{
-		ClientVpnEndpointId:  aws.String(d.Get("client_vpn_endpoint_id").(string)),
-		DestinationCidrBlock: aws.String(d.Get("destination_cidr_block").(string)),
-		TargetVpcSubnetId:    aws.String(d.Get("target_vpc_subnet_id").(string)),
-	})
-	if err != nil {
-		return fmt.Errorf("error deleting client VPN route %q: %w", d.Id(), err)
-	}
+	endpointID, targetSubnetID, destinationCIDR, err := ClientVPNRouteParseResourceID(d.Id())
 
-	return nil
-}
-
-func deleteClientVpnRoute(conn *ec2.EC2, input *ec2.DeleteClientVpnRouteInput) error {
-	id := ClientVPNRouteCreateResourceID(
-		aws.StringValue(input.ClientVpnEndpointId),
-		aws.StringValue(input.TargetVpcSubnetId),
-		aws.StringValue(input.DestinationCidrBlock),
-	)
-
-	_, err := conn.DeleteClientVpnRoute(input)
-	if tfawserr.ErrMessageContains(err, ErrCodeInvalidClientVpnRouteNotFound, "") {
-		return nil
-	}
 	if err != nil {
 		return err
 	}
 
-	_, err = WaitClientVPNRouteDeleted(conn, id)
+	log.Printf("[DEBUG] Deleting EC2 Client VPN Route: %s", d.Id())
+	_, err = conn.DeleteClientVpnRoute(&ec2.DeleteClientVpnRouteInput{
+		ClientVpnEndpointId:  aws.String(endpointID),
+		DestinationCidrBlock: aws.String(destinationCIDR),
+		TargetVpcSubnetId:    aws.String(targetSubnetID),
+	})
 
-	return err
+	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidClientVpnEndpointIdNotFound, ErrCodeInvalidClientVpnRouteNotFound) {
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("error deleting EC2 Client VPN Route (%s): %w", d.Id(), err)
+	}
+
+	if _, err := WaitClientVPNRouteDeleted(conn, d.Id()); err != nil {
+		return fmt.Errorf("error waiting for EC2 Client VPN Route (%s) delete: %w", d.Id(), err)
+	}
+
+	return nil
 }
 
 func resourceClientVPNRouteImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
