@@ -10,6 +10,8 @@ description: |-
 
 Provides an S3 bucket ACL resource.
 
+~> **Note:** `terraform destroy` does not delete the S3 Bucket ACL but does remove the resource from Terraform state.
+
 ## Example Usage
 
 ### With ACL
