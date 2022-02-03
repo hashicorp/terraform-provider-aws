@@ -389,8 +389,9 @@ func ResourceBucket() *schema.Resource {
 			},
 
 			"replication_configuration": {
-				Type:     schema.TypeList,
-				Computed: true,
+				Type:       schema.TypeList,
+				Computed:   true,
+				Deprecated: "Use the aws_s3_bucket_replication__configuration resource instead",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"role": {
@@ -399,8 +400,9 @@ func ResourceBucket() *schema.Resource {
 							Deprecated: "Use the aws_s3_bucket_replication__configuration resource instead",
 						},
 						"rules": {
-							Type:     schema.TypeSet,
-							Computed: true,
+							Type:       schema.TypeSet,
+							Computed:   true,
+							Deprecated: "Use the aws_s3_bucket_replication__configuration resource instead",
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"id": {
@@ -409,8 +411,9 @@ func ResourceBucket() *schema.Resource {
 										Deprecated: "Use the aws_s3_bucket_replication__configuration resource instead",
 									},
 									"destination": {
-										Type:     schema.TypeList,
-										Computed: true,
+										Type:       schema.TypeList,
+										Computed:   true,
+										Deprecated: "Use the aws_s3_bucket_replication__configuration resource instead",
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"account_id": {
@@ -434,8 +437,9 @@ func ResourceBucket() *schema.Resource {
 													Deprecated: "Use the aws_s3_bucket_replication__configuration resource instead",
 												},
 												"access_control_translation": {
-													Type:     schema.TypeList,
-													Computed: true,
+													Type:       schema.TypeList,
+													Computed:   true,
+													Deprecated: "Use the aws_s3_bucket_replication__configuration resource instead",
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
 															"owner": {
@@ -445,11 +449,11 @@ func ResourceBucket() *schema.Resource {
 															},
 														},
 													},
-													Deprecated: "Use the aws_s3_bucket_replication__configuration resource instead",
 												},
 												"replication_time": {
-													Type:     schema.TypeList,
-													Computed: true,
+													Type:       schema.TypeList,
+													Computed:   true,
+													Deprecated: "Use the aws_s3_bucket_replication__configuration resource instead",
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
 															"minutes": {
@@ -464,11 +468,11 @@ func ResourceBucket() *schema.Resource {
 															},
 														},
 													},
-													Deprecated: "Use the aws_s3_bucket_replication__configuration resource instead",
 												},
 												"metrics": {
-													Type:     schema.TypeList,
-													Computed: true,
+													Type:       schema.TypeList,
+													Computed:   true,
+													Deprecated: "Use the aws_s3_bucket_replication__configuration resource instead",
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
 															"minutes": {
@@ -483,19 +487,20 @@ func ResourceBucket() *schema.Resource {
 															},
 														},
 													},
-													Deprecated: "Use the aws_s3_bucket_replication__configuration resource instead",
 												},
 											},
 										},
 									},
 									"source_selection_criteria": {
-										Type:     schema.TypeList,
-										Computed: true,
+										Type:       schema.TypeList,
+										Computed:   true,
+										Deprecated: "Use the aws_s3_bucket_replication__configuration resource instead",
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"sse_kms_encrypted_objects": {
-													Type:     schema.TypeList,
-													Computed: true,
+													Type:       schema.TypeList,
+													Computed:   true,
+													Deprecated: "Use the aws_s3_bucket_replication__configuration resource instead",
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
 															"enabled": {
@@ -505,11 +510,9 @@ func ResourceBucket() *schema.Resource {
 															},
 														},
 													},
-													Deprecated: "Use the aws_s3_bucket_replication__configuration resource instead",
 												},
 											},
 										},
-										Deprecated: "Use the aws_s3_bucket_replication__configuration resource instead",
 									},
 									"prefix": {
 										Type:       schema.TypeString,
@@ -527,19 +530,19 @@ func ResourceBucket() *schema.Resource {
 										Deprecated: "Use the aws_s3_bucket_replication__configuration resource instead",
 									},
 									"filter": {
-										Type:     schema.TypeList,
-										Optional: true,
-										Computed: true,
+										Type:       schema.TypeList,
+										Computed:   true,
+										Deprecated: "Use the aws_s3_bucket_replication__configuration resource instead",
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"prefix": {
-													Type:     schema.TypeString,
-													Computed: true,
+													Type:       schema.TypeString,
+													Computed:   true,
+													Deprecated: "Use the aws_s3_bucket_replication__configuration resource instead",
 												},
 												"tags": tftags.TagsSchemaComputedDeprecated("Use the aws_s3_bucket_replication__configuration resource instead"),
 											},
 										},
-										Deprecated: "Use the aws_s3_bucket_replication__configuration resource instead",
 									},
 									"delete_marker_replication_status": {
 										Type:       schema.TypeString,
@@ -548,11 +551,9 @@ func ResourceBucket() *schema.Resource {
 									},
 								},
 							},
-							Deprecated: "Use the aws_s3_bucket_replication__configuration resource instead",
 						},
 					},
 				},
-				Deprecated: "Use the aws_s3_bucket_replication__configuration resource instead",
 			},
 
 			"server_side_encryption_configuration": {
