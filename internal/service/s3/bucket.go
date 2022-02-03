@@ -19,7 +19,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/request"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
@@ -806,7 +806,7 @@ func resourceBucketUpdate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if d.HasChange("logging") {
-		if err := resourceBucketLoggingUpdate(conn, d); err != nil {
+		if err := resourceBucketInternalLoggingUpdate(conn, d); err != nil {
 			return err
 		}
 	}
@@ -842,7 +842,7 @@ func resourceBucketUpdate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if d.HasChange("object_lock_configuration") {
-		if err := resourceObjectLockConfigurationUpdate(conn, d); err != nil {
+		if err := resourceBucketInternalObjectLockConfigurationUpdate(conn, d); err != nil {
 			return err
 		}
 	}
@@ -1868,7 +1868,7 @@ func resourceBucketInternalVersioningUpdate(conn *s3.S3, bucket string, versioni
 	return nil
 }
 
-func resourceBucketLoggingUpdate(conn *s3.S3, d *schema.ResourceData) error {
+func resourceBucketInternalLoggingUpdate(conn *s3.S3, d *schema.ResourceData) error {
 	logging := d.Get("logging").(*schema.Set).List()
 	bucket := d.Get("bucket").(string)
 	loggingStatus := &s3.BucketLoggingStatus{}
@@ -2014,7 +2014,7 @@ func resourceBucketServerSideEncryptionConfigurationUpdate(conn *s3.S3, d *schem
 	return nil
 }
 
-func resourceObjectLockConfigurationUpdate(conn *s3.S3, d *schema.ResourceData) error {
+func resourceBucketInternalObjectLockConfigurationUpdate(conn *s3.S3, d *schema.ResourceData) error {
 	// S3 Object Lock configuration cannot be deleted, only updated.
 	req := &s3.PutObjectLockConfigurationInput{
 		Bucket:                  aws.String(d.Get("bucket").(string)),

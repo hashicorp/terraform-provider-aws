@@ -1,7 +1,7 @@
 package verify
 
 import (
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"gopkg.in/yaml.v2"
 )
 

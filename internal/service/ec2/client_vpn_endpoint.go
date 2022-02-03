@@ -7,7 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -134,6 +134,7 @@ func ResourceClientVPNEndpoint() *schema.Resource {
 						"cloudwatch_log_stream": {
 							Type:     schema.TypeString,
 							Optional: true,
+							Computed: true,
 						},
 						"enabled": {
 							Type:     schema.TypeBool,
@@ -151,7 +152,7 @@ func ResourceClientVPNEndpoint() *schema.Resource {
 				Computed: true,
 			},
 			"dns_servers": {
-				Type:     schema.TypeSet,
+				Type:     schema.TypeList,
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
@@ -178,8 +179,9 @@ func ResourceClientVPNEndpoint() *schema.Resource {
 				Default:  false,
 			},
 			"status": {
-				Type:     schema.TypeString,
-				Computed: true,
+				Type:       schema.TypeString,
+				Computed:   true,
+				Deprecated: `This attribute has been deprecated.`,
 			},
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
@@ -237,8 +239,8 @@ func resourceClientVPNEndpointCreate(d *schema.ResourceData, meta interface{}) e
 		input.Description = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("dns_servers"); ok {
-		input.DnsServers = flex.ExpandStringSet(v.(*schema.Set))
+	if v, ok := d.GetOk("dns_servers"); ok && len(v.([]interface{})) > 0 {
+		input.DnsServers = flex.ExpandStringList(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("self_service_portal"); ok {
@@ -374,14 +376,14 @@ func resourceClientVPNEndpointUpdate(d *schema.ResourceData, meta interface{}) e
 		}
 
 		if d.HasChange("dns_servers") {
-			dnsServers := d.Get("dns_servers").(*schema.Set)
-			enabled := dnsServers.Len() > 0
+			dnsServers := d.Get("dns_servers").([]interface{})
+			enabled := len(dnsServers) > 0
 
 			input.DnsServers = &ec2.DnsServersOptionsModifyStructure{
 				Enabled: aws.Bool(enabled),
 			}
 			if enabled {
-				input.DnsServers.CustomDnsServers = flex.ExpandStringSet(dnsServers)
+				input.DnsServers.CustomDnsServers = flex.ExpandStringList(dnsServers)
 			}
 		}
 

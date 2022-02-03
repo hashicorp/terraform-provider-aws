@@ -8,7 +8,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/eventbridge"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -157,7 +157,6 @@ func ResourceTarget() *schema.Resource {
 						"launch_type": {
 							Type:     schema.TypeString,
 							Optional: true,
-							Default:  eventbridge.LaunchTypeEc2,
 							ValidateFunc: validation.Any(
 								validation.StringIsEmpty,
 								validation.StringInSlice(eventbridge.LaunchType_Values(), false),
@@ -335,7 +334,7 @@ func ResourceTarget() *schema.Resource {
 							Optional: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 							ValidateFunc: validation.All(
-								mapMaxItems(mapMaxItemsCount),
+								mapMaxItems(targetInputTransformerMaxInputPaths),
 								mapKeysDoNotMatch(regexp.MustCompile(`^AWS.*$`), "input_path must not start with \"AWS\""),
 							),
 						},
