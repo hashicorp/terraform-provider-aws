@@ -2,11 +2,12 @@ package grafana
 
 import (
 	"fmt"
+	"time"
+	
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/managedgrafana"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"time"
 )
 
 func waitWorkspaceCreated(conn *managedgrafana.ManagedGrafana, id string, timeout time.Duration) (*managedgrafana.DescribeWorkspaceOutput, error) {
