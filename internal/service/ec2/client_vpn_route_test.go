@@ -5,13 +5,13 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func testAccClientVPNRoute_basic(t *testing.T) {
@@ -113,41 +113,56 @@ func testAccCheckClientVPNRouteDestroy(s *terraform.State) error {
 			continue
 		}
 
-		_, err := tfec2.FindClientVPNRouteByID(conn, rs.Primary.ID)
-		if err == nil {
-			return fmt.Errorf("Client VPN route (%s) still exists", rs.Primary.ID)
+		endpointID, targetSubnetID, destinationCIDR, err := tfec2.ClientVPNRouteParseResourceID(rs.Primary.ID)
+
+		if err != nil {
+			return err
 		}
-		if tfawserr.ErrMessageContains(err, tfec2.ErrCodeInvalidClientVpnRouteNotFound, "") {
+
+		_, err = tfec2.FindClientVPNRouteByThreePartKey(conn, endpointID, targetSubnetID, destinationCIDR)
+
+		if tfresource.NotFound(err) {
 			continue
 		}
+
+		if err != nil {
+			return err
+		}
+
+		return fmt.Errorf("EC2 Client VPN Route %s still exists", rs.Primary.ID)
 	}
 
 	return nil
 }
 
-func testAccCheckClientVPNRouteExists(name string, route *ec2.ClientVpnRoute) resource.TestCheckFunc {
+func testAccCheckClientVPNRouteExists(name string, v *ec2.ClientVpnRoute) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
 			return fmt.Errorf("Not found: %s", name)
 		}
+
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No ID is set")
+			return fmt.Errorf("No EC2 Client VPN Route ID is set")
+		}
+
+		endpointID, targetSubnetID, destinationCIDR, err := tfec2.ClientVPNRouteParseResourceID(rs.Primary.ID)
+
+		if err != nil {
+			return err
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
-		resp, err := tfec2.FindClientVPNRouteByID(conn, rs.Primary.ID)
+		output, err := tfec2.FindClientVPNRouteByThreePartKey(conn, endpointID, targetSubnetID, destinationCIDR)
+
 		if err != nil {
-			return fmt.Errorf("Error reading Client VPN route (%s): %w", rs.Primary.ID, err)
+			return err
 		}
 
-		if resp != nil || len(resp.Routes) == 1 || resp.Routes[0] != nil {
-			*route = *resp.Routes[0]
-			return nil
-		}
+		*v = *output
 
-		return fmt.Errorf("Client VPN route (%s) not found", rs.Primary.ID)
+		return nil
 	}
 }
 

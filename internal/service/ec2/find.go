@@ -269,27 +269,67 @@ func FindClientVPNNetworkAssociationByIDs(conn *ec2.EC2, associationID, endpoint
 	return output, nil
 }
 
-func FindClientVPNRoute(conn *ec2.EC2, endpointID, targetSubnetID, destinationCidr string) (*ec2.DescribeClientVpnRoutesOutput, error) {
-	filters := map[string]string{
-		"target-subnet":    targetSubnetID,
-		"destination-cidr": destinationCidr,
-	}
+func FindClientVPNRoute(conn *ec2.EC2, input *ec2.DescribeClientVpnRoutesInput) (*ec2.ClientVpnRoute, error) {
+	output, err := FindClientVPNRoutes(conn, input)
 
-	input := &ec2.DescribeClientVpnRoutesInput{
-		ClientVpnEndpointId: aws.String(endpointID),
-		Filters:             BuildAttributeFilterList(filters),
-	}
-
-	return conn.DescribeClientVpnRoutes(input)
-}
-
-func FindClientVPNRouteByID(conn *ec2.EC2, routeID string) (*ec2.DescribeClientVpnRoutesOutput, error) {
-	endpointID, targetSubnetID, destinationCidr, err := ClientVPNRouteParseResourceID(routeID)
 	if err != nil {
 		return nil, err
 	}
 
-	return FindClientVPNRoute(conn, endpointID, targetSubnetID, destinationCidr)
+	if len(output) == 0 || output[0] == nil || output[0].Status == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	if count := len(output); count > 1 {
+		return nil, tfresource.NewTooManyResultsError(count, input)
+	}
+
+	return output[0], nil
+}
+
+func FindClientVPNRoutes(conn *ec2.EC2, input *ec2.DescribeClientVpnRoutesInput) ([]*ec2.ClientVpnRoute, error) {
+	var output []*ec2.ClientVpnRoute
+
+	err := conn.DescribeClientVpnRoutesPages(input, func(page *ec2.DescribeClientVpnRoutesOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.Routes {
+			if v == nil {
+				continue
+			}
+
+			output = append(output, v)
+		}
+
+		return !lastPage
+	})
+
+	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidClientVpnEndpointIdNotFound) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
+}
+
+func FindClientVPNRouteByThreePartKey(conn *ec2.EC2, endpointID, targetSubnetID, destinationCIDR string) (*ec2.ClientVpnRoute, error) {
+	input := &ec2.DescribeClientVpnRoutesInput{
+		ClientVpnEndpointId: aws.String(endpointID),
+		Filters: BuildAttributeFilterList(map[string]string{
+			"destination-cidr": destinationCIDR,
+			"target-subnet":    targetSubnetID,
+		}),
+	}
+
+	return FindClientVPNRoute(conn, input)
 }
 
 func FindCOIPPools(conn *ec2.EC2, input *ec2.DescribeCoipPoolsInput) ([]*ec2.CoipPool, error) {
