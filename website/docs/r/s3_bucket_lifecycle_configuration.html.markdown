@@ -129,7 +129,7 @@ The following arguments are supported:
 
 * `bucket` - (Required) The name of the source S3 bucket you want Amazon S3 to monitor.
 * `expected_bucket_owner` - (Optional) The account ID of the expected bucket owner. If the bucket is owned by a different account, the request will fail with an HTTP 403 (Access Denied) error.
-* `rule` - (Required) Set of configuration blocks describing the rules managing the replication [documented below](#rule).
+* `rule` - (Required) List of configuration blocks describing the rules managing the replication [documented below](#rule).
 
 ### rule
 

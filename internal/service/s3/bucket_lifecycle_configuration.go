@@ -42,7 +42,7 @@ func ResourceBucketLifecycleConfiguration() *schema.Resource {
 			},
 
 			"rule": {
-				Type:     schema.TypeSet,
+				Type:     schema.TypeList,
 				Required: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -247,7 +247,7 @@ func resourceBucketLifecycleConfigurationCreate(ctx context.Context, d *schema.R
 	bucket := d.Get("bucket").(string)
 	expectedBucketOwner := d.Get("expected_bucket_owner").(string)
 
-	rules, err := ExpandLifecycleRules(d.Get("rule").(*schema.Set).List())
+	rules, err := ExpandLifecycleRules(d.Get("rule").([]interface{}))
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("error creating S3 Lifecycle Configuration for bucket (%s): %w", bucket, err))
 	}
@@ -329,7 +329,7 @@ func resourceBucketLifecycleConfigurationUpdate(ctx context.Context, d *schema.R
 		return diag.FromErr(err)
 	}
 
-	rules, err := ExpandLifecycleRules(d.Get("rule").(*schema.Set).List())
+	rules, err := ExpandLifecycleRules(d.Get("rule").([]interface{}))
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("error updating S3 Bucket Lifecycle Configuration rule: %w", err))
 	}
