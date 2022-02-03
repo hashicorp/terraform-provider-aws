@@ -33,6 +33,7 @@ Upgrade topics:
 - [Resource: aws_cloudwatch_event_target](#resource-aws_cloudwatch_event_target)
 - [Resource: aws_customer_gateway](#resource-aws_customer_gateway)
 - [Resource: aws_default_network_acl](#resource-aws_default_network_acl)
+- [Resource: aws_default_route_table](#resource-aws_default_route_table)
 - [Resource: aws_elasticache_cluster](#resource-aws_elasticache_cluster)
 - [Resource: aws_elasticache_global_replication_group](#resource-aws_elasticache_global_replication_group)
 - [Resource: aws_elasticache_replication_group](#resource-aws_elasticache_replication_group)
@@ -42,6 +43,7 @@ Upgrade topics:
 - [Resource: aws_s3_bucket](#resource-aws_s3_bucket)
 - [Resource: aws_s3_bucket_object](#resource-aws_s3_bucket_object)
 - [Resource: aws_spot_instance_request](#resource-aws_spot_instance_request)
+- [Resource: aws_route_table](#resource-aws_route_table)
 
 <!-- /TOC -->
 
@@ -415,12 +417,12 @@ Previously, `ip_address` could be set to `""`, which would result in an AWS erro
 
 ## Resource: aws_default_network_acl
 
-Previously, `egress.*.cidr_block`, `egress.*.ipv6_cidr_block`, `ingress.*.cidr_block`, or `ingress.*.ipv6_cidr_block` could be set to `""`. However, the value `""` is no longer valid.
+Previously, `egress.*.cidr_block`, `egress.*.ipv6_cidr_block`, `ingress.*.cidr_block`, and `ingress.*.ipv6_cidr_block` could be set to `""`. However, the value `""` is no longer valid. Now, set the argument to `null` (_e.g._, `ipv6_cidr_block = null`) or remove the empty-string configuration.
 
-For example, previously this type of configuration was valid:
+For example, this type of configuration is now not valid:
 
 ```terraform
-resource "aws_default_network_acl" "default" {
+resource "aws_default_network_acl" "example" {
   # ...
   egress {
     cidr_block      = "0.0.0.0/0"
@@ -430,13 +432,42 @@ resource "aws_default_network_acl" "default" {
 }
 ```
 
-Now, set the argument to null (`ipv6_cidr_block = null`) or simply remove the empty-value configuration:
+In this updated and valid configuration, we remove the empty-string configuration:
 
 ```terraform
-resource "aws_default_network_acl" "default" {
+resource "aws_default_network_acl" "example" {
   # ...
   egress {
+    cidr_block = "0.0.0.0/0"
+    # ...
+  }
+}
+```
+
+## Resource: aws_default_route_table
+
+Previously, `route.*.cidr_block` and `route.*.ipv6_cidr_block` could be set to `""`. However, the value `""` is no longer valid. Now, set the argument to `null` (_e.g._, `ipv6_cidr_block = null`) or remove the empty-string configuration.
+
+For example, this type of configuration is now not valid:
+
+```terraform
+resource "aws_default_route_table" "example" {
+  # ...
+  route {
     cidr_block      = "0.0.0.0/0"
+    ipv6_cidr_block = ""
+    # ...
+  }
+}
+```
+
+In this updated and valid configuration, we remove the empty-string configuration:
+
+```terraform
+resource "aws_default_route_table" "example" {
+  # ...
+  route {
+    cidr_block = "0.0.0.0/0"
     # ...
   }
 }
@@ -502,12 +533,12 @@ We removed the misspelled argument `active_directory_configuration.0.self_manage
 
 ## Resource: aws_network_acl
 
-Previously, `egress.*.cidr_block`, `egress.*.ipv6_cidr_block`, `ingress.*.cidr_block`, or `ingress.*.ipv6_cidr_block` could be set to `""`. However, the value `""` is no longer valid.
+Previously, `egress.*.cidr_block`, `egress.*.ipv6_cidr_block`, `ingress.*.cidr_block`, and `ingress.*.ipv6_cidr_block` could be set to `""`. However, the value `""` is no longer valid. Now, set the argument to `null` (_e.g._, `ipv6_cidr_block = null`) or remove the empty-string configuration.
 
-For example, previously this type of configuration was valid:
+For example, this type of configuration is now not valid:
 
 ```terraform
-resource "aws_network_acl" "default" {
+resource "aws_network_acl" "example" {
   # ...
   egress {
     cidr_block      = "0.0.0.0/0"
@@ -517,13 +548,13 @@ resource "aws_network_acl" "default" {
 }
 ```
 
-Now, set the argument to null (`ipv6_cidr_block = null`) or simply remove the empty-value configuration:
+In this updated and valid configuration, we remove the empty-string configuration:
 
 ```terraform
-resource "aws_network_acl" "default" {
+resource "aws_network_acl" "example" {
   # ...
   egress {
-    cidr_block      = "0.0.0.0/0"
+    cidr_block = "0.0.0.0/0"
     # ...
   }
 }
@@ -558,6 +589,62 @@ An updated configuration:
 resource "aws_spot_instance_request" "example" {
   # ... other configuration ...
   instance_interruption_behavior =  "hibernate"
+}
+```
+
+## Resource: aws_route
+
+Previously, `destination_cidr_block` and `destination_ipv6_cidr_block` could be set to `""`. However, the value `""` is no longer valid. Now, set the argument to `null` (_e.g._, `destination_ipv6_cidr_block = null`) or remove the empty-string configuration.
+
+In addition, now exactly one of `destination_cidr_block`, `destination_ipv6_cidr_block`, and `destination_prefix_list_id` can be set.
+
+For example, this type of configuration is now not valid:
+
+```terraform
+resource "aws_route" "example" {
+  # ...
+  destination_cidr_block      = "172.16.1.0/24"
+  destination_ipv6_cidr_block = ""
+  # ...
+}
+```
+
+In this updated and valid configuration, we remove the empty-string configuration:
+
+```terraform
+resource "aws_route" "example" {
+  # ...
+  destination_cidr_block = "172.16.1.0/24"
+  # ...
+}
+```
+
+## Resource: aws_route_table
+
+Previously, `route.*.cidr_block` and `route.*.ipv6_cidr_block` could be set to `""`. However, the value `""` is no longer valid. Now, set the argument to `null` (_e.g._, `ipv6_cidr_block = null`) or remove the empty-string configuration.
+
+For example, this type of configuration is now not valid:
+
+```terraform
+resource "aws_route_table" "example" {
+  # ...
+  route {
+    cidr_block      = "0.0.0.0/0"
+    ipv6_cidr_block = ""
+    # ...
+  }
+}
+```
+
+In this updated and valid configuration, we remove the empty-string configuration:
+
+```terraform
+resource "aws_route_table" "example" {
+  # ...
+  route {
+    cidr_block = "0.0.0.0/0"
+    # ...
+  }
 }
 ```
 
