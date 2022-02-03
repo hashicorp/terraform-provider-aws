@@ -3,7 +3,9 @@ package grafana
 import (
 	"fmt"
 	"time"
-	
+)
+
+import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/managedgrafana"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
