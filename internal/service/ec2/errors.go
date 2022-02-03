@@ -21,6 +21,7 @@ const (
 	ErrCodeInvalidAssociationIDNotFound                 = "InvalidAssociationID.NotFound"
 	ErrCodeInvalidAttachmentIDNotFound                  = "InvalidAttachmentID.NotFound"
 	ErrCodeInvalidCarrierGatewayIDNotFound              = "InvalidCarrierGatewayID.NotFound"
+	ErrCodeInvalidClientVpnActiveAssociationNotFound    = "InvalidClientVpnActiveAssociationNotFound"
 	ErrCodeInvalidClientVpnAssociationIdNotFound        = "InvalidClientVpnAssociationIdNotFound"
 	ErrCodeInvalidClientVpnAuthorizationRuleNotFound    = "InvalidClientVpnEndpointAuthorizationRuleNotFound"
 	ErrCodeInvalidClientVpnEndpointIdNotFound           = "InvalidClientVpnEndpointId.NotFound"
