@@ -16,7 +16,7 @@ import (
 func TestAccCloudWatchLogsDestinationPolicy_basic(t *testing.T) {
 	var destination cloudwatchlogs.Destination
 	resourceName := "aws_cloudwatch_log_destination_policy.test"
-	rstring := sdkacctest.RandString(5)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -25,15 +25,25 @@ func TestAccCloudWatchLogsDestinationPolicy_basic(t *testing.T) {
 		CheckDestroy: testAccCheckDestinationPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDestinationPolicyConfig(rstring),
+				Config: testAccDestinationPolicyConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDestinationPolicyExists(resourceName, &destination),
+					resource.TestCheckResourceAttrPair(resourceName, "destination_name", "aws_cloudwatch_log_destination.test", "name"),
+					resource.TestCheckResourceAttrSet(resourceName, "access_policy"),
 				),
 			},
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+			{
+				Config: testAccDestinationPolicyForceUpdateConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDestinationPolicyExists(resourceName, &destination),
+					resource.TestCheckResourceAttrPair(resourceName, "destination_name", "aws_cloudwatch_log_destination.test", "name"),
+					resource.TestCheckResourceAttrSet(resourceName, "access_policy"),
+				),
 			},
 		},
 	})
@@ -83,10 +93,10 @@ func testAccCheckDestinationPolicyExists(n string, d *cloudwatchlogs.Destination
 	}
 }
 
-func testAccDestinationPolicyConfig(rstring string) string {
+func testAccDestinationPolicyBaseConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_kinesis_stream" "test" {
-  name        = "RootAccess_%s"
+  name        = %[1]q
   shard_count = 1
 }
 
@@ -112,7 +122,7 @@ data "aws_iam_policy_document" "role" {
 }
 
 resource "aws_iam_role" "test" {
-  name               = "CWLtoKinesisRole_%s"
+  name               = %[1]q
   assume_role_policy = data.aws_iam_policy_document.role.json
 }
 
@@ -143,13 +153,13 @@ data "aws_iam_policy_document" "policy" {
 }
 
 resource "aws_iam_role_policy" "test" {
-  name   = "Permissions-Policy-For-CWL_%s"
+  name   = %[1]q
   role   = aws_iam_role.test.id
   policy = data.aws_iam_policy_document.policy.json
 }
 
 resource "aws_cloudwatch_log_destination" "test" {
-  name       = "testDestination_%s"
+  name       = %[1]q
   target_arn = aws_kinesis_stream.test.arn
   role_arn   = aws_iam_role.test.arn
   depends_on = [aws_iam_role_policy.test]
@@ -176,10 +186,46 @@ data "aws_iam_policy_document" "access" {
     ]
   }
 }
+`, rName)
+}
 
+func testAccDestinationPolicyConfig(rName string) string {
+	return testAccDestinationPolicyBaseConfig(rName) + `
 resource "aws_cloudwatch_log_destination_policy" "test" {
   destination_name = aws_cloudwatch_log_destination.test.name
   access_policy    = data.aws_iam_policy_document.access.json
 }
-`, rstring, rstring, rstring, rstring)
+`
+}
+
+func testAccDestinationPolicyForceUpdateConfig(rName string) string {
+	return testAccDestinationPolicyBaseConfig(rName) + `
+data "aws_iam_policy_document" "access2" {
+  statement {
+    effect = "Allow"
+
+    principals {
+      type = "AWS"
+
+      identifiers = [
+        "000000000000",
+      ]
+    }
+
+    actions = [
+      "logs:*",
+    ]
+
+    resources = [
+      aws_cloudwatch_log_destination.test.arn,
+    ]
+  }
+}
+
+resource "aws_cloudwatch_log_destination_policy" "test" {
+  destination_name = aws_cloudwatch_log_destination.test.name
+  access_policy    = data.aws_iam_policy_document.access2.json
+  force_update     = true
+}
+`
 }

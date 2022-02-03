@@ -28,6 +28,8 @@ The following attributes are exported:
 
 * `id` - The identifier for the distribution. For example: `EDFDVBD632BHDS5`.
 
+* `aliases` - A list that contains information about CNAMEs (alternate domain names), if any, for this distribution.
+
 * `arn` - The ARN (Amazon Resource Name) for the distribution. For example: arn:aws:cloudfront::123456789012:distribution/EDFDVBD632BHDS5, where 123456789012 is your AWS account ID.
 
 * `status` - The current status of the distribution. `Deployed` if the

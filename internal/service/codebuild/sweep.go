@@ -25,6 +25,11 @@ func init() {
 		Name: "aws_codebuild_project",
 		F:    sweepProjects,
 	})
+
+	resource.AddTestSweepers("aws_codebuild_source_credential", &resource.Sweeper{
+		Name: "aws_codebuild_source_credential",
+		F:    sweepSourceCredentials,
+	})
 }
 
 func sweepReportGroups(region string) error {
@@ -115,6 +120,46 @@ func sweepProjects(region string) error {
 
 	if err != nil {
 		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error retrieving CodeBuild Projects: %w", err))
+	}
+
+	return sweeperErrs.ErrorOrNil()
+}
+
+func sweepSourceCredentials(region string) error {
+	client, err := sweep.SharedRegionalSweepClient(region)
+
+	if err != nil {
+		return fmt.Errorf("error getting client: %w", err)
+	}
+
+	conn := client.(*conns.AWSClient).CodeBuildConn
+	input := &codebuild.ListSourceCredentialsInput{}
+	var sweeperErrs *multierror.Error
+
+	creds, err := conn.ListSourceCredentials(input)
+
+	for _, cred := range creds.SourceCredentialsInfos {
+		id := aws.StringValue(cred.Arn)
+		r := ResourceSourceCredential()
+		d := r.Data(nil)
+		d.SetId(id)
+
+		err := r.Delete(d, client)
+		if err != nil {
+			sweeperErr := fmt.Errorf("error deleting CodeBuild Source Credential (%s): %w", id, err)
+			log.Printf("[ERROR] %s", sweeperErr)
+			sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
+			continue
+		}
+	}
+
+	if sweep.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping CodeBuild Source Credential sweep for %s: %s", region, err)
+		return sweeperErrs.ErrorOrNil()
+	}
+
+	if err != nil {
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error retrieving CodeBuild Source Credentials: %w", err))
 	}
 
 	return sweeperErrs.ErrorOrNil()

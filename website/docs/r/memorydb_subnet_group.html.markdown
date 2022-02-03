@@ -33,12 +33,15 @@ resource "aws_memorydb_subnet_group" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+The following arguments are required:
+
+* `subnet_ids` - (Required) Set of VPC Subnet ID-s for the subnet group. At least one subnet must be provided.
+
+The following arguments are optional:
 
 * `name` - (Optional, Forces new resource) Name of the subnet group. If omitted, Terraform will assign a random, unique name. Conflicts with `name_prefix`.
 * `name_prefix` - (Optional, Forces new resource) Creates a unique name beginning with the specified prefix. Conflicts with `name`.
 * `description` - (Optional) Description for the subnet group. Defaults to `"Managed by Terraform"`.
-* `subnet_ids` - (Required) Set of VPC Subnet ID-s for the subnet group. At least one subnet must be provided.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attributes Reference

@@ -7,7 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/imagebuilder"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -134,6 +134,23 @@ func ResourceImageRecipe() *schema.Resource {
 							Required:     true,
 							ValidateFunc: verify.ValidARN,
 						},
+						"parameter": {
+							Type:     schema.TypeSet,
+							Optional: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"name": {
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: validation.StringLenBetween(1, 256),
+									},
+									"value": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+								},
+							},
+						},
 					},
 				},
 			},
@@ -168,6 +185,24 @@ func ResourceImageRecipe() *schema.Resource {
 			},
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
+			"user_data_base64": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+				Computed: true,
+				ValidateFunc: validation.All(
+					validation.StringLenBetween(1, 21847),
+					func(v interface{}, name string) (warns []string, errs []error) {
+						s := v.(string)
+						if !verify.IsBase64Encoded([]byte(s)) {
+							errs = append(errs, fmt.Errorf(
+								"%s: must be base64-encoded", name,
+							))
+						}
+						return
+					},
+				),
+			},
 			"version": {
 				Type:         schema.TypeString,
 				Required:     true,
@@ -217,6 +252,12 @@ func resourceImageRecipeCreate(d *schema.ResourceData, meta interface{}) error {
 
 	if len(tags) > 0 {
 		input.Tags = Tags(tags.IgnoreAWS())
+	}
+
+	if v, ok := d.GetOk("user_data_base64"); ok {
+		input.AdditionalInstanceConfiguration = &imagebuilder.AdditionalInstanceConfiguration{
+			UserDataOverride: aws.String(v.(string)),
+		}
 	}
 
 	if v, ok := d.GetOk("version"); ok {
@@ -287,6 +328,11 @@ func resourceImageRecipeRead(d *schema.ResourceData, meta interface{}) error {
 	if err := d.Set("tags_all", tags.Map()); err != nil {
 		return fmt.Errorf("error setting tags_all: %w", err)
 	}
+
+	if imageRecipe.AdditionalInstanceConfiguration != nil {
+		d.Set("user_data_base64", imageRecipe.AdditionalInstanceConfiguration.UserDataOverride)
+	}
+
 	d.Set("version", imageRecipe.Version)
 	d.Set("working_directory", imageRecipe.WorkingDirectory)
 
@@ -336,6 +382,56 @@ func expandComponentConfiguration(tfMap map[string]interface{}) *imagebuilder.Co
 
 	if v, ok := tfMap["component_arn"].(string); ok && v != "" {
 		apiObject.ComponentArn = aws.String(v)
+	}
+
+	if v, ok := tfMap["parameter"].(*schema.Set); ok && v.Len() > 0 {
+		apiObject.Parameters = expandComponentParameters(v.List())
+	}
+
+	return apiObject
+}
+
+func expandComponentParameters(tfList []interface{}) []*imagebuilder.ComponentParameter {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	var apiObjects []*imagebuilder.ComponentParameter
+
+	for _, tfMapRaw := range tfList {
+		tfMap, ok := tfMapRaw.(map[string]interface{})
+
+		if !ok {
+			continue
+		}
+
+		apiObject := expandComponentParameter(tfMap)
+
+		if apiObject == nil {
+			continue
+		}
+
+		apiObjects = append(apiObjects, apiObject)
+	}
+
+	return apiObjects
+}
+
+func expandComponentParameter(tfMap map[string]interface{}) *imagebuilder.ComponentParameter {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &imagebuilder.ComponentParameter{}
+
+	if v, ok := tfMap["name"].(string); ok && v != "" {
+		apiObject.Name = aws.String(v)
+	}
+
+	if v, ok := tfMap["value"].(string); ok && v != "" {
+		// ImageBuilder API quirk
+		// Even though Value is a slice, only one element is accepted.
+		apiObject.Value = aws.StringSlice([]string{v})
 	}
 
 	return apiObject
@@ -468,6 +564,48 @@ func flattenComponentConfiguration(apiObject *imagebuilder.ComponentConfiguratio
 
 	if v := apiObject.ComponentArn; v != nil {
 		tfMap["component_arn"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.Parameters; v != nil {
+		tfMap["parameter"] = flattenComponentParameters(v)
+	}
+
+	return tfMap
+}
+
+func flattenComponentParameters(apiObjects []*imagebuilder.ComponentParameter) []interface{} {
+	if len(apiObjects) == 0 {
+		return nil
+	}
+
+	var tfList []interface{}
+
+	for _, apiObject := range apiObjects {
+		if apiObject == nil {
+			continue
+		}
+
+		tfList = append(tfList, flattenComponentParameter(apiObject))
+	}
+
+	return tfList
+}
+
+func flattenComponentParameter(apiObject *imagebuilder.ComponentParameter) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.Name; v != nil {
+		tfMap["name"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.Value; v != nil {
+		// ImageBuilder API quirk
+		// Even though Value is a slice, only one element is accepted.
+		tfMap["value"] = aws.StringValueSlice(v)[0]
 	}
 
 	return tfMap

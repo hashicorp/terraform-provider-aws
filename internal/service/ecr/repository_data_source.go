@@ -5,11 +5,13 @@ import (
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/service/ecr"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func DataSourceRepository() *schema.Resource {
@@ -103,20 +105,28 @@ func dataSourceRepositoryRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("repository_url", repository.RepositoryUri)
 	d.Set("image_tag_mutability", repository.ImageTagMutability)
 
-	tags, err := ListTags(conn, arn)
-	if err != nil {
-		return fmt.Errorf("error listing tags for ECR Repository (%s): %w", arn, err)
-	}
-	if err := d.Set("tags", tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags for ECR Repository (%s): %w", arn, err)
-	}
-
 	if err := d.Set("image_scanning_configuration", flattenImageScanningConfiguration(repository.ImageScanningConfiguration)); err != nil {
 		return fmt.Errorf("error setting image_scanning_configuration for ECR Repository (%s): %w", arn, err)
 	}
 
 	if err := d.Set("encryption_configuration", flattenEcrRepositoryEncryptionConfiguration(repository.EncryptionConfiguration)); err != nil {
 		return fmt.Errorf("error setting encryption_configuration for ECR Repository (%s): %w", arn, err)
+	}
+
+	tags, err := ListTags(conn, arn)
+
+	// Some partitions (i.e., ISO) may not support tagging, giving error
+	if meta.(*conns.AWSClient).Partition != endpoints.AwsPartitionID && verify.CheckISOErrorTagsUnsupported(err) {
+		log.Printf("[WARN] failed listing tags for ECR Repository (%s): %s", d.Id(), err)
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("failed listing tags for ECR Repository (%s): %w", arn, err)
+	}
+
+	if err := d.Set("tags", tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags for ECR Repository (%s): %w", arn, err)
 	}
 
 	return nil

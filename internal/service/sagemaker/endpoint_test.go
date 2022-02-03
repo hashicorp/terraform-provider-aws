@@ -308,7 +308,7 @@ resource "aws_s3_bucket" "test" {
   bucket = %[1]q
 }
 
-resource "aws_s3_bucket_object" "test" {
+resource "aws_s3_object" "test" {
   bucket = aws_s3_bucket.test.id
   key    = "model.tar.gz"
   source = "test-fixtures/sagemaker-tensorflow-serving-test-model.tar.gz"
@@ -325,7 +325,7 @@ resource "aws_sagemaker_model" "test" {
 
   primary_container {
     image          = data.aws_sagemaker_prebuilt_ecr_image.test.registry_path
-    model_data_url = "https://${aws_s3_bucket.test.bucket_regional_domain_name}/${aws_s3_bucket_object.test.key}"
+    model_data_url = "https://${aws_s3_bucket.test.bucket_regional_domain_name}/${aws_s3_object.test.key}"
   }
 
   depends_on = [aws_iam_role_policy.test]

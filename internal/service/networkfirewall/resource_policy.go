@@ -7,12 +7,13 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/networkfirewall"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
@@ -117,12 +118,24 @@ func resourceResourcePolicyDelete(ctx context.Context, d *schema.ResourceData, m
 		ResourceArn: aws.String(d.Id()),
 	}
 
-	_, err := conn.DeleteResourcePolicyWithContext(ctx, input)
+	_, err := tfresource.RetryWhenContext(ctx, resourcePolicyDeleteTimeout,
+		func() (interface{}, error) {
+			return conn.DeleteResourcePolicyWithContext(ctx, input)
+		},
+		func(err error) (bool, error) {
+			// RAM managed permissions eventual consistency
+			if tfawserr.ErrMessageContains(err, networkfirewall.ErrCodeInvalidResourcePolicyException, "The supplied policy does not match RAM managed permissions") {
+				return true, err
+			}
+			return false, err
+		},
+	)
+
+	if tfawserr.ErrCodeEquals(err, networkfirewall.ErrCodeResourceNotFoundException) {
+		return nil
+	}
 
 	if err != nil {
-		if tfawserr.ErrCodeEquals(err, networkfirewall.ErrCodeResourceNotFoundException) {
-			return nil
-		}
 		return diag.FromErr(fmt.Errorf("error deleting NetworkFirewall Resource Policy (for resource: %s): %w", d.Id(), err))
 	}
 

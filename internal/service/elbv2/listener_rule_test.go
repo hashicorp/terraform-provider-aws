@@ -9,7 +9,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/elbv2"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -499,6 +499,10 @@ func TestAccELBV2ListenerRule_priority(t *testing.T) {
 	var rule elbv2.Rule
 	lbName := fmt.Sprintf("testrule-basic-%s", sdkacctest.RandString(13))
 	targetGroupName := fmt.Sprintf("testtargetgroup-%s", sdkacctest.RandString(10))
+
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -1036,6 +1040,10 @@ func TestAccELBV2ListenerRule_conditionUpdateMixed(t *testing.T) {
 
 	resourceName := "aws_lb_listener_rule.static"
 	frontEndListenerResourceName := "aws_lb_listener.front_end"
+
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
