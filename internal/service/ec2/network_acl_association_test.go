@@ -8,19 +8,18 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccNetworkAclAssociation_basic(t *testing.T) {
-
+func TestAccEC2NetworkACLAssociation_basic(t *testing.T) {
 	var networkAcl ec2.NetworkAcl
 	resourceName := "aws_network_acl.acl_a"
 
-	//lintignore:XAT001
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckNetworkACLDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccNetworkAclAssoc,
+				Config: testAccNetworkACLAssociationConfig,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckNetworkACLExists(resourceName, &networkAcl),
 					testAccCheckSubnetIsAssociatedWithAcl(resourceName, "aws_subnet.subnet_a"),
@@ -35,7 +34,7 @@ func TestAccNetworkAclAssociation_basic(t *testing.T) {
 	})
 }
 
-const testAccNetworkAclAssoc = `
+const testAccNetworkACLAssociationConfig = `
 resource "aws_vpc" "test_vpc" {
   cidr_block = "10.1.0.0/16"
   tags = {

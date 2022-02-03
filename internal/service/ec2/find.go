@@ -762,6 +762,50 @@ func FindNetworkACLByID(conn *ec2.EC2, id string) (*ec2.NetworkAcl, error) {
 	// TODO: Layer on top of FindNetworkACL and modify callers to handle NotFoundError.
 }
 
+func FindNetworkACLAssociationByID(conn *ec2.EC2, associationID string) (*ec2.NetworkAclAssociation, error) {
+	input := &ec2.DescribeNetworkAclsInput{
+		Filters: BuildAttributeFilterList(map[string]string{
+			"association.association-id": associationID,
+		}),
+	}
+
+	output, err := FindNetworkACL(conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	for _, v := range output.Associations {
+		if aws.StringValue(v.NetworkAclAssociationId) == associationID {
+			return v, nil
+		}
+	}
+
+	return nil, &resource.NotFoundError{}
+}
+
+func FindNetworkACLAssociationBySubnetID(conn *ec2.EC2, subnetID string) (*ec2.NetworkAclAssociation, error) {
+	input := &ec2.DescribeNetworkAclsInput{
+		Filters: BuildAttributeFilterList(map[string]string{
+			"association.subnet-id": subnetID,
+		}),
+	}
+
+	output, err := FindNetworkACL(conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	for _, v := range output.Associations {
+		if aws.StringValue(v.SubnetId) == subnetID {
+			return v, nil
+		}
+	}
+
+	return nil, &resource.NotFoundError{}
+}
+
 // FindNetworkACLEntry looks up a FindNetworkACLEntry by Network ACL ID, Egress, and Rule Number. When not found, returns nil and potentially an API error.
 func FindNetworkACLEntry(conn *ec2.EC2, networkAclID string, egress bool, ruleNumber int) (*ec2.NetworkAclEntry, error) {
 	input := &ec2.DescribeNetworkAclsInput{
