@@ -243,8 +243,9 @@ func ResourceBucket() *schema.Resource {
 			},
 
 			"logging": {
-				Type:     schema.TypeSet,
-				Computed: true,
+				Type:       schema.TypeSet,
+				Computed:   true,
+				Deprecated: "Use the aws_s3_bucket_logging resource instead",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"target_bucket": {
@@ -259,7 +260,6 @@ func ResourceBucket() *schema.Resource {
 						},
 					},
 				},
-				Deprecated: "Use the aws_s3_bucket_logging resource instead",
 			},
 
 			"lifecycle_rule": {
