@@ -142,8 +142,8 @@ func testAccClientVPNNetworkAssociation_securityGroups(t *testing.T) {
 		CheckDestroy: testAccCheckClientVPNNetworkAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEc2ClientVpnNetworkAssociationTwoSecurityGroups(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Config: testAccEc2ClientVpnNetworkAssociationConfigTwoSecurityGroups(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClientVPNNetworkAssociationExists(resourceName, &assoc1),
 					testAccCheckDefaultSecurityGroupExists(securityGroup1ResourceName, &group11),
 					testAccCheckDefaultSecurityGroupExists(securityGroup2ResourceName, &group12),
@@ -159,8 +159,8 @@ func testAccClientVPNNetworkAssociation_securityGroups(t *testing.T) {
 				ImportStateIdFunc: testAccClientVPNNetworkAssociationImportStateIdFunc(resourceName),
 			},
 			{
-				Config: testAccEc2ClientVpnNetworkAssociationOneSecurityGroup(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Config: testAccEc2ClientVpnNetworkAssociationConfigOneSecurityGroup(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClientVPNNetworkAssociationExists(resourceName, &assoc2),
 					testAccCheckDefaultSecurityGroupExists(securityGroup1ResourceName, &group21),
 					resource.TestCheckResourceAttr(resourceName, "security_groups.#", "1"),
@@ -301,7 +301,7 @@ resource "aws_ec2_client_vpn_network_association" "test2" {
 `)
 }
 
-func testAccEc2ClientVpnNetworkAssociationTwoSecurityGroups(rName string) string {
+func testAccEc2ClientVpnNetworkAssociationConfigTwoSecurityGroups(rName string) string {
 	return acctest.ConfigCompose(
 		testAccEc2ClientVpnNetworkAssociationBaseConfig(rName),
 		fmt.Sprintf(`
@@ -331,7 +331,7 @@ resource "aws_security_group" "test2" {
 `, rName))
 }
 
-func testAccEc2ClientVpnNetworkAssociationOneSecurityGroup(rName string) string {
+func testAccEc2ClientVpnNetworkAssociationConfigOneSecurityGroup(rName string) string {
 	return acctest.ConfigCompose(
 		testAccEc2ClientVpnNetworkAssociationBaseConfig(rName),
 		fmt.Sprintf(`
