@@ -31,6 +31,7 @@ Upgrade topics:
 - [Data Source: aws_s3_bucket_objects](#data-source-aws_s3_bucket_objects)
 - [Resource: aws_batch_compute_environment](#resource-aws_batch_compute_environment)
 - [Resource: aws_cloudwatch_event_target](#resource-aws_cloudwatch_event_target)
+- [Resource: aws_customer_gateway](#resource-aws_customer_gateway)
 - [Resource: aws_elasticache_cluster](#resource-aws_elasticache_cluster)
 - [Resource: aws_elasticache_global_replication_group](#resource-aws_elasticache_global_replication_group)
 - [Resource: aws_elasticache_replication_group](#resource-aws_elasticache_replication_group)
@@ -404,6 +405,10 @@ resource "aws_cloudwatch_event_target" "test" {
   }
 }
 ```
+
+## Resource: aws_customer_gateway
+
+Previously, `ip_address` could be set to `""`, which would result in an AWS error. However, this value is no longer accepted by the provider.
 
 ## Resource: aws_elasticache_cluster
 
