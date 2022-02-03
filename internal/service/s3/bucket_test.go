@@ -3089,6 +3089,12 @@ func testAccBucketConfig_withNoTags(bucketName string) string {
 resource "aws_s3_bucket" "bucket" {
   bucket        = %[1]q
   force_destroy = false
+
+  lifecycle {
+    ignore_changes = [
+      grant,
+    ]
+  }
 }
 
 resource "aws_s3_bucket_acl" "test" {
@@ -3108,6 +3114,12 @@ resource "aws_s3_bucket" "bucket" {
     Key1 = "AAA"
     Key2 = "BBB"
     Key3 = "CCC"
+  }
+
+  lifecycle {
+    ignore_changes = [
+      grant,
+    ]
   }
 }
 
@@ -3130,6 +3142,12 @@ resource "aws_s3_bucket" "bucket" {
     Key4 = "DDD"
     Key5 = "EEE"
   }
+
+  lifecycle {
+    ignore_changes = [
+      grant,
+    ]
+  }
 }
 
 resource "aws_s3_bucket_acl" "test" {
@@ -3149,9 +3167,15 @@ resource "aws_s3_bucket" "bucket1" {
     Name        = "tf-test-bucket-1-%[1]d"
     Environment = "%[1]d"
   }
+
+  lifecycle {
+    ignore_changes = [
+      grant,
+    ]
+  }
 }
 
-resource "aws_s3_bucket_acl" "test" {
+resource "aws_s3_bucket_acl" "bucket1" {
   bucket = aws_s3_bucket.bucket1.id
   acl    = "private"
 }
@@ -3164,9 +3188,15 @@ resource "aws_s3_bucket" "bucket2" {
     Name        = "tf-test-bucket-2-%[1]d"
     Environment = "%[1]d"
   }
+
+  lifecycle {
+    ignore_changes = [
+      grant,
+    ]
+  }
 }
 
-resource "aws_s3_bucket_acl" "test" {
+resource "aws_s3_bucket_acl" "bucket2" {
   bucket = aws_s3_bucket.bucket2.id
   acl    = "private"
 }
@@ -3179,9 +3209,15 @@ resource "aws_s3_bucket" "bucket3" {
     Name        = "tf-test-bucket-3-%[1]d"
     Environment = "%[1]d"
   }
+
+  lifecycle {
+    ignore_changes = [
+      grant,
+    ]
+  }
 }
 
-resource "aws_s3_bucket_acl" "test" {
+resource "aws_s3_bucket_acl" "bucket3" {
   bucket = aws_s3_bucket.bucket3.id
   acl    = "private"
 }
@@ -3194,9 +3230,15 @@ resource "aws_s3_bucket" "bucket4" {
     Name        = "tf-test-bucket-4-%[1]d"
     Environment = "%[1]d"
   }
+
+  lifecycle {
+    ignore_changes = [
+      grant,
+    ]
+  }
 }
 
-resource "aws_s3_bucket_acl" "test" {
+resource "aws_s3_bucket_acl" "bucket4" {
   bucket = aws_s3_bucket.bucket4.id
   acl    = "private"
 }
@@ -3209,9 +3251,15 @@ resource "aws_s3_bucket" "bucket5" {
     Name        = "tf-test-bucket-5-%[1]d"
     Environment = "%[1]d"
   }
+
+  lifecycle {
+    ignore_changes = [
+      grant,
+    ]
+  }
 }
 
-resource "aws_s3_bucket_acl" "test" {
+resource "aws_s3_bucket_acl" "bucket5" {
   bucket = aws_s3_bucket.bucket5.id
   acl    = "private"
 }
@@ -3224,9 +3272,15 @@ resource "aws_s3_bucket" "bucket6" {
     Name        = "tf-test-bucket-6-%[1]d"
     Environment = "%[1]d"
   }
+
+  lifecycle {
+    ignore_changes = [
+      grant,
+    ]
+  }
 }
 
-resource "aws_s3_bucket_acl" "test" {
+resource "aws_s3_bucket_acl" "bucket6" {
   bucket = aws_s3_bucket.bucket6.id
   acl    = "private"
 }
@@ -3274,6 +3328,12 @@ func testAccBucketWithPolicyConfig(bucketName, partition string) string {
 resource "aws_s3_bucket" "bucket" {
   bucket = %[1]q
   policy = %[2]s
+
+  lifecycle {
+    ignore_changes = [
+      grant,
+    ]
+  }
 }
 
 resource "aws_s3_bucket_acl" "test" {
@@ -3287,6 +3347,12 @@ func testAccBucketDestroyedConfig(bucketName string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "bucket" {
   bucket = %[1]q
+
+  lifecycle {
+    ignore_changes = [
+      grant,
+    ]
+  }
 }
 
 resource "aws_s3_bucket_acl" "test" {
@@ -3386,6 +3452,12 @@ func testAccBucketWithEmptyPolicyConfig(bucketName string) string {
 resource "aws_s3_bucket" "bucket" {
   bucket = %[1]q
   policy = ""
+
+  lifecycle {
+    ignore_changes = [
+      grant,
+    ]
+  }
 }
 
 resource "aws_s3_bucket_acl" "test" {
@@ -3468,6 +3540,12 @@ func testAccBucketWithLoggingConfig(bucketName string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "log_bucket" {
   bucket = "%[1]s-log"
+
+  lifecycle {
+    ignore_changes = [
+      grant,
+    ]
+  }
 }
 
 resource "aws_s3_bucket_acl" "log_bucket" {
@@ -3481,6 +3559,12 @@ resource "aws_s3_bucket" "bucket" {
   logging {
     target_bucket = aws_s3_bucket.log_bucket.id
     target_prefix = "log/"
+  }
+
+  lifecycle {
+    ignore_changes = [
+      grant,
+    ]
   }
 }
 
@@ -3595,6 +3679,12 @@ resource "aws_s3_bucket" "bucket" {
       storage_class = "GLACIER"
     }
   }
+
+  lifecycle {
+    ignore_changes = [
+      grant,
+    ]
+  }
 }
 
 resource "aws_s3_bucket_acl" "test" {
@@ -3617,6 +3707,12 @@ resource "aws_s3_bucket" "bucket" {
     expiration {
       expired_object_delete_marker = "true"
     }
+  }
+
+  lifecycle {
+    ignore_changes = [
+      grant,
+    ]
   }
 }
 
@@ -3675,6 +3771,12 @@ resource "aws_s3_bucket" "bucket" {
       days          = 0
       storage_class = "GLACIER"
     }
+  }
+
+  lifecycle {
+    ignore_changes = [
+      grant,
+    ]
   }
 }
 
@@ -3757,6 +3859,12 @@ resource "aws_s3_bucket" "bucket" {
   versioning {
     enabled = true
   }
+
+  lifecycle {
+    ignore_changes = [
+      grant,
+    ]
+  }
 }
 
 resource "aws_s3_bucket_acl" "test" {
@@ -3788,6 +3896,12 @@ resource "aws_s3_bucket" "bucket" {
         storage_class = "%[2]s"
       }
     }
+  }
+
+  lifecycle {
+    ignore_changes = [
+      grant,
+    ]
   }
 }
 
@@ -3829,6 +3943,12 @@ resource "aws_s3_bucket" "bucket" {
       }
     }
   }
+
+  lifecycle {
+    ignore_changes = [
+      grant,
+    ]
+  }
 }
 
 resource "aws_s3_bucket_acl" "test" {
@@ -3864,6 +3984,12 @@ resource "aws_s3_bucket" "bucket" {
         }
       }
     }
+  }
+
+  lifecycle {
+    ignore_changes = [
+      grant,
+    ]
   }
 }
 
@@ -3901,6 +4027,12 @@ resource "aws_s3_bucket" "bucket" {
       }
     }
   }
+
+  lifecycle {
+    ignore_changes = [
+      grant,
+    ]
+  }
 }
 
 resource "aws_s3_bucket_acl" "test" {
@@ -3934,6 +4066,12 @@ resource "aws_s3_bucket" "bucket" {
         replication_time {}
       }
     }
+  }
+
+  lifecycle {
+    ignore_changes = [
+      grant,
+    ]
   }
 }
 
@@ -4014,6 +4152,12 @@ resource "aws_s3_bucket" "bucket" {
         storage_class = "ONEZONE_IA"
       }
     }
+  }
+
+  lifecycle {
+    ignore_changes = [
+      grant,
+    ]
   }
 }
 
@@ -4107,6 +4251,12 @@ resource "aws_s3_bucket" "bucket" {
       }
     }
   }
+
+  lifecycle {
+    ignore_changes = [
+      grant,
+    ]
+  }
 }
 
 resource "aws_s3_bucket_acl" "test" {
@@ -4171,6 +4321,12 @@ resource "aws_s3_bucket" "bucket" {
       }
     }
   }
+
+  lifecycle {
+    ignore_changes = [
+      grant,
+    ]
+  }
 }
 
 resource "aws_s3_bucket_acl" "test" {
@@ -4216,6 +4372,12 @@ resource "aws_s3_bucket" "bucket" {
       }
     }
   }
+
+  lifecycle {
+    ignore_changes = [
+      grant,
+    ]
+  }
 }
 
 resource "aws_s3_bucket_acl" "test" {
@@ -4255,6 +4417,12 @@ resource "aws_s3_bucket" "bucket" {
       }
     }
   }
+
+  lifecycle {
+    ignore_changes = [
+      grant,
+    ]
+  }
 }
 
 resource "aws_s3_bucket_acl" "test" {
@@ -4289,6 +4457,12 @@ resource "aws_s3_bucket" "bucket" {
 
   versioning {
     enabled = true
+  }
+
+  lifecycle {
+    ignore_changes = [
+      grant,
+    ]
   }
 }
 
@@ -4342,6 +4516,12 @@ resource "aws_s3_bucket" "bucket" {
       }
     }
   }
+
+  lifecycle {
+    ignore_changes = [
+      grant,
+    ]
+  }
 }
 
 resource "aws_s3_bucket_acl" "test" {
@@ -4372,6 +4552,12 @@ resource "aws_s3_bucket" "bucket" {
         bucket = aws_s3_bucket.destination.arn
       }
     }
+  }
+
+  lifecycle {
+    ignore_changes = [
+      grant,
+    ]
   }
 }
 
@@ -4404,6 +4590,12 @@ resource "aws_s3_bucket" "bucket" {
       }
     }
   }
+
+  lifecycle {
+    ignore_changes = [
+      grant,
+    ]
+  }
 }
 
 resource "aws_s3_bucket_acl" "test" {
@@ -4431,6 +4623,12 @@ resource "aws_s3_bucket" "bucket" {
         storage_class = "STANDARD"
       }
     }
+  }
+
+  lifecycle {
+    ignore_changes = [
+      grant,
+    ]
   }
 }
 
@@ -4468,6 +4666,12 @@ resource "aws_s3_bucket" "bucket" {
         storage_class = "STANDARD"
       }
     }
+  }
+
+  lifecycle {
+    ignore_changes = [
+      grant,
+    ]
   }
 }
 
@@ -4512,6 +4716,12 @@ resource "aws_s3_bucket" "bucket" {
       }
     }
   }
+
+  lifecycle {
+    ignore_changes = [
+      grant,
+    ]
+  }
 }
 
 resource "aws_s3_bucket_acl" "test" {
@@ -4548,6 +4758,12 @@ resource "aws_s3_bucket" "bucket" {
         storage_class = "STANDARD"
       }
     }
+  }
+
+  lifecycle {
+    ignore_changes = [
+      grant,
+    ]
   }
 }
 
@@ -4587,6 +4803,12 @@ resource "aws_s3_bucket" "bucket" {
         storage_class = "STANDARD"
       }
     }
+  }
+
+  lifecycle {
+    ignore_changes = [
+      grant,
+    ]
   }
 }
 
@@ -4630,6 +4852,12 @@ resource "aws_s3_bucket" "bucket" {
       }
     }
   }
+
+  lifecycle {
+    ignore_changes = [
+      grant,
+    ]
+  }
 }
 
 resource "aws_s3_bucket_acl" "test" {
@@ -4668,6 +4896,12 @@ resource "aws_s3_bucket" "bucket" {
         storage_class = "STANDARD"
       }
     }
+  }
+
+  lifecycle {
+    ignore_changes = [
+      grant,
+    ]
   }
 }
 
@@ -4714,11 +4948,17 @@ func testAccBucketConfig_forceDestroy(bucketName string) string {
 resource "aws_s3_bucket" "bucket" {
   bucket        = "%s"
   force_destroy = true
+
+  lifecycle {
+    ignore_changes = [
+      grant,
+    ]
+  }
 }
 
 resource "aws_s3_bucket_acl" "test" {
   bucket = aws_s3_bucket.bucket.id
-  acl    = "publi-read"
+  acl    = "public-read"
 }
 `, bucketName)
 }
@@ -4735,6 +4975,12 @@ resource "aws_s3_bucket" "bucket" {
 
   object_lock_configuration {
     object_lock_enabled = "Enabled"
+  }
+
+  lifecycle {
+    ignore_changes = [
+      grant,
+    ]
   }
 }
 
