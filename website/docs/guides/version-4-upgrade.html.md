@@ -396,6 +396,32 @@ resource "aws_cloudwatch_event_target" "test" {
 
 ## Resource: aws_elasticache_cluster
 
+### Error raised if neither `engine` nor `replication_group_id` is specified
+
+Previously, when neither `engine` nor `replication_group_id` was specified, Terraform would not prevent users from applying the invalid configuration.
+Now, this will produce an error similar to the below:
+
+```
+Error: Invalid combination of arguments
+
+          with aws_elasticache_cluster.example,
+          on terraform_plugin_test.tf line 2, in resource "aws_elasticache_cluster" "example":
+           2: resource "aws_elasticache_cluster" "example" {
+
+        "replication_group_id": one of `engine,replication_group_id` must be
+        specified
+
+        Error: Invalid combination of arguments
+
+          with aws_elasticache_cluster.example,
+          on terraform_plugin_test.tf line 2, in resource "aws_elasticache_cluster" "example":
+           2: resource "aws_elasticache_cluster" "example" {
+
+        "engine": one of `engine,replication_group_id` must be specified
+```
+
+Configuration that depend on the previous behavior will need to be updated.
+
 ## Resource: aws_elasticache_global_replication_group
 
 ### actual_engine_version Attribute removal
