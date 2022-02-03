@@ -122,6 +122,7 @@ func ResourceCluster() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
+				ExactlyOneOf: []string{"engine", "replication_group_id"},
 				ForceNew:     true,
 				ValidateFunc: validation.StringInSlice(engine_Values(), false),
 			},
@@ -185,6 +186,8 @@ func ResourceCluster() *schema.Resource {
 			"replication_group_id": {
 				Type:         schema.TypeString,
 				Optional:     true,
+				Computed:     true,
+				ExactlyOneOf: []string{"replication_group_id", "engine"},
 				ForceNew:     true,
 				ValidateFunc: validateReplicationGroupID,
 				ConflictsWith: []string{
@@ -204,7 +207,6 @@ func ResourceCluster() *schema.Resource {
 					"snapshot_window",
 					"subnet_group_name",
 				},
-				Computed: true,
 			},
 			"security_group_names": {
 				Type:     schema.TypeSet,
@@ -263,6 +265,7 @@ func ResourceCluster() *schema.Resource {
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
 		},
+
 		CustomizeDiff: customdiff.Sequence(
 			CustomizeDiffValidateClusterAZMode,
 			CustomizeDiffValidateClusterEngineVersion,
@@ -304,8 +307,6 @@ func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
 
 	if v, ok := d.GetOk("engine"); ok {
 		req.Engine = aws.String(v.(string))
-	} else if _, ok := d.GetOk("replication_group_id"); !ok {
-		return fmt.Errorf(`"engine" is required unless a "replication_group_id" is provided`)
 	}
 
 	if v, ok := d.GetOk("engine_version"); ok {

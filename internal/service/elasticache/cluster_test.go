@@ -96,18 +96,20 @@ func TestAccElastiCacheCluster_Engine_redis(t *testing.T) {
 	})
 }
 
-func TestAccAWSElasticacheCluster_Engine_None(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+func TestAccElastiCacheCluster_Engine_None(t *testing.T) {
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, elasticache.EndpointsID),
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSElasticacheClusterDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, elasticache.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccAWSElasticacheClusterConfig_Engine_None(rName),
-				ExpectError: regexp.MustCompile(`"engine" is required unless a "replication_group_id" is provided`),
+				Config: testAccClusterConfig_Engine_None(rName),
+				// Verify "ExactlyOneOf" in the schema for "engine" and "replication_group_id"
+				// throws a plan-time error when neither are configured.
+				ExpectError: regexp.MustCompile(`Invalid combination of arguments`),
 			},
 		},
 	})
@@ -892,21 +894,11 @@ func testAccCheckClusterEC2ClassicExists(n string, v *elasticache.CacheCluster) 
 	}
 }
 
-func testAccAWSElasticacheClusterConfig_Engine_Memcached(rName string) string {
+func testAccClusterConfig_Engine_Memcached(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_elasticache_cluster" "test" {
   cluster_id      = "%s"
   engine          = "memcached"
-  node_type       = "cache.t3.small"
-  num_cache_nodes = 1
-}
-`, rName)
-}
-
-func testAccAWSElasticacheClusterConfig_Engine_None(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_elasticache_cluster" "test" {
-  cluster_id      = "%s"
   node_type       = "cache.t3.small"
   num_cache_nodes = 1
 }
@@ -918,6 +910,16 @@ func testAccClusterConfig_Engine_Redis(rName string) string {
 resource "aws_elasticache_cluster" "test" {
   cluster_id      = "%s"
   engine          = "redis"
+  node_type       = "cache.t3.small"
+  num_cache_nodes = 1
+}
+`, rName)
+}
+
+func testAccClusterConfig_Engine_None(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_elasticache_cluster" "test" {
+  cluster_id      = "%s"
   node_type       = "cache.t3.small"
   num_cache_nodes = 1
 }
