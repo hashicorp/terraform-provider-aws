@@ -160,31 +160,31 @@ func TestAccAutoScalingPolicy_predictiveScalingCustom(t *testing.T) {
 				Config: testAccPolicyConfigPredictiveScalingCustom(name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScalingPolicyExists(resourceSimpleName, &policy),
-					resource.TestCheckResourceAttr(resourceSimpleName, "predictive_scaling_configuration.0.mode", "ForecastOnly"),
-					resource.TestCheckResourceAttr(resourceSimpleName, "predictive_scaling_configuration.0.scheduling_buffer_time", "10"),
 					resource.TestCheckResourceAttr(resourceSimpleName, "predictive_scaling_configuration.0.max_capacity_breach_behavior", "IncreaseMaxCapacity"),
 					resource.TestCheckResourceAttr(resourceSimpleName, "predictive_scaling_configuration.0.max_capacity_buffer", "0"),
-					resource.TestCheckResourceAttr(resourceSimpleName, "predictive_scaling_configuration.0.metric_specification.0.target_value", "32"),
-					resource.TestCheckResourceAttr(resourceSimpleName, "predictive_scaling_configuration.0.metric_specification.0.customized_scaling_metric_specification.0.metric_data_queries.0.id", "scaling_metric"),
-					resource.TestCheckResourceAttr(resourceSimpleName, "predictive_scaling_configuration.0.metric_specification.0.customized_scaling_metric_specification.0.metric_data_queries.0.expression", "TIME_SERIES(1)"),
-					resource.TestCheckResourceAttr(resourceSimpleName, "predictive_scaling_configuration.0.metric_specification.0.customized_load_metric_specification.0.metric_data_queries.0.id", "load_metric"),
-					resource.TestCheckResourceAttr(resourceSimpleName, "predictive_scaling_configuration.0.metric_specification.0.customized_load_metric_specification.0.metric_data_queries.0.label", "fake_load_metric"),
-					resource.TestCheckResourceAttr(resourceSimpleName, "predictive_scaling_configuration.0.metric_specification.0.customized_load_metric_specification.0.metric_data_queries.0.expression", "TIME_SERIES(100)"),
 					resource.TestCheckResourceAttr(resourceSimpleName, "predictive_scaling_configuration.0.metric_specification.0.customized_capacity_metric_specification.0.metric_data_queries.0.id", "weighted_sum"),
-					resource.TestCheckResourceAttr(resourceSimpleName, "predictive_scaling_configuration.0.metric_specification.0.customized_capacity_metric_specification.0.metric_data_queries.0.metric_stat.0.metric.0.namespace", "namespace_foo"),
 					resource.TestCheckResourceAttr(resourceSimpleName, "predictive_scaling_configuration.0.metric_specification.0.customized_capacity_metric_specification.0.metric_data_queries.0.metric_stat.0.metric.0.metric_name", "metric_name_foo"),
+					resource.TestCheckResourceAttr(resourceSimpleName, "predictive_scaling_configuration.0.metric_specification.0.customized_capacity_metric_specification.0.metric_data_queries.0.metric_stat.0.metric.0.namespace", "namespace_foo"),
 					resource.TestCheckResourceAttr(resourceSimpleName, "predictive_scaling_configuration.0.metric_specification.0.customized_capacity_metric_specification.0.metric_data_queries.0.metric_stat.0.stat", "Sum"),
 					resource.TestCheckResourceAttr(resourceSimpleName, "predictive_scaling_configuration.0.metric_specification.0.customized_capacity_metric_specification.0.metric_data_queries.0.return_data", "false"),
 					resource.TestCheckResourceAttr(resourceSimpleName, "predictive_scaling_configuration.0.metric_specification.0.customized_capacity_metric_specification.0.metric_data_queries.1.id", "capacity_sum"),
-					resource.TestCheckResourceAttr(resourceSimpleName, "predictive_scaling_configuration.0.metric_specification.0.customized_capacity_metric_specification.0.metric_data_queries.1.metric_stat.0.metric.0.namespace", "namespace_bar"),
-					resource.TestCheckResourceAttr(resourceSimpleName, "predictive_scaling_configuration.0.metric_specification.0.customized_capacity_metric_specification.0.metric_data_queries.1.metric_stat.0.metric.0.metric_name", "metric_name_bar"),
 					resource.TestCheckResourceAttr(resourceSimpleName, "predictive_scaling_configuration.0.metric_specification.0.customized_capacity_metric_specification.0.metric_data_queries.1.metric_stat.0.metric.0.dimensions.#", "2"),
+					resource.TestCheckResourceAttr(resourceSimpleName, "predictive_scaling_configuration.0.metric_specification.0.customized_capacity_metric_specification.0.metric_data_queries.1.metric_stat.0.metric.0.metric_name", "metric_name_bar"),
+					resource.TestCheckResourceAttr(resourceSimpleName, "predictive_scaling_configuration.0.metric_specification.0.customized_capacity_metric_specification.0.metric_data_queries.1.metric_stat.0.metric.0.namespace", "namespace_bar"),
 					resource.TestCheckResourceAttr(resourceSimpleName, "predictive_scaling_configuration.0.metric_specification.0.customized_capacity_metric_specification.0.metric_data_queries.1.metric_stat.0.unit", "Percent"),
 					resource.TestCheckResourceAttr(resourceSimpleName, "predictive_scaling_configuration.0.metric_specification.0.customized_capacity_metric_specification.0.metric_data_queries.1.metric_stat.0.stat", "Sum"),
 					resource.TestCheckResourceAttr(resourceSimpleName, "predictive_scaling_configuration.0.metric_specification.0.customized_capacity_metric_specification.0.metric_data_queries.1.return_data", "false"),
 					resource.TestCheckResourceAttr(resourceSimpleName, "predictive_scaling_configuration.0.metric_specification.0.customized_capacity_metric_specification.0.metric_data_queries.2.id", "capacity"),
 					resource.TestCheckResourceAttr(resourceSimpleName, "predictive_scaling_configuration.0.metric_specification.0.customized_capacity_metric_specification.0.metric_data_queries.2.expression", "weighted_sum / capacity_sum"),
 					resource.TestCheckResourceAttr(resourceSimpleName, "predictive_scaling_configuration.0.metric_specification.0.customized_capacity_metric_specification.0.metric_data_queries.2.return_data", "true"),
+					resource.TestCheckResourceAttr(resourceSimpleName, "predictive_scaling_configuration.0.metric_specification.0.customized_scaling_metric_specification.0.metric_data_queries.0.id", "scaling_metric"),
+					resource.TestCheckResourceAttr(resourceSimpleName, "predictive_scaling_configuration.0.metric_specification.0.customized_scaling_metric_specification.0.metric_data_queries.0.expression", "TIME_SERIES(1)"),
+					resource.TestCheckResourceAttr(resourceSimpleName, "predictive_scaling_configuration.0.metric_specification.0.customized_load_metric_specification.0.metric_data_queries.0.id", "load_metric"),
+					resource.TestCheckResourceAttr(resourceSimpleName, "predictive_scaling_configuration.0.metric_specification.0.customized_load_metric_specification.0.metric_data_queries.0.label", "fake_load_metric"),
+					resource.TestCheckResourceAttr(resourceSimpleName, "predictive_scaling_configuration.0.metric_specification.0.customized_load_metric_specification.0.metric_data_queries.0.expression", "TIME_SERIES(100)"),
+					resource.TestCheckResourceAttr(resourceSimpleName, "predictive_scaling_configuration.0.metric_specification.0.target_value", "32"),
+					resource.TestCheckResourceAttr(resourceSimpleName, "predictive_scaling_configuration.0.mode", "ForecastOnly"),
+					resource.TestCheckResourceAttr(resourceSimpleName, "predictive_scaling_configuration.0.scheduling_buffer_time", "10"),
 				),
 			},
 			{
@@ -653,19 +653,6 @@ resource "aws_autoscaling_policy" "test" {
   predictive_scaling_configuration {
     metric_specification {
       target_value = 32
-      customized_scaling_metric_specification {
-        metric_data_queries {
-          id         = "scaling_metric"
-          expression = "TIME_SERIES(1)"
-        }
-      }
-      customized_load_metric_specification {
-        metric_data_queries {
-          id         = "load_metric"
-          label      = "fake_load_metric"
-          expression = "TIME_SERIES(100)"
-        }
-      }
       customized_capacity_metric_specification {
         metric_data_queries {
           id = "weighted_sum"
@@ -702,6 +689,19 @@ resource "aws_autoscaling_policy" "test" {
           id          = "capacity"
           expression  = "weighted_sum / capacity_sum"
           return_data = true
+        }
+      }
+      customized_load_metric_specification {
+        metric_data_queries {
+          id         = "load_metric"
+          label      = "fake_load_metric"
+          expression = "TIME_SERIES(100)"
+        }
+      }
+      customized_scaling_metric_specification {
+        metric_data_queries {
+          id         = "scaling_metric"
+          expression = "TIME_SERIES(1)"
         }
       }
     }

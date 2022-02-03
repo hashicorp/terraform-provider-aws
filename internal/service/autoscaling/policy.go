@@ -87,11 +87,11 @@ func ResourcePolicy() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"customized_scaling_metric_specification": {
+									"customized_capacity_metric_specification": {
 										Type:          schema.TypeList,
 										Optional:      true,
 										MaxItems:      1,
-										ConflictsWith: []string{"predictive_scaling_configuration.0.metric_specification.0.predefined_scaling_metric_specification"},
+										ConflictsWith: []string{"predictive_scaling_configuration.0.metric_specification.0.predefined_load_metric_specification"},
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"metric_data_queries": {
@@ -100,15 +100,20 @@ func ResourcePolicy() *schema.Resource {
 													MaxItems: 10,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
+															"expression": {
+																Type:         schema.TypeString,
+																Optional:     true,
+																ValidateFunc: validation.StringLenBetween(1, 1023),
+															},
 															"id": {
 																Type:         schema.TypeString,
 																Required:     true,
 																ValidateFunc: validation.StringLenBetween(1, 255),
 															},
-															"expression": {
+															"label": {
 																Type:         schema.TypeString,
 																Optional:     true,
-																ValidateFunc: validation.StringLenBetween(1, 1023),
+																ValidateFunc: validation.StringLenBetween(1, 2047),
 															},
 															"metric_stat": {
 																Type:     schema.TypeList,
@@ -122,14 +127,6 @@ func ResourcePolicy() *schema.Resource {
 																			MaxItems: 1,
 																			Elem: &schema.Resource{
 																				Schema: map[string]*schema.Schema{
-																					"metric_name": {
-																						Type:     schema.TypeString,
-																						Required: true,
-																					},
-																					"namespace": {
-																						Type:     schema.TypeString,
-																						Required: true,
-																					},
 																					"dimensions": {
 																						Type:     schema.TypeSet,
 																						Optional: true,
@@ -146,6 +143,14 @@ func ResourcePolicy() *schema.Resource {
 																							},
 																						},
 																					},
+																					"metric_name": {
+																						Type:     schema.TypeString,
+																						Required: true,
+																					},
+																					"namespace": {
+																						Type:     schema.TypeString,
+																						Required: true,
+																					},
 																				},
 																			},
 																		},
@@ -160,11 +165,6 @@ func ResourcePolicy() *schema.Resource {
 																		},
 																	},
 																},
-															},
-															"label": {
-																Type:         schema.TypeString,
-																Optional:     true,
-																ValidateFunc: validation.StringLenBetween(1, 2047),
 															},
 															"return_data": {
 																Type:     schema.TypeBool,
@@ -190,15 +190,20 @@ func ResourcePolicy() *schema.Resource {
 													MaxItems: 10,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
+															"expression": {
+																Type:         schema.TypeString,
+																Optional:     true,
+																ValidateFunc: validation.StringLenBetween(1, 1023),
+															},
 															"id": {
 																Type:         schema.TypeString,
 																Required:     true,
 																ValidateFunc: validation.StringLenBetween(1, 255),
 															},
-															"expression": {
+															"label": {
 																Type:         schema.TypeString,
 																Optional:     true,
-																ValidateFunc: validation.StringLenBetween(1, 1023),
+																ValidateFunc: validation.StringLenBetween(1, 2047),
 															},
 															"metric_stat": {
 																Type:     schema.TypeList,
@@ -212,14 +217,6 @@ func ResourcePolicy() *schema.Resource {
 																			MaxItems: 1,
 																			Elem: &schema.Resource{
 																				Schema: map[string]*schema.Schema{
-																					"metric_name": {
-																						Type:     schema.TypeString,
-																						Required: true,
-																					},
-																					"namespace": {
-																						Type:     schema.TypeString,
-																						Required: true,
-																					},
 																					"dimensions": {
 																						Type:     schema.TypeSet,
 																						Optional: true,
@@ -236,6 +233,14 @@ func ResourcePolicy() *schema.Resource {
 																							},
 																						},
 																					},
+																					"metric_name": {
+																						Type:     schema.TypeString,
+																						Required: true,
+																					},
+																					"namespace": {
+																						Type:     schema.TypeString,
+																						Required: true,
+																					},
 																				},
 																			},
 																		},
@@ -250,11 +255,6 @@ func ResourcePolicy() *schema.Resource {
 																		},
 																	},
 																},
-															},
-															"label": {
-																Type:         schema.TypeString,
-																Optional:     true,
-																ValidateFunc: validation.StringLenBetween(1, 2047),
 															},
 															"return_data": {
 																Type:     schema.TypeBool,
@@ -267,11 +267,11 @@ func ResourcePolicy() *schema.Resource {
 											},
 										},
 									},
-									"customized_capacity_metric_specification": {
+									"customized_scaling_metric_specification": {
 										Type:          schema.TypeList,
 										Optional:      true,
 										MaxItems:      1,
-										ConflictsWith: []string{"predictive_scaling_configuration.0.metric_specification.0.predefined_load_metric_specification"},
+										ConflictsWith: []string{"predictive_scaling_configuration.0.metric_specification.0.predefined_scaling_metric_specification"},
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"metric_data_queries": {
@@ -280,15 +280,20 @@ func ResourcePolicy() *schema.Resource {
 													MaxItems: 10,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
+															"expression": {
+																Type:         schema.TypeString,
+																Optional:     true,
+																ValidateFunc: validation.StringLenBetween(1, 1023),
+															},
 															"id": {
 																Type:         schema.TypeString,
 																Required:     true,
 																ValidateFunc: validation.StringLenBetween(1, 255),
 															},
-															"expression": {
+															"label": {
 																Type:         schema.TypeString,
 																Optional:     true,
-																ValidateFunc: validation.StringLenBetween(1, 1023),
+																ValidateFunc: validation.StringLenBetween(1, 2047),
 															},
 															"metric_stat": {
 																Type:     schema.TypeList,
@@ -302,14 +307,6 @@ func ResourcePolicy() *schema.Resource {
 																			MaxItems: 1,
 																			Elem: &schema.Resource{
 																				Schema: map[string]*schema.Schema{
-																					"metric_name": {
-																						Type:     schema.TypeString,
-																						Required: true,
-																					},
-																					"namespace": {
-																						Type:     schema.TypeString,
-																						Required: true,
-																					},
 																					"dimensions": {
 																						Type:     schema.TypeSet,
 																						Optional: true,
@@ -326,6 +323,14 @@ func ResourcePolicy() *schema.Resource {
 																							},
 																						},
 																					},
+																					"metric_name": {
+																						Type:     schema.TypeString,
+																						Required: true,
+																					},
+																					"namespace": {
+																						Type:     schema.TypeString,
+																						Required: true,
+																					},
 																				},
 																			},
 																		},
@@ -340,11 +345,6 @@ func ResourcePolicy() *schema.Resource {
 																		},
 																	},
 																},
-															},
-															"label": {
-																Type:         schema.TypeString,
-																Optional:     true,
-																ValidateFunc: validation.StringLenBetween(1, 2047),
 															},
 															"return_data": {
 																Type:     schema.TypeBool,
@@ -995,6 +995,7 @@ func expandMetricDataQueries(metricDataQuerySlices []interface{}) []*autoscaling
 	metricDataQueries := make([]*autoscaling.MetricDataQuery, len(metricDataQuerySlices))
 
 	for i := range metricDataQueries {
+
 		metricDataQueryFlat := metricDataQuerySlices[i].(map[string]interface{})
 		metricDataQuery := &autoscaling.MetricDataQuery{
 			Id: aws.String(metricDataQueryFlat["id"].(string)),

@@ -48,6 +48,12 @@ resource "aws_autoscaling_policy" "example" {
   predictive_scaling_configuration {
     metric_specification {
       target_value = 10
+      customized_load_metric_specification {
+        metric_data_queries {
+          id         = "load_sum"
+          expression = "SUM(SEARCH('{AWS/EC2,AutoScalingGroupName} MetricName=\"CPUUtilization\" my-test-asg', 'Sum', 3600))"
+        }
+      }
       customized_scaling_metric_specification {
         metric_data_queries {
           id = "scaling"
@@ -63,13 +69,7 @@ resource "aws_autoscaling_policy" "example" {
             stat = "Average"
           }
         }
-      }
-      customized_load_metric_specification {
-        metric_data_queries {
-          id         = "load_sum"
-          expression = "SUM(SEARCH('{AWS/EC2,AutoScalingGroupName} MetricName=\"CPUUtilization\" my-test-asg', 'Sum', 3600))"
-        }
-      }
+      }      
       customized_capacity_metric_specification {
         metric_data_queries {
           id          = "capacity_sum"
@@ -210,12 +210,12 @@ The following arguments are supported:
 
 The following arguments are supported:
 
+* `customized_capacity_metric_specification` - (Optional) The customized capacity metric specification. The field is only valid when you use `customized_load_metric_specification`
+* `customized_load_metric_specification` - (Optional) The customized load metric specification.
+* `customized_scaling_metric_specification` - (Optional) The customized scaling metric specification. 
 * `predefined_load_metric_specification` - (Optional) The predefined load metric specification.
 * `predefined_metric_pair_specification` - (Optional) The metric pair specification from which Amazon EC2 Auto Scaling determines the appropriate scaling metric and load metric to use.
 * `predefined_scaling_metric_specification` - (Optional) The predefined scaling metric specification.
-* `customized_scaling_metric_specification` - (Optional) The customized scaling metric specification. 
-* `customized_load_metric_specification` - (Optional) The customized load metric specification.
-* `customized_capacity_metric_specification` - (Optional) The customized capacity metric specification. The field is only valid when you use `customized_load_metric_specification`
 
 ##### predefined_load_metric_specification
 
@@ -253,8 +253,8 @@ The following arguments are supported:
 
 ##### metric_data_queries
 The following arguments are supported:
-* `id` - (Required) A short name for the metric used in predictive scaling policy.
 * `expression` - (Optional) The math expression used on the returned metric. You must specify either `expression` or `metric_stat`, but not both.
+* `id` - (Required) A short name for the metric used in predictive scaling policy.
 * `metric_stat` - (Optional) A structure that defines CloudWatch metric to be used in predictive scaling policy. You must specify either `expression` or `metric_stat`, but not both.
 * `label` - (Optional) A human-readable label for this metric or expression.
 * `return_data` - (Optional) A boolean that indicates whether to return the timestamps and raw data values of this metric, the default it true
@@ -266,9 +266,15 @@ The following arguments are supported:
 * `unit` - (Optional) The unit of the metrics to return.
 
 ##### metric
+The following arguments are supported:
+* `dimensions` - (Optional) The dimensions of the metric.
 * `metric_name` - (Required) The name of the metric.
 * `namespace` - (Required) The namespace of the metric.
-* `dimensions` - (Optional) The dimensions of the metric.
+
+##### dimensions
+The following arguments are supported:
+* `name` - (Required) The name of the dimension.
+* `value` - (Required) The value of the dimension.
 
 ## Attributes Reference
 
