@@ -43,6 +43,7 @@ Upgrade topics:
 - [Resource: aws_s3_bucket](#resource-aws_s3_bucket)
 - [Resource: aws_s3_bucket_object](#resource-aws_s3_bucket_object)
 - [Resource: aws_spot_instance_request](#resource-aws_spot_instance_request)
+- [Resource: aws_route](#resource-aws_route)
 - [Resource: aws_route_table](#resource-aws_route_table)
 
 <!-- /TOC -->
