@@ -306,8 +306,17 @@ func testAccCheckBucketLoggingDestroy(s *terraform.State) error {
 			continue
 		}
 
+		bucket, expectedBucketOwner, err := tfs3.ParseResourceID(rs.Primary.ID)
+		if err != nil {
+			return err
+		}
+
 		input := &s3.GetBucketLoggingInput{
-			Bucket: aws.String(rs.Primary.ID),
+			Bucket: aws.String(bucket),
+		}
+
+		if expectedBucketOwner != "" {
+			input.ExpectedBucketOwner = aws.String(expectedBucketOwner)
 		}
 
 		output, err := conn.GetBucketLogging(input)
@@ -341,8 +350,17 @@ func testAccCheckBucketLoggingExists(resourceName string) resource.TestCheckFunc
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn
 
+		bucket, expectedBucketOwner, err := tfs3.ParseResourceID(rs.Primary.ID)
+		if err != nil {
+			return err
+		}
+
 		input := &s3.GetBucketLoggingInput{
-			Bucket: aws.String(rs.Primary.ID),
+			Bucket: aws.String(bucket),
+		}
+
+		if expectedBucketOwner != "" {
+			input.ExpectedBucketOwner = aws.String(expectedBucketOwner)
 		}
 
 		output, err := conn.GetBucketLogging(input)

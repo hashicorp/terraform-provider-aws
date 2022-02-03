@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/s3"
@@ -128,7 +127,7 @@ func resourceBucketLoggingCreate(ctx context.Context, d *schema.ResourceData, me
 		return diag.FromErr(fmt.Errorf("error putting S3 bucket (%s) logging: %w", bucket, err))
 	}
 
-	d.SetId(resourceBucketLoggingCreateResourceID(bucket, expectedBucketOwner))
+	d.SetId(CreateResourceID(bucket, expectedBucketOwner))
 
 	return resourceBucketLoggingRead(ctx, d, meta)
 }
@@ -136,7 +135,7 @@ func resourceBucketLoggingCreate(ctx context.Context, d *schema.ResourceData, me
 func resourceBucketLoggingRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).S3Conn
 
-	bucket, expectedBucketOwner, err := resourceBucketLoggingParseResourceID(d.Id())
+	bucket, expectedBucketOwner, err := ParseResourceID(d.Id())
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -191,7 +190,7 @@ func resourceBucketLoggingRead(ctx context.Context, d *schema.ResourceData, meta
 func resourceBucketLoggingUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).S3Conn
 
-	bucket, expectedBucketOwner, err := resourceBucketLoggingParseResourceID(d.Id())
+	bucket, expectedBucketOwner, err := ParseResourceID(d.Id())
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -230,7 +229,7 @@ func resourceBucketLoggingUpdate(ctx context.Context, d *schema.ResourceData, me
 func resourceBucketLoggingDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).S3Conn
 
-	bucket, expectedBucketOwner, err := resourceBucketLoggingParseResourceID(d.Id())
+	bucket, expectedBucketOwner, err := ParseResourceID(d.Id())
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -255,35 +254,6 @@ func resourceBucketLoggingDelete(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	return nil
-}
-
-func resourceBucketLoggingCreateResourceID(bucket, expectedBucketOwner string) string {
-	if bucket == "" {
-		return expectedBucketOwner
-	}
-
-	if expectedBucketOwner == "" {
-		return bucket
-	}
-
-	parts := []string{bucket, expectedBucketOwner}
-	id := strings.Join(parts, ",")
-
-	return id
-}
-
-func resourceBucketLoggingParseResourceID(id string) (string, string, error) {
-	parts := strings.Split(id, ",")
-
-	if len(parts) == 1 && parts[0] != "" {
-		return parts[0], "", nil
-	}
-
-	if len(parts) == 2 && parts[0] != "" && parts[1] != "" {
-		return parts[0], parts[1], nil
-	}
-
-	return "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected BUCKET or BUCKET,EXPECTED_BUCKET_OWNER", id)
 }
 
 func expandBucketLoggingTargetGrants(l []interface{}) []*s3.TargetGrant {
