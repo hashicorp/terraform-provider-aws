@@ -24,6 +24,7 @@ func TestAccConnectHoursOfOperationDataSource_hoursOfOperationID(t *testing.T) {
 				Config: testAccHoursOfOperationDataSourceConfig_HoursOfOperationID(rName, resourceName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "arn", resourceName, "arn"),
+					resource.TestCheckResourceAttrPair(datasourceName, "hours_of_operation_arn", resourceName, "hours_of_operation_arn"), // Deprecated
 					resource.TestCheckResourceAttrPair(datasourceName, "hours_of_operation_id", resourceName, "hours_of_operation_id"),
 					resource.TestCheckResourceAttrPair(datasourceName, "instance_id", resourceName, "instance_id"),
 					resource.TestCheckResourceAttrPair(datasourceName, "name", resourceName, "name"),
@@ -52,6 +53,7 @@ func TestAccConnectHoursOfOperationDataSource_name(t *testing.T) {
 				Config: testAccHoursOfOperationDataSourceConfig_Name(rName, rName2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "arn", resourceName, "arn"),
+					resource.TestCheckResourceAttrPair(datasourceName, "hours_of_operation_arn", resourceName, "hours_of_operation_arn"), // Deprecated
 					resource.TestCheckResourceAttrPair(datasourceName, "hours_of_operation_id", resourceName, "hours_of_operation_id"),
 					resource.TestCheckResourceAttrPair(datasourceName, "instance_id", resourceName, "instance_id"),
 					resource.TestCheckResourceAttrPair(datasourceName, "name", resourceName, "name"),

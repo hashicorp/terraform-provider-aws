@@ -93,6 +93,11 @@ func ResourceHoursOfOperation() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(1, 250),
 			},
+			"hours_of_operation_arn": {
+				Type:       schema.TypeString,
+				Computed:   true,
+				Deprecated: "use 'arn' attribute instead",
+			},
 			"hours_of_operation_id": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -192,6 +197,7 @@ func resourceHoursOfOperationRead(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	d.Set("arn", resp.HoursOfOperation.HoursOfOperationArn)
+	d.Set("hours_of_operation_arn", resp.HoursOfOperation.HoursOfOperationArn) // Deprecated
 	d.Set("hours_of_operation_id", resp.HoursOfOperation.HoursOfOperationId)
 	d.Set("instance_id", instanceID)
 	d.Set("description", resp.HoursOfOperation.Description)
