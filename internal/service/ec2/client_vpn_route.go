@@ -3,6 +3,7 @@ package ec2
 import (
 	"fmt"
 	"log"
+	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
@@ -73,7 +74,7 @@ func resourceClientVPNRouteCreate(d *schema.ResourceData, meta interface{}) erro
 		req.Description = aws.String(v.(string))
 	}
 
-	id := ClientVPNRouteCreateID(endpointID, targetSubnetID, destinationCidr)
+	id := ClientVPNRouteCreateResourceID(endpointID, targetSubnetID, destinationCidr)
 
 	_, err := conn.CreateClientVpnRoute(req)
 
@@ -142,7 +143,7 @@ func resourceClientVPNRouteDelete(d *schema.ResourceData, meta interface{}) erro
 }
 
 func deleteClientVpnRoute(conn *ec2.EC2, input *ec2.DeleteClientVpnRouteInput) error {
-	id := ClientVPNRouteCreateID(
+	id := ClientVPNRouteCreateResourceID(
 		aws.StringValue(input.ClientVpnEndpointId),
 		aws.StringValue(input.TargetVpcSubnetId),
 		aws.StringValue(input.DestinationCidrBlock),
@@ -162,7 +163,7 @@ func deleteClientVpnRoute(conn *ec2.EC2, input *ec2.DeleteClientVpnRouteInput) e
 }
 
 func resourceClientVPNRouteImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-	endpointID, targetSubnetID, destinationCidr, err := ClientVPNRouteParseID(d.Id())
+	endpointID, targetSubnetID, destinationCidr, err := ClientVPNRouteParseResourceID(d.Id())
 	if err != nil {
 		return nil, err
 	}
@@ -172,4 +173,23 @@ func resourceClientVPNRouteImport(d *schema.ResourceData, meta interface{}) ([]*
 	d.Set("destination_cidr_block", destinationCidr)
 
 	return []*schema.ResourceData{d}, nil
+}
+
+const clientVPNRouteIDSeparator = ","
+
+func ClientVPNRouteCreateResourceID(endpointID, targetSubnetID, destinationCIDR string) string {
+	parts := []string{endpointID, targetSubnetID, destinationCIDR}
+	id := strings.Join(parts, clientVPNRouteIDSeparator)
+
+	return id
+}
+
+func ClientVPNRouteParseResourceID(id string) (string, string, string, error) {
+	parts := strings.Split(id, clientVPNRouteIDSeparator)
+
+	if len(parts) == 3 && parts[0] != "" && parts[1] != "" && parts[2] != "" {
+		return parts[0], parts[1], parts[2], nil
+	}
+
+	return "", "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected EndpointID%[2]sTargetSubnetID%[2]sDestinationCIDRBlock", id, clientVPNRouteIDSeparator)
 }

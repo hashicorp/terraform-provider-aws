@@ -284,7 +284,7 @@ func FindClientVPNRoute(conn *ec2.EC2, endpointID, targetSubnetID, destinationCi
 }
 
 func FindClientVPNRouteByID(conn *ec2.EC2, routeID string) (*ec2.DescribeClientVpnRoutesOutput, error) {
-	endpointID, targetSubnetID, destinationCidr, err := ClientVPNRouteParseID(routeID)
+	endpointID, targetSubnetID, destinationCidr, err := ClientVPNRouteParseResourceID(routeID)
 	if err != nil {
 		return nil, err
 	}
