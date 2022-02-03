@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/s3"
@@ -124,7 +123,7 @@ func resourceBucketObjectLockConfigurationCreate(ctx context.Context, d *schema.
 		return diag.FromErr(fmt.Errorf("error creating S3 bucket (%s) Object Lock configuration: %w", bucket, err))
 	}
 
-	d.SetId(resourceBucketObjectLockConfigurationCreateResourceID(bucket, expectedBucketOwner))
+	d.SetId(CreateResourceID(bucket, expectedBucketOwner))
 
 	return resourceBucketObjectLockConfigurationRead(ctx, d, meta)
 }
@@ -132,7 +131,7 @@ func resourceBucketObjectLockConfigurationCreate(ctx context.Context, d *schema.
 func resourceBucketObjectLockConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).S3Conn
 
-	bucket, expectedBucketOwner, err := resourceBucketObjectLockConfigurationParseResourceID(d.Id())
+	bucket, expectedBucketOwner, err := ParseResourceID(d.Id())
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -182,7 +181,7 @@ func resourceBucketObjectLockConfigurationRead(ctx context.Context, d *schema.Re
 func resourceBucketObjectLockConfigurationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).S3Conn
 
-	bucket, expectedBucketOwner, err := resourceBucketObjectLockConfigurationParseResourceID(d.Id())
+	bucket, expectedBucketOwner, err := ParseResourceID(d.Id())
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -221,7 +220,7 @@ func resourceBucketObjectLockConfigurationUpdate(ctx context.Context, d *schema.
 func resourceBucketObjectLockConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).S3Conn
 
-	bucket, expectedBucketOwner, err := resourceBucketObjectLockConfigurationParseResourceID(d.Id())
+	bucket, expectedBucketOwner, err := ParseResourceID(d.Id())
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -250,35 +249,6 @@ func resourceBucketObjectLockConfigurationDelete(ctx context.Context, d *schema.
 	}
 
 	return nil
-}
-
-func resourceBucketObjectLockConfigurationCreateResourceID(bucket, expectedBucketOwner string) string {
-	if bucket == "" {
-		return expectedBucketOwner
-	}
-
-	if expectedBucketOwner == "" {
-		return bucket
-	}
-
-	parts := []string{bucket, expectedBucketOwner}
-	id := strings.Join(parts, ",")
-
-	return id
-}
-
-func resourceBucketObjectLockConfigurationParseResourceID(id string) (string, string, error) {
-	parts := strings.Split(id, ",")
-
-	if len(parts) == 1 && parts[0] != "" {
-		return parts[0], "", nil
-	}
-
-	if len(parts) == 2 && parts[0] != "" && parts[1] != "" {
-		return parts[0], parts[1], nil
-	}
-
-	return "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected BUCKET or BUCKET,EXPECTED_BUCKET_OWNER", id)
 }
 
 func expandBucketObjectLockConfigurationRule(l []interface{}) *s3.ObjectLockRule {
