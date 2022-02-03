@@ -23,6 +23,11 @@ func ResourceClientVPNRoute() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(ClientVPNRouteCreatedTimeout),
+			Delete: schema.DefaultTimeout(ClientVPNRouteDeletedTimeout),
+		},
+
 		Schema: map[string]*schema.Schema{
 			"client_vpn_endpoint_id": {
 				Type:     schema.TypeString,
@@ -74,6 +79,7 @@ func resourceClientVPNRouteCreate(d *schema.ResourceData, meta interface{}) erro
 		input.Description = aws.String(v.(string))
 	}
 
+	log.Printf("[DEBUG] Creating EC2 Client VPN Route: %s", input)
 	_, err := conn.CreateClientVpnRoute(input)
 
 	if err != nil {
@@ -82,7 +88,7 @@ func resourceClientVPNRouteCreate(d *schema.ResourceData, meta interface{}) erro
 
 	d.SetId(id)
 
-	if _, err := WaitClientVPNRouteCreated(conn, endpointID, targetSubnetID, destinationCIDR); err != nil {
+	if _, err := WaitClientVPNRouteCreated(conn, endpointID, targetSubnetID, destinationCIDR, d.Timeout(schema.TimeoutCreate)); err != nil {
 		return fmt.Errorf("error waiting for EC2 Client VPN Route (%s) create: %w", d.Id(), err)
 	}
 
@@ -144,7 +150,7 @@ func resourceClientVPNRouteDelete(d *schema.ResourceData, meta interface{}) erro
 		return fmt.Errorf("error deleting EC2 Client VPN Route (%s): %w", d.Id(), err)
 	}
 
-	if _, err := WaitClientVPNRouteDeleted(conn, endpointID, targetSubnetID, destinationCIDR); err != nil {
+	if _, err := WaitClientVPNRouteDeleted(conn, endpointID, targetSubnetID, destinationCIDR, d.Timeout(schema.TimeoutDelete)); err != nil {
 		return fmt.Errorf("error waiting for EC2 Client VPN Route (%s) delete: %w", d.Id(), err)
 	}
 

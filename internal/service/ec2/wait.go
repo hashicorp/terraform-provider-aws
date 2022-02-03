@@ -254,12 +254,12 @@ const (
 	ClientVPNRouteDeletedTimeout = 1 * time.Minute
 )
 
-func WaitClientVPNRouteCreated(conn *ec2.EC2, endpointID, targetSubnetID, destinationCIDR string) (*ec2.ClientVpnRoute, error) {
+func WaitClientVPNRouteCreated(conn *ec2.EC2, endpointID, targetSubnetID, destinationCIDR string, timeout time.Duration) (*ec2.ClientVpnRoute, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{ec2.ClientVpnRouteStatusCodeCreating},
 		Target:  []string{ec2.ClientVpnRouteStatusCodeActive},
 		Refresh: StatusClientVPNRoute(conn, endpointID, targetSubnetID, destinationCIDR),
-		Timeout: ClientVPNRouteCreatedTimeout,
+		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForState()
@@ -273,12 +273,12 @@ func WaitClientVPNRouteCreated(conn *ec2.EC2, endpointID, targetSubnetID, destin
 	return nil, err
 }
 
-func WaitClientVPNRouteDeleted(conn *ec2.EC2, endpointID, targetSubnetID, destinationCIDR string) (*ec2.ClientVpnRoute, error) {
+func WaitClientVPNRouteDeleted(conn *ec2.EC2, endpointID, targetSubnetID, destinationCIDR string, timeout time.Duration) (*ec2.ClientVpnRoute, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{ec2.ClientVpnRouteStatusCodeActive, ec2.ClientVpnRouteStatusCodeDeleting},
 		Target:  []string{},
 		Refresh: StatusClientVPNRoute(conn, endpointID, targetSubnetID, destinationCIDR),
-		Timeout: ClientVPNRouteDeletedTimeout,
+		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForState()

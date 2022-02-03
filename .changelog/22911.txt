@@ -9,3 +9,7 @@ resource/aws_ec2_client_vpn_endpoint: Add `security_group_ids` and `vpc_id` argu
 ```release-note:enhancement
 data-source/aws_ec2_client_vpn_endpoint: Add `security_group_ids` and `vpc_id` attributes
 ```
+
+```release-note:note
+resource/aws_ec2_client_vpn_route: Add [custom `timeouts`](https://www.terraform.io/docs/language/resources/syntax.html#operation-timeouts) block
+```
