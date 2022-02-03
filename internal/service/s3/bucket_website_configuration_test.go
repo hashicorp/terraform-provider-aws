@@ -340,12 +340,6 @@ func testAccBucketWebsiteConfigurationBasicConfig(rName string) string {
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
   acl    = "public-read"
-
-  lifecycle {
-    ignore_changes = [
-      website
-    ]
-  }
 }
 
 resource "aws_s3_bucket_website_configuration" "test" {
@@ -362,12 +356,6 @@ func testAccBucketWebsiteConfigurationUpdateConfig(rName string) string {
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
   acl    = "public-read"
-
-  lifecycle {
-    ignore_changes = [
-      website
-    ]
-  }
 }
 
 resource "aws_s3_bucket_website_configuration" "test" {
@@ -389,12 +377,6 @@ func testAccBucketWebsiteConfigurationConfig_Redirect(rName string) string {
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
   acl    = "public-read"
-
-  lifecycle {
-    ignore_changes = [
-      website
-    ]
-  }
 }
 
 resource "aws_s3_bucket_website_configuration" "test" {
@@ -411,12 +393,6 @@ func testAccBucketWebsiteConfigurationConfig_RoutingRules_OptionalRedirection(rN
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
   acl    = "public-read"
-
-  lifecycle {
-    ignore_changes = [
-      website
-    ]
-  }
 }
 
 resource "aws_s3_bucket_website_configuration" "test" {
@@ -449,12 +425,6 @@ func testAccBucketWebsiteConfigurationConfig_RoutingRules_RedirectErrors(rName s
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
   acl    = "public-read"
-
-  lifecycle {
-    ignore_changes = [
-      website
-    ]
-  }
 }
 
 resource "aws_s3_bucket_website_configuration" "test" {
@@ -485,12 +455,6 @@ func testAccBucketWebsiteConfigurationConfig_RoutingRules_RedirectToPage(rName s
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
   acl    = "public-read"
-
-  lifecycle {
-    ignore_changes = [
-      website
-    ]
-  }
 }
 
 resource "aws_s3_bucket_website_configuration" "test" {
@@ -521,12 +485,6 @@ func testAccBucketWebsiteConfigurationConfig_RoutingRules_RedirectOnly(rName str
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
   acl    = "public-read"
-
-  lifecycle {
-    ignore_changes = [
-      website
-    ]
-  }
 }
 
 resource "aws_s3_bucket_website_configuration" "test" {
@@ -555,12 +513,6 @@ func testAccBucketWebsiteConfigurationConfig_RoutingRules_MultipleRules(rName st
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
   acl    = "public-read"
-
-  lifecycle {
-    ignore_changes = [
-      website
-    ]
-  }
 }
 
 resource "aws_s3_bucket_website_configuration" "test" {
