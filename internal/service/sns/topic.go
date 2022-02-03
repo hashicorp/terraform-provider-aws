@@ -9,7 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/sns"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
@@ -250,8 +250,15 @@ func resourceTopicCreate(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG] Creating SNS Topic: %s", input)
 	output, err := conn.CreateTopic(input)
 
+	// Some partitions may not support tag-on-create
+	if input.Tags != nil && verify.CheckISOErrorTagsUnsupported(err) {
+		log.Printf("[WARN] failed creating SNS Topic (%s) with tags: %s. Trying create without tags.", name, err)
+		input.Tags = nil
+		output, err = conn.CreateTopic(input)
+	}
+
 	if err != nil {
-		return fmt.Errorf("error creating SNS Topic (%s): %w", name, err)
+		return fmt.Errorf("failed creating SNS Topic (%s): %w", name, err)
 	}
 
 	d.SetId(aws.StringValue(output.TopicArn))
@@ -260,6 +267,21 @@ func resourceTopicCreate(d *schema.ResourceData, meta interface{}) error {
 
 	if err != nil {
 		return err
+	}
+
+	// Post-create tagging supported in some partitions
+	if input.Tags == nil && len(tags) > 0 {
+		err := UpdateTags(conn, d.Id(), nil, tags)
+
+		if v, ok := d.GetOk("tags"); (!ok || len(v.(map[string]interface{})) == 0) && verify.CheckISOErrorTagsUnsupported(err) {
+			// if default tags only, log and continue (i.e., should error if explicitly setting tags and they can't be)
+			log.Printf("[WARN] failed adding tags after create for SNS Topic (%s): %s", d.Id(), err)
+			return resourceTopicRead(d, meta)
+		}
+
+		if err != nil {
+			return fmt.Errorf("failed adding tags after create for SNS Topic (%s): %w", d.Id(), err)
+		}
 	}
 
 	return resourceTopicRead(d, meta)
@@ -304,8 +326,14 @@ func resourceTopicRead(d *schema.ResourceData, meta interface{}) error {
 
 	tags, err := ListTags(conn, d.Id())
 
+	if verify.CheckISOErrorTagsUnsupported(err) {
+		// ISO partitions may not support tagging, giving error
+		log.Printf("[WARN] failed listing tags for SNS Topic (%s): %s", d.Id(), err)
+		return nil
+	}
+
 	if err != nil {
-		return fmt.Errorf("error listing tags for SNS Topic (%s): %w", d.Id(), err)
+		return fmt.Errorf("failed listing tags for SNS Topic (%s): %w", d.Id(), err)
 	}
 
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
@@ -341,8 +369,17 @@ func resourceTopicUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
-		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
-			return fmt.Errorf("error updating tags: %w", err)
+
+		err := UpdateTags(conn, d.Id(), o, n)
+
+		if verify.CheckISOErrorTagsUnsupported(err) {
+			// ISO partitions may not support tagging, giving error
+			log.Printf("[WARN] failed updating tags for SNS Topic (%s): %s", d.Id(), err)
+			return resourceTopicRead(d, meta)
+		}
+
+		if err != nil {
+			return fmt.Errorf("failed updating tags for SNS Topic (%s): %w", d.Id(), err)
 		}
 	}
 

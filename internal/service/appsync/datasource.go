@@ -8,7 +8,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/appsync"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -498,7 +498,7 @@ func flattenAppsyncDynamodbDataSourceConfig(config *appsync.DynamodbDataSourceCo
 	}
 
 	if config.DeltaSyncConfig != nil {
-		result["delte_sync_config"] = flattenAppsyncDynamodbDataSourceDeltaSyncConfig(config.DeltaSyncConfig)
+		result["delta_sync_config"] = flattenAppsyncDynamodbDataSourceDeltaSyncConfig(config.DeltaSyncConfig)
 	}
 
 	return []map[string]interface{}{result}

@@ -192,6 +192,8 @@ service/globalaccelerator:
   - '((\*|-) ?`?|(data|resource) "?)aws_globalaccelerator_'
 service/glue:
   - '((\*|-) ?`?|(data|resource) "?)aws_glue_'
+service/grafana:
+  - '((\*|-) ?`?|(data|resource) "?)aws_grafana_'
 service/greengrass:
   - '((\*|-) ?`?|(data|resource) "?)aws_greengrass_'
 service/guardduty:

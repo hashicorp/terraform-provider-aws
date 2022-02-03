@@ -8,7 +8,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/iam"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -240,7 +240,7 @@ func resourceInstanceProfileRead(d *schema.ResourceData, meta interface{}) error
 					return fmt.Errorf("removing role %s to IAM instance profile %s: %w", roleName, d.Id(), err)
 				}
 			}
-			return fmt.Errorf("reading IAM Role %s attcahed to IAM Instance Profile %s: %w", roleName, d.Id(), err)
+			return fmt.Errorf("reading IAM Role %s attached to IAM Instance Profile %s: %w", roleName, d.Id(), err)
 		}
 	}
 

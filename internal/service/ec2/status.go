@@ -7,7 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -77,102 +77,67 @@ func StatusLocalGatewayRouteTableVPCAssociationState(conn *ec2.EC2, localGateway
 	}
 }
 
-const (
-	ClientVPNEndpointStatusNotFound = "NotFound"
-
-	ClientVPNEndpointStatusUnknown = "Unknown"
-)
-
-// StatusClientVPNEndpoint fetches the Client VPN endpoint and its Status
-func StatusClientVPNEndpoint(conn *ec2.EC2, endpointID string) resource.StateRefreshFunc {
+func StatusClientVPNEndpointState(conn *ec2.EC2, id string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		result, err := conn.DescribeClientVpnEndpoints(&ec2.DescribeClientVpnEndpointsInput{
-			ClientVpnEndpointIds: aws.StringSlice([]string{endpointID}),
-		})
-		if tfawserr.ErrCodeEquals(err, ErrCodeClientVpnEndpointIdNotFound) {
-			return nil, ClientVPNEndpointStatusNotFound, nil
+		output, err := FindClientVPNEndpointByID(conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
 		}
+
 		if err != nil {
-			return nil, ClientVPNEndpointStatusUnknown, err
+			return nil, "", err
 		}
 
-		if result == nil || len(result.ClientVpnEndpoints) == 0 || result.ClientVpnEndpoints[0] == nil {
-			return nil, ClientVPNEndpointStatusNotFound, nil
-		}
-
-		endpoint := result.ClientVpnEndpoints[0]
-		if endpoint.Status == nil || endpoint.Status.Code == nil {
-			return endpoint, ClientVPNEndpointStatusUnknown, nil
-		}
-
-		return endpoint, aws.StringValue(endpoint.Status.Code), nil
+		return output, aws.StringValue(output.Status.Code), nil
 	}
 }
 
-const (
-	ClientVPNAuthorizationRuleStatusNotFound = "NotFound"
-
-	ClientVPNAuthorizationRuleStatusUnknown = "Unknown"
-)
-
-// StatusClientVPNAuthorizationRule fetches the Client VPN authorization rule and its Status
-func StatusClientVPNAuthorizationRule(conn *ec2.EC2, authorizationRuleID string) resource.StateRefreshFunc {
+func StatusClientVPNEndpointClientConnectResponseOptionsState(conn *ec2.EC2, id string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		result, err := FindClientVPNAuthorizationRuleByID(conn, authorizationRuleID)
-		if tfawserr.ErrCodeEquals(err, ErrCodeClientVpnAuthorizationRuleNotFound) {
-			return nil, ClientVPNAuthorizationRuleStatusNotFound, nil
+		output, err := FindClientVPNEndpointClientConnectResponseOptionsByID(conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
 		}
+
 		if err != nil {
-			return nil, ClientVPNAuthorizationRuleStatusUnknown, err
+			return nil, "", err
 		}
 
-		if result == nil || len(result.AuthorizationRules) == 0 || result.AuthorizationRules[0] == nil {
-			return nil, ClientVPNAuthorizationRuleStatusNotFound, nil
-		}
-
-		if len(result.AuthorizationRules) > 1 {
-			return nil, ClientVPNAuthorizationRuleStatusUnknown, fmt.Errorf("internal error: found %d results for Client VPN authorization rule (%s) status, need 1", len(result.AuthorizationRules), authorizationRuleID)
-		}
-
-		rule := result.AuthorizationRules[0]
-		if rule.Status == nil || rule.Status.Code == nil {
-			return rule, ClientVPNAuthorizationRuleStatusUnknown, nil
-		}
-
-		return rule, aws.StringValue(rule.Status.Code), nil
+		return output, aws.StringValue(output.Status.Code), nil
 	}
 }
 
-const (
-	ClientVPNNetworkAssociationStatusNotFound = "NotFound"
-
-	ClientVPNNetworkAssociationStatusUnknown = "Unknown"
-)
-
-func StatusClientVPNNetworkAssociation(conn *ec2.EC2, cvnaID string, cvepID string) resource.StateRefreshFunc {
+func StatusClientVPNAuthorizationRule(conn *ec2.EC2, endpointID, targetNetworkCIDR, accessGroupID string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		result, err := conn.DescribeClientVpnTargetNetworks(&ec2.DescribeClientVpnTargetNetworksInput{
-			ClientVpnEndpointId: aws.String(cvepID),
-			AssociationIds:      []*string{aws.String(cvnaID)},
-		})
+		output, err := FindClientVPNAuthorizationRuleByThreePartKey(conn, endpointID, targetNetworkCIDR, accessGroupID)
 
-		if tfawserr.ErrCodeEquals(err, ErrCodeClientVpnAssociationIdNotFound) || tfawserr.ErrCodeEquals(err, ErrCodeClientVpnEndpointIdNotFound) {
-			return nil, ClientVPNNetworkAssociationStatusNotFound, nil
+		if tfresource.NotFound(err) {
+			return nil, "", nil
 		}
+
 		if err != nil {
-			return nil, ClientVPNNetworkAssociationStatusUnknown, err
+			return nil, "", err
 		}
 
-		if result == nil || len(result.ClientVpnTargetNetworks) == 0 || result.ClientVpnTargetNetworks[0] == nil {
-			return nil, ClientVPNNetworkAssociationStatusNotFound, nil
+		return output, aws.StringValue(output.Status.Code), nil
+	}
+}
+
+func StatusClientVPNNetworkAssociation(conn *ec2.EC2, associationID, endpointID string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := FindClientVPNNetworkAssociationByIDs(conn, associationID, endpointID)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
 		}
 
-		network := result.ClientVpnTargetNetworks[0]
-		if network.Status == nil || network.Status.Code == nil {
-			return network, ClientVPNNetworkAssociationStatusUnknown, nil
+		if err != nil {
+			return nil, "", err
 		}
 
-		return network, aws.StringValue(network.Status.Code), nil
+		return output, aws.StringValue(output.Status.Code), nil
 	}
 }
 
@@ -186,7 +151,7 @@ const (
 func StatusClientVPNRoute(conn *ec2.EC2, routeID string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		result, err := FindClientVPNRouteByID(conn, routeID)
-		if tfawserr.ErrCodeEquals(err, ErrCodeClientVpnRouteNotFound) {
+		if tfawserr.ErrCodeEquals(err, ErrCodeInvalidClientVpnRouteNotFound) {
 			return nil, ClientVPNRouteStatusNotFound, nil
 		}
 		if err != nil {
@@ -218,16 +183,12 @@ func StatusInstanceIAMInstanceProfile(conn *ec2.EC2, id string) resource.StateRe
 	return func() (interface{}, string, error) {
 		instance, err := FindInstanceByID(conn, id)
 
-		if tfawserr.ErrCodeEquals(err, ErrCodeInvalidInstanceIDNotFound) {
+		if tfresource.NotFound(err) {
 			return nil, "", nil
 		}
 
 		if err != nil {
 			return nil, "", err
-		}
-
-		if instance == nil {
-			return nil, "", nil
 		}
 
 		if instance.IamInstanceProfile == nil || instance.IamInstanceProfile.Arn == nil {
@@ -241,6 +202,22 @@ func StatusInstanceIAMInstanceProfile(conn *ec2.EC2, id string) resource.StateRe
 		}
 
 		return instance, name, nil
+	}
+}
+
+func StatusNATGatewayState(conn *ec2.EC2, id string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := FindNATGatewayByID(conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, aws.StringValue(output.State), nil
 	}
 }
 
@@ -296,30 +273,35 @@ func StatusRouteTableAssociationState(conn *ec2.EC2, id string) resource.StateRe
 			return nil, "", err
 		}
 
+		if output.AssociationState == nil {
+			// In ISO partitions AssociationState can be nil.
+			// If the association has been found then we assume it's associated.
+			state := ec2.RouteTableAssociationStateCodeAssociated
+
+			return &ec2.RouteTableAssociationState{State: aws.String(state)}, state, nil
+		}
+
 		return output.AssociationState, aws.StringValue(output.AssociationState.State), nil
 	}
 }
 
 const (
 	SecurityGroupStatusCreated = "Created"
-
-	SecurityGroupStatusNotFound = "NotFound"
-
-	SecurityGroupStatusUnknown = "Unknown"
 )
 
-// StatusSecurityGroup fetches the security group and its status
 func StatusSecurityGroup(conn *ec2.EC2, id string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		group, err := FindSecurityGroupByID(conn, id)
+		output, err := FindSecurityGroupByID(conn, id)
+
 		if tfresource.NotFound(err) {
-			return nil, SecurityGroupStatusNotFound, nil
-		}
-		if err != nil {
-			return nil, SecurityGroupStatusUnknown, err
+			return nil, "", nil
 		}
 
-		return group, SecurityGroupStatusCreated, nil
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, SecurityGroupStatusCreated, nil
 	}
 }
 
@@ -355,7 +337,7 @@ func StatusSubnetIPv6CIDRBlockAssociationState(conn *ec2.EC2, id string) resourc
 	}
 }
 
-func StatusSubnetMapCustomerOwnedIPOnLaunch(conn *ec2.EC2, id string) resource.StateRefreshFunc {
+func StatusSubnetAssignIpv6AddressOnCreation(conn *ec2.EC2, id string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindSubnetByID(conn, id)
 
@@ -367,7 +349,7 @@ func StatusSubnetMapCustomerOwnedIPOnLaunch(conn *ec2.EC2, id string) resource.S
 			return nil, "", err
 		}
 
-		return output, strconv.FormatBool(aws.BoolValue(output.MapCustomerOwnedIpOnLaunch)), nil
+		return output, strconv.FormatBool(aws.BoolValue(output.AssignIpv6AddressOnCreation)), nil
 	}
 }
 
@@ -419,6 +401,22 @@ func StatusSubnetEnableResourceNameDnsARecordOnLaunch(conn *ec2.EC2, id string) 
 	}
 }
 
+func StatusSubnetMapCustomerOwnedIPOnLaunch(conn *ec2.EC2, id string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := FindSubnetByID(conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, strconv.FormatBool(aws.BoolValue(output.MapCustomerOwnedIpOnLaunch)), nil
+	}
+}
+
 func StatusSubnetMapPublicIPOnLaunch(conn *ec2.EC2, id string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindSubnetByID(conn, id)
@@ -432,6 +430,22 @@ func StatusSubnetMapPublicIPOnLaunch(conn *ec2.EC2, id string) resource.StateRef
 		}
 
 		return output, strconv.FormatBool(aws.BoolValue(output.MapPublicIpOnLaunch)), nil
+	}
+}
+
+func StatusSubnetPrivateDNSHostnameTypeOnLaunch(conn *ec2.EC2, id string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := FindSubnetByID(conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, aws.StringValue(output.PrivateDnsNameOptionsOnLaunch.HostnameType), nil
 	}
 }
 
@@ -467,12 +481,11 @@ func StatusTransitGatewayRouteTablePropagationState(conn *ec2.EC2, transitGatewa
 	}
 }
 
-// StatusVPCAttribute fetches the Vpc and its attribute value
-func StatusVPCAttribute(conn *ec2.EC2, id string, attribute string) resource.StateRefreshFunc {
+func StatusVPCState(conn *ec2.EC2, id string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		attributeValue, err := FindVPCAttribute(conn, id, attribute)
+		output, err := FindVPCByID(conn, id)
 
-		if tfawserr.ErrCodeEquals(err, ErrCodeInvalidVpcIDNotFound) {
+		if tfresource.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -480,11 +493,55 @@ func StatusVPCAttribute(conn *ec2.EC2, id string, attribute string) resource.Sta
 			return nil, "", err
 		}
 
-		if attributeValue == nil {
+		return output, aws.StringValue(output.State), nil
+	}
+}
+
+func StatusVPCAttributeValue(conn *ec2.EC2, id string, attribute string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		attributeValue, err := FindVPCAttribute(conn, id, attribute)
+
+		if tfresource.NotFound(err) {
 			return nil, "", nil
 		}
 
-		return attributeValue, strconv.FormatBool(aws.BoolValue(attributeValue)), nil
+		if err != nil {
+			return nil, "", err
+		}
+
+		return attributeValue, strconv.FormatBool(attributeValue), nil
+	}
+}
+
+func StatusVPCCIDRBlockAssociationState(conn *ec2.EC2, id string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, _, err := FindVPCCIDRBlockAssociationByID(conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output.CidrBlockState, aws.StringValue(output.CidrBlockState.State), nil
+	}
+}
+
+func StatusVPCIPv6CIDRBlockAssociationState(conn *ec2.EC2, id string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, _, err := FindVPCIPv6CIDRBlockAssociationByID(conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output.Ipv6CidrBlockState, aws.StringValue(output.Ipv6CidrBlockState.State), nil
 	}
 }
 
@@ -544,6 +601,38 @@ func StatusVPNGatewayVPCAttachmentState(conn *ec2.EC2, vpnGatewayID, vpcID strin
 func StatusCustomerGatewayState(conn *ec2.EC2, id string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindCustomerGatewayByID(conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, aws.StringValue(output.State), nil
+	}
+}
+
+func StatusVPNConnectionState(conn *ec2.EC2, id string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := FindVPNConnectionByID(conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, aws.StringValue(output.State), nil
+	}
+}
+
+func StatusVPNConnectionRouteState(conn *ec2.EC2, vpnConnectionID, cidrBlock string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := FindVPNConnectionRouteByVPNConnectionIDAndCIDR(conn, vpnConnectionID, cidrBlock)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil

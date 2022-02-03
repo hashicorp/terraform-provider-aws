@@ -67,9 +67,9 @@ func ResourceTaskDefinition() *schema.Resource {
 					// Sort the lists of environment variables as they are serialized to state, so we won't get
 					// spurious reorderings in plans (diff is suppressed if the environment variables haven't changed,
 					// but they still show in the plan if some other property changes).
-					orderedCDs, _ := expandEcsContainerDefinitions(v.(string))
+					orderedCDs, _ := expandContainerDefinitions(v.(string))
 					containerDefinitions(orderedCDs).OrderEnvironmentVariables()
-					unnormalizedJson, _ := flattenEcsContainerDefinitions(orderedCDs)
+					unnormalizedJson, _ := flattenContainerDefinitions(orderedCDs)
 					json, _ := structure.NormalizeJsonString(unnormalizedJson)
 					return json
 				},
@@ -422,7 +422,7 @@ func ResourceTaskDefinition() *schema.Resource {
 
 func ValidTaskDefinitionContainerDefinitions(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(string)
-	_, err := expandEcsContainerDefinitions(value)
+	_, err := expandContainerDefinitions(value)
 	if err != nil {
 		errors = append(errors, fmt.Errorf("ECS Task Definition container_definitions is invalid: %s", err))
 	}
@@ -435,7 +435,7 @@ func resourceTaskDefinitionCreate(d *schema.ResourceData, meta interface{}) erro
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
 	rawDefinitions := d.Get("container_definitions").(string)
-	definitions, err := expandEcsContainerDefinitions(rawDefinitions)
+	definitions, err := expandContainerDefinitions(rawDefinitions)
 	if err != nil {
 		return err
 	}
@@ -479,17 +479,17 @@ func resourceTaskDefinitionCreate(d *schema.ResourceData, meta interface{}) erro
 	}
 
 	if v, ok := d.GetOk("volume"); ok {
-		volumes := expandEcsVolumes(v.(*schema.Set).List())
+		volumes := expandVolumes(v.(*schema.Set).List())
 		input.Volumes = volumes
 	}
 
 	if v, ok := d.GetOk("inference_accelerator"); ok {
-		input.InferenceAccelerators = expandEcsInferenceAccelerators(v.(*schema.Set).List())
+		input.InferenceAccelerators = expandInferenceAccelerators(v.(*schema.Set).List())
 	}
 
 	constraints := d.Get("placement_constraints").(*schema.Set).List()
 	if len(constraints) > 0 {
-		cons, err := expandEcsTaskDefinitionPlacementConstraints(constraints)
+		cons, err := expandTaskDefinitionPlacementConstraints(constraints)
 		if err != nil {
 			return err
 		}
@@ -502,22 +502,31 @@ func resourceTaskDefinitionCreate(d *schema.ResourceData, meta interface{}) erro
 
 	runtimePlatformConfigs := d.Get("runtime_platform").([]interface{})
 	if len(runtimePlatformConfigs) > 0 && runtimePlatformConfigs[0] != nil {
-		input.RuntimePlatform = expandEcsTaskDefinitionRuntimePlatformConfiguration(runtimePlatformConfigs)
+		input.RuntimePlatform = expandTaskDefinitionRuntimePlatformConfiguration(runtimePlatformConfigs)
 	}
 
 	proxyConfigs := d.Get("proxy_configuration").([]interface{})
 	if len(proxyConfigs) > 0 {
-		input.ProxyConfiguration = expandEcsTaskDefinitionProxyConfiguration(proxyConfigs)
+		input.ProxyConfiguration = expandTaskDefinitionProxyConfiguration(proxyConfigs)
 	}
 
 	if v, ok := d.GetOk("ephemeral_storage"); ok && len(v.([]interface{})) > 0 {
-		input.EphemeralStorage = expandEcsTaskDefinitionEphemeralStorage(v.([]interface{}))
+		input.EphemeralStorage = expandTaskDefinitionEphemeralStorage(v.([]interface{}))
 	}
 
 	log.Printf("[DEBUG] Registering ECS task definition: %s", input)
 	out, err := conn.RegisterTaskDefinition(&input)
+
+	// Some partitions (i.e., ISO) may not support tag-on-create
+	if input.Tags != nil && verify.CheckISOErrorTagsUnsupported(err) {
+		log.Printf("[WARN] ECS tagging failed creating Task Definition (%s) with tags: %s. Trying create without tags.", d.Get("family").(string), err)
+		input.Tags = nil
+
+		out, err = conn.RegisterTaskDefinition(&input)
+	}
+
 	if err != nil {
-		return err
+		return fmt.Errorf("failed creating ECS Task Definition (%s): %w", d.Get("family").(string), err)
 	}
 
 	taskDefinition := *out.TaskDefinition // nosemgrep: prefer-aws-go-sdk-pointer-conversion-assignment // false positive
@@ -527,6 +536,21 @@ func resourceTaskDefinitionCreate(d *schema.ResourceData, meta interface{}) erro
 
 	d.SetId(aws.StringValue(taskDefinition.Family))
 	d.Set("arn", taskDefinition.TaskDefinitionArn)
+
+	// Some partitions (i.e., ISO) may not support tag-on-create, attempt tag after create
+	if input.Tags == nil && len(tags) > 0 {
+		err := UpdateTags(conn, aws.StringValue(taskDefinition.TaskDefinitionArn), nil, tags)
+
+		// If default tags only, log and continue. Otherwise, error.
+		if v, ok := d.GetOk("tags"); (!ok || len(v.(map[string]interface{})) == 0) && verify.CheckISOErrorTagsUnsupported(err) {
+			log.Printf("[WARN] ECS tagging failed adding tags after create for Task Definition (%s): %s", d.Id(), err)
+			return resourceTaskDefinitionRead(d, meta)
+		}
+
+		if err != nil {
+			return fmt.Errorf("ECS tagging failed adding tags after create for Task Definition (%s): %w", d.Id(), err)
+		}
+	}
 
 	return resourceTaskDefinitionRead(d, meta)
 }
@@ -565,7 +589,7 @@ func resourceTaskDefinitionRead(d *schema.ResourceData, meta interface{}) error 
 	// some other property changes).
 	containerDefinitions(taskDefinition.ContainerDefinitions).OrderEnvironmentVariables()
 
-	defs, err := flattenEcsContainerDefinitions(taskDefinition.ContainerDefinitions)
+	defs, err := flattenContainerDefinitions(taskDefinition.ContainerDefinitions)
 	if err != nil {
 		return err
 	}
@@ -582,22 +606,11 @@ func resourceTaskDefinitionRead(d *schema.ResourceData, meta interface{}) error 
 	d.Set("ipc_mode", taskDefinition.IpcMode)
 	d.Set("pid_mode", taskDefinition.PidMode)
 
-	tags := KeyValueTags(out.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
-	}
-
-	if err := d.Set("volume", flattenEcsVolumes(taskDefinition.Volumes)); err != nil {
+	if err := d.Set("volume", flattenVolumes(taskDefinition.Volumes)); err != nil {
 		return fmt.Errorf("error setting volume: %w", err)
 	}
 
-	if err := d.Set("inference_accelerator", flattenEcsInferenceAccelerators(taskDefinition.InferenceAccelerators)); err != nil {
+	if err := d.Set("inference_accelerator", flattenInferenceAccelerators(taskDefinition.InferenceAccelerators)); err != nil {
 		return fmt.Errorf("error setting inference accelerators: %w", err)
 	}
 
@@ -617,9 +630,27 @@ func resourceTaskDefinitionRead(d *schema.ResourceData, meta interface{}) error 
 		return fmt.Errorf("error setting proxy_configuration: %w", err)
 	}
 
-	if err := d.Set("ephemeral_storage", flattenEcsTaskDefinitionEphemeralStorage(taskDefinition.EphemeralStorage)); err != nil {
+	if err := d.Set("ephemeral_storage", flattenTaskDefinitionEphemeralStorage(taskDefinition.EphemeralStorage)); err != nil {
 		return fmt.Errorf("error setting ephemeral_storage: %w", err)
 	}
+
+	tags := KeyValueTags(out.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+
+	// Some partitions (i.e., ISO) may not support tagging, giving error
+	if verify.CheckISOErrorTagsUnsupported(err) {
+		log.Printf("[WARN] ECS tagging failed listing tags for Task Definition (%s): %s", d.Id(), err)
+		return nil
+	}
+
+	//lintignore:AWSR002
+	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %w", err)
+	}
+
+	if err := d.Set("tags_all", tags.Map()); err != nil {
+		return fmt.Errorf("error setting tags_all: %w", err)
+	}
+
 	return nil
 }
 
@@ -691,8 +722,16 @@ func resourceTaskDefinitionUpdate(d *schema.ResourceData, meta interface{}) erro
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("error updating ECS Task Definition (%s) tags: %s", d.Id(), err)
+		err := UpdateTags(conn, d.Get("arn").(string), o, n)
+
+		// Some partitions (i.e., ISO) may not support tagging, giving error
+		if verify.CheckISOErrorTagsUnsupported(err) {
+			log.Printf("[WARN] ECS tagging failed updating tags for Task Definition (%s): %s", d.Id(), err)
+			return nil
+		}
+
+		if err != nil {
+			return fmt.Errorf("ECS tagging failed updating tags for Task Definition (%s): %w", d.Id(), err)
 		}
 	}
 
@@ -778,7 +817,7 @@ func resourceTaskDefinitionVolumeHash(v interface{}) int {
 	return create.StringHashcode(buf.String())
 }
 
-func flattenEcsInferenceAccelerators(list []*ecs.InferenceAccelerator) []map[string]interface{} {
+func flattenInferenceAccelerators(list []*ecs.InferenceAccelerator) []map[string]interface{} {
 	result := make([]map[string]interface{}, 0, len(list))
 	for _, iAcc := range list {
 		l := map[string]interface{}{
@@ -791,7 +830,7 @@ func flattenEcsInferenceAccelerators(list []*ecs.InferenceAccelerator) []map[str
 	return result
 }
 
-func expandEcsInferenceAccelerators(configured []interface{}) []*ecs.InferenceAccelerator {
+func expandInferenceAccelerators(configured []interface{}) []*ecs.InferenceAccelerator {
 	iAccs := make([]*ecs.InferenceAccelerator, 0, len(configured))
 	for _, lRaw := range configured {
 		data := lRaw.(map[string]interface{})
@@ -805,7 +844,7 @@ func expandEcsInferenceAccelerators(configured []interface{}) []*ecs.InferenceAc
 	return iAccs
 }
 
-func expandEcsTaskDefinitionPlacementConstraints(constraints []interface{}) ([]*ecs.TaskDefinitionPlacementConstraint, error) {
+func expandTaskDefinitionPlacementConstraints(constraints []interface{}) ([]*ecs.TaskDefinitionPlacementConstraint, error) {
 	var pc []*ecs.TaskDefinitionPlacementConstraint
 	for _, raw := range constraints {
 		p := raw.(map[string]interface{})
@@ -823,7 +862,7 @@ func expandEcsTaskDefinitionPlacementConstraints(constraints []interface{}) ([]*
 	return pc, nil
 }
 
-func expandEcsTaskDefinitionRuntimePlatformConfiguration(runtimePlatformConfig []interface{}) *ecs.RuntimePlatform {
+func expandTaskDefinitionRuntimePlatformConfiguration(runtimePlatformConfig []interface{}) *ecs.RuntimePlatform {
 	config := runtimePlatformConfig[0]
 
 	configMap := config.(map[string]interface{})
@@ -842,7 +881,7 @@ func expandEcsTaskDefinitionRuntimePlatformConfiguration(runtimePlatformConfig [
 	return ecsProxyConfig
 }
 
-func expandEcsTaskDefinitionProxyConfiguration(proxyConfigs []interface{}) *ecs.ProxyConfiguration {
+func expandTaskDefinitionProxyConfiguration(proxyConfigs []interface{}) *ecs.ProxyConfiguration {
 	proxyConfig := proxyConfigs[0]
 	configMap := proxyConfig.(map[string]interface{})
 
@@ -867,7 +906,7 @@ func expandEcsTaskDefinitionProxyConfiguration(proxyConfigs []interface{}) *ecs.
 	return ecsProxyConfig
 }
 
-func expandEcsVolumes(configured []interface{}) []*ecs.Volume {
+func expandVolumes(configured []interface{}) []*ecs.Volume {
 	volumes := make([]*ecs.Volume, 0, len(configured))
 
 	// Loop over our configured volumes and create
@@ -887,15 +926,15 @@ func expandEcsVolumes(configured []interface{}) []*ecs.Volume {
 		}
 
 		if v, ok := data["docker_volume_configuration"].([]interface{}); ok && len(v) > 0 {
-			l.DockerVolumeConfiguration = expandEcsVolumesDockerVolume(v)
+			l.DockerVolumeConfiguration = expandVolumesDockerVolume(v)
 		}
 
 		if v, ok := data["efs_volume_configuration"].([]interface{}); ok && len(v) > 0 {
-			l.EfsVolumeConfiguration = expandEcsVolumesEFSVolume(v)
+			l.EfsVolumeConfiguration = expandVolumesEFSVolume(v)
 		}
 
 		if v, ok := data["fsx_windows_file_server_volume_configuration"].([]interface{}); ok && len(v) > 0 {
-			l.FsxWindowsFileServerVolumeConfiguration = expandEcsVolumesFsxWinVolume(v)
+			l.FsxWindowsFileServerVolumeConfiguration = expandVolumesFsxWinVolume(v)
 		}
 
 		volumes = append(volumes, l)
@@ -904,7 +943,7 @@ func expandEcsVolumes(configured []interface{}) []*ecs.Volume {
 	return volumes
 }
 
-func expandEcsVolumesDockerVolume(configList []interface{}) *ecs.DockerVolumeConfiguration {
+func expandVolumesDockerVolume(configList []interface{}) *ecs.DockerVolumeConfiguration {
 	config := configList[0].(map[string]interface{})
 	dockerVol := &ecs.DockerVolumeConfiguration{}
 
@@ -934,7 +973,7 @@ func expandEcsVolumesDockerVolume(configList []interface{}) *ecs.DockerVolumeCon
 	return dockerVol
 }
 
-func expandEcsVolumesEFSVolume(efsConfig []interface{}) *ecs.EFSVolumeConfiguration {
+func expandVolumesEFSVolume(efsConfig []interface{}) *ecs.EFSVolumeConfiguration {
 	config := efsConfig[0].(map[string]interface{})
 	efsVol := &ecs.EFSVolumeConfiguration{}
 
@@ -954,13 +993,13 @@ func expandEcsVolumesEFSVolume(efsConfig []interface{}) *ecs.EFSVolumeConfigurat
 	}
 	if v, ok := config["authorization_config"].([]interface{}); ok && len(v) > 0 {
 		efsVol.RootDirectory = nil
-		efsVol.AuthorizationConfig = expandEcsVolumesEFSVolumeAuthorizationConfig(v)
+		efsVol.AuthorizationConfig = expandVolumesEFSVolumeAuthorizationConfig(v)
 	}
 
 	return efsVol
 }
 
-func expandEcsVolumesEFSVolumeAuthorizationConfig(efsConfig []interface{}) *ecs.EFSAuthorizationConfig {
+func expandVolumesEFSVolumeAuthorizationConfig(efsConfig []interface{}) *ecs.EFSAuthorizationConfig {
 	authconfig := efsConfig[0].(map[string]interface{})
 	auth := &ecs.EFSAuthorizationConfig{}
 
@@ -975,7 +1014,7 @@ func expandEcsVolumesEFSVolumeAuthorizationConfig(efsConfig []interface{}) *ecs.
 	return auth
 }
 
-func expandEcsVolumesFsxWinVolume(fsxWinConfig []interface{}) *ecs.FSxWindowsFileServerVolumeConfiguration {
+func expandVolumesFsxWinVolume(fsxWinConfig []interface{}) *ecs.FSxWindowsFileServerVolumeConfiguration {
 	config := fsxWinConfig[0].(map[string]interface{})
 	fsxVol := &ecs.FSxWindowsFileServerVolumeConfiguration{}
 
@@ -988,13 +1027,13 @@ func expandEcsVolumesFsxWinVolume(fsxWinConfig []interface{}) *ecs.FSxWindowsFil
 	}
 
 	if v, ok := config["authorization_config"].([]interface{}); ok && len(v) > 0 {
-		fsxVol.AuthorizationConfig = expandEcsVolumesFsxWinVolumeAuthorizationConfig(v)
+		fsxVol.AuthorizationConfig = expandVolumesFsxWinVolumeAuthorizationConfig(v)
 	}
 
 	return fsxVol
 }
 
-func expandEcsVolumesFsxWinVolumeAuthorizationConfig(config []interface{}) *ecs.FSxWindowsFileServerAuthorizationConfig {
+func expandVolumesFsxWinVolumeAuthorizationConfig(config []interface{}) *ecs.FSxWindowsFileServerAuthorizationConfig {
 	authconfig := config[0].(map[string]interface{})
 	auth := &ecs.FSxWindowsFileServerAuthorizationConfig{}
 
@@ -1009,7 +1048,7 @@ func expandEcsVolumesFsxWinVolumeAuthorizationConfig(config []interface{}) *ecs.
 	return auth
 }
 
-func flattenEcsVolumes(list []*ecs.Volume) []map[string]interface{} {
+func flattenVolumes(list []*ecs.Volume) []map[string]interface{} {
 	result := make([]map[string]interface{}, 0, len(list))
 	for _, volume := range list {
 		l := map[string]interface{}{
@@ -1146,7 +1185,7 @@ func flattenFsxWinVolumeAuthorizationConfig(config *ecs.FSxWindowsFileServerAuth
 	return items
 }
 
-func flattenEcsContainerDefinitions(definitions []*ecs.ContainerDefinition) (string, error) {
+func flattenContainerDefinitions(definitions []*ecs.ContainerDefinition) (string, error) {
 	b, err := jsonutil.BuildJSON(definitions)
 	if err != nil {
 		return "", err
@@ -1155,7 +1194,7 @@ func flattenEcsContainerDefinitions(definitions []*ecs.ContainerDefinition) (str
 	return string(b), nil
 }
 
-func expandEcsContainerDefinitions(rawDefinitions string) ([]*ecs.ContainerDefinition, error) {
+func expandContainerDefinitions(rawDefinitions string) ([]*ecs.ContainerDefinition, error) {
 	var definitions []*ecs.ContainerDefinition
 
 	err := json.Unmarshal([]byte(rawDefinitions), &definitions)
@@ -1166,7 +1205,7 @@ func expandEcsContainerDefinitions(rawDefinitions string) ([]*ecs.ContainerDefin
 	return definitions, nil
 }
 
-func expandEcsTaskDefinitionEphemeralStorage(config []interface{}) *ecs.EphemeralStorage {
+func expandTaskDefinitionEphemeralStorage(config []interface{}) *ecs.EphemeralStorage {
 	configMap := config[0].(map[string]interface{})
 
 	es := &ecs.EphemeralStorage{
@@ -1176,7 +1215,7 @@ func expandEcsTaskDefinitionEphemeralStorage(config []interface{}) *ecs.Ephemera
 	return es
 }
 
-func flattenEcsTaskDefinitionEphemeralStorage(pc *ecs.EphemeralStorage) []map[string]interface{} {
+func flattenTaskDefinitionEphemeralStorage(pc *ecs.EphemeralStorage) []map[string]interface{} {
 	if pc == nil {
 		return nil
 	}

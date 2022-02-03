@@ -192,7 +192,7 @@ The `root_block_device` block supports the following:
 * `volume_size` - (Optional) Size of the volume in gibibytes (GiB).
 * `volume_type` - (Optional) Type of volume. Valid values include `standard`, `gp2`, `gp3`, `io1`, `io2`, `sc1`, or `st1`. Defaults to `gp2`.
 
-Modifying any of the `root_block_device` settings other than `volume_size` or `tags` requires resource replacement.
+Modifying the `encrypted` or `kms_key_id` settings of the `root_block_device` requires resource replacement.
 
 Each `ebs_block_device` block supports the following:
 

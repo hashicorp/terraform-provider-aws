@@ -65,6 +65,35 @@ resource "aws_backup_selection" "example" {
 }
 ```
 
+### Selecting Backups By Conditions
+
+```terraform
+resource "aws_backup_selection" "example" {
+  iam_role_arn = aws_iam_role.example.arn
+  name         = "tf_example_backup_selection"
+  plan_id      = aws_backup_plan.example.id
+
+  condition {
+    string_equals {
+      key   = "aws:ResourceTag/Component"
+      value = "rds"
+    }
+    string_like {
+      key   = "aws:ResourceTag/Application"
+      value = "app*"
+    }
+    string_not_equals {
+      key   = "aws:ResourceTag/Backup"
+      value = "false"
+    }
+    string_not_like {
+      key   = "aws:ResourceTag/Environment"
+      value = "test*"
+    }
+  }
+}
+```
+
 ### Selecting Backups By Resource
 
 ```terraform
@@ -81,6 +110,22 @@ resource "aws_backup_selection" "example" {
 }
 ```
 
+### Selecting Backups By Not Resource
+
+```terraform
+resource "aws_backup_selection" "example" {
+  iam_role_arn = aws_iam_role.example.arn
+  name         = "tf_example_backup_selection"
+  plan_id      = aws_backup_plan.example.id
+
+  not_resources = [
+    aws_db_instance.example.arn,
+    aws_ebs_volume.example.arn,
+    aws_efs_file_system.example.arn,
+  ]
+}
+```
+
 ## Argument Reference
 
 The following arguments are supported:
@@ -89,7 +134,9 @@ The following arguments are supported:
 * `plan_id` - (Required) The backup plan ID to be associated with the selection of resources.
 * `iam_role_arn` - (Required) The ARN of the IAM role that AWS Backup uses to authenticate when restoring and backing up the target resource. See the [AWS Backup Developer Guide](https://docs.aws.amazon.com/aws-backup/latest/devguide/access-control.html#managed-policies) for additional information about using AWS managed policies or creating custom policies attached to the IAM role.
 * `selection_tag` - (Optional) Tag-based conditions used to specify a set of resources to assign to a backup plan.
-* `resources` - (Optional) An array of strings that either contain Amazon Resource Names (ARNs) or match patterns of resources to assign to a backup plan..
+* `condition` - (Optional) A list of conditions that you define to assign resources to your backup plans using tags.
+* `resources` - (Optional) An array of strings that either contain Amazon Resource Names (ARNs) or match patterns of resources to assign to a backup plan.
+* `not_resources` - (Optional) An array of strings that either contain Amazon Resource Names (ARNs) or match patterns of resources to exclude from a backup plan.
 
 Tag conditions (`selection_tag`) support the following:
 

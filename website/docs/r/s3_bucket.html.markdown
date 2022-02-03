@@ -307,7 +307,7 @@ resource "aws_s3_bucket" "source" {
 
 ```terraform
 resource "aws_kms_key" "mykey" {
-  description             = "This key is used to encrypt bucket objects"
+  description             = "This key is used to encrypt objects"
   deletion_window_in_days = 10
 }
 

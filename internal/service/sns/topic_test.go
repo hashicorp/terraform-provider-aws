@@ -20,10 +20,10 @@ import (
 )
 
 func init() {
-	acctest.RegisterServiceErrorCheckFunc(sns.EndpointsID, testAccErrorCheckSkipSNS)
+	acctest.RegisterServiceErrorCheckFunc(sns.EndpointsID, testAccErrorCheckSkip)
 }
 
-func testAccErrorCheckSkipSNS(t *testing.T) resource.ErrorCheckFunc {
+func testAccErrorCheckSkip(t *testing.T) resource.ErrorCheckFunc {
 	return acctest.ErrorCheckSkipMessagesContaining(t,
 		"Invalid protocol type: firehose",
 		"Unknown attribute FifoTopic",

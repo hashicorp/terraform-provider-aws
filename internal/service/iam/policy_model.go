@@ -110,7 +110,7 @@ func (ps IAMPolicyStatementPrincipalSet) MarshalJSON() ([]byte, error) {
 				raw[p.Type] = i
 			case string:
 				// Convert to []string to stop drop of principals
-				raw[p.Type] = make([]string, 0, 2)
+				raw[p.Type] = make([]string, 0, policyModelMarshallJSONStartSliceSize)
 				raw[p.Type] = append(raw[p.Type].([]string), v)
 				raw[p.Type] = append(raw[p.Type].([]string), i)
 			case []string:
