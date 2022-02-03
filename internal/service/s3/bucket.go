@@ -1776,7 +1776,7 @@ func flattenServerSideEncryptionConfiguration(c *s3.ServerSideEncryptionConfigur
 	}
 
 	m := map[string]interface{}{
-		"rules": flattenServerSideEncryptionConfigurationRules(c.Rules),
+		"rule": flattenServerSideEncryptionConfigurationRules(c.Rules),
 	}
 
 	return []interface{}{m}
