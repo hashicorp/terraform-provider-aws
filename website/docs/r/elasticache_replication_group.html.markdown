@@ -38,7 +38,7 @@ To create a single shard primary with single read replica:
 ```terraform
 resource "aws_elasticache_replication_group" "example" {
   automatic_failover_enabled    = true
-  availability_zones            = ["us-west-2a", "us-west-2b"]
+  preferred_cache_cluster_azs   = ["us-west-2a", "us-west-2b"]
   replication_group_id          = "tf-rep-group-1"
   replication_group_description = "test description"
   node_type                     = "cache.m4.large"
@@ -56,7 +56,7 @@ You have two options for adjusting the number of replicas:
 ```terraform
 resource "aws_elasticache_replication_group" "example" {
   automatic_failover_enabled    = true
-  availability_zones            = ["us-west-2a", "us-west-2b"]
+  preferred_cache_cluster_azs   = ["us-west-2a", "us-west-2b"]
   replication_group_id          = "tf-rep-group-1"
   replication_group_description = "test description"
   node_type                     = "cache.m4.large"
@@ -151,7 +151,7 @@ The following arguments are optional:
 * `auth_token` - (Optional) Password used to access a password protected server. Can be specified only if `transit_encryption_enabled = true`.
 * `auto_minor_version_upgrade` - (Optional) Specifies whether a minor engine upgrades will be applied automatically to the underlying Cache Cluster instances during the maintenance window. This parameter is currently not supported by the AWS API. Defaults to `true`.
 * `automatic_failover_enabled` - (Optional) Specifies whether a read-only replica will be automatically promoted to read/write primary if the existing primary fails. If enabled, `number_cache_clusters` must be greater than 1. Must be enabled for Redis (cluster mode enabled) replication groups. Defaults to `false`.
-* `availability_zones` - (Optional) List of EC2 availability zones in which the replication group's cache clusters will be created. The order of the availability zones in the list is not important.
+* `availability_zones` - (Optional, **Deprecated** use `preferred_cache_cluster_azs` instead) List of EC2 availability zones in which the replication group's cache clusters will be created. The order of the availability zones in the list is not considered.
 * `cluster_mode` - (Optional) Create a native Redis cluster. `automatic_failover_enabled` must be set to true. Cluster Mode documented below. Only 1 `cluster_mode` block is allowed. Note that configuring this block does not enable cluster mode, i.e., data sharding, this requires using a parameter group that has the parameter `cluster-enabled` set to true.
 * `data_tiering_enabled` - (Optional) Enables data tiering. Data tiering is only supported for replication groups using the r6gd node type. This parameter must be set to `true` when using r6gd nodes.
 * `engine` - (Optional) Name of the cache engine to be used for the clusters in this replication group. The only valid value is `redis`.
@@ -166,6 +166,7 @@ The following arguments are optional:
 * `number_cache_clusters` - (Optional) Number of cache clusters (primary and replicas) this replication group will have. If Multi-AZ is enabled, the value of this parameter must be at least 2. Updates will occur before other modifications. One of `number_cache_clusters` or `cluster_mode` is required.
 * `parameter_group_name` - (Optional) Name of the parameter group to associate with this replication group. If this argument is omitted, the default cache parameter group for the specified engine is used. To enable "cluster mode", i.e., data sharding, use a parameter group that has the parameter `cluster-enabled` set to true.
 * `port` – (Optional) Port number on which each of the cache nodes will accept connections. For Memcache the default is 11211, and for Redis the default port is 6379.
+* `preferred_cache_cluster_azs` - (Optional) List of EC2 availability zones in which the replication group's cache clusters will be created. The order of the availability zones in the list is considered. The first item in the list will be the primary node. Ignored when updating.
 * `security_group_ids` - (Optional) One or more Amazon VPC security groups associated with this replication group. Use this parameter only when you are creating a replication group in an Amazon Virtual Private Cloud
 * `security_group_names` - (Optional) List of cache security group names to associate with this replication group.
 * `snapshot_arns` – (Optional) List of ARNs that identify Redis RDB snapshot files stored in Amazon S3. The names object names cannot contain any commas.

@@ -69,11 +69,12 @@ func ResourceReplicationGroup() *schema.Resource {
 				Default:  false,
 			},
 			"availability_zones": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				ForceNew: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				Set:      schema.HashString,
+				Type:          schema.TypeSet,
+				Optional:      true,
+				ForceNew:      true,
+				Elem:          &schema.Schema{Type: schema.TypeString},
+				Set:           schema.HashString,
+				ConflictsWith: []string{"preferred_cache_cluster_azs"},
 			},
 			"cluster_enabled": {
 				Type:     schema.TypeBool,
@@ -226,6 +227,12 @@ func ResourceReplicationGroup() *schema.Resource {
 					}
 					return false
 				},
+			},
+			"preferred_cache_cluster_azs": {
+				Type:          schema.TypeList,
+				Optional:      true,
+				Elem:          &schema.Schema{Type: schema.TypeString},
+				ConflictsWith: []string{"availability_zones"},
 			},
 			"primary_endpoint_address": {
 				Type:     schema.TypeString,
@@ -403,8 +410,11 @@ func resourceReplicationGroupCreate(d *schema.ResourceData, meta interface{}) er
 		params.EngineVersion = aws.String(v.(string))
 	}
 
-	if preferredAzs := d.Get("availability_zones").(*schema.Set); preferredAzs.Len() > 0 {
-		params.PreferredCacheClusterAZs = flex.ExpandStringSet(preferredAzs)
+	if preferredAZs, ok := d.GetOk("preferred_cache_cluster_azs"); ok {
+		params.PreferredCacheClusterAZs = flex.ExpandStringList(preferredAZs.([]interface{}))
+	}
+	if availabilityZones := d.Get("availability_zones").(*schema.Set); availabilityZones.Len() > 0 {
+		params.PreferredCacheClusterAZs = flex.ExpandStringSet(availabilityZones)
 	}
 
 	if v, ok := d.GetOk("parameter_group_name"); ok {

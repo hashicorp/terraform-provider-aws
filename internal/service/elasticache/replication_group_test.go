@@ -456,13 +456,14 @@ func TestAccElastiCacheReplicationGroup_vpc(t *testing.T) {
 					testAccCheckReplicationGroupExists(resourceName, &rg),
 					resource.TestCheckResourceAttr(resourceName, "number_cache_clusters", "1"),
 					resource.TestCheckResourceAttr(resourceName, "auto_minor_version_upgrade", "false"),
+					resource.TestCheckResourceAttr(resourceName, "preferred_cache_cluster_azs.#", "1"),
 				),
 			},
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"apply_immediately", "availability_zones"},
+				ImportStateVerifyIgnore: []string{"apply_immediately", "preferred_cache_cluster_azs"},
 			},
 		},
 	})
@@ -484,11 +485,12 @@ func TestAccElastiCacheReplicationGroup_depecatedAvailabilityZones_vpc(t *testin
 		CheckDestroy: testAccCheckReplicationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccReplicationGroupInVPCConfig(rName),
+				Config: testAccReplicationGroupInVPCConfig_DeprecatedAvailabilityZones(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReplicationGroupExists(resourceName, &rg),
 					resource.TestCheckResourceAttr(resourceName, "number_cache_clusters", "1"),
 					resource.TestCheckResourceAttr(resourceName, "auto_minor_version_upgrade", "false"),
+					resource.TestCheckResourceAttr(resourceName, "availability_zones.#", "1"),
 				),
 			},
 			{
@@ -517,43 +519,29 @@ func TestAccElastiCacheReplicationGroup_multiAzNotInVPC(t *testing.T) {
 		CheckDestroy: testAccCheckReplicationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccReplicationGroupConfig_MultiAZNotInVPC_Basic(rName),
+				Config: testAccReplicationGroupConfig_MultiAZNotInVPC_PreferredCacheClusterAZs_notRepeated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReplicationGroupExists(resourceName, &rg),
-					resource.TestCheckResourceAttr(resourceName, "number_cache_clusters", "2"),
+					resource.TestCheckResourceAttr(resourceName, "num_cache_clusters", "2"),
 					resource.TestCheckResourceAttr(resourceName, "multi_az_enabled", "true"),
 					resource.TestCheckResourceAttr(resourceName, "automatic_failover_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "preferred_cache_cluster_azs.#", "2"),
+					resource.TestCheckResourceAttrPair(resourceName, "preferred_cache_cluster_azs.0", "data.aws_availability_zones.available", "names.0"),
+					resource.TestCheckResourceAttrPair(resourceName, "preferred_cache_cluster_azs.1", "data.aws_availability_zones.available", "names.1"),
+					resource.TestCheckResourceAttr(resourceName, "availability_zones.#", "0"),
 				),
 			},
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"apply_immediately"},
-			},
-			{
-				Config: testAccReplicationGroupConfig_MultiAZNotInVPC_AvailabilityZones(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckReplicationGroupExists(resourceName, &rg),
-					resource.TestCheckResourceAttr(resourceName, "number_cache_clusters", "2"),
-					resource.TestCheckResourceAttr(resourceName, "multi_az_enabled", "true"),
-					resource.TestCheckResourceAttr(resourceName, "automatic_failover_enabled", "true"),
-					resource.TestCheckResourceAttr(resourceName, "availability_zones.#", "2"),
-					resource.TestCheckResourceAttrPair(resourceName, "availability_zones.0", "data.aws_availability_zones.available", "names.0"),
-					resource.TestCheckResourceAttrPair(resourceName, "availability_zones.1", "data.aws_availability_zones.available", "names.1"),
-				),
-			},
-			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"apply_immediately", "availability_zones"},
+				ImportStateVerifyIgnore: []string{"apply_immediately", "preferred_cache_cluster_azs"},
 			},
 		},
 	})
 }
 
-func TestAccElastiCacheReplicationGroup_deprecatedAvailabilityZones_multiAzNotInVPC(t *testing.T) {
+func TestAccElastiCacheReplicationGroup_multiAzNotInVPC_repeated(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -569,10 +557,50 @@ func TestAccElastiCacheReplicationGroup_deprecatedAvailabilityZones_multiAzNotIn
 		CheckDestroy: testAccCheckReplicationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccReplicationGroupConfig_MultiAZNotInVPC_Basic(rName),
+				Config: testAccReplicationGroupConfig_MultiAZNotInVPC_PreferredCacheClusterAZs_repeated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReplicationGroupExists(resourceName, &rg),
-					resource.TestCheckResourceAttr(resourceName, "number_cache_clusters", "2"),
+					resource.TestCheckResourceAttr(resourceName, "num_cache_clusters", "4"),
+					resource.TestCheckResourceAttr(resourceName, "multi_az_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "automatic_failover_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "preferred_cache_cluster_azs.#", "4"),
+					resource.TestCheckResourceAttrPair(resourceName, "preferred_cache_cluster_azs.0", "data.aws_availability_zones.available", "names.0"),
+					resource.TestCheckResourceAttrPair(resourceName, "preferred_cache_cluster_azs.1", "data.aws_availability_zones.available", "names.1"),
+					resource.TestCheckResourceAttrPair(resourceName, "preferred_cache_cluster_azs.2", "data.aws_availability_zones.available", "names.0"),
+					resource.TestCheckResourceAttrPair(resourceName, "preferred_cache_cluster_azs.3", "data.aws_availability_zones.available", "names.1"),
+					resource.TestCheckResourceAttr(resourceName, "availability_zones.#", "0"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"apply_immediately", "preferred_cache_cluster_azs"},
+			},
+		},
+	})
+}
+
+func TestAccElastiCacheReplicationGroup_deprecatedAvailabilityZones_multiAzNotInVPC(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var rg1, rg2 elasticache.ReplicationGroup
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_elasticache_replication_group.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, elasticache.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckReplicationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccReplicationGroupConfig_MultiAZNotInVPC_Basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckReplicationGroupExists(resourceName, &rg1),
+					resource.TestCheckResourceAttr(resourceName, "num_cache_clusters", "2"),
 					resource.TestCheckResourceAttr(resourceName, "multi_az_enabled", "true"),
 					resource.TestCheckResourceAttr(resourceName, "automatic_failover_enabled", "true"),
 				),
@@ -584,15 +612,17 @@ func TestAccElastiCacheReplicationGroup_deprecatedAvailabilityZones_multiAzNotIn
 				ImportStateVerifyIgnore: []string{"apply_immediately"},
 			},
 			{
-				Config: testAccReplicationGroupConfig_MultiAZNotInVPC_AvailabilityZones(rName),
+				Config: testAccReplicationGroupConfig_MultiAZNotInVPC_DeprecatedAvailabilityZones(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckReplicationGroupExists(resourceName, &rg),
-					resource.TestCheckResourceAttr(resourceName, "number_cache_clusters", "2"),
+					testAccCheckReplicationGroupExists(resourceName, &rg2),
+					testAccCheckReplicationGroupRecreated(&rg1, &rg2),
+					resource.TestCheckResourceAttr(resourceName, "num_cache_clusters", "2"),
 					resource.TestCheckResourceAttr(resourceName, "multi_az_enabled", "true"),
 					resource.TestCheckResourceAttr(resourceName, "automatic_failover_enabled", "true"),
 					resource.TestCheckResourceAttr(resourceName, "availability_zones.#", "2"),
 					resource.TestCheckResourceAttrPair(resourceName, "availability_zones.0", "data.aws_availability_zones.available", "names.0"),
 					resource.TestCheckResourceAttrPair(resourceName, "availability_zones.1", "data.aws_availability_zones.available", "names.1"),
+					resource.TestCheckResourceAttr(resourceName, "preferred_cache_cluster_azs.#", "0"),
 				),
 			},
 			{
@@ -705,86 +735,6 @@ func TestAccElastiCacheReplicationGroup_ValidationMultiAz_noAutomaticFailover(t 
 			{
 				Config:      testAccReplicationGroupConfig_MultiAZ_NoAutomaticFailover(rName),
 				ExpectError: regexp.MustCompile("automatic_failover_enabled must be true if multi_az_enabled is true"),
-			},
-		},
-	})
-}
-
-func TestAccElastiCacheReplicationGroup_redisClusterInVPC2(t *testing.T) {
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
-	var rg elasticache.ReplicationGroup
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_elasticache_replication_group.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, elasticache.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckReplicationDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccReplicationGroupRedisClusterInVPCConfig(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckReplicationGroupExists(resourceName, &rg),
-					resource.TestCheckResourceAttr(resourceName, "number_cache_clusters", "2"),
-					resource.TestCheckResourceAttr(resourceName, "automatic_failover_enabled", "false"),
-					resource.TestCheckResourceAttr(resourceName, "multi_az_enabled", "false"),
-					resource.TestCheckResourceAttr(resourceName, "snapshot_window", "02:00-03:00"),
-					resource.TestCheckResourceAttr(resourceName, "snapshot_retention_limit", "7"),
-					resource.TestCheckResourceAttrSet(resourceName, "primary_endpoint_address"),
-					resource.TestMatchResourceAttr(resourceName, "primary_endpoint_address", regexp.MustCompile(fmt.Sprintf("%s\\..+\\.%s", rName, acctest.PartitionDNSSuffix()))),
-					resource.TestCheckResourceAttrSet(resourceName, "reader_endpoint_address"),
-					resource.TestMatchResourceAttr(resourceName, "reader_endpoint_address", regexp.MustCompile(fmt.Sprintf("%s-ro\\..+\\.%s", rName, acctest.PartitionDNSSuffix()))),
-				),
-			},
-			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"apply_immediately", "availability_zones"},
-			},
-		},
-	})
-}
-
-func TestAccElastiCacheReplicationGroup_deprecatedAvailabilityZones_redisClusterInVPC2(t *testing.T) {
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
-	var rg elasticache.ReplicationGroup
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_elasticache_replication_group.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, elasticache.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckReplicationDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccReplicationGroupRedisClusterInVPCConfig(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckReplicationGroupExists(resourceName, &rg),
-					resource.TestCheckResourceAttr(resourceName, "number_cache_clusters", "2"),
-					resource.TestCheckResourceAttr(resourceName, "automatic_failover_enabled", "false"),
-					resource.TestCheckResourceAttr(resourceName, "multi_az_enabled", "false"),
-					resource.TestCheckResourceAttr(resourceName, "snapshot_window", "02:00-03:00"),
-					resource.TestCheckResourceAttr(resourceName, "snapshot_retention_limit", "7"),
-					resource.TestCheckResourceAttrSet(resourceName, "primary_endpoint_address"),
-					resource.TestMatchResourceAttr(resourceName, "primary_endpoint_address", regexp.MustCompile(fmt.Sprintf("%s\\..+\\.%s", rName, acctest.PartitionDNSSuffix()))),
-					resource.TestCheckResourceAttrSet(resourceName, "reader_endpoint_address"),
-					resource.TestMatchResourceAttr(resourceName, "reader_endpoint_address", regexp.MustCompile(fmt.Sprintf("%s-ro\\..+\\.%s", rName, acctest.PartitionDNSSuffix()))),
-				),
-			},
-			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"apply_immediately", "availability_zones"},
 			},
 		},
 	})
@@ -2417,6 +2367,43 @@ resource "aws_elasticache_replication_group" "test" {
   port                          = 6379
   subnet_group_name             = aws_elasticache_subnet_group.test.name
   security_group_ids            = [aws_security_group.test.id]
+  preferred_cache_cluster_azs   = [data.aws_availability_zones.available.names[0]]
+  auto_minor_version_upgrade    = false
+}
+
+resource "aws_elasticache_subnet_group" "test" {
+  name       = %[1]q
+  subnet_ids = aws_subnet.test[*].id
+}
+
+resource "aws_security_group" "test" {
+  name        = %[1]q
+  description = "tf-test-security-group-descr"
+  vpc_id      = aws_vpc.test.id
+
+  ingress {
+    from_port   = -1
+    to_port     = -1
+    protocol    = "icmp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+}
+`, rName),
+	)
+}
+
+func testAccReplicationGroupInVPCConfig_DeprecatedAvailabilityZones(rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigVpcWithSubnets(1),
+		fmt.Sprintf(`
+resource "aws_elasticache_replication_group" "test" {
+  replication_group_id          = %[1]q
+  replication_group_description = "test description"
+  node_type                     = "cache.t3.small"
+  number_cache_clusters         = 1
+  port                          = 6379
+  subnet_group_name             = aws_elasticache_subnet_group.test.name
+  security_group_ids            = [aws_security_group.test.id]
   availability_zones            = [data.aws_availability_zones.available.names[0]]
   auto_minor_version_upgrade    = false
 }
@@ -2455,7 +2442,41 @@ resource "aws_elasticache_replication_group" "test" {
 `, rName)
 }
 
-func testAccReplicationGroupConfig_MultiAZNotInVPC_AvailabilityZones(rName string) string {
+func testAccReplicationGroupConfig_MultiAZNotInVPC_PreferredCacheClusterAZs_notRepeated(rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigAvailableAZsNoOptIn(),
+		fmt.Sprintf(`
+resource "aws_elasticache_replication_group" "test" {
+  replication_group_id        = %[1]q
+  description                 = "test description"
+  num_cache_clusters          = 2
+  node_type                   = "cache.t3.small"
+  automatic_failover_enabled  = true
+  multi_az_enabled            = true
+  preferred_cache_cluster_azs = slice(data.aws_availability_zones.available.names, 0, 2)
+}
+`, rName),
+	)
+}
+
+func testAccReplicationGroupConfig_MultiAZNotInVPC_PreferredCacheClusterAZs_repeated(rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigAvailableAZsNoOptIn(),
+		fmt.Sprintf(`
+resource "aws_elasticache_replication_group" "test" {
+  replication_group_id        = %[1]q
+  description                 = "test description"
+	  num_cache_clusters          = 4
+  node_type                   = "cache.t3.small"
+  automatic_failover_enabled  = true
+  multi_az_enabled            = true
+  preferred_cache_cluster_azs = concat(slice(data.aws_availability_zones.available.names, 0, 2), slice(data.aws_availability_zones.available.names, 0, 2))
+}
+`, rName),
+	)
+}
+
+func testAccReplicationGroupConfig_MultiAZNotInVPC_DeprecatedAvailabilityZones(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigAvailableAZsNoOptIn(),
 		fmt.Sprintf(`
@@ -2523,47 +2544,6 @@ resource "aws_elasticache_replication_group" "test" {
   multi_az_enabled              = true
 }
 `, rName)
-}
-
-func testAccReplicationGroupRedisClusterInVPCConfig(rName string) string {
-	return acctest.ConfigCompose(
-		acctest.ConfigVpcWithSubnets(2),
-		fmt.Sprintf(`
-resource "aws_elasticache_replication_group" "test" {
-  replication_group_id          = %[1]q
-  replication_group_description = "test description"
-  node_type                     = "cache.t3.medium"
-  number_cache_clusters         = "2"
-  port                          = 6379
-  subnet_group_name             = aws_elasticache_subnet_group.test.name
-  security_group_ids            = [aws_security_group.test.id]
-  availability_zones            = [data.aws_availability_zones.available.names[0], data.aws_availability_zones.available.names[1]]
-  automatic_failover_enabled    = false
-  snapshot_window               = "02:00-03:00"
-  snapshot_retention_limit      = 7
-  engine_version                = "3.2.4"
-  maintenance_window            = "thu:03:00-thu:04:00"
-}
-
-resource "aws_elasticache_subnet_group" "test" {
-  name       = %[1]q
-  subnet_ids = aws_subnet.test[*].id
-}
-
-resource "aws_security_group" "test" {
-  name        = %[1]q
-  description = "tf-test-security-group-descr"
-  vpc_id      = aws_vpc.test.id
-
-  ingress {
-    from_port   = -1
-    to_port     = -1
-    protocol    = "icmp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-}
-`, rName),
-	)
 }
 
 func testAccReplicationGroupNativeRedisClusterErrorConfig(rName string) string {
