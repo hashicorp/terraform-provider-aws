@@ -2466,7 +2466,7 @@ func testAccReplicationGroupConfig_MultiAZNotInVPC_PreferredCacheClusterAZs_repe
 resource "aws_elasticache_replication_group" "test" {
   replication_group_id        = %[1]q
   description                 = "test description"
-	  num_cache_clusters          = 4
+  num_cache_clusters          = 4
   node_type                   = "cache.t3.small"
   automatic_failover_enabled  = true
   multi_az_enabled            = true

@@ -90,10 +90,8 @@ resource "aws_elasticache_replication_group" "baz" {
   parameter_group_name          = "default.redis3.2.cluster.on"
   automatic_failover_enabled    = true
 
-  cluster_mode {
-    replicas_per_node_group = 1
-    num_node_groups         = 2
-  }
+  num_node_groups         = 2
+  replicas_per_node_group = 1
 }
 ```
 
@@ -152,18 +150,19 @@ The following arguments are optional:
 * `auto_minor_version_upgrade` - (Optional) Specifies whether a minor engine upgrades will be applied automatically to the underlying Cache Cluster instances during the maintenance window. This parameter is currently not supported by the AWS API. Defaults to `true`.
 * `automatic_failover_enabled` - (Optional) Specifies whether a read-only replica will be automatically promoted to read/write primary if the existing primary fails. If enabled, `number_cache_clusters` must be greater than 1. Must be enabled for Redis (cluster mode enabled) replication groups. Defaults to `false`.
 * `availability_zones` - (Optional, **Deprecated** use `preferred_cache_cluster_azs` instead) List of EC2 availability zones in which the replication group's cache clusters will be created. The order of the availability zones in the list is not considered.
-* `cluster_mode` - (Optional) Create a native Redis cluster. `automatic_failover_enabled` must be set to true. Cluster Mode documented below. Only 1 `cluster_mode` block is allowed. Note that configuring this block does not enable cluster mode, i.e., data sharding, this requires using a parameter group that has the parameter `cluster-enabled` set to true.
+* `cluster_mode` - (Optional, **Deprecated** use root-level `num_node_groups` and `replicas_per_node_group` instead) Create a native Redis cluster. `automatic_failover_enabled` must be set to true. Cluster Mode documented below. Only 1 `cluster_mode` block is allowed. Note that configuring this block does not enable cluster mode, i.e., data sharding, this requires using a parameter group that has the parameter `cluster-enabled` set to true.
 * `data_tiering_enabled` - (Optional) Enables data tiering. Data tiering is only supported for replication groups using the r6gd node type. This parameter must be set to `true` when using r6gd nodes.
 * `engine` - (Optional) Name of the cache engine to be used for the clusters in this replication group. The only valid value is `redis`.
 * `engine_version` - (Optional) Version number of the cache engine to be used for the cache clusters in this replication group. If the version is 6 or higher, only the major version can be set, e.g., `6.x`, otherwise, specify the full version desired, e.g., `5.0.6`. The actual engine version used is returned in the attribute `engine_version_actual`, [defined below](#engine_version_actual).
 * `final_snapshot_identifier` - (Optional) The name of your final node group (shard) snapshot. ElastiCache creates the snapshot from the primary node in the cluster. If omitted, no final snapshot will be made.
-* `global_replication_group_id` - (Optional) The ID of the global replication group to which this replication group should belong. If this parameter is specified, the replication group is added to the specified global replication group as a secondary replication group; otherwise, the replication group is not part of any global replication group. If `global_replication_group_id` is set, the `num_node_groups` parameter of the `cluster_mode` block cannot be set.
+* `global_replication_group_id` - (Optional) The ID of the global replication group to which this replication group should belong. If this parameter is specified, the replication group is added to the specified global replication group as a secondary replication group; otherwise, the replication group is not part of any global replication group. If `global_replication_group_id` is set, the `num_node_groups` parameter (or the `num_node_groups` parameter of the deprecated `cluster_mode` block) cannot be set.
 * `kms_key_id` - (Optional) The ARN of the key that you wish to use if encrypting at rest. If not supplied, uses service managed encryption. Can be specified only if `at_rest_encryption_enabled = true`.
 * `maintenance_window` – (Optional) Specifies the weekly time range for when maintenance on the cache cluster is performed. The format is `ddd:hh24:mi-ddd:hh24:mi` (24H Clock UTC). The minimum maintenance window is a 60 minute period. Example: `sun:05:00-sun:09:00`
 * `multi_az_enabled` - (Optional) Specifies whether to enable Multi-AZ Support for the replication group. If `true`, `automatic_failover_enabled` must also be enabled. Defaults to `false`.
 * `node_type` - (Optional) Instance class to be used. See AWS documentation for information on [supported node types](https://docs.aws.amazon.com/AmazonElastiCache/latest/red-ug/CacheNodes.SupportedTypes.html) and [guidance on selecting node types](https://docs.aws.amazon.com/AmazonElastiCache/latest/red-ug/nodes-select-size.html). Required unless `global_replication_group_id` is set. Cannot be set if `global_replication_group_id` is set.
 * `notification_topic_arn` – (Optional) ARN of an SNS topic to send ElastiCache notifications to. Example: `arn:aws:sns:us-east-1:012345678999:my_sns_topic`
-* `number_cache_clusters` - (Optional) Number of cache clusters (primary and replicas) this replication group will have. If Multi-AZ is enabled, the value of this parameter must be at least 2. Updates will occur before other modifications. One of `number_cache_clusters` or `cluster_mode` is required.
+* `number_cache_clusters` - (Optional, **Deprecated** use `num_cache_clusters` instead) Number of cache clusters (primary and replicas) this replication group will have. If Multi-AZ is enabled, the value of this parameter must be at least 2. Updates will occur before other modifications. Conflicts with `num_cache_clusters`, `num_node_groups`, or the deprecated `cluster_mode`. Defaults to `1`.
+* `num_cache_clusters` - (Optional) Number of cache clusters (primary and replicas) this replication group will have. If Multi-AZ is enabled, the value of this parameter must be at least 2. Updates will occur before other modifications. Conflicts with `num_node_groups`, the deprecated`number_cache_clusters`, or the deprecated `cluster_mode`. Defaults to `1`.
 * `parameter_group_name` - (Optional) Name of the parameter group to associate with this replication group. If this argument is omitted, the default cache parameter group for the specified engine is used. To enable "cluster mode", i.e., data sharding, use a parameter group that has the parameter `cluster-enabled` set to true.
 * `port` – (Optional) Port number on which each of the cache nodes will accept connections. For Memcache the default is 11211, and for Redis the default port is 6379.
 * `preferred_cache_cluster_azs` - (Optional) List of EC2 availability zones in which the replication group's cache clusters will be created. The order of the availability zones in the list is considered. The first item in the list will be the primary node. Ignored when updating.
