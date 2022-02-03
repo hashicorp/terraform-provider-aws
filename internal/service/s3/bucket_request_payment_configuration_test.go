@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfs3 "github.com/hashicorp/terraform-provider-aws/internal/service/s3"
 )
 
 func TestAccS3BucketRequestPaymentConfiguration_Basic_BucketOwner(t *testing.T) {
@@ -113,8 +114,17 @@ func testAccCheckBucketRequestPaymentConfigurationDestroy(s *terraform.State) er
 			continue
 		}
 
+		bucket, expectedBucketOwner, err := tfs3.ParseResourceID(rs.Primary.ID)
+		if err != nil {
+			return err
+		}
+
 		input := &s3.GetBucketRequestPaymentInput{
-			Bucket: aws.String(rs.Primary.ID),
+			Bucket: aws.String(bucket),
+		}
+
+		if expectedBucketOwner != "" {
+			input.ExpectedBucketOwner = aws.String(expectedBucketOwner)
 		}
 
 		output, err := conn.GetBucketRequestPayment(input)
@@ -148,8 +158,17 @@ func testAccCheckBucketRequestPaymentConfigurationExists(resourceName string) re
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn
 
+		bucket, expectedBucketOwner, err := tfs3.ParseResourceID(rs.Primary.ID)
+		if err != nil {
+			return err
+		}
+
 		input := &s3.GetBucketRequestPaymentInput{
-			Bucket: aws.String(rs.Primary.ID),
+			Bucket: aws.String(bucket),
+		}
+
+		if expectedBucketOwner != "" {
+			input.ExpectedBucketOwner = aws.String(expectedBucketOwner)
 		}
 
 		output, err := conn.GetBucketRequestPayment(input)
