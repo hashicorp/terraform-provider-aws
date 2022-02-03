@@ -421,11 +421,11 @@ For example, previously this type of configuration was valid:
 
 ```terraform
 resource "aws_default_network_acl" "default" {
-  // ...
+  # ...
   egress {
     cidr_block      = "0.0.0.0/0"
     ipv6_cidr_block = ""
-    // ...
+    # ...
   }
 }
 ```
@@ -434,10 +434,10 @@ Now, set the argument to null (`ipv6_cidr_block = null`) or simply remove the em
 
 ```terraform
 resource "aws_default_network_acl" "default" {
-  // ...
+  # ...
   egress {
     cidr_block      = "0.0.0.0/0"
-    // ...
+    # ...
   }
 }
 ```
@@ -521,10 +521,10 @@ Now, set the argument to null (`ipv6_cidr_block = null`) or simply remove the em
 
 ```terraform
 resource "aws_network_acl" "default" {
-  // ...
+  # ...
   egress {
     cidr_block      = "0.0.0.0/0"
-    // ...
+    # ...
   }
 }
 ```
