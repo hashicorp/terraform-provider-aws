@@ -811,6 +811,8 @@ func FindNetworkACLEntry(conn *ec2.EC2, networkAclID string, egress bool, ruleNu
 	}
 
 	return nil, nil
+
+	// TODO: Layer on top of FindNetworkACL and modify callers to handle NotFoundError.
 }
 
 func FindNetworkInterface(conn *ec2.EC2, input *ec2.DescribeNetworkInterfacesInput) (*ec2.NetworkInterface, error) {
