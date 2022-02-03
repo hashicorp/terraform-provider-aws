@@ -36,7 +36,13 @@ func ResourceOntapStorageVirtualMachine() *schema.Resource {
 		},
 
 		SchemaVersion: 1,
-		MigrateState:  resourceOntapStorageVirtualMachineMigrateState,
+		StateUpgraders: []schema.StateUpgrader{
+			{
+				Type:    ResourceOntapStorageVirtualMachineV0().CoreConfigSchema().ImpliedType(),
+				Upgrade: ResourceOntapStorageVirtualMachineStateUpgradeV0,
+				Version: 0,
+			},
+		},
 
 		Schema: map[string]*schema.Schema{
 			"arn": {
