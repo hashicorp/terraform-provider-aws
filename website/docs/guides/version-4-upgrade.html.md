@@ -430,7 +430,7 @@ resource "aws_default_network_acl" "default" {
 }
 ```
 
-Now, simply remove the empty-value configuration:
+Now, set the argument to null (`ipv6_cidr_block = null`) or simply remove the empty-value configuration:
 
 ```terraform
 resource "aws_default_network_acl" "default" {
