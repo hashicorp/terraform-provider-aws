@@ -11,4 +11,5 @@ const (
 	ErrCodeNoSuchWebsiteConfiguration           = "NoSuchWebsiteConfiguration"
 	ErrCodeObjectLockConfigurationNotFound      = "ObjectLockConfigurationNotFoundError"
 	ErrCodeOperationAborted                     = "OperationAborted"
+	ErrCodeServerSideEncryptionConfigurationNotFound = "ServerSideEncryptionConfigurationNotFoundError"
 )
