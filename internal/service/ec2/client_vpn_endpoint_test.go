@@ -57,10 +57,11 @@ func TestAccEC2ClientVPNEndpoint_serial(t *testing.T) {
 			"disappearsEndpoint": testAccClientVPNAuthorizationRule_Disappears_endpoint,
 		},
 		"NetworkAssociation": {
-			"basic":           testAccClientVPNNetworkAssociation_basic,
-			"multipleSubnets": testAccClientVPNNetworkAssociation_multipleSubnets,
-			"disappears":      testAccClientVPNNetworkAssociation_disappears,
-			"securityGroups":  testAccClientVPNNetworkAssociation_securityGroups,
+			"basic":                    testAccClientVPNNetworkAssociation_basic,
+			"multipleSubnets":          testAccClientVPNNetworkAssociation_multipleSubnets,
+			"disappears":               testAccClientVPNNetworkAssociation_disappears,
+			"securityGroups":           testAccClientVPNNetworkAssociation_securityGroups,
+			"securityGroupsOnEndpoint": testAccClientVPNNetworkAssociation_securityGroupsOnEndpoint,
 		},
 		"Route": {
 			"basic":       testAccClientVPNRoute_basic,
@@ -806,7 +807,7 @@ func testAccEc2ClientVpnEndpointConfigVPCBase(rName string) string {
 		acctest.ConfigAvailableAZsNoOptIn(),
 		fmt.Sprintf(`
 resource "aws_vpc" "test" {
-  cidr_block = "10.0.0.0/16"
+  cidr_block = "10.1.0.0/16"
 
   tags = {
     Name = %[1]q
