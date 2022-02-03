@@ -152,7 +152,7 @@ See the [`aws_s3_bucket_replication_configuration` resource](s3_bucket_replicati
 
 ### Enable Default Server Side Encryption
 
-The `server_side_encryption_configuration` argument is read-only as of version 4.0.
+The `server_side_encryption_configuration` argument is read-only as of version 4.0 of the Terraform AWS Provider.
 See the [`aws_s3_bucket_server_side_encryption_configuration` resource](s3_bucket_server_side_encryption_configuration.html.markdown) for configuration details.
 
 ### Using ACL policy grants
