@@ -203,7 +203,7 @@ The `tag` configuration block supports the following arguments:
 
 In addition to all arguments above, the following attributes are exported:
 
-* `id` - The S3 source bucket name.
+* `id` - The `bucket` or `bucket` and `expected_bucket_owner` separated by a comma (`,`) if the latter is provided.
 
 ## Import
 
@@ -211,4 +211,10 @@ S3 bucket lifecycle configuration can be imported using the `bucket`, e.g.
 
 ```sh
 $ terraform import aws_s3_bucket_lifecycle_configuration.example bucket-name
+```
+
+In addition, S3 bucket lifecycle configuration can be imported using the `bucket` and `expected_bucket_owner` separated by a comma (`,`) e.g.,
+
+```
+$ terraform import aws_s3_bucket_lifecycle_configuration.example bucket-name,123456789012
 ```

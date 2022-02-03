@@ -24,11 +24,11 @@ func retryWhenBucketNotFound(f func() (interface{}, error)) (interface{}, error)
 	return tfresource.RetryWhenAWSErrCodeEquals(propagationTimeout, f, s3.ErrCodeNoSuchBucket)
 }
 
-func waitForLifecycleConfigurationRulesStatus(ctx context.Context, conn *s3.S3, bucket string, rules []*s3.LifecycleRule) error {
+func waitForLifecycleConfigurationRulesStatus(ctx context.Context, conn *s3.S3, bucket, expectedBucketOwner string, rules []*s3.LifecycleRule) error {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{"", LifecycleConfigurationRulesStatusNotReady},
 		Target:  []string{LifecycleConfigurationRulesStatusReady},
-		Refresh: lifecycleConfigurationRulesStatus(ctx, conn, bucket, rules),
+		Refresh: lifecycleConfigurationRulesStatus(ctx, conn, bucket, expectedBucketOwner, rules),
 		Timeout: lifecycleConfigurationRulesPropagationTimeout,
 	}
 

@@ -5,14 +5,18 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/s3"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
-func lifecycleConfigurationRulesStatus(ctx context.Context, conn *s3.S3, bucket string, rules []*s3.LifecycleRule) resource.StateRefreshFunc {
+func lifecycleConfigurationRulesStatus(ctx context.Context, conn *s3.S3, bucket, expectedBucketOwner string, rules []*s3.LifecycleRule) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		input := &s3.GetBucketLifecycleConfigurationInput{
 			Bucket: aws.String(bucket),
+		}
+
+		if expectedBucketOwner != "" {
+			input.ExpectedBucketOwner = aws.String(expectedBucketOwner)
 		}
 
 		output, err := conn.GetBucketLifecycleConfigurationWithContext(ctx, input)

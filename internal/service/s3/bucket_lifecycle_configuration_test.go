@@ -457,7 +457,19 @@ func testAccCheckBucketLifecycleConfigurationDestroy(s *terraform.State) error {
 		if rs.Type != "aws_s3_bucket_lifecycle_configuration" {
 			continue
 		}
-		input := &s3.GetBucketLifecycleConfigurationInput{Bucket: aws.String(rs.Primary.ID)}
+
+		bucket, expectedBucketOwner, err := tfs3.ParseResourceID(rs.Primary.ID)
+		if err != nil {
+			return err
+		}
+
+		input := &s3.GetBucketLifecycleConfigurationInput{
+			Bucket: aws.String(bucket),
+		}
+
+		if expectedBucketOwner != "" {
+			input.ExpectedBucketOwner = aws.String(expectedBucketOwner)
+		}
 
 		output, err := verify.RetryOnAWSCode(s3.ErrCodeNoSuchBucket, func() (interface{}, error) {
 			return conn.GetBucketLifecycleConfiguration(input)
@@ -492,9 +504,20 @@ func testAccCheckBucketLifecycleConfigurationExists(n string) resource.TestCheck
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn
 
-		output, err := conn.GetBucketLifecycleConfiguration(&s3.GetBucketLifecycleConfigurationInput{
-			Bucket: aws.String(rs.Primary.ID),
-		})
+		bucket, expectedBucketOwner, err := tfs3.ParseResourceID(rs.Primary.ID)
+		if err != nil {
+			return err
+		}
+
+		input := &s3.GetBucketLifecycleConfigurationInput{
+			Bucket: aws.String(bucket),
+		}
+
+		if expectedBucketOwner != "" {
+			input.ExpectedBucketOwner = aws.String(expectedBucketOwner)
+		}
+
+		output, err := conn.GetBucketLifecycleConfiguration(input)
 
 		if err != nil {
 			return err
