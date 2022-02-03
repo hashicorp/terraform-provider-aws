@@ -511,13 +511,15 @@ func testAccCheckBucketLifecycleConfigurationExists(n string) resource.TestCheck
 			input.ExpectedBucketOwner = aws.String(expectedBucketOwner)
 		}
 
-		output, err := conn.GetBucketLifecycleConfiguration(input)
+		output, err := verify.RetryOnAWSCode(tfs3.ErrCodeNoSuchLifecycleConfiguration, func() (interface{}, error) {
+			return conn.GetBucketLifecycleConfiguration(input)
+		})
 
 		if err != nil {
 			return err
 		}
 
-		if output == nil {
+		if config, ok := output.(*s3.GetBucketLifecycleConfigurationOutput); !ok || config == nil {
 			return fmt.Errorf("S3 Bucket Replication Configuration for bucket (%s) not found", rs.Primary.ID)
 		}
 
