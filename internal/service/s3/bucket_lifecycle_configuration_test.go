@@ -73,7 +73,7 @@ func TestAccS3BucketLifecycleConfiguration_disappears(t *testing.T) {
 	})
 }
 
-func TestAccS3BucketLifecycleConfiguration_update(t *testing.T) {
+func TestAccS3BucketLifecycleConfiguration_FilterWithPrefix(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_s3_bucket_lifecycle_configuration.test"
 	currTime := time.Now()
@@ -86,12 +86,6 @@ func TestAccS3BucketLifecycleConfiguration_update(t *testing.T) {
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckBucketLifecycleConfigurationDestroy,
 		Steps: []resource.TestStep{
-			{
-				Config: testAccBucketLifecycleConfigurationBasicConfig(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketLifecycleConfigurationExists(resourceName),
-				),
-			},
 			{
 				Config: testAccBucketLifecycleConfiguration_Basic_UpdateConfig(rName, date, "logs/"),
 				Check: resource.ComposeTestCheckFunc(
