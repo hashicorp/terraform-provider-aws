@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -88,7 +89,23 @@ func resourceRouteTableAssociationCreate(d *schema.ResourceData, meta interface{
 func resourceRouteTableAssociationRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
-	association, err := FindRouteTableAssociationByID(conn, d.Id())
+	var association *ec2.RouteTableAssociation
+
+	err := resource.Retry(PropagationTimeout, func() *resource.RetryError {
+		var err error
+		association, err = FindRouteTableAssociationByID(conn, d.Id())
+		if d.IsNewResource() && tfawserr.ErrCodeEquals(err, tfresource.ErrEmptyResult.Error()) {
+			return resource.RetryableError(err)
+		}
+		if err != nil {
+			return resource.NonRetryableError(err)
+		}
+		return nil
+	})
+
+	if tfresource.TimedOut(err) {
+		association, err = FindRouteTableAssociationByID(conn, d.Id())
+	}
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Route Table Association (%s) not found, removing from state", d.Id())
