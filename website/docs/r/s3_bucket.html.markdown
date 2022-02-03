@@ -30,7 +30,7 @@ resource "aws_s3_bucket" "b" {
 
 ### Static Website Hosting
 
-The `website` argument is read-only as of version 4.0.
+The `website` argument is read-only as of version 4.0 of the Terraform AWS Provider.
 See the [`aws_s3_bucket_website_configuration` resource](s3_bucket_website_configuration.html.markdown) for configuration details.
 
 ### Using CORS

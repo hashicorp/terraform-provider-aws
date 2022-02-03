@@ -32,6 +32,8 @@ func TestAccS3BucketWebsiteConfiguration_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "bucket", "aws_s3_bucket.test", "id"),
 					resource.TestCheckResourceAttr(resourceName, "index_document.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "index_document.0.suffix", "index.html"),
+					resource.TestCheckResourceAttrSet(resourceName, "website_domain"),
+					resource.TestCheckResourceAttrSet(resourceName, "website_endpoint"),
 				),
 			},
 			{
