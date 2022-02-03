@@ -14,20 +14,19 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func ResourceNetworkAclAssociation() *schema.Resource {
+func ResourceNetworkACLAssociation() *schema.Resource {
 	return &schema.Resource{
-		Create: ResourceNetworkAclAssociationCreate,
-		Read:   ResourceNetworkAclAssociationRead,
-		Delete: ResourceNetworkAclAssociationDelete,
+		Create: resourceNetworkACLAssociationCreate,
+		Read:   resourceNetworkACLAssociationRead,
+		Delete: resourceNetworkACLAssociationDelete,
 
 		Schema: map[string]*schema.Schema{
-			"subnet_id": {
+			"network_acl_id": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-
-			"network_acl_id": {
+			"subnet_id": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -36,7 +35,7 @@ func ResourceNetworkAclAssociation() *schema.Resource {
 	}
 }
 
-func ResourceNetworkAclAssociationCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceNetworkACLAssociationCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	naclId := d.Get("network_acl_id").(string)
@@ -62,10 +61,10 @@ func ResourceNetworkAclAssociationCreate(d *schema.ResourceData, meta interface{
 	d.SetId(aws.StringValue(associationId))
 	log.Printf("[INFO] New Association ID: %s", d.Id())
 
-	return ResourceNetworkAclAssociationRead(d, meta)
+	return resourceNetworkACLAssociationRead(d, meta)
 }
 
-func ResourceNetworkAclAssociationRead(d *schema.ResourceData, meta interface{}) error {
+func resourceNetworkACLAssociationRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	// Inspect that the association exists
@@ -93,7 +92,7 @@ func ResourceNetworkAclAssociationRead(d *schema.ResourceData, meta interface{})
 	return nil
 }
 
-func ResourceNetworkAclAssociationDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceNetworkACLAssociationDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	subnetId := d.Get("subnet_id").(string)
