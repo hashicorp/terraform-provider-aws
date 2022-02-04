@@ -34,10 +34,12 @@ Upgrade topics:
 - [Resource: aws_customer_gateway](#resource-aws_customer_gateway)
 - [Resource: aws_default_network_acl](#resource-aws_default_network_acl)
 - [Resource: aws_default_route_table](#resource-aws_default_route_table)
+- [Resource: aws_default_vpc](#resource-aws_default_vpc)
 - [Resource: aws_elasticache_cluster](#resource-aws_elasticache_cluster)
 - [Resource: aws_elasticache_global_replication_group](#resource-aws_elasticache_global_replication_group)
 - [Resource: aws_elasticache_replication_group](#resource-aws_elasticache_replication_group)
 - [Resource: aws_fsx_ontap_storage_virtual_machine](#resource-aws_fsx_ontap_storage_virtual_machine)
+- [Resource: aws_instance](#resource-aws_instance)
 - [Resource: aws_network_acl](#resource-aws_network_acl)
 - [Resource: aws_network_interface](#resource-aws_network_interface)
 - [Resource: aws_s3_bucket](#resource-aws_s3_bucket)
@@ -473,6 +475,10 @@ resource "aws_default_route_table" "example" {
 }
 ```
 
+## Resource: aws_default_vpc
+
+Previously, `ipv6_cidr_block` could be set to `""`. However, the value `""` is no longer valid. Now, set the argument to `null` (_e.g._, `ipv6_cidr_block = null`) or remove the empty-string configuration.
+
 ## Resource: aws_elasticache_cluster
 
 ### Error raised if neither `engine` nor `replication_group_id` is specified
@@ -530,6 +536,27 @@ output "elasticache_global_replication_group_version_result" {
 ## Resource: aws_fsx_ontap_storage_virtual_machine
 
 We removed the misspelled argument `active_directory_configuration.0.self_managed_active_directory_configuration.0.organizational_unit_distinguidshed_name` that was previously deprecated. Use `active_directory_configuration.0.self_managed_active_directory_configuration.0.organizational_unit_distinguished_name` now instead. Terraform will automatically migrate the state to `active_directory_configuration.0.self_managed_active_directory_configuration.0.organizational_unit_distinguished_name` during planning.
+
+## Resource: aws_instance
+
+Previously, `private_ip` could be set to `""`. However, the value `""` is no longer valid. Now, set the argument to `null` (_e.g._, `private_ip = null`) or remove the empty-string configuration.
+
+For example, this type of configuration is now not valid:
+
+```terraform
+resource "aws_instance" "test" {
+  instance_type = "t2.micro"
+  private_ip    = ""
+}
+```
+
+In this updated and valid configuration, we remove the empty-string configuration:
+
+```terraform
+resource "aws_instance" "test" {
+  instance_type = "t2.micro"
+}
+```
 
 ## Resource: aws_network_acl
 
