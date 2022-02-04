@@ -41,6 +41,7 @@ resource "aws_ami" "example" {
 The following arguments are supported:
 
 * `name` - (Required) A region-unique name for the AMI.
+* `boot_mode` - (Optional) The boot mode of the AMI. For more information, see [Boot modes](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ami-boot.html) in the Amazon Elastic Compute Cloud User Guide.
 * `description` - (Optional) A longer, human-readable description for the AMI.
 * `ena_support` - (Optional) Specifies whether enhanced networking with ENA is enabled. Defaults to `false`.
 * `root_device_name` - (Optional) The name of the root device (for example, `/dev/sda1`, or `/dev/xvda`).
@@ -87,6 +88,7 @@ Nested `ebs_block_device` blocks have the following structure:
 * `kms_key_id` - (Optional) The full ARN of the AWS Key Management Service (AWS KMS) CMK to use when encrypting the snapshots of
 an image during a copy operation. This parameter is only required if you want to use a non-default CMK;
 if this parameter is not specified, the default CMK for EBS is used
+* `outpost_arn` - (Optional) The ARN of the Outpost on which the snapshot is stored.
 
 ~> **Note:** You can specify `encrypted` or `snapshot_id` but not both.
 

@@ -8,7 +8,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
@@ -200,49 +200,49 @@ func WaitClientVPNAuthorizationRuleDeleted(conn *ec2.EC2, endpointID, targetNetw
 }
 
 const (
-	ClientVPNNetworkAssociationAssociatedTimeout = 30 * time.Minute
-
-	ClientVPNNetworkAssociationAssociatedDelay = 4 * time.Minute
-
-	ClientVPNNetworkAssociationDisassociatedTimeout = 30 * time.Minute
-
-	ClientVPNNetworkAssociationDisassociatedDelay = 4 * time.Minute
-
+	ClientVPNNetworkAssociationCreatedTimeout     = 30 * time.Minute
+	ClientVPNNetworkAssociationCreatedDelay       = 4 * time.Minute
+	ClientVPNNetworkAssociationDeletedTimeout     = 30 * time.Minute
+	ClientVPNNetworkAssociationDeletedDelay       = 4 * time.Minute
 	ClientVPNNetworkAssociationStatusPollInterval = 10 * time.Second
 )
 
-func WaitClientVPNNetworkAssociationAssociated(conn *ec2.EC2, networkAssociationID, clientVpnEndpointID string) (*ec2.TargetNetwork, error) {
+func WaitClientVPNNetworkAssociationCreated(conn *ec2.EC2, associationID, endpointID string, timeout time.Duration) (*ec2.TargetNetwork, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending:      []string{ec2.AssociationStatusCodeAssociating},
 		Target:       []string{ec2.AssociationStatusCodeAssociated},
-		Refresh:      StatusClientVPNNetworkAssociation(conn, networkAssociationID, clientVpnEndpointID),
-		Timeout:      ClientVPNNetworkAssociationAssociatedTimeout,
-		Delay:        ClientVPNNetworkAssociationAssociatedDelay,
+		Refresh:      StatusClientVPNNetworkAssociation(conn, associationID, endpointID),
+		Timeout:      timeout,
+		Delay:        ClientVPNNetworkAssociationCreatedDelay,
 		PollInterval: ClientVPNNetworkAssociationStatusPollInterval,
 	}
 
 	outputRaw, err := stateConf.WaitForState()
 
 	if output, ok := outputRaw.(*ec2.TargetNetwork); ok {
+		tfresource.SetLastError(err, errors.New(aws.StringValue(output.Status.Message)))
+
 		return output, err
 	}
 
 	return nil, err
 }
 
-func WaitClientVPNNetworkAssociationDisassociated(conn *ec2.EC2, networkAssociationID, clientVpnEndpointID string) (*ec2.TargetNetwork, error) {
+func WaitClientVPNNetworkAssociationDeleted(conn *ec2.EC2, associationID, endpointID string, timeout time.Duration) (*ec2.TargetNetwork, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending:      []string{ec2.AssociationStatusCodeDisassociating},
 		Target:       []string{},
-		Refresh:      StatusClientVPNNetworkAssociation(conn, networkAssociationID, clientVpnEndpointID),
-		Timeout:      ClientVPNNetworkAssociationDisassociatedTimeout,
-		Delay:        ClientVPNNetworkAssociationDisassociatedDelay,
+		Refresh:      StatusClientVPNNetworkAssociation(conn, associationID, endpointID),
+		Timeout:      timeout,
+		Delay:        ClientVPNNetworkAssociationDeletedDelay,
 		PollInterval: ClientVPNNetworkAssociationStatusPollInterval,
 	}
 
 	outputRaw, err := stateConf.WaitForState()
 
 	if output, ok := outputRaw.(*ec2.TargetNetwork); ok {
+		tfresource.SetLastError(err, errors.New(aws.StringValue(output.Status.Message)))
+
 		return output, err
 	}
 
@@ -250,20 +250,42 @@ func WaitClientVPNNetworkAssociationDisassociated(conn *ec2.EC2, networkAssociat
 }
 
 const (
+	ClientVPNRouteCreatedTimeout = 1 * time.Minute
 	ClientVPNRouteDeletedTimeout = 1 * time.Minute
 )
 
-func WaitClientVPNRouteDeleted(conn *ec2.EC2, routeID string) (*ec2.ClientVpnRoute, error) {
+func WaitClientVPNRouteCreated(conn *ec2.EC2, endpointID, targetSubnetID, destinationCIDR string, timeout time.Duration) (*ec2.ClientVpnRoute, error) {
 	stateConf := &resource.StateChangeConf{
-		Pending: []string{ec2.ClientVpnRouteStatusCodeActive, ec2.ClientVpnRouteStatusCodeDeleting},
-		Target:  []string{},
-		Refresh: StatusClientVPNRoute(conn, routeID),
-		Timeout: ClientVPNRouteDeletedTimeout,
+		Pending: []string{ec2.ClientVpnRouteStatusCodeCreating},
+		Target:  []string{ec2.ClientVpnRouteStatusCodeActive},
+		Refresh: StatusClientVPNRoute(conn, endpointID, targetSubnetID, destinationCIDR),
+		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForState()
 
 	if output, ok := outputRaw.(*ec2.ClientVpnRoute); ok {
+		tfresource.SetLastError(err, errors.New(aws.StringValue(output.Status.Message)))
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func WaitClientVPNRouteDeleted(conn *ec2.EC2, endpointID, targetSubnetID, destinationCIDR string, timeout time.Duration) (*ec2.ClientVpnRoute, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{ec2.ClientVpnRouteStatusCodeActive, ec2.ClientVpnRouteStatusCodeDeleting},
+		Target:  []string{},
+		Refresh: StatusClientVPNRoute(conn, endpointID, targetSubnetID, destinationCIDR),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*ec2.ClientVpnRoute); ok {
+		tfresource.SetLastError(err, errors.New(aws.StringValue(output.Status.Message)))
+
 		return output, err
 	}
 

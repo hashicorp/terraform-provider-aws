@@ -7,8 +7,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -33,6 +34,7 @@ func ResourceClientVPNAuthorizationRule() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
+				ValidateFunc: validation.StringDoesNotContainAny(","),
 				ExactlyOneOf: []string{"access_group_id", "authorize_all_groups"},
 			},
 			"authorize_all_groups": {
@@ -113,7 +115,7 @@ func resourceClientVPNAuthorizationRuleRead(d *schema.ResourceData, meta interfa
 		return err
 	}
 
-	rule, err := FindClientVPNAuthorizationRuleByEndpointIDTargetNetworkCIDRAndGroupID(conn, endpointID, targetNetworkCIDR, accessGroupID)
+	rule, err := FindClientVPNAuthorizationRuleByThreePartKey(conn, endpointID, targetNetworkCIDR, accessGroupID)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] EC2 Client VPN Authorization Rule (%s) not found, removing from state", d.Id())

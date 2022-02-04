@@ -27,6 +27,8 @@ func DataSourceSubnetIDs() *schema.Resource {
 				Required: true,
 			},
 		},
+		DeprecationMessage: `The aws_subnet_ids data source has been deprecated and will be removed in a future version. ` +
+			`Use the aws_subnets data source instead.`,
 	}
 }
 

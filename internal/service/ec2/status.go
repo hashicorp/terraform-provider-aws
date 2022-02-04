@@ -7,7 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -111,7 +111,7 @@ func StatusClientVPNEndpointClientConnectResponseOptionsState(conn *ec2.EC2, id 
 
 func StatusClientVPNAuthorizationRule(conn *ec2.EC2, endpointID, targetNetworkCIDR, accessGroupID string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindClientVPNAuthorizationRuleByEndpointIDTargetNetworkCIDRAndGroupID(conn, endpointID, targetNetworkCIDR, accessGroupID)
+		output, err := FindClientVPNAuthorizationRuleByThreePartKey(conn, endpointID, targetNetworkCIDR, accessGroupID)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -125,70 +125,35 @@ func StatusClientVPNAuthorizationRule(conn *ec2.EC2, endpointID, targetNetworkCI
 	}
 }
 
-const (
-	ClientVPNNetworkAssociationStatusNotFound = "NotFound"
-
-	ClientVPNNetworkAssociationStatusUnknown = "Unknown"
-)
-
-func StatusClientVPNNetworkAssociation(conn *ec2.EC2, cvnaID string, cvepID string) resource.StateRefreshFunc {
+func StatusClientVPNNetworkAssociation(conn *ec2.EC2, associationID, endpointID string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		result, err := conn.DescribeClientVpnTargetNetworks(&ec2.DescribeClientVpnTargetNetworksInput{
-			ClientVpnEndpointId: aws.String(cvepID),
-			AssociationIds:      []*string{aws.String(cvnaID)},
-		})
+		output, err := FindClientVPNNetworkAssociationByIDs(conn, associationID, endpointID)
 
-		if tfawserr.ErrCodeEquals(err, ErrCodeInvalidClientVpnAssociationIdNotFound) || tfawserr.ErrCodeEquals(err, ErrCodeInvalidClientVpnEndpointIdNotFound) {
-			return nil, ClientVPNNetworkAssociationStatusNotFound, nil
+		if tfresource.NotFound(err) {
+			return nil, "", nil
 		}
+
 		if err != nil {
-			return nil, ClientVPNNetworkAssociationStatusUnknown, err
+			return nil, "", err
 		}
 
-		if result == nil || len(result.ClientVpnTargetNetworks) == 0 || result.ClientVpnTargetNetworks[0] == nil {
-			return nil, ClientVPNNetworkAssociationStatusNotFound, nil
-		}
-
-		network := result.ClientVpnTargetNetworks[0]
-		if network.Status == nil || network.Status.Code == nil {
-			return network, ClientVPNNetworkAssociationStatusUnknown, nil
-		}
-
-		return network, aws.StringValue(network.Status.Code), nil
+		return output, aws.StringValue(output.Status.Code), nil
 	}
 }
 
-const (
-	ClientVPNRouteStatusNotFound = "NotFound"
-
-	ClientVPNRouteStatusUnknown = "Unknown"
-)
-
-// StatusClientVPNRoute fetches the Client VPN route and its Status
-func StatusClientVPNRoute(conn *ec2.EC2, routeID string) resource.StateRefreshFunc {
+func StatusClientVPNRoute(conn *ec2.EC2, endpointID, targetSubnetID, destinationCIDR string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		result, err := FindClientVPNRouteByID(conn, routeID)
-		if tfawserr.ErrCodeEquals(err, ErrCodeInvalidClientVpnRouteNotFound) {
-			return nil, ClientVPNRouteStatusNotFound, nil
+		output, err := FindClientVPNRouteByThreePartKey(conn, endpointID, targetSubnetID, destinationCIDR)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
 		}
+
 		if err != nil {
-			return nil, ClientVPNRouteStatusUnknown, err
+			return nil, "", err
 		}
 
-		if result == nil || len(result.Routes) == 0 || result.Routes[0] == nil {
-			return nil, ClientVPNRouteStatusNotFound, nil
-		}
-
-		if len(result.Routes) > 1 {
-			return nil, ClientVPNRouteStatusUnknown, fmt.Errorf("internal error: found %d results for Client VPN route (%s) status, need 1", len(result.Routes), routeID)
-		}
-
-		rule := result.Routes[0]
-		if rule.Status == nil || rule.Status.Code == nil {
-			return rule, ClientVPNRouteStatusUnknown, nil
-		}
-
-		return rule, aws.StringValue(rule.Status.Code), nil
+		return output, aws.StringValue(output.Status.Code), nil
 	}
 }
 

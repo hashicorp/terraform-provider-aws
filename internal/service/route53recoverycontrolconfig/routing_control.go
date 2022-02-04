@@ -6,7 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	r53rcc "github.com/aws/aws-sdk-go/service/route53recoverycontrolconfig"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -133,11 +133,10 @@ func resourceRoutingControlUpdate(d *schema.ResourceData, meta interface{}) erro
 func resourceRoutingControlDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).Route53RecoveryControlConfigConn
 
-	input := &r53rcc.DeleteRoutingControlInput{
+	log.Printf("[INFO] Deleting Route53 Recovery Control Config Routing Control: %s", d.Id())
+	_, err := conn.DeleteRoutingControl(&r53rcc.DeleteRoutingControlInput{
 		RoutingControlArn: aws.String(d.Id()),
-	}
-
-	_, err := conn.DeleteRoutingControl(input)
+	})
 
 	if tfawserr.ErrCodeEquals(err, r53rcc.ErrCodeResourceNotFoundException) {
 		return nil
