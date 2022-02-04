@@ -75,46 +75,38 @@ func ResourceBucket() *schema.Resource {
 			},
 
 			"acl": {
-				Type:          schema.TypeString,
-				Default:       "private",
-				Optional:      true,
-				ConflictsWith: []string{"grant"},
-				ValidateFunc:  validation.StringInSlice(BucketCannedACL_Values(), false),
+				Type:       schema.TypeString,
+				Computed:   true,
+				Deprecated: "Use the aws_s3_bucket_acl resource instead",
 			},
 
 			"grant": {
-				Type:          schema.TypeSet,
-				Optional:      true,
-				Set:           grantHash,
-				ConflictsWith: []string{"acl"},
+				Type:       schema.TypeSet,
+				Computed:   true,
+				Deprecated: "Use the aws_s3_bucket_acl resource instead",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"id": {
-							Type:     schema.TypeString,
-							Optional: true,
+							Type:       schema.TypeString,
+							Computed:   true,
+							Deprecated: "Use the aws_s3_bucket_acl resource instead",
 						},
 						"type": {
-							Type:     schema.TypeString,
-							Required: true,
-							// TypeAmazonCustomerByEmail is not currently supported
-							ValidateFunc: validation.StringInSlice([]string{
-								s3.TypeCanonicalUser,
-								s3.TypeGroup,
-							}, false),
+							Type:       schema.TypeString,
+							Computed:   true,
+							Deprecated: "Use the aws_s3_bucket_acl resource instead",
 						},
 						"uri": {
-							Type:     schema.TypeString,
-							Optional: true,
+							Type:       schema.TypeString,
+							Computed:   true,
+							Deprecated: "Use the aws_s3_bucket_acl resource instead",
 						},
 
 						"permissions": {
-							Type:     schema.TypeSet,
-							Required: true,
-							Set:      schema.HashString,
-							Elem: &schema.Schema{
-								Type:         schema.TypeString,
-								ValidateFunc: validation.StringInSlice(s3.Permission_Values(), false),
-							},
+							Type:       schema.TypeSet,
+							Computed:   true,
+							Deprecated: "Use the aws_s3_bucket_acl resource instead",
+							Elem:       &schema.Schema{Type: schema.TypeString},
 						},
 					},
 				},
@@ -168,31 +160,31 @@ func ResourceBucket() *schema.Resource {
 			"website": {
 				Type:       schema.TypeList,
 				Computed:   true,
-				Deprecated: "Use the aws_s3_bucket_website_configuration resource instead when available in a future minor version",
+				Deprecated: "Use the aws_s3_bucket_website_configuration resource",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"index_document": {
 							Type:       schema.TypeString,
 							Computed:   true,
-							Deprecated: "Use the aws_s3_bucket_website_configuration resource instead when available in a future minor version",
+							Deprecated: "Use the aws_s3_bucket_website_configuration resource",
 						},
 
 						"error_document": {
 							Type:       schema.TypeString,
 							Computed:   true,
-							Deprecated: "Use the aws_s3_bucket_website_configuration resource instead when available in a future minor version",
+							Deprecated: "Use the aws_s3_bucket_website_configuration resource",
 						},
 
 						"redirect_all_requests_to": {
 							Type:       schema.TypeString,
 							Computed:   true,
-							Deprecated: "Use the aws_s3_bucket_website_configuration resource instead when available in a future minor version",
+							Deprecated: "Use the aws_s3_bucket_website_configuration resource",
 						},
 
 						"routing_rules": {
 							Type:       schema.TypeString,
 							Computed:   true,
-							Deprecated: "Use the aws_s3_bucket_website_configuration resource instead when available in a future minor version",
+							Deprecated: "Use the aws_s3_bucket_website_configuration resource",
 						},
 					},
 				},
@@ -211,12 +203,12 @@ func ResourceBucket() *schema.Resource {
 			"website_endpoint": {
 				Type:       schema.TypeString,
 				Computed:   true,
-				Deprecated: "Use the aws_s3_bucket_website_configuration resource instead when available in a future minor version",
+				Deprecated: "Use the aws_s3_bucket_website_configuration resource",
 			},
 			"website_domain": {
 				Type:       schema.TypeString,
 				Computed:   true,
-				Deprecated: "Use the aws_s3_bucket_website_configuration resource instead when available in a future minor version",
+				Deprecated: "Use the aws_s3_bucket_website_configuration resource",
 			},
 
 			"versioning": {
@@ -681,12 +673,6 @@ func resourceBucketCreate(d *schema.ResourceData, meta interface{}) error {
 		Bucket: aws.String(bucket),
 	}
 
-	if acl, ok := d.GetOk("acl"); ok {
-		acl := acl.(string)
-		req.ACL = aws.String(acl)
-		log.Printf("[DEBUG] S3 bucket %s has canned ACL %s", bucket, acl)
-	}
-
 	awsRegion := meta.(*conns.AWSClient).Region
 	log.Printf("[DEBUG] S3 bucket create: %s, using region: %s", bucket, awsRegion)
 
@@ -747,18 +733,6 @@ func resourceBucketUpdate(d *schema.ResourceData, meta interface{}) error {
 		})
 		if err != nil {
 			return fmt.Errorf("error updating S3 Bucket (%s) tags: %s", d.Id(), err)
-		}
-	}
-
-	if d.HasChange("acl") && !d.IsNewResource() {
-		if err := resourceBucketACLUpdate(conn, d); err != nil {
-			return err
-		}
-	}
-
-	if d.HasChange("grant") {
-		if err := resourceBucketGrantsUpdate(conn, d); err != nil {
-			return err
 		}
 	}
 
@@ -842,24 +816,34 @@ func resourceBucketRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("policy", nil)
 	}
 
-	//Read the Grant ACL. Reset if `acl` (canned ACL) is set.
-	if acl, ok := d.GetOk("acl"); ok && acl.(string) != "private" {
+	// Read the Grant ACL if configured outside this resource;
+	// In the event grants are not configured on the bucket, the API returns an empty array
+
+	// Reset `grant` if `acl` (canned ACL) is set.
+	if acl, ok := d.GetOk("acl"); ok && acl.(string) != s3.BucketCannedACLPrivate {
 		if err := d.Set("grant", nil); err != nil {
-			return fmt.Errorf("error resetting grant %s", err)
+			return fmt.Errorf("error resetting grant %w", err)
 		}
 	} else {
-		apResponse, err := verify.RetryOnAWSCode("NoSuchBucket", func() (interface{}, error) {
+		// Set the ACL to its default i.e. "private" (to mimic pre-v4.0 schema)
+		d.Set("acl", s3.BucketCannedACLPrivate)
+
+		apResponse, err := verify.RetryOnAWSCode(s3.ErrCodeNoSuchBucket, func() (interface{}, error) {
 			return conn.GetBucketAcl(&s3.GetBucketAclInput{
 				Bucket: aws.String(d.Id()),
 			})
 		})
+
 		if err != nil {
-			return fmt.Errorf("error getting S3 Bucket (%s) ACL: %s", d.Id(), err)
+			return fmt.Errorf("error getting S3 Bucket (%s) ACL: %w", d.Id(), err)
 		}
-		log.Printf("[DEBUG] S3 bucket: %s, read ACL grants policy: %+v", d.Id(), apResponse)
-		grants := flattenGrants(apResponse.(*s3.GetBucketAclOutput))
-		if err := d.Set("grant", schema.NewSet(grantHash, grants)); err != nil {
-			return fmt.Errorf("error setting grant %s", err)
+
+		if aclOutput, ok := apResponse.(*s3.GetBucketAclOutput); ok {
+			if err := d.Set("grant", flattenGrants(aclOutput)); err != nil {
+				return fmt.Errorf("error setting grant %s", err)
+			}
+		} else {
+			d.Set("grant", nil)
 		}
 	}
 
@@ -1195,74 +1179,6 @@ func resourceBucketDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func resourceBucketGrantsUpdate(conn *s3.S3, d *schema.ResourceData) error {
-	bucket := d.Get("bucket").(string)
-	rawGrants := d.Get("grant").(*schema.Set).List()
-
-	if len(rawGrants) == 0 {
-		log.Printf("[DEBUG] S3 bucket: %s, Grants fallback to canned ACL", bucket)
-		if err := resourceBucketACLUpdate(conn, d); err != nil {
-			return fmt.Errorf("Error fallback to canned ACL, %s", err)
-		}
-	} else {
-		apResponse, err := verify.RetryOnAWSCode("NoSuchBucket", func() (interface{}, error) {
-			return conn.GetBucketAcl(&s3.GetBucketAclInput{
-				Bucket: aws.String(d.Id()),
-			})
-		})
-
-		if err != nil {
-			return fmt.Errorf("error getting S3 Bucket (%s) ACL: %s", d.Id(), err)
-		}
-
-		ap := apResponse.(*s3.GetBucketAclOutput)
-		log.Printf("[DEBUG] S3 bucket: %s, read ACL grants policy: %+v", d.Id(), ap)
-
-		grants := make([]*s3.Grant, 0, len(rawGrants))
-		for _, rawGrant := range rawGrants {
-			log.Printf("[DEBUG] S3 bucket: %s, put grant: %#v", bucket, rawGrant)
-			grantMap := rawGrant.(map[string]interface{})
-			for _, rawPermission := range grantMap["permissions"].(*schema.Set).List() {
-				ge := &s3.Grantee{}
-				if i, ok := grantMap["id"].(string); ok && i != "" {
-					ge.SetID(i)
-				}
-				if t, ok := grantMap["type"].(string); ok && t != "" {
-					ge.SetType(t)
-				}
-				if u, ok := grantMap["uri"].(string); ok && u != "" {
-					ge.SetURI(u)
-				}
-
-				g := &s3.Grant{
-					Grantee:    ge,
-					Permission: aws.String(rawPermission.(string)),
-				}
-				grants = append(grants, g)
-			}
-		}
-
-		grantsInput := &s3.PutBucketAclInput{
-			Bucket: aws.String(bucket),
-			AccessControlPolicy: &s3.AccessControlPolicy{
-				Grants: grants,
-				Owner:  ap.Owner,
-			},
-		}
-
-		log.Printf("[DEBUG] S3 bucket: %s, put Grants: %#v", bucket, grantsInput)
-
-		_, err = verify.RetryOnAWSCode("NoSuchBucket", func() (interface{}, error) {
-			return conn.PutBucketAcl(grantsInput)
-		})
-
-		if err != nil {
-			return fmt.Errorf("Error putting S3 Grants: %s", err)
-		}
-	}
-	return nil
-}
-
 func websiteEndpoint(client *conns.AWSClient, d *schema.ResourceData) (*S3Website, error) {
 	// If the bucket doesn't have a website configuration, return an empty
 	// endpoint
@@ -1342,26 +1258,6 @@ func isOldRegion(region string) bool {
 		}
 	}
 	return false
-}
-
-func resourceBucketACLUpdate(conn *s3.S3, d *schema.ResourceData) error {
-	acl := d.Get("acl").(string)
-	bucket := d.Get("bucket").(string)
-
-	i := &s3.PutBucketAclInput{
-		Bucket: aws.String(bucket),
-		ACL:    aws.String(acl),
-	}
-	log.Printf("[DEBUG] S3 put bucket ACL: %#v", i)
-
-	_, err := verify.RetryOnAWSCode(s3.ErrCodeNoSuchBucket, func() (interface{}, error) {
-		return conn.PutBucketAcl(i)
-	})
-	if err != nil {
-		return fmt.Errorf("Error putting S3 ACL: %s", err)
-	}
-
-	return nil
 }
 
 func resourceBucketInternalObjectLockConfigurationUpdate(conn *s3.S3, d *schema.ResourceData) error {
@@ -2212,6 +2108,9 @@ func flattenS3ObjectLockConfiguration(conf *s3.ObjectLockConfiguration) []interf
 }
 
 func flattenGrants(ap *s3.GetBucketAclOutput) []interface{} {
+	if len(ap.Grants) == 0 {
+		return []interface{}{}
+	}
 	//if ACL grants contains bucket owner FULL_CONTROL only - it is default "private" acl
 	if len(ap.Grants) == 1 && aws.StringValue(ap.Grants[0].Grantee.ID) == aws.StringValue(ap.Owner.ID) &&
 		aws.StringValue(ap.Grants[0].Permission) == s3.PermissionFullControl {

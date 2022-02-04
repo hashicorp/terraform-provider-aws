@@ -70,7 +70,7 @@ func TestAccS3Bucket_Basic_basic(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy", "acl"},
+				ImportStateVerifyIgnore: []string{"force_destroy"},
 			},
 		},
 	})
@@ -98,13 +98,16 @@ func TestAccS3Bucket_Basic_emptyString(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy", "acl"},
+				ImportStateVerifyIgnore: []string{"force_destroy"},
 			},
 		},
 	})
 }
 
 func TestAccS3Bucket_Tags_withNoSystemTags(t *testing.T) {
+	// TODO: remove skip once aws_s3_bucket_acl resource is available in the provider
+	t.Skipf("skipping acceptance testing: aws_s3_bucket 'acl' and 'grant' are read-only, migrate configuration to aws_s3_bucket_acl")
+
 	resourceName := "aws_s3_bucket.bucket"
 	bucketName := sdkacctest.RandomWithPrefix("tf-test-bucket")
 
@@ -164,6 +167,9 @@ func TestAccS3Bucket_Tags_withNoSystemTags(t *testing.T) {
 }
 
 func TestAccS3Bucket_Tags_withSystemTags(t *testing.T) {
+	// TODO: remove skip once aws_s3_bucket_acl resource is available in the provider
+	t.Skipf("skipping acceptance testing: aws_s3_bucket 'acl' and 'grant' are read-only, migrate configuration to aws_s3_bucket_acl")
+
 	resourceName := "aws_s3_bucket.bucket"
 	bucketName := sdkacctest.RandomWithPrefix("tf-test-bucket")
 
@@ -249,6 +255,9 @@ func TestAccS3Bucket_Tags_withSystemTags(t *testing.T) {
 }
 
 func TestAccS3Bucket_Tags_ignoreTags(t *testing.T) {
+	// TODO: remove skip once aws_s3_bucket_acl resource is available in the provider
+	t.Skipf("skipping acceptance testing: aws_s3_bucket 'acl' and 'grant' are read-only, migrate configuration to aws_s3_bucket_acl")
+
 	resourceName := "aws_s3_bucket.bucket"
 	bucketName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -294,6 +303,9 @@ func TestAccS3Bucket_Tags_ignoreTags(t *testing.T) {
 }
 
 func TestAccS3Bucket_Tags_basic(t *testing.T) {
+	// TODO: remove skip once aws_s3_bucket_acl resource is available in the provider
+	t.Skipf("skipping acceptance testing: aws_s3_bucket 'acl' and 'grant' are read-only, migrate configuration to aws_s3_bucket_acl")
+
 	rInt := sdkacctest.RandInt()
 	resourceName := "aws_s3_bucket.bucket1"
 
@@ -336,7 +348,7 @@ func TestAccS3Bucket_Basic_namePrefix(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy", "acl", "bucket_prefix"},
+				ImportStateVerifyIgnore: []string{"force_destroy", "bucket_prefix"},
 			},
 		},
 	})
@@ -361,7 +373,7 @@ func TestAccS3Bucket_Basic_generatedName(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy", "acl", "bucket_prefix"},
+				ImportStateVerifyIgnore: []string{"force_destroy", "bucket_prefix"},
 			},
 		},
 	})
@@ -371,6 +383,9 @@ func TestAccS3Bucket_Basic_generatedName(t *testing.T) {
 // not empty" error in Terraform, to check against regressions.
 // See https://github.com/hashicorp/terraform/pull/2925
 func TestAccS3Bucket_Basic_shouldFailNotFound(t *testing.T) {
+	// TODO: remove skip once aws_s3_bucket_acl resource is available in the provider
+	t.Skipf("skipping acceptance testing: aws_s3_bucket 'acl' and 'grant' are read-only, migrate configuration to aws_s3_bucket_acl")
+
 	bucketName := sdkacctest.RandomWithPrefix("tf-test-bucket")
 	resourceName := "aws_s3_bucket.bucket"
 
@@ -415,7 +430,7 @@ func TestAccS3Bucket_Manage_objectLock(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy", "acl"},
+				ImportStateVerifyIgnore: []string{"force_destroy"},
 			},
 		},
 	})
@@ -450,6 +465,9 @@ func TestAccS3Bucket_Manage_objectLockWithVersioning(t *testing.T) {
 }
 
 func TestAccS3Bucket_Basic_forceDestroy(t *testing.T) {
+	// TODO: remove skip once aws_s3_bucket_acl resource is available in the provider
+	t.Skipf("skipping acceptance testing: aws_s3_bucket 'acl' and 'grant' are read-only, migrate configuration to aws_s3_bucket_acl")
+
 	resourceName := "aws_s3_bucket.bucket"
 	bucketName := sdkacctest.RandomWithPrefix("tf-test-bucket")
 
@@ -476,6 +494,9 @@ func TestAccS3Bucket_Basic_forceDestroy(t *testing.T) {
 // to not contain these extra slashes, out-of-band handling and other AWS
 // services may create keys with extra slashes (empty "directory" prefixes).
 func TestAccS3Bucket_Basic_forceDestroyWithEmptyPrefixes(t *testing.T) {
+	// TODO: remove skip once aws_s3_bucket_acl resource is available in the provider
+	t.Skipf("skipping acceptance testing: aws_s3_bucket 'acl' and 'grant' are read-only, migrate configuration to aws_s3_bucket_acl")
+
 	resourceName := "aws_s3_bucket.bucket"
 	bucketName := sdkacctest.RandomWithPrefix("tf-test-bucket")
 
@@ -497,6 +518,9 @@ func TestAccS3Bucket_Basic_forceDestroyWithEmptyPrefixes(t *testing.T) {
 }
 
 func TestAccS3Bucket_Basic_forceDestroyWithObjectLockEnabled(t *testing.T) {
+	// TODO: remove skip once aws_s3_bucket_acl resource is available in the provider
+	t.Skipf("skipping acceptance testing: aws_s3_bucket 'acl' and 'grant' are read-only, migrate configuration to aws_s3_bucket_acl")
+
 	resourceName := "aws_s3_bucket.bucket"
 	bucketName := sdkacctest.RandomWithPrefix("tf-test-bucket")
 
