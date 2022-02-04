@@ -31,6 +31,7 @@ Upgrade topics:
     - [Resource: aws_default_route_table](#resource-aws_default_route_table)
     - [Resource: aws_default_vpc (Empty String)](#resource-aws_default_vpc-empty-string)
     - [Resource: aws_efs_mount_target](#resource-aws_efs_mount_target)
+    - [Resource: aws_elasticsearch_domain](#resource-aws_elasticsearch_domain)
     - [Resource: aws_instance](#resource-aws_instance)
     - [Resource: aws_network_acl](#resource-aws_network_acl)
     - [Resource: aws_route](#resource-aws_route)
@@ -352,7 +353,7 @@ resource "aws_elasticsearch_domain" "example" {
   # ...
   ebs_options {
     ebs_enabled = true
-    volume_size = 10
+    volume_size = var.volume_size
     volume_type = var.volume_size > 0 ? local.volume_type : ""
   }
 }
@@ -365,7 +366,7 @@ resource "aws_elasticsearch_domain" "test" {
   # ...
   ebs_options {
     ebs_enabled = true
-    volume_size = 10
+    volume_size = var.volume_size
     volume_type = var.volume_size > 0 ? local.volume_type : null
   }
 }
