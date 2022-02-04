@@ -92,6 +92,10 @@ func TestAccElasticsearchDomain_requireHTTPS(t *testing.T) {
 }
 
 func TestAccElasticsearchDomain_customEndpoint(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var domain elasticsearch.ElasticsearchDomainStatus
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_elasticsearch_domain.test"
@@ -481,6 +485,10 @@ func TestAccElasticsearchDomain_VPC_update(t *testing.T) {
 }
 
 func TestAccElasticsearchDomain_internetToVPCEndpoint(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var domain elasticsearch.ElasticsearchDomainStatus
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_elasticsearch_domain.test"
@@ -1103,6 +1111,10 @@ func TestAccElasticsearchDomain_tags(t *testing.T) {
 }
 
 func TestAccElasticsearchDomain_update(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var input elasticsearch.ElasticsearchDomainStatus
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_elasticsearch_domain.test"
@@ -1139,6 +1151,10 @@ func TestAccElasticsearchDomain_update(t *testing.T) {
 }
 
 func TestAccElasticsearchDomain_UpdateVolume_type(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var input elasticsearch.ElasticsearchDomainStatus
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_elasticsearch_domain.test"
