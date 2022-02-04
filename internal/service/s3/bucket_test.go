@@ -131,7 +131,7 @@ func TestAccS3Bucket_Tags_withNoSystemTags(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy", "acl"},
+				ImportStateVerifyIgnore: []string{"force_destroy"},
 			},
 			{
 				Config: testAccBucketConfig_withUpdatedTags(bucketName),
@@ -217,7 +217,7 @@ func TestAccS3Bucket_Tags_withSystemTags(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy", "acl"},
+				ImportStateVerifyIgnore: []string{"force_destroy"},
 			},
 			{
 				Config: testAccBucketConfig_withTags(bucketName),
@@ -322,7 +322,7 @@ func TestAccS3Bucket_Tags_basic(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy", "acl"},
+				ImportStateVerifyIgnore: []string{"force_destroy"},
 			},
 		},
 	})
