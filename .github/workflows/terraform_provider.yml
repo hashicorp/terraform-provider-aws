@@ -237,6 +237,9 @@ jobs:
           if [[ "${pkg}" == */test-fixtures ]]; then
             continue
           fi
+          if [[ "${pkg}" == internal/generate/* ]]; then
+            continue
+          fi          
           while read file; do
             if [ "${file}" = "" ]; then
               continue
