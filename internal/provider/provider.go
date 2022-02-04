@@ -1046,6 +1046,7 @@ func Provider() *schema.Provider {
 			"aws_cur_report_definition": cur.ResourceReportDefinition(),
 
 			"aws_dataexchange_data_set": dataexchange.ResourceDataSet(),
+			"aws_dataexchange_revision": dataexchange.ResourceRevision(),
 
 			"aws_datapipeline_pipeline":            datapipeline.ResourcePipeline(),
 			"aws_datapipeline_pipeline_definition": datapipeline.ResourcePipelineDefinition(),
