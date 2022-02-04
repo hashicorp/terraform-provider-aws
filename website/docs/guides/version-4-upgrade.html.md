@@ -320,7 +320,7 @@ resource "aws_instance" "test" {
 
 ### Resource: aws_efs_mount_target
 
-Previously, `ip_address` could be set to `""`. However, the value `""` is no longer valid. Now, set the argument to `null` (_e.g._, `private_ip = null`) or remove the empty-string configuration.
+Previously, `ip_address` could be set to `""`. However, the value `""` is no longer valid. Now, set the argument to `null` (_e.g._, `ip_address = null`) or remove the empty-string configuration.
 
 For example, this type of configuration is now not valid:
 
@@ -338,6 +338,36 @@ In this updated and valid configuration, we remove the empty-string configuratio
 resource "aws_efs_mount_target" "test" {
   file_system_id = aws_efs_file_system.test.id
   subnet_id      = aws_subnet.test.id
+}
+```
+
+### Resource: aws_elasticsearch_domain
+
+Previously, `ebs_options.0.volume_type` could be set to `""`. However, the value `""` is no longer valid. Now, set the argument to `null` (_e.g._, `volume_type = null`) or remove the empty-string configuration.
+
+For example, this type of configuration is now not valid:
+
+```terraform
+resource "aws_elasticsearch_domain" "example" {
+  # ...
+  ebs_options {
+    ebs_enabled = true
+    volume_size = 10
+    volume_type = var.volume_size > 0 ? local.volume_type : ""
+  }
+}
+```
+
+In this updated and valid configuration, we use `null` instead of `""`:
+
+```terraform
+resource "aws_elasticsearch_domain" "test" {
+  # ...
+  ebs_options {
+    ebs_enabled = true
+    volume_size = 10
+    volume_type = var.volume_size > 0 ? local.volume_type : null
+  }
 }
 ```
 

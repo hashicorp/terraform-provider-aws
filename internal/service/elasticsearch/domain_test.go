@@ -1110,7 +1110,7 @@ func TestAccElasticsearchDomain_WithVolumeType_missing(t *testing.T) {
 		CheckDestroy: testAccCheckDomainDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDomainConfigWithDisabledEBSAndVolumeType(rName, ""),
+				Config: testAccDomainConfigWithDisabledEBSNullVolumeType(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(resourceName, &domain),
 					resource.TestCheckResourceAttr(resourceName, "cluster_config.#", "1"),
@@ -1493,7 +1493,7 @@ resource "aws_elasticsearch_domain" "test" {
 `, rName, autoTuneStartAtTime)
 }
 
-func testAccDomainConfigWithDisabledEBSAndVolumeType(rName, volumeType string) string {
+func testAccDomainConfigWithDisabledEBSNullVolumeType(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_elasticsearch_domain" "test" {
   domain_name           = substr(%[1]q, 0, 28)
@@ -1507,10 +1507,10 @@ resource "aws_elasticsearch_domain" "test" {
   ebs_options {
     ebs_enabled = false
     volume_size = 0
-    volume_type = %[2]q
+    volume_type = null
   }
 }
-`, rName, volumeType)
+`, rName)
 }
 
 func testAccDomainConfig_DomainEndpointOptions(rName string, enforceHttps bool, tlsSecurityPolicy string) string {
