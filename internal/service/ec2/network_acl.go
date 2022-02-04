@@ -24,6 +24,62 @@ import (
 )
 
 func ResourceNetworkACL() *schema.Resource {
+	networkACLRuleSetSchema := &schema.Schema{
+		Type:       schema.TypeSet,
+		Optional:   true,
+		Computed:   true,
+		ConfigMode: schema.SchemaConfigModeAttr,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"action": {
+					Type:     schema.TypeString,
+					Required: true,
+					DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+						return strings.EqualFold(old, new)
+					},
+					ValidateFunc: validation.StringInSlice(ec2.RuleAction_Values(), true),
+				},
+				"cidr_block": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: verify.ValidIPv4CIDRNetworkAddress,
+				},
+				"from_port": {
+					Type:         schema.TypeInt,
+					Required:     true,
+					ValidateFunc: validation.IsPortNumberOrZero,
+				},
+				"icmp_code": {
+					Type:     schema.TypeInt,
+					Optional: true,
+				},
+				"icmp_type": {
+					Type:     schema.TypeInt,
+					Optional: true,
+				},
+				"ipv6_cidr_block": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: verify.ValidIPv6CIDRNetworkAddress,
+				},
+				"protocol": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				"rule_no": {
+					Type:         schema.TypeInt,
+					Required:     true,
+					ValidateFunc: validation.IntBetween(1, 32766),
+				},
+				"to_port": {
+					Type:         schema.TypeInt,
+					Required:     true,
+					ValidateFunc: validation.IsPortNumberOrZero,
+				},
+			},
+		},
+		Set: resourceNetworkACLEntryHash,
+	}
 
 	return &schema.Resource{
 		Create: resourceNetworkACLCreate,
@@ -39,10 +95,11 @@ func ResourceNetworkACL() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"vpc_id": {
+			"egress":  networkACLRuleSetSchema,
+			"ingress": networkACLRuleSetSchema,
+			"owner_id": {
 				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Computed: true,
 			},
 			"subnet_ids": {
 				Type:     schema.TypeSet,
@@ -50,130 +107,13 @@ func ResourceNetworkACL() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"ingress": {
-				Type:       schema.TypeSet,
-				Optional:   true,
-				Computed:   true,
-				ConfigMode: schema.SchemaConfigModeAttr,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"from_port": {
-							Type:         schema.TypeInt,
-							Required:     true,
-							ValidateFunc: validation.IsPortNumberOrZero,
-						},
-						"to_port": {
-							Type:         schema.TypeInt,
-							Required:     true,
-							ValidateFunc: validation.IsPortNumberOrZero,
-						},
-						"rule_no": {
-							Type:         schema.TypeInt,
-							Required:     true,
-							ValidateFunc: validation.IntBetween(1, 32766),
-						},
-						"action": {
-							Type:     schema.TypeString,
-							Required: true,
-							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-								return strings.EqualFold(old, new)
-							},
-							ValidateFunc: validation.StringInSlice([]string{
-								ec2.RuleActionAllow,
-								ec2.RuleActionDeny,
-							}, true),
-						},
-						"protocol": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"cidr_block": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: validation.IsCIDR,
-						},
-						"ipv6_cidr_block": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: validation.IsCIDR,
-						},
-						"icmp_type": {
-							Type:     schema.TypeInt,
-							Optional: true,
-						},
-						"icmp_code": {
-							Type:     schema.TypeInt,
-							Optional: true,
-						},
-					},
-				},
-				Set: resourceNetworkACLEntryHash,
-			},
-			"egress": {
-				Type:       schema.TypeSet,
-				Optional:   true,
-				Computed:   true,
-				ConfigMode: schema.SchemaConfigModeAttr,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"from_port": {
-							Type:         schema.TypeInt,
-							Required:     true,
-							ValidateFunc: validation.IsPortNumberOrZero,
-						},
-						"to_port": {
-							Type:         schema.TypeInt,
-							Required:     true,
-							ValidateFunc: validation.IsPortNumberOrZero,
-						},
-						"rule_no": {
-							Type:         schema.TypeInt,
-							Required:     true,
-							ValidateFunc: validation.IntBetween(1, 32766),
-						},
-						"action": {
-							Type:     schema.TypeString,
-							Required: true,
-							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-								return strings.EqualFold(old, new)
-							},
-							ValidateFunc: validation.StringInSlice([]string{
-								ec2.RuleActionAllow,
-								ec2.RuleActionDeny,
-							}, true),
-						},
-						"protocol": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"cidr_block": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: validation.IsCIDR,
-						},
-						"ipv6_cidr_block": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: validation.IsCIDR,
-						},
-						"icmp_type": {
-							Type:     schema.TypeInt,
-							Optional: true,
-						},
-						"icmp_code": {
-							Type:     schema.TypeInt,
-							Optional: true,
-						},
-					},
-				},
-				Set: resourceNetworkACLEntryHash,
+			"vpc_id": {
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
 			},
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
-			"owner_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
