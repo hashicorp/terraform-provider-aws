@@ -138,48 +138,21 @@ func resourceNetworkACLCreate(d *schema.ResourceData, meta interface{}) error {
 	d.SetId(aws.StringValue(output.NetworkAcl.NetworkAclId))
 
 	if v, ok := d.GetOk("egress"); ok && v.(*schema.Set).Len() > 0 {
-		err := updateNetworkAclEntries(d, "egress", conn)
-
-		if err != nil {
-			return fmt.Errorf("error updating EC2 Network ACL (%s) Egress Entries: %w", d.Id(), err)
+		if err := createNetworkACLEntries(conn, d.Id(), v.(*schema.Set).List(), true); err != nil {
+			return err
 		}
 	}
 
 	if v, ok := d.GetOk("ingress"); ok && v.(*schema.Set).Len() > 0 {
-		err := updateNetworkAclEntries(d, "ingress", conn)
-
-		if err != nil {
-			return fmt.Errorf("error updating EC2 Network ACL (%s) Ingress Entries: %w", d.Id(), err)
+		if err := createNetworkACLEntries(conn, d.Id(), v.(*schema.Set).List(), false); err != nil {
+			return err
 		}
 	}
 
 	if v, ok := d.GetOk("subnet_ids"); ok && v.(*schema.Set).Len() > 0 {
-		for _, subnetIDRaw := range v.(*schema.Set).List() {
-			subnetID, ok := subnetIDRaw.(string)
-
-			if !ok {
-				continue
-			}
-
-			association, err := findNetworkAclAssociation(subnetID, conn)
-
-			if err != nil {
-				return fmt.Errorf("error finding existing EC2 Network ACL association for Subnet (%s): %w", subnetID, err)
-			}
-
-			if association == nil {
-				return fmt.Errorf("error finding existing EC2 Network ACL association for Subnet (%s): empty response", subnetID)
-			}
-
-			input := &ec2.ReplaceNetworkAclAssociationInput{
-				AssociationId: association.NetworkAclAssociationId,
-				NetworkAclId:  aws.String(d.Id()),
-			}
-
-			_, err = conn.ReplaceNetworkAclAssociation(input)
-
-			if err != nil {
-				return fmt.Errorf("error replacing existing EC2 Network ACL association for Subnet (%s): %w", subnetID, err)
+		for _, v := range v.(*schema.Set).List() {
+			if _, err := networkACLAssociationCreate(conn, d.Id(), v.(string)); err != nil {
+				return err
 			}
 		}
 	}
@@ -229,8 +202,6 @@ func resourceNetworkACLRead(d *schema.ResourceData, meta interface{}) error {
 
 	var egressEntries []*ec2.NetworkAclEntry
 	var ingressEntries []*ec2.NetworkAclEntry
-
-	// separate the ingress and egress rules
 	for _, v := range networkAcl.Entries {
 		// Skip the default rules added by AWS. They can be neither
 		// configured or deleted by users.
@@ -244,7 +215,6 @@ func resourceNetworkACLRead(d *schema.ResourceData, meta interface{}) error {
 			ingressEntries = append(ingressEntries, v)
 		}
 	}
-
 	if err := d.Set("egress", flattenNetworkAclEntries(egressEntries)); err != nil {
 		return fmt.Errorf("error setting egress: %w", err)
 	}
@@ -641,6 +611,139 @@ func findNetworkAclAssociation(subnetId string, conn *ec2.EC2) (networkAclAssoci
 	}
 }
 
+func createNetworkACLEntries(conn *ec2.EC2, naclID string, tfList []interface{}, egress bool) error {
+	naclEntries := expandNetworkAclEntries(tfList, egress)
+
+	for _, naclEntry := range naclEntries {
+		if naclEntry == nil {
+			continue
+		}
+
+		if aws.StringValue(naclEntry.Protocol) == "-1" {
+			// Protocol -1 rules don't store ports in AWS. Thus, they'll always
+			// hash differently when being read out of the API. Force the user
+			// to set from_port and to_port to 0 for these rules, to keep the
+			// hashing consistent.
+			if from, to := aws.Int64Value(naclEntry.PortRange.From), aws.Int64Value(naclEntry.PortRange.To); from != 0 || to != 0 {
+				return fmt.Errorf("to_port (%d) and from_port (%d) must both be 0 to use the the 'all' \"-1\" protocol!", to, from)
+			}
+		}
+
+		input := &ec2.CreateNetworkAclEntryInput{
+			CidrBlock:     naclEntry.CidrBlock,
+			Egress:        naclEntry.Egress,
+			IcmpTypeCode:  naclEntry.IcmpTypeCode,
+			Ipv6CidrBlock: naclEntry.Ipv6CidrBlock,
+			NetworkAclId:  aws.String(naclID),
+			PortRange:     naclEntry.PortRange,
+			Protocol:      naclEntry.Protocol,
+			RuleAction:    naclEntry.RuleAction,
+			RuleNumber:    naclEntry.RuleNumber,
+		}
+
+		log.Printf("[INFO] Creating EC2 Network ACL Entry: %s", input)
+		_, err := conn.CreateNetworkAclEntry(input)
+
+		if err != nil {
+			return fmt.Errorf("error creating EC2 Network ACL (%s) Entry: %w", naclID, err)
+		}
+	}
+
+	return nil
+}
+
+func expandNetworkAclEntry(tfMap map[string]interface{}, egress bool) *ec2.NetworkAclEntry {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &ec2.NetworkAclEntry{
+		Egress:    aws.Bool(egress),
+		PortRange: &ec2.PortRange{},
+	}
+
+	if v, ok := tfMap["rule_no"].(int); ok {
+		apiObject.RuleNumber = aws.Int64(int64(v))
+	}
+
+	if v, ok := tfMap["action"].(string); ok && v != "" {
+		apiObject.RuleAction = aws.String(v)
+	}
+
+	if v, ok := tfMap["cidr_block"].(string); ok && v != "" {
+		apiObject.CidrBlock = aws.String(v)
+	}
+
+	if v, ok := tfMap["ipv6_cidr_block"].(string); ok && v != "" {
+		apiObject.Ipv6CidrBlock = aws.String(v)
+	}
+
+	if v, ok := tfMap["from_port"].(int); ok {
+		apiObject.PortRange.From = aws.Int64(int64(v))
+	}
+
+	if v, ok := tfMap["to_port"].(int); ok {
+		apiObject.PortRange.To = aws.Int64(int64(v))
+	}
+
+	if v, ok := tfMap["protocol"].(string); ok && v != "" {
+		i, err := strconv.Atoi(v)
+
+		if err != nil {
+			// We're a protocol name. Look up the number.
+			i, ok = protocolIntegers()[v]
+
+			if !ok {
+				log.Printf("[WARN] Unsupported protocol: %s", v)
+				return nil
+			}
+		}
+
+		apiObject.Protocol = aws.String(strconv.Itoa(i))
+
+		// Specify additional required fields for ICMP.
+		if i == 1 || i == 58 {
+			apiObject.IcmpTypeCode = &ec2.IcmpTypeCode{}
+
+			if v, ok := tfMap["icmp_code"].(int); ok {
+				apiObject.IcmpTypeCode.Code = aws.Int64(int64(v))
+			}
+
+			if v, ok := tfMap["icmp_type"].(int); ok {
+				apiObject.IcmpTypeCode.Type = aws.Int64(int64(v))
+			}
+		}
+	}
+
+	return apiObject
+}
+
+func expandNetworkAclEntries(tfList []interface{}, egress bool) []*ec2.NetworkAclEntry {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	var apiObjects []*ec2.NetworkAclEntry
+
+	for _, tfMapRaw := range tfList {
+		tfMap, ok := tfMapRaw.(map[string]interface{})
+
+		if !ok {
+			continue
+		}
+
+		apiObject := expandNetworkAclEntry(tfMap, egress)
+
+		if apiObject == nil {
+			continue
+		}
+
+		apiObjects = append(apiObjects, apiObject)
+	}
+
+	return apiObjects
+}
+
 func flattenNetworkAclEntry(apiObject *ec2.NetworkAclEntry) map[string]interface{} {
 	if apiObject == nil {
 		return nil
@@ -681,7 +784,13 @@ func flattenNetworkAclEntry(apiObject *ec2.NetworkAclEntry) map[string]interface
 
 		if err != nil {
 			// We're a protocol name. Look up the number.
-			i = protocolIntegers()[v]
+			var ok bool
+			i, ok = protocolIntegers()[v]
+
+			if !ok {
+				log.Printf("[WARN] Unsupported protocol: %s", v)
+				return nil
+			}
 		}
 
 		tfMap["protocol"] = strconv.Itoa(i)
