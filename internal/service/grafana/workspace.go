@@ -207,6 +207,10 @@ func resourceWorkspaceUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		_, err = waitWorkspaceUpdated(conn, d.Id(), d.Timeout(schema.TimeoutUpdate))
+
+		if err != nil {
+			return fmt.Errorf("error updating Grafana Workspace (%s) authentication provider: %w", d.Id(), err)
+		}
 	}
 
 	input := &managedgrafana.UpdateWorkspaceInput{
@@ -280,6 +284,10 @@ func resourceWorkspaceDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	_, err = waitWorkspaceDeleted(conn, d.Id(), d.Timeout(schema.TimeoutDelete))
+
+	if err != nil {
+		return fmt.Errorf("error deleting Grafana Workspace (%s): %w", d.Id(), err)
+	}
 
 	return nil
 }
