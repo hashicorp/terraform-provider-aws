@@ -3175,7 +3175,7 @@ resource "aws_s3_bucket" "bucket1" {
   }
 }
 
-resource "aws_s3_bucket_acl" "bucket1" {
+resource "aws_s3_bucket_acl" "test1" {
   bucket = aws_s3_bucket.bucket1.id
   acl    = "private"
 }
@@ -3196,7 +3196,7 @@ resource "aws_s3_bucket" "bucket2" {
   }
 }
 
-resource "aws_s3_bucket_acl" "bucket2" {
+resource "aws_s3_bucket_acl" "test2" {
   bucket = aws_s3_bucket.bucket2.id
   acl    = "private"
 }
@@ -3217,7 +3217,7 @@ resource "aws_s3_bucket" "bucket3" {
   }
 }
 
-resource "aws_s3_bucket_acl" "bucket3" {
+resource "aws_s3_bucket_acl" "test3" {
   bucket = aws_s3_bucket.bucket3.id
   acl    = "private"
 }
@@ -3238,7 +3238,7 @@ resource "aws_s3_bucket" "bucket4" {
   }
 }
 
-resource "aws_s3_bucket_acl" "bucket4" {
+resource "aws_s3_bucket_acl" "test4" {
   bucket = aws_s3_bucket.bucket4.id
   acl    = "private"
 }
@@ -3259,7 +3259,7 @@ resource "aws_s3_bucket" "bucket5" {
   }
 }
 
-resource "aws_s3_bucket_acl" "bucket5" {
+resource "aws_s3_bucket_acl" "test5" {
   bucket = aws_s3_bucket.bucket5.id
   acl    = "private"
 }
@@ -3280,7 +3280,7 @@ resource "aws_s3_bucket" "bucket6" {
   }
 }
 
-resource "aws_s3_bucket_acl" "bucket6" {
+resource "aws_s3_bucket_acl" "test6" {
   bucket = aws_s3_bucket.bucket6.id
   acl    = "private"
 }
