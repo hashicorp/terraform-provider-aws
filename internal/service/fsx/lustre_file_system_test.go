@@ -1343,7 +1343,7 @@ resource "aws_fsx_lustre_file_system" "test" {
   log_configuration {
     destination = aws_cloudwatch_log_group.test.arn
     level       = %[2]q
-  }  
+  }
 }
 `, rName, status))
 }
