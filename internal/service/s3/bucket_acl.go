@@ -26,7 +26,7 @@ func ResourceBucketAcl() *schema.Resource {
 		CreateContext: resourceBucketAclCreate,
 		ReadContext:   resourceBucketAclRead,
 		UpdateContext: resourceBucketAclUpdate,
-		DeleteContext: schema.NoopContext,
+		DeleteContext: resourceBucketAclDelete,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -241,6 +241,11 @@ func resourceBucketAclUpdate(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	return resourceBucketAclRead(ctx, d, meta)
+}
+
+func resourceBucketAclDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	log.Printf("[WARN] Cannot destroy S3 Bucket ACL. Terraform will remove this resource from the state file, however resources may remain.")
+	return nil
 }
 
 func expandBucketAclAccessControlPolicy(l []interface{}) *s3.AccessControlPolicy {
