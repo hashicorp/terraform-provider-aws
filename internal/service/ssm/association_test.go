@@ -1257,7 +1257,7 @@ resource "aws_ssm_association" "test" {
 func testAccAssociationBasicWithOutPutLocationUpdateBucketNameConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "output_location" {
-  bucket        =  %[1]q
+  bucket        = %[1]q
   force_destroy = true
 }
 
