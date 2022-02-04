@@ -598,28 +598,18 @@ Previously, `destination_cidr_block` and `destination_ipv6_cidr_block` could be 
 
 In addition, now exactly one of `destination_cidr_block`, `destination_ipv6_cidr_block`, and `destination_prefix_list_id` can be set.
 
-For example, this type of configuration is now not valid:
+For example, this type of configuration for `aws_route` is now not valid:
 
 ```terraform
-resource "aws_route" "example" {
-  route_table_id = aws_route_table.example.id
-  gateway_id     = aws_internet_gateway.example.id
-
   destination_cidr_block      = local.ipv6 ? "" : local.destination
   destination_ipv6_cidr_block = local.ipv6 ? local.destination_ipv6 : ""
-}
 ```
 
 In this updated and valid configuration, we use `null` instead of an empty-string (`""`):
 
 ```terraform
-resource "aws_route" "example" {
-  route_table_id = aws_route_table.example.id
-  gateway_id     = aws_internet_gateway.example.id
-
   destination_cidr_block      = local.ipv6 ? null : local.destination
   destination_ipv6_cidr_block = local.ipv6 ? local.destination_ipv6 : null
-}
 ```
 
 ## Resource: aws_route_table
