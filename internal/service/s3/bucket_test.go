@@ -423,7 +423,7 @@ func TestAccS3Bucket_Security_policy(t *testing.T) {
 }
 
 // Test TestAccS3Bucket_Basic_shouldFailNotFound is designed to fail with a "plan
-// not empty" error in Terraform, to check against regresssions.
+// not empty" error in Terraform, to check against regressions.
 // See https://github.com/hashicorp/terraform/pull/2925
 func TestAccS3Bucket_Basic_shouldFailNotFound(t *testing.T) {
 	bucketName := sdkacctest.RandomWithPrefix("tf-test-bucket")
