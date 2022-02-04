@@ -125,7 +125,7 @@ func testAccCheckNetworkACLAssociationDestroy(s *terraform.State) error {
 			return err
 		}
 
-		return fmt.Errorf("Network ACL Association %s still exists", rs.Primary.ID)
+		return fmt.Errorf("EC2 Network ACL Association %s still exists", rs.Primary.ID)
 	}
 
 	return nil
@@ -139,7 +139,7 @@ func testAccCheckNetworkACLAssociationExists(n string, v *ec2.NetworkAclAssociat
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Network ACL Association ID is set")
+			return fmt.Errorf("No EC2 Network ACL Association ID is set")
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn

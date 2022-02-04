@@ -43,7 +43,7 @@ func resourceNetworkACLAssociationCreate(d *schema.ResourceData, meta interface{
 	association, err := FindNetworkACLAssociationBySubnetID(conn, subnetID)
 
 	if err != nil {
-		return fmt.Errorf("error reading Network ACL Association for EC2 Subnet (%s): %w", subnetID, err)
+		return fmt.Errorf("error reading EC2 Network ACL Association for EC2 Subnet (%s): %w", subnetID, err)
 	}
 
 	input := &ec2.ReplaceNetworkAclAssociationInput{
@@ -51,11 +51,11 @@ func resourceNetworkACLAssociationCreate(d *schema.ResourceData, meta interface{
 		NetworkAclId:  aws.String(d.Get("network_acl_id").(string)),
 	}
 
-	log.Printf("[DEBUG] Creating Network ACL Association: %s", input)
+	log.Printf("[DEBUG] Creating EC2 Network ACL Association: %s", input)
 	output, err := conn.ReplaceNetworkAclAssociation(input)
 
 	if err != nil {
-		return fmt.Errorf("error creating Network ACL Association: %w", err)
+		return fmt.Errorf("error creating EC2 Network ACL Association: %w", err)
 	}
 
 	d.SetId(aws.StringValue(output.NewAssociationId))
@@ -69,13 +69,13 @@ func resourceNetworkACLAssociationRead(d *schema.ResourceData, meta interface{})
 	association, err := FindNetworkACLAssociationByID(conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
-		log.Printf("[WARN] Network ACL Association (%s) not found, removing from state", d.Id())
+		log.Printf("[WARN] EC2 Network ACL Association (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading Network ACL Association (%s): %w", d.Id(), err)
+		return fmt.Errorf("error reading EC2 Network ACL Association (%s): %w", d.Id(), err)
 	}
 
 	d.Set("network_acl_id", association.NetworkAclId)
@@ -96,7 +96,7 @@ func resourceNetworkACLAssociationDelete(d *schema.ResourceData, meta interface{
 	nacl, err := FindNetworkACL(conn, input)
 
 	if err != nil {
-		return fmt.Errorf("error reading Network ACL for Association (%s): %w", d.Id(), err)
+		return fmt.Errorf("error reading EC2 Network ACL for Association (%s): %w", d.Id(), err)
 	}
 
 	vpcID := aws.StringValue(nacl.VpcId)
@@ -112,7 +112,7 @@ func resourceNetworkACLAssociationDelete(d *schema.ResourceData, meta interface{
 	})
 
 	if err != nil {
-		return fmt.Errorf("error deleting Network ACL Association (%s): %w", d.Id(), err)
+		return fmt.Errorf("error deleting EC2 Network ACL Association (%s): %w", d.Id(), err)
 	}
 
 	return nil
