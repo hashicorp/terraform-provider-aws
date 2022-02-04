@@ -1,0 +1,3 @@
+```release-note:breaking-change
+resource/aws_efs_mount_target: `ip_address` can no longer be set to `""`; instead, remove or set to `null`
+```
