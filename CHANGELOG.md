@@ -51,7 +51,9 @@ NOTES:
 * resource/aws_default_vpc: If no default VPC exists in the current AWS Region one is now created. The `force_destroy` destroy argument has been added (defaults to `false`). Setting this argument to `true` deletes the default VPC on `terraform destroy` ([#22253](https://github.com/hashicorp/terraform-provider-aws/issues/22253))
 * resource/aws_ec2_client_vpn_endpoint: The `status` attribute has been deprecated ([#22887](https://github.com/hashicorp/terraform-provider-aws/issues/22887))
 * resource/aws_ec2_client_vpn_endpoint: The type of the `dns_servers` argument has changed from Set to List ([#22889](https://github.com/hashicorp/terraform-provider-aws/issues/22889))
+* resource/aws_ec2_client_vpn_network_association: The `security_groups` argument has been deprecated. Use the `security_group_ids` argument of the `aws_ec2_client_vpn_endpoint` resource instead ([#22911](https://github.com/hashicorp/terraform-provider-aws/issues/22911))
 * resource/aws_ec2_client_vpn_network_association: The `status` attribute has been deprecated ([#22887](https://github.com/hashicorp/terraform-provider-aws/issues/22887))
+* resource/aws_ec2_client_vpn_route: Add [custom `timeouts`](https://www.terraform.io/docs/language/resources/syntax.html#operation-timeouts) block ([#22911](https://github.com/hashicorp/terraform-provider-aws/issues/22911))
 * resource/aws_ecs_cluster: The `capacity_providers` and `default_capacity_provider_strategy` arguments have been deprecated. Use the `aws_ecs_cluster_capacity_providers` resource instead. ([#22783](https://github.com/hashicorp/terraform-provider-aws/issues/22783))
 * resource/aws_elasticache_replication_group: The `cluster_mode` argument has been deprecated. All configurations using `cluster_mode` should be updated to use the root-level `num_node_groups` and `replicas_per_node_group` arguments instead ([#22666](https://github.com/hashicorp/terraform-provider-aws/issues/22666))
 * resource/aws_elasticache_replication_group: The `number_cache_clusters` argument has been deprecated. All configurations using `number_cache_clusters` should be updated to use the `num_cache_clusters` argument instead ([#22666](https://github.com/hashicorp/terraform-provider-aws/issues/22666))
@@ -62,6 +64,7 @@ NOTES:
 
 FEATURES:
 
+* **New Data Source:** `aws_cloudfront_realtime_log_config` ([#22620](https://github.com/hashicorp/terraform-provider-aws/issues/22620))
 * **New Data Source:** `aws_ec2_client_vpn_endpoint` ([#14218](https://github.com/hashicorp/terraform-provider-aws/issues/14218))
 * **New Data Source:** `aws_eips` ([#7537](https://github.com/hashicorp/terraform-provider-aws/issues/7537))
 * **New Data Source:** `aws_s3_object` ([#22850](https://github.com/hashicorp/terraform-provider-aws/issues/22850))
@@ -83,6 +86,7 @@ ENHANCEMENTS:
 
 * data-source/aws_ami: Add `boot_mode` attribute. ([#22939](https://github.com/hashicorp/terraform-provider-aws/issues/22939))
 * data-source/aws_cloudwatch_log_group: Automatically trim `:*` suffix from `arn` attribute ([#22043](https://github.com/hashicorp/terraform-provider-aws/issues/22043))
+* data-source/aws_ec2_client_vpn_endpoint: Add `security_group_ids` and `vpc_id` attributes ([#22911](https://github.com/hashicorp/terraform-provider-aws/issues/22911))
 * data-source/aws_elasticache_replication_group: Add `description`, `num_cache_clusters`, `num_node_groups`, and `replicas_per_node_group` attributes ([#22667](https://github.com/hashicorp/terraform-provider-aws/issues/22667))
 * data-source/aws_imagebuilder_distribution_configuration: Add `container_distribution_configuration` attribute to the `distribution` configuration block ([#22838](https://github.com/hashicorp/terraform-provider-aws/issues/22838))
 * data-source/aws_imagebuilder_distribution_configuration: Add `launch_template_configuration` attribute to the `distribution` configuration block ([#22884](https://github.com/hashicorp/terraform-provider-aws/issues/22884))
@@ -92,9 +96,11 @@ ENHANCEMENTS:
 * provider: Updates AWS authentication to use AWS SDK for Go v2 <https://aws.github.io/aws-sdk-go-v2/docs/> ([#20587](https://github.com/hashicorp/terraform-provider-aws/issues/20587))
 * resource/aws_ami: Add `boot_mode` and `ebs_block_device.outpost_arn` arguments. ([#22939](https://github.com/hashicorp/terraform-provider-aws/issues/22939))
 * resource/aws_autoscaling_attachment: Add `lb_target_group_arn` argument ([#22662](https://github.com/hashicorp/terraform-provider-aws/issues/22662))
+* resource/aws_cloudwatch_event_target: Add plan time validation for `input`, `input_path`, `run_command_targets.values`, `http_target.header_parameters`, `http_target.query_string_parameters`, `redshift_target.database`, `redshift_target.db_user`, `redshift_target.secrets_manager_arn`, `redshift_target.sql`, `redshift_target.statement_name`, `retry_policy.maximum_event_age_in_seconds`, `retry_policy.maximum_retry_attempts`. ([#22946](https://github.com/hashicorp/terraform-provider-aws/issues/22946))
 * resource/aws_ec2_client_vpn_authorization_rule: Configurable Create and Delete timeouts ([#20688](https://github.com/hashicorp/terraform-provider-aws/issues/20688))
 * resource/aws_ec2_client_vpn_endpoint: Add `client_connect_options` argument ([#22793](https://github.com/hashicorp/terraform-provider-aws/issues/22793))
 * resource/aws_ec2_client_vpn_endpoint: Add `client_login_banner_options` argument ([#22793](https://github.com/hashicorp/terraform-provider-aws/issues/22793))
+* resource/aws_ec2_client_vpn_endpoint: Add `security_group_ids` and `vpc_id` arguments ([#22911](https://github.com/hashicorp/terraform-provider-aws/issues/22911))
 * resource/aws_ec2_client_vpn_endpoint: Add `session_timeout_hours` argument ([#22793](https://github.com/hashicorp/terraform-provider-aws/issues/22793))
 * resource/aws_ec2_client_vpn_endpoint: Add `vpn_port` argument ([#22793](https://github.com/hashicorp/terraform-provider-aws/issues/22793))
 * resource/aws_ec2_client_vpn_network_association: Configurable Create and Delete timeouts ([#20689](https://github.com/hashicorp/terraform-provider-aws/issues/20689))
@@ -114,6 +120,7 @@ BUG FIXES:
 * data-source/aws_vpc_peering_connections: Return empty array instead of error when no connections found. ([#17382](https://github.com/hashicorp/terraform-provider-aws/issues/17382))
 * resource/aws_backup_selection: Fix permanent diffs for `condition` and `not_resources` arguments causing resource recreation ([#22882](https://github.com/hashicorp/terraform-provider-aws/issues/22882))
 * resource/aws_cloudformation_stack: Retry resource Create and Update for IAM eventual consistency ([#22840](https://github.com/hashicorp/terraform-provider-aws/issues/22840))
+* resource/aws_cloudwatch_event_target: Preserve order of `http_target.path_parameter_values`. ([#22946](https://github.com/hashicorp/terraform-provider-aws/issues/22946))
 * resource/aws_db_instance: Fix error with reboot of replica ([#22178](https://github.com/hashicorp/terraform-provider-aws/issues/22178))
 * resource/aws_ec2_client_vpn_authorization_rule: Don't raise an error when `InvalidClientVpnEndpointId.NotFound` is returned during refresh ([#20688](https://github.com/hashicorp/terraform-provider-aws/issues/20688))
 * resource/aws_ec2_client_vpn_endpoint: `connection_log_options.cloudwatch_log_stream` argument is Computed, preventing spurious resource diffs ([#22891](https://github.com/hashicorp/terraform-provider-aws/issues/22891))
