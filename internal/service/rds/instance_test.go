@@ -16,13 +16,16 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func TestAccRDSInstance_basic(t *testing.T) {
 	var dbInstance1 rds.DBInstance
-	resourceName := "aws_db_instance.bar"
+
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_db_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -31,10 +34,12 @@ func TestAccRDSInstance_basic(t *testing.T) {
 		CheckDestroy: testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceBasicConfig(),
-				Check: resource.ComposeTestCheckFunc(
+				Config: testAccInstanceBasicConfig(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &dbInstance1),
 					testAccCheckInstanceAttributes(&dbInstance1),
+					resource.TestCheckResourceAttr(resourceName, "identifier", rName),
+					resource.TestCheckResourceAttr(resourceName, "identifier_prefix", ""),
 					resource.TestCheckResourceAttr(resourceName, "allocated_storage", "10"),
 					resource.TestCheckNoResourceAttr(resourceName, "allow_major_version_upgrade"),
 					resource.TestCheckResourceAttr(resourceName, "auto_minor_version_upgrade", "true"),
@@ -64,8 +69,9 @@ func TestAccRDSInstance_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "resource_id"),
 					resource.TestCheckResourceAttr(resourceName, "status", "available"),
 					resource.TestCheckResourceAttr(resourceName, "storage_encrypted", "false"),
+					resource.TestCheckResourceAttr(resourceName, "storage_type", "gp2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "username", "foo"),
+					resource.TestCheckResourceAttr(resourceName, "username", "test"),
 				),
 			},
 			{
@@ -120,6 +126,9 @@ func TestAccRDSInstance_onlyMajorVersion(t *testing.T) {
 func TestAccRDSInstance_namePrefix(t *testing.T) {
 	var v rds.DBInstance
 
+	const identifierPrefix = "tf-acc-test-prefix-"
+	const resourceName = "aws_db_instance.test"
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
@@ -127,20 +136,29 @@ func TestAccRDSInstance_namePrefix(t *testing.T) {
 		CheckDestroy: testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceConfig_namePrefix(),
+				Config: testAccInstanceConfig_namePrefix(identifierPrefix),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceExists("aws_db_instance.test", &v),
-					testAccCheckInstanceAttributes(&v),
-					resource.TestMatchResourceAttr(
-						"aws_db_instance.test", "identifier", regexp.MustCompile("^tf-test-")),
+					testAccCheckInstanceExists(resourceName, &v),
+					create.TestCheckResourceAttrNameFromPrefix(resourceName, "identifier", identifierPrefix),
+					resource.TestCheckResourceAttr(resourceName, "identifier_prefix", identifierPrefix),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"password",
+				},
 			},
 		},
 	})
 }
 
-func TestAccRDSInstance_generatedName(t *testing.T) {
+func TestAccRDSInstance_nameGenerated(t *testing.T) {
 	var v rds.DBInstance
+
+	const resourceName = "aws_db_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -149,11 +167,20 @@ func TestAccRDSInstance_generatedName(t *testing.T) {
 		CheckDestroy: testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceConfig_generatedName(),
+				Config: testAccInstanceConfig_nameGenerated(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceExists("aws_db_instance.test", &v),
-					testAccCheckInstanceAttributes(&v),
+					testAccCheckInstanceExists(resourceName, &v),
+					create.TestCheckResourceAttrNameGenerated(resourceName, "identifier"),
+					resource.TestCheckResourceAttr(resourceName, "identifier_prefix", resource.UniqueIdPrefix),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"password",
+				},
 			},
 		},
 	})
@@ -599,7 +626,7 @@ func TestAccRDSInstance_password(t *testing.T) {
 	})
 }
 
-func TestAccRDSInstance_replicateSourceDB(t *testing.T) {
+func TestAccRDSInstance_replicateSourceDB_basic(t *testing.T) {
 	var dbInstance, sourceDbInstance rds.DBInstance
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -613,8 +640,116 @@ func TestAccRDSInstance_replicateSourceDB(t *testing.T) {
 		CheckDestroy: testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceConfig_ReplicateSourceDB(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Config: testAccInstanceConfig_ReplicateSourceDB_basic(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInstanceExists(sourceResourceName, &sourceDbInstance),
+					testAccCheckInstanceExists(resourceName, &dbInstance),
+					resource.TestCheckResourceAttr(resourceName, "identifier", rName),
+					resource.TestCheckResourceAttr(resourceName, "identifier_prefix", ""),
+					testAccCheckInstanceReplicaAttributes(&sourceDbInstance, &dbInstance),
+					resource.TestCheckResourceAttrPair(resourceName, "name", sourceResourceName, "name"),
+					resource.TestCheckResourceAttrPair(resourceName, "username", sourceResourceName, "username"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"password",
+				},
+			},
+		},
+	})
+}
+
+func TestAccRDSInstance_replicateSourceDB_namePrefix(t *testing.T) {
+	var v rds.DBInstance
+
+	sourceName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	const identifierPrefix = "tf-acc-test-prefix-"
+	const resourceName = "aws_db_instance.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_ReplicateSourceDB_namePrefix(identifierPrefix, sourceName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInstanceExists(resourceName, &v),
+					create.TestCheckResourceAttrNameFromPrefix(resourceName, "identifier", identifierPrefix),
+					resource.TestCheckResourceAttr(resourceName, "identifier_prefix", identifierPrefix),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"password",
+				},
+			},
+		},
+	})
+}
+
+func TestAccRDSInstance_replicateSourceDB_nameGenerated(t *testing.T) {
+	var v rds.DBInstance
+
+	sourceName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	const resourceName = "aws_db_instance.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_ReplicateSourceDB_nameGenerated(sourceName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInstanceExists(resourceName, &v),
+					create.TestCheckResourceAttrNameGenerated(resourceName, "identifier"),
+					resource.TestCheckResourceAttr(resourceName, "identifier_prefix", resource.UniqueIdPrefix),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"password",
+				},
+			},
+		},
+	})
+}
+
+func TestAccRDSInstance_replicateSourceDB_addLater(t *testing.T) {
+	var dbInstance, sourceDbInstance rds.DBInstance
+
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	sourceResourceName := "aws_db_instance.source"
+	resourceName := "aws_db_instance.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_ReplicateSourceDB_addLaterSetup(),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInstanceExists(sourceResourceName, &sourceDbInstance),
+				),
+			},
+			{
+				Config: testAccInstanceConfig_ReplicateSourceDB_addLater(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(sourceResourceName, &sourceDbInstance),
 					testAccCheckInstanceExists(resourceName, &dbInstance),
 					testAccCheckInstanceReplicaAttributes(&sourceDbInstance, &dbInstance),
@@ -1102,7 +1237,7 @@ func TestAccRDSInstance_ReplicateSourceDB_multiAZ(t *testing.T) {
 	})
 }
 
-func TestAccRDSInstance_ReplicateSourceDB_parameterGroupName(t *testing.T) {
+func TestAccRDSInstance_ReplicateSourceDB_parameterGroupName_sameSetOnBoth(t *testing.T) {
 	var dbInstance, sourceDbInstance rds.DBInstance
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -1116,8 +1251,94 @@ func TestAccRDSInstance_ReplicateSourceDB_parameterGroupName(t *testing.T) {
 		CheckDestroy: testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceConfig_ReplicateSourceDB_ParameterGroupName(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Config: testAccInstanceConfig_ReplicateSourceDB_ParameterGroupName_sameSetOnBoth(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInstanceExists(sourceResourceName, &sourceDbInstance),
+					testAccCheckInstanceExists(resourceName, &dbInstance),
+					testAccCheckInstanceReplicaAttributes(&sourceDbInstance, &dbInstance),
+					resource.TestCheckResourceAttr(resourceName, "parameter_group_name", rName),
+					resource.TestCheckResourceAttrPair(resourceName, "parameter_group_name", sourceResourceName, "parameter_group_name"),
+					testAccCheckInstanceParameterApplyStatusInSync(&dbInstance),
+					testAccCheckInstanceParameterApplyStatusInSync(&sourceDbInstance),
+				),
+			},
+		},
+	})
+}
+
+func TestAccRDSInstance_ReplicateSourceDB_parameterGroupName_differentSetOnBoth(t *testing.T) {
+	var dbInstance, sourceDbInstance rds.DBInstance
+
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	sourceResourceName := "aws_db_instance.source"
+	resourceName := "aws_db_instance.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_ReplicateSourceDB_ParameterGroupName_differentSetOnBoth(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInstanceExists(sourceResourceName, &sourceDbInstance),
+					resource.TestCheckResourceAttr(sourceResourceName, "parameter_group_name", fmt.Sprintf("%s-source", rName)),
+					testAccCheckInstanceExists(resourceName, &dbInstance),
+					testAccCheckInstanceReplicaAttributes(&sourceDbInstance, &dbInstance),
+					resource.TestCheckResourceAttr(resourceName, "parameter_group_name", rName),
+					testAccCheckInstanceParameterApplyStatusInSync(&dbInstance),
+					testAccCheckInstanceParameterApplyStatusInSync(&sourceDbInstance),
+				),
+			},
+		},
+	})
+}
+
+func TestAccRDSInstance_ReplicateSourceDB_parameterGroupName_replicaCopiesValue(t *testing.T) {
+	var dbInstance, sourceDbInstance rds.DBInstance
+
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	sourceResourceName := "aws_db_instance.source"
+	resourceName := "aws_db_instance.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_ReplicateSourceDB_ParameterGroupName_replicaCopiesValue(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInstanceExists(sourceResourceName, &sourceDbInstance),
+					testAccCheckInstanceExists(resourceName, &dbInstance),
+					testAccCheckInstanceReplicaAttributes(&sourceDbInstance, &dbInstance),
+					resource.TestCheckResourceAttr(resourceName, "parameter_group_name", rName),
+					resource.TestCheckResourceAttrPair(resourceName, "parameter_group_name", sourceResourceName, "parameter_group_name"),
+					testAccCheckInstanceParameterApplyStatusInSync(&dbInstance),
+				),
+			},
+		},
+	})
+}
+
+func TestAccRDSInstance_ReplicateSourceDB_parameterGroupName_setOnReplica(t *testing.T) {
+	var dbInstance, sourceDbInstance rds.DBInstance
+
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	sourceResourceName := "aws_db_instance.source"
+	resourceName := "aws_db_instance.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_ReplicateSourceDB_ParameterGroupName_setOnReplica(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(sourceResourceName, &sourceDbInstance),
 					testAccCheckInstanceExists(resourceName, &dbInstance),
 					testAccCheckInstanceReplicaAttributes(&sourceDbInstance, &dbInstance),
@@ -1187,7 +1408,7 @@ func TestAccRDSInstance_ReplicateSourceDB_caCertificateIdentifier(t *testing.T) 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	sourceResourceName := "aws_db_instance.source"
 	resourceName := "aws_db_instance.test"
-	dataSourceName := "data.aws_rds_certificate.latest"
+	certifiateDataSourceName := "data.aws_rds_certificate.latest"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -1201,8 +1422,8 @@ func TestAccRDSInstance_ReplicateSourceDB_caCertificateIdentifier(t *testing.T) 
 					testAccCheckInstanceExists(sourceResourceName, &sourceDbInstance),
 					testAccCheckInstanceExists(resourceName, &dbInstance),
 					testAccCheckInstanceReplicaAttributes(&sourceDbInstance, &dbInstance),
-					resource.TestCheckResourceAttrPair(sourceResourceName, "ca_cert_identifier", dataSourceName, "id"),
-					resource.TestCheckResourceAttrPair(resourceName, "ca_cert_identifier", dataSourceName, "id"),
+					resource.TestCheckResourceAttrPair(sourceResourceName, "ca_cert_identifier", certifiateDataSourceName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "ca_cert_identifier", certifiateDataSourceName, "id"),
 				),
 			},
 		},
@@ -1235,11 +1456,18 @@ func TestAccRDSInstance_ReplicateSourceDB_replicaMode(t *testing.T) {
 	})
 }
 
-func TestAccRDSInstance_s3Import(t *testing.T) {
-	var snap rds.DBInstance
-	bucket := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	uniqueId := sdkacctest.RandomWithPrefix("tf-acc-s3-import-test")
-	bucketPrefix := sdkacctest.RandString(5)
+// When an RDS Instance is added in a separate apply from the creation of the source instance, and the
+// parameter group is changed on the replica, it can sometimes lead to the API trying to reboot the instance
+//  whenanother "management operation" is in progress:
+// InvalidDBInstanceState: Instance cannot currently reboot due to an in-progress management operation
+// https://github.com/hashicorp/terraform-provider-aws/issues/11905
+func TestAccRDSInstance_ReplicateSourceDB_parameterGroupTwoStep(t *testing.T) {
+	var dbInstance, sourceDbInstance rds.DBInstance
+
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_db_instance.test"
+	sourceResourceName := "aws_db_instance.source"
+	parameterGroupResourceName := "aws_db_parameter_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -1248,16 +1476,131 @@ func TestAccRDSInstance_s3Import(t *testing.T) {
 		CheckDestroy: testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceConfig_S3Import(bucket, bucketPrefix, uniqueId),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceExists("aws_db_instance.s3", &snap),
+				Config: testAccInstanceConfig_ReplicateSourceDB_ParameterGroupTwoStep_Setup(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInstanceExists(sourceResourceName, &sourceDbInstance),
+					resource.TestCheckResourceAttr(sourceResourceName, "parameter_group_name", "default.oracle-ee-19"),
+					testAccCheckInstanceParameterApplyStatusInSync(&sourceDbInstance),
+				),
+			},
+			{
+				Config: testAccInstanceConfig_ReplicateSourceDB_ParameterGroupTwoStep(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInstanceExists(sourceResourceName, &sourceDbInstance),
+					resource.TestCheckResourceAttr(sourceResourceName, "parameter_group_name", "default.oracle-ee-19"),
+					testAccCheckInstanceExists(resourceName, &dbInstance),
+					resource.TestCheckResourceAttr(resourceName, "replica_mode", "open-read-only"),
+					resource.TestCheckResourceAttrPair(resourceName, "parameter_group_name", parameterGroupResourceName, "id"),
+					testAccCheckInstanceParameterApplyStatusInSync(&dbInstance),
+					testAccCheckInstanceParameterApplyStatusInSync(&sourceDbInstance),
 				),
 			},
 		},
 	})
 }
 
-func TestAccRDSInstance_snapshotIdentifier(t *testing.T) {
+func TestAccRDSInstance_s3Import_basic(t *testing.T) {
+	var snap rds.DBInstance
+	bucket := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	uniqueId := sdkacctest.RandomWithPrefix("tf-acc-s3-import-test")
+	bucketPrefix := sdkacctest.RandString(5)
+
+	const resourceName = "aws_db_instance.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_S3Import_basic(bucket, bucketPrefix, uniqueId),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(resourceName, &snap),
+					resource.TestCheckResourceAttr(resourceName, "identifier", uniqueId),
+					resource.TestCheckResourceAttr(resourceName, "identifier_prefix", ""),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"password",
+				},
+			},
+		},
+	})
+}
+
+func TestAccRDSInstance_s3Import_namePrefix(t *testing.T) {
+	var snap rds.DBInstance
+	const identifierPrefix = "tf-acc-test-prefix-"
+	bucket := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	bucketPrefix := sdkacctest.RandString(5)
+
+	const resourceName = "aws_db_instance.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_S3Import_namePrefix(bucket, bucketPrefix, identifierPrefix),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(resourceName, &snap),
+					create.TestCheckResourceAttrNameFromPrefix(resourceName, "identifier", identifierPrefix),
+					resource.TestCheckResourceAttr(resourceName, "identifier_prefix", identifierPrefix),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"password",
+				},
+			},
+		},
+	})
+}
+
+func TestAccRDSInstance_s3Import_nameGenerated(t *testing.T) {
+	var snap rds.DBInstance
+	bucket := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	bucketPrefix := sdkacctest.RandString(5)
+
+	const resourceName = "aws_db_instance.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_S3Import_nameGenerated(bucket, bucketPrefix),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(resourceName, &snap),
+					create.TestCheckResourceAttrNameGenerated(resourceName, "identifier"),
+					resource.TestCheckResourceAttr(resourceName, "identifier_prefix", resource.UniqueIdPrefix),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"password",
+				},
+			},
+		},
+	})
+}
+
+func TestAccRDSInstance_SnapshotIdentifier_basic(t *testing.T) {
 	var dbInstance, sourceDbInstance rds.DBInstance
 	var dbSnapshot rds.DBSnapshot
 
@@ -1278,16 +1621,96 @@ func TestAccRDSInstance_snapshotIdentifier(t *testing.T) {
 					testAccCheckInstanceExists(sourceDbResourceName, &sourceDbInstance),
 					testAccCheckDbSnapshotExists(snapshotResourceName, &dbSnapshot),
 					testAccCheckInstanceExists(resourceName, &dbInstance),
+					resource.TestCheckResourceAttr(resourceName, "identifier", rName),
+					resource.TestCheckResourceAttr(resourceName, "identifier_prefix", ""),
+					resource.TestCheckResourceAttrPair(resourceName, "instance_class", sourceDbResourceName, "instance_class"),
+					resource.TestCheckResourceAttrPair(resourceName, "allocated_storage", sourceDbResourceName, "allocated_storage"),
+					resource.TestCheckResourceAttrPair(resourceName, "engine", sourceDbResourceName, "engine"),
+					resource.TestCheckResourceAttrPair(resourceName, "engine_version", sourceDbResourceName, "engine_version"),
+					resource.TestCheckResourceAttrPair(resourceName, "username", sourceDbResourceName, "username"),
+					resource.TestCheckResourceAttrPair(resourceName, "name", sourceDbResourceName, "name"),
+					resource.TestCheckResourceAttrPair(resourceName, "maintenance_window", sourceDbResourceName, "maintenance_window"),
+					resource.TestCheckResourceAttrPair(resourceName, "option_group_name", sourceDbResourceName, "option_group_name"),
+					resource.TestCheckResourceAttrPair(resourceName, "parameter_group_name", sourceDbResourceName, "parameter_group_name"),
+					resource.TestCheckResourceAttrPair(resourceName, "port", sourceDbResourceName, "port"),
 				),
 			},
 		},
 	})
 }
 
-func TestAccRDSInstance_snapshotIdentifierRemoved(t *testing.T) {
+func TestAccRDSInstance_SnapshotIdentifier_namePrefix(t *testing.T) {
+	var v rds.DBInstance
+
+	sourceName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	const identifierPrefix = "tf-acc-test-prefix-"
+	const resourceName = "aws_db_instance.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_SnapshotIdentifier_namePrefix(identifierPrefix, sourceName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(resourceName, &v),
+					create.TestCheckResourceAttrNameFromPrefix(resourceName, "identifier", identifierPrefix),
+					resource.TestCheckResourceAttr(resourceName, "identifier_prefix", identifierPrefix),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"password",
+					"snapshot_identifier",
+				},
+			},
+		},
+	})
+}
+
+func TestAccRDSInstance_SnapshotIdentifier_nameGenerated(t *testing.T) {
+	var v rds.DBInstance
+
+	sourceName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	const resourceName = "aws_db_instance.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_SnapshotIdentifier_nameGenerated(sourceName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(resourceName, &v),
+					create.TestCheckResourceAttrNameGenerated(resourceName, "identifier"),
+					resource.TestCheckResourceAttr(resourceName, "identifier_prefix", resource.UniqueIdPrefix),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"password",
+					"snapshot_identifier",
+				},
+			},
+		},
+	})
+}
+
+func TestAccRDSInstance_SnapshotIdentifier_AssociationRemoved(t *testing.T) {
 	var dbInstance1, dbInstance2 rds.DBInstance
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	sourceDbResourceName := "aws_db_instance.source"
 	resourceName := "aws_db_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -1303,10 +1726,13 @@ func TestAccRDSInstance_snapshotIdentifierRemoved(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccInstanceConfig_SnapshotIdentifierRemoved(rName),
+				Config: testAccInstanceConfig_SnapshotIdentifier_AssociationRemoved(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &dbInstance2),
 					testAccCheckInstanceNotRecreated(&dbInstance1, &dbInstance2),
+					resource.TestCheckResourceAttrPair(resourceName, "allocated_storage", sourceDbResourceName, "allocated_storage"),
+					resource.TestCheckResourceAttrPair(resourceName, "engine", sourceDbResourceName, "engine"),
+					resource.TestCheckResourceAttrPair(resourceName, "username", sourceDbResourceName, "username"),
 				),
 			},
 		},
@@ -1452,7 +1878,7 @@ func TestAccRDSInstance_SnapshotIdentifier_availabilityZone(t *testing.T) {
 	})
 }
 
-func TestAccRDSInstance_SnapshotIdentifier_backupRetentionPeriod(t *testing.T) {
+func TestAccRDSInstance_SnapshotIdentifier_backupRetentionPeriod_override(t *testing.T) {
 	var dbInstance, sourceDbInstance rds.DBInstance
 	var dbSnapshot rds.DBSnapshot
 
@@ -1480,7 +1906,7 @@ func TestAccRDSInstance_SnapshotIdentifier_backupRetentionPeriod(t *testing.T) {
 	})
 }
 
-func TestAccRDSInstance_SnapshotIdentifierBackupRetentionPeriod_unset(t *testing.T) {
+func TestAccRDSInstance_SnapshotIdentifier_backupRetentionPeriod_unset(t *testing.T) {
 	var dbInstance, sourceDbInstance rds.DBInstance
 	var dbSnapshot rds.DBSnapshot
 
@@ -1567,7 +1993,7 @@ func TestAccRDSInstance_SnapshotIdentifier_dbSubnetGroupName(t *testing.T) {
 	})
 }
 
-func TestAccRDSInstance_SnapshotIdentifierDBSubnetGroupName_ramShared(t *testing.T) {
+func TestAccRDSInstance_SnapshotIdentifier_DBSubnetGroupName_ramShared(t *testing.T) {
 	var dbInstance, sourceDbInstance rds.DBInstance
 	var dbSnapshot rds.DBSnapshot
 	var dbSubnetGroup rds.DBSubnetGroup
@@ -1603,7 +2029,7 @@ func TestAccRDSInstance_SnapshotIdentifierDBSubnetGroupName_ramShared(t *testing
 	})
 }
 
-func TestAccRDSInstance_SnapshotIdentifierDBSubnetGroupName_vpcSecurityGroupIDs(t *testing.T) {
+func TestAccRDSInstance_SnapshotIdentifier_DBSubnetGroupName_vpcSecurityGroupIDs(t *testing.T) {
 	var dbInstance, sourceDbInstance rds.DBInstance
 	var dbSnapshot rds.DBSnapshot
 	var dbSubnetGroup rds.DBSubnetGroup
@@ -1812,7 +2238,7 @@ func TestAccRDSInstance_SnapshotIdentifier_multiAZ(t *testing.T) {
 	})
 }
 
-func TestAccRDSInstance_SnapshotIdentifierMultiAZ_sqlServer(t *testing.T) {
+func TestAccRDSInstance_SnapshotIdentifier_multiAZ_sqlServer(t *testing.T) {
 	var dbInstance, sourceDbInstance rds.DBInstance
 	var dbSnapshot rds.DBSnapshot
 
@@ -1926,7 +2352,7 @@ func TestAccRDSInstance_SnapshotIdentifier_tags(t *testing.T) {
 	})
 }
 
-func TestAccRDSInstance_SnapshotIdentifierTags_unset(t *testing.T) {
+func TestAccRDSInstance_SnapshotIdentifier_Tags_Clear(t *testing.T) {
 	acctest.Skip(t, "To be fixed: https://github.com/hashicorp/terraform-provider-aws/issues/5959")
 	// --- FAIL: TestAccRDSInstance_SnapshotIdentifierTags_unset (1086.15s)
 	//     testing.go:527: Step 0 error: Check failed: Check 4/4 error: aws_db_instance.test: Attribute 'tags.%' expected "0", got "1"
@@ -1946,7 +2372,7 @@ func TestAccRDSInstance_SnapshotIdentifierTags_unset(t *testing.T) {
 		CheckDestroy: testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceConfig_SnapshotIdentifier_Tags_Unset(rName),
+				Config: testAccInstanceConfig_SnapshotIdentifier_Tags_Clear(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(sourceDbResourceName, &sourceDbInstance),
 					testAccCheckDbSnapshotExists(snapshotResourceName, &dbSnapshot),
@@ -1989,7 +2415,7 @@ func TestAccRDSInstance_SnapshotIdentifier_vpcSecurityGroupIDs(t *testing.T) {
 // This acceptance test explicitly tests when snapshot_identifier is set,
 // vpc_security_group_ids is set (which triggered the resource update function),
 // and tags is set which was missing its ARN used for tagging
-func TestAccRDSInstance_SnapshotIdentifierVPCSecurityGroupIDs_tags(t *testing.T) {
+func TestAccRDSInstance_SnapshotIdentifier_vpcSecurityGroupIDs_tags(t *testing.T) {
 	var dbInstance, sourceDbInstance rds.DBInstance
 	var dbSnapshot rds.DBSnapshot
 
@@ -3569,9 +3995,9 @@ func TestAccRDSInstance_license(t *testing.T) {
 func testAccInstanceConfig_orderableClass(engine, version, license string) string {
 	return fmt.Sprintf(`
 data "aws_rds_orderable_db_instance" "test" {
-  engine         = %q
-  engine_version = %q
-  license_model  = %q
+  engine         = %[1]q
+  engine_version = %[2]q
+  license_model  = %[3]q
   storage_type   = "standard"
 
   preferred_instance_classes = ["db.t3.micro", "db.t2.micro", "db.t2.medium"]
@@ -3584,16 +4010,19 @@ func testAccInstanceConfig_orderableClassMySQL() string {
 }
 
 func testAccInstanceConfig_orderableClassMariadb() string {
-	return testAccInstanceConfig_orderableClass("mariadb", "10.2.15", "general-public-license")
+	return testAccInstanceConfig_orderableClass("mariadb", "10.5.12", "general-public-license")
 }
 
 func testAccInstanceConfig_orderableClassSQLServerEx() string {
 	return testAccInstanceConfig_orderableClass("sqlserver-ex", "14.00.1000.169.v1", "license-included")
 }
 
-func testAccInstanceBasicConfig() string {
-	return acctest.ConfigCompose(testAccInstanceConfig_orderableClassMySQL(), `
-resource "aws_db_instance" "bar" {
+func testAccInstanceBasicConfig(rName string) string {
+	return acctest.ConfigCompose(
+		testAccInstanceConfig_orderableClassMySQL(),
+		fmt.Sprintf(`
+resource "aws_db_instance" "test" {
+  identifier              = %[1]q
   allocated_storage       = 10
   backup_retention_period = 0
   engine                  = data.aws_rds_orderable_db_instance.test.engine
@@ -3603,14 +4032,14 @@ resource "aws_db_instance" "bar" {
   parameter_group_name    = "default.mysql5.6"
   password                = "barbarbarbar"
   skip_final_snapshot     = true
-  username                = "foo"
+  username                = "test"
 
   # Maintenance Window is stored in lower case in the API, though not strictly
   # documented. Terraform will downcase this to match (as opposed to throw a
   # validation error).
   maintenance_window = "Fri:09:00-Fri:09:30"
 }
-`)
+`, rName))
 }
 
 func testAccInstanceConfig_MajorVersionOnly(engine, engineVersion string) string {
@@ -3639,23 +4068,26 @@ resource "aws_db_instance" "test" {
 `, engine, engineVersion))
 }
 
-func testAccInstanceConfig_namePrefix() string {
-	return acctest.ConfigCompose(testAccInstanceConfig_orderableClassMySQL(), `
+func testAccInstanceConfig_namePrefix(identifierPrefix string) string {
+	return acctest.ConfigCompose(
+		testAccInstanceConfig_orderableClassMySQL(),
+		fmt.Sprintf(`
 resource "aws_db_instance" "test" {
+  identifier_prefix   = %[1]q
   allocated_storage   = 10
   engine              = data.aws_rds_orderable_db_instance.test.engine
-  identifier_prefix   = "tf-test-"
   instance_class      = data.aws_rds_orderable_db_instance.test.instance_class
   password            = "password"
   publicly_accessible = true
   skip_final_snapshot = true
   username            = "root"
 }
-`)
+`, identifierPrefix))
 }
 
-func testAccInstanceConfig_generatedName() string {
-	return acctest.ConfigCompose(testAccInstanceConfig_orderableClassMySQL(), `
+func testAccInstanceConfig_nameGenerated() string {
+	return acctest.ConfigCompose(
+		testAccInstanceConfig_orderableClassMySQL(), `
 resource "aws_db_instance" "test" {
   allocated_storage   = 10
   engine              = data.aws_rds_orderable_db_instance.test.engine
@@ -3829,8 +4261,10 @@ resource "aws_db_instance" "snapshot" {
 `, sdkacctest.RandInt()))
 }
 
-func testAccInstanceConfig_S3Import(bucketName string, bucketPrefix string, uniqueId string) string {
-	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
+func testAccInstanceConfig_S3Import_Base(rName, bucketPrefix string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigVpcWithSubnets(2),
+		fmt.Sprintf(`
 resource "aws_s3_bucket" "xtrabackup" {
   bucket = %[1]q
 }
@@ -3845,7 +4279,7 @@ resource "aws_s3_object" "xtrabackup_db" {
 data "aws_partition" "current" {}
 
 resource "aws_iam_role" "rds_s3_access_role" {
-  name = "%[3]s-role"
+  name = "%[1]s-role"
 
   assume_role_policy = <<EOF
 {
@@ -3865,7 +4299,7 @@ EOF
 }
 
 resource "aws_iam_policy" "test" {
-  name = "%[3]s-policy"
+  name = "%[1]s-policy"
 
   policy = <<POLICY
 {
@@ -3887,7 +4321,7 @@ POLICY
 }
 
 resource "aws_iam_policy_attachment" "test-attach" {
-  name = "%[3]s-policy-attachment"
+  name = "%[1]s-policy-attachment"
 
   roles = [
     aws_iam_role.rds_s3_access_role.name,
@@ -3896,38 +4330,9 @@ resource "aws_iam_policy_attachment" "test-attach" {
   policy_arn = aws_iam_policy.test.arn
 }
 
-#  Make sure EVERYTHING required is here...
-resource "aws_vpc" "foo" {
-  cidr_block = "10.1.0.0/16"
-
-  tags = {
-    Name = "terraform-testacc-db-instance-with-subnet-group"
-  }
-}
-
-resource "aws_subnet" "foo" {
-  cidr_block        = "10.1.1.0/24"
-  availability_zone = data.aws_availability_zones.available.names[0]
-  vpc_id            = aws_vpc.foo.id
-
-  tags = {
-    Name = "tf-acc-db-instance-with-subnet-group-1"
-  }
-}
-
-resource "aws_subnet" "bar" {
-  cidr_block        = "10.1.2.0/24"
-  availability_zone = data.aws_availability_zones.available.names[1]
-  vpc_id            = aws_vpc.foo.id
-
-  tags = {
-    Name = "tf-acc-db-instance-with-subnet-group-2"
-  }
-}
-
 resource "aws_db_subnet_group" "foo" {
-  name       = "%[3]s-subnet-group"
-  subnet_ids = [aws_subnet.foo.id, aws_subnet.bar.id]
+  name       = %[1]q
+  subnet_ids = aws_subnet.test[*].id
 
   tags = {
     Name = "tf-dbsubnet-group-test"
@@ -3943,9 +4348,15 @@ data "aws_rds_orderable_db_instance" "test" {
   # instance class db.t2.micro is not supported for restoring from S3
   preferred_instance_classes = ["db.t3.small", "db.t2.small", "db.t2.medium"]
 }
+`, rName, bucketPrefix))
+}
 
-resource "aws_db_instance" "s3" {
-  identifier = "%[3]s-db"
+func testAccInstanceConfig_S3Import_basic(bucketName, bucketPrefix, uniqueId string) string {
+	return acctest.ConfigCompose(
+		testAccInstanceConfig_S3Import_Base(bucketName, bucketPrefix),
+		fmt.Sprintf(`
+resource "aws_db_instance" "test" {
+  identifier = "%[1]s-db"
 
   allocated_storage          = 5
   engine                     = data.aws_rds_orderable_db_instance.test.engine
@@ -3972,7 +4383,75 @@ resource "aws_db_instance" "s3" {
     ingestion_role = aws_iam_role.rds_s3_access_role.arn
   }
 }
-`, bucketName, bucketPrefix, uniqueId))
+`, uniqueId, bucketPrefix))
+}
+
+func testAccInstanceConfig_S3Import_namePrefix(rName, bucketPrefix, identifierPrefix string) string {
+	return acctest.ConfigCompose(
+		testAccInstanceConfig_S3Import_Base(rName, bucketPrefix),
+		fmt.Sprintf(`
+resource "aws_db_instance" "test" {
+  identifier_prefix = %[1]q
+
+  allocated_storage          = 5
+  engine                     = data.aws_rds_orderable_db_instance.test.engine
+  engine_version             = "5.6"
+  auto_minor_version_upgrade = true
+  instance_class             = data.aws_rds_orderable_db_instance.test.instance_class
+  name                       = "baz"
+  password                   = "barbarbarbar"
+  publicly_accessible        = false
+  username                   = "foo"
+  backup_retention_period    = 0
+
+  parameter_group_name = "default.mysql5.6"
+  skip_final_snapshot  = true
+  multi_az             = false
+  db_subnet_group_name = aws_db_subnet_group.foo.id
+
+  s3_import {
+    source_engine         = data.aws_rds_orderable_db_instance.test.engine
+    source_engine_version = "5.6"
+
+    bucket_name    = aws_s3_bucket.xtrabackup.bucket
+    bucket_prefix  = %[2]q
+    ingestion_role = aws_iam_role.rds_s3_access_role.arn
+  }
+}
+`, identifierPrefix, bucketPrefix))
+}
+
+func testAccInstanceConfig_S3Import_nameGenerated(rName, bucketPrefix string) string {
+	return acctest.ConfigCompose(
+		testAccInstanceConfig_S3Import_Base(rName, bucketPrefix),
+		fmt.Sprintf(`
+resource "aws_db_instance" "test" {
+  allocated_storage          = 5
+  engine                     = data.aws_rds_orderable_db_instance.test.engine
+  engine_version             = "5.6"
+  auto_minor_version_upgrade = true
+  instance_class             = data.aws_rds_orderable_db_instance.test.instance_class
+  name                       = "baz"
+  password                   = "barbarbarbar"
+  publicly_accessible        = false
+  username                   = "foo"
+  backup_retention_period    = 0
+
+  parameter_group_name = "default.mysql5.6"
+  skip_final_snapshot  = true
+  multi_az             = false
+  db_subnet_group_name = aws_db_subnet_group.foo.id
+
+  s3_import {
+    source_engine         = data.aws_rds_orderable_db_instance.test.engine
+    source_engine_version = "5.6"
+
+    bucket_name    = aws_s3_bucket.xtrabackup.bucket
+    bucket_prefix  = %[1]q
+    ingestion_role = aws_iam_role.rds_s3_access_role.arn
+  }
+}
+`, bucketPrefix))
 }
 
 func testAccInstanceConfig_FinalSnapshotIdentifier(rInt int) string {
@@ -5561,8 +6040,10 @@ resource "aws_db_instance" "test" {
 `, rName, password))
 }
 
-func testAccInstanceConfig_ReplicateSourceDB(rName string) string {
-	return acctest.ConfigCompose(testAccInstanceConfig_orderableClassMySQL(), fmt.Sprintf(`
+func testAccInstanceConfig_ReplicateSourceDB_basic(rName string) string {
+	return acctest.ConfigCompose(
+		testAccInstanceConfig_orderableClassMySQL(),
+		fmt.Sprintf(`
 resource "aws_db_instance" "source" {
   allocated_storage       = 5
   backup_retention_period = 1
@@ -5574,6 +6055,81 @@ resource "aws_db_instance" "source" {
   skip_final_snapshot     = true
 }
 
+resource "aws_db_instance" "test" {
+  identifier          = %[1]q
+  instance_class      = aws_db_instance.source.instance_class
+  replicate_source_db = aws_db_instance.source.id
+  skip_final_snapshot = true
+}
+`, rName))
+}
+
+func testAccInstanceConfig_ReplicateSourceDB_namePrefix(identifierPrefix, sourceName string) string {
+	return acctest.ConfigCompose(
+		testAccInstanceConfig_orderableClassMySQL(),
+		fmt.Sprintf(`
+resource "aws_db_instance" "source" {
+  allocated_storage       = 5
+  backup_retention_period = 1
+  engine                  = data.aws_rds_orderable_db_instance.test.engine
+  identifier              = %[1]q
+  instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
+  password                = "avoid-plaintext-passwords"
+  username                = "tfacctest"
+  skip_final_snapshot     = true
+}
+
+resource "aws_db_instance" "test" {
+  identifier_prefix   = %[2]q
+  instance_class      = aws_db_instance.source.instance_class
+  replicate_source_db = aws_db_instance.source.id
+  skip_final_snapshot = true
+}
+`, sourceName, identifierPrefix))
+}
+
+func testAccInstanceConfig_ReplicateSourceDB_nameGenerated(sourceName string) string {
+	return acctest.ConfigCompose(
+		testAccInstanceConfig_orderableClassMySQL(),
+		fmt.Sprintf(`
+resource "aws_db_instance" "source" {
+  allocated_storage       = 5
+  backup_retention_period = 1
+  engine                  = data.aws_rds_orderable_db_instance.test.engine
+  identifier              = %[1]q
+  instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
+  password                = "avoid-plaintext-passwords"
+  username                = "tfacctest"
+  skip_final_snapshot     = true
+}
+
+resource "aws_db_instance" "test" {
+  instance_class      = aws_db_instance.source.instance_class
+  replicate_source_db = aws_db_instance.source.id
+  skip_final_snapshot = true
+}
+`, sourceName))
+}
+
+func testAccInstanceConfig_ReplicateSourceDB_addLaterSetup() string {
+	return acctest.ConfigCompose(
+		testAccInstanceConfig_orderableClassMySQL(), `
+resource "aws_db_instance" "source" {
+  allocated_storage       = 5
+  backup_retention_period = 1
+  engine                  = data.aws_rds_orderable_db_instance.test.engine
+  instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
+  password                = "avoid-plaintext-passwords"
+  username                = "tfacctest"
+  skip_final_snapshot     = true
+}
+`)
+}
+
+func testAccInstanceConfig_ReplicateSourceDB_addLater(rName string) string {
+	return acctest.ConfigCompose(
+		testAccInstanceConfig_ReplicateSourceDB_addLaterSetup(),
+		fmt.Sprintf(`
 resource "aws_db_instance" "test" {
   identifier          = %[1]q
   instance_class      = aws_db_instance.source.instance_class
@@ -6269,34 +6825,10 @@ resource "aws_db_instance" "test" {
 }
 
 func testAccInstanceConfig_ReplicateSourceDB_Monitoring(rName string, monitoringInterval int) string {
-	return acctest.ConfigCompose(testAccInstanceConfig_orderableClassMySQL(), fmt.Sprintf(`
-data "aws_partition" "current" {}
-
-resource "aws_iam_role" "test" {
-  name = %[1]q
-
-  assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Sid": "",
-      "Effect": "Allow",
-      "Principal": {
-        "Service": "monitoring.rds.${data.aws_partition.current.dns_suffix}"
-      },
-      "Action": "sts:AssumeRole"
-    }
-  ]
-}
-EOF
-}
-
-resource "aws_iam_role_policy_attachment" "test" {
-  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/service-role/AmazonRDSEnhancedMonitoringRole"
-  role       = aws_iam_role.test.id
-}
-
+	return acctest.ConfigCompose(
+		testAccInstanceConfig_orderableClassMySQL(),
+		testAccInstanceConfig_MonitoringRole(rName),
+		fmt.Sprintf(`
 resource "aws_db_instance" "source" {
   allocated_storage       = 5
   backup_retention_period = 1
@@ -6342,8 +6874,130 @@ resource "aws_db_instance" "test" {
 `, rName, multiAz))
 }
 
-func testAccInstanceConfig_ReplicateSourceDB_ParameterGroupName(rName string) string {
-	return acctest.ConfigCompose(testAccInstanceConfig_orderableClassMySQL(), fmt.Sprintf(`
+func testAccInstanceConfig_ReplicateSourceDB_ParameterGroupName_sameSetOnBoth(rName string) string {
+	return acctest.ConfigCompose(
+		testAccInstanceConfig_orderableClassMySQL(),
+		fmt.Sprintf(`
+resource "aws_db_parameter_group" "test" {
+  family = "mysql5.6"
+  name   = %[1]q
+
+  parameter {
+    name  = "sync_binlog"
+    value = 0
+  }
+}
+
+resource "aws_db_instance" "source" {
+  allocated_storage       = 5
+  backup_retention_period = 1
+  engine                  = data.aws_rds_orderable_db_instance.test.engine
+  engine_version          = data.aws_rds_orderable_db_instance.test.engine_version
+  identifier              = "%[1]s-source"
+  instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
+  parameter_group_name    = aws_db_parameter_group.test.id
+  password                = "avoid-plaintext-passwords"
+  username                = "tfacctest"
+  skip_final_snapshot     = true
+}
+
+resource "aws_db_instance" "test" {
+  identifier           = %[1]q
+  instance_class       = aws_db_instance.source.instance_class
+  parameter_group_name = aws_db_parameter_group.test.id
+  replicate_source_db  = aws_db_instance.source.id
+  skip_final_snapshot  = true
+}
+`, rName))
+}
+
+func testAccInstanceConfig_ReplicateSourceDB_ParameterGroupName_differentSetOnBoth(rName string) string {
+	return acctest.ConfigCompose(
+		testAccInstanceConfig_orderableClassMySQL(),
+		fmt.Sprintf(`
+resource "aws_db_instance" "test" {
+  identifier           = %[1]q
+  instance_class       = aws_db_instance.source.instance_class
+  parameter_group_name = aws_db_parameter_group.test.id
+  replicate_source_db  = aws_db_instance.source.id
+  skip_final_snapshot  = true
+}
+
+resource "aws_db_parameter_group" "test" {
+  family = "mysql5.6"
+  name   = %[1]q
+
+  parameter {
+    name  = "sync_binlog"
+    value = 0
+  }
+}
+
+resource "aws_db_instance" "source" {
+  allocated_storage       = 5
+  backup_retention_period = 1
+  engine                  = data.aws_rds_orderable_db_instance.test.engine
+  engine_version          = data.aws_rds_orderable_db_instance.test.engine_version
+  identifier              = "%[1]s-source"
+  instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
+  parameter_group_name    = aws_db_parameter_group.source.id
+  password                = "avoid-plaintext-passwords"
+  username                = "tfacctest"
+  skip_final_snapshot     = true
+}
+
+resource "aws_db_parameter_group" "source" {
+  family = "mysql5.6"
+  name   = "%[1]s-source"
+
+  parameter {
+    name  = "sync_binlog"
+    value = 0
+  }
+}
+`, rName))
+}
+
+func testAccInstanceConfig_ReplicateSourceDB_ParameterGroupName_replicaCopiesValue(rName string) string {
+	return acctest.ConfigCompose(
+		testAccInstanceConfig_orderableClassMySQL(),
+		fmt.Sprintf(`
+resource "aws_db_parameter_group" "test" {
+  family = "mysql5.6"
+  name   = %[1]q
+
+  parameter {
+    name  = "sync_binlog"
+    value = 0
+  }
+}
+
+resource "aws_db_instance" "source" {
+  allocated_storage       = 5
+  backup_retention_period = 1
+  engine                  = data.aws_rds_orderable_db_instance.test.engine
+  engine_version          = data.aws_rds_orderable_db_instance.test.engine_version
+  identifier              = "%[1]s-source"
+  instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
+  parameter_group_name    = aws_db_parameter_group.test.id
+  password                = "avoid-plaintext-passwords"
+  username                = "tfacctest"
+  skip_final_snapshot     = true
+}
+
+resource "aws_db_instance" "test" {
+  identifier          = %[1]q
+  instance_class      = aws_db_instance.source.instance_class
+  replicate_source_db = aws_db_instance.source.id
+  skip_final_snapshot = true
+}
+`, rName))
+}
+
+func testAccInstanceConfig_ReplicateSourceDB_ParameterGroupName_setOnReplica(rName string) string {
+	return acctest.ConfigCompose(
+		testAccInstanceConfig_orderableClassMySQL(),
+		fmt.Sprintf(`
 resource "aws_db_parameter_group" "test" {
   family = "mysql5.6"
   name   = %[1]q
@@ -6432,7 +7086,9 @@ resource "aws_db_instance" "test" {
 }
 
 func testAccInstanceConfig_ReplicateSourceDB_CACertificateIdentifier(rName string) string {
-	return acctest.ConfigCompose(testAccInstanceConfig_orderableClassMySQL(), fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		testAccInstanceConfig_orderableClassMySQL(),
+		fmt.Sprintf(`
 data "aws_rds_certificate" "latest" {
   latest_valid_till = true
 }
@@ -6463,19 +7119,21 @@ func testAccInstanceConfig_ReplicateSourceDB_ReplicaMode(rName string) string {
 	return fmt.Sprintf(`
 data "aws_rds_orderable_db_instance" "test" {
   engine         = "oracle-ee"
-  engine_version = "12.1.0.2.v22"
+  engine_version = "19.0.0.0.ru-2021-07.rur-2021-07.r1"
   license_model  = "bring-your-own-license"
-  storage_type   = "standard"
+  storage_type   = "gp2"
 
-  preferred_instance_classes = ["db.m5.large", "db.m4.large", "db.r4.large"]
+  preferred_instance_classes = ["db.t3.medium", "db.t2.medium"]
 }
 
 resource "aws_db_instance" "source" {
+  identifier              = "%[1]s-source"
   allocated_storage       = 20
   backup_retention_period = 1
   engine                  = data.aws_rds_orderable_db_instance.test.engine
-  identifier              = "%[1]s-source"
+  engine_version          = data.aws_rds_orderable_db_instance.test.engine_version
   instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
+  storage_type            = data.aws_rds_orderable_db_instance.test.storage_type
   password                = "avoid-plaintext-passwords"
   username                = "tfacctest"
   skip_final_snapshot     = true
@@ -6491,8 +7149,105 @@ resource "aws_db_instance" "test" {
 `, rName)
 }
 
+func testAccInstanceConfig_ReplicateSourceDB_ParameterGroupTwoStep_Setup(rName string) string {
+	return acctest.ConfigCompose(
+		fmt.Sprintf(`
+data "aws_rds_orderable_db_instance" "test" {
+  engine         = "oracle-ee"
+  engine_version = "19.0.0.0.ru-2021-07.rur-2021-07.r1"
+  license_model  = "bring-your-own-license"
+  storage_type   = "gp2"
+
+  # Oracle requires at least a medium instance as a replica source
+  preferred_instance_classes = ["db.t3.medium"]
+}
+
+resource "aws_db_instance" "source" {
+  identifier              = "%[1]s-source"
+  allocated_storage       = 20
+  engine                  = data.aws_rds_orderable_db_instance.test.engine
+  engine_version          = data.aws_rds_orderable_db_instance.test.engine_version
+  instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
+  storage_type            = data.aws_rds_orderable_db_instance.test.storage_type
+  name                    = "MAINDB"
+  username                = "oadmin"
+  password                = "avoid-plaintext-passwords"
+  skip_final_snapshot     = true
+  apply_immediately       = true
+  backup_retention_period = 3
+
+  parameter_group_name = "default.oracle-ee-19"
+  character_set_name   = "AL32UTF8"
+  timeouts {
+    update = "120m"
+  }
+  ca_cert_identifier = "rds-ca-2019"
+}
+`, rName))
+}
+
+func testAccInstanceConfig_ReplicateSourceDB_ParameterGroupTwoStep(rName string) string {
+	return acctest.ConfigCompose(
+		testAccInstanceConfig_ReplicateSourceDB_ParameterGroupTwoStep_Setup(rName),
+		fmt.Sprintf(`
+resource "aws_db_instance" "test" {
+  identifier          = %[1]q
+  replicate_source_db = aws_db_instance.source.id
+
+  instance_class      = data.aws_rds_orderable_db_instance.test.instance_class
+  skip_final_snapshot = true
+  apply_immediately   = true
+
+  parameter_group_name = aws_db_parameter_group.test.id
+  ca_cert_identifier   = "rds-ca-2019"
+
+  timeouts {
+    update = "120m"
+  }
+}
+
+resource "aws_db_parameter_group" "test" {
+  family = "oracle-ee-19"
+  name   = %[1]q
+}
+`, rName))
+}
+
+func testAccInstanceConfig_MonitoringRole(rName string) string {
+	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+
+resource "aws_iam_role" "test" {
+  name = %[1]q
+
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "",
+      "Effect": "Allow",
+      "Principal": {
+        "Service": "monitoring.rds.${data.aws_partition.current.dns_suffix}"
+      },
+      "Action": "sts:AssumeRole"
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_iam_role_policy_attachment" "test" {
+  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/service-role/AmazonRDSEnhancedMonitoringRole"
+  role       = aws_iam_role.test.name
+}
+`, rName)
+}
+
 func testAccInstanceConfig_SnapshotIdentifier(rName string) string {
-	return acctest.ConfigCompose(testAccInstanceConfig_orderableClassMariadb(), fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		testAccInstanceConfig_orderableClassMariadb(),
+		fmt.Sprintf(`
 resource "aws_db_instance" "source" {
   allocated_storage   = 5
   engine              = data.aws_rds_orderable_db_instance.test.engine
@@ -6517,8 +7272,65 @@ resource "aws_db_instance" "test" {
 `, rName))
 }
 
-func testAccInstanceConfig_SnapshotIdentifierRemoved(rName string) string {
-	return acctest.ConfigCompose(testAccInstanceConfig_orderableClassMariadb(), fmt.Sprintf(`
+func testAccInstanceConfig_SnapshotIdentifier_namePrefix(identifierPrefix, sourceName string) string {
+	return acctest.ConfigCompose(
+		testAccInstanceConfig_orderableClassMariadb(),
+		fmt.Sprintf(`
+resource "aws_db_instance" "source" {
+  allocated_storage   = 5
+  engine              = data.aws_rds_orderable_db_instance.test.engine
+  identifier          = %[1]q
+  instance_class      = data.aws_rds_orderable_db_instance.test.instance_class
+  password            = "avoid-plaintext-passwords"
+  username            = "tfacctest"
+  skip_final_snapshot = true
+}
+
+resource "aws_db_snapshot" "test" {
+  db_instance_identifier = aws_db_instance.source.id
+  db_snapshot_identifier = %[1]q
+}
+
+resource "aws_db_instance" "test" {
+  identifier_prefix   = %[2]q
+  instance_class      = aws_db_instance.source.instance_class
+  snapshot_identifier = aws_db_snapshot.test.id
+  skip_final_snapshot = true
+}
+`, sourceName, identifierPrefix))
+}
+
+func testAccInstanceConfig_SnapshotIdentifier_nameGenerated(sourceName string) string {
+	return acctest.ConfigCompose(
+		testAccInstanceConfig_orderableClassMariadb(),
+		fmt.Sprintf(`
+resource "aws_db_instance" "source" {
+  allocated_storage   = 5
+  engine              = data.aws_rds_orderable_db_instance.test.engine
+  identifier          = %[1]q
+  instance_class      = data.aws_rds_orderable_db_instance.test.instance_class
+  password            = "avoid-plaintext-passwords"
+  username            = "tfacctest"
+  skip_final_snapshot = true
+}
+
+resource "aws_db_snapshot" "test" {
+  db_instance_identifier = aws_db_instance.source.id
+  db_snapshot_identifier = %[1]q
+}
+
+resource "aws_db_instance" "test" {
+  instance_class      = aws_db_instance.source.instance_class
+  snapshot_identifier = aws_db_snapshot.test.id
+  skip_final_snapshot = true
+}
+`, sourceName))
+}
+
+func testAccInstanceConfig_SnapshotIdentifier_AssociationRemoved(rName string) string {
+	return acctest.ConfigCompose(
+		testAccInstanceConfig_orderableClassMariadb(),
+		fmt.Sprintf(`
 resource "aws_db_instance" "source" {
   allocated_storage   = 5
   engine              = data.aws_rds_orderable_db_instance.test.engine
@@ -6535,10 +7347,6 @@ resource "aws_db_snapshot" "test" {
 }
 
 resource "aws_db_instance" "test" {
-  allocated_storage   = 5
-  engine              = data.aws_rds_orderable_db_instance.test.engine
-  password            = "avoid-plaintext-passwords"
-  username            = "tfacctest"
   identifier          = %[1]q
   instance_class      = aws_db_instance.source.instance_class
   skip_final_snapshot = true
@@ -6577,7 +7385,7 @@ func testAccInstanceConfig_SnapshotIdentifier_Io1Storage(rName string, iops int)
 	return fmt.Sprintf(`
 data "aws_rds_orderable_db_instance" "test" {
   engine         = "mariadb"
-  engine_version = "10.2.15"
+  engine_version = "10.5.12"
   license_model  = "general-public-license"
   storage_type   = "io1"
 
@@ -7333,6 +8141,10 @@ resource "aws_db_instance" "source" {
   password            = "avoid-plaintext-passwords"
   username            = "tfacctest"
   skip_final_snapshot = true
+
+  tags = {
+    key1 = "value-old"
+  }
 }
 
 resource "aws_db_snapshot" "test" {
@@ -7353,8 +8165,10 @@ resource "aws_db_instance" "test" {
 `, rName))
 }
 
-func testAccInstanceConfig_SnapshotIdentifier_Tags_Unset(rName string) string {
-	return acctest.ConfigCompose(testAccInstanceConfig_orderableClassMariadb(), fmt.Sprintf(`
+func testAccInstanceConfig_SnapshotIdentifier_Tags_Clear(rName string) string {
+	return acctest.ConfigCompose(
+		testAccInstanceConfig_orderableClassMariadb(),
+		fmt.Sprintf(`
 resource "aws_db_instance" "source" {
   allocated_storage   = 5
   engine              = data.aws_rds_orderable_db_instance.test.engine

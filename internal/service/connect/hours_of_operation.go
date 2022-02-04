@@ -27,11 +27,11 @@ func ResourceHoursOfOperation() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
-		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(connectHoursOfOperationCreatedTimeout),
-			Delete: schema.DefaultTimeout(connectHoursOfOperationDeletedTimeout),
-		},
 		Schema: map[string]*schema.Schema{
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"config": {
 				Type:     schema.TypeSet,
 				Required: true,
@@ -94,8 +94,9 @@ func ResourceHoursOfOperation() *schema.Resource {
 				ValidateFunc: validation.StringLenBetween(1, 250),
 			},
 			"hours_of_operation_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
+				Type:       schema.TypeString,
+				Computed:   true,
+				Deprecated: "use 'arn' attribute instead",
 			},
 			"hours_of_operation_id": {
 				Type:     schema.TypeString,
@@ -195,7 +196,8 @@ func resourceHoursOfOperationRead(ctx context.Context, d *schema.ResourceData, m
 		return diag.FromErr(err)
 	}
 
-	d.Set("hours_of_operation_arn", resp.HoursOfOperation.HoursOfOperationArn)
+	d.Set("arn", resp.HoursOfOperation.HoursOfOperationArn)
+	d.Set("hours_of_operation_arn", resp.HoursOfOperation.HoursOfOperationArn) // Deprecated
 	d.Set("hours_of_operation_id", resp.HoursOfOperation.HoursOfOperationId)
 	d.Set("instance_id", instanceID)
 	d.Set("description", resp.HoursOfOperation.Description)

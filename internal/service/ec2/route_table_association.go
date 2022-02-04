@@ -30,12 +30,10 @@ func ResourceRouteTableAssociation() *schema.Resource {
 				ForceNew:     true,
 				ExactlyOneOf: []string{"subnet_id", "gateway_id"},
 			},
-
 			"route_table_id": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-
 			"subnet_id": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -88,7 +86,9 @@ func resourceRouteTableAssociationCreate(d *schema.ResourceData, meta interface{
 func resourceRouteTableAssociationRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
-	association, err := FindRouteTableAssociationByID(conn, d.Id())
+	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(PropagationTimeout, func() (interface{}, error) {
+		return FindRouteTableAssociationByID(conn, d.Id())
+	}, d.IsNewResource())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Route Table Association (%s) not found, removing from state", d.Id())
@@ -99,6 +99,8 @@ func resourceRouteTableAssociationRead(d *schema.ResourceData, meta interface{})
 	if err != nil {
 		return fmt.Errorf("error reading Route Table Association (%s): %w", d.Id(), err)
 	}
+
+	association := outputRaw.(*ec2.RouteTableAssociation)
 
 	d.Set("gateway_id", association.GatewayId)
 	d.Set("route_table_id", association.RouteTableId)

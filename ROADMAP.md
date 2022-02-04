@@ -23,7 +23,7 @@ From February ‘22 - April ‘22, we will be prioritizing the following areas o
 
 ### AWS AppFlow
 
-Issue: [#11145](https://github.com/hashicorp/terraform-provider-aws/issues/11145)
+Issue: [#16253](https://github.com/hashicorp/terraform-provider-aws/issues/16253)
 
 _[Amazon AppFlow](https://aws.amazon.com/appflow/) is a fully managed integration service that enables you to securely transfer data between Software-as-a-Service (SaaS) applications_
 

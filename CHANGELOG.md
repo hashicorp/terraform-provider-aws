@@ -2,8 +2,17 @@
 
 BREAKING CHANGES:
 
+* data-source/aws_connect_hours_of_operation: The hours_of_operation_arn attribute is renamed to arn ([#22375](https://github.com/hashicorp/terraform-provider-aws/issues/22375))
 * resource/aws_batch_compute_environment: No `compute_resources` configuration block can be specified when `type` is `UNMANAGED` ([#22805](https://github.com/hashicorp/terraform-provider-aws/issues/22805))
 * resource/aws_cloudwatch_event_target: The `ecs_target` `launch_type` argument no longer has a default value (previously was `EC2`) ([#22803](https://github.com/hashicorp/terraform-provider-aws/issues/22803))
+* resource/aws_connect_hours_of_operation: The hours_of_operation_arn attribute is renamed to arn ([#22375](https://github.com/hashicorp/terraform-provider-aws/issues/22375))
+* resource/aws_default_network_acl: These arguments can no longer be set to `""`: `egress.*.cidr_block`, `egress.*.ipv6_cidr_block`, `ingress.*.cidr_block`, or `ingress.*.ipv6_cidr_block` ([#22928](https://github.com/hashicorp/terraform-provider-aws/issues/22928))
+* resource/aws_default_route_table: These arguments can no longer be set to `""`: `route.*.cidr_block`, `route.*.ipv6_cidr_block` ([#22931](https://github.com/hashicorp/terraform-provider-aws/issues/22931))
+* resource/aws_elasticache_cluster: Either `engine` or `replication_group_id` must be specified ([#20482](https://github.com/hashicorp/terraform-provider-aws/issues/20482))
+* resource/aws_fsx_ontap_storage_virtual_machine: Remove deprecated `active_directory_configuration.0.self_managed_active_directory_configuration.0.organizational_unit_distinguidshed_name`, migrating value to `active_directory_configuration.0.self_managed_active_directory_configuration.0.organizational_unit_distinguished_name` ([#22915](https://github.com/hashicorp/terraform-provider-aws/issues/22915))
+* resource/aws_network_acl: These arguments can no longer be set to `""`: `egress.*.cidr_block`, `egress.*.ipv6_cidr_block`, `ingress.*.cidr_block`, or `ingress.*.ipv6_cidr_block` ([#22928](https://github.com/hashicorp/terraform-provider-aws/issues/22928))
+* resource/aws_route: Exactly one of these can be set: `destination_cidr_block`, `destination_ipv6_cidr_block`, `destination_prefix_list_id`. These arguments can no longer be set to `""`: `destination_cidr_block`, `destination_ipv6_cidr_block`. ([#22931](https://github.com/hashicorp/terraform-provider-aws/issues/22931))
+* resource/aws_route_table: These arguments can no longer be set to `""`: `route.*.cidr_block`, `route.*.ipv6_cidr_block` ([#22931](https://github.com/hashicorp/terraform-provider-aws/issues/22931))
 
 NOTES:
 
@@ -36,6 +45,8 @@ NOTES:
 * resource/aws_autoscaling_attachment: The `alb_target_group_arn` argument has been deprecated. All configurations using `alb_target_group_arn` should be updated to use the new `lb_target_group_arn` argument instead ([#22662](https://github.com/hashicorp/terraform-provider-aws/issues/22662))
 * resource/aws_autoscaling_group: The `tags` argument has been deprecated. All configurations using `tags` should be updated to use the `tag` argument instead ([#22663](https://github.com/hashicorp/terraform-provider-aws/issues/22663))
 * resource/aws_budgets_budget: The `cost_filters` attribute has been deprecated. Use the `cost_filter` attribute instead. ([#22888](https://github.com/hashicorp/terraform-provider-aws/issues/22888))
+* resource/aws_connect_hours_of_operation: Timeout support has been removed as it is not needed for this resource ([#22375](https://github.com/hashicorp/terraform-provider-aws/issues/22375))
+* resource/aws_customer_gateway: `ip_address` can no longer be set to `""` ([#22926](https://github.com/hashicorp/terraform-provider-aws/issues/22926))
 * resource/aws_default_subnet: If no default subnet exists in the specified Availability Zone one is now created. The `force_destroy` destroy argument has been added (defaults to `false`). Setting this argument to `true` deletes the default subnet on `terraform destroy` ([#22253](https://github.com/hashicorp/terraform-provider-aws/issues/22253))
 * resource/aws_default_vpc: If no default VPC exists in the current AWS Region one is now created. The `force_destroy` destroy argument has been added (defaults to `false`). Setting this argument to `true` deletes the default VPC on `terraform destroy` ([#22253](https://github.com/hashicorp/terraform-provider-aws/issues/22253))
 * resource/aws_ec2_client_vpn_endpoint: The `status` attribute has been deprecated ([#22887](https://github.com/hashicorp/terraform-provider-aws/issues/22887))
@@ -55,12 +66,22 @@ FEATURES:
 * **New Data Source:** `aws_eips` ([#7537](https://github.com/hashicorp/terraform-provider-aws/issues/7537))
 * **New Data Source:** `aws_s3_object` ([#22850](https://github.com/hashicorp/terraform-provider-aws/issues/22850))
 * **New Data Source:** `aws_s3_objects` ([#22850](https://github.com/hashicorp/terraform-provider-aws/issues/22850))
+* **New Resource:** `aws_cognito_user` ([#19919](https://github.com/hashicorp/terraform-provider-aws/issues/19919))
+* **New Resource:** `aws_dataexchange_revision` ([#22933](https://github.com/hashicorp/terraform-provider-aws/issues/22933))
+* **New Resource:** `aws_s3_bucket_accelerate_configuration` ([#22617](https://github.com/hashicorp/terraform-provider-aws/issues/22617))
 * **New Resource:** `aws_s3_bucket_cors_configuration` ([#12141](https://github.com/hashicorp/terraform-provider-aws/issues/12141))
+* **New Resource:** `aws_s3_bucket_lifecycle_configuration` ([#22579](https://github.com/hashicorp/terraform-provider-aws/issues/22579))
+* **New Resource:** `aws_s3_bucket_logging` ([#22608](https://github.com/hashicorp/terraform-provider-aws/issues/22608))
+* **New Resource:** `aws_s3_bucket_object_lock_configuration` ([#22644](https://github.com/hashicorp/terraform-provider-aws/issues/22644))
+* **New Resource:** `aws_s3_bucket_request_payment_configuration` ([#22649](https://github.com/hashicorp/terraform-provider-aws/issues/22649))
+* **New Resource:** `aws_s3_bucket_server_side_encryption_configuration` ([#22609](https://github.com/hashicorp/terraform-provider-aws/issues/22609))
 * **New Resource:** `aws_s3_bucket_versioning` ([#5132](https://github.com/hashicorp/terraform-provider-aws/issues/5132))
+* **New Resource:** `aws_s3_bucket_website_configuration` ([#22648](https://github.com/hashicorp/terraform-provider-aws/issues/22648))
 * **New Resource:** `aws_s3_object` ([#22850](https://github.com/hashicorp/terraform-provider-aws/issues/22850))
 
 ENHANCEMENTS:
 
+* data-source/aws_ami: Add `boot_mode` attribute. ([#22939](https://github.com/hashicorp/terraform-provider-aws/issues/22939))
 * data-source/aws_cloudwatch_log_group: Automatically trim `:*` suffix from `arn` attribute ([#22043](https://github.com/hashicorp/terraform-provider-aws/issues/22043))
 * data-source/aws_elasticache_replication_group: Add `description`, `num_cache_clusters`, `num_node_groups`, and `replicas_per_node_group` attributes ([#22667](https://github.com/hashicorp/terraform-provider-aws/issues/22667))
 * data-source/aws_imagebuilder_distribution_configuration: Add `container_distribution_configuration` attribute to the `distribution` configuration block ([#22838](https://github.com/hashicorp/terraform-provider-aws/issues/22838))
@@ -69,6 +90,7 @@ ENHANCEMENTS:
 * provider: Add `ec2_metadata_service_endpoint`, `ec2_metadata_service_endpoint_mode`, `use_dualstack_endpoint`, `use_fips_endpoint` arguments ([#22804](https://github.com/hashicorp/terraform-provider-aws/issues/22804))
 * provider: Add support for `shared_config_file` parameter ([#20587](https://github.com/hashicorp/terraform-provider-aws/issues/20587))
 * provider: Updates AWS authentication to use AWS SDK for Go v2 <https://aws.github.io/aws-sdk-go-v2/docs/> ([#20587](https://github.com/hashicorp/terraform-provider-aws/issues/20587))
+* resource/aws_ami: Add `boot_mode` and `ebs_block_device.outpost_arn` arguments. ([#22939](https://github.com/hashicorp/terraform-provider-aws/issues/22939))
 * resource/aws_autoscaling_attachment: Add `lb_target_group_arn` argument ([#22662](https://github.com/hashicorp/terraform-provider-aws/issues/22662))
 * resource/aws_ec2_client_vpn_authorization_rule: Configurable Create and Delete timeouts ([#20688](https://github.com/hashicorp/terraform-provider-aws/issues/20688))
 * resource/aws_ec2_client_vpn_endpoint: Add `client_connect_options` argument ([#22793](https://github.com/hashicorp/terraform-provider-aws/issues/22793))
@@ -79,7 +101,9 @@ ENHANCEMENTS:
 * resource/aws_elasticache_replication_group: Add `description` argument ([#22666](https://github.com/hashicorp/terraform-provider-aws/issues/22666))
 * resource/aws_elasticache_replication_group: Add `num_cache_clusters` argument ([#22666](https://github.com/hashicorp/terraform-provider-aws/issues/22666))
 * resource/aws_elasticache_replication_group: Add `num_node_groups` and `replicas_per_node_group` arguments ([#22666](https://github.com/hashicorp/terraform-provider-aws/issues/22666))
+* resource/aws_fsx_lustre_file_system: Add `log_configuration` argument. ([#22935](https://github.com/hashicorp/terraform-provider-aws/issues/22935))
 * resource/aws_fsx_ontap_file_system: Reduce the minimum valid value of the `throughput_capacity` argument to `128` (128 MB/s) ([#22898](https://github.com/hashicorp/terraform-provider-aws/issues/22898))
+* resource/aws_glue_partition_index: Add support for custom timeouts. ([#22941](https://github.com/hashicorp/terraform-provider-aws/issues/22941))
 * resource/aws_imagebuilder_distribution_configuration: Add `launch_template_configuration` argument to the `distribution` configuration block ([#22842](https://github.com/hashicorp/terraform-provider-aws/issues/22842))
 * resource/aws_imagebuilder_image_recipe: Add `parameter` argument to the `component` configuration block ([#22837](https://github.com/hashicorp/terraform-provider-aws/issues/22837))
 * resource/aws_vpn_connection: Add the ability to revert changes to unconfigured tunnel options made outside of Terraform to their [documented default values](https://docs.aws.amazon.com/vpn/latest/s2svpn/VPNTunnels.html) ([#17031](https://github.com/hashicorp/terraform-provider-aws/issues/17031))
@@ -90,9 +114,11 @@ BUG FIXES:
 * data-source/aws_vpc_peering_connections: Return empty array instead of error when no connections found. ([#17382](https://github.com/hashicorp/terraform-provider-aws/issues/17382))
 * resource/aws_backup_selection: Fix permanent diffs for `condition` and `not_resources` arguments causing resource recreation ([#22882](https://github.com/hashicorp/terraform-provider-aws/issues/22882))
 * resource/aws_cloudformation_stack: Retry resource Create and Update for IAM eventual consistency ([#22840](https://github.com/hashicorp/terraform-provider-aws/issues/22840))
+* resource/aws_db_instance: Fix error with reboot of replica ([#22178](https://github.com/hashicorp/terraform-provider-aws/issues/22178))
 * resource/aws_ec2_client_vpn_authorization_rule: Don't raise an error when `InvalidClientVpnEndpointId.NotFound` is returned during refresh ([#20688](https://github.com/hashicorp/terraform-provider-aws/issues/20688))
 * resource/aws_ec2_client_vpn_endpoint: `connection_log_options.cloudwatch_log_stream` argument is Computed, preventing spurious resource diffs ([#22891](https://github.com/hashicorp/terraform-provider-aws/issues/22891))
 * resource/aws_route_table_association: Handle nil 'AssociationState' in ISO regions ([#22806](https://github.com/hashicorp/terraform-provider-aws/issues/22806))
+* resource/aws_route_table_association: Retry resource Read for EC2 eventual consistency ([#22927](https://github.com/hashicorp/terraform-provider-aws/issues/22927))
 * resource/aws_vpc_ipam: Correct update of `description` ([#22863](https://github.com/hashicorp/terraform-provider-aws/issues/22863))
 
 ## 3.74.0 (January 28, 2022)

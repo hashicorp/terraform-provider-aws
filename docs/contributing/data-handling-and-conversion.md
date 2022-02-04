@@ -359,7 +359,7 @@ To read:
 input := service.ExampleOperationInput{}
 
 if v, ok := d.GetOk("attribute_name"); ok && len(v.([]interface{})) > 0 {
-    input.AttributeName = expandStringList(v.([]interface{}))
+    input.AttributeName = flex.ExpandStringList(v.([]interface{}))
 }
 ```
 
@@ -377,7 +377,7 @@ To read:
 input := service.ExampleOperationInput{}
 
 if v, ok := d.GetOk("attribute_name"); ok && len(v.(map[string]interface{})) > 0 {
-    input.AttributeName = expandStringMap(v.(map[string]interface{}))
+    input.AttributeName = flex.ExpandStringMap(v.(map[string]interface{}))
 }
 ```
 
@@ -415,7 +415,7 @@ To read:
 input := service.ExampleOperationInput{}
 
 if v, ok := d.GetOk("attribute_name"); ok && v.(*schema.Set).Len() > 0 {
-    input.AttributeName = expandStringSet(v.(*schema.Set))
+    input.AttributeName = flex.ExpandStringSet(v.(*schema.Set))
 }
 ```
 
@@ -650,7 +650,7 @@ func expandStructure(tfMap map[string]interface{}) *service.Structure {
     // ...
 
     if v, ok := tfMap["nested_attribute_name"].([]interface{}); ok && len(v) > 0 {
-        apiObject.NestedAttributeName = expandStringList(v)
+        apiObject.NestedAttributeName = flex.ExpandStringList(v)
     }
 
     // ...
@@ -679,7 +679,7 @@ To read:
 input := service.ExampleOperationInput{}
 
 if v, ok := tfMap["nested_attribute_name"].(map[string]interface{}); ok && len(v) > 0 {
-    apiObject.NestedAttributeName = expandStringMap(v)
+    apiObject.NestedAttributeName = flex.ExpandStringMap(v)
 }
 ```
 
@@ -736,7 +736,7 @@ func expandStructure(tfMap map[string]interface{}) *service.Structure {
     // ...
 
     if v, ok := tfMap["nested_attribute_name"].(*schema.Set); ok && v.Len() > 0 {
-        apiObject.NestedAttributeName = expandStringSet(v)
+        apiObject.NestedAttributeName = flex.ExpandStringSet(v)
     }
 
     // ...
