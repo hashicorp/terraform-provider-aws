@@ -497,6 +497,10 @@ func TestAccEventsTarget_ecsWithoutLaunchType(t *testing.T) {
 }
 
 func TestAccEventsTarget_ecsWithBlankLaunchType(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	resourceName := "aws_cloudwatch_event_target.test"
 	iamRoleResourceName := "aws_iam_role.test"
 	ecsTaskDefinitionResourceName := "aws_ecs_task_definition.task"
