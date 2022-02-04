@@ -950,6 +950,8 @@ func resourceBucketRead(d *schema.ResourceData, meta interface{}) error {
 		if err := d.Set("website", website); err != nil {
 			return fmt.Errorf("error setting website: %w", err)
 		}
+	} else {
+		d.Set("website", nil)
 	}
 
 	// Read the versioning configuration
@@ -1167,6 +1169,9 @@ func resourceBucketRead(d *schema.ResourceData, meta interface{}) error {
 		if err := d.Set("replication_configuration", flattenBucketReplicationConfiguration(replication.ReplicationConfiguration)); err != nil {
 			return fmt.Errorf("error setting replication_configuration: %w", err)
 		}
+	} else {
+		// Still need to set for the non-existent case
+		d.Set("replication_configuration", nil)
 	}
 
 	// Read the bucket server side encryption configuration
