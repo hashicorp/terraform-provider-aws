@@ -1502,36 +1502,6 @@ func flattenBucketLifecycleRuleExpiration(expiration *s3.LifecycleExpiration) []
 	return []interface{}{m}
 }
 
-func flattenBucketLifecycleRuleFilter(filter *s3.LifecycleRuleFilter) []interface{} {
-	if filter == nil {
-		return []interface{}{}
-	}
-
-	m := make(map[string]interface{})
-
-	if filter.And != nil {
-		// Prefix
-		if filter.And.Prefix != nil {
-			m["prefix"] = aws.StringValue(filter.And.Prefix)
-		}
-		// Tag
-		if len(filter.And.Tags) > 0 {
-			m["tags"] = KeyValueTags(filter.And.Tags).IgnoreAWS().Map()
-		}
-	} else {
-		// Prefix
-		if filter.Prefix != nil {
-			m["prefix"] = aws.StringValue(filter.Prefix)
-		}
-		// Tag
-		if filter.Tag != nil {
-			m["tags"] = KeyValueTags([]*s3.Tag{filter.Tag}).IgnoreAWS().Map()
-		}
-	}
-
-	return []interface{}{m}
-}
-
 func flattenBucketLifecycleRules(lifecycleRules []*s3.LifecycleRule) []interface{} {
 	if len(lifecycleRules) == 0 {
 		return []interface{}{}
@@ -1559,8 +1529,26 @@ func flattenBucketLifecycleRules(lifecycleRules []*s3.LifecycleRule) []interface
 		}
 
 		// Filter
-		if lifecycleRule.Filter != nil {
-			rule["filter"] = flattenBucketLifecycleRuleFilter(lifecycleRule.Filter)
+		if filter := lifecycleRule.Filter; filter != nil {
+			if filter.And != nil {
+				// Prefix
+				if filter.And.Prefix != nil {
+					rule["prefix"] = aws.StringValue(filter.And.Prefix)
+				}
+				// Tag
+				if len(filter.And.Tags) > 0 {
+					rule["tags"] = KeyValueTags(filter.And.Tags).IgnoreAWS().Map()
+				}
+			} else {
+				// Prefix
+				if filter.Prefix != nil {
+					rule["prefix"] = aws.StringValue(filter.Prefix)
+				}
+				// Tag
+				if filter.Tag != nil {
+					rule["tags"] = KeyValueTags([]*s3.Tag{filter.Tag}).IgnoreAWS().Map()
+				}
+			}
 		}
 
 		// Prefix
