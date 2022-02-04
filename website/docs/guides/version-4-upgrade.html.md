@@ -356,24 +356,7 @@ resource "aws_instance" "example" {
 
 Previously, `ip_address` could be set to `""`. However, the value `""` is no longer valid. Now, set the argument to `null` (_e.g._, `ip_address = null`) or remove the empty-string configuration.
 
-For example, this type of configuration is now not valid:
-
-```terraform
-resource "aws_efs_mount_target" "example" {
-  file_system_id = aws_efs_file_system.example.id
-  ip_address     = ""
-  subnet_id      = aws_subnet.example.id
-}
-```
-
-In this updated and valid configuration, we remove the empty-string configuration:
-
-```terraform
-resource "aws_efs_mount_target" "example" {
-  file_system_id = aws_efs_file_system.example.id
-  subnet_id      = aws_subnet.example.id
-}
-```
+For example, this type of configuration is now not valid: `ip_address = ""`.
 
 ### Resource: aws_elasticsearch_domain
 
