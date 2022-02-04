@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/s3"
@@ -143,6 +142,14 @@ func ResourceBucketWebsiteConfiguration() *schema.Resource {
 					},
 				},
 			},
+			"website_endpoint": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"website_domain": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 		},
 	}
 }
@@ -188,7 +195,7 @@ func resourceBucketWebsiteConfigurationCreate(ctx context.Context, d *schema.Res
 		return diag.FromErr(fmt.Errorf("error creating S3 bucket (%s) website configuration: %w", bucket, err))
 	}
 
-	d.SetId(resourceBucketWebsiteConfigurationCreateResourceID(bucket, expectedBucketOwner))
+	d.SetId(CreateResourceID(bucket, expectedBucketOwner))
 
 	return resourceBucketWebsiteConfigurationRead(ctx, d, meta)
 }
@@ -196,7 +203,7 @@ func resourceBucketWebsiteConfigurationCreate(ctx context.Context, d *schema.Res
 func resourceBucketWebsiteConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).S3Conn
 
-	bucket, expectedBucketOwner, err := resourceBucketWebsiteConfigurationParseResourceID(d.Id())
+	bucket, expectedBucketOwner, err := ParseResourceID(d.Id())
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -245,13 +252,24 @@ func resourceBucketWebsiteConfigurationRead(ctx context.Context, d *schema.Resou
 		return diag.FromErr(fmt.Errorf("error setting routing_rule: %w", err))
 	}
 
+	// Add website_endpoint and website_domain as attributes
+	websiteEndpoint, err := resourceBucketWebsiteConfigurationWebsiteEndpoint(ctx, meta.(*conns.AWSClient), bucket, expectedBucketOwner)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	if websiteEndpoint != nil {
+		d.Set("website_endpoint", websiteEndpoint.Endpoint)
+		d.Set("website_domain", websiteEndpoint.Domain)
+	}
+
 	return nil
 }
 
 func resourceBucketWebsiteConfigurationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).S3Conn
 
-	bucket, expectedBucketOwner, err := resourceBucketWebsiteConfigurationParseResourceID(d.Id())
+	bucket, expectedBucketOwner, err := ParseResourceID(d.Id())
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -295,7 +313,7 @@ func resourceBucketWebsiteConfigurationUpdate(ctx context.Context, d *schema.Res
 func resourceBucketWebsiteConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).S3Conn
 
-	bucket, expectedBucketOwner, err := resourceBucketWebsiteConfigurationParseResourceID(d.Id())
+	bucket, expectedBucketOwner, err := ParseResourceID(d.Id())
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -321,33 +339,28 @@ func resourceBucketWebsiteConfigurationDelete(ctx context.Context, d *schema.Res
 	return nil
 }
 
-func resourceBucketWebsiteConfigurationCreateResourceID(bucket, expectedBucketOwner string) string {
-	if bucket == "" {
-		return expectedBucketOwner
+func resourceBucketWebsiteConfigurationWebsiteEndpoint(ctx context.Context, client *conns.AWSClient, bucket, expectedBucketOwner string) (*S3Website, error) {
+	conn := client.S3Conn
+
+	input := &s3.GetBucketLocationInput{
+		Bucket: aws.String(bucket),
 	}
 
-	if expectedBucketOwner == "" {
-		return bucket
+	if expectedBucketOwner != "" {
+		input.ExpectedBucketOwner = aws.String(expectedBucketOwner)
 	}
 
-	parts := []string{bucket, expectedBucketOwner}
-	id := strings.Join(parts, ",")
-
-	return id
-}
-
-func resourceBucketWebsiteConfigurationParseResourceID(id string) (string, string, error) {
-	parts := strings.Split(id, ",")
-
-	if len(parts) == 1 && parts[0] != "" {
-		return parts[0], "", nil
+	output, err := conn.GetBucketLocationWithContext(ctx, input)
+	if err != nil {
+		return nil, fmt.Errorf("error getting S3 Bucket (%s) Location: %w", bucket, err)
 	}
 
-	if len(parts) == 2 && parts[0] != "" && parts[1] != "" {
-		return parts[0], parts[1], nil
+	var region string
+	if output.LocationConstraint != nil {
+		region = aws.StringValue(output.LocationConstraint)
 	}
 
-	return "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected BUCKET or BUCKET,EXPECTED_BUCKET_OWNER", id)
+	return WebsiteEndpoint(client, bucket, region), nil
 }
 
 func expandS3BucketWebsiteConfigurationErrorDocument(l []interface{}) *s3.ErrorDocument {

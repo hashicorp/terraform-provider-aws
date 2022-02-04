@@ -32,6 +32,8 @@ func TestAccS3BucketWebsiteConfiguration_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "bucket", "aws_s3_bucket.test", "id"),
 					resource.TestCheckResourceAttr(resourceName, "index_document.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "index_document.0.suffix", "index.html"),
+					resource.TestCheckResourceAttrSet(resourceName, "website_domain"),
+					resource.TestCheckResourceAttrSet(resourceName, "website_endpoint"),
 				),
 			},
 			{
@@ -280,8 +282,17 @@ func testAccCheckBucketWebsiteConfigurationDestroy(s *terraform.State) error {
 			continue
 		}
 
+		bucket, expectedBucketOwner, err := tfs3.ParseResourceID(rs.Primary.ID)
+		if err != nil {
+			return err
+		}
+
 		input := &s3.GetBucketWebsiteInput{
-			Bucket: aws.String(rs.Primary.ID),
+			Bucket: aws.String(bucket),
+		}
+
+		if expectedBucketOwner != "" {
+			input.ExpectedBucketOwner = aws.String(expectedBucketOwner)
 		}
 
 		output, err := conn.GetBucketWebsite(input)
@@ -315,8 +326,17 @@ func testAccCheckBucketWebsiteConfigurationExists(resourceName string) resource.
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn
 
+		bucket, expectedBucketOwner, err := tfs3.ParseResourceID(rs.Primary.ID)
+		if err != nil {
+			return err
+		}
+
 		input := &s3.GetBucketWebsiteInput{
-			Bucket: aws.String(rs.Primary.ID),
+			Bucket: aws.String(bucket),
+		}
+
+		if expectedBucketOwner != "" {
+			input.ExpectedBucketOwner = aws.String(expectedBucketOwner)
 		}
 
 		output, err := conn.GetBucketWebsite(input)
@@ -338,12 +358,6 @@ func testAccBucketWebsiteConfigurationBasicConfig(rName string) string {
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
   acl    = "public-read"
-
-  lifecycle {
-    ignore_changes = [
-      website
-    ]
-  }
 }
 
 resource "aws_s3_bucket_website_configuration" "test" {
@@ -360,12 +374,6 @@ func testAccBucketWebsiteConfigurationUpdateConfig(rName string) string {
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
   acl    = "public-read"
-
-  lifecycle {
-    ignore_changes = [
-      website
-    ]
-  }
 }
 
 resource "aws_s3_bucket_website_configuration" "test" {
@@ -387,12 +395,6 @@ func testAccBucketWebsiteConfigurationConfig_Redirect(rName string) string {
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
   acl    = "public-read"
-
-  lifecycle {
-    ignore_changes = [
-      website
-    ]
-  }
 }
 
 resource "aws_s3_bucket_website_configuration" "test" {
@@ -409,12 +411,6 @@ func testAccBucketWebsiteConfigurationConfig_RoutingRules_OptionalRedirection(rN
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
   acl    = "public-read"
-
-  lifecycle {
-    ignore_changes = [
-      website
-    ]
-  }
 }
 
 resource "aws_s3_bucket_website_configuration" "test" {
@@ -447,12 +443,6 @@ func testAccBucketWebsiteConfigurationConfig_RoutingRules_RedirectErrors(rName s
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
   acl    = "public-read"
-
-  lifecycle {
-    ignore_changes = [
-      website
-    ]
-  }
 }
 
 resource "aws_s3_bucket_website_configuration" "test" {
@@ -483,12 +473,6 @@ func testAccBucketWebsiteConfigurationConfig_RoutingRules_RedirectToPage(rName s
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
   acl    = "public-read"
-
-  lifecycle {
-    ignore_changes = [
-      website
-    ]
-  }
 }
 
 resource "aws_s3_bucket_website_configuration" "test" {
@@ -519,12 +503,6 @@ func testAccBucketWebsiteConfigurationConfig_RoutingRules_RedirectOnly(rName str
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
   acl    = "public-read"
-
-  lifecycle {
-    ignore_changes = [
-      website
-    ]
-  }
 }
 
 resource "aws_s3_bucket_website_configuration" "test" {
@@ -553,12 +531,6 @@ func testAccBucketWebsiteConfigurationConfig_RoutingRules_MultipleRules(rName st
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
   acl    = "public-read"
-
-  lifecycle {
-    ignore_changes = [
-      website
-    ]
-  }
 }
 
 resource "aws_s3_bucket_website_configuration" "test" {

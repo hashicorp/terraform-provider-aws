@@ -96,6 +96,8 @@ The `redirect` configuration block supports the following arguments:
 In addition to all arguments above, the following attributes are exported:
 
 * `id` - The `bucket` or `bucket` and `expected_bucket_owner` separated by a comma (`,`) if the latter is provided.
+* `website_domain` - The domain of the website endpoint. This is used to create Route 53 alias records.
+* `website_endpoint` - The website endpoint.
 
 ## Import
 
