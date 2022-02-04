@@ -260,6 +260,10 @@ func TestAccEC2DefaultRouteTable_ipv4ToTransitGateway(t *testing.T) {
 }
 
 func TestAccEC2DefaultRouteTable_ipv4ToVPCEndpoint(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var routeTable ec2.RouteTable
 	resourceName := "aws_default_route_table.test"
 	vpceResourceName := "aws_vpc_endpoint.test"

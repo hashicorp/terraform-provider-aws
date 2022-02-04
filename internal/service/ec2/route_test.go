@@ -1408,6 +1408,10 @@ func TestAccEC2Route_IPv6Update_target(t *testing.T) {
 }
 
 func TestAccEC2Route_ipv4ToVPCEndpoint(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var route ec2.Route
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_route.test"
