@@ -178,12 +178,9 @@ func ResourceTarget() *schema.Resource {
 							ValidateFunc: validation.StringLenBetween(1, 255),
 						},
 						"launch_type": {
-							Type:     schema.TypeString,
-							Optional: true,
-							ValidateFunc: validation.Any(
-								validation.StringIsEmpty,
-								validation.StringInSlice(eventbridge.LaunchType_Values(), false),
-							),
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validation.StringInSlice(eventbridge.LaunchType_Values(), false),
 						},
 						"network_configuration": {
 							Type:     schema.TypeList,

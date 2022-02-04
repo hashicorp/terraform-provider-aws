@@ -26,6 +26,7 @@ Upgrade topics:
     - [Resource: aws_default_vpc](#resource-aws_default_vpc)
 - [Plural Data Source Behavior](#plural-data-source-behavior)
 - [Empty Strings Not Valid For Certain Resources](#empty-strings-not-valid-for-certain-resources)
+    - [Resource: aws_cloudwatch_event_target (Empty String)](#resource-aws_cloudwatch_event_target-empty-string)
     - [Resource: aws_customer_gateway](#resource-aws_customer_gateway)
     - [Resource: aws_default_network_acl](#resource-aws_default_network_acl)
     - [Resource: aws_default_route_table](#resource-aws_default_route_table)
@@ -233,6 +234,38 @@ First, this is a breaking change but should affect very few configurations.
 
 Second, the motivation behind this change is that previously, you might set an argument to `""` to explicitly convey it is empty. However, with the introduction of `null` in Terraform 0.12 and to prepare for continuing enhancements that distinguish between unset arguments and those that have a value, including an empty string (`""`), we are moving away from this use of zero values. We ask practitioners to either use `null` instead or remove the arguments that are set to `""`.
 
+### Resource: aws_cloudwatch_event_target (Empty String)
+
+Previously, `ecs_target.0.launch_type` could be set to `""`. However, the value `""` is no longer valid. Now, set the argument to `null` (_e.g._, `launch_type = null`) or remove the empty-string configuration.
+
+For example, this type of configuration is now not valid:
+
+```terraform
+resource "aws_cloudwatch_event_target" "example" {
+  # ...
+  ecs_target {
+    task_count          = 1
+    task_definition_arn = aws_ecs_task_definition.task.arn
+    launch_type         = ""
+    # ...
+  }
+}
+```
+
+In this updated and valid configuration, we set `launch_type` to `null`:
+
+```terraform
+resource "aws_cloudwatch_event_target" "example" {
+  # ...
+  ecs_target {
+    task_count          = 1
+    task_definition_arn = aws_ecs_task_definition.task.arn
+    launch_type         = null
+    # ...
+  }
+}
+```
+
 ### Resource: aws_customer_gateway
 
 Previously, `ip_address` could be set to `""`, which would result in an AWS error. However, this value is no longer accepted by the provider.
@@ -305,7 +338,7 @@ Previously, `private_ip` could be set to `""`. However, the value `""` is no lon
 For example, this type of configuration is now not valid:
 
 ```terraform
-resource "aws_instance" "test" {
+resource "aws_instance" "example" {
   instance_type = "t2.micro"
   private_ip    = ""
 }
@@ -314,7 +347,7 @@ resource "aws_instance" "test" {
 In this updated and valid configuration, we remove the empty-string configuration:
 
 ```terraform
-resource "aws_instance" "test" {
+resource "aws_instance" "example" {
   instance_type = "t2.micro"
 }
 ```
@@ -326,19 +359,19 @@ Previously, `ip_address` could be set to `""`. However, the value `""` is no lon
 For example, this type of configuration is now not valid:
 
 ```terraform
-resource "aws_efs_mount_target" "test" {
-  file_system_id = aws_efs_file_system.test.id
+resource "aws_efs_mount_target" "example" {
+  file_system_id = aws_efs_file_system.example.id
   ip_address     = ""
-  subnet_id      = aws_subnet.test.id
+  subnet_id      = aws_subnet.example.id
 }
 ```
 
 In this updated and valid configuration, we remove the empty-string configuration:
 
 ```terraform
-resource "aws_efs_mount_target" "test" {
-  file_system_id = aws_efs_file_system.test.id
-  subnet_id      = aws_subnet.test.id
+resource "aws_efs_mount_target" "example" {
+  file_system_id = aws_efs_file_system.example.id
+  subnet_id      = aws_subnet.example.id
 }
 ```
 
@@ -362,7 +395,7 @@ resource "aws_elasticsearch_domain" "example" {
 In this updated and valid configuration, we use `null` instead of `""`:
 
 ```terraform
-resource "aws_elasticsearch_domain" "test" {
+resource "aws_elasticsearch_domain" "example" {
   # ...
   ebs_options {
     ebs_enabled = true
@@ -410,9 +443,9 @@ In addition, now exactly one of `destination_cidr_block`, `destination_ipv6_cidr
 For example, this type of configuration for `aws_route` is now not valid:
 
 ```terraform
-resource "aws_route" "test" {
-  route_table_id = aws_route_table.test.id
-  gateway_id     = aws_internet_gateway.test.id
+resource "aws_route" "example" {
+  route_table_id = aws_route_table.example.id
+  gateway_id     = aws_internet_gateway.example.id
 
   destination_cidr_block      = local.ipv6 ? "" : local.destination
   destination_ipv6_cidr_block = local.ipv6 ? local.destination_ipv6 : ""
@@ -422,9 +455,9 @@ resource "aws_route" "test" {
 In this updated and valid configuration, we use `null` instead of an empty-string (`""`):
 
 ```terraform
-resource "aws_route" "test" {
-  route_table_id = aws_route_table.test.id
-  gateway_id     = aws_internet_gateway.test.id
+resource "aws_route" "example" {
+  route_table_id = aws_route_table.example.id
+  gateway_id     = aws_internet_gateway.example.id
 
   destination_cidr_block      = local.ipv6 ? null : local.destination
   destination_ipv6_cidr_block = local.ipv6 ? local.destination_ipv6 : null
@@ -466,7 +499,7 @@ Previously, `ipv6_cidr_block` could be set to `""`. However, the value `""` is n
 For example, this type of configuration is now not valid:
 
 ```terraform
-resource "aws_vpc" "test" {
+resource "aws_vpc" "example" {
   cidr_block      = "10.1.0.0/16"
   ipv6_cidr_block = ""
 }
@@ -475,7 +508,7 @@ resource "aws_vpc" "test" {
 In this updated and valid configuration, we remove `ipv6_cidr_block`:
 
 ```terraform
-resource "aws_vpc" "test" {
+resource "aws_vpc" "example" {
   cidr_block      = "10.1.0.0/16"
 }
 ```

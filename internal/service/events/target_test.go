@@ -1509,7 +1509,7 @@ resource "aws_cloudwatch_event_target" "test" {
   ecs_target {
     task_count          = 1
     task_definition_arn = aws_ecs_task_definition.task.arn
-    launch_type         = ""
+    launch_type         = null
 
     network_configuration {
       subnets = [aws_subnet.subnet.id]
