@@ -6,7 +6,6 @@ import (
 	"log"
 	"strconv"
 	"strings"
-	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
@@ -84,8 +83,8 @@ func ResourceNetworkACL() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceNetworkACLCreate,
 		Read:   resourceNetworkACLRead,
-		Delete: resourceNetworkACLDelete,
 		Update: resourceNetworkACLUpdate,
+		Delete: resourceNetworkACLDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -121,29 +120,23 @@ func ResourceNetworkACL() *schema.Resource {
 }
 
 func resourceNetworkACLCreate(d *schema.ResourceData, meta interface{}) error {
-
 	conn := meta.(*conns.AWSClient).EC2Conn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
-	// Create the Network Acl
-	createOpts := &ec2.CreateNetworkAclInput{
-		VpcId:             aws.String(d.Get("vpc_id").(string)),
+	input := &ec2.CreateNetworkAclInput{
 		TagSpecifications: ec2TagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeNetworkAcl),
+		VpcId:             aws.String(d.Get("vpc_id").(string)),
 	}
 
-	log.Printf("[DEBUG] Network Acl create config: %#v", createOpts)
-	resp, err := conn.CreateNetworkAcl(createOpts)
+	log.Printf("[DEBUG] Creating EC2 Network ACL: %s", input)
+	output, err := conn.CreateNetworkAcl(input)
 
 	if err != nil {
 		return fmt.Errorf("error creating EC2 Network ACL: %w", err)
 	}
 
-	if resp == nil || resp.NetworkAcl == nil {
-		return fmt.Errorf("error creating EC2 Network ACL: empty response")
-	}
-
-	d.SetId(aws.StringValue(resp.NetworkAcl.NetworkAclId))
+	d.SetId(aws.StringValue(output.NetworkAcl.NetworkAclId))
 
 	if v, ok := d.GetOk("egress"); ok && v.(*schema.Set).Len() > 0 {
 		err := updateNetworkAclEntries(d, "egress", conn)
@@ -401,6 +394,42 @@ func resourceNetworkACLUpdate(d *schema.ResourceData, meta interface{}) error {
 	return resourceNetworkACLRead(d, meta)
 }
 
+func resourceNetworkACLDelete(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*conns.AWSClient).EC2Conn
+
+	input := &ec2.DeleteNetworkAclInput{
+		NetworkAclId: aws.String(d.Id()),
+	}
+
+	log.Printf("[INFO] Deleting EC2 Network ACL: %s", d.Id())
+	_, err := tfresource.RetryWhen(NetworkACLDeletedTimeout,
+		func() (interface{}, error) {
+			return conn.DeleteNetworkAcl(input)
+		},
+		func(err error) (bool, error) {
+			if tfawserr.ErrCodeEquals(err, ErrCodeDependencyViolation) {
+				if err := cleanUpDependencyViolations(d, conn); err != nil {
+					return false, err
+				}
+
+				return true, err
+			}
+
+			return false, err
+		},
+	)
+
+	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidNetworkAclIDNotFound) {
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("error deleting EC2 Network ACL (%s): %w", d.Id(), err)
+	}
+
+	return nil
+}
+
 func updateNetworkAclEntries(d *schema.ResourceData, entryType string, conn *ec2.EC2) error {
 	if d.HasChange(entryType) {
 		o, n := d.GetChange(entryType)
@@ -503,53 +532,6 @@ func updateNetworkAclEntries(d *schema.ResourceData, entryType string, conn *ec2
 				return fmt.Errorf("Error creating %s entry: %s", entryType, connErr)
 			}
 		}
-	}
-	return nil
-}
-
-func resourceNetworkACLDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
-
-	log.Printf("[INFO] Deleting Network Acl: %s", d.Id())
-	input := &ec2.DeleteNetworkAclInput{
-		NetworkAclId: aws.String(d.Id()),
-	}
-	err := resource.Retry(5*time.Minute, func() *resource.RetryError {
-		_, err := conn.DeleteNetworkAcl(input)
-		if err != nil {
-			if tfawserr.ErrMessageContains(err, "InvalidNetworkAclID.NotFound", "") {
-				return nil
-			}
-			if tfawserr.ErrMessageContains(err, "DependencyViolation", "") {
-				err = cleanUpDependencyViolations(d, conn)
-				if err != nil {
-					return resource.NonRetryableError(err)
-				}
-				return resource.RetryableError(fmt.Errorf("Dependencies found and cleaned up, retrying"))
-			}
-
-			return resource.NonRetryableError(err)
-
-		}
-		log.Printf("[Info] Deleted network ACL %s successfully", d.Id())
-		return nil
-	})
-	if tfresource.TimedOut(err) {
-		_, err = conn.DeleteNetworkAcl(input)
-		if err != nil && tfawserr.ErrMessageContains(err, "InvalidNetworkAclID.NotFound", "") {
-			return nil
-		}
-		err = cleanUpDependencyViolations(d, conn)
-		if err != nil {
-			// This seems excessive but is probably the best way to make sure it's actually deleted
-			_, err = conn.DeleteNetworkAcl(input)
-			if err != nil && tfawserr.ErrMessageContains(err, "InvalidNetworkAclID.NotFound", "") {
-				return nil
-			}
-		}
-	}
-	if err != nil {
-		return fmt.Errorf("Error destroying Network ACL (%s): %s", d.Id(), err)
 	}
 	return nil
 }
