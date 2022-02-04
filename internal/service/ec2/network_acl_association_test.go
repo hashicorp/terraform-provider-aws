@@ -44,6 +44,29 @@ func TestAccEC2NetworkACLAssociation_basic(t *testing.T) {
 	})
 }
 
+func TestAccEC2NetworkACLAssociation_disappears(t *testing.T) {
+	var v ec2.NetworkAclAssociation
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_network_acl_association.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckNetworkACLAssociationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNetworkACLAssociationConfig(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckNetworkACLAssociationExists(resourceName, &v),
+					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceNetworkACLAssociation(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func testAccCheckNetworkACLAssociationDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
