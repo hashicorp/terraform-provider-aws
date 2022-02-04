@@ -21,7 +21,7 @@ func TestAccEC2NetworkACLAssociation_basic(t *testing.T) {
 	naclResourceName := "aws_network_acl.test"
 	subnetResourceName := "aws_subnet.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    acctest.Providers,
@@ -49,7 +49,7 @@ func TestAccEC2NetworkACLAssociation_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_network_acl_association.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    acctest.Providers,
@@ -62,6 +62,46 @@ func TestAccEC2NetworkACLAssociation_disappears(t *testing.T) {
 					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceNetworkACLAssociation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccEC2NetworkACLAssociation_twoAssociations(t *testing.T) {
+	var v1, v2 ec2.NetworkAclAssociation
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resource1Name := "aws_network_acl_association.test1"
+	resource2Name := "aws_network_acl_association.test2"
+	naclResourceName := "aws_network_acl.test"
+	subnet1ResourceName := "aws_subnet.test1"
+	subnet2ResourceName := "aws_subnet.test2"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckNetworkACLAssociationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNetworkACLAssociationTwoAssociationsConfig(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckNetworkACLAssociationExists(resource1Name, &v1),
+					testAccCheckNetworkACLAssociationExists(resource1Name, &v2),
+					resource.TestCheckResourceAttrPair(resource1Name, "network_acl_id", naclResourceName, "id"),
+					resource.TestCheckResourceAttrPair(resource1Name, "subnet_id", subnet1ResourceName, "id"),
+					resource.TestCheckResourceAttrPair(resource2Name, "network_acl_id", naclResourceName, "id"),
+					resource.TestCheckResourceAttrPair(resource2Name, "subnet_id", subnet2ResourceName, "id"),
+				),
+			},
+			{
+				ResourceName:      resource1Name,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				ResourceName:      resource2Name,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
