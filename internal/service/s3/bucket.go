@@ -1029,6 +1029,8 @@ func resourceBucketRead(d *schema.ResourceData, meta interface{}) error {
 		if err := d.Set("logging", flattenBucketLoggingEnabled(logging.LoggingEnabled)); err != nil {
 			return fmt.Errorf("error setting logging: %s", err)
 		}
+	} else {
+		d.Set("logging", nil)
 	}
 
 	// Read the lifecycle configuration
