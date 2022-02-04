@@ -34,6 +34,7 @@ Upgrade topics:
     - [Resource: aws_network_acl](#resource-aws_network_acl)
     - [Resource: aws_route](#resource-aws_route)
     - [Resource: aws_route_table](#resource-aws_route_table)
+    - [Resource: aws_vpc](#resource-aws_vpc)
     - [Resource: aws_vpc_ipv6_cidr_block_association](#resource-aws_vpc_ipv6_cidr_block_association)
 - [Data Source: aws_cloudwatch_log_group](#data-source-aws_cloudwatch_log_group)
 - [Data Source: aws_subnet_ids](#data-source-aws_subnet_ids)
@@ -400,6 +401,27 @@ resource "aws_route_table" "example" {
     cidr_block      = local.ipv6 ? null : local.destination
     ipv6_cidr_block = local.ipv6 ? local.destination_ipv6 : null
   }
+}
+```
+
+### Resource: aws_vpc
+
+Previously, `ipv6_cidr_block` could be set to `""`. However, the value `""` is no longer valid. Now, set the argument to `null` (_e.g._, `ipv6_cidr_block = null`) or remove the empty-string configuration.
+
+For example, this type of configuration is now not valid:
+
+```terraform
+resource "aws_vpc" "test" {
+  cidr_block      = "10.1.0.0/16"
+  ipv6_cidr_block = ""
+}
+```
+
+In this updated and valid configuration, we remove `ipv6_cidr_block`:
+
+```terraform
+resource "aws_vpc" "test" {
+  cidr_block      = "10.1.0.0/16"
 }
 ```
 
