@@ -88,6 +88,7 @@ func TestAccEFSMountTarget_disappears(t *testing.T) {
 func TestAccEFSMountTarget_ipAddress(t *testing.T) {
 	var mount efs.MountTargetDescription
 	resourceName := "aws_efs_mount_target.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -96,7 +97,7 @@ func TestAccEFSMountTarget_ipAddress(t *testing.T) {
 		CheckDestroy: testAccCheckEfsMountTargetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccMountTargetIPAddressConfig("10.0.0.100"),
+				Config: testAccMountTargetIPAddressConfig(rName, "10.0.0.100"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEfsMountTarget(resourceName, &mount),
 					resource.TestCheckResourceAttr(resourceName, "ip_address", "10.0.0.100"),
@@ -115,6 +116,7 @@ func TestAccEFSMountTarget_ipAddress(t *testing.T) {
 func TestAccEFSMountTarget_IPAddress_emptyString(t *testing.T) {
 	var mount efs.MountTargetDescription
 	resourceName := "aws_efs_mount_target.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -123,7 +125,7 @@ func TestAccEFSMountTarget_IPAddress_emptyString(t *testing.T) {
 		CheckDestroy: testAccCheckEfsMountTargetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccMountTargetIPAddressConfig(""),
+				Config: testAccMountTargetIPAddressConfigNullIP(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEfsMountTarget(resourceName, &mount),
 					resource.TestMatchResourceAttr(resourceName, "ip_address", regexp.MustCompile(`\d+\.\d+\.\d+\.\d+`)),
@@ -320,7 +322,7 @@ resource "aws_subnet" "test2" {
 `, ct)
 }
 
-func testAccMountTargetIPAddressConfig(ipAddress string) string {
+func testAccMountTargetIPAddressConfig(rName, ipAddress string) string {
 	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {
   state = "available"
@@ -335,7 +337,7 @@ resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
   tags = {
-    Name = "tf-acc-efs-mount-target-test"
+    Name = %[1]q
   }
 }
 
@@ -345,13 +347,13 @@ resource "aws_subnet" "test" {
   cidr_block        = "10.0.0.0/24"
 
   tags = {
-    Name = "tf-acc-efs-mount-target-test"
+    Name = %[1]q
   }
 }
 
 resource "aws_efs_file_system" "test" {
   tags = {
-    Name = "tf-acc-efs-mount-target-test"
+    Name = %[1]q
   }
 }
 
@@ -361,6 +363,49 @@ resource "aws_efs_mount_target" "test" {
   subnet_id      = aws_subnet.test.id
 }
 `, ipAddress)
+}
+
+func testAccMountTargetIPAddressConfigNullIP(rName string) string {
+	return fmt.Sprintf(`
+data "aws_availability_zones" "available" {
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
+
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_subnet" "test" {
+  vpc_id            = aws_vpc.test.id
+  availability_zone = data.aws_availability_zones.available.names[0]
+  cidr_block        = "10.0.0.0/24"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_efs_file_system" "test" {
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_efs_mount_target" "test" {
+  file_system_id = aws_efs_file_system.test.id
+  ip_address     = null
+  subnet_id      = aws_subnet.test.id
+}
+`, rName)
 }
 
 func testAccCheckVpnGatewayDestroy(s *terraform.State) error {
