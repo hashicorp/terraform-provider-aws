@@ -908,12 +908,12 @@ func expandPredictiveScalingMetricSpecifications(metricSpecificationsSlice []int
 	}
 	metricSpecificationsFlat := metricSpecificationsSlice[0].(map[string]interface{})
 	metricSpecification := &autoscaling.PredictiveScalingMetricSpecification{
+		CustomizedCapacityMetricSpecification: expandCustomizedCapacityMetricSpecification(metricSpecificationsFlat["customized_capacity_metric_specification"].([]interface{})),
+		CustomizedLoadMetricSpecification:     expandCustomizedLoadMetricSpecification(metricSpecificationsFlat["customized_load_metric_specification"].([]interface{})),
+		CustomizedScalingMetricSpecification:  expandCustomizedScalingMetricSpecification(metricSpecificationsFlat["customized_scaling_metric_specification"].([]interface{})),
 		PredefinedLoadMetricSpecification:     expandPredefinedLoadMetricSpecification(metricSpecificationsFlat["predefined_load_metric_specification"].([]interface{})),
 		PredefinedMetricPairSpecification:     expandPredefinedMetricPairSpecification(metricSpecificationsFlat["predefined_metric_pair_specification"].([]interface{})),
 		PredefinedScalingMetricSpecification:  expandPredefinedScalingMetricSpecification(metricSpecificationsFlat["predefined_scaling_metric_specification"].([]interface{})),
-		CustomizedScalingMetricSpecification:  expandCustomizedScalingMetricSpecification(metricSpecificationsFlat["customized_scaling_metric_specification"].([]interface{})),
-		CustomizedLoadMetricSpecification:     expandCustomizedLoadMetricSpecification(metricSpecificationsFlat["customized_load_metric_specification"].([]interface{})),
-		CustomizedCapacityMetricSpecification: expandCustomizedCapacityMetricSpecification(metricSpecificationsFlat["customized_capacity_metric_specification"].([]interface{})),
 		TargetValue:                           aws.Float64(float64(metricSpecificationsFlat["target_value"].(int))),
 	}
 	return []*autoscaling.PredictiveScalingMetricSpecification{metricSpecification}
@@ -1114,6 +1114,15 @@ func flattenPredictiveScalingMetricSpecifications(metricSpecification []*autosca
 	if metricSpecification[0].TargetValue != nil {
 		metricSpecificationFlat["target_value"] = aws.Float64Value(metricSpecification[0].TargetValue)
 	}
+	if metricSpecification[0].CustomizedCapacityMetricSpecification != nil {
+		metricSpecificationFlat["customized_capacity_metric_specification"] = flattenCustomizedCapacityMetricSpecification(metricSpecification[0].CustomizedCapacityMetricSpecification)
+	}
+	if metricSpecification[0].CustomizedLoadMetricSpecification != nil {
+		metricSpecificationFlat["customized_load_metric_specification"] = flattenCustomizedLoadMetricSpecification(metricSpecification[0].CustomizedLoadMetricSpecification)
+	}
+	if metricSpecification[0].CustomizedScalingMetricSpecification != nil {
+		metricSpecificationFlat["customized_scaling_metric_specification"] = flattenCustomizedScalingMetricSpecification(metricSpecification[0].CustomizedScalingMetricSpecification)
+	}
 	if metricSpecification[0].PredefinedLoadMetricSpecification != nil {
 		metricSpecificationFlat["predefined_load_metric_specification"] = flattenPredefinedLoadMetricSpecification(metricSpecification[0].PredefinedLoadMetricSpecification)
 	}
@@ -1122,15 +1131,6 @@ func flattenPredictiveScalingMetricSpecifications(metricSpecification []*autosca
 	}
 	if metricSpecification[0].PredefinedScalingMetricSpecification != nil {
 		metricSpecificationFlat["predefined_scaling_metric_specification"] = flattenPredefinedScalingMetricSpecification(metricSpecification[0].PredefinedScalingMetricSpecification)
-	}
-	if metricSpecification[0].CustomizedScalingMetricSpecification != nil {
-		metricSpecificationFlat["customized_scaling_metric_specification"] = flattenCustomizedScalingMetricSpecification(metricSpecification[0].CustomizedScalingMetricSpecification)
-	}
-	if metricSpecification[0].CustomizedLoadMetricSpecification != nil {
-		metricSpecificationFlat["customized_load_metric_specification"] = flattenCustomizedLoadMetricSpecification(metricSpecification[0].CustomizedLoadMetricSpecification)
-	}
-	if metricSpecification[0].CustomizedCapacityMetricSpecification != nil {
-		metricSpecificationFlat["customized_capacity_metric_specification"] = flattenCustomizedCapacityMetricSpecification(metricSpecification[0].CustomizedCapacityMetricSpecification)
 	}
 	return []map[string]interface{}{metricSpecificationFlat}
 }
@@ -1207,17 +1207,14 @@ func flattenMetricDataQueries(metricDataQueries []*autoscaling.MetricDataQuery) 
 		if rawMetricDataQuery.Expression != nil {
 			metricDataQuery["expression"] = aws.StringValue(rawMetricDataQuery.Expression)
 		}
+		if rawMetricDataQuery.Label != nil {
+			metricDataQuery["label"] = aws.StringValue(rawMetricDataQuery.Label)
+		}
 		if rawMetricDataQuery.MetricStat != nil {
 			metricStatSpec := map[string]interface{}{}
 			rawMetricStat := rawMetricDataQuery.MetricStat
-			metricStatSpec["stat"] = aws.StringValue(rawMetricStat.Stat)
-			if rawMetricStat.Unit != nil {
-				metricStatSpec["unit"] = aws.StringValue(rawMetricStat.Unit)
-			}
 			rawMetric := rawMetricStat.Metric
 			metricSpec := map[string]interface{}{}
-			metricSpec["metric_name"] = aws.StringValue(rawMetric.MetricName)
-			metricSpec["namespace"] = aws.StringValue(rawMetric.Namespace)
 			if rawMetric.Dimensions != nil {
 				dimSpec := make([]interface{}, len(rawMetric.Dimensions))
 				for i := range dimSpec {
@@ -1229,11 +1226,14 @@ func flattenMetricDataQueries(metricDataQueries []*autoscaling.MetricDataQuery) 
 				}
 				metricSpec["dimensions"] = dimSpec
 			}
+			metricSpec["metric_name"] = aws.StringValue(rawMetric.MetricName)
+			metricSpec["namespace"] = aws.StringValue(rawMetric.Namespace)
 			metricStatSpec["metric"] = []map[string]interface{}{metricSpec}
+			metricStatSpec["stat"] = aws.StringValue(rawMetricStat.Stat)
+			if rawMetricStat.Unit != nil {
+				metricStatSpec["unit"] = aws.StringValue(rawMetricStat.Unit)
+			}
 			metricDataQuery["metric_stat"] = []map[string]interface{}{metricStatSpec}
-		}
-		if rawMetricDataQuery.Label != nil {
-			metricDataQuery["label"] = aws.StringValue(rawMetricDataQuery.Label)
 		}
 		if rawMetricDataQuery.ReturnData != nil {
 			metricDataQuery["return_data"] = aws.BoolValue(rawMetricDataQuery.ReturnData)
