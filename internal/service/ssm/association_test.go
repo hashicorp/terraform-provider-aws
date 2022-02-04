@@ -1262,7 +1262,7 @@ resource "aws_s3_bucket" "output_location" {
 }
 
 resource "aws_s3_bucket" "output_location_updated" {
-  bucket        =  "%[1]s-2"
+  bucket        = "%[1]s-2"
   force_destroy = true
 }
 
