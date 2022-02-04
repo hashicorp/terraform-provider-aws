@@ -25,28 +25,30 @@ Upgrade topics:
     - [Resource: aws_default_subnet](#resource-aws_default_subnet)
     - [Resource: aws_default_vpc](#resource-aws_default_vpc)
 - [Plural Data Source Behavior](#plural-data-source-behavior)
+- [Empty Strings Not Valid For Certain Resources](#empty-strings-not-valid-for-certain-resources)
+    - [Resource: aws_customer_gateway](#resource-aws_customer_gateway)
+    - [Resource: aws_default_network_acl](#resource-aws_default_network_acl)
+    - [Resource: aws_default_route_table](#resource-aws_default_route_table)
+    - [Resource: aws_default_vpc (Empty String)](#resource-aws_default_vpc-empty-string)
+    - [Resource: aws_instance](#resource-aws_instance)
+    - [Resource: aws_network_acl](#resource-aws_network_acl)
+    - [Resource: aws_route](#resource-aws_route)
+    - [Resource: aws_route_table](#resource-aws_route_table)
+    - [Resource: aws_vpc_ipv6_cidr_block_association](#resource-aws_vpc_ipv6_cidr_block_association)
 - [Data Source: aws_cloudwatch_log_group](#data-source-aws_cloudwatch_log_group)
 - [Data Source: aws_subnet_ids](#data-source-aws_subnet_ids)
 - [Data Source: aws_s3_bucket_object](#data-source-aws_s3_bucket_object)
 - [Data Source: aws_s3_bucket_objects](#data-source-aws_s3_bucket_objects)
 - [Resource: aws_batch_compute_environment](#resource-aws_batch_compute_environment)
 - [Resource: aws_cloudwatch_event_target](#resource-aws_cloudwatch_event_target)
-- [Resource: aws_customer_gateway](#resource-aws_customer_gateway)
-- [Resource: aws_default_network_acl](#resource-aws_default_network_acl)
-- [Resource: aws_default_route_table](#resource-aws_default_route_table)
-- [Resource: aws_default_vpc](#resource-aws_default_vpc)
 - [Resource: aws_elasticache_cluster](#resource-aws_elasticache_cluster)
 - [Resource: aws_elasticache_global_replication_group](#resource-aws_elasticache_global_replication_group)
 - [Resource: aws_elasticache_replication_group](#resource-aws_elasticache_replication_group)
 - [Resource: aws_fsx_ontap_storage_virtual_machine](#resource-aws_fsx_ontap_storage_virtual_machine)
-- [Resource: aws_instance](#resource-aws_instance)
-- [Resource: aws_network_acl](#resource-aws_network_acl)
 - [Resource: aws_network_interface](#resource-aws_network_interface)
 - [Resource: aws_s3_bucket](#resource-aws_s3_bucket)
 - [Resource: aws_s3_bucket_object](#resource-aws_s3_bucket_object)
 - [Resource: aws_spot_instance_request](#resource-aws_spot_instance_request)
-- [Resource: aws_route](#resource-aws_route)
-- [Resource: aws_route_table](#resource-aws_route_table)
 
 <!-- /TOC -->
 
@@ -86,30 +88,6 @@ provider "aws" {
   version = "~> 4.0"
 }
 ```
-
-## Plural Data Source Behavior
-
-The following plural data sources are now consistent with [Provider Design](https://github.com/hashicorp/terraform-provider-aws/blob/main/docs/contributing/provider-design.md#data-sources)
-such that they no longer return an error if zero results are found.
-
-* [aws_cognito_user_pools](/docs/providers/aws/d/cognito_user_pools.html)
-* [aws_db_event_categories](/docs/providers/aws/d/db_event_categories.html)
-* [aws_ebs_volumes](/docs/providers/aws/d/ebs_volumes.html)
-* [aws_ec2_coip_pools](/docs/providers/aws/d/ec2_coip_pools.html)
-* [aws_ec2_local_gateway_route_tables](/docs/providers/aws/d/ec2_local_gateway_route_tables.html)
-* [aws_ec2_local_gateway_virtual_interface_groups](/docs/providers/aws/d/ec2_local_gateway_virtual_interface_groups.html)
-* [aws_ec2_local_gateways](/docs/providers/aws/d/ec2_local_gateways.html)
-* [aws_ec2_transit_gateway_route_tables](/docs/providers/aws/d/ec2_transit_gateway_route_tables.html)
-* [aws_efs_access_points](/docs/providers/aws/d/efs_access_points.html)
-* [aws_emr_release_labels](/docs/providers/aws/d/emr_release_labels.markdown)
-* [aws_inspector_rules_packages](/docs/providers/aws/d/inspector_rules_packages.html)
-* [aws_ip_ranges](/docs/providers/aws/d/ip_ranges.html)
-* [aws_network_acls](/docs/providers/aws/d/network_acls.html)
-* [aws_route_tables](/docs/providers/aws/d/route_tables.html)
-* [aws_security_groups](/docs/providers/aws/d/security_groups.html)
-* [aws_ssoadmin_instances](/docs/providers/aws/d/ssoadmin_instances.html)
-* [aws_vpcs](/docs/providers/aws/d/vpcs.html)
-* [aws_vpc_peering_connections](/docs/providers/aws/d/vpc_peering_connections.html)
 
 ## Full Resource Lifecycle of Default Resources
 
@@ -221,6 +199,213 @@ resource "aws_default_vpc" "default" {
   force_destroy = true
 }
 ```
+
+## Plural Data Source Behavior
+
+The following plural data sources are now consistent with [Provider Design](https://github.com/hashicorp/terraform-provider-aws/blob/main/docs/contributing/provider-design.md#data-sources)
+such that they no longer return an error if zero results are found.
+
+* [aws_cognito_user_pools](/docs/providers/aws/d/cognito_user_pools.html)
+* [aws_db_event_categories](/docs/providers/aws/d/db_event_categories.html)
+* [aws_ebs_volumes](/docs/providers/aws/d/ebs_volumes.html)
+* [aws_ec2_coip_pools](/docs/providers/aws/d/ec2_coip_pools.html)
+* [aws_ec2_local_gateway_route_tables](/docs/providers/aws/d/ec2_local_gateway_route_tables.html)
+* [aws_ec2_local_gateway_virtual_interface_groups](/docs/providers/aws/d/ec2_local_gateway_virtual_interface_groups.html)
+* [aws_ec2_local_gateways](/docs/providers/aws/d/ec2_local_gateways.html)
+* [aws_ec2_transit_gateway_route_tables](/docs/providers/aws/d/ec2_transit_gateway_route_tables.html)
+* [aws_efs_access_points](/docs/providers/aws/d/efs_access_points.html)
+* [aws_emr_release_labels](/docs/providers/aws/d/emr_release_labels.markdown)
+* [aws_inspector_rules_packages](/docs/providers/aws/d/inspector_rules_packages.html)
+* [aws_ip_ranges](/docs/providers/aws/d/ip_ranges.html)
+* [aws_network_acls](/docs/providers/aws/d/network_acls.html)
+* [aws_route_tables](/docs/providers/aws/d/route_tables.html)
+* [aws_security_groups](/docs/providers/aws/d/security_groups.html)
+* [aws_ssoadmin_instances](/docs/providers/aws/d/ssoadmin_instances.html)
+* [aws_vpcs](/docs/providers/aws/d/vpcs.html)
+* [aws_vpc_peering_connections](/docs/providers/aws/d/vpc_peering_connections.html)
+
+## Empty Strings Not Valid For Certain Resources
+
+First, this breaking change but should affect very few configurations.
+
+Second, the motivation behind this change is that previously, you might set an argument to `""` to explicity convey it is empty. However, with the introduction of `null` in Terraform 0.12 and to prepare for continuing enhancements that distinguish between unset arguments and those that have a value, including an empty string (`""`), we are moving away from this use of zero values. We ask practitioners to either use `null` instead or remove the arguments that are set to `""`.
+
+### Resource: aws_customer_gateway
+
+Previously, `ip_address` could be set to `""`, which would result in an AWS error. However, this value is no longer accepted by the provider.
+
+### Resource: aws_default_network_acl
+
+Previously, `egress.*.cidr_block`, `egress.*.ipv6_cidr_block`, `ingress.*.cidr_block`, and `ingress.*.ipv6_cidr_block` could be set to `""`. However, the value `""` is no longer valid. Now, set the argument to `null` (_e.g._, `ipv6_cidr_block = null`) or remove the empty-string configuration.
+
+For example, this type of configuration is now not valid:
+
+```terraform
+resource "aws_default_network_acl" "example" {
+  # ...
+  egress {
+    cidr_block      = "0.0.0.0/0"
+    ipv6_cidr_block = ""
+    # ...
+  }
+}
+```
+
+In this updated and valid configuration, we remove the empty-string configuration:
+
+```terraform
+resource "aws_default_network_acl" "example" {
+  # ...
+  egress {
+    cidr_block = "0.0.0.0/0"
+    # ...
+  }
+}
+```
+
+### Resource: aws_default_route_table
+
+Previously, `route.*.cidr_block` and `route.*.ipv6_cidr_block` could be set to `""`. However, the value `""` is no longer valid. Now, set the argument to `null` (_e.g._, `ipv6_cidr_block = null`) or remove the empty-string configuration.
+
+For example, this type of configuration is now not valid:
+
+```terraform
+resource "aws_default_route_table" "example" {
+  # ...
+  route {
+    cidr_block      = local.ipv6 ? "" : local.destination
+    ipv6_cidr_block = local.ipv6 ? local.destination_ipv6 : ""
+  }
+}
+```
+
+In this updated and valid configuration, we use `null` instead of an empty string (`""`):
+
+```terraform
+resource "aws_default_route_table" "example" {
+  # ...
+  route {
+    cidr_block      = local.ipv6 ? null : local.destination
+    ipv6_cidr_block = local.ipv6 ? local.destination_ipv6 : null
+  }
+}
+```
+
+### Resource: aws_default_vpc (Empty String)
+
+Previously, `ipv6_cidr_block` could be set to `""`. However, the value `""` is no longer valid. Now, set the argument to `null` (_e.g._, `ipv6_cidr_block = null`) or remove the empty-string configuration.
+
+### Resource: aws_instance
+
+Previously, `private_ip` could be set to `""`. However, the value `""` is no longer valid. Now, set the argument to `null` (_e.g._, `private_ip = null`) or remove the empty-string configuration.
+
+For example, this type of configuration is now not valid:
+
+```terraform
+resource "aws_instance" "test" {
+  instance_type = "t2.micro"
+  private_ip    = ""
+}
+```
+
+In this updated and valid configuration, we remove the empty-string configuration:
+
+```terraform
+resource "aws_instance" "test" {
+  instance_type = "t2.micro"
+}
+```
+
+### Resource: aws_network_acl
+
+Previously, `egress.*.cidr_block`, `egress.*.ipv6_cidr_block`, `ingress.*.cidr_block`, and `ingress.*.ipv6_cidr_block` could be set to `""`. However, the value `""` is no longer valid. Now, set the argument to `null` (_e.g._, `ipv6_cidr_block = null`) or remove the empty-string configuration.
+
+For example, this type of configuration is now not valid:
+
+```terraform
+resource "aws_network_acl" "example" {
+  # ...
+  egress {
+    cidr_block      = "0.0.0.0/0"
+    ipv6_cidr_block = ""
+    # ...
+  }
+}
+```
+
+In this updated and valid configuration, we remove the empty-string configuration:
+
+```terraform
+resource "aws_network_acl" "example" {
+  # ...
+  egress {
+    cidr_block = "0.0.0.0/0"
+    # ...
+  }
+}
+```
+
+### Resource: aws_route
+
+Previously, `destination_cidr_block` and `destination_ipv6_cidr_block` could be set to `""`. However, the value `""` is no longer valid. Now, set the argument to `null` (_e.g._, `destination_ipv6_cidr_block = null`) or remove the empty-string configuration.
+
+In addition, now exactly one of `destination_cidr_block`, `destination_ipv6_cidr_block`, and `destination_prefix_list_id` can be set.
+
+For example, this type of configuration for `aws_route` is now not valid:
+
+```terraform
+resource "aws_route" "test" {
+  route_table_id = aws_route_table.test.id
+  gateway_id     = aws_internet_gateway.test.id
+
+  destination_cidr_block      = local.ipv6 ? "" : local.destination
+  destination_ipv6_cidr_block = local.ipv6 ? local.destination_ipv6 : ""
+}
+```
+
+In this updated and valid configuration, we use `null` instead of an empty-string (`""`):
+
+```terraform
+resource "aws_route" "test" {
+  route_table_id = aws_route_table.test.id
+  gateway_id     = aws_internet_gateway.test.id
+
+  destination_cidr_block      = local.ipv6 ? null : local.destination
+  destination_ipv6_cidr_block = local.ipv6 ? local.destination_ipv6 : null
+}
+```
+
+### Resource: aws_route_table
+
+Previously, `route.*.cidr_block` and `route.*.ipv6_cidr_block` could be set to `""`. However, the value `""` is no longer valid. Now, set the argument to `null` (_e.g._, `ipv6_cidr_block = null`) or remove the empty-string configuration.
+
+For example, this type of configuration is now not valid:
+
+```terraform
+resource "aws_route_table" "example" {
+  # ...
+  route {
+    cidr_block      = local.ipv6 ? "" : local.destination
+    ipv6_cidr_block = local.ipv6 ? local.destination_ipv6 : ""
+  }
+}
+```
+
+In this updated and valid configuration, we used `null` instead of an empty-string (`""`):
+
+```terraform
+resource "aws_route_table" "example" {
+  # ...
+  route {
+    cidr_block      = local.ipv6 ? null : local.destination
+    ipv6_cidr_block = local.ipv6 ? local.destination_ipv6 : null
+  }
+}
+```
+
+### Resource: aws_vpc_ipv6_cidr_block_association
+
+Previously, `ipv6_cidr_block` could be set to `""`. However, the value `""` is no longer valid. Now, set the argument to `null` (_e.g._, `ipv6_cidr_block = null`) or remove the empty-string configuration.
 
 ## Data Source: aws_cloudwatch_log_group
 
@@ -414,71 +599,6 @@ resource "aws_cloudwatch_event_target" "test" {
 }
 ```
 
-## Resource: aws_customer_gateway
-
-Previously, `ip_address` could be set to `""`, which would result in an AWS error. However, this value is no longer accepted by the provider.
-
-## Resource: aws_default_network_acl
-
-Previously, `egress.*.cidr_block`, `egress.*.ipv6_cidr_block`, `ingress.*.cidr_block`, and `ingress.*.ipv6_cidr_block` could be set to `""`. However, the value `""` is no longer valid. Now, set the argument to `null` (_e.g._, `ipv6_cidr_block = null`) or remove the empty-string configuration.
-
-For example, this type of configuration is now not valid:
-
-```terraform
-resource "aws_default_network_acl" "example" {
-  # ...
-  egress {
-    cidr_block      = "0.0.0.0/0"
-    ipv6_cidr_block = ""
-    # ...
-  }
-}
-```
-
-In this updated and valid configuration, we remove the empty-string configuration:
-
-```terraform
-resource "aws_default_network_acl" "example" {
-  # ...
-  egress {
-    cidr_block = "0.0.0.0/0"
-    # ...
-  }
-}
-```
-
-## Resource: aws_default_route_table
-
-Previously, `route.*.cidr_block` and `route.*.ipv6_cidr_block` could be set to `""`. However, the value `""` is no longer valid. Now, set the argument to `null` (_e.g._, `ipv6_cidr_block = null`) or remove the empty-string configuration.
-
-For example, this type of configuration is now not valid:
-
-```terraform
-resource "aws_default_route_table" "example" {
-  # ...
-  route {
-    cidr_block      = local.ipv6 ? "" : local.destination
-    ipv6_cidr_block = local.ipv6 ? local.destination_ipv6 : ""
-  }
-}
-```
-
-In this updated and valid configuration, we use `null` instead of an empty string (`""`):
-
-```terraform
-resource "aws_default_route_table" "example" {
-  # ...
-  route {
-    cidr_block      = local.ipv6 ? null : local.destination
-    ipv6_cidr_block = local.ipv6 ? local.destination_ipv6 : null
-  }
-}
-```
-
-## Resource: aws_default_vpc
-
-Previously, `ipv6_cidr_block` could be set to `""`. However, the value `""` is no longer valid. Now, set the argument to `null` (_e.g._, `ipv6_cidr_block = null`) or remove the empty-string configuration.
-
 ## Resource: aws_elasticache_cluster
 
 ### Error raised if neither `engine` nor `replication_group_id` is specified
@@ -537,56 +657,6 @@ output "elasticache_global_replication_group_version_result" {
 
 We removed the misspelled argument `active_directory_configuration.0.self_managed_active_directory_configuration.0.organizational_unit_distinguidshed_name` that was previously deprecated. Use `active_directory_configuration.0.self_managed_active_directory_configuration.0.organizational_unit_distinguished_name` now instead. Terraform will automatically migrate the state to `active_directory_configuration.0.self_managed_active_directory_configuration.0.organizational_unit_distinguished_name` during planning.
 
-## Resource: aws_instance
-
-Previously, `private_ip` could be set to `""`. However, the value `""` is no longer valid. Now, set the argument to `null` (_e.g._, `private_ip = null`) or remove the empty-string configuration.
-
-For example, this type of configuration is now not valid:
-
-```terraform
-resource "aws_instance" "test" {
-  instance_type = "t2.micro"
-  private_ip    = ""
-}
-```
-
-In this updated and valid configuration, we remove the empty-string configuration:
-
-```terraform
-resource "aws_instance" "test" {
-  instance_type = "t2.micro"
-}
-```
-
-## Resource: aws_network_acl
-
-Previously, `egress.*.cidr_block`, `egress.*.ipv6_cidr_block`, `ingress.*.cidr_block`, and `ingress.*.ipv6_cidr_block` could be set to `""`. However, the value `""` is no longer valid. Now, set the argument to `null` (_e.g._, `ipv6_cidr_block = null`) or remove the empty-string configuration.
-
-For example, this type of configuration is now not valid:
-
-```terraform
-resource "aws_network_acl" "example" {
-  # ...
-  egress {
-    cidr_block      = "0.0.0.0/0"
-    ipv6_cidr_block = ""
-    # ...
-  }
-}
-```
-
-In this updated and valid configuration, we remove the empty-string configuration:
-
-```terraform
-resource "aws_network_acl" "example" {
-  # ...
-  egress {
-    cidr_block = "0.0.0.0/0"
-    # ...
-  }
-}
-```
-
 ## Resource: aws_network_interface
 
 !> **WARNING:** This topic is placeholder documentation.
@@ -635,11 +705,11 @@ resource "aws_s3_bucket" "example" {
 
 resource "aws_s3_bucket_website_configuration" "example" {
   bucket = aws_s3_bucket.example.id
-  
+
   index_document {
     suffix = "index.html"
   }
-  
+
   error_document {
     key = "error.html"
   }
@@ -702,7 +772,7 @@ resource "aws_s3_bucket" "website" {
 
 resource "aws_s3_bucket_website_configuration" "example" {
   bucket = aws_s3_bucket.website.id
-  
+
   index_document {
     suffix = "index.html"
   }
@@ -712,13 +782,25 @@ resource "aws_route53_record" "alias" {
   zone_id = aws_route53_zone.main.zone_id
   name    = "www"
   type    = "A"
-  
+
   alias {
     zone_id                = aws_s3_bucket.website.hosted_zone_id
     name                   = aws_s3_bucket_website_configuration.example.website_domain
     evaluate_target_health = true
   }
 }
+```
+
+## Resource: aws_s3_bucket_object
+
+The `aws_s3_bucket_object` resource is deprecated and will be removed in a future version. Use `aws_s3_object` instead, where new features and fixes will be added.
+
+When replacing `aws_s3_bucket_object` with `aws_s3_object` in your configuration, on the next apply, Terraform will recreate the object. If you prefer to not have Terraform recreate the object, import the object using `aws_s3_object`.
+
+For example, the following will import an S3 object into state, assuming the configuration exists, as `aws_s3_object.example`:
+
+```console
+% terraform import aws_s3_object.example s3://some-bucket-name/some/key.txt
 ```
 
 ## Resource: aws_spot_instance_request
@@ -743,76 +825,6 @@ resource "aws_spot_instance_request" "example" {
   # ... other configuration ...
   instance_interruption_behavior =  "hibernate"
 }
-```
-
-## Resource: aws_route
-
-Previously, `destination_cidr_block` and `destination_ipv6_cidr_block` could be set to `""`. However, the value `""` is no longer valid. Now, set the argument to `null` (_e.g._, `destination_ipv6_cidr_block = null`) or remove the empty-string configuration.
-
-In addition, now exactly one of `destination_cidr_block`, `destination_ipv6_cidr_block`, and `destination_prefix_list_id` can be set.
-
-For example, this type of configuration for `aws_route` is now not valid:
-
-```terraform
-resource "aws_route" "test" {
-  route_table_id = aws_route_table.test.id
-  gateway_id     = aws_internet_gateway.test.id
-
-  destination_cidr_block      = local.ipv6 ? "" : local.destination
-  destination_ipv6_cidr_block = local.ipv6 ? local.destination_ipv6 : ""
-}
-```
-
-In this updated and valid configuration, we use `null` instead of an empty-string (`""`):
-
-```terraform
-resource "aws_route" "test" {
-  route_table_id = aws_route_table.test.id
-  gateway_id     = aws_internet_gateway.test.id
-
-  destination_cidr_block      = local.ipv6 ? null : local.destination
-  destination_ipv6_cidr_block = local.ipv6 ? local.destination_ipv6 : null
-}
-```
-
-## Resource: aws_route_table
-
-Previously, `route.*.cidr_block` and `route.*.ipv6_cidr_block` could be set to `""`. However, the value `""` is no longer valid. Now, set the argument to `null` (_e.g._, `ipv6_cidr_block = null`) or remove the empty-string configuration.
-
-For example, this type of configuration is now not valid:
-
-```terraform
-resource "aws_route_table" "example" {
-  # ...
-  route {
-    cidr_block      = local.ipv6 ? "" : local.destination
-    ipv6_cidr_block = local.ipv6 ? local.destination_ipv6 : ""
-  }
-}
-```
-
-In this updated and valid configuration, we used `null` instead of an empty-string (`""`):
-
-```terraform
-resource "aws_route_table" "example" {
-  # ...
-  route {
-    cidr_block      = local.ipv6 ? null : local.destination
-    ipv6_cidr_block = local.ipv6 ? local.destination_ipv6 : null
-  }
-}
-```
-
-## Resource: aws_s3_bucket_object
-
-The `aws_s3_bucket_object` resource is deprecated and will be removed in a future version. Use `aws_s3_object` instead, where new features and fixes will be added.
-
-When replacing `aws_s3_bucket_object` with `aws_s3_object` in your configuration, on the next apply, Terraform will recreate the object. If you prefer to not have Terraform recreate the object, import the object using `aws_s3_object`.
-
-For example, the following will import an S3 object into state, assuming the configuration exists, as `aws_s3_object.example`:
-
-```console
-% terraform import aws_s3_object.example s3://some-bucket-name/some/key.txt
 ```
 
 ## EC2-Classic Resource and Data Source Support
