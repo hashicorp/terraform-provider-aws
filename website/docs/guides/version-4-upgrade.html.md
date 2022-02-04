@@ -30,6 +30,7 @@ Upgrade topics:
     - [Resource: aws_default_network_acl](#resource-aws_default_network_acl)
     - [Resource: aws_default_route_table](#resource-aws_default_route_table)
     - [Resource: aws_default_vpc (Empty String)](#resource-aws_default_vpc-empty-string)
+    - [Resource: aws_efs_mount_target](#resource-aws_efs_mount_target)
     - [Resource: aws_instance](#resource-aws_instance)
     - [Resource: aws_network_acl](#resource-aws_network_acl)
     - [Resource: aws_route](#resource-aws_route)
@@ -314,6 +315,29 @@ In this updated and valid configuration, we remove the empty-string configuratio
 ```terraform
 resource "aws_instance" "test" {
   instance_type = "t2.micro"
+}
+```
+
+### Resource: aws_efs_mount_target
+
+Previously, `ip_address` could be set to `""`. However, the value `""` is no longer valid. Now, set the argument to `null` (_e.g._, `private_ip = null`) or remove the empty-string configuration.
+
+For example, this type of configuration is now not valid:
+
+```terraform
+resource "aws_efs_mount_target" "test" {
+  file_system_id = aws_efs_file_system.test.id
+  ip_address     = ""
+  subnet_id      = aws_subnet.test.id
+}
+```
+
+In this updated and valid configuration, we remove the empty-string configuration:
+
+```terraform
+resource "aws_efs_mount_target" "test" {
+  file_system_id = aws_efs_file_system.test.id
+  subnet_id      = aws_subnet.test.id
 }
 ```
 
