@@ -1045,10 +1045,16 @@ func resourceBucketRead(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
+	if err != nil {
+		log.Printf("[WARN] Unable to read S3 bucket (%s) Object Lock Configuration: %s", d.Id(), err)
+	}
+
 	if output, ok := resp.(*s3.GetObjectLockConfigurationOutput); ok {
 		if err := d.Set("object_lock_configuration", flattenS3ObjectLockConfiguration(output.ObjectLockConfiguration)); err != nil {
 			return fmt.Errorf("error setting object_lock_configuration: %w", err)
 		}
+	} else {
+		d.Set("object_lock_configuration", nil)
 	}
 
 	// Add the region as an attribute
