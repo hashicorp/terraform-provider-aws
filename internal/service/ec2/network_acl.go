@@ -16,7 +16,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -193,36 +192,12 @@ func resourceNetworkACLRead(d *schema.ResourceData, meta interface{}) error {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	var networkAcl *ec2.NetworkAcl
+	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(PropagationTimeout, func() (interface{}, error) {
+		return FindNetworkACLByID(conn, d.Id())
+	}, d.IsNewResource())
 
-	err := resource.Retry(NetworkACLPropagationTimeout, func() *resource.RetryError {
-		var err error
-
-		networkAcl, err = FindNetworkACLByID(conn, d.Id())
-
-		if d.IsNewResource() && tfawserr.ErrCodeEquals(err, "InvalidNetworkAclID.NotFound") {
-			return resource.RetryableError(err)
-		}
-
-		if err != nil {
-			return resource.NonRetryableError(err)
-		}
-
-		if d.IsNewResource() && networkAcl == nil {
-			return resource.RetryableError(&resource.NotFoundError{
-				LastError: fmt.Errorf("EC2 Network ACL (%s) not found", d.Id()),
-			})
-		}
-
-		return nil
-	})
-
-	if tfresource.TimedOut(err) {
-		networkAcl, err = FindNetworkACLByID(conn, d.Id())
-	}
-
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, "InvalidNetworkAclID.NotFound") {
-		log.Printf("[WARN] EC2 Network ACL (%s) not found, removing from state", d.Id())
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] EC2 Network ACL %s not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
@@ -231,36 +206,51 @@ func resourceNetworkACLRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error reading EC2 Network ACL (%s): %w", d.Id(), err)
 	}
 
-	if networkAcl == nil {
-		if d.IsNewResource() {
-			return fmt.Errorf("error reading EC2 Network ACL (%s): not found after creation", d.Id())
-		}
+	networkAcl := outputRaw.(*ec2.NetworkAcl)
 
-		log.Printf("[WARN] EC2 Network ACL (%s) not found, removing from state", d.Id())
-		d.SetId("")
-		return nil
+	ownerID := aws.StringValue(networkAcl.OwnerId)
+	arn := arn.ARN{
+		Partition: meta.(*conns.AWSClient).Partition,
+		Service:   ec2.ServiceName,
+		Region:    meta.(*conns.AWSClient).Region,
+		AccountID: ownerID,
+		Resource:  fmt.Sprintf("network-acl/%s", d.Id()),
+	}.String()
+	d.Set("arn", arn)
+	d.Set("owner_id", ownerID)
+
+	var subnetIDs []string
+	for _, v := range networkAcl.Associations {
+		subnetIDs = append(subnetIDs, aws.StringValue(v.SubnetId))
 	}
+	d.Set("subnet_ids", subnetIDs)
 
-	var ingressEntries []*ec2.NetworkAclEntry
+	d.Set("vpc_id", networkAcl.VpcId)
+
 	var egressEntries []*ec2.NetworkAclEntry
+	var ingressEntries []*ec2.NetworkAclEntry
 
 	// separate the ingress and egress rules
-	for _, e := range networkAcl.Entries {
+	for _, v := range networkAcl.Entries {
 		// Skip the default rules added by AWS. They can be neither
 		// configured or deleted by users.
-		if aws.Int64Value(e.RuleNumber) == defaultACLRuleNumberIPv4 ||
-			aws.Int64Value(e.RuleNumber) == defaultACLRuleNumberIPv6 {
+		if v := aws.Int64Value(v.RuleNumber); v == defaultACLRuleNumberIPv4 || v == defaultACLRuleNumberIPv6 {
 			continue
 		}
 
-		if aws.BoolValue(e.Egress) {
-			egressEntries = append(egressEntries, e)
+		if aws.BoolValue(v.Egress) {
+			egressEntries = append(egressEntries, v)
 		} else {
-			ingressEntries = append(ingressEntries, e)
+			ingressEntries = append(ingressEntries, v)
 		}
 	}
 
-	d.Set("vpc_id", networkAcl.VpcId)
+	if err := d.Set("egress", flattenNetworkAclEntries(egressEntries)); err != nil {
+		return fmt.Errorf("error setting egress: %w", err)
+	}
+	if err := d.Set("ingress", flattenNetworkAclEntries(ingressEntries)); err != nil {
+		return fmt.Errorf("error setting ingress: %w", err)
+	}
 
 	tags := KeyValueTags(networkAcl.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
@@ -272,33 +262,6 @@ func resourceNetworkACLRead(d *schema.ResourceData, meta interface{}) error {
 	if err := d.Set("tags_all", tags.Map()); err != nil {
 		return fmt.Errorf("error setting tags_all: %w", err)
 	}
-
-	d.Set("owner_id", networkAcl.OwnerId)
-
-	var subnetIds []*string
-	for _, a := range networkAcl.Associations {
-		subnetIds = append(subnetIds, a.SubnetId)
-	}
-	if err := d.Set("subnet_ids", flex.FlattenStringSet(subnetIds)); err != nil {
-		return err
-	}
-
-	if err := d.Set("ingress", networkAclEntriesToMapList(ingressEntries)); err != nil {
-		return err
-	}
-	if err := d.Set("egress", networkAclEntriesToMapList(egressEntries)); err != nil {
-		return err
-	}
-
-	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
-		Service:   ec2.ServiceName,
-		Region:    meta.(*conns.AWSClient).Region,
-		AccountID: aws.StringValue(networkAcl.OwnerId),
-		Resource:  fmt.Sprintf("network-acl/%s", d.Id()),
-	}.String()
-
-	d.Set("arn", arn)
 
 	return nil
 }
@@ -678,43 +641,79 @@ func findNetworkAclAssociation(subnetId string, conn *ec2.EC2) (networkAclAssoci
 	}
 }
 
-// networkAclEntriesToMapList turns ingress/egress rules read from AWS into a list
-// of maps.
-func networkAclEntriesToMapList(networkAcls []*ec2.NetworkAclEntry) []map[string]interface{} {
-	result := make([]map[string]interface{}, 0, len(networkAcls))
-	for _, entry := range networkAcls {
-		acl := make(map[string]interface{})
-		acl["rule_no"] = aws.Int64Value(entry.RuleNumber)
-		acl["action"] = aws.StringValue(entry.RuleAction)
-		if entry.CidrBlock != nil {
-			acl["cidr_block"] = aws.StringValue(entry.CidrBlock)
-		}
-		if entry.Ipv6CidrBlock != nil {
-			acl["ipv6_cidr_block"] = aws.StringValue(entry.Ipv6CidrBlock)
-		}
-		// The AWS network ACL API only speaks protocol numbers, and
-		// that's all we record.
-		if _, err := strconv.Atoi(aws.StringValue(entry.Protocol)); err != nil {
-			// We're a protocol name. Look up the number.
-			acl["protocol"] = protocolIntegers()[aws.StringValue(entry.Protocol)]
-		} else {
-			// We're a protocol number. Pass through.
-			acl["protocol"] = aws.StringValue(entry.Protocol)
-		}
-
-		acl["protocol"] = aws.StringValue(entry.Protocol)
-		if entry.PortRange != nil {
-			acl["from_port"] = aws.Int64Value(entry.PortRange.From)
-			acl["to_port"] = aws.Int64Value(entry.PortRange.To)
-		}
-
-		if entry.IcmpTypeCode != nil {
-			acl["icmp_type"] = aws.Int64Value(entry.IcmpTypeCode.Type)
-			acl["icmp_code"] = aws.Int64Value(entry.IcmpTypeCode.Code)
-		}
-
-		result = append(result, acl)
+func flattenNetworkAclEntry(apiObject *ec2.NetworkAclEntry) map[string]interface{} {
+	if apiObject == nil {
+		return nil
 	}
 
-	return result
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.RuleNumber; v != nil {
+		tfMap["rule_no"] = aws.Int64Value(v)
+	}
+
+	if v := apiObject.RuleAction; v != nil {
+		tfMap["action"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.CidrBlock; v != nil {
+		tfMap["cidr_block"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.Ipv6CidrBlock; v != nil {
+		tfMap["ipv6_cidr_block"] = aws.StringValue(v)
+	}
+
+	if apiObject := apiObject.PortRange; apiObject != nil {
+		if v := apiObject.From; v != nil {
+			tfMap["from_port"] = aws.Int64Value(v)
+		}
+
+		if v := apiObject.To; v != nil {
+			tfMap["to_port"] = aws.Int64Value(v)
+		}
+	}
+
+	if v := aws.StringValue(apiObject.Protocol); v != "" {
+		// The AWS network ACL API only speaks protocol numbers, and
+		// that's all we record.
+		i, err := strconv.Atoi(v)
+
+		if err != nil {
+			// We're a protocol name. Look up the number.
+			i = protocolIntegers()[v]
+		}
+
+		tfMap["protocol"] = strconv.Itoa(i)
+	}
+
+	if apiObject := apiObject.IcmpTypeCode; apiObject != nil {
+		if v := apiObject.Code; v != nil {
+			tfMap["icmp_code"] = aws.Int64Value(v)
+		}
+
+		if v := apiObject.Type; v != nil {
+			tfMap["icmp_type"] = aws.Int64Value(v)
+		}
+	}
+
+	return tfMap
+}
+
+func flattenNetworkAclEntries(apiObjects []*ec2.NetworkAclEntry) []interface{} {
+	if len(apiObjects) == 0 {
+		return nil
+	}
+
+	var tfList []interface{}
+
+	for _, apiObject := range apiObjects {
+		if apiObject == nil {
+			continue
+		}
+
+		tfList = append(tfList, flattenNetworkAclEntry(apiObject))
+	}
+
+	return tfList
 }

@@ -729,37 +729,25 @@ func FindNetworkACLs(conn *ec2.EC2, input *ec2.DescribeNetworkAclsInput) ([]*ec2
 	return output, nil
 }
 
-// FindNetworkACLByID looks up a NetworkAcl by ID. When not found, returns nil and potentially an API error.
 func FindNetworkACLByID(conn *ec2.EC2, id string) (*ec2.NetworkAcl, error) {
 	input := &ec2.DescribeNetworkAclsInput{
 		NetworkAclIds: aws.StringSlice([]string{id}),
 	}
 
-	output, err := conn.DescribeNetworkAcls(input)
+	output, err := FindNetworkACL(conn, input)
 
 	if err != nil {
 		return nil, err
 	}
 
-	if output == nil {
-		return nil, nil
+	// Eventual consistency check.
+	if aws.StringValue(output.NetworkAclId) != id {
+		return nil, &resource.NotFoundError{
+			LastRequest: input,
+		}
 	}
 
-	for _, networkAcl := range output.NetworkAcls {
-		if networkAcl == nil {
-			continue
-		}
-
-		if aws.StringValue(networkAcl.NetworkAclId) != id {
-			continue
-		}
-
-		return networkAcl, nil
-	}
-
-	return nil, nil
-
-	// TODO: Layer on top of FindNetworkACL and modify callers to handle NotFoundError.
+	return output, nil
 }
 
 func FindNetworkACLAssociationByID(conn *ec2.EC2, associationID string) (*ec2.NetworkAclAssociation, error) {
