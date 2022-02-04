@@ -600,16 +600,21 @@ In addition, now exactly one of `destination_cidr_block`, `destination_ipv6_cidr
 
 For example, this type of configuration for `aws_route` is now not valid:
 
-```terraform
-  destination_cidr_block      = local.ipv6 ? "" : local.destination
-  destination_ipv6_cidr_block = local.ipv6 ? local.destination_ipv6 : ""
+<!--
+Including the route configuration makes validate-terraform mad w/ aws_route_not_specified_target
+even if you have a gateway_id target. Rather than fighting !@#!@#$% VT, dropping to non-Terraform.
+-->
+
+```
+destination_cidr_block      = local.ipv6 ? "" : local.destination
+destination_ipv6_cidr_block = local.ipv6 ? local.destination_ipv6 : ""
 ```
 
 In this updated and valid configuration, we use `null` instead of an empty-string (`""`):
 
-```terraform
-  destination_cidr_block      = local.ipv6 ? null : local.destination
-  destination_ipv6_cidr_block = local.ipv6 ? local.destination_ipv6 : null
+```
+destination_cidr_block      = local.ipv6 ? null : local.destination
+destination_ipv6_cidr_block = local.ipv6 ? local.destination_ipv6 : null
 ```
 
 ## Resource: aws_route_table
