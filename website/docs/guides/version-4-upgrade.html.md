@@ -455,21 +455,20 @@ For example, this type of configuration is now not valid:
 resource "aws_default_route_table" "example" {
   # ...
   route {
-    cidr_block      = "0.0.0.0/0"
-    ipv6_cidr_block = ""
-    # ...
+    cidr_block      = local.ipv6 ? "" : local.destination
+    ipv6_cidr_block = local.ipv6 ? local.destination_ipv6 : ""
   }
 }
 ```
 
-In this updated and valid configuration, we remove the empty-string configuration:
+In this updated and valid configuration, we use `null` instead of an empty string (`""`):
 
 ```terraform
 resource "aws_default_route_table" "example" {
   # ...
   route {
-    cidr_block = "0.0.0.0/0"
-    # ...
+    cidr_block      = local.ipv6 ? null : local.destination
+    ipv6_cidr_block = local.ipv6 ? local.destination_ipv6 : null
   }
 }
 ```
@@ -603,20 +602,23 @@ For example, this type of configuration is now not valid:
 
 ```terraform
 resource "aws_route" "example" {
-  # ...
-  destination_cidr_block      = "172.16.1.0/24"
-  destination_ipv6_cidr_block = ""
-  # ...
+  route_table_id = aws_route_table.example.id
+  gateway_id     = aws_internet_gateway.example.id
+
+  destination_cidr_block      = local.ipv6 ? "" : local.destination
+  destination_ipv6_cidr_block = local.ipv6 ? local.destination_ipv6 : ""
 }
 ```
 
-In this updated and valid configuration, we remove the empty-string configuration:
+In this updated and valid configuration, we use `null` instead of an empty-string (`""`):
 
 ```terraform
 resource "aws_route" "example" {
-  # ...
-  destination_cidr_block = "172.16.1.0/24"
-  # ...
+  route_table_id = aws_route_table.example.id
+  gateway_id     = aws_internet_gateway.example.id
+
+  destination_cidr_block      = local.ipv6 ? null : local.destination
+  destination_ipv6_cidr_block = local.ipv6 ? local.destination_ipv6 : null
 }
 ```
 
@@ -630,21 +632,20 @@ For example, this type of configuration is now not valid:
 resource "aws_route_table" "example" {
   # ...
   route {
-    cidr_block      = "0.0.0.0/0"
-    ipv6_cidr_block = ""
-    # ...
+    cidr_block      = local.ipv6 ? "" : local.destination
+    ipv6_cidr_block = local.ipv6 ? local.destination_ipv6 : ""
   }
 }
 ```
 
-In this updated and valid configuration, we remove the empty-string configuration:
+In this updated and valid configuration, we used `null` instead of an empty-string (`""`):
 
 ```terraform
 resource "aws_route_table" "example" {
   # ...
   route {
-    cidr_block = "0.0.0.0/0"
-    # ...
+    cidr_block      = local.ipv6 ? null : local.destination
+    ipv6_cidr_block = local.ipv6 ? local.destination_ipv6 : null
   }
 }
 ```
