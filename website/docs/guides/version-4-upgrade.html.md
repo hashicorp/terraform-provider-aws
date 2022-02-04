@@ -229,7 +229,7 @@ such that they no longer return an error if zero results are found.
 
 First, this breaking change but should affect very few configurations.
 
-Second, the motivation behind this change is that previously, you might set an argument to `""` to explicity convey it is empty. However, with the introduction of `null` in Terraform 0.12 and to prepare for continuing enhancements that distinguish between unset arguments and those that have a value, including an empty string (`""`), we are moving away from this use of zero values. We ask practitioners to either use `null` instead or remove the arguments that are set to `""`.
+Second, the motivation behind this change is that previously, you might set an argument to `""` to explicitly convey it is empty. However, with the introduction of `null` in Terraform 0.12 and to prepare for continuing enhancements that distinguish between unset arguments and those that have a value, including an empty string (`""`), we are moving away from this use of zero values. We ask practitioners to either use `null` instead or remove the arguments that are set to `""`.
 
 ### Resource: aws_customer_gateway
 
