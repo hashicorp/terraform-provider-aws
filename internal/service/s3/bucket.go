@@ -162,39 +162,33 @@ func ResourceBucket() *schema.Resource {
 			},
 
 			"website": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
+				Type:       schema.TypeList,
+				Computed:   true,
+				Deprecated: "Use the aws_s3_bucket_website_configuration resource instead when available in a future minor version",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"index_document": {
-							Type:     schema.TypeString,
-							Optional: true,
+							Type:       schema.TypeString,
+							Computed:   true,
+							Deprecated: "Use the aws_s3_bucket_website_configuration resource instead when available in a future minor version",
 						},
 
 						"error_document": {
-							Type:     schema.TypeString,
-							Optional: true,
+							Type:       schema.TypeString,
+							Computed:   true,
+							Deprecated: "Use the aws_s3_bucket_website_configuration resource instead when available in a future minor version",
 						},
 
 						"redirect_all_requests_to": {
-							Type: schema.TypeString,
-							ConflictsWith: []string{
-								"website.0.index_document",
-								"website.0.error_document",
-								"website.0.routing_rules",
-							},
-							Optional: true,
+							Type:       schema.TypeString,
+							Computed:   true,
+							Deprecated: "Use the aws_s3_bucket_website_configuration resource instead when available in a future minor version",
 						},
 
 						"routing_rules": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: validation.StringIsJSON,
-							StateFunc: func(v interface{}) string {
-								json, _ := structure.NormalizeJsonString(v)
-								return json
-							},
+							Type:       schema.TypeString,
+							Computed:   true,
+							Deprecated: "Use the aws_s3_bucket_website_configuration resource instead when available in a future minor version",
 						},
 					},
 				},
@@ -211,14 +205,14 @@ func ResourceBucket() *schema.Resource {
 				Computed: true,
 			},
 			"website_endpoint": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
+				Type:       schema.TypeString,
+				Computed:   true,
+				Deprecated: "Use the aws_s3_bucket_website_configuration resource instead when available in a future minor version",
 			},
 			"website_domain": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
+				Type:       schema.TypeString,
+				Computed:   true,
+				Deprecated: "Use the aws_s3_bucket_website_configuration resource instead when available in a future minor version",
 			},
 
 			"versioning": {
@@ -770,12 +764,6 @@ func resourceBucketUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	if d.HasChange("website") {
-		if err := resourceBucketWebsiteUpdate(conn, d); err != nil {
-			return err
-		}
-	}
-
 	if d.HasChange("versioning") {
 		v := d.Get("versioning").([]interface{})
 
@@ -999,64 +987,18 @@ func resourceBucketRead(d *schema.ResourceData, meta interface{}) error {
 			Bucket: aws.String(d.Id()),
 		})
 	})
-	if err != nil && !tfawserr.ErrMessageContains(err, "NotImplemented", "") && !tfawserr.ErrMessageContains(err, "NoSuchWebsiteConfiguration", "") {
-		return fmt.Errorf("error getting S3 Bucket website configuration: %s", err)
+	if err != nil && !tfawserr.ErrCodeEquals(err, ErrCodeNotImplemented, ErrCodeNoSuchWebsiteConfiguration) {
+		return fmt.Errorf("error getting S3 Bucket website configuration: %w", err)
 	}
 
-	websites := make([]map[string]interface{}, 0, 1)
 	if ws, ok := wsResponse.(*s3.GetBucketWebsiteOutput); ok {
-		w := make(map[string]interface{})
-
-		if v := ws.IndexDocument; v != nil {
-			w["index_document"] = aws.StringValue(v.Suffix)
+		website, err := flattenBucketWebsite(ws)
+		if err != nil {
+			return err
 		}
-
-		if v := ws.ErrorDocument; v != nil {
-			w["error_document"] = aws.StringValue(v.Key)
+		if err := d.Set("website", website); err != nil {
+			return fmt.Errorf("error setting website: %w", err)
 		}
-
-		if v := ws.RedirectAllRequestsTo; v != nil {
-			if v.Protocol == nil {
-				w["redirect_all_requests_to"] = aws.StringValue(v.HostName)
-			} else {
-				var host string
-				var path string
-				var query string
-				parsedHostName, err := url.Parse(aws.StringValue(v.HostName))
-				if err == nil {
-					host = parsedHostName.Host
-					path = parsedHostName.Path
-					query = parsedHostName.RawQuery
-				} else {
-					host = aws.StringValue(v.HostName)
-					path = ""
-				}
-
-				w["redirect_all_requests_to"] = (&url.URL{
-					Host:     host,
-					Path:     path,
-					Scheme:   aws.StringValue(v.Protocol),
-					RawQuery: query,
-				}).String()
-			}
-		}
-
-		if v := ws.RoutingRules; v != nil {
-			rr, err := normalizeRoutingRules(v)
-			if err != nil {
-				return fmt.Errorf("Error while marshaling routing rules: %s", err)
-			}
-			w["routing_rules"] = rr
-		}
-
-		// We have special handling for the website configuration,
-		// so only add the configuration if there is any
-		if len(w) > 0 {
-			websites = append(websites, w)
-		}
-	}
-	if err := d.Set("website", websites); err != nil {
-		return fmt.Errorf("error setting website: %s", err)
 	}
 
 	// Read the versioning configuration
@@ -1637,115 +1579,6 @@ func resourceBucketCorsUpdate(conn *s3.S3, d *schema.ResourceData) error {
 			return fmt.Errorf("Error putting S3 CORS: %s", err)
 		}
 	}
-
-	return nil
-}
-
-func resourceBucketWebsiteUpdate(conn *s3.S3, d *schema.ResourceData) error {
-	ws := d.Get("website").([]interface{})
-
-	if len(ws) == 0 {
-		return resourceBucketWebsiteDelete(conn, d)
-	}
-
-	var w map[string]interface{}
-	if ws[0] != nil {
-		w = ws[0].(map[string]interface{})
-	} else {
-		w = make(map[string]interface{})
-	}
-	return resourceBucketWebsitePut(conn, d, w)
-}
-
-func resourceBucketWebsitePut(conn *s3.S3, d *schema.ResourceData, website map[string]interface{}) error {
-	bucket := d.Get("bucket").(string)
-
-	var indexDocument, errorDocument, redirectAllRequestsTo, routingRules string
-	if v, ok := website["index_document"]; ok {
-		indexDocument = v.(string)
-	}
-	if v, ok := website["error_document"]; ok {
-		errorDocument = v.(string)
-	}
-	if v, ok := website["redirect_all_requests_to"]; ok {
-		redirectAllRequestsTo = v.(string)
-	}
-	if v, ok := website["routing_rules"]; ok {
-		routingRules = v.(string)
-	}
-
-	if indexDocument == "" && redirectAllRequestsTo == "" {
-		return fmt.Errorf("Must specify either index_document or redirect_all_requests_to.")
-	}
-
-	websiteConfiguration := &s3.WebsiteConfiguration{}
-
-	if indexDocument != "" {
-		websiteConfiguration.IndexDocument = &s3.IndexDocument{Suffix: aws.String(indexDocument)}
-	}
-
-	if errorDocument != "" {
-		websiteConfiguration.ErrorDocument = &s3.ErrorDocument{Key: aws.String(errorDocument)}
-	}
-
-	if redirectAllRequestsTo != "" {
-		redirect, err := url.Parse(redirectAllRequestsTo)
-		if err == nil && redirect.Scheme != "" {
-			var redirectHostBuf bytes.Buffer
-			redirectHostBuf.WriteString(redirect.Host)
-			if redirect.Path != "" {
-				redirectHostBuf.WriteString(redirect.Path)
-			}
-			if redirect.RawQuery != "" {
-				redirectHostBuf.WriteString("?")
-				redirectHostBuf.WriteString(redirect.RawQuery)
-			}
-			websiteConfiguration.RedirectAllRequestsTo = &s3.RedirectAllRequestsTo{HostName: aws.String(redirectHostBuf.String()), Protocol: aws.String(redirect.Scheme)}
-		} else {
-			websiteConfiguration.RedirectAllRequestsTo = &s3.RedirectAllRequestsTo{HostName: aws.String(redirectAllRequestsTo)}
-		}
-	}
-
-	if routingRules != "" {
-		var unmarshaledRules []*s3.RoutingRule
-		if err := json.Unmarshal([]byte(routingRules), &unmarshaledRules); err != nil {
-			return err
-		}
-		websiteConfiguration.RoutingRules = unmarshaledRules
-	}
-
-	putInput := &s3.PutBucketWebsiteInput{
-		Bucket:               aws.String(bucket),
-		WebsiteConfiguration: websiteConfiguration,
-	}
-
-	log.Printf("[DEBUG] S3 put bucket website: %#v", putInput)
-
-	_, err := verify.RetryOnAWSCode(s3.ErrCodeNoSuchBucket, func() (interface{}, error) {
-		return conn.PutBucketWebsite(putInput)
-	})
-	if err != nil {
-		return fmt.Errorf("Error putting S3 website: %s", err)
-	}
-
-	return nil
-}
-
-func resourceBucketWebsiteDelete(conn *s3.S3, d *schema.ResourceData) error {
-	bucket := d.Get("bucket").(string)
-	deleteInput := &s3.DeleteBucketWebsiteInput{Bucket: aws.String(bucket)}
-
-	log.Printf("[DEBUG] S3 delete bucket website: %#v", deleteInput)
-
-	_, err := verify.RetryOnAWSCode(s3.ErrCodeNoSuchBucket, func() (interface{}, error) {
-		return conn.DeleteBucketWebsite(deleteInput)
-	})
-	if err != nil {
-		return fmt.Errorf("Error deleting S3 website: %s", err)
-	}
-
-	d.Set("website_endpoint", "")
-	d.Set("website_domain", "")
 
 	return nil
 }
@@ -2389,6 +2222,64 @@ func flattenServerSideEncryptionConfiguration(c *s3.ServerSideEncryptionConfigur
 		"rule": rules,
 	})
 	return encryptionConfiguration
+}
+
+func flattenBucketWebsite(ws *s3.GetBucketWebsiteOutput) ([]interface{}, error) {
+	if ws == nil {
+		return []interface{}{}, nil
+	}
+
+	m := make(map[string]interface{})
+
+	if v := ws.IndexDocument; v != nil {
+		m["index_document"] = aws.StringValue(v.Suffix)
+	}
+
+	if v := ws.ErrorDocument; v != nil {
+		m["error_document"] = aws.StringValue(v.Key)
+	}
+
+	if v := ws.RedirectAllRequestsTo; v != nil {
+		if v.Protocol == nil {
+			m["redirect_all_requests_to"] = aws.StringValue(v.HostName)
+		} else {
+			var host string
+			var path string
+			var query string
+			parsedHostName, err := url.Parse(aws.StringValue(v.HostName))
+			if err == nil {
+				host = parsedHostName.Host
+				path = parsedHostName.Path
+				query = parsedHostName.RawQuery
+			} else {
+				host = aws.StringValue(v.HostName)
+				path = ""
+			}
+
+			m["redirect_all_requests_to"] = (&url.URL{
+				Host:     host,
+				Path:     path,
+				Scheme:   aws.StringValue(v.Protocol),
+				RawQuery: query,
+			}).String()
+		}
+	}
+
+	if v := ws.RoutingRules; v != nil {
+		rr, err := normalizeRoutingRules(v)
+		if err != nil {
+			return nil, fmt.Errorf("error while marshaling routing rules: %w", err)
+		}
+		m["routing_rules"] = rr
+	}
+
+	// We have special handling for the website configuration,
+	// so only return the configuration if there is any
+	if len(m) == 0 {
+		return []interface{}{}, nil
+	}
+
+	return []interface{}{m}, nil
 }
 
 func flattenBucketReplicationConfiguration(r *s3.ReplicationConfiguration) []map[string]interface{} {

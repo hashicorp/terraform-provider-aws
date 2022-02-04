@@ -6,8 +6,10 @@ BREAKING CHANGES:
 * resource/aws_batch_compute_environment: No `compute_resources` configuration block can be specified when `type` is `UNMANAGED` ([#22805](https://github.com/hashicorp/terraform-provider-aws/issues/22805))
 * resource/aws_cloudwatch_event_target: The `ecs_target` `launch_type` argument no longer has a default value (previously was `EC2`) ([#22803](https://github.com/hashicorp/terraform-provider-aws/issues/22803))
 * resource/aws_connect_hours_of_operation: The hours_of_operation_arn attribute is renamed to arn ([#22375](https://github.com/hashicorp/terraform-provider-aws/issues/22375))
+* resource/aws_default_network_acl: These arguments can no longer be set to `""`: `egress.*.cidr_block`, `egress.*.ipv6_cidr_block`, `ingress.*.cidr_block`, or `ingress.*.ipv6_cidr_block` ([#22928](https://github.com/hashicorp/terraform-provider-aws/issues/22928))
 * resource/aws_elasticache_cluster: Either `engine` or `replication_group_id` must be specified ([#20482](https://github.com/hashicorp/terraform-provider-aws/issues/20482))
 * resource/aws_fsx_ontap_storage_virtual_machine: Remove deprecated `active_directory_configuration.0.self_managed_active_directory_configuration.0.organizational_unit_distinguidshed_name`, migrating value to `active_directory_configuration.0.self_managed_active_directory_configuration.0.organizational_unit_distinguished_name` ([#22915](https://github.com/hashicorp/terraform-provider-aws/issues/22915))
+* resource/aws_network_acl: These arguments can no longer be set to `""`: `egress.*.cidr_block`, `egress.*.ipv6_cidr_block`, `ingress.*.cidr_block`, or `ingress.*.ipv6_cidr_block` ([#22928](https://github.com/hashicorp/terraform-provider-aws/issues/22928))
 
 NOTES:
 
@@ -108,6 +110,7 @@ BUG FIXES:
 * resource/aws_ec2_client_vpn_authorization_rule: Don't raise an error when `InvalidClientVpnEndpointId.NotFound` is returned during refresh ([#20688](https://github.com/hashicorp/terraform-provider-aws/issues/20688))
 * resource/aws_ec2_client_vpn_endpoint: `connection_log_options.cloudwatch_log_stream` argument is Computed, preventing spurious resource diffs ([#22891](https://github.com/hashicorp/terraform-provider-aws/issues/22891))
 * resource/aws_route_table_association: Handle nil 'AssociationState' in ISO regions ([#22806](https://github.com/hashicorp/terraform-provider-aws/issues/22806))
+* resource/aws_route_table_association: Retry resource Read for EC2 eventual consistency ([#22927](https://github.com/hashicorp/terraform-provider-aws/issues/22927))
 * resource/aws_vpc_ipam: Correct update of `description` ([#22863](https://github.com/hashicorp/terraform-provider-aws/issues/22863))
 
 ## 3.74.0 (January 28, 2022)
