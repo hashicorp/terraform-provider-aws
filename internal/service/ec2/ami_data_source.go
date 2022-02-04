@@ -272,6 +272,7 @@ func amiDescriptionAttributes(d *schema.ResourceData, image *ec2.Image, meta int
 	// Simple attributes first
 	d.SetId(aws.StringValue(image.ImageId))
 	d.Set("architecture", image.Architecture)
+	d.Set("boot_mode", image.BootMode)
 	d.Set("creation_date", image.CreationDate)
 	if image.Description != nil {
 		d.Set("description", image.Description)
