@@ -240,87 +240,103 @@ func resourceNetworkACLUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	if d.HasChange("ingress") {
-		err := updateNetworkAclEntries(d, "ingress", conn)
-		if err != nil {
+		o, n := d.GetChange("ingress")
+		os, ns := o.(*schema.Set), n.(*schema.Set)
+
+		if err := updateNetworkACLEntries(conn, d.Id(), os, ns, false); err != nil {
 			return err
 		}
 	}
 
 	if d.HasChange("egress") {
-		err := updateNetworkAclEntries(d, "egress", conn)
-		if err != nil {
+		o, n := d.GetChange("egress")
+		os, ns := o.(*schema.Set), n.(*schema.Set)
+
+		if err := updateNetworkACLEntries(conn, d.Id(), os, ns, true); err != nil {
 			return err
 		}
 	}
 
 	if d.HasChange("subnet_ids") {
 		o, n := d.GetChange("subnet_ids")
-		if o == nil {
-			o = new(schema.Set)
-		}
-		if n == nil {
-			n = new(schema.Set)
-		}
+		os, ns := o.(*schema.Set), n.(*schema.Set)
+		add, del := ns.Difference(os).List(), os.Difference(ns).List()
 
-		os := o.(*schema.Set)
-		ns := n.(*schema.Set)
-
-		remove := os.Difference(ns).List()
-		add := ns.Difference(os).List()
-
-		if len(remove) > 0 {
+		if len(del) > 0 {
 			// A Network ACL is required for each subnet. In order to disassociate a
 			// subnet from this ACL, we must associate it with the default ACL.
-			defaultAcl, err := GetDefaultNetworkACL(d.Get("vpc_id").(string), conn)
+			vpcID := d.Get("vpc_id").(string)
+			defaultNACL, err := FindVPCDefaultNetworkACL(conn, vpcID)
+
 			if err != nil {
-				return fmt.Errorf("Failed to find Default ACL for VPC %s", d.Get("vpc_id").(string))
+				return fmt.Errorf("error reading EC2 VPC (%s) default NACL: %w", vpcID, err)
 			}
-			for _, r := range remove {
-				association, err := findNetworkAclAssociation(r.(string), conn)
-				if err != nil {
-					if tfresource.NotFound(err) {
-						// Subnet has been deleted.
-						continue
-					}
-					return fmt.Errorf("Failed to find acl association: acl %s with subnet %s: %s", d.Id(), r, err)
+
+			for _, v := range del {
+				subnetID := v.(string)
+
+				association, err := FindNetworkACLAssociationBySubnetID(conn, subnetID)
+
+				if tfresource.NotFound(err) {
+					// Subnet has been deleted.
+					continue
 				}
-				log.Printf("[DEBUG] Replacing Network Acl Association (%s) with Default Network ACL ID (%s)", *association.NetworkAclAssociationId, *defaultAcl.NetworkAclId)
-				_, err = conn.ReplaceNetworkAclAssociation(&ec2.ReplaceNetworkAclAssociationInput{
-					AssociationId: association.NetworkAclAssociationId,
-					NetworkAclId:  defaultAcl.NetworkAclId,
-				})
+
 				if err != nil {
-					if tfawserr.ErrMessageContains(err, "InvalidAssociationID.NotFound", "") {
-						continue
-					}
-					return fmt.Errorf("Error Replacing Default Network Acl Association: %s", err)
+					return fmt.Errorf("error reading EC2 Network ACL Association for EC2 Subnet (%s): %w", subnetID, err)
+				}
+
+				input := &ec2.ReplaceNetworkAclAssociationInput{
+					AssociationId: association.NetworkAclAssociationId,
+					NetworkAclId:  defaultNACL.NetworkAclId,
+				}
+
+				log.Printf("[DEBUG] Replacing EC2 Network ACL Association: %s", input)
+				_, err = conn.ReplaceNetworkAclAssociation(input)
+
+				if tfawserr.ErrCodeEquals(err, ErrCodeInvalidAssociationIDNotFound) {
+					continue
+				}
+
+				if err != nil {
+					return fmt.Errorf("error replacing EC2 Network ACL (%s) Association: %w", d.Id(), err)
 				}
 			}
 		}
 
-		if len(add) > 0 {
-			for _, a := range add {
-				association, err := findNetworkAclAssociation(a.(string), conn)
-				if err != nil {
-					return fmt.Errorf("Failed to find acl association: acl %s with subnet %s: %s", d.Id(), a, err)
-				}
-				_, err = conn.ReplaceNetworkAclAssociation(&ec2.ReplaceNetworkAclAssociationInput{
-					AssociationId: association.NetworkAclAssociationId,
-					NetworkAclId:  aws.String(d.Id()),
-				})
-				if err != nil {
-					return err
-				}
+		for _, v := range add {
+			subnetID := v.(string)
+
+			association, err := FindNetworkACLAssociationBySubnetID(conn, subnetID)
+
+			if tfresource.NotFound(err) {
+				// Subnet has been deleted.
+				continue
+			}
+
+			if err != nil {
+				return fmt.Errorf("error reading EC2 Network ACL Association for EC2 Subnet (%s): %w", subnetID, err)
+			}
+
+			input := &ec2.ReplaceNetworkAclAssociationInput{
+				AssociationId: association.NetworkAclAssociationId,
+				NetworkAclId:  aws.String(d.Id()),
+			}
+
+			log.Printf("[DEBUG] Replacing EC2 Network ACL Association: %s", input)
+			_, err = conn.ReplaceNetworkAclAssociation(input)
+
+			if err != nil {
+				return fmt.Errorf("error replacing EC2 Network ACL (%s) Association: %w", d.Id(), err)
 			}
 		}
-
 	}
 
-	if d.HasChange("tags_all") && !d.IsNewResource() {
+	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
 		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
-			return fmt.Errorf("error updating EC2 Network ACL (%s) tags: %s", d.Id(), err)
+			return fmt.Errorf("error updating EC2 Network ACL (%s) tags: %w", d.Id(), err)
 		}
 	}
 
@@ -647,6 +663,51 @@ func createNetworkACLEntries(conn *ec2.EC2, naclID string, tfList []interface{},
 		if err != nil {
 			return fmt.Errorf("error creating EC2 Network ACL (%s) Entry: %w", naclID, err)
 		}
+	}
+
+	return nil
+}
+
+func deleteNetworkACLEntries(conn *ec2.EC2, naclID string, tfList []interface{}, egress bool) error {
+	naclEntries := expandNetworkAclEntries(tfList, egress)
+
+	for _, naclEntry := range naclEntries {
+		if naclEntry == nil {
+			continue
+		}
+
+		// AWS includes default rules with all network ACLs that can be
+		// neither modified nor destroyed. They have a custom rule
+		// number that is out of bounds for any other rule. If we
+		// encounter it, just continue. There's no work to be done.
+		if v := aws.Int64Value(naclEntry.RuleNumber); v == defaultACLRuleNumberIPv4 || v == defaultACLRuleNumberIPv6 {
+			continue
+		}
+
+		input := &ec2.DeleteNetworkAclEntryInput{
+			Egress:       naclEntry.Egress,
+			NetworkAclId: aws.String(naclID),
+			RuleNumber:   naclEntry.RuleNumber,
+		}
+
+		log.Printf("[INFO] Deleting EC2 Network ACL Entry: %s", input)
+		_, err := conn.DeleteNetworkAclEntry(input)
+
+		if err != nil {
+			return fmt.Errorf("error deleting EC2 Network ACL (%s) Entry: %w", naclID, err)
+		}
+	}
+
+	return nil
+}
+
+func updateNetworkACLEntries(conn *ec2.EC2, naclID string, os, ns *schema.Set, egress bool) error {
+	if err := deleteNetworkACLEntries(conn, naclID, os.Difference(ns).List(), egress); err != nil {
+		return err
+	}
+
+	if err := createNetworkACLEntries(conn, naclID, ns.Difference(os).List(), egress); err != nil {
+		return err
 	}
 
 	return nil
