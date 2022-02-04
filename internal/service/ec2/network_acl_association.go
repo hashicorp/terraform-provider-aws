@@ -93,6 +93,7 @@ func resourceNetworkACLAssociationDelete(d *schema.ResourceData, meta interface{
 		return fmt.Errorf("error reading EC2 VPC (%s) default NACL: %w", vpcID, err)
 	}
 
+	log.Printf("[DEBUG] Deleting EC2 Network ACL Association: %s", d.Id())
 	_, err = conn.ReplaceNetworkAclAssociation(&ec2.ReplaceNetworkAclAssociationInput{
 		AssociationId: aws.String(d.Id()),
 		NetworkAclId:  defaultNACL.NetworkAclId,

@@ -291,7 +291,7 @@ func resourceNetworkACLUpdate(d *schema.ResourceData, meta interface{}) error {
 					NetworkAclId:  defaultNACL.NetworkAclId,
 				}
 
-				log.Printf("[DEBUG] Replacing EC2 Network ACL Association: %s", input)
+				log.Printf("[DEBUG] Deleting EC2 Network ACL Association: %s", input)
 				_, err = conn.ReplaceNetworkAclAssociation(input)
 
 				if tfawserr.ErrCodeEquals(err, ErrCodeInvalidAssociationIDNotFound) {
@@ -299,7 +299,7 @@ func resourceNetworkACLUpdate(d *schema.ResourceData, meta interface{}) error {
 				}
 
 				if err != nil {
-					return fmt.Errorf("error replacing EC2 Network ACL (%s) Association: %w", d.Id(), err)
+					return fmt.Errorf("error deleting EC2 Network ACL (%s) Association: %w", d.Id(), err)
 				}
 			}
 		}
@@ -323,11 +323,13 @@ func resourceNetworkACLUpdate(d *schema.ResourceData, meta interface{}) error {
 				NetworkAclId:  aws.String(d.Id()),
 			}
 
-			log.Printf("[DEBUG] Replacing EC2 Network ACL Association: %s", input)
-			_, err = conn.ReplaceNetworkAclAssociation(input)
+			log.Printf("[DEBUG] Creating EC2 Network ACL Association: %s", input)
+			_, err = tfresource.RetryWhenAWSErrCodeEquals(PropagationTimeout, func() (interface{}, error) {
+				return conn.ReplaceNetworkAclAssociation(input)
+			}, ErrCodeInvalidAssociationIDNotFound)
 
 			if err != nil {
-				return fmt.Errorf("error replacing EC2 Network ACL (%s) Association: %w", d.Id(), err)
+				return fmt.Errorf("error creating EC2 Network ACL (%s) Association: %w", d.Id(), err)
 			}
 		}
 	}
