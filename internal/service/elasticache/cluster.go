@@ -122,6 +122,7 @@ func ResourceCluster() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
+				ExactlyOneOf: []string{"engine", "replication_group_id"},
 				ForceNew:     true,
 				ValidateFunc: validation.StringInSlice(engine_Values(), false),
 			},
@@ -185,12 +186,13 @@ func ResourceCluster() *schema.Resource {
 			"replication_group_id": {
 				Type:         schema.TypeString,
 				Optional:     true,
+				Computed:     true,
+				ExactlyOneOf: []string{"replication_group_id", "engine"},
 				ForceNew:     true,
 				ValidateFunc: validateReplicationGroupID,
 				ConflictsWith: []string{
 					"az_mode",
 					"engine_version",
-					"engine",
 					"maintenance_window",
 					"node_type",
 					"notification_topic_arn",
@@ -205,7 +207,6 @@ func ResourceCluster() *schema.Resource {
 					"snapshot_window",
 					"subnet_group_name",
 				},
-				Computed: true,
 			},
 			"security_group_names": {
 				Type:     schema.TypeSet,
