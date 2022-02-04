@@ -49,6 +49,76 @@ func TestAccRDSInstance_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "backup_window"),
 					resource.TestCheckResourceAttrSet(resourceName, "ca_cert_identifier"),
 					resource.TestCheckResourceAttr(resourceName, "copy_tags_to_snapshot", "false"),
+					resource.TestCheckResourceAttr(resourceName, "db_name", "baz"),
+					resource.TestCheckResourceAttr(resourceName, "db_subnet_group_name", "default"),
+					resource.TestCheckResourceAttr(resourceName, "deletion_protection", "false"),
+					resource.TestCheckResourceAttr(resourceName, "enabled_cloudwatch_logs_exports.#", "0"),
+					resource.TestCheckResourceAttrSet(resourceName, "endpoint"),
+					resource.TestCheckResourceAttr(resourceName, "engine", "mysql"),
+					resource.TestCheckResourceAttrSet(resourceName, "engine_version"),
+					resource.TestCheckResourceAttrSet(resourceName, "hosted_zone_id"),
+					resource.TestCheckResourceAttr(resourceName, "iam_database_authentication_enabled", "false"),
+					resource.TestCheckResourceAttrPair(resourceName, "instance_class", "data.aws_rds_orderable_db_instance.test", "instance_class"),
+					resource.TestCheckResourceAttr(resourceName, "license_model", "general-public-license"),
+					resource.TestCheckResourceAttrSet(resourceName, "maintenance_window"),
+					resource.TestCheckResourceAttr(resourceName, "max_allocated_storage", "0"),
+					resource.TestCheckResourceAttr(resourceName, "option_group_name", "default:mysql-5-6"),
+					resource.TestCheckResourceAttr(resourceName, "parameter_group_name", "default.mysql5.6"),
+					resource.TestCheckResourceAttr(resourceName, "port", "3306"),
+					resource.TestCheckResourceAttr(resourceName, "publicly_accessible", "false"),
+					resource.TestCheckResourceAttrSet(resourceName, "resource_id"),
+					resource.TestCheckResourceAttr(resourceName, "status", "available"),
+					resource.TestCheckResourceAttr(resourceName, "storage_encrypted", "false"),
+					resource.TestCheckResourceAttr(resourceName, "storage_type", "gp2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "username", "test"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"apply_immediately",
+					"final_snapshot_identifier",
+					"password",
+					"skip_final_snapshot",
+					"delete_automated_backups",
+				},
+			},
+		},
+	})
+}
+
+func TestAccRDSInstance_NameDeprecated_basic(t *testing.T) {
+	var dbInstance1 rds.DBInstance
+
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_db_instance.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceNameDeprecatedBasicConfig(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInstanceExists(resourceName, &dbInstance1),
+					testAccCheckInstanceAttributes(&dbInstance1),
+					resource.TestCheckResourceAttr(resourceName, "identifier", rName),
+					resource.TestCheckResourceAttr(resourceName, "identifier_prefix", ""),
+					resource.TestCheckResourceAttr(resourceName, "allocated_storage", "10"),
+					resource.TestCheckNoResourceAttr(resourceName, "allow_major_version_upgrade"),
+					resource.TestCheckResourceAttr(resourceName, "auto_minor_version_upgrade", "true"),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "rds", regexp.MustCompile(`db:.+`)),
+					resource.TestCheckResourceAttrSet(resourceName, "availability_zone"),
+					resource.TestCheckResourceAttr(resourceName, "backup_retention_period", "0"),
+					resource.TestCheckResourceAttrSet(resourceName, "backup_window"),
+					resource.TestCheckResourceAttrSet(resourceName, "ca_cert_identifier"),
+					resource.TestCheckResourceAttr(resourceName, "copy_tags_to_snapshot", "false"),
+					resource.TestCheckResourceAttr(resourceName, "db_name", "baz"),
 					resource.TestCheckResourceAttr(resourceName, "db_subnet_group_name", "default"),
 					resource.TestCheckResourceAttr(resourceName, "deletion_protection", "false"),
 					resource.TestCheckResourceAttr(resourceName, "enabled_cloudwatch_logs_exports.#", "0"),
@@ -1515,6 +1585,40 @@ func TestAccRDSInstance_s3Import_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_S3Import_basic(bucket, bucketPrefix, uniqueId),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(resourceName, &snap),
+					resource.TestCheckResourceAttr(resourceName, "identifier", uniqueId),
+					resource.TestCheckResourceAttr(resourceName, "identifier_prefix", ""),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"password",
+				},
+			},
+		},
+	})
+}
+
+func TestAccRDSInstance_s3Import_NameDeprecated_basic(t *testing.T) {
+	var snap rds.DBInstance
+	bucket := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	uniqueId := sdkacctest.RandomWithPrefix("tf-acc-s3-import-test")
+	bucketPrefix := sdkacctest.RandString(5)
+
+	const resourceName = "aws_db_instance.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_S3Import_NameDeprecated_basic(bucket, bucketPrefix, uniqueId),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &snap),
 					resource.TestCheckResourceAttr(resourceName, "identifier", uniqueId),
@@ -4028,7 +4132,32 @@ resource "aws_db_instance" "test" {
   engine                  = data.aws_rds_orderable_db_instance.test.engine
   engine_version          = data.aws_rds_orderable_db_instance.test.engine_version
   instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
-  name                    = "baz"
+  db_name                 = "baz"
+  parameter_group_name    = "default.mysql5.6"
+  password                = "barbarbarbar"
+  skip_final_snapshot     = true
+  username                = "test"
+
+  # Maintenance Window is stored in lower case in the API, though not strictly
+  # documented. Terraform will downcase this to match (as opposed to throw a
+  # validation error).
+  maintenance_window = "Fri:09:00-Fri:09:30"
+}
+`, rName))
+}
+
+func testAccInstanceNameDeprecatedBasicConfig(rName string) string {
+	return acctest.ConfigCompose(
+		testAccInstanceConfig_orderableClassMySQL(),
+		fmt.Sprintf(`
+resource "aws_db_instance" "test" {
+  identifier              = %[1]q
+  allocated_storage       = 10
+  backup_retention_period = 0
+  engine                  = data.aws_rds_orderable_db_instance.test.engine
+  engine_version          = data.aws_rds_orderable_db_instance.test.engine_version
+  instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
+  name                    = "baz" # deprecated
   parameter_group_name    = "default.mysql5.6"
   password                = "barbarbarbar"
   skip_final_snapshot     = true
@@ -4363,7 +4492,42 @@ resource "aws_db_instance" "test" {
   engine_version             = "5.6"
   auto_minor_version_upgrade = true
   instance_class             = data.aws_rds_orderable_db_instance.test.instance_class
-  name                       = "baz"
+  db_name                    = "baz"
+  password                   = "barbarbarbar"
+  publicly_accessible        = false
+  username                   = "foo"
+  backup_retention_period    = 0
+
+  parameter_group_name = "default.mysql5.6"
+  skip_final_snapshot  = true
+  multi_az             = false
+  db_subnet_group_name = aws_db_subnet_group.foo.id
+
+  s3_import {
+    source_engine         = data.aws_rds_orderable_db_instance.test.engine
+    source_engine_version = "5.6"
+
+    bucket_name    = aws_s3_bucket.xtrabackup.bucket
+    bucket_prefix  = %[2]q
+    ingestion_role = aws_iam_role.rds_s3_access_role.arn
+  }
+}
+`, uniqueId, bucketPrefix))
+}
+
+func testAccInstanceConfig_S3Import_NameDeprecated_basic(bucketName, bucketPrefix, uniqueId string) string {
+	return acctest.ConfigCompose(
+		testAccInstanceConfig_S3Import_Base(bucketName, bucketPrefix),
+		fmt.Sprintf(`
+resource "aws_db_instance" "test" {
+  identifier = "%[1]s-db"
+
+  allocated_storage          = 5
+  engine                     = data.aws_rds_orderable_db_instance.test.engine
+  engine_version             = "5.6"
+  auto_minor_version_upgrade = true
+  instance_class             = data.aws_rds_orderable_db_instance.test.instance_class
+  name                       = "baz" # deprecated
   password                   = "barbarbarbar"
   publicly_accessible        = false
   username                   = "foo"
