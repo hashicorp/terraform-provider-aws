@@ -3,7 +3,7 @@ subcategory: "CloudTrail"
 layout: "aws"
 page_title: "AWS: aws_cloudtrail_event_data_store"
 description: |-
-  Provides a CloudTrail Event Data Store.
+  Provides a CloudTrail Event Data Store resource.
 ---
 
 # Resource: aws_cloudtrail_event_data_store
@@ -33,22 +33,18 @@ CloudTrail can log [Data Events](https://docs.aws.amazon.com/awscloudtrail/lates
 
 - [CloudTrail API AdvancedFieldSelector documentation](https://docs.aws.amazon.com/awscloudtrail/latest/APIReference/API_AdvancedFieldSelector.html)
 
-#### Logging all S3 Bucket object events except for two S3 buckets by using advanced event selectors
+#### Log all DynamoDB PutEvent actions for a specific DynamoDB table
 
 ```terraform
-data "aws_s3_bucket" "not-important-bucket-1" {
-  bucket = "not-important-bucket-1"
-}
-
-data "aws_s3_bucket" "not-important-bucket-2" {
-  bucket = "not-important-bucket-2"
+data "aws_dynamodb_table" "table" {
+  name = "not-important-dynamodb-table"
 }
 
 resource "aws_cloudtrail_event_data_store" "example" {
   # ... other configuration ...
 
   advanced_event_selector {
-    name = "Log all S3 buckets objects events except for two S3 buckets"
+    name = "Log all DynamoDB PutEvent actions for a specific DynamoDB table"
 
     field_selector {
       field  = "eventCategory"
@@ -56,26 +52,24 @@ resource "aws_cloudtrail_event_data_store" "example" {
     }
 
     field_selector {
-      field = "resources.ARN"
+      field = "resources.type"
 
-      not_equals = [
-        "${data.aws_s3_bucket.not-important-bucket-1.arn}/",
-        "${data.aws_s3_bucket.not-important-bucket-2.arn}/"
+      equals = [
+        "AWS::DynamoDB::Table"
       ]
     }
 
     field_selector {
-      field  = "resources.type"
-      equals = ["AWS::S3::Object"]
+      field  = "eventName"
+      equals = ["PutItem"]
     }
-  }
-
-  advanced_event_selector {
-    name = "Log readOnly and writeOnly management events"
 
     field_selector {
-      field  = "eventCategory"
-      equals = ["Management"]
+      field = "resources.ARN"
+
+      equals = [
+        data.aws_dynamodb_table.table.arn
+      ]
     }
   }
 }
@@ -116,14 +110,14 @@ For **field_selector** the following attributes are supported.
 
 In addition to all arguments above, the following attributes are exported:
 
-* `arn` - ARN of the trail.
-* `id` - Name of the trail.
-* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
+- `arn` - ARN of the trail.
+- `id` - Name of the trail.
+- `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
 
 ## Import
 
-Event data stores can be imported using the `name`, e.g.,
+Event data stores can be imported using their `arn`, e.g.,
 
 ```
-$ terraform import aws_cloudtrail_event_data_store.example example-event-data-store
+$ terraform import aws_cloudtrail_event_data_store.example arn:aws:cloudtrail:us-east-1:123456789123:eventdatastore/22333815-4414-412c-b155-dd254033gfhf
 ```
