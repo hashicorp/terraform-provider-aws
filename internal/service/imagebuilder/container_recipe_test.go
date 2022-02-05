@@ -37,6 +37,7 @@ func TestAccImageBuilderContainerRecipe_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "container_type", "DOCKER"),
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
 					resource.TestCheckResourceAttrSet(resourceName, "dockerfile_template_data"),
+					// template uri
 					// resource.TestCheckResourceAttr(resourceName, "instance_configuration.#", "1"),
 					// resource.TestCheckResourceAttr(resourceName, "instance_configuration.0.block_device_mapping.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "kms_key_id", ""),
@@ -633,10 +634,10 @@ func testAccContainerRecipeNameConfig(rName string) string {
 		testAccContainerRecipeBaseConfig(rName),
 		fmt.Sprintf(`
 resource "aws_imagebuilder_container_recipe" "test" {
-	name = %[1]q
+  name           = %[1]q
   container_type = "DOCKER"
-  parent_image = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:image/amazon-linux-x86-2/x.x.x"
-	version = "1.0.0"
+  parent_image   = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:image/amazon-linux-x86-2/x.x.x"
+  version        = "1.0.0"
 
   component {
     component_arn = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:component/update-linux/x.x.x"
@@ -661,10 +662,10 @@ func testAccContainerRecipeComponentConfig(rName string) string {
 		testAccContainerRecipeBaseConfig(rName),
 		fmt.Sprintf(`
 resource "aws_imagebuilder_container_recipe" "test" {
-	name = %[1]q
+  name           = %[1]q
   container_type = "DOCKER"
-  parent_image = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:image/amazon-linux-x86-2/x.x.x"
-	version = "1.0.0"
+  parent_image   = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:image/amazon-linux-x86-2/x.x.x"
+  version        = "1.0.0"
 
   component {
     component_arn = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:component/update-linux/x.x.x"
@@ -717,24 +718,24 @@ EOF
 }
 
 resource "aws_imagebuilder_container_recipe" "test" {
-	name = %[1]q
+  name = %[1]q
 
   container_type = "DOCKER"
-  parent_image = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:image/amazon-linux-x86-2/x.x.x"
-	version = "1.0.0"
+  parent_image   = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:image/amazon-linux-x86-2/x.x.x"
+  version        = "1.0.0"
 
   component {
     component_arn = aws_imagebuilder_component.test.arn
 
-	parameter {
-		name = "Parameter1"
-		value = "Value1"
-	}
+    parameter {
+      name  = "Parameter1"
+      value = "Value1"
+    }
 
-	parameter {
-		name = "Parameter2"
-		value = "Value2"
-	}
+    parameter {
+      name  = "Parameter2"
+      value = "Value2"
+    }
   }
 
   dockerfile_template_data = <<EOF
@@ -756,12 +757,12 @@ func testAccContainerRecipeDescriptionConfig(rName string) string {
 		testAccContainerRecipeBaseConfig(rName),
 		fmt.Sprintf(`
 resource "aws_imagebuilder_container_recipe" "test" {
-  name = %[1]q
+  name        = %[1]q
   description = "description"
 
   container_type = "DOCKER"
-  parent_image = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:image/amazon-linux-x86-2/x.x.x"
-  version = "1.0.0"
+  parent_image   = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:image/amazon-linux-x86-2/x.x.x"
+  version        = "1.0.0"
 
   component {
     component_arn = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:component/update-linux/x.x.x"
@@ -790,8 +791,8 @@ resource "aws_s3_bucket" "test" {
 }
 
 resource "aws_s3_object" "test" {
-  bucket = aws_s3_bucket.test.id
-  key = "Dockerfile"
+  bucket  = aws_s3_bucket.test.id
+  key     = "Dockerfile"
   content = <<EOF
 FROM {{{ imagebuilder:parentImage }}}
 {{{ imagebuilder:environments }}}
@@ -803,8 +804,8 @@ resource "aws_imagebuilder_container_recipe" "test" {
   name = %[1]q
 
   container_type = "DOCKER"
-  parent_image = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:image/amazon-linux-x86-2/x.x.x"
-  version = "1.0.0"
+  parent_image   = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:image/amazon-linux-x86-2/x.x.x"
+  version        = "1.0.0"
 
   component {
     component_arn = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:component/update-linux/x.x.x"
@@ -832,11 +833,11 @@ resource "aws_imagebuilder_container_recipe" "test" {
   name = %[1]q
 
   container_type = "DOCKER"
-  parent_image = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:image/amazon-linux-x86-2/x.x.x"
-  version = "1.0.0"
+  parent_image   = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:image/amazon-linux-x86-2/x.x.x"
+  version        = "1.0.0"
 
   component {
-	component_arn = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:component/update-linux/x.x.x"
+    component_arn = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:component/update-linux/x.x.x"
   }
 
   dockerfile_template_data = <<EOF
@@ -846,14 +847,14 @@ FROM {{{ imagebuilder:parentImage }}}
 EOF
 
   target_repository {
-	repository_name = aws_ecr_repository.test.name
-	service         = "ECR"
+    repository_name = aws_ecr_repository.test.name
+    service         = "ECR"
   }
 
   instance_configuration {
-	block_device_mapping {
-	  device_name = "/dev/xvda"
-	}
+    block_device_mapping {
+      device_name = "/dev/xvda"
+    }
   }
 }
 `, rName))
@@ -867,11 +868,11 @@ resource "aws_imagebuilder_container_recipe" "test" {
   name = %[1]q
 
   container_type = "DOCKER"
-  parent_image = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:image/amazon-linux-x86-2/x.x.x"
-  version = "1.0.0"
+  parent_image   = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:image/amazon-linux-x86-2/x.x.x"
+  version        = "1.0.0"
 
   component {
-	component_arn = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:component/update-linux/x.x.x"
+    component_arn = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:component/update-linux/x.x.x"
   }
 
   dockerfile_template_data = <<EOF
@@ -881,16 +882,16 @@ FROM {{{ imagebuilder:parentImage }}}
 EOF
 
   target_repository {
-	repository_name = aws_ecr_repository.test.name
-	service         = "ECR"
+    repository_name = aws_ecr_repository.test.name
+    service         = "ECR"
   }
 
   instance_configuration {
-	block_device_mapping {
-		ebs {
-			delete_on_termination = true
-		}
-	}
+    block_device_mapping {
+      ebs {
+        delete_on_termination = true
+      }
+    }
   }
 }
 `, rName))
@@ -904,11 +905,11 @@ resource "aws_imagebuilder_container_recipe" "test" {
   name = %[1]q
 
   container_type = "DOCKER"
-  parent_image = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:image/amazon-linux-x86-2/x.x.x"
-  version = "1.0.0"
+  parent_image   = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:image/amazon-linux-x86-2/x.x.x"
+  version        = "1.0.0"
 
   component {
-	component_arn = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:component/update-linux/x.x.x"
+    component_arn = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:component/update-linux/x.x.x"
   }
 
   dockerfile_template_data = <<EOF
@@ -918,16 +919,16 @@ FROM {{{ imagebuilder:parentImage }}}
 EOF
 
   target_repository {
-	repository_name = aws_ecr_repository.test.name
-	service         = "ECR"
+    repository_name = aws_ecr_repository.test.name
+    service         = "ECR"
   }
 
   instance_configuration {
-	block_device_mapping {
-		ebs {
-			encrypted = true
-		}
-	}
+    block_device_mapping {
+      ebs {
+        encrypted = true
+      }
+    }
   }
 }
 `, rName))
@@ -941,11 +942,11 @@ resource "aws_imagebuilder_container_recipe" "test" {
   name = %[1]q
 
   container_type = "DOCKER"
-  parent_image = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:image/amazon-linux-x86-2/x.x.x"
-  version = "1.0.0"
+  parent_image   = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:image/amazon-linux-x86-2/x.x.x"
+  version        = "1.0.0"
 
   component {
-	component_arn = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:component/update-linux/x.x.x"
+    component_arn = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:component/update-linux/x.x.x"
   }
 
   dockerfile_template_data = <<EOF
@@ -955,16 +956,16 @@ FROM {{{ imagebuilder:parentImage }}}
 EOF
 
   target_repository {
-	repository_name = aws_ecr_repository.test.name
-	service         = "ECR"
+    repository_name = aws_ecr_repository.test.name
+    service         = "ECR"
   }
 
   instance_configuration {
-	block_device_mapping {
-		ebs {
-			iops = 100
-		}
-	}
+    block_device_mapping {
+      ebs {
+        iops = 100
+      }
+    }
   }
 }
 `, rName))
@@ -982,11 +983,11 @@ resource "aws_imagebuilder_container_recipe" "test" {
   name = %[1]q
 
   container_type = "DOCKER"
-  parent_image = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:image/amazon-linux-x86-2/x.x.x"
-  version = "1.0.0"
+  parent_image   = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:image/amazon-linux-x86-2/x.x.x"
+  version        = "1.0.0"
 
   component {
-	component_arn = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:component/update-linux/x.x.x"
+    component_arn = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:component/update-linux/x.x.x"
   }
 
   dockerfile_template_data = <<EOF
@@ -996,16 +997,16 @@ FROM {{{ imagebuilder:parentImage }}}
 EOF
 
   target_repository {
-	repository_name = aws_ecr_repository.test.name
-	service         = "ECR"
+    repository_name = aws_ecr_repository.test.name
+    service         = "ECR"
   }
 
   instance_configuration {
-	block_device_mapping {
-		ebs {
-			kms_key_id = aws_kms_key.test.arn
-		}
-	}
+    block_device_mapping {
+      ebs {
+        kms_key_id = aws_kms_key.test.arn
+      }
+    }
   }
 }
 `, rName))
@@ -1029,11 +1030,11 @@ resource "aws_imagebuilder_container_recipe" "test" {
   name = %[1]q
 
   container_type = "DOCKER"
-  parent_image = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:image/amazon-linux-x86-2/x.x.x"
-  version = "1.0.0"
+  parent_image   = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:image/amazon-linux-x86-2/x.x.x"
+  version        = "1.0.0"
 
   component {
-	component_arn = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:component/update-linux/x.x.x"
+    component_arn = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:component/update-linux/x.x.x"
   }
 
   dockerfile_template_data = <<EOF
@@ -1043,16 +1044,16 @@ FROM {{{ imagebuilder:parentImage }}}
 EOF
 
   target_repository {
-	repository_name = aws_ecr_repository.test.name
-	service         = "ECR"
+    repository_name = aws_ecr_repository.test.name
+    service         = "ECR"
   }
 
   instance_configuration {
-	block_device_mapping {
-		ebs {
-			snapshot_id = aws_ebs_snapshot.test.id
-		}
-	}
+    block_device_mapping {
+      ebs {
+        snapshot_id = aws_ebs_snapshot.test.id
+      }
+    }
   }
 }
 `, rName))
@@ -1066,11 +1067,11 @@ resource "aws_imagebuilder_container_recipe" "test" {
   name = %[1]q
 
   container_type = "DOCKER"
-  parent_image = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:image/amazon-linux-x86-2/x.x.x"
-  version = "1.0.0"
+  parent_image   = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:image/amazon-linux-x86-2/x.x.x"
+  version        = "1.0.0"
 
   component {
-	component_arn = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:component/update-linux/x.x.x"
+    component_arn = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:component/update-linux/x.x.x"
   }
 
   dockerfile_template_data = <<EOF
@@ -1080,16 +1081,16 @@ FROM {{{ imagebuilder:parentImage }}}
 EOF
 
   target_repository {
-	repository_name = aws_ecr_repository.test.name
-	service         = "ECR"
+    repository_name = aws_ecr_repository.test.name
+    service         = "ECR"
   }
 
   instance_configuration {
-	block_device_mapping {
-		ebs {
-			volume_size = 20
-		}
-	}
+    block_device_mapping {
+      ebs {
+        volume_size = 20
+      }
+    }
   }
 }
 `, rName))
@@ -1103,11 +1104,11 @@ resource "aws_imagebuilder_container_recipe" "test" {
   name = %[1]q
 
   container_type = "DOCKER"
-  parent_image = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:image/amazon-linux-x86-2/x.x.x"
-  version = "1.0.0"
+  parent_image   = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:image/amazon-linux-x86-2/x.x.x"
+  version        = "1.0.0"
 
   component {
-	component_arn = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:component/update-linux/x.x.x"
+    component_arn = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:component/update-linux/x.x.x"
   }
 
   dockerfile_template_data = <<EOF
@@ -1117,16 +1118,16 @@ FROM {{{ imagebuilder:parentImage }}}
 EOF
 
   target_repository {
-	repository_name = aws_ecr_repository.test.name
-	service         = "ECR"
+    repository_name = aws_ecr_repository.test.name
+    service         = "ECR"
   }
 
   instance_configuration {
-	block_device_mapping {
-		ebs {
-			volume_type = "gp2"
-		}
-	}
+    block_device_mapping {
+      ebs {
+        volume_type = "gp2"
+      }
+    }
   }
 }
 `, rName))
@@ -1140,11 +1141,11 @@ resource "aws_imagebuilder_container_recipe" "test" {
   name = %[1]q
 
   container_type = "DOCKER"
-  parent_image = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:image/amazon-linux-x86-2/x.x.x"
-  version = "1.0.0"
+  parent_image   = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:image/amazon-linux-x86-2/x.x.x"
+  version        = "1.0.0"
 
   component {
-	component_arn = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:component/update-linux/x.x.x"
+    component_arn = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:component/update-linux/x.x.x"
   }
 
   dockerfile_template_data = <<EOF
@@ -1154,14 +1155,14 @@ FROM {{{ imagebuilder:parentImage }}}
 EOF
 
   target_repository {
-	repository_name = aws_ecr_repository.test.name
-	service         = "ECR"
+    repository_name = aws_ecr_repository.test.name
+    service         = "ECR"
   }
 
   instance_configuration {
-	block_device_mapping {
-		no_device = true
-	}
+    block_device_mapping {
+      no_device = true
+    }
   }
 }
 `, rName))
@@ -1175,11 +1176,11 @@ resource "aws_imagebuilder_container_recipe" "test" {
   name = %[1]q
 
   container_type = "DOCKER"
-  parent_image = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:image/amazon-linux-x86-2/x.x.x"
-  version = "1.0.0"
+  parent_image   = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:image/amazon-linux-x86-2/x.x.x"
+  version        = "1.0.0"
 
   component {
-	component_arn = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:component/update-linux/x.x.x"
+    component_arn = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:component/update-linux/x.x.x"
   }
 
   dockerfile_template_data = <<EOF
@@ -1189,14 +1190,14 @@ FROM {{{ imagebuilder:parentImage }}}
 EOF
 
   target_repository {
-	repository_name = aws_ecr_repository.test.name
-	service         = "ECR"
+    repository_name = aws_ecr_repository.test.name
+    service         = "ECR"
   }
 
   instance_configuration {
-	block_device_mapping {
-		virtual_name = "ephemeral0"
-	}
+    block_device_mapping {
+      virtual_name = "ephemeral0"
+    }
   }
 }
 `, rName))
@@ -1220,11 +1221,11 @@ resource "aws_imagebuilder_container_recipe" "test" {
   name = %[1]q
 
   container_type = "DOCKER"
-  parent_image = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:image/amazon-linux-x86-2/x.x.x"
-  version = "1.0.0"
+  parent_image   = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:image/amazon-linux-x86-2/x.x.x"
+  version        = "1.0.0"
 
   component {
-	component_arn = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:component/update-linux/x.x.x"
+    component_arn = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:component/update-linux/x.x.x"
   }
 
   dockerfile_template_data = <<EOF
@@ -1234,12 +1235,12 @@ FROM {{{ imagebuilder:parentImage }}}
 EOF
 
   target_repository {
-	repository_name = aws_ecr_repository.test.name
-	service         = "ECR"
+    repository_name = aws_ecr_repository.test.name
+    service         = "ECR"
   }
 
   instance_configuration {
-	  image = data.aws_ami.test.id
+    image = data.aws_ami.test.id
   }
 }
 `, rName))
@@ -1257,11 +1258,11 @@ resource "aws_imagebuilder_container_recipe" "test" {
   name = %[1]q
 
   container_type = "DOCKER"
-  parent_image = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:image/amazon-linux-x86-2/x.x.x"
-  version = "1.0.0"
+  parent_image   = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:image/amazon-linux-x86-2/x.x.x"
+  version        = "1.0.0"
 
   component {
-	component_arn = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:component/update-linux/x.x.x"
+    component_arn = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:component/update-linux/x.x.x"
   }
 
   dockerfile_template_data = <<EOF
@@ -1271,8 +1272,8 @@ FROM {{{ imagebuilder:parentImage }}}
 EOF
 
   target_repository {
-	repository_name = aws_ecr_repository.test.name
-	service         = "ECR"
+    repository_name = aws_ecr_repository.test.name
+    service         = "ECR"
   }
 
   kms_key_id = aws_kms_key.test.arn
@@ -1288,11 +1289,11 @@ resource "aws_imagebuilder_container_recipe" "test" {
   name = %[1]q
 
   container_type = "DOCKER"
-  parent_image = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:image/amazon-linux-x86-2/x.x.x"
-  version = "1.0.0"
+  parent_image   = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:image/amazon-linux-x86-2/x.x.x"
+  version        = "1.0.0"
 
   component {
-	component_arn = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:component/update-linux/x.x.x"
+    component_arn = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:component/update-linux/x.x.x"
   }
 
   dockerfile_template_data = <<EOF
@@ -1302,8 +1303,8 @@ FROM {{{ imagebuilder:parentImage }}}
 EOF
 
   target_repository {
-	repository_name = aws_ecr_repository.test.name
-	service         = "ECR"
+    repository_name = aws_ecr_repository.test.name
+    service         = "ECR"
   }
 
   working_directory = "/tmp"

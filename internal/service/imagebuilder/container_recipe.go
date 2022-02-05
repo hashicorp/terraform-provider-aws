@@ -38,11 +38,13 @@ func ResourceContainerRecipe() *schema.Resource {
 						"component_arn": {
 							Type:         schema.TypeString,
 							Required:     true,
+							ForceNew:     true,
 							ValidateFunc: verify.ValidARN,
 						},
 						"parameter": {
 							Type:     schema.TypeSet,
 							Optional: true,
+							ForceNew: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"name": {
@@ -77,6 +79,7 @@ func ResourceContainerRecipe() *schema.Resource {
 				Optional:     true,
 				Computed:     true,
 				ForceNew:     true,
+				ExactlyOneOf: []string{"dockerfile_template_data", "dockerfile_template_uri"},
 				ValidateFunc: validation.StringLenBetween(1, 16000),
 			},
 			"dockerfile_template_uri": {
