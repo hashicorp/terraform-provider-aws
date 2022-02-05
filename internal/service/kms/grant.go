@@ -10,7 +10,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/kms"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -506,12 +506,12 @@ func flattenKmsGrantConstraints(constraint *kms.GrantConstraints) *schema.Set {
 	m := make(map[string]interface{})
 	if constraint.EncryptionContextEquals != nil {
 		if len(constraint.EncryptionContextEquals) > 0 {
-			m["encryption_context_equals"] = verify.PointersMapToStringList(constraint.EncryptionContextEquals)
+			m["encryption_context_equals"] = flex.PointersMapToStringList(constraint.EncryptionContextEquals)
 		}
 	}
 	if constraint.EncryptionContextSubset != nil {
 		if len(constraint.EncryptionContextSubset) > 0 {
-			m["encryption_context_subset"] = verify.PointersMapToStringList(constraint.EncryptionContextSubset)
+			m["encryption_context_subset"] = flex.PointersMapToStringList(constraint.EncryptionContextSubset)
 		}
 	}
 	constraints.Add(m)

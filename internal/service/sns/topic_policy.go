@@ -4,12 +4,12 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/sns"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
@@ -31,39 +31,43 @@ func ResourceTopicPolicy() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: verify.ValidARN,
 			},
+			"owner": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"policy": {
 				Type:             schema.TypeString,
 				Required:         true,
 				ValidateFunc:     validation.StringIsJSON,
 				DiffSuppressFunc: verify.SuppressEquivalentPolicyDiffs,
-			},
-			"owner": {
-				Type:     schema.TypeString,
-				Computed: true,
+				StateFunc: func(v interface{}) string {
+					json, _ := structure.NormalizeJsonString(v)
+					return json
+				},
 			},
 		},
 	}
 }
 
 func resourceTopicPolicyUpsert(d *schema.ResourceData, meta interface{}) error {
-	arn := d.Get("arn").(string)
-	req := sns.SetTopicAttributesInput{
-		TopicArn:       aws.String(arn),
-		AttributeName:  aws.String("Policy"),
-		AttributeValue: aws.String(d.Get("policy").(string)),
+	conn := meta.(*conns.AWSClient).SNSConn
+
+	policy, err := structure.NormalizeJsonString(d.Get("policy").(string))
+
+	if err != nil {
+		return fmt.Errorf("policy (%s) is invalid JSON: %w", d.Get("policy").(string), err)
 	}
 
-	d.SetId(arn)
+	arn := d.Get("arn").(string)
 
-	// Retry the update in the event of an eventually consistent style of
-	// error, where say an IAM resource is successfully created but not
-	// actually available. See https://github.com/hashicorp/terraform/issues/3660
-	conn := meta.(*conns.AWSClient).SNSConn
-	_, err := verify.RetryOnAWSCode("InvalidParameter", func() (interface{}, error) {
-		return conn.SetTopicAttributes(&req)
-	})
+	err = putTopicPolicy(conn, arn, policy)
+
 	if err != nil {
 		return err
+	}
+
+	if d.IsNewResource() {
+		d.SetId(arn)
 	}
 
 	return resourceTopicPolicyRead(d, meta)
@@ -72,62 +76,57 @@ func resourceTopicPolicyUpsert(d *schema.ResourceData, meta interface{}) error {
 func resourceTopicPolicyRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SNSConn
 
-	attributeOutput, err := conn.GetTopicAttributes(&sns.GetTopicAttributesInput{
-		TopicArn: aws.String(d.Id()),
-	})
-	if err != nil {
-		if tfawserr.ErrMessageContains(err, sns.ErrCodeNotFoundException, "") {
-			log.Printf("[WARN] SNS Topic (%s) not found, removing from state", d.Id())
-			d.SetId("")
-			return nil
-		}
+	attributes, err := FindTopicAttributesByARN(conn, d.Id())
 
+	var policy string
+
+	if err == nil {
+		policy = attributes[TopicAttributeNamePolicy]
+
+		if policy == "" {
+			err = tfresource.NewEmptyResultError(d.Id())
+		}
+	}
+
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] SNS Topic Policy (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("error reading SNS Topic Policy (%s): %w", d.Id(), err)
+	}
+
+	policyToSet, err := verify.PolicyToSet(d.Get("policy").(string), policy)
+
+	if err != nil {
 		return err
 	}
 
-	if attributeOutput.Attributes == nil {
-		log.Printf("[WARN] SNS Topic (%q) attributes not found (nil), removing from state", d.Id())
-		d.SetId("")
-		return nil
-	}
-	attrmap := attributeOutput.Attributes
-
-	policy, ok := attrmap["Policy"]
-	if !ok {
-		log.Printf("[WARN] SNS Topic (%q) policy not found in attributes, removing from state", d.Id())
-		d.SetId("")
-		return nil
-	}
-
-	d.Set("policy", policy)
-	d.Set("arn", attrmap["TopicArn"])
-	d.Set("owner", attrmap["Owner"])
+	d.Set("arn", attributes[TopicAttributeNameTopicArn])
+	d.Set("owner", attributes[TopicAttributeNameOwner])
+	d.Set("policy", policyToSet)
 
 	return nil
 }
 
 func resourceTopicPolicyDelete(d *schema.ResourceData, meta interface{}) error {
-	req := sns.SetTopicAttributesInput{
-		TopicArn:      aws.String(d.Id()),
-		AttributeName: aws.String("Policy"),
-		// It is impossible to delete a policy or set to empty
-		// (confirmed by AWS Support representative)
-		// so we instead set it back to the default one
-		AttributeValue: aws.String(buildDefaultSnsTopicPolicy(d.Id(), d.Get("owner").(string))),
+	conn := meta.(*conns.AWSClient).SNSConn
+
+	// It is impossible to delete a policy or set to empty
+	// (confirmed by AWS Support representative)
+	// so we instead set it back to the default one.
+	err := putTopicPolicy(conn, d.Id(), defaultSNSTopicPolicy(d.Id(), d.Get("owner").(string)))
+
+	if err != nil {
+		return err
 	}
 
-	// Retry the update in the event of an eventually consistent style of
-	// error, where say an IAM resource is successfully created but not
-	// actually available. See https://github.com/hashicorp/terraform/issues/3660
-	log.Printf("[DEBUG] Resetting SNS Topic Policy to default: %s", req)
-	conn := meta.(*conns.AWSClient).SNSConn
-	_, err := verify.RetryOnAWSCode("InvalidParameter", func() (interface{}, error) {
-		return conn.SetTopicAttributes(&req)
-	})
-	return err
+	return nil
 }
 
-func buildDefaultSnsTopicPolicy(topicArn, accountId string) string {
+func defaultSNSTopicPolicy(topicArn, accountId string) string {
 	return fmt.Sprintf(`{
   "Version": "2008-10-17",
   "Id": "__default_policy_ID",
@@ -149,14 +148,18 @@ func buildDefaultSnsTopicPolicy(topicArn, accountId string) string {
         "SNS:Publish",
         "SNS:Receive"
       ],
-      "Resource": "%s",
+      "Resource": %[1]q,
       "Condition": {
         "StringEquals": {
-          "AWS:SourceOwner": "%s"
+          "AWS:SourceOwner": %[2]q
         }
       }
     }
   ]
 }
 `, topicArn, accountId)
+}
+
+func putTopicPolicy(conn *sns.SNS, arn string, policy string) error {
+	return putTopicAttribute(conn, arn, TopicAttributeNamePolicy, policy)
 }

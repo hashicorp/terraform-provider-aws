@@ -12,6 +12,10 @@ import (
 )
 
 func TestAccLambdaFunctionDataSource_basic(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_lambda_function.test"
 	resourceName := "aws_lambda_function.test"
@@ -121,6 +125,10 @@ func TestAccLambdaFunctionDataSource_layers(t *testing.T) {
 }
 
 func TestAccLambdaFunctionDataSource_vpc(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_lambda_function.test"
 	resourceName := "aws_lambda_function.test"
@@ -168,6 +176,10 @@ func TestAccLambdaFunctionDataSource_environment(t *testing.T) {
 }
 
 func TestAccLambdaFunctionDataSource_fileSystem(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_lambda_function.test"
 	resourceName := "aws_lambda_function.test"
@@ -198,7 +210,7 @@ func TestAccLambdaFunctionDataSource_image(t *testing.T) {
 	imageLatestID := os.Getenv("AWS_LAMBDA_IMAGE_LATEST_ID")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t); testAccDataSourceLambdaImagePreCheck(t) },
+		PreCheck:   func() { acctest.PreCheck(t); testAccImagePreCheck(t) },
 		ErrorCheck: acctest.ErrorCheck(t, lambda.EndpointsID),
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
@@ -588,7 +600,7 @@ data "aws_lambda_function" "test" {
 `, rName)
 }
 
-func testAccDataSourceLambdaImagePreCheck(t *testing.T) {
+func testAccImagePreCheck(t *testing.T) {
 	if os.Getenv("AWS_LAMBDA_IMAGE_LATEST_ID") == "" {
 		t.Skip("AWS_LAMBDA_IMAGE_LATEST_ID env var must be set for Lambda Function Data Source Image Support acceptance tests.")
 	}

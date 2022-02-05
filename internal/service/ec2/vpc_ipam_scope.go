@@ -8,7 +8,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -175,12 +175,11 @@ func ResourceVPCIpamScopeUpdate(d *schema.ResourceData, meta interface{}) error 
 func ResourceVPCIpamScopeDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
-	input := &ec2.DeleteIpamScopeInput{
+	log.Printf("[DEBUG] Deleting IPAM Scope: %s", d.Id())
+	_, err := conn.DeleteIpamScope(&ec2.DeleteIpamScopeInput{
 		IpamScopeId: aws.String(d.Id()),
-	}
+	})
 
-	log.Printf("[DEBUG] Deleting IPAM Scope: %s", input)
-	_, err := conn.DeleteIpamScope(input)
 	if err != nil {
 		return fmt.Errorf("error deleting IPAM Scope: (%s): %w", d.Id(), err)
 	}

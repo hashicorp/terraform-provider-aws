@@ -11,7 +11,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/iam"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -344,12 +344,16 @@ func sweepPolicies(region string) error {
 
 			// Treat this sweeper as best effort for now. There are a lot of edge cases
 			// with lingering aws_iam_role resources in the HashiCorp testing accounts.
-			if tfawserr.ErrMessageContains(err, iam.ErrCodeDeleteConflictException, "") {
+			if tfawserr.ErrCodeEquals(err, iam.ErrCodeDeleteConflictException) {
 				log.Printf("[WARN] Ignoring IAM Policy (%s) deletion error: %s", arn, err)
 				continue
 			}
 
-			if tfawserr.ErrMessageContains(err, iam.ErrCodeNoSuchEntityException, "") {
+			if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
+				continue
+			}
+
+			if tfawserr.ErrMessageContains(err, "AccessDenied", "with an explicit deny") {
 				continue
 			}
 
@@ -513,7 +517,7 @@ func sweepServiceLinkedRoles(region string) error {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 	conn := client.(*conns.AWSClient).IAMConn
-
+	var sweeperErrs *multierror.Error
 	input := &iam.ListRolesInput{
 		PathPrefix: aws.String("/aws-service-role/"),
 	}
@@ -535,33 +539,30 @@ func sweepServiceLinkedRoles(region string) error {
 				continue
 			}
 
-			log.Printf("[INFO] Deleting IAM Service Role: %s", roleName)
-			deletionTaskID, err := DeleteServiceLinkedRole(conn, roleName)
+			r := ResourceServiceLinkedRole()
+			d := r.Data(nil)
+			d.SetId(aws.StringValue(role.Arn))
+			err := r.Delete(d, client)
 			if err != nil {
-				log.Printf("[ERROR] Failed to delete IAM Service Role %s: %s", roleName, err)
+				sweeperErr := fmt.Errorf("error deleting IAM Service Linked Role (%s): %w", roleName, err)
+				log.Printf("[ERROR] %s", sweeperErr)
+				sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
 				continue
-			}
-			if deletionTaskID == "" {
-				continue
-			}
-
-			log.Printf("[INFO] Waiting for deletion of IAM Service Role: %s", roleName)
-			err = DeleteServiceLinkedRoleWaiter(conn, deletionTaskID)
-			if err != nil {
-				log.Printf("[ERROR] Failed to wait for deletion of IAM Service Role %s: %s", roleName, err)
 			}
 		}
 		return !lastPage
 	})
-	if err != nil {
-		if sweep.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping IAM Service Role sweep for %s: %s", region, err)
-			return nil
-		}
-		return fmt.Errorf("Error retrieving IAM Service Roles: %s", err)
+
+	if sweep.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping IAM Service Role sweep for %s: %s", region, err)
+		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
 	}
 
-	return nil
+	if err != nil {
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error describing IAM Service Roles: %w", err))
+	}
+
+	return sweeperErrs.ErrorOrNil()
 }
 
 func sweepUsers(region string) error {
@@ -615,7 +616,7 @@ func sweepUsers(region string) error {
 		}
 		listUserPoliciesOutput, err := conn.ListUserPolicies(listUserPoliciesInput)
 
-		if tfawserr.ErrMessageContains(err, iam.ErrCodeNoSuchEntityException, "") {
+		if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
 			continue
 		}
 		if err != nil {
@@ -634,7 +635,7 @@ func sweepUsers(region string) error {
 			}
 
 			if _, err := conn.DeleteUserPolicy(input); err != nil {
-				if tfawserr.ErrMessageContains(err, iam.ErrCodeNoSuchEntityException, "") {
+				if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
 					continue
 				}
 				sweeperErr := fmt.Errorf("error deleting IAM User (%s) inline policy %q: %s", username, *inlinePolicyName, err)
@@ -649,7 +650,7 @@ func sweepUsers(region string) error {
 		}
 		listAttachedUserPoliciesOutput, err := conn.ListAttachedUserPolicies(listAttachedUserPoliciesInput)
 
-		if tfawserr.ErrMessageContains(err, iam.ErrCodeNoSuchEntityException, "") {
+		if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
 			continue
 		}
 		if err != nil {
@@ -720,7 +721,7 @@ func sweepUsers(region string) error {
 
 		_, err = conn.DeleteUser(input)
 
-		if tfawserr.ErrMessageContains(err, iam.ErrCodeNoSuchEntityException, "") {
+		if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
 			continue
 		}
 		if err != nil {

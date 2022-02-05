@@ -85,3 +85,11 @@ func FlattenInt64List(list []*int64) []interface{} {
 	}
 	return vs
 }
+
+func PointersMapToStringList(pointers map[string]*string) map[string]interface{} {
+	list := make(map[string]interface{}, len(pointers))
+	for i, v := range pointers {
+		list[i] = *v
+	}
+	return list
+}

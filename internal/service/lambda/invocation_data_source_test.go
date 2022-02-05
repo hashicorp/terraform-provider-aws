@@ -12,7 +12,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-func testAccCheckLambdaInvocationResult(name, expectedResult string) resource.TestCheckFunc {
+func testAccCheckInvocationResult(name, expectedResult string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -49,7 +49,7 @@ func TestAccLambdaInvocationDataSource_basic(t *testing.T) {
 			{
 				Config: testAccInvocationDataSource_basic_config(rName, testData),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLambdaInvocationResult("data.aws_lambda_invocation.invocation_test", `{"key1":"value1","key2":"value2","key3":"`+testData+`"}`),
+					testAccCheckInvocationResult("data.aws_lambda_invocation.invocation_test", `{"key1":"value1","key2":"value2","key3":"`+testData+`"}`),
 				),
 			},
 		},
@@ -68,7 +68,7 @@ func TestAccLambdaInvocationDataSource_qualifier(t *testing.T) {
 			{
 				Config: testAccInvocationDataSource_qualifier_config(rName, testData),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLambdaInvocationResult("data.aws_lambda_invocation.invocation_test", `{"key1":"value1","key2":"value2","key3":"`+testData+`"}`),
+					testAccCheckInvocationResult("data.aws_lambda_invocation.invocation_test", `{"key1":"value1","key2":"value2","key3":"`+testData+`"}`),
 				),
 			},
 		},
@@ -87,7 +87,7 @@ func TestAccLambdaInvocationDataSource_complex(t *testing.T) {
 			{
 				Config: testAccInvocationDataSource_complex_config(rName, testData),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLambdaInvocationResult("data.aws_lambda_invocation.invocation_test", `{"key1":{"subkey1":"subvalue1"},"key2":{"subkey2":"subvalue2","subkey3":{"a": "b"}},"key3":"`+testData+`"}`),
+					testAccCheckInvocationResult("data.aws_lambda_invocation.invocation_test", `{"key1":{"subkey1":"subvalue1"},"key2":{"subkey2":"subvalue2","subkey3":{"a": "b"}},"key3":"`+testData+`"}`),
 				),
 			},
 		},

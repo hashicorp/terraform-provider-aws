@@ -9,7 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/firehose"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -149,6 +149,12 @@ func s3ConfigurationSchema() *schema.Schema {
 					Optional:     true,
 					Default:      firehose.CompressionFormatUncompressed,
 					ValidateFunc: validation.StringInSlice(firehose.CompressionFormat_Values(), false),
+				},
+
+				"error_output_prefix": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.StringLenBetween(0, 1024),
 				},
 
 				"kms_key_arn": {
@@ -378,6 +384,7 @@ func flattenS3Configuration(description *firehose.S3DestinationDescription) []ma
 		"bucket_arn":                 aws.StringValue(description.BucketARN),
 		"cloudwatch_logging_options": flattenCloudwatchLoggingOptions(description.CloudWatchLoggingOptions),
 		"compression_format":         aws.StringValue(description.CompressionFormat),
+		"error_output_prefix":        aws.StringValue(description.ErrorOutputPrefix),
 		"prefix":                     aws.StringValue(description.Prefix),
 		"role_arn":                   aws.StringValue(description.RoleARN),
 	}
@@ -1225,8 +1232,9 @@ func ResourceDeliveryStream() *schema.Resource {
 						},
 
 						"error_output_prefix": {
-							Type:     schema.TypeString,
-							Optional: true,
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validation.StringLenBetween(0, 1024),
 						},
 
 						"kms_key_arn": {
@@ -1617,6 +1625,10 @@ func createS3Config(d *schema.ResourceData) *firehose.S3DestinationConfiguration
 		EncryptionConfiguration: extractEncryptionConfiguration(s3),
 	}
 
+	if v, ok := s3["error_output_prefix"].(string); ok && v != "" {
+		configuration.ErrorOutputPrefix = aws.String(v)
+	}
+
 	if _, ok := s3["cloudwatch_logging_options"]; ok {
 		configuration.CloudWatchLoggingOptions = extractCloudWatchLoggingConfiguration(s3)
 	}
@@ -1646,6 +1658,10 @@ func expandS3BackupConfig(d map[string]interface{}) *firehose.S3DestinationConfi
 
 	if _, ok := s3["cloudwatch_logging_options"]; ok {
 		configuration.CloudWatchLoggingOptions = extractCloudWatchLoggingConfiguration(s3)
+	}
+
+	if v, ok := s3["error_output_prefix"].(string); ok && v != "" {
+		configuration.ErrorOutputPrefix = aws.String(v)
 	}
 
 	return configuration
@@ -1679,8 +1695,8 @@ func createExtendedS3Config(d *schema.ResourceData) *firehose.ExtendedS3Destinat
 		configuration.CloudWatchLoggingOptions = extractCloudWatchLoggingConfiguration(s3)
 	}
 
-	if v, ok := s3["error_output_prefix"]; ok && v.(string) != "" {
-		configuration.ErrorOutputPrefix = aws.String(v.(string))
+	if v, ok := s3["error_output_prefix"].(string); ok && v != "" {
+		configuration.ErrorOutputPrefix = aws.String(v)
 	}
 
 	if s3BackupMode, ok := s3["s3_backup_mode"]; ok {
@@ -1701,6 +1717,7 @@ func updateS3Config(d *schema.ResourceData) *firehose.S3DestinationUpdate {
 			IntervalInSeconds: aws.Int64((int64)(s3["buffer_interval"].(int))),
 			SizeInMBs:         aws.Int64((int64)(s3["buffer_size"].(int))),
 		},
+		ErrorOutputPrefix:        aws.String(s3["error_output_prefix"].(string)),
 		Prefix:                   extractPrefixConfiguration(s3),
 		CompressionFormat:        aws.String(s3["compression_format"].(string)),
 		EncryptionConfiguration:  extractEncryptionConfiguration(s3),
@@ -1729,6 +1746,7 @@ func updateS3BackupConfig(d map[string]interface{}) *firehose.S3DestinationUpdat
 			IntervalInSeconds: aws.Int64((int64)(s3["buffer_interval"].(int))),
 			SizeInMBs:         aws.Int64((int64)(s3["buffer_size"].(int))),
 		},
+		ErrorOutputPrefix:        aws.String(s3["error_output_prefix"].(string)),
 		Prefix:                   extractPrefixConfiguration(s3),
 		CompressionFormat:        aws.String(s3["compression_format"].(string)),
 		EncryptionConfiguration:  extractEncryptionConfiguration(s3),
@@ -1752,6 +1770,7 @@ func updateExtendedS3Config(d *schema.ResourceData) *firehose.ExtendedS3Destinat
 			IntervalInSeconds: aws.Int64((int64)(s3["buffer_interval"].(int))),
 			SizeInMBs:         aws.Int64((int64)(s3["buffer_size"].(int))),
 		},
+		ErrorOutputPrefix:                 aws.String(s3["error_output_prefix"].(string)),
 		Prefix:                            extractPrefixConfiguration(s3),
 		CompressionFormat:                 aws.String(s3["compression_format"].(string)),
 		EncryptionConfiguration:           extractEncryptionConfiguration(s3),
@@ -1766,10 +1785,6 @@ func updateExtendedS3Config(d *schema.ResourceData) *firehose.ExtendedS3Destinat
 
 	if _, ok := s3["dynamic_partitioning_configuration"]; ok {
 		configuration.DynamicPartitioningConfiguration = extractDynamicPartitioningConfiguration(s3)
-	}
-
-	if v, ok := s3["error_output_prefix"]; ok && v.(string) != "" {
-		configuration.ErrorOutputPrefix = aws.String(v.(string))
 	}
 
 	if s3BackupMode, ok := s3["s3_backup_mode"]; ok {
@@ -2162,6 +2177,12 @@ func updateRedshiftConfig(d *schema.ResourceData, s3Update *firehose.S3Destinati
 	if s3BackupMode, ok := redshift["s3_backup_mode"]; ok {
 		configuration.S3BackupMode = aws.String(s3BackupMode.(string))
 		configuration.S3BackupUpdate = updateS3BackupConfig(d.Get("redshift_configuration").([]interface{})[0].(map[string]interface{}))
+		if configuration.S3BackupUpdate != nil {
+			// Redshift does not currently support ErrorOutputPrefix,
+			// which is set to the empty string within "updateS3BackupConfig",
+			// thus we must remove it here to avoid an InvalidArgumentException.
+			configuration.S3BackupUpdate.ErrorOutputPrefix = nil
+		}
 	}
 
 	return configuration, nil
@@ -2722,6 +2743,12 @@ func resourceDeliveryStreamUpdate(d *schema.ResourceData, meta interface{}) erro
 			}
 			updateInput.ElasticsearchDestinationUpdate = esUpdate
 		} else if d.Get("destination").(string) == destinationTypeRedshift {
+			// Redshift does not currently support ErrorOutputPrefix,
+			// which is set to the empty string within "updateS3Config",
+			// thus we must remove it here to avoid an InvalidArgumentException.
+			if s3Config != nil {
+				s3Config.ErrorOutputPrefix = nil
+			}
 			rc, err := updateRedshiftConfig(d, s3Config)
 			if err != nil {
 				return err

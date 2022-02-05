@@ -1,6 +1,7 @@
 package conns
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"strings"
@@ -143,6 +144,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/iotthingsgraph"
 	"github.com/aws/aws-sdk-go/service/iotwireless"
 	"github.com/aws/aws-sdk-go/service/kafka"
+	"github.com/aws/aws-sdk-go/service/kafkaconnect"
 	"github.com/aws/aws-sdk-go/service/kendra"
 	"github.com/aws/aws-sdk-go/service/kinesis"
 	"github.com/aws/aws-sdk-go/service/kinesisanalytics"
@@ -168,6 +170,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/macie"
 	"github.com/aws/aws-sdk-go/service/macie2"
 	"github.com/aws/aws-sdk-go/service/managedblockchain"
+	"github.com/aws/aws-sdk-go/service/managedgrafana"
 	"github.com/aws/aws-sdk-go/service/marketplacecatalog"
 	"github.com/aws/aws-sdk-go/service/marketplacecommerceanalytics"
 	"github.com/aws/aws-sdk-go/service/marketplaceentitlementservice"
@@ -278,9 +281,9 @@ import (
 	"github.com/aws/aws-sdk-go/service/workmailmessageflow"
 	"github.com/aws/aws-sdk-go/service/workspaces"
 	"github.com/aws/aws-sdk-go/service/xray"
-	awsbase "github.com/hashicorp/aws-sdk-go-base"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/logging"
+	awsbase "github.com/hashicorp/aws-sdk-go-base/v2"
+	awsbasev1 "github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/version"
 )
@@ -397,6 +400,7 @@ const (
 	GlobalAccelerator             = "globalaccelerator"
 	Glue                          = "glue"
 	GlueDataBrew                  = "gluedatabrew"
+	Grafana                       = "grafana"
 	Greengrass                    = "greengrass"
 	GreengrassV2                  = "greengrassv2"
 	GroundStation                 = "groundstation"
@@ -424,6 +428,7 @@ const (
 	IoTWireless                   = "iotwireless"
 	IVS                           = "ivs"
 	Kafka                         = "kafka"
+	KafkaConnect                  = "kafkaconnect"
 	Kendra                        = "kendra"
 	Kinesis                       = "kinesis"
 	KinesisAnalytics              = "kinesisanalytics"
@@ -683,6 +688,7 @@ func init() {
 	serviceData[GlobalAccelerator] = &ServiceDatum{AWSClientName: "GlobalAccelerator", AWSServiceName: globalaccelerator.ServiceName, AWSEndpointsID: globalaccelerator.EndpointsID, AWSServiceID: globalaccelerator.ServiceID, ProviderNameUpper: "GlobalAccelerator", HCLKeys: []string{"globalaccelerator"}}
 	serviceData[Glue] = &ServiceDatum{AWSClientName: "Glue", AWSServiceName: glue.ServiceName, AWSEndpointsID: glue.EndpointsID, AWSServiceID: glue.ServiceID, ProviderNameUpper: "Glue", HCLKeys: []string{"glue"}}
 	serviceData[GlueDataBrew] = &ServiceDatum{AWSClientName: "GlueDataBrew", AWSServiceName: gluedatabrew.ServiceName, AWSEndpointsID: gluedatabrew.EndpointsID, AWSServiceID: gluedatabrew.ServiceID, ProviderNameUpper: "GlueDataBrew", HCLKeys: []string{"gluedatabrew"}}
+	serviceData[Grafana] = &ServiceDatum{AWSClientName: "Grafana", AWSServiceName: managedgrafana.ServiceName, AWSEndpointsID: managedgrafana.EndpointsID, AWSServiceID: managedgrafana.ServiceID, ProviderNameUpper: "Grafana", HCLKeys: []string{"grafana", "managedgrafana", "amg"}}
 	serviceData[Greengrass] = &ServiceDatum{AWSClientName: "Greengrass", AWSServiceName: greengrass.ServiceName, AWSEndpointsID: greengrass.EndpointsID, AWSServiceID: greengrass.ServiceID, ProviderNameUpper: "Greengrass", HCLKeys: []string{"greengrass"}}
 	serviceData[GreengrassV2] = &ServiceDatum{AWSClientName: "GreengrassV2", AWSServiceName: greengrassv2.ServiceName, AWSEndpointsID: greengrassv2.EndpointsID, AWSServiceID: greengrassv2.ServiceID, ProviderNameUpper: "GreengrassV2", HCLKeys: []string{"greengrassv2"}}
 	serviceData[GroundStation] = &ServiceDatum{AWSClientName: "GroundStation", AWSServiceName: groundstation.ServiceName, AWSEndpointsID: groundstation.EndpointsID, AWSServiceID: groundstation.ServiceID, ProviderNameUpper: "GroundStation", HCLKeys: []string{"groundstation"}}
@@ -709,6 +715,7 @@ func init() {
 	serviceData[IoTThingsGraph] = &ServiceDatum{AWSClientName: "IoTThingsGraph", AWSServiceName: iotthingsgraph.ServiceName, AWSEndpointsID: iotthingsgraph.EndpointsID, AWSServiceID: iotthingsgraph.ServiceID, ProviderNameUpper: "IoTThingsGraph", HCLKeys: []string{"iotthingsgraph"}}
 	serviceData[IoTWireless] = &ServiceDatum{AWSClientName: "IoTWireless", AWSServiceName: iotwireless.ServiceName, AWSEndpointsID: iotwireless.EndpointsID, AWSServiceID: iotwireless.ServiceID, ProviderNameUpper: "IoTWireless", HCLKeys: []string{"iotwireless"}}
 	serviceData[Kafka] = &ServiceDatum{AWSClientName: "Kafka", AWSServiceName: kafka.ServiceName, AWSEndpointsID: kafka.EndpointsID, AWSServiceID: kafka.ServiceID, ProviderNameUpper: "Kafka", HCLKeys: []string{"kafka"}}
+	serviceData[KafkaConnect] = &ServiceDatum{AWSClientName: "KafkaConnect", AWSServiceName: kafkaconnect.ServiceName, AWSEndpointsID: kafkaconnect.EndpointsID, AWSServiceID: kafkaconnect.ServiceID, ProviderNameUpper: "KafkaConnect", HCLKeys: []string{"kafkaconnect"}}
 	serviceData[Kendra] = &ServiceDatum{AWSClientName: "Kendra", AWSServiceName: kendra.ServiceName, AWSEndpointsID: kendra.EndpointsID, AWSServiceID: kendra.ServiceID, ProviderNameUpper: "Kendra", HCLKeys: []string{"kendra"}}
 	serviceData[Kinesis] = &ServiceDatum{AWSClientName: "Kinesis", AWSServiceName: kinesis.ServiceName, AWSEndpointsID: kinesis.EndpointsID, AWSServiceID: kinesis.ServiceID, ProviderNameUpper: "Kinesis", HCLKeys: []string{"kinesis"}}
 	serviceData[KinesisAnalytics] = &ServiceDatum{AWSClientName: "KinesisAnalytics", AWSServiceName: kinesisanalytics.ServiceName, AWSEndpointsID: kinesisanalytics.EndpointsID, AWSServiceID: kinesisanalytics.ServiceID, ProviderNameUpper: "KinesisAnalytics", HCLKeys: []string{"kinesisanalytics"}}
@@ -846,40 +853,34 @@ func init() {
 }
 
 type Config struct {
-	AccessKey     string
-	SecretKey     string
-	CredsFilename string
-	Profile       string
-	Token         string
-	Region        string
-	MaxRetries    int
-
-	AssumeRoleARN               string
-	AssumeRoleDurationSeconds   int
-	AssumeRoleExternalID        string
-	AssumeRolePolicy            string
-	AssumeRolePolicyARNs        []string
-	AssumeRoleSessionName       string
-	AssumeRoleTags              map[string]string
-	AssumeRoleTransitiveTagKeys []string
-
-	AllowedAccountIds   []string
-	ForbiddenAccountIds []string
-
-	DefaultTagsConfig *tftags.DefaultConfig
-	Endpoints         map[string]string
-	IgnoreTagsConfig  *tftags.IgnoreConfig
-	Insecure          bool
-	HTTPProxy         string
-
-	SkipCredsValidation     bool
-	SkipGetEC2Platforms     bool
-	SkipRegionValidation    bool
-	SkipRequestingAccountId bool
-	SkipMetadataApiCheck    bool
-	S3ForcePathStyle        bool
-
-	TerraformVersion string
+	AccessKey                      string
+	AllowedAccountIds              []string
+	AssumeRole                     *awsbase.AssumeRole
+	DefaultTagsConfig              *tftags.DefaultConfig
+	EC2MetadataServiceEndpoint     string
+	EC2MetadataServiceEndpointMode string
+	Endpoints                      map[string]string
+	ForbiddenAccountIds            []string
+	HTTPProxy                      string
+	IgnoreTagsConfig               *tftags.IgnoreConfig
+	Insecure                       bool
+	MaxRetries                     int
+	Profile                        string
+	Region                         string
+	S3ForcePathStyle               bool
+	SecretKey                      string
+	SharedConfigFile               string
+	SharedCredentialsFile          string
+	SkipCredsValidation            bool
+	SkipGetEC2Platforms            bool
+	SkipMetadataApiCheck           bool
+	SkipRegionValidation           bool
+	SkipRequestingAccountId        bool
+	STSRegion                      string
+	TerraformVersion               string
+	Token                          string
+	UseDualStackEndpoint           bool
+	UseFIPSEndpoint                bool
 }
 
 type AWSClient struct {
@@ -995,6 +996,7 @@ type AWSClient struct {
 	GlobalAcceleratorConn             *globalaccelerator.GlobalAccelerator
 	GlueConn                          *glue.Glue
 	GlueDataBrewConn                  *gluedatabrew.GlueDataBrew
+	GrafanaConn                       *managedgrafana.ManagedGrafana
 	GreengrassConn                    *greengrass.Greengrass
 	GreengrassV2Conn                  *greengrassv2.GreengrassV2
 	GroundStationConn                 *groundstation.GroundStation
@@ -1022,6 +1024,7 @@ type AWSClient struct {
 	IoTThingsGraphConn                *iotthingsgraph.IoTThingsGraph
 	IoTWirelessConn                   *iotwireless.IoTWireless
 	KafkaConn                         *kafka.Kafka
+	KafkaConnectConn                  *kafkaconnect.KafkaConnect
 	KendraConn                        *kendra.Kendra
 	KinesisAnalyticsConn              *kinesisanalytics.KinesisAnalytics
 	KinesisAnalyticsV2Conn            *kinesisanalyticsv2.KinesisAnalyticsV2
@@ -1189,46 +1192,83 @@ func (c *Config) Client() (interface{}, error) {
 		}
 	}
 
-	awsbaseConfig := &awsbase.Config{
-		AccessKey:                   c.AccessKey,
-		AssumeRoleARN:               c.AssumeRoleARN,
-		AssumeRoleDurationSeconds:   c.AssumeRoleDurationSeconds,
-		AssumeRoleExternalID:        c.AssumeRoleExternalID,
-		AssumeRolePolicy:            c.AssumeRolePolicy,
-		AssumeRolePolicyARNs:        c.AssumeRolePolicyARNs,
-		AssumeRoleSessionName:       c.AssumeRoleSessionName,
-		AssumeRoleTags:              c.AssumeRoleTags,
-		AssumeRoleTransitiveTagKeys: c.AssumeRoleTransitiveTagKeys,
-		CallerDocumentationURL:      "https://registry.terraform.io/providers/hashicorp/aws",
-		CallerName:                  "Terraform AWS Provider",
-		CredsFilename:               c.CredsFilename,
-		DebugLogging:                logging.IsDebugOrHigher(),
-		IamEndpoint:                 c.Endpoints[IAM],
-		Insecure:                    c.Insecure,
-		HTTPProxy:                   c.HTTPProxy,
-		MaxRetries:                  c.MaxRetries,
-		Profile:                     c.Profile,
-		Region:                      c.Region,
-		SecretKey:                   c.SecretKey,
-		SkipCredsValidation:         c.SkipCredsValidation,
-		SkipMetadataApiCheck:        c.SkipMetadataApiCheck,
-		SkipRequestingAccountId:     c.SkipRequestingAccountId,
-		StsEndpoint:                 c.Endpoints[STS],
-		Token:                       c.Token,
-		UserAgentProducts:           StdUserAgentProducts(c.TerraformVersion),
+	awsbaseConfig := awsbase.Config{
+		AccessKey:               c.AccessKey,
+		APNInfo:                 StdUserAgentProducts(c.TerraformVersion),
+		CallerDocumentationURL:  "https://registry.terraform.io/providers/hashicorp/aws",
+		CallerName:              "Terraform AWS Provider",
+		DebugLogging:            true, // Until https://github.com/hashicorp/aws-sdk-go-base/issues/96 is implemented
+		IamEndpoint:             c.Endpoints[IAM],
+		Insecure:                c.Insecure,
+		HTTPProxy:               c.HTTPProxy,
+		MaxRetries:              c.MaxRetries,
+		Profile:                 c.Profile,
+		Region:                  c.Region,
+		SecretKey:               c.SecretKey,
+		SkipCredsValidation:     c.SkipCredsValidation,
+		SkipEC2MetadataApiCheck: c.SkipMetadataApiCheck,
+		SkipRequestingAccountId: c.SkipRequestingAccountId,
+		StsEndpoint:             c.Endpoints[STS],
+		Token:                   c.Token,
+		UseDualStackEndpoint:    c.UseDualStackEndpoint,
+		UseFIPSEndpoint:         c.UseFIPSEndpoint,
 	}
 
-	sess, accountID, Partition, err := awsbase.GetSessionWithAccountIDAndPartition(awsbaseConfig)
+	if c.AssumeRole != nil && c.AssumeRole.RoleARN != "" {
+		awsbaseConfig.AssumeRole = c.AssumeRole
+	}
+
+	if c.EC2MetadataServiceEndpoint != "" {
+		awsbaseConfig.EC2MetadataServiceEndpoint = c.EC2MetadataServiceEndpoint
+		awsbaseConfig.EC2MetadataServiceEndpointMode = c.EC2MetadataServiceEndpointMode
+	}
+
+	if c.SharedConfigFile != "" {
+		awsbaseConfig.SharedConfigFiles = []string{c.SharedConfigFile}
+	}
+
+	if c.SharedCredentialsFile != "" {
+		awsbaseConfig.SharedCredentialsFiles = []string{c.SharedCredentialsFile}
+	}
+
+	ctx := context.Background()
+	cfg, err := awsbase.GetAwsConfig(ctx, &awsbaseConfig)
 	if err != nil {
 		return nil, fmt.Errorf("error configuring Terraform AWS Provider: %w", err)
 	}
 
-	if accountID == "" {
-		log.Printf("[WARN] AWS account ID not found for provider. See https://www.terraform.io/docs/providers/aws/index.html#skip_requesting_account_id for implications.")
+	sess, err := awsbasev1.GetSession(&cfg, &awsbaseConfig)
+	if err != nil {
+		return nil, fmt.Errorf("error creating AWS SDK v1 session: %w", err)
 	}
 
-	if err := awsbase.ValidateAccountID(accountID, c.AllowedAccountIds, c.ForbiddenAccountIds); err != nil {
-		return nil, err
+	accountID, Partition, err := awsbase.GetAwsAccountIDAndPartition(ctx, cfg, &awsbaseConfig)
+	if err != nil {
+		return nil, fmt.Errorf("error retrieving account details: %w", err)
+	}
+
+	if accountID == "" {
+		log.Println("[WARN] AWS account ID not found for provider. See https://www.terraform.io/docs/providers/aws/index.html#skip_requesting_account_id for implications.")
+	}
+
+	if len(c.ForbiddenAccountIds) > 0 {
+		for _, forbiddenAccountID := range c.AllowedAccountIds {
+			if accountID == forbiddenAccountID {
+				return nil, fmt.Errorf("AWS Account ID not allowed: %s", accountID)
+			}
+		}
+	}
+	if len(c.AllowedAccountIds) > 0 {
+		found := false
+		for _, allowedAccountID := range c.AllowedAccountIds {
+			if accountID == allowedAccountID {
+				found = true
+				break
+			}
+		}
+		if !found {
+			return nil, fmt.Errorf("AWS Account ID not allowed: %s", accountID)
+		}
 	}
 
 	DNSSuffix := "amazonaws.com"
@@ -1348,6 +1388,7 @@ func (c *Config) Client() (interface{}, error) {
 		GlacierConn:                       glacier.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[Glacier])})),
 		GlueConn:                          glue.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[Glue])})),
 		GlueDataBrewConn:                  gluedatabrew.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[GlueDataBrew])})),
+		GrafanaConn:                       managedgrafana.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[Grafana])})),
 		GreengrassConn:                    greengrass.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[Greengrass])})),
 		GreengrassV2Conn:                  greengrassv2.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[GreengrassV2])})),
 		GroundStationConn:                 groundstation.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[GroundStation])})),
@@ -1375,6 +1416,7 @@ func (c *Config) Client() (interface{}, error) {
 		IoTThingsGraphConn:                iotthingsgraph.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[IoTThingsGraph])})),
 		IoTWirelessConn:                   iotwireless.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[IoTWireless])})),
 		KafkaConn:                         kafka.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[Kafka])})),
+		KafkaConnectConn:                  kafkaconnect.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[KafkaConnect])})),
 		KendraConn:                        kendra.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[Kendra])})),
 		KinesisAnalyticsConn:              kinesisanalytics.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[KinesisAnalytics])})),
 		KinesisAnalyticsV2Conn:            kinesisanalyticsv2.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[KinesisAnalyticsV2])})),
@@ -1676,26 +1718,29 @@ func (c *Config) Client() (interface{}, error) {
 	})
 
 	client.EC2Conn.Handlers.Retry.PushBack(func(r *request.Request) {
-		if r.Operation.Name == "CreateClientVpnEndpoint" {
-			if tfawserr.ErrMessageContains(r.Error, "OperationNotPermitted", "Endpoint cannot be created while another endpoint is being created") {
+		switch err := r.Error; r.Operation.Name {
+		case "AttachVpnGateway", "DetachVpnGateway":
+			if tfawserr.ErrMessageContains(err, "InvalidParameterValue", "This call cannot be completed because there are pending VPNs or Virtual Interfaces") {
 				r.Retryable = aws.Bool(true)
 			}
-		}
 
-		if r.Operation.Name == "CreateVpnConnection" {
-			if tfawserr.ErrMessageContains(r.Error, "VpnConnectionLimitExceeded", "maximum number of mutating objects has been reached") {
+		case "CreateClientVpnEndpoint":
+			if tfawserr.ErrMessageContains(err, "OperationNotPermitted", "Endpoint cannot be created while another endpoint is being created") {
 				r.Retryable = aws.Bool(true)
 			}
-		}
 
-		if r.Operation.Name == "CreateVpnGateway" {
-			if tfawserr.ErrMessageContains(r.Error, "VpnGatewayLimitExceeded", "maximum number of mutating objects has been reached") {
+		case "CreateClientVpnRoute", "DeleteClientVpnRoute":
+			if tfawserr.ErrMessageContains(err, "ConcurrentMutationLimitExceeded", "Cannot initiate another change for this endpoint at this time") {
 				r.Retryable = aws.Bool(true)
 			}
-		}
 
-		if r.Operation.Name == "AttachVpnGateway" || r.Operation.Name == "DetachVpnGateway" {
-			if tfawserr.ErrMessageContains(r.Error, "InvalidParameterValue", "This call cannot be completed because there are pending VPNs or Virtual Interfaces") {
+		case "CreateVpnConnection":
+			if tfawserr.ErrMessageContains(err, "VpnConnectionLimitExceeded", "maximum number of mutating objects has been reached") {
+				r.Retryable = aws.Bool(true)
+			}
+
+		case "CreateVpnGateway":
+			if tfawserr.ErrMessageContains(err, "VpnGatewayLimitExceeded", "maximum number of mutating objects has been reached") {
 				r.Retryable = aws.Bool(true)
 			}
 		}
@@ -1812,12 +1857,13 @@ func (c *Config) Client() (interface{}, error) {
 	return client, nil
 }
 
-func StdUserAgentProducts(terraformVersion string) []*awsbase.UserAgentProduct {
-	return []*awsbase.UserAgentProduct{
-		{Name: "APN", Version: "1.0"},
-		{Name: "HashiCorp", Version: "1.0"},
-		{Name: "Terraform", Version: terraformVersion, Extra: []string{"+https://www.terraform.io"}},
-		{Name: "terraform-provider-aws", Version: version.ProviderVersion, Extra: []string{"+https://registry.terraform.io/providers/hashicorp/aws"}},
+func StdUserAgentProducts(terraformVersion string) *awsbase.APNInfo {
+	return &awsbase.APNInfo{
+		PartnerName: "HashiCorp",
+		Products: []awsbase.UserAgentProduct{
+			{Name: "Terraform", Version: terraformVersion, Comment: "+https://www.terraform.io"},
+			{Name: "terraform-provider-aws", Version: version.ProviderVersion, Comment: "+https://registry.terraform.io/providers/hashicorp/aws"},
+		},
 	}
 }
 
@@ -1828,12 +1874,9 @@ func NewSessionForRegion(cfg *aws.Config, region, terraformVersion string) (*ses
 		return nil, err
 	}
 
-	userAgentProducts := StdUserAgentProducts(terraformVersion)
-	// Copied from github.com/hashicorp/aws-sdk-go-base@v1.0.0/session.go:
-	for i := len(userAgentProducts) - 1; i >= 0; i-- {
-		product := userAgentProducts[i]
-		session.Handlers.Build.PushFront(request.MakeAddToUserAgentHandler(product.Name, product.Version, product.Extra...))
-	}
+	apnInfo := StdUserAgentProducts(terraformVersion)
+
+	awsbasev1.SetSessionUserAgent(session, apnInfo, awsbase.UserAgentProducts{})
 
 	return session.Copy(&aws.Config{Region: aws.String(region)}), nil
 }

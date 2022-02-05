@@ -19,47 +19,29 @@ Provides a S3 bucket resource.
 ```terraform
 resource "aws_s3_bucket" "b" {
   bucket = "my-tf-test-bucket"
-  acl    = "private"
 
   tags = {
     Name        = "My bucket"
     Environment = "Dev"
   }
 }
+
+resource "aws_s3_bucket_acl" "example" {
+  bucket = aws_s3_bucket.b.id
+  acl    = "private"
+}
 ```
 
 ### Static Website Hosting
 
-```terraform
-resource "aws_s3_bucket" "b" {
-  bucket = "s3-website-test.hashicorp.com"
-  acl    = "public-read"
-  policy = file("policy.json")
-
-  website {
-    index_document = "index.html"
-    error_document = "error.html"
-
-    routing_rules = <<EOF
-[{
-    "Condition": {
-        "KeyPrefixEquals": "docs/"
-    },
-    "Redirect": {
-        "ReplaceKeyPrefixWith": "documents/"
-    }
-}]
-EOF
-  }
-}
-```
+The `website` argument is read-only as of version 4.0 of the Terraform AWS Provider.
+See the [`aws_s3_bucket_website_configuration` resource](s3_bucket_website_configuration.html.markdown) for configuration details.
 
 ### Using CORS
 
 ```terraform
 resource "aws_s3_bucket" "b" {
   bucket = "s3-website-test.hashicorp.com"
-  acl    = "public-read"
 
   cors_rule {
     allowed_headers = ["*"]
@@ -69,6 +51,11 @@ resource "aws_s3_bucket" "b" {
     max_age_seconds = 3000
   }
 }
+
+resource "aws_s3_bucket_acl" "example" {
+  bucket = aws_s3_bucket.b.id
+  acl    = "public-read"
+}
 ```
 
 ### Using versioning
@@ -76,11 +63,15 @@ resource "aws_s3_bucket" "b" {
 ```terraform
 resource "aws_s3_bucket" "b" {
   bucket = "my-tf-test-bucket"
-  acl    = "private"
 
   versioning {
     enabled = true
   }
+}
+
+resource "aws_s3_bucket_acl" "example" {
+  bucket = aws_s3_bucket.b.id
+  acl    = "private"
 }
 ```
 
@@ -89,17 +80,26 @@ resource "aws_s3_bucket" "b" {
 ```terraform
 resource "aws_s3_bucket" "log_bucket" {
   bucket = "my-tf-log-bucket"
+}
+
+resource "aws_s3_bucket_acl" "log_bucket_acl" {
+  bucket = aws_s3_bucket.log_bucket.id
   acl    = "log-delivery-write"
 }
 
 resource "aws_s3_bucket" "b" {
   bucket = "my-tf-test-bucket"
-  acl    = "private"
 
   logging {
-    target_bucket = aws_s3_bucket.log_bucket.id
+    # The log bucket must have its ACL configured first
+    target_bucket = aws_s3_bucket_acl.log_bucket_acl.bucket
     target_prefix = "log/"
   }
+}
+
+resource "aws_s3_bucket_acl" "b_bucket_acl" {
+  bucket = aws_s3_bucket.b.id
+  acl    = "private"
 }
 ```
 
@@ -108,7 +108,6 @@ resource "aws_s3_bucket" "b" {
 ```terraform
 resource "aws_s3_bucket" "bucket" {
   bucket = "my-bucket"
-  acl    = "private"
 
   lifecycle_rule {
     id      = "log"
@@ -147,9 +146,13 @@ resource "aws_s3_bucket" "bucket" {
   }
 }
 
+resource "aws_s3_bucket_acl" "bucket_acl" {
+  bucket = aws_s3_bucket.bucket.id
+  acl    = "private"
+}
+
 resource "aws_s3_bucket" "versioning_bucket" {
   bucket = "my-versioning-bucket"
-  acl    = "private"
 
   versioning {
     enabled = true
@@ -173,6 +176,11 @@ resource "aws_s3_bucket" "versioning_bucket" {
       days = 90
     }
   }
+}
+
+resource "aws_s3_bucket_acl" "versioning_bucket_acl" {
+  bucket = aws_s3_bucket.versioning_bucket.id
+  acl    = "private"
 }
 ```
 
@@ -268,7 +276,6 @@ resource "aws_s3_bucket" "destination" {
 resource "aws_s3_bucket" "source" {
   provider = aws.central
   bucket   = "tf-test-bucket-source-12345"
-  acl      = "private"
 
   versioning {
     enabled = true
@@ -301,13 +308,18 @@ resource "aws_s3_bucket" "source" {
     }
   }
 }
+
+resource "aws_s3_bucket_acl" "source_bucket_acl" {
+  bucket = aws_s3_bucket.source.id
+  acl    = "private"
+}
 ```
 
 ### Enable Default Server Side Encryption
 
 ```terraform
 resource "aws_kms_key" "mykey" {
-  description             = "This key is used to encrypt bucket objects"
+  description             = "This key is used to encrypt objects"
   deletion_window_in_days = 10
 }
 
@@ -359,7 +371,6 @@ The following arguments are supported:
 
 * `tags` - (Optional) A map of tags to assign to the bucket. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `force_destroy` - (Optional, Default:`false`) A boolean that indicates all objects (including any [locked objects](https://docs.aws.amazon.com/AmazonS3/latest/dev/object-lock-overview.html)) should be deleted from the bucket so that the bucket can be destroyed without error. These objects are *not* recoverable.
-* `website` - (Optional) A website object (documented below).
 * `cors_rule` - (Optional) A rule of [Cross-Origin Resource Sharing](https://docs.aws.amazon.com/AmazonS3/latest/dev/cors.html) (documented below).
 * `versioning` - (Optional) A state of [versioning](https://docs.aws.amazon.com/AmazonS3/latest/dev/Versioning.html) (documented below)
 * `logging` - (Optional) A settings of [bucket logging](https://docs.aws.amazon.com/AmazonS3/latest/UG/ManagingBucketLogging.html) (documented below).
@@ -374,14 +385,6 @@ developer guide for more information.
 * `object_lock_configuration` - (Optional) A configuration of [S3 object locking](https://docs.aws.amazon.com/AmazonS3/latest/dev/object-lock.html) (documented below)
 
 ~> **NOTE:** You cannot use `acceleration_status` in `cn-north-1` or `us-gov-west-1`
-
-The `website` object supports the following:
-
-* `index_document` - (Required, unless using `redirect_all_requests_to`) Amazon S3 returns this index document when requests are made to the root domain or any of the subfolders.
-* `error_document` - (Optional) An absolute path to the document to return in case of a 4XX error.
-* `redirect_all_requests_to` - (Optional) A hostname to redirect all website requests for this bucket to. Hostname can optionally be prefixed with a protocol (`http://` or `https://`) to use when redirecting requests. The default is the protocol that is used in the original request.
-* `routing_rules` - (Optional) A json array containing [routing rules](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-s3-websiteconfiguration-routingrules.html)
-describing redirect behavior and when redirects are applied.
 
 The `CORS` object supports the following:
 
@@ -425,7 +428,7 @@ The `transition` object supports the following
 
 * `date` (Optional) Specifies the date after which you want the corresponding action to take effect.
 * `days` (Optional) Specifies the number of days after object creation when the specific rule action takes effect.
-* `storage_class` (Required) Specifies the Amazon S3 storage class to which you want the object to transition. Can be `ONEZONE_IA`, `STANDARD_IA`, `INTELLIGENT_TIERING`, `GLACIER`, or `DEEP_ARCHIVE`.
+* `storage_class` (Required) Specifies the Amazon S3 [storage class](https://docs.aws.amazon.com/AmazonS3/latest/API/API_Transition.html#AmazonS3-Type-Transition-StorageClass) to which you want the object to transition.
 
 The `noncurrent_version_expiration` object supports the following
 
@@ -434,7 +437,7 @@ The `noncurrent_version_expiration` object supports the following
 The `noncurrent_version_transition` object supports the following
 
 * `days` (Required) Specifies the number of days noncurrent object versions transition.
-* `storage_class` (Required) Specifies the Amazon S3 storage class to which you want the noncurrent object versions to transition. Can be `ONEZONE_IA`, `STANDARD_IA`, `INTELLIGENT_TIERING`, `GLACIER`, or `DEEP_ARCHIVE`.
+* `storage_class` (Required) Specifies the Amazon S3 [storage class](https://docs.aws.amazon.com/AmazonS3/latest/API/API_Transition.html#AmazonS3-Type-Transition-StorageClass) to which you want the object to transition.
 
 The `replication_configuration` object supports the following:
 
@@ -471,7 +474,7 @@ Replication configuration V1 supports filtering based on only the `prefix` attri
 The `destination` object supports the following:
 
 * `bucket` - (Required) The ARN of the S3 bucket where you want Amazon S3 to store replicas of the object identified by the rule.
-* `storage_class` - (Optional) The class of storage used to store the object. Can be `STANDARD`, `REDUCED_REDUNDANCY`, `STANDARD_IA`, `ONEZONE_IA`, `INTELLIGENT_TIERING`, `GLACIER`, or `DEEP_ARCHIVE`.
+* `storage_class` - (Optional) The [storage class](https://docs.aws.amazon.com/AmazonS3/latest/API/API_Destination.html#AmazonS3-Type-Destination-StorageClass) used to store the object. By default, Amazon S3 uses the storage class of the source object to create the object replica.
 * `replica_kms_key_id` - (Optional) Destination KMS encryption key ARN for SSE-KMS replication. Must be used in conjunction with
   `sse_kms_encrypted_objects` source selection criteria.
 * `access_control_translation` - (Optional) Specifies the overrides to use for object owners on replication. Must be used in conjunction with `account_id` owner override configuration.
@@ -561,6 +564,11 @@ In addition to all arguments above, the following attributes are exported:
 * `hosted_zone_id` - The [Route 53 Hosted Zone ID](https://docs.aws.amazon.com/general/latest/gr/rande.html#s3_website_region_endpoints) for this bucket's region.
 * `region` - The AWS region this bucket resides in.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
+* `website` - The website configuration, if configured.
+    * `error_document` - The name of the error document for the website.
+    * `index_document` - The name of the index document for the website.
+    * `redirect_all_requests_to` - The redirect behavior for every request to this bucket's website endpoint.
+    * `routing_rules` - (Optional) The rules that define when a redirect is applied and the redirect behavior.
 * `website_endpoint` - The website endpoint, if the bucket is configured with a website. If not, this will be an empty string.
 * `website_domain` - The domain of the website endpoint, if the bucket is configured with a website. If not, this will be an empty string. This is used to create Route 53 alias records.
 

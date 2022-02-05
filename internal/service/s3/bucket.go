@@ -19,7 +19,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/request"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
@@ -162,39 +162,33 @@ func ResourceBucket() *schema.Resource {
 			},
 
 			"website": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
+				Type:       schema.TypeList,
+				Computed:   true,
+				Deprecated: "Use the aws_s3_bucket_website_configuration resource instead when available in a future minor version",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"index_document": {
-							Type:     schema.TypeString,
-							Optional: true,
+							Type:       schema.TypeString,
+							Computed:   true,
+							Deprecated: "Use the aws_s3_bucket_website_configuration resource instead when available in a future minor version",
 						},
 
 						"error_document": {
-							Type:     schema.TypeString,
-							Optional: true,
+							Type:       schema.TypeString,
+							Computed:   true,
+							Deprecated: "Use the aws_s3_bucket_website_configuration resource instead when available in a future minor version",
 						},
 
 						"redirect_all_requests_to": {
-							Type: schema.TypeString,
-							ConflictsWith: []string{
-								"website.0.index_document",
-								"website.0.error_document",
-								"website.0.routing_rules",
-							},
-							Optional: true,
+							Type:       schema.TypeString,
+							Computed:   true,
+							Deprecated: "Use the aws_s3_bucket_website_configuration resource instead when available in a future minor version",
 						},
 
 						"routing_rules": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: validation.StringIsJSON,
-							StateFunc: func(v interface{}) string {
-								json, _ := structure.NormalizeJsonString(v)
-								return json
-							},
+							Type:       schema.TypeString,
+							Computed:   true,
+							Deprecated: "Use the aws_s3_bucket_website_configuration resource instead when available in a future minor version",
 						},
 					},
 				},
@@ -211,14 +205,14 @@ func ResourceBucket() *schema.Resource {
 				Computed: true,
 			},
 			"website_endpoint": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
+				Type:       schema.TypeString,
+				Computed:   true,
+				Deprecated: "Use the aws_s3_bucket_website_configuration resource instead when available in a future minor version",
 			},
 			"website_domain": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
+				Type:       schema.TypeString,
+				Computed:   true,
+				Deprecated: "Use the aws_s3_bucket_website_configuration resource instead when available in a future minor version",
 			},
 
 			"versioning": {
@@ -346,7 +340,7 @@ func ResourceBucket() *schema.Resource {
 									"storage_class": {
 										Type:         schema.TypeString,
 										Required:     true,
-										ValidateFunc: validBucketLifecycleTransitionStorageClass(),
+										ValidateFunc: validation.StringInSlice(s3.TransitionStorageClass_Values(), false),
 									},
 								},
 							},
@@ -365,7 +359,7 @@ func ResourceBucket() *schema.Resource {
 									"storage_class": {
 										Type:         schema.TypeString,
 										Required:     true,
-										ValidateFunc: validBucketLifecycleTransitionStorageClass(),
+										ValidateFunc: validation.StringInSlice(s3.TransitionStorageClass_Values(), false),
 									},
 								},
 							},
@@ -770,17 +764,23 @@ func resourceBucketUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	if d.HasChange("website") {
-		if err := resourceBucketWebsiteUpdate(conn, d); err != nil {
-			return err
+	if d.HasChange("versioning") {
+		v := d.Get("versioning").([]interface{})
+
+		if d.IsNewResource() {
+			if versioning := expandVersioningWhenIsNewResource(v); versioning != nil {
+				err := resourceBucketInternalVersioningUpdate(conn, d.Id(), versioning)
+				if err != nil {
+					return err
+				}
+			}
+		} else {
+			if err := resourceBucketInternalVersioningUpdate(conn, d.Id(), expandVersioning(v)); err != nil {
+				return err
+			}
 		}
 	}
 
-	if d.HasChange("versioning") {
-		if err := resourceBucketVersioningUpdate(conn, d); err != nil {
-			return err
-		}
-	}
 	if d.HasChange("acl") && !d.IsNewResource() {
 		if err := resourceBucketACLUpdate(conn, d); err != nil {
 			return err
@@ -794,7 +794,7 @@ func resourceBucketUpdate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if d.HasChange("logging") {
-		if err := resourceBucketLoggingUpdate(conn, d); err != nil {
+		if err := resourceBucketInternalLoggingUpdate(conn, d); err != nil {
 			return err
 		}
 	}
@@ -824,13 +824,13 @@ func resourceBucketUpdate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if d.HasChange("server_side_encryption_configuration") {
-		if err := resourceBucketServerSideEncryptionConfigurationUpdate(conn, d); err != nil {
+		if err := resourceBucketInternalServerSideEncryptionConfigurationUpdate(conn, d); err != nil {
 			return err
 		}
 	}
 
 	if d.HasChange("object_lock_configuration") {
-		if err := resourceBucketObjectLockConfigurationUpdate(conn, d); err != nil {
+		if err := resourceBucketInternalObjectLockConfigurationUpdate(conn, d); err != nil {
 			return err
 		}
 	}
@@ -987,64 +987,18 @@ func resourceBucketRead(d *schema.ResourceData, meta interface{}) error {
 			Bucket: aws.String(d.Id()),
 		})
 	})
-	if err != nil && !tfawserr.ErrMessageContains(err, "NotImplemented", "") && !tfawserr.ErrMessageContains(err, "NoSuchWebsiteConfiguration", "") {
-		return fmt.Errorf("error getting S3 Bucket website configuration: %s", err)
+	if err != nil && !tfawserr.ErrCodeEquals(err, ErrCodeNotImplemented, ErrCodeNoSuchWebsiteConfiguration) {
+		return fmt.Errorf("error getting S3 Bucket website configuration: %w", err)
 	}
 
-	websites := make([]map[string]interface{}, 0, 1)
 	if ws, ok := wsResponse.(*s3.GetBucketWebsiteOutput); ok {
-		w := make(map[string]interface{})
-
-		if v := ws.IndexDocument; v != nil {
-			w["index_document"] = aws.StringValue(v.Suffix)
+		website, err := flattenBucketWebsite(ws)
+		if err != nil {
+			return err
 		}
-
-		if v := ws.ErrorDocument; v != nil {
-			w["error_document"] = aws.StringValue(v.Key)
+		if err := d.Set("website", website); err != nil {
+			return fmt.Errorf("error setting website: %w", err)
 		}
-
-		if v := ws.RedirectAllRequestsTo; v != nil {
-			if v.Protocol == nil {
-				w["redirect_all_requests_to"] = aws.StringValue(v.HostName)
-			} else {
-				var host string
-				var path string
-				var query string
-				parsedHostName, err := url.Parse(aws.StringValue(v.HostName))
-				if err == nil {
-					host = parsedHostName.Host
-					path = parsedHostName.Path
-					query = parsedHostName.RawQuery
-				} else {
-					host = aws.StringValue(v.HostName)
-					path = ""
-				}
-
-				w["redirect_all_requests_to"] = (&url.URL{
-					Host:     host,
-					Path:     path,
-					Scheme:   aws.StringValue(v.Protocol),
-					RawQuery: query,
-				}).String()
-			}
-		}
-
-		if v := ws.RoutingRules; v != nil {
-			rr, err := normalizeRoutingRules(v)
-			if err != nil {
-				return fmt.Errorf("Error while marshaling routing rules: %s", err)
-			}
-			w["routing_rules"] = rr
-		}
-
-		// We have special handling for the website configuration,
-		// so only add the configuration if there is any
-		if len(w) > 0 {
-			websites = append(websites, w)
-		}
-	}
-	if err := d.Set("website", websites); err != nil {
-		return fmt.Errorf("error setting website: %s", err)
 	}
 
 	// Read the versioning configuration
@@ -1054,28 +1008,15 @@ func resourceBucketRead(d *schema.ResourceData, meta interface{}) error {
 			Bucket: aws.String(d.Id()),
 		})
 	})
+
 	if err != nil {
-		return err
+		return fmt.Errorf("error getting S3 Bucket versioning (%s): %w", d.Id(), err)
 	}
 
-	vcl := make([]map[string]interface{}, 0, 1)
 	if versioning, ok := versioningResponse.(*s3.GetBucketVersioningOutput); ok {
-		vc := make(map[string]interface{})
-		if versioning.Status != nil && aws.StringValue(versioning.Status) == s3.BucketVersioningStatusEnabled {
-			vc["enabled"] = true
-		} else {
-			vc["enabled"] = false
+		if err := d.Set("versioning", flattenVersioning(versioning)); err != nil {
+			return fmt.Errorf("error setting versioning: %w", err)
 		}
-
-		if versioning.MFADelete != nil && aws.StringValue(versioning.MFADelete) == s3.MFADeleteEnabled {
-			vc["mfa_delete"] = true
-		} else {
-			vc["mfa_delete"] = false
-		}
-		vcl = append(vcl, vc)
-	}
-	if err := d.Set("versioning", vcl); err != nil {
-		return fmt.Errorf("error setting versioning: %s", err)
 	}
 
 	// Read the acceleration status
@@ -1305,9 +1246,18 @@ func resourceBucketRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	// Object Lock configuration.
-	if conf, err := readS3ObjectLockConfiguration(conn, d.Id()); err != nil {
-		return fmt.Errorf("error getting S3 Bucket Object Lock configuration: %s", err)
-	} else {
+	conf, err := readS3ObjectLockConfiguration(conn, d.Id())
+
+	// Object lock not supported in all partitions (extra guard, also guards in read func)
+	if err != nil && (meta.(*conns.AWSClient).Partition == endpoints.AwsPartitionID || meta.(*conns.AWSClient).Partition == endpoints.AwsUsGovPartitionID) {
+		return fmt.Errorf("error getting S3 Object Lock configuration: %s", err)
+	}
+
+	if err != nil {
+		log.Printf("[WARN] Unable to read S3 bucket (%s) object lock configuration: %s", d.Id(), err)
+	}
+
+	if err == nil {
 		if err := d.Set("object_lock_configuration", conf); err != nil {
 			return fmt.Errorf("error setting object_lock_configuration: %s", err)
 		}
@@ -1418,7 +1368,7 @@ func resourceBucketDelete(d *schema.ResourceData, meta interface{}) error {
 	if tfawserr.ErrMessageContains(err, "BucketNotEmpty", "") {
 		if d.Get("force_destroy").(bool) {
 			// Use a S3 service client that can handle multiple slashes in URIs.
-			// While aws_s3_bucket_object resources cannot create these object
+			// While aws_s3_object resources cannot create these object
 			// keys, other AWS services and applications using the S3 Bucket can.
 			conn = meta.(*conns.AWSClient).S3ConnURICleaningDisabled
 
@@ -1633,115 +1583,6 @@ func resourceBucketCorsUpdate(conn *s3.S3, d *schema.ResourceData) error {
 	return nil
 }
 
-func resourceBucketWebsiteUpdate(conn *s3.S3, d *schema.ResourceData) error {
-	ws := d.Get("website").([]interface{})
-
-	if len(ws) == 0 {
-		return resourceBucketWebsiteDelete(conn, d)
-	}
-
-	var w map[string]interface{}
-	if ws[0] != nil {
-		w = ws[0].(map[string]interface{})
-	} else {
-		w = make(map[string]interface{})
-	}
-	return resourceBucketWebsitePut(conn, d, w)
-}
-
-func resourceBucketWebsitePut(conn *s3.S3, d *schema.ResourceData, website map[string]interface{}) error {
-	bucket := d.Get("bucket").(string)
-
-	var indexDocument, errorDocument, redirectAllRequestsTo, routingRules string
-	if v, ok := website["index_document"]; ok {
-		indexDocument = v.(string)
-	}
-	if v, ok := website["error_document"]; ok {
-		errorDocument = v.(string)
-	}
-	if v, ok := website["redirect_all_requests_to"]; ok {
-		redirectAllRequestsTo = v.(string)
-	}
-	if v, ok := website["routing_rules"]; ok {
-		routingRules = v.(string)
-	}
-
-	if indexDocument == "" && redirectAllRequestsTo == "" {
-		return fmt.Errorf("Must specify either index_document or redirect_all_requests_to.")
-	}
-
-	websiteConfiguration := &s3.WebsiteConfiguration{}
-
-	if indexDocument != "" {
-		websiteConfiguration.IndexDocument = &s3.IndexDocument{Suffix: aws.String(indexDocument)}
-	}
-
-	if errorDocument != "" {
-		websiteConfiguration.ErrorDocument = &s3.ErrorDocument{Key: aws.String(errorDocument)}
-	}
-
-	if redirectAllRequestsTo != "" {
-		redirect, err := url.Parse(redirectAllRequestsTo)
-		if err == nil && redirect.Scheme != "" {
-			var redirectHostBuf bytes.Buffer
-			redirectHostBuf.WriteString(redirect.Host)
-			if redirect.Path != "" {
-				redirectHostBuf.WriteString(redirect.Path)
-			}
-			if redirect.RawQuery != "" {
-				redirectHostBuf.WriteString("?")
-				redirectHostBuf.WriteString(redirect.RawQuery)
-			}
-			websiteConfiguration.RedirectAllRequestsTo = &s3.RedirectAllRequestsTo{HostName: aws.String(redirectHostBuf.String()), Protocol: aws.String(redirect.Scheme)}
-		} else {
-			websiteConfiguration.RedirectAllRequestsTo = &s3.RedirectAllRequestsTo{HostName: aws.String(redirectAllRequestsTo)}
-		}
-	}
-
-	if routingRules != "" {
-		var unmarshaledRules []*s3.RoutingRule
-		if err := json.Unmarshal([]byte(routingRules), &unmarshaledRules); err != nil {
-			return err
-		}
-		websiteConfiguration.RoutingRules = unmarshaledRules
-	}
-
-	putInput := &s3.PutBucketWebsiteInput{
-		Bucket:               aws.String(bucket),
-		WebsiteConfiguration: websiteConfiguration,
-	}
-
-	log.Printf("[DEBUG] S3 put bucket website: %#v", putInput)
-
-	_, err := verify.RetryOnAWSCode(s3.ErrCodeNoSuchBucket, func() (interface{}, error) {
-		return conn.PutBucketWebsite(putInput)
-	})
-	if err != nil {
-		return fmt.Errorf("Error putting S3 website: %s", err)
-	}
-
-	return nil
-}
-
-func resourceBucketWebsiteDelete(conn *s3.S3, d *schema.ResourceData) error {
-	bucket := d.Get("bucket").(string)
-	deleteInput := &s3.DeleteBucketWebsiteInput{Bucket: aws.String(bucket)}
-
-	log.Printf("[DEBUG] S3 delete bucket website: %#v", deleteInput)
-
-	_, err := verify.RetryOnAWSCode(s3.ErrCodeNoSuchBucket, func() (interface{}, error) {
-		return conn.DeleteBucketWebsite(deleteInput)
-	})
-	if err != nil {
-		return fmt.Errorf("Error deleting S3 website: %s", err)
-	}
-
-	d.Set("website_endpoint", "")
-	d.Set("website_domain", "")
-
-	return nil
-}
-
 func websiteEndpoint(client *conns.AWSClient, d *schema.ResourceData) (*S3Website, error) {
 	// If the bucket doesn't have a website configuration, return an empty
 	// endpoint
@@ -1843,47 +1684,24 @@ func resourceBucketACLUpdate(conn *s3.S3, d *schema.ResourceData) error {
 	return nil
 }
 
-func resourceBucketVersioningUpdate(conn *s3.S3, d *schema.ResourceData) error {
-	v := d.Get("versioning").([]interface{})
-	bucket := d.Get("bucket").(string)
-	vc := &s3.VersioningConfiguration{}
-
-	if len(v) > 0 {
-		c := v[0].(map[string]interface{})
-
-		if c["enabled"].(bool) {
-			vc.Status = aws.String(s3.BucketVersioningStatusEnabled)
-		} else {
-			vc.Status = aws.String(s3.BucketVersioningStatusSuspended)
-		}
-
-		if c["mfa_delete"].(bool) {
-			vc.MFADelete = aws.String(s3.MFADeleteEnabled)
-		} else {
-			vc.MFADelete = aws.String(s3.MFADeleteDisabled)
-		}
-
-	} else {
-		vc.Status = aws.String(s3.BucketVersioningStatusSuspended)
-	}
-
-	i := &s3.PutBucketVersioningInput{
+func resourceBucketInternalVersioningUpdate(conn *s3.S3, bucket string, versioningConfig *s3.VersioningConfiguration) error {
+	input := &s3.PutBucketVersioningInput{
 		Bucket:                  aws.String(bucket),
-		VersioningConfiguration: vc,
+		VersioningConfiguration: versioningConfig,
 	}
-	log.Printf("[DEBUG] S3 put bucket versioning: %#v", i)
 
 	_, err := verify.RetryOnAWSCode(s3.ErrCodeNoSuchBucket, func() (interface{}, error) {
-		return conn.PutBucketVersioning(i)
+		return conn.PutBucketVersioning(input)
 	})
+
 	if err != nil {
-		return fmt.Errorf("Error putting S3 versioning: %s", err)
+		return fmt.Errorf("error putting S3 versioning for bucket (%s): %w", bucket, err)
 	}
 
 	return nil
 }
 
-func resourceBucketLoggingUpdate(conn *s3.S3, d *schema.ResourceData) error {
+func resourceBucketInternalLoggingUpdate(conn *s3.S3, d *schema.ResourceData) error {
 	logging := d.Get("logging").(*schema.Set).List()
 	bucket := d.Get("bucket").(string)
 	loggingStatus := &s3.BucketLoggingStatus{}
@@ -1962,7 +1780,7 @@ func resourceBucketRequestPayerUpdate(conn *s3.S3, d *schema.ResourceData) error
 	return nil
 }
 
-func resourceBucketServerSideEncryptionConfigurationUpdate(conn *s3.S3, d *schema.ResourceData) error {
+func resourceBucketInternalServerSideEncryptionConfigurationUpdate(conn *s3.S3, d *schema.ResourceData) error {
 	bucket := d.Get("bucket").(string)
 	serverSideEncryptionConfiguration := d.Get("server_side_encryption_configuration").([]interface{})
 	if len(serverSideEncryptionConfiguration) == 0 {
@@ -2029,7 +1847,7 @@ func resourceBucketServerSideEncryptionConfigurationUpdate(conn *s3.S3, d *schem
 	return nil
 }
 
-func resourceBucketObjectLockConfigurationUpdate(conn *s3.S3, d *schema.ResourceData) error {
+func resourceBucketInternalObjectLockConfigurationUpdate(conn *s3.S3, d *schema.ResourceData) error {
 	// S3 Object Lock configuration cannot be deleted, only updated.
 	req := &s3.PutObjectLockConfigurationInput{
 		Bucket:                  aws.String(d.Get("bucket").(string)),
@@ -2404,6 +2222,64 @@ func flattenServerSideEncryptionConfiguration(c *s3.ServerSideEncryptionConfigur
 		"rule": rules,
 	})
 	return encryptionConfiguration
+}
+
+func flattenBucketWebsite(ws *s3.GetBucketWebsiteOutput) ([]interface{}, error) {
+	if ws == nil {
+		return []interface{}{}, nil
+	}
+
+	m := make(map[string]interface{})
+
+	if v := ws.IndexDocument; v != nil {
+		m["index_document"] = aws.StringValue(v.Suffix)
+	}
+
+	if v := ws.ErrorDocument; v != nil {
+		m["error_document"] = aws.StringValue(v.Key)
+	}
+
+	if v := ws.RedirectAllRequestsTo; v != nil {
+		if v.Protocol == nil {
+			m["redirect_all_requests_to"] = aws.StringValue(v.HostName)
+		} else {
+			var host string
+			var path string
+			var query string
+			parsedHostName, err := url.Parse(aws.StringValue(v.HostName))
+			if err == nil {
+				host = parsedHostName.Host
+				path = parsedHostName.Path
+				query = parsedHostName.RawQuery
+			} else {
+				host = aws.StringValue(v.HostName)
+				path = ""
+			}
+
+			m["redirect_all_requests_to"] = (&url.URL{
+				Host:     host,
+				Path:     path,
+				Scheme:   aws.StringValue(v.Protocol),
+				RawQuery: query,
+			}).String()
+		}
+	}
+
+	if v := ws.RoutingRules; v != nil {
+		rr, err := normalizeRoutingRules(v)
+		if err != nil {
+			return nil, fmt.Errorf("error while marshaling routing rules: %w", err)
+		}
+		m["routing_rules"] = rr
+	}
+
+	// We have special handling for the website configuration,
+	// so only return the configuration if there is any
+	if len(m) == 0 {
+		return []interface{}{}, nil
+	}
+
+	return []interface{}{m}, nil
 }
 
 func flattenBucketReplicationConfiguration(r *s3.ReplicationConfiguration) []map[string]interface{} {
@@ -2874,6 +2750,95 @@ func expandS3ObjectLockConfiguration(vConf []interface{}) *s3.ObjectLockConfigur
 	}
 
 	return conf
+}
+
+// Versioning functions
+
+func expandVersioning(l []interface{}) *s3.VersioningConfiguration {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	tfMap, ok := l[0].(map[string]interface{})
+
+	if !ok {
+		return nil
+	}
+
+	output := &s3.VersioningConfiguration{}
+
+	if v, ok := tfMap["enabled"].(bool); ok {
+		if v {
+			output.Status = aws.String(s3.BucketVersioningStatusEnabled)
+		} else {
+			output.Status = aws.String(s3.BucketVersioningStatusSuspended)
+		}
+	}
+
+	if v, ok := tfMap["mfa_delete"].(bool); ok {
+		if v {
+			output.MFADelete = aws.String(s3.MFADeleteEnabled)
+		} else {
+			output.MFADelete = aws.String(s3.MFADeleteDisabled)
+		}
+	}
+
+	return output
+}
+
+func expandVersioningWhenIsNewResource(l []interface{}) *s3.VersioningConfiguration {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	tfMap, ok := l[0].(map[string]interface{})
+
+	if !ok {
+		return nil
+	}
+
+	output := &s3.VersioningConfiguration{}
+
+	// Only set and return a non-nil VersioningConfiguration with at least one of
+	// MFADelete or Status enabled as the PutBucketVersioning API request
+	// does not need to be made for new buckets that don't require versioning.
+	// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/4494
+
+	if v, ok := tfMap["enabled"].(bool); ok && v {
+		output.Status = aws.String(s3.BucketVersioningStatusEnabled)
+	}
+
+	if v, ok := tfMap["mfa_delete"].(bool); ok && v {
+		output.MFADelete = aws.String(s3.MFADeleteEnabled)
+	}
+
+	if output.MFADelete == nil && output.Status == nil {
+		return nil
+	}
+
+	return output
+}
+
+func flattenVersioning(versioning *s3.GetBucketVersioningOutput) []interface{} {
+	if versioning == nil {
+		return []interface{}{}
+	}
+
+	vc := make(map[string]interface{})
+
+	if aws.StringValue(versioning.Status) == s3.BucketVersioningStatusEnabled {
+		vc["enabled"] = true
+	} else {
+		vc["enabled"] = false
+	}
+
+	if aws.StringValue(versioning.MFADelete) == s3.MFADeleteEnabled {
+		vc["mfa_delete"] = true
+	} else {
+		vc["mfa_delete"] = false
+	}
+
+	return []interface{}{vc}
 }
 
 func flattenS3ObjectLockConfiguration(conf *s3.ObjectLockConfiguration) []interface{} {

@@ -7,12 +7,11 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/apigatewayv2"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceIntegrationResponse() *schema.Resource {
@@ -109,7 +108,7 @@ func resourceIntegrationResponseRead(d *schema.ResourceData, meta interface{}) e
 
 	d.Set("content_handling_strategy", resp.ContentHandlingStrategy)
 	d.Set("integration_response_key", resp.IntegrationResponseKey)
-	err = d.Set("response_templates", verify.PointersMapToStringList(resp.ResponseTemplates))
+	err = d.Set("response_templates", flex.PointersMapToStringList(resp.ResponseTemplates))
 	if err != nil {
 		return fmt.Errorf("error setting response_templates: %s", err)
 	}

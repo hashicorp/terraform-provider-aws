@@ -17,7 +17,7 @@ import (
 )
 
 func TestAccKinesisStream_basic(t *testing.T) {
-	var stream kinesis.StreamDescription
+	var stream kinesis.StreamDescriptionSummary
 	resourceName := "aws_kinesis_stream.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -56,7 +56,7 @@ func TestAccKinesisStream_basic(t *testing.T) {
 }
 
 func TestAccKinesisStream_disappears(t *testing.T) {
-	var stream kinesis.StreamDescription
+	var stream kinesis.StreamDescriptionSummary
 	resourceName := "aws_kinesis_stream.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -79,7 +79,7 @@ func TestAccKinesisStream_disappears(t *testing.T) {
 }
 
 func TestAccKinesisStream_createMultipleConcurrentStreams(t *testing.T) {
-	var stream kinesis.StreamDescription
+	var stream kinesis.StreamDescriptionSummary
 	resourceName := "aws_kinesis_stream.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -143,7 +143,7 @@ func TestAccKinesisStream_encryptionWithoutKMSKeyThrowsError(t *testing.T) {
 }
 
 func TestAccKinesisStream_encryption(t *testing.T) {
-	var stream kinesis.StreamDescription
+	var stream kinesis.StreamDescriptionSummary
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_kinesis_stream.test"
 
@@ -186,8 +186,8 @@ func TestAccKinesisStream_encryption(t *testing.T) {
 }
 
 func TestAccKinesisStream_shardCount(t *testing.T) {
-	var stream kinesis.StreamDescription
-	var updatedStream kinesis.StreamDescription
+	var stream kinesis.StreamDescriptionSummary
+	var updatedStream kinesis.StreamDescriptionSummary
 
 	testCheckStreamNotDestroyed := func() resource.TestCheckFunc {
 		return func(*terraform.State) error {
@@ -234,7 +234,7 @@ func TestAccKinesisStream_shardCount(t *testing.T) {
 }
 
 func TestAccKinesisStream_retentionPeriod(t *testing.T) {
-	var stream kinesis.StreamDescription
+	var stream kinesis.StreamDescriptionSummary
 	resourceName := "aws_kinesis_stream.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -278,7 +278,7 @@ func TestAccKinesisStream_retentionPeriod(t *testing.T) {
 }
 
 func TestAccKinesisStream_shardLevelMetrics(t *testing.T) {
-	var stream kinesis.StreamDescription
+	var stream kinesis.StreamDescriptionSummary
 	resourceName := "aws_kinesis_stream.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -330,7 +330,7 @@ func TestAccKinesisStream_shardLevelMetrics(t *testing.T) {
 }
 
 func TestAccKinesisStream_enforceConsumerDeletion(t *testing.T) {
-	var stream kinesis.StreamDescription
+	var stream kinesis.StreamDescriptionSummary
 	resourceName := "aws_kinesis_stream.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -359,7 +359,7 @@ func TestAccKinesisStream_enforceConsumerDeletion(t *testing.T) {
 }
 
 func TestAccKinesisStream_tags(t *testing.T) {
-	var stream kinesis.StreamDescription
+	var stream kinesis.StreamDescriptionSummary
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_kinesis_stream.test"
 
@@ -406,7 +406,7 @@ func TestAccKinesisStream_tags(t *testing.T) {
 }
 
 func TestAccKinesisStream_updateKMSKeyID(t *testing.T) {
-	var stream kinesis.StreamDescription
+	var stream kinesis.StreamDescriptionSummary
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_kinesis_stream.test"
 
@@ -435,7 +435,7 @@ func TestAccKinesisStream_updateKMSKeyID(t *testing.T) {
 }
 
 func TestAccKinesisStream_basicOnDemand(t *testing.T) {
-	var stream kinesis.StreamDescription
+	var stream kinesis.StreamDescriptionSummary
 	resourceName := "aws_kinesis_stream.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -465,7 +465,7 @@ func TestAccKinesisStream_basicOnDemand(t *testing.T) {
 }
 
 func TestAccKinesisStream_switchBetweenProvisionedAndOnDemand(t *testing.T) {
-	var stream kinesis.StreamDescription
+	var stream kinesis.StreamDescriptionSummary
 	resourceName := "aws_kinesis_stream.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -540,7 +540,7 @@ func TestAccKinesisStream_switchBetweenProvisionedAndOnDemand(t *testing.T) {
 }
 
 func TestAccKinesisStream_failOnBadStreamCountAndStreamModeCombination(t *testing.T) {
-	var stream kinesis.StreamDescription
+	var stream kinesis.StreamDescriptionSummary
 	resourceName := "aws_kinesis_stream.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -583,7 +583,7 @@ func TestAccKinesisStream_failOnBadStreamCountAndStreamModeCombination(t *testin
 	})
 }
 
-func testAccCheckKinesisStreamExists(n string, v *kinesis.StreamDescription) resource.TestCheckFunc {
+func testAccCheckKinesisStreamExists(n string, v *kinesis.StreamDescriptionSummary) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).KinesisConn
 
@@ -632,7 +632,7 @@ func testAccCheckKinesisStreamDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccStreamRegisterStreamConsumer(stream *kinesis.StreamDescription, rName string) resource.TestCheckFunc {
+func testAccStreamRegisterStreamConsumer(stream *kinesis.StreamDescriptionSummary, rName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).KinesisConn
 

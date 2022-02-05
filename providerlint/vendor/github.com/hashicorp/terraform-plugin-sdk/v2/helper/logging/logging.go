@@ -1,6 +1,7 @@
 package logging
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -10,31 +11,54 @@ import (
 	"syscall"
 
 	"github.com/hashicorp/logutils"
+	"github.com/hashicorp/terraform-plugin-log/tfsdklog"
 	testing "github.com/mitchellh/go-testing-interface"
 )
 
 // These are the environmental variables that determine if we log, and if
 // we log whether or not the log should go to a file.
 const (
-	EnvLog     = "TF_LOG"      // Set to True
-	EnvLogFile = "TF_LOG_PATH" // Set to a file
+	EnvLog        = "TF_LOG"          // See ValidLevels
+	EnvLogFile    = "TF_LOG_PATH"     // Set to a file
+	EnvAccLogFile = "TF_ACC_LOG_PATH" // Set to a file
 	// EnvLogPathMask splits test log files by name.
 	EnvLogPathMask = "TF_LOG_PATH_MASK"
 )
 
 var ValidLevels = []logutils.LogLevel{"TRACE", "DEBUG", "INFO", "WARN", "ERROR"}
 
-// LogOutput determines where we should send logs (if anywhere) and the log level.
+// LogOutput determines where we should send logs (if anywhere) and the log
+// level. This only effects this log.Print* functions called in the provider
+// under test. Dependency providers for the provider under test will have their
+// logging controlled by Terraform itself and managed with the TF_ACC_LOG_PATH
+// environment variable. Calls to tflog.* will have their output managed by the
+// tfsdklog sink.
 func LogOutput(t testing.T) (logOutput io.Writer, err error) {
 	logOutput = ioutil.Discard
 
 	logLevel := LogLevel()
 	if logLevel == "" {
-		return
+		if os.Getenv(EnvAccLogFile) != "" {
+			// plugintest defaults to TRACE when TF_ACC_LOG_PATH is
+			// set for Terraform and dependency providers of the
+			// provider under test. We should do the same for the
+			// provider under test.
+			logLevel = "TRACE"
+		} else {
+			return
+		}
 	}
 
 	logOutput = os.Stderr
 	if logPath := os.Getenv(EnvLogFile); logPath != "" {
+		var err error
+		logOutput, err = os.OpenFile(logPath, syscall.O_CREAT|syscall.O_RDWR|syscall.O_APPEND, 0666)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if logPath := os.Getenv(EnvAccLogFile); logPath != "" {
 		var err error
 		logOutput, err = os.OpenFile(logPath, syscall.O_CREAT|syscall.O_RDWR|syscall.O_APPEND, 0666)
 		if err != nil {
@@ -113,4 +137,13 @@ func isValidLogLevel(level string) bool {
 	}
 
 	return false
+}
+
+// GetTestLogContext creates a context that is registered to the SDK log sink.
+// This function is for internal usage only and is not supported by the project's
+// compatibility promises.
+func GetTestLogContext(t testing.T) context.Context {
+	ctx := context.Background()
+	ctx = tfsdklog.RegisterTestSink(ctx, t)
+	return ctx
 }
