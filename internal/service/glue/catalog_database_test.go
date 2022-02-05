@@ -36,6 +36,11 @@ func TestAccGlueCatalogDatabase_full(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "location_uri", ""),
 					resource.TestCheckResourceAttr(resourceName, "parameters.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "target_database.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "create_table_default_permission.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "create_table_default_permission.0.permissions.#", "1"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "create_table_default_permission.0.permissions.*", "ALL"),
+					resource.TestCheckResourceAttr(resourceName, "create_table_default_permission.0.principal.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "create_table_default_permission.0.principal.0.data_lake_principal_identifier", "IAM_ALLOWED_PRINCIPALS"),
 				),
 			},
 			{
@@ -64,6 +69,49 @@ func TestAccGlueCatalogDatabase_full(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "parameters.param1", "value1"),
 					resource.TestCheckResourceAttr(resourceName, "parameters.param2", "true"),
 					resource.TestCheckResourceAttr(resourceName, "parameters.param3", "50"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccGlueCatalogDatabase_createTablePermission(t *testing.T) {
+	resourceName := "aws_glue_catalog_database.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckGlueDatabaseDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config:  testAccGlueCatalogDatabasePermissionConfig(rName, "ALTER"),
+				Destroy: false,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGlueCatalogDatabaseExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "create_table_default_permission.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "create_table_default_permission.0.permissions.#", "1"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "create_table_default_permission.0.permissions.*", "ALTER"),
+					resource.TestCheckResourceAttr(resourceName, "create_table_default_permission.0.principal.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "create_table_default_permission.0.principal.0.data_lake_principal_identifier", "IAM_ALLOWED_PRINCIPALS"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config:  testAccGlueCatalogDatabasePermissionConfig(rName, "SELECT"),
+				Destroy: false,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGlueCatalogDatabaseExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "create_table_default_permission.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "create_table_default_permission.0.permissions.#", "1"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "create_table_default_permission.0.permissions.*", "SELECT"),
+					resource.TestCheckResourceAttr(resourceName, "create_table_default_permission.0.principal.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "create_table_default_permission.0.principal.0.data_lake_principal_identifier", "IAM_ALLOWED_PRINCIPALS"),
 				),
 			},
 		},
@@ -218,6 +266,22 @@ resource "aws_glue_catalog_database" "test2" {
   location_uri = "my-location"
 }
 `, rName)
+}
+
+func testAccGlueCatalogDatabasePermissionConfig(rName, permission string) string {
+	return fmt.Sprintf(`
+resource "aws_glue_catalog_database" "test" { 
+  name = %[1]q
+
+  create_table_default_permission {
+    permissions = [%[2]q]
+
+    principal {
+      data_lake_principal_identifier = "IAM_ALLOWED_PRINCIPALS"
+    }
+  }
+}
+`, rName, permission)
 }
 
 func testAccCheckGlueCatalogDatabaseExists(name string) resource.TestCheckFunc {
