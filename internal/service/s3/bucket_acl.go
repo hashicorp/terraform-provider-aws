@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"regexp"
 	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -16,10 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-const (
-	BucketAclSeparator                    = "/"
-	BucketAndExpectedBucketOwnerSeparator = ","
-)
+const BucketAclSeparator = ","
 
 func ResourceBucketAcl() *schema.Resource {
 	return &schema.Resource{
@@ -451,42 +449,59 @@ func BucketACLCreateResourceID(bucket, expectedBucketOwner, acl string) string {
 	}
 
 	if acl == "" {
-		return strings.Join([]string{bucket, expectedBucketOwner}, BucketAndExpectedBucketOwnerSeparator)
+		return strings.Join([]string{bucket, expectedBucketOwner}, BucketAclSeparator)
 	}
 
-	parts := []string{bucket, expectedBucketOwner}
-	id := strings.Join([]string{strings.Join(parts, BucketAndExpectedBucketOwnerSeparator), acl}, BucketAclSeparator)
-
-	return id
+	return strings.Join([]string{bucket, expectedBucketOwner, acl}, BucketAclSeparator)
 }
 
 // BucketACLParseResourceID is a method for parsing the ID string
 // for the bucket name, accountID, and ACL if provided.
 func BucketACLParseResourceID(id string) (string, string, string, error) {
-	idParts := strings.Split(id, BucketAndExpectedBucketOwnerSeparator)
+	// For only  bucket name in the ID  e.g. bucket
+	// ~> Bucket names can consist of only lowercase letters, numbers, dots, and hyphens; Max 63 characters
+	bucketRegex := regexp.MustCompile(`^[a-z0-9.-]{1,63}$`)
+	// For bucket and accountID in the ID e.g. bucket,123456789101
+	// ~> Account IDs must consist of 12 digits
+	bucketAndOwnerRegex := regexp.MustCompile(`^[a-z0-9.-]{1,63},\d{12}$`)
+	// For bucket and ACL in the ID e.g. bucket,public-read
+	// ~> (Canned) ACL values include: private, public-read, public-read-write, authenticated-read, aws-exec-read, and log-delivery-write
+	bucketAndAclRegex := regexp.MustCompile(`^[a-z0-9.-]{1,63},[a-z-]+$`)
+	// For bucket, accountID, and ACL in the ID e.g. bucket,123456789101,public-read
+	bucketOwnerAclRegex := regexp.MustCompile(`^[a-z0-9.-]{1,63},\d{12},[a-z-]+$`)
 
-	// Bucket name and optional ACL
-	if len(idParts) == 1 && idParts[0] != "" {
-		parts := strings.Split(idParts[0], BucketAclSeparator)
-
-		if len(parts) == 1 { // no ACL in ID
-			return parts[0], "", "", nil
-		} else if len(parts) == 2 && parts[0] != "" && parts[1] != "" { // ACL in ID
-			return parts[0], "", parts[1], nil
-		}
+	// Bucket name ONLY
+	if bucketRegex.MatchString(id) {
+		return id, "", "", nil
 	}
 
-	// Bucket name, expected bucket owner (i.e. account ID) and optional ACL
-	if len(idParts) == 2 && idParts[0] != "" && idParts[1] != "" {
-		parts := strings.Split(idParts[1], BucketAclSeparator)
-
-		if len(parts) == 1 { // no ACL in ID
-			return idParts[0], parts[0], "", nil
-		} else if len(parts) == 2 && parts[0] != "" && parts[1] != "" { // ACL in ID
-			return idParts[0], parts[0], parts[1], nil
+	// Bucket and Account ID ONLY
+	if bucketAndOwnerRegex.MatchString(id) {
+		parts := strings.Split(id, BucketAclSeparator)
+		if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
+			return "", "", "", fmt.Errorf("unexpected format for ID (%s), expected BUCKET%sEXPECTED_BUCKET_OWNER", id, BucketAclSeparator)
 		}
+		return parts[0], parts[1], "", nil
 	}
 
-	return "", "", "", fmt.Errorf("unexpected format for ID (%s), expected BUCKET or BUCKET%[2]sEXPECTED_BUCKET_OWNER or BUCKET%[3]sACL "+
-		"or BUCKET%[2]sEXPECTED_BUCKET_OWNER%[3]sACL", id, BucketAndExpectedBucketOwnerSeparator, BucketAclSeparator)
+	// Bucket and ACL ONLY
+	if bucketAndAclRegex.MatchString(id) {
+		parts := strings.Split(id, BucketAclSeparator)
+		if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
+			return "", "", "", fmt.Errorf("unexpected format for ID (%s), expected BUCKET%sACL", id, BucketAclSeparator)
+		}
+		return parts[0], "", parts[1], nil
+	}
+
+	// Bucket, Account ID, and ACL
+	if bucketOwnerAclRegex.MatchString(id) {
+		parts := strings.Split(id, BucketAclSeparator)
+		if len(parts) != 3 || parts[0] == "" || parts[1] == "" || parts[2] == "" {
+			return "", "", "", fmt.Errorf("unexpected format for ID (%s), expected BUCKET%[2]sEXPECTED_BUCKET_OWNER%[2]sACL", id, BucketAclSeparator)
+		}
+		return parts[0], parts[1], parts[2], nil
+	}
+
+	return "", "", "", fmt.Errorf("unexpected format for ID (%s), expected BUCKET or BUCKET%[2]sEXPECTED_BUCKET_OWNER or BUCKET%[2]sACL "+
+		"or BUCKET%[2]sEXPECTED_BUCKET_OWNER%[2]sACL", id, BucketAclSeparator)
 }

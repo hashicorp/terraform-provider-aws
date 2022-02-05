@@ -105,7 +105,7 @@ The `grantee` configuration block supports the following arguments:
 
 In addition to all arguments above, the following attributes are exported:
 
-* `id` - The `bucket` and `expected_bucket_owner` separated by a comma (`,`) if the latter is provided, and the `acl` prefixed with a slash (`/`) if configured.
+* `id` - The `bucket`, `expected_bucket_owner` (if configured), and `acl` (if configured) separated by commas (`,`).
 
 ## Import
 
@@ -115,20 +115,20 @@ S3 bucket ACL can be imported using the `bucket` e.g.,
 $ terraform import aws_s3_bucket_acl.example bucket-name
 ```
 
-S3 bucket ACL can also be imported using the `bucket` and `acl` separated by a slash (`/`) e.g.,
+S3 bucket ACL can also be imported using the `bucket` and `acl` separated by a comma (`,`), e.g.
 
 ```
-$ terraform import aws_s3_bucket_acl.example bucket-name/private
+$ terraform import aws_s3_bucket_acl.example bucket-name,private
 ```
 
-S3 bucket ACL can also be imported using the `bucket` and `expected_bucket_owner` separated by a comma (`,`) e.g.,
+S3 bucket ACL can also be imported using the `bucket` and `expected_bucket_owner` separated by a comma (`,`), e.g.
 
 ```
 $ terraform import aws_s3_bucket_acl.example bucket-name,123456789012
 ```
 
-S3 bucket ACL can also be imported using the `bucket` and `expected_bucket_owner` separated by a comma (`,`) and `acl` prefixed with a slash (`/`) e.g.,
+S3 bucket ACL can also be imported using the `bucket`, `expected_bucket_owner`, and `acl` separated by commas (`,`), e.g.
 
 ```
-$ terraform import aws_s3_bucket_acl.example bucket-name,123456789012/private
+$ terraform import aws_s3_bucket_acl.example bucket-name,123456789012,private
 ```

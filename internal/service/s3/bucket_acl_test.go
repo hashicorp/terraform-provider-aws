@@ -30,13 +30,23 @@ func TestBucketACLParseResourceID(t *testing.T) {
 			ExpectError: true,
 		},
 		{
-			TestName:    "incorrect format with comma separators",
-			InputID:     "test,example,123456789012",
+			TestName:    "incorrect bucket and account ID format with slash separator",
+			InputID:     "test/123456789012",
 			ExpectError: true,
 		},
 		{
-			TestName:    "incorrect format with slash separators",
-			InputID:     "test/example/123456789012",
+			TestName:    "incorrect bucket, account ID, and ACL format with slash separators",
+			InputID:     "test/123456789012/private",
+			ExpectError: true,
+		},
+		{
+			TestName:    "incorrect bucket, account ID, and ACL format with mixed separators",
+			InputID:     "test/123456789012,private",
+			ExpectError: true,
+		},
+		{
+			TestName:    "incorrect bucket, ACL, and account ID format",
+			InputID:     "test,private,123456789012",
 			ExpectError: true,
 		},
 		{
@@ -47,10 +57,45 @@ func TestBucketACLParseResourceID(t *testing.T) {
 			ExpectedBucketOwner: "",
 		},
 		{
+			TestName:            "valid ID with bucket that has hyphens",
+			InputID:             tfs3.BucketACLCreateResourceID("my-example-bucket", "", ""),
+			ExpectedACL:         "",
+			ExpectedBucket:      "my-example-bucket",
+			ExpectedBucketOwner: "",
+		},
+		{
+			TestName:            "valid ID with bucket that has dot and hyphens",
+			InputID:             tfs3.BucketACLCreateResourceID("my-example.bucket", "", ""),
+			ExpectedACL:         "",
+			ExpectedBucket:      "my-example.bucket",
+			ExpectedBucketOwner: "",
+		},
+		{
+			TestName:            "valid ID with bucket that has dots, hyphen, and numbers",
+			InputID:             tfs3.BucketACLCreateResourceID("my-example.bucket.4000", "", ""),
+			ExpectedACL:         "",
+			ExpectedBucket:      "my-example.bucket.4000",
+			ExpectedBucketOwner: "",
+		},
+		{
 			TestName:            "valid ID with bucket and acl",
 			InputID:             tfs3.BucketACLCreateResourceID("example", "", s3.BucketCannedACLPrivate),
 			ExpectedACL:         s3.BucketCannedACLPrivate,
 			ExpectedBucket:      "example",
+			ExpectedBucketOwner: "",
+		},
+		{
+			TestName:            "valid ID with bucket and acl that has hyphens",
+			InputID:             tfs3.BucketACLCreateResourceID("example", "", s3.BucketCannedACLPublicReadWrite),
+			ExpectedACL:         s3.BucketCannedACLPublicReadWrite,
+			ExpectedBucket:      "example",
+			ExpectedBucketOwner: "",
+		},
+		{
+			TestName:            "valid ID with bucket that has dot, hyphen, and number and acl that has hyphens",
+			InputID:             tfs3.BucketACLCreateResourceID("my-example.bucket.4000", "", s3.BucketCannedACLPublicReadWrite),
+			ExpectedACL:         s3.BucketCannedACLPublicReadWrite,
+			ExpectedBucket:      "my-example.bucket.4000",
 			ExpectedBucketOwner: "",
 		},
 		{
@@ -61,17 +106,31 @@ func TestBucketACLParseResourceID(t *testing.T) {
 			ExpectedBucketOwner: "123456789012",
 		},
 		{
-			TestName:            "valid ID with bucket, bucket owner, and 'private' acl",
+			TestName:            "valid ID with bucket that has dot, hyphen, and number and bucket owner",
+			InputID:             tfs3.BucketACLCreateResourceID("my-example.bucket.4000", "123456789012", ""),
+			ExpectedACL:         "",
+			ExpectedBucket:      "my-example.bucket.4000",
+			ExpectedBucketOwner: "123456789012",
+		},
+		{
+			TestName:            "valid ID with bucket, bucket owner, and acl",
 			InputID:             tfs3.BucketACLCreateResourceID("example", "123456789012", s3.BucketCannedACLPrivate),
 			ExpectedACL:         s3.BucketCannedACLPrivate,
 			ExpectedBucket:      "example",
 			ExpectedBucketOwner: "123456789012",
 		},
 		{
-			TestName:            "valid ID with bucket, bucket owner, and 'public-read' acl",
-			InputID:             tfs3.BucketACLCreateResourceID("example", "123456789012", s3.BucketCannedACLPublicRead),
-			ExpectedACL:         s3.BucketCannedACLPublicRead,
+			TestName:            "valid ID with bucket, bucket owner, and acl that has hyphens",
+			InputID:             tfs3.BucketACLCreateResourceID("example", "123456789012", s3.BucketCannedACLPublicReadWrite),
+			ExpectedACL:         s3.BucketCannedACLPublicReadWrite,
 			ExpectedBucket:      "example",
+			ExpectedBucketOwner: "123456789012",
+		},
+		{
+			TestName:            "valid ID with bucket that has dot, hyphen, and numbers, bucket owner, and acl that has hyphens",
+			InputID:             tfs3.BucketACLCreateResourceID("my-example.bucket.4000", "123456789012", s3.BucketCannedACLPublicReadWrite),
+			ExpectedACL:         s3.BucketCannedACLPublicReadWrite,
+			ExpectedBucket:      "my-example.bucket.4000",
 			ExpectedBucketOwner: "123456789012",
 		},
 	}
@@ -89,7 +148,7 @@ func TestBucketACLParseResourceID(t *testing.T) {
 			}
 
 			if gotAcl != testCase.ExpectedACL {
-				t.Errorf("got bucket %s, expected %s", gotAcl, testCase.ExpectedACL)
+				t.Errorf("got ACL %s, expected %s", gotAcl, testCase.ExpectedACL)
 			}
 
 			if gotBucket != testCase.ExpectedBucket {
