@@ -2126,19 +2126,19 @@ func flattenBucketCorsRules(rules []*s3.CORSRule) []interface{} {
 		m := make(map[string]interface{})
 
 		if len(rule.AllowedHeaders) > 0 {
-			m["allowed_headers"] = flex.FlattenStringSet(rule.AllowedHeaders)
+			m["allowed_headers"] = flex.FlattenStringList(rule.AllowedHeaders)
 		}
 
 		if len(rule.AllowedMethods) > 0 {
-			m["allowed_methods"] = flex.FlattenStringSet(rule.AllowedMethods)
+			m["allowed_methods"] = flex.FlattenStringList(rule.AllowedMethods)
 		}
 
 		if len(rule.AllowedOrigins) > 0 {
-			m["allowed_origins"] = flex.FlattenStringSet(rule.AllowedOrigins)
+			m["allowed_origins"] = flex.FlattenStringList(rule.AllowedOrigins)
 		}
 
 		if len(rule.ExposeHeaders) > 0 {
-			m["expose_headers"] = flex.FlattenStringSet(rule.ExposeHeaders)
+			m["expose_headers"] = flex.FlattenStringList(rule.ExposeHeaders)
 		}
 
 		if rule.MaxAgeSeconds != nil {
