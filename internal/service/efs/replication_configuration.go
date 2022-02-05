@@ -49,15 +49,14 @@ func ResourceReplicationConfiguration() *schema.Resource {
 							Type:     schema.TypeString,
 							Optional: true,
 							ForceNew: true,
-							Computed: true,
 						},
 						// TODO do we really want this one? Causes TF to grump
 						// that it changed outside of Terraform and I'm not sure
 						// why we'd ever need it in the state
-						"last_replicated_timestamp": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
+						//"last_replicated_timestamp": {
+						//	Type:     schema.TypeString,
+						//	Computed: true,
+						//},
 						"region": {
 							Type:         schema.TypeString,
 							Optional:     true,
@@ -73,6 +72,10 @@ func ResourceReplicationConfiguration() *schema.Resource {
 				},
 			},
 			"original_source_file_system_arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"source_file_system_arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -130,15 +133,27 @@ func resourceReplicationConfigurationRead(d *schema.ResourceData, meta interface
 	}
 
 	replication := output.Replications[0] //TODO error checking and such
+	destination := flattenEfsReplicationConfigurationDestination(replication.Destinations[0])
+	dests := d.Get("destinations").([]interface{})
+	dest := dests[0].(map[string]interface{})
 
-	if err := d.Set("destinations", flattenEfsReplicationConfigurationDestinations(replication.Destinations)); err != nil {
+	if v, ok := dest["availability_zone_name"]; ok {
+		destination["availability_zone_name"] = v
+	}
+
+	if v, ok := dest["kms_key_id"]; ok {
+		destination["kms_key_id"] = v
+	}
+
+	if err := d.Set("destinations", []interface{}{destination}); err != nil {
 		return fmt.Errorf("error setting destinations: %w", err)
 	}
 
 	d.Set("creation_time", aws.TimeValue(replication.CreationTime).String())
 	d.Set("original_source_file_system_arn", replication.OriginalSourceFileSystemArn)
-	d.Set("source_file_system_region", replication.SourceFileSystemRegion)
+	d.Set("source_file_system_arn", replication.SourceFileSystemArn)
 	d.Set("source_file_system_id", replication.SourceFileSystemId)
+	d.Set("source_file_system_region", replication.SourceFileSystemRegion)
 
 	return nil
 }
@@ -195,37 +210,25 @@ func expandEfsReplicationConfigurationDestinations(l []interface{}) []*efs.Desti
 	m := l[0].(map[string]interface{})
 
 	if v, ok := m["availability_zone_name"]; ok && v != "" {
-		log.Printf("[DEBUG] Setting destination.AvailabilityZoneName to %s", aws.String(v.(string)))
 		destination.AvailabilityZoneName = aws.String(v.(string))
 	}
 
 	if v, ok := m["kms_key_id"]; ok && v != "" {
-		log.Printf("[DEBUG] Setting destination.KmsKeyId to %s", aws.String(v.(string)))
 		destination.KmsKeyId = aws.String(v.(string))
 	}
 
 	if v, ok := m["region"]; ok && v != "" {
-		log.Printf("[DEBUG] Setting destination.Region to %s", aws.String(v.(string)))
 		destination.Region = aws.String(v.(string))
 	}
 
 	return []*efs.DestinationToCreate{destination}
 }
 
-func flattenEfsReplicationConfigurationDestinations(destinations []*efs.Destination) []interface{} {
-	if len(destinations) == 0 || destinations[0] == nil {
-		return []interface{}{}
-	}
-
-	destination := destinations[0]
+func flattenEfsReplicationConfigurationDestination(destination *efs.Destination) map[string]interface{} {
 	m := map[string]interface{}{}
 
 	if destination.FileSystemId != nil {
 		m["file_system_id"] = destination.FileSystemId
-	}
-
-	if destination.LastReplicatedTimestamp != nil {
-		m["last_replicated_timestamp"] = aws.TimeValue(destination.LastReplicatedTimestamp).String()
 	}
 
 	if destination.Region != nil {
@@ -236,5 +239,5 @@ func flattenEfsReplicationConfigurationDestinations(destinations []*efs.Destinat
 		m["status"] = destination.Status
 	}
 
-	return []interface{}{m}
+	return m
 }
