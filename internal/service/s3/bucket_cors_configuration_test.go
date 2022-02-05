@@ -301,12 +301,6 @@ func testAccBucketCorsConfigurationBasicConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
-
-  lifecycle {
-    ignore_changes = [
-      cors_rule
-    ]
-  }
 }
 
 resource "aws_s3_bucket_cors_configuration" "test" {
@@ -324,12 +318,6 @@ func testAccBucketCorsConfigurationCompleteConfig_SingleRule(rName string) strin
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
-
-  lifecycle {
-    ignore_changes = [
-      cors_rule
-    ]
-  }
 }
 
 resource "aws_s3_bucket_cors_configuration" "test" {
@@ -351,12 +339,6 @@ func testAccBucketCorsConfigurationConfig_MultipleRules(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
-
-  lifecycle {
-    ignore_changes = [
-      cors_rule
-    ]
-  }
 }
 
 resource "aws_s3_bucket_cors_configuration" "test" {
