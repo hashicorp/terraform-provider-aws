@@ -19,12 +19,16 @@ Provides a S3 bucket resource.
 ```terraform
 resource "aws_s3_bucket" "b" {
   bucket = "my-tf-test-bucket"
-  acl    = "private"
 
   tags = {
     Name        = "My bucket"
     Environment = "Dev"
   }
+}
+
+resource "aws_s3_bucket_acl" "example" {
+  bucket = aws_s3_bucket.b.id
+  acl    = "private"
 }
 ```
 
@@ -38,7 +42,6 @@ See the [`aws_s3_bucket_website_configuration` resource](s3_bucket_website_confi
 ```terraform
 resource "aws_s3_bucket" "b" {
   bucket = "s3-website-test.hashicorp.com"
-  acl    = "public-read"
 
   cors_rule {
     allowed_headers = ["*"]
@@ -48,6 +51,11 @@ resource "aws_s3_bucket" "b" {
     max_age_seconds = 3000
   }
 }
+
+resource "aws_s3_bucket_acl" "example" {
+  bucket = aws_s3_bucket.b.id
+  acl    = "public-read"
+}
 ```
 
 ### Using versioning
@@ -55,11 +63,15 @@ resource "aws_s3_bucket" "b" {
 ```terraform
 resource "aws_s3_bucket" "b" {
   bucket = "my-tf-test-bucket"
-  acl    = "private"
 
   versioning {
     enabled = true
   }
+}
+
+resource "aws_s3_bucket_acl" "example" {
+  bucket = aws_s3_bucket.b.id
+  acl    = "private"
 }
 ```
 
@@ -68,17 +80,26 @@ resource "aws_s3_bucket" "b" {
 ```terraform
 resource "aws_s3_bucket" "log_bucket" {
   bucket = "my-tf-log-bucket"
+}
+
+resource "aws_s3_bucket_acl" "log_bucket_acl" {
+  bucket = aws_s3_bucket.log_bucket.id
   acl    = "log-delivery-write"
 }
 
 resource "aws_s3_bucket" "b" {
   bucket = "my-tf-test-bucket"
-  acl    = "private"
 
   logging {
-    target_bucket = aws_s3_bucket.log_bucket.id
+    # The log bucket must have its ACL configured first
+    target_bucket = aws_s3_bucket_acl.log_bucket_acl.bucket
     target_prefix = "log/"
   }
+}
+
+resource "aws_s3_bucket_acl" "b_bucket_acl" {
+  bucket = aws_s3_bucket.b.id
+  acl    = "private"
 }
 ```
 
@@ -87,7 +108,6 @@ resource "aws_s3_bucket" "b" {
 ```terraform
 resource "aws_s3_bucket" "bucket" {
   bucket = "my-bucket"
-  acl    = "private"
 
   lifecycle_rule {
     id      = "log"
@@ -126,9 +146,13 @@ resource "aws_s3_bucket" "bucket" {
   }
 }
 
+resource "aws_s3_bucket_acl" "bucket_acl" {
+  bucket = aws_s3_bucket.bucket.id
+  acl    = "private"
+}
+
 resource "aws_s3_bucket" "versioning_bucket" {
   bucket = "my-versioning-bucket"
-  acl    = "private"
 
   versioning {
     enabled = true
@@ -152,6 +176,11 @@ resource "aws_s3_bucket" "versioning_bucket" {
       days = 90
     }
   }
+}
+
+resource "aws_s3_bucket_acl" "versioning_bucket_acl" {
+  bucket = aws_s3_bucket.versioning_bucket.id
+  acl    = "private"
 }
 ```
 
@@ -247,7 +276,6 @@ resource "aws_s3_bucket" "destination" {
 resource "aws_s3_bucket" "source" {
   provider = aws.central
   bucket   = "tf-test-bucket-source-12345"
-  acl      = "private"
 
   versioning {
     enabled = true
@@ -279,6 +307,11 @@ resource "aws_s3_bucket" "source" {
       }
     }
   }
+}
+
+resource "aws_s3_bucket_acl" "source_bucket_acl" {
+  bucket = aws_s3_bucket.source.id
+  acl    = "private"
 }
 ```
 

@@ -497,158 +497,6 @@ func TestAccS3Bucket_Security_policy(t *testing.T) {
 	})
 }
 
-func TestAccS3Bucket_Security_updateACL(t *testing.T) {
-	bucketName := sdkacctest.RandomWithPrefix("tf-test-bucket")
-	resourceName := "aws_s3_bucket.bucket"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckBucketDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccBucketWithACLConfig(bucketName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "acl", "public-read"),
-				),
-			},
-			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy", "acl", "grant"},
-			},
-			{
-				Config: testAccBucketWithACLUpdateConfig(bucketName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "acl", "private"),
-				),
-			},
-		},
-	})
-}
-
-func TestAccS3Bucket_Security_updateGrant(t *testing.T) {
-	bucketName := sdkacctest.RandomWithPrefix("tf-test-bucket")
-	resourceName := "aws_s3_bucket.bucket"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckBucketDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccBucketWithGrantsConfig(bucketName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "grant.#", "1"),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "grant.*", map[string]string{
-						"permissions.#": "2",
-						"type":          "CanonicalUser",
-					}),
-					resource.TestCheckTypeSetElemAttr(resourceName, "grant.*.permissions.*", "FULL_CONTROL"),
-					resource.TestCheckTypeSetElemAttr(resourceName, "grant.*.permissions.*", "WRITE"),
-				),
-			},
-			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy", "acl"},
-			},
-			{
-				Config: testAccBucketWithGrantsUpdateConfig(bucketName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "grant.#", "2"),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "grant.*", map[string]string{
-						"permissions.#": "1",
-						"type":          "CanonicalUser",
-					}),
-					resource.TestCheckTypeSetElemAttr(resourceName, "grant.*.permissions.*", "READ"),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "grant.*", map[string]string{
-						"permissions.#": "1",
-						"type":          "Group",
-						"uri":           "http://acs.amazonaws.com/groups/s3/LogDelivery",
-					}),
-					resource.TestCheckTypeSetElemAttr(resourceName, "grant.*.permissions.*", "READ_ACP"),
-				),
-			},
-			{
-				Config: testAccBucketConfig_Basic(bucketName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "grant.#", "0"),
-				),
-			},
-		},
-	})
-}
-
-func TestAccS3Bucket_Security_aclToGrant(t *testing.T) {
-	bucketName := sdkacctest.RandomWithPrefix("tf-test-bucket")
-	resourceName := "aws_s3_bucket.bucket"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckBucketDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccBucketWithACLConfig(bucketName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "acl", "public-read"),
-					resource.TestCheckResourceAttr(resourceName, "grant.#", "0"),
-				),
-			},
-			{
-				Config: testAccBucketWithGrantsConfig(bucketName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "grant.#", "1"),
-					// check removed ACLs
-				),
-			},
-		},
-	})
-}
-
-func TestAccS3Bucket_Security_grantToACL(t *testing.T) {
-	bucketName := sdkacctest.RandomWithPrefix("tf-test-bucket")
-	resourceName := "aws_s3_bucket.bucket"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckBucketDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccBucketWithGrantsConfig(bucketName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "grant.#", "1"),
-				),
-			},
-			{
-				Config: testAccBucketWithACLConfig(bucketName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "acl", "public-read"),
-					resource.TestCheckResourceAttr(resourceName, "grant.#", "0"),
-					// check removed grants
-				),
-			},
-		},
-	})
-}
-
 func TestAccS3Bucket_Security_enableDefaultEncryptionWhenTypical(t *testing.T) {
 	bucketName := sdkacctest.RandomWithPrefix("tf-test-bucket")
 	resourceName := "aws_s3_bucket.arbitrary"
@@ -3240,8 +3088,18 @@ func testAccBucketConfig_withNoTags(bucketName string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "bucket" {
   bucket        = %[1]q
-  acl           = "private"
   force_destroy = false
+
+  lifecycle {
+    ignore_changes = [
+      grant,
+    ]
+  }
+}
+
+resource "aws_s3_bucket_acl" "test" {
+  bucket = aws_s3_bucket.bucket.id
+  acl    = "private"
 }
 `, bucketName)
 }
@@ -3250,7 +3108,6 @@ func testAccBucketConfig_withTags(bucketName string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "bucket" {
   bucket        = %[1]q
-  acl           = "private"
   force_destroy = false
 
   tags = {
@@ -3258,6 +3115,17 @@ resource "aws_s3_bucket" "bucket" {
     Key2 = "BBB"
     Key3 = "CCC"
   }
+
+  lifecycle {
+    ignore_changes = [
+      grant,
+    ]
+  }
+}
+
+resource "aws_s3_bucket_acl" "test" {
+  bucket = aws_s3_bucket.bucket.id
+  acl    = "private"
 }
 `, bucketName)
 }
@@ -3266,7 +3134,6 @@ func testAccBucketConfig_withUpdatedTags(bucketName string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "bucket" {
   bucket        = %[1]q
-  acl           = "private"
   force_destroy = false
 
   tags = {
@@ -3275,6 +3142,17 @@ resource "aws_s3_bucket" "bucket" {
     Key4 = "DDD"
     Key5 = "EEE"
   }
+
+  lifecycle {
+    ignore_changes = [
+      grant,
+    ]
+  }
+}
+
+resource "aws_s3_bucket_acl" "test" {
+  bucket = aws_s3_bucket.bucket.id
+  acl    = "private"
 }
 `, bucketName)
 }
@@ -3283,68 +3161,128 @@ func testAccMultiBucketWithTagsConfig(randInt int) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "bucket1" {
   bucket        = "tf-test-bucket-1-%[1]d"
-  acl           = "private"
   force_destroy = true
 
   tags = {
     Name        = "tf-test-bucket-1-%[1]d"
     Environment = "%[1]d"
   }
+
+  lifecycle {
+    ignore_changes = [
+      grant,
+    ]
+  }
+}
+
+resource "aws_s3_bucket_acl" "test1" {
+  bucket = aws_s3_bucket.bucket1.id
+  acl    = "private"
 }
 
 resource "aws_s3_bucket" "bucket2" {
   bucket        = "tf-test-bucket-2-%[1]d"
-  acl           = "private"
   force_destroy = true
 
   tags = {
     Name        = "tf-test-bucket-2-%[1]d"
     Environment = "%[1]d"
   }
+
+  lifecycle {
+    ignore_changes = [
+      grant,
+    ]
+  }
+}
+
+resource "aws_s3_bucket_acl" "test2" {
+  bucket = aws_s3_bucket.bucket2.id
+  acl    = "private"
 }
 
 resource "aws_s3_bucket" "bucket3" {
   bucket        = "tf-test-bucket-3-%[1]d"
-  acl           = "private"
   force_destroy = true
 
   tags = {
     Name        = "tf-test-bucket-3-%[1]d"
     Environment = "%[1]d"
   }
+
+  lifecycle {
+    ignore_changes = [
+      grant,
+    ]
+  }
+}
+
+resource "aws_s3_bucket_acl" "test3" {
+  bucket = aws_s3_bucket.bucket3.id
+  acl    = "private"
 }
 
 resource "aws_s3_bucket" "bucket4" {
   bucket        = "tf-test-bucket-4-%[1]d"
-  acl           = "private"
   force_destroy = true
 
   tags = {
     Name        = "tf-test-bucket-4-%[1]d"
     Environment = "%[1]d"
   }
+
+  lifecycle {
+    ignore_changes = [
+      grant,
+    ]
+  }
+}
+
+resource "aws_s3_bucket_acl" "test4" {
+  bucket = aws_s3_bucket.bucket4.id
+  acl    = "private"
 }
 
 resource "aws_s3_bucket" "bucket5" {
   bucket        = "tf-test-bucket-5-%[1]d"
-  acl           = "private"
   force_destroy = true
 
   tags = {
     Name        = "tf-test-bucket-5-%[1]d"
     Environment = "%[1]d"
   }
+
+  lifecycle {
+    ignore_changes = [
+      grant,
+    ]
+  }
+}
+
+resource "aws_s3_bucket_acl" "test5" {
+  bucket = aws_s3_bucket.bucket5.id
+  acl    = "private"
 }
 
 resource "aws_s3_bucket" "bucket6" {
   bucket        = "tf-test-bucket-6-%[1]d"
-  acl           = "private"
   force_destroy = true
 
   tags = {
     Name        = "tf-test-bucket-6-%[1]d"
     Environment = "%[1]d"
   }
+
+  lifecycle {
+    ignore_changes = [
+      grant,
+    ]
+  }
+}
+
+resource "aws_s3_bucket_acl" "test6" {
+  bucket = aws_s3_bucket.bucket6.id
+  acl    = "private"
 }
 `, randInt)
 }
@@ -3389,8 +3327,18 @@ func testAccBucketWithPolicyConfig(bucketName, partition string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "bucket" {
   bucket = %[1]q
-  acl    = "public-read"
   policy = %[2]s
+
+  lifecycle {
+    ignore_changes = [
+      grant,
+    ]
+  }
+}
+
+resource "aws_s3_bucket_acl" "test" {
+  bucket = aws_s3_bucket.bucket.id
+  acl    = "public-read"
 }
 `, bucketName, strconv.Quote(testAccBucketPolicy(bucketName, partition)))
 }
@@ -3399,6 +3347,16 @@ func testAccBucketDestroyedConfig(bucketName string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "bucket" {
   bucket = %[1]q
+
+  lifecycle {
+    ignore_changes = [
+      grant,
+    ]
+  }
+}
+
+resource "aws_s3_bucket_acl" "test" {
+  bucket = aws_s3_bucket.bucket.id
   acl    = "public-read"
 }
 `, bucketName)
@@ -3493,8 +3451,18 @@ func testAccBucketWithEmptyPolicyConfig(bucketName string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "bucket" {
   bucket = %[1]q
-  acl    = "public-read"
   policy = ""
+
+  lifecycle {
+    ignore_changes = [
+      grant,
+    ]
+  }
+}
+
+resource "aws_s3_bucket_acl" "test" {
+  bucket = aws_s3_bucket.bucket.id
+  acl    = "public-read"
 }
 `, bucketName)
 }
@@ -3568,77 +3536,41 @@ resource "aws_s3_bucket" "bucket" {
 `, bucketName)
 }
 
-func testAccBucketWithACLConfig(bucketName string) string {
-	return fmt.Sprintf(`
-resource "aws_s3_bucket" "bucket" {
-  bucket = %[1]q
-  acl    = "public-read"
-}
-`, bucketName)
-}
-
-func testAccBucketWithACLUpdateConfig(bucketName string) string {
-	return fmt.Sprintf(`
-resource "aws_s3_bucket" "bucket" {
-  bucket = %[1]q
-  acl    = "private"
-}
-`, bucketName)
-}
-
-func testAccBucketWithGrantsConfig(bucketName string) string {
-	return fmt.Sprintf(`
-data "aws_canonical_user_id" "current" {}
-
-resource "aws_s3_bucket" "bucket" {
-  bucket = %[1]q
-
-  grant {
-    id          = data.aws_canonical_user_id.current.id
-    type        = "CanonicalUser"
-    permissions = ["FULL_CONTROL", "WRITE"]
-  }
-}
-`, bucketName)
-}
-
-func testAccBucketWithGrantsUpdateConfig(bucketName string) string {
-	return fmt.Sprintf(`
-data "aws_canonical_user_id" "current" {}
-
-resource "aws_s3_bucket" "bucket" {
-  bucket = %[1]q
-
-  grant {
-    id          = data.aws_canonical_user_id.current.id
-    type        = "CanonicalUser"
-    permissions = ["READ"]
-  }
-
-  grant {
-    type        = "Group"
-    permissions = ["READ_ACP"]
-    uri         = "http://acs.amazonaws.com/groups/s3/LogDelivery"
-  }
-}
-`, bucketName)
-}
-
 func testAccBucketWithLoggingConfig(bucketName string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "log_bucket" {
   bucket = "%[1]s-log"
+
+  lifecycle {
+    ignore_changes = [
+      grant,
+    ]
+  }
+}
+
+resource "aws_s3_bucket_acl" "log_bucket" {
+  bucket = aws_s3_bucket.log_bucket.id
   acl    = "log-delivery-write"
 }
 
 resource "aws_s3_bucket" "bucket" {
   bucket = %[1]q
-  acl    = "private"
 
   logging {
     target_bucket = aws_s3_bucket.log_bucket.id
     target_prefix = "log/"
   }
+
+  lifecycle {
+    ignore_changes = [
+      grant,
+    ]
+  }
+}
+
+resource "aws_s3_bucket_acl" "test" {
+  bucket = aws_s3_bucket.bucket.id
+  acl    = "private"
 }
 `, bucketName)
 }
@@ -3647,7 +3579,6 @@ func testAccBucketWithLifecycleConfig(bucketName string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "bucket" {
   bucket = %[1]q
-  acl    = "private"
 
   lifecycle_rule {
     id      = "id1"
@@ -3748,6 +3679,17 @@ resource "aws_s3_bucket" "bucket" {
       storage_class = "GLACIER"
     }
   }
+
+  lifecycle {
+    ignore_changes = [
+      grant,
+    ]
+  }
+}
+
+resource "aws_s3_bucket_acl" "test" {
+  bucket = aws_s3_bucket.bucket.id
+  acl    = "private"
 }
 `, bucketName)
 }
@@ -3756,7 +3698,6 @@ func testAccBucketWithLifecycleExpireMarkerConfig(bucketName string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "bucket" {
   bucket = %[1]q
-  acl    = "private"
 
   lifecycle_rule {
     id      = "id1"
@@ -3767,6 +3708,17 @@ resource "aws_s3_bucket" "bucket" {
       expired_object_delete_marker = "true"
     }
   }
+
+  lifecycle {
+    ignore_changes = [
+      grant,
+    ]
+  }
+}
+
+resource "aws_s3_bucket_acl" "test" {
+  bucket = aws_s3_bucket.bucket.id
+  acl    = "private"
 }
 `, bucketName)
 }
@@ -3775,7 +3727,6 @@ func testAccBucketWithVersioningLifecycleConfig(bucketName string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "bucket" {
   bucket = %[1]q
-  acl    = "private"
 
   versioning {
     enabled = false
@@ -3821,6 +3772,17 @@ resource "aws_s3_bucket" "bucket" {
       storage_class = "GLACIER"
     }
   }
+
+  lifecycle {
+    ignore_changes = [
+      grant,
+    ]
+  }
+}
+
+resource "aws_s3_bucket_acl" "test" {
+  bucket = aws_s3_bucket.bucket.id
+  acl    = "private"
 }
 `, bucketName)
 }
@@ -3893,11 +3855,21 @@ func testAccBucketReplicationConfig(randInt int) string {
 	return testAccBucketReplicationBasicConfig(randInt) + fmt.Sprintf(`
 resource "aws_s3_bucket" "bucket" {
   bucket = "tf-test-bucket-%[1]d"
-  acl    = "private"
 
   versioning {
     enabled = true
   }
+
+  lifecycle {
+    ignore_changes = [
+      grant,
+    ]
+  }
+}
+
+resource "aws_s3_bucket_acl" "test" {
+  bucket = aws_s3_bucket.bucket.id
+  acl    = "private"
 }
 `, randInt)
 }
@@ -3906,7 +3878,6 @@ func testAccBucketReplicationWithConfigurationConfig(randInt int, storageClass s
 	return testAccBucketReplicationBasicConfig(randInt) + fmt.Sprintf(`
 resource "aws_s3_bucket" "bucket" {
   bucket = "tf-test-bucket-%[1]d"
-  acl    = "private"
 
   versioning {
     enabled = true
@@ -3926,6 +3897,17 @@ resource "aws_s3_bucket" "bucket" {
       }
     }
   }
+
+  lifecycle {
+    ignore_changes = [
+      grant,
+    ]
+  }
+}
+
+resource "aws_s3_bucket_acl" "test" {
+  bucket = aws_s3_bucket.bucket.id
+  acl    = "private"
 }
 `, randInt, storageClass)
 }
@@ -3936,7 +3918,6 @@ func testAccBucketReplicationWithReplicationConfigurationWithRTCConfig(randInt i
 		fmt.Sprintf(`
 resource "aws_s3_bucket" "bucket" {
   bucket = "tf-test-bucket-rtc-%[1]d"
-  acl    = "private"
   versioning {
     enabled = true
   }
@@ -3962,6 +3943,17 @@ resource "aws_s3_bucket" "bucket" {
       }
     }
   }
+
+  lifecycle {
+    ignore_changes = [
+      grant,
+    ]
+  }
+}
+
+resource "aws_s3_bucket_acl" "test" {
+  bucket = aws_s3_bucket.bucket.id
+  acl    = "private"
 }
 `, randInt, minutes))
 }
@@ -3972,7 +3964,6 @@ func testAccBucketReplicationWithReplicationConfigurationWithRTCNoMinutesConfig(
 		fmt.Sprintf(`
 resource "aws_s3_bucket" "bucket" {
   bucket = "tf-test-bucket-rtc-no-minutes-%[1]d"
-  acl    = "private"
   versioning {
     enabled = true
   }
@@ -3994,6 +3985,17 @@ resource "aws_s3_bucket" "bucket" {
       }
     }
   }
+
+  lifecycle {
+    ignore_changes = [
+      grant,
+    ]
+  }
+}
+
+resource "aws_s3_bucket_acl" "test" {
+  bucket = aws_s3_bucket.bucket.id
+  acl    = "private"
 }
 `, randInt))
 }
@@ -4004,7 +4006,6 @@ func testAccBucketReplicationWithReplicationConfigurationWithRTCNoStatusConfig(r
 		fmt.Sprintf(`
 resource "aws_s3_bucket" "bucket" {
   bucket = "tf-test-bucket-rtc-no-minutes-%[1]d"
-  acl    = "private"
   versioning {
     enabled = true
   }
@@ -4026,6 +4027,17 @@ resource "aws_s3_bucket" "bucket" {
       }
     }
   }
+
+  lifecycle {
+    ignore_changes = [
+      grant,
+    ]
+  }
+}
+
+resource "aws_s3_bucket_acl" "test" {
+  bucket = aws_s3_bucket.bucket.id
+  acl    = "private"
 }
 `, randInt))
 }
@@ -4036,7 +4048,6 @@ func testAccBucketReplicationWithReplicationConfigurationWithRTCNoConfigConfig(r
 		fmt.Sprintf(`
 resource "aws_s3_bucket" "bucket" {
   bucket = "tf-test-bucket-rtc-no-config-%[1]d"
-  acl    = "private"
   versioning {
     enabled = true
   }
@@ -4056,6 +4067,17 @@ resource "aws_s3_bucket" "bucket" {
       }
     }
   }
+
+  lifecycle {
+    ignore_changes = [
+      grant,
+    ]
+  }
+}
+
+resource "aws_s3_bucket_acl" "test" {
+  bucket = aws_s3_bucket.bucket.id
+  acl    = "private"
 }
 `, randInt))
 }
@@ -4084,7 +4106,6 @@ resource "aws_s3_bucket" "destination3" {
 
 resource "aws_s3_bucket" "bucket" {
   bucket = "tf-test-bucket-%[1]d"
-  acl    = "private"
 
   versioning {
     enabled = true
@@ -4132,6 +4153,17 @@ resource "aws_s3_bucket" "bucket" {
       }
     }
   }
+
+  lifecycle {
+    ignore_changes = [
+      grant,
+    ]
+  }
+}
+
+resource "aws_s3_bucket_acl" "test" {
+  bucket = aws_s3_bucket.bucket.id
+  acl    = "private"
 }
 `, randInt))
 }
@@ -4160,7 +4192,6 @@ resource "aws_s3_bucket" "destination3" {
 
 resource "aws_s3_bucket" "bucket" {
   bucket = "tf-test-bucket-%[1]d"
-  acl    = "private"
 
   versioning {
     enabled = true
@@ -4220,6 +4251,17 @@ resource "aws_s3_bucket" "bucket" {
       }
     }
   }
+
+  lifecycle {
+    ignore_changes = [
+      grant,
+    ]
+  }
+}
+
+resource "aws_s3_bucket_acl" "test" {
+  bucket = aws_s3_bucket.bucket.id
+  acl    = "private"
 }
 `, randInt))
 }
@@ -4239,7 +4281,6 @@ resource "aws_s3_bucket" "destination2" {
 
 resource "aws_s3_bucket" "bucket" {
   bucket = "tf-test-bucket-%[1]d"
-  acl    = "private"
 
   versioning {
     enabled = true
@@ -4280,6 +4321,17 @@ resource "aws_s3_bucket" "bucket" {
       }
     }
   }
+
+  lifecycle {
+    ignore_changes = [
+      grant,
+    ]
+  }
+}
+
+resource "aws_s3_bucket_acl" "test" {
+  bucket = aws_s3_bucket.bucket.id
+  acl    = "private"
 }
 `, randInt))
 }
@@ -4294,7 +4346,6 @@ resource "aws_kms_key" "replica" {
 
 resource "aws_s3_bucket" "bucket" {
   bucket = "tf-test-bucket-%[1]d"
-  acl    = "private"
 
   versioning {
     enabled = true
@@ -4321,6 +4372,17 @@ resource "aws_s3_bucket" "bucket" {
       }
     }
   }
+
+  lifecycle {
+    ignore_changes = [
+      grant,
+    ]
+  }
+}
+
+resource "aws_s3_bucket_acl" "test" {
+  bucket = aws_s3_bucket.bucket.id
+  acl    = "private"
 }
 `, randInt)
 }
@@ -4331,7 +4393,6 @@ data "aws_caller_identity" "current" {}
 
 resource "aws_s3_bucket" "bucket" {
   bucket = "tf-test-bucket-%[1]d"
-  acl    = "private"
 
   versioning {
     enabled = true
@@ -4356,6 +4417,17 @@ resource "aws_s3_bucket" "bucket" {
       }
     }
   }
+
+  lifecycle {
+    ignore_changes = [
+      grant,
+    ]
+  }
+}
+
+resource "aws_s3_bucket_acl" "test" {
+  bucket = aws_s3_bucket.bucket.id
+  acl    = "private"
 }
 `, randInt)
 }
@@ -4365,7 +4437,6 @@ func testAccBucketReplicationConfigurationRulesDestinationConfig(randInt int) st
 data "aws_caller_identity" "current" {}
 
 resource "aws_s3_bucket" "bucket" {
-  acl    = "private"
   bucket = "tf-test-bucket-%[1]d"
 
   replication_configuration {
@@ -4387,6 +4458,17 @@ resource "aws_s3_bucket" "bucket" {
   versioning {
     enabled = true
   }
+
+  lifecycle {
+    ignore_changes = [
+      grant,
+    ]
+  }
+}
+
+resource "aws_s3_bucket_acl" "test" {
+  bucket = aws_s3_bucket.bucket.id
+  acl    = "private"
 }
 `, randInt)
 }
@@ -4403,7 +4485,6 @@ resource "aws_kms_key" "replica" {
 
 resource "aws_s3_bucket" "bucket" {
   bucket = "tf-test-bucket-%[1]d"
-  acl    = "private"
 
   versioning {
     enabled = true
@@ -4435,6 +4516,17 @@ resource "aws_s3_bucket" "bucket" {
       }
     }
   }
+
+  lifecycle {
+    ignore_changes = [
+      grant,
+    ]
+  }
+}
+
+resource "aws_s3_bucket_acl" "test" {
+  bucket = aws_s3_bucket.bucket.id
+  acl    = "private"
 }
 `, randInt)
 }
@@ -4443,7 +4535,6 @@ func testAccBucketReplicationWithoutStorageClassConfig(randInt int) string {
 	return testAccBucketReplicationBasicConfig(randInt) + fmt.Sprintf(`
 resource "aws_s3_bucket" "bucket" {
   bucket = "tf-test-bucket-%[1]d"
-  acl    = "private"
 
   versioning {
     enabled = true
@@ -4462,6 +4553,17 @@ resource "aws_s3_bucket" "bucket" {
       }
     }
   }
+
+  lifecycle {
+    ignore_changes = [
+      grant,
+    ]
+  }
+}
+
+resource "aws_s3_bucket_acl" "test" {
+  bucket = aws_s3_bucket.bucket.id
+  acl    = "private"
 }
 `, randInt)
 }
@@ -4470,7 +4572,6 @@ func testAccBucketReplicationWithoutPrefixConfig(randInt int) string {
 	return testAccBucketReplicationBasicConfig(randInt) + fmt.Sprintf(`
 resource "aws_s3_bucket" "bucket" {
   bucket = "tf-test-bucket-%[1]d"
-  acl    = "private"
 
   versioning {
     enabled = true
@@ -4489,6 +4590,17 @@ resource "aws_s3_bucket" "bucket" {
       }
     }
   }
+
+  lifecycle {
+    ignore_changes = [
+      grant,
+    ]
+  }
+}
+
+resource "aws_s3_bucket_acl" "test" {
+  bucket = aws_s3_bucket.bucket.id
+  acl    = "private"
 }
 `, randInt)
 }
@@ -4497,7 +4609,6 @@ func testAccBucketReplicationNoVersioningConfig(randInt int) string {
 	return testAccBucketReplicationBasicConfig(randInt) + fmt.Sprintf(`
 resource "aws_s3_bucket" "bucket" {
   bucket = "tf-test-bucket-%[1]d"
-  acl    = "private"
 
   replication_configuration {
     role = aws_iam_role.role.arn
@@ -4513,6 +4624,17 @@ resource "aws_s3_bucket" "bucket" {
       }
     }
   }
+
+  lifecycle {
+    ignore_changes = [
+      grant,
+    ]
+  }
+}
+
+resource "aws_s3_bucket_acl" "test" {
+  bucket = aws_s3_bucket.bucket.id
+  acl    = "private"
 }
 `, randInt)
 }
@@ -4521,7 +4643,6 @@ func testAccBucketSameRegionReplicationWithV2ConfigurationNoTagsConfig(rName, rN
 	return acctest.ConfigCompose(testAccBucketReplicationConfig_iamPolicy(rName), fmt.Sprintf(`
 resource "aws_s3_bucket" "bucket" {
   bucket = %[1]q
-  acl    = "private"
 
   versioning {
     enabled = true
@@ -4546,6 +4667,17 @@ resource "aws_s3_bucket" "bucket" {
       }
     }
   }
+
+  lifecycle {
+    ignore_changes = [
+      grant,
+    ]
+  }
+}
+
+resource "aws_s3_bucket_acl" "test" {
+  bucket = aws_s3_bucket.bucket.id
+  acl    = "private"
 }
 
 resource "aws_s3_bucket" "destination" {
@@ -4562,7 +4694,6 @@ func testAccBucketReplicationWithV2ConfigurationDeleteMarkerReplicationDisabledC
 	return testAccBucketReplicationBasicConfig(randInt) + fmt.Sprintf(`
 resource "aws_s3_bucket" "bucket" {
   bucket = "tf-test-bucket-%[1]d"
-  acl    = "private"
 
   versioning {
     enabled = true
@@ -4585,6 +4716,17 @@ resource "aws_s3_bucket" "bucket" {
       }
     }
   }
+
+  lifecycle {
+    ignore_changes = [
+      grant,
+    ]
+  }
+}
+
+resource "aws_s3_bucket_acl" "test" {
+  bucket = aws_s3_bucket.bucket.id
+  acl    = "private"
 }
 `, randInt)
 }
@@ -4593,7 +4735,6 @@ func testAccBucketReplicationWithV2ConfigurationNoTagsConfig(randInt int) string
 	return testAccBucketReplicationBasicConfig(randInt) + fmt.Sprintf(`
 resource "aws_s3_bucket" "bucket" {
   bucket = "tf-test-bucket-%[1]d"
-  acl    = "private"
 
   versioning {
     enabled = true
@@ -4618,6 +4759,17 @@ resource "aws_s3_bucket" "bucket" {
       }
     }
   }
+
+  lifecycle {
+    ignore_changes = [
+      grant,
+    ]
+  }
+}
+
+resource "aws_s3_bucket_acl" "test" {
+  bucket = aws_s3_bucket.bucket.id
+  acl    = "private"
 }
 `, randInt)
 }
@@ -4626,7 +4778,6 @@ func testAccBucketReplicationWithV2ConfigurationOnlyOneTagConfig(randInt int) st
 	return testAccBucketReplicationBasicConfig(randInt) + fmt.Sprintf(`
 resource "aws_s3_bucket" "bucket" {
   bucket = "tf-test-bucket-%[1]d"
-  acl    = "private"
 
   versioning {
     enabled = true
@@ -4653,6 +4804,17 @@ resource "aws_s3_bucket" "bucket" {
       }
     }
   }
+
+  lifecycle {
+    ignore_changes = [
+      grant,
+    ]
+  }
+}
+
+resource "aws_s3_bucket_acl" "test" {
+  bucket = aws_s3_bucket.bucket.id
+  acl    = "private"
 }
 `, randInt)
 }
@@ -4661,7 +4823,6 @@ func testAccBucketReplicationWithV2ConfigurationPrefixAndTagsConfig(randInt int)
 	return testAccBucketReplicationBasicConfig(randInt) + fmt.Sprintf(`
 resource "aws_s3_bucket" "bucket" {
   bucket = "tf-test-bucket-%[1]d"
-  acl    = "private"
 
   versioning {
     enabled = true
@@ -4691,6 +4852,17 @@ resource "aws_s3_bucket" "bucket" {
       }
     }
   }
+
+  lifecycle {
+    ignore_changes = [
+      grant,
+    ]
+  }
+}
+
+resource "aws_s3_bucket_acl" "test" {
+  bucket = aws_s3_bucket.bucket.id
+  acl    = "private"
 }
 `, randInt)
 }
@@ -4699,7 +4871,6 @@ func testAccBucketReplicationWithV2ConfigurationMultipleTagsConfig(randInt int) 
 	return testAccBucketReplicationBasicConfig(randInt) + fmt.Sprintf(`
 resource "aws_s3_bucket" "bucket" {
   bucket = "tf-test-bucket-%[1]d"
-  acl    = "private"
 
   versioning {
     enabled = true
@@ -4726,6 +4897,17 @@ resource "aws_s3_bucket" "bucket" {
       }
     }
   }
+
+  lifecycle {
+    ignore_changes = [
+      grant,
+    ]
+  }
+}
+
+resource "aws_s3_bucket_acl" "test" {
+  bucket = aws_s3_bucket.bucket.id
+  acl    = "private"
 }
 `, randInt)
 }
@@ -4765,8 +4947,18 @@ func testAccBucketConfig_forceDestroy(bucketName string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "bucket" {
   bucket        = "%s"
-  acl           = "private"
   force_destroy = true
+
+  lifecycle {
+    ignore_changes = [
+      grant,
+    ]
+  }
+}
+
+resource "aws_s3_bucket_acl" "test" {
+  bucket = aws_s3_bucket.bucket.id
+  acl    = "public-read"
 }
 `, bucketName)
 }
@@ -4775,7 +4967,6 @@ func testAccBucketConfig_forceDestroyWithObjectLockEnabled(bucketName string) st
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "bucket" {
   bucket        = "%s"
-  acl           = "private"
   force_destroy = true
 
   versioning {
@@ -4785,6 +4976,17 @@ resource "aws_s3_bucket" "bucket" {
   object_lock_configuration {
     object_lock_enabled = "Enabled"
   }
+
+  lifecycle {
+    ignore_changes = [
+      grant,
+    ]
+  }
+}
+
+resource "aws_s3_bucket_acl" "test" {
+  bucket = aws_s3_bucket.bucket.id
+  acl    = "private"
 }
 `, bucketName)
 }
