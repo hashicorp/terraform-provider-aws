@@ -109,7 +109,8 @@ func resourceBuildCreate(d *schema.ResourceData, meta interface{}) error {
 		var err error
 		out, err = conn.CreateBuild(&input)
 		if err != nil {
-			if tfawserr.ErrMessageContains(err, gamelift.ErrCodeInvalidRequestException, "Provided build is not accessible.") {
+			if tfawserr.ErrMessageContains(err, gamelift.ErrCodeInvalidRequestException, "Provided build is not accessible.") ||
+				tfawserr.ErrMessageContains(err, gamelift.ErrCodeInvalidRequestException, "GameLift cannot assume the role") {
 				return resource.RetryableError(err)
 			}
 			return resource.NonRetryableError(err)
