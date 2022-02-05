@@ -51,6 +51,28 @@ func TestAccEventDataStore_basic(t *testing.T) {
 	})
 }
 
+func TestAccEventDataStore_disappears(t *testing.T) {
+	rName := "tf-test-" + sdkacctest.RandString(8)
+	resourceName := "aws_cloudtrail_event_data_store.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, cloudtrail.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckEventDataStoreDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEventDataStoreConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEventDataStoreExists(resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfcloudtrail.ResourceEventDataStore(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func TestAccEventDataStore_multi_region_enabled(t *testing.T) {
 	rName := "tf-test-" + sdkacctest.RandString(8)
 	resourceName := "aws_cloudtrail_event_data_store.test"
