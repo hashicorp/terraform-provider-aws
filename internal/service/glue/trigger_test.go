@@ -877,7 +877,7 @@ func testAccTriggerConfigEvent(rName string) string {
 resource "aws_glue_workflow" test {
   name = %[1]q
 }
-	
+
 resource "aws_glue_trigger" "test" {
   name              = %[1]q
   type              = "EVENT"
@@ -900,7 +900,7 @@ func testAccTriggerConfigEventUpdated(rName string) string {
 resource "aws_glue_workflow" test {
   name = %[1]q
 }
-	
+
 resource "aws_glue_trigger" "test" {
   name              = %[1]q
   type              = "EVENT"
@@ -913,7 +913,7 @@ resource "aws_glue_trigger" "test" {
 
   event_batching_condition {
     batch_size   = 1
-	batch_window = 50
+    batch_window = 50
   }
 }
 `, rName))
