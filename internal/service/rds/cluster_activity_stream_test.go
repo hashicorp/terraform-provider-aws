@@ -6,7 +6,6 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/rds"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -15,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func init() {
@@ -164,50 +164,6 @@ func TestAccAWSRDSClusterActivityStream_mode(t *testing.T) {
 	})
 }
 
-func TestAccAWSRDSClusterActivityStream_resourceArn(t *testing.T) {
-	var dbCluster rds.DBCluster
-	clusterName := sdkacctest.RandomWithPrefix("tf-testacc-aurora-cluster")
-	instanceName := sdkacctest.RandomWithPrefix("tf-testacc-aurora-instance")
-	newClusterName := sdkacctest.RandomWithPrefix("tf-testacc-new-aurora-cluster")
-	newInstanceName := sdkacctest.RandomWithPrefix("tf-testacc-new-aurora-instance")
-
-	resourceName := "aws_rds_cluster_activity_stream.test"
-	rdsClusterResourceName := "aws_rds_cluster.test"
-	newRdsClusterResourceName := "aws_rds_cluster.new_rds_cluster_test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSClusterActivityStreamDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAWSClusterActivityStreamConfig(clusterName, instanceName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSRDSClusterActivityStreamExists(resourceName, &dbCluster),
-					testAccCheckAWSRDSClusterActivityStreamAttributes(&dbCluster),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "resource_arn", "rds", regexp.MustCompile("cluster:"+clusterName)),
-					resource.TestCheckResourceAttrPair(resourceName, "resource_arn", rdsClusterResourceName, "arn"),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{
-				Config: testAccAWSClusterActivityStreamConfig_resourceArn(newClusterName, newInstanceName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSRDSClusterActivityStreamExists(resourceName, &dbCluster),
-					testAccCheckAWSRDSClusterActivityStreamAttributes(&dbCluster),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "resource_arn", "rds", regexp.MustCompile("cluster:"+newClusterName)),
-					resource.TestCheckResourceAttrPair(resourceName, "resource_arn", newRdsClusterResourceName, "arn"),
-				),
-			},
-		},
-	})
-}
-
 func testAccCheckAWSRDSClusterActivityStreamExists(resourceName string, dbCluster *rds.DBCluster) resource.TestCheckFunc {
 	return testAccCheckAWSRDSClusterActivityStreamExistsWithProvider(resourceName, dbCluster, acctest.Provider)
 }
@@ -225,19 +181,17 @@ func testAccCheckAWSRDSClusterActivityStreamExistsWithProvider(resourceName stri
 
 		conn := provider.Meta().(*conns.AWSClient).RDSConn
 
-		response, err := conn.DescribeDBClusters(&rds.DescribeDBClustersInput{
-			DBClusterIdentifier: aws.String(rs.Primary.ID),
-		})
+		response, err := tfrds.FindDBClusterByClusterArn(conn, rs.Primary.ID)
 
 		if err != nil {
+			if tfresource.NotFound(err) {
+				return fmt.Errorf("DBCluster not found")
+			}
 			return err
 		}
 
-		if len(response.DBClusters) != 1 || *response.DBClusters[0].DBClusterArn != rs.Primary.ID {
-			return fmt.Errorf("DBCluster not found")
-		}
+		dbCluster = response
 
-		*dbCluster = *response.DBClusters[0]
 		return nil
 	}
 }
@@ -282,21 +236,19 @@ func testAccCheckAWSClusterActivityStreamDestroyWithProvider(s *terraform.State,
 		}
 
 		var err error
-		resp, err := conn.DescribeDBClusters(
-			&rds.DescribeDBClustersInput{
-				DBClusterIdentifier: aws.String(rs.Primary.ID),
-			})
 
-		if err == nil {
-			if len(resp.DBClusters) != 0 &&
-				*resp.DBClusters[0].ActivityStreamStatus != rds.ActivityStreamStatusStopped {
-				return fmt.Errorf("DB Cluster %s Activity Stream still exists", rs.Primary.ID)
+		resp, err := tfrds.FindDBClusterByClusterArn(conn, rs.Primary.ID)
+		if err != nil {
+			// Return nil if the cluster is already destroyed
+			if tfresource.NotFound(err) {
+				return nil
 			}
+			return err
 		}
 
-		// Return nil if the cluster is already destroyed
-		if awsErr, ok := err.(awserr.Error); ok && awsErr.Code() == rds.ErrCodeDBClusterNotFoundFault {
-			return nil
+		if *resp.ActivityStreamStatus != rds.ActivityStreamStatusStopped {
+			return fmt.Errorf("DB Cluster %s Activity Stream still exists with status %s when status %s is expected",
+				rs.Primary.ID, *resp.ActivityStreamStatus, rds.ActivityStreamStatusStopped)
 		}
 
 		return err
