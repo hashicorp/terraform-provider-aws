@@ -11,6 +11,9 @@ import (
 const (
 	eventDataStoreAvailableTimeout = 5 * time.Minute
 	eventDataStoreDeletedTimeout   = 5 * time.Minute
+	eventDataStoreStatusCreating   = "CREATED"
+	eventDataStoreStatusAvailable  = "ENABLED"
+	eventDataStoreStatusDeleting   = "PENDING_DELETION"
 )
 
 // waitEventDataStoreAvailable waits for CloudTrail Event Data Store to reach the available state.
@@ -19,7 +22,7 @@ func waitEventDataStoreAvailable(ctx context.Context, conn *cloudtrail.CloudTrai
 		Pending: []string{eventDataStoreStatusCreating},
 		Target:  []string{eventDataStoreStatusAvailable},
 		Refresh: statusEventDataStore(ctx, conn, eventDataStoreArn),
-		Timeout: timeout,
+		Timeout: eventDataStoreAvailableTimeout,
 	}
 
 	_, err := stateConf.WaitForStateContext(ctx)
@@ -33,7 +36,7 @@ func waitEventDataStoreDeleted(ctx context.Context, conn *cloudtrail.CloudTrail,
 		Pending: []string{},
 		Target:  []string{eventDataStoreStatusDeleting},
 		Refresh: statusEventDataStore(ctx, conn, eventDataStoreArn),
-		Timeout: timeout,
+		Timeout: eventDataStoreDeletedTimeout,
 	}
 
 	_, err := stateConf.WaitForStateContext(ctx)

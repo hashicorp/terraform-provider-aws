@@ -315,6 +315,12 @@ func resourceEventDataStoreRead(ctx context.Context, d *schema.ResourceData, met
 		return nil
 	}
 
+	if eventDataStore.Status != nil && *eventDataStore.Status == cloudtrail.EventDataStoreStatusPendingDeletion {
+		log.Printf("[WARN] CloudTrail Event Data Store (%s) is deleted, removing from state", d.Id())
+		d.SetId("")
+		return nil
+	}
+
 	if err != nil {
 		return diag.Errorf("error reading CloudTrail Event Data Store (%s): %s", d.Id(), err)
 	}

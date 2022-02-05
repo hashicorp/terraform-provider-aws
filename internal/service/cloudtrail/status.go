@@ -9,13 +9,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-const (
-	eventDataStoreStatusCreating  = "CREATED"
-	eventDataStoreStatusAvailable = "ENABLED"
-	eventDataStoreStatusDeleting  = "PENDING_DELETION"
-)
-
-// statusEventDataStore fetches the CloudTrail Event Data Store and its status.
+// statusEventDataStore fetches the CloudTrail Event Data Store its status.
 func statusEventDataStore(ctx context.Context, conn *cloudtrail.CloudTrail, eventDataStoreArn string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		eventDataStore, err := FindEventDataStoreByArn(ctx, conn, eventDataStoreArn)
