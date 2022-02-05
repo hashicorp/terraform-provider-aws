@@ -10,20 +10,74 @@ description: |-
 
 Provides a CloudTrail Event Data Store.
 
-More information about event data stores see [Event Data Store User Guide](https://docs.aws.amazon.com/awscloudtrail/latest/userguide/query-event-data-store.html).
+More information about event data stores can be found in the [Event Data Store User Guide](https://docs.aws.amazon.com/awscloudtrail/latest/userguide/query-event-data-store.html).
 
--> **Tip:** For an organization event data store, this resource must be in the master account of the organization.
+-> **Tip:** For an organization event data store you must create this resource in the management account.
 
 ## Example Usage
 
 ### Basic
 
-The most simple event data store configuration is as following. The event data store will automatically capture all management events. To capture management events from other regions, `multi_region_enabled` must be `true`.
+The most simple event data store configuration requires us to only set the `name` and `retention_period` attributes. The event data store will automatically capture all management events. To capture management events from all the regions, `multi_region_enabled` must be `true`.
 
 ```terraform
 resource "aws_cloudtrail_event_data_store" "example" {
   name                  = "example-event-data-store"
   retention_period      = 7
+}
+```
+
+### Data Event Logging
+
+CloudTrail can log [Data Events](https://docs.aws.amazon.com/awscloudtrail/latest/userguide/logging-data-events-with-cloudtrail.html) for certain services such as S3 bucket objects and Lambda function invocations. Additional information about data event configuration can be found in the following links:
+
+- [CloudTrail API AdvancedFieldSelector documentation](https://docs.aws.amazon.com/awscloudtrail/latest/APIReference/API_AdvancedFieldSelector.html)
+
+#### Logging all S3 Bucket object events except for two S3 buckets by using advanced event selectors
+
+```terraform
+data "aws_s3_bucket" "not-important-bucket-1" {
+  bucket = "not-important-bucket-1"
+}
+
+data "aws_s3_bucket" "not-important-bucket-2" {
+  bucket = "not-important-bucket-2"
+}
+
+resource "aws_cloudtrail_event_data_store" "example" {
+  # ... other configuration ...
+
+  advanced_event_selector {
+    name = "Log all S3 buckets objects events except for two S3 buckets"
+
+    field_selector {
+      field  = "eventCategory"
+      equals = ["Data"]
+    }
+
+    field_selector {
+      field = "resources.ARN"
+
+      not_equals = [
+        "${data.aws_s3_bucket.not-important-bucket-1.arn}/",
+        "${data.aws_s3_bucket.not-important-bucket-2.arn}/"
+      ]
+    }
+
+    field_selector {
+      field  = "resources.type"
+      equals = ["AWS::S3::Object"]
+    }
+  }
+
+  advanced_event_selector {
+    name = "Log readOnly and writeOnly management events"
+
+    field_selector {
+      field  = "eventCategory"
+      equals = ["Management"]
+    }
+  }
 }
 ```
 
@@ -43,25 +97,33 @@ The following arguments are supported:
 
 For **advanced_event_selector** the following attributes are supported.
 
-* `name` (Optional) - Specifies the name of the advanced event selector.
-* `field_selector` (Required) - Specifies the selector statements in an advanced event selector. Fields documented below.
+- `name` (Optional) - Specifies the name of the advanced event selector.
+- `field_selector` (Required) - Specifies the selector statements in an advanced event selector. Fields documented below.
 
 #### Field Selector Arguments
 
 For **field_selector** the following attributes are supported.
 
-* `field` (Required) - Specifies a field in an event record on which to filter events to be logged. You can specify only the following values: `readOnly`, `eventSource`, `eventName`, `eventCategory`, `resources.type`, `resources.ARN`.
-* `equals` (Optional) - A list of values that includes events that match the exact value of the event record field specified as the value of `field`. This is the only valid operator that you can use with the `readOnly`, `eventCategory`, and `resources.type` fields.
-* `not_equals` (Optional) - A list of values that excludes events that match the exact value of the event record field specified as the value of `field`.
-* `starts_with` (Optional) - A list of values that includes events that match the first few characters of the event record field specified as the value of `field`.
-* `not_starts_with` (Optional) - A list of values that excludes events that match the first few characters of the event record field specified as the value of `field`.
-* `ends_with` (Optional) - A list of values that includes events that match the last few characters of the event record field specified as the value of `field`.
-* `not_ends_with` (Optional) - A list of values that excludes events that match the last few characters of the event record field specified as the value of `field`.
-
+- `field` (Required) - Specifies a field in an event record on which to filter events to be logged. You can specify only the following values: `readOnly`, `eventSource`, `eventName`, `eventCategory`, `resources.type`, `resources.ARN`.
+- `equals` (Optional) - A list of values that includes events that match the exact value of the event record field specified as the value of `field`. This is the only valid operator that you can use with the `readOnly`, `eventCategory`, and `resources.type` fields.
+- `not_equals` (Optional) - A list of values that excludes events that match the exact value of the event record field specified as the value of `field`.
+- `starts_with` (Optional) - A list of values that includes events that match the first few characters of the event record field specified as the value of `field`.
+- `not_starts_with` (Optional) - A list of values that excludes events that match the first few characters of the event record field specified as the value of `field`.
+- `ends_with` (Optional) - A list of values that includes events that match the last few characters of the event record field specified as the value of `field`.
+- `not_ends_with` (Optional) - A list of values that excludes events that match the last few characters of the event record field specified as the value of `field`.
 
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 
+* `arn` - ARN of the trail.
+* `id` - Name of the trail.
+* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
 
 ## Import
+
+Event data stores can be imported using the `name`, e.g.,
+
+```
+$ terraform import aws_cloudtrail_event_data_store.example example-event-data-store
+```
