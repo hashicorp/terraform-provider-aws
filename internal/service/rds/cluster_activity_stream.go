@@ -6,12 +6,12 @@ import (
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/rds"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
@@ -37,17 +37,19 @@ func ResourceClusterActivityStream() *schema.Resource {
 				ForceNew: true,
 			},
 			"mode": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				ValidateFunc: validation.StringInSlice([]string{
-					rds.ActivityStreamModeSync,
-					rds.ActivityStreamModeAsync,
-				}, false),
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringInSlice(rds.ActivityStreamMode_Values(), false),
 			},
 			"kinesis_stream_name": {
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+			"engine_native_audit_fields_included": {
+				Type:     schema.TypeBool,
+				Required: false,
+				ForceNew: true,
 			},
 		},
 	}
@@ -57,14 +59,13 @@ func resourceAwsRDSClusterActivityStreamCreate(ctx context.Context, d *schema.Re
 	conn := meta.(*conns.AWSClient).RDSConn
 
 	resourceArn := d.Get("resource_arn").(string)
-	kmsKeyId := d.Get("kms_key_id").(string)
-	mode := d.Get("mode").(string)
 
 	startActivityStreamInput := &rds.StartActivityStreamInput{
-		ResourceArn:      aws.String(resourceArn),
-		ApplyImmediately: aws.Bool(true),
-		KmsKeyId:         aws.String(kmsKeyId),
-		Mode:             aws.String(mode),
+		ResourceArn:                     aws.String(resourceArn),
+		ApplyImmediately:                aws.Bool(true),
+		KmsKeyId:                        aws.String(d.Get("kms_key_id").(string)),
+		Mode:                            aws.String(d.Get("mode").(string)),
+		EngineNativeAuditFieldsIncluded: aws.Bool(d.Get("engine_native_audit_fields_included").(bool)),
 	}
 
 	log.Printf("[DEBUG] RDS Cluster start activity stream input: %s", startActivityStreamInput)
@@ -94,10 +95,11 @@ func resourceAwsRDSClusterActivityStreamRead(ctx context.Context, d *schema.Reso
 	}
 
 	log.Printf("[DEBUG] Describing RDS Cluster: %s", input)
-	resp, err := conn.DescribeDBClusters(input)
+	// resp, err := conn.DescribeDBClusters(input)
+	resp, err := FindDBClusterByClusterArn(conn, d.Id())
 
 	if err != nil {
-		if awsErr, ok := err.(awserr.Error); ok && awsErr.Code() == rds.ErrCodeDBClusterNotFoundFault {
+		if tfresource.NotFound(err) {
 			log.Printf("[WARN] RDS Cluster (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -110,30 +112,16 @@ func resourceAwsRDSClusterActivityStreamRead(ctx context.Context, d *schema.Reso
 		return diag.FromErr(fmt.Errorf("error retrieving RDS cluster: empty response for: %s", input))
 	}
 
-	var dbc *rds.DBCluster
-	for _, c := range resp.DBClusters {
-		if aws.StringValue(c.DBClusterArn) == d.Id() {
-			dbc = c
-			break
-		}
-	}
-
-	if dbc == nil {
-		log.Printf("[WARN] RDS Cluster (%s) not found, removing from state", d.Id())
-		d.SetId("")
-		return nil
-	}
-
-	if aws.StringValue(dbc.ActivityStreamStatus) == rds.ActivityStreamStatusStopped {
+	if aws.StringValue(resp.ActivityStreamStatus) == rds.ActivityStreamStatusStopped {
 		log.Printf("[WARN] RDS Cluster (%s) Activity Stream already stopped, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
-	d.Set("resource_arn", dbc.DBClusterArn)
-	d.Set("kms_key_id", dbc.ActivityStreamKmsKeyId)
-	d.Set("kinesis_stream_name", dbc.ActivityStreamKinesisStreamName)
-	d.Set("mode", dbc.ActivityStreamMode)
+	d.Set("resource_arn", resp.DBClusterArn)
+	d.Set("kms_key_id", aws.StringValue(resp.ActivityStreamKmsKeyId))
+	d.Set("kinesis_stream_name", aws.StringValue(resp.ActivityStreamKinesisStreamName))
+	d.Set("mode", aws.StringValue(resp.ActivityStreamMode))
 
 	return nil
 }
