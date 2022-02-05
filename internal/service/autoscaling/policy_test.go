@@ -107,9 +107,7 @@ func TestAccAutoScalingPolicy_basic(t *testing.T) {
 
 func TestAccAutoScalingPolicy_predictiveScalingPredefined(t *testing.T) {
 	var policy autoscaling.ScalingPolicy
-
 	resourceSimpleName := "aws_autoscaling_policy.test"
-
 	name := sdkacctest.RandomWithPrefix("terraform-testacc-asp")
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -145,9 +143,7 @@ func TestAccAutoScalingPolicy_predictiveScalingPredefined(t *testing.T) {
 
 func TestAccAutoScalingPolicy_predictiveScalingCustom(t *testing.T) {
 	var policy autoscaling.ScalingPolicy
-
 	resourceSimpleName := "aws_autoscaling_policy.test"
-
 	name := sdkacctest.RandomWithPrefix("terraform-testacc-asp1")
 
 	resource.ParallelTest(t, resource.TestCase{
