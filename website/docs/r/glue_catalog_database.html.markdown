@@ -30,7 +30,7 @@ resource "aws_glue_catalog_database" "aws_glue_catalog_database" {
     principal {
       data_lake_principal_identifier = "IAM_ALLOWED_PRINCIPALS"
     }
-  }  
+  }
 }
 ```
 

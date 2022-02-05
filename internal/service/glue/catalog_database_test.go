@@ -270,7 +270,7 @@ resource "aws_glue_catalog_database" "test2" {
 
 func testAccGlueCatalogDatabasePermissionConfig(rName, permission string) string {
 	return fmt.Sprintf(`
-resource "aws_glue_catalog_database" "test" { 
+resource "aws_glue_catalog_database" "test" {
   name = %[1]q
 
   create_table_default_permission {
