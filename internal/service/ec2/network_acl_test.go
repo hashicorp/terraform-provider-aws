@@ -6,7 +6,6 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -14,11 +13,14 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func TestAccEC2NetworkACL_basic(t *testing.T) {
+	var v ec2.NetworkAcl
 	resourceName := "aws_network_acl.test"
-	var networkAcl ec2.NetworkAcl
+	vpcResourceName := "aws_vpc.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -27,11 +29,16 @@ func TestAccEC2NetworkACL_basic(t *testing.T) {
 		CheckDestroy: testAccCheckNetworkACLDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccNetworkACLEgressNIngressConfig,
+				Config: testAccNetworkACLConfig(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckNetworkACLExists(resourceName, &networkAcl),
+					testAccCheckNetworkACLExists(resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`network-acl/acl-.+`)),
+					resource.TestCheckResourceAttr(resourceName, "egress.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "ingress.#", "0"),
+					acctest.CheckResourceAttrAccountID(resourceName, "owner_id"),
+					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttrPair(resourceName, "vpc_id", vpcResourceName, "id"),
 				),
 			},
 			{
@@ -43,10 +50,33 @@ func TestAccEC2NetworkACL_basic(t *testing.T) {
 	})
 }
 
-func TestAccEC2NetworkACL_tags(t *testing.T) {
+func TestAccEC2NetworkACL_disappears(t *testing.T) {
+	var v ec2.NetworkAcl
 	resourceName := "aws_network_acl.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	var networkAcl ec2.NetworkAcl
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckNetworkACLDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNetworkACLConfig(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckNetworkACLExists(resourceName, &v),
+					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceNetworkACL(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccEC2NetworkACL_tags(t *testing.T) {
+	var v ec2.NetworkAcl
+	resourceName := "aws_network_acl.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -57,7 +87,7 @@ func TestAccEC2NetworkACL_tags(t *testing.T) {
 			{
 				Config: testAccNetworkACLTags1Config(rName, "key1", "value1"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckNetworkACLExists(resourceName, &networkAcl),
+					testAccCheckNetworkACLExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -70,7 +100,7 @@ func TestAccEC2NetworkACL_tags(t *testing.T) {
 			{
 				Config: testAccNetworkACLTags2Config(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckNetworkACLExists(resourceName, &networkAcl),
+					testAccCheckNetworkACLExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
@@ -79,32 +109,10 @@ func TestAccEC2NetworkACL_tags(t *testing.T) {
 			{
 				Config: testAccNetworkACLTags1Config(rName, "key2", "value2"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckNetworkACLExists(resourceName, &networkAcl),
+					testAccCheckNetworkACLExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
-			},
-		},
-	})
-}
-
-func TestAccEC2NetworkACL_disappears(t *testing.T) {
-	var networkAcl ec2.NetworkAcl
-	resourceName := "aws_network_acl.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckNetworkACLDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccNetworkACLEgressNIngressConfig,
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckNetworkACLExists(resourceName, &networkAcl),
-					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceNetworkACL(), resourceName),
-				),
-				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
@@ -644,36 +652,27 @@ func testAccCheckNetworkACLDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
 	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_network" {
+		if rs.Type != "aws_network_acl" {
 			continue
 		}
 
-		// Retrieve the network acl
-		resp, err := conn.DescribeNetworkAcls(&ec2.DescribeNetworkAclsInput{
-			NetworkAclIds: []*string{aws.String(rs.Primary.ID)},
-		})
-		if err == nil {
-			if len(resp.NetworkAcls) > 0 && *resp.NetworkAcls[0].NetworkAclId == rs.Primary.ID {
-				return fmt.Errorf("Network Acl (%s) still exists.", rs.Primary.ID)
-			}
+		_, err := tfec2.FindNetworkACLByID(conn, rs.Primary.ID)
 
-			return nil
+		if tfresource.NotFound(err) {
+			continue
 		}
 
-		ec2err, ok := err.(awserr.Error)
-		if !ok {
+		if err != nil {
 			return err
 		}
-		// Confirm error code is what we want
-		if ec2err.Code() != "InvalidNetworkAclID.NotFound" {
-			return err
-		}
+
+		return fmt.Errorf("EC2 Network ACL %s still exists", rs.Primary.ID)
 	}
 
 	return nil
 }
 
-func testAccCheckNetworkACLExists(n string, networkAcl *ec2.NetworkAcl) resource.TestCheckFunc {
+func testAccCheckNetworkACLExists(n string, v *ec2.NetworkAcl) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -681,23 +680,20 @@ func testAccCheckNetworkACLExists(n string, networkAcl *ec2.NetworkAcl) resource
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No ID is set: %s", n)
+			return fmt.Errorf("No EC2 Network ACL ID is set: %s", n)
 		}
+
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
-		resp, err := conn.DescribeNetworkAcls(&ec2.DescribeNetworkAclsInput{
-			NetworkAclIds: []*string{aws.String(rs.Primary.ID)},
-		})
+		output, err := tfec2.FindNetworkACLByID(conn, rs.Primary.ID)
+
 		if err != nil {
 			return err
 		}
 
-		if len(resp.NetworkAcls) > 0 && *resp.NetworkAcls[0].NetworkAclId == rs.Primary.ID {
-			*networkAcl = *resp.NetworkAcls[0]
-			return nil
-		}
+		*v = *output
 
-		return fmt.Errorf("Network Acls not found")
+		return nil
 	}
 }
 
@@ -785,6 +781,22 @@ func testAccCheckSubnetIsNotAssociatedWithAcl(acl string, subnet string) resourc
 		}
 		return nil
 	}
+}
+
+func testAccNetworkACLConfig(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  cidr_block = "10.1.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_network_acl" "test" {
+  vpc_id = aws_vpc.test.id
+}
+`, rName)
 }
 
 func testAccNetworkACLIPv6ICMPConfig(rName string) string {
@@ -1527,8 +1539,7 @@ resource "aws_vpc" "test" {
 }
 
 resource "aws_network_acl" "test" {
-  vpc_id  = aws_vpc.test.id
-  ingress = []
+  vpc_id = aws_vpc.test.id
 
   tags = {
     %[2]q = %[3]q
@@ -1548,8 +1559,7 @@ resource "aws_vpc" "test" {
 }
 
 resource "aws_network_acl" "test" {
-  vpc_id  = aws_vpc.test.id
-  ingress = []
+  vpc_id = aws_vpc.test.id
 
   tags = {
     %[2]q = %[3]q

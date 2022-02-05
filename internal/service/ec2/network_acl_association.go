@@ -110,6 +110,8 @@ func resourceNetworkACLAssociationDelete(d *schema.ResourceData, meta interface{
 	return nil
 }
 
+// networkACLAssociationCreate creates an association between the specified NACL and subnet.
+// The subnet's current association is replaced and the new association's ID is returned.
 func networkACLAssociationCreate(conn *ec2.EC2, naclID, subnetID string) (string, error) {
 	association, err := FindNetworkACLAssociationBySubnetID(conn, subnetID)
 
