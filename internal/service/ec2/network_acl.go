@@ -286,28 +286,14 @@ func resourceNetworkACLUpdate(d *schema.ResourceData, meta interface{}) error {
 					return fmt.Errorf("error reading EC2 Network ACL Association for EC2 Subnet (%s): %w", subnetID, err)
 				}
 
-				input := &ec2.ReplaceNetworkAclAssociationInput{
-					AssociationId: association.NetworkAclAssociationId,
-					NetworkAclId:  defaultNACL.NetworkAclId,
-				}
-
-				log.Printf("[DEBUG] Deleting EC2 Network ACL Association: %s", input)
-				_, err = conn.ReplaceNetworkAclAssociation(input)
-
-				if tfawserr.ErrCodeEquals(err, ErrCodeInvalidAssociationIDNotFound) {
-					continue
-				}
-
-				if err != nil {
-					return fmt.Errorf("error deleting EC2 Network ACL (%s) Association: %w", d.Id(), err)
+				if err := networkACLAssociationDelete(conn, aws.StringValue(association.NetworkAclAssociationId), aws.StringValue(defaultNACL.NetworkAclId)); err != nil {
+					return err
 				}
 			}
 		}
 
 		for _, v := range add {
-			subnetID := v.(string)
-
-			association, err := FindNetworkACLAssociationBySubnetID(conn, subnetID)
+			_, err := networkACLAssociationCreate(conn, d.Id(), v.(string))
 
 			if tfresource.NotFound(err) {
 				// Subnet has been deleted.
@@ -315,21 +301,7 @@ func resourceNetworkACLUpdate(d *schema.ResourceData, meta interface{}) error {
 			}
 
 			if err != nil {
-				return fmt.Errorf("error reading EC2 Network ACL Association for EC2 Subnet (%s): %w", subnetID, err)
-			}
-
-			input := &ec2.ReplaceNetworkAclAssociationInput{
-				AssociationId: association.NetworkAclAssociationId,
-				NetworkAclId:  aws.String(d.Id()),
-			}
-
-			log.Printf("[DEBUG] Creating EC2 Network ACL Association: %s", input)
-			_, err = tfresource.RetryWhenAWSErrCodeEquals(PropagationTimeout, func() (interface{}, error) {
-				return conn.ReplaceNetworkAclAssociation(input)
-			}, ErrCodeInvalidAssociationIDNotFound)
-
-			if err != nil {
-				return fmt.Errorf("error creating EC2 Network ACL (%s) Association: %w", d.Id(), err)
+				return err
 			}
 		}
 	}

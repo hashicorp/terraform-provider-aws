@@ -115,13 +115,15 @@ func networkACLAssociationCreate(conn *ec2.EC2, naclID, subnetID string) (string
 	}
 
 	log.Printf("[DEBUG] Creating EC2 Network ACL Association: %s", input)
-	output, err := conn.ReplaceNetworkAclAssociation(input)
+	outputRaw, err := tfresource.RetryWhenAWSErrCodeEquals(PropagationTimeout, func() (interface{}, error) {
+		return conn.ReplaceNetworkAclAssociation(input)
+	}, ErrCodeInvalidAssociationIDNotFound)
 
 	if err != nil {
-		return "", fmt.Errorf("error creating EC2 Network ACL Association: %w", err)
+		return "", fmt.Errorf("error creating EC2 Network ACL (%s) Association: %w", naclID, err)
 	}
 
-	return aws.StringValue(output.NewAssociationId), nil
+	return aws.StringValue(outputRaw.(*ec2.ReplaceNetworkAclAssociationOutput).NewAssociationId), nil
 }
 
 // networkACLAssociationDelete deletes the specified association between a NACL and subnet.
