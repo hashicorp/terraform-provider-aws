@@ -3,6 +3,7 @@ package imagebuilder
 import (
 	"fmt"
 	"log"
+	"regexp"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/imagebuilder"
@@ -65,11 +66,139 @@ func ResourceContainerRecipe() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.StringInSlice([]string{"DOCKER"}, false),
 			},
-			"dockerfile_template_data": {
+			"description": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
+				ValidateFunc: validation.StringLenBetween(1, 1024),
+			},
+			"dockerfile_template_data": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(1, 16000),
+			},
+			"dockerfile_template_uri": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ExactlyOneOf: []string{"dockerfile_template_data", "dockerfile_template_uri"},
+				ValidateFunc: validation.StringMatch(regexp.MustCompile(`^s3://`), "must begin with s3://"),
+			},
+			"instance_configuration": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Computed: true,
+				ForceNew: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"block_device_mapping": {
+							Type:     schema.TypeSet,
+							Optional: true,
+							ForceNew: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"device_name": {
+										Type:         schema.TypeString,
+										Optional:     true,
+										ForceNew:     true,
+										ValidateFunc: validation.StringLenBetween(1, 1024),
+									},
+									"ebs": {
+										Type:     schema.TypeList,
+										Optional: true,
+										ForceNew: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"delete_on_termination": {
+													// Use TypeString to allow an "unspecified" value,
+													// since TypeBool only has true/false with false default.
+													// The conversion from bare true/false values in
+													// configurations to TypeString value is currently safe.
+													Type:             schema.TypeString,
+													Optional:         true,
+													ForceNew:         true,
+													DiffSuppressFunc: verify.SuppressEquivalentTypeStringBoolean,
+													ValidateFunc:     verify.ValidTypeStringNullableBoolean,
+												},
+												"encrypted": {
+													// Use TypeString to allow an "unspecified" value,
+													// since TypeBool only has true/false with false default.
+													// The conversion from bare true/false values in
+													// configurations to TypeString value is currently safe.
+													Type:             schema.TypeString,
+													Optional:         true,
+													ForceNew:         true,
+													DiffSuppressFunc: verify.SuppressEquivalentTypeStringBoolean,
+													ValidateFunc:     verify.ValidTypeStringNullableBoolean,
+												},
+												"iops": {
+													Type:         schema.TypeInt,
+													Optional:     true,
+													ForceNew:     true,
+													ValidateFunc: validation.IntBetween(100, 64000),
+												},
+												"kms_key_id": {
+													Type:         schema.TypeString,
+													Optional:     true,
+													ForceNew:     true,
+													ValidateFunc: validation.StringLenBetween(1, 1024),
+												},
+												"snapshot_id": {
+													Type:         schema.TypeString,
+													Optional:     true,
+													ForceNew:     true,
+													ValidateFunc: validation.StringLenBetween(1, 1024),
+												},
+												"volume_size": {
+													Type:         schema.TypeInt,
+													Optional:     true,
+													ForceNew:     true,
+													ValidateFunc: validation.IntBetween(1, 16000),
+												},
+												"volume_type": {
+													Type:         schema.TypeString,
+													Optional:     true,
+													ForceNew:     true,
+													ValidateFunc: validation.StringInSlice(imagebuilder.EbsVolumeType_Values(), false),
+												},
+											},
+										},
+									},
+									"no_device": {
+										// Use TypeBool to allow an "unspecified" value of false,
+										// since the API uses an empty string ("") as true and
+										// this is not compatible with TypeString's zero value.
+										Type:     schema.TypeBool,
+										Optional: true,
+										ForceNew: true,
+									},
+									"virtual_name": {
+										Type:         schema.TypeString,
+										Optional:     true,
+										ForceNew:     true,
+										ValidateFunc: validation.StringLenBetween(1, 1024),
+									},
+								},
+							},
+						},
+						"image": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ForceNew:     true,
+							ValidateFunc: validation.StringLenBetween(1, 1024),
+						},
+					},
+				},
+			},
+			"kms_key_id": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringLenBetween(1, 1024),
 			},
 			"name": {
 				Type:         schema.TypeString,
@@ -83,6 +212,7 @@ func ResourceContainerRecipe() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(1, 1024),
 			},
+			// tags
 			"target_repository": {
 				Type:     schema.TypeList,
 				Required: true,
@@ -108,6 +238,12 @@ func ResourceContainerRecipe() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
+			"working_directory": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringLenBetween(1, 1024),
+			},
 		},
 	}
 }
@@ -127,8 +263,24 @@ func resourceContainerRecipeCreate(d *schema.ResourceData, meta interface{}) err
 		input.ContainerType = aws.String(v.(string))
 	}
 
+	if v, ok := d.GetOk("description"); ok {
+		input.Description = aws.String(v.(string))
+	}
+
 	if v, ok := d.GetOk("dockerfile_template_data"); ok {
 		input.DockerfileTemplateData = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("dockerfile_template_uri"); ok {
+		input.DockerfileTemplateUri = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("instance_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		input.InstanceConfiguration = expandInstanceConfiguration(v.([]interface{})[0].(map[string]interface{}))
+	}
+
+	if v, ok := d.GetOk("kms_key_id"); ok {
+		input.KmsKeyId = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("name"); ok {
@@ -145,6 +297,10 @@ func resourceContainerRecipeCreate(d *schema.ResourceData, meta interface{}) err
 
 	if v, ok := d.GetOk("version"); ok {
 		input.SemanticVersion = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("working_directory"); ok {
+		input.WorkingDirectory = aws.String(v.(string))
 	}
 
 	output, err := conn.CreateContainerRecipe(input)
@@ -182,11 +338,15 @@ func resourceContainerRecipeRead(d *schema.ResourceData, meta interface{}) error
 	d.Set("arn", containerRecipe.Arn)
 	d.Set("component", flattenComponentConfigurations(containerRecipe.Components))
 	d.Set("container_type", containerRecipe.ContainerType)
+	d.Set("description", containerRecipe.Description)
 	d.Set("dockerfile_template_data", containerRecipe.DockerfileTemplateData)
+	d.Set("instance_configuration", []interface{}{flattenInstanceConfiguration(containerRecipe.InstanceConfiguration)})
+	d.Set("kms_key_id", containerRecipe.KmsKeyId)
 	d.Set("name", containerRecipe.Name)
 	d.Set("parent_image", containerRecipe.ParentImage)
 	d.Set("target_repository", []interface{}{flattenTargetContainerRepository(containerRecipe.TargetRepository)})
 	d.Set("version", containerRecipe.Version)
+	d.Set("working_directory", containerRecipe.WorkingDirectory)
 
 	return nil
 }
@@ -209,4 +369,40 @@ func resourceContainerRecipeDelete(d *schema.ResourceData, meta interface{}) err
 	}
 
 	return nil
+}
+
+func expandInstanceConfiguration(tfMap map[string]interface{}) *imagebuilder.InstanceConfiguration {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &imagebuilder.InstanceConfiguration{}
+
+	if v, ok := tfMap["block_device_mapping"].(*schema.Set); ok && v.Len() > 0 {
+		apiObject.BlockDeviceMappings = expandInstanceBlockDeviceMappings(v.List())
+	}
+
+	if v, ok := tfMap["image"].(string); ok && v != "" {
+		apiObject.Image = aws.String(v)
+	}
+
+	return apiObject
+}
+
+func flattenInstanceConfiguration(apiObject *imagebuilder.InstanceConfiguration) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.BlockDeviceMappings; v != nil {
+		tfMap["block_device_mapping"] = flattenInstanceBlockDeviceMappings(v)
+	}
+
+	if v := apiObject.Image; v != nil {
+		tfMap["image"] = aws.StringValue(v)
+	}
+
+	return tfMap
 }
