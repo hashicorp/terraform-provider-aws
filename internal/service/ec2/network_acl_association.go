@@ -93,18 +93,8 @@ func resourceNetworkACLAssociationDelete(d *schema.ResourceData, meta interface{
 		return fmt.Errorf("error reading EC2 VPC (%s) default NACL: %w", vpcID, err)
 	}
 
-	log.Printf("[DEBUG] Deleting EC2 Network ACL Association: %s", d.Id())
-	_, err = conn.ReplaceNetworkAclAssociation(&ec2.ReplaceNetworkAclAssociationInput{
-		AssociationId: aws.String(d.Id()),
-		NetworkAclId:  defaultNACL.NetworkAclId,
-	})
-
-	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidAssociationIDNotFound) {
-		return nil
-	}
-
-	if err != nil {
-		return fmt.Errorf("error deleting EC2 Network ACL Association (%s): %w", d.Id(), err)
+	if err := networkACLAssociationDelete(conn, d.Id(), aws.StringValue(defaultNACL.NetworkAclId)); err != nil {
+		return err
 	}
 
 	return nil
@@ -132,4 +122,26 @@ func networkACLAssociationCreate(conn *ec2.EC2, naclID, subnetID string) (string
 	}
 
 	return aws.StringValue(output.NewAssociationId), nil
+}
+
+// networkACLAssociationDelete deletes the specified association between a NACL and subnet.
+// The subnet's current association is replaced by an association with the VPC's default NACL.
+func networkACLAssociationDelete(conn *ec2.EC2, associationID, naclID string) error {
+	input := &ec2.ReplaceNetworkAclAssociationInput{
+		AssociationId: aws.String(associationID),
+		NetworkAclId:  aws.String(naclID),
+	}
+
+	log.Printf("[DEBUG] Deleting EC2 Network ACL Association: %s", associationID)
+	_, err := conn.ReplaceNetworkAclAssociation(input)
+
+	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidAssociationIDNotFound) {
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("error deleting EC2 Network ACL Association (%s): %w", associationID, err)
+	}
+
+	return nil
 }
