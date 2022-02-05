@@ -38,6 +38,15 @@ In addition to all arguments above, the following attributes are exported:
             * `user_groups` - Set of EC2 launch permission user groups.
             * `user_ids` - Set of AWS Account identifiers.
         * `target_account_ids` - Set of target AWS Account identifiers.
+    * `container_distribution_configuration` - Nested list of container distribution configurations.
+        * `container_tags` - Set of tags that are attached to the container distribution configuration.
+        * `description` - Description of the container distribution configuration.
+        * `target_repository` - Set of destination repositories for the container distribution configuration.
+            * `repository_name` - Name of the container repository where the output container image is stored.
+            * `service` - Service in which the image is registered.
+    * `launch_template_configuration` - Nested list of launch template configurations.
+        * `default` - Indicates whether the specified Amazon EC2 launch template is set as the default launch template.
+        * `launch_template_id` - ID of the Amazon EC2 launch template.
     * `license_configuration_arns` - Set of Amazon Resource Names (ARNs) of License Manager License Configurations.
     * `region` - AWS Region of distribution.
 * `name` - Name of the distribution configuration.

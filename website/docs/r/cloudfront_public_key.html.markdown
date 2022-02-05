@@ -39,7 +39,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-CloudFront Public Key can be imported using the `id`, e.g.
+CloudFront Public Key can be imported using the `id`, e.g.,
 
 ```
 $ terraform import aws_cloudfront_public_key.example K3D5EWEUDCCXON

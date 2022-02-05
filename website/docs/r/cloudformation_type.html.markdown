@@ -16,7 +16,7 @@ Manages a version of a CloudFormation Type.
 
 ```terraform
 resource "aws_cloudformation_type" "example" {
-  schema_handler_package = "s3://${aws_s3_bucket_object.example.bucket}/${aws_s3_bucket_object.example.key}"
+  schema_handler_package = "s3://${aws_s3_object.example.bucket}/${aws_s3_object.example.key}"
   type                   = "RESOURCE"
   type_name              = "ExampleCompany::ExampleService::ExampleResource"
 
@@ -67,7 +67,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-`aws_cloudformation_type` can be imported with their type version Amazon Resource Name (ARN), e.g.
+`aws_cloudformation_type` can be imported with their type version Amazon Resource Name (ARN), e.g.,
 
 ```
 terraform import aws_cloudformation_type.example arn:aws:cloudformation:us-east-1:123456789012:type/resource/ExampleCompany-ExampleService-ExampleType/1

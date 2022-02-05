@@ -59,7 +59,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-The EFS access points can be imported using the `id`, e.g.
+The EFS access points can be imported using the `id`, e.g.,
 
 ```
 $ terraform import aws_efs_access_point.test fsap-52a643fb
