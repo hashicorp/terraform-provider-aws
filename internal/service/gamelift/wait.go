@@ -11,7 +11,7 @@ const (
 	buildReadyTimeout = 1 * time.Minute
 )
 
-func waitBuildReady(conn *gamelift.GameLift, id string) (*gamelift.Build, error) { //nolint:unparam
+func waitBuildReady(conn *gamelift.GameLift, id string) (*gamelift.Build, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{gamelift.BuildStatusInitialized},
 		Target:  []string{gamelift.BuildStatusReady},
