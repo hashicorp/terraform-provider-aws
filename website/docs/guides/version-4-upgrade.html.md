@@ -689,6 +689,73 @@ To help distribute the management of S3 bucket settings via independent resource
 have become read-only. Configurations dependent on these arguments should be updated to use the corresponding `aws_s3_bucket_*` resource.
 Once updated, new `aws_s3_bucket_*` resources should be imported into Terraform state.
 
+### `cors_rule` Argument deprecation
+
+Switch your Terraform configuration to the `aws_s3_bucket_cors_configuration` resource instead.
+
+For example, given this previous configuration:
+
+```terraform
+resource "aws_s3_bucket" "example" {
+  # ... other configuration ...
+  cors_rule {
+    allowed_headers = ["*"]
+    allowed_methods = ["PUT", "POST"]
+    allowed_origins = ["https://s3-website-test.hashicorp.com"]
+    expose_headers  = ["ETag"]
+    max_age_seconds = 3000
+  }
+}
+```
+
+It will receive the following error after upgrading:
+
+```
+│ Error: Value for unconfigurable attribute
+│
+│   with aws_s3_bucket.example,
+│   on main.tf line 1, in resource "aws_s3_bucket" "example":
+│    1: resource "aws_s3_bucket" "example" {
+│
+│ Can't configure a value for "cors_rule": its value will be decided automatically based on the result of applying this configuration.
+```
+
+Since the `cors_rule` argument changed to read-only, the recommendation is to update the configuration to use the `aws_s3_bucket_cors_configuration`
+resource and remove any references to `cors_rule` and its nested arguments in the `aws_s3_bucket` resource:
+
+```terraform
+resource "aws_s3_bucket" "example" {
+  # ... other configuration ...
+}
+
+resource "aws_s3_bucket_cors_configuration" "example" {
+  bucket = aws_s3_bucket.example.id
+  
+  cors_rule {
+    allowed_headers = ["*"]
+    allowed_methods = ["PUT", "POST"]
+    allowed_origins = ["https://s3-website-test.hashicorp.com"]
+    expose_headers  = ["ETag"]
+    max_age_seconds = 3000
+  }
+}
+```
+
+It is then recommended running `terraform import` on each new resource to prevent data loss, e.g.
+
+```shell
+$ terraform import aws_s3_bucket_cors_configuration.example example
+aws_s3_bucket_cors_configuration.example: Importing from ID "example"...
+aws_s3_bucket_cors_configuration.example: Import prepared!
+  Prepared aws_s3_bucket_cors_configuration for import
+aws_s3_bucket_cors_configuration.example: Refreshing state... [id=example]
+
+Import successful!
+
+The resources that were imported are shown above. These resources are now in
+your Terraform state and will henceforth be managed by Terraform.
+```
+
 ### `request_payer` Argument deprecation
 
 Switch your Terraform configuration to the `aws_s3_bucket_request_payment_configuration` resource instead.
