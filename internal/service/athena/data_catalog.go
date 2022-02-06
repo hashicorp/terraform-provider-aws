@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/athena"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -62,14 +63,13 @@ func ResourceDataCatalog() *schema.Resource {
 			},
 			"parameters": {
 				Type:     schema.TypeMap,
-				Computed: true,
 				Optional: true,
-				Elem: &schema.Schema{
-					Type:     schema.TypeString,
-					Computed: true,
-					Optional: true,
-					//ValidateFunc: validation.StringLenBetween(1, 51200), -- WIP
-				},
+				Elem:     &schema.Schema{Type: schema.TypeString},
+				ValidateDiagFunc: allDiagFunc(
+					validation.MapKeyLenBetween(1, 255),
+					validation.MapValueLenBetween(0, 51200),
+					validation.MapValueMatch(regexp.MustCompile(`^[\w@_-]+$`), ""),
+				),
 			},
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
@@ -242,4 +242,14 @@ func resourceDataCatalogRead(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	return nil
+}
+
+func allDiagFunc(validators ...schema.SchemaValidateDiagFunc) schema.SchemaValidateDiagFunc {
+	return func(i interface{}, k cty.Path) diag.Diagnostics {
+		var diags diag.Diagnostics
+		for _, validator := range validators {
+			diags = append(diags, validator(i, k)...)
+		}
+		return diags
+	}
 }
