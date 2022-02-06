@@ -48,7 +48,8 @@ func ResourceClusterActivityStream() *schema.Resource {
 			},
 			"engine_native_audit_fields_included": {
 				Type:     schema.TypeBool,
-				Required: false,
+				Optional: true,
+				Default:  false,
 				ForceNew: true,
 			},
 		},
@@ -90,12 +91,7 @@ func resourceAwsRDSClusterActivityStreamCreate(ctx context.Context, d *schema.Re
 func resourceAwsRDSClusterActivityStreamRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).RDSConn
 
-	input := &rds.DescribeDBClustersInput{
-		DBClusterIdentifier: aws.String(d.Id()),
-	}
-
-	log.Printf("[DEBUG] Describing RDS Cluster: %s", input)
-	// resp, err := conn.DescribeDBClusters(input)
+	log.Printf("[DEBUG] Finding DB Cluster (%s)", d.Id())
 	resp, err := FindDBClusterByClusterArn(conn, d.Id())
 
 	if err != nil {
@@ -109,7 +105,7 @@ func resourceAwsRDSClusterActivityStreamRead(ctx context.Context, d *schema.Reso
 	}
 
 	if resp == nil {
-		return diag.FromErr(fmt.Errorf("error retrieving RDS cluster: empty response for: %s", input))
+		return diag.FromErr(fmt.Errorf("error retrieving RDS cluster: empty response for: %s", d.Id()))
 	}
 
 	if aws.StringValue(resp.ActivityStreamStatus) == rds.ActivityStreamStatusStopped {
