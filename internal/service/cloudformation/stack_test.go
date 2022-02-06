@@ -853,7 +853,7 @@ resource "aws_s3_bucket" "b" {
 POLICY
 }
 
-resource "aws_s3_website_configuration" "test" {
+resource "aws_s3_bucket_website_configuration" "test" {
   bucket = aws_s3_bucket.b.id
   index_document {
     suffix = "index.html"
