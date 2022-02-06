@@ -52,6 +52,140 @@ func TestAccDataCatalog_basic(t *testing.T) {
 	})
 }
 
+func TestAccDataCatalog_type_lambda(t *testing.T) {
+	rName := "tf-test-" + sdkacctest.RandString(8)
+	resourceName := "aws_athena_data_catalog.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, athena.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckDataCatalogDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDataCatalogConfig_type_lambda(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDataCatalogExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "description", "A test data catalog using Lambda"),
+					resource.TestCheckResourceAttr(resourceName, "type", "LAMBDA"),
+					resource.TestCheckResourceAttr(resourceName, "parameters.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "parameters.metadata-function", "arn:aws:lambda:us-east-1:123456789012:function:test-function"),
+					resource.TestCheckResourceAttr(resourceName, "parameters.record-function", "arn:aws:lambda:us-east-1:123456789012:function:test-function"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"name",
+					"parameters",
+				},
+			},
+		},
+	})
+}
+
+func TestAccDataCatalog_type_hive(t *testing.T) {
+	rName := "tf-test-" + sdkacctest.RandString(8)
+	resourceName := "aws_athena_data_catalog.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, athena.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckDataCatalogDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDataCatalogConfig_type_hive(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDataCatalogExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "description", "A test data catalog using Hive"),
+					resource.TestCheckResourceAttr(resourceName, "type", "HIVE"),
+					resource.TestCheckResourceAttr(resourceName, "parameters.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "parameters.metadata-function", "arn:aws:lambda:us-east-1:123456789012:function:test-function"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"name",
+					"parameters",
+				},
+			},
+		},
+	})
+}
+
+func TestAccDataCatalog_type_glue(t *testing.T) {
+	rName := "tf-test-" + sdkacctest.RandString(8)
+	resourceName := "aws_athena_data_catalog.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, athena.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckDataCatalogDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDataCatalogConfig_type_glue(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDataCatalogExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "description", "A test data catalog using Glue"),
+					resource.TestCheckResourceAttr(resourceName, "type", "GLUE"),
+					resource.TestCheckResourceAttr(resourceName, "parameters.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "parameters.catalog-id", "123456789012"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"name",
+					"parameters",
+				},
+			},
+		},
+	})
+}
+
+func TestAccDataCatalog_parameters(t *testing.T) {
+	rName := "tf-test-" + sdkacctest.RandString(8)
+	resourceName := "aws_athena_data_catalog.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, athena.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckDataCatalogDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDataCatalogConfig_parameters(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDataCatalogExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "type", "LAMBDA"),
+					resource.TestCheckResourceAttr(resourceName, "description", "Testing parameters attribute"),
+					resource.TestCheckResourceAttr(resourceName, "parameters.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "parameters.function", "arn:aws:lambda:us-east-1:123456789012:function:test-function"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"name",
+					"parameters",
+				},
+			},
+		},
+	})
+}
+
 func TestAccDataCatalog_disappears(t *testing.T) {
 	rName := "tf-test-" + sdkacctest.RandString(8)
 	resourceName := "aws_athena_data_catalog.test"
@@ -87,6 +221,75 @@ resource "aws_athena_data_catalog" "test" {
 
 	tags = {
 	  Test = "test"
+	}
+}
+`, rName)
+}
+
+func testAccDataCatalogConfig_type_lambda(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_athena_data_catalog" "test" {
+	name = %[1]q
+	description = "A test data catalog using Lambda"
+	type = "LAMBDA"
+
+	parameters = {
+	  "metadata-function" = "arn:aws:lambda:us-east-1:123456789012:function:test-function"
+	  "record-function" = "arn:aws:lambda:us-east-1:123456789012:function:test-function"
+	}
+
+	tags = {
+	  Test = "test"
+	}
+}
+`, rName)
+}
+
+func testAccDataCatalogConfig_type_hive(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_athena_data_catalog" "test" {
+	name = %[1]q
+	description = "A test data catalog using Hive"
+	type = "HIVE"
+
+	parameters = {
+	  "metadata-function" = "arn:aws:lambda:us-east-1:123456789012:function:test-function"
+	}
+
+	tags = {
+	  Test = "test"
+	}
+}
+`, rName)
+}
+
+func testAccDataCatalogConfig_type_glue(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_athena_data_catalog" "test" {
+	name = %[1]q
+	description = "A test data catalog using Glue"
+	type = "GLUE"
+
+	parameters = {
+	  "catalog-id" = "123456789012"
+	}
+
+	tags = {
+	  Test = "test"
+	}
+}
+`, rName)
+}
+
+func testAccDataCatalogConfig_parameters(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_athena_data_catalog" "test" {
+	name = %[1]q
+	description = "Testing parameters attribute"
+	type = "LAMBDA"
+
+	parameters = {
+	  "function" = "arn:aws:lambda:us-east-1:123456789012:function:test-function"
 	}
 }
 `, rName)
