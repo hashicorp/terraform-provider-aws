@@ -22,7 +22,6 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
@@ -859,6 +858,8 @@ func resourceBucketRead(d *schema.ResourceData, meta interface{}) error {
 
 	if output, ok := pol.(*s3.GetBucketPolicyOutput); ok {
 		d.Set("policy", output.Policy)
+	} else {
+		d.Set("policy", nil)
 	}
 
 	//Read the Grant ACL. Reset if `acl` (canned ACL) is set.
