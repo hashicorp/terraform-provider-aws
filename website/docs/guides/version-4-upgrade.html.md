@@ -878,6 +878,115 @@ The resources that were imported are shown above. These resources are now in
 your Terraform state and will henceforth be managed by Terraform.
 ```
 
+### `replication_configuration` Argument deprecation
+
+Switch your Terraform configuration to the `aws_s3_bucket_replication_configuration` resource instead.
+
+For example, given this previous configuration:
+
+```terraform
+resource "aws_s3_bucket" "source" {
+  provider = aws.central
+  
+  # ... other configuration ...
+  
+  replication_configuration {
+    role = aws_iam_role.replication.arn
+    rules {
+      id     = "foobar"
+      status = "Enabled"
+      filter {
+        tags = {}
+      }
+      destination {
+        bucket        = aws_s3_bucket.destination.arn
+        storage_class = "STANDARD"
+        replication_time {
+          status  = "Enabled"
+          minutes = 15
+        }
+        metrics {
+          status  = "Enabled"
+          minutes = 15
+        }
+      }
+    }
+  }
+}
+```
+
+It will receive the following error after upgrading:
+
+```
+│ Error: Value for unconfigurable attribute
+│
+│   with aws_s3_bucket.source,
+│   on main.tf line 1, in resource "aws_s3_bucket" "source":
+│    1: resource "aws_s3_bucket" "source" {
+│
+│ Can't configure a value for "replication_configuration": its value will be decided automatically based on the result of applying this configuration.
+```
+
+Since the `replication_configuration` argument changed to read-only, the recommendation is to update the configuration to use the `aws_s3_bucket_replication_configuration`
+resource and remove any references to `replication_configuration` and its nested arguments in the `aws_s3_bucket` resource:
+
+```terraform
+resource "aws_s3_bucket" "source" {
+  provider = aws.central
+  # ... other configuration ...
+}
+
+resource "aws_s3_bucket_replication_configuration" "example" {
+  bucket = aws_s3_bucket.source.id
+  role   = aws_iam_role.replication.arn
+  
+  rule {
+    id     = "foobar"
+    status = "Enabled"
+
+    filter {}
+
+    delete_marker_replication {
+      status = "Enabled"
+    }
+
+    destination {
+      bucket        = aws_s3_bucket.destination.arn
+      storage_class = "STANDARD"
+
+      replication_time {
+        status = "Enabled"
+        time {
+          minutes = 15
+        }
+      }
+
+      metrics {
+        status = "Enabled"
+        event_threshold {
+          minutes = 15
+        }
+      }
+    }
+  }
+}
+```
+
+It is then recommended running `terraform import` on each new resource to prevent data loss, e.g.
+
+```shell
+$ terraform import aws_s3_bucket_replication_configuration.example example
+aws_s3_bucket_replication_configuration.example: Importing from ID "example"...
+aws_s3_bucket_replication_configuration.example: Import prepared!
+  Prepared aws_s3_bucket_replication_configuration for import
+aws_s3_bucket_replication_configuration.example: Refreshing state... [id=example]
+
+Import successful!
+
+The resources that were imported are shown above. These resources are now in
+your Terraform state and will henceforth be managed by Terraform.
+```
+
 ### `request_payer` Argument deprecation
 
 Switch your Terraform configuration to the `aws_s3_bucket_request_payment_configuration` resource instead.
