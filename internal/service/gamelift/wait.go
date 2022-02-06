@@ -54,7 +54,7 @@ func waitFleetActive(conn *gamelift.GameLift, id string, timeout time.Duration) 
 	return nil, err
 }
 
-func waitFleetTerminated(conn *gamelift.GameLift, id string, timeout time.Duration) (*gamelift.FleetAttributes, error) { //nolint:unparam
+func waitFleetTerminated(conn *gamelift.GameLift, id string, timeout time.Duration) (*gamelift.FleetAttributes, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{
 			gamelift.FleetStatusActive,
