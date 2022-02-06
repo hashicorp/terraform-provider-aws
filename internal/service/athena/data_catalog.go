@@ -2,10 +2,12 @@ package athena
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"regexp"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/athena"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -32,6 +34,10 @@ func ResourceDataCatalog() *schema.Resource {
 		CustomizeDiff: verify.SetTagsDiff,
 
 		Schema: map[string]*schema.Schema{
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"name": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -60,7 +66,7 @@ func ResourceDataCatalog() *schema.Resource {
 					Type: schema.TypeString,
 					//ValidateFunc: validation.StringLenBetween(1, 51200), -- WIP
 				},
-				Optional: true,
+				Required: true,
 			},
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
@@ -122,7 +128,7 @@ func resourceDataCatalogUpdate(ctx context.Context, d *schema.ResourceData, meta
 		}
 
 		if d.HasChange("type") {
-			input.Name = aws.String(d.Get("type").(string))
+			input.Type = aws.String(d.Get("type").(string))
 		}
 
 		if d.HasChange("parameters") {
@@ -205,7 +211,17 @@ func resourceDataCatalogRead(ctx context.Context, d *schema.ResourceData, meta i
 	d.Set("type", dataCatalog.DataCatalog.Type)
 	d.Set("parameters", aws.StringValueMap(dataCatalog.DataCatalog.Parameters))
 
-	tags, err := ListTags(conn, d.Id())
+	arn := arn.ARN{
+		Partition: meta.(*conns.AWSClient).Partition,
+		Region:    meta.(*conns.AWSClient).Region,
+		Service:   "athena",
+		AccountID: meta.(*conns.AWSClient).AccountID,
+		Resource:  fmt.Sprintf("datacatalog/%s", d.Id()),
+	}
+
+	d.Set("arn", arn.String())
+
+	tags, err := ListTags(conn, arn.String())
 
 	if err != nil {
 		return diag.Errorf("error listing tags for Athena Data Catalog (%s): %s", d.Id(), err)
