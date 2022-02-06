@@ -54,6 +54,22 @@ func ResourceFleet() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
+			"certificate_configuration": {
+				Type:     schema.TypeList,
+				MaxItems: 1,
+				Optional: true,
+				ForceNew: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"certificate_type": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Default:      gamelift.CertificateTypeDisabled,
+							ValidateFunc: validation.StringInSlice(gamelift.CertificateType_Values(), false),
+						},
+					},
+				},
+			},
 			"description": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -245,6 +261,10 @@ func resourceFleetCreate(d *schema.ResourceData, meta interface{}) error {
 		input.RuntimeConfiguration = expandGameliftRuntimeConfiguration(v.([]interface{}))
 	}
 
+	if v, ok := d.GetOk("certificate_configuration"); ok {
+		input.CertificateConfiguration = expandGameliftCertificateConfiguration(v.([]interface{}))
+	}
+
 	log.Printf("[INFO] Creating Gamelift Fleet: %s", input)
 	var out *gamelift.CreateFleetOutput
 	err := resource.Retry(tfiam.PropagationTimeout, func() *resource.RetryError {
@@ -309,6 +329,10 @@ func resourceFleetRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("instance_type", fleet.InstanceType)
 	d.Set("new_game_session_protection_policy", fleet.NewGameSessionProtectionPolicy)
 	d.Set("operating_system", fleet.OperatingSystem)
+
+	if err := d.Set("certificate_configuration", flattenGameliftCertificateConfiguration(fleet.CertificateConfiguration)); err != nil {
+		return fmt.Errorf("error setting certificate_configuration: %w", err)
+	}
 
 	if err := d.Set("resource_creation_limit_policy", flattenGameliftResourceCreationLimitPolicy(fleet.ResourceCreationLimitPolicy)); err != nil {
 		return fmt.Errorf("error setting resource_creation_limit_policy: %w", err)
@@ -607,6 +631,31 @@ func flattenGameliftServerProcess(sps []*gamelift.ServerProcess) []interface{} {
 	}
 
 	return tfList
+}
+
+func expandGameliftCertificateConfiguration(cfg []interface{}) *gamelift.CertificateConfiguration {
+	if len(cfg) < 1 {
+		return nil
+	}
+	out := gamelift.CertificateConfiguration{}
+	m := cfg[0].(map[string]interface{})
+
+	if v, ok := m["certificate_type"].(string); ok {
+		out.CertificateType = aws.String(v)
+	}
+
+	return &out
+}
+
+func flattenGameliftCertificateConfiguration(config *gamelift.CertificateConfiguration) []interface{} {
+	if config == nil {
+		return []interface{}{}
+	}
+
+	m := make(map[string]interface{})
+	m["certificate_type"] = aws.StringValue(config.CertificateType)
+
+	return []interface{}{m}
 }
 
 func getGameliftFleetFailures(conn *gamelift.GameLift, id string) ([]*gamelift.Event, error) {
