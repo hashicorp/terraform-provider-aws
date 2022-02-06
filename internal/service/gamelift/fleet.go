@@ -326,7 +326,7 @@ func resourceFleetRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("name", fleet.Name)
 	d.Set("fleet_type", fleet.FleetType)
 	d.Set("instance_role_arn", fleet.InstanceRoleArn)
-	d.Set("instance_type", fleet.InstanceType)
+	d.Set("ec2_instance_type", fleet.InstanceType)
 	d.Set("new_game_session_protection_policy", fleet.NewGameSessionProtectionPolicy)
 	d.Set("operating_system", fleet.OperatingSystem)
 
