@@ -347,8 +347,8 @@ func resourceFleetRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error reading for GameLift Fleet runtime configuration (%s): %w", d.Id(), err)
 	}
 
-	if err := d.Set("resource_creation_limit_policy", flattenGameliftRuntimeConfiguration(runtimeConfig.RuntimeConfiguration)); err != nil {
-		return fmt.Errorf("error setting resource_creation_limit_policy: %w", err)
+	if err := d.Set("runtime_configuration", flattenGameliftRuntimeConfiguration(runtimeConfig.RuntimeConfiguration)); err != nil {
+		return fmt.Errorf("error setting runtime_configuration: %w", err)
 	}
 
 	tags, err := ListTags(conn, arn)
