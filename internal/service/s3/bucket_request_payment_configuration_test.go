@@ -189,12 +189,6 @@ func testAccBucketRequestPaymentConfigurationBasicConfig(rName, payer string) st
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
-
-  lifecycle {
-    ignore_changes = [
-      request_payer
-    ]
-  }
 }
 
 resource "aws_s3_bucket_request_payment_configuration" "test" {

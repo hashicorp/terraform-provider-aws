@@ -409,42 +409,6 @@ func TestAccS3Bucket_Basic_acceleration(t *testing.T) {
 	})
 }
 
-func TestAccS3Bucket_Basic_requestPayer(t *testing.T) {
-	bucketName := sdkacctest.RandomWithPrefix("tf-test-bucket")
-	resourceName := "aws_s3_bucket.bucket"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckBucketDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccBucketRequestPayerBucketOwnerConfig(bucketName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "request_payer", "BucketOwner"),
-					testAccCheckRequestPayer(resourceName, "BucketOwner"),
-				),
-			},
-			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy", "acl"},
-			},
-			{
-				Config: testAccBucketRequestPayerRequesterConfig(bucketName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "request_payer", "Requester"),
-					testAccCheckRequestPayer(resourceName, "Requester"),
-				),
-			},
-		},
-	})
-}
-
 func TestAccS3Bucket_Security_policy(t *testing.T) {
 	bucketName := sdkacctest.RandomWithPrefix("tf-test-bucket")
 	partition := acctest.Partition()
@@ -2887,28 +2851,6 @@ func testAccCheckBucketCors(n string, corsRules []*s3.CORSRule) resource.TestChe
 	}
 }
 
-func testAccCheckRequestPayer(n, expectedPayer string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		rs := s.RootModule().Resources[n]
-		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn
-
-		out, err := conn.GetBucketRequestPayment(&s3.GetBucketRequestPaymentInput{
-			Bucket: aws.String(rs.Primary.ID),
-		})
-
-		if err != nil {
-			return fmt.Errorf("GetBucketRequestPayment error: %v", err)
-		}
-
-		if *out.Payer != expectedPayer {
-			return fmt.Errorf("bad error request payer type, expected: %v, got %v",
-				expectedPayer, out.Payer)
-		}
-
-		return nil
-	}
-}
-
 func testAccCheckBucketLogging(n, b, p string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs := s.RootModule().Resources[n]
@@ -3301,24 +3243,6 @@ func testAccBucketWithoutAccelerationConfig(bucketName string) string {
 resource "aws_s3_bucket" "bucket" {
   bucket              = %[1]q
   acceleration_status = "Suspended"
-}
-`, bucketName)
-}
-
-func testAccBucketRequestPayerBucketOwnerConfig(bucketName string) string {
-	return fmt.Sprintf(`
-resource "aws_s3_bucket" "bucket" {
-  bucket        = %[1]q
-  request_payer = "BucketOwner"
-}
-`, bucketName)
-}
-
-func testAccBucketRequestPayerRequesterConfig(bucketName string) string {
-	return fmt.Sprintf(`
-resource "aws_s3_bucket" "bucket" {
-  bucket        = %[1]q
-  request_payer = "Requester"
 }
 `, bucketName)
 }
