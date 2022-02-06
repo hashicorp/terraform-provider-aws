@@ -94,7 +94,6 @@ The following arguments are required:
 The following arguments are optional:
 
 * `block_device_mapping` - (Optional) Configuration block(s) with block device mappings for the the image recipe. Detailed below.
-
 * `image` - (Optional) The AMI ID to use as the base image for a container build and test instance. If not specified, Image Builder will use the appropriate ECS-optimized AMI as a base image.
 
 ### block_device_mapping
