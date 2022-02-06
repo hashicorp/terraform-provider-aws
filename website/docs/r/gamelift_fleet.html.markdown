@@ -82,6 +82,7 @@ In addition to all arguments above, the following attributes are exported:
 
 * `id` - Fleet ID.
 * `arn` - Fleet ARN.
+* `build_arn` - Build ARN.
 * `operating_system` - Operating system of the fleet's computing resources.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
 
