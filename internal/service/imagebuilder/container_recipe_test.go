@@ -830,7 +830,8 @@ func testAccContainerDockerfileTemplateURIConfig(rName string) string {
 		testAccContainerRecipeBaseConfig(rName),
 		fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
-  bucket = %[1]q
+  bucket        = %[1]q
+  force_destroy = true
 }
 
 resource "aws_s3_object" "test" {
