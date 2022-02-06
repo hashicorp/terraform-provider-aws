@@ -61,12 +61,15 @@ func ResourceDataCatalog() *schema.Resource {
 				}, false),
 			},
 			"parameters": {
-				Type: schema.TypeMap,
+				Type:     schema.TypeMap,
+				Computed: true,
+				Optional: true,
 				Elem: &schema.Schema{
-					Type: schema.TypeString,
+					Type:     schema.TypeString,
+					Computed: true,
+					Optional: true,
 					//ValidateFunc: validation.StringLenBetween(1, 51200), -- WIP
 				},
-				Required: true,
 			},
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
@@ -116,19 +119,9 @@ func resourceDataCatalogUpdate(ctx context.Context, d *schema.ResourceData, meta
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &athena.UpdateDataCatalogInput{
-			Name: aws.String(d.Id()),
-		}
-
-		if d.HasChange("name") {
-			input.Name = aws.String(d.Get("name").(string))
-		}
-
-		if d.HasChange("description") {
-			input.Name = aws.String(d.Get("description").(string))
-		}
-
-		if d.HasChange("type") {
-			input.Type = aws.String(d.Get("type").(string))
+			Name:        aws.String(d.Id()),
+			Type:        aws.String(d.Get("type").(string)),
+			Description: aws.String(d.Get("description").(string)),
 		}
 
 		if d.HasChange("parameters") {
@@ -209,7 +202,17 @@ func resourceDataCatalogRead(ctx context.Context, d *schema.ResourceData, meta i
 
 	d.Set("description", dataCatalog.DataCatalog.Description)
 	d.Set("type", dataCatalog.DataCatalog.Type)
-	d.Set("parameters", aws.StringValueMap(dataCatalog.DataCatalog.Parameters))
+
+	// NOTE: This is a workaround for the fact that the API sets default values for parameters that are not set.
+	// Because the API sets default values, what's returned by the API is different than what's set by the user.
+	parameters := map[string]*string{}
+	if v, ok := d.GetOk("parameters"); ok {
+		if m, ok := v.(map[string]interface{}); ok {
+			parameters = flex.ExpandStringMap(m)
+		}
+	}
+
+	d.Set("parameters", aws.StringValueMap(parameters))
 
 	arn := arn.ARN{
 		Partition: meta.(*conns.AWSClient).Partition,
