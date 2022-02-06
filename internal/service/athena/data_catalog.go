@@ -17,7 +17,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
@@ -68,7 +67,6 @@ func ResourceDataCatalog() *schema.Resource {
 				ValidateDiagFunc: allDiagFunc(
 					validation.MapKeyLenBetween(1, 255),
 					validation.MapValueLenBetween(0, 51200),
-					validation.MapValueMatch(regexp.MustCompile(`^[\w@_-]+$`), ""),
 				),
 			},
 			"tags":     tftags.TagsSchema(),
@@ -190,7 +188,8 @@ func resourceDataCatalogRead(ctx context.Context, d *schema.ResourceData, meta i
 
 	dataCatalog, err := conn.GetDataCatalogWithContext(ctx, input)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	// If the resource doesn't exist, the API returns a `ErrCodeInvalidRequestException` error.
+	if !d.IsNewResource() && tfawserr.ErrMessageContains(err, athena.ErrCodeInvalidRequestException, "was not found") {
 		log.Printf("[WARN] Athena Data Catalog (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
