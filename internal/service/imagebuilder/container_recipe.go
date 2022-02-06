@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
@@ -19,6 +20,7 @@ func ResourceContainerRecipe() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceContainerRecipeCreate,
 		Read:   resourceContainerRecipeRead,
+		Update: resourceContainerRecipeUpdate,
 		Delete: resourceContainerRecipeDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -92,7 +94,6 @@ func ResourceContainerRecipe() *schema.Resource {
 			"instance_configuration": {
 				Type:     schema.TypeList,
 				Optional: true,
-				Computed: true,
 				ForceNew: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
@@ -215,7 +216,8 @@ func ResourceContainerRecipe() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(1, 1024),
 			},
-			// tags
+			"tags":     tftags.TagsSchema(),
+			"tags_all": tftags.TagsSchemaComputed(),
 			"target_repository": {
 				Type:     schema.TypeList,
 				Required: true,
@@ -248,11 +250,14 @@ func ResourceContainerRecipe() *schema.Resource {
 				ValidateFunc: validation.StringLenBetween(1, 1024),
 			},
 		},
+		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
 func resourceContainerRecipeCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ImageBuilderConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
 	input := &imagebuilder.CreateContainerRecipeInput{
 		ClientToken: aws.String(resource.UniqueId()),
@@ -294,6 +299,10 @@ func resourceContainerRecipeCreate(d *schema.ResourceData, meta interface{}) err
 		input.ParentImage = aws.String(v.(string))
 	}
 
+	if len(tags) > 0 {
+		input.Tags = Tags(tags.IgnoreAWS())
+	}
+
 	if v, ok := d.GetOk("target_repository"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		input.TargetRepository = expandTargetContainerRepository(v.([]interface{})[0].(map[string]interface{}))
 	}
@@ -323,6 +332,8 @@ func resourceContainerRecipeCreate(d *schema.ResourceData, meta interface{}) err
 
 func resourceContainerRecipeRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ImageBuilderConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	input := &imagebuilder.GetContainerRecipeInput{
 		ContainerRecipeArn: aws.String(d.Id()),
@@ -336,6 +347,14 @@ func resourceContainerRecipeRead(d *schema.ResourceData, meta interface{}) error
 		return nil
 	}
 
+	if err != nil {
+		return fmt.Errorf("error creating Image Builder Container Recipe: %w", err)
+	}
+
+	if output == nil {
+		return fmt.Errorf("error creating Image Builder Container Recipe: empty response")
+	}
+
 	containerRecipe := output.ContainerRecipe
 
 	d.Set("arn", containerRecipe.Arn)
@@ -343,15 +362,46 @@ func resourceContainerRecipeRead(d *schema.ResourceData, meta interface{}) error
 	d.Set("container_type", containerRecipe.ContainerType)
 	d.Set("description", containerRecipe.Description)
 	d.Set("dockerfile_template_data", containerRecipe.DockerfileTemplateData)
-	d.Set("instance_configuration", []interface{}{flattenInstanceConfiguration(containerRecipe.InstanceConfiguration)})
+
+	if containerRecipe.InstanceConfiguration != nil {
+		d.Set("instance_configuration", []interface{}{flattenInstanceConfiguration(containerRecipe.InstanceConfiguration)})
+	} else {
+		d.Set("instance_configuration", nil)
+	}
+
 	d.Set("kms_key_id", containerRecipe.KmsKeyId)
 	d.Set("name", containerRecipe.Name)
 	d.Set("parent_image", containerRecipe.ParentImage)
+
+	tags := KeyValueTags(containerRecipe.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+
+	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %w", err)
+	}
+
+	if err := d.Set("tags_all", tags.Map()); err != nil {
+		return fmt.Errorf("error setting tags_all: %w", err)
+	}
+
 	d.Set("target_repository", []interface{}{flattenTargetContainerRepository(containerRecipe.TargetRepository)})
 	d.Set("version", containerRecipe.Version)
 	d.Set("working_directory", containerRecipe.WorkingDirectory)
 
 	return nil
+}
+
+func resourceContainerRecipeUpdate(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*conns.AWSClient).ImageBuilderConn
+
+	if d.HasChange("tags_all") {
+		o, n := d.GetChange("tags_all")
+
+		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
+			return fmt.Errorf("error updating tags for Image Builder Container Recipe (%s): %w", d.Id(), err)
+		}
+	}
+
+	return resourceContainerRecipeRead(d, meta)
 }
 
 func resourceContainerRecipeDelete(d *schema.ResourceData, meta interface{}) error {
