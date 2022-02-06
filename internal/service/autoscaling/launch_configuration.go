@@ -250,7 +250,10 @@ func ResourceLaunchConfiguration() *schema.Resource {
 							Type:     schema.TypeString,
 							Required: true,
 						},
-
+						"no_device": {
+							Type:     schema.TypeBool,
+							Optional: true,
+						},
 						"virtual_name": {
 							Type:     schema.TypeString,
 							Required: true,
@@ -482,10 +485,19 @@ func resourceLaunchConfigurationCreate(d *schema.ResourceData, meta interface{})
 		vL := v.(*schema.Set).List()
 		for _, v := range vL {
 			bd := v.(map[string]interface{})
-			blockDevices = append(blockDevices, &autoscaling.BlockDeviceMapping{
+			bdm := &autoscaling.BlockDeviceMapping{
 				DeviceName:  aws.String(bd["device_name"].(string)),
 				VirtualName: aws.String(bd["virtual_name"].(string)),
-			})
+			}
+			if v, ok := bd["no_device"].(bool); ok && v {
+				bdm.NoDevice = aws.Bool(true)
+				// When NoDevice is true, just ignore VirtualName since it's not needed
+				bdm.VirtualName = nil
+			}
+			if bdm.NoDevice == nil && aws.StringValue(bdm.VirtualName) == "" {
+				return errors.New("virtual_name cannot be empty when no_device is false or undefined.")
+			}
+			blockDevices = append(blockDevices, bdm)
 		}
 	}
 

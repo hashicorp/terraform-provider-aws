@@ -816,6 +816,7 @@ resource "aws_launch_configuration" "test" {
 
   ephemeral_block_device {
     device_name  = "/dev/sde"
+	no_device    = false
     virtual_name = "ephemeral0"
   }
 }
