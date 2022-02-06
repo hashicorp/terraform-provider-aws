@@ -6,6 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -327,4 +328,31 @@ func revokeAllNetworkACLEntries(netaclId string, meta interface{}) error {
 	}
 
 	return nil
+}
+
+func findNetworkAclAssociation(subnetId string, conn *ec2.EC2) (networkAclAssociation *ec2.NetworkAclAssociation, err error) {
+	req := &ec2.DescribeNetworkAclsInput{}
+	req.Filters = BuildAttributeFilterList(
+		map[string]string{
+			"association.subnet-id": subnetId,
+		},
+	)
+	resp, err := conn.DescribeNetworkAcls(req)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(resp.NetworkAcls) > 0 {
+		for _, association := range resp.NetworkAcls[0].Associations {
+			if aws.StringValue(association.SubnetId) == subnetId {
+				return association, nil
+			}
+		}
+	}
+
+	return nil, &resource.NotFoundError{
+		LastRequest:  req,
+		LastResponse: resp,
+		Message:      fmt.Sprintf("could not find association for subnet: %s ", subnetId),
+	}
 }

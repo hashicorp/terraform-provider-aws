@@ -126,6 +126,25 @@ func networkACLAssociationCreate(conn *ec2.EC2, naclID, subnetID string) (string
 	return aws.StringValue(outputRaw.(*ec2.ReplaceNetworkAclAssociationOutput).NewAssociationId), nil
 }
 
+// networkACLAssociationsCreate creates associations between the specified NACL and subnets.
+func networkACLAssociationsCreate(conn *ec2.EC2, naclID string, subnetIDs []interface{}) error {
+	for _, v := range subnetIDs {
+		subnetID := v.(string)
+		_, err := networkACLAssociationCreate(conn, naclID, subnetID)
+
+		if tfresource.NotFound(err) {
+			// Subnet has been deleted.
+			continue
+		}
+
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
 // networkACLAssociationDelete deletes the specified association between a NACL and subnet.
 // The subnet's current association is replaced by an association with the VPC's default NACL.
 func networkACLAssociationDelete(conn *ec2.EC2, associationID, naclID string) error {
@@ -143,6 +162,36 @@ func networkACLAssociationDelete(conn *ec2.EC2, associationID, naclID string) er
 
 	if err != nil {
 		return fmt.Errorf("error deleting EC2 Network ACL Association (%s): %w", associationID, err)
+	}
+
+	return nil
+}
+
+// networkACLAssociationDelete deletes the specified NACL associations for the specified subnets.
+// Each subnet's current association is replaced by an association with the specified VPC's default NACL.
+func networkACLAssociationsDelete(conn *ec2.EC2, vpcID string, subnetIDs []interface{}) error {
+	defaultNACL, err := FindVPCDefaultNetworkACL(conn, vpcID)
+
+	if err != nil {
+		return fmt.Errorf("error reading EC2 VPC (%s) default NACL: %w", vpcID, err)
+	}
+
+	for _, v := range subnetIDs {
+		subnetID := v.(string)
+		association, err := FindNetworkACLAssociationBySubnetID(conn, subnetID)
+
+		if tfresource.NotFound(err) {
+			// Subnet has been deleted.
+			continue
+		}
+
+		if err != nil {
+			return fmt.Errorf("error reading EC2 Network ACL Association for EC2 Subnet (%s): %w", subnetID, err)
+		}
+
+		if err := networkACLAssociationDelete(conn, aws.StringValue(association.NetworkAclAssociationId), aws.StringValue(defaultNACL.NetworkAclId)); err != nil {
+			return err
+		}
 	}
 
 	return nil

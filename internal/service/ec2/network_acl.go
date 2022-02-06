@@ -11,7 +11,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -263,44 +262,13 @@ func resourceNetworkACLUpdate(d *schema.ResourceData, meta interface{}) error {
 		add, del := ns.Difference(os).List(), os.Difference(ns).List()
 
 		if len(del) > 0 {
-			// A Network ACL is required for each subnet. In order to disassociate a
-			// subnet from this ACL, we must associate it with the default ACL.
-			vpcID := d.Get("vpc_id").(string)
-			defaultNACL, err := FindVPCDefaultNetworkACL(conn, vpcID)
-
-			if err != nil {
-				return fmt.Errorf("error reading EC2 VPC (%s) default NACL: %w", vpcID, err)
-			}
-
-			for _, v := range del {
-				subnetID := v.(string)
-
-				association, err := FindNetworkACLAssociationBySubnetID(conn, subnetID)
-
-				if tfresource.NotFound(err) {
-					// Subnet has been deleted.
-					continue
-				}
-
-				if err != nil {
-					return fmt.Errorf("error reading EC2 Network ACL Association for EC2 Subnet (%s): %w", subnetID, err)
-				}
-
-				if err := networkACLAssociationDelete(conn, aws.StringValue(association.NetworkAclAssociationId), aws.StringValue(defaultNACL.NetworkAclId)); err != nil {
-					return err
-				}
+			if err := networkACLAssociationsDelete(conn, d.Get("vpc_id").(string), del); err != nil {
+				return err
 			}
 		}
 
-		for _, v := range add {
-			_, err := networkACLAssociationCreate(conn, d.Id(), v.(string))
-
-			if tfresource.NotFound(err) {
-				// Subnet has been deleted.
-				continue
-			}
-
-			if err != nil {
+		if len(add) > 0 {
+			if err := networkACLAssociationsCreate(conn, d.Id(), add); err != nil {
 				return err
 			}
 		}
@@ -320,27 +288,20 @@ func resourceNetworkACLUpdate(d *schema.ResourceData, meta interface{}) error {
 func resourceNetworkACLDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
+	if v, ok := d.GetOk("subnet_ids"); ok && v.(*schema.Set).Len() > 0 {
+		if err := networkACLAssociationsDelete(conn, d.Get("vpc_id").(string), v.(*schema.Set).List()); err != nil {
+			return err
+		}
+	}
+
 	input := &ec2.DeleteNetworkAclInput{
 		NetworkAclId: aws.String(d.Id()),
 	}
 
 	log.Printf("[INFO] Deleting EC2 Network ACL: %s", d.Id())
-	_, err := tfresource.RetryWhen(NetworkACLDeletedTimeout,
-		func() (interface{}, error) {
-			return conn.DeleteNetworkAcl(input)
-		},
-		func(err error) (bool, error) {
-			if tfawserr.ErrCodeEquals(err, ErrCodeDependencyViolation) {
-				if err := cleanUpDependencyViolations(d, conn); err != nil {
-					return false, err
-				}
-
-				return true, err
-			}
-
-			return false, err
-		},
-	)
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(PropagationTimeout, func() (interface{}, error) {
+		return conn.DeleteNetworkAcl(input)
+	}, ErrCodeDependencyViolation)
 
 	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidNetworkAclIDNotFound) {
 		return nil
@@ -459,60 +420,6 @@ func updateNetworkAclEntries(d *schema.ResourceData, entryType string, conn *ec2
 	return nil
 }
 
-func cleanUpDependencyViolations(d *schema.ResourceData, conn *ec2.EC2) error {
-	// In case of dependency violation, we remove the association between subnet and network acl.
-	// This means the subnet is attached to default acl of vpc.
-	var associations []*ec2.NetworkAclAssociation
-	if v, ok := d.GetOk("subnet_ids"); ok {
-		ids := v.(*schema.Set).List()
-		for _, i := range ids {
-			a, err := findNetworkAclAssociation(i.(string), conn)
-			if err != nil {
-				if tfresource.NotFound(err) {
-					continue
-				}
-				return fmt.Errorf("Error finding network ACL association: %s", err)
-			}
-			associations = append(associations, a)
-		}
-	}
-
-	log.Printf("[DEBUG] Replacing network associations for Network ACL (%s): %s", d.Id(), associations)
-	defaultAcl, err := GetDefaultNetworkACL(d.Get("vpc_id").(string), conn)
-	if err != nil {
-		return fmt.Errorf("Error getting default network ACL: %s", err)
-	}
-
-	for _, a := range associations {
-		log.Printf("DEBUG] Replacing Network Acl Association (%s) with Default Network ACL ID (%s)",
-			aws.StringValue(a.NetworkAclAssociationId), aws.StringValue(defaultAcl.NetworkAclId))
-		_, replaceErr := conn.ReplaceNetworkAclAssociation(&ec2.ReplaceNetworkAclAssociationInput{
-			AssociationId: a.NetworkAclAssociationId,
-			NetworkAclId:  defaultAcl.NetworkAclId,
-		})
-		if replaceErr != nil {
-			// It's possible that during an attempt to replace this
-			// association, the Subnet in question has already been moved to
-			// another ACL. This can happen if you're destroying a network acl
-			// and simultaneously re-associating it's subnet(s) with another
-			// ACL; Terraform may have already re-associated the subnet(s) by
-			// the time we attempt to destroy them, even between the time we
-			// list them and then try to destroy them. In this case, the
-			// association we're trying to replace will no longer exist and
-			// this call will fail. Here we trap that error and fail
-			// gracefully; the association we tried to replace gone, we trust
-			// someone else has taken ownership.
-			if tfawserr.ErrMessageContains(replaceErr, "InvalidAssociationID.NotFound", "") {
-				log.Printf("[WARN] Network Association (%s) no longer found; Network Association likely updated or removed externally, removing from state", aws.StringValue(a.NetworkAclAssociationId))
-				continue
-			}
-			log.Printf("[ERR] Non retry-able error in replacing associations for Network ACL (%s): %s", d.Id(), replaceErr)
-			return fmt.Errorf("Error replacing network ACL associations: %s", err)
-		}
-	}
-	return nil
-}
-
 func resourceNetworkACLEntryHash(v interface{}) int {
 	var buf bytes.Buffer
 	m := v.(map[string]interface{})
@@ -572,33 +479,6 @@ func GetDefaultNetworkACL(vpcId string, conn *ec2.EC2) (defaultAcl *ec2.NetworkA
 		return nil, err
 	}
 	return resp.NetworkAcls[0], nil
-}
-
-func findNetworkAclAssociation(subnetId string, conn *ec2.EC2) (networkAclAssociation *ec2.NetworkAclAssociation, err error) {
-	req := &ec2.DescribeNetworkAclsInput{}
-	req.Filters = BuildAttributeFilterList(
-		map[string]string{
-			"association.subnet-id": subnetId,
-		},
-	)
-	resp, err := conn.DescribeNetworkAcls(req)
-	if err != nil {
-		return nil, err
-	}
-
-	if len(resp.NetworkAcls) > 0 {
-		for _, association := range resp.NetworkAcls[0].Associations {
-			if aws.StringValue(association.SubnetId) == subnetId {
-				return association, nil
-			}
-		}
-	}
-
-	return nil, &resource.NotFoundError{
-		LastRequest:  req,
-		LastResponse: resp,
-		Message:      fmt.Sprintf("could not find association for subnet: %s ", subnetId),
-	}
 }
 
 func createNetworkACLEntries(conn *ec2.EC2, naclID string, tfList []interface{}, egress bool) error {

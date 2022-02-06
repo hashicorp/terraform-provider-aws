@@ -291,7 +291,6 @@ func WaitInstanceIAMInstanceProfileUpdated(conn *ec2.EC2, instanceID string, exp
 const ManagedPrefixListEntryCreateTimeout = 5 * time.Minute
 
 const (
-	NetworkACLDeletedTimeout          = 5 * time.Minute
 	NetworkACLEntryPropagationTimeout = 5 * time.Minute
 )
 
