@@ -971,9 +971,10 @@ func Provider() *schema.Provider {
 			"aws_appsync_graphql_api":                 appsync.ResourceGraphQLAPI(),
 			"aws_appsync_resolver":                    appsync.ResourceResolver(),
 
-			"aws_athena_database":    athena.ResourceDatabase(),
-			"aws_athena_named_query": athena.ResourceNamedQuery(),
-			"aws_athena_workgroup":   athena.ResourceWorkGroup(),
+			"aws_athena_database":     athena.ResourceDatabase(),
+			"aws_athena_data_catalog": athena.ResourceDataCatalog(),
+			"aws_athena_named_query":  athena.ResourceNamedQuery(),
+			"aws_athena_workgroup":    athena.ResourceWorkGroup(),
 
 			"aws_autoscaling_attachment":     autoscaling.ResourceAttachment(),
 			"aws_autoscaling_group":          autoscaling.ResourceGroup(),
