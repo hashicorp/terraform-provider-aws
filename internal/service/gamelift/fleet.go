@@ -454,54 +454,14 @@ func resourceFleetDelete(d *schema.ResourceData, meta interface{}) error {
 		_, err = conn.DeleteFleet(input)
 	}
 	if err != nil {
-		return fmt.Errorf("Error deleting Gamelift fleet: %s", err)
+		return fmt.Errorf("Error deleting Gamelift fleet: %w", err)
 	}
 
-	return WaitForFleetToBeDeleted(conn, d.Id(), d.Timeout(schema.TimeoutDelete))
-}
-
-func WaitForFleetToBeDeleted(conn *gamelift.GameLift, id string, timeout time.Duration) error {
-	stateConf := resource.StateChangeConf{
-		Pending: []string{
-			gamelift.FleetStatusActive,
-			gamelift.FleetStatusDeleting,
-			gamelift.FleetStatusError,
-			gamelift.FleetStatusTerminated,
-		},
-		Target:  []string{},
-		Timeout: timeout,
-		Refresh: func() (interface{}, string, error) {
-			out, err := conn.DescribeFleetAttributes(&gamelift.DescribeFleetAttributesInput{
-				FleetIds: aws.StringSlice([]string{id}),
-			})
-			if err != nil {
-				return 42, "", err
-			}
-
-			attributes := out.FleetAttributes
-			if len(attributes) < 1 {
-				return nil, "", nil
-			}
-			if len(attributes) != 1 {
-				return 42, "", fmt.Errorf("Expected exactly 1 Gamelift fleet, found %d under %q",
-					len(attributes), id)
-			}
-
-			fleet := attributes[0]
-			return fleet, *fleet.Status, nil
-		},
+	if _, err := waitFleetTerminated(conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+		return fmt.Errorf("error waiting for GameLift Fleet (%s) to be deleted: %w", d.Id(), err)
 	}
-	_, err := stateConf.WaitForState()
-	if err != nil {
-		events, fErr := getGameliftFleetFailures(conn, id)
-		if fErr != nil {
-			log.Printf("[WARN] Failed to poll fleet failures: %s", fErr)
-		}
-		if len(events) > 0 {
-			return fmt.Errorf("%s Recent failures:\n%+v", err, events)
-		}
-	}
-	return err
+
+	return nil
 }
 
 func expandGameliftIpPermissions(cfgs []interface{}) []*gamelift.IpPermission {
@@ -656,65 +616,6 @@ func flattenGameliftCertificateConfiguration(config *gamelift.CertificateConfigu
 	m["certificate_type"] = aws.StringValue(config.CertificateType)
 
 	return []interface{}{m}
-}
-
-func getGameliftFleetFailures(conn *gamelift.GameLift, id string) ([]*gamelift.Event, error) {
-	var events []*gamelift.Event
-	err := _getGameliftFleetFailures(conn, id, nil, &events)
-	return events, err
-}
-
-func _getGameliftFleetFailures(conn *gamelift.GameLift, id string, nextToken *string, events *[]*gamelift.Event) error {
-	eOut, err := conn.DescribeFleetEvents(&gamelift.DescribeFleetEventsInput{
-		FleetId:   aws.String(id),
-		NextToken: nextToken,
-	})
-	if err != nil {
-		return err
-	}
-
-	for _, e := range eOut.Events {
-		if isGameliftEventFailure(e) {
-			*events = append(*events, e)
-		}
-	}
-
-	if eOut.NextToken != nil {
-		err := _getGameliftFleetFailures(conn, id, nextToken, events)
-		if err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-func isGameliftEventFailure(event *gamelift.Event) bool {
-	failureCodes := []string{
-		gamelift.EventCodeFleetActivationFailed,
-		gamelift.EventCodeFleetActivationFailedNoInstances,
-		gamelift.EventCodeFleetBinaryDownloadFailed,
-		gamelift.EventCodeFleetInitializationFailed,
-		gamelift.EventCodeFleetStateError,
-		gamelift.EventCodeFleetValidationExecutableRuntimeFailure,
-		gamelift.EventCodeFleetValidationLaunchPathNotFound,
-		gamelift.EventCodeFleetValidationTimedOut,
-		gamelift.EventCodeFleetVpcPeeringFailed,
-		gamelift.EventCodeGameSessionActivationTimeout,
-		gamelift.EventCodeServerProcessCrashed,
-		gamelift.EventCodeServerProcessForceTerminated,
-		gamelift.EventCodeServerProcessInvalidPath,
-		gamelift.EventCodeServerProcessProcessExitTimeout,
-		gamelift.EventCodeServerProcessProcessReadyTimeout,
-		gamelift.EventCodeServerProcessSdkInitializationTimeout,
-		gamelift.EventCodeServerProcessTerminatedUnhealthy,
-	}
-	for _, fc := range failureCodes {
-		if aws.StringValue(event.EventCode) == fc {
-			return true
-		}
-	}
-	return false
 }
 
 func DiffPortSettings(oldPerms, newPerms []interface{}) (a []*gamelift.IpPermission, r []*gamelift.IpPermission) {
