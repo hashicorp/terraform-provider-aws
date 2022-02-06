@@ -391,61 +391,61 @@ func ResourceBucket() *schema.Resource {
 			"replication_configuration": {
 				Type:       schema.TypeList,
 				Computed:   true,
-				Deprecated: "Use the aws_s3_bucket_replication__configuration resource instead",
+				Deprecated: "Use the aws_s3_bucket_replication_configuration resource instead",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"role": {
 							Type:       schema.TypeString,
 							Computed:   true,
-							Deprecated: "Use the aws_s3_bucket_replication__configuration resource instead",
+							Deprecated: "Use the aws_s3_bucket_replication_configuration resource instead",
 						},
 						"rules": {
 							Type:       schema.TypeSet,
 							Computed:   true,
-							Deprecated: "Use the aws_s3_bucket_replication__configuration resource instead",
+							Deprecated: "Use the aws_s3_bucket_replication_configuration resource instead",
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"id": {
 										Type:       schema.TypeString,
 										Computed:   true,
-										Deprecated: "Use the aws_s3_bucket_replication__configuration resource instead",
+										Deprecated: "Use the aws_s3_bucket_replication_configuration resource instead",
 									},
 									"destination": {
 										Type:       schema.TypeList,
 										Computed:   true,
-										Deprecated: "Use the aws_s3_bucket_replication__configuration resource instead",
+										Deprecated: "Use the aws_s3_bucket_replication_configuration resource instead",
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"account_id": {
 													Type:       schema.TypeString,
 													Computed:   true,
-													Deprecated: "Use the aws_s3_bucket_replication__configuration resource instead",
+													Deprecated: "Use the aws_s3_bucket_replication_configuration resource instead",
 												},
 												"bucket": {
 													Type:       schema.TypeString,
 													Computed:   true,
-													Deprecated: "Use the aws_s3_bucket_replication__configuration resource instead",
+													Deprecated: "Use the aws_s3_bucket_replication_configuration resource instead",
 												},
 												"storage_class": {
 													Type:       schema.TypeString,
 													Computed:   true,
-													Deprecated: "Use the aws_s3_bucket_replication__configuration resource instead",
+													Deprecated: "Use the aws_s3_bucket_replication_configuration resource instead",
 												},
 												"replica_kms_key_id": {
 													Type:       schema.TypeString,
 													Computed:   true,
-													Deprecated: "Use the aws_s3_bucket_replication__configuration resource instead",
+													Deprecated: "Use the aws_s3_bucket_replication_configuration resource instead",
 												},
 												"access_control_translation": {
 													Type:       schema.TypeList,
 													Computed:   true,
-													Deprecated: "Use the aws_s3_bucket_replication__configuration resource instead",
+													Deprecated: "Use the aws_s3_bucket_replication_configuration resource instead",
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
 															"owner": {
 																Type:       schema.TypeString,
 																Computed:   true,
-																Deprecated: "Use the aws_s3_bucket_replication__configuration resource instead",
+																Deprecated: "Use the aws_s3_bucket_replication_configuration resource instead",
 															},
 														},
 													},
@@ -453,18 +453,18 @@ func ResourceBucket() *schema.Resource {
 												"replication_time": {
 													Type:       schema.TypeList,
 													Computed:   true,
-													Deprecated: "Use the aws_s3_bucket_replication__configuration resource instead",
+													Deprecated: "Use the aws_s3_bucket_replication_configuration resource instead",
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
 															"minutes": {
 																Type:       schema.TypeInt,
 																Computed:   true,
-																Deprecated: "Use the aws_s3_bucket_replication__configuration resource instead",
+																Deprecated: "Use the aws_s3_bucket_replication_configuration resource instead",
 															},
 															"status": {
 																Type:       schema.TypeString,
 																Computed:   true,
-																Deprecated: "Use the aws_s3_bucket_replication__configuration resource instead",
+																Deprecated: "Use the aws_s3_bucket_replication_configuration resource instead",
 															},
 														},
 													},
@@ -472,18 +472,18 @@ func ResourceBucket() *schema.Resource {
 												"metrics": {
 													Type:       schema.TypeList,
 													Computed:   true,
-													Deprecated: "Use the aws_s3_bucket_replication__configuration resource instead",
+													Deprecated: "Use the aws_s3_bucket_replication_configuration resource instead",
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
 															"minutes": {
 																Type:       schema.TypeInt,
 																Computed:   true,
-																Deprecated: "Use the aws_s3_bucket_replication__configuration resource instead",
+																Deprecated: "Use the aws_s3_bucket_replication_configuration resource instead",
 															},
 															"status": {
 																Type:       schema.TypeString,
 																Computed:   true,
-																Deprecated: "Use the aws_s3_bucket_replication__configuration resource instead",
+																Deprecated: "Use the aws_s3_bucket_replication_configuration resource instead",
 															},
 														},
 													},
@@ -494,19 +494,19 @@ func ResourceBucket() *schema.Resource {
 									"source_selection_criteria": {
 										Type:       schema.TypeList,
 										Computed:   true,
-										Deprecated: "Use the aws_s3_bucket_replication__configuration resource instead",
+										Deprecated: "Use the aws_s3_bucket_replication_configuration resource instead",
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"sse_kms_encrypted_objects": {
 													Type:       schema.TypeList,
 													Computed:   true,
-													Deprecated: "Use the aws_s3_bucket_replication__configuration resource instead",
+													Deprecated: "Use the aws_s3_bucket_replication_configuration resource instead",
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
 															"enabled": {
 																Type:       schema.TypeBool,
 																Computed:   true,
-																Deprecated: "Use the aws_s3_bucket_replication__configuration resource instead",
+																Deprecated: "Use the aws_s3_bucket_replication_configuration resource instead",
 															},
 														},
 													},
@@ -517,37 +517,37 @@ func ResourceBucket() *schema.Resource {
 									"prefix": {
 										Type:       schema.TypeString,
 										Computed:   true,
-										Deprecated: "Use the aws_s3_bucket_replication__configuration resource instead",
+										Deprecated: "Use the aws_s3_bucket_replication_configuration resource instead",
 									},
 									"status": {
 										Type:       schema.TypeString,
 										Computed:   true,
-										Deprecated: "Use the aws_s3_bucket_replication__configuration resource instead",
+										Deprecated: "Use the aws_s3_bucket_replication_configuration resource instead",
 									},
 									"priority": {
 										Type:       schema.TypeInt,
 										Computed:   true,
-										Deprecated: "Use the aws_s3_bucket_replication__configuration resource instead",
+										Deprecated: "Use the aws_s3_bucket_replication_configuration resource instead",
 									},
 									"filter": {
 										Type:       schema.TypeList,
 										Computed:   true,
-										Deprecated: "Use the aws_s3_bucket_replication__configuration resource instead",
+										Deprecated: "Use the aws_s3_bucket_replication_configuration resource instead",
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"prefix": {
 													Type:       schema.TypeString,
 													Computed:   true,
-													Deprecated: "Use the aws_s3_bucket_replication__configuration resource instead",
+													Deprecated: "Use the aws_s3_bucket_replication_configuration resource instead",
 												},
-												"tags": tftags.TagsSchemaComputedDeprecated("Use the aws_s3_bucket_replication__configuration resource instead"),
+												"tags": tftags.TagsSchemaComputedDeprecated("Use the aws_s3_bucket_replication_configuration resource instead"),
 											},
 										},
 									},
 									"delete_marker_replication_status": {
 										Type:       schema.TypeString,
 										Computed:   true,
-										Deprecated: "Use the aws_s3_bucket_replication__configuration resource instead",
+										Deprecated: "Use the aws_s3_bucket_replication_configuration resource instead",
 									},
 								},
 							},
