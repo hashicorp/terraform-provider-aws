@@ -57,6 +57,7 @@ func ResourceFleet() *schema.Resource {
 			"certificate_configuration": {
 				Type:     schema.TypeList,
 				MaxItems: 1,
+				Computed: true,
 				Optional: true,
 				ForceNew: true,
 				Elem: &schema.Resource{
@@ -454,6 +455,9 @@ func resourceFleetDelete(d *schema.ResourceData, meta interface{}) error {
 		_, err = conn.DeleteFleet(input)
 	}
 	if err != nil {
+		if tfawserr.ErrCodeEquals(err, gamelift.ErrCodeNotFoundException) {
+			return nil
+		}
 		return fmt.Errorf("Error deleting Gamelift fleet: %w", err)
 	}
 
