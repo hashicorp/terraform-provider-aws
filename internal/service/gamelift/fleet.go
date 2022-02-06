@@ -175,6 +175,7 @@ func ResourceFleet() *schema.Resource {
 			"runtime_configuration": {
 				Type:     schema.TypeList,
 				MaxItems: 1,
+				Computed: true,
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
