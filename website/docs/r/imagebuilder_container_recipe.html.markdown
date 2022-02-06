@@ -129,5 +129,5 @@ In addition to all arguments above, the following attributes are exported:
 `aws_imagebuilder_container_recipe` resources can be imported by using the Amazon Resource Name (ARN), e.g.,
 
 ```
-$ terraform import aws_imagebuilder_image_recipe.example arn:aws:imagebuilder:us-east-1:123456789012:container-recipe/example/1.0.0
+$ terraform import aws_imagebuilder_container_recipe.example arn:aws:imagebuilder:us-east-1:123456789012:container-recipe/example/1.0.0
 ```
