@@ -208,9 +208,10 @@ func TestAccGameLiftFleet_basic(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"runtime_configuration"},
 			},
 			{
 				Config: testAccFleetBasicUpdatedConfig(rNameUpdated, launchPath, params, bucketName, key, roleArn),
@@ -282,9 +283,10 @@ func TestAccGameLiftFleet_tags(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"runtime_configuration"},
 			},
 			{
 				Config: testAccFleetBasicTags2Config(rName, launchPath, params, bucketName, key, roleArn, "key1", "value1updated", "key2", "value2"),
@@ -388,9 +390,10 @@ func TestAccGameLiftFleet_allFields(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"runtime_configuration"},
 			},
 			{
 				Config: testAccFleetAllFieldsUpdatedConfig(rNameUpdated, desc, launchPath, params[1], bucketName, key, roleArn),
@@ -479,9 +482,10 @@ func TestAccGameLiftFleet_cert(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"runtime_configuration"},
 			},
 		},
 	})

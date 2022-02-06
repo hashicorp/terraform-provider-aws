@@ -340,19 +340,6 @@ func resourceFleetRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error setting resource_creation_limit_policy: %w", err)
 	}
 
-	runtimeInput := &gamelift.DescribeRuntimeConfigurationInput{
-		FleetId: aws.String(d.Id()),
-	}
-
-	runtimeConfig, err := conn.DescribeRuntimeConfiguration(runtimeInput)
-	if err != nil {
-		return fmt.Errorf("error reading for GameLift Fleet runtime configuration (%s): %w", d.Id(), err)
-	}
-
-	if err := d.Set("runtime_configuration", flattenGameliftRuntimeConfiguration(runtimeConfig.RuntimeConfiguration)); err != nil {
-		return fmt.Errorf("error setting runtime_configuration: %w", err)
-	}
-
 	tags, err := ListTags(conn, arn)
 
 	if tfawserr.ErrMessageContains(err, gamelift.ErrCodeInvalidRequestException, fmt.Sprintf("Resource %s is not in a taggable state", d.Id())) {
@@ -540,19 +527,6 @@ func expandGameliftRuntimeConfiguration(cfg []interface{}) *gamelift.RuntimeConf
 	return &out
 }
 
-func flattenGameliftRuntimeConfiguration(config *gamelift.RuntimeConfiguration) []interface{} {
-	if config == nil {
-		return []interface{}{}
-	}
-
-	m := make(map[string]interface{})
-	m["game_session_activation_timeout_seconds"] = aws.Int64Value(config.GameSessionActivationTimeoutSeconds)
-	m["max_concurrent_game_session_activations"] = aws.Int64Value(config.MaxConcurrentGameSessionActivations)
-	m["server_process"] = flattenGameliftServerProcess(config.ServerProcesses)
-
-	return []interface{}{m}
-}
-
 func expandGameliftServerProcesses(cfgs []interface{}) []*gamelift.ServerProcess {
 	if len(cfgs) < 1 {
 		return []*gamelift.ServerProcess{}
@@ -571,31 +545,6 @@ func expandGameliftServerProcesses(cfgs []interface{}) []*gamelift.ServerProcess
 		processes[i] = process
 	}
 	return processes
-}
-
-func flattenGameliftServerProcess(sps []*gamelift.ServerProcess) []interface{} {
-	if len(sps) == 0 {
-		return []interface{}{}
-	}
-
-	var tfList []interface{}
-
-	for _, sp := range sps {
-		if sp == nil {
-			continue
-		}
-		m := make(map[string]interface{})
-		m["concurrent_executions"] = aws.Int64Value(sp.ConcurrentExecutions)
-		m["launch_path"] = aws.StringValue(sp.LaunchPath)
-
-		if sp.Parameters != nil {
-			m["parameters"] = aws.StringValue(sp.Parameters)
-		}
-
-		tfList = append(tfList, m)
-	}
-
-	return tfList
 }
 
 func expandGameliftCertificateConfiguration(cfg []interface{}) *gamelift.CertificateConfiguration {
