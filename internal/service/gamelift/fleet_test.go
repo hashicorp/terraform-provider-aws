@@ -191,6 +191,8 @@ func TestAccGameLiftFleet_basic(t *testing.T) {
 					testAccCheckFleetExists(resourceName, &conf),
 					resource.TestCheckResourceAttrPair(resourceName, "build_id", "aws_gamelift_build.test", "id"),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "gamelift", regexp.MustCompile(`fleet/fleet-.+`)),
+					resource.TestCheckResourceAttr(resourceName, "certificate_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "certificate_configuration.0.certificate_type", "DISABLED"),
 					resource.TestCheckResourceAttr(resourceName, "ec2_instance_type", "c4.large"),
 					resource.TestCheckResourceAttr(resourceName, "log_paths.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -428,6 +430,58 @@ func TestAccGameLiftFleet_allFields(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "runtime_configuration.0.server_process.0.launch_path", launchPath),
 					resource.TestCheckResourceAttr(resourceName, "runtime_configuration.0.server_process.0.parameters", params[1]),
 				),
+			},
+		},
+	})
+}
+
+func TestAccGameLiftFleet_cert(t *testing.T) {
+	var conf gamelift.FleetAttributes
+
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	region := acctest.Region()
+	g, err := testAccSampleGame(region)
+
+	if tfresource.NotFound(err) {
+		t.Skip(err)
+	}
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	loc := g.Location
+	bucketName := *loc.Bucket
+	roleArn := *loc.RoleArn
+	key := *loc.Key
+
+	launchPath := g.LaunchPath
+	params := g.Parameters(33435)
+	resourceName := "aws_gamelift_fleet.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(t)
+			acctest.PreCheckPartitionHasService(gamelift.EndpointsID, t)
+			testAccPreCheck(t)
+		},
+		ErrorCheck:   acctest.ErrorCheck(t, gamelift.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckFleetDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccFleetCertConfig(rName, launchPath, params, bucketName, key, roleArn),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFleetExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "certificate_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "certificate_configuration.0.certificate_type", "GENERATED"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -798,4 +852,26 @@ resource "aws_iam_policy_attachment" "test" {
   policy_arn = aws_iam_policy.test.arn
 }
 `, rName)
+}
+
+func testAccFleetCertConfig(rName, launchPath, params, bucketName, key, roleArn string) string {
+	return testAccFleetBasicTemplate(rName, bucketName, key, roleArn) + fmt.Sprintf(`
+resource "aws_gamelift_fleet" "test" {
+  build_id          = aws_gamelift_build.test.id
+  ec2_instance_type = "c4.large"
+  name              = %[1]q
+
+  certificate_configuration {
+    certificate_type = "GENERATED"
+  }
+
+  runtime_configuration {
+    server_process {
+      concurrent_executions = 1
+      launch_path           = %[2]q
+      parameters            = %[3]q
+    }
+  }
+}
+`, rName, launchPath, params)
 }
