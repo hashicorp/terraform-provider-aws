@@ -77,7 +77,7 @@ func ResourceFleet() *schema.Resource {
 				ValidateFunc: validation.StringLenBetween(1, 1024),
 			},
 			"ec2_inbound_permission": {
-				Type:     schema.TypeList,
+				Type:     schema.TypeSet,
 				Optional: true,
 				MaxItems: 50,
 				Elem: &schema.Resource{
@@ -242,7 +242,7 @@ func resourceFleetCreate(d *schema.ResourceData, meta interface{}) error {
 		input.FleetType = aws.String(v.(string))
 	}
 	if v, ok := d.GetOk("ec2_inbound_permission"); ok {
-		input.EC2InboundPermissions = expandGameliftIpPermissions(v.([]interface{}))
+		input.EC2InboundPermissions = expandGameliftIpPermissions(v.(*schema.Set))
 	}
 
 	if v, ok := d.GetOk("instance_role_arn"); ok {
@@ -339,6 +339,19 @@ func resourceFleetRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error setting resource_creation_limit_policy: %w", err)
 	}
 
+	portInput := &gamelift.DescribeFleetPortSettingsInput{
+		FleetId: aws.String(d.Id()),
+	}
+
+	portConfig, err := conn.DescribeFleetPortSettings(portInput)
+	if err != nil {
+		return fmt.Errorf("error reading for GameLift Fleet ec2 inbound permission (%s): %w", d.Id(), err)
+	}
+
+	if err := d.Set("ec2_inbound_permission", flattenGameliftIpPermissions(portConfig.InboundPermissions)); err != nil {
+		return fmt.Errorf("error setting ec2_inbound_permission: %w", err)
+	}
+
 	tags, err := ListTags(conn, arn)
 
 	if tfawserr.ErrMessageContains(err, gamelift.ErrCodeInvalidRequestException, fmt.Sprintf("Resource %s is not in a taggable state", d.Id())) {
@@ -384,7 +397,7 @@ func resourceFleetUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	if d.HasChange("ec2_inbound_permission") {
 		oldPerms, newPerms := d.GetChange("ec2_inbound_permission")
-		authorizations, revocations := DiffPortSettings(oldPerms.([]interface{}), newPerms.([]interface{}))
+		authorizations, revocations := DiffPortSettings(oldPerms.(*schema.Set).List(), newPerms.(*schema.Set).List())
 
 		_, err := conn.UpdateFleetPortSettings(&gamelift.UpdateFleetPortSettingsInput{
 			FleetId:                         aws.String(d.Id()),
@@ -455,13 +468,13 @@ func resourceFleetDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func expandGameliftIpPermissions(cfgs []interface{}) []*gamelift.IpPermission {
-	if len(cfgs) < 1 {
+func expandGameliftIpPermissions(cfgs *schema.Set) []*gamelift.IpPermission {
+	if cfgs.Len() < 1 {
 		return []*gamelift.IpPermission{}
 	}
 
-	perms := make([]*gamelift.IpPermission, len(cfgs))
-	for i, rawCfg := range cfgs {
+	perms := make([]*gamelift.IpPermission, cfgs.Len())
+	for i, rawCfg := range cfgs.List() {
 		cfg := rawCfg.(map[string]interface{})
 		perms[i] = expandGameliftIpPermission(cfg)
 	}
@@ -475,6 +488,40 @@ func expandGameliftIpPermission(cfg map[string]interface{}) *gamelift.IpPermissi
 		Protocol: aws.String(cfg["protocol"].(string)),
 		ToPort:   aws.Int64(int64(cfg["to_port"].(int))),
 	}
+}
+
+func flattenGameliftIpPermissions(apiObjects []*gamelift.IpPermission) []interface{} {
+	if len(apiObjects) == 0 {
+		return nil
+	}
+
+	var tfList []interface{}
+	for _, apiObject := range apiObjects {
+		if apiObject == nil {
+			continue
+		}
+
+		if v := flattenGameliftIpPermission(apiObject); len(v) > 0 {
+			tfList = append(tfList, v)
+		}
+	}
+
+	return tfList
+}
+
+func flattenGameliftIpPermission(apiObject *gamelift.IpPermission) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	tfMap["from_port"] = aws.Int64Value(apiObject.FromPort)
+	tfMap["to_port"] = aws.Int64Value(apiObject.ToPort)
+	tfMap["protocol"] = aws.StringValue(apiObject.Protocol)
+	tfMap["ip_range"] = aws.StringValue(apiObject.IpRange)
+
+	return tfMap
 }
 
 func expandGameliftResourceCreationLimitPolicy(cfg []interface{}) *gamelift.ResourceCreationLimitPolicy {
