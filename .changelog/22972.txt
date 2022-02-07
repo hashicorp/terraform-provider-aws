@@ -1,7 +1,7 @@
-```release-note:bug
+```release-note:enhancement
 resource/aws_ami_copy: Prevent panic when reading the source AMI's `boot_mode` or `destination` `outpost_arn`
 ```
 
-```release-note:bug
+```release-note:enhancement
 resource/aws_ami_from_instance: Prevent panic when reading the AMI's `boot_mode` or `destination` `outpost_arn`
 ```
