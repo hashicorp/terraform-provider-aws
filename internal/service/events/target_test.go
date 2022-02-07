@@ -497,6 +497,10 @@ func TestAccEventsTarget_ecsWithoutLaunchType(t *testing.T) {
 }
 
 func TestAccEventsTarget_ecsWithBlankLaunchType(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	resourceName := "aws_cloudwatch_event_target.test"
 	iamRoleResourceName := "aws_iam_role.test"
 	ecsTaskDefinitionResourceName := "aws_ecs_task_definition.task"
@@ -1509,7 +1513,7 @@ resource "aws_cloudwatch_event_target" "test" {
   ecs_target {
     task_count          = 1
     task_definition_arn = aws_ecs_task_definition.task.arn
-    launch_type         = ""
+    launch_type         = null
 
     network_configuration {
       subnets = [aws_subnet.subnet.id]

@@ -683,3 +683,13 @@ rules:
           metavariable: "$FUNC"
           regex: "^resource\\w*(Delete|Disable)$"
     severity: WARNING
+
+  - id: avoid-string-is-empty-validation
+    languages: [go]
+    message: Empty strings should not be included in validation
+    paths:
+      include:
+        - internal/
+    patterns:
+      - pattern: validation.Any(..., validation.StringIsEmpty, ...)
+    severity: ERROR
