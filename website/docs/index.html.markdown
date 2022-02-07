@@ -159,7 +159,9 @@ This is a preferred approach over any other when running in EC2 as you can avoid
 hard coding credentials. Instead these are leased on-the-fly by Terraform
 which reduces the chance of leakage.
 
-You can provide a custom metadata API endpoint via `ec2_metadata_service_endpoint` or the `AWS_EC2_METADATA_SERVICE_ENDPOINT` environment variable (the `AWS_METADATA_URL` variable is discouraged). Include the endpoint URL and version. The default is `http://169.254.169.254:80/latest`.
+You can provide a custom metadata API endpoint via `ec2_metadata_service_endpoint` or the `AWS_EC2_METADATA_SERVICE_ENDPOINT` environment variable. Include the endpoint URL and version. The default is `http://169.254.169.254:80/latest`.
+
+~> **NOTE:** Using the `AWS_METADATA_URL` environment variable has been deprecated in Terraform AWS Provider v4.0.0 and support will be removed in a future version. Change any scripts or environments using `AWS_METADATA_URL` to instead use `AWS_EC2_METADATA_SERVICE_ENDPOINT`.
 
 ### Assume Role
 

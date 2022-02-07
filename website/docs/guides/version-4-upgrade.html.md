@@ -21,6 +21,7 @@ Upgrade topics:
 <!-- TOC depthFrom:2 depthTo:2 -->
 
 - [Provider Version Configuration](#provider-version-configuration)
+- [New Provider Arguments](#new-provider-arguments)
 - [Full Resource Lifecycle of Default Resources](#full-resource-lifecycle-of-default-resources)
     - [Resource: aws_default_subnet](#resource-aws_default_subnet)
     - [Resource: aws_default_vpc](#resource-aws_default_vpc)
@@ -93,6 +94,39 @@ provider "aws" {
   version = "~> 4.0"
 }
 ```
+
+## New Provider Arguments
+
+Version 4.0.0 adds these new provider arguments:
+
+* `ec2_metadata_service_endpoint` - Address of the EC2 metadata service (IMDS) endpoint to use. Can also be set with the `AWS_EC2_METADATA_SERVICE_ENDPOINT` environment variable.
+* `ec2_metadata_service_endpoint_mode` - Mode to use in communicating with the metadata service. Valid values are `IPv4` and `IPv6`. Can also be set with the `AWS_EC2_METADATA_SERVICE_ENDPOINT_MODE` environment variable.
+* `use_dualstack_endpoint` - Force the provider to resolve endpoints with DualStack capability. Can also be set with the `AWS_USE_DUALSTACK_ENDPOINT` environment variable or in a shared config file (`use_dualstack_endpoint`).
+* `use_fips_endpoint` - Force the provider to resolve endpoints with FIPS capability. Can also be set with the `AWS_USE_FIPS_ENDPOINT` environment variable or in a shared config file (`use_fips_endpoint`).
+
+~> **NOTE:** Using the `AWS_METADATA_URL` environment variable has been deprecated in Terraform AWS Provider v4.0.0 and support will be removed in a future version. Change any scripts or environments using `AWS_METADATA_URL` to instead use `AWS_EC2_METADATA_SERVICE_ENDPOINT`.
+
+For example, in previous versions, to use FIPS endpoints, you would need to provide all the FIPS endpoints that you wanted to use in the `endpoints` configuration block:
+
+```terraform
+provider "aws" {
+  endpoints {
+    ec2 = "https://ec2-fips.us-west-2.amazonaws.com"
+    s3  = "https://s3-fips.us-west-2.amazonaws.com"
+    sts = "https://sts-fips.us-west-2.amazonaws.com"
+  }
+}
+```
+
+In v4.0.0, you can still set endpoints in the same way. However, you can instead use the `use_fips_endpoint` argument to have the provider automatically resolve FIPS endpoints for all supported services:
+
+```terraform
+provider "aws" {
+  use_fips_endpoint = true
+}
+```
+
+Note that the provider can only resolve FIPS endpoints where AWS provides FIPS support. Support depends on the service and may include `us-east-1`, `us-east-2`, `us-west-1`, `us-west-2`, `us-gov-east-1`, `us-gov-west-1`, and `ca-central-1`. For more information, see [Federal Information Processing Standard (FIPS) 140-2](https://aws.amazon.com/compliance/fips/).
 
 ## Full Resource Lifecycle of Default Resources
 
