@@ -54,6 +54,8 @@ func ResourceNetworkACL() *schema.Resource {
 			},
 		},
 
+		// Keep in sync with aws_default_network_acl's schema.
+		// See notes in default_network_acl.go.
 		Schema: map[string]*schema.Schema{
 			"arn": {
 				Type:     schema.TypeString,
@@ -164,24 +166,8 @@ func resourceNetworkACLCreate(d *schema.ResourceData, meta interface{}) error {
 
 	d.SetId(aws.StringValue(output.NetworkAcl.NetworkAclId))
 
-	if v, ok := d.GetOk("egress"); ok && v.(*schema.Set).Len() > 0 {
-		if err := createNetworkACLEntries(conn, d.Id(), v.(*schema.Set).List(), true); err != nil {
-			return err
-		}
-	}
-
-	if v, ok := d.GetOk("ingress"); ok && v.(*schema.Set).Len() > 0 {
-		if err := createNetworkACLEntries(conn, d.Id(), v.(*schema.Set).List(), false); err != nil {
-			return err
-		}
-	}
-
-	if v, ok := d.GetOk("subnet_ids"); ok && v.(*schema.Set).Len() > 0 {
-		for _, v := range v.(*schema.Set).List() {
-			if _, err := networkACLAssociationCreate(conn, d.Id(), v.(string)); err != nil {
-				return err
-			}
-		}
+	if err := modifyNetworkACLAttributesOnCreate(conn, d); err != nil {
+		return err
 	}
 
 	return resourceNetworkACLRead(d, meta)
@@ -353,6 +339,32 @@ func resourceNetworkACLDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
+// modifyNetworkACLAttributesOnCreate sets NACL attributes on resource Create.
+// Called after new NACL creation or existing default NACL adoption.
+func modifyNetworkACLAttributesOnCreate(conn *ec2.EC2, d *schema.ResourceData) error {
+	if v, ok := d.GetOk("egress"); ok && v.(*schema.Set).Len() > 0 {
+		if err := createNetworkACLEntries(conn, d.Id(), v.(*schema.Set).List(), true); err != nil {
+			return err
+		}
+	}
+
+	if v, ok := d.GetOk("ingress"); ok && v.(*schema.Set).Len() > 0 {
+		if err := createNetworkACLEntries(conn, d.Id(), v.(*schema.Set).List(), false); err != nil {
+			return err
+		}
+	}
+
+	if v, ok := d.GetOk("subnet_ids"); ok && v.(*schema.Set).Len() > 0 {
+		for _, v := range v.(*schema.Set).List() {
+			if _, err := networkACLAssociationCreate(conn, d.Id(), v.(string)); err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
+}
+
 func resourceNetworkACLEntryHash(v interface{}) int {
 	var buf bytes.Buffer
 	m := v.(map[string]interface{})
@@ -436,8 +448,10 @@ func createNetworkACLEntries(conn *ec2.EC2, naclID string, tfList []interface{},
 }
 
 func deleteNetworkACLEntries(conn *ec2.EC2, naclID string, tfList []interface{}, egress bool) error {
-	naclEntries := expandNetworkAclEntries(tfList, egress)
+	return deleteNetworkAclEntries(conn, naclID, expandNetworkAclEntries(tfList, egress))
+}
 
+func deleteNetworkAclEntries(conn *ec2.EC2, naclID string, naclEntries []*ec2.NetworkAclEntry) error {
 	for _, naclEntry := range naclEntries {
 		if naclEntry == nil {
 			continue
