@@ -195,6 +195,10 @@ const (
 )
 
 func TestAccMQBroker_basic(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var broker mq.DescribeBrokerResponse
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_mq_broker.test"
@@ -268,6 +272,10 @@ func TestAccMQBroker_basic(t *testing.T) {
 }
 
 func TestAccMQBroker_throughputOptimized(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var broker mq.DescribeBrokerResponse
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_mq_broker.test"
@@ -334,6 +342,10 @@ func TestAccMQBroker_throughputOptimized(t *testing.T) {
 }
 
 func TestAccMQBroker_allFieldsDefaultVPC(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var broker mq.DescribeBrokerResponse
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rNameUpdated := sdkacctest.RandomWithPrefix("tf-acc-test-updated")
@@ -458,6 +470,10 @@ func TestAccMQBroker_allFieldsDefaultVPC(t *testing.T) {
 }
 
 func TestAccMQBroker_allFieldsCustomVPC(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var broker mq.DescribeBrokerResponse
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rNameUpdated := sdkacctest.RandomWithPrefix("tf-acc-test-updated")
@@ -582,6 +598,10 @@ func TestAccMQBroker_allFieldsCustomVPC(t *testing.T) {
 }
 
 func TestAccMQBroker_EncryptionOptions_kmsKeyID(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var broker mq.DescribeBrokerResponse
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	kmsKeyResourceName := "aws_kms_key.test"
@@ -617,6 +637,10 @@ func TestAccMQBroker_EncryptionOptions_kmsKeyID(t *testing.T) {
 }
 
 func TestAccMQBroker_EncryptionOptionsUseAwsOwnedKey_disabled(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var broker mq.DescribeBrokerResponse
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_mq_broker.test"
@@ -650,6 +674,10 @@ func TestAccMQBroker_EncryptionOptionsUseAwsOwnedKey_disabled(t *testing.T) {
 }
 
 func TestAccMQBroker_EncryptionOptionsUseAwsOwnedKey_enabled(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var broker mq.DescribeBrokerResponse
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_mq_broker.test"
@@ -683,6 +711,10 @@ func TestAccMQBroker_EncryptionOptionsUseAwsOwnedKey_enabled(t *testing.T) {
 }
 
 func TestAccMQBroker_updateUsers(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var broker mq.DescribeBrokerResponse
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_mq_broker.test"
@@ -756,6 +788,10 @@ func TestAccMQBroker_updateUsers(t *testing.T) {
 }
 
 func TestAccMQBroker_tags(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var broker mq.DescribeBrokerResponse
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_mq_broker.test"
@@ -806,6 +842,10 @@ func TestAccMQBroker_tags(t *testing.T) {
 }
 
 func TestAccMQBroker_updateSecurityGroup(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var broker mq.DescribeBrokerResponse
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_mq_broker.test"
@@ -859,6 +899,10 @@ func TestAccMQBroker_updateSecurityGroup(t *testing.T) {
 }
 
 func TestAccMQBroker_updateEngineVersion(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var broker mq.DescribeBrokerResponse
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_mq_broker.test"
@@ -898,6 +942,10 @@ func TestAccMQBroker_updateEngineVersion(t *testing.T) {
 }
 
 func TestAccMQBroker_disappears(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var broker mq.DescribeBrokerResponse
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_mq_broker.test"
@@ -925,6 +973,10 @@ func TestAccMQBroker_disappears(t *testing.T) {
 }
 
 func TestAccMQBroker_rabbitMQ(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var broker mq.DescribeBrokerResponse
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_mq_broker.test"
@@ -966,6 +1018,10 @@ func TestAccMQBroker_rabbitMQ(t *testing.T) {
 }
 
 func TestAccMQBroker_RabbitMQ_logs(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var broker mq.DescribeBrokerResponse
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_mq_broker.test"
@@ -1007,6 +1063,10 @@ func TestAccMQBroker_RabbitMQ_logs(t *testing.T) {
 }
 
 func TestAccMQBroker_RabbitMQValidation_auditLog(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var broker mq.DescribeBrokerResponse
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_mq_broker.test"
@@ -1041,6 +1101,10 @@ func TestAccMQBroker_RabbitMQValidation_auditLog(t *testing.T) {
 }
 
 func TestAccMQBroker_clusterRabbitMQ(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var broker mq.DescribeBrokerResponse
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_mq_broker.test"
@@ -1103,6 +1167,10 @@ func TestAccMQBroker_clusterRabbitMQ(t *testing.T) {
 }
 
 func TestAccMQBroker_ldap(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var broker mq.DescribeBrokerResponse
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_mq_broker.test"
