@@ -560,7 +560,7 @@ func resourceBrokerUpdate(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("host_instance_type") {
 		_, err := conn.UpdateBroker(&mq.UpdateBrokerRequest{
 			BrokerId:         aws.String(d.Id()),
-			HostInstanceType: aws.String(d.Get("host_instance_type")),
+			HostInstanceType: aws.String(d.Get("host_instance_type").(string)),
 		})
 		if err != nil {
 			return fmt.Errorf("error updating MQ Broker (%s) host instance type: %w", d.Id(), err)
