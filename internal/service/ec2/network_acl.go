@@ -26,57 +26,8 @@ func ResourceNetworkACL() *schema.Resource {
 		Optional:   true,
 		Computed:   true,
 		ConfigMode: schema.SchemaConfigModeAttr,
-		Elem: &schema.Resource{
-			Schema: map[string]*schema.Schema{
-				"action": {
-					Type:     schema.TypeString,
-					Required: true,
-					DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-						return strings.EqualFold(old, new)
-					},
-					ValidateFunc: validation.StringInSlice(ec2.RuleAction_Values(), true),
-				},
-				"cidr_block": {
-					Type:         schema.TypeString,
-					Optional:     true,
-					ValidateFunc: verify.ValidIPv4CIDRNetworkAddress,
-				},
-				"from_port": {
-					Type:         schema.TypeInt,
-					Required:     true,
-					ValidateFunc: validation.IsPortNumberOrZero,
-				},
-				"icmp_code": {
-					Type:     schema.TypeInt,
-					Optional: true,
-				},
-				"icmp_type": {
-					Type:     schema.TypeInt,
-					Optional: true,
-				},
-				"ipv6_cidr_block": {
-					Type:         schema.TypeString,
-					Optional:     true,
-					ValidateFunc: verify.ValidIPv6CIDRNetworkAddress,
-				},
-				"protocol": {
-					Type:     schema.TypeString,
-					Required: true,
-					// TODO: Add ValidateFunc.
-				},
-				"rule_no": {
-					Type:         schema.TypeInt,
-					Required:     true,
-					ValidateFunc: validation.IntBetween(1, 32766),
-				},
-				"to_port": {
-					Type:         schema.TypeInt,
-					Required:     true,
-					ValidateFunc: validation.IsPortNumberOrZero,
-				},
-			},
-		},
-		Set: resourceNetworkACLEntryHash,
+		Elem:       networkACLRuleResource,
+		Set:        resourceNetworkACLEntryHash,
 	}
 
 	return &schema.Resource{
@@ -84,8 +35,23 @@ func ResourceNetworkACL() *schema.Resource {
 		Read:   resourceNetworkACLRead,
 		Update: resourceNetworkACLUpdate,
 		Delete: resourceNetworkACLDelete,
+
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+				conn := meta.(*conns.AWSClient).EC2Conn
+
+				nacl, err := FindNetworkACLByID(conn, d.Id())
+
+				if err != nil {
+					return nil, err
+				}
+
+				if aws.BoolValue(nacl.IsDefault) {
+					return nil, fmt.Errorf("use the `aws_default_network_acl` resource instead")
+				}
+
+				return []*schema.ResourceData{d}, nil
+			},
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -116,6 +82,59 @@ func ResourceNetworkACL() *schema.Resource {
 
 		CustomizeDiff: verify.SetTagsDiff,
 	}
+}
+
+// NACL rule Resource definition.
+// Used in aws_network_acl and aws_default_network_acl ingress and egress rule sets.
+var networkACLRuleResource = &schema.Resource{
+	Schema: map[string]*schema.Schema{
+		"action": {
+			Type:     schema.TypeString,
+			Required: true,
+			DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+				return strings.EqualFold(old, new)
+			},
+			ValidateFunc: validation.StringInSlice(ec2.RuleAction_Values(), true),
+		},
+		"cidr_block": {
+			Type:         schema.TypeString,
+			Optional:     true,
+			ValidateFunc: verify.ValidIPv4CIDRNetworkAddress,
+		},
+		"from_port": {
+			Type:         schema.TypeInt,
+			Required:     true,
+			ValidateFunc: validation.IsPortNumberOrZero,
+		},
+		"icmp_code": {
+			Type:     schema.TypeInt,
+			Optional: true,
+		},
+		"icmp_type": {
+			Type:     schema.TypeInt,
+			Optional: true,
+		},
+		"ipv6_cidr_block": {
+			Type:         schema.TypeString,
+			Optional:     true,
+			ValidateFunc: verify.ValidIPv6CIDRNetworkAddress,
+		},
+		"protocol": {
+			Type:     schema.TypeString,
+			Required: true,
+			// TODO: Add ValidateFunc.
+		},
+		"rule_no": {
+			Type:         schema.TypeInt,
+			Required:     true,
+			ValidateFunc: validation.IntBetween(1, 32766),
+		},
+		"to_port": {
+			Type:         schema.TypeInt,
+			Required:     true,
+			ValidateFunc: validation.IsPortNumberOrZero,
+		},
+	},
 }
 
 func resourceNetworkACLCreate(d *schema.ResourceData, meta interface{}) error {
