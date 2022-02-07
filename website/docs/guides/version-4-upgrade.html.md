@@ -743,6 +743,60 @@ The resources that were imported are shown above. These resources are now in
 your Terraform state and will henceforth be managed by Terraform.
 ```
 
+### `acl` Argument deprecation
+
+Switch your Terraform configuration to the `aws_s3_bucket_acl` resource instead.
+
+For example, given this previous configuration:
+
+```terraform
+resource "aws_s3_bucket" "example" {
+  # ... other configuration ...
+  acl = "private"
+}
+```
+
+It will receive the following error after upgrading:
+
+```
+│ Error: Value for unconfigurable attribute
+│
+│   with aws_s3_bucket.example,
+│   on main.tf line 1, in resource "aws_s3_bucket" "example":
+│    1: resource "aws_s3_bucket" "example" {
+│
+│ Can't configure a value for "acl": its value will be decided automatically based on the result of applying this configuration.
+```
+
+Since the `acl` argument changed to read-only, the recommendation is to update the configuration to use the `aws_s3_bucket_acl`
+resource and remove any reference to `acl` in the `aws_s3_bucket` resource:
+
+```terraform
+resource "aws_s3_bucket" "example" {
+  # ... other configuration ...
+}
+
+resource "aws_s3_bucket_acl" "example" {
+  bucket = aws_s3_bucket.example.id
+  acl    = "private"
+}
+```
+
+It is then recommended running `terraform import` on each new resource to prevent data loss, e.g.
+
+```shell
+$ terraform import aws_s3_bucket_acl.example example,private
+aws_s3_bucket_acl.example: Importing from ID "example,private"...
+aws_s3_bucket_acl.example: Import prepared!
+  Prepared aws_s3_bucket_acl for import
+aws_s3_bucket_acl.example: Refreshing state... [id=example,private]
+
+Import successful!
+
+The resources that were imported are shown above. These resources are now in
+your Terraform state and will henceforth be managed by Terraform.
+```
+
 ### `cors_rule` Argument deprecation
 
 Switch your Terraform configuration to the `aws_s3_bucket_cors_configuration` resource instead.
@@ -803,6 +857,98 @@ aws_s3_bucket_cors_configuration.example: Importing from ID "example"...
 aws_s3_bucket_cors_configuration.example: Import prepared!
   Prepared aws_s3_bucket_cors_configuration for import
 aws_s3_bucket_cors_configuration.example: Refreshing state... [id=example]
+
+Import successful!
+
+The resources that were imported are shown above. These resources are now in
+your Terraform state and will henceforth be managed by Terraform.
+```
+
+### `grant` Argument deprecation
+
+Switch your Terraform configuration to the `aws_s3_bucket_acl` resource instead.
+
+For example, given this previous configuration:
+
+```terraform
+resource "aws_s3_bucket" "example" {
+  # ... other configuration ...
+  grant {
+    id          = data.aws_canonical_user_id.current_user.id
+    type        = "CanonicalUser"
+    permissions = ["FULL_CONTROL"]
+  }
+  grant {
+    type        = "Group"
+    permissions = ["READ_ACP", "WRITE"]
+    uri         = "http://acs.amazonaws.com/groups/s3/LogDelivery"
+  }
+}
+```
+
+It will receive the following error after upgrading:
+
+```
+│ Error: Value for unconfigurable attribute
+│
+│   with aws_s3_bucket.example,
+│   on main.tf line 1, in resource "aws_s3_bucket" "example":
+│    1: resource "aws_s3_bucket" "example" {
+│
+│ Can't configure a value for "grant": its value will be decided automatically based on the result of applying this configuration.
+```
+
+Since the `grant` argument changed to read-only, the recommendation is to update the configuration to use the `aws_s3_bucket_acl`
+resource and remove any reference to `grant` in the `aws_s3_bucket` resource:
+
+```terraform
+resource "aws_s3_bucket" "example" {
+  # ... other configuration ...
+}
+
+resource "aws_s3_bucket_acl" "example" {
+  bucket = aws_s3_bucket.example.id
+  
+  access_control_policy {
+    grant {
+      grantee {
+        id   = data.aws_canonical_user_id.current_user.id
+        type = "CanonicalUser"
+      }
+      permission = "FULL_CONTROL"
+    }
+
+    grant {
+      grantee {
+        type = "Group"
+        uri  = "http://acs.amazonaws.com/groups/s3/LogDelivery"
+      }
+      permission = "READ_ACP"
+    }
+
+    grant {
+      grantee {
+        type = "Group"
+        uri  = "http://acs.amazonaws.com/groups/s3/LogDelivery"
+      }
+      permission = "WRITE"
+    }
+
+    owner {
+      id = data.aws_canonical_user_id.current_user.id
+    }
+  }
+}
+```
+
+It is then recommended running `terraform import` on each new resource to prevent data loss, e.g.
+
+```shell
+$ terraform import aws_s3_bucket_acl.example example
+aws_s3_bucket_acl.example: Importing from ID "example"...
+aws_s3_bucket_acl.example: Import prepared!
+  Prepared aws_s3_bucket_acl for import
+aws_s3_bucket_acl.example: Refreshing state... [id=example]
 
 Import successful!
 
