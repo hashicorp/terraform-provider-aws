@@ -385,11 +385,12 @@ func resourceStackUpdate(d *schema.ResourceData, meta interface{}) error {
 		},
 	)
 
-	if err != nil {
+	if err != nil && !tfawserr.ErrMessageContains(err, "ValidationError", "No updates are to be performed") {
 		return fmt.Errorf("error updating CloudFormation Stack (%s): %w", d.Id(), err)
 	}
 
 	_, err = WaitStackUpdated(conn, d.Id(), requestToken, d.Timeout(schema.TimeoutUpdate))
+
 	if err != nil {
 		return fmt.Errorf("error waiting for CloudFormation Stack (%s) update: %w", d.Id(), err)
 	}
