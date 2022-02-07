@@ -396,12 +396,6 @@ resource "aws_s3_bucket" "log_bucket" {
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
   acl    = "private"
-
-  lifecycle {
-    ignore_changes = [
-      logging
-    ]
-  }
 }
 
 resource "aws_s3_bucket_logging" "test" {
@@ -418,12 +412,6 @@ func testAccBucketLoggingUpdateConfig(rName, targetBucketName, targetPrefix stri
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
   acl    = "private"
-
-  lifecycle {
-    ignore_changes = [
-      logging
-    ]
-  }
 }
 
 resource "aws_s3_bucket" "log_bucket" {
@@ -452,12 +440,6 @@ resource "aws_s3_bucket" "log_bucket" {
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
   acl    = "private"
-
-  lifecycle {
-    ignore_changes = [
-      logging
-    ]
-  }
 }
 
 resource "aws_s3_bucket_logging" "test" {
@@ -487,12 +469,6 @@ resource "aws_s3_bucket" "log_bucket" {
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
   acl    = "private"
-
-  lifecycle {
-    ignore_changes = [
-      logging
-    ]
-  }
 }
 
 resource "aws_s3_bucket_logging" "test" {
@@ -524,12 +500,6 @@ resource "aws_s3_bucket" "log_bucket" {
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
   acl    = "private"
-
-  lifecycle {
-    ignore_changes = [
-      logging
-    ]
-  }
 }
 
 resource "aws_s3_bucket_logging" "test" {
