@@ -223,7 +223,7 @@ func TestAccMQBroker_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "encryption_options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "encryption_options.0.use_aws_owned_key", "true"),
 					resource.TestCheckResourceAttr(resourceName, "engine_type", "ActiveMQ"),
-					resource.TestCheckResourceAttr(resourceName, "engine_version", "5.15.0"),
+					resource.TestCheckResourceAttr(resourceName, "engine_version", testAccBrokerVersionNewer),
 					resource.TestCheckResourceAttr(resourceName, "host_instance_type", "mq.t2.micro"),
 					resource.TestCheckResourceAttr(resourceName, "maintenance_window_start_time.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "maintenance_window_start_time.0.day_of_week"),
@@ -295,7 +295,7 @@ func TestAccMQBroker_throughputOptimized(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "encryption_options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "encryption_options.0.use_aws_owned_key", "true"),
 					resource.TestCheckResourceAttr(resourceName, "engine_type", "ActiveMQ"),
-					resource.TestCheckResourceAttr(resourceName, "engine_version", "5.15.9"),
+					resource.TestCheckResourceAttr(resourceName, "engine_version", testAccBrokerVersionNewer),
 					resource.TestCheckResourceAttr(resourceName, "storage_type", "ebs"),
 					resource.TestCheckResourceAttr(resourceName, "host_instance_type", "mq.m5.large"),
 					resource.TestCheckResourceAttr(resourceName, "maintenance_window_start_time.#", "1"),
@@ -372,7 +372,7 @@ func TestAccMQBroker_allFieldsDefaultVPC(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.revision", "2"),
 					resource.TestCheckResourceAttr(resourceName, "deployment_mode", "ACTIVE_STANDBY_MULTI_AZ"),
 					resource.TestCheckResourceAttr(resourceName, "engine_type", "ActiveMQ"),
-					resource.TestCheckResourceAttr(resourceName, "engine_version", "5.15.0"),
+					resource.TestCheckResourceAttr(resourceName, "engine_version", testAccBrokerVersionNewer),
 					resource.TestCheckResourceAttr(resourceName, "storage_type", "efs"),
 					resource.TestCheckResourceAttr(resourceName, "host_instance_type", "mq.t2.micro"),
 					resource.TestCheckResourceAttr(resourceName, "maintenance_window_start_time.#", "1"),
@@ -496,7 +496,7 @@ func TestAccMQBroker_allFieldsCustomVPC(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.revision", "2"),
 					resource.TestCheckResourceAttr(resourceName, "deployment_mode", "ACTIVE_STANDBY_MULTI_AZ"),
 					resource.TestCheckResourceAttr(resourceName, "engine_type", "ActiveMQ"),
-					resource.TestCheckResourceAttr(resourceName, "engine_version", "5.15.0"),
+					resource.TestCheckResourceAttr(resourceName, "engine_version", testAccBrokerVersionNewer),
 					resource.TestCheckResourceAttr(resourceName, "storage_type", "efs"),
 					resource.TestCheckResourceAttr(resourceName, "host_instance_type", "mq.t2.micro"),
 					resource.TestCheckResourceAttr(resourceName, "maintenance_window_start_time.#", "1"),
@@ -1246,7 +1246,7 @@ resource "aws_security_group" "test" {
 resource "aws_mq_broker" "test" {
   broker_name        = %[1]q
   engine_type        = "ActiveMQ"
-  engine_version     = %[2]q # "5.15.9"
+  engine_version     = %[2]q
   storage_type       = "ebs"
   host_instance_type = "mq.m5.large"
   security_groups    = [aws_security_group.test.id]
@@ -1273,7 +1273,7 @@ resource "aws_mq_broker" "test" {
   broker_name        = %[1]q
   apply_immediately  = true
   engine_type        = "ActiveMQ"
-  engine_version     = %[2]q # "5.15.9"
+  engine_version     = %[2]q
   host_instance_type = "mq.t2.micro"
   security_groups    = [aws_security_group.test.id]
 
