@@ -100,6 +100,9 @@ resource "aws_s3_bucket_versioning" "example" {
 }
 
 resource "aws_s3_object" "examplebucket_object" {
+  # Must have bucket versioning enabled first
+  depends_on = [aws_s3_bucket_versioning.example]
+
   key    = "someobject"
   bucket = aws_s3_bucket.examplebucket.id
   source = "important.txt"
