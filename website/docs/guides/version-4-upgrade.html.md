@@ -118,7 +118,7 @@ provider "aws" {
 }
 ```
 
-In v4.0.0, you can still set endpoints in the same way. However, you can also use the `use_fips_endpoint` argument to have the provider automatically resolve FIPS endpoints for all supported services:
+In v4.0.0, you can still set endpoints in the same way. However, you can instead use the `use_fips_endpoint` argument to have the provider automatically resolve FIPS endpoints for all supported services:
 
 ```terraform
 provider "aws" {
