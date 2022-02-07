@@ -5,6 +5,7 @@ package s3
 
 const (
 	ErrCodeMethodNotAllowed                          = "MethodNotAllowed"
+	ErrCodeNoSuchBucketPolicy                        = "NoSuchBucketPolicy"
 	ErrCodeNoSuchConfiguration                       = "NoSuchConfiguration"
 	ErrCodeNoSuchCORSConfiguration                   = "NoSuchCORSConfiguration"
 	ErrCodeNoSuchLifecycleConfiguration              = "NoSuchLifecycleConfiguration"

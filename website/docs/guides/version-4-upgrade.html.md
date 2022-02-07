@@ -878,6 +878,92 @@ The resources that were imported are shown above. These resources are now in
 your Terraform state and will henceforth be managed by Terraform.
 ```
 
+### `policy` Argument deprecation
+
+Switch your Terraform configuration to the `aws_s3_bucket_policy` resource instead.
+
+For example, given this previous configuration:
+
+```terraform
+resource "aws_s3_bucket" "accesslogs_bucket" {
+  # ... other configuration ...
+  policy = <<EOF
+{
+  "Id": "Policy1446577137248",
+  "Statement": [
+    {
+      "Action": "s3:PutObject",
+      "Effect": "Allow",
+      "Principal": {
+        "AWS": "${data.aws_elb_service_account.current.arn}"
+      },
+      "Resource": "arn:${data.aws_partition.current.partition}:s3:::example/*",
+      "Sid": "Stmt1446575236270"
+    }
+  ],
+  "Version": "2012-10-17"
+}
+EOF
+}
+```
+
+It will receive the following error after upgrading:
+
+```
+│ Error: Value for unconfigurable attribute
+│
+│   with aws_s3_bucket.accesslogs_bucket,
+│   on main.tf line 1, in resource "aws_s3_bucket" "accesslogs_bucket":
+│    1: resource "aws_s3_bucket" "accesslogs_bucket" {
+│
+│ Can't configure a value for "policy": its value will be decided automatically based on the result of applying this configuration.
+```
+
+Since the `policy` argument changed to read-only, the recommendation is to update the configuration to use the `aws_s3_bucket_policy`
+resource and remove any reference to `policy` in the `aws_s3_bucket` resource:
+
+```terraform
+resource "aws_s3_bucket" "accesslogs_bucket" {
+  # ... other configuration ...
+}
+
+resource "aws_s3_bucket_policy" "example" {
+  bucket = aws_s3_bucket.accesslogs_bucket.id
+  policy = <<EOF
+{
+  "Id": "Policy1446577137248",
+  "Statement": [
+    {
+      "Action": "s3:PutObject",
+      "Effect": "Allow",
+      "Principal": {
+        "AWS": "${data.aws_elb_service_account.current.arn}"
+      },
+      "Resource": "arn:${data.aws_partition.current.partition}:s3:::example/*",
+      "Sid": "Stmt1446575236270"
+    }
+  ],
+  "Version": "2012-10-17"
+}
+EOF
+}
+```
+
+It is then recommended running `terraform import` on each new resource to prevent data loss, e.g.
+
+```shell
+$ terraform import aws_s3_bucket_policy.example example
+aws_s3_bucket_policy.example: Importing from ID "example"...
+aws_s3_bucket_policy.example: Import prepared!
+  Prepared aws_s3_bucket_policy for import
+aws_s3_bucket_policy.example: Refreshing state... [id=example]
+
+Import successful!
+
+The resources that were imported are shown above. These resources are now in
+your Terraform state and will henceforth be managed by Terraform.
+```
+
 ### `replication_configuration` Argument deprecation
 
 Switch your Terraform configuration to the `aws_s3_bucket_replication_configuration` resource instead.

@@ -18,7 +18,10 @@ data "aws_billing_service_account" "main" {}
 resource "aws_s3_bucket" "billing_logs" {
   bucket = "my-billing-tf-test-bucket"
   acl    = "private"
+}
 
+resource "aws_s3_bucket_policy" "allow_billing_logging" {
+  bucket = aws_s3_bucket.billing_logs.id
   policy = <<POLICY
 {
   "Id": "Policy",
@@ -53,7 +56,6 @@ resource "aws_s3_bucket" "billing_logs" {
 POLICY
 }
 ```
-
 
 ## Attributes Reference
 
