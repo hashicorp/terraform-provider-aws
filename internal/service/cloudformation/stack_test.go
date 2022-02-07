@@ -834,7 +834,10 @@ data "aws_region" "current" {}
 resource "aws_s3_bucket" "b" {
   bucket = %[1]q
   acl    = "public-read"
+}
 
+resource "aws_s3_bucket_policy" "test" {
+  bucket = aws_s3_bucket.b.id
   policy = <<POLICY
 {
   "Version":"2008-10-17",
@@ -892,7 +895,10 @@ data "aws_region" "current" {}
 resource "aws_s3_bucket" "b" {
   bucket = %[1]q
   acl    = "public-read"
+}
 
+resource "aws_s3_bucket_policy" "test" {
+  bucket = aws_s3_bucket.b.id
   policy = <<POLICY
 {
   "Version":"2008-10-17",
