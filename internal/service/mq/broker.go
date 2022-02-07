@@ -549,9 +549,12 @@ func resourceBrokerUpdate(d *schema.ResourceData, meta interface{}) error {
 			BrokerId:         aws.String(d.Id()),
 			HostInstanceType: aws.String(d.Get("host_instance_type").(string)),
 		})
+
 		if err != nil {
 			return fmt.Errorf("error updating MQ Broker (%s) host instance type: %w", d.Id(), err)
 		}
+
+		requiresReboot = true
 	}
 
 	if d.HasChange("auto_minor_version_upgrade") {
@@ -559,9 +562,12 @@ func resourceBrokerUpdate(d *schema.ResourceData, meta interface{}) error {
 			BrokerId:                aws.String(d.Id()),
 			AutoMinorVersionUpgrade: aws.Bool(d.Get("auto_minor_version_upgrade").(bool)),
 		})
+
 		if err != nil {
 			return fmt.Errorf("error updating MQ Broker (%s) auto minor version upgrade: %w", d.Id(), err)
 		}
+
+		requiresReboot = true
 	}
 
 	if d.Get("apply_immediately").(bool) && requiresReboot {
