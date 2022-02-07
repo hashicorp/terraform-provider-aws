@@ -1279,7 +1279,7 @@ resource "aws_s3_bucket_acl" "test" {
 
 func testAccObjectLockEnabledNoDefaultRetention(bucketName string) string {
 	return fmt.Sprintf(`
-resource "aws_s3_bucket" "arbitrary" {
+resource "aws_s3_bucket" "test" {
   bucket = %[1]q
 
   object_lock_configuration {
@@ -1296,12 +1296,15 @@ resource "aws_s3_bucket" "test" {
   acl           = "private"
   force_destroy = true
 
-  versioning {
-    enabled = true
-  }
-
   object_lock_configuration {
     object_lock_enabled = "Enabled"
+  }
+}
+
+resource "aws_s3_bucket_versioning" "test" {
+  bucket = aws_s3_bucket.test.id
+  versioning_configuration {
+    status = "Enabled"
   }
 }
 `, bucketName)
