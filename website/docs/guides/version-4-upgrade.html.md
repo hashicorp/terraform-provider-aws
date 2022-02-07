@@ -49,6 +49,7 @@ Upgrade topics:
 - [Resource: aws_elasticache_global_replication_group](#resource-aws_elasticache_global_replication_group)
 - [Resource: aws_elasticache_replication_group](#resource-aws_elasticache_replication_group)
 - [Resource: aws_fsx_ontap_storage_virtual_machine](#resource-aws_fsx_ontap_storage_virtual_machine)
+- [Resource: aws_lb_target_group](#resource-aws_lb_target_group)
 - [Resource: aws_network_interface](#resource-aws_network_interface)
 - [Resource: aws_s3_bucket](#resource-aws_s3_bucket)
 - [Resource: aws_s3_bucket_object](#resource-aws_s3_bucket_object)
@@ -750,6 +751,42 @@ output "elasticache_global_replication_group_version_result" {
 
 We removed the misspelled argument `active_directory_configuration.0.self_managed_active_directory_configuration.0.organizational_unit_distinguidshed_name` that was previously deprecated. Use `active_directory_configuration.0.self_managed_active_directory_configuration.0.organizational_unit_distinguished_name` now instead. Terraform will automatically migrate the state to `active_directory_configuration.0.self_managed_active_directory_configuration.0.organizational_unit_distinguished_name` during planning.
 
+## Resource: aws_lb_target_group
+
+
+For `protocol = "TCP"`, `stickiness.type` can no longer be set to `lb_cookie` even when `enabled = false`. Instead, either change the `protocol` to `"HTTP"` or `"HTTPS"`, or change `stickiness.type` to `"source_ip"`.
+
+For example, this configuration is no longer valid:
+
+```terraform
+resource "aws_lb_target_group" "test" {
+  port        = 25
+  protocol    = "TCP"
+  vpc_id      = aws_vpc.test.id
+
+  stickiness {
+    type    = "lb_cookie"
+    enabled = false
+  }
+}
+```
+
+To fix this, we change the `stickiness.type` to `"source_ip"`.
+
+```terraform
+resource "aws_lb_target_group" "test" {
+  port        = 25
+  protocol    = "TCP"
+  vpc_id      = aws_vpc.test.id
+
+  stickiness {
+    type    = "source_ip"
+    enabled = false
+  }
+}
+```
+
+
 ## Resource: aws_network_interface
 
 !> **WARNING:** This topic is placeholder documentation.
@@ -855,7 +892,7 @@ resource "aws_s3_bucket" "example" {
 
 resource "aws_s3_bucket_cors_configuration" "example" {
   bucket = aws_s3_bucket.example.id
-  
+
   cors_rule {
     allowed_headers = ["*"]
     allowed_methods = ["PUT", "POST"]
@@ -910,7 +947,7 @@ resource "aws_s3_bucket" "example" {
       days = 90
     }
   }
-  
+
   lifecycle_rule {
     id      = "tmp"
     prefix  = "tmp/"
@@ -944,7 +981,7 @@ resource "aws_s3_bucket" "example" {
 
 resource "aws_s3_bucket_lifecycle_configuration" "example" {
   bucket = aws_s3_bucket.example.id
-  
+
   rule {
     id     = "log"
     status = "Enabled"
@@ -1240,9 +1277,9 @@ For example, given this previous configuration:
 ```terraform
 resource "aws_s3_bucket" "source" {
   provider = aws.central
-  
+
   # ... other configuration ...
-  
+
   replication_configuration {
     role = aws_iam_role.replication.arn
     rules {
@@ -1292,7 +1329,7 @@ resource "aws_s3_bucket" "source" {
 resource "aws_s3_bucket_replication_configuration" "example" {
   bucket = aws_s3_bucket.source.id
   role   = aws_iam_role.replication.arn
-  
+
   rule {
     id     = "foobar"
     status = "Enabled"
