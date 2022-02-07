@@ -48,7 +48,8 @@ Upgrade topics:
 - [Resource: aws_elasticache_cluster](#resource-aws_elasticache_cluster)
 - [Resource: aws_elasticache_global_replication_group](#resource-aws_elasticache_global_replication_group)
 - [Resource: aws_elasticache_replication_group](#resource-aws_elasticache_replication_group)
-- [Resource: aws_fsx_ontap_storage_virtual_machine](#resource-aws_fsx_ontap_storage_virtual_machine)
+- [Resource: aws_fsx_ontap_storage_virtual_machine](#resource-aws_fsx_ontap_storage_virtual_machine) 
+- [Resource: aws_lb_target_group](#resource-aws_lb_target_group)
 - [Resource: aws_network_interface](#resource-aws_network_interface)
 - [Resource: aws_s3_bucket](#resource-aws_s3_bucket)
 - [Resource: aws_s3_bucket_object](#resource-aws_s3_bucket_object)
@@ -749,6 +750,42 @@ output "elasticache_global_replication_group_version_result" {
 ## Resource: aws_fsx_ontap_storage_virtual_machine
 
 We removed the misspelled argument `active_directory_configuration.0.self_managed_active_directory_configuration.0.organizational_unit_distinguidshed_name` that was previously deprecated. Use `active_directory_configuration.0.self_managed_active_directory_configuration.0.organizational_unit_distinguished_name` now instead. Terraform will automatically migrate the state to `active_directory_configuration.0.self_managed_active_directory_configuration.0.organizational_unit_distinguished_name` during planning.
+
+## Resource: aws_lb_target_group
+
+
+For `protocol = "TCP"`, `stickiness` can no longer be type set to `lb_cookie` even when `enabled = false`. Instead, either change the `protocol` to `"HTTP"` or `"HTTPS"`, or change `stickiness.type` to `"source_ip"`.
+
+For example, this configuration is no longer valid:
+
+```terraform
+resource "aws_lb_target_group" "test" {
+  port        = 25
+  protocol    = "TCP"
+  vpc_id      = aws_vpc.test.id
+
+  stickiness {
+    type    = "lb_cookie"
+    enabled = false
+  }
+}
+```
+
+To fix this, we change the `stickiness.type` to `"source_ip"`.
+
+```terraform
+resource "aws_lb_target_group" "test" {
+  port        = 25
+  protocol    = "TCP"
+  vpc_id      = aws_vpc.test.id
+
+  stickiness {
+    type    = "source_ip"
+    enabled = false
+  }
+}
+```
+
 
 ## Resource: aws_network_interface
 
