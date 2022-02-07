@@ -122,7 +122,7 @@ In v4.0.0, you can still set endpoints in the same way. However, you can instead
 
 ```terraform
 provider "aws" {
-  use_fips_endpoints = true
+  use_fips_endpoint = true
 }
 ```
 
