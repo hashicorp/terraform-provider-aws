@@ -93,7 +93,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
-* `block_device_mapping` - (Optional) Configuration block(s) with block device mappings for the the image recipe. Detailed below.
+* `block_device_mapping` - (Optional) Configuration block(s) with block device mappings for the the container recipe. Detailed below.
 * `image` - (Optional) The AMI ID to use as the base image for a container build and test instance. If not specified, Image Builder will use the appropriate ECS-optimized AMI as a base image.
 
 ### block_device_mapping
@@ -121,7 +121,11 @@ The following arguments are optional:
 
 In addition to all arguments above, the following attributes are exported:
 
-* `arn` - (Required) Amazon Resource Name (ARN) of the image recipe.
+* `arn` - (Required) Amazon Resource Name (ARN) of the container recipe.
+* `date_created` - Date the container recipe was created.
+* `encrypted` - A flag that indicates if the target container is encrypted.
+* `owner` - Owner of the container recipe.
+* `platform` - Platform of the container recipe.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
 
 ## Import

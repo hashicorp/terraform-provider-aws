@@ -70,6 +70,10 @@ func ResourceContainerRecipe() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.StringInSlice([]string{"DOCKER"}, false),
 			},
+			"date_created": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"description": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -90,6 +94,10 @@ func ResourceContainerRecipe() *schema.Resource {
 				ForceNew:     true,
 				ExactlyOneOf: []string{"dockerfile_template_data", "dockerfile_template_uri"},
 				ValidateFunc: validation.StringMatch(regexp.MustCompile(`^s3://`), "must begin with s3://"),
+			},
+			"encrypted": {
+				Type:     schema.TypeBool,
+				Computed: true,
 			},
 			"instance_configuration": {
 				Type:     schema.TypeList,
@@ -210,11 +218,19 @@ func ResourceContainerRecipe() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(1, 128),
 			},
+			"owner": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"parent_image": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(1, 1024),
+			},
+			"platform": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
@@ -360,8 +376,10 @@ func resourceContainerRecipeRead(d *schema.ResourceData, meta interface{}) error
 	d.Set("arn", containerRecipe.Arn)
 	d.Set("component", flattenComponentConfigurations(containerRecipe.Components))
 	d.Set("container_type", containerRecipe.ContainerType)
+	d.Set("date_created", containerRecipe.DateCreated)
 	d.Set("description", containerRecipe.Description)
 	d.Set("dockerfile_template_data", containerRecipe.DockerfileTemplateData)
+	d.Set("encrypted", containerRecipe.Encrypted)
 
 	if containerRecipe.InstanceConfiguration != nil {
 		d.Set("instance_configuration", []interface{}{flattenInstanceConfiguration(containerRecipe.InstanceConfiguration)})
@@ -371,7 +389,9 @@ func resourceContainerRecipeRead(d *schema.ResourceData, meta interface{}) error
 
 	d.Set("kms_key_id", containerRecipe.KmsKeyId)
 	d.Set("name", containerRecipe.Name)
+	d.Set("owner", containerRecipe.Owner)
 	d.Set("parent_image", containerRecipe.ParentImage)
+	d.Set("platform", containerRecipe.Platform)
 
 	tags := KeyValueTags(containerRecipe.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
