@@ -3582,9 +3582,9 @@ data "aws_rds_orderable_db_instance" "test" {
 func testAccInstanceConfig_orderableClass_SQLServerEx(engine, version, license string) string {
 	return fmt.Sprintf(`
 data "aws_rds_orderable_db_instance" "test" {
-  engine         = %q
-  engine_version = %q
-  license_model  = %q
+  engine         = %[1]q
+  engine_version = %[2]q
+  license_model  = %[3]q
   storage_type   = "standard"
 
   preferred_instance_classes = ["db.t2.small", "db.t3.small"]
