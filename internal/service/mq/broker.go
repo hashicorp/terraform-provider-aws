@@ -1,4 +1,3 @@
-<<<<<<< HEAD:internal/service/mq/broker.go
 package mq
 
 import (
@@ -558,14 +557,6 @@ func resourceBrokerUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("error updating MQ Broker (%s) tags: %w", d.Get("arn").(string), err)
-		}
-	}
-
 	if d.HasChange("host_instance_type") {
 		_, err := conn.UpdateBroker(&mq.UpdateBrokerRequest{
 			BrokerId:         aws.String(d.Id()),
@@ -583,6 +574,14 @@ func resourceBrokerUpdate(d *schema.ResourceData, meta interface{}) error {
 		})
 		if err != nil {
 			return fmt.Errorf("error updating MQ Broker (%s) auto minor version upgrade: %w", d.Id(), err)
+		}
+	}
+
+	if d.HasChange("tags_all") {
+		o, n := d.GetChange("tags_all")
+
+		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+			return fmt.Errorf("error updating MQ Broker (%s) tags: %w", d.Get("arn").(string), err)
 		}
 	}
 
@@ -1088,6 +1087,3 @@ func expandMQLDAPServerMetadata(tfList []interface{}) *mq.LdapServerMetadataInpu
 
 	return apiObject
 }
-=======
-
->>>>>>> ceb21bc040 (Update resource_aws_mq_broker.go):aws/resource_aws_mq_broker.go
