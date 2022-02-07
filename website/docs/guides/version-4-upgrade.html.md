@@ -1318,6 +1318,64 @@ The resources that were imported are shown above. These resources are now in
 your Terraform state and will henceforth be managed by Terraform.
 ```
 
+### `versioning` Argument deprecation
+
+Switch your Terraform configuration to the `aws_s3_bucket_versioning` resource instead.
+
+For example, given this previous configuration:
+
+```terraform
+resource "aws_s3_bucket" "example" {
+  # ... other configuration ...
+  versioning {
+    enabled = true
+  }
+}
+```
+
+It will receive the following error after upgrading:
+
+```
+│ Error: Value for unconfigurable attribute
+│
+│   with aws_s3_bucket.example,
+│   on main.tf line 1, in resource "aws_s3_bucket" "example":
+│    1: resource "aws_s3_bucket" "example" {
+│
+│ Can't configure a value for "versioning": its value will be decided automatically based on the result of applying this configuration.
+```
+
+Since the `versioning` argument changed to read-only, the recommendation is to update the configuration to use the `aws_s3_bucket_versioning`
+resource and remove any references to `versioning` and its nested arguments in the `aws_s3_bucket` resource:
+
+```terraform
+resource "aws_s3_bucket" "example" {
+  # ... other configuration ...
+}
+
+resource "aws_s3_bucket_versioning" "example" {
+  bucket = aws_s3_bucket.example.id
+  versioning_configuration {
+    status = "Enabled"
+  }
+}
+```
+
+It is then recommended running `terraform import` on each new resource to prevent data loss, e.g.
+
+```shell
+$ terraform import aws_s3_bucket_versioning.example example
+aws_s3_bucket_versioning.example: Importing from ID "example"...
+aws_s3_bucket_versioning.example: Import prepared!
+  Prepared aws_s3_bucket_versioning for import
+aws_s3_bucket_versioning.example: Refreshing state... [id=example]
+
+Import successful!
+
+The resources that were imported are shown above. These resources are now in
+your Terraform state and will henceforth be managed by Terraform.
+```
+
 ### `website`, `website_domain`, and `website_endpoint` Argument deprecation
 
 Switch your Terraform configuration to the `aws_s3_bucket_website_configuration` resource instead.

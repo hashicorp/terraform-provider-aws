@@ -44,20 +44,8 @@ See the [`aws_s3_bucket_cors_configuration` resource](s3_bucket_cors_configurati
 
 ### Using versioning
 
-```terraform
-resource "aws_s3_bucket" "b" {
-  bucket = "my-tf-test-bucket"
-
-  versioning {
-    enabled = true
-  }
-}
-
-resource "aws_s3_bucket_acl" "example" {
-  bucket = aws_s3_bucket.b.id
-  acl    = "private"
-}
-```
+The `versioning` argument is read-only as of version 4.0 of the Terraform AWS Provider.
+See the [`aws_s3_bucket_versioning` resource](s3_bucket_versioning.html.markdown) for configuration details.
 
 ### Enable Logging
 
@@ -111,13 +99,7 @@ The following arguments are supported:
 * `grant` - (Optional) An [ACL policy grant](https://docs.aws.amazon.com/AmazonS3/latest/dev/acl-overview.html#sample-acl) (documented below). Conflicts with `acl`.
 * `tags` - (Optional) A map of tags to assign to the bucket. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `force_destroy` - (Optional, Default:`false`) A boolean that indicates all objects (including any [locked objects](https://docs.aws.amazon.com/AmazonS3/latest/dev/object-lock-overview.html)) should be deleted from the bucket so that the bucket can be destroyed without error. These objects are *not* recoverable.
-* `versioning` - (Optional) A state of [versioning](https://docs.aws.amazon.com/AmazonS3/latest/dev/Versioning.html) (documented below)
 * `object_lock_configuration` - (Optional) A configuration of [S3 object locking](https://docs.aws.amazon.com/AmazonS3/latest/dev/object-lock.html) (documented below)
-
-The `versioning` object supports the following:
-
-* `enabled` - (Optional) Enable versioning. Once you version-enable a bucket, it can never return to an unversioned state. You can, however, suspend versioning on that bucket.
-* `mfa_delete` - (Optional) Enable MFA delete for either `Change the versioning state of your bucket` or `Permanently delete an object version`. Default is `false`. This cannot be used to toggle this setting but is available to allow managed buckets to reflect the state in AWS
 
 The `grant` object supports the following:
 
@@ -222,6 +204,9 @@ In addition to all arguments above, the following attributes are exported:
             * `sse_algorithm` - (required) The server-side encryption algorithm used.
         * `bucket_key_enabled` - (Optional) Whether an [Amazon S3 Bucket Key](https://docs.aws.amazon.com/AmazonS3/latest/dev/bucket-key.html) is used for SSE-KMS.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
+* `versioning` - The [versioning](https://docs.aws.amazon.com/AmazonS3/latest/dev/Versioning.html) state of the bucket.
+    * `enabled` - Whether versioning is enabled.
+    * `mfa_delete` - Whether MFA delete is enabled.
 * `website` - The website configuration, if configured.
     * `error_document` - The name of the error document for the website.
     * `index_document` - The name of the index document for the website.

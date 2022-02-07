@@ -70,13 +70,19 @@ resource "aws_s3_bucket_lifecycle_configuration" "bucket-config" {
 resource "aws_s3_bucket" "versioning_bucket" {
   bucket = "my-versioning-bucket"
   acl    = "private"
+}
 
-  versioning {
-    enabled = true
+resource "aws_s3_bucket_versioning" "versioning" {
+  bucket = aws_s3_bucket.versioning_bucket.id
+  versioning_configuration {
+    status = "Enabled"
   }
 }
 
 resource "aws_s3_bucket_lifecycle_configuration" "versioning-bucket-config" {
+  # Must have bucket versioning enabled first
+  depends_on = [aws_s3_bucket_versioning.versioning]
+
   bucket = aws_s3_bucket.versioning_bucket.bucket
 
   rule {
