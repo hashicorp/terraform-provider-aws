@@ -2131,19 +2131,24 @@ resource "aws_kms_key" "test" {
 
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
+}
 
-  server_side_encryption_configuration {
-    rule {
-      apply_server_side_encryption_by_default {
-        kms_master_key_id = aws_kms_key.test.arn
-        sse_algorithm     = "aws:kms"
-      }
-      bucket_key_enabled = true
+resource "aws_s3_bucket_server_side_encryption_configuration" "test" {
+  bucket = aws_s3_bucket.test.id
+
+  rule {
+    apply_server_side_encryption_by_default {
+      kms_master_key_id = aws_kms_key.test.arn
+      sse_algorithm     = "aws:kms"
     }
+    bucket_key_enabled = true
   }
 }
 
 resource "aws_s3_bucket_object" "object" {
+  # Must have bucket SSE enabled first
+  depends_on = [aws_s3_bucket_server_side_encryption_configuration.test]
+
   bucket  = aws_s3_bucket.test.bucket
   key     = "test-key"
   content = %q
@@ -2160,17 +2165,23 @@ resource "aws_kms_key" "test" {
 
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
-  server_side_encryption_configuration {
-    rule {
-      apply_server_side_encryption_by_default {
-        kms_master_key_id = aws_kms_key.test.arn
-        sse_algorithm     = "aws:kms"
-      }
+}
+
+resource "aws_s3_bucket_server_side_encryption_configuration" "test" {
+  bucket = aws_s3_bucket.test.id
+
+  rule {
+    apply_server_side_encryption_by_default {
+      kms_master_key_id = aws_kms_key.test.arn
+      sse_algorithm     = "aws:kms"
     }
   }
 }
 
 resource "aws_s3_bucket_object" "object" {
+  # Must have bucket SSE enabled first
+  depends_on = [aws_s3_bucket_server_side_encryption_configuration.test]
+
   bucket  = aws_s3_bucket.test.bucket
   key     = "test-key"
   content = %[2]q

@@ -179,19 +179,24 @@ resource "aws_s3_object" "source" {
 
 resource "aws_s3_bucket" "target" {
   bucket = "%[1]s-target"
+}
 
-  server_side_encryption_configuration {
-    rule {
-      apply_server_side_encryption_by_default {
-        kms_master_key_id = aws_kms_key.test.arn
-        sse_algorithm     = "aws:kms"
-      }
-      bucket_key_enabled = true
+resource "aws_s3_bucket_server_side_encryption_configuration" "test" {
+  bucket = aws_s3_bucket.target.id
+
+  rule {
+    apply_server_side_encryption_by_default {
+      kms_master_key_id = aws_kms_key.test.arn
+      sse_algorithm     = "aws:kms"
     }
+    bucket_key_enabled = true
   }
 }
 
 resource "aws_s3_object_copy" "test" {
+  # Must have bucket SSE enabled first
+  depends_on = [aws_s3_bucket_server_side_encryption_configuration.test]
+
   bucket = aws_s3_bucket.target.bucket
   key    = "test"
   source = "${aws_s3_bucket.source.bucket}/${aws_s3_object.source.key}"
