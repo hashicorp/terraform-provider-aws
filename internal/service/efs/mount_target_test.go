@@ -359,10 +359,10 @@ resource "aws_efs_file_system" "test" {
 
 resource "aws_efs_mount_target" "test" {
   file_system_id = aws_efs_file_system.test.id
-  ip_address     = %[1]q
+  ip_address     = %[2]q
   subnet_id      = aws_subnet.test.id
 }
-`, ipAddress)
+`, rName, ipAddress)
 }
 
 func testAccMountTargetIPAddressConfigNullIP(rName string) string {
