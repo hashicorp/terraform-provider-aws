@@ -252,48 +252,8 @@ func resourceNetworkACLRead(d *schema.ResourceData, meta interface{}) error {
 func resourceNetworkACLUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
-	if d.HasChange("ingress") {
-		o, n := d.GetChange("ingress")
-		os, ns := o.(*schema.Set), n.(*schema.Set)
-
-		if err := updateNetworkACLEntries(conn, d.Id(), os, ns, false); err != nil {
-			return err
-		}
-	}
-
-	if d.HasChange("egress") {
-		o, n := d.GetChange("egress")
-		os, ns := o.(*schema.Set), n.(*schema.Set)
-
-		if err := updateNetworkACLEntries(conn, d.Id(), os, ns, true); err != nil {
-			return err
-		}
-	}
-
-	if d.HasChange("subnet_ids") {
-		o, n := d.GetChange("subnet_ids")
-		os, ns := o.(*schema.Set), n.(*schema.Set)
-		add, del := ns.Difference(os).List(), os.Difference(ns).List()
-
-		if len(del) > 0 {
-			if err := networkACLAssociationsDelete(conn, d.Get("vpc_id").(string), del); err != nil {
-				return err
-			}
-		}
-
-		if len(add) > 0 {
-			if err := networkACLAssociationsCreate(conn, d.Id(), add); err != nil {
-				return err
-			}
-		}
-	}
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
-			return fmt.Errorf("error updating EC2 Network ACL (%s) tags: %w", d.Id(), err)
-		}
+	if err := modifyNetworkACLAttributesOnUpdate(conn, d, true); err != nil {
+		return err
 	}
 
 	return resourceNetworkACLRead(d, meta)
@@ -341,6 +301,7 @@ func resourceNetworkACLDelete(d *schema.ResourceData, meta interface{}) error {
 
 // modifyNetworkACLAttributesOnCreate sets NACL attributes on resource Create.
 // Called after new NACL creation or existing default NACL adoption.
+// Tags are not configured.
 func modifyNetworkACLAttributesOnCreate(conn *ec2.EC2, d *schema.ResourceData) error {
 	if v, ok := d.GetOk("egress"); ok && v.(*schema.Set).Len() > 0 {
 		if err := createNetworkACLEntries(conn, d.Id(), v.(*schema.Set).List(), true); err != nil {
@@ -359,6 +320,56 @@ func modifyNetworkACLAttributesOnCreate(conn *ec2.EC2, d *schema.ResourceData) e
 			if _, err := networkACLAssociationCreate(conn, d.Id(), v.(string)); err != nil {
 				return err
 			}
+		}
+	}
+
+	return nil
+}
+
+// modifyNetworkACLAttributesOnUpdate sets NACL attributes on resource Update.
+// Tags are configured.
+func modifyNetworkACLAttributesOnUpdate(conn *ec2.EC2, d *schema.ResourceData, deleteEntries bool) error {
+	if d.HasChange("ingress") {
+		o, n := d.GetChange("ingress")
+		os, ns := o.(*schema.Set), n.(*schema.Set)
+
+		if err := updateNetworkACLEntries(conn, d.Id(), os, ns, false, deleteEntries); err != nil {
+			return err
+		}
+	}
+
+	if d.HasChange("egress") {
+		o, n := d.GetChange("egress")
+		os, ns := o.(*schema.Set), n.(*schema.Set)
+
+		if err := updateNetworkACLEntries(conn, d.Id(), os, ns, true, deleteEntries); err != nil {
+			return err
+		}
+	}
+
+	if d.HasChange("subnet_ids") {
+		o, n := d.GetChange("subnet_ids")
+		os, ns := o.(*schema.Set), n.(*schema.Set)
+		add, del := ns.Difference(os).List(), os.Difference(ns).List()
+
+		if len(del) > 0 {
+			if err := networkACLAssociationsDelete(conn, d.Get("vpc_id").(string), del); err != nil {
+				return err
+			}
+		}
+
+		if len(add) > 0 {
+			if err := networkACLAssociationsCreate(conn, d.Id(), add); err != nil {
+				return err
+			}
+		}
+	}
+
+	if d.HasChange("tags_all") {
+		o, n := d.GetChange("tags_all")
+
+		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
+			return fmt.Errorf("error updating EC2 Network ACL (%s) tags: %w", d.Id(), err)
 		}
 	}
 
@@ -482,9 +493,11 @@ func deleteNetworkAclEntries(conn *ec2.EC2, naclID string, naclEntries []*ec2.Ne
 	return nil
 }
 
-func updateNetworkACLEntries(conn *ec2.EC2, naclID string, os, ns *schema.Set, egress bool) error {
-	if err := deleteNetworkACLEntries(conn, naclID, os.Difference(ns).List(), egress); err != nil {
-		return err
+func updateNetworkACLEntries(conn *ec2.EC2, naclID string, os, ns *schema.Set, egress bool, deleteEntries bool) error {
+	if deleteEntries {
+		if err := deleteNetworkACLEntries(conn, naclID, os.Difference(ns).List(), egress); err != nil {
+			return err
+		}
 	}
 
 	if err := createNetworkACLEntries(conn, naclID, ns.Difference(os).List(), egress); err != nil {
@@ -668,6 +681,12 @@ func networkACLProtocolNumber(v string) (int, error) {
 
 		if !ok {
 			return 0, fmt.Errorf("unsupported NACL protocol: %s", v)
+		}
+	} else {
+		_, ok := protocolStrings(protocolIntegers())[i]
+
+		if !ok {
+			return 0, fmt.Errorf("unsupported NACL protocol: %d", i)
 		}
 	}
 
