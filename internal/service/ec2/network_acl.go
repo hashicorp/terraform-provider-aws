@@ -122,7 +122,15 @@ var networkACLRuleResource = &schema.Resource{
 		"protocol": {
 			Type:     schema.TypeString,
 			Required: true,
-			// TODO: Add ValidateFunc.
+			ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
+				_, err := networkACLProtocolNumber(v.(string))
+
+				if err != nil {
+					errors = append(errors, fmt.Errorf("%q : %w", k, err))
+				}
+
+				return
+			},
 		},
 		"rule_no": {
 			Type:         schema.TypeInt,
@@ -507,16 +515,11 @@ func expandNetworkAclEntry(tfMap map[string]interface{}, egress bool) *ec2.Netwo
 	}
 
 	if v, ok := tfMap["protocol"].(string); ok && v != "" {
-		i, err := strconv.Atoi(v)
+		i, err := networkACLProtocolNumber(v)
 
 		if err != nil {
-			// We're a protocol name. Look up the number.
-			i, ok = protocolIntegers()[v]
-
-			if !ok {
-				log.Printf("[WARN] Unsupported protocol: %s", v)
-				return nil
-			}
+			log.Printf("[WARN] %s", err)
+			return nil
 		}
 
 		apiObject.Protocol = aws.String(strconv.Itoa(i))
@@ -600,17 +603,11 @@ func flattenNetworkAclEntry(apiObject *ec2.NetworkAclEntry) map[string]interface
 	if v := aws.StringValue(apiObject.Protocol); v != "" {
 		// The AWS network ACL API only speaks protocol numbers, and
 		// that's all we record.
-		i, err := strconv.Atoi(v)
+		i, err := networkACLProtocolNumber(v)
 
 		if err != nil {
-			// We're a protocol name. Look up the number.
-			var ok bool
-			i, ok = protocolIntegers()[v]
-
-			if !ok {
-				log.Printf("[WARN] Unsupported protocol: %s", v)
-				return nil
-			}
+			log.Printf("[WARN] %s", err)
+			return nil
 		}
 
 		tfMap["protocol"] = strconv.Itoa(i)
@@ -645,4 +642,20 @@ func flattenNetworkAclEntries(apiObjects []*ec2.NetworkAclEntry) []interface{} {
 	}
 
 	return tfList
+}
+
+func networkACLProtocolNumber(v string) (int, error) {
+	i, err := strconv.Atoi(v)
+
+	if err != nil {
+		// Lookup number by name.
+		var ok bool
+		i, ok = protocolIntegers()[v]
+
+		if !ok {
+			return 0, fmt.Errorf("unsupported NACL protocol: %s", v)
+		}
+	}
+
+	return i, nil
 }
