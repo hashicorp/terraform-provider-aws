@@ -70,7 +70,7 @@ func TestAccS3Bucket_Basic_basic(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy", "acl"},
+				ImportStateVerifyIgnore: []string{"force_destroy"},
 			},
 		},
 	})
@@ -98,7 +98,7 @@ func TestAccS3Bucket_Basic_emptyString(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy", "acl"},
+				ImportStateVerifyIgnore: []string{"force_destroy"},
 			},
 		},
 	})
@@ -128,7 +128,7 @@ func TestAccS3Bucket_Tags_withNoSystemTags(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy", "acl"},
+				ImportStateVerifyIgnore: []string{"force_destroy"},
 			},
 			{
 				Config: testAccBucketConfig_withUpdatedTags(bucketName),
@@ -211,7 +211,7 @@ func TestAccS3Bucket_Tags_withSystemTags(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy", "acl"},
+				ImportStateVerifyIgnore: []string{"force_destroy"},
 			},
 			{
 				Config: testAccBucketConfig_withTags(bucketName),
@@ -310,7 +310,7 @@ func TestAccS3Bucket_Tags_basic(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy", "acl"},
+				ImportStateVerifyIgnore: []string{"force_destroy"},
 			},
 		},
 	})
@@ -336,7 +336,7 @@ func TestAccS3Bucket_Basic_namePrefix(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy", "acl", "bucket_prefix"},
+				ImportStateVerifyIgnore: []string{"force_destroy", "bucket_prefix"},
 			},
 		},
 	})
@@ -361,7 +361,7 @@ func TestAccS3Bucket_Basic_generatedName(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy", "acl", "bucket_prefix"},
+				ImportStateVerifyIgnore: []string{"force_destroy", "bucket_prefix"},
 			},
 		},
 	})
@@ -415,7 +415,7 @@ func TestAccS3Bucket_Manage_objectLock(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy", "acl"},
+				ImportStateVerifyIgnore: []string{"force_destroy"},
 			},
 		},
 	})
@@ -443,7 +443,7 @@ func TestAccS3Bucket_Manage_objectLockWithVersioning(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy", "acl"},
+				ImportStateVerifyIgnore: []string{"force_destroy"},
 			},
 		},
 	})
@@ -1060,12 +1060,6 @@ func testAccBucketConfig_withNoTags(bucketName string) string {
 resource "aws_s3_bucket" "bucket" {
   bucket        = %[1]q
   force_destroy = false
-
-  lifecycle {
-    ignore_changes = [
-      grant,
-    ]
-  }
 }
 
 resource "aws_s3_bucket_acl" "test" {
@@ -1085,12 +1079,6 @@ resource "aws_s3_bucket" "bucket" {
     Key1 = "AAA"
     Key2 = "BBB"
     Key3 = "CCC"
-  }
-
-  lifecycle {
-    ignore_changes = [
-      grant,
-    ]
   }
 }
 
@@ -1113,12 +1101,6 @@ resource "aws_s3_bucket" "bucket" {
     Key4 = "DDD"
     Key5 = "EEE"
   }
-
-  lifecycle {
-    ignore_changes = [
-      grant,
-    ]
-  }
 }
 
 resource "aws_s3_bucket_acl" "test" {
@@ -1138,12 +1120,6 @@ resource "aws_s3_bucket" "bucket1" {
     Name        = "tf-test-bucket-1-%[1]d"
     Environment = "%[1]d"
   }
-
-  lifecycle {
-    ignore_changes = [
-      grant,
-    ]
-  }
 }
 
 resource "aws_s3_bucket_acl" "test1" {
@@ -1158,12 +1134,6 @@ resource "aws_s3_bucket" "bucket2" {
   tags = {
     Name        = "tf-test-bucket-2-%[1]d"
     Environment = "%[1]d"
-  }
-
-  lifecycle {
-    ignore_changes = [
-      grant,
-    ]
   }
 }
 
@@ -1180,12 +1150,6 @@ resource "aws_s3_bucket" "bucket3" {
     Name        = "tf-test-bucket-3-%[1]d"
     Environment = "%[1]d"
   }
-
-  lifecycle {
-    ignore_changes = [
-      grant,
-    ]
-  }
 }
 
 resource "aws_s3_bucket_acl" "test3" {
@@ -1200,12 +1164,6 @@ resource "aws_s3_bucket" "bucket4" {
   tags = {
     Name        = "tf-test-bucket-4-%[1]d"
     Environment = "%[1]d"
-  }
-
-  lifecycle {
-    ignore_changes = [
-      grant,
-    ]
   }
 }
 
@@ -1222,12 +1180,6 @@ resource "aws_s3_bucket" "bucket5" {
     Name        = "tf-test-bucket-5-%[1]d"
     Environment = "%[1]d"
   }
-
-  lifecycle {
-    ignore_changes = [
-      grant,
-    ]
-  }
 }
 
 resource "aws_s3_bucket_acl" "test5" {
@@ -1243,12 +1195,6 @@ resource "aws_s3_bucket" "bucket6" {
     Name        = "tf-test-bucket-6-%[1]d"
     Environment = "%[1]d"
   }
-
-  lifecycle {
-    ignore_changes = [
-      grant,
-    ]
-  }
 }
 
 resource "aws_s3_bucket_acl" "test6" {
@@ -1262,12 +1208,6 @@ func testAccBucketDestroyedConfig(bucketName string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "bucket" {
   bucket = %[1]q
-
-  lifecycle {
-    ignore_changes = [
-      grant,
-    ]
-  }
 }
 
 resource "aws_s3_bucket_acl" "test" {
@@ -1292,13 +1232,17 @@ resource "aws_s3_bucket" "test" {
 func testAccBucketConfig_objectLockEnabledWithVersioning(bucketName string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
-  bucket        = "%s"
-  acl           = "private"
+  bucket        = %[1]q
   force_destroy = true
 
   object_lock_configuration {
     object_lock_enabled = "Enabled"
   }
+}
+
+resource "aws_s3_bucket_acl" "test" {
+  bucket = aws_s3_bucket.test.id
+  acl    = "private"
 }
 
 resource "aws_s3_bucket_versioning" "test" {
@@ -1315,12 +1259,6 @@ func testAccBucketConfig_forceDestroy(bucketName string) string {
 resource "aws_s3_bucket" "bucket" {
   bucket        = "%s"
   force_destroy = true
-
-  lifecycle {
-    ignore_changes = [
-      grant,
-    ]
-  }
 }
 
 resource "aws_s3_bucket_acl" "test" {
@@ -1338,12 +1276,6 @@ resource "aws_s3_bucket" "bucket" {
 
   object_lock_configuration {
     object_lock_enabled = "Enabled"
-  }
-
-  lifecycle {
-    ignore_changes = [
-      grant,
-    ]
   }
 }
 

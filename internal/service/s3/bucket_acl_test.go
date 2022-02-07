@@ -435,12 +435,6 @@ func testAccBucketAclBasicConfig(rName, acl string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
-
-  lifecycle {
-    ignore_changes = [
-      grant,
-    ]
-  }
 }
 
 resource "aws_s3_bucket_acl" "test" {
@@ -456,12 +450,6 @@ data "aws_canonical_user_id" "current" {}
 
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
-
-  lifecycle {
-    ignore_changes = [
-      grant,
-    ]
-  }
 }
 
 resource "aws_s3_bucket_acl" "test" {
@@ -499,12 +487,6 @@ data "aws_partition" "current" {}
 
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
-
-  lifecycle {
-    ignore_changes = [
-      grant,
-    ]
-  }
 }
 
 resource "aws_s3_bucket_acl" "test" {
