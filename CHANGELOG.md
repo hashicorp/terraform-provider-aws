@@ -1,4 +1,3 @@
-## 3.75.0 (Unreleased)
 ## 4.0.0 (Unreleased)
 
 BREAKING CHANGES:
