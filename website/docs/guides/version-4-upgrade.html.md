@@ -754,7 +754,7 @@ We removed the misspelled argument `active_directory_configuration.0.self_manage
 ## Resource: aws_lb_target_group
 
 
-For `protocol = "TCP"`, `stickiness` can no longer be type set to `lb_cookie` even when `enabled = false`. Instead, either change the `protocol` to `"HTTP"` or `"HTTPS"`, or change `stickiness.type` to `"source_ip"`.
+For `protocol = "TCP"`, `stickiness.type` can no longer be set to `lb_cookie` even when `enabled = false`. Instead, either change the `protocol` to `"HTTP"` or `"HTTPS"`, or change `stickiness.type` to `"source_ip"`.
 
 For example, this configuration is no longer valid:
 
