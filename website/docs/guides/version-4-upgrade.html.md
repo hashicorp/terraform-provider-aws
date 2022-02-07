@@ -1002,6 +1002,78 @@ The resources that were imported are shown above. These resources are now in
 your Terraform state and will henceforth be managed by Terraform.
 ```
 
+### `object_lock_configuration` `rule` Argument deprecation
+
+Switch your Terraform configuration to the `aws_s3_bucket_object_lock_configuration` resource instead.
+
+For example, given this previous configuration:
+
+```terraform
+resource "aws_s3_bucket" "example" {
+  # ... other configuration ...
+  object_lock_configuration {
+    object_lock_enabled = "Enabled"
+
+    rule {
+      default_retention {
+        mode = "COMPLIANCE"
+        days = 3
+      }
+    }
+  }
+}
+```
+
+It will receive the following error after upgrading:
+
+```
+│ Error: Value for unconfigurable attribute
+│
+│   with aws_s3_bucket.example,
+│   on main.tf line 1, in resource "aws_s3_bucket" "example":
+│    1: resource "aws_s3_bucket" "example" {
+│
+│ Can't configure a value for "object_lock_configuration.0.rule": its value will be decided automatically based on the result of applying this configuration.
+```
+
+Since the `rule` argument of the `object_lock_configuration` configuration block changed to read-only, the recommendation is to update the configuration to use the `aws_s3_bucket_object_lock_configuration`
+resource and remove any references to `rule` and its nested arguments in the `aws_s3_bucket` resource:
+
+```terraform
+resource "aws_s3_bucket" "example" {
+  # ... other configuration ...
+  object_lock_configuration {
+    object_lock_enabled = "Enabled"
+  }
+}
+
+resource "aws_s3_bucket_object_lock_configuration" "example" {
+  bucket = aws_s3_bucket.example.id
+
+  rule {
+    default_retention {
+      mode = "COMPLIANCE"
+      days = 3
+    }
+  }
+}
+```
+
+It is then recommended running `terraform import` on each new resource to prevent data loss, e.g.
+
+```shell
+$ terraform import aws_s3_bucket_object_lock_configuration.example example
+aws_s3_bucket_object_lock_configuration.example: Importing from ID "example"...
+aws_s3_bucket_object_lock_configuration.example: Import prepared!
+  Prepared aws_s3_bucket_object_lock_configuration for import
+aws_s3_bucket_object_lock_configuration.example: Refreshing state... [id=example]
+
+Import successful!
+
+The resources that were imported are shown above. These resources are now in
+your Terraform state and will henceforth be managed by Terraform.
+```
+
 ### `policy` Argument deprecation
 
 Switch your Terraform configuration to the `aws_s3_bucket_policy` resource instead.

@@ -197,7 +197,7 @@ func TestAccS3BucketReplicationConfiguration_multipleDestinationsNonEmptyFilter(
 				Config: testAccBucketReplicationConfigurationWithMultipleDestinationsNonEmptyFilter(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketReplicationConfigurationExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "rule.#", "3"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
 						"id":                          "rule1",
 						"priority":                    "1",
@@ -212,9 +212,23 @@ func TestAccS3BucketReplicationConfiguration_multipleDestinationsNonEmptyFilter(
 						"priority":                    "2",
 						"status":                      s3.ReplicationRuleStatusEnabled,
 						"filter.#":                    "1",
-						"filter.0.prefix":             "prefix2",
+						"filter.0.tag.#":              "1",
+						"filter.0.tag.0.key":          "Key2",
+						"filter.0.tag.0.value":        "Value2",
 						"destination.#":               "1",
 						"destination.0.storage_class": s3.StorageClassStandardIa,
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
+						"id":                          "rule3",
+						"priority":                    "3",
+						"status":                      s3.ReplicationRuleStatusDisabled,
+						"filter.#":                    "1",
+						"filter.0.and.#":              "1",
+						"filter.0.and.0.prefix":       "prefix3",
+						"filter.0.and.0.tags.%":       "1",
+						"filter.0.and.0.tags.Key3":    "Value3",
+						"destination.#":               "1",
+						"destination.0.storage_class": s3.StorageClassOnezoneIa,
 					}),
 				),
 			},
@@ -1018,10 +1032,14 @@ resource "aws_s3_bucket_replication_configuration" "test" {
 }
 
 func testAccBucketReplicationConfigurationRTC(rName string) string {
-	return acctest.ConfigCompose(testAccBucketReplicationConfigurationBase(rName),
+	return acctest.ConfigCompose(
+		testAccBucketReplicationConfigurationBase(rName),
 		`
 resource "aws_s3_bucket_replication_configuration" "test" {
-  depends_on = [aws_s3_bucket_versioning.source]
+  depends_on = [
+    aws_s3_bucket_versioning.source,
+    aws_s3_bucket_versioning.destination
+  ]
 
   bucket = aws_s3_bucket.source.id
   role   = aws_iam_role.test.arn
@@ -1206,7 +1224,12 @@ resource "aws_s3_bucket_versioning" "destination3" {
 }
 
 resource "aws_s3_bucket_replication_configuration" "test" {
-  depends_on = [aws_s3_bucket_versioning.source]
+  depends_on = [
+    aws_s3_bucket_versioning.source,
+    aws_s3_bucket_versioning.destination,
+    aws_s3_bucket_versioning.destination2,
+    aws_s3_bucket_versioning.destination3
+  ]
 
   bucket = aws_s3_bucket.source.id
   role   = aws_iam_role.test.arn
@@ -1236,16 +1259,43 @@ resource "aws_s3_bucket_replication_configuration" "test" {
     status   = "Enabled"
 
     filter {
-      prefix = "prefix2"
+      tag {
+        key   = "Key2"
+        value = "Value2"
+      }
     }
 
     delete_marker_replication {
-      status = "Enabled"
+      status = "Disabled"
     }
 
     destination {
       bucket        = aws_s3_bucket.destination2.arn
       storage_class = "STANDARD_IA"
+    }
+  }
+
+  rule {
+    id       = "rule3"
+    priority = 3
+    status   = "Disabled"
+
+    filter {
+      and {
+        prefix = "prefix3"
+        tags = {
+          Key3 = "Value3"
+        }
+      }
+    }
+
+    delete_marker_replication {
+      status = "Disabled"
+    }
+
+    destination {
+      bucket        = aws_s3_bucket.destination3.arn
+      storage_class = "ONEZONE_IA"
     }
   }
 }`, rName))
@@ -1750,7 +1800,10 @@ resource "aws_s3_bucket_replication_configuration" "test" {
 func testAccBucketReplicationConfiguration_schemaV2DestinationMetrics_statusOnly(rName, storageClass string) string {
 	return testAccBucketReplicationConfigurationBase(rName) + fmt.Sprintf(`
 resource "aws_s3_bucket_replication_configuration" "test" {
-  depends_on = [aws_s3_bucket_versioning.source]
+  depends_on = [
+    aws_s3_bucket_versioning.source,
+    aws_s3_bucket_versioning.destination
+  ]
 
   bucket = aws_s3_bucket.source.id
   role   = aws_iam_role.test.arn
