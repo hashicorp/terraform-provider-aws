@@ -11,8 +11,6 @@ const (
 	BucketCannedACLExecRead         = "aws-exec-read"
 	BucketCannedACLLogDeliveryWrite = "log-delivery-write"
 
-	ErrCodeReplicationConfigurationNotFound = "ReplicationConfigurationNotFoundError"
-
 	LifecycleRuleStatusEnabled  = "Enabled"
 	LifecycleRuleStatusDisabled = "Disabled"
 )

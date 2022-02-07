@@ -107,12 +107,6 @@ resource "aws_s3_bucket" "source" {
   versioning {
     enabled = true
   }
-
-  lifecycle {
-    ignore_changes = [
-      replication_configuration
-    ]
-  }
 }
 
 resource "aws_s3_bucket_replication_configuration" "replication" {
@@ -143,12 +137,6 @@ resource "aws_s3_bucket" "east" {
   versioning {
     enabled = true
   }
-
-  lifecycle {
-    ignore_changes = [
-      replication_configuration
-    ]
-  }
 }
 
 resource "aws_s3_bucket" "west" {
@@ -157,12 +145,6 @@ resource "aws_s3_bucket" "west" {
 
   versioning {
     enabled = true
-  }
-
-  lifecycle {
-    ignore_changes = [
-      replication_configuration
-    ]
   }
 }
 
@@ -199,29 +181,6 @@ resource "aws_s3_bucket_replication_configuration" "west_to_east" {
 }
 ```
 
-## Usage Notes
-
-~> **NOTE:** To avoid conflicts always add the following lifecycle object to the `aws_s3_bucket` resource of the source bucket.
-
-This resource implements the same features that are provided by the `replication_configuration` object of the [`aws_s3_bucket` resource](/docs/providers/aws/r/s3_bucket.html). To avoid conflicts or unexpected apply results, a lifecycle configuration is needed on the `aws_s3_bucket` to ignore changes to the internal `replication_configuration` object.  Failure to add the `lifecycle` configuration to the `aws_s3_bucket` will result in conflicting state results.
-
-```
-lifecycle {
-  ignore_changes = [
-    replication_configuration
-  ]
-}
-```
-
-The `aws_s3_bucket_replication_configuration` resource provides the following features that are not available in the [`aws_s3_bucket` resource](/docs/providers/aws/r/s3_bucket.html):
-
-* `replica_modifications` - Added to the `source_selection_criteria` configuration object [documented below](#source_selection_criteria)
-* `metrics` - Added to the `destination` configuration object [documented below](#metrics)
-* `replication_time` - Added to the `destination` configuration object [documented below](#replication_time)
-* `existing_object_replication` - Added to the replication rule object [documented below](#existing_object_replication)
-
-Replication for existing objects requires activation by AWS Support.  See [userguide/replication-what-is-isnot-replicated](https://docs.aws.amazon.com/AmazonS3/latest/userguide/replication-what-is-isnot-replicated.html#existing-object-replication).
-
 ## Argument Reference
 
 The following arguments are supported:
@@ -249,8 +208,6 @@ The `rule` configuration block supports the following arguments:
 * `status` - (Required) The status of the rule. Either `"Enabled"` or `"Disabled"`. The rule is ignored if status is not "Enabled".
 
 ### delete_marker_replication
-
-~> **NOTE:** This configuration format differs from that of `aws_s3_bucket`.
 
 ~> **NOTE:** This argument is only available with V2 replication configurations.
 
@@ -396,8 +353,6 @@ source_selection_criteria {
 ```
 
 The `source_selection_criteria` configuration block supports the following arguments:
-
-~> **NOTE:** `sse_kms_encrypted_objects` configuration format differs here from the configuration in the [`aws_s3_bucket` resource](/docs/providers/aws/r/s3_bucket.html).
 
 * `replica_modifications` - (Optional) A configuration block that you can specify for selections for modifications on replicas. Amazon S3 doesn't replicate replica modifications by default. In the latest version of replication configuration (when `filter` is specified), you can specify this element and set the status to `Enabled` to replicate modifications on replicas.
 
