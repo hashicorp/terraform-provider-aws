@@ -140,7 +140,7 @@ func resourceDefaultNetworkACLUpdate(d *schema.ResourceData, meta interface{}) e
 	// do that, so we simply log a NO-OP. In order to remove the Subnet here,
 	// it must be destroyed, or assigned to different Network ACL. Those
 	// operations are not handled here.
-	if err := modifyNetworkACLAttributesOnUpdate(conn, d, true); err != nil {
+	if err := modifyNetworkACLAttributesOnUpdate(conn, d, false); err != nil {
 		return err
 	}
 

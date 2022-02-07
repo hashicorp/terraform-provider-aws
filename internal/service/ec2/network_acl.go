@@ -328,12 +328,12 @@ func modifyNetworkACLAttributesOnCreate(conn *ec2.EC2, d *schema.ResourceData) e
 
 // modifyNetworkACLAttributesOnUpdate sets NACL attributes on resource Update.
 // Tags are configured.
-func modifyNetworkACLAttributesOnUpdate(conn *ec2.EC2, d *schema.ResourceData, deleteEntries bool) error {
+func modifyNetworkACLAttributesOnUpdate(conn *ec2.EC2, d *schema.ResourceData, deleteAssociations bool) error {
 	if d.HasChange("ingress") {
 		o, n := d.GetChange("ingress")
 		os, ns := o.(*schema.Set), n.(*schema.Set)
 
-		if err := updateNetworkACLEntries(conn, d.Id(), os, ns, false, deleteEntries); err != nil {
+		if err := updateNetworkACLEntries(conn, d.Id(), os, ns, false); err != nil {
 			return err
 		}
 	}
@@ -342,7 +342,7 @@ func modifyNetworkACLAttributesOnUpdate(conn *ec2.EC2, d *schema.ResourceData, d
 		o, n := d.GetChange("egress")
 		os, ns := o.(*schema.Set), n.(*schema.Set)
 
-		if err := updateNetworkACLEntries(conn, d.Id(), os, ns, true, deleteEntries); err != nil {
+		if err := updateNetworkACLEntries(conn, d.Id(), os, ns, true); err != nil {
 			return err
 		}
 	}
@@ -352,7 +352,7 @@ func modifyNetworkACLAttributesOnUpdate(conn *ec2.EC2, d *schema.ResourceData, d
 		os, ns := o.(*schema.Set), n.(*schema.Set)
 		add, del := ns.Difference(os).List(), os.Difference(ns).List()
 
-		if len(del) > 0 {
+		if len(del) > 0 && deleteAssociations {
 			if err := networkACLAssociationsDelete(conn, d.Get("vpc_id").(string), del); err != nil {
 				return err
 			}
@@ -493,11 +493,9 @@ func deleteNetworkAclEntries(conn *ec2.EC2, naclID string, naclEntries []*ec2.Ne
 	return nil
 }
 
-func updateNetworkACLEntries(conn *ec2.EC2, naclID string, os, ns *schema.Set, egress bool, deleteEntries bool) error {
-	if deleteEntries {
-		if err := deleteNetworkACLEntries(conn, naclID, os.Difference(ns).List(), egress); err != nil {
-			return err
-		}
+func updateNetworkACLEntries(conn *ec2.EC2, naclID string, os, ns *schema.Set, egress bool) error {
+	if err := deleteNetworkACLEntries(conn, naclID, os.Difference(ns).List(), egress); err != nil {
+		return err
 	}
 
 	if err := createNetworkACLEntries(conn, naclID, ns.Difference(os).List(), egress); err != nil {
