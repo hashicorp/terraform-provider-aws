@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/aws/request"
 	"github.com/aws/aws-sdk-go/service/accessanalyzer"
+	"github.com/aws/aws-sdk-go/service/account"
 	"github.com/aws/aws-sdk-go/service/acm"
 	"github.com/aws/aws-sdk-go/service/acmpca"
 	"github.com/aws/aws-sdk-go/service/amplify"
@@ -190,6 +191,7 @@ type Config struct {
 type AWSClient struct {
 	accessanalyzerconn                  *accessanalyzer.AccessAnalyzer
 	accountid                           string
+	accountconn                         *account.Account
 	acmconn                             *acm.ACM
 	acmpcaconn                          *acmpca.ACMPCA
 	amplifyconn                         *amplify.Amplify
@@ -413,6 +415,7 @@ func (c *Config) Client() (interface{}, error) {
 
 	client := &AWSClient{
 		accessanalyzerconn:                  accessanalyzer.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["accessanalyzer"])})),
+		accountconn:                         account.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["account"])})),
 		accountid:                           accountID,
 		acmconn:                             acm.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["acm"])})),
 		acmpcaconn:                          acmpca.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["acmpca"])})),
