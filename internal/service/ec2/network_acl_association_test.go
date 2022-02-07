@@ -67,6 +67,54 @@ func TestAccEC2NetworkACLAssociation_disappears(t *testing.T) {
 	})
 }
 
+func TestAccEC2NetworkACLAssociation_disappears_NACL(t *testing.T) {
+	var v ec2.NetworkAclAssociation
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_network_acl_association.test"
+	naclResourceName := "aws_network_acl.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckNetworkACLAssociationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNetworkACLAssociationConfig(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckNetworkACLAssociationExists(resourceName, &v),
+					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceNetworkACL(), naclResourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccEC2NetworkACLAssociation_disappears_Subnet(t *testing.T) {
+	var v ec2.NetworkAclAssociation
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_network_acl_association.test"
+	subnetResourceName := "aws_subnet.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckNetworkACLAssociationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNetworkACLAssociationConfig(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckNetworkACLAssociationExists(resourceName, &v),
+					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceSubnet(), subnetResourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func TestAccEC2NetworkACLAssociation_twoAssociations(t *testing.T) {
 	var v1, v2 ec2.NetworkAclAssociation
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)

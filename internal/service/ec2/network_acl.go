@@ -179,9 +179,9 @@ func resourceNetworkACLRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error reading EC2 Network ACL (%s): %w", d.Id(), err)
 	}
 
-	networkAcl := outputRaw.(*ec2.NetworkAcl)
+	nacl := outputRaw.(*ec2.NetworkAcl)
 
-	ownerID := aws.StringValue(networkAcl.OwnerId)
+	ownerID := aws.StringValue(nacl.OwnerId)
 	arn := arn.ARN{
 		Partition: meta.(*conns.AWSClient).Partition,
 		Service:   ec2.ServiceName,
@@ -193,16 +193,16 @@ func resourceNetworkACLRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("owner_id", ownerID)
 
 	var subnetIDs []string
-	for _, v := range networkAcl.Associations {
+	for _, v := range nacl.Associations {
 		subnetIDs = append(subnetIDs, aws.StringValue(v.SubnetId))
 	}
 	d.Set("subnet_ids", subnetIDs)
 
-	d.Set("vpc_id", networkAcl.VpcId)
+	d.Set("vpc_id", nacl.VpcId)
 
 	var egressEntries []*ec2.NetworkAclEntry
 	var ingressEntries []*ec2.NetworkAclEntry
-	for _, v := range networkAcl.Entries {
+	for _, v := range nacl.Entries {
 		// Skip the default rules added by AWS. They can be neither
 		// configured or deleted by users.
 		if v := aws.Int64Value(v.RuleNumber); v == defaultACLRuleNumberIPv4 || v == defaultACLRuleNumberIPv6 {
@@ -222,7 +222,7 @@ func resourceNetworkACLRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error setting ingress: %w", err)
 	}
 
-	tags := KeyValueTags(networkAcl.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(nacl.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
@@ -289,8 +289,19 @@ func resourceNetworkACLUpdate(d *schema.ResourceData, meta interface{}) error {
 func resourceNetworkACLDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
-	if v, ok := d.GetOk("subnet_ids"); ok && v.(*schema.Set).Len() > 0 {
-		if err := networkACLAssociationsDelete(conn, d.Get("vpc_id").(string), v.(*schema.Set).List()); err != nil {
+	// Delete all NACL/Subnet associations, even if they are managed via aws_network_acl_association resources.
+	nacl, err := FindNetworkACLByID(conn, d.Id())
+
+	if err != nil {
+		return fmt.Errorf("error reading EC2 Network ACL (%s): %w", d.Id(), err)
+	}
+
+	var subnetIDs []interface{}
+	for _, v := range nacl.Associations {
+		subnetIDs = append(subnetIDs, aws.StringValue(v.SubnetId))
+	}
+	if len(subnetIDs) > 0 {
+		if err := networkACLAssociationsDelete(conn, d.Get("vpc_id").(string), subnetIDs); err != nil {
 			return err
 		}
 	}
@@ -300,7 +311,7 @@ func resourceNetworkACLDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	log.Printf("[INFO] Deleting EC2 Network ACL: %s", d.Id())
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(PropagationTimeout, func() (interface{}, error) {
+	_, err = tfresource.RetryWhenAWSErrCodeEquals(PropagationTimeout, func() (interface{}, error) {
 		return conn.DeleteNetworkAcl(input)
 	}, ErrCodeDependencyViolation)
 
