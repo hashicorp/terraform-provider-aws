@@ -15,7 +15,10 @@ resource "aws_s3_bucket" "prod" {
 
   bucket = var.bucket_name
   acl    = "private"
+}
 
+resource "aws_s3_bucket_policy" "prod_bucket_policy" {
+  bucket = aws_s3_bucket.prod.id
   policy = <<POLICY
 {
   "Version": "2012-10-17",
@@ -37,6 +40,8 @@ POLICY
 resource "aws_s3_object" "prod" {
   provider = aws.prod
 
+  depends_on = [aws_s3_bucket_policy.prod_bucket_policy]
+
   bucket = aws_s3_bucket.prod.id
   key    = "object-uploaded-via-prod-creds"
   source = "${path.module}/prod.txt"
@@ -52,6 +57,8 @@ provider "aws" {
 
 resource "aws_s3_object" "test" {
   provider = aws.test
+
+  depends_on = [aws_s3_bucket_policy.prod_bucket_policy]
 
   bucket = aws_s3_bucket.prod.id
   key    = "object-uploaded-via-test-creds"
