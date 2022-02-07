@@ -462,7 +462,7 @@ func resourceBrokerRead(d *schema.ResourceData, meta interface{}) error {
 		password = v.(string)
 	}
 
-	if err := d.Set("ldap_server_metadata", flattenMQLDAPServerMetadata(output.LdapServerMetadata, password)); err != nil {
+	if err := d.Set("ldap_server_metadata", flattenLDAPServerMetadata(output.LdapServerMetadata, password)); err != nil {
 		return fmt.Errorf("error setting ldap_server_metadata: %w", err)
 	}
 
@@ -998,7 +998,7 @@ func expandLogs(engineType string, l []interface{}) *mq.Logs {
 	return logs
 }
 
-func flattenMQLDAPServerMetadata(apiObject *mq.LdapServerMetadataOutput, password string) []interface{} {
+func flattenLDAPServerMetadata(apiObject *mq.LdapServerMetadataOutput, password string) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
