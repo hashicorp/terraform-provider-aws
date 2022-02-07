@@ -519,9 +519,12 @@ resource "aws_security_group" "test" {
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
   acl    = "private"
+}
 
-  versioning {
-    enabled = true
+resource "aws_s3_bucket_versioning" "test" {
+  bucket = aws_s3_bucket.test.id
+  versioning_configuration {
+    status = "Enabled"
   }
 }
 
@@ -533,6 +536,9 @@ resource "aws_s3_bucket_public_access_block" "test" {
 }
 
 resource "aws_s3_object" "dags" {
+  # Must have bucket versioning enabled first
+  depends_on = [aws_s3_bucket_versioning.test]
+
   bucket       = aws_s3_bucket.test.id
   acl          = "private"
   key          = "dags/"
@@ -578,6 +584,7 @@ resource "aws_iam_role_policy" "test" {
 }
 POLICY
 }
+
 
 `, rName)
 }
@@ -795,6 +802,9 @@ resource "aws_mwaa_environment" "test" {
 }
 
 resource "aws_s3_object" "plugins" {
+  # Must have bucket versioning enabled first
+  depends_on = [aws_s3_bucket_versioning.test]
+
   bucket  = aws_s3_bucket.test.id
   acl     = "private"
   key     = "plugins.zip"

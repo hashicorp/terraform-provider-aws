@@ -35,6 +35,15 @@ func ResourceOntapStorageVirtualMachine() *schema.Resource {
 			Delete: schema.DefaultTimeout(30 * time.Minute),
 		},
 
+		SchemaVersion: 1,
+		StateUpgraders: []schema.StateUpgrader{
+			{
+				Type:    ResourceOntapStorageVirtualMachineV0().CoreConfigSchema().ImpliedType(),
+				Upgrade: ResourceOntapStorageVirtualMachineStateUpgradeV0,
+				Version: 0,
+			},
+		},
+
 		Schema: map[string]*schema.Schema{
 			"arn": {
 				Type:     schema.TypeString,
@@ -82,20 +91,11 @@ func ResourceOntapStorageVirtualMachine() *schema.Resource {
 										ForceNew:     true,
 										ValidateFunc: validation.StringLenBetween(1, 256),
 									},
-									"organizational_unit_distinguidshed_name": {
-										Type:          schema.TypeString,
-										Optional:      true,
-										ForceNew:      true,
-										ValidateFunc:  validation.StringLenBetween(1, 2000),
-										Deprecated:    "use 'organizational_unit_distinguished_name' instead",
-										ConflictsWith: []string{"active_directory_configuration.0.self_managed_active_directory_configuration.0.organizational_unit_distinguished_name"},
-									},
 									"organizational_unit_distinguished_name": {
-										Type:          schema.TypeString,
-										Optional:      true,
-										ForceNew:      true,
-										ValidateFunc:  validation.StringLenBetween(1, 2000),
-										ConflictsWith: []string{"active_directory_configuration.0.self_managed_active_directory_configuration.0.organizational_unit_distinguidshed_name"},
+										Type:         schema.TypeString,
+										Optional:     true,
+										ForceNew:     true,
+										ValidateFunc: validation.StringLenBetween(1, 2000),
 									},
 									"password": {
 										Type:         schema.TypeString,
@@ -430,9 +430,7 @@ func expandFsxOntapSvmSelfManagedActiveDirectoryConfiguration(cfg []interface{})
 		out.FileSystemAdministratorsGroup = aws.String(v)
 	}
 
-	if v, ok := conf["organizational_unit_distinguidshed_name"].(string); ok && len(v) > 0 {
-		out.OrganizationalUnitDistinguishedName = aws.String(v)
-	} else if v, ok := conf["organizational_unit_distinguished_name"].(string); ok && len(v) > 0 {
+	if v, ok := conf["organizational_unit_distinguished_name"].(string); ok && len(v) > 0 {
 		out.OrganizationalUnitDistinguishedName = aws.String(v)
 	}
 
@@ -523,9 +521,7 @@ func flattenFsxOntapSelfManagedActiveDirectoryConfiguration(d *schema.ResourceDa
 	}
 
 	if rs.OrganizationalUnitDistinguishedName != nil {
-		if _, ok := d.GetOk("active_directory_configuration.0.self_managed_active_directory_configuration.0.organizational_unit_distinguidshed_name"); ok {
-			m["organizational_unit_distinguidshed_name"] = aws.StringValue(rs.OrganizationalUnitDistinguishedName)
-		} else {
+		if _, ok := d.GetOk("active_directory_configuration.0.self_managed_active_directory_configuration.0.organizational_unit_distinguished_name"); ok {
 			m["organizational_unit_distinguished_name"] = aws.StringValue(rs.OrganizationalUnitDistinguishedName)
 		}
 	}

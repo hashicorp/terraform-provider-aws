@@ -3416,13 +3416,19 @@ resource "aws_s3_bucket" "artifacts" {
   bucket        = "%s"
   acl           = "private"
   force_destroy = true
+}
 
-  versioning {
-    enabled = true
+resource "aws_s3_bucket_versioning" "artifacts" {
+  bucket = aws_s3_bucket.artifacts.id
+  versioning_configuration {
+    status = "Enabled"
   }
 }
 
 resource "aws_s3_object" "o" {
+  # Must have versioning enabled first
+  depends_on = [aws_s3_bucket_versioning.artifacts]
+
   bucket = aws_s3_bucket.artifacts.bucket
   key    = "%s"
   source = "%s"

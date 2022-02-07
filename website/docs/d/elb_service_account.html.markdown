@@ -19,7 +19,10 @@ data "aws_elb_service_account" "main" {}
 resource "aws_s3_bucket" "elb_logs" {
   bucket = "my-elb-tf-test-bucket"
   acl    = "private"
+}
 
+resource "aws_s3_bucket_policy" "allow_elb_logging" {
+  bucket = aws_s3_bucket.elb_logs.id
   policy = <<POLICY
 {
   "Id": "Policy",

@@ -25,6 +25,17 @@ Upgrade topics:
     - [Resource: aws_default_subnet](#resource-aws_default_subnet)
     - [Resource: aws_default_vpc](#resource-aws_default_vpc)
 - [Plural Data Source Behavior](#plural-data-source-behavior)
+- [Empty Strings Not Valid For Certain Resources](#empty-strings-not-valid-for-certain-resources)
+    - [Resource: aws_customer_gateway](#resource-aws_customer_gateway)
+    - [Resource: aws_default_network_acl](#resource-aws_default_network_acl)
+    - [Resource: aws_default_route_table](#resource-aws_default_route_table)
+    - [Resource: aws_default_vpc (Empty String)](#resource-aws_default_vpc-empty-string)
+    - [Resource: aws_instance](#resource-aws_instance)
+    - [Resource: aws_network_acl](#resource-aws_network_acl)
+    - [Resource: aws_route](#resource-aws_route)
+    - [Resource: aws_route_table](#resource-aws_route_table)
+    - [Resource: aws_vpc](#resource-aws_vpc)
+    - [Resource: aws_vpc_ipv6_cidr_block_association](#resource-aws_vpc_ipv6_cidr_block_association)
 - [Data Source: aws_cloudwatch_log_group](#data-source-aws_cloudwatch_log_group)
 - [Data Source: aws_subnet_ids](#data-source-aws_subnet_ids)
 - [Data Source: aws_s3_bucket_object](#data-source-aws_s3_bucket_object)
@@ -34,6 +45,7 @@ Upgrade topics:
 - [Resource: aws_elasticache_cluster](#resource-aws_elasticache_cluster)
 - [Resource: aws_elasticache_global_replication_group](#resource-aws_elasticache_global_replication_group)
 - [Resource: aws_elasticache_replication_group](#resource-aws_elasticache_replication_group)
+- [Resource: aws_fsx_ontap_storage_virtual_machine](#resource-aws_fsx_ontap_storage_virtual_machine)
 - [Resource: aws_network_interface](#resource-aws_network_interface)
 - [Resource: aws_s3_bucket](#resource-aws_s3_bucket)
 - [Resource: aws_s3_bucket_object](#resource-aws_s3_bucket_object)
@@ -77,30 +89,6 @@ provider "aws" {
   version = "~> 4.0"
 }
 ```
-
-## Plural Data Source Behavior
-
-The following plural data sources are now consistent with [Provider Design](https://github.com/hashicorp/terraform-provider-aws/blob/main/docs/contributing/provider-design.md#data-sources)
-such that they no longer return an error if zero results are found.
-
-* [aws_cognito_user_pools](/docs/providers/aws/d/cognito_user_pools.html)
-* [aws_db_event_categories](/docs/providers/aws/d/db_event_categories.html)
-* [aws_ebs_volumes](/docs/providers/aws/d/ebs_volumes.html)
-* [aws_ec2_coip_pools](/docs/providers/aws/d/ec2_coip_pools.html)
-* [aws_ec2_local_gateway_route_tables](/docs/providers/aws/d/ec2_local_gateway_route_tables.html)
-* [aws_ec2_local_gateway_virtual_interface_groups](/docs/providers/aws/d/ec2_local_gateway_virtual_interface_groups.html)
-* [aws_ec2_local_gateways](/docs/providers/aws/d/ec2_local_gateways.html)
-* [aws_ec2_transit_gateway_route_tables](/docs/providers/aws/d/ec2_transit_gateway_route_tables.html)
-* [aws_efs_access_points](/docs/providers/aws/d/efs_access_points.html)
-* [aws_emr_release_labels](/docs/providers/aws/d/emr_release_labels.markdown)
-* [aws_inspector_rules_packages](/docs/providers/aws/d/inspector_rules_packages.html)
-* [aws_ip_ranges](/docs/providers/aws/d/ip_ranges.html)
-* [aws_network_acls](/docs/providers/aws/d/network_acls.html)
-* [aws_route_tables](/docs/providers/aws/d/route_tables.html)
-* [aws_security_groups](/docs/providers/aws/d/security_groups.html)
-* [aws_ssoadmin_instances](/docs/providers/aws/d/ssoadmin_instances.html)
-* [aws_vpcs](/docs/providers/aws/d/vpcs.html)
-* [aws_vpc_peering_connections](/docs/providers/aws/d/vpc_peering_connections.html)
 
 ## Full Resource Lifecycle of Default Resources
 
@@ -212,6 +200,234 @@ resource "aws_default_vpc" "default" {
   force_destroy = true
 }
 ```
+
+## Plural Data Source Behavior
+
+The following plural data sources are now consistent with [Provider Design](https://github.com/hashicorp/terraform-provider-aws/blob/main/docs/contributing/provider-design.md#data-sources)
+such that they no longer return an error if zero results are found.
+
+* [aws_cognito_user_pools](/docs/providers/aws/d/cognito_user_pools.html)
+* [aws_db_event_categories](/docs/providers/aws/d/db_event_categories.html)
+* [aws_ebs_volumes](/docs/providers/aws/d/ebs_volumes.html)
+* [aws_ec2_coip_pools](/docs/providers/aws/d/ec2_coip_pools.html)
+* [aws_ec2_local_gateway_route_tables](/docs/providers/aws/d/ec2_local_gateway_route_tables.html)
+* [aws_ec2_local_gateway_virtual_interface_groups](/docs/providers/aws/d/ec2_local_gateway_virtual_interface_groups.html)
+* [aws_ec2_local_gateways](/docs/providers/aws/d/ec2_local_gateways.html)
+* [aws_ec2_transit_gateway_route_tables](/docs/providers/aws/d/ec2_transit_gateway_route_tables.html)
+* [aws_efs_access_points](/docs/providers/aws/d/efs_access_points.html)
+* [aws_emr_release_labels](/docs/providers/aws/d/emr_release_labels.markdown)
+* [aws_inspector_rules_packages](/docs/providers/aws/d/inspector_rules_packages.html)
+* [aws_ip_ranges](/docs/providers/aws/d/ip_ranges.html)
+* [aws_network_acls](/docs/providers/aws/d/network_acls.html)
+* [aws_route_tables](/docs/providers/aws/d/route_tables.html)
+* [aws_security_groups](/docs/providers/aws/d/security_groups.html)
+* [aws_ssoadmin_instances](/docs/providers/aws/d/ssoadmin_instances.html)
+* [aws_vpcs](/docs/providers/aws/d/vpcs.html)
+* [aws_vpc_peering_connections](/docs/providers/aws/d/vpc_peering_connections.html)
+
+## Empty Strings Not Valid For Certain Resources
+
+First, this is a breaking change but should affect very few configurations.
+
+Second, the motivation behind this change is that previously, you might set an argument to `""` to explicitly convey it is empty. However, with the introduction of `null` in Terraform 0.12 and to prepare for continuing enhancements that distinguish between unset arguments and those that have a value, including an empty string (`""`), we are moving away from this use of zero values. We ask practitioners to either use `null` instead or remove the arguments that are set to `""`.
+
+### Resource: aws_customer_gateway
+
+Previously, `ip_address` could be set to `""`, which would result in an AWS error. However, this value is no longer accepted by the provider.
+
+### Resource: aws_default_network_acl
+
+Previously, `egress.*.cidr_block`, `egress.*.ipv6_cidr_block`, `ingress.*.cidr_block`, and `ingress.*.ipv6_cidr_block` could be set to `""`. However, the value `""` is no longer valid. Now, set the argument to `null` (_e.g._, `ipv6_cidr_block = null`) or remove the empty-string configuration.
+
+For example, this type of configuration is now not valid:
+
+```terraform
+resource "aws_default_network_acl" "example" {
+  # ...
+  egress {
+    cidr_block      = "0.0.0.0/0"
+    ipv6_cidr_block = ""
+    # ...
+  }
+}
+```
+
+In this updated and valid configuration, we remove the empty-string configuration:
+
+```terraform
+resource "aws_default_network_acl" "example" {
+  # ...
+  egress {
+    cidr_block = "0.0.0.0/0"
+    # ...
+  }
+}
+```
+
+### Resource: aws_default_route_table
+
+Previously, `route.*.cidr_block` and `route.*.ipv6_cidr_block` could be set to `""`. However, the value `""` is no longer valid. Now, set the argument to `null` (_e.g._, `ipv6_cidr_block = null`) or remove the empty-string configuration.
+
+For example, this type of configuration is now not valid:
+
+```terraform
+resource "aws_default_route_table" "example" {
+  # ...
+  route {
+    cidr_block      = local.ipv6 ? "" : local.destination
+    ipv6_cidr_block = local.ipv6 ? local.destination_ipv6 : ""
+  }
+}
+```
+
+In this updated and valid configuration, we use `null` instead of an empty string (`""`):
+
+```terraform
+resource "aws_default_route_table" "example" {
+  # ...
+  route {
+    cidr_block      = local.ipv6 ? null : local.destination
+    ipv6_cidr_block = local.ipv6 ? local.destination_ipv6 : null
+  }
+}
+```
+
+### Resource: aws_default_vpc (Empty String)
+
+Previously, `ipv6_cidr_block` could be set to `""`. However, the value `""` is no longer valid. Now, set the argument to `null` (_e.g._, `ipv6_cidr_block = null`) or remove the empty-string configuration.
+
+### Resource: aws_instance
+
+Previously, `private_ip` could be set to `""`. However, the value `""` is no longer valid. Now, set the argument to `null` (_e.g._, `private_ip = null`) or remove the empty-string configuration.
+
+For example, this type of configuration is now not valid:
+
+```terraform
+resource "aws_instance" "test" {
+  instance_type = "t2.micro"
+  private_ip    = ""
+}
+```
+
+In this updated and valid configuration, we remove the empty-string configuration:
+
+```terraform
+resource "aws_instance" "test" {
+  instance_type = "t2.micro"
+}
+```
+
+### Resource: aws_network_acl
+
+Previously, `egress.*.cidr_block`, `egress.*.ipv6_cidr_block`, `ingress.*.cidr_block`, and `ingress.*.ipv6_cidr_block` could be set to `""`. However, the value `""` is no longer valid. Now, set the argument to `null` (_e.g._, `ipv6_cidr_block = null`) or remove the empty-string configuration.
+
+For example, this type of configuration is now not valid:
+
+```terraform
+resource "aws_network_acl" "example" {
+  # ...
+  egress {
+    cidr_block      = "0.0.0.0/0"
+    ipv6_cidr_block = ""
+    # ...
+  }
+}
+```
+
+In this updated and valid configuration, we remove the empty-string configuration:
+
+```terraform
+resource "aws_network_acl" "example" {
+  # ...
+  egress {
+    cidr_block = "0.0.0.0/0"
+    # ...
+  }
+}
+```
+
+### Resource: aws_route
+
+Previously, `destination_cidr_block` and `destination_ipv6_cidr_block` could be set to `""`. However, the value `""` is no longer valid. Now, set the argument to `null` (_e.g._, `destination_ipv6_cidr_block = null`) or remove the empty-string configuration.
+
+In addition, now exactly one of `destination_cidr_block`, `destination_ipv6_cidr_block`, and `destination_prefix_list_id` can be set.
+
+For example, this type of configuration for `aws_route` is now not valid:
+
+```terraform
+resource "aws_route" "test" {
+  route_table_id = aws_route_table.test.id
+  gateway_id     = aws_internet_gateway.test.id
+
+  destination_cidr_block      = local.ipv6 ? "" : local.destination
+  destination_ipv6_cidr_block = local.ipv6 ? local.destination_ipv6 : ""
+}
+```
+
+In this updated and valid configuration, we use `null` instead of an empty-string (`""`):
+
+```terraform
+resource "aws_route" "test" {
+  route_table_id = aws_route_table.test.id
+  gateway_id     = aws_internet_gateway.test.id
+
+  destination_cidr_block      = local.ipv6 ? null : local.destination
+  destination_ipv6_cidr_block = local.ipv6 ? local.destination_ipv6 : null
+}
+```
+
+### Resource: aws_route_table
+
+Previously, `route.*.cidr_block` and `route.*.ipv6_cidr_block` could be set to `""`. However, the value `""` is no longer valid. Now, set the argument to `null` (_e.g._, `ipv6_cidr_block = null`) or remove the empty-string configuration.
+
+For example, this type of configuration is now not valid:
+
+```terraform
+resource "aws_route_table" "example" {
+  # ...
+  route {
+    cidr_block      = local.ipv6 ? "" : local.destination
+    ipv6_cidr_block = local.ipv6 ? local.destination_ipv6 : ""
+  }
+}
+```
+
+In this updated and valid configuration, we used `null` instead of an empty-string (`""`):
+
+```terraform
+resource "aws_route_table" "example" {
+  # ...
+  route {
+    cidr_block      = local.ipv6 ? null : local.destination
+    ipv6_cidr_block = local.ipv6 ? local.destination_ipv6 : null
+  }
+}
+```
+
+### Resource: aws_vpc
+
+Previously, `ipv6_cidr_block` could be set to `""`. However, the value `""` is no longer valid. Now, set the argument to `null` (_e.g._, `ipv6_cidr_block = null`) or remove the empty-string configuration.
+
+For example, this type of configuration is now not valid:
+
+```terraform
+resource "aws_vpc" "test" {
+  cidr_block      = "10.1.0.0/16"
+  ipv6_cidr_block = ""
+}
+```
+
+In this updated and valid configuration, we remove `ipv6_cidr_block`:
+
+```terraform
+resource "aws_vpc" "test" {
+  cidr_block      = "10.1.0.0/16"
+}
+```
+
+### Resource: aws_vpc_ipv6_cidr_block_association
+
+Previously, `ipv6_cidr_block` could be set to `""`. However, the value `""` is no longer valid. Now, set the argument to `null` (_e.g._, `ipv6_cidr_block = null`) or remove the empty-string configuration.
 
 ## Data Source: aws_cloudwatch_log_group
 
@@ -407,6 +623,32 @@ resource "aws_cloudwatch_event_target" "test" {
 
 ## Resource: aws_elasticache_cluster
 
+### Error raised if neither `engine` nor `replication_group_id` is specified
+
+Previously, when neither `engine` nor `replication_group_id` was specified, Terraform would not prevent users from applying the invalid configuration.
+Now, this will produce an error similar to the below:
+
+```
+Error: Invalid combination of arguments
+
+          with aws_elasticache_cluster.example,
+          on terraform_plugin_test.tf line 2, in resource "aws_elasticache_cluster" "example":
+           2: resource "aws_elasticache_cluster" "example" {
+
+        "replication_group_id": one of `engine,replication_group_id` must be
+        specified
+
+        Error: Invalid combination of arguments
+
+          with aws_elasticache_cluster.example,
+          on terraform_plugin_test.tf line 2, in resource "aws_elasticache_cluster" "example":
+           2: resource "aws_elasticache_cluster" "example" {
+
+        "engine": one of `engine,replication_group_id` must be specified
+```
+
+Configuration that depend on the previous behavior will need to be updated.
+
 ## Resource: aws_elasticache_global_replication_group
 
 ### actual_engine_version Attribute removal
@@ -433,13 +675,914 @@ output "elasticache_global_replication_group_version_result" {
 
 !> **WARNING:** This topic is placeholder documentation.
 
+## Resource: aws_fsx_ontap_storage_virtual_machine
+
+We removed the misspelled argument `active_directory_configuration.0.self_managed_active_directory_configuration.0.organizational_unit_distinguidshed_name` that was previously deprecated. Use `active_directory_configuration.0.self_managed_active_directory_configuration.0.organizational_unit_distinguished_name` now instead. Terraform will automatically migrate the state to `active_directory_configuration.0.self_managed_active_directory_configuration.0.organizational_unit_distinguished_name` during planning.
+
 ## Resource: aws_network_interface
 
 !> **WARNING:** This topic is placeholder documentation.
 
 ## Resource: aws_s3_bucket
 
-!> **WARNING:** This topic is placeholder documentation.
+To help distribute the management of S3 bucket settings via independent resources, various arguments and attributes in the `aws_s3_bucket` resource
+have become read-only. Configurations dependent on these arguments should be updated to use the corresponding `aws_s3_bucket_*` resource.
+Once updated, new `aws_s3_bucket_*` resources should be imported into Terraform state.
+
+### `acceleration_status` Argument deprecation
+
+Switch your Terraform configuration to the `aws_s3_bucket_accelerate_configuration` resource instead.
+
+For example, given this previous configuration:
+
+```terraform
+resource "aws_s3_bucket" "example" {
+  # ... other configuration ...
+  acceleration_status = "Enabled"
+}
+```
+
+It will receive the following error after upgrading:
+
+```
+│ Error: Value for unconfigurable attribute
+│
+│   with aws_s3_bucket.example,
+│   on main.tf line 1, in resource "aws_s3_bucket" "example":
+│    1: resource "aws_s3_bucket" "example" {
+│
+│ Can't configure a value for "acceleration_status": its value will be decided automatically based on the result of applying this configuration.
+```
+
+Since the `acceleration_status` argument changed to read-only, the recommendation is to update the configuration to use the `aws_s3_bucket_accelerate_configuration`
+resource and remove any reference to `acceleration_status` in the `aws_s3_bucket` resource:
+
+```terraform
+resource "aws_s3_bucket" "example" {
+  # ... other configuration ...
+}
+
+resource "aws_s3_bucket_accelerate_configuration" "example" {
+  bucket = aws_s3_bucket.example.id
+  status = "Enabled"
+}
+```
+
+It is then recommended running `terraform import` on each new resource to prevent data loss, e.g.
+
+```shell
+$ terraform import aws_s3_bucket_accelerate_configuration.example example
+aws_s3_bucket_accelerate_configuration.example: Importing from ID "example"...
+aws_s3_bucket_accelerate_configuration.example: Import prepared!
+  Prepared aws_s3_bucket_accelerate_configuration for import
+aws_s3_bucket_accelerate_configuration.example: Refreshing state... [id=example]
+
+Import successful!
+
+The resources that were imported are shown above. These resources are now in
+your Terraform state and will henceforth be managed by Terraform.
+```
+
+### `cors_rule` Argument deprecation
+
+Switch your Terraform configuration to the `aws_s3_bucket_cors_configuration` resource instead.
+
+For example, given this previous configuration:
+
+```terraform
+resource "aws_s3_bucket" "example" {
+  # ... other configuration ...
+  cors_rule {
+    allowed_headers = ["*"]
+    allowed_methods = ["PUT", "POST"]
+    allowed_origins = ["https://s3-website-test.hashicorp.com"]
+    expose_headers  = ["ETag"]
+    max_age_seconds = 3000
+  }
+}
+```
+
+It will receive the following error after upgrading:
+
+```
+│ Error: Value for unconfigurable attribute
+│
+│   with aws_s3_bucket.example,
+│   on main.tf line 1, in resource "aws_s3_bucket" "example":
+│    1: resource "aws_s3_bucket" "example" {
+│
+│ Can't configure a value for "cors_rule": its value will be decided automatically based on the result of applying this configuration.
+```
+
+Since the `cors_rule` argument changed to read-only, the recommendation is to update the configuration to use the `aws_s3_bucket_cors_configuration`
+resource and remove any references to `cors_rule` and its nested arguments in the `aws_s3_bucket` resource:
+
+```terraform
+resource "aws_s3_bucket" "example" {
+  # ... other configuration ...
+}
+
+resource "aws_s3_bucket_cors_configuration" "example" {
+  bucket = aws_s3_bucket.example.id
+  
+  cors_rule {
+    allowed_headers = ["*"]
+    allowed_methods = ["PUT", "POST"]
+    allowed_origins = ["https://s3-website-test.hashicorp.com"]
+    expose_headers  = ["ETag"]
+    max_age_seconds = 3000
+  }
+}
+```
+
+It is then recommended running `terraform import` on each new resource to prevent data loss, e.g.
+
+```shell
+$ terraform import aws_s3_bucket_cors_configuration.example example
+aws_s3_bucket_cors_configuration.example: Importing from ID "example"...
+aws_s3_bucket_cors_configuration.example: Import prepared!
+  Prepared aws_s3_bucket_cors_configuration for import
+aws_s3_bucket_cors_configuration.example: Refreshing state... [id=example]
+
+Import successful!
+
+The resources that were imported are shown above. These resources are now in
+your Terraform state and will henceforth be managed by Terraform.
+```
+
+### `lifecycle_rule` Argument deprecation
+
+Switch your Terraform configuration to the `aws_s3_bucket_lifecycle_configuration` resource instead.
+
+For example, given this previous configuration:
+
+```terraform
+resource "aws_s3_bucket" "example" {
+  # ... other configuration ...
+  lifecycle_rule {
+    id      = "log"
+    enabled = true
+    prefix = "log/"
+    tags = {
+      rule      = "log"
+      autoclean = "true"
+    }
+    transition {
+      days          = 30
+      storage_class = "STANDARD_IA"
+    }
+    transition {
+      days          = 60
+      storage_class = "GLACIER"
+    }
+    expiration {
+      days = 90
+    }
+  }
+  
+  lifecycle_rule {
+    id      = "tmp"
+    prefix  = "tmp/"
+    enabled = true
+    expiration {
+      date = "2022-12-31"
+    }
+  }
+}
+```
+
+It will receive the following error after upgrading:
+
+```
+│ Error: Value for unconfigurable attribute
+│
+│   with aws_s3_bucket.example,
+│   on main.tf line 1, in resource "aws_s3_bucket" "example":
+│    1: resource "aws_s3_bucket" "example" {
+│
+│ Can't configure a value for "lifecycle_rule": its value will be decided automatically based on the result of applying this configuration.
+```
+
+Since the `lifecycle_rule` argument changed to read-only, the recommendation is to update the configuration to use the `aws_s3_bucket_lifecycle_configuration`
+resource and remove any references to `lifecycle_rule` and its nested arguments in the `aws_s3_bucket` resource:
+
+```terraform
+resource "aws_s3_bucket" "example" {
+  # ... other configuration ...
+}
+
+resource "aws_s3_bucket_lifecycle_configuration" "example" {
+  bucket = aws_s3_bucket.example.id
+  
+  rule {
+    id     = "log"
+    status = "Enabled"
+
+    filter {
+      and {
+        prefix = "log/"
+        tags = {
+          rule      = "log"
+          autoclean = "true"
+        }
+      }
+    }
+
+    transition {
+      days          = 30
+      storage_class = "STANDARD_IA"
+    }
+
+    transition {
+      days          = 60
+      storage_class = "GLACIER"
+    }
+
+    expiration {
+      days = 90
+    }
+  }
+
+  rule {
+    id = "tmp"
+
+    filter {
+      prefix  = "tmp/"
+    }
+
+    expiration {
+      date = "2022-12-31T00:00:00Z"
+    }
+
+    status = "Enabled"
+  }
+}
+```
+
+It is then recommended running `terraform import` on each new resource to prevent data loss, e.g.
+
+```shell
+$ terraform import aws_s3_bucket_lifecycle_configuration.example example
+aws_s3_bucket_lifecycle_configuration.example: Importing from ID "example"...
+aws_s3_bucket_lifecycle_configuration.example: Import prepared!
+  Prepared aws_s3_bucket_lifecycle_configuration for import
+aws_s3_bucket_lifecycle_configuration.example: Refreshing state... [id=example]
+
+Import successful!
+
+The resources that were imported are shown above. These resources are now in
+your Terraform state and will henceforth be managed by Terraform.
+```
+
+### `logging` Argument deprecation
+
+Switch your Terraform configuration to the `aws_s3_bucket_logging` resource instead.
+
+For example, given this previous configuration:
+
+```terraform
+resource "aws_s3_bucket" "log_bucket" {
+  # ... other configuration ...
+  bucket = "example-log-bucket"
+}
+
+resource "aws_s3_bucket" "example" {
+  # ... other configuration ...
+  logging {
+    target_bucket = aws_s3_bucket.log_bucket.id
+    target_prefix = "log/"
+  }
+}
+```
+
+It will receive the following error after upgrading:
+
+```
+│ Error: Value for unconfigurable attribute
+│
+│   with aws_s3_bucket.example,
+│   on main.tf line 1, in resource "aws_s3_bucket" "example":
+│    1: resource "aws_s3_bucket" "example" {
+│
+│ Can't configure a value for "logging": its value will be decided automatically based on the result of applying this configuration.
+```
+
+Since the `logging` argument changed to read-only, the recommendation is to update the configuration to use the `aws_s3_bucket_logging`
+resource and remove any references to `logging` and its nested arguments in the `aws_s3_bucket` resource:
+
+```terraform
+resource "aws_s3_bucket" "log_bucket" {
+  # ... other configuration ...
+  bucket = "example-log-bucket"
+}
+
+resource "aws_s3_bucket" "example" {
+  # ... other configuration ...
+}
+
+resource "aws_s3_bucket_logging" "example" {
+  bucket        = aws_s3_bucket.example.id
+  target_bucket = aws_s3_bucket.log_bucket.id
+  target_prefix = "log/"
+}
+```
+
+It is then recommended running `terraform import` on each new resource to prevent data loss, e.g.
+
+```shell
+$ terraform import aws_s3_bucket_logging.example example
+aws_s3_bucket_logging.example: Importing from ID "example"...
+aws_s3_bucket_logging.example: Import prepared!
+  Prepared aws_s3_bucket_logging for import
+aws_s3_bucket_logging.example: Refreshing state... [id=example]
+
+Import successful!
+
+The resources that were imported are shown above. These resources are now in
+your Terraform state and will henceforth be managed by Terraform.
+```
+
+### `object_lock_configuration` `rule` Argument deprecation
+
+Switch your Terraform configuration to the `aws_s3_bucket_object_lock_configuration` resource instead.
+
+For example, given this previous configuration:
+
+```terraform
+resource "aws_s3_bucket" "example" {
+  # ... other configuration ...
+  object_lock_configuration {
+    object_lock_enabled = "Enabled"
+
+    rule {
+      default_retention {
+        mode = "COMPLIANCE"
+        days = 3
+      }
+    }
+  }
+}
+```
+
+It will receive the following error after upgrading:
+
+```
+│ Error: Value for unconfigurable attribute
+│
+│   with aws_s3_bucket.example,
+│   on main.tf line 1, in resource "aws_s3_bucket" "example":
+│    1: resource "aws_s3_bucket" "example" {
+│
+│ Can't configure a value for "object_lock_configuration.0.rule": its value will be decided automatically based on the result of applying this configuration.
+```
+
+Since the `rule` argument of the `object_lock_configuration` configuration block changed to read-only, the recommendation is to update the configuration to use the `aws_s3_bucket_object_lock_configuration`
+resource and remove any references to `rule` and its nested arguments in the `aws_s3_bucket` resource:
+
+```terraform
+resource "aws_s3_bucket" "example" {
+  # ... other configuration ...
+  object_lock_configuration {
+    object_lock_enabled = "Enabled"
+  }
+}
+
+resource "aws_s3_bucket_object_lock_configuration" "example" {
+  bucket = aws_s3_bucket.example.id
+
+  rule {
+    default_retention {
+      mode = "COMPLIANCE"
+      days = 3
+    }
+  }
+}
+```
+
+It is then recommended running `terraform import` on each new resource to prevent data loss, e.g.
+
+```shell
+$ terraform import aws_s3_bucket_object_lock_configuration.example example
+aws_s3_bucket_object_lock_configuration.example: Importing from ID "example"...
+aws_s3_bucket_object_lock_configuration.example: Import prepared!
+  Prepared aws_s3_bucket_object_lock_configuration for import
+aws_s3_bucket_object_lock_configuration.example: Refreshing state... [id=example]
+
+Import successful!
+
+The resources that were imported are shown above. These resources are now in
+your Terraform state and will henceforth be managed by Terraform.
+```
+
+### `policy` Argument deprecation
+
+Switch your Terraform configuration to the `aws_s3_bucket_policy` resource instead.
+
+For example, given this previous configuration:
+
+```terraform
+resource "aws_s3_bucket" "accesslogs_bucket" {
+  # ... other configuration ...
+  policy = <<EOF
+{
+  "Id": "Policy1446577137248",
+  "Statement": [
+    {
+      "Action": "s3:PutObject",
+      "Effect": "Allow",
+      "Principal": {
+        "AWS": "${data.aws_elb_service_account.current.arn}"
+      },
+      "Resource": "arn:${data.aws_partition.current.partition}:s3:::example/*",
+      "Sid": "Stmt1446575236270"
+    }
+  ],
+  "Version": "2012-10-17"
+}
+EOF
+}
+```
+
+It will receive the following error after upgrading:
+
+```
+│ Error: Value for unconfigurable attribute
+│
+│   with aws_s3_bucket.accesslogs_bucket,
+│   on main.tf line 1, in resource "aws_s3_bucket" "accesslogs_bucket":
+│    1: resource "aws_s3_bucket" "accesslogs_bucket" {
+│
+│ Can't configure a value for "policy": its value will be decided automatically based on the result of applying this configuration.
+```
+
+Since the `policy` argument changed to read-only, the recommendation is to update the configuration to use the `aws_s3_bucket_policy`
+resource and remove any reference to `policy` in the `aws_s3_bucket` resource:
+
+```terraform
+resource "aws_s3_bucket" "accesslogs_bucket" {
+  # ... other configuration ...
+}
+
+resource "aws_s3_bucket_policy" "example" {
+  bucket = aws_s3_bucket.accesslogs_bucket.id
+  policy = <<EOF
+{
+  "Id": "Policy1446577137248",
+  "Statement": [
+    {
+      "Action": "s3:PutObject",
+      "Effect": "Allow",
+      "Principal": {
+        "AWS": "${data.aws_elb_service_account.current.arn}"
+      },
+      "Resource": "arn:${data.aws_partition.current.partition}:s3:::example/*",
+      "Sid": "Stmt1446575236270"
+    }
+  ],
+  "Version": "2012-10-17"
+}
+EOF
+}
+```
+
+It is then recommended running `terraform import` on each new resource to prevent data loss, e.g.
+
+```shell
+$ terraform import aws_s3_bucket_policy.example example
+aws_s3_bucket_policy.example: Importing from ID "example"...
+aws_s3_bucket_policy.example: Import prepared!
+  Prepared aws_s3_bucket_policy for import
+aws_s3_bucket_policy.example: Refreshing state... [id=example]
+
+Import successful!
+
+The resources that were imported are shown above. These resources are now in
+your Terraform state and will henceforth be managed by Terraform.
+```
+
+### `replication_configuration` Argument deprecation
+
+Switch your Terraform configuration to the `aws_s3_bucket_replication_configuration` resource instead.
+
+For example, given this previous configuration:
+
+```terraform
+resource "aws_s3_bucket" "source" {
+  provider = aws.central
+  
+  # ... other configuration ...
+  
+  replication_configuration {
+    role = aws_iam_role.replication.arn
+    rules {
+      id     = "foobar"
+      status = "Enabled"
+      filter {
+        tags = {}
+      }
+      destination {
+        bucket        = aws_s3_bucket.destination.arn
+        storage_class = "STANDARD"
+        replication_time {
+          status  = "Enabled"
+          minutes = 15
+        }
+        metrics {
+          status  = "Enabled"
+          minutes = 15
+        }
+      }
+    }
+  }
+}
+```
+
+It will receive the following error after upgrading:
+
+```
+│ Error: Value for unconfigurable attribute
+│
+│   with aws_s3_bucket.source,
+│   on main.tf line 1, in resource "aws_s3_bucket" "source":
+│    1: resource "aws_s3_bucket" "source" {
+│
+│ Can't configure a value for "replication_configuration": its value will be decided automatically based on the result of applying this configuration.
+```
+
+Since the `replication_configuration` argument changed to read-only, the recommendation is to update the configuration to use the `aws_s3_bucket_replication_configuration`
+resource and remove any references to `replication_configuration` and its nested arguments in the `aws_s3_bucket` resource:
+
+```terraform
+resource "aws_s3_bucket" "source" {
+  provider = aws.central
+  # ... other configuration ...
+}
+
+resource "aws_s3_bucket_replication_configuration" "example" {
+  bucket = aws_s3_bucket.source.id
+  role   = aws_iam_role.replication.arn
+  
+  rule {
+    id     = "foobar"
+    status = "Enabled"
+
+    filter {}
+
+    delete_marker_replication {
+      status = "Enabled"
+    }
+
+    destination {
+      bucket        = aws_s3_bucket.destination.arn
+      storage_class = "STANDARD"
+
+      replication_time {
+        status = "Enabled"
+        time {
+          minutes = 15
+        }
+      }
+
+      metrics {
+        status = "Enabled"
+        event_threshold {
+          minutes = 15
+        }
+      }
+    }
+  }
+}
+```
+
+It is then recommended running `terraform import` on each new resource to prevent data loss, e.g.
+
+```shell
+$ terraform import aws_s3_bucket_replication_configuration.example example
+aws_s3_bucket_replication_configuration.example: Importing from ID "example"...
+aws_s3_bucket_replication_configuration.example: Import prepared!
+  Prepared aws_s3_bucket_replication_configuration for import
+aws_s3_bucket_replication_configuration.example: Refreshing state... [id=example]
+
+Import successful!
+
+The resources that were imported are shown above. These resources are now in
+your Terraform state and will henceforth be managed by Terraform.
+```
+
+### `request_payer` Argument deprecation
+
+Switch your Terraform configuration to the `aws_s3_bucket_request_payment_configuration` resource instead.
+
+For example, given this previous configuration:
+
+```terraform
+resource "aws_s3_bucket" "example" {
+  # ... other configuration ...
+  request_payer = "Requester"
+}
+```
+
+It will receive the following error after upgrading:
+
+```
+│ Error: Value for unconfigurable attribute
+│
+│   with aws_s3_bucket.example,
+│   on main.tf line 1, in resource "aws_s3_bucket" "example":
+│    1: resource "aws_s3_bucket" "example" {
+│
+│ Can't configure a value for "request_payer": its value will be decided automatically based on the result of applying this configuration.
+```
+
+Since the `request_payer` argument changed to read-only, the recommendation is to update the configuration to use the `aws_s3_bucket_request_payment_configuration`
+resource and remove any reference to `request_payer` in the `aws_s3_bucket` resource:
+
+```terraform
+resource "aws_s3_bucket" "example" {
+  # ... other configuration ...
+}
+
+resource "aws_s3_bucket_request_payment_configuration" "example" {
+  bucket = aws_s3_bucket.example.id
+  payer  = "Requester"
+}
+```
+
+It is then recommended running `terraform import` on each new resource to prevent data loss, e.g.
+
+```shell
+$ terraform import aws_s3_bucket_request_payment_configuration.example example
+aws_s3_bucket_request_payment_configuration.example: Importing from ID "example"...
+aws_s3_bucket_request_payment_configuration.example: Import prepared!
+  Prepared aws_s3_bucket_request_payment_configuration for import
+aws_s3_bucket_request_payment_configuration.example: Refreshing state... [id=example]
+
+Import successful!
+
+The resources that were imported are shown above. These resources are now in
+your Terraform state and will henceforth be managed by Terraform.
+```
+
+### `server_side_encryption_configuration` Argument deprecation
+
+Switch your Terraform configuration to the `aws_s3_bucket_server_side_encryption_configuration` resource instead.
+
+For example, given this previous configuration:
+
+```terraform
+resource "aws_s3_bucket" "example" {
+  # ... other configuration ...
+  server_side_encryption_configuration {
+    rule {
+      apply_server_side_encryption_by_default {
+        kms_master_key_id = aws_kms_key.mykey.arn
+        sse_algorithm     = "aws:kms"
+      }
+    }
+  }
+}
+```
+
+It will receive the following error after upgrading:
+
+```
+│ Error: Value for unconfigurable attribute
+│
+│   with aws_s3_bucket.example,
+│   on main.tf line 1, in resource "aws_s3_bucket" "example":
+│    1: resource "aws_s3_bucket" "example" {
+│
+│ Can't configure a value for "server_side_encryption_configuration": its value will be decided automatically based on the result of applying this configuration.
+```
+
+Since the `server_side_encryption_configuration` argument changed to read-only, the recommendation is to update the configuration to use the `aws_s3_bucket_server_side_encryption_configuration`
+resource and remove any references to `server_side_encryption_configuration` and its nested arguments in the `aws_s3_bucket` resource:
+
+```terraform
+resource "aws_s3_bucket" "example" {
+  # ... other configuration ...
+}
+
+resource "aws_s3_bucket_server_side_encryption_configuration" "example" {
+  bucket = aws_s3_bucket.example.id
+
+  rule {
+    apply_server_side_encryption_by_default {
+      kms_master_key_id = aws_kms_key.mykey.arn
+      sse_algorithm     = "aws:kms"
+    }
+  }
+}
+```
+
+It is then recommended running `terraform import` on each new resource to prevent data loss, e.g.
+
+```shell
+$ terraform import aws_s3_bucket_server_side_encryption_configuration.example example
+aws_s3_bucket_server_side_encryption_configuration.example: Importing from ID "example"...
+aws_s3_bucket_server_side_encryption_configuration.example: Import prepared!
+  Prepared aws_s3_bucket_server_side_encryption_configuration for import
+aws_s3_bucket_server_side_encryption_configuration.example: Refreshing state... [id=example]
+
+Import successful!
+
+The resources that were imported are shown above. These resources are now in
+your Terraform state and will henceforth be managed by Terraform.
+```
+
+### `versioning` Argument deprecation
+
+Switch your Terraform configuration to the `aws_s3_bucket_versioning` resource instead.
+
+For example, given this previous configuration:
+
+```terraform
+resource "aws_s3_bucket" "example" {
+  # ... other configuration ...
+  versioning {
+    enabled = true
+  }
+}
+```
+
+It will receive the following error after upgrading:
+
+```
+│ Error: Value for unconfigurable attribute
+│
+│   with aws_s3_bucket.example,
+│   on main.tf line 1, in resource "aws_s3_bucket" "example":
+│    1: resource "aws_s3_bucket" "example" {
+│
+│ Can't configure a value for "versioning": its value will be decided automatically based on the result of applying this configuration.
+```
+
+Since the `versioning` argument changed to read-only, the recommendation is to update the configuration to use the `aws_s3_bucket_versioning`
+resource and remove any references to `versioning` and its nested arguments in the `aws_s3_bucket` resource:
+
+```terraform
+resource "aws_s3_bucket" "example" {
+  # ... other configuration ...
+}
+
+resource "aws_s3_bucket_versioning" "example" {
+  bucket = aws_s3_bucket.example.id
+  versioning_configuration {
+    status = "Enabled"
+  }
+}
+```
+
+It is then recommended running `terraform import` on each new resource to prevent data loss, e.g.
+
+```shell
+$ terraform import aws_s3_bucket_versioning.example example
+aws_s3_bucket_versioning.example: Importing from ID "example"...
+aws_s3_bucket_versioning.example: Import prepared!
+  Prepared aws_s3_bucket_versioning for import
+aws_s3_bucket_versioning.example: Refreshing state... [id=example]
+
+Import successful!
+
+The resources that were imported are shown above. These resources are now in
+your Terraform state and will henceforth be managed by Terraform.
+```
+
+### `website`, `website_domain`, and `website_endpoint` Argument deprecation
+
+Switch your Terraform configuration to the `aws_s3_bucket_website_configuration` resource instead.
+
+For example, given this previous configuration:
+
+```terraform
+resource "aws_s3_bucket" "example" {
+  # ... other configuration ...
+  website {
+    index_document = "index.html"
+    error_document = "error.html"
+  }
+}
+```
+
+It will receive the following error after upgrading:
+
+```
+│ Error: Value for unconfigurable attribute
+│
+│   with aws_s3_bucket.example,
+│   on main.tf line 1, in resource "aws_s3_bucket" "example":
+│    1: resource "aws_s3_bucket" "example" {
+│
+│ Can't configure a value for "website": its value will be decided automatically based on the result of applying this configuration.
+```
+
+Since the `website` argument changed to read-only, the recommendation is to update the configuration to use the `aws_s3_bucket_website_configuration`
+resource and remove any references to `website` and its nested arguments in the `aws_s3_bucket` resource:
+
+```terraform
+resource "aws_s3_bucket" "example" {
+  # ... other configuration ...
+}
+
+resource "aws_s3_bucket_website_configuration" "example" {
+  bucket = aws_s3_bucket.example.id
+
+  index_document {
+    suffix = "index.html"
+  }
+
+  error_document {
+    key = "error.html"
+  }
+}
+```
+
+It is then recommended running `terraform import` on each new resource to prevent data loss, e.g.
+
+```shell
+$ terraform import aws_s3_bucket_website_configuration.example example
+aws_s3_bucket_website_configuration.example: Importing from ID "example"...
+aws_s3_bucket_website_configuration.example: Import prepared!
+  Prepared aws_s3_bucket_website_configuration for import
+aws_s3_bucket_website_configuration.example: Refreshing state... [id=example]
+
+Import successful!
+
+The resources that were imported are shown above. These resources are now in
+your Terraform state and will henceforth be managed by Terraform.
+```
+
+For configurations that previously used the `website_domain` attribute to create Route 53 alias records e.g.
+
+```terraform
+resource "aws_route53_zone" "main" {
+  name = "domain.test"
+}
+
+resource "aws_s3_bucket" "website" {
+  # ... other configuration ...
+  website {
+    index_document = "index.html"
+    error_document = "error.html"
+  }
+}
+
+resource "aws_route53_record" "alias" {
+  zone_id = aws_route53_zone.main.zone_id
+  name    = "www"
+  type    = "A"
+
+  alias {
+    zone_id                = aws_s3_bucket.website.hosted_zone_id
+    name                   = aws_s3_bucket.website.website_domain
+    evaluate_target_health = true
+  }
+}
+```
+
+An updated configuration:
+
+```terraform
+resource "aws_route53_zone" "main" {
+  name = "domain.test"
+}
+
+resource "aws_s3_bucket" "website" {
+  # ... other configuration ...
+}
+
+resource "aws_s3_bucket_website_configuration" "example" {
+  bucket = aws_s3_bucket.website.id
+
+  index_document {
+    suffix = "index.html"
+  }
+}
+
+resource "aws_route53_record" "alias" {
+  zone_id = aws_route53_zone.main.zone_id
+  name    = "www"
+  type    = "A"
+
+  alias {
+    zone_id                = aws_s3_bucket.website.hosted_zone_id
+    name                   = aws_s3_bucket_website_configuration.example.website_domain
+    evaluate_target_health = true
+  }
+}
+```
+
+## Resource: aws_s3_bucket_object
+
+The `aws_s3_bucket_object` resource is deprecated and will be removed in a future version. Use `aws_s3_object` instead, where new features and fixes will be added.
+
+When replacing `aws_s3_bucket_object` with `aws_s3_object` in your configuration, on the next apply, Terraform will recreate the object. If you prefer to not have Terraform recreate the object, import the object using `aws_s3_object`.
+
+For example, the following will import an S3 object into state, assuming the configuration exists, as `aws_s3_object.example`:
+
+```console
+% terraform import aws_s3_object.example s3://some-bucket-name/some/key.txt
+```
 
 ## Resource: aws_spot_instance_request
 
@@ -463,18 +1606,6 @@ resource "aws_spot_instance_request" "example" {
   # ... other configuration ...
   instance_interruption_behavior =  "hibernate"
 }
-```
-
-## Resource: aws_s3_bucket_object
-
-The `aws_s3_bucket_object` resource is deprecated and will be removed in a future version. Use `aws_s3_object` instead, where new features and fixes will be added.
-
-When replacing `aws_s3_bucket_object` with `aws_s3_object` in your configuration, on the next apply, Terraform will recreate the object. If you prefer to not have Terraform recreate the object, import the object using `aws_s3_object`.
-
-For example, the following will import an S3 object into state, assuming the configuration exists, as `aws_s3_object.example`:
-
-```console
-% terraform import aws_s3_object.example s3://some-bucket-name/some/key.txt
 ```
 
 ## EC2-Classic Resource and Data Source Support
