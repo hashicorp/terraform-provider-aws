@@ -1025,7 +1025,7 @@ func resourceBucketRead(d *schema.ResourceData, meta interface{}) error {
 			Bucket: aws.String(d.Id()),
 		})
 	})
-	if err != nil && !tfawserr.ErrCodeEquals(err, "NoSuchLifecycleConfiguration") {
+	if err != nil && !tfawserr.ErrCodeEquals(err, ErrCodeNoSuchLifecycleConfiguration) {
 		return fmt.Errorf("error getting S3 Bucket (%s) Lifecycle Configuration: %w", d.Id(), err)
 	}
 
