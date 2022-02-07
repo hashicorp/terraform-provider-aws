@@ -540,17 +540,17 @@ func expandNetworkAclEntry(tfMap map[string]interface{}, egress bool) *ec2.Netwo
 	}
 
 	if v, ok := tfMap["protocol"].(string); ok && v != "" {
-		i, err := networkACLProtocolNumber(v)
+		protocolNumber, err := networkACLProtocolNumber(v)
 
 		if err != nil {
 			log.Printf("[WARN] %s", err)
 			return nil
 		}
 
-		apiObject.Protocol = aws.String(strconv.Itoa(i))
+		apiObject.Protocol = aws.String(strconv.Itoa(protocolNumber))
 
 		// Specify additional required fields for ICMP.
-		if i == 1 || i == 58 {
+		if protocolNumber == 1 || protocolNumber == 58 {
 			apiObject.IcmpTypeCode = &ec2.IcmpTypeCode{}
 
 			if v, ok := tfMap["icmp_code"].(int); ok {
@@ -628,14 +628,14 @@ func flattenNetworkAclEntry(apiObject *ec2.NetworkAclEntry) map[string]interface
 	if v := aws.StringValue(apiObject.Protocol); v != "" {
 		// The AWS network ACL API only speaks protocol numbers, and
 		// that's all we record.
-		i, err := networkACLProtocolNumber(v)
+		protocolNumber, err := networkACLProtocolNumber(v)
 
 		if err != nil {
 			log.Printf("[WARN] %s", err)
 			return nil
 		}
 
-		tfMap["protocol"] = strconv.Itoa(i)
+		tfMap["protocol"] = strconv.Itoa(protocolNumber)
 	}
 
 	if apiObject := apiObject.IcmpTypeCode; apiObject != nil {

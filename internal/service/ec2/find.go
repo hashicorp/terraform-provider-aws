@@ -2,6 +2,7 @@ package ec2
 
 import (
 	"fmt"
+	"strconv"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
@@ -794,57 +795,28 @@ func FindNetworkACLAssociationBySubnetID(conn *ec2.EC2, subnetID string) (*ec2.N
 	return nil, &resource.NotFoundError{}
 }
 
-// FindNetworkACLEntry looks up a FindNetworkACLEntry by Network ACL ID, Egress, and Rule Number. When not found, returns nil and potentially an API error.
-func FindNetworkACLEntry(conn *ec2.EC2, networkAclID string, egress bool, ruleNumber int) (*ec2.NetworkAclEntry, error) {
+func FindNetworkACLEntry(conn *ec2.EC2, naclID string, egress bool, ruleNumber int) (*ec2.NetworkAclEntry, error) {
 	input := &ec2.DescribeNetworkAclsInput{
-		Filters: []*ec2.Filter{
-			{
-				Name:   aws.String("entry.egress"),
-				Values: aws.StringSlice([]string{fmt.Sprintf("%t", egress)}),
-			},
-			{
-				Name:   aws.String("entry.rule-number"),
-				Values: aws.StringSlice([]string{fmt.Sprintf("%d", ruleNumber)}),
-			},
-		},
-		NetworkAclIds: aws.StringSlice([]string{networkAclID}),
+		Filters: BuildAttributeFilterList(map[string]string{
+			"entry.egress":      strconv.FormatBool(egress),
+			"entry.rule-number": strconv.Itoa(ruleNumber),
+		}),
+		NetworkAclIds: aws.StringSlice([]string{naclID}),
 	}
 
-	output, err := conn.DescribeNetworkAcls(input)
+	output, err := FindNetworkACL(conn, input)
 
 	if err != nil {
 		return nil, err
 	}
 
-	if output == nil {
-		return nil, nil
-	}
-
-	for _, networkAcl := range output.NetworkAcls {
-		if networkAcl == nil {
-			continue
-		}
-
-		if aws.StringValue(networkAcl.NetworkAclId) != networkAclID {
-			continue
-		}
-
-		for _, entry := range output.NetworkAcls[0].Entries {
-			if entry == nil {
-				continue
-			}
-
-			if aws.BoolValue(entry.Egress) != egress || aws.Int64Value(entry.RuleNumber) != int64(ruleNumber) {
-				continue
-			}
-
-			return entry, nil
+	for _, v := range output.Entries {
+		if aws.BoolValue(v.Egress) == egress && aws.Int64Value(v.RuleNumber) == int64(ruleNumber) {
+			return v, nil
 		}
 	}
 
-	return nil, nil
-
-	// TODO: Layer on top of FindNetworkACL and modify callers to handle NotFoundError.
+	return nil, &resource.NotFoundError{}
 }
 
 func FindNetworkInterface(conn *ec2.EC2, input *ec2.DescribeNetworkInterfacesInput) (*ec2.NetworkInterface, error) {
