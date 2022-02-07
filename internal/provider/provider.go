@@ -667,6 +667,9 @@ func New(ctx context.Context) (*schema.Provider, error) {
 
 			"aws_fsx_openzfs_snapshot": fsx.DataSourceOpenzfsSnapshot(),
 
+			"aws_globalaccelerator_accelerator":                globalaccelerator.DataSourceAccelerator(),
+			"aws_globalaccelerator_custom_routing_accelerator": globalaccelerator.DataSourceCustomRoutingAccelerator(),
+
 			"aws_glue_catalog_table":                    glue.DataSourceCatalogTable(),
 			"aws_glue_connection":                       glue.DataSourceConnection(),
 			"aws_glue_data_catalog_encryption_settings": glue.DataSourceDataCatalogEncryptionSettings(),
@@ -1563,9 +1566,12 @@ func New(ctx context.Context) (*schema.Provider, error) {
 			"aws_glacier_vault":      glacier.ResourceVault(),
 			"aws_glacier_vault_lock": glacier.ResourceVaultLock(),
 
-			"aws_globalaccelerator_accelerator":    globalaccelerator.ResourceAccelerator(),
-			"aws_globalaccelerator_endpoint_group": globalaccelerator.ResourceEndpointGroup(),
-			"aws_globalaccelerator_listener":       globalaccelerator.ResourceListener(),
+			"aws_globalaccelerator_accelerator":                   globalaccelerator.ResourceAccelerator(),
+			"aws_globalaccelerator_endpoint_group":                globalaccelerator.ResourceEndpointGroup(),
+			"aws_globalaccelerator_listener":                      globalaccelerator.ResourceListener(),
+			"aws_globalaccelerator_custom_routing_accelerator":    globalaccelerator.ResourceCustomRoutingAccelerator(),
+			"aws_globalaccelerator_custom_routing_endpoint_group": globalaccelerator.ResourceCustomRoutingEndpointGroup(),
+			"aws_globalaccelerator_custom_routing_listener":       globalaccelerator.ResourceCustomRoutingListener(),
 
 			"aws_glue_catalog_database":                 glue.ResourceCatalogDatabase(),
 			"aws_glue_catalog_table":                    glue.ResourceCatalogTable(),

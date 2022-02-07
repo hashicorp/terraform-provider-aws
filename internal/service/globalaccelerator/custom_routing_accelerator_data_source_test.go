@@ -10,14 +10,15 @@ import (
 )
 
 func TestAccGlobalAcceleratorCustomRoutingAcceleratorDataSource_basic(t *testing.T) {
-	resourceName := "aws_globalaccelerator_customroutingaccelerator.test"
-	dataSourceName := "data.aws_globalaccelerator_customroutingaccelerator.test_by_arn"
-	dataSourceName2 := "data.aws_globalaccelerator_customroutingaccelerator.test_by_name"
+	resourceName := "aws_globalaccelerator_custom_routing_accelerator.test"
+	dataSourceName := "data.aws_globalaccelerator_custom_routing_accelerator.test_by_arn"
+	dataSourceName2 := "data.aws_globalaccelerator_custom_routing_accelerator.test_by_name"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t); testAccPreCheckGlobalAccelerator(t) },
-		ErrorCheck: acctest.ErrorCheck(t, globalaccelerator.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckGlobalAccelerator(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, globalaccelerator.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckGlobalAcceleratorCustomRoutingAcceleratorDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGlobalAcceleratorCustomRoutingAcceleratorDataSourceConfig(resourceName),
@@ -49,17 +50,17 @@ func TestAccGlobalAcceleratorCustomRoutingAcceleratorDataSource_basic(t *testing
 
 func testAccGlobalAcceleratorCustomRoutingAcceleratorDataSourceConfig(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_globalaccelerator_customroutingaccelerator" "test" {
+resource "aws_globalaccelerator_custom_routing_accelerator" "test" {
   name = %[1]q
 }
 
 
-data "aws_globalaccelerator_customroutingaccelerator" "test_by_arn" {
-	arn = aws_globalaccelerator_accelerator.test.id
+data "aws_globalaccelerator_custom_routing_accelerator" "test_by_arn" {
+	arn = aws_globalaccelerator_custom_routing_accelerator.test.id
   }
   
-  data "aws_globalaccelerator_customroutingaccelerator" "test_by_name" {
-	name = aws_globalaccelerator_accelerator.test.name
+  data "aws_globalaccelerator_custom_routing_accelerator" "test_by_name" {
+	name = aws_globalaccelerator_custom_routing_accelerator.test.name
   }
 `, rName)
 }
