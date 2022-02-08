@@ -1594,7 +1594,10 @@ resource "aws_s3_bucket_versioning" "source" {
 }
 
 resource "aws_s3_bucket_replication_configuration" "test" {
-  depends_on = [aws_s3_bucket_versioning.source]
+  depends_on = [
+    aws_s3_bucket_versioning.source,
+    aws_s3_bucket_versioning.destination
+  ]
 
   bucket = aws_s3_bucket.source.id
   role   = aws_iam_role.test.arn
@@ -1671,7 +1674,10 @@ resource "aws_s3_bucket_versioning" "source" {
 }
 
 resource "aws_s3_bucket_replication_configuration" "test" {
-  depends_on = [aws_s3_bucket_versioning.source]
+  depends_on = [
+    aws_s3_bucket_versioning.source,
+    aws_s3_bucket_versioning.destination
+  ]
 
   bucket = aws_s3_bucket.source.id
   role   = aws_iam_role.test.arn
