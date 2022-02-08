@@ -19,6 +19,10 @@ For more information, see [How S3 versioning works](https://docs.aws.amazon.com/
 ```terraform
 resource "aws_s3_bucket" "example" {
   bucket = "example-bucket"
+}
+
+resource "aws_s3_bucket_acl" "example" {
+  bucket = aws_s3_bucket.example.id
   acl    = "private"
 }
 

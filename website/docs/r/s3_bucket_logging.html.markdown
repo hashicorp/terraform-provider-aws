@@ -15,11 +15,19 @@ Provides a S3 bucket logging resource.
 ```terraform
 resource "aws_s3_bucket" "example" {
   bucket = "my-tf-example-bucket"
+}
+
+resource "aws_s3_bucket_acl" "example" {
+  bucket = aws_s3_bucket.example.id
   acl    = "private"
 }
 
 resource "aws_s3_bucket" "log_bucket" {
   bucket = "my-tf-log-bucket"
+}
+
+resource "aws_s3_bucket_acl" "log_bucket_acl" {
+  bucket = aws_s3_bucket.log_bucket.id
   acl    = "log-delivery-write"
 }
 

@@ -105,7 +105,11 @@ resource "aws_s3_bucket_versioning" "destination" {
 resource "aws_s3_bucket" "source" {
   provider = aws.central
   bucket   = "tf-test-bucket-source-12345"
-  acl      = "private"
+}
+
+resource "aws_s3_bucket_acl" "source_bucket_acl" {
+  bucket = aws_s3_bucket.source.id
+  acl    = "private"
 }
 
 resource "aws_s3_bucket_versioning" "source" {

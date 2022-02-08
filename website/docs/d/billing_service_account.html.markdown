@@ -17,6 +17,10 @@ data "aws_billing_service_account" "main" {}
 
 resource "aws_s3_bucket" "billing_logs" {
   bucket = "my-billing-tf-test-bucket"
+}
+
+resource "aws_s3_bucket_acl" "billing_logs_acl" {
+  bucket = aws_s3_bucket.billing_logs.id
   acl    = "private"
 }
 
