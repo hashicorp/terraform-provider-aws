@@ -476,8 +476,12 @@ resource "aws_ses_receipt_rule_set" "test" {
 
 resource "aws_s3_bucket" "test" {
   bucket        = %[1]q
-  acl           = "public-read-write"
   force_destroy = "true"
+}
+
+resource "aws_s3_bucket_acl" "test" {
+  bucket = aws_s3_bucket.test.id
+  acl    = "public-read-write"
 }
 
 resource "aws_ses_receipt_rule" "test" {
