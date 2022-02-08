@@ -18,6 +18,10 @@ data "aws_elb_service_account" "main" {}
 
 resource "aws_s3_bucket" "elb_logs" {
   bucket = "my-elb-tf-test-bucket"
+}
+
+resource "aws_s3_bucket_acl" "elb_logs_acl" {
+  bucket = aws_s3_bucket.elb_logs.id
   acl    = "private"
 }
 

@@ -39,6 +39,10 @@ resource "aws_kms_key" "examplekms" {
 
 resource "aws_s3_bucket" "examplebucket" {
   bucket = "examplebuckettftest"
+}
+
+resource "aws_s3_bucket_acl" "example" {
+  bucket = aws_s3_bucket.examplebucket.id
   acl    = "private"
 }
 
@@ -55,6 +59,10 @@ resource "aws_s3_bucket_object" "example" {
 ```terraform
 resource "aws_s3_bucket" "examplebucket" {
   bucket = "examplebuckettftest"
+}
+
+resource "aws_s3_bucket_acl" "example" {
+  bucket = aws_s3_bucket.examplebucket.id
   acl    = "private"
 }
 
@@ -71,6 +79,10 @@ resource "aws_s3_bucket_object" "example" {
 ```terraform
 resource "aws_s3_bucket" "examplebucket" {
   bucket = "examplebuckettftest"
+}
+
+resource "aws_s3_bucket_acl" "example" {
+  bucket = aws_s3_bucket.examplebucket.id
   acl    = "private"
 }
 
@@ -87,13 +99,16 @@ resource "aws_s3_bucket_object" "example" {
 ```terraform
 resource "aws_s3_bucket" "examplebucket" {
   bucket = "examplebuckettftest"
-  acl    = "private"
 
   object_lock_configuration {
     object_lock_enabled = "Enabled"
   }
 }
 
+resource "aws_s3_bucket_acl" "example" {
+  bucket = aws_s3_bucket.examplebucket.id
+  acl    = "private"
+}
 
 resource "aws_s3_bucket_versioning" "example" {
   bucket = aws_s3_bucket.examplebucket.id

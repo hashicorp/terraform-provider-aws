@@ -42,6 +42,10 @@ resource "aws_kinesis_firehose_delivery_stream" "extended_s3_stream" {
 
 resource "aws_s3_bucket" "bucket" {
   bucket = "tf-test-bucket"
+}
+
+resource "aws_s3_bucket_acl" "bucket_acl" {
+  bucket = aws_s3_bucket.bucket.id
   acl    = "private"
 }
 
@@ -99,6 +103,10 @@ resource "aws_lambda_function" "lambda_processor" {
 ```terraform
 resource "aws_s3_bucket" "bucket" {
   bucket = "tf-test-bucket"
+}
+
+resource "aws_s3_bucket_acl" "bucket_acl" {
+  bucket = aws_s3_bucket.bucket.id
   acl    = "private"
 }
 
