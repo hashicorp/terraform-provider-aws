@@ -62,8 +62,8 @@ func TestAccRDSInstance_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "license_model", "general-public-license"),
 					resource.TestCheckResourceAttrSet(resourceName, "maintenance_window"),
 					resource.TestCheckResourceAttr(resourceName, "max_allocated_storage", "0"),
-					resource.TestCheckResourceAttr(resourceName, "option_group_name", "default:mysql-5-6"),
-					resource.TestCheckResourceAttr(resourceName, "parameter_group_name", "default.mysql5.6"),
+					resource.TestCheckResourceAttr(resourceName, "option_group_name", "default:mysql-8-0"),
+					resource.TestCheckResourceAttr(resourceName, "parameter_group_name", "default.mysql8.0"),
 					resource.TestCheckResourceAttr(resourceName, "port", "3306"),
 					resource.TestCheckResourceAttr(resourceName, "publicly_accessible", "false"),
 					resource.TestCheckResourceAttrSet(resourceName, "resource_id"),
@@ -4182,7 +4182,7 @@ resource "aws_db_instance" "test" {
   engine_version          = data.aws_rds_orderable_db_instance.test.engine_version
   instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
   name                    = "baz" # deprecated
-  parameter_group_name    = "default.mysql5.6"
+  parameter_group_name    = "default.mysql8.0"
   password                = "barbarbarbar"
   skip_final_snapshot     = true
   username                = "test"
@@ -7058,7 +7058,7 @@ func testAccInstanceConfig_ReplicateSourceDB_ParameterGroupName_sameSetOnBoth(rN
 		testAccInstanceConfig_orderableClassMySQL(),
 		fmt.Sprintf(`
 resource "aws_db_parameter_group" "test" {
-  family = "mysql5.6"
+  family = "mysql8.0"
   name   = %[1]q
 
   parameter {
@@ -7103,7 +7103,7 @@ resource "aws_db_instance" "test" {
 }
 
 resource "aws_db_parameter_group" "test" {
-  family = "mysql5.6"
+  family = "mysql8.0"
   name   = %[1]q
 
   parameter {
@@ -7126,7 +7126,7 @@ resource "aws_db_instance" "source" {
 }
 
 resource "aws_db_parameter_group" "source" {
-  family = "mysql5.6"
+  family = "mysql8.0"
   name   = "%[1]s-source"
 
   parameter {
@@ -7142,7 +7142,7 @@ func testAccInstanceConfig_ReplicateSourceDB_ParameterGroupName_replicaCopiesVal
 		testAccInstanceConfig_orderableClassMySQL(),
 		fmt.Sprintf(`
 resource "aws_db_parameter_group" "test" {
-  family = "mysql5.6"
+  family = "mysql8.0"
   name   = %[1]q
 
   parameter {
