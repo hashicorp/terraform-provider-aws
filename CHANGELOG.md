@@ -156,6 +156,12 @@ BUG FIXES:
 * resource/aws_waf_rule_group: Prevent panic when expanding the rule group's set of `activated_rule` ([#22978](https://github.com/hashicorp/terraform-provider-aws/issues/22978))
 * resource/aws_wafregional_rule_group: Prevent panic when expanding the rule group's set of `activated_rule` ([#22978](https://github.com/hashicorp/terraform-provider-aws/issues/22978))
 
+## 3.74.1 (February 07, 2022)
+
+BUG FIXES:
+
+* resource/aws_backup_selection: Fix permanent diffs for `condition` and `not_resources` arguments causing resource recreation ([#22882](https://github.com/hashicorp/terraform-provider-aws/issues/22882))
+
 ## 3.74.0 (January 28, 2022)
 
 FEATURES:
