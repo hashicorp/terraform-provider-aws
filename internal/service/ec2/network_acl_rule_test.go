@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"regexp"
 	"strconv"
+	"strings"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/ec2"
@@ -38,8 +39,6 @@ func TestAccEC2NetworkACLRule_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resource1Name, "cidr_block", "0.0.0.0/0"),
 					resource.TestCheckResourceAttr(resource1Name, "egress", "false"),
 					resource.TestCheckResourceAttr(resource1Name, "from_port", "22"),
-					resource.TestCheckResourceAttr(resource1Name, "icmp_code", "0"),
-					resource.TestCheckResourceAttr(resource1Name, "icmp_type", "0"),
 					resource.TestCheckResourceAttr(resource1Name, "ipv6_cidr_block", ""),
 					resource.TestCheckResourceAttr(resource1Name, "protocol", "6"),
 					resource.TestCheckResourceAttr(resource1Name, "rule_action", "allow"),
@@ -48,25 +47,21 @@ func TestAccEC2NetworkACLRule_basic(t *testing.T) {
 
 					resource.TestCheckResourceAttr(resource2Name, "cidr_block", "0.0.0.0/0"),
 					resource.TestCheckResourceAttr(resource2Name, "egress", "false"),
-					resource.TestCheckResourceAttr(resource2Name, "from_port", "0"),
 					resource.TestCheckResourceAttr(resource2Name, "icmp_code", "-1"),
 					resource.TestCheckResourceAttr(resource2Name, "icmp_type", "0"),
 					resource.TestCheckResourceAttr(resource2Name, "ipv6_cidr_block", ""),
 					resource.TestCheckResourceAttr(resource2Name, "protocol", "1"),
 					resource.TestCheckResourceAttr(resource2Name, "rule_action", "allow"),
 					resource.TestCheckResourceAttr(resource2Name, "rule_number", "300"),
-					resource.TestCheckResourceAttr(resource2Name, "to_port", "0"),
 
 					resource.TestCheckResourceAttr(resource3Name, "cidr_block", "0.0.0.0/0"),
 					resource.TestCheckResourceAttr(resource3Name, "egress", "false"),
-					resource.TestCheckResourceAttr(resource3Name, "from_port", "0"),
 					resource.TestCheckResourceAttr(resource3Name, "icmp_code", "-1"),
 					resource.TestCheckResourceAttr(resource3Name, "icmp_type", "-1"),
 					resource.TestCheckResourceAttr(resource3Name, "ipv6_cidr_block", ""),
 					resource.TestCheckResourceAttr(resource3Name, "protocol", "1"),
 					resource.TestCheckResourceAttr(resource3Name, "rule_action", "allow"),
 					resource.TestCheckResourceAttr(resource3Name, "rule_number", "400"),
-					resource.TestCheckResourceAttr(resource3Name, "to_port", "0"),
 				),
 			},
 			{
@@ -174,8 +169,6 @@ func TestAccEC2NetworkACLRule_ipv6(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "cidr_block", ""),
 					resource.TestCheckResourceAttr(resourceName, "egress", "false"),
 					resource.TestCheckResourceAttr(resourceName, "from_port", "22"),
-					resource.TestCheckResourceAttr(resourceName, "icmp_code", "0"),
-					resource.TestCheckResourceAttr(resourceName, "icmp_type", "0"),
 					resource.TestCheckResourceAttr(resourceName, "ipv6_cidr_block", "::/0"),
 					resource.TestCheckResourceAttr(resourceName, "protocol", "6"),
 					resource.TestCheckResourceAttr(resourceName, "rule_action", "allow"),
@@ -205,18 +198,16 @@ func TestAccEC2NetworkACLRule_ipv6ICMP(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNetworkACLRuleIPv6ICMPConfig(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckNetworkACLRuleExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "cidr_block", ""),
 					resource.TestCheckResourceAttr(resourceName, "egress", "false"),
-					resource.TestCheckResourceAttr(resourceName, "from_port", "0"),
 					resource.TestCheckResourceAttr(resourceName, "icmp_code", "-1"),
 					resource.TestCheckResourceAttr(resourceName, "icmp_type", "-1"),
 					resource.TestCheckResourceAttr(resourceName, "ipv6_cidr_block", "::/0"),
 					resource.TestCheckResourceAttr(resourceName, "protocol", "58"),
 					resource.TestCheckResourceAttr(resourceName, "rule_action", "allow"),
 					resource.TestCheckResourceAttr(resourceName, "rule_number", "150"),
-					resource.TestCheckResourceAttr(resourceName, "to_port", "0"),
 				),
 			},
 			{
@@ -246,7 +237,6 @@ func TestAccEC2NetworkACLRule_ipv6VPCAssignGeneratedIPv6CIDRBlockUpdate(t *testi
 				Config: testAccNetworkACLRuleIPv6VPCNotAssignGeneratedIpv6CIDRBlockUpdateConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckVPCExists(vpcResourceName, &v),
-					testAccCheckNetworkACLRuleExists(resourceName),
 					resource.TestCheckResourceAttr(vpcResourceName, "assign_generated_ipv6_cidr_block", "false"),
 					resource.TestCheckResourceAttr(vpcResourceName, "ipv6_cidr_block", ""),
 				),
@@ -287,8 +277,6 @@ func TestAccEC2NetworkACLRule_allProtocol(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "cidr_block", "0.0.0.0/0"),
 					resource.TestCheckResourceAttr(resourceName, "egress", "false"),
 					resource.TestCheckResourceAttr(resourceName, "from_port", "22"),
-					resource.TestCheckResourceAttr(resourceName, "icmp_code", "0"),
-					resource.TestCheckResourceAttr(resourceName, "icmp_type", "0"),
 					resource.TestCheckResourceAttr(resourceName, "ipv6_cidr_block", ""),
 					resource.TestCheckResourceAttr(resourceName, "protocol", "-1"),
 					resource.TestCheckResourceAttr(resourceName, "rule_action", "allow"),
@@ -321,8 +309,6 @@ func TestAccEC2NetworkACLRule_tcpProtocol(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "cidr_block", "0.0.0.0/0"),
 					resource.TestCheckResourceAttr(resourceName, "egress", "true"),
 					resource.TestCheckResourceAttr(resourceName, "from_port", "22"),
-					resource.TestCheckResourceAttr(resourceName, "icmp_code", "0"),
-					resource.TestCheckResourceAttr(resourceName, "icmp_type", "0"),
 					resource.TestCheckResourceAttr(resourceName, "ipv6_cidr_block", ""),
 					resource.TestCheckResourceAttr(resourceName, "protocol", "6"),
 					resource.TestCheckResourceAttr(resourceName, "rule_action", "deny"),
@@ -360,7 +346,7 @@ func testAccCheckNetworkACLRuleDestroy(s *terraform.State) error {
 			return err
 		}
 
-		_, err = tfec2.FindNetworkACLEntry(conn, naclID, egress, ruleNumber)
+		_, err = tfec2.FindNetworkACLEntryByThreePartKey(conn, naclID, egress, ruleNumber)
 
 		if tfresource.NotFound(err) {
 			continue
@@ -402,7 +388,7 @@ func testAccCheckNetworkACLRuleExists(n string) resource.TestCheckFunc {
 			return err
 		}
 
-		_, err = tfec2.FindNetworkACLEntry(conn, naclID, egress, ruleNumber)
+		_, err = tfec2.FindNetworkACLEntryByThreePartKey(conn, naclID, egress, ruleNumber)
 
 		if err != nil {
 			return err
@@ -748,7 +734,7 @@ func testAccNetworkACLRuleImportStateIdFunc(resourceName, resourceProtocol strin
 			return "", fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		networkAclId := rs.Primary.Attributes["network_acl_id"]
+		naclID := rs.Primary.Attributes["network_acl_id"]
 		ruleNumber := rs.Primary.Attributes["rule_number"]
 		protocol := rs.Primary.Attributes["protocol"]
 		// Ensure the resource's ID will be determined from the original protocol value set in the resource's config
@@ -757,6 +743,6 @@ func testAccNetworkACLRuleImportStateIdFunc(resourceName, resourceProtocol strin
 		}
 		egress := rs.Primary.Attributes["egress"]
 
-		return fmt.Sprintf("%s:%s:%s:%s", networkAclId, ruleNumber, protocol, egress), nil
+		return strings.Join([]string{naclID, ruleNumber, protocol, egress}, tfec2.NetworkACLRuleImportIDSeparator), nil
 	}
 }

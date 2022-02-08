@@ -795,7 +795,7 @@ func FindNetworkACLAssociationBySubnetID(conn *ec2.EC2, subnetID string) (*ec2.N
 	return nil, &resource.NotFoundError{}
 }
 
-func FindNetworkACLEntry(conn *ec2.EC2, naclID string, egress bool, ruleNumber int) (*ec2.NetworkAclEntry, error) {
+func FindNetworkACLEntryByThreePartKey(conn *ec2.EC2, naclID string, egress bool, ruleNumber int) (*ec2.NetworkAclEntry, error) {
 	input := &ec2.DescribeNetworkAclsInput{
 		Filters: BuildAttributeFilterList(map[string]string{
 			"entry.egress":      strconv.FormatBool(egress),

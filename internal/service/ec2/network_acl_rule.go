@@ -24,28 +24,7 @@ func ResourceNetworkACLRule() *schema.Resource {
 		Delete: resourceNetworkACLRuleDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-				idParts := strings.Split(d.Id(), ":")
-				if len(idParts) != 4 || idParts[0] == "" || idParts[1] == "" || idParts[2] == "" || idParts[3] == "" {
-					return nil, fmt.Errorf("unexpected format of ID (%q), expected NETWORK_ACL_ID:RULE_NUMBER:PROTOCOL:EGRESS", d.Id())
-				}
-				networkAclID := idParts[0]
-				ruleNumber, err := strconv.Atoi(idParts[1])
-				if err != nil {
-					return nil, err
-				}
-				protocol := idParts[2]
-				egress, err := strconv.ParseBool(idParts[3])
-				if err != nil {
-					return nil, err
-				}
-
-				d.Set("network_acl_id", networkAclID)
-				d.Set("rule_number", ruleNumber)
-				d.Set("egress", egress)
-				d.SetId(networkAclIdRuleNumberEgressHash(networkAclID, ruleNumber, egress, protocol))
-				return []*schema.ResourceData{d}, nil
-			},
+			State: resourceNetworkACLRuleImport,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -138,13 +117,13 @@ func ResourceNetworkACLRule() *schema.Resource {
 func resourceNetworkACLRuleCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
-	protocolNumber, err := networkACLProtocolNumber(d.Get("protocol").(string))
+	protocol := d.Get("protocol").(string)
+	protocolNumber, err := networkACLProtocolNumber(protocol)
 
 	if err != nil {
 		return err
 	}
 
-	protocol := strconv.Itoa(protocolNumber)
 	egress := d.Get("egress").(bool)
 	naclID := d.Get("network_acl_id").(string)
 	ruleNumber := d.Get("rule_number").(int)
@@ -156,7 +135,7 @@ func resourceNetworkACLRuleCreate(d *schema.ResourceData, meta interface{}) erro
 			From: aws.Int64(int64(d.Get("from_port").(int))),
 			To:   aws.Int64(int64(d.Get("to_port").(int))),
 		},
-		Protocol:   aws.String(protocol),
+		Protocol:   aws.String(strconv.Itoa(protocolNumber)),
 		RuleAction: aws.String(d.Get("rule_action").(string)),
 		RuleNumber: aws.Int64(int64(ruleNumber)),
 	}
@@ -185,7 +164,7 @@ func resourceNetworkACLRuleCreate(d *schema.ResourceData, meta interface{}) erro
 		return fmt.Errorf("error creating EC2 Network ACL (%s) Rule (egress:%t)(%d): %w", naclID, egress, ruleNumber, err)
 	}
 
-	d.SetId(networkAclIdRuleNumberEgressHash(naclID, ruleNumber, egress, protocol))
+	d.SetId(NetworkACLRuleCreateResourceID(naclID, ruleNumber, egress, protocol))
 
 	return resourceNetworkACLRuleRead(d, meta)
 }
@@ -198,7 +177,7 @@ func resourceNetworkACLRuleRead(d *schema.ResourceData, meta interface{}) error 
 	ruleNumber := d.Get("rule_number").(int)
 
 	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(PropagationTimeout, func() (interface{}, error) {
-		return FindNetworkACLEntry(conn, naclID, egress, ruleNumber)
+		return FindNetworkACLEntryByThreePartKey(conn, naclID, egress, ruleNumber)
 	}, d.IsNewResource())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
@@ -219,16 +198,10 @@ func resourceNetworkACLRuleRead(d *schema.ResourceData, meta interface{}) error 
 	if naclEntry.IcmpTypeCode != nil {
 		d.Set("icmp_code", naclEntry.IcmpTypeCode.Code)
 		d.Set("icmp_type", naclEntry.IcmpTypeCode.Type)
-	} else {
-		d.Set("icmp_code", nil)
-		d.Set("icmp_type", nil)
 	}
 	if naclEntry.PortRange != nil {
 		d.Set("from_port", naclEntry.PortRange.From)
 		d.Set("to_port", naclEntry.PortRange.To)
-	} else {
-		d.Set("from_port", nil)
-		d.Set("to_port", nil)
 	}
 	d.Set("rule_action", naclEntry.RuleAction)
 	d.Set("rule_number", naclEntry.RuleNumber)
@@ -271,9 +244,40 @@ func resourceNetworkACLRuleDelete(d *schema.ResourceData, meta interface{}) erro
 	return nil
 }
 
-func networkAclIdRuleNumberEgressHash(networkAclId string, ruleNumber int, egress bool, protocol string) string {
+func resourceNetworkACLRuleImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+	parts := strings.Split(d.Id(), NetworkACLRuleImportIDSeparator)
+
+	if len(parts) != 4 || parts[0] == "" || parts[1] == "" || parts[2] == "" || parts[3] == "" {
+		return nil, fmt.Errorf("unexpected format of ID (%[1]s), expected NETWORK_ACL_ID%[2]sRULE_NUMBER%[2]sPROTOCOL%[2]sEGRESS", d.Id(), NetworkACLRuleImportIDSeparator)
+	}
+
+	naclID := parts[0]
+	ruleNumber, err := strconv.Atoi(parts[1])
+
+	if err != nil {
+		return nil, err
+	}
+
+	protocol := parts[2]
+	egress, err := strconv.ParseBool(parts[3])
+
+	if err != nil {
+		return nil, err
+	}
+
+	d.SetId(NetworkACLRuleCreateResourceID(naclID, ruleNumber, egress, protocol))
+	d.Set("egress", egress)
+	d.Set("network_acl_id", naclID)
+	d.Set("rule_number", ruleNumber)
+
+	return []*schema.ResourceData{d}, nil
+}
+
+const NetworkACLRuleImportIDSeparator = ":"
+
+func NetworkACLRuleCreateResourceID(naclID string, ruleNumber int, egress bool, protocol string) string {
 	var buf bytes.Buffer
-	buf.WriteString(fmt.Sprintf("%s-", networkAclId))
+	buf.WriteString(fmt.Sprintf("%s-", naclID))
 	buf.WriteString(fmt.Sprintf("%d-", ruleNumber))
 	buf.WriteString(fmt.Sprintf("%t-", egress))
 	buf.WriteString(fmt.Sprintf("%s-", protocol))
