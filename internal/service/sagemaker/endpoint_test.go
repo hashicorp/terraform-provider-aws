@@ -304,8 +304,12 @@ resource "aws_iam_role_policy" "test" {
 }
 
 resource "aws_s3_bucket" "test" {
-  acl    = "private"
   bucket = %[1]q
+}
+
+resource "aws_s3_bucket_acl" "test" {
+  bucket = aws_s3_bucket.test.id
+  acl    = "private"
 }
 
 resource "aws_s3_object" "test" {
