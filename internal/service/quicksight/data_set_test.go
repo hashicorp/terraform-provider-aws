@@ -2,7 +2,6 @@ package quicksight_test
 
 import (
 	"fmt"
-	"reflect"
 	"regexp"
 	"testing"
 
@@ -11,7 +10,6 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -78,6 +76,7 @@ func TestAccQuickSightDataSet_disappears(t *testing.T) {
 	})
 }
 
+//REQUIRES LOGICAL_TABLE_MAP
 func TestAccQuickSightDataSet_column_groups(t *testing.T) {
 	var dataSet quicksight.DataSet
 	resourceName := "aws_quicksight_data_set.dset"
@@ -141,7 +140,7 @@ func TestAccQuickSightDataSet_data_set_usage_configuration(t *testing.T) {
 		CheckDestroy:      testAccCheckQuickSightDataSetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSetConfigFieldFolders(rId, rName),
+				Config: testAccDataSetConfigDataSetUsageConfiguration(rId, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckQuickSightDataSetExists(resourceName, &dataSet),
 					resource.TestCheckResourceAttr(resourceName, "data_set_usage_configuration.#", "1"),
@@ -179,6 +178,7 @@ func TestAccQuickSightDataSet_field_folders(t *testing.T) {
 	})
 }
 
+// ERROR: submitted a ticket to aws, they said you cannot create a ltm at this moment, instead just update an old one
 func TestAccQuickSightDataSet_logical_table_map(t *testing.T) {
 	var dataSet quicksight.DataSet
 	resourceName := "aws_quicksight_data_set.dset"
@@ -205,212 +205,7 @@ func TestAccQuickSightDataSet_logical_table_map(t *testing.T) {
 	})
 }
 
-func TestQuickSightDataSetPermissionsDiff(t *testing.T) {
-	testCases := []struct {
-		name            string
-		oldPermissions  []interface{}
-		newPermissions  []interface{}
-		expectedGrants  []*quicksight.ResourcePermission
-		expectedRevokes []*quicksight.ResourcePermission
-	}{
-		{
-			name:            "no changes;empty",
-			oldPermissions:  []interface{}{},
-			newPermissions:  []interface{}{},
-			expectedGrants:  nil,
-			expectedRevokes: nil,
-		},
-		{
-			name: "no changes;same",
-			oldPermissions: []interface{}{
-				map[string]interface{}{
-					"principal": "principal1",
-					"actions": schema.NewSet(schema.HashString, []interface{}{
-						"action1",
-						"action2",
-					}),
-				},
-			},
-			newPermissions: []interface{}{
-				map[string]interface{}{
-					"principal": "principal1",
-					"actions": schema.NewSet(schema.HashString, []interface{}{
-						"action1",
-						"action2",
-					}),
-				}},
-
-			expectedGrants:  nil,
-			expectedRevokes: nil,
-		},
-		{
-			name:           "grant only",
-			oldPermissions: []interface{}{},
-			newPermissions: []interface{}{
-				map[string]interface{}{
-					"principal": "principal1",
-					"actions": schema.NewSet(schema.HashString, []interface{}{
-						"action1",
-						"action2",
-					}),
-				},
-			},
-			expectedGrants: []*quicksight.ResourcePermission{
-				{
-					Actions:   aws.StringSlice([]string{"action1", "action2"}),
-					Principal: aws.String("principal1"),
-				},
-			},
-			expectedRevokes: nil,
-		},
-		{
-			name: "revoke only",
-			oldPermissions: []interface{}{
-				map[string]interface{}{
-					"principal": "principal1",
-					"actions": schema.NewSet(schema.HashString, []interface{}{
-						"action1",
-						"action2",
-					}),
-				},
-			},
-			newPermissions: []interface{}{},
-			expectedGrants: nil,
-			expectedRevokes: []*quicksight.ResourcePermission{
-				{
-					Actions:   aws.StringSlice([]string{"action1", "action2"}),
-					Principal: aws.String("principal1"),
-				},
-			},
-		},
-		{
-			name: "grant new action",
-			oldPermissions: []interface{}{
-				map[string]interface{}{
-					"principal": "principal1",
-					"actions": schema.NewSet(schema.HashString, []interface{}{
-						"action1",
-					}),
-				},
-			},
-			newPermissions: []interface{}{
-				map[string]interface{}{
-					"principal": "principal1",
-					"actions": schema.NewSet(schema.HashString, []interface{}{
-						"action1",
-						"action2",
-					}),
-				},
-			},
-			expectedGrants: []*quicksight.ResourcePermission{
-				{
-					Actions:   aws.StringSlice([]string{"action2"}),
-					Principal: aws.String("principal1"),
-				},
-			},
-			expectedRevokes: nil,
-		},
-		{
-			name: "revoke old action",
-			oldPermissions: []interface{}{
-				map[string]interface{}{
-					"principal": "principal1",
-					"actions": schema.NewSet(schema.HashString, []interface{}{
-						"oldAction",
-						"onlyOldAction",
-					}),
-				},
-			},
-			newPermissions: []interface{}{
-				map[string]interface{}{
-					"principal": "principal1",
-					"actions": schema.NewSet(schema.HashString, []interface{}{
-						"oldAction",
-					}),
-				},
-			},
-			expectedGrants: nil,
-			expectedRevokes: []*quicksight.ResourcePermission{
-				{
-					Actions:   aws.StringSlice([]string{"onlyOldAction"}),
-					Principal: aws.String("principal1"),
-				},
-			},
-		},
-		{
-			name: "multiple permissions",
-			oldPermissions: []interface{}{
-				map[string]interface{}{
-					"principal": "principal1",
-					"actions": schema.NewSet(schema.HashString, []interface{}{
-						"action1",
-						"action2",
-					}),
-				},
-				map[string]interface{}{
-					"principal": "principal2",
-					"actions": schema.NewSet(schema.HashString, []interface{}{
-						"action1",
-						"action3",
-						"action4",
-					}),
-				},
-				map[string]interface{}{
-					"principal": "principal3",
-					"actions": schema.NewSet(schema.HashString, []interface{}{
-						"action5",
-					}),
-				},
-			},
-			newPermissions: []interface{}{
-				map[string]interface{}{
-					"principal": "principal1",
-					"actions": schema.NewSet(schema.HashString, []interface{}{
-						"action1",
-						"action2",
-					}),
-				},
-				map[string]interface{}{
-					"principal": "principal2",
-					"actions": schema.NewSet(schema.HashString, []interface{}{
-						"action3",
-						"action5",
-					}),
-				},
-			},
-			expectedGrants: []*quicksight.ResourcePermission{
-				{
-					Actions:   aws.StringSlice([]string{"action5"}),
-					Principal: aws.String("principal2"),
-				},
-			},
-			expectedRevokes: []*quicksight.ResourcePermission{
-				{
-					Actions:   aws.StringSlice([]string{"action1", "action4"}),
-					Principal: aws.String("principal2"),
-				},
-				{
-					Actions:   aws.StringSlice([]string{"action5"}),
-					Principal: aws.String("principal3"),
-				},
-			},
-		},
-	}
-
-	for _, testCase := range testCases {
-		t.Run(testCase.name, func(t *testing.T) {
-			toGrant, toRevoke := tfquicksight.DiffPermissions(testCase.oldPermissions, testCase.newPermissions)
-			if !reflect.DeepEqual(toGrant, testCase.expectedGrants) {
-				t.Fatalf("Expected: %v, got: %v", testCase.expectedGrants, toGrant)
-			}
-
-			if !reflect.DeepEqual(toRevoke, testCase.expectedRevokes) {
-				t.Fatalf("Expected: %v, got: %v", testCase.expectedRevokes, toRevoke)
-			}
-		})
-	}
-}
-
+// need help with this, don't know how to test
 func TestAccQuickSightDataSet_permissions(t *testing.T) {
 	var dataSet quicksight.DataSet
 	resourceName := "aws_quicksight_data_set.test"
@@ -424,7 +219,7 @@ func TestAccQuickSightDataSet_permissions(t *testing.T) {
 		CheckDestroy:      testAccCheckQuickSightDataSetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSetConfig_Permissions(rId, rName),
+				Config: testAccDataSetConfigPermissions(rId, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckQuickSightDataSetExists(resourceName, &dataSet),
 					resource.TestCheckResourceAttr(resourceName, "permission.#", "1"),
@@ -442,7 +237,7 @@ func TestAccQuickSightDataSet_permissions(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccDataSetConfig_UpdatePermissions(rId, rName),
+				Config: testAccDataSetConfigUpdatePermissions(rId, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckQuickSightDataSetExists(resourceName, &dataSet),
 					resource.TestCheckResourceAttr(resourceName, "permission.#", "1"),
@@ -473,6 +268,7 @@ func TestAccQuickSightDataSet_permissions(t *testing.T) {
 	})
 }
 
+// data set is created, but attribute gets deleted on creation
 func TestAccQuickSightDataSet_row_level_permission_data_set(t *testing.T) {
 	var dataSet quicksight.DataSet
 	resourceName := "aws_quicksight_data_set.dset"
@@ -501,6 +297,7 @@ func TestAccQuickSightDataSet_row_level_permission_data_set(t *testing.T) {
 	})
 }
 
+// data set is created, but attribute gets deleted on creation
 func TestAccQuickSightDataSet_row_level_permission_tag_configuration(t *testing.T) {
 	var dataSet quicksight.DataSet
 	resourceName := "aws_quicksight_data_set.dset"
@@ -529,49 +326,29 @@ func TestAccQuickSightDataSet_row_level_permission_tag_configuration(t *testing.
 	})
 }
 
-// func TestAccQuickSightDataSet_attribute(t *testing.T) {
-// 	var dataSet quicksight.DataSet
-// 	resourceName := "aws_quicksight_data_set.dset"
-// 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-// 	rId := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-//
-// 	resource.ParallelTest(t, resource.TestCase{
-// 		PreCheck:          func() { acctest.PreCheck(t) },
-// 		ProviderFactories: acctest.ProviderFactories,
-// 		ErrorCheck:        acctest.ErrorCheck(t, quicksight.EndpointsID),
-// 		CheckDestroy:      testAccCheckQuickSightDataSetDestroy,
-// 		Steps: []resource.TestStep{
-// 			{
-// 				Config: testAccDataSetConfigAttribute(rId, rName),
-// 				Check: resource.ComposeTestCheckFunc(
-// 					testAccCheckQuickSightDataSetExists(resourceName, &dataSet),
-// 				),
-// 			},
-// 		},
-// 	})
-// }
-//
-// func TestAccQuickSightDataSet_attribute(t *testing.T) {
-// 	var dataSet quicksight.DataSet
-// 	resourceName := "aws_quicksight_data_set.dset"
-// 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-// 	rId := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-//
-// 	resource.ParallelTest(t, resource.TestCase{
-// 		PreCheck:          func() { acctest.PreCheck(t) },
-// 		ProviderFactories: acctest.ProviderFactories,
-// 		ErrorCheck:        acctest.ErrorCheck(t, quicksight.EndpointsID),
-// 		CheckDestroy:      testAccCheckQuickSightDataSetDestroy,
-// 		Steps: []resource.TestStep{
-// 			{
-// 				Config: testAccDataSetConfigAttribute(rId, rName),
-// 				Check: resource.ComposeTestCheckFunc(
-// 					testAccCheckQuickSightDataSetExists(resourceName, &dataSet),
-// 				),
-// 			},
-// 		},
-// 	})
-// }
+func TestAccQuickSightDataSet_tags(t *testing.T) {
+	var dataSet quicksight.DataSet
+	resourceName := "aws_quicksight_data_set.dset"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rId := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ProviderFactories: acctest.ProviderFactories,
+		ErrorCheck:        acctest.ErrorCheck(t, quicksight.EndpointsID),
+		CheckDestroy:      testAccCheckQuickSightDataSetDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTags1DataSetConfig(rId, rName, "key1", "value1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckQuickSightDataSetExists(resourceName, &dataSet),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+				),
+			},
+		},
+	})
+}
 
 func testAccCheckQuickSightDataSetExists(resourceName string, dataSet *quicksight.DataSet) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
@@ -713,7 +490,6 @@ resource "aws_quicksight_data_set" "dset" {
 `, rId, rName))
 }
 
-//REQUIRES LOGICAL_TABLE_MAP
 func testAccDataSetConfigColumnGroups(rId, rName string) string {
 	return acctest.ConfigCompose(
 		testAccBaseDataSetConfig(rId, rName),
@@ -743,8 +519,6 @@ resource "aws_quicksight_data_set" "dset" {
 `, rId, rName))
 }
 
-// ERROR: ColumnLevelPermissionRules is only for enterprise accounts. This account 123456789 is not an enterprise account.
-// Should this be tested?
 func testAccDataSetConfigColumnLevelPermissionRules(rId, rName string) string {
 	return acctest.ConfigCompose(
 		testAccBaseDataSetConfig(rId, rName),
@@ -822,7 +596,6 @@ resource "aws_quicksight_data_set" "dset" {
 `, rId, rName))
 }
 
-// DOES NOT WORK -- AWS TICKET IN PROGRESS
 func testAccDataSetConfigLogicalTableMap(rId, rName string) string {
 	return acctest.ConfigCompose(
 		testAccBaseDataSetConfig(rId, rName),
@@ -851,8 +624,7 @@ resource "aws_quicksight_data_set" "dset" {
 `, rId, rName))
 }
 
-// NEED ACCOUNT ACCESS
-func testAccDataSetConfig_Permissions(rId, rName string) string {
+func testAccDataSetConfigPermissions(rId, rName string) string {
 	return acctest.ConfigCompose(
 		testAccBaseDataSetConfig(rId, rName),
 		testAccDataSource_UserConfig(rName),
@@ -871,7 +643,7 @@ resource "aws_quicksight_data_set" "test" {
 		}
 	}
 
-	permission {
+	permissions {
     	actions = [
       		"quicksight:DescribeDataSet",
       		"quicksight:DescribeDataSetPermissions",
@@ -883,8 +655,7 @@ resource "aws_quicksight_data_set" "test" {
 `, rId, rName))
 }
 
-// NEED ACCOUNT ACCESS
-func testAccDataSetConfig_UpdatePermissions(rId, rName string) string {
+func testAccDataSetConfigUpdatePermissions(rId, rName string) string {
 	return acctest.ConfigCompose(
 		testAccBaseDataSetConfig(rId, rName),
 		testAccDataSource_UserConfig(rName),
@@ -919,7 +690,6 @@ resource "aws_quicksight_data_set" "test" {
 `, rId, rName))
 }
 
-// NEED TO KNOW HOW TO REFERENCE CURRENT DATA SET
 func testAccDataSetConfigRowLevelPermissionDataSet(rId, rName string) string {
 	return acctest.ConfigCompose(
 		testAccBaseDataSetConfig(rId, rName),
@@ -977,4 +747,29 @@ resource "aws_quicksight_data_set" "dset" {
 	}
 }
 `, rId, rName))
+}
+
+func testAccTags1DataSetConfig(rId, rName, key, value string) string {
+	return acctest.ConfigCompose(
+		testAccBaseDataSetConfig(rId, rName),
+		fmt.Sprintf(`
+resource "aws_quicksight_data_set" "dset" {
+	
+	data_set_id = %[1]q
+	name        = %[2]q
+	import_mode = "SPICE"
+	physical_table_map {
+		s3_source {
+			data_source_arn = aws_quicksight_data_source.dsource.arn
+			input_columns {
+				name = "ColumnId-1"
+				type = "STRING"
+			}
+		}
+	}
+	tags = {
+		%[3]q = %[4]q
+	}
+}
+`, rId, rName, key, value))
 }

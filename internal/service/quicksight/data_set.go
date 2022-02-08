@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"os"
 	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -824,7 +823,7 @@ func resourceAwsQuickSightDataSetCreate(ctx context.Context, d *schema.ResourceD
 	}
 
 	if v, ok := d.GetOk("permissions"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		params.Permissions = expandQuickSightDataSourcePermissions(v.(*schema.Set).List())
+		params.Permissions = expandQuickSightDataSetPermissions(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("row_level_permission_data_set"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
@@ -1121,19 +1120,6 @@ func expandQuickSightDataSetColumnGroup(tfMap map[string]interface{}) *quicksigh
 	}
 
 	return columnGroup
-}
-
-func WriteToFile(filename string, text string) {
-	f, err := os.OpenFile(filename, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0600)
-	if err != nil {
-		panic(err)
-	}
-
-	defer f.Close()
-
-	if _, err = f.WriteString(text); err != nil {
-		panic(err)
-	}
 }
 
 func expandQuickSightDataSetGeoSpatialColumnGroup(tfMap map[string]interface{}) *quicksight.GeoSpatialColumnGroup {
@@ -1841,6 +1827,27 @@ func expandQuickSightDataSetUploadSettings(tfMap map[string]interface{}) *quicks
 	}
 
 	return uploadSettings
+}
+
+func expandQuickSightDataSetPermissions(tfList []interface{}) []*quicksight.ResourcePermission {
+	permissions := make([]*quicksight.ResourcePermission, len(tfList))
+
+	for i, tfListRaw := range tfList {
+		tfMap := tfListRaw.(map[string]interface{})
+
+		var fin []string
+		for _, str := range tfMap["actions"].([]interface{}) {
+			fin = append(fin, str.(string))
+		}
+
+		permission := &quicksight.ResourcePermission{
+			Actions:   aws.StringSlice(fin),
+			Principal: aws.String(tfMap["principal"].(string)),
+		}
+
+		permissions[i] = permission
+	}
+	return permissions
 }
 
 func expandQuickSightDataSetRowLevelPermissionDataSet(tfMap map[string]interface{}) *quicksight.RowLevelPermissionDataSet {
