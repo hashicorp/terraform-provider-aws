@@ -250,7 +250,7 @@ resource "aws_network_acl" "test" {
 }
 
 resource "aws_subnet" "test" {
-  vpc_id     = aws_vpc.test.id
+  vpc_id = aws_vpc.test.id
 
   cidr_block = "10.1.33.0/24"
 
@@ -285,7 +285,7 @@ resource "aws_network_acl" "test" {
 }
 
 resource "aws_subnet" "test1" {
-  vpc_id     = aws_vpc.test.id
+  vpc_id = aws_vpc.test.id
 
   cidr_block = "10.1.33.0/24"
 
@@ -295,7 +295,7 @@ resource "aws_subnet" "test1" {
 }
 
 resource "aws_subnet" "test2" {
-  vpc_id     = aws_vpc.test.id
+  vpc_id = aws_vpc.test.id
 
   cidr_block = "10.1.34.0/24"
 
@@ -327,7 +327,7 @@ resource "aws_vpc" "test" {
 }
 
 resource "aws_subnet" "test" {
-  vpc_id     = aws_vpc.test.id
+  vpc_id = aws_vpc.test.id
 
   cidr_block = "10.1.33.0/24"
 
