@@ -209,8 +209,9 @@ func dataSourceContainerRecipeRead(d *schema.ResourceData, meta interface{}) err
 
 	d.SetId(aws.StringValue(containerRecipe.Arn))
 	d.Set("arn", containerRecipe.Arn)
-	d.Set("components", flattenComponentConfigurations(containerRecipe.Components))
+	d.Set("component", flattenComponentConfigurations(containerRecipe.Components))
 	d.Set("container_type", containerRecipe.ContainerType)
+	d.Set("date_created", containerRecipe.DateCreated)
 	d.Set("description", containerRecipe.Description)
 	d.Set("dockerfile_template_data", containerRecipe.DockerfileTemplateData)
 	d.Set("encrypted", containerRecipe.Encrypted)
