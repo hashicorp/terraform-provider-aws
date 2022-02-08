@@ -493,7 +493,7 @@ resource "aws_ses_receipt_rule" "test" {
   tls_policy    = "Require"
 
   s3_action {
-    bucket_name = aws_s3_bucket.test.id
+    bucket_name = aws_s3_bucket_acl.test.bucket
     position    = 1
   }
 }
