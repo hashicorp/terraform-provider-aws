@@ -527,8 +527,12 @@ func testAccSagemakerEndpointConfigurationDataCaptureConfig(rName string) string
 	return testAccSagemakerEndpointConfigurationConfig_Base(rName) + fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket        = %[1]q
-  acl           = "private"
   force_destroy = true
+}
+
+resource "aws_s3_bucket_acl" "test" {
+  bucket = aws_s3_bucket.test.id
+  acl    = "private"
 }
 
 resource "aws_sagemaker_endpoint_configuration" "test" {
@@ -567,8 +571,12 @@ func testAccSagemakerEndpointConfigurationConfigAsyncConfig(rName string) string
 	return testAccSagemakerEndpointConfigurationConfig_Base(rName) + fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket        = %[1]q
-  acl           = "private"
   force_destroy = true
+}
+
+resource "aws_s3_bucket_acl" "test" {
+  bucket = aws_s3_bucket.test.id
+  acl    = "private"
 }
 
 resource "aws_kms_key" "test" {
@@ -601,8 +609,12 @@ func testAccSagemakerEndpointConfigurationConfigAsyncNotifConfig(rName string) s
 	return testAccSagemakerEndpointConfigurationConfig_Base(rName) + fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket        = %[1]q
-  acl           = "private"
   force_destroy = true
+}
+
+resource "aws_s3_bucket_acl" "test" {
+  bucket = aws_s3_bucket.test.id
+  acl    = "private"
 }
 
 resource "aws_sns_topic" "test" {
@@ -644,8 +656,12 @@ func testAccSagemakerEndpointConfigurationConfigAsyncClientConfig(rName string) 
 	return testAccSagemakerEndpointConfigurationConfig_Base(rName) + fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket        = %[1]q
-  acl           = "private"
   force_destroy = true
+}
+
+resource "aws_s3_bucket_acl" "test" {
+  bucket = aws_s3_bucket.test.id
+  acl    = "private"
 }
 
 resource "aws_kms_key" "test" {

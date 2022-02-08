@@ -26,8 +26,8 @@ func TestAccSageMaker_serial(t *testing.T) {
 	testCases := map[string]map[string]func(t *testing.T){
 		"App": {
 			"basic":                 testAccApp_basic,
-			"disappears":            testAccApp_tags,
-			"tags":                  testAccApp_disappears,
+			"disappears":            testAccApp_disappears,
+			"tags":                  testAccApp_tags,
 			"resourceSpec":          testAccApp_resourceSpec,
 			"resourceSpecLifecycle": testAccApp_resourceSpecLifecycle,
 		},
