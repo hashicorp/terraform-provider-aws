@@ -2747,45 +2747,45 @@ func flattenQuickSightTagRule(rule *quicksight.RowLevelPermissionTagRule) map[st
 	return tfMap
 }
 
-func flattenQuickSightOutputColumns(columns []*quicksight.OutputColumn) []interface{} {
-	if len(columns) == 0 {
-		return nil
-	}
+// func flattenQuickSightOutputColumns(columns []*quicksight.OutputColumn) []interface{} {
+// 	if len(columns) == 0 {
+// 		return nil
+// 	}
 
-	var tfList []interface{}
+// 	var tfList []interface{}
 
-	for _, column := range columns {
-		if column == nil {
-			continue
-		}
+// 	for _, column := range columns {
+// 		if column == nil {
+// 			continue
+// 		}
 
-		tfList = append(tfList, flattenQuickSightOutputColumn(column))
-	}
+// 		tfList = append(tfList, flattenQuickSightOutputColumn(column))
+// 	}
 
-	return tfList
-}
+// 	return tfList
+// }
 
-func flattenQuickSightOutputColumn(column *quicksight.OutputColumn) map[string]interface{} {
-	if column == nil {
-		return nil
-	}
+// func flattenQuickSightOutputColumn(column *quicksight.OutputColumn) map[string]interface{} {
+// 	if column == nil {
+// 		return nil
+// 	}
 
-	tfMap := map[string]interface{}{}
+// 	tfMap := map[string]interface{}{}
 
-	if column.Description != nil {
-		tfMap["description"] = aws.StringValue(column.Description)
-	}
+// 	if column.Description != nil {
+// 		tfMap["description"] = aws.StringValue(column.Description)
+// 	}
 
-	if column.Name != nil {
-		tfMap["name"] = aws.StringValue(column.Name)
-	}
+// 	if column.Name != nil {
+// 		tfMap["name"] = aws.StringValue(column.Name)
+// 	}
 
-	if column.Type != nil {
-		tfMap["type"] = aws.StringValue(column.Type)
-	}
+// 	if column.Type != nil {
+// 		tfMap["type"] = aws.StringValue(column.Type)
+// 	}
 
-	return tfMap
-}
+// 	return tfMap
+// }
 
 func ParseDataSetID(id string) (string, string, error) {
 	parts := strings.SplitN(id, "/", 2)
