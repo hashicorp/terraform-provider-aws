@@ -364,11 +364,11 @@ func resourceContainerRecipeRead(d *schema.ResourceData, meta interface{}) error
 	}
 
 	if err != nil {
-		return fmt.Errorf("error creating Image Builder Container Recipe: %w", err)
+		return fmt.Errorf("error getting Image Builder Container Recipe (%s): %w", d.Id(), err)
 	}
 
-	if output == nil {
-		return fmt.Errorf("error creating Image Builder Container Recipe: empty response")
+	if output == nil || output.ContainerRecipe == nil {
+		return fmt.Errorf("error getting Image Builder Container Recipe (%s): empty response", d.Id())
 	}
 
 	containerRecipe := output.ContainerRecipe
