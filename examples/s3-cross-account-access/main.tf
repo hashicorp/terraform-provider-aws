@@ -14,6 +14,10 @@ resource "aws_s3_bucket" "prod" {
   provider = aws.prod
 
   bucket = var.bucket_name
+}
+
+resource "aws_s3_bucket_acl" "prod_bucket_acl" {
+  bucket = aws_s3_bucket.prod.id
   acl    = "private"
 }
 
