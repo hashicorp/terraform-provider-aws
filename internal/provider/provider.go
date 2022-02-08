@@ -1349,6 +1349,7 @@ func Provider() *schema.Provider {
 			"aws_gamelift_build":              gamelift.ResourceBuild(),
 			"aws_gamelift_fleet":              gamelift.ResourceFleet(),
 			"aws_gamelift_game_session_queue": gamelift.ResourceGameSessionQueue(),
+			"aws_gamelift_script":             gamelift.ResourceScript(),
 
 			"aws_glacier_vault":      glacier.ResourceVault(),
 			"aws_glacier_vault_lock": glacier.ResourceVaultLock(),
