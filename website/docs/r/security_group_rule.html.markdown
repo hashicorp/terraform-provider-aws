@@ -62,8 +62,8 @@ resource "aws_vpc_endpoint" "my_endpoint" {
 }
 ```
 
-You can also find a specific Prefix List using the [`aws_prefix_list`](../data-sources/prefix_list)
-or [`ec2_managed_prefix_list`](../data-sources/ec2_managed_prefix_list) data sources:
+You can also find a specific Prefix List using the [`aws_prefix_list`](/docs/providers/aws/d/prefix_list.html)
+or [`ec2_managed_prefix_list`](/docs/providers/aws/d/ec2_managed_prefix_list.html) data sources:
 
 ```terraform
 data "aws_region" "current" {}
