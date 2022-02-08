@@ -52,6 +52,7 @@ const (
 	ErrCodeInvalidSecurityGroupIDNotFound               = "InvalidSecurityGroupID.NotFound"
 	ErrCodeInvalidSnapshotInUse                         = "InvalidSnapshot.InUse"
 	ErrCodeInvalidSnapshotNotFound                      = "InvalidSnapshot.NotFound"
+	ErrCodeInvalidSpotDatafeedNotFound                  = "InvalidSpotDatafeed.NotFound"
 	ErrCodeInvalidSpotInstanceRequestIDNotFound         = "InvalidSpotInstanceRequestID.NotFound"
 	ErrCodeInvalidSubnetCidrReservationIDNotFound       = "InvalidSubnetCidrReservationID.NotFound"
 	ErrCodeInvalidSubnetIDNotFound                      = "InvalidSubnetID.NotFound"
