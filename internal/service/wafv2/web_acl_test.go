@@ -2487,7 +2487,7 @@ resource "aws_wafv2_web_acl" "test" {
       managed_rule_group_statement {
         name        = "AWSManagedRulesCommonRuleSet"
         vendor_name = "AWS"
-				version     = "Version_1.0"
+        version     = "Version_1.0"
       }
     }
 
