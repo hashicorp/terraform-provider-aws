@@ -92,6 +92,7 @@ FEATURES:
 * **New Data Source:** `aws_s3_objects` ([#22850](https://github.com/hashicorp/terraform-provider-aws/issues/22850))
 * **New Resource:** `aws_cognito_user` ([#19919](https://github.com/hashicorp/terraform-provider-aws/issues/19919))
 * **New Resource:** `aws_dataexchange_revision` ([#22933](https://github.com/hashicorp/terraform-provider-aws/issues/22933))
+* **New Resource:** `aws_network_acl_association` ([#18807](https://github.com/hashicorp/terraform-provider-aws/issues/18807))
 * **New Resource:** `aws_s3_bucket_accelerate_configuration` ([#22617](https://github.com/hashicorp/terraform-provider-aws/issues/22617))
 * **New Resource:** `aws_s3_bucket_acl` ([#22853](https://github.com/hashicorp/terraform-provider-aws/issues/22853))
 * **New Resource:** `aws_s3_bucket_cors_configuration` ([#12141](https://github.com/hashicorp/terraform-provider-aws/issues/12141))
@@ -141,6 +142,7 @@ ENHANCEMENTS:
 * resource/aws_s3_bucket_cors_configuration: Retry when `NoSuchCORSConfiguration` errors are returned from the AWS API ([#22977](https://github.com/hashicorp/terraform-provider-aws/issues/22977))
 * resource/aws_vpn_connection: Add the ability to revert changes to unconfigured tunnel options made outside of Terraform to their [documented default values](https://docs.aws.amazon.com/vpn/latest/s2svpn/VPNTunnels.html) ([#17031](https://github.com/hashicorp/terraform-provider-aws/issues/17031))
 * resource/aws_vpn_connection: Mark `customer_gateway_configuration` as [`Sensitive`](https://www.terraform.io/plugin/sdkv2/best-practices/sensitive-state#using-the-sensitive-flag) ([#15806](https://github.com/hashicorp/terraform-provider-aws/issues/15806))
+* resource/aws_wafv2_web_acl: Support `version` on `managed_rule_group_statement` ([#21732](https://github.com/hashicorp/terraform-provider-aws/issues/21732))
 
 BUG FIXES:
 
@@ -151,6 +153,11 @@ BUG FIXES:
 * resource/aws_db_instance: Fix error with reboot of replica ([#22178](https://github.com/hashicorp/terraform-provider-aws/issues/22178))
 * resource/aws_ec2_client_vpn_authorization_rule: Don't raise an error when `InvalidClientVpnEndpointId.NotFound` is returned during refresh ([#20688](https://github.com/hashicorp/terraform-provider-aws/issues/20688))
 * resource/aws_ec2_client_vpn_endpoint: `connection_log_options.cloudwatch_log_stream` argument is Computed, preventing spurious resource diffs ([#22891](https://github.com/hashicorp/terraform-provider-aws/issues/22891))
+* resource/aws_ecs_capacity_provider: Fix tagging error preventing use in ISO partitions ([#23030](https://github.com/hashicorp/terraform-provider-aws/issues/23030))
+* resource/aws_ecs_cluster: Fix tagging error preventing use in ISO partitions ([#23030](https://github.com/hashicorp/terraform-provider-aws/issues/23030))
+* resource/aws_ecs_service: Fix tagging error preventing use in ISO partitions ([#23030](https://github.com/hashicorp/terraform-provider-aws/issues/23030))
+* resource/aws_ecs_task_definition: Fix tagging error preventing use in ISO partitions ([#23030](https://github.com/hashicorp/terraform-provider-aws/issues/23030))
+* resource/aws_ecs_task_set: Fix tagging error preventing use in ISO partitions ([#23030](https://github.com/hashicorp/terraform-provider-aws/issues/23030))
 * resource/aws_route_table_association: Handle nil 'AssociationState' in ISO regions ([#22806](https://github.com/hashicorp/terraform-provider-aws/issues/22806))
 * resource/aws_route_table_association: Retry resource Read for EC2 eventual consistency ([#22927](https://github.com/hashicorp/terraform-provider-aws/issues/22927))
 * resource/aws_vpc_ipam: Correct update of `description` ([#22863](https://github.com/hashicorp/terraform-provider-aws/issues/22863))
