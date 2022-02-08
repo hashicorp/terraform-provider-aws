@@ -341,7 +341,7 @@ func TestAccMQBroker_throughputOptimized(t *testing.T) {
 	})
 }
 
-func TestAccMQBroker_allFieldsDefaultVPC(t *testing.T) {
+func TestAccMQBroker_AllFields_defaultVPC(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -469,7 +469,7 @@ func TestAccMQBroker_allFieldsDefaultVPC(t *testing.T) {
 	})
 }
 
-func TestAccMQBroker_allFieldsCustomVPC(t *testing.T) {
+func TestAccMQBroker_AllFields_customVPC(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -636,7 +636,7 @@ func TestAccMQBroker_EncryptionOptions_kmsKeyID(t *testing.T) {
 	})
 }
 
-func TestAccMQBroker_EncryptionOptionsUseAwsOwnedKey_disabled(t *testing.T) {
+func TestAccMQBroker_EncryptionOptions_awsOwnedKeyDisabled(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -673,7 +673,7 @@ func TestAccMQBroker_EncryptionOptionsUseAwsOwnedKey_disabled(t *testing.T) {
 	})
 }
 
-func TestAccMQBroker_EncryptionOptionsUseAwsOwnedKey_enabled(t *testing.T) {
+func TestAccMQBroker_EncryptionOptions_awsOwnedKeyEnabled(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -710,7 +710,7 @@ func TestAccMQBroker_EncryptionOptionsUseAwsOwnedKey_enabled(t *testing.T) {
 	})
 }
 
-func TestAccMQBroker_updateUsers(t *testing.T) {
+func TestAccMQBroker_Update_users(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -787,7 +787,7 @@ func TestAccMQBroker_updateUsers(t *testing.T) {
 	})
 }
 
-func TestAccMQBroker_tags(t *testing.T) {
+func TestAccMQBroker_Update_tags(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -841,7 +841,7 @@ func TestAccMQBroker_tags(t *testing.T) {
 	})
 }
 
-func TestAccMQBroker_updateSecurityGroup(t *testing.T) {
+func TestAccMQBroker_Update_securityGroup(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -898,7 +898,7 @@ func TestAccMQBroker_updateSecurityGroup(t *testing.T) {
 	})
 }
 
-func TestAccMQBroker_updateEngineVersion(t *testing.T) {
+func TestAccMQBroker_Update_engineVersion(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -941,6 +941,44 @@ func TestAccMQBroker_updateEngineVersion(t *testing.T) {
 	})
 }
 
+func TestAccMQBroker_Update_hostInstanceType(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var broker1, broker2 mq.DescribeBrokerResponse
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_mq_broker.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(t)
+			acctest.PreCheckPartitionHasService(mq.EndpointsID, t)
+			testAccPreCheck(t)
+		},
+		ErrorCheck:   acctest.ErrorCheck(t, mq.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckBrokerDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBrokerConfigInstanceType(rName, testAccBrokerVersionNewer, "mq.t2.micro"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBrokerExists(resourceName, &broker1),
+					resource.TestCheckResourceAttr(resourceName, "host_instance_type", "mq.t2.micro"),
+				),
+			},
+			{
+				Config: testAccBrokerConfigInstanceType(rName, testAccBrokerVersionNewer, "mq.t3.micro"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBrokerExists(resourceName, &broker2),
+					testAccCheckBrokerNotRecreated(&broker1, &broker2),
+					resource.TestCheckResourceAttr(resourceName, "host_instance_type", "mq.t3.micro"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccMQBroker_disappears(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -972,7 +1010,7 @@ func TestAccMQBroker_disappears(t *testing.T) {
 	})
 }
 
-func TestAccMQBroker_rabbitMQ(t *testing.T) {
+func TestAccMQBroker_RabbitMQ_basic(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -1062,7 +1100,7 @@ func TestAccMQBroker_RabbitMQ_logs(t *testing.T) {
 	})
 }
 
-func TestAccMQBroker_RabbitMQValidation_auditLog(t *testing.T) {
+func TestAccMQBroker_RabbitMQ_validationAuditLog(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -1100,7 +1138,7 @@ func TestAccMQBroker_RabbitMQValidation_auditLog(t *testing.T) {
 	})
 }
 
-func TestAccMQBroker_clusterRabbitMQ(t *testing.T) {
+func TestAccMQBroker_RabbitMQ_cluster(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -1275,6 +1313,16 @@ func testAccPreCheck(t *testing.T) {
 
 	if err != nil {
 		t.Fatalf("unexpected PreCheck error: %s", err)
+	}
+}
+
+func testAccCheckBrokerNotRecreated(before, after *mq.DescribeBrokerResponse) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		if before, after := aws.StringValue(before.BrokerId), aws.StringValue(after.BrokerId); before != after {
+			return fmt.Errorf("MQ Broker (%s/%s) recreated", before, after)
+		}
+
+		return nil
 	}
 }
 
@@ -1934,4 +1982,30 @@ resource "aws_mq_broker" "test" {
   }
 }
 `, rName, version, ldapUsername)
+}
+
+func testAccBrokerConfigInstanceType(rName, version, instanceType string) string {
+	return fmt.Sprintf(`
+resource "aws_security_group" "test" {
+  name = %[1]q
+}
+
+resource "aws_mq_broker" "test" {
+  broker_name        = %[1]q
+  apply_immediately  = true
+  engine_type        = "ActiveMQ"
+  engine_version     = %[2]q
+  host_instance_type = %[3]q
+  security_groups    = [aws_security_group.test.id]
+
+  logs {
+    general = true
+  }
+
+  user {
+    username = "Test"
+    password = "TestTest1234"
+  }
+}
+`, rName, version, instanceType)
 }
