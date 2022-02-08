@@ -155,6 +155,33 @@ func TestAccEC2NetworkACLAssociation_twoAssociations(t *testing.T) {
 	})
 }
 
+func TestAccEC2NetworkACLAssociation_associateWithDefaultNACL(t *testing.T) {
+	var v ec2.NetworkAclAssociation
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_network_acl_association.test"
+	subnetResourceName := "aws_subnet.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckNetworkACLAssociationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNetworkACLAssociationDefaultNACLConfig(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckNetworkACLAssociationExists(resourceName, &v),
+					resource.TestCheckResourceAttrPair(resourceName, "subnet_id", subnetResourceName, "id"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
 func testAccCheckNetworkACLAssociationDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
@@ -285,6 +312,33 @@ resource "aws_network_acl_association" "test1" {
 resource "aws_network_acl_association" "test2" {
   network_acl_id = aws_network_acl.test.id
   subnet_id      = aws_subnet.test2.id
+}
+`, rName)
+}
+
+func testAccNetworkACLAssociationDefaultNACLConfig(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  cidr_block = "10.1.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_subnet" "test" {
+  vpc_id     = aws_vpc.test.id
+
+  cidr_block = "10.1.33.0/24"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_network_acl_association" "test" {
+  network_acl_id = aws_vpc.test.default_network_acl_id
+  subnet_id      = aws_subnet.test.id
 }
 `, rName)
 }
