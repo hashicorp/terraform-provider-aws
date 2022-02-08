@@ -8,7 +8,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/quicksight"
-	awserr "github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -862,7 +862,7 @@ func resourceAwsQuickSightDataSetRead(ctx context.Context, d *schema.ResourceDat
 
 	output, err := conn.DescribeDataSetWithContext(ctx, descOpts)
 
-	if !d.IsNewResource() && awserr.ErrCodeEquals(err, quicksight.ErrCodeResourceNotFoundException) {
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, quicksight.ErrCodeResourceNotFoundException) {
 		log.Printf("[WARN] QuickSight Data Set (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -1073,7 +1073,7 @@ func resourceAwsQuickSightDataSetDelete(ctx context.Context, d *schema.ResourceD
 
 	_, err = conn.DeleteDataSetWithContext(ctx, deleteOpts)
 
-	if awserr.ErrCodeEquals(err, quicksight.ErrCodeResourceNotFoundException) {
+	if tfawserr.ErrCodeEquals(err, quicksight.ErrCodeResourceNotFoundException) {
 		return nil
 	}
 
