@@ -184,12 +184,6 @@ func resourceCapacityProviderRead(d *schema.ResourceData, meta interface{}) erro
 
 	tags := KeyValueTags(output.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
-	// Some partitions (i.e., ISO) may not support tagging, giving error
-	if verify.CheckISOErrorTagsUnsupported(err) {
-		log.Printf("[WARN] ECS tagging failed listing tags for Capacity Provider (%s): %s", d.Id(), err)
-		return nil
-	}
-
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %w", err)
