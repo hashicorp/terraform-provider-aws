@@ -390,11 +390,19 @@ func testAccBucketLoggingBasicConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "log_bucket" {
   bucket = "%[1]s-log"
+}
+
+resource "aws_s3_bucket_acl" "log_bucket_acl" {
+  bucket = aws_s3_bucket.log_bucket.id
   acl    = "log-delivery-write"
 }
 
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
+}
+
+resource "aws_s3_bucket_acl" "test" {
+  bucket = aws_s3_bucket.test.id
   acl    = "private"
 }
 

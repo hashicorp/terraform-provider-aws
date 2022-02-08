@@ -530,6 +530,10 @@ data "aws_partition" "current" {}
 
 resource "aws_s3_bucket" "bucket" {
   bucket = %[1]q
+}
+
+resource "aws_s3_bucket_acl" "test" {
+  bucket = aws_s3_bucket.bucket.id
   acl    = "public-read"
 }
 
@@ -571,6 +575,10 @@ POLICY
 
 resource "aws_s3_bucket" "bucket" {
   bucket = %[1]q
+}
+
+resource "aws_s3_bucket_acl" "test" {
+  bucket = aws_s3_bucket.bucket.id
   acl    = "public-read"
 }
 
@@ -634,6 +642,10 @@ POLICY
 
 resource "aws_s3_bucket" "bucket" {
   bucket = %[1]q
+}
+
+resource "aws_s3_bucket_acl" "test" {
+  bucket = aws_s3_bucket.bucket.id
   acl    = "public-read"
 }
 
@@ -698,6 +710,10 @@ resource "aws_lambda_function" "func" {
 
 resource "aws_s3_bucket" "bucket" {
   bucket = %[1]q
+}
+
+resource "aws_s3_bucket_acl" "test" {
+  bucket = aws_s3_bucket.bucket.id
   acl    = "public-read"
 }
 
