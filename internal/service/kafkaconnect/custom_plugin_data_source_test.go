@@ -44,7 +44,7 @@ resource "aws_mskconnect_custom_plugin" "test" {
   location {
     s3 {
       bucket_arn = aws_s3_bucket.test.arn
-      file_key   = aws_s3_bucket_object.test.key
+      file_key   = aws_s3_object.test.key
     }
   }
 }

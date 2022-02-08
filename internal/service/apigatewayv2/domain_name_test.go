@@ -221,7 +221,7 @@ func TestAccAPIGatewayV2DomainName_mutualTLSAuthentication(t *testing.T) {
 	var v apigatewayv2.GetDomainNameOutput
 	resourceName := "aws_apigatewayv2_domain_name.test"
 	acmCertificateResourceName := "aws_acm_certificate.test"
-	s3BucketObjectResourceName := "aws_s3_bucket_object.test"
+	s3ObjectResourceName := "aws_s3_object.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -262,7 +262,7 @@ func TestAccAPIGatewayV2DomainName_mutualTLSAuthentication(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "domain_name_configuration.0.target_domain_name"),
 					resource.TestCheckResourceAttr(resourceName, "mutual_tls_authentication.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "mutual_tls_authentication.0.truststore_uri", fmt.Sprintf("s3://%s/%s", rName, rName)),
-					resource.TestCheckResourceAttrPair(resourceName, "mutual_tls_authentication.0.truststore_version", s3BucketObjectResourceName, "version_id"),
+					resource.TestCheckResourceAttrPair(resourceName, "mutual_tls_authentication.0.truststore_version", s3ObjectResourceName, "version_id"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
@@ -280,7 +280,7 @@ func TestAccAPIGatewayV2DomainName_mutualTLSAuthentication(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "domain_name_configuration.0.target_domain_name"),
 					resource.TestCheckResourceAttr(resourceName, "mutual_tls_authentication.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "mutual_tls_authentication.0.truststore_uri", fmt.Sprintf("s3://%s/%s", rName, rName)),
-					resource.TestCheckResourceAttrPair(resourceName, "mutual_tls_authentication.0.truststore_version", s3BucketObjectResourceName, "version_id"),
+					resource.TestCheckResourceAttrPair(resourceName, "mutual_tls_authentication.0.truststore_version", s3ObjectResourceName, "version_id"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
@@ -469,7 +469,7 @@ resource "aws_s3_bucket" "test" {
   force_destroy = true
 }
 
-resource "aws_s3_bucket_object" "test" {
+resource "aws_s3_object" "test" {
   bucket = aws_s3_bucket.test.id
   key    = %[1]q
   source = "test-fixtures/%[2]s"
@@ -485,7 +485,7 @@ resource "aws_apigatewayv2_domain_name" "test" {
   }
 
   mutual_tls_authentication {
-    truststore_uri = "s3://${aws_s3_bucket_object.test.bucket}/${aws_s3_bucket_object.test.key}"
+    truststore_uri = "s3://${aws_s3_object.test.bucket}/${aws_s3_object.test.key}"
   }
 }
 `, rName, pemFileName))
@@ -499,13 +499,16 @@ resource "aws_s3_bucket" "test" {
   bucket = %[1]q
 
   force_destroy = true
+}
 
-  versioning {
-    enabled = true
+resource "aws_s3_bucket_versioning" "test" {
+  bucket = aws_s3_bucket.test.id
+  versioning_configuration {
+    status = "Enabled"
   }
 }
 
-resource "aws_s3_bucket_object" "test" {
+resource "aws_s3_object" "test" {
   bucket = aws_s3_bucket.test.id
   key    = %[1]q
   source = "test-fixtures/%[2]s"
@@ -521,8 +524,8 @@ resource "aws_apigatewayv2_domain_name" "test" {
   }
 
   mutual_tls_authentication {
-    truststore_uri     = "s3://${aws_s3_bucket_object.test.bucket}/${aws_s3_bucket_object.test.key}"
-    truststore_version = aws_s3_bucket_object.test.version_id
+    truststore_uri     = "s3://${aws_s3_object.test.bucket}/${aws_s3_object.test.key}"
+    truststore_version = aws_s3_object.test.version_id
   }
 }
 `, rName, pemFileName))

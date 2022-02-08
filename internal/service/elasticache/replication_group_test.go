@@ -21,6 +21,10 @@ import (
 )
 
 func TestAccElastiCacheReplicationGroup_basic(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var rg elasticache.ReplicationGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_elasticache_replication_group.test"
@@ -63,6 +67,10 @@ func TestAccElastiCacheReplicationGroup_basic(t *testing.T) {
 }
 
 func TestAccElastiCacheReplicationGroup_uppercase(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var rg elasticache.ReplicationGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_elasticache_replication_group.test"
@@ -91,6 +99,10 @@ func TestAccElastiCacheReplicationGroup_uppercase(t *testing.T) {
 }
 
 func TestAccElastiCacheReplicationGroup_EngineVersion_update(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var v1, v2, v3, v4, v5 elasticache.ReplicationGroup
 	var c1, c2, c3, c4, c5 map[string]*elasticache.CacheCluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -156,6 +168,10 @@ func TestAccElastiCacheReplicationGroup_EngineVersion_update(t *testing.T) {
 }
 
 func TestAccElastiCacheReplicationGroup_disappears(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var rg elasticache.ReplicationGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_elasticache_replication_group.test"
@@ -179,6 +195,10 @@ func TestAccElastiCacheReplicationGroup_disappears(t *testing.T) {
 }
 
 func TestAccElastiCacheReplicationGroup_updateDescription(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var rg elasticache.ReplicationGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_elasticache_replication_group.test"
@@ -218,6 +238,10 @@ func TestAccElastiCacheReplicationGroup_updateDescription(t *testing.T) {
 }
 
 func TestAccElastiCacheReplicationGroup_updateMaintenanceWindow(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var rg elasticache.ReplicationGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_elasticache_replication_group.test"
@@ -252,7 +276,54 @@ func TestAccElastiCacheReplicationGroup_updateMaintenanceWindow(t *testing.T) {
 	})
 }
 
+func TestAccElastiCacheReplicationGroup_updateUserGroups(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var rg elasticache.ReplicationGroup
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	userGroup := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resourceName := "aws_elasticache_replication_group.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, elasticache.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckReplicationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccReplicationGroupUserGroup(rName, userGroup, 0),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckReplicationGroupExists(resourceName, &rg),
+					testAccCheckReplicationGroupUserGroup(resourceName, fmt.Sprintf("%s-%d", userGroup, 0)),
+					resource.TestCheckTypeSetElemAttr(resourceName, "user_group_ids.*", fmt.Sprintf("%s-%d", userGroup, 0)),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"apply_immediately"},
+			},
+			{
+				Config: testAccReplicationGroupUserGroup(rName, userGroup, 1),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckReplicationGroupExists(resourceName, &rg),
+					testAccCheckReplicationGroupUserGroup(resourceName, fmt.Sprintf("%s-%d", userGroup, 1)),
+					resource.TestCheckTypeSetElemAttr(resourceName, "user_group_ids.*", fmt.Sprintf("%s-%d", userGroup, 1)),
+				),
+			},
+		},
+	})
+}
+
 func TestAccElastiCacheReplicationGroup_updateNodeSize(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var rg elasticache.ReplicationGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_elasticache_replication_group.test"
@@ -291,6 +362,10 @@ func TestAccElastiCacheReplicationGroup_updateNodeSize(t *testing.T) {
 
 //This is a test to prove that we panic we get in https://github.com/hashicorp/terraform/issues/9097
 func TestAccElastiCacheReplicationGroup_updateParameterGroup(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var rg elasticache.ReplicationGroup
 	parameterGroupResourceName1 := "aws_elasticache_parameter_group.test.0"
 	parameterGroupResourceName2 := "aws_elasticache_parameter_group.test.1"
@@ -328,6 +403,10 @@ func TestAccElastiCacheReplicationGroup_updateParameterGroup(t *testing.T) {
 }
 
 func TestAccElastiCacheReplicationGroup_updateAuthToken(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var rg elasticache.ReplicationGroup
 	resourceName := "aws_elasticache_replication_group.test"
 
@@ -362,6 +441,10 @@ func TestAccElastiCacheReplicationGroup_updateAuthToken(t *testing.T) {
 }
 
 func TestAccElastiCacheReplicationGroup_vpc(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var rg elasticache.ReplicationGroup
 	resourceName := "aws_elasticache_replication_group.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -391,6 +474,10 @@ func TestAccElastiCacheReplicationGroup_vpc(t *testing.T) {
 }
 
 func TestAccElastiCacheReplicationGroup_multiAzNotInVPC(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var rg elasticache.ReplicationGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_elasticache_replication_group.test"
@@ -439,6 +526,10 @@ func TestAccElastiCacheReplicationGroup_multiAzNotInVPC(t *testing.T) {
 }
 
 func TestAccElastiCacheReplicationGroup_multiAzInVPC(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var rg elasticache.ReplicationGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_elasticache_replication_group.test"
@@ -496,6 +587,10 @@ func TestAccElastiCacheReplicationGroup_ValidationMultiAz_noAutomaticFailover(t 
 }
 
 func TestAccElastiCacheReplicationGroup_redisClusterInVPC2(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var rg elasticache.ReplicationGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_elasticache_replication_group.test"
@@ -532,6 +627,10 @@ func TestAccElastiCacheReplicationGroup_redisClusterInVPC2(t *testing.T) {
 }
 
 func TestAccElastiCacheReplicationGroup_ClusterMode_basic(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var rg elasticache.ReplicationGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_elasticache_replication_group.test"
@@ -570,6 +669,10 @@ func TestAccElastiCacheReplicationGroup_ClusterMode_basic(t *testing.T) {
 }
 
 func TestAccElastiCacheReplicationGroup_ClusterMode_nonClusteredParameterGroup(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var rg elasticache.ReplicationGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_elasticache_replication_group.test"
@@ -606,6 +709,10 @@ func TestAccElastiCacheReplicationGroup_ClusterMode_nonClusteredParameterGroup(t
 }
 
 func TestAccElastiCacheReplicationGroup_ClusterModeUpdateNumNodeGroups_scaleUp(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var rg elasticache.ReplicationGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_elasticache_replication_group.test"
@@ -653,6 +760,10 @@ func TestAccElastiCacheReplicationGroup_ClusterModeUpdateNumNodeGroups_scaleUp(t
 }
 
 func TestAccElastiCacheReplicationGroup_ClusterModeUpdateNumNodeGroups_scaleDown(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var rg elasticache.ReplicationGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_elasticache_replication_group.test"
@@ -694,6 +805,10 @@ func TestAccElastiCacheReplicationGroup_ClusterModeUpdateNumNodeGroups_scaleDown
 }
 
 func TestAccElastiCacheReplicationGroup_ClusterMode_updateReplicasPerNodeGroup(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var rg elasticache.ReplicationGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_elasticache_replication_group.test"
@@ -748,6 +863,10 @@ func TestAccElastiCacheReplicationGroup_ClusterMode_updateReplicasPerNodeGroup(t
 }
 
 func TestAccElastiCacheReplicationGroup_ClusterModeUpdateNumNodeGroupsAndReplicasPerNodeGroup_scaleUp(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var rg elasticache.ReplicationGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_elasticache_replication_group.test"
@@ -789,6 +908,10 @@ func TestAccElastiCacheReplicationGroup_ClusterModeUpdateNumNodeGroupsAndReplica
 }
 
 func TestAccElastiCacheReplicationGroup_ClusterModeUpdateNumNodeGroupsAndReplicasPerNodeGroup_scaleDown(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var rg elasticache.ReplicationGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_elasticache_replication_group.test"
@@ -830,6 +953,10 @@ func TestAccElastiCacheReplicationGroup_ClusterModeUpdateNumNodeGroupsAndReplica
 }
 
 func TestAccElastiCacheReplicationGroup_ClusterMode_singleNode(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var rg elasticache.ReplicationGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_elasticache_replication_group.test"
@@ -884,6 +1011,10 @@ func TestAccElastiCacheReplicationGroup_clusteringAndCacheNodesCausesError(t *te
 }
 
 func TestAccElastiCacheReplicationGroup_enableSnapshotting(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var rg elasticache.ReplicationGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_elasticache_replication_group.test"
@@ -919,6 +1050,10 @@ func TestAccElastiCacheReplicationGroup_enableSnapshotting(t *testing.T) {
 }
 
 func TestAccElastiCacheReplicationGroup_enableAuthTokenTransitEncryption(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var rg elasticache.ReplicationGroup
 	resourceName := "aws_elasticache_replication_group.test"
 
@@ -947,6 +1082,10 @@ func TestAccElastiCacheReplicationGroup_enableAuthTokenTransitEncryption(t *test
 }
 
 func TestAccElastiCacheReplicationGroup_enableAtRestEncryption(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var rg elasticache.ReplicationGroup
 	resourceName := "aws_elasticache_replication_group.test"
 
@@ -974,6 +1113,10 @@ func TestAccElastiCacheReplicationGroup_enableAtRestEncryption(t *testing.T) {
 }
 
 func TestAccElastiCacheReplicationGroup_useCMKKMSKeyID(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var rg elasticache.ReplicationGroup
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -993,6 +1136,10 @@ func TestAccElastiCacheReplicationGroup_useCMKKMSKeyID(t *testing.T) {
 }
 
 func TestAccElastiCacheReplicationGroup_NumberCacheClusters_basic(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var replicationGroup elasticache.ReplicationGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_elasticache_replication_group.test"
@@ -1054,6 +1201,10 @@ func TestAccElastiCacheReplicationGroup_NumberCacheClusters_basic(t *testing.T) 
 }
 
 func TestAccElastiCacheReplicationGroup_NumberCacheClustersFailover_autoFailoverDisabled(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var replicationGroup elasticache.ReplicationGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_elasticache_replication_group.test"
@@ -1107,6 +1258,10 @@ func TestAccElastiCacheReplicationGroup_NumberCacheClustersFailover_autoFailover
 }
 
 func TestAccElastiCacheReplicationGroup_NumberCacheClustersFailover_autoFailoverEnabled(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var replicationGroup elasticache.ReplicationGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_elasticache_replication_group.test"
@@ -1165,6 +1320,10 @@ func TestAccElastiCacheReplicationGroup_NumberCacheClustersFailover_autoFailover
 }
 
 func TestAccElastiCacheReplicationGroup_NumberCacheClusters_multiAZEnabled(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var replicationGroup elasticache.ReplicationGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_elasticache_replication_group.test"
@@ -1223,6 +1382,10 @@ func TestAccElastiCacheReplicationGroup_NumberCacheClusters_multiAZEnabled(t *te
 }
 
 func TestAccElastiCacheReplicationGroup_NumberCacheClustersMemberClusterDisappears_noChange(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var replicationGroup elasticache.ReplicationGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_elasticache_replication_group.test"
@@ -1269,6 +1432,10 @@ func TestAccElastiCacheReplicationGroup_NumberCacheClustersMemberClusterDisappea
 }
 
 func TestAccElastiCacheReplicationGroup_NumberCacheClustersMemberClusterDisappears_addMemberCluster(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var replicationGroup elasticache.ReplicationGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_elasticache_replication_group.test"
@@ -1315,6 +1482,10 @@ func TestAccElastiCacheReplicationGroup_NumberCacheClustersMemberClusterDisappea
 }
 
 func TestAccElastiCacheReplicationGroup_NumberCacheClustersMemberClusterDisappearsRemoveMemberCluster_atTargetSize(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var replicationGroup elasticache.ReplicationGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_elasticache_replication_group.test"
@@ -1361,6 +1532,10 @@ func TestAccElastiCacheReplicationGroup_NumberCacheClustersMemberClusterDisappea
 }
 
 func TestAccElastiCacheReplicationGroup_NumberCacheClustersMemberClusterDisappearsRemoveMemberCluster_scaleDown(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var replicationGroup elasticache.ReplicationGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_elasticache_replication_group.test"
@@ -1407,6 +1582,10 @@ func TestAccElastiCacheReplicationGroup_NumberCacheClustersMemberClusterDisappea
 }
 
 func TestAccElastiCacheReplicationGroup_tags(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var rg elasticache.ReplicationGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_elasticache_replication_group.test"
@@ -1457,6 +1636,10 @@ func TestAccElastiCacheReplicationGroup_tags(t *testing.T) {
 }
 
 func TestAccElastiCacheReplicationGroup_finalSnapshot(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var rg elasticache.ReplicationGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_elasticache_replication_group.test"
@@ -1500,6 +1683,10 @@ func TestAccElastiCacheReplicationGroup_Validation_noNodeType(t *testing.T) {
 }
 
 func TestAccElastiCacheReplicationGroup_Validation_globalReplicationGroupIdAndNodeType(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var providers []*schema.Provider
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -1521,6 +1708,10 @@ func TestAccElastiCacheReplicationGroup_Validation_globalReplicationGroupIdAndNo
 }
 
 func TestAccElastiCacheReplicationGroup_GlobalReplicationGroupID_basic(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var providers []*schema.Provider
 	var rg elasticache.ReplicationGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -1618,6 +1809,10 @@ func TestAccElastiCacheReplicationGroup_GlobalReplicationGroupID_full(t *testing
 }
 
 func TestAccElastiCacheReplicationGroup_GlobalReplicationGroupIDClusterMode_basic(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var providers []*schema.Provider
 	var rg1, rg2 elasticache.ReplicationGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -1674,7 +1869,11 @@ func TestAccElastiCacheReplicationGroup_GlobalReplicationGroupIDClusterMode_basi
 
 // Test for out-of-band deletion
 // Naming to allow grouping all TestAccAWSElasticacheReplicationGroup_GlobalReplicationGroupId_* tests
-func TestAccElastiCacheReplicationGroup_GlobalReplicationGroupID_disappears(t *testing.T) { // nosemgrep: acceptance-test-naming-parent-disappears
+func TestAccElastiCacheReplicationGroup_GlobalReplicationGroupID_disappears(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+	// nosemgrep: acceptance-test-naming-parent-disappears
 	var providers []*schema.Provider
 	var rg elasticache.ReplicationGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -1702,6 +1901,10 @@ func TestAccElastiCacheReplicationGroup_GlobalReplicationGroupID_disappears(t *t
 }
 
 func TestAccElastiCacheReplicationGroup_GlobalReplicationGroupIDClusterModeValidation_numNodeGroupsOnSecondary(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var providers []*schema.Provider
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -1818,6 +2021,31 @@ func testAccCheckReplicationGroupMemberClusters(n string, v *map[string]*elastic
 		*v = clusters
 
 		return nil
+	}
+}
+
+func testAccCheckReplicationGroupUserGroup(resourceName, userGroupID string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[resourceName]
+		if !ok {
+			return fmt.Errorf("Not found: %s", resourceName)
+		}
+
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ElastiCacheConn
+		rg, err := tfelasticache.FindReplicationGroupByID(conn, rs.Primary.ID)
+
+		if err != nil {
+			return err
+		}
+		if len(rg.UserGroupIds) < 1 {
+			return fmt.Errorf("ElastiCache Replication Group (%s) was not assigned any usergroups", resourceName)
+		}
+
+		if *rg.UserGroupIds[0] != userGroupID {
+			return fmt.Errorf("ElastiCache Replication Group (%s) was not assigned usergroup (%s), usergroup was (%s) instead", resourceName, userGroupID, *rg.UserGroupIds[0])
+		}
+		return nil
+
 	}
 }
 
@@ -2041,6 +2269,42 @@ resource "aws_elasticache_replication_group" "test" {
   apply_immediately             = true
 }
 `, rName)
+}
+
+func testAccReplicationGroupUserGroup(rName, userGroup string, flag int) string {
+	return fmt.Sprintf(`
+resource "aws_elasticache_user" "test" {
+  count = 2
+
+  user_id       = "%[2]s-${count.index}"
+  user_name     = "default"
+  access_string = "on ~app::* -@all +@read +@hash +@bitmap +@geo -setbit -bitfield -hset -hsetnx -hmset -hincrby -hincrbyfloat -hdel -bitop -geoadd -georadius -georadiusbymember"
+  engine        = "REDIS"
+  passwords     = ["password123456789"]
+}
+
+resource "aws_elasticache_user_group" "test" {
+  count = 2
+
+  user_group_id = "%[2]s-${count.index}"
+  engine        = "REDIS"
+  user_ids      = [aws_elasticache_user.test[count.index].user_id]
+}
+
+resource "aws_elasticache_replication_group" "test" {
+  replication_group_id          = %[1]q
+  replication_group_description = "test description"
+  node_type                     = "cache.t3.small"
+  port                          = 6379
+  apply_immediately             = true
+  auto_minor_version_upgrade    = false
+  maintenance_window            = "tue:06:30-tue:07:30"
+  snapshot_window               = "01:00-02:00"
+  transit_encryption_enabled    = true
+  user_group_ids                = [aws_elasticache_user_group.test[%[3]d].id]
+}
+`, rName, userGroup, flag)
+
 }
 
 func testAccReplicationGroupInVPCConfig(rName string) string {

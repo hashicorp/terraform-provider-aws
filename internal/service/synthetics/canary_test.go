@@ -637,12 +637,15 @@ resource "aws_s3_bucket" "test" {
   acl           = "private"
   force_destroy = true
 
-  versioning {
-    enabled = true
-  }
-
   tags = {
     Name = %[1]q
+  }
+}
+
+resource "aws_s3_bucket_versioning" "test" {
+  bucket = aws_s3_bucket.test.id
+  versioning_configuration {
+    status = "Enabled"
   }
 }
 
@@ -803,6 +806,9 @@ resource "aws_synthetics_canary" "test" {
 func testAccCanaryBasicConfig(rName string) string {
 	return acctest.ConfigCompose(testAccCanaryBaseConfig(rName), fmt.Sprintf(`
 resource "aws_synthetics_canary" "test" {
+  # Must have bucket versioning enabled first
+  depends_on = [aws_s3_bucket_versioning.test]
+
   name                 = %[1]q
   artifact_s3_location = "s3://${aws_s3_bucket.test.bucket}/"
   execution_role_arn   = aws_iam_role.test.arn
@@ -946,9 +952,9 @@ resource "aws_synthetics_canary" "test" {
   artifact_s3_location = "s3://${aws_s3_bucket.test.bucket}/"
   execution_role_arn   = aws_iam_role.test.arn
   handler              = "exports.handler"
-  s3_bucket            = aws_s3_bucket_object.test.bucket
-  s3_key               = aws_s3_bucket_object.test.key
-  s3_version           = aws_s3_bucket_object.test.version_id
+  s3_bucket            = aws_s3_object.test.bucket
+  s3_key               = aws_s3_object.test.key
+  s3_version           = aws_s3_object.test.version_id
   runtime_version      = "syn-nodejs-puppeteer-3.2"
 
   schedule {
@@ -956,7 +962,10 @@ resource "aws_synthetics_canary" "test" {
   }
 }
 
-resource "aws_s3_bucket_object" "test" {
+resource "aws_s3_object" "test" {
+  # Must have bucket versioning enabled first
+  depends_on = [aws_s3_bucket_versioning.test]
+
   bucket = aws_s3_bucket.test.bucket
   key    = %[1]q
   source = "test-fixtures/lambdatest.zip"

@@ -11,7 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/private/protocol/json/jsonutil"
 	"github.com/aws/aws-sdk-go/service/ecr"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
@@ -191,10 +191,10 @@ type lifecyclePolicyRuleAction struct {
 }
 
 type lifecyclePolicyRule struct {
-	RulePriority *int64                        `locationName:"countNumber" type:"integer" required:"true"`
+	RulePriority *int64                        `locationName:"rulePriority" type:"integer" required:"true"`
 	Description  *string                       `locationName:"description" type:"string"`
-	Selection    *lifecyclePolicyRuleSelection `location:"selection" type:"structure" required:"true"`
-	Action       *lifecyclePolicyRuleAction    `location:"action" type:"structure" required:"true"`
+	Selection    *lifecyclePolicyRuleSelection `locationName:"selection" type:"structure" required:"true"`
+	Action       *lifecyclePolicyRuleAction    `locationName:"action" type:"structure" required:"true"`
 }
 
 type lifecyclePolicy struct {

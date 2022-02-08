@@ -12,7 +12,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/mq"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -56,7 +56,6 @@ func ResourceBroker() *schema.Resource {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
-				ForceNew: true,
 			},
 			"broker_name": {
 				Type:     schema.TypeString,
@@ -127,7 +126,6 @@ func ResourceBroker() *schema.Resource {
 			"host_instance_type": {
 				Type:     schema.TypeString,
 				Required: true,
-				ForceNew: true,
 			},
 			"instances": {
 				Type:     schema.TypeList,
@@ -361,29 +359,29 @@ func resourceBrokerCreate(d *schema.ResourceData, meta interface{}) error {
 		EngineVersion:           aws.String(d.Get("engine_version").(string)),
 		HostInstanceType:        aws.String(d.Get("host_instance_type").(string)),
 		PubliclyAccessible:      aws.Bool(d.Get("publicly_accessible").(bool)),
-		Users:                   expandMqUsers(d.Get("user").(*schema.Set).List()),
+		Users:                   expandUsers(d.Get("user").(*schema.Set).List()),
 	}
 
 	if v, ok := d.GetOk("authentication_strategy"); ok {
 		input.AuthenticationStrategy = aws.String(v.(string))
 	}
 	if v, ok := d.GetOk("configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.Configuration = expandMqConfigurationId(v.([]interface{}))
+		input.Configuration = expandConfigurationId(v.([]interface{}))
 	}
 	if v, ok := d.GetOk("deployment_mode"); ok {
 		input.DeploymentMode = aws.String(v.(string))
 	}
 	if v, ok := d.GetOk("encryption_options"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.EncryptionOptions = expandMqEncryptionOptions(d.Get("encryption_options").([]interface{}))
+		input.EncryptionOptions = expandEncryptionOptions(d.Get("encryption_options").([]interface{}))
 	}
 	if v, ok := d.GetOk("logs"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.Logs = expandMqLogs(engineType, v.([]interface{}))
+		input.Logs = expandLogs(engineType, v.([]interface{}))
 	}
 	if v, ok := d.GetOk("ldap_server_metadata"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		input.LdapServerMetadata = expandMQLDAPServerMetadata(v.([]interface{}))
 	}
 	if v, ok := d.GetOk("maintenance_window_start_time"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.MaintenanceWindowStartTime = expandMqWeeklyStartTime(v.([]interface{}))
+		input.MaintenanceWindowStartTime = expandWeeklyStartTime(v.([]interface{}))
 	}
 	if v, ok := d.GetOk("security_groups"); ok && v.(*schema.Set).Len() > 0 {
 		input.SecurityGroups = flex.ExpandStringSet(v.(*schema.Set))
@@ -445,17 +443,17 @@ func resourceBrokerRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("engine_type", output.EngineType)
 	d.Set("engine_version", output.EngineVersion)
 	d.Set("host_instance_type", output.HostInstanceType)
-	d.Set("instances", flattenMqBrokerInstances(output.BrokerInstances))
+	d.Set("instances", flattenBrokerInstances(output.BrokerInstances))
 	d.Set("publicly_accessible", output.PubliclyAccessible)
 	d.Set("security_groups", aws.StringValueSlice(output.SecurityGroups))
 	d.Set("storage_type", output.StorageType)
 	d.Set("subnet_ids", aws.StringValueSlice(output.SubnetIds))
 
-	if err := d.Set("configuration", flattenMqConfiguration(output.Configurations)); err != nil {
+	if err := d.Set("configuration", flattenConfiguration(output.Configurations)); err != nil {
 		return fmt.Errorf("error setting configuration: %w", err)
 	}
 
-	if err := d.Set("encryption_options", flattenMqEncryptionOptions(output.EncryptionOptions)); err != nil {
+	if err := d.Set("encryption_options", flattenEncryptionOptions(output.EncryptionOptions)); err != nil {
 		return fmt.Errorf("error setting encryption_options: %w", err)
 	}
 
@@ -464,25 +462,25 @@ func resourceBrokerRead(d *schema.ResourceData, meta interface{}) error {
 		password = v.(string)
 	}
 
-	if err := d.Set("ldap_server_metadata", flattenMQLDAPServerMetadata(output.LdapServerMetadata, password)); err != nil {
+	if err := d.Set("ldap_server_metadata", flattenLDAPServerMetadata(output.LdapServerMetadata, password)); err != nil {
 		return fmt.Errorf("error setting ldap_server_metadata: %w", err)
 	}
 
-	if err := d.Set("logs", flattenMqLogs(output.Logs)); err != nil {
+	if err := d.Set("logs", flattenLogs(output.Logs)); err != nil {
 		return fmt.Errorf("error setting logs: %w", err)
 	}
 
-	if err := d.Set("maintenance_window_start_time", flattenMqWeeklyStartTime(output.MaintenanceWindowStartTime)); err != nil {
+	if err := d.Set("maintenance_window_start_time", flattenWeeklyStartTime(output.MaintenanceWindowStartTime)); err != nil {
 		return fmt.Errorf("error setting maintenance_window_start_time: %w", err)
 	}
 
-	rawUsers, err := expandMqUsersForBroker(conn, d.Id(), output.Users)
+	rawUsers, err := expandUsersForBroker(conn, d.Id(), output.Users)
 
 	if err != nil {
 		return fmt.Errorf("error retrieving user info for MQ broker (%s): %w", d.Id(), err)
 	}
 
-	if err := d.Set("user", flattenMqUsers(rawUsers, d.Get("user").(*schema.Set).List())); err != nil {
+	if err := d.Set("user", flattenUsers(rawUsers, d.Get("user").(*schema.Set).List())); err != nil {
 		return fmt.Errorf("error setting user: %w", err)
 	}
 
@@ -519,8 +517,8 @@ func resourceBrokerUpdate(d *schema.ResourceData, meta interface{}) error {
 		engineType := d.Get("engine_type").(string)
 		_, err := conn.UpdateBroker(&mq.UpdateBrokerRequest{
 			BrokerId:      aws.String(d.Id()),
-			Configuration: expandMqConfigurationId(d.Get("configuration").([]interface{})),
-			Logs:          expandMqLogs(engineType, d.Get("logs").([]interface{})),
+			Configuration: expandConfigurationId(d.Get("configuration").([]interface{})),
+			Logs:          expandLogs(engineType, d.Get("logs").([]interface{})),
 			EngineVersion: aws.String(d.Get("engine_version").(string)),
 		})
 		if err != nil {
@@ -544,6 +542,32 @@ func resourceBrokerUpdate(d *schema.ResourceData, meta interface{}) error {
 		if usersUpdated {
 			requiresReboot = true
 		}
+	}
+
+	if d.HasChange("host_instance_type") {
+		_, err := conn.UpdateBroker(&mq.UpdateBrokerRequest{
+			BrokerId:         aws.String(d.Id()),
+			HostInstanceType: aws.String(d.Get("host_instance_type").(string)),
+		})
+
+		if err != nil {
+			return fmt.Errorf("error updating MQ Broker (%s) host instance type: %w", d.Id(), err)
+		}
+
+		requiresReboot = true
+	}
+
+	if d.HasChange("auto_minor_version_upgrade") {
+		_, err := conn.UpdateBroker(&mq.UpdateBrokerRequest{
+			BrokerId:                aws.String(d.Id()),
+			AutoMinorVersionUpgrade: aws.Bool(d.Get("auto_minor_version_upgrade").(bool)),
+		})
+
+		if err != nil {
+			return fmt.Errorf("error updating MQ Broker (%s) auto minor version upgrade: %w", d.Id(), err)
+		}
+
+		requiresReboot = true
 	}
 
 	if d.Get("apply_immediately").(bool) && requiresReboot {
@@ -720,7 +744,7 @@ func DiffBrokerUsers(bId string, oldUsers, newUsers []interface{}) (
 	return cr, di, ur, nil
 }
 
-func expandMqEncryptionOptions(l []interface{}) *mq.EncryptionOptions {
+func expandEncryptionOptions(l []interface{}) *mq.EncryptionOptions {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -738,7 +762,7 @@ func expandMqEncryptionOptions(l []interface{}) *mq.EncryptionOptions {
 	return encryptionOptions
 }
 
-func flattenMqEncryptionOptions(encryptionOptions *mq.EncryptionOptions) []interface{} {
+func flattenEncryptionOptions(encryptionOptions *mq.EncryptionOptions) []interface{} {
 	if encryptionOptions == nil {
 		return []interface{}{}
 	}
@@ -776,7 +800,7 @@ func ValidBrokerPassword(v interface{}, k string) (ws []string, errors []error) 
 	return
 }
 
-func expandMqUsers(cfg []interface{}) []*mq.User {
+func expandUsers(cfg []interface{}) []*mq.User {
 	users := make([]*mq.User, len(cfg))
 	for i, m := range cfg {
 		u := m.(map[string]interface{})
@@ -795,7 +819,7 @@ func expandMqUsers(cfg []interface{}) []*mq.User {
 	return users
 }
 
-func expandMqUsersForBroker(conn *mq.MQ, brokerId string, input []*mq.UserSummary) ([]*mq.User, error) {
+func expandUsersForBroker(conn *mq.MQ, brokerId string, input []*mq.UserSummary) ([]*mq.User, error) {
 	var rawUsers []*mq.User
 
 	for _, u := range input {
@@ -825,7 +849,7 @@ func expandMqUsersForBroker(conn *mq.MQ, brokerId string, input []*mq.UserSummar
 }
 
 // We use cfgdUsers to get & set the password
-func flattenMqUsers(users []*mq.User, cfgUsers []interface{}) *schema.Set {
+func flattenUsers(users []*mq.User, cfgUsers []interface{}) *schema.Set {
 	existingPairs := make(map[string]string)
 	for _, u := range cfgUsers {
 		user := u.(map[string]interface{})
@@ -856,7 +880,7 @@ func flattenMqUsers(users []*mq.User, cfgUsers []interface{}) *schema.Set {
 	return schema.NewSet(resourceUserHash, out)
 }
 
-func expandMqWeeklyStartTime(cfg []interface{}) *mq.WeeklyStartTime {
+func expandWeeklyStartTime(cfg []interface{}) *mq.WeeklyStartTime {
 	if len(cfg) < 1 {
 		return nil
 	}
@@ -869,7 +893,7 @@ func expandMqWeeklyStartTime(cfg []interface{}) *mq.WeeklyStartTime {
 	}
 }
 
-func flattenMqWeeklyStartTime(wst *mq.WeeklyStartTime) []interface{} {
+func flattenWeeklyStartTime(wst *mq.WeeklyStartTime) []interface{} {
 	if wst == nil {
 		return []interface{}{}
 	}
@@ -886,7 +910,7 @@ func flattenMqWeeklyStartTime(wst *mq.WeeklyStartTime) []interface{} {
 	return []interface{}{m}
 }
 
-func expandMqConfigurationId(cfg []interface{}) *mq.ConfigurationId {
+func expandConfigurationId(cfg []interface{}) *mq.ConfigurationId {
 	if len(cfg) < 1 {
 		return nil
 	}
@@ -902,7 +926,7 @@ func expandMqConfigurationId(cfg []interface{}) *mq.ConfigurationId {
 	return &out
 }
 
-func flattenMqConfiguration(config *mq.Configurations) []interface{} {
+func flattenConfiguration(config *mq.Configurations) []interface{} {
 	if config == nil || config.Current == nil {
 		return []interface{}{}
 	}
@@ -915,7 +939,7 @@ func flattenMqConfiguration(config *mq.Configurations) []interface{} {
 	return []interface{}{m}
 }
 
-func flattenMqBrokerInstances(instances []*mq.BrokerInstance) []interface{} {
+func flattenBrokerInstances(instances []*mq.BrokerInstance) []interface{} {
 	if len(instances) == 0 {
 		return []interface{}{}
 	}
@@ -937,7 +961,7 @@ func flattenMqBrokerInstances(instances []*mq.BrokerInstance) []interface{} {
 	return l
 }
 
-func flattenMqLogs(logs *mq.LogsSummary) []interface{} {
+func flattenLogs(logs *mq.LogsSummary) []interface{} {
 	if logs == nil {
 		return []interface{}{}
 	}
@@ -955,7 +979,7 @@ func flattenMqLogs(logs *mq.LogsSummary) []interface{} {
 	return []interface{}{m}
 }
 
-func expandMqLogs(engineType string, l []interface{}) *mq.Logs {
+func expandLogs(engineType string, l []interface{}) *mq.Logs {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -980,7 +1004,7 @@ func expandMqLogs(engineType string, l []interface{}) *mq.Logs {
 	return logs
 }
 
-func flattenMQLDAPServerMetadata(apiObject *mq.LdapServerMetadataOutput, password string) []interface{} {
+func flattenLDAPServerMetadata(apiObject *mq.LdapServerMetadataOutput, password string) []interface{} {
 	if apiObject == nil {
 		return nil
 	}

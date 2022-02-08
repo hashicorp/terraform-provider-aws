@@ -3,21 +3,22 @@ subcategory: "VPC"
 layout: "aws"
 page_title: "AWS: aws_default_vpc"
 description: |-
-  Manage the default VPC resource.
+  Manage a default VPC resource.
 ---
 
 # Resource: aws_default_vpc
 
 Provides a resource to manage the [default AWS VPC](http://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/default-vpc.html)
-in the current region.
+in the current AWS Region.
 
-For AWS accounts created after 2013-12-04, each region comes with a Default VPC.
-**This is an advanced resource**, and has special caveats to be aware of when
-using it. Please read this document in its entirety before using this resource.
+If you created your AWS account after 2013-12-04 you have a default VPC in each AWS Region.
 
-The `aws_default_vpc` behaves differently from normal resources, in that
-Terraform does not _create_ this resource, but instead "adopts" it
-into management.
+**This is an advanced resource** and has special caveats to be aware of when using it. Please read this document in its entirety before using this resource.
+
+The `aws_default_vpc` resource behaves differently from normal resources in that if a default VPC exists, Terraform does not _create_ this resource, but instead "adopts" it into management.
+If no default VPC exists, Terraform creates a new default VPC, which leads to the implicit creation of [other resources](https://docs.aws.amazon.com/vpc/latest/userguide/default-vpc.html#default-vpc-components).
+By default, `terraform destroy` does not delete the default VPC but does remove the resource from Terraform state.
+Set the `force_destroy` argument to `true` to delete the default VPC.
 
 ## Example Usage
 
@@ -33,49 +34,21 @@ resource "aws_default_vpc" "default" {
 
 ## Argument Reference
 
-The arguments of an `aws_default_vpc` differ slightly from `aws_vpc`
-resources. Namely, the `cidr_block`, `instance_tenancy` and `assign_generated_ipv6_cidr_block`
-arguments are computed. The following arguments are still supported:
+The arguments of an `aws_default_vpc` differ slightly from those of [`aws_vpc`](vpc.html):
 
-* `enable_dns_support` - (Optional) A boolean flag to enable/disable DNS support in the VPC. Defaults true.
-* `enable_dns_hostnames` - (Optional) A boolean flag to enable/disable DNS hostnames in the VPC. Defaults false.
-* `enable_classiclink` - (Optional) A boolean flag to enable/disable ClassicLink
-  for the VPC. Only valid in regions and accounts that support EC2 Classic.
-  See the [ClassicLink documentation][1] for more information. Defaults false.
-* `tags` - (Optional) A map of tags to assign to the resource.
+* The `cidr_block` and `instance_tenancy` arguments become computed attributes
+* The default value for `enable_dns_hostnames` is `true`
 
-### Removing `aws_default_vpc` from your configuration
+The following additional arguments are supported:
 
-The `aws_default_vpc` resource allows you to manage a region's default VPC,
-but Terraform cannot destroy it. Removing this resource from your configuration
-will remove it from your statefile and management, but will not destroy the VPC.
-You can resume managing the VPC via the AWS Console.
+* `force_destroy` - (Optional) Whether destroying the resource deletes the default VPC. Default: `false`
 
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 
-* `arn` - Amazon Resource Name (ARN) of VPC
-* `id` - The ID of the VPC
-* `cidr_block` - The CIDR block of the VPC
-* `instance_tenancy` - Tenancy of instances spin up within VPC.
-* `enable_dns_support` - Whether or not the VPC has DNS support
-* `enable_dns_hostnames` - Whether or not the VPC has DNS hostname support
-* `enable_classiclink` - Whether or not the VPC has Classiclink enabled
-* `assign_generated_ipv6_cidr_block` - Whether or not an Amazon-provided IPv6 CIDR
-block with a /56 prefix length for the VPC was assigned
-* `main_route_table_id` - The ID of the main route table associated with
-     this VPC. Note that you can change a VPC's main route table by using an
-     [`aws_main_route_table_association`](/docs/providers/aws/r/main_route_table_association.html)
-* `default_network_acl_id` - The ID of the network ACL created by default on VPC creation
-* `default_security_group_id` - The ID of the security group created by default on VPC creation
-* `default_route_table_id` - The ID of the route table created by default on VPC creation
-* `ipv6_association_id` - The association ID for the IPv6 CIDR block of the VPC
-* `ipv6_cidr_block` - The IPv6 CIDR block of the VPC
-* `owner_id` - The ID of the AWS account that owns the VPC.
-
-
-[1]: https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/vpc-classiclink.html
+* `cidr_block` - The primary IPv4 CIDR block for the VPC
+* `instance_tenancy` - The allowed tenancy of instances launched into the VPC
 
 ## Import
 

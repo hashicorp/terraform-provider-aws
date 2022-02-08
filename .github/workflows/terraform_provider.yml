@@ -180,7 +180,7 @@ jobs:
       with:
         path: ~/go/pkg/mod
         key: ${{ runner.os }}-go-pkg-mod-${{ hashFiles('go.sum') }}
-    - run: go install golang.org/x/tools/cmd/goimports
+    - run: go install golang.org/x/tools/cmd/goimports@latest
     - run: make gen
     - name: Check for Git Differences
       run: |
@@ -218,7 +218,7 @@ jobs:
         key: ${{ runner.os }}-go-pkg-mod-${{ hashFiles('go.sum') }}
     - name: Get all changed files
       id: changed-files
-      uses: tj-actions/changed-files@v13.1
+      uses: tj-actions/changed-files@v14.1
     - name: Get changed packages
       run: |
         touch /tmp/dirs_changed_all
@@ -237,6 +237,9 @@ jobs:
           if [[ "${pkg}" == */test-fixtures ]]; then
             continue
           fi
+          if [[ "${pkg}" == internal/generate/* ]]; then
+            continue
+          fi          
           while read file; do
             if [ "${file}" = "" ]; then
               continue
