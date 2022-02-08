@@ -71,12 +71,11 @@ func ResourceNetworkACLRule() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					pi := protocolIntegers()
-					if val, ok := pi[old]; ok {
-						old = strconv.Itoa(val)
+					if v, ok := ianaProtocolAToI[old]; ok {
+						old = strconv.Itoa(v)
 					}
-					if val, ok := pi[new]; ok {
-						new = strconv.Itoa(val)
+					if v, ok := ianaProtocolAToI[new]; ok {
+						new = strconv.Itoa(v)
 					}
 
 					return old == new

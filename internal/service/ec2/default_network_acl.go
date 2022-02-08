@@ -25,7 +25,7 @@ func ResourceDefaultNetworkACL() *schema.Resource {
 		Type:     schema.TypeSet,
 		Optional: true,
 		Elem:     networkACLRuleResource,
-		Set:      resourceNetworkACLEntryHash,
+		Set:      networkACLRuleHash,
 	}
 
 	return &schema.Resource{
