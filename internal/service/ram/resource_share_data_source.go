@@ -78,8 +78,9 @@ func dataSourceResourceShareRead(d *schema.ResourceData, meta interface{}) error
 	filters, filtersOk := d.GetOk("filter")
 
 	params := &ram.GetResourceSharesInput{
-		Name:          aws.String(name),
-		ResourceOwner: aws.String(owner),
+		Name:                aws.String(name),
+		ResourceOwner:       aws.String(owner),
+		ResourceShareStatus: aws.String(ram.ResourceShareStatusActive),
 	}
 
 	if filtersOk {
