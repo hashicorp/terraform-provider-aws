@@ -561,13 +561,26 @@ func resourceTaskDefinitionRead(d *schema.ResourceData, meta interface{}) error 
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	log.Printf("[DEBUG] Reading task definition %s", d.Id())
-	out, err := conn.DescribeTaskDefinition(&ecs.DescribeTaskDefinitionInput{
+
+	input := ecs.DescribeTaskDefinitionInput{
 		TaskDefinition: aws.String(d.Get("arn").(string)),
 		Include:        []*string{aws.String(ecs.TaskDefinitionFieldTags)},
-	})
+	}
+
+	out, err := conn.DescribeTaskDefinition(&input)
+
+	// Some partitions (i.e., ISO) may not support tagging, giving error
+	if verify.CheckISOErrorTagsUnsupported(err) {
+		log.Printf("[WARN] ECS tagging failed describing Task Definition (%s) with tags: %s; retrying without tags", d.Id(), err)
+
+		input.Include = nil
+		out, err = conn.DescribeTaskDefinition(&input)
+	}
+
 	if err != nil {
 		return err
 	}
+
 	log.Printf("[DEBUG] Received task definition %s, status:%s\n %s", aws.StringValue(out.TaskDefinition.Family),
 		aws.StringValue(out.TaskDefinition.Status), out)
 
@@ -635,12 +648,6 @@ func resourceTaskDefinitionRead(d *schema.ResourceData, meta interface{}) error 
 	}
 
 	tags := KeyValueTags(out.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	// Some partitions (i.e., ISO) may not support tagging, giving error
-	if verify.CheckISOErrorTagsUnsupported(err) {
-		log.Printf("[WARN] ECS tagging failed listing tags for Task Definition (%s): %s", d.Id(), err)
-		return nil
-	}
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
