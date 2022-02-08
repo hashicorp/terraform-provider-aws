@@ -562,7 +562,7 @@ func TestAccWAFV2WebACL_ManagedRuleGroup_basic(t *testing.T) {
 	})
 }
 
-func TestAccWAFV2WebACL_ManagedRuleGroup_specify_version(t *testing.T) {
+func TestAccWAFV2WebACL_ManagedRuleGroup_specifyVersion(t *testing.T) {
 	var v wafv2.WebACL
 	webACLName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_wafv2_web_acl.test"
