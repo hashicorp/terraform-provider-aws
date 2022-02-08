@@ -390,6 +390,10 @@ func TestAccSyntheticsCanary_runTracing(t *testing.T) {
 }
 
 func TestAccSyntheticsCanary_vpc(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var conf synthetics.Canary
 	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(8))
 	resourceName := "aws_synthetics_canary.test"
@@ -634,12 +638,16 @@ func testAccCanaryBaseConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket        = %[1]q
-  acl           = "private"
   force_destroy = true
 
   tags = {
     Name = %[1]q
   }
+}
+
+resource "aws_s3_bucket_acl" "test" {
+  bucket = aws_s3_bucket.test.id
+  acl    = "private"
 }
 
 resource "aws_s3_bucket_versioning" "test" {
