@@ -112,6 +112,11 @@ func DataSourceTransitGatewayMulticastDomain() *schema.Resource {
 				},
 				Set: resourceTransitGatewayMulticastDomainGroupsHash,
 			},
+			"state": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
 			"static_source_support": {
 				Type:     schema.TypeString,
 				Optional: true,

@@ -162,6 +162,8 @@ func testAccTransitGatewayMulticastDomain_Groups(t *testing.T) {
 	resourceName := "aws_ec2_transit_gateway_multicast_domain.test"
 	instanceName1 := "aws_instance.test1"
 	instanceName2 := "aws_instance.test2"
+	multicastGroup1 := "224.0.0.1"
+	multicastGroup2 := "224.0.0.2"
 	// Note: Currently only one source per-group is allowed
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -170,49 +172,49 @@ func testAccTransitGatewayMulticastDomain_Groups(t *testing.T) {
 		CheckDestroy: testAccCheckTransitGatewayMulticastDomainDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTransitGatewayMulticastDomainConfigGroup1(rName),
+				Config: testAccTransitGatewayMulticastDomainConfigGroup1(rName, multicastGroup1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(instanceName1, &instance1),
 					testAccCheckTransitGatewayMulticastDomainExists(resourceName, &domain1),
 					testAccCheckTransitGatewayMulticastDomainGroups(&domain1, 1, true, map[string][]*ec2.Instance{
-						"224.0.0.1": {&instance1},
+						multicastGroup1: {&instance1},
 					}),
 					testAccCheckTransitGatewayMulticastDomainGroups(&domain1, 1, false, map[string][]*ec2.Instance{
-						"224.0.0.1": {&instance1},
+						multicastGroup1: {&instance1},
 					}),
 				),
 			},
 			{
-				Config: testAccTransitGatewayMulticastDomainConfigGroup2(rName),
+				Config: testAccTransitGatewayMulticastDomainConfigGroup2(rName, multicastGroup1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(instanceName2, &instance2),
 					testAccCheckTransitGatewayMulticastDomainGroups(&domain1, 2, true, map[string][]*ec2.Instance{
-						"224.0.0.1": {&instance1, &instance2},
+						multicastGroup1: {&instance1, &instance2},
 					}),
 					testAccCheckTransitGatewayMulticastDomainGroups(&domain1, 1, false, map[string][]*ec2.Instance{
-						"224.0.0.1": {&instance1},
+						multicastGroup1: {&instance1},
 					})),
 			},
 			{
-				Config: testAccTransitGatewayMulticastDomainConfigGroup3(rName),
+				Config: testAccTransitGatewayMulticastDomainConfigGroup3(rName, multicastGroup1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitGatewayMulticastDomainGroups(&domain1, 2, true, map[string][]*ec2.Instance{
-						"224.0.0.1": {&instance1, &instance2},
+						multicastGroup1: {&instance1, &instance2},
 					}),
 					testAccCheckTransitGatewayMulticastDomainGroups(&domain1, 1, false, map[string][]*ec2.Instance{
-						"224.0.0.1": {&instance1},
+						multicastGroup1: {&instance1},
 					})),
 			},
 			{
-				Config: testAccTransitGatewayMulticastDomainConfigGroup4(rName),
+				Config: testAccTransitGatewayMulticastDomainConfigGroup4(rName, multicastGroup1, multicastGroup2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitGatewayMulticastDomainGroups(&domain1, 2, true, map[string][]*ec2.Instance{
-						"224.0.0.1": {&instance1},
-						"224.0.0.2": {&instance2},
+						multicastGroup1: {&instance1},
+						multicastGroup2: {&instance2},
 					}),
 					testAccCheckTransitGatewayMulticastDomainGroups(&domain1, 2, false, map[string][]*ec2.Instance{
-						"224.0.0.1": {&instance1},
-						"224.0.0.2": {&instance2},
+						multicastGroup1: {&instance1},
+						multicastGroup2: {&instance2},
 					})),
 			},
 		},
@@ -550,7 +552,7 @@ resource "aws_ec2_transit_gateway_multicast_domain" "test" {
 `, rName)
 }
 
-func testAccTransitGatewayMulticastDomainConfigGroup1(rName string) string {
+func testAccTransitGatewayMulticastDomainConfigGroup1(rName, multicastGroup1 string) string {
 	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {
   state = "available"
@@ -644,10 +646,10 @@ resource "aws_ec2_transit_gateway_multicast_domain" "test" {
     Name = %[1]q
   }
 }
-`, rName)
+`, rName, multicastGroup1)
 }
 
-func testAccTransitGatewayMulticastDomainConfigGroup2(rName string) string {
+func testAccTransitGatewayMulticastDomainConfigGroup2(rName, multicastGroup1 string) string {
 	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {
   state = "available"
@@ -740,21 +742,21 @@ resource "aws_ec2_transit_gateway_multicast_domain" "test" {
     subnet_ids                    = [aws_subnet.test1.id]
   }
   members {
-    group_ip_address      = "224.0.0.1"
+    group_ip_address      = %[2]q
     network_interface_ids = [aws_instance.test1.primary_network_interface_id, aws_instance.test2.primary_network_interface_id]
   }
   sources {
-    group_ip_address      = "224.0.0.1"
+    group_ip_address      = %[2]q
     network_interface_ids = [aws_instance.test1.primary_network_interface_id]
   }
   tags = {
     Name = %[1]q
   }
 }
-`, rName)
+`, rName, multicastGroup1)
 }
 
-func testAccTransitGatewayMulticastDomainConfigGroup3(rName string) string {
+func testAccTransitGatewayMulticastDomainConfigGroup3(rName, multicastGroup1 string) string {
 	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {
   state = "available"
@@ -846,25 +848,25 @@ resource "aws_ec2_transit_gateway_multicast_domain" "test" {
     subnet_ids                    = [aws_subnet.test1.id]
   }
   members {
-    group_ip_address      = "224.0.0.1"
+    group_ip_address      = %[2]q
     network_interface_ids = [aws_instance.test1.primary_network_interface_id]
   }
   members {
-    group_ip_address      = "224.0.0.1"
+    group_ip_address      = %[2]q
     network_interface_ids = [aws_instance.test2.primary_network_interface_id]
   }
   sources {
-    group_ip_address      = "224.0.0.1"
+    group_ip_address      = %[2]q
     network_interface_ids = [aws_instance.test1.primary_network_interface_id]
   }
   tags = {
     Name = %[1]q
   }
 }
-`, rName)
+`, rName, multicastGroup1)
 }
 
-func testAccTransitGatewayMulticastDomainConfigGroup4(rName string) string {
+func testAccTransitGatewayMulticastDomainConfigGroup4(rName, multicastGroup1, multicastGroup2 string) string {
 	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {
   state = "available"
@@ -950,26 +952,26 @@ resource "aws_ec2_transit_gateway_multicast_domain" "test" {
     subnet_ids                    = [aws_subnet.test1.id]
   }
   members {
-    group_ip_address      = "224.0.0.1"
+    group_ip_address      = %[2]q
     network_interface_ids = [aws_instance.test1.primary_network_interface_id]
   }
   members {
-    group_ip_address      = "224.0.0.2"
+    group_ip_address      = %[3]q
     network_interface_ids = [aws_instance.test2.primary_network_interface_id]
   }
   sources {
-    group_ip_address      = "224.0.0.1"
+    group_ip_address      = %[2]q
     network_interface_ids = [aws_instance.test1.primary_network_interface_id]
   }
   sources {
-    group_ip_address      = "224.0.0.2"
+    group_ip_address      = %[3]q
     network_interface_ids = [aws_instance.test2.primary_network_interface_id]
   }
   tags = {
     Name = %[1]q
   }
 }
-`, rName)
+`, rName, multicastGroup1, multicastGroup2)
 }
 
 func testAccTransitGatewayMulticastDomainConfigTags1(rName, tagKey1, tagValue1 string) string {

@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"log"
+	"net"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
@@ -22,6 +23,9 @@ func ResourceTransitGatewayMulticastDomain() *schema.Resource {
 		Read:   resourceTransitGatewayMulticastDomainRead,
 		Update: resourceTransitGatewayMulticastDomainUpdate,
 		Delete: resourceTransitGatewayMulticastDomainDelete,
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 
 		Schema: map[string]*schema.Schema{
 			"arn": {
@@ -59,10 +63,16 @@ func ResourceTransitGatewayMulticastDomain() *schema.Resource {
 					ec2.AutoAcceptSharedAssociationsValueDisable,
 				}, false),
 			},
-			"igmpv2_support": {
+			"creation_time": {
 				Type:     schema.TypeString,
-				Optional: true,
-				Default:  "disable",
+				Computed: true,
+			},
+			"igmpv2_support": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				Default:       "disable",
+				ConflictsWith: []string{"static_source_support"},
+				ValidateFunc:  validation.StringInSlice([]string{"enable", "disable"}, false),
 			},
 			"members": {
 				Type:       schema.TypeSet,
@@ -72,8 +82,9 @@ func ResourceTransitGatewayMulticastDomain() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"group_ip_address": {
-							Type:     schema.TypeString,
-							Required: true,
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: IsMulticastAddress,
 						},
 						"network_interface_ids": {
 							Type:     schema.TypeSet,
@@ -98,8 +109,9 @@ func ResourceTransitGatewayMulticastDomain() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"group_ip_address": {
-							Type:     schema.TypeString,
-							Required: true,
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: IsMulticastAddress,
 						},
 						"network_interface_ids": {
 							Type:     schema.TypeSet,
@@ -112,10 +124,13 @@ func ResourceTransitGatewayMulticastDomain() *schema.Resource {
 				},
 				Set: resourceTransitGatewayMulticastDomainGroupsHash,
 			},
+
 			"static_source_support": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  "disable",
+				Type:          schema.TypeString,
+				Optional:      true,
+				Default:       "disable",
+				ConflictsWith: []string{"igmpv2_support"},
+				ValidateFunc:  validation.StringInSlice([]string{"enable", "disable"}, false),
 			},
 			"tags": tftags.TagsSchema(),
 			"transit_gateway_id": {
@@ -600,8 +615,7 @@ func resourceTransitGatewayMulticastDomainAssociate(conn *ec2.EC2, id string, as
 }
 
 func resourceTransitGatewayMulticastDomainGroupDeregister(conn *ec2.EC2, id string, groupData map[string]interface{}, member bool) error {
-	// Note: for some reason AWS made the decision to logically separate "members" from "sources" in
-	// register/deregister; however, they are unified in "search"
+	// Note: Search function returns both "members" and "sources"
 	if member {
 		input := &ec2.DeregisterTransitGatewayMulticastGroupMembersInput{
 			GroupIpAddress:                  aws.String(groupData["group_ip_address"].(string)),
@@ -639,8 +653,7 @@ func resourceTransitGatewayMulticastDomainGroupDeregister(conn *ec2.EC2, id stri
 }
 
 func resourceTransitGatewayMulticastDomainGroupRegister(conn *ec2.EC2, id string, groupData map[string]interface{}, member bool) error {
-	// Note: for some reason AWS made the decision to logically separate "members" from "sources" in
-	// register/deregister; however, they are unified in "search"
+	// Note: Search function returns both "members" and "sources"
 	if member {
 		input := &ec2.RegisterTransitGatewayMulticastGroupMembersInput{
 			GroupIpAddress:                  aws.String(groupData["group_ip_address"].(string)),
@@ -784,4 +797,20 @@ func resourceTransitGatewayMulticastDomainCompress(set *schema.Set, groupingKey 
 	}
 
 	return compressed
+}
+
+// IsMulticastAddress is a SchemaValidateFunc which tests if the provided value is of type string and a valid Multicast address
+func IsMulticastAddress(i interface{}, k string) (warnings []string, errors []error) {
+	v, ok := i.(string)
+	if !ok {
+		errors = append(errors, fmt.Errorf("expected type of %q to be string", k))
+		return warnings, errors
+	}
+
+	ip := net.ParseIP(v)
+	if multicast := ip.IsMulticast(); multicast == false {
+		errors = append(errors, fmt.Errorf("expected %s to contain a valid Multicast address, got: %s", k, v))
+	}
+
+	return warnings, errors
 }
