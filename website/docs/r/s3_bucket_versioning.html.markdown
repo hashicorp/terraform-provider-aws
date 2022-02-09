@@ -34,6 +34,30 @@ resource "aws_s3_bucket_versioning" "versioning_example" {
 }
 ```
 
+### Object Dependency On Versioning
+
+As noted above, AWS recommends waiting 15 minutes after enabling versioning before putting or deleting objects in a bucket. When that wait is not possible and you create an object whose `version_id` you need and a versioning resource in the same configuration, you are more likely to have success by ensuring the `s3_object` depends either implicitly (see below) or explicitly (i.e., using `depends_on`) on the `aws_s3_bucket_versioning` resource.
+
+```terraform
+resource "aws_s3_bucket" "example" {
+  bucket = "yotto"
+}
+
+resource "aws_s3_bucket_versioning" "example" {
+  bucket = aws_s3_bucket.example.id
+
+  versioning_configuration {
+    status = "Enabled"
+  }
+}
+
+resource "aws_s3_object" "example" {
+  bucket = aws_s3_bucket_versioning.example.bucket
+  key    = "droeloe"
+  source = "example.txt"
+}
+```
+
 ## Argument Reference
 
 The following arguments are supported:
