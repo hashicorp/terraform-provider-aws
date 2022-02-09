@@ -1903,16 +1903,8 @@ func providerConfigure(d *schema.ResourceData, terraformVersion string) (interfa
 	for _, endpointsSetI := range endpointsSet.List() {
 		endpoints := endpointsSetI.(map[string]interface{})
 
-		for _, hclKey := range conns.HCLKeys() {
-			var serviceKey string
-			var err error
-			if serviceKey, err = conns.ServiceForHCLKey(hclKey); err != nil {
-				return nil, fmt.Errorf("failed to assign endpoint (%s): %w", hclKey, err)
-			}
-
-			if config.Endpoints[serviceKey] == "" && endpoints[hclKey].(string) != "" {
-				config.Endpoints[serviceKey] = endpoints[hclKey].(string)
-			}
+		if err := expandEndpoints(endpoints, config.Endpoints); err != nil {
+			return nil, err
 		}
 	}
 
@@ -2116,4 +2108,20 @@ func expandProviderIgnoreTags(l []interface{}) *tftags.IgnoreConfig {
 	}
 
 	return ignoreConfig
+}
+
+func expandEndpoints(endpoints map[string]interface{}, out map[string]string) error {
+	for _, hclKey := range conns.HCLKeys() {
+		var serviceKey string
+		var err error
+		if serviceKey, err = conns.ServiceForHCLKey(hclKey); err != nil {
+			return fmt.Errorf("failed to assign endpoint (%s): %w", hclKey, err)
+		}
+
+		if out[serviceKey] == "" && endpoints[hclKey].(string) != "" {
+			out[serviceKey] = endpoints[hclKey].(string)
+		}
+	}
+
+	return nil
 }
