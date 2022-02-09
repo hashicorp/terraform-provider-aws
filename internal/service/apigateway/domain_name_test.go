@@ -26,7 +26,7 @@ func TestAccAPIGatewayDomainName_certificateARN(t *testing.T) {
 	resourceName := "aws_api_gateway_domain_name.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckApigatewayEdgeDomainName(t) },
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckEdgeDomainName(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, apigateway.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckEdgeDomainNameDestroy,
@@ -35,7 +35,7 @@ func TestAccAPIGatewayDomainName_certificateARN(t *testing.T) {
 				Config: testAccDomainNameConfig_CertificateARN(rootDomain, domain),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEdgeDomainNameExists(resourceName, &domainName),
-					testAccCheckResourceAttrRegionalARNApigatewayEdgeDomainName(resourceName, "arn", "apigateway", domain),
+					testAccCheckResourceAttrRegionalARNEdgeDomainName(resourceName, "arn", "apigateway", domain),
 					resource.TestCheckResourceAttrPair(resourceName, "certificate_arn", acmCertificateResourceName, "arn"),
 					resource.TestMatchResourceAttr(resourceName, "cloudfront_domain_name", regexp.MustCompile(`[a-z0-9]+.cloudfront.net`)),
 					resource.TestCheckResourceAttr(resourceName, "cloudfront_zone_id", "Z2FDTNDATAQYW2"),
@@ -133,7 +133,7 @@ func TestAccAPIGatewayDomainName_regionalCertificateARN(t *testing.T) {
 				Config: testAccDomainNameConfig_RegionalCertificateARN(rName, key, certificate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainNameExists(resourceName, &domainName),
-					testAccCheckResourceAttrRegionalARNApigatewayRegionalDomainName(resourceName, "arn", "apigateway", rName),
+					testAccCheckResourceAttrRegionalARNRegionalDomainName(resourceName, "arn", "apigateway", rName),
 					resource.TestCheckResourceAttr(resourceName, "domain_name", rName),
 					acctest.MatchResourceAttrRegionalHostname(resourceName, "regional_domain_name", "execute-api", regexp.MustCompile(`d-[a-z0-9]+`)),
 					resource.TestMatchResourceAttr(resourceName, "regional_zone_id", regexp.MustCompile(`^Z`)),
@@ -179,7 +179,7 @@ func TestAccAPIGatewayDomainName_regionalCertificateName(t *testing.T) {
 				Config: testAccDomainNameConfig_RegionalCertificateName(rName, key, certificate, caCertificate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainNameExists(resourceName, &domainName),
-					testAccCheckResourceAttrRegionalARNApigatewayRegionalDomainName(resourceName, "arn", "apigateway", rName),
+					testAccCheckResourceAttrRegionalARNRegionalDomainName(resourceName, "arn", "apigateway", rName),
 					resource.TestCheckResourceAttr(resourceName, "certificate_body", certificate),
 					resource.TestCheckResourceAttr(resourceName, "certificate_chain", caCertificate),
 					resource.TestCheckResourceAttr(resourceName, "certificate_name", "tf-acc-apigateway-domain-name"),
@@ -298,9 +298,9 @@ func TestAccAPIGatewayDomainName_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAPIGatewayDomainName_mutualTLSAuthentication(t *testing.T) {
+func TestAccAPIGatewayDomainName_MutualTLSAuthentication_basic(t *testing.T) {
 	rootDomain := acctest.ACMCertificateDomainFromEnv(t)
-	domain := acctest.ACMCertificateRandomSubDomain(rootDomain)
+	domain := fmt.Sprintf("%s.%s", acctest.RandomSubdomain(), rootDomain)
 
 	var v apigateway.DomainName
 	resourceName := "aws_api_gateway_domain_name.test"
@@ -315,7 +315,7 @@ func TestAccAPIGatewayDomainName_mutualTLSAuthentication(t *testing.T) {
 		CheckDestroy: testAccCheckDomainNameDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDomainNameConfig_MutualTLSAuthentication(rootDomain, domain, rName),
+				Config: testAccDomainNameConfig_MutualTLSAuthentication(rName, rootDomain, domain),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainNameExists(resourceName, &v),
 					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "apigateway", regexp.MustCompile(`/domainnames/+.`)),
@@ -343,17 +343,17 @@ func TestAccAPIGatewayDomainName_mutualTLSAuthentication(t *testing.T) {
 	})
 }
 
-func TestAccAPIGatewayDomainName_MutualTlsAuthentication_ownership(t *testing.T) {
+func TestAccAPIGatewayDomainName_MutualTLSAuthentication_ownership(t *testing.T) {
 	rootDomain := acctest.ACMCertificateDomainFromEnv(t)
+	domain := fmt.Sprintf("%s.%s", acctest.RandomSubdomain(), rootDomain)
+	key := acctest.TLSRSAPrivateKeyPEM(2048)
+	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(key, domain)
 
 	var v apigateway.DomainName
 	resourceName := "aws_api_gateway_domain_name.test"
 	publicAcmCertificateResourceName := "aws_acm_certificate.test"
-	s3BucketObjectResourceName := "aws_s3_bucket_object.test"
+	s3ObjectResourceName := "aws_s3_object.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	key := acctest.TLSRSAPrivateKeyPEM(2048)
-	domainName := fmt.Sprintf("%s.%s", rName, rootDomain)
-	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(key, domainName)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -362,7 +362,7 @@ func TestAccAPIGatewayDomainName_MutualTlsAuthentication_ownership(t *testing.T)
 		CheckDestroy: testAccCheckDomainNameDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSAPIGatewayDomainNameConfig_MutualTlsOwnership(rootDomain, rName, certificate, key),
+				Config: testAccDomainNameConfig_MutualTlsOwnership(rName, rootDomain, domain, certificate, key),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainNameExists(resourceName, &v),
 					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "apigateway", regexp.MustCompile(`/domainnames/+.`)),
@@ -370,7 +370,7 @@ func TestAccAPIGatewayDomainName_MutualTlsAuthentication_ownership(t *testing.T)
 					resource.TestCheckResourceAttrPair(resourceName, "ownership_verification_certificate_arn", publicAcmCertificateResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "mutual_tls_authentication.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "mutual_tls_authentication.0.truststore_uri", fmt.Sprintf("s3://%s/%s", rName, rName)),
-					resource.TestCheckResourceAttrPair(resourceName, "mutual_tls_authentication.0.truststore_version", s3BucketObjectResourceName, "version_id"),
+					resource.TestCheckResourceAttrPair(resourceName, "mutual_tls_authentication.0.truststore_version", s3ObjectResourceName, "version_id"),
 				),
 			},
 			{
@@ -450,7 +450,7 @@ func testAccCheckEdgeDomainNameExists(resourceName string, domainName *apigatewa
 			return fmt.Errorf("resource ID not set")
 		}
 
-		conn := testAccProviderApigatewayEdgeDomainName.Meta().(*conns.AWSClient).APIGatewayConn
+		conn := testAccProviderEdgeDomainName.Meta().(*conns.AWSClient).APIGatewayConn
 
 		input := &apigateway.GetDomainNameInput{
 			DomainName: aws.String(rs.Primary.ID),
@@ -469,7 +469,7 @@ func testAccCheckEdgeDomainNameExists(resourceName string, domainName *apigatewa
 }
 
 func testAccCheckEdgeDomainNameDestroy(s *terraform.State) error {
-	conn := testAccProviderApigatewayEdgeDomainName.Meta().(*conns.AWSClient).APIGatewayConn
+	conn := testAccProviderEdgeDomainName.Meta().(*conns.AWSClient).APIGatewayConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_api_gateway_domain_name" {
@@ -548,7 +548,7 @@ resource "aws_acm_certificate_validation" "test" {
 
 func testAccDomainNameConfig_CertificateARN(rootDomain string, domain string) string {
 	return acctest.ConfigCompose(
-		testAccApigatewayEdgeDomainNameRegionProviderConfig(),
+		testAccEdgeDomainNameRegionProviderConfig(),
 		testAccDomainNamePublicCertConfig(rootDomain, domain),
 		`
 resource "aws_api_gateway_domain_name" "test" {
@@ -672,7 +672,7 @@ resource "aws_api_gateway_domain_name" "test" {
 `, domainName, acctest.TLSPEMEscapeNewlines(certificate), acctest.TLSPEMEscapeNewlines(key), tagKey1, tagValue1, tagKey2, tagValue2)
 }
 
-func testAccDomainNameConfig_MutualTLSAuthentication(rootDomain, domain, rName string) string {
+func testAccDomainNameConfig_MutualTLSAuthentication(rName, rootDomain, domain string) string {
 	return acctest.ConfigCompose(
 		testAccDomainNamePublicCertConfig(rootDomain, domain),
 		fmt.Sprintf(`
@@ -708,6 +708,8 @@ resource "aws_api_gateway_domain_name" "test" {
     truststore_uri     = "s3://${aws_s3_object.test.bucket}/${aws_s3_object.test.key}"
     truststore_version = aws_s3_object.test.version_id
   }
+
+  depends_on = [aws_s3_bucket_versioning.test]
 }
 `, rName))
 }
@@ -728,9 +730,7 @@ resource "aws_api_gateway_domain_name" "test" {
 `)
 }
 
-func testAccAWSAPIGatewayDomainNameConfig_MutualTlsOwnership(rootDomain, rName, certificate, key string) string {
-	domain := fmt.Sprintf("%s.%s", rName, rootDomain)
-
+func testAccDomainNameConfig_MutualTlsOwnership(rName, rootDomain, domain, certificate, key string) string {
 	return acctest.ConfigCompose(
 		testAccDomainNamePublicCertConfig(rootDomain, domain),
 		fmt.Sprintf(`
@@ -738,13 +738,16 @@ resource "aws_s3_bucket" "test" {
   bucket = %[1]q
 
   force_destroy = true
+}
 
-  versioning {
-    enabled = true
+resource "aws_s3_bucket_versioning" "test" {
+  bucket = aws_s3_bucket.test.id
+  versioning_configuration {
+    status = "Enabled"
   }
 }
 
-resource "aws_s3_bucket_object" "test" {
+resource "aws_s3_object" "test" {
   bucket = aws_s3_bucket.test.id
   key    = %[1]q
   source = "test-fixtures/apigateway-domain-name-truststore-1.pem"
@@ -770,9 +773,11 @@ resource "aws_api_gateway_domain_name" "test" {
   }
 
   mutual_tls_authentication {
-    truststore_uri     = "s3://${aws_s3_bucket_object.test.bucket}/${aws_s3_bucket_object.test.key}"
-    truststore_version = aws_s3_bucket_object.test.version_id
+    truststore_uri     = "s3://${aws_s3_object.test.bucket}/${aws_s3_object.test.key}"
+    truststore_version = aws_s3_object.test.version_id
   }
+
+  depends_on = [aws_s3_bucket_versioning.test]
 }
 `, rName, certificate, key))
 }
