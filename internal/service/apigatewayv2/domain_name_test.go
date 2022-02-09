@@ -312,7 +312,7 @@ func TestAccAPIGatewayV2DomainName_mutualTLSAuthentication(t *testing.T) {
 	})
 }
 
-func TestAccAWSAPIGatewayV2DomainName_MutualTLSAuthentication_ownership(t *testing.T) {
+func TestAccAPIGatewayV2DomainName_MutualTLSAuthentication_ownership(t *testing.T) {
 	rootDomain := acctest.ACMCertificateDomainFromEnv(t)
 
 	var v apigatewayv2.GetDomainNameOutput
