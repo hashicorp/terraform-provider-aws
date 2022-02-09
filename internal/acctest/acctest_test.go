@@ -906,8 +906,12 @@ provider "aws" {
 
 resource "aws_s3_bucket" "test" {
   bucket        = %[2]q
-  acl           = "private"
   force_destroy = true
+}
+
+resource "aws_s3_bucket_acl" "test" {
+  bucket = aws_s3_bucket.test.id
+  acl    = "private"
 }
 `, endpoint, rName))
 }

@@ -13,11 +13,11 @@ func TestValidTimeDuration(t *testing.T) {
 	}{
 		{
 			val:         "",
-			expectedErr: regexp.MustCompile(`cannot be parsed as a valid time.Duration`),
+			expectedErr: regexp.MustCompile(`cannot be parsed as a duration`),
 		},
 		{
 			val:         "1",
-			expectedErr: regexp.MustCompile(`cannot be parsed as a valid time.Duration`),
+			expectedErr: regexp.MustCompile(`cannot be parsed as a duration`),
 		},
 		{
 			val: "-10h",

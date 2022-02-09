@@ -335,7 +335,7 @@ In addition to [generic `provider` arguments](https://www.terraform.io/docs/conf
 
 The `assume_role` configuration block supports the following optional arguments:
 
-* `duration` - (Optional, Conflicts with `duration_seconds`) The assume role duration represented as a string such as `300ms`, `-1.5h` or `2h45m`. Valid time units are `ns`, `us` (or `µs`), `ms`, `s`, `m`, `h`.
+* `duration` - (Optional, Conflicts with `duration_seconds`) Duration of the assume role session. You can provide a value from 15 minutes up to the maximum session duration setting for the role. Represented by a string such as `1h`, `2h45m`, or `30m15s`.
 * `duration_seconds` - (Optional, **Deprecated** use `duration` instead) Number of seconds to restrict the assume role session duration. You can provide a value from 900 seconds (15 minutes) up to the maximum session duration setting for the role.
 * `external_id` - (Optional) External identifier to use when assuming the role.
 * `policy` - (Optional) IAM Policy JSON describing further restricting permissions for the IAM Role being assumed.
