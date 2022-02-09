@@ -250,20 +250,42 @@ func WaitClientVPNNetworkAssociationDeleted(conn *ec2.EC2, associationID, endpoi
 }
 
 const (
+	ClientVPNRouteCreatedTimeout = 1 * time.Minute
 	ClientVPNRouteDeletedTimeout = 1 * time.Minute
 )
 
-func WaitClientVPNRouteDeleted(conn *ec2.EC2, routeID string) (*ec2.ClientVpnRoute, error) {
+func WaitClientVPNRouteCreated(conn *ec2.EC2, endpointID, targetSubnetID, destinationCIDR string, timeout time.Duration) (*ec2.ClientVpnRoute, error) {
 	stateConf := &resource.StateChangeConf{
-		Pending: []string{ec2.ClientVpnRouteStatusCodeActive, ec2.ClientVpnRouteStatusCodeDeleting},
-		Target:  []string{},
-		Refresh: StatusClientVPNRoute(conn, routeID),
-		Timeout: ClientVPNRouteDeletedTimeout,
+		Pending: []string{ec2.ClientVpnRouteStatusCodeCreating},
+		Target:  []string{ec2.ClientVpnRouteStatusCodeActive},
+		Refresh: StatusClientVPNRoute(conn, endpointID, targetSubnetID, destinationCIDR),
+		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForState()
 
 	if output, ok := outputRaw.(*ec2.ClientVpnRoute); ok {
+		tfresource.SetLastError(err, errors.New(aws.StringValue(output.Status.Message)))
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func WaitClientVPNRouteDeleted(conn *ec2.EC2, endpointID, targetSubnetID, destinationCIDR string, timeout time.Duration) (*ec2.ClientVpnRoute, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{ec2.ClientVpnRouteStatusCodeActive, ec2.ClientVpnRouteStatusCodeDeleting},
+		Target:  []string{},
+		Refresh: StatusClientVPNRoute(conn, endpointID, targetSubnetID, destinationCIDR),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*ec2.ClientVpnRoute); ok {
+		tfresource.SetLastError(err, errors.New(aws.StringValue(output.Status.Message)))
+
 		return output, err
 	}
 
@@ -291,7 +313,6 @@ func WaitInstanceIAMInstanceProfileUpdated(conn *ec2.EC2, instanceID string, exp
 const ManagedPrefixListEntryCreateTimeout = 5 * time.Minute
 
 const (
-	NetworkACLPropagationTimeout      = 2 * time.Minute
 	NetworkACLEntryPropagationTimeout = 5 * time.Minute
 )
 

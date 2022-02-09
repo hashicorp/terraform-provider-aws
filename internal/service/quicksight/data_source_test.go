@@ -466,9 +466,13 @@ func testAccBaseDataSourceConfig(rName string) string {
 data "aws_partition" "current" {}
 
 resource "aws_s3_bucket" "test" {
-  acl           = "public-read"
   bucket        = %[1]q
   force_destroy = true
+}
+
+resource "aws_s3_bucket_acl" "test" {
+  bucket = aws_s3_bucket.test.id
+  acl    = "public-read"
 }
 
 resource "aws_s3_object" "test" {

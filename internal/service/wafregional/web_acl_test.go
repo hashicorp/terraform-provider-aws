@@ -794,6 +794,10 @@ resource "aws_wafregional_web_acl" "test" {
 
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
+}
+
+resource "aws_s3_bucket_acl" "test" {
+  bucket = aws_s3_bucket.test.id
   acl    = "private"
 }
 
@@ -848,6 +852,10 @@ resource "aws_wafregional_web_acl" "test" {
 
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
+}
+
+resource "aws_s3_bucket_acl" "test" {
+  bucket = aws_s3_bucket.test.id
   acl    = "private"
 }
 

@@ -23,6 +23,10 @@ import (
 )
 
 func TestAccElasticsearchDomain_basic(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var domain elasticsearch.ElasticsearchDomainStatus
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_elasticsearch_domain.test"
@@ -88,6 +92,10 @@ func TestAccElasticsearchDomain_requireHTTPS(t *testing.T) {
 }
 
 func TestAccElasticsearchDomain_customEndpoint(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var domain elasticsearch.ElasticsearchDomainStatus
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_elasticsearch_domain.test"
@@ -294,6 +302,10 @@ func TestAccElasticsearchDomain_withDedicatedMaster(t *testing.T) {
 }
 
 func TestAccElasticsearchDomain_duplicate(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var domain elasticsearch.ElasticsearchDomainStatus
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_elasticsearch_domain.test"
@@ -343,6 +355,10 @@ func TestAccElasticsearchDomain_duplicate(t *testing.T) {
 }
 
 func TestAccElasticsearchDomain_v23(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var domain elasticsearch.ElasticsearchDomainStatus
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_elasticsearch_domain.test"
@@ -372,6 +388,10 @@ func TestAccElasticsearchDomain_v23(t *testing.T) {
 }
 
 func TestAccElasticsearchDomain_complex(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var domain elasticsearch.ElasticsearchDomainStatus
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_elasticsearch_domain.test"
@@ -399,6 +419,10 @@ func TestAccElasticsearchDomain_complex(t *testing.T) {
 }
 
 func TestAccElasticsearchDomain_vpc(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var domain elasticsearch.ElasticsearchDomainStatus
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_elasticsearch_domain.test"
@@ -461,6 +485,10 @@ func TestAccElasticsearchDomain_VPC_update(t *testing.T) {
 }
 
 func TestAccElasticsearchDomain_internetToVPCEndpoint(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var domain elasticsearch.ElasticsearchDomainStatus
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_elasticsearch_domain.test"
@@ -494,6 +522,10 @@ func TestAccElasticsearchDomain_internetToVPCEndpoint(t *testing.T) {
 }
 
 func TestAccElasticsearchDomain_AutoTuneOptions(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var domain elasticsearch.ElasticsearchDomainStatus
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	autoTuneStartAtTime := testAccGetValidStartAtTime(t, "24h")
@@ -534,6 +566,10 @@ func TestAccElasticsearchDomain_AutoTuneOptions(t *testing.T) {
 }
 
 func TestAccElasticsearchDomain_AdvancedSecurityOptions_userDB(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var domain elasticsearch.ElasticsearchDomainStatus
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_elasticsearch_domain.test"
@@ -567,6 +603,10 @@ func TestAccElasticsearchDomain_AdvancedSecurityOptions_userDB(t *testing.T) {
 }
 
 func TestAccElasticsearchDomain_AdvancedSecurityOptions_iam(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var domain elasticsearch.ElasticsearchDomainStatus
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_elasticsearch_domain.test"
@@ -600,6 +640,10 @@ func TestAccElasticsearchDomain_AdvancedSecurityOptions_iam(t *testing.T) {
 }
 
 func TestAccElasticsearchDomain_AdvancedSecurityOptions_disabled(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var domain elasticsearch.ElasticsearchDomainStatus
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_elasticsearch_domain.test"
@@ -633,6 +677,10 @@ func TestAccElasticsearchDomain_AdvancedSecurityOptions_disabled(t *testing.T) {
 }
 
 func TestAccElasticsearchDomain_LogPublishingOptions_indexSlowLogs(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var domain elasticsearch.ElasticsearchDomainStatus
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_elasticsearch_domain.test"
@@ -664,6 +712,10 @@ func TestAccElasticsearchDomain_LogPublishingOptions_indexSlowLogs(t *testing.T)
 }
 
 func TestAccElasticsearchDomain_LogPublishingOptions_searchSlowLogs(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var domain elasticsearch.ElasticsearchDomainStatus
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_elasticsearch_domain.test"
@@ -695,6 +747,10 @@ func TestAccElasticsearchDomain_LogPublishingOptions_searchSlowLogs(t *testing.T
 }
 
 func TestAccElasticsearchDomain_LogPublishingOptions_esApplicationLogs(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var domain elasticsearch.ElasticsearchDomainStatus
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_elasticsearch_domain.test"
@@ -726,6 +782,10 @@ func TestAccElasticsearchDomain_LogPublishingOptions_esApplicationLogs(t *testin
 }
 
 func TestAccElasticsearchDomain_LogPublishingOptions_auditLogs(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var domain elasticsearch.ElasticsearchDomainStatus
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_elasticsearch_domain.test"
@@ -759,6 +819,10 @@ func TestAccElasticsearchDomain_LogPublishingOptions_auditLogs(t *testing.T) {
 }
 
 func TestAccElasticsearchDomain_cognitoOptionsCreateAndRemove(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var domain elasticsearch.ElasticsearchDomainStatus
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_elasticsearch_domain.test"
@@ -798,6 +862,10 @@ func TestAccElasticsearchDomain_cognitoOptionsCreateAndRemove(t *testing.T) {
 }
 
 func TestAccElasticsearchDomain_cognitoOptionsUpdate(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var domain elasticsearch.ElasticsearchDomainStatus
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_elasticsearch_domain.test"
@@ -837,6 +905,10 @@ func TestAccElasticsearchDomain_cognitoOptionsUpdate(t *testing.T) {
 }
 
 func TestAccElasticsearchDomain_policy(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var domain elasticsearch.ElasticsearchDomainStatus
 	resourceName := "aws_elasticsearch_domain.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -864,6 +936,10 @@ func TestAccElasticsearchDomain_policy(t *testing.T) {
 }
 
 func TestAccElasticsearchDomain_policyIgnoreEquivalent(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var domain elasticsearch.ElasticsearchDomainStatus
 	resourceName := "aws_elasticsearch_domain.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -889,6 +965,10 @@ func TestAccElasticsearchDomain_policyIgnoreEquivalent(t *testing.T) {
 }
 
 func TestAccElasticsearchDomain_EncryptAtRestDefault_key(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var domain elasticsearch.ElasticsearchDomainStatus
 	resourceName := "aws_elasticsearch_domain.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -917,6 +997,10 @@ func TestAccElasticsearchDomain_EncryptAtRestDefault_key(t *testing.T) {
 }
 
 func TestAccElasticsearchDomain_EncryptAtRestSpecify_key(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var domain elasticsearch.ElasticsearchDomainStatus
 	resourceName := "aws_elasticsearch_domain.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -945,6 +1029,10 @@ func TestAccElasticsearchDomain_EncryptAtRestSpecify_key(t *testing.T) {
 }
 
 func TestAccElasticsearchDomain_nodeToNodeEncryption(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var domain elasticsearch.ElasticsearchDomainStatus
 	resourceName := "aws_elasticsearch_domain.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -973,6 +1061,10 @@ func TestAccElasticsearchDomain_nodeToNodeEncryption(t *testing.T) {
 }
 
 func TestAccElasticsearchDomain_tags(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var domain elasticsearch.ElasticsearchDomainStatus
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_elasticsearch_domain.test"
@@ -1019,6 +1111,10 @@ func TestAccElasticsearchDomain_tags(t *testing.T) {
 }
 
 func TestAccElasticsearchDomain_update(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var input elasticsearch.ElasticsearchDomainStatus
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_elasticsearch_domain.test"
@@ -1055,6 +1151,10 @@ func TestAccElasticsearchDomain_update(t *testing.T) {
 }
 
 func TestAccElasticsearchDomain_UpdateVolume_type(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var input elasticsearch.ElasticsearchDomainStatus
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_elasticsearch_domain.test"
@@ -1099,6 +1199,10 @@ func TestAccElasticsearchDomain_UpdateVolume_type(t *testing.T) {
 
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/13867
 func TestAccElasticsearchDomain_WithVolumeType_missing(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var domain elasticsearch.ElasticsearchDomainStatus
 	resourceName := "aws_elasticsearch_domain.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -1110,7 +1214,7 @@ func TestAccElasticsearchDomain_WithVolumeType_missing(t *testing.T) {
 		CheckDestroy: testAccCheckDomainDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDomainConfigWithDisabledEBSAndVolumeType(rName, ""),
+				Config: testAccDomainConfigWithDisabledEBSNullVolumeType(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(resourceName, &domain),
 					resource.TestCheckResourceAttr(resourceName, "cluster_config.#", "1"),
@@ -1176,6 +1280,10 @@ func TestAccElasticsearchDomain_Update_version(t *testing.T) {
 }
 
 func TestAccElasticsearchDomain_disappears(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_elasticsearch_domain.test"
 
@@ -1493,7 +1601,7 @@ resource "aws_elasticsearch_domain" "test" {
 `, rName, autoTuneStartAtTime)
 }
 
-func testAccDomainConfigWithDisabledEBSAndVolumeType(rName, volumeType string) string {
+func testAccDomainConfigWithDisabledEBSNullVolumeType(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_elasticsearch_domain" "test" {
   domain_name           = substr(%[1]q, 0, 28)
@@ -1507,10 +1615,10 @@ resource "aws_elasticsearch_domain" "test" {
   ebs_options {
     ebs_enabled = false
     volume_size = 0
-    volume_type = %[2]q
+    volume_type = null
   }
 }
-`, rName, volumeType)
+`, rName)
 }
 
 func testAccDomainConfig_DomainEndpointOptions(rName string, enforceHttps bool, tlsSecurityPolicy string) string {

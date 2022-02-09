@@ -1075,78 +1075,51 @@ func sweepNetworkACLs(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
+	input := &ec2.DescribeNetworkAclsInput{}
 	conn := client.(*conns.AWSClient).EC2Conn
+	sweepResources := make([]*sweep.SweepResource, 0)
 
-	req := &ec2.DescribeNetworkAclsInput{}
-	resp, err := conn.DescribeNetworkAcls(req)
-	if err != nil {
-		if sweep.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping EC2 Network ACL sweep for %s: %s", region, err)
-			return nil
+	err = conn.DescribeNetworkAclsPages(input, func(page *ec2.DescribeNetworkAclsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
 		}
-		return fmt.Errorf("Error describing Network ACLs: %s", err)
-	}
 
-	if len(resp.NetworkAcls) == 0 {
-		log.Print("[DEBUG] No Network ACLs to sweep")
-		return nil
-	}
-
-	for _, nacl := range resp.NetworkAcls {
-		// Delete rules first
-		for _, entry := range nacl.Entries {
-			// These are the rule numbers for IPv4 and IPv6 "ALL traffic" rules which cannot be deleted
-			if aws.Int64Value(entry.RuleNumber) == 32767 || aws.Int64Value(entry.RuleNumber) == 32768 {
-				log.Printf("[DEBUG] Skipping Network ACL rule: %q / %d", *nacl.NetworkAclId, *entry.RuleNumber)
+		for _, v := range page.NetworkAcls {
+			if aws.BoolValue(v.IsDefault) {
 				continue
 			}
 
-			log.Printf("[INFO] Deleting Network ACL rule: %q / %d", *nacl.NetworkAclId, *entry.RuleNumber)
-			_, err := conn.DeleteNetworkAclEntry(&ec2.DeleteNetworkAclEntryInput{
-				NetworkAclId: nacl.NetworkAclId,
-				Egress:       entry.Egress,
-				RuleNumber:   entry.RuleNumber,
-			})
-			if err != nil {
-				return fmt.Errorf(
-					"Error deleting Network ACL rule (%s / %d): %s",
-					*nacl.NetworkAclId, *entry.RuleNumber, err)
+			r := ResourceNetworkACL()
+			d := r.Data(nil)
+			d.SetId(aws.StringValue(v.NetworkAclId))
+
+			var subnetIDs []string
+			for _, v := range v.Associations {
+				subnetIDs = append(subnetIDs, aws.StringValue(v.SubnetId))
 			}
+			d.Set("subnet_ids", subnetIDs)
+
+			d.Set("vpc_id", v.VpcId)
+
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
 
-		// Disassociate subnets
-		log.Printf("[DEBUG] Found %d Network ACL associations for %q", len(nacl.Associations), *nacl.NetworkAclId)
-		for _, a := range nacl.Associations {
-			log.Printf("[DEBUG] Replacing subnet associations for Network ACL %q", *nacl.NetworkAclId)
-			defaultAcl, err := GetDefaultNetworkACL(*nacl.VpcId, conn)
-			if err != nil {
-				return fmt.Errorf("Failed to find default Network ACL for VPC %q", *nacl.VpcId)
-			}
-			_, err = conn.ReplaceNetworkAclAssociation(&ec2.ReplaceNetworkAclAssociationInput{
-				NetworkAclId:  defaultAcl.NetworkAclId,
-				AssociationId: a.NetworkAclAssociationId,
-			})
-			if err != nil {
-				return fmt.Errorf("Failed to replace subnet association for Network ACL %q: %s",
-					*nacl.NetworkAclId, err)
-			}
-		}
+		return !lastPage
+	})
 
-		// Default Network ACLs will be deleted along with VPC
-		if *nacl.IsDefault {
-			log.Printf("[DEBUG] Skipping default Network ACL: %q", *nacl.NetworkAclId)
-			continue
-		}
+	if sweep.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping EC2 Network ACL sweep for %s: %s", region, err)
+		return nil
+	}
 
-		log.Printf("[INFO] Deleting Network ACL: %q", *nacl.NetworkAclId)
-		_, err := conn.DeleteNetworkAcl(&ec2.DeleteNetworkAclInput{
-			NetworkAclId: nacl.NetworkAclId,
-		})
-		if err != nil {
-			return fmt.Errorf(
-				"Error deleting Network ACL (%s): %s",
-				*nacl.NetworkAclId, err)
-		}
+	if err != nil {
+		return fmt.Errorf("error listing EC2 Network ACLs (%s): %w", region, err)
+	}
+
+	err = sweep.SweepOrchestrator(sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("error sweeping EC2 Network ACLs (%s): %w", region, err)
 	}
 
 	return nil

@@ -397,12 +397,6 @@ func testAccBucketServerSideEncryptionConfigurationBasicConfig(rName string) str
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
-
-  lifecycle {
-    ignore_changes = [
-      server_side_encryption_configuration
-    ]
-  }
 }
 
 resource "aws_s3_bucket_server_side_encryption_configuration" "test" {
@@ -422,12 +416,6 @@ resource "aws_kms_key" "test" {
 
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
-
-  lifecycle {
-    ignore_changes = [
-      server_side_encryption_configuration
-    ]
-  }
 }
 
 resource "aws_s3_bucket_server_side_encryption_configuration" "test" {
@@ -452,12 +440,6 @@ resource "aws_kms_key" "test" {
 
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
-
-  lifecycle {
-    ignore_changes = [
-      server_side_encryption_configuration
-    ]
-  }
 }
 
 resource "aws_s3_bucket_server_side_encryption_configuration" "test" {
@@ -477,12 +459,6 @@ func testAccBucketServerSideEncryptionConfigurationConfig_ApplySSEByDefault_SSEA
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
-
-  lifecycle {
-    ignore_changes = [
-      server_side_encryption_configuration
-    ]
-  }
 }
 
 resource "aws_s3_bucket_server_side_encryption_configuration" "test" {
@@ -501,12 +477,6 @@ func testAccBucketServerSideEncryptionConfigurationConfig_BucketKeyEnabled(rName
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
-
-  lifecycle {
-    ignore_changes = [
-      server_side_encryption_configuration
-    ]
-  }
 }
 
 resource "aws_s3_bucket_server_side_encryption_configuration" "test" {
@@ -528,12 +498,6 @@ resource "aws_kms_key" "test" {
 
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
-
-  lifecycle {
-    ignore_changes = [
-      server_side_encryption_configuration
-    ]
-  }
 }
 
 resource "aws_s3_bucket_server_side_encryption_configuration" "test" {

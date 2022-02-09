@@ -1718,26 +1718,29 @@ func (c *Config) Client() (interface{}, error) {
 	})
 
 	client.EC2Conn.Handlers.Retry.PushBack(func(r *request.Request) {
-		if r.Operation.Name == "CreateClientVpnEndpoint" {
-			if tfawserr.ErrMessageContains(r.Error, "OperationNotPermitted", "Endpoint cannot be created while another endpoint is being created") {
+		switch err := r.Error; r.Operation.Name {
+		case "AttachVpnGateway", "DetachVpnGateway":
+			if tfawserr.ErrMessageContains(err, "InvalidParameterValue", "This call cannot be completed because there are pending VPNs or Virtual Interfaces") {
 				r.Retryable = aws.Bool(true)
 			}
-		}
 
-		if r.Operation.Name == "CreateVpnConnection" {
-			if tfawserr.ErrMessageContains(r.Error, "VpnConnectionLimitExceeded", "maximum number of mutating objects has been reached") {
+		case "CreateClientVpnEndpoint":
+			if tfawserr.ErrMessageContains(err, "OperationNotPermitted", "Endpoint cannot be created while another endpoint is being created") {
 				r.Retryable = aws.Bool(true)
 			}
-		}
 
-		if r.Operation.Name == "CreateVpnGateway" {
-			if tfawserr.ErrMessageContains(r.Error, "VpnGatewayLimitExceeded", "maximum number of mutating objects has been reached") {
+		case "CreateClientVpnRoute", "DeleteClientVpnRoute":
+			if tfawserr.ErrMessageContains(err, "ConcurrentMutationLimitExceeded", "Cannot initiate another change for this endpoint at this time") {
 				r.Retryable = aws.Bool(true)
 			}
-		}
 
-		if r.Operation.Name == "AttachVpnGateway" || r.Operation.Name == "DetachVpnGateway" {
-			if tfawserr.ErrMessageContains(r.Error, "InvalidParameterValue", "This call cannot be completed because there are pending VPNs or Virtual Interfaces") {
+		case "CreateVpnConnection":
+			if tfawserr.ErrMessageContains(err, "VpnConnectionLimitExceeded", "maximum number of mutating objects has been reached") {
+				r.Retryable = aws.Bool(true)
+			}
+
+		case "CreateVpnGateway":
+			if tfawserr.ErrMessageContains(err, "VpnGatewayLimitExceeded", "maximum number of mutating objects has been reached") {
 				r.Retryable = aws.Bool(true)
 			}
 		}

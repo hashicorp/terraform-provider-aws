@@ -548,13 +548,19 @@ func testAccBucketObjectDataSourceConfig_allParams(randInt int) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "object_bucket" {
   bucket = "tf-object-test-bucket-%[1]d"
+}
 
-  versioning {
-    enabled = true
+resource "aws_s3_bucket_versioning" "test" {
+  bucket = aws_s3_bucket.object_bucket.id
+  versioning_configuration {
+    status = "Enabled"
   }
 }
 
 resource "aws_s3_object" "object" {
+  # Must have bucket versioning enabled first
+  depends_on = [aws_s3_bucket_versioning.test]
+
   bucket = aws_s3_bucket.object_bucket.bucket
   key    = "tf-testing-obj-%[1]d-all-params"
 
@@ -586,16 +592,22 @@ func testAccBucketObjectDataSourceConfig_objectLockLegalHoldOff(randInt int) str
 resource "aws_s3_bucket" "object_bucket" {
   bucket = "tf-object-test-bucket-%[1]d"
 
-  versioning {
-    enabled = true
-  }
-
   object_lock_configuration {
     object_lock_enabled = "Enabled"
   }
 }
 
+resource "aws_s3_bucket_versioning" "test" {
+  bucket = aws_s3_bucket.object_bucket.id
+  versioning_configuration {
+    status = "Enabled"
+  }
+}
+
 resource "aws_s3_object" "object" {
+  # Must have bucket versioning enabled first
+  depends_on = [aws_s3_bucket_versioning.test]
+
   bucket                        = aws_s3_bucket.object_bucket.bucket
   key                           = "tf-testing-obj-%[1]d"
   content                       = "Hello World"
@@ -614,16 +626,22 @@ func testAccBucketObjectDataSourceConfig_objectLockLegalHoldOn(randInt int, reta
 resource "aws_s3_bucket" "object_bucket" {
   bucket = "tf-object-test-bucket-%[1]d"
 
-  versioning {
-    enabled = true
-  }
-
   object_lock_configuration {
     object_lock_enabled = "Enabled"
   }
 }
 
+resource "aws_s3_bucket_versioning" "test" {
+  bucket = aws_s3_bucket.object_bucket.id
+  versioning_configuration {
+    status = "Enabled"
+  }
+}
+
 resource "aws_s3_object" "object" {
+  # Must have bucket versioning enabled first
+  depends_on = [aws_s3_bucket_versioning.test]
+
   bucket                        = aws_s3_bucket.object_bucket.bucket
   key                           = "tf-testing-obj-%[1]d"
   content                       = "Hello World"

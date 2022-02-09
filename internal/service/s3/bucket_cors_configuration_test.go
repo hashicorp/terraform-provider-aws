@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfs3 "github.com/hashicorp/terraform-provider-aws/internal/service/s3"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func TestAccS3BucketCorsConfiguration_basic(t *testing.T) {
@@ -283,13 +284,15 @@ func testAccCheckBucketCorsConfigurationExists(resourceName string) resource.Tes
 			input.ExpectedBucketOwner = aws.String(expectedBucketOwner)
 		}
 
-		output, err := conn.GetBucketCors(input)
+		corsResponse, err := verify.RetryOnAWSCode(tfs3.ErrCodeNoSuchCORSConfiguration, func() (interface{}, error) {
+			return conn.GetBucketCors(input)
+		})
 
 		if err != nil {
 			return fmt.Errorf("error getting S3 Bucket CORS configuration (%s): %w", rs.Primary.ID, err)
 		}
 
-		if output == nil || len(output.CORSRules) == 0 {
+		if output, ok := corsResponse.(*s3.GetBucketCorsOutput); !ok || output == nil || len(output.CORSRules) == 0 {
 			return fmt.Errorf("S3 Bucket CORS configuration (%s) not found", rs.Primary.ID)
 		}
 
@@ -301,12 +304,6 @@ func testAccBucketCorsConfigurationBasicConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
-
-  lifecycle {
-    ignore_changes = [
-      cors_rule
-    ]
-  }
 }
 
 resource "aws_s3_bucket_cors_configuration" "test" {
@@ -324,12 +321,6 @@ func testAccBucketCorsConfigurationCompleteConfig_SingleRule(rName string) strin
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
-
-  lifecycle {
-    ignore_changes = [
-      cors_rule
-    ]
-  }
 }
 
 resource "aws_s3_bucket_cors_configuration" "test" {
@@ -351,12 +342,6 @@ func testAccBucketCorsConfigurationConfig_MultipleRules(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
-
-  lifecycle {
-    ignore_changes = [
-      cors_rule
-    ]
-  }
 }
 
 resource "aws_s3_bucket_cors_configuration" "test" {

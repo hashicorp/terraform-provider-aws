@@ -44,14 +44,11 @@ func ResourceMountTarget() *schema.Resource {
 			},
 
 			"ip_address": {
-				Type:     schema.TypeString,
-				Computed: true,
-				Optional: true,
-				ForceNew: true,
-				ValidateFunc: validation.Any(
-					validation.IsIPv4Address,
-					validation.StringIsEmpty,
-				),
+				Type:         schema.TypeString,
+				Computed:     true,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.IsIPv4Address,
 			},
 
 			"security_groups": {

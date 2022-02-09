@@ -419,6 +419,7 @@ func Provider() *schema.Provider {
 			"aws_cloudfront_log_delivery_canonical_user_id": cloudfront.DataSourceLogDeliveryCanonicalUserID(),
 			"aws_cloudfront_origin_access_identity":         cloudfront.DataSourceOriginAccessIdentity(),
 			"aws_cloudfront_origin_request_policy":          cloudfront.DataSourceOriginRequestPolicy(),
+			"aws_cloudfront_realtime_log_config":            cloudfront.DataSourceRealtimeLogConfig(),
 			"aws_cloudfront_response_headers_policy":        cloudfront.DataSourceResponseHeadersPolicy(),
 
 			"aws_cloudhsm_v2_cluster": cloudhsmv2.DataSourceCluster(),
@@ -1047,6 +1048,7 @@ func Provider() *schema.Provider {
 			"aws_cur_report_definition": cur.ResourceReportDefinition(),
 
 			"aws_dataexchange_data_set": dataexchange.ResourceDataSet(),
+			"aws_dataexchange_revision": dataexchange.ResourceRevision(),
 
 			"aws_datapipeline_pipeline":            datapipeline.ResourcePipeline(),
 			"aws_datapipeline_pipeline_definition": datapipeline.ResourcePipelineDefinition(),
@@ -1178,6 +1180,7 @@ func Provider() *schema.Provider {
 			"aws_main_route_table_association":                    ec2.ResourceMainRouteTableAssociation(),
 			"aws_nat_gateway":                                     ec2.ResourceNATGateway(),
 			"aws_network_acl":                                     ec2.ResourceNetworkACL(),
+			"aws_network_acl_association":                         ec2.ResourceNetworkACLAssociation(),
 			"aws_network_acl_rule":                                ec2.ResourceNetworkACLRule(),
 			"aws_network_interface":                               ec2.ResourceNetworkInterface(),
 			"aws_network_interface_attachment":                    ec2.ResourceNetworkInterfaceAttachment(),
@@ -1625,6 +1628,7 @@ func Provider() *schema.Provider {
 
 			"aws_s3_bucket":                                      s3.ResourceBucket(),
 			"aws_s3_bucket_accelerate_configuration":             s3.ResourceBucketAccelerateConfiguration(),
+			"aws_s3_bucket_acl":                                  s3.ResourceBucketAcl(),
 			"aws_s3_bucket_analytics_configuration":              s3.ResourceBucketAnalyticsConfiguration(),
 			"aws_s3_bucket_cors_configuration":                   s3.ResourceBucketCorsConfiguration(),
 			"aws_s3_bucket_intelligent_tiering_configuration":    s3.ResourceBucketIntelligentTieringConfiguration(),
