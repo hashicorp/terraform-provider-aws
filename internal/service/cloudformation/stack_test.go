@@ -833,6 +833,10 @@ data "aws_region" "current" {}
 
 resource "aws_s3_bucket" "b" {
   bucket = %[1]q
+}
+
+resource "aws_s3_bucket_acl" "b" {
+  bucket = aws_s3_bucket.b.id
   acl    = "public-read"
 }
 
@@ -894,6 +898,10 @@ data "aws_region" "current" {}
 
 resource "aws_s3_bucket" "b" {
   bucket = %[1]q
+}
+
+resource "aws_s3_bucket_acl" "b" {
+  bucket = aws_s3_bucket.b.id
   acl    = "public-read"
 }
 
