@@ -808,7 +808,7 @@ func IsMulticastAddress(i interface{}, k string) (warnings []string, errors []er
 	}
 
 	ip := net.ParseIP(v)
-	if multicast := ip.IsMulticast(); multicast == false {
+	if multicast := ip.IsMulticast(); !multicast {
 		errors = append(errors, fmt.Errorf("expected %s to contain a valid Multicast address, got: %s", k, v))
 	}
 
