@@ -318,7 +318,7 @@ func Provider() *schema.Provider {
 			"shared_config_files": {
 				Type:        schema.TypeList,
 				Optional:    true,
-				Description: "List of paths to shared config files. If not set, defaults to ~/.aws/config.",
+				Description: "List of paths to shared config files. If not set, defaults to [~/.aws/config].",
 				Elem:        &schema.Schema{Type: schema.TypeString},
 			},
 			"shared_credentials_file": {
@@ -333,7 +333,7 @@ func Provider() *schema.Provider {
 				Type:          schema.TypeList,
 				Optional:      true,
 				ConflictsWith: []string{"shared_credentials_file"},
-				Description:   "List of paths to shared credentials files. If not set, defaults to ~/.aws/credentials.",
+				Description:   "List of paths to shared credentials files. If not set, defaults to [~/.aws/credentials].",
 				Elem:          &schema.Schema{Type: schema.TypeString},
 			},
 			"skip_credentials_validation": {
