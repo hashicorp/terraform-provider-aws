@@ -349,7 +349,7 @@ func TestAccAPIGatewayV2DomainName_MutualTLSAuthentication_ownership(t *testing.
 		CheckDestroy: testAccCheckDomainNameDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDomainNameConfigMututalTlsAuthenticationOwnershipVerificationCert(rName, rootDomain, domain, certificate, key),
+				Config: testAccDomainNameConfigMututalTLSAuthenticationOwnershipVerificationCert(rName, rootDomain, domain, certificate, key),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainNameExists(resourceName, &v),
 					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "apigateway", regexp.MustCompile(`/domainnames/+.`)),
@@ -613,7 +613,7 @@ resource "aws_apigatewayv2_domain_name" "test" {
 `)
 }
 
-func testAccDomainNameConfigMututalTlsAuthenticationOwnershipVerificationCert(rName, rootDomain, domain, certificate, key string) string {
+func testAccDomainNameConfigMututalTLSAuthenticationOwnershipVerificationCert(rName, rootDomain, domain, certificate, key string) string {
 	return acctest.ConfigCompose(
 		testAccDomainNamePublicCertConfig(rootDomain, domain),
 		fmt.Sprintf(`

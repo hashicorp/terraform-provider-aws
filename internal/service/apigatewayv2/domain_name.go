@@ -205,16 +205,16 @@ func resourceDomainNameUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		if d.HasChange("mutual_tls_authentication") {
-			vMutualTlsAuthentication := d.Get("mutual_tls_authentication").([]interface{})
+			mutTLSAuth := d.Get("mutual_tls_authentication").([]interface{})
 
-			if len(vMutualTlsAuthentication) == 0 || vMutualTlsAuthentication[0] == nil {
+			if len(mutTLSAuth) == 0 || mutTLSAuth[0] == nil {
 				// To disable mutual TLS for a custom domain name, remove the truststore from your custom domain name.
 				input.MutualTlsAuthentication = &apigatewayv2.MutualTlsAuthenticationInput{
 					TruststoreUri: aws.String(""),
 				}
 			} else {
 				input.MutualTlsAuthentication = &apigatewayv2.MutualTlsAuthenticationInput{
-					TruststoreVersion: aws.String(vMutualTlsAuthentication[0].(map[string]interface{})["truststore_version"].(string)),
+					TruststoreVersion: aws.String(mutTLSAuth[0].(map[string]interface{})["truststore_version"].(string)),
 				}
 			}
 		}
