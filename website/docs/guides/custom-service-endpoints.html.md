@@ -343,6 +343,14 @@ provider "aws" {
 </div>
 <!-- markdownlint-enable MD033 -->
 
+As a convenience, for compatibility with the [Terraform S3 Backend](https://www.terraform.io/language/settings/backends/s3),
+the following service endpoints can be configured using environment variables:
+
+* DynamoDB: `TF_AWS_DYNAMODB_ENDPOINT` (or **Deprecated** `AWS_DYNAMODB_ENDPOINT`)
+* IAM: `TF_AWS_IAM_ENDPOINT` (or **Deprecated** `AWS_IAM_ENDPOINT`)
+* S3: `TF_AWS_S3_ENDPOINT` (or **Deprecated** `AWS_S3_ENDPOINT`)
+* STS: `TF_AWS_STS_ENDPOINT` (or **Deprecated** `AWS_STS_ENDPOINT`)
+
 ## Connecting to Local AWS Compatible Solutions
 
 ~> **NOTE:** This information is not intended to be exhaustive for all local AWS compatible solutions or necessarily authoritative configurations for those documented. Check the documentation for each of these solutions for the most up to date information.
