@@ -13,6 +13,7 @@ const (
 	bucketCreatedTimeout                          = 2 * time.Minute
 	propagationTimeout                            = 1 * time.Minute
 	lifecycleConfigurationRulesPropagationTimeout = 2 * time.Minute
+	bucketVersioningStableTimeout                 = 1 * time.Minute
 
 	// LifecycleConfigurationRulesStatusReady occurs when all configured rules reach their desired state (Enabled or Disabled)
 	LifecycleConfigurationRulesStatusReady = "READY"
@@ -35,4 +36,26 @@ func waitForLifecycleConfigurationRulesStatus(ctx context.Context, conn *s3.S3, 
 	_, err := stateConf.WaitForState()
 
 	return err
+}
+
+func waitForBucketVersioningStatus(ctx context.Context, conn *s3.S3, bucket, expectedBucketOwner string) (*s3.GetBucketVersioningOutput, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending:                   []string{""},
+		Target:                    []string{s3.BucketVersioningStatusEnabled, s3.BucketVersioningStatusSuspended},
+		Refresh:                   bucketVersioningStatus(ctx, conn, bucket, expectedBucketOwner),
+		Timeout:                   bucketVersioningStableTimeout,
+		ContinuousTargetOccurence: 3,
+		NotFoundChecks:            3,
+		Delay:                     1 * time.Second,
+	}
+
+	_, err := stateConf.WaitForState()
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*s3.GetBucketVersioningOutput); ok {
+		return output, err
+	}
+
+	return nil, err
 }
