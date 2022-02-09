@@ -134,8 +134,17 @@ func resourceReplicationConfigurationRead(d *schema.ResourceData, meta interface
 
 	replication := output.Replications[0] //TODO error checking and such
 	destination := flattenEfsReplicationConfigurationDestination(replication.Destinations[0])
-	dests := d.Get("destinations").([]interface{})
-	dest := dests[0].(map[string]interface{})
+	log.Printf("[DEBUG] destination object: %s", destination)
+
+	dest := make(map[string]interface{})
+	if v, ok := d.GetOk("destinations"); ok {
+		val := v.([]interface{})
+		log.Printf("[DEBUG] val object: %s", val)
+		if len(val) > 0 {
+			log.Printf("[DEBUG] val object[0]: %s", val[0])
+			dest = val[0].(map[string]interface{})
+		}
+	}
 
 	if v, ok := dest["availability_zone_name"]; ok {
 		destination["availability_zone_name"] = v
@@ -144,6 +153,28 @@ func resourceReplicationConfigurationRead(d *schema.ResourceData, meta interface
 	if v, ok := dest["kms_key_id"]; ok {
 		destination["kms_key_id"] = v
 	}
+
+	/*
+		// Create new connection for the region of the destination file system
+		session, sessionErr := conns.NewSessionForRegion(&conn.Config, *destination["region"].(*string), meta.(*conns.AWSClient).TerraformVersion)
+
+		if sessionErr != nil {
+			return fmt.Errorf("error creating AWS session: %w", sessionErr)
+		}
+
+		altConn := efs.New(session)
+		destinationFsConfiguration, err := FindFileSystemByID(altConn, *destination["file_system_id"].(*string))
+
+
+		if v := destinationFsConfiguration.AvailabilityZoneName; v != nil && len(v) > 0 {
+			destination["availability_zone_name"] = v
+		}
+
+		if v := destinationFsConfiguration.KmsKeyId; v != nil && len(v) > 0 {
+			// TODO logic to be able to handle the different formats that kms_key_id could be (arn, id, alias, alias arn)
+			destination["kms_key_id"] = v
+		}
+	*/
 
 	if err := d.Set("destinations", []interface{}{destination}); err != nil {
 		return fmt.Errorf("error setting destinations: %w", err)

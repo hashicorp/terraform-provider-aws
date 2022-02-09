@@ -5,9 +5,7 @@ import (
 	"regexp"
 	"testing"
 
-	//"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/efs"
-	//sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -22,11 +20,50 @@ func TestAccEFSReplicationConfiguration_basic(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	//var v efs.ReplicationConfigurationDescription
+	replicationName := "aws_efs_replication_configuration.test"
+	efsName := "aws_efs_file_system.test"
+	region := acctest.Region()
+
+	var providers []*schema.Provider
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, efs.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      acctest.CheckWithProviders(testAccCheckEfsReplicationConfigurationDestroy, &providers),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccReplicationConfigurationBasic(region),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet(replicationName, "creation_time"),
+					resource.TestCheckResourceAttrPair(replicationName, "original_source_file_system_arn", efsName, "arn"),
+					resource.TestCheckResourceAttrPair(replicationName, "source_file_system_arn", efsName, "arn"),
+					resource.TestCheckResourceAttrPair(replicationName, "source_file_system_id", efsName, "id"),
+					resource.TestCheckResourceAttr(replicationName, "source_file_system_region", region),
+					resource.TestCheckResourceAttr(replicationName, "destinations.#", "1"),
+					resource.TestMatchResourceAttr(replicationName, "destinations.0.file_system_id", regexp.MustCompile(`fs-.+`)),
+					resource.TestCheckResourceAttr(replicationName, "destinations.0.region", region),
+					resource.TestCheckResourceAttr(replicationName, "destinations.0.status", efs.ReplicationStatusEnabled),
+					//cleanupOtherRegion(alternateRegion, v.Destinations[0].FileSystemId) //TODO ??
+				),
+			},
+			{
+				ResourceName:      replicationName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccEFSReplicationConfiguration_allAttributes(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	replicationName := "aws_efs_replication_configuration.test"
 	efsName := "aws_efs_file_system.test"
 	kmsName := "aws_kms_key.test"
-	//rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	alternateRegion := acctest.AlternateRegion()
 	azName := alternateRegion + "a"
 
@@ -42,7 +79,7 @@ func TestAccEFSReplicationConfiguration_basic(t *testing.T) {
 		CheckDestroy:      acctest.CheckWithProviders(testAccCheckEfsReplicationConfigurationDestroy, &providers),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccReplicationConfiguration(azName, alternateRegion),
+				Config: testAccReplicationConfigurationFull(azName, alternateRegion),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(replicationName, "creation_time"),
 					resource.TestCheckResourceAttrPair(replicationName, "original_source_file_system_arn", efsName, "arn"),
@@ -81,7 +118,7 @@ func TestAccEFSReplicationConfiguration_disappears(t *testing.T) {
 		CheckDestroy:      acctest.CheckWithProviders(testAccCheckEfsReplicationConfigurationDestroy, &providers),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccReplicationConfiguration(azName, alternateRegion),
+				Config: testAccReplicationConfigurationFull(azName, alternateRegion),
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckResourceDisappears(acctest.Provider, tfefs.ResourceReplicationConfiguration(), replicationName),
 				),
@@ -115,7 +152,21 @@ func testAccCheckEfsReplicationConfigurationDestroy(s *terraform.State, provider
 	return nil
 }
 
-func testAccReplicationConfiguration(azName, region string) string {
+func testAccReplicationConfigurationBasic(region string) string {
+	return fmt.Sprintf(`
+resource "aws_efs_file_system" "test" {}
+
+resource "aws_efs_replication_configuration" "test" {
+  source_file_system_id = aws_efs_file_system.test.id
+
+  destinations {
+    region = %[1]q
+  }
+}
+`, region)
+}
+
+func testAccReplicationConfigurationFull(azName, region string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigAlternateRegionProvider(),
 		fmt.Sprintf(`
