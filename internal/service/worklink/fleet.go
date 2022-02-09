@@ -3,6 +3,7 @@ package worklink
 import (
 	"fmt"
 	"log"
+	"regexp"
 	"strings"
 	"time"
 
@@ -33,10 +34,13 @@ func ResourceFleet() *schema.Resource {
 				Computed: true,
 			},
 			"name": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validFleetName,
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+				ValidateFunc: validation.All(
+					validation.StringMatch(regexp.MustCompile(`^[a-z0-9](?:[a-z0-9\-]{0,46}[a-z0-9])?$`), "must contain only alphanumeric characters"),
+					validation.StringLenBetween(1, 48),
+				),
 			},
 			"display_name": {
 				Type:         schema.TypeString,
