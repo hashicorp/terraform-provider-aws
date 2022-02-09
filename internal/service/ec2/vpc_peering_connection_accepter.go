@@ -17,6 +17,7 @@ func ResourceVPCPeeringConnectionAccepter() *schema.Resource {
 		Read:   resourceVPCPeeringRead,
 		Update: resourceVPCPeeringUpdate,
 		Delete: resourceVPCPeeringAccepterDelete,
+
 		Importer: &schema.ResourceImporter{
 			State: func(d *schema.ResourceData, m interface{}) (result []*schema.ResourceData, err error) {
 				d.Set("vpc_peering_connection_id", d.Id())
@@ -26,26 +27,14 @@ func ResourceVPCPeeringConnectionAccepter() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"vpc_peering_connection_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"auto_accept": {
-				Type:     schema.TypeBool,
-				Optional: true,
-			},
 			"accept_status": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"vpc_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"peer_vpc_id": {
-				Type:     schema.TypeString,
-				Computed: true,
+			"accepter": vpcPeeringConnectionOptionsSchema,
+			"auto_accept": {
+				Type:     schema.TypeBool,
+				Optional: true,
 			},
 			"peer_owner_id": {
 				Type:     schema.TypeString,
@@ -55,10 +44,22 @@ func ResourceVPCPeeringConnectionAccepter() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"accepter":  vpcPeeringConnectionOptionsSchema,
+			"peer_vpc_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"requester": vpcPeeringConnectionOptionsSchema,
 			"tags":      tftags.TagsSchema(),
 			"tags_all":  tftags.TagsSchemaComputed(),
+			"vpc_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"vpc_peering_connection_id": {
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+			},
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
