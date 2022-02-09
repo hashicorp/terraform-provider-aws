@@ -231,24 +231,6 @@ func TestAccAPIGatewayV2DomainName_MutualTLSAuthentication_basic(t *testing.T) {
 		CheckDestroy: testAccCheckDomainNameDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDomainNameMututalTLSAuthenticationNoObjectVersionConfig(rName, rootDomain, domain),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDomainNameExists(resourceName, &v),
-					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "apigateway", regexp.MustCompile(`/domainnames/.+`)),
-					resource.TestCheckResourceAttrPair(resourceName, "domain_name", acmCertificateResourceName, "domain_name"),
-					resource.TestCheckResourceAttr(resourceName, "domain_name_configuration.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "domain_name_configuration.0.certificate_arn", acmCertificateResourceName, "arn"),
-					resource.TestCheckResourceAttr(resourceName, "domain_name_configuration.0.endpoint_type", "REGIONAL"),
-					resource.TestCheckResourceAttrSet(resourceName, "domain_name_configuration.0.hosted_zone_id"),
-					resource.TestCheckResourceAttr(resourceName, "domain_name_configuration.0.security_policy", "TLS_1_2"),
-					resource.TestCheckResourceAttrSet(resourceName, "domain_name_configuration.0.target_domain_name"),
-					resource.TestCheckResourceAttr(resourceName, "mutual_tls_authentication.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "mutual_tls_authentication.0.truststore_uri", fmt.Sprintf("s3://%s/%s", rName, rName)),
-					resource.TestCheckResourceAttr(resourceName, "mutual_tls_authentication.0.truststore_version", ""),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-				),
-			},
-			{
 				Config: testAccDomainNameMututalTLSAuthenticationObjectVersionConfig(rName, rootDomain, domain),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainNameExists(resourceName, &v),
@@ -303,6 +285,43 @@ func TestAccAPIGatewayV2DomainName_MutualTLSAuthentication_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "domain_name_configuration.0.security_policy", "TLS_1_2"),
 					resource.TestCheckResourceAttrSet(resourceName, "domain_name_configuration.0.target_domain_name"),
 					resource.TestCheckResourceAttr(resourceName, "mutual_tls_authentication.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAPIGatewayV2DomainName_MutualTLSAuthentication_noVersion(t *testing.T) {
+	rootDomain := acctest.ACMCertificateDomainFromEnv(t)
+	domain := fmt.Sprintf("%s.%s", acctest.RandomSubdomain(), rootDomain)
+
+	var v apigatewayv2.GetDomainNameOutput
+	resourceName := "aws_apigatewayv2_domain_name.test"
+	acmCertificateResourceName := "aws_acm_certificate.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckDomainNameDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDomainNameMututalTLSAuthenticationNoObjectVersionConfig(rName, rootDomain, domain),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDomainNameExists(resourceName, &v),
+					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "apigateway", regexp.MustCompile(`/domainnames/.+`)),
+					resource.TestCheckResourceAttrPair(resourceName, "domain_name", acmCertificateResourceName, "domain_name"),
+					resource.TestCheckResourceAttr(resourceName, "domain_name_configuration.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "domain_name_configuration.0.certificate_arn", acmCertificateResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "domain_name_configuration.0.endpoint_type", "REGIONAL"),
+					resource.TestCheckResourceAttrSet(resourceName, "domain_name_configuration.0.hosted_zone_id"),
+					resource.TestCheckResourceAttr(resourceName, "domain_name_configuration.0.security_policy", "TLS_1_2"),
+					resource.TestCheckResourceAttrSet(resourceName, "domain_name_configuration.0.target_domain_name"),
+					resource.TestCheckResourceAttr(resourceName, "mutual_tls_authentication.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "mutual_tls_authentication.0.truststore_uri", fmt.Sprintf("s3://%s/%s", rName, rName)),
+					resource.TestCheckResourceAttr(resourceName, "mutual_tls_authentication.0.truststore_version", ""),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
