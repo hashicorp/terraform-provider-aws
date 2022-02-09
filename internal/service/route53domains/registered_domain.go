@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
@@ -25,6 +26,8 @@ func ResourceRegisteredDomain() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
+			"tags":     tftags.TagsSchema(),
+			"tags_all": tftags.TagsSchemaComputed(),
 		},
 	}
 }
@@ -46,6 +49,8 @@ func resourceRegisteredDomainCreate(d *schema.ResourceData, meta interface{}) er
 
 func resourceRegisteredDomainRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).Route53DomainsConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	domainDetail, err := FindDomainDetailByName(conn, d.Id())
 
@@ -61,11 +66,36 @@ func resourceRegisteredDomainRead(d *schema.ResourceData, meta interface{}) erro
 
 	d.Set("domain_name", domainDetail.DomainName)
 
+	tags, err := ListTags(conn, d.Id())
+
+	if err != nil {
+		return fmt.Errorf("error listing tags for Route 53 Domains Domain (%s): %w", d.Id(), err)
+	}
+
+	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+
+	//lintignore:AWSR002
+	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %w", err)
+	}
+
+	if err := d.Set("tags_all", tags.Map()); err != nil {
+		return fmt.Errorf("error setting tags_all: %w", err)
+	}
+
 	return nil
 }
 
 func resourceRegisteredDomainUpdate(d *schema.ResourceData, meta interface{}) error {
-	//conn := meta.(*conns.AWSClient).Route53DomainsConn
+	conn := meta.(*conns.AWSClient).Route53DomainsConn
+
+	if d.HasChange("tags_all") {
+		o, n := d.GetChange("tags_all")
+
+		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
+			return fmt.Errorf("error updating Route 53 Domains Domain (%s) tags: %w", d.Id(), err)
+		}
+	}
 
 	return resourceRegisteredDomainRead(d, meta)
 }
