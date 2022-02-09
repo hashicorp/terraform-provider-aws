@@ -37,7 +37,7 @@ func ResourceVPCPeeringConnection() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"accepter": vpcPeeringConnectionOptionsSchema(),
+			"accepter": vpcPeeringConnectionOptionsSchema,
 			"auto_accept": {
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -59,7 +59,7 @@ func ResourceVPCPeeringConnection() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"requester": vpcPeeringConnectionOptionsSchema(),
+			"requester": vpcPeeringConnectionOptionsSchema,
 			"tags":      tftags.TagsSchema(),
 			"tags_all":  tftags.TagsSchemaComputed(),
 			"vpc_id": {
@@ -71,6 +71,32 @@ func ResourceVPCPeeringConnection() *schema.Resource {
 
 		CustomizeDiff: verify.SetTagsDiff,
 	}
+}
+
+var vpcPeeringConnectionOptionsSchema = &schema.Schema{
+	Type:     schema.TypeList,
+	Optional: true,
+	Computed: true,
+	MaxItems: 1,
+	Elem: &schema.Resource{
+		Schema: map[string]*schema.Schema{
+			"allow_classic_link_to_remote_vpc": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
+			"allow_remote_vpc_dns_resolution": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
+			"allow_vpc_to_remote_classic_link": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
+		},
+	},
 }
 
 func resourceVPCPeeringCreate(d *schema.ResourceData, meta interface{}) error {
@@ -346,34 +372,6 @@ func vpcPeeringConnectionRefreshState(conn *ec2.EC2, id string) resource.StateRe
 		}
 
 		return pc, statusCode, nil
-	}
-}
-
-func vpcPeeringConnectionOptionsSchema() *schema.Schema {
-	return &schema.Schema{
-		Type:     schema.TypeList,
-		Optional: true,
-		Computed: true,
-		MaxItems: 1,
-		Elem: &schema.Resource{
-			Schema: map[string]*schema.Schema{
-				"allow_remote_vpc_dns_resolution": {
-					Type:     schema.TypeBool,
-					Optional: true,
-					Default:  false,
-				},
-				"allow_classic_link_to_remote_vpc": {
-					Type:     schema.TypeBool,
-					Optional: true,
-					Default:  false,
-				},
-				"allow_vpc_to_remote_classic_link": {
-					Type:     schema.TypeBool,
-					Optional: true,
-					Default:  false,
-				},
-			},
-		},
 	}
 }
 

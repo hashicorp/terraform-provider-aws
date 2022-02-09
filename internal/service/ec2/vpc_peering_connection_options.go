@@ -28,8 +28,8 @@ func ResourceVPCPeeringConnectionOptions() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"accepter":  vpcPeeringConnectionOptionsSchema(),
-			"requester": vpcPeeringConnectionOptionsSchema(),
+			"accepter":  vpcPeeringConnectionOptionsSchema,
+			"requester": vpcPeeringConnectionOptionsSchema,
 		},
 	}
 }
