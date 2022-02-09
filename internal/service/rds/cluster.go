@@ -1543,7 +1543,7 @@ func rdsClusterSetResourceDataEngineVersionFromCluster(d *schema.ResourceData, c
 func compareActualEngineVersion(d *schema.ResourceData, oldVersion string, newVersion string) {
 	newVersionSubstr := newVersion
 
-	if newVersion > oldVersion {
+	if len(newVersion) > len(oldVersion) {
 		newVersionSubstr = string([]byte(newVersion)[0 : len(oldVersion)+1])
 	}
 
