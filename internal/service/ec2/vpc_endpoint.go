@@ -1,7 +1,6 @@
 package ec2
 
 import (
-	"errors"
 	"fmt"
 	"log"
 	"time"
@@ -157,11 +156,6 @@ func ResourceVPCEndpoint() *schema.Resource {
 }
 
 func resourceVPCEndpointCreate(d *schema.ResourceData, meta interface{}) error {
-	if d.Get("vpc_endpoint_type").(string) == ec2.VpcEndpointTypeInterface &&
-		d.Get("security_group_ids").(*schema.Set).Len() == 0 {
-		return errors.New("An Interface VPC Endpoint must always have at least one Security Group")
-	}
-
 	conn := meta.(*conns.AWSClient).EC2Conn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
