@@ -109,6 +109,44 @@ resource "aws_spot_fleet_request" "foo" {
 }
 ```
 
+-> In this example, we use a [`dynamic` block](https://www.terraform.io/language/expressions/dynamic-blocks) to define zero or more `launch_specification` blocks, producing one for each element in the list of subnet ids.
+
+```terraform
+resource "aws_spot_fleet_request" "example" {
+  iam_fleet_role                      = "arn:aws:iam::12345678:role/spot-fleet"
+  target_capacity                     = 3
+  valid_until                         = "2019-11-04T20:44:20Z"
+  allocation_strategy                 = "lowestPrice"
+  fleet_type                          = "request"
+  wait_for_fulfillment                = "true"
+  terminate_instances_with_expiration = "true"
+
+
+  dynamic "launch_specification" {
+
+    for_each = [for s in var.subnets : {
+      subnet_id = s[1]
+    }]
+    content {
+      ami                    = "ami-1234"
+      instance_type          = "m4.4xlarge"
+      subnet_id              = launch_specification.value.subnet_id
+      vpc_security_group_ids = "sg-123456"
+
+      root_block_device {
+        volume_size           = "8"
+        volume_type           = "gp2"
+        delete_on_termination = "true"
+      }
+
+      tags = {
+        Name        = "Spot Node"
+        tag_builder = "builder"
+      }
+    }
+  }
+}
+```
 
 ### Using multiple launch configurations
 
@@ -217,7 +255,7 @@ The `launch_template_config` block supports the following:
 
 * `id` - The ID of the launch template. Conflicts with `name`.
 * `name` - The name of the launch template. Conflicts with `id`.
-* `version` - (Optional) Template version. Unlike the autoscaling equivalent, does not support `$Latest` or `$Default`, so use the launch_template resource's attribute, e.g. `"${aws_launch_template.foo.latest_version}"`. It will use the default version if omitted.
+* `version` - (Optional) Template version. Unlike the autoscaling equivalent, does not support `$Latest` or `$Default`, so use the launch_template resource's attribute, e.g., `"${aws_launch_template.foo.latest_version}"`. It will use the default version if omitted.
 
     **Note:** The specified launch template can specify only a subset of the
     inputs of [`aws_launch_template`](launch_template.html).  There are limitations on
@@ -258,7 +296,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Spot Fleet Requests can be imported using `id`, e.g.
+Spot Fleet Requests can be imported using `id`, e.g.,
 
 ```
 $ terraform import aws_spot_fleet_request.fleet sfr-005e9ec8-5546-4c31-b317-31a62325411e

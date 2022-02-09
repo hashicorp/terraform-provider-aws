@@ -27,7 +27,7 @@ resource "aws_apprunner_service" "example" {
         code_configuration_values {
           build_command = "python setup.py develop"
           port          = "8000"
-          runtime       = "python3"
+          runtime       = "PYTHON_3"
           start_command = "python runapp.py"
         }
         configuration_source = "API"
@@ -105,7 +105,7 @@ The `health_check_configuration` block supports the following arguments:
 The `instance_configuration` block supports the following arguments:
 
 * `cpu` - (Optional) The number of CPU units reserved for each instance of your App Runner service represented as a String. Defaults to `1024`. Valid values: `1024|2048|(1|2) vCPU`.
-* `instance_role_arn` - (Required) The Amazon Resource Name (ARN) of an IAM role that provides permissions to your App Runner service. These are permissions that your code needs when it calls any AWS APIs.
+* `instance_role_arn` - (Optional) The Amazon Resource Name (ARN) of an IAM role that provides permissions to your App Runner service. These are permissions that your code needs when it calls any AWS APIs.
 * `memory` - (Optional) The amount of memory, in MB or GB, reserved for each instance of your App Runner service. Defaults to `2048`. Valid values: `2048|3072|4096|(2|3|4) GB`.
 
 ### Source Configuration
@@ -160,7 +160,7 @@ The `code_configuration_values` blocks supports the following arguments:
 
 * `build_command` - (Optional) The command App Runner runs to build your application.
 * `port` - (Optional) The port that your application listens to in the container. Defaults to `"8080"`.
-* `runtime` - (Required) A runtime environment type for building and running an App Runner service. Represents a programming language runtime. Valid values: `python3`, `nodejs12`.
+* `runtime` - (Required) A runtime environment type for building and running an App Runner service. Represents a programming language runtime. Valid values: `PYTHON_3`, `NODEJS_12`.
 * `runtime_environment_variables` - (Optional) Environment variables available to your running App Runner service. A map of key/value pairs. Keys with a prefix of `AWSAPPRUNNER` are reserved for system use and aren't valid.
 * `start_command` - (Optional) The command App Runner runs to start your application.
 
@@ -191,7 +191,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-App Runner Services can be imported by using the `arn`, e.g.
+App Runner Services can be imported by using the `arn`, e.g.,
 
 ```
 $ terraform import aws_apprunner_service.example arn:aws:apprunner:us-east-1:1234567890:service/example/0a03292a89764e5882c41d8f991c82fe

@@ -17,6 +17,12 @@ Provides a resource to manage a GuardDuty detector.
 ```terraform
 resource "aws_guardduty_detector" "MyDetector" {
   enable = true
+
+  datasources {
+    s3_logs {
+      enable = true
+    }
+  }
 }
 ```
 
@@ -26,7 +32,20 @@ The following arguments are supported:
 
 * `enable` - (Optional) Enable monitoring and feedback reporting. Setting to `false` is equivalent to "suspending" GuardDuty. Defaults to `true`.
 * `finding_publishing_frequency` - (Optional) Specifies the frequency of notifications sent for subsequent finding occurrences. If the detector is a GuardDuty member account, the value is determined by the GuardDuty primary account and cannot be modified, otherwise defaults to `SIX_HOURS`. For standalone and GuardDuty primary accounts, it must be configured in Terraform to enable drift detection. Valid values for standalone and primary accounts: `FIFTEEN_MINUTES`, `ONE_HOUR`, `SIX_HOURS`. See [AWS Documentation](https://docs.aws.amazon.com/guardduty/latest/ug/guardduty_findings_cloudwatch.html#guardduty_findings_cloudwatch_notification_frequency) for more information.
+* `datasources` - (Optional) Describes which data sources will be enabled for the detector. See [Data Sources](#data-sources) below for more details.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+
+### Data Sources
+
+The `datasources` block supports the following:
+
+* `s3_logs` - (Optional) Describes whether S3 data event logs are enabled as a data source. See [S3 Logs](#s3-logs) below for more details.
+
+### S3 Logs
+
+This `s3_logs` block supports the following:
+
+* `enable` - (Required) If true, enables [S3 Protection](https://docs.aws.amazon.com/guardduty/latest/ug/s3_detection.html). Defaults to `true`.
 
 ## Attributes Reference
 
@@ -39,7 +58,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-GuardDuty detectors can be imported using the detector ID, e.g.
+GuardDuty detectors can be imported using the detector ID, e.g.,
 
 ```
 $ terraform import aws_guardduty_detector.MyDetector 00b00fd5aecc0ab60a708659477e9617
