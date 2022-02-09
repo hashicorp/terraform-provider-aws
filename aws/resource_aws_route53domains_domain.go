@@ -7,10 +7,10 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/route53domains"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+
+	"github.com/hashicorp/terraform/helper/resource"
+	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform/helper/validation"
 )
 
 func resourceAwsRoute53DomainsDomainContactDetail() *schema.Schema {
@@ -266,15 +266,16 @@ func resourceAwsRoute53DomainsDomainRead(d *schema.ResourceData, meta interface{
 	}
 	d.Set("transfer_lock", transferLock)
 
-	tags, err := keyvaluetags.Route53domainsListTags(conn, d.Id())
-
+	log.Printf("[DEBUG] List tags for Route 53 domain (%s)", d.Id())
+	tags, err := conn.ListTagsForDomain(&route53domains.ListTagsForDomainInput{
+		DomainName: aws.String(d.Id()),
+	})
 	if err != nil {
-		return fmt.Errorf("error listing tags for Route53 Domains domain (%s): %s", d.Id(), err)
+		return err
 	}
+	log.Printf("[DEBUG] Route 53 Domain tags: %#v", tags)
 
-	if err := d.Set("tags", tags.IgnoreAws().Map()); err != nil {
-		return fmt.Errorf("error setting tags: %s", err)
-	}
+	d.Set("tags", tagsToMapRoute53Domains(tags.TagList))
 
 	return nil
 }
@@ -369,9 +370,9 @@ func resourceAwsRoute53DomainsDomainUpdate(d *schema.ResourceData, meta interfac
 
 	// Changes to tags
 	if d.HasChange("tags") {
-		o, n := d.GetChange("tags")
-		if err := keyvaluetags.Route53domainsUpdateTags(conn, d.Id(), o, n); err != nil {
-			return fmt.Errorf("error updating tags: %s", err)
+		err := setTagsRoute53Domains(conn, d)
+		if err != nil {
+			return fmt.Errorf("Error setting tags for Route 53 domain (%s), error: %s", d.Id(), err)
 		}
 	}
 
@@ -407,7 +408,7 @@ func resourceAwsRoute53DomainsDomainUpdate(d *schema.ResourceData, meta interfac
 				return fmt.Errorf("Error enabling domain transfer lock for Route 53 domain (%s), error: %s", d.Id(), err)
 			}
 			if err := resourceAwsRoute53DomainsDomainWaitForOperation(conn, *out.OperationId, d.Timeout(schema.TimeoutUpdate)); err != nil {
-				return fmt.Errorf("Error waiting for Route 53 domain operation (%s) on domain (%s) to complete: %s", *out.OperationId, d.Id(), err)
+				return fmt.Errorf("Error waiting for Route 53 domain operation (%s) on domain (%s) to complete: %s", out.OperationId, d.Id(), err)
 			}
 		} else {
 			log.Printf("[DEBUG] Disabling domain transfer lock for Route 53 domain (%s)", d.Id())
@@ -418,7 +419,7 @@ func resourceAwsRoute53DomainsDomainUpdate(d *schema.ResourceData, meta interfac
 				return fmt.Errorf("Error disabling domain transfer lock for Route 53 domain (%s), error: %s", d.Id(), err)
 			}
 			if err := resourceAwsRoute53DomainsDomainWaitForOperation(conn, *out.OperationId, d.Timeout(schema.TimeoutUpdate)); err != nil {
-				return fmt.Errorf("Error waiting for Route 53 domain operation (%s) on domain (%s) to complete: %s", *out.OperationId, d.Id(), err)
+				return fmt.Errorf("Error waiting for Route 53 domain operation (%s) on domain (%s) to complete: %s", out.OperationId, d.Id(), err)
 			}
 		}
 	}
@@ -438,7 +439,7 @@ func resourceAwsRoute53DomainsDomainUpdate(d *schema.ResourceData, meta interfac
 			return fmt.Errorf("Error updating domain contact privacy settings for Route 53 domain (%s), error: %s", d.Id(), err)
 		}
 		if err := resourceAwsRoute53DomainsDomainWaitForOperation(conn, *out.OperationId, d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return fmt.Errorf("Error waiting for Route 53 domain operation (%s) on domain (%s) to complete: %s", *out.OperationId, d.Id(), err)
+			return fmt.Errorf("Error waiting for Route 53 domain operation (%s) on domain (%s) to complete: %s", out.OperationId, d.Id(), err)
 		}
 	}
 
@@ -453,7 +454,7 @@ func resourceAwsRoute53DomainsDomainUpdate(d *schema.ResourceData, meta interfac
 			return fmt.Errorf("Error updating domain name servers for Route 53 domain (%s), error: %s", d.Id(), err)
 		}
 		if err := resourceAwsRoute53DomainsDomainWaitForOperation(conn, *out.OperationId, d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return fmt.Errorf("Error waiting for Route 53 domain operation (%s) on domain (%s) to complete: %s", *out.OperationId, d.Id(), err)
+			return fmt.Errorf("Error waiting for Route 53 domain operation (%s) on domain (%s) to complete: %s", out.OperationId, d.Id(), err)
 		}
 	}
 
