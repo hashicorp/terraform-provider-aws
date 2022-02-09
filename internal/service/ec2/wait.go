@@ -910,9 +910,30 @@ func WaitVPCIPv6CIDRBlockAssociationDeleted(conn *ec2.EC2, id string, timeout ti
 	return nil, err
 }
 
+func WaitVPCPeeringConnectionActive(conn *ec2.EC2, id string, timeout time.Duration) (*ec2.VpcPeeringConnection, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{ec2.VpcPeeringConnectionStateReasonCodeInitiatingRequest, ec2.VpcPeeringConnectionStateReasonCodeProvisioning},
+		Target:  []string{ec2.VpcPeeringConnectionStateReasonCodeActive, ec2.VpcPeeringConnectionStateReasonCodePendingAcceptance},
+		Refresh: StatusVPCPeeringConnection(conn, id),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*ec2.VpcPeeringConnection); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
 func WaitVPCPeeringConnectionDeleted(conn *ec2.EC2, id string, timeout time.Duration) (*ec2.VpcPeeringConnection, error) {
 	stateConf := &resource.StateChangeConf{
-		Pending: []string{ec2.VpcPeeringConnectionStateReasonCodeActive, ec2.VpcPeeringConnectionStateReasonCodeDeleting, ec2.VpcPeeringConnectionStateReasonCodePendingAcceptance},
+		Pending: []string{
+			ec2.VpcPeeringConnectionStateReasonCodeActive,
+			ec2.VpcPeeringConnectionStateReasonCodeDeleting,
+			ec2.VpcPeeringConnectionStateReasonCodePendingAcceptance,
+		},
 		Target:  []string{},
 		Refresh: StatusVPCPeeringConnection(conn, id),
 		Timeout: timeout,

@@ -104,39 +104,35 @@ func resourceVPCPeeringCreate(d *schema.ResourceData, meta interface{}) error {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
-	// Create the vpc peering connection
-	createOpts := &ec2.CreateVpcPeeringConnectionInput{
+	input := &ec2.CreateVpcPeeringConnectionInput{
 		PeerVpcId:         aws.String(d.Get("peer_vpc_id").(string)),
-		VpcId:             aws.String(d.Get("vpc_id").(string)),
 		TagSpecifications: ec2TagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeVpcPeeringConnection),
+		VpcId:             aws.String(d.Get("vpc_id").(string)),
 	}
 
 	if v, ok := d.GetOk("peer_owner_id"); ok {
-		createOpts.PeerOwnerId = aws.String(v.(string))
+		input.PeerOwnerId = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("peer_region"); ok {
 		if _, ok := d.GetOk("auto_accept"); ok {
-			return fmt.Errorf("peer_region cannot be set whilst auto_accept is true when creating a vpc peering connection")
+			return fmt.Errorf("`peer_region` cannot be set whilst `auto_accept` is `true` when creating an EC2 VPC Peering Connection")
 		}
-		createOpts.PeerRegion = aws.String(v.(string))
+
+		input.PeerRegion = aws.String(v.(string))
 	}
 
-	log.Printf("[DEBUG] VPC Peering Create options: %#v", createOpts)
+	log.Printf("[DEBUG] Creating EC2 VPC Peering Connection: %s", input)
+	output, err := conn.CreateVpcPeeringConnection(input)
 
-	resp, err := conn.CreateVpcPeeringConnection(createOpts)
 	if err != nil {
-		return fmt.Errorf("Error creating VPC Peering Connection: %s", err)
+		return fmt.Errorf("error creating EC2 VPC Peering Connection: %w", err)
 	}
 
-	// Get the ID and store it
-	rt := resp.VpcPeeringConnection
-	d.SetId(aws.StringValue(rt.VpcPeeringConnectionId))
-	log.Printf("[INFO] VPC Peering Connection ID: %s", d.Id())
+	d.SetId(aws.StringValue(output.VpcPeeringConnection.VpcPeeringConnectionId))
 
-	err = vpcPeeringConnectionWaitUntilAvailable(conn, d.Id(), d.Timeout(schema.TimeoutCreate))
-	if err != nil {
-		return fmt.Errorf("Error waiting for VPC Peering Connection to become available: %s", err)
+	if _, err := WaitVPCPeeringConnectionActive(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+		return fmt.Errorf("error waiting for EC2 VPC Peering Connection (%s) create: %w", d.Id(), err)
 	}
 
 	return resourceVPCPeeringUpdate(d, meta)
