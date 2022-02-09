@@ -625,8 +625,12 @@ func testAccConformancePackS3DeliveryConfig(rName, bucketName string) string {
 		fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket        = %[1]q
-  acl           = "private"
   force_destroy = true
+}
+
+resource "aws_s3_bucket_acl" "test" {
+  bucket = aws_s3_bucket.test.id
+  acl    = "private"
 }
 
 resource "aws_config_conformance_pack" "test" {
@@ -653,8 +657,12 @@ func testAccConformancePackS3TemplateConfig(rName, bucketName string) string {
 		fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket        = %[1]q
-  acl           = "private"
   force_destroy = true
+}
+
+resource "aws_s3_bucket_acl" "test" {
+  bucket = aws_s3_bucket.test.id
+  acl    = "private"
 }
 
 resource "aws_s3_object" "test" {
@@ -685,8 +693,12 @@ func testAccConformancePackS3TemplateAndTemplateBodyConfig(rName string) string 
 		fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket        = %[1]q
-  acl           = "private"
   force_destroy = true
+}
+
+resource "aws_s3_bucket_acl" "test" {
+  bucket = aws_s3_bucket.test.id
+  acl    = "private"
 }
 
 resource "aws_s3_object" "test" {
