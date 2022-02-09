@@ -28,12 +28,12 @@ Some flags control generation a certain section of code, such as whether the gen
 | `ServiceTagsSlice` |  | Whether to generate slice service tags (use this or `ServiceTagsMap`, not both) | `-ServiceTagsSlice` |
 | `UpdateTags` |  | Whether to generate UpdateTags | `-UpdateTags` |
 | `ListTagsInFiltIDName` |  | List tags input filter identifier name | `-ListTagsInFiltIDName=resource-id` |
-| `ListTagsInIDElem` | `ResourceArn` | List tags input identifier element | `-ListTagsInEDElem=ResourceARN` |
+| `ListTagsInIDElem` | `ResourceArn` | List tags input identifier element | `-ListTagsInIDElem=ResourceARN` |
 | `ListTagsInIDNeedSlice` |  | Whether list tags input identifier needs a slice | `-ListTagsInIDNeedSlice=yes` |
 | `ListTagsOp` | `ListTagsForResource` | List tags operation | `-ListTagsOp=ListTags` |
 | `ListTagsOutTagsElem` | `Tags` | List tags output tags element | `-ListTagsOutTagsElem=TagList` |
 | `TagInCustomVal` |  | Tag input custom value | `-TagInCustomVal=aws.StringMap(updatedTags.IgnoreAWS().Map())` |
-| `TagInIDElem` | `ResourceArn` | Tag input identifier element | `-TagInCustomVal=ResourceARN` |
+| `TagInIDElem` | `ResourceArn` | Tag input identifier element | `-TagInIDElem=ResourceARN` |
 | `TagInIDNeedSlice` |  | Tag input identifier needs a slice | `-TagInIDNeedSlice=yes` |
 | `TagInTagsElem` | Tags | Tag input tags element | `-TagInTagsElem=TagsList` |
 | `TagKeyType` |  | Tag key type | `-TagKeyType=TagKeyOnly` |
