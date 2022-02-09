@@ -262,7 +262,7 @@ func ValidTimeDuration(v interface{}, k string) (ws []string, errors []error) {
 	_, err := time.ParseDuration(v.(string))
 
 	if err != nil {
-		errors = append(errors, fmt.Errorf("%q cannot be parsed as a valid time.Duration: %w", k, err))
+		errors = append(errors, fmt.Errorf("%q cannot be parsed as a duration: %w", k, err))
 	}
 
 	return
