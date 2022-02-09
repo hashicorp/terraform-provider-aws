@@ -2,9 +2,10 @@ package apigatewayv2_test
 
 import (
 	"fmt"
-	"github.com/aws/aws-sdk-go/service/apigateway"
 	"regexp"
 	"testing"
+
+	"github.com/aws/aws-sdk-go/service/apigateway"
 
 	"github.com/aws/aws-sdk-go/service/apigatewayv2"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
@@ -331,7 +332,7 @@ func TestAccAWSAPIGatewayV2DomainName_MutualTlsAuthentication_ownership(t *testi
 		CheckDestroy: testAccCheckDomainNameDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAPIGatewayV2DomainNameConfigMututalTlsAuthenticationOwnershipVerificationCert(rootDomain, rName, "apigateway-domain-name-truststore-1.pem", certificate, key),
+				Config: testAccDomainNameConfigMututalTlsAuthenticationOwnershipVerificationCert(rootDomain, rName, "apigateway-domain-name-truststore-1.pem", certificate, key),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainNameExists(resourceName, &v),
 					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "apigateway", regexp.MustCompile(`/domainnames/+.`)),
@@ -575,6 +576,8 @@ resource "aws_apigatewayv2_domain_name" "test" {
     truststore_uri     = "s3://${aws_s3_object.test.bucket}/${aws_s3_object.test.key}"
     truststore_version = aws_s3_object.test.version_id
   }
+
+  depends_on = [aws_s3_bucket_versioning.test]
 }
 `, rName, pemFileName))
 }
@@ -595,7 +598,7 @@ resource "aws_apigatewayv2_domain_name" "test" {
 `)
 }
 
-func testAccAPIGatewayV2DomainNameConfigMututalTlsAuthenticationOwnershipVerificationCert(rootDomain, rName, pemFileName, certificate, key string) string {
+func testAccDomainNameConfigMututalTlsAuthenticationOwnershipVerificationCert(rootDomain, rName, pemFileName, certificate, key string) string {
 	domain := fmt.Sprintf("%s.%s", rName, rootDomain)
 
 	return acctest.ConfigCompose(
