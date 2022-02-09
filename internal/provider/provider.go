@@ -128,6 +128,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/resourcegroups"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/resourcegroupstaggingapi"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/route53"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/route53domains"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/route53recoverycontrolconfig"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/route53recoveryreadiness"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/route53resolver"
@@ -1611,6 +1612,8 @@ func Provider() *schema.Provider {
 			"aws_route53_vpc_association_authorization": route53.ResourceVPCAssociationAuthorization(),
 			"aws_route53_zone":                          route53.ResourceZone(),
 			"aws_route53_zone_association":              route53.ResourceZoneAssociation(),
+
+			"aws_route53domains_registered_domain": route53domains.ResourceRegisteredDomain(),
 
 			"aws_route53recoverycontrolconfig_cluster":         route53recoverycontrolconfig.ResourceCluster(),
 			"aws_route53recoverycontrolconfig_control_panel":   route53recoverycontrolconfig.ResourceControlPanel(),
