@@ -1,6 +1,7 @@
 package ec2
 
 import (
+	"errors"
 	"fmt"
 	"strconv"
 
@@ -1902,23 +1903,92 @@ func FindVPCEndpointSubnetAssociationExists(conn *ec2.EC2, vpcEndpointID string,
 	}
 }
 
-// FindVPCPeeringConnectionByID returns the VPC peering connection corresponding to the specified identifier.
-// Returns nil and potentially an error if no VPC peering connection is found.
+func FindVPCPeeringConnection(conn *ec2.EC2, input *ec2.DescribeVpcPeeringConnectionsInput) (*ec2.VpcPeeringConnection, error) {
+	output, err := FindVPCPeeringConnections(conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if len(output) == 0 || output[0] == nil || output[0].Status == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	if count := len(output); count > 1 {
+		return nil, tfresource.NewTooManyResultsError(count, input)
+	}
+
+	return output[0], nil
+}
+
+func FindVPCPeeringConnections(conn *ec2.EC2, input *ec2.DescribeVpcPeeringConnectionsInput) ([]*ec2.VpcPeeringConnection, error) {
+	var output []*ec2.VpcPeeringConnection
+
+	err := conn.DescribeVpcPeeringConnectionsPages(input, func(page *ec2.DescribeVpcPeeringConnectionsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.VpcPeeringConnections {
+			if v != nil {
+				output = append(output, v)
+			}
+		}
+
+		return !lastPage
+	})
+
+	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidVpcPeeringConnectionIDNotFound) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
+}
+
 func FindVPCPeeringConnectionByID(conn *ec2.EC2, id string) (*ec2.VpcPeeringConnection, error) {
 	input := &ec2.DescribeVpcPeeringConnectionsInput{
 		VpcPeeringConnectionIds: aws.StringSlice([]string{id}),
 	}
 
-	output, err := conn.DescribeVpcPeeringConnections(input)
+	output, err := FindVPCPeeringConnection(conn, input)
+
 	if err != nil {
 		return nil, err
 	}
 
-	if output == nil || len(output.VpcPeeringConnections) == 0 {
-		return nil, nil
+	// See https://docs.aws.amazon.com/vpc/latest/peering/vpc-peering-basics.html#vpc-peering-lifecycle.
+	switch statusCode := aws.StringValue(output.Status.Code); statusCode {
+	case ec2.VpcPeeringConnectionStateReasonCodeDeleted,
+		ec2.VpcPeeringConnectionStateReasonCodeExpired,
+		ec2.VpcPeeringConnectionStateReasonCodeFailed,
+		ec2.VpcPeeringConnectionStateReasonCodeRejected:
+		err := &resource.NotFoundError{
+			Message:     statusCode,
+			LastRequest: input,
+		}
+
+		if message := aws.StringValue(output.Status.Message); message != "" {
+			tfresource.SetLastError(err, errors.New(message))
+		}
+
+		return nil, err
 	}
 
-	return output.VpcPeeringConnections[0], nil
+	// Eventual consistency check.
+	if aws.StringValue(output.VpcPeeringConnectionId) != id {
+		return nil, &resource.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
 }
 
 // FindVPNGatewayRoutePropagationExists returns NotFoundError if no route propagation for the specified VPN gateway is found.
