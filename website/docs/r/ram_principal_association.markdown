@@ -24,7 +24,7 @@ When RAM Sharing with AWS Organizations is not enabled:
 
 ### AWS Account ID
 
-```hcl
+```terraform
 resource "aws_ram_resource_share" "example" {
   # ... other configuration ...
   allow_external_principals = true
@@ -32,16 +32,16 @@ resource "aws_ram_resource_share" "example" {
 
 resource "aws_ram_principal_association" "example" {
   principal          = "111111111111"
-  resource_share_arn = "${aws_ram_resource_share.example.arn}"
+  resource_share_arn = aws_ram_resource_share.example.arn
 }
 ```
 
 ### AWS Organization
 
-```hcl
+```terraform
 resource "aws_ram_principal_association" "example" {
-  principal          = "${aws_organizations_organization.example.arn}"
-  resource_share_arn = "${aws_ram_resource_share.example.arn}"
+  principal          = aws_organizations_organization.example.arn
+  resource_share_arn = aws_ram_resource_share.example.arn
 }
 ```
 
@@ -60,7 +60,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-RAM Principal Associations can be imported using their Resource Share ARN and the `principal` separated by a comma, e.g.
+RAM Principal Associations can be imported using their Resource Share ARN and the `principal` separated by a comma, e.g.,
 
 ```
 $ terraform import aws_ram_principal_association.example arn:aws:ram:eu-west-1:123456789012:resource-share/73da1ab9-b94a-4ba3-8eb4-45917f7f4b12,123456789012

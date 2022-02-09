@@ -17,9 +17,9 @@ Terraform will resize any Instance Group to zero when destroying the resource.
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_emr_instance_group" "task" {
-  cluster_id     = "${aws_emr_cluster.tf-test-cluster.id}"
+  cluster_id     = aws_emr_cluster.tf-test-cluster.id
   instance_count = 1
   instance_type  = "m5.xlarge"
   name           = "my little instance group"
@@ -40,8 +40,11 @@ The following arguments are supported:
 * `autoscaling_policy` - (Optional) The autoscaling policy document. This is a JSON formatted string. See [EMR Auto Scaling](https://docs.aws.amazon.com/emr/latest/ManagementGuide/emr-automatic-scaling.html)
 * `configurations_json` - (Optional) A JSON string for supplying list of configurations specific to the EMR instance group. Note that this can only be changed when using EMR release 5.21 or later.
 
-```hcl
-configurations_json = <<EOF
+```terraform
+resource "aws_emr_instance_group" "task" {
+  # ... other configuration ...
+
+  configurations_json = <<EOF
   [
     {
       "Classification": "hadoop-env",
@@ -57,6 +60,7 @@ configurations_json = <<EOF
     }
   ]
 EOF
+}
 ```
 
 `ebs_config` supports the following:
@@ -76,7 +80,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-EMR task instance group can be imported using their EMR Cluster id and Instance Group id separated by a forward-slash `/`, e.g.
+EMR task instance group can be imported using their EMR Cluster id and Instance Group id separated by a forward-slash `/`, e.g.,
 
 ```
 $ terraform import aws_emr_instance_group.task_greoup j-123456ABCDEF/ig-15EK4O09RZLNR
