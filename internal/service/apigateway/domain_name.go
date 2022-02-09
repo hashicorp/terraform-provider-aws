@@ -136,6 +136,7 @@ func ResourceDomainName() *schema.Resource {
 						"truststore_version": {
 							Type:     schema.TypeString,
 							Optional: true,
+							Computed: true,
 						},
 					},
 				},
@@ -144,6 +145,7 @@ func ResourceDomainName() *schema.Resource {
 			"ownership_verification_certificate_arn": {
 				Type:         schema.TypeString,
 				Optional:     true,
+				Computed:     true,
 				ValidateFunc: verify.ValidARN,
 			},
 
@@ -188,7 +190,7 @@ func resourceDomainNameCreate(d *schema.ResourceData, meta interface{}) error {
 
 	params := &apigateway.CreateDomainNameInput{
 		DomainName:              aws.String(d.Get("domain_name").(string)),
-		MutualTlsAuthentication: expandApiGatewayMutualTlsAuthentication(d.Get("mutual_tls_authentication").([]interface{})),
+		MutualTlsAuthentication: expandMutualTLSAuthentication(d.Get("mutual_tls_authentication").([]interface{})),
 	}
 
 	if v, ok := d.GetOk("certificate_arn"); ok {
@@ -296,9 +298,9 @@ func resourceDomainNameRead(d *schema.ResourceData, meta interface{}) error {
 	if err := d.Set("endpoint_configuration", flattenApiGatewayEndpointConfiguration(domainName.EndpointConfiguration)); err != nil {
 		return fmt.Errorf("error setting endpoint_configuration: %s", err)
 	}
-	err = d.Set("mutual_tls_authentication", flattenApiGatewayMutualTlsAuthentication(domainName.MutualTlsAuthentication))
-	if err != nil {
-		return fmt.Errorf("error setting mutual_tls_authentication: %s", err)
+
+	if err = d.Set("mutual_tls_authentication", flattenMutualTLSAuthentication(domainName.MutualTlsAuthentication)); err != nil {
+		return fmt.Errorf("error setting mutual_tls_authentication: %w", err)
 	}
 
 	d.Set("regional_certificate_arn", domainName.RegionalCertificateArn)
@@ -430,30 +432,40 @@ func resourceDomainNameDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func expandApiGatewayMutualTlsAuthentication(vMutualTlsAuthentication []interface{}) *apigateway.MutualTlsAuthenticationInput {
-	if len(vMutualTlsAuthentication) == 0 || vMutualTlsAuthentication[0] == nil {
+func expandMutualTLSAuthentication(tfList []interface{}) *apigateway.MutualTlsAuthenticationInput {
+	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
-	mMutualTlsAuthentication := vMutualTlsAuthentication[0].(map[string]interface{})
 
-	mutualTlsAuthentication := &apigateway.MutualTlsAuthenticationInput{
-		TruststoreUri: aws.String(mMutualTlsAuthentication["truststore_uri"].(string)),
+	tfMap := tfList[0].(map[string]interface{})
+
+	apiObject := &apigateway.MutualTlsAuthenticationInput{}
+
+	if v, ok := tfMap["truststore_uri"].(string); ok && v != "" {
+		apiObject.TruststoreUri = aws.String(v)
 	}
 
-	if vTruststoreVersion, ok := mMutualTlsAuthentication["truststore_version"].(string); ok && vTruststoreVersion != "" {
-		mutualTlsAuthentication.TruststoreVersion = aws.String(vTruststoreVersion)
+	if v, ok := tfMap["truststore_version"].(string); ok && v != "" {
+		apiObject.TruststoreVersion = aws.String(v)
 	}
 
-	return mutualTlsAuthentication
+	return apiObject
 }
 
-func flattenApiGatewayMutualTlsAuthentication(mutualTlsAuthentication *apigateway.MutualTlsAuthentication) []interface{} {
-	if mutualTlsAuthentication == nil {
-		return []interface{}{}
+func flattenMutualTLSAuthentication(apiObject *apigateway.MutualTlsAuthentication) []interface{} {
+	if apiObject == nil {
+		return nil
 	}
 
-	return []interface{}{map[string]interface{}{
-		"truststore_uri":     aws.StringValue(mutualTlsAuthentication.TruststoreUri),
-		"truststore_version": aws.StringValue(mutualTlsAuthentication.TruststoreVersion),
-	}}
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.TruststoreUri; v != nil {
+		tfMap["truststore_uri"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.TruststoreVersion; v != nil {
+		tfMap["truststore_version"] = aws.StringValue(v)
+	}
+
+	return []interface{}{tfMap}
 }
