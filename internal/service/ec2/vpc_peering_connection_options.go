@@ -23,13 +23,13 @@ func ResourceVPCPeeringConnectionOptions() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
+			"accepter":  vpcPeeringConnectionOptionsSchema,
+			"requester": vpcPeeringConnectionOptionsSchema,
 			"vpc_peering_connection_id": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"accepter":  vpcPeeringConnectionOptionsSchema,
-			"requester": vpcPeeringConnectionOptionsSchema,
 		},
 	}
 }
