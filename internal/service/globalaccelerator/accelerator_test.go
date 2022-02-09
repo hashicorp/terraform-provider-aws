@@ -123,6 +123,10 @@ func TestAccGlobalAcceleratorAccelerator_update(t *testing.T) {
 }
 
 func TestAccGlobalAcceleratorAccelerator_attributes(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	resourceName := "aws_globalaccelerator_accelerator.test"
 	s3BucketResourceName := "aws_s3_bucket.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
