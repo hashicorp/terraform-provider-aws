@@ -136,7 +136,6 @@ func ResourceDomainName() *schema.Resource {
 						"truststore_version": {
 							Type:     schema.TypeString,
 							Optional: true,
-							Computed: true,
 						},
 					},
 				},
