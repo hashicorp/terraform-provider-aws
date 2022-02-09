@@ -32,6 +32,7 @@ func TestAccGrafanaWorkspace_saml(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkspaceExists(resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "id"),
+					resource.TestCheckResourceAttrSet(resourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "account_access_type", managedgrafana.AccountAccessTypeCurrentAccount),
 					resource.TestCheckResourceAttr(resourceName, "authentication_providers.0", managedgrafana.AuthenticationProviderTypesSaml),
 					resource.TestCheckResourceAttr(resourceName, "permission_type", managedgrafana.PermissionTypeServiceManaged),
@@ -39,6 +40,10 @@ func TestAccGrafanaWorkspace_saml(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "description", rName),
 					resource.TestCheckResourceAttr(resourceName, "status", managedgrafana.WorkspaceStatusActive),
 					resource.TestCheckResourceAttrPair(resourceName, "role_arn", iamRoleResourceName, "arn"),
+					resource.TestCheckResourceAttrSet(resourceName, "created_date"),
+					resource.TestCheckResourceAttrSet(resourceName, "last_updated_date"),
+					resource.TestCheckResourceAttrSet(resourceName, "endpoint"),
+					resource.TestCheckResourceAttrSet(resourceName, "grafana_version"),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -56,6 +61,8 @@ func TestAccGrafanaWorkspace_sso(t *testing.T) {
 	resourceName := "aws_grafana_workspace.test"
 	iamRoleResourceName := "aws_iam_role.assume"
 
+	sso := testAccWorkspaceConfigSso(rName)
+	fmt.Print(sso)
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(managedgrafana.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, managedgrafana.EndpointsID),
@@ -63,17 +70,22 @@ func TestAccGrafanaWorkspace_sso(t *testing.T) {
 		Providers:    acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWorkspaceConfigSso(rName),
+				Config: sso,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkspaceExists(resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "id"),
-					resource.TestCheckResourceAttr(resourceName, "account_access_type", managedgrafana.AccountAccessTypeCurrentAccount),
-					resource.TestCheckResourceAttr(resourceName, "authentication_providers.#", managedgrafana.AuthenticationProviderTypesAwsSso),
+					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "account_access_type", managedgrafana.AccountAccessTypeOrganization),
+					resource.TestCheckResourceAttr(resourceName, "authentication_providers.0", managedgrafana.AuthenticationProviderTypesAwsSso),
 					resource.TestCheckResourceAttr(resourceName, "permission_type", managedgrafana.PermissionTypeServiceManaged),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "description", rName),
 					resource.TestCheckResourceAttr(resourceName, "status", managedgrafana.WorkspaceStatusActive),
 					resource.TestCheckResourceAttrPair(resourceName, "role_arn", iamRoleResourceName, "arn"),
+					resource.TestCheckResourceAttrSet(resourceName, "created_date"),
+					resource.TestCheckResourceAttrSet(resourceName, "last_updated_date"),
+					resource.TestCheckResourceAttrSet(resourceName, "endpoint"),
+					resource.TestCheckResourceAttrSet(resourceName, "grafana_version"),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -98,10 +110,11 @@ func TestAccGrafanaWorkspace_organization(t *testing.T) {
 		Providers:    acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWorkspaceConfigOrganization(rName),
+				Config: testAccWorkspaceConfigOrganization(rName, "SAML"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkspaceExists(resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "id"),
+					resource.TestCheckResourceAttrSet(resourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "account_access_type", managedgrafana.AccountAccessTypeOrganization),
 					resource.TestCheckResourceAttr(resourceName, "authentication_providers.0", managedgrafana.AuthenticationProviderTypesSaml),
 					resource.TestCheckResourceAttr(resourceName, "permission_type", managedgrafana.PermissionTypeServiceManaged),
@@ -109,6 +122,10 @@ func TestAccGrafanaWorkspace_organization(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "description", rName),
 					resource.TestCheckResourceAttr(resourceName, "status", managedgrafana.WorkspaceStatusActive),
 					resource.TestCheckResourceAttrPair(resourceName, "role_arn", iamRoleResourceName, "arn"),
+					resource.TestCheckResourceAttrSet(resourceName, "created_date"),
+					resource.TestCheckResourceAttrSet(resourceName, "last_updated_date"),
+					resource.TestCheckResourceAttrSet(resourceName, "endpoint"),
+					resource.TestCheckResourceAttrSet(resourceName, "grafana_version"),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -137,6 +154,7 @@ func TestAccGrafanaWorkspace_dataSources(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkspaceExists(resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "id"),
+					resource.TestCheckResourceAttrSet(resourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "account_access_type", managedgrafana.AccountAccessTypeCurrentAccount),
 					resource.TestCheckResourceAttr(resourceName, "authentication_providers.0", managedgrafana.AuthenticationProviderTypesSaml),
 					resource.TestCheckResourceAttr(resourceName, "permission_type", managedgrafana.PermissionTypeServiceManaged),
@@ -144,6 +162,10 @@ func TestAccGrafanaWorkspace_dataSources(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "description", rName),
 					resource.TestCheckResourceAttr(resourceName, "status", managedgrafana.WorkspaceStatusActive),
 					resource.TestCheckResourceAttrPair(resourceName, "role_arn", iamRoleResourceName, "arn"),
+					resource.TestCheckResourceAttrSet(resourceName, "created_date"),
+					resource.TestCheckResourceAttrSet(resourceName, "last_updated_date"),
+					resource.TestCheckResourceAttrSet(resourceName, "endpoint"),
+					resource.TestCheckResourceAttrSet(resourceName, "grafana_version"),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -172,6 +194,7 @@ func TestAccGrafanaWorkspace_customerManaged(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkspaceExists(resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "id"),
+					resource.TestCheckResourceAttrSet(resourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "account_access_type", managedgrafana.AccountAccessTypeCurrentAccount),
 					resource.TestCheckResourceAttr(resourceName, "authentication_providers.0", managedgrafana.AuthenticationProviderTypesSaml),
 					resource.TestCheckResourceAttr(resourceName, "permission_type", managedgrafana.PermissionTypeCustomerManaged),
@@ -179,6 +202,10 @@ func TestAccGrafanaWorkspace_customerManaged(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "description", rName),
 					resource.TestCheckResourceAttr(resourceName, "status", managedgrafana.WorkspaceStatusActive),
 					resource.TestCheckResourceAttrPair(resourceName, "role_arn", iamRoleResourceName, "arn"),
+					resource.TestCheckResourceAttrSet(resourceName, "created_date"),
+					resource.TestCheckResourceAttrSet(resourceName, "last_updated_date"),
+					resource.TestCheckResourceAttrSet(resourceName, "endpoint"),
+					resource.TestCheckResourceAttrSet(resourceName, "grafana_version"),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -207,6 +234,7 @@ func TestAccGrafanaWorkspace_notificationDestinations(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkspaceExists(resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "id"),
+					resource.TestCheckResourceAttrSet(resourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "account_access_type", managedgrafana.AccountAccessTypeCurrentAccount),
 					resource.TestCheckResourceAttr(resourceName, "authentication_providers.0", managedgrafana.AuthenticationProviderTypesSaml),
 					resource.TestCheckResourceAttr(resourceName, "permission_type", managedgrafana.PermissionTypeServiceManaged),
@@ -215,6 +243,10 @@ func TestAccGrafanaWorkspace_notificationDestinations(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "notification_destinations.0", "SNS"),
 					resource.TestCheckResourceAttr(resourceName, "status", managedgrafana.WorkspaceStatusActive),
 					resource.TestCheckResourceAttrPair(resourceName, "role_arn", iamRoleResourceName, "arn"),
+					resource.TestCheckResourceAttrSet(resourceName, "created_date"),
+					resource.TestCheckResourceAttrSet(resourceName, "last_updated_date"),
+					resource.TestCheckResourceAttrSet(resourceName, "endpoint"),
+					resource.TestCheckResourceAttrSet(resourceName, "grafana_version"),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -244,7 +276,8 @@ resource "aws_iam_role" "assume" {
       },
     ]
   })
-}`, name)
+}
+`, name)
 }
 
 func testAccWorkspaceConfigSaml(name string) string {
@@ -264,26 +297,21 @@ resource "aws_grafana_workspace" "test" {
 
 func testAccWorkspaceConfigSso(name string) string {
 	return acctest.ConfigCompose(
-		testAccWorkspaceRole(name),
-		fmt.Sprintf(`
-resource "aws_grafana_workspace" "test" {
-  account_access_type      = "CURRENT_ACCOUNT"
-  authentication_providers = ["AWS_SSO"]
-  permission_type          = "SERVICE_MANAGED"
-  name                     = %[1]q
-  description              = %[1]q
-  role_arn                 = aws_iam_role.assume.arn
-}
-`, name))
+		testAccWorkspaceConfigOrganization(name, "AWS_SSO"),
+		fmt.Sprint(`
+data "aws_ssoadmin_instances" "test" {}
+
+data "aws_caller_identity" "current" {}
+`))
 }
 
-func testAccWorkspaceConfigOrganization(name string) string {
+func testAccWorkspaceConfigOrganization(name string, authenticationProvider string) string {
 	return acctest.ConfigCompose(
 		testAccWorkspaceRole(name),
 		fmt.Sprintf(`
 resource "aws_grafana_workspace" "test" {
   account_access_type      = "ORGANIZATION"
-  authentication_providers = ["SAML"]
+  authentication_providers = [%[2]q]
   permission_type          = "SERVICE_MANAGED"
   name                     = %[1]q
   description              = %[1]q
@@ -291,18 +319,11 @@ resource "aws_grafana_workspace" "test" {
   organizational_units     = [aws_organizations_organizational_unit.test.id]
 }
 
-resource "aws_organizations_organization" "test" {
-  aws_service_access_principals = [
-    "cloudtrail.amazonaws.com",
-    "config.amazonaws.com"
-  ]
-
-  feature_set = "ALL"
-}
+data "aws_organizations_organization" "test" {}
 
 resource "aws_organizations_organizational_unit" "test" {
   name      = %[1]q
-  parent_id = aws_organizations_organization.test.roots[0].id
+  parent_id = data.aws_organizations_organization.test.roots[0].id
 }
 
 resource "aws_iam_role" "org" {
@@ -322,7 +343,7 @@ resource "aws_iam_role" "org" {
   })
   managed_policy_arns = ["arn:aws:iam::aws:policy/service-role/AWSConfigRoleForOrganizations"]
 }
-`, name))
+`, name, authenticationProvider))
 }
 
 func testAccWorkspaceConfigDataSources(name string) string {
@@ -341,6 +362,131 @@ resource "aws_grafana_workspace" "test" {
 
 resource "aws_prometheus_workspace" "test" {
   alias = %[1]q
+}
+
+resource "aws_iam_policy" "prometheus" {
+  name        = "prometheus"
+  description = "A test policy"
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Effect = "Allow",
+        Action = [
+          "aps:ListWorkspaces",
+          "aps:DescribeWorkspace",
+          "aps:QueryMetrics",
+          "aps:GetLabels",
+          "aps:GetSeries",
+          "aps:GetMetricMetadata"
+        ],
+        Resource = aws_prometheus_workspace.test.arn
+      }
+    ]
+  })
+}
+
+resource "aws_iam_policy_attachment" "prometheus_test" {
+  name       = "${%[1]q}-prometheus"
+  roles      = [aws_iam_role.assume.name]
+  policy_arn = aws_iam_policy.prometheus.arn
+}
+
+resource "aws_iam_policy" "cloudwatch" {
+  name        = "cloudwatch"
+  description = "A test policy"
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Sid = "AllowReadingMetricsFromCloudWatch"
+        Effect = "Allow",
+        Action = [
+          "cloudwatch:DescribeAlarmsForMetric",
+          "cloudwatch:DescribeAlarmHistory",
+          "cloudwatch:DescribeAlarms",
+          "cloudwatch:ListMetrics",
+          "cloudwatch:GetMetricStatistics",
+          "cloudwatch:GetMetricData"
+        ],
+        Resource = "*"
+      },
+      {
+        Sid = "AllowReadingLogsFromCloudWatch"
+        Effect = "Allow",
+        Action = [
+          "logs:DescribeLogGroups",
+          "logs:GetLogGroupFields",
+          "logs:StartQuery",
+          "logs:StopQuery",
+          "logs:GetQueryResults",
+          "logs:GetLogEvents"
+        ],
+        Resource = "*"
+      },
+      {
+        Sid = "AllowReadingTagsInstancesRegionsFromEC2"
+        Effect = "Allow",
+        Action = [
+          "ec2:DescribeTags",
+          "ec2:DescribeInstances",
+          "ec2:DescribeRegions"
+        ],
+        Resource = "*"
+      },
+      {
+        Sid = "AllowReadingTagsInstancesRegions"
+        Effect = "Allow",
+        Action = [
+          "tag:GetResources"
+        ],
+        Resource = "*"
+      }
+    ]
+  })
+}
+
+resource "aws_iam_policy_attachment" "cloudwatch_test" {
+  name       = "${%[1]q}-cloudwatch"
+  roles      = [aws_iam_role.assume.name]
+  policy_arn = aws_iam_policy.cloudwatch.arn
+}
+
+resource "aws_iam_policy" "xray" {
+  name        = "xray"
+  description = "A test policy"
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Effect = "Allow",
+        Action = [
+		  "xray:GetSamplingRules",
+		  "xray:GetSamplingTargets",
+		  "xray:GetSamplingStatisticSummaries",
+		  "xray:BatchGetTraces",
+		  "xray:GetServiceGraph",
+		  "xray:GetTraceGraph",
+		  "xray:GetTraceSummaries",
+		  "xray:GetGroups",
+		  "xray:GetGroup",
+		  "xray:ListTagsForResource",
+		  "xray:GetTimeSeriesServiceStatistics",
+		  "xray:GetInsightSummaries",
+		  "xray:GetInsight",
+		  "xray:GetInsightEvents",
+		  "xray:GetInsightImpactGraph"
+        ],
+        Resource = "*"
+      }
+    ]
+  })
+}
+
+resource "aws_iam_policy_attachment" "xray_test" {
+  name       = "${%[1]q}-xray"
+  roles      = [aws_iam_role.assume.name]
+  policy_arn = aws_iam_policy.xray.arn
 }
 `, name))
 }
@@ -373,6 +519,10 @@ resource "aws_grafana_workspace" "test" {
   notification_destinations = ["SNS"]
   role_arn                  = aws_iam_role.assume.arn
 }
+
+data "aws_caller_identity" "test" { }
+
+data "aws_region" "test" {}
 `, name))
 }
 

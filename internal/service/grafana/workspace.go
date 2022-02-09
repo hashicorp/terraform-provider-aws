@@ -2,6 +2,8 @@ package grafana
 
 import (
 	"fmt"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"log"
 	"time"
 )
@@ -38,6 +40,10 @@ func ResourceWorkspace() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"account_access_type": {
 				Type:         schema.TypeString,
 				Required:     true,
@@ -48,11 +54,6 @@ func ResourceWorkspace() *schema.Resource {
 				Required: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"saml_configuration_status": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringInSlice(managedgrafana.SamlConfigurationStatus_Values(), false),
-			},
 			"organization_role_name": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -61,6 +62,11 @@ func ResourceWorkspace() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringInSlice(managedgrafana.PermissionType_Values(), false),
+			},
+			"saml_configuration_status": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.StringInSlice(managedgrafana.SamlConfigurationStatus_Values(), false),
 			},
 			"stack_set_name": {
 				Type:     schema.TypeString,
@@ -99,6 +105,22 @@ func ResourceWorkspace() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: verify.ValidARN,
 			},
+			"created_date": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"last_updated_date": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"endpoint": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"grafana_version": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 		},
 	}
 }
@@ -106,6 +128,7 @@ func ResourceWorkspace() *schema.Resource {
 func resourceWorkspaceCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).GrafanaConn
 	input := &managedgrafana.CreateWorkspaceInput{
+		ClientToken:             aws.String(resource.UniqueId()),
 		AccountAccessType:       aws.String(d.Get("account_access_type").(string)),
 		AuthenticationProviders: flex.ExpandStringList(d.Get("authentication_providers").([]interface{})),
 	}
@@ -191,6 +214,16 @@ func resourceWorkspaceRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("organizational_units", workspace.OrganizationalUnits)
 	d.Set("status", workspace.Status)
 	d.Set("role_arn", workspace.WorkspaceRoleArn)
+	d.Set("created_date", workspace.Created.Format(time.RFC3339))
+	d.Set("last_updated_date", workspace.Modified.Format(time.RFC3339))
+	d.Set("endpoint", workspace.Endpoint)
+	d.Set("grafana_version", workspace.GrafanaVersion)
+	workspaceArn := arn.ARN{
+		Partition: meta.(*conns.AWSClient).Partition,
+		Service:   "grafana",
+		Resource:  d.Id(),
+	}.String()
+	d.Set("arn", workspaceArn)
 
 	return nil
 }
