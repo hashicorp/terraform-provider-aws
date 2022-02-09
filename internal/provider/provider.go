@@ -3,6 +3,7 @@ package provider
 import (
 	"fmt"
 	"log"
+	"os"
 	"regexp"
 	"time"
 
@@ -1899,13 +1900,8 @@ func providerConfigure(d *schema.ResourceData, terraformVersion string) (interfa
 	}
 
 	endpointsSet := d.Get("endpoints").(*schema.Set)
-
-	for _, endpointsSetI := range endpointsSet.List() {
-		endpoints := endpointsSetI.(map[string]interface{})
-
-		if err := expandEndpoints(endpoints, config.Endpoints); err != nil {
-			return nil, err
-		}
+	if err := expandEndpoints(endpointsSet.List(), config.Endpoints); err != nil {
+		return nil, err
 	}
 
 	if v, ok := d.GetOk("allowed_account_ids"); ok {
@@ -2110,16 +2106,40 @@ func expandProviderIgnoreTags(l []interface{}) *tftags.IgnoreConfig {
 	return ignoreConfig
 }
 
-func expandEndpoints(endpoints map[string]interface{}, out map[string]string) error {
-	for _, hclKey := range conns.HCLKeys() {
-		var serviceKey string
-		var err error
-		if serviceKey, err = conns.ServiceForHCLKey(hclKey); err != nil {
-			return fmt.Errorf("failed to assign endpoint (%s): %w", hclKey, err)
+func expandEndpoints(endpointsSetList []interface{}, out map[string]string) error {
+	for _, endpointsSetI := range endpointsSetList {
+		endpoints := endpointsSetI.(map[string]interface{})
+
+		for _, hclKey := range conns.HCLKeys() {
+			var serviceKey string
+			var err error
+			if serviceKey, err = conns.ServiceForHCLKey(hclKey); err != nil {
+				return fmt.Errorf("failed to assign endpoint (%s): %w", hclKey, err)
+			}
+
+			if out[serviceKey] == "" && endpoints[hclKey].(string) != "" {
+				out[serviceKey] = endpoints[hclKey].(string)
+			}
+		}
+	}
+
+	for _, service := range conns.ServiceKeys() {
+		if out[service] != "" {
+			continue
 		}
 
-		if out[serviceKey] == "" && endpoints[hclKey].(string) != "" {
-			out[serviceKey] = endpoints[hclKey].(string)
+		envvar := conns.ServiceEnvVar(service)
+		if envvar != "" {
+			if v := os.Getenv(envvar); v != "" {
+				out[service] = v
+				continue
+			}
+		}
+		if envvarDeprecated := conns.ServiceDeprecatedEnvVar(service); envvarDeprecated != "" {
+			if v := os.Getenv(envvarDeprecated); v != "" {
+				log.Printf("[WARN] The environment variable %q is deprecated. Use %q instead.", envvarDeprecated, envvar)
+				out[service] = v
+			}
 		}
 	}
 

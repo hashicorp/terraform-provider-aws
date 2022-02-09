@@ -572,6 +572,8 @@ type ServiceDatum struct {
 	AWSServiceID      string
 	ProviderNameUpper string
 	HCLKeys           []string
+	EnvVar            string
+	DeprecatedEnvVar  string
 }
 
 var serviceData map[string]*ServiceDatum
@@ -655,7 +657,7 @@ func init() {
 	serviceData[DMS] = &ServiceDatum{AWSClientName: "DatabaseMigrationService", AWSServiceName: databasemigrationservice.ServiceName, AWSEndpointsID: databasemigrationservice.EndpointsID, AWSServiceID: databasemigrationservice.ServiceID, ProviderNameUpper: "DMS", HCLKeys: []string{"dms", "databasemigration", "databasemigrationservice"}}
 	serviceData[DocDB] = &ServiceDatum{AWSClientName: "DocDB", AWSServiceName: docdb.ServiceName, AWSEndpointsID: docdb.EndpointsID, AWSServiceID: docdb.ServiceID, ProviderNameUpper: "DocDB", HCLKeys: []string{"docdb"}}
 	serviceData[DS] = &ServiceDatum{AWSClientName: "DirectoryService", AWSServiceName: directoryservice.ServiceName, AWSEndpointsID: directoryservice.EndpointsID, AWSServiceID: directoryservice.ServiceID, ProviderNameUpper: "DS", HCLKeys: []string{"ds"}}
-	serviceData[DynamoDB] = &ServiceDatum{AWSClientName: "DynamoDB", AWSServiceName: dynamodb.ServiceName, AWSEndpointsID: dynamodb.EndpointsID, AWSServiceID: dynamodb.ServiceID, ProviderNameUpper: "DynamoDB", HCLKeys: []string{"dynamodb"}}
+	serviceData[DynamoDB] = &ServiceDatum{AWSClientName: "DynamoDB", AWSServiceName: dynamodb.ServiceName, AWSEndpointsID: dynamodb.EndpointsID, AWSServiceID: dynamodb.ServiceID, ProviderNameUpper: "DynamoDB", HCLKeys: []string{"dynamodb"}, EnvVar: "TF_AWS_DYNAMODB_ENDPOINT", DeprecatedEnvVar: "AWS_DYNAMODB_ENDPOINT"}
 	serviceData[DynamoDBStreams] = &ServiceDatum{AWSClientName: "DynamoDBStreams", AWSServiceName: dynamodbstreams.ServiceName, AWSEndpointsID: dynamodbstreams.EndpointsID, AWSServiceID: dynamodbstreams.ServiceID, ProviderNameUpper: "DynamoDBStreams", HCLKeys: []string{"dynamodbstreams"}}
 	serviceData[EC2] = &ServiceDatum{AWSClientName: "EC2", AWSServiceName: ec2.ServiceName, AWSEndpointsID: ec2.EndpointsID, AWSServiceID: ec2.ServiceID, ProviderNameUpper: "EC2", HCLKeys: []string{"ec2"}}
 	serviceData[EC2InstanceConnect] = &ServiceDatum{AWSClientName: "EC2InstanceConnect", AWSServiceName: ec2instanceconnect.ServiceName, AWSEndpointsID: ec2instanceconnect.EndpointsID, AWSServiceID: ec2instanceconnect.ServiceID, ProviderNameUpper: "EC2InstanceConnect", HCLKeys: []string{"ec2instanceconnect"}}
@@ -696,7 +698,7 @@ func init() {
 	serviceData[Health] = &ServiceDatum{AWSClientName: "Health", AWSServiceName: health.ServiceName, AWSEndpointsID: health.EndpointsID, AWSServiceID: health.ServiceID, ProviderNameUpper: "Health", HCLKeys: []string{"health"}}
 	serviceData[HealthLake] = &ServiceDatum{AWSClientName: "HealthLake", AWSServiceName: healthlake.ServiceName, AWSEndpointsID: healthlake.EndpointsID, AWSServiceID: healthlake.ServiceID, ProviderNameUpper: "HealthLake", HCLKeys: []string{"healthlake"}}
 	serviceData[Honeycode] = &ServiceDatum{AWSClientName: "Honeycode", AWSServiceName: honeycode.ServiceName, AWSEndpointsID: honeycode.EndpointsID, AWSServiceID: honeycode.ServiceID, ProviderNameUpper: "Honeycode", HCLKeys: []string{"honeycode"}}
-	serviceData[IAM] = &ServiceDatum{AWSClientName: "IAM", AWSServiceName: iam.ServiceName, AWSEndpointsID: iam.EndpointsID, AWSServiceID: iam.ServiceID, ProviderNameUpper: "IAM", HCLKeys: []string{"iam"}}
+	serviceData[IAM] = &ServiceDatum{AWSClientName: "IAM", AWSServiceName: iam.ServiceName, AWSEndpointsID: iam.EndpointsID, AWSServiceID: iam.ServiceID, ProviderNameUpper: "IAM", HCLKeys: []string{"iam"}, EnvVar: "TF_AWS_IAM_ENDPOINT", DeprecatedEnvVar: "AWS_IAM_ENDPOINT"}
 	serviceData[IdentityStore] = &ServiceDatum{AWSClientName: "IdentityStore", AWSServiceName: identitystore.ServiceName, AWSEndpointsID: identitystore.EndpointsID, AWSServiceID: identitystore.ServiceID, ProviderNameUpper: "IdentityStore", HCLKeys: []string{"identitystore"}}
 	serviceData[ImageBuilder] = &ServiceDatum{AWSClientName: "ImageBuilder", AWSServiceName: imagebuilder.ServiceName, AWSEndpointsID: imagebuilder.EndpointsID, AWSServiceID: imagebuilder.ServiceID, ProviderNameUpper: "ImageBuilder", HCLKeys: []string{"imagebuilder"}}
 	serviceData[Inspector] = &ServiceDatum{AWSClientName: "Inspector", AWSServiceName: inspector.ServiceName, AWSEndpointsID: inspector.EndpointsID, AWSServiceID: inspector.ServiceID, ProviderNameUpper: "Inspector", HCLKeys: []string{"inspector"}}
@@ -797,7 +799,7 @@ func init() {
 	serviceData[Route53RecoveryControlConfig] = &ServiceDatum{AWSClientName: "Route53RecoveryControlConfig", AWSServiceName: route53recoverycontrolconfig.ServiceName, AWSEndpointsID: route53recoverycontrolconfig.EndpointsID, AWSServiceID: route53recoverycontrolconfig.ServiceID, ProviderNameUpper: "Route53RecoveryControlConfig", HCLKeys: []string{"route53recoverycontrolconfig"}}
 	serviceData[Route53RecoveryReadiness] = &ServiceDatum{AWSClientName: "Route53RecoveryReadiness", AWSServiceName: route53recoveryreadiness.ServiceName, AWSEndpointsID: route53recoveryreadiness.EndpointsID, AWSServiceID: route53recoveryreadiness.ServiceID, ProviderNameUpper: "Route53RecoveryReadiness", HCLKeys: []string{"route53recoveryreadiness"}}
 	serviceData[Route53Resolver] = &ServiceDatum{AWSClientName: "Route53Resolver", AWSServiceName: route53resolver.ServiceName, AWSEndpointsID: route53resolver.EndpointsID, AWSServiceID: route53resolver.ServiceID, ProviderNameUpper: "Route53Resolver", HCLKeys: []string{"route53resolver"}}
-	serviceData[S3] = &ServiceDatum{AWSClientName: "S3", AWSServiceName: s3.ServiceName, AWSEndpointsID: s3.EndpointsID, AWSServiceID: s3.ServiceID, ProviderNameUpper: "S3", HCLKeys: []string{"s3"}}
+	serviceData[S3] = &ServiceDatum{AWSClientName: "S3", AWSServiceName: s3.ServiceName, AWSEndpointsID: s3.EndpointsID, AWSServiceID: s3.ServiceID, ProviderNameUpper: "S3", HCLKeys: []string{"s3"}, EnvVar: "TF_AWS_S3_ENDPOINT", DeprecatedEnvVar: "AWS_S3_ENDPOINT"}
 	serviceData[S3Control] = &ServiceDatum{AWSClientName: "S3Control", AWSServiceName: s3control.ServiceName, AWSEndpointsID: s3control.EndpointsID, AWSServiceID: s3control.ServiceID, ProviderNameUpper: "S3Control", HCLKeys: []string{"s3control"}}
 	serviceData[S3Outposts] = &ServiceDatum{AWSClientName: "S3Outposts", AWSServiceName: s3outposts.ServiceName, AWSEndpointsID: s3outposts.EndpointsID, AWSServiceID: s3outposts.ServiceID, ProviderNameUpper: "S3Outposts", HCLKeys: []string{"s3outposts"}}
 	serviceData[SageMaker] = &ServiceDatum{AWSClientName: "SageMaker", AWSServiceName: sagemaker.ServiceName, AWSEndpointsID: sagemaker.EndpointsID, AWSServiceID: sagemaker.ServiceID, ProviderNameUpper: "SageMaker", HCLKeys: []string{"sagemaker"}}
@@ -829,7 +831,7 @@ func init() {
 	serviceData[SSOAdmin] = &ServiceDatum{AWSClientName: "SSOAdmin", AWSServiceName: ssoadmin.ServiceName, AWSEndpointsID: ssoadmin.EndpointsID, AWSServiceID: ssoadmin.ServiceID, ProviderNameUpper: "SSOAdmin", HCLKeys: []string{"ssoadmin"}}
 	serviceData[SSOOIDC] = &ServiceDatum{AWSClientName: "SSOOIDC", AWSServiceName: ssooidc.ServiceName, AWSEndpointsID: ssooidc.EndpointsID, AWSServiceID: ssooidc.ServiceID, ProviderNameUpper: "SSOOIDC", HCLKeys: []string{"ssooidc"}}
 	serviceData[StorageGateway] = &ServiceDatum{AWSClientName: "StorageGateway", AWSServiceName: storagegateway.ServiceName, AWSEndpointsID: storagegateway.EndpointsID, AWSServiceID: storagegateway.ServiceID, ProviderNameUpper: "StorageGateway", HCLKeys: []string{"storagegateway"}}
-	serviceData[STS] = &ServiceDatum{AWSClientName: "STS", AWSServiceName: sts.ServiceName, AWSEndpointsID: sts.EndpointsID, AWSServiceID: sts.ServiceID, ProviderNameUpper: "STS", HCLKeys: []string{"sts"}}
+	serviceData[STS] = &ServiceDatum{AWSClientName: "STS", AWSServiceName: sts.ServiceName, AWSEndpointsID: sts.EndpointsID, AWSServiceID: sts.ServiceID, ProviderNameUpper: "STS", HCLKeys: []string{"sts"}, EnvVar: "TF_AWS_STS_ENDPOINT", DeprecatedEnvVar: "AWS_STS_ENDPOINT"}
 	serviceData[Support] = &ServiceDatum{AWSClientName: "Support", AWSServiceName: support.ServiceName, AWSEndpointsID: support.EndpointsID, AWSServiceID: support.ServiceID, ProviderNameUpper: "Support", HCLKeys: []string{"support"}}
 	serviceData[SWF] = &ServiceDatum{AWSClientName: "SWF", AWSServiceName: swf.ServiceName, AWSEndpointsID: swf.EndpointsID, AWSServiceID: swf.ServiceID, ProviderNameUpper: "SWF", HCLKeys: []string{"swf"}}
 	serviceData[Synthetics] = &ServiceDatum{AWSClientName: "Synthetics", AWSServiceName: synthetics.ServiceName, AWSEndpointsID: synthetics.EndpointsID, AWSServiceID: synthetics.ServiceID, ProviderNameUpper: "Synthetics", HCLKeys: []string{"synthetics"}}
@@ -1972,4 +1974,20 @@ func ServiceProviderNameUpper(key string) (string, error) {
 	}
 
 	return "", fmt.Errorf("no service data found for %s", key)
+}
+
+func ServiceDeprecatedEnvVar(key string) string {
+	if v, ok := serviceData[key]; ok {
+		return v.DeprecatedEnvVar
+	}
+
+	return ""
+}
+
+func ServiceEnvVar(key string) string {
+	if v, ok := serviceData[key]; ok {
+		return v.EnvVar
+	}
+
+	return ""
 }

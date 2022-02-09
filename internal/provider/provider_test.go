@@ -20,7 +20,7 @@ func TestExpandEndpoints(t *testing.T) {
 
 	results := make(map[string]string)
 
-	err := expandEndpoints(endpoints, results)
+	err := expandEndpoints([]interface{}{endpoints}, results)
 	if err != nil {
 		t.Fatalf("Unexpected error: %s", err)
 	}
@@ -30,7 +30,7 @@ func TestExpandEndpoints(t *testing.T) {
 	}
 
 	if v := results["sts"]; v != "https://sts.fake.test" {
-		t.Errorf("Expected endpoint %q, got %q", "https://sts.fake.test", v)
+		t.Errorf("Expected endpoint %q, got %v", "https://sts.fake.test", results)
 	}
 }
 
@@ -78,7 +78,7 @@ func TestEndpointMultipleKeys(t *testing.T) {
 
 		results := make(map[string]string)
 
-		err := expandEndpoints(endpoints, results)
+		err := expandEndpoints([]interface{}{endpoints}, results)
 		if err != nil {
 			t.Fatalf("Unexpected error: %s", err)
 		}
@@ -88,8 +88,84 @@ func TestEndpointMultipleKeys(t *testing.T) {
 		}
 
 		if v := results[testcase.expectedService]; v != testcase.expectedEndpoint {
-			t.Errorf("Expected endpoint[%s] to be %q, got %q", testcase.expectedService, testcase.expectedEndpoint, v)
-			t.Errorf("results: %v", results)
+			t.Errorf("Expected endpoint[%s] to be %q, got %v", testcase.expectedService, testcase.expectedEndpoint, results)
+		}
+	}
+}
+
+func TestEndpointEnvVarPrecedence(t *testing.T) {
+	testcases := []struct {
+		endpoints        map[string]string
+		envvars          map[string]string
+		expectedService  string
+		expectedEndpoint string
+	}{
+		{
+			endpoints: map[string]string{},
+			envvars: map[string]string{
+				"TF_AWS_STS_ENDPOINT": "https://sts.fake.test",
+			},
+			expectedService:  conns.STS,
+			expectedEndpoint: "https://sts.fake.test",
+		},
+		{
+			endpoints: map[string]string{},
+			envvars: map[string]string{
+				"AWS_STS_ENDPOINT": "https://sts-deprecated.fake.test",
+			},
+			expectedService:  conns.STS,
+			expectedEndpoint: "https://sts-deprecated.fake.test",
+		},
+		{
+			endpoints: map[string]string{},
+			envvars: map[string]string{
+				"TF_AWS_STS_ENDPOINT": "https://sts.fake.test",
+				"AWS_STS_ENDPOINT":    "https://sts-deprecated.fake.test",
+			},
+			expectedService:  conns.STS,
+			expectedEndpoint: "https://sts.fake.test",
+		},
+		{
+			endpoints: map[string]string{
+				"sts": "https://sts-config.fake.test",
+			},
+			envvars: map[string]string{
+				"TF_AWS_STS_ENDPOINT": "https://sts-env.fake.test",
+			},
+			expectedService:  conns.STS,
+			expectedEndpoint: "https://sts-config.fake.test",
+		},
+	}
+
+	for _, testcase := range testcases {
+		oldEnv := stashEnv()
+		defer popEnv(oldEnv)
+
+		for k, v := range testcase.envvars {
+			os.Setenv(k, v)
+		}
+
+		endpoints := make(map[string]interface{})
+		for _, serviceKey := range conns.HCLKeys() {
+			endpoints[serviceKey] = ""
+		}
+		for k, v := range testcase.endpoints {
+			endpoints[k] = v
+		}
+
+		results := make(map[string]string)
+
+		err := expandEndpoints([]interface{}{endpoints}, results)
+		if err != nil {
+			t.Fatalf("Unexpected error: %s", err)
+		}
+
+		if a, e := len(results), 1; a != e {
+			t.Errorf("Expected 1 endpoint, got %d", len(results))
+		}
+
+		if v := results[testcase.expectedService]; v != testcase.expectedEndpoint {
+			t.Errorf("Expected endpoint[%s] to be %q, got %v", testcase.expectedService, testcase.expectedEndpoint, results)
 		}
 	}
 }
