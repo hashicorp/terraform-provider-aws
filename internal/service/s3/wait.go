@@ -49,8 +49,6 @@ func waitForBucketVersioningStatus(ctx context.Context, conn *s3.S3, bucket, exp
 		Delay:                     1 * time.Second,
 	}
 
-	_, err := stateConf.WaitForState()
-
 	outputRaw, err := stateConf.WaitForState()
 
 	if output, ok := outputRaw.(*s3.GetBucketVersioningOutput); ok {
