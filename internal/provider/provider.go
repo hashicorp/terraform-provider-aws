@@ -290,13 +290,23 @@ func Provider() *schema.Provider {
 				InputDefault: "us-east-1", // lintignore:AWSAT003
 			},
 			"s3_force_path_style": {
+				Type:       schema.TypeBool,
+				Optional:   true,
+				Default:    false,
+				Deprecated: "Use s3_use_path_style instead.",
+				Description: "Set this to true to enable the request to use path-style addressing,\n" +
+					"i.e., https://s3.amazonaws.com/BUCKET/KEY. By default, the S3 client will\n" +
+					"use virtual hosted bucket addressing when possible\n" +
+					"(https://BUCKET.s3.amazonaws.com/KEY). Specific to the Amazon S3 service.",
+			},
+			"s3_use_path_style": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
-				Description: "Set this to true to force the request to use path-style addressing,\n" +
-					"i.e., http://s3.amazonaws.com/BUCKET/KEY. By default, the S3 client will\n" +
+				Description: "Set this to true to enable the request to use path-style addressing,\n" +
+					"i.e., https://s3.amazonaws.com/BUCKET/KEY. By default, the S3 client will\n" +
 					"use virtual hosted bucket addressing when possible\n" +
-					"(http://BUCKET.s3.amazonaws.com/KEY). Specific to the Amazon S3 service.",
+					"(https://BUCKET.s3.amazonaws.com/KEY). Specific to the Amazon S3 service.",
 			},
 			"secret_key": {
 				Type:     schema.TypeString,
@@ -1879,7 +1889,7 @@ func providerConfigure(d *schema.ResourceData, terraformVersion string) (interfa
 		MaxRetries:                     d.Get("max_retries").(int),
 		Profile:                        d.Get("profile").(string),
 		Region:                         d.Get("region").(string),
-		S3ForcePathStyle:               d.Get("s3_force_path_style").(bool),
+		S3UsePathStyle:                 d.Get("s3_use_path_style").(bool) || d.Get("s3_force_path_style").(bool),
 		SecretKey:                      d.Get("secret_key").(string),
 		SharedConfigFile:               d.Get("shared_config_file").(string),
 		SharedCredentialsFile:          d.Get("shared_credentials_file").(string),

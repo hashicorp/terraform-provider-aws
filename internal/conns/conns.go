@@ -869,7 +869,7 @@ type Config struct {
 	MaxRetries                     int
 	Profile                        string
 	Region                         string
-	S3ForcePathStyle               bool
+	S3UsePathStyle                 bool
 	SecretKey                      string
 	SharedConfigFile               string
 	SharedCredentialsFile          string
@@ -1576,7 +1576,7 @@ func (c *Config) Client() (interface{}, error) {
 	// Services that require multiple client configurations
 	s3Config := &aws.Config{
 		Endpoint:         aws.String(c.Endpoints[S3]),
-		S3ForcePathStyle: aws.Bool(c.S3ForcePathStyle),
+		S3ForcePathStyle: aws.Bool(c.S3UsePathStyle),
 	}
 
 	client.S3Conn = s3.New(sess.Copy(s3Config))
