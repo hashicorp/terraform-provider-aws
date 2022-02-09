@@ -51,40 +51,36 @@ resource "aws_vpc" "vpc2" {
 }
 
 resource "aws_subnet" "subnet1" {
-  vpc_id     = aws_vpc.vpc1.id
-  cidr_block = "10.0.1.0/24"
+  vpc_id            = aws_vpc.vpc1.id
+  cidr_block        = "10.0.1.0/24"
   availability_zone = data.aws_availability_zones.available.names[0]
-
   tags = {
     Name = "Transit_Gateway_Multicast_Domain_Example"
   }
 }
 
 resource "aws_subnet" "subnet2" {
-  vpc_id     = aws_vpc.vpc1.id
-  cidr_block = "10.0.2.0/24"
+  vpc_id            = aws_vpc.vpc1.id
+  cidr_block        = "10.0.2.0/24"
   availability_zone = data.aws_availability_zones.available.names[1]
-
   tags = {
     Name = "Transit_Gateway_Multicast_Domain_Example"
   }
 }
 
 resource "aws_subnet" "subnet3" {
-  vpc_id     = aws_vpc.vpc2.id
-  cidr_block = "11.0.1.0/24"
+  vpc_id            = aws_vpc.vpc2.id
+  cidr_block        = "11.0.1.0/24"
   availability_zone = data.aws_availability_zones.available.names[0]
-
   tags = {
     Name = "Transit_Gateway_Multicast_Domain_Example"
   }
 }
 
 resource "aws_subnet" "subnet4" {
-  vpc_id     = aws_vpc.vpc2.id
-  cidr_block = "11.0.2.0/24"
+  vpc_id            = aws_vpc.vpc2.id
+  cidr_block        = "11.0.2.0/24"
   availability_zone = data.aws_availability_zones.available.names[1]
-
   tags = {
     Name = "Transit_Gateway_Multicast_Domain_Example"
   }
@@ -94,7 +90,6 @@ resource "aws_instance" "instance1" {
   ami           = data.aws_ami.amazon_linux.id
   instance_type = "t2.micro"
   subnet_id     = aws_subnet.subnet1.id
-
   tags = {
     Name = "Transit_Gateway_Multicast_Domain_Example"
   }
@@ -104,7 +99,6 @@ resource "aws_instance" "instance2" {
   ami           = data.aws_ami.amazon_linux.id
   instance_type = "t2.micro"
   subnet_id     = aws_subnet.subnet2.id
-
   tags = {
     Name = "Transit_Gateway_Multicast_Domain_Example"
   }
@@ -112,7 +106,6 @@ resource "aws_instance" "instance2" {
 
 resource "aws_ec2_transit_gateway" "tgw" {
   multicast_support = "enable"
-
   tags = {
     Name = "Transit_Gateway_Multicast_Domain_Example"
   }
@@ -122,7 +115,6 @@ resource "aws_ec2_transit_gateway_vpc_attachment" "attachment1" {
   subnet_ids         = [aws_subnet.subnet1.id, aws_subnet.subnet2.id]
   transit_gateway_id = aws_ec2_transit_gateway.tgw.id
   vpc_id             = aws_vpc.vpc1.id
-
   tags = {
     Name = "Transit_Gateway_Multicast_Domain_Example"
   }
@@ -132,7 +124,6 @@ resource "aws_ec2_transit_gateway_vpc_attachment" "test2" {
   subnet_ids         = [aws_subnet.subnet3.id, aws_subnet.subnet4.id]
   transit_gateway_id = aws_ec2_transit_gateway.tgw.id
   vpc_id             = aws_vpc.vpc2.id
-
   tags = {
     Name = "Transit_Gateway_Multicast_Domain_Example"
   }
@@ -146,7 +137,7 @@ resource "aws_ec2_transit_gateway_multicast_domain" "multicast_domain" {
   }
   association {
     transit_gateway_attachment_id = aws_ec2_transit_gateway_vpc_attachment.attachment2.id
-    subnet_ids                    = [aws_subnet.subnet3.id,aws_subnet.subnet4.id]
+    subnet_ids                    = [aws_subnet.subnet3.id, aws_subnet.subnet4.id]
   }
   members {
     group_ip_address      = "224.0.0.1"
