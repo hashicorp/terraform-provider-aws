@@ -868,6 +868,7 @@ func Provider() *schema.Provider {
 			"aws_apprunner_auto_scaling_configuration_version": apprunner.ResourceAutoScalingConfigurationVersion(),
 			"aws_apprunner_connection":                         apprunner.ResourceConnection(),
 			"aws_apprunner_custom_domain_association":          apprunner.ResourceCustomDomainAssociation(),
+			"aws_apprunner_custom_vpc_association":             apprunner.ResourceCustomVpcAssociation(),
 			"aws_apprunner_service":                            apprunner.ResourceService(),
 
 			"aws_appstream_directory_config":        appstream.ResourceDirectoryConfig(),
