@@ -12,7 +12,7 @@ func init() {
 	acctest.RegisterServiceErrorCheckFunc(apigateway.EndpointsID, testAccErrorCheckSkip)
 }
 
-// testAccErrorCheckSkipAppStream skips AppStream tests that have error messages indicating unsupported features
+// skips tests that have error messages indicating unsupported features
 func testAccErrorCheckSkip(t *testing.T) resource.ErrorCheckFunc {
 	return acctest.ErrorCheckSkipMessagesContaining(t,
 		"no matching Route53Zone found",
