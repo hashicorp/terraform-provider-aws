@@ -6,6 +6,58 @@ import (
 	"testing"
 )
 
+func TestValidTimeDuration(t *testing.T) {
+	testCases := []struct {
+		val         interface{}
+		expectedErr *regexp.Regexp
+	}{
+		{
+			val:         "",
+			expectedErr: regexp.MustCompile(`cannot be parsed as a valid time.Duration`),
+		},
+		{
+			val:         "1",
+			expectedErr: regexp.MustCompile(`cannot be parsed as a valid time.Duration`),
+		},
+		{
+			val: "-10h",
+		},
+		{
+			val: "10h",
+		},
+		{
+			val: "1h10m10s",
+		},
+	}
+
+	matchErr := func(errs []error, r *regexp.Regexp) bool {
+		// err must match one provided
+		for _, err := range errs {
+			if r.MatchString(err.Error()) {
+				return true
+			}
+		}
+
+		return false
+	}
+
+	for i, tc := range testCases {
+		_, errs := ValidTimeDuration(tc.val, "test_property")
+
+		if len(errs) == 0 && tc.expectedErr == nil {
+			continue
+		}
+
+		if len(errs) != 0 && tc.expectedErr == nil {
+			t.Fatalf("expected test case %d to produce no errors, got %v", i, errs)
+		}
+
+		if !matchErr(errs, tc.expectedErr) {
+			t.Fatalf("expected test case %d to produce error matching \"%s\", got %v", i, tc.expectedErr, errs)
+		}
+	}
+}
+
 func TestValidTypeStringNullableBoolean(t *testing.T) {
 	testCases := []struct {
 		val         interface{}
