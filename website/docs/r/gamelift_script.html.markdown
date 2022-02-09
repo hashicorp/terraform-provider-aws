@@ -14,7 +14,7 @@ Provides an Gamelift Script resource.
 
 ```terraform
 resource "aws_gamelift_script" "example" {
-  name             = "example-script"
+  name = "example-script"
 
   storage_location {
     bucket   = aws_s3_bucket.example.bucket
