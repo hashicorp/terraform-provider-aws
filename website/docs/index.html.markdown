@@ -199,7 +199,10 @@ In addition to [generic `provider` arguments](https://www.terraform.io/docs/conf
 * `http_proxy` - (Optional) Address of an HTTP proxy to use when accessing the AWS API. Can also be set using the `HTTP_PROXY` or `HTTPS_PROXY` environment variables.
 * `ignore_tags` - (Optional) Configuration block with resource tag settings to ignore across all resources handled by this provider (except any individual service tag resources such as `aws_ec2_tag`) for situations where external systems are managing certain resource tags. Arguments to the configuration block are described below in the `ignore_tags` Configuration Block section. See the [Terraform multiple provider instances documentation](https://www.terraform.io/docs/configuration/providers.html#alias-multiple-provider-configurations) for more information about additional provider configurations.
 * `insecure` - (Optional) Whether to explicitly allow the provider to perform "insecure" SSL requests. If omitted, the default value is `false`.
-* `max_retries` - (Optional) Maximum number of times an API call is retried when AWS throttles requests or you experience transient failures. The delay between the subsequent API calls increases exponentially. If omitted, the default value is `25`.
+* `max_retries` - (Optional) Maximum number of times an API call is retried when AWS throttles requests or you experience transient failures.
+  The delay between the subsequent API calls increases exponentially.
+  If omitted, the default value is `25`.
+  Can also be set using the environment variable `AWS_MAX_ATTEMPTS`.
 * `profile` - (Optional) AWS profile name as set in the shared credentials file.
 * `region` - (Optional) AWS region. Can also be set with either the `AWS_REGION` or `AWS_DEFAULT_REGION` environment variables, or via a shared config file if `profile` is used.
 * `s3_force_path_style` - (Optional, **Deprecated**) Whether to enable the request to use path-style addressing, i.e., `https://s3.amazonaws.com/BUCKET/KEY`. By default, the S3 client will use virtual hosted bucket addressing, `https://BUCKET.s3.amazonaws.com/KEY`, when possible. Specific to the Amazon S3 service.
