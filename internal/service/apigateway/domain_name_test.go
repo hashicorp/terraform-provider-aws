@@ -690,7 +690,7 @@ resource "aws_s3_bucket_versioning" "test" {
 }
 
 resource "aws_s3_object" "test" {
-  bucket = aws_s3_bucket.test.id
+  bucket = aws_s3_bucket_versioning.test.bucket
   key    = %[1]q
   source = "test-fixtures/apigateway-domain-name-truststore-1.pem"
 }
@@ -708,8 +708,6 @@ resource "aws_api_gateway_domain_name" "test" {
     truststore_uri     = "s3://${aws_s3_object.test.bucket}/${aws_s3_object.test.key}"
     truststore_version = aws_s3_object.test.version_id
   }
-
-  depends_on = [aws_s3_bucket_versioning.test]
 }
 `, rName))
 }
@@ -748,7 +746,7 @@ resource "aws_s3_bucket_versioning" "test" {
 }
 
 resource "aws_s3_object" "test" {
-  bucket = aws_s3_bucket.test.id
+  bucket = aws_s3_bucket_versioning.test.bucket
   key    = %[1]q
   source = "test-fixtures/apigateway-domain-name-truststore-1.pem"
 }
@@ -776,8 +774,6 @@ resource "aws_api_gateway_domain_name" "test" {
     truststore_uri     = "s3://${aws_s3_object.test.bucket}/${aws_s3_object.test.key}"
     truststore_version = aws_s3_object.test.version_id
   }
-
-  depends_on = [aws_s3_bucket_versioning.test]
 }
 `, rName, certificate, key))
 }
