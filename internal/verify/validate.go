@@ -257,17 +257,6 @@ func ValidStringIsJSONOrYAML(v interface{}, k string) (ws []string, errors []err
 	return
 }
 
-// ValidTimeDuration validates a string can be parsed as a valid time.Duration
-func ValidTimeDuration(v interface{}, k string) (ws []string, errors []error) {
-	_, err := time.ParseDuration(v.(string))
-
-	if err != nil {
-		errors = append(errors, fmt.Errorf("%q cannot be parsed as a duration: %w", k, err))
-	}
-
-	return
-}
-
 // ValidTypeStringNullableBoolean provides custom error messaging for TypeString booleans
 // Some arguments require three values: true, false, and "" (unspecified).
 // This ValidateFunc returns a custom message since the message with

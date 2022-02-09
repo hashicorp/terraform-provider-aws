@@ -1939,8 +1939,8 @@ func assumeRoleSchema() *schema.Schema {
 				"duration": {
 					Type:          schema.TypeString,
 					Optional:      true,
-					Description:   "The duration of the role session, e.g. 1h. Valid time units are ns, us (or µs), ms, s, h, or m.",
-					ValidateFunc:  verify.ValidTimeDuration,
+					Description:   "The duration, between 15 minutes and 12 hours, of the role session. Valid time units are ns, us (or µs), ms, s, h, or m.",
+					ValidateFunc:  ValidAssumeRoleDuration,
 					ConflictsWith: []string{"assume_role.0.duration_seconds"},
 				},
 				"duration_seconds": {
