@@ -33,7 +33,22 @@ func ResourceVPCPeeringConnection() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
+			"accept_status": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"accepter": vpcPeeringConnectionOptionsSchema(),
+			"auto_accept": {
+				Type:     schema.TypeBool,
+				Optional: true,
+			},
 			"peer_owner_id": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+				Computed: true,
+			},
+			"peer_region": {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
@@ -44,29 +59,14 @@ func ResourceVPCPeeringConnection() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
+			"requester": vpcPeeringConnectionOptionsSchema(),
+			"tags":      tftags.TagsSchema(),
+			"tags_all":  tftags.TagsSchemaComputed(),
 			"vpc_id": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"auto_accept": {
-				Type:     schema.TypeBool,
-				Optional: true,
-			},
-			"accept_status": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"peer_region": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-				Computed: true,
-			},
-			"accepter":  vpcPeeringConnectionOptionsSchema(),
-			"requester": vpcPeeringConnectionOptionsSchema(),
-			"tags":      tftags.TagsSchema(),
-			"tags_all":  tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
