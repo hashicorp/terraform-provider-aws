@@ -293,7 +293,11 @@ func resourceRoleRead(d *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		return err
 	}
-	if err := d.Set("assume_role_policy", assumeRolePolicy); err != nil {
+	policyToSet, err := verify.PolicyToSet(d.Get("assume_role_policy").(string), assumeRolePolicy)
+	if err != nil {
+		return err
+	}
+	if err := d.Set("assume_role_policy", policyToSet); err != nil {
 		return err
 	}
 
