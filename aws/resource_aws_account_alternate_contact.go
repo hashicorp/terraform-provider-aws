@@ -92,7 +92,8 @@ func resourceAwsAccountAlternateContactRead(d *schema.ResourceData, meta interfa
 		return err
 	}
 
-	output, err := FindAlternateContactByAccountIDAndContactType(conn, accountID, contactType)
+	output, err := FindAlternateContactByAccountIDAndContactType(conn, "", contactType)
+	//output, err := FindAlternateContactByAccountIDAndContactType(conn, accountID, contactType)
 
 	if err != nil {
 		return err
