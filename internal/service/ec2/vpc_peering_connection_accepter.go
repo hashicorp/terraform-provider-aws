@@ -14,8 +14,8 @@ import (
 func ResourceVPCPeeringConnectionAccepter() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceVPCPeeringAccepterCreate,
-		Read:   resourceVPCPeeringRead,
-		Update: resourceVPCPeeringUpdate,
+		Read:   resourceVPCPeeringConnectionRead,
+		Update: resourceVPCPeeringConnectionUpdate,
 		Delete: resourceVPCPeeringAccepterDelete,
 
 		Importer: &schema.ResourceImporter{
@@ -99,7 +99,7 @@ func resourceVPCPeeringAccepterCreate(d *schema.ResourceData, meta interface{}) 
 		}
 	}
 
-	return resourceVPCPeeringUpdate(d, meta)
+	return resourceVPCPeeringConnectionUpdate(d, meta)
 }
 
 func resourceVPCPeeringAccepterDelete(d *schema.ResourceData, meta interface{}) error {

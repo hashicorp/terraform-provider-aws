@@ -19,10 +19,10 @@ import (
 
 func ResourceVPCPeeringConnection() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceVPCPeeringCreate,
-		Read:   resourceVPCPeeringRead,
-		Update: resourceVPCPeeringUpdate,
-		Delete: resourceVPCPeeringDelete,
+		Create: resourceVPCPeeringConnectionCreate,
+		Read:   resourceVPCPeeringConnectionRead,
+		Update: resourceVPCPeeringConnectionUpdate,
+		Delete: resourceVPCPeeringConnectionDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -100,7 +100,7 @@ var vpcPeeringConnectionOptionsSchema = &schema.Schema{
 	},
 }
 
-func resourceVPCPeeringCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceVPCPeeringConnectionCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
@@ -136,10 +136,10 @@ func resourceVPCPeeringCreate(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error waiting for EC2 VPC Peering Connection (%s) create: %w", d.Id(), err)
 	}
 
-	return resourceVPCPeeringUpdate(d, meta)
+	return resourceVPCPeeringConnectionUpdate(d, meta)
 }
 
-func resourceVPCPeeringRead(d *schema.ResourceData, meta interface{}) error {
+func resourceVPCPeeringConnectionRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -201,22 +201,7 @@ func resourceVPCPeeringRead(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func resourceVPCPeeringConnectionAccept(conn *ec2.EC2, id string) (string, error) {
-	log.Printf("[INFO] Accept VPC Peering Connection with ID: %s", id)
-
-	req := &ec2.AcceptVpcPeeringConnectionInput{
-		VpcPeeringConnectionId: aws.String(id),
-	}
-
-	resp, err := conn.AcceptVpcPeeringConnection(req)
-	if err != nil {
-		return "", err
-	}
-
-	return aws.StringValue(resp.VpcPeeringConnection.Status.Code), nil
-}
-
-func resourceVPCPeeringUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceVPCPeeringConnectionUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	if d.HasChange("tags_all") && !d.IsNewResource() {
@@ -277,10 +262,10 @@ func resourceVPCPeeringUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	return resourceVPCPeeringRead(d, meta)
+	return resourceVPCPeeringConnectionRead(d, meta)
 }
 
-func resourceVPCPeeringDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceVPCPeeringConnectionDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	log.Printf("[INFO] Deleting EC2 VPC Peering Connection: %s", d.Id())
@@ -306,6 +291,21 @@ func resourceVPCPeeringDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	return nil
+}
+
+func resourceVPCPeeringConnectionAccept(conn *ec2.EC2, id string) (string, error) {
+	log.Printf("[INFO] Accept VPC Peering Connection with ID: %s", id)
+
+	req := &ec2.AcceptVpcPeeringConnectionInput{
+		VpcPeeringConnectionId: aws.String(id),
+	}
+
+	resp, err := conn.AcceptVpcPeeringConnection(req)
+	if err != nil {
+		return "", err
+	}
+
+	return aws.StringValue(resp.VpcPeeringConnection.Status.Code), nil
 }
 
 // vpcPeeringConnection returns the VPC peering connection corresponding to the specified identifier.
