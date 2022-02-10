@@ -37,8 +37,6 @@ func ResourceRegisteredDomain() *schema.Resource {
 
 func resourceRegisteredDomainCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).Route53DomainsConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
 	domainName := d.Get("domain_name").(string)
 	domainDetail, err := FindDomainDetailByName(conn, domainName)
@@ -49,9 +47,20 @@ func resourceRegisteredDomainCreate(d *schema.ResourceData, meta interface{}) er
 
 	d.SetId(aws.StringValue(domainDetail.DomainName))
 
-	if len(tags) > 0 {
-		if err := UpdateTags(conn, d.Id(), nil, tags); err != nil {
-			return fmt.Errorf("error adding Route 53 Domains Domain (%s) tags: %w", d.Id(), err)
+	tags, err := ListTags(conn, d.Id())
+
+	if err != nil {
+		return fmt.Errorf("error listing tags for Route 53 Domains Domain (%s): %w", d.Id(), err)
+	}
+
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	newTags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{}))).IgnoreConfig(ignoreTagsConfig)
+	oldTags := tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+
+	if !oldTags.Equal(newTags) {
+		if err := UpdateTags(conn, d.Id(), oldTags, newTags); err != nil {
+			return fmt.Errorf("error updating Route 53 Domains Domain (%s) tags: %w", d.Id(), err)
 		}
 	}
 
