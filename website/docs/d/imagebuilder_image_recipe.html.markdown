@@ -42,6 +42,9 @@ In addition to all arguments above, the following attributes are exported:
     * `virtual_name` - Virtual device name. For example, `ephemeral0`. Instance store volumes are numbered starting from 0.
 * `component` - List of objects with components for the image recipe.
     * `component_arn` - Amazon Resource Name (ARN) of the Image Builder Component.
+    * `parameter` - Set of parameters that are used to configure the component.
+        * `name` - Name of the component parameter.
+        * `value` - Value of the component parameter.
 * `date_created` - Date the image recipe was created.
 * `description` - Description of the image recipe.
 * `name` - Name of the image recipe.

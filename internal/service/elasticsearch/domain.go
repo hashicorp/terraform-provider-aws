@@ -10,7 +10,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	elasticsearch "github.com/aws/aws-sdk-go/service/elasticsearchservice"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	awspolicy "github.com/hashicorp/awspolicyequivalence"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -264,13 +264,10 @@ func ResourceDomain() *schema.Resource {
 							Optional: true,
 						},
 						"volume_type": {
-							Type:     schema.TypeString,
-							Optional: true,
-							Computed: true,
-							ValidateFunc: validation.Any(
-								validation.StringIsEmpty,
-								validation.StringInSlice(elasticsearch.VolumeType_Values(), false),
-							),
+							Type:         schema.TypeString,
+							Optional:     true,
+							Computed:     true,
+							ValidateFunc: validation.StringInSlice(elasticsearch.VolumeType_Values(), false),
 						},
 					},
 				},

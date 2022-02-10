@@ -34,7 +34,7 @@ resource "aws_s3_bucket" "example" {
 }
 ```
 
-### Add intelligent tiering configuration with S3 bucket object filter
+### Add intelligent tiering configuration with S3 object filter
 
 ```terraform
 resource "aws_s3_bucket_intelligent_tiering_configuration" "example-filtered" {

@@ -8,9 +8,8 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -62,28 +61,25 @@ func ResourceRoute() *schema.Resource {
 			// Destinations.
 			///
 			"destination_cidr_block": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-				ValidateFunc: validation.Any(
-					validation.StringIsEmpty,
-					verify.ValidIPv4CIDRNetworkAddress,
-				),
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: verify.ValidIPv4CIDRNetworkAddress,
+				ExactlyOneOf: []string{"destination_cidr_block", "destination_ipv6_cidr_block", "destination_prefix_list_id"},
 			},
 			"destination_ipv6_cidr_block": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-				ValidateFunc: validation.Any(
-					validation.StringIsEmpty,
-					verify.ValidIPv6CIDRNetworkAddress,
-				),
+				Type:             schema.TypeString,
+				Optional:         true,
+				ForceNew:         true,
+				ValidateFunc:     verify.ValidIPv6CIDRNetworkAddress,
 				DiffSuppressFunc: suppressEqualCIDRBlockDiffs,
+				ExactlyOneOf:     []string{"destination_cidr_block", "destination_ipv6_cidr_block", "destination_prefix_list_id"},
 			},
 			"destination_prefix_list_id": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ExactlyOneOf: []string{"destination_cidr_block", "destination_ipv6_cidr_block", "destination_prefix_list_id"},
 			},
 
 			//
@@ -110,6 +106,7 @@ func ResourceRoute() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
+				Deprecated:   "Use network_interface_id instead",
 				ExactlyOneOf: routeValidTargets,
 			},
 			"local_gateway_id": {

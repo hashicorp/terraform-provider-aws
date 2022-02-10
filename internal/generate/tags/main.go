@@ -1,5 +1,5 @@
-//go:build ignore
-// +build ignore
+//go:build generate
+// +build generate
 
 package main
 
@@ -256,7 +256,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	{{- end }}
 	{{- if .ParentNotFoundErrCode }}
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	{{- end }}
 	{{- if .TfResourcePkg }}

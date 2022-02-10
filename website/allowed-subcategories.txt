@@ -74,6 +74,7 @@ Gamelift
 Glacier
 Global Accelerator
 Glue
+Grafana
 GuardDuty
 IAM
 Identity Store

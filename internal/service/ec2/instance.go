@@ -16,7 +16,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -440,14 +440,11 @@ func ResourceInstance() *schema.Resource {
 				Computed: true,
 			},
 			"private_ip": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-				Computed: true,
-				ValidateFunc: validation.Any(
-					validation.StringIsEmpty,
-					validation.IsIPv4Address,
-				),
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				Computed:     true,
+				ValidateFunc: validation.IsIPv4Address,
 			},
 			"public_dns": {
 				Type:     schema.TypeString,

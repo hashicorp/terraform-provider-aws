@@ -145,7 +145,7 @@ The following arguments are supported:
 
 ### Retention Policy
 
-* `home_efs_file_system` - (Optional) The retention policy for data stored on an Amazon Elastic File System (EFS) volume. Default value is `Retain`.
+* `home_efs_file_system` - (Optional) The retention policy for data stored on an Amazon Elastic File System (EFS) volume. Valid values are `Retain` or `Delete`.  Default value is `Retain`.
 
 ## Attributes Reference
 

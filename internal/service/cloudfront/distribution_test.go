@@ -9,7 +9,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudfront"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -1417,6 +1417,10 @@ func originBucket(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "s3_bucket_origin" {
   bucket = "%[1]s.origin-bucket"
+}
+
+resource "aws_s3_bucket_acl" "s3_bucket_origin_acl" {
+  bucket = aws_s3_bucket.s3_bucket_origin.id
   acl    = "public-read"
 }
 `, rName)
@@ -1426,6 +1430,10 @@ func backupBucket(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "s3_backup_bucket_origin" {
   bucket = "%[1]s.backup-bucket"
+}
+
+resource "aws_s3_bucket_acl" "s3_backup_bucket_origin_acl" {
+  bucket = aws_s3_bucket.s3_backup_bucket_origin.id
   acl    = "public-read"
 }
 `, rName)
@@ -1435,8 +1443,12 @@ func logBucket(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "s3_bucket_logs" {
   bucket        = "%[1]s.log-bucket"
-  acl           = "public-read"
   force_destroy = true
+}
+
+resource "aws_s3_bucket_acl" "s3_bucket_logs_acl" {
+  bucket = aws_s3_bucket.s3_bucket_logs.id
+  acl    = "public-read"
 }
 `, rName)
 }

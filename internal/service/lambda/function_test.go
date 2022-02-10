@@ -3269,7 +3269,7 @@ resource "aws_s3_bucket" "lambda_bucket" {
   bucket = "%s"
 }
 
-resource "aws_s3_bucket_object" "lambda_code" {
+resource "aws_s3_object" "lambda_code" {
   bucket = aws_s3_bucket.lambda_bucket.id
   key    = "lambdatest.zip"
   source = "test-fixtures/lambdatest.zip"
@@ -3297,7 +3297,7 @@ EOF
 
 resource "aws_lambda_function" "test" {
   s3_bucket     = aws_s3_bucket.lambda_bucket.id
-  s3_key        = aws_s3_bucket_object.lambda_code.id
+  s3_key        = aws_s3_object.lambda_code.id
   function_name = "%s"
   role          = aws_iam_role.iam_for_lambda.arn
   handler       = "exports.example"
@@ -3414,15 +3414,25 @@ func testAccFunctionConfig_s3(bucketName, key, path, roleName, funcName string) 
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "artifacts" {
   bucket        = "%s"
-  acl           = "private"
   force_destroy = true
+}
 
-  versioning {
-    enabled = true
+resource "aws_s3_bucket_acl" "artifacts" {
+  bucket = aws_s3_bucket.artifacts.id
+  acl    = "private"
+}
+
+resource "aws_s3_bucket_versioning" "artifacts" {
+  bucket = aws_s3_bucket.artifacts.id
+  versioning_configuration {
+    status = "Enabled"
   }
 }
 
-resource "aws_s3_bucket_object" "o" {
+resource "aws_s3_object" "o" {
+  # Must have versioning enabled first
+  depends_on = [aws_s3_bucket_versioning.artifacts]
+
   bucket = aws_s3_bucket.artifacts.bucket
   key    = "%s"
   source = "%s"
@@ -3450,9 +3460,9 @@ EOF
 }
 
 resource "aws_lambda_function" "test" {
-  s3_bucket         = aws_s3_bucket_object.o.bucket
-  s3_key            = aws_s3_bucket_object.o.key
-  s3_object_version = aws_s3_bucket_object.o.version_id
+  s3_bucket         = aws_s3_object.o.bucket
+  s3_key            = aws_s3_object.o.key
+  s3_object_version = aws_s3_object.o.version_id
   function_name     = "%s"
   role              = aws_iam_role.iam_for_lambda.arn
   handler           = "exports.example"
@@ -3465,11 +3475,15 @@ func testAccFunctionConfig_s3_unversioned_tpl(bucketName, roleName, funcName, ke
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "artifacts" {
   bucket        = "%s"
-  acl           = "private"
   force_destroy = true
 }
 
-resource "aws_s3_bucket_object" "o" {
+resource "aws_s3_bucket_acl" "artifacts" {
+  bucket = aws_s3_bucket.artifacts.id
+  acl    = "private"
+}
+
+resource "aws_s3_object" "o" {
   bucket = aws_s3_bucket.artifacts.bucket
   key    = "%s"
   source = "%s"
@@ -3497,8 +3511,8 @@ EOF
 }
 
 resource "aws_lambda_function" "test" {
-  s3_bucket     = aws_s3_bucket_object.o.bucket
-  s3_key        = aws_s3_bucket_object.o.key
+  s3_bucket     = aws_s3_object.o.bucket
+  s3_key        = aws_s3_object.o.key
   function_name = "%s"
   role          = aws_iam_role.iam_for_lambda.arn
   handler       = "exports.example"

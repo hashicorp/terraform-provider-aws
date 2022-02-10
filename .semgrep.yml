@@ -181,26 +181,26 @@ rules:
 
   - id: helper-schema-Set-extraneous-NewSet-with-flattenStringList
     languages: [go]
-    message: Prefer `flattenStringSet()` function for casting a list of string pointers to a set
+    message: Prefer `flex.FlattenStringSet()` function for casting a list of string pointers to a set
     paths:
       include:
         - internal/
-    pattern: schema.NewSet(schema.HashString, flattenStringList($APIOBJECT))
+    pattern: schema.NewSet(schema.HashString, flex.FlattenStringList($APIOBJECT))
     severity: WARNING
 
   - id: helper-schema-Set-extraneous-expandStringList-with-List
     languages: [go]
-    message: Prefer `expandStringSet()` function for casting a set to a list of string pointers
+    message: Prefer `flex.ExpandStringSet()` function for casting a set to a list of string pointers
     paths:
       include:
         - internal/
     patterns:
       - pattern-either:
-        - pattern: expandStringList($SET.List())
+        - pattern: flex.ExpandStringList($SET.List())
         - pattern: |
             $LIST := $SET.List()
             ...
-            expandStringList($LIST)
+            flex.ExpandStringList($LIST)
     severity: WARNING
 
   - id: helper-schema-ResourceData-GetOk-with-extraneous-conditional
@@ -568,7 +568,7 @@ rules:
         - internal/service/mq/forge_test.go
         - internal/service/route53/sweep.go
         - internal/service/s3/bucket_test.go
-        - internal/service/s3/bucket_object_test.go
+        - internal/service/s3/object_test.go
         - internal/service/storagegateway/cached_iscsi_volume.go
         - internal/service/storagegateway/cached_iscsi_volume_test.go
         - internal/service/storagegateway/stored_iscsi_volume_test.go
@@ -683,3 +683,13 @@ rules:
           metavariable: "$FUNC"
           regex: "^resource\\w*(Delete|Disable)$"
     severity: WARNING
+
+  - id: avoid-string-is-empty-validation
+    languages: [go]
+    message: Empty strings should not be included in validation
+    paths:
+      include:
+        - internal/
+    patterns:
+      - pattern: validation.Any(..., validation.StringIsEmpty, ...)
+    severity: ERROR

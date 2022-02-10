@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"reflect"
 	"regexp"
-	"sort"
 	"strings"
 	"testing"
 	"time"
@@ -14,7 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/request"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -2286,7 +2285,7 @@ func TestAccEC2Instance_NewNetworkInterface_emptyPrivateIPAndSecondaryPrivateIPs
 		CheckDestroy: testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceConfigPrivateIPAndSecondaryIPs(rName, "", secondaryIPs),
+				Config: testAccInstanceConfigPrivateIPAndSecondaryIPsNullPrivate(rName, secondaryIPs),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, "private_ip"),
@@ -2317,7 +2316,7 @@ func TestAccEC2Instance_NewNetworkInterface_emptyPrivateIPAndSecondaryPrivateIPs
 		CheckDestroy: testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceConfigPrivateIPAndSecondaryIPs(rName, "", secondaryIPs),
+				Config: testAccInstanceConfigPrivateIPAndSecondaryIPsNullPrivate(rName, secondaryIPs),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, "private_ip"),
@@ -2325,7 +2324,7 @@ func TestAccEC2Instance_NewNetworkInterface_emptyPrivateIPAndSecondaryPrivateIPs
 				),
 			},
 			{
-				Config: testAccInstanceConfigPrivateIPAndSecondaryIPs(rName, "", ""),
+				Config: testAccInstanceConfigPrivateIPAndSecondaryIPsNullPrivate(rName, ""),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, "private_ip"),
@@ -2333,7 +2332,7 @@ func TestAccEC2Instance_NewNetworkInterface_emptyPrivateIPAndSecondaryPrivateIPs
 				),
 			},
 			{
-				Config: testAccInstanceConfigPrivateIPAndSecondaryIPs(rName, "", secondaryIP),
+				Config: testAccInstanceConfigPrivateIPAndSecondaryIPsNullPrivate(rName, secondaryIP),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, "private_ip"),
@@ -3988,24 +3987,33 @@ func testAccPreCheckEC2ClassicOrHasDefaultVPCWithDefaultSubnets(t *testing.T) {
 	}
 }
 
-// hasDefaultVPC returns whether the current AWS region has a default VPC.
-func hasDefaultVPC(t *testing.T) bool {
+// defaultVPC returns the ID of the default VPC for the current AWS Region, or "" if none exists.
+func defaultVPC(t *testing.T) string {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
-	resp, err := conn.DescribeAccountAttributes(&ec2.DescribeAccountAttributesInput{
+	output, err := conn.DescribeAccountAttributes(&ec2.DescribeAccountAttributesInput{
 		AttributeNames: aws.StringSlice([]string{ec2.AccountAttributeNameDefaultVpc}),
 	})
-	if acctest.PreCheckSkipError(err) ||
-		len(resp.AccountAttributes) == 0 ||
-		len(resp.AccountAttributes[0].AttributeValues) == 0 ||
-		aws.StringValue(resp.AccountAttributes[0].AttributeValues[0].AttributeValue) == "none" {
-		return false
+
+	if acctest.PreCheckSkipError(err) {
+		return ""
 	}
+
 	if err != nil {
 		t.Fatalf("error describing EC2 account attributes: %s", err)
 	}
 
-	return true
+	if len(output.AccountAttributes) > 0 && len(output.AccountAttributes[0].AttributeValues) > 0 {
+		if v := aws.StringValue(output.AccountAttributes[0].AttributeValues[0].AttributeValue); v != "none" {
+			return v
+		}
+	}
+
+	return ""
+}
+
+func hasDefaultVPC(t *testing.T) bool {
+	return defaultVPC(t) != ""
 }
 
 // defaultSubnetCount returns the number of default subnets in the current region's default VPC.
@@ -4013,72 +4021,30 @@ func defaultSubnetCount(t *testing.T) int {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
 	input := &ec2.DescribeSubnetsInput{
-		Filters: buildAttributeFilterList(map[string]string{
-			"defaultForAz": "true",
-		}),
+		Filters: tfec2.BuildAttributeFilterList(
+			map[string]string{
+				"defaultForAz": "true",
+			},
+		),
 	}
-	output, err := conn.DescribeSubnets(input)
+
+	subnets, err := tfec2.FindSubnets(conn, input)
+
 	if acctest.PreCheckSkipError(err) {
 		return 0
 	}
+
 	if err != nil {
-		t.Fatalf("error describing default subnets: %s", err)
+		t.Fatalf("error listing default subnets: %s", err)
 	}
 
-	return len(output.Subnets)
-}
-
-// buildAttributeFilterList takes a flat map of scalar attributes (most
-// likely values extracted from a *schema.ResourceData on an EC2-querying
-// data source) and produces a []*ec2.Filter representing an exact match
-// for each of the given non-empty attributes.
-//
-// The keys of the given attributes map are the attribute names expected
-// by the EC2 API, which are usually either in camelcase or with dash-separated
-// words. We conventionally map these to underscore-separated identifiers
-// with the same words when presenting these as data source query attributes
-// in Terraform.
-//
-// It's the callers responsibility to transform any non-string values into
-// the appropriate string serialization required by the AWS API when
-// encoding the given filter. Any attributes given with empty string values
-// are ignored, assuming that the user wishes to leave that attribute
-// unconstrained while filtering.
-//
-// The purpose of this function is to create values to pass in
-// for the "Filters" attribute on most of the "Describe..." API functions in
-// the EC2 API, to aid in the implementation of Terraform data sources that
-// retrieve data about EC2 objects.
-func buildAttributeFilterList(attrs map[string]string) []*ec2.Filter {
-	var filters []*ec2.Filter
-
-	// sort the filters by name to make the output deterministic
-	var names []string
-	for filterName := range attrs {
-		names = append(names, filterName)
-	}
-
-	sort.Strings(names)
-
-	for _, filterName := range names {
-		value := attrs[filterName]
-		if value == "" {
-			continue
-		}
-
-		filters = append(filters, &ec2.Filter{
-			Name:   aws.String(filterName),
-			Values: []*string{aws.String(value)},
-		})
-	}
-
-	return filters
+	return len(subnets)
 }
 
 func testAccAvailableAZsWavelengthZonesExcludeConfig(excludeZoneIds ...string) string {
 	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {
-  exclude_zone_ids = ["%[1]s"]
+  exclude_zone_ids = [%[1]q]
   state            = "available"
 
   filter {
@@ -5368,7 +5334,7 @@ resource "aws_instance" "test" {
   ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
   instance_type = "t2.micro"
   subnet_id     = aws_subnet.test.id
-  private_ip    = ""
+  private_ip    = null
 }
 `)
 }
@@ -5777,8 +5743,8 @@ func testAccInstanceConfigPublicAndPrivateSecondaryIPs(rName string, isPublic bo
 		fmt.Sprintf(`
 resource "aws_security_group" "test" {
   vpc_id      = aws_vpc.test.id
-  description = "%[1]s"
-  name        = "%[1]s"
+  description = %[1]q
+  name        = %[1]q
 }
 
 resource "aws_instance" "test" {
@@ -5808,8 +5774,8 @@ func testAccInstanceConfigPrivateIPAndSecondaryIPs(rName, privateIP, secondaryIP
 		fmt.Sprintf(`
 resource "aws_security_group" "test" {
   vpc_id      = aws_vpc.test.id
-  description = "%[1]s"
-  name        = "%[1]s"
+  description = %[1]q
+  name        = %[1]q
 }
 
 resource "aws_instance" "test" {
@@ -5817,7 +5783,7 @@ resource "aws_instance" "test" {
   instance_type = "t3.small"
   subnet_id     = aws_subnet.test.id
 
-  private_ip            = "%[2]s"
+  private_ip            = %[2]q
   secondary_private_ips = [%[3]s]
 
   vpc_security_group_ids = [
@@ -5829,6 +5795,36 @@ resource "aws_instance" "test" {
   }
 }
 `, rName, privateIP, secondaryIPs))
+}
+
+func testAccInstanceConfigPrivateIPAndSecondaryIPsNullPrivate(rName, secondaryIPs string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
+		testAccInstanceVPCConfig(rName, false),
+		fmt.Sprintf(`
+resource "aws_security_group" "test" {
+  vpc_id      = aws_vpc.test.id
+  description = %[1]q
+  name        = %[1]q
+}
+
+resource "aws_instance" "test" {
+  ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  instance_type = "t3.small"
+  subnet_id     = aws_subnet.test.id
+
+  private_ip            = null
+  secondary_private_ips = [%[2]s]
+
+  vpc_security_group_ids = [
+    aws_security_group.test.id
+  ]
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName, secondaryIPs))
 }
 
 func testAccInstanceConfig_associatePublic_defaultPrivate(rName string) string {

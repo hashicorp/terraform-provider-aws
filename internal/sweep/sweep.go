@@ -13,7 +13,7 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws/endpoints"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	multierror "github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -59,23 +59,23 @@ func SharedRegionalSweepClient(region string) (interface{}, error) {
 	}
 
 	if role := os.Getenv(conns.EnvVarAssumeRoleARN); role != "" {
-		conf.AssumeRoleARN = role
+		conf.AssumeRole.RoleARN = role
 
-		conf.AssumeRoleDurationSeconds = defaultSweeperAssumeRoleDurationSeconds
+		conf.AssumeRole.Duration = time.Duration(defaultSweeperAssumeRoleDurationSeconds) * time.Second
 		if v := os.Getenv(conns.EnvVarAssumeRoleDuration); v != "" {
 			d, err := strconv.Atoi(v)
 			if err != nil {
 				return nil, fmt.Errorf("environment variable %s: %w", conns.EnvVarAssumeRoleDuration, err)
 			}
-			conf.AssumeRoleDurationSeconds = d
+			conf.AssumeRole.Duration = time.Duration(d) * time.Second
 		}
 
 		if v := os.Getenv(conns.EnvVarAssumeRoleExternalID); v != "" {
-			conf.AssumeRoleExternalID = v
+			conf.AssumeRole.ExternalID = v
 		}
 
 		if v := os.Getenv(conns.EnvVarAssumeRoleSessionName); v != "" {
-			conf.AssumeRoleSessionName = v
+			conf.AssumeRole.SessionName = v
 		}
 	}
 

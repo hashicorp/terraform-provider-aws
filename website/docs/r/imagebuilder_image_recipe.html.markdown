@@ -26,6 +26,16 @@ resource "aws_imagebuilder_image_recipe" "example" {
 
   component {
     component_arn = aws_imagebuilder_component.example.arn
+
+    parameter {
+      name  = "Parameter1"
+      value = "Value1"
+    }
+
+    parameter {
+      name  = "Parameter2"
+      value = "Value2"
+    }
   }
 
   name         = "example"
@@ -74,9 +84,17 @@ The following arguments are optional:
 
 ### component
 
-The following arguments are required:
+The `component` block supports the following arguments:
 
 * `component_arn` - (Required) Amazon Resource Name (ARN) of the Image Builder Component to associate.
+* `parameter` - (Optional) Configuration block(s) for parameters to configure the component. Detailed below.
+
+### parameter
+
+The following arguments are required:
+
+* `name` - (Required) The name of the component parameter.
+* `value` - (Required) The value for the named component parameter.
 
 ## Attributes Reference
 

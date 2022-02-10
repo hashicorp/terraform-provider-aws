@@ -679,6 +679,10 @@ func testAccStageConfig_accessLogSettingsKinesis(rName string, format string) st
 	return testAccStageConfig_base(rName) + fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket = "%[1]s"
+}
+
+resource "aws_s3_bucket_acl" "test" {
+  bucket = aws_s3_bucket.test.id
   acl    = "private"
 }
 

@@ -11,7 +11,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/elasticache"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -69,32 +69,39 @@ func ResourceReplicationGroup() *schema.Resource {
 				Default:  false,
 			},
 			"availability_zones": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				ForceNew: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				Set:      schema.HashString,
+				Type:          schema.TypeSet,
+				Optional:      true,
+				ForceNew:      true,
+				Elem:          &schema.Schema{Type: schema.TypeString},
+				Set:           schema.HashString,
+				ConflictsWith: []string{"preferred_cache_cluster_azs"},
 			},
 			"cluster_enabled": {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
 			"cluster_mode": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Computed: true,
-				MaxItems: 1,
+				Type:          schema.TypeList,
+				Optional:      true,
+				Computed:      true,
+				MaxItems:      1,
+				ConflictsWith: []string{"num_node_groups", "replicas_per_node_group"},
+				Deprecated:    "Use num_node_groups and replicas_per_node_group instead",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"num_node_groups": {
 							Type:          schema.TypeInt,
 							Optional:      true,
 							Computed:      true,
-							ConflictsWith: []string{"number_cache_clusters", "global_replication_group_id"},
+							ConflictsWith: []string{"num_node_groups", "number_cache_clusters", "num_cache_clusters", "global_replication_group_id"},
+							Deprecated:    "Use root-level num_node_groups instead",
 						},
 						"replicas_per_node_group": {
-							Type:     schema.TypeInt,
-							Required: true,
+							Type:          schema.TypeInt,
+							Optional:      true,
+							Computed:      true,
+							ConflictsWith: []string{"replicas_per_node_group"},
+							Deprecated:    "Use root-level replicas_per_node_group instead",
 						},
 					},
 				},
@@ -108,6 +115,12 @@ func ResourceReplicationGroup() *schema.Resource {
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
+			},
+			"description": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ExactlyOneOf: []string{"description", "replication_group_description"},
 			},
 			"engine": {
 				Type:         schema.TypeString,
@@ -132,7 +145,8 @@ func ResourceReplicationGroup() *schema.Resource {
 				ForceNew: true,
 				Computed: true,
 				ConflictsWith: []string{
-					"cluster_mode.0.num_node_groups", // should/will be top-level "num_node_groups"
+					"cluster_mode.0.num_node_groups",
+					"num_node_groups",
 					"parameter_group_name",
 					"engine",
 					"engine_version",
@@ -175,11 +189,24 @@ func ResourceReplicationGroup() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: verify.ValidARN,
 			},
+			"num_cache_clusters": {
+				Type:          schema.TypeInt,
+				Computed:      true,
+				Optional:      true,
+				ConflictsWith: []string{"cluster_mode.0.num_node_groups", "num_node_groups", "number_cache_clusters"},
+			},
+			"num_node_groups": {
+				Type:          schema.TypeInt,
+				Optional:      true,
+				Computed:      true,
+				ConflictsWith: []string{"cluster_mode", "number_cache_clusters", "num_cache_clusters", "global_replication_group_id"},
+			},
 			"number_cache_clusters": {
 				Type:          schema.TypeInt,
 				Computed:      true,
 				Optional:      true,
-				ConflictsWith: []string{"cluster_mode.0.num_node_groups"},
+				ConflictsWith: []string{"cluster_mode.0.num_node_groups", "num_cache_clusters", "num_node_groups"},
+				Deprecated:    "Use num_cache_clusters instead",
 			},
 			"parameter_group_name": {
 				Type:     schema.TypeString,
@@ -201,6 +228,12 @@ func ResourceReplicationGroup() *schema.Resource {
 					return false
 				},
 			},
+			"preferred_cache_cluster_azs": {
+				Type:          schema.TypeList,
+				Optional:      true,
+				Elem:          &schema.Schema{Type: schema.TypeString},
+				ConflictsWith: []string{"availability_zones"},
+			},
 			"primary_endpoint_address": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -209,9 +242,18 @@ func ResourceReplicationGroup() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"replicas_per_node_group": {
+				Type:          schema.TypeInt,
+				Optional:      true,
+				Computed:      true,
+				ConflictsWith: []string{"cluster_mode"},
+			},
 			"replication_group_description": {
-				Type:     schema.TypeString,
-				Required: true,
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ExactlyOneOf: []string{"description", "replication_group_description"},
+				Deprecated:   "Use description instead",
 			},
 			"replication_group_id": {
 				Type:         schema.TypeString,
@@ -318,8 +360,11 @@ func ResourceReplicationGroup() *schema.Resource {
 			CustomizeDiffElastiCacheEngineVersion,
 			customdiff.ComputedIf("member_clusters", func(ctx context.Context, diff *schema.ResourceDiff, meta interface{}) bool {
 				return diff.HasChange("number_cache_clusters") ||
+					diff.HasChange("num_cache_clusters") ||
 					diff.HasChange("cluster_mode.0.num_node_groups") ||
-					diff.HasChange("cluster_mode.0.replicas_per_node_group")
+					diff.HasChange("cluster_mode.0.replicas_per_node_group") ||
+					diff.HasChange("num_node_groups") ||
+					diff.HasChange("replicas_per_node_group")
 			}),
 			verify.SetTagsDiff,
 		),
@@ -332,10 +377,16 @@ func resourceReplicationGroupCreate(d *schema.ResourceData, meta interface{}) er
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
 	params := &elasticache.CreateReplicationGroupInput{
-		ReplicationGroupId:          aws.String(d.Get("replication_group_id").(string)),
-		ReplicationGroupDescription: aws.String(d.Get("replication_group_description").(string)),
-		AutoMinorVersionUpgrade:     aws.Bool(d.Get("auto_minor_version_upgrade").(bool)),
-		Tags:                        Tags(tags.IgnoreAWS()),
+		ReplicationGroupId:      aws.String(d.Get("replication_group_id").(string)),
+		AutoMinorVersionUpgrade: aws.Bool(d.Get("auto_minor_version_upgrade").(bool)),
+		Tags:                    Tags(tags.IgnoreAWS()),
+	}
+
+	if v, ok := d.GetOk("description"); ok {
+		params.ReplicationGroupDescription = aws.String(v.(string))
+	}
+	if v, ok := d.GetOk("replication_group_description"); ok {
+		params.ReplicationGroupDescription = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("data_tiering_enabled"); ok {
@@ -359,8 +410,11 @@ func resourceReplicationGroupCreate(d *schema.ResourceData, meta interface{}) er
 		params.EngineVersion = aws.String(v.(string))
 	}
 
-	if preferredAzs := d.Get("availability_zones").(*schema.Set); preferredAzs.Len() > 0 {
-		params.PreferredCacheClusterAZs = flex.ExpandStringSet(preferredAzs)
+	if preferredAZs, ok := d.GetOk("preferred_cache_cluster_azs"); ok {
+		params.PreferredCacheClusterAZs = flex.ExpandStringList(preferredAZs.([]interface{}))
+	}
+	if availabilityZones := d.Get("availability_zones").(*schema.Set); availabilityZones.Len() > 0 {
+		params.PreferredCacheClusterAZs = flex.ExpandStringSet(availabilityZones)
 	}
 
 	if v, ok := d.GetOk("parameter_group_name"); ok {
@@ -440,8 +494,20 @@ func resourceReplicationGroupCreate(d *schema.ResourceData, meta interface{}) er
 		}
 	}
 
+	if v, ok := d.GetOk("num_node_groups"); ok && v != 0 {
+		params.NumNodeGroups = aws.Int64(int64(v.(int)))
+	}
+
+	if v, ok := d.GetOk("replicas_per_node_group"); ok {
+		params.ReplicasPerNodeGroup = aws.Int64(int64(v.(int)))
+	}
+
 	if cacheClusters, ok := d.GetOk("number_cache_clusters"); ok {
 		params.NumCacheClusters = aws.Int64(int64(cacheClusters.(int)))
+	}
+
+	if numCacheClusters, ok := d.GetOk("num_cache_clusters"); ok {
+		params.NumCacheClusters = aws.Int64(int64(numCacheClusters.(int)))
 	}
 
 	if userGroupIds := d.Get("user_group_ids").(*schema.Set); userGroupIds.Len() > 0 {
@@ -521,14 +587,20 @@ func resourceReplicationGroupRead(d *schema.ResourceData, meta interface{}) erro
 	}
 
 	d.Set("kms_key_id", rgp.KmsKeyId)
+	d.Set("description", rgp.Description)
 	d.Set("replication_group_description", rgp.Description)
 	d.Set("number_cache_clusters", len(rgp.MemberClusters))
+	d.Set("num_cache_clusters", len(rgp.MemberClusters))
 	if err := d.Set("member_clusters", flex.FlattenStringSet(rgp.MemberClusters)); err != nil {
 		return fmt.Errorf("error setting member_clusters: %w", err)
 	}
 	if err := d.Set("cluster_mode", flattenElasticacheNodeGroupsToClusterMode(rgp.NodeGroups)); err != nil {
 		return fmt.Errorf("error setting cluster_mode attribute: %w", err)
 	}
+
+	d.Set("num_node_groups", len(rgp.NodeGroups))
+	d.Set("replicas_per_node_group", len(rgp.NodeGroups[0].NodeGroupMembers)-1)
+
 	d.Set("cluster_enabled", rgp.ClusterEnabled)
 	d.Set("replication_group_id", rgp.ReplicationGroupId)
 	d.Set("arn", rgp.ARN)
@@ -610,13 +682,24 @@ func resourceReplicationGroupRead(d *schema.ResourceData, meta interface{}) erro
 func resourceReplicationGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ElastiCacheConn
 
-	if d.HasChanges("cluster_mode.0.num_node_groups", "cluster_mode.0.replicas_per_node_group") {
+	if d.HasChanges(
+		"cluster_mode.0.num_node_groups",
+		"cluster_mode.0.replicas_per_node_group",
+		"num_node_groups",
+		"replicas_per_node_group",
+	) {
 		err := elasticacheReplicationGroupModifyShardConfiguration(conn, d)
 		if err != nil {
 			return fmt.Errorf("error modifying ElastiCache Replication Group (%s) shard configuration: %w", d.Id(), err)
 		}
 	} else if d.HasChange("number_cache_clusters") {
-		err := elasticacheReplicationGroupModifyNumCacheClusters(conn, d)
+		// TODO: remove when number_cache_clusters is removed from resource schema
+		err := elasticacheReplicationGroupModifyNumCacheClusters(conn, d, "number_cache_clusters")
+		if err != nil {
+			return fmt.Errorf("error modifying ElastiCache Replication Group (%s) clusters: %w", d.Id(), err)
+		}
+	} else if d.HasChange("num_cache_clusters") {
+		err := elasticacheReplicationGroupModifyNumCacheClusters(conn, d, "num_cache_clusters")
 		if err != nil {
 			return fmt.Errorf("error modifying ElastiCache Replication Group (%s) clusters: %w", d.Id(), err)
 		}
@@ -626,6 +709,11 @@ func resourceReplicationGroupUpdate(d *schema.ResourceData, meta interface{}) er
 	params := &elasticache.ModifyReplicationGroupInput{
 		ApplyImmediately:   aws.Bool(d.Get("apply_immediately").(bool)),
 		ReplicationGroupId: aws.String(d.Id()),
+	}
+
+	if d.HasChange("description") {
+		params.ReplicationGroupDescription = aws.String(d.Get("description").(string))
+		requestUpdate = true
 	}
 
 	if d.HasChange("replication_group_description") {
@@ -877,14 +965,28 @@ func flattenElasticacheNodeGroupsToClusterMode(nodeGroups []*elasticache.NodeGro
 
 func elasticacheReplicationGroupModifyShardConfiguration(conn *elasticache.ElastiCache, d *schema.ResourceData) error {
 	if d.HasChange("cluster_mode.0.num_node_groups") {
-		err := elasticacheReplicationGroupModifyShardConfigurationNumNodeGroups(conn, d)
+		err := elasticacheReplicationGroupModifyShardConfigurationNumNodeGroups(conn, d, "cluster_mode.0.num_node_groups")
 		if err != nil {
 			return err
 		}
 	}
 
 	if d.HasChange("cluster_mode.0.replicas_per_node_group") {
-		err := elasticacheReplicationGroupModifyShardConfigurationReplicasPerNodeGroup(conn, d)
+		err := elasticacheReplicationGroupModifyShardConfigurationReplicasPerNodeGroup(conn, d, "cluster_mode.0.replicas_per_node_group")
+		if err != nil {
+			return err
+		}
+	}
+
+	if d.HasChange("num_node_groups") {
+		err := elasticacheReplicationGroupModifyShardConfigurationNumNodeGroups(conn, d, "num_node_groups")
+		if err != nil {
+			return err
+		}
+	}
+
+	if d.HasChange("replicas_per_node_group") {
+		err := elasticacheReplicationGroupModifyShardConfigurationReplicasPerNodeGroup(conn, d, "replicas_per_node_group")
 		if err != nil {
 			return err
 		}
@@ -893,8 +995,8 @@ func elasticacheReplicationGroupModifyShardConfiguration(conn *elasticache.Elast
 	return nil
 }
 
-func elasticacheReplicationGroupModifyShardConfigurationNumNodeGroups(conn *elasticache.ElastiCache, d *schema.ResourceData) error {
-	o, n := d.GetChange("cluster_mode.0.num_node_groups")
+func elasticacheReplicationGroupModifyShardConfigurationNumNodeGroups(conn *elasticache.ElastiCache, d *schema.ResourceData, argument string) error {
+	o, n := d.GetChange(argument)
 	oldNumNodeGroups := o.(int)
 	newNumNodeGroups := n.(int)
 
@@ -929,8 +1031,8 @@ func elasticacheReplicationGroupModifyShardConfigurationNumNodeGroups(conn *elas
 	return nil
 }
 
-func elasticacheReplicationGroupModifyShardConfigurationReplicasPerNodeGroup(conn *elasticache.ElastiCache, d *schema.ResourceData) error {
-	o, n := d.GetChange("cluster_mode.0.replicas_per_node_group")
+func elasticacheReplicationGroupModifyShardConfigurationReplicasPerNodeGroup(conn *elasticache.ElastiCache, d *schema.ResourceData, argument string) error {
+	o, n := d.GetChange(argument)
 	oldReplicas := o.(int)
 	newReplicas := n.(int)
 
@@ -967,8 +1069,8 @@ func elasticacheReplicationGroupModifyShardConfigurationReplicasPerNodeGroup(con
 	return nil
 }
 
-func elasticacheReplicationGroupModifyNumCacheClusters(conn *elasticache.ElastiCache, d *schema.ResourceData) error {
-	o, n := d.GetChange("number_cache_clusters")
+func elasticacheReplicationGroupModifyNumCacheClusters(conn *elasticache.ElastiCache, d *schema.ResourceData, argument string) error {
+	o, n := d.GetChange(argument)
 	oldNumberCacheClusters := o.(int)
 	newNumberCacheClusters := n.(int)
 

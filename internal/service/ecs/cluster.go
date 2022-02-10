@@ -9,7 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ecs"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -50,9 +50,10 @@ func ResourceCluster() *schema.Resource {
 				Computed: true,
 			},
 			"capacity_providers": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Computed: true,
+				Type:       schema.TypeSet,
+				Optional:   true,
+				Computed:   true,
+				Deprecated: "Use the aws_ecs_cluster_capacity_providers resource instead",
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 				},
@@ -114,9 +115,10 @@ func ResourceCluster() *schema.Resource {
 				},
 			},
 			"default_capacity_provider_strategy": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Computed: true,
+				Type:       schema.TypeSet,
+				Optional:   true,
+				Computed:   true,
+				Deprecated: "Use the aws_ecs_cluster_capacity_providers resource instead",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"base": {
@@ -265,6 +267,7 @@ func resourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 
 		return nil
 	})
+
 	if tfresource.TimedOut(err) {
 		cluster, err = FindClusterByNameOrARN(context.Background(), conn, d.Id())
 	}
@@ -307,12 +310,6 @@ func resourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	tags := KeyValueTags(cluster.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	// Some partitions (i.e., ISO) may not support tagging, giving error
-	if verify.CheckISOErrorTagsUnsupported(err) {
-		log.Printf("[WARN] ECS tagging failed listing tags for Cluster (%s): %s", d.Id(), err)
-		return nil
-	}
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
