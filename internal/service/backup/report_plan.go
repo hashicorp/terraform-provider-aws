@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/backup"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -18,7 +19,8 @@ import (
 
 func ResourceReportPlan() *schema.Resource {
 	return &schema.Resource{
-		Read: resourceReportPlanRead,
+		Create: resourceReportPlanCreate,
+		Read:   resourceReportPlanRead,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -115,6 +117,40 @@ func ResourceReportPlan() *schema.Resource {
 	}
 }
 
+func resourceReportPlanCreate(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*conns.AWSClient).BackupConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+
+	name := d.Get("name").(string)
+
+	input := &backup.CreateReportPlanInput{
+		IdempotencyToken:      aws.String(resource.UniqueId()),
+		ReportDeliveryChannel: expandReportDeliveryChannel(d.Get("report_delivery_channel").([]interface{})),
+		ReportPlanName:        aws.String(name),
+		ReportSetting:         expandReportSetting(d.Get("report_setting").([]interface{})),
+	}
+
+	if v, ok := d.GetOk("description"); ok {
+		input.ReportPlanDescription = aws.String(v.(string))
+	}
+
+	if len(tags) > 0 {
+		input.ReportPlanTags = Tags(tags.IgnoreAWS())
+	}
+
+	log.Printf("[DEBUG] Creating Backup Report Plan: %#v", input)
+	resp, err := conn.CreateReportPlan(input)
+	if err != nil {
+		return fmt.Errorf("error creating Backup Report Plan: %w", err)
+	}
+
+	// Set ID with the name since the name is unique for the report plan
+	d.SetId(aws.StringValue(resp.ReportPlanName))
+
+	return resourceReportPlanRead(d, meta)
+}
+
 func resourceReportPlanRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).BackupConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
@@ -166,6 +202,56 @@ func resourceReportPlanRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	return nil
+}
+
+func expandReportDeliveryChannel(reportDeliveryChannel []interface{}) *backup.ReportDeliveryChannel {
+	if len(reportDeliveryChannel) == 0 || reportDeliveryChannel[0] == nil {
+		return nil
+	}
+
+	tfMap, ok := reportDeliveryChannel[0].(map[string]interface{})
+	if !ok {
+		return nil
+	}
+
+	result := &backup.ReportDeliveryChannel{
+		S3BucketName: aws.String(tfMap["s3_bucket_name"].(string)),
+	}
+
+	if v, ok := tfMap["formats"]; ok && v.(*schema.Set).Len() > 0 {
+		result.Formats = flex.ExpandStringSet(v.(*schema.Set))
+	}
+
+	if v, ok := tfMap["s3_key_prefix"].(string); ok && v != "" {
+		result.S3KeyPrefix = aws.String(v)
+	}
+
+	return result
+}
+
+func expandReportSetting(reportSetting []interface{}) *backup.ReportSetting {
+	if len(reportSetting) == 0 || reportSetting[0] == nil {
+		return nil
+	}
+
+	tfMap, ok := reportSetting[0].(map[string]interface{})
+	if !ok {
+		return nil
+	}
+
+	result := &backup.ReportSetting{
+		ReportTemplate: aws.String(tfMap["report_template"].(string)),
+	}
+
+	if v, ok := tfMap["framework_arns"]; ok && v.(*schema.Set).Len() > 0 {
+		result.FrameworkArns = flex.ExpandStringSet(v.(*schema.Set))
+	}
+
+	if v, ok := tfMap["number_of_frameworks"].(int); ok && v > 0 {
+		result.NumberOfFrameworks = aws.Int64(int64(v))
+	}
+
+	return result
 }
 
 func flattenReportDeliveryChannel(reportDeliveryChannel *backup.ReportDeliveryChannel) []interface{} {
