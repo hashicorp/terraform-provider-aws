@@ -144,7 +144,7 @@ func resourceVPCPeeringConnectionOptionsDelete(d *schema.ResourceData, meta inte
 // Returns nil if no VPC peering connection is found or the connection has reached a terminal state
 // according to https://docs.aws.amazon.com/vpc/latest/peering/vpc-peering-basics.html#vpc-peering-lifecycle.
 func vpcPeeringConnection(conn *ec2.EC2, vpcPeeringConnectionID string) (*ec2.VpcPeeringConnection, error) {
-	outputRaw, _, err := StatusVPCPeeringConnection(conn, vpcPeeringConnectionID)()
+	outputRaw, _, err := StatusVPCPeeringConnectionDeleted(conn, vpcPeeringConnectionID)()
 
 	if output, ok := outputRaw.(*ec2.VpcPeeringConnection); ok {
 		return output, err

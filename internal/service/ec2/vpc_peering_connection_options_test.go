@@ -2,6 +2,7 @@ package ec2_test
 
 import (
 	"fmt"
+	"reflect"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -9,7 +10,9 @@ import (
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccEC2VPCPeeringConnectionOptions_basic(t *testing.T) {
@@ -245,6 +248,46 @@ func TestAccEC2VPCPeeringConnectionOptions_sameRegionDifferentAccount(t *testing
 			},
 		},
 	})
+}
+
+func testAccCheckVPCPeeringConnectionOptions(n, block string, options *ec2.VpcPeeringConnectionOptionsDescription) resource.TestCheckFunc {
+	return testAccCheckVPCPeeringConnectionOptionsWithProvider(n, block, options, func() *schema.Provider { return acctest.Provider })
+}
+
+func testAccCheckVPCPeeringConnectionOptionsWithProvider(n, block string, options *ec2.VpcPeeringConnectionOptionsDescription, providerF func() *schema.Provider) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Not found: %s", n)
+		}
+
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("No VPC Peering Connection ID is set.")
+		}
+
+		conn := providerF().Meta().(*conns.AWSClient).EC2Conn
+		resp, err := conn.DescribeVpcPeeringConnections(
+			&ec2.DescribeVpcPeeringConnectionsInput{
+				VpcPeeringConnectionIds: []*string{aws.String(rs.Primary.ID)},
+			})
+		if err != nil {
+			return err
+		}
+
+		pc := resp.VpcPeeringConnections[0]
+
+		o := pc.AccepterVpcInfo
+		if block == "requester" {
+			o = pc.RequesterVpcInfo
+		}
+
+		if !reflect.DeepEqual(o.PeeringOptions, options) {
+			return fmt.Errorf("Expected the VPC Peering Connection Options to be %#v, got %#v",
+				options, o.PeeringOptions)
+		}
+
+		return nil
+	}
 }
 
 func testAccVpcPeeringConnectionOptionsConfig_sameRegion_sameAccount(rName string, accepterDnsResolution, requesterRemoteClassicLink bool) string {

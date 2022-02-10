@@ -914,13 +914,15 @@ func WaitVPCPeeringConnectionActive(conn *ec2.EC2, id string, timeout time.Durat
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{ec2.VpcPeeringConnectionStateReasonCodeInitiatingRequest, ec2.VpcPeeringConnectionStateReasonCodeProvisioning},
 		Target:  []string{ec2.VpcPeeringConnectionStateReasonCodeActive, ec2.VpcPeeringConnectionStateReasonCodePendingAcceptance},
-		Refresh: StatusVPCPeeringConnection(conn, id),
+		Refresh: StatusVPCPeeringConnectionActive(conn, id),
 		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForState()
 
 	if output, ok := outputRaw.(*ec2.VpcPeeringConnection); ok {
+		tfresource.SetLastError(err, errors.New(aws.StringValue(output.Status.Message)))
+
 		return output, err
 	}
 
@@ -935,13 +937,15 @@ func WaitVPCPeeringConnectionDeleted(conn *ec2.EC2, id string, timeout time.Dura
 			ec2.VpcPeeringConnectionStateReasonCodePendingAcceptance,
 		},
 		Target:  []string{},
-		Refresh: StatusVPCPeeringConnection(conn, id),
+		Refresh: StatusVPCPeeringConnectionDeleted(conn, id),
 		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForState()
 
 	if output, ok := outputRaw.(*ec2.VpcPeeringConnection); ok {
+		tfresource.SetLastError(err, errors.New(aws.StringValue(output.Status.Message)))
+
 		return output, err
 	}
 

@@ -1,7 +1,6 @@
 package ec2
 
 import (
-	"errors"
 	"fmt"
 	"strconv"
 
@@ -1969,16 +1968,10 @@ func FindVPCPeeringConnectionByID(conn *ec2.EC2, id string) (*ec2.VpcPeeringConn
 		ec2.VpcPeeringConnectionStateReasonCodeExpired,
 		ec2.VpcPeeringConnectionStateReasonCodeFailed,
 		ec2.VpcPeeringConnectionStateReasonCodeRejected:
-		err := &resource.NotFoundError{
+		return nil, &resource.NotFoundError{
 			Message:     statusCode,
 			LastRequest: input,
 		}
-
-		if message := aws.StringValue(output.Status.Message); message != "" {
-			tfresource.SetLastError(err, errors.New(message))
-		}
-
-		return nil, err
 	}
 
 	// Eventual consistency check.
