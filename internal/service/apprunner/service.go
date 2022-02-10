@@ -548,6 +548,7 @@ func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta int
 	if d.HasChanges(
 		"auto_scaling_configuration_arn",
 		"instance_configuration",
+		"network_configuration",
 		"source_configuration",
 	) {
 		input := &apprunner.UpdateServiceInput{
@@ -725,7 +726,7 @@ func expandAppRunnerNetworkConfiguration(l []interface{}) *apprunner.NetworkConf
 		result.EgressConfiguration.EgressType = aws.String(v)
 	}
 
-	if v, ok := tfMap["arn"].(string); ok && v != "" {
+	if v, ok := tfMap["vpc_connector_arn"].(string); ok && v != "" {
 		result.EgressConfiguration.VpcConnectorArn = aws.String(v)
 	}
 
