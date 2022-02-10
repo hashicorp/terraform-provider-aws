@@ -17,11 +17,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-func ResourceCustomVpcAssociation() *schema.Resource {
+func ResourceVpcConnector() *schema.Resource {
 	return &schema.Resource{
-		CreateWithoutTimeout: resourceCustomVpcAssociationCreate,
-		ReadWithoutTimeout:   resourceCustomVpcAssociationRead,
-		DeleteWithoutTimeout: resourceCustomVpcAssociationDelete,
+		CreateWithoutTimeout: resourceVpcConnectorCreate,
+		ReadWithoutTimeout:   resourceVpcConnectorRead,
+		DeleteWithoutTimeout: resourceVpcConnectorDelete,
 
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
@@ -64,7 +64,7 @@ func ResourceCustomVpcAssociation() *schema.Resource {
 	}
 }
 
-func resourceCustomVpcAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVpcConnectorCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).AppRunnerConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
@@ -96,10 +96,10 @@ func resourceCustomVpcAssociationCreate(ctx context.Context, d *schema.ResourceD
 		return diag.FromErr(fmt.Errorf("error waiting for associating App Runner Custom VPC(%s) creation: %w", d.Id(), err))
 	}
 
-	return resourceCustomVpcAssociationRead(ctx, d, meta)
+	return resourceVpcConnectorRead(ctx, d, meta)
 }
 
-func resourceCustomVpcAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVpcConnectorRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).AppRunnerConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -171,7 +171,7 @@ func resourceCustomVpcAssociationRead(ctx context.Context, d *schema.ResourceDat
 	return nil
 }
 
-func resourceCustomVpcAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVpcConnectorDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).AppRunnerConn
 
 	input := &apprunner.DeleteVpcConnectorInput{
