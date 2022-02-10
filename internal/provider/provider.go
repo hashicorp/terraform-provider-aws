@@ -681,7 +681,7 @@ func Provider() *schema.Provider {
 			"aws_partition":               meta.DataSourcePartition(),
 			"aws_region":                  meta.DataSourceRegion(),
 			"aws_regions":                 meta.DataSourceRegions(),
-			"aws_service":                                    meta.DataSourceService(),
+			"aws_service":                 meta.DataSourceService(),
 
 			"aws_mq_broker": mq.DataSourceBroker(),
 
