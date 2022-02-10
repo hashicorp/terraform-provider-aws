@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceRegisteredDomain() *schema.Resource {
@@ -29,11 +30,15 @@ func ResourceRegisteredDomain() *schema.Resource {
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
 		},
+
+		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
 func resourceRegisteredDomainCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).Route53DomainsConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
 	domainName := d.Get("domain_name").(string)
 	domainDetail, err := FindDomainDetailByName(conn, domainName)
@@ -43,6 +48,12 @@ func resourceRegisteredDomainCreate(d *schema.ResourceData, meta interface{}) er
 	}
 
 	d.SetId(aws.StringValue(domainDetail.DomainName))
+
+	if len(tags) > 0 {
+		if err := UpdateTags(conn, d.Id(), nil, tags); err != nil {
+			return fmt.Errorf("error adding Route 53 Domains Domain (%s) tags: %w", d.Id(), err)
+		}
+	}
 
 	return resourceRegisteredDomainRead(d, meta)
 }

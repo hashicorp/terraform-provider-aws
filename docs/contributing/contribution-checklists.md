@@ -304,7 +304,7 @@ More details about this code generation, including fixes for potential error mes
   func ResourceCluster() *schema.Resource {
     return &schema.Resource{
       /* ... other configuration ... */
-      CustomizeDiff: SetTagsDiff,
+      CustomizeDiff: verify.SetTagsDiff,
     }
   }
   ```
@@ -361,7 +361,7 @@ More details about this code generation, including fixes for potential error mes
   
   if len(tags) > 0 {
     if err := UpdateTags(conn, d.Id(), nil, tags); err != nil {
-      return fmt.Errorf("error adding Elasticsearch Cluster (%s) tags: %s", d.Id(), err)
+      return fmt.Errorf("error adding Elasticsearch Cluster (%s) tags: %w", d.Id(), err)
     }
   }
   ```
@@ -411,7 +411,7 @@ More details about this code generation, including fixes for potential error mes
   tags, err := keyvaluetags.AthenaListTags(conn, arn.String())
 
   if err != nil {
-    return fmt.Errorf("error listing tags for resource (%s): %s", arn, err)
+    return fmt.Errorf("error listing tags for resource (%s): %w", arn, err)
   }
 
   tags = tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig)
@@ -431,7 +431,7 @@ More details about this code generation, including fixes for potential error mes
   if d.HasChange("tags_all") {
     o, n := d.GetChange("tags_all")
     if err := keyvaluetags.EksUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-      return fmt.Errorf("error updating tags: %s", err)
+      return fmt.Errorf("error updating tags: %w", err)
     }
   }
   ```
@@ -448,7 +448,7 @@ More details about this code generation, including fixes for potential error mes
     }
 
     if _, err := conn.CreatePolicyVersion(request); err != nil {
-        return fmt.Errorf("error updating IAM policy %s: %w", d.Id(), err)
+        return fmt.Errorf("error updating IAM policy (%s): %w", d.Id(), err)
     }
   }
   ```
