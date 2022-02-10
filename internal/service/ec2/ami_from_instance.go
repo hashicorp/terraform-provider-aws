@@ -32,6 +32,10 @@ func ResourceAMIFromInstance() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"boot_mode": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"description": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -65,6 +69,11 @@ func ResourceAMIFromInstance() *schema.Resource {
 
 						"iops": {
 							Type:     schema.TypeInt,
+							Computed: true,
+						},
+
+						"outpost_arn": {
+							Type:     schema.TypeString,
 							Computed: true,
 						},
 

@@ -6,7 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/lambda"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -23,12 +23,12 @@ func TestAccLambdaLayerVersionPermission_basic_byARN(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckLambdaLayerVersionPermissionDestroy,
+		CheckDestroy: testAccCheckLayerVersionPermissionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testLayerVersionPermission_basic_arn(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsLambdaLayerVersionPermissionExists(resourceName),
+					testAccCheckLayerVersionPermissionExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "action", "lambda:GetLayerVersion"),
 					resource.TestCheckResourceAttr(resourceName, "principal", "*"),
 					resource.TestCheckResourceAttr(resourceName, "statement_id", "xaccount"),
@@ -52,12 +52,12 @@ func TestAccLambdaLayerVersionPermission_basic_byName(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckLambdaLayerVersionPermissionDestroy,
+		CheckDestroy: testAccCheckLayerVersionPermissionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testLayerVersionPermission_basic_name(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsLambdaLayerVersionPermissionExists(resourceName),
+					testAccCheckLayerVersionPermissionExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "action", "lambda:GetLayerVersion"),
 					resource.TestCheckResourceAttr(resourceName, "principal", "*"),
 					resource.TestCheckResourceAttr(resourceName, "statement_id", "xaccount"),
@@ -81,12 +81,12 @@ func TestAccLambdaLayerVersionPermission_org(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckLambdaLayerVersionPermissionDestroy,
+		CheckDestroy: testAccCheckLayerVersionPermissionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testLayerVersionPermission_org(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsLambdaLayerVersionPermissionExists(resourceName),
+					testAccCheckLayerVersionPermissionExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "action", "lambda:GetLayerVersion"),
 					resource.TestCheckResourceAttr(resourceName, "principal", "*"),
 					resource.TestCheckResourceAttr(resourceName, "statement_id", "xaccount"),
@@ -111,12 +111,12 @@ func TestAccLambdaLayerVersionPermission_account(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckLambdaLayerVersionPermissionDestroy,
+		CheckDestroy: testAccCheckLayerVersionPermissionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testLayerVersionPermission_account(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsLambdaLayerVersionPermissionExists(resourceName),
+					testAccCheckLayerVersionPermissionExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "action", "lambda:GetLayerVersion"),
 					resource.TestCheckResourceAttrPair(resourceName, "principal", "data.aws_caller_identity.current", "account_id"),
 					resource.TestCheckResourceAttr(resourceName, "statement_id", "xaccount"),
@@ -140,12 +140,12 @@ func TestAccLambdaLayerVersionPermission_disappears(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckLambdaLayerVersionPermissionDestroy,
+		CheckDestroy: testAccCheckLayerVersionPermissionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testLayerVersionPermission_account(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsLambdaLayerVersionPermissionExists(resourceName),
+					testAccCheckLayerVersionPermissionExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tflambda.ResourceLayerVersionPermission(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -227,7 +227,7 @@ resource "aws_lambda_layer_version_permission" "test" {
 `, layerName)
 }
 
-func testAccCheckAwsLambdaLayerVersionPermissionExists(n string) resource.TestCheckFunc {
+func testAccCheckLayerVersionPermissionExists(n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -258,7 +258,7 @@ func testAccCheckAwsLambdaLayerVersionPermissionExists(n string) resource.TestCh
 	}
 }
 
-func testAccCheckLambdaLayerVersionPermissionDestroy(s *terraform.State) error {
+func testAccCheckLayerVersionPermissionDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).LambdaConn
 
 	for _, rs := range s.RootModule().Resources {

@@ -19,7 +19,7 @@ resource "aws_gamelift_build" "test" {
 
   storage_location {
     bucket   = aws_s3_bucket.test.bucket
-    key      = aws_s3_bucket_object.test.key
+    key      = aws_s3_object.test.key
     role_arn = aws_iam_role.test.arn
   }
 

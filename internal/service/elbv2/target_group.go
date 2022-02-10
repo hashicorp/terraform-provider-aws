@@ -11,7 +11,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/elbv2"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -204,6 +204,11 @@ func ResourceTargetGroup() *schema.Resource {
 				Optional: true,
 				Default:  false,
 			},
+			"connection_termination": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
 			"slow_start": {
 				Type:         schema.TypeInt,
 				Optional:     true,
@@ -247,16 +252,6 @@ func ResourceTargetGroup() *schema.Resource {
 								"app_cookie", // Only for ALBs
 								"source_ip",  // Only for NLBs
 							}, false),
-							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-								switch d.Get("protocol").(string) {
-								case elbv2.ProtocolEnumTcp, elbv2.ProtocolEnumUdp, elbv2.ProtocolEnumTcpUdp, elbv2.ProtocolEnumTls:
-									if new == "lb_cookie" && !d.Get("stickiness.0.enabled").(bool) {
-										log.Printf("[WARN] invalid configuration, this will fail in a future version: stickiness enabled %v, protocol %s, type %s", d.Get("stickiness.0.enabled").(bool), d.Get("protocol").(string), new)
-										return true
-									}
-								}
-								return false
-							},
 						},
 					},
 				},
@@ -371,6 +366,14 @@ func resourceTargetGroupCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	resp, err := conn.CreateTargetGroup(params)
+
+	// Some partitions may not support tag-on-create
+	if params.Tags != nil && verify.CheckISOErrorTagsUnsupported(err) {
+		log.Printf("[WARN] ELBv2 Target Group (%s) create failed (%s) with tags. Trying create without tags.", groupName, err)
+		params.Tags = nil
+		resp, err = conn.CreateTargetGroup(params)
+	}
+
 	if err != nil {
 		return fmt.Errorf("error creating LB Target Group: %w", err)
 	}
@@ -437,6 +440,13 @@ func resourceTargetGroupCreate(d *schema.ResourceData, meta interface{}) error {
 			})
 		}
 
+		if v, ok := d.GetOk("connection_termination"); ok {
+			attrs = append(attrs, &elbv2.TargetGroupAttribute{
+				Key:   aws.String("deregistration_delay.connection_termination.enabled"),
+				Value: aws.String(strconv.FormatBool(v.(bool))),
+			})
+		}
+
 		if v, ok := d.GetOk("slow_start"); ok {
 			attrs = append(attrs, &elbv2.TargetGroupAttribute{
 				Key:   aws.String("slow_start.duration_seconds"),
@@ -449,41 +459,37 @@ func resourceTargetGroupCreate(d *schema.ResourceData, meta interface{}) error {
 				stickinessBlocks := v.([]interface{})
 				stickiness := stickinessBlocks[0].(map[string]interface{})
 
-				if !stickiness["enabled"].(bool) && (stickiness["type"].(string) == "lb_cookie" || stickiness["type"].(string) == "app_cookie") && d.Get("protocol").(string) != elbv2.ProtocolEnumHttp && d.Get("protocol").(string) != elbv2.ProtocolEnumHttps {
-					log.Printf("[WARN] invalid configuration, this will fail in a future version: stickiness enabled %v, protocol %s, type %s", stickiness["enabled"].(bool), d.Get("protocol").(string), stickiness["type"].(string))
-				} else {
-					attrs = append(attrs,
-						&elbv2.TargetGroupAttribute{
-							Key:   aws.String("stickiness.enabled"),
-							Value: aws.String(strconv.FormatBool(stickiness["enabled"].(bool))),
-						},
-						&elbv2.TargetGroupAttribute{
-							Key:   aws.String("stickiness.type"),
-							Value: aws.String(stickiness["type"].(string)),
-						})
+				attrs = append(attrs,
+					&elbv2.TargetGroupAttribute{
+						Key:   aws.String("stickiness.enabled"),
+						Value: aws.String(strconv.FormatBool(stickiness["enabled"].(bool))),
+					},
+					&elbv2.TargetGroupAttribute{
+						Key:   aws.String("stickiness.type"),
+						Value: aws.String(stickiness["type"].(string)),
+					})
 
-					switch d.Get("protocol").(string) {
-					case elbv2.ProtocolEnumHttp, elbv2.ProtocolEnumHttps:
-						switch stickiness["type"].(string) {
-						case "lb_cookie":
-							attrs = append(attrs,
-								&elbv2.TargetGroupAttribute{
-									Key:   aws.String("stickiness.lb_cookie.duration_seconds"),
-									Value: aws.String(fmt.Sprintf("%d", stickiness["cookie_duration"].(int))),
-								})
-						case "app_cookie":
-							attrs = append(attrs,
-								&elbv2.TargetGroupAttribute{
-									Key:   aws.String("stickiness.app_cookie.duration_seconds"),
-									Value: aws.String(fmt.Sprintf("%d", stickiness["cookie_duration"].(int))),
-								},
-								&elbv2.TargetGroupAttribute{
-									Key:   aws.String("stickiness.app_cookie.cookie_name"),
-									Value: aws.String(stickiness["cookie_name"].(string)),
-								})
-						default:
-							log.Printf("[WARN] Unexpected stickiness type. Expected lb_cookie or app_cookie, got %s", stickiness["type"].(string))
-						}
+				switch d.Get("protocol").(string) {
+				case elbv2.ProtocolEnumHttp, elbv2.ProtocolEnumHttps:
+					switch stickiness["type"].(string) {
+					case "lb_cookie":
+						attrs = append(attrs,
+							&elbv2.TargetGroupAttribute{
+								Key:   aws.String("stickiness.lb_cookie.duration_seconds"),
+								Value: aws.String(fmt.Sprintf("%d", stickiness["cookie_duration"].(int))),
+							})
+					case "app_cookie":
+						attrs = append(attrs,
+							&elbv2.TargetGroupAttribute{
+								Key:   aws.String("stickiness.app_cookie.duration_seconds"),
+								Value: aws.String(fmt.Sprintf("%d", stickiness["cookie_duration"].(int))),
+							},
+							&elbv2.TargetGroupAttribute{
+								Key:   aws.String("stickiness.app_cookie.cookie_name"),
+								Value: aws.String(stickiness["cookie_name"].(string)),
+							})
+					default:
+						log.Printf("[WARN] Unexpected stickiness type. Expected lb_cookie or app_cookie, got %s", stickiness["type"].(string))
 					}
 				}
 			}
@@ -507,6 +513,21 @@ func resourceTargetGroupCreate(d *schema.ResourceData, meta interface{}) error {
 
 		if err != nil {
 			return fmt.Errorf("error modifying Target Group Attributes: %w", err)
+		}
+	}
+
+	// Post-create tagging supported in some partitions
+	if params.Tags == nil && len(tags) > 0 {
+		err := UpdateTags(conn, d.Id(), nil, tags)
+
+		// if default tags only, log and continue (i.e., should error if explicitly setting tags and they can't be)
+		if v, ok := d.GetOk("tags"); (!ok || len(v.(map[string]interface{})) == 0) && verify.CheckISOErrorTagsUnsupported(err) {
+			log.Printf("[WARN] error adding tags after create for ELBv2 Target Group (%s): %s", d.Id(), err)
+			return resourceTargetGroupRead(d, meta)
+		}
+
+		if err != nil {
+			return fmt.Errorf("error creating ELBv2 Target Group (%s) tags: %w", d.Id(), err)
 		}
 	}
 
@@ -569,33 +590,6 @@ func resourceTargetGroupRead(d *schema.ResourceData, meta interface{}) error {
 
 func resourceTargetGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ELBV2Conn
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		err := resource.Retry(loadBalancerTagPropagationTimeout, func() *resource.RetryError {
-			err := UpdateTags(conn, d.Id(), o, n)
-
-			if tfawserr.ErrCodeEquals(err, elbv2.ErrCodeTargetGroupNotFoundException) {
-				log.Printf("[DEBUG] Retrying tagging of LB (%s)", d.Id())
-				return resource.RetryableError(err)
-			}
-
-			if err != nil {
-				return resource.NonRetryableError(err)
-			}
-
-			return nil
-		})
-
-		if tfresource.TimedOut(err) {
-			err = UpdateTags(conn, d.Id(), o, n)
-		}
-
-		if err != nil {
-			return fmt.Errorf("error updating LB Target Group (%s) tags: %w", d.Id(), err)
-		}
-	}
 
 	if d.HasChange("health_check") {
 		var params *elbv2.ModifyTargetGroupInput
@@ -671,6 +665,13 @@ func resourceTargetGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 			})
 		}
 
+		if d.HasChange("connection_termination") {
+			attrs = append(attrs, &elbv2.TargetGroupAttribute{
+				Key:   aws.String("deregistration_delay.connection_termination.enabled"),
+				Value: aws.String(strconv.FormatBool(d.Get("connection_termination").(bool))),
+			})
+		}
+
 		if d.HasChange("preserve_client_ip") {
 			attrs = append(attrs, &elbv2.TargetGroupAttribute{
 				Key:   aws.String("preserve_client_ip.enabled"),
@@ -685,41 +686,37 @@ func resourceTargetGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 				if len(stickinessBlocks) == 1 {
 					stickiness := stickinessBlocks[0].(map[string]interface{})
 
-					if !stickiness["enabled"].(bool) && (stickiness["type"].(string) == "lb_cookie" || stickiness["type"].(string) == "app_cookie") && d.Get("protocol").(string) != elbv2.ProtocolEnumHttp && d.Get("protocol").(string) != elbv2.ProtocolEnumHttps {
-						log.Printf("[WARN] invalid configuration, this will fail in a future version: stickiness enabled %v, protocol %s, type %s", stickiness["enabled"].(bool), d.Get("protocol").(string), stickiness["type"].(string))
-					} else {
-						attrs = append(attrs,
-							&elbv2.TargetGroupAttribute{
-								Key:   aws.String("stickiness.enabled"),
-								Value: aws.String(strconv.FormatBool(stickiness["enabled"].(bool))),
-							},
-							&elbv2.TargetGroupAttribute{
-								Key:   aws.String("stickiness.type"),
-								Value: aws.String(stickiness["type"].(string)),
-							})
+					attrs = append(attrs,
+						&elbv2.TargetGroupAttribute{
+							Key:   aws.String("stickiness.enabled"),
+							Value: aws.String(strconv.FormatBool(stickiness["enabled"].(bool))),
+						},
+						&elbv2.TargetGroupAttribute{
+							Key:   aws.String("stickiness.type"),
+							Value: aws.String(stickiness["type"].(string)),
+						})
 
-						switch d.Get("protocol").(string) {
-						case elbv2.ProtocolEnumHttp, elbv2.ProtocolEnumHttps:
-							switch stickiness["type"].(string) {
-							case "lb_cookie":
-								attrs = append(attrs,
-									&elbv2.TargetGroupAttribute{
-										Key:   aws.String("stickiness.lb_cookie.duration_seconds"),
-										Value: aws.String(fmt.Sprintf("%d", stickiness["cookie_duration"].(int))),
-									})
-							case "app_cookie":
-								attrs = append(attrs,
-									&elbv2.TargetGroupAttribute{
-										Key:   aws.String("stickiness.app_cookie.duration_seconds"),
-										Value: aws.String(fmt.Sprintf("%d", stickiness["cookie_duration"].(int))),
-									},
-									&elbv2.TargetGroupAttribute{
-										Key:   aws.String("stickiness.app_cookie.cookie_name"),
-										Value: aws.String(stickiness["cookie_name"].(string)),
-									})
-							default:
-								log.Printf("[WARN] Unexpected stickiness type. Expected lb_cookie or app_cookie, got %s", stickiness["type"].(string))
-							}
+					switch d.Get("protocol").(string) {
+					case elbv2.ProtocolEnumHttp, elbv2.ProtocolEnumHttps:
+						switch stickiness["type"].(string) {
+						case "lb_cookie":
+							attrs = append(attrs,
+								&elbv2.TargetGroupAttribute{
+									Key:   aws.String("stickiness.lb_cookie.duration_seconds"),
+									Value: aws.String(fmt.Sprintf("%d", stickiness["cookie_duration"].(int))),
+								})
+						case "app_cookie":
+							attrs = append(attrs,
+								&elbv2.TargetGroupAttribute{
+									Key:   aws.String("stickiness.app_cookie.duration_seconds"),
+									Value: aws.String(fmt.Sprintf("%d", stickiness["cookie_duration"].(int))),
+								},
+								&elbv2.TargetGroupAttribute{
+									Key:   aws.String("stickiness.app_cookie.cookie_name"),
+									Value: aws.String(stickiness["cookie_name"].(string)),
+								})
+						default:
+							log.Printf("[WARN] Unexpected stickiness type. Expected lb_cookie or app_cookie, got %s", stickiness["type"].(string))
 						}
 					}
 				} else if len(stickinessBlocks) == 0 {
@@ -755,6 +752,39 @@ func resourceTargetGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 		_, err := conn.ModifyTargetGroupAttributes(params)
 		if err != nil {
 			return fmt.Errorf("error modifying Target Group Attributes: %w", err)
+		}
+	}
+
+	if d.HasChange("tags_all") {
+		o, n := d.GetChange("tags_all")
+
+		err := resource.Retry(loadBalancerTagPropagationTimeout, func() *resource.RetryError {
+			err := UpdateTags(conn, d.Id(), o, n)
+
+			if tfawserr.ErrCodeEquals(err, elbv2.ErrCodeTargetGroupNotFoundException) {
+				log.Printf("[DEBUG] Retrying tagging of LB (%s)", d.Id())
+				return resource.RetryableError(err)
+			}
+
+			if err != nil {
+				return resource.NonRetryableError(err)
+			}
+
+			return nil
+		})
+
+		if tfresource.TimedOut(err) {
+			err = UpdateTags(conn, d.Id(), o, n)
+		}
+
+		// ISO partitions may not support tagging, giving error
+		if verify.CheckISOErrorTagsUnsupported(err) {
+			log.Printf("[WARN] Unable to update tags for ELBv2 Target Group %s: %s", d.Id(), err)
+			return resourceTargetGroupRead(d, meta)
+		}
+
+		if err != nil {
+			return fmt.Errorf("error updating LB Target Group (%s) tags: %w", d.Id(), err)
 		}
 	}
 
@@ -902,6 +932,12 @@ func flattenTargetGroupResource(d *schema.ResourceData, meta interface{}, target
 				return fmt.Errorf("error converting proxy_protocol_v2.enabled to bool: %s", aws.StringValue(attr.Value))
 			}
 			d.Set("proxy_protocol_v2", enabled)
+		case "deregistration_delay.connection_termination.enabled":
+			enabled, err := strconv.ParseBool(aws.StringValue(attr.Value))
+			if err != nil {
+				return fmt.Errorf("error converting deregistration_delay.connection_termination.enabled to bool: %s", aws.StringValue(attr.Value))
+			}
+			d.Set("connection_termination", enabled)
 		case "slow_start.duration_seconds":
 			slowStart, err := strconv.Atoi(aws.StringValue(attr.Value))
 			if err != nil {
@@ -930,6 +966,11 @@ func flattenTargetGroupResource(d *schema.ResourceData, meta interface{}, target
 	}
 
 	tags, err := ListTags(conn, d.Id())
+
+	if verify.CheckISOErrorTagsUnsupported(err) {
+		log.Printf("[WARN] Unable to list tags for ELBv2 Target Group %s: %s", d.Id(), err)
+		return nil
+	}
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for LB Target Group (%s): %w", d.Id(), err)

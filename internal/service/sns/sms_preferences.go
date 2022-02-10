@@ -9,8 +9,8 @@ import (
 	"github.com/aws/aws-sdk-go/service/sns"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/hashicorp/terraform-provider-aws/internal/attrmap"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 )
 
 func validateMonthlySpend(v interface{}, k string) (ws []string, errors []error) {
@@ -114,7 +114,7 @@ var (
 		},
 	}
 
-	SMSPreferencesAttributeMap = create.AttrMap(map[string]string{
+	SMSPreferencesAttributeMap = attrmap.New(map[string]string{
 		"default_sender_id":                     "DefaultSenderID",
 		"default_sms_type":                      "DefaultSMSType",
 		"delivery_status_iam_role_arn":          "DeliveryStatusIAMRole",

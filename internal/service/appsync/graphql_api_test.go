@@ -3,11 +3,12 @@ package appsync_test
 import (
 	"fmt"
 	"regexp"
+	"strconv"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/appsync"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -37,6 +38,7 @@ func testAccAppSyncGraphQLAPI_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "log_config.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "openid_connect_config.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "user_pool_config.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "lambda_authorizer_config.#", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "uris.%"),
 					resource.TestCheckResourceAttrSet(resourceName, "uris.GRAPHQL"),
 					resource.TestCheckNoResourceAttr(resourceName, "tags"),
@@ -97,6 +99,7 @@ func testAccAppSyncGraphQLAPI_schema(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "log_config.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "openid_connect_config.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "user_pool_config.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "lambda_authorizer_config.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "xray_enabled", "false"),
 					resource.TestCheckResourceAttrSet(resourceName, "schema"),
 					resource.TestCheckResourceAttrSet(resourceName, "uris.%"),
@@ -263,6 +266,38 @@ func testAccAppSyncGraphQLAPI_AuthenticationType_openIDConnect(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "authentication_type", "OPENID_CONNECT"),
 					resource.TestCheckResourceAttr(resourceName, "openid_connect_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "openid_connect_config.0.issuer", "https://example.com"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func testAccAppSyncGraphQLAPI_AuthenticationType_awsLambda(t *testing.T) {
+	var api1 appsync.GraphqlApi
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_appsync_graphql_api.test"
+	lambdaAuthorizerResourceName := "aws_lambda_function.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appsync.EndpointsID, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, appsync.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckGraphQLAPIDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAppsyncGraphqlApiConfig_LambdaAuthorizerConfig_AuthorizerUri(rName, "aws_lambda_function.test.arn"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGraphQLAPIExists(resourceName, &api1),
+					resource.TestCheckResourceAttr(resourceName, "authentication_type", "AWS_LAMBDA"),
+					resource.TestCheckResourceAttr(resourceName, "lambda_authorizer_config.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "lambda_authorizer_config.0.authorizer_uri", lambdaAuthorizerResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "lambda_authorizer_config.0.authorizer_result_ttl_in_seconds", strconv.Itoa(tfappsync.DefaultAuthorizerResultTtlInSeconds)),
+					resource.TestCheckResourceAttr(resourceName, "lambda_authorizer_config.0.identity_validation_expression", ""),
 				),
 			},
 			{
@@ -672,6 +707,142 @@ func testAccAppSyncGraphQLAPI_UserPool_defaultAction(t *testing.T) {
 	})
 }
 
+func testAccAppSyncGraphQLAPI_LambdaAuthorizerConfig_authorizerUri(t *testing.T) {
+	var api1, api2 appsync.GraphqlApi
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_appsync_graphql_api.test"
+	lambdaAuthorizerResourceName := "aws_lambda_function.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appsync.EndpointsID, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, appsync.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckGraphQLAPIDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAppsyncGraphqlApiConfig_LambdaAuthorizerConfig_AuthorizerUri(rName, "aws_lambda_function.test.arn"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGraphQLAPIExists(resourceName, &api1),
+					resource.TestCheckResourceAttr(resourceName, "authentication_type", "AWS_LAMBDA"),
+					resource.TestCheckResourceAttr(resourceName, "lambda_authorizer_config.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "lambda_authorizer_config.0.authorizer_uri", lambdaAuthorizerResourceName, "arn"),
+				),
+			},
+			{
+				Config: testAccAppsyncGraphqlApiConfig_LambdaAuthorizerConfig_AuthorizerUri(rName, "aws_lambda_function.test.qualified_arn"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGraphQLAPIExists(resourceName, &api2),
+					resource.TestCheckResourceAttr(resourceName, "authentication_type", "AWS_LAMBDA"),
+					resource.TestCheckResourceAttr(resourceName, "lambda_authorizer_config.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "lambda_authorizer_config.0.authorizer_uri", lambdaAuthorizerResourceName, "qualified_arn"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func testAccAppSyncGraphQLAPI_LambdaAuthorizerConfig_identityValidationExpression(t *testing.T) {
+	var api1, api2 appsync.GraphqlApi
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_appsync_graphql_api.test"
+	lambdaAuthorizerResourceName := "aws_lambda_function.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appsync.EndpointsID, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, appsync.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckGraphQLAPIDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAppsyncGraphqlApiConfig_LambdaAuthorizerConfig_IdentityValidationExpression(rName, "^test1$"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGraphQLAPIExists(resourceName, &api1),
+					resource.TestCheckResourceAttr(resourceName, "authentication_type", "AWS_LAMBDA"),
+					resource.TestCheckResourceAttr(resourceName, "lambda_authorizer_config.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "lambda_authorizer_config.0.authorizer_uri", lambdaAuthorizerResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "lambda_authorizer_config.0.identity_validation_expression", "^test1$"),
+				),
+			},
+			{
+				Config: testAccAppsyncGraphqlApiConfig_LambdaAuthorizerConfig_IdentityValidationExpression(rName, "^test2$"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGraphQLAPIExists(resourceName, &api2),
+					resource.TestCheckResourceAttr(resourceName, "authentication_type", "AWS_LAMBDA"),
+					resource.TestCheckResourceAttr(resourceName, "lambda_authorizer_config.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "lambda_authorizer_config.0.authorizer_uri", lambdaAuthorizerResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "lambda_authorizer_config.0.identity_validation_expression", "^test2$"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func testAccAppSyncGraphQLAPI_LambdaAuthorizerConfig_authorizerResultTtlInSeconds(t *testing.T) {
+	var api1, api2, api3, api4 appsync.GraphqlApi
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_appsync_graphql_api.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appsync.EndpointsID, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, appsync.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckGraphQLAPIDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAppsyncGraphqlApiConfig_LambdaAuthorizerConfig_AuthorizerUri(rName, "aws_lambda_function.test.arn"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGraphQLAPIExists(resourceName, &api1),
+					resource.TestCheckResourceAttr(resourceName, "authentication_type", "AWS_LAMBDA"),
+					resource.TestCheckResourceAttr(resourceName, "lambda_authorizer_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "lambda_authorizer_config.0.authorizer_result_ttl_in_seconds", strconv.Itoa(tfappsync.DefaultAuthorizerResultTtlInSeconds)),
+				),
+			},
+			{
+				Config: testAccAppsyncGraphqlApiConfig_LambdaAuthorizerConfig_AuthorizerResultTtlInSeconds(rName, "123"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGraphQLAPIExists(resourceName, &api2),
+					resource.TestCheckResourceAttr(resourceName, "authentication_type", "AWS_LAMBDA"),
+					resource.TestCheckResourceAttr(resourceName, "lambda_authorizer_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "lambda_authorizer_config.0.authorizer_result_ttl_in_seconds", "123"),
+				),
+			},
+			{
+				Config: testAccAppsyncGraphqlApiConfig_LambdaAuthorizerConfig_AuthorizerResultTtlInSeconds(rName, "0"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGraphQLAPIExists(resourceName, &api3),
+					resource.TestCheckResourceAttr(resourceName, "authentication_type", "AWS_LAMBDA"),
+					resource.TestCheckResourceAttr(resourceName, "lambda_authorizer_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "lambda_authorizer_config.0.authorizer_result_ttl_in_seconds", "0"),
+				),
+			},
+			{
+				Config: testAccAppsyncGraphqlApiConfig_LambdaAuthorizerConfig_AuthorizerUri(rName, "aws_lambda_function.test.arn"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGraphQLAPIExists(resourceName, &api4),
+					resource.TestCheckResourceAttr(resourceName, "authentication_type", "AWS_LAMBDA"),
+					resource.TestCheckResourceAttr(resourceName, "lambda_authorizer_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "lambda_authorizer_config.0.authorizer_result_ttl_in_seconds", strconv.Itoa(tfappsync.DefaultAuthorizerResultTtlInSeconds)),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccAppSyncGraphQLAPI_tags(t *testing.T) {
 	var api1 appsync.GraphqlApi
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -735,6 +906,7 @@ func testAccAppSyncGraphQLAPI_AdditionalAuthentication_apiKey(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "additional_authentication_provider.0.authentication_type", "API_KEY"),
 					resource.TestCheckResourceAttr(resourceName, "additional_authentication_provider.0.openid_connect_config.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "additional_authentication_provider.0.user_pool_config.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "additional_authentication_provider.0.lambda_authorizer_config.#", "0"),
 				),
 			},
 			{
@@ -768,6 +940,7 @@ func testAccAppSyncGraphQLAPI_AdditionalAuthentication_awsIAM(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "additional_authentication_provider.0.authentication_type", "AWS_IAM"),
 					resource.TestCheckResourceAttr(resourceName, "additional_authentication_provider.0.openid_connect_config.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "additional_authentication_provider.0.user_pool_config.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "additional_authentication_provider.0.lambda_authorizer_config.#", "0"),
 				),
 			},
 			{
@@ -801,6 +974,7 @@ func testAccAppSyncGraphQLAPI_AdditionalAuthentication_cognitoUserPools(t *testi
 					resource.TestCheckResourceAttr(resourceName, "additional_authentication_provider.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "additional_authentication_provider.0.authentication_type", "AMAZON_COGNITO_USER_POOLS"),
 					resource.TestCheckResourceAttr(resourceName, "additional_authentication_provider.0.openid_connect_config.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "additional_authentication_provider.0.lambda_authorizer_config.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "additional_authentication_provider.0.user_pool_config.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "additional_authentication_provider.0.user_pool_config.0.user_pool_id", cognitoUserPoolResourceName, "id"),
 				),
@@ -835,8 +1009,46 @@ func testAccAppSyncGraphQLAPI_AdditionalAuthentication_openIDConnect(t *testing.
 					resource.TestCheckResourceAttr(resourceName, "additional_authentication_provider.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "additional_authentication_provider.0.authentication_type", "OPENID_CONNECT"),
 					resource.TestCheckResourceAttr(resourceName, "additional_authentication_provider.0.user_pool_config.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "additional_authentication_provider.0.lambda_authorizer_config.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "additional_authentication_provider.0.openid_connect_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "additional_authentication_provider.0.openid_connect_config.0.issuer", "https://example.com"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+func testAccAppSyncGraphQLAPI_AdditionalAuthentication_awsLambda(t *testing.T) {
+	var api1 appsync.GraphqlApi
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_appsync_graphql_api.test"
+	lambdaAuthorizerResourceName := "aws_lambda_function.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appsync.EndpointsID, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, appsync.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckGraphQLAPIDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAppsyncGraphqlApiConfig_AdditionalAuth_AwsLambda(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGraphQLAPIExists(resourceName, &api1),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "appsync", regexp.MustCompile(`apis/.+`)),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "authentication_type", "API_KEY"),
+					resource.TestCheckResourceAttr(resourceName, "additional_authentication_provider.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "additional_authentication_provider.0.authentication_type", "AWS_LAMBDA"),
+					resource.TestCheckResourceAttr(resourceName, "additional_authentication_provider.0.openid_connect_config.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "additional_authentication_provider.0.user_pool_config.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "additional_authentication_provider.0.lambda_authorizer_config.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "additional_authentication_provider.0.lambda_authorizer_config.0.authorizer_uri", lambdaAuthorizerResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "additional_authentication_provider.0.lambda_authorizer_config.0.authorizer_result_ttl_in_seconds", strconv.Itoa(tfappsync.DefaultAuthorizerResultTtlInSeconds)),
+					resource.TestCheckResourceAttr(resourceName, "additional_authentication_provider.0.lambda_authorizer_config.0.identity_validation_expression", ""),
 				),
 			},
 			{
@@ -852,6 +1064,7 @@ func testAccAppSyncGraphQLAPI_AdditionalAuthentication_multiple(t *testing.T) {
 	var api1 appsync.GraphqlApi
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	cognitoUserPoolResourceName := "aws_cognito_user_pool.test"
+	lambdaAuthorizerResourceName := "aws_lambda_function.test"
 	resourceName := "aws_appsync_graphql_api.test"
 
 	resource.Test(t, resource.TestCase{
@@ -867,18 +1080,26 @@ func testAccAppSyncGraphQLAPI_AdditionalAuthentication_multiple(t *testing.T) {
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "appsync", regexp.MustCompile(`apis/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "authentication_type", "API_KEY"),
-					resource.TestCheckResourceAttr(resourceName, "additional_authentication_provider.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "additional_authentication_provider.#", "4"),
 					resource.TestCheckResourceAttr(resourceName, "additional_authentication_provider.0.authentication_type", "AWS_IAM"),
 					resource.TestCheckResourceAttr(resourceName, "additional_authentication_provider.0.user_pool_config.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "additional_authentication_provider.0.openid_connect_config.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "additional_authentication_provider.0.lambda_authorizer_config.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "additional_authentication_provider.1.authentication_type", "AMAZON_COGNITO_USER_POOLS"),
 					resource.TestCheckResourceAttr(resourceName, "additional_authentication_provider.1.openid_connect_config.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "additional_authentication_provider.1.lambda_authorizer_config.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "additional_authentication_provider.1.user_pool_config.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "additional_authentication_provider.1.user_pool_config.0.user_pool_id", cognitoUserPoolResourceName, "id"),
 					resource.TestCheckResourceAttr(resourceName, "additional_authentication_provider.2.authentication_type", "OPENID_CONNECT"),
 					resource.TestCheckResourceAttr(resourceName, "additional_authentication_provider.2.user_pool_config.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "additional_authentication_provider.2.lambda_authorizer_config.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "additional_authentication_provider.2.openid_connect_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "additional_authentication_provider.2.openid_connect_config.0.issuer", "https://example.com"),
+					resource.TestCheckResourceAttr(resourceName, "additional_authentication_provider.3.authentication_type", "AWS_LAMBDA"),
+					resource.TestCheckResourceAttr(resourceName, "additional_authentication_provider.3.openid_connect_config.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "additional_authentication_provider.3.user_pool_config.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "additional_authentication_provider.3.lambda_authorizer_config.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "additional_authentication_provider.3.lambda_authorizer_config.0.authorizer_uri", lambdaAuthorizerResourceName, "arn"),
 				),
 			},
 			{
@@ -932,7 +1153,7 @@ func testAccCheckGraphQLAPIDestroy(s *terraform.State) error {
 
 		_, err := conn.GetGraphqlApi(input)
 		if err != nil {
-			if tfawserr.ErrMessageContains(err, appsync.ErrCodeNotFoundException, "") {
+			if tfawserr.ErrCodeEquals(err, appsync.ErrCodeNotFoundException) {
 				return nil
 			}
 			return err
@@ -1172,6 +1393,85 @@ resource "aws_appsync_graphql_api" "test" {
 `, rName, rName, defaultAction)
 }
 
+func testAccAppsyncGraphqlApiConfig_LambdaAuthorizerConfig_Base(rName string) string {
+	return fmt.Sprintf(`
+data "aws_iam_policy_document" "lambda_assume_role_policy" {
+  statement {
+    effect  = "Allow"
+    actions = ["sts:AssumeRole"]
+
+    principals {
+      type        = "Service"
+      identifiers = ["lambda.amazonaws.com"]
+    }
+  }
+}
+
+resource "aws_iam_role" "test" {
+  name               = %[1]q
+  assume_role_policy = data.aws_iam_policy_document.lambda_assume_role_policy.json
+}
+
+resource "aws_lambda_function" "test" {
+  filename      = "test-fixtures/lambdatest.zip"
+  function_name = %[1]q
+  handler       = "lambdatest.handler"
+  role          = aws_iam_role.test.arn
+  runtime       = "nodejs14.x"
+  publish       = true
+}
+
+resource "aws_lambda_permission" "test" {
+  statement_id  = "appsync_lambda_authorizer"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.test.arn
+  principal     = "appsync.amazonaws.com"
+  source_arn    = aws_appsync_graphql_api.test.arn
+}
+`, rName)
+}
+
+func testAccAppsyncGraphqlApiConfig_LambdaAuthorizerConfig_AuthorizerUri(rName, authorizerUri string) string {
+	return acctest.ConfigCompose(testAccAppsyncGraphqlApiConfig_LambdaAuthorizerConfig_Base(rName), fmt.Sprintf(`
+resource "aws_appsync_graphql_api" "test" {
+  authentication_type = "AWS_LAMBDA"
+  name                = %q
+
+  lambda_authorizer_config {
+    authorizer_uri = %s
+  }
+}
+`, rName, authorizerUri))
+}
+
+func testAccAppsyncGraphqlApiConfig_LambdaAuthorizerConfig_IdentityValidationExpression(rName, identityValidationExpression string) string {
+	return acctest.ConfigCompose(testAccAppsyncGraphqlApiConfig_LambdaAuthorizerConfig_Base(rName), fmt.Sprintf(`
+resource "aws_appsync_graphql_api" "test" {
+  authentication_type = "AWS_LAMBDA"
+  name                = %q
+
+  lambda_authorizer_config {
+    authorizer_uri                 = aws_lambda_function.test.arn
+    identity_validation_expression = %q
+  }
+}
+`, rName, identityValidationExpression))
+}
+
+func testAccAppsyncGraphqlApiConfig_LambdaAuthorizerConfig_AuthorizerResultTtlInSeconds(rName, authorizerResultTtlInSeconds string) string {
+	return acctest.ConfigCompose(testAccAppsyncGraphqlApiConfig_LambdaAuthorizerConfig_Base(rName), fmt.Sprintf(`
+resource "aws_appsync_graphql_api" "test" {
+  authentication_type = "AWS_LAMBDA"
+  name                = %q
+
+  lambda_authorizer_config {
+    authorizer_uri                   = aws_lambda_function.test.arn
+    authorizer_result_ttl_in_seconds = %q
+  }
+}
+`, rName, authorizerResultTtlInSeconds))
+}
+
 func testAccAppsyncGraphqlApiConfig_Schema(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_appsync_graphql_api" "test" {
@@ -1271,8 +1571,25 @@ resource "aws_appsync_graphql_api" "test" {
 `, rName, issuer)
 }
 
+func testAccAppsyncGraphqlApiConfig_AdditionalAuth_AwsLambda(rName string) string {
+	return acctest.ConfigCompose(testAccAppsyncGraphqlApiConfig_LambdaAuthorizerConfig_Base(rName), fmt.Sprintf(`
+resource "aws_appsync_graphql_api" "test" {
+  authentication_type = "API_KEY"
+  name                = %q
+
+  additional_authentication_provider {
+    authentication_type = "AWS_LAMBDA"
+
+    lambda_authorizer_config {
+      authorizer_uri = aws_lambda_function.test.arn
+    }
+  }
+}
+`, rName))
+}
+
 func testAccAppsyncGraphqlApiConfig_AdditionalAuth_Multiple(rName, issuer string) string {
-	return fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAppsyncGraphqlApiConfig_LambdaAuthorizerConfig_Base(rName), fmt.Sprintf(`
 resource "aws_cognito_user_pool" "test" {
   name = %q
 }
@@ -1300,8 +1617,16 @@ resource "aws_appsync_graphql_api" "test" {
       issuer = %q
     }
   }
+
+  additional_authentication_provider {
+    authentication_type = "AWS_LAMBDA"
+
+    lambda_authorizer_config {
+      authorizer_uri = aws_lambda_function.test.arn
+    }
+  }
 }
-`, rName, rName, issuer)
+`, rName, rName, issuer))
 }
 
 func testAccAppsyncGraphqlApiConfig_XrayEnabled(rName string, xrayEnabled bool) string {

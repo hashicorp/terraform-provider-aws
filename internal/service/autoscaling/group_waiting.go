@@ -42,7 +42,7 @@ func waitForASGCapacity(
 		if err != nil {
 			return resource.NonRetryableError(err)
 		}
-		if g == nil {
+		if g == nil && !d.IsNewResource() {
 			log.Printf("[WARN] Auto Scaling Group (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -62,7 +62,7 @@ func waitForASGCapacity(
 			return fmt.Errorf("Error getting Auto Scaling Group info: %s", err)
 		}
 
-		if g == nil {
+		if g == nil && !d.IsNewResource() {
 			log.Printf("[WARN] Auto Scaling Group (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil

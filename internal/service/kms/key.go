@@ -6,7 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/kms"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
@@ -199,7 +199,14 @@ func resourceKeyRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("key_id", key.metadata.KeyId)
 	d.Set("key_usage", key.metadata.KeyUsage)
 	d.Set("multi_region", key.metadata.MultiRegion)
-	d.Set("policy", key.policy)
+
+	policyToSet, err := verify.SecondJSONUnlessEquivalent(d.Get("policy").(string), key.policy)
+
+	if err != nil {
+		return fmt.Errorf("while setting policy (%s), encountered: %w", key.policy, err)
+	}
+
+	d.Set("policy", policyToSet)
 
 	tags := key.tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 

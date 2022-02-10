@@ -6,7 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/route53resolver"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -26,11 +26,6 @@ func ResourceFirewallRuleGroup() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
-			"id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -109,7 +104,6 @@ func resourceFirewallRuleGroupRead(d *schema.ResourceData, meta interface{}) err
 
 	arn := aws.StringValue(ruleGroup.Arn)
 	d.Set("arn", arn)
-	d.Set("id", ruleGroup.Id)
 	d.Set("name", ruleGroup.Name)
 	d.Set("owner_id", ruleGroup.OwnerId)
 	d.Set("share_status", ruleGroup.ShareStatus)

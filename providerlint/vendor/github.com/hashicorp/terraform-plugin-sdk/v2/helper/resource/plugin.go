@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-exec/tfexec"
 	"github.com/hashicorp/terraform-plugin-go/tfprotov5"
 	"github.com/hashicorp/terraform-plugin-go/tfprotov6"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/logging"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/internal/plugintest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/plugin"
@@ -34,7 +35,7 @@ func runProviderCommand(t testing.T, f func() error, wd *plugintest.WorkingDir, 
 	// reattach behavior in Terraform. This ensures we get test coverage
 	// and enables the use of delve as a debugger.
 
-	ctx, cancel := context.WithCancel(context.Background())
+	ctx, cancel := context.WithCancel(logging.GetTestLogContext(t))
 	defer cancel()
 
 	// this is needed so Terraform doesn't default to expecting protocol 4;
@@ -93,6 +94,8 @@ func runProviderCommand(t testing.T, f func() error, wd *plugintest.WorkingDir, 
 				Output: ioutil.Discard,
 			}),
 			NoLogOutputOverride: true,
+			UseTFLogSink:        t,
+			ProviderAddr:        getProviderAddr(providerName),
 		}
 
 		// let's actually start the provider server
@@ -170,6 +173,8 @@ func runProviderCommand(t testing.T, f func() error, wd *plugintest.WorkingDir, 
 				Output: ioutil.Discard,
 			}),
 			NoLogOutputOverride: true,
+			UseTFLogSink:        t,
+			ProviderAddr:        getProviderAddr(providerName),
 		}
 
 		// let's actually start the provider server
@@ -244,6 +249,8 @@ func runProviderCommand(t testing.T, f func() error, wd *plugintest.WorkingDir, 
 				Output: ioutil.Discard,
 			}),
 			NoLogOutputOverride: true,
+			UseTFLogSink:        t,
+			ProviderAddr:        getProviderAddr(providerName),
 		}
 
 		// let's actually start the provider server
@@ -315,4 +322,18 @@ func runProviderCommand(t testing.T, f func() error, wd *plugintest.WorkingDir, 
 	// return any error returned from the orchestration code running
 	// Terraform commands
 	return err
+}
+
+func getProviderAddr(name string) string {
+	host := "registry.terraform.io"
+	namespace := "hashicorp"
+	if v := os.Getenv("TF_ACC_PROVIDER_NAMESPACE"); v != "" {
+		namespace = v
+	}
+	if v := os.Getenv("TF_ACC_PROVIDER_HOST"); v != "" {
+		host = v
+	}
+	return strings.TrimSuffix(host, "/") + "/" +
+		strings.TrimSuffix(namespace, "/") + "/" +
+		name
 }

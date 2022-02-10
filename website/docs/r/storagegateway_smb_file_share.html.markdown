@@ -50,13 +50,13 @@ The following arguments are supported:
 * `admin_user_list` - (Optional) A list of users in the Active Directory that have admin access to the file share. Only valid if `authentication` is set to `ActiveDirectory`.
 * `authentication` - (Optional) The authentication method that users use to access the file share. Defaults to `ActiveDirectory`. Valid values: `ActiveDirectory`, `GuestAccess`.
 * `audit_destination_arn` - (Optional) The Amazon Resource Name (ARN) of the CloudWatch Log Group used for the audit logs.
-* `default_storage_class` - (Optional) The default storage class for objects put into an Amazon S3 bucket by the file gateway. Defaults to `S3_STANDARD`. Valid values: `S3_STANDARD`, `S3_STANDARD_IA`, `S3_ONEZONE_IA`.
+* `default_storage_class` - (Optional) The default [storage class](https://docs.aws.amazon.com/storagegateway/latest/APIReference/API_CreateNFSFileShare.html#StorageGateway-CreateNFSFileShare-request-DefaultStorageClass) for objects put into an Amazon S3 bucket by the file gateway. Defaults to `S3_STANDARD`.
 * `file_share_name` - (Optional) The name of the file share. Must be set if an S3 prefix name is set in `location_arn`.
 * `guess_mime_type_enabled` - (Optional) Boolean value that enables guessing of the MIME type for uploaded objects based on file extensions. Defaults to `true`.
 * `invalid_user_list` - (Optional) A list of users in the Active Directory that are not allowed to access the file share. Only valid if `authentication` is set to `ActiveDirectory`.
 * `kms_encrypted` - (Optional) Boolean value if `true` to use Amazon S3 server side encryption with your own AWS KMS key, or `false` to use a key managed by Amazon S3. Defaults to `false`.
 * `kms_key_arn` - (Optional) Amazon Resource Name (ARN) for KMS key used for Amazon S3 server side encryption. This value can only be set when `kms_encrypted` is true.
-* `object_acl` - (Optional) Access Control List permission for S3 bucket objects. Defaults to `private`.
+* `object_acl` - (Optional) Access Control List permission for S3 objects. Defaults to `private`.
 * `oplocks_enabled` - (Optional) Boolean to indicate Opportunistic lock (oplock) status. Defaults to `true`.
 * `cache_attributes` - (Optional) Refresh cache information. see [Cache Attributes](#cache_attributes) for more details.
 * `read_only` - (Optional) Boolean to indicate write status of file share. File share does not accept writes if `true`. Defaults to `false`.

@@ -49,12 +49,12 @@ func TestAccElasticsearchDomainPolicy_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, elasticsearch.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckESDomainDestroy,
+		CheckDestroy: testAccCheckDomainDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccESDomainPolicyConfig(ri, policy),
+				Config: testAccDomainPolicyConfig(ri, policy),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckESDomainExists("aws_elasticsearch_domain.example", &domain),
+					testAccCheckDomainExists("aws_elasticsearch_domain.example", &domain),
 					resource.TestCheckResourceAttr("aws_elasticsearch_domain.example", "elasticsearch_version", "2.3"),
 					func(s *terraform.State) error {
 						awsClient := acctest.Provider.Meta().(*conns.AWSClient)
@@ -83,14 +83,14 @@ func buildESDomainArn(name, partition, accId, region string) (string, error) {
 	return fmt.Sprintf("arn:%s:es:%s:%s:domain/%s", partition, region, accId, name), nil
 }
 
-func testAccESDomainPolicyConfig(randInt int, policy string) string {
+func testAccDomainPolicyConfig(randInt int, policy string) string {
 	return fmt.Sprintf(`
 resource "aws_elasticsearch_domain" "example" {
   domain_name           = "tf-test-%d"
   elasticsearch_version = "2.3"
 
   cluster_config {
-    instance_type = "t2.micro.elasticsearch"
+    instance_type = "t2.small.elasticsearch" # supported in both aws and aws-us-gov
   }
 
   ebs_options {

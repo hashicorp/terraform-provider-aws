@@ -1,0 +1,11 @@
+```release-note:enhancement
+resource/aws_sagemaker_domain: Add `lifecycle_config_arn` and `sagemaker_image_version_arn` arguments to `default_resource_spec` configuration block
+```
+
+```release-note:enhancement
+resource/aws_sagemaker_user_profile: Add `lifecycle_config_arn` and `sagemaker_image_version_arn` arguments to `default_resource_spec` configuration block
+```
+
+```release-note:enhancement
+resource/aws_sagemaker_app: Add `lifecycle_config_arn` and `sagemaker_image_version_arn` arguments to `resource_spec` configuration block
+```

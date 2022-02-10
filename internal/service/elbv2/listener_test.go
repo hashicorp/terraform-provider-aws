@@ -8,7 +8,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/elbv2"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -179,7 +179,7 @@ func TestAccELBV2Listener_forwardWeighted(t *testing.T) {
 	})
 }
 
-func TestAccELBV2Listener_basicUdp(t *testing.T) {
+func TestAccELBV2Listener_Protocol_upd(t *testing.T) {
 	var conf elbv2.Listener
 	resourceName := "aws_lb_listener.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -251,7 +251,7 @@ func TestAccELBV2Listener_backwardsCompatibility(t *testing.T) {
 	})
 }
 
-func TestAccELBV2Listener_https(t *testing.T) {
+func TestAccELBV2Listener_Protocol_https(t *testing.T) {
 	var conf elbv2.Listener
 	key := acctest.TLSRSAPrivateKeyPEM(2048)
 	resourceName := "aws_lb_listener.test"
@@ -297,6 +297,10 @@ func TestAccELBV2Listener_LoadBalancerARN_gatewayLoadBalancer(t *testing.T) {
 	lbResourceName := "aws_lb.test"
 	resourceName := "aws_lb_listener.test"
 
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   testAccErrorCheckSkipELBV2(t),
@@ -322,6 +326,10 @@ func TestAccELBV2Listener_Protocol_tls(t *testing.T) {
 	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(key, "example.com")
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lb_listener.test"
+
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -552,7 +560,7 @@ func TestAccELBV2Listener_DefaultAction_order(t *testing.T) {
 }
 
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/6171
-func TestAccELBV2Listener_DefaultActionOrder_recreates(t *testing.T) {
+func TestAccELBV2Listener_DefaultAction_orderRecreates(t *testing.T) {
 	var listener elbv2.Listener
 	key := acctest.TLSRSAPrivateKeyPEM(2048)
 	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(key, "example.com")

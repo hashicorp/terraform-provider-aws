@@ -5,16 +5,15 @@ import (
 	"regexp"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/service/devicefarm"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfdevicefarm "github.com/hashicorp/terraform-provider-aws/internal/service/devicefarm"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func TestAccDeviceFarmProject_basic(t *testing.T) {
@@ -176,6 +175,7 @@ func TestAccDeviceFarmProject_disappears(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeviceFarmProjectExists(resourceName, &proj),
 					acctest.CheckResourceDisappears(acctest.Provider, tfdevicefarm.ResourceProject(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfdevicefarm.ResourceProject(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -195,16 +195,15 @@ func testAccCheckDeviceFarmProjectExists(n string, v *devicefarm.Project) resour
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).DeviceFarmConn
-		resp, err := conn.GetProject(
-			&devicefarm.GetProjectInput{Arn: aws.String(rs.Primary.ID)})
+		resp, err := tfdevicefarm.FindProjectByArn(conn, rs.Primary.ID)
 		if err != nil {
 			return err
 		}
-		if resp.Project == nil {
-			return fmt.Errorf("DeviceFarmProject not found")
+		if resp == nil {
+			return fmt.Errorf("DeviceFarm Project not found")
 		}
 
-		*v = *resp.Project
+		*v = *resp
 
 		return nil
 	}
@@ -219,19 +218,16 @@ func testAccCheckDeviceFarmProjectDestroy(s *terraform.State) error {
 		}
 
 		// Try to find the resource
-		resp, err := conn.GetProject(
-			&devicefarm.GetProjectInput{Arn: aws.String(rs.Primary.ID)})
-		if err == nil {
-			if resp.Project != nil {
-				return fmt.Errorf("still exist.")
-			}
-
-			return nil
+		_, err := tfdevicefarm.FindProjectByArn(conn, rs.Primary.ID)
+		if tfresource.NotFound(err) {
+			continue
 		}
 
-		if tfawserr.ErrMessageContains(err, devicefarm.ErrCodeNotFoundException, "") {
-			return nil
+		if err != nil {
+			return err
 		}
+
+		return fmt.Errorf("DeviceFarm Project %s still exists", rs.Primary.ID)
 	}
 
 	return nil

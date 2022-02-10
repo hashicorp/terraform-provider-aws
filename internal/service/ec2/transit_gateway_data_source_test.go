@@ -31,7 +31,9 @@ func TestAccEC2TransitGatewayDataSource_serial(t *testing.T) {
 		},
 		"RouteTables": {
 			"basic":  testAccTransitGatewayRouteTablesDataSource_basic,
-			"Filter": testAccTransitGatewayRouteTablesDataSource_Filter,
+			"Filter": testAccTransitGatewayRouteTablesDataSource_filter,
+			"Tags":   testAccTransitGatewayRouteTablesDataSource_tags,
+			"Empty":  testAccTransitGatewayRouteTablesDataSource_empty,
 		},
 		"VpcAttachment": {
 			"Filter": testAccTransitGatewayVPCAttachmentDataSource_Filter,

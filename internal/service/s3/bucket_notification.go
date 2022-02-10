@@ -7,7 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/s3"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -30,6 +30,12 @@ func ResourceBucketNotification() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
+			},
+
+			"eventbridge": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
 			},
 
 			"topic": {
@@ -135,6 +141,13 @@ func resourceBucketNotificationPut(d *schema.ResourceData, meta interface{}) err
 	conn := meta.(*conns.AWSClient).S3Conn
 	bucket := d.Get("bucket").(string)
 
+	// EventBridge
+	eventbridgeNotifications := d.Get("eventbridge").(bool)
+	var eventbridgeConfig *s3.EventBridgeConfiguration
+	if eventbridgeNotifications {
+		eventbridgeConfig = &s3.EventBridgeConfiguration{}
+	}
+
 	// TopicNotifications
 	topicNotifications := d.Get("topic").([]interface{})
 	topicConfigs := make([]*s3.TopicConfiguration, 0, len(topicNotifications))
@@ -163,7 +176,7 @@ func resourceBucketNotificationPut(d *schema.ResourceData, meta interface{}) err
 		}
 
 		// Filter
-		filterRules := make([]*s3.FilterRule, 0, 2)
+		filterRules := make([]*s3.FilterRule, 0, filterRulesSliceStartLen)
 		if val, ok := c["filter_prefix"].(string); ok && val != "" {
 			filterRule := &s3.FilterRule{
 				Name:  aws.String("prefix"),
@@ -216,7 +229,7 @@ func resourceBucketNotificationPut(d *schema.ResourceData, meta interface{}) err
 		}
 
 		// Filter
-		filterRules := make([]*s3.FilterRule, 0, 2)
+		filterRules := make([]*s3.FilterRule, 0, filterRulesSliceStartLen)
 		if val, ok := c["filter_prefix"].(string); ok && val != "" {
 			filterRule := &s3.FilterRule{
 				Name:  aws.String("prefix"),
@@ -269,7 +282,7 @@ func resourceBucketNotificationPut(d *schema.ResourceData, meta interface{}) err
 		}
 
 		// Filter
-		filterRules := make([]*s3.FilterRule, 0, 2)
+		filterRules := make([]*s3.FilterRule, 0, filterRulesSliceStartLen)
 		if val, ok := c["filter_prefix"].(string); ok && val != "" {
 			filterRule := &s3.FilterRule{
 				Name:  aws.String("prefix"),
@@ -295,6 +308,9 @@ func resourceBucketNotificationPut(d *schema.ResourceData, meta interface{}) err
 	}
 
 	notificationConfiguration := &s3.NotificationConfiguration{}
+	if eventbridgeConfig != nil {
+		notificationConfiguration.EventBridgeConfiguration = eventbridgeConfig
+	}
 	if len(lambdaConfigs) > 0 {
 		notificationConfiguration.LambdaFunctionConfigurations = lambdaConfigs
 	}
@@ -379,6 +395,9 @@ func resourceBucketNotificationRead(d *schema.ResourceData, meta interface{}) er
 	log.Printf("[DEBUG] S3 Bucket: %s, get notification: %v", d.Id(), notificationConfigs)
 
 	d.Set("bucket", d.Id())
+
+	// EventBridge Notification
+	d.Set("eventbridge", notificationConfigs.EventBridgeConfiguration != nil)
 
 	// Topic Notification
 	if err := d.Set("topic", flattenTopicConfigurations(notificationConfigs.TopicConfigurations)); err != nil {

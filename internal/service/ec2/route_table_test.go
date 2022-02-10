@@ -272,6 +272,10 @@ func TestAccEC2RouteTable_tags(t *testing.T) {
 }
 
 func TestAccEC2RouteTable_requireRouteDestination(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -382,6 +386,10 @@ func TestAccEC2RouteTable_Route_mode(t *testing.T) {
 }
 
 func TestAccEC2RouteTable_ipv4ToTransitGateway(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var routeTable ec2.RouteTable
 	resourceName := "aws_route_table.test"
 	tgwResourceName := "aws_ec2_transit_gateway.test"
@@ -418,6 +426,10 @@ func TestAccEC2RouteTable_ipv4ToTransitGateway(t *testing.T) {
 }
 
 func TestAccEC2RouteTable_ipv4ToVPCEndpoint(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var routeTable ec2.RouteTable
 	resourceName := "aws_route_table.test"
 	vpceResourceName := "aws_vpc_endpoint.test"
@@ -1842,8 +1854,8 @@ resource "aws_route_table" "test" {
   vpc_id = aws_vpc.test.id
 
   route {
-    cidr_block      = local.ipv6 ? "" : local.destination
-    ipv6_cidr_block = local.ipv6 ? local.destination_ipv6 : ""
+    cidr_block      = local.ipv6 ? null : local.destination
+    ipv6_cidr_block = local.ipv6 ? local.destination_ipv6 : null
     gateway_id      = aws_internet_gateway.test.id
   }
 

@@ -3,6 +3,7 @@ package elbv2
 import (
 	"errors"
 	"fmt"
+	"log"
 	"sort"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -10,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func DataSourceListener() *schema.Resource {
@@ -338,6 +340,11 @@ func dataSourceListenerRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	tags, err := ListTags(conn, d.Id())
+
+	if verify.CheckISOErrorTagsUnsupported(err) {
+		log.Printf("[WARN] Unable to list tags for ELBv2 Listener %s: %s", d.Id(), err)
+		return nil
+	}
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for (%s): %w", d.Id(), err)
