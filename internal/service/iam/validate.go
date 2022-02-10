@@ -6,18 +6,18 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
-var validRolePolicyName = validation.All(
-	validation.StringLenBetween(1, 128),
-	validation.StringMatch(regexp.MustCompile(`^[\w+=,.@-]*$`), "must match [\\w+=,.@-]"),
-)
+var validRolePolicyName = validIamResourceName(rolePolicyNameMaxLen)
 
-var validRolePolicyNamePrefix = validation.All(
-	validation.StringLenBetween(1, 100),
-	validation.StringMatch(regexp.MustCompile(`^[\w+=,.@-]*$`), "must match [\\w+=,.@-]"),
-)
+func validIamResourceName(max int) schema.SchemaValidateFunc {
+	return validation.All(
+		validation.StringLenBetween(1, max),
+		validation.StringMatch(regexp.MustCompile(`^[\w+=,.@-]*$`), "must match [\\w+=,.@-]"),
+	)
+}
 
 var validAccountAlias = validation.All(
 	validation.StringLenBetween(3, 63),
