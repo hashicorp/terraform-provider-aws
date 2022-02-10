@@ -21,6 +21,7 @@ func ResourceReportPlan() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceReportPlanCreate,
 		Read:   resourceReportPlanRead,
+		Update: resourceReportPlanUpdate,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -202,6 +203,35 @@ func resourceReportPlanRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	return nil
+}
+
+func resourceReportPlanUpdate(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*conns.AWSClient).BackupConn
+
+	if d.HasChanges("description", "report_delivery_channel", "report_plan_description", "report_setting") {
+		input := &backup.UpdateReportPlanInput{
+			IdempotencyToken:      aws.String(resource.UniqueId()),
+			ReportDeliveryChannel: expandReportDeliveryChannel(d.Get("report_delivery_channel").([]interface{})),
+			ReportPlanDescription: aws.String(d.Get("description").(string)),
+			ReportPlanName:        aws.String(d.Id()),
+			ReportSetting:         expandReportSetting(d.Get("report_setting").([]interface{})),
+		}
+
+		log.Printf("[DEBUG] Updating Backup Report Plan: %#v", input)
+		_, err := conn.UpdateReportPlan(input)
+		if err != nil {
+			return fmt.Errorf("error updating Backup Report Plan (%s): %w", d.Id(), err)
+		}
+	}
+
+	if d.HasChange("tags_all") {
+		o, n := d.GetChange("tags_all")
+		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+			return fmt.Errorf("error updating tags for Backup Report Plan (%s): %w", d.Id(), err)
+		}
+	}
+
+	return resourceReportPlanRead(d, meta)
 }
 
 func expandReportDeliveryChannel(reportDeliveryChannel []interface{}) *backup.ReportDeliveryChannel {
