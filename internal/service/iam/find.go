@@ -177,13 +177,6 @@ func FindVirtualMfaDevice(conn *iam.IAM, serialNum string) (*iam.VirtualMFADevic
 
 	output, err := conn.ListVirtualMFADevices(input)
 
-	// if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
-	// 	return nil, &resource.NotFoundError{
-	// 		LastError:   err,
-	// 		LastRequest: input,
-	// 	}
-	// }
-
 	if err != nil {
 		return nil, err
 	}
