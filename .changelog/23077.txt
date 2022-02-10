@@ -1,5 +1,5 @@
 ```release-note:note
-provider: The `assume_role.0.duration_seconds` argument has been deprecated. All configurations using `assume_role.0.duration_seconds` should be updated to use the new `assume_role.0.duration` argument instead.
+provider: The `assume_role.duration_seconds` argument has been deprecated. All configurations using `assume_role.duration_seconds` should be updated to use the new `assume_role.duration` argument instead.
 ```
 
 ```release-note:enhancement
