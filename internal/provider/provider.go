@@ -1936,11 +1936,20 @@ func assumeRoleSchema() *schema.Schema {
 		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
+				"duration": {
+					Type:          schema.TypeString,
+					Optional:      true,
+					Description:   "The duration, between 15 minutes and 12 hours, of the role session. Valid time units are ns, us (or µs), ms, s, h, or m.",
+					ValidateFunc:  ValidAssumeRoleDuration,
+					ConflictsWith: []string{"assume_role.0.duration_seconds"},
+				},
 				"duration_seconds": {
-					Type:         schema.TypeInt,
-					Optional:     true,
-					Description:  "The duration, in seconds, of the role session.",
-					ValidateFunc: validation.IntBetween(900, 43200),
+					Type:          schema.TypeInt,
+					Optional:      true,
+					Deprecated:    "Use assume_role.0.duration instead",
+					Description:   "The duration, in seconds, of the role session.",
+					ValidateFunc:  validation.IntBetween(900, 43200),
+					ConflictsWith: []string{"assume_role.0.duration"},
 				},
 				"external_id": {
 					Type:        schema.TypeString,
@@ -2021,6 +2030,11 @@ func endpointsSchema() *schema.Schema {
 
 func expandAssumeRole(m map[string]interface{}) *awsbase.AssumeRole {
 	assumeRole := awsbase.AssumeRole{}
+
+	if v, ok := m["duration"].(string); ok && v != "" {
+		duration, _ := time.ParseDuration(v)
+		assumeRole.Duration = duration
+	}
 
 	if v, ok := m["duration_seconds"].(int); ok && v != 0 {
 		assumeRole.Duration = time.Duration(v) * time.Second
