@@ -94,6 +94,14 @@ func init() {
 	resource.AddTestSweepers("aws_iam_user", &resource.Sweeper{
 		Name: "aws_iam_user",
 		F:    sweepUsers,
+		Dependencies: []string{
+			"aws_iam_virtual_mfa_device",
+		},
+	})
+
+	resource.AddTestSweepers("aws_iam_virtual_mfa_device", &resource.Sweeper{
+		Name: "aws_iam_virtual_mfa_device",
+		F:    sweepVirtualMfaDevice,
 	})
 }
 
@@ -781,4 +789,52 @@ func roleNameFilter(name string) bool {
 	}
 
 	return false
+}
+
+func sweepVirtualMfaDevice(region string) error {
+	client, err := sweep.SharedRegionalSweepClient(region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %s", err)
+	}
+	conn := client.(*conns.AWSClient).IAMConn
+	var sweeperErrs *multierror.Error
+	input := &iam.ListVirtualMFADevicesInput{}
+
+	err = conn.ListVirtualMFADevicesPages(input, func(page *iam.ListVirtualMFADevicesOutput, lastPage bool) bool {
+		if len(page.VirtualMFADevices) == 0 {
+			log.Printf("[INFO] No IAM Virtual MFA Devices to sweep")
+			return true
+		}
+		for _, device := range page.VirtualMFADevices {
+			serialNum := aws.StringValue(device.SerialNumber)
+
+			if strings.Contains(serialNum, "root-account-mfa-device") {
+				log.Printf("[INFO] Skipping IAM Root Virtual MFA Device: %s", device)
+				continue
+			}
+
+			r := ResourceVirtualMfaDevice()
+			d := r.Data(nil)
+			d.SetId(serialNum)
+			err := r.Delete(d, client)
+			if err != nil {
+				sweeperErr := fmt.Errorf("error deleting IAM Virtual MFA Device (%s): %w", device, err)
+				log.Printf("[ERROR] %s", sweeperErr)
+				sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
+				continue
+			}
+		}
+		return !lastPage
+	})
+
+	if sweep.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping IAM Virtual MFA Device sweep for %s: %s", region, err)
+		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
+	}
+
+	if err != nil {
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error describing IAM Virtual MFA Devices: %w", err))
+	}
+
+	return sweeperErrs.ErrorOrNil()
 }
