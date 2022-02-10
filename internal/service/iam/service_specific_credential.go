@@ -106,7 +106,7 @@ func resourceServiceSpecificCredentialRead(d *schema.ResourceData, meta interfac
 	}, d.IsNewResource())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
-		log.Printf("[WARN] IAM Role (%s) not found, removing from state", d.Id())
+		log.Printf("[WARN] IAM Service Specific Credential (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
