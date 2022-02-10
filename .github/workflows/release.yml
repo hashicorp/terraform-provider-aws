@@ -1,8 +1,52 @@
-name: Post Publish
+name: Release
+
 on:
-  release:
-    types: [published]
+  push:
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+*'
+
+permissions:
+  contents: write
+
 jobs:
+  go-version:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.go-version.outputs.version }}
+    steps:
+      - uses: actions/checkout@v2
+      - id: go-version
+        run: echo "::set-output name=version::$(cat ./.go-version)"
+  release-notes:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      - name: Generate Release Notes
+        run: sed -n -e "1{/# /d;}" -e "2{/^$/d;}" -e "/# $(git describe --abbrev=0 --exclude="$(git describe --abbrev=0 --match='v*.*.*' --tags)" --match='v*.*.*' --tags | tr -d v)/q;p" CHANGELOG.md > release-notes.txt
+      - uses: actions/upload-artifact@v2
+        with:
+          name: release-notes
+          path: release-notes.txt
+          retention-days: 1
+  terraform-provider-release:
+    name: 'Terraform Provider Release'
+    needs: [go-version, release-notes]
+    uses: hashicorp/ghaction-terraform-provider-release/.github/workflows/hashicorp.yml@v1
+    secrets:
+      hc-releases-aws-access-key-id: '${{ secrets.TF_PROVIDER_RELEASE_AWS_ACCESS_KEY_ID }}'
+      hc-releases-aws-secret-access-key: '${{ secrets.TF_PROVIDER_RELEASE_AWS_SECRET_ACCESS_KEY }}'
+      hc-releases-aws-role-arn: '${{ secrets.TF_PROVIDER_RELEASE_AWS_ROLE_ARN }}'
+      hc-releases-fastly-api-token: '${{ secrets.HASHI_FASTLY_PURGE_TOKEN }}'
+      hc-releases-github-token: '${{ secrets.HASHI_RELEASES_GITHUB_TOKEN }}'
+      hc-releases-terraform-registry-sync-token: '${{ secrets.TF_PROVIDER_RELEASE_TERRAFORM_REGISTRY_SYNC_TOKEN }}'
+      setup-signore-github-token: '${{ secrets.HASHI_SIGNORE_GITHUB_TOKEN }}'
+      signore-client-id: '${{ secrets.SIGNORE_CLIENT_ID }}'
+      signore-client-secret: '${{ secrets.SIGNORE_CLIENT_SECRET }}'
+    with:
+      release-notes: true
+      setup-go-version: '${{ needs.go-version.outputs.version }}'
   tidy:
     name: Tidy Asana
     runs-on: ubuntu-latest
