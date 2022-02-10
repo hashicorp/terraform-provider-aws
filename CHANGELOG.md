@@ -1,4 +1,9 @@
 ## 4.1.0 (Unreleased)
+
+FEATURES:
+
+* **New Data Source:** `aws_service` ([#16640](https://github.com/hashicorp/terraform-provider-aws/issues/16640))
+
 ## 4.0.0 (February 10, 2022)
 
 BREAKING CHANGES:
