@@ -22,6 +22,7 @@ func ResourceReportPlan() *schema.Resource {
 		Create: resourceReportPlanCreate,
 		Read:   resourceReportPlanRead,
 		Update: resourceReportPlanUpdate,
+		Delete: resourceReportPlanDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -232,6 +233,21 @@ func resourceReportPlanUpdate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	return resourceReportPlanRead(d, meta)
+}
+
+func resourceReportPlanDelete(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*conns.AWSClient).BackupConn
+
+	input := &backup.DeleteReportPlanInput{
+		ReportPlanName: aws.String(d.Id()),
+	}
+
+	_, err := conn.DeleteReportPlan(input)
+	if err != nil {
+		return fmt.Errorf("error deleting Backup Report Plan: %s", err)
+	}
+
+	return nil
 }
 
 func expandReportDeliveryChannel(reportDeliveryChannel []interface{}) *backup.ReportDeliveryChannel {
