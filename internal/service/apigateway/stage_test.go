@@ -130,6 +130,51 @@ func TestAccAPIGatewayStage_cache(t *testing.T) {
 	})
 }
 
+// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/22866
+func TestAccAPIGatewayStage_cache_size_cache_disabled(t *testing.T) {
+	var conf apigateway.Stage
+	rName := sdkacctest.RandString(5)
+	resourceName := "aws_api_gateway_stage.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckStageDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccStageConfigBasic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckStageExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "cache_cluster_enabled", "false"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccStageImportStateIdFunc(resourceName),
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccStageConfigCacheSizeCacheDisabled(rName, "0.5"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckStageExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "cache_cluster_size", "0.5"),
+					resource.TestCheckResourceAttr(resourceName, "cache_cluster_enabled", "false"),
+				),
+			},
+			{
+				Config: testAccStageConfigCacheConfig(rName, "0.5"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckStageExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "cache_cluster_size", "0.5"),
+					resource.TestCheckResourceAttr(resourceName, "cache_cluster_enabled", "true"),
+				),
+			},
+		},
+	})
+}
+
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/12756
 func TestAccAPIGatewayStage_Disappears_referencingDeployment(t *testing.T) {
 	var stage apigateway.Stage
@@ -642,6 +687,17 @@ resource "aws_api_gateway_stage" "test" {
   }
 }
 `
+}
+
+func testAccStageConfigCacheSizeCacheDisabled(rName, size string) string {
+	return testAccStageConfig_base(rName) + fmt.Sprintf(`
+resource "aws_api_gateway_stage" "test" {
+  rest_api_id           = aws_api_gateway_rest_api.test.id
+  stage_name            = "prod"
+  deployment_id         = aws_api_gateway_deployment.dev.id
+  cache_cluster_size    = %[1]q
+}
+`, size)
 }
 
 func testAccStageConfigCacheConfig(rName, size string) string {
