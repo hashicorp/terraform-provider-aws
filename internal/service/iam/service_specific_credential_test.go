@@ -51,7 +51,7 @@ func TestAccServiceSpecificCredential_multi(t *testing.T) {
 	var cred iam.ServiceSpecificCredentialMetadata
 
 	resourceName := "aws_iam_service_specific_credential.test"
-	resourceName2 := "aws_iam_service_specific_credential.test"
+	resourceName2 := "aws_iam_service_specific_credential.test2"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -235,9 +235,9 @@ resource "aws_iam_service_specific_credential" "test" {
 }
 
 resource "aws_iam_service_specific_credential" "test2" {
-	service_name = "codecommit.amazonaws.com"
-	user_name    = aws_iam_user.test.name
-  }
+  service_name = "codecommit.amazonaws.com"
+  user_name    = aws_iam_user.test.name
+}
 `, rName)
 }
 
