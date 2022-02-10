@@ -41,16 +41,14 @@ data "aws_service" "s3" {
 
 ## Argument Reference
 
-~> **Note:** If you provide `reverse_dns_name` or `dns_name` arguments, `region`, `service_id`, and `prefix` values are ignored. If you provide both `reverse_dns_name` and `dns_name`, `dns_name` takes precedence.
-
 The following arguments are optional:
 
-* `dns_name` - (Optional) DNS name of the service (_e.g.,_ `rds.us-east-1.amazonaws.com`).
+* `dns_name` - (Optional) DNS name of the service (_e.g.,_ `rds.us-east-1.amazonaws.com`). One of `dns_name`, `reverse_dns_name`, or `service_id` is required.
 * `partition` - (Optional) Partition corresponding to the region.
 * `region` - (Optional) Region of the service (_e.g.,_ `us-west-2`, `ap-northeast-1`).
-* `reverse_dns_name` - (Optional) Reverse DNS name of the service (_e.g.,_ `com.amazonaws.us-west-2.s3`).
+* `reverse_dns_name` - (Optional) Reverse DNS name of the service (_e.g.,_ `com.amazonaws.us-west-2.s3`). One of `dns_name`, `reverse_dns_name`, or `service_id` is required.
 * `reverse_dns_prefix` - (Optional) Prefix of the service (_e.g.,_ `com.amazonaws` in AWS Commercial, `cn.com.amazonaws` in AWS China).
-* `service_id` - (Optional) Service (_e.g.,_ `s3`, `rds`, `ec2`). Defaults to `ec2`.
+* `service_id` - (Optional) Service (_e.g.,_ `s3`, `rds`, `ec2`). One of `dns_name`, `reverse_dns_name`, or `service_id` is required.
 
 ## Attributes Reference
 

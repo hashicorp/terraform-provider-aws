@@ -15,33 +15,38 @@ func DataSourceService() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"dns_name": {
-				Type:     schema.TypeString,
-				Computed: true,
-				Optional: true,
+				Type:         schema.TypeString,
+				Computed:     true,
+				Optional:     true,
+				ExactlyOneOf: []string{"dns_name", "reverse_dns_name", "service_id"},
 			},
 			"partition": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"region": {
-				Type:     schema.TypeString,
-				Computed: true,
-				Optional: true,
+				Type:          schema.TypeString,
+				Computed:      true,
+				Optional:      true,
+				ConflictsWith: []string{"dns_name", "reverse_dns_name"},
 			},
 			"reverse_dns_name": {
-				Type:     schema.TypeString,
-				Computed: true,
-				Optional: true,
+				Type:         schema.TypeString,
+				Computed:     true,
+				Optional:     true,
+				ExactlyOneOf: []string{"dns_name", "reverse_dns_name", "service_id"},
 			},
 			"reverse_dns_prefix": {
-				Type:     schema.TypeString,
-				Computed: true,
-				Optional: true,
+				Type:          schema.TypeString,
+				Computed:      true,
+				Optional:      true,
+				ConflictsWith: []string{"dns_name", "reverse_dns_name"},
 			},
 			"service_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-				Optional: true,
+				Type:         schema.TypeString,
+				Computed:     true,
+				Optional:     true,
+				ExactlyOneOf: []string{"dns_name", "reverse_dns_name", "service_id"},
 			},
 			"supported": {
 				Type:     schema.TypeBool,
@@ -81,7 +86,7 @@ func dataSourceServiceRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if _, ok := d.GetOk("service_id"); !ok {
-		d.Set("service_id", endpoints.Ec2ServiceID)
+		return fmt.Errorf("service ID not provided directly or through a DNS name")
 	}
 
 	if _, ok := d.GetOk("reverse_dns_prefix"); !ok {

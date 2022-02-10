@@ -160,9 +160,11 @@ func TestAccMetaService_unsupported(t *testing.T) {
 }
 
 func testAccCheckServiceConfig_basic() string {
-	return `
-data "aws_service" "default" {}
-`
+	return fmt.Sprintf(`
+data "aws_service" "default" {
+  service_id = %[1]q
+}
+`, ec2.EndpointsID)
 }
 
 func testAccCheckServiceConfig_byReverseDNSName() string {
