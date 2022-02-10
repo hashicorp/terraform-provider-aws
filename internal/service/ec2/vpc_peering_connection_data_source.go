@@ -206,3 +206,18 @@ func dataSourceVPCPeeringConnectionRead(d *schema.ResourceData, meta interface{}
 
 	return nil
 }
+
+func flattenVPCPeeringConnectionOptions(options *ec2.VpcPeeringConnectionOptionsDescription) []interface{} {
+	// When the VPC Peering Connection is pending acceptance,
+	// the details about accepter and/or requester peering
+	// options would not be included in the response.
+	if options == nil {
+		return []interface{}{}
+	}
+
+	return []interface{}{map[string]interface{}{
+		"allow_remote_vpc_dns_resolution":  aws.BoolValue(options.AllowDnsResolutionFromRemoteVpc),
+		"allow_classic_link_to_remote_vpc": aws.BoolValue(options.AllowEgressFromLocalClassicLinkToRemoteVpc),
+		"allow_vpc_to_remote_classic_link": aws.BoolValue(options.AllowEgressFromLocalVpcToRemoteClassicLink),
+	}}
+}

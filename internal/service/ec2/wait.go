@@ -312,10 +312,6 @@ func WaitInstanceIAMInstanceProfileUpdated(conn *ec2.EC2, instanceID string, exp
 
 const ManagedPrefixListEntryCreateTimeout = 5 * time.Minute
 
-const (
-	NetworkACLEntryPropagationTimeout = 5 * time.Minute
-)
-
 func WaitRouteDeleted(conn *ec2.EC2, routeFinder RouteFinder, routeTableID, destination string, timeout time.Duration) (*ec2.Route, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending:                   []string{RouteStatusReady},
@@ -909,6 +905,10 @@ func WaitVPCIPv6CIDRBlockAssociationDeleted(conn *ec2.EC2, id string, timeout ti
 
 	return nil, err
 }
+
+const (
+	VPCPeeringConnectionOptionsPropagationTimeout = 3 * time.Minute
+)
 
 func WaitVPCPeeringConnectionActive(conn *ec2.EC2, id string, timeout time.Duration) (*ec2.VpcPeeringConnection, error) {
 	stateConf := &resource.StateChangeConf{
