@@ -905,6 +905,7 @@ func Provider() *schema.Provider {
 			"aws_backup_global_settings":          backup.ResourceGlobalSettings(),
 			"aws_backup_plan":                     backup.ResourcePlan(),
 			"aws_backup_region_settings":          backup.ResourceRegionSettings(),
+			"aws_backup_report_plan":              backup.ResourceReportPlan(),
 			"aws_backup_selection":                backup.ResourceSelection(),
 			"aws_backup_vault":                    backup.ResourceVault(),
 			"aws_backup_vault_lock_configuration": backup.ResourceVaultLockConfiguration(),
