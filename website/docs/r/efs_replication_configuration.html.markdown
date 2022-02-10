@@ -1,7 +1,7 @@
 ---
 subcategory: "EFS"
 layout: "aws"
-page_title: "AWS: aws_efs_replication_configuration
+page_title: "AWS: aws_efs_replication_configuration"
 description: Provides an Elastic File System (EFS) Replication Configuration.
 ---
 
