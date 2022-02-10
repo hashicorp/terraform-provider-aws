@@ -34,18 +34,18 @@ var validAccountAlias = validation.All(
 	},
 )
 
-func validOpenIDURL(v interface{}, k string) (ws []string, errors []error) {
-	value := v.(string)
-	u, err := url.Parse(value)
-	if err != nil {
-		errors = append(errors, fmt.Errorf("%q has to be a valid URL", k))
+var validOpenIDURL = validation.All(
+	validation.IsURLWithHTTPS,
+	func(v interface{}, k string) (ws []string, es []error) {
+		value := v.(string)
+		u, err := url.Parse(value)
+		if err != nil {
+			// validation.IsURLWithHTTPS will already have returned an error for an invalid URL
+			return
+		}
+		if len(u.Query()) > 0 {
+			es = append(es, fmt.Errorf("%q cannot contain query parameters per the OIDC standard", k))
+		}
 		return
-	}
-	if u.Scheme != "https" {
-		errors = append(errors, fmt.Errorf("%q has to use HTTPS scheme (i.e. begin with https://)", k))
-	}
-	if len(u.Query()) > 0 {
-		errors = append(errors, fmt.Errorf("%q cannot contain query parameters per the OIDC standard", k))
-	}
-	return
-}
+	},
+)
