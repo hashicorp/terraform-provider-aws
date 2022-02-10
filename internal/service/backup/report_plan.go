@@ -100,6 +100,7 @@ func ResourceReportPlan() *schema.Resource {
 						"report_template": {
 							Type:     schema.TypeString,
 							Required: true,
+							ForceNew: true,
 							ValidateFunc: validation.StringInSlice([]string{
 								"RESOURCE_COMPLIANCE_REPORT",
 								"CONTROL_COMPLIANCE_REPORT",
