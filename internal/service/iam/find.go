@@ -171,3 +171,39 @@ func FindRoleByName(conn *iam.IAM, name string) (*iam.Role, error) {
 
 	return output.Role, nil
 }
+
+func FindVirtualMfaDevice(conn *iam.IAM, serialNum string) (*iam.VirtualMFADevice, error) {
+	input := &iam.ListVirtualMFADevicesInput{}
+
+	output, err := conn.ListVirtualMFADevices(input)
+
+	// if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
+	// 	return nil, &resource.NotFoundError{
+	// 		LastError:   err,
+	// 		LastRequest: input,
+	// 	}
+	// }
+
+	if err != nil {
+		return nil, err
+	}
+
+	if len(output.VirtualMFADevices) == 0 || output.VirtualMFADevices[0] == nil {
+		return nil, tfresource.NewEmptyResultError(output)
+	}
+
+	var device *iam.VirtualMFADevice
+
+	for _, dvs := range output.VirtualMFADevices {
+		if aws.StringValue(dvs.SerialNumber) == serialNum {
+			device = dvs
+			break
+		}
+	}
+
+	if device == nil {
+		return nil, tfresource.NewEmptyResultError(device)
+	}
+
+	return device, nil
+}
