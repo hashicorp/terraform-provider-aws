@@ -144,10 +144,6 @@ func resourceStageCreate(d *schema.ResourceData, meta interface{}) error {
 		input.CacheClusterEnabled = aws.Bool(v.(bool))
 		waitForCache = true
 	}
-	if v, ok := d.GetOk("cache_cluster_size"); ok {
-		input.CacheClusterSize = aws.String(v.(string))
-		waitForCache = true
-	}
 	if v, ok := d.GetOk("description"); ok {
 		input.Description = aws.String(v.(string))
 	}
@@ -303,7 +299,11 @@ func resourceStageUpdate(d *schema.ResourceData, meta interface{}) error {
 				Path:  aws.String("/cacheClusterSize"),
 				Value: aws.String(d.Get("cache_cluster_size").(string)),
 			})
-			waitForCache = true
+			cache_enabled := d.Get("cache_cluster_enabled").(bool)
+
+			if cache_enabled {
+				waitForCache = true
+			}
 		}
 		if d.HasChange("client_certificate_id") {
 			operations = append(operations, &apigateway.PatchOperation{
