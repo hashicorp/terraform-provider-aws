@@ -315,18 +315,26 @@ func Provider() *schema.Provider {
 				Description: "The secret key for API operations. You can retrieve this\n" +
 					"from the 'Security & Credentials' section of the AWS console.",
 			},
-			"shared_config_file": {
-				Type:        schema.TypeString,
+			"shared_config_files": {
+				Type:        schema.TypeList,
 				Optional:    true,
-				Default:     "",
-				Description: "The path to the shared config file. If not set, defaults to ~/.aws/config.",
+				Description: "List of paths to shared config files. If not set, defaults to [~/.aws/config].",
+				Elem:        &schema.Schema{Type: schema.TypeString},
 			},
 			"shared_credentials_file": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  "",
-				Description: "The path to the shared credentials file. If not set\n" +
-					"this defaults to ~/.aws/credentials.",
+				Type:          schema.TypeString,
+				Optional:      true,
+				Default:       "",
+				Deprecated:    "Use shared_credentials_files instead.",
+				ConflictsWith: []string{"shared_credentials_files"},
+				Description:   "The path to the shared credentials file. If not set, defaults to ~/.aws/credentials.",
+			},
+			"shared_credentials_files": {
+				Type:          schema.TypeList,
+				Optional:      true,
+				ConflictsWith: []string{"shared_credentials_file"},
+				Description:   "List of paths to shared credentials files. If not set, defaults to [~/.aws/credentials].",
+				Elem:          &schema.Schema{Type: schema.TypeString},
 			},
 			"skip_credentials_validation": {
 				Type:     schema.TypeBool,
@@ -1891,8 +1899,6 @@ func providerConfigure(d *schema.ResourceData, terraformVersion string) (interfa
 		Region:                         d.Get("region").(string),
 		S3UsePathStyle:                 d.Get("s3_use_path_style").(bool) || d.Get("s3_force_path_style").(bool),
 		SecretKey:                      d.Get("secret_key").(string),
-		SharedConfigFile:               d.Get("shared_config_file").(string),
-		SharedCredentialsFile:          d.Get("shared_credentials_file").(string),
 		SkipCredsValidation:            d.Get("skip_credentials_validation").(bool),
 		SkipGetEC2Platforms:            d.Get("skip_get_ec2_platforms").(bool),
 		SkipMetadataApiCheck:           d.Get("skip_metadata_api_check").(bool),
@@ -1902,6 +1908,25 @@ func providerConfigure(d *schema.ResourceData, terraformVersion string) (interfa
 		Token:                          d.Get("token").(string),
 		UseDualStackEndpoint:           d.Get("use_dualstack_endpoint").(bool),
 		UseFIPSEndpoint:                d.Get("use_fips_endpoint").(bool),
+	}
+
+	if raw := d.Get("shared_config_files").([]interface{}); len(raw) != 0 {
+		l := make([]string, len(raw))
+		for i, v := range raw {
+			l[i] = v.(string)
+		}
+		config.SharedConfigFiles = l
+	}
+
+	if v := d.Get("shared_credentials_file").(string); v != "" {
+		config.SharedCredentialsFiles = []string{v}
+	}
+	if raw := d.Get("shared_credentials_files").([]interface{}); len(raw) != 0 {
+		l := make([]string, len(raw))
+		for i, v := range raw {
+			l[i] = v.(string)
+		}
+		config.SharedCredentialsFiles = l
 	}
 
 	if l, ok := d.Get("assume_role").([]interface{}); ok && len(l) > 0 && l[0] != nil {

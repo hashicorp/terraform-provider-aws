@@ -117,7 +117,7 @@ $ terraform plan
 You can use [AWS credentials or configuration files](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-files.html) to specify your credentials and configuration.
 The default locations are `$HOME/.aws/credentials` and `$HOME/.aws/config` on Linux and macOS,
 or `"%USERPROFILE%\.aws\credentials"` and `"%USERPROFILE%\.aws\config"`on Windows.
-You can optionally specify a different location in the Terraform configuration by providing the `shared_credentials_file` and `shared_config_file` arguments or
+You can optionally specify a different location in the Terraform configuration by providing the `shared_credentials_files` and `shared_config_files` arguments or
 using the `AWS_SHARED_CREDENTIALS_FILE` and `AWS_CONFIG_FILE` environment variables.
 This method also supports the `profile` configuration or corresponding `AWS_PROFILE` environment variable:
 
@@ -125,10 +125,10 @@ Usage:
 
 ```terraform
 provider "aws" {
-  region                  = "us-west-2"
-  shared_config_file      = "/Users/tf_user/.aws/config"
-  shared_credentials_file = "/Users/tf_user/.aws/creds"
-  profile                 = "customprofile"
+  region                   = "us-west-2"
+  shared_config_files      = ["/Users/tf_user/.aws/conf"]
+  shared_credentials_files = ["/Users/tf_user/.aws/creds"]
+  profile                  = "customprofile"
 }
 ```
 
@@ -208,8 +208,9 @@ In addition to [generic `provider` arguments](https://www.terraform.io/docs/conf
 * `s3_force_path_style` - (Optional, **Deprecated**) Whether to enable the request to use path-style addressing, i.e., `https://s3.amazonaws.com/BUCKET/KEY`. By default, the S3 client will use virtual hosted bucket addressing, `https://BUCKET.s3.amazonaws.com/KEY`, when possible. Specific to the Amazon S3 service.
 * `s3_use_path_style` - (Optional) Whether to enable the request to use path-style addressing, i.e., `https://s3.amazonaws.com/BUCKET/KEY`. By default, the S3 client will use virtual hosted bucket addressing, `https://BUCKET.s3.amazonaws.com/KEY`, when possible. Specific to the Amazon S3 service.
 * `secret_key` - (Optional) AWS secret key. Can also be set with the `AWS_SECRET_ACCESS_KEY` environment variable, or via a shared credentials file if `profile` is used. See also `access_key`.
-* `shared_config_file` = (Optional) Path to the AWS shared config file. If not set, the default is `~/.aws/config`. Can also be set with the `AWS_CONFIG_FILE` environment variable.
-* `shared_credentials_file` = (Optional) Path to the shared credentials file. If not set and a profile is used, the default value is `~/.aws/credentials`. Can also be set with the `AWS_SHARED_CREDENTIALS_FILE` environment variable.
+* `shared_config_files` = (Optional) List of paths to AWS shared config files. If not set, the default is `[~/.aws/config]`. A single value can also be set with the `AWS_CONFIG_FILE` environment variable.
+* `shared_credentials_file` = (Optional, **Deprecated**) Path to the shared credentials file. If not set and a profile is used, the default value is `~/.aws/credentials`. Can also be set with the `AWS_SHARED_CREDENTIALS_FILE` environment variable.
+* `shared_credentials_files` = (Optional) List of paths to the shared credentials file. If not set and a profile is used, the default value is `[~/.aws/credentials]`. A single value can also be set with the `AWS_SHARED_CREDENTIALS_FILE` environment variable.
 * `skip_credentials_validation` - (Optional) Whether to skip credentials validation via the STS API. This can be useful for testing and for AWS API implementations that do not have STS available.
 * `skip_get_ec2_platforms` - (Optional) Whether to skip getting the supported EC2 platforms. Can be used when you do not have `ec2:DescribeAccountAttributes` permissions.
 * `skip_metadata_api_check` - (Optional) Whether to skip the AWS Metadata API check.  Useful for AWS API implementations that do not have a metadata API endpoint.  Setting to `true` prevents Terraform from authenticating via the Metadata API. You may need to use other authentication methods like static credentials, configuration variables, or environment variables.

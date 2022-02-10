@@ -871,8 +871,8 @@ type Config struct {
 	Region                         string
 	S3UsePathStyle                 bool
 	SecretKey                      string
-	SharedConfigFile               string
-	SharedCredentialsFile          string
+	SharedConfigFiles              []string
+	SharedCredentialsFiles         []string
 	SkipCredsValidation            bool
 	SkipGetEC2Platforms            bool
 	SkipMetadataApiCheck           bool
@@ -1225,12 +1225,12 @@ func (c *Config) Client() (interface{}, error) {
 		awsbaseConfig.EC2MetadataServiceEndpointMode = c.EC2MetadataServiceEndpointMode
 	}
 
-	if c.SharedConfigFile != "" {
-		awsbaseConfig.SharedConfigFiles = []string{c.SharedConfigFile}
+	if len(c.SharedConfigFiles) != 0 {
+		awsbaseConfig.SharedConfigFiles = c.SharedConfigFiles
 	}
 
-	if c.SharedCredentialsFile != "" {
-		awsbaseConfig.SharedCredentialsFiles = []string{c.SharedCredentialsFile}
+	if len(c.SharedCredentialsFiles) != 0 {
+		awsbaseConfig.SharedCredentialsFiles = c.SharedCredentialsFiles
 	}
 
 	ctx := context.Background()
