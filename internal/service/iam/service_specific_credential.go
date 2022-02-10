@@ -74,7 +74,7 @@ func resourceServiceSpecificCredentialCreate(d *schema.ResourceData, meta interf
 
 	cred := out.ServiceSpecificCredential
 
-	d.SetId(fmt.Sprintf("%s:%s", aws.StringValue(cred.ServiceName), aws.StringValue(cred.UserName)))
+	d.SetId(fmt.Sprintf("%s:%s:%s", aws.StringValue(cred.ServiceName), aws.StringValue(cred.UserName), aws.StringValue(cred.ServiceSpecificCredentialId)))
 	d.Set("service_password", cred.ServicePassword)
 
 	if v, ok := d.GetOk("status"); ok && v.(string) != iam.StatusTypeActive {
@@ -96,13 +96,13 @@ func resourceServiceSpecificCredentialCreate(d *schema.ResourceData, meta interf
 func resourceServiceSpecificCredentialRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).IAMConn
 
-	serviceName, userName, err := DecodeServiceSpecificCredentialId(d.Id())
+	serviceName, userName, credID, err := DecodeServiceSpecificCredentialId(d.Id())
 	if err != nil {
 		return err
 	}
 
 	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(PropagationTimeout, func() (interface{}, error) {
-		return FindServiceSpecificCredential(conn, serviceName, userName)
+		return FindServiceSpecificCredential(conn, serviceName, userName, credID)
 	}, d.IsNewResource())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
@@ -159,13 +159,14 @@ func resourceServiceSpecificCredentialDelete(d *schema.ResourceData, meta interf
 	return nil
 }
 
-func DecodeServiceSpecificCredentialId(id string) (string, string, error) {
+func DecodeServiceSpecificCredentialId(id string) (string, string, string, error) {
 	creds := strings.Split(id, ":")
-	if len(creds) != 2 {
-		return "", "", fmt.Errorf("unknown IAM Service Specific Credential ID format")
+	if len(creds) != 3 {
+		return "", "", "", fmt.Errorf("unknown IAM Service Specific Credential ID format")
 	}
 	serviceName := creds[0]
 	userName := creds[1]
+	credId := creds[2]
 
-	return serviceName, userName, nil
+	return serviceName, userName, credId, nil
 }
