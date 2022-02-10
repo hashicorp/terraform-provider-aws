@@ -200,3 +200,44 @@ func FindVirtualMfaDevice(conn *iam.IAM, serialNum string) (*iam.VirtualMFADevic
 
 	return device, nil
 }
+
+func FindServiceSpecificCredential(conn *iam.IAM, serviceName, userName, credID string) (*iam.ServiceSpecificCredentialMetadata, error) {
+	input := &iam.ListServiceSpecificCredentialsInput{
+		ServiceName: aws.String(serviceName),
+		UserName:    aws.String(userName),
+	}
+
+	output, err := conn.ListServiceSpecificCredentials(input)
+
+	if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if len(output.ServiceSpecificCredentials) == 0 || output.ServiceSpecificCredentials[0] == nil {
+		return nil, tfresource.NewEmptyResultError(output)
+	}
+
+	var cred *iam.ServiceSpecificCredentialMetadata
+
+	for _, crd := range output.ServiceSpecificCredentials {
+		if aws.StringValue(crd.ServiceName) == serviceName &&
+			aws.StringValue(crd.UserName) == userName &&
+			aws.StringValue(crd.ServiceSpecificCredentialId) == credID {
+			cred = crd
+			break
+		}
+	}
+
+	if cred == nil {
+		return nil, tfresource.NewEmptyResultError(cred)
+	}
+
+	return cred, nil
+}
