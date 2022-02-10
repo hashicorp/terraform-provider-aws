@@ -14,7 +14,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceVpcConnector() *schema.Resource {
@@ -30,15 +29,13 @@ func ResourceVpcConnector() *schema.Resource {
 		Schema: map[string]*schema.Schema{
 			"vpc_connector_name": {
 				Type:         schema.TypeString,
-				Computed:     true,
-				Required:     true,
-				ValidateFunc: validation.StringLenBetween(4, 40),
-			},
-			"vpc_connector_arn": {
-				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
+				ValidateFunc: validation.StringLenBetween(4, 40),
+			},
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"security_groups": {
 				Type:     schema.TypeSet,
@@ -54,8 +51,7 @@ func ResourceVpcConnector() *schema.Resource {
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Set:      schema.HashString,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			"tags": tftags.TagsSchemaComputed(),
 			"status": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -77,23 +73,26 @@ func resourceVpcConnectorCreate(ctx context.Context, d *schema.ResourceData, met
 		VpcConnectorName: aws.String(vpcConnectorName),
 		Subnets:          subnets,
 		SecurityGroups:   securityGroups,
-		Tags:             Tags(tags.IgnoreAWS()),
+	}
+
+	if len(tags) > 0 {
+		input.Tags = Tags(tags.IgnoreAWS())
 	}
 
 	output, err := conn.CreateVpcConnectorWithContext(ctx, input)
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error associating App Runner Custom VPC (%s): %w", vpcConnectorName, err))
+		return diag.FromErr(fmt.Errorf("error creating App Runner vpc (%s): %w", vpcConnectorName, err))
 	}
 
 	if output == nil {
-		return diag.FromErr(fmt.Errorf("error associating App Runner Custom VPC (%s): empty output", vpcConnectorName))
+		return diag.FromErr(fmt.Errorf("error creating App Runner vpc (%s): empty output", vpcConnectorName))
 	}
 
 	d.SetId(aws.StringValue(output.VpcConnector.VpcConnectorArn))
 
-	if err := WaitAutoScalingConfigurationActive(ctx, conn, d.Id()); err != nil {
-		return diag.FromErr(fmt.Errorf("error waiting for associating App Runner Custom VPC(%s) creation: %w", d.Id(), err))
+	if err := WaitVpcConnectorActive(ctx, conn, d.Id()); err != nil {
+		return diag.FromErr(fmt.Errorf("error waiting for creating App Runner vpc (%s) creation: %w", d.Id(), err))
 	}
 
 	return resourceVpcConnectorRead(ctx, d, meta)
@@ -132,7 +131,7 @@ func resourceVpcConnectorRead(ctx context.Context, d *schema.ResourceData, meta 
 
 	d.Set("vpc_connector_name", vpcConnector.VpcConnectorName)
 	d.Set("vpc_connector_revision", vpcConnector.VpcConnectorRevision)
-	d.Set("vpc_connector_arn", vpcConnector.VpcConnectorArn)
+	d.Set("arn", vpcConnector.VpcConnectorArn)
 	d.Set("status", vpcConnector.Status)
 
 	var subnets []string
@@ -153,8 +152,8 @@ func resourceVpcConnectorRead(ctx context.Context, d *schema.ResourceData, meta 
 
 	tags, err := ListTags(conn, arn)
 
-	if err != nil {
-		return diag.FromErr(fmt.Errorf("error listing tags for App Runner vpc connector (%s): %s", arn, err))
+	if err := WaitVpcConnectorActive(ctx, conn, d.Id()); err != nil {
+		return diag.FromErr(fmt.Errorf("error waiting for creating App Runner vpc (%s) creation: %w", d.Id(), err))
 	}
 
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
@@ -162,10 +161,6 @@ func resourceVpcConnectorRead(ctx context.Context, d *schema.ResourceData, meta 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
 		return diag.FromErr(fmt.Errorf("error setting tags: %w", err))
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return diag.FromErr(fmt.Errorf("error setting tags_all: %w", err))
 	}
 
 	return nil
@@ -188,7 +183,7 @@ func resourceVpcConnectorDelete(ctx context.Context, d *schema.ResourceData, met
 		return diag.FromErr(fmt.Errorf("error deleting App Runner vpc connector (%s): %w", d.Id(), err))
 	}
 
-	if err := WaitServiceDeleted(ctx, conn, d.Id()); err != nil {
+	if err := WaitVpcConnectorInactive(ctx, conn, d.Id()); err != nil {
 		if tfawserr.ErrCodeEquals(err, apprunner.ErrCodeResourceNotFoundException) {
 			return nil
 		}
