@@ -16,25 +16,10 @@ func DataSourceVPCPeeringConnection() *schema.Resource {
 		Read: dataSourceVPCPeeringConnectionRead,
 
 		Schema: map[string]*schema.Schema{
-			"id": {
-				Type:     schema.TypeString,
-				Optional: true,
+			"accepter": {
+				Type:     schema.TypeMap,
 				Computed: true,
-			},
-			"status": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"vpc_id": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"owner_id": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeBool},
 			},
 			"cidr_block": {
 				Type:     schema.TypeString,
@@ -53,17 +38,13 @@ func DataSourceVPCPeeringConnection() *schema.Resource {
 					},
 				},
 			},
-			"region": {
+			"filter": CustomFiltersSchema(),
+			"id": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"peer_vpc_id": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"peer_owner_id": {
+			"owner_id": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -85,23 +66,42 @@ func DataSourceVPCPeeringConnection() *schema.Resource {
 					},
 				},
 			},
+			"peer_owner_id": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
 			"peer_region": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"accepter": {
-				Type:     schema.TypeMap,
+			"peer_vpc_id": {
+				Type:     schema.TypeString,
+				Optional: true,
 				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeBool},
+			},
+			"region": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
 			},
 			"requester": {
 				Type:     schema.TypeMap,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeBool},
 			},
-			"filter": CustomFiltersSchema(),
-			"tags":   tftags.TagsSchemaComputed(),
+			"status": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"tags": tftags.TagsSchemaComputed(),
+			"vpc_id": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
 		},
 	}
 }
