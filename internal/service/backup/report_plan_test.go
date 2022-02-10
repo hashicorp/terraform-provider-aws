@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfbackup "github.com/hashicorp/terraform-provider-aws/internal/service/backup"
 )
 
 func TestAccBackupReportPlan_basic(t *testing.T) {
@@ -217,6 +218,33 @@ func TestAccBackupReportPlan_updateReportDeliveryChannel(t *testing.T) {
 		},
 	})
 }
+
+func TestAccBackupReportPlan_disappears(t *testing.T) {
+	var reportPlan backup.DescribeReportPlanOutput
+
+	rName := sdkacctest.RandomWithPrefix("tf-test-bucket")
+	rName2 := fmt.Sprintf("tf_acc_test_%s", sdkacctest.RandString(7))
+	description := "disappears"
+	resourceName := "aws_backup_report_plan.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, backup.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckReportPlanDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBackupReportPlanConfig_basic(rName, rName2, description),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckReportPlanExists(resourceName, &reportPlan),
+					acctest.CheckResourceDisappears(acctest.Provider, tfbackup.ResourceReportPlan(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func testAccCheckReportPlanDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).BackupConn
 	for _, rs := range s.RootModule().Resources {
