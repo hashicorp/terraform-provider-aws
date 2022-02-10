@@ -88,10 +88,10 @@ scale, when the adjustment bounds are breached. A positive value scales
 up. A negative value scales down.
 * `metric_interval_lower_bound` - (Optional) The lower bound for the
 difference between the alarm threshold and the CloudWatch metric.
-Without a value, AWS will treat this bound as infinity.
+Without a value, AWS will treat this bound as negative infinity.
 * `metric_interval_upper_bound` - (Optional) The upper bound for the
 difference between the alarm threshold and the CloudWatch metric.
-Without a value, AWS will treat this bound as infinity. The upper bound
+Without a value, AWS will treat this bound as positive infinity. The upper bound
 must be greater than the lower bound.
 
 Notice the bounds are **relative** to the alarm threshold, meaning that the starting point is not 0%, but the alarm threshold. Check the official [docs](https://docs.aws.amazon.com/autoscaling/ec2/userguide/as-scaling-simple-step.html#as-scaling-steps) for a detailed example.
