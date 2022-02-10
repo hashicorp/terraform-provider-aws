@@ -135,12 +135,26 @@ func resourceCustomVpcAssociationRead(ctx context.Context, d *schema.ResourceDat
 	d.Set("vpc_connector_arn", vpcConnector.VpcConnectorArn)
 	d.Set("status", vpcConnector.Status)
 
-	// サブネットとセキュリティグループの設定
+	var subnets []string
+	for _, sn := range vpcConnector.Subnets {
+		subnets = append(subnets, aws.StringValue(sn))
+	}
+	if err := d.Set("subnets", subnets); err != nil {
+		return diag.FromErr(fmt.Errorf("Error saving Subnet IDs to state for App Runner vpc connector (%s): %s", d.Id(), err))
+	}
+
+	var securityGroups []string
+	for _, sn := range vpcConnector.SecurityGroups {
+		securityGroups = append(securityGroups, aws.StringValue(sn))
+	}
+	if err := d.Set("security_groups", securityGroups); err != nil {
+		return diag.FromErr(fmt.Errorf("Error saving securityGroup IDs to state for App Runner vpc connector (%s): %s", d.Id(), err))
+	}
 
 	tags, err := ListTags(conn, arn)
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error listing tags for App Runner Service (%s): %s", arn, err))
+		return diag.FromErr(fmt.Errorf("error listing tags for App Runner vpc connector (%s): %s", arn, err))
 	}
 
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
@@ -160,33 +174,26 @@ func resourceCustomVpcAssociationRead(ctx context.Context, d *schema.ResourceDat
 func resourceCustomVpcAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).AppRunnerConn
 
-	domainName, serviceArn, err := CustomDomainAssociationParseID(d.Id())
-
-	if err != nil {
-		return diag.FromErr(err)
+	input := &apprunner.DeleteVpcConnectorInput{
+		VpcConnectorArn: aws.String(d.Id()),
 	}
 
-	input := &apprunner.DisassociateCustomDomainInput{
-		DomainName: aws.String(domainName),
-		ServiceArn: aws.String(serviceArn),
-	}
-
-	_, err = conn.DisassociateCustomDomainWithContext(ctx, input)
+	_, err := conn.DeleteVpcConnectorWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, apprunner.ErrCodeResourceNotFoundException) {
 		return nil
 	}
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error disassociating App Runner Custom Domain (%s) for Service (%s): %w", domainName, serviceArn, err))
+		return diag.FromErr(fmt.Errorf("error deleting App Runner vpc connector (%s): %w", d.Id(), err))
 	}
 
-	if err := WaitCustomDomainAssociationDeleted(ctx, conn, domainName, serviceArn); err != nil {
+	if err := WaitServiceDeleted(ctx, conn, d.Id()); err != nil {
 		if tfawserr.ErrCodeEquals(err, apprunner.ErrCodeResourceNotFoundException) {
 			return nil
 		}
 
-		return diag.FromErr(fmt.Errorf("error waiting for App Runner Custom Domain Association (%s) deletion: %w", d.Id(), err))
+		return diag.FromErr(fmt.Errorf("error waiting for App Runner vpc connector (%s) deletion: %w", d.Id(), err))
 	}
 
 	return nil
