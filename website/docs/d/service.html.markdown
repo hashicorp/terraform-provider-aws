@@ -43,17 +43,17 @@ data "aws_service" "s3" {
 
 ~> **Note:** If you provide `reverse_dns_name` or `dns_name` arguments, `region`, `service_id`, and `prefix` values are ignored. If you provide both `reverse_dns_name` and `dns_name`, `dns_name` takes precedence.
 
-All arguments are optional:
+The following arguments are optional:
 
-* `dns_name` - DNS name of the service (e.g. `rds.us-east-1.amazonaws.com`).
-* `partition` - Partition corresponding to the region.
-* `region` - Region of the service (e.g. `us-west-2`, `ap-northeast-1`).
-* `reverse_dns_name` - Reverse DNS name of the service (e.g. `com.amazonaws.us-west-2.s3`).
-* `reverse_dns_prefix` - Prefix of the service (e.g. `com.amazonaws` in AWS Commercial, `cn.com.amazonaws` in AWS China).
-* `service_id` - Service (e.g. `s3`, `rds`, `ec2`). Defaults to `ec2`.
+* `dns_name` - (Optional) DNS name of the service (_e.g.,_ `rds.us-east-1.amazonaws.com`).
+* `partition` - (Optional) Partition corresponding to the region.
+* `region` - (Optional) Region of the service (_e.g.,_ `us-west-2`, `ap-northeast-1`).
+* `reverse_dns_name` - (Optional) Reverse DNS name of the service (_e.g.,_ `com.amazonaws.us-west-2.s3`).
+* `reverse_dns_prefix` - (Optional) Prefix of the service (_e.g.,_ `com.amazonaws` in AWS Commercial, `cn.com.amazonaws` in AWS China).
+* `service_id` - (Optional) Service (_e.g.,_ `s3`, `rds`, `ec2`). Defaults to `ec2`.
 
 ## Attributes Reference
 
-Besides the arguments above, the following attribute is exported.
+In addition to all arguments above, the following attributes are exported:
 
 * `supported` - Whether the service is supported in the region's partition. New services may not be listed immediately as supported.
