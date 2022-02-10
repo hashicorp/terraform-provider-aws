@@ -516,6 +516,11 @@ func ResourceDataSet() *schema.Resource {
 				},
 			},
 
+			"physical_table_id": {
+				Type:     schema.TypeString,
+				Required: true,
+			},
+
 			"physical_table_map": {
 				Type:     schema.TypeList,
 				Required: true,
@@ -794,7 +799,7 @@ func resourceAwsQuickSightDataSetCreate(ctx context.Context, d *schema.ResourceD
 		AwsAccountId:     aws.String(awsAccountId),
 		DataSetId:        aws.String(id),
 		ImportMode:       aws.String(d.Get("import_mode").(string)),
-		PhysicalTableMap: expandQuickSightDataSetPhysicalTableMap(d.Get("physical_table_map").([]interface{})),
+		PhysicalTableMap: expandQuickSightDataSetPhysicalTableMap(d.Get("physical_table_map").([]interface{}), d.Get("physical_table_id").(string)),
 		Name:             aws.String(d.Get("name").(string)),
 	}
 
@@ -992,7 +997,7 @@ func resourceAwsQuickSightDataSetUpdate(ctx context.Context, d *schema.ResourceD
 		}
 
 		if d.HasChange("physical_table_map") {
-			params.PhysicalTableMap = expandQuickSightDataSetPhysicalTableMap(d.Get("physical_table_map").([]interface{}))
+			params.PhysicalTableMap = expandQuickSightDataSetPhysicalTableMap(d.Get("physical_table_map").([]interface{}), d.Get("physical_table_id").(string))
 		}
 
 		if d.HasChange("row_level_permission_data_set") {
@@ -1640,7 +1645,7 @@ func expandQuickSightDataSetUntagColumnOperation(tfMap map[string]interface{}) *
 	return untagColumnOperation
 }
 
-func expandQuickSightDataSetPhysicalTableMap(tfList []interface{}) map[string]*quicksight.PhysicalTable {
+func expandQuickSightDataSetPhysicalTableMap(tfList []interface{}, physicalTableId string) map[string]*quicksight.PhysicalTable {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -1673,8 +1678,7 @@ func expandQuickSightDataSetPhysicalTableMap(tfList []interface{}) map[string]*q
 			}
 		}
 
-		// use virtual attribute here
-		physicalTableMap["s3PhysicalTable"] = physicalTable
+		physicalTableMap[physicalTableId] = physicalTable
 	}
 
 	return physicalTableMap
