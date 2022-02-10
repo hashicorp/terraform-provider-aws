@@ -50,13 +50,6 @@ func ResourceReplicationConfiguration() *schema.Resource {
 							Optional: true,
 							ForceNew: true,
 						},
-						// TODO do we really want this one? Causes TF to grump
-						// that it changed outside of Terraform and I'm not sure
-						// why we'd ever need it in the state
-						//"last_replicated_timestamp": {
-						//	Type:     schema.TypeString,
-						//	Computed: true,
-						//},
 						"region": {
 							Type:         schema.TypeString,
 							Optional:     true,
@@ -132,16 +125,22 @@ func resourceReplicationConfigurationRead(d *schema.ResourceData, meta interface
 		return fmt.Errorf("error reading EFS Replication Configuration (%s): %w", d.Id(), err)
 	}
 
-	replication := output.Replications[0] //TODO error checking and such
+	if output == nil || len(output.Replications) == 0 || output.Replications[0] == nil {
+		return fmt.Errorf("error updating state of EFS replication configuration (%s)", d.Id())
+	}
+
+	replication := output.Replications[0]
+
+	if replication == nil || len(replication.Destinations) == 0 || replication.Destinations[0] == nil {
+		return fmt.Errorf("error updating state of EFS replication configuration (%s)", d.Id())
+	}
+
 	destination := flattenEfsReplicationConfigurationDestination(replication.Destinations[0])
-	log.Printf("[DEBUG] destination object: %s", destination)
 
 	dest := make(map[string]interface{})
 	if v, ok := d.GetOk("destinations"); ok {
 		val := v.([]interface{})
-		log.Printf("[DEBUG] val object: %s", val)
 		if len(val) > 0 {
-			log.Printf("[DEBUG] val object[0]: %s", val[0])
 			dest = val[0].(map[string]interface{})
 		}
 	}
