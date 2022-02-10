@@ -57,7 +57,7 @@ For **destinations** the following attributes are supported:
 * `kms_key_id` - (Optional) The Key ID, ARN, alias, or alias ARN of the KMS key that should be used to encrypt the replica file system. If omitted, the default KMS key for EFS `/aws/elasticfilesystem` will be used.
 * `region` - (Optional) The region in which the replica should be created. If omitted, `availability_zone_name` above is required.
 
-## Attribute Reference
+## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 
