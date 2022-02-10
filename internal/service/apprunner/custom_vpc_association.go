@@ -66,6 +66,8 @@ func ResourceCustomVpcAssociation() *schema.Resource {
 
 func resourceCustomVpcAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).AppRunnerConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
 	vpcConnectorName := d.Get("vpc_connector_name").(string)
 	subnets := flex.ExpandStringSet(d.Get("subnets").(*schema.Set))
@@ -75,6 +77,7 @@ func resourceCustomVpcAssociationCreate(ctx context.Context, d *schema.ResourceD
 		VpcConnectorName: aws.String(vpcConnectorName),
 		Subnets:          subnets,
 		SecurityGroups:   securityGroups,
+		Tags:             Tags(tags.IgnoreAWS()),
 	}
 
 	output, err := conn.CreateVpcConnectorWithContext(ctx, input)
@@ -98,38 +101,58 @@ func resourceCustomVpcAssociationCreate(ctx context.Context, d *schema.ResourceD
 
 func resourceCustomVpcAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).AppRunnerConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	domainName, serviceArn, err := CustomDomainAssociationParseID(d.Id())
+	input := &apprunner.DescribeVpcConnectorInput{
+		VpcConnectorArn: aws.String(d.Id()),
+	}
+
+	output, err := conn.DescribeVpcConnectorWithContext(ctx, input)
 
 	if err != nil {
-		return diag.FromErr(err)
+		return diag.FromErr(fmt.Errorf("error reading App Runner vpc connector (%s): %w", d.Id(), err))
 	}
 
-	customDomain, err := FindCustomDomain(ctx, conn, domainName, serviceArn)
-
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, apprunner.ErrCodeResourceNotFoundException) {
-		log.Printf("[WARN] App Runner Custom Domain Association (%s) not found, removing from state", d.Id())
-		d.SetId("")
-		return nil
+	if output == nil || output.VpcConnector == nil {
+		return diag.FromErr(fmt.Errorf("error reading App Runner vpc connector (%s): empty output", d.Id()))
 	}
 
-	if customDomain == nil {
+	if aws.StringValue(output.VpcConnector.Status) == apprunner.ServiceStatusDeleted {
 		if d.IsNewResource() {
-			return diag.FromErr(fmt.Errorf("error reading App Runner Custom Domain Association (%s): empty output after creation", d.Id()))
+			return diag.FromErr(fmt.Errorf("error reading App Runner vpc connector (%s): %s after creation", d.Id(), aws.StringValue(output.VpcConnector.Status)))
 		}
-		log.Printf("[WARN] App Runner Custom Domain Association (%s) not found, removing from state", d.Id())
+		log.Printf("[WARN] App Runner vpc connector (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
-	if err := d.Set("certificate_validation_records", flattenAppRunnerCustomDomainCertificateValidationRecords(customDomain.CertificateValidationRecords)); err != nil {
-		return diag.FromErr(fmt.Errorf("error setting certificate_validation_records: %w", err))
+	vpcConnector := output.VpcConnector
+	arn := aws.StringValue(vpcConnector.VpcConnectorArn)
+
+	d.Set("vpc_connector_name", vpcConnector.VpcConnectorName)
+	d.Set("vpc_connector_revision", vpcConnector.VpcConnectorRevision)
+	d.Set("vpc_connector_arn", vpcConnector.VpcConnectorArn)
+	d.Set("status", vpcConnector.Status)
+
+	// サブネットとセキュリティグループの設定
+
+	tags, err := ListTags(conn, arn)
+
+	if err != nil {
+		return diag.FromErr(fmt.Errorf("error listing tags for App Runner Service (%s): %s", arn, err))
 	}
 
-	d.Set("domain_name", customDomain.DomainName)
-	d.Set("enable_www_subdomain", customDomain.EnableWWWSubdomain)
-	d.Set("service_arn", serviceArn)
-	d.Set("status", customDomain.Status)
+	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+
+	//lintignore:AWSR002
+	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
+		return diag.FromErr(fmt.Errorf("error setting tags: %w", err))
+	}
+
+	if err := d.Set("tags_all", tags.Map()); err != nil {
+		return diag.FromErr(fmt.Errorf("error setting tags_all: %w", err))
+	}
 
 	return nil
 }
