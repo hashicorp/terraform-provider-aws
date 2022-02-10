@@ -1,10 +1,14 @@
 package ec2
 
 import (
+	"errors"
 	"fmt"
 	"log"
 
+	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -26,6 +30,13 @@ func ResourceVPCPeeringConnectionAccepter() *schema.Resource {
 			},
 		},
 
+		// Keep in sync with aws_vpc_peering_connections's schema with the following changes:
+		//   - peer_owner_id is Computed-only
+		//   - peer_region is Computed-only
+		//   - peer_vpc_id is Computed-only
+		//   - vpc_id is Computed-only
+		// and additions:
+		//   - vpc_peering_connection_id Required/ForceNew
 		Schema: map[string]*schema.Schema{
 			"accept_status": {
 				Type:     schema.TypeString,
@@ -99,10 +110,49 @@ func resourceVPCPeeringAccepterCreate(d *schema.ResourceData, meta interface{}) 
 		}
 	}
 
+	// TODO: Call Read.
 	return resourceVPCPeeringConnectionUpdate(d, meta)
 }
 
 func resourceVPCPeeringAccepterDelete(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[WARN] Will not delete VPC peering connection. Terraform will remove this resource from the state file, however resources may remain.")
 	return nil
+}
+
+func vpcPeeringConnectionRefreshState(conn *ec2.EC2, id string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		resp, err := conn.DescribeVpcPeeringConnections(&ec2.DescribeVpcPeeringConnectionsInput{
+			VpcPeeringConnectionIds: aws.StringSlice([]string{id}),
+		})
+		if err != nil {
+			if tfawserr.ErrMessageContains(err, "InvalidVpcPeeringConnectionID.NotFound", "") {
+				return nil, ec2.VpcPeeringConnectionStateReasonCodeDeleted, nil
+			}
+
+			return nil, "", err
+		}
+
+		if resp == nil || resp.VpcPeeringConnections == nil ||
+			len(resp.VpcPeeringConnections) == 0 || resp.VpcPeeringConnections[0] == nil {
+			// Sometimes AWS just has consistency issues and doesn't see
+			// our peering connection yet. Return an empty state.
+			return nil, "", nil
+		}
+		pc := resp.VpcPeeringConnections[0]
+		if pc.Status == nil {
+			// Sometimes AWS just has consistency issues and doesn't see
+			// our peering connection yet. Return an empty state.
+			return nil, "", nil
+		}
+		statusCode := aws.StringValue(pc.Status.Code)
+
+		// A VPC Peering Connection can exist in a failed state due to
+		// incorrect VPC ID, account ID, or overlapping IP address range,
+		// thus we short circuit before the time out would occur.
+		if statusCode == ec2.VpcPeeringConnectionStateReasonCodeFailed {
+			return nil, statusCode, errors.New(aws.StringValue(pc.Status.Message))
+		}
+
+		return pc, statusCode, nil
+	}
 }
