@@ -32,13 +32,15 @@ func TestAccVirtualMfaDevice_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVirtualMfaDeviceExists(resourceName, &conf),
 					acctest.CheckResourceAttrGlobalARN(resourceName, "arn", "iam", fmt.Sprintf("mfa/%s", rName)),
+					resource.TestCheckResourceAttrSet(resourceName, "base_32_string_seed"),
+					resource.TestCheckResourceAttrSet(resourceName, "qr_code_png"),
 				),
 			},
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"path", "virtual_mfa_device_name"},
+				ImportStateVerifyIgnore: []string{"path", "virtual_mfa_device_name", "base_32_string_seed", "qr_code_png"},
 			},
 		},
 	})
@@ -68,7 +70,7 @@ func TestAccVirtualMfaDevice_tags(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"path", "virtual_mfa_device_name"},
+				ImportStateVerifyIgnore: []string{"path", "virtual_mfa_device_name", "base_32_string_seed", "qr_code_png"},
 			},
 			{
 				Config: testAccVirtualMfaDeviceConfigTags2(rName, "key1", "value1updated", "key2", "value2"),

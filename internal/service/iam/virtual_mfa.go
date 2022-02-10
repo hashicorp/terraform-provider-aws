@@ -77,11 +77,15 @@ func resourceVirtualMfaDeviceCreate(d *schema.ResourceData, meta interface{}) er
 		request.Tags = Tags(tags.IgnoreAWS())
 	}
 
-	createResp, err := conn.CreateVirtualMFADevice(request)
+	output, err := conn.CreateVirtualMFADevice(request)
 	if err != nil {
 		return fmt.Errorf("Error creating IAM Virtual MFA Device %s: %w", name, err)
 	}
-	d.SetId(aws.StringValue(createResp.VirtualMFADevice.SerialNumber))
+	vMfa := output.VirtualMFADevice
+	d.SetId(aws.StringValue(vMfa.SerialNumber))
+
+	d.Set("base_32_string_seed", string(vMfa.Base32StringSeed))
+	d.Set("qr_code_png", string(vMfa.QRCodePNG))
 
 	return resourceVirtualMfaDeviceRead(d, meta)
 }
@@ -104,8 +108,6 @@ func resourceVirtualMfaDeviceRead(d *schema.ResourceData, meta interface{}) erro
 	}
 
 	d.Set("arn", output.SerialNumber)
-	d.Set("base_32_string_seed", string(output.Base32StringSeed))
-	d.Set("qr_code_png", string(output.QRCodePNG))
 
 	// The call above returns empty tags
 	tagsInput := &iam.ListMFADeviceTagsInput{
