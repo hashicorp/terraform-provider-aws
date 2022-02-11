@@ -80,6 +80,7 @@ func ResourceFleet() *schema.Resource {
 			"ec2_inbound_permission": {
 				Type:     schema.TypeSet,
 				Optional: true,
+				Computed: true,
 				MaxItems: 50,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
