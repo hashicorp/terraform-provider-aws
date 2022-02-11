@@ -28,7 +28,7 @@ func TestAccGlueCatalogDatabase_full(t *testing.T) {
 			{
 				Config:  testAccGlueCatalogDatabase_basic(rName),
 				Destroy: false,
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGlueCatalogDatabaseExists(resourceName),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "glue", fmt.Sprintf("database/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -36,11 +36,6 @@ func TestAccGlueCatalogDatabase_full(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "location_uri", ""),
 					resource.TestCheckResourceAttr(resourceName, "parameters.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "target_database.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "create_table_default_permission.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "create_table_default_permission.0.permissions.#", "1"),
-					resource.TestCheckTypeSetElemAttr(resourceName, "create_table_default_permission.0.permissions.*", "ALL"),
-					resource.TestCheckResourceAttr(resourceName, "create_table_default_permission.0.principal.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "create_table_default_permission.0.principal.0.data_lake_principal_identifier", "IAM_ALLOWED_PRINCIPALS"),
 				),
 			},
 			{
@@ -51,7 +46,7 @@ func TestAccGlueCatalogDatabase_full(t *testing.T) {
 			{
 				Config:  testAccGlueCatalogDatabase_full(rName, "A test catalog from terraform"),
 				Destroy: false,
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGlueCatalogDatabaseExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "description", "A test catalog from terraform"),
 					resource.TestCheckResourceAttr(resourceName, "location_uri", "my-location"),
@@ -62,7 +57,7 @@ func TestAccGlueCatalogDatabase_full(t *testing.T) {
 			},
 			{
 				Config: testAccGlueCatalogDatabase_full(rName, "An updated test catalog from terraform"),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGlueCatalogDatabaseExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "description", "An updated test catalog from terraform"),
 					resource.TestCheckResourceAttr(resourceName, "location_uri", "my-location"),
