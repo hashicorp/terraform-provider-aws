@@ -1891,6 +1891,10 @@ func testAccClusterBootstrapActionBucketConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "tester" {
   bucket = %[1]q
+}
+
+resource "aws_s3_bucket_acl" "tester" {
+  bucket = aws_s3_bucket.tester.id
   acl    = "public-read"
 }
 

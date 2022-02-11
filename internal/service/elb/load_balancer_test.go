@@ -1182,6 +1182,9 @@ resource "aws_elb" "test" {
 func testAccLoadBalancerAccessLogsOn(r string) string {
 	return `
 resource "aws_elb" "test" {
+  # Must have bucket policy attached first
+  depends_on = [aws_s3_bucket_policy.test]
+
   availability_zones = [data.aws_availability_zones.available.names[0], data.aws_availability_zones.available.names[1], data.aws_availability_zones.available.names[2]]
 
   listener {
@@ -1211,6 +1214,9 @@ data "aws_availability_zones" "available" {
 func testAccLoadBalancerAccessLogsDisabled(r string) string {
 	return `
 resource "aws_elb" "test" {
+  # Must have bucket policy attached first
+  depends_on = [aws_s3_bucket_policy.test]
+
   availability_zones = [data.aws_availability_zones.available.names[0], data.aws_availability_zones.available.names[1], data.aws_availability_zones.available.names[2]]
 
   listener {
@@ -1240,17 +1246,22 @@ data "aws_availability_zones" "available" {
 
 func testAccLoadBalancerAccessLogsCommon(r string) string {
 	return fmt.Sprintf(`
-data "aws_elb_service_account" "current" {
-}
+data "aws_elb_service_account" "current" {}
 
-data "aws_partition" "current" {
-}
+data "aws_partition" "current" {}
 
 resource "aws_s3_bucket" "accesslogs_bucket" {
   bucket        = "%[1]s"
-  acl           = "private"
   force_destroy = true
+}
 
+resource "aws_s3_bucket_acl" "accesslogs_bucket_acl" {
+  bucket = aws_s3_bucket.accesslogs_bucket.id
+  acl    = "private"
+}
+
+resource "aws_s3_bucket_policy" "test" {
+  bucket = aws_s3_bucket.accesslogs_bucket.id
   policy = <<EOF
 {
   "Id": "Policy1446577137248",

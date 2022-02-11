@@ -192,12 +192,6 @@ func testAccBucketAccelerateConfigurationBasicConfig(bucketName, status string) 
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
-
-  lifecycle {
-    ignore_changes = [
-      acceleration_status
-    ]
-  }
 }
 
 resource "aws_s3_bucket_accelerate_configuration" "test" {

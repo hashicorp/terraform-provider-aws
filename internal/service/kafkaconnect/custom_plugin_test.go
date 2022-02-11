@@ -260,13 +260,19 @@ func testAccCustomPluginConfigObjectVersion(name string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
+}
 
-  versioning {
-    enabled = true
+resource "aws_s3_bucket_versioning" "test" {
+  bucket = aws_s3_bucket.test.id
+  versioning_configuration {
+    status = "Enabled"
   }
 }
 
 resource "aws_s3_object" "test" {
+  # Must have versioning enabled first
+  depends_on = [aws_s3_bucket_versioning.test]
+
   bucket = aws_s3_bucket.test.id
   key    = %[1]q
   source = "test-fixtures/mongodb-connector.jar"

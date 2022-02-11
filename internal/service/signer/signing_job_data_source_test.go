@@ -42,13 +42,15 @@ resource "aws_signer_signing_profile" "test" {
 }
 
 resource "aws_s3_bucket" "source" {
-  bucket = "%[1]s-source"
-
-  versioning {
-    enabled = true
-  }
-
+  bucket        = "%[1]s-source"
   force_destroy = true
+}
+
+resource "aws_s3_bucket_versioning" "source" {
+  bucket = aws_s3_bucket.source.id
+  versioning_configuration {
+    status = "Enabled"
+  }
 }
 
 resource "aws_s3_bucket" "destination" {
@@ -57,6 +59,9 @@ resource "aws_s3_bucket" "destination" {
 }
 
 resource "aws_s3_object" "source" {
+  # Must have bucket versioning enabled first
+  depends_on = [aws_s3_bucket_versioning.source]
+
   bucket = aws_s3_bucket.source.bucket
   key    = "lambdatest.zip"
   source = "test-fixtures/lambdatest.zip"

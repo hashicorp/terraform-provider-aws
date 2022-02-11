@@ -3,6 +3,7 @@ package provider
 import (
 	"fmt"
 	"log"
+	"os"
 	"regexp"
 	"time"
 
@@ -289,13 +290,23 @@ func Provider() *schema.Provider {
 				InputDefault: "us-east-1", // lintignore:AWSAT003
 			},
 			"s3_force_path_style": {
+				Type:       schema.TypeBool,
+				Optional:   true,
+				Default:    false,
+				Deprecated: "Use s3_use_path_style instead.",
+				Description: "Set this to true to enable the request to use path-style addressing,\n" +
+					"i.e., https://s3.amazonaws.com/BUCKET/KEY. By default, the S3 client will\n" +
+					"use virtual hosted bucket addressing when possible\n" +
+					"(https://BUCKET.s3.amazonaws.com/KEY). Specific to the Amazon S3 service.",
+			},
+			"s3_use_path_style": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
-				Description: "Set this to true to force the request to use path-style addressing,\n" +
-					"i.e., http://s3.amazonaws.com/BUCKET/KEY. By default, the S3 client will\n" +
+				Description: "Set this to true to enable the request to use path-style addressing,\n" +
+					"i.e., https://s3.amazonaws.com/BUCKET/KEY. By default, the S3 client will\n" +
 					"use virtual hosted bucket addressing when possible\n" +
-					"(http://BUCKET.s3.amazonaws.com/KEY). Specific to the Amazon S3 service.",
+					"(https://BUCKET.s3.amazonaws.com/KEY). Specific to the Amazon S3 service.",
 			},
 			"secret_key": {
 				Type:     schema.TypeString,
@@ -304,18 +315,26 @@ func Provider() *schema.Provider {
 				Description: "The secret key for API operations. You can retrieve this\n" +
 					"from the 'Security & Credentials' section of the AWS console.",
 			},
-			"shared_config_file": {
-				Type:        schema.TypeString,
+			"shared_config_files": {
+				Type:        schema.TypeList,
 				Optional:    true,
-				Default:     "",
-				Description: "The path to the shared config file. If not set, defaults to ~/.aws/config.",
+				Description: "List of paths to shared config files. If not set, defaults to [~/.aws/config].",
+				Elem:        &schema.Schema{Type: schema.TypeString},
 			},
 			"shared_credentials_file": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  "",
-				Description: "The path to the shared credentials file. If not set\n" +
-					"this defaults to ~/.aws/credentials.",
+				Type:          schema.TypeString,
+				Optional:      true,
+				Default:       "",
+				Deprecated:    "Use shared_credentials_files instead.",
+				ConflictsWith: []string{"shared_credentials_files"},
+				Description:   "The path to the shared credentials file. If not set, defaults to ~/.aws/credentials.",
+			},
+			"shared_credentials_files": {
+				Type:          schema.TypeList,
+				Optional:      true,
+				ConflictsWith: []string{"shared_credentials_file"},
+				Description:   "List of paths to shared credentials files. If not set, defaults to [~/.aws/credentials].",
+				Elem:          &schema.Schema{Type: schema.TypeString},
 			},
 			"skip_credentials_validation": {
 				Type:     schema.TypeBool,
@@ -662,6 +681,7 @@ func Provider() *schema.Provider {
 			"aws_partition":               meta.DataSourcePartition(),
 			"aws_region":                  meta.DataSourceRegion(),
 			"aws_regions":                 meta.DataSourceRegions(),
+			"aws_service":                 meta.DataSourceService(),
 
 			"aws_mq_broker": mq.DataSourceBroker(),
 
@@ -1179,6 +1199,7 @@ func Provider() *schema.Provider {
 			"aws_main_route_table_association":                    ec2.ResourceMainRouteTableAssociation(),
 			"aws_nat_gateway":                                     ec2.ResourceNATGateway(),
 			"aws_network_acl":                                     ec2.ResourceNetworkACL(),
+			"aws_network_acl_association":                         ec2.ResourceNetworkACLAssociation(),
 			"aws_network_acl_rule":                                ec2.ResourceNetworkACLRule(),
 			"aws_network_interface":                               ec2.ResourceNetworkInterface(),
 			"aws_network_interface_attachment":                    ec2.ResourceNetworkInterfaceAttachment(),
@@ -1389,6 +1410,7 @@ func Provider() *schema.Provider {
 			"aws_iam_user_ssh_key":            iam.ResourceUserSSHKey(),
 
 			"aws_imagebuilder_component":                    imagebuilder.ResourceComponent(),
+			"aws_imagebuilder_container_recipe":             imagebuilder.ResourceContainerRecipe(),
 			"aws_imagebuilder_distribution_configuration":   imagebuilder.ResourceDistributionConfiguration(),
 			"aws_imagebuilder_image":                        imagebuilder.ResourceImage(),
 			"aws_imagebuilder_image_pipeline":               imagebuilder.ResourceImagePipeline(),
@@ -1878,10 +1900,8 @@ func providerConfigure(d *schema.ResourceData, terraformVersion string) (interfa
 		MaxRetries:                     d.Get("max_retries").(int),
 		Profile:                        d.Get("profile").(string),
 		Region:                         d.Get("region").(string),
-		S3ForcePathStyle:               d.Get("s3_force_path_style").(bool),
+		S3UsePathStyle:                 d.Get("s3_use_path_style").(bool) || d.Get("s3_force_path_style").(bool),
 		SecretKey:                      d.Get("secret_key").(string),
-		SharedConfigFile:               d.Get("shared_config_file").(string),
-		SharedCredentialsFile:          d.Get("shared_credentials_file").(string),
 		SkipCredsValidation:            d.Get("skip_credentials_validation").(bool),
 		SkipGetEC2Platforms:            d.Get("skip_get_ec2_platforms").(bool),
 		SkipMetadataApiCheck:           d.Get("skip_metadata_api_check").(bool),
@@ -1893,27 +1913,33 @@ func providerConfigure(d *schema.ResourceData, terraformVersion string) (interfa
 		UseFIPSEndpoint:                d.Get("use_fips_endpoint").(bool),
 	}
 
+	if raw := d.Get("shared_config_files").([]interface{}); len(raw) != 0 {
+		l := make([]string, len(raw))
+		for i, v := range raw {
+			l[i] = v.(string)
+		}
+		config.SharedConfigFiles = l
+	}
+
+	if v := d.Get("shared_credentials_file").(string); v != "" {
+		config.SharedCredentialsFiles = []string{v}
+	}
+	if raw := d.Get("shared_credentials_files").([]interface{}); len(raw) != 0 {
+		l := make([]string, len(raw))
+		for i, v := range raw {
+			l[i] = v.(string)
+		}
+		config.SharedCredentialsFiles = l
+	}
+
 	if l, ok := d.Get("assume_role").([]interface{}); ok && len(l) > 0 && l[0] != nil {
 		config.AssumeRole = expandAssumeRole(l[0].(map[string]interface{}))
 		log.Printf("[INFO] assume_role configuration set: (ARN: %q, SessionID: %q, ExternalID: %q)", config.AssumeRole.RoleARN, config.AssumeRole.SessionName, config.AssumeRole.ExternalID)
 	}
 
 	endpointsSet := d.Get("endpoints").(*schema.Set)
-
-	for _, endpointsSetI := range endpointsSet.List() {
-		endpoints := endpointsSetI.(map[string]interface{})
-
-		for _, hclKey := range conns.HCLKeys() {
-			var serviceKey string
-			var err error
-			if serviceKey, err = conns.ServiceForHCLKey(hclKey); err != nil {
-				return nil, fmt.Errorf("failed to assign endpoint (%s): %w", hclKey, err)
-			}
-
-			if config.Endpoints[serviceKey] == "" && endpoints[hclKey].(string) != "" {
-				config.Endpoints[serviceKey] = endpoints[hclKey].(string)
-			}
-		}
+	if err := expandEndpoints(endpointsSet.List(), config.Endpoints); err != nil {
+		return nil, err
 	}
 
 	if v, ok := d.GetOk("allowed_account_ids"); ok {
@@ -1938,11 +1964,20 @@ func assumeRoleSchema() *schema.Schema {
 		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
+				"duration": {
+					Type:          schema.TypeString,
+					Optional:      true,
+					Description:   "The duration, between 15 minutes and 12 hours, of the role session. Valid time units are ns, us (or µs), ms, s, h, or m.",
+					ValidateFunc:  ValidAssumeRoleDuration,
+					ConflictsWith: []string{"assume_role.0.duration_seconds"},
+				},
 				"duration_seconds": {
-					Type:         schema.TypeInt,
-					Optional:     true,
-					Description:  "The duration, in seconds, of the role session.",
-					ValidateFunc: validation.IntBetween(900, 43200),
+					Type:          schema.TypeInt,
+					Optional:      true,
+					Deprecated:    "Use assume_role.0.duration instead",
+					Description:   "The duration, in seconds, of the role session.",
+					ValidateFunc:  validation.IntBetween(900, 43200),
+					ConflictsWith: []string{"assume_role.0.duration"},
 				},
 				"external_id": {
 					Type:        schema.TypeString,
@@ -2023,6 +2058,11 @@ func endpointsSchema() *schema.Schema {
 
 func expandAssumeRole(m map[string]interface{}) *awsbase.AssumeRole {
 	assumeRole := awsbase.AssumeRole{}
+
+	if v, ok := m["duration"].(string); ok && v != "" {
+		duration, _ := time.ParseDuration(v)
+		assumeRole.Duration = duration
+	}
 
 	if v, ok := m["duration_seconds"].(int); ok && v != 0 {
 		assumeRole.Duration = time.Duration(v) * time.Second
@@ -2116,4 +2156,44 @@ func expandProviderIgnoreTags(l []interface{}) *tftags.IgnoreConfig {
 	}
 
 	return ignoreConfig
+}
+
+func expandEndpoints(endpointsSetList []interface{}, out map[string]string) error {
+	for _, endpointsSetI := range endpointsSetList {
+		endpoints := endpointsSetI.(map[string]interface{})
+
+		for _, hclKey := range conns.HCLKeys() {
+			var serviceKey string
+			var err error
+			if serviceKey, err = conns.ServiceForHCLKey(hclKey); err != nil {
+				return fmt.Errorf("failed to assign endpoint (%s): %w", hclKey, err)
+			}
+
+			if out[serviceKey] == "" && endpoints[hclKey].(string) != "" {
+				out[serviceKey] = endpoints[hclKey].(string)
+			}
+		}
+	}
+
+	for _, service := range conns.ServiceKeys() {
+		if out[service] != "" {
+			continue
+		}
+
+		envvar := conns.ServiceEnvVar(service)
+		if envvar != "" {
+			if v := os.Getenv(envvar); v != "" {
+				out[service] = v
+				continue
+			}
+		}
+		if envvarDeprecated := conns.ServiceDeprecatedEnvVar(service); envvarDeprecated != "" {
+			if v := os.Getenv(envvarDeprecated); v != "" {
+				log.Printf("[WARN] The environment variable %q is deprecated. Use %q instead.", envvarDeprecated, envvar)
+				out[service] = v
+			}
+		}
+	}
+
+	return nil
 }

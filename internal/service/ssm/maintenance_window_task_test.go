@@ -791,8 +791,12 @@ func testAccMaintenanceWindowTaskAutomationUpdateConfig(rName, version string) s
 	return fmt.Sprintf(testAccMaintenanceWindowTaskBaseConfig(rName)+`
 resource "aws_s3_bucket" "test" {
   bucket        = %[1]q
-  acl           = "private"
   force_destroy = true
+}
+
+resource "aws_s3_bucket_acl" "test" {
+  bucket = aws_s3_bucket.test.id
+  acl    = "private"
 }
 
 resource "aws_ssm_maintenance_window_task" "test" {
@@ -901,8 +905,12 @@ func testAccMaintenanceWindowTaskRunCommandUpdateConfig(rName, comment string, t
 	return fmt.Sprintf(testAccMaintenanceWindowTaskBaseConfig(rName)+`
 resource "aws_s3_bucket" "test" {
   bucket        = %[1]q
-  acl           = "private"
   force_destroy = true
+}
+
+resource "aws_s3_bucket_acl" "test" {
+  bucket = aws_s3_bucket.test.id
+  acl    = "private"
 }
 
 resource "aws_ssm_maintenance_window_task" "test" {

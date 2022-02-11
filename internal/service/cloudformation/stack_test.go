@@ -833,8 +833,15 @@ data "aws_region" "current" {}
 
 resource "aws_s3_bucket" "b" {
   bucket = %[1]q
-  acl    = "public-read"
+}
 
+resource "aws_s3_bucket_acl" "b" {
+  bucket = aws_s3_bucket.b.id
+  acl    = "public-read"
+}
+
+resource "aws_s3_bucket_policy" "test" {
+  bucket = aws_s3_bucket.b.id
   policy = <<POLICY
 {
   "Version":"2008-10-17",
@@ -853,7 +860,7 @@ resource "aws_s3_bucket" "b" {
 POLICY
 }
 
-resource "aws_s3_website_configuration" "test" {
+resource "aws_s3_bucket_website_configuration" "test" {
   bucket = aws_s3_bucket.b.id
   index_document {
     suffix = "index.html"
@@ -891,8 +898,15 @@ data "aws_region" "current" {}
 
 resource "aws_s3_bucket" "b" {
   bucket = %[1]q
-  acl    = "public-read"
+}
 
+resource "aws_s3_bucket_acl" "b" {
+  bucket = aws_s3_bucket.b.id
+  acl    = "public-read"
+}
+
+resource "aws_s3_bucket_policy" "test" {
+  bucket = aws_s3_bucket.b.id
   policy = <<POLICY
 {
   "Version":"2008-10-17",

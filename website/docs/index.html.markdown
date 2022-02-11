@@ -96,7 +96,7 @@ You can provide your credentials via the `AWS_ACCESS_KEY_ID` and
 Access Key and AWS Secret Key, respectively.  Note that setting your
 AWS credentials using either these (or legacy) environment variables
 will override the use of `AWS_SHARED_CREDENTIALS_FILE` and `AWS_PROFILE`.
-The `AWS_DEFAULT_REGION` and `AWS_SESSION_TOKEN` environment variables
+The `AWS_REGION` or `AWS_DEFAULT_REGION` and `AWS_SESSION_TOKEN` environment variables
 are also used, if applicable:
 
 ```terraform
@@ -117,7 +117,7 @@ $ terraform plan
 You can use [AWS credentials or configuration files](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-files.html) to specify your credentials and configuration.
 The default locations are `$HOME/.aws/credentials` and `$HOME/.aws/config` on Linux and macOS,
 or `"%USERPROFILE%\.aws\credentials"` and `"%USERPROFILE%\.aws\config"`on Windows.
-You can optionally specify a different location in the Terraform configuration by providing the `shared_credentials_file` and `shared_config_file` arguments or
+You can optionally specify a different location in the Terraform configuration by providing the `shared_credentials_files` and `shared_config_files` arguments or
 using the `AWS_SHARED_CREDENTIALS_FILE` and `AWS_CONFIG_FILE` environment variables.
 This method also supports the `profile` configuration or corresponding `AWS_PROFILE` environment variable:
 
@@ -125,10 +125,10 @@ Usage:
 
 ```terraform
 provider "aws" {
-  region                  = "us-west-2"
-  shared_config_file      = "/Users/tf_user/.aws/config"
-  shared_credentials_file = "/Users/tf_user/.aws/creds"
-  profile                 = "customprofile"
+  region                   = "us-west-2"
+  shared_config_files      = ["/Users/tf_user/.aws/conf"]
+  shared_credentials_files = ["/Users/tf_user/.aws/creds"]
+  profile                  = "customprofile"
 }
 ```
 
@@ -159,7 +159,9 @@ This is a preferred approach over any other when running in EC2 as you can avoid
 hard coding credentials. Instead these are leased on-the-fly by Terraform
 which reduces the chance of leakage.
 
-You can provide a custom metadata API endpoint via `ec2_metadata_service_endpoint` or the `AWS_EC2_METADATA_SERVICE_ENDPOINT` environment variable (the `AWS_METADATA_URL` variable is discouraged). Include the endpoint URL and version. The default is `http://169.254.169.254:80/latest`.
+You can provide a custom metadata API endpoint via `ec2_metadata_service_endpoint` or the `AWS_EC2_METADATA_SERVICE_ENDPOINT` environment variable. Include the endpoint URL and version. The default is `http://169.254.169.254:80/latest`.
+
+~> **NOTE:** Using the `AWS_METADATA_URL` environment variable has been deprecated in Terraform AWS Provider v4.0.0 and support will be removed in a future version. Change any scripts or environments using `AWS_METADATA_URL` to instead use `AWS_EC2_METADATA_SERVICE_ENDPOINT`.
 
 ### Assume Role
 
@@ -197,13 +199,18 @@ In addition to [generic `provider` arguments](https://www.terraform.io/docs/conf
 * `http_proxy` - (Optional) Address of an HTTP proxy to use when accessing the AWS API. Can also be set using the `HTTP_PROXY` or `HTTPS_PROXY` environment variables.
 * `ignore_tags` - (Optional) Configuration block with resource tag settings to ignore across all resources handled by this provider (except any individual service tag resources such as `aws_ec2_tag`) for situations where external systems are managing certain resource tags. Arguments to the configuration block are described below in the `ignore_tags` Configuration Block section. See the [Terraform multiple provider instances documentation](https://www.terraform.io/docs/configuration/providers.html#alias-multiple-provider-configurations) for more information about additional provider configurations.
 * `insecure` - (Optional) Whether to explicitly allow the provider to perform "insecure" SSL requests. If omitted, the default value is `false`.
-* `max_retries` - (Optional) Maximum number of times an API call is retried when AWS throttles requests or you experience transient failures. The delay between the subsequent API calls increases exponentially. If omitted, the default value is `25`.
+* `max_retries` - (Optional) Maximum number of times an API call is retried when AWS throttles requests or you experience transient failures.
+  The delay between the subsequent API calls increases exponentially.
+  If omitted, the default value is `25`.
+  Can also be set using the environment variable `AWS_MAX_ATTEMPTS`.
 * `profile` - (Optional) AWS profile name as set in the shared credentials file.
-* `region` - (Optional) AWS region. Can also be set with the `AWS_DEFAULT_REGION` environment variables, or via a shared credentials file if `profile` is used.
-* `s3_force_path_style` - (Optional) Whether to force the request to use path-style addressing, i.e., `http://s3.amazonaws.com/BUCKET/KEY`. By default, the S3 client will use virtual hosted bucket addressing, `http://BUCKET.s3.amazonaws.com/KEY`, when possible. Specific to the Amazon S3 service.
+* `region` - (Optional) AWS region. Can also be set with either the `AWS_REGION` or `AWS_DEFAULT_REGION` environment variables, or via a shared config file if `profile` is used.
+* `s3_force_path_style` - (Optional, **Deprecated**) Whether to enable the request to use path-style addressing, i.e., `https://s3.amazonaws.com/BUCKET/KEY`. By default, the S3 client will use virtual hosted bucket addressing, `https://BUCKET.s3.amazonaws.com/KEY`, when possible. Specific to the Amazon S3 service.
+* `s3_use_path_style` - (Optional) Whether to enable the request to use path-style addressing, i.e., `https://s3.amazonaws.com/BUCKET/KEY`. By default, the S3 client will use virtual hosted bucket addressing, `https://BUCKET.s3.amazonaws.com/KEY`, when possible. Specific to the Amazon S3 service.
 * `secret_key` - (Optional) AWS secret key. Can also be set with the `AWS_SECRET_ACCESS_KEY` environment variable, or via a shared credentials file if `profile` is used. See also `access_key`.
-* `shared_config_file` = (Optional) Path to the AWS shared config file. If not set, the default is `~/.aws/config`. Can also be set with the `AWS_CONFIG_FILE` environment variable.
-* `shared_credentials_file` = (Optional) Path to the shared credentials file. If not set and a profile is used, the default value is `~/.aws/credentials`. Can also be set with the `AWS_SHARED_CREDENTIALS_FILE` environment variable.
+* `shared_config_files` = (Optional) List of paths to AWS shared config files. If not set, the default is `[~/.aws/config]`. A single value can also be set with the `AWS_CONFIG_FILE` environment variable.
+* `shared_credentials_file` = (Optional, **Deprecated**) Path to the shared credentials file. If not set and a profile is used, the default value is `~/.aws/credentials`. Can also be set with the `AWS_SHARED_CREDENTIALS_FILE` environment variable.
+* `shared_credentials_files` = (Optional) List of paths to the shared credentials file. If not set and a profile is used, the default value is `[~/.aws/credentials]`. A single value can also be set with the `AWS_SHARED_CREDENTIALS_FILE` environment variable.
 * `skip_credentials_validation` - (Optional) Whether to skip credentials validation via the STS API. This can be useful for testing and for AWS API implementations that do not have STS available.
 * `skip_get_ec2_platforms` - (Optional) Whether to skip getting the supported EC2 platforms. Can be used when you do not have `ec2:DescribeAccountAttributes` permissions.
 * `skip_metadata_api_check` - (Optional) Whether to skip the AWS Metadata API check.  Useful for AWS API implementations that do not have a metadata API endpoint.  Setting to `true` prevents Terraform from authenticating via the Metadata API. You may need to use other authentication methods like static credentials, configuration variables, or environment variables.
@@ -332,7 +339,8 @@ In addition to [generic `provider` arguments](https://www.terraform.io/docs/conf
 
 The `assume_role` configuration block supports the following optional arguments:
 
-* `duration_seconds` - (Optional) Number of seconds to restrict the assume role session duration. You can provide a value from 900 seconds (15 minutes) up to the maximum session duration setting for the role.
+* `duration` - (Optional, Conflicts with `duration_seconds`) Duration of the assume role session. You can provide a value from 15 minutes up to the maximum session duration setting for the role. Represented by a string such as `1h`, `2h45m`, or `30m15s`.
+* `duration_seconds` - (Optional, **Deprecated** use `duration` instead) Number of seconds to restrict the assume role session duration. You can provide a value from 900 seconds (15 minutes) up to the maximum session duration setting for the role.
 * `external_id` - (Optional) External identifier to use when assuming the role.
 * `policy` - (Optional) IAM Policy JSON describing further restricting permissions for the IAM Role being assumed.
 * `policy_arns` - (Optional) Set of Amazon Resource Names (ARNs) of IAM Policies describing further restricting permissions for the IAM Role being assumed.

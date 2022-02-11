@@ -17,6 +17,10 @@ import (
 )
 
 func testAccApp_basic(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var app sagemaker.DescribeAppOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_app.test"
@@ -51,6 +55,10 @@ func testAccApp_basic(t *testing.T) {
 }
 
 func testAccApp_resourceSpec(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var app sagemaker.DescribeAppOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_app.test"
@@ -81,6 +89,10 @@ func testAccApp_resourceSpec(t *testing.T) {
 }
 
 func testAccApp_resourceSpecLifecycle(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var app sagemaker.DescribeAppOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	uName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -113,6 +125,10 @@ func testAccApp_resourceSpecLifecycle(t *testing.T) {
 }
 
 func testAccApp_tags(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var app sagemaker.DescribeAppOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_app.test"
@@ -158,6 +174,10 @@ func testAccApp_tags(t *testing.T) {
 }
 
 func testAccApp_disappears(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var app sagemaker.DescribeAppOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_app.test"

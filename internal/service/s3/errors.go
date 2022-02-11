@@ -4,6 +4,9 @@ package s3
 // https://docs.aws.amazon.com/sdk-for-go/api/service/s3/#pkg-constants
 
 const (
+	ErrCodeInvalidBucketState                        = "InvalidBucketState"
+	ErrCodeMethodNotAllowed                          = "MethodNotAllowed"
+	ErrCodeNoSuchBucketPolicy                        = "NoSuchBucketPolicy"
 	ErrCodeNoSuchConfiguration                       = "NoSuchConfiguration"
 	ErrCodeNoSuchCORSConfiguration                   = "NoSuchCORSConfiguration"
 	ErrCodeNoSuchLifecycleConfiguration              = "NoSuchLifecycleConfiguration"
@@ -12,5 +15,7 @@ const (
 	ErrCodeNotImplemented                            = "NotImplemented"
 	ErrCodeObjectLockConfigurationNotFound           = "ObjectLockConfigurationNotFoundError"
 	ErrCodeOperationAborted                          = "OperationAborted"
+	ErrCodeReplicationConfigurationNotFound          = "ReplicationConfigurationNotFoundError"
 	ErrCodeServerSideEncryptionConfigurationNotFound = "ServerSideEncryptionConfigurationNotFoundError"
+	ErrCodeUnsupportedArgument                       = "UnsupportedArgument"
 )

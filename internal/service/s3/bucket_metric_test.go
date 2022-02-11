@@ -635,8 +635,12 @@ func testAccCheckBucketMetricsExistsConfig(n string, res *s3.MetricsConfiguratio
 func testAccBucketMetricsBucketConfig(name string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "bucket" {
-  acl    = "public-read"
   bucket = "%s"
+}
+
+resource "aws_s3_bucket_acl" "test" {
+  bucket = aws_s3_bucket.bucket.id
+  acl    = "public-read"
 }
 `, name)
 }
