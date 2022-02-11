@@ -3277,4 +3277,5 @@ BUG FIXES
 
 For information on prior major releases, see their changelogs:
 
-* [2.70.0 and earlier](https://github.com/hashicorp/terraform-provider-aws/blob/v2.70.0/CHANGELOG.md)
+* [3.74 and earlier](https://github.com/hashicorp/terraform-provider-aws/blob/release/3.x/CHANGELOG.md)
+* [2.70 and earlier](https://github.com/hashicorp/terraform-provider-aws/blob/release/2.x/CHANGELOG.md)
