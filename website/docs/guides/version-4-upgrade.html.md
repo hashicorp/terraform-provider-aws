@@ -1920,7 +1920,7 @@ For example, the following will import an S3 object into state, assuming the con
 
 ### instance_interruption_behaviour Argument removal
 
-Switch your Terraform configuration to the `engine_version_actual` attribute instead.
+Switch your Terraform configuration to the `instance_interruption_behavior` attribute instead.
 
 For example, given this previous configuration:
 
