@@ -200,7 +200,7 @@ func testAccScriptBasicConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_gamelift_script" "test" {
   name     = %[1]q
-  zip_file = "test-fixtures/lambdatest.zip"
+  zip_file = "test-fixtures/script.zip"
 }
 `, rName)
 }
@@ -209,7 +209,7 @@ func testAccScriptBasicTags1Config(rName, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_gamelift_script" "test" {
   name     = %[1]q
-  zip_file = "test-fixtures/lambdatest.zip"
+  zip_file = "test-fixtures/script.zip"
 
   tags = {
     %[2]q = %[3]q
@@ -222,7 +222,7 @@ func testAccScriptBasicTags2Config(rName, tagKey1, tagValue1, tagKey2, tagValue2
 	return fmt.Sprintf(`
 resource "aws_gamelift_script" "test" {
   name     = %[1]q
-  zip_file = "test-fixtures/lambdatest.zip"
+  zip_file = "test-fixtures/script.zip"
 
   tags = {
     %[2]q = %[3]q

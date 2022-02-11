@@ -50,9 +50,10 @@ func ResourceFleet() *schema.Resource {
 				Computed: true,
 			},
 			"build_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ExactlyOneOf: []string{"build_id", "script_id"},
 			},
 			"certificate_configuration": {
 				Type:     schema.TypeList,
@@ -215,6 +216,16 @@ func ResourceFleet() *schema.Resource {
 					},
 				},
 			},
+			"script_arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"script_id": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ExactlyOneOf: []string{"build_id", "script_id"},
+			},
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
 		},
@@ -229,10 +240,17 @@ func resourceFleetCreate(d *schema.ResourceData, meta interface{}) error {
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
 	input := &gamelift.CreateFleetInput{
-		BuildId:         aws.String(d.Get("build_id").(string)),
 		EC2InstanceType: aws.String(d.Get("ec2_instance_type").(string)),
 		Name:            aws.String(d.Get("name").(string)),
 		Tags:            Tags(tags.IgnoreAWS()),
+	}
+
+	if v, ok := d.GetOk("build_id"); ok {
+		input.BuildId = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("script_id"); ok {
+		input.ScriptId = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -330,6 +348,8 @@ func resourceFleetRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("ec2_instance_type", fleet.InstanceType)
 	d.Set("new_game_session_protection_policy", fleet.NewGameSessionProtectionPolicy)
 	d.Set("operating_system", fleet.OperatingSystem)
+	d.Set("script_arn", fleet.ScriptArn)
+	d.Set("script_id", fleet.ScriptId)
 
 	if err := d.Set("certificate_configuration", flattenGameliftCertificateConfiguration(fleet.CertificateConfiguration)); err != nil {
 		return fmt.Errorf("error setting certificate_configuration: %w", err)
