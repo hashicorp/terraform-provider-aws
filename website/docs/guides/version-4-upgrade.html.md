@@ -92,20 +92,34 @@ It is recommended to use [version constraints when configuring Terraform provide
 For example, given this previous configuration:
 
 ```terraform
-provider "aws" {
-  # ... other configuration ...
+terraform {
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = "~> 3.74"
+    }
+  }
+}
 
-  version = "~> 3.74"
+provider "aws" {
+  # Configuration options
 }
 ```
 
 Update to latest 4.X version:
 
 ```terraform
-provider "aws" {
-  # ... other configuration ...
+terraform {
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = "~> 4.0"
+    }
+  }
+}
 
-  version = "~> 4.0"
+provider "aws" {
+  # Configuration options
 }
 ```
 
