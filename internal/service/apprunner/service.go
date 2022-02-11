@@ -514,7 +514,7 @@ func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta inter
 		return diag.FromErr(fmt.Errorf("error setting instance_configuration: %w", err))
 	}
 
-	if err := d.Set("network_configuration", flattenAppRunnerServiceNetworkConfiguration(service.NetworkConfiguration)); err != nil {
+	if err := d.Set("network_configuration", flattenAppRunnerNetworkConfiguration(service.NetworkConfiguration)); err != nil {
 		return diag.FromErr(fmt.Errorf("error setting network_configuration: %w", err))
 	}
 
@@ -722,12 +722,8 @@ func expandAppRunnerNetworkConfiguration(l []interface{}) *apprunner.NetworkConf
 
 	result := &apprunner.NetworkConfiguration{}
 
-	if v, ok := tfMap["egress_type"].(string); ok {
-		result.EgressConfiguration.EgressType = aws.String(v)
-	}
-
-	if v, ok := tfMap["vpc_connector_arn"].(string); ok && v != "" {
-		result.EgressConfiguration.VpcConnectorArn = aws.String(v)
+	if v, ok := tfMap["egress_configuration"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		result.EgressConfiguration = expandAppRunnerNetworkEgressConfiguration(v)
 	}
 
 	return result
@@ -784,6 +780,30 @@ func expandAppRunnerServiceAuthenticationConfiguration(l []interface{}) *apprunn
 
 	if v, ok := tfMap["connection_arn"].(string); ok && v != "" {
 		result.ConnectionArn = aws.String(v)
+	}
+
+	return result
+}
+
+func expandAppRunnerNetworkEgressConfiguration(l []interface{}) *apprunner.EgressConfiguration {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	tfMap, ok := l[0].(map[string]interface{})
+
+	if !ok {
+		return nil
+	}
+
+	result := &apprunner.EgressConfiguration{}
+
+	if v, ok := tfMap["egress_type"].(string); ok {
+		result.EgressType = aws.String(v)
+	}
+
+	if v, ok := tfMap["vpc_connector_arn"].(string); ok && v != "" {
+		result.VpcConnectorArn = aws.String(v)
 	}
 
 	return result
@@ -1000,14 +1020,26 @@ func flattenAppRunnerServiceInstanceConfiguration(config *apprunner.InstanceConf
 	return []interface{}{m}
 }
 
-func flattenAppRunnerServiceNetworkConfiguration(config *apprunner.NetworkConfiguration) []interface{} {
+func flattenAppRunnerNetworkConfiguration(config *apprunner.NetworkConfiguration) []interface{} {
 	if config == nil {
 		return []interface{}{}
 	}
 
 	m := map[string]interface{}{
-		"egress_type":       aws.StringValue(config.EgressConfiguration.EgressType),
-		"vpc_connector_arn": aws.StringValue(config.EgressConfiguration.VpcConnectorArn),
+		"egress_configuration": flattenAppRunnerNetworkEgressConfiguration(config.EgressConfiguration),
+	}
+
+	return []interface{}{m}
+}
+
+func flattenAppRunnerNetworkEgressConfiguration(config *apprunner.EgressConfiguration) []interface{} {
+	if config == nil {
+		return []interface{}{}
+	}
+
+	m := map[string]interface{}{
+		"egress_type":       aws.StringValue(config.EgressType),
+		"vpc_connector_arn": aws.StringValue(config.VpcConnectorArn),
 	}
 
 	return []interface{}{m}
