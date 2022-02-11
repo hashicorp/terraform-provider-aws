@@ -629,6 +629,7 @@ func Provider() *schema.Provider {
 			"aws_imagebuilder_component":                     imagebuilder.DataSourceComponent(),
 			"aws_imagebuilder_components":                    imagebuilder.DataSourceComponents(),
 			"aws_imagebuilder_container_recipe":              imagebuilder.DataSourceContainerRecipe(),
+			"aws_imagebuilder_container_recipes":             imagebuilder.DataSourceContainerRecipes(),
 			"aws_imagebuilder_distribution_configuration":    imagebuilder.DataSourceDistributionConfiguration(),
 			"aws_imagebuilder_distribution_configurations":   imagebuilder.DataSourceDistributionConfigurations(),
 			"aws_imagebuilder_image":                         imagebuilder.DataSourceImage(),
