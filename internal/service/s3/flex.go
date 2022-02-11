@@ -883,7 +883,15 @@ func FlattenLifecycleRuleExpiration(expiration *s3.LifecycleExpiration) []interf
 
 func FlattenLifecycleRuleFilter(filter *s3.LifecycleRuleFilter) []interface{} {
 	if filter == nil {
-		return []interface{}{}
+		return nil
+	}
+
+	if filter.And == nil &&
+		filter.ObjectSizeGreaterThan == nil &&
+		filter.ObjectSizeLessThan == nil &&
+		(filter.Prefix == nil || aws.StringValue(filter.Prefix) == "") &&
+		filter.Tag == nil {
+		return nil
 	}
 
 	m := make(map[string]interface{})
@@ -900,7 +908,7 @@ func FlattenLifecycleRuleFilter(filter *s3.LifecycleRuleFilter) []interface{} {
 		m["object_size_less_than"] = int(aws.Int64Value(filter.ObjectSizeLessThan))
 	}
 
-	if filter.Prefix != nil {
+	if filter.Prefix != nil && aws.StringValue(filter.Prefix) != "" {
 		m["prefix"] = aws.StringValue(filter.Prefix)
 	}
 
@@ -939,7 +947,7 @@ func FlattenLifecycleRuleFilterAndOperator(andOp *s3.LifecycleRuleAndOperator) [
 
 func FlattenLifecycleRuleFilterTag(tag *s3.Tag) []interface{} {
 	if tag == nil {
-		return []interface{}{}
+		return nil
 	}
 
 	t := KeyValueTags([]*s3.Tag{tag}).IgnoreAWS().Map()

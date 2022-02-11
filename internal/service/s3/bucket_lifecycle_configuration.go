@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/experimental/nullable"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
@@ -114,14 +115,12 @@ func ResourceBucketLifecycleConfiguration() *schema.Resource {
 										},
 									},
 									"object_size_greater_than": {
-										Type:     schema.TypeInt,
+										Type:     nullable.TypeNullableInt,
 										Optional: true,
-										Default:  0, // API returns 0
 									},
 									"object_size_less_than": {
-										Type:     schema.TypeInt,
+										Type:     nullable.TypeNullableInt,
 										Optional: true,
-										Default:  0, // API returns 0
 									},
 									"prefix": {
 										Type:     schema.TypeString,
