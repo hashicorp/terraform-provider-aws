@@ -260,6 +260,7 @@ func TestAccIAMUserLoginProfile_disappears(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserLoginProfileExists(resourceName, &conf),
 					acctest.CheckResourceDisappears(acctest.Provider, tfiam.ResourceUserLoginProfile(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfiam.ResourceUserLoginProfile(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
