@@ -1409,6 +1409,7 @@ func Provider() *schema.Provider {
 			"aws_iam_user_policy":             iam.ResourceUserPolicy(),
 			"aws_iam_user_policy_attachment":  iam.ResourceUserPolicyAttachment(),
 			"aws_iam_user_ssh_key":            iam.ResourceUserSSHKey(),
+			"aws_iam_virtual_mfa_device":      iam.ResourceVirtualMfaDevice(),
 
 			"aws_imagebuilder_component":                    imagebuilder.ResourceComponent(),
 			"aws_imagebuilder_container_recipe":             imagebuilder.ResourceContainerRecipe(),
