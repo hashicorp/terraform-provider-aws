@@ -81,6 +81,11 @@ func init() {
 		F:    sweepSamlProvider,
 	})
 
+	resource.AddTestSweepers("aws_iam_service_specific_credential", &resource.Sweeper{
+		Name: "aws_iam_service_specific_credential",
+		F:    sweepServiceSpecificCredentials,
+	})
+
 	resource.AddTestSweepers("aws_iam_server_certificate", &resource.Sweeper{
 		Name: "aws_iam_server_certificate",
 		F:    sweepServerCertificates,
@@ -95,6 +100,7 @@ func init() {
 		Name: "aws_iam_user",
 		F:    sweepUsers,
 		Dependencies: []string{
+			"aws_iam_service_specific_credential",
 			"aws_iam_virtual_mfa_device",
 		},
 	})
@@ -311,6 +317,72 @@ func sweepOpenIDConnectProvider(region string) error {
 
 	if err != nil {
 		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error describing IAM OIDC Providers: %w", err))
+	}
+
+	return sweeperErrs.ErrorOrNil()
+}
+
+func sweepServiceSpecificCredentials(region string) error {
+	client, err := sweep.SharedRegionalSweepClient(region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %w", err)
+	}
+	conn := client.(*conns.AWSClient).IAMConn
+
+	var sweeperErrs *multierror.Error
+
+	prefixes := []string{
+		"test-user",
+		"test_user",
+		"tf-acc",
+		"tf_acc",
+	}
+
+	users := make([]*iam.User, 0)
+
+	err = conn.ListUsersPages(&iam.ListUsersInput{}, func(page *iam.ListUsersOutput, lastPage bool) bool {
+		for _, user := range page.Users {
+			for _, prefix := range prefixes {
+				if strings.HasPrefix(aws.StringValue(user.UserName), prefix) {
+					users = append(users, user)
+					break
+				}
+			}
+		}
+
+		return !lastPage
+	})
+
+	for _, user := range users {
+		out, err := conn.ListServiceSpecificCredentials(&iam.ListServiceSpecificCredentialsInput{
+			UserName: user.UserName,
+		})
+
+		for _, cred := range out.ServiceSpecificCredentials {
+
+			id := fmt.Sprintf("%s:%s:%s", aws.StringValue(cred.ServiceName), aws.StringValue(cred.UserName), aws.StringValue(cred.ServiceSpecificCredentialId))
+
+			r := ResourceServiceSpecificCredential()
+			d := r.Data(nil)
+			d.SetId(id)
+			err := r.Delete(d, client)
+
+			if err != nil {
+				sweeperErr := fmt.Errorf("error deleting IAM Service Specific Credential (%s): %w", id, err)
+				log.Printf("[ERROR] %s", sweeperErr)
+				sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
+				continue
+			}
+		}
+
+		if sweep.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping IAM Service Specific Credential sweep for %s: %s", region, err)
+			return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
+		}
+
+		if err != nil {
+			sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error describing IAM Service Specific Credentials: %w", err))
+		}
 	}
 
 	return sweeperErrs.ErrorOrNil()
