@@ -357,7 +357,10 @@ func ExpandLifecycleRuleTransitions(l []interface{}) ([]*s3.Transition, error) {
 			transition.Date = aws.Time(t)
 		}
 
-		if v, ok := tfMap["days"].(int); ok && v >= 0 {
+		// Only one of "date" and "days" can be configured
+		// so only set the transition.Days value when transition.Date is nil
+		// By default, tfMap["days"] = 0 if not explicitly configured in terraform.
+		if v, ok := tfMap["days"].(int); ok && v >= 0 && transition.Date == nil {
 			transition.Days = aws.Int64(int64(v))
 		}
 
