@@ -40,13 +40,14 @@ func ResourceUserLoginProfile() *schema.Resource {
 			},
 			"pgp_key": {
 				Type:     schema.TypeString,
-				Required: true,
+				Optional: true,
 				ForceNew: true,
 			},
 			"password_reset_required": {
 				Type:     schema.TypeBool,
 				Optional: true,
-				Default:  true,
+				Computed: true,
+				// Default:  true,
 				ForceNew: true,
 			},
 			"password_length": {
@@ -62,6 +63,10 @@ func ResourceUserLoginProfile() *schema.Resource {
 				Computed: true,
 			},
 			"encrypted_password": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"password": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -127,38 +132,46 @@ func resourceUserLoginProfileCreate(d *schema.ResourceData, meta interface{}) er
 	conn := meta.(*conns.AWSClient).IAMConn
 	username := d.Get("user").(string)
 
-	encryptionKey, err := RetrieveGPGKey(strings.TrimSpace(d.Get("pgp_key").(string)))
-	if err != nil {
-		return fmt.Errorf("error retrieving GPG Key during IAM User Login Profile (%s) creation: %s", username, err)
-	}
-
-	passwordResetRequired := d.Get("password_reset_required").(bool)
 	passwordLength := d.Get("password_length").(int)
 	initialPassword, err := GeneratePassword(passwordLength)
 	if err != nil {
 		return err
 	}
 
-	fingerprint, encrypted, err := EncryptValue(encryptionKey, initialPassword, "Password")
-	if err != nil {
-		return fmt.Errorf("error encrypting password during IAM User Login Profile (%s) creation: %s", username, err)
-	}
-
 	request := &iam.CreateLoginProfileInput{
 		UserName:              aws.String(username),
 		Password:              aws.String(initialPassword),
-		PasswordResetRequired: aws.Bool(passwordResetRequired),
+		PasswordResetRequired: aws.Bool(d.Get("password_reset_required").(bool)),
 	}
 
 	log.Println("[DEBUG] Create IAM User Login Profile request:", request)
 	createResp, err := conn.CreateLoginProfile(request)
 	if err != nil {
-		return fmt.Errorf("Error creating IAM User Login Profile for %q: %s", username, err)
+		return fmt.Errorf("Error creating IAM User Login Profile for %q: %w", username, err)
 	}
 
 	d.SetId(aws.StringValue(createResp.LoginProfile.UserName))
-	d.Set("key_fingerprint", fingerprint)
-	d.Set("encrypted_password", encrypted)
+
+	if v, ok := d.GetOk("pgp_key"); ok {
+		pgpKey := v.(string)
+		pgpKey = strings.TrimSuffix(pgpKey, "\n")
+
+		encryptionKey, err := RetrieveGPGKey(pgpKey)
+		if err != nil {
+			return fmt.Errorf("error retrieving GPG Key during IAM User Login Profile (%s) creation: %w", username, err)
+		}
+
+		fingerprint, encrypted, err := EncryptValue(encryptionKey, initialPassword, "Password")
+		if err != nil {
+			return fmt.Errorf("error encrypting password during IAM User Login Profile (%s) creation: %w", username, err)
+		}
+
+		d.Set("key_fingerprint", fingerprint)
+		d.Set("encrypted_password", encrypted)
+	} else {
+		d.Set("password", initialPassword)
+	}
+
 	return nil
 }
 
@@ -205,7 +218,10 @@ func resourceUserLoginProfileRead(d *schema.ResourceData, meta interface{}) erro
 		return fmt.Errorf("error reading IAM User Login Profile (%s): empty response", d.Id())
 	}
 
-	d.Set("user", output.LoginProfile.UserName)
+	loginProfile := output.LoginProfile
+
+	d.Set("user", loginProfile.UserName)
+	d.Set("password_reset_required", loginProfile.PasswordResetRequired)
 
 	return nil
 }
@@ -248,7 +264,7 @@ func resourceUserLoginProfileDelete(d *schema.ResourceData, meta interface{}) er
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting IAM User Login Profile (%s): %s", d.Id(), err)
+		return fmt.Errorf("error deleting IAM User Login Profile (%s): %w", d.Id(), err)
 	}
 
 	return nil
