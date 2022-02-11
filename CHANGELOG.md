@@ -3,6 +3,22 @@
 FEATURES:
 
 * **New Data Source:** `aws_service` ([#16640](https://github.com/hashicorp/terraform-provider-aws/issues/16640))
+* **New Resource:** `aws_imagebuilder_container_recipe` ([#22965](https://github.com/hashicorp/terraform-provider-aws/issues/22965))
+
+ENHANCEMENTS:
+
+* resource/aws_gamelift_build: Add `object_version` argument to `storage_location` block. ([#22966](https://github.com/hashicorp/terraform-provider-aws/issues/22966))
+* resource/aws_gamelift_build: Add import support ([#22966](https://github.com/hashicorp/terraform-provider-aws/issues/22966))
+* resource/aws_gamelift_fleet: Add `certificate_configuration` argument ([#22967](https://github.com/hashicorp/terraform-provider-aws/issues/22967))
+* resource/aws_gamelift_fleet: Add import support ([#22967](https://github.com/hashicorp/terraform-provider-aws/issues/22967))
+* resource/aws_gamelift_fleet: Add plan time validation to `ec2_instance_type` ([#22967](https://github.com/hashicorp/terraform-provider-aws/issues/22967))
+* resource/aws_glue_catalog_database: Add support `create_table_default_permission` argument ([#22964](https://github.com/hashicorp/terraform-provider-aws/issues/22964))
+* resource/aws_glue_trigger: Add `event_batching_condition` argument. ([#22963](https://github.com/hashicorp/terraform-provider-aws/issues/22963))
+
+BUG FIXES:
+
+* resource/aws_sagemaker_endpoint_configuration: Emptiness check for arguments, Allow not passing `async_inference_config.kms_key_id`. ([#22960](https://github.com/hashicorp/terraform-provider-aws/issues/22960))
+* resource/aws_vpn_connection: Add support for `ipsec.1-aes256` connection type ([#23127](https://github.com/hashicorp/terraform-provider-aws/issues/23127))
 
 ## 4.0.0 (February 10, 2022)
 
