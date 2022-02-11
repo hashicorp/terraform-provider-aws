@@ -1410,6 +1410,7 @@ func Provider() *schema.Provider {
 			"aws_iam_user_ssh_key":            iam.ResourceUserSSHKey(),
 
 			"aws_imagebuilder_component":                    imagebuilder.ResourceComponent(),
+			"aws_imagebuilder_container_recipe":             imagebuilder.ResourceContainerRecipe(),
 			"aws_imagebuilder_distribution_configuration":   imagebuilder.ResourceDistributionConfiguration(),
 			"aws_imagebuilder_image":                        imagebuilder.ResourceImage(),
 			"aws_imagebuilder_image_pipeline":               imagebuilder.ResourceImagePipeline(),
