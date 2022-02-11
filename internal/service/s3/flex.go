@@ -357,7 +357,7 @@ func ExpandLifecycleRuleTransitions(l []interface{}) ([]*s3.Transition, error) {
 			transition.Date = aws.Time(t)
 		}
 
-		if v, ok := tfMap["days"].(int); ok && v > 0 {
+		if v, ok := tfMap["days"].(int); ok && v >= 0 {
 			transition.Days = aws.Int64(int64(v))
 		}
 
