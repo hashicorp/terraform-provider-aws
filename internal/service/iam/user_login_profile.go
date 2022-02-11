@@ -151,9 +151,6 @@ func resourceUserLoginProfileCreate(d *schema.ResourceData, meta interface{}) er
 	d.SetId(aws.StringValue(createResp.LoginProfile.UserName))
 
 	if v, ok := d.GetOk("pgp_key"); ok {
-		// pgpKey := v.(string)
-		// pgpKey = strings.TrimPrefix(strings.TrimSuffix(pgpKey, "\n"), "\n")
-
 		encryptionKey, err := RetrieveGPGKey(v.(string))
 		if err != nil {
 			return fmt.Errorf("error retrieving GPG Key during IAM User Login Profile (%s) creation: %w", username, err)
