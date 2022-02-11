@@ -24,7 +24,7 @@ func TestAccBackupReportPlan_basic(t *testing.T) {
 	resourceName := "aws_backup_report_plan.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccReportPlanPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, backup.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckReportPlanDestroy,
@@ -83,7 +83,7 @@ func TestAccBackupReportPlan_updateTags(t *testing.T) {
 	resourceName := "aws_backup_report_plan.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccReportPlanPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, backup.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckReportPlanDestroy,
@@ -168,7 +168,7 @@ func TestAccBackupReportPlan_updateReportDeliveryChannel(t *testing.T) {
 	resourceName := "aws_backup_report_plan.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccReportPlanPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, backup.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckReportPlanDestroy,
@@ -228,7 +228,7 @@ func TestAccBackupReportPlan_disappears(t *testing.T) {
 	resourceName := "aws_backup_report_plan.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccReportPlanPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, backup.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckReportPlanDestroy,
@@ -243,6 +243,20 @@ func TestAccBackupReportPlan_disappears(t *testing.T) {
 			},
 		},
 	})
+}
+
+func testAccReportPlanPreCheck(t *testing.T) {
+	conn := acctest.Provider.Meta().(*conns.AWSClient).BackupConn
+
+	_, err := conn.ListReportPlans(&backup.ListReportPlansInput{})
+
+	if acctest.PreCheckSkipError(err) {
+		t.Skipf("skipping acceptance testing: %s", err)
+	}
+
+	if err != nil {
+		t.Fatalf("unexpected PreCheck error: %s", err)
+	}
 }
 
 func testAccCheckReportPlanDestroy(s *terraform.State) error {
