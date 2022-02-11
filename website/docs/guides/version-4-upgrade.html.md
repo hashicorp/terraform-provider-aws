@@ -95,7 +95,7 @@ For example, given this previous configuration:
 terraform {
   required_providers {
     aws = {
-      source = "hashicorp/aws"
+      source  = "hashicorp/aws"
       version = "~> 3.74"
     }
   }
@@ -112,7 +112,7 @@ Update to latest 4.X version:
 terraform {
   required_providers {
     aws = {
-      source = "hashicorp/aws"
+      source  = "hashicorp/aws"
       version = "~> 4.0"
     }
   }
