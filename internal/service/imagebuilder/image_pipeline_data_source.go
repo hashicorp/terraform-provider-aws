@@ -23,7 +23,7 @@ func DataSourceImagePipeline() *schema.Resource {
 			},
 			"container_recipe_arn": {
 				Type:     schema.TypeString,
-				Required: true,
+				Computed: true,
 			},
 			"date_created": {
 				Type:     schema.TypeString,
