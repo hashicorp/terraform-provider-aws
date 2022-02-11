@@ -131,7 +131,7 @@ resource "aws_iot_certificate" "foo_cert" {
 
 var testAccCertificate_existing_certificate = `
 resource "aws_iot_certificate" "foo_cert" {
-  active = true
+  active          = true
   certificate_pem = "%[1]s"
 }
 `

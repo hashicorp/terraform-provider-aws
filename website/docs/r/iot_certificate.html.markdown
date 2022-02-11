@@ -34,7 +34,7 @@ resource "aws_iot_certificate" "cert" {
 ```terraform
 resource "aws_iot_certificate" "cert" {
   certificate_pem = file("/my/cert.pem")
-  active = true
+  active          = true
 }
 ```
 
