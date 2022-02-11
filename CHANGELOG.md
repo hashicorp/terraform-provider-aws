@@ -1,5 +1,9 @@
 ## 3.74.2 (Unreleased)
 
+BUG FIXES:
+
+* resource/aws_vpn_connection: Add support for `ipsec.1-aes256` connection type ([#23127](https://github.com/hashicorp/terraform-provider-aws/issues/23127))
+
 ## 3.74.1 (February 07, 2022)
 
 BUG FIXES:
