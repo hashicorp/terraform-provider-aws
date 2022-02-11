@@ -25,39 +25,60 @@ import (
 
  GCM_API_KEY - Google Cloud Messaging API Key
 
+ APNS_SANDBOX_CREDENTIAL - Apple Push Notification Sandbox Private Key
+ APNS_SANDBOX_PRINCIPAL - Apple Push Notification Sandbox Certificate
+
  APNS_SANDBOX_CREDENTIAL_PATH - Apple Push Notification Sandbox Private Key file location
  APNS_SANDBOX_PRINCIPAL_PATH - Apple Push Notification Sandbox Certificate file location
+
+ APNS_SANDBOX_TOKEN_CREDENTIAL - Apple signing key
+ APNS_SANDBOX_TOKEN_PRINCIPAL - Apple signing key id
 **/
 
 type testAccPlatformApplicationPlatform struct {
-	Name       string
-	Credential string
-	Principal  string
+	Name         string
+	Credential   string
+	Principal    string
+	ApnsAuthType string // "certificate", "token"
 }
 
-func testAccPlatformApplicationPlatformFromEnv(t *testing.T) []*testAccPlatformApplicationPlatform {
+func testAccPlatformApplicationPlatformFromEnv(t *testing.T, allowedApnsAuthType string) []*testAccPlatformApplicationPlatform {
 	platforms := make([]*testAccPlatformApplicationPlatform, 0, 2)
 
-	if os.Getenv("APNS_SANDBOX_CREDENTIAL") != "" {
+	if os.Getenv("APNS_SANDBOX_CREDENTIAL") != "" && allowedApnsAuthType == "certificate" {
 		if os.Getenv("APNS_SANDBOX_PRINCIPAL") == "" {
 			t.Fatalf("APNS_SANDBOX_CREDENTIAL set but missing APNS_SANDBOX_PRINCIPAL")
 		}
 
 		platform := &testAccPlatformApplicationPlatform{
-			Name:       "APNS_SANDBOX",
-			Credential: fmt.Sprintf("<<EOF\n%s\nEOF\n", strings.TrimSpace(os.Getenv("APNS_SANDBOX_CREDENTIAL"))),
-			Principal:  fmt.Sprintf("<<EOF\n%s\nEOF\n", strings.TrimSpace(os.Getenv("APNS_SANDBOX_PRINCIPAL"))),
+			Name:         "APNS_SANDBOX",
+			Credential:   fmt.Sprintf("<<EOF\n%s\nEOF\n", strings.TrimSpace(os.Getenv("APNS_SANDBOX_CREDENTIAL"))),
+			Principal:    fmt.Sprintf("<<EOF\n%s\nEOF\n", strings.TrimSpace(os.Getenv("APNS_SANDBOX_PRINCIPAL"))),
+			ApnsAuthType: "certificate",
 		}
 		platforms = append(platforms, platform)
-	} else if os.Getenv("APNS_SANDBOX_CREDENTIAL_PATH") != "" {
+	} else if os.Getenv("APNS_SANDBOX_CREDENTIAL_PATH") != "" && allowedApnsAuthType == "certificate" {
 		if os.Getenv("APNS_SANDBOX_PRINCIPAL_PATH") == "" {
 			t.Fatalf("APNS_SANDBOX_CREDENTIAL_PATH set but missing APNS_SANDBOX_PRINCIPAL_PATH")
 		}
 
 		platform := &testAccPlatformApplicationPlatform{
-			Name:       "APNS_SANDBOX",
-			Credential: strconv.Quote(fmt.Sprintf("${file(pathexpand(%q))}", os.Getenv("APNS_SANDBOX_CREDENTIAL_PATH"))),
-			Principal:  strconv.Quote(fmt.Sprintf("${file(pathexpand(%q))}", os.Getenv("APNS_SANDBOX_PRINCIPAL_PATH"))),
+			Name:         "APNS_SANDBOX",
+			Credential:   strconv.Quote(fmt.Sprintf("${file(pathexpand(%q))}", os.Getenv("APNS_SANDBOX_CREDENTIAL_PATH"))),
+			Principal:    strconv.Quote(fmt.Sprintf("${file(pathexpand(%q))}", os.Getenv("APNS_SANDBOX_PRINCIPAL_PATH"))),
+			ApnsAuthType: "certificate",
+		}
+		platforms = append(platforms, platform)
+	} else if os.Getenv("APNS_SANDBOX_TOKEN_CREDENTIAL") != "" && allowedApnsAuthType == "token" {
+		if os.Getenv("APNS_SANDBOX_TOKEN_PRINCIPAL") == "" {
+			t.Fatalf("APNS_SANDBOX_TOKEN_PRINCIPAL set but missing APNS_SANDBOX_TOKEN_CREDENTIAL")
+		}
+
+		platform := &testAccPlatformApplicationPlatform{
+			Name:         "APNS_SANDBOX",
+			Credential:   fmt.Sprintf("<<EOF\n%s\nEOF\n", strings.TrimSpace(os.Getenv("APNS_SANDBOX_TOKEN_CREDENTIAL"))),
+			Principal:    fmt.Sprintf("<<EOF\n%s\nEOF\n", strings.TrimSpace(os.Getenv("APNS_SANDBOX_TOKEN_PRINCIPAL"))),
+			ApnsAuthType: "token",
 		}
 		platforms = append(platforms, platform)
 	}
@@ -149,7 +170,7 @@ func TestDecodePlatformApplicationID(t *testing.T) {
 }
 
 func TestAccSNSPlatformApplication_basic(t *testing.T) {
-	platforms := testAccPlatformApplicationPlatformFromEnv(t)
+	platforms := testAccPlatformApplicationPlatformFromEnv(t, "certificate")
 	resourceName := "aws_sns_platform_application.test"
 
 	for _, platform := range platforms {
@@ -190,7 +211,7 @@ func TestAccSNSPlatformApplication_basic(t *testing.T) {
 }
 
 func TestAccSNSPlatformApplication_basicAttributes(t *testing.T) {
-	platforms := testAccPlatformApplicationPlatformFromEnv(t)
+	platforms := testAccPlatformApplicationPlatformFromEnv(t, "certificate")
 	resourceName := "aws_sns_platform_application.test"
 
 	var testCases = []struct {
@@ -246,7 +267,7 @@ func TestAccSNSPlatformApplication_basicAttributes(t *testing.T) {
 }
 
 func TestAccSNSPlatformApplication_iamRoleAttributes(t *testing.T) {
-	platforms := testAccPlatformApplicationPlatformFromEnv(t)
+	platforms := testAccPlatformApplicationPlatformFromEnv(t, "certificate")
 	resourceName := "aws_sns_platform_application.test"
 
 	var testCases = []string{
@@ -297,7 +318,7 @@ func TestAccSNSPlatformApplication_iamRoleAttributes(t *testing.T) {
 }
 
 func TestAccSNSPlatformApplication_snsTopicAttributes(t *testing.T) {
-	platforms := testAccPlatformApplicationPlatformFromEnv(t)
+	platforms := testAccPlatformApplicationPlatformFromEnv(t, "certificate")
 	resourceName := "aws_sns_platform_application.test"
 
 	var testCases = []string{
@@ -345,6 +366,56 @@ func TestAccSNSPlatformApplication_snsTopicAttributes(t *testing.T) {
 					})
 				})
 			}
+		})
+	}
+}
+
+func TestAccSNSPlatformApplication_basicApnsWithTokenCredentials(t *testing.T) {
+	platforms := testAccPlatformApplicationPlatformFromEnv(t, "token")
+	resourceName := "aws_sns_platform_application.test"
+	applePlatformTeamId := "1111111111"
+	updatedApplePlatformTeamId := "2222222222"
+	applePlatformBundleId := "com.bundle.name"
+	updatedApplePlatformBundleId := "com.bundle2.name2"
+
+	for _, platform := range platforms {
+		name := fmt.Sprintf("tf-acc-%d", sdkacctest.RandInt())
+
+		t.Run(platform.Name, func(*testing.T) {
+			resource.ParallelTest(t, resource.TestCase{
+				PreCheck:     func() { acctest.PreCheck(t) },
+				ErrorCheck:   acctest.ErrorCheck(t, sns.EndpointsID),
+				Providers:    acctest.Providers,
+				CheckDestroy: testAccCheckPlatformApplicationDestroy,
+				Steps: []resource.TestStep{
+					{
+						Config: testAccPlatformApplicationConfig_basicApnsWithTokenCredentials(name, platform, applePlatformTeamId, applePlatformBundleId),
+						Check: resource.ComposeTestCheckFunc(
+							testAccCheckPlatformApplicationExists(resourceName),
+							resource.TestCheckResourceAttr(resourceName, "name", name),
+							resource.TestCheckResourceAttr(resourceName, "platform", platform.Name),
+							resource.TestCheckResourceAttrSet(resourceName, "platform_credential"),
+							resource.TestCheckResourceAttrSet(resourceName, "platform_principal"),
+							resource.TestCheckResourceAttr(resourceName, "apple_platform_team_id", applePlatformTeamId),
+							resource.TestCheckResourceAttr(resourceName, "apple_platform_bundle_id", applePlatformBundleId),
+						),
+					},
+					{
+						Config: testAccPlatformApplicationConfig_basicApnsWithTokenCredentials(name, platform, updatedApplePlatformTeamId, updatedApplePlatformBundleId),
+						Check: resource.ComposeTestCheckFunc(
+							testAccCheckPlatformApplicationExists(resourceName),
+							resource.TestCheckResourceAttr(resourceName, "apple_platform_team_id", updatedApplePlatformTeamId),
+							resource.TestCheckResourceAttr(resourceName, "apple_platform_bundle_id", updatedApplePlatformBundleId),
+						),
+					},
+					{
+						ResourceName:            resourceName,
+						ImportState:             true,
+						ImportStateVerify:       true,
+						ImportStateVerifyIgnore: []string{"platform_credential", "platform_principal"},
+					},
+				},
+			})
 		})
 	}
 }
@@ -477,4 +548,17 @@ resource "aws_sns_topic" "test" {
 
 %s
 `, snsTopicName, testAccPlatformApplicationConfig_basicAttribute(name, platform, attributeKey, "${aws_sns_topic.test.arn}"))
+}
+
+func testAccPlatformApplicationConfig_basicApnsWithTokenCredentials(name string, platform *testAccPlatformApplicationPlatform, applePlatformTeamId string, applePlatformBundleId string) string {
+	return fmt.Sprintf(`
+resource "aws_sns_platform_application" "test" {
+  name                     = "%s"
+  platform                 = "%s"
+  platform_credential      = %s
+  platform_principal       = %s
+  apple_platform_team_id   = "%s"
+  apple_platform_bundle_id = "%s"
+}
+`, name, platform.Name, platform.Credential, platform.Principal, applePlatformTeamId, applePlatformBundleId)
 }

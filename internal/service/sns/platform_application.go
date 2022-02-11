@@ -78,6 +78,14 @@ func ResourcePlatformApplication() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
+			"apple_platform_team_id": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			"apple_platform_bundle_id": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
 		},
 	}
 }
@@ -92,6 +100,16 @@ func resourcePlatformApplicationCreate(d *schema.ResourceData, meta interface{})
 	attributes["PlatformCredential"] = aws.String(d.Get("platform_credential").(string))
 	if v, ok := d.GetOk("platform_principal"); ok {
 		attributes["PlatformPrincipal"] = aws.String(v.(string))
+	}
+
+	if platform == "APNS" || platform == "APNS_SANDBOX" {
+		applePlatformTeamId, applePlatformTeamIdOk := d.GetOk("apple_platform_team_id")
+		applePlatformBundleId, applePlatformBundleIdOk := d.GetOk("apple_platform_bundle_id")
+
+		if applePlatformTeamIdOk && applePlatformBundleIdOk {
+			attributes["ApplePlatformTeamID"] = aws.String(applePlatformTeamId.(string))
+			attributes["ApplePlatformBundleID"] = aws.String(applePlatformBundleId.(string))
+		}
 	}
 
 	req := &sns.CreatePlatformApplicationInput{
@@ -145,7 +163,14 @@ func resourcePlatformApplicationUpdate(d *schema.ResourceData, meta interface{})
 		attributes["SuccessFeedbackSampleRate"] = aws.String(d.Get("success_feedback_sample_rate").(string))
 	}
 
-	if d.HasChanges("platform_credential", "platform_principal") {
+	if d.HasChanges("platform_credential", "platform_principal", "apple_platform_team_id", "apple_platform_bundle_id") {
+		// If APNS platform was configured with token-based authentication then the only way to update them
+		// is to update all 4 attributes as they must be specified together in the request.
+		if d.HasChanges("apple_platform_team_id", "apple_platform_bundle_id") {
+			attributes["ApplePlatformTeamID"] = aws.String(d.Get("apple_platform_team_id").(string))
+			attributes["ApplePlatformBundleID"] = aws.String(d.Get("apple_platform_bundle_id").(string))
+		}
+
 		// Prior to version 3.0.0 of the Terraform AWS Provider, the platform_credential and platform_principal
 		// attributes were stored in state as SHA256 hashes. If the changes to these two attributes are the only
 		// changes and if both of their changes only match updating the state value, then skip the API call.
@@ -258,6 +283,14 @@ func resourcePlatformApplicationRead(d *schema.ResourceData, meta interface{}) e
 
 	if v, ok := output.Attributes["SuccessFeedbackSampleRate"]; ok {
 		d.Set("success_feedback_sample_rate", v)
+	}
+
+	if v, ok := output.Attributes["ApplePlatformTeamID"]; ok {
+		d.Set("apple_platform_team_id", v)
+	}
+
+	if v, ok := output.Attributes["ApplePlatformBundleID"]; ok {
+		d.Set("apple_platform_bundle_id", v)
 	}
 
 	return nil
