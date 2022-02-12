@@ -275,9 +275,9 @@ resource "aws_datasync_agent" "test" {
 func testAccLocationObjectStorageConfig(rName string) string {
 	return testAccLocationObjectStorageBaseConfig(rName) + fmt.Sprintf(`
 resource "aws_datasync_location_object_storage" "test" {
-  agent_arns          = [aws_datasync_agent.test.arn]
-  server_hostname     = %[1]q
-  bucket_name         = %[1]q
+  agent_arns      = [aws_datasync_agent.test.arn]
+  server_hostname = %[1]q
+  bucket_name     = %[1]q
 }
 `, rName)
 }
@@ -285,9 +285,9 @@ resource "aws_datasync_location_object_storage" "test" {
 func testAccLocationObjectStorageTags1Config(rName, key1, value1 string) string {
 	return testAccLocationObjectStorageBaseConfig(rName) + fmt.Sprintf(`
 resource "aws_datasync_location_object_storage" "test" {
-  agent_arns          = [aws_datasync_agent.test.arn]
-  server_hostname     = %[1]q
-  bucket_name         = %[1]q
+  agent_arns      = [aws_datasync_agent.test.arn]
+  server_hostname = %[1]q
+  bucket_name     = %[1]q
 
   tags = {
     %[2]q = %[3]q
@@ -299,9 +299,9 @@ resource "aws_datasync_location_object_storage" "test" {
 func testAccLocationObjectStorageTags2Config(rName, key1, value1, key2, value2 string) string {
 	return testAccLocationObjectStorageBaseConfig(rName) + fmt.Sprintf(`
 resource "aws_datasync_location_object_storage" "test" {
-  agent_arns          = [aws_datasync_agent.test.arn]
-  server_hostname     = %[1]q
-  bucket_name         = %[1]q
+  agent_arns      = [aws_datasync_agent.test.arn]
+  server_hostname = %[1]q
+  bucket_name     = %[1]q
 
   tags = {
     %[2]q = %[3]q

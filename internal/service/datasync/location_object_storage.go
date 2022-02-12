@@ -66,11 +66,13 @@ func ResourceLocationObjectStorage() *schema.Resource {
 			"server_protocol": {
 				Type:         schema.TypeString,
 				Optional:     true,
+				Default:      datasync.ObjectStorageServerProtocolHttps,
 				ValidateFunc: validation.StringInSlice(datasync.ObjectStorageServerProtocol_Values(), false),
 			},
 			"server_port": {
 				Type:         schema.TypeInt,
 				Optional:     true,
+				Default:      443,
 				ValidateFunc: validation.IsPortNumber,
 			},
 			"subdirectory": {
