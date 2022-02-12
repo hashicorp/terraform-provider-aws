@@ -125,17 +125,17 @@ func TestSubdirectoryFromLocationURI(t *testing.T) {
 		},
 		{
 			TestName:             "Object Storage URI top level",
-			InputURI:             "object-storage://192.168.1.1:80/",
+			InputURI:             "object-storage://192.168.1.1/bucket/",
 			ExpectedSubdirectory: "/",
 		},
 		{
 			TestName:             "Object Storage URI one level",
-			InputURI:             "object-storage://192.168.1.1:80/my-folder-1/",
+			InputURI:             "object-storage://192.168.1.1/bucket/my-folder-1/",
 			ExpectedSubdirectory: "/my-folder-1/",
 		},
 		{
 			TestName:             "Object Storage URI two levels",
-			InputURI:             "object-storage://192.168.1.1:80/my-folder-1/my-folder-2",
+			InputURI:             "object-storage://192.168.1.1/bucket/my-folder-1/my-folder-2",
 			ExpectedSubdirectory: "/my-folder-1/my-folder-2",
 		},
 		{
