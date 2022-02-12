@@ -35,19 +35,19 @@ func ResourcePermission() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validPermissionAction,
+				ValidateFunc: validPermissionAction(),
 			},
 			"event_source_token": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
-				ValidateFunc: validPermissionEventSourceToken,
+				ValidateFunc: validPermissionEventSourceToken(),
 			},
 			"function_name": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validFunctionName,
+				ValidateFunc: validFunctionName(),
 			},
 			"principal": {
 				Type:     schema.TypeString,
@@ -58,7 +58,7 @@ func ResourcePermission() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
-				ValidateFunc: validQualifier,
+				ValidateFunc: validQualifier(),
 			},
 			"source_account": {
 				Type:         schema.TypeString,
@@ -78,14 +78,14 @@ func ResourcePermission() *schema.Resource {
 				Computed:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"statement_id_prefix"},
-				ValidateFunc:  validPolicyStatementID,
+				ValidateFunc:  validPolicyStatementID(),
 			},
 			"statement_id_prefix": {
 				Type:          schema.TypeString,
 				Optional:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"statement_id"},
-				ValidateFunc:  validPolicyStatementID,
+				ValidateFunc:  validPolicyStatementID(),
 			},
 		},
 	}
