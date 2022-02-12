@@ -2,8 +2,11 @@ package dynamodb
 
 import (
 	"context"
+	"fmt"
 	"time"
 
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
@@ -236,6 +239,35 @@ func waitDynamoDBTTLUpdated(conn *dynamodb.DynamoDB, tableName string, toEnable 
 }
 
 func waitDynamoDBSSEUpdated(conn *dynamodb.DynamoDB, tableName string) (*dynamodb.TableDescription, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{
+			dynamodb.SSEStatusDisabling,
+			dynamodb.SSEStatusEnabling,
+			dynamodb.SSEStatusUpdating,
+		},
+		Target: []string{
+			dynamodb.SSEStatusDisabled,
+			dynamodb.SSEStatusEnabled,
+		},
+		Timeout: updateTableTimeout,
+		Refresh: statusDynamoDBTableSES(conn, tableName),
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*dynamodb.TableDescription); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitDynamoDBReplicaSSEUpdated(region string, tableName string) (*dynamodb.TableDescription, error) {
+	sess, err := session.NewSession(&aws.Config{Region: aws.String(region)})
+	if err != nil {
+		return nil, fmt.Errorf("error creating DynamoDB session: %w", err)
+	}
+	conn := dynamodb.New(sess)
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{
 			dynamodb.SSEStatusDisabling,

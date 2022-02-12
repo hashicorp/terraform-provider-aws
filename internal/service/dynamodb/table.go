@@ -860,17 +860,63 @@ func resourceTableUpdate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if d.HasChange("server_side_encryption") {
-		// "ValidationException: One or more parameter values were invalid: Server-Side Encryption modification must be the only operation in the request".
-		_, err := conn.UpdateTable(&dynamodb.UpdateTableInput{
-			TableName:        aws.String(d.Id()),
-			SSESpecification: expandDynamoDbEncryptAtRestOptions(d.Get("server_side_encryption").([]interface{})),
-		})
-		if err != nil {
-			return fmt.Errorf("error updating DynamoDB Table (%s) SSE: %w", d.Id(), err)
-		}
+		if replicas := d.Get("replica").(*schema.Set); replicas.Len() > 0 {
+			var replicaInputs []*dynamodb.ReplicationGroupUpdate
+			var replicaRegions []string
+			for _, replica := range replicas.List() {
+				tfMap, ok := replica.(map[string]interface{})
+				if !ok {
+					continue
+				}
+				var regionName string
+				var KMSMasterKeyId string
+				if v, ok := tfMap["region_name"].(string); ok {
+					regionName = v
+					replicaRegions = append(replicaRegions, v)
+				}
+				if v, ok := tfMap["kms_key_arn"].(string); ok && v != "" {
+					KMSMasterKeyId = v
+				}
+				var input = &dynamodb.UpdateReplicationGroupMemberAction{
+					RegionName:     aws.String(regionName),
+					KMSMasterKeyId: aws.String(KMSMasterKeyId),
+				}
+				var update = &dynamodb.ReplicationGroupUpdate{Update: input}
+				replicaInputs = append(replicaInputs, update)
+			}
+			var input = &dynamodb.UpdateReplicationGroupMemberAction{
+				KMSMasterKeyId: expandDynamoDbEncryptAtRestOptions(d.Get("server_side_encryption").([]interface{})).KMSMasterKeyId,
+				RegionName:     aws.String(meta.(*conns.AWSClient).Region),
+			}
+			var update = &dynamodb.ReplicationGroupUpdate{Update: input}
+			replicaInputs = append(replicaInputs, update)
+			_, err := conn.UpdateTable(&dynamodb.UpdateTableInput{
+				TableName:      aws.String(d.Id()),
+				ReplicaUpdates: replicaInputs,
+			})
+			if err != nil {
+				return fmt.Errorf("error updating DynamoDB Table (%s) SSE: %w", d.Id(), err)
+			}
+			for _, region := range replicaRegions {
+				if tableDetail, err := waitDynamoDBReplicaSSEUpdated(region, d.Id()); err != nil {
+					return fmt.Errorf("error waiting for DynamoDB Table (%s) in region (#{region}) SSE: {%w}", *tableDetail.TableName, err)
+				}
+			}
+			if tableDetail, err := waitDynamoDBSSEUpdated(conn, d.Id()); err != nil {
+				return fmt.Errorf("error waiting for DynamoDB Table (%s) SSE update: %w", *tableDetail.TableName, err)
+			}
+		} else {
+			_, err := conn.UpdateTable(&dynamodb.UpdateTableInput{
+				TableName:        aws.String(d.Id()),
+				SSESpecification: expandDynamoDbEncryptAtRestOptions(d.Get("server_side_encryption").([]interface{})),
+			})
+			if err != nil {
+				return fmt.Errorf("error updating DynamoDB Table (%s) SSE: %w", d.Id(), err)
+			}
 
-		if _, err := waitDynamoDBSSEUpdated(conn, d.Id()); err != nil {
-			return fmt.Errorf("error waiting for DynamoDB Table (%s) SSE update: %w", d.Id(), err)
+			if tableDetail, err := waitDynamoDBSSEUpdated(conn, d.Id()); err != nil {
+				return fmt.Errorf("error waiting for DynamoDB Table (%s) SSE update: %w", *tableDetail.TableName, err)
+			}
 		}
 	}
 
@@ -1068,10 +1114,8 @@ func updateDynamoDbReplica(d *schema.ResourceData, conn *dynamodb.DynamoDB) erro
 	oRaw, nRaw := d.GetChange("replica")
 	o := oRaw.(*schema.Set)
 	n := nRaw.(*schema.Set)
-
 	removed := o.Difference(n).List()
 	added := n.Difference(o).List()
-
 	if len(added) > 0 {
 		if err := createDynamoDbReplicas(d.Id(), added, conn); err != nil {
 			return fmt.Errorf("error updating DynamoDB replicas for table (%s), while creating: %w", d.Id(), err)
