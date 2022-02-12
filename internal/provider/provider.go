@@ -1225,6 +1225,7 @@ func Provider() *schema.Provider {
 			"aws_vpc_endpoint":                                    ec2.ResourceVPCEndpoint(),
 			"aws_vpc_endpoint_connection_accepter":                ec2.ResourceVPCEndpointConnectionAccepter(),
 			"aws_vpc_endpoint_connection_notification":            ec2.ResourceVPCEndpointConnectionNotification(),
+			"aws_vpc_endpoint_policy":                             ec2.ResourceVPCEndpointPolicy(),
 			"aws_vpc_endpoint_route_table_association":            ec2.ResourceVPCEndpointRouteTableAssociation(),
 			"aws_vpc_endpoint_service":                            ec2.ResourceVPCEndpointService(),
 			"aws_vpc_endpoint_service_allowed_principal":          ec2.ResourceVPCEndpointServiceAllowedPrincipal(),
