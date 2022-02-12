@@ -869,7 +869,7 @@ func init() {
 	awsServiceNames["apigatewayv2"] = "APIGatewayV2"
 	awsServiceNames["apigatewayv2"] = "ApiGatewayV2"
 	awsServiceNames["appconfig"] = "AppConfig"
-	awsServiceNames["appflow"] = "AppFlow"
+	awsServiceNames["appflow"] = "Appflow"
 	awsServiceNames["appintegrations"] = "AppIntegrations"
 	awsServiceNames["applicationautoscaling"] = "ApplicationAutoScaling"
 	awsServiceNames["applicationcostprofiler"] = "ApplicationCostProfiler"
