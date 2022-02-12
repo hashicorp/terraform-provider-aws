@@ -1628,6 +1628,51 @@ func TestAccDynamoDBTable_Replica_singleWithCMK(t *testing.T) {
 	})
 }
 
+func TestAccDynamoDBTable_Replica_singleAddCMK(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+	var conf dynamodb.DescribeTableOutput
+	resourceName := "aws_dynamodb_table.test"
+	kmsKeyResourceName := "aws_kms_key.test"
+	kmsAliasDatasourceName := "data.aws_kms_alias.dynamodb"
+	kmsKeyReplicaResourceName := "aws_kms_key.alt_test"
+	kmsAliasReplicaDatasourceName := "data.aws_kms_alias.replica"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(t)
+			acctest.PreCheckMultipleRegion(t, 2)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, dynamodb.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(t, 3), // 3 due to shared test configuration
+		CheckDestroy:             testAccCheckTableDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTableConfig_replicaAmazonManagedKey(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInitialTableExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "replica.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.0.enabled", "true"),
+					resource.TestCheckResourceAttrPair(resourceName, "replica.0.kms_key_arn", kmsAliasReplicaDatasourceName, "target_key_arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "server_side_encryption.0.kms_key_arn", kmsAliasDatasourceName, "target_key_arn"),
+				),
+			},
+			{
+				Config: testAccTableConfig_replicaCMK(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInitialTableExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "replica.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "replica.0.kms_key_arn", kmsKeyReplicaResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.0.enabled", "true"),
+					resource.TestCheckResourceAttrPair(resourceName, "server_side_encryption.0.kms_key_arn", kmsKeyResourceName, "arn"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccDynamoDBTable_Replica_pitr(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -3124,6 +3169,52 @@ resource "aws_dynamodb_table" "test" {
     create = "20m"
     update = "20m"
     delete = "20m"
+  }
+}
+`, rName))
+}
+
+func testAccTableConfig_replicaAmazonManagedKey(rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigMultipleRegionProvider(3), // Prevent "Provider configuration not present" errors
+		fmt.Sprintf(`
+data "aws_region" "alternate" {
+  provider = "awsalternate"
+}
+
+data "aws_kms_alias" "dynamodb" {
+  name = "alias/aws/dynamodb"
+}
+
+data "aws_kms_alias" "replica" {
+  name     = "alias/aws/dynamodb"
+  provider = "awsalternate"
+}
+
+resource "aws_dynamodb_table" "test" {
+  name             = %[1]q
+  hash_key         = "TestTableHashKey"
+  billing_mode     = "PAY_PER_REQUEST"
+  stream_enabled   = true
+  stream_view_type = "NEW_AND_OLD_IMAGES"
+
+  attribute {
+	name = "TestTableHashKey"
+	type = "S"
+  }
+
+  replica {
+	region_name = data.aws_region.alternate.name
+  }
+
+  server_side_encryption {
+	enabled = true
+  }
+
+  timeouts {
+	create = "20m"
+	update = "20m"
+	delete = "20m"
   }
 }
 `, rName))

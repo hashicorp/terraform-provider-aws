@@ -49,6 +49,7 @@ func ResourceTable() *schema.Resource {
 			Update: schema.DefaultTimeout(updateTableTimeoutTotal),
 		},
 
+		//TODO: Add a custom diff if it is just the kms keys changing maybe check the replica update function?
 		CustomizeDiff: customdiff.All(
 			func(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
 				return validStreamSpec(diff)
@@ -928,17 +929,65 @@ func resourceTableUpdate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if d.HasChange("server_side_encryption") {
-		// "ValidationException: One or more parameter values were invalid: Server-Side Encryption modification must be the only operation in the request".
-		_, err := conn.UpdateTable(&dynamodb.UpdateTableInput{
-			TableName:        aws.String(d.Id()),
-			SSESpecification: expandEncryptAtRestOptions(d.Get("server_side_encryption").([]interface{})),
-		})
-		if err != nil {
-			return create.Error(names.DynamoDB, create.ErrActionUpdating, ResNameTable, d.Id(), fmt.Errorf("SSE: %w", err))
-		}
+		if replicas := d.Get("replica").(*schema.Set); replicas.Len() > 0 {
+			log.Printf("[DEBUG] Using SSE update on replicas")
+			var replicaInputs []*dynamodb.ReplicationGroupUpdate
+			var replicaRegions []string
+			for _, replica := range replicas.List() {
+				tfMap, ok := replica.(map[string]interface{})
+				if !ok {
+					continue
+				}
+				var regionName string
+				var KMSMasterKeyId string
+				if v, ok := tfMap["region_name"].(string); ok {
+					regionName = v
+					replicaRegions = append(replicaRegions, v)
+				}
+				if v, ok := tfMap["kms_key_arn"].(string); ok && v != "" {
+					KMSMasterKeyId = v
+				}
+				var input = &dynamodb.UpdateReplicationGroupMemberAction{
+					RegionName:     aws.String(regionName),
+					KMSMasterKeyId: aws.String(KMSMasterKeyId),
+				}
+				var update = &dynamodb.ReplicationGroupUpdate{Update: input}
+				replicaInputs = append(replicaInputs, update)
+			}
+			var input = &dynamodb.UpdateReplicationGroupMemberAction{
+				KMSMasterKeyId: expandEncryptAtRestOptions(d.Get("server_side_encryption").([]interface{})).KMSMasterKeyId,
+				RegionName:     aws.String(meta.(*conns.AWSClient).Region),
+			}
+			var update = &dynamodb.ReplicationGroupUpdate{Update: input}
+			replicaInputs = append(replicaInputs, update)
+			_, err := conn.UpdateTable(&dynamodb.UpdateTableInput{
+				TableName:      aws.String(d.Id()),
+				ReplicaUpdates: replicaInputs,
+			})
+			if err != nil {
+				return fmt.Errorf("error updating DynamoDB Table (%s) SSE: %w", d.Id(), err)
+			}
+			for _, region := range replicaRegions {
+				if tableDetail, err := waitReplicaSSEUpdated(region, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+					return fmt.Errorf("error waiting for DynamoDB Table (%s) in region (#{region}) SSE: {%w}", *tableDetail.TableName, err)
+				}
+			}
+			if tableDetail, err := waitSSEUpdated(conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+				return fmt.Errorf("error waiting for DynamoDB Table (%s) SSE update: %w", *tableDetail.TableName, err)
+			}
+		} else {
+			log.Printf("[DEBUG] Using normal update for SSE")
+			_, err := conn.UpdateTable(&dynamodb.UpdateTableInput{
+				TableName:        aws.String(d.Id()),
+				SSESpecification: expandEncryptAtRestOptions(d.Get("server_side_encryption").([]interface{})),
+			})
+			if err != nil {
+				return fmt.Errorf("error updating DynamoDB Table (%s) SSE: %w", d.Id(), err)
+			}
 
-		if _, err := waitSSEUpdated(conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return create.Error(names.DynamoDB, create.ErrActionWaitingForUpdate, ResNameTable, d.Id(), err)
+			if tableDetail, err := waitSSEUpdated(conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+				return fmt.Errorf("error waiting for DynamoDB Table (%s) SSE update: %w", *tableDetail.TableName, err)
+			}
 		}
 	}
 
@@ -1269,6 +1318,12 @@ func updateReplica(d *schema.ResourceData, conn *dynamodb.DynamoDB, tfVersion st
 	oRaw, nRaw := d.GetChange("replica")
 	o := oRaw.(*schema.Set)
 	n := nRaw.(*schema.Set)
+	newRegions := replicaRegions(n)
+	oldRegions := replicaRegions(o)
+	// If it is a change in KMS keys causing the diff no updates needed
+	if reflect.DeepEqual(oldRegions, newRegions) {
+		return nil
+	}
 
 	removed := o.Difference(n).List()
 	added := n.Difference(o).List()
@@ -1299,6 +1354,18 @@ func updateReplica(d *schema.ResourceData, conn *dynamodb.DynamoDB, tfVersion st
 	}
 
 	return nil
+}
+
+func replicaRegions(r *schema.Set) []string {
+	var regions []string
+	for _, tfMapRaw := range r.List() {
+		tfMap, ok := tfMapRaw.(map[string]interface{})
+		if !ok {
+			continue
+		}
+		regions = append(regions, tfMap["region_name"].(string))
+	}
+	return regions
 }
 
 func UpdateDiffGSI(oldGsi, newGsi []interface{}, billingMode string) (ops []*dynamodb.GlobalSecondaryIndexUpdate, e error) {
