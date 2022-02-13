@@ -16,11 +16,17 @@ The `aws_route53domains_registered_domain` resource behaves differently from nor
 
 ## Example Usage
 
-Basic usage:
-
 ```terraform
 resource "aws_route53domains_registered_domain" "example" {
   domain_name = "example.com"
+
+  name_server {
+    name = "ns-195.awsdns-24.com"
+  }
+
+  name_server {
+    name = "ns-874.awsdns-45.net"
+  }
 
   tags = {
     Environment = "test"
@@ -33,7 +39,13 @@ resource "aws_route53domains_registered_domain" "example" {
 The following arguments are supported:
 
 * `domain_name` - (Required) The name of the registered domain.
+* `name_server` - (Optional) The list of nameservers for the domain.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+
+The `name_server` object supports the following:
+
+* `glue_ips` - (Optional) Glue IP addresses of a name server. The list can contain only one IPv4 and one IPv6 address.
+* `name` - (Required) The fully qualified host name of the name server.
 
 ## Attributes Reference
 
@@ -41,3 +53,11 @@ In addition to all arguments above, the following attributes are exported:
 
 * `id` - The domain name.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
+
+## Timeouts
+
+`aws_route53domains_registered_domain` provides the following
+[Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
+
+- `create` - (Default `30 minutes`) Used for Domain creation
+- `update` - (Default `30 minutes`) Used for Domain update
