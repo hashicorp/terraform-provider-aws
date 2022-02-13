@@ -2,7 +2,6 @@ package iam_test
 
 import (
 	"fmt"
-	"os"
 	"testing"
 	"time"
 
@@ -674,12 +673,11 @@ func testAccCheckUserUploadSigningCertificate(getUserOutput *iam.GetUserOutput) 
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn
 
-		signingCertificate, err := os.ReadFile("./test-fixtures/iam-ssl-unix-line-endings.pem")
-		if err != nil {
-			return fmt.Errorf("error reading signing certificate fixture: %s", err)
-		}
+		key := acctest.TLSRSAPrivateKeyPEM(2048)
+		certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(key, "example.com")
+
 		input := &iam.UploadSigningCertificateInput{
-			CertificateBody: aws.String(string(signingCertificate)),
+			CertificateBody: aws.String(certificate),
 			UserName:        getUserOutput.User.UserName,
 		}
 

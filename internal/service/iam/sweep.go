@@ -86,6 +86,11 @@ func init() {
 		F:    sweepServiceSpecificCredentials,
 	})
 
+	resource.AddTestSweepers("aws_iam_signing_certificate", &resource.Sweeper{
+		Name: "aws_iam_signing_certificate",
+		F:    sweepSigningCertificates,
+	})
+
 	resource.AddTestSweepers("aws_iam_server_certificate", &resource.Sweeper{
 		Name: "aws_iam_server_certificate",
 		F:    sweepServerCertificates,
@@ -102,6 +107,7 @@ func init() {
 		Dependencies: []string{
 			"aws_iam_service_specific_credential",
 			"aws_iam_virtual_mfa_device",
+			"aws_iam_signing_certificate",
 		},
 	})
 
@@ -906,6 +912,72 @@ func sweepVirtualMfaDevice(region string) error {
 
 	if err != nil {
 		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error describing IAM Virtual MFA Devices: %w", err))
+	}
+
+	return sweeperErrs.ErrorOrNil()
+}
+
+func sweepSigningCertificates(region string) error {
+	client, err := sweep.SharedRegionalSweepClient(region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %w", err)
+	}
+	conn := client.(*conns.AWSClient).IAMConn
+
+	var sweeperErrs *multierror.Error
+
+	prefixes := []string{
+		"test-user",
+		"test_user",
+		"tf-acc",
+		"tf_acc",
+	}
+
+	users := make([]*iam.User, 0)
+
+	err = conn.ListUsersPages(&iam.ListUsersInput{}, func(page *iam.ListUsersOutput, lastPage bool) bool {
+		for _, user := range page.Users {
+			for _, prefix := range prefixes {
+				if strings.HasPrefix(aws.StringValue(user.UserName), prefix) {
+					users = append(users, user)
+					break
+				}
+			}
+		}
+
+		return !lastPage
+	})
+
+	for _, user := range users {
+		out, err := conn.ListSigningCertificates(&iam.ListSigningCertificatesInput{
+			UserName: user.UserName,
+		})
+
+		for _, cert := range out.Certificates {
+
+			id := fmt.Sprintf("%s:%s", aws.StringValue(cert.CertificateId), aws.StringValue(cert.UserName))
+
+			r := ResourceSigningCertificate()
+			d := r.Data(nil)
+			d.SetId(id)
+			err := r.Delete(d, client)
+
+			if err != nil {
+				sweeperErr := fmt.Errorf("error deleting IAM Signing Certificate (%s): %w", id, err)
+				log.Printf("[ERROR] %s", sweeperErr)
+				sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
+				continue
+			}
+		}
+
+		if sweep.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping IAM Signing Certificate sweep for %s: %s", region, err)
+			return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
+		}
+
+		if err != nil {
+			sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error describing IAM Signing Certificates: %w", err))
+		}
 	}
 
 	return sweeperErrs.ErrorOrNil()
