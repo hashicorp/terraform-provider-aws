@@ -417,9 +417,10 @@ func Provider() *schema.Provider {
 			"aws_autoscaling_groups":   autoscaling.DataSourceGroups(),
 			"aws_launch_configuration": autoscaling.DataSourceLaunchConfiguration(),
 
-			"aws_backup_plan":      backup.DataSourcePlan(),
-			"aws_backup_selection": backup.DataSourceSelection(),
-			"aws_backup_vault":     backup.DataSourceVault(),
+			"aws_backup_plan":        backup.DataSourcePlan(),
+			"aws_backup_report_plan": backup.DataSourceReportPlan(),
+			"aws_backup_selection":   backup.DataSourceSelection(),
+			"aws_backup_vault":       backup.DataSourceVault(),
 
 			"aws_batch_compute_environment": batch.DataSourceComputeEnvironment(),
 			"aws_batch_job_queue":           batch.DataSourceJobQueue(),
