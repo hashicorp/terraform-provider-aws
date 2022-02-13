@@ -21,10 +21,7 @@ func TestAccSSMInstancesDataSource_filter(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckInstancesDataSourceConfig_filter_instance(rName),
-			},
-			{
-				Config: testAccCheckInstancesDataSourceConfig_filter_dataSource(rName),
+				Config: testAccCheckInstancesDataSourceConfig_filter(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "ids.#", "1"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "ids.0", resourceName, "id"),
@@ -34,9 +31,9 @@ func TestAccSSMInstancesDataSource_filter(t *testing.T) {
 	})
 }
 
-func testAccCheckInstancesDataSourceConfig_filter_instance(rName string) string {
+func testAccCheckInstancesDataSourceConfig_filter(rName string) string {
 	return acctest.ConfigCompose(
-		acctest.AvailableEC2InstanceTypeForRegion("t2.micro"),
+		acctest.AvailableEC2InstanceTypeForRegion("t2.micro", "t3.micro"),
 		fmt.Sprintf(`
 data "aws_iam_policy" "test" {
   name = "AmazonSSMManagedInstanceCore"
@@ -86,17 +83,12 @@ resource "aws_instance" "test" {
   instance_type        = data.aws_ec2_instance_type_offering.available.instance_type
   iam_instance_profile = aws_iam_instance_profile.test.name
 }
-`, rName))
-}
 
-func testAccCheckInstancesDataSourceConfig_filter_dataSource(rName string) string {
-	return acctest.ConfigCompose(
-		testAccCheckInstancesDataSourceConfig_filter_instance(rName), `
 data "aws_ssm_instances" "test" {
   filter {
     name   = "InstanceIds"
     values = [aws_instance.test.id]
   }
 }
-`)
+`, rName))
 }
