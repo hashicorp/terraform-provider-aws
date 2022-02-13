@@ -531,6 +531,10 @@ func testAccBucketLifecycleConfigurationBasicConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
+}
+
+resource "aws_s3_bucket_acl" "test" {
+  bucket = aws_s3_bucket.test.id
   acl    = "private"
 }
 
@@ -555,6 +559,10 @@ func testAccBucketLifecycleConfiguration_Basic_StatusConfig(rName, status string
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
+}
+
+resource "aws_s3_bucket_acl" "test" {
+  bucket = aws_s3_bucket.test.id
   acl    = "private"
 }
 
@@ -579,6 +587,10 @@ func testAccBucketLifecycleConfiguration_Basic_UpdateConfig(rName, date, prefix 
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
+}
+
+resource "aws_s3_bucket_acl" "test" {
+  bucket = aws_s3_bucket.test.id
   acl    = "private"
 }
 
@@ -605,6 +617,10 @@ func testAccBucketLifecycleConfiguration_Basic_PrefixConfig(rName, prefix string
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
+}
+
+resource "aws_s3_bucket_acl" "test" {
+  bucket = aws_s3_bucket.test.id
   acl    = "private"
 }
 
@@ -629,6 +645,10 @@ func testAccBucketLifecycleConfiguration_RuleExpiration_ExpiredDeleteMarkerConfi
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
+}
+
+resource "aws_s3_bucket_acl" "test" {
+  bucket = aws_s3_bucket.test.id
   acl    = "private"
 }
 
@@ -654,6 +674,10 @@ func testAccBucketLifecycleConfiguration_RuleExpiration_EmptyConfigurationBlockC
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
+}
+
+resource "aws_s3_bucket_acl" "test" {
+  bucket = aws_s3_bucket.test.id
   acl    = "private"
 }
 
@@ -677,6 +701,10 @@ func testAccBucketLifecycleConfiguration_RuleAbortIncompleteMultipartUploadConfi
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
+}
+
+resource "aws_s3_bucket_acl" "test" {
+  bucket = aws_s3_bucket.test.id
   acl    = "private"
 }
 
@@ -702,6 +730,10 @@ func testAccBucketLifecycleConfiguration_MultipleRulesConfig(rName, date string)
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
+}
+
+resource "aws_s3_bucket_acl" "test" {
+  bucket = aws_s3_bucket.test.id
   acl    = "private"
 }
 
@@ -760,6 +792,10 @@ func testAccBucketLifecycleConfiguration_NonCurrentVersionExpirationConfig(rName
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
+}
+
+resource "aws_s3_bucket_acl" "test" {
+  bucket = aws_s3_bucket.test.id
   acl    = "private"
 }
 
@@ -788,6 +824,10 @@ func testAccBucketLifecycleConfiguration_NonCurrentVersionTransitionConfig(rName
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
+}
+
+resource "aws_s3_bucket_acl" "test" {
+  bucket = aws_s3_bucket.test.id
   acl    = "private"
 }
 

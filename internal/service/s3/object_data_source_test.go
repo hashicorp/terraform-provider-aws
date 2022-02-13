@@ -634,7 +634,8 @@ resource "aws_s3_bucket_versioning" "object_bucket" {
 }
 
 resource "aws_s3_object" "object" {
-  bucket                        = aws_s3_bucket.object_bucket.bucket
+  # Must have bucket versioning enabled first
+  bucket                        = aws_s3_bucket_versioning.object_bucket.bucket
   key                           = "tf-testing-obj-%[1]d"
   content                       = "Hello World"
   object_lock_legal_hold_status = "OFF"
@@ -665,7 +666,8 @@ resource "aws_s3_bucket_versioning" "object_bucket" {
 }
 
 resource "aws_s3_object" "object" {
-  bucket                        = aws_s3_bucket.object_bucket.bucket
+  # Must have bucket versioning enabled first
+  bucket                        = aws_s3_bucket_versioning.object_bucket.bucket
   key                           = "tf-testing-obj-%[1]d"
   content                       = "Hello World"
   force_destroy                 = true

@@ -3,7 +3,7 @@ module github.com/hashicorp/terraform-provider-aws
 go 1.17
 
 require (
-	github.com/aws/aws-sdk-go v1.42.44
+	github.com/aws/aws-sdk-go v1.42.51
 	github.com/beevik/etree v1.1.0
 	github.com/hashicorp/aws-cloudformation-resource-schema-sdk-go v0.15.0
 	github.com/hashicorp/aws-sdk-go-base/v2 v2.0.0-beta.5

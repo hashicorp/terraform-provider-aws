@@ -248,6 +248,38 @@ func TestAccSageMakerEndpointConfiguration_async(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "async_inference_config.0.output_config.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "async_inference_config.0.output_config.0.s3_output_path"),
 					resource.TestCheckResourceAttr(resourceName, "async_inference_config.0.output_config.0.notification_config.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "async_inference_config.0.output_config.0.kms_key_id", ""),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccSageMakerEndpointConfiguration_async_kms(t *testing.T) {
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_sagemaker_endpoint_configuration.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckSagemakerEndpointConfigurationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSagemakerEndpointConfigurationConfigAsyncKMSConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSagemakerEndpointConfigurationExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "async_inference_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "async_inference_config.0.client_config.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "async_inference_config.0.output_config.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "async_inference_config.0.output_config.0.s3_output_path"),
+					resource.TestCheckResourceAttr(resourceName, "async_inference_config.0.output_config.0.notification_config.#", "0"),
 					resource.TestCheckResourceAttrPair(resourceName, "async_inference_config.0.output_config.0.kms_key_id", "aws_kms_key.test", "arn"),
 				),
 			},
@@ -567,7 +599,7 @@ resource "aws_sagemaker_endpoint_configuration" "test" {
 `, rName)
 }
 
-func testAccSagemakerEndpointConfigurationConfigAsyncConfig(rName string) string {
+func testAccSagemakerEndpointConfigurationConfigAsyncKMSConfig(rName string) string {
 	return testAccSagemakerEndpointConfigurationConfig_Base(rName) + fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket        = %[1]q
@@ -599,6 +631,34 @@ resource "aws_sagemaker_endpoint_configuration" "test" {
     output_config {
       s3_output_path = "s3://${aws_s3_bucket.test.bucket}/"
       kms_key_id     = aws_kms_key.test.arn
+    }
+  }
+}
+`, rName)
+}
+
+func testAccSagemakerEndpointConfigurationConfigAsyncConfig(rName string) string {
+	return testAccSagemakerEndpointConfigurationConfig_Base(rName) + fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket        = %[1]q
+  acl           = "private"
+  force_destroy = true
+}
+
+resource "aws_sagemaker_endpoint_configuration" "test" {
+  name = %[1]q
+
+  production_variants {
+    variant_name           = "variant-1"
+    model_name             = aws_sagemaker_model.test.name
+    initial_instance_count = 2
+    instance_type          = "ml.t2.medium"
+    initial_variant_weight = 1
+  }
+
+  async_inference_config {
+    output_config {
+      s3_output_path = "s3://${aws_s3_bucket.test.bucket}/"
     }
   }
 }

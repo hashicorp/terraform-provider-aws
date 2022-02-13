@@ -201,6 +201,35 @@ func TestAccIAMUser_ForceDestroy_sshKey(t *testing.T) {
 	})
 }
 
+func TestAccIAMUser_ForceDestroy_serviceSpecificCred(t *testing.T) {
+	var user iam.GetUserOutput
+
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_iam_user.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, iam.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckUserDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccUserForceDestroyConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckUserExists(resourceName, &user),
+					testAccCheckUserServiceSpecificCredential(&user),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"force_destroy"},
+			},
+		},
+	})
+}
+
 func TestAccIAMUser_ForceDestroy_signingCertificate(t *testing.T) {
 	var user iam.GetUserOutput
 
@@ -615,6 +644,26 @@ func testAccCheckUserUploadsSSHKey(getUserOutput *iam.GetUserOutput) resource.Te
 		_, err = conn.UploadSSHPublicKey(input)
 		if err != nil {
 			return fmt.Errorf("error uploading IAM User (%s) SSH key: %w", aws.StringValue(getUserOutput.User.UserName), err)
+		}
+
+		return nil
+	}
+}
+
+// Creates an IAM User Service Specific Credential outside of Terraform to verify that it is deleted when `force_destroy` is set
+func testAccCheckUserServiceSpecificCredential(getUserOutput *iam.GetUserOutput) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn
+
+		input := &iam.CreateServiceSpecificCredentialInput{
+			UserName:    getUserOutput.User.UserName,
+			ServiceName: aws.String("codecommit.amazonaws.com"),
+		}
+
+		_, err := conn.CreateServiceSpecificCredential(input)
+		if err != nil {
+			return fmt.Errorf("error uploading IAM User (%s) Service Specifc Credential: %w", aws.StringValue(getUserOutput.User.UserName), err)
 		}
 
 		return nil
