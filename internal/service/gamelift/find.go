@@ -67,3 +67,28 @@ func FindFleetByID(conn *gamelift.GameLift, id string) (*gamelift.FleetAttribute
 
 	return fleet, nil
 }
+
+func FindScriptByID(conn *gamelift.GameLift, id string) (*gamelift.Script, error) {
+	input := &gamelift.DescribeScriptInput{
+		ScriptId: aws.String(id),
+	}
+
+	output, err := conn.DescribeScript(input)
+
+	if tfawserr.ErrCodeEquals(err, gamelift.ErrCodeNotFoundException) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.Script == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.Script, nil
+}

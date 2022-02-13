@@ -29,6 +29,11 @@ func init() {
 		F:    sweepBuilds,
 	})
 
+	resource.AddTestSweepers("aws_gamelift_script", &resource.Sweeper{
+		Name: "aws_gamelift_script",
+		F:    sweepScripts,
+	})
+
 	resource.AddTestSweepers("aws_gamelift_fleet", &resource.Sweeper{
 		Name: "aws_gamelift_fleet",
 		Dependencies: []string{
@@ -112,6 +117,43 @@ func sweepBuilds(region string) error {
 		if err != nil {
 			return fmt.Errorf("Error deleting Gamelift Build (%s): %s",
 				*build.BuildId, err)
+		}
+	}
+
+	return nil
+}
+
+func sweepScripts(region string) error {
+	client, err := sweep.SharedRegionalSweepClient(region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %s", err)
+	}
+	conn := client.(*conns.AWSClient).GameLiftConn
+
+	resp, err := conn.ListScripts(&gamelift.ListScriptsInput{})
+	if err != nil {
+		if sweep.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping Gamelife Script sweep for %s: %s", region, err)
+			return nil
+		}
+		return fmt.Errorf("Error listing Gamelift Scripts: %s", err)
+	}
+
+	if len(resp.Scripts) == 0 {
+		log.Print("[DEBUG] No Gamelift Scripts to sweep")
+		return nil
+	}
+
+	log.Printf("[INFO] Found %d Gamelift Scripts", len(resp.Scripts))
+
+	for _, build := range resp.Scripts {
+		log.Printf("[INFO] Deleting Gamelift Script %q", *build.ScriptId)
+		_, err := conn.DeleteScript(&gamelift.DeleteScriptInput{
+			ScriptId: build.ScriptId,
+		})
+		if err != nil {
+			return fmt.Errorf("Error deleting Gamelift Script (%s): %s",
+				*build.ScriptId, err)
 		}
 	}
 
