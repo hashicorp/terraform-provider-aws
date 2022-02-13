@@ -1406,6 +1406,7 @@ func Provider() *schema.Provider {
 			"aws_iam_server_certificate":          iam.ResourceServerCertificate(),
 			"aws_iam_service_linked_role":         iam.ResourceServiceLinkedRole(),
 			"aws_iam_service_specific_credential": iam.ResourceServiceSpecificCredential(),
+			"aws_iam_signing_certificate":         iam.ResourceSigningCertificate(),
 			"aws_iam_user":                        iam.ResourceUser(),
 			"aws_iam_user_group_membership":       iam.ResourceUserGroupMembership(),
 			"aws_iam_user_login_profile":          iam.ResourceUserLoginProfile(),
