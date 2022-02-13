@@ -18,7 +18,7 @@ func TestAccBackupReportPlanDataSource_basic(t *testing.T) {
 	rName2 := fmt.Sprintf("tf_acc_test_%s", sdkacctest.RandString(7))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
+		PreCheck:   func() { acctest.PreCheck(t); testAccReportPlanPreCheck(t) },
 		ErrorCheck: acctest.ErrorCheck(t, backup.EndpointsID),
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
