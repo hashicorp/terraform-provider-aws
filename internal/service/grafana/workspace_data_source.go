@@ -6,7 +6,7 @@ import (
 
 func DataSourceWorkspace() *schema.Resource {
 	return &schema.Resource{
-		Read: resourceWorkspaceRead,
+		Read: dataSourceWorkspaceRead,
 
 		Schema: map[string]*schema.Schema{
 			"id": {
@@ -91,4 +91,9 @@ func DataSourceWorkspace() *schema.Resource {
 			},
 		},
 	}
+}
+
+func dataSourceWorkspaceRead(d *schema.ResourceData, meta interface{}) error {
+	d.SetId(d.Get("id").(string))
+	return resourceWorkspaceRead(d, meta)
 }

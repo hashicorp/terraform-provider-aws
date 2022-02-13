@@ -187,20 +187,20 @@ func resourceWorkspaceCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceWorkspaceRead(d *schema.ResourceData, meta interface{}) error {
+	id := d.Id()
 	conn := meta.(*conns.AWSClient).GrafanaConn
-
-	workspace, err := FindWorkspaceById(conn, d.Id())
+	workspace, err := FindWorkspaceById(conn, id)
 
 	if tfresource.NotFound(err) && !d.IsNewResource() {
-		log.Printf("[WARN] Grafana Workspace (%s) not found, removing from state", d.Id())
+		log.Printf("[WARN] Grafana Workspace (%s) not found, removing from state", id)
 		d.SetId("")
 		return nil
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading Grafana Workspace (%s): %w", d.Id(), err)
+		return fmt.Errorf("error reading Grafana Workspace (%s): %w", id, err)
 	}
-
+	d.Set("id", d.Id())
 	d.Set("account_access_type", workspace.AccountAccessType)
 	d.Set("authentication_providers", workspace.Authentication.Providers)
 	d.Set("saml_configuration_status", workspace.Authentication.SamlConfigurationStatus)
@@ -221,7 +221,7 @@ func resourceWorkspaceRead(d *schema.ResourceData, meta interface{}) error {
 	workspaceArn := arn.ARN{
 		Partition: meta.(*conns.AWSClient).Partition,
 		Service:   "grafana",
-		Resource:  d.Id(),
+		Resource:  id,
 	}.String()
 	d.Set("arn", workspaceArn)
 

@@ -1,7 +1,6 @@
 package grafana_test
 
 import (
-	"fmt"
 	"testing"
 )
 
@@ -12,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccGrafanaWorkspaceDataSource(t *testing.T) {
+func TestAccGrafanaWorkspaceDataSource_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_grafana_workspace.test"
 	dataSourceName := "data.aws_grafana_workspace.test"
@@ -40,6 +39,7 @@ func TestAccGrafanaWorkspaceDataSource(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "endpoint", dataSourceName, "endpoint"),
 					resource.TestCheckResourceAttrPair(resourceName, "grafana_version", dataSourceName, "grafana_version"),
 				),
+				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
@@ -47,9 +47,9 @@ func TestAccGrafanaWorkspaceDataSource(t *testing.T) {
 
 func testAccWorkspaceDataSourceConfig(name string) string {
 	return acctest.ConfigCompose(testAccWorkspaceConfigSaml(name),
-		fmt.Sprint(`
+		`
 data "aws_grafana_workspace" "test" {
   id = aws_grafana_workspace.test.id
 }
-`))
+`)
 }
