@@ -34,6 +34,19 @@ func ResourceRegisteredDomain() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
+			"abuse_contact_email": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"abuse_contact_phone": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"auto_renew": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  true,
+			},
 			"domain_name": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -85,11 +98,17 @@ func resourceRegisteredDomainCreate(d *schema.ResourceData, meta interface{}) er
 
 	d.SetId(aws.StringValue(domainDetail.DomainName))
 
+	if v := d.Get("auto_renew").(bool); v != aws.BoolValue(domainDetail.AutoRenew) {
+		if err := modifyDomainAutoRenew(conn, d.Id(), v); err != nil {
+			return err
+		}
+	}
+
 	if v, ok := d.GetOk("name_server"); ok && len(v.([]interface{})) > 0 {
 		nameservers := expandNameservers(v.([]interface{}))
 
 		if !reflect.DeepEqual(nameservers, domainDetail.Nameservers) {
-			if err := updateNameservers(conn, d.Id(), nameservers, d.Timeout(schema.TimeoutCreate)); err != nil {
+			if err := modifyDomainNameservers(conn, d.Id(), nameservers, d.Timeout(schema.TimeoutCreate)); err != nil {
 				return err
 			}
 		}
@@ -132,6 +151,9 @@ func resourceRegisteredDomainRead(d *schema.ResourceData, meta interface{}) erro
 		return fmt.Errorf("error reading Route 53 Domains Domain (%s): %w", d.Id(), err)
 	}
 
+	d.Set("abuse_contact_email", domainDetail.AbuseContactEmail)
+	d.Set("abuse_contact_phone", domainDetail.AbuseContactPhone)
+	d.Set("auto_renew", domainDetail.AutoRenew)
 	d.Set("domain_name", domainDetail.DomainName)
 	if err := d.Set("name_server", flattenNameservers(domainDetail.Nameservers)); err != nil {
 		return fmt.Errorf("error setting name_servers: %w", err)
@@ -160,9 +182,15 @@ func resourceRegisteredDomainRead(d *schema.ResourceData, meta interface{}) erro
 func resourceRegisteredDomainUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).Route53DomainsConn
 
+	if d.HasChange("auto_renew") {
+		if err := modifyDomainAutoRenew(conn, d.Id(), d.Get("auto_renew").(bool)); err != nil {
+			return err
+		}
+	}
+
 	if d.HasChange("name_server") {
 		if v, ok := d.GetOk("name_server"); ok && len(v.([]interface{})) > 0 {
-			if err := updateNameservers(conn, d.Id(), expandNameservers(v.([]interface{})), d.Timeout(schema.TimeoutUpdate)); err != nil {
+			if err := modifyDomainNameservers(conn, d.Id(), expandNameservers(v.([]interface{})), d.Timeout(schema.TimeoutUpdate)); err != nil {
 				return err
 			}
 		}
@@ -185,7 +213,35 @@ func resourceRegisteredDomainDelete(d *schema.ResourceData, meta interface{}) er
 	return nil
 }
 
-func updateNameservers(conn *route53domains.Route53Domains, domainName string, nameservers []*route53domains.Nameserver, timeout time.Duration) error {
+func modifyDomainAutoRenew(conn *route53domains.Route53Domains, domainName string, autoRenew bool) error {
+	if autoRenew {
+		input := &route53domains.EnableDomainAutoRenewInput{
+			DomainName: aws.String(domainName),
+		}
+
+		log.Printf("[DEBUG] Enabling Route 53 Domains Domain auto-renew: %s", input)
+		_, err := conn.EnableDomainAutoRenew(input)
+
+		if err != nil {
+			return fmt.Errorf("error enabling Route 53 Domains Domain (%s) auto-renew: %w", domainName, err)
+		}
+	} else {
+		input := &route53domains.DisableDomainAutoRenewInput{
+			DomainName: aws.String(domainName),
+		}
+
+		log.Printf("[DEBUG] Disabling Route 53 Domains Domain auto-renew: %s", input)
+		_, err := conn.DisableDomainAutoRenew(input)
+
+		if err != nil {
+			return fmt.Errorf("error disabling Route 53 Domains Domain (%s) auto-renew: %w", domainName, err)
+		}
+	}
+
+	return nil
+}
+
+func modifyDomainNameservers(conn *route53domains.Route53Domains, domainName string, nameservers []*route53domains.Nameserver, timeout time.Duration) error {
 	input := &route53domains.UpdateDomainNameserversInput{
 		DomainName:  aws.String(domainName),
 		Nameservers: nameservers,

@@ -16,6 +16,7 @@ func TestAccRoute53Domains_serial(t *testing.T) {
 	testCases := map[string]map[string]func(t *testing.T){
 		"RegisteredDomain": {
 			"tags":        testAccRoute53DomainsRegisteredDomain_tags,
+			"autoRenew":   testAccRoute53DomainsRegisteredDomain_autoRenew,
 			"nameservers": testAccRoute53DomainsRegisteredDomain_nameservers,
 		},
 	}
@@ -86,6 +87,37 @@ func testAccRoute53DomainsRegisteredDomain_tags(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+		},
+	})
+}
+
+func testAccRoute53DomainsRegisteredDomain_autoRenew(t *testing.T) {
+	key := "ROUTE53DOMAINS_DOMAIN_NAME"
+	domainName := os.Getenv(key)
+	if domainName == "" {
+		t.Skipf("Environment variable %s is not set", key)
+	}
+
+	resourceName := "aws_route53domains_registered_domain.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckRoute53Domains(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, route53domains.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckRegisteredDomainDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRegisteredDomainAutoRenewConfig(domainName, false),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "auto_renew", "false"),
+				),
+			},
+			{
+				Config: testAccRegisteredDomainAutoRenewConfig(domainName, true),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "auto_renew", "true"),
 				),
 			},
 		},
@@ -163,6 +195,15 @@ resource "aws_route53domains_registered_domain" "test" {
   }
 }
 `, domainName, tagKey1, tagValue1, tagKey2, tagValue2)
+}
+
+func testAccRegisteredDomainAutoRenewConfig(domainName string, autoRenew bool) string {
+	return fmt.Sprintf(`
+resource "aws_route53domains_registered_domain" "test" {
+  domain_name = %[1]q
+  auto_renew  = %[2]t
+}
+`, domainName, autoRenew)
 }
 
 func testAccRegisteredDomainNameserversConfig(domainName string) string {

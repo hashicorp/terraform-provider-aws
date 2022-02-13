@@ -38,6 +38,7 @@ resource "aws_route53domains_registered_domain" "example" {
 
 The following arguments are supported:
 
+* `auto_renew` - (Optional) Whether the domain registration is set to renew automatically. Default: `true`.
 * `domain_name` - (Required) The name of the registered domain.
 * `name_server` - (Optional) The list of nameservers for the domain.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
@@ -52,6 +53,8 @@ The `name_server` object supports the following:
 In addition to all arguments above, the following attributes are exported:
 
 * `id` - The domain name.
+* `abuse_contact_email` - Email address to contact to report incorrect contact information for a domain, to report that the domain is being used to send spam, to report that someone is cybersquatting on a domain name, or report some other type of abuse.
+* `abuse_contact_phone` - Phone number for reporting abuse.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
 
 ## Timeouts
