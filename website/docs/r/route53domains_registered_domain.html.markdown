@@ -36,12 +36,17 @@ resource "aws_route53domains_registered_domain" "example" {
 
 ## Argument Reference
 
+~> **NOTE:** You must specify the same privacy setting for `admin_privacy`, `registrant_privacy` and `tech_privacy`.
+
 The following arguments are supported:
 
+* `admin_privacy` - (Optional) Whether domain administrative contact information is concealed from WHOIS queries. Default: `true`.
 * `auto_renew` - (Optional) Whether the domain registration is set to renew automatically. Default: `true`.
 * `domain_name` - (Required) The name of the registered domain.
 * `name_server` - (Optional) The list of nameservers for the domain.
+* `registrant_privacy` - (Optional) Whether domain registrant contact information is concealed from WHOIS queries. Default: `true`.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tech_privacy` - (Optional) Whether domain technical contact information is concealed from WHOIS queries. Default: `true`.
 
 The `name_server` object supports the following:
 

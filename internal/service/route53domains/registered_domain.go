@@ -42,6 +42,11 @@ func ResourceRegisteredDomain() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"admin_privacy": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  true,
+			},
 			"auto_renew": {
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -86,6 +91,11 @@ func ResourceRegisteredDomain() *schema.Resource {
 					},
 				},
 			},
+			"registrant_privacy": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  true,
+			},
 			"registrar_name": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -105,6 +115,11 @@ func ResourceRegisteredDomain() *schema.Resource {
 			},
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
+			"tech_privacy": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  true,
+			},
 			"updated_date": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -130,6 +145,12 @@ func resourceRegisteredDomainCreate(d *schema.ResourceData, meta interface{}) er
 	}
 
 	d.SetId(aws.StringValue(domainDetail.DomainName))
+
+	if adminPrivacy, registrantPrivacy, techPrivacy := d.Get("admin_privacy").(bool), d.Get("registrant_privacy").(bool), d.Get("tech_privacy").(bool); adminPrivacy != aws.BoolValue(domainDetail.AdminPrivacy) || registrantPrivacy != aws.BoolValue(domainDetail.RegistrantPrivacy) || techPrivacy != aws.BoolValue(domainDetail.TechPrivacy) {
+		if err := modifyDomainContactPrivacy(conn, d.Id(), adminPrivacy, registrantPrivacy, techPrivacy, d.Timeout(schema.TimeoutCreate)); err != nil {
+			return err
+		}
+	}
 
 	if v := d.Get("auto_renew").(bool); v != aws.BoolValue(domainDetail.AutoRenew) {
 		if err := modifyDomainAutoRenew(conn, d.Id(), v); err != nil {
@@ -186,6 +207,7 @@ func resourceRegisteredDomainRead(d *schema.ResourceData, meta interface{}) erro
 
 	d.Set("abuse_contact_email", domainDetail.AbuseContactEmail)
 	d.Set("abuse_contact_phone", domainDetail.AbuseContactPhone)
+	d.Set("admin_privacy", domainDetail.AdminPrivacy)
 	d.Set("auto_renew", domainDetail.AutoRenew)
 	if domainDetail.CreationDate != nil {
 		d.Set("creation_date", aws.TimeValue(domainDetail.CreationDate).Format(time.RFC3339))
@@ -201,11 +223,13 @@ func resourceRegisteredDomainRead(d *schema.ResourceData, meta interface{}) erro
 	if err := d.Set("name_server", flattenNameservers(domainDetail.Nameservers)); err != nil {
 		return fmt.Errorf("error setting name_servers: %w", err)
 	}
+	d.Set("registrant_privacy", domainDetail.RegistrantPrivacy)
 	d.Set("registrar_name", domainDetail.RegistrarName)
 	d.Set("registrar_url", domainDetail.RegistrarUrl)
 	d.Set("reseller", domainDetail.Reseller)
 	d.Set("status_list", aws.StringValueSlice(domainDetail.StatusList))
-	if domainDetail.ExpirationDate != nil {
+	d.Set("tech_privacy", domainDetail.TechPrivacy)
+	if domainDetail.UpdatedDate != nil {
 		d.Set("updated_date", aws.TimeValue(domainDetail.UpdatedDate).Format(time.RFC3339))
 	} else {
 		d.Set("updated_date", nil)
@@ -235,6 +259,12 @@ func resourceRegisteredDomainRead(d *schema.ResourceData, meta interface{}) erro
 func resourceRegisteredDomainUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).Route53DomainsConn
 
+	if d.HasChanges("admin_privacy", "registrant_privacy", "tech_privacy") {
+		if err := modifyDomainContactPrivacy(conn, d.Id(), d.Get("admin_privacy").(bool), d.Get("registrant_privacy").(bool), d.Get("tech_privacy").(bool), d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return err
+		}
+	}
+
 	if d.HasChange("auto_renew") {
 		if err := modifyDomainAutoRenew(conn, d.Id(), d.Get("auto_renew").(bool)); err != nil {
 			return err
@@ -251,7 +281,6 @@ func resourceRegisteredDomainUpdate(d *schema.ResourceData, meta interface{}) er
 
 	// TODO TransferLock
 	// TODO Contacts
-	// TODO ContactPrivacy
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
@@ -293,6 +322,28 @@ func modifyDomainAutoRenew(conn *route53domains.Route53Domains, domainName strin
 		if err != nil {
 			return fmt.Errorf("error disabling Route 53 Domains Domain (%s) auto-renew: %w", domainName, err)
 		}
+	}
+
+	return nil
+}
+
+func modifyDomainContactPrivacy(conn *route53domains.Route53Domains, domainName string, adminPrivacy, registrantPrivacy, techPrivacy bool, timeout time.Duration) error {
+	input := &route53domains.UpdateDomainContactPrivacyInput{
+		AdminPrivacy:      aws.Bool(adminPrivacy),
+		DomainName:        aws.String(domainName),
+		RegistrantPrivacy: aws.Bool(registrantPrivacy),
+		TechPrivacy:       aws.Bool(techPrivacy),
+	}
+
+	log.Printf("[DEBUG] Updating Route 53 Domains Domain contact privacy: %s", input)
+	output, err := conn.UpdateDomainContactPrivacy(input)
+
+	if err != nil {
+		return fmt.Errorf("error enabling Route 53 Domains Domain (%s) contact privacy: %w", domainName, err)
+	}
+
+	if _, err := waitOperationSucceeded(conn, aws.StringValue(output.OperationId), timeout); err != nil {
+		return fmt.Errorf("error waiting for Route 53 Domains Domain (%s) contact privacy update: %w", domainName, err)
 	}
 
 	return nil

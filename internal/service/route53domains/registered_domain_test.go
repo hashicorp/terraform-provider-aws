@@ -15,9 +15,10 @@ import (
 func TestAccRoute53Domains_serial(t *testing.T) {
 	testCases := map[string]map[string]func(t *testing.T){
 		"RegisteredDomain": {
-			"tags":        testAccRoute53DomainsRegisteredDomain_tags,
-			"autoRenew":   testAccRoute53DomainsRegisteredDomain_autoRenew,
-			"nameservers": testAccRoute53DomainsRegisteredDomain_nameservers,
+			"tags":           testAccRoute53DomainsRegisteredDomain_tags,
+			"autoRenew":      testAccRoute53DomainsRegisteredDomain_autoRenew,
+			"contactPrivacy": testAccRoute53DomainsRegisteredDomain_contactPrivacy,
+			"nameservers":    testAccRoute53DomainsRegisteredDomain_nameservers,
 		},
 	}
 
@@ -124,6 +125,41 @@ func testAccRoute53DomainsRegisteredDomain_autoRenew(t *testing.T) {
 	})
 }
 
+func testAccRoute53DomainsRegisteredDomain_contactPrivacy(t *testing.T) {
+	key := "ROUTE53DOMAINS_DOMAIN_NAME"
+	domainName := os.Getenv(key)
+	if domainName == "" {
+		t.Skipf("Environment variable %s is not set", key)
+	}
+
+	resourceName := "aws_route53domains_registered_domain.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckRoute53Domains(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, route53domains.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckRegisteredDomainDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRegisteredDomainContactPrivacyConfig(domainName, true, true, true),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "admin_privacy", "true"),
+					resource.TestCheckResourceAttr(resourceName, "registrant_privacy", "true"),
+					resource.TestCheckResourceAttr(resourceName, "tech_privacy", "true"),
+				),
+			},
+			{
+				Config: testAccRegisteredDomainContactPrivacyConfig(domainName, false, false, false),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "admin_privacy", "false"),
+					resource.TestCheckResourceAttr(resourceName, "registrant_privacy", "false"),
+					resource.TestCheckResourceAttr(resourceName, "tech_privacy", "false"),
+				),
+			},
+		},
+	})
+}
+
 func testAccRoute53DomainsRegisteredDomain_nameservers(t *testing.T) {
 	key := "ROUTE53DOMAINS_DOMAIN_NAME"
 	domainName := os.Getenv(key)
@@ -204,6 +240,18 @@ resource "aws_route53domains_registered_domain" "test" {
   auto_renew  = %[2]t
 }
 `, domainName, autoRenew)
+}
+
+func testAccRegisteredDomainContactPrivacyConfig(domainName string, adminPrivacy, registrantPrivacy, techPrivacy bool) string {
+	return fmt.Sprintf(`
+resource "aws_route53domains_registered_domain" "test" {
+  domain_name = %[1]q
+
+  admin_privacy      = %[2]t
+  registrant_privacy = %[3]t
+  tech_privacy       = %[4]t
+}
+`, domainName, adminPrivacy, registrantPrivacy, techPrivacy)
 }
 
 func testAccRegisteredDomainNameserversConfig(domainName string) string {
