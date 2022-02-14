@@ -120,6 +120,11 @@ func ResourceRegisteredDomain() *schema.Resource {
 				Optional: true,
 				Default:  true,
 			},
+			"transfer_lock": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  true,
+			},
 			"updated_date": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -165,6 +170,12 @@ func resourceRegisteredDomainCreate(d *schema.ResourceData, meta interface{}) er
 			if err := modifyDomainNameservers(conn, d.Id(), nameservers, d.Timeout(schema.TimeoutCreate)); err != nil {
 				return err
 			}
+		}
+	}
+
+	if v := d.Get("transfer_lock").(bool); v != hasDomainTransferLock(aws.StringValueSlice(domainDetail.StatusList)) {
+		if err := modifyDomainTransferLock(conn, d.Id(), v, d.Timeout(schema.TimeoutCreate)); err != nil {
+			return err
 		}
 	}
 
@@ -227,8 +238,10 @@ func resourceRegisteredDomainRead(d *schema.ResourceData, meta interface{}) erro
 	d.Set("registrar_name", domainDetail.RegistrarName)
 	d.Set("registrar_url", domainDetail.RegistrarUrl)
 	d.Set("reseller", domainDetail.Reseller)
-	d.Set("status_list", aws.StringValueSlice(domainDetail.StatusList))
+	statusList := aws.StringValueSlice(domainDetail.StatusList)
+	d.Set("status_list", statusList)
 	d.Set("tech_privacy", domainDetail.TechPrivacy)
+	d.Set("transfer_lock", hasDomainTransferLock(statusList))
 	if domainDetail.UpdatedDate != nil {
 		d.Set("updated_date", aws.TimeValue(domainDetail.UpdatedDate).Format(time.RFC3339))
 	} else {
@@ -279,7 +292,12 @@ func resourceRegisteredDomainUpdate(d *schema.ResourceData, meta interface{}) er
 		}
 	}
 
-	// TODO TransferLock
+	if d.HasChange("transfer_lock") {
+		if err := modifyDomainTransferLock(conn, d.Id(), d.Get("transfer_lock").(bool), d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return err
+		}
+	}
+
 	// TODO Contacts
 
 	if d.HasChange("tags_all") {
@@ -297,6 +315,19 @@ func resourceRegisteredDomainDelete(d *schema.ResourceData, meta interface{}) er
 	log.Printf("[WARN] Route 53 Domains Registered Domain (%s) not deleted, removing from state", d.Id())
 
 	return nil
+}
+
+const (
+	eppStatusClientTransferProhibited = "clientTransferProhibited"
+)
+
+func hasDomainTransferLock(statusList []string) bool {
+	for _, v := range statusList {
+		if v == eppStatusClientTransferProhibited {
+			return true
+		}
+	}
+	return false
 }
 
 func modifyDomainAutoRenew(conn *route53domains.Route53Domains, domainName string, autoRenew bool) error {
@@ -364,6 +395,42 @@ func modifyDomainNameservers(conn *route53domains.Route53Domains, domainName str
 
 	if _, err := waitOperationSucceeded(conn, aws.StringValue(output.OperationId), timeout); err != nil {
 		return fmt.Errorf("error waiting for Route 53 Domains Domain (%s) name servers update: %w", domainName, err)
+	}
+
+	return nil
+}
+
+func modifyDomainTransferLock(conn *route53domains.Route53Domains, domainName string, transferLock bool, timeout time.Duration) error {
+	if transferLock {
+		input := &route53domains.EnableDomainTransferLockInput{
+			DomainName: aws.String(domainName),
+		}
+
+		log.Printf("[DEBUG] Enabling Route 53 Domains Domain transfer lock: %s", input)
+		output, err := conn.EnableDomainTransferLock(input)
+
+		if err != nil {
+			return fmt.Errorf("error enabling Route 53 Domains Domain (%s) transfer lock: %w", domainName, err)
+		}
+
+		if _, err := waitOperationSucceeded(conn, aws.StringValue(output.OperationId), timeout); err != nil {
+			return fmt.Errorf("error waiting for Route 53 Domains Domain (%s) transfer lock enable: %w", domainName, err)
+		}
+	} else {
+		input := &route53domains.DisableDomainTransferLockInput{
+			DomainName: aws.String(domainName),
+		}
+
+		log.Printf("[DEBUG] Disabling Route 53 Domains Domain transfer lock: %s", input)
+		output, err := conn.DisableDomainTransferLock(input)
+
+		if err != nil {
+			return fmt.Errorf("error disabling Route 53 Domains Domain (%s) transfer lock: %w", domainName, err)
+		}
+
+		if _, err := waitOperationSucceeded(conn, aws.StringValue(output.OperationId), timeout); err != nil {
+			return fmt.Errorf("error waiting for Route 53 Domains Domain (%s) transfer lock disable: %w", domainName, err)
+		}
 	}
 
 	return nil

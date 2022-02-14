@@ -19,6 +19,7 @@ func TestAccRoute53Domains_serial(t *testing.T) {
 			"autoRenew":      testAccRoute53DomainsRegisteredDomain_autoRenew,
 			"contactPrivacy": testAccRoute53DomainsRegisteredDomain_contactPrivacy,
 			"nameservers":    testAccRoute53DomainsRegisteredDomain_nameservers,
+			"transferLock":   testAccRoute53DomainsRegisteredDomain_transferLock,
 		},
 	}
 
@@ -204,6 +205,37 @@ func testAccRoute53DomainsRegisteredDomain_nameservers(t *testing.T) {
 	})
 }
 
+func testAccRoute53DomainsRegisteredDomain_transferLock(t *testing.T) {
+	key := "ROUTE53DOMAINS_DOMAIN_NAME"
+	domainName := os.Getenv(key)
+	if domainName == "" {
+		t.Skipf("Environment variable %s is not set", key)
+	}
+
+	resourceName := "aws_route53domains_registered_domain.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckRoute53Domains(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, route53domains.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckRegisteredDomainDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRegisteredDomainTransferLockConfig(domainName, false),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "transfer_lock", "false"),
+				),
+			},
+			{
+				Config: testAccRegisteredDomainTransferLockConfig(domainName, true),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "transfer_lock", "true"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckRegisteredDomainDestroy(s *terraform.State) error {
 	return nil
 }
@@ -294,4 +326,13 @@ resource "aws_route53domains_registered_domain" "test" {
   }
 }
 `, domainName)
+}
+
+func testAccRegisteredDomainTransferLockConfig(domainName string, transferLock bool) string {
+	return fmt.Sprintf(`
+resource "aws_route53domains_registered_domain" "test" {
+  domain_name   = %[1]q
+  transfer_lock = %[2]t
+}
+`, domainName, transferLock)
 }
