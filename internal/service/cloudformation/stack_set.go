@@ -67,6 +67,12 @@ func ResourceStackSet() *schema.Resource {
 					},
 				},
 			},
+			"call_as": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.StringInSlice(cloudformation.CallAs_Values(), false),
+				Default:      cloudformation.CallAsSelf,
+			},
 			"capabilities": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -106,12 +112,6 @@ func ResourceStackSet() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: validation.StringInSlice(cloudformation.PermissionModels_Values(), false),
 				Default:      cloudformation.PermissionModelsSelfManaged,
-			},
-			"call_as": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringInSlice(cloudformation.CallAs_Values(), false),
-				Default:      cloudformation.CallAsSelf,
 			},
 			"stack_set_id": {
 				Type:     schema.TypeString,
