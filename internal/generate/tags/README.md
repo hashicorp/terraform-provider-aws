@@ -62,11 +62,11 @@ This package instead implements a single `KeyValueTags` type, which covers all k
 
 Full documentation for this package can be found on [GoDoc](https://godoc.org/github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags).
 
-Many AWS Go SDK services that support tagging have their service-specific Go type conversion functions to and from `KeyValueTags` code generated. Converting from `KeyValueTags` to AWS Go SDK types is done via `{SERVICE}Tags()` functions on the type, while converting from AWS Go SDK types to the `KeyValueTags` type is done via `{SERVICE}KeyValueTags()` functions. For more information about this code generation, see the [`generators/servicetags` README](generators/servicetags/README.md).
+Many AWS Go SDK services that support tagging have their service-specific Go type conversion functions to and from `KeyValueTags` code generated. Converting from `KeyValueTags` to AWS Go SDK types is done via `{SERVICE}Tags()` functions on the type, while converting from AWS Go SDK types to the `KeyValueTags` type is done via `{SERVICE}KeyValueTags()` functions. For more information about this code generation, see the [`servicetags` README](README_servicetags.md).
 
-Some AWS Go SDK services that have common tag listing functionality (such as `ListTagsForResource` API call), also have auto-generated list functions. For more information about this code generation, see the [`generators/listtags` README](generators/listtags/README.md).
+Some AWS Go SDK services that have common tag listing functionality (such as `ListTagsForResource` API call), also have auto-generated list functions. For more information about this code generation, see the [`listtags` README](README_listtags.md).
 
-Some AWS Go SDK services that have common tagging update functionality (such as `TagResource` and `UntagResource` API calls), also have auto-generated update functions. For more information about this code generation, see the [`generators/updatetags` README](generators/updatetags/README.md).
+Some AWS Go SDK services that have common tagging update functionality (such as `TagResource` and `UntagResource` API calls), also have auto-generated update functions. For more information about this code generation, see the [`updatetags` README](README_updatetags.md).
 
 Any tagging functions that cannot be generated should be hand implemented in a service-specific source file (e.g. `iam_tags.go`) and follow the format of similar generated code wherever possible. The first line of the source file should be `// +build !generate`. This prevents the file's inclusion during the code generation phase.
 
@@ -126,7 +126,7 @@ func AmplifyListTags(conn *amplify.Amplify, identifier string) (KeyValueTags, er
 
 Before a new service can be added to the generator, the new service must:
 
-- Have the `KeyValueTags` conversion functions implemented for the AWS Go SDK service type/map. See also the [`servicetags` generator README](../servicetags/README.md).
+- Have the `KeyValueTags` conversion functions implemented for the AWS Go SDK service type/map. See also the [`servicetags` README](README_servicetags.md).
 - Implement a function for listing resource tags (e.g. `ListTagsforResource`)
 - Have the service included in `aws/internal/keyvaluetags/service_generation_customizations.go`, if not present the following compilation error will be seen:
 
@@ -376,7 +376,7 @@ func AthenaUpdateTags(conn *athena.Athena, identifier string, oldTagsMap interfa
 
 Before a new service can be added to the generator, the new service must:
 
-- Have the `KeyValueTags` conversion functions implemented for the AWS Go SDK service type/map. See also the [`servicetags` generator README](../servicetags/README.md).
+- Have the `KeyValueTags` conversion functions implemented for the AWS Go SDK service type/map. See also the [`servicetags` README](README_servicetags.md).
 - Implement a function for tagging (e.g. `TagResource`) and a function for untagging via keys (e.g. `UntagResource`)
 - Have the service included in `aws/internal/keyvaluetags/service_generation_customizations.go`, if not present the following compilation error will be seen:
 
