@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/backup"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -18,7 +19,8 @@ import (
 
 func ResourceFramework() *schema.Resource {
 	return &schema.Resource{
-		Read: resourceFrameworkRead,
+		Create: resourceFrameworkCreate,
+		Read:   resourceFrameworkRead,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -124,6 +126,44 @@ func ResourceFramework() *schema.Resource {
 	}
 }
 
+func resourceFrameworkCreate(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*conns.AWSClient).BackupConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+
+	name := d.Get("name").(string)
+
+	input := &backup.CreateFrameworkInput{
+		IdempotencyToken:  aws.String(resource.UniqueId()),
+		FrameworkControls: expandFrameworkControls(d.Get("control").(*schema.Set).List()),
+		FrameworkName:     aws.String(name),
+	}
+
+	if v, ok := d.GetOk("description"); ok {
+		input.FrameworkDescription = aws.String(v.(string))
+	}
+
+	if len(tags) > 0 {
+		input.FrameworkTags = Tags(tags.IgnoreAWS())
+	}
+
+	log.Printf("[DEBUG] Creating Backup Framework: %#v", input)
+	resp, err := conn.CreateFramework(input)
+	if err != nil {
+		return fmt.Errorf("error creating Backup Framework: %w", err)
+	}
+
+	// Set ID with the name since the name is unique for the framework
+	d.SetId(aws.StringValue(resp.FrameworkName))
+
+	// waiter since the status changes from CREATE_IN_PROGRESS to either COMPLETED or FAILED
+	if _, err := waitFrameworkCreated(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+		return fmt.Errorf("error waiting for Framework (%s) creation: %w", d.Id(), err)
+	}
+
+	return resourceFrameworkRead(d, meta)
+}
+
 func resourceFrameworkRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).BackupConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
@@ -174,6 +214,91 @@ func resourceFrameworkRead(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
+func expandFrameworkControls(controls []interface{}) []*backup.FrameworkControl {
+	if len(controls) == 0 {
+		return nil
+	}
+
+	frameworkControls := []*backup.FrameworkControl{}
+
+	for _, control := range controls {
+		tfMap := control.(map[string]interface{})
+
+		// on some updates, there is an { ControlName: "" } element in Framework Controls.
+		// this element must be skipped to avoid the "A control name is required." error
+		// this happens for Step 7/7 for TestAccBackupFramework_updateControlScope
+		if v, ok := tfMap["name"].(string); ok && v == "" {
+			continue
+		}
+
+		frameworkControl := &backup.FrameworkControl{
+			ControlName:  aws.String(tfMap["name"].(string)),
+			ControlScope: expandControlScope(tfMap["scope"].([]interface{})),
+		}
+
+		if v, ok := tfMap["input_parameter"]; ok && v.(*schema.Set).Len() > 0 {
+			frameworkControl.ControlInputParameters = expandInputParmaeters(tfMap["input_parameter"].(*schema.Set).List())
+		}
+
+		frameworkControls = append(frameworkControls, frameworkControl)
+	}
+
+	return frameworkControls
+}
+
+func expandInputParmaeters(inputParams []interface{}) []*backup.ControlInputParameter {
+	if len(inputParams) == 0 {
+		return nil
+	}
+
+	controlInputParameters := []*backup.ControlInputParameter{}
+
+	for _, inputParam := range inputParams {
+		tfMap := inputParam.(map[string]interface{})
+		controlInputParameter := &backup.ControlInputParameter{}
+
+		if v, ok := tfMap["name"].(string); ok && v != "" {
+			controlInputParameter.ParameterName = aws.String(v)
+		}
+
+		if v, ok := tfMap["value"].(string); ok && v != "" {
+			controlInputParameter.ParameterValue = aws.String(v)
+		}
+
+		controlInputParameters = append(controlInputParameters, controlInputParameter)
+	}
+
+	return controlInputParameters
+}
+
+func expandControlScope(scope []interface{}) *backup.ControlScope {
+	if len(scope) == 0 || scope[0] == nil {
+		return nil
+	}
+
+	tfMap, ok := scope[0].(map[string]interface{})
+	if !ok {
+		return nil
+	}
+
+	controlScope := &backup.ControlScope{}
+
+	if v, ok := tfMap["compliance_resource_ids"]; ok && v.(*schema.Set).Len() > 0 {
+		controlScope.ComplianceResourceIds = flex.ExpandStringSet(v.(*schema.Set))
+	}
+
+	if v, ok := tfMap["compliance_resource_types"]; ok && v.(*schema.Set).Len() > 0 {
+		controlScope.ComplianceResourceTypes = flex.ExpandStringSet(v.(*schema.Set))
+	}
+
+	// A maximum of one key-value pair can be provided.
+	// The tag value is optional, but it cannot be an empty string
+	if v, ok := tfMap["tags"].(map[string]interface{}); ok && len(v) > 0 {
+		controlScope.Tags = Tags(tftags.New(v).IgnoreAWS())
+	}
+
+	return controlScope
+}
 
 func flattenFrameworkControls(controls []*backup.FrameworkControl) []interface{} {
 	if controls == nil {
