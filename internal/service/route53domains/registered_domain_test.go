@@ -17,6 +17,7 @@ func TestAccRoute53Domains_serial(t *testing.T) {
 		"RegisteredDomain": {
 			"tags":           testAccRoute53DomainsRegisteredDomain_tags,
 			"autoRenew":      testAccRoute53DomainsRegisteredDomain_autoRenew,
+			"contacts":       testAccRoute53DomainsRegisteredDomain_contacts,
 			"contactPrivacy": testAccRoute53DomainsRegisteredDomain_contactPrivacy,
 			"nameservers":    testAccRoute53DomainsRegisteredDomain_nameservers,
 			"transferLock":   testAccRoute53DomainsRegisteredDomain_transferLock,
@@ -120,6 +121,125 @@ func testAccRoute53DomainsRegisteredDomain_autoRenew(t *testing.T) {
 				Config: testAccRegisteredDomainAutoRenewConfig(domainName, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "auto_renew", "true"),
+				),
+			},
+		},
+	})
+}
+
+func testAccRoute53DomainsRegisteredDomain_contacts(t *testing.T) {
+	key := "ROUTE53DOMAINS_DOMAIN_NAME"
+	domainName := os.Getenv(key)
+	if domainName == "" {
+		t.Skipf("Environment variable %s is not set", key)
+	}
+
+	resourceName := "aws_route53domains_registered_domain.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckRoute53Domains(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, route53domains.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckRegisteredDomainDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRegisteredDomainContactsConfig(domainName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "admin_contact.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "admin_contact.0.address_line_1", "99 High Street"),
+					resource.TestCheckResourceAttr(resourceName, "admin_contact.0.address_line_2", "Flat 1a"),
+					resource.TestCheckResourceAttr(resourceName, "admin_contact.0.city", "Little Nowhere"),
+					resource.TestCheckResourceAttr(resourceName, "admin_contact.0.contact_type", "ASSOCIATION"),
+					resource.TestCheckResourceAttr(resourceName, "admin_contact.0.country_code", "GB"),
+					resource.TestCheckResourceAttr(resourceName, "admin_contact.0.email", "test1@example.com"),
+					resource.TestCheckResourceAttr(resourceName, "admin_contact.0.extra_params.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "admin_contact.0.fax", "+44.123456788"),
+					resource.TestCheckResourceAttr(resourceName, "admin_contact.0.first_name", "Sys"),
+					resource.TestCheckResourceAttr(resourceName, "admin_contact.0.last_name", "Admin"),
+					resource.TestCheckResourceAttr(resourceName, "admin_contact.0.organization_name", "Support"),
+					resource.TestCheckResourceAttr(resourceName, "admin_contact.0.phone_number", "+44.123456789"),
+					resource.TestCheckResourceAttr(resourceName, "admin_contact.0.state", ""),
+					resource.TestCheckResourceAttr(resourceName, "admin_contact.0.zip_code", "ST1 1AB"),
+					resource.TestCheckResourceAttr(resourceName, "registrant_contact.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "registrant_contact.0.address_line_1", "100 Main Street"),
+					resource.TestCheckResourceAttr(resourceName, "registrant_contact.0.address_line_2", ""),
+					resource.TestCheckResourceAttr(resourceName, "registrant_contact.0.city", "New York City"),
+					resource.TestCheckResourceAttr(resourceName, "registrant_contact.0.contact_type", "COMPANY"),
+					resource.TestCheckResourceAttr(resourceName, "registrant_contact.0.country_code", "US"),
+					resource.TestCheckResourceAttr(resourceName, "registrant_contact.0.email", "test2@example.com"),
+					resource.TestCheckResourceAttr(resourceName, "registrant_contact.0.extra_params.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "registrant_contact.0.fax", ""),
+					resource.TestCheckResourceAttr(resourceName, "registrant_contact.0.first_name", "Terraform"),
+					resource.TestCheckResourceAttr(resourceName, "registrant_contact.0.last_name", "Team"),
+					resource.TestCheckResourceAttr(resourceName, "registrant_contact.0.organization_name", "HashiCorp"),
+					resource.TestCheckResourceAttr(resourceName, "registrant_contact.0.phone_number", "+1.2025551234"),
+					resource.TestCheckResourceAttr(resourceName, "registrant_contact.0.state", "NY"),
+					resource.TestCheckResourceAttr(resourceName, "registrant_contact.0.zip_code", "10001"),
+					resource.TestCheckResourceAttr(resourceName, "tech_contact.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tech_contact.0.address_line_1", "The Castle"),
+					resource.TestCheckResourceAttr(resourceName, "tech_contact.0.address_line_2", ""),
+					resource.TestCheckResourceAttr(resourceName, "tech_contact.0.city", "Prague"),
+					resource.TestCheckResourceAttr(resourceName, "tech_contact.0.contact_type", "PERSON"),
+					resource.TestCheckResourceAttr(resourceName, "tech_contact.0.country_code", "CZ"),
+					resource.TestCheckResourceAttr(resourceName, "tech_contact.0.email", "test3@example.com"),
+					resource.TestCheckResourceAttr(resourceName, "tech_contact.0.extra_params.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "tech_contact.0.fax", ""),
+					resource.TestCheckResourceAttr(resourceName, "tech_contact.0.first_name", "Franz"),
+					resource.TestCheckResourceAttr(resourceName, "tech_contact.0.last_name", "Kafka"),
+					resource.TestCheckResourceAttr(resourceName, "tech_contact.0.organization_name", ""),
+					resource.TestCheckResourceAttr(resourceName, "tech_contact.0.phone_number", "+420.224372434"),
+					resource.TestCheckResourceAttr(resourceName, "tech_contact.0.state", ""),
+					resource.TestCheckResourceAttr(resourceName, "tech_contact.0.zip_code", "119 01"),
+				),
+			},
+			{
+				Config: testAccRegisteredDomainContactsUpdatedConfig(domainName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "admin_contact.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "admin_contact.0.address_line_1", "101 2nd St #700"),
+					resource.TestCheckResourceAttr(resourceName, "admin_contact.0.address_line_2", ""),
+					resource.TestCheckResourceAttr(resourceName, "admin_contact.0.city", "San Francisco"),
+					resource.TestCheckResourceAttr(resourceName, "admin_contact.0.contact_type", "COMPANY"),
+					resource.TestCheckResourceAttr(resourceName, "admin_contact.0.country_code", "US"),
+					resource.TestCheckResourceAttr(resourceName, "admin_contact.0.email", "terraform-acctest+aws@hashicorp.com"),
+					resource.TestCheckResourceAttr(resourceName, "admin_contact.0.extra_params.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "admin_contact.0.fax", "+1.4155551234"),
+					resource.TestCheckResourceAttr(resourceName, "admin_contact.0.first_name", "Terraform"),
+					resource.TestCheckResourceAttr(resourceName, "admin_contact.0.last_name", "Team"),
+					resource.TestCheckResourceAttr(resourceName, "admin_contact.0.organization_name", "HashiCorp"),
+					resource.TestCheckResourceAttr(resourceName, "admin_contact.0.phone_number", "+1.4155551234"),
+					resource.TestCheckResourceAttr(resourceName, "admin_contact.0.state", "CA"),
+					resource.TestCheckResourceAttr(resourceName, "admin_contact.0.zip_code", "94105"),
+					resource.TestCheckResourceAttr(resourceName, "registrant_contact.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "registrant_contact.0.address_line_1", "101 2nd St #700"),
+					resource.TestCheckResourceAttr(resourceName, "registrant_contact.0.address_line_2", ""),
+					resource.TestCheckResourceAttr(resourceName, "registrant_contact.0.city", "San Francisco"),
+					resource.TestCheckResourceAttr(resourceName, "registrant_contact.0.contact_type", "COMPANY"),
+					resource.TestCheckResourceAttr(resourceName, "registrant_contact.0.country_code", "US"),
+					resource.TestCheckResourceAttr(resourceName, "registrant_contact.0.email", "terraform-acctest+aws@hashicorp.com"),
+					resource.TestCheckResourceAttr(resourceName, "registrant_contact.0.extra_params.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "registrant_contact.0.fax", "+1.4155551234"),
+					resource.TestCheckResourceAttr(resourceName, "registrant_contact.0.first_name", "Terraform"),
+					resource.TestCheckResourceAttr(resourceName, "registrant_contact.0.last_name", "Team"),
+					resource.TestCheckResourceAttr(resourceName, "registrant_contact.0.organization_name", "HashiCorp"),
+					resource.TestCheckResourceAttr(resourceName, "registrant_contact.0.phone_number", "+1.4155551234"),
+					resource.TestCheckResourceAttr(resourceName, "registrant_contact.0.state", "CA"),
+					resource.TestCheckResourceAttr(resourceName, "registrant_contact.0.zip_code", "94105"),
+					resource.TestCheckResourceAttr(resourceName, "tech_contact.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tech_contact.0.address_line_1", "101 2nd St #700"),
+					resource.TestCheckResourceAttr(resourceName, "tech_contact.0.address_line_2", ""),
+					resource.TestCheckResourceAttr(resourceName, "tech_contact.0.city", "San Francisco"),
+					resource.TestCheckResourceAttr(resourceName, "tech_contact.0.contact_type", "COMPANY"),
+					resource.TestCheckResourceAttr(resourceName, "tech_contact.0.country_code", "US"),
+					resource.TestCheckResourceAttr(resourceName, "tech_contact.0.email", "terraform-acctest+aws@hashicorp.com"),
+					resource.TestCheckResourceAttr(resourceName, "tech_contact.0.extra_params.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "tech_contact.0.fax", "+1.4155551234"),
+					resource.TestCheckResourceAttr(resourceName, "tech_contact.0.first_name", "Terraform"),
+					resource.TestCheckResourceAttr(resourceName, "tech_contact.0.last_name", "Team"),
+					resource.TestCheckResourceAttr(resourceName, "tech_contact.0.organization_name", "HashiCorp"),
+					resource.TestCheckResourceAttr(resourceName, "tech_contact.0.phone_number", "+1.4155551234"),
+					resource.TestCheckResourceAttr(resourceName, "tech_contact.0.state", "CA"),
+					resource.TestCheckResourceAttr(resourceName, "tech_contact.0.zip_code", "94105"),
 				),
 			},
 		},
@@ -272,6 +392,109 @@ resource "aws_route53domains_registered_domain" "test" {
   auto_renew  = %[2]t
 }
 `, domainName, autoRenew)
+}
+
+func testAccRegisteredDomainContactsConfig(domainName string) string {
+	return fmt.Sprintf(`
+resource "aws_route53domains_registered_domain" "test" {
+  domain_name = %[1]q
+
+  admin_contact {
+    address_line_1    = "99 High Street"
+	address_line_2    = "Flat 1a"
+    city              = "Little Nowhere"
+    contact_type      = "ASSOCIATION"
+    country_code      = "GB"
+    email             = "test1@example.com"
+    fax               = "+44.123456788"
+    first_name        = "Sys"
+    last_name         = "Admin"
+    organization_name = "Support"
+    phone_number      = "+44.123456789"
+    zip_code          = "ST1 1AB"
+  }
+
+  registrant_contact {
+    address_line_1    = "100 Main Street"
+    city              = "New York City"
+    contact_type      = "COMPANY"
+    country_code      = "US"
+    email             = "test2@example.com"
+    # Changing owner's first or last name is a change of ownership.
+    first_name        = "Terraform"
+    last_name         = "Team"
+    organization_name = "HashiCorp"
+    phone_number      = "+1.2025551234"
+    state             = "NY"
+    zip_code          = "10001"
+  }
+
+  tech_contact {
+    address_line_1 = "The Castle"
+    city           = "Prague"
+    contact_type   = "PERSON"
+    country_code   = "CZ"
+    email          = "test3@example.com"
+    first_name     = "Franz"
+    last_name      = "Kafka"
+	phone_number   = "+420.224372434"
+    zip_code       = "119 01"
+  }
+}
+`, domainName)
+}
+
+func testAccRegisteredDomainContactsUpdatedConfig(domainName string) string {
+	return fmt.Sprintf(`
+resource "aws_route53domains_registered_domain" "test" {
+  domain_name = %[1]q
+
+  admin_contact {
+    address_line_1    = "101 2nd St #700"
+    city              = "San Francisco"
+    contact_type      = "COMPANY"
+    country_code      = "US"
+    email             = "terraform-acctest+aws@hashicorp.com"
+    fax               = "+1.4155551234"
+    first_name        = "Terraform"
+    last_name         = "Team"
+    organization_name = "HashiCorp"
+    phone_number      = "+1.4155551234"
+    state             = "CA"
+    zip_code          = "94105"
+  }
+
+  registrant_contact {
+    address_line_1    = "101 2nd St #700"
+    city              = "San Francisco"
+    contact_type      = "COMPANY"
+    country_code      = "US"
+    email             = "terraform-acctest+aws@hashicorp.com"
+    fax               = "+1.4155551234"
+    first_name        = "Terraform"
+    last_name         = "Team"
+    organization_name = "HashiCorp"
+    phone_number      = "+1.4155551234"
+    state             = "CA"
+    zip_code          = "94105"
+  }
+
+  tech_contact {
+    address_line_1    = "101 2nd St #700"
+    city              = "San Francisco"
+    contact_type      = "COMPANY"
+    country_code      = "US"
+    email             = "terraform-acctest+aws@hashicorp.com"
+    fax               = "+1.4155551234"
+    first_name        = "Terraform"
+    last_name         = "Team"
+    organization_name = "HashiCorp"
+    phone_number      = "+1.4155551234"
+    state             = "CA"
+    zip_code          = "94105"
+  }
+}
+`, domainName)
 }
 
 func testAccRegisteredDomainContactPrivacyConfig(domainName string, adminPrivacy, registrantPrivacy, techPrivacy bool) string {

@@ -32,17 +32,17 @@ func ResourceRegisteredDomain() *schema.Resource {
 				"address_line_1": {
 					Type:         schema.TypeString,
 					Optional:     true,
-					ValidateFunc: validation.StringLenBetween(1, 255),
+					ValidateFunc: validation.StringLenBetween(0, 255),
 				},
 				"address_line_2": {
 					Type:         schema.TypeString,
 					Optional:     true,
-					ValidateFunc: validation.StringLenBetween(1, 255),
+					ValidateFunc: validation.StringLenBetween(0, 255),
 				},
 				"city": {
 					Type:         schema.TypeString,
 					Optional:     true,
-					ValidateFunc: validation.StringLenBetween(1, 255),
+					ValidateFunc: validation.StringLenBetween(0, 255),
 				},
 				"contact_type": {
 					Type:         schema.TypeString,
@@ -57,7 +57,7 @@ func ResourceRegisteredDomain() *schema.Resource {
 				"email": {
 					Type:         schema.TypeString,
 					Optional:     true,
-					ValidateFunc: validation.StringLenBetween(1, 254),
+					ValidateFunc: validation.StringLenBetween(0, 254),
 				},
 				"extra_params": {
 					Type:     schema.TypeMap,
@@ -67,37 +67,37 @@ func ResourceRegisteredDomain() *schema.Resource {
 				"fax": {
 					Type:         schema.TypeString,
 					Optional:     true,
-					ValidateFunc: validation.StringLenBetween(1, 30),
+					ValidateFunc: validation.StringLenBetween(0, 30),
 				},
 				"first_name": {
 					Type:         schema.TypeString,
 					Optional:     true,
-					ValidateFunc: validation.StringLenBetween(1, 255),
+					ValidateFunc: validation.StringLenBetween(0, 255),
 				},
 				"last_name": {
 					Type:         schema.TypeString,
 					Optional:     true,
-					ValidateFunc: validation.StringLenBetween(1, 255),
+					ValidateFunc: validation.StringLenBetween(0, 255),
 				},
 				"organization_name": {
 					Type:         schema.TypeString,
 					Optional:     true,
-					ValidateFunc: validation.StringLenBetween(1, 255),
+					ValidateFunc: validation.StringLenBetween(0, 255),
 				},
 				"phone_number": {
 					Type:         schema.TypeString,
 					Optional:     true,
-					ValidateFunc: validation.StringLenBetween(1, 30),
+					ValidateFunc: validation.StringLenBetween(0, 30),
 				},
 				"state": {
 					Type:         schema.TypeString,
 					Optional:     true,
-					ValidateFunc: validation.StringLenBetween(1, 30),
+					ValidateFunc: validation.StringLenBetween(0, 255),
 				},
 				"zip_code": {
 					Type:         schema.TypeString,
 					Optional:     true,
-					ValidateFunc: validation.StringLenBetween(1, 30),
+					ValidateFunc: validation.StringLenBetween(0, 255),
 				},
 			},
 		},
@@ -234,6 +234,32 @@ func resourceRegisteredDomainCreate(d *schema.ResourceData, meta interface{}) er
 	}
 
 	d.SetId(aws.StringValue(domainDetail.DomainName))
+
+	var adminContact, registrantContact, techContact *route53domains.ContactDetail
+
+	if v, ok := d.GetOk("admin_contact"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		if v := expandContactDetail(v.([]interface{})[0].(map[string]interface{})); !reflect.DeepEqual(v, domainDetail.AdminContact) {
+			adminContact = v
+		}
+	}
+
+	if v, ok := d.GetOk("registrant_contact"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		if v := expandContactDetail(v.([]interface{})[0].(map[string]interface{})); !reflect.DeepEqual(v, domainDetail.RegistrantContact) {
+			registrantContact = v
+		}
+	}
+
+	if v, ok := d.GetOk("tech_contact"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		if v := expandContactDetail(v.([]interface{})[0].(map[string]interface{})); !reflect.DeepEqual(v, domainDetail.TechContact) {
+			techContact = v
+		}
+	}
+
+	if adminContact != nil || registrantContact != nil || techContact != nil {
+		if err := modifyDomainContact(conn, d.Id(), adminContact, registrantContact, techContact, d.Timeout(schema.TimeoutCreate)); err != nil {
+			return err
+		}
+	}
 
 	if adminPrivacy, registrantPrivacy, techPrivacy := d.Get("admin_privacy").(bool), d.Get("registrant_privacy").(bool), d.Get("tech_privacy").(bool); adminPrivacy != aws.BoolValue(domainDetail.AdminPrivacy) || registrantPrivacy != aws.BoolValue(domainDetail.RegistrantPrivacy) || techPrivacy != aws.BoolValue(domainDetail.TechPrivacy) {
 		if err := modifyDomainContactPrivacy(conn, d.Id(), adminPrivacy, registrantPrivacy, techPrivacy, d.Timeout(schema.TimeoutCreate)); err != nil {
@@ -377,6 +403,32 @@ func resourceRegisteredDomainRead(d *schema.ResourceData, meta interface{}) erro
 func resourceRegisteredDomainUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).Route53DomainsConn
 
+	if d.HasChanges("admin_contact", "registrant_contact", "tech_contact") {
+		var adminContact, registrantContact, techContact *route53domains.ContactDetail
+
+		if key := "admin_contact"; d.HasChange(key) {
+			if v, ok := d.GetOk(key); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+				adminContact = expandContactDetail(v.([]interface{})[0].(map[string]interface{}))
+			}
+		}
+
+		if key := "registrant_contact"; d.HasChange(key) {
+			if v, ok := d.GetOk(key); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+				registrantContact = expandContactDetail(v.([]interface{})[0].(map[string]interface{}))
+			}
+		}
+
+		if key := "tech_contact"; d.HasChange(key) {
+			if v, ok := d.GetOk(key); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+				techContact = expandContactDetail(v.([]interface{})[0].(map[string]interface{}))
+			}
+		}
+
+		if err := modifyDomainContact(conn, d.Id(), adminContact, registrantContact, techContact, d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return err
+		}
+	}
+
 	if d.HasChanges("admin_privacy", "registrant_privacy", "tech_privacy") {
 		if err := modifyDomainContactPrivacy(conn, d.Id(), d.Get("admin_privacy").(bool), d.Get("registrant_privacy").(bool), d.Get("tech_privacy").(bool), d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return err
@@ -402,8 +454,6 @@ func resourceRegisteredDomainUpdate(d *schema.ResourceData, meta interface{}) er
 			return err
 		}
 	}
-
-	// TODO Contacts
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
@@ -458,6 +508,28 @@ func modifyDomainAutoRenew(conn *route53domains.Route53Domains, domainName strin
 		if err != nil {
 			return fmt.Errorf("error disabling Route 53 Domains Domain (%s) auto-renew: %w", domainName, err)
 		}
+	}
+
+	return nil
+}
+
+func modifyDomainContact(conn *route53domains.Route53Domains, domainName string, adminContact, registrantContact, techContact *route53domains.ContactDetail, timeout time.Duration) error {
+	input := &route53domains.UpdateDomainContactInput{
+		AdminContact:      adminContact,
+		DomainName:        aws.String(domainName),
+		RegistrantContact: registrantContact,
+		TechContact:       techContact,
+	}
+
+	log.Printf("[DEBUG] Updating Route 53 Domains Domain contacts: %s", input)
+	output, err := conn.UpdateDomainContact(input)
+
+	if err != nil {
+		return fmt.Errorf("error updating Route 53 Domains Domain (%s) contacts: %w", domainName, err)
+	}
+
+	if _, err := waitOperationSucceeded(conn, aws.StringValue(output.OperationId), timeout); err != nil {
+		return fmt.Errorf("error waiting for Route 53 Domains Domain (%s) contacts update: %w", domainName, err)
 	}
 
 	return nil
