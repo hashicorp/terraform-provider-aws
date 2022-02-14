@@ -679,7 +679,7 @@ func statusOperation(conn *route53domains.Route53Domains, id string) resource.St
 	}
 }
 
-func waitOperationSucceeded(conn *route53domains.Route53Domains, id string, timeout time.Duration) (*route53domains.GetOperationDetailOutput, error) {
+func waitOperationSucceeded(conn *route53domains.Route53Domains, id string, timeout time.Duration) (*route53domains.GetOperationDetailOutput, error) { //nolint:unparam
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{route53domains.OperationStatusSubmitted, route53domains.OperationStatusInProgress},
 		Target:  []string{route53domains.OperationStatusSuccessful},
