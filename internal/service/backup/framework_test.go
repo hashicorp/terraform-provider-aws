@@ -1,9 +1,13 @@
 package backup_test
 
 import (
+	"fmt"
 	"testing"
 
+	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/backup"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
@@ -21,3 +25,28 @@ func testAccFrameworkPreCheck(t *testing.T) {
 		t.Fatalf("unexpected PreCheck error: %s", err)
 	}
 }
+
+func testAccCheckFrameworkExists(name string, framework *backup.DescribeFrameworkOutput) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[name]
+
+		if !ok {
+			return fmt.Errorf("Not found: %s", name)
+		}
+
+		conn := acctest.Provider.Meta().(*conns.AWSClient).BackupConn
+		input := &backup.DescribeFrameworkInput{
+			FrameworkName: aws.String(rs.Primary.ID),
+		}
+		resp, err := conn.DescribeFramework(input)
+
+		if err != nil {
+			return err
+		}
+
+		*framework = *resp
+
+		return nil
+	}
+}
+
