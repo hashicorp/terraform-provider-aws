@@ -324,8 +324,8 @@ func testAccCheckUserLoginProfileExists(n string, res *iam.GetLoginProfileOutput
 func testAccUserLoginProfileConfig_base(rName, path string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_user" "user" {
-  name          = "%s"
-  path          = "%s"
+  name          = %[1]q
+  path          = %[2]q
   force_destroy = true
 }
 
@@ -360,32 +360,28 @@ resource "aws_iam_access_key" "user" {
 }
 
 func testAccUserLoginProfileConfig_PasswordLength(rName, path, pgpKey string, passwordLength int) string {
-	return fmt.Sprintf(`
-%s
-
+	return acctest.ConfigCompose(testAccUserLoginProfileConfig_base(rName, path), fmt.Sprintf(`
 resource "aws_iam_user_login_profile" "user" {
   user            = aws_iam_user.user.name
-  password_length = %d
+  password_length = %[1]d
 
   pgp_key = <<EOF
-%s
+%[2]s
 EOF
 }
-`, testAccUserLoginProfileConfig_base(rName, path), passwordLength, pgpKey)
+`, passwordLength, pgpKey))
 }
 
 func testAccUserLoginProfileConfig_Required(rName, path, pgpKey string) string {
-	return fmt.Sprintf(`
-%s
-
+	return acctest.ConfigCompose(testAccUserLoginProfileConfig_base(rName, path), fmt.Sprintf(`
 resource "aws_iam_user_login_profile" "user" {
   user = aws_iam_user.user.name
 
   pgp_key = <<EOF
-%s
+%[1]s
 EOF
 }
-`, testAccUserLoginProfileConfig_base(rName, path), pgpKey)
+`, pgpKey))
 }
 
 const testPubKey1 = `mQENBFXbjPUBCADjNjCUQwfxKL+RR2GA6pv/1K+zJZ8UWIF9S0lk7cVIEfJiprzzwiMwBS5cD0da
