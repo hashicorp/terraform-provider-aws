@@ -9,14 +9,18 @@ import (
 )
 
 // retrieveGPGKey returns the PGP key specified as the pgpKey parameter, or queries
-// the public key from the keybase service if the parameter is a keybase username
-// prefixed with the phrase "keybase:"
+// the public key from the keybase or external service if the parameter is a username
+// prefixed with the phrase "keybase:" or "external:".
+// With "external:", the parameter is expected to be in the form "external:username|url".
+// The url is expected to be a valid url to a public key, it can also be a formatable url
+// which will use the associated username.
 func retrieveGPGKey(pgpKey string) (string, error) {
 	const keybasePrefix = "keybase:"
+	const externalPrefix = "external:"
 
 	encryptionKey := pgpKey
-	if strings.HasPrefix(pgpKey, keybasePrefix) {
-		publicKeys, err := pgpkeys.FetchKeybasePubkeys([]string{pgpKey})
+	if strings.HasPrefix(pgpKey, keybasePrefix) || strings.HasPrefix(pgpKey, externalPrefix) {
+		publicKeys, err := pgpkeys.FetchPubkeys([]string{pgpKey})
 		if err != nil {
 			return "", fmt.Errorf("Error retrieving Public Key for %s: %w", pgpKey, err)
 		}

@@ -13,7 +13,8 @@ import (
 
 func TestFetchKeybasePubkeys(t *testing.T) {
 	testset := []string{"keybase:jefferai", "keybase:hashicorp"}
-	ret, err := FetchKeybasePubkeys(testset)
+	keybaseUrl := "https://keybase.io/_/api/1.0/user/lookup.json?usernames=%s&fields=public_keys"
+	ret, err := FetchPubkeys(testset, keybaseUrl)
 	if err != nil {
 		t.Fatalf("bad: %v", err)
 	}
