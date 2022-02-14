@@ -1,16 +1,24 @@
 package backup
 
 import (
+	"fmt"
+	"log"
 	"time"
 
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/backup"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceFramework() *schema.Resource {
 	return &schema.Resource{
+		Read: resourceFrameworkRead,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -114,4 +122,103 @@ func ResourceFramework() *schema.Resource {
 		},
 		CustomizeDiff: verify.SetTagsDiff,
 	}
+}
+
+func resourceFrameworkRead(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*conns.AWSClient).BackupConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+
+	resp, err := conn.DescribeFramework(&backup.DescribeFrameworkInput{
+		FrameworkName: aws.String(d.Id()),
+	})
+
+	if tfawserr.ErrMessageContains(err, backup.ErrCodeResourceNotFoundException, "") {
+		log.Printf("[WARN] Backup Framework (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
+	}
+	if err != nil {
+		return fmt.Errorf("error reading Backup Framework (%s): %w", d.Id(), err)
+	}
+
+	d.Set("arn", resp.FrameworkArn)
+	d.Set("deployment_status", resp.DeploymentStatus)
+	d.Set("description", resp.FrameworkDescription)
+	d.Set("name", resp.FrameworkName)
+	d.Set("status", resp.FrameworkStatus)
+
+	if err := d.Set("creation_time", resp.CreationTime.Format(time.RFC3339)); err != nil {
+		return fmt.Errorf("error setting creation_time: %s", err)
+	}
+
+	if err := d.Set("control", flattenFrameworkControls(resp.FrameworkControls)); err != nil {
+		return fmt.Errorf("error setting control: %w", err)
+	}
+
+	tags, err := ListTags(conn, d.Get("arn").(string))
+	if err != nil {
+		return fmt.Errorf("error listing tags for Backup Framework (%s): %w", d.Id(), err)
+	}
+	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+
+	//lintignore:AWSR002
+	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %w", err)
+	}
+
+	if err := d.Set("tags_all", tags.Map()); err != nil {
+		return fmt.Errorf("error setting tags_all: %w", err)
+	}
+
+	return nil
+}
+
+
+func flattenFrameworkControls(controls []*backup.FrameworkControl) []interface{} {
+	if controls == nil {
+		return []interface{}{}
+	}
+
+	frameworkControls := []interface{}{}
+	for _, control := range controls {
+		values := map[string]interface{}{}
+		values["input_parameter"] = flattenInputParameters(control.ControlInputParameters)
+		values["name"] = aws.StringValue(control.ControlName)
+		values["scope"] = flattenScope(control.ControlScope)
+		frameworkControls = append(frameworkControls, values)
+	}
+	return frameworkControls
+}
+
+func flattenInputParameters(inputParams []*backup.ControlInputParameter) []interface{} {
+	if inputParams == nil {
+		return []interface{}{}
+	}
+
+	controlInputParameters := []interface{}{}
+	for _, inputParam := range inputParams {
+		values := map[string]interface{}{}
+		values["name"] = aws.StringValue(inputParam.ParameterName)
+		values["value"] = aws.StringValue(inputParam.ParameterValue)
+		controlInputParameters = append(controlInputParameters, values)
+	}
+	return controlInputParameters
+}
+
+func flattenScope(scope *backup.ControlScope) []interface{} {
+	if scope == nil {
+		return []interface{}{}
+	}
+
+	controlScope := map[string]interface{}{
+		"compliance_resource_ids":   flex.FlattenStringList(scope.ComplianceResourceIds),
+		"compliance_resource_types": flex.FlattenStringList(scope.ComplianceResourceTypes),
+	}
+
+	if v := scope.Tags; v != nil {
+		controlScope["tags"] = KeyValueTags(v).IgnoreAWS().Map()
+	}
+
+	return []interface{}{controlScope}
 }
