@@ -10,6 +10,7 @@ import (
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfamp "github.com/hashicorp/terraform-provider-aws/internal/service/amp"
@@ -30,6 +31,7 @@ func TestAccAMPWorkspace_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAMPWorkspaceExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "alias", workspaceAlias),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
 			{
@@ -136,6 +138,18 @@ resource "aws_prometheus_workspace" "test" {
 func testAccAMPWorkspaceWithoutAliasConfig() string {
 	return `
 resource "aws_prometheus_workspace" "test" {
+}
+`
+}
+func testAccAMPWorkspaceWithTagsConfig() string {
+	return `
+resource "aws_prometheus_workspace" "tf-tag" {
+  alias = "tf-tag"
+
+  tags = {
+    Environment = "prod"
+    Owner = "mh9"
+  }
 }
 `
 }

@@ -10,7 +10,9 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 func ResourceWorkspace() *schema.Resource {
@@ -36,6 +38,8 @@ func ResourceWorkspace() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"tags":     tftags.TagsSchema(),
+			"tags_all": tftags.TagsSchemaComputed(),
 		},
 	}
 }
@@ -43,6 +47,9 @@ func ResourceWorkspace() *schema.Resource {
 func resourceWorkspaceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[INFO] Reading AMP workspace %s", d.Id())
 	conn := meta.(*conns.AWSClient).AMPConn
+
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	details, err := conn.DescribeWorkspaceWithContext(ctx, &prometheusservice.DescribeWorkspaceInput{
 		WorkspaceId: aws.String(d.Id()),
@@ -67,6 +74,22 @@ func resourceWorkspaceRead(ctx context.Context, d *schema.ResourceData, meta int
 	d.Set("arn", ws.Arn)
 	d.Set("prometheus_endpoint", ws.PrometheusEndpoint)
 
+	tags, err := ListTags(conn, *ws.Arn)
+
+	if err != nil {
+		return diag.FromErr(fmt.Errorf("error listing tags for Prometheus Workspace (%s): %s", d.Id(), err))
+	}
+
+	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+
+	//lintignore:AWSR002
+	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
+		return diag.FromErr(fmt.Errorf("error setting tags: %w", err))
+	}
+
+	if err := d.Set("tags_all", tags.Map()); err != nil {
+		return diag.FromErr(fmt.Errorf("error setting tags_all: %w", err))
+	}
 	return nil
 }
 
@@ -80,6 +103,22 @@ func resourceWorkspaceUpdate(ctx context.Context, d *schema.ResourceData, meta i
 		req.Alias = aws.String(v.(string))
 	}
 	conn := meta.(*conns.AWSClient).AMPConn
+
+	if d.HasChange("tags") {
+		o, n := d.GetChange("tags")
+		log.Printf("[DEBUG] Updating tags")
+		details, err := conn.DescribeWorkspaceWithContext(ctx, &prometheusservice.DescribeWorkspaceInput{
+			WorkspaceId: aws.String(d.Id()),
+		})
+		if err != nil {
+			return diag.FromErr(fmt.Errorf("error reading Prometheus Workspace (%s): %s", d.Id(), err))
+		}
+		ws := details.Workspace
+		if err := UpdateTags(conn, *ws.Arn, o, n); err != nil {
+			return diag.FromErr(fmt.Errorf("error updating Prometheus WorkSpace (%s) tags: %s", d.Id(), err))
+		}
+	}
+
 	if _, err := conn.UpdateWorkspaceAliasWithContext(ctx, req); err != nil {
 		return diag.FromErr(fmt.Errorf("error updating Prometheus WorkSpace (%s): %w", d.Id(), err))
 	}
@@ -90,10 +129,16 @@ func resourceWorkspaceUpdate(ctx context.Context, d *schema.ResourceData, meta i
 func resourceWorkspaceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[INFO] Creating AMP workspace %s", d.Id())
 	conn := meta.(*conns.AWSClient).AMPConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
 	req := &prometheusservice.CreateWorkspaceInput{}
 	if v, ok := d.GetOk("alias"); ok {
 		req.Alias = aws.String(v.(string))
+	}
+
+	if len(tags) > 0 {
+		req.Tags = Tags(tags.IgnoreAWS())
 	}
 
 	result, err := conn.CreateWorkspaceWithContext(ctx, req)
