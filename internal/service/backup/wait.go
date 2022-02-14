@@ -10,17 +10,14 @@ import (
 const (
 	// Maximum amount of time to wait for Backup changes to propagate
 	propagationTimeout = 2 * time.Minute
-	// Maximum amount of time to wait for Framework creation and deletion
-	frameworkCreationTimeout = 2 * time.Minute
-	frameworkDeletionTimeout = 2 * time.Minute
 )
 
-func waitFrameworkCreated(conn *backup.Backup, id string) (*backup.DescribeFrameworkOutput, error) {
+func waitFrameworkCreated(conn *backup.Backup, id string, timeout time.Duration) (*backup.DescribeFrameworkOutput, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{frameworkStatusCreationInProgress},
 		Target:  []string{frameworkStatusCompleted, frameworkStatusFailed},
 		Refresh: statusFramework(conn, id),
-		Timeout: frameworkCreationTimeout,
+		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForState()
@@ -32,12 +29,12 @@ func waitFrameworkCreated(conn *backup.Backup, id string) (*backup.DescribeFrame
 	return nil, err
 }
 
-func waitFrameworkDeleted(conn *backup.Backup, id string) (*backup.DescribeFrameworkOutput, error) {
+func waitFrameworkDeleted(conn *backup.Backup, id string, timeout time.Duration) (*backup.DescribeFrameworkOutput, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{frameworkStatusDeletionInProgress},
 		Target:  []string{backup.ErrCodeResourceNotFoundException},
 		Refresh: statusFramework(conn, id),
-		Timeout: frameworkDeletionTimeout,
+		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForState()
