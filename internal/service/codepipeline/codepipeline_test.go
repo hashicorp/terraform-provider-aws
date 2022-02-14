@@ -1343,6 +1343,10 @@ func testAccS3Bucket(bucket, rName string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "%[1]s" {
   bucket = "tf-test-pipeline-%[1]s-%[2]s"
+}
+
+resource "aws_s3_bucket_acl" "%[1]s" {
+  bucket = aws_s3_bucket.%[1]s.id
   acl    = "private"
 }
 `, bucket, rName)
@@ -1352,6 +1356,11 @@ func testAccS3BucketWithProvider(bucket, rName, provider string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "%[1]s" {
   bucket   = "tf-test-pipeline-%[1]s-%[2]s"
+  provider = %[3]s
+}
+
+resource "aws_s3_bucket_acl" "%[1]s" {
+  bucket   = aws_s3_bucket.%[1]s.id
   acl      = "private"
   provider = %[3]s
 }
@@ -1422,6 +1431,10 @@ resource "aws_codestarconnections_connection" "test" {
 
 resource "aws_s3_bucket" "foo" {
   bucket = "tf-test-pipeline-%[1]s"
+}
+
+resource "aws_s3_bucket_acl" "foo_acl" {
+  bucket = aws_s3_bucket.foo.id
   acl    = "private"
 }
 `, rName))

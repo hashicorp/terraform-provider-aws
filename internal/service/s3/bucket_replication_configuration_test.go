@@ -1579,6 +1579,10 @@ resource "aws_s3_bucket_versioning" "destination" {
 
 resource "aws_s3_bucket" "source" {
   bucket = %[1]q
+}
+
+resource "aws_s3_bucket_acl" "source_acl" {
+  bucket = aws_s3_bucket.source.id
   acl    = "private"
 }
 
@@ -1590,7 +1594,10 @@ resource "aws_s3_bucket_versioning" "source" {
 }
 
 resource "aws_s3_bucket_replication_configuration" "test" {
-  depends_on = [aws_s3_bucket_versioning.source]
+  depends_on = [
+    aws_s3_bucket_versioning.source,
+    aws_s3_bucket_versioning.destination
+  ]
 
   bucket = aws_s3_bucket.source.id
   role   = aws_iam_role.test.arn
@@ -1652,6 +1659,10 @@ resource "aws_s3_bucket_versioning" "destination" {
 
 resource "aws_s3_bucket" "source" {
   bucket = %[1]q
+}
+
+resource "aws_s3_bucket_acl" "source_acl" {
+  bucket = aws_s3_bucket.source.id
   acl    = "private"
 }
 
@@ -1663,7 +1674,10 @@ resource "aws_s3_bucket_versioning" "source" {
 }
 
 resource "aws_s3_bucket_replication_configuration" "test" {
-  depends_on = [aws_s3_bucket_versioning.source]
+  depends_on = [
+    aws_s3_bucket_versioning.source,
+    aws_s3_bucket_versioning.destination
+  ]
 
   bucket = aws_s3_bucket.source.id
   role   = aws_iam_role.test.arn

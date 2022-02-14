@@ -31,6 +31,13 @@ func ResourceImagePipeline() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"container_recipe_arn": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringMatch(regexp.MustCompile(`^arn:aws[^:]*:imagebuilder:[^:]+:(?:\d{12}|aws):container-recipe/[a-z0-9-_]+/\d+\.\d+\.\d+$`), "valid container recipe ARN must be provided"),
+				ExactlyOneOf: []string{"container_recipe_arn", "image_recipe_arn"},
+			},
 			"date_created": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -64,9 +71,10 @@ func ResourceImagePipeline() *schema.Resource {
 			},
 			"image_recipe_arn": {
 				Type:         schema.TypeString,
-				Required:     true,
+				Optional:     true,
 				ForceNew:     true,
 				ValidateFunc: validation.StringMatch(regexp.MustCompile(`^arn:aws[^:]*:imagebuilder:[^:]+:(?:\d{12}|aws):image-recipe/[a-z0-9-_]+/\d+\.\d+\.\d+$`), "valid image recipe ARN must be provided"),
+				ExactlyOneOf: []string{"container_recipe_arn", "image_recipe_arn"},
 			},
 			"image_tests_configuration": {
 				Type:     schema.TypeList,
@@ -148,6 +156,10 @@ func resourceImagePipelineCreate(d *schema.ResourceData, meta interface{}) error
 		EnhancedImageMetadataEnabled: aws.Bool(d.Get("enhanced_image_metadata_enabled").(bool)),
 	}
 
+	if v, ok := d.GetOk("container_recipe_arn"); ok {
+		input.ContainerRecipeArn = aws.String(v.(string))
+	}
+
 	if v, ok := d.GetOk("description"); ok {
 		input.Description = aws.String(v.(string))
 	}
@@ -227,6 +239,7 @@ func resourceImagePipelineRead(d *schema.ResourceData, meta interface{}) error {
 	imagePipeline := output.ImagePipeline
 
 	d.Set("arn", imagePipeline.Arn)
+	d.Set("container_recipe_arn", imagePipeline.ContainerRecipeArn)
 	d.Set("date_created", imagePipeline.DateCreated)
 	d.Set("date_last_run", imagePipeline.DateLastRun)
 	d.Set("date_next_run", imagePipeline.DateNextRun)
@@ -284,6 +297,10 @@ func resourceImagePipelineUpdate(d *schema.ResourceData, meta interface{}) error
 			ClientToken:                  aws.String(resource.UniqueId()),
 			EnhancedImageMetadataEnabled: aws.Bool(d.Get("enhanced_image_metadata_enabled").(bool)),
 			ImagePipelineArn:             aws.String(d.Id()),
+		}
+
+		if v, ok := d.GetOk("container_recipe_arn"); ok {
+			input.ContainerRecipeArn = aws.String(v.(string))
 		}
 
 		if v, ok := d.GetOk("description"); ok {
