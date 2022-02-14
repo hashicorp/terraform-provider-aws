@@ -53,6 +53,7 @@ func TestAccCloudFormationStackSet_basic(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
+					"call_as",
 					"template_url",
 				},
 			},
@@ -108,6 +109,7 @@ func TestAccCloudFormationStackSet_administrationRoleARN(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
+					"call_as",
 					"template_url",
 				},
 			},
@@ -146,6 +148,7 @@ func TestAccCloudFormationStackSet_description(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
+					"call_as",
 					"template_url",
 				},
 			},
@@ -184,6 +187,7 @@ func TestAccCloudFormationStackSet_executionRoleName(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
+					"call_as",
 					"template_url",
 				},
 			},
@@ -239,6 +243,7 @@ func TestAccCloudFormationStackSet_name(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
+					"call_as",
 					"template_url",
 				},
 			},
@@ -278,6 +283,7 @@ func TestAccCloudFormationStackSet_parameters(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
+					"call_as",
 					"template_url",
 				},
 			},
@@ -338,6 +344,7 @@ func TestAccCloudFormationStackSet_Parameters_default(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
+					"call_as",
 					"template_url",
 				},
 			},
@@ -390,6 +397,7 @@ func TestAccCloudFormationStackSet_Parameters_noEcho(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
+					"call_as",
 					"template_url",
 				},
 			},
@@ -440,6 +448,7 @@ func TestAccCloudFormationStackSet_PermissionModel_serviceManaged(t *testing.T) 
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
+					"call_as",
 					"template_url",
 				},
 			},
@@ -471,6 +480,7 @@ func TestAccCloudFormationStackSet_tags(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
+					"call_as",
 					"template_url",
 				},
 			},
@@ -526,6 +536,7 @@ func TestAccCloudFormationStackSet_templateBody(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
+					"call_as",
 					"template_url",
 				},
 			},
@@ -565,6 +576,7 @@ func TestAccCloudFormationStackSet_templateURL(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
+					"call_as",
 					"template_url",
 				},
 			},
