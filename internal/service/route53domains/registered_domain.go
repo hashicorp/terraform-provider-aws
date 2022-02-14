@@ -47,9 +47,17 @@ func ResourceRegisteredDomain() *schema.Resource {
 				Optional: true,
 				Default:  true,
 			},
+			"creation_date": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"domain_name": {
 				Type:     schema.TypeString,
 				Required: true,
+			},
+			"expiration_date": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"name_server": {
 				Type:     schema.TypeList,
@@ -78,8 +86,33 @@ func ResourceRegisteredDomain() *schema.Resource {
 					},
 				},
 			},
+			"registrar_name": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"registrar_url": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"reseller": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"status_list": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
+			"updated_date": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"whois_server": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -154,10 +187,30 @@ func resourceRegisteredDomainRead(d *schema.ResourceData, meta interface{}) erro
 	d.Set("abuse_contact_email", domainDetail.AbuseContactEmail)
 	d.Set("abuse_contact_phone", domainDetail.AbuseContactPhone)
 	d.Set("auto_renew", domainDetail.AutoRenew)
+	if domainDetail.CreationDate != nil {
+		d.Set("creation_date", aws.TimeValue(domainDetail.CreationDate).Format(time.RFC3339))
+	} else {
+		d.Set("creation_date", nil)
+	}
 	d.Set("domain_name", domainDetail.DomainName)
+	if domainDetail.ExpirationDate != nil {
+		d.Set("expiration_date", aws.TimeValue(domainDetail.ExpirationDate).Format(time.RFC3339))
+	} else {
+		d.Set("expiration_date", nil)
+	}
 	if err := d.Set("name_server", flattenNameservers(domainDetail.Nameservers)); err != nil {
 		return fmt.Errorf("error setting name_servers: %w", err)
 	}
+	d.Set("registrar_name", domainDetail.RegistrarName)
+	d.Set("registrar_url", domainDetail.RegistrarUrl)
+	d.Set("reseller", domainDetail.Reseller)
+	d.Set("status_list", aws.StringValueSlice(domainDetail.StatusList))
+	if domainDetail.ExpirationDate != nil {
+		d.Set("updated_date", aws.TimeValue(domainDetail.UpdatedDate).Format(time.RFC3339))
+	} else {
+		d.Set("updated_date", nil)
+	}
+	d.Set("whois_server", domainDetail.WhoIsServer)
 
 	tags, err := ListTags(conn, d.Id())
 
@@ -195,6 +248,10 @@ func resourceRegisteredDomainUpdate(d *schema.ResourceData, meta interface{}) er
 			}
 		}
 	}
+
+	// TODO TransferLock
+	// TODO Contacts
+	// TODO ContactPrivacy
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")

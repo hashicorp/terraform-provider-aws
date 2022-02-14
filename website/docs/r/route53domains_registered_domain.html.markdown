@@ -55,7 +55,15 @@ In addition to all arguments above, the following attributes are exported:
 * `id` - The domain name.
 * `abuse_contact_email` - Email address to contact to report incorrect contact information for a domain, to report that the domain is being used to send spam, to report that someone is cybersquatting on a domain name, or report some other type of abuse.
 * `abuse_contact_phone` - Phone number for reporting abuse.
+* `creation_date` - The date when the domain was created as found in the response to a WHOIS query.
+* `expiration_date` - The date when the registration for the domain is set to expire.
+* `registrar_name` - Name of the registrar of the domain as identified in the registry.
+* `registrar_url` - Web address of the registrar.
+* `reseller` - Reseller of the domain.
+* `status_list` - List of [domain name status codes](https://www.icann.org/resources/pages/epp-status-codes-2014-06-16-en).
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
+* `updated_date` - The last updated date of the domain as found in the response to a WHOIS query.
+* `whois_server` - The fully qualified name of the WHOIS server that can answer the WHOIS query for the domain.
 
 ## Timeouts
 
