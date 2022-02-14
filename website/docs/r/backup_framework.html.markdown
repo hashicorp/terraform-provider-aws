@@ -100,6 +100,14 @@ For **scope** the following attributes are supported:
 * `compliance_resource_types` - (Optional) Describes whether the control scope includes one or more types of resources, such as EFS or RDS.
 * `tags` - (Optional) The tag key-value pair applied to those AWS resources that you want to trigger an evaluation for a rule. A maximum of one key-value pair can be provided.
 
+### Timeouts
+
+The `timeouts` block allows you to specify [timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) for certain actions:
+
+* `create` - (Defaults to 2 mins) Used when creating the framework
+* `update` - (Defaults to 2 mins) Used when updating the framework
+* `delete` - (Defaults to 2 mins) Used when deleting the framework
+
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
