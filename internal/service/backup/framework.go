@@ -237,6 +237,10 @@ func resourceFrameworkUpdate(d *schema.ResourceData, meta interface{}) error {
 		if err != nil {
 			return fmt.Errorf("error updating Backup Framework (%s): %w", d.Id(), err)
 		}
+
+		if _, err := waitFrameworkUpdated(conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return fmt.Errorf("error waiting for Framework (%s) update: %w", d.Id(), err)
+		}
 	}
 
 	if d.HasChange("tags_all") {
