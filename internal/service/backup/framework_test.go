@@ -26,6 +26,29 @@ func testAccFrameworkPreCheck(t *testing.T) {
 	}
 }
 
+func testAccCheckFrameworkDestroy(s *terraform.State) error {
+	conn := acctest.Provider.Meta().(*conns.AWSClient).BackupConn
+	for _, rs := range s.RootModule().Resources {
+		if rs.Type != "aws_backup_framework" {
+			continue
+		}
+
+		input := &backup.DescribeFrameworkInput{
+			FrameworkName: aws.String(rs.Primary.ID),
+		}
+
+		resp, err := conn.DescribeFramework(input)
+
+		if err == nil {
+			if aws.StringValue(resp.FrameworkName) == rs.Primary.ID {
+				return fmt.Errorf("Backup Framework '%s' was not deleted properly", rs.Primary.ID)
+			}
+		}
+	}
+
+	return nil
+}
+
 func testAccCheckFrameworkExists(name string, framework *backup.DescribeFrameworkOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
