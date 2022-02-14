@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
@@ -21,6 +22,7 @@ func ResourceFramework() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceFrameworkCreate,
 		Read:   resourceFrameworkRead,
+		Update: resourceFrameworkUpdate,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -212,6 +214,38 @@ func resourceFrameworkRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	return nil
+}
+
+func resourceFrameworkUpdate(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*conns.AWSClient).BackupConn
+
+	if d.HasChanges("description", "control") {
+		input := &backup.UpdateFrameworkInput{
+			IdempotencyToken:     aws.String(resource.UniqueId()),
+			FrameworkControls:    expandFrameworkControls(d.Get("control").(*schema.Set).List()),
+			FrameworkDescription: aws.String(d.Get("description").(string)),
+			FrameworkName:        aws.String(d.Id()),
+		}
+
+		log.Printf("[DEBUG] Updating Backup Framework: %#v", input)
+
+		_, err := tfresource.RetryWhenAWSErrCodeEquals(d.Timeout(schema.TimeoutUpdate), func() (interface{}, error) {
+			return conn.UpdateFramework(input)
+		}, backup.ErrCodeConflictException)
+
+		if err != nil {
+			return fmt.Errorf("error updating Backup Framework (%s): %w", d.Id(), err)
+		}
+	}
+
+	if d.HasChange("tags_all") {
+		o, n := d.GetChange("tags_all")
+		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+			return fmt.Errorf("error updating tags for Backup Framework (%s): %w", d.Id(), err)
+		}
+	}
+
+	return resourceFrameworkRead(d, meta)
 }
 
 func expandFrameworkControls(controls []interface{}) []*backup.FrameworkControl {
