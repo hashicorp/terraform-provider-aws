@@ -401,7 +401,7 @@ resource "aws_route53domains_registered_domain" "test" {
 
   admin_contact {
     address_line_1    = "99 High Street"
-	address_line_2    = "Flat 1a"
+    address_line_2    = "Flat 1a"
     city              = "Little Nowhere"
     contact_type      = "ASSOCIATION"
     country_code      = "GB"
@@ -420,8 +420,7 @@ resource "aws_route53domains_registered_domain" "test" {
     contact_type      = "COMPANY"
     country_code      = "US"
     email             = "test2@example.com"
-    # Changing owner's first or last name is a change of ownership.
-    first_name        = "Terraform"
+    first_name        = "Terraform" # Changing owner's first or last name is a change of ownership.
     last_name         = "Team"
     organization_name = "HashiCorp"
     phone_number      = "+1.2025551234"
@@ -437,7 +436,7 @@ resource "aws_route53domains_registered_domain" "test" {
     email          = "test3@example.com"
     first_name     = "Franz"
     last_name      = "Kafka"
-	phone_number   = "+420.224372434"
+    phone_number   = "+420.224372434"
     zip_code       = "119 01"
   }
 }
@@ -515,7 +514,8 @@ resource "aws_route53domains_registered_domain" "test" {
   domain_name = %[1]q
 
   name_server {
-    name     = "ns1.%[1]s"
+    name = "ns1.%[1]s"
+
     # Glue records are only applicable when the name server is a sub-domain.
     glue_ips = ["1.1.1.1"]
   }
