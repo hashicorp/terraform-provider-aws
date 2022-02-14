@@ -272,6 +272,89 @@ func TestAccBackupFramework_updateControlScope(t *testing.T) {
 		},
 	})
 }
+
+func TestAccBackupFramework_updateControlInputParameters(t *testing.T) {
+	var framework backup.DescribeFrameworkOutput
+
+	rName := fmt.Sprintf("tf_acc_test_%s", sdkacctest.RandString(7))
+	description := "example description"
+	originalRequiredRetentionDays := "35"
+	updatedRequiredRetentionDays := "34"
+	resourceName := "aws_backup_framework.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t); testAccFrameworkPreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, backup.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckFrameworkDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBackupFrameworkConfig_controlInputParameter(rName, description, originalRequiredRetentionDays),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFrameworkExists(resourceName, &framework),
+					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "control.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "control.0.name", "BACKUP_PLAN_MIN_FREQUENCY_AND_MIN_RETENTION_CHECK"),
+					resource.TestCheckResourceAttr(resourceName, "control.0.input_parameter.#", "3"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "control.0.input_parameter.*", map[string]string{
+						"name":  "requiredFrequencyUnit",
+						"value": "hours",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "control.0.input_parameter.*", map[string]string{
+						"name":  "requiredRetentionDays",
+						"value": originalRequiredRetentionDays,
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "control.0.input_parameter.*", map[string]string{
+						"name":  "requiredFrequencyValue",
+						"value": "1",
+					}),
+					resource.TestCheckResourceAttrSet(resourceName, "creation_time"),
+					resource.TestCheckResourceAttrSet(resourceName, "deployment_status"),
+					resource.TestCheckResourceAttr(resourceName, "description", description),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttrSet(resourceName, "status"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Name", "Test Framework"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccBackupFrameworkConfig_controlInputParameter(rName, description, updatedRequiredRetentionDays),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFrameworkExists(resourceName, &framework),
+					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "control.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "control.0.name", "BACKUP_PLAN_MIN_FREQUENCY_AND_MIN_RETENTION_CHECK"),
+					resource.TestCheckResourceAttr(resourceName, "control.0.input_parameter.#", "3"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "control.0.input_parameter.*", map[string]string{
+						"name":  "requiredFrequencyUnit",
+						"value": "hours",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "control.0.input_parameter.*", map[string]string{
+						"name":  "requiredRetentionDays",
+						"value": updatedRequiredRetentionDays,
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "control.0.input_parameter.*", map[string]string{
+						"name":  "requiredFrequencyValue",
+						"value": "1",
+					}),
+					resource.TestCheckResourceAttrSet(resourceName, "creation_time"),
+					resource.TestCheckResourceAttrSet(resourceName, "deployment_status"),
+					resource.TestCheckResourceAttr(resourceName, "description", description),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttrSet(resourceName, "status"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Name", "Test Framework"),
+				),
+			},
+		},
+	})
+}
+
 func testAccFrameworkPreCheck(t *testing.T) {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).BackupConn
 
@@ -469,3 +552,36 @@ resource "aws_backup_framework" "test" {
 }
 `, rName, label, controlScopeTagValue)
 }
+
+func testAccBackupFrameworkConfig_controlInputParameter(rName, label, requiredRetentionDaysValue string) string {
+	return fmt.Sprintf(`
+resource "aws_backup_framework" "test" {
+  name        = %[1]q
+  description = %[2]q
+
+  control {
+    name = "BACKUP_PLAN_MIN_FREQUENCY_AND_MIN_RETENTION_CHECK"
+
+    input_parameter {
+      name  = "requiredFrequencyUnit"
+      value = "hours"
+    }
+
+    input_parameter {
+      name  = "requiredRetentionDays"
+      value = %[3]q
+    }
+
+    input_parameter {
+      name  = "requiredFrequencyValue"
+      value = "1"
+    }
+  }
+
+  tags = {
+    "Name" = "Test Framework"
+  }
+}
+`, rName, label, requiredRetentionDaysValue)
+}
+
