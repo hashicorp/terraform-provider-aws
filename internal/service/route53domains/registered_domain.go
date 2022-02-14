@@ -22,6 +22,87 @@ import (
 )
 
 func ResourceRegisteredDomain() *schema.Resource {
+	contactSchema := &schema.Schema{
+		Type:     schema.TypeList,
+		Optional: true,
+		Computed: true,
+		MaxItems: 1,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"address_line_1": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.StringLenBetween(1, 255),
+				},
+				"address_line_2": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.StringLenBetween(1, 255),
+				},
+				"city": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.StringLenBetween(1, 255),
+				},
+				"contact_type": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.StringInSlice(route53domains.ContactType_Values(), false),
+				},
+				"country_code": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.StringInSlice(route53domains.CountryCode_Values(), false),
+				},
+				"email": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.StringLenBetween(1, 254),
+				},
+				"extra_params": {
+					Type:     schema.TypeMap,
+					Optional: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				"fax": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.StringLenBetween(1, 30),
+				},
+				"first_name": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.StringLenBetween(1, 255),
+				},
+				"last_name": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.StringLenBetween(1, 255),
+				},
+				"organization_name": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.StringLenBetween(1, 255),
+				},
+				"phone_number": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.StringLenBetween(1, 30),
+				},
+				"state": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.StringLenBetween(1, 30),
+				},
+				"zip_code": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.StringLenBetween(1, 30),
+				},
+			},
+		},
+	}
+
 	return &schema.Resource{
 		Create: resourceRegisteredDomainCreate,
 		Read:   resourceRegisteredDomainRead,
@@ -42,6 +123,7 @@ func ResourceRegisteredDomain() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"admin_contact": contactSchema,
 			"admin_privacy": {
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -91,6 +173,7 @@ func ResourceRegisteredDomain() *schema.Resource {
 					},
 				},
 			},
+			"registrant_contact": contactSchema,
 			"registrant_privacy": {
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -113,8 +196,9 @@ func ResourceRegisteredDomain() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			"tags":         tftags.TagsSchema(),
+			"tags_all":     tftags.TagsSchemaComputed(),
+			"tech_contact": contactSchema,
 			"tech_privacy": {
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -218,6 +302,13 @@ func resourceRegisteredDomainRead(d *schema.ResourceData, meta interface{}) erro
 
 	d.Set("abuse_contact_email", domainDetail.AbuseContactEmail)
 	d.Set("abuse_contact_phone", domainDetail.AbuseContactPhone)
+	if domainDetail.AdminContact != nil {
+		if err := d.Set("admin_contact", []interface{}{flattenContactDetail(domainDetail.AdminContact)}); err != nil {
+			return fmt.Errorf("error setting admin_contact: %w", err)
+		}
+	} else {
+		d.Set("admin_contact", nil)
+	}
 	d.Set("admin_privacy", domainDetail.AdminPrivacy)
 	d.Set("auto_renew", domainDetail.AutoRenew)
 	if domainDetail.CreationDate != nil {
@@ -234,12 +325,26 @@ func resourceRegisteredDomainRead(d *schema.ResourceData, meta interface{}) erro
 	if err := d.Set("name_server", flattenNameservers(domainDetail.Nameservers)); err != nil {
 		return fmt.Errorf("error setting name_servers: %w", err)
 	}
+	if domainDetail.RegistrantContact != nil {
+		if err := d.Set("registrant_contact", []interface{}{flattenContactDetail(domainDetail.RegistrantContact)}); err != nil {
+			return fmt.Errorf("error setting registrant_contact: %w", err)
+		}
+	} else {
+		d.Set("registrant_contact", nil)
+	}
 	d.Set("registrant_privacy", domainDetail.RegistrantPrivacy)
 	d.Set("registrar_name", domainDetail.RegistrarName)
 	d.Set("registrar_url", domainDetail.RegistrarUrl)
 	d.Set("reseller", domainDetail.Reseller)
 	statusList := aws.StringValueSlice(domainDetail.StatusList)
 	d.Set("status_list", statusList)
+	if domainDetail.TechContact != nil {
+		if err := d.Set("tech_contact", []interface{}{flattenContactDetail(domainDetail.TechContact)}); err != nil {
+			return fmt.Errorf("error setting tech_contact: %w", err)
+		}
+	} else {
+		d.Set("tech_contact", nil)
+	}
 	d.Set("tech_privacy", domainDetail.TechPrivacy)
 	d.Set("transfer_lock", hasDomainTransferLock(statusList))
 	if domainDetail.UpdatedDate != nil {
@@ -519,6 +624,179 @@ func waitOperationSucceeded(conn *route53domains.Route53Domains, id string, time
 	}
 
 	return nil, err
+}
+
+func flattenContactDetail(apiObject *route53domains.ContactDetail) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.AddressLine1; v != nil {
+		tfMap["address_line_1"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.AddressLine2; v != nil {
+		tfMap["address_line_2"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.City; v != nil {
+		tfMap["city"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.ContactType; v != nil {
+		tfMap["contact_type"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.CountryCode; v != nil {
+		tfMap["country_code"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.Email; v != nil {
+		tfMap["email"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.ExtraParams; v != nil {
+		tfMap["extra_params"] = flattenExtraParams(v)
+	}
+
+	if v := apiObject.Fax; v != nil {
+		tfMap["fax"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.FirstName; v != nil {
+		tfMap["first_name"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.LastName; v != nil {
+		tfMap["last_name"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.OrganizationName; v != nil {
+		tfMap["organization_name"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.PhoneNumber; v != nil {
+		tfMap["phone_number"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.State; v != nil {
+		tfMap["state"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.ZipCode; v != nil {
+		tfMap["zip_code"] = aws.StringValue(v)
+	}
+
+	return tfMap
+}
+
+func flattenExtraParams(apiObjects []*route53domains.ExtraParam) map[string]interface{} {
+	if len(apiObjects) == 0 {
+		return nil
+	}
+
+	tfMap := make(map[string]interface{}, len(apiObjects))
+
+	for _, apiObject := range apiObjects {
+		if apiObject == nil {
+			continue
+		}
+
+		tfMap[aws.StringValue(apiObject.Name)] = aws.StringValue(apiObject.Value)
+	}
+
+	return tfMap
+}
+
+func expandContactDetail(tfMap map[string]interface{}) *route53domains.ContactDetail {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &route53domains.ContactDetail{}
+
+	if v, ok := tfMap["address_line_1"].(string); ok {
+		apiObject.AddressLine1 = aws.String(v)
+	}
+
+	if v, ok := tfMap["address_line_2"].(string); ok {
+		apiObject.AddressLine2 = aws.String(v)
+	}
+
+	if v, ok := tfMap["city"].(string); ok {
+		apiObject.City = aws.String(v)
+	}
+
+	if v, ok := tfMap["contact_type"].(string); ok {
+		apiObject.ContactType = aws.String(v)
+	}
+
+	if v, ok := tfMap["country_code"].(string); ok {
+		apiObject.CountryCode = aws.String(v)
+	}
+
+	if v, ok := tfMap["email"].(string); ok {
+		apiObject.Email = aws.String(v)
+	}
+
+	if v, ok := tfMap["extra_params"].(map[string]interface{}); ok {
+		apiObject.ExtraParams = expandExtraParams(v)
+	}
+
+	if v, ok := tfMap["fax"].(string); ok {
+		apiObject.Fax = aws.String(v)
+	}
+
+	if v, ok := tfMap["first_name"].(string); ok {
+		apiObject.FirstName = aws.String(v)
+	}
+
+	if v, ok := tfMap["last_name"].(string); ok {
+		apiObject.LastName = aws.String(v)
+	}
+
+	if v, ok := tfMap["organization_name"].(string); ok {
+		apiObject.OrganizationName = aws.String(v)
+	}
+
+	if v, ok := tfMap["phone_number"].(string); ok {
+		apiObject.PhoneNumber = aws.String(v)
+	}
+
+	if v, ok := tfMap["state"].(string); ok {
+		apiObject.State = aws.String(v)
+	}
+
+	if v, ok := tfMap["zip_code"].(string); ok {
+		apiObject.ZipCode = aws.String(v)
+	}
+
+	return apiObject
+}
+
+func expandExtraParams(tfMap map[string]interface{}) []*route53domains.ExtraParam {
+	if len(tfMap) == 0 {
+		return nil
+	}
+
+	var apiObjects []*route53domains.ExtraParam
+
+	for k, vRaw := range tfMap {
+		v, ok := vRaw.(string)
+
+		if !ok {
+			continue
+		}
+
+		apiObjects = append(apiObjects, &route53domains.ExtraParam{
+			Name:  aws.String(k),
+			Value: aws.String(v),
+		})
+	}
+
+	return apiObjects
 }
 
 func flattenNameserver(apiObject *route53domains.Nameserver) map[string]interface{} {
