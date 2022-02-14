@@ -121,7 +121,7 @@ func resourceVpcConnectorRead(ctx context.Context, d *schema.ResourceData, meta 
 		return diag.FromErr(fmt.Errorf("error reading App Runner vpc connector (%s): empty output", d.Id()))
 	}
 
-	if aws.StringValue(output.VpcConnector.Status) == apprunner.ServiceStatusDeleted {
+	if aws.StringValue(output.VpcConnector.Status) == apprunner.VpcConnectorStatusInactive {
 		if d.IsNewResource() {
 			return diag.FromErr(fmt.Errorf("error reading App Runner vpc connector (%s): %s after creation", d.Id(), aws.StringValue(output.VpcConnector.Status)))
 		}

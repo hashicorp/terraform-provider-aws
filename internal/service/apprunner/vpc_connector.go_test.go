@@ -22,7 +22,7 @@ func TestAccAppRunnerVpcConnector_basic(t *testing.T) {
 	resourceName := "aws_apprunner_vpc_connector.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAppRunner(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAppRunnerVpcConnector(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apprunner.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckVpcConnectorDestroy,
@@ -52,7 +52,7 @@ func TestAccAppRunnerVpcConnector_disappears(t *testing.T) {
 	resourceName := "aws_apprunner_vpc_connector.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAppRunner(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAppRunnerVpcConnector(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apprunner.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckVpcConnectorDestroy,
@@ -74,7 +74,7 @@ func TestAccAppRunnerVpcConnector_tags(t *testing.T) {
 	resourceName := "aws_apprunner_vpc_connector.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAppRunner(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAppRunnerVpcConnector(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apprunner.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckVpcConnectorDestroy,
@@ -206,4 +206,21 @@ resource "aws_apprunner_vpc_connector" "test" {
   }
 }
 `, rName, tagKey1, tagValue1)
+}
+
+func testAccPreCheckAppRunnerVpcConnector(t *testing.T) {
+	conn := acctest.Provider.Meta().(*conns.AWSClient).AppRunnerConn
+	ctx := context.Background()
+
+	input := &apprunner.ListVpcConnectorsInput{}
+
+	_, err := conn.ListVpcConnectorsWithContext(ctx, input)
+
+	if acctest.PreCheckSkipError(err) {
+		t.Skipf("skipping acceptance testing: %s", err)
+	}
+
+	if err != nil {
+		t.Fatalf("unexpected PreCheck error: %s", err)
+	}
 }
