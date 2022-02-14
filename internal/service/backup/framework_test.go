@@ -355,6 +355,84 @@ func TestAccBackupFramework_updateControlInputParameters(t *testing.T) {
 	})
 }
 
+func TestAccBackupFramework_updateControls(t *testing.T) {
+	var framework backup.DescribeFrameworkOutput
+
+	rName := fmt.Sprintf("tf_acc_test_%s", sdkacctest.RandString(7))
+	description := "example description"
+	resourceName := "aws_backup_framework.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t); testAccFrameworkPreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, backup.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckFrameworkDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBackupFrameworkConfig_basic(rName, description),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFrameworkExists(resourceName, &framework),
+					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "control.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "control.0.name", "BACKUP_RESOURCES_PROTECTED_BY_BACKUP_PLAN"),
+					resource.TestCheckResourceAttr(resourceName, "control.0.scope.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "control.0.scope.0.compliance_resource_types.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "control.0.scope.0.compliance_resource_types.0", "EBS"),
+					resource.TestCheckResourceAttrSet(resourceName, "creation_time"),
+					resource.TestCheckResourceAttrSet(resourceName, "deployment_status"),
+					resource.TestCheckResourceAttr(resourceName, "description", description),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttrSet(resourceName, "status"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Name", "Test Framework"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccBackupFrameworkConfig_controls(rName, description),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFrameworkExists(resourceName, &framework),
+					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "control.#", "5"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "control.*", map[string]string{
+						"name":                    "BACKUP_RECOVERY_POINT_MINIMUM_RETENTION_CHECK",
+						"input_parameter.#":       "1",
+						"input_parameter.0.name":  "requiredRetentionDays",
+						"input_parameter.0.value": "35",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "control.*", map[string]string{
+						"name":              "BACKUP_PLAN_MIN_FREQUENCY_AND_MIN_RETENTION_CHECK",
+						"input_parameter.#": "3",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "control.*", map[string]string{
+						"name": "BACKUP_RECOVERY_POINT_ENCRYPTED",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "control.*", map[string]string{
+						"name":                                "BACKUP_RESOURCES_PROTECTED_BY_BACKUP_PLAN",
+						"scope.#":                             "1",
+						"scope.0.compliance_resource_types.#": "1",
+						"scope.0.compliance_resource_types.0": "EBS",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "control.*", map[string]string{
+						"name": "BACKUP_RECOVERY_POINT_MANUAL_DELETION_DISABLED",
+					}),
+					resource.TestCheckResourceAttrSet(resourceName, "creation_time"),
+					resource.TestCheckResourceAttrSet(resourceName, "deployment_status"),
+					resource.TestCheckResourceAttr(resourceName, "description", description),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttrSet(resourceName, "status"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Name", "Test Framework"),
+				),
+			},
+		},
+	})
+}
+
 func testAccFrameworkPreCheck(t *testing.T) {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).BackupConn
 
@@ -585,3 +663,61 @@ resource "aws_backup_framework" "test" {
 `, rName, label, requiredRetentionDaysValue)
 }
 
+func testAccBackupFrameworkConfig_controls(rName, label string) string {
+	return fmt.Sprintf(`
+resource "aws_backup_framework" "test" {
+  name        = %[1]q
+  description = %[2]q
+
+  control {
+    name = "BACKUP_RECOVERY_POINT_MINIMUM_RETENTION_CHECK"
+
+    input_parameter {
+      name  = "requiredRetentionDays"
+      value = "35"
+    }
+  }
+
+  control {
+    name = "BACKUP_PLAN_MIN_FREQUENCY_AND_MIN_RETENTION_CHECK"
+
+    input_parameter {
+      name  = "requiredFrequencyUnit"
+      value = "hours"
+    }
+
+    input_parameter {
+      name  = "requiredRetentionDays"
+      value = "35"
+    }
+
+    input_parameter {
+      name  = "requiredFrequencyValue"
+      value = "1"
+    }
+  }
+
+  control {
+    name = "BACKUP_RECOVERY_POINT_ENCRYPTED"
+  }
+
+  control {
+    name = "BACKUP_RESOURCES_PROTECTED_BY_BACKUP_PLAN"
+
+    scope {
+      compliance_resource_types = [
+        "EBS"
+      ]
+    }
+  }
+
+  control {
+    name = "BACKUP_RECOVERY_POINT_MANUAL_DELETION_DISABLED"
+  }
+
+  tags = {
+    "Name" = "Test Framework"
+  }
+}
+`, rName, label)
+}
