@@ -33,9 +33,9 @@ The following arguments supported:
 
 In addition to all arguments above, the following attributes are exported:
 
-* `vpc_connector_arn` - The Amazon Resource Name (ARN) of this VPC connector.
+* `vpc_connector_arn` - The Amazon Resource Name (ARN) of VPC connector.
 * `status` - The current state of the VPC connector. If the status of a connector revision is INACTIVE, it was deleted and can't be used. Inactive connector revisions are permanently removed some time after they are deleted.
-* `vpc_connector_revision` - The revision of this VPC connector. It's unique among all the active connectors ("Status": "ACTIVE") that share the same Name.
+* `vpc_connector_revision` - The revision of VPC connector. It's unique among all the active connectors ("Status": "ACTIVE") that share the same Name.
 
 ## Import
 

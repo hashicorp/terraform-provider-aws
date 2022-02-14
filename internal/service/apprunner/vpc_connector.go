@@ -56,6 +56,10 @@ func ResourceVpcConnector() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"vpc_connector_revision": {
+				Type:     schema.TypeInt,
+				Computed: true,
+			},
 		},
 	}
 }
