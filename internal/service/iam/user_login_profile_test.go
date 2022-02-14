@@ -417,7 +417,7 @@ resource "aws_iam_access_key" "test" {
 }
 
 func testAccUserLoginProfileConfig_PasswordLength(rName, pgpKey string, passwordLength int) string {
-	return testAccUserLoginProfileConfig_base(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccUserLoginProfileConfig_base(rName), fmt.Sprintf(`
 resource "aws_iam_user_login_profile" "test" {
   user            = aws_iam_user.test.name
   password_length = %d
@@ -426,11 +426,11 @@ resource "aws_iam_user_login_profile" "test" {
 %s
 EOF
 }
-`, passwordLength, pgpKey)
+`, passwordLength, pgpKey))
 }
 
 func testAccUserLoginProfileConfig_Required(rName, pgpKey string) string {
-	return testAccUserLoginProfileConfig_base(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccUserLoginProfileConfig_base(rName), fmt.Sprintf(`
 resource "aws_iam_user_login_profile" "test" {
   user = aws_iam_user.test.name
 
@@ -438,15 +438,15 @@ resource "aws_iam_user_login_profile" "test" {
 %s
 EOF
 }
-`, pgpKey)
+`, pgpKey))
 }
 
 func testAccUserLoginProfileConfigNoGPG(rName string) string {
-	return testAccUserLoginProfileConfig_base(rName) + `
+	return acctest.ConfigCompose(testAccUserLoginProfileConfig_base(rName), `
 resource "aws_iam_user_login_profile" "test" {
   user = aws_iam_user.test.name
 }
-`
+`)
 }
 
 const testPubKey1 = `mQENBFXbjPUBCADjNjCUQwfxKL+RR2GA6pv/1K+zJZ8UWIF9S0lk7cVIEfJiprzzwiMwBS5cD0da
