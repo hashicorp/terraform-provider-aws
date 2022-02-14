@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfbackup "github.com/hashicorp/terraform-provider-aws/internal/service/backup"
 )
 
 func TestAccBackupFramework_basic(t *testing.T) {
@@ -428,6 +429,31 @@ func TestAccBackupFramework_updateControls(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", "Test Framework"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccBackupFramework_disappears(t *testing.T) {
+	var framework backup.DescribeFrameworkOutput
+
+	rName := fmt.Sprintf("tf_acc_test_%s", sdkacctest.RandString(7))
+	description := "disappears"
+	resourceName := "aws_backup_framework.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t); testAccFrameworkPreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, backup.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckFrameworkDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBackupFrameworkConfig_basic(rName, description),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFrameworkExists(resourceName, &framework),
+					acctest.CheckResourceDisappears(acctest.Provider, tfbackup.ResourceFramework(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
