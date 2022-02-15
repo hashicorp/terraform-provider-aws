@@ -148,7 +148,7 @@ provider "aws" {
 ```
 
 In previous versions of the provider, the credentials in the environment variables would be used.
-Staring in v4.0, the profile shown in the provider configuration will be used.
+Starting in v4.1, what previously should have been the precedence process, is enforced. In other words, before v4.0, if an invalid profile was configured in the provider configuration, the provider would fall back to use environment variables. **This is no longer the case.** An explicitly set profile that does not have valid credentials will cause an authentication error. When a profile is explicitly set, the provider will not use environment variables per the precedence shown above.
 
 ## New Provider Arguments
 
