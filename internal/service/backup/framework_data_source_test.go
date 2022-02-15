@@ -67,6 +67,37 @@ func TestAccBackupFrameworkDataSource_basic(t *testing.T) {
 	})
 }
 
+func TestAccBackupFrameworkDataSource_controlScopeTag(t *testing.T) {
+	datasourceName := "data.aws_backup_framework.test"
+	resourceName := "aws_backup_framework.test"
+	rName := fmt.Sprintf("tf_acc_test_%s", sdkacctest.RandString(7))
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:   func() { acctest.PreCheck(t); testAccFrameworkPreCheck(t) },
+		ErrorCheck: acctest.ErrorCheck(t, backup.EndpointsID),
+		Providers:  acctest.Providers,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccFrameworkDataSourceConfig_controlScopeTag(rName),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrPair(datasourceName, "arn", resourceName, "arn"),
+					resource.TestCheckResourceAttrPair(datasourceName, "control.#", resourceName, "control.#"),
+					resource.TestCheckResourceAttrPair(datasourceName, "control.0.name", resourceName, "control.0.name"),
+					resource.TestCheckResourceAttrPair(datasourceName, "control.0.scope.#", resourceName, "control.0.scope.#"),
+					resource.TestCheckResourceAttrPair(datasourceName, "control.0.scope.0.tags.%", resourceName, "control.0.scope.0.tags.%"),
+					resource.TestCheckResourceAttrPair(datasourceName, "control.0.scope.0.tags.Name", resourceName, "control.0.scope.0.tags.Name"),
+					resource.TestCheckResourceAttrPair(datasourceName, "creation_time", resourceName, "creation_time"),
+					resource.TestCheckResourceAttrPair(datasourceName, "deployment_status", resourceName, "deployment_status"),
+					resource.TestCheckResourceAttrPair(datasourceName, "id", resourceName, "id"),
+					resource.TestCheckResourceAttrPair(datasourceName, "name", resourceName, "name"),
+					resource.TestCheckResourceAttrPair(datasourceName, "status", resourceName, "status"),
+					resource.TestCheckResourceAttrPair(datasourceName, "tags.%", resourceName, "tags.%"),
+					resource.TestCheckResourceAttrPair(datasourceName, "tags.Name", resourceName, "tags.Name"),
+				),
+			},
+		},
+	})
+}
 
 const testAccFrameworkDataSourceConfig_nonExistent = `
 data "aws_backup_framework" "test" {
@@ -143,6 +174,33 @@ resource "aws_backup_framework" "test" {
 
   control {
     name = "BACKUP_RECOVERY_POINT_MANUAL_DELETION_DISABLED"
+  }
+
+  tags = {
+    "Name" = "Test Framework"
+  }
+}
+
+data "aws_backup_framework" "test" {
+  name = aws_backup_framework.test.name
+}
+`, rName)
+}
+
+func testAccFrameworkDataSourceConfig_controlScopeTag(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_backup_framework" "test" {
+  name        = %[1]q
+  description = "Example framework"
+
+  control {
+    name = "BACKUP_RESOURCES_PROTECTED_BY_BACKUP_PLAN"
+
+    scope {
+      tags = {
+        "Name" = "Example"
+      }
+    }
   }
 
   tags = {
