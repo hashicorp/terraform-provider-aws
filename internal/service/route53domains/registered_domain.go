@@ -1,6 +1,7 @@
 package route53domains
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"log"
@@ -11,6 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/route53domains"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -104,10 +106,10 @@ func ResourceRegisteredDomain() *schema.Resource {
 	}
 
 	return &schema.Resource{
-		Create: resourceRegisteredDomainCreate,
-		Read:   resourceRegisteredDomainRead,
-		Update: resourceRegisteredDomainUpdate,
-		Delete: resourceRegisteredDomainDelete,
+		CreateWithoutTimeout: resourceRegisteredDomainCreate,
+		ReadWithoutTimeout:   resourceRegisteredDomainRead,
+		UpdateWithoutTimeout: resourceRegisteredDomainUpdate,
+		DeleteWithoutTimeout: resourceRegisteredDomainDelete,
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(30 * time.Minute),
@@ -223,14 +225,14 @@ func ResourceRegisteredDomain() *schema.Resource {
 	}
 }
 
-func resourceRegisteredDomainCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceRegisteredDomainCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).Route53DomainsConn
 
 	domainName := d.Get("domain_name").(string)
 	domainDetail, err := findDomainDetailByName(conn, domainName)
 
 	if err != nil {
-		return fmt.Errorf("error reading Route 53 Domains Domain (%s): %w", domainName, err)
+		return diag.FromErr(fmt.Errorf("error reading Route 53 Domains Domain (%s): %w", domainName, err))
 	}
 
 	d.SetId(aws.StringValue(domainDetail.DomainName))
@@ -257,19 +259,19 @@ func resourceRegisteredDomainCreate(d *schema.ResourceData, meta interface{}) er
 
 	if adminContact != nil || registrantContact != nil || techContact != nil {
 		if err := modifyDomainContact(conn, d.Id(), adminContact, registrantContact, techContact, d.Timeout(schema.TimeoutCreate)); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 	}
 
 	if adminPrivacy, registrantPrivacy, techPrivacy := d.Get("admin_privacy").(bool), d.Get("registrant_privacy").(bool), d.Get("tech_privacy").(bool); adminPrivacy != aws.BoolValue(domainDetail.AdminPrivacy) || registrantPrivacy != aws.BoolValue(domainDetail.RegistrantPrivacy) || techPrivacy != aws.BoolValue(domainDetail.TechPrivacy) {
 		if err := modifyDomainContactPrivacy(conn, d.Id(), adminPrivacy, registrantPrivacy, techPrivacy, d.Timeout(schema.TimeoutCreate)); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 	}
 
 	if v := d.Get("auto_renew").(bool); v != aws.BoolValue(domainDetail.AutoRenew) {
 		if err := modifyDomainAutoRenew(conn, d.Id(), v); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 	}
 
@@ -278,21 +280,21 @@ func resourceRegisteredDomainCreate(d *schema.ResourceData, meta interface{}) er
 
 		if !reflect.DeepEqual(nameservers, domainDetail.Nameservers) {
 			if err := modifyDomainNameservers(conn, d.Id(), nameservers, d.Timeout(schema.TimeoutCreate)); err != nil {
-				return err
+				return diag.FromErr(err)
 			}
 		}
 	}
 
 	if v := d.Get("transfer_lock").(bool); v != hasDomainTransferLock(aws.StringValueSlice(domainDetail.StatusList)) {
 		if err := modifyDomainTransferLock(conn, d.Id(), v, d.Timeout(schema.TimeoutCreate)); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 	}
 
 	tags, err := ListTags(conn, d.Id())
 
 	if err != nil {
-		return fmt.Errorf("error listing tags for Route 53 Domains Domain (%s): %w", d.Id(), err)
+		return diag.FromErr(fmt.Errorf("error listing tags for Route 53 Domains Domain (%s): %w", d.Id(), err))
 	}
 
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
@@ -302,14 +304,14 @@ func resourceRegisteredDomainCreate(d *schema.ResourceData, meta interface{}) er
 
 	if !oldTags.Equal(newTags) {
 		if err := UpdateTags(conn, d.Id(), oldTags, newTags); err != nil {
-			return fmt.Errorf("error updating Route 53 Domains Domain (%s) tags: %w", d.Id(), err)
+			return diag.FromErr(fmt.Errorf("error updating Route 53 Domains Domain (%s) tags: %w", d.Id(), err))
 		}
 	}
 
-	return resourceRegisteredDomainRead(d, meta)
+	return resourceRegisteredDomainRead(ctx, d, meta)
 }
 
-func resourceRegisteredDomainRead(d *schema.ResourceData, meta interface{}) error {
+func resourceRegisteredDomainRead(_ context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).Route53DomainsConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -323,14 +325,14 @@ func resourceRegisteredDomainRead(d *schema.ResourceData, meta interface{}) erro
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading Route 53 Domains Domain (%s): %w", d.Id(), err)
+		return diag.FromErr(fmt.Errorf("error reading Route 53 Domains Domain (%s): %w", d.Id(), err))
 	}
 
 	d.Set("abuse_contact_email", domainDetail.AbuseContactEmail)
 	d.Set("abuse_contact_phone", domainDetail.AbuseContactPhone)
 	if domainDetail.AdminContact != nil {
 		if err := d.Set("admin_contact", []interface{}{flattenContactDetail(domainDetail.AdminContact)}); err != nil {
-			return fmt.Errorf("error setting admin_contact: %w", err)
+			return diag.FromErr(fmt.Errorf("error setting admin_contact: %w", err))
 		}
 	} else {
 		d.Set("admin_contact", nil)
@@ -349,11 +351,11 @@ func resourceRegisteredDomainRead(d *schema.ResourceData, meta interface{}) erro
 		d.Set("expiration_date", nil)
 	}
 	if err := d.Set("name_server", flattenNameservers(domainDetail.Nameservers)); err != nil {
-		return fmt.Errorf("error setting name_servers: %w", err)
+		return diag.FromErr(fmt.Errorf("error setting name_servers: %w", err))
 	}
 	if domainDetail.RegistrantContact != nil {
 		if err := d.Set("registrant_contact", []interface{}{flattenContactDetail(domainDetail.RegistrantContact)}); err != nil {
-			return fmt.Errorf("error setting registrant_contact: %w", err)
+			return diag.FromErr(fmt.Errorf("error setting registrant_contact: %w", err))
 		}
 	} else {
 		d.Set("registrant_contact", nil)
@@ -366,7 +368,7 @@ func resourceRegisteredDomainRead(d *schema.ResourceData, meta interface{}) erro
 	d.Set("status_list", statusList)
 	if domainDetail.TechContact != nil {
 		if err := d.Set("tech_contact", []interface{}{flattenContactDetail(domainDetail.TechContact)}); err != nil {
-			return fmt.Errorf("error setting tech_contact: %w", err)
+			return diag.FromErr(fmt.Errorf("error setting tech_contact: %w", err))
 		}
 	} else {
 		d.Set("tech_contact", nil)
@@ -383,24 +385,24 @@ func resourceRegisteredDomainRead(d *schema.ResourceData, meta interface{}) erro
 	tags, err := ListTags(conn, d.Id())
 
 	if err != nil {
-		return fmt.Errorf("error listing tags for Route 53 Domains Domain (%s): %w", d.Id(), err)
+		return diag.FromErr(fmt.Errorf("error listing tags for Route 53 Domains Domain (%s): %w", d.Id(), err))
 	}
 
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return diag.FromErr(fmt.Errorf("error setting tags: %w", err))
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
+		return diag.FromErr(fmt.Errorf("error setting tags_all: %w", err))
 	}
 
 	return nil
 }
 
-func resourceRegisteredDomainUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceRegisteredDomainUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).Route53DomainsConn
 
 	if d.HasChanges("admin_contact", "registrant_contact", "tech_contact") {
@@ -425,33 +427,33 @@ func resourceRegisteredDomainUpdate(d *schema.ResourceData, meta interface{}) er
 		}
 
 		if err := modifyDomainContact(conn, d.Id(), adminContact, registrantContact, techContact, d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 	}
 
 	if d.HasChanges("admin_privacy", "registrant_privacy", "tech_privacy") {
 		if err := modifyDomainContactPrivacy(conn, d.Id(), d.Get("admin_privacy").(bool), d.Get("registrant_privacy").(bool), d.Get("tech_privacy").(bool), d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 	}
 
 	if d.HasChange("auto_renew") {
 		if err := modifyDomainAutoRenew(conn, d.Id(), d.Get("auto_renew").(bool)); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 	}
 
 	if d.HasChange("name_server") {
 		if v, ok := d.GetOk("name_server"); ok && len(v.([]interface{})) > 0 {
 			if err := modifyDomainNameservers(conn, d.Id(), expandNameservers(v.([]interface{})), d.Timeout(schema.TimeoutUpdate)); err != nil {
-				return err
+				return diag.FromErr(err)
 			}
 		}
 	}
 
 	if d.HasChange("transfer_lock") {
 		if err := modifyDomainTransferLock(conn, d.Id(), d.Get("transfer_lock").(bool), d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 	}
 
@@ -459,14 +461,14 @@ func resourceRegisteredDomainUpdate(d *schema.ResourceData, meta interface{}) er
 		o, n := d.GetChange("tags_all")
 
 		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
-			return fmt.Errorf("error updating Route 53 Domains Domain (%s) tags: %w", d.Id(), err)
+			return diag.FromErr(fmt.Errorf("error updating Route 53 Domains Domain (%s) tags: %w", d.Id(), err))
 		}
 	}
 
-	return resourceRegisteredDomainRead(d, meta)
+	return resourceRegisteredDomainRead(ctx, d, meta)
 }
 
-func resourceRegisteredDomainDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceRegisteredDomainDelete(_ context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[WARN] Route 53 Domains Registered Domain (%s) not deleted, removing from state", d.Id())
 
 	return nil
