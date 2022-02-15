@@ -41,6 +41,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/internal/ini v1.3.4 // indirect
 	github.com/aws/aws-sdk-go-v2/service/iam v1.16.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.7.0 // indirect
+	github.com/aws/aws-sdk-go-v2/service/route53domains v1.8.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sso v1.9.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sts v1.14.0 // indirect
 	github.com/aws/smithy-go v1.10.0 // indirect
