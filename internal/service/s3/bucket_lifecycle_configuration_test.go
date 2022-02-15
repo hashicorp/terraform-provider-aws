@@ -444,6 +444,165 @@ func TestAccS3BucketLifecycleConfiguration_RuleAbortIncompleteMultipartUpload(t 
 	})
 }
 
+// TestAccS3BucketLifecycleConfiguration_TransitionDate_StandardIa validates the change to address
+// https://github.com/hashicorp/terraform-provider-aws/issues/23117
+// does not introduce a regression.
+func TestAccS3BucketLifecycleConfiguration_TransitionDate_StandardIa(t *testing.T) {
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_s3_bucket_lifecycle_configuration.test"
+
+	currTime := time.Now()
+	date := time.Date(currTime.Year(), currTime.Month()+1, currTime.Day(), 0, 0, 0, 0, time.UTC).Format(time.RFC3339)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckBucketLifecycleConfigurationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBucketLifecycleConfiguration_DateTransitionConfig(rName, date, s3.TransitionStorageClassStandardIa),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBucketLifecycleConfigurationExists(resourceName),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+// TestAccS3BucketLifecycleConfiguration_TransitionDate_IntelligentTiering validates the change to address
+// https://github.com/hashicorp/terraform-provider-aws/issues/23117
+// does not introduce a regression.
+func TestAccS3BucketLifecycleConfiguration_TransitionDate_IntelligentTiering(t *testing.T) {
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_s3_bucket_lifecycle_configuration.test"
+
+	currTime := time.Now()
+	date := time.Date(currTime.Year(), currTime.Month()+1, currTime.Day(), 0, 0, 0, 0, time.UTC).Format(time.RFC3339)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckBucketLifecycleConfigurationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBucketLifecycleConfiguration_DateTransitionConfig(rName, date, s3.StorageClassIntelligentTiering),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBucketLifecycleConfigurationExists(resourceName),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/23117
+func TestAccS3BucketLifecycleConfiguration_TransitionStorageClassOnly_IntelligentTiering(t *testing.T) {
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_s3_bucket_lifecycle_configuration.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckBucketLifecycleConfigurationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBucketLifecycleConfiguration_TransitionStorageClassOnlyConfig(rName, s3.StorageClassIntelligentTiering),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBucketLifecycleConfigurationExists(resourceName),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.0.transition.*", map[string]string{
+						"days":          "0",
+						"date":          "",
+						"storage_class": s3.StorageClassIntelligentTiering,
+					}),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/23117
+func TestAccS3BucketLifecycleConfiguration_TransitionZeroDays_IntelligentTiering(t *testing.T) {
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_s3_bucket_lifecycle_configuration.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckBucketLifecycleConfigurationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBucketLifecycleConfiguration_ZeroDaysTransitionConfig(rName, s3.StorageClassIntelligentTiering),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBucketLifecycleConfigurationExists(resourceName),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccS3BucketLifecycleConfiguration_TransitionUpdateBetweenDaysAndDate_IntelligentTiering(t *testing.T) {
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_s3_bucket_lifecycle_configuration.test"
+
+	currTime := time.Now()
+	date := time.Date(currTime.Year(), currTime.Month()+1, currTime.Day(), 0, 0, 0, 0, time.UTC).Format(time.RFC3339)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckBucketLifecycleConfigurationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBucketLifecycleConfiguration_ZeroDaysTransitionConfig(rName, s3.StorageClassIntelligentTiering),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBucketLifecycleConfigurationExists(resourceName),
+				),
+			},
+			{
+				Config: testAccBucketLifecycleConfiguration_DateTransitionConfig(rName, date, s3.StorageClassIntelligentTiering),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBucketLifecycleConfigurationExists(resourceName),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccBucketLifecycleConfiguration_ZeroDaysTransitionConfig(rName, s3.StorageClassIntelligentTiering),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBucketLifecycleConfigurationExists(resourceName),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckBucketLifecycleConfigurationDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn
 
@@ -856,4 +1015,114 @@ resource "aws_s3_bucket_lifecycle_configuration" "test" {
   }
 }
 `, rName)
+}
+
+func testAccBucketLifecycleConfiguration_TransitionStorageClassOnlyConfig(rName, storageClass string) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket = %[1]q
+}
+
+resource "aws_s3_bucket_acl" "test" {
+  bucket = aws_s3_bucket.test.id
+  acl    = "private"
+}
+
+resource "aws_s3_bucket_lifecycle_configuration" "test" {
+  bucket = aws_s3_bucket.test.bucket
+
+  rule {
+    id = %[1]q
+
+    abort_incomplete_multipart_upload {
+      days_after_initiation = 1
+    }
+
+    noncurrent_version_transition {
+      noncurrent_days = 0
+      storage_class   = "INTELLIGENT_TIERING"
+    }
+
+    transition {
+      storage_class = %[2]q
+    }
+
+    status = "Enabled"
+  }
+}
+`, rName, storageClass)
+}
+
+func testAccBucketLifecycleConfiguration_ZeroDaysTransitionConfig(rName, storageClass string) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket = %[1]q
+}
+
+resource "aws_s3_bucket_acl" "test" {
+  bucket = aws_s3_bucket.test.id
+  acl    = "private"
+}
+
+resource "aws_s3_bucket_lifecycle_configuration" "test" {
+  bucket = aws_s3_bucket.test.bucket
+
+  rule {
+    id = %[1]q
+
+    abort_incomplete_multipart_upload {
+      days_after_initiation = 1
+    }
+
+    noncurrent_version_transition {
+      noncurrent_days = 0
+      storage_class   = "INTELLIGENT_TIERING"
+    }
+
+    transition {
+      days          = 0
+      storage_class = %[2]q
+    }
+
+    status = "Enabled"
+  }
+}
+`, rName, storageClass)
+}
+
+func testAccBucketLifecycleConfiguration_DateTransitionConfig(rName, transitionDate, storageClass string) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket = %[1]q
+}
+
+resource "aws_s3_bucket_acl" "test" {
+  bucket = aws_s3_bucket.test.id
+  acl    = "private"
+}
+
+resource "aws_s3_bucket_lifecycle_configuration" "test" {
+  bucket = aws_s3_bucket.test.bucket
+
+  rule {
+    id = %[1]q
+
+    abort_incomplete_multipart_upload {
+      days_after_initiation = 1
+    }
+
+    noncurrent_version_transition {
+      noncurrent_days = 0
+      storage_class   = "INTELLIGENT_TIERING"
+    }
+
+    transition {
+      date          = %[2]q
+      storage_class = %[3]q
+    }
+
+    status = "Enabled"
+  }
+}
+`, rName, transitionDate, storageClass)
 }

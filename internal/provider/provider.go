@@ -925,6 +925,7 @@ func Provider() *schema.Provider {
 
 			"aws_autoscalingplans_scaling_plan": autoscalingplans.ResourceScalingPlan(),
 
+			"aws_backup_framework":                backup.ResourceFramework(),
 			"aws_backup_global_settings":          backup.ResourceGlobalSettings(),
 			"aws_backup_plan":                     backup.ResourcePlan(),
 			"aws_backup_region_settings":          backup.ResourceRegionSettings(),

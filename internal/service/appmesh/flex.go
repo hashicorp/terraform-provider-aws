@@ -275,7 +275,7 @@ func expandGRPCRoute(vGrpcRoute []interface{}) *appmesh.GrpcRoute {
 
 		mGrpcRetryPolicy := vGrpcRetryPolicy[0].(map[string]interface{})
 
-		if vMaxRetries, ok := mGrpcRetryPolicy["max_retries"].(int); ok && vMaxRetries > 0 {
+		if vMaxRetries, ok := mGrpcRetryPolicy["max_retries"].(int); ok {
 			grpcRetryPolicy.MaxRetries = aws.Int64(int64(vMaxRetries))
 		}
 
@@ -437,7 +437,7 @@ func expandHTTPRoute(vHttpRoute []interface{}) *appmesh.HttpRoute {
 
 		mHttpRetryPolicy := vHttpRetryPolicy[0].(map[string]interface{})
 
-		if vMaxRetries, ok := mHttpRetryPolicy["max_retries"].(int); ok && vMaxRetries > 0 {
+		if vMaxRetries, ok := mHttpRetryPolicy["max_retries"].(int); ok {
 			httpRetryPolicy.MaxRetries = aws.Int64(int64(vMaxRetries))
 		}
 
