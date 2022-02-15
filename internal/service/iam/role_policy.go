@@ -16,6 +16,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+const (
+	rolePolicyNameMaxLen       = 128
+	rolePolicyNamePrefixMaxLen = rolePolicyNameMaxLen - resource.UniqueIDSuffixLength
+)
+
 func ResourceRolePolicy() *schema.Resource {
 	return &schema.Resource{
 		// PutRolePolicy API is idempotent, so these can be the same.
@@ -48,7 +53,7 @@ func ResourceRolePolicy() *schema.Resource {
 				Optional:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"name"},
-				ValidateFunc:  validRolePolicyNamePrefix,
+				ValidateFunc:  validIamResourceName(rolePolicyNamePrefixMaxLen),
 			},
 			"role": {
 				Type:     schema.TypeString,
