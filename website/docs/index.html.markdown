@@ -65,10 +65,19 @@ authentication. The following methods are supported, in this order, and
 explained below:
 
 - Static credentials
+- Profiles with shared credentials and configuration files
 - Environment variables
-- Shared credentials/configuration file
 - CodeBuild, ECS, and EKS Roles
 - EC2 Instance Metadata Service (IMDS and IMDSv2)
+
+If a setting is specified more than once, the precedence is:
+
+- The provider configuration
+- Environment variables
+- Settings for the profile from the shared credentials and configuration files
+
+For instance the region is set in the shared configuration file and in the provider configuration,
+the setting from the provider configuration will be used.
 
 ### Static Credentials
 
@@ -88,6 +97,28 @@ provider "aws" {
   secret_key = "my-secret-key"
 }
 ```
+
+### Profiles With Shared Credentials and Configuration Files
+
+You can use [AWS credentials and configuration files](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-files.html) to specify your credentials and configuration.
+The default locations are `$HOME/.aws/credentials` and `$HOME/.aws/config` on Linux and macOS,
+or `"%USERPROFILE%\.aws\credentials"` and `"%USERPROFILE%\.aws\config"`on Windows.
+You can optionally specify a different location in the Terraform configuration by providing the `shared_credentials_files` and `shared_config_files` arguments or
+using the `AWS_SHARED_CREDENTIALS_FILE` and `AWS_CONFIG_FILE` environment variables.
+This method also supports the `profile` configuration or corresponding `AWS_PROFILE` environment variable:
+
+Usage:
+
+```terraform
+provider "aws" {
+  region                   = "us-west-2"
+  shared_config_files      = ["/Users/tf_user/.aws/conf"]
+  shared_credentials_files = ["/Users/tf_user/.aws/creds"]
+  profile                  = "customprofile"
+}
+```
+
+Please note that the [AWS SDK for Go v2](https://aws.amazon.com/sdk-for-go-v2/), the underlying authentication handler used by the Terraform AWS Provider, does not support all AWS CLI features.
 
 ### Environment Variables
 
@@ -112,41 +143,11 @@ $ export AWS_DEFAULT_REGION="us-west-2"
 $ terraform plan
 ```
 
-### Shared Credentials File
-
-You can use [AWS credentials or configuration files](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-files.html) to specify your credentials and configuration.
-The default locations are `$HOME/.aws/credentials` and `$HOME/.aws/config` on Linux and macOS,
-or `"%USERPROFILE%\.aws\credentials"` and `"%USERPROFILE%\.aws\config"`on Windows.
-You can optionally specify a different location in the Terraform configuration by providing the `shared_credentials_files` and `shared_config_files` arguments or
-using the `AWS_SHARED_CREDENTIALS_FILE` and `AWS_CONFIG_FILE` environment variables.
-This method also supports the `profile` configuration or corresponding `AWS_PROFILE` environment variable:
-
-Usage:
-
-```terraform
-provider "aws" {
-  region                   = "us-west-2"
-  shared_config_files      = ["/Users/tf_user/.aws/conf"]
-  shared_credentials_files = ["/Users/tf_user/.aws/creds"]
-  profile                  = "customprofile"
-}
-```
-
-Please note that the [AWS SDK for Go v2](https://aws.amazon.com/sdk-for-go-v2/), the underlying authentication handler used by the Terraform AWS Provider, does not support all AWS CLI features.
-
 ### CodeBuild, ECS, and EKS Roles
 
 If you're running Terraform on CodeBuild or ECS and have configured an [IAM Task Role](http://docs.aws.amazon.com/AmazonECS/latest/developerguide/task-iam-roles.html), Terraform will use the container's Task Role. This support is based on the underlying `AWS_CONTAINER_CREDENTIALS_RELATIVE_URI` and `AWS_CONTAINER_CREDENTIALS_FULL_URI` environment variables being automatically set by those services or manually for advanced usage.
 
 If you're running Terraform on EKS and have configured [IAM Roles for Service Accounts (IRSA)](https://docs.aws.amazon.com/eks/latest/userguide/iam-roles-for-service-accounts.html), Terraform will use the pod's role. This support is based on the underlying `AWS_ROLE_ARN` and `AWS_WEB_IDENTITY_TOKEN_FILE` environment variables being automatically set by Kubernetes or manually for advanced usage.
-
-### Custom User-Agent Information
-
-By default, the underlying AWS client used by the Terraform AWS Provider creates requests with User-Agent headers including information about Terraform and AWS SDK for Go versions. To provide additional information in the User-Agent headers, the `TF_APPEND_USER_AGENT` environment variable can be set and its value will be directly added to HTTP requestsE.g.,
-
-```sh
-$ export TF_APPEND_USER_AGENT="JenkinsAgent/i-12345678 BuildID/1234 (Optional Extra Information)"
-```
 
 ### EC2 Instance Metadata Service
 
@@ -181,6 +182,15 @@ provider "aws" {
 ```
 
 > **Hands-on:** Try the [Use AssumeRole to Provision AWS Resources Across Accounts](https://learn.hashicorp.com/tutorials/terraform/aws-assumerole) tutorial on HashiCorp Learn.
+
+
+## Custom User-Agent Information
+
+By default, the underlying AWS client used by the Terraform AWS Provider creates requests with User-Agent headers including information about Terraform and AWS SDK for Go versions. To provide additional information in the User-Agent headers, the `TF_APPEND_USER_AGENT` environment variable can be set and its value will be directly added to HTTP requestsE.g.,
+
+```sh
+$ export TF_APPEND_USER_AGENT="JenkinsAgent/i-12345678 BuildID/1234 (Optional Extra Information)"
+```
 
 ## Argument Reference
 

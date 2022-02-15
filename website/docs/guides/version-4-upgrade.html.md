@@ -123,6 +123,33 @@ provider "aws" {
 }
 ```
 
+## Changes to Authentication
+
+The authentication configuration for the AWS Provider has changed in this version
+to match the behavior of other AWS tooling, including the AWS SDK and AWS CLI.
+Precendence for settings is as follows:
+
+* Settings in the provider configuration
+* Settings configured with environment variables
+* Settings from the shared credentials and configuration files
+
+For example, with the following:
+
+```console
+$ export AWS_ACCESS_KEY_ID="anaccesskey"
+$ export AWS_SECRET_ACCESS_KEY="asecretkey"
+```
+
+```terraform
+provider "aws" {
+  region  = "us-west-2"
+  profile = "customprofile"
+}
+```
+
+In previous versions of the provider, the credentials in the environment variables would be used.
+Staring in v4.0, the profile shown in the provider configuration will be used.
+
 ## New Provider Arguments
 
 Version 4.0.0 adds these new provider arguments:
