@@ -35,12 +35,6 @@ func ResourceEventDataStore() *schema.Resource {
 		CustomizeDiff: verify.SetTagsDiff,
 
 		Schema: map[string]*schema.Schema{
-			"name": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(3, 128),
-			},
 			"advanced_event_selector": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -141,6 +135,12 @@ func ResourceEventDataStore() *schema.Resource {
 				Optional: true,
 				Default:  false,
 			},
+			"name": {
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringLenBetween(3, 128),
+			},
 			"organization_enabled": {
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -153,14 +153,13 @@ func ResourceEventDataStore() *schema.Resource {
 					validation.IntBetween(7, 2555),
 				),
 			},
+			"tags":     tftags.TagsSchema(),
+			"tags_all": tftags.TagsSchemaComputed(),
 			"termination_protection_enabled": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  true,
 			},
-
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
 		},
 	}
 }
