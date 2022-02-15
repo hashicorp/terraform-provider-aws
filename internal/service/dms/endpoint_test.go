@@ -1028,10 +1028,10 @@ resource "aws_dms_endpoint" "dms_endpoint" {
   s3_settings {
     service_access_role_arn = aws_iam_role.iam_role.arn
     bucket_name             = "bucket_name"
-	cdc_path 				= "cdc/path"
-	date_partition_enabled  = true
-	date_partition_sequence = "yyyymmddhh"
-	timestamp_column_name	= "tx_commit_time"
+    cdc_path                = "cdc/path"
+    date_partition_enabled  = true
+    date_partition_sequence = "yyyymmddhh"
+    timestamp_column_name   = "tx_commit_time"
   }
 
   depends_on = [aws_iam_role_policy.dms_s3_access]

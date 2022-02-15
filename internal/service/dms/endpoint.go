@@ -436,6 +436,7 @@ func ResourceEndpoint() *schema.Resource {
 						"timestamp_column_name": {
 							Type:     schema.TypeString,
 							Optional: true,
+							Default:  "",
 						},
 						"parquet_timestamp_in_millisecond": {
 							Type:     schema.TypeBool,
@@ -482,6 +483,7 @@ func ResourceEndpoint() *schema.Resource {
 						"cdc_path": {
 							Type:     schema.TypeString,
 							Optional: true,
+							Default:  "",
 						},
 						"canned_acl_for_objects": {
 							Type:         schema.TypeString,
@@ -1446,13 +1448,13 @@ func expandDmsS3Settings(tfMap map[string]interface{}) *dms.S3Settings {
 	if v, ok := tfMap["add_column_name"].(bool); ok {
 		apiObject.AddColumnName = aws.Bool(v)
 	}
-	if v, ok := tfMap["bucket_folder"].(string); ok && v != "" {
+	if v, ok := tfMap["bucket_folder"].(string); ok {
 		apiObject.BucketFolder = aws.String(v)
 	}
-	if v, ok := tfMap["bucket_name"].(string); ok && v != "" {
+	if v, ok := tfMap["bucket_name"].(string); ok {
 		apiObject.BucketName = aws.String(v)
 	}
-	if v, ok := tfMap["canned_acl_for_objects"].(string); ok && v != "" {
+	if v, ok := tfMap["canned_acl_for_objects"].(string); ok {
 		apiObject.CannedAclForObjects = aws.String(v)
 	}
 	if v, ok := tfMap["cdc_inserts_and_updates"].(bool); ok {
@@ -1467,37 +1469,37 @@ func expandDmsS3Settings(tfMap map[string]interface{}) *dms.S3Settings {
 	if v, ok := tfMap["cdc_min_file_size"].(int); ok {
 		apiObject.CdcMinFileSize = aws.Int64(int64(v))
 	}
-	if v, ok := tfMap["cdc_path"].(string); ok && v != "" {
+	if v, ok := tfMap["cdc_path"].(string); ok {
 		apiObject.CdcPath = aws.String(v)
 	}
-	if v, ok := tfMap["compression_type"].(string); ok && v != "" {
+	if v, ok := tfMap["compression_type"].(string); ok {
 		apiObject.CompressionType = aws.String(v)
 	}
-	if v, ok := tfMap["csv_delimiter"].(string); ok && v != "" {
+	if v, ok := tfMap["csv_delimiter"].(string); ok {
 		apiObject.CsvDelimiter = aws.String(v)
 	}
-	if v, ok := tfMap["csv_no_sup_value"].(string); ok && v != "" {
+	if v, ok := tfMap["csv_no_sup_value"].(string); ok {
 		apiObject.CsvNoSupValue = aws.String(v)
 	}
-	if v, ok := tfMap["csv_null_value"].(string); ok && v != "" {
+	if v, ok := tfMap["csv_null_value"].(string); ok {
 		apiObject.CsvNullValue = aws.String(v)
 	}
-	if v, ok := tfMap["csv_row_delimiter"].(string); ok && v != "" {
+	if v, ok := tfMap["csv_row_delimiter"].(string); ok {
 		apiObject.CsvRowDelimiter = aws.String(v)
 	}
-	if v, ok := tfMap["data_format"].(string); ok && v != "" {
+	if v, ok := tfMap["data_format"].(string); ok {
 		apiObject.DataFormat = aws.String(v)
 	}
 	if v, ok := tfMap["data_page_size"].(int); ok {
 		apiObject.DataPageSize = aws.Int64(int64(v))
 	}
-	if v, ok := tfMap["date_partition_delimiter"].(string); ok && v != "" {
+	if v, ok := tfMap["date_partition_delimiter"].(string); ok {
 		apiObject.DatePartitionDelimiter = aws.String(v)
 	}
 	if v, ok := tfMap["date_partition_enabled"].(bool); ok {
 		apiObject.DatePartitionEnabled = aws.Bool(v)
 	}
-	if v, ok := tfMap["date_partition_sequence"].(string); ok && v != "" {
+	if v, ok := tfMap["date_partition_sequence"].(string); ok {
 		apiObject.DatePartitionSequence = aws.String(v)
 	}
 	if v, ok := tfMap["dict_page_size_limit"].(int); ok {
@@ -1506,13 +1508,13 @@ func expandDmsS3Settings(tfMap map[string]interface{}) *dms.S3Settings {
 	if v, ok := tfMap["enable_statistics"].(bool); ok {
 		apiObject.EnableStatistics = aws.Bool(v)
 	}
-	if v, ok := tfMap["encoding_type"].(string); ok && v != "" {
+	if v, ok := tfMap["encoding_type"].(string); ok {
 		apiObject.EncodingType = aws.String(v)
 	}
-	if v, ok := tfMap["encryption_mode"].(string); ok && v != "" {
+	if v, ok := tfMap["encryption_mode"].(string); ok {
 		apiObject.EncryptionMode = aws.String(v)
 	}
-	if v, ok := tfMap["external_table_definition"].(string); ok && v != "" {
+	if v, ok := tfMap["external_table_definition"].(string); ok {
 		apiObject.ExternalTableDefinition = aws.String(v)
 	}
 	if v, ok := tfMap["ignore_header_rows"].(int); ok {
@@ -1527,7 +1529,7 @@ func expandDmsS3Settings(tfMap map[string]interface{}) *dms.S3Settings {
 	if v, ok := tfMap["parquet_timestamp_in_millisecond"].(bool); ok {
 		apiObject.ParquetTimestampInMillisecond = aws.Bool(v)
 	}
-	if v, ok := tfMap["parquet_version"].(string); ok && v != "" {
+	if v, ok := tfMap["parquet_version"].(string); ok {
 		apiObject.ParquetVersion = aws.String(v)
 	}
 	if v, ok := tfMap["preserve_transactions"].(bool); ok {
@@ -1539,13 +1541,13 @@ func expandDmsS3Settings(tfMap map[string]interface{}) *dms.S3Settings {
 	if v, ok := tfMap["row_group_length"].(int); ok {
 		apiObject.RowGroupLength = aws.Int64(int64(v))
 	}
-	if v, ok := tfMap["server_side_encryption_kms_key_id"].(string); ok && v != "" {
+	if v, ok := tfMap["server_side_encryption_kms_key_id"].(string); ok {
 		apiObject.ServerSideEncryptionKmsKeyId = aws.String(v)
 	}
-	if v, ok := tfMap["service_access_role_arn"].(string); ok && v != "" {
+	if v, ok := tfMap["service_access_role_arn"].(string); ok {
 		apiObject.ServiceAccessRoleArn = aws.String(v)
 	}
-	if v, ok := tfMap["timestamp_column_name"].(string); ok && v != "" {
+	if v, ok := tfMap["timestamp_column_name"].(string); ok {
 		apiObject.TimestampColumnName = aws.String(v)
 	}
 	if v, ok := tfMap["use_csv_no_sup_value"].(bool); ok {
