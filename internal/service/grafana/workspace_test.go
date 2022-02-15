@@ -2,7 +2,6 @@ package grafana_test
 
 import (
 	"fmt"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"testing"
 )
 
@@ -14,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/grafana"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func TestAccGrafanaWorkspace_saml(t *testing.T) {
