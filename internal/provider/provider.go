@@ -371,6 +371,13 @@ func Provider() *schema.Provider {
 				Description: "Skip requesting the account ID. " +
 					"Used for AWS API implementations that do not have IAM/STS API and/or metadata API.",
 			},
+			"sts_region": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Default:  "",
+				Description: "The region where AWS STS operations will take place. Examples\n" +
+					"are us-east-1 and us-west-2.", // lintignore:AWSAT003,
+			},
 			"token": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -1917,6 +1924,7 @@ func providerConfigure(d *schema.ResourceData, terraformVersion string) (interfa
 		SkipMetadataApiCheck:           d.Get("skip_metadata_api_check").(bool),
 		SkipRegionValidation:           d.Get("skip_region_validation").(bool),
 		SkipRequestingAccountId:        d.Get("skip_requesting_account_id").(bool),
+		STSRegion:                      d.Get("sts_region").(string),
 		TerraformVersion:               terraformVersion,
 		Token:                          d.Get("token").(string),
 		UseDualStackEndpoint:           d.Get("use_dualstack_endpoint").(bool),

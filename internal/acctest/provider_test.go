@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/endpoints"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -68,7 +69,7 @@ func TestReverseDNS(t *testing.T) {
 	}
 }
 
-func TestAccAcctestProvider_DefaultTags_emptyBlock(t *testing.T) {
+func TestAccProvider_DefaultTags_emptyBlock(t *testing.T) {
 	var providers []*schema.Provider
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -87,7 +88,7 @@ func TestAccAcctestProvider_DefaultTags_emptyBlock(t *testing.T) {
 	})
 }
 
-func TestAccAcctestProvider_DefaultTagsTags_none(t *testing.T) {
+func TestAccProvider_DefaultTagsTags_none(t *testing.T) {
 	var providers []*schema.Provider
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -106,7 +107,7 @@ func TestAccAcctestProvider_DefaultTagsTags_none(t *testing.T) {
 	})
 }
 
-func TestAccAcctestProvider_DefaultTagsTags_one(t *testing.T) {
+func TestAccProvider_DefaultTagsTags_one(t *testing.T) {
 	var providers []*schema.Provider
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -125,7 +126,7 @@ func TestAccAcctestProvider_DefaultTagsTags_one(t *testing.T) {
 	})
 }
 
-func TestAccAcctestProvider_DefaultTagsTags_multiple(t *testing.T) {
+func TestAccProvider_DefaultTagsTags_multiple(t *testing.T) {
 	var providers []*schema.Provider
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -147,7 +148,7 @@ func TestAccAcctestProvider_DefaultTagsTags_multiple(t *testing.T) {
 	})
 }
 
-func TestAccAcctestProvider_DefaultAndIgnoreTags_emptyBlocks(t *testing.T) {
+func TestAccProvider_DefaultAndIgnoreTags_emptyBlocks(t *testing.T) {
 	var providers []*schema.Provider
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -168,7 +169,7 @@ func TestAccAcctestProvider_DefaultAndIgnoreTags_emptyBlocks(t *testing.T) {
 	})
 }
 
-func TestAccAcctestProvider_endpoints(t *testing.T) {
+func TestAccProvider_endpoints(t *testing.T) {
 	var providers []*schema.Provider
 	var endpoints strings.Builder
 
@@ -193,7 +194,7 @@ func TestAccAcctestProvider_endpoints(t *testing.T) {
 	})
 }
 
-func TestAccAcctestProvider_fipsEndpoint(t *testing.T) {
+func TestAccProvider_fipsEndpoint(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(ResourcePrefix)
 	resourceName := "aws_s3_bucket.test"
 
@@ -213,7 +214,7 @@ func TestAccAcctestProvider_fipsEndpoint(t *testing.T) {
 	})
 }
 
-func TestAccAcctestProvider_unusualEndpoints(t *testing.T) {
+func TestAccProvider_unusualEndpoints(t *testing.T) {
 	var providers []*schema.Provider
 
 	unusual1 := []string{"es", "elasticsearch", "http://notarealendpoint"}
@@ -236,7 +237,7 @@ func TestAccAcctestProvider_unusualEndpoints(t *testing.T) {
 	})
 }
 
-func TestAccAcctestProvider_IgnoreTags_emptyBlock(t *testing.T) {
+func TestAccProvider_IgnoreTags_emptyBlock(t *testing.T) {
 	var providers []*schema.Provider
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -256,7 +257,7 @@ func TestAccAcctestProvider_IgnoreTags_emptyBlock(t *testing.T) {
 	})
 }
 
-func TestAccAcctestProvider_IgnoreTagsKeyPrefixes_none(t *testing.T) {
+func TestAccProvider_IgnoreTagsKeyPrefixes_none(t *testing.T) {
 	var providers []*schema.Provider
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -275,7 +276,7 @@ func TestAccAcctestProvider_IgnoreTagsKeyPrefixes_none(t *testing.T) {
 	})
 }
 
-func TestAccAcctestProvider_IgnoreTagsKeyPrefixes_one(t *testing.T) {
+func TestAccProvider_IgnoreTagsKeyPrefixes_one(t *testing.T) {
 	var providers []*schema.Provider
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -294,7 +295,7 @@ func TestAccAcctestProvider_IgnoreTagsKeyPrefixes_one(t *testing.T) {
 	})
 }
 
-func TestAccAcctestProvider_IgnoreTagsKeyPrefixes_multiple(t *testing.T) {
+func TestAccProvider_IgnoreTagsKeyPrefixes_multiple(t *testing.T) {
 	var providers []*schema.Provider
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -313,7 +314,7 @@ func TestAccAcctestProvider_IgnoreTagsKeyPrefixes_multiple(t *testing.T) {
 	})
 }
 
-func TestAccAcctestProvider_IgnoreTagsKeys_none(t *testing.T) {
+func TestAccProvider_IgnoreTagsKeys_none(t *testing.T) {
 	var providers []*schema.Provider
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -332,7 +333,7 @@ func TestAccAcctestProvider_IgnoreTagsKeys_none(t *testing.T) {
 	})
 }
 
-func TestAccAcctestProvider_IgnoreTagsKeys_one(t *testing.T) {
+func TestAccProvider_IgnoreTagsKeys_one(t *testing.T) {
 	var providers []*schema.Provider
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -351,7 +352,7 @@ func TestAccAcctestProvider_IgnoreTagsKeys_one(t *testing.T) {
 	})
 }
 
-func TestAccAcctestProvider_IgnoreTagsKeys_multiple(t *testing.T) {
+func TestAccProvider_IgnoreTagsKeys_multiple(t *testing.T) {
 	var providers []*schema.Provider
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -370,7 +371,7 @@ func TestAccAcctestProvider_IgnoreTagsKeys_multiple(t *testing.T) {
 	})
 }
 
-func TestAccAcctestProvider_Region_awsC2S(t *testing.T) {
+func TestAccProvider_Region_awsC2S(t *testing.T) {
 	var providers []*schema.Provider
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -380,10 +381,10 @@ func TestAccAcctestProvider_Region_awsC2S(t *testing.T) {
 		CheckDestroy:      nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRegionConfig("us-iso-east-1"), // lintignore:AWSAT003
+				Config: testAccRegionConfig(endpoints.UsIsoEast1RegionID),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDNSSuffix(&providers, "c2s.ic.gov"),
-					testAccCheckPartition(&providers, "aws-iso"),
+					testAccCheckPartition(&providers, endpoints.AwsIsoPartitionID),
 					testAccCheckReverseDNSPrefix(&providers, "gov.ic.c2s"),
 				),
 				PlanOnly: true,
@@ -392,7 +393,7 @@ func TestAccAcctestProvider_Region_awsC2S(t *testing.T) {
 	})
 }
 
-func TestAccAcctestProvider_Region_awsChina(t *testing.T) {
+func TestAccProvider_Region_awsChina(t *testing.T) {
 	var providers []*schema.Provider
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -402,10 +403,10 @@ func TestAccAcctestProvider_Region_awsChina(t *testing.T) {
 		CheckDestroy:      nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRegionConfig("cn-northwest-1"), // lintignore:AWSAT003
+				Config: testAccRegionConfig(endpoints.CnNorthwest1RegionID),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDNSSuffix(&providers, "amazonaws.com.cn"),
-					testAccCheckPartition(&providers, "aws-cn"),
+					testAccCheckPartition(&providers, endpoints.AwsCnPartitionID),
 					testAccCheckReverseDNSPrefix(&providers, "cn.com.amazonaws"),
 				),
 				PlanOnly: true,
@@ -414,7 +415,7 @@ func TestAccAcctestProvider_Region_awsChina(t *testing.T) {
 	})
 }
 
-func TestAccAcctestProvider_Region_awsCommercial(t *testing.T) {
+func TestAccProvider_Region_awsCommercial(t *testing.T) {
 	var providers []*schema.Provider
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -424,10 +425,10 @@ func TestAccAcctestProvider_Region_awsCommercial(t *testing.T) {
 		CheckDestroy:      nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRegionConfig("us-west-2"), // lintignore:AWSAT003
+				Config: testAccRegionConfig(endpoints.UsWest2RegionID),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDNSSuffix(&providers, "amazonaws.com"),
-					testAccCheckPartition(&providers, "aws"),
+					testAccCheckPartition(&providers, endpoints.AwsPartitionID),
 					testAccCheckReverseDNSPrefix(&providers, "com.amazonaws"),
 				),
 				PlanOnly: true,
@@ -436,7 +437,7 @@ func TestAccAcctestProvider_Region_awsCommercial(t *testing.T) {
 	})
 }
 
-func TestAccAcctestProvider_Region_awsGovCloudUs(t *testing.T) {
+func TestAccProvider_Region_awsGovCloudUs(t *testing.T) {
 	var providers []*schema.Provider
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -446,10 +447,10 @@ func TestAccAcctestProvider_Region_awsGovCloudUs(t *testing.T) {
 		CheckDestroy:      nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRegionConfig("us-gov-west-1"), // lintignore:AWSAT003
+				Config: testAccRegionConfig(endpoints.UsGovWest1RegionID),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDNSSuffix(&providers, "amazonaws.com"),
-					testAccCheckPartition(&providers, "aws-us-gov"),
+					testAccCheckPartition(&providers, endpoints.AwsUsGovPartitionID),
 					testAccCheckReverseDNSPrefix(&providers, "com.amazonaws"),
 				),
 				PlanOnly: true,
@@ -458,7 +459,7 @@ func TestAccAcctestProvider_Region_awsGovCloudUs(t *testing.T) {
 	})
 }
 
-func TestAccAcctestProvider_Region_awsSC2S(t *testing.T) {
+func TestAccProvider_Region_awsSC2S(t *testing.T) {
 	var providers []*schema.Provider
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -468,10 +469,10 @@ func TestAccAcctestProvider_Region_awsSC2S(t *testing.T) {
 		CheckDestroy:      nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRegionConfig("us-isob-east-1"), // lintignore:AWSAT003
+				Config: testAccRegionConfig(endpoints.UsIsobEast1RegionID),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDNSSuffix(&providers, "sc2s.sgov.gov"),
-					testAccCheckPartition(&providers, "aws-iso-b"),
+					testAccCheckPartition(&providers, endpoints.AwsIsoBPartitionID),
 					testAccCheckReverseDNSPrefix(&providers, "gov.sgov.sc2s"),
 				),
 				PlanOnly: true,
@@ -480,7 +481,28 @@ func TestAccAcctestProvider_Region_awsSC2S(t *testing.T) {
 	})
 }
 
-func TestAccAcctestProvider_AssumeRole_empty(t *testing.T) {
+func TestAccProvider_Region_stsRegion(t *testing.T) {
+	var providers []*schema.Provider
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { PreCheck(t) },
+		ErrorCheck:        ErrorCheck(t),
+		ProviderFactories: FactoriesInternal(&providers),
+		CheckDestroy:      nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSTSRegionConfig(endpoints.UsEast1RegionID, endpoints.UsWest2RegionID),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRegion(&providers, endpoints.UsEast1RegionID),
+					testAccCheckSTSRegion(&providers, endpoints.UsWest2RegionID),
+				),
+				PlanOnly: true,
+			},
+		},
+	})
+}
+
+func TestAccProvider_AssumeRole_empty(t *testing.T) {
 	var providers []*schema.Provider
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -536,6 +558,48 @@ func testAccCheckDNSSuffix(providers *[]*schema.Provider, expectedDnsSuffix stri
 
 			if providerDnsSuffix != expectedDnsSuffix {
 				return fmt.Errorf("expected DNS Suffix (%s), got: %s", expectedDnsSuffix, providerDnsSuffix)
+			}
+		}
+
+		return nil
+	}
+}
+
+func testAccCheckRegion(providers *[]*schema.Provider, expectedRegion string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		if providers == nil {
+			return fmt.Errorf("no providers initialized")
+		}
+
+		for _, provo := range *providers {
+			if provo == nil || provo.Meta() == nil || provo.Meta().(*conns.AWSClient) == nil {
+				continue
+			}
+
+			if provo.Meta().(*conns.AWSClient).Region != expectedRegion {
+				return fmt.Errorf("expected Region (%s), got: %s", expectedRegion, provo.Meta().(*conns.AWSClient).Region)
+			}
+		}
+
+		return nil
+	}
+}
+
+func testAccCheckSTSRegion(providers *[]*schema.Provider, expectedRegion string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		if providers == nil {
+			return fmt.Errorf("no providers initialized")
+		}
+
+		for _, provo := range *providers {
+			if provo == nil || provo.Meta() == nil || provo.Meta().(*conns.AWSClient) == nil {
+				continue
+			}
+
+			stsRegion := aws.StringValue(provo.Meta().(*conns.AWSClient).STSConn.Config.Region)
+
+			if stsRegion != expectedRegion {
+				return fmt.Errorf("expected STS Region (%s), got: %s", expectedRegion, stsRegion)
 			}
 		}
 
@@ -1098,4 +1162,20 @@ provider "aws" {
   skip_requesting_account_id  = true
 }
 `, region))
+}
+
+func testAccSTSRegionConfig(region, stsRegion string) string {
+	//lintignore:AT004
+	return ConfigCompose(
+		testAccProviderConfigBase,
+		fmt.Sprintf(`
+provider "aws" {
+  region                      = %[1]q
+  sts_region                  = %[2]q
+  skip_credentials_validation = true
+  skip_get_ec2_platforms      = true
+  skip_metadata_api_check     = true
+  skip_requesting_account_id  = true
+}
+`, region, stsRegion))
 }
