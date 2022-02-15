@@ -355,7 +355,10 @@ func ResourceEndpoint() *schema.Resource {
 							Type:         schema.TypeString,
 							Optional:     true,
 							Default:      dms.CannedAclForObjectsValueNone,
-							ValidateFunc: validation.StringInSlice(dms.CannedAclForObjectsValue_Values(), false),
+							ValidateFunc: validation.StringInSlice(dms.CannedAclForObjectsValue_Values(), true),
+							StateFunc: func(v interface{}) string {
+								return strings.ToLower(v.(string))
+							},
 						},
 						"cdc_inserts_and_updates": {
 							Type:     schema.TypeBool,
