@@ -1,6 +1,8 @@
 package rds
 
 import (
+	"log"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/rds"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -123,13 +125,18 @@ func FindDBClusterByClusterArn(conn *rds.RDS, dbClusterArn string) (*rds.DBClust
 		DBClusterIdentifier: aws.String(dbClusterArn),
 	}
 
+	log.Printf("[DEBUG] Calling conn.DescribeDBCClusters(input) with DBClusterIdentifier set to %s", dbClusterArn)
 	output, err := conn.DescribeDBClusters(input)
 
-	if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBClusterNotFoundFault) {
-		return nil, &resource.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+	if err != nil {
+		if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBClusterNotFoundFault) {
+			return nil, &resource.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
+			}
 		}
+		log.Print("[WARN] Error is not nil")
+		return nil, err
 	}
 
 	if output == nil || len(output.DBClusters) == 0 || output.DBClusters[0] == nil {

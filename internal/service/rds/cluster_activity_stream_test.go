@@ -17,18 +17,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func init() {
-	resource.AddTestSweepers("aws_rds_cluster_activity_stream", &resource.Sweeper{
-		Name: "aws_rds_cluster_activity_stream",
-		F:    func(region string) error { return nil },
-		Dependencies: []string{
-			"aws_kms_key",
-			"aws_kinesis_stream",
-			"aws_rds_cluster",
-		},
-	})
-}
-
 func TestAccAWSRDSClusterActivityStream_basic(t *testing.T) {
 	var dbCluster rds.DBCluster
 	clusterName := sdkacctest.RandomWithPrefix("tf-testacc-aurora-cluster")
@@ -114,8 +102,7 @@ func testAccCheckAWSRDSClusterActivityStreamExistsWithProvider(resourceName stri
 			return err
 		}
 
-		dbCluster = response
-
+		*dbCluster = *response
 		return nil
 	}
 }
@@ -209,7 +196,7 @@ resource "aws_rds_cluster_instance" "test" {
   engine             = aws_rds_cluster.test.engine
   instance_class     = "db.r6g.large"
 }
-	`, clusterName, instanceName)
+`, clusterName, instanceName)
 }
 
 func testAccAWSClusterActivityStreamConfig(clusterName, instanceName string) string {
