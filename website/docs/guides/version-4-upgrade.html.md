@@ -23,6 +23,7 @@ Upgrade topics:
 <!-- TOC depthFrom:2 depthTo:2 -->
 
 - [Provider Version Configuration](#provider-version-configuration)
+- [Changes to Authentication](#changes-to-authentication)
 - [New Provider Arguments](#new-provider-arguments)
 - [S3 Bucket Refactor](#s3-bucket-refactor)
     - [`acceleration_status` Argument](#acceleration_status-argument)
@@ -125,15 +126,19 @@ provider "aws" {
 
 ## Changes to Authentication
 
-The authentication configuration for the AWS Provider has changed in this version
-to match the behavior of other AWS tooling, including the AWS SDK and AWS CLI.
-Precedence for settings is as follows:
+The authentication configuration for the AWS Provider has changed in this version to match the behavior of other AWS products, including the AWS SDK and AWS CLI. _This will break AWS provider configurations where a non-empty `profile` is set in the `provider` configuration but the profile does not correspond to an AWS profile with valid credentials._
 
-* Settings in the provider configuration
-* Settings configured with environment variables
-* Settings from the shared credentials and configuration files
+Precedence for authentication settings is as follows:
 
-For example, with the following:
+* `provider` configuration
+* Environment variables
+* Shared credentials and configuration files
+
+In previous versions of the provider, you could explicitly set `profile` in the `provider`, and if the profile did not correspond to valid credentials, the provider would use credentials from environment variables. Starting in v4.0, the Terraform AWS provider enforces the precedence shown above, similarly to how the AWS SDK and AWS CLI behave.
+
+In other words, when you explicitly set `profile` in `provider`, the AWS provider will not use environment variables per the precedence shown above. Before v4.0, if `profile` was configured in the `provider` configuration but did not correspond to an AWS profile or valid credentials, the provider would attempt to use environment variables. **This is no longer the case.** An explicitly set profile that does not have valid credentials will cause an authentication error. 
+
+For example, with the following, the environment variables will not be used:
 
 ```console
 $ export AWS_ACCESS_KEY_ID="anaccesskey"
@@ -146,9 +151,6 @@ provider "aws" {
   profile = "customprofile"
 }
 ```
-
-In previous versions of the provider, the credentials in the environment variables would be used.
-Starting in v4.1, what previously should have been the precedence process, is enforced. In other words, before v4.0, if an invalid profile was configured in the provider configuration, the provider would fall back to use environment variables. **This is no longer the case.** An explicitly set profile that does not have valid credentials will cause an authentication error. When a profile is explicitly set, the provider will not use environment variables per the precedence shown above.
 
 ## New Provider Arguments
 
