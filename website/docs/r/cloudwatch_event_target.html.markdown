@@ -299,7 +299,7 @@ EOF
 data "aws_iam_policy_document" "event_bus_invoke_remote_event_bus" {
   statement {
     effect    = "Allow"
-    actions   = ["events.PutEvents"]
+    actions   = ["events:PutEvents"]
     resources = ["arn:aws:events:eu-west-1:1234567890:event-bus/My-Event-Bus"]
   }
 }

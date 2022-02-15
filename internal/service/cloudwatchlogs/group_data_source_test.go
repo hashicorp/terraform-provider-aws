@@ -22,10 +22,10 @@ func TestAccCloudWatchLogsGroupDataSource_basic(t *testing.T) {
 			{
 				Config: testAccCheckGroupDataSourceConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "name", "aws_cloudwatch_log_group.test", "name"),
+					resource.TestCheckResourceAttrPair(resourceName, "arn", "aws_cloudwatch_log_group.test", "arn"),
 					resource.TestCheckResourceAttrSet(resourceName, "creation_time"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttrPair(resourceName, "tags", "aws_cloudwatch_log_group.test", "tags"),
 				),
 			},
 		},
@@ -44,13 +44,10 @@ func TestAccCloudWatchLogsGroupDataSource_tags(t *testing.T) {
 			{
 				Config: testAccCheckGroupTagsDataSourceConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "name", "aws_cloudwatch_log_group.test", "name"),
+					resource.TestCheckResourceAttrPair(resourceName, "arn", "aws_cloudwatch_log_group.test", "arn"),
 					resource.TestCheckResourceAttrSet(resourceName, "creation_time"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "3"),
-					resource.TestCheckResourceAttr(resourceName, "tags.Environment", "Production"),
-					resource.TestCheckResourceAttr(resourceName, "tags.Foo", "Bar"),
-					resource.TestCheckResourceAttr(resourceName, "tags.Empty", ""),
+					resource.TestCheckResourceAttrPair(resourceName, "tags", "aws_cloudwatch_log_group.test", "tags"),
 				),
 			},
 		},
@@ -69,11 +66,11 @@ func TestAccCloudWatchLogsGroupDataSource_kms(t *testing.T) {
 			{
 				Config: testAccCheckGroupKMSDataSourceConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "name", "aws_cloudwatch_log_group.test", "name"),
+					resource.TestCheckResourceAttrPair(resourceName, "arn", "aws_cloudwatch_log_group.test", "arn"),
 					resource.TestCheckResourceAttrSet(resourceName, "creation_time"),
-					resource.TestCheckResourceAttrSet(resourceName, "kms_key_id"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttrPair(resourceName, "kms_key_id", "aws_cloudwatch_log_group.test", "kms_key_id"),
+					resource.TestCheckResourceAttrPair(resourceName, "tags", "aws_cloudwatch_log_group.test", "tags"),
 				),
 			},
 		},
@@ -92,11 +89,11 @@ func TestAccCloudWatchLogsGroupDataSource_retention(t *testing.T) {
 			{
 				Config: testAccCheckGroupRetentionDataSourceConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "name", "aws_cloudwatch_log_group.test", "name"),
+					resource.TestCheckResourceAttrPair(resourceName, "arn", "aws_cloudwatch_log_group.test", "arn"),
 					resource.TestCheckResourceAttrSet(resourceName, "creation_time"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "retention_in_days", "365"),
+					resource.TestCheckResourceAttrPair(resourceName, "tags", "aws_cloudwatch_log_group.test", "tags"),
+					resource.TestCheckResourceAttrPair(resourceName, "retention_in_days", "aws_cloudwatch_log_group.test", "retention_in_days"),
 				),
 			},
 		},

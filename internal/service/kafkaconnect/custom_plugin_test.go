@@ -163,7 +163,7 @@ func testAccCheckCustomPluginObjectVersion(name string) resource.TestCheckFunc {
 		}
 
 		for _, rs := range s.RootModule().Resources {
-			if rs.Type == "aws_s3_bucket_object" {
+			if rs.Type == "aws_s3_object" {
 				pluginObjectVersion := plugin.Primary.Attributes["location.0.s3.0.object_version"]
 				objectVersionId := rs.Primary.Attributes["version_id"]
 
@@ -175,7 +175,7 @@ func testAccCheckCustomPluginObjectVersion(name string) resource.TestCheckFunc {
 			}
 		}
 
-		return fmt.Errorf("Couldn't find aws_s3_bucket_object resource to compare versions.")
+		return fmt.Errorf("Couldn't find aws_s3_object resource to compare versions.")
 	}
 }
 
@@ -185,7 +185,7 @@ resource "aws_s3_bucket" "test" {
   bucket = %[1]q
 }
 
-resource "aws_s3_bucket_object" "test" {
+resource "aws_s3_object" "test" {
   bucket = aws_s3_bucket.test.id
   key    = %[1]q
   source = "test-fixtures/activemq-connector.zip"
@@ -199,7 +199,7 @@ resource "aws_s3_bucket" "test" {
   bucket = %[1]q
 }
 
-resource "aws_s3_bucket_object" "test" {
+resource "aws_s3_object" "test" {
   bucket = aws_s3_bucket.test.id
   key    = %[1]q
   source = "test-fixtures/mongodb-connector.jar"
@@ -216,7 +216,7 @@ resource "aws_mskconnect_custom_plugin" "test" {
   location {
     s3 {
       bucket_arn = aws_s3_bucket.test.arn
-      file_key   = aws_s3_bucket_object.test.key
+      file_key   = aws_s3_object.test.key
     }
   }
 }
@@ -233,7 +233,7 @@ resource "aws_mskconnect_custom_plugin" "test" {
   location {
     s3 {
       bucket_arn = aws_s3_bucket.test.arn
-      file_key   = aws_s3_bucket_object.test.key
+      file_key   = aws_s3_object.test.key
     }
   }
 }
@@ -249,7 +249,7 @@ resource "aws_mskconnect_custom_plugin" "test" {
   location {
     s3 {
       bucket_arn = aws_s3_bucket.test.arn
-      file_key   = aws_s3_bucket_object.test.key
+      file_key   = aws_s3_object.test.key
     }
   }
 }
@@ -260,13 +260,19 @@ func testAccCustomPluginConfigObjectVersion(name string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
+}
 
-  versioning {
-    enabled = true
+resource "aws_s3_bucket_versioning" "test" {
+  bucket = aws_s3_bucket.test.id
+  versioning_configuration {
+    status = "Enabled"
   }
 }
 
-resource "aws_s3_bucket_object" "test" {
+resource "aws_s3_object" "test" {
+  # Must have versioning enabled first
+  depends_on = [aws_s3_bucket_versioning.test]
+
   bucket = aws_s3_bucket.test.id
   key    = %[1]q
   source = "test-fixtures/mongodb-connector.jar"
@@ -279,8 +285,8 @@ resource "aws_mskconnect_custom_plugin" "test" {
   location {
     s3 {
       bucket_arn     = aws_s3_bucket.test.arn
-      file_key       = aws_s3_bucket_object.test.key
-      object_version = aws_s3_bucket_object.test.version_id
+      file_key       = aws_s3_object.test.key
+      object_version = aws_s3_object.test.version_id
     }
   }
 }

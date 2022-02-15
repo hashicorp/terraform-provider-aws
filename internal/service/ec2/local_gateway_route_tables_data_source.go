@@ -13,17 +13,15 @@ import (
 func DataSourceLocalGatewayRouteTables() *schema.Resource {
 	return &schema.Resource{
 		Read: dataSourceLocalGatewayRouteTablesRead,
+
 		Schema: map[string]*schema.Schema{
-			"filter": CustomFiltersSchema(),
-
-			"tags": tftags.TagsSchemaComputed(),
-
+			"filter": DataSourceFiltersSchema(),
 			"ids": {
-				Type:     schema.TypeSet,
+				Type:     schema.TypeList,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
-				Set:      schema.HashString,
 			},
+			"tags": tftags.TagsSchemaComputed(),
 		},
 	}
 }
@@ -31,55 +29,34 @@ func DataSourceLocalGatewayRouteTables() *schema.Resource {
 func dataSourceLocalGatewayRouteTablesRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
-	req := &ec2.DescribeLocalGatewayRouteTablesInput{}
+	input := &ec2.DescribeLocalGatewayRouteTablesInput{}
 
-	req.Filters = append(req.Filters, BuildTagFilterList(
+	input.Filters = append(input.Filters, BuildTagFilterList(
 		Tags(tftags.New(d.Get("tags").(map[string]interface{}))),
 	)...)
 
-	req.Filters = append(req.Filters, BuildCustomFilterList(
+	input.Filters = append(input.Filters, BuildFiltersDataSource(
 		d.Get("filter").(*schema.Set),
 	)...)
-	if len(req.Filters) == 0 {
-		// Don't send an empty filters list; the EC2 API won't accept it.
-		req.Filters = nil
+
+	if len(input.Filters) == 0 {
+		input.Filters = nil
 	}
 
-	var localGatewayRouteTables []*ec2.LocalGatewayRouteTable
-
-	err := conn.DescribeLocalGatewayRouteTablesPages(req, func(page *ec2.DescribeLocalGatewayRouteTablesOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
-
-		localGatewayRouteTables = append(localGatewayRouteTables, page.LocalGatewayRouteTables...)
-
-		return !lastPage
-	})
+	output, err := FindLocalGatewayRouteTables(conn, input)
 
 	if err != nil {
-		return fmt.Errorf("error describing EC2 Local Gateway Route Tables: %w", err)
+		return fmt.Errorf("error reading EC2 Local Gateway Route Tables: %w", err)
 	}
 
-	if len(localGatewayRouteTables) == 0 {
-		return fmt.Errorf("no matching EC2 Local Gateway Route Tables found")
-	}
+	var routeTableIDs []string
 
-	var ids []string
-
-	for _, localGatewayRouteTable := range localGatewayRouteTables {
-		if localGatewayRouteTable == nil {
-			continue
-		}
-
-		ids = append(ids, aws.StringValue(localGatewayRouteTable.LocalGatewayRouteTableId))
+	for _, v := range output {
+		routeTableIDs = append(routeTableIDs, aws.StringValue(v.LocalGatewayRouteTableId))
 	}
 
 	d.SetId(meta.(*conns.AWSClient).Region)
-
-	if err := d.Set("ids", ids); err != nil {
-		return fmt.Errorf("error setting ids: %w", err)
-	}
+	d.Set("ids", routeTableIDs)
 
 	return nil
 }
