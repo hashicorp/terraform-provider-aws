@@ -304,7 +304,7 @@ func resourceBucketLifecycleConfigurationRead(ctx context.Context, d *schema.Res
 	err = resource.RetryContext(ctx, lifecycleConfigurationRulesSteadyTimeout, func() *resource.RetryError {
 		var err error
 
-		time.Sleep(lifecycleConfigurationRetryDelay)
+		time.Sleep(lifecycleConfigurationExtraRetryDelay)
 
 		output, err = conn.GetBucketLifecycleConfigurationWithContext(ctx, input)
 
