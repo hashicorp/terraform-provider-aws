@@ -19,10 +19,10 @@ import (
 
 func ResourceEventDataStore() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceEventDataStoreCreate,
-		ReadContext:   resourceEventDataStoreRead,
-		UpdateContext: resourceEventDataStoreUpdate,
-		DeleteContext: resourceEventDataStoreDelete,
+		CreateWithoutTimeout: resourceEventDataStoreCreate,
+		ReadWithoutTimeout:   resourceEventDataStoreRead,
+		UpdateWithoutTimeout: resourceEventDataStoreUpdate,
+		DeleteWithoutTimeout: resourceEventDataStoreDelete,
 
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
