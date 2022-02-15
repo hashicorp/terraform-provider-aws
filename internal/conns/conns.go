@@ -1199,7 +1199,6 @@ func (c *Config) Client() (interface{}, error) {
 		APNInfo:                 StdUserAgentProducts(c.TerraformVersion),
 		CallerDocumentationURL:  "https://registry.terraform.io/providers/hashicorp/aws",
 		CallerName:              "Terraform AWS Provider",
-		DebugLogging:            true, // Until https://github.com/hashicorp/aws-sdk-go-base/issues/96 is implemented
 		IamEndpoint:             c.Endpoints[IAM],
 		Insecure:                c.Insecure,
 		HTTPProxy:               c.HTTPProxy,
