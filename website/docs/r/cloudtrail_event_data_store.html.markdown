@@ -22,8 +22,8 @@ The most simple event data store configuration requires us to only set the `name
 
 ```terraform
 resource "aws_cloudtrail_event_data_store" "example" {
-  name                  = "example-event-data-store"
-  retention_period      = 7
+  name             = "example-event-data-store"
+  retention_period = 7
 }
 ```
 
