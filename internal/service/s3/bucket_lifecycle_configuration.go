@@ -276,7 +276,7 @@ func resourceBucketLifecycleConfigurationCreate(ctx context.Context, d *schema.R
 
 	d.SetId(CreateResourceID(bucket, expectedBucketOwner))
 
-	if _, err = waitForLifecycleConfigurationRulesStatus(ctx, conn, bucket, expectedBucketOwner, rules); err != nil {
+	if err = waitForLifecycleConfigurationRulesStatus(ctx, conn, bucket, expectedBucketOwner, rules); err != nil {
 		return diag.Errorf("error waiting for S3 Lifecycle Configuration for bucket (%s) to reach expected rules status after update: %s", d.Id(), err)
 	}
 
@@ -379,7 +379,7 @@ func resourceBucketLifecycleConfigurationUpdate(ctx context.Context, d *schema.R
 		return diag.Errorf("error updating S3 Bucket Lifecycle Configuration (%s): %s", d.Id(), err)
 	}
 
-	if _, err := waitForLifecycleConfigurationRulesStatus(ctx, conn, bucket, expectedBucketOwner, rules); err != nil {
+	if err := waitForLifecycleConfigurationRulesStatus(ctx, conn, bucket, expectedBucketOwner, rules); err != nil {
 		return diag.Errorf("error waiting for S3 Lifecycle Configuration for bucket (%s) to reach expected rules status after update: %s", d.Id(), err)
 	}
 
