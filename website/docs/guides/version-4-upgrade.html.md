@@ -23,6 +23,7 @@ Upgrade topics:
 <!-- TOC depthFrom:2 depthTo:2 -->
 
 - [Provider Version Configuration](#provider-version-configuration)
+- [Changes to Authentication](#changes-to-authentication)
 - [New Provider Arguments](#new-provider-arguments)
 - [S3 Bucket Refactor](#s3-bucket-refactor)
     - [`acceleration_status` Argument](#acceleration_status-argument)
@@ -92,20 +93,62 @@ It is recommended to use [version constraints when configuring Terraform provide
 For example, given this previous configuration:
 
 ```terraform
-provider "aws" {
-  # ... other configuration ...
+terraform {
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = "~> 3.74"
+    }
+  }
+}
 
-  version = "~> 3.74"
+provider "aws" {
+  # Configuration options
 }
 ```
 
 Update to latest 4.X version:
 
 ```terraform
-provider "aws" {
-  # ... other configuration ...
+terraform {
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = "~> 4.0"
+    }
+  }
+}
 
-  version = "~> 4.0"
+provider "aws" {
+  # Configuration options
+}
+```
+
+## Changes to Authentication
+
+The authentication configuration for the AWS Provider has changed in this version to match the behavior of other AWS products, including the AWS SDK and AWS CLI. _This will break AWS provider configurations where you set a non-empty `profile` in the `provider` configuration but the profile does not correspond to an AWS profile with valid credentials._
+
+Precedence for authentication settings is as follows:
+
+* `provider` configuration
+* Environment variables
+* Shared credentials and configuration files (_e.g._, `~/.aws/credentials` and `~/.aws/config`)
+
+In previous versions of the provider, you could explicitly set `profile` in the `provider`, and if the profile did not correspond to valid credentials, the provider would use credentials from environment variables. Starting in v4.0, the Terraform AWS provider enforces the precedence shown above, similarly to how the AWS SDK and AWS CLI behave.
+
+In other words, when you explicitly set `profile` in `provider`, the AWS provider will not use environment variables per the precedence shown above. Before v4.0, if `profile` was configured in the `provider` configuration but did not correspond to an AWS profile or valid credentials, the provider would attempt to use environment variables. **This is no longer the case.** An explicitly set profile that does not have valid credentials will cause an authentication error.
+
+For example, with the following, the environment variables will not be used:
+
+```console
+$ export AWS_ACCESS_KEY_ID="anaccesskey"
+$ export AWS_SECRET_ACCESS_KEY="asecretkey"
+```
+
+```terraform
+provider "aws" {
+  region  = "us-west-2"
+  profile = "customprofile"
 }
 ```
 
@@ -376,7 +419,7 @@ resource "aws_s3_bucket" "example" {
 
 resource "aws_s3_bucket_acl" "example" {
   bucket = aws_s3_bucket.example.id
-  
+
   access_control_policy {
     grant {
       grantee {
@@ -1920,7 +1963,7 @@ For example, the following will import an S3 object into state, assuming the con
 
 ### instance_interruption_behaviour Argument removal
 
-Switch your Terraform configuration to the `engine_version_actual` attribute instead.
+Switch your Terraform configuration to the `instance_interruption_behavior` attribute instead.
 
 For example, given this previous configuration:
 

@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func DataSourceVPCIpamPool() *schema.Resource {
@@ -115,8 +116,8 @@ func dataSourceVPCIpamPoolRead(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	if output == nil || len(output.IpamPools) == 0 || output.IpamPools[0] == nil {
-		return nil
+	if len(output.IpamPools) == 0 || output.IpamPools[0] == nil {
+		return tfresource.SingularDataSourceFindError("EC2 VPC IPAM POOL", tfresource.NewEmptyResultError(input))
 	}
 
 	if len(output.IpamPools) > 1 {

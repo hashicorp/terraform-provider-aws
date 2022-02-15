@@ -32,3 +32,63 @@ func FindBuildByID(conn *gamelift.GameLift, id string) (*gamelift.Build, error) 
 
 	return output.Build, nil
 }
+
+func FindFleetByID(conn *gamelift.GameLift, id string) (*gamelift.FleetAttributes, error) {
+	input := &gamelift.DescribeFleetAttributesInput{
+		FleetIds: aws.StringSlice([]string{id}),
+	}
+
+	output, err := conn.DescribeFleetAttributes(input)
+
+	if tfawserr.ErrCodeEquals(err, gamelift.ErrCodeNotFoundException) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if len(output.FleetAttributes) == 0 || output.FleetAttributes[0] == nil {
+		return nil, tfresource.NewEmptyResultError(output)
+	}
+
+	if count := len(output.FleetAttributes); count > 1 {
+		return nil, tfresource.NewTooManyResultsError(count, output)
+	}
+
+	fleet := output.FleetAttributes[0]
+
+	if aws.StringValue(fleet.FleetId) != id {
+		return nil, tfresource.NewEmptyResultError(id)
+	}
+
+	return fleet, nil
+}
+
+func FindScriptByID(conn *gamelift.GameLift, id string) (*gamelift.Script, error) {
+	input := &gamelift.DescribeScriptInput{
+		ScriptId: aws.String(id),
+	}
+
+	output, err := conn.DescribeScript(input)
+
+	if tfawserr.ErrCodeEquals(err, gamelift.ErrCodeNotFoundException) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.Script == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.Script, nil
+}
