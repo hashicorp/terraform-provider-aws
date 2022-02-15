@@ -36,7 +36,7 @@ func TestAccS3BucketLifecycleConfiguration_basic(t *testing.T) {
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
 						"expiration.#":      "1",
 						"expiration.0.days": "365",
-						"filter.#":          "1",
+						"filter.#":          "0",
 						"id":                rName,
 						"status":            tfs3.LifecycleRuleStatusEnabled,
 					}),
@@ -706,9 +706,6 @@ resource "aws_s3_bucket_lifecycle_configuration" "test" {
     expiration {
       days = 365
     }
-
-    # One of prefix or filter required to ensure XML is well-formed
-    filter {}
   }
 }
 `, rName)
@@ -734,9 +731,6 @@ resource "aws_s3_bucket_lifecycle_configuration" "test" {
     expiration {
       days = 365
     }
-
-    # One of prefix or filter required to ensure XML is well-formed
-    filter {}
   }
 }
 `, rName, status)
@@ -821,9 +815,6 @@ resource "aws_s3_bucket_lifecycle_configuration" "test" {
     expiration {
       expired_object_delete_marker = %[2]t
     }
-
-    # One of prefix or filter required to ensure XML is well-formed
-    filter {}
   }
 }
 `, rName, expired)
@@ -848,9 +839,6 @@ resource "aws_s3_bucket_lifecycle_configuration" "test" {
     status = "Enabled"
 
     expiration {}
-
-    # One of prefix or filter required to ensure XML is well-formed
-    filter {}
   }
 }
 `, rName)
@@ -877,9 +865,6 @@ resource "aws_s3_bucket_lifecycle_configuration" "test" {
 
     id     = %[1]q
     status = "Enabled"
-
-    # One of prefix or filter required to ensure XML is well-formed
-    filter {}
   }
 }
 `, rName, days)
