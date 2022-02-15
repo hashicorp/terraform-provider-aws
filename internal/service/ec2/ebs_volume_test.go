@@ -696,7 +696,7 @@ func TestAccAWSEBSVolume_FinalSnapshot(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { acctest.PreCheck(t) },
-		IDRefreshName: resourceName,
+		ErrorCheck:    testAccErrorCheckSkipEBSVolume(t),
 		Providers:     acctest.Providers,
 		CheckDestroy:  testAccCheckVolumeDestroy,
 		Steps: []resource.TestStep{
