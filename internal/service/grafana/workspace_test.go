@@ -298,11 +298,11 @@ resource "aws_grafana_workspace" "test" {
 func testAccWorkspaceConfigSso(name string) string {
 	return acctest.ConfigCompose(
 		testAccWorkspaceConfigOrganization(name, "AWS_SSO"),
-		fmt.Sprint(`
+		`
 data "aws_ssoadmin_instances" "test" {}
 
 data "aws_caller_identity" "current" {}
-`))
+`)
 }
 
 func testAccWorkspaceConfigOrganization(name string, authenticationProvider string) string {
