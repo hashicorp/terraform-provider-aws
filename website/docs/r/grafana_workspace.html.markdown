@@ -3,7 +3,7 @@ subcategory: "Grafana"
 layout: "aws"
 page_title: "AWS: aws_grafana_workspace"
 description: |-
-Provides an Amazon Managed Grafana workspace resource.
+  Provides an Amazon Managed Grafana workspace resource.
 ---
 
 # Resource: aws_grafana_workspace
