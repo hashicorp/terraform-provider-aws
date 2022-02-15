@@ -3,5 +3,5 @@ provider: Support `ap-northeast-3`, `ap-southeast-3` and `us-iso-west-1` as vali
 ```
 
 ```release-note:bug
-provider: Use new HTTP client which allows IMDS authentication in container environments and custom RootCAs in ISO regions
+provider: Use AWS HTTP client which allows IMDS authentication in container environments and custom RootCAs in ISO regions
 ```
