@@ -890,7 +890,7 @@ resource "aws_dms_endpoint" "dms_endpoint" {
   ssl_mode            = "none"
 
   tags = {
-    Name   = "tf-test-dynamodb-endpoint-%[1]s"
+    Name   = %[1]q
     Update = "to-update"
     Remove = "to-remove"
   }
@@ -899,7 +899,7 @@ resource "aws_dms_endpoint" "dms_endpoint" {
 }
 
 resource "aws_iam_role" "iam_role" {
-  name = "tf-test-iam-dynamodb-role-%[1]s"
+  name = %[1]q
 
   assume_role_policy = <<EOF
 {
@@ -918,7 +918,7 @@ EOF
 }
 
 resource "aws_iam_role_policy" "dms_dynamodb_access" {
-  name = "tf-test-iam-dynamodb-role-policy-%[1]s"
+  name = %[1]q
   role = aws_iam_role.iam_role.name
 
   policy = <<EOF
@@ -956,14 +956,14 @@ resource "aws_dms_endpoint" "dms_endpoint" {
   ssl_mode            = "none"
 
   tags = {
-    Name   = "tf-test-dynamodb-endpoint-%[1]s"
+    Name   = %[1]q
     Update = "updated"
     Add    = "added"
   }
 }
 
 resource "aws_iam_role" "iam_role" {
-  name = "tf-test-iam-dynamodb-role-%[1]s"
+  name = %[1]q
 
   assume_role_policy = <<EOF
 {
@@ -982,7 +982,7 @@ EOF
 }
 
 resource "aws_iam_role_policy" "dms_dynamodb_access" {
-  name = "tf-test-iam-dynamodb-role-policy-%[1]s"
+  name = %[1]q
   role = aws_iam_role.iam_role.name
 
   policy = <<EOF
@@ -1020,7 +1020,7 @@ resource "aws_dms_endpoint" "dms_endpoint" {
   extra_connection_attributes = ""
 
   tags = {
-    Name   = "tf-test-s3-endpoint-%[1]s"
+    Name   = %[1]q
     Update = "to-update"
     Remove = "to-remove"
   }
@@ -1038,7 +1038,7 @@ resource "aws_dms_endpoint" "dms_endpoint" {
 }
 
 resource "aws_iam_role" "iam_role" {
-  name = "tf-test-iam-s3-role-%[1]s"
+  name = %[1]q
 
   assume_role_policy = <<EOF
 {
@@ -1057,7 +1057,7 @@ EOF
 }
 
 resource "aws_iam_role_policy" "dms_s3_access" {
-  name = "tf-test-iam-s3-role-policy-%[1]s"
+  name = %[1]q
   role = aws_iam_role.iam_role.name
 
   policy = <<EOF
@@ -1107,7 +1107,7 @@ resource "aws_dms_endpoint" "dms_endpoint" {
   }
 
   tags = {
-    Name   = "tf-test-s3-endpoint-%[1]s"
+    Name   = %[1]q
     Update = "to-update"
     Remove = "to-remove"
   }
@@ -1116,7 +1116,7 @@ resource "aws_dms_endpoint" "dms_endpoint" {
 }
 
 resource "aws_iam_role" "iam_role" {
-  name = "tf-test-iam-s3-role-%[1]s"
+  name = %[1]q
 
   assume_role_policy = <<EOF
 {
@@ -1135,7 +1135,7 @@ EOF
 }
 
 resource "aws_iam_role_policy" "dms_s3_access" {
-  name = "tf-test-iam-s3-role-policy-%[1]s"
+  name = %[1]q
   role = aws_iam_role.iam_role.name
 
   policy = <<EOF
@@ -1178,7 +1178,7 @@ resource "aws_dms_endpoint" "dms_endpoint" {
   extra_connection_attributes = "key=value;"
 
   tags = {
-    Name   = "tf-test-s3-endpoint-%[1]s"
+    Name   = %[1]q
     Update = "updated"
     Add    = "added"
   }
@@ -1195,7 +1195,7 @@ resource "aws_dms_endpoint" "dms_endpoint" {
 }
 
 resource "aws_iam_role" "iam_role" {
-  name = "tf-test-iam-s3-role-%[1]s"
+  name = %[1]q
 
   assume_role_policy = <<EOF
 {
@@ -1214,7 +1214,7 @@ EOF
 }
 
 resource "aws_iam_role_policy" "dms_s3_access" {
-  name = "tf-test-iam-s3-role-policy-%[1]s"
+  name = %[1]q
   role = aws_iam_role.iam_role.name
 
   policy = <<EOF
@@ -1303,7 +1303,7 @@ func testAccEndpointConfig_openSearch(rName string) string {
 resource "aws_dms_endpoint" "test" {
   endpoint_id   = %[1]q
   endpoint_type = "target"
-  engine_name   = "elasticsearch"
+  engine_name   = "opensearch"
 
   elasticsearch_settings {
     endpoint_uri            = "search-estest.es.${data.aws_region.current.name}.${data.aws_partition.current.dns_suffix}"
