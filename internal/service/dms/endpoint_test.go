@@ -26,7 +26,7 @@ func TestAccDMSEndpoint_basic(t *testing.T) {
 		CheckDestroy: testAccCheckEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: dmsEndpointBasicConfig(randId),
+				Config: testAccEndpointConfig_basic(randId),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointExists(resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "endpoint_arn"),
@@ -39,7 +39,7 @@ func TestAccDMSEndpoint_basic(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"password"},
 			},
 			{
-				Config: dmsEndpointBasicConfigUpdate(randId),
+				Config: testAccEndpointConfig_basicUpdate(randId),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "database_name", "tf-test-dms-db-updated"),
@@ -66,7 +66,7 @@ func TestAccDMSEndpoint_s3(t *testing.T) {
 		CheckDestroy: testAccCheckEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: dmsEndpointS3Config(randId),
+				Config: testAccEndpointConfig_s3(randId),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "s3_settings.#", "1"),
@@ -94,7 +94,7 @@ func TestAccDMSEndpoint_s3(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"password"},
 			},
 			{
-				Config: dmsEndpointS3ConfigUpdate(randId),
+				Config: testAccEndpointConfig_s3Config(randId),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointExists(resourceName),
 					resource.TestMatchResourceAttr(resourceName, "extra_connection_attributes", regexp.MustCompile(`key=value;`)),
@@ -123,7 +123,7 @@ func TestAccDMSEndpoint_S3_extraConnectionAttributes(t *testing.T) {
 		CheckDestroy: testAccCheckEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: dmsEndpointS3ExtraConnectionAttributesConfig(randId),
+				Config: testAccEndpointConfig_s3ExtraConnectionAttributes(randId),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointExists(resourceName),
 					resource.TestMatchResourceAttr(resourceName, "extra_connection_attributes", regexp.MustCompile(`dataFormat=parquet;`)),
@@ -150,7 +150,7 @@ func TestAccDMSEndpoint_dynamoDB(t *testing.T) {
 		CheckDestroy: testAccCheckEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: dmsEndpointDynamoDbConfig(randId),
+				Config: testAccEndpointConfig_dynamoDB(randId),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointExists(resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "endpoint_arn"),
@@ -163,7 +163,7 @@ func TestAccDMSEndpoint_dynamoDB(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"password"},
 			},
 			{
-				Config: dmsEndpointDynamoDbConfigUpdate(randId),
+				Config: testAccEndpointConfig_dynamoDBUpdate(randId),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointExists(resourceName),
 				),
@@ -172,7 +172,7 @@ func TestAccDMSEndpoint_dynamoDB(t *testing.T) {
 	})
 }
 
-func TestAccDMSEndpoint_elasticSearch(t *testing.T) {
+func TestAccDMSEndpoint_openSearch(t *testing.T) {
 	resourceName := "aws_dms_endpoint.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -183,7 +183,7 @@ func TestAccDMSEndpoint_elasticSearch(t *testing.T) {
 		CheckDestroy: testAccCheckEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: dmsEndpointElasticsearchConfig(rName),
+				Config: testAccEndpointConfig_openSearch(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "elasticsearch_settings.#", "1"),
@@ -202,11 +202,11 @@ func TestAccDMSEndpoint_elasticSearch(t *testing.T) {
 	})
 }
 
-// TestAccDMSEndpoint_Elasticsearch_extraConnectionAttributes validates
+// TestAccDMSEndpoint_OpenSearch_extraConnectionAttributes validates
 // extra_connection_attributes handling for "elasticsearch" engine not affected
 // by changes made specific to suppressing diffs in the case of "s3"/"mongodb" engine
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/8009
-func TestAccDMSEndpoint_Elasticsearch_extraConnectionAttributes(t *testing.T) {
+func TestAccDMSEndpoint_OpenSearch_extraConnectionAttributes(t *testing.T) {
 	resourceName := "aws_dms_endpoint.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -217,7 +217,7 @@ func TestAccDMSEndpoint_Elasticsearch_extraConnectionAttributes(t *testing.T) {
 		CheckDestroy: testAccCheckEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: dmsEndpointElasticsearchExtraConnectionAttributesConfig(rName),
+				Config: testAccEndpointConfig_openSearchExtraConnectionAttributes(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "extra_connection_attributes", "errorRetryDuration=400;"),
@@ -233,7 +233,7 @@ func TestAccDMSEndpoint_Elasticsearch_extraConnectionAttributes(t *testing.T) {
 	})
 }
 
-func TestAccDMSEndpoint_Elasticsearch_errorRetryDuration(t *testing.T) {
+func TestAccDMSEndpoint_OpenSearch_errorRetryDuration(t *testing.T) {
 	resourceName := "aws_dms_endpoint.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -244,7 +244,7 @@ func TestAccDMSEndpoint_Elasticsearch_errorRetryDuration(t *testing.T) {
 		CheckDestroy: testAccCheckEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: dmsEndpointElasticsearchConfigErrorRetryDuration(rName, 60),
+				Config: testAccEndpointConfig_openSearchErrorRetryDuration(rName, 60),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "elasticsearch_settings.#", "1"),
@@ -260,7 +260,7 @@ func TestAccDMSEndpoint_Elasticsearch_errorRetryDuration(t *testing.T) {
 			// Resource needs additional creation retry handling for the following:
 			// Error creating DMS endpoint: ResourceAlreadyExistsFault: ReplicationEndpoint "xxx" already in use
 			// {
-			// 	Config: dmsEndpointElasticsearchConfigErrorRetryDuration(rName, 120),
+			// 	Config: testAccEndpointConfig_openSearchErrorRetryDuration(rName, 120),
 			// 	Check: resource.ComposeTestCheckFunc(
 			// 		testAccCheckEndpointExists(resourceName),
 			// 		resource.TestCheckResourceAttr(resourceName, "elasticsearch_settings.#", "1"),
@@ -271,7 +271,7 @@ func TestAccDMSEndpoint_Elasticsearch_errorRetryDuration(t *testing.T) {
 	})
 }
 
-func TestAccDMSEndpoint_Elasticsearch_fullLoadErrorPercentage(t *testing.T) {
+func TestAccDMSEndpoint_OpenSearch_fullLoadErrorPercentage(t *testing.T) {
 	resourceName := "aws_dms_endpoint.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -282,7 +282,7 @@ func TestAccDMSEndpoint_Elasticsearch_fullLoadErrorPercentage(t *testing.T) {
 		CheckDestroy: testAccCheckEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: dmsEndpointElasticsearchConfigFullLoadErrorPercentage(rName, 1),
+				Config: testAccEndpointConfig_openSearchFullLoadErrorPercentage(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "elasticsearch_settings.#", "1"),
@@ -298,7 +298,7 @@ func TestAccDMSEndpoint_Elasticsearch_fullLoadErrorPercentage(t *testing.T) {
 			// Resource needs additional creation retry handling for the following:
 			// Error creating DMS endpoint: ResourceAlreadyExistsFault: ReplicationEndpoint "xxx" already in use
 			// {
-			// 	Config: dmsEndpointElasticsearchConfigFullLoadErrorPercentage(rName, 2),
+			// 	Config: testAccEndpointConfig_openSearchFullLoadErrorPercentage(rName, 2),
 			// 	Check: resource.ComposeTestCheckFunc(
 			// 		testAccCheckEndpointExists(resourceName),
 			// 		resource.TestCheckResourceAttr(resourceName, "elasticsearch_settings.#", "1"),
@@ -321,7 +321,7 @@ func TestAccDMSEndpoint_kafka(t *testing.T) {
 		CheckDestroy: testAccCheckEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: dmsEndpointKafkaConfig(rName, domainName),
+				Config: testAccEndpointConfig_kafka(rName, domainName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "kafka_settings.#", "1"),
@@ -351,7 +351,7 @@ func TestAccDMSEndpoint_kafka(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"password"},
 			},
 			{
-				Config: dmsEndpointKafkaConfigUpdate(rName, domainName),
+				Config: testAccEndpointConfig_kafkaUpdate(rName, domainName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "kafka_settings.#", "1"),
@@ -392,7 +392,7 @@ func TestAccDMSEndpoint_kinesis(t *testing.T) {
 		CheckDestroy: testAccCheckEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: dmsEndpointKinesisConfig(rName),
+				Config: testAccEndpointConfig_kinesis(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "kinesis_settings.#", "1"),
@@ -414,7 +414,7 @@ func TestAccDMSEndpoint_kinesis(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"password"},
 			},
 			{
-				Config: dmsEndpointKinesisConfigUpdate(rName),
+				Config: testAccEndpointConfig_kinesisUpdate(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "kinesis_settings.#", "1"),
@@ -444,7 +444,7 @@ func TestAccDMSEndpoint_mongoDB(t *testing.T) {
 		CheckDestroy: testAccCheckEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: dmsEndpointMongoDbConfig(randId),
+				Config: testAccEndpointConfig_mongoDB(randId),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointExists(resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "endpoint_arn"),
@@ -474,14 +474,14 @@ func TestAccDMSEndpoint_MongoDB_update(t *testing.T) {
 		CheckDestroy: testAccCheckEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: dmsEndpointMongoDbConfig(randId),
+				Config: testAccEndpointConfig_mongoDB(randId),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointExists(resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "endpoint_arn"),
 				),
 			},
 			{
-				Config: dmsEndpointMongoDbConfigUpdate(randId),
+				Config: testAccEndpointConfig_mongoDBUpdate(randId),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "server_name", "tftest-new-server_name"),
@@ -519,7 +519,7 @@ func TestAccDMSEndpoint_Oracle(t *testing.T) {
 		CheckDestroy: testAccCheckEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: dmsEndpointOracleConfig(randId),
+				Config: testAccEndpointConfig_oracle(randId),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointExists(resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "endpoint_arn"),
@@ -535,7 +535,7 @@ func TestAccDMSEndpoint_Oracle(t *testing.T) {
 	})
 }
 
-func TestAccDMSEndpoint_Oracle_secretId(t *testing.T) {
+func TestAccDMSEndpoint_Oracle_secretID(t *testing.T) {
 	resourceName := "aws_dms_endpoint.dms_endpoint"
 	randId := sdkacctest.RandString(8) + "-oracledb"
 
@@ -546,7 +546,7 @@ func TestAccDMSEndpoint_Oracle_secretId(t *testing.T) {
 		CheckDestroy: testAccCheckEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: dmsEndpointOracleConfigSecretId(randId),
+				Config: testAccEndpointConfig_oracleSecretID(randId),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointExists(resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "endpoint_arn"),
@@ -572,14 +572,14 @@ func TestAccDMSEndpoint_Oracle_update(t *testing.T) {
 		CheckDestroy: testAccCheckEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: dmsEndpointOracleConfig(randId),
+				Config: testAccEndpointConfig_oracle(randId),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointExists(resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "endpoint_arn"),
 				),
 			},
 			{
-				Config: dmsEndpointOracleConfigUpdate(randId),
+				Config: testAccEndpointConfig_oracleUpdate(randId),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "server_name", "tftest-new-server_name"),
@@ -601,7 +601,7 @@ func TestAccDMSEndpoint_Oracle_update(t *testing.T) {
 	})
 }
 
-func TestAccDMSEndpoint_Postgres(t *testing.T) {
+func TestAccDMSEndpoint_PostgreSQL(t *testing.T) {
 	resourceName := "aws_dms_endpoint.dms_endpoint"
 	randId := sdkacctest.RandString(8) + "-oracledb"
 
@@ -612,7 +612,7 @@ func TestAccDMSEndpoint_Postgres(t *testing.T) {
 		CheckDestroy: testAccCheckEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: dmsEndpointPostgresConfig(randId),
+				Config: testAccEndpointConfig_postgreSQL(randId),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointExists(resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "endpoint_arn"),
@@ -628,7 +628,7 @@ func TestAccDMSEndpoint_Postgres(t *testing.T) {
 	})
 }
 
-func TestAccDMSEndpoint_Postgres_secretId(t *testing.T) {
+func TestAccDMSEndpoint_PostgreSQL_secretID(t *testing.T) {
 	resourceName := "aws_dms_endpoint.dms_endpoint"
 	randId := sdkacctest.RandString(8) + "-oracledb"
 
@@ -639,7 +639,7 @@ func TestAccDMSEndpoint_Postgres_secretId(t *testing.T) {
 		CheckDestroy: testAccCheckEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: dmsEndpointPostgresConfigSecretId(randId),
+				Config: testAccEndpointConfig_postgreSQLSecretID(randId),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointExists(resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "endpoint_arn"),
@@ -654,7 +654,7 @@ func TestAccDMSEndpoint_Postgres_secretId(t *testing.T) {
 	})
 }
 
-func TestAccDMSEndpoint_Postgres_update(t *testing.T) {
+func TestAccDMSEndpoint_PostgreSQL_update(t *testing.T) {
 	resourceName := "aws_dms_endpoint.dms_endpoint"
 	randId := sdkacctest.RandString(8) + "-oracledb"
 
@@ -665,14 +665,14 @@ func TestAccDMSEndpoint_Postgres_update(t *testing.T) {
 		CheckDestroy: testAccCheckEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: dmsEndpointPostgresConfig(randId),
+				Config: testAccEndpointConfig_postgreSQL(randId),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointExists(resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "endpoint_arn"),
 				),
 			},
 			{
-				Config: dmsEndpointPostgresConfigUpdate(randId),
+				Config: testAccEndpointConfig_postgreSQLUpdate(randId),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "server_name", "tftest-new-server_name"),
@@ -705,7 +705,7 @@ func TestAccDMSEndpoint_docDB(t *testing.T) {
 		CheckDestroy: testAccCheckEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: dmsEndpointDocDBConfig(randId),
+				Config: testAccEndpointConfig_docDB(randId),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointExists(resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "endpoint_arn"),
@@ -718,7 +718,7 @@ func TestAccDMSEndpoint_docDB(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"password"},
 			},
 			{
-				Config: dmsEndpointDocDBConfigUpdate(randId),
+				Config: testAccEndpointConfig_docDBUpdate(randId),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "database_name", "tf-test-dms-db-updated"),
@@ -745,7 +745,7 @@ func TestAccDMSEndpoint_db2(t *testing.T) {
 		CheckDestroy: testAccCheckEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: dmsEndpointDb2Config(randId),
+				Config: testAccEndpointConfig_db2(randId),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointExists(resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "endpoint_arn"),
@@ -758,7 +758,7 @@ func TestAccDMSEndpoint_db2(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"password"},
 			},
 			{
-				Config: dmsEndpointDb2ConfigUpdate(randId),
+				Config: testAccEndpointConfig_db2Update(randId),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "database_name", "tf-test-dms-db-updated"),
@@ -830,7 +830,7 @@ func testAccCheckEndpointExists(n string) resource.TestCheckFunc {
 	}
 }
 
-func dmsEndpointBasicConfig(randId string) string {
+func testAccEndpointConfig_basic(randId string) string {
 	return fmt.Sprintf(`
 resource "aws_dms_endpoint" "dms_endpoint" {
   database_name               = "tf-test-dms-db"
@@ -854,7 +854,7 @@ resource "aws_dms_endpoint" "dms_endpoint" {
 `, randId)
 }
 
-func dmsEndpointBasicConfigUpdate(randId string) string {
+func testAccEndpointConfig_basicUpdate(randId string) string {
 	return fmt.Sprintf(`
 resource "aws_dms_endpoint" "dms_endpoint" {
   database_name               = "tf-test-dms-db-updated"
@@ -878,7 +878,7 @@ resource "aws_dms_endpoint" "dms_endpoint" {
 `, randId)
 }
 
-func dmsEndpointDynamoDbConfig(randId string) string {
+func testAccEndpointConfig_dynamoDB(randId string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -944,7 +944,7 @@ EOF
 `, randId)
 }
 
-func dmsEndpointDynamoDbConfigUpdate(randId string) string {
+func testAccEndpointConfig_dynamoDBUpdate(randId string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -1008,7 +1008,7 @@ EOF
 `, randId)
 }
 
-func dmsEndpointS3Config(randId string) string {
+func testAccEndpointConfig_s3(randId string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -1088,7 +1088,7 @@ EOF
 `, randId)
 }
 
-func dmsEndpointS3ExtraConnectionAttributesConfig(randId string) string {
+func testAccEndpointConfig_s3ExtraConnectionAttributes(randId string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -1166,7 +1166,7 @@ EOF
 `, randId)
 }
 
-func dmsEndpointS3ConfigUpdate(randId string) string {
+func testAccEndpointConfig_s3Config(randId string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -1245,7 +1245,7 @@ EOF
 `, randId)
 }
 
-func dmsEndpointElasticsearchConfigBase(rName string) string {
+func testAccEndpointConfig_openSearchBase(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -1296,9 +1296,9 @@ EOF
 `, rName)
 }
 
-func dmsEndpointElasticsearchConfig(rName string) string {
+func testAccEndpointConfig_openSearch(rName string) string {
 	return acctest.ConfigCompose(
-		dmsEndpointElasticsearchConfigBase(rName),
+		testAccEndpointConfig_openSearchBase(rName),
 		fmt.Sprintf(`
 resource "aws_dms_endpoint" "test" {
   endpoint_id   = %[1]q
@@ -1315,9 +1315,9 @@ resource "aws_dms_endpoint" "test" {
 `, rName))
 }
 
-func dmsEndpointElasticsearchExtraConnectionAttributesConfig(rName string) string {
+func testAccEndpointConfig_openSearchExtraConnectionAttributes(rName string) string {
 	return acctest.ConfigCompose(
-		dmsEndpointElasticsearchConfigBase(rName),
+		testAccEndpointConfig_openSearchBase(rName),
 		fmt.Sprintf(`
 resource "aws_dms_endpoint" "test" {
   endpoint_id                 = %[1]q
@@ -1335,9 +1335,9 @@ resource "aws_dms_endpoint" "test" {
 `, rName))
 }
 
-func dmsEndpointElasticsearchConfigErrorRetryDuration(rName string, errorRetryDuration int) string {
+func testAccEndpointConfig_openSearchErrorRetryDuration(rName string, errorRetryDuration int) string {
 	return acctest.ConfigCompose(
-		dmsEndpointElasticsearchConfigBase(rName),
+		testAccEndpointConfig_openSearchBase(rName),
 		fmt.Sprintf(`
 resource "aws_dms_endpoint" "test" {
   endpoint_id   = %[1]q
@@ -1355,9 +1355,9 @@ resource "aws_dms_endpoint" "test" {
 `, rName, errorRetryDuration))
 }
 
-func dmsEndpointElasticsearchConfigFullLoadErrorPercentage(rName string, fullLoadErrorPercentage int) string {
+func testAccEndpointConfig_openSearchFullLoadErrorPercentage(rName string, fullLoadErrorPercentage int) string {
 	return acctest.ConfigCompose(
-		dmsEndpointElasticsearchConfigBase(rName),
+		testAccEndpointConfig_openSearchBase(rName),
 		fmt.Sprintf(`
 resource "aws_dms_endpoint" "test" {
   endpoint_id   = %[1]q
@@ -1375,7 +1375,7 @@ resource "aws_dms_endpoint" "test" {
 `, rName, fullLoadErrorPercentage))
 }
 
-func dmsEndpointKafkaConfig(rName, domainName string) string {
+func testAccEndpointConfig_kafka(rName, domainName string) string {
 	return fmt.Sprintf(`
 resource "aws_dms_endpoint" "test" {
   endpoint_id   = %[1]q
@@ -1393,7 +1393,7 @@ resource "aws_dms_endpoint" "test" {
 `, rName, domainName)
 }
 
-func dmsEndpointKafkaConfigUpdate(rName, domainName string) string {
+func testAccEndpointConfig_kafkaUpdate(rName, domainName string) string {
 	return fmt.Sprintf(`
 resource "aws_dms_endpoint" "test" {
   endpoint_id   = %[1]q
@@ -1421,7 +1421,7 @@ resource "aws_dms_endpoint" "test" {
 `, rName, domainName)
 }
 
-func dmsEndpointKinesisConfigBase(rName string) string {
+func testAccEndpointConfig_kinesisBase(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -1474,8 +1474,8 @@ data "aws_iam_policy_document" "test" {
 `, rName)
 }
 
-func dmsEndpointKinesisConfig(rName string) string {
-	return acctest.ConfigCompose(dmsEndpointKinesisConfigBase(rName), fmt.Sprintf(`
+func testAccEndpointConfig_kinesis(rName string) string {
+	return acctest.ConfigCompose(testAccEndpointConfig_kinesisBase(rName), fmt.Sprintf(`
 resource "aws_dms_endpoint" "test" {
   endpoint_id   = %[1]q
   endpoint_type = "target"
@@ -1495,8 +1495,8 @@ resource "aws_dms_endpoint" "test" {
 `, rName))
 }
 
-func dmsEndpointKinesisConfigUpdate(rName string) string {
-	return acctest.ConfigCompose(dmsEndpointKinesisConfigBase(rName), fmt.Sprintf(`
+func testAccEndpointConfig_kinesisUpdate(rName string) string {
+	return acctest.ConfigCompose(testAccEndpointConfig_kinesisBase(rName), fmt.Sprintf(`
 resource "aws_dms_endpoint" "test" {
   endpoint_id   = %[1]q
   endpoint_type = "target"
@@ -1519,7 +1519,7 @@ resource "aws_dms_endpoint" "test" {
 `, rName))
 }
 
-func dmsEndpointMongoDbConfig(randId string) string {
+func testAccEndpointConfig_mongoDB(randId string) string {
 	return fmt.Sprintf(`
 data "aws_kms_alias" "dms" {
   name = "alias/aws/dms"
@@ -1556,7 +1556,7 @@ resource "aws_dms_endpoint" "dms_endpoint" {
 `, randId)
 }
 
-func dmsEndpointMongoDbConfigUpdate(randId string) string {
+func testAccEndpointConfig_mongoDBUpdate(randId string) string {
 	return fmt.Sprintf(`
 data "aws_kms_alias" "dms" {
   name = "alias/aws/dms"
@@ -1591,7 +1591,7 @@ resource "aws_dms_endpoint" "dms_endpoint" {
 `, randId)
 }
 
-func dmsEndpointOracleConfig(randId string) string {
+func testAccEndpointConfig_oracle(randId string) string {
 	return fmt.Sprintf(`
 resource "aws_dms_endpoint" "dms_endpoint" {
   endpoint_id                 = "tf-test-dms-endpoint-%[1]s"
@@ -1614,7 +1614,7 @@ resource "aws_dms_endpoint" "dms_endpoint" {
 `, randId)
 }
 
-func dmsEndpointOracleConfigUpdate(randId string) string {
+func testAccEndpointConfig_oracleUpdate(randId string) string {
 	return fmt.Sprintf(`
 resource "aws_dms_endpoint" "dms_endpoint" {
   endpoint_id                 = "tf-test-dms-endpoint-%[1]s"
@@ -1637,7 +1637,7 @@ resource "aws_dms_endpoint" "dms_endpoint" {
 `, randId)
 }
 
-func dmsEndpointOracleConfigSecretId(randId string) string {
+func testAccEndpointConfig_oracleSecretID(randId string) string {
 	return fmt.Sprintf(`
 data "aws_kms_alias" "dms" {
   name = "alias/aws/dms"
@@ -1707,7 +1707,7 @@ resource "aws_dms_endpoint" "dms_endpoint" {
 `, randId)
 }
 
-func dmsEndpointPostgresConfig(randId string) string {
+func testAccEndpointConfig_postgreSQL(randId string) string {
 	return fmt.Sprintf(`
 resource "aws_dms_endpoint" "dms_endpoint" {
   endpoint_id                 = "tf-test-dms-endpoint-%[1]s"
@@ -1730,7 +1730,7 @@ resource "aws_dms_endpoint" "dms_endpoint" {
 `, randId)
 }
 
-func dmsEndpointPostgresConfigUpdate(randId string) string {
+func testAccEndpointConfig_postgreSQLUpdate(randId string) string {
 	return fmt.Sprintf(`
 resource "aws_dms_endpoint" "dms_endpoint" {
   endpoint_id                 = "tf-test-dms-endpoint-%[1]s"
@@ -1753,7 +1753,7 @@ resource "aws_dms_endpoint" "dms_endpoint" {
 `, randId)
 }
 
-func dmsEndpointPostgresConfigSecretId(randId string) string {
+func testAccEndpointConfig_postgreSQLSecretID(randId string) string {
 	return fmt.Sprintf(`
 data "aws_kms_alias" "dms" {
   name = "alias/aws/dms"
@@ -1822,7 +1822,7 @@ resource "aws_dms_endpoint" "dms_endpoint" {
 `, randId)
 }
 
-func dmsEndpointDocDBConfig(randId string) string {
+func testAccEndpointConfig_docDB(randId string) string {
 	return fmt.Sprintf(`
 resource "aws_dms_endpoint" "dms_endpoint" {
   database_name               = "tf-test-dms-db"
@@ -1846,7 +1846,7 @@ resource "aws_dms_endpoint" "dms_endpoint" {
 `, randId)
 }
 
-func dmsEndpointDocDBConfigUpdate(randId string) string {
+func testAccEndpointConfig_docDBUpdate(randId string) string {
 	return fmt.Sprintf(`
 resource "aws_dms_endpoint" "dms_endpoint" {
   database_name               = "tf-test-dms-db-updated"
@@ -1870,7 +1870,7 @@ resource "aws_dms_endpoint" "dms_endpoint" {
 `, randId)
 }
 
-func dmsEndpointDb2Config(randId string) string {
+func testAccEndpointConfig_db2(randId string) string {
 	return fmt.Sprintf(`
 resource "aws_dms_endpoint" "dms_endpoint" {
   database_name               = "tf-test-dms-db"
@@ -1894,7 +1894,7 @@ resource "aws_dms_endpoint" "dms_endpoint" {
 `, randId)
 }
 
-func dmsEndpointDb2ConfigUpdate(randId string) string {
+func testAccEndpointConfig_db2Update(randId string) string {
 	return fmt.Sprintf(`
 resource "aws_dms_endpoint" "dms_endpoint" {
   database_name               = "tf-test-dms-db-updated"

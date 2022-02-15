@@ -606,9 +606,9 @@ func resourceEndpointCreate(d *schema.ResourceData, meta interface{}) error {
 			FullLoadErrorPercentage: aws.Int64(int64(d.Get("elasticsearch_settings.0.full_load_error_percentage").(int))),
 		}
 	case engineNameKafka:
-		request.KafkaSettings = expandDmsKafkaSettings(d.Get("kafka_settings").([]interface{})[0].(map[string]interface{}))
+		request.KafkaSettings = expandKafkaSettings(d.Get("kafka_settings").([]interface{})[0].(map[string]interface{}))
 	case engineNameKinesis:
-		request.KinesisSettings = expandDmsKinesisSettings(d.Get("kinesis_settings").([]interface{})[0].(map[string]interface{}))
+		request.KinesisSettings = expandKinesisSettings(d.Get("kinesis_settings").([]interface{})[0].(map[string]interface{}))
 	case engineNameMongodb:
 		request.MongoDbSettings = &dms.MongoDbSettings{
 			Username:     aws.String(d.Get("username").(string)),
@@ -679,7 +679,7 @@ func resourceEndpointCreate(d *schema.ResourceData, meta interface{}) error {
 			request.DatabaseName = aws.String(d.Get("database_name").(string))
 		}
 	case engineNameS3:
-		request.S3Settings = expandDmsS3Settings(d.Get("s3_settings").([]interface{})[0].(map[string]interface{}))
+		request.S3Settings = expandS3Settings(d.Get("s3_settings").([]interface{})[0].(map[string]interface{}))
 	default:
 		request.Password = aws.String(d.Get("password").(string))
 		request.Port = aws.Int64(int64(d.Get("port").(int)))
@@ -856,13 +856,13 @@ func resourceEndpointUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 	case engineNameKafka:
 		if d.HasChange("kafka_settings") {
-			request.KafkaSettings = expandDmsKafkaSettings(d.Get("kafka_settings").([]interface{})[0].(map[string]interface{}))
+			request.KafkaSettings = expandKafkaSettings(d.Get("kafka_settings").([]interface{})[0].(map[string]interface{}))
 			request.EngineName = aws.String(engineName)
 			hasChanges = true
 		}
 	case engineNameKinesis:
 		if d.HasChanges("kinesis_settings") {
-			request.KinesisSettings = expandDmsKinesisSettings(d.Get("kinesis_settings").([]interface{})[0].(map[string]interface{}))
+			request.KinesisSettings = expandKinesisSettings(d.Get("kinesis_settings").([]interface{})[0].(map[string]interface{}))
 			request.EngineName = aws.String(engineName)
 			hasChanges = true
 		}
@@ -957,7 +957,7 @@ func resourceEndpointUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 	case engineNameS3:
 		if d.HasChanges("s3_settings") {
-			request.S3Settings = expandDmsS3Settings(d.Get("s3_settings").([]interface{})[0].(map[string]interface{}))
+			request.S3Settings = expandS3Settings(d.Get("s3_settings").([]interface{})[0].(map[string]interface{}))
 			request.EngineName = aws.String(engineName)
 			hasChanges = true
 		}
@@ -1073,13 +1073,13 @@ func resourceEndpointSetState(d *schema.ResourceData, endpoint *dms.Endpoint) er
 			d.Set("service_access_role", "")
 		}
 	case engineNameElasticsearch:
-		if err := d.Set("elasticsearch_settings", flattenDmsElasticsearchSettings(endpoint.ElasticsearchSettings)); err != nil {
+		if err := d.Set("elasticsearch_settings", flattenElasticsearchSettings(endpoint.ElasticsearchSettings)); err != nil {
 			return fmt.Errorf("Error setting elasticsearch for DMS: %s", err)
 		}
 	case engineNameKafka:
 		if endpoint.KafkaSettings != nil {
 			// SASL password isn't returned in API. Propagate state value.
-			tfMap := flattenDmsKafkaSettings(endpoint.KafkaSettings)
+			tfMap := flattenKafkaSettings(endpoint.KafkaSettings)
 			tfMap["sasl_password"] = d.Get("kafka_settings.0.sasl_password").(string)
 
 			if err := d.Set("kafka_settings", []interface{}{tfMap}); err != nil {
@@ -1089,7 +1089,7 @@ func resourceEndpointSetState(d *schema.ResourceData, endpoint *dms.Endpoint) er
 			d.Set("kafka_settings", nil)
 		}
 	case engineNameKinesis:
-		if err := d.Set("kinesis_settings", []interface{}{flattenDmsKinesisSettings(endpoint.KinesisSettings)}); err != nil {
+		if err := d.Set("kinesis_settings", []interface{}{flattenKinesisSettings(endpoint.KinesisSettings)}); err != nil {
 			return fmt.Errorf("error setting kinesis_settings: %w", err)
 		}
 	case engineNameMongodb:
@@ -1104,7 +1104,7 @@ func resourceEndpointSetState(d *schema.ResourceData, endpoint *dms.Endpoint) er
 			d.Set("port", endpoint.Port)
 			d.Set("database_name", endpoint.DatabaseName)
 		}
-		if err := d.Set("mongodb_settings", flattenDmsMongoDbSettings(endpoint.MongoDbSettings)); err != nil {
+		if err := d.Set("mongodb_settings", flattenMongoDBSettings(endpoint.MongoDbSettings)); err != nil {
 			return fmt.Errorf("Error setting mongodb_settings for DMS: %s", err)
 		}
 	case engineNameOracle:
@@ -1136,7 +1136,7 @@ func resourceEndpointSetState(d *schema.ResourceData, endpoint *dms.Endpoint) er
 			d.Set("database_name", endpoint.DatabaseName)
 		}
 	case engineNameS3:
-		if err := d.Set("s3_settings", flattenDmsS3Settings(endpoint.S3Settings)); err != nil {
+		if err := d.Set("s3_settings", flattenS3Settings(endpoint.S3Settings)); err != nil {
 			return fmt.Errorf("Error setting s3_settings for DMS: %s", err)
 		}
 	default:
@@ -1153,7 +1153,7 @@ func resourceEndpointSetState(d *schema.ResourceData, endpoint *dms.Endpoint) er
 	return nil
 }
 
-func flattenDmsElasticsearchSettings(settings *dms.ElasticsearchSettings) []map[string]interface{} {
+func flattenElasticsearchSettings(settings *dms.ElasticsearchSettings) []map[string]interface{} {
 	if settings == nil {
 		return []map[string]interface{}{}
 	}
@@ -1168,7 +1168,7 @@ func flattenDmsElasticsearchSettings(settings *dms.ElasticsearchSettings) []map[
 	return []map[string]interface{}{m}
 }
 
-func expandDmsKafkaSettings(tfMap map[string]interface{}) *dms.KafkaSettings {
+func expandKafkaSettings(tfMap map[string]interface{}) *dms.KafkaSettings {
 	if tfMap == nil {
 		return nil
 	}
@@ -1250,7 +1250,7 @@ func expandDmsKafkaSettings(tfMap map[string]interface{}) *dms.KafkaSettings {
 	return apiObject
 }
 
-func flattenDmsKafkaSettings(apiObject *dms.KafkaSettings) map[string]interface{} {
+func flattenKafkaSettings(apiObject *dms.KafkaSettings) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -1332,7 +1332,7 @@ func flattenDmsKafkaSettings(apiObject *dms.KafkaSettings) map[string]interface{
 	return tfMap
 }
 
-func expandDmsKinesisSettings(tfMap map[string]interface{}) *dms.KinesisSettings {
+func expandKinesisSettings(tfMap map[string]interface{}) *dms.KinesisSettings {
 	if tfMap == nil {
 		return nil
 	}
@@ -1378,7 +1378,7 @@ func expandDmsKinesisSettings(tfMap map[string]interface{}) *dms.KinesisSettings
 	return apiObject
 }
 
-func flattenDmsKinesisSettings(apiObject *dms.KinesisSettings) map[string]interface{} {
+func flattenKinesisSettings(apiObject *dms.KinesisSettings) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -1424,7 +1424,7 @@ func flattenDmsKinesisSettings(apiObject *dms.KinesisSettings) map[string]interf
 	return tfMap
 }
 
-func flattenDmsMongoDbSettings(settings *dms.MongoDbSettings) []map[string]interface{} {
+func flattenMongoDBSettings(settings *dms.MongoDbSettings) []map[string]interface{} {
 	if settings == nil {
 		return []map[string]interface{}{}
 	}
@@ -1441,7 +1441,7 @@ func flattenDmsMongoDbSettings(settings *dms.MongoDbSettings) []map[string]inter
 	return []map[string]interface{}{m}
 }
 
-func expandDmsS3Settings(tfMap map[string]interface{}) *dms.S3Settings {
+func expandS3Settings(tfMap map[string]interface{}) *dms.S3Settings {
 	if tfMap == nil {
 		return nil
 	}
@@ -1560,7 +1560,7 @@ func expandDmsS3Settings(tfMap map[string]interface{}) *dms.S3Settings {
 	return apiObject
 }
 
-func flattenDmsS3Settings(apiObject *dms.S3Settings) []map[string]interface{} {
+func flattenS3Settings(apiObject *dms.S3Settings) []map[string]interface{} {
 	if apiObject == nil {
 		return []map[string]interface{}{}
 	}
