@@ -54,6 +54,7 @@ BUG FIXES:
 * resource/aws_elastic_transcoder_preset: Allow `video_codec_options` to be empty. ([#13974](https://github.com/hashicorp/terraform-provider-aws/issues/13974))
 * resource/aws_rds_cluster: Fix crash when configured `engine_version` string is shorter than the `EngineVersion` string returned from the AWS API ([#23039](https://github.com/hashicorp/terraform-provider-aws/issues/23039))
 * resource/aws_s3_bucket_lifecycle_configuration: Correctly handle the `days` value of the `rule` `transition` configuration block when set to `0` ([#23120](https://github.com/hashicorp/terraform-provider-aws/issues/23120))
+* resource/aws_s3_bucket_lifecycle_configuration: Fix extraneous diffs especially after import ([#23144](https://github.com/hashicorp/terraform-provider-aws/issues/23144))
 * resource/aws_sagemaker_endpoint_configuration: Emptiness check for arguments, Allow not passing `async_inference_config.kms_key_id`. ([#22960](https://github.com/hashicorp/terraform-provider-aws/issues/22960))
 * resource/aws_vpn_connection: Add support for `ipsec.1-aes256` connection type ([#23127](https://github.com/hashicorp/terraform-provider-aws/issues/23127))
 
