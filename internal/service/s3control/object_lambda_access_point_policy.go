@@ -6,8 +6,10 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/s3control"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -44,7 +46,12 @@ func ResourceObjectLambdaAccessPointPolicy() *schema.Resource {
 			"policy": {
 				Type:             schema.TypeString,
 				Required:         true,
+				ValidateFunc:     validation.StringIsJSON,
 				DiffSuppressFunc: verify.SuppressEquivalentPolicyDiffs,
+				StateFunc: func(v interface{}) string {
+					json, _ := structure.NormalizeJsonString(v)
+					return json
+				},
 			},
 		},
 	}
@@ -60,14 +67,20 @@ func resourceObjectLambdaAccessPointPolicyCreate(d *schema.ResourceData, meta in
 	name := d.Get("name").(string)
 	resourceID := ObjectLambdaAccessPointCreateResourceID(accountID, name)
 
+	policy, err := structure.NormalizeJsonString(d.Get("policy").(string))
+
+	if err != nil {
+		return fmt.Errorf("policy (%s) is invalid JSON: %w", d.Get("policy").(string), err)
+	}
+
 	input := &s3control.PutAccessPointPolicyForObjectLambdaInput{
 		AccountId: aws.String(accountID),
 		Name:      aws.String(name),
-		Policy:    aws.String(d.Get("policy").(string)),
+		Policy:    aws.String(policy),
 	}
 
 	log.Printf("[DEBUG] Creating S3 Object Lambda Access Point Policy: %s", input)
-	_, err := conn.PutAccessPointPolicyForObjectLambda(input)
+	_, err = conn.PutAccessPointPolicyForObjectLambda(input)
 
 	if err != nil {
 		return fmt.Errorf("error creating S3 Object Lambda Access Point (%s) Policy: %w", resourceID, err)
@@ -102,7 +115,18 @@ func resourceObjectLambdaAccessPointPolicyRead(d *schema.ResourceData, meta inte
 	d.Set("account_id", accountID)
 	d.Set("has_public_access_policy", status.IsPublic)
 	d.Set("name", name)
-	d.Set("policy", policy)
+
+	if policy != "" {
+		policyToSet, err := verify.PolicyToSet(d.Get("policy").(string), policy)
+
+		if err != nil {
+			return err
+		}
+
+		d.Set("policy", policyToSet)
+	} else {
+		d.Set("policy", "")
+	}
 
 	return nil
 }
@@ -116,10 +140,16 @@ func resourceObjectLambdaAccessPointPolicyUpdate(d *schema.ResourceData, meta in
 		return err
 	}
 
+	policy, err := structure.NormalizeJsonString(d.Get("policy").(string))
+
+	if err != nil {
+		return fmt.Errorf("policy (%s) is invalid JSON: %w", d.Get("policy").(string), err)
+	}
+
 	input := &s3control.PutAccessPointPolicyForObjectLambdaInput{
 		AccountId: aws.String(accountID),
 		Name:      aws.String(name),
-		Policy:    aws.String(d.Get("policy").(string)),
+		Policy:    aws.String(policy),
 	}
 
 	log.Printf("[DEBUG] Updating S3 Object Lambda Access Point Policy: %s", input)

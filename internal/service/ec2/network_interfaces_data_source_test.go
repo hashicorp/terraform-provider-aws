@@ -48,6 +48,25 @@ func TestAccEC2NetworkInterfacesDataSource_tags(t *testing.T) {
 	})
 }
 
+func TestAccEC2NetworkInterfacesDataSource_empty(t *testing.T) {
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckVpcDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNetworkInterfacesDataSourceConfig_Empty(rName),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.aws_network_interfaces.test", "ids.#", "0"),
+				),
+			},
+		},
+	})
+}
+
 func testAccNetworkInterfacesDataSourceConfig_Base(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
@@ -104,4 +123,14 @@ data "aws_network_interfaces" "test" {
   }
 }
 `)
+}
+
+func testAccNetworkInterfacesDataSourceConfig_Empty(rName string) string {
+	return fmt.Sprintf(`
+data "aws_network_interfaces" "test" {
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName)
 }

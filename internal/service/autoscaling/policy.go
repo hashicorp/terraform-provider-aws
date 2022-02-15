@@ -329,7 +329,7 @@ func resourcePolicyRead(d *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		return err
 	}
-	if p == nil {
+	if p == nil && !d.IsNewResource() {
 		log.Printf("[WARN] Autoscaling Policy (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil

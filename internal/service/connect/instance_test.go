@@ -90,6 +90,8 @@ func testAccInstance_directory(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	resourceName := "aws_connect_instance.test"
 
+	domainName := acctest.RandomDomainName()
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, connect.EndpointsID),
@@ -97,7 +99,7 @@ func testAccInstance_directory(t *testing.T) {
 		CheckDestroy: testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceDirectoryConfig(rName),
+				Config: testAccInstanceDirectoryConfig(rName, domainName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "identity_management_type", connect.DirectoryTypeExistingDirectory),
@@ -224,7 +226,7 @@ resource "aws_connect_instance" "test" {
 `, rName)
 }
 
-func testAccInstanceDirectoryConfig(rName string) string {
+func testAccInstanceDirectoryConfig(rName, domain string) string {
 	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {
   state = "available"
@@ -261,7 +263,7 @@ resource "aws_subnet" "test2" {
 }
 
 resource "aws_directory_service_directory" "test" {
-  name     = "corp.notexample.com"
+  name     = %[2]q
   password = "SuperSecretPassw0rd"
   size     = "Small"
 
@@ -278,7 +280,7 @@ resource "aws_connect_instance" "test" {
   inbound_calls_enabled    = true
   outbound_calls_enabled   = true
 }
-`, rName)
+`, rName, domain)
 }
 
 func testAccInstanceSAMLConfig(rName string) string {

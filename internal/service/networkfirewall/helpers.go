@@ -175,3 +175,16 @@ func flattenNetworkFirewallDimensions(d []*networkfirewall.Dimension) []interfac
 
 	return dimensions
 }
+
+func forceNewIfNotRuleOrderDefault(key string, d *schema.ResourceDiff) error {
+	if d.Id() != "" && d.HasChange(key) {
+		old, new := d.GetChange(key)
+		defaultRuleOrderOld := old == nil || old.(string) == "" || old.(string) == networkfirewall.RuleOrderDefaultActionOrder
+		defaultRuleOrderNew := new == nil || new.(string) == "" || new.(string) == networkfirewall.RuleOrderDefaultActionOrder
+
+		if (defaultRuleOrderOld && !defaultRuleOrderNew) || (defaultRuleOrderNew && !defaultRuleOrderOld) {
+			return d.ForceNew(key)
+		}
+	}
+	return nil
+}

@@ -437,7 +437,70 @@ func TestAccEventsTarget_redshift(t *testing.T) {
 	})
 }
 
+// TestAccEventsTarget_ecsWithoutLaunchType verifies Event Target resources
+// can be created without a specified LaunchType
+// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/16078
+func TestAccEventsTarget_ecsWithoutLaunchType(t *testing.T) {
+	resourceName := "aws_cloudwatch_event_target.test"
+	iamRoleResourceName := "aws_iam_role.test"
+	ecsTaskDefinitionResourceName := "aws_ecs_task_definition.task"
+	var v eventbridge.Target
+	rName := sdkacctest.RandomWithPrefix("tf_ecs_target")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, eventbridge.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckTargetDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTargetECSWithoutLaunchTypeConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTargetExists(resourceName, &v),
+					resource.TestCheckResourceAttrPair(resourceName, "role_arn", iamRoleResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "ecs_target.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "ecs_target.0.task_count", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "ecs_target.0.task_definition_arn", ecsTaskDefinitionResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "ecs_target.0.launch_type", ""),
+					resource.TestCheckResourceAttr(resourceName, "ecs_target.0.network_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "ecs_target.0.network_configuration.0.subnets.#", "1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccTargetImportStateIdFunc(resourceName),
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccTargetECSConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTargetExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "ecs_target.0.launch_type", "FARGATE"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccTargetImportStateIdFunc(resourceName),
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccTargetECSWithoutLaunchTypeConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTargetExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "ecs_target.0.launch_type", ""),
+				),
+			},
+		},
+	})
+}
+
 func TestAccEventsTarget_ecsWithBlankLaunchType(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	resourceName := "aws_cloudwatch_event_target.test"
 	iamRoleResourceName := "aws_iam_role.test"
 	ecsTaskDefinitionResourceName := "aws_ecs_task_definition.task"
@@ -1421,6 +1484,25 @@ resource "aws_redshift_cluster" "test" {
 `, 123))
 }
 
+func testAccTargetECSWithoutLaunchTypeConfig(rName string) string {
+	return testAccTargetECSBaseConfig(rName) + `
+resource "aws_cloudwatch_event_target" "test" {
+  arn      = aws_ecs_cluster.test.id
+  rule     = aws_cloudwatch_event_rule.test.id
+  role_arn = aws_iam_role.test.arn
+
+  ecs_target {
+    task_count          = 1
+    task_definition_arn = aws_ecs_task_definition.task.arn
+
+    network_configuration {
+      subnets = [aws_subnet.subnet.id]
+    }
+  }
+}
+`
+}
+
 func testAccTargetECSWithBlankLaunchTypeConfig(rName string) string {
 	return testAccTargetECSBaseConfig(rName) + `
 resource "aws_cloudwatch_event_target" "test" {
@@ -1431,7 +1513,7 @@ resource "aws_cloudwatch_event_target" "test" {
   ecs_target {
     task_count          = 1
     task_definition_arn = aws_ecs_task_definition.task.arn
-    launch_type         = ""
+    launch_type         = null
 
     network_configuration {
       subnets = [aws_subnet.subnet.id]

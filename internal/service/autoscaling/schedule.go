@@ -112,7 +112,7 @@ func resourceScheduleCreate(d *schema.ResourceData, meta interface{}) error {
 	if attr, ok := d.GetOk("start_time"); ok {
 		t, err := time.Parse(ScheduleTimeLayout, attr.(string))
 		if err != nil {
-			return fmt.Errorf("Error Parsing AWS Autoscaling Group Schedule Start Time: %s", err.Error())
+			return fmt.Errorf("Error Parsing AWS Autoscaling Group Schedule Start Time: %w", err)
 		}
 		params.StartTime = aws.Time(t)
 	}
@@ -120,7 +120,7 @@ func resourceScheduleCreate(d *schema.ResourceData, meta interface{}) error {
 	if attr, ok := d.GetOk("end_time"); ok {
 		t, err := time.Parse(ScheduleTimeLayout, attr.(string))
 		if err != nil {
-			return fmt.Errorf("Error Parsing AWS Autoscaling Group Schedule End Time: %s", err.Error())
+			return fmt.Errorf("Error Parsing AWS Autoscaling Group Schedule End Time: %w", err)
 		}
 		params.EndTime = aws.Time(t)
 	}
@@ -155,7 +155,7 @@ func resourceScheduleCreate(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[INFO] Creating Autoscaling Scheduled Action: %s", d.Get("scheduled_action_name").(string))
 	_, err := conn.PutScheduledUpdateGroupAction(params)
 	if err != nil {
-		return fmt.Errorf("Error Creating Autoscaling Scheduled Action: %s", err.Error())
+		return fmt.Errorf("Error Creating Autoscaling Scheduled Action: %w", err)
 	}
 
 	d.SetId(d.Get("scheduled_action_name").(string))
@@ -169,7 +169,7 @@ func resourceScheduleRead(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	if !exists {
+	if !exists && !d.IsNewResource() {
 		log.Printf("[WARN] Autoscaling Scheduled Action (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -222,7 +222,7 @@ func resourceScheduleDelete(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[INFO] Deleting Autoscaling Scheduled Action: %s", d.Id())
 	_, err := conn.DeleteScheduledAction(params)
 	if err != nil {
-		return fmt.Errorf("Error deleting Autoscaling Scheduled Action: %s", err.Error())
+		return fmt.Errorf("Error deleting Autoscaling Scheduled Action: %w", err)
 	}
 
 	return nil
@@ -246,7 +246,7 @@ func resourceASGScheduledActionRetrieve(d *schema.ResourceData, meta interface{}
 
 			return nil, false, nil
 		}
-		return nil, false, fmt.Errorf("Error retrieving Autoscaling Scheduled Actions: %s", err)
+		return nil, false, fmt.Errorf("Error retrieving Autoscaling Scheduled Actions: %w", err)
 	}
 
 	if len(actions.ScheduledUpdateGroupActions) != 1 ||

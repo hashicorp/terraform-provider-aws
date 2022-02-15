@@ -8,7 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/kms"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -209,7 +209,15 @@ func resourceReplicaKeyRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("key_rotation_enabled", key.rotation)
 	d.Set("key_spec", key.metadata.KeySpec)
 	d.Set("key_usage", key.metadata.KeyUsage)
-	d.Set("policy", key.policy)
+
+	policyToSet, err := verify.SecondJSONUnlessEquivalent(d.Get("policy").(string), key.policy)
+
+	if err != nil {
+		return fmt.Errorf("while setting policy (%s), encountered: %w", key.policy, err)
+	}
+
+	d.Set("policy", policyToSet)
+
 	d.Set("primary_key_arn", key.metadata.MultiRegionConfiguration.PrimaryKey.Arn)
 
 	tags := key.tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)

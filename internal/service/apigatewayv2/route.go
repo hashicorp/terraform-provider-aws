@@ -7,12 +7,11 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/apigatewayv2"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceRoute() *schema.Resource {
@@ -152,7 +151,7 @@ func resourceRouteRead(d *schema.ResourceData, meta interface{}) error {
 		RouteId: aws.String(d.Id()),
 	})
 
-	if tfawserr.ErrCodeEquals(err, apigatewayv2.ErrCodeNotFoundException) {
+	if tfawserr.ErrCodeEquals(err, apigatewayv2.ErrCodeNotFoundException) && !d.IsNewResource() {
 		log.Printf("[WARN] API Gateway v2 route (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -170,7 +169,7 @@ func resourceRouteRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("authorizer_id", resp.AuthorizerId)
 	d.Set("model_selection_expression", resp.ModelSelectionExpression)
 	d.Set("operation_name", resp.OperationName)
-	if err := d.Set("request_models", verify.PointersMapToStringList(resp.RequestModels)); err != nil {
+	if err := d.Set("request_models", flex.PointersMapToStringList(resp.RequestModels)); err != nil {
 		return fmt.Errorf("error setting request_models: %w", err)
 	}
 	if err := d.Set("request_parameter", flattenApiGatewayV2RouteRequestParameters(resp.RequestParameters)); err != nil {
