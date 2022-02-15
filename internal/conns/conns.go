@@ -6,6 +6,7 @@ import (
 	"log"
 	"strings"
 
+	"github.com/aws/aws-sdk-go-v2/service/route53domains"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/aws/request"
@@ -224,7 +225,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/resourcegroupstaggingapi"
 	"github.com/aws/aws-sdk-go/service/robomaker"
 	"github.com/aws/aws-sdk-go/service/route53"
-	"github.com/aws/aws-sdk-go/service/route53domains"
 	"github.com/aws/aws-sdk-go/service/route53recoverycontrolconfig"
 	"github.com/aws/aws-sdk-go/service/route53recoveryreadiness"
 	"github.com/aws/aws-sdk-go/service/route53resolver"
@@ -284,6 +284,7 @@ import (
 	awsbase "github.com/hashicorp/aws-sdk-go-base/v2"
 	awsbasev1 "github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/version"
 )
@@ -565,6 +566,12 @@ const (
 	XRay                          = "xray"
 )
 
+// TODO: These "should" be defined by the AWS Go SDK v2.
+const (
+	Route53DomainsEndpointID  = "route53domains"
+	Route53DomainsServiceName = "route53domains"
+)
+
 type ServiceDatum struct {
 	AWSClientName     string
 	AWSServiceName    string
@@ -795,7 +802,7 @@ func init() {
 	serviceData[ResourceGroupsTaggingAPI] = &ServiceDatum{AWSClientName: "ResourceGroupsTaggingAPI", AWSServiceName: resourcegroupstaggingapi.ServiceName, AWSEndpointsID: resourcegroupstaggingapi.EndpointsID, AWSServiceID: resourcegroupstaggingapi.ServiceID, ProviderNameUpper: "ResourceGroupsTaggingAPI", HCLKeys: []string{"resourcegroupstaggingapi", "resourcegroupstagging"}}
 	serviceData[RoboMaker] = &ServiceDatum{AWSClientName: "RoboMaker", AWSServiceName: robomaker.ServiceName, AWSEndpointsID: robomaker.EndpointsID, AWSServiceID: robomaker.ServiceID, ProviderNameUpper: "RoboMaker", HCLKeys: []string{"robomaker"}}
 	serviceData[Route53] = &ServiceDatum{AWSClientName: "Route53", AWSServiceName: route53.ServiceName, AWSEndpointsID: route53.EndpointsID, AWSServiceID: route53.ServiceID, ProviderNameUpper: "Route53", HCLKeys: []string{"route53"}}
-	serviceData[Route53Domains] = &ServiceDatum{AWSClientName: "Route53Domains", AWSServiceName: route53domains.ServiceName, AWSEndpointsID: route53domains.EndpointsID, AWSServiceID: route53domains.ServiceID, ProviderNameUpper: "Route53Domains", HCLKeys: []string{"route53domains"}}
+	serviceData[Route53Domains] = &ServiceDatum{AWSClientName: "Route53Domains", AWSServiceName: Route53DomainsServiceName, AWSEndpointsID: Route53DomainsEndpointID, AWSServiceID: route53domains.ServiceID, ProviderNameUpper: "Route53Domains", HCLKeys: []string{"route53domains"}}
 	serviceData[Route53RecoveryControlConfig] = &ServiceDatum{AWSClientName: "Route53RecoveryControlConfig", AWSServiceName: route53recoverycontrolconfig.ServiceName, AWSEndpointsID: route53recoverycontrolconfig.EndpointsID, AWSServiceID: route53recoverycontrolconfig.ServiceID, ProviderNameUpper: "Route53RecoveryControlConfig", HCLKeys: []string{"route53recoverycontrolconfig"}}
 	serviceData[Route53RecoveryReadiness] = &ServiceDatum{AWSClientName: "Route53RecoveryReadiness", AWSServiceName: route53recoveryreadiness.ServiceName, AWSEndpointsID: route53recoveryreadiness.EndpointsID, AWSServiceID: route53recoveryreadiness.ServiceID, ProviderNameUpper: "Route53RecoveryReadiness", HCLKeys: []string{"route53recoveryreadiness"}}
 	serviceData[Route53Resolver] = &ServiceDatum{AWSClientName: "Route53Resolver", AWSServiceName: route53resolver.ServiceName, AWSEndpointsID: route53resolver.EndpointsID, AWSServiceID: route53resolver.ServiceID, ProviderNameUpper: "Route53Resolver", HCLKeys: []string{"route53resolver"}}
@@ -1108,7 +1115,7 @@ type AWSClient struct {
 	ReverseDNSPrefix                  string
 	RoboMakerConn                     *robomaker.RoboMaker
 	Route53Conn                       *route53.Route53
-	Route53DomainsConn                *route53domains.Route53Domains
+	Route53DomainsConn                *route53domains.Client
 	Route53RecoveryControlConfigConn  *route53recoverycontrolconfig.Route53RecoveryControlConfig
 	Route53RecoveryReadinessConn      *route53recoveryreadiness.Route53RecoveryReadiness
 	Route53ResolverConn               *route53resolver.Route53Resolver
@@ -1185,12 +1192,12 @@ func (client *AWSClient) RegionalHostname(prefix string) string {
 }
 
 // Client configures and returns a fully initialized AWSClient
-func (c *Config) Client() (interface{}, error) {
+func (c *Config) Client(ctx context.Context) (interface{}, diag.Diagnostics) {
 	// Get the auth and region. This can fail if keys/regions were not
 	// specified and we're attempting to use the environment.
 	if !c.SkipRegionValidation {
 		if err := awsbase.ValidateRegion(c.Region); err != nil {
-			return nil, err
+			return nil, diag.FromErr(err)
 		}
 	}
 
@@ -1233,20 +1240,19 @@ func (c *Config) Client() (interface{}, error) {
 		awsbaseConfig.SharedCredentialsFiles = []string{c.SharedCredentialsFile}
 	}
 
-	ctx := context.Background()
 	cfg, err := awsbase.GetAwsConfig(ctx, &awsbaseConfig)
 	if err != nil {
-		return nil, fmt.Errorf("error configuring Terraform AWS Provider: %w", err)
+		return nil, diag.Errorf("error configuring Terraform AWS Provider: %s", err)
 	}
 
 	sess, err := awsbasev1.GetSession(&cfg, &awsbaseConfig)
 	if err != nil {
-		return nil, fmt.Errorf("error creating AWS SDK v1 session: %w", err)
+		return nil, diag.Errorf("error creating AWS SDK v1 session: %s", err)
 	}
 
 	accountID, Partition, err := awsbase.GetAwsAccountIDAndPartition(ctx, cfg, &awsbaseConfig)
 	if err != nil {
-		return nil, fmt.Errorf("error retrieving account details: %w", err)
+		return nil, diag.Errorf("error retrieving account details: %s", err)
 	}
 
 	if accountID == "" {
@@ -1256,7 +1262,7 @@ func (c *Config) Client() (interface{}, error) {
 	if len(c.ForbiddenAccountIds) > 0 {
 		for _, forbiddenAccountID := range c.AllowedAccountIds {
 			if accountID == forbiddenAccountID {
-				return nil, fmt.Errorf("AWS Account ID not allowed: %s", accountID)
+				return nil, diag.Errorf("AWS Account ID not allowed: %s", accountID)
 			}
 		}
 	}
@@ -1269,7 +1275,7 @@ func (c *Config) Client() (interface{}, error) {
 			}
 		}
 		if !found {
-			return nil, fmt.Errorf("AWS Account ID not allowed: %s", accountID)
+			return nil, diag.Errorf("AWS Account ID not allowed: %s", accountID)
 		}
 	}
 
@@ -1498,62 +1504,65 @@ func (c *Config) Client() (interface{}, error) {
 		ResourceGroupsTaggingAPIConn:      resourcegroupstaggingapi.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[ResourceGroupsTaggingAPI])})),
 		ReverseDNSPrefix:                  ReverseDNS(DNSSuffix),
 		RoboMakerConn:                     robomaker.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[RoboMaker])})),
-		Route53DomainsConn:                route53domains.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[Route53Domains])})),
-		Route53RecoveryControlConfigConn:  route53recoverycontrolconfig.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[Route53RecoveryControlConfig])})),
-		Route53RecoveryReadinessConn:      route53recoveryreadiness.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[Route53RecoveryReadiness])})),
-		Route53ResolverConn:               route53resolver.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[Route53Resolver])})),
-		S3ControlConn:                     s3control.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[S3Control])})),
-		S3OutpostsConn:                    s3outposts.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[S3Outposts])})),
-		SageMakerConn:                     sagemaker.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[SageMaker])})),
-		SageMakerEdgeManagerConn:          sagemakeredgemanager.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[SageMakerEdgeManager])})),
-		SageMakerFeatureStoreRuntimeConn:  sagemakerfeaturestoreruntime.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[SageMakerFeatureStoreRuntime])})),
-		SageMakerRuntimeConn:              sagemakerruntime.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[SageMakerRuntime])})),
-		SavingsPlansConn:                  savingsplans.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[SavingsPlans])})),
-		SchemasConn:                       schemas.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[Schemas])})),
-		SecretsManagerConn:                secretsmanager.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[SecretsManager])})),
-		SecurityHubConn:                   securityhub.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[SecurityHub])})),
-		ServerlessRepoConn:                serverlessapplicationrepository.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[ServerlessRepo])})),
-		ServiceCatalogConn:                servicecatalog.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[ServiceCatalog])})),
-		ServiceDiscoveryConn:              servicediscovery.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[ServiceDiscovery])})),
-		ServiceQuotasConn:                 servicequotas.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[ServiceQuotas])})),
-		SESConn:                           ses.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[SES])})),
-		SESV2Conn:                         sesv2.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[SESV2])})),
-		SFNConn:                           sfn.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[SFN])})),
-		SignerConn:                        signer.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[Signer])})),
-		SimpleDBConn:                      simpledb.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[SimpleDB])})),
-		SMSConn:                           sms.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[SMS])})),
-		SnowballConn:                      snowball.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[Snowball])})),
-		SNSConn:                           sns.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[SNS])})),
-		SQSConn:                           sqs.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[SQS])})),
-		SSMConn:                           ssm.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[SSM])})),
-		SSMContactsConn:                   ssmcontacts.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[SSMContacts])})),
-		SSMIncidentsConn:                  ssmincidents.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[SSMIncidents])})),
-		SSOAdminConn:                      ssoadmin.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[SSOAdmin])})),
-		SSOConn:                           sso.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[SSO])})),
-		SSOOIDCConn:                       ssooidc.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[SSOOIDC])})),
-		StorageGatewayConn:                storagegateway.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[StorageGateway])})),
-		STSConn:                           sts.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[STS])})),
-		SupportConn:                       support.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[Support])})),
-		SWFConn:                           swf.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[SWF])})),
-		SyntheticsConn:                    synthetics.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[Synthetics])})),
-		TerraformVersion:                  c.TerraformVersion,
-		TextractConn:                      textract.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[Textract])})),
-		TimestreamQueryConn:               timestreamquery.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[TimestreamQuery])})),
-		TimestreamWriteConn:               timestreamwrite.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[TimestreamWrite])})),
-		TranscribeConn:                    transcribeservice.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[Transcribe])})),
-		TranscribeStreamingConn:           transcribestreamingservice.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[TranscribeStreaming])})),
-		TransferConn:                      transfer.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[Transfer])})),
-		TranslateConn:                     translate.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[Translate])})),
-		WAFConn:                           waf.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[WAF])})),
-		WAFRegionalConn:                   wafregional.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[WAFRegional])})),
-		WAFV2Conn:                         wafv2.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[WAFV2])})),
-		WellArchitectedConn:               wellarchitected.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[WellArchitected])})),
-		WorkDocsConn:                      workdocs.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[WorkDocs])})),
-		WorkLinkConn:                      worklink.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[WorkLink])})),
-		WorkMailConn:                      workmail.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[WorkMail])})),
-		WorkMailMessageFlowConn:           workmailmessageflow.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[WorkMailMessageFlow])})),
-		WorkSpacesConn:                    workspaces.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[WorkSpaces])})),
-		XRayConn:                          xray.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[XRay])})),
+		Route53DomainsConn: route53domains.NewFromConfig(cfg, func(o *route53domains.Options) {
+			// TODO How to override endpoint?
+			// route53domains.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[Route53Domains])})),
+		}),
+		Route53RecoveryControlConfigConn: route53recoverycontrolconfig.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[Route53RecoveryControlConfig])})),
+		Route53RecoveryReadinessConn:     route53recoveryreadiness.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[Route53RecoveryReadiness])})),
+		Route53ResolverConn:              route53resolver.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[Route53Resolver])})),
+		S3ControlConn:                    s3control.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[S3Control])})),
+		S3OutpostsConn:                   s3outposts.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[S3Outposts])})),
+		SageMakerConn:                    sagemaker.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[SageMaker])})),
+		SageMakerEdgeManagerConn:         sagemakeredgemanager.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[SageMakerEdgeManager])})),
+		SageMakerFeatureStoreRuntimeConn: sagemakerfeaturestoreruntime.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[SageMakerFeatureStoreRuntime])})),
+		SageMakerRuntimeConn:             sagemakerruntime.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[SageMakerRuntime])})),
+		SavingsPlansConn:                 savingsplans.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[SavingsPlans])})),
+		SchemasConn:                      schemas.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[Schemas])})),
+		SecretsManagerConn:               secretsmanager.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[SecretsManager])})),
+		SecurityHubConn:                  securityhub.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[SecurityHub])})),
+		ServerlessRepoConn:               serverlessapplicationrepository.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[ServerlessRepo])})),
+		ServiceCatalogConn:               servicecatalog.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[ServiceCatalog])})),
+		ServiceDiscoveryConn:             servicediscovery.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[ServiceDiscovery])})),
+		ServiceQuotasConn:                servicequotas.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[ServiceQuotas])})),
+		SESConn:                          ses.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[SES])})),
+		SESV2Conn:                        sesv2.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[SESV2])})),
+		SFNConn:                          sfn.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[SFN])})),
+		SignerConn:                       signer.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[Signer])})),
+		SimpleDBConn:                     simpledb.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[SimpleDB])})),
+		SMSConn:                          sms.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[SMS])})),
+		SnowballConn:                     snowball.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[Snowball])})),
+		SNSConn:                          sns.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[SNS])})),
+		SQSConn:                          sqs.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[SQS])})),
+		SSMConn:                          ssm.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[SSM])})),
+		SSMContactsConn:                  ssmcontacts.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[SSMContacts])})),
+		SSMIncidentsConn:                 ssmincidents.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[SSMIncidents])})),
+		SSOAdminConn:                     ssoadmin.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[SSOAdmin])})),
+		SSOConn:                          sso.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[SSO])})),
+		SSOOIDCConn:                      ssooidc.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[SSOOIDC])})),
+		StorageGatewayConn:               storagegateway.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[StorageGateway])})),
+		STSConn:                          sts.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[STS])})),
+		SupportConn:                      support.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[Support])})),
+		SWFConn:                          swf.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[SWF])})),
+		SyntheticsConn:                   synthetics.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[Synthetics])})),
+		TerraformVersion:                 c.TerraformVersion,
+		TextractConn:                     textract.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[Textract])})),
+		TimestreamQueryConn:              timestreamquery.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[TimestreamQuery])})),
+		TimestreamWriteConn:              timestreamwrite.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[TimestreamWrite])})),
+		TranscribeConn:                   transcribeservice.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[Transcribe])})),
+		TranscribeStreamingConn:          transcribestreamingservice.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[TranscribeStreaming])})),
+		TransferConn:                     transfer.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[Transfer])})),
+		TranslateConn:                    translate.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[Translate])})),
+		WAFConn:                          waf.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[WAF])})),
+		WAFRegionalConn:                  wafregional.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[WAFRegional])})),
+		WAFV2Conn:                        wafv2.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[WAFV2])})),
+		WellArchitectedConn:              wellarchitected.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[WellArchitected])})),
+		WorkDocsConn:                     workdocs.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[WorkDocs])})),
+		WorkLinkConn:                     worklink.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[WorkLink])})),
+		WorkMailConn:                     workmail.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[WorkMail])})),
+		WorkMailMessageFlowConn:          workmailmessageflow.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[WorkMailMessageFlow])})),
+		WorkSpacesConn:                   workspaces.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[WorkSpaces])})),
+		XRayConn:                         xray.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[XRay])})),
 	}
 
 	// "Global" services that require customizations
