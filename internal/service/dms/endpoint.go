@@ -54,7 +54,7 @@ func ResourceEndpoint() *schema.Resource {
 							Type:     schema.TypeString,
 							Required: true,
 							// API returns this error with ModifyEndpoint:
-							// InvalidParameterCombinationException: Elasticsearch endpoint cant be modified.
+							// InvalidParameterCombinationException: OpenSearch endpoint cant be modified.
 							ForceNew: true,
 						},
 						"error_retry_duration": {
@@ -63,7 +63,7 @@ func ResourceEndpoint() *schema.Resource {
 							Default:      300,
 							ValidateFunc: validation.IntAtLeast(0),
 							// API returns this error with ModifyEndpoint:
-							// InvalidParameterCombinationException: Elasticsearch endpoint cant be modified.
+							// InvalidParameterCombinationException: OpenSearch endpoint cant be modified.
 							ForceNew: true,
 						},
 						"full_load_error_percentage": {
@@ -72,7 +72,7 @@ func ResourceEndpoint() *schema.Resource {
 							Default:      10,
 							ValidateFunc: validation.IntBetween(0, 100),
 							// API returns this error with ModifyEndpoint:
-							// InvalidParameterCombinationException: Elasticsearch endpoint cant be modified.
+							// InvalidParameterCombinationException: OpenSearch endpoint cant be modified.
 							ForceNew: true,
 						},
 						"service_access_role_arn": {
@@ -80,7 +80,7 @@ func ResourceEndpoint() *schema.Resource {
 							Required:     true,
 							ValidateFunc: verify.ValidARN,
 							// API returns this error with ModifyEndpoint:
-							// InvalidParameterCombinationException: Elasticsearch endpoint cant be modified.
+							// InvalidParameterCombinationException: OpenSearch endpoint cant be modified.
 							ForceNew: true,
 						},
 					},
@@ -598,7 +598,7 @@ func resourceEndpointCreate(d *schema.ResourceData, meta interface{}) error {
 		request.DynamoDbSettings = &dms.DynamoDbSettings{
 			ServiceAccessRoleArn: aws.String(d.Get("service_access_role").(string)),
 		}
-	case engineNameElasticsearch:
+	case engineNameElasticsearch, engineNameOpenSearch:
 		request.ElasticsearchSettings = &dms.ElasticsearchSettings{
 			ServiceAccessRoleArn:    aws.String(d.Get("elasticsearch_settings.0.service_access_role_arn").(string)),
 			EndpointUri:             aws.String(d.Get("elasticsearch_settings.0.endpoint_uri").(string)),
@@ -839,7 +839,7 @@ func resourceEndpointUpdate(d *schema.ResourceData, meta interface{}) error {
 			}
 			hasChanges = true
 		}
-	case engineNameElasticsearch:
+	case engineNameElasticsearch, engineNameOpenSearch:
 		if d.HasChanges(
 			"elasticsearch_settings.0.endpoint_uri",
 			"elasticsearch_settings.0.error_retry_duration",
@@ -1029,7 +1029,7 @@ func resourceEndpointDelete(d *schema.ResourceData, meta interface{}) error {
 
 func resourceEndpointCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
 	switch engineName := diff.Get("engine_name").(string); engineName {
-	case engineNameElasticsearch:
+	case engineNameElasticsearch, engineNameOpenSearch:
 		if v, ok := diff.GetOk("elasticsearch_settings"); !ok || len(v.([]interface{})) == 0 || v.([]interface{})[0] == nil {
 			return fmt.Errorf("elasticsearch_settings must be set when engine_name = %q", engineName)
 		}
@@ -1072,8 +1072,8 @@ func resourceEndpointSetState(d *schema.ResourceData, endpoint *dms.Endpoint) er
 		} else {
 			d.Set("service_access_role", "")
 		}
-	case engineNameElasticsearch:
-		if err := d.Set("elasticsearch_settings", flattenElasticsearchSettings(endpoint.ElasticsearchSettings)); err != nil {
+	case engineNameElasticsearch, engineNameOpenSearch:
+		if err := d.Set("elasticsearch_settings", flattenOpenSearchSettings(endpoint.ElasticsearchSettings)); err != nil {
 			return fmt.Errorf("Error setting elasticsearch for DMS: %s", err)
 		}
 	case engineNameKafka:
@@ -1153,7 +1153,7 @@ func resourceEndpointSetState(d *schema.ResourceData, endpoint *dms.Endpoint) er
 	return nil
 }
 
-func flattenElasticsearchSettings(settings *dms.ElasticsearchSettings) []map[string]interface{} {
+func flattenOpenSearchSettings(settings *dms.ElasticsearchSettings) []map[string]interface{} {
 	if settings == nil {
 		return []map[string]interface{}{}
 	}
