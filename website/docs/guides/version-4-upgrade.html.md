@@ -136,7 +136,7 @@ Precedence for authentication settings is as follows:
 
 In previous versions of the provider, you could explicitly set `profile` in the `provider`, and if the profile did not correspond to valid credentials, the provider would use credentials from environment variables. Starting in v4.0, the Terraform AWS provider enforces the precedence shown above, similarly to how the AWS SDK and AWS CLI behave.
 
-In other words, when you explicitly set `profile` in `provider`, the AWS provider will not use environment variables per the precedence shown above. Before v4.0, if `profile` was configured in the `provider` configuration but did not correspond to an AWS profile or valid credentials, the provider would attempt to use environment variables. **This is no longer the case.** An explicitly set profile that does not have valid credentials will cause an authentication error. 
+In other words, when you explicitly set `profile` in `provider`, the AWS provider will not use environment variables per the precedence shown above. Before v4.0, if `profile` was configured in the `provider` configuration but did not correspond to an AWS profile or valid credentials, the provider would attempt to use environment variables. **This is no longer the case.** An explicitly set profile that does not have valid credentials will cause an authentication error.
 
 For example, with the following, the environment variables will not be used:
 
@@ -419,7 +419,7 @@ resource "aws_s3_bucket" "example" {
 
 resource "aws_s3_bucket_acl" "example" {
   bucket = aws_s3_bucket.example.id
-  
+
   access_control_policy {
     grant {
       grantee {
