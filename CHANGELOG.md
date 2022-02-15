@@ -1,4 +1,13 @@
 ## 4.02.0 (Unreleased)
+
+FEATURES:
+
+* **New Resource:** `aws_cloudtrail_event_data_store` ([#22490](https://github.com/hashicorp/terraform-provider-aws/issues/22490))
+
+ENHANCEMENTS:
+
+* provider: Add `sts_region` argument ([#23212](https://github.com/hashicorp/terraform-provider-aws/issues/23212))
+
 ## 4.1.0 (February 15, 2022)
 
 FEATURES:
