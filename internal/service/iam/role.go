@@ -24,6 +24,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+const (
+	roleNameMaxLen       = 64
+	roleNamePrefixMaxLen = roleNameMaxLen - resource.UniqueIDSuffixLength
+)
+
 func ResourceRole() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceRoleCreate,
@@ -50,10 +55,7 @@ func ResourceRole() *schema.Resource {
 				Computed:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"name_prefix"},
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(1, 64),
-					validation.StringMatch(regexp.MustCompile(`^[\w+=,.@-]*$`), "must match [\\w+=,.@-]"),
-				),
+				ValidateFunc:  validIamResourceName(roleNameMaxLen),
 			},
 
 			"name_prefix": {
@@ -62,10 +64,7 @@ func ResourceRole() *schema.Resource {
 				Computed:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"name"},
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(1, 64-resource.UniqueIDSuffixLength),
-					validation.StringMatch(regexp.MustCompile(`^[\w+=,.@-]*$`), "must match [\\w+=,.@-]"),
-				),
+				ValidateFunc:  validIamResourceName(roleNamePrefixMaxLen),
 			},
 
 			"path": {

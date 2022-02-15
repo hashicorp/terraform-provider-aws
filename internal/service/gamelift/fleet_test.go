@@ -504,6 +504,55 @@ func TestAccGameLiftFleet_cert(t *testing.T) {
 	})
 }
 
+func TestAccGameLiftFleet_script(t *testing.T) {
+	var conf gamelift.FleetAttributes
+
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resourceName := "aws_gamelift_fleet.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(t)
+			acctest.PreCheckPartitionHasService(gamelift.EndpointsID, t)
+			testAccPreCheck(t)
+		},
+		ErrorCheck:   acctest.ErrorCheck(t, gamelift.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckFleetDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccFleetScriptConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFleetExists(resourceName, &conf),
+					resource.TestCheckResourceAttrPair(resourceName, "script_id", "aws_gamelift_script.test", "id"),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "gamelift", regexp.MustCompile(`fleet/fleet-.+`)),
+					resource.TestCheckResourceAttr(resourceName, "certificate_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "certificate_configuration.0.certificate_type", "DISABLED"),
+					resource.TestCheckResourceAttr(resourceName, "ec2_instance_type", "t2.micro"),
+					resource.TestCheckResourceAttr(resourceName, "log_paths.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "metric_groups.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "metric_groups.0", "default"),
+					resource.TestCheckResourceAttr(resourceName, "new_game_session_protection_policy", "NoProtection"),
+					resource.TestCheckResourceAttr(resourceName, "resource_creation_limit_policy.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "runtime_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "runtime_configuration.0.server_process.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "runtime_configuration.0.server_process.0.concurrent_executions", "1"),
+					resource.TestCheckResourceAttr(resourceName, "runtime_configuration.0.server_process.0.launch_path", "/local/game/lol"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"runtime_configuration"},
+			},
+		},
+	})
+}
+
 func TestAccGameLiftFleet_disappears(t *testing.T) {
 	var conf gamelift.FleetAttributes
 
@@ -891,4 +940,26 @@ resource "aws_gamelift_fleet" "test" {
   }
 }
 `, rName, launchPath, params)
+}
+
+func testAccFleetScriptConfig(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_gamelift_script" "test" {
+  name     = %[1]q
+  zip_file = "test-fixtures/script.zip"
+}
+
+resource "aws_gamelift_fleet" "test" {
+  script_id         = aws_gamelift_script.test.id
+  ec2_instance_type = "t2.micro"
+  name              = %[1]q
+
+  runtime_configuration {
+    server_process {
+      concurrent_executions = 1
+      launch_path           = "/local/game/lol"
+    }
+  }
+}
+`, rName)
 }

@@ -202,8 +202,10 @@ The `noncurrent_version_transition` configuration block supports the following a
 
 The `transition` configuration block supports the following arguments:
 
-* `date` - (Optional) The date objects are transitioned to the specified storage class. The date value must be in ISO 8601 format. The time is always midnight UTC.
-* `days` - (Optional) The number of days after creation when objects are transitioned to the specified storage class. The value must be a positive integer.
+~> **Note:** Only one of `date` or `days` should be specified. If neither are specified, the `transition` will default to 0 `days`.
+
+* `date` - (Optional, Conflicts with `days`) The date objects are transitioned to the specified storage class. The date value must be in ISO 8601 format and set to midnight UTC e.g. `2023-01-13T00:00:00Z`.
+* `days` - (Optional, Conflicts with `date`) The number of days after creation when objects are transitioned to the specified storage class. The value must be a positive integer. If both `days` and `date` are not specified, defaults to `0`. Valid values depend on `storage_class`, see [Transition objects using Amazon S3 Lifecycle](https://docs.aws.amazon.com/AmazonS3/latest/userguide/lifecycle-transition-general-considerations.html) for more details.
 * `storage_class` - The class of storage used to store the object. Valid Values: `GLACIER`, `STANDARD_IA`, `ONEZONE_IA`, `INTELLIGENT_TIERING`, `DEEP_ARCHIVE`, `GLACIER_IR`.
 
 ### tag
