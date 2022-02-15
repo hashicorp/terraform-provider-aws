@@ -982,7 +982,8 @@ func Provider() *schema.Provider {
 			"aws_cloudsearch_domain":                       cloudsearch.ResourceDomain(),
 			"aws_cloudsearch_domain_service_access_policy": cloudsearch.ResourceDomainServiceAccessPolicy(),
 
-			"aws_cloudtrail": cloudtrail.ResourceCloudTrail(),
+			"aws_cloudtrail":                  cloudtrail.ResourceCloudTrail(),
+			"aws_cloudtrail_event_data_store": cloudtrail.ResourceEventDataStore(),
 
 			"aws_cloudwatch_composite_alarm": cloudwatch.ResourceCompositeAlarm(),
 			"aws_cloudwatch_dashboard":       cloudwatch.ResourceDashboard(),
