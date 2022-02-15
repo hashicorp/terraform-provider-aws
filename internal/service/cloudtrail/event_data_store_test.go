@@ -78,30 +78,40 @@ func TestAccEventDataStore_disappears(t *testing.T) {
 	})
 }
 
-func TestAccEventDataStore_multi_region_enabled(t *testing.T) {
-	rName := "tf-test-" + sdkacctest.RandString(8)
+func TestAccEventDataStore_options(t *testing.T) {
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cloudtrail_event_data_store.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOrganizationManagementAccount(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, cloudtrail.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckEventDataStoreDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEventDataStoreConfig_multi_region_enabled(rName),
+				Config: testAccEventDataStoreOptionsConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEventDataStoreExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "retention_period", "7"),
-					resource.TestCheckResourceAttr(resourceName, "multi_region_enabled", "true"),
-					resource.TestCheckResourceAttr(resourceName, "termination_protection_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "multi_region_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "organization_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "retention_period", "365"),
+					resource.TestCheckResourceAttr(resourceName, "termination_protection_enabled", "true"),
 				),
 			},
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+			{
+				Config: testAccEventDataStoreOptionsUpdatedConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEventDataStoreExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "multi_region_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "organization_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "retention_period", "90"),
+					resource.TestCheckResourceAttr(resourceName, "termination_protection_enabled", "false"),
+				),
 			},
 		},
 	})
@@ -211,23 +221,27 @@ resource "aws_cloudtrail_event_data_store" "test" {
 `, rName)
 }
 
-func testAccEventDataStoreConfigRetentionPeriodAndTerminationProtection(rName string, retentionPeriod int, terminationProtection bool) string {
+func testAccEventDataStoreOptionsConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudtrail_event_data_store" "test" {
   name                 = %[1]q
-  retention_period     = %[2]d
+  multi_region_enabled = false
+  organization_enabled = true
+  retention_period     = 365
 
-  termination_protection_enabled = %[3]t
+  termination_protection_enabled = true
 }
-`, rName, retentionPeriod, terminationProtection)
+`, rName)
 }
 
-func testAccEventDataStoreConfig_multi_region_enabled(rName string) string {
+func testAccEventDataStoreOptionsUpdatedConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudtrail_event_data_store" "test" {
-  name = %[1]q
-  retention_period     = 7
+  name                 = %[1]q
   multi_region_enabled = true
+  organization_enabled = false
+  retention_period     = 90
+
   termination_protection_enabled = false
 }
 `, rName)
