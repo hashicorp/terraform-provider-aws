@@ -76,7 +76,7 @@ func TestAccAMPWorkspace_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAMPWorkspace_tagging(t *testing.T) {
+func TestAccAMPWorkspace_tags(t *testing.T) {
 	rInt := sdkacctest.RandInt()
 	resourceName := "aws_prometheus_workspace.test"
 
@@ -206,7 +206,7 @@ resource "aws_prometheus_workspace" "test" {
 
   tags = {
     Environment = "production"
-    Owner = "mh9"
+    Owner       = "mh9"
   }
 }
 `, randInt)
@@ -219,8 +219,8 @@ resource "aws_prometheus_workspace" "test" {
 
   tags = {
     Environment = "production"
-    Owner = "mh9"
-    App = "foo42"
+    Owner       = "mh9"
+    App         = "foo42"
   }
 }
 `, randInt)
@@ -233,8 +233,8 @@ resource "aws_prometheus_workspace" "test" {
 
   tags = {
     Environment = "production"
-    Owner = "abhi"
-    App = "foo42"
+    Owner       = "abhi"
+    App         = "foo42"
   }
 }
 `, randInt)
