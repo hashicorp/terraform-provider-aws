@@ -6,6 +6,7 @@ FEATURES:
 * **New Data Source:** `aws_imagebuilder_container_recipe` ([#23040](https://github.com/hashicorp/terraform-provider-aws/issues/23040))
 * **New Data Source:** `aws_imagebuilder_container_recipes` ([#23134](https://github.com/hashicorp/terraform-provider-aws/issues/23134))
 * **New Data Source:** `aws_service` ([#16640](https://github.com/hashicorp/terraform-provider-aws/issues/16640))
+* **New Resource:** `aws_backup_framework` ([#23175](https://github.com/hashicorp/terraform-provider-aws/issues/23175))
 * **New Resource:** `aws_backup_report_plan` ([#23098](https://github.com/hashicorp/terraform-provider-aws/issues/23098))
 * **New Resource:** `aws_gamelift_script` ([#11560](https://github.com/hashicorp/terraform-provider-aws/issues/11560))
 * **New Resource:** `aws_iam_service_specific_credential` ([#16185](https://github.com/hashicorp/terraform-provider-aws/issues/16185))
@@ -18,6 +19,7 @@ ENHANCEMENTS:
 * data-source/aws_imagebuilder_image_pipeline: Add `container_recipe_arn` attribute ([#23111](https://github.com/hashicorp/terraform-provider-aws/issues/23111))
 * data-source/aws_kms_public_key: Add `public_key_pem` attribute ([#23130](https://github.com/hashicorp/terraform-provider-aws/issues/23130))
 * resource/aws_api_gateway_authorizer: Add `arn` attribute. ([#23151](https://github.com/hashicorp/terraform-provider-aws/issues/23151))
+* resource/aws_cloudformation_stack_set: Add `call_as` argument ([#22440](https://github.com/hashicorp/terraform-provider-aws/issues/22440))
 * resource/aws_elastic_transcoder_preset: Add plan time validations to `audio.audio_packing_mode`,  `audio.channels`,
 `audio.codec`,`audio.sample_rate`, `audio_codec_options.bit_depth`, `audio_codec_options.bit_order`,
 `audio_codec_options.profile`, `audio_codec_options.signed`, `audio_codec_options.signed`, 
@@ -42,8 +44,10 @@ ENHANCEMENTS:
 
 BUG FIXES:
 
+* resource/aws_appmesh_route: Handle zero `max_retries` ([#23035](https://github.com/hashicorp/terraform-provider-aws/issues/23035))
 * resource/aws_elastic_transcoder_preset: Allow `video_codec_options` to be empty. ([#13974](https://github.com/hashicorp/terraform-provider-aws/issues/13974))
 * resource/aws_rds_cluster: Fix crash when configured `engine_version` string is shorter than the `EngineVersion` string returned from the AWS API ([#23039](https://github.com/hashicorp/terraform-provider-aws/issues/23039))
+* resource/aws_s3_bucket_lifecycle_configuration: Correctly handle the `days` value of the `rule` `transition` configuration block when set to `0` ([#23120](https://github.com/hashicorp/terraform-provider-aws/issues/23120))
 * resource/aws_sagemaker_endpoint_configuration: Emptiness check for arguments, Allow not passing `async_inference_config.kms_key_id`. ([#22960](https://github.com/hashicorp/terraform-provider-aws/issues/22960))
 * resource/aws_vpn_connection: Add support for `ipsec.1-aes256` connection type ([#23127](https://github.com/hashicorp/terraform-provider-aws/issues/23127))
 
