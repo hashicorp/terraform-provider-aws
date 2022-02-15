@@ -417,6 +417,7 @@ func Provider() *schema.Provider {
 			"aws_autoscaling_groups":   autoscaling.DataSourceGroups(),
 			"aws_launch_configuration": autoscaling.DataSourceLaunchConfiguration(),
 
+			"aws_backup_framework":   backup.DataSourceFramework(),
 			"aws_backup_plan":        backup.DataSourcePlan(),
 			"aws_backup_report_plan": backup.DataSourceReportPlan(),
 			"aws_backup_selection":   backup.DataSourceSelection(),
