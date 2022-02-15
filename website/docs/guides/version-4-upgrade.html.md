@@ -126,13 +126,13 @@ provider "aws" {
 
 ## Changes to Authentication
 
-The authentication configuration for the AWS Provider has changed in this version to match the behavior of other AWS products, including the AWS SDK and AWS CLI. _This will break AWS provider configurations where a non-empty `profile` is set in the `provider` configuration but the profile does not correspond to an AWS profile with valid credentials._
+The authentication configuration for the AWS Provider has changed in this version to match the behavior of other AWS products, including the AWS SDK and AWS CLI. _This will break AWS provider configurations where you set a non-empty `profile` in the `provider` configuration but the profile does not correspond to an AWS profile with valid credentials._
 
 Precedence for authentication settings is as follows:
 
 * `provider` configuration
 * Environment variables
-* Shared credentials and configuration files
+* Shared credentials and configuration files (_e.g._, `~/.aws/credentials` and `~/.aws/config`)
 
 In previous versions of the provider, you could explicitly set `profile` in the `provider`, and if the profile did not correspond to valid credentials, the provider would use credentials from environment variables. Starting in v4.0, the Terraform AWS provider enforces the precedence shown above, similarly to how the AWS SDK and AWS CLI behave.
 
