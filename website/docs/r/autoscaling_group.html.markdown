@@ -21,6 +21,8 @@ mutually-exclusive. If `aws_autoscaling_attachment` resources are used, either a
 to ignore changes to the `load_balancers` and `target_group_arns` arguments within a
 [`lifecycle` configuration block](https://www.terraform.io/docs/configuration/meta-arguments/lifecycle.html).
 
+> **Hands-on:** Try the [Manage AWS Auto Scaling Groups](https://learn.hashicorp.com/tutorials/terraform/aws-asg?utm_source=WEBSITE&utm_medium=WEB_IO&utm_offer=ARTICLE_PAGE&utm_content=DOCS) tutorial on HashiCorp Learn.
+
 ## Example Usage
 
 ```terraform

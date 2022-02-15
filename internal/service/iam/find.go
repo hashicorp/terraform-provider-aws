@@ -241,3 +241,42 @@ func FindServiceSpecificCredential(conn *iam.IAM, serviceName, userName, credID 
 
 	return cred, nil
 }
+
+func FindSigningCertificate(conn *iam.IAM, userName, certId string) (*iam.SigningCertificate, error) {
+	input := &iam.ListSigningCertificatesInput{
+		UserName: aws.String(userName),
+	}
+
+	output, err := conn.ListSigningCertificates(input)
+
+	if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if len(output.Certificates) == 0 || output.Certificates[0] == nil {
+		return nil, tfresource.NewEmptyResultError(output)
+	}
+
+	var cert *iam.SigningCertificate
+
+	for _, crt := range output.Certificates {
+		if aws.StringValue(crt.UserName) == userName &&
+			aws.StringValue(crt.CertificateId) == certId {
+			cert = crt
+			break
+		}
+	}
+
+	if cert == nil {
+		return nil, tfresource.NewEmptyResultError(cert)
+	}
+
+	return cert, nil
+}

@@ -1654,6 +1654,18 @@ func resourceGroupDrain(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("Error setting capacity to zero to drain: %s", err)
 	}
 
+	// Next, ensure that instances are not prevented from scaling in.
+	//
+	// The ASG's own scale-in protection setting doesn't make a difference here,
+	// as it only affects new instances, which won't be launched now that the
+	// desired capacity is set to 0. There is also the possibility that this ASG
+	// no longer applies scale-in protection to new instances, but there's still
+	// old ones that have it.
+	log.Printf("[DEBUG] Disabling scale-in protection for all instances in the group")
+	if err := disableASGScaleInProtections(d, conn); err != nil {
+		return fmt.Errorf("Error disabling scale-in protection for all instances: %s", err)
+	}
+
 	// Next, wait for the Auto Scaling Group to drain
 	log.Printf("[DEBUG] Waiting for group to have zero instances")
 	var g *autoscaling.Group
@@ -2364,4 +2376,41 @@ func flattenLaunchTemplateSpecification(lt *autoscaling.LaunchTemplateSpecificat
 	result = append(result, attrs)
 
 	return result
+}
+
+// disableASGScaleInProtections disables scale-in protection for all instances
+// in the given Auto-Scaling Group.
+func disableASGScaleInProtections(d *schema.ResourceData, conn *autoscaling.AutoScaling) error {
+	g, err := getGroup(d.Id(), conn)
+	if err != nil {
+		return fmt.Errorf("Error getting group %s: %s", d.Id(), err)
+	}
+
+	var instanceIds []string
+	for _, instance := range g.Instances {
+		if aws.BoolValue(instance.ProtectedFromScaleIn) {
+			instanceIds = append(instanceIds, aws.StringValue(instance.InstanceId))
+		}
+	}
+
+	const chunkSize = 50 // API limit
+
+	for i := 0; i < len(instanceIds); i += chunkSize {
+		j := i + chunkSize
+		if j > len(instanceIds) {
+			j = len(instanceIds)
+		}
+
+		input := autoscaling.SetInstanceProtectionInput{
+			AutoScalingGroupName: aws.String(d.Id()),
+			InstanceIds:          aws.StringSlice(instanceIds[i:j]),
+			ProtectedFromScaleIn: aws.Bool(false),
+		}
+
+		if _, err := conn.SetInstanceProtection(&input); err != nil {
+			return fmt.Errorf("Error disabling scale-in protections: %s", err)
+		}
+	}
+
+	return nil
 }

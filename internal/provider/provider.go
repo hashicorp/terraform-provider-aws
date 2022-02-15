@@ -418,9 +418,11 @@ func Provider() *schema.Provider {
 			"aws_autoscaling_groups":   autoscaling.DataSourceGroups(),
 			"aws_launch_configuration": autoscaling.DataSourceLaunchConfiguration(),
 
-			"aws_backup_plan":      backup.DataSourcePlan(),
-			"aws_backup_selection": backup.DataSourceSelection(),
-			"aws_backup_vault":     backup.DataSourceVault(),
+			"aws_backup_framework":   backup.DataSourceFramework(),
+			"aws_backup_plan":        backup.DataSourcePlan(),
+			"aws_backup_report_plan": backup.DataSourceReportPlan(),
+			"aws_backup_selection":   backup.DataSourceSelection(),
+			"aws_backup_vault":       backup.DataSourceVault(),
 
 			"aws_batch_compute_environment": batch.DataSourceComputeEnvironment(),
 			"aws_batch_job_queue":           batch.DataSourceJobQueue(),
@@ -927,6 +929,7 @@ func Provider() *schema.Provider {
 
 			"aws_autoscalingplans_scaling_plan": autoscalingplans.ResourceScalingPlan(),
 
+			"aws_backup_framework":                backup.ResourceFramework(),
 			"aws_backup_global_settings":          backup.ResourceGlobalSettings(),
 			"aws_backup_plan":                     backup.ResourcePlan(),
 			"aws_backup_region_settings":          backup.ResourceRegionSettings(),
@@ -1354,6 +1357,7 @@ func Provider() *schema.Provider {
 			"aws_gamelift_build":              gamelift.ResourceBuild(),
 			"aws_gamelift_fleet":              gamelift.ResourceFleet(),
 			"aws_gamelift_game_session_queue": gamelift.ResourceGameSessionQueue(),
+			"aws_gamelift_script":             gamelift.ResourceScript(),
 
 			"aws_glacier_vault":      glacier.ResourceVault(),
 			"aws_glacier_vault_lock": glacier.ResourceVaultLock(),
@@ -1411,6 +1415,7 @@ func Provider() *schema.Provider {
 			"aws_iam_server_certificate":          iam.ResourceServerCertificate(),
 			"aws_iam_service_linked_role":         iam.ResourceServiceLinkedRole(),
 			"aws_iam_service_specific_credential": iam.ResourceServiceSpecificCredential(),
+			"aws_iam_signing_certificate":         iam.ResourceSigningCertificate(),
 			"aws_iam_user":                        iam.ResourceUser(),
 			"aws_iam_user_group_membership":       iam.ResourceUserGroupMembership(),
 			"aws_iam_user_login_profile":          iam.ResourceUserLoginProfile(),
