@@ -376,7 +376,7 @@ func Provider() *schema.Provider {
 				Optional: true,
 				Default:  "",
 				Description: "The region where AWS STS operations will take place. Examples\n" +
-					"are us-east-1, us-west-2, etc.", // lintignore:AWSAT003,
+					"are us-east-1, us-west-2,", // lintignore:AWSAT003,
 			},
 			"token": {
 				Type:     schema.TypeString,
