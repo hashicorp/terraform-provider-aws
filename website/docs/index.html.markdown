@@ -76,7 +76,7 @@ If a setting is specified more than once, the precedence is:
 - Environment variables
 - Settings for the profile from the shared credentials and configuration files
 
-For instance the region is set in the shared configuration file and in the provider configuration,
+For instance, if the region is set in the shared configuration file and in the provider configuration,
 the setting from the provider configuration will be used.
 
 ### Static Credentials
