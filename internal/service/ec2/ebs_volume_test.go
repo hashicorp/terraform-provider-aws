@@ -690,7 +690,7 @@ func TestAccEC2EBSVolume_snapshotIDAndSize(t *testing.T) {
 	})
 }
 
-func TestAccAWSEBSVolume_FinalSnapshot(t *testing.T) {
+func TestAccEC2EBSVolume_FinalSnapshot(t *testing.T) {
 	var v ec2.Volume
 	resourceName := "aws_ebs_volume.test"
 
