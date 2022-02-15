@@ -36,7 +36,6 @@ func waitForLifecycleConfigurationRulesStatus(ctx context.Context, conn *s3.S3, 
 		MinTimeout:                5 * time.Second,
 		ContinuousTargetOccurence: 3,
 		NotFoundChecks:            20,
-		//Delay:                     1 * time.Second,
 	}
 
 	outputRaw, err := stateConf.WaitForState()
