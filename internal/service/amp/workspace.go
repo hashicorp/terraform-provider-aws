@@ -13,6 +13,7 @@ import (
 
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceWorkspace() *schema.Resource {
@@ -24,6 +25,8 @@ func ResourceWorkspace() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
+
+		CustomizeDiff: verify.SetTagsDiff,
 
 		Schema: map[string]*schema.Schema{
 			"alias": {
@@ -104,17 +107,10 @@ func resourceWorkspaceUpdate(ctx context.Context, d *schema.ResourceData, meta i
 	}
 	conn := meta.(*conns.AWSClient).AMPConn
 
-	if d.HasChange("tags") {
-		o, n := d.GetChange("tags")
-		log.Printf("[DEBUG] Updating tags")
-		details, err := conn.DescribeWorkspaceWithContext(ctx, &prometheusservice.DescribeWorkspaceInput{
-			WorkspaceId: aws.String(d.Id()),
-		})
-		if err != nil {
-			return diag.FromErr(fmt.Errorf("error reading Prometheus Workspace (%s): %s", d.Id(), err))
-		}
-		ws := details.Workspace
-		if err := UpdateTags(conn, *ws.Arn, o, n); err != nil {
+	if d.HasChange("tags_all") {
+		o, n := d.GetChange("tags_all")
+
+		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return diag.FromErr(fmt.Errorf("error updating Prometheus WorkSpace (%s) tags: %s", d.Id(), err))
 		}
 	}
