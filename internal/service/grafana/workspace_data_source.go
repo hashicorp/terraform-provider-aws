@@ -1,7 +1,16 @@
 package grafana
 
 import (
+	"fmt"
+	"log"
+	"time"
+)
+
+import (
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func DataSourceWorkspace() *schema.Resource {
@@ -95,5 +104,43 @@ func DataSourceWorkspace() *schema.Resource {
 
 func dataSourceWorkspaceRead(d *schema.ResourceData, meta interface{}) error {
 	d.SetId(d.Get("id").(string))
-	return resourceWorkspaceRead(d, meta)
+	id := d.Id()
+	conn := meta.(*conns.AWSClient).GrafanaConn
+	workspace, err := FindWorkspaceById(conn, id)
+
+	if tfresource.NotFound(err) && !d.IsNewResource() {
+		log.Printf("[WARN] Grafana Workspace (%s) not found, removing from state", id)
+		d.SetId("")
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("error reading Grafana Workspace (%s): %w", id, err)
+	}
+	d.Set("id", d.Id())
+	d.Set("account_access_type", workspace.AccountAccessType)
+	d.Set("authentication_providers", workspace.Authentication.Providers)
+	d.Set("saml_configuration_status", workspace.Authentication.SamlConfigurationStatus)
+	d.Set("organization_role_name", workspace.OrganizationRoleName)
+	d.Set("permission_type", workspace.PermissionType)
+	d.Set("stack_set_name", workspace.StackSetName)
+	d.Set("data_sources", workspace.DataSources)
+	d.Set("description", workspace.Description)
+	d.Set("name", workspace.Name)
+	d.Set("notification_destinations", workspace.NotificationDestinations)
+	d.Set("organizational_units", workspace.OrganizationalUnits)
+	d.Set("status", workspace.Status)
+	d.Set("role_arn", workspace.WorkspaceRoleArn)
+	d.Set("created_date", workspace.Created.Format(time.RFC3339))
+	d.Set("last_updated_date", workspace.Modified.Format(time.RFC3339))
+	d.Set("endpoint", workspace.Endpoint)
+	d.Set("grafana_version", workspace.GrafanaVersion)
+	workspaceArn := arn.ARN{
+		Partition: meta.(*conns.AWSClient).Partition,
+		Service:   "grafana",
+		Resource:  id,
+	}.String()
+	d.Set("arn", workspaceArn)
+
+	return nil
 }
