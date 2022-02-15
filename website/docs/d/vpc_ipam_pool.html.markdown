@@ -23,12 +23,12 @@ AWS IPAM.
 ```terraform
 data "aws_vpc_ipam_pool" "test" {
   filter {
-    name = "description"
+    name   = "description"
     values = ["*test*"]
   }
 
   filter {
-    name = "address-family"
+    name   = "address-family"
     values = ["ipv4"]
   }
 }
