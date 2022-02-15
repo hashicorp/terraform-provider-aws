@@ -21,7 +21,7 @@ func lifecycleConfigurationRulesStatus(ctx context.Context, conn *s3.S3, bucket,
 
 		output, err := conn.GetBucketLifecycleConfigurationWithContext(ctx, input)
 
-		if tfawserr.ErrCodeEquals(err, ErrCodeNoSuchLifecycleConfiguration) {
+		if tfawserr.ErrCodeEquals(err, ErrCodeNoSuchLifecycleConfiguration, s3.ErrCodeNoSuchBucket) {
 			return nil, "", nil
 		}
 
