@@ -9,7 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
-func FindEventDataStoreByArn(ctx context.Context, conn *cloudtrail.CloudTrail, eventDataStoreArn string) (*cloudtrail.GetEventDataStoreOutput, error) {
+func FindEventDataStoreByARN(ctx context.Context, conn *cloudtrail.CloudTrail, eventDataStoreArn string) (*cloudtrail.GetEventDataStoreOutput, error) {
 	input := cloudtrail.GetEventDataStoreInput{
 		EventDataStore: aws.String(eventDataStoreArn),
 	}
@@ -25,6 +25,13 @@ func FindEventDataStoreByArn(ctx context.Context, conn *cloudtrail.CloudTrail, e
 
 	if err != nil {
 		return nil, err
+	}
+
+	if status := aws.StringValue(output.Status); status == cloudtrail.EventDataStoreStatusPendingDeletion {
+		return nil, &resource.NotFoundError{
+			Message:     status,
+			LastRequest: input,
+		}
 	}
 
 	return output, nil

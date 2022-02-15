@@ -9,10 +9,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-// statusEventDataStore fetches the CloudTrail Event Data Store its status.
-func statusEventDataStore(ctx context.Context, conn *cloudtrail.CloudTrail, eventDataStoreArn string) resource.StateRefreshFunc {
+func statusEventDataStore(ctx context.Context, conn *cloudtrail.CloudTrail, arn string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		eventDataStore, err := FindEventDataStoreByArn(ctx, conn, eventDataStoreArn)
+		eventDataStore, err := FindEventDataStoreByARN(ctx, conn, arn)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil

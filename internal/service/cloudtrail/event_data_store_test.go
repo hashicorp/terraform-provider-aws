@@ -255,6 +255,49 @@ func TestAccEventDataStore_advancedEventSelector(t *testing.T) {
 	})
 }
 
+func testAccCheckEventDataStoreExists(n string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Not found: %s", n)
+		}
+
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("No CloudTrail Event Data Store ARN is set")
+		}
+
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudTrailConn
+
+		_, err := tfcloudtrail.FindEventDataStoreByARN(context.Background(), conn, rs.Primary.ID)
+
+		if err != nil {
+			return err
+		}
+
+		return nil
+	}
+}
+
+func testAccCheckEventDataStoreDestroy(s *terraform.State) error {
+	conn := acctest.Provider.Meta().(*conns.AWSClient).CloudTrailConn
+
+	for _, rs := range s.RootModule().Resources {
+		if rs.Type != "aws_cloudtrail_event_data_store" {
+			continue
+		}
+
+		_, err := tfcloudtrail.FindEventDataStoreByARN(context.Background(), conn, rs.Primary.ID)
+
+		if tfresource.NotFound(err) {
+			continue
+		}
+
+		return fmt.Errorf("CloudTrail Event Data Store %s still exists", rs.Primary.ID)
+	}
+
+	return nil
+}
+
 func testAccEventDataStoreConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudtrail_event_data_store" "test" {
@@ -408,52 +451,4 @@ resource "aws_cloudtrail_event_data_store" "test" {
   }
 }
 `, rName)
-}
-
-func testAccCheckEventDataStoreExists(n string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[n]
-		if !ok {
-			return fmt.Errorf("Not found: %s", n)
-		}
-
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No CloudTrail Event Data Store ARN is set")
-		}
-
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudTrailConn
-
-		_, err := tfcloudtrail.FindEventDataStoreByArn(context.Background(), conn, rs.Primary.ID)
-
-		if err != nil {
-			return err
-		}
-
-		return nil
-	}
-}
-
-func testAccCheckEventDataStoreDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).CloudTrailConn
-
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_cloudtrail_event_data_store" {
-			continue
-		}
-
-		output, err := tfcloudtrail.FindEventDataStoreByArn(context.Background(), conn, rs.Primary.ID)
-
-		if tfresource.NotFound(err) {
-			continue
-		}
-
-		deletionState := cloudtrail.EventDataStoreStatusPendingDeletion
-		if output.Status != &deletionState {
-			return err
-		}
-
-		return fmt.Errorf("CloudTrail Event Data Store %s still exists", rs.Primary.ID)
-	}
-
-	return nil
 }

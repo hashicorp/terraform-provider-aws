@@ -3,6 +3,7 @@ package cloudtrail
 import (
 	"context"
 	"log"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudtrail"
@@ -28,8 +29,9 @@ func ResourceEventDataStore() *schema.Resource {
 		},
 
 		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(eventDataStoreAvailableTimeout),
-			Delete: schema.DefaultTimeout(eventDataStoreDeletedTimeout),
+			Create: schema.DefaultTimeout(5 * time.Minute),
+			Update: schema.DefaultTimeout(5 * time.Minute),
+			Delete: schema.DefaultTimeout(5 * time.Minute),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -208,16 +210,10 @@ func resourceEventDataStoreRead(ctx context.Context, d *schema.ResourceData, met
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	eventDataStore, err := FindEventDataStoreByArn(ctx, conn, d.Id())
+	eventDataStore, err := FindEventDataStoreByARN(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] CloudTrail Event Data Store (%s) not found, removing from state", d.Id())
-		d.SetId("")
-		return nil
-	}
-
-	if eventDataStore.Status != nil && *eventDataStore.Status == cloudtrail.EventDataStoreStatusPendingDeletion {
-		log.Printf("[WARN] CloudTrail Event Data Store (%s) is deleted, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
@@ -295,7 +291,7 @@ func resourceEventDataStoreUpdate(ctx context.Context, d *schema.ResourceData, m
 			return diag.Errorf("error updating CloudTrail Event Data Store (%s): %s", d.Id(), err)
 		}
 
-		if err := waitEventDataStoreAvailable(ctx, conn, d.Id(), eventDataStoreAvailableTimeout); err != nil {
+		if err := waitEventDataStoreAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return diag.Errorf("error waiting for CloudTrail Event Data Store (%s) to be modified: %s", d.Id(), err)
 		}
 	}

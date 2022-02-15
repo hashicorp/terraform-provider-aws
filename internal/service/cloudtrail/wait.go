@@ -8,21 +8,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
-const (
-	eventDataStoreAvailableTimeout = 5 * time.Minute
-	eventDataStoreDeletedTimeout   = 5 * time.Minute
-	eventDataStoreStatusCreating   = "CREATED"
-	eventDataStoreStatusAvailable  = "ENABLED"
-	eventDataStoreStatusDeleting   = "PENDING_DELETION"
-)
-
-// waitEventDataStoreAvailable waits for CloudTrail Event Data Store to reach the available state.
-func waitEventDataStoreAvailable(ctx context.Context, conn *cloudtrail.CloudTrail, eventDataStoreArn string, timeout time.Duration) error {
+func waitEventDataStoreAvailable(ctx context.Context, conn *cloudtrail.CloudTrail, arn string, timeout time.Duration) error {
 	stateConf := &resource.StateChangeConf{
-		Pending: []string{eventDataStoreStatusCreating},
-		Target:  []string{eventDataStoreStatusAvailable},
-		Refresh: statusEventDataStore(ctx, conn, eventDataStoreArn),
-		Timeout: eventDataStoreAvailableTimeout,
+		Pending: []string{cloudtrail.EventDataStoreStatusCreated},
+		Target:  []string{cloudtrail.EventDataStoreStatusEnabled},
+		Refresh: statusEventDataStore(ctx, conn, arn),
+		Timeout: timeout,
 	}
 
 	_, err := stateConf.WaitForStateContext(ctx)
@@ -30,13 +21,12 @@ func waitEventDataStoreAvailable(ctx context.Context, conn *cloudtrail.CloudTrai
 	return err
 }
 
-// waitEventDataStoreDeleted waits for CloudTrail Event Data Store to be deleted.
-func waitEventDataStoreDeleted(ctx context.Context, conn *cloudtrail.CloudTrail, eventDataStoreArn string, timeout time.Duration) error {
+func waitEventDataStoreDeleted(ctx context.Context, conn *cloudtrail.CloudTrail, arn string, timeout time.Duration) error {
 	stateConf := &resource.StateChangeConf{
-		Pending: []string{},
-		Target:  []string{eventDataStoreStatusDeleting},
-		Refresh: statusEventDataStore(ctx, conn, eventDataStoreArn),
-		Timeout: eventDataStoreDeletedTimeout,
+		Pending: []string{cloudtrail.EventDataStoreStatusCreated, cloudtrail.EventDataStoreStatusEnabled},
+		Target:  []string{},
+		Refresh: statusEventDataStore(ctx, conn, arn),
+		Timeout: timeout,
 	}
 
 	_, err := stateConf.WaitForStateContext(ctx)
