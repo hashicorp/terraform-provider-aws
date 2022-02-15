@@ -15,7 +15,7 @@ const (
 	lifecycleConfigurationRulesPropagationTimeout = 2 * time.Minute
 	lifecycleConfigurationRulesSteadyTimeout      = 2 * time.Minute
 	bucketVersioningStableTimeout                 = 1 * time.Minute
-	lifecycleConfigurationRetryDelay              = 15 * time.Second
+	lifecycleConfigurationRetryDelay              = 2 * time.Second
 
 	// LifecycleConfigurationRulesStatusReady occurs when all configured rules reach their desired state (Enabled or Disabled)
 	LifecycleConfigurationRulesStatusReady = "READY"
@@ -33,7 +33,7 @@ func waitForLifecycleConfigurationRulesStatus(ctx context.Context, conn *s3.S3, 
 		Target:                    []string{LifecycleConfigurationRulesStatusReady},
 		Refresh:                   lifecycleConfigurationRulesStatus(ctx, conn, bucket, expectedBucketOwner, rules),
 		Timeout:                   lifecycleConfigurationRulesPropagationTimeout,
-		MinTimeout:                5 * time.Second,
+		MinTimeout:                15 * time.Second,
 		ContinuousTargetOccurence: 3,
 		NotFoundChecks:            20,
 	}
