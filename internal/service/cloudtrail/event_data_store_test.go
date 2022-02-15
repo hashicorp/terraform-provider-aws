@@ -3,6 +3,7 @@ package cloudtrail_test
 import (
 	"context"
 	"fmt"
+	"regexp"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/cloudtrail"
@@ -16,7 +17,7 @@ import (
 )
 
 func TestAccEventDataStore_basic(t *testing.T) {
-	rName := "tf-test-" + sdkacctest.RandString(8)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cloudtrail_event_data_store.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -27,32 +28,36 @@ func TestAccEventDataStore_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEventDataStoreConfig(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEventDataStoreExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "advanced_event_selector.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "advanced_event_selector.0.field_selector.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "advanced_event_selector.0.field_selector.*", map[string]string{
+						"equals.#": "1",
+						"equals.0": "Management",
+						"field":    "eventCategory",
+					}),
+					resource.TestCheckResourceAttr(resourceName, "advanced_event_selector.0.name", "Default management events"),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "cloudtrail", regexp.MustCompile(`eventdatastore/.+`)),
+					resource.TestCheckResourceAttr(resourceName, "multi_region_enabled", "true"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "retention_period", "7"),
-					resource.TestCheckResourceAttr(resourceName, "multi_region_enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "organization_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "retention_period", "2555"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "termination_protection_enabled", "false"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.Test", "test"),
 				),
 			},
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					// Need this workaround due to import behavior change introduced by https://github.com/hashicorp/terraform/issues/20985
-					"name",
-				},
 			},
 		},
 	})
 }
 
 func TestAccEventDataStore_disappears(t *testing.T) {
-	rName := "tf-test-" + sdkacctest.RandString(8)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cloudtrail_event_data_store.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -97,10 +102,6 @@ func TestAccEventDataStore_multi_region_enabled(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					// Need this workaround due to import behavior change introduced by https://github.com/hashicorp/terraform/issues/20985
-					"name",
-				},
 			},
 		},
 	})
@@ -195,10 +196,6 @@ func TestAccEventDataStore_advanced_event_selector(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					// Need this workaround due to import behavior change introduced by https://github.com/hashicorp/terraform/issues/20985
-					"name",
-				},
 			},
 		},
 	})
@@ -208,13 +205,21 @@ func testAccEventDataStoreConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudtrail_event_data_store" "test" {
   name = %[1]q
-  retention_period     = 7
-  termination_protection_enabled = false
-  tags = {
-    Test = "test"
-  }
+
+  termination_protection_enabled = false # For ease of deletion.
 }
 `, rName)
+}
+
+func testAccEventDataStoreConfigRetentionPeriodAndTerminationProtection(rName string, retentionPeriod int, terminationProtection bool) string {
+	return fmt.Sprintf(`
+resource "aws_cloudtrail_event_data_store" "test" {
+  name                 = %[1]q
+  retention_period     = %[2]d
+
+  termination_protection_enabled = %[3]t
+}
+`, rName, retentionPeriod, terminationProtection)
 }
 
 func testAccEventDataStoreConfig_multi_region_enabled(rName string) string {

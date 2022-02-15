@@ -133,7 +133,7 @@ func ResourceEventDataStore() *schema.Resource {
 			"multi_region_enabled": {
 				Type:     schema.TypeBool,
 				Optional: true,
-				Default:  false,
+				Default:  true,
 			},
 			"name": {
 				Type:         schema.TypeString,
@@ -148,7 +148,8 @@ func ResourceEventDataStore() *schema.Resource {
 			},
 			"retention_period": {
 				Type:     schema.TypeInt,
-				Required: true,
+				Optional: true,
+				Default:  2555,
 				ValidateFunc: validation.All(
 					validation.IntBetween(7, 2555),
 				),
@@ -197,13 +198,11 @@ func resourceEventDataStoreCreate(ctx context.Context, d *schema.ResourceData, m
 		return diag.Errorf("error creating CloudTrail Event Data Store (%s): %s", name, err)
 	}
 
-	eventDataStoreArn := aws.StringValue(output.EventDataStoreArn)
+	d.SetId(aws.StringValue(output.EventDataStoreArn))
 
-	if err := waitEventDataStoreAvailable(ctx, conn, eventDataStoreArn, d.Timeout(schema.TimeoutCreate)); err != nil {
+	if err := waitEventDataStoreAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return diag.Errorf("error waiting for CloudTrail Event Data Store (%s) to be created: %s", name, err)
 	}
-
-	d.SetId(eventDataStoreArn)
 
 	return resourceEventDataStoreRead(ctx, d, meta)
 }
@@ -315,12 +314,15 @@ func resourceEventDataStoreRead(ctx context.Context, d *schema.ResourceData, met
 		return diag.Errorf("error reading CloudTrail Event Data Store (%s): %s", d.Id(), err)
 	}
 
+	if err := d.Set("advanced_event_selector", flattenAdvancedEventSelector(eventDataStore.AdvancedEventSelectors)); err != nil {
+		return diag.Errorf("error setting advanced_event_selector: %s", err)
+	}
 	d.Set("arn", eventDataStore.EventDataStoreArn)
 	d.Set("multi_region_enabled", eventDataStore.MultiRegionEnabled)
+	d.Set("name", eventDataStore.Name)
 	d.Set("organization_enabled", eventDataStore.OrganizationEnabled)
 	d.Set("retention_period", eventDataStore.RetentionPeriod)
 	d.Set("termination_protection_enabled", eventDataStore.TerminationProtectionEnabled)
-	d.Set("advanced_event_selector", flattenAdvancedEventSelector(eventDataStore.AdvancedEventSelectors))
 
 	tags, err := ListTags(conn, d.Id())
 

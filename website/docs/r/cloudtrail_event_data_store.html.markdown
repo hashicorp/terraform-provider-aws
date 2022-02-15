@@ -80,12 +80,12 @@ resource "aws_cloudtrail_event_data_store" "example" {
 The following arguments are supported:
 
 - `name` - (Required) The name of the event data store.
-- `retention_period` - (Required) The retention period of the event data store, in days. You can set a retention period of up to 2555 days, the equivalent of seven years.
 - `advanced_event_selector` - (Required) The advanced event selectors to use to select the events for the data store. For more information about how to use advanced event selectors, see [Log events by using advanced event selectors](https://docs.aws.amazon.com/awscloudtrail/latest/userguide/logging-data-events-with-cloudtrail.html#creating-data-event-selectors-advanced) in the CloudTrail User Guide.
-- `multi_region_enabled` - (Optional) Specifies whether the event data store includes events from all regions, or only from the region in which the event data store is created.
-- `organization_enabled` - (Optional) Specifies whether an event data store collects events logged for an organization in AWS Organizations.
-- `termination_protection_enabled` - (Optional) Specifies whether termination protection is enabled for the event data store. If termination protection is enabled, you cannot delete the event data store until termination protection is disabled.
+- `multi_region_enabled` - (Optional) Specifies whether the event data store includes events from all regions, or only from the region in which the event data store is created. Default: `true`.
+- `organization_enabled` - (Optional) Specifies whether an event data store collects events logged for an organization in AWS Organizations. Default: `false`.
+- `retention_period` - (Optional) The retention period of the event data store, in days. You can set a retention period of up to 2555 days, the equivalent of seven years. Default: `2555`.
 - `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+- `termination_protection_enabled` - (Optional) Specifies whether termination protection is enabled for the event data store. If termination protection is enabled, you cannot delete the event data store until termination protection is disabled. Default: `true`.
 
 ### Advanced Event Selector Arguments
 
