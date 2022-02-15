@@ -3,7 +3,6 @@ package cloudtrail
 import (
 	"context"
 	"log"
-	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudtrail"
@@ -134,14 +133,6 @@ func ResourceEventDataStore() *schema.Resource {
 				},
 			},
 			"arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"created_timestamp": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"updated_timestamp": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -326,9 +317,6 @@ func resourceEventDataStoreRead(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	d.Set("arn", eventDataStore.EventDataStoreArn)
-
-	d.Set("created_timestamp", aws.TimeValue(eventDataStore.CreatedTimestamp).Format(time.RFC3339))
-	d.Set("updated_timestamp", aws.TimeValue(eventDataStore.UpdatedTimestamp).Format(time.RFC3339))
 	d.Set("multi_region_enabled", eventDataStore.MultiRegionEnabled)
 	d.Set("organization_enabled", eventDataStore.OrganizationEnabled)
 	d.Set("retention_period", eventDataStore.RetentionPeriod)
