@@ -465,8 +465,11 @@ func ResourceEndpoint() *schema.Resource {
 						"date_partition_delimiter": {
 							Type:         schema.TypeString,
 							Optional:     true,
-							Default:      DatePartitionDelimiterValueSlash,
-							ValidateFunc: validation.StringInSlice(DatePartitionDelimiterValue_Values(), false),
+							Default:      dms.DatePartitionDelimiterValueSlash,
+							ValidateFunc: validation.StringInSlice(dms.DatePartitionDelimiterValue_Values(), true),
+							StateFunc: func(v interface{}) string {
+								return strings.ToLower(v.(string))
+							},
 						},
 						"use_csv_no_sup_value": {
 							Type:     schema.TypeBool,
