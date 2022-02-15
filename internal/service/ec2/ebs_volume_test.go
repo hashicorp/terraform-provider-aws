@@ -695,10 +695,10 @@ func TestAccEC2EBSVolume_FinalSnapshot(t *testing.T) {
 	resourceName := "aws_ebs_volume.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:      func() { acctest.PreCheck(t) },
-		ErrorCheck:    testAccErrorCheckSkipEBSVolume(t),
-		Providers:     acctest.Providers,
-		CheckDestroy:  testAccCheckVolumeDestroy,
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   testAccErrorCheckSkipEBSVolume(t),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckVolumeDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAwsEbsVolumeConfigFinalSnapshot,
