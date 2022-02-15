@@ -17,7 +17,7 @@ Manages an Amazon Managed Service for Prometheus (AMP) Workspace.
 ```terraform
 resource "aws_prometheus_workspace" "demo" {
   alias = "prometheus-test"
-  
+
   tags = {
     Environment = "production"
     Owner       = "abhi"
