@@ -1552,9 +1552,9 @@ func expandDmsS3Settings(tfMap map[string]interface{}) *dms.S3Settings {
 	return apiObject
 }
 
-func flattenDmsS3Settings(apiObject *dms.S3Settings) map[string]interface{} {
+func flattenDmsS3Settings(apiObject *dms.S3Settings) []map[string]interface{} {
 	if apiObject == nil {
-		return nil
+		return []map[string]interface{}{}
 	}
 
 	tfMap := map[string]interface{}{}
@@ -1665,7 +1665,7 @@ func flattenDmsS3Settings(apiObject *dms.S3Settings) map[string]interface{} {
 		tfMap["use_csv_no_sup_value"] = aws.BoolValue(v)
 	}
 
-	return tfMap
+	return []map[string]interface{}{tfMap}
 }
 
 func suppressExtraConnectionAttributesDiffs(_, old, new string, d *schema.ResourceData) bool {
