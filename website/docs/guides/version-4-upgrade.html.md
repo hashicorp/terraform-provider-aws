@@ -127,7 +127,7 @@ provider "aws" {
 
 The authentication configuration for the AWS Provider has changed in this version
 to match the behavior of other AWS tooling, including the AWS SDK and AWS CLI.
-Precendence for settings is as follows:
+Precedence for settings is as follows:
 
 * Settings in the provider configuration
 * Settings configured with environment variables
