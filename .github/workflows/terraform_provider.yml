@@ -261,6 +261,9 @@ jobs:
           if [[ "${pkg}" == */test-fixtures ]]; then
             continue
           fi
+          if [[ "${pkg}" == internal/generate/* ]]; then
+            continue
+          fi
           go test -run ^Test[^A][^c][^c] "github.com/hashicorp/terraform-provider-aws/${pkg}"
         done </tmp/dep_pkgs
 
