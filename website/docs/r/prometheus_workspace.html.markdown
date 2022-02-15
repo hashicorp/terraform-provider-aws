@@ -20,7 +20,7 @@ resource "aws_prometheus_workspace" "demo" {
   
   tags = {
     Environment = "production"
-    Owner = "abhi"
+    Owner       = "abhi"
   }
 }
 ```
