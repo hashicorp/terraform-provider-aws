@@ -282,38 +282,38 @@ func ResourceEndpoint() *schema.Resource {
 				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"auth_type": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Default:      dms.AuthTypeValuePassword,
-							ValidateFunc: validation.StringInSlice(dms.AuthTypeValue_Values(), false),
-						},
 						"auth_mechanism": {
 							Type:         schema.TypeString,
 							Optional:     true,
 							Default:      mongoDBAuthMechanismValueDefault,
 							ValidateFunc: validation.StringInSlice(mongoDBAuthMechanismValue_Values(), false),
 						},
-						"nesting_level": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Default:      dms.NestingLevelValueNone,
-							ValidateFunc: validation.StringInSlice(dms.NestingLevelValue_Values(), false),
-						},
-						"extract_doc_id": {
+						"auth_source": {
 							Type:     schema.TypeString,
 							Optional: true,
-							Default:  "false",
+							Default:  mongoDBAuthSourceAdmin,
+						},
+						"auth_type": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Default:      dms.AuthTypeValuePassword,
+							ValidateFunc: validation.StringInSlice(dms.AuthTypeValue_Values(), false),
 						},
 						"docs_to_investigate": {
 							Type:     schema.TypeString,
 							Optional: true,
 							Default:  "1000",
 						},
-						"auth_source": {
+						"extract_doc_id": {
 							Type:     schema.TypeString,
 							Optional: true,
-							Default:  mongoDBAuthSourceAdmin,
+							Default:  "false",
+						},
+						"nesting_level": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Default:      dms.NestingLevelValueNone,
+							ValidateFunc: validation.StringInSlice(dms.NestingLevelValue_Values(), false),
 						},
 					},
 				},
@@ -336,26 +336,10 @@ func ResourceEndpoint() *schema.Resource {
 				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"service_access_role_arn": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Default:      "",
-							ValidateFunc: verify.ValidARN,
-						},
-						"external_table_definition": {
-							Type:     schema.TypeString,
+						"add_column_name": {
+							Type:     schema.TypeBool,
 							Optional: true,
-							Default:  "",
-						},
-						"csv_row_delimiter": {
-							Type:     schema.TypeString,
-							Optional: true,
-							Default:  "\\n",
-						},
-						"csv_delimiter": {
-							Type:     schema.TypeString,
-							Optional: true,
-							Default:  ",",
+							Default:  false,
 						},
 						"bucket_folder": {
 							Type:     schema.TypeString,
@@ -367,134 +351,18 @@ func ResourceEndpoint() *schema.Resource {
 							Optional: true,
 							Default:  "",
 						},
-						"compression_type": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Default:      s3SettingsCompressionTypeNone,
-							ValidateFunc: validation.StringInSlice(s3SettingsCompressionType_Values(), false),
-						},
-						"encryption_mode": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Default:      s3SettingsEncryptionModeSseS3,
-							ValidateFunc: validation.StringInSlice(s3SettingsEncryptionMode_Values(), false),
-						},
-						"server_side_encryption_kms_key_id": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"data_format": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Default:      dms.DataFormatValueCsv,
-							ValidateFunc: validation.StringInSlice(dms.DataFormatValue_Values(), false),
-						},
-						"encoding_type": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: validation.StringInSlice(dms.EncodingTypeValue_Values(), false),
-						},
-						"dict_page_size_limit": {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							Default:      1048576,
-							ValidateFunc: validation.IntAtLeast(0),
-						},
-						"row_group_length": {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							Default:      10000,
-							ValidateFunc: validation.IntAtLeast(0),
-						},
-						"data_page_size": {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							Default:      1048576,
-							ValidateFunc: validation.IntAtLeast(0),
-						},
-						"parquet_version": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Default:      dms.ParquetVersionValueParquet10,
-							ValidateFunc: validation.StringInSlice(dms.ParquetVersionValue_Values(), false),
-						},
-						"enable_statistics": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  true,
-						},
-						"include_op_for_full_load": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  false,
-						},
-						"cdc_inserts_only": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  false,
-						},
-						"timestamp_column_name": {
-							Type:     schema.TypeString,
-							Optional: true,
-							Default:  "",
-						},
-						"parquet_timestamp_in_millisecond": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  false,
-						},
-						"cdc_inserts_and_updates": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  false,
-						},
-						"date_partition_enabled": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  false,
-						},
-						"date_partition_sequence": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Default:      dms.DatePartitionSequenceValueYyyymmdd,
-							ValidateFunc: validation.StringInSlice(dms.DatePartitionSequenceValue_Values(), true),
-							StateFunc: func(v interface{}) string {
-								return strings.ToLower(v.(string))
-							},
-						},
-						"date_partition_delimiter": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Default:      dms.DatePartitionDelimiterValueSlash,
-							ValidateFunc: validation.StringInSlice(dms.DatePartitionDelimiterValue_Values(), true),
-							StateFunc: func(v interface{}) string {
-								return strings.ToLower(v.(string))
-							},
-						},
-						"use_csv_no_sup_value": {
-							Type:     schema.TypeBool,
-							Optional: true,
-						},
-						"csv_no_sup_value": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"preserve_transactions": {
-							Type:     schema.TypeBool,
-							Optional: true,
-						},
-						"cdc_path": {
-							Type:     schema.TypeString,
-							Optional: true,
-							Default:  "",
-						},
 						"canned_acl_for_objects": {
 							Type:         schema.TypeString,
 							Optional:     true,
 							Default:      dms.CannedAclForObjectsValueNone,
 							ValidateFunc: validation.StringInSlice(dms.CannedAclForObjectsValue_Values(), false),
 						},
-						"add_column_name": {
+						"cdc_inserts_and_updates": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  false,
+						},
+						"cdc_inserts_only": {
 							Type:     schema.TypeBool,
 							Optional: true,
 							Default:  false,
@@ -511,10 +379,99 @@ func ResourceEndpoint() *schema.Resource {
 							Default:      32,
 							ValidateFunc: validation.IntAtLeast(0),
 						},
+						"cdc_path": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Default:  "",
+						},
+						"compression_type": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Default:      s3SettingsCompressionTypeNone,
+							ValidateFunc: validation.StringInSlice(s3SettingsCompressionType_Values(), false),
+						},
+						"csv_delimiter": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Default:  ",",
+						},
+						"csv_no_sup_value": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Default:  "",
+						},
 						"csv_null_value": {
 							Type:     schema.TypeString,
 							Optional: true,
 							Default:  "NULL",
+						},
+						"csv_row_delimiter": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Default:  "\\n",
+						},
+						"data_format": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Default:      dms.DataFormatValueCsv,
+							ValidateFunc: validation.StringInSlice(dms.DataFormatValue_Values(), false),
+						},
+						"data_page_size": {
+							Type:         schema.TypeInt,
+							Optional:     true,
+							Default:      1048576,
+							ValidateFunc: validation.IntAtLeast(0),
+						},
+						"date_partition_delimiter": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Default:      dms.DatePartitionDelimiterValueSlash,
+							ValidateFunc: validation.StringInSlice(dms.DatePartitionDelimiterValue_Values(), true),
+							StateFunc: func(v interface{}) string {
+								return strings.ToLower(v.(string))
+							},
+						},
+						"date_partition_enabled": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  false,
+						},
+						"date_partition_sequence": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Default:      dms.DatePartitionSequenceValueYyyymmdd,
+							ValidateFunc: validation.StringInSlice(dms.DatePartitionSequenceValue_Values(), true),
+							StateFunc: func(v interface{}) string {
+								return strings.ToLower(v.(string))
+							},
+						},
+						"dict_page_size_limit": {
+							Type:         schema.TypeInt,
+							Optional:     true,
+							Default:      1048576,
+							ValidateFunc: validation.IntAtLeast(0),
+						},
+						"enable_statistics": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  true,
+						},
+						"encoding_type": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Default:      dms.EncodingTypeValueRleDictionary,
+							ValidateFunc: validation.StringInSlice(dms.EncodingTypeValue_Values(), false),
+						},
+						"encryption_mode": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Default:      s3SettingsEncryptionModeSseS3,
+							ValidateFunc: validation.StringInSlice(s3SettingsEncryptionMode_Values(), false),
+						},
+						"external_table_definition": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Default:  "",
 						},
 						"ignore_headers_row": {
 							Type:         schema.TypeInt,
@@ -522,16 +479,64 @@ func ResourceEndpoint() *schema.Resource {
 							Default:      0,
 							ValidateFunc: validation.IntInSlice([]int{0, 1}),
 						},
+						"include_op_for_full_load": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  false,
+						},
 						"max_file_size": {
 							Type:         schema.TypeInt,
 							Optional:     true,
 							Default:      1048576,
 							ValidateFunc: validation.IntBetween(1, 1048576),
 						},
+						"parquet_timestamp_in_millisecond": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  false,
+						},
+						"parquet_version": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Default:      dms.ParquetVersionValueParquet10,
+							ValidateFunc: validation.StringInSlice(dms.ParquetVersionValue_Values(), false),
+						},
+						"preserve_transactions": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  false,
+						},
 						"rfc_4180": {
 							Type:     schema.TypeBool,
 							Optional: true,
 							Default:  true,
+						},
+						"row_group_length": {
+							Type:         schema.TypeInt,
+							Optional:     true,
+							Default:      10000,
+							ValidateFunc: validation.IntAtLeast(0),
+						},
+						"server_side_encryption_kms_key_id": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Default:  "",
+						},
+						"service_access_role_arn": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Default:      "",
+							ValidateFunc: verify.ValidARN,
+						},
+						"timestamp_column_name": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Default:  "",
+						},
+						"use_csv_no_sup_value": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  false,
 						},
 					},
 				},
