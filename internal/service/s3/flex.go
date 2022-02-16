@@ -357,7 +357,10 @@ func ExpandLifecycleRuleTransitions(l []interface{}) ([]*s3.Transition, error) {
 			transition.Date = aws.Time(t)
 		}
 
-		if v, ok := tfMap["days"].(int); ok && v > 0 {
+		// Only one of "date" and "days" can be configured
+		// so only set the transition.Days value when transition.Date is nil
+		// By default, tfMap["days"] = 0 if not explicitly configured in terraform.
+		if v, ok := tfMap["days"].(int); ok && v >= 0 && transition.Date == nil {
 			transition.Days = aws.Int64(int64(v))
 		}
 
@@ -880,7 +883,15 @@ func FlattenLifecycleRuleExpiration(expiration *s3.LifecycleExpiration) []interf
 
 func FlattenLifecycleRuleFilter(filter *s3.LifecycleRuleFilter) []interface{} {
 	if filter == nil {
-		return []interface{}{}
+		return nil
+	}
+
+	if filter.And == nil &&
+		filter.ObjectSizeGreaterThan == nil &&
+		filter.ObjectSizeLessThan == nil &&
+		(filter.Prefix == nil || aws.StringValue(filter.Prefix) == "") &&
+		filter.Tag == nil {
+		return nil
 	}
 
 	m := make(map[string]interface{})
@@ -897,7 +908,7 @@ func FlattenLifecycleRuleFilter(filter *s3.LifecycleRuleFilter) []interface{} {
 		m["object_size_less_than"] = int(aws.Int64Value(filter.ObjectSizeLessThan))
 	}
 
-	if filter.Prefix != nil {
+	if filter.Prefix != nil && aws.StringValue(filter.Prefix) != "" {
 		m["prefix"] = aws.StringValue(filter.Prefix)
 	}
 
@@ -936,7 +947,7 @@ func FlattenLifecycleRuleFilterAndOperator(andOp *s3.LifecycleRuleAndOperator) [
 
 func FlattenLifecycleRuleFilterTag(tag *s3.Tag) []interface{} {
 	if tag == nil {
-		return []interface{}{}
+		return nil
 	}
 
 	t := KeyValueTags([]*s3.Tag{tag}).IgnoreAWS().Map()

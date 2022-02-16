@@ -878,8 +878,8 @@ type Config struct {
 	Region                         string
 	S3UsePathStyle                 bool
 	SecretKey                      string
-	SharedConfigFile               string
-	SharedCredentialsFile          string
+	SharedConfigFiles              []string
+	SharedCredentialsFiles         []string
 	SkipCredsValidation            bool
 	SkipGetEC2Platforms            bool
 	SkipMetadataApiCheck           bool
@@ -1206,7 +1206,6 @@ func (c *Config) Client(ctx context.Context) (interface{}, diag.Diagnostics) {
 		APNInfo:                 StdUserAgentProducts(c.TerraformVersion),
 		CallerDocumentationURL:  "https://registry.terraform.io/providers/hashicorp/aws",
 		CallerName:              "Terraform AWS Provider",
-		DebugLogging:            true, // Until https://github.com/hashicorp/aws-sdk-go-base/issues/96 is implemented
 		IamEndpoint:             c.Endpoints[IAM],
 		Insecure:                c.Insecure,
 		HTTPProxy:               c.HTTPProxy,
@@ -1232,12 +1231,16 @@ func (c *Config) Client(ctx context.Context) (interface{}, diag.Diagnostics) {
 		awsbaseConfig.EC2MetadataServiceEndpointMode = c.EC2MetadataServiceEndpointMode
 	}
 
-	if c.SharedConfigFile != "" {
-		awsbaseConfig.SharedConfigFiles = []string{c.SharedConfigFile}
+	if len(c.SharedConfigFiles) != 0 {
+		awsbaseConfig.SharedConfigFiles = c.SharedConfigFiles
 	}
 
-	if c.SharedCredentialsFile != "" {
-		awsbaseConfig.SharedCredentialsFiles = []string{c.SharedCredentialsFile}
+	if len(c.SharedCredentialsFiles) != 0 {
+		awsbaseConfig.SharedCredentialsFiles = c.SharedCredentialsFiles
+	}
+
+	if c.STSRegion != "" {
+		awsbaseConfig.StsRegion = c.STSRegion
 	}
 
 	cfg, err := awsbase.GetAwsConfig(ctx, &awsbaseConfig)
@@ -1541,7 +1544,6 @@ func (c *Config) Client(ctx context.Context) (interface{}, diag.Diagnostics) {
 		SSOConn:                          sso.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[SSO])})),
 		SSOOIDCConn:                      ssooidc.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[SSOOIDC])})),
 		StorageGatewayConn:               storagegateway.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[StorageGateway])})),
-		STSConn:                          sts.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[STS])})),
 		SupportConn:                      support.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[Support])})),
 		SWFConn:                          swf.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[SWF])})),
 		SyntheticsConn:                   synthetics.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[Synthetics])})),
@@ -1564,6 +1566,17 @@ func (c *Config) Client(ctx context.Context) (interface{}, diag.Diagnostics) {
 		WorkSpacesConn:                   workspaces.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[WorkSpaces])})),
 		XRayConn:                         xray.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[XRay])})),
 	}
+
+	// sts
+	stsConfig := &aws.Config{
+		Endpoint: aws.String(c.Endpoints[STS]),
+	}
+
+	if c.STSRegion != "" {
+		stsConfig.Region = aws.String(c.STSRegion)
+	}
+
+	client.STSConn = sts.New(sess.Copy(stsConfig))
 
 	// "Global" services that require customizations
 	globalAcceleratorConfig := &aws.Config{

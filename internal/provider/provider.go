@@ -318,18 +318,26 @@ func Provider() *schema.Provider {
 				Description: "The secret key for API operations. You can retrieve this\n" +
 					"from the 'Security & Credentials' section of the AWS console.",
 			},
-			"shared_config_file": {
-				Type:        schema.TypeString,
+			"shared_config_files": {
+				Type:        schema.TypeList,
 				Optional:    true,
-				Default:     "",
-				Description: "The path to the shared config file. If not set, defaults to ~/.aws/config.",
+				Description: "List of paths to shared config files. If not set, defaults to [~/.aws/config].",
+				Elem:        &schema.Schema{Type: schema.TypeString},
 			},
 			"shared_credentials_file": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  "",
-				Description: "The path to the shared credentials file. If not set\n" +
-					"this defaults to ~/.aws/credentials.",
+				Type:          schema.TypeString,
+				Optional:      true,
+				Default:       "",
+				Deprecated:    "Use shared_credentials_files instead.",
+				ConflictsWith: []string{"shared_credentials_files"},
+				Description:   "The path to the shared credentials file. If not set, defaults to ~/.aws/credentials.",
+			},
+			"shared_credentials_files": {
+				Type:          schema.TypeList,
+				Optional:      true,
+				ConflictsWith: []string{"shared_credentials_file"},
+				Description:   "List of paths to shared credentials files. If not set, defaults to [~/.aws/credentials].",
+				Elem:          &schema.Schema{Type: schema.TypeString},
 			},
 			"skip_credentials_validation": {
 				Type:     schema.TypeBool,
@@ -365,6 +373,13 @@ func Provider() *schema.Provider {
 				Default:  false,
 				Description: "Skip requesting the account ID. " +
 					"Used for AWS API implementations that do not have IAM/STS API and/or metadata API.",
+			},
+			"sts_region": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Default:  "",
+				Description: "The region where AWS STS operations will take place. Examples\n" +
+					"are us-east-1 and us-west-2.", // lintignore:AWSAT003,
 			},
 			"token": {
 				Type:     schema.TypeString,
@@ -412,9 +427,11 @@ func Provider() *schema.Provider {
 			"aws_autoscaling_groups":   autoscaling.DataSourceGroups(),
 			"aws_launch_configuration": autoscaling.DataSourceLaunchConfiguration(),
 
-			"aws_backup_plan":      backup.DataSourcePlan(),
-			"aws_backup_selection": backup.DataSourceSelection(),
-			"aws_backup_vault":     backup.DataSourceVault(),
+			"aws_backup_framework":   backup.DataSourceFramework(),
+			"aws_backup_plan":        backup.DataSourcePlan(),
+			"aws_backup_report_plan": backup.DataSourceReportPlan(),
+			"aws_backup_selection":   backup.DataSourceSelection(),
+			"aws_backup_vault":       backup.DataSourceVault(),
 
 			"aws_batch_compute_environment": batch.DataSourceComputeEnvironment(),
 			"aws_batch_job_queue":           batch.DataSourceJobQueue(),
@@ -623,6 +640,8 @@ func Provider() *schema.Provider {
 
 			"aws_imagebuilder_component":                     imagebuilder.DataSourceComponent(),
 			"aws_imagebuilder_components":                    imagebuilder.DataSourceComponents(),
+			"aws_imagebuilder_container_recipe":              imagebuilder.DataSourceContainerRecipe(),
+			"aws_imagebuilder_container_recipes":             imagebuilder.DataSourceContainerRecipes(),
 			"aws_imagebuilder_distribution_configuration":    imagebuilder.DataSourceDistributionConfiguration(),
 			"aws_imagebuilder_distribution_configurations":   imagebuilder.DataSourceDistributionConfigurations(),
 			"aws_imagebuilder_image":                         imagebuilder.DataSourceImage(),
@@ -676,6 +695,7 @@ func Provider() *schema.Provider {
 			"aws_partition":               meta.DataSourcePartition(),
 			"aws_region":                  meta.DataSourceRegion(),
 			"aws_regions":                 meta.DataSourceRegions(),
+			"aws_service":                 meta.DataSourceService(),
 
 			"aws_mq_broker": mq.DataSourceBroker(),
 
@@ -916,9 +936,11 @@ func Provider() *schema.Provider {
 
 			"aws_autoscalingplans_scaling_plan": autoscalingplans.ResourceScalingPlan(),
 
+			"aws_backup_framework":                backup.ResourceFramework(),
 			"aws_backup_global_settings":          backup.ResourceGlobalSettings(),
 			"aws_backup_plan":                     backup.ResourcePlan(),
 			"aws_backup_region_settings":          backup.ResourceRegionSettings(),
+			"aws_backup_report_plan":              backup.ResourceReportPlan(),
 			"aws_backup_selection":                backup.ResourceSelection(),
 			"aws_backup_vault":                    backup.ResourceVault(),
 			"aws_backup_vault_lock_configuration": backup.ResourceVaultLockConfiguration(),
@@ -970,7 +992,8 @@ func Provider() *schema.Provider {
 			"aws_cloudsearch_domain":                       cloudsearch.ResourceDomain(),
 			"aws_cloudsearch_domain_service_access_policy": cloudsearch.ResourceDomainServiceAccessPolicy(),
 
-			"aws_cloudtrail": cloudtrail.ResourceCloudTrail(),
+			"aws_cloudtrail":                  cloudtrail.ResourceCloudTrail(),
+			"aws_cloudtrail_event_data_store": cloudtrail.ResourceEventDataStore(),
 
 			"aws_cloudwatch_composite_alarm": cloudwatch.ResourceCompositeAlarm(),
 			"aws_cloudwatch_dashboard":       cloudwatch.ResourceDashboard(),
@@ -1342,6 +1365,7 @@ func Provider() *schema.Provider {
 			"aws_gamelift_build":              gamelift.ResourceBuild(),
 			"aws_gamelift_fleet":              gamelift.ResourceFleet(),
 			"aws_gamelift_game_session_queue": gamelift.ResourceGameSessionQueue(),
+			"aws_gamelift_script":             gamelift.ResourceScript(),
 
 			"aws_glacier_vault":      glacier.ResourceVault(),
 			"aws_glacier_vault_lock": glacier.ResourceVaultLock(),
@@ -1379,31 +1403,35 @@ func Provider() *schema.Provider {
 			"aws_guardduty_publishing_destination":     guardduty.ResourcePublishingDestination(),
 			"aws_guardduty_threatintelset":             guardduty.ResourceThreatintelset(),
 
-			"aws_iam_access_key":              iam.ResourceAccessKey(),
-			"aws_iam_account_alias":           iam.ResourceAccountAlias(),
-			"aws_iam_account_password_policy": iam.ResourceAccountPasswordPolicy(),
-			"aws_iam_group":                   iam.ResourceGroup(),
-			"aws_iam_group_membership":        iam.ResourceGroupMembership(),
-			"aws_iam_group_policy":            iam.ResourceGroupPolicy(),
-			"aws_iam_group_policy_attachment": iam.ResourceGroupPolicyAttachment(),
-			"aws_iam_instance_profile":        iam.ResourceInstanceProfile(),
-			"aws_iam_openid_connect_provider": iam.ResourceOpenIDConnectProvider(),
-			"aws_iam_policy":                  iam.ResourcePolicy(),
-			"aws_iam_policy_attachment":       iam.ResourcePolicyAttachment(),
-			"aws_iam_role":                    iam.ResourceRole(),
-			"aws_iam_role_policy":             iam.ResourceRolePolicy(),
-			"aws_iam_role_policy_attachment":  iam.ResourceRolePolicyAttachment(),
-			"aws_iam_saml_provider":           iam.ResourceSamlProvider(),
-			"aws_iam_server_certificate":      iam.ResourceServerCertificate(),
-			"aws_iam_service_linked_role":     iam.ResourceServiceLinkedRole(),
-			"aws_iam_user":                    iam.ResourceUser(),
-			"aws_iam_user_group_membership":   iam.ResourceUserGroupMembership(),
-			"aws_iam_user_login_profile":      iam.ResourceUserLoginProfile(),
-			"aws_iam_user_policy":             iam.ResourceUserPolicy(),
-			"aws_iam_user_policy_attachment":  iam.ResourceUserPolicyAttachment(),
-			"aws_iam_user_ssh_key":            iam.ResourceUserSSHKey(),
+			"aws_iam_access_key":                  iam.ResourceAccessKey(),
+			"aws_iam_account_alias":               iam.ResourceAccountAlias(),
+			"aws_iam_account_password_policy":     iam.ResourceAccountPasswordPolicy(),
+			"aws_iam_group":                       iam.ResourceGroup(),
+			"aws_iam_group_membership":            iam.ResourceGroupMembership(),
+			"aws_iam_group_policy":                iam.ResourceGroupPolicy(),
+			"aws_iam_group_policy_attachment":     iam.ResourceGroupPolicyAttachment(),
+			"aws_iam_instance_profile":            iam.ResourceInstanceProfile(),
+			"aws_iam_openid_connect_provider":     iam.ResourceOpenIDConnectProvider(),
+			"aws_iam_policy":                      iam.ResourcePolicy(),
+			"aws_iam_policy_attachment":           iam.ResourcePolicyAttachment(),
+			"aws_iam_role":                        iam.ResourceRole(),
+			"aws_iam_role_policy":                 iam.ResourceRolePolicy(),
+			"aws_iam_role_policy_attachment":      iam.ResourceRolePolicyAttachment(),
+			"aws_iam_saml_provider":               iam.ResourceSamlProvider(),
+			"aws_iam_server_certificate":          iam.ResourceServerCertificate(),
+			"aws_iam_service_linked_role":         iam.ResourceServiceLinkedRole(),
+			"aws_iam_service_specific_credential": iam.ResourceServiceSpecificCredential(),
+			"aws_iam_signing_certificate":         iam.ResourceSigningCertificate(),
+			"aws_iam_user":                        iam.ResourceUser(),
+			"aws_iam_user_group_membership":       iam.ResourceUserGroupMembership(),
+			"aws_iam_user_login_profile":          iam.ResourceUserLoginProfile(),
+			"aws_iam_user_policy":                 iam.ResourceUserPolicy(),
+			"aws_iam_user_policy_attachment":      iam.ResourceUserPolicyAttachment(),
+			"aws_iam_user_ssh_key":                iam.ResourceUserSSHKey(),
+			"aws_iam_virtual_mfa_device":          iam.ResourceVirtualMfaDevice(),
 
 			"aws_imagebuilder_component":                    imagebuilder.ResourceComponent(),
+			"aws_imagebuilder_container_recipe":             imagebuilder.ResourceContainerRecipe(),
 			"aws_imagebuilder_distribution_configuration":   imagebuilder.ResourceDistributionConfiguration(),
 			"aws_imagebuilder_image":                        imagebuilder.ResourceImage(),
 			"aws_imagebuilder_image_pipeline":               imagebuilder.ResourceImagePipeline(),
@@ -1896,17 +1924,35 @@ func providerConfigure(ctx context.Context, d *schema.ResourceData, terraformVer
 		Region:                         d.Get("region").(string),
 		S3UsePathStyle:                 d.Get("s3_use_path_style").(bool) || d.Get("s3_force_path_style").(bool),
 		SecretKey:                      d.Get("secret_key").(string),
-		SharedConfigFile:               d.Get("shared_config_file").(string),
-		SharedCredentialsFile:          d.Get("shared_credentials_file").(string),
 		SkipCredsValidation:            d.Get("skip_credentials_validation").(bool),
 		SkipGetEC2Platforms:            d.Get("skip_get_ec2_platforms").(bool),
 		SkipMetadataApiCheck:           d.Get("skip_metadata_api_check").(bool),
 		SkipRegionValidation:           d.Get("skip_region_validation").(bool),
 		SkipRequestingAccountId:        d.Get("skip_requesting_account_id").(bool),
+		STSRegion:                      d.Get("sts_region").(string),
 		TerraformVersion:               terraformVersion,
 		Token:                          d.Get("token").(string),
 		UseDualStackEndpoint:           d.Get("use_dualstack_endpoint").(bool),
 		UseFIPSEndpoint:                d.Get("use_fips_endpoint").(bool),
+	}
+
+	if raw := d.Get("shared_config_files").([]interface{}); len(raw) != 0 {
+		l := make([]string, len(raw))
+		for i, v := range raw {
+			l[i] = v.(string)
+		}
+		config.SharedConfigFiles = l
+	}
+
+	if v := d.Get("shared_credentials_file").(string); v != "" {
+		config.SharedCredentialsFiles = []string{v}
+	}
+	if raw := d.Get("shared_credentials_files").([]interface{}); len(raw) != 0 {
+		l := make([]string, len(raw))
+		for i, v := range raw {
+			l[i] = v.(string)
+		}
+		config.SharedCredentialsFiles = l
 	}
 
 	if l, ok := d.Get("assume_role").([]interface{}); ok && len(l) > 0 && l[0] != nil {
@@ -1941,11 +1987,20 @@ func assumeRoleSchema() *schema.Schema {
 		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
+				"duration": {
+					Type:          schema.TypeString,
+					Optional:      true,
+					Description:   "The duration, between 15 minutes and 12 hours, of the role session. Valid time units are ns, us (or µs), ms, s, h, or m.",
+					ValidateFunc:  ValidAssumeRoleDuration,
+					ConflictsWith: []string{"assume_role.0.duration_seconds"},
+				},
 				"duration_seconds": {
-					Type:         schema.TypeInt,
-					Optional:     true,
-					Description:  "The duration, in seconds, of the role session.",
-					ValidateFunc: validation.IntBetween(900, 43200),
+					Type:          schema.TypeInt,
+					Optional:      true,
+					Deprecated:    "Use assume_role.0.duration instead",
+					Description:   "The duration, in seconds, of the role session.",
+					ValidateFunc:  validation.IntBetween(900, 43200),
+					ConflictsWith: []string{"assume_role.0.duration"},
 				},
 				"external_id": {
 					Type:        schema.TypeString,
@@ -2026,6 +2081,11 @@ func endpointsSchema() *schema.Schema {
 
 func expandAssumeRole(m map[string]interface{}) *awsbase.AssumeRole {
 	assumeRole := awsbase.AssumeRole{}
+
+	if v, ok := m["duration"].(string); ok && v != "" {
+		duration, _ := time.ParseDuration(v)
+		assumeRole.Duration = duration
+	}
 
 	if v, ok := m["duration_seconds"].(int); ok && v != 0 {
 		assumeRole.Duration = time.Duration(v) * time.Second
