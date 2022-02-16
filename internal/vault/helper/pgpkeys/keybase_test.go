@@ -5,7 +5,6 @@ import (
 	"encoding/base64"
 	"encoding/hex"
 	"fmt"
-	"log"
 	"reflect"
 	"strings"
 	"testing"
@@ -13,6 +12,42 @@ import (
 	"github.com/ProtonMail/go-crypto/openpgp"
 	"github.com/ProtonMail/go-crypto/openpgp/packet"
 )
+
+func TestFetchPubkeys(t *testing.T) {
+	testset := []string{
+		"keybase:jefferai",
+		"keybase:hashicorp",
+		"external:hbollon|https://github.com/hbollon.gpg",
+		"external:hbollon|https://github.com/%s.gpg",
+	}
+	ret, err := FetchPubkeys(testset)
+	if err != nil {
+		t.Fatalf("bad: %v", err)
+	}
+
+	fingerprints := map[string]string{}
+	for username, key := range ret {
+		data, err := base64.StdEncoding.DecodeString(key)
+		if err != nil {
+			t.Fatalf("error decoding key for user %s: %v", username, err)
+		}
+		entity, err := openpgp.ReadEntity(packet.NewReader(bytes.NewBuffer(data)))
+		if err != nil {
+			t.Fatalf("error parsing key for user %s: %v", username, err)
+		}
+		fingerprints[username] = hex.EncodeToString(entity.PrimaryKey.Fingerprint[:])
+	}
+
+	exp := map[string]string{
+		"keybase:jefferai":  "0f801f518ec853daff611e836528efcac6caa3db",
+		"keybase:hashicorp": "c874011f0ab405110d02105534365d9472d7468f",
+		"external:hbollon":  "49ca0f0ba50de5e1fab6638b3b3614614b74b1d6",
+	}
+
+	if !reflect.DeepEqual(fingerprints, exp) {
+		t.Fatalf("fingerprints do not match; expected \n%#v\ngot\n%#v\n", exp, fingerprints)
+	}
+}
 
 func TestFetchKeybasePubkeys(t *testing.T) {
 	testset := []string{"keybase:jefferai", "keybase:hashicorp"}
@@ -55,7 +90,6 @@ func TestFetchExternalPubkeys(t *testing.T) {
 		t.Fatalf("bad: %v", err)
 	}
 
-	log.Println(ret)
 	fingerprints := []string{}
 	for _, user := range testset {
 		userData := strings.Split(user, "|")
