@@ -504,7 +504,7 @@ func testAccCheckWorkspaceExists(name string) resource.TestCheckFunc {
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("no Grafana Workspace ID is set")
+			return fmt.Errorf("No Grafana Workspace ID is set")
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).GrafanaConn
@@ -537,7 +537,7 @@ func testAccCheckWorkspaceDestroy(s *terraform.State) error {
 			return err
 		}
 
-		return fmt.Errorf("grafana Workspace %s still exists", rs.Primary.ID)
+		return fmt.Errorf("Grafana Workspace %s still exists", rs.Primary.ID)
 	}
 	return nil
 }
