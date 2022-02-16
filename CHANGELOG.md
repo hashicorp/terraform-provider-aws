@@ -1,4 +1,4 @@
-## 4.02.0 (Unreleased)
+## 4.2.0 (Unreleased)
 
 FEATURES:
 
