@@ -44,9 +44,10 @@ func TestAccAWSRDSClusterActivityStream_basic(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"engine_native_audit_fields_included"},
 			},
 		},
 	})
