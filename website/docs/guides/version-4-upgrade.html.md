@@ -160,13 +160,9 @@ Version 4.0.0 adds these new provider arguments:
 * `ec2_metadata_service_endpoint` - Address of the EC2 metadata service (IMDS) endpoint to use. Can also be set with the `AWS_EC2_METADATA_SERVICE_ENDPOINT` environment variable.
 * `ec2_metadata_service_endpoint_mode` - Mode to use in communicating with the metadata service. Valid values are `IPv4` and `IPv6`. Can also be set with the `AWS_EC2_METADATA_SERVICE_ENDPOINT_MODE` environment variable.
 * `s3_use_path_style` - Replaces `s3_force_path_style`, which has been deprecated in Terraform AWS Provider v4.0.0 and support will be removed in a future version.
-* `shared_config_files` - List of paths to AWS shared config files.
-  If not set, the default is `[~/.aws/config]`.
-  A single value can also be set with the `AWS_CONFIG_FILE` environment variable.
-* `shared_credentials_files` - List of paths to the shared credentials file.
-  If not set, the default  is `[~/.aws/credentials]`.
-  A single value can also be set with the `AWS_SHARED_CREDENTIALS_FILE` environment variable.
-  Replaces `shared_credentials_file`, which has been deprecated in Terraform AWS Provider v4.0.0 and support will be removed in a future version.
+* `shared_config_files` - List of paths to AWS shared config files. If not set, the default is `[~/.aws/config]`. A single value can also be set with the `AWS_CONFIG_FILE` environment variable.
+* `shared_credentials_files` - List of paths to the shared credentials file. If not set, the default  is `[~/.aws/credentials]`. A single value can also be set with the `AWS_SHARED_CREDENTIALS_FILE` environment variable. Replaces `shared_credentials_file`, which has been deprecated in Terraform AWS Provider v4.0.0 and support will be removed in a future version.
+* `sts_region` - Region where AWS STS operations will take place. For example, `us-east-1` and `us-west-2`.
 * `use_dualstack_endpoint` - Force the provider to resolve endpoints with DualStack capability. Can also be set with the `AWS_USE_DUALSTACK_ENDPOINT` environment variable or in a shared config file (`use_dualstack_endpoint`).
 * `use_fips_endpoint` - Force the provider to resolve endpoints with FIPS capability. Can also be set with the `AWS_USE_FIPS_ENDPOINT` environment variable or in a shared config file (`use_fips_endpoint`).
 
