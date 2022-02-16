@@ -62,8 +62,6 @@ func TestAccGrafanaWorkspace_sso(t *testing.T) {
 	resourceName := "aws_grafana_workspace.test"
 	iamRoleResourceName := "aws_iam_role.assume"
 
-	sso := testAccWorkspaceConfigSso(rName)
-	fmt.Print(sso)
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(managedgrafana.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, managedgrafana.EndpointsID),
@@ -71,7 +69,7 @@ func TestAccGrafanaWorkspace_sso(t *testing.T) {
 		Providers:    acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: sso,
+				Config: testAccWorkspaceConfigSso(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkspaceExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "account_access_type", managedgrafana.AccountAccessTypeOrganization),
@@ -142,18 +140,28 @@ func TestAccGrafanaWorkspace_dataSources(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccWorkspaceConfigDataSources(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckWorkspaceExists(resourceName),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "grafana", regexp.MustCompile(`/workspaces/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "account_access_type", managedgrafana.AccountAccessTypeCurrentAccount),
+					resource.TestCheckResourceAttr(resourceName, "authentication_providers.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "authentication_providers.0", managedgrafana.AuthenticationProviderTypesSaml),
-					resource.TestCheckResourceAttr(resourceName, "permission_type", managedgrafana.PermissionTypeServiceManaged),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "data_sources.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "data_sources.0", "CLOUDWATCH"),
+					resource.TestCheckResourceAttr(resourceName, "data_sources.1", "PROMETHEUS"),
+					resource.TestCheckResourceAttr(resourceName, "data_sources.2", "XRAY"),
 					resource.TestCheckResourceAttr(resourceName, "description", rName),
-					resource.TestCheckResourceAttrPair(resourceName, "role_arn", iamRoleResourceName, "arn"),
 					resource.TestCheckResourceAttrSet(resourceName, "endpoint"),
 					resource.TestCheckResourceAttrSet(resourceName, "grafana_version"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "notification_destinations.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "organization_role_name", ""),
+					resource.TestCheckResourceAttr(resourceName, "organizational_units.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "permission_type", managedgrafana.PermissionTypeServiceManaged),
+					resource.TestCheckResourceAttrPair(resourceName, "role_arn", iamRoleResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "saml_configuration_status", managedgrafana.SamlConfigurationStatusNotConfigured),
+					resource.TestCheckResourceAttr(resourceName, "stack_set_name", ""),
 				),
-				ExpectNonEmptyPlan: true,
 			},
 			{
 				ResourceName:      resourceName,
@@ -268,20 +276,16 @@ resource "aws_grafana_workspace" "test" {
 `)
 }
 
-func testAccWorkspaceConfigSso(name string) string {
-	return acctest.ConfigCompose(
-		testAccWorkspaceConfigOrganization(name, "AWS_SSO"),
-		`
+func testAccWorkspaceConfigSso(rName string) string {
+	return acctest.ConfigCompose(testAccWorkspaceConfigOrganization(rName, "AWS_SSO"), `
 data "aws_ssoadmin_instances" "test" {}
 
 data "aws_caller_identity" "current" {}
 `)
 }
 
-func testAccWorkspaceConfigOrganization(name string, authenticationProvider string) string {
-	return acctest.ConfigCompose(
-		testAccWorkspaceRole(name),
-		fmt.Sprintf(`
+func testAccWorkspaceConfigOrganization(rName string, authenticationProvider string) string {
+	return acctest.ConfigCompose(testAccWorkspaceRole(rName), fmt.Sprintf(`
 resource "aws_grafana_workspace" "test" {
   account_access_type      = "ORGANIZATION"
   authentication_providers = [%[2]q]
@@ -300,7 +304,8 @@ resource "aws_organizations_organizational_unit" "test" {
 }
 
 resource "aws_iam_role" "org" {
-  name = "${%[1]q}-org"
+  name = "%[1]s-org"
+
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
@@ -316,13 +321,11 @@ resource "aws_iam_role" "org" {
   })
   managed_policy_arns = ["arn:aws:iam::aws:policy/service-role/AWSConfigRoleForOrganizations"]
 }
-`, name, authenticationProvider))
+`, rName, authenticationProvider))
 }
 
-func testAccWorkspaceConfigDataSources(name string) string {
-	return acctest.ConfigCompose(
-		testAccWorkspaceRole(name),
-		fmt.Sprintf(`
+func testAccWorkspaceConfigDataSources(rName string) string {
+	return acctest.ConfigCompose(testAccWorkspaceRole(rName), fmt.Sprintf(`
 resource "aws_grafana_workspace" "test" {
   account_access_type      = "CURRENT_ACCOUNT"
   authentication_providers = ["SAML"]
@@ -338,8 +341,9 @@ resource "aws_prometheus_workspace" "test" {
 }
 
 resource "aws_iam_policy" "prometheus" {
-  name        = "prometheus"
+  name        = "%[1]s-prometheus"
   description = "A test policy"
+
   policy = jsonencode({
     Version = "2012-10-17",
     Statement = [
@@ -360,14 +364,15 @@ resource "aws_iam_policy" "prometheus" {
 }
 
 resource "aws_iam_policy_attachment" "prometheus_test" {
-  name       = "${%[1]q}-prometheus"
+  name       = "%[1]s-prometheus"
   roles      = [aws_iam_role.assume.name]
   policy_arn = aws_iam_policy.prometheus.arn
 }
 
 resource "aws_iam_policy" "cloudwatch" {
-  name        = "cloudwatch"
+  name        = "%[1]s-cloudwatch"
   description = "A test policy"
+
   policy = jsonencode({
     Version = "2012-10-17",
     Statement = [
@@ -420,14 +425,15 @@ resource "aws_iam_policy" "cloudwatch" {
 }
 
 resource "aws_iam_policy_attachment" "cloudwatch_test" {
-  name       = "${%[1]q}-cloudwatch"
+  name       = "%[1]s-cloudwatch"
   roles      = [aws_iam_role.assume.name]
   policy_arn = aws_iam_policy.cloudwatch.arn
 }
 
 resource "aws_iam_policy" "xray" {
-  name        = "xray"
+  name        = "%[1]s-xray"
   description = "A test policy"
+
   policy = jsonencode({
     Version = "2012-10-17",
     Statement = [
@@ -457,11 +463,11 @@ resource "aws_iam_policy" "xray" {
 }
 
 resource "aws_iam_policy_attachment" "xray_test" {
-  name       = "${%[1]q}-xray"
+  name       = "%[1]s-xray"
   roles      = [aws_iam_role.assume.name]
   policy_arn = aws_iam_policy.xray.arn
 }
-`, name))
+`, rName))
 }
 
 func testAccWorkspaceConfigCustomerManaged(name string) string {
