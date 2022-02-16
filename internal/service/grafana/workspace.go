@@ -170,7 +170,7 @@ func resourceWorkspaceCreate(d *schema.ResourceData, meta interface{}) error {
 func resourceWorkspaceRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).GrafanaConn
 
-	workspace, err := FindWorkspaceById(conn, d.Id())
+	workspace, err := FindWorkspaceByID(conn, d.Id())
 
 	if tfresource.NotFound(err) && !d.IsNewResource() {
 		log.Printf("[WARN] Grafana Workspace (%s) not found, removing from state", d.Id())

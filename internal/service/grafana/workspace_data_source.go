@@ -4,9 +4,7 @@ import (
 	"fmt"
 	"log"
 	"time"
-)
 
-import (
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -106,7 +104,7 @@ func dataSourceWorkspaceRead(d *schema.ResourceData, meta interface{}) error {
 	d.SetId(d.Get("id").(string))
 	id := d.Id()
 	conn := meta.(*conns.AWSClient).GrafanaConn
-	workspace, err := FindWorkspaceById(conn, id)
+	workspace, err := FindWorkspaceByID(conn, id)
 
 	if tfresource.NotFound(err) && !d.IsNewResource() {
 		log.Printf("[WARN] Grafana Workspace (%s) not found, removing from state", id)

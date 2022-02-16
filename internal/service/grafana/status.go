@@ -9,7 +9,7 @@ import (
 
 func statusWorkspaceStatus(conn *managedgrafana.ManagedGrafana, id string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindWorkspaceById(conn, id)
+		output, err := FindWorkspaceByID(conn, id)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil

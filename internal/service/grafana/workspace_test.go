@@ -509,7 +509,7 @@ func testAccCheckWorkspaceExists(name string) resource.TestCheckFunc {
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).GrafanaConn
 
-		_, err := grafana.FindWorkspaceById(conn, rs.Primary.ID)
+		_, err := grafana.FindWorkspaceByID(conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -527,7 +527,7 @@ func testAccCheckWorkspaceDestroy(s *terraform.State) error {
 			continue
 		}
 
-		_, err := grafana.FindWorkspaceById(conn, rs.Primary.ID)
+		_, err := grafana.FindWorkspaceByID(conn, rs.Primary.ID)
 
 		if tfresource.NotFound(err) {
 			continue
