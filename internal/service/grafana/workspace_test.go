@@ -81,7 +81,6 @@ func TestAccGrafanaWorkspace_sso(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "endpoint"),
 					resource.TestCheckResourceAttrSet(resourceName, "grafana_version"),
 				),
-				ExpectNonEmptyPlan: true,
 			},
 			{
 				ResourceName:      resourceName,
@@ -95,10 +94,14 @@ func TestAccGrafanaWorkspace_sso(t *testing.T) {
 func TestAccGrafanaWorkspace_organization(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_grafana_workspace.test"
-	iamRoleResourceName := "aws_iam_role.assume"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(managedgrafana.EndpointsID, t) },
+		PreCheck: func() {
+			acctest.PreCheck(t)
+			acctest.PreCheckPartitionHasService(managedgrafana.EndpointsID, t)
+			acctest.PreCheckOrganizationsEnabled(t)
+			acctest.PreCheckOrganizationManagementAccount(t)
+		},
 		ErrorCheck:   acctest.ErrorCheck(t, managedgrafana.EndpointsID),
 		CheckDestroy: testAccCheckWorkspaceDestroy,
 		Providers:    acctest.Providers,
@@ -108,15 +111,11 @@ func TestAccGrafanaWorkspace_organization(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkspaceExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "account_access_type", managedgrafana.AccountAccessTypeOrganization),
+					resource.TestCheckResourceAttr(resourceName, "authentication_providers.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "authentication_providers.0", managedgrafana.AuthenticationProviderTypesSaml),
-					resource.TestCheckResourceAttr(resourceName, "permission_type", managedgrafana.PermissionTypeServiceManaged),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "description", rName),
-					resource.TestCheckResourceAttrPair(resourceName, "role_arn", iamRoleResourceName, "arn"),
-					resource.TestCheckResourceAttrSet(resourceName, "endpoint"),
-					resource.TestCheckResourceAttrSet(resourceName, "grafana_version"),
+					resource.TestCheckResourceAttr(resourceName, "organization_role_name", ""),
+					resource.TestCheckResourceAttr(resourceName, "organizational_units.#", "1"),
 				),
-				ExpectNonEmptyPlan: true,
 			},
 			{
 				ResourceName:      resourceName,
@@ -290,8 +289,6 @@ resource "aws_grafana_workspace" "test" {
   account_access_type      = "ORGANIZATION"
   authentication_providers = [%[2]q]
   permission_type          = "SERVICE_MANAGED"
-  name                     = %[1]q
-  description              = %[1]q
   role_arn                 = aws_iam_role.assume.arn
   organizational_units     = [aws_organizations_organizational_unit.test.id]
 }
@@ -301,25 +298,6 @@ data "aws_organizations_organization" "test" {}
 resource "aws_organizations_organizational_unit" "test" {
   name      = %[1]q
   parent_id = data.aws_organizations_organization.test.roots[0].id
-}
-
-resource "aws_iam_role" "org" {
-  name = "%[1]s-org"
-
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Action = "sts:AssumeRole"
-        Effect = "Allow"
-        Sid    = ""
-        Principal = {
-          Service = "organizations.amazonaws.com"
-        }
-      },
-    ]
-  })
-  managed_policy_arns = ["arn:aws:iam::aws:policy/service-role/AWSConfigRoleForOrganizations"]
 }
 `, rName, authenticationProvider))
 }
