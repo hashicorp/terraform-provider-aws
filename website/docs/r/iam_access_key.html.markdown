@@ -67,7 +67,7 @@ output "aws_iam_smtp_password_v4" {
 
 The following arguments are supported:
 
-* `pgp_key` - (Optional) Either a base-64 encoded PGP public key, or a keybase username in the form `keybase:some_person_that_exists`, for use in the `encrypted_secret` output attribute.
+* `pgp_key` - (Optional) Either a base-64 encoded PGP public key, an external url in the form `external:some_person_that_exists|url_to_fetch_his_key` (note that the url can also be a formatable url which will use the username like: `https://github.com/%s.gpg`) or a keybase username in the form `keybase:some_person_that_exists`, for use in the `encrypted_secret` output attribute.
 * `status` - (Optional) Access key status to apply. Defaults to `Active`. Valid values are `Active` and `Inactive`.
 * `user` - (Required) IAM user to associate with this access key.
 
