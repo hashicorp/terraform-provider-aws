@@ -15,12 +15,38 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func TestAccGrafanaWorkspace_saml(t *testing.T) {
+func TestAccGrafana_serial(t *testing.T) {
+	testCases := map[string]map[string]func(t *testing.T){
+		"Workspace": {
+			"saml":                     testAccGrafanaWorkspace_saml,
+			"sso":                      testAccGrafanaWorkspace_sso,
+			"disappears":               testAccGrafanaWorkspace_disappears,
+			"organization":             testAccGrafanaWorkspace_organization,
+			"dataSources":              testAccGrafanaWorkspace_dataSources,
+			"permissionType":           testAccGrafanaWorkspace_permissionType,
+			"notificationDestinations": testAccGrafanaWorkspace_notificationDestinations,
+		},
+	}
+
+	for group, m := range testCases {
+		m := m
+		t.Run(group, func(t *testing.T) {
+			for name, tc := range m {
+				tc := tc
+				t.Run(name, func(t *testing.T) {
+					tc(t)
+				})
+			}
+		})
+	}
+}
+
+func testAccGrafanaWorkspace_saml(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_grafana_workspace.test"
 	iamRoleResourceName := "aws_iam_role.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(managedgrafana.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, managedgrafana.EndpointsID),
 		CheckDestroy: testAccCheckWorkspaceDestroy,
@@ -57,12 +83,12 @@ func TestAccGrafanaWorkspace_saml(t *testing.T) {
 	})
 }
 
-func TestAccGrafanaWorkspace_sso(t *testing.T) {
+func testAccGrafanaWorkspace_sso(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_grafana_workspace.test"
 	iamRoleResourceName := "aws_iam_role.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			acctest.PreCheckPartitionHasService(managedgrafana.EndpointsID, t)
@@ -103,11 +129,11 @@ func TestAccGrafanaWorkspace_sso(t *testing.T) {
 	})
 }
 
-func TestAccGrafanaWorkspace_disappears(t *testing.T) {
+func testAccGrafanaWorkspace_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_grafana_workspace.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(managedgrafana.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, managedgrafana.EndpointsID),
 		CheckDestroy: testAccCheckWorkspaceDestroy,
@@ -125,11 +151,11 @@ func TestAccGrafanaWorkspace_disappears(t *testing.T) {
 	})
 }
 
-func TestAccGrafanaWorkspace_organization(t *testing.T) {
+func testAccGrafanaWorkspace_organization(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_grafana_workspace.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			acctest.PreCheckPartitionHasService(managedgrafana.EndpointsID, t)
@@ -160,12 +186,12 @@ func TestAccGrafanaWorkspace_organization(t *testing.T) {
 	})
 }
 
-func TestAccGrafanaWorkspace_dataSources(t *testing.T) {
+func testAccGrafanaWorkspace_dataSources(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_grafana_workspace.test"
 	iamRoleResourceName := "aws_iam_role.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(managedgrafana.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, managedgrafana.EndpointsID),
 		CheckDestroy: testAccCheckWorkspaceDestroy,
@@ -205,11 +231,11 @@ func TestAccGrafanaWorkspace_dataSources(t *testing.T) {
 	})
 }
 
-func TestAccGrafanaWorkspace_permissionType(t *testing.T) {
+func testAccGrafanaWorkspace_permissionType(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_grafana_workspace.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(managedgrafana.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, managedgrafana.EndpointsID),
 		CheckDestroy: testAccCheckWorkspaceDestroy,
@@ -238,11 +264,11 @@ func TestAccGrafanaWorkspace_permissionType(t *testing.T) {
 	})
 }
 
-func TestAccGrafanaWorkspace_notificationDestinations(t *testing.T) {
+func testAccGrafanaWorkspace_notificationDestinations(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_grafana_workspace.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(managedgrafana.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, managedgrafana.EndpointsID),
 		CheckDestroy: testAccCheckWorkspaceDestroy,
