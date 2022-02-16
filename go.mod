@@ -3,7 +3,8 @@ module github.com/hashicorp/terraform-provider-aws
 go 1.17
 
 require (
-	github.com/aws/aws-sdk-go v1.42.52
+	github.com/ProtonMail/go-crypto v0.0.0-20210428141323-04723f9f07d7
+	github.com/aws/aws-sdk-go v1.42.53
 	github.com/beevik/etree v1.1.0
 	github.com/hashicorp/aws-cloudformation-resource-schema-sdk-go v0.15.0
 	github.com/hashicorp/aws-sdk-go-base/v2 v2.0.0-beta.7
@@ -14,7 +15,6 @@ require (
 	github.com/hashicorp/go-multierror v1.1.1
 	github.com/hashicorp/go-version v1.4.0
 	github.com/hashicorp/terraform-plugin-sdk/v2 v2.10.1
-	github.com/keybase/go-crypto v0.0.0-20161004153544-93f5b35093ba
 	github.com/mattbaird/jsonpatch v0.0.0-20200820163806-098863c1fc24
 	github.com/mitchellh/copystructure v1.2.0
 	github.com/mitchellh/go-homedir v1.1.0
@@ -28,7 +28,6 @@ require (
 
 require (
 	github.com/agext/levenshtein v1.2.2 // indirect
-	github.com/agl/ed25519 v0.0.0-20170116200512-5312a6153412 // indirect
 	github.com/apparentlymart/go-cidr v1.0.1 // indirect
 	github.com/apparentlymart/go-textseg v1.0.0 // indirect
 	github.com/apparentlymart/go-textseg/v13 v13.0.0 // indirect

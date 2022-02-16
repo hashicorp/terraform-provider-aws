@@ -1232,6 +1232,10 @@ func (c *Config) Client() (interface{}, error) {
 		awsbaseConfig.SharedCredentialsFiles = c.SharedCredentialsFiles
 	}
 
+	if c.STSRegion != "" {
+		awsbaseConfig.StsRegion = c.STSRegion
+	}
+
 	ctx := context.Background()
 	cfg, err := awsbase.GetAwsConfig(ctx, &awsbaseConfig)
 	if err != nil {
@@ -1531,7 +1535,6 @@ func (c *Config) Client() (interface{}, error) {
 		SSOConn:                           sso.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[SSO])})),
 		SSOOIDCConn:                       ssooidc.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[SSOOIDC])})),
 		StorageGatewayConn:                storagegateway.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[StorageGateway])})),
-		STSConn:                           sts.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[STS])})),
 		SupportConn:                       support.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[Support])})),
 		SWFConn:                           swf.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[SWF])})),
 		SyntheticsConn:                    synthetics.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[Synthetics])})),
@@ -1554,6 +1557,17 @@ func (c *Config) Client() (interface{}, error) {
 		WorkSpacesConn:                    workspaces.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[WorkSpaces])})),
 		XRayConn:                          xray.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[XRay])})),
 	}
+
+	// sts
+	stsConfig := &aws.Config{
+		Endpoint: aws.String(c.Endpoints[STS]),
+	}
+
+	if c.STSRegion != "" {
+		stsConfig.Region = aws.String(c.STSRegion)
+	}
+
+	client.STSConn = sts.New(sess.Copy(stsConfig))
 
 	// "Global" services that require customizations
 	globalAcceleratorConfig := &aws.Config{
