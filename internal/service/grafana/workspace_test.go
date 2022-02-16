@@ -172,10 +172,9 @@ func TestAccGrafanaWorkspace_dataSources(t *testing.T) {
 	})
 }
 
-func TestAccGrafanaWorkspace_customerManaged(t *testing.T) {
+func TestAccGrafanaWorkspace_permissionType(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_grafana_workspace.test"
-	iamRoleResourceName := "aws_iam_role.assume"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(managedgrafana.EndpointsID, t) },
@@ -184,24 +183,23 @@ func TestAccGrafanaWorkspace_customerManaged(t *testing.T) {
 		Providers:    acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWorkspaceConfigCustomerManaged(rName),
+				Config: testAccWorkspaceConfigPermissionType(rName, "CUSTOMER_MANAGED"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkspaceExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "account_access_type", managedgrafana.AccountAccessTypeCurrentAccount),
-					resource.TestCheckResourceAttr(resourceName, "authentication_providers.0", managedgrafana.AuthenticationProviderTypesSaml),
 					resource.TestCheckResourceAttr(resourceName, "permission_type", managedgrafana.PermissionTypeCustomerManaged),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "description", rName),
-					resource.TestCheckResourceAttrPair(resourceName, "role_arn", iamRoleResourceName, "arn"),
-					resource.TestCheckResourceAttrSet(resourceName, "endpoint"),
-					resource.TestCheckResourceAttrSet(resourceName, "grafana_version"),
 				),
-				ExpectNonEmptyPlan: true,
 			},
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+			{
+				Config: testAccWorkspaceConfigPermissionType(rName, "SERVICE_MANAGED"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWorkspaceExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "permission_type", managedgrafana.PermissionTypeServiceManaged),
+				),
 			},
 		},
 	})
@@ -338,19 +336,15 @@ resource "aws_grafana_workspace" "test" {
 `, rName))
 }
 
-func testAccWorkspaceConfigCustomerManaged(name string) string {
-	return acctest.ConfigCompose(
-		testAccWorkspaceRole(name),
-		fmt.Sprintf(`
+func testAccWorkspaceConfigPermissionType(rName, permissionType string) string {
+	return acctest.ConfigCompose(testAccWorkspaceRole(rName), fmt.Sprintf(`
 resource "aws_grafana_workspace" "test" {
   account_access_type      = "CURRENT_ACCOUNT"
   authentication_providers = ["SAML"]
-  permission_type          = "CUSTOMER_MANAGED"
-  name                     = %[1]q
-  description              = %[1]q
+  permission_type          = %[1]q
   role_arn                 = aws_iam_role.assume.arn
 }
-`, name))
+`, permissionType))
 }
 
 func testAccWorkspaceConfigNotificationDestinations(name string) string {
