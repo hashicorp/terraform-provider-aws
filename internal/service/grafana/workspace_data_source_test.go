@@ -2,9 +2,7 @@ package grafana_test
 
 import (
 	"testing"
-)
 
-import (
 	"github.com/aws/aws-sdk-go/service/managedgrafana"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -15,6 +13,7 @@ func TestAccGrafanaWorkspaceDataSource_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_grafana_workspace.test"
 	dataSourceName := "data.aws_grafana_workspace.test"
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(managedgrafana.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, managedgrafana.EndpointsID),
@@ -45,9 +44,8 @@ func TestAccGrafanaWorkspaceDataSource_basic(t *testing.T) {
 	})
 }
 
-func testAccWorkspaceDataSourceConfig(name string) string {
-	return acctest.ConfigCompose(testAccWorkspaceConfigSaml(name),
-		`
+func testAccWorkspaceDataSourceConfig(rName string) string {
+	return acctest.ConfigCompose(testAccWorkspaceConfigAuthenticationProvider(rName, "SAML"), `
 data "aws_grafana_workspace" "test" {
   id = aws_grafana_workspace.test.id
 }
