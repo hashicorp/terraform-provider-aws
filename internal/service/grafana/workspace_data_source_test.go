@@ -9,12 +9,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccGrafanaWorkspaceDataSource_basic(t *testing.T) {
+func testAccGrafanaWorkspaceDataSource_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_grafana_workspace.test"
 	dataSourceName := "data.aws_grafana_workspace.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(managedgrafana.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, managedgrafana.EndpointsID),
 		CheckDestroy: nil,
@@ -24,21 +24,25 @@ func TestAccGrafanaWorkspaceDataSource_basic(t *testing.T) {
 				Config: testAccWorkspaceDataSourceConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkspaceExists(dataSourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "id", dataSourceName, "id"),
-					resource.TestCheckResourceAttrPair(resourceName, "arn", dataSourceName, "arn"),
 					resource.TestCheckResourceAttrPair(resourceName, "account_access_type", dataSourceName, "account_access_type"),
-					resource.TestCheckResourceAttrPair(resourceName, "authentication_providers.0", dataSourceName, "authentication_providers.0"),
-					resource.TestCheckResourceAttrPair(resourceName, "permission_type", dataSourceName, "permission_type"),
-					resource.TestCheckResourceAttrPair(resourceName, "name", dataSourceName, "name"),
+					resource.TestCheckResourceAttrPair(resourceName, "arn", dataSourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "authentication_providers.#", dataSourceName, "authentication_providers.#"),
+					resource.TestCheckResourceAttrSet(dataSourceName, "created_date"),
+					resource.TestCheckResourceAttrPair(resourceName, "data_sources.#", dataSourceName, "data_sources.#"),
 					resource.TestCheckResourceAttrPair(resourceName, "description", dataSourceName, "description"),
-					resource.TestCheckResourceAttrPair(resourceName, "status", dataSourceName, "status"),
-					resource.TestCheckResourceAttrPair(resourceName, "role_arn", dataSourceName, "role_arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "created_date", dataSourceName, "created_date"),
-					resource.TestCheckResourceAttrPair(resourceName, "last_updated_date", dataSourceName, "last_updated_date"),
 					resource.TestCheckResourceAttrPair(resourceName, "endpoint", dataSourceName, "endpoint"),
 					resource.TestCheckResourceAttrPair(resourceName, "grafana_version", dataSourceName, "grafana_version"),
+					resource.TestCheckResourceAttrSet(dataSourceName, "last_updated_date"),
+					resource.TestCheckResourceAttrPair(resourceName, "name", dataSourceName, "name"),
+					resource.TestCheckResourceAttrPair(resourceName, "notification_destinations.#", dataSourceName, "notification_destinations.#"),
+					resource.TestCheckResourceAttrPair(resourceName, "organization_role_name", dataSourceName, "organization_role_name"),
+					resource.TestCheckResourceAttrPair(resourceName, "organizational_units.#", dataSourceName, "organizational_units.#"),
+					resource.TestCheckResourceAttrPair(resourceName, "permission_type", dataSourceName, "permission_type"),
+					resource.TestCheckResourceAttrPair(resourceName, "role_arn", dataSourceName, "role_arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "saml_configuration_status", dataSourceName, "saml_configuration_status"),
+					resource.TestCheckResourceAttrPair(resourceName, "stack_set_name", dataSourceName, "stack_set_name"),
+					resource.TestCheckResourceAttrSet(dataSourceName, "status"),
 				),
-				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
@@ -47,7 +51,7 @@ func TestAccGrafanaWorkspaceDataSource_basic(t *testing.T) {
 func testAccWorkspaceDataSourceConfig(rName string) string {
 	return acctest.ConfigCompose(testAccWorkspaceConfigAuthenticationProvider(rName, "SAML"), `
 data "aws_grafana_workspace" "test" {
-  id = aws_grafana_workspace.test.id
+  workspace_id = aws_grafana_workspace.test.id
 }
 `)
 }

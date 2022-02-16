@@ -26,6 +26,9 @@ func TestAccGrafana_serial(t *testing.T) {
 			"permissionType":           testAccGrafanaWorkspace_permissionType,
 			"notificationDestinations": testAccGrafanaWorkspace_notificationDestinations,
 		},
+		"DataSource": {
+			"basic": testAccGrafanaWorkspaceDataSource_basic,
+		},
 	}
 
 	for group, m := range testCases {

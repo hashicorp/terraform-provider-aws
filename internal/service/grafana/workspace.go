@@ -184,14 +184,14 @@ func resourceWorkspaceRead(d *schema.ResourceData, meta interface{}) error {
 
 	d.Set("account_access_type", workspace.AccountAccessType)
 	// https://docs.aws.amazon.com/service-authorization/latest/reference/list_amazonmanagedgrafana.html#amazonmanagedgrafana-resources-for-iam-policies.
-	workspaceArn := arn.ARN{
+	workspaceARN := arn.ARN{
 		Partition: meta.(*conns.AWSClient).Partition,
 		Service:   managedgrafana.ServiceName,
 		Region:    meta.(*conns.AWSClient).Region,
 		AccountID: meta.(*conns.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("/workspaces/%s", d.Id()),
 	}.String()
-	d.Set("arn", workspaceArn)
+	d.Set("arn", workspaceARN)
 	d.Set("authentication_providers", workspace.Authentication.Providers)
 	d.Set("data_sources", workspace.DataSources)
 	d.Set("description", workspace.Description)
