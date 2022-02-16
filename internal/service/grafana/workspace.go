@@ -4,9 +4,7 @@ import (
 	"fmt"
 	"log"
 	"time"
-)
 
-import (
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/managedgrafana"
@@ -36,41 +34,23 @@ func ResourceWorkspace() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 			"account_access_type": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringInSlice(managedgrafana.AccountAccessType_Values(), false),
+			},
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"authentication_providers": {
 				Type:     schema.TypeList,
 				Required: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"organization_role_name": {
+			"created_date": {
 				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"permission_type": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringInSlice(managedgrafana.PermissionType_Values(), false),
-			},
-			"saml_configuration_status": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringInSlice(managedgrafana.SamlConfigurationStatus_Values(), false),
-			},
-			"stack_set_name": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Computed: true,
 			},
 			"data_sources": {
 				Type:     schema.TypeList,
@@ -81,6 +61,18 @@ func ResourceWorkspace() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
+			"endpoint": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"grafana_version": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"last_updated_date": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"name": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -90,36 +82,38 @@ func ResourceWorkspace() *schema.Resource {
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
+			"organization_role_name": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
 			"organizational_units": {
 				Type:     schema.TypeList,
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"status": {
+			"permission_type": {
 				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringInSlice(managedgrafana.WorkspaceStatus_Values(), false),
+				Required:     true,
+				ValidateFunc: validation.StringInSlice(managedgrafana.PermissionType_Values(), false),
 			},
 			"role_arn": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-			"created_date": {
-				Type:     schema.TypeString,
-				Computed: true,
+			"saml_configuration_status": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.StringInSlice(managedgrafana.SamlConfigurationStatus_Values(), false),
 			},
-			"last_updated_date": {
+			"stack_set_name": {
 				Type:     schema.TypeString,
-				Computed: true,
+				Optional: true,
 			},
-			"endpoint": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"grafana_version": {
-				Type:     schema.TypeString,
-				Computed: true,
+			"status": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.StringInSlice(managedgrafana.WorkspaceStatus_Values(), false),
 			},
 		},
 	}
@@ -187,20 +181,20 @@ func resourceWorkspaceCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceWorkspaceRead(d *schema.ResourceData, meta interface{}) error {
-	id := d.Id()
 	conn := meta.(*conns.AWSClient).GrafanaConn
-	workspace, err := FindWorkspaceById(conn, id)
+
+	workspace, err := FindWorkspaceById(conn, d.Id())
 
 	if tfresource.NotFound(err) && !d.IsNewResource() {
-		log.Printf("[WARN] Grafana Workspace (%s) not found, removing from state", id)
+		log.Printf("[WARN] Grafana Workspace (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading Grafana Workspace (%s): %w", id, err)
+		return fmt.Errorf("error reading Grafana Workspace (%s): %w", d.Id(), err)
 	}
-	d.Set("id", d.Id())
+
 	d.Set("account_access_type", workspace.AccountAccessType)
 	d.Set("authentication_providers", workspace.Authentication.Providers)
 	d.Set("saml_configuration_status", workspace.Authentication.SamlConfigurationStatus)
@@ -221,7 +215,7 @@ func resourceWorkspaceRead(d *schema.ResourceData, meta interface{}) error {
 	workspaceArn := arn.ARN{
 		Partition: meta.(*conns.AWSClient).Partition,
 		Service:   "grafana",
-		Resource:  id,
+		Resource:  d.Id(),
 	}.String()
 	d.Set("arn", workspaceArn)
 
@@ -305,9 +299,8 @@ func resourceWorkspaceUpdate(d *schema.ResourceData, meta interface{}) error {
 func resourceWorkspaceDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).GrafanaConn
 
-	id := d.Get("id").(string)
 	input := &managedgrafana.DeleteWorkspaceInput{
-		WorkspaceId: aws.String(id),
+		WorkspaceId: aws.String(d.Id()),
 	}
 
 	_, err := conn.DeleteWorkspace(input)
