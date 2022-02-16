@@ -86,6 +86,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/glacier"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/globalaccelerator"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/glue"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/grafana"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/guardduty"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/identitystore"
@@ -616,6 +617,8 @@ func Provider() *schema.Provider {
 			"aws_glue_connection":                       glue.DataSourceConnection(),
 			"aws_glue_data_catalog_encryption_settings": glue.DataSourceDataCatalogEncryptionSettings(),
 			"aws_glue_script":                           glue.DataSourceScript(),
+
+			"aws_grafana_workspace": grafana.DataSourceWorkspace(),
 
 			"aws_guardduty_detector": guardduty.DataSourceDetector(),
 
@@ -1390,6 +1393,8 @@ func Provider() *schema.Provider {
 			"aws_glue_trigger":                          glue.ResourceTrigger(),
 			"aws_glue_user_defined_function":            glue.ResourceUserDefinedFunction(),
 			"aws_glue_workflow":                         glue.ResourceWorkflow(),
+
+			"aws_grafana_workspace": grafana.ResourceWorkspace(),
 
 			"aws_guardduty_detector":                   guardduty.ResourceDetector(),
 			"aws_guardduty_filter":                     guardduty.ResourceFilter(),
