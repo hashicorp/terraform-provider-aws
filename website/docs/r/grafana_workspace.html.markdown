@@ -46,18 +46,18 @@ The following arguments are required:
 
 * `account_access_type` - (Required) The type of account access for the workspace. Valid values are `CURRENT_ACCOUNT` and `ORGANIZATION`. If `ORGANIZATION` is specified, then `organizational_units` must also be present.
 * `authentication_providers` - (Required) The authentication providers for the workspace. Valid values are `AWS_SSO`, `SAML`, or both.
+* `permission_type` - (Required) The permission type of the workspace. If `SERVICE_MANAGED` is specified, the IAM roles and IAM policy attachments are generated automatically. If `CUSTOMER_MANAGED` is specified, the IAM roles and IAM policy attachments will not be created.
 
 The following arguments are optional:
 
-* `organization_role_name` - (Optional) The role name that the workspace uses to access resources through Amazon Organizations.
-* `permission_type` - (Optional) The permission type of the workspace. If `SERVICE_MANAGED` is specified, the IAM roles and IAM policy attachments are generated automatically. If `CUSTOMER_MANAGED` is specified, the IAM roles and IAM policy attachments will not be created.
-* `stack_set_name` - (Optional) The AWS CloudFormation stack set name that provisions IAM roles to be used by the workspace.
 * `data_sources` - (Optional) The data sources for the workspace. Valid values are `AMAZON_OPENSEARCH_SERVICE`, `CLOUDWATCH`, `PROMETHEUS`, `XRAY`, `TIMESTREAM`, `SITEWISE`.
 * `description` - (Optional) The workspace description.
 * `name` - (Optional) The Grafana workspace name.
 * `notification_destinations` - (Optional) The notification destinations. If a data source is specified here, Amazon Managed Grafana will create IAM roles and permissions needed to use these destinations. Must be set to `SNS`.
+* `organization_role_name` - (Optional) The role name that the workspace uses to access resources through Amazon Organizations.
 * `organizational_units` - (Optional) The Amazon Organizations organizational units that the workspace is authorized to use data sources from.
 * `role_arn` - (Optional) The IAM role ARN that the workspace assumes.
+* `stack_set_name` - (Optional) The AWS CloudFormation stack set name that provisions IAM roles to be used by the workspace.
 
 ## Attributes Reference
 

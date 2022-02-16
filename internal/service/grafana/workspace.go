@@ -94,9 +94,8 @@ func ResourceWorkspace() *schema.Resource {
 				ValidateFunc: verify.ValidARN,
 			},
 			"saml_configuration_status": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringInSlice(managedgrafana.SamlConfigurationStatus_Values(), false),
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"stack_set_name": {
 				Type:     schema.TypeString,
@@ -113,6 +112,7 @@ func resourceWorkspaceCreate(d *schema.ResourceData, meta interface{}) error {
 		AccountAccessType:       aws.String(d.Get("account_access_type").(string)),
 		AuthenticationProviders: flex.ExpandStringList(d.Get("authentication_providers").([]interface{})),
 		ClientToken:             aws.String(resource.UniqueId()),
+		PermissionType:          aws.String(d.Get("permission_type").(string)),
 	}
 
 	if v, ok := d.GetOk("data_sources"); ok {
@@ -137,10 +137,6 @@ func resourceWorkspaceCreate(d *schema.ResourceData, meta interface{}) error {
 
 	if v, ok := d.GetOk("organizational_units"); ok {
 		input.WorkspaceOrganizationalUnits = flex.ExpandStringList(v.([]interface{}))
-	}
-
-	if v, ok := d.GetOk("permission_type"); ok {
-		input.PermissionType = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("role_arn"); ok {

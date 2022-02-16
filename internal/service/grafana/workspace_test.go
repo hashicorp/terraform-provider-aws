@@ -16,9 +16,7 @@ import (
 )
 
 func TestAccGrafanaWorkspace_saml(t *testing.T) {
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_grafana_workspace.test"
-	iamRoleResourceName := "aws_iam_role.assume"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(managedgrafana.EndpointsID, t) },
@@ -27,20 +25,26 @@ func TestAccGrafanaWorkspace_saml(t *testing.T) {
 		Providers:    acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWorkspaceConfigSaml(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Config: testAccWorkspaceConfigSaml(),
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckWorkspaceExists(resourceName),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "grafana", regexp.MustCompile(`/workspaces/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "account_access_type", managedgrafana.AccountAccessTypeCurrentAccount),
+					resource.TestCheckResourceAttr(resourceName, "authentication_providers.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "authentication_providers.0", managedgrafana.AuthenticationProviderTypesSaml),
-					resource.TestCheckResourceAttr(resourceName, "permission_type", managedgrafana.PermissionTypeServiceManaged),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "description", rName),
-					resource.TestCheckResourceAttrPair(resourceName, "role_arn", iamRoleResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "data_sources.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "description", ""),
 					resource.TestCheckResourceAttrSet(resourceName, "endpoint"),
 					resource.TestCheckResourceAttrSet(resourceName, "grafana_version"),
+					resource.TestCheckResourceAttr(resourceName, "name", ""),
+					resource.TestCheckResourceAttr(resourceName, "notification_destinations.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "organization_role_name", ""),
+					resource.TestCheckResourceAttr(resourceName, "organizational_units.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "permission_type", managedgrafana.PermissionTypeServiceManaged),
+					resource.TestCheckResourceAttr(resourceName, "role_arn", ""),
+					resource.TestCheckResourceAttr(resourceName, "saml_configuration_status", managedgrafana.SamlConfigurationStatusNotConfigured),
+					resource.TestCheckResourceAttr(resourceName, "stack_set_name", ""),
 				),
-				ExpectNonEmptyPlan: true,
 			},
 			{
 				ResourceName:      resourceName,
@@ -250,19 +254,14 @@ resource "aws_iam_role" "assume" {
 `, name)
 }
 
-func testAccWorkspaceConfigSaml(name string) string {
-	return acctest.ConfigCompose(
-		testAccWorkspaceRole(name),
-		fmt.Sprintf(`
+func testAccWorkspaceConfigSaml() string {
+	return `
 resource "aws_grafana_workspace" "test" {
   account_access_type      = "CURRENT_ACCOUNT"
   authentication_providers = ["SAML"]
   permission_type          = "SERVICE_MANAGED"
-  name                     = %[1]q
-  description              = %[1]q
-  role_arn                 = aws_iam_role.assume.arn
 }
-`, name))
+`
 }
 
 func testAccWorkspaceConfigSso(name string) string {
