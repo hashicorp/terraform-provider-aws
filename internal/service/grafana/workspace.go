@@ -68,6 +68,7 @@ func ResourceWorkspace() *schema.Resource {
 			"name": {
 				Type:     schema.TypeString,
 				Optional: true,
+				Computed: true,
 			},
 			"notification_destinations": {
 				Type:     schema.TypeList,
