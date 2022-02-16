@@ -31,6 +31,7 @@ func ResourceWorkspace() *schema.Resource {
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(10 * time.Minute),
+			Update: schema.DefaultTimeout(10 * time.Minute),
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -277,6 +278,12 @@ func resourceWorkspaceUpdate(d *schema.ResourceData, meta interface{}) error {
 
 		if err != nil {
 			return fmt.Errorf("error updating Grafana Workspace (%s): %w", d.Id(), err)
+		}
+
+		_, err = waitWorkspaceUpdated(conn, d.Id(), d.Timeout(schema.TimeoutUpdate))
+
+		if err != nil {
+			return fmt.Errorf("error waiting for Grafana Workspace (%s) update: %w", d.Id(), err)
 		}
 	}
 
