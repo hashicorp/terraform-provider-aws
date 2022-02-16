@@ -21,7 +21,7 @@ const (
 	engineNameMongodb                    = "mongodb"
 	engineNameMySQL                      = "mysql"
 	engineNameNeptune                    = "neptune"
-	engineNameOpensearch                 = "opensearch"
+	engineNameOpenSearch                 = "opensearch"
 	engineNameOracle                     = "oracle"
 	engineNamePostgres                   = "postgres"
 	engineNameRedis                      = "redis"
@@ -49,7 +49,7 @@ func engineName_Values() []string {
 		engineNameMongodb,
 		engineNameMySQL,
 		engineNameNeptune,
-		engineNameOpensearch,
+		engineNameOpenSearch,
 		engineNameOracle,
 		engineNamePostgres,
 		engineNameRedis,
