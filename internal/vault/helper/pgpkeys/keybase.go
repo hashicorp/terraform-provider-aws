@@ -33,10 +33,11 @@ func FetchPubkeys(input []string) (map[string]string, error) {
 
 	kbUsernames := make([]string, 0, len(input))
 	extUsernames := make([]string, 0, len(input))
+	extReg, _ := regexp.Compile(externalRegex)
 	for _, v := range input {
 		if strings.HasPrefix(v, kbPrefix) {
 			kbUsernames = append(kbUsernames, strings.TrimSuffix(strings.TrimPrefix(v, kbPrefix), "\n"))
-		} else if match, err := regexp.MatchString(externalRegex, v); match && err == nil {
+		} else if match := extReg.MatchString(v); match {
 			extUser := strings.TrimPrefix(v, externalPrefix)
 			if err := validateFetchingURL(strings.Split(extUser, "|")[1]); err != nil {
 				return nil, err
