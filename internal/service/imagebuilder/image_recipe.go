@@ -82,12 +82,13 @@ func ResourceImageRecipe() *schema.Resource {
 										Type:         schema.TypeString,
 										Optional:     true,
 										ForceNew:     true,
-										ValidateFunc: verify.ValidARN,
+										ValidateFunc: validation.StringLenBetween(1, 1024),
 									},
 									"snapshot_id": {
-										Type:     schema.TypeString,
-										Optional: true,
-										ForceNew: true,
+										Type:         schema.TypeString,
+										Optional:     true,
+										ForceNew:     true,
+										ValidateFunc: validation.StringLenBetween(1, 1024),
 									},
 									"volume_size": {
 										Type:         schema.TypeInt,
@@ -96,11 +97,10 @@ func ResourceImageRecipe() *schema.Resource {
 										ValidateFunc: validation.IntBetween(1, 16000),
 									},
 									"volume_type": {
-										Type:     schema.TypeString,
-										Optional: true,
-										ForceNew: true,
-										// https://github.com/hashicorp/terraform-provider-aws/issues/17274.
-										ValidateFunc: validation.StringInSlice(append(imagebuilder.EbsVolumeType_Values(), EBSVolumeTypeGP3), false),
+										Type:         schema.TypeString,
+										Optional:     true,
+										ForceNew:     true,
+										ValidateFunc: validation.StringInSlice(imagebuilder.EbsVolumeType_Values(), false),
 									},
 								},
 							},
@@ -167,7 +167,7 @@ func ResourceImageRecipe() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(1, 126),
+				ValidateFunc: validation.StringLenBetween(1, 128),
 			},
 			"owner": {
 				Type:     schema.TypeString,
@@ -177,7 +177,7 @@ func ResourceImageRecipe() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(1, 126),
+				ValidateFunc: validation.StringLenBetween(1, 1024),
 			},
 			"platform": {
 				Type:     schema.TypeString,
