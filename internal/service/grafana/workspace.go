@@ -48,10 +48,6 @@ func ResourceWorkspace() *schema.Resource {
 				Required: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"created_date": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 			"data_sources": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -66,10 +62,6 @@ func ResourceWorkspace() *schema.Resource {
 				Computed: true,
 			},
 			"grafana_version": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"last_updated_date": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -109,11 +101,6 @@ func ResourceWorkspace() *schema.Resource {
 			"stack_set_name": {
 				Type:     schema.TypeString,
 				Optional: true,
-			},
-			"status": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringInSlice(managedgrafana.WorkspaceStatus_Values(), false),
 			},
 		},
 	}
@@ -206,10 +193,7 @@ func resourceWorkspaceRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("name", workspace.Name)
 	d.Set("notification_destinations", workspace.NotificationDestinations)
 	d.Set("organizational_units", workspace.OrganizationalUnits)
-	d.Set("status", workspace.Status)
 	d.Set("role_arn", workspace.WorkspaceRoleArn)
-	d.Set("created_date", workspace.Created.Format(time.RFC3339))
-	d.Set("last_updated_date", workspace.Modified.Format(time.RFC3339))
 	d.Set("endpoint", workspace.Endpoint)
 	d.Set("grafana_version", workspace.GrafanaVersion)
 	workspaceArn := arn.ARN{

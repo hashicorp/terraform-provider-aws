@@ -64,10 +64,6 @@ The following arguments are optional:
 In addition to all arguments above, the following attributes are exported:
 
 * `arn` - The Amazon Resource Name (ARN) of the Grafana workspace.
-* `id` - The Grafana workspace ID.
-* `status` - The status of the Grafana workspace. One of `ACTIVE`, `CREATING`, `DELETING`, `FAILED`, `UPDATING`, `UPGRADING`, `DELETION_FAILED`, `CREATION_FAILED`, `UPDATE_FAILED`, `UPGRADE_FAILED`, `LICENSE_REMOVAL_FAILED`.
-* `created_date` - The creation date of the Grafana workspace.
-* `last_updated_date` - The last updated date of the Grafana workspace.
 * `endpoint` - The endpoint of the Grafana workspace.
 * `grafana_version` - The version of Grafana running on the workspace.
 
