@@ -467,6 +467,199 @@ your Terraform state and will henceforth be managed by Terraform.
 
 Switch your Terraform configuration to the [`aws_s3_bucket_lifecycle_configuration` resource](/docs/providers/aws/r/s3_bucket_lifecycle_configuration.html) instead.
 
+#### For Lifecycle Rules with no `prefix` previously configured
+
+For example, given this previous configuration:
+
+```terraform
+resource "aws_s3_bucket" "example" {
+  bucket = "my-example-bucket"
+
+  lifecycle_rule {
+    id      = "Keep previous version 30 days, then in Glacier another 60"
+    enabled = true
+
+    noncurrent_version_transition {
+      days          = 30
+      storage_class = "GLACIER"
+    }
+
+    noncurrent_version_expiration {
+      days = 90
+    }
+  }
+
+  lifecycle_rule {
+    id                                     = "Delete old incomplete multi-part uploads"
+    enabled                                = true
+    abort_incomplete_multipart_upload_days = 7
+  }
+}
+```
+
+It will receive the following error after upgrading:
+
+```
+│ Error: Value for unconfigurable attribute
+│
+│   with aws_s3_bucket.example,
+│   on main.tf line 1, in resource "aws_s3_bucket" "example":
+│    1: resource "aws_s3_bucket" "example" {
+│
+│ Can't configure a value for "lifecycle_rule": its value will be decided automatically based on the result of applying this configuration.
+```
+
+Since the `lifecycle_rule` argument changed to read-only, the recommendation is to update the configuration to use the `aws_s3_bucket_lifecycle_configuration`
+resource and remove any references to `lifecycle_rule` and its nested arguments in the `aws_s3_bucket` resource.
+
+~> **Note:** When configuring the `rule.filter` configuration block in the new `aws_s3_bucket_lifecycle_configuration` resource, it is recommended to use the AWS CLI s3api [get-bucket-lifecycle-configuration](https://awscli.amazonaws.com/v2/documentation/api/latest/reference/s3api/get-bucket-lifecycle-configuration.html)
+to fetch the source bucket's lifecycle configuration and determine if the `Filter` is configured as `"Filter" : {}` or `"Filter" : { "Prefix": "" }`.
+If the former is returned, `rule.filter` should be configured as `filter {}`. If the latter is returned, `rule.filter` should be configured as follows.
+
+```terraform
+resource "aws_s3_bucket" "example" {
+  # ... other configuration ...
+}
+
+resource "aws_s3_bucket_lifecycle_configuration" "example" {
+  bucket = aws_s3_bucket.example.id
+
+  rule {
+    id     = "Keep previous version 30 days, then in Glacier another 60"
+    status = "Enabled"
+
+    filter {
+      prefix = ""
+    }
+
+    noncurrent_version_transition {
+      noncurrent_days = 30
+      storage_class   = "GLACIER"
+    }
+
+    noncurrent_version_expiration {
+      noncurrent_days = 90
+    }
+  }
+
+  rule {
+    id     = "Delete old incomplete multi-part uploads"
+    status = "Enabled"
+
+    filter {
+      prefix = ""
+    }
+
+    abort_incomplete_multipart_upload {
+      days_after_initiation = 7
+    }
+  }
+}
+```
+
+It is then recommended running `terraform import` on each new resource to prevent data loss, e.g.
+
+```shell
+$ terraform import aws_s3_bucket_lifecycle_configuration.example example
+aws_s3_bucket_lifecycle_configuration.example: Importing from ID "example"...
+aws_s3_bucket_lifecycle_configuration.example: Import prepared!
+  Prepared aws_s3_bucket_lifecycle_configuration for import
+aws_s3_bucket_lifecycle_configuration.example: Refreshing state... [id=example]
+
+Import successful!
+
+The resources that were imported are shown above. These resources are now in
+your Terraform state and will henceforth be managed by Terraform.
+```
+
+#### For Lifecycle Rules with `prefix` previously configured as an empty string
+
+For example, given this configuration:
+
+```terraform
+resource "aws_s3_bucket" "example" {
+  bucket = "my-example-bucket"
+
+  lifecycle_rule {
+    id      = "log-expiration"
+    enabled = true
+    prefix  = ""
+
+    transition {
+      days          = 30
+      storage_class = "STANDARD_IA"
+    }
+
+    transition {
+      days          = 180
+      storage_class = "GLACIER"
+    }
+  }
+}
+```
+
+It will receive the following error after upgrading:
+
+```
+│ Error: Value for unconfigurable attribute
+│
+│   with aws_s3_bucket.example,
+│   on main.tf line 1, in resource "aws_s3_bucket" "example":
+│    1: resource "aws_s3_bucket" "example" {
+│
+│ Can't configure a value for "lifecycle_rule": its value will be decided automatically based on the result of applying this configuration.
+```
+
+Since the `lifecycle_rule` argument changed to read-only, the recommendation is to update the configuration to use the `aws_s3_bucket_lifecycle_configuration`
+resource and remove any references to `lifecycle_rule` and its nested arguments in the `aws_s3_bucket` resource:
+
+```terraform
+resource "aws_s3_bucket" "example" {
+  # ... other configuration ...
+}
+
+resource "aws_s3_bucket_lifecycle_configuration" "example" {
+  bucket = aws_s3_bucket.example.id
+
+  rule {
+    id     = "log-expiration"
+    status = "Enabled"
+
+    filter {
+      prefix = ""
+    }
+
+    transition {
+      days          = 30
+      storage_class = "STANDARD_IA"
+    }
+
+    transition {
+      days          = 180
+      storage_class = "GLACIER"
+    }
+  }
+}
+```
+
+It is then recommended running `terraform import` on each new resource to prevent data loss, e.g.
+
+```shell
+$ terraform import aws_s3_bucket_lifecycle_configuration.example example
+aws_s3_bucket_lifecycle_configuration.example: Importing from ID "example"...
+aws_s3_bucket_lifecycle_configuration.example: Import prepared!
+  Prepared aws_s3_bucket_lifecycle_configuration for import
+aws_s3_bucket_lifecycle_configuration.example: Refreshing state... [id=example]
+
+Import successful!
+
+The resources that were imported are shown above. These resources are now in
+your Terraform state and will henceforth be managed by Terraform.
+```
+
+#### For Lifecycle Rules with a `prefix`
+
+
 For example, given this previous configuration:
 
 ```terraform
@@ -476,18 +669,22 @@ resource "aws_s3_bucket" "example" {
     id      = "log"
     enabled = true
     prefix = "log/"
+
     tags = {
       rule      = "log"
       autoclean = "true"
     }
+
     transition {
       days          = 30
       storage_class = "STANDARD_IA"
     }
+
     transition {
       days          = 60
       storage_class = "GLACIER"
     }
+
     expiration {
       days = 90
     }
@@ -497,6 +694,7 @@ resource "aws_s3_bucket" "example" {
     id      = "tmp"
     prefix  = "tmp/"
     enabled = true
+
     expiration {
       date = "2022-12-31"
     }
@@ -534,6 +732,7 @@ resource "aws_s3_bucket_lifecycle_configuration" "example" {
     filter {
       and {
         prefix = "log/"
+
         tags = {
           rule      = "log"
           autoclean = "true"
