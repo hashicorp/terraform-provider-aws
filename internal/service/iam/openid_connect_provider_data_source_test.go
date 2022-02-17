@@ -102,7 +102,7 @@ resource "aws_iam_openid_connect_provider" "test" {
 }
 
 data "aws_iam_openid_connect_provider" "test" {	
-	arn = aws_iam_openid_connect_provider.test.arn
+  arn = aws_iam_openid_connect_provider.test.arn
 }
 `, rString)
 }
@@ -120,7 +120,7 @@ resource "aws_iam_openid_connect_provider" "test" {
 }
 
 data "aws_iam_openid_connect_provider" "test" {	
-	url = "https://${aws_iam_openid_connect_provider.test.url}"
+  url = "https://${aws_iam_openid_connect_provider.test.url}"
 }
 `, rString)
 }
@@ -143,7 +143,7 @@ resource "aws_iam_openid_connect_provider" "test" {
 }
 
 data "aws_iam_openid_connect_provider" "test" {	
-	arn = aws_iam_openid_connect_provider.test.arn
+  arn = aws_iam_openid_connect_provider.test.arn
 }
 `, rString)
 }
