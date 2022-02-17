@@ -27,28 +27,24 @@ func ResourcePolicy() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"name": {
+			"arn": {
 				Type:     schema.TypeString,
-				Required: true,
+				Computed: true,
 			},
-
 			"delete_all_policy_resources": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  true,
 			},
-
 			"delete_unused_fm_managed_resources": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
 			},
-
 			"exclude_resource_tags": {
 				Type:     schema.TypeBool,
 				Required: true,
 			},
-
 			"exclude_map": {
 				Type:             schema.TypeList,
 				MaxItems:         1,
@@ -73,7 +69,6 @@ func ResourcePolicy() *schema.Resource {
 					},
 				},
 			},
-
 			"include_map": {
 				Type:             schema.TypeList,
 				MaxItems:         1,
@@ -98,60 +93,53 @@ func ResourcePolicy() *schema.Resource {
 					},
 				},
 			},
-
-			"remediation_enabled": {
-				Type:     schema.TypeBool,
-				Optional: true,
+			"name": {
+				Type:     schema.TypeString,
+				Required: true,
 			},
-
-			"resource_type_list": {
-				Type:          schema.TypeSet,
-				Optional:      true,
-				Computed:      true,
-				Set:           schema.HashString,
-				ConflictsWith: []string{"resource_type"},
-				Elem: &schema.Schema{
-					Type:         schema.TypeString,
-					ValidateFunc: validation.StringMatch(regexp.MustCompile(`^([\p{L}\p{Z}\p{N}_.:/=+\-@]*)$`), "must match a supported resource type, such as AWS::EC2::VPC, see also: https://docs.aws.amazon.com/fms/2018-01-01/APIReference/API_Policy.html"),
-				},
-			},
-
-			"resource_type": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ConflictsWith: []string{"resource_type_list"},
-				ValidateFunc:  validation.StringMatch(regexp.MustCompile(`^([\p{L}\p{Z}\p{N}_.:/=+\-@]*)$`), "must match a supported resource type, such as AWS::EC2::VPC, see also: https://docs.aws.amazon.com/fms/2018-01-01/APIReference/API_Policy.html"),
-			},
-
 			"policy_update_token": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
+			"remediation_enabled": {
+				Type:     schema.TypeBool,
+				Optional: true,
+			},
 			"resource_tags": tftags.TagsSchema(),
-
+			"resource_type": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				Computed:      true,
+				ValidateFunc:  validation.StringMatch(regexp.MustCompile(`^([\p{L}\p{Z}\p{N}_.:/=+\-@]*)$`), "must match a supported resource type, such as AWS::EC2::VPC, see also: https://docs.aws.amazon.com/fms/2018-01-01/APIReference/API_Policy.html"),
+				ConflictsWith: []string{"resource_type_list"},
+			},
+			"resource_type_list": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Computed: true,
+				Elem: &schema.Schema{
+					Type:         schema.TypeString,
+					ValidateFunc: validation.StringMatch(regexp.MustCompile(`^([\p{L}\p{Z}\p{N}_.:/=+\-@]*)$`), "must match a supported resource type, such as AWS::EC2::VPC, see also: https://docs.aws.amazon.com/fms/2018-01-01/APIReference/API_Policy.html"),
+				},
+				ConflictsWith: []string{"resource_type"},
+			},
 			"security_service_policy_data": {
 				Type:     schema.TypeList,
 				Required: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"type": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
 						"managed_service_data": {
 							Type:             schema.TypeString,
 							Optional:         true,
 							DiffSuppressFunc: verify.SuppressEquivalentJSONDiffs,
 						},
+						"type": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
 					},
 				},
-			},
-			"arn": {
-				Type:     schema.TypeString,
-				Computed: true,
 			},
 		},
 	}
