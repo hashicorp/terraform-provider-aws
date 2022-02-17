@@ -86,9 +86,9 @@ Additional Topics:
 
 ## Provider Version Configuration
 
--> Before upgrading to version 4.0.0, it is recommended to upgrade to the most recent 3.X version of the provider and ensure that your environment successfully runs [`terraform plan`](https://www.terraform.io/docs/commands/plan.html) without unexpected changes or deprecation notices.
+-> Before upgrading to version 4.0.0, upgrade to the most recent 3.X version of the provider and ensure that your environment successfully runs [`terraform plan`](https://www.terraform.io/docs/commands/plan.html) without unexpected changes or deprecation notices.
 
-It is recommended to use [version constraints when configuring Terraform providers](https://www.terraform.io/docs/configuration/providers.html#provider-versions). If you are following that recommendation, update the version constraints in your Terraform configuration and run [`terraform init`](https://www.terraform.io/docs/commands/init.html) to download the new version.
+Use [version constraints when configuring Terraform providers](https://www.terraform.io/docs/configuration/providers.html#provider-versions). If you are following that recommendation, update the version constraints in your Terraform configuration and run [`terraform init`](https://www.terraform.io/docs/commands/init.html) to download the new version.
 
 For example, given this previous configuration:
 
@@ -154,7 +154,7 @@ provider "aws" {
 
 ## New Provider Arguments
 
-Version 4.0.0 adds these new provider arguments:
+Version 4.0.0 adds these new `provider` arguments:
 
 * `assume_role.duration` - The assume role duration represented as a string e.g. `"1h"` or `"1h30s"`. Replaces `assume_role.duration_seconds`, which has been deprecated in Terraform AWS Provider v4.0.0 and support will be removed in a future version.
 * `ec2_metadata_service_endpoint` - Address of the EC2 metadata service (IMDS) endpoint to use. Can also be set with the `AWS_EC2_METADATA_SERVICE_ENDPOINT` environment variable.
@@ -204,12 +204,14 @@ For example, given this previous configuration:
 
 ```terraform
 resource "aws_s3_bucket" "example" {
+  bucket = "villaviciosa-2697126908"
+
   # ... other configuration ...
   acceleration_status = "Enabled"
 }
 ```
 
-It will receive the following error after upgrading:
+You will get the following error after upgrading:
 
 ```
 │ Error: Value for unconfigurable attribute
@@ -221,11 +223,13 @@ It will receive the following error after upgrading:
 │ Can't configure a value for "acceleration_status": its value will be decided automatically based on the result of applying this configuration.
 ```
 
-Since the `acceleration_status` argument changed to read-only, the recommendation is to update the configuration to use the `aws_s3_bucket_accelerate_configuration`
+Since the `acceleration_status` argument changed to read-only, update the configuration to use the `aws_s3_bucket_accelerate_configuration`
 resource and remove any reference to `acceleration_status` in the `aws_s3_bucket` resource:
 
 ```terraform
 resource "aws_s3_bucket" "example" {
+  bucket = "villaviciosa-2697126908"
+
   # ... other configuration ...
 }
 
@@ -235,14 +239,14 @@ resource "aws_s3_bucket_accelerate_configuration" "example" {
 }
 ```
 
-It is then recommended running `terraform import` on each new resource to prevent data loss, e.g.
+Run `terraform import` on each new resource, _e.g._,
 
 ```shell
-$ terraform import aws_s3_bucket_accelerate_configuration.example example
-aws_s3_bucket_accelerate_configuration.example: Importing from ID "example"...
+$ terraform import aws_s3_bucket_accelerate_configuration.example villaviciosa-2697126908
+aws_s3_bucket_accelerate_configuration.example: Importing from ID "villaviciosa-2697126908"...
 aws_s3_bucket_accelerate_configuration.example: Import prepared!
   Prepared aws_s3_bucket_accelerate_configuration for import
-aws_s3_bucket_accelerate_configuration.example: Refreshing state... [id=example]
+aws_s3_bucket_accelerate_configuration.example: Refreshing state... [id=villaviciosa-2697126908]
 
 Import successful!
 
@@ -258,12 +262,14 @@ For example, given this previous configuration:
 
 ```terraform
 resource "aws_s3_bucket" "example" {
+  bucket = "villaviciosa-2697126908"
+  acl    = "private"
+
   # ... other configuration ...
-  acl = "private"
 }
 ```
 
-It will receive the following error after upgrading:
+You will get the following error after upgrading:
 
 ```
 │ Error: Value for unconfigurable attribute
@@ -275,12 +281,12 @@ It will receive the following error after upgrading:
 │ Can't configure a value for "acl": its value will be decided automatically based on the result of applying this configuration.
 ```
 
-Since the `acl` argument changed to read-only, the recommendation is to update the configuration to use the `aws_s3_bucket_acl`
-resource and remove any reference to `acl` in the `aws_s3_bucket` resource:
+Since the `acl` argument changed to read-only, update the configuration to use the `aws_s3_bucket_acl`
+resource and remove the `acl` argument in the `aws_s3_bucket` resource:
 
 ```terraform
 resource "aws_s3_bucket" "example" {
-  # ... other configuration ...
+  bucket = "villaviciosa-2697126908"
 }
 
 resource "aws_s3_bucket_acl" "example" {
@@ -289,14 +295,16 @@ resource "aws_s3_bucket_acl" "example" {
 }
 ```
 
-It is then recommended running `terraform import` on each new resource to prevent data loss, e.g.
+~> **NOTE:** When importing into `aws_s3_bucket_acl`, make sure you use the S3 bucket name (_e.g._, `villaviciosa-2697126908` in the example above) as part of the ID, and _not_ the Terraform bucket configuration name (_e.g._, `example` in the example above).
+
+Run `terraform import` on each new resource, _e.g._,
 
 ```shell
-$ terraform import aws_s3_bucket_acl.example example,private
-aws_s3_bucket_acl.example: Importing from ID "example,private"...
+$ terraform import aws_s3_bucket_acl.example villaviciosa-2697126908,private
+aws_s3_bucket_acl.example: Importing from ID "villaviciosa-2697126908,private"...
 aws_s3_bucket_acl.example: Import prepared!
   Prepared aws_s3_bucket_acl for import
-aws_s3_bucket_acl.example: Refreshing state... [id=example,private]
+aws_s3_bucket_acl.example: Refreshing state... [id=villaviciosa-2697126908,private]
 
 Import successful!
 
@@ -312,6 +320,8 @@ For example, given this previous configuration:
 
 ```terraform
 resource "aws_s3_bucket" "example" {
+  bucket = "villaviciosa-2697126908"
+
   # ... other configuration ...
   cors_rule {
     allowed_headers = ["*"]
@@ -323,7 +333,7 @@ resource "aws_s3_bucket" "example" {
 }
 ```
 
-It will receive the following error after upgrading:
+You will get the following error after upgrading:
 
 ```
 │ Error: Value for unconfigurable attribute
@@ -335,11 +345,13 @@ It will receive the following error after upgrading:
 │ Can't configure a value for "cors_rule": its value will be decided automatically based on the result of applying this configuration.
 ```
 
-Since the `cors_rule` argument changed to read-only, the recommendation is to update the configuration to use the `aws_s3_bucket_cors_configuration`
+Since the `cors_rule` argument changed to read-only, update the configuration to use the `aws_s3_bucket_cors_configuration`
 resource and remove any references to `cors_rule` and its nested arguments in the `aws_s3_bucket` resource:
 
 ```terraform
 resource "aws_s3_bucket" "example" {
+  bucket = "villaviciosa-2697126908"
+
   # ... other configuration ...
 }
 
@@ -356,14 +368,14 @@ resource "aws_s3_bucket_cors_configuration" "example" {
 }
 ```
 
-It is then recommended running `terraform import` on each new resource to prevent data loss, e.g.
+Run `terraform import` on each new resource, _e.g._,
 
 ```shell
-$ terraform import aws_s3_bucket_cors_configuration.example example
-aws_s3_bucket_cors_configuration.example: Importing from ID "example"...
+$ terraform import aws_s3_bucket_cors_configuration.example villaviciosa-2697126908
+aws_s3_bucket_cors_configuration.example: Importing from ID "villaviciosa-2697126908"...
 aws_s3_bucket_cors_configuration.example: Import prepared!
   Prepared aws_s3_bucket_cors_configuration for import
-aws_s3_bucket_cors_configuration.example: Refreshing state... [id=example]
+aws_s3_bucket_cors_configuration.example: Refreshing state... [id=villaviciosa-2697126908]
 
 Import successful!
 
@@ -379,12 +391,15 @@ For example, given this previous configuration:
 
 ```terraform
 resource "aws_s3_bucket" "example" {
+  bucket = "villaviciosa-2697126908"
+
   # ... other configuration ...
   grant {
     id          = data.aws_canonical_user_id.current_user.id
     type        = "CanonicalUser"
     permissions = ["FULL_CONTROL"]
   }
+
   grant {
     type        = "Group"
     permissions = ["READ_ACP", "WRITE"]
@@ -393,7 +408,7 @@ resource "aws_s3_bucket" "example" {
 }
 ```
 
-It will receive the following error after upgrading:
+You will get the following error after upgrading:
 
 ```
 │ Error: Value for unconfigurable attribute
@@ -405,11 +420,13 @@ It will receive the following error after upgrading:
 │ Can't configure a value for "grant": its value will be decided automatically based on the result of applying this configuration.
 ```
 
-Since the `grant` argument changed to read-only, the recommendation is to update the configuration to use the `aws_s3_bucket_acl`
+Since the `grant` argument changed to read-only, update the configuration to use the `aws_s3_bucket_acl`
 resource and remove any reference to `grant` in the `aws_s3_bucket` resource:
 
 ```terraform
 resource "aws_s3_bucket" "example" {
+  bucket = "villaviciosa-2697126908"
+
   # ... other configuration ...
 }
 
@@ -448,14 +465,14 @@ resource "aws_s3_bucket_acl" "example" {
 }
 ```
 
-It is then recommended running `terraform import` on each new resource to prevent data loss, e.g.
+Run `terraform import` on each new resource, _e.g._,
 
 ```shell
-$ terraform import aws_s3_bucket_acl.example example
-aws_s3_bucket_acl.example: Importing from ID "example"...
+$ terraform import aws_s3_bucket_acl.example villaviciosa-2697126908
+aws_s3_bucket_acl.example: Importing from ID "villaviciosa-2697126908"...
 aws_s3_bucket_acl.example: Import prepared!
   Prepared aws_s3_bucket_acl for import
-aws_s3_bucket_acl.example: Refreshing state... [id=example]
+aws_s3_bucket_acl.example: Refreshing state... [id=villaviciosa-2697126908]
 
 Import successful!
 
@@ -471,6 +488,8 @@ For example, given this previous configuration:
 
 ```terraform
 resource "aws_s3_bucket" "example" {
+  bucket = "villaviciosa-2697126908"
+
   # ... other configuration ...
   lifecycle_rule {
     id      = "log"
@@ -504,7 +523,7 @@ resource "aws_s3_bucket" "example" {
 }
 ```
 
-It will receive the following error after upgrading:
+You will get the following error after upgrading:
 
 ```
 │ Error: Value for unconfigurable attribute
@@ -516,11 +535,13 @@ It will receive the following error after upgrading:
 │ Can't configure a value for "lifecycle_rule": its value will be decided automatically based on the result of applying this configuration.
 ```
 
-Since the `lifecycle_rule` argument changed to read-only, the recommendation is to update the configuration to use the `aws_s3_bucket_lifecycle_configuration`
+Since the `lifecycle_rule` argument changed to read-only, update the configuration to use the `aws_s3_bucket_lifecycle_configuration`
 resource and remove any references to `lifecycle_rule` and its nested arguments in the `aws_s3_bucket` resource:
 
 ```terraform
 resource "aws_s3_bucket" "example" {
+  bucket = "villaviciosa-2697126908"
+
   # ... other configuration ...
 }
 
@@ -572,14 +593,14 @@ resource "aws_s3_bucket_lifecycle_configuration" "example" {
 }
 ```
 
-It is then recommended running `terraform import` on each new resource to prevent data loss, e.g.
+Run `terraform import` on each new resource, _e.g._,
 
 ```shell
-$ terraform import aws_s3_bucket_lifecycle_configuration.example example
-aws_s3_bucket_lifecycle_configuration.example: Importing from ID "example"...
+$ terraform import aws_s3_bucket_lifecycle_configuration.example villaviciosa-2697126908
+aws_s3_bucket_lifecycle_configuration.example: Importing from ID "villaviciosa-2697126908"...
 aws_s3_bucket_lifecycle_configuration.example: Import prepared!
   Prepared aws_s3_bucket_lifecycle_configuration for import
-aws_s3_bucket_lifecycle_configuration.example: Refreshing state... [id=example]
+aws_s3_bucket_lifecycle_configuration.example: Refreshing state... [id=villaviciosa-2697126908]
 
 Import successful!
 
@@ -600,6 +621,8 @@ resource "aws_s3_bucket" "log_bucket" {
 }
 
 resource "aws_s3_bucket" "example" {
+  bucket = "villaviciosa-2697126908"
+
   # ... other configuration ...
   logging {
     target_bucket = aws_s3_bucket.log_bucket.id
@@ -608,7 +631,7 @@ resource "aws_s3_bucket" "example" {
 }
 ```
 
-It will receive the following error after upgrading:
+You will get the following error after upgrading:
 
 ```
 │ Error: Value for unconfigurable attribute
@@ -620,16 +643,19 @@ It will receive the following error after upgrading:
 │ Can't configure a value for "logging": its value will be decided automatically based on the result of applying this configuration.
 ```
 
-Since the `logging` argument changed to read-only, the recommendation is to update the configuration to use the `aws_s3_bucket_logging`
+Since the `logging` argument changed to read-only, update the configuration to use the `aws_s3_bucket_logging`
 resource and remove any references to `logging` and its nested arguments in the `aws_s3_bucket` resource:
 
 ```terraform
 resource "aws_s3_bucket" "log_bucket" {
-  # ... other configuration ...
   bucket = "example-log-bucket"
+
+  # ... other configuration ...  
 }
 
 resource "aws_s3_bucket" "example" {
+  bucket = "villaviciosa-2697126908"
+
   # ... other configuration ...
 }
 
@@ -640,14 +666,14 @@ resource "aws_s3_bucket_logging" "example" {
 }
 ```
 
-It is then recommended running `terraform import` on each new resource to prevent data loss, e.g.
+Run `terraform import` on each new resource, _e.g._,
 
 ```shell
-$ terraform import aws_s3_bucket_logging.example example
-aws_s3_bucket_logging.example: Importing from ID "example"...
+$ terraform import aws_s3_bucket_logging.example villaviciosa-2697126908
+aws_s3_bucket_logging.example: Importing from ID "villaviciosa-2697126908"...
 aws_s3_bucket_logging.example: Import prepared!
   Prepared aws_s3_bucket_logging for import
-aws_s3_bucket_logging.example: Refreshing state... [id=example]
+aws_s3_bucket_logging.example: Refreshing state... [id=villaviciosa-2697126908]
 
 Import successful!
 
@@ -663,6 +689,8 @@ For example, given this previous configuration:
 
 ```terraform
 resource "aws_s3_bucket" "example" {
+  bucket = "villaviciosa-2697126908"
+
   # ... other configuration ...
   object_lock_configuration {
     object_lock_enabled = "Enabled"
@@ -677,7 +705,7 @@ resource "aws_s3_bucket" "example" {
 }
 ```
 
-It will receive the following error after upgrading:
+You will get the following error after upgrading:
 
 ```
 │ Error: Value for unconfigurable attribute
@@ -689,11 +717,13 @@ It will receive the following error after upgrading:
 │ Can't configure a value for "object_lock_configuration.0.rule": its value will be decided automatically based on the result of applying this configuration.
 ```
 
-Since the `rule` argument of the `object_lock_configuration` configuration block changed to read-only, the recommendation is to update the configuration to use the `aws_s3_bucket_object_lock_configuration`
+Since the `rule` argument of the `object_lock_configuration` configuration block changed to read-only, update the configuration to use the `aws_s3_bucket_object_lock_configuration`
 resource and remove any references to `rule` and its nested arguments in the `aws_s3_bucket` resource:
 
 ```terraform
 resource "aws_s3_bucket" "example" {
+  bucket = "villaviciosa-2697126908"
+
   # ... other configuration ...
   object_lock_configuration {
     object_lock_enabled = "Enabled"
@@ -712,14 +742,14 @@ resource "aws_s3_bucket_object_lock_configuration" "example" {
 }
 ```
 
-It is then recommended running `terraform import` on each new resource to prevent data loss, e.g.
+Run `terraform import` on each new resource, _e.g._,
 
 ```shell
-$ terraform import aws_s3_bucket_object_lock_configuration.example example
-aws_s3_bucket_object_lock_configuration.example: Importing from ID "example"...
+$ terraform import aws_s3_bucket_object_lock_configuration.example villaviciosa-2697126908
+aws_s3_bucket_object_lock_configuration.example: Importing from ID "villaviciosa-2697126908"...
 aws_s3_bucket_object_lock_configuration.example: Import prepared!
   Prepared aws_s3_bucket_object_lock_configuration for import
-aws_s3_bucket_object_lock_configuration.example: Refreshing state... [id=example]
+aws_s3_bucket_object_lock_configuration.example: Refreshing state... [id=villaviciosa-2697126908]
 
 Import successful!
 
@@ -734,7 +764,9 @@ Switch your Terraform configuration to the [`aws_s3_bucket_policy` resource](/do
 For example, given this previous configuration:
 
 ```terraform
-resource "aws_s3_bucket" "accesslogs_bucket" {
+resource "aws_s3_bucket" "example" {
+  bucket = "villaviciosa-2697126908"
+
   # ... other configuration ...
   policy = <<EOF
 {
@@ -756,7 +788,7 @@ EOF
 }
 ```
 
-It will receive the following error after upgrading:
+You will get the following error after upgrading:
 
 ```
 │ Error: Value for unconfigurable attribute
@@ -768,11 +800,13 @@ It will receive the following error after upgrading:
 │ Can't configure a value for "policy": its value will be decided automatically based on the result of applying this configuration.
 ```
 
-Since the `policy` argument changed to read-only, the recommendation is to update the configuration to use the `aws_s3_bucket_policy`
+Since the `policy` argument changed to read-only, update the configuration to use the `aws_s3_bucket_policy`
 resource and remove any reference to `policy` in the `aws_s3_bucket` resource:
 
 ```terraform
-resource "aws_s3_bucket" "accesslogs_bucket" {
+resource "aws_s3_bucket" "example" {
+  bucket = "villaviciosa-2697126908"
+
   # ... other configuration ...
 }
 
@@ -798,14 +832,14 @@ EOF
 }
 ```
 
-It is then recommended running `terraform import` on each new resource to prevent data loss, e.g.
+Run `terraform import` on each new resource, _e.g._,
 
 ```shell
-$ terraform import aws_s3_bucket_policy.example example
-aws_s3_bucket_policy.example: Importing from ID "example"...
+$ terraform import aws_s3_bucket_policy.example villaviciosa-2697126908
+aws_s3_bucket_policy.example: Importing from ID "villaviciosa-2697126908"...
 aws_s3_bucket_policy.example: Import prepared!
   Prepared aws_s3_bucket_policy for import
-aws_s3_bucket_policy.example: Refreshing state... [id=example]
+aws_s3_bucket_policy.example: Refreshing state... [id=villaviciosa-2697126908]
 
 Import successful!
 
@@ -820,8 +854,9 @@ Switch your Terraform configuration to the [`aws_s3_bucket_replication_configura
 For example, given this previous configuration:
 
 ```terraform
-resource "aws_s3_bucket" "source" {
+resource "aws_s3_bucket" "example" {
   provider = aws.central
+  bucket   = "villaviciosa-2697126908"
 
   # ... other configuration ...
 
@@ -850,7 +885,7 @@ resource "aws_s3_bucket" "source" {
 }
 ```
 
-It will receive the following error after upgrading:
+You will get the following error after upgrading:
 
 ```
 │ Error: Value for unconfigurable attribute
@@ -862,12 +897,14 @@ It will receive the following error after upgrading:
 │ Can't configure a value for "replication_configuration": its value will be decided automatically based on the result of applying this configuration.
 ```
 
-Since the `replication_configuration` argument changed to read-only, the recommendation is to update the configuration to use the `aws_s3_bucket_replication_configuration`
+Since the `replication_configuration` argument changed to read-only, update the configuration to use the `aws_s3_bucket_replication_configuration`
 resource and remove any references to `replication_configuration` and its nested arguments in the `aws_s3_bucket` resource:
 
 ```terraform
-resource "aws_s3_bucket" "source" {
+resource "aws_s3_bucket" "example" {
   provider = aws.central
+  bucket   = "villaviciosa-2697126908"
+
   # ... other configuration ...
 }
 
@@ -907,14 +944,14 @@ resource "aws_s3_bucket_replication_configuration" "example" {
 }
 ```
 
-It is then recommended running `terraform import` on each new resource to prevent data loss, e.g.
+Run `terraform import` on each new resource, _e.g._,
 
 ```shell
-$ terraform import aws_s3_bucket_replication_configuration.example example
-aws_s3_bucket_replication_configuration.example: Importing from ID "example"...
+$ terraform import aws_s3_bucket_replication_configuration.example villaviciosa-2697126908
+aws_s3_bucket_replication_configuration.example: Importing from ID "villaviciosa-2697126908"...
 aws_s3_bucket_replication_configuration.example: Import prepared!
   Prepared aws_s3_bucket_replication_configuration for import
-aws_s3_bucket_replication_configuration.example: Refreshing state... [id=example]
+aws_s3_bucket_replication_configuration.example: Refreshing state... [id=villaviciosa-2697126908]
 
 Import successful!
 
@@ -930,12 +967,14 @@ For example, given this previous configuration:
 
 ```terraform
 resource "aws_s3_bucket" "example" {
+  bucket = "villaviciosa-2697126908"
+
   # ... other configuration ...
   request_payer = "Requester"
 }
 ```
 
-It will receive the following error after upgrading:
+You will get the following error after upgrading:
 
 ```
 │ Error: Value for unconfigurable attribute
@@ -947,11 +986,13 @@ It will receive the following error after upgrading:
 │ Can't configure a value for "request_payer": its value will be decided automatically based on the result of applying this configuration.
 ```
 
-Since the `request_payer` argument changed to read-only, the recommendation is to update the configuration to use the `aws_s3_bucket_request_payment_configuration`
+Since the `request_payer` argument changed to read-only, update the configuration to use the `aws_s3_bucket_request_payment_configuration`
 resource and remove any reference to `request_payer` in the `aws_s3_bucket` resource:
 
 ```terraform
 resource "aws_s3_bucket" "example" {
+  bucket = "villaviciosa-2697126908"
+
   # ... other configuration ...
 }
 
@@ -961,14 +1002,14 @@ resource "aws_s3_bucket_request_payment_configuration" "example" {
 }
 ```
 
-It is then recommended running `terraform import` on each new resource to prevent data loss, e.g.
+Run `terraform import` on each new resource, _e.g._,
 
 ```shell
-$ terraform import aws_s3_bucket_request_payment_configuration.example example
-aws_s3_bucket_request_payment_configuration.example: Importing from ID "example"...
+$ terraform import aws_s3_bucket_request_payment_configuration.example villaviciosa-2697126908
+aws_s3_bucket_request_payment_configuration.example: Importing from ID "villaviciosa-2697126908"...
 aws_s3_bucket_request_payment_configuration.example: Import prepared!
   Prepared aws_s3_bucket_request_payment_configuration for import
-aws_s3_bucket_request_payment_configuration.example: Refreshing state... [id=example]
+aws_s3_bucket_request_payment_configuration.example: Refreshing state... [id=villaviciosa-2697126908]
 
 Import successful!
 
@@ -984,6 +1025,8 @@ For example, given this previous configuration:
 
 ```terraform
 resource "aws_s3_bucket" "example" {
+  bucket = "villaviciosa-2697126908"
+
   # ... other configuration ...
   server_side_encryption_configuration {
     rule {
@@ -996,7 +1039,7 @@ resource "aws_s3_bucket" "example" {
 }
 ```
 
-It will receive the following error after upgrading:
+You will get the following error after upgrading:
 
 ```
 │ Error: Value for unconfigurable attribute
@@ -1008,11 +1051,13 @@ It will receive the following error after upgrading:
 │ Can't configure a value for "server_side_encryption_configuration": its value will be decided automatically based on the result of applying this configuration.
 ```
 
-Since the `server_side_encryption_configuration` argument changed to read-only, the recommendation is to update the configuration to use the `aws_s3_bucket_server_side_encryption_configuration`
+Since the `server_side_encryption_configuration` argument changed to read-only, update the configuration to use the `aws_s3_bucket_server_side_encryption_configuration`
 resource and remove any references to `server_side_encryption_configuration` and its nested arguments in the `aws_s3_bucket` resource:
 
 ```terraform
 resource "aws_s3_bucket" "example" {
+  bucket = "villaviciosa-2697126908"
+
   # ... other configuration ...
 }
 
@@ -1028,14 +1073,14 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "example" {
 }
 ```
 
-It is then recommended running `terraform import` on each new resource to prevent data loss, e.g.
+Run `terraform import` on each new resource, _e.g._,
 
 ```shell
-$ terraform import aws_s3_bucket_server_side_encryption_configuration.example example
-aws_s3_bucket_server_side_encryption_configuration.example: Importing from ID "example"...
+$ terraform import aws_s3_bucket_server_side_encryption_configuration.example villaviciosa-2697126908
+aws_s3_bucket_server_side_encryption_configuration.example: Importing from ID "villaviciosa-2697126908"...
 aws_s3_bucket_server_side_encryption_configuration.example: Import prepared!
   Prepared aws_s3_bucket_server_side_encryption_configuration for import
-aws_s3_bucket_server_side_encryption_configuration.example: Refreshing state... [id=example]
+aws_s3_bucket_server_side_encryption_configuration.example: Refreshing state... [id=villaviciosa-2697126908]
 
 Import successful!
 
@@ -1053,6 +1098,8 @@ For example, given this previous configuration:
 
 ```terraform
 resource "aws_s3_bucket" "example" {
+  bucket = "villaviciosa-2697126908"
+
   # ... other configuration ...
   versioning {
     enabled = true
@@ -1060,7 +1107,7 @@ resource "aws_s3_bucket" "example" {
 }
 ```
 
-It will receive the following error after upgrading:
+You will get the following error after upgrading:
 
 ```
 │ Error: Value for unconfigurable attribute
@@ -1072,11 +1119,13 @@ It will receive the following error after upgrading:
 │ Can't configure a value for "versioning": its value will be decided automatically based on the result of applying this configuration.
 ```
 
-Since the `versioning` argument changed to read-only, the recommendation is to update the configuration to use the `aws_s3_bucket_versioning`
+Since the `versioning` argument changed to read-only, update the configuration to use the `aws_s3_bucket_versioning`
 resource and remove any references to `versioning` and its nested arguments in the `aws_s3_bucket` resource:
 
 ```terraform
 resource "aws_s3_bucket" "example" {
+  bucket = "villaviciosa-2697126908"
+
   # ... other configuration ...
 }
 
@@ -1088,14 +1137,14 @@ resource "aws_s3_bucket_versioning" "example" {
 }
 ```
 
-It is then recommended running `terraform import` on each new resource to prevent data loss, e.g.
+Run `terraform import` on each new resource, _e.g._,
 
 ```shell
-$ terraform import aws_s3_bucket_versioning.example example
-aws_s3_bucket_versioning.example: Importing from ID "example"...
+$ terraform import aws_s3_bucket_versioning.example villaviciosa-2697126908
+aws_s3_bucket_versioning.example: Importing from ID "villaviciosa-2697126908"...
 aws_s3_bucket_versioning.example: Import prepared!
   Prepared aws_s3_bucket_versioning for import
-aws_s3_bucket_versioning.example: Refreshing state... [id=example]
+aws_s3_bucket_versioning.example: Refreshing state... [id=villaviciosa-2697126908]
 
 Import successful!
 
@@ -1139,6 +1188,8 @@ For example, given this previous configuration:
 
 ```terraform
 resource "aws_s3_bucket" "example" {
+  bucket = "villaviciosa-2697126908"
+
   # ... other configuration ...
   website {
     index_document = "index.html"
@@ -1147,7 +1198,7 @@ resource "aws_s3_bucket" "example" {
 }
 ```
 
-It will receive the following error after upgrading:
+You will get the following error after upgrading:
 
 ```
 │ Error: Value for unconfigurable attribute
@@ -1159,11 +1210,13 @@ It will receive the following error after upgrading:
 │ Can't configure a value for "website": its value will be decided automatically based on the result of applying this configuration.
 ```
 
-Since the `website` argument changed to read-only, the recommendation is to update the configuration to use the `aws_s3_bucket_website_configuration`
+Since the `website` argument changed to read-only, update the configuration to use the `aws_s3_bucket_website_configuration`
 resource and remove any references to `website` and its nested arguments in the `aws_s3_bucket` resource:
 
 ```terraform
 resource "aws_s3_bucket" "example" {
+  bucket = "villaviciosa-2697126908"
+
   # ... other configuration ...
 }
 
@@ -1180,14 +1233,14 @@ resource "aws_s3_bucket_website_configuration" "example" {
 }
 ```
 
-It is then recommended running `terraform import` on each new resource to prevent data loss, e.g.
+Run `terraform import` on each new resource, _e.g._,
 
 ```shell
-$ terraform import aws_s3_bucket_website_configuration.example example
-aws_s3_bucket_website_configuration.example: Importing from ID "example"...
+$ terraform import aws_s3_bucket_website_configuration.example villaviciosa-2697126908
+aws_s3_bucket_website_configuration.example: Importing from ID "villaviciosa-2697126908"...
 aws_s3_bucket_website_configuration.example: Import prepared!
   Prepared aws_s3_bucket_website_configuration for import
-aws_s3_bucket_website_configuration.example: Refreshing state... [id=example]
+aws_s3_bucket_website_configuration.example: Refreshing state... [id=villaviciosa-2697126908]
 
 Import successful!
 
