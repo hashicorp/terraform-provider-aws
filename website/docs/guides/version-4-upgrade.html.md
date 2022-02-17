@@ -8,9 +8,9 @@ description: |-
 
 # Terraform AWS Provider Version 4 Upgrade Guide
 
-Version 4.0.0 of the AWS provider for Terraform is a major release and includes some changes that you will need to consider when upgrading. This guide is intended to help with that process and focuses only on changes from version 3.X to version 4.0.0. See the [Version 3 Upgrade Guide](/docs/providers/aws/guides/version-3-upgrade.html) for information about upgrading from 1.X to version 3.0.0.
+Version 4.0.0 of the AWS provider for Terraform is a major release and includes some changes that you will need to consider when upgrading. We intend this guide to help with that process and focus only on changes from version 3.X to version 4.0.0. See the [Version 3 Upgrade Guide](/docs/providers/aws/guides/version-3-upgrade.html) for information about upgrading from 1.X to version 3.0.0.
 
-Most of the changes outlined in this guide have been previously marked as deprecated in the Terraform plan/apply output throughout previous provider releases. These changes, such as deprecation notices, can always be found in the [Terraform AWS Provider CHANGELOG](https://github.com/hashicorp/terraform-provider-aws/blob/main/CHANGELOG.md).
+We previously marked most of the changes we outline in this guide as deprecated in the Terraform plan/apply output throughout previous provider releases. You can find these changes, including deprecation notices, in the [Terraform AWS Provider CHANGELOG](https://github.com/hashicorp/terraform-provider-aws/blob/main/CHANGELOG.md).
 
 ~> **NOTE:** Version 4.0.0 of the AWS Provider introduces significant changes to the `aws_s3_bucket` resource. See [S3 Bucket Refactor](#s3-bucket-refactor) for more details.
 
@@ -86,7 +86,7 @@ Additional Topics:
 
 ## Provider Version Configuration
 
--> Before upgrading to version 4.0.0, upgrade to the most recent 3.X version of the provider and ensure that your environment successfully runs [`terraform plan`](https://www.terraform.io/docs/commands/plan.html) without unexpected changes or deprecation notices.
+-> Before upgrading to version 4.0.0, upgrade to the most recent 3.X version of the provider and ensure that your environment successfully runs [`terraform plan`](https://www.terraform.io/docs/commands/plan.html). You should not see changes you don't expect or deprecation notices.
 
 Use [version constraints when configuring Terraform providers](https://www.terraform.io/docs/configuration/providers.html#provider-versions). If you are following that recommendation, update the version constraints in your Terraform configuration and run [`terraform init -upgrade`](https://www.terraform.io/docs/commands/init.html) to download the new version.
 
@@ -154,9 +154,9 @@ provider "aws" {
 
 ## New Provider Arguments
 
-Version 4.0.0 adds these new `provider` arguments:
+Version 4.x adds these new `provider` arguments:
 
-* `assume_role.duration` - The assume role duration represented as a string e.g. `"1h"` or `"1h30s"`. Replaces `assume_role.duration_seconds`, which has been deprecated in Terraform AWS Provider v4.0.0 and support will be removed in a future version.
+* `assume_role.duration` - Assume role duration as a string, _e.g._, `"1h"` or `"1h30s"`. Terraform AWS Provider v4.0.0 deprecates `assume_role.duration_seconds` and a future version will remove it.
 * `ec2_metadata_service_endpoint` - Address of the EC2 metadata service (IMDS) endpoint to use. Can also be set with the `AWS_EC2_METADATA_SERVICE_ENDPOINT` environment variable.
 * `ec2_metadata_service_endpoint_mode` - Mode to use in communicating with the metadata service. Valid values are `IPv4` and `IPv6`. Can also be set with the `AWS_EC2_METADATA_SERVICE_ENDPOINT_MODE` environment variable.
 * `s3_use_path_style` - Replaces `s3_force_path_style`, which has been deprecated in Terraform AWS Provider v4.0.0 and support will be removed in a future version.
