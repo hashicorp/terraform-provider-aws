@@ -675,6 +675,7 @@ func New(_ context.Context) (*schema.Provider, error) {
 
 			"aws_fsx_openzfs_snapshot": fsx.DataSourceOpenzfsSnapshot(),
 
+			"aws_glue_catalog_table":                    glue.DataSourceCatalogTable(),
 			"aws_glue_connection":                       glue.DataSourceConnection(),
 			"aws_glue_data_catalog_encryption_settings": glue.DataSourceDataCatalogEncryptionSettings(),
 			"aws_glue_script":                           glue.DataSourceScript(),
