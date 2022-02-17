@@ -38,7 +38,7 @@ resource "aws_fms_policy" "example" {
   }
 
   tags = {
-    Name = "foobar-fms-policy"
+    Name = "example-fms-policy"
   }
 }
 
