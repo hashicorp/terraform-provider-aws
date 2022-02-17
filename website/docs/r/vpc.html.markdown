@@ -103,7 +103,7 @@ In addition to all arguments above, the following attributes are exported:
 * `default_security_group_id` - The ID of the security group created by default on VPC creation
 * `default_route_table_id` - The ID of the route table created by default on VPC creation
 * `ipv6_association_id` - The association ID for the IPv6 CIDR block.
-* ipv6_cidr_block_network_border_group - The Network Border Group Zone name
+* `ipv6_cidr_block_network_border_group` - The Network Border Group Zone name
 * `owner_id` - The ID of the AWS account that owns the VPC.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
 
