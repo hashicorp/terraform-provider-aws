@@ -68,7 +68,7 @@ func FindAddonUpdateByClusterNameAddonNameAndID(ctx context.Context, conn *eks.E
 	return output.Update, nil
 }
 
-func FindAddonVersionByAddonNameAndKubernetesVersion(ctx context.Context, conn *eks.EKS, addonName, kubernetesVersion string, latest bool) (*eks.AddonVersionInfo, error) {
+func FindAddonVersionByAddonNameAndKubernetesVersion(ctx context.Context, conn *eks.EKS, addonName, kubernetesVersion string, mostRecent bool) (*eks.AddonVersionInfo, error) {
 	input := &eks.DescribeAddonVersionsInput{
 		AddonName:         aws.String(addonName),
 		KubernetesVersion: aws.String(kubernetesVersion),
@@ -82,7 +82,7 @@ func FindAddonVersionByAddonNameAndKubernetesVersion(ctx context.Context, conn *
 
 		for _, addon := range page.Addons {
 			for i, addonVersion := range addon.AddonVersions {
-				if latest && i == 0 {
+				if mostRecent && i == 0 {
 					version = addonVersion
 					return !lastPage
 				}

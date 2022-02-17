@@ -31,7 +31,7 @@ func TestAccEKSAddonVersionDataSource_basic(t *testing.T) {
 					testAccCheckAddonExists(ctx, addonDataSourceName, &addon),
 					resource.TestCheckResourceAttrPair(versionDataSourceName, "version", addonDataSourceName, "addon_version"),
 					resource.TestCheckResourceAttrPair(versionDataSourceName, "addon_name", addonDataSourceName, "addon_name"),
-					resource.TestCheckResourceAttr(versionDataSourceName, "latest", "true"),
+					resource.TestCheckResourceAttr(versionDataSourceName, "most_recent", "true"),
 				),
 			},
 			{
@@ -40,19 +40,19 @@ func TestAccEKSAddonVersionDataSource_basic(t *testing.T) {
 					testAccCheckAddonExists(ctx, addonDataSourceName, &addon),
 					resource.TestCheckResourceAttrPair(versionDataSourceName, "version", addonDataSourceName, "addon_version"),
 					resource.TestCheckResourceAttrPair(versionDataSourceName, "addon_name", addonDataSourceName, "addon_name"),
-					resource.TestCheckResourceAttr(versionDataSourceName, "latest", "false"),
+					resource.TestCheckResourceAttr(versionDataSourceName, "most_recent", "false"),
 				),
 			},
 		},
 	})
 }
 
-func testAccAddonVersionDataSourceConfig_Basic(rName, addonName string, latest bool) string {
+func testAccAddonVersionDataSourceConfig_Basic(rName, addonName string, mostRecent bool) string {
 	return acctest.ConfigCompose(testAccAddonConfig_Base(rName), fmt.Sprintf(`
 data "aws_eks_addon_version" "test" {
   addon_name   = %[2]q
   kubernetes_version = aws_eks_cluster.test.version
-  latest = %[3]t
+  most_recent = %[3]t
 }
 
 resource "aws_eks_addon" "test" {
@@ -71,5 +71,5 @@ data "aws_eks_addon" "test" {
     aws_eks_cluster.test,
   ]
 }
-`, rName, addonName, latest))
+`, rName, addonName, mostRecent))
 }

@@ -23,7 +23,7 @@ func DataSourceAddonVersion() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"latest": {
+			"most_recent": {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
@@ -40,19 +40,19 @@ func dataSourceAddonVersionRead(ctx context.Context, d *schema.ResourceData, met
 
 	addonName := d.Get("addon_name").(string)
 	kubernetesVersion := d.Get("kubernetes_version").(string)
-	latest := d.Get("latest").(bool)
+	mostRecent := d.Get("most_recent").(bool)
 	id := addonName
 
-	versionInfo, err := FindAddonVersionByAddonNameAndKubernetesVersion(ctx, conn, id, kubernetesVersion, latest)
+	versionInfo, err := FindAddonVersionByAddonNameAndKubernetesVersion(ctx, conn, id, kubernetesVersion, mostRecent)
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error reading EKS Add-On version info (%s): %w", id, err))
+		return diag.FromErr(fmt.Errorf("error reading EKS Add-On version info (%s, %s): %w", id, kubernetesVersion, err))
 	}
 
 	d.SetId(id)
 	d.Set("addon_name", addonName)
 	d.Set("kubernetes_version", kubernetesVersion)
-	d.Set("latest", latest)
+	d.Set("most_recent", mostRecent)
 	d.Set("version", versionInfo.AddonVersion)
 
 	return nil
