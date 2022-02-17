@@ -3,6 +3,7 @@ package iam
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/iam"
@@ -25,14 +26,12 @@ func DataSourceOpenIDConnectProvider() *schema.Resource {
 				ValidateFunc: verify.ValidARN,
 			},
 			"url": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ExactlyOneOf: []string{"arn", "url"},
-			},
-			"created_date": {
-				Type:     schema.TypeString,
-				Computed: true,
+				Type:             schema.TypeString,
+				Optional:         true,
+				Computed:         true,
+				ValidateFunc:     validOpenIDURL,
+				DiffSuppressFunc: suppressOpenIDURL,
+				ExactlyOneOf:     []string{"arn", "url"},
 			},
 			"client_id_list": {
 				Elem: &schema.Schema{
@@ -55,7 +54,6 @@ func DataSourceOpenIDConnectProvider() *schema.Resource {
 
 func dataSourceOpenIDConnectProviderRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).IAMConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	input := &iam.GetOpenIDConnectProviderInput{}
@@ -82,21 +80,14 @@ func dataSourceOpenIDConnectProviderRead(d *schema.ResourceData, meta interface{
 		return fmt.Errorf("error reading IAM OIDC Provider: %w", err)
 	}
 
+	d.SetId(aws.StringValue(input.OpenIDConnectProviderArn))
 	d.Set("arn", input.OpenIDConnectProviderArn)
 	d.Set("url", resp.Url)
-	d.Set("created_at", aws.TimeValue(resp.CreateDate).String())
 	d.Set("client_id_list", flex.FlattenStringList(resp.ClientIDList))
 	d.Set("thumbprint_list", flex.FlattenStringList(resp.ThumbprintList))
 
-	tags := KeyValueTags(resp.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
+	if err := d.Set("tags", KeyValueTags(resp.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %w", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
 	}
 
 	return nil
@@ -117,13 +108,13 @@ func dataSourceGetOpenIDConnectProviderByURL(ctx context.Context, conn *iam.IAM,
 		if oidcp == nil {
 			continue
 		}
-		_, arnUrl, err := urlFromOpenIDConnectProviderArn(aws.StringValue(oidcp.Arn))
+
+		arnUrl, err := urlFromOpenIDConnectProviderArn(aws.StringValue(oidcp.Arn))
 		if err != nil {
 			return nil, err
 		}
 
-		oidcpUrl := fmt.Sprintf("https://%s", arnUrl)
-		if oidcpUrl == url {
+		if arnUrl == strings.TrimPrefix(url, "https://") {
 			return oidcp, nil
 		}
 	}

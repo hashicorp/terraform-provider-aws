@@ -27,7 +27,7 @@ func TestAccIAMOpenidConnectProviderDataSource_basic(t *testing.T) {
 					testAccCheckIAMOpenIDConnectProvider(resourceName),
 					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "url", resourceName, "url"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "client_id_list", resourceName, "client_id_list.0"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "client_id_list", resourceName, "client_id_list"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "thumbprint_list", resourceName, "thumbprint_list"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
@@ -53,7 +53,7 @@ func TestAccIAMOpenidConnectProviderDataSource_url(t *testing.T) {
 					testAccCheckIAMOpenIDConnectProvider(resourceName),
 					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "url", resourceName, "url"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "client_id_list", resourceName, "client_id_list.0"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "client_id_list", resourceName, "client_id_list"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "thumbprint_list", resourceName, "thumbprint_list"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
@@ -74,12 +74,12 @@ func TestAccIAMOpenidConnectProviderDataSource_tags(t *testing.T) {
 		CheckDestroy: testAccCheckIAMOpenIDConnectProviderDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccIAMOpenIDConnectProviderDataSourceConfig_url(rString),
+				Config: testAccIAMOpenIDConnectProviderDataSourceConfig_tags(rString),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIAMOpenIDConnectProvider(resourceName),
 					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "url", resourceName, "url"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "client_id_list", resourceName, "client_id_list.0"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "client_id_list", resourceName, "client_id_list"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "thumbprint_list", resourceName, "thumbprint_list"),
 					resource.TestCheckResourceAttr(dataSourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(dataSourceName, "tags.tag1", "test-value1"),
@@ -120,7 +120,7 @@ resource "aws_iam_openid_connect_provider" "test" {
 }
 
 data "aws_iam_openid_connect_provider" "test" {	
-	url = aws_iam_openid_connect_provider.test.url
+	url = "https://${aws_iam_openid_connect_provider.test.url}"
 }
 `, rString)
 }
