@@ -886,14 +886,6 @@ func FlattenLifecycleRuleFilter(filter *s3.LifecycleRuleFilter) []interface{} {
 		return nil
 	}
 
-	if filter.And == nil &&
-		filter.ObjectSizeGreaterThan == nil &&
-		filter.ObjectSizeLessThan == nil &&
-		(filter.Prefix == nil || aws.StringValue(filter.Prefix) == "") &&
-		filter.Tag == nil {
-		return nil
-	}
-
 	m := make(map[string]interface{})
 
 	if filter.And != nil {
@@ -908,7 +900,7 @@ func FlattenLifecycleRuleFilter(filter *s3.LifecycleRuleFilter) []interface{} {
 		m["object_size_less_than"] = int(aws.Int64Value(filter.ObjectSizeLessThan))
 	}
 
-	if filter.Prefix != nil && aws.StringValue(filter.Prefix) != "" {
+	if filter.Prefix != nil {
 		m["prefix"] = aws.StringValue(filter.Prefix)
 	}
 
