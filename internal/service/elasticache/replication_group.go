@@ -121,6 +121,7 @@ func ResourceReplicationGroup() *schema.Resource {
 				Optional:     true,
 				Computed:     true,
 				ExactlyOneOf: []string{"description", "replication_group_description"},
+				ValidateFunc: validation.StringIsNotEmpty,
 			},
 			"engine": {
 				Type:         schema.TypeString,
@@ -254,6 +255,7 @@ func ResourceReplicationGroup() *schema.Resource {
 				Computed:     true,
 				ExactlyOneOf: []string{"description", "replication_group_description"},
 				Deprecated:   "Use description instead",
+				ValidateFunc: validation.StringIsNotEmpty,
 			},
 			"replication_group_id": {
 				Type:         schema.TypeString,
