@@ -22,7 +22,6 @@ func testAccPolicy_basic(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			testAccPreCheckFmsAdmin(t)
-			// acctest.PreCheckOrganizationsAccount(t)
 			acctest.PreCheckOrganizationsEnabled(t)
 			acctest.PreCheckOrganizationManagementAccount(t)
 		},
@@ -51,29 +50,30 @@ func testAccPolicy_basic(t *testing.T) {
 }
 
 func testAccPolicy_cloudFrontDistribution(t *testing.T) {
-	fmsPolicyName := fmt.Sprintf("tf-fms-%s", sdkacctest.RandString(5))
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_fms_policy.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			testAccPreCheckFmsAdmin(t)
-			acctest.PreCheckOrganizationsAccount(t)
+			acctest.PreCheckOrganizationsEnabled(t)
+			acctest.PreCheckOrganizationManagementAccount(t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, fms.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFmsPolicyConfig_cloudfrontDistribution(fmsPolicyName),
+				Config: testAccFmsPolicyConfig_cloudfrontDistribution(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPolicyExists("aws_fms_policy.test"),
-					acctest.CheckResourceAttrRegionalARNIgnoreRegionAndAccount("aws_fms_policy.test", "arn", "fms", "policy/.+"),
-					resource.TestCheckResourceAttr("aws_fms_policy.test", "name", fmsPolicyName),
-					resource.TestCheckResourceAttr("aws_fms_policy.test", "security_service_policy_data.#", "1"),
+					testAccCheckPolicyExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "security_service_policy_data.#", "1"),
 				),
 			},
 			{
-				ResourceName:            "aws_fms_policy.test",
+				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"policy_update_token", "delete_all_policy_resources"},
@@ -83,30 +83,30 @@ func testAccPolicy_cloudFrontDistribution(t *testing.T) {
 }
 
 func testAccPolicy_includeMap(t *testing.T) {
-	fmsPolicyName := fmt.Sprintf("tf-fms-%s", sdkacctest.RandString(5))
-	wafRuleGroupName := fmt.Sprintf("tf-waf-rg-%s", sdkacctest.RandString(5))
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_fms_policy.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			testAccPreCheckFmsAdmin(t)
-			acctest.PreCheckOrganizationsAccount(t)
+			acctest.PreCheckOrganizationsEnabled(t)
+			acctest.PreCheckOrganizationManagementAccount(t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, fms.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFmsPolicyConfig_include(fmsPolicyName, wafRuleGroupName),
+				Config: testAccFmsPolicyConfig_include(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPolicyExists("aws_fms_policy.test"),
-					acctest.CheckResourceAttrRegionalARNIgnoreRegionAndAccount("aws_fms_policy.test", "arn", "fms", "policy/.+"),
-					resource.TestCheckResourceAttr("aws_fms_policy.test", "name", fmsPolicyName),
-					resource.TestCheckResourceAttr("aws_fms_policy.test", "security_service_policy_data.#", "1"),
+					testAccCheckPolicyExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "security_service_policy_data.#", "1"),
 				),
 			},
 			{
-				ResourceName:            "aws_fms_policy.test",
+				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"policy_update_token", "delete_all_policy_resources"},
@@ -124,7 +124,8 @@ func testAccPolicy_update(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			testAccPreCheckFmsAdmin(t)
-			acctest.PreCheckOrganizationsAccount(t)
+			acctest.PreCheckOrganizationsEnabled(t)
+			acctest.PreCheckOrganizationManagementAccount(t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, fms.EndpointsID),
 		Providers:    acctest.Providers,
@@ -134,8 +135,8 @@ func testAccPolicy_update(t *testing.T) {
 				Config: testAccFmsPolicyConfig(rName1, rName1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPolicyExists(resourceName),
-					resource.TestCheckResourceAttr("aws_fms_policy.test", "name", rName1),
-					resource.TestCheckResourceAttr("aws_fms_policy.test", "security_service_policy_data.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName1),
+					resource.TestCheckResourceAttr(resourceName, "security_service_policy_data.#", "1"),
 				),
 			},
 			{
@@ -146,35 +147,36 @@ func testAccPolicy_update(t *testing.T) {
 }
 
 func testAccPolicy_tags(t *testing.T) {
-	fmsPolicyName := fmt.Sprintf("tf-fms-%s", sdkacctest.RandString(5))
-	wafRuleGroupName := fmt.Sprintf("tf-waf-rg-%s", sdkacctest.RandString(5))
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_fms_policy.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			testAccPreCheckFmsAdmin(t)
-			acctest.PreCheckOrganizationsAccount(t)
+			acctest.PreCheckOrganizationsEnabled(t)
+			acctest.PreCheckOrganizationManagementAccount(t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, fms.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFmsPolicyConfig_tags(fmsPolicyName, wafRuleGroupName),
+				Config: testAccFmsPolicyConfigResourceTags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPolicyExists("aws_fms_policy.test"),
-					resource.TestCheckResourceAttr("aws_fms_policy.test", "name", fmsPolicyName),
-					resource.TestCheckResourceAttr("aws_fms_policy.test", "resource_tags.%", "2"),
-					resource.TestCheckResourceAttr("aws_fms_policy.test", "resource_tags.Usage", "original"),
+					testAccCheckPolicyExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "resource_tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "resource_tags.key1", "value1"),
 				),
 			},
 			{
-				Config: testAccFmsPolicyConfig_tagsChanged(fmsPolicyName, wafRuleGroupName),
+				Config: testAccFmsPolicyConfigResourceTags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPolicyExists("aws_fms_policy.test"),
-					resource.TestCheckResourceAttr("aws_fms_policy.test", "name", fmsPolicyName),
-					resource.TestCheckResourceAttr("aws_fms_policy.test", "resource_tags.%", "1"),
-					resource.TestCheckResourceAttr("aws_fms_policy.test", "resource_tags.Usage", "changed"),
+					testAccCheckPolicyExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "resource_tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "resource_tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "resource_tags.key2", "value2"),
 				),
 			},
 		},
@@ -238,25 +240,7 @@ resource "aws_fms_admin_account" "test" {
 `)
 }
 
-func testAccFmsPolicyConfigBase() string {
-	return acctest.ConfigCompose(testAccFmsAdminRegionProviderConfig(), `
-data "aws_caller_identity" "current" {}
-
-data "aws_partition" "current" {}
-
-resource "aws_organizations_organization" "test" {
-  aws_service_access_principals = ["fms.${data.aws_partition.current.dns_suffix}"]
-  feature_set                   = "ALL"
-}
-
-resource "aws_fms_admin_account" "test" {
-  account_id = aws_organizations_organization.test.master_account_id
-}
-`)
-}
-
 func testAccFmsPolicyConfig(policyName, ruleGroupName string) string {
-	// return acctest.ConfigCompose(testAccFmsPolicyConfigBase(), fmt.Sprintf(`
 	return acctest.ConfigCompose(testAccFmsPolicyConfigOrgMgmtAccountBase(), fmt.Sprintf(`
 resource "aws_fms_policy" "test" {
   exclude_resource_tags = false
@@ -283,13 +267,11 @@ resource "aws_wafregional_rule_group" "test" {
 `, policyName, ruleGroupName))
 }
 
-func testAccFmsPolicyConfig_cloudfrontDistribution(name string) string {
-	return acctest.ConfigCompose(
-		testAccFmsPolicyConfigBase(),
-		fmt.Sprintf(`
+func testAccFmsPolicyConfig_cloudfrontDistribution(rName string) string {
+	return acctest.ConfigCompose(testAccFmsPolicyConfigOrgMgmtAccountBase(), fmt.Sprintf(`
 resource "aws_fms_policy" "test" {
   exclude_resource_tags = false
-  name                  = "%[1]s"
+  name                  = %[1]q
   remediation_enabled   = false
   resource_type         = "AWS::CloudFront::Distribution"
 
@@ -350,7 +332,7 @@ resource "aws_s3_bucket" "test" {
 }
 
 resource "aws_kinesis_firehose_delivery_stream" "test" {
-  name        = "aws-waf-logs-%[1]s"
+  name        = %[1]q
   destination = "s3"
 
   s3_configuration {
@@ -358,11 +340,11 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
     bucket_arn = aws_s3_bucket.test.arn
   }
 }
-`, name))
+`, rName))
 }
 
 func testAccFmsPolicyConfig_updated(policyName, ruleGroupName string) string {
-	return acctest.ConfigCompose(testAccFmsPolicyConfigBase(), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccFmsPolicyConfigOrgMgmtAccountBase(), fmt.Sprintf(`
 resource "aws_fms_policy" "test" {
   exclude_resource_tags = false
   name                  = %[1]q
@@ -392,13 +374,11 @@ resource "aws_wafregional_rule_group" "test" {
 `, policyName, ruleGroupName))
 }
 
-func testAccFmsPolicyConfig_include(name string, group string) string {
-	return acctest.ConfigCompose(
-		testAccFmsPolicyConfigBase(),
-		fmt.Sprintf(`
+func testAccFmsPolicyConfig_include(rName string) string {
+	return acctest.ConfigCompose(testAccFmsPolicyConfigOrgMgmtAccountBase(), fmt.Sprintf(`
 resource "aws_fms_policy" "test" {
   exclude_resource_tags = false
-  name                  = "%[1]s"
+  name                  = %[1]q
   remediation_enabled   = false
   resource_type_list    = ["AWS::ElasticLoadBalancingV2::LoadBalancer"]
 
@@ -416,18 +396,16 @@ resource "aws_fms_policy" "test" {
 
 resource "aws_wafregional_rule_group" "test" {
   metric_name = "MyTest"
-  name        = "%[2]s"
+  name        = %[1]q
 }
-`, name, group))
+`, rName))
 }
 
-func testAccFmsPolicyConfig_tags(name string, group string) string {
-	return acctest.ConfigCompose(
-		testAccFmsPolicyConfigBase(),
-		fmt.Sprintf(`
+func testAccFmsPolicyConfigResourceTags1(rName, tagKey1, tagValue1 string) string {
+	return acctest.ConfigCompose(testAccFmsPolicyConfigOrgMgmtAccountBase(), fmt.Sprintf(`
 resource "aws_fms_policy" "test" {
   exclude_resource_tags = false
-  name                  = "%[1]s"
+  name                  = %[1]q
   remediation_enabled   = false
   resource_type_list    = ["AWS::ElasticLoadBalancingV2::LoadBalancer"]
 
@@ -437,8 +415,7 @@ resource "aws_fms_policy" "test" {
   }
 
   resource_tags = {
-    Environment = "Testing"
-    Usage       = "original"
+    %[2]q = %[3]q
   }
 
   depends_on = [aws_fms_admin_account.test]
@@ -446,18 +423,16 @@ resource "aws_fms_policy" "test" {
 
 resource "aws_wafregional_rule_group" "test" {
   metric_name = "MyTest"
-  name        = "%[2]s"
+  name        = %[1]q
 }
-`, name, group))
+`, rName, tagKey1, tagValue1))
 }
 
-func testAccFmsPolicyConfig_tagsChanged(name string, group string) string {
-	return acctest.ConfigCompose(
-		testAccFmsPolicyConfigBase(),
-		fmt.Sprintf(`
+func testAccFmsPolicyConfigResourceTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return acctest.ConfigCompose(testAccFmsPolicyConfigOrgMgmtAccountBase(), fmt.Sprintf(`
 resource "aws_fms_policy" "test" {
   exclude_resource_tags = false
-  name                  = "%[1]s"
+  name                  = %[1]q
   remediation_enabled   = false
   resource_type_list    = ["AWS::ElasticLoadBalancingV2::LoadBalancer"]
 
@@ -467,7 +442,8 @@ resource "aws_fms_policy" "test" {
   }
 
   resource_tags = {
-    Usage = "changed"
+    %[2]q = %[3]q
+    %[4]q = %[5]q
   }
 
   depends_on = [aws_fms_admin_account.test]
@@ -475,7 +451,7 @@ resource "aws_fms_policy" "test" {
 
 resource "aws_wafregional_rule_group" "test" {
   metric_name = "MyTest"
-  name        = "%[2]s"
+  name        = %[1]q
 }
-`, name, group))
+`, rName, tagKey1, tagValue1, tagKey2, tagValue2))
 }
